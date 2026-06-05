@@ -5,8 +5,8 @@ export const metadata = {
 
 const links = [
   {
-    label: "Descubra Seu Ministério",
-    desc: "Quiz — identifique seu chamado",
+    label: "Descubra sua vocação",
+    desc: "",
     href: "/quiz",
     highlight: true,
   },
