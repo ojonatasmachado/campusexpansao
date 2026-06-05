@@ -1,6 +1,61 @@
-# CE.X · Biblioteca da Marca
+# CE.X · Campus Expansão — Guia para Agentes de Código
 
-> Sistema de design da **CE.X · Campus Expansão** para desenvolvimento de front-end.
+> Este arquivo é lido automaticamente pelo **Codex (OpenAI)** e pelo **Claude Code (Anthropic)**.
+> Siga todas as instruções abaixo antes de qualquer edição.
+
+---
+
+## Estrutura do projeto
+
+```
+app/
+  layout.tsx      ← metadata, fontes, imports dos CSS
+  page.tsx        ← página principal (Home) — edite aqui o conteúdo
+public/
+  tokens.css      ← variáveis CSS da marca (cores, espaçamento, tipografia)
+  components.css  ← estilos de todos os componentes
+  pages.css       ← estilos de seções de página
+  tokens.json     ← tokens em formato machine-readable
+```
+
+**Nunca edite** `tokens.css`, `components.css` ou `pages.css` diretamente — são a fonte da verdade da marca.
+
+---
+
+## Como publicar alterações
+
+```bash
+git add -A && git commit -m "descrição da mudança" && git push
+```
+
+A Vercel faz o deploy automaticamente após o push. Site: https://campusexpansao.vercel.app/
+
+---
+
+## Tarefas comuns
+
+### Editar texto de uma seção
+Abra `app/page.tsx` e localize o texto pelo conteúdo. Edite apenas o texto dentro das tags JSX — não altere as `className`.
+
+### Adicionar um curso
+No array de cursos em `app/page.tsx`, adicione um objeto no padrão:
+```ts
+{ num: "04", title: "Nome do Curso", desc: "Descrição curta do curso." }
+```
+
+### Adicionar uma pergunta no FAQ
+No array de FAQ em `app/page.tsx`, adicione:
+```ts
+{ q: "Pergunta?", a: "Resposta completa." }
+```
+
+### Adicionar nova seção
+Use apenas classes documentadas abaixo. Nunca crie CSS inline fora do padrão do design system.
+
+---
+
+## Sistema de design da CE.X · Biblioteca da Marca
+
 > Fonte da verdade para agentes de código (Claude Code, Codex) e desenvolvedores.
 
 ---
