@@ -660,7 +660,7 @@
       <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
       <button class="lang-btn" data-lang="es" onclick="setLanguage('es')">ES</button>
     </div>
-    <div class="w-intro">
+    <div class="w-intro" id="w-intro">
       <span class="eyebrow">Por que os Cinco Ministérios?</span>
       <p>Em Efésios 4:11-13, Paulo revela como Cristo estruturou a Sua Igreja para que ela pudesse cumprir sua missão no mundo:</p>
       <p class="w-verse">"E ele mesmo concedeu que uns fossem apóstolos, outros profetas, outros evangelistas e outros pastores e mestres, para o aperfeiçoamento dos santos, para a obra do ministério, para a edificação do corpo de Cristo, até que todos alcancemos a unidade da fé e do pleno conhecimento do Filho de Deus." (Ef 4:11-13)</p>
@@ -703,10 +703,10 @@
       <div class="eyebrow q-num" id="q-num">Pergunta 1</div>
       <div class="q-text" id="q-text"></div>
     </div>
-    <p class="q-hint">Selecione até 2 respostas que mais identificam você</p>
+    <p class="q-hint" id="q-hint">Selecione até 2 respostas que mais identificam você</p>
     <div class="q-options" id="q-options"></div>
     <div class="q-nav">
-      <button class="btn-prev" id="btn-prev" onclick="prevQ()" id="btn-prev2">← Anterior</button>
+      <button class="btn-prev" id="btn-prev" onclick="prevQ()">← Anterior</button>
       <button class="btn-next" id="btn-next" onclick="nextQ()" disabled>Próxima →</button>
     </div>
   </div>
@@ -717,9 +717,9 @@
   <div class="r-header">
     <div class="r-header-inner">
       <div class="logo r-logo">CE<span class="x">.X</span></div>
-      <div class="r-greeting">Resultado de</div>
+      <div class="r-greeting" id="r-greeting">Resultado de</div>
       <div class="r-name" id="r-name"></div>
-      <div class="r-meta">Cinco Ministérios · Efésios 4:11–13</div>
+      <div class="r-meta" id="r-meta">Cinco Ministérios · Efésios 4:11–13</div>
     </div>
   </div>
 
@@ -728,7 +728,7 @@
 
     <div class="r-label" id="r-label-dominant">Ministério Dominante</div>
     <div class="r-primary">
-      <div class="r-pri-badge">Principal</div>
+      <div class="r-pri-badge" id="r-pri-badge">Principal</div>
       <div class="r-pri-name" id="r-pri-name"></div>
       <div class="r-pri-sub" id="r-pri-sub"></div>
       <div class="score-row">
@@ -739,7 +739,7 @@
 
     <div class="r-secondary">
       <div>
-        <div class="r-sec-lbl">Ministério Secundário</div>
+        <div class="r-sec-lbl" id="r-sec-lbl">Ministério Secundário</div>
         <div class="r-sec-name" id="r-sec-name"></div>
         <div class="r-sec-sub" id="r-sec-sub"></div>
       </div>
@@ -769,15 +769,15 @@
 
     <div class="disclaimer">
       <div class="disclaimer-lbl" id="r-label-note">Uma nota importante</div>
-      <p>Este questionário é uma ferramenta de autoconhecimento baseada nas Escrituras. Os resultados <strong>não são definitivos</strong> e não substituem o discernimento espiritual, o aconselhamento pastoral ou a confirmação da sua liderança. Nenhum questionário define quem você é diante de Deus.</p>
-      <p>Use este resultado como ponto de partida para reflexão, conversa e oração. A clareza sobre o seu chamado não vem de uma vez. Ela vai sendo formada através do <strong>aprofundamento bíblico</strong>, estudar as Escrituras com profundidade e não só por cima, e de uma vida consistente de <strong>oração e jejum</strong>, na qual você busca a face de Deus com intenção. É na <strong>intimidade com Ele</strong> que os propósitos vão ganhando forma.</p>
-      <p>Sua jornada ministerial é única e continua sendo moldada por Deus dia a dia. Se quiser ir mais fundo nessa descoberta, converse com seu líder ou pastor na CE.X.</p>
+      <p id="r-discl-1">Este questionário é uma ferramenta de autoconhecimento baseada nas Escrituras. Os resultados <strong>não são definitivos</strong> e não substituem o discernimento espiritual, o aconselhamento pastoral ou a confirmação da sua liderança. Nenhum questionário define quem você é diante de Deus.</p>
+      <p id="r-discl-2">Use este resultado como ponto de partida para reflexão, conversa e oração. A clareza sobre o seu chamado não vem de uma vez. Ela vai sendo formada através do <strong>aprofundamento bíblico</strong>, estudar as Escrituras com profundidade e não só por cima, e de uma vida consistente de <strong>oração e jejum</strong>, na qual você busca a face de Deus com intenção. É na <strong>intimidade com Ele</strong> que os propósitos vão ganhando forma.</p>
+      <p id="r-discl-3">Sua jornada ministerial é única e continua sendo moldada por Deus dia a dia. Se quiser ir mais fundo nessa descoberta, converse com seu líder ou pastor na CE.X.</p>
     </div>
     <button class="btn-restart" id="r-restart" onclick="restart()">Refazer o questionário</button>
 
     <div class="r-footer">
       <div class="logo r-footer-logo">CE<span class="x">.X</span></div>
-      <div class="r-footer-sub">Campus Expansão · Preparamos trabalhadores<br>para a Grande Comissão</div>
+      <div class="r-footer-sub" id="r-footer-sub">Campus Expansão · Preparamos trabalhadores<br>para a Grande Comissão</div>
     </div>
   </div>
 </div>
@@ -804,6 +804,21 @@ const UI_STRINGS = {
     wNameLbl: 'Qual é o seu nome?',
     wNamePh: 'Digite seu nome',
     wStart: 'Começar →',
+    wIntroHtml: `
+      <span class="eyebrow">Por que os Cinco Ministérios?</span>
+      <p>Em Efésios 4:11-13, Paulo revela como Cristo estruturou a Sua Igreja para que ela pudesse cumprir sua missão no mundo:</p>
+      <p class="w-verse">"E ele mesmo concedeu que uns fossem apóstolos, outros profetas, outros evangelistas e outros pastores e mestres, para o aperfeiçoamento dos santos, para a obra do ministério, para a edificação do corpo de Cristo, até que todos alcancemos a unidade da fé e do pleno conhecimento do Filho de Deus." (Ef 4:11-13)</p>
+      <p>Cristo salva a Igreja e a equipa com cinco chamados distintos, cada um essencial para que o Corpo funcione em plenitude. Esses não são apenas títulos ou cargos. São formas diferentes de enxergar o mundo, de liderar e de servir ao Reino.</p>
+      <div class="w-ministry-list">
+        <div class="w-m-item"><span class="w-m-name">Apóstolo</span><span class="w-m-desc">Pioneiro e estrategista que estabelece fundamentos onde não há</span></div>
+        <div class="w-m-item"><span class="w-m-name">Profeta</span><span class="w-m-desc">Sensível ao que Deus está dizendo ao Seu povo agora</span></div>
+        <div class="w-m-item"><span class="w-m-name">Evangelista</span><span class="w-m-desc">Construtor de pontes entre pessoas e o Evangelho</span></div>
+        <div class="w-m-item"><span class="w-m-name">Pastor</span><span class="w-m-desc">Cuidador que cria ambientes de crescimento seguro</span></div>
+        <div class="w-m-item"><span class="w-m-name">Mestre</span><span class="w-m-desc">Equipador que torna a Palavra acessível e transformadora</span></div>
+      </div>
+      <p>Quando a Igreja não tem clareza sobre esses papéis, ela tende a operar com apenas um ou dois chamados dominantes e fica incompleta. Quando cada membro descobre e exerce o seu, o Corpo inteiro é edificado em amor (Ef 4:16). A CE.X acredita que a descoberta do seu ministério não é apenas autoconhecimento, mas parte da sua responsabilidade com o Corpo de Cristo.</p>
+      <p>São 18 perguntas. Não existe resposta certa ou errada. Responda com sinceridade, escolhendo o que mais se aproxima da sua realidade.</p>
+    `,
     qHint: 'Selecione até 2 respostas que mais identificam você',
     qPrev: '← Anterior',
     qNext: 'Próxima →',
@@ -825,8 +840,34 @@ const UI_STRINGS = {
     reportSubtitle: 'Resultado do Questionário dos Cinco Ministérios',
     rTeaserEyebrow: 'RELATÓRIO COMPLETO',
     rTeaserTitle: 'Isso é só o começo.',
-    rTeaserBody: 'Seu relatório aprofundado inclui perfil detalhado com 4 níveis de expressão do seu chamado, fundamento bíblico completo, figura histórica de referência, áreas de atuação, pontos de atenção, plano de estudo bíblico de 6 semanas e ferramenta prática exclusiva para o seu ministério.',
-    rTeaserTags: 'Gratuito · Download imediato · Leitura offline'
+    rTeaserBody: 'O seu relatório aprofundado inclui perfil detalhado com 4 níveis de expressão do seu chamado, fundamento bíblico completo, figura histórica de referência, áreas de atuação, pontos de atenção, plano de estudo bíblico de 6 semanas e ferramenta prática exclusiva para o seu ministério.',
+    rTeaserTags: 'Gratuito · Download imediato · Leitura offline',
+    discl1: 'Este questionário é uma ferramenta de autoconhecimento baseada nas Escrituras. Os resultados <strong>não são definitivos</strong> e não substituem o discernimento espiritual, o aconselhamento pastoral ou a confirmação da sua liderança. Nenhum questionário define quem você é diante de Deus.',
+    discl2: 'Use este resultado como ponto de partida para reflexão, conversa e oração. A clareza sobre o seu chamado não vem de uma vez. Ela vai sendo formada através do <strong>aprofundamento bíblico</strong>, estudar as Escrituras com profundidade e não só por cima, e de uma vida consistente de <strong>oração e jejum</strong>, na qual você busca a face de Deus com intenção. É na <strong>intimidade com Ele</strong> que os propósitos vão ganhando forma.',
+    discl3: 'Sua jornada ministerial é única e continua sendo moldada por Deus dia a dia. Se quiser ir mais fundo nessa descoberta, converse com seu líder ou pastor na CE.X.',
+    descBadgeDominant: 'Dominante',
+    descBadgeSecondary: 'Secundário',
+    descCalling: 'Seu Chamado',
+    descReference: 'Referência bíblica',
+    descCharacteristics: 'Características',
+    descExamples: 'Exemplos de Atuação',
+    cardMinistry: 'MINISTÉRIO',
+    cardHeadline1: 'Descobri meu',
+    cardHeadline2: 'ministério.',
+    cardCallingLine: 'tem o chamado de',
+    cardSecondaryLine: 'como ministério secundário',
+    cardCta: 'Quer descobrir qual é o seu?',
+    cardLink: 'ACESSE O LINK NA BIO',
+    shareLoading: '↻ Gerando...',
+    reportInstagramCard: 'Card para Instagram',
+    reportSaveCard: 'Pressione e segure ou clique com o botão direito para salvar',
+    reportDistribution: 'Distribuição dos Ministérios',
+    reportPrimarySummaryTitle: 'Resumo do perfil dominante',
+    reportServiceAreas: 'Áreas de atuação',
+    reportCarePoints: 'Pontos de atenção',
+    reportNextSteps: 'Próximos passos',
+    reportBibleStudy: 'Plano bíblico de 6 semanas',
+    reportPracticalTool: 'Ferramenta prática CE.X'
   },
   'pt-PT': {
     pageTitle: 'Descubra o Seu Ministério · CE.X',
@@ -835,6 +876,21 @@ const UI_STRINGS = {
     wNameLbl: 'Qual é o seu nome?',
     wNamePh: 'Escreva o seu nome',
     wStart: 'Começar →',
+    wIntroHtml: `
+      <span class="eyebrow">Porque importam os Cinco Ministérios?</span>
+      <p>Em Efésios 4:11-13, Paulo revela como Cristo estruturou a Sua Igreja para que ela pudesse cumprir a sua missão no mundo:</p>
+      <p class="w-verse">"E ele mesmo concedeu uns para apóstolos, outros para profetas, outros para evangelistas e outros para pastores e mestres, com vista ao aperfeiçoamento dos santos para o desempenho do seu serviço, para a edificação do corpo de Cristo." (Ef 4:11-13)</p>
+      <p>Cristo salva a Igreja e equipa-a com cinco chamados distintos, cada um essencial para que o Corpo funcione em plenitude. Estes não são apenas títulos ou cargos. São formas diferentes de ver o mundo, liderar e servir o Reino.</p>
+      <div class="w-ministry-list">
+        <div class="w-m-item"><span class="w-m-name">Apóstolo</span><span class="w-m-desc">Pioneiro e estratega que estabelece fundamentos onde ainda não existem</span></div>
+        <div class="w-m-item"><span class="w-m-name">Profeta</span><span class="w-m-desc">Sensível ao que Deus está a dizer ao Seu povo agora</span></div>
+        <div class="w-m-item"><span class="w-m-name">Evangelista</span><span class="w-m-desc">Construtor de pontes entre pessoas e o Evangelho</span></div>
+        <div class="w-m-item"><span class="w-m-name">Pastor</span><span class="w-m-desc">Cuidador que cria ambientes de crescimento seguro</span></div>
+        <div class="w-m-item"><span class="w-m-name">Mestre</span><span class="w-m-desc">Equipador que torna a Palavra acessível e transformadora</span></div>
+      </div>
+      <p>Quando a Igreja não tem clareza sobre estes papéis, tende a funcionar com apenas um ou dois chamados dominantes e fica incompleta. Quando cada membro descobre e exerce o seu, todo o Corpo é edificado em amor (Ef 4:16).</p>
+      <p>São 18 perguntas. Não há resposta certa ou errada. Responda com sinceridade, escolhendo o que mais se aproxima da sua realidade.</p>
+    `,
     qHint: 'Selecione até 2 respostas que mais se identificam consigo',
     qPrev: '← Anterior',
     qNext: 'Seguinte →',
@@ -857,7 +913,33 @@ const UI_STRINGS = {
     rTeaserEyebrow: 'RELATÓRIO COMPLETO',
     rTeaserTitle: 'Isso é só o começo.',
     rTeaserBody: 'Seu relatório aprofundado inclui perfil detalhado com 4 níveis de expressão do seu chamado, fundamento bíblico completo, figura histórica de referência, áreas de atuação, pontos de atenção, plano de estudo bíblico de 6 semanas e ferramenta prática exclusiva para o seu ministério.',
-    rTeaserTags: 'Gratuito · Download imediato · Leitura offline'
+    rTeaserTags: 'Gratuito · Download imediato · Leitura offline',
+    discl1: 'Este questionário é uma ferramenta de autoconhecimento baseada nas Escrituras. Os resultados <strong>não são definitivos</strong> e não substituem o discernimento espiritual, o aconselhamento pastoral ou a confirmação da sua liderança. Nenhum questionário define a sua identidade diante de Deus.',
+    discl2: 'Use este resultado como ponto de partida para reflexão, conversa e oração. A clareza sobre o seu chamado não surge toda de uma vez. Ela vai sendo formada através de <strong>aprofundamento bíblico</strong> e de uma vida consistente de <strong>oração e jejum</strong>.',
+    discl3: 'A sua jornada ministerial é única e continua a ser moldada por Deus dia após dia. Se quiser aprofundar esta descoberta, converse com o seu líder ou pastor na CE.X.',
+    descBadgeDominant: 'Dominante',
+    descBadgeSecondary: 'Secundário',
+    descCalling: 'O Seu Chamado',
+    descReference: 'Referência bíblica',
+    descCharacteristics: 'Características',
+    descExamples: 'Exemplos de Atuação',
+    cardMinistry: 'MINISTÉRIO',
+    cardHeadline1: 'Descobri o meu',
+    cardHeadline2: 'ministério.',
+    cardCallingLine: 'tem o chamado de',
+    cardSecondaryLine: 'como ministério secundário',
+    cardCta: 'Quer descobrir qual é o seu?',
+    cardLink: 'ACESSE O LINK NA BIO',
+    shareLoading: '↻ A gerar...',
+    reportInstagramCard: 'Card para Instagram',
+    reportSaveCard: 'Pressione e segure ou clique com o botão direito para guardar',
+    reportDistribution: 'Distribuição dos Ministérios',
+    reportPrimarySummaryTitle: 'Resumo do perfil dominante',
+    reportServiceAreas: 'Áreas de atuação',
+    reportCarePoints: 'Pontos de atenção',
+    reportNextSteps: 'Próximos passos',
+    reportBibleStudy: 'Plano bíblico de 6 semanas',
+    reportPracticalTool: 'Ferramenta prática CE.X'
   },
   'en': {
     pageTitle: 'Discover Your Ministry · CE.X',
@@ -866,6 +948,21 @@ const UI_STRINGS = {
     wNameLbl: 'What is your name?',
     wNamePh: 'Enter your name',
     wStart: 'Begin →',
+    wIntroHtml: `
+      <span class="eyebrow">Why the Five Ministries?</span>
+      <p>In Ephesians 4:11-13, Paul shows how Christ equipped His Church to fulfill its mission in the world:</p>
+      <p class="w-verse">"So Christ himself gave the apostles, the prophets, the evangelists, the pastors and teachers, to equip his people for works of service, so that the body of Christ may be built up." (Eph. 4:11-12)</p>
+      <p>Christ saves the Church and equips it with five distinct callings, each one essential for the Body to function with maturity. These are not merely titles or offices. They are different ways of seeing, leading, serving, and building the Kingdom.</p>
+      <div class="w-ministry-list">
+        <div class="w-m-item"><span class="w-m-name">Apostle</span><span class="w-m-desc">A pioneer and strategist who lays foundations where none exist</span></div>
+        <div class="w-m-item"><span class="w-m-name">Prophet</span><span class="w-m-desc">Sensitive to what God is saying to His people now</span></div>
+        <div class="w-m-item"><span class="w-m-name">Evangelist</span><span class="w-m-desc">A bridge-builder between people and the Gospel</span></div>
+        <div class="w-m-item"><span class="w-m-name">Shepherd</span><span class="w-m-desc">A caregiver who creates safe environments for growth</span></div>
+        <div class="w-m-item"><span class="w-m-name">Teacher</span><span class="w-m-desc">An equipper who makes Scripture clear and transformative</span></div>
+      </div>
+      <p>When the Church lacks clarity about these roles, it tends to operate with only one or two dominant callings and becomes incomplete. When each member discovers and exercises their calling, the whole Body is built up in love (Eph. 4:16).</p>
+      <p>There are 18 questions. There are no right or wrong answers. Answer honestly, choosing what best reflects your current reality.</p>
+    `,
     qHint: 'Select up to 2 answers that best describe you',
     qPrev: '← Previous',
     qNext: 'Next →',
@@ -888,7 +985,33 @@ const UI_STRINGS = {
     rTeaserEyebrow: 'FULL REPORT',
     rTeaserTitle: 'This is just the beginning.',
     rTeaserBody: 'Your in-depth report includes a detailed profile with 4 levels of expression, complete biblical foundation, historical figure of reference, service areas, caution points, a 6-week Bible study plan, and an exclusive practical tool for your ministry.',
-    rTeaserTags: 'Free · Instant download · Offline reading'
+    rTeaserTags: 'Free · Instant download · Offline reading',
+    discl1: 'This quiz is a Scripture-based self-knowledge tool. Results are <strong>not definitive</strong> and do not replace spiritual discernment, pastoral counsel, or confirmation from your leadership. No quiz defines who you are before God.',
+    discl2: 'Use this result as a starting point for reflection, conversation, and prayer. Clarity about your calling does not come all at once. It is formed through <strong>deep biblical study</strong> and a consistent life of <strong>prayer and fasting</strong>.',
+    discl3: 'Your ministry journey is unique and continues to be shaped by God day by day. If you want to go deeper in this discovery, talk with your leader or pastor at CE.X.',
+    descBadgeDominant: 'Dominant',
+    descBadgeSecondary: 'Secondary',
+    descCalling: 'Your Calling',
+    descReference: 'Biblical reference',
+    descCharacteristics: 'Characteristics',
+    descExamples: 'Examples of Service',
+    cardMinistry: 'MINISTRY',
+    cardHeadline1: 'I discovered my',
+    cardHeadline2: 'ministry.',
+    cardCallingLine: 'has the calling of',
+    cardSecondaryLine: 'as secondary ministry',
+    cardCta: 'Want to discover yours?',
+    cardLink: 'OPEN THE LINK IN BIO',
+    shareLoading: '↻ Generating...',
+    reportInstagramCard: 'Instagram Card',
+    reportSaveCard: 'Long press or right-click the image below to save it',
+    reportDistribution: 'Ministry Distribution',
+    reportPrimarySummaryTitle: 'Dominant profile summary',
+    reportServiceAreas: 'Service areas',
+    reportCarePoints: 'Caution points',
+    reportNextSteps: 'Next steps',
+    reportBibleStudy: '6-week Bible study plan',
+    reportPracticalTool: 'CE.X practical tool'
   },
   'es': {
     pageTitle: 'Descubre Tu Ministerio · CE.X',
@@ -897,6 +1020,21 @@ const UI_STRINGS = {
     wNameLbl: '¿Cuál es tu nombre?',
     wNamePh: 'Escribe tu nombre',
     wStart: 'Comenzar →',
+    wIntroHtml: `
+      <span class="eyebrow">¿Por qué los Cinco Ministerios?</span>
+      <p>En Efesios 4:11-13, Pablo muestra cómo Cristo equipó a Su Iglesia para cumplir su misión en el mundo:</p>
+      <p class="w-verse">"Y él mismo constituyó a unos, apóstoles; a otros, profetas; a otros, evangelistas; a otros, pastores y maestros, a fin de perfeccionar a los santos para la obra del ministerio, para la edificación del cuerpo de Cristo." (Ef. 4:11-12)</p>
+      <p>Cristo salva a la Iglesia y la equipa con cinco llamados distintos, cada uno esencial para que el Cuerpo funcione con madurez. No son solo títulos o cargos. Son formas diferentes de ver, liderar, servir y edificar el Reino.</p>
+      <div class="w-ministry-list">
+        <div class="w-m-item"><span class="w-m-name">Apóstol</span><span class="w-m-desc">Pionero y estratega que establece fundamentos donde no existen</span></div>
+        <div class="w-m-item"><span class="w-m-name">Profeta</span><span class="w-m-desc">Sensible a lo que Dios está diciendo a Su pueblo ahora</span></div>
+        <div class="w-m-item"><span class="w-m-name">Evangelista</span><span class="w-m-desc">Constructor de puentes entre las personas y el Evangelio</span></div>
+        <div class="w-m-item"><span class="w-m-name">Pastor</span><span class="w-m-desc">Cuidador que crea ambientes seguros para crecer</span></div>
+        <div class="w-m-item"><span class="w-m-name">Maestro</span><span class="w-m-desc">Equipador que hace la Escritura clara y transformadora</span></div>
+      </div>
+      <p>Cuando la Iglesia no tiene claridad sobre estos roles, suele operar con solo uno o dos llamados dominantes y queda incompleta. Cuando cada miembro descubre y ejerce su llamado, todo el Cuerpo es edificado en amor (Ef. 4:16).</p>
+      <p>Son 18 preguntas. No hay respuestas correctas o incorrectas. Responde con sinceridad, escogiendo lo que más se acerca a tu realidad.</p>
+    `,
     qHint: 'Selecciona hasta 2 respuestas que más te identifiquen',
     qPrev: '← Anterior',
     qNext: 'Siguiente →',
@@ -919,7 +1057,33 @@ const UI_STRINGS = {
     rTeaserEyebrow: 'INFORME COMPLETO',
     rTeaserTitle: 'Esto es solo el comienzo.',
     rTeaserBody: 'Tu informe profundo incluye perfil detallado con 4 niveles de expresión, fundamento bíblico completo, figura histórica de referencia, áreas de actuación, puntos de atención, plan de estudio bíblico de 6 semanas y herramienta práctica exclusiva para tu ministerio.',
-    rTeaserTags: 'Gratuito · Descarga inmediata · Lectura sin conexión'
+    rTeaserTags: 'Gratuito · Descarga inmediata · Lectura sin conexión',
+    discl1: 'Este cuestionario es una herramienta de autoconocimiento basada en las Escrituras. Los resultados <strong>no son definitivos</strong> y no reemplazan el discernimiento espiritual, la consejería pastoral ni la confirmación de tu liderazgo. Ningún cuestionario define quién eres delante de Dios.',
+    discl2: 'Usa este resultado como punto de partida para la reflexión, la conversación y la oración. La claridad sobre tu llamado no llega de una sola vez. Se forma mediante <strong>estudio bíblico profundo</strong> y una vida constante de <strong>oración y ayuno</strong>.',
+    discl3: 'Tu jornada ministerial es única y sigue siendo moldeada por Dios día a día. Si quieres profundizar en este descubrimiento, conversa con tu líder o pastor en CE.X.',
+    descBadgeDominant: 'Dominante',
+    descBadgeSecondary: 'Secundario',
+    descCalling: 'Tu Llamado',
+    descReference: 'Referencia bíblica',
+    descCharacteristics: 'Características',
+    descExamples: 'Ejemplos de Servicio',
+    cardMinistry: 'MINISTERIO',
+    cardHeadline1: 'Descubrí mi',
+    cardHeadline2: 'ministerio.',
+    cardCallingLine: 'tiene el llamado de',
+    cardSecondaryLine: 'como ministerio secundario',
+    cardCta: '¿Quieres descubrir el tuyo?',
+    cardLink: 'ABRE EL LINK EN LA BIO',
+    shareLoading: '↻ Generando...',
+    reportInstagramCard: 'Tarjeta de Instagram',
+    reportSaveCard: 'Mantén presionada o haz clic derecho para guardar',
+    reportDistribution: 'Distribución de Ministerios',
+    reportPrimarySummaryTitle: 'Resumen del perfil dominante',
+    reportServiceAreas: 'Áreas de servicio',
+    reportCarePoints: 'Puntos de atención',
+    reportNextSteps: 'Próximos pasos',
+    reportBibleStudy: 'Plan bíblico de 6 semanas',
+    reportPracticalTool: 'Herramienta práctica CE.X'
   }
 };
 
@@ -940,6 +1104,30 @@ function updateUI() {
   if (inp) inp.placeholder = t('wNamePh');
   const wb = document.getElementById('w-start');
   if (wb) wb.textContent = t('wStart');
+  const wi = document.getElementById('w-intro');
+  if (wi) wi.innerHTML = t('wIntroHtml');
+  const qh = document.getElementById('q-hint');
+  if (qh) qh.textContent = t('qHint');
+  const qp = document.getElementById('btn-prev');
+  if (qp) qp.textContent = t('qPrev');
+  const rg = document.getElementById('r-greeting');
+  if (rg) rg.textContent = t('rGreeting');
+  const rm = document.getElementById('r-meta');
+  if (rm) rm.textContent = t('rMeta');
+  const rb = document.getElementById('r-pri-badge');
+  if (rb) rb.textContent = t('rBadge');
+  const rsl = document.getElementById('r-sec-lbl');
+  if (rsl) rsl.textContent = t('rSecLbl');
+  const rf = document.getElementById('r-footer-sub');
+  if (rf) rf.innerHTML = t('rFooterSub').replace(/\n/g, '<br>');
+  [
+    ['r-discl-1', 'discl1'],
+    ['r-discl-2', 'discl2'],
+    ['r-discl-3', 'discl3']
+  ].forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = t(key);
+  });
   const labels = [
     ['r-label-dominant', 'rDominant'],
     ['r-label-full', 'rFull'],
@@ -990,6 +1178,7 @@ function setLanguage(lang) {
   updateUI();
   const screen = document.querySelector('.screen.active');
   if (screen && screen.id === 'screen-quiz') { renderQ(); }
+  if (screen && screen.id === 'screen-results') { showResults(); }
 }
 
 // ── DATA ──────────────────────────────────────────────────────────────
@@ -3452,9 +3641,9 @@ function showResults() {
   });
 
   const priDescEl = document.getElementById('r-pri-desc');
-  if (priDescEl) priDescEl.innerHTML = buildDesc(pri, 'Dominante');
+  if (priDescEl) priDescEl.innerHTML = buildDesc(pri, t('descBadgeDominant'));
   const secDescEl = document.getElementById('r-sec-desc');
-  if (secDescEl) secDescEl.innerHTML = buildDesc(sec, 'Secundário');
+  if (secDescEl) secDescEl.innerHTML = buildDesc(sec, t('descBadgeSecondary'));
   const stepsEl = document.getElementById('r-steps');
   if (stepsEl) stepsEl.innerHTML = buildSteps(priKey);
 
@@ -3474,15 +3663,15 @@ function buildDesc(m, badge) {
       <div class="desc-body">
         <div class="desc-verse">${m.verse}</div>
         <div class="desc-bible-refs">${refsHtml}</div>
-        <div class="desc-section">Seu Chamado</div>
+        <div class="desc-section">${t('descCalling')}</div>
         <p class="desc-text">${m.main}</p>
         <div class="desc-figure">
-          <div class="desc-figure-label">Referência bíblica</div>
+          <div class="desc-figure-label">${t('descReference')}</div>
           <div class="desc-figure-text">${m.figure.name}: ${m.figure.text}</div>
         </div>
-        <div class="desc-section">Características</div>
+        <div class="desc-section">${t('descCharacteristics')}</div>
         <ul class="desc-list">${m.characteristics.map(c => `<li>${c}</li>`).join('')}</ul>
-        <div class="desc-section">Exemplos de Atuação</div>
+        <div class="desc-section">${t('descExamples')}</div>
         <ul class="desc-list">${m.examples.map(e => `<li>${e}</li>`).join('')}</ul>
         <div class="calling-box"><p>${m.calling}</p></div>
       </div>
@@ -3505,10 +3694,11 @@ function buildSteps(priKey) {
 function renderChart(scores) {
   if (chartInst) chartInst.destroy();
   const ctx = document.getElementById('ministry-chart').getContext('2d');
+  const labels = ministryChartLabels();
   chartInst = new Chart(ctx, {
     type: 'radar',
     data: {
-      labels: ['Apóstolo', 'Profeta', 'Evangelista', 'Pastor', 'Mestre'],
+      labels,
       datasets: [{
         data: [scores.A, scores.E, scores.D, scores.B, scores.C],
         backgroundColor: 'rgba(122,158,63,0.15)',
@@ -3538,6 +3728,12 @@ function renderChart(scores) {
       }
     }
   });
+}
+
+function ministryChartLabels() {
+  if (currentLang === 'en') return ['Apostle', 'Prophet', 'Evangelist', 'Shepherd', 'Teacher'];
+  if (currentLang === 'es') return ['Apóstol', 'Profeta', 'Evangelista', 'Pastor', 'Maestro'];
+  return ['Apóstolo', 'Profeta', 'Evangelista', 'Pastor', 'Mestre'];
 }
 
 // ── SHARE CARD (1080×1920) ────────────────────────────────────────────
@@ -3610,7 +3806,7 @@ async function renderInstagramCard() {
   ctx.fillStyle = '#7A9E3F';
   ctx.letterSpacing = '0.22em';
   ctx.textAlign = 'right';
-  ctx.fillText('MINISTÉRIO', W - pad, 308);
+  ctx.fillText(t('cardMinistry'), W - pad, 308);
   ctx.textAlign = 'left';
   ctx.letterSpacing = '0';
 
@@ -3621,10 +3817,10 @@ async function renderInstagramCard() {
   // HEADLINE
   ctx.font = `700 88px ${F}`;
   ctx.fillStyle = '#FAFAF7';
-  ctx.fillText('Descobri meu', pad, 466);
+  ctx.fillText(t('cardHeadline1'), pad, 466);
   ctx.font = `italic 700 88px ${F}`;
   ctx.fillStyle = '#7A9E3F';
-  ctx.fillText('ministério.', pad, 566);
+  ctx.fillText(t('cardHeadline2'), pad, 566);
 
   // Short accent line (decorative, not full-width)
   ctx.fillStyle = '#7A9E3F';
@@ -3636,7 +3832,7 @@ async function renderInstagramCard() {
   ctx.fillText(userName, pad, 658);
   ctx.font = `400 26px ${F}`;
   ctx.fillStyle = '#8B8C82';
-  ctx.fillText('tem o chamado de', pad, 694);
+  ctx.fillText(t('cardCallingLine'), pad, 694);
 
   // MINISTRY NAME hero (auto-scale)
   let fs = 148;
@@ -3655,7 +3851,7 @@ async function renderInstagramCard() {
   // Secondary ministry
   ctx.font = `400 24px ${F}`;
   ctx.fillStyle = '#555650';
-  ctx.fillText('+ ' + sec.name + ' como ministério secundário', pad, 942);
+  ctx.fillText('+ ' + sec.name + ' ' + t('cardSecondaryLine'), pad, 942);
 
   // Thin separator
   ctx.fillStyle = 'rgba(122,158,63,0.2)';
@@ -3676,7 +3872,7 @@ async function renderInstagramCard() {
   // CTA (left-aligned)
   ctx.font = `700 28px ${F}`;
   ctx.fillStyle = '#FAFAF7';
-  ctx.fillText('Quer descobrir qual é o seu?', pad, 1716);
+  ctx.fillText(t('cardCta'), pad, 1716);
 
   ctx.font = `700 32px ${F}`;
   ctx.fillStyle = '#7A9E3F';
@@ -3685,7 +3881,7 @@ async function renderInstagramCard() {
   ctx.font = `500 16px ${F}`;
   ctx.fillStyle = '#555650';
   ctx.letterSpacing = '0.16em';
-  ctx.fillText('ACESSE O LINK NA BIO', pad, 1778);
+  ctx.fillText(t('cardLink'), pad, 1778);
   ctx.letterSpacing = '0';
 
   return canvas.toDataURL('image/png');
@@ -3697,7 +3893,7 @@ async function shareCard() {
   // Show loading state on buttons
   ['r-share-top', 'r-share-bot'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) { el.disabled = true; el.textContent = '↻ Gerando...'; }
+    if (el) { el.disabled = true; el.textContent = t('shareLoading'); }
   });
 
   try {
@@ -3727,7 +3923,7 @@ async function shareCard() {
 function drawRadar(ctx, scores, cx, cy, radius, fontStack) {
   // APEST order: Apóstolo(A), Profeta(E), Evangelista(D), Pastor(B), Mestre(C)
   const vals   = [scores.A, scores.E, scores.D, scores.B, scores.C];
-  const labels = ['Apóstolo', 'Profeta', 'Evangelista', 'Pastor', 'Mestre'];
+  const labels = ministryChartLabels();
   const n = 5;
   const max = 18;
 
@@ -3812,6 +4008,76 @@ function drawRadar(ctx, scores, cx, cy, radius, fontStack) {
     ctx.fillText(`${_fl[i]}%`, x, y + 8 + 30);
   }
   ctx.textAlign = 'left';
+}
+
+function reportBiblePlan() {
+  if (currentLang === 'en') return [
+    'Week 1: Read Ephesians 4:11-16 and observe how every ministry equips the Body.',
+    'Week 2: Read the key passages connected to your dominant profile and write what Christ is forming in you.',
+    'Week 3: Identify one example from Jesus that corrects and matures this calling.',
+    'Week 4: Read Acts and notice how this ministry serves real people, not only ideas.',
+    'Week 5: Pray through your caution points and ask for humility, wisdom, and fruit.',
+    'Week 6: Choose one concrete act of service that lets this calling bless your church.'
+  ];
+  if (currentLang === 'es') return [
+    'Semana 1: Lee Efesios 4:11-16 y observa cómo cada ministerio equipa al Cuerpo.',
+    'Semana 2: Lee los pasajes clave conectados con tu perfil dominante y escribe lo que Cristo está formando en ti.',
+    'Semana 3: Identifica un ejemplo de Jesús que corrige y madura este llamado.',
+    'Semana 4: Lee Hechos y observa cómo este ministerio sirve a personas reales, no solo a ideas.',
+    'Semana 5: Ora sobre tus puntos de atención y pide humildad, sabiduría y fruto.',
+    'Semana 6: Elige un acto concreto de servicio que permita que este llamado bendiga tu iglesia.'
+  ];
+  return [
+    'Semana 1: Leia Efésios 4:11-16 e observe como cada ministério equipa o Corpo.',
+    'Semana 2: Leia os textos-chave ligados ao seu perfil dominante e escreva o que Cristo está formando em você.',
+    'Semana 3: Identifique um exemplo de Jesus que corrige e amadurece esse chamado.',
+    'Semana 4: Leia Atos e observe como esse ministério serve pessoas reais, não apenas ideias.',
+    'Semana 5: Ore sobre seus pontos de atenção e peça humildade, sabedoria e fruto.',
+    'Semana 6: Escolha um ato concreto de serviço que permita que esse chamado abençoe sua igreja.'
+  ];
+}
+
+function reportPracticalToolText(m) {
+  if (currentLang === 'en') {
+    return `Create a simple weekly rhythm for your ${m.name.toLowerCase()} calling: one Scripture to study, one person to serve, one conversation with a leader, and one note about what you are learning. Revisit it every week with prayer and humility.`;
+  }
+  if (currentLang === 'es') {
+    return `Crea un ritmo semanal sencillo para tu llamado de ${m.name.toLowerCase()}: un texto bíblico para estudiar, una persona para servir, una conversación con un líder y una nota sobre lo que estás aprendiendo. Revísalo cada semana con oración y humildad.`;
+  }
+  return `Crie um ritmo semanal simples para sua vocação de ${m.name.toLowerCase()}: um texto bíblico para estudar, uma pessoa para servir, uma conversa com uma liderança e uma anotação sobre o que está aprendendo. Revise isso toda semana com oração e humildade.`;
+}
+
+function buildLocalizedDeepProfile(m, key) {
+  const s = ministrySteps[key] || { title: '', intro: '', steps: [] };
+  const bibleRefs = (m.bibleRefs || []).map(ref => `<li>${ref}</li>`).join('');
+  const characteristics = (m.characteristics || []).map(item => `<li>${item}</li>`).join('');
+  const examples = (m.examples || []).map(item => `<li>${item}</li>`).join('');
+  const steps = (s.steps || []).map(item => `<li>${item}</li>`).join('');
+  const biblePlan = reportBiblePlan().map(item => `<li>${item}</li>`).join('');
+
+  return `
+<div class="dp">
+<h2 class="dp-title">${m.name}</h2>
+<p class="dp-subtitle">${m.subtitle}</p>
+<div class="dp-quote">${m.verse}</div>
+<h3 class="dp-h3">${t('reportPrimarySummaryTitle')}</h3>
+<p>${m.main}</p>
+<div class="calling">${m.calling}</div>
+<h3 class="dp-h3">${t('descReference')}</h3>
+<p><strong>${m.figure.name}:</strong> ${m.figure.text}</p>
+<ul>${bibleRefs}</ul>
+<h3 class="dp-h3">${t('descCharacteristics')}</h3>
+<ul>${characteristics}</ul>
+<h3 class="dp-h3">${t('reportServiceAreas')}</h3>
+<ul>${examples}</ul>
+<h3 class="dp-h3">${t('reportNextSteps')}</h3>
+<p>${s.intro || ''}</p>
+<ul>${steps}</ul>
+<h3 class="dp-h3">${t('reportBibleStudy')}</h3>
+<ul>${biblePlan}</ul>
+<h3 class="dp-h3">${t('reportPracticalTool')}</h3>
+<p>${reportPracticalToolText(m)}</p>
+</div>`;
 }
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
@@ -3956,8 +4222,9 @@ function generateMinistryReport(cardDataUrl = '') {
     </div>`;
   }).join('');
 
-  const deepPri = (DEEP_PROFILES[lang] || DEEP_PROFILES['pt-BR'])[lastPriKey] || '';
-  const deepSec = (DEEP_PROFILES[lang] || DEEP_PROFILES['pt-BR'])[lastSecKey] || '';
+  const deepProfilesForLang = DEEP_PROFILES[lang];
+  const deepPri = (deepProfilesForLang && deepProfilesForLang[lastPriKey]) || buildLocalizedDeepProfile(pri, lastPriKey);
+  const deepSec = (deepProfilesForLang && deepProfilesForLang[lastSecKey]) || buildLocalizedDeepProfile(sec, lastSecKey);
 
   const secLabel = lang === 'en' ? 'Secondary Ministry' : lang === 'es' ? 'Ministerio Secundario' : 'Ministério Secundário';
   const secPctStr = `${scores[lastSecKey]} ${lang === 'en' ? 'answer' : lang === 'es' ? 'respuesta' : 'resposta'}${scores[lastSecKey] !== 1 ? 's' : ''} · ${Math.round(scores[lastSecKey]/total*100)}%`;
@@ -4040,15 +4307,15 @@ ${cardDataUrl ? `
 <div class="insta-section">
   <div class="wrap">
     <div class="box">
-      <div class="box-title">${lang === 'en' ? 'Instagram Card' : lang === 'es' ? 'Tarjeta de Instagram' : 'Card para Instagram'}</div>
-      <p style="font-size:12px;color:#8B8C82;margin-bottom:12px;">${lang === 'en' ? 'Long press or right-click the image below to save it' : lang === 'es' ? 'Mantén presionada o haz clic derecho para guardar' : 'Pressione e segure ou clique com o botão direito para salvar'}</p>
+      <div class="box-title">${t('reportInstagramCard')}</div>
+      <p style="font-size:12px;color:#8B8C82;margin-bottom:12px;">${t('reportSaveCard')}</p>
       <img src="${cardDataUrl}" style="width:100%;max-width:300px;display:block;margin:0 auto;border-radius:8px;" alt="Card para Instagram">
     </div>
   </div>
 </div>` : ''}
 <div class="wrap">
   <div class="box">
-    <div class="box-title">${lang === 'en' ? 'Ministry Distribution' : lang === 'es' ? 'Distribución de Ministerios' : 'Distribuição dos Ministérios'}</div>
+    <div class="box-title">${t('reportDistribution')}</div>
     ${distBars}
     ${radarDataUrl ? `<img class="radar-img" src="${radarDataUrl}" alt="Radar">` : ''}
   </div>
@@ -4056,6 +4323,9 @@ ${cardDataUrl ? `
     ${deepPri}
   </div>
   ${miniSecCard}
+  <div class="m-card">
+    ${deepSec}
+  </div>
   <div class="box disc">
     ${disclText}
   </div>
