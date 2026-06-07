@@ -21,6 +21,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="/tokens.css" />
         <link rel="stylesheet" href="/components.css" />
         <link rel="stylesheet" href="/pages.css" />
+        <link rel="stylesheet" href="/loja.css" />
       </head>
       <body>{children}</body>
     </html>
