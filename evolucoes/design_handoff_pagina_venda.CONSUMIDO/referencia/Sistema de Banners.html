@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CE.X · Sistema de Banners dos Materiais</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #0E110D; }
+  * { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="../design-canvas.jsx"></script>
+<script type="text/babel" src="cards.jsx"></script>
+
+<script type="text/babel">
+  const Pad = ({ children, p = 36, bg = '#0E110D' }) => (
+    <div style={{ width: '100%', height: '100%', background: bg, padding: p,
+      boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {children}
+    </div>
+  );
+
+  // legenda curta sob um card de modelo
+  const ModelCard = ({ tag, nota, ...p }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18, alignItems: 'center' }}>
+      <CardCEX {...p} />
+      <div style={{ textAlign: 'center', maxWidth: CARD_W }}>
+        <div style={{ fontFamily: cexTok.mono, fontSize: 12, letterSpacing: '0.12em',
+          textTransform: 'uppercase', color: cexTok.olive, marginBottom: 8 }}>{tag}</div>
+        <div style={{ fontFamily: cexTok.sans, fontSize: 13.5, lineHeight: 1.55, color: cexTok.muted }}>{nota}</div>
+      </div>
+    </div>
+  );
+
+  const Shelf = ({ nome, count, cards, accent = 'olive' }) => {
+    const ac = cexAccents[accent] || cexAccents.olive;
+    return (
+      <div style={{ width: '100%' }}>
+        <ShelfHead nome={nome} count={count} accent={ac} />
+        <div style={{ display: 'flex', gap: 22 }}>
+          {cards.map((c, i) => <CardCEX key={i} accent={accent} {...c} />)}
+        </div>
+      </div>
+    );
+  };
+
+  // amostra de cor da paleta estendida
+  const Swatch = ({ ac, uso }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: 150 }}>
+      <div style={{ height: 72, borderRadius: 8, background: ac.base, border: `1px solid ${cexTok.border}` }} />
+      <div>
+        <div style={{ fontFamily: cexTok.sans, fontWeight: 600, fontSize: 15, color: cexTok.cream }}>{ac.name}</div>
+        <div style={{ fontFamily: cexTok.mono, fontSize: 11, color: cexTok.muted, marginTop: 3 }}>{ac.base}</div>
+        <div style={{ fontFamily: cexTok.mono, fontSize: 11, color: cexTok.subtle, marginTop: 6, letterSpacing: '0.04em' }}>{uso}</div>
+      </div>
+    </div>
+  );
+
+  function App() {
+    return (
+      <DesignCanvas>
+
+        {/* ── PALETA ESTENDIDA · PROPOSTA ── */}
+        <DCSection id="paleta" title="Paleta estendida · proposta"
+          subtitle="Acentos terrosos, irmãos da oliva. A cor codifica a ESTANTE (só etiqueta, número, ◆ e bloco B) — Ink + Creme seguem dominando. Vivo, mas calmo.">
+          <DCArtboard id="swatches" label="Os acentos" width={1480} height={300}>
+            <div style={{ width: '100%', height: '100%', background: cexTok.ink, padding: 48,
+              boxSizing: 'border-box', display: 'flex', alignItems: 'center', gap: 40 }}>
+              <Swatch ac={cexAccents.ochre} uso="Juniores" />
+              <Swatch ac={cexAccents.clay}  uso="Adolescentes" />
+              <Swatch ac={cexAccents.olive} uso="Jovens · núcleo" />
+              <Swatch ac={cexAccents.pine}  uso="Igreja toda" />
+              <div style={{ width: 1, height: 96, background: cexTok.border2 }} />
+              <Swatch ac={cexAccents.slate} uso="Para liderar" />
+            </div>
+          </DCArtboard>
+          <DCArtboard id="wall" label="A parede com código de cor" width={1480} height={1180}>
+            <div style={{ width: '100%', height: '100%', background: cexTok.ink, padding: 48,
+              boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 44 }}>
+              <Shelf nome="Juniores" count={3} accent="ochre" cards={[
+                { model: 'A', code: 'S-03', etiqueta: 'Juniores', titulo: 'Aventura', meta: '5 mensagens · Editável · PDF', preco: 'R$ 39' },
+                { model: 'C', big: '06', bigLabel: 'encontros', etiqueta: 'Juniores', titulo: 'Heróis da Fé', meta: '6 encontros · Editável · PDF', preco: 'R$ 39' },
+                { model: 'B', code: 'S-07', etiqueta: 'Juniores', titulo: 'Coração Firme', meta: '4 mensagens · Editável · Slides', preco: 'R$ 37' },
+              ]} />
+              <Shelf nome="Adolescentes" count={3} accent="clay" cards={[
+                { model: 'B', code: 'S-12', etiqueta: 'Adolescentes', titulo: 'Firmes', meta: '6 mensagens · Editável · PDF', preco: 'R$ 47' },
+                { model: 'A', code: 'S-19', etiqueta: 'Adolescentes', titulo: 'Sem Máscara', meta: '5 encontros · Editável · Slides', preco: 'R$ 47' },
+                { model: 'C', big: '08', bigLabel: 'encontros', etiqueta: 'Adolescentes', titulo: 'Deserto', meta: '8 encontros · Editável · PDF', preco: 'R$ 57' },
+              ]} />
+              <Shelf nome="Jovens" count={3} accent="olive" cards={[
+                { model: 'C', big: '08', bigLabel: 'encontros', etiqueta: 'Jovens', titulo: 'Enviados', meta: '8 encontros · Editável · Slides', preco: 'R$ 57' },
+                { model: 'B', code: 'S-21', etiqueta: 'Jovens', titulo: 'Propósito', meta: '6 mensagens · Editável · PDF', preco: 'R$ 57' },
+                { model: 'A', code: 'S-26', etiqueta: 'Jovens', titulo: 'Contramão', meta: '5 mensagens · Editável · PDF', preco: 'R$ 49' },
+              ]} />
+            </div>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ── OS 3 MODELOS BASE ── */}
+        <DCSection id="modelos" title="3 modelos · 1 família"
+          subtitle="Mesma moldura, mesmo rodapé (meta + preço + CTA). Só o miolo muda — é isso que dá vida sem poluir.">
+          <DCArtboard id="modelo-a" label="Modelo A · Tipográfico" width={400} height={560}>
+            <Pad>
+              <ModelCard model="A" code="S-12" etiqueta="Adolescentes" titulo="Firmes"
+                meta="6 mensagens · Editável · PDF" preco="R$ 47" tag="A · Tipográfico"
+                nota="O título é a arte. Pro nome que já é gancho." />
+            </Pad>
+          </DCArtboard>
+          <DCArtboard id="modelo-b" label="Modelo B · Bloco oliva" width={400} height={560}>
+            <Pad>
+              <ModelCard model="B" code="S-08" etiqueta="Jovens" titulo="Enviados"
+                meta="8 encontros · Editável · Slides" preco="R$ 57" tag="B · Bloco oliva"
+                nota="O único com cor cheia. Use 1 por estante — segura os 15% de oliva." />
+            </Pad>
+          </DCArtboard>
+          <DCArtboard id="modelo-c" label="Modelo C · Número" width={400} height={560}>
+            <Pad>
+              <ModelCard model="C" big="06" bigLabel="encontros" etiqueta="Juniores" titulo="Raiz"
+                meta="6 encontros · Editável · PDF" preco="R$ 39" tag="C · Número / índice"
+                nota="Estrutural. Quando o número já vende (encontros, páginas)." />
+            </Pad>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ── MODELO D · FOTO ── */}
+        <DCSection id="foto" title="Modelo D · Foto"
+          subtitle="Pra quando você tiver arte ou foto real. Entra depois — placeholder por enquanto.">
+          <DCArtboard id="modelo-d" label="Modelo D · Foto (futuro)" width={400} height={560}>
+            <Pad>
+              <ModelCard model="D" etiqueta="Igreja toda" titulo="Tempo de Ceia"
+                meta="5 mensagens · Editável · PDF" preco="R$ 49" tag="D · Foto"
+                nota="Imagem + escurecido + título. Encaixa na mesma moldura." />
+            </Pad>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ── RITMO NUMA ESTANTE · PARA MINISTRAR ── */}
+        <DCSection id="estante-ministrar" title="O ritmo numa estante"
+          subtitle="Para ministrar · Adolescentes. Os modelos se alternam por regra — nunca 2 iguais em fila. Vivo, mas é família.">
+          <DCArtboard id="shelf-min" label="Estante · Para ministrar" width={1480} height={560}>
+            <Pad p={48}>
+              <Shelf nome="Adolescentes" count={4} cards={[
+                { model: 'A', code: 'S-12', etiqueta: 'Adolescentes', titulo: 'Firmes', meta: '6 mensagens · Editável · PDF', preco: 'R$ 47' },
+                { model: 'B', code: 'S-19', etiqueta: 'Adolescentes', titulo: 'Sem Máscara', meta: '5 encontros · Editável · Slides', preco: 'R$ 47' },
+                { model: 'C', big: '08', bigLabel: 'encontros', etiqueta: 'Adolescentes', titulo: 'Deserto', meta: '8 encontros · Editável · PDF', preco: 'R$ 57' },
+                { model: 'A', code: 'S-23', etiqueta: 'Adolescentes', titulo: 'Contracultura', meta: '4 mensagens · Editável · PDF', preco: 'R$ 39' },
+              ]} />
+            </Pad>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ── RITMO · PARA LIDERAR (tom estrutural) ── */}
+        <DCSection id="estante-liderar" title="Para liderar · tom estrutural"
+          subtitle="Mesma família de cards, mas o lado de gestão pende ao mono/número — atmosfera de ferramenta, não de mensagem.">
+          <DCArtboard id="shelf-lid" label="Estante · Para liderar" width={1480} height={560}>
+            <Pad p={48}>
+              <Shelf nome="Manuais" count={4} accent="slate" cards={[
+                { model: 'C', big: '40', bigLabel: 'páginas', etiqueta: 'Manual', titulo: 'Gestão de Ministério', meta: '40 páginas · Editável · PDF', preco: 'R$ 67' },
+                { model: 'A', code: 'M-04', etiqueta: 'Manual', titulo: 'Plantar um Ministério', meta: '32 páginas · Editável · PDF', preco: 'R$ 57' },
+                { model: 'C', big: '12', bigLabel: 'modelos', etiqueta: 'Checklist', titulo: 'Reuniões que Andam', meta: '12 modelos · Editável · Docs', preco: 'R$ 37' },
+                { model: 'B', code: 'M-09', etiqueta: 'Montar evento', titulo: 'Kit Retiro', meta: 'Cronograma + equipe · Editável', preco: 'R$ 77' },
+              ]} />
+            </Pad>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ── MOBILE · 2 COLUNAS ── */}
+        <DCSection id="mobile" title="No celular · 2 colunas"
+          subtitle="Abaixo do limite a estante empilha em 2 colunas (não some pro lado). É de onde vem a maior parte do tráfego.">
+          <DCArtboard id="mob" label="Mobile · 390px" width={430} height={760}>
+            <div style={{ width: '100%', height: '100%', background: cexTok.ink, padding: 20, boxSizing: 'border-box' }}>
+              <div style={{ marginBottom: 16 }}><ShelfHead nome="Adolescentes" count={4} /></div>
+              <div style={{ width: 656, transform: 'scale(0.594)', transformOrigin: 'top left',
+                display: 'grid', gridTemplateColumns: '320px 320px', gap: 16 }}>
+                <CardCEX model="A" code="S-12" etiqueta="Adolescentes" titulo="Firmes" meta="6 mensagens · Editável" preco="R$ 47" />
+                <CardCEX model="B" code="S-19" etiqueta="Adolescentes" titulo="Sem Máscara" meta="5 encontros · Editável" preco="R$ 47" />
+                <CardCEX model="C" big="08" bigLabel="encontros" etiqueta="Adolescentes" titulo="Deserto" meta="8 encontros · Editável" preco="R$ 57" />
+                <CardCEX model="A" code="S-23" etiqueta="Adolescentes" titulo="Contracultura" meta="4 mensagens · Editável" preco="R$ 39" />
+              </div>
+            </div>
+          </DCArtboard>
+        </DCSection>
+
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

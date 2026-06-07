@@ -11,15 +11,22 @@ const SHELF_CAROUSEL_THRESHOLD = 6;
 type Familia = "ministrar" | "liderar";
 type FiltroL1 = "tudo" | Familia | "eventos";
 type Colecao = "retiro" | "conferencia";
+type Modelo = "A" | "B" | "C" | "D";
+type AccentKey = "olive" | "clay" | "ochre" | "pine" | "slate";
+
+interface Accent { base: string; deep: string; name: string }
 
 interface Material {
   id: string;
   familia: Familia;
   estante: string;
+  model: Modelo;
   etiqueta: string;
   titulo: string;
+  code?: string;
+  big?: string;
+  bigLabel?: string;
   promessa: string;
-  capa: string;
   meta: { mensagens?: number; paginas: number; formatos: string[] };
   preco: string;
   hotmartUrl: string;
@@ -30,162 +37,151 @@ interface Material {
   faq: { q: string; a: string }[];
 }
 
-// ─── ESTANTES ───────────────────────────────────────────────────────────────
-const ESTANTES_MINISTRAR = [
-  { key: "juniores",    label: "Juniores" },
-  { key: "adolescentes", label: "Adolescentes" },
-  { key: "jovens",      label: "Jovens" },
-  { key: "igreja-toda", label: "Igreja toda" },
-];
-const ESTANTES_LIDERAR = [
-  { key: "manuais",            label: "Manuais" },
-  { key: "criar-ministerio",   label: "Criar ministério" },
-  { key: "modelos-checklists", label: "Modelos & Checklists" },
-  { key: "montar-evento",      label: "Montar evento" },
-];
-
-// ─── GRADIENTES POR ESTANTE ──────────────────────────────────────────────────
-const G: Record<string, string> = {
-  juniores:           "linear-gradient(135deg,#7A9E3F 0%,#4F6B26 100%)",
-  adolescentes:       "linear-gradient(135deg,#181B16 0%,#4F6B26 100%)",
-  jovens:             "linear-gradient(135deg,#1F221C 0%,#2E3327 100%)",
-  "igreja-toda":      "linear-gradient(135deg,#4F6B26 0%,#0E110D 100%)",
-  manuais:            "linear-gradient(135deg,#25291F 0%,#181B16 100%)",
-  "criar-ministerio": "linear-gradient(135deg,#1F221C 0%,#3A4E20 100%)",
-  "modelos-checklists":"linear-gradient(135deg,#181B16 0%,#25291F 100%)",
-  "montar-evento":    "linear-gradient(135deg,#4F6B26 0%,#181B16 100%)",
+// ─── PALETA DE ACENTOS ───────────────────────────────────────────────────────
+const ACCENTS: Record<AccentKey, Accent> = {
+  olive: { base: "#7A9E3F", deep: "#4F6B26", name: "Oliva" },
+  clay:  { base: "#B07355", deep: "#7C4B33", name: "Argila" },
+  ochre: { base: "#C0934E", deep: "#8A6630", name: "Ocre"  },
+  pine:  { base: "#4F7264", deep: "#335147", name: "Pinho" },
+  slate: { base: "#5C7488", deep: "#3C4E5C", name: "Ardósia" },
 };
 
-// ─── DADOS ──────────────────────────────────────────────────────────────────
+// ─── ESTANTES ────────────────────────────────────────────────────────────────
+interface Estante { key: string; label: string; familia: Familia; accent: AccentKey }
+
+const ESTANTES: Estante[] = [
+  { key: "juniores",            label: "Juniores",            familia: "ministrar", accent: "ochre" },
+  { key: "adolescentes",        label: "Adolescentes",        familia: "ministrar", accent: "clay"  },
+  { key: "jovens",              label: "Jovens",              familia: "ministrar", accent: "olive" },
+  { key: "igreja-toda",         label: "Igreja toda",         familia: "ministrar", accent: "pine"  },
+  { key: "manuais",             label: "Manuais",             familia: "liderar",   accent: "slate" },
+  { key: "criar-ministerio",    label: "Criar ministério",    familia: "liderar",   accent: "slate" },
+  { key: "modelos-checklists",  label: "Modelos & Checklists",familia: "liderar",   accent: "slate" },
+  { key: "montar-evento",       label: "Montar evento",       familia: "liderar",   accent: "slate" },
+];
+const ESTANTES_MINISTRAR = ESTANTES.filter(e => e.familia === "ministrar");
+const ESTANTES_LIDERAR   = ESTANTES.filter(e => e.familia === "liderar");
+const ESTANTE_MAP = Object.fromEntries(ESTANTES.map(e => [e.key, e]));
+
+// ─── DADOS ───────────────────────────────────────────────────────────────────
 const MATERIAIS: Material[] = [
-  // ── ADOLESCENTES (7 itens → carrossel) ──────────────────────────────────
+  // ── ADOLESCENTES (7 itens → carrossel) ─────────────────────────────────
   {
-    id: "firmes", familia: "ministrar", estante: "adolescentes",
-    etiqueta: "Adolescentes", titulo: "Firmes",
+    id: "firmes", familia: "ministrar", estante: "adolescentes", model: "B",
+    etiqueta: "Adolescentes", titulo: "Firmes", code: "S-12",
     promessa: "Seis mensagens que ancora adolescentes no fundamento da fé.",
-    capa: G["adolescentes"],
     meta: { mensagens: 6, paginas: 48, formatos: ["PDF", "Editável", "Slides"] },
     preco: "R$ 47", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
     praQuem: "Para o líder que trabalha com adolescentes que vivem cercados de dúvidas e pressão cultural — e precisam saber em quem crer, não só o que crer.",
     conteudo: ["Mensagem 1 — Quem é Jesus de verdade?", "Mensagem 2 — A Bíblia como âncora", "Mensagem 3 — Quando a fé parece fraca", "Mensagem 4 — A comunidade que sustenta", "Mensagem 5 — Fé na adversidade", "Mensagem 6 — Firmes e inabaláveis"],
-    comoUsar: "Cada mensagem vem em Word editável com roteiro expandido, perguntas para small groups e sugestão de atividade prática. Adapte a linguagem do seu pregador em minutos.",
+    comoUsar: "Cada mensagem vem em Word editável com roteiro expandido, perguntas para small groups e sugestão de atividade prática.",
     faq: [{ q: "Dá pra editar o conteúdo?", a: "Sim. Arquivo Word aberto, sem senha, pronto para adaptar." }, { q: "Funciona para grupos pequenos?", a: "Séries funcionam de 5 a 500 pessoas. O formato é flexível." }],
   },
   {
-    id: "raizes", familia: "ministrar", estante: "adolescentes",
-    etiqueta: "Adolescentes", titulo: "Raízes",
+    id: "raizes", familia: "ministrar", estante: "adolescentes", model: "A",
+    etiqueta: "Adolescentes", titulo: "Raízes", code: "S-19",
     promessa: "Cinco mensagens sobre identidade cristã para quem ainda está descobrindo quem é.",
-    capa: "linear-gradient(135deg,#2E3327 0%,#4F6B26 100%)",
     meta: { mensagens: 5, paginas: 40, formatos: ["PDF", "Editável"] },
     preco: "R$ 47", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para líderes que percebem que seus adolescentes constroem identidade a partir de comparação, redes sociais e aprovação dos outros — e precisam de uma base mais profunda.",
+    praQuem: "Para líderes que percebem adolescentes construindo identidade a partir de comparação e redes sociais — e precisando de uma base mais profunda.",
     conteudo: ["Mensagem 1 — Quem eu sou sem o que dizem de mim?", "Mensagem 2 — Criado à imagem de Deus", "Mensagem 3 — A mentira da performance", "Mensagem 4 — Pertencer sem precisar provar", "Mensagem 5 — Plantado, frutificando"],
     comoUsar: "Material em Word com roteiro, aplicação prática e perguntas de grupo. Adapte o contexto cultural em menos de 30 minutos.",
-    faq: [{ q: "Tem slides prontos?", a: "Não neste pacote. O arquivo Word tem indicações visuais para criar seus próprios slides." }, { q: "Posso usar em retiro?", a: "Sim. A série funciona bem em formato intensivo de retiro." }],
+    faq: [{ q: "Tem slides prontos?", a: "Não neste pacote — o Word tem indicações visuais para criar os seus." }, { q: "Pode usar em retiro?", a: "Sim. Funciona muito bem em formato intensivo." }],
   },
   {
-    id: "entre-dois-mundos", familia: "ministrar", estante: "adolescentes",
-    etiqueta: "Adolescentes", titulo: "Entre Dois Mundos",
+    id: "entre-dois-mundos", familia: "ministrar", estante: "adolescentes", model: "C",
+    etiqueta: "Adolescentes", titulo: "Entre Dois Mundos", big: "07", bigLabel: "mensagens",
     promessa: "Sete mensagens sobre viver a fé no cotidiano de quem não se encaixa em lugar nenhum.",
-    capa: "linear-gradient(135deg,#0E110D 0%,#2E3327 100%)",
     meta: { mensagens: 7, paginas: 56, formatos: ["PDF", "Editável", "Slides"] },
     preco: "R$ 67", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para líderes que trabalham com adolescentes que sentem que não pertencem nem ao mundo cristão nem ao secular — e vivem essa tensão com ansiedade.",
+    praQuem: "Para líderes com adolescentes que sentem a tensão entre o mundo cristão e o secular — e vivem essa tensão com ansiedade.",
     conteudo: ["Mensagem 1 — Estrangeiros aqui", "Mensagem 2 — Fé que não envergonha", "Mensagem 3 — Amigos que não crêem", "Mensagem 4 — Escola e fé", "Mensagem 5 — Redes sociais e o mundo que construímos", "Mensagem 6 — Sendo luz sem apagar ninguém", "Mensagem 7 — A cidadania que não passa"],
-    comoUsar: "Roteiro expandido com pontes culturais específicas para cada contexto — escola, redes sociais, família. Material mais longo para séries de médio prazo.",
-    faq: [{ q: "É muito teológico para adolescentes?", a: "Não. A linguagem é acessível e os exemplos são cotidianos. Testado em grupos de 14 a 17 anos." }, { q: "Posso dividir em módulos menores?", a: "Sim. Cada mensagem é independente e pode ser pregada fora de ordem." }],
+    comoUsar: "Roteiro expandido com pontes culturais específicas para cada contexto — escola, redes sociais, família.",
+    faq: [{ q: "É muito teológico?", a: "Não. Linguagem acessível, testada em grupos de 14 a 17 anos." }, { q: "Posso dividir em módulos menores?", a: "Sim. Cada mensagem é independente." }],
   },
   {
-    id: "primeira-vez", familia: "ministrar", estante: "adolescentes",
-    etiqueta: "Adolescentes", titulo: "Primeira Vez",
+    id: "primeira-vez", familia: "ministrar", estante: "adolescentes", model: "A",
+    etiqueta: "Adolescentes", titulo: "Primeira Vez", code: "S-23",
     promessa: "Quatro mensagens de abertura de ano que colocam adolescentes na direção certa desde o início.",
-    capa: "linear-gradient(135deg,#3A4E20 0%,#1F221C 100%)",
     meta: { mensagens: 4, paginas: 32, formatos: ["PDF", "Editável"] },
     preco: "R$ 37", hotmartUrl: "https://pay.hotmart.com/", colecoes: ["retiro"],
-    praQuem: "Para líderes que querem começar o ano ministerial com intenção — estabelecendo expectativas, criando cultura de grupo e apontando a direção para os próximos meses.",
+    praQuem: "Para líderes que querem começar o ano ministerial com intenção — estabelecendo expectativas e apontando a direção.",
     conteudo: ["Mensagem 1 — Por que estamos aqui?", "Mensagem 2 — O tipo de pessoa que queremos ser", "Mensagem 3 — O que Deus quer fazer neste ano", "Mensagem 4 — Começa agora"],
-    comoUsar: "Ideal para o primeiro mês de atividades. Funciona igualmente como abertura de retiro de início de ano.",
-    faq: [{ q: "Funciona para abertura de retiro?", a: "Sim. A série foi desenhada para funcionar tanto em cultos semanais quanto em formato de retiro de 2 dias." }],
+    comoUsar: "Ideal para o primeiro mês. Funciona igualmente como abertura de retiro de início de ano.",
+    faq: [{ q: "Funciona para abertura de retiro?", a: "Sim. Desenhada para funcionar tanto em cultos semanais quanto em formato de retiro de 2 dias." }],
   },
   {
-    id: "nao-desista", familia: "ministrar", estante: "adolescentes",
-    etiqueta: "Adolescentes", titulo: "Não Desista",
-    promessa: "Cinco mensagens sobre perseverança para adolescentes que estão pensando em desistir — da fé, dos sonhos, do grupo.",
-    capa: "linear-gradient(135deg,#181B16 0%,#3A4E20 100%)",
+    id: "nao-desista", familia: "ministrar", estante: "adolescentes", model: "C",
+    etiqueta: "Adolescentes", titulo: "Não Desista", big: "05", bigLabel: "mensagens",
+    promessa: "Cinco mensagens sobre perseverança para adolescentes que estão pensando em desistir.",
     meta: { mensagens: 5, paginas: 44, formatos: ["PDF", "Editável"] },
     preco: "R$ 47", hotmartUrl: "https://pay.hotmart.com/", colecoes: ["retiro"],
-    praQuem: "Para líderes que percebem cansaço, afastamento ou apatia espiritual nos adolescentes — e precisam de uma série que fale essa realidade sem fingir que está tudo bem.",
+    praQuem: "Para líderes que percebem cansaço, afastamento ou apatia espiritual nos adolescentes.",
     conteudo: ["Mensagem 1 — É normal se sentir assim?", "Mensagem 2 — Elias também quis desistir", "Mensagem 3 — A coragem de ficar", "Mensagem 4 — Onde buscar força", "Mensagem 5 — A promessa que sustenta"],
-    comoUsar: "Série densa para ser usada com cuidado. Recomendamos small groups de acompanhamento paralelos às mensagens.",
-    faq: [{ q: "É muito pesado para adolescentes?", a: "A linguagem é cuidadosa — honesta sem ser desesperançosa. Parte da realidade, termina na promessa." }],
+    comoUsar: "Série densa. Recomendamos small groups de acompanhamento paralelos às mensagens.",
+    faq: [{ q: "É muito pesado?", a: "Honesta sem ser desesperançosa. Parte da realidade, termina na promessa." }],
   },
   {
-    id: "o-nome-certo", familia: "ministrar", estante: "adolescentes",
-    etiqueta: "Adolescentes", titulo: "O Nome Certo",
+    id: "o-nome-certo", familia: "ministrar", estante: "adolescentes", model: "A",
+    etiqueta: "Adolescentes", titulo: "O Nome Certo", code: "S-31",
     promessa: "Seis mensagens sobre chamado e identidade para quem ainda está tentando descobrir quem é.",
-    capa: "linear-gradient(135deg,#25291F 0%,#4F6B26 100%)",
     meta: { mensagens: 6, paginas: 48, formatos: ["PDF", "Editável", "Slides"] },
     preco: "R$ 47", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
     praQuem: "Para líderes que querem abordar chamado sem romantizar — mostrando que vocação começa no ordinário, não no excepcional.",
     conteudo: ["Mensagem 1 — Deus sabe o seu nome", "Mensagem 2 — Antes da competência, o chamado", "Mensagem 3 — O que você faz com o que tem", "Mensagem 4 — Chamado no cotidiano", "Mensagem 5 — Pequeno e fiel", "Mensagem 6 — O próximo passo"],
-    comoUsar: "Série de 6 semanas com progressão clara. Cada mensagem inclui \"Próximo passo\" concreto para a semana seguinte.",
-    faq: [{ q: "Funciona para jovens também?", a: "Sim. Apesar de desenhada para adolescentes, a linguagem funciona para jovens de 18 a 25 anos também." }],
+    comoUsar: "Série de 6 semanas com progressão clara. Cada mensagem inclui um 'Próximo passo' concreto para a semana.",
+    faq: [{ q: "Funciona para jovens também?", a: "Sim. A linguagem alcança de 14 a 25 anos sem adaptação." }],
   },
   {
-    id: "geracao-levante", familia: "ministrar", estante: "adolescentes",
+    id: "geracao-levante", familia: "ministrar", estante: "adolescentes", model: "D",
     etiqueta: "Adolescentes", titulo: "Geração Levante",
     promessa: "Oito mensagens sobre missão e propósito — para adolescentes que querem que sua vida importe.",
-    capa: "linear-gradient(135deg,#4F6B26 0%,#1F221C 100%)",
     meta: { mensagens: 8, paginas: 64, formatos: ["PDF", "Editável", "Slides"] },
     preco: "R$ 67", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para líderes que trabalham com adolescentes com potencial de liderança — e querem direcionar essa energia para algo que dure.",
+    praQuem: "Para líderes com adolescentes com potencial de liderança — e que querem direcionar essa energia para algo que dure.",
     conteudo: ["Mensagem 1 — Uma geração com propósito", "Mensagem 2 — O que o mundo precisa", "Mensagem 3 — O papel da sua geração", "Mensagem 4 — Missão começa aqui", "Mensagem 5 — Servir como forma de vida", "Mensagem 6 — Liderança que cuida", "Mensagem 7 — O custo de ser diferente", "Mensagem 8 — Levanta"],
-    comoUsar: "Série longa para uso em semestres ou como âncora de um programa de formação de líderes juniores.",
-    faq: [{ q: "Posso usar como formação de liderança?", a: "Sim. Vem com perguntas de mentoria que funcionam como base para 1 a 1 com líderes em formação." }],
+    comoUsar: "Série longa para uso semestral ou como âncora de um programa de formação de líderes juniores.",
+    faq: [{ q: "Posso usar como formação de liderança?", a: "Sim. Vem com perguntas de mentoria que funcionam como base para 1 a 1." }],
   },
 
-  // ── JUNIORES (4 itens → grid) ────────────────────────────────────────────
+  // ── JUNIORES (4 itens → grid) ──────────────────────────────────────────
   {
-    id: "pequenos-grandes", familia: "ministrar", estante: "juniores",
-    etiqueta: "Juniores", titulo: "Pequenos Grandes",
-    promessa: "Cinco lições sobre crianças da Bíblia que foram usadas por Deus — mesmo sendo pequenas.",
-    capa: G["juniores"],
+    id: "pequenos-grandes", familia: "ministrar", estante: "juniores", model: "A",
+    etiqueta: "Juniores", titulo: "Pequenos Grandes", code: "S-03",
+    promessa: "Cinco lições sobre crianças da Bíblia usadas por Deus — mesmo sendo pequenas.",
     meta: { mensagens: 5, paginas: 40, formatos: ["PDF", "Editável"] },
     preco: "R$ 37", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para líderes de ministério infantil que querem inspirar crianças de 7 a 12 anos a perceber que Deus usa quem está disposto — independente da idade.",
+    praQuem: "Para líderes de ministério infantil que querem inspirar crianças de 7 a 12 anos a perceber que Deus usa quem está disposto.",
     conteudo: ["Lição 1 — Davi: pequeno, mas escolhido", "Lição 2 — A menina serva de Naamã", "Lição 3 — O menino com os cinco pães", "Lição 4 — Timóteo: jovem, mas fiel", "Lição 5 — Você também conta"],
-    comoUsar: "Roteiro com linguagem adaptada para crianças, dinâmica sugerida por lição e verso para memorizar. Formato de 40 a 50 minutos por encontro.",
+    comoUsar: "Roteiro com linguagem adaptada para crianças, dinâmica sugerida por lição e verso para memorizar. 40 a 50 minutos por encontro.",
     faq: [{ q: "Qual faixa etária?", a: "7 a 12 anos. A linguagem escala bem para esse intervalo." }, { q: "Tem atividades?", a: "Sim. Cada lição inclui uma dinâmica prática e o verso da semana." }],
   },
   {
-    id: "deus-cuida", familia: "ministrar", estante: "juniores",
-    etiqueta: "Juniores", titulo: "Deus Cuida",
+    id: "deus-cuida", familia: "ministrar", estante: "juniores", model: "C",
+    etiqueta: "Juniores", titulo: "Deus Cuida", big: "04", bigLabel: "lições",
     promessa: "Quatro encontros sobre confiança e ansiedade para crianças que também sentem medo.",
-    capa: "linear-gradient(135deg,#94B85C 0%,#4F6B26 100%)",
     meta: { mensagens: 4, paginas: 32, formatos: ["PDF", "Editável"] },
     preco: "R$ 37", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
     praQuem: "Para líderes que percebem ansiedade e medo em crianças — e querem falar essa realidade de forma gentil, com base bíblica sólida.",
     conteudo: ["Lição 1 — É normal ter medo?", "Lição 2 — Deus vê você", "Lição 3 — Confiar mesmo sem entender", "Lição 4 — Paz que guarda"],
-    comoUsar: "Série leve e afetiva. Inclui dinâmica de oração adaptada para crianças e arte para imprimir.",
-    faq: [{ q: "Funciona para crianças que passam por situações difíceis?", a: "Sim. A linguagem é gentil e não trivializa a dor — aponta para o cuidado de Deus sem minimizar o sentimento." }],
+    comoUsar: "Série leve e afetiva. Inclui dinâmica de oração adaptada para crianças.",
+    faq: [{ q: "Funciona para crianças em situações difíceis?", a: "Sim. A linguagem é gentil e não trivializa a dor." }],
   },
   {
-    id: "missao-possivel", familia: "ministrar", estante: "juniores",
-    etiqueta: "Juniores", titulo: "Missão Possível",
+    id: "missao-possivel", familia: "ministrar", estante: "juniores", model: "B",
+    etiqueta: "Juniores", titulo: "Missão Possível", code: "S-07",
     promessa: "Cinco encontros sobre crianças missionárias — porque a missão começa antes da viagem.",
-    capa: "linear-gradient(135deg,#7A9E3F 0%,#2E3327 100%)",
     meta: { mensagens: 5, paginas: 40, formatos: ["PDF", "Editável"] },
     preco: "R$ 47", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
     praQuem: "Para líderes que querem formar crianças com visão missionária — não só para o futuro, mas para a vida que têm agora.",
     conteudo: ["Lição 1 — O que é missão?", "Lição 2 — Missionário começa em casa", "Lição 3 — Na escola também dá", "Lição 4 — Orar é parte da missão", "Lição 5 — Pronto, vá"],
-    comoUsar: "Série com linguagem de aventura e missão. Inclui \"Missão da semana\" — uma tarefa prática para a criança completar antes do próximo encontro.",
-    faq: [{ q: "Tem material de apoio para os pais?", a: "Sim. Cada lição inclui um cartão resumo para os pais saberem o que trabalhar em casa." }],
+    comoUsar: "Série com linguagem de aventura. Inclui 'Missão da semana' — tarefa prática entre os encontros.",
+    faq: [{ q: "Tem material de apoio para os pais?", a: "Sim. Cada lição inclui um cartão resumo para os pais." }],
   },
   {
-    id: "brilha", familia: "ministrar", estante: "juniores",
-    etiqueta: "Juniores", titulo: "Brilha!",
+    id: "brilha", familia: "ministrar", estante: "juniores", model: "A",
+    etiqueta: "Juniores", titulo: "Brilha!", code: "S-11",
     promessa: "Quatro lições sobre ser luz na escola — para crianças que não sabem como viver a fé no dia a dia.",
-    capa: "linear-gradient(135deg,#94B85C 0%,#7A9E3F 100%)",
     meta: { mensagens: 4, paginas: 32, formatos: ["PDF", "Editável"] },
     preco: "R$ 37", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
     praQuem: "Para líderes que querem equipar crianças para viver a fé fora da igreja — na escola, em casa, na vizinhança.",
@@ -194,298 +190,333 @@ const MATERIAIS: Material[] = [
     faq: [{ q: "Funciona como série isolada?", a: "Sim. Também é uma boa introdução para a série Missão Possível." }],
   },
 
-  // ── JOVENS (5 itens → grid) ──────────────────────────────────────────────
+  // ── JOVENS (5 itens → grid) ────────────────────────────────────────────
   {
-    id: "alta-performance", familia: "ministrar", estante: "jovens",
-    etiqueta: "Jovens", titulo: "Alta Performance",
+    id: "alta-performance", familia: "ministrar", estante: "jovens", model: "C",
+    etiqueta: "Jovens", titulo: "Alta Performance", big: "06", bigLabel: "mensagens",
     promessa: "Seis mensagens sobre excelência com propósito — para jovens que querem crescer sem perder a alma.",
-    capa: G["jovens"],
     meta: { mensagens: 6, paginas: 52, formatos: ["PDF", "Editável", "Slides"] },
     preco: "R$ 67", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para líderes que trabalham com jovens universitários e profissionais que vivem sob pressão de performance — e precisam recalibrar o que é sucesso.",
+    praQuem: "Para líderes com jovens universitários e profissionais sob pressão de performance — que precisam recalibrar o que é sucesso.",
     conteudo: ["Mensagem 1 — Excelência não é perfeccionismo", "Mensagem 2 — Para quem você trabalha?", "Mensagem 3 — Descanso não é preguiça", "Mensagem 4 — O que você está construindo?", "Mensagem 5 — Ambição a serviço do reino", "Mensagem 6 — A vida plena"],
     comoUsar: "Série para jovens adultos. Inclui perguntas para grupos de discussão e leituras complementares por mensagem.",
-    faq: [{ q: "Funciona para universitários?", a: "Sim. O conteúdo foi desenhado especificamente para quem está em fase de escolhas de carreira e identidade." }],
+    faq: [{ q: "Funciona para universitários?", a: "Sim. Desenhado especificamente para a fase de escolhas de carreira e identidade." }],
   },
   {
-    id: "relacionamentos", familia: "ministrar", estante: "jovens",
-    etiqueta: "Jovens", titulo: "Relacionamentos",
+    id: "relacionamentos", familia: "ministrar", estante: "jovens", model: "B",
+    etiqueta: "Jovens", titulo: "Relacionamentos", code: "S-21",
     promessa: "Sete mensagens sobre amor, namoro e pureza — com honestidade, sem religiosidade vazia.",
-    capa: "linear-gradient(135deg,#2E3327 0%,#1F221C 100%)",
     meta: { mensagens: 7, paginas: 60, formatos: ["PDF", "Editável"] },
     preco: "R$ 67", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para líderes que querem abordar relacionamentos de forma bíblica e culturalmente relevante — sem romantismo vazio nem moralismo desnecessário.",
+    praQuem: "Para líderes que querem abordar relacionamentos de forma bíblica e culturalmente relevante — sem romantismo vazio nem moralismo.",
     conteudo: ["Mensagem 1 — Deus inventou o amor", "Mensagem 2 — O que você está buscando?", "Mensagem 3 — Pureza como projeto, não regra", "Mensagem 4 — Amizade é base", "Mensagem 5 — Quando o coração engana", "Mensagem 6 — Conflito e perdão", "Mensagem 7 — Relacionamentos que glorificam"],
-    comoUsar: "Série sensível que exige ambiente de confiança. Recomendamos preparar small groups por gênero para aprofundar.",
-    faq: [{ q: "Aborda sexualidade?", a: "De forma madura e bíblica. O foco é formação de caráter e visão de mundo, não só regras de comportamento." }],
+    comoUsar: "Série sensível que exige ambiente de confiança. Recomendamos small groups por gênero para aprofundar.",
+    faq: [{ q: "Aborda sexualidade?", a: "De forma madura e bíblica. Foco em formação de caráter e visão de mundo." }],
   },
   {
-    id: "vocacao", familia: "ministrar", estante: "jovens",
-    etiqueta: "Jovens", titulo: "Vocação",
+    id: "vocacao", familia: "ministrar", estante: "jovens", model: "A",
+    etiqueta: "Jovens", titulo: "Vocação", code: "S-26",
     promessa: "Seis mensagens sobre chamado e carreira — para jovens que querem integrar fé e trabalho.",
-    capa: "linear-gradient(135deg,#1F221C 0%,#4F6B26 100%)",
     meta: { mensagens: 6, paginas: 52, formatos: ["PDF", "Editável", "Slides"] },
     preco: "R$ 67", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para líderes que acompanham jovens em transição — terminando faculdade, entrando no mercado de trabalho ou questionando se o que fazem tem sentido.",
+    praQuem: "Para líderes que acompanham jovens em transição — terminando faculdade, entrando no mercado ou questionando o sentido do que fazem.",
     conteudo: ["Mensagem 1 — Todo trabalho é ministério?", "Mensagem 2 — Chamado não é cargo", "Mensagem 3 — Como escolher?", "Mensagem 4 — Fiel no processo", "Mensagem 5 — Trabalho e descanso", "Mensagem 6 — Onde você planta"],
-    comoUsar: "Série com leituras complementares e perguntas de mentoria para 1 a 1. Ideal para grupos de jovens adultos em transição de vida.",
-    faq: [{ q: "Posso adaptar para faculdade?", a: "Sim. Vem com versões adaptadas das perguntas para contexto universitário e pós-graduação." }],
+    comoUsar: "Série com leituras complementares e perguntas de mentoria. Ideal para grupos de jovens adultos em transição de vida.",
+    faq: [{ q: "Posso adaptar para faculdade?", a: "Sim. Vem com versões adaptadas para contexto universitário." }],
   },
   {
-    id: "resilientes", familia: "ministrar", estante: "jovens",
-    etiqueta: "Jovens", titulo: "Resilientes",
+    id: "resilientes", familia: "ministrar", estante: "jovens", model: "C",
+    etiqueta: "Jovens", titulo: "Resilientes", big: "05", bigLabel: "mensagens",
     promessa: "Cinco mensagens sobre fé em tempo de crise — quando o mundo desmorona e Deus parece silencioso.",
-    capa: "linear-gradient(135deg,#25291F 0%,#2E3327 100%)",
     meta: { mensagens: 5, paginas: 44, formatos: ["PDF", "Editável"] },
     preco: "R$ 47", hotmartUrl: "https://pay.hotmart.com/", colecoes: ["retiro"],
-    praQuem: "Para líderes que percebem jovens desiludidos, cansados ou distantes após períodos difíceis — e precisam de uma série que fale a realidade sem falsas promessas.",
+    praQuem: "Para líderes com jovens desiludidos, cansados ou distantes após períodos difíceis — que precisam de uma série que fale a realidade sem falsas promessas.",
     conteudo: ["Mensagem 1 — Está tudo bem não estar bem", "Mensagem 2 — Fé que sobrevive à dúvida", "Mensagem 3 — Lamentação é oração", "Mensagem 4 — A presença no vale", "Mensagem 5 — Depois da tempestade"],
-    comoUsar: "Série densa. Funciona muito bem em formato de retiro com momentos de oração e partilha após cada mensagem.",
-    faq: [{ q: "É muito pesado para jovens?", a: "A linguagem é honesta, mas não desesperançosa. Começa na realidade e termina na promessa." }],
+    comoUsar: "Funciona muito bem em retiro com momentos de oração e partilha após cada mensagem.",
+    faq: [{ q: "É muito pesado para jovens?", a: "Honesta, mas não desesperançosa. Começa na realidade e termina na promessa." }],
   },
   {
-    id: "primeiros-passos", familia: "ministrar", estante: "jovens",
-    etiqueta: "Jovens", titulo: "Primeiros Passos",
+    id: "primeiros-passos", familia: "ministrar", estante: "jovens", model: "A",
+    etiqueta: "Jovens", titulo: "Primeiros Passos", code: "S-34",
     promessa: "Quatro mensagens de discipulado para novos convertidos que precisam entender o que acabou de acontecer.",
-    capa: "linear-gradient(135deg,#3A4E20 0%,#25291F 100%)",
     meta: { mensagens: 4, paginas: 36, formatos: ["PDF", "Editável"] },
     preco: "R$ 47", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para líderes que acolhem novos convertidos e precisam de material simples, claro e não intimidador para os primeiros meses de fé.",
+    praQuem: "Para líderes que acolhem novos convertidos e precisam de material simples e claro para os primeiros meses de fé.",
     conteudo: ["Mensagem 1 — O que aconteceu comigo?", "Mensagem 2 — Como ler a Bíblia", "Mensagem 3 — Por que me batizar?", "Mensagem 4 — Uma vida diferente"],
-    comoUsar: "Funciona como série de culto ou como material de acompanhamento 1 a 1. Linguagem simples, sem jargão religioso.",
-    faq: [{ q: "Funciona para quem não tem base bíblica?", a: "Sim. Foi desenhado exatamente para isso. Zero pressuposto de conhecimento prévio." }],
+    comoUsar: "Funciona como série de culto ou material de acompanhamento 1 a 1. Zero pressuposto de conhecimento bíblico.",
+    faq: [{ q: "Funciona para quem não tem base bíblica?", a: "Sim. Foi desenhado exatamente para isso." }],
   },
 
-  // ── IGREJA TODA (4 itens → grid) ─────────────────────────────────────────
+  // ── IGREJA TODA (4 itens → grid) ──────────────────────────────────────
   {
-    id: "familia-do-jeito-certo", familia: "ministrar", estante: "igreja-toda",
-    etiqueta: "Igreja toda", titulo: "Família do Jeito Certo",
+    id: "familia-do-jeito-certo", familia: "ministrar", estante: "igreja-toda", model: "B",
+    etiqueta: "Igreja toda", titulo: "Família do Jeito Certo", code: "S-40",
     promessa: "Oito mensagens sobre família bíblica — para pregar com a congregação inteira sem simplificar a realidade.",
-    capa: G["igreja-toda"],
     meta: { mensagens: 8, paginas: 72, formatos: ["PDF", "Editável", "Slides"] },
     preco: "R$ 97", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para pastores e pregadores que querem abordar família de forma bíblica e pastoral — honrando diferentes configurações familiares sem perder o fundamento.",
+    praQuem: "Para pastores e pregadores que querem abordar família de forma bíblica e pastoral — honrando diferentes configurações sem perder o fundamento.",
     conteudo: ["Mensagem 1 — Família é ideia de Deus", "Mensagem 2 — O lar como escola", "Mensagem 3 — Matrimônio e aliança", "Mensagem 4 — Filhos e autoridade", "Mensagem 5 — Famílias feridas, Deus que cura", "Mensagem 6 — Família monoparental, coração inteiro", "Mensagem 7 — A família da fé", "Mensagem 8 — O que queremos passar para a próxima geração"],
-    comoUsar: "Série pensada para cultos dominicais. Cada mensagem inclui variação de aplicação para famílias diferentes (casados, solteiros, pais solo).",
-    faq: [{ q: "Aborda divórcio e recasamento?", a: "Sim, na mensagem 5 e de forma pastoral — sem condenação, com cuidado bíblico." }],
+    comoUsar: "Cada mensagem inclui variação de aplicação para diferentes configurações familiares.",
+    faq: [{ q: "Aborda divórcio e recasamento?", a: "Sim, na mensagem 5 — de forma pastoral, sem condenação." }],
   },
   {
-    id: "generosidade", familia: "ministrar", estante: "igreja-toda",
-    etiqueta: "Igreja toda", titulo: "Generosidade",
+    id: "generosidade", familia: "ministrar", estante: "igreja-toda", model: "A",
+    etiqueta: "Igreja toda", titulo: "Generosidade", code: "S-48",
     promessa: "Cinco mensagens sobre oferta e mordomia que transformam a forma como a congregação vê o dinheiro.",
-    capa: "linear-gradient(135deg,#3A4E20 0%,#0E110D 100%)",
     meta: { mensagens: 5, paginas: 44, formatos: ["PDF", "Editável"] },
     preco: "R$ 67", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para pastores que evitam pregar sobre dinheiro — e precisam de uma série que aborde o tema sem manipulação, com base bíblica sólida e aplicação prática.",
+    praQuem: "Para pastores que evitam pregar sobre dinheiro — e precisam de uma série que aborde o tema sem manipulação.",
     conteudo: ["Mensagem 1 — Por que a Bíblia fala tanto de dinheiro?", "Mensagem 2 — Mordomia: tudo é de Deus", "Mensagem 3 — Dízimo como ato de fé", "Mensagem 4 — Oferta além do dízimo", "Mensagem 5 — O coração que dá"],
-    comoUsar: "Série para momentos estratégicos (campanhas, início de ano, planejamento financeiro da igreja). Inclui variação para contexto de oferta de obra.",
-    faq: [{ q: "Pode gerar rejeição na congregação?", a: "Toda série sobre dinheiro tem esse risco. Este material foi construído para disarmar a resistência antes de tratar o tema." }],
+    comoUsar: "Série para momentos estratégicos — campanhas, início de ano, planejamento financeiro da igreja.",
+    faq: [{ q: "Pode gerar rejeição?", a: "Este material foi construído para disarmar a resistência antes de tratar o tema." }],
   },
   {
-    id: "ano-novo-vida-nova", familia: "ministrar", estante: "igreja-toda",
-    etiqueta: "Igreja toda", titulo: "Ano Novo Vida Nova",
+    id: "ano-novo-vida-nova", familia: "ministrar", estante: "igreja-toda", model: "C",
+    etiqueta: "Igreja toda", titulo: "Ano Novo Vida Nova", big: "04", bigLabel: "mensagens",
     promessa: "Quatro mensagens de virada de ano que ancoram esperança sem romantizar o que vem por aí.",
-    capa: "linear-gradient(135deg,#4F6B26 0%,#25291F 100%)",
     meta: { mensagens: 4, paginas: 36, formatos: ["PDF", "Editável"] },
     preco: "R$ 47", hotmartUrl: "https://pay.hotmart.com/", colecoes: ["retiro"],
-    praQuem: "Para pastores e líderes que precisam de conteúdo de transição de ano — que celebre o que Deus fez e projete o que está por vir, com realismo e fé.",
+    praQuem: "Para pastores e líderes que precisam de conteúdo de transição de ano — com realismo e fé.",
     conteudo: ["Mensagem 1 — Antes de olhar pra frente", "Mensagem 2 — Tudo novo e tudo the same?", "Mensagem 3 — A fidelidade que garante o próximo passo", "Mensagem 4 — Que ano você quer ter?"],
-    comoUsar: "Série de dezembro ou janeiro. Funciona para cultos de final de ano, retiro de virada ou primeiras semanas do ano.",
-    faq: [{ q: "Pode ser usada em dezembro ou janeiro?", a: "Sim. A série funciona tanto para encerramento de dezembro quanto para abertura de janeiro." }],
+    comoUsar: "Funciona para cultos de final de ano, retiro de virada ou primeiras semanas de janeiro.",
+    faq: [{ q: "Pode ser usada em dezembro ou janeiro?", a: "Sim. Funciona para encerramento de dezembro ou abertura de janeiro." }],
   },
   {
-    id: "sal-e-luz", familia: "ministrar", estante: "igreja-toda",
-    etiqueta: "Igreja toda", titulo: "Sal e Luz",
-    promessa: "Seis mensagens sobre missão cotidiana — para uma congregação que quer impactar sua cidade sem sair da rotina.",
-    capa: "linear-gradient(135deg,#2E3327 0%,#4F6B26 100%)",
+    id: "sal-e-luz", familia: "ministrar", estante: "igreja-toda", model: "A",
+    etiqueta: "Igreja toda", titulo: "Sal e Luz", code: "S-54",
+    promessa: "Seis mensagens sobre missão cotidiana — para mobilizar a congregação sem sair da rotina.",
     meta: { mensagens: 6, paginas: 52, formatos: ["PDF", "Editável", "Slides"] },
     preco: "R$ 67", hotmartUrl: "https://pay.hotmart.com/", colecoes: ["conferencia"],
-    praQuem: "Para pastores que querem mobilizar a congregação inteira para missão — sem romantismo, com foco no cotidiano de cada membro no bairro, no trabalho, na família.",
+    praQuem: "Para pastores que querem mobilizar a congregação inteira para missão — sem romantismo, com foco no cotidiano.",
     conteudo: ["Mensagem 1 — Missão é para todo crente", "Mensagem 2 — Sal: presença que preserva", "Mensagem 3 — Luz: vida que ilumina", "Mensagem 4 — No mercado de trabalho", "Mensagem 5 — Na vizinhança", "Mensagem 6 — A igreja que vai"],
-    comoUsar: "Série de impacto para todo o corpo. Ideal para campanhas missionárias ou conferências congregacionais.",
-    faq: [{ q: "Funciona como série de conferência?", a: "Sim. Vem com versão em formato de conferência de 2 dias (manhã e tarde)." }],
+    comoUsar: "Ideal para campanhas missionárias ou conferências congregacionais. Vem com versão de conferência de 2 dias.",
+    faq: [{ q: "Funciona como série de conferência?", a: "Sim. Vem com versão em formato de conferência de 2 dias." }],
   },
 
-  // ── MANUAIS (4 itens → grid) ─────────────────────────────────────────────
+  // ── MANUAIS (4 itens → grid) ──────────────────────────────────────────
   {
-    id: "manual-celula", familia: "liderar", estante: "manuais",
-    etiqueta: "Manual", titulo: "Manual do Líder de Célula",
+    id: "manual-celula", familia: "liderar", estante: "manuais", model: "C",
+    etiqueta: "Manual", titulo: "Manual do Líder de Célula", big: "80", bigLabel: "páginas",
     promessa: "Guia completo para quem lidera pequenos grupos — do primeiro encontro ao discipulado contínuo.",
-    capa: G["manuais"],
     meta: { paginas: 80, formatos: ["PDF", "Editável"] },
     preco: "R$ 97", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para coordenadores de células que precisam de um material de formação para seus líderes — que cubra prática, teologia e pastoreio em um único documento.",
-    conteudo: ["Parte 1 — O que é uma célula saudável", "Parte 2 — O papel do líder (não é ser pastor)", "Parte 3 — Como conduzir o primeiro encontro", "Parte 4 — Discipulado na célula", "Parte 5 — Quando a célula emperra", "Parte 6 — Multiplicação", "Apêndice — Modelos de encontro e checklists"],
-    comoUsar: "Manual de referência + guia de formação. Pode ser usado como material de treinamento de líderes (8 encontros de 1h30) ou como consulta individual.",
-    faq: [{ q: "Para qual denominação?", a: "O manual é transdenominacional. Adaptável a qualquer modelo de célula (G12, células puras, comunidades)." }],
+    praQuem: "Para coordenadores de células que precisam de material de formação para seus líderes — que cubra prática, teologia e pastoreio em um único documento.",
+    conteudo: ["Parte 1 — O que é uma célula saudável", "Parte 2 — O papel do líder", "Parte 3 — Como conduzir o primeiro encontro", "Parte 4 — Discipulado na célula", "Parte 5 — Quando a célula emperra", "Parte 6 — Multiplicação", "Apêndice — Modelos de encontro e checklists"],
+    comoUsar: "Manual de referência + guia de formação. Pode ser usado como treinamento de líderes (8 encontros de 1h30) ou como consulta individual.",
+    faq: [{ q: "Para qual denominação?", a: "Transdenominacional. Adaptável a qualquer modelo de célula." }],
   },
   {
-    id: "manual-adolescentes", familia: "liderar", estante: "manuais",
-    etiqueta: "Manual", titulo: "Manual do Liderinho",
+    id: "manual-adolescentes", familia: "liderar", estante: "manuais", model: "A",
+    etiqueta: "Manual", titulo: "Manual do Liderinho", code: "M-04",
     promessa: "Guia prático para líderes de adolescentes — linguagem, relacionamento, formação e pastoreio.",
-    capa: "linear-gradient(135deg,#1F221C 0%,#25291F 100%)",
     meta: { paginas: 72, formatos: ["PDF", "Editável"] },
     preco: "R$ 97", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para coordenadores de ministério jovem e de adolescentes que precisam formar seus líderes — em especial os que nunca lideraram antes.",
+    praQuem: "Para coordenadores que precisam formar seus líderes de adolescentes — em especial os que nunca lideraram antes.",
     conteudo: ["Parte 1 — Quem é o adolescente de hoje", "Parte 2 — O líder como referência", "Parte 3 — Como se relacionar sem perder a autoridade", "Parte 4 — Pastoreio: quando vai além da reunião", "Parte 5 — Crises e situações difíceis", "Parte 6 — Formação contínua do líder"],
-    comoUsar: "Manual de formação de líderes de adolescentes. Ideal para o processo de certificação de voluntários.",
-    faq: [{ q: "Funciona para líderes jovens (18-22 anos)?", a: "Sim. Foi escrito pensando em líderes que têm pouca diferença de idade dos liderados." }],
+    comoUsar: "Manual de formação. Ideal para o processo de certificação de voluntários.",
+    faq: [{ q: "Funciona para líderes jovens (18-22 anos)?", a: "Sim. Escrito para líderes com pouca diferença de idade dos liderados." }],
   },
   {
-    id: "manual-discipulado", familia: "liderar", estante: "manuais",
-    etiqueta: "Manual", titulo: "Manual de Discipulado",
+    id: "manual-discipulado", familia: "liderar", estante: "manuais", model: "C",
+    etiqueta: "Manual", titulo: "Manual de Discipulado", big: "56", bigLabel: "páginas",
     promessa: "Processo completo de discipulado individual — do primeiro contato ao envio para liderar outros.",
-    capa: "linear-gradient(135deg,#25291F 0%,#181B16 100%)",
     meta: { paginas: 56, formatos: ["PDF", "Editável"] },
     preco: "R$ 67", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
     praQuem: "Para líderes que fazem 1 a 1 mas não têm metodologia — e precisam de um processo claro do primeiro encontro ao envio.",
-    conteudo: ["Parte 1 — O que é discipulado (e o que não é)", "Parte 2 — Estrutura do 1 a 1", "Parte 3 — Perguntas certas na hora certa", "Parte 4 — Acompanhamento de crise", "Parte 5 — Quando o discípulo está pronto para discipular", "Apêndice — Templates de perguntas e guia de encontros"],
+    conteudo: ["Parte 1 — O que é discipulado (e o que não é)", "Parte 2 — Estrutura do 1 a 1", "Parte 3 — Perguntas certas na hora certa", "Parte 4 — Acompanhamento de crise", "Parte 5 — Quando o discípulo está pronto", "Apêndice — 12 templates de encontros"],
     comoUsar: "Manual de referência para discipuladores. Inclui 12 templates de encontros mensais já estruturados.",
-    faq: [{ q: "Preciso de experiência prévia para usar?", a: "Não. O manual guia o discipulador desde o começo, incluindo erros comuns para evitar." }],
+    faq: [{ q: "Preciso de experiência prévia?", a: "Não. O manual guia o discipulador desde o começo, incluindo erros comuns para evitar." }],
   },
   {
-    id: "manual-pastoral", familia: "liderar", estante: "manuais",
-    etiqueta: "Manual", titulo: "Manual de Pastoral",
+    id: "manual-pastoral", familia: "liderar", estante: "manuais", model: "B",
+    etiqueta: "Manual", titulo: "Manual de Pastoral", code: "M-09",
     promessa: "Cuidado e aconselhamento básico para líderes que pastoreiam sem ser pastores.",
-    capa: "linear-gradient(135deg,#181B16 0%,#2E3327 100%)",
     meta: { paginas: 88, formatos: ["PDF", "Editável"] },
     preco: "R$ 97", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para líderes e voluntários que se veem diante de situações de aconselhamento — crise, luto, conflito, questões de saúde mental — sem saber como agir.",
-    conteudo: ["Parte 1 — O papel do líder no cuidado pastoral", "Parte 2 — Escuta ativa e limites", "Parte 3 — Crise e intervenção básica", "Parte 4 — Luto e perdas", "Parte 5 — Saúde mental e fé", "Parte 6 — Quando encaminhar para um profissional", "Apêndice — Recursos e rede de apoio"],
-    comoUsar: "Manual de referência. Não substitui acompanhamento profissional — orienta o líder sobre quando e como agir.",
+    praQuem: "Para líderes que se veem diante de situações de aconselhamento — crise, luto, conflito — sem saber como agir.",
+    conteudo: ["Parte 1 — O papel do líder no cuidado pastoral", "Parte 2 — Escuta ativa e limites", "Parte 3 — Crise e intervenção básica", "Parte 4 — Luto e perdas", "Parte 5 — Saúde mental e fé", "Parte 6 — Quando encaminhar para um profissional", "Apêndice — Rede de apoio"],
+    comoUsar: "Manual de referência. Não substitui formação profissional — orienta o líder sobre quando e como agir.",
     faq: [{ q: "Substitui formação em aconselhamento?", a: "Não. É um guia prático para situações cotidianas — ensina a ouvir bem e saber quando encaminhar." }],
   },
 
-  // ── CRIAR MINISTÉRIO (3 itens → grid) ────────────────────────────────────
+  // ── CRIAR MINISTÉRIO (3 itens → grid) ───────────────────────────────
   {
-    id: "montar-min-adolescentes", familia: "liderar", estante: "criar-ministerio",
-    etiqueta: "Criar ministério", titulo: "Montando um Ministério de Adolescentes",
+    id: "montar-min-adolescentes", familia: "liderar", estante: "criar-ministerio", model: "A",
+    etiqueta: "Criar ministério", titulo: "Montando um Ministério de Adolescentes", code: "M-12",
     promessa: "Do zero ao sistema: como estruturar um ministério de adolescentes que funciona sem depender de uma pessoa.",
-    capa: G["criar-ministerio"],
     meta: { paginas: 64, formatos: ["PDF", "Editável"] },
     preco: "R$ 97", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para líderes que estão começando um ministério de adolescentes do zero — ou que têm um que depende completamente de uma pessoa para funcionar.",
-    conteudo: ["Módulo 1 — Diagnóstico: onde você está", "Módulo 2 — Visão e propósito do ministério", "Módulo 3 — Estrutura e cargos", "Módulo 4 — Recrutamento e formação de voluntários", "Módulo 5 — Calendário e programação", "Módulo 6 — Integração com a igreja", "Módulo 7 — Sistema de acompanhamento", "Módulo 8 — Como crescer sem perder a saúde"],
-    comoUsar: "Guia de implantação em 8 módulos. Recomendamos trabalhar um módulo por semana com a equipe de liderança.",
-    faq: [{ q: "E se eu já tenho um ministério funcionando?", a: "O Módulo 1 (Diagnóstico) identifica o que está sólido e o que precisa de estrutura. Você só implementa o que falta." }],
+    praQuem: "Para líderes começando do zero — ou que têm um ministério que depende completamente de uma pessoa.",
+    conteudo: ["Módulo 1 — Diagnóstico: onde você está", "Módulo 2 — Visão e propósito", "Módulo 3 — Estrutura e cargos", "Módulo 4 — Recrutamento de voluntários", "Módulo 5 — Calendário e programação", "Módulo 6 — Integração com a igreja", "Módulo 7 — Sistema de acompanhamento", "Módulo 8 — Como crescer sem perder a saúde"],
+    comoUsar: "Guia de implantação em 8 módulos. Recomendamos trabalhar um módulo por semana com a equipe.",
+    faq: [{ q: "E se já tenho um ministério?", a: "O Módulo 1 (Diagnóstico) identifica o que está sólido e o que falta. Você implementa só o que precisar." }],
   },
   {
-    id: "estruturar-celulas", familia: "liderar", estante: "criar-ministerio",
-    etiqueta: "Criar ministério", titulo: "Como Estruturar um Grupo de Células",
+    id: "estruturar-celulas", familia: "liderar", estante: "criar-ministerio", model: "C",
+    etiqueta: "Criar ministério", titulo: "Como Estruturar um Grupo de Células", big: "90", bigLabel: "dias",
     promessa: "Modelo prático para implantar ou reorganizar células — sem precisar reinventar o que já funciona.",
-    capa: "linear-gradient(135deg,#2E3327 0%,#3A4E20 100%)",
     meta: { paginas: 48, formatos: ["PDF", "Editável"] },
     preco: "R$ 67", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para pastores e coordenadores que querem implementar células mas não sabem por onde começar — ou que já têm células mas sem sistema.",
+    praQuem: "Para pastores e coordenadores que querem implementar células mas não sabem por onde começar — ou que já têm células sem sistema.",
     conteudo: ["Parte 1 — Por que células (e por que não funcionam na maioria das igrejas)", "Parte 2 — Modelos de célula", "Parte 3 — Implantando as primeiras células", "Parte 4 — Formando líderes em escala", "Parte 5 — Supervisão e cuidado", "Parte 6 — Manutenção do sistema"],
-    comoUsar: "Guia de implantação prático, sem romantismo. Inclui cronograma de 90 dias para implantação inicial.",
+    comoUsar: "Inclui cronograma de 90 dias para implantação inicial e versão para igrejas de menos de 100 pessoas.",
     faq: [{ q: "Funciona para igrejas pequenas?", a: "Sim. O guia inclui versão adaptada para igrejas de menos de 100 pessoas." }],
   },
   {
-    id: "lancar-missoes", familia: "liderar", estante: "criar-ministerio",
-    etiqueta: "Criar ministério", titulo: "Lançando um Ministério de Missões",
+    id: "lancar-missoes", familia: "liderar", estante: "criar-ministerio", model: "B",
+    etiqueta: "Criar ministério", titulo: "Lançando um Ministério de Missões", code: "M-17",
     promessa: "Passo a passo para criar um ministério de missões que vai além do evento anual de coleta.",
-    capa: "linear-gradient(135deg,#1F221C 0%,#4F6B26 100%)",
     meta: { paginas: 60, formatos: ["PDF", "Editável"] },
     preco: "R$ 97", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
     praQuem: "Para líderes que querem levar a igreja de ações pontuais de missão para um ministério estruturado e contínuo.",
-    conteudo: ["Parte 1 — O que é um ministério de missões", "Parte 2 — Missão local, regional e global", "Parte 3 — Orçamento e sustentação de missionários", "Parte 4 — Mobilização da congregação", "Parte 5 — Parceria com organizações missionárias", "Parte 6 — Medindo impacto"],
-    comoUsar: "Guia de estratégia missionária para igrejas locais. Inclui templates de orçamento e carta de compromisso missionário.",
-    faq: [{ q: "Para igrejas que nunca tiveram missões?", a: "Sim. Começa do zero e escala progressivamente — sem pressão de montar tudo de uma vez." }],
+    conteudo: ["Parte 1 — O que é um ministério de missões", "Parte 2 — Missão local, regional e global", "Parte 3 — Orçamento e sustentação", "Parte 4 — Mobilização da congregação", "Parte 5 — Parceria com organizações missionárias", "Parte 6 — Medindo impacto"],
+    comoUsar: "Inclui templates de orçamento e carta de compromisso missionário.",
+    faq: [{ q: "Para igrejas que nunca tiveram missões?", a: "Sim. Começa do zero e escala progressivamente." }],
   },
 
-  // ── MODELOS & CHECKLISTS (4 itens → grid) ────────────────────────────────
+  // ── MODELOS & CHECKLISTS (4 itens → grid) ───────────────────────────
   {
-    id: "checklist-culto", familia: "liderar", estante: "modelos-checklists",
-    etiqueta: "Checklist", titulo: "Checklist do Culto Especial",
+    id: "checklist-culto", familia: "liderar", estante: "modelos-checklists", model: "C",
+    etiqueta: "Checklist", titulo: "Checklist do Culto Especial", big: "05", bigLabel: "checklists",
     promessa: "Tudo que não pode falhar — produção, som, comunicação e hospitalidade em um único documento.",
-    capa: G["modelos-checklists"],
     meta: { paginas: 12, formatos: ["PDF", "Editável"] },
     preco: "R$ 37", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para líderes de produção e coordenadores de culto que querem eliminar o improviso em eventos especiais — Natal, Páscoa, aniversário da igreja.",
+    praQuem: "Para líderes de produção que querem eliminar o improviso em eventos especiais — Natal, Páscoa, aniversário da igreja.",
     conteudo: ["Checklist de 30 dias antes", "Checklist de 7 dias antes", "Checklist de véspera", "Checklist no dia", "Checklist pós-evento", "Modelo de briefing de equipe"],
-    comoUsar: "Documento Word editável. Adapte os itens para a realidade da sua estrutura e salve como template recorrente.",
-    faq: [{ q: "Funciona para qualquer tamanho de iglesia?", a: "Sim. Os checklists têm itens opcionais marcados — remova o que não se aplica à sua realidade." }],
+    comoUsar: "Documento Word editável. Adapte os itens para a realidade da sua estrutura.",
+    faq: [{ q: "Funciona para qualquer tamanho?", a: "Sim. Os checklists têm itens opcionais marcados — remova o que não se aplica." }],
   },
   {
-    id: "carta-compromisso", familia: "liderar", estante: "modelos-checklists",
-    etiqueta: "Modelo", titulo: "Modelo de Carta de Compromisso",
+    id: "carta-compromisso", familia: "liderar", estante: "modelos-checklists", model: "A",
+    etiqueta: "Modelo", titulo: "Carta de Compromisso", code: "M-22",
     promessa: "Carta de compromisso para voluntários e líderes — clara, pastoral e sem juridiquês.",
-    capa: "linear-gradient(135deg,#25291F 0%,#1F221C 100%)",
     meta: { paginas: 8, formatos: ["PDF", "Editável"] },
     preco: "R$ 27", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para coordenadores que querem formalizar o compromisso de voluntários sem criar uma burocracia fria — estabelecendo expectativas claras com amor.",
+    praQuem: "Para coordenadores que querem formalizar o compromisso de voluntários sem criar uma burocracia fria.",
     conteudo: ["Modelo para líderes de célula", "Modelo para voluntários de ministério", "Modelo para equipe de produção", "Cláusulas de conduta e saída", "Guia de como usar a carta na prática"],
-    comoUsar: "Edite os campos em Word e adapte para cada ministério. Vem com guia de como apresentar a carta na conversa de onboarding.",
-    faq: [{ q: "Tem valor legal?", a: "Não tem valor jurídico — não é contrato. É um instrumento pastoral de alinhamento de expectativas." }],
+    comoUsar: "Edite os campos em Word e adapte para cada ministério. Vem com guia de apresentação.",
+    faq: [{ q: "Tem valor legal?", a: "Não. É um instrumento pastoral de alinhamento de expectativas, não um contrato." }],
   },
   {
-    id: "onboarding-voluntario", familia: "liderar", estante: "modelos-checklists",
-    etiqueta: "Kit", titulo: "Kit de Onboarding do Voluntário",
+    id: "onboarding-voluntario", familia: "liderar", estante: "modelos-checklists", model: "C",
+    etiqueta: "Kit", titulo: "Kit de Onboarding", big: "30", bigLabel: "dias",
     promessa: "Primeiros passos para novos voluntários — do recrutamento à primeira tarefa, sem deixar ninguém perdido.",
-    capa: "linear-gradient(135deg,#1F221C 0%,#25291F 100%)",
     meta: { paginas: 20, formatos: ["PDF", "Editável"] },
     preco: "R$ 47", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para líderes que recebem novos voluntários e veem eles sumindo depois de poucas semanas — porque ninguém os integrou de verdade.",
-    conteudo: ["Guia de boas-vindas (personalizável)", "Folha de perfil e dons do voluntário", "Checklist de onboarding da primeira semana", "Formulário de expectativas", "Plano de acompanhamento dos primeiros 30 dias", "Modelo de conversa de feedback"],
-    comoUsar: "Kit completo. Personalize o guia de boas-vindas com a identidade do seu ministério e siga o checklist cronologicamente.",
+    praQuem: "Para líderes que recebem novos voluntários e os veem sumindo após poucas semanas — porque ninguém os integrou de verdade.",
+    conteudo: ["Guia de boas-vindas (personalizável)", "Folha de perfil e dons", "Checklist da primeira semana", "Formulário de expectativas", "Plano de acompanhamento dos primeiros 30 dias", "Modelo de conversa de feedback"],
+    comoUsar: "Personalize o guia de boas-vindas com a identidade do seu ministério e siga o checklist cronologicamente.",
     faq: [{ q: "Funciona para todos os ministérios?", a: "Sim. O kit é genérico e adaptável. Vem com orientação de como personalizar por ministério." }],
   },
   {
-    id: "relatorio-saude", familia: "liderar", estante: "modelos-checklists",
-    etiqueta: "Relatório", titulo: "Relatório de Saúde da Igreja",
+    id: "relatorio-saude", familia: "liderar", estante: "modelos-checklists", model: "B",
+    etiqueta: "Relatório", titulo: "Relatório de Saúde da Igreja", code: "M-26",
     promessa: "Diagnóstico mensal em uma página — para o pastor ter clareza sobre o que está crescendo e o que está regredindo.",
-    capa: "linear-gradient(135deg,#181B16 0%,#1F221C 100%)",
     meta: { paginas: 16, formatos: ["PDF", "Editável"] },
     preco: "R$ 37", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
-    praQuem: "Para pastores que tomam decisões de intuição e querem começar a tomar de dados — sem precisar de um sistema sofisticado.",
-    conteudo: ["Relatório de presença e novos visitantes", "Relatório de discipulado e células", "Relatório financeiro simplificado", "Painel de saúde espiritual da equipe", "Guia de como coletar os dados", "Template de reunião mensal de liderança baseada no relatório"],
-    comoUsar: "Preencha mensalmente. Leva menos de 1 hora para completar e gera clareza imediata sobre prioridades.",
+    praQuem: "Para pastores que tomam decisões de intuição e querem começar a tomar de dados — sem sistema sofisticado.",
+    conteudo: ["Relatório de presença e novos visitantes", "Relatório de discipulado e células", "Relatório financeiro simplificado", "Painel de saúde espiritual da equipe", "Guia de como coletar os dados", "Template de reunião mensal baseada no relatório"],
+    comoUsar: "Preencha mensalmente. Leva menos de 1 hora e gera clareza imediata sobre prioridades.",
     faq: [{ q: "Precisa de software especial?", a: "Não. É uma planilha e um documento Word. Funciona com o que você já tem." }],
   },
 
-  // ── MONTAR EVENTO (3 itens → grid) ────────────────────────────────────────
+  // ── MONTAR EVENTO (3 itens → grid) ─────────────────────────────────
   {
-    id: "retiro-adolescentes", familia: "liderar", estante: "montar-evento",
-    etiqueta: "Montar evento", titulo: "Retiro de Adolescentes",
-    promessa: "Guia completo de produção — do briefing ao pós-retiro, para um evento que transforma e não vira um pesadelo logístico.",
-    capa: G["montar-evento"],
+    id: "retiro-adolescentes", familia: "liderar", estante: "montar-evento", model: "A",
+    etiqueta: "Montar evento", titulo: "Retiro de Adolescentes", code: "M-30",
+    promessa: "Guia completo de produção — do briefing ao pós-retiro, sem improvisação logística.",
     meta: { paginas: 90, formatos: ["PDF", "Editável"] },
     preco: "R$ 147", hotmartUrl: "https://pay.hotmart.com/", colecoes: ["retiro"],
-    praQuem: "Para coordenadores de retiro que carregam o evento nas costas — e precisam de um sistema que distribua a carga, reduza o improviso e garanta que o espiritual não se perca no logístico.",
-    conteudo: ["Módulo 1 — Propósito e tema do retiro", "Módulo 2 — Orçamento e viabilidade", "Módulo 3 — Local, translado e hospedagem", "Módulo 4 — Programação e grade horária", "Módulo 5 — Equipe e divisão de funções", "Módulo 6 — Comunicação e inscrições", "Módulo 7 — Logística no dia", "Módulo 8 — Pastoreio e cuidado durante o retiro", "Módulo 9 — Pós-retiro: como integrar o que aconteceu"],
-    comoUsar: "Guia de 9 módulos + checklists cronológicos de 60, 30, 15, 7 e 1 dia antes. Inclui modelo de formulário de inscrição e carta de autorização para menores.",
-    faq: [{ q: "Funciona para retiros de 1 dia?", a: "Sim. Os módulos são adaptáveis. O guia inclui versão compacta para day retreat." }, { q: "Precisa de equipe grande?", a: "Tem versão mínima para equipes de 3 a 5 pessoas." }],
+    praQuem: "Para coordenadores de retiro que carregam o evento nas costas — e precisam de um sistema que distribua a carga.",
+    conteudo: ["Módulo 1 — Propósito e tema", "Módulo 2 — Orçamento e viabilidade", "Módulo 3 — Local, translado e hospedagem", "Módulo 4 — Programação e grade horária", "Módulo 5 — Equipe e divisão de funções", "Módulo 6 — Comunicação e inscrições", "Módulo 7 — Logística no dia", "Módulo 8 — Pastoreio durante o retiro", "Módulo 9 — Pós-retiro"],
+    comoUsar: "9 módulos + checklists cronológicos de 60, 30, 15, 7 e 1 dia antes. Inclui carta de autorização para menores.",
+    faq: [{ q: "Funciona para retiros de 1 dia?", a: "Sim. Os módulos são adaptáveis — inclui versão compacta para day retreat." }],
   },
   {
-    id: "conferencia-lideranca", familia: "liderar", estante: "montar-evento",
-    etiqueta: "Montar evento", titulo: "Conferência de Liderança",
-    promessa: "Do briefing ao pós-evento — como produzir uma conferência de liderança que move pessoas e não só enche auditório.",
-    capa: "linear-gradient(135deg,#25291F 0%,#4F6B26 100%)",
+    id: "conferencia-lideranca", familia: "liderar", estante: "montar-evento", model: "C",
+    etiqueta: "Montar evento", titulo: "Conferência de Liderança", big: "07", bigLabel: "módulos",
+    promessa: "Do briefing ao pós-evento — como produzir uma conferência que move pessoas e não só enche auditório.",
     meta: { paginas: 80, formatos: ["PDF", "Editável"] },
     preco: "R$ 127", hotmartUrl: "https://pay.hotmart.com/", colecoes: ["conferencia"],
-    praQuem: "Para líderes que organizam conferências e eventos de formação — e querem um evento que gere transformação real, não só audiência.",
+    praQuem: "Para líderes que organizam conferências de formação — e querem um evento que gere transformação real.",
     conteudo: ["Módulo 1 — Propósito da conferência", "Módulo 2 — Curadoria de conteúdo e speakers", "Módulo 3 — Produção e infraestrutura", "Módulo 4 — Comunicação e vendas de ingresso", "Módulo 5 — Experiência do participante", "Módulo 6 — Transmissão e registro", "Módulo 7 — Pós-conferência e follow-up"],
-    comoUsar: "Guia de 7 módulos + checklists cronológicos. Inclui template de contrato de speaker e guia de curadoria de conteúdo.",
+    comoUsar: "7 módulos + checklists cronológicos. Inclui template de contrato de speaker e guia de curadoria de conteúdo.",
     faq: [{ q: "Para conferências grandes ou pequenas?", a: "Escala de 50 a 2000 participantes. Os módulos têm variações para cada escala." }],
   },
   {
-    id: "culto-natal", familia: "liderar", estante: "montar-evento",
-    etiqueta: "Montar evento", titulo: "Culto de Natal",
+    id: "culto-natal", familia: "liderar", estante: "montar-evento", model: "B",
+    etiqueta: "Montar evento", titulo: "Culto de Natal", code: "M-38",
     promessa: "Roteiro e checklist completo para o culto mais importante do ano — sem improvisar no Natal.",
-    capa: "linear-gradient(135deg,#4F6B26 0%,#25291F 100%)",
     meta: { paginas: 60, formatos: ["PDF", "Editável"] },
     preco: "R$ 97", hotmartUrl: "https://pay.hotmart.com/", colecoes: ["conferencia"],
-    praQuem: "Para pastores e coordenadores de culto que querem que o Natal seja o melhor evento do ano — para membros e para os visitantes que só aparecem nesse dia.",
+    praQuem: "Para pastores e coordenadores que querem que o Natal seja o melhor evento do ano — para membros e para visitantes.",
     conteudo: ["Módulo 1 — O Natal como porta de entrada", "Módulo 2 — Roteiro do culto", "Módulo 3 — Produção e decoração", "Módulo 4 — Música e adoração", "Módulo 5 — Comunicação e convite", "Módulo 6 — Acolhimento de visitantes", "Módulo 7 — Pós-Natal: como integrar quem chegou"],
-    comoUsar: "Guia completo com roteiro de culto editável, checklist de produção e guia de acolhimento. Comece a usar em outubro para não correr em dezembro.",
-    faq: [{ q: "Funciona para igrejas pequenas?", a: "Sim. O guia inclui versão simplificada para igrejas de menos de 100 pessoas." }, { q: "Tem roteiro de pregação?", a: "Não — o roteiro é de produção e estrutura. O conteúdo da pregação fica a critério do pastor." }],
+    comoUsar: "Roteiro de culto editável + checklist de produção + guia de acolhimento. Comece em outubro.",
+    faq: [{ q: "Funciona para igrejas pequenas?", a: "Sim. Inclui versão simplificada para igrejas de menos de 100 pessoas." }],
   },
 ];
 
-// ─── COMPONENTES INTERNOS ────────────────────────────────────────────────────
+// ─── CARD COMPONENTS ─────────────────────────────────────────────────────────
+function Eyebrow({ children, variant = "default" }: { children: string; variant?: "default"|"dark"|"sand"|"cream" }) {
+  const cls = { default: "cex-eyebrow", dark: "cex-eyebrow cex-eyebrow-dark", sand: "cex-eyebrow cex-eyebrow-sand", cream: "cex-eyebrow cex-eyebrow-cream" }[variant];
+  return <div className={cls}>{children}</div>;
+}
 
-function ProdCard({ material, onClick }: { material: Material; onClick: () => void }) {
+function ModelA({ etiqueta, titulo, code }: { etiqueta: string; titulo: string; code?: string }) {
+  return (
+    <div className="cex-art-a">
+      <div className="cex-art-a-top">
+        <Eyebrow>{etiqueta}</Eyebrow>
+        {code && <span className="cex-code">{code}</span>}
+      </div>
+      <div className="cex-art-a-title">{titulo}</div>
+    </div>
+  );
+}
+
+function ModelB({ etiqueta, titulo, code }: { etiqueta: string; titulo: string; code?: string }) {
+  return (
+    <div className="cex-art-b">
+      <div className="cex-art-b-header">
+        <Eyebrow variant="dark">{etiqueta}</Eyebrow>
+        {code && <span className="cex-code cex-code-dark">{code}</span>}
+      </div>
+      <div className="cex-art-b-body">
+        <div className="cex-art-b-title">{titulo}</div>
+      </div>
+    </div>
+  );
+}
+
+function ModelC({ etiqueta, titulo, big, bigLabel }: { etiqueta: string; titulo: string; big?: string; bigLabel?: string }) {
+  return (
+    <div className="cex-art-c">
+      <Eyebrow variant="sand">{etiqueta}</Eyebrow>
+      <div className="cex-art-c-num-row">
+        <span className="cex-art-c-num">{big || "—"}</span>
+        {bigLabel && <span className="cex-art-c-label">{bigLabel}</span>}
+      </div>
+      <div className="cex-art-c-title">{titulo}</div>
+    </div>
+  );
+}
+
+function ModelD({ etiqueta, titulo }: { etiqueta: string; titulo: string }) {
+  return (
+    <div className="cex-art-d">
+      <div className="cex-art-d-bg" />
+      <div className="cex-art-d-texture" />
+      <div className="cex-art-d-scrim" />
+      <div className="cex-art-d-content">
+        <Eyebrow variant="cream">{etiqueta}</Eyebrow>
+        <div className="cex-art-d-title">{titulo}</div>
+      </div>
+    </div>
+  );
+}
+
+function ProdCard({ material, accentKey, onClick }: { material: Material; accentKey: AccentKey; onClick: () => void }) {
+  const accent = ACCENTS[accentKey];
   const metaStr = [
     material.meta.mensagens ? `${material.meta.mensagens} mensagens` : null,
     `${material.meta.paginas} páginas`,
@@ -493,30 +524,39 @@ function ProdCard({ material, onClick }: { material: Material; onClick: () => vo
   ].filter(Boolean).join(" · ");
 
   return (
-    <div className="prod-card" onClick={onClick} role="button" tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && onClick()}>
-      <div className="prod-card-capa" style={{ background: material.capa }}>
-        <span className="prod-card-etiqueta">{material.etiqueta}</span>
-        <span className="prod-card-preco-badge">{material.preco}</span>
-      </div>
-      <div className="prod-card-body">
-        <div className="prod-card-titulo">{material.titulo}</div>
-        <div className="prod-card-meta">{metaStr}</div>
-        <div className="prod-card-ver">Ver material</div>
+    <div
+      className="cex-card"
+      style={{ "--cex-accent": accent.base, "--cex-accent-deep": accent.deep } as React.CSSProperties}
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && onClick()}
+    >
+      {material.model === "A" && <ModelA etiqueta={material.etiqueta} titulo={material.titulo} code={material.code} />}
+      {material.model === "B" && <ModelB etiqueta={material.etiqueta} titulo={material.titulo} code={material.code} />}
+      {material.model === "C" && <ModelC etiqueta={material.etiqueta} titulo={material.titulo} big={material.big} bigLabel={material.bigLabel} />}
+      {material.model === "D" && <ModelD etiqueta={material.etiqueta} titulo={material.titulo} />}
+      <div className="cex-card-foot">
+        <div className="cex-foot-meta">{metaStr}</div>
+        <div className="cex-foot-price-row">
+          <span className="cex-foot-price">{material.preco}</span>
+          <span className="cex-foot-ver">Ver material →</span>
+        </div>
       </div>
     </div>
   );
 }
 
-function ShelfCarousel({ materiais, onCardClick }: { materiais: Material[]; onCardClick: (m: Material) => void }) {
+// ─── SHELF CAROUSEL ───────────────────────────────────────────────────────────
+function ShelfCarousel({ materiais, accentKey, onCardClick }: { materiais: Material[]; accentKey: AccentKey; onCardClick: (m: Material) => void }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const scroll = (dir: "left" | "right") => {
-    trackRef.current?.scrollBy({ left: dir === "left" ? -250 : 250, behavior: "smooth" });
+    trackRef.current?.scrollBy({ left: dir === "left" ? -350 : 350, behavior: "smooth" });
   };
   return (
     <div className="loja-shelf-carousel">
       <div className="loja-carousel-track" ref={trackRef}>
-        {materiais.map((m) => <ProdCard key={m.id} material={m} onClick={() => onCardClick(m)} />)}
+        {materiais.map((m) => <ProdCard key={m.id} material={m} accentKey={accentKey} onClick={() => onCardClick(m)} />)}
       </div>
       <div className="loja-carousel-arrows">
         <button className="loja-carousel-arrow" onClick={() => scroll("left")} aria-label="Anterior">←</button>
@@ -526,31 +566,35 @@ function ShelfCarousel({ materiais, onCardClick }: { materiais: Material[]; onCa
   );
 }
 
-function Shelf({ estanteKey, label, materiais, onCardClick }: {
-  estanteKey: string; label: string; materiais: Material[]; onCardClick: (m: Material) => void;
-}) {
+// ─── SHELF ────────────────────────────────────────────────────────────────────
+function Shelf({ estante, materiais, onCardClick }: { estante: Estante; materiais: Material[]; onCardClick: (m: Material) => void }) {
   if (materiais.length === 0) return null;
+  const accent = ACCENTS[estante.accent];
   const isCarousel = materiais.length > SHELF_CAROUSEL_THRESHOLD;
   return (
     <div className="loja-shelf">
       <div className="loja-shelf-head">
-        <span className="loja-shelf-name">{label}</span>
+        <span className="loja-shelf-name" style={{ color: accent.base }}>{estante.label}</span>
         <span className="loja-shelf-count">{materiais.length} {materiais.length === 1 ? "material" : "materiais"}</span>
         {isCarousel && <span className="loja-shelf-ver">Ver todos</span>}
       </div>
       {isCarousel ? (
-        <ShelfCarousel materiais={materiais} onCardClick={onCardClick} />
+        <ShelfCarousel materiais={materiais} accentKey={estante.accent} onCardClick={onCardClick} />
       ) : (
         <div className="loja-shelf-grid">
-          {materiais.map((m) => <ProdCard key={m.id} material={m} onClick={() => onCardClick(m)} />)}
+          {materiais.map((m) => <ProdCard key={m.id} material={m} accentKey={estante.accent} onClick={() => onCardClick(m)} />)}
         </div>
       )}
     </div>
   );
 }
 
-// ─── MODAL DE DETALHE ────────────────────────────────────────────────────────
+// ─── MODAL ────────────────────────────────────────────────────────────────────
 function Modal({ material, onClose }: { material: Material; onClose: () => void }) {
+  const estante = ESTANTE_MAP[material.estante];
+  const accentKey = estante?.accent || "olive";
+  const accent = ACCENTS[accentKey];
+
   const relacionados = MATERIAIS.filter(
     (m) => m.estante === material.estante && m.id !== material.id
   ).slice(0, 3);
@@ -559,10 +603,7 @@ function Modal({ material, onClose }: { material: Material; onClose: () => void 
     document.body.style.overflow = "hidden";
     const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", handleKey);
-    return () => {
-      document.body.style.overflow = "";
-      document.removeEventListener("keydown", handleKey);
-    };
+    return () => { document.body.style.overflow = ""; document.removeEventListener("keydown", handleKey); };
   }, [onClose]);
 
   const metaStr = [
@@ -575,21 +616,24 @@ function Modal({ material, onClose }: { material: Material; onClose: () => void 
       <div className="loja-modal-backdrop" onClick={onClose} />
       <div className="loja-modal-inner">
         <div className="loja-modal-bar">
-          <span className="loja-modal-breadcrumb">
-            Materiais → {material.etiqueta}
-          </span>
+          <span className="loja-modal-breadcrumb">Materiais → {material.etiqueta}</span>
           <button className="loja-modal-close" onClick={onClose}>Fechar ×</button>
         </div>
-
         <div className="loja-detail">
           {/* HERO */}
           <div className="loja-detail-hero">
-            <div className="loja-detail-capa" style={{ background: material.capa }} />
+            <div className="loja-detail-capa"
+              style={{ "--cex-accent": accent.base, "--cex-accent-deep": accent.deep } as React.CSSProperties}>
+              {material.model === "A" && <ModelA etiqueta={material.etiqueta} titulo={material.titulo} code={material.code} />}
+              {material.model === "B" && <ModelB etiqueta={material.etiqueta} titulo={material.titulo} code={material.code} />}
+              {material.model === "C" && <ModelC etiqueta={material.etiqueta} titulo={material.titulo} big={material.big} bigLabel={material.bigLabel} />}
+              {material.model === "D" && <ModelD etiqueta={material.etiqueta} titulo={material.titulo} />}
+            </div>
             <div>
               <div className="loja-detail-meta-row">
-                <span className="loja-detail-etiqueta">{material.etiqueta}</span>
+                <span className="loja-detail-etiqueta" style={{ color: accent.base, background: `${accent.base}18`, borderColor: `${accent.base}44` }}>{material.etiqueta}</span>
                 {material.colecoes.length > 0 && (
-                  <span className="loja-detail-etiqueta" style={{ borderColor: "var(--border-2)", background: "var(--card)", color: "var(--muted)" }}>
+                  <span className="loja-detail-etiqueta" style={{ color: "var(--muted)", background: "var(--card)", borderColor: "var(--border-2)" }}>
                     {material.colecoes.map((c) => c.charAt(0).toUpperCase() + c.slice(1)).join(", ")}
                   </span>
                 )}
@@ -613,27 +657,28 @@ function Modal({ material, onClose }: { material: Material; onClose: () => void 
             </ul>
           </div>
 
-          {/* FORMATOS */}
+          {/* COMO USAR + FORMATOS */}
           <div className="loja-detail-sec">
             <div className="loja-detail-sec-label">— Como usar</div>
             <p className="loja-detail-text">{material.comoUsar}</p>
             <div className="loja-detail-formatos">
               {material.meta.formatos.map((f) => (
-                <span key={f} className="loja-detail-formato">{f}</span>
+                <span key={f} className="loja-detail-formato" style={{ color: accent.base, borderColor: `${accent.base}44` }}>{f}</span>
               ))}
             </div>
           </div>
 
-          {/* PREÇO + CTA */}
+          {/* PREÇO */}
           <div className="loja-detail-sec">
             <div className="loja-detail-preco-block">
               <div>
-                <div className="loja-detail-preco-val">{material.preco}</div>
+                <div className="loja-detail-preco-val" style={{ color: accent.base }}>{material.preco}</div>
                 <div className="loja-detail-preco-desc">Compra única · Acesso vitalício</div>
               </div>
               <div className="loja-detail-preco-info" />
               <a href={material.hotmartUrl} target="_blank" rel="noopener noreferrer"
-                className="btn btn-primary btn-lg btn-arrow">Comprar</a>
+                style={{ background: accent.base, color: "#0E110D", borderColor: accent.base } as React.CSSProperties}
+                className="btn btn-lg btn-arrow">Comprar</a>
             </div>
           </div>
 
@@ -643,7 +688,7 @@ function Modal({ material, onClose }: { material: Material; onClose: () => void 
               <div className="loja-detail-sec-label">— Da mesma estante</div>
               <div className="loja-relacionados">
                 {relacionados.map((m) => (
-                  <ProdCard key={m.id} material={m} onClick={() => { onClose(); setTimeout(() => {}, 0); }} />
+                  <ProdCard key={m.id} material={m} accentKey={accentKey} onClick={() => {}} />
                 ))}
               </div>
             </div>
@@ -665,44 +710,27 @@ function Modal({ material, onClose }: { material: Material; onClose: () => void 
   );
 }
 
-// ─── PÁGINA PRINCIPAL ────────────────────────────────────────────────────────
-export default function Loja() {
+// ─── PÁGINA PRINCIPAL ─────────────────────────────────────────────────────────
+export default function Materiais() {
   const [filtroL1, setFiltroL1] = useState<FiltroL1>("tudo");
   const [estanteAtiva, setEstanteAtiva] = useState<string | null>(null);
   const [materialAberto, setMaterialAberto] = useState<Material | null>(null);
 
-  const handleL1 = useCallback((f: FiltroL1) => {
-    setFiltroL1(f);
-    setEstanteAtiva(null);
-  }, []);
+  const handleL1 = useCallback((f: FiltroL1) => { setFiltroL1(f); setEstanteAtiva(null); }, []);
+  const handleL2 = useCallback((k: string) => { setEstanteAtiva((prev) => (prev === k ? null : k)); }, []);
 
-  const handleL2 = useCallback((estante: string) => {
-    setEstanteAtiva((prev) => (prev === estante ? null : estante));
-  }, []);
+  const estantesVisiveis = (lista: Estante[]) => lista.filter((e) => !estanteAtiva || e.key === estanteAtiva);
+  const materiaisDe = (estante: string) => MATERIAIS.filter((m) => m.estante === estante);
 
-  // Quais estantes mostrar, filtradas
-  const estantesParaExibir = (familia: Familia) => {
-    const lista = familia === "ministrar" ? ESTANTES_MINISTRAR : ESTANTES_LIDERAR;
-    return lista.filter((e) => !estanteAtiva || e.key === estanteAtiva);
-  };
-
-  const materiaisDaEstante = (estante: string) =>
-    MATERIAIS.filter((m) => m.estante === estante);
-
-  // Eventos: materiais com colecoes, agrupados
-  const materiaisEventos = MATERIAIS.filter((m) => m.colecoes.length > 0);
+  // Eventos — materiais por coleção
   const eventosGrupos: Record<string, Material[]> = {};
-  materiaisEventos.forEach((m) => {
-    m.colecoes.forEach((c) => {
-      if (!eventosGrupos[c]) eventosGrupos[c] = [];
-      eventosGrupos[c].push(m);
-    });
-  });
-  const eventosLabels: Record<Colecao, string> = { retiro: "Retiro", conferencia: "Conferência" };
+  MATERIAIS.forEach((m) => m.colecoes.forEach((c) => {
+    if (!eventosGrupos[c]) eventosGrupos[c] = [];
+    eventosGrupos[c].push(m);
+  }));
+  const eventosLabels: Record<string, string> = { retiro: "Retiro", conferencia: "Conferência" };
 
-  const l2Options =
-    filtroL1 === "ministrar" ? ESTANTES_MINISTRAR :
-    filtroL1 === "liderar"   ? ESTANTES_LIDERAR   : null;
+  const l2Options = filtroL1 === "ministrar" ? ESTANTES_MINISTRAR : filtroL1 === "liderar" ? ESTANTES_LIDERAR : null;
 
   return (
     <div className="pg">
@@ -726,20 +754,18 @@ export default function Loja() {
             {(["tudo", "ministrar", "liderar", "eventos"] as FiltroL1[]).map((f) => {
               const labels: Record<FiltroL1, string> = { tudo: "Tudo", ministrar: "Para ministrar", liderar: "Para liderar", eventos: "Eventos" };
               return (
-                <button key={f}
-                  className={`loja-filter-btn${filtroL1 === f ? " ativo" : ""}${filtroL1 !== f && filtroL1 !== "tudo" && f === filtroL1 ? " ativo-pai" : ""}`}
-                  onClick={() => handleL1(f)}>
+                <button key={f} className={`loja-filter-btn${filtroL1 === f ? " ativo" : ""}`} onClick={() => handleL1(f)}>
                   {labels[f]}
                 </button>
               );
             })}
           </div>
-
           {l2Options && (
             <div className="loja-filter-l2">
               {l2Options.map((e) => (
                 <button key={e.key}
                   className={`loja-filter-btn${estanteAtiva === e.key ? " ativo" : ""}`}
+                  style={{ "--cex-accent": ACCENTS[e.accent].base } as React.CSSProperties}
                   onClick={() => handleL2(e.key)}>
                   {e.label}
                 </button>
@@ -755,14 +781,20 @@ export default function Loja() {
         {/* EVENTOS */}
         {filtroL1 === "eventos" && (
           <div>
-            {(Object.entries(eventosGrupos) as [Colecao, Material[]][]).map(([colecao, mats]) => (
-              <div key={colecao} className="loja-eventos-grupo">
-                <div className="loja-eventos-label">{eventosLabels[colecao]}</div>
-                <div className="loja-shelf-grid">
-                  {mats.map((m) => <ProdCard key={m.id} material={m} onClick={() => setMaterialAberto(m)} />)}
+            {Object.entries(eventosGrupos).map(([colecao, mats]) => {
+              const estanteRef = ESTANTE_MAP[mats[0]?.estante];
+              return (
+                <div key={colecao} className="loja-eventos-grupo">
+                  <div className="loja-eventos-label">{eventosLabels[colecao] ?? colecao}</div>
+                  <div className="loja-shelf-grid">
+                    {mats.map((m) => {
+                      const e = ESTANTE_MAP[m.estante];
+                      return <ProdCard key={m.id} material={m} accentKey={e?.accent || "olive"} onClick={() => setMaterialAberto(m)} />;
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -775,10 +807,8 @@ export default function Loja() {
                 <div className="loja-familia-title">Para <em>ministrar</em></div>
               </div>
             )}
-            {estantesParaExibir("ministrar").map((e) => (
-              <Shelf key={e.key} estanteKey={e.key} label={e.label}
-                materiais={materiaisDaEstante(e.key)}
-                onCardClick={setMaterialAberto} />
+            {estantesVisiveis(ESTANTES_MINISTRAR).map((e) => (
+              <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} />
             ))}
           </div>
         )}
@@ -792,10 +822,8 @@ export default function Loja() {
                 <div className="loja-familia-title">Para <em>liderar</em></div>
               </div>
             )}
-            {estantesParaExibir("liderar").map((e) => (
-              <Shelf key={e.key} estanteKey={e.key} label={e.label}
-                materiais={materiaisDaEstante(e.key)}
-                onCardClick={setMaterialAberto} />
+            {estantesVisiveis(ESTANTES_LIDERAR).map((e) => (
+              <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} />
             ))}
           </div>
         )}
