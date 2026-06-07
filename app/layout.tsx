@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Head from "next/head";
+import "./loja.css";
 
 export const metadata: Metadata = {
   title: "CE.X · Campus Expansão",
@@ -21,7 +22,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="/tokens.css" />
         <link rel="stylesheet" href="/components.css" />
         <link rel="stylesheet" href="/pages.css" />
-        <link rel="stylesheet" href="/loja.css" />
+        {/* loja.css importado via module import acima — cache busting automático */}
       </head>
       <body>{children}</body>
     </html>

@@ -1,0 +1,315 @@
+/* ════════════════════════════════════════════════════════════════
+   CE.X LOJA — Materiais Editáveis
+   Sistema de banners: moldura fixa + miolo que varia (A · B · C · D)
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── HERO DA LOJA ── */
+.loja-hero { padding: 80px 0 56px; position: relative; overflow: hidden; }
+.loja-hero-tag { display: inline-flex; align-items: center; gap: 10px; background: var(--olive-dim); border: 0.5px solid var(--olive-line); border-radius: var(--r-pill); padding: 8px 18px; font-family: var(--mono); font-size: 11px; color: var(--olive); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 24px; }
+.loja-hero-title { font-size: 72px; font-weight: 700; letter-spacing: -0.05em; line-height: 0.96; margin-bottom: 20px; }
+.loja-hero-title em { font-style: italic; color: var(--olive); }
+.loja-hero-desc { font-size: 18px; color: var(--muted); line-height: 1.6; max-width: 520px; }
+
+/* ── FILTROS ── */
+.loja-filter-bar { border-top: 0.5px solid var(--border-2); position: sticky; top: 56px; z-index: 90; background: rgba(14,17,13,0.96); backdrop-filter: blur(14px); }
+.loja-filter-l1 { display: flex; gap: 4px; padding: 14px 0; overflow-x: auto; scrollbar-width: none; }
+.loja-filter-l1::-webkit-scrollbar { display: none; }
+.loja-filter-l2 { display: flex; gap: 4px; padding: 10px 0 14px; border-top: 0.5px solid var(--border-2); overflow-x: auto; scrollbar-width: none; }
+.loja-filter-l2::-webkit-scrollbar { display: none; }
+.loja-filter-btn { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 16px; border-radius: var(--r-pill); border: 0.5px solid transparent; cursor: pointer; transition: all 0.18s; background: transparent; color: var(--muted); white-space: nowrap; }
+.loja-filter-btn:hover { color: var(--olive); background: var(--olive-dim); border-color: var(--olive-line); }
+.loja-filter-btn.ativo { color: var(--ink); background: var(--olive); border-color: var(--olive); }
+
+/* ── SEÇÃO FAMÍLIA ── */
+.loja-familia { margin-bottom: 80px; }
+.loja-familia-head { display: flex; align-items: center; gap: 20px; padding: 40px 0 8px; border-top: 0.5px solid var(--border-2); }
+.loja-familia-eyebrow { font-family: var(--mono); font-size: 10px; color: var(--olive); letter-spacing: 0.18em; text-transform: uppercase; }
+.loja-familia-title { font-size: 28px; font-weight: 700; letter-spacing: -0.025em; }
+.loja-familia-title em { font-style: italic; color: var(--olive); }
+
+/* ── ESTANTE ── */
+.loja-shelf { margin-bottom: 48px; }
+.loja-shelf-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 22px; }
+.loja-shelf-name { font-family: var(--mono); font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; }
+.loja-shelf-count { font-family: var(--mono); font-size: 12px; color: var(--subtle); }
+.loja-shelf-ver { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; margin-left: auto; transition: color 0.15s; }
+.loja-shelf-ver:hover { color: var(--olive); }
+.loja-shelf-ver::after { content: ' →'; }
+
+/* ── GRID (≤ SHELF_CAROUSEL_THRESHOLD) ── */
+.loja-shelf-grid { display: flex; flex-wrap: wrap; gap: 22px; }
+
+/* ── CAROUSEL (> SHELF_CAROUSEL_THRESHOLD) ── */
+.loja-shelf-carousel { position: relative; }
+.loja-carousel-track { display: flex; gap: 22px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding-bottom: 8px; scrollbar-width: none; }
+.loja-carousel-track::-webkit-scrollbar { display: none; }
+.loja-carousel-track .cex-card { flex: 0 0 320px; scroll-snap-align: start; }
+.loja-carousel-arrows { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+.loja-carousel-arrow { width: 34px; height: 34px; border-radius: 50%; border: 0.5px solid var(--border-2); background: var(--card); color: var(--light); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; line-height: 1; transition: all 0.18s; font-family: var(--mono); }
+.loja-carousel-arrow:hover { border-color: var(--olive-line); color: var(--olive); background: var(--olive-dim); }
+
+/* ════════════════════════════════════════════════════════════════
+   SISTEMA DE CARDS — MOLDURA FIXA + MIOLO QUE VARIA
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── FRAME (igual em todos) ── */
+.cex-card {
+  width: 320px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #25291F;
+  background: #181B16;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.02), 0 20px 40px -28px rgba(0,0,0,0.8);
+  cursor: pointer;
+  transition: transform 0.22s, border-color 0.22s;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+.cex-card:hover { transform: translateY(-3px); border-color: var(--cex-accent, #7A9E3F); }
+
+/* ── EYEBROW: ◆ label (geral) ── */
+.cex-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cex-accent, #7A9E3F);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cex-eyebrow::before { content: '◆'; font-size: 9px; }
+
+/* eyebrow sobre cor cheia (modelo B) — tinta escura */
+.cex-eyebrow-dark { color: #0E110D; font-weight: 500; }
+.cex-eyebrow-dark::before { color: #0E110D; }
+
+/* eyebrow areia (modelo C) */
+.cex-eyebrow-sand { color: #C9BFA0; }
+.cex-eyebrow-sand::before { color: #C9BFA0; }
+
+/* eyebrow cream (modelo D) */
+.cex-eyebrow-cream { color: #F6F1E0; }
+.cex-eyebrow-cream::before { color: #F6F1E0; }
+
+/* ── CODE · canto superior direito ── */
+.cex-code { font-family: var(--mono); font-size: 10px; color: #555650; letter-spacing: 0.08em; }
+.cex-code-dark { color: rgba(14,17,13,0.5); }
+
+/* ════ MODELO A · TIPOGRÁFICO ════
+   Fundo ink. Título gigante é a arte — pro nome que já é o gancho. */
+.cex-art-a {
+  height: 300px;
+  background: #0E110D;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+.cex-art-a-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.cex-art-a-title {
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 52px;
+  line-height: 0.9;
+  letter-spacing: -0.035em;
+  color: #EDE6D3;
+  text-wrap: balance;
+}
+
+/* ════ MODELO B · BLOCO DE COR ════
+   Único com cor cheia no topo. Texto sobre cor = tinta escura (regra da marca). */
+.cex-art-b {
+  height: 300px;
+  background: #0E110D;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+.cex-art-b-header {
+  background: var(--cex-accent, #7A9E3F);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cex-art-b-body { flex: 1; padding: 24px; display: flex; align-items: flex-end; }
+.cex-art-b-title {
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 46px;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  color: #EDE6D3;
+  text-wrap: balance;
+}
+
+/* ════ MODELO C · NÚMERO / ÍNDICE ════
+   Estrutural. Pro material onde "6 encontros / 40 páginas" já atrai. */
+.cex-art-c {
+  height: 300px;
+  background: #14170F;
+  background-image: linear-gradient(#25291F 1px, transparent 1px);
+  background-size: 100% 38px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+.cex-art-c-num-row { display: flex; align-items: baseline; gap: 10px; }
+.cex-art-c-num {
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 92px;
+  line-height: 0.8;
+  color: var(--cex-accent, #7A9E3F);
+  letter-spacing: -0.05em;
+}
+.cex-art-c-label {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8B8C82;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+.cex-art-c-title {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #EDE6D3;
+}
+
+/* ════ MODELO D · FOTO / GRADIENTE ════
+   Placeholder até arte real. Fundo: gradiente radial + textura + scrim. */
+.cex-art-d { height: 300px; position: relative; overflow: hidden; }
+.cex-art-d-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(120% 80% at 30% 20%, var(--cex-accent-deep, #4F6B26) 0%, #0E110D 60%);
+}
+.cex-art-d-texture {
+  position: absolute; inset: 0; opacity: 0.5;
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 9px);
+}
+.cex-art-d-scrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(14,17,13,0.1) 0%, rgba(14,17,13,0.9) 100%);
+}
+.cex-art-d-content {
+  position: absolute; inset: 0; padding: 24px;
+  display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;
+}
+.cex-art-d-title {
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 44px;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  color: #FAFAF7;
+  text-wrap: balance;
+}
+
+/* ── RODAPÉ FIXO (igual em todos os cards) ── */
+.cex-card-foot {
+  height: 150px;
+  background: #181B16;
+  border-top: 1px solid #25291F;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+.cex-foot-meta { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.03em; color: #8B8C82; line-height: 1.5; }
+.cex-foot-price-row { display: flex; align-items: flex-end; justify-content: space-between; }
+.cex-foot-price { font-family: var(--sans); font-weight: 600; font-size: 19px; color: #FAFAF7; letter-spacing: -0.01em; }
+.cex-foot-ver { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--cex-accent, #7A9E3F); text-transform: uppercase; }
+
+/* ── MODAL OVERLAY ── */
+.loja-modal { position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center; padding: 32px; }
+.loja-modal-backdrop { position: absolute; inset: 0; background: rgba(14,17,13,0.88); backdrop-filter: blur(8px); }
+.loja-modal-inner { position: relative; background: var(--graphite); border: 0.5px solid var(--border-2); border-radius: var(--r-lg); width: 100%; max-width: 880px; max-height: 88vh; overflow-y: auto; }
+.loja-modal-bar { position: sticky; top: 0; z-index: 10; background: var(--graphite); border-bottom: 0.5px solid var(--border-2); display: flex; align-items: center; justify-content: space-between; padding: 14px 28px; }
+.loja-modal-breadcrumb { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.loja-modal-close { font-family: var(--mono); font-size: 11px; color: var(--muted); cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase; background: none; border: 0.5px solid var(--border-2); border-radius: var(--r-pill); padding: 6px 14px; transition: all 0.18s; }
+.loja-modal-close:hover { color: var(--white); background: var(--card); }
+
+/* ── DETAIL SECTIONS ── */
+.loja-detail { padding: 0 36px 72px; }
+.loja-detail-hero { padding: 40px 0 32px; display: grid; grid-template-columns: 1fr 1.4fr; gap: 36px; align-items: center; }
+.loja-detail-capa { height: 240px; border-radius: var(--r-lg); overflow: hidden; position: relative; }
+.loja-detail-meta-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.loja-detail-etiqueta { font-family: var(--mono); font-size: 10px; color: var(--olive); letter-spacing: 0.16em; text-transform: uppercase; background: var(--olive-dim); border: 0.5px solid var(--olive-line); padding: 5px 12px; border-radius: var(--r-pill); }
+.loja-detail-titulo { font-size: 36px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; margin-bottom: 14px; }
+.loja-detail-titulo em { font-style: italic; color: var(--olive); }
+.loja-detail-promessa { font-size: 15px; color: var(--light); line-height: 1.6; }
+.loja-detail-sec { padding: 28px 0; border-top: 0.5px solid var(--border-2); }
+.loja-detail-sec-label { font-family: var(--mono); font-size: 10px; color: var(--olive); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 14px; }
+.loja-detail-text { font-size: 15px; color: var(--muted); line-height: 1.7; }
+.loja-detail-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.loja-detail-list li { font-size: 13px; color: var(--light); padding: 10px 14px; background: var(--card); border: 0.5px solid var(--border-2); border-radius: var(--r-md); display: flex; align-items: center; gap: 10px; }
+.loja-detail-list li::before { content: '◆'; color: var(--olive); font-size: 7px; flex-shrink: 0; }
+.loja-detail-formatos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.loja-detail-formato { font-family: var(--mono); font-size: 10px; color: var(--olive); border: 0.5px solid var(--olive-line); padding: 5px 12px; border-radius: var(--r-pill); letter-spacing: 0.06em; text-transform: uppercase; }
+.loja-detail-preco-block { display: flex; align-items: center; gap: 24px; padding: 24px; background: var(--card); border: 0.5px solid var(--olive-line); border-radius: var(--r-lg); }
+.loja-detail-preco-val { font-size: 44px; font-weight: 700; letter-spacing: -0.04em; color: var(--olive); line-height: 1; }
+.loja-detail-preco-info { flex: 1; }
+.loja-detail-preco-desc { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.loja-detail-faq-item { border-top: 0.5px solid var(--border-2); padding: 14px 0; }
+.loja-detail-faq-q { font-size: 14px; font-weight: 600; color: var(--white); margin-bottom: 6px; }
+.loja-detail-faq-a { font-size: 13px; color: var(--muted); line-height: 1.65; }
+.loja-relacionados { display: flex; gap: 22px; flex-wrap: wrap; }
+
+/* ── EVENTOS ── */
+.loja-eventos-grupo { margin-bottom: 48px; }
+.loja-eventos-label { font-family: var(--mono); font-size: 10px; color: var(--subtle); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 0.5px solid var(--border-2); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 980px) {
+  .loja-hero-title { font-size: 52px; }
+  /* Mobile: grid 2 colunas, cards fluid */
+  .loja-shelf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .loja-shelf-grid .cex-card { width: 100%; }
+  .loja-shelf-grid .cex-art-a,
+  .loja-shelf-grid .cex-art-b,
+  .loja-shelf-grid .cex-art-c,
+  .loja-shelf-grid .cex-art-d { height: 220px; }
+  .loja-shelf-grid .cex-art-a-title { font-size: 36px; }
+  .loja-shelf-grid .cex-art-b-title { font-size: 32px; }
+  .loja-shelf-grid .cex-art-c-num { font-size: 64px; }
+  .loja-shelf-grid .cex-art-d-title { font-size: 30px; }
+  .loja-shelf-grid .cex-card-foot { height: 130px; }
+  /* Carousel: cards 260px em mobile */
+  .loja-carousel-track .cex-card { flex: 0 0 260px; }
+  .loja-detail-hero { grid-template-columns: 1fr; }
+  .loja-detail-capa { height: 200px; }
+  .loja-detail-preco-block { flex-direction: column; text-align: center; gap: 16px; }
+  .loja-relacionados { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .loja-relacionados .cex-card { width: 100%; }
+  .loja-detail { padding: 0 20px 56px; }
+  .loja-modal { padding: 0; align-items: flex-end; }
+  .loja-modal-inner { border-radius: var(--r-lg) var(--r-lg) 0 0; border-bottom: none; max-height: 94vh; }
+}
+
+@media (max-width: 600px) {
+  .loja-hero-title { font-size: 40px; }
+  .loja-shelf-grid { gap: 10px; }
+  .loja-shelf-grid .cex-art-a,
+  .loja-shelf-grid .cex-art-b,
+  .loja-shelf-grid .cex-art-c,
+  .loja-shelf-grid .cex-art-d { height: 180px; }
+  .loja-shelf-grid .cex-art-a-title { font-size: 28px; }
+  .loja-shelf-grid .cex-art-b-title { font-size: 26px; }
+  .loja-shelf-grid .cex-art-c-num { font-size: 52px; }
+  .loja-shelf-grid .cex-art-d-title { font-size: 24px; }
+  .loja-shelf-grid .cex-card-foot { height: 110px; padding: 14px 14px; }
+  .loja-shelf-grid .cex-foot-meta { font-size: 9.5px; }
+  .loja-shelf-grid .cex-foot-price { font-size: 16px; }
+}
