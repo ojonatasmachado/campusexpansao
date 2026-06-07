@@ -1,6 +1,7 @@
 "use client";
-
 import { useEffect } from "react";
+import Nav from "./components/Nav";
+import Footer from "./components/Footer";
 
 export default function Home() {
   useEffect(() => {
@@ -12,192 +13,153 @@ export default function Home() {
   }, []);
 
   return (
-    <>
-      {/* NAV */}
-      <nav className="nav">
-        <a href="/" className="nav-logo">
-          CE<span className="dot">.</span><span className="x">X</span>
-        </a>
-        <div className="nav-links">
-          <a href="#cursos" className="nav-link">Cursos</a>
-          <a href="#materiais" className="nav-link">Materiais</a>
-          <a href="#sobre" className="nav-link">Sobre</a>
-        </div>
-        <a href="#inscricao" className="btn btn-primary btn-sm nav-cta">Começar agora</a>
-      </nav>
+    <div className="pg">
+      <Nav />
 
       {/* HERO */}
-      <section className="hero">
+      <div className="home-hero">
         <div className="hero-grid-bg" aria-hidden="true" />
         <div className="hero-x" aria-hidden="true">X</div>
-        <div className="hero-inner">
-          <span className="hero-eyebrow t-eyebrow">Campus Expansão</span>
-          <h1 className="hero-title t-display">
-            Formação que <em>expande</em>
-          </h1>
-          <p className="hero-desc t-body-lg">
-            Cursos, materiais e comunidade para quem quer crescer de verdade —
-            sem atalhos, com método.
-          </p>
-          <div className="hero-actions">
-            <a href="#inscricao" className="btn btn-primary btn-lg btn-arrow">
-              Começar agora
-            </a>
-            <a href="#cursos" className="btn btn-ghost btn-lg">
-              Ver cursos
-            </a>
+        <div className="pg-wrap">
+          <div className="hero-inner">
+            <div className="hero-eyebrow">Campus Expansão</div>
+            <h1 className="hero-title">
+              Nós preparamos.<br /><em>Deus multiplica.</em>
+            </h1>
+            <p className="hero-desc">
+              Estrutura ministerial para líderes de igreja locais. Materiais, formação e ferramentas pra preparar trabalhadores fiéis.
+            </p>
+            <div className="hero-actions">
+              <a href="/landing" className="btn btn-primary btn-lg btn-arrow">Baixar manual gratuito</a>
+              <a href="/cursos" className="btn btn-secondary btn-lg">Conhecer cursos</a>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* CURSOS */}
-      <section id="cursos" style={{ padding: "96px 24px", maxWidth: 1100, margin: "0 auto" }}>
+      {/* STATS */}
+      <div className="pg-wrap">
+        <div className="stats-strip">
+          <div className="stat-item">
+            <div className="stat-item-num">+2<em>mil</em></div>
+            <div className="stat-item-label">Líderes formados</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-item-num">12</div>
+            <div className="stat-item-label">Cursos &amp; trilhas</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-item-num">40<em>+</em></div>
+            <div className="stat-item-label">Materiais gratuitos</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-item-num">6</div>
+            <div className="stat-item-label">Anos de estrada</div>
+          </div>
+        </div>
+      </div>
+
+      {/* MATERIAIS */}
+      <div className="pg-wrap pg-section">
         <div className="psec-head">
           <div className="psec-head-left">
-            <span className="psec-eyebrow t-eyebrow">Formações</span>
-            <h2 className="psec-title t-h1">Cursos disponíveis</h2>
-            <p className="psec-desc t-body">
-              Cada curso foi construído com foco em resultado real — não em horas assistidas.
-            </p>
+            <div className="psec-eyebrow">— Recursos gratuitos</div>
+            <div className="psec-title">Materiais</div>
           </div>
+          <a href="/materiais" className="btn btn-ghost btn-arrow">Ver todos</a>
         </div>
-        <div className="course-grid">
-          {[
-            { num: "01", title: "Fundamentos da Fé", desc: "Bases teológicas sólidas para uma vida cristã madura e frutífera." },
-            { num: "02", title: "Liderança Servil", desc: "Como liderar com autoridade e humildade ao mesmo tempo." },
-            { num: "03", title: "Comunicação & Pregação", desc: "Ferramentas práticas para comunicar a Palavra com clareza e poder." },
-          ].map((c) => (
-            <div className="course" key={c.num}>
-              <span className="course-num t-eyebrow">{c.num}</span>
-              <h3 className="course-title t-h3">{c.title}</h3>
-              <p className="course-desc t-body">{c.desc}</p>
-              <div className="course-foot">
-                <a href="#inscricao" className="btn btn-secondary btn-sm btn-arrow">
-                  Saiba mais
-                </a>
+        <div className="card-grid">
+          <article className="card">
+            <div className="card-media">
+              <div className="card-media-x">X</div>
+              <span className="card-tag">Apostila</span>
+            </div>
+            <div className="card-body">
+              <div className="card-eyebrow">Material gratuito</div>
+              <h3 className="card-title">A igreja que <em>discipula</em></h3>
+              <p className="card-desc">Seis módulos para estruturar o discipulado da sua igreja.</p>
+              <div className="card-foot">
+                <span className="card-meta">PDF · 64 páginas</span>
+                <a href="/landing" className="card-link">Baixar</a>
               </div>
             </div>
-          ))}
+          </article>
+          <article className="card card-cream">
+            <div className="card-media" style={{ background: "linear-gradient(135deg,#94B85C 0%,#4F6B26 100%)" }}>
+              <div className="card-media-x" style={{ color: "rgba(14,17,13,0.1)" }}>X</div>
+              <span className="card-tag" style={{ background: "rgba(14,17,13,0.4)" }}>Curso</span>
+            </div>
+            <div className="card-body">
+              <div className="card-eyebrow">Formação · 6 semanas</div>
+              <h3 className="card-title">Estrutura de <em>equipe</em></h3>
+              <p className="card-desc">Da dependência de uma pessoa ao sistema que sustenta.</p>
+              <div className="card-foot">
+                <span className="card-meta">Online · ao vivo</span>
+                <a href="/cursos" className="card-link">Inscrever</a>
+              </div>
+            </div>
+          </article>
         </div>
-      </section>
-
-      {/* CAPTURA / INSCRIÇÃO */}
-      <section id="inscricao" className="capture">
-        <span className="capture-eyebrow t-eyebrow">Lista de espera</span>
-        <h2 className="capture-title t-h1">
-          Pronto para <em>expandir</em>?
-        </h2>
-        <p className="capture-desc t-body-lg">
-          Entre na lista e receba acesso antecipado, materiais gratuitos e as
-          novidades da CE.X antes de todo mundo.
-        </p>
-        <form className="capture-form" onSubmit={(e) => e.preventDefault()}>
-          <div className="field">
-            <label className="field-label req">Seu nome</label>
-            <input className="input" type="text" placeholder="Como você se chama?" />
-          </div>
-          <div className="field">
-            <label className="field-label req">E-mail</label>
-            <input className="input" type="email" placeholder="seu@email.com" />
-          </div>
-          <button type="submit" className="btn btn-cream btn-lg capture-btn btn-arrow">
-            Quero entrar
-          </button>
-        </form>
-      </section>
+      </div>
 
       {/* DEPOIMENTO */}
-      <section style={{ padding: "96px 24px", maxWidth: 720, margin: "0 auto" }}>
+      <div className="pg-wrap pg-section tight">
         <div className="testimonial">
-          <span className="testi-mark">◆</span>
-          <blockquote className="testi-quote t-h2">
-            "A CE.X mudou completamente a forma como estudo e aplico a Palavra.
-            Conteúdo denso, mas acessível."
-          </blockquote>
-          <footer className="testi-author">
-            <div className="testi-avatar">JM</div>
+          <div className="testi-mark">&ldquo;</div>
+          <p className="testi-quote">
+            A CE.X mudou como eu enxergo liderança. Parei de <em>apagar incêndio</em> e comecei a construir sistema.
+          </p>
+          <div className="testi-author">
+            <div className="testi-avatar" />
             <div>
-              <div className="testi-name">João Machado</div>
-              <div className="testi-role">Aluno — Turma 2025</div>
+              <div className="testi-name">Pr. Ricardo Almeida</div>
+              <div className="testi-role">Igreja Batista Renovo · São Paulo</div>
             </div>
-          </footer>
+          </div>
         </div>
-      </section>
+      </div>
 
       {/* FAQ */}
-      <section id="sobre" style={{ padding: "0 24px 96px", maxWidth: 720, margin: "0 auto" }}>
-        <div className="psec-head" style={{ marginBottom: 40 }}>
-          <span className="psec-eyebrow t-eyebrow">Dúvidas frequentes</span>
-          <h2 className="psec-title t-h2">Perguntas comuns</h2>
+      <div className="pg-wrap pg-section">
+        <div className="psec-head">
+          <div className="psec-head-left">
+            <div className="psec-eyebrow">— Dúvidas frequentes</div>
+            <div className="psec-title">Perguntas</div>
+          </div>
         </div>
         <div className="faq">
           {[
-            { q: "Para quem é a CE.X?", a: "Para qualquer pessoa que queira crescer na fé com seriedade — independente de denominação ou nível de conhecimento." },
-            { q: "Os cursos têm certificado?", a: "Sim. Todos os cursos emitem certificado de conclusão digital após aprovação nas avaliações." },
-            { q: "Posso assistir no meu ritmo?", a: "Sim. Todo o conteúdo é gravado e fica disponível para você assistir quando e onde quiser." },
+            { q: "Para quem é a CE.X?", a: "Para líderes de igrejas locais que querem preparar sua equipe com estrutura — independente de denominação ou tamanho da igreja." },
+            { q: "Os materiais são realmente gratuitos?", a: "Sim. Todo o conteúdo da biblioteca é gratuito. Só pedimos seu e-mail para liberar o acesso." },
+            { q: "Os cursos têm acompanhamento?", a: "Sim. As turmas ao vivo têm mentoria e acompanhamento direto. O conteúdo gravado fica disponível para assistir no seu ritmo." },
+            { q: "Como funciona o método CE.X?", a: "Estrutura ministerial aplicada: diagnóstico, princípios bíblicos e ferramentas práticas que você implementa na mesma semana." },
           ].map((item, i) => (
             <div className="faq-item" key={i}>
               <button className="faq-q">
                 <span className="faq-q-text">{item.q}</span>
-                <span className="faq-icon">+</span>
+                <span className="faq-icon" aria-hidden="true" />
               </button>
-              <div className="faq-a t-body">{item.a}</div>
+              <div className="faq-a">{item.a}</div>
             </div>
           ))}
         </div>
-      </section>
+      </div>
 
-      {/* CTA FINAL */}
-      <section className="cta-block" style={{ margin: "0 24px 96px" }}>
-        <span className="cta-eyebrow t-eyebrow">CE.X · Campus Expansão</span>
-        <h2 className="cta-title t-h1">
-          O próximo passo é <em>seu</em>
-        </h2>
-        <p className="cta-desc t-body-lg">
-          Junte-se a centenas de alunos que estão expandindo sua compreensão da
-          fé e da vida.
-        </p>
-        <div className="cta-actions">
-          <a href="#inscricao" className="btn btn-primary btn-lg btn-arrow">
-            Entrar na lista
-          </a>
+      {/* CTA */}
+      <div className="pg-wrap pg-section">
+        <div className="cta-block">
+          <div className="cta-x">X</div>
+          <div className="cta-eyebrow">— Comece hoje</div>
+          <h2 className="cta-title">Prepare sua <em>equipe.</em></h2>
+          <p className="cta-desc">Baixe o manual gratuito e dê o primeiro passo pra estruturar seu ministério.</p>
+          <div className="cta-actions">
+            <a href="/landing" className="btn btn-ink btn-lg btn-arrow">Baixar manual</a>
+            <a href="#" className="btn btn-lg" style={{ background: "transparent", color: "var(--ink)", borderColor: "rgba(14,17,13,0.3)" }}>Falar conosco</a>
+          </div>
         </div>
-      </section>
+      </div>
 
-      {/* FOOTER */}
-      <footer className="footer">
-        <div className="footer-top">
-          <div>
-            <div className="footer-brand-logo">
-              CE<span className="dot">.</span><span className="x">X</span>
-            </div>
-            <p className="t-small" style={{ marginTop: 8, maxWidth: 280 }}>
-              Campus Expansão — formação que expande fé, caráter e capacidade.
-            </p>
-          </div>
-          <div>
-            <div className="footer-col-title">Links</div>
-            <ul className="footer-links">
-              <li><a href="#cursos">Cursos</a></li>
-              <li><a href="#sobre">Sobre</a></li>
-              <li><a href="#inscricao">Inscrição</a></li>
-            </ul>
-          </div>
-          <div>
-            <div className="footer-col-title">Contato</div>
-            <ul className="footer-links">
-              <li><a href="mailto:contato@campusexpansao.com.br">contato@campusexpansao.com.br</a></li>
-            </ul>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <span>© {new Date().getFullYear()} CE.X · Campus Expansão</span>
-          <div className="footer-social">
-            <a href="#">Instagram</a>
-            <a href="#">YouTube</a>
-          </div>
-        </div>
-      </footer>
-    </>
+      <Footer />
+    </div>
   );
 }
