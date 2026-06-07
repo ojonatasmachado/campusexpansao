@@ -100,6 +100,25 @@ export default function Home() {
             </div>
           </article>
         </div>
+
+        {/* SÉRIE EM DESTAQUE */}
+        <div style={{ marginTop: 20 }}>
+          <article className="card" style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+            <div className="card-media" style={{ height: "100%", minHeight: 180, background: "linear-gradient(135deg,var(--ink) 0%,var(--graphite) 100%)", position: "relative" }}>
+              <div style={{ position: "absolute", right: -20, bottom: -40, fontSize: 160, fontWeight: 700, fontStyle: "italic", color: "rgba(122,158,63,0.12)", lineHeight: 0.8, pointerEvents: "none" }}>X</div>
+              <span className="card-tag" style={{ position: "relative", zIndex: 1 }}>Série · 5 mensagens</span>
+            </div>
+            <div className="card-body">
+              <div className="card-eyebrow">Série para adolescentes · 13 a 17 anos</div>
+              <h3 className="card-title">Muito <em>Barulho</em></h3>
+              <p className="card-desc">Quando todo mundo fala, como ouvir a voz certa? Cinco mensagens sobre chamado, identidade e discernimento — gratuitas.</p>
+              <div className="card-foot">
+                <span className="card-meta">Word · 5 arquivos · gratuito</span>
+                <a href="/series/muito-barulho" className="card-link">Acessar</a>
+              </div>
+            </div>
+          </article>
+        </div>
       </div>
 
       {/* DEPOIMENTO */}
