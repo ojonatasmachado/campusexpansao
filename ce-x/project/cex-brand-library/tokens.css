@@ -1,0 +1,47 @@
+/* ════════════════════════════════════════════════════════════════
+   CE.X DESIGN TOKENS · v1.0
+   Fonte da verdade para front-end. Importe antes de components.css.
+   ════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Cores · base ── */
+  --ink:        #0E110D;
+  --graphite:   #181B16;
+  --card:       #1F221C;
+  --border:     #25291F;
+  --border-2:   #2E3327;
+
+  /* ── Cores · acento ── */
+  --olive:      #7A9E3F;
+  --olive-soft: #94B85C;
+  --olive-deep: #4F6B26;
+  --olive-dim:  rgba(122,158,63,0.10);
+  --olive-line: rgba(122,158,63,0.28);
+
+  /* ── Cores · calor ── */
+  --cream:      #EDE6D3;
+  --cream-soft: #F6F1E0;
+
+  /* ── Cores · texto ── */
+  --white:      #FAFAF7;
+  --light:      #E6E5DD;
+  --muted:      #8B8C82;
+  --subtle:     #555650;
+
+  /* ── Cores · estado ── */
+  --danger:     #D17066;
+
+  /* ── Espaçamento ── */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+
+  /* ── Raio ── */
+  --r-sm: 4px; --r-md: 8px; --r-lg: 14px; --r-pill: 100px;
+
+  /* ── Tipografia ── */
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+
+  /* ── Movimento ── */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 0.18s; --dur-base: 0.4s; --dur-slow: 0.7s;
+}

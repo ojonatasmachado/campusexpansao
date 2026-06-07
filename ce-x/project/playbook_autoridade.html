@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CE.X · Playbook de Autoridade</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0E110D; --graphite: #181B16; --border: #25291F; --border-2: #2E3327;
+    --olive: #7A9E3F; --olive-soft: #94B85C; --olive-deep: #4F6B26;
+    --olive-dim: rgba(122,158,63,0.10); --olive-line: rgba(122,158,63,0.30);
+    --cream: #EDE6D3; --white: #FAFAF7; --light: #E6E5DD; --muted: #8B8C82; --subtle: #555650;
+    --danger: #D17066;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--ink); color: var(--white);
+    font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'ss01';
+  }
+  body { padding: 80px 24px 120px; }
+  .container { max-width: 960px; margin: 0 auto; }
+
+  /* ════════ HERO ════════ */
+  .hero {
+    border-bottom: 0.5px solid var(--border-2);
+    padding-bottom: 64px;
+    margin-bottom: 80px;
+  }
+  .crumb {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--olive);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .crumb::before { content: ''; width: 24px; height: 1px; background: var(--olive); }
+  h1 {
+    font-size: 88px;
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    line-height: 0.95;
+    color: var(--white);
+    margin-bottom: 32px;
+  }
+  h1 em { font-style: italic; font-weight: 600; color: var(--olive); }
+  .lede {
+    font-size: 22px;
+    color: var(--light);
+    line-height: 1.55;
+    max-width: 720px;
+    font-style: italic;
+  }
+  .lede em { color: var(--olive); font-weight: 600; font-style: italic; }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-top: 64px;
+    padding-top: 36px;
+    border-top: 0.5px solid var(--border-2);
+  }
+  .stat-num {
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    color: var(--white);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-num em { color: var(--olive); font-style: italic; font-weight: 600; }
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    line-height: 1.4;
+  }
+
+  /* ════════ SECTIONS ════════ */
+  section { margin-bottom: 96px; }
+  .sec-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--olive);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .sec-num::before { content: '§ '; color: var(--subtle); }
+  h2 {
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--white);
+    margin-bottom: 18px;
+  }
+  h2 em { font-style: italic; font-weight: 600; color: var(--olive); }
+  .sec-desc {
+    font-size: 17px;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 680px;
+    margin-bottom: 48px;
+  }
+  .sec-desc strong { color: var(--light); font-weight: 600; }
+  .sec-desc em { color: var(--olive); font-style: italic; font-weight: 600; }
+
+  /* ════════ THESIS BLOCK ════════ */
+  .thesis {
+    background: var(--graphite);
+    border: 0.5px solid var(--border-2);
+    border-left: 3px solid var(--olive);
+    padding: 36px 40px;
+    margin-bottom: 32px;
+  }
+  .thesis-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--olive);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+  .thesis-text {
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--white);
+    line-height: 1.3;
+    letter-spacing: -0.025em;
+    font-style: italic;
+  }
+  .thesis-text em { color: var(--olive); font-weight: 600; }
+
+  /* ════════ PILLARS ════════ */
+  .pillars {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .pillar {
+    background: var(--graphite);
+    border: 0.5px solid var(--border-2);
+    border-radius: 4px;
+    padding: 32px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .pillar-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--olive);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .pillar-name {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--white);
+    line-height: 1.1;
+  }
+  .pillar-name em { font-style: italic; color: var(--olive); font-weight: 600; }
+  .pillar-purpose {
+    font-size: 14px;
+    color: var(--light);
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+  .pillar-divider {
+    height: 0.5px;
+    background: var(--border-2);
+    margin: 18px 0 14px;
+  }
+  .pillar-block-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--subtle);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .pillar-examples {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pillar-example {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+    padding-left: 16px;
+    position: relative;
+  }
+  .pillar-example::before {
+    content: '◆';
+    position: absolute;
+    left: 0;
+    color: var(--olive);
+    font-size: 7px;
+    top: 6px;
+  }
+  .pillar-example strong { color: var(--light); font-weight: 600; }
+
+  /* ════════ WEEKLY RHYTHM ════════ */
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .day {
+    background: var(--graphite);
+    border: 0.5px solid var(--border-2);
+    border-radius: 4px;
+    padding: 14px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+    min-height: 130px;
+  }
+  .day.active { border-color: var(--olive); border-left-width: 2px; }
+  .day.rest { opacity: 0.45; }
+  .day-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .day.active .day-name { color: var(--olive); }
+  .day-type {
+    font-size: 11px;
+    color: var(--white);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    line-height: 1.2;
+  }
+  .day.rest .day-type { color: var(--subtle); font-weight: 400; font-style: italic; }
+  .day-format {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    color: var(--olive);
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    margin-top: auto;
+    font-weight: 500;
+  }
+
+  /* ════════ TEMPLATES ════════ */
+  .templates {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .template {
+    background: var(--graphite);
+    border: 0.5px solid var(--border-2);
+    border-radius: 4px;
+    padding: 32px 36px;
+  }
+  .template-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+    gap: 16px;
+  }
+  .template-name {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--white);
+  }
+  .template-name em { font-style: italic; color: var(--olive); font-weight: 600; }
+  .template-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--olive);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    background: var(--olive-dim);
+    border: 0.5px solid var(--olive-line);
+    padding: 4px 10px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .template-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .template-struct {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .struct-row {
+    display: grid;
+    grid-template-columns: 70px 90px 1fr;
+    gap: 18px;
+    padding: 12px 0;
+    border-top: 0.5px dashed var(--border-2);
+    align-items: baseline;
+  }
+  .struct-row:first-child { border-top: none; padding-top: 0; }
+  .struct-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--olive);
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+  .struct-stage {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--light);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .struct-content {
+    font-size: 14px;
+    color: var(--light);
+    line-height: 1.55;
+  }
+  .struct-content em { color: var(--olive); font-style: italic; font-weight: 600; }
+  .struct-content code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--ink);
+    border: 0.5px solid var(--border-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--olive);
+  }
+
+  /* ════════ HASHTAGS ════════ */
+  .tags-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .tag-pool {
+    background: var(--graphite);
+    border: 0.5px solid var(--border-2);
+    border-radius: 4px;
+    padding: 24px 28px;
+  }
+  .tag-pool-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 0.5px solid var(--border-2);
+  }
+  .tag-pool-name {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--white);
+  }
+  .tag-pool-size {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--olive);
+    letter-spacing: 0.10em;
+    font-weight: 500;
+  }
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--olive);
+    background: var(--ink);
+    border: 0.5px solid var(--olive-line);
+    padding: 4px 10px;
+    border-radius: 100px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ════════ BIO BLOCK ════════ */
+  .bio-mock {
+    background: var(--graphite);
+    border: 0.5px solid var(--border-2);
+    border-radius: 8px;
+    padding: 32px 36px;
+    max-width: 520px;
+  }
+  .bio-handle {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+  }
+  .bio-meta {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 18px;
+    line-height: 1.5;
+  }
+  .bio-text {
+    font-size: 15px;
+    color: var(--light);
+    line-height: 1.55;
+    margin-bottom: 16px;
+    white-space: pre-line;
+  }
+  .bio-text strong { color: var(--white); font-weight: 600; }
+  .bio-text em { color: var(--olive); font-style: italic; font-weight: 600; }
+  .bio-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--olive);
+    letter-spacing: 0.02em;
+  }
+
+  /* ════════ 30-DAY PLAN ════════ */
+  .plan-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 24px;
+  }
+  .plan-cell {
+    aspect-ratio: 1;
+    background: var(--graphite);
+    border: 0.5px solid var(--border-2);
+    border-radius: 3px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    font-size: 9px;
+    overflow: hidden;
+  }
+  .plan-cell.rest { opacity: 0.35; }
+  .plan-day-num {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--subtle);
+    font-size: 9px;
+    font-weight: 500;
+  }
+  .plan-cell.active .plan-day-num { color: var(--white); }
+  .plan-cell-type {
+    color: var(--olive);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    font-weight: 500;
+  }
+  .plan-cell.rest .plan-cell-type { color: var(--subtle); font-style: italic; }
+  .plan-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    padding: 14px 0;
+    border-top: 0.5px solid var(--border-2);
+  }
+  .plan-legend strong { color: var(--olive); font-weight: 600; }
+
+  /* ════════ PRINCIPLES ════════ */
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .principle {
+    background: var(--graphite);
+    border: 0.5px solid var(--border-2);
+    border-left: 2px solid var(--olive);
+    border-radius: 4px;
+    padding: 24px 28px;
+  }
+  .principle-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--olive);
+    letter-spacing: 0.14em;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .principle-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--white);
+    margin-bottom: 8px;
+    line-height: 1.25;
+  }
+  .principle-title em { color: var(--olive); font-style: italic; font-weight: 600; }
+  .principle-text {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+
+  /* ════════ CALLOUT ════════ */
+  .callout {
+    background: var(--olive-dim);
+    border: 0.5px solid var(--olive-line);
+    border-radius: 4px;
+    padding: 22px 26px;
+    margin-top: 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .callout-icon {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--olive);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .callout-body {
+    font-size: 14px;
+    color: var(--light);
+    line-height: 1.6;
+  }
+  .callout-body strong { color: var(--white); font-weight: 600; }
+  .callout-body em { color: var(--olive); font-style: italic; font-weight: 600; }
+
+  /* ════════ FOOTER ════════ */
+  .footer {
+    margin-top: 96px;
+    padding-top: 48px;
+    border-top: 0.5px solid var(--border-2);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .footer-logo {
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: -0.06em;
+    color: var(--white);
+  }
+  .footer-logo .dot, .footer-logo .x { color: var(--olive); }
+  .footer-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.10em;
+    text-align: right;
+    line-height: 1.6;
+  }
+  .footer-tag strong { color: var(--olive); font-weight: 500; }
+
+  @media (max-width: 720px) {
+    h1 { font-size: 56px; }
+    h2 { font-size: 40px; }
+    .hero-stats { grid-template-columns: repeat(2, 1fr); }
+    .pillars { grid-template-columns: 1fr; }
+    .principles { grid-template-columns: 1fr; }
+    .tags-grid { grid-template-columns: 1fr; }
+    .week-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .plan-grid { grid-template-columns: repeat(5, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ════════ HERO ════════ -->
+  <header class="hero">
+    <div class="crumb">Playbook · Autoridade no Instagram</div>
+    <h1>Como você vira <em>referência</em>.</h1>
+    <p class="lede">
+      Autoridade no Instagram não é viralizar. É ser a primeira pessoa que <em>vem na cabeça</em> do líder quando ele pensa em estrutura ministerial. Esse playbook é o sistema pra você chegar lá em 90 dias.
+    </p>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-num"><em>4</em></div>
+        <div class="stat-label">Pilares de<br>conteúdo</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">5×<em>/sem</em></div>
+        <div class="stat-label">Frequência<br>mínima</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num"><em>90</em></div>
+        <div class="stat-label">Dias para<br>tração</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">1<em>:1</em></div>
+        <div class="stat-label">DM resposta<br>obrigatória</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ════════ §01 — TESE ════════ -->
+  <section>
+    <div class="sec-num">01 · Posicionamento</div>
+    <h2>O que <em>você é.</em></h2>
+    <p class="sec-desc">
+      Antes de postar nada, escreve isto em uma frase. Cada post depois passa por esse filtro: <em>se não serve esta tese, não posta</em>.
+    </p>
+
+    <div class="thesis">
+      <div class="thesis-title">Tese central · CE.X</div>
+      <div class="thesis-text">
+        Eu ajudo líderes de igreja a <em>estruturar o ministério</em> com excelência prática — para que a parte humana esteja preparada quando Deus se mover.
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-icon">▸</div>
+      <div class="callout-body">
+        <strong>Como usar:</strong> antes de gravar ou postar qualquer coisa, leia a tese em voz alta. Se o conteúdo não move alguém em direção a "estrutura ministerial com excelência", <em>não é da CE.X</em>. Guarda pra outro perfil.
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ §02 — PILARES ════════ -->
+  <section>
+    <div class="sec-num">02 · Pilares de conteúdo</div>
+    <h2>Os <em>4 tipos</em> de post.</h2>
+    <p class="sec-desc">
+      Todo post da CE.X cai em <strong>um destes quatro pilares</strong>. Isso facilita o planejamento — você não fica "sem ideia". Você fica girando entre os pilares.
+    </p>
+
+    <div class="pillars">
+      <!-- PILAR 1 -->
+      <div class="pillar">
+        <div class="pillar-num">Pilar · 01</div>
+        <div class="pillar-name"><em>Diagnóstico</em></div>
+        <div class="pillar-purpose">
+          Identifica um problema que o líder sente mas não sabe nomear. Cria <em>"é isso que eu vivo!"</em>. Maior gerador de save/share.
+        </div>
+        <div class="pillar-divider"></div>
+        <div class="pillar-block-label">Exemplos</div>
+        <div class="pillar-examples">
+          <div class="pillar-example"><strong>5 sinais</strong> de que sua equipe está no esforço, não no sistema</div>
+          <div class="pillar-example"><strong>Por que</strong> sua igreja cresce em culto mas não em discípulos</div>
+          <div class="pillar-example"><strong>O que toda</strong> equipe ministerial faz errado nos primeiros 6 meses</div>
+        </div>
+      </div>
+
+      <!-- PILAR 2 -->
+      <div class="pillar">
+        <div class="pillar-num">Pilar · 02</div>
+        <div class="pillar-name"><em>Princípio</em></div>
+        <div class="pillar-purpose">
+          Verdade bíblica + aplicada à estrutura. O "porquê" antes do "como". Constrói autoridade — você não dá só técnica, dá fundamento.
+        </div>
+        <div class="pillar-divider"></div>
+        <div class="pillar-block-label">Exemplos</div>
+        <div class="pillar-examples">
+          <div class="pillar-example">"<strong>Nós preparamos.</strong> Deus multiplica." (manifesto)</div>
+          <div class="pillar-example"><strong>Estrutura é honrar</strong> o agir de Deus</div>
+          <div class="pillar-example"><strong>A diferença</strong> entre delegar e abandonar</div>
+        </div>
+      </div>
+
+      <!-- PILAR 3 -->
+      <div class="pillar">
+        <div class="pillar-num">Pilar · 03</div>
+        <div class="pillar-name"><em>Aplicação</em></div>
+        <div class="pillar-purpose">
+          O "como fazer agora". Passos práticos, checklists, ferramentas. Gera engajamento de "vou aplicar amanhã". DM e save campeão.
+        </div>
+        <div class="pillar-divider"></div>
+        <div class="pillar-block-label">Exemplos</div>
+        <div class="pillar-examples">
+          <div class="pillar-example"><strong>Como rodar</strong> uma reunião de líderes em 45 minutos</div>
+          <div class="pillar-example"><strong>O checklist</strong> de revisão antes de cada culto</div>
+          <div class="pillar-example"><strong>3 perguntas</strong> que todo discipulador precisa fazer no primeiro encontro</div>
+        </div>
+      </div>
+
+      <!-- PILAR 4 -->
+      <div class="pillar">
+        <div class="pillar-num">Pilar · 04</div>
+        <div class="pillar-name"><em>Devocional</em></div>
+        <div class="pillar-purpose">
+          Versículo + reflexão pessoal de liderança. Humaniza. Mostra o lado pastoral. Não é pregação — é caminhada compartilhada.
+        </div>
+        <div class="pillar-divider"></div>
+        <div class="pillar-block-label">Exemplos</div>
+        <div class="pillar-examples">
+          <div class="pillar-example"><strong>Habacuque 2.3</strong> — a visão é para um tempo determinado</div>
+          <div class="pillar-example"><strong>Provérbios 28.19</strong> — quem lavra a terra terá pão</div>
+          <div class="pillar-example"><strong>Lucas 10.2</strong> — a seara é grande, os trabalhadores são poucos</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-icon">▸</div>
+      <div class="callout-body">
+        <strong>Proporção alvo:</strong> a cada 10 posts → <em>3 Diagnóstico, 3 Princípio, 3 Aplicação, 1 Devocional</em>. O devocional pesa menos porque qualquer pastor faz — o que te diferencia é Diagnóstico + Aplicação.
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ §03 — RITMO SEMANAL ════════ -->
+  <section>
+    <div class="sec-num">03 · Ritmo semanal</div>
+    <h2>O calendário <em>que funciona.</em></h2>
+    <p class="sec-desc">
+      5 posts por semana. <strong>Terça e quinta são os dias-âncora</strong> (maior alcance pra conteúdo ministerial). Sexta funciona pra devocional. Sábado e domingo, descanso (você é pastor — pratique também).
+    </p>
+
+    <div class="week-grid">
+      <div class="day rest">
+        <div class="day-name">Seg</div>
+        <div class="day-type">Descanso<br>ativo</div>
+        <div class="day-format">Story</div>
+      </div>
+      <div class="day active">
+        <div class="day-name">Ter</div>
+        <div class="day-type">Reel<br>Diagnóstico</div>
+        <div class="day-format">Reel</div>
+      </div>
+      <div class="day active">
+        <div class="day-name">Qua</div>
+        <div class="day-type">Carrossel<br>Aplicação</div>
+        <div class="day-format">Carrossel</div>
+      </div>
+      <div class="day active">
+        <div class="day-name">Qui</div>
+        <div class="day-type">Reel<br>Princípio</div>
+        <div class="day-format">Reel</div>
+      </div>
+      <div class="day active">
+        <div class="day-name">Sex</div>
+        <div class="day-type">Post<br>Devocional</div>
+        <div class="day-format">Estático</div>
+      </div>
+      <div class="day rest">
+        <div class="day-name">Sáb</div>
+        <div class="day-type">Off</div>
+        <div class="day-format">—</div>
+      </div>
+      <div class="day active">
+        <div class="day-name">Dom</div>
+        <div class="day-type">Reel<br>Aplicação</div>
+        <div class="day-format">Reel</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-icon">▸</div>
+      <div class="callout-body">
+        <strong>Hora ideal de postar:</strong> reels às <em>20h da terça/quinta</em>; carrosséis às <em>13h da quarta</em>; devocional <em>7h da sexta</em>. São janelas de quando líderes consomem conteúdo (depois do expediente / hora do almoço).
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ §04 — REEL TEMPLATES ════════ -->
+  <section>
+    <div class="sec-num">04 · Estrutura de reel</div>
+    <h2>O molde de <em>cada reel.</em></h2>
+    <p class="sec-desc">
+      Reel de autoridade ministerial tem uma estrutura quase invariável. <strong>3s pra fisgar, 5s pra prometer, 30s pra entregar, 5s pra chamar.</strong> Aqui está o esqueleto para cada pilar.
+    </p>
+
+    <div class="templates">
+
+      <!-- TEMPLATE 1: Diagnóstico -->
+      <div class="template">
+        <div class="template-head">
+          <div class="template-name"><em>Diagnóstico</em> · 45-60s</div>
+          <div class="template-meta">Pilar 01</div>
+        </div>
+        <div class="template-desc">
+          Aponta um problema que o líder vive mas não nomeia. Termina com uma "luz" — o que fazer.
+        </div>
+        <div class="template-struct">
+          <div class="struct-row">
+            <div class="struct-time">0:00–0:03</div>
+            <div class="struct-stage">Gancho</div>
+            <div class="struct-content">Pergunta direta ou afirmação chocante. <em>"A maioria das igrejas não tem problema de fé."</em></div>
+          </div>
+          <div class="struct-row">
+            <div class="struct-time">0:03–0:08</div>
+            <div class="struct-stage">Tese</div>
+            <div class="struct-content">Sua afirmação contraintuitiva. <em>"Tem problema de estrutura."</em> · Cue: <code>Lower Third</code></div>
+          </div>
+          <div class="struct-row">
+            <div class="struct-time">0:08–0:30</div>
+            <div class="struct-stage">Sintomas</div>
+            <div class="struct-content">3-5 sinais práticos. Cada um vira item de lista. · Cue: <code>Lista Numerada</code></div>
+          </div>
+          <div class="struct-row">
+            <div class="struct-time">0:30–0:40</div>
+            <div class="struct-stage">Diagnóstico</div>
+            <div class="struct-content">A causa-raiz comum a todos os sintomas. Ex: <em>"Você cresceu sem processo."</em></div>
+          </div>
+          <div class="struct-row">
+            <div class="struct-time">0:40–0:55</div>
+            <div class="struct-stage">Aplicação</div>
+            <div class="struct-content">O primeiro passo prático. <em>"Documente o que funciona."</em> · Cue: <code>Highlight</code></div>
+          </div>
+          <div class="struct-row">
+            <div class="struct-time">0:55–1:00</div>
+            <div class="struct-stage">CTA</div>
+            <div class="struct-content">"Salva este reel" ou "Marca um líder que precisa ver isso". · Cue: <code>End Card</code></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TEMPLATE 2: Princípio -->
+      <div class="template">
+        <div class="template-head">
+          <div class="template-name"><em>Princípio</em> · 45s</div>
+          <div class="template-meta">Pilar 02</div>
+        </div>
+        <div class="template-desc">
+          Verdade bíblica conectada à liderança prática. Constrói reputação de "pastor que pensa".
+        </div>
+        <div class="template-struct">
+          <div class="struct-row">
+            <div class="struct-time">0:00–0:05</div>
+            <div class="struct-stage">Frase-tese</div>
+            <div class="struct-content">Sua versão do princípio em 6 palavras ou menos. <em>"Estrutura é honrar o agir de Deus."</em></div>
+          </div>
+          <div class="struct-row">
+            <div class="struct-time">0:05–0:20</div>
+            <div class="struct-stage">Versículo</div>
+            <div class="struct-content">Passagem bíblica que ancora a tese. · Cue: <code>Versículo</code></div>
+          </div>
+          <div class="struct-row">
+            <div class="struct-time">0:20–0:35</div>
+            <div class="struct-stage">Aplicação ministerial</div>
+            <div class="struct-content">Como isso muda a liderança hoje. Exemplo concreto, não abstração.</div>
+          </div>
+          <div class="struct-row">
+            <div class="struct-time">0:35–0:45</div>
+            <div class="struct-stage">Manifesto + CTA</div>
+            <div class="struct-content">Repete a frase-tese. Convida pro próximo conteúdo. · Cue: <code>End Card</code></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TEMPLATE 3: Aplicação -->
+      <div class="template">
+        <div class="template-head">
+          <div class="template-name"><em>Aplicação</em> · 60-90s</div>
+          <div class="template-meta">Pilar 03</div>
+        </div>
+        <div class="template-desc">
+          Pode ser mais longo. O líder vai pausar pra anotar. Foca em ferramenta ou processo.
+        </div>
+        <div class="template-struct">
+          <div class="struct-row">
+            <div class="struct-time">0:00–0:05</div>
+            <div class="struct-stage">Promessa</div>
+            <div class="struct-content">O que ele vai conseguir. <em>"3 perguntas pra rodar sua próxima reunião em 45 minutos."</em></div>
+          </div>
+          <div class="struct-row">
+            <div class="struct-time">0:05–0:15</div>
+            <div class="struct-stage">Contexto</div>
+            <div class="struct-content">Por que isso importa agora. Validação do problema.</div>
+          </div>
+          <div class="struct-row">
+            <div class="struct-time">0:15–1:00</div>
+            <div class="struct-stage">Passos</div>
+            <div class="struct-content">Os 3-5 passos numerados. Cada um com nome curto + 1 frase de explicação. · Cue: <code>Lista</code></div>
+          </div>
+          <div class="struct-row">
+            <div class="struct-time">1:00–1:20</div>
+            <div class="struct-stage">Exemplo real</div>
+            <div class="struct-content">Aplicação na sua própria liderança. Cria credibilidade.</div>
+          </div>
+          <div class="struct-row">
+            <div class="struct-time">1:20–1:30</div>
+            <div class="struct-stage">CTA específico</div>
+            <div class="struct-content">"Comenta SIM que mando o PDF" / "Marca o líder da sua equipe". · Cue: <code>End Card</code></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TEMPLATE 4: Devocional -->
+      <div class="template">
+        <div class="template-head">
+          <div class="template-name"><em>Devocional</em> · 30-40s</div>
+          <div class="template-meta">Pilar 04 · Estático ou reel curto</div>
+        </div>
+        <div class="template-desc">
+          Pode ser post estático (carrossel de 2 slides) ou reel curto. Foco em ressonância, não em informação.
+        </div>
+        <div class="template-struct">
+          <div class="struct-row">
+            <div class="struct-time">0:00–0:08</div>
+            <div class="struct-stage">Versículo</div>
+            <div class="struct-content">Lê devagar. Cue: <code>Versículo</code> em destaque.</div>
+          </div>
+          <div class="struct-row">
+            <div class="struct-time">0:08–0:25</div>
+            <div class="struct-stage">Reflexão pessoal</div>
+            <div class="struct-content">Como esse versículo te marcou esta semana. Vulnerabilidade pastoral.</div>
+          </div>
+          <div class="struct-row">
+            <div class="struct-time">0:25–0:35</div>
+            <div class="struct-stage">Convite</div>
+            <div class="struct-content">"Hoje, leve isso pra sua oração." Sem CTA comercial.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ §05 — HASHTAGS ════════ -->
+  <section>
+    <div class="sec-num">05 · Hashtags</div>
+    <h2>O conjunto <em>certo</em>.</h2>
+    <p class="sec-desc">
+      <strong>15 hashtags por post</strong>. Mistura três pools: 5 grandes (alcance), 5 médias (nicho), 5 pequenas (descoberta orgânica). Sempre cole no <em>primeiro comentário</em>, não na legenda.
+    </p>
+
+    <div class="tags-grid">
+      <div class="tag-pool">
+        <div class="tag-pool-head">
+          <div class="tag-pool-name">Pool 1 · Amplas</div>
+          <div class="tag-pool-size">5/post · 500k+</div>
+        </div>
+        <div class="tag-list">
+          <span class="tag">#igreja</span>
+          <span class="tag">#discipulado</span>
+          <span class="tag">#cristao</span>
+          <span class="tag">#fe</span>
+          <span class="tag">#pastor</span>
+          <span class="tag">#evangelho</span>
+          <span class="tag">#oracao</span>
+        </div>
+      </div>
+
+      <div class="tag-pool">
+        <div class="tag-pool-head">
+          <div class="tag-pool-name">Pool 2 · Nicho médio</div>
+          <div class="tag-pool-size">5/post · 50–500k</div>
+        </div>
+        <div class="tag-list">
+          <span class="tag">#liderancacristã</span>
+          <span class="tag">#ministerio</span>
+          <span class="tag">#plantacaodeigrejas</span>
+          <span class="tag">#discipuladocristao</span>
+          <span class="tag">#liderpastor</span>
+          <span class="tag">#igrejalocal</span>
+          <span class="tag">#vocacaoministerial</span>
+        </div>
+      </div>
+
+      <div class="tag-pool">
+        <div class="tag-pool-head">
+          <div class="tag-pool-name">Pool 3 · Específicas</div>
+          <div class="tag-pool-size">5/post · &lt;50k</div>
+        </div>
+        <div class="tag-list">
+          <span class="tag">#estruturadeigreja</span>
+          <span class="tag">#formacaodeliderescristaos</span>
+          <span class="tag">#equipeministerial</span>
+          <span class="tag">#processoministerial</span>
+          <span class="tag">#liderancaintencional</span>
+          <span class="tag">#discipuladointencional</span>
+          <span class="tag">#campusexpansao</span>
+        </div>
+      </div>
+
+      <div class="tag-pool">
+        <div class="tag-pool-head">
+          <div class="tag-pool-name">Marca · Sempre</div>
+          <div class="tag-pool-size">1/post</div>
+        </div>
+        <div class="tag-list">
+          <span class="tag">#cex</span>
+          <span class="tag">#campusexpansao</span>
+        </div>
+        <div style="margin-top: 14px; font-size: 12px; color: var(--muted); line-height: 1.5;">
+          A hashtag de marca <em>#cex</em> ou <em>#campusexpansao</em> entra em <strong>100% dos posts</strong>. É o que constrói histórico próprio e permite que o algoritmo aprenda seu nicho.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ §06 — BIO ════════ -->
+  <section>
+    <div class="sec-num">06 · Bio &amp; perfil</div>
+    <h2>O que tem que estar <em>na bio.</em></h2>
+    <p class="sec-desc">
+      A bio é seu <em>elevator pitch</em>. Quem chega no perfil tem 3 segundos pra decidir se segue. <strong>Quatro linhas, quatro funções.</strong>
+    </p>
+
+    <div class="bio-mock">
+      <div class="bio-handle">@campusexpansao</div>
+      <div class="bio-meta">Campus Expansão · Categoria: Educação religiosa</div>
+      <div class="bio-text"><strong>CE.X · Campus Expansão</strong>
+Estrutura ministerial para líderes locais.
+<em>Nós preparamos. Deus multiplica.</em>
+↓ Materiais gratuitos abaixo</div>
+      <div class="bio-link">campusexpansao.com</div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-icon">▸</div>
+      <div class="callout-body">
+        <strong>As 4 funções da bio:</strong> <em>linha 1</em> diz quem você é · <em>linha 2</em> diz o que você ensina · <em>linha 3</em> é seu manifesto/diferencial · <em>linha 4</em> é a chamada pro link. Não inverta a ordem. Não acrescente emojis de pizza.
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ §07 — PRINCÍPIOS DE ENGAJAMENTO ════════ -->
+  <section>
+    <div class="sec-num">07 · Princípios de engajamento</div>
+    <h2>Regras <em>inegociáveis.</em></h2>
+    <p class="sec-desc">
+      Autoridade se constrói na <strong>interação</strong>, não no broadcast. Estes 6 princípios separam quem cresce de quem só posta.
+    </p>
+
+    <div class="principles">
+      <div class="principle">
+        <div class="principle-num">P · 01</div>
+        <div class="principle-title">Responda <em>toda</em> DM</div>
+        <div class="principle-text">Até a DM que parece spam. Resposta em até 24h. O algoritmo nota quem responde — e quem manda DM nota duas vezes mais.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">P · 02</div>
+        <div class="principle-title">Comente em <em>10 perfis/dia</em></div>
+        <div class="principle-text">Líderes pares, não fãs. Comente algo substantivo, não "amém". Tempo: 15 min/dia, no início da manhã.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">P · 03</div>
+        <div class="principle-title">Stories <em>diários</em></div>
+        <div class="principle-text">Mesmo sem reel/post — story todo dia. Mostra rotina ministerial, leituras, perguntas. Constrói familiaridade.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">P · 04</div>
+        <div class="principle-title">Nunca delete <em>comentários críticos</em></div>
+        <div class="principle-text">Responda com substância ou ignore. Apagar destrói credibilidade. Só apague xingamento ou spam.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">P · 05</div>
+        <div class="principle-title">Salve mais do <em>que cure</em></div>
+        <div class="principle-text">Posts que viram referência ("vou salvar pra usar") batem viralizar. Aplicação > entretenimento. Foque em save rate.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">P · 06</div>
+        <div class="principle-title">Não <em>compre</em> seguidor</div>
+        <div class="principle-text">Sério. O algoritmo do Instagram penaliza por décadas. Cresça orgânico mesmo que devagar — autoridade é confiança.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ §08 — PLANO 30 DIAS ════════ -->
+  <section>
+    <div class="sec-num">08 · Plano de 30 dias</div>
+    <h2>O primeiro <em>mês.</em></h2>
+    <p class="sec-desc">
+      Pra você não ficar travado. <strong>22 posts em 30 dias</strong>, distribuídos pelos 4 pilares. Cada quadrado é um dia — verde escuro são dias off (use pra descanso e DMs).
+    </p>
+
+    <div class="plan-grid">
+      <!-- Semana 1 -->
+      <div class="plan-cell rest"><div class="plan-day-num">D01·Seg</div><div class="plan-cell-type">off · stories</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D02·Ter</div><div class="plan-cell-type">Reel<br>Diagnóstico</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D03·Qua</div><div class="plan-cell-type">Carrossel<br>Aplicação</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D04·Qui</div><div class="plan-cell-type">Reel<br>Princípio</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D05·Sex</div><div class="plan-cell-type">Devocional</div></div>
+      <div class="plan-cell rest"><div class="plan-day-num">D06·Sáb</div><div class="plan-cell-type">off</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D07·Dom</div><div class="plan-cell-type">Reel<br>Aplicação</div></div>
+
+      <!-- Semana 2 -->
+      <div class="plan-cell rest"><div class="plan-day-num">D08·Seg</div><div class="plan-cell-type">off · stories</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D09·Ter</div><div class="plan-cell-type">Reel<br>Diagnóstico</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D10·Qua</div><div class="plan-cell-type">Carrossel<br>Aplicação</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D11·Qui</div><div class="plan-cell-type">Reel<br>Princípio</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D12·Sex</div><div class="plan-cell-type">Devocional</div></div>
+      <div class="plan-cell rest"><div class="plan-day-num">D13·Sáb</div><div class="plan-cell-type">off</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D14·Dom</div><div class="plan-cell-type">Reel<br>Aplicação</div></div>
+
+      <!-- Semana 3 -->
+      <div class="plan-cell rest"><div class="plan-day-num">D15·Seg</div><div class="plan-cell-type">off · stories</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D16·Ter</div><div class="plan-cell-type">Reel<br>Diagnóstico</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D17·Qua</div><div class="plan-cell-type">Carrossel<br>Aplicação</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D18·Qui</div><div class="plan-cell-type">Reel<br>Princípio</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D19·Sex</div><div class="plan-cell-type">Devocional</div></div>
+      <div class="plan-cell rest"><div class="plan-day-num">D20·Sáb</div><div class="plan-cell-type">off</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D21·Dom</div><div class="plan-cell-type">Carrossel<br>Diagnóstico</div></div>
+
+      <!-- Semana 4 -->
+      <div class="plan-cell rest"><div class="plan-day-num">D22·Seg</div><div class="plan-cell-type">off · stories</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D23·Ter</div><div class="plan-cell-type">Reel<br>Diagnóstico</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D24·Qua</div><div class="plan-cell-type">Carrossel<br>Aplicação</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D25·Qui</div><div class="plan-cell-type">Reel<br>Princípio</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D26·Sex</div><div class="plan-cell-type">Devocional</div></div>
+      <div class="plan-cell rest"><div class="plan-day-num">D27·Sáb</div><div class="plan-cell-type">off</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D28·Dom</div><div class="plan-cell-type">Reel<br>Aplicação</div></div>
+
+      <!-- Semana 5 (parcial) -->
+      <div class="plan-cell rest"><div class="plan-day-num">D29·Seg</div><div class="plan-cell-type">Revisão<br>de métricas</div></div>
+      <div class="plan-cell active"><div class="plan-day-num">D30·Ter</div><div class="plan-cell-type">Reel especial<br>retrospectiva</div></div>
+    </div>
+
+    <div class="plan-legend">
+      <span><strong>22</strong> · posts ativos</span>
+      <span><strong>8</strong> · dias de descanso</span>
+      <span><strong>10</strong> · reels</span>
+      <span><strong>8</strong> · carrosséis</span>
+      <span><strong>4</strong> · devocionais</span>
+    </div>
+
+    <div class="callout">
+      <div class="callout-icon">▸</div>
+      <div class="callout-body">
+        <strong>No D29</strong> você abre os Insights, olha quais 3 reels tiveram mais save/share, e usa eles como <em>norte</em> pro mês 2. Conteúdo que repete o padrão de save vence sempre.
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ §09 — MÉTRICAS QUE IMPORTAM ════════ -->
+  <section>
+    <div class="sec-num">09 · O que medir</div>
+    <h2>Métricas <em>que importam.</em></h2>
+    <p class="sec-desc">
+      Esqueça follower count. Quatro métricas dizem se você está construindo autoridade ou só fazendo barulho.
+    </p>
+
+    <div class="principles">
+      <div class="principle">
+        <div class="principle-num">M · 01</div>
+        <div class="principle-title">Save rate <em>≥ 4%</em></div>
+        <div class="principle-text">Saves ÷ alcance. Acima de 4% significa que o conteúdo virou referência. Líderes salvam o que vão usar — é o sinal mais honesto.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">M · 02</div>
+        <div class="principle-title">Share rate <em>≥ 2%</em></div>
+        <div class="principle-text">Compartilhamentos por DM ou story. Mostra que o conteúdo viralizou no <em>nicho certo</em>, não no Instagram inteiro.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">M · 03</div>
+        <div class="principle-title">DMs <em>com pergunta</em></div>
+        <div class="principle-text">Conte quantas DMs por semana são perguntas práticas ministeriais (não cumprimento). 5+ por semana = autoridade nascendo.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">M · 04</div>
+        <div class="principle-title">Follower quality</div>
+        <div class="principle-text">Dos seguidores novos do mês, quantos são pastores/líderes? Olhe os perfis. Quantidade sem qualidade não é autoridade.</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+    <div class="footer-tag">
+      Playbook de Autoridade · <strong>v1.0</strong><br>
+      campusexpansao.com
+    </div>
+  </footer>
+</div>
+</body>
+</html>

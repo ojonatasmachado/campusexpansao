@@ -20,12 +20,10 @@ export default function Nav() {
       <ul className="nav-links">
         {link("/", "Início")}
         {link("/materiais", "Materiais")}
-        {link("/cursos", "Cursos")}
-        {link("/series/muito-barulho", "Séries")}
-        {link("/loja", "Loja")}
+        {link("/cursos", "Cursos & Mentorias")}
         {link("/sobre", "Sobre")}
       </ul>
-      <Link href="/landing" className="nav-cta">Comece agora</Link>
+      <Link href="/materiais" className="nav-cta">Comece agora</Link>
     </nav>
   );
 }

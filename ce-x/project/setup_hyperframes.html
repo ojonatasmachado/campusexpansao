@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CE.X · Setup HyperFrames</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0E110D; --graphite: #181B16; --border: #25291F; --border-2: #2E3327;
+    --olive: #7A9E3F; --olive-soft: #94B85C; --olive-deep: #4F6B26;
+    --olive-dim: rgba(122,158,63,0.10); --olive-line: rgba(122,158,63,0.30);
+    --cream: #EDE6D3; --white: #FAFAF7; --light: #E6E5DD; --muted: #8B8C82; --subtle: #555650;
+    --danger: #D17066;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--ink); color: var(--white);
+    font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased;
+    line-height: 1.5; font-feature-settings: 'ss01';
+  }
+  body { padding: 80px 24px 120px; }
+  .container { max-width: 880px; margin: 0 auto; }
+
+  /* HEADER */
+  .head {
+    border-bottom: 0.5px solid var(--border-2);
+    padding-bottom: 56px;
+    margin-bottom: 56px;
+  }
+  .crumb {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--olive);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .crumb::before { content: ''; width: 24px; height: 1px; background: var(--olive); }
+  h1 {
+    font-size: 72px;
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    line-height: 0.95;
+    color: var(--white);
+    margin-bottom: 28px;
+  }
+  h1 em { font-style: italic; font-weight: 600; color: var(--olive); }
+  .lede {
+    font-family: 'Inter', sans-serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--light);
+    line-height: 1.55;
+    max-width: 660px;
+    font-style: italic;
+  }
+  .lede em { color: var(--olive); font-weight: 600; }
+  .meta-row {
+    display: flex;
+    gap: 48px;
+    margin-top: 48px;
+    padding-top: 28px;
+    border-top: 0.5px solid var(--border-2);
+  }
+  .meta { display: flex; flex-direction: column; gap: 6px; }
+  .meta-k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--subtle);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .meta-v {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--white);
+  }
+  .meta-v em { color: var(--olive); font-style: italic; }
+
+  /* SECTIONS */
+  section { margin-bottom: 96px; }
+  .sec-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--olive);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .sec-num::before { content: '§'; color: var(--subtle); }
+  h2 {
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--white);
+    margin-bottom: 16px;
+  }
+  h2 em { font-style: italic; font-weight: 600; color: var(--olive); }
+  .sec-desc {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 620px;
+    margin-bottom: 40px;
+  }
+
+  /* STEP CARDS */
+  .step {
+    background: var(--graphite);
+    border: 0.5px solid var(--border-2);
+    border-left: 2px solid var(--olive);
+    border-radius: 4px;
+    padding: 28px 32px;
+    margin-bottom: 16px;
+  }
+  .step-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+    gap: 16px;
+  }
+  .step-name {
+    font-family: 'Inter', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--white);
+  }
+  .step-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--olive);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    background: var(--olive-dim);
+    border: 0.5px solid var(--olive-line);
+    padding: 3px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .step-desc {
+    font-size: 14px;
+    color: var(--light);
+    line-height: 1.65;
+    margin-bottom: 16px;
+  }
+  .step-desc em { color: var(--olive); font-style: italic; font-weight: 600; }
+
+  /* CODE BLOCKS */
+  .code {
+    background: var(--ink);
+    border: 0.5px solid var(--border-2);
+    border-radius: 4px;
+    padding: 14px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--olive);
+    line-height: 1.7;
+    overflow-x: auto;
+    position: relative;
+    margin-top: 12px;
+  }
+  .code .comment { color: var(--subtle); }
+  .code .prompt { color: var(--muted); user-select: none; }
+  .code-label {
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    background: var(--graphite);
+    padding: 0 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--subtle);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* CALLOUTS */
+  .callout {
+    border-radius: 4px;
+    padding: 18px 22px;
+    margin-top: 16px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .callout.tip { background: var(--olive-dim); border: 0.5px solid var(--olive-line); }
+  .callout.warn { background: rgba(209,112,102,0.08); border: 0.5px solid rgba(209,112,102,0.30); }
+  .callout-icon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+  .callout.tip .callout-icon { color: var(--olive); }
+  .callout.warn .callout-icon { color: var(--danger); }
+  .callout-body { font-size: 13px; color: var(--light); line-height: 1.6; }
+  .callout-body strong { color: var(--white); font-weight: 600; }
+  .callout-body em { color: var(--olive); font-style: italic; }
+  .callout.warn .callout-body em { color: var(--danger); }
+
+  /* PIPELINE */
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-top: 32px;
+    margin-bottom: 24px;
+  }
+  .pp-step {
+    background: var(--graphite);
+    border: 0.5px solid var(--border-2);
+    border-radius: 4px;
+    padding: 18px 16px;
+    text-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+  .pp-icon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    color: var(--olive);
+    font-weight: 700;
+  }
+  .pp-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--white);
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .pp-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .pp-arrow {
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--olive);
+    font-size: 14px;
+    z-index: 2;
+  }
+  @media (max-width: 720px) { .pipeline { grid-template-columns: 1fr 1fr; } .pp-arrow { display: none; } }
+
+  /* OS TABS */
+  .os-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    border-bottom: 0.5px solid var(--border-2);
+  }
+  .os-tab {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    padding: 10px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .os-tab.active {
+    color: var(--olive);
+    border-bottom-color: var(--olive);
+  }
+  .os-content { display: none; }
+  .os-content.active { display: block; }
+
+  /* CHECKLIST */
+  .checklist {
+    background: var(--graphite);
+    border: 0.5px solid var(--border-2);
+    border-radius: 4px;
+    padding: 28px 32px;
+    margin-top: 24px;
+  }
+  .check-item {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 0.5px dashed var(--border-2);
+    align-items: flex-start;
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-box {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--olive-line);
+    border-radius: 2px;
+    margin-top: 2px;
+  }
+  .check-text {
+    font-size: 14px;
+    color: var(--light);
+    line-height: 1.5;
+  }
+  .check-text strong { color: var(--white); font-weight: 600; }
+  .check-text code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--ink);
+    border: 0.5px solid var(--border-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--olive);
+  }
+
+  /* FAQ */
+  .faq-item {
+    border-bottom: 0.5px solid var(--border-2);
+    padding: 20px 0;
+  }
+  .faq-q {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 8px;
+    letter-spacing: -0.015em;
+  }
+  .faq-q em { color: var(--olive); font-style: italic; }
+  .faq-a {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+  .faq-a em { color: var(--olive); font-style: italic; }
+  .faq-a code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--olive);
+    background: var(--ink);
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 96px;
+    padding-top: 48px;
+    border-top: 0.5px solid var(--border-2);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .footer-logo {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.06em;
+    color: var(--white);
+  }
+  .footer-logo .dot, .footer-logo .x { color: var(--olive); }
+  .footer-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.10em;
+    text-align: right;
+  }
+  .footer-tag strong { color: var(--olive); font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <header class="head">
+    <div class="crumb">Pipeline · HyperFrames · v1.0</div>
+    <h1>Renderize seus reels <em>num comando.</em></h1>
+    <p class="lede">
+      Setup feito uma vez. Depois, cada reel é: <em>grava → manda pra mim → roda npx hyperframes render → posta.</em>
+    </p>
+    <div class="meta-row">
+      <div class="meta">
+        <span class="meta-k">Ferramenta</span>
+        <span class="meta-v">HyperFrames · <em>HeyGen</em></span>
+      </div>
+      <div class="meta">
+        <span class="meta-k">Custo</span>
+        <span class="meta-v">Gratuito · Apache 2.0</span>
+      </div>
+      <div class="meta">
+        <span class="meta-k">Tempo de setup</span>
+        <span class="meta-v">15 min · <em>uma vez</em></span>
+      </div>
+      <div class="meta">
+        <span class="meta-k">Tempo por reel</span>
+        <span class="meta-v">~3 min</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- §00 — PIPELINE -->
+  <section>
+    <div class="sec-num">00 · O quadro geral</div>
+    <h2>Da câmera <em>ao Instagram.</em></h2>
+    <p class="sec-desc">
+      Cinco etapas. As três primeiras já tinha que fazer. As duas últimas são automatizadas pelo HyperFrames.
+    </p>
+
+    <div class="pipeline">
+      <div class="pp-step">
+        <div class="pp-icon">📱</div>
+        <div class="pp-name">Grava</div>
+        <div class="pp-time">no celular</div>
+        <div class="pp-arrow">→</div>
+      </div>
+      <div class="pp-step">
+        <div class="pp-icon">📡</div>
+        <div class="pp-name">AirDrop</div>
+        <div class="pp-time">pro Mac</div>
+        <div class="pp-arrow">→</div>
+      </div>
+      <div class="pp-step">
+        <div class="pp-icon">💬</div>
+        <div class="pp-name">Claude</div>
+        <div class="pp-time">gera HTML</div>
+        <div class="pp-arrow">→</div>
+      </div>
+      <div class="pp-step">
+        <div class="pp-icon">🎬</div>
+        <div class="pp-name">Render</div>
+        <div class="pp-time">1 comando</div>
+        <div class="pp-arrow">→</div>
+      </div>
+      <div class="pp-step">
+        <div class="pp-icon">🚀</div>
+        <div class="pp-name">Posta</div>
+        <div class="pp-time">MP4 pronto</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-icon">▸</div>
+      <div class="callout-body">
+        <strong>O comando único é <em>npx hyperframes render</em>.</strong> Você abre o terminal, cola, espera 30-60s, sai o MP4. Não precisa entender o que tá rolando por baixo.
+      </div>
+    </div>
+  </section>
+
+  <!-- §01 — SETUP -->
+  <section>
+    <div class="sec-num">01 · Setup único</div>
+    <h2>Instalar <em>uma vez.</em></h2>
+    <p class="sec-desc">
+      Três coisas: Node.js (motor), FFmpeg (renderizador de vídeo), HyperFrames (framework). 15 minutos no máximo.
+    </p>
+
+    <!-- STEP 1: Node + FFmpeg -->
+    <div class="step">
+      <div class="step-head">
+        <div class="step-name">1.1 · Instalar Node.js e FFmpeg</div>
+        <div class="step-tag">Terminal</div>
+      </div>
+      <div class="step-desc">
+        Esses são os dois "motores" que o HyperFrames precisa. Mais simples no Mac via <em>Homebrew</em>. Se você não tem Homebrew, instala primeiro.
+      </div>
+
+      <div class="os-tabs">
+        <button class="os-tab active" data-os="mac">macOS</button>
+        <button class="os-tab" data-os="win">Windows</button>
+      </div>
+
+      <div class="os-content active" data-os="mac">
+        <div class="code">
+          <span class="code-label">Terminal · macOS</span>
+<span class="comment"># Se ainda não tem o Homebrew (gerenciador de pacotes do Mac):</span>
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+<span class="comment"># Instalar Node.js (versão 22 ou maior) e FFmpeg:</span>
+brew install node ffmpeg
+
+<span class="comment"># Verificar se deu certo (precisa retornar v22 ou maior):</span>
+node --version
+ffmpeg -version
+        </div>
+      </div>
+
+      <div class="os-content" data-os="win">
+        <div class="code">
+          <span class="code-label">PowerShell · Windows</span>
+<span class="comment"># Baixar e instalar:</span>
+<span class="comment"># 1. Node.js: https://nodejs.org → "LTS" → próximo, próximo, instalar</span>
+<span class="comment"># 2. FFmpeg: https://www.gyan.dev/ffmpeg/builds/ → "release builds" → essentials</span>
+<span class="comment">#    Descompacta em C:\ffmpeg e adiciona C:\ffmpeg\bin no PATH do sistema.</span>
+
+<span class="comment"># Depois, verificar:</span>
+node --version
+ffmpeg -version
+        </div>
+        <div class="callout warn">
+          <div class="callout-icon">!</div>
+          <div class="callout-body">
+            No <em>Windows</em>, recomendo usar o <strong>WSL2</strong> (Ubuntu) ao invés. Roda mais estável e os comandos viram iguais aos do Mac. Pesquisa "instalar WSL2 ubuntu" — Microsoft tem guia oficial.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Init project -->
+    <div class="step">
+      <div class="step-head">
+        <div class="step-name">1.2 · Criar a pasta do projeto</div>
+        <div class="step-tag">Terminal · 1x</div>
+      </div>
+      <div class="step-desc">
+        Uma pasta na sua máquina onde TODOS os seus reels vão morar. Cada reel é uma sub-pasta.
+      </div>
+      <div class="code">
+        <span class="code-label">Terminal</span>
+<span class="comment"># Vai pro diretório onde você quer guardar (Documentos é uma boa):</span>
+cd ~/Documents
+
+<span class="comment"># Cria a pasta e entra:</span>
+mkdir cex-reels && cd cex-reels
+
+<span class="comment"># Inicializa um projeto HyperFrames de exemplo:</span>
+npx hyperframes init reel-01 --non-interactive --example blank
+
+<span class="comment"># O comando acima cria a pasta reel-01/ com um composition base.</span>
+<span class="comment"># Daqui pra frente, cada novo reel é uma sub-pasta nova.</span>
+      </div>
+    </div>
+
+    <!-- STEP 3: Test render -->
+    <div class="step">
+      <div class="step-head">
+        <div class="step-name">1.3 · Render de teste</div>
+        <div class="step-tag">Validação</div>
+      </div>
+      <div class="step-desc">
+        Gera um MP4 do projeto de exemplo só pra garantir que tudo funciona. Se sair vídeo, tá tudo certo.
+      </div>
+      <div class="code">
+        <span class="code-label">Terminal</span>
+<span class="comment"># Entra na pasta do reel:</span>
+cd reel-01
+
+<span class="comment"># Roda o render — sai um MP4 em ./renders/</span>
+npx hyperframes render
+
+<span class="comment"># Abre o resultado no Finder:</span>
+open renders
+      </div>
+      <div class="callout tip">
+        <div class="callout-icon">✓</div>
+        <div class="callout-body">
+          Se o MP4 abrir e tocar — <strong>setup completo</strong>. Daqui pra frente, todo reel novo é só repetir o passo 1.2 (criar pasta) e me pedir pra gerar a composition.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §02 — PER-REEL WORKFLOW -->
+  <section>
+    <div class="sec-num">02 · Por cada reel</div>
+    <h2>O ciclo <em>de produção.</em></h2>
+    <p class="sec-desc">
+      Depois do setup, cada reel novo segue este loop. Tempo médio: 8 minutos de ponta a ponta (a maior parte é gravação + render).
+    </p>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-name">2.1 · Grava no celular</div>
+        <div class="step-tag">~3 min</div>
+      </div>
+      <div class="step-desc">
+        Modo vertical, câmera frontal, boa luz. Foca em <em>uma tese</em>. Estrutura recomendada: <strong>gancho (3s) → tese (5s) → exemplo (15s) → versículo/citação (5s) → aplicação (10s) → CTA (5s)</strong>. Total entre 30 e 60 segundos.
+      </div>
+      <div class="callout tip">
+        <div class="callout-icon">▸</div>
+        <div class="callout-body">
+          Anota mentalmente <em>onde estão os picos</em> da fala — momentos em que você quer um overlay aparecer (uma estatística, uma palavra-chave, um versículo). Vai te ajudar na hora de me pedir a composition.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-name">2.2 · AirDrop pro Mac</div>
+        <div class="step-tag">~30s</div>
+      </div>
+      <div class="step-desc">
+        Envia o vídeo do celular pro Mac. Salva como <code>face-cam.mp4</code> dentro de uma nova pasta de reel:
+      </div>
+      <div class="code">
+        <span class="code-label">Terminal</span>
+<span class="comment"># Cria pasta do novo reel:</span>
+cd ~/Documents/cex-reels
+npx hyperframes init reel-02 --non-interactive --example blank
+cd reel-02
+
+<span class="comment"># Move o vídeo do AirDrop pra cá (ajuste o nome):</span>
+mv ~/Downloads/IMG_1234.MOV ./face-cam.mp4
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-name">2.3 · Me manda a transcrição</div>
+        <div class="step-tag">Claude Desktop</div>
+      </div>
+      <div class="step-desc">
+        Aqui no Claude Desktop, manda: <em>"Cláudio, novo reel — segue transcrição [cola o que você falou]. Duração: 45s. Picos: 'estrutura' aos 12s, '73%' aos 28s, versículo Mateus 9.38 aos 35s."</em>
+      </div>
+      <div class="step-desc">
+        Eu te devolvo um <code>index.html</code> — a composition HyperFrames pronta pra renderizar. Você copia o arquivo todo e cola dentro da pasta <code>reel-02/</code> substituindo o que tem lá.
+      </div>
+      <div class="callout tip">
+        <div class="callout-icon">▸</div>
+        <div class="callout-body">
+          Não precisa transcrever <strong>tudo</strong>. Manda só os <em>momentos-chave</em> e os timestamps aproximados. Pra detalhes finos, conversa comigo iterativamente.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-name">2.4 · Render</div>
+        <div class="step-tag">~60s</div>
+      </div>
+      <div class="step-desc">
+        Um comando. Você espera, o MP4 sai pronto com sua face cam <em>e os overlays já compostos em cima</em>. Nada de CapCut.
+      </div>
+      <div class="code">
+        <span class="code-label">Terminal</span>
+<span class="comment"># Dentro da pasta reel-02/:</span>
+npx hyperframes render
+
+<span class="comment"># Resultado em ./renders/. Abre pra ver:</span>
+open renders
+      </div>
+      <div class="callout tip">
+        <div class="callout-icon">▸</div>
+        <div class="callout-body">
+          Quer ver antes de renderizar? Roda <em>npx hyperframes preview</em> em vez de <em>render</em>. Abre o navegador com a animação rolando ao vivo. Útil pra ajustes.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-name">2.5 · Posta</div>
+        <div class="step-tag">~1 min</div>
+      </div>
+      <div class="step-desc">
+        AirDrop o MP4 do Mac pro celular. Abre o Instagram, novo Reel, sobe o vídeo, escreve a legenda, publica. Pronto.
+      </div>
+    </div>
+  </section>
+
+  <!-- §03 — CHECKLIST -->
+  <section>
+    <div class="sec-num">03 · Checklist</div>
+    <h2>Antes <em>de começar.</em></h2>
+    <p class="sec-desc">
+      Marca tudo aqui antes de gravar o primeiro reel oficial. Garante que vai dar certo na primeira vez.
+    </p>
+
+    <div class="checklist">
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div class="check-text"><strong>Node.js v22+ instalado.</strong> Confirma com <code>node --version</code>.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div class="check-text"><strong>FFmpeg instalado.</strong> Confirma com <code>ffmpeg -version</code>.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div class="check-text"><strong>Pasta <code>~/Documents/cex-reels/</code> criada.</strong></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div class="check-text"><strong>Render de teste rodou.</strong> Saiu um MP4 em <code>renders/</code>.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div class="check-text"><strong>Você sabe AirDrop entre celular e Mac.</strong> Se não souber: Centro de Controle iOS → AirDrop → "Todos por 10 min". No Mac, o arquivo cai em <em>Downloads</em>.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div class="check-text"><strong>Você sabe abrir o Terminal.</strong> Mac: Cmd+Espaço → "Terminal". Windows: tecla Windows → "PowerShell".</div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div class="check-text"><strong>Conta no Instagram pronta</strong> — bio, foto, primeiro post (mesmo que provisório).</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §04 — FAQ -->
+  <section>
+    <div class="sec-num">04 · Dúvidas comuns</div>
+    <h2>O que <em>perguntam.</em></h2>
+
+    <div class="faq-item">
+      <div class="faq-q">E se eu não souber <em>nada</em> de terminal?</div>
+      <div class="faq-a">
+        Os comandos deste guia são literais — você copia e cola. Não precisa entender, só seguir. Em 3-4 reels você já vai pegar o ritmo. Se travar em algo, me manda print do terminal aqui no chat e eu te ajudo.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">E se o render der erro?</div>
+      <div class="faq-a">
+        Roda <code>npx hyperframes doctor</code> — ele te diz o que tá faltando. 90% dos erros são <em>Node desatualizado</em> ou <em>FFmpeg fora do PATH</em>. Me manda a saída do <code>doctor</code> que eu interpreto.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Posso editar a composition manualmente depois?</div>
+      <div class="faq-a">
+        Sim. O HTML que eu te entregar é editável. Mexer em texto é fácil — abre num editor (TextEdit, VS Code) e troca. Pra ajustes finos de animação, me chama.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Renderiza em quanto tempo?</div>
+      <div class="faq-a">
+        Reel de 60s renderiza em ~45-90 segundos no Mac M1/M2. Mais lento em máquinas antigas. Pra acelerar testes, roda <code>npx hyperframes render --quality draft</code>.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Funciona no iPad ou só no Mac?</div>
+      <div class="faq-a">
+        Só Mac/PC. iPad não roda Node.js nativo (sem trapaça). Mas você grava no iPhone e renderiza no Mac, que é o fluxo previsto.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">E os carrosséis estáticos? Servem aqui?</div>
+      <div class="faq-a">
+        Não — pra posts estáticos, você usa o <em>Brand Book</em> e o <em>Reel Composer</em>. O HyperFrames é só pros reels animados com vídeo de fundo.
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+    <div class="footer-tag">
+      Setup HyperFrames · <strong>v1.0</strong><br>
+      campusexpansao.com
+    </div>
+  </footer>
+</div>
+
+<script>
+  // OS tab switcher
+  document.querySelectorAll('.os-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const os = btn.dataset.os;
+      document.querySelectorAll('.os-tab').forEach(b => b.classList.toggle('active', b.dataset.os === os));
+      document.querySelectorAll('.os-content').forEach(c => c.classList.toggle('active', c.dataset.os === os));
+    });
+  });
+</script>
+</body>
+</html>

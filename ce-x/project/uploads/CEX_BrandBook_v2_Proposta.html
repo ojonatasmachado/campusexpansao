@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CE.X Brand Book v2.0 — Campus Expansão</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black:       #0D0D0D;
+    --dark:        #1A1A1A;
+    --card:        #1F1F1F;
+    --border:      #2A2A2A;
+    --green:       #B8F52E;
+    --green-dim:   rgba(184,245,46,0.08);
+    --green-borda: rgba(184,245,46,0.20);
+    --white:       #FFFFFF;
+    --muted:       #888888;
+    --subtle:      #555555;
+    --light:       #E8E8E8;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  }
+
+  body {
+    background: var(--black);
+    font-family: var(--font);
+    color: var(--white);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ── RESETS DE TEXTO ── */
+  p, h1, h2, h3, h4, h5, h6, span, div { font-family: var(--font); }
+
+  /* ══════════════════════════════════════
+     ESTRUTURA GERAL
+  ══════════════════════════════════════ */
+  .page { max-width: 1180px; margin: 0 auto; }
+  .section {
+    padding: 100px 64px 0;
+    position: relative;
+  }
+  .section-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 0.5px; background: var(--border);
+  }
+  .section-title {
+    font-size: 36px; font-weight: 700;
+    letter-spacing: -0.035em; line-height: 1.1;
+    color: var(--white); margin-bottom: 12px;
+  }
+  .section-title .accent { color: var(--green); }
+  .section-desc {
+    font-size: 15px; font-weight: 400;
+    color: var(--muted); line-height: 1.7;
+    max-width: 600px; margin-bottom: 48px;
+  }
+
+  .divider {
+    height: 0.5px; background: var(--border);
+    margin: 100px 64px 0;
+  }
+
+  .eyebrow {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.20em; text-transform: uppercase;
+    color: var(--green);
+  }
+  .caption {
+    font-size: 11px; font-weight: 400;
+    letter-spacing: 0.05em; color: var(--subtle);
+    line-height: 1.5;
+  }
+
+  /* ══════════════════════════════════════
+     HERO
+  ══════════════════════════════════════ */
+  .hero {
+    position: relative;
+    padding: 120px 64px 100px;
+    background: var(--black);
+    border-bottom: 0.5px solid var(--border);
+    overflow: hidden;
+  }
+  .hero-glow {
+    position: absolute;
+    top: -200px; right: -200px;
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(184,245,46,0.06) 0%, transparent 65%);
+    border-radius: 50%; pointer-events: none;
+  }
+  .hero-content {
+    position: relative; z-index: 1;
+    max-width: 1180px; margin: 0 auto;
+  }
+  .hero-eyebrow {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 36px;
+  }
+  .hero-logo {
+    font-size: 132px; font-weight: 700;
+    letter-spacing: -0.05em; line-height: 0.95;
+    margin-bottom: 36px;
+    display: flex; align-items: baseline;
+  }
+  .hero-logo .dot { color: var(--green); }
+  .hero-logo .x   { color: var(--green); font-weight: 300; letter-spacing: -0.06em; }
+  .hero-tagline {
+    font-size: 18px; font-weight: 400;
+    color: var(--muted); line-height: 1.7;
+    border-left: 2px solid var(--green);
+    padding-left: 24px; max-width: 560px;
+  }
+  .hero-meta {
+    position: absolute;
+    bottom: 48px; right: 64px;
+    text-align: right;
+  }
+  .hero-meta-label {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.20em; text-transform: uppercase;
+    color: var(--subtle); margin-bottom: 4px;
+  }
+  .hero-meta-val {
+    font-size: 11px; color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* ══════════════════════════════════════
+     SUMÁRIO
+  ══════════════════════════════════════ */
+  .toc {
+    padding: 60px 64px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  .toc-item {
+    display: flex; gap: 12px;
+    padding: 14px 16px;
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+  }
+  .toc-num {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; color: var(--green);
+    font-family: 'SF Mono', monospace;
+    min-width: 24px;
+  }
+  .toc-name {
+    font-size: 12px; font-weight: 500;
+    color: var(--light);
+  }
+
+  /* ══════════════════════════════════════
+     01 — LOGO
+  ══════════════════════════════════════ */
+  .logo-versions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px; margin-bottom: 40px;
+  }
+  .logo-card {
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 14px;
+    padding: 56px 36px 32px;
+    display: flex; flex-direction: column;
+    justify-content: space-between;
+    min-height: 240px;
+    overflow: hidden;
+    position: relative;
+  }
+  .logo-card.lc-light  { background: #FFFFFF; }
+  .logo-card.lc-green  { background: var(--green); border-color: rgba(0,0,0,0.10); }
+
+  .logo-display {
+    font-size: 76px; font-weight: 700;
+    letter-spacing: -0.04em; line-height: 1;
+    margin-bottom: 28px; color: var(--white);
+  }
+  .logo-display .dot { color: var(--green); }
+  .logo-display .x   { color: var(--green); font-weight: 300; letter-spacing: -0.06em; }
+  .lc-light .logo-display       { color: var(--black); }
+  .lc-light .logo-display .dot  { color: var(--black); }
+  .lc-light .logo-display .x    { color: var(--black); }
+  .lc-green .logo-display       { color: var(--black); }
+  .lc-green .logo-display .dot  { color: rgba(0,0,0,0.40); }
+  .lc-green .logo-display .x    { color: var(--black); }
+
+  .logo-card-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--subtle);
+  }
+  .lc-light .logo-card-label { color: #999; }
+  .lc-green .logo-card-label { color: rgba(0,0,0,0.50); }
+
+  /* Variações de logo */
+  .logo-variations {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .lv-card {
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 14px;
+    padding: 36px 28px 24px;
+    display: flex; flex-direction: column;
+    justify-content: space-between;
+    min-height: 200px;
+  }
+  .lv-display {
+    flex: 1; display: flex; align-items: center;
+  }
+  .lv-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--subtle); margin-top: 24px;
+  }
+
+  .lv1-symbol {
+    font-size: 76px; font-weight: 700;
+    letter-spacing: -0.04em; line-height: 1; color: var(--white);
+  }
+  .lv1-symbol .dot { color: var(--green); }
+  .lv1-symbol .x   { color: var(--green); font-weight: 300; }
+
+  .lv2-wrap { display: flex; flex-direction: column; gap: 8px; }
+  .lv2-logo {
+    font-size: 44px; font-weight: 700;
+    letter-spacing: -0.04em; line-height: 1; color: var(--white);
+  }
+  .lv2-logo .dot { color: var(--green); }
+  .lv2-logo .x   { color: var(--green); font-weight: 300; }
+  .lv2-tagline {
+    font-size: 9px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--subtle);
+  }
+
+  .lv3-wrap { display: flex; align-items: center; gap: 14px; }
+  .lv3-logo {
+    font-size: 44px; font-weight: 700;
+    letter-spacing: -0.04em; line-height: 1; color: var(--white);
+  }
+  .lv3-logo .dot { color: var(--green); }
+  .lv3-logo .x   { color: var(--green); font-weight: 300; }
+  .lv3-line { width: 1px; height: 44px; background: var(--border); }
+  .lv3-text { display: flex; flex-direction: column; gap: 3px; }
+  .lv3-name {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.10em; text-transform: uppercase;
+    color: var(--white);
+  }
+  .lv3-sub {
+    font-size: 10px; font-weight: 400;
+    color: var(--subtle); letter-spacing: 0.04em;
+  }
+
+  .lv4-wrap {
+    background: var(--green);
+    border-radius: 8px;
+    padding: 12px 18px;
+    display: inline-flex;
+  }
+  .lv4-logo {
+    font-size: 32px; font-weight: 700;
+    letter-spacing: -0.04em; line-height: 1; color: var(--black);
+  }
+  .lv4-logo .dot { color: rgba(0,0,0,0.35); }
+  .lv4-logo .x   { color: var(--black); font-weight: 300; }
+
+  /* Significado letras */
+  .meaning-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 16px; margin-top: 40px;
+  }
+  .meaning-card {
+    background: var(--card); border: 0.5px solid var(--border);
+    border-radius: 14px; padding: 32px 28px;
+  }
+  .meaning-letter {
+    font-size: 56px; font-weight: 700;
+    letter-spacing: -0.04em; color: var(--green);
+    line-height: 1; margin-bottom: 20px;
+  }
+  .meaning-title {
+    font-size: 13px; font-weight: 600;
+    color: var(--light); margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  .meaning-desc {
+    font-size: 12px; font-weight: 400;
+    color: var(--subtle); line-height: 1.7;
+  }
+
+  /* ══════════════════════════════════════
+     02 — CORES
+  ══════════════════════════════════════ */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+  }
+  .color-chip {
+    border-radius: 12px; overflow: hidden;
+    border: 0.5px solid var(--border);
+  }
+  .color-swatch {
+    height: 120px;
+    display: flex; align-items: flex-end;
+    padding: 14px;
+    position: relative;
+  }
+  .color-pct {
+    font-size: 28px; font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+  .color-swatch.cs-black .color-pct  { color: rgba(255,255,255,0.15); }
+  .color-swatch.cs-graf .color-pct   { color: rgba(255,255,255,0.18); }
+  .color-swatch.cs-green .color-pct  { color: rgba(0,0,0,0.30); }
+  .color-swatch.cs-white .color-pct  { color: rgba(0,0,0,0.20); }
+  .color-swatch.cs-gray .color-pct   { color: rgba(255,255,255,0.30); }
+  .color-meta { background: var(--card); padding: 16px; }
+  .color-name {
+    font-size: 13px; font-weight: 500;
+    color: var(--light); margin-bottom: 4px;
+  }
+  .color-hex {
+    font-size: 11px; color: var(--subtle);
+    letter-spacing: 0.06em;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .color-role {
+    font-size: 10px; color: var(--subtle); margin-top: 6px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ══════════════════════════════════════
+     03 — TIPOGRAFIA
+  ══════════════════════════════════════ */
+  .type-table { display: flex; flex-direction: column; gap: 4px; }
+  .type-row {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 32px 36px;
+    background: var(--card); border: 0.5px solid var(--border);
+    border-radius: 12px; gap: 32px;
+  }
+  .type-sample { flex: 1; min-width: 0; }
+  .type-spec { text-align: right; min-width: 220px; flex-shrink: 0; }
+  .type-spec-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--subtle); margin-bottom: 6px;
+  }
+  .type-spec-val {
+    font-size: 11px; color: var(--green);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    line-height: 1.7;
+  }
+
+  .t-display {
+    font-size: 80px; font-weight: 700;
+    letter-spacing: -0.05em; line-height: 1.0;
+    color: var(--white);
+  }
+  .t-display .accent { color: var(--green); }
+  .t-display .x { color: var(--green); font-weight: 300; }
+
+  .t-mega {
+    font-size: 64px; font-weight: 700;
+    letter-spacing: -0.04em; line-height: 1.0;
+    color: var(--white);
+  }
+  .t-mega .accent { color: var(--green); }
+
+  .t-title-xl {
+    font-size: 44px; font-weight: 700;
+    letter-spacing: -0.035em; line-height: 1.05;
+    color: var(--white);
+  }
+  .t-title {
+    font-size: 28px; font-weight: 600;
+    letter-spacing: -0.025em; line-height: 1.2;
+    color: var(--white);
+  }
+  .t-subtitle {
+    font-size: 20px; font-weight: 400;
+    letter-spacing: -0.015em; line-height: 1.4;
+    color: var(--muted);
+  }
+  .t-body {
+    font-size: 15px; font-weight: 400;
+    letter-spacing: 0; line-height: 1.75;
+    color: var(--muted); max-width: 480px;
+  }
+  .t-eyebrow-sample {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.20em; text-transform: uppercase;
+    color: var(--green);
+  }
+  .t-caption-sample {
+    font-size: 12px; font-weight: 400;
+    letter-spacing: 0.05em; color: var(--subtle);
+    line-height: 1.5;
+  }
+
+  /* ══════════════════════════════════════
+     COMPARTILHADO MOCKUPS
+  ══════════════════════════════════════ */
+  .mock-frame {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 0.5px solid var(--border);
+    background: var(--black);
+    position: relative;
+  }
+  .mock-glow-tr {
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 380px; height: 380px;
+    background: radial-gradient(circle, rgba(184,245,46,0.07) 0%, transparent 65%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .mock-bar {
+    position: absolute; left: 0; top: 0;
+    width: 4px; height: 100%;
+    background: var(--green);
+    z-index: 3;
+  }
+
+  /* Logo padrão dentro de mockups */
+  .mock-logo {
+    font-weight: 700; letter-spacing: -0.04em;
+    color: var(--white); line-height: 1;
+  }
+  .mock-logo .dot { color: var(--green); }
+  .mock-logo .x   { color: var(--green); font-weight: 300; letter-spacing: -0.06em; }
+
+  /* Logo desbotado de rodapé */
+  .mock-logo-faded {
+    font-weight: 700; letter-spacing: -0.04em;
+    color: rgba(255,255,255,0.14); line-height: 1;
+  }
+  .mock-logo-faded .dot { color: rgba(184,245,46,0.22); }
+  .mock-logo-faded .x   { color: rgba(184,245,46,0.22); font-weight: 300; }
+
+  /* ══════════════════════════════════════
+     04 — POSTS FEED 1:1
+  ══════════════════════════════════════ */
+  .post-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .post-mock {
+    aspect-ratio: 1;
+    background: var(--black);
+  }
+  .post-mock.pm-graf { background: var(--dark); }
+  .post-mock.pm-green { background: var(--green); }
+
+  .post-inner {
+    position: relative; z-index: 2;
+    padding: 36px;
+    height: 100%;
+    display: flex; flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .post-top { display: flex; justify-content: space-between; align-items: flex-start; }
+
+  /* Logo no post: ~22px no mockup que representa 540px = ~44px em 1080 */
+  .post-mock .mock-logo { font-size: 22px; }
+
+  .post-tag {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.20em; text-transform: uppercase;
+    color: var(--green);
+  }
+  .pm-green .post-tag { color: rgba(0,0,0,0.50); }
+
+  .post-body { display: flex; flex-direction: column; gap: 12px; padding: 20px 0; }
+
+  /* Título mega no post: ~58px no mockup = ~116px em 1080 */
+  .post-title-mega {
+    font-size: 58px; font-weight: 700;
+    letter-spacing: -0.05em; line-height: 0.95;
+    color: var(--white);
+  }
+  .post-title-mega .accent { color: var(--green); }
+  .pm-green .post-title-mega { color: var(--black); }
+  .pm-green .post-title-mega .accent { color: rgba(0,0,0,0.50); }
+
+  /* Subtítulo: ~24px = ~48px em 1080 */
+  .post-subtitle {
+    font-size: 24px; font-weight: 400;
+    letter-spacing: -0.015em; line-height: 1.25;
+    color: var(--muted);
+  }
+  .pm-graf .post-subtitle { color: #999; }
+  .pm-green .post-subtitle { color: rgba(0,0,0,0.55); }
+
+  .post-footer {
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .post-footer-meta {
+    font-size: 11px; font-weight: 400;
+    letter-spacing: 0.05em; color: var(--subtle);
+  }
+  .pm-green .post-footer-meta { color: rgba(0,0,0,0.45); }
+
+  .post-mock .mock-logo-faded { font-size: 14px; }
+  .pm-green .mock-logo-faded {
+    color: rgba(0,0,0,0.18);
+  }
+  .pm-green .mock-logo-faded .dot,
+  .pm-green .mock-logo-faded .x {
+    color: rgba(0,0,0,0.18);
+  }
+
+  /* ══════════════════════════════════════
+     05 — STORIES 9:16
+  ══════════════════════════════════════ */
+  .stories-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .story-mock {
+    aspect-ratio: 9/16;
+    background: var(--black);
+    max-height: 600px;
+  }
+  .story-mock.sm-graf { background: var(--dark); }
+  .story-mock.sm-green { background: var(--green); }
+
+  .story-inner {
+    position: relative; z-index: 2;
+    padding: 28px 24px;
+    height: 100%;
+    display: flex; flex-direction: column;
+    justify-content: space-between;
+  }
+  .story-top {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .story-mock .mock-logo { font-size: 16px; }
+  .story-tag {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.20em; text-transform: uppercase;
+    color: var(--green);
+  }
+  .sm-green .story-tag { color: rgba(0,0,0,0.50); }
+
+  .story-mid {
+    display: flex; flex-direction: column;
+    gap: 14px; flex: 1; justify-content: center;
+  }
+  .story-title {
+    font-size: 38px; font-weight: 700;
+    letter-spacing: -0.04em; line-height: 1.0;
+    color: var(--white);
+  }
+  .story-title .accent { color: var(--green); }
+  .sm-green .story-title { color: var(--black); }
+  .sm-green .story-title .accent { color: rgba(0,0,0,0.55); }
+
+  .story-quote {
+    font-size: 12px; font-weight: 400; font-style: italic;
+    color: var(--muted); line-height: 1.6;
+  }
+  .sm-green .story-quote { color: rgba(0,0,0,0.55); }
+
+  .story-bottom { display: flex; flex-direction: column; gap: 8px; }
+  .story-line {
+    width: 32px; height: 2px;
+    background: var(--green); border-radius: 1px;
+  }
+  .sm-green .story-line { background: var(--black); }
+  .story-cta {
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 0.04em; color: var(--subtle);
+  }
+  .sm-green .story-cta { color: rgba(0,0,0,0.45); }
+
+  /* ══════════════════════════════════════
+     06 — THUMBNAIL / AULAS
+  ══════════════════════════════════════ */
+  .thumb-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  .thumb-mock {
+    aspect-ratio: 16/9;
+    background: var(--black);
+  }
+  .thumb-inner {
+    position: relative; z-index: 2;
+    padding: 32px 36px;
+    height: 100%;
+    display: flex; flex-direction: column;
+    justify-content: space-between;
+  }
+  .thumb-top { display: flex; justify-content: space-between; }
+  .thumb-mock .mock-logo { font-size: 18px; }
+  .thumb-tag {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--green);
+  }
+  .thumb-title {
+    font-size: 32px; font-weight: 700;
+    letter-spacing: -0.035em; line-height: 1.05;
+    color: var(--white); max-width: 70%;
+  }
+  .thumb-title .accent { color: var(--green); }
+  .thumb-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
+  .thumb-meta {
+    font-size: 10px; color: var(--subtle); letter-spacing: 0.04em;
+  }
+  .thumb-mock .mock-logo-faded { font-size: 14px; }
+
+  /* ══════════════════════════════════════
+     07 — REELS COVER 9:16
+  ══════════════════════════════════════ */
+  .reels-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .reels-mock {
+    aspect-ratio: 9/16;
+    background: var(--black);
+    max-height: 600px;
+  }
+  .reels-mock.rm-graf { background: var(--dark); }
+  .reels-inner {
+    position: relative; z-index: 2;
+    padding: 28px 24px;
+    height: 100%;
+    display: flex; flex-direction: column;
+    justify-content: space-between;
+  }
+  .reels-top { display: flex; justify-content: space-between; align-items: center; }
+  .reels-mock .mock-logo { font-size: 14px; }
+  .reels-mid { display: flex; flex-direction: column; gap: 12px; }
+  .reels-tag {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.20em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 6px;
+  }
+  .reels-title {
+    font-size: 36px; font-weight: 700;
+    letter-spacing: -0.04em; line-height: 0.95;
+    color: var(--white);
+  }
+  .reels-title .accent { color: var(--green); }
+  .reels-bottom { display: flex; align-items: center; gap: 8px; }
+  .reels-play {
+    width: 0; height: 0;
+    border-left: 8px solid var(--green);
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+  }
+  .reels-duration {
+    font-size: 10px; color: var(--subtle); letter-spacing: 0.04em;
+  }
+
+  /* ══════════════════════════════════════
+     08 — SLIDES / APRESENTAÇÃO
+  ══════════════════════════════════════ */
+  .slide-mock {
+    aspect-ratio: 16/9;
+    background: var(--black);
+  }
+  .slide-inner {
+    position: relative; z-index: 2;
+    padding: 40px 56px 36px 64px;
+    height: 100%;
+    display: flex; flex-direction: column;
+    justify-content: center;
+  }
+  .slide-eyebrow {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 16px;
+  }
+  .slide-title {
+    font-size: 44px; font-weight: 700;
+    letter-spacing: -0.035em; line-height: 1.05;
+    color: var(--white); margin-bottom: 24px;
+    max-width: 70%;
+  }
+  .slide-title .accent { color: var(--green); }
+  .slide-points { display: flex; flex-direction: column; gap: 10px; max-width: 60%; }
+  .slide-point { display: flex; align-items: flex-start; gap: 12px; }
+  .slide-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-top: 7px; flex-shrink: 0;
+  }
+  .slide-point-text {
+    font-size: 14px; color: var(--light); line-height: 1.5;
+  }
+  .slide-corner-logo {
+    position: absolute;
+    bottom: 24px; right: 32px;
+    font-size: 14px; z-index: 3;
+  }
+  .slide-page-num {
+    position: absolute;
+    bottom: 26px; left: 64px;
+    font-size: 11px; color: var(--subtle);
+    letter-spacing: 0.05em;
+    z-index: 3;
+  }
+
+  /* ══════════════════════════════════════
+     09 — BANNER / E-MAIL
+  ══════════════════════════════════════ */
+  .banner-mock {
+    aspect-ratio: 3/1;
+    background: var(--black);
+  }
+  .banner-inner {
+    display: flex; height: 100%;
+    position: relative; z-index: 2;
+  }
+  .banner-stripe {
+    background: var(--green); width: 8px; flex-shrink: 0;
+  }
+  .banner-body {
+    flex: 1; padding: 32px 40px;
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 32px;
+  }
+  .banner-text { flex: 1; }
+  .banner-eyebrow {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.20em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 8px;
+  }
+  .banner-title {
+    font-size: 32px; font-weight: 700;
+    letter-spacing: -0.035em; line-height: 1.1;
+    color: var(--white); margin-bottom: 8px;
+  }
+  .banner-desc {
+    font-size: 14px; color: var(--muted);
+    line-height: 1.55; max-width: 480px;
+  }
+  .banner-right {
+    display: flex; flex-direction: column;
+    align-items: flex-end; gap: 14px;
+  }
+  .banner-cta {
+    background: var(--green);
+    color: var(--black);
+    font-size: 13px; font-weight: 700;
+    letter-spacing: -0.01em;
+    padding: 14px 24px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+  .banner-mock .mock-logo-faded { font-size: 16px; }
+
+  /* ══════════════════════════════════════
+     10 — PDF / APOSTILA
+  ══════════════════════════════════════ */
+  .pdf-mock {
+    aspect-ratio: 1/1.414;
+    background: var(--black);
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .pdf-inner {
+    position: relative; z-index: 2;
+    height: 100%;
+    display: flex; flex-direction: column;
+  }
+  .pdf-header {
+    padding: 24px 32px 18px;
+    border-bottom: 0.5px solid var(--border);
+    display: flex; justify-content: space-between;
+    align-items: center;
+  }
+  .pdf-mock .mock-logo { font-size: 16px; }
+  .pdf-meta-right { text-align: right; }
+  .pdf-series {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 3px;
+  }
+  .pdf-num {
+    font-size: 10px; color: var(--subtle);
+  }
+  .pdf-cover {
+    padding: 36px 32px 28px;
+    flex: 1;
+    display: flex; flex-direction: column;
+    justify-content: center;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .pdf-eyebrow {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.20em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 16px;
+  }
+  .pdf-title {
+    font-size: 36px; font-weight: 700;
+    letter-spacing: -0.04em; line-height: 1.0;
+    color: var(--white); margin-bottom: 12px;
+  }
+  .pdf-title .accent { color: var(--green); }
+  .pdf-subtitle {
+    font-size: 13px; color: var(--muted);
+    line-height: 1.6; max-width: 320px; margin-bottom: 28px;
+  }
+  .pdf-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pdf-tag {
+    background: var(--green-dim);
+    border: 0.5px solid var(--green-borda);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 10px; color: var(--green);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .pdf-content {
+    padding: 24px 32px 22px;
+  }
+  .pdf-content-eyebrow {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 8px;
+  }
+  .pdf-content-h {
+    font-size: 17px; font-weight: 600;
+    letter-spacing: -0.02em; color: var(--white);
+    margin-bottom: 10px; line-height: 1.3;
+  }
+  .pdf-content-body {
+    font-size: 11px; color: var(--muted);
+    line-height: 1.7; margin-bottom: 14px;
+  }
+  .pdf-callout {
+    background: var(--green-dim);
+    border-left: 2px solid var(--green);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 14px;
+    font-size: 11px; color: var(--green);
+    font-style: italic; line-height: 1.55;
+  }
+  .pdf-footer {
+    padding: 14px 32px;
+    border-top: 0.5px solid var(--border);
+    display: flex; justify-content: space-between;
+  }
+  .pdf-footer-text {
+    font-size: 9px; color: var(--subtle);
+    letter-spacing: 0.04em;
+  }
+  .pdf-footer-page {
+    font-size: 9px; color: var(--green);
+    font-weight: 600;
+  }
+
+  /* ══════════════════════════════════════
+     11 — POWERPOINT (CAPA + SLIDE)
+  ══════════════════════════════════════ */
+  .ppt-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .ppt-mock {
+    aspect-ratio: 16/9;
+    background: var(--black);
+  }
+  .ppt-cover-inner {
+    position: relative; z-index: 2;
+    padding: 56px 64px;
+    height: 100%;
+    display: flex; flex-direction: column;
+    justify-content: space-between;
+  }
+  .ppt-top { display: flex; justify-content: space-between; align-items: center; }
+  .ppt-mock .mock-logo { font-size: 18px; }
+  .ppt-meta {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--subtle);
+  }
+  .ppt-cover-mid {}
+  .ppt-cover-eyebrow {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 18px;
+  }
+  .ppt-cover-title {
+    font-size: 56px; font-weight: 700;
+    letter-spacing: -0.04em; line-height: 0.95;
+    color: var(--white);
+  }
+  .ppt-cover-title .accent { color: var(--green); }
+  .ppt-cover-bottom {
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .ppt-cover-by {
+    font-size: 11px; color: var(--muted);
+    line-height: 1.5; letter-spacing: 0.02em;
+  }
+  .ppt-cover-by strong { color: var(--white); font-weight: 600; }
+
+  /* ══════════════════════════════════════
+     12 — TOM DE VOZ
+  ══════════════════════════════════════ */
+  .voice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .voice-card {
+    background: var(--card); border: 0.5px solid var(--border);
+    border-radius: 12px; padding: 32px;
+  }
+  .voice-yes { border-left: 2px solid var(--green); }
+  .voice-no  { border-left: 2px solid var(--subtle); }
+  .voice-tag {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .voice-yes .voice-tag { color: var(--green); }
+  .voice-no  .voice-tag { color: var(--subtle); }
+  .voice-item {
+    font-size: 14px; color: var(--light);
+    line-height: 1.7; display: flex; gap: 12px;
+    align-items: flex-start; margin-bottom: 4px;
+  }
+  .vi-dot  { color: var(--green); font-size: 8px; margin-top: 7px; flex-shrink: 0; }
+  .vi-x    { color: var(--subtle); font-size: 13px; line-height: 1; margin-top: 4px; flex-shrink: 0; font-weight: 300; }
+
+  /* ══════════════════════════════════════
+     13 — REGRAS
+  ══════════════════════════════════════ */
+  .rules-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .rule-card {
+    background: var(--card); border: 0.5px solid var(--border);
+    border-radius: 12px; padding: 24px 22px;
+  }
+  .rule-num {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; color: var(--green);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    margin-bottom: 10px;
+  }
+  .rule-text {
+    font-size: 13px; color: var(--light);
+    line-height: 1.6;
+  }
+
+  /* ══════════════════════════════════════
+     FOOTER
+  ══════════════════════════════════════ */
+  .brand-footer {
+    padding: 100px 64px 80px;
+    margin-top: 60px;
+    border-top: 0.5px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    max-width: 1180px; margin-left: auto; margin-right: auto;
+  }
+  .footer-logo {
+    font-size: 56px; font-weight: 700;
+    letter-spacing: -0.04em; line-height: 1;
+  }
+  .footer-logo .dot { color: var(--green); }
+  .footer-logo .x   { color: var(--green); font-weight: 300; }
+  .footer-right { text-align: right; }
+  .footer-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--subtle); margin-bottom: 8px;
+  }
+  .footer-mission {
+    font-size: 16px; color: var(--muted);
+    font-style: italic; line-height: 1.6;
+  }
+
+  /* Format tag (dentro de seções) */
+  .format-tag {
+    display: inline-block;
+    background: var(--green-dim);
+    border: 0.5px solid var(--green-borda);
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--green);
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ HERO ══════════════════ -->
+<div class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Brand Book v2.0 · Identidade Visual Oficial</div>
+    <div class="hero-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+    <div class="hero-tagline">
+      Campus Expansão. Nós preparamos o campo. Deus multiplica o crescimento.
+    </div>
+  </div>
+  <div class="hero-meta">
+    <div class="hero-meta-label">Edição</div>
+    <div class="hero-meta-val">v2.0 · Proposta</div>
+  </div>
+</div>
+
+<!-- ══════════════════ SUMÁRIO ══════════════════ -->
+<div class="toc">
+  <div class="toc-grid">
+    <div class="toc-item"><span class="toc-num">01</span><span class="toc-name">Sistema de Logo</span></div>
+    <div class="toc-item"><span class="toc-num">02</span><span class="toc-name">Paleta de Cores</span></div>
+    <div class="toc-item"><span class="toc-num">03</span><span class="toc-name">Tipografia</span></div>
+    <div class="toc-item"><span class="toc-num">04</span><span class="toc-name">Posts Feed</span></div>
+    <div class="toc-item"><span class="toc-num">05</span><span class="toc-name">Stories</span></div>
+    <div class="toc-item"><span class="toc-num">06</span><span class="toc-name">Thumbnails / Aulas</span></div>
+    <div class="toc-item"><span class="toc-num">07</span><span class="toc-name">Reels Cover</span></div>
+    <div class="toc-item"><span class="toc-num">08</span><span class="toc-name">Slides</span></div>
+    <div class="toc-item"><span class="toc-num">09</span><span class="toc-name">Banners / E-mail</span></div>
+    <div class="toc-item"><span class="toc-num">10</span><span class="toc-name">PDF / Apostila</span></div>
+    <div class="toc-item"><span class="toc-num">11</span><span class="toc-name">PowerPoint</span></div>
+    <div class="toc-item"><span class="toc-num">12</span><span class="toc-name">Tom de Voz</span></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════ 01 — LOGO ══════════════════ -->
+<div class="section">
+  <div class="section-label">01</div>
+  <div class="section-title">Sistema de <span class="accent">Logo</span></div>
+  <div class="section-desc">
+    O logotipo CE.X é o símbolo central da marca. Três versões aprovadas para fundos diferentes
+    e quatro variações para usos específicos. O CE é sempre peso 700. O X é sempre peso 300.
+    O ponto e o X usam a cor acento verde.
+  </div>
+
+  <!-- Versões aprovadas -->
+  <div class="logo-versions">
+    <div class="logo-card">
+      <div class="logo-display">CE<span class="dot">.</span><span class="x">X</span></div>
+      <div class="logo-card-label">Principal · Fundo escuro</div>
+    </div>
+    <div class="logo-card lc-light">
+      <div class="logo-display">CE<span class="dot">.</span><span class="x">X</span></div>
+      <div class="logo-card-label">Invertido · Fundo claro</div>
+    </div>
+    <div class="logo-card lc-green">
+      <div class="logo-display">CE<span class="dot">.</span><span class="x">X</span></div>
+      <div class="logo-card-label">Verde · Capas e destaque</div>
+    </div>
+  </div>
+
+  <!-- Variações -->
+  <div style="margin-top: 16px;">
+    <div class="eyebrow" style="margin-bottom: 20px;">Variações de uso</div>
+    <div class="logo-variations">
+      <div class="lv-card">
+        <div class="lv-display">
+          <div class="lv1-symbol">.<span class="x">X</span></div>
+        </div>
+        <div class="lv-label">Símbolo · App / Favicon</div>
+      </div>
+      <div class="lv-card">
+        <div class="lv-display">
+          <div class="lv2-wrap">
+            <div class="lv2-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+            <div class="lv2-tagline">Campus Expansão</div>
+          </div>
+        </div>
+        <div class="lv-label">Com tagline · Headers</div>
+      </div>
+      <div class="lv-card">
+        <div class="lv-display">
+          <div class="lv3-wrap">
+            <div class="lv3-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+            <div class="lv3-line"></div>
+            <div class="lv3-text">
+              <div class="lv3-name">Campus Expansão</div>
+              <div class="lv3-sub">campusexpansao.com</div>
+            </div>
+          </div>
+        </div>
+        <div class="lv-label">Horizontal · Documentos</div>
+      </div>
+      <div class="lv-card">
+        <div class="lv-display">
+          <div class="lv4-wrap">
+            <div class="lv4-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+          </div>
+        </div>
+        <div class="lv-label">Badge · Selos / CTAs</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Significado -->
+  <div class="meaning-row">
+    <div class="meaning-card">
+      <div class="meaning-letter">CE</div>
+      <div class="meaning-title">Campus Expansão</div>
+      <div class="meaning-desc">Ensino, estrutura, preparo, formação. A parte que cabe a nós.</div>
+    </div>
+    <div class="meaning-card">
+      <div class="meaning-letter">.</div>
+      <div class="meaning-title">Multiplicação</div>
+      <div class="meaning-desc">O ponto que une o humano ao divino. O sinal da operação.</div>
+    </div>
+    <div class="meaning-card">
+      <div class="meaning-letter">X</div>
+      <div class="meaning-title">Variável Divina</div>
+      <div class="meaning-desc">O crescimento que só Deus dá. A parte que escapa ao nosso controle.</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════════ 02 — CORES ══════════════════ -->
+<div class="section">
+  <div class="section-label">02</div>
+  <div class="section-title">Paleta de <span class="accent">Cores</span></div>
+  <div class="section-desc">
+    Cinco cores no sistema principal. O verde nunca ocupa mais de 30% de uma peça.
+    Fundos sempre preto ou grafite, nunca coloridos. Texto sobre verde é sempre preto.
+  </div>
+  <div class="color-grid">
+    <div class="color-chip">
+      <div class="color-swatch cs-black" style="background:#0D0D0D; border-bottom: 0.5px solid #1A1A1A;">
+        <div class="color-pct">100</div>
+      </div>
+      <div class="color-meta">
+        <div class="color-name">Preto Profundo</div>
+        <div class="color-hex">#0D0D0D</div>
+        <div class="color-role">Fundo primário</div>
+      </div>
+    </div>
+    <div class="color-chip">
+      <div class="color-swatch cs-graf" style="background:#1A1A1A; border-bottom: 0.5px solid #2A2A2A;">
+        <div class="color-pct">90</div>
+      </div>
+      <div class="color-meta">
+        <div class="color-name">Grafite</div>
+        <div class="color-hex">#1A1A1A</div>
+        <div class="color-role">Fundo secundário, cards</div>
+      </div>
+    </div>
+    <div class="color-chip">
+      <div class="color-swatch cs-green" style="background:#B8F52E; border-bottom: 0.5px solid #2A2A2A;">
+        <div class="color-pct">CE.X</div>
+      </div>
+      <div class="color-meta">
+        <div class="color-name">Verde CE.X</div>
+        <div class="color-hex">#B8F52E</div>
+        <div class="color-role">Acento principal</div>
+      </div>
+    </div>
+    <div class="color-chip">
+      <div class="color-swatch cs-white" style="background:#FFFFFF; border-bottom: 0.5px solid #2A2A2A;">
+        <div class="color-pct">00</div>
+      </div>
+      <div class="color-meta">
+        <div class="color-name">Branco</div>
+        <div class="color-hex">#FFFFFF</div>
+        <div class="color-role">Texto principal</div>
+      </div>
+    </div>
+    <div class="color-chip">
+      <div class="color-swatch cs-gray" style="background:#888888; border-bottom: 0.5px solid #2A2A2A;">
+        <div class="color-pct">50</div>
+      </div>
+      <div class="color-meta">
+        <div class="color-name">Cinza</div>
+        <div class="color-hex">#888888</div>
+        <div class="color-role">Texto secundário</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════════ 03 — TIPOGRAFIA ══════════════════ -->
+<div class="section">
+  <div class="section-label">03</div>
+  <div class="section-title">Tipografia · <span class="accent">Inter</span></div>
+  <div class="section-desc">
+    Fonte única em toda a comunicação. Inter, do peso Light 300 ao Bold 700.
+    Hierarquia clara: tipografia massiva para impacto, corpo limpo para leitura.
+    Eyebrow sempre em ALL CAPS com tracking alto.
+  </div>
+
+  <div class="type-table">
+    <div class="type-row">
+      <div class="type-sample">
+        <div class="t-display">CE<span class="accent">.</span><span class="x">X</span></div>
+      </div>
+      <div class="type-spec">
+        <div class="type-spec-label">Display · Logo</div>
+        <div class="type-spec-val">80–132px · 700<br>tracking -0.05em</div>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-sample">
+        <div class="t-mega">Tem <span class="accent">problema</span><br>de estrutura.</div>
+      </div>
+      <div class="type-spec">
+        <div class="type-spec-label">Mega · Posts e capas</div>
+        <div class="type-spec-val">64–116px · 700<br>tracking -0.05em · lh 0.95</div>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-sample">
+        <div class="t-title-xl">A Igreja que Discipula</div>
+      </div>
+      <div class="type-spec">
+        <div class="type-spec-label">Título XL · PDFs e Slides</div>
+        <div class="type-spec-val">36–48px · 700<br>tracking -0.035em · lh 1.05</div>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-sample">
+        <div class="t-title">Formação de Líderes — Módulo 1</div>
+      </div>
+      <div class="type-spec">
+        <div class="type-spec-label">Título · Seções</div>
+        <div class="type-spec-val">24–32px · 600<br>tracking -0.025em · lh 1.2</div>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-sample">
+        <div class="t-subtitle">A maioria das igrejas não tem problema de fé.</div>
+      </div>
+      <div class="type-spec">
+        <div class="type-spec-label">Subtítulo · Setup</div>
+        <div class="type-spec-val">18–24px · 400<br>tracking -0.015em · lh 1.4</div>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-sample">
+        <div class="t-body">O Campus Expansão não existe para substituir o agir de Deus. Existe para preparar melhor o campo onde Deus já deseja agir.</div>
+      </div>
+      <div class="type-spec">
+        <div class="type-spec-label">Corpo · Texto corrido</div>
+        <div class="type-spec-val">14–16px · 400<br>tracking 0 · lh 1.75</div>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-sample">
+        <div class="t-eyebrow-sample">Aula 03 · Discipulado Intencional</div>
+      </div>
+      <div class="type-spec">
+        <div class="type-spec-label">Eyebrow · Rótulos</div>
+        <div class="type-spec-val">10–11px · 700 · CAPS<br>tracking 0.20em</div>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-sample">
+        <div class="t-caption-sample">campusexpansao.com · Campus Expansão</div>
+      </div>
+      <div class="type-spec">
+        <div class="type-spec-label">Caption · Rodapés</div>
+        <div class="type-spec-val">11–12px · 400<br>tracking 0.05em</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════════ 04 — POSTS FEED ══════════════════ -->
+<div class="section">
+  <div class="section-label">04</div>
+  <div class="section-title">Posts <span class="accent">Feed</span> · 1080×1080</div>
+  <div class="section-desc">
+    Tipografia em escala de exibição. Título mega ocupa o frame com intenção.
+    Fundo limpo, sem grid. Padding 36–48px. O verde aparece em palavras-chave do título,
+    não como elemento de fundo.
+  </div>
+  <div class="format-tag">Instagram · Feed · 1:1</div>
+
+  <div class="post-grid">
+    <!-- Post escuro padrão -->
+    <div class="mock-frame post-mock">
+      <div class="mock-glow-tr"></div>
+      <div class="mock-bar"></div>
+      <div class="post-inner">
+        <div class="post-top">
+          <div class="mock-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+          <div class="post-tag">Liderança</div>
+        </div>
+        <div class="post-body">
+          <div class="post-subtitle">A maioria das igrejas<br>não tem problema de fé.</div>
+          <div class="post-title-mega">Tem <span class="accent">problema</span><br>de estrutura.</div>
+        </div>
+        <div class="post-footer">
+          <div class="post-footer-meta">Deus multiplica o que está preparado.</div>
+          <div class="mock-logo-faded">CE<span class="dot">.</span><span class="x">X</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Post grafite -->
+    <div class="mock-frame post-mock pm-graf">
+      <div class="mock-bar"></div>
+      <div class="post-inner">
+        <div class="post-top">
+          <div class="mock-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+          <div class="post-tag">Princípio</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title-mega">Nós preparamos.<br><span class="accent">Deus multiplica.</span></div>
+        </div>
+        <div class="post-footer">
+          <div class="post-footer-meta">Campus Expansão</div>
+          <div class="mock-logo-faded">CE<span class="dot">.</span><span class="x">X</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Post verde -->
+    <div class="mock-frame post-mock pm-green">
+      <div class="post-inner">
+        <div class="post-top">
+          <div class="mock-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+          <div class="post-tag">Direção</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title-mega">Estrutura<br>é honrar<br>o agir<br>de Deus.</div>
+        </div>
+        <div class="post-footer">
+          <div class="post-footer-meta">Campus Expansão</div>
+          <div class="mock-logo-faded">CE<span class="dot">.</span><span class="x">X</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Post escuro com mais texto -->
+    <div class="mock-frame post-mock">
+      <div class="mock-glow-tr"></div>
+      <div class="mock-bar"></div>
+      <div class="post-inner">
+        <div class="post-top">
+          <div class="mock-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+          <div class="post-tag">Diagnóstico</div>
+        </div>
+        <div class="post-body">
+          <div class="post-subtitle">5 sinais de que sua equipe</div>
+          <div class="post-title-mega"><span class="accent">está no esforço,</span><br>não no sistema.</div>
+        </div>
+        <div class="post-footer">
+          <div class="post-footer-meta">Arraste para ver →</div>
+          <div class="mock-logo-faded">CE<span class="dot">.</span><span class="x">X</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════════ 05 — STORIES ══════════════════ -->
+<div class="section">
+  <div class="section-label">05</div>
+  <div class="section-title">Stories · <span class="accent">9:16</span></div>
+  <div class="section-desc">
+    Versão vertical compacta. Logo no topo esquerdo, tag no topo direito.
+    Conteúdo central, CTA na base com linha verde. Safe zone entre y=150 e y=1770.
+  </div>
+  <div class="format-tag">Instagram · Stories · 1080×1920</div>
+
+  <div class="stories-grid">
+    <div class="mock-frame story-mock">
+      <div class="mock-glow-tr"></div>
+      <div class="mock-bar"></div>
+      <div class="story-inner">
+        <div class="story-top">
+          <div class="mock-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+          <div class="story-tag">Devocional</div>
+        </div>
+        <div class="story-mid">
+          <div class="story-title">Prepare<br>o campo.<br><span class="accent">Confie</span><br>na colheita.</div>
+          <div class="story-quote">"Porque a visão é ainda para um tempo determinado." Habacuque 2.3</div>
+        </div>
+        <div class="story-bottom">
+          <div class="story-line"></div>
+          <div class="story-cta">campusexpansao.com</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-frame story-mock sm-graf">
+      <div class="mock-bar"></div>
+      <div class="story-inner">
+        <div class="story-top">
+          <div class="mock-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+          <div class="story-tag">Nova série</div>
+        </div>
+        <div class="story-mid">
+          <div class="story-title">A Igreja<br>que <span class="accent">Discipula</span></div>
+          <div class="story-quote">6 módulos para estruturar o discipulado da sua igreja.</div>
+        </div>
+        <div class="story-bottom">
+          <div class="story-line"></div>
+          <div class="story-cta">Acesse no link da bio</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-frame story-mock sm-green">
+      <div class="story-inner">
+        <div class="story-top">
+          <div class="mock-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+          <div class="story-tag">Formação</div>
+        </div>
+        <div class="story-mid">
+          <div class="story-title">Retiro<br>de Líderes<br>2025</div>
+          <div class="story-quote">Três dias para estruturar a equipe da sua igreja.</div>
+        </div>
+        <div class="story-bottom">
+          <div class="story-line"></div>
+          <div class="story-cta">Inscrições abertas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════════ 06 — THUMBNAIL / AULAS ══════════════════ -->
+<div class="section">
+  <div class="section-label">06</div>
+  <div class="section-title">Thumbnails / <span class="accent">Aulas</span></div>
+  <div class="section-desc">
+    Capas de aulas e thumbnails de YouTube. Glow radial verde sutil no canto direito,
+    título em escala grande com palavra-chave em verde, logo desbotado no rodapé.
+  </div>
+  <div class="format-tag">YouTube · Plataforma · 1280×720 / 1920×1080</div>
+
+  <div class="thumb-grid">
+    <div class="mock-frame thumb-mock">
+      <div class="mock-glow-tr"></div>
+      <div class="mock-bar"></div>
+      <div class="thumb-inner">
+        <div class="thumb-top">
+          <div class="mock-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+          <div class="thumb-tag">Aula 01 · Liderança</div>
+        </div>
+        <div class="thumb-title">Como <span class="accent">delegar</span><br>sem perder o controle</div>
+        <div class="thumb-bottom">
+          <div class="thumb-meta">18 min · PDF incluso</div>
+          <div class="mock-logo-faded">CE<span class="dot">.</span><span class="x">X</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-frame thumb-mock">
+      <div class="mock-glow-tr"></div>
+      <div class="mock-bar"></div>
+      <div class="thumb-inner">
+        <div class="thumb-top">
+          <div class="mock-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+          <div class="thumb-tag">Checklist · Ministério</div>
+        </div>
+        <div class="thumb-title">O que <span class="accent">revisar</span><br>antes de cada culto</div>
+        <div class="thumb-bottom">
+          <div class="thumb-meta">Material baixável</div>
+          <div class="mock-logo-faded">CE<span class="dot">.</span><span class="x">X</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════════ 07 — REELS COVER ══════════════════ -->
+<div class="section">
+  <div class="section-label">07</div>
+  <div class="section-title">Reels <span class="accent">Cover</span></div>
+  <div class="section-desc">
+    Capas de Reels para o feed. Igual ao Stories no formato 9:16, mas com indicador
+    de play e duração no rodapé. Otimizado para destaque no grid do perfil.
+  </div>
+  <div class="format-tag">Instagram · Reels Cover · 1080×1920</div>
+
+  <div class="reels-grid">
+    <div class="mock-frame reels-mock">
+      <div class="mock-glow-tr"></div>
+      <div class="mock-bar"></div>
+      <div class="reels-inner">
+        <div class="reels-top">
+          <div class="mock-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+          <div class="reels-play"></div>
+        </div>
+        <div class="reels-mid">
+          <div class="reels-tag">Bônus</div>
+          <div class="reels-title">3 erros<br>que <span class="accent">esgotam</span><br>sua equipe</div>
+        </div>
+        <div class="reels-bottom">
+          <div class="reels-duration">02:14</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-frame reels-mock rm-graf">
+      <div class="mock-bar"></div>
+      <div class="reels-inner">
+        <div class="reels-top">
+          <div class="mock-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+          <div class="reels-play"></div>
+        </div>
+        <div class="reels-mid">
+          <div class="reels-tag">Princípio</div>
+          <div class="reels-title">Por que<br>discipular<br>é <span class="accent">processo,</span><br>não evento</div>
+        </div>
+        <div class="reels-bottom">
+          <div class="reels-duration">01:48</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-frame reels-mock">
+      <div class="mock-glow-tr"></div>
+      <div class="mock-bar"></div>
+      <div class="reels-inner">
+        <div class="reels-top">
+          <div class="mock-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+          <div class="reels-play"></div>
+        </div>
+        <div class="reels-mid">
+          <div class="reels-tag">Diagnóstico</div>
+          <div class="reels-title">Sua igreja<br>cresce ou<br><span class="accent">só lota?</span></div>
+        </div>
+        <div class="reels-bottom">
+          <div class="reels-duration">03:02</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════════ 08 — SLIDES ══════════════════ -->
+<div class="section">
+  <div class="section-label">08</div>
+  <div class="section-title">Slides / <span class="accent">Apresentação</span></div>
+  <div class="section-desc">
+    Apresentações em 16:9. Barra lateral verde de 4-5px à esquerda. Eyebrow em
+    verde caps, título em 44px, pontos com bullet circular verde.
+    Logo desbotado no canto inferior direito, número de slide à esquerda.
+  </div>
+  <div class="format-tag">Apresentação · 16:9 · Aulas e palestras</div>
+
+  <div class="mock-frame slide-mock">
+    <div class="mock-glow-tr"></div>
+    <div class="mock-bar"></div>
+    <div class="slide-inner">
+      <div class="slide-eyebrow">Módulo 03 · Liderança Pastoral</div>
+      <div class="slide-title">Os 5 pilares<br>de uma <span class="accent">equipe saudável</span></div>
+      <div class="slide-points">
+        <div class="slide-point"><div class="slide-dot"></div><div class="slide-point-text">Cultura de confiança mútua</div></div>
+        <div class="slide-point"><div class="slide-dot"></div><div class="slide-point-text">Comunicação clara e consistente</div></div>
+        <div class="slide-point"><div class="slide-dot"></div><div class="slide-point-text">Funções bem definidas e acordadas</div></div>
+        <div class="slide-point"><div class="slide-dot"></div><div class="slide-point-text">Feedback como prática de cuidado</div></div>
+        <div class="slide-point"><div class="slide-dot"></div><div class="slide-point-text">Propósito compartilhado e vivido</div></div>
+      </div>
+    </div>
+    <div class="slide-page-num">06 / 14</div>
+    <div class="slide-corner-logo mock-logo-faded">CE<span class="dot">.</span><span class="x">X</span></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════════ 09 — BANNER / E-MAIL ══════════════════ -->
+<div class="section">
+  <div class="section-label">09</div>
+  <div class="section-title">Banner / <span class="accent">E-mail</span></div>
+  <div class="section-desc">
+    Banners para campanhas, e-mails e divulgação de eventos. Stripe verde de 8px à esquerda,
+    eyebrow + título + descrição à esquerda, CTA e logo à direita.
+  </div>
+  <div class="format-tag">Banner · Email · Evento · 1200×400 / 1920×600</div>
+
+  <div class="mock-frame banner-mock">
+    <div class="banner-inner">
+      <div class="banner-stripe"></div>
+      <div class="banner-body">
+        <div class="banner-text">
+          <div class="banner-eyebrow">Campus Expansão · Formação</div>
+          <div class="banner-title">Retiro de Liderança 2025</div>
+          <div class="banner-desc">Três dias para estruturar, alinhar e potencializar a equipe da sua igreja. Inscrições abertas.</div>
+        </div>
+        <div class="banner-right">
+          <div class="banner-cta">Inscreva-se</div>
+          <div class="mock-logo-faded">CE<span class="dot">.</span><span class="x">X</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════════ 10 — PDF / APOSTILA ══════════════════ -->
+<div class="section">
+  <div class="section-label">10</div>
+  <div class="section-title">PDF / <span class="accent">Apostila</span></div>
+  <div class="section-desc">
+    Materiais para download. Cabeçalho com logo + série, capa com título mega,
+    tags de seções, callout bíblico em verde dim com borda esquerda, rodapé com site e número.
+  </div>
+  <div class="format-tag">PDF · Apostila · A4 · Material de estudo</div>
+
+  <div class="mock-frame pdf-mock">
+    <div class="pdf-inner">
+      <div class="pdf-header">
+        <div class="mock-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+        <div class="pdf-meta-right">
+          <div class="pdf-series">Série · Fundamentos</div>
+          <div class="pdf-num">Material 01 de 06</div>
+        </div>
+      </div>
+      <div class="pdf-cover">
+        <div class="pdf-eyebrow">Formação de Líderes</div>
+        <div class="pdf-title">A <span class="accent">Igreja</span><br>que Discipula</div>
+        <div class="pdf-subtitle">Como estruturar um processo de discipulado que forma, retém e multiplica líderes na sua igreja.</div>
+        <div class="pdf-tags">
+          <span class="pdf-tag">Contexto</span>
+          <span class="pdf-tag">Fundamento</span>
+          <span class="pdf-tag">Diagnóstico</span>
+          <span class="pdf-tag">Passo a passo</span>
+        </div>
+      </div>
+      <div class="pdf-content">
+        <div class="pdf-content-eyebrow">Capítulo 01</div>
+        <div class="pdf-content-h">Por que o discipulado falha na maioria das igrejas?</div>
+        <div class="pdf-content-body">A maioria das igrejas tem boa intenção, mas não tem processo. Discipulado sem estrutura depende de esforço individual.</div>
+        <div class="pdf-callout">"Tudo o que você ouviu de mim, confia isso a homens fiéis." 2 Timóteo 2.2</div>
+      </div>
+      <div class="pdf-footer">
+        <div class="pdf-footer-text">Campus Expansão · campusexpansao.com</div>
+        <div class="pdf-footer-page">02</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════════ 11 — POWERPOINT ══════════════════ -->
+<div class="section">
+  <div class="section-label">11</div>
+  <div class="section-title">PowerPoint · <span class="accent">Capas</span></div>
+  <div class="section-desc">
+    Capas de palestras, treinamentos e mentorias. Layout em 16:9 com tipografia
+    massiva, eyebrow superior, autor e data no rodapé.
+  </div>
+  <div class="format-tag">PowerPoint · 16:9 · Capa de palestra</div>
+
+  <div class="ppt-grid">
+    <div class="mock-frame ppt-mock">
+      <div class="mock-glow-tr"></div>
+      <div class="mock-bar"></div>
+      <div class="ppt-cover-inner">
+        <div class="ppt-top">
+          <div class="mock-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+          <div class="ppt-meta">Mentoria Pastoral</div>
+        </div>
+        <div class="ppt-cover-mid">
+          <div class="ppt-cover-eyebrow">Sessão 04</div>
+          <div class="ppt-cover-title">Liderar<br>sem se <span class="accent">esgotar</span></div>
+        </div>
+        <div class="ppt-cover-bottom">
+          <div class="ppt-cover-by">
+            <strong>Campus Expansão</strong><br>
+            Outubro · 2025
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-frame ppt-mock">
+      <div class="mock-glow-tr"></div>
+      <div class="mock-bar"></div>
+      <div class="ppt-cover-inner">
+        <div class="ppt-top">
+          <div class="mock-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+          <div class="ppt-meta">Treinamento de Equipe</div>
+        </div>
+        <div class="ppt-cover-mid">
+          <div class="ppt-cover-eyebrow">Workshop</div>
+          <div class="ppt-cover-title"><span class="accent">Discipulado</span><br>com processo</div>
+        </div>
+        <div class="ppt-cover-bottom">
+          <div class="ppt-cover-by">
+            <strong>Campus Expansão</strong><br>
+            Equipe de Líderes
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════════ 12 — TOM DE VOZ ══════════════════ -->
+<div class="section">
+  <div class="section-label">12</div>
+  <div class="section-title">Tom de <span class="accent">Voz</span></div>
+  <div class="section-desc">
+    Como o Campus Expansão fala. Impactante mas próximo, nunca distante.
+    Direto sem ser frio, profundo sem ser pesado, bíblico sem ser clichê.
+  </div>
+
+  <div class="voice-grid">
+    <div class="voice-card voice-yes">
+      <div class="voice-tag">Escrever assim</div>
+      <div class="voice-item"><span class="vi-dot">●</span>Simples, humano, direto e profundo</div>
+      <div class="voice-item"><span class="vi-dot">●</span>Bíblico sem ser clichê</div>
+      <div class="voice-item"><span class="vi-dot">●</span>Prático sem ser raso</div>
+      <div class="voice-item"><span class="vi-dot">●</span>Moderno sem parecer frio</div>
+      <div class="voice-item"><span class="vi-dot">●</span>Impactante, mas próximo. Nunca distante.</div>
+      <div class="voice-item"><span class="vi-dot">●</span>Com começo, meio e fim claro</div>
+      <div class="voice-item"><span class="vi-dot">●</span>Como alguém que conhece a realidade do pastor</div>
+    </div>
+    <div class="voice-card voice-no">
+      <div class="voice-tag">Nunca assim</div>
+      <div class="voice-item"><span class="vi-x">×</span>Travessão. Parece inteligência artificial.</div>
+      <div class="voice-item"><span class="vi-x">×</span>"Protocolo". Trocar por processo, estrutura, rotina.</div>
+      <div class="voice-item"><span class="vi-x">×</span>Linguagem robótica ou genérica</div>
+      <div class="voice-item"><span class="vi-x">×</span>Promessas de crescimento garantido</div>
+      <div class="voice-item"><span class="vi-x">×</span>Jargão religioso artificial</div>
+      <div class="voice-item"><span class="vi-x">×</span>Especialista de fora falando para o pastor</div>
+      <div class="voice-item"><span class="vi-x">×</span>Conteúdo bonito mas inaplicável</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════════ REGRAS DE USO ══════════════════ -->
+<div class="section">
+  <div class="section-label">13</div>
+  <div class="section-title">Regras de <span class="accent">Uso</span></div>
+  <div class="section-desc">
+    Princípios não-negociáveis. Toda peça produzida passa por esta verificação antes de ser entregue.
+  </div>
+
+  <div class="rules-grid">
+    <div class="rule-card">
+      <div class="rule-num">R · 01</div>
+      <div class="rule-text">Logo nunca aparece sobre fundos coloridos que não sejam preto, branco ou verde CE.X.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">R · 02</div>
+      <div class="rule-text">Tipografia única: Inter. Pesos do 300 ao 700. Nunca outra fonte.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">R · 03</div>
+      <div class="rule-text">Verde #B8F52E é sempre acento. Nunca domina mais de 30% de uma peça.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">R · 04</div>
+      <div class="rule-text">Eyebrow sempre em ALL CAPS, tracking 0.18em a 0.22em.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">R · 05</div>
+      <div class="rule-text">Margens generosas. O conteúdo respira. Nunca comprime texto até as bordas.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">R · 06</div>
+      <div class="rule-text">CE em peso 700. X em peso 300. Ponto e X sempre verde acento.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">R · 07</div>
+      <div class="rule-text">Sem gradientes. Sem grid quadriculado de fundo. Fundos limpos.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">R · 08</div>
+      <div class="rule-text">Glow radial verde sutil é o único elemento de profundidade aprovado.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">R · 09</div>
+      <div class="rule-text">Citações bíblicas sempre em callout próprio, nunca no meio de parágrafos.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">R · 10</div>
+      <div class="rule-text">Hierarquia visual obrigatória: eyebrow → título → corpo → rodapé.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">R · 11</div>
+      <div class="rule-text">Posts de feed: tipografia em escala mega (64-116px) ocupa o frame.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">R · 12</div>
+      <div class="rule-text">Verde do título destaca palavra-chave, não a frase inteira.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════ FOOTER ══════════════════ -->
+<div class="brand-footer">
+  <div class="footer-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+  <div class="footer-right">
+    <div class="footer-label">Brand Book v2.0 · Campus Expansão</div>
+    <div class="footer-mission">Nós preparamos. Deus multiplica.</div>
+  </div>
+</div>
+
+</body>
+</html>

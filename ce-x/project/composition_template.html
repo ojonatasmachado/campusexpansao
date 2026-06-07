@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<!--
+═══════════════════════════════════════════════════════════════════════════
+  CE.X · TEMPLATE DE COMPOSIÇÃO HYPERFRAMES · v1.0
+
+  Como usar:
+  1. Coloca seu vídeo de face cam como ./face-cam.mp4 nesta pasta
+  2. Edita os timings, textos e cores aqui em baixo
+  3. Roda no terminal:  npx hyperframes preview   (pra ver ao vivo)
+     ou:                npx hyperframes render    (pra gerar MP4)
+
+  Os pontos onde você (ou o Claude) precisa editar estão marcados com /* EDIT */
+═══════════════════════════════════════════════════════════════════════════
+-->
+<head>
+<meta charset="UTF-8">
+<title>CE.X Reel</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<style>
+  :root {
+    --ink: #0E110D;
+    --olive: #7A9E3F;
+    --olive-soft: #94B85C;
+    --olive-deep: #4F6B26;
+    --olive-line: rgba(122,158,63,0.30);
+    --cream: #EDE6D3;
+    --white: #FAFAF7;
+    --light: #E6E5DD;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: #000;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  #root {
+    position: relative;
+    width: 1080px;
+    height: 1920px;
+    background: #000;
+    overflow: hidden;
+  }
+  .clip { position: absolute; pointer-events: none; }
+
+  /* ────── FACE CAM (track 0 — base) ────── */
+  .face-cam-clip {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+  }
+
+  /* ────── OVERLAYS (track 1+) ────── */
+
+  /* Title Card — topo */
+  .ovl-title {
+    top: 90px;
+    left: 60px;
+    right: 60px;
+    z-index: 10;
+  }
+  .ovl-title-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    color: var(--olive);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+  .ovl-title-h {
+    font-size: 88px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    color: var(--white);
+    text-shadow: 0 4px 24px rgba(0,0,0,0.7);
+  }
+  .ovl-title-h em {
+    font-style: italic;
+    color: var(--olive);
+    font-weight: 600;
+  }
+
+  /* Lower Third — base */
+  .ovl-lt {
+    bottom: 320px;
+    left: 60px;
+    right: 60px;
+    z-index: 10;
+  }
+  .ovl-lt-box {
+    background: rgba(14,17,13,0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-left: 6px solid var(--olive);
+    padding: 36px 44px;
+    border-radius: 4px;
+    display: inline-block;
+    max-width: 90%;
+  }
+  .ovl-lt-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    color: var(--olive);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .ovl-lt-text {
+    font-size: 52px;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+  }
+  .ovl-lt-text em { color: var(--olive); font-style: italic; font-weight: 700; }
+
+  /* Big Number — canto superior direito */
+  .ovl-bignum {
+    top: 240px;
+    right: 80px;
+    text-align: right;
+    max-width: 540px;
+    z-index: 10;
+  }
+  .ovl-bignum-val {
+    font-size: 280px;
+    font-weight: 800;
+    letter-spacing: -0.06em;
+    line-height: 0.85;
+    color: var(--olive);
+    text-shadow: 0 4px 32px rgba(0,0,0,0.5);
+  }
+  .ovl-bignum-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 30px;
+    color: var(--white);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-top: 20px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  /* Versículo — base, fundo creme */
+  .ovl-verse {
+    bottom: 220px;
+    left: 80px;
+    right: 80px;
+    background: rgba(237,230,211,0.97);
+    backdrop-filter: blur(16px);
+    border-radius: 12px;
+    padding: 48px 52px;
+    z-index: 10;
+  }
+  .ovl-verse-text {
+    font-size: 52px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.32;
+    font-style: italic;
+    letter-spacing: -0.005em;
+    margin-bottom: 18px;
+  }
+  .ovl-verse-ref {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    color: var(--olive-deep);
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  /* Lista — coluna direita */
+  .ovl-list {
+    top: 260px;
+    right: 60px;
+    width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    z-index: 10;
+  }
+  .ovl-list-item {
+    background: rgba(14,17,13,0.88);
+    backdrop-filter: blur(12px);
+    border-left: 5px solid var(--olive);
+    padding: 24px 28px;
+    border-radius: 4px;
+    color: var(--white);
+    line-height: 1.3;
+    font-weight: 600;
+    font-size: 32px;
+  }
+  .ovl-list-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    color: var(--olive);
+    letter-spacing: 0.10em;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  /* Pull Quote — tela cheia, creme */
+  .ovl-pq {
+    inset: 0;
+    background: rgba(237,230,211,0.97);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 120px 80px;
+    text-align: center;
+    gap: 48px;
+    z-index: 20;
+  }
+  .ovl-pq-mark {
+    font-size: 200px;
+    color: var(--olive);
+    font-weight: 800;
+    line-height: 0.5;
+  }
+  .ovl-pq-text {
+    font-size: 80px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    font-style: italic;
+  }
+  .ovl-pq-text em { font-style: italic; color: var(--olive); font-weight: 700; }
+  .ovl-pq-attr {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 26px;
+    color: var(--olive-deep);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  /* Highlight Word — caption base */
+  .ovl-hl {
+    bottom: 260px;
+    left: 60px;
+    right: 60px;
+    text-align: center;
+    z-index: 10;
+  }
+  .ovl-hl-text {
+    font-size: 112px;
+    font-weight: 800;
+    color: var(--white);
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+    text-shadow: 0 4px 32px rgba(0,0,0,0.6);
+  }
+  .ovl-hl-text em {
+    color: var(--olive);
+    font-style: normal;
+    background: var(--ink);
+    padding: 6px 28px;
+    border-radius: 8px;
+  }
+
+  /* End Card — tela cheia ink */
+  .ovl-end {
+    inset: 0;
+    background: var(--ink);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 120px 80px;
+    gap: 48px;
+    text-align: center;
+    z-index: 30;
+  }
+  .ovl-end-mark {
+    font-size: 200px;
+    font-weight: 700;
+    letter-spacing: -0.06em;
+    color: var(--white);
+  }
+  .ovl-end-mark .dot, .ovl-end-mark .x { color: var(--olive); }
+  .ovl-end-line {
+    width: 120px;
+    height: 4px;
+    background: var(--olive);
+  }
+  .ovl-end-tagline {
+    font-size: 52px;
+    font-weight: 500;
+    color: var(--white);
+    line-height: 1.35;
+    max-width: 80%;
+    letter-spacing: -0.01em;
+  }
+  .ovl-end-tagline em { color: var(--olive); font-weight: 700; font-style: italic; }
+  .ovl-end-cta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32px;
+    color: var(--olive);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<!--
+═══════════════════════════════════════════════════════════════════════════
+  COMPOSIÇÃO — Edite os data-* attributes e os textos conforme seu reel.
+
+  data-composition-id  → identificador único (qualquer string)
+  data-width / height  → SEMPRE 1080×1920 pra Instagram Reels
+  data-start           → SEMPRE 0
+  CADA CLIP precisa:
+    - data-start="N"    (em segundos, quando aparece)
+    - data-duration="N" (quanto tempo fica visível)
+    - data-track-index  (camada — 0 = fundo, 10+ = overlay)
+═══════════════════════════════════════════════════════════════════════════
+-->
+
+<div id="root"
+     data-composition-id="cex-reel"
+     data-start="0"
+     data-width="1080"
+     data-height="1920">
+
+  <!-- ▸▸▸ TRACK 0 — FACE CAM (vídeo de fundo, sempre visível) ◂◂◂ -->
+  <video
+    class="clip face-cam-clip"
+    data-start="0"
+    data-duration="45"
+    data-track-index="0"
+    src="./face-cam.mp4"
+    autoplay
+    muted
+    playsinline>
+  </video>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- ▸ CUE 1 · TITLE CARD                                        -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div id="cue-title"
+       class="clip ovl-title"
+       data-start="0"
+       data-duration="3.5"
+       data-track-index="10">
+    <!-- /* EDIT — texto do title card */ -->
+    <div class="ovl-title-eyebrow">Aula · 01</div>
+    <div class="ovl-title-h">A maioria das igrejas<br>não tem problema <em>de fé</em>.</div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- ▸ CUE 2 · LOWER THIRD                                       -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div id="cue-lt"
+       class="clip ovl-lt"
+       data-start="4"
+       data-duration="8"
+       data-track-index="11">
+    <div class="ovl-lt-box">
+      <!-- /* EDIT — eyebrow + texto */ -->
+      <div class="ovl-lt-eyebrow">Tese</div>
+      <div class="ovl-lt-text">Tem problema <em>de estrutura</em>.</div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- ▸ CUE 3 · BIG NUMBER                                        -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div id="cue-bignum"
+       class="clip ovl-bignum"
+       data-start="13"
+       data-duration="5"
+       data-track-index="12">
+    <!-- /* EDIT — valor + rótulo */ -->
+    <div class="ovl-bignum-val">73%</div>
+    <div class="ovl-bignum-label">das equipes<br>dependem de<br>uma pessoa</div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- ▸ CUE 4 · LISTA NUMERADA                                    -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div id="cue-list"
+       class="clip ovl-list"
+       data-start="19"
+       data-duration="10"
+       data-track-index="13">
+    <!-- /* EDIT — adicione/remova itens com a classe .ovl-list-item */ -->
+    <div class="ovl-list-item" data-list-idx="0">
+      <span class="ovl-list-num">01</span>
+      Ninguém substitui o líder
+    </div>
+    <div class="ovl-list-item" data-list-idx="1">
+      <span class="ovl-list-num">02</span>
+      Reuniões repetem decisões
+    </div>
+    <div class="ovl-list-item" data-list-idx="2">
+      <span class="ovl-list-num">03</span>
+      Cresceu sem processo
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- ▸ CUE 5 · VERSÍCULO                                         -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div id="cue-verse"
+       class="clip ovl-verse"
+       data-start="30"
+       data-duration="5"
+       data-track-index="14">
+    <!-- /* EDIT — texto + referência */ -->
+    <div class="ovl-verse-text">"Quem lavra a sua terra terá pão com fartura."</div>
+    <div class="ovl-verse-ref">— Provérbios 28.19</div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- ▸ CUE 6 · HIGHLIGHT WORD                                    -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div id="cue-hl"
+       class="clip ovl-hl"
+       data-start="36"
+       data-duration="3"
+       data-track-index="15">
+    <!-- /* EDIT — palavra(s) com <em> destacando */ -->
+    <div class="ovl-hl-text">Documente<br>o que <em>funciona</em>.</div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- ▸ CUE 7 · PULL QUOTE (tela cheia — cobre o vídeo)           -->
+  <!-- /* COMENTE este bloco se não quiser usar */                  -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!--
+  <div id="cue-pq"
+       class="clip ovl-pq"
+       data-start="39"
+       data-duration="3"
+       data-track-index="20">
+    <div class="ovl-pq-mark">"</div>
+    <div class="ovl-pq-text">Estrutura é honrar<br><em>o agir de Deus</em>.</div>
+    <div class="ovl-pq-attr">— Manifesto CE.X</div>
+  </div>
+  -->
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- ▸ CUE 8 · END CARD (tela cheia — encerramento)              -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div id="cue-end"
+       class="clip ovl-end"
+       data-start="40"
+       data-duration="5"
+       data-track-index="30">
+    <div class="ovl-end-mark">CE<span class="dot">.</span><span class="x">X</span></div>
+    <div class="ovl-end-line"></div>
+    <!-- /* EDIT — tagline + CTA */ -->
+    <div class="ovl-end-tagline">Nós preparamos.<br><em>Deus multiplica</em>.</div>
+    <div class="ovl-end-cta">@campusexpansao</div>
+  </div>
+
+
+  <!--
+  ═════════════════════════════════════════════════════════════════════════
+    TIMELINE GSAP — animações de entrada/saída de cada cue.
+    HyperFrames lê window.__timelines[id] e renderiza frame-a-frame.
+
+    Easing usado: "expo.out" (entradas) / "expo.in" (saídas)
+    Esses easings dão um movimento "snap" — começa rápido, freia suave.
+  ═════════════════════════════════════════════════════════════════════════
+  -->
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    /* ▸ Util: anima um cue com fade-in + slide quando entra, fade-out quando sai */
+    function animateCue(selector, startTime, duration, opts = {}) {
+      const {
+        fromY = 30,
+        fromOpacity = 0,
+        enterDuration = 0.5,
+        exitDuration = 0.4,
+        ease = 'expo.out'
+      } = opts;
+
+      // Entrada
+      tl.fromTo(selector,
+        { opacity: fromOpacity, y: fromY },
+        { opacity: 1, y: 0, duration: enterDuration, ease },
+        startTime
+      );
+
+      // Saída (no fim da duração do cue)
+      tl.to(selector,
+        { opacity: 0, y: -fromY, duration: exitDuration, ease: 'expo.in' },
+        startTime + duration - exitDuration
+      );
+    }
+
+    /* ─── ANIMAÇÕES POR CUE ─── */
+
+    // Title card — fade + slide up
+    animateCue('#cue-title', 0, 3.5, { fromY: 40 });
+
+    // Lower third — fade + slide right
+    tl.fromTo('#cue-lt',
+      { opacity: 0, x: -40 },
+      { opacity: 1, x: 0, duration: 0.55, ease: 'expo.out' },
+      4
+    );
+    tl.to('#cue-lt',
+      { opacity: 0, x: -40, duration: 0.4, ease: 'expo.in' },
+      4 + 8 - 0.4
+    );
+
+    // Big Number — scale + fade
+    tl.fromTo('#cue-bignum .ovl-bignum-val',
+      { opacity: 0, scale: 0.7 },
+      { opacity: 1, scale: 1, duration: 0.7, ease: 'back.out(1.6)' },
+      13
+    );
+    tl.fromTo('#cue-bignum .ovl-bignum-label',
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.5, ease: 'expo.out' },
+      13.2
+    );
+    tl.to('#cue-bignum',
+      { opacity: 0, duration: 0.4, ease: 'expo.in' },
+      13 + 5 - 0.4
+    );
+
+    // Lista — itens entram em sequência (staggered)
+    tl.fromTo('#cue-list',
+      { opacity: 0 }, { opacity: 1, duration: 0.3 },
+      19
+    );
+    tl.fromTo('#cue-list .ovl-list-item',
+      { opacity: 0, x: 60 },
+      { opacity: 1, x: 0, duration: 0.5, ease: 'expo.out', stagger: 0.5 },
+      19
+    );
+    tl.to('#cue-list',
+      { opacity: 0, duration: 0.4, ease: 'expo.in' },
+      19 + 10 - 0.4
+    );
+
+    // Versículo — fade up
+    animateCue('#cue-verse', 30, 5, { fromY: 30 });
+
+    // Highlight — punch in (scale)
+    tl.fromTo('#cue-hl',
+      { opacity: 0, scale: 0.92 },
+      { opacity: 1, scale: 1, duration: 0.4, ease: 'expo.out' },
+      36
+    );
+    tl.to('#cue-hl',
+      { opacity: 0, scale: 1.05, duration: 0.3, ease: 'expo.in' },
+      36 + 3 - 0.3
+    );
+
+    // Pull Quote (se ativo — descomentado)
+    // animateCue('#cue-pq', 39, 3, { fromY: 0 });
+
+    // End Card — cross-fade do vídeo
+    tl.fromTo('#cue-end',
+      { opacity: 0 },
+      { opacity: 1, duration: 0.8, ease: 'expo.out' },
+      40
+    );
+
+    // Pequeno breathe do logo no end card
+    tl.fromTo('#cue-end .ovl-end-mark',
+      { scale: 0.92 },
+      { scale: 1, duration: 0.8, ease: 'expo.out' },
+      40
+    );
+    tl.fromTo('#cue-end .ovl-end-tagline',
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.6, ease: 'expo.out' },
+      40.4
+    );
+    tl.fromTo('#cue-end .ovl-end-cta',
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.5, ease: 'expo.out' },
+      40.8
+    );
+
+    /* ▸ Registrar timeline pro HyperFrames consumir */
+    window.__timelines = window.__timelines || {};
+    window.__timelines['cex-reel'] = tl;
+  </script>
+
+</div>
+
+</body>
+</html>

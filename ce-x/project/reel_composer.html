@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CE.X · Reel Composer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<style>
+  :root {
+    --ink: #0E110D;
+    --graphite: #181B16;
+    --border: #25291F;
+    --border-2: #2E3327;
+    --olive: #7A9E3F;
+    --olive-soft: #94B85C;
+    --olive-deep: #4F6B26;
+    --olive-dim: rgba(122,158,63,0.10);
+    --olive-line: rgba(122,158,63,0.30);
+    --cream: #EDE6D3;
+    --white: #FAFAF7;
+    --light: #E6E5DD;
+    --muted: #8B8C82;
+    --subtle: #555650;
+    --danger: #D17066;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--ink);
+    color: var(--white);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  body { overflow-x: hidden; }
+
+  /* ════════ LAYOUT ════════ */
+  .app {
+    display: grid;
+    grid-template-columns: 480px 1fr 360px;
+    height: 100vh;
+    width: 100vw;
+  }
+  @media (max-width: 1280px) {
+    .app { grid-template-columns: 420px 1fr 320px; }
+  }
+
+  /* ════════ TOPBAR ════════ */
+  .topbar {
+    grid-column: 1 / -1;
+    height: 64px;
+    background: var(--graphite);
+    border-bottom: 0.5px solid var(--border-2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 24px; }
+  .logo {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.06em;
+    color: var(--white);
+  }
+  .logo .dot, .logo .x { color: var(--olive); }
+  .logo .x { font-weight: 700; }
+  .crumbs {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--subtle);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .crumbs strong {
+    color: var(--olive);
+    font-weight: 500;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .btn {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    padding: 9px 16px;
+    border-radius: 4px;
+    border: 0.5px solid var(--border-2);
+    background: transparent;
+    color: var(--light);
+    cursor: pointer;
+    transition: all 0.18s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn:hover { background: var(--graphite); border-color: var(--olive-line); }
+  .btn-primary {
+    background: var(--olive);
+    color: var(--ink);
+    border-color: var(--olive);
+    font-weight: 600;
+  }
+  .btn-primary:hover { background: var(--olive-soft); border-color: var(--olive-soft); }
+  .btn-ghost { border-color: transparent; color: var(--muted); }
+
+  /* ════════ APP MAIN ════════ */
+  .app-main {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 480px 1fr 360px;
+    height: calc(100vh - 64px);
+  }
+  @media (max-width: 1280px) {
+    .app-main { grid-template-columns: 420px 1fr 320px; }
+  }
+
+  /* ════════ LEFT PANEL — SCRIPT ════════ */
+  .panel-left {
+    background: var(--graphite);
+    border-right: 0.5px solid var(--border-2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-head {
+    padding: 20px 24px 16px;
+    border-bottom: 0.5px solid var(--border-2);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .panel-head h2 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--white);
+  }
+  .panel-head p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+  }
+
+  .script-input {
+    width: 100%;
+    background: var(--ink);
+    border: 0.5px solid var(--border-2);
+    border-radius: 4px;
+    padding: 14px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--light);
+    resize: vertical;
+    min-height: 160px;
+    outline: none;
+    transition: border-color 0.18s;
+  }
+  .script-input:focus { border-color: var(--olive-line); }
+  .script-input::placeholder { color: var(--subtle); font-style: italic; }
+
+  .field-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--olive);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .field-label span:last-child { color: var(--subtle); font-size: 10px; letter-spacing: 0.04em; }
+  .field-group { margin-bottom: 24px; }
+
+  .duration-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .num-input {
+    background: var(--ink);
+    border: 0.5px solid var(--border-2);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--white);
+    outline: none;
+    width: 100%;
+  }
+  .num-input:focus { border-color: var(--olive-line); }
+
+  /* CUES LIST */
+  .cues-section {
+    margin-top: 8px;
+  }
+  .cues-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .cue {
+    background: var(--ink);
+    border: 0.5px solid var(--border-2);
+    border-left: 2px solid var(--olive);
+    border-radius: 4px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .cue.active { border-color: var(--olive); background: var(--olive-dim); }
+  .cue:hover { border-left-color: var(--olive-soft); }
+  .cue-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .cue-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--olive);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .cue-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .cue-text {
+    font-size: 12px;
+    color: var(--light);
+    line-height: 1.45;
+  }
+  .cue-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 2px;
+  }
+  .cue-mini-btn {
+    background: transparent;
+    border: 0.5px solid var(--border-2);
+    color: var(--muted);
+    padding: 3px 8px;
+    font-size: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+    border-radius: 3px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .cue-mini-btn:hover { color: var(--olive); border-color: var(--olive-line); }
+  .cue-mini-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
+
+  .add-cue-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .add-cue-btn {
+    background: transparent;
+    border: 0.5px dashed var(--border-2);
+    color: var(--muted);
+    padding: 10px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .add-cue-btn:hover {
+    border-color: var(--olive);
+    color: var(--olive);
+    background: var(--olive-dim);
+  }
+
+  /* ════════ CENTER — PREVIEW ════════ */
+  .panel-center {
+    background: var(--ink);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .preview-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow: hidden;
+    position: relative;
+  }
+  .preview-frame {
+    width: 360px;
+    height: 640px;
+    background: #1a1d18;
+    border-radius: 32px;
+    border: 8px solid #0a0c08;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px var(--border-2);
+    position: relative;
+    overflow: hidden;
+  }
+  .preview-canvas {
+    position: absolute;
+    inset: 0;
+    /* Phone-aspect canvas - we'll render the reel inside */
+  }
+
+  /* Face zone marker */
+  .face-zone {
+    position: absolute;
+    left: 50%;
+    top: 22%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 50%;
+    border: 1px dashed rgba(122,158,63,0.18);
+    border-radius: 100% 100% 24% 24% / 70% 70% 24% 24%;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .face-zone-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    color: rgba(122,158,63,0.40);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .face-zone-silhouette {
+    width: 50%;
+    aspect-ratio: 1;
+    background: rgba(122,158,63,0.04);
+    border-radius: 50%;
+    border: 1px dashed rgba(122,158,63,0.15);
+  }
+
+  /* Phone notch */
+  .phone-notch {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 18px;
+    background: #0a0c08;
+    border-radius: 12px;
+    z-index: 30;
+  }
+
+  /* ════════ OVERLAYS (in preview) ════════ */
+  .overlay {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  /* Top zone overlays */
+  .ovl-top-zone {
+    top: 38px;
+    left: 16px;
+    right: 16px;
+    z-index: 10;
+  }
+  .ovl-bottom-zone {
+    bottom: 38px;
+    left: 16px;
+    right: 16px;
+    z-index: 10;
+  }
+  .ovl-mark {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    color: var(--white);
+    display: inline-flex;
+    align-items: baseline;
+  }
+  .ovl-mark .dot, .ovl-mark .x { color: var(--olive); }
+
+  /* TitleCard overlay (centered top-third + bottom-third) */
+  .ovl-title {
+    top: 40px;
+    left: 16px;
+    right: 16px;
+  }
+  .ovl-title-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--olive);
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .ovl-title-h {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    color: var(--white);
+    text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  }
+  .ovl-title-h em {
+    font-style: italic;
+    color: var(--olive);
+    font-weight: 600;
+  }
+
+  /* Lower Third (topic strip bottom) */
+  .ovl-lower-third {
+    bottom: 110px;
+    left: 0;
+    right: 0;
+    padding: 0 16px;
+  }
+  .ovl-lt-wrap {
+    background: rgba(14,17,13,0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-left: 2px solid var(--olive);
+    padding: 10px 14px;
+    border-radius: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .ovl-lt-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    color: var(--olive);
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .ovl-lt-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+  }
+
+  /* Big Number */
+  .ovl-bignum {
+    top: 70px;
+    right: 20px;
+    text-align: right;
+    max-width: 160px;
+  }
+  .ovl-bignum-val {
+    font-size: 72px;
+    font-weight: 800;
+    letter-spacing: -0.06em;
+    line-height: 0.85;
+    color: var(--olive);
+    text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  }
+  .ovl-bignum-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--white);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  /* Versículo */
+  .ovl-verse {
+    bottom: 70px;
+    left: 16px;
+    right: 16px;
+    background: rgba(237,230,211,0.95);
+    backdrop-filter: blur(6px);
+    border-radius: 6px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ovl-verse-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.35;
+    font-style: italic;
+    letter-spacing: -0.005em;
+  }
+  .ovl-verse-ref {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--olive-deep);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* Bullet List (right side panel) */
+  .ovl-list {
+    top: 80px;
+    right: 16px;
+    width: 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .ovl-list-item {
+    background: rgba(14,17,13,0.78);
+    backdrop-filter: blur(8px);
+    border-left: 2px solid var(--olive);
+    padding: 8px 10px;
+    border-radius: 2px;
+    font-size: 12px;
+    color: var(--white);
+    line-height: 1.35;
+    font-weight: 500;
+  }
+  .ovl-list-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--olive);
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    margin-bottom: 2px;
+    display: block;
+  }
+
+  /* Pull Quote (centered full overlay) */
+  .ovl-pullquote {
+    inset: 0;
+    background: rgba(237,230,211,0.96);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 28px;
+    text-align: center;
+    gap: 18px;
+  }
+  .ovl-pq-mark {
+    font-family: 'Inter', serif;
+    font-size: 56px;
+    color: var(--olive);
+    font-weight: 800;
+    line-height: 0.6;
+  }
+  .ovl-pq-text {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    font-style: italic;
+  }
+  .ovl-pq-attr {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--olive-deep);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* Highlight Word (bottom caption) */
+  .ovl-highlight {
+    bottom: 80px;
+    left: 16px;
+    right: 16px;
+    text-align: center;
+  }
+  .ovl-hl-text {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--white);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+  }
+  .ovl-hl-text em {
+    color: var(--olive);
+    font-style: normal;
+    background: var(--ink);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  /* End Card */
+  .ovl-endcard {
+    inset: 0;
+    background: var(--ink);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 28px;
+    gap: 14px;
+    text-align: center;
+  }
+  .ovl-ec-mark {
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: -0.06em;
+    color: var(--white);
+  }
+  .ovl-ec-mark .dot, .ovl-ec-mark .x { color: var(--olive); }
+  .ovl-ec-line {
+    width: 32px;
+    height: 1px;
+    background: var(--olive);
+  }
+  .ovl-ec-tagline {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--light);
+    line-height: 1.4;
+    max-width: 220px;
+    letter-spacing: -0.01em;
+  }
+  .ovl-ec-tagline em {
+    color: var(--olive);
+    font-weight: 600;
+    font-style: italic;
+  }
+  .ovl-ec-cta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--olive);
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+
+  /* TIMELINE */
+  .timeline {
+    height: 120px;
+    background: var(--graphite);
+    border-top: 0.5px solid var(--border-2);
+    padding: 14px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .timeline-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .play-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--olive);
+    border: none;
+    color: var(--ink);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .play-btn:hover { background: var(--olive-soft); }
+  .play-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--olive);
+    letter-spacing: 0.04em;
+    min-width: 80px;
+  }
+  .play-time strong { color: var(--white); }
+  .scrubber {
+    flex: 1;
+    height: 4px;
+    background: var(--border-2);
+    border-radius: 2px;
+    position: relative;
+    cursor: pointer;
+  }
+  .scrubber-fill {
+    height: 100%;
+    background: var(--olive);
+    border-radius: 2px;
+    position: relative;
+  }
+  .scrubber-fill::after {
+    content: '';
+    position: absolute;
+    right: -6px; top: 50%;
+    transform: translateY(-50%);
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--olive-soft);
+    box-shadow: 0 0 0 3px rgba(122,158,63,0.20);
+  }
+  .timeline-tracks {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+  }
+  .timeline-track {
+    height: 18px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 2px;
+    position: relative;
+  }
+  .timeline-block {
+    position: absolute;
+    height: 100%;
+    background: var(--olive-dim);
+    border: 0.5px solid var(--olive);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    color: var(--olive);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    overflow: hidden;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .timeline-block:hover { background: rgba(122,158,63,0.20); }
+  .timeline-block.active { background: var(--olive); color: var(--ink); }
+  .timeline-playhead {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--white);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* ════════ RIGHT — INSPECTOR ════════ */
+  .panel-right {
+    background: var(--graphite);
+    border-left: 0.5px solid var(--border-2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .empty-state {
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--subtle);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .empty-state-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+  .field { margin-bottom: 18px; }
+  .field-input {
+    width: 100%;
+    background: var(--ink);
+    border: 0.5px solid var(--border-2);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--white);
+    outline: none;
+    transition: border-color 0.18s;
+  }
+  .field-input:focus { border-color: var(--olive-line); }
+  .field-textarea {
+    min-height: 60px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+  .delete-cue-btn {
+    width: 100%;
+    background: transparent;
+    border: 0.5px solid var(--border-2);
+    color: var(--muted);
+    padding: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .delete-cue-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(14,17,13,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+  .modal {
+    background: var(--graphite);
+    border: 0.5px solid var(--border-2);
+    border-radius: 8px;
+    padding: 32px;
+    max-width: 720px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal h2 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+  }
+  .modal h2 em { color: var(--olive); font-style: italic; }
+  .modal p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+  .modal-step {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 14px;
+    padding: 14px 0;
+    border-top: 0.5px solid var(--border-2);
+  }
+  .modal-step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--olive);
+    letter-spacing: 0.04em;
+    padding-top: 2px;
+    font-weight: 600;
+  }
+  .modal-step-body h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+  .modal-step-body p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .modal-close {
+    width: 100%;
+    background: var(--olive);
+    color: var(--ink);
+    border: none;
+    padding: 12px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+    text-transform: uppercase;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--olive-deep); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useMemo } = React;
+
+// Cue type registry
+const CUE_TYPES = {
+  titleCard: { name: 'Title Card', short: '+ Title' },
+  lowerThird: { name: 'Lower Third', short: '+ Topic' },
+  bigNumber: { name: 'Big Number', short: '+ Number' },
+  verse: { name: 'Versículo', short: '+ Versículo' },
+  list: { name: 'Bullet List', short: '+ Lista' },
+  pullQuote: { name: 'Pull Quote', short: '+ Quote' },
+  highlight: { name: 'Highlight Word', short: '+ Highlight' },
+  endCard: { name: 'End Card', short: '+ Encerra' },
+};
+
+// Default cues — example reel
+const DEFAULT_CUES = [
+  { id: 1, type: 'titleCard', start: 0, duration: 3, data: { eyebrow: 'Aula · 03', heading: 'A maioria das igrejas\nnão tem problema *de fé*.' } },
+  { id: 2, type: 'lowerThird', start: 3.5, duration: 8, data: { eyebrow: 'Tese', text: 'Tem problema de estrutura.' } },
+  { id: 3, type: 'bigNumber', start: 13, duration: 4, data: { value: '73%', label: 'Equipes dependem\nde 1 pessoa' } },
+  { id: 4, type: 'list', start: 18, duration: 10, data: { items: ['Ninguém substitui o líder','Reuniões repetem decisões','Cresceu sem processo'] } },
+  { id: 5, type: 'verse', start: 29, duration: 5, data: { text: 'Quem lavra a sua terra terá pão com fartura.', ref: 'Provérbios 28.19' } },
+  { id: 6, type: 'highlight', start: 35, duration: 3, data: { text: 'Documente o que *funciona*.' } },
+  { id: 7, type: 'endCard', start: 39, duration: 4, data: { tagline: 'Nós preparamos.\n*Deus multiplica.*', cta: '@campusexpansao' } },
+];
+
+// Render `*word*` as <em>word</em>
+function renderEm(text) {
+  if (!text) return null;
+  const parts = text.split(/(\*[^*]+\*)/g);
+  return parts.map((p, i) => {
+    if (p.startsWith('*') && p.endsWith('*')) {
+      return <em key={i}>{p.slice(1, -1)}</em>;
+    }
+    return <React.Fragment key={i}>{p}</React.Fragment>;
+  });
+}
+
+function renderMultiline(text) {
+  if (!text) return null;
+  return text.split('\n').map((line, i) => (
+    <React.Fragment key={i}>
+      {i > 0 && <br />}
+      {renderEm(line)}
+    </React.Fragment>
+  ));
+}
+
+// ════════ OVERLAY COMPONENTS ════════
+function OvlTitleCard({ data }) {
+  return (
+    <div className="overlay ovl-title">
+      {data.eyebrow && <div className="ovl-title-eyebrow">{data.eyebrow}</div>}
+      <div className="ovl-title-h">{renderMultiline(data.heading || '')}</div>
+    </div>
+  );
+}
+
+function OvlLowerThird({ data }) {
+  return (
+    <div className="overlay ovl-lower-third">
+      <div className="ovl-lt-wrap">
+        {data.eyebrow && <div className="ovl-lt-eyebrow">{data.eyebrow}</div>}
+        <div className="ovl-lt-text">{renderEm(data.text || '')}</div>
+      </div>
+    </div>
+  );
+}
+
+function OvlBigNumber({ data }) {
+  return (
+    <div className="overlay ovl-bignum">
+      <div className="ovl-bignum-val">{data.value || '00'}</div>
+      <div className="ovl-bignum-label">{renderMultiline(data.label || '')}</div>
+    </div>
+  );
+}
+
+function OvlVerse({ data }) {
+  return (
+    <div className="overlay ovl-verse">
+      <div className="ovl-verse-text">"{data.text || ''}"</div>
+      <div className="ovl-verse-ref">— {data.ref || ''}</div>
+    </div>
+  );
+}
+
+function OvlList({ data }) {
+  return (
+    <div className="overlay ovl-list">
+      {(data.items || []).map((item, i) => (
+        <div className="ovl-list-item" key={i}>
+          <span className="ovl-list-num">0{i + 1}</span>
+          {renderEm(item)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function OvlPullQuote({ data }) {
+  return (
+    <div className="overlay ovl-pullquote">
+      <div className="ovl-pq-mark">"</div>
+      <div className="ovl-pq-text">{renderEm(data.text || '')}</div>
+      {data.attr && <div className="ovl-pq-attr">— {data.attr}</div>}
+    </div>
+  );
+}
+
+function OvlHighlight({ data }) {
+  return (
+    <div className="overlay ovl-highlight">
+      <div className="ovl-hl-text">{renderEm(data.text || '')}</div>
+    </div>
+  );
+}
+
+function OvlEndCard({ data }) {
+  return (
+    <div className="overlay ovl-endcard">
+      <div className="ovl-ec-mark">CE<span className="dot">.</span><span className="x">X</span></div>
+      <div className="ovl-ec-line"></div>
+      <div className="ovl-ec-tagline">{renderMultiline(data.tagline || '')}</div>
+      {data.cta && <div className="ovl-ec-cta">{data.cta}</div>}
+    </div>
+  );
+}
+
+const OVERLAY_COMPS = {
+  titleCard: OvlTitleCard,
+  lowerThird: OvlLowerThird,
+  bigNumber: OvlBigNumber,
+  verse: OvlVerse,
+  list: OvlList,
+  pullQuote: OvlPullQuote,
+  highlight: OvlHighlight,
+  endCard: OvlEndCard,
+};
+
+// ════════ DEFAULT CUE DATA ════════
+const CUE_DEFAULTS = {
+  titleCard: { eyebrow: 'Aula · 01', heading: 'Título de *abertura*' },
+  lowerThird: { eyebrow: 'Tópico', text: 'Texto do tema atual' },
+  bigNumber: { value: '00', label: 'Descrição\nda métrica' },
+  verse: { text: 'Texto do versículo aqui.', ref: 'Livro 0.0' },
+  list: { items: ['Primeiro item', 'Segundo item', 'Terceiro item'] },
+  pullQuote: { text: 'Frase de *impacto* aqui.', attr: 'Atribuição' },
+  highlight: { text: 'Palavra *chave*.' },
+  endCard: { tagline: 'Nós preparamos.\n*Deus multiplica.*', cta: '@campusexpansao' },
+};
+
+// ════════ MAIN APP ════════
+function App() {
+  const [duration, setDuration] = useState(45);
+  const [cues, setCues] = useState(DEFAULT_CUES);
+  const [activeCueId, setActiveCueId] = useState(null);
+  const [playing, setPlaying] = useState(false);
+  const [time, setTime] = useState(0);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+
+  // Playback
+  useEffect(() => {
+    if (!playing) return;
+    let raf;
+    let last = performance.now();
+    const tick = (now) => {
+      const dt = (now - last) / 1000;
+      last = now;
+      setTime((t) => {
+        const next = t + dt;
+        if (next >= duration) { setPlaying(false); return duration; }
+        return next;
+      });
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [playing, duration]);
+
+  // Active cues at current time
+  const activeCues = cues.filter(c => time >= c.start && time < c.start + c.duration);
+  const activeCue = cues.find(c => c.id === activeCueId);
+
+  const addCue = (type) => {
+    const newId = Math.max(0, ...cues.map(c => c.id)) + 1;
+    const newCue = {
+      id: newId,
+      type,
+      start: Math.min(duration - 3, Math.round(time * 10) / 10),
+      duration: 4,
+      data: { ...CUE_DEFAULTS[type] },
+    };
+    setCues([...cues, newCue].sort((a, b) => a.start - b.start));
+    setActiveCueId(newId);
+  };
+
+  const updateCue = (id, updates) => {
+    setCues(cs => cs.map(c => c.id === id ? { ...c, ...updates } : c).sort((a, b) => a.start - b.start));
+  };
+
+  const updateCueData = (id, dataUpdates) => {
+    setCues(cs => cs.map(c => c.id === id ? { ...c, data: { ...c.data, ...dataUpdates } } : c));
+  };
+
+  const deleteCue = (id) => {
+    setCues(cs => cs.filter(c => c.id !== id));
+    if (activeCueId === id) setActiveCueId(null);
+  };
+
+  const handleExport = () => setShowExportModal(true);
+  const downloadHTML = () => {
+    const html = generateExportHTML(duration, cues);
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cex-reel-${Date.now()}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const formatTime = (t) => {
+    const m = Math.floor(t / 60);
+    const s = Math.floor(t % 60);
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  };
+
+  return (
+    <>
+      <div className="topbar">
+        <div className="topbar-left">
+          <div className="logo">CE<span className="dot">.</span><span className="x">X</span></div>
+          <div className="crumbs">Reel Composer · <strong>v1.0</strong></div>
+        </div>
+        <div className="topbar-right">
+          <button className="btn btn-ghost" onClick={() => setShowHelp(true)}>Como usar</button>
+          <button className="btn btn-primary" onClick={handleExport}>↓ Exportar reel</button>
+        </div>
+      </div>
+
+      <div className="app-main">
+        {/* LEFT — Script + Cues */}
+        <aside className="panel-left">
+          <div className="panel-head">
+            <h2>Composição</h2>
+            <p>Cada cue é um overlay que aparece no tempo definido. Use <code>*palavra*</code> para destacar em oliva.</p>
+          </div>
+          <div className="panel-body">
+            <div className="field-group">
+              <div className="field-label">
+                <span>Duração total do reel</span>
+                <span>seg</span>
+              </div>
+              <input
+                type="number"
+                className="num-input"
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value) || 30)}
+                min="5"
+                max="180"
+              />
+            </div>
+
+            <div className="cues-section">
+              <div className="field-label">
+                <span>Cues · {cues.length}</span>
+                <span>{formatTime(duration)} total</span>
+              </div>
+              <div className="cues-list">
+                {cues.map(cue => (
+                  <div
+                    key={cue.id}
+                    className={`cue ${activeCueId === cue.id ? 'active' : ''}`}
+                    onClick={() => { setActiveCueId(cue.id); setTime(cue.start); }}
+                  >
+                    <div className="cue-head">
+                      <span className="cue-type">{CUE_TYPES[cue.type]?.name || cue.type}</span>
+                      <span className="cue-time">{cue.start.toFixed(1)}s → {(cue.start + cue.duration).toFixed(1)}s</span>
+                    </div>
+                    <div className="cue-text">
+                      {cue.data.heading || cue.data.text || cue.data.value || cue.data.tagline || (cue.data.items && cue.data.items[0]) || '—'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="add-cue-row">
+                {Object.entries(CUE_TYPES).map(([key, val]) => (
+                  <button key={key} className="add-cue-btn" onClick={() => addCue(key)}>
+                    {val.short}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* CENTER — Preview */}
+        <main className="panel-center">
+          <div className="preview-wrap">
+            <div className="preview-frame">
+              <div className="phone-notch"></div>
+              <div className="preview-canvas">
+                <div className="face-zone">
+                  <div className="face-zone-silhouette"></div>
+                  <div className="face-zone-label">Sua face cam</div>
+                </div>
+                {activeCues.map(cue => {
+                  const Comp = OVERLAY_COMPS[cue.type];
+                  return Comp ? <Comp key={cue.id} data={cue.data} /> : null;
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="timeline">
+            <div className="timeline-controls">
+              <button className="play-btn" onClick={() => {
+                if (time >= duration) setTime(0);
+                setPlaying(!playing);
+              }}>
+                {playing ? '⏸' : '▶'}
+              </button>
+              <div className="play-time">
+                <strong>{formatTime(time)}</strong> / {formatTime(duration)}
+              </div>
+              <div
+                className="scrubber"
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const pct = (e.clientX - rect.left) / rect.width;
+                  setTime(pct * duration);
+                }}
+              >
+                <div className="scrubber-fill" style={{ width: `${(time / duration) * 100}%` }}></div>
+              </div>
+            </div>
+            <div className="timeline-tracks" style={{ position: 'relative' }}>
+              <div className="timeline-track">
+                {cues.map(cue => (
+                  <div
+                    key={cue.id}
+                    className={`timeline-block ${activeCueId === cue.id ? 'active' : ''}`}
+                    style={{
+                      left: `${(cue.start / duration) * 100}%`,
+                      width: `${(cue.duration / duration) * 100}%`,
+                    }}
+                    onClick={(e) => { e.stopPropagation(); setActiveCueId(cue.id); setTime(cue.start); }}
+                  >
+                    {CUE_TYPES[cue.type]?.name || cue.type}
+                  </div>
+                ))}
+              </div>
+              <div className="timeline-playhead" style={{ left: `${(time / duration) * 100}%` }}></div>
+            </div>
+          </div>
+        </main>
+
+        {/* RIGHT — Inspector */}
+        <aside className="panel-right">
+          <div className="panel-head">
+            <h2>Inspetor</h2>
+            <p>{activeCue ? `Editando: ${CUE_TYPES[activeCue.type]?.name}` : 'Selecione um cue para editar'}</p>
+          </div>
+          <div className="panel-body">
+            {!activeCue && (
+              <div className="empty-state">
+                <div className="empty-state-icon">◇</div>
+                Clique em um cue à esquerda<br />ou adicione um novo.
+              </div>
+            )}
+            {activeCue && (
+              <CueEditor
+                cue={activeCue}
+                onChangeMeta={(updates) => updateCue(activeCue.id, updates)}
+                onChangeData={(updates) => updateCueData(activeCue.id, updates)}
+                onDelete={() => deleteCue(activeCue.id)}
+                maxDuration={duration}
+              />
+            )}
+          </div>
+        </aside>
+      </div>
+
+      {showExportModal && (
+        <div className="modal-backdrop" onClick={() => setShowExportModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Exportar <em>reel</em></h2>
+            <p>O arquivo HTML gerado vai rodar a animação completa em tela cheia. Você grava a tela rolando — esse vídeo é o seu overlay, depois junta com a face cam no CapCut.</p>
+            <button className="modal-close" onClick={() => { downloadHTML(); setShowExportModal(false); }}>
+              ↓ Baixar HTML do reel
+            </button>
+            <div style={{ marginTop: 28 }}>
+              <div className="modal-step">
+                <div className="modal-step-num">01</div>
+                <div className="modal-step-body">
+                  <h4>Abra o HTML no navegador</h4>
+                  <p>Pode ser celular ou Mac. A página entra automaticamente em modo cheio com fundo preto.</p>
+                </div>
+              </div>
+              <div className="modal-step">
+                <div className="modal-step-num">02</div>
+                <div className="modal-step-body">
+                  <h4>Grave a tela rolando</h4>
+                  <p>iPhone: gravação de tela nativa (Centro de Controle). Mac: QuickTime · Novo Gravar Tela. Aperte play e deixe rolar até o fim.</p>
+                </div>
+              </div>
+              <div className="modal-step">
+                <div className="modal-step-num">03</div>
+                <div className="modal-step-body">
+                  <h4>Abra o CapCut com sua face cam</h4>
+                  <p>Sua gravação do rosto entra como camada principal. O screen-record do overlay vai por cima, com blend mode "Tela" (Screen) — o fundo preto some, só as animações ficam.</p>
+                </div>
+              </div>
+              <div className="modal-step">
+                <div className="modal-step-num">04</div>
+                <div className="modal-step-body">
+                  <h4>Exporte e poste</h4>
+                  <p>1080×1920, 30fps. Pronto pro Instagram Reels.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showHelp && (
+        <div className="modal-backdrop" onClick={() => setShowHelp(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Como <em>usar</em></h2>
+            <p>O Reel Composer é onde você monta os overlays animados pros seus reels. O fluxo completo:</p>
+            <div className="modal-step">
+              <div className="modal-step-num">01</div>
+              <div className="modal-step-body">
+                <h4>Grave o reel no celular</h4>
+                <p>Fale por 30-60s. Foque em uma única tese. Estrutura: gancho (3s) → tese (5s) → exemplo (15s) → versículo ou citação (5s) → aplicação prática (10s) → CTA (5s).</p>
+              </div>
+            </div>
+            <div className="modal-step">
+              <div className="modal-step-num">02</div>
+              <div className="modal-step-body">
+                <h4>Volte aqui e monte os cues</h4>
+                <p>Para cada momento-chave da sua fala, adicione um cue (Title, Big Number, Versículo, etc.). Defina o tempo de início e duração. Edite o texto à direita.</p>
+              </div>
+            </div>
+            <div className="modal-step">
+              <div className="modal-step-num">03</div>
+              <div className="modal-step-body">
+                <h4>Preview ao vivo</h4>
+                <p>O preview central mostra como vai ficar com sua face. A área tracejada é onde seu rosto entra — os overlays sempre ficam fora dela.</p>
+              </div>
+            </div>
+            <div className="modal-step">
+              <div className="modal-step-num">04</div>
+              <div className="modal-step-body">
+                <h4>Exporte e renderize</h4>
+                <p>Clique em "Exportar reel" → HTML é gerado → grave a tela rolando → junte com a face cam no CapCut.</p>
+              </div>
+            </div>
+            <div className="modal-step">
+              <div className="modal-step-num">★</div>
+              <div className="modal-step-body">
+                <h4>Atalhos de texto</h4>
+                <p>Use <code>*palavra*</code> em qualquer campo de texto para deixar a palavra em destaque (oliva, semibold). Use <code>\n</code> para quebra de linha.</p>
+              </div>
+            </div>
+            <button className="modal-close" onClick={() => setShowHelp(false)}>Entendi</button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function CueEditor({ cue, onChangeMeta, onChangeData, onDelete, maxDuration }) {
+  const { type, data } = cue;
+
+  return (
+    <>
+      <div className="field">
+        <div className="field-label"><span>Tipo</span></div>
+        <select className="field-input" value={type} onChange={(e) => onChangeMeta({ type: e.target.value, data: { ...CUE_DEFAULTS[e.target.value] } })}>
+          {Object.entries(CUE_TYPES).map(([k, v]) => (
+            <option key={k} value={k}>{v.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="field">
+        <div className="field-label"><span>Tempo</span><span>seg</span></div>
+        <div className="duration-row">
+          <input type="number" className="field-input" value={cue.start} step="0.5" min="0" max={maxDuration}
+            onChange={(e) => onChangeMeta({ start: Number(e.target.value) })} />
+          <input type="number" className="field-input" value={cue.duration} step="0.5" min="0.5"
+            onChange={(e) => onChangeMeta({ duration: Number(e.target.value) })} />
+        </div>
+      </div>
+
+      <hr style={{ border: 'none', borderTop: '0.5px solid var(--border-2)', margin: '20px 0' }} />
+
+      {/* Type-specific fields */}
+      {type === 'titleCard' && (
+        <>
+          <Field label="Eyebrow" value={data.eyebrow} onChange={(v) => onChangeData({ eyebrow: v })} />
+          <Field label="Heading" value={data.heading} onChange={(v) => onChangeData({ heading: v })} textarea />
+        </>
+      )}
+      {type === 'lowerThird' && (
+        <>
+          <Field label="Eyebrow" value={data.eyebrow} onChange={(v) => onChangeData({ eyebrow: v })} />
+          <Field label="Texto" value={data.text} onChange={(v) => onChangeData({ text: v })} textarea />
+        </>
+      )}
+      {type === 'bigNumber' && (
+        <>
+          <Field label="Valor" value={data.value} onChange={(v) => onChangeData({ value: v })} />
+          <Field label="Rótulo" value={data.label} onChange={(v) => onChangeData({ label: v })} textarea />
+        </>
+      )}
+      {type === 'verse' && (
+        <>
+          <Field label="Texto do versículo" value={data.text} onChange={(v) => onChangeData({ text: v })} textarea />
+          <Field label="Referência" value={data.ref} onChange={(v) => onChangeData({ ref: v })} />
+        </>
+      )}
+      {type === 'list' && (
+        <Field
+          label="Itens (um por linha)"
+          value={(data.items || []).join('\n')}
+          onChange={(v) => onChangeData({ items: v.split('\n').filter(x => x.trim()) })}
+          textarea
+        />
+      )}
+      {type === 'pullQuote' && (
+        <>
+          <Field label="Citação" value={data.text} onChange={(v) => onChangeData({ text: v })} textarea />
+          <Field label="Atribuição" value={data.attr} onChange={(v) => onChangeData({ attr: v })} />
+        </>
+      )}
+      {type === 'highlight' && (
+        <Field label="Frase" value={data.text} onChange={(v) => onChangeData({ text: v })} textarea />
+      )}
+      {type === 'endCard' && (
+        <>
+          <Field label="Tagline" value={data.tagline} onChange={(v) => onChangeData({ tagline: v })} textarea />
+          <Field label="CTA" value={data.cta} onChange={(v) => onChangeData({ cta: v })} />
+        </>
+      )}
+
+      <button className="delete-cue-btn" onClick={onDelete}>Excluir cue</button>
+    </>
+  );
+}
+
+function Field({ label, value, onChange, textarea }) {
+  return (
+    <div className="field">
+      <div className="field-label"><span>{label}</span></div>
+      {textarea ? (
+        <textarea
+          className="field-input field-textarea"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      ) : (
+        <input
+          className="field-input"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ════════ EXPORT HTML GENERATOR ════════
+function generateExportHTML(duration, cues) {
+  const cuesJSON = JSON.stringify(cues, null, 2);
+  const tpl = EXPORT_HTML_TEMPLATE;
+  return tpl
+    .replace('__CUES_JSON__', cuesJSON)
+    .replace('__DURATION__', String(duration));
+}
+
+const EXPORT_HTML_TEMPLATE = [
+'<!DOCTYPE html>',
+'<html lang="pt-BR">',
+'<head>',
+'<meta charset="UTF-8">',
+'<title>CE.X Reel · Export</title>',
+'<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">',
+'<style>',
+'  :root { --ink:#0E110D; --olive:#7A9E3F; --olive-deep:#4F6B26; --cream:#EDE6D3; --white:#FAFAF7; }',
+'  * { box-sizing: border-box; margin: 0; padding: 0; }',
+'  html, body { background: #000; overflow: hidden; height: 100vh; font-family: Inter, sans-serif; -webkit-font-smoothing: antialiased; }',
+'  .stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }',
+'  .frame { position: relative; aspect-ratio: 9/16; height: 100vh; max-height: 100vh; background: #000; overflow: hidden; }',
+'  @media (orientation: portrait) { .frame { width: 100vw; height: auto; max-width: 100vw; } }',
+'  .overlay { position: absolute; pointer-events: none; opacity: 0; transition: opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); transform: translateY(20px); }',
+'  .overlay.visible { opacity: 1; transform: translateY(0); }',
+'  .ovl-title { top: 8%; left: 5%; right: 5%; }',
+'  .ovl-title-eyebrow { font-family: JetBrains Mono,monospace; font-size: 1.6vh; color: var(--olive); letter-spacing: 0.22em; text-transform: uppercase; font-weight: 600; margin-bottom: 1vh; }',
+'  .ovl-title-h { font-size: 4.4vh; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; color: var(--white); text-shadow: 0 2px 16px rgba(0,0,0,0.7); }',
+'  .ovl-title-h em { font-style: italic; color: var(--olive); font-weight: 600; }',
+'  .ovl-lower-third { bottom: 16%; left: 0; right: 0; padding: 0 5%; }',
+'  .ovl-lt-wrap { background: rgba(14,17,13,0.78); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-left: 3px solid var(--olive); padding: 1.8vh 2.5vh; border-radius: 3px; display: inline-block; max-width: 90%; }',
+'  .ovl-lt-eyebrow { font-family: JetBrains Mono,monospace; font-size: 1.4vh; color: var(--olive); letter-spacing: 0.22em; text-transform: uppercase; font-weight: 600; margin-bottom: 0.4vh; }',
+'  .ovl-lt-text { font-size: 2.6vh; font-weight: 600; color: var(--white); letter-spacing: -0.015em; line-height: 1.15; }',
+'  .ovl-lt-text em { color: var(--olive); font-style: italic; font-weight: 700; }',
+'  .ovl-bignum { top: 10%; right: 5%; text-align: right; max-width: 50%; }',
+'  .ovl-bignum-val { font-size: 14vh; font-weight: 800; letter-spacing: -0.06em; line-height: 0.85; color: var(--olive); text-shadow: 0 2px 16px rgba(0,0,0,0.5); }',
+'  .ovl-bignum-label { font-family: JetBrains Mono,monospace; font-size: 1.6vh; color: var(--white); letter-spacing: 0.18em; text-transform: uppercase; margin-top: 1vh; font-weight: 600; }',
+'  .ovl-verse { bottom: 10%; left: 5%; right: 5%; background: rgba(237,230,211,0.96); backdrop-filter: blur(8px); border-radius: 8px; padding: 2.4vh 2.8vh; }',
+'  .ovl-verse-text { font-size: 2.6vh; font-weight: 500; color: var(--ink); line-height: 1.35; font-style: italic; letter-spacing: -0.005em; margin-bottom: 0.8vh; }',
+'  .ovl-verse-ref { font-family: JetBrains Mono,monospace; font-size: 1.4vh; color: var(--olive-deep); letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; }',
+'  .ovl-list { top: 12%; right: 5%; width: 38%; display: flex; flex-direction: column; gap: 1.4vh; }',
+'  .ovl-list-item { background: rgba(14,17,13,0.82); backdrop-filter: blur(10px); border-left: 3px solid var(--olive); padding: 1.4vh 1.6vh; border-radius: 3px; font-size: 2vh; color: var(--white); line-height: 1.3; font-weight: 600; opacity: 0; transform: translateX(20px); transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1); }',
+'  .ovl-list-item.shown { opacity: 1; transform: translateX(0); }',
+'  .ovl-list-num { font-family: JetBrains Mono,monospace; font-size: 1.4vh; color: var(--olive); letter-spacing: 0.1em; font-weight: 700; margin-bottom: 0.4vh; display: block; }',
+'  .ovl-pullquote { inset: 0; background: rgba(237,230,211,0.97); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 6vh 5%; text-align: center; gap: 3vh; }',
+'  .ovl-pq-mark { font-size: 12vh; color: var(--olive); font-weight: 800; line-height: 0.55; }',
+'  .ovl-pq-text { font-size: 4vh; font-weight: 600; color: var(--ink); line-height: 1.2; letter-spacing: -0.02em; font-style: italic; }',
+'  .ovl-pq-text em { font-style: italic; color: var(--olive); }',
+'  .ovl-pq-attr { font-family: JetBrains Mono,monospace; font-size: 1.6vh; color: var(--olive-deep); letter-spacing: 0.22em; text-transform: uppercase; font-weight: 700; }',
+'  .ovl-highlight { bottom: 12%; left: 5%; right: 5%; text-align: center; }',
+'  .ovl-hl-text { font-size: 5.6vh; font-weight: 800; color: var(--white); line-height: 1.05; letter-spacing: -0.03em; text-shadow: 0 2px 16px rgba(0,0,0,0.6); }',
+'  .ovl-hl-text em { color: var(--olive); font-style: normal; background: var(--ink); padding: 0.3vh 1.4vh; border-radius: 4px; }',
+'  .ovl-endcard { inset: 0; background: var(--ink); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 6vh 5%; gap: 2.4vh; text-align: center; }',
+'  .ovl-ec-mark { font-size: 10vh; font-weight: 700; letter-spacing: -0.06em; color: var(--white); }',
+'  .ovl-ec-mark .dot, .ovl-ec-mark .x { color: var(--olive); }',
+'  .ovl-ec-line { width: 6vh; height: 2px; background: var(--olive); }',
+'  .ovl-ec-tagline { font-size: 2.6vh; font-weight: 500; color: var(--white); line-height: 1.4; max-width: 80%; letter-spacing: -0.01em; }',
+'  .ovl-ec-tagline em { color: var(--olive); font-weight: 700; font-style: italic; }',
+'  .ovl-ec-cta { font-family: JetBrains Mono,monospace; font-size: 1.6vh; color: var(--olive); letter-spacing: 0.22em; text-transform: uppercase; font-weight: 700; margin-top: 1vh; }',
+'  .hud { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 100; font-family: JetBrains Mono, monospace; font-size: 11px; color: var(--olive); letter-spacing: 0.1em; background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 4px; border: 0.5px solid rgba(122,158,63,0.3); }',
+'  .hud.hidden { opacity: 0; transition: opacity 0.4s; pointer-events: none; }',
+'  .start-btn { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 18px; z-index: 200; cursor: pointer; font-family: JetBrains Mono, monospace; }',
+'  .start-btn-circle { width: 80px; height: 80px; border-radius: 50%; background: var(--olive); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 32px; }',
+'  .start-btn-label { font-size: 13px; color: var(--white); letter-spacing: 0.16em; text-transform: uppercase; }',
+'  .start-btn-hint { font-size: 11px; color: var(--olive); letter-spacing: 0.06em; }',
+'</style>',
+'</head>',
+'<body>',
+'<div id="start" class="start-btn">',
+'  <div class="start-btn-circle">&#9654;</div>',
+'  <div class="start-btn-label">Iniciar reel</div>',
+'  <div class="start-btn-hint">Comece a gravar a tela antes de clicar</div>',
+'</div>',
+'<div id="hud" class="hud hidden">00:00 / 00:00</div>',
+'<div class="stage"><div class="frame" id="frame"></div></div>',
+'<script>',
+'const CUES = __CUES_JSON__;',
+'const DURATION = __DURATION__;',
+'function renderEm(text) {',
+'  if (!text) return "";',
+'  return text.split(/(\\*[^*]+\\*)/g).map(function(p){',
+'    if (p.charAt(0)==="*" && p.charAt(p.length-1)==="*") return "<em>"+p.slice(1,-1)+"</em>";',
+'    return p;',
+'  }).join("");',
+'}',
+'function renderMultiline(text) {',
+'  if (!text) return "";',
+'  return text.split("\\n").map(renderEm).join("<br>");',
+'}',
+'function renderCue(cue) {',
+'  var d = cue.data || {};',
+'  switch(cue.type) {',
+'    case "titleCard":',
+'      return \'<div class="overlay ovl-title"><div class="ovl-title-eyebrow">\' + (d.eyebrow||"") + \'</div><div class="ovl-title-h">\' + renderMultiline(d.heading||"") + \'</div></div>\';',
+'    case "lowerThird":',
+'      return \'<div class="overlay ovl-lower-third"><div class="ovl-lt-wrap"><div class="ovl-lt-eyebrow">\' + (d.eyebrow||"") + \'</div><div class="ovl-lt-text">\' + renderEm(d.text||"") + \'</div></div></div>\';',
+'    case "bigNumber":',
+'      return \'<div class="overlay ovl-bignum"><div class="ovl-bignum-val">\' + (d.value||"") + \'</div><div class="ovl-bignum-label">\' + renderMultiline(d.label||"") + \'</div></div>\';',
+'    case "verse":',
+'      return \'<div class="overlay ovl-verse"><div class="ovl-verse-text">&quot;\' + (d.text||"") + \'&quot;</div><div class="ovl-verse-ref">&mdash; \' + (d.ref||"") + \'</div></div>\';',
+'    case "list":',
+'      return \'<div class="overlay ovl-list">\' + (d.items||[]).map(function(item, i){ return \'<div class="ovl-list-item" style="transition-delay:\' + (i*0.15) + \'s"><span class="ovl-list-num">0\' + (i+1) + \'</span>\' + renderEm(item) + \'</div>\'; }).join("") + \'</div>\';',
+'    case "pullQuote":',
+'      return \'<div class="overlay ovl-pullquote"><div class="ovl-pq-mark">&quot;</div><div class="ovl-pq-text">\' + renderEm(d.text||"") + \'</div>\' + (d.attr ? \'<div class="ovl-pq-attr">&mdash; \' + d.attr + \'</div>\' : "") + \'</div>\';',
+'    case "highlight":',
+'      return \'<div class="overlay ovl-highlight"><div class="ovl-hl-text">\' + renderEm(d.text||"") + \'</div></div>\';',
+'    case "endCard":',
+'      return \'<div class="overlay ovl-endcard"><div class="ovl-ec-mark">CE<span class="dot">.</span><span class="x">X</span></div><div class="ovl-ec-line"></div><div class="ovl-ec-tagline">\' + renderMultiline(d.tagline||"") + \'</div>\' + (d.cta ? \'<div class="ovl-ec-cta">\' + d.cta + \'</div>\' : "") + \'</div>\';',
+'  }',
+'  return "";',
+'}',
+'var frame = document.getElementById("frame");',
+'CUES.forEach(function(cue, i){',
+'  var wrap = document.createElement("div");',
+'  wrap.innerHTML = renderCue(cue);',
+'  var node = wrap.firstChild;',
+'  if (node) { node.setAttribute("data-cue-idx", i); frame.appendChild(node); }',
+'});',
+'var startTime = null;',
+'var raf = null;',
+'var hud = document.getElementById("hud");',
+'function fmt(t){ var m=Math.floor(t/60),s=Math.floor(t%60); return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0"); }',
+'function tick(now){',
+'  if (!startTime) startTime = now;',
+'  var t = (now - startTime)/1000;',
+'  hud.textContent = fmt(t) + " / " + fmt(DURATION);',
+'  CUES.forEach(function(cue, i){',
+'    var el = frame.querySelector(\'[data-cue-idx="\' + i + \'"]\');',
+'    if (!el) return;',
+'    var visible = t >= cue.start && t < cue.start + cue.duration;',
+'    el.classList.toggle("visible", visible);',
+'    if (cue.type === "list" && visible) {',
+'      var items = el.querySelectorAll(".ovl-list-item");',
+'      var localT = t - cue.start;',
+'      items.forEach(function(it, idx){ it.classList.toggle("shown", localT > idx * 0.4); });',
+'    }',
+'  });',
+'  if (t < DURATION + 0.5) raf = requestAnimationFrame(tick);',
+'}',
+'document.getElementById("start").addEventListener("click", function(){',
+'  document.getElementById("start").style.display = "none";',
+'  hud.classList.remove("hidden");',
+'  setTimeout(function(){ hud.classList.add("hidden"); }, 2500);',
+'  raf = requestAnimationFrame(tick);',
+'});',
+'</' + 'script>',
+'</body>',
+'</html>'
+].join('\n');
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

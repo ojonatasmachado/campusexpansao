@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lidere 1.0 · Aula 1 — Campus Expansão</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:        #0E110D;
+    --graphite:   #181B16;
+    --olive:      #7A9E3F;
+    --olive-soft: #94B85C;
+    --olive-deep: #4F6B26;
+    --olive-dim:  rgba(122,158,63,0.10);
+    --olive-line: rgba(122,158,63,0.28);
+    --cream:      #EDE6D3;
+    --cream-soft: #F6F1E0;
+    --sand:       #C9BFA0;
+    --white:      #FAFAF7;
+    --muted:      #8B8C82;
+    --subtle:     #555650;
+    --sans: 'Inter', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--cream-soft);
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── CAPA ── */
+  .cover {
+    background: var(--ink);
+    color: var(--white);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 64px 72px;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 480px; height: 480px;
+    border-radius: 50%;
+    border: 1px solid var(--olive-line);
+    pointer-events: none;
+  }
+
+  .cover::after {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    border: 1px solid var(--olive-line);
+    pointer-events: none;
+  }
+
+  .cover-logo {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--white);
+  }
+
+  .cover-logo .dot,
+  .cover-logo .x {
+    color: var(--olive);
+  }
+
+  .cover-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--olive);
+    margin-bottom: 24px;
+  }
+
+  .cover-course {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .cover-title {
+    font-size: clamp(42px, 7vw, 72px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.0;
+    color: var(--white);
+    margin-bottom: 24px;
+  }
+
+  .cover-title em {
+    color: var(--olive);
+    font-style: italic;
+  }
+
+  .cover-subtitle {
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--muted);
+    max-width: 480px;
+    line-height: 1.5;
+  }
+
+  .cover-divider {
+    width: 48px;
+    height: 2px;
+    background: var(--olive);
+    margin: 32px 0;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 40px;
+    align-items: flex-end;
+  }
+
+  .cover-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .cover-meta-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--subtle);
+  }
+
+  .cover-meta-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  /* ── CONTEÚDO ── */
+  .content {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 80px 40px;
+  }
+
+  /* ── CABEÇALHO DE SEÇÃO ── */
+  .chapter-header {
+    margin-bottom: 56px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--sand);
+  }
+
+  .chapter-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--olive);
+    margin-bottom: 12px;
+  }
+
+  .chapter-num {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sand);
+    margin-bottom: 8px;
+  }
+
+  .chapter-title {
+    font-size: clamp(28px, 5vw, 40px);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+
+  .chapter-title em {
+    color: var(--olive-deep);
+    font-style: italic;
+  }
+
+  .chapter-desc {
+    font-size: 17px;
+    font-weight: 300;
+    color: var(--subtle);
+    line-height: 1.65;
+  }
+
+  /* ── TIPOGRAFIA ── */
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    color: var(--ink);
+    margin: 56px 0 16px;
+    padding-top: 8px;
+  }
+
+  h2::before {
+    content: '◆';
+    color: var(--olive);
+    font-size: 10px;
+    margin-right: 10px;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+  }
+
+  p {
+    margin-bottom: 20px;
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.8;
+  }
+
+  strong {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* ── DESTAQUE ── */
+  .highlight {
+    background: var(--olive-dim);
+    border-left: 3px solid var(--olive);
+    padding: 20px 24px;
+    margin: 32px 0;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .highlight p {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.65;
+  }
+
+  /* ── FRASE DE DESTAQUE ── */
+  .pullquote {
+    padding: 32px 0;
+    margin: 40px 0;
+    border-top: 1px solid var(--sand);
+    border-bottom: 1px solid var(--sand);
+  }
+
+  .pullquote p {
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .pullquote p em {
+    color: var(--olive-deep);
+    font-style: italic;
+  }
+
+  /* ── BLOCO DE EXERCÍCIO ── */
+  .exercise {
+    background: var(--cream);
+    border: 1px solid var(--sand);
+    border-radius: 8px;
+    padding: 32px;
+    margin: 40px 0;
+  }
+
+  .exercise-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--olive-deep);
+    margin-bottom: 16px;
+  }
+
+  .exercise-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 20px;
+    letter-spacing: -0.01em;
+  }
+
+  .exercise p {
+    font-size: 14px;
+    color: var(--subtle);
+    margin-bottom: 16px;
+  }
+
+  .write-line {
+    border: none;
+    border-bottom: 1px solid var(--sand);
+    width: 100%;
+    height: 40px;
+    margin-bottom: 8px;
+    background: transparent;
+    display: block;
+  }
+
+  .write-area {
+    border: 1px solid var(--sand);
+    border-radius: 4px;
+    width: 100%;
+    min-height: 80px;
+    background: var(--cream-soft);
+    margin-top: 8px;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  /* ── PERGUNTAS ── */
+  .questions {
+    background: var(--ink);
+    border-radius: 8px;
+    padding: 32px;
+    margin: 40px 0;
+  }
+
+  .questions-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--olive);
+    margin-bottom: 20px;
+  }
+
+  .questions-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 24px;
+    letter-spacing: -0.01em;
+  }
+
+  .question-item {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+  }
+
+  .question-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--olive);
+    min-width: 20px;
+    padding-top: 2px;
+    letter-spacing: 0.04em;
+  }
+
+  .question-text {
+    font-size: 14px;
+    color: var(--cream);
+    line-height: 1.6;
+    flex: 1;
+  }
+
+  .question-line {
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    width: 100%;
+    height: 36px;
+    background: transparent;
+    display: block;
+    margin-top: 4px;
+  }
+
+  /* ── PLANO DE 7 DIAS ── */
+  .plan {
+    margin: 40px 0;
+  }
+
+  .plan-day {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--sand);
+    align-items: flex-start;
+  }
+
+  .plan-day:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .plan-day-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--olive);
+    letter-spacing: 0.08em;
+    min-width: 56px;
+    padding-top: 3px;
+  }
+
+  .plan-day-text {
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.65;
+  }
+
+  /* ── ORAÇÃO ── */
+  .prayer {
+    background: var(--graphite);
+    border-radius: 8px;
+    padding: 40px;
+    margin: 56px 0 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .prayer::before {
+    content: '"';
+    position: absolute;
+    top: -20px; left: 24px;
+    font-size: 120px;
+    color: var(--olive-line);
+    font-family: Georgia, serif;
+    line-height: 1;
+  }
+
+  .prayer-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--olive);
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .prayer p {
+    color: var(--cream);
+    font-size: 15px;
+    line-height: 1.8;
+    font-style: italic;
+    position: relative;
+    margin-bottom: 0;
+  }
+
+  /* ── SÍNTESE FINAL ── */
+  .synthesis {
+    background: var(--cream);
+    border: 1px solid var(--sand);
+    border-radius: 8px;
+    padding: 40px;
+    margin: 56px 0;
+  }
+
+  .synthesis-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--olive-deep);
+    margin-bottom: 16px;
+  }
+
+  .synthesis-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+  }
+
+  .synthesis p {
+    font-size: 14px;
+    color: var(--subtle);
+    margin-bottom: 16px;
+  }
+
+  .synthesis p:last-child { margin-bottom: 0; }
+
+  /* ── FRASE FINAL ── */
+  .final-quote {
+    text-align: center;
+    padding: 56px 40px;
+    border-top: 1px solid var(--sand);
+    margin-top: 56px;
+  }
+
+  .final-quote-text {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1.35;
+    margin-bottom: 16px;
+  }
+
+  .final-quote-text em {
+    color: var(--olive-deep);
+    font-style: italic;
+  }
+
+  .final-quote-brand {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.10em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .final-quote-brand .dot,
+  .final-quote-brand .x {
+    color: var(--olive);
+  }
+
+  /* ── DIVISOR ── */
+  .divider {
+    height: 1px;
+    background: var(--sand);
+    margin: 48px 0;
+  }
+
+  .divider-olive {
+    height: 2px;
+    width: 40px;
+    background: var(--olive);
+    margin: 48px 0;
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: white; font-size: 13px; }
+    .cover { min-height: 100vh; }
+    h2 { page-break-after: avoid; }
+    .exercise, .questions, .prayer, .synthesis { page-break-inside: avoid; }
+    .content { padding: 40px 32px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CAPA -->
+<div class="cover">
+  <div>
+    <div class="cover-logo">CE<span class="dot">.</span><span class="x">X</span></div>
+  </div>
+  <div>
+    <div class="cover-label">Campus Expansão · Material de Formação</div>
+    <div class="cover-course">Lidere 1.0 · Aula 01</div>
+    <h1 class="cover-title">Quando uma função<br>vira <em>responsabilidade</em></h1>
+    <div class="cover-divider"></div>
+    <p class="cover-subtitle">Pare de apenas ocupar uma função. Comece a liderar pessoas.</p>
+  </div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Curso</span>
+      <span class="cover-meta-value">Lidere 1.0</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Capítulo</span>
+      <span class="cover-meta-value">01 de 01</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Versão</span>
+      <span class="cover-meta-value">Primeira Versão</span>
+    </div>
+  </div>
+</div>
+
+<!-- CONTEÚDO -->
+<div class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-eyebrow">Campus Expansão · Lidere 1.0</div>
+    <div class="chapter-num">Capítulo 1</div>
+    <h1 class="chapter-title">Quando uma função vira <em>responsabilidade</em></h1>
+    <p class="chapter-desc">A maioria dos líderes não começa liderando porque se sente pronta. Em muitos casos, a liderança começa com um convite simples, feito em uma reunião, depois de um culto, em uma conversa com o pastor ou até em uma necessidade urgente da igreja.</p>
+  </div>
+
+  <p>Alguém diz: "Você consegue assumir essa escala?", "Você pode cuidar desse grupo?", "Você pode liderar esse ministério?", "Você pode nos ajudar com esse time?".</p>
+
+  <p>Por fora, parece apenas uma nova função. Mas, por dentro, algo muito mais profundo começa a acontecer. A partir daquele momento, pessoas, processos, decisões, ambientes e expectativas passam a ser afetados pela sua maturidade. O que antes talvez fosse apenas participação, agora se torna responsabilidade.</p>
+
+  <p>Essa é uma das primeiras mudanças que todo líder precisa entender. Liderança não começa quando alguém recebe um título. <strong>Liderança começa quando alguém percebe que recebeu uma responsabilidade diante de Deus, da liderança da igreja e das pessoas que serão impactadas por suas decisões.</strong></p>
+
+  <div class="pullquote">
+    <p>Cargo é o lugar que você ocupa.<br><em>Responsabilidade é o peso que você carrega.</em></p>
+  </div>
+
+  <p>O problema é que muita gente deseja o lugar da liderança sem compreender o peso da liderança. E quando o lugar chega antes da maturidade, a função deixa de ser um campo de serviço e começa a virar uma fonte de pressão, insegurança, comparação e controle.</p>
+
+  <p>Por isso, este primeiro capítulo não é sobre como ter mais autoridade. É sobre como carregar melhor a responsabilidade que já chegou às suas mãos, seja no ministério, na empresa, no negócio, na equipe ou em qualquer ambiente onde pessoas são afetadas pela sua liderança.</p>
+
+  <div class="highlight">
+    <p>Você vai sair desta aula sabendo que uma função não é apenas uma oportunidade para decidir mais. É uma oportunidade para <strong>servir melhor</strong>.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <h2>A dor de muitos líderes na igreja e no trabalho</h2>
+
+  <p>Em muitas igrejas, pessoas sinceras assumem funções importantes sem terem sido preparadas para carregar essas funções com maturidade. Isso nem sempre acontece por descuido. Às vezes a igreja cresceu rápido. Às vezes havia uma necessidade urgente. Às vezes a pessoa era fiel, disponível e comprometida, então recebeu uma oportunidade. Às vezes não havia mais ninguém para assumir. Às vezes o talento apareceu antes da formação.</p>
+
+  <p>O mesmo acontece fora da igreja. Alguém vira gestor porque vendia bem, mas nunca foi preparado para liderar pessoas. Alguém abre uma empresa porque tem coragem e visão, mas descobre que empreender também exige formar time, cuidar de cultura, comunicar com clareza e tomar decisões difíceis. Alguém é promovido porque era bom tecnicamente, mas agora precisa lidar com conflitos, expectativas, pressão e responsabilidade sobre outras pessoas.</p>
+
+  <p>O problema é que <strong>uma função sem formação cobra um preço</strong>. O líder começa a fazer, mas não entende exatamente o que precisa construir. Começa a cobrar presença, mas não sabe acompanhar pessoas. Começa a organizar tarefas, mas não consegue criar cultura. Começa a decidir, mas ainda não aprendeu a ouvir. Começa a sentir a pressão da liderança, mas não sabe prestar contas. Começa a ser chamado de líder, mas ainda não entendeu que liderança cristã não é domínio, é serviço.</p>
+
+  <p>A liderança cristã precisa ir além de fazer coisas acontecerem. Ela precisa <strong>formar pessoas enquanto a missão avança</strong>. E isso também se aplica ao trabalho: liderar como cristão na empresa não é apenas buscar performance. É servir com integridade, clareza, justiça, responsabilidade e cuidado pelas pessoas.</p>
+
+  <div class="divider"></div>
+
+  <h2>O primeiro nível da liderança: posição</h2>
+
+  <p>Todo líder começa em algum lugar, e esse começo normalmente passa pela posição. Posição é quando você lidera porque recebeu uma função formal. Você é o responsável por uma área, o coordenador de um time, o líder de uma célula, o supervisor de uma escala, o gestor de um setor, o dono de uma empresa, o pastor de um grupo, o responsável por um ministério ou alguém designado para conduzir uma tarefa.</p>
+
+  <p>Esse nível é necessário. Toda igreja precisa de clareza. Todo ministério precisa saber quem decide, quem acompanha, quem cuida, quem organiza e quem responde. Toda empresa também precisa disso. Quando ninguém assume responsabilidade, decisões atrasam, pessoas ficam perdidas, problemas se repetem e a missão perde força prática.</p>
+
+  <p>Então o problema não é começar com uma posição. <strong>O problema é acreditar que a posição, sozinha, já é liderança suficiente.</strong></p>
+
+  <p>A posição pode colocar você diante das pessoas, mas não coloca você dentro da confiança delas. Pode abrir a porta para você começar a liderar, mas não sustenta a caminhada. Pode fazer alguém obedecer uma orientação por necessidade, mas não faz alguém confiar no seu cuidado.</p>
+
+  <div class="highlight">
+    <p>Na igreja local, autoridade não pode ser confundida com autoritarismo. Autoridade saudável serve, orienta, protege, corrige e assume responsabilidade. Autoritarismo exige, pressiona, se defende, controla e usa a função para proteger o próprio ego.</p>
+  </div>
+
+  <div class="pullquote">
+    <p>Função não é autoridade para se impor.<br><em>Função é responsabilidade para servir melhor.</em></p>
+  </div>
+
+  <div class="divider"></div>
+
+  <h2>Transforme cargo em responsabilidade</h2>
+
+  <p>Uma das formas mais práticas de mudar sua postura como líder é mudar a maneira como você descreve sua função. Quando você começa a descrever sua função como responsabilidade, a visão muda.</p>
+
+  <p>Em vez de dizer <strong>"sou líder da recepção"</strong>, você pode dizer: <em>"sou responsável por preparar e acompanhar o time que acolhe as pessoas na chegada da igreja"</em>. Em vez de dizer <strong>"sou líder de jovens"</strong>, você pode dizer: <em>"sou responsável por ajudar jovens a caminharem com Cristo, serem discipulados e servirem com maturidade"</em>.</p>
+
+  <p>Essa mudança parece pequena, mas muda a postura. Cargo fala sobre o lugar que você ocupa. Responsabilidade fala sobre o serviço que você precisa prestar. Cargo pode alimentar status. Responsabilidade chama para cuidado.</p>
+
+  <div class="exercise">
+    <div class="exercise-label">Exercício · Transforme seu cargo</div>
+    <div class="exercise-title">Minha função em forma de responsabilidade</div>
+    <p>Escreva sua função atual como responsabilidade. Não escreva apenas o nome do cargo. Escreva o que Deus, sua liderança e as pessoas esperam que seja cuidado através de você.</p>
+    <div class="write-line"></div>
+    <div class="write-line"></div>
+    <div class="write-line"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h2>O que a posição revela sobre o líder</h2>
+
+  <p>Existe uma ideia equivocada de que o cargo forma automaticamente uma pessoa. Na prática, antes de formar, o cargo revela. Ele revela como você lida com pressão, como se organiza, como reage quando é contrariado, como trata pessoas quando está cansado, como recebe correção, como presta contas, como administra expectativas e como serve quando ninguém está aplaudindo.</p>
+
+  <p>Isso não significa que você precisa ser perfeito para liderar. Nenhum líder começa pronto. Mas significa que você precisa ser ensinável. <strong>A liderança cristã não exige perfeição, mas exige humildade para ser formado.</strong></p>
+
+  <p>Por isso, a pergunta mais importante no início da liderança não é "qual função eu tenho?", mas <strong>"que tipo de pessoa estou me tornando enquanto carrego essa função?"</strong>. Essa pergunta é espiritual. Deus não está interessado apenas no que você faz através da liderança. Ele também está interessado em quem você se torna enquanto lidera.</p>
+
+  <div class="questions">
+    <div class="questions-label">Reflexão · Espelho da função</div>
+    <div class="questions-title">O que minha função tem revelado sobre mim?</div>
+    <div class="question-item">
+      <span class="question-num">01</span>
+      <div style="flex:1">
+        <p class="question-text">Tenho usado minha função para servir melhor ou para me sentir mais importante?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+    <div class="question-item">
+      <span class="question-num">02</span>
+      <div style="flex:1">
+        <p class="question-text">Tenho cobrado mais do que acompanhado?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+    <div class="question-item">
+      <span class="question-num">03</span>
+      <div style="flex:1">
+        <p class="question-text">Tenho aparecido apenas quando há problema ou tenho presença constante junto às pessoas?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+    <div class="question-item">
+      <span class="question-num">04</span>
+      <div style="flex:1">
+        <p class="question-text">Como reajo quando alguém questiona uma decisão minha?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+    <div class="question-item">
+      <span class="question-num">05</span>
+      <div style="flex:1">
+        <p class="question-text">Minha função tem revelado humildade ou necessidade de controle?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+    <div class="question-item">
+      <span class="question-num">06</span>
+      <div style="flex:1">
+        <p class="question-text">Tenho tratado pessoas como vidas a serem cuidadas ou como recursos para manter tarefas funcionando?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h2>Saul: o alerta de uma posição sem obediência</h2>
+
+  <p>A história de Saul é uma das advertências mais fortes da Bíblia sobre liderança. Ele não começou sem oportunidade. Foi escolhido como rei, recebeu reconhecimento público, tinha aparência de liderança, autoridade formal e o lugar mais alto da nação. Ainda assim, sua trajetória mostra que estar em um lugar alto não significa ter um coração alinhado com Deus.</p>
+
+  <p>O problema de Saul não era a falta de posição. Ele tinha posição. <strong>O problema era o que acontecia dentro dele enquanto ocupava a posição.</strong> Em momentos decisivos, Saul se precipitou quando deveria esperar, desobedeceu quando deveria obedecer por completo, justificou o erro quando deveria se quebrantar e se preocupou com a própria imagem quando deveria se preocupar com a vontade de Deus.</p>
+
+  <div class="highlight">
+    <p><strong>Saul nos ensina que a posição, sem obediência, se torna perigosa.</strong> O cargo pode até dar visibilidade, mas não substitui quebrantamento. A função pode até dar autoridade, mas não substitui temor.</p>
+  </div>
+
+  <div class="questions">
+    <div class="questions-label">Diagnóstico · Alerta de Saul</div>
+    <div class="questions-title">Transforme a história de Saul em diagnóstico pessoal</div>
+    <div class="question-item">
+      <span class="question-num">01</span>
+      <div style="flex:1">
+        <p class="question-text">Em que situações eu tento proteger minha imagem?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+    <div class="question-item">
+      <span class="question-num">02</span>
+      <div style="flex:1">
+        <p class="question-text">Quando sou confrontado, eu me quebranto ou me justifico rápido demais?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+    <div class="question-item">
+      <span class="question-num">03</span>
+      <div style="flex:1">
+        <p class="question-text">Tenho mais medo de perder reconhecimento ou de perder fidelidade?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+    <div class="question-item">
+      <span class="question-num">04</span>
+      <div style="flex:1">
+        <p class="question-text">Existe alguma área em que estou obedecendo pela metade?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+    <div class="question-item">
+      <span class="question-num">05</span>
+      <div style="flex:1">
+        <p class="question-text">Estou liderando para servir a missão ou para preservar meu espaço?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h2>Davi: o processo antes da influência</h2>
+
+  <p>Se Saul nos alerta sobre o perigo de ter posição sem obediência, Davi nos ensina sobre formação antes da influência. Antes de ser reconhecido como rei, Davi foi formado em lugares pequenos. Antes do trono, houve campo. Antes da coroa, houve cuidado com ovelhas. Antes da visibilidade, houve fidelidade escondida. Antes de Golias, houve leão e urso.</p>
+
+  <p>Muitos líderes querem o momento de Golias, mas desprezam o processo das ovelhas. Querem a vitória pública, mas não querem a fidelidade diária. Querem influência, mas ainda não aprenderam constância.</p>
+
+  <div class="pullquote">
+    <p>A fidelidade no secreto<br><em>não é atraso. É formação.</em></p>
+  </div>
+
+  <p>Davi não era perfeito, e isso também precisa ser dito. A diferença entre Saul e Davi não é que um tinha problemas e o outro não tinha. A diferença aparece na forma como cada um responde quando seus problemas são revelados. <strong>Davi errava e voltava para Deus. Saul errava e protegia a imagem.</strong></p>
+
+  <div class="questions">
+    <div class="questions-label">Reflexão · Processo de Davi</div>
+    <div class="questions-title">Pense no seu próprio campo hoje</div>
+    <div class="question-item">
+      <span class="question-num">01</span>
+      <div style="flex:1">
+        <p class="question-text">Qual responsabilidade pequena eu tenho desprezado?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+    <div class="question-item">
+      <span class="question-num">02</span>
+      <div style="flex:1">
+        <p class="question-text">Que parte do meu serviço parece invisível, mas Deus está usando para me formar?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+    <div class="question-item">
+      <span class="question-num">03</span>
+      <div style="flex:1">
+        <p class="question-text">Onde preciso ser mais fiel antes de pedir mais espaço?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+    <div class="question-item">
+      <span class="question-num">04</span>
+      <div style="flex:1">
+        <p class="question-text">Quem são as "ovelhas" que Deus confiou ao meu cuidado nesta fase?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+    <div class="question-item">
+      <span class="question-num">05</span>
+      <div style="flex:1">
+        <p class="question-text">O que preciso proteger, cuidar e acompanhar melhor hoje?</p>
+        <div class="question-line"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h2>Liderança cristã é mordomia</h2>
+
+  <p>A palavra mordomia precisa organizar sua visão sobre liderança. Mordomo é alguém que administra aquilo que pertence a outro. Essa ideia muda completamente a postura do líder, porque lembra que aquilo que está sob seus cuidados não é propriedade sua.</p>
+
+  <p>Se o ministério não é meu, não posso tratá-lo como palco pessoal. Se as pessoas não são minhas, não posso tratá-las como peças de uma engrenagem. Se a igreja pertence a Cristo, não posso liderar como se estivesse construindo meu próprio nome.</p>
+
+  <div class="highlight">
+    <p><strong>Excelência, na liderança cristã, não é luxo. É mordomia.</strong> Fazer bem feito é uma forma de amar melhor, servir melhor e proteger melhor as pessoas.</p>
+  </div>
+
+  <p>A liderança amadurece quando o líder para de perguntar apenas "como faço isso funcionar?" e começa a perguntar <strong>"como cuido melhor das pessoas enquanto fazemos isso funcionar?"</strong>.</p>
+
+  <div class="divider"></div>
+
+  <h2>O mapa da responsabilidade recebida</h2>
+
+  <p>A CE.X não existe para entregar apenas reflexão. O objetivo é que você saiba o que fazer com o que ouviu. O exercício abaixo vai ajudar você a organizar sua responsabilidade atual.</p>
+
+  <div class="exercise">
+    <div class="exercise-label">Exercício · Mapa da Responsabilidade</div>
+
+    <div class="exercise-title">1 — Minha responsabilidade atual</div>
+    <p>Escreva sua função em forma de serviço, não apenas em forma de cargo.</p>
+    <div class="write-area"></div>
+
+    <div class="exercise-title">2 — Pessoas confiadas ao meu cuidado</div>
+    <p>Liste nomes reais. Não lidere pessoas de forma genérica.</p>
+    <div class="write-area"></div>
+
+    <div class="exercise-title">3 — Processos sob minha responsabilidade</div>
+    <p>Liste rotinas, escalas, reuniões, comunicações, acompanhamentos, entregas e decisões que dependem da sua liderança.</p>
+    <div class="write-area"></div>
+
+    <div class="exercise-title">4 — O que minha função tem revelado sobre mim</div>
+    <p>Escreva com sinceridade em cada área:</p>
+    <p>Sobre minha fidelidade:</p>
+    <div class="write-line"></div>
+    <p>Sobre minha organização:</p>
+    <div class="write-line"></div>
+    <p>Sobre minha humildade:</p>
+    <div class="write-line"></div>
+    <p>Sobre meu cuidado com pessoas:</p>
+    <div class="write-line"></div>
+
+    <div class="exercise-title">5 — Meu alerta Saul</div>
+    <p>Onde tenho protegido imagem, controle ou posição? Preciso me arrepender e ajustar em:</p>
+    <div class="write-area"></div>
+
+    <div class="exercise-title">6 — Meu processo Davi</div>
+    <p>Onde Deus está me formando em algo pequeno que eu não devo desprezar?</p>
+    <div class="write-area"></div>
+
+    <div class="exercise-title">7 — Minha prática de mordomia · Próximos 7 dias</div>
+    <p>Uma pessoa que vou acompanhar:</p>
+    <div class="write-line"></div>
+    <p>Um processo que vou organizar:</p>
+    <div class="write-line"></div>
+    <p>Uma conversa que vou iniciar:</p>
+    <div class="write-line"></div>
+    <p>Uma prestação de contas que vou fazer:</p>
+    <div class="write-line"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h2>Plano de 7 dias</h2>
+
+  <p>A aplicação desta aula precisa ser simples, concreta e mensurável. Nos próximos sete dias, você não precisa tentar mudar tudo. Precisa dar passos reais.</p>
+
+  <div class="plan">
+    <div class="plan-day">
+      <span class="plan-day-num">Dia 01</span>
+      <p class="plan-day-text">Escreva sua responsabilidade em uma frase clara — não como cargo, mas como serviço. Essa frase vai orientar sua postura.</p>
+    </div>
+    <div class="plan-day">
+      <span class="plan-day-num">Dia 02</span>
+      <p class="plan-day-text">Liste as pessoas que estão sob sua liderança ou influência e ore por elas pelo nome. Líder que não ora pelas pessoas tende a tratá-las apenas como parte de uma tarefa.</p>
+    </div>
+    <div class="plan-day">
+      <span class="plan-day-num">Dia 03</span>
+      <p class="plan-day-text">Converse com uma pessoa do seu time. Não comece cobrando. Pergunte como ela está, o que tem sido mais difícil no ministério e como você pode ajudá-la a servir melhor.</p>
+    </div>
+    <div class="plan-day">
+      <span class="plan-day-num">Dia 04</span>
+      <p class="plan-day-text">Escolha um processo simples para organizar. Pode ser uma escala, uma lista, uma reunião, um grupo de mensagens ou um acompanhamento que está solto. Organização também é cuidado.</p>
+    </div>
+    <div class="plan-day">
+      <span class="plan-day-num">Dia 05</span>
+      <p class="plan-day-text">Procure sua liderança e pergunte: "O que você espera de mim nesta fase?" e "onde eu preciso melhorar?". Essa atitude simples pode evitar muitos desalinhamentos.</p>
+    </div>
+    <div class="plan-day">
+      <span class="plan-day-num">Dia 06</span>
+      <p class="plan-day-text">Faça uma correção prática. Não espere uma grande mudança emocional. Obedeça em algo concreto.</p>
+    </div>
+    <div class="plan-day">
+      <span class="plan-day-num">Dia 07</span>
+      <p class="plan-day-text">Revise a semana. Pergunte: o que aprendi sobre mim como líder? Quem eu cuidei melhor? O que ficou mais claro? O que preciso continuar praticando?</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h2>Diagnóstico final</h2>
+
+  <div class="questions">
+    <div class="questions-label">Autoavaliação · Antes de avançar</div>
+    <div class="questions-title">Responda com honestidade</div>
+    <div class="question-item"><span class="question-num">01</span><p class="question-text">Tenho tratado minha função como status ou como serviço?</p></div>
+    <div class="question-item"><span class="question-num">02</span><p class="question-text">Dependo do cargo para ser respeitado?</p></div>
+    <div class="question-item"><span class="question-num">03</span><p class="question-text">As pessoas me procuram porque confiam em mim ou apenas porque precisam resolver algo da função?</p></div>
+    <div class="question-item"><span class="question-num">04</span><p class="question-text">Tenho servido o time ou apenas cobrado o time?</p></div>
+    <div class="question-item"><span class="question-num">05</span><p class="question-text">Aceito correção com humildade ou me defendo rápido demais?</p></div>
+    <div class="question-item"><span class="question-num">06</span><p class="question-text">Sou fiel nos compromissos básicos da liderança?</p></div>
+    <div class="question-item"><span class="question-num">07</span><p class="question-text">Minha presença gera segurança ou tensão?</p></div>
+    <div class="question-item"><span class="question-num">08</span><p class="question-text">Cuido das pessoas ou apenas organizo tarefas?</p></div>
+    <div class="question-item"><span class="question-num">09</span><p class="question-text">Tenho clareza sobre o que Deus, minha liderança e meu time esperam de mim?</p></div>
+    <div class="question-item"><span class="question-num">10</span><p class="question-text">O que precisa mudar em mim antes de eu pedir mais influência?</p></div>
+  </div>
+
+  <div class="synthesis">
+    <div class="synthesis-label">Síntese do Capítulo</div>
+    <div class="synthesis-title">O que levar desta aula</div>
+    <p>Você pode começar liderando por posição, mas não deve permanecer liderando apenas por posição. A posição é o lugar onde a liderança começa a ser testada. Ali Deus trata seu coração, sua motivação, sua insegurança, sua necessidade de controle, sua relação com reconhecimento, sua fidelidade no pequeno e sua capacidade de servir antes de ser visto.</p>
+    <p>Saul nos alerta sobre o perigo de ter um lugar alto e um coração desalinhado. Davi nos lembra que Deus forma líderes em lugares que muitos desprezam. Jesus nos mostra que, no Reino, grandeza não é domínio. <strong>Grandeza é serviço.</strong></p>
+    <p>Não despreze a função que você recebeu, mas também não adore a função que recebeu. Honre esse lugar. Sirva bem. Cuide das pessoas. Preste contas. Aprenda. Seja fiel.</p>
+    <p>Antes de Deus confiar mais pessoas às suas mãos, Ele forma o tipo de pessoa que você é quando já recebeu alguma responsabilidade.</p>
+  </div>
+
+  <div class="prayer">
+    <div class="prayer-label">Oração de Encerramento</div>
+    <p>Senhor, eu reconheço que toda liderança é responsabilidade diante de Ti. Livra-me de tratar pessoas como tarefas e ministério como palco. Forma meu coração antes de ampliar minha influência. Ensina-me a servir com fidelidade, cuidar com amor, obedecer com humildade e liderar como mordomo daquilo que pertence a Ti. Que minha função não alimente orgulho, mas produza serviço. Que minha liderança prepare pessoas para servirem melhor. Em nome de Jesus, amém.</p>
+  </div>
+
+  <div class="final-quote">
+    <div class="final-quote-text">Pare de apenas ocupar uma função.<br><em>Comece a carregar essa responsabilidade diante de Deus.</em></div>
+    <div class="final-quote-brand">CE<span class="dot">.</span><span class="x">X</span> · Campus Expansão · Lidere 1.0</div>
+  </div>
+
+</div>
+</body>
+</html>
