@@ -1,0 +1,29 @@
+.faqSection :global(.faq-q) {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.faqSection :global(.faq-q:hover),
+.faqSection :global(.faq-q:focus-visible) {
+  background: var(--olive-dim);
+  border-radius: var(--r-sm);
+  outline: 1px solid var(--olive-line);
+  outline-offset: -1px;
+}
+
+.faqSection :global(.faq-a) {
+  display: none;
+}
+
+.faqSection :global(.faq-item.open .faq-q) {
+  background: var(--graphite);
+  border-radius: var(--r-sm);
+}
+
+.faqSection :global(.faq-item.open .faq-a) {
+  display: block;
+}

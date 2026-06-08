@@ -1,7 +1,9 @@
 "use client";
+
 import { useEffect } from "react";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
+import styles from "./page.module.css";
 
 export default function Home() {
   useEffect(() => {
@@ -139,7 +141,7 @@ export default function Home() {
       </div>
 
       {/* FAQ */}
-      <div className="pg-wrap pg-section">
+      <div className={`pg-wrap pg-section ${styles.faqSection}`}>
         <div className="psec-head">
           <div className="psec-head-left">
             <div className="psec-eyebrow">— Dúvidas frequentes</div>
@@ -154,7 +156,7 @@ export default function Home() {
             { q: "Como funciona o método CE.X?", a: "Estrutura ministerial aplicada: diagnóstico, princípios bíblicos e ferramentas práticas que você implementa na mesma semana." },
           ].map((item, i) => (
             <div className="faq-item" key={i}>
-              <button className="faq-q">
+              <button className="faq-q" type="button">
                 <span className="faq-q-text">{item.q}</span>
                 <span className="faq-icon" aria-hidden="true" />
               </button>
