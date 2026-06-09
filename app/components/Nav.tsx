@@ -13,7 +13,7 @@ export default function Nav() {
   );
 
   return (
-    <nav className="nav">
+    <nav className="nav" style={{ position: "sticky", top: 0, zIndex: 100 }}>
       <Link href="/" className="nav-logo">
         CE<span className="dot">.</span><span className="x">X</span>
       </Link>

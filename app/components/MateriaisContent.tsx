@@ -459,7 +459,12 @@ function ShelfCarousel({ materiais, accentKey, onCardClick }: { materiais: Mater
 }
 
 // ─── SHELF ────────────────────────────────────────────────────────────────────
-function Shelf({ estante, materiais, onCardClick }: { estante: Estante; materiais: Material[]; onCardClick: (m: Material) => void }) {
+function Shelf({ estante, materiais, onCardClick, onVerTodos }: {
+  estante: Estante;
+  materiais: Material[];
+  onCardClick: (m: Material) => void;
+  onVerTodos: (e: Estante) => void;
+}) {
   if (materiais.length === 0) return null;
   const accent = ACCENTS[estante.accent];
   const isCarousel = materiais.length > SHELF_CAROUSEL_THRESHOLD;
@@ -468,7 +473,11 @@ function Shelf({ estante, materiais, onCardClick }: { estante: Estante; materiai
       <div className="loja-shelf-head">
         <span className="loja-shelf-name" style={{ color: accent.base }}>{estante.label}</span>
         <span className="loja-shelf-count">{materiais.length} {materiais.length === 1 ? "material" : "materiais"}</span>
-        {isCarousel && <span className="loja-shelf-ver">Ver todos</span>}
+        {isCarousel && (
+          <button className="loja-shelf-ver" style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }} onClick={() => onVerTodos(estante)}>
+            Ver todos
+          </button>
+        )}
       </div>
       {isCarousel ? (
         <ShelfCarousel materiais={materiais} accentKey={estante.accent} onCardClick={onCardClick} />
@@ -595,11 +604,53 @@ function Modal({ material, onClose }: { material: Material; onClose: () => void 
   );
 }
 
+// ─── SHELF MODAL ─────────────────────────────────────────────────────────────
+function ShelfModal({ estante, materiais, onCardClick, onClose }: {
+  estante: Estante;
+  materiais: Material[];
+  onCardClick: (m: Material) => void;
+  onClose: () => void;
+}) {
+  const accent = ACCENTS[estante.accent];
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handleKey);
+    return () => { document.body.style.overflow = ""; document.removeEventListener("keydown", handleKey); };
+  }, [onClose]);
+
+  return (
+    <div className="loja-modal">
+      <div className="loja-modal-backdrop" onClick={onClose} />
+      <div className="loja-modal-inner">
+        <div className="loja-modal-bar">
+          <span className="loja-modal-breadcrumb">Materiais → {estante.label}</span>
+          <button className="loja-modal-close" onClick={onClose}>Fechar ×</button>
+        </div>
+        <div className="loja-detail">
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: accent.base, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>◆ Estante</div>
+            <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.03em", color: "var(--white)" }}>{estante.label}</div>
+            <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{materiais.length} materiais disponíveis</div>
+          </div>
+          <div className="loja-shelf-grid">
+            {materiais.map((m) => (
+              <ProdCard key={m.id} material={m} accentKey={estante.accent} onClick={() => onCardClick(m)} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
 export default function MateriaisContent({ showHero = true, showCrossLink = true }: { showHero?: boolean; showCrossLink?: boolean }) {
   const [filtroL1, setFiltroL1] = useState<FiltroL1>("tudo");
   const [estanteAtiva, setEstanteAtiva] = useState<string | null>(null);
   const [materialAberto, setMaterialAberto] = useState<Material | null>(null);
+  const [estanteAberta, setEstanteAberta] = useState<Estante | null>(null);
 
   const handleL1 = useCallback((f: FiltroL1) => { setFiltroL1(f); setEstanteAtiva(null); }, []);
   const handleL2 = useCallback((k: string) => { setEstanteAtiva((prev) => (prev === k ? null : k)); }, []);
@@ -683,7 +734,7 @@ export default function MateriaisContent({ showHero = true, showCrossLink = true
               </div>
             )}
             {estantesVisiveis(ESTANTES_MINISTRAR).map((e) => (
-              <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} />
+              <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} onVerTodos={setEstanteAberta} />
             ))}
           </div>
         )}
@@ -697,7 +748,7 @@ export default function MateriaisContent({ showHero = true, showCrossLink = true
               </div>
             )}
             {estantesVisiveis(ESTANTES_LIDERAR).map((e) => (
-              <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} />
+              <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} onVerTodos={setEstanteAberta} />
             ))}
           </div>
         )}
@@ -725,6 +776,15 @@ export default function MateriaisContent({ showHero = true, showCrossLink = true
             <a href="/cursos" className="btn btn-primary btn-arrow">Conheça os cursos</a>
           </div>
         </div>
+      )}
+
+      {estanteAberta && (
+        <ShelfModal
+          estante={estanteAberta}
+          materiais={materiaisDe(estanteAberta.key)}
+          onCardClick={(m) => { setEstanteAberta(null); setMaterialAberto(m); }}
+          onClose={() => setEstanteAberta(null)}
+        />
       )}
 
       {materialAberto && (
