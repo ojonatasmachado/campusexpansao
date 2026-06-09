@@ -4,7 +4,7 @@ import "./loja.css";
 
 export const metadata: Metadata = {
   title: "CE.X · Campus Expansão",
-  description: "Formação que expande — cursos, materiais e comunidade para quem quer crescer de verdade.",
+  description: "Formação que expande: cursos, materiais e comunidade para quem quer crescer de verdade.",
 };
 
 export default function RootLayout({

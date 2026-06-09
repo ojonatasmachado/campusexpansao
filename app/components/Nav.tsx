@@ -21,7 +21,7 @@ export default function Nav() {
         {link("/", "Início")}
         {link("/materiais", "Materiais")}
         {link("/cursos", "Cursos & Mentorias")}
-        {link("/sobre", "Sobre")}
+        {link("/#sobre", "Sobre")}
       </ul>
       <Link href="/materiais" className="nav-cta">Comece agora</Link>
     </nav>

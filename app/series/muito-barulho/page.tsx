@@ -51,7 +51,7 @@ export default function MuitoBarulho() {
               Muito <em>Barulho</em>
             </h1>
             <p className="hero-desc">
-              Quando todo mundo fala, como ouvir a voz certa? Cinco mensagens sobre chamado, identidade e discernimento espiritual — para adolescentes que vivem cercados de vozes.
+              Quando todo mundo fala, como ouvir a voz certa? Cinco mensagens sobre chamado, identidade e discernimento espiritual, para adolescentes que vivem cercados de vozes.
             </p>
             <div className="hero-actions">
               <a href="#mensagens" className="btn btn-primary btn-lg btn-arrow">
@@ -66,7 +66,7 @@ export default function MuitoBarulho() {
       <div className="pg-wrap pg-section">
         <div className="psec-head">
           <div className="psec-head-left">
-            <div className="psec-eyebrow">— Base bíblica · 1 Samuel 3:1-10</div>
+            <div className="psec-eyebrow">◆ Base bíblica · 1 Samuel 3:1-10</div>
             <div className="psec-title">Sobre a <em>série</em></div>
           </div>
         </div>
@@ -77,7 +77,7 @@ export default function MuitoBarulho() {
               <div className="card-eyebrow">O ponto de entrada</div>
               <h3 className="card-title">Uma dor <em>real</em></h3>
               <p className="card-desc">
-                Adolescentes estão cercados de vozes — notificações, comparação, escola, redes, amizades, medo, cobrança. A série começa nessa tensão e conduz até a pergunta bíblica central: qual voz está formando a minha vida?
+                Adolescentes estão cercados de vozes: notificações, comparação, escola, redes, amizades, medo, cobrança. A série começa nessa tensão e conduz até a pergunta bíblica central: qual voz está formando a minha vida?
               </p>
             </div>
           </div>
@@ -99,7 +99,7 @@ export default function MuitoBarulho() {
             <div className="stat-item-label">Mensagens completas</div>
           </div>
           <div className="stat-item">
-            <div className="stat-item-num"><em>13</em>–17</div>
+            <div className="stat-item-num"><em>13</em> a 17</div>
             <div className="stat-item-label">Faixa etária</div>
           </div>
           <div className="stat-item">
@@ -115,12 +115,12 @@ export default function MuitoBarulho() {
 
       {/* JORNADA DAS MENSAGENS */}
       <div className="pg-wrap" style={{ paddingBottom: 32 }}>
-        <div className="psec-eyebrow" style={{ marginBottom: 32 }}>— A jornada em cinco etapas</div>
+        <div className="psec-eyebrow" style={{ marginBottom: 32 }}>◆ A jornada em cinco etapas</div>
         <div className="course-grid">
           <div className="course">
             <div className="course-num">01</div>
             <h3 className="course-title">Vozes demais</h3>
-            <p className="course-desc">Localiza a dor: há vozes demais tentando guiar o adolescente. Deus continua chamando pelo nome — mas é preciso aprender a ouvir.</p>
+            <p className="course-desc">Localiza a dor: há vozes demais tentando guiar o adolescente. Deus continua chamando pelo nome, mas é preciso aprender a ouvir.</p>
           </div>
           <div className="course">
             <div className="course-num">02</div>
@@ -140,7 +140,7 @@ export default function MuitoBarulho() {
           <div className="course">
             <div className="course-num">05</div>
             <h3 className="course-title">Resposta</h3>
-            <p className="course-desc">A voz que chama também envia. Não para performance — para seguimento. A série termina com um próximo passo concreto de discipulado.</p>
+            <p className="course-desc">A voz que chama também envia. Não para performance; para seguimento. A série termina com um próximo passo concreto de discipulado.</p>
           </div>
           <div className="course" style={{ borderColor: "var(--olive-line)", background: "var(--olive-dim)" }}>
             <div className="course-num" style={{ opacity: 1 }}>→</div>
@@ -154,7 +154,7 @@ export default function MuitoBarulho() {
       <div className="pg-wrap pg-section" id="mensagens">
         <div className="psec-head">
           <div className="psec-head-left">
-            <div className="psec-eyebrow">— Download gratuito</div>
+            <div className="psec-eyebrow">◆ Download gratuito</div>
             <div className="psec-title">As 5 <em>mensagens</em></div>
             <p className="psec-desc">Cada arquivo em Word, pronto para adaptar à linguagem do seu pregador.</p>
           </div>
@@ -197,10 +197,10 @@ export default function MuitoBarulho() {
       <div className="pg-wrap pg-section">
         <div className="capture">
           <div className="capture-x">X</div>
-          <div className="capture-eyebrow">— Acompanhe os lançamentos</div>
+          <div className="capture-eyebrow">◆ Acompanhe os lançamentos</div>
           <h3 className="capture-title">Mais séries <em>chegando</em></h3>
           <p className="capture-desc">
-            Cadastre-se para receber as próximas séries em primeira mão — e acesso antecipado quando forem para o Hotmart.
+            Cadastre-se para receber as próximas séries em primeira mão, com acesso antecipado quando forem para o Hotmart.
           </p>
           <form className="capture-form" onSubmit={(e) => e.preventDefault()}>
             <input className="input" type="email" placeholder="Seu melhor e-mail" />
@@ -209,7 +209,7 @@ export default function MuitoBarulho() {
         </div>
       </div>
 
-      <Footer minimal />
+      <Footer />
     </div>
   );
 }
