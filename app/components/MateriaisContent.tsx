@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { ProdCard, ModelA, ModelB, ModelC, ModelD, ACCENTS } from "./ProdCard";
 import type { AccentKey, Modelo } from "./ProdCard";
 
-const SHELF_CAROUSEL_THRESHOLD = 6;
+const SHELF_CAROUSEL_THRESHOLD = 0;
 
 type Familia = "ministrar" | "liderar";
 type FiltroL1 = "tudo" | Familia | "eventos";
