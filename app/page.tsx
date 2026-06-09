@@ -4,37 +4,7 @@ import { useEffect } from "react";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import styles from "./page.module.css";
-import { ProdCard } from "./components/ProdCard";
-import type { CardMaterial, AccentKey } from "./components/ProdCard";
-
-const SAMPLE_CARDS: { material: CardMaterial; accentKey: AccentKey }[] = [
-  {
-    accentKey: "clay",
-    material: {
-      id: "firmes", model: "B", etiqueta: "Adolescentes", titulo: "Firmes", code: "S-12",
-      meta: { mensagens: 6, paginas: 48, formatos: ["PDF", "Editável", "Slides"] },
-      preco: "R$ 47",
-    },
-  },
-  {
-    accentKey: "olive",
-    material: {
-      id: "alta-performance", model: "C", etiqueta: "Jovens", titulo: "Alta Performance",
-      big: "06", bigLabel: "mensagens",
-      meta: { mensagens: 6, paginas: 52, formatos: ["PDF", "Editável", "Slides"] },
-      preco: "R$ 67",
-    },
-  },
-  {
-    accentKey: "slate",
-    material: {
-      id: "manual-celula", model: "C", etiqueta: "Manual", titulo: "Manual do Líder de Célula",
-      big: "80", bigLabel: "páginas",
-      meta: { paginas: 80, formatos: ["PDF", "Editável"] },
-      preco: "R$ 97",
-    },
-  },
-];
+import MateriaisContent from "./components/MateriaisContent";
 
 const cursos = [
   { num: "01", title: "Fundamentos da estrutura", desc: "Por que estrutura honra o agir de Deus. O alicerce de todo ministério que multiplica.", dur: "4 semanas" },
@@ -156,25 +126,13 @@ export default function Home() {
         </div>
       </div>
 
-      {/* TEASER MATERIAIS */}
-      <div id="materiais" className="pg-wrap pg-section">
-        <div className="psec-head">
-          <div className="psec-head-left">
-            <div className="psec-eyebrow">◆ Recursos gratuitos</div>
-            <div className="psec-title">Materiais</div>
-          </div>
-          <a href="/materiais" className="btn btn-ghost btn-arrow">Ver catálogo completo</a>
+      {/* MATERIAIS — catálogo completo embutido */}
+      <div id="materiais">
+        <div className="pg-wrap" style={{ paddingTop: 80, paddingBottom: 0 }}>
+          <div className="psec-eyebrow">◆ Recursos gratuitos</div>
+          <div className="psec-title" style={{ fontSize: "clamp(28px,5vw,48px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.1, marginTop: 8 }}>Materiais</div>
         </div>
-        <div className="loja-shelf-grid">
-          {SAMPLE_CARDS.map(({ material, accentKey }) => (
-            <ProdCard
-              key={material.id}
-              material={material}
-              accentKey={accentKey}
-              onClick={() => window.location.href = "/materiais"}
-            />
-          ))}
-        </div>
+        <MateriaisContent showHero={false} showCrossLink={false} />
       </div>
 
       {/* TEASER CURSOS */}
