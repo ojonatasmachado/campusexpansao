@@ -126,7 +126,7 @@ export default function Home() {
         </div>
       </div>
       <div className="pg-wrap" style={{ paddingBottom: 64 }}>
-        <CursosNiveis onCardClick={() => { window.location.href = "/cursos"; }} />
+        <CursosNiveis />
       </div>
 
       {/* FAQ */}

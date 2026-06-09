@@ -1,134 +1,103 @@
 "use client";
 import React from "react";
+import Link from "next/link";
 import { ACCENTS } from "./ProdCard";
-import type { AccentKey } from "./ProdCard";
+import { NIVEIS, CURSOS_DATA } from "../lib/cursos-data";
+import type { CursoDado } from "../lib/cursos-data";
 
-// ─── DADOS ────────────────────────────────────────────────────────────────────
-export interface CursoDado {
-  num: string;
-  nivel: "fundacao" | "lideranca" | "multiplicacao";
-  title: string;
-  desc: string;
-  dur: string;
-}
-
-interface Nivel { key: CursoDado["nivel"]; label: string; accent: AccentKey }
-
-export const NIVEIS: Nivel[] = [
-  { key: "fundacao",      label: "Fundação",      accent: "ochre" },
-  { key: "lideranca",     label: "Liderança",     accent: "clay"  },
-  { key: "multiplicacao", label: "Multiplicação", accent: "olive" },
-];
-
-export const CURSOS_DATA: CursoDado[] = [
-  { num: "01", nivel: "fundacao",      title: "Fundamentos da Estrutura", desc: "Por que estrutura honra o agir de Deus. O alicerce de todo ministério que multiplica.", dur: "4 semanas" },
-  { num: "04", nivel: "fundacao",      title: "Gestão de Equipe",         desc: "Reuniões que decidem, processos que documentam, pessoas que crescem com o sistema.", dur: "5 semanas" },
-  { num: "02", nivel: "lideranca",     title: "Formação de Líderes",      desc: "Como identificar, treinar e soltar líderes que não dependem de você pra funcionar.", dur: "6 semanas" },
-  { num: "06", nivel: "lideranca",     title: "Liderança e Descanso",     desc: "Como liderar sem queimar. Ritmo sustentável pra quem carrega muita responsabilidade.", dur: "4 semanas" },
-  { num: "03", nivel: "multiplicacao", title: "Discipulado Intencional",  desc: "Um sistema de discipulado que nasce com data pra multiplicar, não só informar.", dur: "8 semanas" },
-  { num: "05", nivel: "multiplicacao", title: "Plantação de Igrejas",     desc: "Estrutura mínima viável pra plantar com saúde e multiplicar com intenção.", dur: "10 semanas" },
-];
+export type { CursoDado };
+export { NIVEIS, CURSOS_DATA };
 
 // ─── CARD ─────────────────────────────────────────────────────────────────────
-export function CursoCard({ curso, accentKey, onClick }: {
-  curso: CursoDado;
-  accentKey: AccentKey;
-  onClick?: () => void;
-}) {
-  const accent = ACCENTS[accentKey];
+export function CursoCard({ curso }: { curso: CursoDado }) {
   const nivel = NIVEIS.find(n => n.key === curso.nivel)!;
+  const accent = ACCENTS[nivel.accent];
 
   return (
-    <div
-      className="cex-card"
-      style={{ "--cex-accent": accent.base, "--cex-accent-deep": accent.deep } as React.CSSProperties}
-      onClick={onClick}
-      role={onClick ? "button" : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onKeyDown={onClick ? (e) => e.key === "Enter" && onClick() : undefined}
-    >
-      {/* MIOLO */}
-      <div style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        padding: "18px 20px 16px",
-        background: accent.deep,
-        position: "relative",
-        overflow: "hidden",
-        minHeight: 160,
-      }}>
-        {/* Textura sutil */}
+    <Link href={`/cursos/${curso.slug}`} style={{ textDecoration: "none", display: "flex", flexDirection: "column" }}>
+      <div
+        className="cex-card"
+        style={{ "--cex-accent": accent.base, "--cex-accent-deep": accent.deep, cursor: "pointer" } as React.CSSProperties}
+      >
+        {/* MIOLO — fundo ink com linhas-guia */}
         <div style={{
-          position: "absolute", inset: 0, pointerEvents: "none",
-          background: "repeating-linear-gradient(45deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 8px)",
-        }} />
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: "18px 20px 16px",
+          background: "#0E110D",
+          backgroundImage: "linear-gradient(#25291F 1px, transparent 1px)",
+          backgroundSize: "100% 44px",
+          position: "relative",
+          overflow: "hidden",
+          minHeight: 160,
+        }}>
+          {/* TOPO: nível + badge AO VIVO */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+            <div style={{
+              fontFamily: "var(--mono)",
+              fontSize: 10,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: accent.base,
+            }}>◆ {nivel.label}</div>
+            <div style={{
+              fontFamily: "var(--mono)",
+              fontSize: 9,
+              letterSpacing: "0.10em",
+              textTransform: "uppercase",
+              background: accent.base,
+              color: "#0E110D",
+              padding: "3px 8px",
+              borderRadius: 4,
+              fontWeight: 700,
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}>● AO VIVO</div>
+          </div>
 
-        {/* TOPO: nível + badge AO VIVO */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "relative", gap: 8 }}>
-          <div style={{
-            fontFamily: "var(--mono)",
-            fontSize: 10,
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color: accent.base,
-          }}>◆ {nivel.label}</div>
-          <div style={{
-            fontFamily: "var(--mono)",
-            fontSize: 9,
-            letterSpacing: "0.10em",
-            textTransform: "uppercase",
-            background: accent.base,
-            color: "#0E110D",
-            padding: "3px 8px",
-            borderRadius: 4,
-            fontWeight: 700,
-            whiteSpace: "nowrap",
-            flexShrink: 0,
-          }}>● AO VIVO</div>
+          {/* BASE: título + desc */}
+          <div>
+            <div style={{
+              fontSize: 22,
+              fontWeight: 800,
+              lineHeight: 1.1,
+              letterSpacing: "-0.03em",
+              color: "#EDE6D3",
+              marginBottom: 8,
+            }}>{curso.title}</div>
+            <div style={{
+              fontSize: 13,
+              lineHeight: 1.45,
+              color: "#C9BFA0",
+            }}>{curso.desc}</div>
+          </div>
         </div>
 
-        {/* BASE: título + desc */}
-        <div style={{ position: "relative" }}>
-          <div style={{
-            fontSize: 22,
-            fontWeight: 800,
-            lineHeight: 1.1,
-            letterSpacing: "-0.03em",
-            color: "var(--cream, #EDE6D3)",
-            marginBottom: 8,
-          }}>{curso.title}</div>
-          <div style={{
-            fontSize: 13,
-            lineHeight: 1.45,
-            color: "#C9BFA0",
-          }}>{curso.desc}</div>
+        {/* RODAPÉ */}
+        <div className="cex-card-foot" style={{ background: "#181B16", borderTop: "1px solid #25291F" }}>
+          <div className="cex-foot-meta">
+            <span style={{ color: accent.base }}>●</span>{" "}{curso.dur} · Mentoria inclusa
+          </div>
+          <div className="cex-foot-price-row">
+            <span style={{
+              fontFamily: "var(--mono)",
+              fontSize: 10,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: accent.base,
+            }}>ETAPA {curso.num.padStart(2, "0")}</span>
+            <span className="cex-foot-ver">Detalhes →</span>
+          </div>
         </div>
       </div>
-
-      {/* RODAPÉ */}
-      <div className="cex-card-foot">
-        <div className="cex-foot-meta">
-          <span style={{ color: accent.base }}>●</span>{" "}{curso.dur} · Mentoria inclusa
-        </div>
-        <div className="cex-foot-price-row">
-          <span style={{
-            fontFamily: "var(--mono)",
-            fontSize: 10,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            color: accent.base,
-          }}>ETAPA {curso.num.padStart(2, "0")}</span>
-          <span className="cex-foot-ver">Detalhes →</span>
-        </div>
-      </div>
-    </div>
+    </Link>
   );
 }
 
 // ─── GRADE POR NÍVEL ─────────────────────────────────────────────────────────
-export function CursosNiveis({ onCardClick }: { onCardClick?: (c: CursoDado) => void }) {
+export function CursosNiveis() {
   return (
     <>
       {NIVEIS.map((nivel) => {
@@ -137,16 +106,11 @@ export function CursosNiveis({ onCardClick }: { onCardClick?: (c: CursoDado) => 
         return (
           <div key={nivel.key} className="loja-shelf">
             <div className="loja-shelf-head">
-              <span className="loja-shelf-name" style={{ color: accent.base }}>
-                ◆ {nivel.label}
-              </span>
+              <span className="loja-shelf-name" style={{ color: accent.base }}>◆ {nivel.label}</span>
               <span className="loja-shelf-count">{cursosDoNivel.length} cursos</span>
             </div>
             <div className="loja-shelf-grid">
-              {cursosDoNivel.map(c => (
-                <CursoCard key={c.num} curso={c} accentKey={nivel.accent}
-                  onClick={onCardClick ? () => onCardClick(c) : undefined} />
-              ))}
+              {cursosDoNivel.map(c => <CursoCard key={c.num} curso={c} />)}
             </div>
           </div>
         );
