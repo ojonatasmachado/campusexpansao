@@ -5,15 +5,7 @@ import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import styles from "./page.module.css";
 import MateriaisContent from "./components/MateriaisContent";
-
-const cursos = [
-  { num: "01", title: "Fundamentos da estrutura", desc: "Por que estrutura honra o agir de Deus. O alicerce de todo ministério que multiplica.", dur: "4 semanas" },
-  { num: "02", title: "Formação de líderes", desc: "Como identificar, treinar e soltar líderes que não dependem de você pra funcionar.", dur: "6 semanas" },
-  { num: "03", title: "Discipulado intencional", desc: "Um sistema de discipulado que nasce com data pra multiplicar, não só informar.", dur: "8 semanas" },
-  { num: "04", title: "Gestão de equipe", desc: "Reuniões que decidem, processos que documentam, pessoas que crescem com o sistema.", dur: "5 semanas" },
-  { num: "05", title: "Plantação de igrejas", desc: "Estrutura mínima viável pra plantar com saúde e multiplicar com intenção.", dur: "10 semanas" },
-  { num: "06", title: "Liderança e descanso", desc: "Como liderar sem queimar. Ritmo sustentável pra quem carrega muita responsabilidade.", dur: "4 semanas" },
-];
+import { CursosNiveis } from "./components/CursoCard";
 
 export default function Home() {
   const [showTop, setShowTop] = useState(false);
@@ -124,7 +116,7 @@ export default function Home() {
       </div>
 
       {/* TEASER CURSOS */}
-      <div id="cursos" className="pg-wrap pg-section">
+      <div id="cursos" className="pg-wrap pg-section" style={{ paddingBottom: 0 }}>
         <div className="psec-head">
           <div className="psec-head-left">
             <div className="psec-eyebrow">◆ Formação ao vivo</div>
@@ -132,19 +124,9 @@ export default function Home() {
           </div>
           <a href="/cursos" className="btn btn-ghost btn-arrow">Conhecer formação ao vivo</a>
         </div>
-        <div className="course-grid">
-          {cursos.map((c) => (
-            <div className="course" key={c.num}>
-              <div className="course-num">{c.num}</div>
-              <h3 className="course-title">{c.title}</h3>
-              <p className="course-desc">{c.desc}</p>
-              <div className="course-foot">
-                <span className="course-dur">{c.dur}</span>
-                <a href="/cursos" className="course-link">Detalhes</a>
-              </div>
-            </div>
-          ))}
-        </div>
+      </div>
+      <div className="pg-wrap" style={{ paddingBottom: 64 }}>
+        <CursosNiveis onCardClick={() => { window.location.href = "/cursos"; }} />
       </div>
 
       {/* FAQ */}
