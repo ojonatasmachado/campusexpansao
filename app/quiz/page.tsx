@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Descubra Seu Ministério · CE.X",
-  description: "Quiz ·identifique qual dos cinco ministérios de Efésios 4:11 representa seu chamado.",
+  title: "Sua Vocação · CE.X",
+  description: "Quiz: identifique qual dos cinco ministérios de Efésios 4:11 representa seu chamado.",
 };
 
 export default function QuizPage() {

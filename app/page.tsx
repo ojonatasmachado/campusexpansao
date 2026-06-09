@@ -109,23 +109,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* DEPOIMENTO */}
-      <div className="pg-wrap pg-section tight">
-        <div className="testimonial">
-          <div className="testi-mark">&ldquo;</div>
-          <p className="testi-quote">
-            A CE.X mudou como eu enxergo liderança. Parei de <em>apagar incêndio</em> e comecei a construir sistema.
-          </p>
-          <div className="testi-author">
-            <div className="testi-avatar" />
-            <div>
-              <div className="testi-name">Pr. Ricardo Almeida</div>
-              <div className="testi-role">Igreja Batista Renovo · São Paulo</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* MATERIAIS — catálogo completo embutido */}
       <div id="materiais">
         <div className="pg-wrap" style={{ paddingTop: 80, paddingBottom: 0 }}>
@@ -196,6 +179,19 @@ export default function Home() {
             <a href="/landing" className="btn btn-ink btn-lg btn-arrow">Baixar manual</a>
             <a href="#" className="btn btn-lg" style={{ background: "transparent", color: "var(--ink)", borderColor: "rgba(14,17,13,0.3)" }}>Falar conosco</a>
           </div>
+        </div>
+      </div>
+
+      {/* QUIZ — SUA VOCAÇÃO */}
+      <div className="pg-wrap pg-section">
+        <div className="capture">
+          <div className="capture-x">X</div>
+          <div className="capture-eyebrow">◆ Descubra seu chamado</div>
+          <h3 className="capture-title">Sua <em>Vocação</em></h3>
+          <p className="capture-desc">
+            Qual dos cinco ministérios de Efésios 4:11 representa o seu chamado? Responda 12 perguntas e descubra onde sua liderança tem mais impacto.
+          </p>
+          <a href="/quiz" className="capture-btn">Fazer o quiz →</a>
         </div>
       </div>
 
