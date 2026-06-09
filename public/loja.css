@@ -11,7 +11,7 @@
 .loja-hero-desc { font-size: 18px; color: var(--muted); line-height: 1.6; max-width: 520px; }
 
 /* ── FILTROS ── */
-.loja-filter-bar { border-top: 0.5px solid var(--border-2); position: sticky; top: 56px; z-index: 90; background: rgba(14,17,13,0.96); backdrop-filter: blur(14px); }
+.loja-filter-bar { border-top: 0.5px solid var(--border-2); position: relative; z-index: 1; background: rgba(14,17,13,0.96); backdrop-filter: blur(14px); }
 .loja-filter-l1 { display: flex; gap: 4px; padding: 14px 0; overflow-x: auto; scrollbar-width: none; }
 .loja-filter-l1::-webkit-scrollbar { display: none; }
 .loja-filter-l2 { display: flex; gap: 4px; padding: 10px 0 14px; border-top: 0.5px solid var(--border-2); overflow-x: auto; scrollbar-width: none; }
