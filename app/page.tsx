@@ -126,7 +126,7 @@ export default function Home() {
       </div>
 
       {/* TEASER MATERIAIS */}
-      <div className="pg-wrap pg-section">
+      <div id="materiais" className="pg-wrap pg-section">
         <div className="psec-head">
           <div className="psec-head-left">
             <div className="psec-eyebrow">◆ Recursos gratuitos</div>
@@ -186,7 +186,7 @@ export default function Home() {
       </div>
 
       {/* TEASER CURSOS */}
-      <div className="pg-wrap pg-section">
+      <div id="cursos" className="pg-wrap pg-section">
         <div className="psec-head">
           <div className="psec-head-left">
             <div className="psec-eyebrow">◆ Formação ao vivo</div>
