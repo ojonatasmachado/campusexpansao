@@ -4,6 +4,37 @@ import { useEffect } from "react";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import styles from "./page.module.css";
+import { ProdCard } from "./components/ProdCard";
+import type { CardMaterial, AccentKey } from "./components/ProdCard";
+
+const SAMPLE_CARDS: { material: CardMaterial; accentKey: AccentKey }[] = [
+  {
+    accentKey: "clay",
+    material: {
+      id: "firmes", model: "B", etiqueta: "Adolescentes", titulo: "Firmes", code: "S-12",
+      meta: { mensagens: 6, paginas: 48, formatos: ["PDF", "Editável", "Slides"] },
+      preco: "R$ 47",
+    },
+  },
+  {
+    accentKey: "olive",
+    material: {
+      id: "alta-performance", model: "C", etiqueta: "Jovens", titulo: "Alta Performance",
+      big: "06", bigLabel: "mensagens",
+      meta: { mensagens: 6, paginas: 52, formatos: ["PDF", "Editável", "Slides"] },
+      preco: "R$ 67",
+    },
+  },
+  {
+    accentKey: "slate",
+    material: {
+      id: "manual-celula", model: "C", etiqueta: "Manual", titulo: "Manual do Líder de Célula",
+      big: "80", bigLabel: "páginas",
+      meta: { paginas: 80, formatos: ["PDF", "Editável"] },
+      preco: "R$ 97",
+    },
+  },
+];
 
 const cursos = [
   { num: "01", title: "Fundamentos da estrutura", desc: "Por que estrutura honra o agir de Deus. O alicerce de todo ministério que multiplica.", dur: "4 semanas" },
@@ -134,54 +165,15 @@ export default function Home() {
           </div>
           <a href="/materiais" className="btn btn-ghost btn-arrow">Ver catálogo completo</a>
         </div>
-        <div className="card-grid">
-          <article className="card">
-            <div className="card-media">
-              <div className="card-media-x">X</div>
-              <span className="card-tag">Apostila</span>
-            </div>
-            <div className="card-body">
-              <div className="card-eyebrow">Material gratuito</div>
-              <h3 className="card-title">A igreja que <em>discipula</em></h3>
-              <p className="card-desc">Seis módulos para estruturar o discipulado da sua igreja.</p>
-              <div className="card-foot">
-                <span className="card-meta">PDF · 64 páginas</span>
-                <a href="/landing" className="card-link">Baixar</a>
-              </div>
-            </div>
-          </article>
-          <article className="card card-cream">
-            <div className="card-media" style={{ background: "linear-gradient(135deg,#94B85C 0%,#4F6B26 100%)" }}>
-              <div className="card-media-x" style={{ color: "rgba(14,17,13,0.1)" }}>X</div>
-              <span className="card-tag" style={{ background: "rgba(14,17,13,0.4)" }}>Curso</span>
-            </div>
-            <div className="card-body">
-              <div className="card-eyebrow">Formação · 6 semanas</div>
-              <h3 className="card-title">Estrutura de <em>equipe</em></h3>
-              <p className="card-desc">Da dependência de uma pessoa ao sistema que sustenta.</p>
-              <div className="card-foot">
-                <span className="card-meta">Online · ao vivo</span>
-                <a href="/cursos" className="card-link">Inscrever</a>
-              </div>
-            </div>
-          </article>
-        </div>
-        <div style={{ marginTop: 20 }}>
-          <article className="card" style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
-            <div className="card-media" style={{ height: "100%", minHeight: 180, background: "linear-gradient(135deg,var(--ink) 0%,var(--graphite) 100%)", position: "relative" }}>
-              <div style={{ position: "absolute", right: -20, bottom: -40, fontSize: 160, fontWeight: 700, fontStyle: "italic", color: "rgba(122,158,63,0.12)", lineHeight: 0.8, pointerEvents: "none" }}>X</div>
-              <span className="card-tag" style={{ position: "relative", zIndex: 1 }}>Série · 5 mensagens</span>
-            </div>
-            <div className="card-body">
-              <div className="card-eyebrow">Série para adolescentes · 13 a 17 anos</div>
-              <h3 className="card-title">Muito <em>Barulho</em></h3>
-              <p className="card-desc">Cinco mensagens gratuitas sobre chamado, identidade e discernimento.</p>
-              <div className="card-foot">
-                <span className="card-meta">Word · 5 arquivos · gratuito</span>
-                <a href="/series/muito-barulho" className="card-link">Acessar</a>
-              </div>
-            </div>
-          </article>
+        <div className="loja-shelf-grid">
+          {SAMPLE_CARDS.map(({ material, accentKey }) => (
+            <ProdCard
+              key={material.id}
+              material={material}
+              accentKey={accentKey}
+              onClick={() => window.location.href = "/materiais"}
+            />
+          ))}
         </div>
       </div>
 
