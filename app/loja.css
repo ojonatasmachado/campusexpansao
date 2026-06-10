@@ -3,8 +3,8 @@
    Sistema de banners: moldura fixa + miolo que varia (A · B · C · D)
    ════════════════════════════════════════════════════════════════ */
 
-/* ── OVERRIDE PG-WRAP — container mais largo nas seções de loja ── */
-.pg-wrap { max-width: 1400px; }
+/* ── OVERRIDE PG-WRAP — full-width Netflix-style ── */
+.pg-wrap { max-width: none; padding: 0 4%; }
 
 /* ── HERO DA LOJA ── */
 .loja-hero { padding: 80px 0 56px; position: relative; overflow: hidden; }
@@ -380,7 +380,7 @@
 
 /* ── RESPONSIVE ── */
 @media (max-width: 980px) {
-  .pg-wrap { padding: 0 20px; }
+  .pg-wrap { padding: 0 3%; }
   .loja-hero-title { font-size: 52px; }
   .loja-hero-desc { font-size: 16px; }
   /* Grid 2 colunas, cards fluid */
@@ -414,7 +414,7 @@
 }
 
 @media (max-width: 600px) {
-  .pg-wrap { padding: 0 14px; }
+  .pg-wrap { padding: 0 16px; }
   .loja-hero { padding: 48px 0 36px; }
   .loja-hero-title { font-size: 36px; }
   .loja-hero-desc { font-size: 14px; }
