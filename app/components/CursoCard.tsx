@@ -14,33 +14,32 @@ export function CursoCard({ curso }: { curso: CursoDado }) {
   const accent = ACCENTS[nivel.accent];
 
   return (
-    <Link href={`/cursos/${curso.slug}`} style={{ textDecoration: "none", display: "flex", flexDirection: "column" }}>
-      <div
-        className="cex-card"
-        style={{ "--cex-accent": accent.base, "--cex-accent-deep": accent.deep, cursor: "pointer" } as React.CSSProperties}
-      >
-        <div className="cex-art-c">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div className="cex-eyebrow cex-eyebrow-sand">{nivel.label}</div>
-            <div style={{
-              fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.10em",
-              textTransform: "uppercase", backgroundColor: accent.base,
-              color: "#0E110D", padding: "3px 8px", borderRadius: 4,
-              fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0,
-            }}>● AO VIVO</div>
-          </div>
-          <div className="cex-art-c-num-row">
-            <span className="cex-art-c-num">{curso.num.padStart(2, "0")}</span>
-            <span className="cex-art-c-label">etapa</span>
-          </div>
-          <div className="cex-art-c-title">{curso.title}</div>
+    <Link
+      href={`/cursos/${curso.slug}`}
+      className="cex-course"
+      style={{ "--cex-ac": accent.base } as React.CSSProperties}
+    >
+      <div className="cex-course__body">
+        <div className="cex-course__top">
+          <span className="cex-course__eyebrow">{nivel.label}</span>
+          <span className="cex-live">
+            <span className="cex-live__dot" />
+            AO VIVO
+          </span>
         </div>
-
-        <div className="cex-card-foot">
-          <div className="cex-foot-meta">{curso.dur} · Mentoria inclusa</div>
-          <div className="cex-foot-price-row">
-            <span className="cex-foot-ver">Detalhes →</span>
-          </div>
+        <div className="cex-course__head">
+          <h3 className="cex-course__title">{curso.title}</h3>
+          <p className="cex-course__desc">{curso.desc}</p>
+        </div>
+      </div>
+      <div className="cex-course__foot">
+        <div className="cex-course__meta">
+          <span className="cex-course__meta-dot" />
+          {curso.dur} · Mentoria inclusa
+        </div>
+        <div className="cex-course__foot-row">
+          <span className="cex-course__stage">ETAPA {curso.num.padStart(2, "0")}</span>
+          <span className="cex-course__more">Detalhes →</span>
         </div>
       </div>
     </Link>

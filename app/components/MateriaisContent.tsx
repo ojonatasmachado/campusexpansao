@@ -31,9 +31,16 @@ interface Material {
   faq: { q: string; a: string }[];
 }
 
-interface Estante { key: string; label: string; familia: Familia; accent: AccentKey }
+interface Estante { key: string; label: string; familia: Familia; accent: AccentKey; faixaEtaria?: string }
+
+const INFANTIL_ESTANTES: Estante[] = [
+  { key: "infantil-bercario",  label: "Berçário",  familia: "ministrar", accent: "wheat", faixaEtaria: "0-1a 11m" },
+  { key: "infantil-maternal",  label: "Maternal",  familia: "ministrar", accent: "wheat", faixaEtaria: "2-5 anos" },
+  { key: "infantil-primarios", label: "Primários", familia: "ministrar", accent: "wheat", faixaEtaria: "6-7 anos" },
+];
 
 const ESTANTES: Estante[] = [
+  ...INFANTIL_ESTANTES,
   { key: "juniores",           label: "Juniores",             familia: "ministrar", accent: "ochre" },
   { key: "adolescentes",       label: "Adolescentes",         familia: "ministrar", accent: "clay"  },
   { key: "jovens",             label: "Jovens",               familia: "ministrar", accent: "olive" },
@@ -43,9 +50,13 @@ const ESTANTES: Estante[] = [
   { key: "modelos-checklists", label: "Modelos & Checklists", familia: "liderar",   accent: "slate" },
   { key: "montar-evento",      label: "Montar evento",        familia: "liderar",   accent: "slate" },
 ];
-const ESTANTES_MINISTRAR = ESTANTES.filter(e => e.familia === "ministrar");
+const ESTANTES_MINISTRAR = ESTANTES.filter(e => e.familia === "ministrar" && !e.key.startsWith("infantil-"));
 const ESTANTES_LIDERAR   = ESTANTES.filter(e => e.familia === "liderar");
 const ESTANTE_MAP = Object.fromEntries(ESTANTES.map(e => [e.key, e]));
+
+// Chip virtual "Infantil" para o L2 de ministrar
+const INFANTIL_CHIP = { key: "infantil", label: "Infantil", accent: "wheat" as AccentKey };
+const L2_MINISTRAR = [INFANTIL_CHIP, ...ESTANTES_MINISTRAR];
 
 const MATERIAIS: Material[] = [
   // ── ADOLESCENTES (7 itens → carrossel) ─────────────────────────────────
@@ -403,6 +414,63 @@ const MATERIAIS: Material[] = [
     faq: [{ q: "Precisa de software especial?", a: "Não. É uma planilha e um documento Word. Funciona com o que você já tem." }],
   },
 
+  // ── INFANTIL ──────────────────────────────────────────────────────────────
+  {
+    id: "primeiros-sons", familia: "ministrar", estante: "infantil-bercario", model: "A",
+    etiqueta: "Berçário", titulo: "Primeiros Sons da Fé", code: "I-01",
+    promessa: "Quatro encontros sensoriais sobre quem é Deus para bebês de 0 a 1 ano e 11 meses.",
+    meta: { mensagens: 4, paginas: 28, formatos: ["PDF", "Editável"] },
+    preco: "R$ 37", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
+    praQuem: "Para líderes e voluntários do berçário que querem ir além do cuidado básico e criar momentos intencionais de fé.",
+    conteudo: ["Encontro 1: Deus fez tudo o que você toca", "Encontro 2: Deus ouve a sua voz", "Encontro 3: Deus te vê", "Encontro 4: Deus cuida de você"],
+    comoUsar: "Roteiro com atividades sensoriais (toque, som, visão) adaptadas para bebês. Inclui orientações para os pais levarem para casa.",
+    faq: [{ q: "Como trabalhar com bebês?", a: "O material usa estímulos sensoriais simples: tecidos, sons, contato. Guia explica cada dinâmica." }],
+  },
+  {
+    id: "arca-noe", familia: "ministrar", estante: "infantil-maternal", model: "C",
+    etiqueta: "Maternal", titulo: "Arca do Noé", big: "06", bigLabel: "encontros",
+    promessa: "Seis encontros sobre cuidado, obediência e promessa de Deus para crianças de 2 a 5 anos.",
+    meta: { mensagens: 6, paginas: 40, formatos: ["PDF", "Editável", "Slides"] },
+    preco: "R$ 39", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
+    praQuem: "Para líderes do maternal que querem histórias bíblicas adaptadas com linguagem simples, dinâmicas e reforço visual.",
+    conteudo: ["Encontro 1: Noé ouviu Deus", "Encontro 2: Os animais de dois em dois", "Encontro 3: A chuva e a arca", "Encontro 4: Esperando em Deus", "Encontro 5: O arco-íris", "Encontro 6: Deus sempre cumpre o que promete"],
+    comoUsar: "Cada encontro tem história ilustrada, dinâmica para fazer em grupo e verso simples para memorizar com gestos.",
+    faq: [{ q: "Tem ilustrações?", a: "Sim. Vem com folhas ilustradas em PDF para imprimir." }],
+  },
+  {
+    id: "deus-cuida-de-mim", familia: "ministrar", estante: "infantil-maternal", model: "B",
+    etiqueta: "Maternal", titulo: "Deus Cuida de Mim", code: "I-03",
+    promessa: "Cinco encontros sobre provisão e cuidado de Deus para crianças de 2 a 5 anos que sentem medo.",
+    meta: { mensagens: 5, paginas: 36, formatos: ["PDF", "Editável"] },
+    preco: "R$ 39", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
+    praQuem: "Para líderes que percebem crianças do maternal com insegurança ou medo: e querem oferecer base emocional e espiritual.",
+    conteudo: ["Encontro 1: Deus me conhece", "Encontro 2: Deus cuida dos passarinhos e de mim", "Encontro 3: Posso falar com Deus", "Encontro 4: Deus está aqui mesmo que eu não veja", "Encontro 5: Eu não preciso ter medo"],
+    comoUsar: "Dinâmicas com música, movimento e repetição: ideal para a fase de aprendizado do maternal.",
+    faq: [{ q: "Funciona para crianças com ansiedade de separação?", a: "Sim. O material trabalha segurança e presença de Deus de forma lúdica e afetiva." }],
+  },
+  {
+    id: "herois-pequenos", familia: "ministrar", estante: "infantil-primarios", model: "A",
+    etiqueta: "Primários", titulo: "Heróis Pequenos", code: "I-04",
+    promessa: "Seis lições sobre personagens bíblicos pequenos usados por Deus: para crianças de 6 a 7 anos.",
+    meta: { mensagens: 6, paginas: 44, formatos: ["PDF", "Editável"] },
+    preco: "R$ 41", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
+    praQuem: "Para líderes que querem mostrar para crianças de 6 e 7 anos que Deus usa qualquer um: independente do tamanho ou da idade.",
+    conteudo: ["Lição 1: Davi e o gigante", "Lição 2: A menina que curou Naamã", "Lição 3: O menino com o peixe e o pão", "Lição 4: Rute: fiel até o fim", "Lição 5: Timóteo: jovem e fiel", "Lição 6: Você também é usado por Deus"],
+    comoUsar: "Roteiro com história, pergunta de aplicação e missão da semana. Inclui cartão de memória com o verso.",
+    faq: [{ q: "Tem atividades para fazer?", a: "Sim. Cada lição tem missão da semana e dinâmica em grupo." }],
+  },
+  {
+    id: "primeiras-verdades", familia: "ministrar", estante: "infantil-primarios", model: "C",
+    etiqueta: "Primários", titulo: "Primeiras Verdades", big: "08", bigLabel: "lições",
+    promessa: "Oito lições sobre os fundamentos da fé para crianças de 6 a 7 anos aprenderem e guardarem.",
+    meta: { mensagens: 8, paginas: 52, formatos: ["PDF", "Editável"] },
+    preco: "R$ 43", hotmartUrl: "https://pay.hotmart.com/", colecoes: [],
+    praQuem: "Para líderes que querem trabalhar catequese básica com os primários: Deus, Bíblia, Jesus, oração, salvação: de forma simples e memorável.",
+    conteudo: ["Lição 1: Quem é Deus?", "Lição 2: A Bíblia é verdade", "Lição 3: Como Deus fez o mundo", "Lição 4: Por que Jesus veio?", "Lição 5: Jesus morreu e ressuscitou", "Lição 6: O que é ser cristão?", "Lição 7: Como conversar com Deus", "Lição 8: A vida que Deus quer pra mim"],
+    comoUsar: "Cada lição tem pergunta e resposta para memorizar, história, dinâmica e oração final. Funciona como base de formação.",
+    faq: [{ q: "Pode ser usado como catequese?", a: "Sim. Estruturado para formação básica, não só para culto semanal." }],
+  },
+
   // ── MONTAR EVENTO (3 itens → grid) ─────────────────────────────────
   {
     id: "retiro-adolescentes", familia: "liderar", estante: "montar-evento", model: "A",
@@ -471,7 +539,12 @@ function Shelf({ estante, materiais, onCardClick, onVerTodos }: {
   return (
     <div className="loja-shelf">
       <div className="loja-shelf-head">
-        <span className="loja-shelf-name" style={{ color: accent.base }}>{estante.label}</span>
+        <span className="loja-shelf-name" style={{ color: accent.base }}>
+          {estante.faixaEtaria ? `◆ ${estante.label.toUpperCase()}` : estante.label}
+        </span>
+        {estante.faixaEtaria && (
+          <span className="loja-shelf-count">· {estante.faixaEtaria}</span>
+        )}
         <span className="loja-shelf-count">{materiais.length} {materiais.length === 1 ? "material" : "materiais"}</span>
         {isCarousel && (
           <button className="loja-shelf-ver" style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }} onClick={() => onVerTodos(estante)}>
@@ -649,14 +722,20 @@ function ShelfModal({ estante, materiais, onCardClick, onClose }: {
 export default function MateriaisContent({ showHero = true, showCrossLink = true }: { showHero?: boolean; showCrossLink?: boolean }) {
   const [filtroL1, setFiltroL1] = useState<FiltroL1>("tudo");
   const [estanteAtiva, setEstanteAtiva] = useState<string | null>(null);
+  const [faixaInfantil, setFaixaInfantil] = useState<string | null>(null);
   const [materialAberto, setMaterialAberto] = useState<Material | null>(null);
   const [estanteAberta, setEstanteAberta] = useState<Estante | null>(null);
 
-  const handleL1 = useCallback((f: FiltroL1) => { setFiltroL1(f); setEstanteAtiva(null); }, []);
-  const handleL2 = useCallback((k: string) => { setEstanteAtiva((prev) => (prev === k ? null : k)); }, []);
+  const handleL1 = useCallback((f: FiltroL1) => { setFiltroL1(f); setEstanteAtiva(null); setFaixaInfantil(null); }, []);
+  const handleL2 = useCallback((k: string) => { setEstanteAtiva((prev) => (prev === k ? null : k)); setFaixaInfantil(null); }, []);
+  const handleFaixa = useCallback((k: string) => { setFaixaInfantil((prev) => (prev === k ? null : k)); }, []);
 
   const estantesVisiveis = (lista: Estante[]) => lista.filter((e) => !estanteAtiva || e.key === estanteAtiva);
+  const infantilVisiveis = () => estanteAtiva === "infantil" || !estanteAtiva
+    ? INFANTIL_ESTANTES.filter(e => !faixaInfantil || e.key === faixaInfantil)
+    : [];
   const materiaisDe = (estante: string) => MATERIAIS.filter((m) => m.estante === estante);
+  const totalInfantil = INFANTIL_ESTANTES.reduce((sum, e) => sum + materiaisDe(e.key).length, 0);
 
   const eventosGrupos: Record<string, Material[]> = {};
   MATERIAIS.forEach((m) => m.colecoes.forEach((c) => {
@@ -665,7 +744,8 @@ export default function MateriaisContent({ showHero = true, showCrossLink = true
   }));
   const eventosLabels: Record<string, string> = { retiro: "Retiro", conferencia: "Conferência" };
 
-  const l2Options = filtroL1 === "ministrar" ? ESTANTES_MINISTRAR : filtroL1 === "liderar" ? ESTANTES_LIDERAR : null;
+  const l2Options = filtroL1 === "ministrar" ? L2_MINISTRAR : filtroL1 === "liderar" ? ESTANTES_LIDERAR : null;
+  const showFaixaInfantil = filtroL1 === "ministrar" && estanteAtiva === "infantil";
 
   return (
     <>
@@ -705,6 +785,19 @@ export default function MateriaisContent({ showHero = true, showCrossLink = true
               ))}
             </div>
           )}
+          {showFaixaInfantil && (
+            <div className="loja-filter-l2">
+              <button className={`loja-filter-btn${!faixaInfantil ? " ativo" : ""}`} onClick={() => setFaixaInfantil(null)}>Todas</button>
+              {INFANTIL_ESTANTES.map((e) => (
+                <button key={e.key}
+                  className={`loja-filter-btn${faixaInfantil === e.key ? " ativo" : ""}`}
+                  style={{ "--cex-accent": ACCENTS[e.accent].base } as React.CSSProperties}
+                  onClick={() => handleFaixa(e.key)}>
+                  {e.label} <span style={{ color: "var(--subtle)", marginLeft: 4 }}>{e.faixaEtaria}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -726,17 +819,37 @@ export default function MateriaisContent({ showHero = true, showCrossLink = true
         )}
 
         {(filtroL1 === "tudo" || filtroL1 === "ministrar") && (
-          <div className="loja-familia">
-            {filtroL1 === "tudo" && (
-              <div className="loja-familia-head">
-                <span className="loja-familia-eyebrow">◆</span>
-                <div className="loja-familia-title">Para <em>ministrar</em></div>
+          <>
+            {/* INFANTIL — aparece antes dos demais públicos */}
+            {infantilVisiveis().length > 0 && (
+              <div className="loja-familia">
+                {filtroL1 === "tudo" && (
+                  <div className="loja-familia-head">
+                    <span className="loja-familia-eyebrow" style={{ color: ACCENTS.wheat.base }}>◆ Infantil</span>
+                    <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--subtle)" }}>{totalInfantil} materiais</span>
+                  </div>
+                )}
+                {infantilVisiveis().map((e) => (
+                  <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} onVerTodos={setEstanteAberta} />
+                ))}
               </div>
             )}
-            {estantesVisiveis(ESTANTES_MINISTRAR).map((e) => (
-              <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} onVerTodos={setEstanteAberta} />
-            ))}
-          </div>
+
+            {/* DEMAIS PÚBLICOS (Juniores, Adolescentes, Jovens, Igreja toda) */}
+            {(!estanteAtiva || estanteAtiva !== "infantil") && (
+              <div className="loja-familia">
+                {filtroL1 === "tudo" && (
+                  <div className="loja-familia-head">
+                    <span className="loja-familia-eyebrow">◆</span>
+                    <div className="loja-familia-title">Para <em>ministrar</em></div>
+                  </div>
+                )}
+                {estantesVisiveis(ESTANTES_MINISTRAR).map((e) => (
+                  <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} onVerTodos={setEstanteAberta} />
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {(filtroL1 === "tudo" || filtroL1 === "liderar") && (
