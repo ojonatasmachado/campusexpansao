@@ -19,14 +19,9 @@ export function CursoCard({ curso }: { curso: CursoDado }) {
         className="cex-card"
         style={{ "--cex-accent": accent.base, "--cex-accent-deep": accent.deep, cursor: "pointer" } as React.CSSProperties}
       >
-        {/* MIOLO — usa .cex-art-c: fundo #14170F + linhas-guia horizontais */}
         <div className="cex-art-c">
-          {/* TOPO: nível + badge AO VIVO */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-            <div style={{
-              fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.14em",
-              textTransform: "uppercase", color: accent.base,
-            }}>◆ {nivel.label}</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div className="cex-eyebrow cex-eyebrow-sand">{nivel.label}</div>
             <div style={{
               fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.10em",
               textTransform: "uppercase", backgroundColor: accent.base,
@@ -34,29 +29,16 @@ export function CursoCard({ curso }: { curso: CursoDado }) {
               fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0,
             }}>● AO VIVO</div>
           </div>
-
-          {/* BASE: título + desc */}
-          <div>
-            <div style={{
-              fontSize: 22, fontWeight: 800, lineHeight: 1.1,
-              letterSpacing: "-0.03em", color: "#EDE6D3", marginBottom: 8,
-            }}>{curso.title}</div>
-            <div style={{ fontSize: 13, lineHeight: 1.45, color: "#C9BFA0" }}>
-              {curso.desc}
-            </div>
+          <div className="cex-art-c-num-row">
+            <span className="cex-art-c-num">{curso.num.padStart(2, "0")}</span>
+            <span className="cex-art-c-label">etapa</span>
           </div>
+          <div className="cex-art-c-title">{curso.title}</div>
         </div>
 
-        {/* RODAPÉ */}
         <div className="cex-card-foot">
-          <div className="cex-foot-meta">
-            <span style={{ color: accent.base }}>●</span>{" "}{curso.dur} · Mentoria inclusa
-          </div>
+          <div className="cex-foot-meta">{curso.dur} · Mentoria inclusa</div>
           <div className="cex-foot-price-row">
-            <span style={{
-              fontFamily: "var(--mono)", fontSize: 10,
-              letterSpacing: "0.12em", textTransform: "uppercase", color: accent.base,
-            }}>ETAPA {curso.num.padStart(2, "0")}</span>
             <span className="cex-foot-ver">Detalhes →</span>
           </div>
         </div>

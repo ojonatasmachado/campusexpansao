@@ -9,7 +9,7 @@ export default function Cursos() {
 
       <div className="pg-wrap pg-section">
         <div className="hero-eyebrow" style={{ display: "flex" }}>◆ Formação ao vivo</div>
-        <h1 className="t-display" style={{ marginBottom: 16 }}>Cursos &amp; <em>trilhas</em></h1>
+        <h1 className="t-display" style={{ marginBottom: 16 }}>Cursos &amp; <em>Mentorias</em></h1>
         <p className="t-body-lg" style={{ maxWidth: 560 }}>
           Programas de formação com mentoria. Da fundação da estrutura ao discipulado que multiplica.
         </p>

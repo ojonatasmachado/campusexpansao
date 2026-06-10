@@ -93,7 +93,7 @@ export default function Home() {
           </div>
           <div className="stat-item">
             <div className="stat-item-num">12</div>
-            <div className="stat-item-label">Cursos &amp; trilhas</div>
+            <div className="stat-item-label">Cursos &amp; Mentorias</div>
           </div>
           <div className="stat-item">
             <div className="stat-item-num">40<em>+</em></div>
@@ -120,7 +120,7 @@ export default function Home() {
         <div className="psec-head">
           <div className="psec-head-left">
             <div className="psec-eyebrow">◆ Formação ao vivo</div>
-            <div className="psec-title">Cursos &amp; <em>trilhas</em></div>
+            <div className="psec-title">Cursos &amp; <em>Mentorias</em></div>
           </div>
           <a href="/cursos" className="btn btn-ghost btn-arrow">Conhecer formação ao vivo</a>
         </div>
