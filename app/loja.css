@@ -372,8 +372,6 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
 .cex-course__stage { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--cex-ac, #7A9E3F); }
 .cex-course__more { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #EDE6D3; }
 
-/* grid de cursos — mesma grade das estantes */
-.loja-shelf-grid .cex-course { width: 100%; }
 
 /* ── EVENTOS ── */
 .loja-eventos-grupo { margin-bottom: 48px; }
