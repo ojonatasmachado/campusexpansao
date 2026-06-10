@@ -542,7 +542,7 @@ function Shelf({ estante, materiais, onCardClick, onVerTodos }: {
     <div className="loja-shelf">
       <div className="loja-shelf-head">
         <span className="loja-shelf-name" style={{ color: accent.base }}>
-          {estante.faixaEtaria ? `◆ ${estante.label.toUpperCase()}` : estante.label}
+          {estante.faixaEtaria ? `◆ ${estante.label}` : estante.label}
         </span>
         {estante.faixaEtaria && (
           <span className="loja-shelf-count">· {estante.faixaEtaria}</span>
@@ -737,7 +737,6 @@ export default function MateriaisContent({ showHero = true, showCrossLink = true
     ? INFANTIL_ESTANTES.filter(e => !faixaInfantil || e.key === faixaInfantil)
     : [];
   const materiaisDe = (estante: string) => MATERIAIS.filter((m) => m.estante === estante);
-  const totalInfantil = INFANTIL_ESTANTES.reduce((sum, e) => sum + materiaisDe(e.key).length, 0);
 
   const eventosGrupos: Record<string, Material[]> = {};
   MATERIAIS.forEach((m) => m.colecoes.forEach((c) => {
@@ -821,37 +820,20 @@ export default function MateriaisContent({ showHero = true, showCrossLink = true
         )}
 
         {(filtroL1 === "tudo" || filtroL1 === "ministrar") && (
-          <>
-            {/* INFANTIL — aparece antes dos demais públicos */}
-            {infantilVisiveis().length > 0 && (
-              <div className="loja-familia">
-                {filtroL1 === "tudo" && (
-                  <div className="loja-familia-head">
-                    <span className="loja-familia-eyebrow" style={{ color: ACCENTS.wheat.base }}>◆ Infantil</span>
-                    <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--subtle)" }}>{totalInfantil} materiais</span>
-                  </div>
-                )}
-                {infantilVisiveis().map((e) => (
-                  <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} onVerTodos={setEstanteAberta} />
-                ))}
+          <div className="loja-familia">
+            {filtroL1 === "tudo" && (
+              <div className="loja-familia-head">
+                <span className="loja-familia-eyebrow">◆</span>
+                <div className="loja-familia-title">Para <em>ministrar</em></div>
               </div>
             )}
-
-            {/* DEMAIS PÚBLICOS (Juniores, Adolescentes, Jovens, Igreja toda) */}
-            {(!estanteAtiva || estanteAtiva !== "infantil") && (
-              <div className="loja-familia">
-                {filtroL1 === "tudo" && (
-                  <div className="loja-familia-head">
-                    <span className="loja-familia-eyebrow">◆</span>
-                    <div className="loja-familia-title">Para <em>ministrar</em></div>
-                  </div>
-                )}
-                {estantesVisiveis(ESTANTES_MINISTRAR).map((e) => (
-                  <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} onVerTodos={setEstanteAberta} />
-                ))}
-              </div>
-            )}
-          </>
+            {infantilVisiveis().map((e) => (
+              <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} onVerTodos={setEstanteAberta} />
+            ))}
+            {estanteAtiva !== "infantil" && estantesVisiveis(ESTANTES_MINISTRAR).map((e) => (
+              <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} onVerTodos={setEstanteAberta} />
+            ))}
+          </div>
         )}
 
         {(filtroL1 === "tudo" || filtroL1 === "liderar") && (
