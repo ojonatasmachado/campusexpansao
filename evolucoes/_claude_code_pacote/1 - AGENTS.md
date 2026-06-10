@@ -7,9 +7,8 @@
 > este arquivo é o que **nunca muda**.
 >
 > Codex lê `AGENTS.md`. Claude Code lê `CLAUDE.md` (e este arquivo). Se houver conflito,
-> **as regras de construção do site/admin deste arquivo prevalecem** sobre qualquer outro
-> arquivo de instrução (que cobre a identidade da marca e a produção de reels, não o build
-> do site).
+> **as regras de construção do site/admin deste arquivo prevalecem** sobre o `CLAUDE.md`
+> (que cobre a identidade da marca e a produção de reels, não o build do site).
 
 ---
 
@@ -74,13 +73,16 @@ handoff/CSS deriva daqui, ninguém redefine hex em outro lugar.
 > **Paleta de estante (o que o admin oferece ao criar uma estante nova).** Os 8 acentos
 > acima — `sand, wheat, amber, clay, terra, rust, cocoa, olive` — são as **únicas** opções
 > que o seletor de cor do admin mostra (swatches travados, **sem picker livre de hex**).
+> Pra adicionar uma cor nova à paleta no futuro: inclua o token AQUI, quente/terroso, e
+> ele passa a aparecer no admin. Nunca um hex solto fora desta lista.
 
 - A cor **codifica a estante** e entra **só como acento** (borda-topo do card, etiqueta ◆,
   número, selo, bolinha, hover). **Nunca** pinta o fundo do card (exceção única: bloco do
   Modelo B, 1 por fileira — §4).
-- **Nunca inventar cor fora desta lista.** Mapeamento de cores antigas → canônicas:
-  `Ardósia #5C7488 → (extinto)` · `Pinho #4F7264 → terra` ·
-  `Ocre #C0934E → wheat` · `Argila #B07355 → clay` · `"Trigo" #C9A86B (antigo) → wheat`.
+- **Nunca inventar cor fora desta lista.** Nada de cinza/azul apagado ("parece desativado").
+  Mapeamento de cores antigas → canônicas (ao migrar código legado):
+  `Ardósia #5C7488 → (estante deriva, ver §3)` · `Pinho #4F7264 → terra` ·
+  `Ocre #C0934E → wheat` · `Argila #B07355 → clay` · `"Trigo" #C9A86B (Infantil) → wheat`.
 
 **Acentos de NÍVEL (cursos)** — derivam dos mesmos tokens:
 
@@ -94,12 +96,16 @@ handoff/CSS deriva daqui, ninguém redefine hex em outro lugar.
 
 ## 3. Cor é da ESTANTE — e a estante é EDITÁVEL no admin
 
-- A estante é uma **entidade de primeira classe**, gerenciada no admin.
+- A estante é uma **entidade de primeira classe**, gerenciada no admin (criar, renomear,
+  reordenar, ativar/desativar — ver `HANDOFF v3` §4). Não é mais uma lista fixa em código.
 - O acento de um **item** vem da estante onde ele está — nunca é escolhido item a item.
-- **Quem define a cor é a estante**, uma vez, no cadastro/edição **da estante**.
-- Reúso de cor entre estantes diferentes é OK: estão em seções separadas.
+  No editor de item a cor aparece **travada (read-only)**.
+- **Quem define a cor é a estante**, uma vez, no cadastro/edição **da estante**: o usuário
+  escolhe o acento entre os swatches da paleta de estante (§2) — nunca hex livre.
+- Reúso de cor entre estantes diferentes é OK (ex. barro em Adolescentes e Manuais):
+  estão em seções separadas, **nunca na mesma fileira**.
 
-Tabela de estantes (estado inicial — editável no admin):
+A tabela abaixo é o **estado inicial semeado** (o usuário edita a partir daqui):
 
 | Família | Estante | Faixa / sub | Acento |
 |---|---|---|---|
@@ -115,8 +121,10 @@ Tabela de estantes (estado inicial — editável no admin):
 | Liderar | Modelos & Checklists | prático, pra usar hoje | `sand` |
 | Liderar | Montar evento | retiro/conferência/culto | `wheat` |
 
-> **Infantil** = Berçário + Maternal + Primários (todas `wheat`). Escada de público:
-> `Infantil → Juniores → Adolescentes → Jovens → Igreja toda`.
+> **Infantil** = a modalidade que reúne **Berçário + Maternal + Primários**. As três
+> sub-estantes **compartilham `wheat`** (a diferenciação é o rótulo + faixa etária, nunca a
+> cor). No filtro de público, `Infantil` entra antes de `Juniores`. Resolve a proposta
+> "Trigo" do BRIEFING: **é `wheat`, não uma cor nova.**
 
 ---
 
@@ -133,19 +141,23 @@ Tabela de estantes (estado inicial — editável no admin):
 - **C · número** — `messages`/`pages` em número grande + fundo com linhas-guia.
 - **B · bloco** — única exceção que pinta cor cheia no topo (texto = tinta escura `--ink`);
   **no máximo 1 por fileira visível**.
-- **Mesma moldura sempre:** borda-topo no acento, rodapé fixo com meta + preço/CTA.
+- **Mesma moldura sempre:** 244–254px, borda-topo no acento, rodapé fixo com meta + preço/CTA.
+  É a moldura + a cor que dão a sensação de "família" mesmo com miolos diferentes.
 - `model`, `big`, `bigLabel` **não se armazenam** — são derivados no render.
 
 ---
 
 ## 5. Layout — full-bleed estilo Netflix
 
-- Fileiras **sangram até a borda da tela** (sem margem lateral).
-- **Auto-Netflix:** estante com **≤ 6** itens → fileira fixa. **≥ 7** → carrossel
-  horizontal com setas (desktop) + arraste (touch) + "ver todos →".
-  `const SHELF_CAROUSEL_THRESHOLD = 6;`
+- Fileiras **sangram até a borda da tela** (sem margem lateral):
+  `.row-track { margin: 0 -64px; padding: 0 64px; }` dentro de container de largura total.
+  Os cabeçalhos respeitam o padding.
+- **Auto-Netflix:** estante com **≤ 6** itens → fileira fixa, tudo visível. **≥ 7** →
+  carrossel horizontal com setas (desktop) + arraste (touch) + "ver todos →".
+  `const SHELF_CAROUSEL_THRESHOLD = 6;` (fácil de achar e alterar).
 - **Estante vazia (0 itens publicados) não renderiza.** `status: "Rascunho"` esconde do site.
-- **Mobile-first**: abaixo do limite empilha em 2 colunas.
+- **Mobile-first** (tráfego vem do Instagram): abaixo do limite empilha em 2 colunas;
+  nada de scroll lateral acidental.
 
 ---
 
@@ -153,18 +165,19 @@ Tabela de estantes (estado inicial — editável no admin):
 
 - **Capítulo da jornada:** cada família (`Para ministrar` / `Para liderar`) abre com
   marcador forte — numeral-fantasma `01`/`02`, régua com segmento no acento,
-  `§ 01 · Conteúdo`, título grande, contador à direita.
-- **Cabeçalho de estante:** nome com ◆ no acento + **faixa etária / subtítulo** mono
-  embaixo. Nunca a linha mono cinza miúda que some na parede preta.
+  `§ 01 · Conteúdo`, título grande, contador à direita. Bate o olho, entende a seção.
+- **Cabeçalho de estante:** nome em cream, bold, ~20px, com ◆ no acento + **faixa etária /
+  subtítulo** mono embaixo. Nunca a linha mono cinza miúda que some na parede preta.
 
 ---
 
 ## 7. Material × Curso — mesma família, conversão diferente
 
-- **Mesma moldura/rodapé** dos cards.
+- **Mesma moldura/rodapé** dos cards de material (é o que faz o site conversar).
 - **Card de curso:** fundo **escuro** com linhas-guia (nunca pintar o miolo de cor).
   Acento só nos detalhes. Selo sólido **`● AO VIVO`** (fundo no acento, texto ink) é o
-  ÚNICO elemento de cor cheia.
+  ÚNICO elemento de cor cheia. **Sem preço.** Agrupar **por nível** (Fundação / Liderança /
+  Multiplicação), não em grade plana.
 - **Página de detalhe — Material:** termina em **`COMPRAR` → Hotmart** (`target="_blank"`).
 - **Página de detalhe — Curso:** termina em **`Entrar na lista de espera →`** + ementa por
   semana. **Sem Hotmart, sem preço.**
@@ -176,6 +189,7 @@ Tabela de estantes (estado inicial — editável no admin):
 - **Marca de seção sempre `◆`** (mono, caixa-alta, espaçada, cor de acento). **Nunca `—`.**
 - **Zero travessão renderizado:** o caractere `—` (em dash) e `–` (en dash) **não podem
   existir** em nada visível. Reescreva frases com ponto, vírgula ou dois-pontos.
+  Faça varredura final buscando `—` e `–`.
 - **Manter** o ponto-do-meio `·` (ex. "PDF · 64 páginas") e as setas `→`.
 - **Sem emoji.** Marcas permitidas: `◆ ◇ → §` e a bolinha `●` (só no selo AO VIVO).
 
@@ -185,59 +199,31 @@ Tabela de estantes (estado inicial — editável no admin):
 
 Este arquivo é a **lei**. O **como executar cada tarefa** está em:
 
-- `evolucoes/_claude_code_pacote/2 - HANDOFF - Materiais v3 (site + admin).md` → site Materiais v3 + ajustes do admin + contrato de dados.
-- `evolucoes/_claude_code_pacote/3 - AJUSTES_ClaudeCode_jornada.md` → unificar header/footer, Home narrativa, cross-linking, fim dos travessões.
-- `evolucoes/_claude_code_pacote/4 - AJUSTES_Cursos_e_Mentorias.md` + `5 - BRIEFING_ClaudeCode_Cursos_e_Infantil.md` → cursos, mentorias, faixas Infantil.
-- `evolucoes/_claude_code_pacote/6 - Materiais - Revisão v3.html` → **mockup visual aprovado** (referência de pixel).
-- `evolucoes/_claude_code_pacote/admin/` → painel interno já prototipado.
+- `HANDOFF - Materiais v3 (site + admin).md` → site Materiais v3 + ajustes do admin + **contrato de dados** (§1).
+- `AJUSTES_ClaudeCode_jornada.md` → unificar header/footer, Home narrativa, cross-linking, fim dos travessões.
+- `AJUSTES_Cursos_e_Mentorias.md` + `BRIEFING_ClaudeCode_Cursos_e_Infantil.md` → cursos, mentorias, faixas Infantil.
+- `Materiais - Revisão v3.html` → **mockup visual aprovado** do site público (referência de pixel).
+- `admin/` → painel interno já prototipado (`Admin CE.X.html` + `*.jsx` + `data.js`).
+- `CEX_BrandBook_v3.html` → tokens e uso da marca.
 
-> Se um handoff de tarefa contradisser este arquivo, **este arquivo vence**.
+> Se um handoff de tarefa contradisser este arquivo, **este arquivo vence** — ou pare e
+> sinalize o conflito. As regras de §0–§8 valem para tudo que for criado, sempre.
 
-**Código legado a migrar** (paleta antiga — azul/ocre/argila/pinho): `admin/data.js`,
-`banners/cards.jsx`. Ao tocar nesses arquivos, troque pelos tokens canônicos de §2.
+**Código legado a migrar** (ainda com a paleta antiga — azul/ocre/argila/pinho): o mapa de
+acento de `admin/data.js` (`ACCENTS`, `accentFor()`) e as referências `banners/cards.jsx` /
+`design_handoff_pagina_venda/referencia/cards.jsx`. Ao tocar nesses arquivos, troque os hex
+pelos tokens deste §2 (mapa de migração lá). Não copie a paleta deles.
 
 ---
 
 ## 10. Recap — regras inegociáveis
 
 1. **Dois apps:** admin é a fonte, site é o render. Não fundir.
-2. **Sem azul.** Ardósia extinta. Só paleta quente.
-3. **Cor é da estante**, derivada. **Modelo é por posição**, não editável.
+2. **Sem azul.** Ardósia extinta do site e do admin. Só paleta quente.
+3. **Cor é da estante**, derivada, não editável. **Modelo é por posição**, não editável.
 4. Acento colore **detalhes**, nunca o fundo do card (exceto bloco do Modelo B, 1 por fileira).
 5. Texto sobre acento é sempre tinta escura `#0E110D`.
 6. **Oliva ≤ 15%** (só Jovens + marca).
 7. **Zero `—`/`–`** renderizado. Marca de seção sempre `◆`. Manter `·` e `→`. Sem emoji.
 8. Logo `CE.X` = `CE` 700 + `.X` 700 oliva, sem itálico. Fonte Inter, não trocar.
 9. Mobile-first. Estante vazia não renderiza. Rascunho não aparece no site.
-
----
-
-## Estrutura do projeto
-
-```
-app/
-  layout.tsx      ← metadata, fontes, imports dos CSS
-  page.tsx        ← Home (página-narrativa)
-  materiais/      ← catálogo de materiais
-  cursos/         ← cursos & mentorias
-  sobre/          ← página sobre
-  components/     ← Nav, Footer, MateriaisContent, CursoCard, ProdCard
-  lib/            ← accents.ts, cursos-data.ts
-public/
-  tokens.css      ← variáveis CSS da marca (IMPORTAR PRIMEIRO)
-  components.css  ← estilos de todos os componentes
-  pages.css       ← estilos de seções de página
-  tokens.json     ← tokens em formato machine-readable
-```
-
-**Nunca edite** `tokens.css`, `components.css` ou `pages.css` diretamente.
-
-**Ordem de import obrigatória:** `tokens.css` → `components.css` → `pages.css`.
-
-## Como publicar alterações
-
-```bash
-git add -A && git commit -m "descrição da mudança" && git push
-```
-
-A Vercel faz o deploy automaticamente após o push.

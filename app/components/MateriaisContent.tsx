@@ -6,7 +6,7 @@ import type { Modelo } from "./ProdCard";
 import { ACCENTS } from "../lib/accents";
 import type { AccentKey } from "../lib/accents";
 
-const SHELF_CAROUSEL_THRESHOLD = 0;
+const SHELF_CAROUSEL_THRESHOLD = 6;
 
 type Familia = "ministrar" | "liderar";
 type FiltroL1 = "tudo" | Familia | "eventos";
@@ -43,14 +43,14 @@ const INFANTIL_ESTANTES: Estante[] = [
 
 const ESTANTES: Estante[] = [
   ...INFANTIL_ESTANTES,
-  { key: "juniores",           label: "Juniores",             familia: "ministrar", accent: "ochre" },
-  { key: "adolescentes",       label: "Adolescentes",         familia: "ministrar", accent: "clay"  },
-  { key: "jovens",             label: "Jovens",               familia: "ministrar", accent: "olive" },
-  { key: "igreja-toda",        label: "Igreja toda",          familia: "ministrar", accent: "pine"  },
-  { key: "manuais",            label: "Manuais",              familia: "liderar",   accent: "slate" },
-  { key: "criar-ministerio",   label: "Criar ministério",     familia: "liderar",   accent: "slate" },
-  { key: "modelos-checklists", label: "Modelos & Checklists", familia: "liderar",   accent: "slate" },
-  { key: "montar-evento",      label: "Montar evento",        familia: "liderar",   accent: "slate" },
+  { key: "juniores",           label: "Juniores",             familia: "ministrar", accent: "sand",  faixaEtaria: "8 a 11 anos" },
+  { key: "adolescentes",       label: "Adolescentes",         familia: "ministrar", accent: "clay",  faixaEtaria: "12 a 15 anos" },
+  { key: "jovens",             label: "Jovens",               familia: "ministrar", accent: "olive", faixaEtaria: "16 a 24 anos" },
+  { key: "igreja-toda",        label: "Igreja toda",          familia: "ministrar", accent: "terra", faixaEtaria: "datas & campanhas" },
+  { key: "manuais",            label: "Manuais",              familia: "liderar",   accent: "clay",  faixaEtaria: "referência completa" },
+  { key: "criar-ministerio",   label: "Criar ministério",     familia: "liderar",   accent: "terra", faixaEtaria: "passo a passo" },
+  { key: "modelos-checklists", label: "Modelos & Checklists", familia: "liderar",   accent: "sand",  faixaEtaria: "prático, pra usar hoje" },
+  { key: "montar-evento",      label: "Montar evento",        familia: "liderar",   accent: "wheat", faixaEtaria: "retiro, conferência, culto" },
 ];
 const ESTANTES_MINISTRAR = ESTANTES.filter(e => e.familia === "ministrar" && !e.key.startsWith("infantil-"));
 const ESTANTES_LIDERAR   = ESTANTES.filter(e => e.familia === "liderar");
@@ -518,7 +518,12 @@ function ShelfCarousel({ materiais, accentKey, onCardClick }: { materiais: Mater
   return (
     <div className="loja-shelf-carousel">
       <div className="loja-carousel-track" ref={trackRef}>
-        {materiais.map((m) => <ProdCard key={m.id} material={m} accentKey={accentKey} onClick={() => onCardClick(m)} />)}
+        {materiais.map((m, i) => {
+          const model = (["A","C","B"] as const)[i % 3] as Modelo;
+          const big = (m.meta.mensagens ?? m.meta.paginas).toString();
+          const bigLabel = m.meta.mensagens != null ? "mensagens" : "páginas";
+          return <ProdCard key={m.id} material={{...m, model, big, bigLabel}} accentKey={accentKey} onClick={() => onCardClick(m)} />;
+        })}
       </div>
       <div className="loja-carousel-arrows">
         <button className="loja-carousel-arrow" onClick={() => scroll("left")} aria-label="Anterior">←</button>
@@ -541,9 +546,7 @@ function Shelf({ estante, materiais, onCardClick, onVerTodos }: {
   return (
     <div className="loja-shelf">
       <div className="loja-shelf-head">
-        <span className="loja-shelf-name" style={{ color: accent.base }}>
-          {estante.faixaEtaria ? `◆ ${estante.label}` : estante.label}
-        </span>
+        <span className="loja-shelf-name" style={{ color: accent.base }}>◆ {estante.label}</span>
         {estante.faixaEtaria && (
           <span className="loja-shelf-count">· {estante.faixaEtaria}</span>
         )}
@@ -558,7 +561,12 @@ function Shelf({ estante, materiais, onCardClick, onVerTodos }: {
         <ShelfCarousel materiais={materiais} accentKey={estante.accent} onCardClick={onCardClick} />
       ) : (
         <div className="loja-shelf-grid">
-          {materiais.map((m) => <ProdCard key={m.id} material={m} accentKey={estante.accent} onClick={() => onCardClick(m)} />)}
+          {materiais.map((m, i) => {
+            const model = (["A","C","B"] as const)[i % 3] as Modelo;
+            const big = (m.meta.mensagens ?? m.meta.paginas).toString();
+            const bigLabel = m.meta.mensagens != null ? "mensagens" : "páginas";
+            return <ProdCard key={m.id} material={{...m, model, big, bigLabel}} accentKey={estante.accent} onClick={() => onCardClick(m)} />;
+          })}
         </div>
       )}
     </div>
@@ -570,6 +578,12 @@ function Modal({ material, onClose }: { material: Material; onClose: () => void 
   const estante = ESTANTE_MAP[material.estante];
   const accentKey = estante?.accent || "olive";
   const accent = ACCENTS[accentKey];
+
+  const shelfItems = MATERIAIS.filter(mi => mi.estante === material.estante);
+  const posInShelf = shelfItems.findIndex(mi => mi.id === material.id);
+  const derivedModel = (["A","C","B"] as const)[Math.max(0, posInShelf) % 3] as Modelo;
+  const derivedBig = (material.meta.mensagens ?? material.meta.paginas).toString();
+  const derivedBigLabel = material.meta.mensagens != null ? "mensagens" : "páginas";
 
   const relacionados = MATERIAIS.filter(
     (m) => m.estante === material.estante && m.id !== material.id
@@ -599,10 +613,9 @@ function Modal({ material, onClose }: { material: Material; onClose: () => void 
           <div className="loja-detail-hero">
             <div className="loja-detail-capa"
               style={{ "--cex-accent": accent.base, "--cex-accent-deep": accent.deep } as React.CSSProperties}>
-              {material.model === "A" && <ModelA etiqueta={material.etiqueta} titulo={material.titulo} code={material.code} />}
-              {material.model === "B" && <ModelB etiqueta={material.etiqueta} titulo={material.titulo} code={material.code} />}
-              {material.model === "C" && <ModelC etiqueta={material.etiqueta} titulo={material.titulo} big={material.big} bigLabel={material.bigLabel} />}
-              {material.model === "D" && <ModelD etiqueta={material.etiqueta} titulo={material.titulo} />}
+              {derivedModel === "A" && <ModelA etiqueta={material.etiqueta} titulo={material.titulo} code={material.code} />}
+              {derivedModel === "B" && <ModelB etiqueta={material.etiqueta} titulo={material.titulo} code={material.code} />}
+              {derivedModel === "C" && <ModelC etiqueta={material.etiqueta} titulo={material.titulo} big={derivedBig} bigLabel={derivedBigLabel} />}
             </div>
             <div>
               <div className="loja-detail-meta-row">
@@ -657,9 +670,14 @@ function Modal({ material, onClose }: { material: Material; onClose: () => void 
             <div className="loja-detail-sec">
               <div className="loja-detail-sec-label">◆ Da mesma estante</div>
               <div className="loja-relacionados">
-                {relacionados.map((m) => (
-                  <ProdCard key={m.id} material={m} accentKey={accentKey} onClick={() => {}} />
-                ))}
+                {relacionados.map((m) => {
+                  const allInShelf = MATERIAIS.filter(mi => mi.estante === material.estante);
+                  const pos = allInShelf.findIndex(mi => mi.id === m.id);
+                  const relModel = (["A","C","B"] as const)[Math.max(0, pos) % 3] as Modelo;
+                  const relBig = (m.meta.mensagens ?? m.meta.paginas).toString();
+                  const relBigLabel = m.meta.mensagens != null ? "mensagens" : "páginas";
+                  return <ProdCard key={m.id} material={{...m, model: relModel, big: relBig, bigLabel: relBigLabel}} accentKey={accentKey} onClick={() => {}} />;
+                })}
               </div>
             </div>
           )}
@@ -710,9 +728,12 @@ function ShelfModal({ estante, materiais, onCardClick, onClose }: {
             <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{materiais.length} materiais disponíveis</div>
           </div>
           <div className="loja-shelf-grid">
-            {materiais.map((m) => (
-              <ProdCard key={m.id} material={m} accentKey={estante.accent} onClick={() => onCardClick(m)} />
-            ))}
+            {materiais.map((m, i) => {
+              const model = (["A","C","B"] as const)[i % 3] as Modelo;
+              const big = (m.meta.mensagens ?? m.meta.paginas).toString();
+              const bigLabel = m.meta.mensagens != null ? "mensagens" : "páginas";
+              return <ProdCard key={m.id} material={{...m, model, big, bigLabel}} accentKey={estante.accent} onClick={() => onCardClick(m)} />;
+            })}
           </div>
         </div>
       </div>

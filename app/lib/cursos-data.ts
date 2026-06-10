@@ -5,7 +5,7 @@ export type NivelKey = "fundacao" | "lideranca" | "multiplicacao";
 export interface Nivel { key: NivelKey; label: string; accent: AccentKey }
 
 export const NIVEIS: Nivel[] = [
-  { key: "fundacao",      label: "Fundação",      accent: "ochre" },
+  { key: "fundacao",      label: "Fundação",      accent: "wheat" },
   { key: "lideranca",     label: "Liderança",     accent: "clay"  },
   { key: "multiplicacao", label: "Multiplicação", accent: "olive" },
 ];

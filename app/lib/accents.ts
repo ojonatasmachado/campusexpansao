@@ -1,11 +1,13 @@
-export type AccentKey = "olive" | "clay" | "ochre" | "pine" | "slate" | "wheat";
+export type AccentKey = "olive" | "clay" | "wheat" | "sand" | "amber" | "terra" | "rust" | "cocoa";
 export interface Accent { base: string; deep: string; name: string }
 
 export const ACCENTS: Record<AccentKey, Accent> = {
-  olive: { base: "#7A9E3F", deep: "#4F6B26", name: "Oliva" },
-  clay:  { base: "#B07355", deep: "#7C4B33", name: "Argila" },
-  ochre: { base: "#C0934E", deep: "#8A6630", name: "Ocre"  },
-  pine:  { base: "#4F7264", deep: "#335147", name: "Pinho" },
-  slate: { base: "#5C7488", deep: "#3C4E5C", name: "Ardósia" },
-  wheat: { base: "#C9A86B", deep: "#9A7C42", name: "Trigo" },
+  olive: { base: "#7A9E3F", deep: "#4F6B26", name: "Oliva"     },
+  clay:  { base: "#C5805A", deep: "#8A5038", name: "Argila"    },
+  wheat: { base: "#CBA95C", deep: "#9A7C42", name: "Trigo"     },
+  sand:  { base: "#E2D6B4", deep: "#B8A882", name: "Areia"     },
+  amber: { base: "#D6A23E", deep: "#A0742A", name: "Âmbar"     },
+  terra: { base: "#B5694A", deep: "#7C4030", name: "Terracota" },
+  rust:  { base: "#9C5A33", deep: "#6A3A1E", name: "Ferrugem"  },
+  cocoa: { base: "#6F523A", deep: "#4A3322", name: "Cacau"     },
 };

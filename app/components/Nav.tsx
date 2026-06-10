@@ -19,9 +19,9 @@ export default function Nav() {
       </Link>
       <ul className="nav-links">
         {link("/", "Início")}
-        {link("/#materiais", "Materiais")}
-        {link("/#cursos", "Cursos & Mentorias")}
-        {link("/#sobre", "Sobre")}
+        {link("/materiais", "Materiais")}
+        {link("/cursos", "Cursos & Mentorias")}
+        {link("/sobre", "Sobre")}
         {link("/quiz", "Sua Vocação")}
       </ul>
       <Link href="/materiais" className="nav-cta">Comece agora</Link>
