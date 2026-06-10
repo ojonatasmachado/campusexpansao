@@ -1,4 +1,4 @@
-import type { AccentKey } from "../components/ProdCard";
+import type { AccentKey } from "./accents";
 
 export type NivelKey = "fundacao" | "lideranca" | "multiplicacao";
 

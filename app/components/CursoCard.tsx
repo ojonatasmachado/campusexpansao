@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { ACCENTS } from "./ProdCard";
+import { ACCENTS } from "../lib/accents";
 import { NIVEIS, CURSOS_DATA } from "../lib/cursos-data";
 import type { CursoDado } from "../lib/cursos-data";
 

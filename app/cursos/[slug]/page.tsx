@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Nav from "../../components/Nav";
 import Footer from "../../components/Footer";
 import { CURSOS_DATA, CURSOS_EM_ORDEM, NIVEIS } from "../../lib/cursos-data";
-import { ACCENTS } from "../../components/ProdCard";
+import { ACCENTS } from "../../lib/accents";
 
 export function generateStaticParams() {
   return CURSOS_DATA.map(c => ({ slug: c.slug }));
@@ -20,8 +20,8 @@ export default async function CursoDetalhe({ params }: { params: Promise<{ slug:
   const curso = CURSOS_DATA.find(c => c.slug === slug);
   if (!curso) notFound();
 
-  const nivel = NIVEIS.find(n => n.key === curso.nivel)!;
-  const accent = ACCENTS[nivel.accent];
+  const nivel = NIVEIS.find(n => n.key === curso.nivel) ?? NIVEIS[0];
+  const accent = ACCENTS[nivel.accent] ?? ACCENTS.olive;
   const relacionados = CURSOS_DATA.filter(c => c.nivel === curso.nivel && c.slug !== curso.slug);
 
   return (
@@ -78,7 +78,7 @@ export default async function CursoDetalhe({ params }: { params: Promise<{ slug:
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           {CURSOS_EM_ORDEM.map((c, i) => {
             const isAtual = c.slug === curso.slug;
-            const acentoItem = ACCENTS[NIVEIS.find(n => n.key === c.nivel)!.accent];
+            const acentoItem = ACCENTS[NIVEIS.find(n => n.key === c.nivel)?.accent ?? "olive"] ?? ACCENTS.olive;
             return (
               <a key={c.slug} href={`/cursos/${c.slug}`} style={{
                 display: "flex", alignItems: "center", gap: 14,

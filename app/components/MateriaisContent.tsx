@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { ProdCard, ModelA, ModelB, ModelC, ModelD, ACCENTS } from "./ProdCard";
-import type { AccentKey, Modelo } from "./ProdCard";
+import { ProdCard, ModelA, ModelB, ModelC, ModelD } from "./ProdCard";
+import type { Modelo } from "./ProdCard";
+import { ACCENTS } from "../lib/accents";
+import type { AccentKey } from "../lib/accents";
 
 const SHELF_CAROUSEL_THRESHOLD = 0;
 
