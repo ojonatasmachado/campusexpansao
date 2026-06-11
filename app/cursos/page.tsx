@@ -15,20 +15,24 @@ export default async function Cursos() {
     <div className="pg">
       <Nav />
 
-      <div className="pg-wrap pg-section">
-        <div className="hero-eyebrow" style={{ display: "flex" }}>◆ Formação ao vivo</div>
-        <h1 className="t-display" style={{ marginBottom: 16 }}>Cursos &amp; Mentorias</h1>
-        <p className="t-body-lg" style={{ maxWidth: 560 }}>
-          Programas de formação com mentoria. Da fundação da estrutura ao discipulado que multiplica.
+      {/* HERO — mesma estrutura da página de Materiais */}
+      <div className="loja-hero pg-wrap" style={{ paddingTop: 80, paddingBottom: 56 }}>
+        <div className="loja-hero-tag">◆ Formação ao vivo</div>
+        <h1 className="loja-hero-title">
+          Cursos &amp;<br />Mentorias
+        </h1>
+        <p className="loja-hero-desc">
+          Uma trilha por nível. Você entra onde está e sobe quando estiver pronto.
         </p>
       </div>
 
-      <div className="pg-wrap pg-section tight">
+      {/* CURSOS POR NÍVEL */}
+      <div className="pg-wrap" style={{ paddingBottom: 56 }}>
         <CursosNiveis dbCursos={cursosDb ?? undefined} dbMentorias={mentoriasDb ?? undefined} />
       </div>
 
       {/* CROSS-LINK PARA MATERIAIS */}
-      <div className="pg-wrap" style={{ paddingBottom: 64 }}>
+      <div style={{ padding: "0 4% 64px" }}>
         <div style={{
           background: "var(--graphite)",
           border: "0.5px solid var(--border-2)",
@@ -42,7 +46,7 @@ export default async function Cursos() {
         }}>
           <div>
             <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--olive)", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>◆ Comece antes da próxima turma</div>
-            <p style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--white)" }}>
+            <p style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--white)", margin: 0 }}>
               Quer começar agora, sem esperar turma?
             </p>
           </div>
@@ -50,7 +54,8 @@ export default async function Cursos() {
         </div>
       </div>
 
-      <div className="pg-wrap pg-section">
+      {/* CTA LISTA DE ESPERA */}
+      <div style={{ padding: "0 4% 80px" }}>
         <div className="cta-block">
           <div className="cta-x">X</div>
           <div className="cta-eyebrow">◆ Próxima turma</div>
