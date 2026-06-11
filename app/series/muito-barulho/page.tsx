@@ -107,8 +107,8 @@ export default function MuitoBarulho() {
             <div className="stat-item-label">Samuel 3:1-10 · texto-eixo</div>
           </div>
           <div className="stat-item">
-            <div className="stat-item-num"><em>gratuito</em></div>
-            <div className="stat-item-label">Por tempo limitado</div>
+            <div className="stat-item-num"><em>Word</em></div>
+            <div className="stat-item-label">Editável · sem senha</div>
           </div>
         </div>
       </div>
@@ -154,7 +154,7 @@ export default function MuitoBarulho() {
       <div className="pg-wrap pg-section" id="mensagens">
         <div className="psec-head">
           <div className="psec-head-left">
-            <div className="psec-eyebrow">◆ Download gratuito</div>
+            <div className="psec-eyebrow">◆ As mensagens</div>
             <div className="psec-title">As 5 <em>mensagens</em></div>
             <p className="psec-desc">Cada arquivo em Word, pronto para adaptar à linguagem do seu pregador.</p>
           </div>

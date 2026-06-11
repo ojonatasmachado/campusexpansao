@@ -15,7 +15,7 @@ export default function Landing() {
         <div className="hero-x" style={{ right: -100 }} aria-hidden="true">X</div>
         <div className="pg-wrap">
           <div className="landing-inner">
-            <div className="landing-badge">Material gratuito · PDF</div>
+            <div className="landing-badge">Material editável · PDF</div>
             <h1 className="landing-title">A igreja que <em>discipula</em></h1>
             <p className="landing-desc">
               64 páginas com os princípios e checklists pra estruturar o discipulado da sua igreja. Do encontro inicial à formação de líderes.
@@ -24,7 +24,7 @@ export default function Landing() {
               <input className="input" type="email" placeholder="Seu melhor e-mail" />
               <button type="submit" className="capture-btn">Quero o manual</button>
             </form>
-            <div className="landing-trust">Sem spam · cancele quando quiser · +2.000 líderes já baixaram</div>
+            <div className="landing-trust">Sem spam · cancele quando quiser · +2.000 líderes já usaram</div>
 
             <div className="landing-bullets">
               <div className="lbullet">

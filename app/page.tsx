@@ -39,7 +39,7 @@ export default function Home() {
               Estrutura ministerial para líderes de igreja locais. Materiais, formação e ferramentas pra preparar trabalhadores fiéis.
             </p>
             <div className="hero-actions">
-              <a href="/landing" className="btn btn-primary btn-lg btn-arrow">Baixar manual gratuito</a>
+              <a href="/materiais" className="btn btn-primary btn-lg btn-arrow">Conhecer materiais</a>
               <a href="/cursos" className="btn btn-secondary btn-lg">Conhecer cursos</a>
             </div>
           </div>
@@ -97,7 +97,7 @@ export default function Home() {
           </div>
           <div className="stat-item">
             <div className="stat-item-num">40<em>+</em></div>
-            <div className="stat-item-label">Materiais gratuitos</div>
+            <div className="stat-item-label">Materiais editáveis</div>
           </div>
           <div className="stat-item">
             <div className="stat-item-num">6</div>
@@ -109,7 +109,7 @@ export default function Home() {
       {/* MATERIAIS — catálogo completo embutido */}
       <div id="materiais">
         <div className="pg-wrap" style={{ paddingTop: 80, paddingBottom: 0 }}>
-          <div className="psec-eyebrow">◆ Recursos gratuitos</div>
+          <div className="psec-eyebrow">◆ Materiais editáveis</div>
           <div className="psec-title" style={{ fontSize: "clamp(28px,5vw,48px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.1, marginTop: 8 }}>Materiais</div>
         </div>
         <MateriaisContent showHero={false} showCrossLink={false} />
@@ -140,7 +140,7 @@ export default function Home() {
         <div className="faq">
           {[
             { q: "Para quem é a CE.X?", a: "Para líderes de igrejas locais que querem preparar sua equipe com estrutura, independente de denominação ou tamanho da igreja." },
-            { q: "Os materiais são realmente gratuitos?", a: "Sim. Todo o conteúdo da biblioteca é gratuito. Só pedimos seu e-mail para liberar o acesso." },
+            { q: "Como funciona a compra dos materiais?", a: "Cada material é adquirido individualmente via Hotmart. Após a compra, você recebe o arquivo editável diretamente — pronto para aplicar na sua igreja." },
             { q: "Os cursos têm acompanhamento?", a: "Sim. As turmas ao vivo têm mentoria e acompanhamento direto. O conteúdo gravado fica disponível para assistir no seu ritmo." },
             { q: "Como funciona o método CE.X?", a: "Estrutura ministerial aplicada: diagnóstico, princípios bíblicos e ferramentas práticas que você implementa na mesma semana." },
           ].map((item, i) => (
@@ -161,9 +161,9 @@ export default function Home() {
           <div className="cta-x">X</div>
           <div className="cta-eyebrow">◆ Comece hoje</div>
           <h2 className="cta-title">Prepare sua <em>equipe.</em></h2>
-          <p className="cta-desc">Baixe o manual gratuito e dê o primeiro passo pra estruturar seu ministério.</p>
+          <p className="cta-desc">Escolha o material certo para o seu momento e comece a aplicar esta semana.</p>
           <div className="cta-actions">
-            <a href="/landing" className="btn btn-ink btn-lg btn-arrow">Baixar manual</a>
+            <a href="/materiais" className="btn btn-ink btn-lg btn-arrow">Ver materiais</a>
             <a href="#" className="btn btn-lg" style={{ background: "transparent", color: "var(--ink)", borderColor: "rgba(14,17,13,0.3)" }}>Falar conosco</a>
           </div>
         </div>
