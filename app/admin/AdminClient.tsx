@@ -1020,19 +1020,37 @@ function ShelfEditor({ estante, onSave, onCancel }: { estante: EstanteAdmin | nu
   )
 }
 
-function ShelvesView({ estantes, materiais, onSave, onToggle, onDelete, onMove }:{
+function ShelvesView({ estantes, materiais, onSave, onToggle, onDelete, onReorder }:{
   estantes: EstanteAdmin[]
   materiais: Material[]
   onSave: (e: EstanteAdmin) => void
   onToggle: (key: string) => void
   onDelete: (key: string) => void
-  onMove: (key: string, dir: 'up' | 'down') => void
+  onReorder: (orderedKeys: string[]) => void
 }) {
   const [editing, setEditing] = useState<EstanteAdmin | 'new' | null>(null)
   const [toDelete, setToDelete] = useState<EstanteAdmin | null>(null)
+  const [dragOver, setDragOver] = useState<string | null>(null)
+  const dragKey = useRef<string | null>(null)
   const sorted = [...estantes].sort((a, b) => a.order - b.order)
 
   const countFor = (key: string) => materiais.filter(m => m.shelf === estantes.find(e => e.key === key)?.label).length
+
+  const handleDragStart = (key: string) => { dragKey.current = key }
+  const handleDragOver = (e: React.DragEvent, key: string) => { e.preventDefault(); setDragOver(key) }
+  const handleDrop = (targetKey: string) => {
+    if (!dragKey.current || dragKey.current === targetKey) { setDragOver(null); return }
+    const from = sorted.findIndex(e => e.key === dragKey.current)
+    const to   = sorted.findIndex(e => e.key === targetKey)
+    if (from < 0 || to < 0) { setDragOver(null); return }
+    const next = [...sorted]
+    const [item] = next.splice(from, 1)
+    next.splice(to, 0, item)
+    onReorder(next.map(e => e.key))
+    dragKey.current = null
+    setDragOver(null)
+  }
+  const handleDragEnd = () => { dragKey.current = null; setDragOver(null) }
 
   return (
     <div className="listview">
@@ -1056,21 +1074,33 @@ function ShelvesView({ estantes, materiais, onSave, onToggle, onDelete, onMove }
       )}
 
       <div className="lv-toolbar">
-        <div style={{ fontSize: 13, color: 'var(--muted)' }}>{sorted.length} estante{sorted.length !== 1 ? 's' : ''} · arraste a ordem com ↑↓</div>
+        <div style={{ fontSize: 13, color: 'var(--muted)' }}>{sorted.length} estante{sorted.length !== 1 ? 's' : ''} · arraste para reordenar</div>
         <button className="btn-pri" onClick={() => setEditing('new')}>+ Nova estante</button>
       </div>
 
       <div className="lv-list">
-        {sorted.map((e, i) => {
+        {sorted.map((e) => {
           const n = countFor(e.key)
-          const isFirst = i === 0
-          const isLast = i === sorted.length - 1
+          const isDragTarget = dragOver === e.key
           return (
-            <div key={e.key} className="row" style={{ opacity: e.status === 'hidden' ? 0.45 : 1, transition: 'opacity .2s' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginRight: 4 }}>
-                <button className="row-btn" style={{ padding: '2px 6px', fontSize: 11 }} disabled={isFirst} onClick={() => onMove(e.key, 'up')}>↑</button>
-                <button className="row-btn" style={{ padding: '2px 6px', fontSize: 11 }} disabled={isLast} onClick={() => onMove(e.key, 'down')}>↓</button>
-              </div>
+            <div
+              key={e.key}
+              className="row"
+              draggable
+              onDragStart={() => handleDragStart(e.key)}
+              onDragOver={(ev) => handleDragOver(ev, e.key)}
+              onDrop={() => handleDrop(e.key)}
+              onDragEnd={handleDragEnd}
+              style={{
+                opacity: e.status === 'hidden' ? 0.45 : 1,
+                transition: 'all .15s',
+                cursor: 'grab',
+                borderTop: isDragTarget ? `2px solid ${e.accent}` : '2px solid transparent',
+                marginTop: isDragTarget ? -2 : 0,
+              }}
+            >
+              {/* Handle de drag */}
+              <div style={{ color: 'var(--subtle)', fontSize: 18, cursor: 'grab', marginRight: 8, userSelect: 'none', letterSpacing: 2 }}>⠿</div>
               <div className="row-chip" style={{ background: e.accent, flexShrink: 0 }}>
                 <span style={{ color: '#0E110D', fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700 }}>◆</span>
               </div>
@@ -1393,19 +1423,12 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
     })
   }
 
-  const moveShelf = (key: string, dir: 'up' | 'down') => {
+  const reorderShelves = (orderedKeys: string[]) => {
     setData(prev => {
-      const sorted = [...prev.estantes].sort((a, b) => a.order - b.order)
-      const idx = sorted.findIndex(e => e.key === key)
-      const swapIdx = dir === 'up' ? idx - 1 : idx + 1
-      if (swapIdx < 0 || swapIdx >= sorted.length) return prev
-      const reordered = sorted.map((e, i) => {
-        if (i === idx) return { ...sorted[swapIdx], order: sorted[idx].order }
-        if (i === swapIdx) return { ...sorted[idx], order: sorted[swapIdx].order }
-        return e
-      })
+      const map = Object.fromEntries(prev.estantes.map(e => [e.key, e]))
+      const reordered = orderedKeys.map((key, i) => ({ ...map[key], order: i }))
       startTransition(async () => {
-        try { await reorderEstantes(reordered.map(e => e.key)) }
+        try { await reorderEstantes(orderedKeys) }
         catch (err) { console.error('Erro ao reordenar:', err) }
       })
       return { ...prev, estantes: reordered }
@@ -1449,7 +1472,7 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
               onSave={saveShelf}
               onToggle={toggleShelf}
               onDelete={deleteShelf}
-              onMove={moveShelf}
+              onReorder={reorderShelves}
             />
           ) : (
             <ListView type={currentType} items={data[arrKey(currentType)] as Item[]}
