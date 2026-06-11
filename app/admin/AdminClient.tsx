@@ -1,6 +1,8 @@
 'use client'
 import { useState, useRef, useTransition, type ReactNode, type CSSProperties } from 'react'
 import { loginAction, logoutAction } from './actions'
+import { MATERIAIS, ESTANTE_MAP } from '../lib/materiais-data'
+import { CURSOS_DATA } from '../lib/cursos-data'
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -93,131 +95,104 @@ const TYPES = [
 // ── DADOS INICIAIS ────────────────────────────────────────────────────────────
 
 function buildData(): AdminData {
-  let _id = 0
-  const uid = (p: string) => `${p}-${(++_id).toString().padStart(3, '0')}`
-
-  const mat = (family: string, shelf: string, code: string, title: string, desc: string,
-    msgs: number | null, pages: number, price: number, views: number, status = 'Publicado'): Material => {
-    const hasMsg = msgs != null
-    return {
-      id: uid('mat'), type: 'material', family, shelf, code, title, desc,
-      messages: msgs, pages, format: 'PDF', price,
-      hotmart: `https://pay.hotmart.com/CEX${code.replace(/[^A-Z0-9]/gi, '')}`,
-      accent: accentFor({ type: 'material', family, shelf } as Material),
-      image: null, model: hasMsg ? 'A' : 'C', big: hasMsg ? msgs : pages,
-      bigLabel: hasMsg ? 'mensagens' : 'páginas', messageList: [], paraQuem: '',
-      beneficios: ['Editável e pronto pra aplicar na sua igreja', 'White-label CE.X: coloque a marca do seu ministério'],
-      depoimento: { texto: '', autor: '' }, status, views, buyClicks: Math.round(views * 0.065),
-    }
+  const SHELF_LABEL: Record<string, string> = {
+    'infantil-bercario': 'Berçário', 'infantil-maternal': 'Maternal',
+    'infantil-primarios': 'Primários', 'juniores': 'Juniores',
+    'adolescentes': 'Adolescentes', 'jovens': 'Jovens', 'igreja-toda': 'Igreja toda',
+    'manuais': 'Manuais', 'criar-ministerio': 'Criar ministério',
+    'modelos-checklists': 'Modelos & Checklists', 'montar-evento': 'Montar evento',
+  }
+  const FAMILY_LABEL: Record<string, string> = {
+    ministrar: 'Para ministrar', liderar: 'Para liderar',
+  }
+  const NIVEL_LABEL: Record<string, string> = {
+    fundacao: 'Fundação', lideranca: 'Liderança', multiplicacao: 'Multiplicação',
   }
 
-  const materiais: Material[] = [
-    mat('Para ministrar', 'Juniores', 'S-03', 'Pequenos Grandes', 'Cinco mensagens que mostram aos juniores que fé pequena move montanhas.', 5, 40, 37, 1840),
-    mat('Para ministrar', 'Juniores', 'J-04', 'Deus Cuida', 'Quatro lições sobre confiança e provisão para as crianças maiores.', 4, 32, 37, 1310),
-    mat('Para ministrar', 'Juniores', 'S-07', 'Missão Possível', 'Uma jornada de cinco encontros sobre coragem e chamado.', 5, 40, 47, 980),
-    mat('Para ministrar', 'Juniores', 'S-11', 'Brilha!', 'Identidade e propósito para a fase júnior, em quatro mensagens.', 4, 32, 37, 1170),
-    mat('Para ministrar', 'Adolescentes', 'S-12', 'Firmes', 'Seis mensagens para adolescentes que enfrentam pressão e dúvida.', 6, 48, 47, 2640, 'Rascunho'),
-    mat('Para ministrar', 'Adolescentes', 'S-19', 'Raízes', 'Cinco encontros sobre fundamentar a fé antes da tempestade.', 5, 40, 47, 1520),
-    mat('Para ministrar', 'Adolescentes', 'A-07', 'Entre Dois Mundos', 'Sete mensagens sobre viver a fé na escola, no celular e em casa.', 7, 56, 67, 2210),
-    mat('Para ministrar', 'Adolescentes', 'S-23', 'Primeira Vez', 'Quatro mensagens para quem está começando a caminhada.', 4, 32, 37, 870),
-    mat('Para ministrar', 'Adolescentes', 'A-05', 'Não Desista', 'Cinco encontros sobre perseverança quando tudo parece travar.', 5, 44, 47, 1430),
-    mat('Para ministrar', 'Adolescentes', 'S-31', 'O Nome Certo', 'Seis mensagens sobre identidade em Cristo na adolescência.', 6, 48, 47, 1090),
-    mat('Para ministrar', 'Adolescentes', 'A-08', 'Geração Levante', 'Oito mensagens para mobilizar uma geração de adolescentes.', 8, 64, 67, 1760),
-    mat('Para ministrar', 'Jovens', 'J-06', 'Alta Performance', 'Seis encontros sobre excelência, disciplina e descanso.', 6, 52, 67, 2980),
-    mat('Para ministrar', 'Jovens', 'S-21', 'Relacionamentos', 'Sete mensagens sobre afeto, limites e propósito.', 7, 60, 67, 3450),
-    mat('Para ministrar', 'Jovens', 'S-26', 'Vocação', 'Seis encontros para o jovem descobrir onde Deus o coloca.', 6, 52, 67, 2670),
-    mat('Para ministrar', 'Jovens', 'J-05', 'Resilientes', 'Cinco mensagens sobre se reerguer com fé madura.', 5, 44, 47, 1380),
-    mat('Para ministrar', 'Jovens', 'S-34', 'Primeiros Passos', 'Quatro encontros para o novo convertido jovem.', 4, 36, 47, 1020),
-    mat('Para ministrar', 'Igreja toda', 'S-40', 'Família do Jeito Certo', 'Oito mensagens sobre estrutura familiar à luz da Escritura.', 8, 72, 97, 2240),
-    mat('Para ministrar', 'Igreja toda', 'S-48', 'Generosidade', 'Cinco encontros sobre dar com alegria e propósito.', 5, 44, 67, 1660),
-    mat('Para ministrar', 'Igreja toda', 'I-04', 'Ano Novo Vida Nova', 'Quatro mensagens para abrir o ano com direção.', 4, 36, 47, 1910),
-    mat('Para ministrar', 'Igreja toda', 'S-54', 'Sal e Luz', 'Seis encontros sobre influência cristã no mundo.', 6, 52, 67, 1480),
-    mat('Para liderar', 'Manuais', 'M-01', 'Manual do Líder de Célula', 'Oitenta páginas para estruturar e conduzir uma célula saudável.', null, 80, 97, 3120),
-    mat('Para liderar', 'Manuais', 'M-04', 'Manual do Liderinho', 'Formação do líder mirim, passo a passo.', null, 72, 97, 1240),
-    mat('Para liderar', 'Manuais', 'M-06', 'Manual de Discipulado', 'Um sistema de discipulado pronto para aplicar.', null, 56, 67, 2480),
-    mat('Para liderar', 'Manuais', 'M-09', 'Manual de Pastoral', 'Oitenta e oito páginas sobre cuidado e governo pastoral.', null, 88, 97, 1670),
-    mat('Para liderar', 'Criar ministério', 'M-12', 'Montando um Ministério de Adolescentes', 'Do zero ao primeiro encontro, com estrutura replicável.', null, 64, 97, 1890),
-    mat('Para liderar', 'Criar ministério', 'C-90', 'Como Estruturar um Grupo de Células', 'Noventa dias para sair de uma célula a uma rede.', null, 48, 67, 2050),
-    mat('Para liderar', 'Criar ministério', 'M-17', 'Lançando um Ministério de Missões', 'Estrutura mínima viável para mobilizar missões locais.', null, 60, 97, 940),
-    mat('Para liderar', 'Modelos & Checklists', 'CK-05', 'Checklist do Culto Especial', 'Cinco checklists para nunca esquecer um detalhe.', null, 12, 37, 1330),
-    mat('Para liderar', 'Modelos & Checklists', 'M-22', 'Carta de Compromisso', 'Modelo editável de aliança ministerial.', null, 8, 27, 760),
-    mat('Para liderar', 'Modelos & Checklists', 'K-30', 'Kit de Onboarding', 'Trinta dias para integrar um novo voluntário.', null, 20, 47, 1450),
-    mat('Para liderar', 'Modelos & Checklists', 'M-26', 'Relatório de Saúde da Igreja', 'Dezesseis páginas de diagnóstico estrutural.', null, 16, 37, 880),
-    mat('Para liderar', 'Montar evento', 'M-30', 'Retiro de Adolescentes', 'Noventa páginas para planejar um retiro do começo ao fim.', null, 90, 147, 1240),
-    mat('Para liderar', 'Montar evento', 'E-07', 'Conferência de Liderança', 'Sete módulos para montar uma conferência marcante.', null, 80, 127, 980),
-    mat('Para liderar', 'Montar evento', 'M-38', 'Culto de Natal', 'Roteiro completo e editável para o culto de Natal.', null, 60, 97, 1620),
-  ]
-
-  const DEFAULT_EMENTA = [
-    'Diagnóstico: onde sua estrutura trava hoje',
-    'O princípio bíblico por trás do sistema',
-    'A ferramenta aplicada na sua realidade',
-    'Plano de implementação para a próxima semana',
-  ]
-  const cur = (level: string, etapa: number, title: string, desc: string, weeks: number,
-    mentor: string, waitlist: number, views: number, status = 'Publicado'): Curso => ({
-    id: uid('cur'), type: 'curso', level, etapa, totalEtapas: 6, title, desc,
-    weeks, mentoria: true, aoVivo: true, mentor,
-    accent: accentFor({ type: 'curso', level } as Curso),
-    image: null, status, views, waitlist, paraQuem: '',
-    depoimento: { texto: '', autor: '' }, ementa: [...DEFAULT_EMENTA],
-    proximaTurma: 'Próxima turma: Agosto/2026',
+  const materiais: Material[] = MATERIAIS.map(m => {
+    const estante = ESTANTE_MAP[m.estante]
+    const family = FAMILY_LABEL[m.familia] ?? m.familia
+    const shelf = SHELF_LABEL[m.estante] ?? m.estante
+    const accent = estante ? AC[estante.accent as keyof typeof AC] ?? AC.olive : AC.olive
+    return {
+      id: m.id,
+      type: 'material' as const,
+      family,
+      shelf,
+      code: m.code ?? '',
+      title: m.titulo,
+      desc: m.promessa,
+      messages: m.meta.mensagens ?? null,
+      pages: m.meta.paginas,
+      format: m.meta.formatos.join(', '),
+      price: parseInt(m.preco.replace(/\D/g, ''), 10),
+      hotmart: m.hotmartUrl,
+      accent,
+      image: null,
+      model: m.model,
+      big: m.big ? parseInt(m.big, 10) : null,
+      bigLabel: m.bigLabel ?? '',
+      messageList: m.conteudo.map(c => ({ nome: c, desc: '' })),
+      paraQuem: m.praQuem,
+      beneficios: ['Editável e pronto pra aplicar', 'White-label: coloque a marca do seu ministério'],
+      depoimento: { texto: '', autor: '' },
+      status: 'Publicado',
+      views: 0,
+      buyClicks: 0,
+    }
   })
 
-  const cursos: Curso[] = [
-    cur('Fundação', 1, 'Fundamentos da Estrutura', 'Por que estrutura honra o agir de Deus. O alicerce de todo ministério que multiplica.', 4, 'Pr. Ricardo Almeida', 84, 1920),
-    cur('Fundação', 4, 'Gestão de Equipe', 'Reuniões que decidem, processos que documentam, pessoas que crescem com o sistema.', 5, 'Pr. Ricardo Almeida', 47, 1110),
-    cur('Liderança', 2, 'Formação de Líderes', 'Como identificar, treinar e soltar líderes que não dependem de você pra funcionar.', 6, 'Pra. Helena Dias', 132, 2480),
-    cur('Liderança', 6, 'Liderança e Descanso', 'Como liderar sem queimar. Ritmo sustentável pra quem carrega muita responsabilidade.', 4, 'Pra. Helena Dias', 61, 1340),
-    cur('Multiplicação', 3, 'Discipulado Intencional', 'Um sistema de discipulado que nasce com data pra multiplicar, não só informar.', 8, 'Pr. Daniel Moraes', 98, 2010, 'Rascunho'),
-    cur('Multiplicação', 5, 'Plantação de Igrejas', 'Estrutura mínima viável pra plantar com saúde e multiplicar com intenção.', 10, 'Pr. Daniel Moraes', 73, 1560),
-  ]
+  const NIVEL_ACCENT_KEY: Record<string, keyof typeof AC> = {
+    fundacao: 'wheat', lideranca: 'clay', multiplicacao: 'olive',
+  }
 
-  const men = (title: string, desc: string, formato: string, vagas: number,
-    mentor: string, views: number, status = 'Publicado'): Mentoria => ({
-    id: uid('men'), type: 'mentoria', title, desc, formato, vagas, mentor,
-    accent: AC.olive, image: null, status, views,
-    waitlist: Math.round(views * 0.06), cadencia: 'Encontros quinzenais · 90 min',
-  })
-  const mentorias: Mentoria[] = [
-    men('Mentoria de Plantadores', 'Acompanhamento de seis meses para quem está plantando uma igreja agora.', 'Grupo · 8 vagas', 8, 'Pr. Ricardo Almeida', 640),
-    men('Mentoria 1:1 de Liderança', 'Sessões individuais para líderes em transição de cargo.', 'Individual · 90 min', 1, 'Pra. Helena Dias', 410, 'Rascunho'),
-  ]
+  const cursos: Curso[] = CURSOS_DATA.map(c => ({
+    id: c.slug,
+    type: 'curso' as const,
+    level: NIVEL_LABEL[c.nivel] ?? c.nivel,
+    etapa: parseInt(c.num, 10),
+    totalEtapas: 6,
+    title: c.title,
+    desc: c.desc,
+    weeks: c.ementa.length,
+    mentoria: true,
+    aoVivo: true,
+    mentor: c.mentor,
+    accent: AC[NIVEL_ACCENT_KEY[c.nivel] ?? 'olive'],
+    image: null,
+    status: 'Publicado',
+    views: 0,
+    waitlist: 0,
+    paraQuem: c.praQuem,
+    depoimento: { texto: c.depoimento.texto, autor: c.depoimento.autor },
+    ementa: c.ementa.map(e => e.titulo),
+    proximaTurma: c.turma,
+  }))
 
-  const evt = (title: string, desc: string, data: string, local: string,
-    vagas: number, views: number, status = 'Publicado'): Evento => ({
-    id: uid('evt'), type: 'evento', title, desc, data, local, vagas,
-    accent: AC.oliveDeep, image: null, status, views,
-    inscritos: Math.round(vagas * 0.6), hotmart: 'https://pay.hotmart.com/CEXEVENTO',
-  })
-  const eventos: Evento[] = [
-    evt('Retiro de Líderes 2026', 'Três dias de imersão em estrutura ministerial e descanso.', '14 a 16 de Agosto · 2026', 'Serra da Cantareira · SP', 120, 1480),
-    evt('Conferência Expansão', 'Um dia sobre multiplicação saudável para equipes inteiras.', '05 de Outubro · 2026', 'Online + presencial', 400, 2210, 'Rascunho'),
-  ]
+  const mentorias: Mentoria[] = []
+  const eventos: Evento[] = []
 
-  const series30 = [280,310,265,290,340,315,380,295,270,305,285,320,345,300,275,360,330,310,295,285,315,340,370,325,305,290,315,360,395,410]
-  const totalVisitas = series30.reduce((a, b) => a + b, 0)
+  const series30 = Array(30).fill(0)
   return {
     materiais, cursos, mentorias, eventos,
     metrics: {
       series30,
-      kpis: { visitas: totalVisitas, visitasDelta: 18.4, cliquesComprar: 1842, cliquesDelta: 12.1, listaEspera: 305, listaDelta: 31.7, capturas: 2410, capturasDelta: -4.2 },
+      kpis: { visitas: 0, visitasDelta: 0, cliquesComprar: 0, cliquesDelta: 0, listaEspera: 0, listaDelta: 0, capturas: 0, capturasDelta: 0 },
       funil: [
-        { label: 'Visitas ao site', value: totalVisitas },
-        { label: 'Abriu um material', value: Math.round(totalVisitas * 0.46) },
-        { label: 'Clicou em comprar', value: 1842 },
-        { label: 'Compra concluída', value: 612 },
+        { label: 'Visitas ao site', value: 0 },
+        { label: 'Abriu um material', value: 0 },
+        { label: 'Clicou em comprar', value: 0 },
+        { label: 'Compra concluída', value: 0 },
       ],
       origem: [
-        { label: 'Instagram', value: 58, color: AC.olive },
-        { label: 'Direto', value: 19, color: AC.wheat },
-        { label: 'Google', value: 13, color: AC.clay },
-        { label: 'YouTube', value: 10, color: AC.oliveDeep },
+        { label: 'Instagram', value: 0, color: AC.olive },
+        { label: 'Direto', value: 0, color: AC.wheat },
+        { label: 'Google', value: 0, color: AC.clay },
+        { label: 'YouTube', value: 0, color: AC.oliveDeep },
       ],
     },
   }
 }
-
 function newItem(type: ItemType): Item {
   const base = { id: '', title: '', desc: '', image: null, status: 'Rascunho', views: 0 }
   if (type === 'material') {
