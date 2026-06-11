@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useTransition, type ReactNode, type CSSProperties } from 'react'
 import { loginAction, logoutAction } from './actions'
-import { MATERIAIS, ESTANTE_MAP } from '../lib/materiais-data'
+import { MATERIAIS, ESTANTE_MAP, ESTANTES } from '../lib/materiais-data'
 import { CURSOS_DATA } from '../lib/cursos-data'
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
@@ -37,8 +37,15 @@ interface Evento {
 }
 type Item = Material | Curso | Mentoria | Evento
 
+interface EstanteAdmin {
+  key: string; label: string; familia: 'ministrar' | 'liderar'
+  accent: string; faixaEtaria: string
+  status: 'visible' | 'hidden'; order: number
+}
+
 interface AdminData {
   materiais: Material[]; cursos: Curso[]; mentorias: Mentoria[]; eventos: Evento[]
+  estantes: EstanteAdmin[]
   metrics: {
     series30: number[]
     kpis: { visitas: number; visitasDelta: number; cliquesComprar: number; cliquesDelta: number; listaEspera: number; listaDelta: number; capturas: number; capturasDelta: number }
@@ -172,9 +179,19 @@ function buildData(): AdminData {
   const mentorias: Mentoria[] = []
   const eventos: Evento[] = []
 
+  const estantes: EstanteAdmin[] = ESTANTES.map((e, i) => ({
+    key: e.key,
+    label: e.label,
+    familia: e.familia,
+    accent: AC[e.accent as keyof typeof AC] ?? AC.olive,
+    faixaEtaria: e.faixaEtaria ?? '',
+    status: 'visible' as const,
+    order: i,
+  }))
+
   const series30 = Array(30).fill(0)
   return {
-    materiais, cursos, mentorias, eventos,
+    materiais, cursos, mentorias, eventos, estantes,
     metrics: {
       series30,
       kpis: { visitas: 0, visitasDelta: 0, cliquesComprar: 0, cliquesDelta: 0, listaEspera: 0, listaDelta: 0, capturas: 0, capturasDelta: 0 },
@@ -990,7 +1007,7 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
 
 // ── SHELL ────────────────────────────────────────────────────────────────────
 
-type Route = { screen: 'dashboard' } | { screen: 'list'; type: ItemType }
+type Route = { screen: 'dashboard' } | { screen: 'list'; type: ItemType } | { screen: 'shelves' }
 
 function Login({ onEnter }: { onEnter: () => void }) {
   const [pw, setPw] = useState('')
@@ -1029,6 +1046,157 @@ function Login({ onEnter }: { onEnter: () => void }) {
   )
 }
 
+// ── SHELVES ───────────────────────────────────────────────────────────────────
+
+const ACCENT_OPTIONS: { key: string; hex: string; name: string }[] = [
+  { key: 'sand',  hex: '#E2D6B4', name: 'Areia'     },
+  { key: 'wheat', hex: '#CBA95C', name: 'Trigo'     },
+  { key: 'amber', hex: '#D6A23E', name: 'Âmbar'     },
+  { key: 'clay',  hex: '#C5805A', name: 'Barro'     },
+  { key: 'terra', hex: '#B5694A', name: 'Terracota' },
+  { key: 'rust',  hex: '#9C5A33', name: 'Ferrugem'  },
+  { key: 'cocoa', hex: '#6F523A', name: 'Cacau'     },
+  { key: 'olive', hex: '#7A9E3F', name: 'Oliva'     },
+]
+
+function ShelfEditor({ estante, onSave, onCancel }: { estante: EstanteAdmin | null; onSave: (e: EstanteAdmin) => void; onCancel: () => void }) {
+  const isNew = !estante
+  const [form, setForm] = useState<EstanteAdmin>(estante ?? {
+    key: `estante-${Date.now()}`, label: '', familia: 'ministrar',
+    accent: AC.wheat, faixaEtaria: '', status: 'visible', order: 999,
+  })
+  const set = <K extends keyof EstanteAdmin>(k: K, v: EstanteAdmin[K]) => setForm(f => ({ ...f, [k]: v }))
+  const valid = form.label.trim().length > 0
+
+  return (
+    <div className="modal-bg" onClick={onCancel}>
+      <div className="modal" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-title">{isNew ? 'Nova estante' : `Editar · ${estante!.label}`}</div>
+
+        <div className="fld">
+          <label className="fld-label">Nome da estante <span className="fld-req">◆</span></label>
+          <input className="inp" value={form.label} onChange={e => set('label', e.target.value)} placeholder="ex: Casais" />
+        </div>
+
+        <div className="fld">
+          <label className="fld-label">Família</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {(['ministrar', 'liderar'] as const).map(f => (
+              <button key={f} onClick={() => set('familia', f)}
+                style={{ flex: 1, padding: '10px 14px', borderRadius: 'var(--r-sm)', border: `1px solid ${form.familia === f ? form.accent : 'var(--border-2)'}`, background: form.familia === f ? 'var(--graphite)' : 'var(--ink)', color: form.familia === f ? 'var(--cream)' : 'var(--muted)', fontFamily: 'inherit', fontSize: 13, cursor: 'pointer', transition: 'all .15s' }}>
+                Para {f}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="fld">
+          <label className="fld-label">Subtítulo / faixa etária</label>
+          <input className="inp" value={form.faixaEtaria} onChange={e => set('faixaEtaria', e.target.value)} placeholder="ex: 26 a 40 anos" />
+          <div className="fld-hint">Aparece embaixo do nome da estante no site.</div>
+        </div>
+
+        <div className="fld">
+          <label className="fld-label">Cor de acento</label>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
+            {ACCENT_OPTIONS.map(a => (
+              <button key={a.key} title={a.name} onClick={() => set('accent', a.hex)}
+                style={{ width: 36, height: 36, borderRadius: 8, background: a.hex, border: form.accent === a.hex ? '2px solid var(--cream)' : '2px solid transparent', cursor: 'pointer', outline: form.accent === a.hex ? `2px solid ${a.hex}` : 'none', outlineOffset: 2, transition: 'all .15s' }} />
+            ))}
+          </div>
+          <div className="fld-hint">Oliva (verde) deve ser reservada para Jovens e a marca. Máx 15% da peça.</div>
+        </div>
+
+        <div className="modal-acts">
+          <button className="btn-pri" onClick={() => valid && onSave(form)} disabled={!valid} style={{ opacity: valid ? 1 : 0.4 }}>
+            {isNew ? 'Criar estante' : 'Salvar alterações'}
+          </button>
+          <button className="btn-sec" onClick={onCancel}>Cancelar</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ShelvesView({ estantes, materiais, onSave, onToggle, onDelete, onMove }:{
+  estantes: EstanteAdmin[]
+  materiais: Material[]
+  onSave: (e: EstanteAdmin) => void
+  onToggle: (key: string) => void
+  onDelete: (key: string) => void
+  onMove: (key: string, dir: 'up' | 'down') => void
+}) {
+  const [editing, setEditing] = useState<EstanteAdmin | 'new' | null>(null)
+  const [toDelete, setToDelete] = useState<EstanteAdmin | null>(null)
+  const sorted = [...estantes].sort((a, b) => a.order - b.order)
+
+  const countFor = (key: string) => materiais.filter(m => m.shelf === estantes.find(e => e.key === key)?.label).length
+
+  return (
+    <div className="listview">
+      {editing === 'new' && (
+        <ShelfEditor estante={null} onSave={e => { onSave(e); setEditing(null) }} onCancel={() => setEditing(null)} />
+      )}
+      {editing && editing !== 'new' && (
+        <ShelfEditor estante={editing} onSave={e => { onSave(e); setEditing(null) }} onCancel={() => setEditing(null)} />
+      )}
+      {toDelete && (
+        <div className="modal-bg" onClick={() => setToDelete(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-title">Excluir estante &ldquo;{toDelete.label}&rdquo;?</div>
+            <p className="modal-text">Os materiais desta estante não serão excluídos, mas ficarão sem estante atribuída. Esta ação não pode ser desfeita.</p>
+            <div className="modal-acts">
+              <button className="btn-danger" onClick={() => { onDelete(toDelete.key); setToDelete(null) }}>Excluir estante</button>
+              <button className="btn-sec" onClick={() => setToDelete(null)}>Manter</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="lv-toolbar">
+        <div style={{ fontSize: 13, color: 'var(--muted)' }}>{sorted.length} estante{sorted.length !== 1 ? 's' : ''} · arraste a ordem com ↑↓</div>
+        <button className="btn-pri" onClick={() => setEditing('new')}>+ Nova estante</button>
+      </div>
+
+      <div className="lv-list">
+        {sorted.map((e, i) => {
+          const n = countFor(e.key)
+          const isFirst = i === 0
+          const isLast = i === sorted.length - 1
+          return (
+            <div key={e.key} className="row" style={{ opacity: e.status === 'hidden' ? 0.45 : 1, transition: 'opacity .2s' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginRight: 4 }}>
+                <button className="row-btn" style={{ padding: '2px 6px', fontSize: 11 }} disabled={isFirst} onClick={() => onMove(e.key, 'up')}>↑</button>
+                <button className="row-btn" style={{ padding: '2px 6px', fontSize: 11 }} disabled={isLast} onClick={() => onMove(e.key, 'down')}>↓</button>
+              </div>
+              <div className="row-chip" style={{ background: e.accent, flexShrink: 0 }}>
+                <span style={{ color: '#0E110D', fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700 }}>◆</span>
+              </div>
+              <div className="row-main">
+                <div className="row-title" style={{ color: e.status === 'hidden' ? 'var(--subtle)' : 'var(--cream)' }}>
+                  {e.label}
+                  {e.status === 'hidden' && <span style={{ marginLeft: 8, fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)', letterSpacing: '.08em' }}>OCULTA</span>}
+                </div>
+                <div className="row-cat">Para {e.familia} · {e.faixaEtaria || 'sem subtítulo'}</div>
+              </div>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', minWidth: 60, textAlign: 'right' }}>
+                {n} item{n !== 1 ? 's' : ''}
+              </span>
+              <div className="row-acts">
+                <button className="row-btn" onClick={() => onToggle(e.key)}>
+                  {e.status === 'visible' ? 'Ocultar' : 'Mostrar'}
+                </button>
+                <button className="row-btn" onClick={() => setEditing(e)}>Editar</button>
+                <button className="row-btn danger" onClick={() => setToDelete(e)}>Excluir</button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function Sidebar({ route, go, counts, onLogout }: { route: Route; go: (r: Route) => void; counts: Record<string, number>; onLogout: () => void }) {
   const isOn = (r: Route) => r.screen === route.screen && (r.screen !== 'list' || (route.screen === 'list' && r.type === route.type))
   return (
@@ -1047,6 +1215,10 @@ function Sidebar({ route, go, counts, onLogout }: { route: Route; go: (r: Route)
               <span className="adm-sb-count">{counts[t.key]}</span>
             </button>
           ))}
+          <button className={`adm-sb-link${route.screen === 'shelves' ? ' on' : ''}`} onClick={() => go({ screen: 'shelves' })}>
+            <span className="adm-sb-ic">◇</span> Estantes
+            <span className="adm-sb-count">{counts.estante}</span>
+          </button>
         </nav>
       </div>
       <div className="adm-sb-bottom">
@@ -1148,7 +1320,11 @@ export default function AdminClient({ initialAuthed }: { initialAuthed: boolean 
   if (!authed) return <Login onEnter={() => setAuthed(true)} />
 
   const arrKey = (type: ItemType) => TYPES.find((t) => t.key === type)!.arr
-  const counts = { material: data.materiais.length, curso: data.cursos.length, mentoria: data.mentorias.length, evento: data.eventos.length }
+  const counts = {
+    material: data.materiais.length, curso: data.cursos.length,
+    mentoria: data.mentorias.length, evento: data.eventos.length,
+    estante: data.estantes.length,
+  }
 
   const go = (r: Route) => { setEditing(null); setRoute(r) }
 
@@ -1169,6 +1345,44 @@ export default function AdminClient({ initialAuthed }: { initialAuthed: boolean 
     setConfirm(null)
   }
 
+  const saveShelf = (e: EstanteAdmin) => {
+    setData(prev => {
+      const exists = prev.estantes.find(x => x.key === e.key)
+      if (exists) return { ...prev, estantes: prev.estantes.map(x => x.key === e.key ? e : x) }
+      const maxOrder = Math.max(-1, ...prev.estantes.map(x => x.order))
+      return { ...prev, estantes: [...prev.estantes, { ...e, order: maxOrder + 1 }] }
+    })
+  }
+
+  const toggleShelf = (key: string) => {
+    setData(prev => ({
+      ...prev,
+      estantes: prev.estantes.map(e => e.key === key ? { ...e, status: e.status === 'visible' ? 'hidden' : 'visible' } : e),
+    }))
+  }
+
+  const deleteShelf = (key: string) => {
+    setData(prev => ({
+      ...prev,
+      estantes: prev.estantes.filter(e => e.key !== key).map((e, i) => ({ ...e, order: i })),
+    }))
+  }
+
+  const moveShelf = (key: string, dir: 'up' | 'down') => {
+    setData(prev => {
+      const sorted = [...prev.estantes].sort((a, b) => a.order - b.order)
+      const idx = sorted.findIndex(e => e.key === key)
+      const swapIdx = dir === 'up' ? idx - 1 : idx + 1
+      if (swapIdx < 0 || swapIdx >= sorted.length) return prev
+      const reordered = sorted.map((e, i) => {
+        if (i === idx) return { ...sorted[swapIdx], order: sorted[idx].order }
+        if (i === swapIdx) return { ...sorted[idx], order: sorted[swapIdx].order }
+        return e
+      })
+      return { ...prev, estantes: reordered }
+    })
+  }
+
   const handleLogout = () => {
     startTransition(async () => {
       await logoutAction()
@@ -1180,6 +1394,7 @@ export default function AdminClient({ initialAuthed }: { initialAuthed: boolean 
   const pageTitle = editing
     ? (editing.id ? 'Editar item' : 'Novo item')
     : route.screen === 'dashboard' ? 'Painel de métricas'
+    : route.screen === 'shelves' ? 'Estantes'
     : TYPES.find((t) => t.key === currentType)!.plural
 
   return (
@@ -1198,6 +1413,15 @@ export default function AdminClient({ initialAuthed }: { initialAuthed: boolean 
             <Editor item={editing} onSave={save} onCancel={() => setEditing(null)} />
           ) : route.screen === 'dashboard' ? (
             <Dashboard data={data} />
+          ) : route.screen === 'shelves' ? (
+            <ShelvesView
+              estantes={data.estantes}
+              materiais={data.materiais}
+              onSave={saveShelf}
+              onToggle={toggleShelf}
+              onDelete={deleteShelf}
+              onMove={moveShelf}
+            />
           ) : (
             <ListView type={currentType} items={data[arrKey(currentType)] as Item[]}
               onNew={() => setEditing(newItem(currentType))}
