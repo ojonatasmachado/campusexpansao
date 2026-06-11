@@ -494,3 +494,100 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   color: #0E110D; text-decoration: none;
   text-align: center; display: block;
 }
+
+/* ── FAMÍLIA — CABEÇALHO DE CAPÍTULO (v3) ──────────────────────────────────── */
+
+.loja-familia-head {
+  position: relative;
+  padding: 64px 0 40px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+/* Numeral-fantasma */
+.loja-familia-num {
+  position: absolute;
+  top: -12px; left: -8px;
+  font-size: 240px;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  color: var(--cream);
+  opacity: 0.04;
+  pointer-events: none;
+  user-select: none;
+}
+.loja-familia-head--liderar .loja-familia-num { color: var(--olive); opacity: 0.1; }
+
+/* Layout interno */
+.loja-familia-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+}
+
+/* Régua */
+.loja-familia-rule {
+  display: flex;
+  align-items: center;
+  height: 2px;
+  background: var(--border-2);
+  width: 100%;
+}
+.loja-familia-rule-seg {
+  display: block;
+  width: 96px;
+  height: 2px;
+  background: var(--cream);
+  flex-shrink: 0;
+}
+.loja-familia-rule-seg--olive { background: var(--olive); }
+
+/* Meta: eyebrow + título + desc */
+.loja-familia-meta { display: flex; flex-direction: column; gap: 8px; }
+
+.loja-familia-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.loja-familia-eyebrow--olive { color: var(--olive); }
+
+.loja-familia-title {
+  font-size: 52px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--cream);
+}
+.loja-familia-title em { font-style: italic; color: var(--cream); }
+.loja-familia-title--olive { color: var(--olive); }
+.loja-familia-title--olive em { color: var(--olive); }
+
+.loja-familia-desc {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.5;
+  max-width: 440px;
+  margin: 0;
+}
+
+/* Contador */
+.loja-familia-counter {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--subtle);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .loja-familia-num { font-size: 140px; top: 0; }
+  .loja-familia-title { font-size: 36px; }
+  .loja-familia-desc { font-size: 14px; }
+  .loja-familia-head { padding: 48px 0 28px; }
+}

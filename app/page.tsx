@@ -1,25 +1,28 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
-import styles from "./page.module.css";
 import MateriaisContent from "./components/MateriaisContent";
 import { CursosNiveis } from "./components/CursoCard";
+import FaqAccordion from "./components/FaqAccordion";
+import ScrollTop from "./components/ScrollTop";
+import styles from "./page.module.css";
+import { supabase } from "./lib/supabase";
 
-export default function Home() {
-  const [showTop, setShowTop] = useState(false);
+export const revalidate = 60;
 
-  useEffect(() => {
-    document.querySelectorAll(".faq-q").forEach((q) =>
-      q.addEventListener("click", () =>
-        (q.parentElement as HTMLElement)?.classList.toggle("open")
-      )
-    );
-    const onScroll = () => setShowTop(window.scrollY > 500);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+const FAQ_ITEMS = [
+  { q: "Para quem é a CE.X?", a: "Para líderes de igrejas locais que querem preparar sua equipe com estrutura, independente de denominação ou tamanho da igreja." },
+  { q: "Como funciona a compra dos materiais?", a: "Cada material é adquirido individualmente via Hotmart. Após a compra, você recebe o arquivo editável diretamente — pronto para aplicar na sua igreja." },
+  { q: "Os cursos têm acompanhamento?", a: "Sim. As turmas ao vivo têm mentoria e acompanhamento direto. O conteúdo gravado fica disponível para assistir no seu ritmo." },
+  { q: "Como funciona o método CE.X?", a: "Estrutura ministerial aplicada: diagnóstico, princípios bíblicos e ferramentas práticas que você implementa na mesma semana." },
+];
+
+export default async function Home() {
+  const [{ data: estantes }, { data: materiais }, { data: cursos }, { data: mentorias }] = await Promise.all([
+    supabase.from('estantes').select('*').order('ord'),
+    supabase.from('materiais').select('*').eq('status', 'Publicado').order('created_at'),
+    supabase.from('cursos').select('*').eq('status', 'Publicado').order('num'),
+    supabase.from('mentorias').select('*').eq('status', 'Publicado').order('created_at'),
+  ]);
 
   return (
     <div className="pg">
@@ -84,7 +87,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* PROVA — STATS */}
+      {/* STATS */}
       <div className="pg-wrap">
         <div className="stats-strip">
           <div className="stat-item">
@@ -106,16 +109,21 @@ export default function Home() {
         </div>
       </div>
 
-      {/* MATERIAIS — catálogo completo embutido */}
+      {/* MATERIAIS — dados do banco */}
       <div id="materiais">
         <div className="pg-wrap" style={{ paddingTop: 80, paddingBottom: 0 }}>
           <div className="psec-eyebrow">◆ Materiais editáveis</div>
           <div className="psec-title" style={{ fontSize: "clamp(28px,5vw,48px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.1, marginTop: 8 }}>Materiais</div>
         </div>
-        <MateriaisContent showHero={false} showCrossLink={false} />
+        <MateriaisContent
+          showHero={false}
+          showCrossLink={false}
+          dbEstantes={estantes ?? undefined}
+          dbMateriais={materiais ?? undefined}
+        />
       </div>
 
-      {/* TEASER CURSOS */}
+      {/* CURSOS — dados do banco */}
       <div id="cursos" className="pg-wrap pg-section" style={{ paddingBottom: 0 }}>
         <div className="psec-head">
           <div className="psec-head-left">
@@ -126,7 +134,7 @@ export default function Home() {
         </div>
       </div>
       <div className="pg-wrap" style={{ paddingBottom: 64 }}>
-        <CursosNiveis />
+        <CursosNiveis dbCursos={cursos ?? undefined} dbMentorias={mentorias ?? undefined} />
       </div>
 
       {/* FAQ */}
@@ -137,22 +145,7 @@ export default function Home() {
             <div className="psec-title">Perguntas</div>
           </div>
         </div>
-        <div className="faq">
-          {[
-            { q: "Para quem é a CE.X?", a: "Para líderes de igrejas locais que querem preparar sua equipe com estrutura, independente de denominação ou tamanho da igreja." },
-            { q: "Como funciona a compra dos materiais?", a: "Cada material é adquirido individualmente via Hotmart. Após a compra, você recebe o arquivo editável diretamente — pronto para aplicar na sua igreja." },
-            { q: "Os cursos têm acompanhamento?", a: "Sim. As turmas ao vivo têm mentoria e acompanhamento direto. O conteúdo gravado fica disponível para assistir no seu ritmo." },
-            { q: "Como funciona o método CE.X?", a: "Estrutura ministerial aplicada: diagnóstico, princípios bíblicos e ferramentas práticas que você implementa na mesma semana." },
-          ].map((item, i) => (
-            <div className="faq-item" key={i}>
-              <button className="faq-q" type="button">
-                <span className="faq-q-text">{item.q}</span>
-                <span className="faq-icon" aria-hidden="true" />
-              </button>
-              <div className="faq-a">{item.a}</div>
-            </div>
-          ))}
-        </div>
+        <FaqAccordion items={FAQ_ITEMS} />
       </div>
 
       {/* CTA FINAL */}
@@ -169,7 +162,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* QUIZ — SUA VOCAÇÃO */}
+      {/* QUIZ */}
       <div className="pg-wrap pg-section">
         <div className="capture">
           <div className="capture-x">X</div>
@@ -183,21 +176,7 @@ export default function Home() {
       </div>
 
       <Footer />
-
-      {showTop && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          aria-label="Voltar ao topo"
-          style={{
-            position: "fixed", bottom: 32, right: 32, zIndex: 200,
-            width: 48, height: 48, borderRadius: "50%",
-            background: "var(--olive)", color: "#0E110D",
-            border: "none", cursor: "pointer",
-            fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
-          }}
-        >↑</button>
-      )}
+      <ScrollTop />
     </div>
   );
 }
