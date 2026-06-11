@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef, useTransition, type ReactNode, type CSSProperties } from 'react'
-import { loginAction, logoutAction, upsertEstante, deleteEstante, reorderEstantes, upsertMaterial, deleteMaterial, upsertCurso, deleteCurso } from './actions'
+import { loginAction, logoutAction, upsertEstante, deleteEstante, reorderEstantes, upsertMaterial, deleteMaterial, upsertCurso, deleteCurso, upsertMentoria, deleteMentoria } from './actions'
 import { ESTANTE_MAP, ESTANTES } from '../lib/materiais-data'
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
@@ -1209,7 +1209,7 @@ function Confirm({ item, onYes, onNo }: { item: Item; onYes: () => void; onNo: (
 
 // ── MAIN ─────────────────────────────────────────────────────────────────────
 
-type InitialData = { estantes: EstanteAdmin[]; materiais: Material[]; cursos: Curso[] } | null
+type InitialData = { estantes: EstanteAdmin[]; materiais: Material[]; cursos: Curso[]; mentorias: Mentoria[] } | null
 
 export default function AdminClient({ initialAuthed, initialData }: { initialAuthed: boolean; initialData: InitialData }) {
   const [authed, setAuthed] = useState(initialAuthed)
@@ -1259,9 +1259,18 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
         ementa: ((c.ementa as {titulo:string}[]) ?? []).map(e => e.titulo),
         proximaTurma: (c.turma as string) ?? '',
       }))
+      const mentorias: Mentoria[] = (initialData.mentorias as unknown as Record<string, unknown>[]).map((m) => ({
+        id: m.id as string, type: 'mentoria' as const,
+        title: m.title as string, desc: (m.desc_text as string) ?? '',
+        formato: (m.formato as string) ?? '', vagas: (m.vagas as number) ?? 0,
+        mentor: (m.mentor as string) ?? '', accent: (m.accent as string) ?? AC.olive,
+        image: null, status: (m.status as string) ?? 'Publicado',
+        views: 0, waitlist: (m.waitlist as number) ?? 0,
+        cadencia: (m.cadencia as string) ?? '',
+      }))
       const series30 = Array(30).fill(0)
       return {
-        materiais, cursos, mentorias: [], eventos: [], estantes,
+        materiais, cursos, mentorias, eventos: [], estantes,
         metrics: { series30, kpis: { visitas:0,visitasDelta:0,cliquesComprar:0,cliquesDelta:0,listaEspera:0,listaDelta:0,capturas:0,capturasDelta:0 }, funil:[{label:'Visitas ao site',value:0},{label:'Abriu um material',value:0},{label:'Clicou em comprar',value:0},{label:'Compra concluída',value:0}], origem:[{label:'Instagram',value:0,color:AC.olive},{label:'Direto',value:0,color:AC.wheat},{label:'Google',value:0,color:AC.clay},{label:'YouTube',value:0,color:AC.oliveDeep}] },
       }
     }
@@ -1322,6 +1331,14 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
             formato: '', mentor: c.mentor, mentor_bio: '',
             depoimento: c.depoimento, turma: c.proximaTurma, status: c.status,
           })
+        } else if (d.type === 'mentoria') {
+          const men = d as Mentoria
+          await upsertMentoria({
+            id: men.id || `mentoria-${Date.now()}`,
+            title: men.title, desc_text: men.desc, formato: men.formato,
+            vagas: men.vagas, mentor: men.mentor, accent: men.accent,
+            cadencia: men.cadencia, status: men.status, waitlist: men.waitlist,
+          })
         }
       } catch (err) { console.error('Erro ao salvar:', err) }
     })
@@ -1335,6 +1352,7 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
       try {
         if (it.type === 'material') await deleteMaterial(it.id)
         else if (it.type === 'curso') await deleteCurso(it.id)
+        else if (it.type === 'mentoria') await deleteMentoria(it.id)
       } catch (err) { console.error('Erro ao excluir:', err) }
     })
   }

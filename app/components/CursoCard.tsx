@@ -8,6 +8,21 @@ import type { CursoDado } from "../lib/cursos-data";
 export type { CursoDado };
 export { NIVEIS, CURSOS_DATA };
 
+// ─── Tipos do banco ───────────────────────────────────────────────────────────
+type DbCurso = { slug: string; num: string; nivel: string; title: string; desc_text: string; dur: string; mentor: string; turma: string; status: string }
+type DbMentoria = { id: string; title: string; desc_text: string; formato: string; vagas: number; mentor: string; accent: string; cadencia: string; status: string }
+
+function dbCursoToCursoDado(c: DbCurso): CursoDado {
+  return {
+    num: c.num, slug: c.slug, nivel: c.nivel as CursoDado['nivel'],
+    title: c.title, desc: c.desc_text, dur: c.dur,
+    promessa: '', praQuem: '', ementa: [], formato: '',
+    mentor: c.mentor, mentorBio: '',
+    depoimento: { texto: '', autor: '', cargo: '' },
+    turma: c.turma,
+  }
+}
+
 // ─── CARD ─────────────────────────────────────────────────────────────────────
 export function CursoCard({ curso }: { curso: CursoDado }) {
   const nivel = NIVEIS.find(n => n.key === curso.nivel)!;
@@ -46,12 +61,47 @@ export function CursoCard({ curso }: { curso: CursoDado }) {
   );
 }
 
+// ─── CARD MENTORIA ────────────────────────────────────────────────────────────
+export function MentoriaCard({ mentoria }: { mentoria: DbMentoria }) {
+  return (
+    <div className="cex-course" style={{ "--cex-ac": mentoria.accent } as React.CSSProperties}>
+      <div className="cex-course__body">
+        <div className="cex-course__top">
+          <span className="cex-course__eyebrow">Mentoria</span>
+          {mentoria.vagas > 0 && (
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: mentoria.accent, letterSpacing: '.06em' }}>
+              {mentoria.vagas} vagas
+            </span>
+          )}
+        </div>
+        <div className="cex-course__head">
+          <h3 className="cex-course__title">{mentoria.title}</h3>
+          <p className="cex-course__desc">{mentoria.desc_text}</p>
+        </div>
+      </div>
+      <div className="cex-course__foot">
+        <div className="cex-course__meta">
+          <span className="cex-course__meta-dot" />
+          {mentoria.cadencia || mentoria.formato}
+        </div>
+        <div className="cex-course__foot-row">
+          <span className="cex-course__stage">{mentoria.mentor}</span>
+          <span className="cex-course__more">Entrar na lista →</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── GRADE POR NÍVEL ─────────────────────────────────────────────────────────
-export function CursosNiveis() {
+export function CursosNiveis({ dbCursos, dbMentorias }: { dbCursos?: DbCurso[]; dbMentorias?: DbMentoria[] }) {
+  const cursos = dbCursos ? dbCursos.map(dbCursoToCursoDado) : CURSOS_DATA
+  const mentorias = dbMentorias ?? []
+
   return (
     <>
       {NIVEIS.map((nivel) => {
-        const cursosDoNivel = CURSOS_DATA.filter(c => c.nivel === nivel.key);
+        const cursosDoNivel = cursos.filter(c => c.nivel === nivel.key);
         const accent = ACCENTS[nivel.accent];
         return (
           <div key={nivel.key} className="loja-shelf">
@@ -65,6 +115,17 @@ export function CursosNiveis() {
           </div>
         );
       })}
+      {mentorias.length > 0 && (
+        <div className="loja-shelf">
+          <div className="loja-shelf-head">
+            <span className="loja-shelf-name" style={{ color: 'var(--olive)' }}>◆ Mentorias</span>
+            <span className="loja-shelf-count">{mentorias.length} {mentorias.length === 1 ? 'mentoria' : 'mentorias'}</span>
+          </div>
+          <div className="loja-shelf-grid">
+            {mentorias.map(m => <MentoriaCard key={m.id} mentoria={m} />)}
+          </div>
+        </div>
+      )}
     </>
   );
 }

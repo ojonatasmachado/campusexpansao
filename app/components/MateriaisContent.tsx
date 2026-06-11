@@ -15,6 +15,37 @@ const SHELF_CAROUSEL_THRESHOLD = 6;
 
 type FiltroL1 = "tudo" | Familia | "eventos";
 
+// ── Conversão de dados do banco para tipos locais ─────────────────────────────
+const HEX_TO_ACCENT: Record<string, AccentKey> = {
+  '#E2D6B4': 'sand', '#CBA95C': 'wheat', '#D6A23E': 'amber', '#C5805A': 'clay',
+  '#B5694A': 'terra', '#9C5A33': 'rust', '#6F523A': 'cocoa', '#7A9E3F': 'olive',
+}
+
+type DbEstante = { key: string; label: string; familia: string; accent: string; faixa_etaria: string; status: string; ord: number }
+type DbMaterial = { id: string; familia: string; estante: string; model: string; etiqueta: string; titulo: string; code: string | null; big: string | null; big_label: string | null; promessa: string; mensagens: number | null; paginas: number; formatos: string[]; preco: string; hotmart_url: string; colecoes: string[]; pra_quem: string; conteudo: string[]; como_usar: string; faq: { q: string; a: string }[] }
+
+function dbEstanteToEstante(e: DbEstante): Estante {
+  return {
+    key: e.key, label: e.label, familia: e.familia as Familia,
+    accent: HEX_TO_ACCENT[e.accent] ?? 'olive',
+    faixaEtaria: e.faixa_etaria,
+  }
+}
+
+function dbMaterialToMaterial(m: DbMaterial): Material {
+  return {
+    id: m.id, familia: m.familia as Familia, estante: m.estante,
+    model: m.model as Material['model'], etiqueta: m.etiqueta, titulo: m.titulo,
+    code: m.code ?? undefined, big: m.big ?? undefined, bigLabel: m.big_label ?? undefined,
+    promessa: m.promessa,
+    meta: { mensagens: m.mensagens ?? undefined, paginas: m.paginas, formatos: m.formatos ?? [] },
+    preco: m.preco, hotmartUrl: m.hotmart_url,
+    colecoes: (m.colecoes ?? []) as Colecao[],
+    praQuem: m.pra_quem, conteudo: m.conteudo ?? [],
+    comoUsar: m.como_usar, faq: m.faq ?? [],
+  }
+}
+
 
 // ─── SHELF CAROUSEL ───────────────────────────────────────────────────────────
 function ShelfCarousel({ materiais, accentKey, onCardClick }: { materiais: Material[]; accentKey: AccentKey; onCardClick: (m: Material) => void }) {
@@ -81,18 +112,18 @@ function Shelf({ estante, materiais, onCardClick, onVerTodos }: {
 }
 
 // ─── MODAL ────────────────────────────────────────────────────────────────────
-function Modal({ material, onClose }: { material: Material; onClose: () => void }) {
+function Modal({ material, onClose, allMateriais }: { material: Material; onClose: () => void; allMateriais: Material[] }) {
   const estante = ESTANTE_MAP[material.estante];
   const accentKey = estante?.accent || "olive";
   const accent = ACCENTS[accentKey];
 
-  const shelfItems = MATERIAIS.filter(mi => mi.estante === material.estante);
+  const shelfItems = allMateriais.filter(mi => mi.estante === material.estante);
   const posInShelf = shelfItems.findIndex(mi => mi.id === material.id);
   const derivedModel = (["A","C","B"] as const)[Math.max(0, posInShelf) % 3] as Modelo;
   const derivedBig = (material.meta.mensagens ?? material.meta.paginas).toString();
   const derivedBigLabel = material.meta.mensagens != null ? "mensagens" : "páginas";
 
-  const relacionados = MATERIAIS.filter(
+  const relacionados = allMateriais.filter(
     (m) => m.estante === material.estante && m.id !== material.id
   ).slice(0, 3);
 
@@ -178,7 +209,7 @@ function Modal({ material, onClose }: { material: Material; onClose: () => void 
               <div className="loja-detail-sec-label">◆ Da mesma estante</div>
               <div className="loja-relacionados">
                 {relacionados.map((m) => {
-                  const allInShelf = MATERIAIS.filter(mi => mi.estante === material.estante);
+                  const allInShelf = allMateriais.filter(mi => mi.estante === material.estante);
                   const pos = allInShelf.findIndex(mi => mi.id === m.id);
                   const relModel = (["A","C","B"] as const)[Math.max(0, pos) % 3] as Modelo;
                   const relBig = (m.meta.mensagens ?? m.meta.paginas).toString();
@@ -249,7 +280,27 @@ function ShelfModal({ estante, materiais, onCardClick, onClose }: {
 }
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
-export default function MateriaisContent({ showHero = true, showCrossLink = true }: { showHero?: boolean; showCrossLink?: boolean }) {
+export default function MateriaisContent({
+  showHero = true, showCrossLink = true,
+  dbEstantes, dbMateriais,
+}: {
+  showHero?: boolean; showCrossLink?: boolean
+  dbEstantes?: DbEstante[]; dbMateriais?: DbMaterial[]
+}) {
+  // Usa dados do banco se disponíveis, senão fallback para estáticos
+  const allEstantes = dbEstantes
+    ? dbEstantes.filter(e => e.status === 'visible').map(dbEstanteToEstante)
+    : ESTANTES
+  const allMateriais = dbMateriais
+    ? dbMateriais.map(dbMaterialToMaterial)
+    : MATERIAIS
+
+  const estantesMinistrar = allEstantes.filter(e => e.familia === "ministrar" && !e.key.startsWith("infantil-"))
+  const estantesLiderar   = allEstantes.filter(e => e.familia === "liderar")
+  const infantilEstantes  = allEstantes.filter(e => e.key.startsWith("infantil-"))
+  const infantilChip      = { key: "infantil", label: "Infantil", accent: "wheat" as AccentKey }
+  const l2Ministrar       = [infantilChip, ...estantesMinistrar]
+
   const [filtroL1, setFiltroL1] = useState<FiltroL1>("tudo");
   const [estanteAtiva, setEstanteAtiva] = useState<string | null>(null);
   const [faixaInfantil, setFaixaInfantil] = useState<string | null>(null);
@@ -262,18 +313,18 @@ export default function MateriaisContent({ showHero = true, showCrossLink = true
 
   const estantesVisiveis = (lista: Estante[]) => lista.filter((e) => !estanteAtiva || e.key === estanteAtiva);
   const infantilVisiveis = () => estanteAtiva === "infantil" || !estanteAtiva
-    ? INFANTIL_ESTANTES.filter(e => !faixaInfantil || e.key === faixaInfantil)
+    ? infantilEstantes.filter(e => !faixaInfantil || e.key === faixaInfantil)
     : [];
-  const materiaisDe = (estante: string) => MATERIAIS.filter((m) => m.estante === estante);
+  const materiaisDe = (estante: string) => allMateriais.filter((m) => m.estante === estante);
 
   const eventosGrupos: Record<string, Material[]> = {};
-  MATERIAIS.forEach((m) => m.colecoes.forEach((c) => {
+  allMateriais.forEach((m) => m.colecoes.forEach((c) => {
     if (!eventosGrupos[c]) eventosGrupos[c] = [];
     eventosGrupos[c].push(m);
   }));
   const eventosLabels: Record<string, string> = { retiro: "Retiro", conferencia: "Conferência" };
 
-  const l2Options = filtroL1 === "ministrar" ? L2_MINISTRAR : filtroL1 === "liderar" ? ESTANTES_LIDERAR : null;
+  const l2Options = filtroL1 === "ministrar" ? l2Ministrar : filtroL1 === "liderar" ? estantesLiderar : null;
   const showFaixaInfantil = filtroL1 === "ministrar" && estanteAtiva === "infantil";
 
   return (
@@ -317,7 +368,7 @@ export default function MateriaisContent({ showHero = true, showCrossLink = true
           {showFaixaInfantil && (
             <div className="loja-filter-l2">
               <button className={`loja-filter-btn${!faixaInfantil ? " ativo" : ""}`} onClick={() => setFaixaInfantil(null)}>Todas</button>
-              {INFANTIL_ESTANTES.map((e) => (
+              {infantilEstantes.map((e) => (
                 <button key={e.key}
                   className={`loja-filter-btn${faixaInfantil === e.key ? " ativo" : ""}`}
                   style={{ "--cex-accent": ACCENTS[e.accent].base } as React.CSSProperties}
@@ -358,7 +409,7 @@ export default function MateriaisContent({ showHero = true, showCrossLink = true
             {infantilVisiveis().map((e) => (
               <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} onVerTodos={setEstanteAberta} />
             ))}
-            {estanteAtiva !== "infantil" && estantesVisiveis(ESTANTES_MINISTRAR).map((e) => (
+            {estanteAtiva !== "infantil" && estantesVisiveis(estantesMinistrar).map((e) => (
               <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} onVerTodos={setEstanteAberta} />
             ))}
           </div>
@@ -372,7 +423,7 @@ export default function MateriaisContent({ showHero = true, showCrossLink = true
                 <div className="loja-familia-title">Para <em>liderar</em></div>
               </div>
             )}
-            {estantesVisiveis(ESTANTES_LIDERAR).map((e) => (
+            {estantesVisiveis(estantesLiderar).map((e) => (
               <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} onVerTodos={setEstanteAberta} />
             ))}
           </div>
@@ -413,7 +464,7 @@ export default function MateriaisContent({ showHero = true, showCrossLink = true
       )}
 
       {materialAberto && (
-        <Modal material={materialAberto} onClose={() => setMaterialAberto(null)} />
+        <Modal material={materialAberto} onClose={() => setMaterialAberto(null)} allMateriais={allMateriais} />
       )}
     </>
   );

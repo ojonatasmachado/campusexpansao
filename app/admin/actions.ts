@@ -80,6 +80,27 @@ export async function deleteMaterial(id: string) {
   revalidatePath('/materiais'); revalidatePath('/admin')
 }
 
+// ── MENTORIAS ────────────────────────────────────────────────────────────────
+
+export async function getMentorias() {
+  const { data, error } = await supabaseAdmin()
+    .from('mentorias').select('*').order('created_at')
+  if (error) throw error
+  return data
+}
+
+export async function upsertMentoria(m: Record<string, unknown>) {
+  const { error } = await supabaseAdmin().from('mentorias').upsert(m, { onConflict: 'id' })
+  if (error) throw error
+  revalidatePath('/cursos'); revalidatePath('/admin')
+}
+
+export async function deleteMentoria(id: string) {
+  const { error } = await supabaseAdmin().from('mentorias').delete().eq('id', id)
+  if (error) throw error
+  revalidatePath('/cursos'); revalidatePath('/admin')
+}
+
 // ── CURSOS ───────────────────────────────────────────────────────────────────
 
 export async function getCursos() {

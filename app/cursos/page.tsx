@@ -1,8 +1,16 @@
 import Nav from "../components/Nav";
 import Footer from "../components/Footer";
 import { CursosNiveis } from "../components/CursoCard";
+import { supabase } from "../lib/supabase";
 
-export default function Cursos() {
+export const revalidate = 60;
+
+export default async function Cursos() {
+  const [{ data: cursosDb }, { data: mentoriasDb }] = await Promise.all([
+    supabase.from('cursos').select('*').eq('status', 'Publicado').order('num'),
+    supabase.from('mentorias').select('*').eq('status', 'Publicado').order('created_at'),
+  ])
+
   return (
     <div className="pg">
       <Nav />
@@ -16,7 +24,7 @@ export default function Cursos() {
       </div>
 
       <div className="pg-wrap pg-section tight">
-        <CursosNiveis />
+        <CursosNiveis dbCursos={cursosDb ?? undefined} dbMentorias={mentoriasDb ?? undefined} />
       </div>
 
       {/* CROSS-LINK PARA MATERIAIS */}
