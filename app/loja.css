@@ -40,8 +40,13 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
 .loja-shelf-ver:hover { color: var(--olive); }
 .loja-shelf-ver::after { content: ' →'; }
 
-/* ── GRID (≤ SHELF_CAROUSEL_THRESHOLD) ── */
-.loja-shelf-grid { display: flex; flex-wrap: wrap; gap: 18px; }
+/* ── GRID (≤ SHELF_CAROUSEL_THRESHOLD) — linha única com scroll horizontal ── */
+.loja-shelf-grid {
+  display: flex; flex-wrap: nowrap; gap: 18px;
+  overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+  padding-bottom: 16px; -webkit-overflow-scrolling: touch;
+}
+.loja-shelf-grid::-webkit-scrollbar { display: none; }
 
 /* ── CAROUSEL (> SHELF_CAROUSEL_THRESHOLD) ── */
 .loja-shelf-carousel { position: relative; }
@@ -382,9 +387,9 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   html .pg-wrap { padding: 0 3%; }
   .loja-hero-title { font-size: 52px; }
   .loja-hero-desc { font-size: 16px; }
-  /* Grid 2 colunas, cards fluid */
-  .loja-shelf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .loja-shelf-grid .cex-card { width: 100%; }
+  /* Cards menores em tablet — linha única mantida */
+  .loja-shelf-grid { gap: 14px; }
+  .loja-shelf-grid .cex-card { width: 200px; flex-shrink: 0; }
   .loja-shelf-grid .cex-course__body { height: 190px; }
   .loja-shelf-grid .cex-course__title { font-size: 20px; }
   .loja-shelf-grid .cex-course__foot { height: 110px; }
@@ -418,6 +423,7 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   .loja-hero-title { font-size: 36px; }
   .loja-hero-desc { font-size: 14px; }
   .loja-shelf-grid { gap: 10px; }
+  .loja-shelf-grid .cex-card { width: 168px; flex-shrink: 0; }
   .loja-shelf-grid .cex-course__body { height: 160px; }
   .loja-shelf-grid .cex-course__title { font-size: 17px; }
   .loja-shelf-grid .cex-course__foot { height: 100px; padding: 14px; }
