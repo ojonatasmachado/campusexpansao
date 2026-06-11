@@ -1,8 +1,7 @@
 'use client'
 import { useState, useRef, useTransition, type ReactNode, type CSSProperties } from 'react'
-import { loginAction, logoutAction } from './actions'
-import { MATERIAIS, ESTANTE_MAP, ESTANTES } from '../lib/materiais-data'
-import { CURSOS_DATA } from '../lib/cursos-data'
+import { loginAction, logoutAction, upsertEstante, deleteEstante, reorderEstantes, upsertMaterial, deleteMaterial, upsertCurso, deleteCurso } from './actions'
+import { ESTANTE_MAP, ESTANTES } from '../lib/materiais-data'
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -102,111 +101,14 @@ const TYPES = [
 // ── DADOS INICIAIS ────────────────────────────────────────────────────────────
 
 function buildData(): AdminData {
-  const SHELF_LABEL: Record<string, string> = {
-    'infantil-bercario': 'Berçário', 'infantil-maternal': 'Maternal',
-    'infantil-primarios': 'Primários', 'juniores': 'Juniores',
-    'adolescentes': 'Adolescentes', 'jovens': 'Jovens', 'igreja-toda': 'Igreja toda',
-    'manuais': 'Manuais', 'criar-ministerio': 'Criar ministério',
-    'modelos-checklists': 'Modelos & Checklists', 'montar-evento': 'Montar evento',
-  }
-  const FAMILY_LABEL: Record<string, string> = {
-    ministrar: 'Para ministrar', liderar: 'Para liderar',
-  }
-  const NIVEL_LABEL: Record<string, string> = {
-    fundacao: 'Fundação', lideranca: 'Liderança', multiplicacao: 'Multiplicação',
-  }
-
-  const materiais: Material[] = MATERIAIS.map(m => {
-    const estante = ESTANTE_MAP[m.estante]
-    const family = FAMILY_LABEL[m.familia] ?? m.familia
-    const shelf = SHELF_LABEL[m.estante] ?? m.estante
-    const accent = estante ? AC[estante.accent as keyof typeof AC] ?? AC.olive : AC.olive
-    return {
-      id: m.id,
-      type: 'material' as const,
-      family,
-      shelf,
-      code: m.code ?? '',
-      title: m.titulo,
-      desc: m.promessa,
-      messages: m.meta.mensagens ?? null,
-      pages: m.meta.paginas,
-      format: m.meta.formatos.join(', '),
-      price: parseInt(m.preco.replace(/\D/g, ''), 10),
-      hotmart: m.hotmartUrl,
-      accent,
-      image: null,
-      model: m.model,
-      big: m.big ? parseInt(m.big, 10) : null,
-      bigLabel: m.bigLabel ?? '',
-      messageList: m.conteudo.map(c => ({ nome: c, desc: '' })),
-      paraQuem: m.praQuem,
-      beneficios: ['Editável e pronto pra aplicar', 'White-label: coloque a marca do seu ministério'],
-      depoimento: { texto: '', autor: '' },
-      status: 'Publicado',
-      views: 0,
-      buyClicks: 0,
-    }
-  })
-
-  const NIVEL_ACCENT_KEY: Record<string, keyof typeof AC> = {
-    fundacao: 'wheat', lideranca: 'clay', multiplicacao: 'olive',
-  }
-
-  const cursos: Curso[] = CURSOS_DATA.map(c => ({
-    id: c.slug,
-    type: 'curso' as const,
-    level: NIVEL_LABEL[c.nivel] ?? c.nivel,
-    etapa: parseInt(c.num, 10),
-    totalEtapas: 6,
-    title: c.title,
-    desc: c.desc,
-    weeks: c.ementa.length,
-    mentoria: true,
-    aoVivo: true,
-    mentor: c.mentor,
-    accent: AC[NIVEL_ACCENT_KEY[c.nivel] ?? 'olive'],
-    image: null,
-    status: 'Publicado',
-    views: 0,
-    waitlist: 0,
-    paraQuem: c.praQuem,
-    depoimento: { texto: c.depoimento.texto, autor: c.depoimento.autor },
-    ementa: c.ementa.map(e => e.titulo),
-    proximaTurma: c.turma,
-  }))
-
-  const mentorias: Mentoria[] = []
-  const eventos: Evento[] = []
-
-  const estantes: EstanteAdmin[] = ESTANTES.map((e, i) => ({
-    key: e.key,
-    label: e.label,
-    familia: e.familia,
-    accent: AC[e.accent as keyof typeof AC] ?? AC.olive,
-    faixaEtaria: e.faixaEtaria ?? '',
-    status: 'visible' as const,
-    order: i,
-  }))
-
   const series30 = Array(30).fill(0)
   return {
-    materiais, cursos, mentorias, eventos, estantes,
+    materiais: [], cursos: [], mentorias: [], eventos: [], estantes: [],
     metrics: {
       series30,
-      kpis: { visitas: 0, visitasDelta: 0, cliquesComprar: 0, cliquesDelta: 0, listaEspera: 0, listaDelta: 0, capturas: 0, capturasDelta: 0 },
-      funil: [
-        { label: 'Visitas ao site', value: 0 },
-        { label: 'Abriu um material', value: 0 },
-        { label: 'Clicou em comprar', value: 0 },
-        { label: 'Compra concluída', value: 0 },
-      ],
-      origem: [
-        { label: 'Instagram', value: 0, color: AC.olive },
-        { label: 'Direto', value: 0, color: AC.wheat },
-        { label: 'Google', value: 0, color: AC.clay },
-        { label: 'YouTube', value: 0, color: AC.oliveDeep },
-      ],
+      kpis: { visitas:0,visitasDelta:0,cliquesComprar:0,cliquesDelta:0,listaEspera:0,listaDelta:0,capturas:0,capturasDelta:0 },
+      funil: [{label:'Visitas ao site',value:0},{label:'Abriu um material',value:0},{label:'Clicou em comprar',value:0},{label:'Compra concluída',value:0}],
+      origem: [{label:'Instagram',value:0,color:AC.olive},{label:'Direto',value:0,color:AC.wheat},{label:'Google',value:0,color:AC.clay},{label:'YouTube',value:0,color:AC.oliveDeep}],
     },
   }
 }
@@ -1307,11 +1209,64 @@ function Confirm({ item, onYes, onNo }: { item: Item; onYes: () => void; onNo: (
 
 // ── MAIN ─────────────────────────────────────────────────────────────────────
 
-const INITIAL_DATA = buildData()
+type InitialData = { estantes: EstanteAdmin[]; materiais: Material[]; cursos: Curso[] } | null
 
-export default function AdminClient({ initialAuthed }: { initialAuthed: boolean }) {
+export default function AdminClient({ initialAuthed, initialData }: { initialAuthed: boolean; initialData: InitialData }) {
   const [authed, setAuthed] = useState(initialAuthed)
-  const [data, setData] = useState<AdminData>(INITIAL_DATA)
+  const [data, setData] = useState<AdminData>(() => {
+    if (initialData) {
+      // Map DB rows → admin types
+      const estantes: EstanteAdmin[] = (initialData.estantes as unknown as Record<string, unknown>[]).map((e) => ({
+        key: e.key as string, label: e.label as string,
+        familia: e.familia as 'ministrar' | 'liderar',
+        accent: e.accent as string, faixaEtaria: (e.faixa_etaria as string) ?? '',
+        status: (e.status as 'visible' | 'hidden') ?? 'visible',
+        order: (e.ord as number) ?? 0,
+      }))
+      const materiais: Material[] = (initialData.materiais as unknown as Record<string, unknown>[]).map((m) => ({
+        id: m.id as string, type: 'material' as const,
+        family: m.familia === 'ministrar' ? 'Para ministrar' : 'Para liderar',
+        shelf: estantes.find(e => e.key === m.estante)?.label ?? (m.estante as string),
+        code: (m.code as string) ?? '', title: m.titulo as string, desc: m.promessa as string,
+        messages: (m.mensagens as number | null) ?? null, pages: (m.paginas as number) ?? 0,
+        format: ((m.formatos as string[]) ?? []).join(', '),
+        price: parseInt(((m.preco as string) ?? '0').replace(/\D/g, ''), 10),
+        hotmart: (m.hotmart_url as string) ?? '', accent: accentFor({ type: 'material', family: m.familia === 'ministrar' ? 'Para ministrar' : 'Para liderar', shelf: estantes.find(e => e.key === m.estante)?.label ?? '' } as Material),
+        image: null, model: (m.model as Modelo) ?? 'A',
+        big: m.big ? parseInt(m.big as string, 10) : null,
+        bigLabel: (m.big_label as string) ?? '',
+        messageList: ((m.conteudo as string[]) ?? []).map(c => ({ nome: c, desc: '' })),
+        paraQuem: (m.pra_quem as string) ?? '',
+        beneficios: ['Editável e pronto pra aplicar', 'White-label: coloque a marca do seu ministério'],
+        depoimento: { texto: '', autor: '' },
+        status: (m.status as string) ?? 'Publicado',
+        views: 0, buyClicks: 0,
+      }))
+      const NIVEL_LABEL: Record<string, string> = { fundacao: 'Fundação', lideranca: 'Liderança', multiplicacao: 'Multiplicação' }
+      const NIVEL_AC: Record<string, string> = { fundacao: AC.wheat, lideranca: AC.clay, multiplicacao: AC.olive }
+      const cursos: Curso[] = (initialData.cursos as unknown as Record<string, unknown>[]).map((c) => ({
+        id: c.slug as string, type: 'curso' as const,
+        level: NIVEL_LABEL[c.nivel as string] ?? (c.nivel as string),
+        etapa: parseInt(c.num as string, 10), totalEtapas: 6,
+        title: c.title as string, desc: c.desc_text as string,
+        weeks: ((c.ementa as unknown[]) ?? []).length,
+        mentoria: true, aoVivo: true, mentor: (c.mentor as string) ?? '',
+        accent: NIVEL_AC[c.nivel as string] ?? AC.olive,
+        image: null, status: (c.status as string) ?? 'Publicado',
+        views: 0, waitlist: 0,
+        paraQuem: (c.pra_quem as string) ?? '',
+        depoimento: { texto: ((c.depoimento as Record<string,string>)?.texto) ?? '', autor: ((c.depoimento as Record<string,string>)?.autor) ?? '' },
+        ementa: ((c.ementa as {titulo:string}[]) ?? []).map(e => e.titulo),
+        proximaTurma: (c.turma as string) ?? '',
+      }))
+      const series30 = Array(30).fill(0)
+      return {
+        materiais, cursos, mentorias: [], eventos: [], estantes,
+        metrics: { series30, kpis: { visitas:0,visitasDelta:0,cliquesComprar:0,cliquesDelta:0,listaEspera:0,listaDelta:0,capturas:0,capturasDelta:0 }, funil:[{label:'Visitas ao site',value:0},{label:'Abriu um material',value:0},{label:'Clicou em comprar',value:0},{label:'Compra concluída',value:0}], origem:[{label:'Instagram',value:0,color:AC.olive},{label:'Direto',value:0,color:AC.wheat},{label:'Google',value:0,color:AC.clay},{label:'YouTube',value:0,color:AC.oliveDeep}] },
+      }
+    }
+    return buildData()
+  })
   const [route, setRoute] = useState<Route>({ screen: 'dashboard' })
   const [editing, setEditing] = useState<Item | null>(null)
   const [confirm, setConfirm] = useState<Item | null>(null)
@@ -1330,6 +1285,7 @@ export default function AdminClient({ initialAuthed }: { initialAuthed: boolean 
 
   const save = (d: Item) => {
     const key = arrKey(d.type)
+    // Optimistic update
     setData((prev) => {
       const arr = prev[key] as Item[]
       if (d.id) return { ...prev, [key]: arr.map((x) => (x.id === d.id ? d : x)) }
@@ -1337,12 +1293,50 @@ export default function AdminClient({ initialAuthed }: { initialAuthed: boolean 
       return { ...prev, [key]: [withId, ...arr] }
     })
     setEditing(null)
+    // Persist to Supabase
+    startTransition(async () => {
+      try {
+        if (d.type === 'material') {
+          const m = d as Material
+          await upsertMaterial({
+            id: m.id, familia: m.family === 'Para ministrar' ? 'ministrar' : 'liderar',
+            estante: Object.entries(ESTANTE_MAP).find(([,v]) => v.label === m.shelf)?.[0] ?? m.shelf,
+            model: m.model, etiqueta: m.shelf, titulo: m.title, code: m.code || null,
+            big: m.big ? String(m.big) : null, big_label: m.bigLabel || null,
+            promessa: m.desc, mensagens: m.messages, paginas: m.pages,
+            formatos: m.format.split(', ').filter(Boolean),
+            preco: `R$ ${m.price}`, hotmart_url: m.hotmart,
+            colecoes: [], pra_quem: m.paraQuem,
+            conteudo: m.messageList.map(x => x.nome),
+            como_usar: '', faq: [], status: m.status,
+          })
+        } else if (d.type === 'curso') {
+          const c = d as Curso
+          const NIVEL_KEY: Record<string,string> = { 'Fundação':'fundacao','Liderança':'lideranca','Multiplicação':'multiplicacao' }
+          await upsertCurso({
+            slug: c.id, num: String(c.etapa).padStart(2,'0'),
+            nivel: NIVEL_KEY[c.level] ?? 'fundacao',
+            title: c.title, desc_text: c.desc, dur: `${c.weeks} semanas`,
+            promessa: c.desc, pra_quem: c.paraQuem,
+            ementa: c.ementa.map((t,i) => ({ semana: i+1, titulo: t, desc: '' })),
+            formato: '', mentor: c.mentor, mentor_bio: '',
+            depoimento: c.depoimento, turma: c.proximaTurma, status: c.status,
+          })
+        }
+      } catch (err) { console.error('Erro ao salvar:', err) }
+    })
   }
 
   const doDelete = (it: Item) => {
     const key = arrKey(it.type)
     setData((prev) => ({ ...prev, [key]: (prev[key] as Item[]).filter((x) => x.id !== it.id) }))
     setConfirm(null)
+    startTransition(async () => {
+      try {
+        if (it.type === 'material') await deleteMaterial(it.id)
+        else if (it.type === 'curso') await deleteCurso(it.id)
+      } catch (err) { console.error('Erro ao excluir:', err) }
+    })
   }
 
   const saveShelf = (e: EstanteAdmin) => {
@@ -1352,13 +1346,23 @@ export default function AdminClient({ initialAuthed }: { initialAuthed: boolean 
       const maxOrder = Math.max(-1, ...prev.estantes.map(x => x.order))
       return { ...prev, estantes: [...prev.estantes, { ...e, order: maxOrder + 1 }] }
     })
+    startTransition(async () => {
+      try {
+        await upsertEstante({ key: e.key, label: e.label, familia: e.familia, accent: e.accent, faixa_etaria: e.faixaEtaria, status: e.status, ord: e.order })
+      } catch (err) { console.error('Erro ao salvar estante:', err) }
+    })
   }
 
   const toggleShelf = (key: string) => {
-    setData(prev => ({
-      ...prev,
-      estantes: prev.estantes.map(e => e.key === key ? { ...e, status: e.status === 'visible' ? 'hidden' : 'visible' } : e),
-    }))
+    setData(prev => {
+      const updated = prev.estantes.map(e => e.key === key ? { ...e, status: (e.status === 'visible' ? 'hidden' : 'visible') as 'visible'|'hidden' } : e)
+      const shelf = updated.find(e => e.key === key)!
+      startTransition(async () => {
+        try { await upsertEstante({ key: shelf.key, label: shelf.label, familia: shelf.familia, accent: shelf.accent, faixa_etaria: shelf.faixaEtaria, status: shelf.status, ord: shelf.order }) }
+        catch (err) { console.error('Erro ao ocultar estante:', err) }
+      })
+      return { ...prev, estantes: updated }
+    })
   }
 
   const deleteShelf = (key: string) => {
@@ -1366,6 +1370,9 @@ export default function AdminClient({ initialAuthed }: { initialAuthed: boolean 
       ...prev,
       estantes: prev.estantes.filter(e => e.key !== key).map((e, i) => ({ ...e, order: i })),
     }))
+    startTransition(async () => {
+      try { await deleteEstante(key) } catch (err) { console.error('Erro ao excluir estante:', err) }
+    })
   }
 
   const moveShelf = (key: string, dir: 'up' | 'down') => {
@@ -1378,6 +1385,10 @@ export default function AdminClient({ initialAuthed }: { initialAuthed: boolean 
         if (i === idx) return { ...sorted[swapIdx], order: sorted[idx].order }
         if (i === swapIdx) return { ...sorted[idx], order: sorted[swapIdx].order }
         return e
+      })
+      startTransition(async () => {
+        try { await reorderEstantes(reordered.map(e => e.key)) }
+        catch (err) { console.error('Erro ao reordenar:', err) }
       })
       return { ...prev, estantes: reordered }
     })
