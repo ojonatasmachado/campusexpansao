@@ -361,6 +361,19 @@ function DetailPreview({ item }: { item: Item }) {
             <span className="pv-detail-buy">COMPRAR →</span>
           </div>
           <div className="pv-detail-hot">Hotmart: <code>{m.hotmart}</code></div>
+          {m.id && (
+            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <code style={{ fontSize: 11, color: 'var(--muted)', background: 'var(--graphite)', padding: '4px 8px', borderRadius: 4, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                campusexpansao.com/materiais/{m.id}
+              </code>
+              <button
+                onClick={() => { navigator.clipboard.writeText(`https://campusexpansao.com/materiais/${m.id}`) }}
+                style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--wheat)', border: 'none', borderRadius: 4, padding: '4px 10px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+              >
+                Copiar
+              </button>
+            </div>
+          )}
         </>}
 
         {isCurso && <>
