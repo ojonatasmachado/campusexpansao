@@ -3,6 +3,7 @@ import Nav from "../../components/Nav";
 import Footer from "../../components/Footer";
 import MaterialLanding from "../../components/MaterialLanding";
 import { supabase } from "../../lib/supabase";
+import "../landing.css";
 
 export const revalidate = 60;
 
