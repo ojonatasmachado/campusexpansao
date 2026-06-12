@@ -25,12 +25,79 @@ function Eyebrow({ children, variant = "default" }: { children: string; variant?
   return <div className={cls}>{children}</div>;
 }
 
-function titleSize(titulo: string, base: number): string {
-  const len = titulo.length;
-  if (len > 28) return `${Math.round(base * 0.52)}px`;
-  if (len > 20) return `${Math.round(base * 0.65)}px`;
-  if (len > 14) return `${Math.round(base * 0.80)}px`;
-  return `${base}px`;
+function FitTitle({
+  children,
+  className,
+  max,
+  min = 12,
+}: {
+  children: string;
+  className: string;
+  max: number;
+  min?: number;
+}) {
+  const boxRef = React.useRef<HTMLDivElement>(null);
+  const textRef = React.useRef<HTMLSpanElement>(null);
+  const [fontSize, setFontSize] = React.useState(max);
+
+  React.useLayoutEffect(() => {
+    const box = boxRef.current;
+    const text = textRef.current;
+    if (!box || !text) return;
+
+    let frame = 0;
+    const fit = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const width = box.clientWidth;
+        const height = box.clientHeight;
+        if (!width || !height) return;
+
+        let lo = min;
+        let hi = max;
+        let best = min;
+
+        for (let i = 0; i < 12; i += 1) {
+          const mid = (lo + hi) / 2;
+          text.style.fontSize = `${mid}px`;
+
+          const fitsWidth = text.scrollWidth <= width + 0.5;
+          const fitsHeight = text.scrollHeight <= height + 0.5;
+
+          if (fitsWidth && fitsHeight) {
+            best = mid;
+            lo = mid;
+          } else {
+            hi = mid;
+          }
+        }
+
+        text.style.fontSize = `${best}px`;
+        setFontSize(best);
+      });
+    };
+
+    fit();
+
+    const resizeObserver = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(fit)
+      : null;
+    resizeObserver?.observe(box);
+    document.fonts?.ready.then(fit);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      resizeObserver?.disconnect();
+    };
+  }, [children, max, min]);
+
+  return (
+    <div className={className} ref={boxRef}>
+      <span ref={textRef} className="cex-fit-title-text" style={{ fontSize }}>
+        {children}
+      </span>
+    </div>
+  );
 }
 
 export function ModelA({ etiqueta, titulo, code }: { etiqueta: string; titulo: string; code?: string }) {
@@ -40,7 +107,7 @@ export function ModelA({ etiqueta, titulo, code }: { etiqueta: string; titulo: s
         <Eyebrow>{etiqueta}</Eyebrow>
         {code && <span className="cex-code">{code}</span>}
       </div>
-      <div className="cex-art-a-title" style={{ fontSize: titleSize(titulo, 52) }}>{titulo}</div>
+      <FitTitle className="cex-art-a-title" max={38} min={13}>{titulo}</FitTitle>
     </div>
   );
 }
@@ -53,7 +120,7 @@ export function ModelB({ etiqueta, titulo, code }: { etiqueta: string; titulo: s
         {code && <span className="cex-code cex-code-dark">{code}</span>}
       </div>
       <div className="cex-art-b-body">
-        <div className="cex-art-b-title" style={{ fontSize: titleSize(titulo, 46) }}>{titulo}</div>
+        <FitTitle className="cex-art-b-title" max={34} min={13}>{titulo}</FitTitle>
       </div>
     </div>
   );
@@ -67,7 +134,7 @@ export function ModelC({ etiqueta, titulo, big, bigLabel }: { etiqueta: string; 
         <span className="cex-art-c-num">{big}</span>
         {bigLabel && <span className="cex-art-c-label">{bigLabel}</span>}
       </div>
-      <div className="cex-art-c-title">{titulo}</div>
+      <FitTitle className="cex-art-c-title" max={20} min={11}>{titulo}</FitTitle>
     </div>
   );
 }
@@ -80,7 +147,7 @@ export function ModelD({ etiqueta, titulo }: { etiqueta: string; titulo: string 
       <div className="cex-art-d-scrim" />
       <div className="cex-art-d-content">
         <Eyebrow variant="cream">{etiqueta}</Eyebrow>
-        <div className="cex-art-d-title" style={{ fontSize: titleSize(titulo, 44) }}>{titulo}</div>
+        <FitTitle className="cex-art-d-title" max={32} min={12}>{titulo}</FitTitle>
       </div>
     </div>
   );

@@ -125,6 +125,21 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   line-height: 0.9;
   letter-spacing: -0.035em;
   color: #EDE6D3;
+  display: flex;
+  align-items: flex-end;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.cex-fit-title-text {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
   text-wrap: balance;
 }
 
@@ -144,7 +159,7 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   align-items: center;
   justify-content: space-between;
 }
-.cex-art-b-body { flex: 1; padding: 20px; display: flex; align-items: flex-end; }
+.cex-art-b-body { flex: 1; padding: 20px; display: flex; align-items: stretch; }
 .cex-art-b-title {
   font-family: var(--sans);
   font-weight: 800;
@@ -152,7 +167,12 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   line-height: 0.92;
   letter-spacing: -0.035em;
   color: #EDE6D3;
-  text-wrap: balance;
+  display: flex;
+  align-items: flex-end;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
 }
 
 /* ════ MODELO C · NÚMERO / ÍNDICE ════
@@ -193,6 +213,11 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   line-height: 1;
   letter-spacing: -0.02em;
   color: #EDE6D3;
+  display: flex;
+  align-items: flex-end;
+  height: 54px;
+  overflow: hidden;
+  width: 100%;
 }
 
 /* ════ MODELO D · FOTO / GRADIENTE ════
@@ -221,7 +246,12 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   line-height: 0.92;
   letter-spacing: -0.035em;
   color: #FAFAF7;
-  text-wrap: balance;
+  display: flex;
+  align-items: flex-end;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
 }
 
 /* ── RODAPÉ FIXO (igual em todos os cards) ── */

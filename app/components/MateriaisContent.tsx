@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { ProdCard, ModelA, ModelB, ModelC, ModelD } from "./ProdCard";
+import Link from "next/link";
+import { ProdCard } from "./ProdCard";
 import type { Modelo } from "./ProdCard";
 import { ACCENTS } from "../lib/accents";
 import type { AccentKey } from "../lib/accents";
@@ -48,7 +49,7 @@ function dbMaterialToMaterial(m: DbMaterial): Material {
 
 
 // ─── SHELF CAROUSEL ───────────────────────────────────────────────────────────
-function ShelfCarousel({ materiais, accentKey, onCardClick }: { materiais: Material[]; accentKey: AccentKey; onCardClick: (m: Material) => void }) {
+function ShelfCarousel({ materiais, accentKey }: { materiais: Material[]; accentKey: AccentKey }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const scroll = (dir: "left" | "right") => {
     trackRef.current?.scrollBy({ left: dir === "left" ? -350 : 350, behavior: "smooth" });
@@ -60,7 +61,11 @@ function ShelfCarousel({ materiais, accentKey, onCardClick }: { materiais: Mater
           const model = (["A","C","B"] as const)[i % 3] as Modelo;
           const big = (m.meta.mensagens ?? m.meta.paginas).toString();
           const bigLabel = m.meta.mensagens != null ? "mensagens" : "páginas";
-          return <ProdCard key={m.id} material={{...m, model, big, bigLabel}} accentKey={accentKey} onClick={() => onCardClick(m)} />;
+          return (
+            <Link key={m.id} href={`/materiais/${m.id}`} style={{ textDecoration: "none" }}>
+              <ProdCard material={{...m, model, big, bigLabel}} accentKey={accentKey} onClick={() => {}} />
+            </Link>
+          );
         })}
       </div>
       <div className="loja-carousel-arrows">
@@ -72,10 +77,9 @@ function ShelfCarousel({ materiais, accentKey, onCardClick }: { materiais: Mater
 }
 
 // ─── SHELF ────────────────────────────────────────────────────────────────────
-function Shelf({ estante, materiais, onCardClick, onVerTodos }: {
+function Shelf({ estante, materiais, onVerTodos }: {
   estante: Estante;
   materiais: Material[];
-  onCardClick: (m: Material) => void;
   onVerTodos: (e: Estante) => void;
 }) {
   if (materiais.length === 0) return null;
@@ -96,14 +100,18 @@ function Shelf({ estante, materiais, onCardClick, onVerTodos }: {
         )}
       </div>
       {isCarousel ? (
-        <ShelfCarousel materiais={materiais} accentKey={estante.accent} onCardClick={onCardClick} />
+        <ShelfCarousel materiais={materiais} accentKey={estante.accent} />
       ) : (
         <div className="loja-shelf-grid">
           {materiais.map((m, i) => {
             const model = (["A","C","B"] as const)[i % 3] as Modelo;
             const big = (m.meta.mensagens ?? m.meta.paginas).toString();
             const bigLabel = m.meta.mensagens != null ? "mensagens" : "páginas";
-            return <ProdCard key={m.id} material={{...m, model, big, bigLabel}} accentKey={estante.accent} onClick={() => onCardClick(m)} />;
+            return (
+              <Link key={m.id} href={`/materiais/${m.id}`} style={{ textDecoration: "none" }}>
+                <ProdCard material={{...m, model, big, bigLabel}} accentKey={estante.accent} onClick={() => {}} />
+              </Link>
+            );
           })}
         </div>
       )}
@@ -111,135 +119,11 @@ function Shelf({ estante, materiais, onCardClick, onVerTodos }: {
   );
 }
 
-// ─── MODAL ────────────────────────────────────────────────────────────────────
-function Modal({ material, onClose, allMateriais }: { material: Material; onClose: () => void; allMateriais: Material[] }) {
-  const estante = ESTANTE_MAP[material.estante];
-  const accentKey = estante?.accent || "olive";
-  const accent = ACCENTS[accentKey];
-
-  const shelfItems = allMateriais.filter(mi => mi.estante === material.estante);
-  const posInShelf = shelfItems.findIndex(mi => mi.id === material.id);
-  const derivedModel = (["A","C","B"] as const)[Math.max(0, posInShelf) % 3] as Modelo;
-  const derivedBig = (material.meta.mensagens ?? material.meta.paginas).toString();
-  const derivedBigLabel = material.meta.mensagens != null ? "mensagens" : "páginas";
-
-  const relacionados = allMateriais.filter(
-    (m) => m.estante === material.estante && m.id !== material.id
-  ).slice(0, 3);
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", handleKey);
-    return () => { document.body.style.overflow = ""; document.removeEventListener("keydown", handleKey); };
-  }, [onClose]);
-
-  const metaStr = [
-    material.meta.mensagens ? `${material.meta.mensagens} mensagens` : null,
-    `${material.meta.paginas} páginas`,
-  ].filter(Boolean).join(" · ");
-
-  return (
-    <div className="loja-modal">
-      <div className="loja-modal-backdrop" onClick={onClose} />
-      <div className="loja-modal-inner">
-        <div className="loja-modal-bar">
-          <span className="loja-modal-breadcrumb">Materiais → {material.etiqueta}</span>
-          <button className="loja-modal-close" onClick={onClose}>Fechar ×</button>
-        </div>
-        <div className="loja-detail">
-          <div className="loja-detail-hero">
-            <div className="loja-detail-capa"
-              style={{ "--cex-accent": accent.base, "--cex-accent-deep": accent.deep } as React.CSSProperties}>
-              {derivedModel === "A" && <ModelA etiqueta={material.etiqueta} titulo={material.titulo} code={material.code} />}
-              {derivedModel === "B" && <ModelB etiqueta={material.etiqueta} titulo={material.titulo} code={material.code} />}
-              {derivedModel === "C" && <ModelC etiqueta={material.etiqueta} titulo={material.titulo} big={derivedBig} bigLabel={derivedBigLabel} />}
-            </div>
-            <div>
-              <div className="loja-detail-meta-row">
-                <span className="loja-detail-etiqueta" style={{ color: accent.base, background: `${accent.base}18`, borderColor: `${accent.base}44` }}>{material.etiqueta}</span>
-                {material.colecoes.length > 0 && (
-                  <span className="loja-detail-etiqueta" style={{ color: "var(--muted)", background: "var(--card)", borderColor: "var(--border-2)" }}>
-                    {material.colecoes.map((c) => c.charAt(0).toUpperCase() + c.slice(1)).join(", ")}
-                  </span>
-                )}
-              </div>
-              <div className="loja-detail-titulo">{material.titulo}</div>
-              <p className="loja-detail-promessa">{material.promessa}</p>
-            </div>
-          </div>
-
-          <div className="loja-detail-sec">
-            <div className="loja-detail-sec-label">◆ Pra quem é</div>
-            <p className="loja-detail-text">{material.praQuem}</p>
-          </div>
-
-          <div className="loja-detail-sec">
-            <div className="loja-detail-sec-label">◆ O que vem dentro · {metaStr}</div>
-            <ul className="loja-detail-list">
-              {material.conteudo.map((item, i) => <li key={i}>{item}</li>)}
-            </ul>
-          </div>
-
-          <div className="loja-detail-sec">
-            <div className="loja-detail-sec-label">◆ Como usar</div>
-            <p className="loja-detail-text">{material.comoUsar}</p>
-            <div className="loja-detail-formatos">
-              {material.meta.formatos.map((f) => (
-                <span key={f} className="loja-detail-formato" style={{ color: accent.base, borderColor: `${accent.base}44` }}>{f}</span>
-              ))}
-            </div>
-          </div>
-
-          <div className="loja-detail-sec">
-            <div className="loja-detail-preco-block">
-              <div>
-                <div className="loja-detail-preco-val" style={{ color: accent.base }}>{material.preco}</div>
-                <div className="loja-detail-preco-desc">Compra única · Acesso vitalício</div>
-              </div>
-              <div className="loja-detail-preco-info" />
-              <a href={material.hotmartUrl} target="_blank" rel="noopener noreferrer"
-                style={{ background: accent.base, color: "#0E110D", borderColor: accent.base } as React.CSSProperties}
-                className="btn btn-lg btn-arrow">Comprar</a>
-            </div>
-          </div>
-
-          {relacionados.length > 0 && (
-            <div className="loja-detail-sec">
-              <div className="loja-detail-sec-label">◆ Da mesma estante</div>
-              <div className="loja-relacionados">
-                {relacionados.map((m) => {
-                  const allInShelf = allMateriais.filter(mi => mi.estante === material.estante);
-                  const pos = allInShelf.findIndex(mi => mi.id === m.id);
-                  const relModel = (["A","C","B"] as const)[Math.max(0, pos) % 3] as Modelo;
-                  const relBig = (m.meta.mensagens ?? m.meta.paginas).toString();
-                  const relBigLabel = m.meta.mensagens != null ? "mensagens" : "páginas";
-                  return <ProdCard key={m.id} material={{...m, model: relModel, big: relBig, bigLabel: relBigLabel}} accentKey={accentKey} onClick={() => {}} />;
-                })}
-              </div>
-            </div>
-          )}
-
-          <div className="loja-detail-sec">
-            <div className="loja-detail-sec-label">◆ Perguntas frequentes</div>
-            {material.faq.map((item, i) => (
-              <div key={i} className="loja-detail-faq-item">
-                <div className="loja-detail-faq-q">{item.q}</div>
-                <div className="loja-detail-faq-a">{item.a}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ─── SHELF MODAL ─────────────────────────────────────────────────────────────
-function ShelfModal({ estante, materiais, onCardClick, onClose }: {
+function ShelfModal({ estante, materiais, onClose }: {
   estante: Estante;
   materiais: Material[];
-  onCardClick: (m: Material) => void;
   onClose: () => void;
 }) {
   const accent = ACCENTS[estante.accent];
@@ -270,7 +154,11 @@ function ShelfModal({ estante, materiais, onCardClick, onClose }: {
               const model = (["A","C","B"] as const)[i % 3] as Modelo;
               const big = (m.meta.mensagens ?? m.meta.paginas).toString();
               const bigLabel = m.meta.mensagens != null ? "mensagens" : "páginas";
-              return <ProdCard key={m.id} material={{...m, model, big, bigLabel}} accentKey={estante.accent} onClick={() => onCardClick(m)} />;
+              return (
+                <Link key={m.id} href={`/materiais/${m.id}`} style={{ textDecoration: "none" }}>
+                  <ProdCard material={{...m, model, big, bigLabel}} accentKey={estante.accent} onClick={() => {}} />
+                </Link>
+              );
             })}
           </div>
         </div>
@@ -304,7 +192,6 @@ export default function MateriaisContent({
   const [filtroL1, setFiltroL1] = useState<FiltroL1>("tudo");
   const [estanteAtiva, setEstanteAtiva] = useState<string | null>(null);
   const [faixaInfantil, setFaixaInfantil] = useState<string | null>(null);
-  const [materialAberto, setMaterialAberto] = useState<Material | null>(null);
   const [estanteAberta, setEstanteAberta] = useState<Estante | null>(null);
 
   const handleL1 = useCallback((f: FiltroL1) => { setFiltroL1(f); setEstanteAtiva(null); setFaixaInfantil(null); }, []);
@@ -390,7 +277,11 @@ export default function MateriaisContent({
                 <div className="loja-shelf-grid">
                   {mats.map((m) => {
                     const e = ESTANTE_MAP[m.estante];
-                    return <ProdCard key={m.id} material={m} accentKey={e?.accent || "olive"} onClick={() => setMaterialAberto(m)} />;
+                    return (
+                      <Link key={m.id} href={`/materiais/${m.id}`} style={{ textDecoration: "none" }}>
+                        <ProdCard material={m} accentKey={e?.accent || "olive"} onClick={() => {}} />
+                      </Link>
+                    );
                   })}
                 </div>
               </div>
@@ -419,10 +310,10 @@ export default function MateriaisContent({
               </div>
             )}
             {infantilVisiveis().map((e) => (
-              <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} onVerTodos={setEstanteAberta} />
+              <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onVerTodos={setEstanteAberta} />
             ))}
             {estanteAtiva !== "infantil" && estantesVisiveis(estantesMinistrar).map((e) => (
-              <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} onVerTodos={setEstanteAberta} />
+              <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onVerTodos={setEstanteAberta} />
             ))}
           </div>
         )}
@@ -448,7 +339,7 @@ export default function MateriaisContent({
               </div>
             )}
             {estantesVisiveis(estantesLiderar).map((e) => (
-              <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onCardClick={setMaterialAberto} onVerTodos={setEstanteAberta} />
+              <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onVerTodos={setEstanteAberta} />
             ))}
           </div>
         )}
@@ -482,13 +373,8 @@ export default function MateriaisContent({
         <ShelfModal
           estante={estanteAberta}
           materiais={materiaisDe(estanteAberta.key)}
-          onCardClick={(m) => { setEstanteAberta(null); setMaterialAberto(m); }}
           onClose={() => setEstanteAberta(null)}
         />
-      )}
-
-      {materialAberto && (
-        <Modal material={materialAberto} onClose={() => setMaterialAberto(null)} allMateriais={allMateriais} />
       )}
     </>
   );
