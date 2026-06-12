@@ -11,7 +11,7 @@ export default function Nav() {
 
   const links = [
     { href: "/", label: "Início" },
-    { href: "/materiais", label: "Materiais" },
+    { href: pathname === "/" ? "#materiais" : "/materiais", label: "Materiais" },
     { href: "/cursos", label: "Cursos & Mentorias" },
     { href: "/sobre", label: "Sobre" },
     { href: "/quiz", label: "Sua Vocação" },

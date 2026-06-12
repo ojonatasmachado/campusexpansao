@@ -4,7 +4,7 @@
    ════════════════════════════════════════════════════════════════ */
 
 /* ── HERO DA LOJA ── */
-.loja-hero { padding: 80px 0 56px; position: relative; overflow: hidden; }
+.loja-hero { padding: 100px 0 72px; position: relative; overflow: hidden; }
 .loja-hero-tag { display: inline-flex; align-items: center; gap: 10px; background: var(--olive-dim); border: 0.5px solid var(--olive-line); border-radius: var(--r-pill); padding: 8px 18px; font-family: var(--mono); font-size: 11px; color: var(--olive); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 24px; }
 .loja-hero-title { font-size: 72px; font-weight: 700; letter-spacing: -0.05em; line-height: 0.96; margin-bottom: 20px; }
 .loja-hero-title em { font-style: italic; color: var(--olive); }
@@ -28,7 +28,7 @@
 .loja-familia-title em { font-style: italic; color: var(--olive); }
 
 /* ── ESTANTE ── */
-.loja-shelf { margin-bottom: 48px; }
+.loja-shelf { margin-bottom: 64px; }
 .loja-shelf-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 22px; }
 .loja-shelf-name { font-family: var(--mono); font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; }
 .loja-shelf-count { font-family: var(--mono); font-size: 12px; color: var(--subtle); }
@@ -37,10 +37,10 @@
 .loja-shelf-ver::after { content: ' →'; }
 
 /* ── GRID (≤ SHELF_CAROUSEL_THRESHOLD) ── */
-.loja-shelf-grid { display: flex; flex-wrap: wrap; gap: 22px; }
+.loja-shelf-grid { display: flex; flex-wrap: wrap; gap: 22px; padding-top: 6px; overflow: visible; }
 
 /* ── CAROUSEL (> SHELF_CAROUSEL_THRESHOLD) ── */
-.loja-shelf-carousel { position: relative; }
+.loja-shelf-carousel { position: relative; padding-top: 6px; overflow: visible; }
 .loja-carousel-track { display: flex; gap: 22px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding-bottom: 8px; scrollbar-width: none; }
 .loja-carousel-track::-webkit-scrollbar { display: none; }
 .loja-carousel-track .cex-card { flex: 0 0 320px; scroll-snap-align: start; }
