@@ -183,6 +183,48 @@
 .row-btn:hover { color: var(--white); border-color: var(--olive-line); }
 .row-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
 
+/* Lista de estantes: grid próprio para não herdar o layout genérico das listas. */
+.shelf-row {
+  grid-template-columns: 52px 72px minmax(260px, 1fr) 96px auto;
+  gap: 18px;
+  padding: 18px 14px;
+}
+.shelf-drag {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--subtle);
+  font-size: 18px;
+  letter-spacing: 2px;
+  cursor: grab;
+  user-select: none;
+}
+.shelf-row .row-chip {
+  width: 52px;
+  height: 52px;
+}
+.shelf-row .row-main {
+  justify-self: start;
+  width: 100%;
+}
+.shelf-row .row-title {
+  font-size: 16px;
+}
+.shelf-count {
+  justify-self: end;
+  min-width: 82px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-align: right;
+  white-space: nowrap;
+}
+.shelf-row .row-acts {
+  justify-self: end;
+}
+
 /* ════════ MODAL ════════ */
 .modal-bg { position: fixed; inset: 0; background: rgba(14,17,13,.78); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 24px; }
 .modal { background: var(--graphite); border: .5px solid var(--border-2); border-radius: var(--r-lg); padding: 32px; max-width: 420px; width: 100%; }
@@ -353,4 +395,24 @@ select.inp { appearance: none; cursor: pointer; background-image: url("data:imag
   .kpi-row { grid-template-columns: 1fr 1fr; }
   .dash-2col { grid-template-columns: 1fr; }
   .adm-top, .adm-content { padding-left: 24px; padding-right: 24px; }
+  .shelf-row {
+    grid-template-columns: 40px 56px minmax(0, 1fr);
+    align-items: start;
+  }
+  .shelf-row .row-chip {
+    width: 46px;
+    height: 46px;
+  }
+  .shelf-count {
+    grid-column: 3;
+    justify-self: start;
+    text-align: left;
+    margin-top: -8px;
+  }
+  .shelf-row .row-acts {
+    grid-column: 1 / -1;
+    justify-self: start;
+    padding-left: 96px;
+    flex-wrap: wrap;
+  }
 }

@@ -911,7 +911,7 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
 
 type Route = { screen: 'dashboard' } | { screen: 'list'; type: ItemType } | { screen: 'shelves' }
 
-function Login({ onEnter }: { onEnter: () => void }) {
+function Login() {
   const [pw, setPw] = useState('')
   const [err, setErr] = useState(false)
   const [pending, startTransition] = useTransition()
@@ -920,7 +920,7 @@ function Login({ onEnter }: { onEnter: () => void }) {
     startTransition(async () => {
       const ok = await loginAction(pw)
       if (ok) {
-        onEnter()
+        window.location.reload()
       } else {
         setErr(true)
         setTimeout(() => setErr(false), 600)
@@ -1085,7 +1085,7 @@ function ShelvesView({ estantes, materiais, onSave, onToggle, onDelete, onReorde
           return (
             <div
               key={e.key}
-              className="row"
+              className="row shelf-row"
               draggable
               onDragStart={() => handleDragStart(e.key)}
               onDragOver={(ev) => handleDragOver(ev, e.key)}
@@ -1100,7 +1100,7 @@ function ShelvesView({ estantes, materiais, onSave, onToggle, onDelete, onReorde
               }}
             >
               {/* Handle de drag */}
-              <div style={{ color: 'var(--subtle)', fontSize: 18, cursor: 'grab', marginRight: 8, userSelect: 'none', letterSpacing: 2 }}>⠿</div>
+              <div className="shelf-drag" aria-label="Arrastar estante">⠿</div>
               <div className="row-chip" style={{ background: e.accent, flexShrink: 0 }}>
                 <span style={{ color: '#0E110D', fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700 }}>◆</span>
               </div>
@@ -1111,7 +1111,7 @@ function ShelvesView({ estantes, materiais, onSave, onToggle, onDelete, onReorde
                 </div>
                 <div className="row-cat">Para {e.familia} · {e.faixaEtaria || 'sem subtítulo'}</div>
               </div>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', minWidth: 60, textAlign: 'right' }}>
+              <span className="shelf-count">
                 {n} item{n !== 1 ? 's' : ''}
               </span>
               <div className="row-acts">
@@ -1311,7 +1311,7 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
   const [confirm, setConfirm] = useState<Item | null>(null)
   const [, startTransition] = useTransition()
 
-  if (!authed) return <Login onEnter={() => setAuthed(true)} />
+  if (!authed) return <Login />
 
   const arrKey = (type: ItemType) => TYPES.find((t) => t.key === type)!.arr
   const counts = {
