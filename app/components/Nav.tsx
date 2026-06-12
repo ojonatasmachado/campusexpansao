@@ -9,11 +9,15 @@ export default function Nav() {
 
   const isActive = (href: string) => pathname === href;
 
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const links = [
     { href: "/", label: "Início" },
-    { href: pathname === "/" ? "#materiais" : "/materiais", label: "Materiais" },
+    { href: pathname === "/" ? "#materiais" : "/materiais", label: "Materiais", scrollId: pathname === "/" ? "materiais" : undefined },
     { href: "/cursos", label: "Cursos & Mentorias" },
-    { href: pathname === "/" ? "#sobre" : "/#sobre", label: "Sobre" },
+    { href: pathname === "/" ? "#sobre" : "/#sobre", label: "Sobre", scrollId: pathname === "/" ? "sobre" : undefined },
     { href: "/quiz", label: "Sua Vocação" },
   ];
 
@@ -28,7 +32,11 @@ export default function Nav() {
         <ul className="nav-links">
           {links.map(l => (
             <li key={l.href}>
-              <Link href={l.href} className={`nav-link${isActive(l.href) ? " active" : ""}`}>
+              <Link
+                href={l.href}
+                className={`nav-link${isActive(l.href) ? " active" : ""}`}
+                onClick={l.scrollId ? (e) => { e.preventDefault(); scrollTo(l.scrollId!); } : undefined}
+              >
                 {l.label}
               </Link>
             </li>
@@ -56,7 +64,7 @@ export default function Nav() {
             key={l.href}
             href={l.href}
             className={`nav-drawer-link${isActive(l.href) ? " active" : ""}`}
-            onClick={() => setOpen(false)}
+            onClick={l.scrollId ? (e) => { e.preventDefault(); setOpen(false); scrollTo(l.scrollId!); } : () => setOpen(false)}
           >
             {l.label}
           </Link>

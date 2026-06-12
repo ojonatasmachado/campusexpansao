@@ -66,7 +66,7 @@
   display: flex;
   flex-direction: column;
 }
-.cex-card:hover { transform: translateY(-3px); border-color: var(--cex-accent, #7A9E3F); }
+.cex-card:hover { border-color: var(--cex-accent, #7A9E3F); box-shadow: 0 0 0 1px var(--cex-accent, #7A9E3F), 0 16px 48px -16px rgba(0,0,0,0.7); }
 
 /* ── EYEBROW: ◆ label (geral) ── */
 .cex-eyebrow {
