@@ -13,7 +13,7 @@ export default function Nav() {
     { href: "/", label: "Início" },
     { href: pathname === "/" ? "#materiais" : "/materiais", label: "Materiais" },
     { href: "/cursos", label: "Cursos & Mentorias" },
-    { href: "/sobre", label: "Sobre" },
+    { href: pathname === "/" ? "#sobre" : "/#sobre", label: "Sobre" },
     { href: "/quiz", label: "Sua Vocação" },
   ];
 
