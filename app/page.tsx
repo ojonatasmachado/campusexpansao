@@ -82,31 +82,6 @@ export default async function Home() {
             <div className="value-desc">O crescimento que só Deus dá e que nos mantém em dependência.</div>
           </div>
         </div>
-        <div style={{ marginTop: 40 }}>
-          <a href="/sobre" className="btn btn-secondary btn-arrow">Conhecer a CE.X</a>
-        </div>
-      </div>
-
-      {/* STATS */}
-      <div className="pg-wrap">
-        <div className="stats-strip">
-          <div className="stat-item">
-            <div className="stat-item-num">+2<em>mil</em></div>
-            <div className="stat-item-label">Líderes formados</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-item-num">12</div>
-            <div className="stat-item-label">Cursos &amp; Mentorias</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-item-num">40<em>+</em></div>
-            <div className="stat-item-label">Materiais editáveis</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-item-num">6</div>
-            <div className="stat-item-label">Anos de estrada</div>
-          </div>
-        </div>
       </div>
 
       {/* MATERIAIS — dados do banco */}

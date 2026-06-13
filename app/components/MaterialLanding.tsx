@@ -152,7 +152,7 @@ export default function MaterialLanding({
   const faq = raw.faq?.length ? raw.faq : FAQ_PADRAO;
 
   const wrap: React.CSSProperties = { maxWidth: 1180, margin: "0 auto", padding: "0 clamp(22px, 5vw, 64px)" };
-  const sec: React.CSSProperties = { padding: "88px 0", borderBottom: "0.5px solid #25291F" };
+  const sec: React.CSSProperties = { padding: "60px 0", borderBottom: "0.5px solid #25291F" };
 
   return (
     <>
@@ -165,8 +165,7 @@ export default function MaterialLanding({
             textDecoration: "none", display: "inline-flex", gap: 8, marginBottom: 26,
           }}>← Voltar pra Materiais</Link>
 
-          <div className="ld-hero-grid">
-            {/* esquerda */}
+          <div style={{ maxWidth: 680 }}>
             <div>
               <div style={{
                 fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.12em",
@@ -235,11 +234,6 @@ export default function MaterialLanding({
               </div>
             </div>
 
-            {/* direita: poster */}
-            <Poster
-              etiqueta={raw.etiqueta} titulo={raw.titulo} code={raw.code}
-              faixa={faixa} formato={formato} accent={ac}
-            />
           </div>
         </div>
       </div>

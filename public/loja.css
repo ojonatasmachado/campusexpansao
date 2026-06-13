@@ -286,8 +286,17 @@
   .loja-shelf-grid .cex-art-c-num { font-size: 64px; }
   .loja-shelf-grid .cex-art-d-title { font-size: 30px; }
   .loja-shelf-grid .cex-card-foot { height: 130px; }
-  /* Carousel: cards 260px em mobile */
+  /* Carousel: cards 260px em mobile, alturas uniformes */
   .loja-carousel-track .cex-card { flex: 0 0 260px; }
+  .loja-carousel-track .cex-art-a,
+  .loja-carousel-track .cex-art-b,
+  .loja-carousel-track .cex-art-c,
+  .loja-carousel-track .cex-art-d { height: 220px; }
+  .loja-carousel-track .cex-art-a-title { font-size: 34px; }
+  .loja-carousel-track .cex-art-b-title { font-size: 30px; }
+  .loja-carousel-track .cex-art-c-num { font-size: 64px; }
+  .loja-carousel-track .cex-art-d-title { font-size: 28px; }
+  .loja-carousel-track .cex-card-foot { height: 130px; }
   .loja-detail-hero { grid-template-columns: 1fr; }
   .loja-detail-capa { height: 200px; }
   .loja-detail-preco-block { flex-direction: column; text-align: center; gap: 16px; }

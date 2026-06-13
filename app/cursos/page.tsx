@@ -32,7 +32,7 @@ export default async function Cursos() {
       </div>
 
       {/* CROSS-LINK PARA MATERIAIS */}
-      <div style={{ padding: "0 4% 64px" }}>
+      <div className="pg-wrap" style={{ paddingBottom: 64 }}>
         <div style={{
           background: "var(--graphite)",
           border: "0.5px solid var(--border-2)",
@@ -55,7 +55,7 @@ export default async function Cursos() {
       </div>
 
       {/* CTA LISTA DE ESPERA */}
-      <div style={{ padding: "0 4% 80px" }}>
+      <div className="pg-wrap" style={{ paddingBottom: 80 }}>
         <div className="cta-block">
           <div className="cta-x">X</div>
           <div className="cta-eyebrow">◆ Próxima turma</div>
