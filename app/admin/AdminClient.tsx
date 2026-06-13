@@ -478,10 +478,10 @@ function buildFeedSlides(item: Item): SlideType[] {
   return slides
 }
 
-function CexLogo({ ac, size = 28 }: { ac?: string; size?: number }) {
+function CexLogo({ size = 28, dark = false }: { size?: number; dark?: boolean }) {
   return (
-    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: size, fontWeight: 700, letterSpacing: '-.06em', lineHeight: 1, color: '#EDE6D3' }}>
-      CE<span style={{ color: ac ?? '#7A9E3F' }}>.X</span>
+    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: size, fontWeight: 700, letterSpacing: '-.06em', lineHeight: 1, color: dark ? '#0E110D' : '#EDE6D3' }}>
+      CE<span style={{ color: dark ? '#2D4A12' : '#7A9E3F' }}>.X</span>
     </span>
   )
 }
@@ -537,7 +537,7 @@ function FeedSlide({ item, type, s = 1 }: { item: Item; type: SlideType; s?: num
         <div style={grid} />
         <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(80% 60% at 90% 10%, ${ac}22 0%, transparent 55%)`, pointerEvents: 'none' }} />
         <div style={{ ...topBar }}>
-          <CexLogo ac={ac} size={Math.round(28 * s)} />
+          <CexLogo size={Math.round(28 * s)} />
           <div style={eyebrow(m.shelf ?? item.type)}>
             <span style={{ fontSize: Math.round(8 * s) }}>◆</span> {(m.shelf ?? item.type).toUpperCase()}
           </div>
@@ -569,7 +569,7 @@ function FeedSlide({ item, type, s = 1 }: { item: Item; type: SlideType; s?: num
       <div style={{ ...base, background: '#181B16' }}>
         <div style={grid} />
         <div style={topBar}>
-          <CexLogo ac={ac} size={Math.round(24 * s)} />
+          <CexLogo size={Math.round(24 * s)} />
           <div style={eyebrow('Pra quem é')}><span style={{ fontSize: Math.round(8 * s) }}>◆</span> PRA QUEM É</div>
         </div>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: `0 ${p}px`, position: 'relative', zIndex: 2 }}>
@@ -588,7 +588,7 @@ function FeedSlide({ item, type, s = 1 }: { item: Item; type: SlideType; s?: num
       <div style={{ ...base }}>
         <div style={grid} />
         <div style={topBar}>
-          <CexLogo ac={ac} size={Math.round(24 * s)} />
+          <CexLogo size={Math.round(24 * s)} />
           <div style={eyebrow('Conteúdo')}><span style={{ fontSize: Math.round(8 * s) }}>◆</span> O QUE VEM DENTRO</div>
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: `${Math.round(40 * s)}px ${p}px`, gap: Math.round(22 * s), position: 'relative', zIndex: 2 }}>
@@ -609,7 +609,7 @@ function FeedSlide({ item, type, s = 1 }: { item: Item; type: SlideType; s?: num
       <div style={{ ...base, background: '#181B16' }}>
         <div style={grid} />
         <div style={topBar}>
-          <CexLogo ac={ac} size={Math.round(24 * s)} />
+          <CexLogo size={Math.round(24 * s)} />
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: `0 ${p}px`, position: 'relative', zIndex: 2 }}>
           <div style={{ fontSize: Math.round(100 * s), lineHeight: 0.7, color: ac, fontFamily: sans, fontWeight: 900, marginBottom: Math.round(30 * s) }}>&ldquo;</div>
@@ -632,7 +632,7 @@ function FeedSlide({ item, type, s = 1 }: { item: Item; type: SlideType; s?: num
     <div style={{ ...base, background: ac }}>
       <div style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(rgba(14,17,13,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(14,17,13,.08) 1px, transparent 1px)`, backgroundSize: `${72 * s}px ${72 * s}px`, pointerEvents: 'none' }} />
       <div style={{ ...topBar }}>
-        <span style={{ fontFamily: sans, fontSize: Math.round(28 * s), fontWeight: 700, letterSpacing: '-.06em', color: '#0E110D' }}>CE.X</span>
+        <CexLogo size={Math.round(28 * s)} dark />
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: `0 ${p}px`, position: 'relative', zIndex: 2 }}>
         <div style={{ fontFamily: mono, fontSize: Math.round(13 * s), letterSpacing: '.16em', textTransform: 'uppercase', color: '#0E110D', opacity: .6, marginBottom: Math.round(20 * s) }}>
@@ -672,7 +672,7 @@ function StoriesSlide({ item, s = 1 }: { item: Item; s?: number }) {
 
       {/* Top bar */}
       <div style={{ padding: `${Math.round(90 * s)}px ${p}px ${Math.round(40 * s)}px`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 2 }}>
-        <CexLogo ac={ac} size={Math.round(36 * s)} />
+        <CexLogo size={Math.round(36 * s)} />
         <div style={{ fontFamily: mono, fontSize: Math.round(13 * s), letterSpacing: '.16em', textTransform: 'uppercase', color: ac, display: 'flex', alignItems: 'center', gap: Math.round(8 * s) }}>
           <span style={{ fontSize: Math.round(8 * s) }}>◆</span> {(m.shelf ?? item.type).toUpperCase()}
         </div>
@@ -748,21 +748,30 @@ function FeedPreview({ item }: { item: Item }) {
     }
   }
 
+  // Helper: container com tamanho visual exato + slide posicionado absolutamente
+  const ScaledSlide = ({ type, scale }: { type: SlideType; scale: number }) => (
+    <div style={{ width: Math.round(1080 * scale), height: Math.round(1350 * scale), position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+        <FeedSlide item={item} type={type} s={1} />
+      </div>
+    </div>
+  )
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
-      {/* Main slide preview */}
-      <div style={{ display: 'flex', justifyContent: 'center', background: 'rgba(0,0,0,.3)', borderRadius: 8, padding: 16, overflow: 'hidden' }}>
-        <div style={{ transform: `scale(${MAIN_S})`, transformOrigin: 'top center', height: Math.round(1350 * MAIN_S), overflow: 'hidden' }}>
-          <FeedSlide item={item} type={slides[active]} s={1} />
-        </div>
+      {/* Main slide preview — centralizado */}
+      <div style={{ display: 'flex', justifyContent: 'center', background: 'rgba(0,0,0,.3)', borderRadius: 8, padding: '16px 8px' }}>
+        <ScaledSlide type={slides[active]} scale={MAIN_S} />
       </div>
       {/* Thumbnails */}
       <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
         {slides.map((t, i) => (
           <button key={i} onClick={() => setActive(i)}
             style={{ padding: 0, background: 'none', border: `2px solid ${active === i ? item.accent : 'var(--border)'}`, borderRadius: 4, cursor: 'pointer', overflow: 'hidden', flexShrink: 0 }}>
-            <div style={{ transform: `scale(${THUMB_S})`, transformOrigin: 'top left', width: Math.round(1080 * THUMB_S), height: Math.round(1350 * THUMB_S), pointerEvents: 'none' }}>
-              <FeedSlide item={item} type={t} s={1} />
+            <div style={{ width: Math.round(1080 * THUMB_S), height: Math.round(1350 * THUMB_S), position: 'relative', overflow: 'hidden', pointerEvents: 'none' }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${THUMB_S})`, transformOrigin: 'top left' }}>
+                <FeedSlide item={item} type={t} s={1} />
+              </div>
             </div>
           </button>
         ))}
@@ -772,8 +781,8 @@ function FeedPreview({ item }: { item: Item }) {
         style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--olive)', border: 'none', borderRadius: 6, padding: '10px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
         {downloading ? 'Baixando...' : `↓ Baixar ${slides.length} slides · PNG 1080×1350`}
       </button>
-      {/* Hidden full-size export container */}
-      <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none', opacity: 0 }}>
+      {/* Slides em tamanho real para export — fora da tela */}
+      <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none' }}>
         {slides.map((t, i) => <FeedSlide key={i} item={item} type={t} s={1} />)}
       </div>
     </div>
@@ -799,16 +808,20 @@ function StoriesPreview({ item }: { item: Item }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%', alignItems: 'center' }}>
-      <div style={{ background: 'rgba(0,0,0,.3)', borderRadius: 8, padding: 16, overflow: 'hidden' }}>
-        <div style={{ transform: `scale(${MAIN_S})`, transformOrigin: 'top center', height: Math.round(1920 * MAIN_S), overflow: 'hidden' }}>
-          <StoriesSlide item={item} s={1} />
+      {/* Preview com tamanho visual correto */}
+      <div style={{ background: 'rgba(0,0,0,.3)', borderRadius: 8, padding: '16px 8px' }}>
+        <div style={{ width: Math.round(1080 * MAIN_S), height: Math.round(1920 * MAIN_S), position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${MAIN_S})`, transformOrigin: 'top left' }}>
+            <StoriesSlide item={item} s={1} />
+          </div>
         </div>
       </div>
       <button onClick={handleDownload} disabled={downloading}
         style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--olive)', border: 'none', borderRadius: 6, padding: '10px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1, width: '100%' }}>
         {downloading ? 'Baixando...' : '↓ Baixar stories · PNG 1080×1920'}
       </button>
-      <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none', opacity: 0 }}>
+      {/* Stories em tamanho real para export */}
+      <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none' }}>
         <StoriesSlide item={item} s={1} />
       </div>
     </div>
