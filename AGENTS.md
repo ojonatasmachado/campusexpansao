@@ -212,22 +212,58 @@ Este arquivo é a **lei**. O **como executar cada tarefa** está em:
 
 ---
 
+## 11. Módulos centrais — NUNCA duplicar
+
+Estes arquivos são **fonte única de verdade**. Qualquer agente que tocar em dados do banco,
+paleta de cores ou layout de landing page **importa daqui**. Nunca redefina inline o que já
+existe aqui.
+
+### `app/lib/types.ts` — tipos do Supabase
+Contém `DbEstante`, `DbMaterial`, `DbCurso`, `DbMentoria`.
+- Se um campo novo for adicionado ao banco, **adicione aqui primeiro**.
+- Todos os componentes que leem Supabase importam de `../lib/types`.
+- Nunca declare `type DbMaterial = { ... }` ou similar dentro de um componente.
+
+### `app/lib/accents.ts` — paleta e conversão de hex
+Contém `AccentKey`, `ACCENTS`, `HEX_TO_ACCENT`, `accentKeyFromHex`.
+- `HEX_TO_ACCENT` converte o hex vindo do banco para `AccentKey`. Fonte única.
+- Nunca declare `const HEX_TO_ACCENT = { ... }` dentro de um componente.
+
+### `app/loja.css` — CSS global ativo
+Importado via `import "./loja.css"` no `app/layout.tsx`. **Este é o arquivo CSS que vale.**
+O arquivo `public/loja.css` não existe mais (foi deletado — era morto).
+
+Classes de landing page definidas aqui:
+- `.ld-wrap` — container centralizado (max-width 1180px, padding responsivo).
+- `.ld-sec` — seção com padding vertical e borda inferior.
+
+Nunca declare `const wrap = { maxWidth: 1180, ... }` ou `const sec = { padding: "60px 0", ... }`
+dentro de um componente. Use `className="ld-wrap"` e `className="ld-sec"`.
+
+---
+
 ## Estrutura do projeto
 
 ```
 app/
-  layout.tsx      ← metadata, fontes, imports dos CSS
-  page.tsx        ← Home (página-narrativa)
-  materiais/      ← catálogo de materiais
-  cursos/         ← cursos & mentorias
-  sobre/          ← página sobre
-  components/     ← Nav, Footer, MateriaisContent, CursoCard, ProdCard
-  lib/            ← accents.ts, cursos-data.ts
+  layout.tsx         ← metadata, fontes, import "./loja.css"
+  loja.css           ← CSS GLOBAL ATIVO (tokens, layout, landing pages)
+  page.tsx           ← Home (página-narrativa)
+  materiais/         ← catálogo de materiais
+  cursos/            ← cursos & mentorias
+  sobre/             ← página sobre
+  components/        ← Nav, Footer, MateriaisContent, CursoCard, ProdCard,
+                        MaterialLanding, CursoLanding
+  lib/
+    types.ts         ← tipos Supabase (DbEstante, DbMaterial, DbCurso, DbMentoria)
+    accents.ts       ← paleta (ACCENTS, HEX_TO_ACCENT, accentKeyFromHex)
+    materiais-data.ts
+    cursos-data.ts
 public/
-  tokens.css      ← variáveis CSS da marca (IMPORTAR PRIMEIRO)
-  components.css  ← estilos de todos os componentes
-  pages.css       ← estilos de seções de página
-  tokens.json     ← tokens em formato machine-readable
+  tokens.css         ← variáveis CSS da marca (IMPORTAR PRIMEIRO)
+  components.css     ← estilos de todos os componentes
+  pages.css          ← estilos de seções de página
+  tokens.json        ← tokens em formato machine-readable
 ```
 
 **Nunca edite** `tokens.css`, `components.css` ou `pages.css` diretamente.
