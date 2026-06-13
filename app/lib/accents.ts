@@ -11,3 +11,20 @@ export const ACCENTS: Record<AccentKey, Accent> = {
   rust:  { base: "#9C5A33", deep: "#6A3A1E", name: "Ferrugem"  },
   cocoa: { base: "#6F523A", deep: "#4A3322", name: "Cacau"     },
 };
+
+// Converte um hex canônico da paleta para AccentKey.
+// Fonte única: componentes de landing e o admin importam daqui.
+export const HEX_TO_ACCENT: Record<string, AccentKey> = {
+  "#E2D6B4": "sand",
+  "#CBA95C": "wheat",
+  "#D6A23E": "amber",
+  "#C5805A": "clay",
+  "#B5694A": "terra",
+  "#9C5A33": "rust",
+  "#6F523A": "cocoa",
+  "#7A9E3F": "olive",
+};
+
+export function accentKeyFromHex(hex: string, fallback: AccentKey = "olive"): AccentKey {
+  return HEX_TO_ACCENT[hex] ?? fallback;
+}

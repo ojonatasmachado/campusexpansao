@@ -2,31 +2,10 @@
 
 import React from "react";
 import Link from "next/link";
-import { ACCENTS } from "../lib/accents";
+import { ACCENTS, HEX_TO_ACCENT } from "../lib/accents";
 import type { AccentKey } from "../lib/accents";
 import { ESTANTE_MAP } from "../lib/materiais-data";
-
-// ── TIPOS ────────────────────────────────────────────────────────────────────
-
-const HEX_TO_ACCENT: Record<string, AccentKey> = {
-  "#E2D6B4": "sand", "#CBA95C": "wheat", "#D6A23E": "amber", "#C5805A": "clay",
-  "#B5694A": "terra", "#9C5A33": "rust", "#6F523A": "cocoa", "#7A9E3F": "olive",
-};
-
-type DbEstante = {
-  key: string; label: string; familia: string; accent: string;
-  faixa_etaria: string; status: string; ord: number;
-};
-
-type DbMaterial = {
-  id: string; familia: string; estante: string; model: string; etiqueta: string;
-  titulo: string; code: string | null; big: string | null; big_label: string | null;
-  promessa: string; mensagens: number | null; paginas: number; formatos: string[];
-  preco: string; hotmart_url: string; colecoes: string[]; pra_quem: string;
-  conteudo: string[]; como_usar: string; faq: { q: string; a: string }[];
-  mensagens_lista?: { nome: string; desc: string }[] | null;
-  depoimento?: { texto: string; autor: string } | null;
-};
+import type { DbEstante, DbMaterial } from "../lib/types";
 
 // ── TEMPLATE FIXO ────────────────────────────────────────────────────────────
 
@@ -151,14 +130,11 @@ export default function MaterialLanding({
   const depoimento = raw.depoimento;
   const faq = raw.faq?.length ? raw.faq : FAQ_PADRAO;
 
-  const wrap: React.CSSProperties = { maxWidth: 1180, margin: "0 auto", padding: "0 clamp(22px, 5vw, 64px)" };
-  const sec: React.CSSProperties = { padding: "60px 0", borderBottom: "0.5px solid #25291F" };
-
   return (
     <>
       {/* ── HERO ───────────────────────────────────────────────────────────── */}
-      <div style={{ ...sec, paddingTop: 54, paddingBottom: 70 }}>
-        <div style={wrap}>
+      <div className="ld-sec" style={{ paddingTop: 54, paddingBottom: 70 }}>
+        <div className="ld-wrap">
           <Link href="/materiais" style={{
             fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.1em",
             textTransform: "uppercase", color: "var(--muted)",
@@ -244,7 +220,7 @@ export default function MaterialLanding({
         backgroundImage: "linear-gradient(#25291F 1px, transparent 1px)",
         backgroundSize: "100% 46px",
       }}>
-        <div style={{ ...wrap, padding: "78px clamp(22px, 5vw, 64px)" }}>
+        <div className="ld-wrap" style={{ padding: "78px clamp(22px, 5vw, 64px)" }}>
           <p style={{
             fontSize: "clamp(22px, 4vw, 42px)", fontWeight: 700,
             letterSpacing: "-0.035em", lineHeight: 1.16,
@@ -265,8 +241,8 @@ export default function MaterialLanding({
 
       {/* ── PRA QUEM É ─────────────────────────────────────────────────────── */}
       {raw.pra_quem && (
-        <div style={sec}>
-          <div style={wrap}>
+        <div className="ld-sec">
+          <div className="ld-wrap">
             <div className="ld-sec-grid">
               <div>
                 <SecMark label="Pra quem é" accent={ac} />
@@ -287,8 +263,8 @@ export default function MaterialLanding({
       )}
 
       {/* ── O QUE VEM DENTRO ───────────────────────────────────────────────── */}
-      <div style={sec}>
-        <div style={wrap}>
+      <div className="ld-sec">
+        <div className="ld-wrap">
           <SecMark label="O que vem dentro" accent={ac} />
 
           {/* fatos */}
@@ -387,8 +363,8 @@ export default function MaterialLanding({
       </div>
 
       {/* ── COMO USAR ──────────────────────────────────────────────────────── */}
-      <div style={sec}>
-        <div style={wrap}>
+      <div className="ld-sec">
+        <div className="ld-wrap">
           <SecMark label="Como você usa" accent={ac} />
           <div className="ld-sec-grid" style={{ marginBottom: 36 }}>
             <h2 style={{
@@ -418,7 +394,7 @@ export default function MaterialLanding({
 
       {/* ── TESE ───────────────────────────────────────────────────────────── */}
       <div style={{ background: ac }}>
-        <div style={{ ...wrap, padding: "96px clamp(22px, 5vw, 64px)", textAlign: "center" }}>
+        <div className="ld-wrap" style={{ padding: "96px clamp(22px, 5vw, 64px)", textAlign: "center" }}>
           <div style={{
             fontFamily: "var(--mono)", fontSize: 12, letterSpacing: "0.16em",
             textTransform: "uppercase", color: "rgba(14,17,13,.6)",
@@ -438,8 +414,8 @@ export default function MaterialLanding({
       </div>
 
       {/* ── OFERTA ─────────────────────────────────────────────────────────── */}
-      <div id="oferta" style={sec}>
-        <div style={wrap}>
+      <div id="oferta" className="ld-sec">
+        <div className="ld-wrap">
           <div className="ld-offer-grid" style={{
             background: "#181B16", border: "0.5px solid #2E3327",
             borderTop: `2px solid ${ac}`, borderRadius: 18,
@@ -491,8 +467,8 @@ export default function MaterialLanding({
 
       {/* ── RELACIONADOS ───────────────────────────────────────────────────── */}
       {relacionados.length > 0 && (
-        <div style={sec}>
-          <div style={wrap}>
+        <div className="ld-sec">
+          <div className="ld-wrap">
             <div style={{
               display: "flex", alignItems: "flex-end", justifyContent: "space-between",
               gap: 24, marginBottom: 30, flexWrap: "wrap",
@@ -548,8 +524,8 @@ export default function MaterialLanding({
       )}
 
       {/* ── FAQ ────────────────────────────────────────────────────────────── */}
-      <div style={sec}>
-        <div style={wrap}>
+      <div className="ld-sec">
+        <div className="ld-wrap">
           <div className="ld-sec-grid">
             <div>
               <SecMark label="Perguntas" accent={ac} />
@@ -583,7 +559,7 @@ export default function MaterialLanding({
 
       {/* ── CTA FINAL ──────────────────────────────────────────────────────── */}
       <div style={{ padding: "96px 0", textAlign: "center" }}>
-        <div style={wrap}>
+        <div className="ld-wrap">
           <h2 style={{
             fontSize: "clamp(30px, 5vw, 52px)", fontWeight: 800,
             letterSpacing: "-0.04em", lineHeight: 0.98,

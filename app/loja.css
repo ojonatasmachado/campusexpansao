@@ -7,6 +7,14 @@
    Usa html .pg-wrap (especificidade 0,1,1) para vencer pages.css (0,1,0) ── */
 html .pg-wrap { max-width: none; padding: 0 4%; }
 
+/* ── LANDING PAGES — layout compartilhado (MaterialLanding + CursoLanding)
+   Mude aqui e reflete em todas as landing pages automaticamente. ── */
+.ld-wrap { max-width: 1180px; margin: 0 auto; padding: 0 clamp(22px, 5vw, 64px); }
+.ld-sec  { padding: 60px 0; border-bottom: 0.5px solid #25291F; }
+@media (max-width: 640px) {
+  .ld-sec { padding: 44px 0; }
+}
+
 /* ── HERO DA LOJA ── */
 .loja-hero { padding: 80px 0 56px; position: relative; overflow: hidden; }
 .loja-hero-tag { display: inline-flex; align-items: center; gap: 10px; background: var(--olive-dim); border: 0.5px solid var(--olive-line); border-radius: var(--r-pill); padding: 8px 18px; font-family: var(--mono); font-size: 11px; color: var(--olive); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 24px; }

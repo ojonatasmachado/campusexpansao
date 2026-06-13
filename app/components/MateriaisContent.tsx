@@ -4,26 +4,18 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ProdCard } from "./ProdCard";
 import type { Modelo } from "./ProdCard";
-import { ACCENTS } from "../lib/accents";
+import { ACCENTS, HEX_TO_ACCENT } from "../lib/accents";
 import type { AccentKey } from "../lib/accents";
 import {
   MATERIAIS, ESTANTES, ESTANTE_MAP, ESTANTES_MINISTRAR, ESTANTES_LIDERAR,
   INFANTIL_CHIP, L2_MINISTRAR, INFANTIL_ESTANTES,
 } from "../lib/materiais-data";
 import type { Material, Familia, Colecao, Estante } from "../lib/materiais-data";
+import type { DbEstante, DbMaterial } from "../lib/types";
 
 const SHELF_CAROUSEL_THRESHOLD = 6;
 
 type FiltroL1 = "tudo" | Familia | "eventos";
-
-// ── Conversão de dados do banco para tipos locais ─────────────────────────────
-const HEX_TO_ACCENT: Record<string, AccentKey> = {
-  '#E2D6B4': 'sand', '#CBA95C': 'wheat', '#D6A23E': 'amber', '#C5805A': 'clay',
-  '#B5694A': 'terra', '#9C5A33': 'rust', '#6F523A': 'cocoa', '#7A9E3F': 'olive',
-}
-
-type DbEstante = { key: string; label: string; familia: string; accent: string; faixa_etaria: string; status: string; ord: number }
-type DbMaterial = { id: string; familia: string; estante: string; model: string; etiqueta: string; titulo: string; code: string | null; big: string | null; big_label: string | null; promessa: string; mensagens: number | null; paginas: number; formatos: string[]; preco: string; hotmart_url: string; colecoes: string[]; pra_quem: string; conteudo: string[]; como_usar: string; faq: { q: string; a: string }[] }
 
 function dbEstanteToEstante(e: DbEstante): Estante {
   return {

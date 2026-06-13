@@ -42,14 +42,11 @@ export default function CursoLanding({
   const accent = ACCENTS[accentKey];
   const ac = accent.base;
 
-  const wrap: React.CSSProperties = { maxWidth: 1180, margin: "0 auto", padding: "0 clamp(22px, 5vw, 64px)" };
-  const sec: React.CSSProperties = { padding: "60px 0", borderBottom: "0.5px solid #25291F" };
-
   return (
     <>
       {/* ── HERO ───────────────────────────────────────────────────────────── */}
-      <div style={{ ...sec, paddingTop: 54, paddingBottom: 70 }}>
-        <div style={wrap}>
+      <div className="ld-sec" style={{ paddingTop: 54, paddingBottom: 70 }}>
+        <div className="ld-wrap">
           <Link href="/cursos" style={{
             fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.1em",
             textTransform: "uppercase", color: "var(--muted)",
@@ -125,7 +122,7 @@ export default function CursoLanding({
         backgroundImage: "linear-gradient(#25291F 1px, transparent 1px)",
         backgroundSize: "100% 46px",
       }}>
-        <div style={{ ...wrap, padding: "78px clamp(22px, 5vw, 64px)" }}>
+        <div className="ld-wrap" style={{ padding: "78px clamp(22px, 5vw, 64px)" }}>
           <p style={{
             fontSize: "clamp(22px, 4vw, 42px)", fontWeight: 700,
             letterSpacing: "-0.035em", lineHeight: 1.16,
@@ -145,8 +142,8 @@ export default function CursoLanding({
       </div>
 
       {/* ── PRA QUEM É ─────────────────────────────────────────────────────── */}
-      <div style={sec}>
-        <div style={wrap}>
+      <div className="ld-sec">
+        <div className="ld-wrap">
           <div className="ld-sec-grid">
             <div>
               <SecMark label="Pra quem é" accent={ac} />
@@ -166,8 +163,8 @@ export default function CursoLanding({
       </div>
 
       {/* ── A TRILHA ────────────────────────────────────────────────────────── */}
-      <div style={sec}>
-        <div style={wrap}>
+      <div className="ld-sec">
+        <div className="ld-wrap">
           <SecMark label="A trilha completa" accent={ac} />
           <div className="ld-sec-grid" style={{ marginBottom: 32 }}>
             <h2 style={{
@@ -225,8 +222,8 @@ export default function CursoLanding({
       </div>
 
       {/* ── EMENTA ──────────────────────────────────────────────────────────── */}
-      <div style={sec}>
-        <div style={wrap}>
+      <div className="ld-sec">
+        <div className="ld-wrap">
           <SecMark label="Ementa semana a semana" accent={ac} />
           <div className="ld-sec-grid" style={{ marginBottom: 32 }}>
             <h2 style={{
@@ -264,8 +261,8 @@ export default function CursoLanding({
       </div>
 
       {/* ── COMO É + MENTOR ─────────────────────────────────────────────────── */}
-      <div style={sec}>
-        <div style={wrap}>
+      <div className="ld-sec">
+        <div className="ld-wrap">
           <div className="ld-sec-grid">
             {/* como é */}
             <div>
@@ -312,8 +309,8 @@ export default function CursoLanding({
       </div>
 
       {/* ── DEPOIMENTO ──────────────────────────────────────────────────────── */}
-      <div style={{ ...sec, background: "#0A0D09" }}>
-        <div style={wrap}>
+      <div className="ld-sec" style={{ background: "#0A0D09" }}>
+        <div className="ld-wrap">
           <blockquote style={{
             borderLeft: `2px solid ${ac}`,
             padding: "6px 0 6px 32px", maxWidth: 760,
@@ -338,7 +335,7 @@ export default function CursoLanding({
 
       {/* ── TESE COLOR BAND ─────────────────────────────────────────────────── */}
       <div style={{ background: ac }}>
-        <div style={{ ...wrap, padding: "96px clamp(22px, 5vw, 64px)", textAlign: "center" }}>
+        <div className="ld-wrap" style={{ padding: "96px clamp(22px, 5vw, 64px)", textAlign: "center" }}>
           <div style={{
             fontFamily: "var(--mono)", fontSize: 12, letterSpacing: "0.16em",
             textTransform: "uppercase", color: "rgba(14,17,13,.6)",
@@ -358,8 +355,8 @@ export default function CursoLanding({
       </div>
 
       {/* ── LISTA DE ESPERA ─────────────────────────────────────────────────── */}
-      <div id="lista" style={sec}>
-        <div style={wrap}>
+      <div id="lista" className="ld-sec">
+        <div className="ld-wrap">
           <div className="ld-offer-grid" style={{
             background: "#181B16", border: "0.5px solid #2E3327",
             borderTop: `2px solid ${ac}`, borderRadius: 18,
@@ -416,8 +413,8 @@ export default function CursoLanding({
 
       {/* ── RELACIONADOS ───────────────────────────────────────────────────── */}
       {relacionados.length > 0 && (
-        <div style={sec}>
-          <div style={wrap}>
+        <div className="ld-sec">
+          <div className="ld-wrap">
             <div style={{
               display: "flex", alignItems: "flex-end", justifyContent: "space-between",
               gap: 24, marginBottom: 30, flexWrap: "wrap",
@@ -470,8 +467,8 @@ export default function CursoLanding({
       )}
 
       {/* ── FAQ ────────────────────────────────────────────────────────────── */}
-      <div style={sec}>
-        <div style={wrap}>
+      <div className="ld-sec">
+        <div className="ld-wrap">
           <div className="ld-sec-grid">
             <div>
               <SecMark label="Perguntas" accent={ac} />
@@ -505,7 +502,7 @@ export default function CursoLanding({
 
       {/* ── CTA FINAL ──────────────────────────────────────────────────────── */}
       <div style={{ padding: "96px 0", textAlign: "center" }}>
-        <div style={wrap}>
+        <div className="ld-wrap">
           <h2 style={{
             fontSize: "clamp(30px, 5vw, 52px)", fontWeight: 800,
             letterSpacing: "-0.04em", lineHeight: 0.98,
