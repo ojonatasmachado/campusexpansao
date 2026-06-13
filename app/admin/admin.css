@@ -319,9 +319,8 @@ select.inp { appearance: none; cursor: pointer; background-image: url("data:imag
 .seg { display: flex; background: var(--graphite); border: .5px solid var(--border-2); border-radius: var(--r-sm); padding: 3px; gap: 2px; }
 .seg-btn { font-size: 12px; color: var(--muted); padding: 6px 14px; border-radius: 3px; transition: all .15s; cursor: pointer; background: none; border: none; font-family: inherit; }
 .seg-btn.on { background: var(--olive); color: var(--ink); font-weight: 600; }
-.ed-prevstage { background: var(--ink); border: .5px solid var(--border-2); border-radius: var(--r-lg); padding: 28px; min-height: 380px; display: flex; align-items: flex-start; justify-content: center; overflow: hidden; }
+.ed-prevstage { background: var(--ink); border: .5px solid var(--border-2); border-radius: var(--r-lg); padding: 20px; min-height: 380px; display: flex; align-items: flex-start; justify-content: center; overflow: visible; }
 .prev-center { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 340px; }
-.prev-scale { transform: scale(.62); transform-origin: top center; width: 100%; }
 .ed-draftnote { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 14px; text-align: center; letter-spacing: .04em; }
 
 /* ════════ PRÉVIA ARTE ════════ */

@@ -232,8 +232,8 @@ function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
 
 function MaterialCardPv({ item }: { item: Material }) {
   return (
-    <div className="pv-mcard" style={{ width: 300 }}>
-      <ModelArt item={item} height={220} />
+    <div className="pv-mcard" style={{ width: 248 }}>
+      <ModelArt item={item} height={280} />
       <div className="pv-mcard-foot" style={{ margin: 0, padding: '16px 20px', borderTop: '.5px solid var(--border)' }}>
         <div className="pv-mcard-meta" style={{ margin: '0 0 10px' }}>{matMeta(item)}</div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -415,44 +415,401 @@ function DetailPreview({ item }: { item: Item }) {
   )
 }
 
-function BannerPreview({ item }: { item: Item }) {
-  const isMaterial = item.type === 'material'
-  const isCurso = item.type === 'curso'
+// ── PRÉVIA PÁGINA (iframe) ────────────────────────────────────────────────────
+
+function PagePreview({ item }: { item: Item }) {
+  const [zoom, setZoom] = useState(38)
   const m = item as Material
   const c = item as Curso
-  const tag = isCurso ? c.level : isMaterial ? m.shelf : item.type === 'mentoria' ? 'Mentoria' : 'Evento'
-  const model = isMaterial ? (m.model ?? 'A') : 'A'
-  const big = m.big ?? m.messages ?? m.pages
-  const bgStyle: CSSProperties | undefined = (model === 'D' && isMaterial)
-    ? (item.image
-        ? { backgroundImage: `url(${item.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-        : { background: `radial-gradient(120% 80% at 28% 18%, ${item.accent} 0%, var(--ink) 60%)` })
-    : undefined
-  return (
-    <div className="pv-banner" style={bgStyle}>
-      {model === 'D' && isMaterial && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,rgba(14,17,13,.2),rgba(14,17,13,.85))' }} />}
-      <div className="pv-art-grid" />
-      {model !== 'D' && <div className="pv-banner-x" style={{ color: item.accent }}>X</div>}
-      <div className="pv-banner-top">
-        <span style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-.06em' }}>CE<span style={{ color: 'var(--olive)' }}>.X</span></span>
-        {isCurso && <span className="pv-ccard-live" style={{ background: item.accent }}>● AO VIVO</span>}
+  const href = item.type === 'material' && m.id
+    ? `/materiais/${m.id}`
+    : item.type === 'curso' && c.id
+    ? `/cursos/${c.id}`
+    : null
+
+  if (!href) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 340, color: 'var(--muted)', fontFamily: 'var(--mono)', fontSize: 12, textAlign: 'center', flexDirection: 'column', gap: 10 }}>
+        <span style={{ fontSize: 22 }}>◆</span>
+        Salve o item primeiro para ver a prévia da página.
       </div>
-      <div className="pv-banner-mid">
-        {model === 'B'
-          ? <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: item.accent, color: 'var(--ink)', fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', padding: '6px 10px', borderRadius: 4, marginBottom: 14 }}>◆ {String(tag).toUpperCase()}</div>
-          : <div className="pv-banner-eyebrow" style={{ color: item.accent }}>◆ {String(tag).toUpperCase()}</div>}
-        {model === 'C' && big != null && (
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
-            <span style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: 80, lineHeight: .8, color: item.accent, letterSpacing: '-.05em' }}>{big}</span>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>{m.bigLabel ?? ''}</span>
+    )
+  }
+
+  const scale = zoom / 100
+  const BASE = 1180
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', minWidth: 36 }}>{zoom}%</span>
+        <input type="range" min={25} max={75} value={zoom} onChange={e => setZoom(+e.target.value)}
+          style={{ flex: 1, accentColor: 'var(--olive)' }} />
+        <a href={href} target="_blank" rel="noreferrer"
+          style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--olive)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+          Abrir site →
+        </a>
+      </div>
+      <div style={{ overflow: 'hidden', height: 500, width: '100%', position: 'relative', borderRadius: 8, border: '.5px solid var(--border-2)', background: 'var(--ink)' }}>
+        <iframe
+          key={href}
+          src={href}
+          style={{ width: BASE, height: Math.round(500 / scale), transform: `scale(${scale})`, transformOrigin: 'top left', border: 'none', pointerEvents: 'none' }}
+        />
+      </div>
+    </div>
+  )
+}
+
+// ── SLIDES DE EXPORTAÇÃO (Feed 4:5 e Stories 9:16) ───────────────────────────
+
+const CEX_DOMAIN = 'campusexpansao.com.br'
+
+type SlideType = 'capa' | 'para-quem' | 'conteudo' | 'depoimento' | 'cta'
+
+function buildFeedSlides(item: Item): SlideType[] {
+  const slides: SlideType[] = ['capa']
+  if (item.type === 'material') {
+    const m = item as Material
+    if (m.paraQuem?.trim()) slides.push('para-quem')
+    if ((m.beneficios ?? []).some(b => b?.trim())) slides.push('conteudo')
+    if (m.depoimento?.texto?.trim()) slides.push('depoimento')
+  }
+  slides.push('cta')
+  return slides
+}
+
+function CexLogo({ ac, size = 28 }: { ac?: string; size?: number }) {
+  return (
+    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: size, fontWeight: 700, letterSpacing: '-.06em', lineHeight: 1, color: '#EDE6D3' }}>
+      CE<span style={{ color: ac ?? '#7A9E3F' }}>.X</span>
+    </span>
+  )
+}
+
+function FeedSlide({ item, type, s = 1 }: { item: Item; type: SlideType; s?: number }) {
+  const m = item as Material
+  const ac = item.accent
+  const W = 1080 * s
+  const H = 1350 * s
+  const p = Math.round(72 * s)
+  const mono = 'JetBrains Mono, SF Mono, monospace'
+  const sans = 'Inter, sans-serif'
+
+  const base: CSSProperties = {
+    width: W, height: H, position: 'relative', overflow: 'hidden',
+    fontFamily: sans, boxSizing: 'border-box',
+    background: '#0E110D',
+    display: 'flex', flexDirection: 'column',
+  }
+
+  const grid: CSSProperties = {
+    position: 'absolute', inset: 0,
+    backgroundImage: `linear-gradient(rgba(46,51,39,.35) 1px, transparent 1px), linear-gradient(90deg, rgba(46,51,39,.35) 1px, transparent 1px)`,
+    backgroundSize: `${72 * s}px ${72 * s}px`,
+    pointerEvents: 'none',
+  }
+
+  const eyebrow = (label: string): CSSProperties => ({
+    fontFamily: mono, fontSize: Math.round(13 * s), letterSpacing: '.18em',
+    textTransform: 'uppercase', color: ac, display: 'flex', alignItems: 'center', gap: Math.round(8 * s),
+  })
+
+  const topBar: CSSProperties = {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: `${p}px ${p}px 0`,
+    position: 'relative', zIndex: 2,
+  }
+
+  const botBar: CSSProperties = {
+    padding: `0 ${p}px ${p}px`,
+    display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
+    position: 'relative', zIndex: 2,
+  }
+
+  const domainLabel: CSSProperties = {
+    fontFamily: mono, fontSize: Math.round(11 * s), letterSpacing: '.12em',
+    textTransform: 'uppercase', color: '#555650',
+  }
+
+  if (type === 'capa') {
+    return (
+      <div style={{ ...base, background: '#0E110D' }}>
+        <div style={grid} />
+        <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(80% 60% at 90% 10%, ${ac}22 0%, transparent 55%)`, pointerEvents: 'none' }} />
+        <div style={{ ...topBar }}>
+          <CexLogo ac={ac} size={Math.round(28 * s)} />
+          <div style={eyebrow(m.shelf ?? item.type)}>
+            <span style={{ fontSize: Math.round(8 * s) }}>◆</span> {(m.shelf ?? item.type).toUpperCase()}
+          </div>
+        </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: `0 ${p}px`, position: 'relative', zIndex: 2, paddingBottom: Math.round(56 * s) }}>
+          <div style={{ fontFamily: sans, fontWeight: 900, fontSize: Math.round(120 * s), lineHeight: 0.88, letterSpacing: '-.05em', color: '#EDE6D3', overflowWrap: 'break-word' }}>
+            {item.title}
+          </div>
+          {item.desc && (
+            <div style={{ marginTop: Math.round(28 * s), fontSize: Math.round(30 * s), lineHeight: 1.4, color: '#E6E5DD', maxWidth: Math.round(820 * s) }}>
+              {item.desc}
+            </div>
+          )}
+        </div>
+        <div style={{ background: ac, padding: `${Math.round(24 * s)}px ${p}px`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 2 }}>
+          <div style={{ display: 'flex', gap: Math.round(12 * s), flexWrap: 'wrap' }}>
+            {(m.formats ?? ['PDF']).map((f, i) => (
+              <span key={i} style={{ fontFamily: mono, fontSize: Math.round(12 * s), fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: '#0E110D' }}>{f}</span>
+            ))}
+          </div>
+          <span style={{ fontFamily: mono, fontSize: Math.round(12 * s), letterSpacing: '.1em', color: '#0E110D', opacity: .7 }}>{CEX_DOMAIN}</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (type === 'para-quem') {
+    return (
+      <div style={{ ...base, background: '#181B16' }}>
+        <div style={grid} />
+        <div style={topBar}>
+          <CexLogo ac={ac} size={Math.round(24 * s)} />
+          <div style={eyebrow('Pra quem é')}><span style={{ fontSize: Math.round(8 * s) }}>◆</span> PRA QUEM É</div>
+        </div>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: `0 ${p}px`, position: 'relative', zIndex: 2 }}>
+          <div style={{ fontSize: Math.round(52 * s), fontWeight: 800, lineHeight: 1.15, letterSpacing: '-.03em', color: '#EDE6D3' }}>
+            {m.paraQuem}
+          </div>
+        </div>
+        <div style={{ ...botBar }}><span style={domainLabel}>{CEX_DOMAIN}</span></div>
+      </div>
+    )
+  }
+
+  if (type === 'conteudo') {
+    const items = (m.beneficios ?? []).filter(b => b?.trim()).slice(0, 6)
+    return (
+      <div style={{ ...base }}>
+        <div style={grid} />
+        <div style={topBar}>
+          <CexLogo ac={ac} size={Math.round(24 * s)} />
+          <div style={eyebrow('Conteúdo')}><span style={{ fontSize: Math.round(8 * s) }}>◆</span> O QUE VEM DENTRO</div>
+        </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: `${Math.round(40 * s)}px ${p}px`, gap: Math.round(22 * s), position: 'relative', zIndex: 2 }}>
+          {items.map((b, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: Math.round(20 * s) }}>
+              <span style={{ color: ac, fontFamily: mono, fontSize: Math.round(13 * s), marginTop: Math.round(6 * s), flexShrink: 0 }}>→</span>
+              <span style={{ fontSize: Math.round(34 * s), lineHeight: 1.25, color: '#E6E5DD', fontWeight: 500 }}>{b}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ ...botBar }}><span style={domainLabel}>{CEX_DOMAIN}</span></div>
+      </div>
+    )
+  }
+
+  if (type === 'depoimento') {
+    return (
+      <div style={{ ...base, background: '#181B16' }}>
+        <div style={grid} />
+        <div style={topBar}>
+          <CexLogo ac={ac} size={Math.round(24 * s)} />
+        </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: `0 ${p}px`, position: 'relative', zIndex: 2 }}>
+          <div style={{ fontSize: Math.round(100 * s), lineHeight: 0.7, color: ac, fontFamily: sans, fontWeight: 900, marginBottom: Math.round(30 * s) }}>&ldquo;</div>
+          <div style={{ fontSize: Math.round(44 * s), fontWeight: 600, lineHeight: 1.3, color: '#EDE6D3', fontStyle: 'italic' }}>
+            {m.depoimento?.texto}
+          </div>
+          {m.depoimento?.autor && (
+            <div style={{ marginTop: Math.round(36 * s), fontFamily: mono, fontSize: Math.round(14 * s), letterSpacing: '.1em', color: '#8B8C82', textTransform: 'uppercase' }}>
+              {m.depoimento.autor}
+            </div>
+          )}
+        </div>
+        <div style={{ ...botBar }}><span style={domainLabel}>{CEX_DOMAIN}</span></div>
+      </div>
+    )
+  }
+
+  // CTA slide
+  return (
+    <div style={{ ...base, background: ac }}>
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(rgba(14,17,13,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(14,17,13,.08) 1px, transparent 1px)`, backgroundSize: `${72 * s}px ${72 * s}px`, pointerEvents: 'none' }} />
+      <div style={{ ...topBar }}>
+        <span style={{ fontFamily: sans, fontSize: Math.round(28 * s), fontWeight: 700, letterSpacing: '-.06em', color: '#0E110D' }}>CE.X</span>
+      </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: `0 ${p}px`, position: 'relative', zIndex: 2 }}>
+        <div style={{ fontFamily: mono, fontSize: Math.round(13 * s), letterSpacing: '.16em', textTransform: 'uppercase', color: '#0E110D', opacity: .6, marginBottom: Math.round(20 * s) }}>
+          MATERIAL DIGITAL
+        </div>
+        <div style={{ fontFamily: sans, fontWeight: 900, fontSize: Math.round(100 * s), lineHeight: 0.88, letterSpacing: '-.05em', color: '#0E110D', overflowWrap: 'break-word' }}>
+          {item.title}
+        </div>
+        <div style={{ marginTop: Math.round(48 * s), display: 'flex', alignItems: 'baseline', gap: Math.round(8 * s) }}>
+          <span style={{ fontFamily: mono, fontSize: Math.round(18 * s), fontWeight: 700, color: '#0E110D', opacity: .6 }}>R$</span>
+          <span style={{ fontFamily: sans, fontWeight: 900, fontSize: Math.round(96 * s), letterSpacing: '-.04em', color: '#0E110D', lineHeight: 1 }}>{m.price ?? '—'}</span>
+        </div>
+        <div style={{ marginTop: Math.round(36 * s), fontFamily: sans, fontWeight: 700, fontSize: Math.round(30 * s), color: '#0E110D' }}>
+          Comprar em {CEX_DOMAIN} →
+        </div>
+      </div>
+      <div style={{ padding: `${Math.round(24 * s)}px ${p}px`, position: 'relative', zIndex: 2 }}>
+        <span style={{ fontFamily: mono, fontSize: Math.round(11 * s), letterSpacing: '.12em', textTransform: 'uppercase', color: '#0E110D', opacity: .5 }}>{CEX_DOMAIN}</span>
+      </div>
+    </div>
+  )
+}
+
+function StoriesSlide({ item, s = 1 }: { item: Item; s?: number }) {
+  const m = item as Material
+  const ac = item.accent
+  const W = 1080 * s
+  const H = 1920 * s
+  const p = Math.round(80 * s)
+  const mono = 'JetBrains Mono, SF Mono, monospace'
+  const sans = 'Inter, sans-serif'
+
+  return (
+    <div style={{ width: W, height: H, position: 'relative', overflow: 'hidden', fontFamily: sans, boxSizing: 'border-box', background: '#0E110D', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(rgba(46,51,39,.3) 1px, transparent 1px), linear-gradient(90deg, rgba(46,51,39,.3) 1px, transparent 1px)`, backgroundSize: `${80 * s}px ${80 * s}px`, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(70% 50% at 80% 15%, ${ac}28 0%, transparent 55%)`, pointerEvents: 'none' }} />
+
+      {/* Top bar */}
+      <div style={{ padding: `${Math.round(90 * s)}px ${p}px ${Math.round(40 * s)}px`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 2 }}>
+        <CexLogo ac={ac} size={Math.round(36 * s)} />
+        <div style={{ fontFamily: mono, fontSize: Math.round(13 * s), letterSpacing: '.16em', textTransform: 'uppercase', color: ac, display: 'flex', alignItems: 'center', gap: Math.round(8 * s) }}>
+          <span style={{ fontSize: Math.round(8 * s) }}>◆</span> {(m.shelf ?? item.type).toUpperCase()}
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: `0 ${p}px`, position: 'relative', zIndex: 2 }}>
+        <div style={{ fontFamily: sans, fontWeight: 900, fontSize: Math.round(128 * s), lineHeight: 0.88, letterSpacing: '-.05em', color: '#EDE6D3', overflowWrap: 'break-word' }}>
+          {item.title}
+        </div>
+        {item.desc && (
+          <div style={{ marginTop: Math.round(32 * s), fontSize: Math.round(34 * s), lineHeight: 1.4, color: '#E6E5DD', maxWidth: Math.round(900 * s) }}>
+            {item.desc}
           </div>
         )}
-        <div className="pv-banner-title">{item.title}</div>
-        <div className="pv-banner-desc">{item.desc}</div>
       </div>
-      <div className="pv-banner-bot">
-        <span>{isMaterial ? `${((m.formats ?? ['PDF'])[0] ?? 'PDF').toUpperCase()} EDITÁVEL · R$ ${m.price}` : isCurso ? `${c.weeks} SEMANAS · MENTORIA INCLUSA` : item.type === 'mentoria' ? String((item as Mentoria).formato).toUpperCase() : String((item as Evento).data).toUpperCase()}</span>
-        <span style={{ color: item.accent }}>{isMaterial ? 'campusexpansao.com →' : isCurso ? 'LISTA DE ESPERA ABERTA →' : 'INSCREVA-SE →'}</span>
+
+      {/* Bottom CTA panel */}
+      <div style={{ background: ac, padding: `${Math.round(48 * s)}px ${p}px ${Math.round(80 * s)}px`, position: 'relative', zIndex: 2 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div>
+            <div style={{ fontFamily: mono, fontSize: Math.round(13 * s), letterSpacing: '.14em', textTransform: 'uppercase', color: '#0E110D', opacity: .6, marginBottom: Math.round(10 * s) }}>
+              MATERIAL DIGITAL
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: Math.round(6 * s) }}>
+              <span style={{ fontFamily: mono, fontSize: Math.round(20 * s), color: '#0E110D', opacity: .6 }}>R$</span>
+              <span style={{ fontFamily: sans, fontWeight: 900, fontSize: Math.round(80 * s), letterSpacing: '-.04em', color: '#0E110D', lineHeight: 1 }}>{m.price ?? '—'}</span>
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontFamily: sans, fontWeight: 800, fontSize: Math.round(26 * s), color: '#0E110D' }}>Comprar →</div>
+            <div style={{ fontFamily: mono, fontSize: Math.round(13 * s), letterSpacing: '.1em', color: '#0E110D', opacity: .6, marginTop: Math.round(6 * s) }}>{CEX_DOMAIN}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── FEED PREVIEW + DOWNLOAD ───────────────────────────────────────────────────
+
+async function downloadAsPng(element: HTMLElement, filename: string) {
+  const html2canvas = (await import('html2canvas')).default
+  const canvas = await html2canvas(element, { scale: 1, backgroundColor: '#0E110D', useCORS: true, logging: false })
+  const link = document.createElement('a')
+  link.download = filename
+  link.href = canvas.toDataURL('image/png')
+  link.click()
+}
+
+function FeedPreview({ item }: { item: Item }) {
+  const [active, setActive] = useState(0)
+  const [downloading, setDownloading] = useState(false)
+  const exportRef = useRef<HTMLDivElement>(null)
+  const slides = buildFeedSlides(item)
+  const THUMB_S = 0.19
+  const MAIN_S = 0.32
+
+  const handleDownload = async () => {
+    setDownloading(true)
+    try {
+      const container = exportRef.current
+      if (!container) return
+      const slug = (item as Material).id ?? item.title.toLowerCase().replace(/\s+/g, '-')
+      for (let i = 0; i < slides.length; i++) {
+        const el = container.children[i] as HTMLElement
+        if (!el) continue
+        await downloadAsPng(el, `${slug}-feed-${i + 1}.png`)
+        await new Promise(r => setTimeout(r, 300))
+      }
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
+      {/* Main slide preview */}
+      <div style={{ display: 'flex', justifyContent: 'center', background: 'rgba(0,0,0,.3)', borderRadius: 8, padding: 16, overflow: 'hidden' }}>
+        <div style={{ transform: `scale(${MAIN_S})`, transformOrigin: 'top center', height: Math.round(1350 * MAIN_S), overflow: 'hidden' }}>
+          <FeedSlide item={item} type={slides[active]} s={1} />
+        </div>
+      </div>
+      {/* Thumbnails */}
+      <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
+        {slides.map((t, i) => (
+          <button key={i} onClick={() => setActive(i)}
+            style={{ padding: 0, background: 'none', border: `2px solid ${active === i ? item.accent : 'var(--border)'}`, borderRadius: 4, cursor: 'pointer', overflow: 'hidden', flexShrink: 0 }}>
+            <div style={{ transform: `scale(${THUMB_S})`, transformOrigin: 'top left', width: Math.round(1080 * THUMB_S), height: Math.round(1350 * THUMB_S), pointerEvents: 'none' }}>
+              <FeedSlide item={item} type={t} s={1} />
+            </div>
+          </button>
+        ))}
+      </div>
+      {/* Download */}
+      <button onClick={handleDownload} disabled={downloading}
+        style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--olive)', border: 'none', borderRadius: 6, padding: '10px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
+        {downloading ? 'Baixando...' : `↓ Baixar ${slides.length} slides · PNG 1080×1350`}
+      </button>
+      {/* Hidden full-size export container */}
+      <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none', opacity: 0 }}>
+        {slides.map((t, i) => <FeedSlide key={i} item={item} type={t} s={1} />)}
+      </div>
+    </div>
+  )
+}
+
+function StoriesPreview({ item }: { item: Item }) {
+  const [downloading, setDownloading] = useState(false)
+  const exportRef = useRef<HTMLDivElement>(null)
+  const MAIN_S = 0.22
+
+  const handleDownload = async () => {
+    setDownloading(true)
+    try {
+      const el = exportRef.current?.children[0] as HTMLElement
+      if (!el) return
+      const slug = (item as Material).id ?? item.title.toLowerCase().replace(/\s+/g, '-')
+      await downloadAsPng(el, `${slug}-stories.png`)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%', alignItems: 'center' }}>
+      <div style={{ background: 'rgba(0,0,0,.3)', borderRadius: 8, padding: 16, overflow: 'hidden' }}>
+        <div style={{ transform: `scale(${MAIN_S})`, transformOrigin: 'top center', height: Math.round(1920 * MAIN_S), overflow: 'hidden' }}>
+          <StoriesSlide item={item} s={1} />
+        </div>
+      </div>
+      <button onClick={handleDownload} disabled={downloading}
+        style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--olive)', border: 'none', borderRadius: 6, padding: '10px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1, width: '100%' }}>
+        {downloading ? 'Baixando...' : '↓ Baixar stories · PNG 1080×1920'}
+      </button>
+      <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none', opacity: 0 }}>
+        <StoriesSlide item={item} s={1} />
       </div>
     </div>
   )
@@ -816,7 +1173,7 @@ function EmentaField({ value, onChange }: { value: { titulo: string; desc: strin
 
 function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => void; onCancel: () => void }) {
   const [d, setD] = useState<Item>({ ...item })
-  const [mode, setMode] = useState<'card' | 'pagina' | 'banner'>('card')
+  const [mode, setMode] = useState<'card' | 'pagina' | 'feed' | 'stories'>('card')
   const set = <K extends keyof Item>(k: K, v: Item[K]) => setD((prev) => ({ ...prev, [k]: v }))
   const accent = accentFor(d)
   const accentName = ACCENT_NAME[accent] ?? ''
@@ -998,17 +1355,18 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
         <div className="ed-prevbar">
           <span className="ed-prevtitle">Prévia ao vivo</span>
           <div className="seg">
-            {(['card', 'pagina', 'banner'] as const).map((m) => (
+            {(['card', 'pagina', 'feed', 'stories'] as const).map((m) => (
               <button key={m} className={`seg-btn${mode === m ? ' on' : ''}`} onClick={() => setMode(m)}>
-                {m === 'card' ? 'Card' : m === 'pagina' ? 'Página' : 'Banner'}
+                {m === 'card' ? 'Card' : m === 'pagina' ? 'Página' : m === 'feed' ? 'Feed 4:5' : 'Stories'}
               </button>
             ))}
           </div>
         </div>
         <div className="ed-prevstage">
           {mode === 'card' && <div className="prev-center"><CatalogCardPreview item={dv} /></div>}
-          {mode === 'pagina' && <div className="prev-scale"><DetailPreview item={dv} /></div>}
-          {mode === 'banner' && <div className="prev-center"><BannerPreview item={dv} /></div>}
+          {mode === 'pagina' && <div style={{ width: '100%' }}><PagePreview item={dv} /></div>}
+          {mode === 'feed' && <FeedPreview item={dv} />}
+          {mode === 'stories' && <StoriesPreview item={dv} />}
         </div>
         {d.status === 'Rascunho' && <div className="ed-draftnote">◆ Em rascunho. Não aparece no site até publicar.</div>}
       </div>
