@@ -433,8 +433,8 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   .loja-shelf-grid .cex-art-c-title { font-size: 18px; }
   .loja-shelf-grid .cex-art-d-title { font-size: 26px; }
   .loja-shelf-grid .cex-card-foot { height: 110px; }
-  /* Carousel: cards 220px em tablet */
-  .loja-carousel-track .cex-card { flex: 0 0 220px; }
+  /* Carousel: cards 220px em tablet, altura total forçada */
+  .loja-carousel-track .cex-card { flex: 0 0 220px; height: 340px; }
   .loja-detail-hero { grid-template-columns: 1fr; }
   .loja-detail-capa { height: 200px; }
   .loja-detail-preco-block { flex-direction: column; text-align: center; gap: 16px; }
@@ -448,7 +448,7 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
 }
 
 @media (max-width: 600px) {
-  html .pg-wrap { padding: 0 16px; }
+  html .pg-wrap { padding: 0 20px; }
   .loja-hero { padding: 48px 0 36px; }
   .loja-hero-title { font-size: 36px; }
   .loja-hero-desc { font-size: 14px; }
@@ -469,8 +469,8 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   .loja-shelf-grid .cex-card-foot { height: 100px; padding: 12px 14px; }
   .loja-shelf-grid .cex-foot-meta { font-size: 9px; }
   .loja-shelf-grid .cex-foot-price { font-size: 14px; }
-  /* Carousel: cards 200px em mobile */
-  .loja-carousel-track .cex-card { flex: 0 0 200px; }
+  /* Carousel: cards 200px em mobile, altura total forçada */
+  .loja-carousel-track .cex-card { flex: 0 0 200px; height: 340px; }
   .loja-filter-btn { font-size: 10px; padding: 7px 12px; }
   .loja-familia-title { font-size: 20px; }
   .loja-shelf-name { font-size: 11px; }
