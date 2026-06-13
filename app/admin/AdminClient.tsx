@@ -11,23 +11,29 @@ type ItemType = 'material' | 'curso' | 'mentoria' | 'evento'
 interface Material {
   id: string; type: 'material'; family: string; shelf: string; code: string
   title: string; desc: string; messages: number | null; pages: number
-  format: string; price: number; hotmart: string; accent: string; image: string | null
+  formats: string[]; price: number; hotmart: string; accent: string; image: string | null
   model: Modelo; big: number | null; bigLabel: string
   messageList: { nome: string; desc: string }[]
-  paraQuem: string; beneficios: string[]; depoimento: { texto: string; autor: string }
+  paraQuem: string; beneficios: string[]
+  depoimento: { texto: string; autor: string }
+  faq: { q: string; a: string }[]
+  keywords: string[]
   status: string; views: number; buyClicks: number
 }
 interface Curso {
   id: string; type: 'curso'; level: string; etapa: number; totalEtapas: number
-  title: string; desc: string; weeks: number; mentoria: boolean; aoVivo: boolean
-  mentor: string; accent: string; image: string | null; status: string; views: number
-  waitlist: number; paraQuem: string; depoimento: { texto: string; autor: string }
-  ementa: string[]; proximaTurma: string
+  title: string; desc: string; promessa: string; weeks: number; mentoria: boolean; aoVivo: boolean
+  mentor: string; mentorBio: string; formato: string; accent: string; image: string | null
+  status: string; views: number; waitlist: number
+  paraQuem: string; depoimento: { texto: string; autor: string; cargo: string }
+  ementa: { titulo: string; desc: string }[]; proximaTurma: string
+  keywords: string[]
 }
 interface Mentoria {
   id: string; type: 'mentoria'; title: string; desc: string
   formato: string; vagas: number; mentor: string; accent: string
   image: string | null; status: string; views: number; waitlist: number; cadencia: string
+  keywords: string[]
 }
 interface Evento {
   id: string; type: 'evento'; title: string; desc: string
@@ -117,21 +123,22 @@ function newItem(type: ItemType): Item {
   if (type === 'material') {
     const family = 'Para ministrar', shelf = 'Juniores'
     return { ...base, type: 'material', family, shelf, code: '', messages: null, pages: 0,
-      format: 'PDF', price: 0, hotmart: '', accent: accentFor({ type: 'material', family, shelf } as Material),
+      formats: ['PDF'], price: 0, hotmart: '', accent: accentFor({ type: 'material', family, shelf } as Material),
       buyClicks: 0, model: 'A', big: null, bigLabel: 'mensagens', messageList: [], paraQuem: '',
       beneficios: ['Editável e pronto pra aplicar na sua igreja', 'White-label CE.X: coloque a marca do seu ministério'],
-      depoimento: { texto: '', autor: '' } } as Material
+      depoimento: { texto: '', autor: '' }, faq: [], keywords: [] } as Material
   }
   if (type === 'curso') {
     return { ...base, type: 'curso', level: 'Fundação', etapa: 1, totalEtapas: 6, weeks: 4,
-      mentoria: true, aoVivo: true, mentor: '',
+      mentoria: true, aoVivo: true, mentor: '', mentorBio: '', formato: '', promessa: '',
       accent: accentFor({ type: 'curso', level: 'Fundação' } as Curso),
-      waitlist: 0, ementa: ['', '', '', ''], paraQuem: '',
-      depoimento: { texto: '', autor: '' }, proximaTurma: 'Próxima turma: a definir' } as Curso
+      waitlist: 0, ementa: [{ titulo: '', desc: '' }, { titulo: '', desc: '' }, { titulo: '', desc: '' }, { titulo: '', desc: '' }],
+      paraQuem: '', depoimento: { texto: '', autor: '', cargo: '' },
+      proximaTurma: 'Próxima turma: a definir', keywords: [] } as Curso
   }
   if (type === 'mentoria') {
     return { ...base, type: 'mentoria', formato: 'Grupo · 8 vagas', vagas: 8, mentor: '',
-      cadencia: 'Encontros quinzenais · 90 min', accent: AC.olive, waitlist: 0 } as Mentoria
+      cadencia: 'Encontros quinzenais · 90 min', accent: AC.olive, waitlist: 0, keywords: [] } as Mentoria
   }
   return { ...base, type: 'evento', data: '', local: '', vagas: 100, inscritos: 0,
     hotmart: '', accent: AC.terra } as Evento
@@ -163,7 +170,7 @@ function CardMedia({ item, height = 150, big = false, labelOverride }: { item: I
 
 function matMeta(item: Material) {
   const n = item.messages ? `${item.messages} mensagens` : (item.pages ? `${item.pages} páginas` : null)
-  return [n, 'Editável', item.format || 'PDF'].filter(Boolean).join(' · ')
+  return [n, 'Editável', (item.formats ?? []).join(' · ') || 'PDF'].filter(Boolean).join(' · ')
 }
 
 function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
@@ -318,7 +325,7 @@ function DetailPreview({ item }: { item: Item }) {
   const c = item as Curso
   const men = item as Mentoria
   const ev = item as Evento
-  const meta = [m.messages ? `${m.messages} mensagens` : null, m.pages ? `${m.pages} páginas` : null, m.format].filter(Boolean).join(' · ')
+  const meta = [m.messages ? `${m.messages} mensagens` : null, m.pages ? `${m.pages} páginas` : null, (m.formats ?? []).join(' · ') || 'PDF'].filter(Boolean).join(' · ')
 
   return (
     <div className="pv-detail">
@@ -379,7 +386,7 @@ function DetailPreview({ item }: { item: Item }) {
         {isCurso && <>
           {c.paraQuem && <><div className="pv-detail-sec">◆ Pra quem é</div><p className="pv-detail-promise" style={{ fontSize: 13 }}>{c.paraQuem}</p></>}
           <div className="pv-detail-sec">◆ Ementa por semana</div>
-          <ul className="pv-detail-list">{c.ementa.map((e, i) => <li key={i}><span style={{ color: item.accent, fontFamily: 'var(--mono)', marginRight: 8 }}>S{i + 1}</span>{e}</li>)}</ul>
+          <ul className="pv-detail-list">{c.ementa.map((e, i) => <li key={i}><span style={{ color: item.accent, fontFamily: 'var(--mono)', marginRight: 8 }}>S{i + 1}</span>{e.titulo}</li>)}</ul>
           <div className="pv-detail-buybar">
             <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)' }}>{c.proximaTurma}</span>
             <span className="pv-detail-buy" style={{ background: item.accent }}>Entrar na lista de espera →</span>
@@ -444,7 +451,7 @@ function BannerPreview({ item }: { item: Item }) {
         <div className="pv-banner-desc">{item.desc}</div>
       </div>
       <div className="pv-banner-bot">
-        <span>{isMaterial ? `PDF EDITÁVEL · R$ ${m.price}` : isCurso ? `${c.weeks} SEMANAS · MENTORIA INCLUSA` : item.type === 'mentoria' ? String((item as Mentoria).formato).toUpperCase() : String((item as Evento).data).toUpperCase()}</span>
+        <span>{isMaterial ? `${((m.formats ?? ['PDF'])[0] ?? 'PDF').toUpperCase()} EDITÁVEL · R$ ${m.price}` : isCurso ? `${c.weeks} SEMANAS · MENTORIA INCLUSA` : item.type === 'mentoria' ? String((item as Mentoria).formato).toUpperCase() : String((item as Evento).data).toUpperCase()}</span>
         <span style={{ color: item.accent }}>{isMaterial ? 'campusexpansao.com →' : isCurso ? 'LISTA DE ESPERA ABERTA →' : 'INSCREVA-SE →'}</span>
       </div>
     </div>
@@ -699,12 +706,67 @@ function MessageListField({ count, value, accent, onChange }: { count: number; v
   )
 }
 
-function DepoimentoField({ value, onChange }: { value: { texto: string; autor: string }; onChange: (v: { texto: string; autor: string }) => void }) {
-  const v = value || { texto: '', autor: '' }
+function DepoimentoField({ value, onChange, showCargo }: { value: { texto: string; autor: string; cargo?: string }; onChange: (v: { texto: string; autor: string; cargo?: string }) => void; showCargo?: boolean }) {
+  const v = value || { texto: '', autor: '', cargo: '' }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <textarea className="inp ta" value={v.texto} onChange={(e) => onChange({ ...v, texto: e.target.value })} placeholder="O que essa pessoa disse depois de usar..." />
-      <input className="inp" value={v.autor} onChange={(e) => onChange({ ...v, autor: e.target.value })} placeholder="Nome · igreja / cargo" />
+      <input className="inp" value={v.autor} onChange={(e) => onChange({ ...v, autor: e.target.value })} placeholder="Nome" />
+      {showCargo && (
+        <input className="inp" value={v.cargo ?? ''} onChange={(e) => onChange({ ...v, cargo: e.target.value })} placeholder="Igreja / cargo (ex: Pr. Ricardo · Igreja Batista Renovo)" />
+      )}
+    </div>
+  )
+}
+
+function TagsField({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const [input, setInput] = useState('')
+  const add = (raw: string) => {
+    const tags = raw.split(',').map(t => t.trim().toLowerCase()).filter(t => t && !value.includes(t))
+    if (tags.length) onChange([...value, ...tags])
+    setInput('')
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, minHeight: 32 }}>
+        {value.map((tag, i) => (
+          <span key={i} style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.06em', background: 'var(--graphite)', border: '1px solid var(--border-2)', borderRadius: 100, padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--light)' }}>
+            {tag}
+            <button onClick={() => onChange(value.filter((_, k) => k !== i))} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', padding: 0, lineHeight: 1, fontSize: 12 }}>✕</button>
+          </span>
+        ))}
+        {value.length === 0 && <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--subtle)' }}>Nenhuma palavra-chave ainda</span>}
+      </div>
+      <input
+        className="inp" value={input}
+        placeholder="Digite uma palavra e pressione Enter (ou vírgula para múltiplas)"
+        onChange={e => setInput(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(input) } }}
+        onBlur={() => { if (input.trim()) add(input) }}
+      />
+    </div>
+  )
+}
+
+function FaqField({ value, onChange }: { value: { q: string; a: string }[]; onChange: (v: { q: string; a: string }[]) => void }) {
+  const set = (i: number, patch: Partial<{ q: string; a: string }>) => {
+    const a = [...value]; a[i] = { ...a[i], ...patch }; onChange(a)
+  }
+  const add = () => onChange([...value, { q: '', a: '' }])
+  const del = (i: number) => onChange(value.filter((_, k) => k !== i))
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {value.map((f, i) => (
+        <div key={i} style={{ border: '1px solid var(--border-2)', borderRadius: 'var(--r-sm)', padding: '12px 14px', background: 'var(--ink)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)', letterSpacing: '.08em' }}>PERGUNTA {i + 1}</span>
+            <button className="ementa-del" onClick={() => del(i)}>✕</button>
+          </div>
+          <input className="inp" value={f.q} onChange={e => set(i, { q: e.target.value })} placeholder="Pergunta..." style={{ marginBottom: 8 }} />
+          <textarea className="inp ta" value={f.a} onChange={e => set(i, { a: e.target.value })} placeholder="Resposta..." />
+        </div>
+      ))}
+      <button className="btn-ghost-add" onClick={add}>+ Adicionar pergunta</button>
     </div>
   )
 }
@@ -729,17 +791,22 @@ function ImageField({ value, onChange }: { value: string | null; onChange: (v: s
   )
 }
 
-function EmentaField({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
-  const set = (i: number, v: string) => { const a = [...value]; a[i] = v; onChange(a) }
-  const add = () => onChange([...value, ''])
+function EmentaField({ value, onChange }: { value: { titulo: string; desc: string }[]; onChange: (v: { titulo: string; desc: string }[]) => void }) {
+  const set = (i: number, patch: Partial<{ titulo: string; desc: string }>) => {
+    const a = [...value]; a[i] = { ...a[i], ...patch }; onChange(a)
+  }
+  const add = () => onChange([...value, { titulo: '', desc: '' }])
   const del = (i: number) => onChange(value.filter((_, k) => k !== i))
   return (
-    <div className="ementa">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {value.map((e, i) => (
-        <div className="ementa-row" key={i}>
-          <span className="ementa-num">S{i + 1}</span>
-          <input className="inp" value={e} onChange={(ev) => set(i, ev.target.value)} placeholder={`O que se aprende na semana ${i + 1}`} />
-          <button className="ementa-del" onClick={() => del(i)}>✕</button>
+        <div key={i} style={{ border: '1px solid var(--border-2)', borderRadius: 'var(--r-sm)', padding: '12px 14px', background: 'var(--ink)' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+            <span className="ementa-num">S{i + 1}</span>
+            <input className="inp" style={{ flex: 1 }} value={e.titulo} onChange={(ev) => set(i, { titulo: ev.target.value })} placeholder={`Título da semana ${i + 1}`} />
+            <button className="ementa-del" onClick={() => del(i)}>✕</button>
+          </div>
+          <input className="inp" value={e.desc} onChange={(ev) => set(i, { desc: ev.target.value })} placeholder="Descrição breve (o que o aluno aprende e leva)" />
         </div>
       ))}
       <button className="btn-ghost-add" onClick={add}>+ Adicionar semana</button>
@@ -791,6 +858,9 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
             <Field label="Mensagens"><input className="inp" type="number" value={m.messages ?? ''} onChange={(e) => set('messages' as never, (e.target.value ? +e.target.value : null) as never)} /></Field>
             <Field label="Páginas"><input className="inp" type="number" value={m.pages} onChange={(e) => set('pages' as never, +e.target.value as never)} /></Field>
           </div>
+          <Field label="Formatos" hint="Ex: PDF, PowerPoint, Word. Um por linha.">
+            <ListField value={m.formats ?? []} onChange={(v) => set('formats' as never, v as never)} placeholder="Ex: PDF" />
+          </Field>
           <div className="ed-2col">
             <Field label="Preço (R$)" req><input className="inp" type="number" value={m.price} onChange={(e) => set('price' as never, +e.target.value as never)} /></Field>
             <Field label="Status">
@@ -819,6 +889,12 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
           <Field label="Depoimento">
             <DepoimentoField value={m.depoimento} onChange={(v) => set('depoimento' as never, v as never)} />
           </Field>
+          <Field label="Perguntas frequentes (FAQ)" hint="Aparecem na landing page do material.">
+            <FaqField value={m.faq ?? []} onChange={(v) => set('faq' as never, v as never)} />
+          </Field>
+          <Field label="Palavras-chave" hint="Para busca e correlação com outros materiais. Pressione Enter ou vírgula para adicionar.">
+            <TagsField value={m.keywords ?? []} onChange={(v) => set('keywords' as never, v as never)} />
+          </Field>
         </>}
 
         {d.type === 'curso' && <>
@@ -839,14 +915,31 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
             <Field label="de (total)"><input className="inp" type="number" value={c.totalEtapas} onChange={(e) => set('totalEtapas' as never, +e.target.value as never)} /></Field>
             <Field label="Semanas"><input className="inp" type="number" value={c.weeks} onChange={(e) => set('weeks' as never, +e.target.value as never)} /></Field>
           </div>
-          <Field label="Mentor / condutor"><input className="inp" value={c.mentor} onChange={(e) => set('mentor' as never, e.target.value as never)} /></Field>
-          <Field label="Próxima turma"><input className="inp" value={c.proximaTurma} onChange={(e) => set('proximaTurma' as never, e.target.value as never)} /></Field>
-          <Field label="Ementa por semana"><EmentaField value={c.ementa} onChange={(v) => set('ementa' as never, v as never)} /></Field>
+          <Field label="Promessa" hint="Frase de impacto. Aparece no hero da landing page (diferente da descrição curta).">
+            <textarea className="inp ta" value={c.promessa ?? ''} onChange={(e) => set('promessa' as never, e.target.value as never)} placeholder="Construa o alicerce que sustenta tudo que Deus quer fazer..." />
+          </Field>
           <Field label="Pra quem é">
             <textarea className="inp ta" value={c.paraQuem ?? ''} onChange={(e) => set('paraQuem' as never, e.target.value as never)} placeholder="Pra líder que..." />
           </Field>
+          <Field label="Próxima turma"><input className="inp" value={c.proximaTurma} onChange={(e) => set('proximaTurma' as never, e.target.value as never)} placeholder="Julho 2026" /></Field>
+          <Field label="Ementa semana a semana" hint="Título e descrição de cada encontro.">
+            <EmentaField value={c.ementa} onChange={(v) => set('ementa' as never, v as never)} />
+          </Field>
+          <Field label="Como é (formato)" hint="Descreve como funciona o curso: ao vivo, gravação, WhatsApp etc.">
+            <textarea className="inp ta" value={c.formato ?? ''} onChange={(e) => set('formato' as never, e.target.value as never)} placeholder="4 encontros ao vivo de 2h · mentoria em grupo por WhatsApp · materiais editáveis..." />
+          </Field>
+          <div className="ed-2col">
+            <Field label="Mentor / condutor"><input className="inp" value={c.mentor} onChange={(e) => set('mentor' as never, e.target.value as never)} /></Field>
+            <Field label="Status" hint=" "><div /></Field>
+          </div>
+          <Field label="Bio do mentor" hint="Aparece no card do mentor na landing page.">
+            <textarea className="inp ta" value={c.mentorBio ?? ''} onChange={(e) => set('mentorBio' as never, e.target.value as never)} placeholder="Fundador da CE.X. Formou mais de 2 mil líderes..." />
+          </Field>
           <Field label="Depoimento">
-            <DepoimentoField value={c.depoimento} onChange={(v) => set('depoimento' as never, v as never)} />
+            <DepoimentoField value={c.depoimento} onChange={(v) => set('depoimento' as never, v as never)} showCargo />
+          </Field>
+          <Field label="Palavras-chave" hint="Para busca e correlação com outros cursos. Pressione Enter ou vírgula para adicionar.">
+            <TagsField value={c.keywords ?? []} onChange={(v) => set('keywords' as never, v as never)} />
           </Field>
           <div className="fld">
             <label className="fld-label">Selo AO VIVO</label>
@@ -865,6 +958,9 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
               </select>
             </Field>
           </div>
+          <Field label="Palavras-chave" hint="Para busca e correlação. Pressione Enter ou vírgula para adicionar.">
+            <TagsField value={men.keywords ?? []} onChange={(v) => set('keywords' as never, v as never)} />
+          </Field>
         </>}
 
         {d.type === 'evento' && <>
@@ -1272,16 +1368,18 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
         shelf: estantes.find(e => e.key === m.estante)?.label ?? (m.estante as string),
         code: (m.code as string) ?? '', title: m.titulo as string, desc: m.promessa as string,
         messages: (m.mensagens as number | null) ?? null, pages: (m.paginas as number) ?? 0,
-        format: ((m.formatos as string[]) ?? []).join(', '),
+        formats: (m.formatos as string[]) ?? ['PDF'],
         price: parseInt(((m.preco as string) ?? '0').replace(/\D/g, ''), 10),
         hotmart: (m.hotmart_url as string) ?? '', accent: accentFor({ type: 'material', family: m.familia === 'ministrar' ? 'Para ministrar' : 'Para liderar', shelf: estantes.find(e => e.key === m.estante)?.label ?? '' } as Material),
         image: null, model: (m.model as Modelo) ?? 'A',
         big: m.big ? parseInt(m.big as string, 10) : null,
         bigLabel: (m.big_label as string) ?? '',
-        messageList: ((m.conteudo as string[]) ?? []).map(c => ({ nome: c, desc: '' })),
+        messageList: (m.mensagens_lista as { nome: string; desc: string }[]) ?? ((m.conteudo as string[]) ?? []).map(c => ({ nome: c, desc: '' })),
         paraQuem: (m.pra_quem as string) ?? '',
-        beneficios: ['Editável e pronto pra aplicar', 'White-label: coloque a marca do seu ministério'],
-        depoimento: { texto: '', autor: '' },
+        beneficios: (m.conteudo as string[]) ?? [],
+        depoimento: (m.depoimento as { texto: string; autor: string }) ?? { texto: '', autor: '' },
+        faq: (m.faq as { q: string; a: string }[]) ?? [],
+        keywords: (m.keywords as string[]) ?? [],
         status: (m.status as string) ?? 'Publicado',
         views: 0, buyClicks: 0,
       }))
@@ -1291,16 +1389,24 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
         id: c.slug as string, type: 'curso' as const,
         level: NIVEL_LABEL[c.nivel as string] ?? (c.nivel as string),
         etapa: parseInt(c.num as string, 10), totalEtapas: 6,
-        title: c.title as string, desc: c.desc_text as string,
+        title: c.title as string, desc: (c.desc_text as string) ?? '',
+        promessa: (c.promessa as string) ?? '',
         weeks: ((c.ementa as unknown[]) ?? []).length,
-        mentoria: true, aoVivo: true, mentor: (c.mentor as string) ?? '',
+        mentoria: true, aoVivo: true,
+        mentor: (c.mentor as string) ?? '', mentorBio: (c.mentor_bio as string) ?? '',
+        formato: (c.formato as string) ?? '',
         accent: NIVEL_AC[c.nivel as string] ?? AC.olive,
         image: null, status: (c.status as string) ?? 'Publicado',
         views: 0, waitlist: 0,
         paraQuem: (c.pra_quem as string) ?? '',
-        depoimento: { texto: ((c.depoimento as Record<string,string>)?.texto) ?? '', autor: ((c.depoimento as Record<string,string>)?.autor) ?? '' },
-        ementa: ((c.ementa as {titulo:string}[]) ?? []).map(e => e.titulo),
+        depoimento: {
+          texto: ((c.depoimento as Record<string,string>)?.texto) ?? '',
+          autor: ((c.depoimento as Record<string,string>)?.autor) ?? '',
+          cargo: ((c.depoimento as Record<string,string>)?.cargo) ?? '',
+        },
+        ementa: ((c.ementa as {titulo:string; desc:string}[]) ?? []).map(e => ({ titulo: e.titulo ?? '', desc: e.desc ?? '' })),
         proximaTurma: (c.turma as string) ?? '',
+        keywords: (c.keywords as string[]) ?? [],
       }))
       const mentorias: Mentoria[] = (initialData.mentorias as unknown as Record<string, unknown>[]).map((m) => ({
         id: m.id as string, type: 'mentoria' as const,
@@ -1310,6 +1416,7 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
         image: null, status: (m.status as string) ?? 'Publicado',
         views: 0, waitlist: (m.waitlist as number) ?? 0,
         cadencia: (m.cadencia as string) ?? '',
+        keywords: (m.keywords as string[]) ?? [],
       }))
       const series30 = Array(30).fill(0)
       return {
@@ -1356,11 +1463,15 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
             model: m.model, etiqueta: m.shelf, titulo: m.title, code: m.code || null,
             big: m.big ? String(m.big) : null, big_label: m.bigLabel || null,
             promessa: m.desc, mensagens: m.messages, paginas: m.pages,
-            formatos: m.format.split(', ').filter(Boolean),
+            formatos: (m.formats ?? []).filter(Boolean),
             preco: `R$ ${m.price}`, hotmart_url: m.hotmart,
             colecoes: [], pra_quem: m.paraQuem,
-            conteudo: m.messageList.map(x => x.nome),
-            como_usar: '', faq: [], status: m.status,
+            conteudo: m.beneficios ?? [],
+            mensagens_lista: m.messageList ?? [],
+            depoimento: m.depoimento,
+            como_usar: '', faq: m.faq ?? [],
+            keywords: m.keywords ?? [],
+            status: m.status,
           })
         } else if (d.type === 'curso') {
           const c = d as Curso
@@ -1369,10 +1480,12 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
             slug: c.id, num: String(c.etapa).padStart(2,'0'),
             nivel: NIVEL_KEY[c.level] ?? 'fundacao',
             title: c.title, desc_text: c.desc, dur: `${c.weeks} semanas`,
-            promessa: c.desc, pra_quem: c.paraQuem,
-            ementa: c.ementa.map((t,i) => ({ semana: i+1, titulo: t, desc: '' })),
-            formato: '', mentor: c.mentor, mentor_bio: '',
-            depoimento: c.depoimento, turma: c.proximaTurma, status: c.status,
+            promessa: c.promessa || c.desc, pra_quem: c.paraQuem,
+            ementa: c.ementa.map((e, i) => ({ semana: i + 1, titulo: e.titulo, desc: e.desc })),
+            formato: c.formato || '', mentor: c.mentor, mentor_bio: c.mentorBio || '',
+            depoimento: c.depoimento, turma: c.proximaTurma,
+            keywords: c.keywords ?? [],
+            status: c.status,
           })
         } else if (d.type === 'mentoria') {
           const men = d as Mentoria
@@ -1381,6 +1494,7 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
             title: men.title, desc_text: men.desc, formato: men.formato,
             vagas: men.vagas, mentor: men.mentor, accent: men.accent,
             cadencia: men.cadencia, status: men.status, waitlist: men.waitlist,
+            keywords: men.keywords ?? [],
           })
         }
       } catch (err) { console.error('Erro ao salvar:', err) }
