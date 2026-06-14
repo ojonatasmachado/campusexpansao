@@ -74,13 +74,15 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
 .loja-shelf-grid {
   display: flex; flex-wrap: nowrap; gap: 18px;
   overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+  margin-top: -6px;
+  padding-top: 6px;
   padding-bottom: 16px; -webkit-overflow-scrolling: touch;
 }
 .loja-shelf-grid::-webkit-scrollbar { display: none; }
 
 /* ── CAROUSEL (> SHELF_CAROUSEL_THRESHOLD) ── */
 .loja-shelf-carousel { position: relative; }
-.loja-carousel-track { display: flex; gap: 18px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding-bottom: 8px; scrollbar-width: none; }
+.loja-carousel-track { display: flex; gap: 18px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; margin-top: -6px; padding-top: 6px; padding-bottom: 8px; scrollbar-width: none; }
 .loja-carousel-track::-webkit-scrollbar { display: none; }
 .loja-carousel-track .cex-card { flex: 0 0 248px; scroll-snap-align: start; }
 .loja-carousel-arrows { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
@@ -105,7 +107,7 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   display: flex;
   flex-direction: column;
 }
-.cex-card:hover { transform: translateY(-3px); border-color: var(--cex-accent, #7A9E3F); }
+.cex-card:hover { transform: translateY(-3px); border-color: var(--cex-accent, #7A9E3F); position: relative; z-index: 2; }
 
 /* ── EYEBROW: ◆ label (geral) ── */
 .cex-eyebrow {
@@ -354,7 +356,7 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   text-decoration: none;
   flex-shrink: 0;
 }
-.cex-course:hover { transform: translateY(-3px); border-color: var(--cex-ac, #7A9E3F); }
+.cex-course:hover { transform: translateY(-3px); border-color: var(--cex-ac, #7A9E3F); position: relative; z-index: 2; }
 
 .cex-course__body {
   height: 220px;
