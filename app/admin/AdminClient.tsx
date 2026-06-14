@@ -173,9 +173,20 @@ function matMeta(item: Material) {
   return [n, 'Editável', (item.formats ?? []).join(' · ') || 'PDF'].filter(Boolean).join(' · ')
 }
 
+// Tamanho de fonte do título adaptado ao comprimento — cabe no cartaz até 60 chars
+function titleFontSize(title: string, base: number): number {
+  const n = title.length
+  if (n <= 15) return base
+  if (n <= 25) return Math.round(base * 0.82)
+  if (n <= 40) return Math.round(base * 0.66)
+  if (n <= 55) return Math.round(base * 0.52)
+  return Math.round(base * 0.42)
+}
+
 function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
   const ac = item.accent
   const etiqueta = (item.shelf ?? '').toUpperCase()
+  const title = item.title?.slice(0, 60) ?? ''
   const eb: CSSProperties = { fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 7 }
   const codeStyle: CSSProperties = { fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--subtle)', letterSpacing: '.08em' }
   const big = item.big ?? item.messages ?? item.pages ?? ''
@@ -189,7 +200,7 @@ function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,rgba(14,17,13,.15),rgba(14,17,13,.9))' }} />
         <div style={{ position: 'absolute', inset: 0, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div style={{ ...eb, color: 'var(--cream-soft)' }}><span style={{ fontSize: 9 }}>◆</span>{etiqueta}</div>
-          <div style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: 38, lineHeight: .92, letterSpacing: '-.035em', color: 'var(--white)', textWrap: 'balance' } as CSSProperties}>{item.title}</div>
+          <div style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: titleFontSize(title, 38), lineHeight: .92, letterSpacing: '-.035em', color: 'var(--white)' }}>{title}</div>
         </div>
       </div>
     )
@@ -202,7 +213,7 @@ function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
           <span style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: 78, lineHeight: .8, color: ac, letterSpacing: '-.05em' }}>{big}</span>
           <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>{item.bigLabel ?? ''}</span>
         </div>
-        <div style={{ fontFamily: 'var(--sans)', fontWeight: 700, fontSize: 24, lineHeight: 1, letterSpacing: '-.02em', color: 'var(--cream)' }}>{item.title}</div>
+        <div style={{ fontFamily: 'var(--sans)', fontWeight: 700, fontSize: titleFontSize(title, 24), lineHeight: 1.05, letterSpacing: '-.02em', color: 'var(--cream)' }}>{title}</div>
       </div>
     )
   }
@@ -214,18 +225,19 @@ function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
           <span style={{ ...codeStyle, color: 'rgba(14,17,13,.5)' }}>{item.code}</span>
         </div>
         <div style={{ flex: 1, padding: 20, display: 'flex', alignItems: 'flex-end' }}>
-          <div style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: 38, lineHeight: .92, letterSpacing: '-.035em', color: 'var(--cream)', textWrap: 'balance' } as CSSProperties}>{item.title}</div>
+          <div style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: titleFontSize(title, 38), lineHeight: .92, letterSpacing: '-.035em', color: 'var(--cream)' }}>{title}</div>
         </div>
       </div>
     )
   }
+  // Modelo A
   return (
     <div style={{ height, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'var(--ink)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ ...eb, color: ac }}><span style={{ fontSize: 9 }}>◆</span>{etiqueta}</div>
         <span style={codeStyle}>{item.code}</span>
       </div>
-      <div style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: 44, lineHeight: .9, letterSpacing: '-.035em', color: 'var(--cream)', textWrap: 'balance' } as CSSProperties}>{item.title}</div>
+      <div style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: titleFontSize(title, 44), lineHeight: .9, letterSpacing: '-.035em', color: 'var(--cream)' }}>{title}</div>
     </div>
   )
 }
@@ -449,12 +461,15 @@ function PagePreview({ item }: { item: Item }) {
           Abrir site →
         </a>
       </div>
-      <div style={{ overflow: 'hidden', height: 500, width: '100%', position: 'relative', borderRadius: 8, border: '.5px solid var(--border-2)', background: 'var(--ink)' }}>
-        <iframe
-          key={href}
-          src={href}
-          style={{ width: BASE, height: Math.round(500 / scale), transform: `scale(${scale})`, transformOrigin: 'top left', border: 'none', pointerEvents: 'none' }}
-        />
+      {/* Container com overflow-y: auto para o iframe ser scrollável dentro da prévia */}
+      <div style={{ overflowY: 'auto', overflowX: 'hidden', height: 500, width: '100%', position: 'relative', borderRadius: 8, border: '.5px solid var(--border-2)', background: 'var(--ink)' }}>
+        <div style={{ width: Math.round(BASE * scale), height: Math.round(3200 * scale), position: 'relative' }}>
+          <iframe
+            key={href}
+            src={href}
+            style={{ width: BASE, height: 3200, transform: `scale(${scale})`, transformOrigin: 'top left', border: 'none', pointerEvents: 'none', position: 'absolute', top: 0, left: 0 }}
+          />
+        </div>
       </div>
     </div>
   )
@@ -842,6 +857,59 @@ function StoriesPreview({ item }: { item: Item }) {
   )
 }
 
+// ── MODAL ARTES PARA INSTAGRAM ────────────────────────────────────────────────
+
+function ArtesModal({ item, onClose }: { item: Item; onClose: () => void }) {
+  const [tab, setTab] = useState<'feed' | 'stories'>('feed')
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000,
+      background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(6px)',
+      display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+      overflowY: 'auto', padding: '40px 20px',
+    }} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div style={{
+        background: 'var(--graphite)', border: '.5px solid var(--border-2)',
+        borderRadius: 16, width: '100%', maxWidth: 560,
+        padding: 28, display: 'flex', flexDirection: 'column', gap: 20,
+        position: 'relative',
+      }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--olive)', letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 4 }}>
+              ◆ Artes para Instagram
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--cream)', letterSpacing: '-.02em' }}>
+              {item.title}
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: '.5px solid var(--border-2)', borderRadius: 8, color: 'var(--muted)', fontSize: 18, cursor: 'pointer', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: 'flex', background: 'var(--ink)', border: '.5px solid var(--border-2)', borderRadius: 8, padding: 3, gap: 3 }}>
+          {(['feed', 'stories'] as const).map(t => (
+            <button key={t} onClick={() => setTab(t)}
+              style={{ flex: 1, fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '.08em', textTransform: 'uppercase', border: 'none', borderRadius: 6, padding: '8px 0', cursor: 'pointer', transition: 'all .15s', background: tab === t ? 'var(--olive)' : 'transparent', color: tab === t ? 'var(--ink)' : 'var(--muted)', fontWeight: tab === t ? 700 : 400 }}>
+              {t === 'feed' ? 'Feed 4:5' : 'Stories 9:16'}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        {tab === 'feed' && <FeedPreview item={item} />}
+        {tab === 'stories' && <StoriesPreview item={item} />}
+
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--subtle)', textAlign: 'center', letterSpacing: '.06em' }}>
+          Todas as artes levam a identidade CE.X · campusexpansao.com.br
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── DASHBOARD ────────────────────────────────────────────────────────────────
 
 function Delta({ v }: { v: number }) {
@@ -1200,7 +1268,8 @@ function EmentaField({ value, onChange }: { value: { titulo: string; desc: strin
 
 function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => void; onCancel: () => void }) {
   const [d, setD] = useState<Item>({ ...item })
-  const [mode, setMode] = useState<'card' | 'pagina' | 'feed' | 'stories'>('card')
+  const [mode, setMode] = useState<'card' | 'pagina'>('card')
+  const [artesOpen, setArtesOpen] = useState(false)
   const set = <K extends keyof Item>(k: K, v: Item[K]) => setD((prev) => ({ ...prev, [k]: v }))
   const accent = accentFor(d)
   const accentName = ACCENT_NAME[accent] ?? ''
@@ -1381,22 +1450,28 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
       <div className="ed-preview">
         <div className="ed-prevbar">
           <span className="ed-prevtitle">Prévia ao vivo</span>
-          <div className="seg">
-            {(['card', 'pagina', 'feed', 'stories'] as const).map((m) => (
-              <button key={m} className={`seg-btn${mode === m ? ' on' : ''}`} onClick={() => setMode(m)}>
-                {m === 'card' ? 'Card' : m === 'pagina' ? 'Página' : m === 'feed' ? 'Feed 4:5' : 'Stories'}
-              </button>
-            ))}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div className="seg">
+              {(['card', 'pagina'] as const).map((m) => (
+                <button key={m} className={`seg-btn${mode === m ? ' on' : ''}`} onClick={() => setMode(m)}>
+                  {m === 'card' ? 'Card' : 'Página'}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setArtesOpen(true)}
+              style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--olive)', border: 'none', borderRadius: 6, padding: '7px 12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              ◆ Artes Insta
+            </button>
           </div>
         </div>
         <div className="ed-prevstage">
           {mode === 'card' && <div className="prev-center"><CatalogCardPreview item={dv} /></div>}
           {mode === 'pagina' && <div style={{ width: '100%' }}><PagePreview item={dv} /></div>}
-          {mode === 'feed' && <FeedPreview item={dv} />}
-          {mode === 'stories' && <StoriesPreview item={dv} />}
         </div>
         {d.status === 'Rascunho' && <div className="ed-draftnote">◆ Em rascunho. Não aparece no site até publicar.</div>}
       </div>
+
+      {artesOpen && <ArtesModal item={dv} onClose={() => setArtesOpen(false)} />}
     </div>
   )
 }
