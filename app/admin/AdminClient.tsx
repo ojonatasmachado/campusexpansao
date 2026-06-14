@@ -465,6 +465,31 @@ function PagePreview({ item }: { item: Item }) {
 const CEX_DOMAIN = 'campusexpansao.com.br'
 
 type SlideType = 'capa' | 'para-quem' | 'conteudo' | 'depoimento' | 'cta'
+type FeedVariant = 'ink' | 'graphite'
+type StoriesState = { kicker: string; gancho: string; ponte: string; cta: string; variant: FeedVariant }
+
+const ART_OLIVE = '#7A9E3F'
+const ART_OLIVE_DEEP = '#4F6B26'
+const ART_INK = '#0E110D'
+const ART_GRAPHITE = '#161A12'
+const ART_MUTED = '#8B8C82'
+const ART_BORDER = '#2E3327'
+const ART_SANS = 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
+const ART_MONO = 'JetBrains Mono, SF Mono, ui-monospace, monospace'
+
+const SLIDE_VARIANTS: Record<SlideType, FeedVariant> = {
+  'capa': 'ink', 'para-quem': 'graphite', 'conteudo': 'ink', 'depoimento': 'graphite', 'cta': 'ink',
+}
+
+function parseGancho(text: string): React.ReactNode {
+  if (!text || !text.includes('*')) return text
+  const parts = text.split(/\*([^*]+)\*/)
+  return parts.map((part, i) =>
+    i % 2 === 1
+      ? <em key={i} style={{ fontStyle: 'italic', fontWeight: 800, color: ART_OLIVE }}>{part}</em>
+      : part
+  )
+}
 
 function buildFeedSlides(item: Item): SlideType[] {
   const slides: SlideType[] = ['capa']
@@ -478,87 +503,62 @@ function buildFeedSlides(item: Item): SlideType[] {
   return slides
 }
 
-function CexLogo({ size = 28, dark = false }: { size?: number; dark?: boolean }) {
+function ArtLogo({ size = 40, dark = false, s = 1 }: { size?: number; dark?: boolean; s?: number }) {
+  const base = dark ? ART_INK : '#EDE6D3'
+  const accent = dark ? ART_OLIVE_DEEP : ART_OLIVE
   return (
-    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: size, fontWeight: 700, letterSpacing: '-.06em', lineHeight: 1, color: dark ? '#0E110D' : '#EDE6D3' }}>
-      CE<span style={{ color: dark ? '#2D4A12' : '#7A9E3F' }}>.X</span>
+    <span style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: size * s, letterSpacing: '-.045em', color: base, lineHeight: 1, display: 'inline-block' }}>
+      CE<span style={{ color: accent }}>.</span><span style={{ color: accent, fontStyle: 'italic' }}>X</span>
     </span>
   )
 }
 
-function FeedSlide({ item, type, s = 1 }: { item: Item; type: SlideType; s?: number }) {
+function FeedSlide({ item, type, counter, total, s = 1 }: {
+  item: Item; type: SlideType; counter?: number; total?: number; s?: number
+}) {
   const m = item as Material
-  const ac = item.accent
   const W = 1080 * s
   const H = 1350 * s
-  const p = Math.round(72 * s)
-  const mono = 'JetBrains Mono, SF Mono, monospace'
-  const sans = 'Inter, sans-serif'
+  const p = Math.round(90 * s)
+  const pb = Math.round(84 * s)
+  const topPad = Math.round(64 * s)
+  const variant = SLIDE_VARIANTS[type]
+  const dark = variant === 'graphite'
+  const bg = dark ? ART_GRAPHITE : ART_INK
+  const counterStr = counter != null && total != null ? `${String(counter).padStart(2, '0')} / ${String(total).padStart(2, '0')}` : undefined
 
-  const base: CSSProperties = {
-    width: W, height: H, position: 'relative', overflow: 'hidden',
-    fontFamily: sans, boxSizing: 'border-box',
-    background: '#0E110D',
-    display: 'flex', flexDirection: 'column',
-  }
+  const outer: CSSProperties = { width: W, height: H, position: 'relative', overflow: 'hidden', fontFamily: ART_SANS, background: bg, boxSizing: 'border-box' }
+  const inner: CSSProperties = { position: 'absolute', inset: 0, zIndex: 2, padding: `${topPad}px ${p}px ${pb}px`, display: 'flex', flexDirection: 'column' }
+  const topBar: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }
+  const body: CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }
 
-  const grid: CSSProperties = {
-    position: 'absolute', inset: 0,
-    backgroundImage: `linear-gradient(rgba(46,51,39,.35) 1px, transparent 1px), linear-gradient(90deg, rgba(46,51,39,.35) 1px, transparent 1px)`,
-    backgroundSize: `${72 * s}px ${72 * s}px`,
-    pointerEvents: 'none',
-  }
-
-  const eyebrow = (label: string): CSSProperties => ({
-    fontFamily: mono, fontSize: Math.round(13 * s), letterSpacing: '.18em',
-    textTransform: 'uppercase', color: ac, display: 'flex', alignItems: 'center', gap: Math.round(8 * s),
-  })
-
-  const topBar: CSSProperties = {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: `${p}px ${p}px 0`,
-    position: 'relative', zIndex: 2,
-  }
-
-  const botBar: CSSProperties = {
-    padding: `0 ${p}px ${p}px`,
-    display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
-    position: 'relative', zIndex: 2,
-  }
-
-  const domainLabel: CSSProperties = {
-    fontFamily: mono, fontSize: Math.round(11 * s), letterSpacing: '.12em',
-    textTransform: 'uppercase', color: '#555650',
-  }
+  const Filete = () => <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 5 * s, background: ART_OLIVE, zIndex: 3 }} />
+  const WmX = ({ opacity = .07 }: { opacity?: number }) => (
+    <div style={{ position: 'absolute', right: -46 * s, bottom: -150 * s, fontFamily: ART_SANS, fontWeight: 800, fontStyle: 'italic', fontSize: 780 * s, lineHeight: .7, color: `rgba(122,158,63,${opacity})`, zIndex: 0, pointerEvents: 'none', whiteSpace: 'nowrap' }}>X</div>
+  )
+  const TopChrome = () => (
+    <div style={topBar}>
+      <ArtLogo size={40} dark={false} s={s} />
+      {counterStr && <span style={{ fontFamily: ART_MONO, fontSize: 21 * s, letterSpacing: '.18em', color: ART_OLIVE_DEEP }}>{counterStr}</span>}
+    </div>
+  )
 
   if (type === 'capa') {
     return (
-      <div style={{ ...base, background: '#0E110D' }}>
-        <div style={grid} />
-        <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(80% 60% at 90% 10%, ${ac}22 0%, transparent 55%)`, pointerEvents: 'none' }} />
-        <div style={{ ...topBar }}>
-          <CexLogo size={Math.round(28 * s)} />
-          <div style={eyebrow(m.shelf ?? item.type)}>
-            <span style={{ fontSize: Math.round(8 * s) }}>◆</span> {(m.shelf ?? item.type).toUpperCase()}
+      <div style={outer}>
+        <Filete /><WmX />
+        <div style={inner}>
+          <TopChrome />
+          <div style={body}>
+            {m.shelf && (
+              <div style={{ fontFamily: ART_MONO, fontSize: 22 * s, letterSpacing: '.18em', textTransform: 'uppercase', color: ART_OLIVE, marginBottom: 36 * s }}>
+                {m.shelf}
+              </div>
+            )}
+            <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 124 * s, lineHeight: .96, letterSpacing: '-.04em', color: '#EDE6D3', margin: 0 }}>
+              {item.title}
+            </h2>
           </div>
-        </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: `0 ${p}px`, position: 'relative', zIndex: 2, paddingBottom: Math.round(56 * s) }}>
-          <div style={{ fontFamily: sans, fontWeight: 900, fontSize: Math.round(120 * s), lineHeight: 0.88, letterSpacing: '-.05em', color: '#EDE6D3', overflowWrap: 'break-word' }}>
-            {item.title}
-          </div>
-          {item.desc && (
-            <div style={{ marginTop: Math.round(28 * s), fontSize: Math.round(30 * s), lineHeight: 1.4, color: '#E6E5DD', maxWidth: Math.round(820 * s) }}>
-              {item.desc}
-            </div>
-          )}
-        </div>
-        <div style={{ background: ac, padding: `${Math.round(24 * s)}px ${p}px`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 2 }}>
-          <div style={{ display: 'flex', gap: Math.round(12 * s), flexWrap: 'wrap' }}>
-            {(m.formats ?? ['PDF']).map((f, i) => (
-              <span key={i} style={{ fontFamily: mono, fontSize: Math.round(12 * s), fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: '#0E110D' }}>{f}</span>
-            ))}
-          </div>
-          <span style={{ fontFamily: mono, fontSize: Math.round(12 * s), letterSpacing: '.1em', color: '#0E110D', opacity: .7 }}>{CEX_DOMAIN}</span>
         </div>
       </div>
     )
@@ -566,147 +566,133 @@ function FeedSlide({ item, type, s = 1 }: { item: Item; type: SlideType; s?: num
 
   if (type === 'para-quem') {
     return (
-      <div style={{ ...base, background: '#181B16' }}>
-        <div style={grid} />
-        <div style={topBar}>
-          <CexLogo size={Math.round(24 * s)} />
-          <div style={eyebrow('Pra quem é')}><span style={{ fontSize: Math.round(8 * s) }}>◆</span> PRA QUEM É</div>
-        </div>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: `0 ${p}px`, position: 'relative', zIndex: 2 }}>
-          <div style={{ fontSize: Math.round(52 * s), fontWeight: 800, lineHeight: 1.15, letterSpacing: '-.03em', color: '#EDE6D3' }}>
-            {m.paraQuem}
+      <div style={outer}>
+        <Filete /><WmX />
+        <div style={inner}>
+          <TopChrome />
+          <div style={body}>
+            <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 124 * s, lineHeight: .96, letterSpacing: '-.04em', color: '#EDE6D3', margin: 0 }}>
+              {m.paraQuem || 'Pra quem é esse material?'}
+            </h2>
           </div>
         </div>
-        <div style={{ ...botBar }}><span style={domainLabel}>{CEX_DOMAIN}</span></div>
       </div>
     )
   }
 
   if (type === 'conteudo') {
-    const items = (m.beneficios ?? []).filter(b => b?.trim()).slice(0, 6)
+    const bens = (m.beneficios ?? []).filter(b => b?.trim()).slice(0, 4)
     return (
-      <div style={{ ...base }}>
-        <div style={grid} />
-        <div style={topBar}>
-          <CexLogo size={Math.round(24 * s)} />
-          <div style={eyebrow('Conteúdo')}><span style={{ fontSize: Math.round(8 * s) }}>◆</span> O QUE VEM DENTRO</div>
-        </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: `${Math.round(40 * s)}px ${p}px`, gap: Math.round(22 * s), position: 'relative', zIndex: 2 }}>
-          {items.map((b, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: Math.round(20 * s) }}>
-              <span style={{ color: ac, fontFamily: mono, fontSize: Math.round(13 * s), marginTop: Math.round(6 * s), flexShrink: 0 }}>→</span>
-              <span style={{ fontSize: Math.round(34 * s), lineHeight: 1.25, color: '#E6E5DD', fontWeight: 500 }}>{b}</span>
+      <div style={outer}>
+        <Filete /><WmX />
+        <div style={inner}>
+          <TopChrome />
+          <div style={body}>
+            <div style={{ fontFamily: ART_MONO, fontSize: 22 * s, letterSpacing: '.18em', textTransform: 'uppercase', color: ART_OLIVE, marginBottom: 44 * s }}>
+              O QUE VEM DENTRO
             </div>
-          ))}
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {bens.map((b, i) => (
+                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 30 * s, fontFamily: ART_SANS, fontWeight: 700, fontSize: 58 * s, letterSpacing: '-.02em', color: '#EDE6D3', padding: `${22 * s}px 0`, borderTop: `1.5px solid ${ART_BORDER}`, ...(i === bens.length - 1 ? { borderBottom: `1.5px solid ${ART_BORDER}` } : {}) }}>
+                  <span style={{ color: ART_OLIVE, fontWeight: 500, flexShrink: 0, fontSize: 36 * s }}>—</span>
+                  {b}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-        <div style={{ ...botBar }}><span style={domainLabel}>{CEX_DOMAIN}</span></div>
       </div>
     )
   }
 
   if (type === 'depoimento') {
     return (
-      <div style={{ ...base, background: '#181B16' }}>
-        <div style={grid} />
-        <div style={topBar}>
-          <CexLogo size={Math.round(24 * s)} />
-        </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: `0 ${p}px`, position: 'relative', zIndex: 2 }}>
-          <div style={{ fontSize: Math.round(100 * s), lineHeight: 0.7, color: ac, fontFamily: sans, fontWeight: 900, marginBottom: Math.round(30 * s) }}>&ldquo;</div>
-          <div style={{ fontSize: Math.round(44 * s), fontWeight: 600, lineHeight: 1.3, color: '#EDE6D3', fontStyle: 'italic' }}>
-            {m.depoimento?.texto}
-          </div>
-          {m.depoimento?.autor && (
-            <div style={{ marginTop: Math.round(36 * s), fontFamily: mono, fontSize: Math.round(14 * s), letterSpacing: '.1em', color: '#8B8C82', textTransform: 'uppercase' }}>
-              {m.depoimento.autor}
+      <div style={outer}>
+        <Filete /><WmX />
+        <div style={inner}>
+          <TopChrome />
+          <div style={body}>
+            <div style={{ fontSize: 96 * s, lineHeight: .7, color: ART_OLIVE, fontWeight: 900, marginBottom: 30 * s }}>&ldquo;</div>
+            <div style={{ fontSize: 44 * s, fontWeight: 600, lineHeight: 1.3, color: '#EDE6D3', fontStyle: 'italic', maxWidth: 860 * s }}>
+              {m.depoimento?.texto || 'Depoimento de quem usou o material.'}
             </div>
-          )}
+            {m.depoimento?.autor && (
+              <div style={{ marginTop: 36 * s, fontFamily: ART_MONO, fontSize: 14 * s, letterSpacing: '.1em', color: ART_MUTED, textTransform: 'uppercase' }}>
+                {m.depoimento.autor}
+              </div>
+            )}
+          </div>
         </div>
-        <div style={{ ...botBar }}><span style={domainLabel}>{CEX_DOMAIN}</span></div>
       </div>
     )
   }
 
-  // CTA slide
+  // CTA / fecho
   return (
-    <div style={{ ...base, background: ac }}>
-      <div style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(rgba(14,17,13,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(14,17,13,.08) 1px, transparent 1px)`, backgroundSize: `${72 * s}px ${72 * s}px`, pointerEvents: 'none' }} />
-      <div style={{ ...topBar }}>
-        <CexLogo size={Math.round(28 * s)} dark />
-      </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: `0 ${p}px`, position: 'relative', zIndex: 2 }}>
-        <div style={{ fontFamily: mono, fontSize: Math.round(13 * s), letterSpacing: '.16em', textTransform: 'uppercase', color: '#0E110D', opacity: .6, marginBottom: Math.round(20 * s) }}>
-          MATERIAL DIGITAL
+    <div style={outer}>
+      <Filete /><WmX />
+      <div style={inner}>
+        <TopChrome />
+        <div style={body}>
+          <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 104 * s, lineHeight: .96, letterSpacing: '-.04em', color: '#EDE6D3', margin: `0 0 ${38 * s}px` }}>
+            {item.title}
+          </h2>
+          <div style={{ width: 96 * s, height: 5 * s, background: ART_OLIVE, borderRadius: 2 * s, margin: `0 0 ${38 * s}px` }} />
+          <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 104 * s, lineHeight: .96, letterSpacing: '-.04em', color: ART_OLIVE, fontStyle: 'italic', margin: 0 }}>
+            {(m.price) ? `R$ ${m.price} →` : `Ver →`}
+          </h2>
         </div>
-        <div style={{ fontFamily: sans, fontWeight: 900, fontSize: Math.round(100 * s), lineHeight: 0.88, letterSpacing: '-.05em', color: '#0E110D', overflowWrap: 'break-word' }}>
-          {item.title}
+        <div style={{ fontFamily: ART_MONO, fontSize: 22 * s, letterSpacing: '.06em', color: ART_OLIVE }}>
+          @campus.expansao · {CEX_DOMAIN}
         </div>
-        <div style={{ marginTop: Math.round(48 * s), display: 'flex', alignItems: 'baseline', gap: Math.round(8 * s) }}>
-          <span style={{ fontFamily: mono, fontSize: Math.round(18 * s), fontWeight: 700, color: '#0E110D', opacity: .6 }}>R$</span>
-          <span style={{ fontFamily: sans, fontWeight: 900, fontSize: Math.round(96 * s), letterSpacing: '-.04em', color: '#0E110D', lineHeight: 1 }}>{m.price ?? '—'}</span>
-        </div>
-        <div style={{ marginTop: Math.round(36 * s), fontFamily: sans, fontWeight: 700, fontSize: Math.round(30 * s), color: '#0E110D' }}>
-          Comprar em {CEX_DOMAIN} →
-        </div>
-      </div>
-      <div style={{ padding: `${Math.round(24 * s)}px ${p}px`, position: 'relative', zIndex: 2 }}>
-        <span style={{ fontFamily: mono, fontSize: Math.round(11 * s), letterSpacing: '.12em', textTransform: 'uppercase', color: '#0E110D', opacity: .5 }}>{CEX_DOMAIN}</span>
       </div>
     </div>
   )
 }
 
-function StoriesSlide({ item, s = 1 }: { item: Item; s?: number }) {
-  const m = item as Material
-  const ac = item.accent
+function StoriesSlide({ st, s = 1 }: { st: StoriesState; s?: number }) {
+  const bg = st.variant === 'graphite' ? ART_GRAPHITE : ART_INK
   const W = 1080 * s
   const H = 1920 * s
-  const p = Math.round(80 * s)
-  const mono = 'JetBrains Mono, SF Mono, monospace'
-  const sans = 'Inter, sans-serif'
 
   return (
-    <div style={{ width: W, height: H, position: 'relative', overflow: 'hidden', fontFamily: sans, boxSizing: 'border-box', background: '#0E110D', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(rgba(46,51,39,.3) 1px, transparent 1px), linear-gradient(90deg, rgba(46,51,39,.3) 1px, transparent 1px)`, backgroundSize: `${80 * s}px ${80 * s}px`, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(70% 50% at 80% 15%, ${ac}28 0%, transparent 55%)`, pointerEvents: 'none' }} />
-
-      {/* Top bar */}
-      <div style={{ padding: `${Math.round(90 * s)}px ${p}px ${Math.round(40 * s)}px`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 2 }}>
-        <CexLogo size={Math.round(36 * s)} />
-        <div style={{ fontFamily: mono, fontSize: Math.round(13 * s), letterSpacing: '.16em', textTransform: 'uppercase', color: ac, display: 'flex', alignItems: 'center', gap: Math.round(8 * s) }}>
-          <span style={{ fontSize: Math.round(8 * s) }}>◆</span> {(m.shelf ?? item.type).toUpperCase()}
+    <div style={{ width: W, height: H, position: 'relative', overflow: 'hidden', background: bg, fontFamily: ART_SANS }}>
+      {/* Filete oliva 5px topo */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 5 * s, background: ART_OLIVE, zIndex: 3 }} />
+      {/* Marca d'agua X gigante */}
+      <div style={{ position: 'absolute', right: -46 * s, bottom: 120 * s, fontFamily: ART_SANS, fontWeight: 800, fontStyle: 'italic', fontSize: 740 * s, lineHeight: .7, color: 'rgba(122,158,63,.06)', zIndex: 0, pointerEvents: 'none', whiteSpace: 'nowrap' }}>X</div>
+      {/* Inner: padding 100 88 360 */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 2, padding: `${100 * s}px ${88 * s}px ${360 * s}px`, display: 'flex', flexDirection: 'column' }}>
+        {/* Logo */}
+        <div><ArtLogo size={44} s={s} /></div>
+        {/* Mid: kicker + gancho + ponte */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          {st.kicker && (
+            <div style={{ fontFamily: ART_MONO, fontSize: 26 * s, letterSpacing: '.16em', textTransform: 'uppercase', color: ART_OLIVE, marginBottom: 42 * s }}>
+              {st.kicker}
+            </div>
+          )}
+          <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 138 * s, lineHeight: .95, letterSpacing: '-.04em', color: '#F6F1E0', margin: 0 }}>
+            {parseGancho(st.gancho)}
+          </h2>
+          {st.ponte && (
+            <p style={{ fontFamily: ART_SANS, fontStyle: 'italic', fontWeight: 400, fontSize: 46 * s, lineHeight: 1.3, color: ART_MUTED, marginTop: 46 * s, maxWidth: 860 * s, marginBottom: 0 }}>
+              {st.ponte}
+            </p>
+          )}
+        </div>
+        {/* CTA pill */}
+        <div style={{ display: 'flex' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', background: ART_OLIVE, color: ART_INK, fontFamily: ART_SANS, fontWeight: 800, fontSize: 48 * s, letterSpacing: '-.015em', padding: `${32 * s}px ${50 * s}px`, borderRadius: 16 * s }}>
+            {st.cta || 'ARRASTA PRA CIMA ↑'}
+          </div>
         </div>
       </div>
-
-      {/* Main content */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: `0 ${p}px`, position: 'relative', zIndex: 2 }}>
-        <div style={{ fontFamily: sans, fontWeight: 900, fontSize: Math.round(128 * s), lineHeight: 0.88, letterSpacing: '-.05em', color: '#EDE6D3', overflowWrap: 'break-word' }}>
-          {item.title}
-        </div>
-        {item.desc && (
-          <div style={{ marginTop: Math.round(32 * s), fontSize: Math.round(34 * s), lineHeight: 1.4, color: '#E6E5DD', maxWidth: Math.round(900 * s) }}>
-            {item.desc}
-          </div>
-        )}
-      </div>
-
-      {/* Bottom CTA panel */}
-      <div style={{ background: ac, padding: `${Math.round(48 * s)}px ${p}px ${Math.round(80 * s)}px`, position: 'relative', zIndex: 2 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <div>
-            <div style={{ fontFamily: mono, fontSize: Math.round(13 * s), letterSpacing: '.14em', textTransform: 'uppercase', color: '#0E110D', opacity: .6, marginBottom: Math.round(10 * s) }}>
-              MATERIAL DIGITAL
-            </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: Math.round(6 * s) }}>
-              <span style={{ fontFamily: mono, fontSize: Math.round(20 * s), color: '#0E110D', opacity: .6 }}>R$</span>
-              <span style={{ fontFamily: sans, fontWeight: 900, fontSize: Math.round(80 * s), letterSpacing: '-.04em', color: '#0E110D', lineHeight: 1 }}>{m.price ?? '—'}</span>
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontFamily: sans, fontWeight: 800, fontSize: Math.round(26 * s), color: '#0E110D' }}>Comprar →</div>
-            <div style={{ fontFamily: mono, fontSize: Math.round(13 * s), letterSpacing: '.1em', color: '#0E110D', opacity: .6, marginTop: Math.round(6 * s) }}>{CEX_DOMAIN}</div>
-          </div>
-        </div>
+      {/* Zona segura 310px (referencia visual) */}
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 310 * s, zIndex: 1, borderTop: `1.5px dashed rgba(122,158,63,.30)`, background: 'repeating-linear-gradient(45deg, rgba(122,158,63,.025) 0 14px, transparent 14px 28px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 22 * s, pointerEvents: 'none' }}>
+        <span style={{ fontFamily: ART_MONO, fontSize: 18 * s, letterSpacing: '.14em', color: 'rgba(139,140,130,.7)' }}>
+          AREA DA UI DO INSTAGRAM · MANTENHA LIVRE
+        </span>
       </div>
     </div>
   )
@@ -748,58 +734,62 @@ function FeedPreview({ item }: { item: Item }) {
     }
   }
 
-  // Helper: container com tamanho visual exato + slide posicionado absolutamente
-  const ScaledSlide = ({ type, scale }: { type: SlideType; scale: number }) => (
+  const ScaledSlide = ({ type, idx, scale }: { type: SlideType; idx: number; scale: number }) => (
     <div style={{ width: Math.round(1080 * scale), height: Math.round(1350 * scale), position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
       <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-        <FeedSlide item={item} type={type} s={1} />
+        <FeedSlide item={item} type={type} counter={idx + 1} total={slides.length} s={1} />
       </div>
     </div>
   )
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
-      {/* Main slide preview — centralizado */}
       <div style={{ display: 'flex', justifyContent: 'center', background: 'rgba(0,0,0,.3)', borderRadius: 8, padding: '16px 8px' }}>
-        <ScaledSlide type={slides[active]} scale={MAIN_S} />
+        <ScaledSlide type={slides[active]} idx={active} scale={MAIN_S} />
       </div>
-      {/* Thumbnails */}
       <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
         {slides.map((t, i) => (
           <button key={i} onClick={() => setActive(i)}
-            style={{ padding: 0, background: 'none', border: `2px solid ${active === i ? item.accent : 'var(--border)'}`, borderRadius: 4, cursor: 'pointer', overflow: 'hidden', flexShrink: 0 }}>
+            style={{ padding: 0, background: 'none', border: `2px solid ${active === i ? ART_OLIVE : 'var(--border)'}`, borderRadius: 4, cursor: 'pointer', overflow: 'hidden', flexShrink: 0 }}>
             <div style={{ width: Math.round(1080 * THUMB_S), height: Math.round(1350 * THUMB_S), position: 'relative', overflow: 'hidden', pointerEvents: 'none' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${THUMB_S})`, transformOrigin: 'top left' }}>
-                <FeedSlide item={item} type={t} s={1} />
+                <FeedSlide item={item} type={t} counter={i + 1} total={slides.length} s={1} />
               </div>
             </div>
           </button>
         ))}
       </div>
-      {/* Download */}
       <button onClick={handleDownload} disabled={downloading}
         style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--olive)', border: 'none', borderRadius: 6, padding: '10px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
         {downloading ? 'Baixando...' : `↓ Baixar ${slides.length} slides · PNG 1080×1350`}
       </button>
-      {/* Slides em tamanho real para export — fora da tela */}
       <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none' }}>
-        {slides.map((t, i) => <FeedSlide key={i} item={item} type={t} s={1} />)}
+        {slides.map((t, i) => <FeedSlide key={i} item={item} type={t} counter={i + 1} total={slides.length} s={1} />)}
       </div>
     </div>
   )
 }
 
 function StoriesPreview({ item }: { item: Item }) {
+  const m = item as Material
   const [downloading, setDownloading] = useState(false)
   const exportRef = useRef<HTMLDivElement>(null)
   const MAIN_S = 0.22
+
+  const [st, setSt] = useState<StoriesState>({
+    kicker: m.shelf ?? item.type,
+    gancho: item.title,
+    ponte: item.desc ?? '',
+    cta: m.hotmart ? 'VER O MATERIAL →' : 'ARRASTA PRA CIMA ↑',
+    variant: 'ink',
+  })
 
   const handleDownload = async () => {
     setDownloading(true)
     try {
       const el = exportRef.current?.children[0] as HTMLElement
       if (!el) return
-      const slug = (item as Material).id ?? item.title.toLowerCase().replace(/\s+/g, '-')
+      const slug = m.id ?? item.title.toLowerCase().replace(/\s+/g, '-')
       await downloadAsPng(el, `${slug}-stories.png`)
     } finally {
       setDownloading(false)
@@ -807,22 +797,46 @@ function StoriesPreview({ item }: { item: Item }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%', alignItems: 'center' }}>
-      {/* Preview com tamanho visual correto */}
-      <div style={{ background: 'rgba(0,0,0,.3)', borderRadius: 8, padding: '16px 8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%' }}>
+      {/* Variante */}
+      <div style={{ display: 'flex', gap: 8 }}>
+        {(['ink', 'graphite'] as const).map((v) => (
+          <button key={v} onClick={() => setSt(prev => ({ ...prev, variant: v }))}
+            style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', padding: '8px 14px', borderRadius: 'var(--r-sm)', border: `1px solid ${st.variant === v ? ART_OLIVE : 'var(--border-2)'}`, background: st.variant === v ? 'rgba(122,158,63,.12)' : 'var(--ink)', color: st.variant === v ? ART_OLIVE : 'var(--muted)', cursor: 'pointer' }}>
+            {v === 'ink' ? 'Ink (padrão)' : 'Graphite'}
+          </button>
+        ))}
+      </div>
+      {/* Campos de texto */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <Field label="Kicker" hint="Segmento da audiência. Ex: LIDER DE IGREJA">
+          <input className="inp" value={st.kicker} onChange={e => setSt(prev => ({ ...prev, kicker: e.target.value }))} placeholder="LIDER DE IGREJA" />
+        </Field>
+        <Field label="Gancho" hint="Manchete principal. Use *palavra* para colocar em itálico oliva.">
+          <textarea className="inp ta" style={{ minHeight: 80 }} value={st.gancho} onChange={e => setSt(prev => ({ ...prev, gancho: e.target.value }))} placeholder="Sua equipe não está cansada. Está *sem direção.*" />
+        </Field>
+        <Field label="Ponte" hint="Uma linha que liga o gancho à oferta. Itálico automático.">
+          <input className="inp" value={st.ponte} onChange={e => setSt(prev => ({ ...prev, ponte: e.target.value }))} placeholder="Tem um material pronto que organiza isso em 4 passos." />
+        </Field>
+        <Field label="CTA" hint="Texto do botão. Use → ou ↑ como marcas.">
+          <input className="inp" value={st.cta} onChange={e => setSt(prev => ({ ...prev, cta: e.target.value }))} placeholder="ARRASTA PRA CIMA ↑" />
+        </Field>
+      </div>
+      {/* Preview */}
+      <div style={{ display: 'flex', justifyContent: 'center', background: 'rgba(0,0,0,.3)', borderRadius: 8, padding: '12px 8px' }}>
         <div style={{ width: Math.round(1080 * MAIN_S), height: Math.round(1920 * MAIN_S), position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${MAIN_S})`, transformOrigin: 'top left' }}>
-            <StoriesSlide item={item} s={1} />
+            <StoriesSlide st={st} s={1} />
           </div>
         </div>
       </div>
       <button onClick={handleDownload} disabled={downloading}
-        style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--olive)', border: 'none', borderRadius: 6, padding: '10px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1, width: '100%' }}>
+        style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--olive)', border: 'none', borderRadius: 6, padding: '10px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
         {downloading ? 'Baixando...' : '↓ Baixar stories · PNG 1080×1920'}
       </button>
-      {/* Stories em tamanho real para export */}
+      {/* Full-size para export */}
       <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none' }}>
-        <StoriesSlide item={item} s={1} />
+        <StoriesSlide st={st} s={1} />
       </div>
     </div>
   )
