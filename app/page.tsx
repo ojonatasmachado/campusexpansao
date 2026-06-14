@@ -86,7 +86,7 @@ export default async function Home() {
 
       {/* MATERIAIS — dados do banco */}
       <div id="materiais">
-        <div className="pg-wrap pg-section" style={{ paddingBottom: 0 }}>
+        <div className={`pg-wrap pg-section ${styles.materialsIntro}`}>
           <div className="psec-title">Materiais</div>
         </div>
         <MateriaisContent
@@ -123,7 +123,7 @@ export default async function Home() {
       </div>
 
       {/* CTA FINAL */}
-      <div className="pg-wrap pg-section">
+      <div className={`pg-wrap pg-section ${styles.finalCtaSection}`}>
         <div className="cta-block">
           <div className="cta-x">X</div>
           <div className="cta-eyebrow">◆ Comece hoje</div>
@@ -137,7 +137,7 @@ export default async function Home() {
       </div>
 
       {/* QUIZ */}
-      <div className="pg-wrap pg-section">
+      <div className={`pg-wrap pg-section ${styles.quizSection}`}>
         <div className="capture">
           <div className="capture-x">X</div>
           <div className="capture-eyebrow">◆ Descubra seu chamado</div>
