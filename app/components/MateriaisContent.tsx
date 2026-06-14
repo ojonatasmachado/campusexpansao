@@ -220,7 +220,7 @@ export default function MateriaisContent({
         </div>
       )}
 
-      <div className="loja-filter-bar">
+      <div className={`loja-filter-bar${showHero ? "" : " loja-filter-bar--section"}`}>
         <div className="pg-wrap">
           <div className="loja-filter-l1">
             {(["tudo", "ministrar", "liderar", "eventos"] as FiltroL1[]).map((f) => {

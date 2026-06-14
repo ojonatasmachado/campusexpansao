@@ -87,7 +87,6 @@ export default async function Home() {
       {/* MATERIAIS — dados do banco */}
       <div id="materiais">
         <div className="pg-wrap pg-section" style={{ paddingBottom: 0 }}>
-          <div className="psec-eyebrow">◆ Materiais editáveis</div>
           <div className="psec-title">Materiais</div>
         </div>
         <MateriaisContent
