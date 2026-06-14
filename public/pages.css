@@ -65,10 +65,51 @@
 
 @media (max-width:980px) {
   .stats-strip { grid-template-columns:1fr 1fr; }
-  .about-cols { grid-template-columns:1fr; }
-  .about-values { grid-template-columns:1fr; }
+  .about-cols { grid-template-columns:1fr; gap:32px; }
+  .about-values { grid-template-columns:1fr 1fr; gap:12px; }
   .landing-bullets { grid-template-columns:1fr; }
   .landing-title { font-size:44px; }
   .landing-form { flex-direction:column; }
   .about-lead { font-size:30px; }
+}
+
+@media (max-width:640px) {
+  /* wrap e seções */
+  .pg-wrap { padding:0 20px; }
+  .pg-section { padding:56px 0; }
+  .pg-section.tight { padding:40px 0; }
+
+  /* hero */
+  .home-hero { padding:72px 0 60px; }
+
+  /* sobre */
+  .about-lead { font-size:24px; }
+  .about-cols { gap:24px; }
+  .about-values { grid-template-columns:1fr; gap:10px; }
+  .value { padding:20px; }
+  .value-letter { font-size:40px; margin-bottom:10px; }
+
+  /* seções */
+  .psec-title { font-size:32px; }
+  .psec-head { margin-bottom:28px; }
+  .stats-strip { grid-template-columns:1fr 1fr; gap:16px; padding:24px 0; }
+  .stat-item-num { font-size:36px; }
+
+  /* CTA block */
+  .cta-block { padding:48px 28px; border-radius:16px; }
+  .cta-title { font-size:36px; }
+  .cta-desc { font-size:15px; }
+  .cta-actions { flex-direction:column; align-items:stretch; }
+  .cta-actions .btn { justify-content:center; }
+
+  /* capture / quiz */
+  .capture { padding:36px 24px; }
+  .capture-title { font-size:26px; }
+  .capture-desc { font-size:14px; }
+  .capture-form { flex-direction:column; }
+
+  /* botões */
+  .btn-lg { font-size:15px; padding:14px 24px; }
+  .hero-actions { flex-direction:column; align-items:stretch; }
+  .hero-actions .btn { justify-content:center; }
 }
