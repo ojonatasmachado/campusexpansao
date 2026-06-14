@@ -4,13 +4,10 @@ import Link from "next/link";
 import { ACCENTS } from "../lib/accents";
 import { NIVEIS, CURSOS_DATA } from "../lib/cursos-data";
 import type { CursoDado } from "../lib/cursos-data";
+import type { DbCurso, DbMentoria } from "../lib/types";
 
 export type { CursoDado };
 export { NIVEIS, CURSOS_DATA };
-
-// ─── Tipos do banco ───────────────────────────────────────────────────────────
-type DbCurso = { slug: string; num: string; nivel: string; title: string; desc_text: string; dur: string; mentor: string; turma: string; status: string }
-type DbMentoria = { id: string; title: string; desc_text: string; formato: string; vagas: number; mentor: string; accent: string; cadencia: string; status: string }
 
 function dbCursoToCursoDado(c: DbCurso): CursoDado {
   return {
@@ -102,6 +99,8 @@ export function CursosNiveis({ dbCursos, dbMentorias }: { dbCursos?: DbCurso[]; 
     <>
       {NIVEIS.map((nivel) => {
         const cursosDoNivel = cursos.filter(c => c.nivel === nivel.key);
+        if (cursosDoNivel.length === 0) return null;
+
         const accent = ACCENTS[nivel.accent];
         return (
           <div key={nivel.key} className="loja-shelf">
