@@ -573,6 +573,7 @@ const CEX_DOMAIN = 'campusexpansao.com.br'
 
 type SlideType = 'capa' | 'para-quem' | 'conteudo' | 'depoimento' | 'cta'
 type FeedVariant = 'ink' | 'graphite'
+type TextColor = 'cream' | 'ink' | 'olive'
 type StoriesState = { kicker: string; gancho: string; ponte: string; cta: string; variant: FeedVariant }
 type FeedSlideCopy = {
   variant: FeedVariant
@@ -583,6 +584,11 @@ type FeedSlideCopy = {
   author: string
   cta: string
   footer: string
+  // Controles de estilo do texto principal
+  titleWeight: number       // 400 | 600 | 800
+  titleItalic: boolean
+  titleColor: TextColor
+  titleSize: number         // px at s=1 (ex: 72, 96, 118, 148)
 }
 type FeedCopies = Record<SlideType, FeedSlideCopy>
 type FeedField = 'kicker' | 'title' | 'quote' | 'author' | 'cta' | 'footer' | `item-${number}`
@@ -610,16 +616,19 @@ const SLIDE_NAMES: Record<SlideType, string> = {
   'cta': 'Chamada final',
 }
 
-function parseArtText(text: string): ReactNode {
+function parseArtText(text: string, baseColor?: string): ReactNode {
   if (!text) return null
-  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|\n)/g).filter(Boolean)
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|_[^_]+_|\n)/g).filter(Boolean)
   return parts.map((part, i) => {
     if (part === '\n') return <br key={i} />
     if (part.startsWith('**') && part.endsWith('**')) {
       return <strong key={i} style={{ fontWeight: 900 }}>{part.slice(2, -2)}</strong>
     }
     if (part.startsWith('*') && part.endsWith('*')) {
-      return <em key={i} style={{ fontStyle: 'italic', fontWeight: 800, color: ART_OLIVE }}>{part.slice(1, -1)}</em>
+      return <em key={i} style={{ fontStyle: 'italic', fontWeight: 'inherit', color: ART_OLIVE }}>{part.slice(1, -1)}</em>
+    }
+    if (part.startsWith('_') && part.endsWith('_')) {
+      return <em key={i} style={{ fontStyle: 'italic', color: baseColor }}>{part.slice(1, -1)}</em>
     }
     return part
   })
@@ -643,86 +652,83 @@ function buildFeedSlides(item: Item): SlideType[] {
   return slides
 }
 
+const STYLE_DEFAULTS = { titleWeight: 800, titleItalic: false, titleColor: 'cream' as TextColor, titleSize: 118 }
+
 function buildFeedCopies(item: Item): FeedCopies {
   const m = item as Material
   const footer = `@campus.expansao · ${CEX_DOMAIN}`
+  const base = (extra?: Partial<typeof STYLE_DEFAULTS>) => ({ ...STYLE_DEFAULTS, ...extra })
   return {
-    capa: {
-      variant: SLIDE_VARIANTS.capa,
-      kicker: m.shelf ?? item.type,
-      title: item.title,
-      items: [],
-      quote: '',
-      author: '',
-      cta: '',
-      footer,
-    },
-    'para-quem': {
-      variant: SLIDE_VARIANTS['para-quem'],
-      kicker: 'PARA QUEM É',
-      title: m.paraQuem || 'Pra quem é esse material?',
-      items: [],
-      quote: '',
-      author: '',
-      cta: '',
-      footer,
-    },
-    conteudo: {
-      variant: SLIDE_VARIANTS.conteudo,
-      kicker: 'O QUE VEM DENTRO',
-      title: '',
-      items: ((m.beneficios ?? []).filter(b => b?.trim()).slice(0, 4).concat(['', '', '', ''])).slice(0, 4),
-      quote: '',
-      author: '',
-      cta: '',
-      footer,
-    },
-    depoimento: {
-      variant: SLIDE_VARIANTS.depoimento,
-      kicker: 'DEPOIMENTO',
-      title: '',
-      items: [],
-      quote: m.depoimento?.texto || 'Depoimento de quem usou o material.',
-      author: m.depoimento?.autor || '',
-      cta: '',
-      footer,
-    },
-    cta: {
-      variant: SLIDE_VARIANTS.cta,
-      kicker: '',
-      title: item.title,
-      items: [],
-      quote: '',
-      author: '',
-      cta: m.price ? `R$ ${m.price} →` : 'Ver →',
-      footer,
-    },
+    capa: { variant: SLIDE_VARIANTS.capa, kicker: m.shelf ?? item.type, title: item.title, items: [], quote: '', author: '', cta: '', footer, ...base() },
+    'para-quem': { variant: SLIDE_VARIANTS['para-quem'], kicker: 'PARA QUEM É', title: m.paraQuem || 'Pra quem é esse material?', items: [], quote: '', author: '', cta: '', footer, ...base({ titleColor: 'ink' }) },
+    conteudo: { variant: SLIDE_VARIANTS.conteudo, kicker: 'O QUE VEM DENTRO', title: '', items: ((m.beneficios ?? []).filter(b => b?.trim()).slice(0, 4).concat(['', '', '', ''])).slice(0, 4), quote: '', author: '', cta: '', footer, ...base({ titleSize: 58 }) },
+    depoimento: { variant: SLIDE_VARIANTS.depoimento, kicker: 'DEPOIMENTO', title: '', items: [], quote: m.depoimento?.texto || 'Depoimento de quem usou o material.', author: m.depoimento?.autor || '', cta: '', footer, ...base({ titleWeight: 600, titleItalic: true, titleColor: 'ink', titleSize: 44 }) },
+    cta: { variant: SLIDE_VARIANTS.cta, kicker: '', title: item.title, items: [], quote: '', author: '', cta: m.price ? `R$ ${m.price} →` : 'Ver →', footer, ...base({ titleSize: 104 }) },
   }
 }
 
-function ArtComponentLibrary({ onInsert }: { onInsert: (token: string) => void }) {
-  const tools = [
-    { label: 'N', token: '**negrito**', title: 'Negrito — palavra mais grossa' },
-    { label: 'Verde', token: '*destaque*', title: 'Palavra em verde oliva' },
-    { label: '↵', token: '\n', title: 'Quebrar linha aqui' },
-    { label: '◆', token: '◆ ', title: 'Marcador ◆' },
-    { label: '→', token: '→', title: 'Seta' },
-  ]
+function useWindowWidth() {
+  const [w, setW] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)
+  useEffect(() => {
+    const h = () => setW(window.innerWidth)
+    window.addEventListener('resize', h)
+    return () => window.removeEventListener('resize', h)
+  }, [])
+  return w
+}
+
+function ToolBtn({ label, active, onClick, color, title, mono }: { label: string; active?: boolean; onClick: () => void; color?: string; title?: string; mono?: boolean }) {
   return (
-    <div>
-      <div style={{ fontFamily: ART_SANS, fontSize: 11, color: 'var(--muted)', marginBottom: 6, letterSpacing: '.01em' }}>
-        Formatar texto
+    <button type="button" title={title} onClick={onClick}
+      style={{ height: 28, minWidth: 28, padding: '0 8px', borderRadius: 5, border: `1.5px solid ${active ? ART_OLIVE : 'var(--border-2)'}`, background: active ? 'rgba(122,158,63,.15)' : 'var(--graphite)', color: color ?? (active ? ART_OLIVE : 'var(--cream)'), fontFamily: mono ? ART_MONO : ART_SANS, fontSize: 11, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
+      {label}
+    </button>
+  )
+}
+
+function ArtFormatBar({ copy, onUpdate, onInsert }: {
+  copy: FeedSlideCopy
+  onUpdate: (patch: Partial<FeedSlideCopy>) => void
+  onInsert: (token: string) => void
+}) {
+  const SIZE_STEPS = [60, 80, 100, 118, 140, 164]
+  const curSizeIdx = SIZE_STEPS.reduce((best, s, i) => Math.abs(s - copy.titleSize) < Math.abs(SIZE_STEPS[best] - copy.titleSize) ? i : best, 0)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(0,0,0,.18)', border: '.5px solid var(--border-2)', borderRadius: 8, padding: '10px 12px' }}>
+      {/* Linha 1: peso + estilo + cor */}
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        <ToolBtn label="N" title="Normal — sem negrito" active={copy.titleWeight === 400} onClick={() => onUpdate({ titleWeight: 400 })} />
+        <ToolBtn label="S" title="Semi-negrito" active={copy.titleWeight === 600} onClick={() => onUpdate({ titleWeight: 600 })} />
+        <ToolBtn label="B" title="Negrito" active={copy.titleWeight === 800} onClick={() => onUpdate({ titleWeight: 800 })} />
+        <div style={{ width: 1, background: 'var(--border-2)', margin: '0 2px' }} />
+        <ToolBtn label="I" title="Itálico" active={copy.titleItalic} onClick={() => onUpdate({ titleItalic: !copy.titleItalic })} />
+        <div style={{ width: 1, background: 'var(--border-2)', margin: '0 2px' }} />
+        <ToolBtn label="Br" title="Branco / Creme" active={copy.titleColor === 'cream'} onClick={() => onUpdate({ titleColor: 'cream' })} />
+        <ToolBtn label="Pr" title="Preto" active={copy.titleColor === 'ink'} onClick={() => onUpdate({ titleColor: 'ink' })} />
+        <ToolBtn label="Ve" title="Verde oliva" active={copy.titleColor === 'olive'} color={copy.titleColor === 'olive' ? ART_OLIVE : ART_OLIVE} onClick={() => onUpdate({ titleColor: 'olive' })} />
       </div>
-      <div style={{ display: 'flex', gap: 5 }}>
-        {tools.map(tool => (
-          <button key={tool.label} type="button" title={tool.title} onClick={() => onInsert(tool.token)}
-            style={{ height: 28, padding: '0 9px', borderRadius: 5, border: '.5px solid var(--border-2)', background: 'var(--graphite)', color: tool.label === 'Verde' ? ART_OLIVE : 'var(--cream)', fontFamily: tool.label === 'N' ? ART_SANS : ART_MONO, fontSize: 11, fontWeight: tool.label === 'N' ? 900 : 500, cursor: 'pointer' }}>
-            {tool.label}
-          </button>
-        ))}
+
+      {/* Linha 2: tamanho */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontFamily: ART_SANS, fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' }}>Tamanho</span>
+        <input type="range" min={0} max={SIZE_STEPS.length - 1} step={1} value={curSizeIdx}
+          onChange={e => onUpdate({ titleSize: SIZE_STEPS[+e.target.value] })}
+          style={{ flex: 1, accentColor: ART_OLIVE, cursor: 'pointer' }} />
+        <span style={{ fontFamily: ART_MONO, fontSize: 10, color: 'var(--muted)', minWidth: 24, textAlign: 'right' }}>{copy.titleSize}</span>
       </div>
-      <div style={{ fontFamily: ART_SANS, fontSize: 10, color: 'var(--subtle)', marginTop: 6, lineHeight: 1.5 }}>
-        **texto** = negrito · *texto* = verde oliva
+
+      {/* Linha 3: inserir tokens */}
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        <ToolBtn label="*verde*" title="Palavra em verde oliva: envolva com *" onClick={() => onInsert('*destaque*')} color={ART_OLIVE} mono />
+        <ToolBtn label="_itálico_" title="Palavra em itálico: envolva com _" onClick={() => onInsert('_itálico_')} mono />
+        <ToolBtn label="**bold**" title="Palavra extra-negrita: envolva com **" onClick={() => onInsert('**negrito**')} mono />
+        <ToolBtn label="↵" title="Quebrar linha" onClick={() => onInsert('\n')} />
+        <ToolBtn label="◆" title="Marcador ◆" onClick={() => onInsert('◆ ')} />
+        <ToolBtn label="→" title="Seta" onClick={() => onInsert('→')} />
+      </div>
+      <div style={{ fontFamily: ART_SANS, fontSize: 10, color: 'var(--subtle)', lineHeight: 1.5 }}>
+        Envolva palavras com * verde * ou _ itálico _ diretamente no texto acima.
       </div>
     </div>
   )
@@ -778,6 +784,18 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
     </div>
   )
 
+  // Resolve cor do texto a partir do controle de cor
+  const colorMap: Record<TextColor, string> = { cream: '#EDE6D3', ink: ART_INK, olive: ART_OLIVE }
+  const titleFontWeight = copy?.titleWeight ?? 800
+  const titleFontStyle = (copy?.titleItalic ?? false) ? 'italic' : 'normal'
+  const titleFontSize = (copy?.titleSize ?? 118) * s
+  const titleFontColor = colorMap[copy?.titleColor ?? 'cream']
+  const titleStyle: CSSProperties = { fontFamily: ART_SANS, fontWeight: titleFontWeight, fontStyle: titleFontStyle, fontSize: titleFontSize, lineHeight: .96, letterSpacing: '-.04em', color: titleFontColor, margin: 0 }
+
+  const Kicker = ({ text }: { text: string }) => (
+    <div style={{ fontFamily: ART_MONO, fontSize: 22 * s, letterSpacing: '.18em', textTransform: 'uppercase', color: ART_OLIVE, marginBottom: 36 * s }}>{text}</div>
+  )
+
   if (type === 'capa') {
     return (
       <div style={outer}>
@@ -785,14 +803,8 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
         <div style={inner}>
           <TopChrome />
           <div style={body}>
-            {(copy?.kicker || m.shelf) && (
-              <div style={{ fontFamily: ART_MONO, fontSize: 22 * s, letterSpacing: '.18em', textTransform: 'uppercase', color: ART_OLIVE, marginBottom: 36 * s }}>
-                {copy?.kicker || m.shelf}
-              </div>
-            )}
-            <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 118 * s, lineHeight: .96, letterSpacing: '-.04em', color: textMain, margin: 0 }}>
-              {parseArtText(copy?.title || item.title)}
-            </h2>
+            {(copy?.kicker || m.shelf) && <Kicker text={copy?.kicker || m.shelf || ''} />}
+            <h2 style={titleStyle}>{parseArtText(copy?.title || item.title, titleFontColor)}</h2>
           </div>
         </div>
       </div>
@@ -806,14 +818,8 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
         <div style={inner}>
           <TopChrome />
           <div style={body}>
-            {copy?.kicker && (
-              <div style={{ fontFamily: ART_MONO, fontSize: 22 * s, letterSpacing: '.18em', textTransform: 'uppercase', color: ART_OLIVE, marginBottom: 36 * s }}>
-                {copy.kicker}
-              </div>
-            )}
-            <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 118 * s, lineHeight: .96, letterSpacing: '-.04em', color: textMain, margin: 0 }}>
-              {parseArtText(copy?.title || m.paraQuem || 'Pra quem é esse material?')}
-            </h2>
+            {copy?.kicker && <Kicker text={copy.kicker} />}
+            <h2 style={titleStyle}>{parseArtText(copy?.title || m.paraQuem || 'Pra quem é esse material?', titleFontColor)}</h2>
           </div>
         </div>
       </div>
@@ -822,20 +828,21 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
 
   if (type === 'conteudo') {
     const bens = (copy?.items ?? (m.beneficios ?? [])).filter(b => b?.trim()).slice(0, 4)
+    const itemSize = (copy?.titleSize ?? 58) * s
+    const itemWeight = copy?.titleWeight ?? 700
+    const itemColor = colorMap[copy?.titleColor ?? 'cream']
     return (
       <div style={outer}>
         <LeftLine /><DotGrid /><WmX />
         <div style={inner}>
           <TopChrome />
           <div style={body}>
-            <div style={{ fontFamily: ART_MONO, fontSize: 22 * s, letterSpacing: '.18em', textTransform: 'uppercase', color: ART_OLIVE, marginBottom: 44 * s }}>
-              {copy?.kicker || 'O QUE VEM DENTRO'}
-            </div>
+            <Kicker text={copy?.kicker || 'O QUE VEM DENTRO'} />
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               {bens.map((b, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 30 * s, fontFamily: ART_SANS, fontWeight: 700, fontSize: 58 * s, letterSpacing: '-.02em', color: textMain, padding: `${22 * s}px 0`, borderTop: `1.5px solid ${borderColor}`, ...(i === bens.length - 1 ? { borderBottom: `1.5px solid ${borderColor}` } : {}) }}>
+                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 30 * s, fontFamily: ART_SANS, fontWeight: itemWeight, fontSize: itemSize, letterSpacing: '-.02em', color: itemColor, padding: `${22 * s}px 0`, borderTop: `1.5px solid ${borderColor}`, ...(i === bens.length - 1 ? { borderBottom: `1.5px solid ${borderColor}` } : {}) }}>
                   <span style={{ color: ART_OLIVE, fontWeight: 500, flexShrink: 0, fontSize: 24 * s }}>◆</span>
-                  <span>{parseArtText(b)}</span>
+                  <span>{parseArtText(b, itemColor)}</span>
                 </li>
               ))}
             </ul>
@@ -846,6 +853,10 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
   }
 
   if (type === 'depoimento') {
+    const quoteSize = (copy?.titleSize ?? 44) * s
+    const quoteWeight = copy?.titleWeight ?? 600
+    const quoteStyle = (copy?.titleItalic ?? true) ? 'italic' : 'normal'
+    const quoteColor = colorMap[copy?.titleColor ?? 'cream']
     return (
       <div style={outer}>
         <LeftLine /><DotGrid /><WmX />
@@ -853,8 +864,8 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
           <TopChrome />
           <div style={body}>
             <div style={{ fontSize: 96 * s, lineHeight: .7, color: ART_OLIVE, fontWeight: 900, marginBottom: 30 * s }}>&ldquo;</div>
-            <div style={{ fontSize: 44 * s, fontWeight: 600, lineHeight: 1.3, color: textMain, fontStyle: 'italic', maxWidth: 860 * s }}>
-              {parseArtText(copy?.quote || m.depoimento?.texto || 'Depoimento de quem usou o material.')}
+            <div style={{ fontFamily: ART_SANS, fontSize: quoteSize, fontWeight: quoteWeight, fontStyle: quoteStyle, lineHeight: 1.3, color: quoteColor, maxWidth: 860 * s }}>
+              {parseArtText(copy?.quote || m.depoimento?.texto || 'Depoimento de quem usou o material.', quoteColor)}
             </div>
             {(copy?.author || m.depoimento?.autor) && (
               <div style={{ marginTop: 36 * s, fontFamily: ART_MONO, fontSize: 14 * s, letterSpacing: '.1em', color: textMuted, textTransform: 'uppercase' }}>
@@ -868,17 +879,20 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
   }
 
   // CTA / fecho
+  const ctaSize = (copy?.titleSize ?? 104) * s
+  const ctaWeight = copy?.titleWeight ?? 800
+  const ctaColor = colorMap[copy?.titleColor ?? 'cream']
   return (
     <div style={outer}>
       <LeftLine /><DotGrid /><WmX />
       <div style={inner}>
         <TopChrome />
         <div style={body}>
-          <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 104 * s, lineHeight: .96, letterSpacing: '-.04em', color: textMain, margin: `0 0 ${38 * s}px` }}>
-            {parseArtText(copy?.title || item.title)}
+          <h2 style={{ fontFamily: ART_SANS, fontWeight: ctaWeight, fontSize: ctaSize, lineHeight: .96, letterSpacing: '-.04em', color: ctaColor, margin: `0 0 ${38 * s}px` }}>
+            {parseArtText(copy?.title || item.title, ctaColor)}
           </h2>
           <div style={{ width: 96 * s, height: 5 * s, background: ART_OLIVE, borderRadius: 2 * s, margin: `0 0 ${38 * s}px` }} />
-          <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 104 * s, lineHeight: .96, letterSpacing: '-.04em', color: ART_OLIVE, fontStyle: 'italic', margin: 0 }}>
+          <h2 style={{ fontFamily: ART_SANS, fontWeight: ctaWeight, fontSize: ctaSize, lineHeight: .96, letterSpacing: '-.04em', color: ART_OLIVE, fontStyle: 'italic', margin: 0 }}>
             {parseArtText(copy?.cta || ((m.price) ? `R$ ${m.price} →` : `Ver →`))}
           </h2>
         </div>
@@ -1034,114 +1048,134 @@ function FeedPreview({ item }: { item: Item }) {
     }
   }
 
-  const THUMB_S = 0.09
+  const THUMB_S = 0.065
+  const TW = Math.round(1080 * THUMB_S) // 70
+  const TH = Math.round(1350 * THUMB_S) // 88
+  const windowWidth = useWindowWidth()
+  const isMobile = windowWidth < 900
+
+  const BgToggle = ({ v: vActive, onChange }: { v: FeedVariant; onChange: (v: FeedVariant) => void }) => (
+    <div style={{ display: 'flex', gap: 6 }}>
+      {([['ink', 'Escuro'], ['graphite', 'Claro']] as const).map(([v, label]) => (
+        <button key={v} onClick={() => onChange(v as FeedVariant)}
+          style={{ flex: 1, fontFamily: ART_SANS, fontSize: 11, fontWeight: 500, padding: '7px 0', borderRadius: 6, border: `1.5px solid ${vActive === v ? ART_OLIVE : 'var(--border-2)'}`, background: vActive === v ? 'rgba(122,158,63,.14)' : 'var(--ink)', color: vActive === v ? ART_OLIVE : 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+          <span style={{ width: 10, height: 10, borderRadius: '50%', background: v === 'ink' ? ART_INK : ART_CREAM, border: `1.5px solid ${v === 'ink' ? 'var(--border)' : 'rgba(14,17,13,.2)'}`, flexShrink: 0, display: 'inline-block' }} />
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+
+  const ThumbBtn = ({ t, i }: { t: SlideType; i: number }) => {
+    const isActive = active === i
+    return (
+      <button onClick={() => { setActive(i); setFocusedField(t === 'conteudo' ? 'item-0' : t === 'depoimento' ? 'quote' : 'title') }}
+        style={{ padding: 0, background: 'none', border: `2px solid ${isActive ? ART_OLIVE : 'rgba(255,255,255,.12)'}`, borderRadius: 5, cursor: 'pointer', overflow: 'visible', flexShrink: 0 }}>
+        <div style={{ width: TW, height: TH, position: 'relative', overflow: 'hidden', borderRadius: 3 }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: 1080, height: 1350, transform: `scale(${THUMB_S})`, transformOrigin: 'top left', pointerEvents: 'none' }}>
+            <FeedSlide item={item} type={t} counter={i + 1} total={slides.length} s={1} copy={copies[t]} />
+          </div>
+        </div>
+        <div style={{ fontFamily: ART_MONO, fontSize: 8, color: isActive ? ART_OLIVE : 'var(--muted)', padding: '3px 0', background: 'var(--ink)', textAlign: 'center' }}>
+          {String(i + 1).padStart(2, '0')}
+        </div>
+      </button>
+    )
+  }
+
+  const EditPanel = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ fontFamily: ART_SANS, fontSize: 12, fontWeight: 600, color: 'var(--cream)' }}>
+        Slide {active + 1} · {SLIDE_NAMES[activeType]}
+      </div>
+      <EditorField label="Fundo do slide"><BgToggle v={activeCopy.variant} onChange={v => updateActive({ variant: v })} /></EditorField>
+      <ArtFormatBar copy={activeCopy} onUpdate={updateActive} onInsert={insertToken} />
+      {(activeType === 'capa' || activeType === 'para-quem') && (<>
+        <EditorField label="Categoria" hint="Aparece pequeno acima. Ex: ADOLESCENTES">
+          <input className="inp" value={activeCopy.kicker} onFocus={() => setFocusedField('kicker')} onChange={e => updateActive({ kicker: e.target.value })} />
+        </EditorField>
+        <EditorField label="Frase principal">
+          <textarea className="inp ta" style={{ minHeight: 80, resize: 'vertical' }} value={activeCopy.title} onFocus={() => setFocusedField('title')} onChange={e => updateActive({ title: e.target.value })} />
+        </EditorField>
+      </>)}
+      {activeType === 'conteudo' && (<>
+        <EditorField label="Título da lista">
+          <input className="inp" value={activeCopy.kicker} onFocus={() => setFocusedField('kicker')} onChange={e => updateActive({ kicker: e.target.value })} />
+        </EditorField>
+        {activeCopy.items.map((txt, idx) => (
+          <EditorField key={idx} label={`Item ${idx + 1}`}>
+            <input className="inp" value={txt} onFocus={() => setFocusedField(`item-${idx}`)} onChange={e => updateItem(idx, e.target.value)} />
+          </EditorField>
+        ))}
+      </>)}
+      {activeType === 'depoimento' && (<>
+        <EditorField label="Texto do depoimento">
+          <textarea className="inp ta" style={{ minHeight: 100, resize: 'vertical' }} value={activeCopy.quote} onFocus={() => setFocusedField('quote')} onChange={e => updateActive({ quote: e.target.value })} />
+        </EditorField>
+        <EditorField label="Quem disse">
+          <input className="inp" value={activeCopy.author} onFocus={() => setFocusedField('author')} onChange={e => updateActive({ author: e.target.value })} />
+        </EditorField>
+      </>)}
+      {activeType === 'cta' && (<>
+        <EditorField label="Frase principal">
+          <textarea className="inp ta" style={{ minHeight: 70, resize: 'vertical' }} value={activeCopy.title} onFocus={() => setFocusedField('title')} onChange={e => updateActive({ title: e.target.value })} />
+        </EditorField>
+        <EditorField label="Chamada para ação" hint="Ex: R$ 47 → ou Ver agora →">
+          <input className="inp" value={activeCopy.cta} onFocus={() => setFocusedField('cta')} onChange={e => updateActive({ cta: e.target.value })} />
+        </EditorField>
+        <EditorField label="Rodapé">
+          <input className="inp" value={activeCopy.footer} onFocus={() => setFocusedField('footer')} onChange={e => updateActive({ footer: e.target.value })} />
+        </EditorField>
+      </>)}
+      <button onClick={handleDownload} disabled={downloading}
+        style={{ fontFamily: ART_SANS, fontSize: 12, fontWeight: 600, color: ART_INK, background: ART_OLIVE, border: 'none', borderRadius: 6, padding: '10px 0', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
+        {downloading ? 'Baixando...' : `↓ Baixar ${slides.length} slides`}
+      </button>
+    </div>
+  )
+
+  if (isMobile) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', overflowY: 'auto' }}>
+        {/* Filmstrip horizontal */}
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '4px 0' }}>
+          {slides.map((t, i) => <ThumbBtn key={i} t={t} i={i} />)}
+        </div>
+        {/* Preview */}
+        <div ref={centerRef} style={{ width: '100%', aspectRatio: '4/5', position: 'relative', background: 'rgba(0,0,0,.3)', borderRadius: 10, overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: Math.round(1080 * scale), height: Math.round(1350 * scale), overflow: 'hidden', borderRadius: 3 }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, width: 1080, height: 1350, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+              <FeedSlide item={item} type={activeType} counter={active + 1} total={slides.length} s={1} copy={activeCopy} />
+            </div>
+          </div>
+        </div>
+        {/* Edição */}
+        <EditPanel />
+        <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none' }}>
+          {slides.map((t, i) => <FeedSlide key={i} item={item} type={t} counter={i + 1} total={slides.length} s={1} copy={copies[t]} />)}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ display: 'flex', gap: 0, width: '100%', height: '100%', minHeight: 0 }}>
       {/* Filmstrip esquerdo */}
-      <div style={{ width: 82, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 6, paddingRight: 10, overflowY: 'auto', overflowX: 'hidden' }}>
-        {slides.map((t, i) => {
-          const isActive = active === i
-          return (
-            <button key={i} onClick={() => { setActive(i); setFocusedField(t === 'conteudo' ? 'item-0' : t === 'depoimento' ? 'quote' : 'title') }}
-              style={{ padding: 0, background: 'none', border: `2px solid ${isActive ? ART_OLIVE : 'var(--border)'}`, borderRadius: 5, cursor: 'pointer', overflow: 'hidden', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ width: Math.round(1080 * THUMB_S), height: Math.round(1350 * THUMB_S), position: 'relative', overflow: 'hidden', pointerEvents: 'none' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${THUMB_S})`, transformOrigin: 'top left' }}>
-                  <FeedSlide item={item} type={t} counter={i + 1} total={slides.length} s={1} copy={copies[t]} />
-                </div>
-              </div>
-              <div style={{ fontFamily: ART_MONO, fontSize: 8, color: isActive ? ART_OLIVE : 'var(--muted)', letterSpacing: '.06em', padding: '4px 0', background: 'var(--ink)', textAlign: 'center', lineHeight: 1 }}>
-                {String(i + 1).padStart(2, '0')}
-              </div>
-            </button>
-          )
-        })}
+      <div style={{ width: TW + 10, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 6, paddingRight: 10, overflowY: 'auto', overflowX: 'hidden' }}>
+        {slides.map((t, i) => <ThumbBtn key={i} t={t} i={i} />)}
       </div>
-
       {/* Preview central */}
-      <div ref={centerRef} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, background: 'rgba(0,0,0,.25)', borderRadius: 10, border: '.5px solid var(--border-2)', padding: 16 }}>
+      <div ref={centerRef} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0, background: 'rgba(0,0,0,.25)', borderRadius: 10, border: '.5px solid var(--border-2)', padding: 12 }}>
         <div style={{ width: Math.round(1080 * scale), height: Math.round(1350 * scale), position: 'relative', overflow: 'hidden', borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,.5)' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: 1080, height: 1350, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
             <FeedSlide item={item} type={activeType} counter={active + 1} total={slides.length} s={1} copy={activeCopy} />
           </div>
         </div>
-        <button onClick={handleDownload} disabled={downloading}
-          style={{ fontFamily: ART_SANS, fontSize: 11, fontWeight: 600, letterSpacing: '.04em', color: ART_INK, background: ART_OLIVE, border: 'none', borderRadius: 6, padding: '8px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
-          {downloading ? 'Baixando...' : `↓ Baixar ${slides.length} slides`}
-        </button>
       </div>
-
       {/* Painel de edição direito */}
-      <div style={{ width: 272, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14, paddingLeft: 16, overflowY: 'auto' }}>
-        {/* Nome do slide */}
-        <div style={{ fontFamily: ART_SANS, fontSize: 12, fontWeight: 600, color: 'var(--cream)', letterSpacing: '.01em' }}>
-          Slide {active + 1} · {SLIDE_NAMES[activeType]}
-        </div>
-
-        {/* Fundo do slide */}
-        <div>
-          <div style={{ fontFamily: ART_SANS, fontSize: 11, fontWeight: 500, color: 'var(--light)', marginBottom: 6 }}>Fundo do slide</div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {([['ink', 'Escuro'], ['graphite', 'Claro']] as const).map(([v, label]) => (
-              <button key={v} onClick={() => updateActive({ variant: v })}
-                style={{ flex: 1, fontFamily: ART_SANS, fontSize: 11, fontWeight: 500, padding: '7px 0', borderRadius: 6, border: `1.5px solid ${activeCopy.variant === v ? ART_OLIVE : 'var(--border-2)'}`, background: activeCopy.variant === v ? 'rgba(122,158,63,.14)' : 'var(--ink)', color: activeCopy.variant === v ? ART_OLIVE : 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                <span style={{ width: 10, height: 10, borderRadius: '50%', background: v === 'ink' ? ART_INK : ART_CREAM, border: `1.5px solid ${v === 'ink' ? 'var(--border)' : 'rgba(14,17,13,.2)'}`, flexShrink: 0, display: 'inline-block' }} />
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <ArtComponentLibrary onInsert={insertToken} />
-
-        {/* Campos por tipo de slide */}
-        {(activeType === 'capa' || activeType === 'para-quem') && (
-          <>
-            <EditorField label="Categoria" hint="Aparece pequeno acima do título. Ex: ADOLESCENTES">
-              <input className="inp" value={activeCopy.kicker} onFocus={() => setFocusedField('kicker')} onChange={e => updateActive({ kicker: e.target.value })} />
-            </EditorField>
-            <EditorField label="Frase principal">
-              <textarea className="inp ta" style={{ minHeight: 90, resize: 'vertical' }} value={activeCopy.title} onFocus={() => setFocusedField('title')} onChange={e => updateActive({ title: e.target.value })} />
-            </EditorField>
-          </>
-        )}
-        {activeType === 'conteudo' && (
-          <>
-            <EditorField label="Título da lista">
-              <input className="inp" value={activeCopy.kicker} onFocus={() => setFocusedField('kicker')} onChange={e => updateActive({ kicker: e.target.value })} />
-            </EditorField>
-            {activeCopy.items.map((txt, idx) => (
-              <EditorField key={idx} label={`Item ${idx + 1}`}>
-                <input className="inp" value={txt} onFocus={() => setFocusedField(`item-${idx}`)} onChange={e => updateItem(idx, e.target.value)} />
-              </EditorField>
-            ))}
-          </>
-        )}
-        {activeType === 'depoimento' && (
-          <>
-            <EditorField label="Texto do depoimento">
-              <textarea className="inp ta" style={{ minHeight: 110, resize: 'vertical' }} value={activeCopy.quote} onFocus={() => setFocusedField('quote')} onChange={e => updateActive({ quote: e.target.value })} />
-            </EditorField>
-            <EditorField label="Quem disse">
-              <input className="inp" value={activeCopy.author} onFocus={() => setFocusedField('author')} onChange={e => updateActive({ author: e.target.value })} />
-            </EditorField>
-          </>
-        )}
-        {activeType === 'cta' && (
-          <>
-            <EditorField label="Frase principal">
-              <textarea className="inp ta" style={{ minHeight: 80, resize: 'vertical' }} value={activeCopy.title} onFocus={() => setFocusedField('title')} onChange={e => updateActive({ title: e.target.value })} />
-            </EditorField>
-            <EditorField label="Chamada para ação" hint="Ex: R$ 47 → ou Ver agora →">
-              <input className="inp" value={activeCopy.cta} onFocus={() => setFocusedField('cta')} onChange={e => updateActive({ cta: e.target.value })} />
-            </EditorField>
-            <EditorField label="Rodapé">
-              <input className="inp" value={activeCopy.footer} onFocus={() => setFocusedField('footer')} onChange={e => updateActive({ footer: e.target.value })} />
-            </EditorField>
-          </>
-        )}
+      <div style={{ width: 276, flexShrink: 0, paddingLeft: 14, overflowY: 'auto' }}>
+        <EditPanel />
       </div>
-
       <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none' }}>
         {slides.map((t, i) => <FeedSlide key={i} item={item} type={t} counter={i + 1} total={slides.length} s={1} copy={copies[t]} />)}
       </div>
@@ -1156,6 +1190,8 @@ function StoriesPreview({ item }: { item: Item }) {
   const exportRef = useRef<HTMLDivElement>(null)
   const centerRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(0.28)
+  const windowWidth = useWindowWidth()
+  const isMobile = windowWidth < 900
 
   const [st, setSt] = useState<StoriesState>({
     kicker: m.shelf ?? item.type,
@@ -1193,54 +1229,64 @@ function StoriesPreview({ item }: { item: Item }) {
     setSt(prev => ({ ...prev, [focusedField]: appendArtToken(prev[focusedField], token) }))
   }
 
+  const StoriesEditPanel = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ fontFamily: ART_SANS, fontSize: 12, fontWeight: 600, color: 'var(--cream)' }}>Stories 9:16</div>
+      <EditorField label="Fundo">
+        <div style={{ display: 'flex', gap: 6 }}>
+          {([['ink', 'Escuro'], ['graphite', 'Claro']] as const).map(([v, label]) => (
+            <button key={v} onClick={() => setSt(prev => ({ ...prev, variant: v as FeedVariant }))}
+              style={{ flex: 1, fontFamily: ART_SANS, fontSize: 11, fontWeight: 500, padding: '7px 0', borderRadius: 6, border: `1.5px solid ${st.variant === v ? ART_OLIVE : 'var(--border-2)'}`, background: st.variant === v ? 'rgba(122,158,63,.14)' : 'var(--ink)', color: st.variant === v ? ART_OLIVE : 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: v === 'ink' ? ART_INK : ART_CREAM, border: `1.5px solid ${v === 'ink' ? 'var(--border)' : 'rgba(14,17,13,.2)'}`, flexShrink: 0, display: 'inline-block' }} />
+              {label}
+            </button>
+          ))}
+        </div>
+      </EditorField>
+      <div style={{ background: 'rgba(0,0,0,.18)', border: '.5px solid var(--border-2)', borderRadius: 8, padding: '10px 12px' }}>
+        <div style={{ fontFamily: ART_SANS, fontSize: 10, color: 'var(--muted)', marginBottom: 6 }}>Inserir no texto</div>
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+          {[{ l: '*verde*', t: '*destaque*', c: ART_OLIVE }, { l: '_itálico_', t: '_itálico_' }, { l: '↵', t: '\n' }, { l: '◆', t: '◆ ' }, { l: '→', t: '→' }].map(({ l, t, c }) => (
+            <ToolBtn key={l} label={l} color={c} onClick={() => insertToken(t)} mono />
+          ))}
+        </div>
+      </div>
+      <EditorField label="Segmento do público" hint="Aparece pequeno. Ex: LIDER DE IGREJA">
+        <input className="inp" value={st.kicker} onFocus={() => setFocusedField('kicker')} onChange={e => setSt(prev => ({ ...prev, kicker: e.target.value }))} placeholder="LIDER DE IGREJA" />
+      </EditorField>
+      <EditorField label="Frase de impacto" hint="Frase grande que para o scroll. Use *palavra* para verde.">
+        <textarea className="inp ta" style={{ minHeight: 80, resize: 'vertical' }} value={st.gancho} onFocus={() => setFocusedField('gancho')} onChange={e => setSt(prev => ({ ...prev, gancho: e.target.value }))} />
+      </EditorField>
+      <EditorField label="Texto complementar" hint="Frase de apoio, menor.">
+        <input className="inp" value={st.ponte} onFocus={() => setFocusedField('ponte')} onChange={e => setSt(prev => ({ ...prev, ponte: e.target.value }))} />
+      </EditorField>
+      <EditorField label="Botão de ação" hint="Use → ou ↑ no final.">
+        <input className="inp" value={st.cta} onFocus={() => setFocusedField('cta')} onChange={e => setSt(prev => ({ ...prev, cta: e.target.value }))} />
+      </EditorField>
+      <button onClick={handleDownload} disabled={downloading}
+        style={{ fontFamily: ART_SANS, fontSize: 12, fontWeight: 600, color: ART_INK, background: ART_OLIVE, border: 'none', borderRadius: 6, padding: '10px 0', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
+        {downloading ? 'Baixando...' : '↓ Baixar stories'}
+      </button>
+    </div>
+  )
+
+  const PreviewBox = ({ style }: { style?: CSSProperties }) => (
+    <div ref={centerRef} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,.25)', borderRadius: 10, border: '.5px solid var(--border-2)', padding: 12, ...style }}>
+      <div style={{ width: Math.round(1080 * scale), height: Math.round(1920 * scale), position: 'relative', overflow: 'hidden', borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,.5)' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: 1080, height: 1920, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+          <StoriesSlide st={st} s={1} />
+        </div>
+      </div>
+    </div>
+  )
+
   return (
-    <div style={{ display: 'flex', gap: 0, width: '100%', height: '100%', minHeight: 0 }}>
-      {/* Preview central */}
-      <div ref={centerRef} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, background: 'rgba(0,0,0,.25)', borderRadius: 10, border: '.5px solid var(--border-2)', padding: 16 }}>
-        <div style={{ width: Math.round(1080 * scale), height: Math.round(1920 * scale), position: 'relative', overflow: 'hidden', borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,.5)' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-            <StoriesSlide st={st} s={1} />
-          </div>
-        </div>
-        <button onClick={handleDownload} disabled={downloading}
-          style={{ fontFamily: ART_SANS, fontSize: 11, fontWeight: 600, letterSpacing: '.04em', color: ART_INK, background: ART_OLIVE, border: 'none', borderRadius: 6, padding: '8px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
-          {downloading ? 'Baixando...' : '↓ Baixar stories'}
-        </button>
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 0, width: '100%', height: isMobile ? 'auto' : '100%', minHeight: 0, overflowY: isMobile ? 'auto' : undefined }}>
+      {!isMobile && <PreviewBox />}
+      {isMobile && <PreviewBox style={{ height: '60vw', minHeight: 260, flex: 'none' }} />}
+      <div style={{ width: isMobile ? '100%' : 276, flexShrink: 0, paddingLeft: isMobile ? 0 : 14, paddingTop: isMobile ? 12 : 0 }}>
+        <StoriesEditPanel />
       </div>
-
-      {/* Painel de edição direito */}
-      <div style={{ width: 272, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14, paddingLeft: 16, overflowY: 'auto' }}>
-        <div style={{ fontFamily: ART_SANS, fontSize: 12, fontWeight: 600, color: 'var(--cream)' }}>Stories 9:16</div>
-
-        <div>
-          <div style={{ fontFamily: ART_SANS, fontSize: 11, fontWeight: 500, color: 'var(--light)', marginBottom: 6 }}>Fundo do slide</div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {([['ink', 'Escuro'], ['graphite', 'Claro']] as const).map(([v, label]) => (
-              <button key={v} onClick={() => setSt(prev => ({ ...prev, variant: v }))}
-                style={{ flex: 1, fontFamily: ART_SANS, fontSize: 11, fontWeight: 500, padding: '7px 0', borderRadius: 6, border: `1.5px solid ${st.variant === v ? ART_OLIVE : 'var(--border-2)'}`, background: st.variant === v ? 'rgba(122,158,63,.14)' : 'var(--ink)', color: st.variant === v ? ART_OLIVE : 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                <span style={{ width: 10, height: 10, borderRadius: '50%', background: v === 'ink' ? ART_INK : ART_CREAM, border: `1.5px solid ${v === 'ink' ? 'var(--border)' : 'rgba(14,17,13,.2)'}`, flexShrink: 0, display: 'inline-block' }} />
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <ArtComponentLibrary onInsert={insertToken} />
-
-        <EditorField label="Segmento do público" hint="Aparece pequeno. Ex: LIDER DE IGREJA">
-          <input className="inp" value={st.kicker} onFocus={() => setFocusedField('kicker')} onChange={e => setSt(prev => ({ ...prev, kicker: e.target.value }))} placeholder="LIDER DE IGREJA" />
-        </EditorField>
-        <EditorField label="Frase de impacto" hint="Frase grande que para o scroll. Use *palavra* para verde.">
-          <textarea className="inp ta" style={{ minHeight: 90, resize: 'vertical' }} value={st.gancho} onFocus={() => setFocusedField('gancho')} onChange={e => setSt(prev => ({ ...prev, gancho: e.target.value }))} placeholder="Sua equipe não está cansada. Está *sem direção.*" />
-        </EditorField>
-        <EditorField label="Texto complementar" hint="Frase de apoio, menor.">
-          <input className="inp" value={st.ponte} onFocus={() => setFocusedField('ponte')} onChange={e => setSt(prev => ({ ...prev, ponte: e.target.value }))} placeholder="Tem um material pronto que organiza isso." />
-        </EditorField>
-        <EditorField label="Botão de ação" hint="Use → ou ↑ no final.">
-          <input className="inp" value={st.cta} onFocus={() => setFocusedField('cta')} onChange={e => setSt(prev => ({ ...prev, cta: e.target.value }))} placeholder="ARRASTA PRA CIMA ↑" />
-        </EditorField>
-      </div>
-
       <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none' }}>
         <StoriesSlide st={st} s={1} />
       </div>
@@ -1252,6 +1298,7 @@ function StoriesPreview({ item }: { item: Item }) {
 
 function ArtesModal({ item, onClose }: { item: Item; onClose: () => void }) {
   const [tab, setTab] = useState<'feed' | 'stories'>('feed')
+  const isMobile = useWindowWidth() < 900
 
   return (
     <div style={{
@@ -1290,7 +1337,7 @@ function ArtesModal({ item, onClose }: { item: Item; onClose: () => void }) {
         </div>
 
         {/* Content */}
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', overflow: isMobile ? 'auto' : 'hidden' }}>
           {tab === 'feed' && <FeedPreview item={item} />}
           {tab === 'stories' && <StoriesPreview item={item} />}
         </div>
