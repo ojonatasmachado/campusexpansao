@@ -1,5 +1,5 @@
 'use client'
-import { useLayoutEffect, useState, useRef, useTransition, type ReactNode, type CSSProperties } from 'react'
+import { useLayoutEffect, useState, useRef, useEffect, useTransition, type ReactNode, type CSSProperties } from 'react'
 import { loginAction, logoutAction, upsertEstante, deleteEstante, reorderEstantes, upsertMaterial, deleteMaterial, upsertCurso, deleteCurso, upsertMentoria, deleteMentoria } from './actions'
 import { ESTANTE_MAP, ESTANTES } from '../lib/materiais-data'
 
@@ -592,6 +592,7 @@ const ART_OLIVE = '#7A9E3F'
 const ART_OLIVE_DEEP = '#4F6B26'
 const ART_INK = '#0E110D'
 const ART_GRAPHITE = '#161A12'
+const ART_CREAM = '#E8E1CE'
 const ART_MUTED = '#8B8C82'
 const ART_BORDER = '#2E3327'
 const ART_SANS = 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
@@ -599,6 +600,14 @@ const ART_MONO = 'JetBrains Mono, SF Mono, ui-monospace, monospace'
 
 const SLIDE_VARIANTS: Record<SlideType, FeedVariant> = {
   'capa': 'ink', 'para-quem': 'graphite', 'conteudo': 'ink', 'depoimento': 'graphite', 'cta': 'ink',
+}
+
+const SLIDE_NAMES: Record<SlideType, string> = {
+  'capa': 'Capa',
+  'para-quem': 'Para quem é',
+  'conteudo': 'O que tem dentro',
+  'depoimento': 'Depoimento',
+  'cta': 'Chamada final',
 }
 
 function parseArtText(text: string): ReactNode {
@@ -693,32 +702,27 @@ function buildFeedCopies(item: Item): FeedCopies {
 
 function ArtComponentLibrary({ onInsert }: { onInsert: (token: string) => void }) {
   const tools = [
-    { label: 'B', token: '**negrito**', desc: 'Negrito' },
-    { label: 'Oliva', token: '*destaque*', desc: 'Destaque' },
-    { label: 'Linha', token: '\n', desc: 'Quebra' },
-    { label: '◆', token: '◆ ', desc: 'Marcador' },
-    { label: 'CTA', token: '→', desc: 'Seta' },
+    { label: 'N', token: '**negrito**', title: 'Negrito — palavra mais grossa' },
+    { label: 'Verde', token: '*destaque*', title: 'Palavra em verde oliva' },
+    { label: '↵', token: '\n', title: 'Quebrar linha aqui' },
+    { label: '◆', token: '◆ ', title: 'Marcador ◆' },
+    { label: '→', token: '→', title: 'Seta' },
   ]
   return (
-    <div style={{ background: 'var(--ink)', border: '.5px solid var(--border-2)', borderRadius: 8, padding: 12 }}>
-      <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--olive)', letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 10 }}>
-        Biblioteca de componentes
+    <div>
+      <div style={{ fontFamily: ART_SANS, fontSize: 11, color: 'var(--muted)', marginBottom: 6, letterSpacing: '.01em' }}>
+        Formatar texto
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      <div style={{ display: 'flex', gap: 5 }}>
         {tools.map(tool => (
-          <button
-            key={tool.label}
-            type="button"
-            title={tool.desc}
-            onClick={() => onInsert(tool.token)}
-            style={{ minWidth: 34, height: 30, padding: '0 10px', borderRadius: 6, border: '.5px solid var(--border-2)', background: 'var(--graphite)', color: tool.label === 'Oliva' ? ART_OLIVE : 'var(--cream)', fontFamily: tool.label === 'B' ? 'var(--sans)' : 'var(--mono)', fontSize: 11, fontWeight: tool.label === 'B' ? 900 : 600, letterSpacing: tool.label === 'B' ? 0 : '.08em', cursor: 'pointer' }}
-          >
+          <button key={tool.label} type="button" title={tool.title} onClick={() => onInsert(tool.token)}
+            style={{ height: 28, padding: '0 9px', borderRadius: 5, border: '.5px solid var(--border-2)', background: 'var(--graphite)', color: tool.label === 'Verde' ? ART_OLIVE : 'var(--cream)', fontFamily: tool.label === 'N' ? ART_SANS : ART_MONO, fontSize: 11, fontWeight: tool.label === 'N' ? 900 : 500, cursor: 'pointer' }}>
             {tool.label}
           </button>
         ))}
       </div>
-      <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--subtle)', letterSpacing: '.04em', marginTop: 10, lineHeight: 1.5 }}>
-        Use **texto** para negrito e *texto* para destaque oliva.
+      <div style={{ fontFamily: ART_SANS, fontSize: 10, color: 'var(--subtle)', marginTop: 6, lineHeight: 1.5 }}>
+        **texto** = negrito · *texto* = verde oliva
       </div>
     </div>
   )
@@ -727,10 +731,16 @@ function ArtComponentLibrary({ onInsert }: { onInsert: (token: string) => void }
 function ArtLogo({ size = 40, dark = false, s = 1 }: { size?: number; dark?: boolean; s?: number }) {
   const base = dark ? ART_INK : '#EDE6D3'
   const accent = dark ? ART_OLIVE_DEEP : ART_OLIVE
+  const sub = dark ? 'rgba(14,17,13,.42)' : 'rgba(237,230,211,.48)'
   return (
-    <span style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: size * s, letterSpacing: '-.045em', color: base, lineHeight: 1, display: 'inline-block' }}>
-      CE<span style={{ color: accent }}>.</span><span style={{ color: accent, fontStyle: 'italic' }}>X</span>
-    </span>
+    <div style={{ display: 'inline-flex', flexDirection: 'column', gap: 0 }}>
+      <span style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: size * s, letterSpacing: '-.045em', color: base, lineHeight: 1, display: 'block' }}>
+        CE<span style={{ color: accent }}>.</span><span style={{ color: accent, fontStyle: 'italic' }}>X</span>
+      </span>
+      <span style={{ fontFamily: ART_MONO, fontWeight: 400, fontSize: Math.round(size * 0.27 * s), letterSpacing: '.13em', textTransform: 'uppercase', color: sub, lineHeight: 1.3, display: 'block' }}>
+        Campus Expansão
+      </span>
+    </div>
   )
 }
 
@@ -744,30 +754,34 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
   const pb = Math.round(84 * s)
   const topPad = Math.round(64 * s)
   const variant = copy?.variant ?? SLIDE_VARIANTS[type]
-  const dark = variant === 'graphite'
-  const bg = dark ? ART_GRAPHITE : ART_INK
-  const counterStr = counter != null && total != null ? `${String(counter).padStart(2, '0')} / ${String(total).padStart(2, '0')}` : undefined
+  const isLight = variant === 'graphite'
+  const bg = isLight ? ART_CREAM : ART_INK
+  const textMain = isLight ? ART_INK : '#EDE6D3'
+  const textMuted = isLight ? '#6B6960' : ART_MUTED
+  const borderColor = isLight ? 'rgba(14,17,13,.14)' : ART_BORDER
+  const dotColor = isLight ? 'rgba(14,17,13,.09)' : 'rgba(255,255,255,.035)'
+  const counterStr = counter != null && total != null ? `${String(counter).padStart(2, '0')}/${String(total).padStart(2, '0')}` : undefined
 
   const outer: CSSProperties = { width: W, height: H, position: 'relative', overflow: 'hidden', fontFamily: ART_SANS, background: bg, boxSizing: 'border-box' }
-  const inner: CSSProperties = { position: 'absolute', inset: 0, zIndex: 2, padding: `${topPad}px ${p}px ${pb}px`, display: 'flex', flexDirection: 'column' }
-  const topBar: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }
+  const inner: CSSProperties = { position: 'absolute', inset: 0, zIndex: 2, padding: `${topPad}px ${p}px ${pb}px ${p + Math.round(4 * s)}px`, display: 'flex', flexDirection: 'column' }
   const body: CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }
 
-  const Filete = () => <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 5 * s, background: ART_OLIVE, zIndex: 3 }} />
-  const WmX = ({ opacity = .07 }: { opacity?: number }) => (
-    <div style={{ position: 'absolute', right: -46 * s, bottom: -150 * s, fontFamily: ART_SANS, fontWeight: 800, fontStyle: 'italic', fontSize: 780 * s, lineHeight: .7, color: `rgba(122,158,63,${opacity})`, zIndex: 0, pointerEvents: 'none', whiteSpace: 'nowrap' }}>X</div>
+  const LeftLine = () => <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: Math.round(4 * s), background: ART_OLIVE, zIndex: 3 }} />
+  const DotGrid = () => <div style={{ position: 'absolute', inset: 0, zIndex: 1, backgroundImage: `radial-gradient(circle, ${dotColor} ${1.5 * s}px, transparent ${1.5 * s}px)`, backgroundSize: `${30 * s}px ${30 * s}px`, pointerEvents: 'none' }} />
+  const WmX = () => (
+    <div style={{ position: 'absolute', right: -46 * s, bottom: -150 * s, fontFamily: ART_SANS, fontWeight: 800, fontStyle: 'italic', fontSize: 780 * s, lineHeight: .7, color: isLight ? 'rgba(14,17,13,.06)' : 'rgba(122,158,63,.07)', zIndex: 0, pointerEvents: 'none', whiteSpace: 'nowrap' }}>X</div>
   )
   const TopChrome = () => (
-    <div style={topBar}>
-      <ArtLogo size={40} dark={false} s={s} />
-      {counterStr && <span style={{ fontFamily: ART_MONO, fontSize: 21 * s, letterSpacing: '.18em', color: ART_OLIVE_DEEP }}>{counterStr}</span>}
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <ArtLogo size={38} dark={isLight} s={s} />
+      {counterStr && <span style={{ fontFamily: ART_MONO, fontSize: 20 * s, letterSpacing: '.16em', color: ART_OLIVE_DEEP }}>{counterStr}</span>}
     </div>
   )
 
   if (type === 'capa') {
     return (
       <div style={outer}>
-        <Filete /><WmX />
+        <LeftLine /><DotGrid /><WmX />
         <div style={inner}>
           <TopChrome />
           <div style={body}>
@@ -776,7 +790,7 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
                 {copy?.kicker || m.shelf}
               </div>
             )}
-            <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 124 * s, lineHeight: .96, letterSpacing: '-.04em', color: '#EDE6D3', margin: 0 }}>
+            <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 118 * s, lineHeight: .96, letterSpacing: '-.04em', color: textMain, margin: 0 }}>
               {parseArtText(copy?.title || item.title)}
             </h2>
           </div>
@@ -788,7 +802,7 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
   if (type === 'para-quem') {
     return (
       <div style={outer}>
-        <Filete /><WmX />
+        <LeftLine /><DotGrid /><WmX />
         <div style={inner}>
           <TopChrome />
           <div style={body}>
@@ -797,7 +811,7 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
                 {copy.kicker}
               </div>
             )}
-            <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 124 * s, lineHeight: .96, letterSpacing: '-.04em', color: '#EDE6D3', margin: 0 }}>
+            <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 118 * s, lineHeight: .96, letterSpacing: '-.04em', color: textMain, margin: 0 }}>
               {parseArtText(copy?.title || m.paraQuem || 'Pra quem é esse material?')}
             </h2>
           </div>
@@ -810,7 +824,7 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
     const bens = (copy?.items ?? (m.beneficios ?? [])).filter(b => b?.trim()).slice(0, 4)
     return (
       <div style={outer}>
-        <Filete /><WmX />
+        <LeftLine /><DotGrid /><WmX />
         <div style={inner}>
           <TopChrome />
           <div style={body}>
@@ -819,7 +833,7 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
             </div>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               {bens.map((b, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 30 * s, fontFamily: ART_SANS, fontWeight: 700, fontSize: 58 * s, letterSpacing: '-.02em', color: '#EDE6D3', padding: `${22 * s}px 0`, borderTop: `1.5px solid ${ART_BORDER}`, ...(i === bens.length - 1 ? { borderBottom: `1.5px solid ${ART_BORDER}` } : {}) }}>
+                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 30 * s, fontFamily: ART_SANS, fontWeight: 700, fontSize: 58 * s, letterSpacing: '-.02em', color: textMain, padding: `${22 * s}px 0`, borderTop: `1.5px solid ${borderColor}`, ...(i === bens.length - 1 ? { borderBottom: `1.5px solid ${borderColor}` } : {}) }}>
                   <span style={{ color: ART_OLIVE, fontWeight: 500, flexShrink: 0, fontSize: 24 * s }}>◆</span>
                   <span>{parseArtText(b)}</span>
                 </li>
@@ -834,16 +848,16 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
   if (type === 'depoimento') {
     return (
       <div style={outer}>
-        <Filete /><WmX />
+        <LeftLine /><DotGrid /><WmX />
         <div style={inner}>
           <TopChrome />
           <div style={body}>
             <div style={{ fontSize: 96 * s, lineHeight: .7, color: ART_OLIVE, fontWeight: 900, marginBottom: 30 * s }}>&ldquo;</div>
-            <div style={{ fontSize: 44 * s, fontWeight: 600, lineHeight: 1.3, color: '#EDE6D3', fontStyle: 'italic', maxWidth: 860 * s }}>
+            <div style={{ fontSize: 44 * s, fontWeight: 600, lineHeight: 1.3, color: textMain, fontStyle: 'italic', maxWidth: 860 * s }}>
               {parseArtText(copy?.quote || m.depoimento?.texto || 'Depoimento de quem usou o material.')}
             </div>
             {(copy?.author || m.depoimento?.autor) && (
-              <div style={{ marginTop: 36 * s, fontFamily: ART_MONO, fontSize: 14 * s, letterSpacing: '.1em', color: ART_MUTED, textTransform: 'uppercase' }}>
+              <div style={{ marginTop: 36 * s, fontFamily: ART_MONO, fontSize: 14 * s, letterSpacing: '.1em', color: textMuted, textTransform: 'uppercase' }}>
                 {copy?.author || m.depoimento?.autor}
               </div>
             )}
@@ -856,11 +870,11 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
   // CTA / fecho
   return (
     <div style={outer}>
-      <Filete /><WmX />
+      <LeftLine /><DotGrid /><WmX />
       <div style={inner}>
         <TopChrome />
         <div style={body}>
-          <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 104 * s, lineHeight: .96, letterSpacing: '-.04em', color: '#EDE6D3', margin: `0 0 ${38 * s}px` }}>
+          <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 104 * s, lineHeight: .96, letterSpacing: '-.04em', color: textMain, margin: `0 0 ${38 * s}px` }}>
             {parseArtText(copy?.title || item.title)}
           </h2>
           <div style={{ width: 96 * s, height: 5 * s, background: ART_OLIVE, borderRadius: 2 * s, margin: `0 0 ${38 * s}px` }} />
@@ -868,7 +882,7 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
             {parseArtText(copy?.cta || ((m.price) ? `R$ ${m.price} →` : `Ver →`))}
           </h2>
         </div>
-        <div style={{ fontFamily: ART_MONO, fontSize: 22 * s, letterSpacing: '.06em', color: ART_OLIVE }}>
+        <div style={{ fontFamily: ART_MONO, fontSize: 22 * s, letterSpacing: '.06em', color: isLight ? ART_OLIVE_DEEP : ART_OLIVE }}>
           {copy?.footer || `@campus.expansao · ${CEX_DOMAIN}`}
         </div>
       </div>
@@ -935,17 +949,48 @@ async function downloadAsPng(element: HTMLElement, filename: string) {
   link.click()
 }
 
+const FIELD_LABELS: Record<string, string> = {
+  kicker: 'Categoria (ex: ADOLESCENTES)',
+  title: 'Frase principal',
+  quote: 'Texto do depoimento',
+  author: 'Quem disse',
+  cta: 'Chamada para ação',
+  footer: 'Rodapé',
+}
+
+function EditorField({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <label style={{ fontFamily: ART_SANS, fontSize: 11, fontWeight: 500, color: 'var(--light)', letterSpacing: '.01em' }}>{label}</label>
+      {children}
+      {hint && <span style={{ fontFamily: ART_SANS, fontSize: 10, color: 'var(--subtle)', lineHeight: 1.5 }}>{hint}</span>}
+    </div>
+  )
+}
+
 function FeedPreview({ item }: { item: Item }) {
   const [active, setActive] = useState(0)
   const [downloading, setDownloading] = useState(false)
   const [focusedField, setFocusedField] = useState<FeedField>('title')
   const [copies, setCopies] = useState<FeedCopies>(() => buildFeedCopies(item))
   const exportRef = useRef<HTMLDivElement>(null)
+  const centerRef = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(0.38)
   const slides = buildFeedSlides(item)
-  const THUMB_S = 0.1
-  const MAIN_S = 0.29
   const activeType = slides[active]
   const activeCopy = copies[activeType]
+
+  useEffect(() => {
+    const el = centerRef.current
+    if (!el) return
+    const obs = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect
+      const s = Math.min((width - 32) / 1080, (height - 56) / 1350)
+      setScale(Math.max(0.18, Math.min(0.6, s)))
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
 
   const updateActive = (patch: Partial<FeedSlideCopy>) => {
     setCopies(prev => ({ ...prev, [activeType]: { ...prev[activeType], ...patch } }))
@@ -989,97 +1034,110 @@ function FeedPreview({ item }: { item: Item }) {
     }
   }
 
-  const ScaledSlide = ({ type, idx, scale }: { type: SlideType; idx: number; scale: number }) => (
-    <div style={{ width: Math.round(1080 * scale), height: Math.round(1350 * scale), position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-        <FeedSlide item={item} type={type} counter={idx + 1} total={slides.length} s={1} copy={copies[type]} />
-      </div>
-    </div>
-  )
+  const THUMB_S = 0.09
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(420px, 1fr) 320px', gap: 18, width: '100%', minHeight: 0 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'center', background: 'rgba(0,0,0,.3)', border: '.5px solid var(--border-2)', borderRadius: 10, padding: '14px 8px' }}>
-          <ScaledSlide type={activeType} idx={active} scale={MAIN_S} />
-        </div>
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-          {slides.map((t, i) => (
+    <div style={{ display: 'flex', gap: 0, width: '100%', height: '100%', minHeight: 0 }}>
+      {/* Filmstrip esquerdo */}
+      <div style={{ width: 82, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 6, paddingRight: 10, overflowY: 'auto', overflowX: 'hidden' }}>
+        {slides.map((t, i) => {
+          const isActive = active === i
+          return (
             <button key={i} onClick={() => { setActive(i); setFocusedField(t === 'conteudo' ? 'item-0' : t === 'depoimento' ? 'quote' : 'title') }}
-              style={{ width: Math.round(1080 * THUMB_S), padding: 0, background: 'none', border: `2px solid ${active === i ? ART_OLIVE : 'var(--border)'}`, borderRadius: 6, cursor: 'pointer', overflow: 'hidden', flexShrink: 0 }}>
+              style={{ padding: 0, background: 'none', border: `2px solid ${isActive ? ART_OLIVE : 'var(--border)'}`, borderRadius: 5, cursor: 'pointer', overflow: 'hidden', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
               <div style={{ width: Math.round(1080 * THUMB_S), height: Math.round(1350 * THUMB_S), position: 'relative', overflow: 'hidden', pointerEvents: 'none' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${THUMB_S})`, transformOrigin: 'top left' }}>
                   <FeedSlide item={item} type={t} counter={i + 1} total={slides.length} s={1} copy={copies[t]} />
                 </div>
               </div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: active === i ? ART_OLIVE : 'var(--muted)', letterSpacing: '.08em', textTransform: 'uppercase', padding: '6px 4px', background: 'var(--ink)' }}>
+              <div style={{ fontFamily: ART_MONO, fontSize: 8, color: isActive ? ART_OLIVE : 'var(--muted)', letterSpacing: '.06em', padding: '4px 0', background: 'var(--ink)', textAlign: 'center', lineHeight: 1 }}>
                 {String(i + 1).padStart(2, '0')}
               </div>
             </button>
-          ))}
+          )
+        })}
+      </div>
+
+      {/* Preview central */}
+      <div ref={centerRef} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, background: 'rgba(0,0,0,.25)', borderRadius: 10, border: '.5px solid var(--border-2)', padding: 16 }}>
+        <div style={{ width: Math.round(1080 * scale), height: Math.round(1350 * scale), position: 'relative', overflow: 'hidden', borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,.5)' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+            <FeedSlide item={item} type={activeType} counter={active + 1} total={slides.length} s={1} copy={activeCopy} />
+          </div>
         </div>
         <button onClick={handleDownload} disabled={downloading}
-          style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--olive)', border: 'none', borderRadius: 6, padding: '10px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
-          {downloading ? 'Baixando...' : `↓ Baixar ${slides.length} slides · PNG 1080×1350`}
+          style={{ fontFamily: ART_SANS, fontSize: 11, fontWeight: 600, letterSpacing: '.04em', color: ART_INK, background: ART_OLIVE, border: 'none', borderRadius: 6, padding: '8px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
+          {downloading ? 'Baixando...' : `↓ Baixar ${slides.length} slides`}
         </button>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--olive)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
-          Editar slide {String(active + 1).padStart(2, '0')} · {activeType.replace('-', ' ')}
+      {/* Painel de edição direito */}
+      <div style={{ width: 272, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14, paddingLeft: 16, overflowY: 'auto' }}>
+        {/* Nome do slide */}
+        <div style={{ fontFamily: ART_SANS, fontSize: 12, fontWeight: 600, color: 'var(--cream)', letterSpacing: '.01em' }}>
+          Slide {active + 1} · {SLIDE_NAMES[activeType]}
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {(['ink', 'graphite'] as const).map((v) => (
-            <button key={v} onClick={() => updateActive({ variant: v })}
-              style={{ flex: 1, fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', padding: '8px 10px', borderRadius: 'var(--r-sm)', border: `1px solid ${activeCopy.variant === v ? ART_OLIVE : 'var(--border-2)'}`, background: activeCopy.variant === v ? 'rgba(122,158,63,.12)' : 'var(--ink)', color: activeCopy.variant === v ? ART_OLIVE : 'var(--muted)', cursor: 'pointer' }}>
-              {v}
-            </button>
-          ))}
+
+        {/* Fundo do slide */}
+        <div>
+          <div style={{ fontFamily: ART_SANS, fontSize: 11, fontWeight: 500, color: 'var(--light)', marginBottom: 6 }}>Fundo do slide</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {([['ink', 'Escuro'], ['graphite', 'Claro']] as const).map(([v, label]) => (
+              <button key={v} onClick={() => updateActive({ variant: v })}
+                style={{ flex: 1, fontFamily: ART_SANS, fontSize: 11, fontWeight: 500, padding: '7px 0', borderRadius: 6, border: `1.5px solid ${activeCopy.variant === v ? ART_OLIVE : 'var(--border-2)'}`, background: activeCopy.variant === v ? 'rgba(122,158,63,.14)' : 'var(--ink)', color: activeCopy.variant === v ? ART_OLIVE : 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: v === 'ink' ? ART_INK : ART_CREAM, border: `1.5px solid ${v === 'ink' ? 'var(--border)' : 'rgba(14,17,13,.2)'}`, flexShrink: 0, display: 'inline-block' }} />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
+
         <ArtComponentLibrary onInsert={insertToken} />
+
+        {/* Campos por tipo de slide */}
         {(activeType === 'capa' || activeType === 'para-quem') && (
           <>
-            <Field label="Kicker">
+            <EditorField label="Categoria" hint="Aparece pequeno acima do título. Ex: ADOLESCENTES">
               <input className="inp" value={activeCopy.kicker} onFocus={() => setFocusedField('kicker')} onChange={e => updateActive({ kicker: e.target.value })} />
-            </Field>
-            <Field label="Título" hint="Use **texto** para negrito, *texto* para destaque oliva e Linha para quebrar.">
-              <textarea className="inp ta" style={{ minHeight: 110 }} value={activeCopy.title} onFocus={() => setFocusedField('title')} onChange={e => updateActive({ title: e.target.value })} />
-            </Field>
+            </EditorField>
+            <EditorField label="Frase principal">
+              <textarea className="inp ta" style={{ minHeight: 90, resize: 'vertical' }} value={activeCopy.title} onFocus={() => setFocusedField('title')} onChange={e => updateActive({ title: e.target.value })} />
+            </EditorField>
           </>
         )}
         {activeType === 'conteudo' && (
           <>
-            <Field label="Kicker">
+            <EditorField label="Título da lista">
               <input className="inp" value={activeCopy.kicker} onFocus={() => setFocusedField('kicker')} onChange={e => updateActive({ kicker: e.target.value })} />
-            </Field>
+            </EditorField>
             {activeCopy.items.map((txt, idx) => (
-              <Field key={idx} label={`Item ${idx + 1}`}>
+              <EditorField key={idx} label={`Item ${idx + 1}`}>
                 <input className="inp" value={txt} onFocus={() => setFocusedField(`item-${idx}`)} onChange={e => updateItem(idx, e.target.value)} />
-              </Field>
+              </EditorField>
             ))}
           </>
         )}
         {activeType === 'depoimento' && (
           <>
-            <Field label="Depoimento">
-              <textarea className="inp ta" style={{ minHeight: 120 }} value={activeCopy.quote} onFocus={() => setFocusedField('quote')} onChange={e => updateActive({ quote: e.target.value })} />
-            </Field>
-            <Field label="Autor">
+            <EditorField label="Texto do depoimento">
+              <textarea className="inp ta" style={{ minHeight: 110, resize: 'vertical' }} value={activeCopy.quote} onFocus={() => setFocusedField('quote')} onChange={e => updateActive({ quote: e.target.value })} />
+            </EditorField>
+            <EditorField label="Quem disse">
               <input className="inp" value={activeCopy.author} onFocus={() => setFocusedField('author')} onChange={e => updateActive({ author: e.target.value })} />
-            </Field>
+            </EditorField>
           </>
         )}
         {activeType === 'cta' && (
           <>
-            <Field label="Título">
-              <textarea className="inp ta" style={{ minHeight: 90 }} value={activeCopy.title} onFocus={() => setFocusedField('title')} onChange={e => updateActive({ title: e.target.value })} />
-            </Field>
-            <Field label="CTA">
+            <EditorField label="Frase principal">
+              <textarea className="inp ta" style={{ minHeight: 80, resize: 'vertical' }} value={activeCopy.title} onFocus={() => setFocusedField('title')} onChange={e => updateActive({ title: e.target.value })} />
+            </EditorField>
+            <EditorField label="Chamada para ação" hint="Ex: R$ 47 → ou Ver agora →">
               <input className="inp" value={activeCopy.cta} onFocus={() => setFocusedField('cta')} onChange={e => updateActive({ cta: e.target.value })} />
-            </Field>
-            <Field label="Rodapé">
+            </EditorField>
+            <EditorField label="Rodapé">
               <input className="inp" value={activeCopy.footer} onFocus={() => setFocusedField('footer')} onChange={e => updateActive({ footer: e.target.value })} />
-            </Field>
+            </EditorField>
           </>
         )}
       </div>
@@ -1096,7 +1154,8 @@ function StoriesPreview({ item }: { item: Item }) {
   const [downloading, setDownloading] = useState(false)
   const [focusedField, setFocusedField] = useState<StoriesField>('gancho')
   const exportRef = useRef<HTMLDivElement>(null)
-  const MAIN_S = 0.24
+  const centerRef = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(0.28)
 
   const [st, setSt] = useState<StoriesState>({
     kicker: m.shelf ?? item.type,
@@ -1105,6 +1164,18 @@ function StoriesPreview({ item }: { item: Item }) {
     cta: m.hotmart ? 'VER O MATERIAL →' : 'ARRASTA PRA CIMA ↑',
     variant: 'ink',
   })
+
+  useEffect(() => {
+    const el = centerRef.current
+    if (!el) return
+    const obs = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect
+      const s = Math.min((width - 32) / 1080, (height - 56) / 1920)
+      setScale(Math.max(0.15, Math.min(0.5, s)))
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
 
   const handleDownload = async () => {
     setDownloading(true)
@@ -1123,46 +1194,51 @@ function StoriesPreview({ item }: { item: Item }) {
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1fr) 320px', gap: 18, width: '100%', minHeight: 0 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'center', background: 'rgba(0,0,0,.3)', border: '.5px solid var(--border-2)', borderRadius: 10, padding: '14px 8px' }}>
-          <div style={{ width: Math.round(1080 * MAIN_S), height: Math.round(1920 * MAIN_S), position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${MAIN_S})`, transformOrigin: 'top left' }}>
-              <StoriesSlide st={st} s={1} />
-            </div>
+    <div style={{ display: 'flex', gap: 0, width: '100%', height: '100%', minHeight: 0 }}>
+      {/* Preview central */}
+      <div ref={centerRef} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, background: 'rgba(0,0,0,.25)', borderRadius: 10, border: '.5px solid var(--border-2)', padding: 16 }}>
+        <div style={{ width: Math.round(1080 * scale), height: Math.round(1920 * scale), position: 'relative', overflow: 'hidden', borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,.5)' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+            <StoriesSlide st={st} s={1} />
           </div>
         </div>
         <button onClick={handleDownload} disabled={downloading}
-          style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--olive)', border: 'none', borderRadius: 6, padding: '10px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
-          {downloading ? 'Baixando...' : '↓ Baixar stories · PNG 1080×1920'}
+          style={{ fontFamily: ART_SANS, fontSize: 11, fontWeight: 600, letterSpacing: '.04em', color: ART_INK, background: ART_OLIVE, border: 'none', borderRadius: 6, padding: '8px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
+          {downloading ? 'Baixando...' : '↓ Baixar stories'}
         </button>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--olive)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
-          Editar stories
+      {/* Painel de edição direito */}
+      <div style={{ width: 272, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14, paddingLeft: 16, overflowY: 'auto' }}>
+        <div style={{ fontFamily: ART_SANS, fontSize: 12, fontWeight: 600, color: 'var(--cream)' }}>Stories 9:16</div>
+
+        <div>
+          <div style={{ fontFamily: ART_SANS, fontSize: 11, fontWeight: 500, color: 'var(--light)', marginBottom: 6 }}>Fundo do slide</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {([['ink', 'Escuro'], ['graphite', 'Claro']] as const).map(([v, label]) => (
+              <button key={v} onClick={() => setSt(prev => ({ ...prev, variant: v }))}
+                style={{ flex: 1, fontFamily: ART_SANS, fontSize: 11, fontWeight: 500, padding: '7px 0', borderRadius: 6, border: `1.5px solid ${st.variant === v ? ART_OLIVE : 'var(--border-2)'}`, background: st.variant === v ? 'rgba(122,158,63,.14)' : 'var(--ink)', color: st.variant === v ? ART_OLIVE : 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: v === 'ink' ? ART_INK : ART_CREAM, border: `1.5px solid ${v === 'ink' ? 'var(--border)' : 'rgba(14,17,13,.2)'}`, flexShrink: 0, display: 'inline-block' }} />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {(['ink', 'graphite'] as const).map((v) => (
-            <button key={v} onClick={() => setSt(prev => ({ ...prev, variant: v }))}
-              style={{ flex: 1, fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', padding: '8px 10px', borderRadius: 'var(--r-sm)', border: `1px solid ${st.variant === v ? ART_OLIVE : 'var(--border-2)'}`, background: st.variant === v ? 'rgba(122,158,63,.12)' : 'var(--ink)', color: st.variant === v ? ART_OLIVE : 'var(--muted)', cursor: 'pointer' }}>
-              {v}
-            </button>
-          ))}
-        </div>
+
         <ArtComponentLibrary onInsert={insertToken} />
-        <Field label="Kicker" hint="Segmento da audiência. Ex: LIDER DE IGREJA">
+
+        <EditorField label="Segmento do público" hint="Aparece pequeno. Ex: LIDER DE IGREJA">
           <input className="inp" value={st.kicker} onFocus={() => setFocusedField('kicker')} onChange={e => setSt(prev => ({ ...prev, kicker: e.target.value }))} placeholder="LIDER DE IGREJA" />
-        </Field>
-        <Field label="Gancho" hint="Use **texto** para negrito, *texto* para destaque oliva e Linha para quebrar.">
-          <textarea className="inp ta" style={{ minHeight: 96 }} value={st.gancho} onFocus={() => setFocusedField('gancho')} onChange={e => setSt(prev => ({ ...prev, gancho: e.target.value }))} placeholder="Sua equipe não está cansada. Está *sem direção.*" />
-        </Field>
-        <Field label="Ponte">
-          <input className="inp" value={st.ponte} onFocus={() => setFocusedField('ponte')} onChange={e => setSt(prev => ({ ...prev, ponte: e.target.value }))} placeholder="Tem um material pronto que organiza isso em 4 passos." />
-        </Field>
-        <Field label="CTA" hint="Texto do botão. Use → ou ↑ como marcas.">
+        </EditorField>
+        <EditorField label="Frase de impacto" hint="Frase grande que para o scroll. Use *palavra* para verde.">
+          <textarea className="inp ta" style={{ minHeight: 90, resize: 'vertical' }} value={st.gancho} onFocus={() => setFocusedField('gancho')} onChange={e => setSt(prev => ({ ...prev, gancho: e.target.value }))} placeholder="Sua equipe não está cansada. Está *sem direção.*" />
+        </EditorField>
+        <EditorField label="Texto complementar" hint="Frase de apoio, menor.">
+          <input className="inp" value={st.ponte} onFocus={() => setFocusedField('ponte')} onChange={e => setSt(prev => ({ ...prev, ponte: e.target.value }))} placeholder="Tem um material pronto que organiza isso." />
+        </EditorField>
+        <EditorField label="Botão de ação" hint="Use → ou ↑ no final.">
           <input className="inp" value={st.cta} onFocus={() => setFocusedField('cta')} onChange={e => setSt(prev => ({ ...prev, cta: e.target.value }))} placeholder="ARRASTA PRA CIMA ↑" />
-        </Field>
+        </EditorField>
       </div>
 
       <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none' }}>
@@ -1186,8 +1262,8 @@ function ArtesModal({ item, onClose }: { item: Item; onClose: () => void }) {
     }} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div style={{
         background: 'var(--graphite)', border: '.5px solid var(--border-2)',
-        borderRadius: 16, width: '100%', maxWidth: 1120, maxHeight: 'calc(100vh - 48px)',
-        padding: 28, display: 'flex', flexDirection: 'column', gap: 20,
+        borderRadius: 16, width: '100%', maxWidth: 1200, height: 'calc(100vh - 48px)',
+        padding: 24, display: 'flex', flexDirection: 'column', gap: 16,
         position: 'relative', overflow: 'hidden',
       }}>
         {/* Header */}
@@ -1214,7 +1290,7 @@ function ArtesModal({ item, onClose }: { item: Item; onClose: () => void }) {
         </div>
 
         {/* Content */}
-        <div style={{ minHeight: 0 }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
           {tab === 'feed' && <FeedPreview item={item} />}
           {tab === 'stories' && <StoriesPreview item={item} />}
         </div>
