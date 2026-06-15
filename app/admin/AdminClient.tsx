@@ -457,7 +457,7 @@ function DetailPreview({ item }: { item: Item }) {
             <ul className="pv-detail-list">{m.messageList.filter(x => x?.nome).map((x, i) => (
               <li key={i}><span style={{ color: item.accent, fontFamily: 'var(--mono)', marginRight: 8 }}>{String(i + 1).padStart(2, '0')}</span>
                 <strong style={{ color: 'var(--cream)' }}>{x.nome}</strong>
-                {x.desc ? <span style={{ color: 'var(--muted)' }}> — {x.desc}</span> : null}
+                {x.desc ? <span style={{ color: 'var(--muted)' }}> · {x.desc}</span> : null}
               </li>
             ))}</ul>
           </>}
@@ -574,6 +574,19 @@ const CEX_DOMAIN = 'campusexpansao.com.br'
 type SlideType = 'capa' | 'para-quem' | 'conteudo' | 'depoimento' | 'cta'
 type FeedVariant = 'ink' | 'graphite'
 type StoriesState = { kicker: string; gancho: string; ponte: string; cta: string; variant: FeedVariant }
+type FeedSlideCopy = {
+  variant: FeedVariant
+  kicker: string
+  title: string
+  items: string[]
+  quote: string
+  author: string
+  cta: string
+  footer: string
+}
+type FeedCopies = Record<SlideType, FeedSlideCopy>
+type FeedField = 'kicker' | 'title' | 'quote' | 'author' | 'cta' | 'footer' | `item-${number}`
+type StoriesField = 'kicker' | 'gancho' | 'ponte' | 'cta'
 
 const ART_OLIVE = '#7A9E3F'
 const ART_OLIVE_DEEP = '#4F6B26'
@@ -588,14 +601,25 @@ const SLIDE_VARIANTS: Record<SlideType, FeedVariant> = {
   'capa': 'ink', 'para-quem': 'graphite', 'conteudo': 'ink', 'depoimento': 'graphite', 'cta': 'ink',
 }
 
-function parseGancho(text: string): React.ReactNode {
-  if (!text || !text.includes('*')) return text
-  const parts = text.split(/\*([^*]+)\*/)
-  return parts.map((part, i) =>
-    i % 2 === 1
-      ? <em key={i} style={{ fontStyle: 'italic', fontWeight: 800, color: ART_OLIVE }}>{part}</em>
-      : part
-  )
+function parseArtText(text: string): ReactNode {
+  if (!text) return null
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|\n)/g).filter(Boolean)
+  return parts.map((part, i) => {
+    if (part === '\n') return <br key={i} />
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} style={{ fontWeight: 900 }}>{part.slice(2, -2)}</strong>
+    }
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return <em key={i} style={{ fontStyle: 'italic', fontWeight: 800, color: ART_OLIVE }}>{part.slice(1, -1)}</em>
+    }
+    return part
+  })
+}
+
+function appendArtToken(value: string, token: string): string {
+  if (!value) return token.trimStart()
+  if (token === '\n') return `${value}\n`
+  return `${value}${value.endsWith('\n') ? '' : ' '}${token}`
 }
 
 function buildFeedSlides(item: Item): SlideType[] {
@@ -610,6 +634,96 @@ function buildFeedSlides(item: Item): SlideType[] {
   return slides
 }
 
+function buildFeedCopies(item: Item): FeedCopies {
+  const m = item as Material
+  const footer = `@campus.expansao · ${CEX_DOMAIN}`
+  return {
+    capa: {
+      variant: SLIDE_VARIANTS.capa,
+      kicker: m.shelf ?? item.type,
+      title: item.title,
+      items: [],
+      quote: '',
+      author: '',
+      cta: '',
+      footer,
+    },
+    'para-quem': {
+      variant: SLIDE_VARIANTS['para-quem'],
+      kicker: 'PARA QUEM É',
+      title: m.paraQuem || 'Pra quem é esse material?',
+      items: [],
+      quote: '',
+      author: '',
+      cta: '',
+      footer,
+    },
+    conteudo: {
+      variant: SLIDE_VARIANTS.conteudo,
+      kicker: 'O QUE VEM DENTRO',
+      title: '',
+      items: ((m.beneficios ?? []).filter(b => b?.trim()).slice(0, 4).concat(['', '', '', ''])).slice(0, 4),
+      quote: '',
+      author: '',
+      cta: '',
+      footer,
+    },
+    depoimento: {
+      variant: SLIDE_VARIANTS.depoimento,
+      kicker: 'DEPOIMENTO',
+      title: '',
+      items: [],
+      quote: m.depoimento?.texto || 'Depoimento de quem usou o material.',
+      author: m.depoimento?.autor || '',
+      cta: '',
+      footer,
+    },
+    cta: {
+      variant: SLIDE_VARIANTS.cta,
+      kicker: '',
+      title: item.title,
+      items: [],
+      quote: '',
+      author: '',
+      cta: m.price ? `R$ ${m.price} →` : 'Ver →',
+      footer,
+    },
+  }
+}
+
+function ArtComponentLibrary({ onInsert }: { onInsert: (token: string) => void }) {
+  const tools = [
+    { label: 'B', token: '**negrito**', desc: 'Negrito' },
+    { label: 'Oliva', token: '*destaque*', desc: 'Destaque' },
+    { label: 'Linha', token: '\n', desc: 'Quebra' },
+    { label: '◆', token: '◆ ', desc: 'Marcador' },
+    { label: 'CTA', token: '→', desc: 'Seta' },
+  ]
+  return (
+    <div style={{ background: 'var(--ink)', border: '.5px solid var(--border-2)', borderRadius: 8, padding: 12 }}>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--olive)', letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 10 }}>
+        Biblioteca de componentes
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {tools.map(tool => (
+          <button
+            key={tool.label}
+            type="button"
+            title={tool.desc}
+            onClick={() => onInsert(tool.token)}
+            style={{ minWidth: 34, height: 30, padding: '0 10px', borderRadius: 6, border: '.5px solid var(--border-2)', background: 'var(--graphite)', color: tool.label === 'Oliva' ? ART_OLIVE : 'var(--cream)', fontFamily: tool.label === 'B' ? 'var(--sans)' : 'var(--mono)', fontSize: 11, fontWeight: tool.label === 'B' ? 900 : 600, letterSpacing: tool.label === 'B' ? 0 : '.08em', cursor: 'pointer' }}
+          >
+            {tool.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--subtle)', letterSpacing: '.04em', marginTop: 10, lineHeight: 1.5 }}>
+        Use **texto** para negrito e *texto* para destaque oliva.
+      </div>
+    </div>
+  )
+}
+
 function ArtLogo({ size = 40, dark = false, s = 1 }: { size?: number; dark?: boolean; s?: number }) {
   const base = dark ? ART_INK : '#EDE6D3'
   const accent = dark ? ART_OLIVE_DEEP : ART_OLIVE
@@ -620,8 +734,8 @@ function ArtLogo({ size = 40, dark = false, s = 1 }: { size?: number; dark?: boo
   )
 }
 
-function FeedSlide({ item, type, counter, total, s = 1 }: {
-  item: Item; type: SlideType; counter?: number; total?: number; s?: number
+function FeedSlide({ item, type, counter, total, s = 1, copy }: {
+  item: Item; type: SlideType; counter?: number; total?: number; s?: number; copy?: FeedSlideCopy
 }) {
   const m = item as Material
   const W = 1080 * s
@@ -629,7 +743,7 @@ function FeedSlide({ item, type, counter, total, s = 1 }: {
   const p = Math.round(90 * s)
   const pb = Math.round(84 * s)
   const topPad = Math.round(64 * s)
-  const variant = SLIDE_VARIANTS[type]
+  const variant = copy?.variant ?? SLIDE_VARIANTS[type]
   const dark = variant === 'graphite'
   const bg = dark ? ART_GRAPHITE : ART_INK
   const counterStr = counter != null && total != null ? `${String(counter).padStart(2, '0')} / ${String(total).padStart(2, '0')}` : undefined
@@ -657,13 +771,13 @@ function FeedSlide({ item, type, counter, total, s = 1 }: {
         <div style={inner}>
           <TopChrome />
           <div style={body}>
-            {m.shelf && (
+            {(copy?.kicker || m.shelf) && (
               <div style={{ fontFamily: ART_MONO, fontSize: 22 * s, letterSpacing: '.18em', textTransform: 'uppercase', color: ART_OLIVE, marginBottom: 36 * s }}>
-                {m.shelf}
+                {copy?.kicker || m.shelf}
               </div>
             )}
             <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 124 * s, lineHeight: .96, letterSpacing: '-.04em', color: '#EDE6D3', margin: 0 }}>
-              {item.title}
+              {parseArtText(copy?.title || item.title)}
             </h2>
           </div>
         </div>
@@ -678,8 +792,13 @@ function FeedSlide({ item, type, counter, total, s = 1 }: {
         <div style={inner}>
           <TopChrome />
           <div style={body}>
+            {copy?.kicker && (
+              <div style={{ fontFamily: ART_MONO, fontSize: 22 * s, letterSpacing: '.18em', textTransform: 'uppercase', color: ART_OLIVE, marginBottom: 36 * s }}>
+                {copy.kicker}
+              </div>
+            )}
             <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 124 * s, lineHeight: .96, letterSpacing: '-.04em', color: '#EDE6D3', margin: 0 }}>
-              {m.paraQuem || 'Pra quem é esse material?'}
+              {parseArtText(copy?.title || m.paraQuem || 'Pra quem é esse material?')}
             </h2>
           </div>
         </div>
@@ -688,7 +807,7 @@ function FeedSlide({ item, type, counter, total, s = 1 }: {
   }
 
   if (type === 'conteudo') {
-    const bens = (m.beneficios ?? []).filter(b => b?.trim()).slice(0, 4)
+    const bens = (copy?.items ?? (m.beneficios ?? [])).filter(b => b?.trim()).slice(0, 4)
     return (
       <div style={outer}>
         <Filete /><WmX />
@@ -696,13 +815,13 @@ function FeedSlide({ item, type, counter, total, s = 1 }: {
           <TopChrome />
           <div style={body}>
             <div style={{ fontFamily: ART_MONO, fontSize: 22 * s, letterSpacing: '.18em', textTransform: 'uppercase', color: ART_OLIVE, marginBottom: 44 * s }}>
-              O QUE VEM DENTRO
+              {copy?.kicker || 'O QUE VEM DENTRO'}
             </div>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               {bens.map((b, i) => (
                 <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 30 * s, fontFamily: ART_SANS, fontWeight: 700, fontSize: 58 * s, letterSpacing: '-.02em', color: '#EDE6D3', padding: `${22 * s}px 0`, borderTop: `1.5px solid ${ART_BORDER}`, ...(i === bens.length - 1 ? { borderBottom: `1.5px solid ${ART_BORDER}` } : {}) }}>
-                  <span style={{ color: ART_OLIVE, fontWeight: 500, flexShrink: 0, fontSize: 36 * s }}>—</span>
-                  {b}
+                  <span style={{ color: ART_OLIVE, fontWeight: 500, flexShrink: 0, fontSize: 24 * s }}>◆</span>
+                  <span>{parseArtText(b)}</span>
                 </li>
               ))}
             </ul>
@@ -721,11 +840,11 @@ function FeedSlide({ item, type, counter, total, s = 1 }: {
           <div style={body}>
             <div style={{ fontSize: 96 * s, lineHeight: .7, color: ART_OLIVE, fontWeight: 900, marginBottom: 30 * s }}>&ldquo;</div>
             <div style={{ fontSize: 44 * s, fontWeight: 600, lineHeight: 1.3, color: '#EDE6D3', fontStyle: 'italic', maxWidth: 860 * s }}>
-              {m.depoimento?.texto || 'Depoimento de quem usou o material.'}
+              {parseArtText(copy?.quote || m.depoimento?.texto || 'Depoimento de quem usou o material.')}
             </div>
-            {m.depoimento?.autor && (
+            {(copy?.author || m.depoimento?.autor) && (
               <div style={{ marginTop: 36 * s, fontFamily: ART_MONO, fontSize: 14 * s, letterSpacing: '.1em', color: ART_MUTED, textTransform: 'uppercase' }}>
-                {m.depoimento.autor}
+                {copy?.author || m.depoimento?.autor}
               </div>
             )}
           </div>
@@ -742,15 +861,15 @@ function FeedSlide({ item, type, counter, total, s = 1 }: {
         <TopChrome />
         <div style={body}>
           <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 104 * s, lineHeight: .96, letterSpacing: '-.04em', color: '#EDE6D3', margin: `0 0 ${38 * s}px` }}>
-            {item.title}
+            {parseArtText(copy?.title || item.title)}
           </h2>
           <div style={{ width: 96 * s, height: 5 * s, background: ART_OLIVE, borderRadius: 2 * s, margin: `0 0 ${38 * s}px` }} />
           <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 104 * s, lineHeight: .96, letterSpacing: '-.04em', color: ART_OLIVE, fontStyle: 'italic', margin: 0 }}>
-            {(m.price) ? `R$ ${m.price} →` : `Ver →`}
+            {parseArtText(copy?.cta || ((m.price) ? `R$ ${m.price} →` : `Ver →`))}
           </h2>
         </div>
         <div style={{ fontFamily: ART_MONO, fontSize: 22 * s, letterSpacing: '.06em', color: ART_OLIVE }}>
-          @campus.expansao · {CEX_DOMAIN}
+          {copy?.footer || `@campus.expansao · ${CEX_DOMAIN}`}
         </div>
       </div>
     </div>
@@ -780,18 +899,18 @@ function StoriesSlide({ st, s = 1 }: { st: StoriesState; s?: number }) {
             </div>
           )}
           <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 138 * s, lineHeight: .95, letterSpacing: '-.04em', color: '#F6F1E0', margin: 0 }}>
-            {parseGancho(st.gancho)}
+            {parseArtText(st.gancho)}
           </h2>
           {st.ponte && (
             <p style={{ fontFamily: ART_SANS, fontStyle: 'italic', fontWeight: 400, fontSize: 46 * s, lineHeight: 1.3, color: ART_MUTED, marginTop: 46 * s, maxWidth: 860 * s, marginBottom: 0 }}>
-              {st.ponte}
+              {parseArtText(st.ponte)}
             </p>
           )}
         </div>
         {/* CTA pill */}
         <div style={{ display: 'flex' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', background: ART_OLIVE, color: ART_INK, fontFamily: ART_SANS, fontWeight: 800, fontSize: 48 * s, letterSpacing: '-.015em', padding: `${32 * s}px ${50 * s}px`, borderRadius: 16 * s }}>
-            {st.cta || 'ARRASTA PRA CIMA ↑'}
+            {parseArtText(st.cta || 'ARRASTA PRA CIMA ↑')}
           </div>
         </div>
       </div>
@@ -819,10 +938,39 @@ async function downloadAsPng(element: HTMLElement, filename: string) {
 function FeedPreview({ item }: { item: Item }) {
   const [active, setActive] = useState(0)
   const [downloading, setDownloading] = useState(false)
+  const [focusedField, setFocusedField] = useState<FeedField>('title')
+  const [copies, setCopies] = useState<FeedCopies>(() => buildFeedCopies(item))
   const exportRef = useRef<HTMLDivElement>(null)
   const slides = buildFeedSlides(item)
-  const THUMB_S = 0.19
-  const MAIN_S = 0.32
+  const THUMB_S = 0.1
+  const MAIN_S = 0.29
+  const activeType = slides[active]
+  const activeCopy = copies[activeType]
+
+  const updateActive = (patch: Partial<FeedSlideCopy>) => {
+    setCopies(prev => ({ ...prev, [activeType]: { ...prev[activeType], ...patch } }))
+  }
+  const updateItem = (idx: number, value: string) => {
+    setCopies(prev => {
+      const current = prev[activeType]
+      const items = [...current.items]
+      items[idx] = value
+      return { ...prev, [activeType]: { ...current, items } }
+    })
+  }
+  const insertToken = (token: string) => {
+    setCopies(prev => {
+      const current = prev[activeType]
+      if (focusedField.startsWith('item-')) {
+        const idx = Number(focusedField.replace('item-', ''))
+        const items = [...current.items]
+        items[idx] = appendArtToken(items[idx] ?? '', token)
+        return { ...prev, [activeType]: { ...current, items } }
+      }
+      const key = focusedField as Exclude<FeedField, `item-${number}`>
+      return { ...prev, [activeType]: { ...current, [key]: appendArtToken(String(current[key] ?? ''), token) } }
+    })
+  }
 
   const handleDownload = async () => {
     setDownloading(true)
@@ -844,34 +992,100 @@ function FeedPreview({ item }: { item: Item }) {
   const ScaledSlide = ({ type, idx, scale }: { type: SlideType; idx: number; scale: number }) => (
     <div style={{ width: Math.round(1080 * scale), height: Math.round(1350 * scale), position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
       <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-        <FeedSlide item={item} type={type} counter={idx + 1} total={slides.length} s={1} />
+        <FeedSlide item={item} type={type} counter={idx + 1} total={slides.length} s={1} copy={copies[type]} />
       </div>
     </div>
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'center', background: 'rgba(0,0,0,.3)', borderRadius: 8, padding: '16px 8px' }}>
-        <ScaledSlide type={slides[active]} idx={active} scale={MAIN_S} />
-      </div>
-      <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
-        {slides.map((t, i) => (
-          <button key={i} onClick={() => setActive(i)}
-            style={{ padding: 0, background: 'none', border: `2px solid ${active === i ? ART_OLIVE : 'var(--border)'}`, borderRadius: 4, cursor: 'pointer', overflow: 'hidden', flexShrink: 0 }}>
-            <div style={{ width: Math.round(1080 * THUMB_S), height: Math.round(1350 * THUMB_S), position: 'relative', overflow: 'hidden', pointerEvents: 'none' }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${THUMB_S})`, transformOrigin: 'top left' }}>
-                <FeedSlide item={item} type={t} counter={i + 1} total={slides.length} s={1} />
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(420px, 1fr) 320px', gap: 18, width: '100%', minHeight: 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', background: 'rgba(0,0,0,.3)', border: '.5px solid var(--border-2)', borderRadius: 10, padding: '14px 8px' }}>
+          <ScaledSlide type={activeType} idx={active} scale={MAIN_S} />
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+          {slides.map((t, i) => (
+            <button key={i} onClick={() => { setActive(i); setFocusedField(t === 'conteudo' ? 'item-0' : t === 'depoimento' ? 'quote' : 'title') }}
+              style={{ width: Math.round(1080 * THUMB_S), padding: 0, background: 'none', border: `2px solid ${active === i ? ART_OLIVE : 'var(--border)'}`, borderRadius: 6, cursor: 'pointer', overflow: 'hidden', flexShrink: 0 }}>
+              <div style={{ width: Math.round(1080 * THUMB_S), height: Math.round(1350 * THUMB_S), position: 'relative', overflow: 'hidden', pointerEvents: 'none' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${THUMB_S})`, transformOrigin: 'top left' }}>
+                  <FeedSlide item={item} type={t} counter={i + 1} total={slides.length} s={1} copy={copies[t]} />
+                </div>
               </div>
-            </div>
-          </button>
-        ))}
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: active === i ? ART_OLIVE : 'var(--muted)', letterSpacing: '.08em', textTransform: 'uppercase', padding: '6px 4px', background: 'var(--ink)' }}>
+                {String(i + 1).padStart(2, '0')}
+              </div>
+            </button>
+          ))}
+        </div>
+        <button onClick={handleDownload} disabled={downloading}
+          style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--olive)', border: 'none', borderRadius: 6, padding: '10px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
+          {downloading ? 'Baixando...' : `↓ Baixar ${slides.length} slides · PNG 1080×1350`}
+        </button>
       </div>
-      <button onClick={handleDownload} disabled={downloading}
-        style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--olive)', border: 'none', borderRadius: 6, padding: '10px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
-        {downloading ? 'Baixando...' : `↓ Baixar ${slides.length} slides · PNG 1080×1350`}
-      </button>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--olive)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
+          Editar slide {String(active + 1).padStart(2, '0')} · {activeType.replace('-', ' ')}
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {(['ink', 'graphite'] as const).map((v) => (
+            <button key={v} onClick={() => updateActive({ variant: v })}
+              style={{ flex: 1, fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', padding: '8px 10px', borderRadius: 'var(--r-sm)', border: `1px solid ${activeCopy.variant === v ? ART_OLIVE : 'var(--border-2)'}`, background: activeCopy.variant === v ? 'rgba(122,158,63,.12)' : 'var(--ink)', color: activeCopy.variant === v ? ART_OLIVE : 'var(--muted)', cursor: 'pointer' }}>
+              {v}
+            </button>
+          ))}
+        </div>
+        <ArtComponentLibrary onInsert={insertToken} />
+        {(activeType === 'capa' || activeType === 'para-quem') && (
+          <>
+            <Field label="Kicker">
+              <input className="inp" value={activeCopy.kicker} onFocus={() => setFocusedField('kicker')} onChange={e => updateActive({ kicker: e.target.value })} />
+            </Field>
+            <Field label="Título" hint="Use **texto** para negrito, *texto* para destaque oliva e Linha para quebrar.">
+              <textarea className="inp ta" style={{ minHeight: 110 }} value={activeCopy.title} onFocus={() => setFocusedField('title')} onChange={e => updateActive({ title: e.target.value })} />
+            </Field>
+          </>
+        )}
+        {activeType === 'conteudo' && (
+          <>
+            <Field label="Kicker">
+              <input className="inp" value={activeCopy.kicker} onFocus={() => setFocusedField('kicker')} onChange={e => updateActive({ kicker: e.target.value })} />
+            </Field>
+            {activeCopy.items.map((txt, idx) => (
+              <Field key={idx} label={`Item ${idx + 1}`}>
+                <input className="inp" value={txt} onFocus={() => setFocusedField(`item-${idx}`)} onChange={e => updateItem(idx, e.target.value)} />
+              </Field>
+            ))}
+          </>
+        )}
+        {activeType === 'depoimento' && (
+          <>
+            <Field label="Depoimento">
+              <textarea className="inp ta" style={{ minHeight: 120 }} value={activeCopy.quote} onFocus={() => setFocusedField('quote')} onChange={e => updateActive({ quote: e.target.value })} />
+            </Field>
+            <Field label="Autor">
+              <input className="inp" value={activeCopy.author} onFocus={() => setFocusedField('author')} onChange={e => updateActive({ author: e.target.value })} />
+            </Field>
+          </>
+        )}
+        {activeType === 'cta' && (
+          <>
+            <Field label="Título">
+              <textarea className="inp ta" style={{ minHeight: 90 }} value={activeCopy.title} onFocus={() => setFocusedField('title')} onChange={e => updateActive({ title: e.target.value })} />
+            </Field>
+            <Field label="CTA">
+              <input className="inp" value={activeCopy.cta} onFocus={() => setFocusedField('cta')} onChange={e => updateActive({ cta: e.target.value })} />
+            </Field>
+            <Field label="Rodapé">
+              <input className="inp" value={activeCopy.footer} onFocus={() => setFocusedField('footer')} onChange={e => updateActive({ footer: e.target.value })} />
+            </Field>
+          </>
+        )}
+      </div>
+
       <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none' }}>
-        {slides.map((t, i) => <FeedSlide key={i} item={item} type={t} counter={i + 1} total={slides.length} s={1} />)}
+        {slides.map((t, i) => <FeedSlide key={i} item={item} type={t} counter={i + 1} total={slides.length} s={1} copy={copies[t]} />)}
       </div>
     </div>
   )
@@ -880,8 +1094,9 @@ function FeedPreview({ item }: { item: Item }) {
 function StoriesPreview({ item }: { item: Item }) {
   const m = item as Material
   const [downloading, setDownloading] = useState(false)
+  const [focusedField, setFocusedField] = useState<StoriesField>('gancho')
   const exportRef = useRef<HTMLDivElement>(null)
-  const MAIN_S = 0.22
+  const MAIN_S = 0.24
 
   const [st, setSt] = useState<StoriesState>({
     kicker: m.shelf ?? item.type,
@@ -903,45 +1118,53 @@ function StoriesPreview({ item }: { item: Item }) {
     }
   }
 
+  const insertToken = (token: string) => {
+    setSt(prev => ({ ...prev, [focusedField]: appendArtToken(prev[focusedField], token) }))
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%' }}>
-      {/* Variante */}
-      <div style={{ display: 'flex', gap: 8 }}>
-        {(['ink', 'graphite'] as const).map((v) => (
-          <button key={v} onClick={() => setSt(prev => ({ ...prev, variant: v }))}
-            style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', padding: '8px 14px', borderRadius: 'var(--r-sm)', border: `1px solid ${st.variant === v ? ART_OLIVE : 'var(--border-2)'}`, background: st.variant === v ? 'rgba(122,158,63,.12)' : 'var(--ink)', color: st.variant === v ? ART_OLIVE : 'var(--muted)', cursor: 'pointer' }}>
-            {v === 'ink' ? 'Ink (padrão)' : 'Graphite'}
-          </button>
-        ))}
-      </div>
-      {/* Campos de texto */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <Field label="Kicker" hint="Segmento da audiência. Ex: LIDER DE IGREJA">
-          <input className="inp" value={st.kicker} onChange={e => setSt(prev => ({ ...prev, kicker: e.target.value }))} placeholder="LIDER DE IGREJA" />
-        </Field>
-        <Field label="Gancho" hint="Manchete principal. Use *palavra* para colocar em itálico oliva.">
-          <textarea className="inp ta" style={{ minHeight: 80 }} value={st.gancho} onChange={e => setSt(prev => ({ ...prev, gancho: e.target.value }))} placeholder="Sua equipe não está cansada. Está *sem direção.*" />
-        </Field>
-        <Field label="Ponte" hint="Uma linha que liga o gancho à oferta. Itálico automático.">
-          <input className="inp" value={st.ponte} onChange={e => setSt(prev => ({ ...prev, ponte: e.target.value }))} placeholder="Tem um material pronto que organiza isso em 4 passos." />
-        </Field>
-        <Field label="CTA" hint="Texto do botão. Use → ou ↑ como marcas.">
-          <input className="inp" value={st.cta} onChange={e => setSt(prev => ({ ...prev, cta: e.target.value }))} placeholder="ARRASTA PRA CIMA ↑" />
-        </Field>
-      </div>
-      {/* Preview */}
-      <div style={{ display: 'flex', justifyContent: 'center', background: 'rgba(0,0,0,.3)', borderRadius: 8, padding: '12px 8px' }}>
-        <div style={{ width: Math.round(1080 * MAIN_S), height: Math.round(1920 * MAIN_S), position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${MAIN_S})`, transformOrigin: 'top left' }}>
-            <StoriesSlide st={st} s={1} />
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1fr) 320px', gap: 18, width: '100%', minHeight: 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', background: 'rgba(0,0,0,.3)', border: '.5px solid var(--border-2)', borderRadius: 10, padding: '14px 8px' }}>
+          <div style={{ width: Math.round(1080 * MAIN_S), height: Math.round(1920 * MAIN_S), position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, transform: `scale(${MAIN_S})`, transformOrigin: 'top left' }}>
+              <StoriesSlide st={st} s={1} />
+            </div>
           </div>
         </div>
+        <button onClick={handleDownload} disabled={downloading}
+          style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--olive)', border: 'none', borderRadius: 6, padding: '10px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
+          {downloading ? 'Baixando...' : '↓ Baixar stories · PNG 1080×1920'}
+        </button>
       </div>
-      <button onClick={handleDownload} disabled={downloading}
-        style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--olive)', border: 'none', borderRadius: 6, padding: '10px 16px', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
-        {downloading ? 'Baixando...' : '↓ Baixar stories · PNG 1080×1920'}
-      </button>
-      {/* Full-size para export */}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--olive)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
+          Editar stories
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {(['ink', 'graphite'] as const).map((v) => (
+            <button key={v} onClick={() => setSt(prev => ({ ...prev, variant: v }))}
+              style={{ flex: 1, fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', padding: '8px 10px', borderRadius: 'var(--r-sm)', border: `1px solid ${st.variant === v ? ART_OLIVE : 'var(--border-2)'}`, background: st.variant === v ? 'rgba(122,158,63,.12)' : 'var(--ink)', color: st.variant === v ? ART_OLIVE : 'var(--muted)', cursor: 'pointer' }}>
+              {v}
+            </button>
+          ))}
+        </div>
+        <ArtComponentLibrary onInsert={insertToken} />
+        <Field label="Kicker" hint="Segmento da audiência. Ex: LIDER DE IGREJA">
+          <input className="inp" value={st.kicker} onFocus={() => setFocusedField('kicker')} onChange={e => setSt(prev => ({ ...prev, kicker: e.target.value }))} placeholder="LIDER DE IGREJA" />
+        </Field>
+        <Field label="Gancho" hint="Use **texto** para negrito, *texto* para destaque oliva e Linha para quebrar.">
+          <textarea className="inp ta" style={{ minHeight: 96 }} value={st.gancho} onFocus={() => setFocusedField('gancho')} onChange={e => setSt(prev => ({ ...prev, gancho: e.target.value }))} placeholder="Sua equipe não está cansada. Está *sem direção.*" />
+        </Field>
+        <Field label="Ponte">
+          <input className="inp" value={st.ponte} onFocus={() => setFocusedField('ponte')} onChange={e => setSt(prev => ({ ...prev, ponte: e.target.value }))} placeholder="Tem um material pronto que organiza isso em 4 passos." />
+        </Field>
+        <Field label="CTA" hint="Texto do botão. Use → ou ↑ como marcas.">
+          <input className="inp" value={st.cta} onFocus={() => setFocusedField('cta')} onChange={e => setSt(prev => ({ ...prev, cta: e.target.value }))} placeholder="ARRASTA PRA CIMA ↑" />
+        </Field>
+      </div>
+
       <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none' }}>
         <StoriesSlide st={st} s={1} />
       </div>
@@ -958,14 +1181,14 @@ function ArtesModal({ item, onClose }: { item: Item; onClose: () => void }) {
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000,
       background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(6px)',
-      display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-      overflowY: 'auto', padding: '40px 20px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      overflow: 'hidden', padding: 24,
     }} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div style={{
         background: 'var(--graphite)', border: '.5px solid var(--border-2)',
-        borderRadius: 16, width: '100%', maxWidth: 560,
+        borderRadius: 16, width: '100%', maxWidth: 1120, maxHeight: 'calc(100vh - 48px)',
         padding: 28, display: 'flex', flexDirection: 'column', gap: 20,
-        position: 'relative',
+        position: 'relative', overflow: 'hidden',
       }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -973,7 +1196,7 @@ function ArtesModal({ item, onClose }: { item: Item; onClose: () => void }) {
             <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--olive)', letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 4 }}>
               ◆ Artes para Instagram
             </div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--cream)', letterSpacing: '-.02em' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--cream)', letterSpacing: '-.02em', maxWidth: 760, lineHeight: 1.25 }}>
               {item.title}
             </div>
           </div>
@@ -991,8 +1214,10 @@ function ArtesModal({ item, onClose }: { item: Item; onClose: () => void }) {
         </div>
 
         {/* Content */}
-        {tab === 'feed' && <FeedPreview item={item} />}
-        {tab === 'stories' && <StoriesPreview item={item} />}
+        <div style={{ minHeight: 0 }}>
+          {tab === 'feed' && <FeedPreview item={item} />}
+          {tab === 'stories' && <StoriesPreview item={item} />}
+        </div>
 
         <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--subtle)', textAlign: 'center', letterSpacing: '.06em' }}>
           Todas as artes levam a identidade CE.X · campusexpansao.com.br
