@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef, useTransition, type ReactNode, type CSSProperties } from 'react'
+import { useLayoutEffect, useState, useRef, useTransition, type ReactNode, type CSSProperties } from 'react'
 import { loginAction, logoutAction, upsertEstante, deleteEstante, reorderEstantes, upsertMaterial, deleteMaterial, upsertCurso, deleteCurso, upsertMentoria, deleteMentoria } from './actions'
 import { ESTANTE_MAP, ESTANTES } from '../lib/materiais-data'
 
@@ -173,14 +173,106 @@ function matMeta(item: Material) {
   return [n, 'Editável', (item.formats ?? []).join(' · ') || 'PDF'].filter(Boolean).join(' · ')
 }
 
-// Tamanho de fonte do título adaptado ao comprimento — cabe no cartaz até 60 chars
-function titleFontSize(title: string, base: number): number {
-  const n = title.length
-  if (n <= 15) return base
-  if (n <= 25) return Math.round(base * 0.82)
-  if (n <= 40) return Math.round(base * 0.66)
-  if (n <= 55) return Math.round(base * 0.52)
-  return Math.round(base * 0.42)
+function PreviewFitTitle({
+  title,
+  max,
+  min = 12,
+  color = 'var(--cream)',
+  weight = 800,
+  lineHeight = .92,
+  letterSpacing = '-.035em',
+  boxStyle,
+}: {
+  title: string
+  max: number
+  min?: number
+  color?: string
+  weight?: number
+  lineHeight?: number
+  letterSpacing?: string
+  boxStyle?: CSSProperties
+}) {
+  const boxRef = useRef<HTMLDivElement>(null)
+  const textRef = useRef<HTMLDivElement>(null)
+  const [fontSize, setFontSize] = useState(max)
+
+  useLayoutEffect(() => {
+    const box = boxRef.current
+    const text = textRef.current
+    if (!box || !text) return
+
+    let frame = 0
+    const fit = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        const width = box.clientWidth
+        const height = box.clientHeight
+        if (!width || !height) return
+
+        let lo = min
+        let hi = max
+        let best = min
+
+        for (let i = 0; i < 12; i += 1) {
+          const mid = (lo + hi) / 2
+          text.style.fontSize = `${mid}px`
+
+          const fitsWidth = text.scrollWidth <= width + 0.5
+          const fitsHeight = text.scrollHeight <= height + 0.5
+
+          if (fitsWidth && fitsHeight) {
+            best = mid
+            lo = mid
+          } else {
+            hi = mid
+          }
+        }
+
+        text.style.fontSize = `${best}px`
+        setFontSize(best)
+      })
+    }
+
+    fit()
+
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(fit)
+      : null
+    resizeObserver?.observe(box)
+    document.fonts?.ready.then(fit)
+
+    return () => {
+      cancelAnimationFrame(frame)
+      resizeObserver?.disconnect()
+    }
+  }, [title, max, min])
+
+  return (
+    <div ref={boxRef} style={{
+      display: 'flex',
+      alignItems: 'flex-end',
+      width: '100%',
+      minHeight: 0,
+      overflow: 'hidden',
+      ...boxStyle,
+    }}>
+      <div ref={textRef} style={{
+        width: '100%',
+        fontFamily: 'var(--sans)',
+        fontWeight: weight,
+        fontSize,
+        lineHeight,
+        letterSpacing,
+        color,
+        overflowWrap: 'normal',
+        wordBreak: 'normal',
+        hyphens: 'none',
+        textWrap: 'balance',
+      }}>
+        {title}
+      </div>
+    </div>
+  )
 }
 
 function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
@@ -200,7 +292,7 @@ function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,rgba(14,17,13,.15),rgba(14,17,13,.9))' }} />
         <div style={{ position: 'absolute', inset: 0, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div style={{ ...eb, color: 'var(--cream-soft)' }}><span style={{ fontSize: 9 }}>◆</span>{etiqueta}</div>
-          <div style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: titleFontSize(title, 38), lineHeight: .92, letterSpacing: '-.035em', color: 'var(--white)' }}>{title}</div>
+          <PreviewFitTitle title={title} max={42} min={13} color="var(--white)" boxStyle={{ flex: 1, paddingTop: 18 }} />
         </div>
       </div>
     )
@@ -213,7 +305,7 @@ function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
           <span style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: 78, lineHeight: .8, color: ac, letterSpacing: '-.05em' }}>{big}</span>
           <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>{item.bigLabel ?? ''}</span>
         </div>
-        <div style={{ fontFamily: 'var(--sans)', fontWeight: 700, fontSize: titleFontSize(title, 24), lineHeight: 1.05, letterSpacing: '-.02em', color: 'var(--cream)' }}>{title}</div>
+        <PreviewFitTitle title={title} max={28} min={11} weight={700} lineHeight={1.02} letterSpacing="-.02em" boxStyle={{ flex: 1, marginTop: 12 }} />
       </div>
     )
   }
@@ -224,8 +316,8 @@ function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
           <div style={{ ...eb, color: 'var(--ink)' }}><span style={{ fontSize: 9 }}>◆</span>{etiqueta}</div>
           <span style={{ ...codeStyle, color: 'rgba(14,17,13,.5)' }}>{item.code}</span>
         </div>
-        <div style={{ flex: 1, padding: 20, display: 'flex', alignItems: 'flex-end' }}>
-          <div style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: titleFontSize(title, 38), lineHeight: .92, letterSpacing: '-.035em', color: 'var(--cream)' }}>{title}</div>
+        <div style={{ flex: 1, padding: 20, display: 'flex', alignItems: 'stretch' }}>
+          <PreviewFitTitle title={title} max={42} min={13} boxStyle={{ flex: 1 }} />
         </div>
       </div>
     )
@@ -237,7 +329,7 @@ function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
         <div style={{ ...eb, color: ac }}><span style={{ fontSize: 9 }}>◆</span>{etiqueta}</div>
         <span style={codeStyle}>{item.code}</span>
       </div>
-      <div style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: titleFontSize(title, 44), lineHeight: .9, letterSpacing: '-.035em', color: 'var(--cream)' }}>{title}</div>
+      <PreviewFitTitle title={title} max={46} min={13} lineHeight={.9} boxStyle={{ flex: 1, paddingTop: 18 }} />
     </div>
   )
 }
