@@ -1,5 +1,5 @@
 'use client'
-import { useLayoutEffect, useState, useRef, useEffect, useTransition, type ReactNode, type CSSProperties, type ClipboardEvent } from 'react'
+import { useLayoutEffect, useState, useRef, useEffect, useTransition, useCallback, type ReactNode, type CSSProperties, type ClipboardEvent } from 'react'
 import { loginAction, logoutAction, upsertEstante, deleteEstante, reorderEstantes, upsertMaterial, deleteMaterial, upsertCurso, deleteCurso, upsertMentoria, deleteMentoria } from './actions'
 import { ESTANTE_MAP } from '../lib/materiais-data'
 
@@ -579,6 +579,7 @@ type ArtFont = 'sans' | 'mono'
 type ArtAlign = 'left'
 type ArtLayoutPresetId = 'impacto' | 'contraste' | 'lista' | 'passos' | 'claro' | 'enfase' | 'cta'
 type ArtSurface = 'feed' | 'stories'
+type ArtSelectionFormat = { bold: boolean; italic: boolean; underline: boolean; strike: boolean; color: TextColor }
 type ArtTextBox = {
   id: string
   html: string
@@ -665,6 +666,104 @@ const ART_TEXT_COLOR: Record<ArtTextBox['color'], string> = {
   oliveDeep: ART_OLIVE_DEEP,
   muted: ART_MUTED,
   subtle: ART_SUBTLE,
+}
+const ART_COLOR_OPTIONS: { key: TextColor; label: string }[] = [
+  { key: 'white', label: 'Branco' },
+  { key: 'cream', label: 'Creme' },
+  { key: 'creamSoft', label: 'Creme suave' },
+  { key: 'olive', label: 'Oliva' },
+  { key: 'oliveSoft', label: 'Oliva claro' },
+  { key: 'oliveDeep', label: 'Oliva profundo' },
+  { key: 'muted', label: 'Cinza' },
+  { key: 'subtle', label: 'Cinza baixo' },
+  { key: 'ink', label: 'Tinta' },
+]
+
+function cloneArtElements(elements: ArtTextBox[]) {
+  return elements.map(box => ({ ...box }))
+}
+
+function cloneFeedCopy(copy: FeedSlideCopy): FeedSlideCopy {
+  return {
+    ...copy,
+    items: [...copy.items],
+    elements: cloneArtElements(copy.elements),
+  }
+}
+
+function cloneFeedCopies(copies: FeedCopies): FeedCopies {
+  return Object.fromEntries(Object.entries(copies).map(([key, copy]) => [key, cloneFeedCopy(copy)])) as FeedCopies
+}
+
+function duplicateFeedCopy(copy: FeedSlideCopy, suffix: string): FeedSlideCopy {
+  return {
+    ...cloneFeedCopy(copy),
+    elements: copy.elements.map((box, index) => ({ ...box, id: `${box.id}-${suffix}-${index}` })),
+  }
+}
+
+function cloneStoriesState(story: StoriesState): StoriesState {
+  return { ...story, elements: cloneArtElements(story.elements) }
+}
+
+function duplicateStoriesState(story: StoriesState, suffix: string): StoriesState {
+  return { ...cloneStoriesState(story), elements: story.elements.map((box, index) => ({ ...box, id: `${box.id}-${suffix}-${index}` })) }
+}
+
+function artFormatFromBox(box: ArtTextBox | undefined, variant: FeedVariant): ArtSelectionFormat {
+  const color = box?.color ?? (variant === 'graphite' ? 'ink' : 'cream')
+  return {
+    bold: (box?.weight ?? ART_BODY_WEIGHT) >= ART_DISPLAY_WEIGHT,
+    italic: box?.italic ?? false,
+    underline: false,
+    strike: false,
+    color,
+  }
+}
+
+function normalizeCssColor(value: string) {
+  const color = value.trim().toLowerCase()
+  if (color.startsWith('#')) {
+    const hex = color.slice(1)
+    if (hex.length === 3) return `#${hex.split('').map(char => `${char}${char}`).join('')}`.toUpperCase()
+    return color.toUpperCase()
+  }
+  const rgb = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+  if (!rgb) return color.toUpperCase()
+  return `#${[rgb[1], rgb[2], rgb[3]].map(part => Number(part).toString(16).padStart(2, '0')).join('')}`.toUpperCase()
+}
+
+function textColorFromCss(value: string, fallback: TextColor): TextColor {
+  const normalized = normalizeCssColor(value)
+  const found = ART_COLOR_OPTIONS.find(option => normalizeCssColor(ART_TEXT_COLOR[option.key]) === normalized)
+  return found?.key ?? fallback
+}
+
+function artSelectionNode(editable: HTMLElement, boxId: string) {
+  const selection = window.getSelection()
+  const currentRange = selection?.rangeCount ? selection.getRangeAt(0) : null
+  if (currentRange && editable.contains(currentRange.commonAncestorContainer)) return currentRange.startContainer
+  if (artSavedRange && artSavedBoxId === boxId && editable.ownerDocument.contains(artSavedRange.commonAncestorContainer)) {
+    return artSavedRange.startContainer
+  }
+  return null
+}
+
+function artFormatFromSelection(editable: HTMLElement, box: ArtTextBox, variant: FeedVariant): ArtSelectionFormat {
+  const base = artFormatFromBox(box, variant)
+  const node = artSelectionNode(editable, box.id)
+  const element = node instanceof Element ? node : node?.parentElement
+  if (!element || !editable.contains(element)) return base
+  const computed = window.getComputedStyle(element)
+  const numericWeight = computed.fontWeight === 'bold' ? 700 : Number.parseInt(computed.fontWeight, 10)
+  const decoration = computed.textDecorationLine || computed.textDecoration || ''
+  return {
+    bold: Number.isFinite(numericWeight) ? numericWeight >= 600 : base.bold,
+    italic: computed.fontStyle.includes('italic') || computed.fontStyle.includes('oblique'),
+    underline: decoration.includes('underline'),
+    strike: decoration.includes('line-through'),
+    color: textColorFromCss(computed.color, base.color),
+  }
 }
 
 function plainToArtHtml(text: string) {
@@ -1260,6 +1359,7 @@ function saveArtSelection(editable: HTMLElement, boxId: string) {
   if (!editable.contains(range.commonAncestorContainer)) return
   artSavedRange = range.cloneRange()
   artSavedBoxId = boxId
+  window.dispatchEvent(new Event('art-selection-change'))
 }
 
 function restoreArtSelection(editable: HTMLElement, boxId: string) {
@@ -1449,13 +1549,12 @@ function EditableArtCanvas({ w, h, scale, variant, counter, total, safeZone, ele
   )
 }
 
-function ArtToolbar({ box, onPatch, onAdd, onAddSlide, onRemoveSlide, canRemoveSlide, onApplyPreset, variant, onVariantChange, onDownload, downloading, downloadLabel }: {
+function ArtToolbar({ box, onPatch, onAdd, onUndo, canUndo, onApplyPreset, variant, onVariantChange, onDownload, downloading, downloadLabel }: {
   box?: ArtTextBox
   onPatch: (patch: Partial<ArtTextBox>) => void
   onAdd: () => void
-  onAddSlide?: () => void
-  onRemoveSlide?: () => void
-  canRemoveSlide?: boolean
+  onUndo: () => void
+  canUndo: boolean
   onApplyPreset?: (preset: ArtLayoutPresetId) => void
   variant: FeedVariant
   onVariantChange: (variant: FeedVariant) => void
@@ -1463,6 +1562,57 @@ function ArtToolbar({ box, onPatch, onAdd, onAddSlide, onRemoveSlide, canRemoveS
   downloading: boolean
   downloadLabel: string
 }) {
+  const presetMenuRef = useRef<HTMLDivElement>(null)
+  const colorMenuRef = useRef<HTMLDivElement>(null)
+  const [presetMenuOpen, setPresetMenuOpen] = useState(false)
+  const [colorMenuOpen, setColorMenuOpen] = useState(false)
+  const [selectionFormat, setSelectionFormat] = useState<ArtSelectionFormat>(() => artFormatFromBox(box, variant))
+
+  const refreshSelectionFormat = useCallback(() => {
+    if (!box) {
+      setSelectionFormat(artFormatFromBox(undefined, variant))
+      return
+    }
+    const editable = document.querySelector(`[data-art-box-id="${box.id}"]`) as HTMLElement | null
+    setSelectionFormat(editable ? artFormatFromSelection(editable, box, variant) : artFormatFromBox(box, variant))
+  }, [box, variant])
+
+  useEffect(() => {
+    if (!presetMenuOpen && !colorMenuOpen) return
+    const closeOnOutside = (event: PointerEvent) => {
+      const target = event.target as Node
+      if (!presetMenuRef.current?.contains(target)) setPresetMenuOpen(false)
+      if (!colorMenuRef.current?.contains(target)) setColorMenuOpen(false)
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setPresetMenuOpen(false)
+        setColorMenuOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', closeOnOutside)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutside)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [presetMenuOpen, colorMenuOpen])
+
+  useEffect(() => {
+    const scheduleRefresh = () => requestAnimationFrame(refreshSelectionFormat)
+    scheduleRefresh()
+    document.addEventListener('selectionchange', scheduleRefresh)
+    window.addEventListener('art-selection-change', scheduleRefresh)
+    window.addEventListener('keyup', scheduleRefresh)
+    window.addEventListener('mouseup', scheduleRefresh)
+    return () => {
+      document.removeEventListener('selectionchange', scheduleRefresh)
+      window.removeEventListener('art-selection-change', scheduleRefresh)
+      window.removeEventListener('keyup', scheduleRefresh)
+      window.removeEventListener('mouseup', scheduleRefresh)
+    }
+  }, [refreshSelectionFormat])
+
   const syncHtml = () => {
     if (!box) return
     const editable = document.querySelector(`[data-art-box-id="${box.id}"]`) as HTMLElement | null
@@ -1474,33 +1624,70 @@ function ArtToolbar({ box, onPatch, onAdd, onAddSlide, onRemoveSlide, canRemoveS
     if (editable) {
       if (wrapCurrentSelection(style, editable, box.id)) {
         syncHtml()
+        refreshSelectionFormat()
         return
       }
       editable.focus()
     }
     onPatch(patch)
+    requestAnimationFrame(refreshSelectionFormat)
   }
   const toggleBold = () => {
     if (!box) return
     const editable = document.querySelector(`[data-art-box-id="${box.id}"]`) as HTMLElement | null
     if (editable && restoreArtSelection(editable, box.id)) {
       const sel = window.getSelection()
-      const anchor = sel?.anchorNode
-      const anchorEl = anchor instanceof Element ? anchor : anchor?.parentElement
-      const weight = anchorEl ? window.getComputedStyle(anchorEl).fontWeight : ''
-      const numericWeight = weight === 'bold' ? 700 : Number.parseInt(weight, 10)
-      const isBold = document.queryCommandState('bold') || numericWeight >= 700
+      const isBold = artFormatFromSelection(editable, box, variant).bold
       if (sel && !sel.isCollapsed && wrapCurrentSelection(`font-weight:${isBold ? ART_BODY_WEIGHT : ART_DISPLAY_WEIGHT}`, editable, box.id)) {
         syncHtml()
         saveArtSelection(editable, box.id)
+        refreshSelectionFormat()
         return
       }
       document.execCommand('bold', false)
       syncHtml()
       saveArtSelection(editable, box.id)
+      refreshSelectionFormat()
       return
     }
     onPatch({ weight: box.weight >= ART_DISPLAY_WEIGHT ? ART_BODY_WEIGHT : ART_DISPLAY_WEIGHT })
+    requestAnimationFrame(refreshSelectionFormat)
+  }
+  const toggleItalic = () => {
+    if (!box) return
+    const editable = document.querySelector(`[data-art-box-id="${box.id}"]`) as HTMLElement | null
+    if (editable && restoreArtSelection(editable, box.id)) {
+      const sel = window.getSelection()
+      const isItalic = artFormatFromSelection(editable, box, variant).italic
+      if (sel && !sel.isCollapsed && wrapCurrentSelection(`font-style:${isItalic ? 'normal' : 'italic'}`, editable, box.id)) {
+        syncHtml()
+        saveArtSelection(editable, box.id)
+        refreshSelectionFormat()
+        return
+      }
+      document.execCommand('italic', false)
+      syncHtml()
+      saveArtSelection(editable, box.id)
+      refreshSelectionFormat()
+      return
+    }
+    onPatch({ italic: !(selectionFormat.italic || box.italic) })
+    requestAnimationFrame(refreshSelectionFormat)
+  }
+  const toggleDecoration = (kind: 'underline' | 'line-through') => {
+    if (!box) return
+    const editable = document.querySelector(`[data-art-box-id="${box.id}"]`) as HTMLElement | null
+    const isActive = kind === 'underline' ? selectionFormat.underline : selectionFormat.strike
+    if (editable && restoreArtSelection(editable, box.id)) {
+      const sel = window.getSelection()
+      if (sel && !sel.isCollapsed && wrapCurrentSelection(`text-decoration:${isActive ? 'none' : kind}`, editable, box.id)) {
+        syncHtml()
+        saveArtSelection(editable, box.id)
+        refreshSelectionFormat()
+        return
+      }
+    }
+    applyInline(`text-decoration:${isActive ? 'none' : kind}`, {})
   }
   const insertInline = (html: string) => {
     if (!box) return
@@ -1510,8 +1697,20 @@ function ArtToolbar({ box, onPatch, onAdd, onAddSlide, onRemoveSlide, canRemoveS
     document.execCommand('insertHTML', false, html)
     syncHtml()
     saveArtSelection(editable, box.id)
+    refreshSelectionFormat()
   }
   const disabled = !box
+  const applyPreset = (preset: ArtLayoutPresetId) => {
+    if (!onApplyPreset) return
+    onApplyPreset(preset)
+    setPresetMenuOpen(false)
+  }
+  const currentColor = selectionFormat.color
+  const selectColor = (color: TextColor) => {
+    applyInline(`color:${ART_TEXT_COLOR[color]}`, { color })
+    setColorMenuOpen(false)
+    requestAnimationFrame(refreshSelectionFormat)
+  }
   const tool = (content: ReactNode, fn: () => void, active?: boolean, title?: string, color?: string) => (
     <button
       type="button"
@@ -1535,7 +1734,16 @@ function ArtToolbar({ box, onPatch, onAdd, onAddSlide, onRemoveSlide, canRemoveS
   const divider = <span style={{ width: 1, height: 24, background: 'var(--border-2)', display: 'inline-block', margin: '0 2px' }} />
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 5, width: '100%', minHeight: 42, overflow: 'hidden', background: 'rgba(0,0,0,.18)', border: '.5px solid var(--border-2)', borderRadius: 9, padding: 5 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, width: '100%', minHeight: 42, overflow: 'visible', background: 'rgba(0,0,0,.18)', border: '.5px solid var(--border-2)', borderRadius: 9, padding: 5 }}>
+      <button
+        type="button"
+        onClick={onUndo}
+        disabled={!canUndo}
+        title="Voltar última ação"
+        style={{ height: 34, padding: '0 10px', borderRadius: 6, border: '.5px solid var(--border-2)', background: 'var(--ink)', color: canUndo ? 'var(--cream)' : 'var(--subtle)', fontFamily: ART_SANS, fontWeight: ART_DISPLAY_WEIGHT, fontSize: 12, cursor: canUndo ? 'pointer' : 'not-allowed', opacity: canUndo ? 1 : .42, whiteSpace: 'nowrap' }}
+      >
+        Voltar
+      </button>
       <button
         type="button"
         onClick={onAdd}
@@ -1544,57 +1752,136 @@ function ArtToolbar({ box, onPatch, onAdd, onAddSlide, onRemoveSlide, canRemoveS
       >
         T+
       </button>
-      {onAddSlide && (
-        <button
-          type="button"
-          onClick={onAddSlide}
-          title="Adicionar imagem ao carrossel"
-          style={{ height: 34, minWidth: 48, padding: '0 10px', borderRadius: 6, border: '.5px solid var(--border-2)', background: 'var(--ink)', color: 'var(--cream)', fontFamily: ART_SANS, fontWeight: ART_DISPLAY_WEIGHT, fontSize: 12, cursor: 'pointer' }}
-        >
-          Img+
-        </button>
-      )}
-      {onRemoveSlide && (
-        <button
-          type="button"
-          onClick={onRemoveSlide}
-          disabled={!canRemoveSlide}
-          title="Remover imagem atual"
-          style={{ height: 34, minWidth: 48, padding: '0 10px', borderRadius: 6, border: '.5px solid var(--border-2)', background: 'var(--ink)', color: 'var(--muted)', fontFamily: ART_SANS, fontWeight: ART_DISPLAY_WEIGHT, fontSize: 12, cursor: canRemoveSlide ? 'pointer' : 'not-allowed', opacity: canRemoveSlide ? 1 : .45 }}
-        >
-          Img-
-        </button>
-      )}
       {onApplyPreset && (
-        <select
-          title="Aplicar modelo pronto"
-          defaultValue=""
-          onChange={event => {
-            const preset = event.currentTarget.value as ArtLayoutPresetId
-            if (preset) onApplyPreset(preset)
-            event.currentTarget.value = ''
-          }}
-          style={{ height: 34, width: 116, borderRadius: 6, border: '.5px solid var(--border-2)', background: 'var(--ink)', color: 'var(--cream)', fontFamily: ART_SANS, fontSize: 12, fontWeight: ART_DISPLAY_WEIGHT, cursor: 'pointer' }}
+        <div
+          ref={presetMenuRef}
+          style={{ position: 'relative', flexShrink: 0 }}
         >
-          <option value="">Modelo</option>
-          {ART_LAYOUT_PRESETS.map(preset => <option key={preset.id} value={preset.id}>{preset.label}</option>)}
-        </select>
+          <button
+            type="button"
+            title="Aplicar modelo pronto"
+            aria-haspopup="menu"
+            aria-expanded={presetMenuOpen}
+            className="btn btn-secondary btn-sm"
+            onClick={() => setPresetMenuOpen(open => !open)}
+            style={{
+              height: 34, padding: '0 12px', borderRadius: 6,
+              border: `1.5px solid ${presetMenuOpen ? ART_OLIVE : 'var(--border-2)'}`,
+              background: presetMenuOpen ? 'rgba(122,158,63,.16)' : 'var(--ink)',
+              color: presetMenuOpen ? ART_OLIVE : 'var(--cream)',
+              fontFamily: ART_MONO, fontSize: 10, fontWeight: 500,
+              letterSpacing: '.12em', textTransform: 'uppercase',
+              cursor: 'pointer', whiteSpace: 'nowrap',
+            }}
+          >
+            <span style={{ color: ART_OLIVE }}>◆</span>
+            Modelos
+          </button>
+          {presetMenuOpen && (
+            <div
+              role="menu"
+              aria-label="Modelos prontos"
+              style={{
+                position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 30,
+                width: 250, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6,
+                padding: 8, border: '.5px solid var(--border-2)',
+                borderRadius: 'var(--r-md)', background: 'var(--graphite)',
+                boxShadow: '0 18px 48px rgba(0,0,0,.34)',
+              }}
+            >
+              {ART_LAYOUT_PRESETS.map(preset => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  role="menuitem"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => applyPreset(preset.id)}
+                  style={{
+                    height: 34, justifyContent: 'flex-start', padding: '0 10px',
+                    borderRadius: 6, border: '.5px solid var(--border-2)',
+                    background: 'var(--ink)', color: 'var(--cream)',
+                    fontFamily: ART_MONO, fontSize: 10, fontWeight: 500,
+                    letterSpacing: '.1em', textTransform: 'uppercase',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  <span style={{ color: ART_OLIVE }}>◆</span>
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       )}
       {divider}
-      {tool('B', toggleBold, (box?.weight ?? 0) >= ART_DISPLAY_WEIGHT, 'Negrito')}
-      {tool(<span style={{ fontStyle: 'italic' }}>I</span>, () => applyInline('font-style:italic', { italic: true }), box?.italic, 'Itálico')}
-      {tool(<span style={{ textDecoration: 'underline' }}>U</span>, () => applyInline('text-decoration:underline', {}), false, 'Sublinhar')}
-      {tool(<span style={{ textDecoration: 'line-through' }}>S</span>, () => applyInline('text-decoration:line-through', {}), false, 'Tachado')}
+      {tool('B', toggleBold, selectionFormat.bold, selectionFormat.bold ? 'Remover negrito' : 'Negrito')}
+      {tool(<span style={{ fontStyle: 'italic' }}>I</span>, toggleItalic, selectionFormat.italic, selectionFormat.italic ? 'Remover itálico' : 'Itálico')}
+      {tool(<span style={{ textDecoration: 'underline' }}>U</span>, () => toggleDecoration('underline'), selectionFormat.underline, selectionFormat.underline ? 'Remover sublinhado' : 'Sublinhar')}
+      {tool(<span style={{ textDecoration: 'line-through' }}>S</span>, () => toggleDecoration('line-through'), selectionFormat.strike, selectionFormat.strike ? 'Remover tachado' : 'Tachado')}
       {divider}
-      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_WHITE, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_WHITE}`, { color: 'white' }), box?.color === 'white', 'Cor branco CE.X')}
-      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_CREAM, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_CREAM}`, { color: 'cream' }), box?.color === 'cream', 'Cor creme')}
-      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_CREAM_SOFT, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_CREAM_SOFT}`, { color: 'creamSoft' }), box?.color === 'creamSoft', 'Cor creme claro')}
-      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_OLIVE, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_OLIVE}`, { color: 'olive' }), box?.color === 'olive', 'Cor oliva', ART_OLIVE)}
-      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_OLIVE_SOFT, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_OLIVE_SOFT}`, { color: 'oliveSoft' }), box?.color === 'oliveSoft', 'Cor oliva claro', ART_OLIVE_SOFT)}
-      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_OLIVE_DEEP, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_OLIVE_DEEP}`, { color: 'oliveDeep' }), box?.color === 'oliveDeep', 'Cor oliva profundo', ART_OLIVE_DEEP)}
-      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_MUTED, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_MUTED}`, { color: 'muted' }), box?.color === 'muted', 'Cor cinza muted', ART_MUTED)}
-      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_SUBTLE, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_SUBTLE}`, { color: 'subtle' }), box?.color === 'subtle', 'Cor cinza subtle', ART_SUBTLE)}
-      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_INK, border: '.5px solid var(--border-2)', marginTop: 2 }} /></span>, () => applyInline(`color:${ART_INK}`, { color: 'ink' }), box?.color === 'ink', 'Cor ink')}
+      <div ref={colorMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
+        <button
+          type="button"
+          title="Cor da fonte"
+          disabled={disabled}
+          onMouseDown={event => {
+            event.preventDefault()
+            if (!disabled) setColorMenuOpen(open => !open)
+          }}
+          style={{
+            height: 34, minWidth: 42, padding: '0 9px', borderRadius: 6,
+            border: `1.5px solid ${colorMenuOpen ? ART_OLIVE : 'var(--border-2)'}`,
+            background: colorMenuOpen ? 'rgba(122,158,63,.16)' : 'var(--ink)',
+            color: colorMenuOpen ? ART_OLIVE : 'var(--cream)',
+            fontFamily: ART_SANS, fontSize: 13, fontWeight: ART_DISPLAY_WEIGHT,
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            opacity: disabled ? .42 : 1,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>
+            A
+            <span style={{ width: 18, height: 3, borderRadius: 2, background: ART_TEXT_COLOR[currentColor], border: currentColor === 'ink' ? '.5px solid var(--border-2)' : 'none', marginTop: 2 }} />
+          </span>
+        </button>
+        {colorMenuOpen && (
+          <div
+            role="menu"
+            aria-label="Cores da fonte"
+            style={{
+              position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 30,
+              width: 218, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6,
+              padding: 8, border: '.5px solid var(--border-2)',
+              borderRadius: 'var(--r-md)', background: 'var(--graphite)',
+              boxShadow: '0 18px 48px rgba(0,0,0,.34)',
+            }}
+          >
+            {ART_COLOR_OPTIONS.map(option => {
+              const active = option.key === currentColor
+              return (
+                <button
+                  key={option.key}
+                  type="button"
+                  role="menuitem"
+                  title={option.label}
+                  onMouseDown={event => {
+                    event.preventDefault()
+                    selectColor(option.key)
+                  }}
+                  style={{
+                    height: 34, borderRadius: 6,
+                    border: `1.5px solid ${active ? ART_OLIVE : 'var(--border-2)'}`,
+                    background: active ? 'rgba(122,158,63,.16)' : 'var(--ink)',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  <span style={{ width: 18, height: 18, borderRadius: '50%', background: ART_TEXT_COLOR[option.key], border: option.key === 'ink' ? '.5px solid var(--border-2)' : 'none', boxShadow: active ? `0 0 0 3px rgba(122,158,63,.18)` : 'none' }} />
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
       {divider}
       {tool('A+', () => applyInline('font-size:1.16em;line-height:.95', { fontSize: Math.min(180, (box?.fontSize ?? 80) + 10) }), false, 'Aumentar fonte')}
       {tool('A-', () => applyInline('font-size:.86em;line-height:1.05', { fontSize: Math.max(24, (box?.fontSize ?? 80) - 10) }), false, 'Diminuir fonte')}
@@ -1621,6 +1908,9 @@ function FeedPreview({ item }: { item: Item }) {
   const [copies, setCopies] = useState<FeedCopies>(() => buildFeedCopies(item))
   const [slides, setSlides] = useState<SlideType[]>(() => buildFeedSlides(item))
   const [selectedId, setSelectedId] = useState('')
+  const [history, setHistory] = useState<{ copies: FeedCopies; slides: SlideType[]; active: number; selectedId: string }[]>([])
+  const [hoveredThumb, setHoveredThumb] = useState<number | null>(null)
+  const slideIdSeq = useRef(0)
   const exportRef = useRef<HTMLDivElement>(null)
   const centerRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(0.38)
@@ -1641,10 +1931,24 @@ function FeedPreview({ item }: { item: Item }) {
     return () => obs.disconnect()
   }, [])
 
-  const updateActive = (patch: Partial<FeedSlideCopy>) => {
+  const pushHistory = () => {
+    setHistory(prev => [...prev.slice(-23), { copies: cloneFeedCopies(copies), slides: [...slides], active, selectedId }])
+  }
+  const undo = () => {
+    const last = history[history.length - 1]
+    if (!last) return
+    setCopies(cloneFeedCopies(last.copies))
+    setSlides([...last.slides])
+    setActive(last.active)
+    setSelectedId(last.selectedId)
+    setHistory(prev => prev.slice(0, -1))
+  }
+
+  const updateActive = (patch: Partial<FeedSlideCopy>, record = true) => {
+    if (record) pushHistory()
     setCopies(prev => ({ ...prev, [activeType]: { ...(prev[activeType] ?? activeCopy), ...patch } }))
   }
-  const setActiveElements = (elements: ArtTextBox[]) => updateActive({ elements })
+  const setActiveElements = (elements: ArtTextBox[], record = true) => updateActive({ elements }, record)
   const clipboardRef = useRef<ArtTextBox | null>(null)
   const patchSelected = (patch: Partial<ArtTextBox>) => {
     setActiveElements(activeElements.map(box => box.id === selectedBoxId ? clampArtBox({ ...box, ...patch }, 1080, 1350) : box))
@@ -1660,8 +1964,13 @@ function FeedPreview({ item }: { item: Item }) {
     setActiveElements(next)
     setSelectedId(next[0]?.id ?? '')
   }
+  const nextSlideId = () => {
+    slideIdSeq.current += 1
+    return `extra-${slides.length}-${slideIdSeq.current}` as SlideType
+  }
   const addSlide = () => {
-    const id = `extra-${Date.now().toString(36)}` as SlideType
+    pushHistory()
+    const id = nextSlideId()
     const preset = ART_LAYOUT_PRESET_CYCLE[slides.length % ART_LAYOUT_PRESET_CYCLE.length]
     const nextCopy = buildFeedPresetCopy(item, preset, slides.length + 1)
     setCopies(prev => ({ ...prev, [id]: nextCopy }))
@@ -1678,17 +1987,34 @@ function FeedPreview({ item }: { item: Item }) {
     updateActive(nextCopy)
     setSelectedId(nextCopy.elements[0]?.id ?? '')
   }
-  const removeSlide = () => {
+  const duplicateSlide = (index: number) => {
+    const sourceId = slides[index]
+    const sourceCopy = copies[sourceId]
+    if (!sourceCopy) return
+    pushHistory()
+    const id = nextSlideId()
+    const nextCopy = duplicateFeedCopy(sourceCopy, id)
+    setCopies(prev => ({ ...prev, [id]: nextCopy }))
+    setSlides(prev => {
+      const next = [...prev]
+      next.splice(index + 1, 0, id)
+      return next
+    })
+    setActive(index + 1)
+    setSelectedId(nextCopy.elements[0]?.id ?? '')
+  }
+  const removeSlideAt = (index: number) => {
     if (slides.length <= 1) return
-    const removeId = activeType
-    const nextSlides = slides.filter((_, index) => index !== active)
+    pushHistory()
+    const removeId = slides[index]
+    const nextSlides = slides.filter((_, slideIndex) => slideIndex !== index)
     setSlides(nextSlides)
     setCopies(prev => {
       const next = { ...prev }
       delete next[removeId]
       return next
     })
-    const nextIndex = Math.max(0, Math.min(active, nextSlides.length - 1))
+    const nextIndex = Math.max(0, Math.min(index, nextSlides.length - 1))
     setActive(nextIndex)
     const nextId = nextSlides[nextIndex]
     setSelectedId((copies[nextId]?.elements ?? [])[0]?.id ?? '')
@@ -1745,29 +2071,50 @@ function FeedPreview({ item }: { item: Item }) {
 
   const renderThumbBtn = (t: SlideType, i: number) => {
     const isActive = active === i
+    const showActions = isMobile ? isActive : hoveredThumb === i
     return (
-      <button key={i} onClick={() => setActive(i)}
-        style={{ width: TW + 4, height: TH + 18, padding: 0, background: 'var(--ink)', border: `2px solid ${isActive ? ART_OLIVE : 'rgba(255,255,255,.12)'}`, borderRadius: 5, cursor: 'pointer', overflow: 'hidden', flexShrink: 0, boxSizing: 'border-box' }}>
-        <div style={{ width: TW, height: TH, position: 'relative', overflow: 'hidden', borderRadius: 3 }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, width: 1080, height: 1350, transform: `scale(${THUMB_S})`, transformOrigin: 'top left', pointerEvents: 'none' }}>
-            <FeedSlide item={item} type={t} counter={i + 1} total={slides.length} s={1} copy={copies[t]} />
+      <div
+        key={`${t}-${i}`}
+        onMouseEnter={() => setHoveredThumb(i)}
+        onMouseLeave={() => setHoveredThumb(null)}
+        style={{ width: TW + 4, position: 'relative', flexShrink: 0 }}
+      >
+        <button onClick={() => setActive(i)}
+          style={{ width: TW + 4, height: TH + 18, padding: 0, background: 'var(--ink)', border: `2px solid ${isActive ? ART_OLIVE : 'rgba(255,255,255,.12)'}`, borderRadius: 5, cursor: 'pointer', overflow: 'hidden', flexShrink: 0, boxSizing: 'border-box' }}>
+          <div style={{ width: TW, height: TH, position: 'relative', overflow: 'hidden', borderRadius: 3 }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, width: 1080, height: 1350, transform: `scale(${THUMB_S})`, transformOrigin: 'top left', pointerEvents: 'none' }}>
+              <FeedSlide item={item} type={t} counter={i + 1} total={slides.length} s={1} copy={copies[t]} />
+            </div>
           </div>
-        </div>
-        <div style={{ height: 14, lineHeight: '14px', fontFamily: ART_MONO, fontSize: 8, color: isActive ? ART_OLIVE : 'var(--muted)', padding: 0, background: 'var(--ink)', textAlign: 'center' }}>
-          {String(i + 1).padStart(2, '0')}
-        </div>
-      </button>
+          <div style={{ height: 14, lineHeight: '14px', fontFamily: ART_MONO, fontSize: 8, color: isActive ? ART_OLIVE : 'var(--muted)', padding: 0, background: 'var(--ink)', textAlign: 'center' }}>
+            {String(i + 1).padStart(2, '0')}
+          </div>
+        </button>
+        {showActions && (
+          <div style={{ position: 'absolute', left: isMobile ? 0 : 'calc(100% + 6px)', top: isMobile ? 'calc(100% + 4px)' : 0, zIndex: 24, display: 'grid', gap: 4, width: 78 }}>
+            <button type="button" onClick={event => { event.stopPropagation(); duplicateSlide(i) }} style={{ height: 23, borderRadius: 5, border: '.5px solid var(--border-2)', background: 'var(--graphite)', color: 'var(--cream)', fontFamily: ART_MONO, fontSize: 9, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Duplicar</button>
+            <button type="button" disabled={slides.length <= 1} onClick={event => { event.stopPropagation(); removeSlideAt(i) }} style={{ height: 23, borderRadius: 5, border: '.5px solid var(--border-2)', background: 'var(--ink)', color: slides.length > 1 ? 'var(--muted)' : 'var(--subtle)', fontFamily: ART_MONO, fontSize: 9, letterSpacing: '.08em', textTransform: 'uppercase', cursor: slides.length > 1 ? 'pointer' : 'not-allowed', opacity: slides.length > 1 ? 1 : .48 }}>Excluir</button>
+          </div>
+        )}
+      </div>
     )
   }
+
+  const renderAddThumbBtn = () => (
+    <button type="button" onClick={addSlide} title="Adicionar imagem ao carrossel"
+      style={{ width: TW + 4, height: TH + 18, padding: 0, background: 'var(--ink)', border: '1.5px dashed var(--border-2)', borderRadius: 5, color: ART_OLIVE, cursor: 'pointer', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, boxSizing: 'border-box' }}>
+      <span style={{ fontFamily: ART_SANS, fontWeight: ART_DISPLAY_WEIGHT, fontSize: 18, lineHeight: 1 }}>+</span>
+      <span style={{ fontFamily: ART_MONO, fontSize: 7, letterSpacing: '.08em', textTransform: 'uppercase' }}>nova</span>
+      </button>
+  )
 
   const toolbar = (
     <ArtToolbar
       box={activeElements.find(el => el.id === selectedBoxId)}
       onPatch={patchSelected}
       onAdd={addBox}
-      onAddSlide={addSlide}
-      onRemoveSlide={removeSlide}
-      canRemoveSlide={slides.length > 1}
+      onUndo={undo}
+      canUndo={history.length > 0}
       onApplyPreset={applyPreset}
       variant={activeCopy.variant}
       onVariantChange={variant => updateActive({ variant })}
@@ -1781,8 +2128,9 @@ function FeedPreview({ item }: { item: Item }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', overflow: 'hidden' }}>
         {toolbar}
-        <div style={{ display: 'flex', gap: 6, overflow: 'hidden', padding: '2px 0' }}>
+        <div style={{ display: 'flex', gap: 6, overflow: 'visible', padding: '2px 0 58px' }}>
           {slides.map((t, i) => renderThumbBtn(t, i))}
+          {renderAddThumbBtn()}
         </div>
         <div ref={centerRef} style={{ width: '100%', flex: 1, minHeight: 260, position: 'relative', background: 'rgba(0,0,0,.3)', borderRadius: 10, overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 12, left: 12, width: Math.round(1080 * scale), height: Math.round(1350 * scale), overflow: 'hidden', borderRadius: 3 }}>
@@ -1800,8 +2148,9 @@ function FeedPreview({ item }: { item: Item }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', height: '100%', minHeight: 0, overflow: 'hidden' }}>
       {toolbar}
       <div style={{ display: 'flex', gap: 0, flex: 1, minHeight: 0, overflow: 'hidden' }}>
-        <div style={{ width: TW + 10, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 5, paddingRight: 8, overflow: 'hidden' }}>
+        <div style={{ width: TW + 10, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 5, paddingRight: 8, overflow: 'visible' }}>
           {slides.map((t, i) => renderThumbBtn(t, i))}
+          {renderAddThumbBtn()}
         </div>
         <div ref={centerRef} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0, background: 'rgba(0,0,0,.25)', borderRadius: 10, border: '.5px solid var(--border-2)', padding: 12, overflow: 'hidden' }}>
           <div style={{ width: Math.round(1080 * scale), height: Math.round(1350 * scale), position: 'relative', overflow: 'hidden', borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,.5)' }}>
@@ -1822,6 +2171,9 @@ function StoriesPreview({ item }: { item: Item }) {
   const [downloading, setDownloading] = useState(false)
   const [selectedId, setSelectedId] = useState('')
   const [storySlides, setStorySlides] = useState<StoriesState[]>(() => [buildStoryState(item)])
+  const [history, setHistory] = useState<{ storySlides: StoriesState[]; active: number; selectedId: string }[]>([])
+  const [hoveredThumb, setHoveredThumb] = useState<number | null>(null)
+  const storyIdSeq = useRef(0)
   const exportRef = useRef<HTMLDivElement>(null)
   const centerRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(0.28)
@@ -1844,10 +2196,23 @@ function StoriesPreview({ item }: { item: Item }) {
     return () => obs.disconnect()
   }, [])
 
-  const updateStory = (patch: Partial<StoriesState>) => {
+  const pushHistory = () => {
+    setHistory(prev => [...prev.slice(-23), { storySlides: storySlides.map(cloneStoriesState), active, selectedId }])
+  }
+  const undo = () => {
+    const last = history[history.length - 1]
+    if (!last) return
+    setStorySlides(last.storySlides.map(cloneStoriesState))
+    setActive(last.active)
+    setSelectedId(last.selectedId)
+    setHistory(prev => prev.slice(0, -1))
+  }
+
+  const updateStory = (patch: Partial<StoriesState>, record = true) => {
+    if (record) pushHistory()
     setStorySlides(prev => prev.map((story, index) => index === activeIndex ? { ...story, ...patch } : story))
   }
-  const setStoryElements = (elements: ArtTextBox[]) => updateStory({ elements })
+  const setStoryElements = (elements: ArtTextBox[], record = true) => updateStory({ elements }, record)
   const clipboardRef = useRef<ArtTextBox | null>(null)
   const patchSelected = (patch: Partial<ArtTextBox>) => {
     setStoryElements(activeElements.map(box => box.id === selectedBoxId ? clampArtBox({ ...box, ...patch }, 1080, 1920) : box))
@@ -1863,7 +2228,12 @@ function StoriesPreview({ item }: { item: Item }) {
     setStoryElements(next)
     setSelectedId(next[0]?.id ?? '')
   }
+  const nextStorySuffix = () => {
+    storyIdSeq.current += 1
+    return `${storySlides.length}-${storyIdSeq.current}`
+  }
   const addStory = () => {
+    pushHistory()
     const preset = ART_LAYOUT_PRESET_CYCLE[storySlides.length % ART_LAYOUT_PRESET_CYCLE.length]
     const nextStory = buildStoryState(item, st.variant, preset, storySlides.length + 1)
     setStorySlides(prev => {
@@ -1879,10 +2249,24 @@ function StoriesPreview({ item }: { item: Item }) {
     updateStory(nextStory)
     setSelectedId(nextStory.elements[0]?.id ?? '')
   }
-  const removeStory = () => {
+  const duplicateStory = (index: number) => {
+    const source = storySlides[index]
+    if (!source) return
+    pushHistory()
+    const nextStory = duplicateStoriesState(source, nextStorySuffix())
+    setStorySlides(prev => {
+      const next = [...prev]
+      next.splice(index + 1, 0, nextStory)
+      return next
+    })
+    setActive(index + 1)
+    setSelectedId(nextStory.elements[0]?.id ?? '')
+  }
+  const removeStoryAt = (index: number) => {
     if (storySlides.length <= 1) return
-    const nextSlides = storySlides.filter((_, index) => index !== activeIndex)
-    const nextIndex = Math.max(0, Math.min(activeIndex, nextSlides.length - 1))
+    pushHistory()
+    const nextSlides = storySlides.filter((_, storyIndex) => storyIndex !== index)
+    const nextIndex = Math.max(0, Math.min(index, nextSlides.length - 1))
     setStorySlides(nextSlides)
     setActive(nextIndex)
     setSelectedId(nextSlides[nextIndex]?.elements[0]?.id ?? '')
@@ -1937,29 +2321,50 @@ function StoriesPreview({ item }: { item: Item }) {
 
   const renderThumbBtn = (story: StoriesState, i: number) => {
     const isActive = activeIndex === i
+    const showActions = isMobile ? isActive : hoveredThumb === i
     return (
-      <button key={i} onClick={() => setActive(i)}
-        style={{ width: TW + 4, height: TH + 18, padding: 0, background: 'var(--ink)', border: `2px solid ${isActive ? ART_OLIVE : 'rgba(255,255,255,.12)'}`, borderRadius: 5, cursor: 'pointer', overflow: 'hidden', flexShrink: 0, boxSizing: 'border-box' }}>
-        <div style={{ width: TW, height: TH, position: 'relative', overflow: 'hidden', borderRadius: 3 }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, width: 1080, height: 1920, transform: `scale(${THUMB_S})`, transformOrigin: 'top left', pointerEvents: 'none' }}>
-            <StoriesSlide st={story} s={1} />
+      <div
+        key={i}
+        onMouseEnter={() => setHoveredThumb(i)}
+        onMouseLeave={() => setHoveredThumb(null)}
+        style={{ width: TW + 4, position: 'relative', flexShrink: 0 }}
+      >
+        <button onClick={() => setActive(i)}
+          style={{ width: TW + 4, height: TH + 18, padding: 0, background: 'var(--ink)', border: `2px solid ${isActive ? ART_OLIVE : 'rgba(255,255,255,.12)'}`, borderRadius: 5, cursor: 'pointer', overflow: 'hidden', flexShrink: 0, boxSizing: 'border-box' }}>
+          <div style={{ width: TW, height: TH, position: 'relative', overflow: 'hidden', borderRadius: 3 }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, width: 1080, height: 1920, transform: `scale(${THUMB_S})`, transformOrigin: 'top left', pointerEvents: 'none' }}>
+              <StoriesSlide st={story} s={1} />
+            </div>
           </div>
-        </div>
-        <div style={{ height: 14, lineHeight: '14px', fontFamily: ART_MONO, fontSize: 8, color: isActive ? ART_OLIVE : 'var(--muted)', padding: 0, background: 'var(--ink)', textAlign: 'center' }}>
-          {String(i + 1).padStart(2, '0')}
-        </div>
-      </button>
+          <div style={{ height: 14, lineHeight: '14px', fontFamily: ART_MONO, fontSize: 8, color: isActive ? ART_OLIVE : 'var(--muted)', padding: 0, background: 'var(--ink)', textAlign: 'center' }}>
+            {String(i + 1).padStart(2, '0')}
+          </div>
+        </button>
+        {showActions && (
+          <div style={{ position: 'absolute', left: isMobile ? 0 : 'calc(100% + 6px)', top: isMobile ? 'calc(100% + 4px)' : 0, zIndex: 24, display: 'grid', gap: 4, width: 78 }}>
+            <button type="button" onClick={event => { event.stopPropagation(); duplicateStory(i) }} style={{ height: 23, borderRadius: 5, border: '.5px solid var(--border-2)', background: 'var(--graphite)', color: 'var(--cream)', fontFamily: ART_MONO, fontSize: 9, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Duplicar</button>
+            <button type="button" disabled={storySlides.length <= 1} onClick={event => { event.stopPropagation(); removeStoryAt(i) }} style={{ height: 23, borderRadius: 5, border: '.5px solid var(--border-2)', background: 'var(--ink)', color: storySlides.length > 1 ? 'var(--muted)' : 'var(--subtle)', fontFamily: ART_MONO, fontSize: 9, letterSpacing: '.08em', textTransform: 'uppercase', cursor: storySlides.length > 1 ? 'pointer' : 'not-allowed', opacity: storySlides.length > 1 ? 1 : .48 }}>Excluir</button>
+          </div>
+        )}
+      </div>
     )
   }
+
+  const renderAddThumbBtn = () => (
+    <button type="button" onClick={addStory} title="Adicionar story"
+      style={{ width: TW + 4, height: TH + 18, padding: 0, background: 'var(--ink)', border: '1.5px dashed var(--border-2)', borderRadius: 5, color: ART_OLIVE, cursor: 'pointer', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, boxSizing: 'border-box' }}>
+      <span style={{ fontFamily: ART_SANS, fontWeight: ART_DISPLAY_WEIGHT, fontSize: 18, lineHeight: 1 }}>+</span>
+      <span style={{ fontFamily: ART_MONO, fontSize: 7, letterSpacing: '.08em', textTransform: 'uppercase' }}>nova</span>
+      </button>
+  )
 
   const toolbar = (
     <ArtToolbar
       box={activeElements.find(el => el.id === selectedBoxId)}
       onPatch={patchSelected}
       onAdd={addBox}
-      onAddSlide={addStory}
-      onRemoveSlide={removeStory}
-      canRemoveSlide={storySlides.length > 1}
+      onUndo={undo}
+      canUndo={history.length > 0}
       onApplyPreset={applyStoryPreset}
       variant={st.variant}
       onVariantChange={variant => updateStory({ variant })}
@@ -1981,14 +2386,16 @@ function StoriesPreview({ item }: { item: Item }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', height: isMobile ? 'auto' : '100%', minHeight: 0, overflow: 'hidden' }}>
       {toolbar}
       {isMobile && (
-        <div style={{ display: 'flex', gap: 6, overflow: 'hidden', padding: '2px 0' }}>
+        <div style={{ display: 'flex', gap: 6, overflow: 'visible', padding: '2px 0 58px' }}>
           {storySlides.map((story, i) => renderThumbBtn(story, i))}
+          {renderAddThumbBtn()}
         </div>
       )}
       {!isMobile && (
         <div style={{ display: 'flex', gap: 0, flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          <div style={{ width: TW + 10, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 5, paddingRight: 8, overflow: 'hidden' }}>
+          <div style={{ width: TW + 10, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 5, paddingRight: 8, overflow: 'visible' }}>
             {storySlides.map((story, i) => renderThumbBtn(story, i))}
+            {renderAddThumbBtn()}
           </div>
           {renderPreviewBox()}
         </div>
