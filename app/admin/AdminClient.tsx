@@ -1,7 +1,7 @@
 'use client'
-import { useLayoutEffect, useState, useRef, useEffect, useTransition, type ReactNode, type CSSProperties } from 'react'
+import { useLayoutEffect, useState, useRef, useEffect, useTransition, type ReactNode, type CSSProperties, type ClipboardEvent } from 'react'
 import { loginAction, logoutAction, upsertEstante, deleteEstante, reorderEstantes, upsertMaterial, deleteMaterial, upsertCurso, deleteCurso, upsertMentoria, deleteMentoria } from './actions'
-import { ESTANTE_MAP, ESTANTES } from '../lib/materiais-data'
+import { ESTANTE_MAP } from '../lib/materiais-data'
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -302,7 +302,7 @@ function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
       <div style={{ height, padding: 20, position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'var(--ink)', backgroundImage: 'linear-gradient(var(--border) 1px, transparent 1px)', backgroundSize: '100% 38px' }}>
         <div style={{ ...eb, color: 'var(--sand)' }}><span style={{ fontSize: 9 }}>◆</span>{etiqueta}</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <span style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: 78, lineHeight: .8, color: ac, letterSpacing: '-.05em' }}>{big}</span>
+          <span style={{ fontFamily: 'var(--sans)', fontWeight: 700, fontSize: 78, lineHeight: .8, color: ac, letterSpacing: '-.05em' }}>{big}</span>
           <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>{item.bigLabel ?? ''}</span>
         </div>
         <PreviewFitTitle title={title} max={28} min={11} weight={700} lineHeight={1.02} letterSpacing="-.02em" boxStyle={{ flex: 1, marginTop: 12 }} />
@@ -571,10 +571,32 @@ function PagePreview({ item }: { item: Item }) {
 
 const CEX_DOMAIN = 'campusexpansao.com.br'
 
-type SlideType = 'capa' | 'para-quem' | 'conteudo' | 'depoimento' | 'cta'
+type BaseSlideType = 'capa' | 'para-quem' | 'conteudo' | 'depoimento' | 'cta'
+type SlideType = BaseSlideType | `extra-${string}`
 type FeedVariant = 'ink' | 'graphite'
-type TextColor = 'cream' | 'ink' | 'olive'
-type StoriesState = { kicker: string; gancho: string; ponte: string; cta: string; variant: FeedVariant }
+type TextColor = 'cream' | 'creamSoft' | 'white' | 'ink' | 'olive' | 'oliveSoft' | 'oliveDeep' | 'muted' | 'subtle'
+type ArtFont = 'sans' | 'mono'
+type ArtAlign = 'left'
+type ArtLayoutPresetId = 'impacto' | 'contraste' | 'lista' | 'passos' | 'claro' | 'enfase' | 'cta'
+type ArtSurface = 'feed' | 'stories'
+type ArtTextBox = {
+  id: string
+  html: string
+  x: number
+  y: number
+  w: number
+  fontSize: number
+  lineHeight: number
+  weight: number
+  italic: boolean
+  color: TextColor
+  align: ArtAlign
+  font: ArtFont
+  letterSpacing?: number
+  uppercase?: boolean
+  opacity?: number
+}
+type StoriesState = { kicker: string; gancho: string; ponte: string; cta: string; variant: FeedVariant; elements: ArtTextBox[] }
 type FeedSlideCopy = {
   variant: FeedVariant
   kicker: string
@@ -585,59 +607,182 @@ type FeedSlideCopy = {
   cta: string
   footer: string
   // Controles de estilo do texto principal
-  titleWeight: number       // 400 | 600 | 800
+  titleWeight: number       // 400 | 700
   titleItalic: boolean
   titleColor: TextColor
   titleSize: number         // px at s=1 (ex: 72, 96, 118, 148)
+  elements: ArtTextBox[]
 }
-type FeedCopies = Record<SlideType, FeedSlideCopy>
-type FeedField = 'kicker' | 'title' | 'quote' | 'author' | 'cta' | 'footer' | `item-${number}`
-type StoriesField = 'kicker' | 'gancho' | 'ponte' | 'cta'
+type FeedCopies = Record<string, FeedSlideCopy>
 
+// BRANDBOOK_V3_2_ARTS: tokens e proporcoes usados pelo editor/exportador de artes.
+// Fonte de verdade: ce-x/project/CEX_BrandBook_v3.html secoes 04, 05, 09, 10, 10.5 e 11.
 const ART_OLIVE = '#7A9E3F'
+const ART_OLIVE_SOFT = '#94B85C'
 const ART_OLIVE_DEEP = '#4F6B26'
 const ART_INK = '#0E110D'
-const ART_GRAPHITE = '#161A12'
-const ART_CREAM = '#E8E1CE'
+const ART_GRAPHITE = '#181B16'
+const ART_CREAM = '#EDE6D3'
+const ART_CREAM_SOFT = '#F6F1E0'
+const ART_WHITE = '#FAFAF7'
 const ART_MUTED = '#8B8C82'
+const ART_SUBTLE = '#555650'
 const ART_BORDER = '#2E3327'
 const ART_SANS = 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
 const ART_MONO = 'JetBrains Mono, SF Mono, ui-monospace, monospace'
+const ART_DISPLAY_WEIGHT = 700
+const ART_BODY_WEIGHT = 400
 
-const SLIDE_VARIANTS: Record<SlideType, FeedVariant> = {
+function artSafeBounds(canvasW: number, canvasH: number) {
+  if (canvasW === 1080 && canvasH === 1920) return { x: 80, top: 250, bottom: 310 }
+  if (canvasW === 1080 && canvasH === 1350) return { x: 96, top: 120, bottom: 120 }
+  return { x: 96, top: 96, bottom: 96 }
+}
+
+const SLIDE_VARIANTS: Record<BaseSlideType, FeedVariant> = {
   'capa': 'ink', 'para-quem': 'graphite', 'conteudo': 'ink', 'depoimento': 'graphite', 'cta': 'ink',
 }
 
-const SLIDE_NAMES: Record<SlideType, string> = {
-  'capa': 'Capa',
-  'para-quem': 'Para quem é',
-  'conteudo': 'O que tem dentro',
-  'depoimento': 'Depoimento',
-  'cta': 'Chamada final',
+// ART_LAYOUT_PRESETS: modelos prontos do editor de artes. Claude Design pode começar por aqui.
+const ART_LAYOUT_PRESETS: { id: ArtLayoutPresetId; label: string }[] = [
+  { id: 'impacto', label: 'Impacto' },
+  { id: 'contraste', label: 'Contraste' },
+  { id: 'lista', label: 'Lista' },
+  { id: 'passos', label: 'Passos' },
+  { id: 'claro', label: 'Claro' },
+  { id: 'enfase', label: 'Ênfase' },
+  { id: 'cta', label: 'CTA' },
+]
+const ART_LAYOUT_PRESET_CYCLE: ArtLayoutPresetId[] = ['impacto', 'contraste', 'lista', 'passos', 'claro', 'enfase', 'cta']
+
+const ART_TEXT_COLOR: Record<ArtTextBox['color'], string> = {
+  cream: ART_CREAM,
+  creamSoft: ART_CREAM_SOFT,
+  white: ART_WHITE,
+  ink: ART_INK,
+  olive: ART_OLIVE,
+  oliveSoft: ART_OLIVE_SOFT,
+  oliveDeep: ART_OLIVE_DEEP,
+  muted: ART_MUTED,
+  subtle: ART_SUBTLE,
 }
 
-function parseArtText(text: string, baseColor?: string): ReactNode {
-  if (!text) return null
-  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|_[^_]+_|\n)/g).filter(Boolean)
-  return parts.map((part, i) => {
-    if (part === '\n') return <br key={i} />
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={i} style={{ fontWeight: 900 }}>{part.slice(2, -2)}</strong>
-    }
-    if (part.startsWith('*') && part.endsWith('*')) {
-      return <em key={i} style={{ fontStyle: 'italic', fontWeight: 'inherit', color: ART_OLIVE }}>{part.slice(1, -1)}</em>
-    }
-    if (part.startsWith('_') && part.endsWith('_')) {
-      return <em key={i} style={{ fontStyle: 'italic', color: baseColor }}>{part.slice(1, -1)}</em>
-    }
-    return part
-  })
+function plainToArtHtml(text: string) {
+  return String(text ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')
 }
 
-function appendArtToken(value: string, token: string): string {
-  if (!value) return token.trimStart()
-  if (token === '\n') return `${value}\n`
-  return `${value}${value.endsWith('\n') ? '' : ' '}${token}`
+function artBox(id: string, html: string, patch: Partial<ArtTextBox> = {}): ArtTextBox {
+  return {
+    id,
+    html: plainToArtHtml(html),
+    x: 96,
+    y: 560,
+    w: 850,
+    fontSize: 112,
+    lineHeight: .94,
+    weight: ART_BODY_WEIGHT,
+    italic: false,
+    color: 'cream',
+    align: 'left',
+    font: 'sans',
+    ...patch,
+  }
+}
+
+function artRichBox(id: string, html: string, patch: Partial<ArtTextBox> = {}): ArtTextBox {
+  return { ...artBox(id, '', patch), html }
+}
+
+function cloneArtBox(box: ArtTextBox): ArtTextBox {
+  return {
+    ...box,
+    id: `${box.id}-c${Date.now().toString(36)}`,
+    x: box.x + 34,
+    y: box.y + 34,
+  }
+}
+
+function clampArtBox(box: ArtTextBox, canvasW: number, canvasH: number): ArtTextBox {
+  const safe = artSafeBounds(canvasW, canvasH)
+  const w = Math.max(120, Math.min(box.w, canvasW - safe.x * 2))
+  const hGuess = Math.max(90, box.fontSize * box.lineHeight * 2.1)
+  return {
+    ...box,
+    w,
+    x: Math.max(safe.x, Math.min(box.x, canvasW - safe.x - w)),
+    y: Math.max(safe.top, Math.min(box.y, canvasH - safe.bottom - hGuess)),
+  }
+}
+
+function styleForArtBox(box: ArtTextBox, s = 1): CSSProperties {
+  return {
+    position: 'absolute',
+    left: box.x * s,
+    top: box.y * s,
+    width: box.w * s,
+    fontFamily: box.font === 'mono' ? ART_MONO : ART_SANS,
+    fontSize: box.fontSize * s,
+    lineHeight: box.lineHeight,
+    fontWeight: box.weight,
+    fontStyle: box.italic ? 'italic' : 'normal',
+    color: ART_TEXT_COLOR[box.color],
+    textAlign: 'left',
+    letterSpacing: box.letterSpacing != null ? `${box.letterSpacing}em` : '-.04em',
+    textTransform: box.uppercase ? 'uppercase' : 'none',
+    opacity: box.opacity ?? 1,
+    wordBreak: 'normal',
+    overflowWrap: 'break-word',
+    whiteSpace: 'normal',
+    zIndex: 5,
+  }
+}
+
+function parseArtText(html: string, baseColor?: string): ReactNode {
+  if (!html) return null
+
+  const isHtml = /<[a-z][\s\S]*>/i.test(html)
+  if (!isHtml) {
+    const parts = html.split(/(\*\*[^*]+\*\*|\*[^*]+\*|_[^_]+_|\n)/g).filter(Boolean)
+    return parts.map((part, i) => {
+      if (part === '\n') return <br key={i} />
+      if (part.startsWith('**') && part.endsWith('**')) return <strong key={i} style={{ fontWeight: ART_DISPLAY_WEIGHT }}>{part.slice(2, -2)}</strong>
+      if (part.startsWith('*') && part.endsWith('*')) return <em key={i} style={{ fontStyle: 'italic', fontWeight: ART_DISPLAY_WEIGHT, color: ART_OLIVE }}>{part.slice(1, -1)}</em>
+      if (part.startsWith('_') && part.endsWith('_')) return <em key={i} style={{ fontStyle: 'italic', color: baseColor }}>{part.slice(1, -1)}</em>
+      return part
+    })
+  }
+
+  function parseNode(node: ChildNode, key: number): ReactNode {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent || ''
+    if (node.nodeType !== Node.ELEMENT_NODE) return null
+    const el = node as HTMLElement
+    const tag = el.tagName.toLowerCase()
+    const children = Array.from(el.childNodes).map((c, i) => parseNode(c, i))
+    if (tag === 'br') return <br key={key} />
+    if (tag === 'div' || tag === 'p') return <span key={key}>{children}<br /></span>
+
+    const style: CSSProperties = {}
+    if (el.style.fontWeight) style.fontWeight = el.style.fontWeight
+    if (el.style.fontStyle) style.fontStyle = el.style.fontStyle
+    if (el.style.color) style.color = el.style.color
+    if (el.style.fontSize) style.fontSize = el.style.fontSize
+    if (el.style.lineHeight) style.lineHeight = el.style.lineHeight
+    if (el.style.textDecoration) style.textDecoration = el.style.textDecoration
+    if (el.style.display) style.display = el.style.display
+
+    if (tag === 'b' || tag === 'strong') style.fontWeight = style.fontWeight || ART_DISPLAY_WEIGHT
+    if (tag === 'i' || tag === 'em') style.fontStyle = style.fontStyle || 'italic'
+    if (tag === 'u') style.textDecoration = style.textDecoration || 'underline'
+
+    const hasStyle = Object.keys(style).length > 0
+    if (!hasStyle) return <span key={key}>{children}</span>
+    return <span key={key} style={style}>{children}</span>
+  }
+
+  if (typeof document === 'undefined') return html
+  const div = document.createElement('div')
+  div.innerHTML = html
+  return <>{Array.from(div.childNodes).map((n, i) => parseNode(n, i))}</>
 }
 
 function buildFeedSlides(item: Item): SlideType[] {
@@ -652,18 +797,162 @@ function buildFeedSlides(item: Item): SlideType[] {
   return slides
 }
 
-const STYLE_DEFAULTS = { titleWeight: 800, titleItalic: false, titleColor: 'cream' as TextColor, titleSize: 118 }
+const STYLE_DEFAULTS = { titleWeight: ART_DISPLAY_WEIGHT, titleItalic: false, titleColor: 'cream' as TextColor, titleSize: 118 }
+
+function buildBlankFeedCopy(title = 'Novo texto', variant: FeedVariant = 'ink'): FeedSlideCopy {
+  return {
+    variant,
+    kicker: '',
+    title,
+    items: [],
+    quote: '',
+    author: '',
+    cta: '',
+    footer: `@campus.expansao · ${CEX_DOMAIN}`,
+    ...STYLE_DEFAULTS,
+    titleWeight: 400,
+    elements: [
+      artBox(`extra-title-${Date.now().toString(36)}`, title, { x: 96, y: 520, w: 850, fontSize: 104, lineHeight: .96, weight: ART_BODY_WEIGHT, color: variant === 'graphite' ? 'ink' : 'cream' }),
+    ],
+  }
+}
+
+function artUniqueId(prefix: string) {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
+}
+
+function cleanArtText(value: unknown, fallback = '') {
+  const text = String(value ?? '').trim()
+  return text || fallback
+}
+
+function highlightWord(value: string) {
+  const words = value.replace(/[.?!,;:]+$/g, '').split(/\s+/).filter(Boolean)
+  if (!words.length) return 'clareza'
+  return words.slice(-Math.min(2, words.length)).join(' ')
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function artDataFromItem(item: Item) {
+  const material = item.type === 'material' ? item as Material : null
+  const curso = item.type === 'curso' ? item as Curso : null
+  const title = cleanArtText(item.title, 'Novo material')
+  const desc = cleanArtText(item.desc, 'Uma ferramenta para servir com mais clareza.')
+  const category = cleanArtText(material?.shelf ?? curso?.level ?? item.type, 'CE.X')
+  const paraQuem = cleanArtText(material?.paraQuem ?? curso?.paraQuem, desc)
+  const benefits = material?.beneficios?.filter(b => b?.trim()).slice(0, 4) ?? []
+  const list = benefits.length ? benefits : ['o que fazer', 'como fazer', 'a quem responder', 'quando pedir ajuda']
+  const quote = cleanArtText(material?.depoimento?.texto ?? curso?.depoimento?.texto, paraQuem)
+  const cta = item.type === 'material' && material?.price ? `R$ ${material.price} →` : item.type === 'curso' ? 'Entrar na lista →' : 'Ver agora →'
+  const footer = `@campus.expansao · ${CEX_DOMAIN}`
+  return { title, desc, category, paraQuem, list, quote, cta, footer }
+}
+
+function buildPresetElements(item: Item, preset: ArtLayoutPresetId, surface: ArtSurface, sequence = 1): ArtTextBox[] {
+  const data = artDataFromItem(item)
+  const story = surface === 'stories'
+  const y = (feedY: number, storyY: number) => story ? storyY : feedY
+  const fs = (feedSize: number, storySize: number) => story ? storySize : feedSize
+  const id = (name: string) => artUniqueId(`${surface}-${preset}-${name}`)
+  const lineList = data.list.slice(0, 4).map(line => `◆ ${line}`).join('\n')
+
+  if (preset === 'contraste') {
+    const green = highlightWord(data.paraQuem)
+    return [
+      artBox(id('category'), data.category, { x: 96, y: y(290, 420), w: 760, font: 'mono', fontSize: fs(15, 24), lineHeight: 1.2, weight: 500, color: 'olive', letterSpacing: .18, uppercase: true }),
+      artRichBox(id('title'), `${plainToArtHtml(data.paraQuem)}<br><span style="color:${ART_OLIVE};font-style:italic;font-weight:${ART_DISPLAY_WEIGHT}">${plainToArtHtml(green)}.</span>`, { x: 96, y: y(400, 620), w: 900, fontSize: fs(100, 132), lineHeight: .94, weight: ART_DISPLAY_WEIGHT, color: 'cream' }),
+      artBox(id('support'), data.desc, { x: 96, y: y(900, 1390), w: 820, fontSize: fs(38, 54), lineHeight: 1.18, weight: ART_BODY_WEIGHT, italic: true, color: 'muted', opacity: .86 }),
+    ]
+  }
+
+  if (preset === 'lista') {
+    return [
+      artBox(id('title'), cleanArtText(data.desc, 'Ela não sabe direito:'), { x: 96, y: y(330, 470), w: 880, fontSize: fs(104, 126), lineHeight: .96, weight: ART_DISPLAY_WEIGHT, color: 'cream' }),
+      artBox(id('list'), lineList, { x: 96, y: y(650, 930), w: 880, fontSize: fs(58, 72), lineHeight: 1.45, weight: ART_DISPLAY_WEIGHT, color: 'cream', letterSpacing: -.02 }),
+    ]
+  }
+
+  if (preset === 'passos') {
+    return [
+      artBox(id('number'), `${sequence}.`, { x: 96, y: y(300, 500), w: 430, fontSize: fs(280, 330), lineHeight: .82, weight: ART_DISPLAY_WEIGHT, color: 'olive' }),
+      artBox(id('title'), sequence === 1 ? 'Função' : sequence === 2 ? 'Sentido' : sequence === 3 ? 'Direção' : data.category, { x: 96, y: y(650, 930), w: 820, fontSize: fs(132, 158), lineHeight: .9, weight: ART_DISPLAY_WEIGHT, color: 'cream' }),
+      artBox(id('question'), data.desc, { x: 96, y: y(850, 1220), w: 850, fontSize: fs(58, 72), lineHeight: 1.35, weight: ART_BODY_WEIGHT, italic: true, color: 'muted' }),
+    ]
+  }
+
+  if (preset === 'claro') {
+    return [
+      artBox(id('number'), `${sequence}.`, { x: 96, y: y(290, 480), w: 420, fontSize: fs(260, 320), lineHeight: .82, weight: ART_DISPLAY_WEIGHT, color: 'olive' }),
+      artBox(id('title'), sequence === 1 ? 'Clareza' : data.category, { x: 96, y: y(610, 860), w: 820, fontSize: fs(126, 152), lineHeight: .9, weight: ART_DISPLAY_WEIGHT, color: 'ink' }),
+      artBox(id('question'), data.paraQuem, { x: 96, y: y(830, 1160), w: 820, fontSize: fs(56, 70), lineHeight: 1.35, weight: ART_BODY_WEIGHT, italic: true, color: 'muted' }),
+    ]
+  }
+
+  if (preset === 'enfase') {
+    const green = highlightWord(data.title)
+    const titleLead = data.title.replace(new RegExp(`${escapeRegExp(green)}[.?!,;:]*$`, 'i'), '').trim()
+    return [
+      artRichBox(id('title'), `${plainToArtHtml(titleLead || data.title)}<br><span style="color:${ART_OLIVE};font-style:italic;font-weight:${ART_DISPLAY_WEIGHT}">${plainToArtHtml(green)}.</span>`, { x: 96, y: y(340, 540), w: 900, fontSize: fs(104, 134), lineHeight: .95, weight: ART_DISPLAY_WEIGHT, color: 'cream' }),
+      artBox(id('support'), data.desc, { x: 96, y: y(970, 1390), w: 820, fontSize: fs(46, 62), lineHeight: 1.22, weight: ART_BODY_WEIGHT, italic: true, color: 'muted' }),
+    ]
+  }
+
+  if (preset === 'cta') {
+    return [
+      artBox(id('title'), data.title, { x: 96, y: y(380, 560), w: 860, fontSize: fs(102, 126), lineHeight: .96, weight: ART_DISPLAY_WEIGHT, color: 'cream' }),
+      artBox(id('cta'), data.cta, { x: 96, y: y(760, 1080), w: 760, fontSize: fs(108, 138), lineHeight: .94, weight: ART_DISPLAY_WEIGHT, italic: true, color: 'olive' }),
+      artBox(id('footer'), data.footer, { x: 96, y: y(1160, 1600), w: 840, font: 'mono', fontSize: fs(20, 28), lineHeight: 1.2, weight: 500, color: 'muted', letterSpacing: .06 }),
+    ]
+  }
+
+  return [
+    artBox(id('category'), data.category, { x: 96, y: y(330, 500), w: 760, font: 'mono', fontSize: fs(15, 24), lineHeight: 1.2, weight: 500, color: 'olive', letterSpacing: .18, uppercase: true }),
+    artBox(id('title'), data.title, { x: 96, y: y(455, 670), w: 900, fontSize: fs(118, 144), lineHeight: .94, weight: ART_DISPLAY_WEIGHT, color: 'cream' }),
+    artBox(id('support'), data.desc, { x: 96, y: y(920, 1320), w: 820, fontSize: fs(72, 88), lineHeight: 1, weight: ART_DISPLAY_WEIGHT, color: 'muted', opacity: .78 }),
+  ]
+}
+
+function buildFeedPresetCopy(item: Item, preset: ArtLayoutPresetId, sequence = 1): FeedSlideCopy {
+  const data = artDataFromItem(item)
+  const variant: FeedVariant = preset === 'claro' ? 'graphite' : 'ink'
+  return {
+    variant,
+    kicker: data.category,
+    title: data.title,
+    items: data.list,
+    quote: data.quote,
+    author: item.type === 'material' ? (item as Material).depoimento?.autor ?? '' : '',
+    cta: data.cta,
+    footer: data.footer,
+    ...STYLE_DEFAULTS,
+    titleColor: variant === 'graphite' ? 'ink' : 'cream',
+    elements: buildPresetElements(item, preset, 'feed', sequence),
+  }
+}
 
 function buildFeedCopies(item: Item): FeedCopies {
-  const m = item as Material
-  const footer = `@campus.expansao · ${CEX_DOMAIN}`
-  const base = (extra?: Partial<typeof STYLE_DEFAULTS>) => ({ ...STYLE_DEFAULTS, ...extra })
   return {
-    capa: { variant: SLIDE_VARIANTS.capa, kicker: m.shelf ?? item.type, title: item.title, items: [], quote: '', author: '', cta: '', footer, ...base() },
-    'para-quem': { variant: SLIDE_VARIANTS['para-quem'], kicker: 'PARA QUEM É', title: m.paraQuem || 'Pra quem é esse material?', items: [], quote: '', author: '', cta: '', footer, ...base({ titleColor: 'ink' }) },
-    conteudo: { variant: SLIDE_VARIANTS.conteudo, kicker: 'O QUE VEM DENTRO', title: '', items: ((m.beneficios ?? []).filter(b => b?.trim()).slice(0, 4).concat(['', '', '', ''])).slice(0, 4), quote: '', author: '', cta: '', footer, ...base({ titleSize: 58 }) },
-    depoimento: { variant: SLIDE_VARIANTS.depoimento, kicker: 'DEPOIMENTO', title: '', items: [], quote: m.depoimento?.texto || 'Depoimento de quem usou o material.', author: m.depoimento?.autor || '', cta: '', footer, ...base({ titleWeight: 600, titleItalic: true, titleColor: 'ink', titleSize: 44 }) },
-    cta: { variant: SLIDE_VARIANTS.cta, kicker: '', title: item.title, items: [], quote: '', author: '', cta: m.price ? `R$ ${m.price} →` : 'Ver →', footer, ...base({ titleSize: 104 }) },
+    capa: buildFeedPresetCopy(item, 'impacto', 1),
+    'para-quem': buildFeedPresetCopy(item, 'contraste', 2),
+    conteudo: buildFeedPresetCopy(item, 'lista', 3),
+    depoimento: buildFeedPresetCopy(item, 'enfase', 4),
+    cta: buildFeedPresetCopy(item, 'cta', 5),
+  }
+}
+
+function buildStoryState(item: Item, variant: FeedVariant = 'ink', preset: ArtLayoutPresetId = 'impacto', sequence = 1): StoriesState {
+  const data = artDataFromItem(item)
+  const resolvedVariant = preset === 'claro' ? 'graphite' : variant
+  return {
+    kicker: data.category,
+    gancho: data.title,
+    ponte: data.desc,
+    cta: data.cta,
+    variant: resolvedVariant,
+    elements: buildPresetElements(item, preset, 'stories', sequence),
   }
 }
 
@@ -677,81 +966,64 @@ function useWindowWidth() {
   return w
 }
 
-function ToolBtn({ label, active, onClick, color, title, mono }: { label: string; active?: boolean; onClick: () => void; color?: string; title?: string; mono?: boolean }) {
+function ArtLogo({ size = 40, dark = false, s = 1 }: { size?: number; dark?: boolean; s?: number }) {
+  const base = dark ? ART_INK : ART_WHITE
+  const accent = dark ? ART_OLIVE_DEEP : ART_OLIVE
   return (
-    <button type="button" title={title} onClick={onClick}
-      style={{ height: 28, minWidth: 28, padding: '0 8px', borderRadius: 5, border: `1.5px solid ${active ? ART_OLIVE : 'var(--border-2)'}`, background: active ? 'rgba(122,158,63,.15)' : 'var(--graphite)', color: color ?? (active ? ART_OLIVE : 'var(--cream)'), fontFamily: mono ? ART_MONO : ART_SANS, fontSize: 11, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
-      {label}
-    </button>
+    <span style={{ fontFamily: ART_SANS, fontWeight: ART_DISPLAY_WEIGHT, fontSize: size * s, letterSpacing: '-.045em', color: base, lineHeight: 1, display: 'block' }}>
+      CE<span style={{ color: accent }}>.</span><span style={{ color: accent, fontStyle: 'normal', fontWeight: ART_DISPLAY_WEIGHT }}>X</span>
+    </span>
   )
 }
 
-function ArtFormatBar({ copy, onUpdate, onInsert }: {
-  copy: FeedSlideCopy
-  onUpdate: (patch: Partial<FeedSlideCopy>) => void
-  onInsert: (token: string) => void
+function ArtSlideShell({ w, h, s, variant, counter, total, children, safeZone = false }: {
+  w: number
+  h: number
+  s: number
+  variant: FeedVariant
+  counter?: number
+  total?: number
+  children: ReactNode
+  safeZone?: boolean
 }) {
-  const SIZE_STEPS = [60, 80, 100, 118, 140, 164]
-  const curSizeIdx = SIZE_STEPS.reduce((best, s, i) => Math.abs(s - copy.titleSize) < Math.abs(SIZE_STEPS[best] - copy.titleSize) ? i : best, 0)
-
+  const isLight = variant === 'graphite'
+  const bg = isLight ? ART_CREAM : ART_INK
+  const dotColor = isLight ? 'rgba(14,17,13,.09)' : 'rgba(255,255,255,.035)'
+  const counterStr = counter != null && total != null ? `${String(counter).padStart(2, '0')} / ${String(total).padStart(2, '0')}` : undefined
+  const safe = artSafeBounds(w, h)
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(0,0,0,.18)', border: '.5px solid var(--border-2)', borderRadius: 8, padding: '10px 12px' }}>
-      {/* Linha 1: peso + estilo + cor */}
-      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-        <ToolBtn label="N" title="Normal — sem negrito" active={copy.titleWeight === 400} onClick={() => onUpdate({ titleWeight: 400 })} />
-        <ToolBtn label="S" title="Semi-negrito" active={copy.titleWeight === 600} onClick={() => onUpdate({ titleWeight: 600 })} />
-        <ToolBtn label="B" title="Negrito" active={copy.titleWeight === 800} onClick={() => onUpdate({ titleWeight: 800 })} />
-        <div style={{ width: 1, background: 'var(--border-2)', margin: '0 2px' }} />
-        <ToolBtn label="I" title="Itálico" active={copy.titleItalic} onClick={() => onUpdate({ titleItalic: !copy.titleItalic })} />
-        <div style={{ width: 1, background: 'var(--border-2)', margin: '0 2px' }} />
-        <ToolBtn label="Br" title="Branco / Creme" active={copy.titleColor === 'cream'} onClick={() => onUpdate({ titleColor: 'cream' })} />
-        <ToolBtn label="Pr" title="Preto" active={copy.titleColor === 'ink'} onClick={() => onUpdate({ titleColor: 'ink' })} />
-        <ToolBtn label="Ve" title="Verde oliva" active={copy.titleColor === 'olive'} color={copy.titleColor === 'olive' ? ART_OLIVE : ART_OLIVE} onClick={() => onUpdate({ titleColor: 'olive' })} />
+    <div style={{ width: w * s, height: h * s, position: 'relative', overflow: 'hidden', background: bg, fontFamily: ART_SANS }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 5 * s, background: ART_OLIVE, zIndex: 8 }} />
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, backgroundImage: `radial-gradient(circle, ${dotColor} ${1.35 * s}px, transparent ${1.35 * s}px)`, backgroundSize: `${30 * s}px ${30 * s}px`, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', right: -52 * s, bottom: -80 * s, fontFamily: ART_SANS, fontWeight: 300, fontStyle: 'italic', fontSize: Math.round(w * .72) * s, lineHeight: .7, color: isLight ? 'rgba(14,17,13,.055)' : 'rgba(122,158,63,.07)', zIndex: 2, pointerEvents: 'none', whiteSpace: 'nowrap' }}>X</div>
+      <div style={{ position: 'absolute', left: 96 * s, top: 64 * s, zIndex: 9 }}>
+        <ArtLogo size={38} dark={isLight} s={s} />
       </div>
-
-      {/* Linha 2: tamanho */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ fontFamily: ART_SANS, fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' }}>Tamanho</span>
-        <input type="range" min={0} max={SIZE_STEPS.length - 1} step={1} value={curSizeIdx}
-          onChange={e => onUpdate({ titleSize: SIZE_STEPS[+e.target.value] })}
-          style={{ flex: 1, accentColor: ART_OLIVE, cursor: 'pointer' }} />
-        <span style={{ fontFamily: ART_MONO, fontSize: 10, color: 'var(--muted)', minWidth: 24, textAlign: 'right' }}>{copy.titleSize}</span>
+      {counterStr && (
+        <div style={{ position: 'absolute', right: 96 * s, top: 66 * s, zIndex: 9, fontFamily: ART_MONO, fontSize: 16 * s, letterSpacing: '.16em', color: ART_OLIVE }}>
+          {counterStr}
+        </div>
+      )}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 6 }}>
+        {children}
       </div>
-
-      {/* Linha 3: inserir tokens */}
-      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-        <ToolBtn label="*verde*" title="Palavra em verde oliva: envolva com *" onClick={() => onInsert('*destaque*')} color={ART_OLIVE} mono />
-        <ToolBtn label="_itálico_" title="Palavra em itálico: envolva com _" onClick={() => onInsert('_itálico_')} mono />
-        <ToolBtn label="**bold**" title="Palavra extra-negrita: envolva com **" onClick={() => onInsert('**negrito**')} mono />
-        <ToolBtn label="↵" title="Quebrar linha" onClick={() => onInsert('\n')} />
-        <ToolBtn label="◆" title="Marcador ◆" onClick={() => onInsert('◆ ')} />
-        <ToolBtn label="→" title="Seta" onClick={() => onInsert('→')} />
-      </div>
-      <div style={{ fontFamily: ART_SANS, fontSize: 10, color: 'var(--subtle)', lineHeight: 1.5 }}>
-        Envolva palavras com * verde * ou _ itálico _ diretamente no texto acima.
-      </div>
+      {safeZone && (
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: safe.bottom * s, zIndex: 4, borderTop: `1.5px dashed rgba(122,158,63,.22)`, background: 'repeating-linear-gradient(45deg, rgba(122,158,63,.022) 0 14px, transparent 14px 28px)', pointerEvents: 'none' }} />
+      )}
     </div>
   )
 }
 
-function ArtLogo({ size = 40, dark = false, s = 1 }: { size?: number; dark?: boolean; s?: number }) {
-  const base = dark ? ART_INK : '#EDE6D3'
-  const accent = dark ? ART_OLIVE_DEEP : ART_OLIVE
-  const sub = dark ? 'rgba(14,17,13,.42)' : 'rgba(237,230,211,.48)'
+function ArtTextBoxView({ box, s = 1 }: { box: ArtTextBox; s?: number }) {
   return (
-    <div style={{ display: 'inline-flex', flexDirection: 'column', gap: 0 }}>
-      <span style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: size * s, letterSpacing: '-.045em', color: base, lineHeight: 1, display: 'block' }}>
-        CE<span style={{ color: accent }}>.</span><span style={{ color: accent, fontStyle: 'italic' }}>X</span>
-      </span>
-      <span style={{ fontFamily: ART_MONO, fontWeight: 400, fontSize: Math.round(size * 0.27 * s), letterSpacing: '.13em', textTransform: 'uppercase', color: sub, lineHeight: 1.3, display: 'block' }}>
-        Campus Expansão
-      </span>
+    <div style={styleForArtBox(box, s)}>
+      {parseArtText(box.html, ART_TEXT_COLOR[box.color])}
     </div>
   )
 }
 
 function FeedSlide({ item, type, counter, total, s = 1, copy }: {
-  item: Item; type: SlideType; counter?: number; total?: number; s?: number; copy?: FeedSlideCopy
+  item: Item; type: string; counter?: number; total?: number; s?: number; copy?: FeedSlideCopy
 }) {
   const m = item as Material
   const W = 1080 * s
@@ -759,11 +1031,10 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
   const p = Math.round(90 * s)
   const pb = Math.round(84 * s)
   const topPad = Math.round(64 * s)
-  const variant = copy?.variant ?? SLIDE_VARIANTS[type]
+  const variant = copy?.variant ?? SLIDE_VARIANTS[type as BaseSlideType] ?? 'ink'
   const isLight = variant === 'graphite'
   const bg = isLight ? ART_CREAM : ART_INK
-  const textMain = isLight ? ART_INK : '#EDE6D3'
-  const textMuted = isLight ? '#6B6960' : ART_MUTED
+  const textMuted = isLight ? ART_SUBTLE : ART_MUTED
   const borderColor = isLight ? 'rgba(14,17,13,.14)' : ART_BORDER
   const dotColor = isLight ? 'rgba(14,17,13,.09)' : 'rgba(255,255,255,.035)'
   const counterStr = counter != null && total != null ? `${String(counter).padStart(2, '0')}/${String(total).padStart(2, '0')}` : undefined
@@ -772,12 +1043,12 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
   const inner: CSSProperties = { position: 'absolute', inset: 0, zIndex: 2, padding: `${topPad}px ${p}px ${pb}px ${p + Math.round(4 * s)}px`, display: 'flex', flexDirection: 'column' }
   const body: CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }
 
-  const LeftLine = () => <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: Math.round(4 * s), background: ART_OLIVE, zIndex: 3 }} />
-  const DotGrid = () => <div style={{ position: 'absolute', inset: 0, zIndex: 1, backgroundImage: `radial-gradient(circle, ${dotColor} ${1.5 * s}px, transparent ${1.5 * s}px)`, backgroundSize: `${30 * s}px ${30 * s}px`, pointerEvents: 'none' }} />
-  const WmX = () => (
-    <div style={{ position: 'absolute', right: -46 * s, bottom: -150 * s, fontFamily: ART_SANS, fontWeight: 800, fontStyle: 'italic', fontSize: 780 * s, lineHeight: .7, color: isLight ? 'rgba(14,17,13,.06)' : 'rgba(122,158,63,.07)', zIndex: 0, pointerEvents: 'none', whiteSpace: 'nowrap' }}>X</div>
+  const leftLine = <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: Math.round(4 * s), background: ART_OLIVE, zIndex: 3 }} />
+  const dotGrid = <div style={{ position: 'absolute', inset: 0, zIndex: 1, backgroundImage: `radial-gradient(circle, ${dotColor} ${1.5 * s}px, transparent ${1.5 * s}px)`, backgroundSize: `${30 * s}px ${30 * s}px`, pointerEvents: 'none' }} />
+  const watermarkX = (
+    <div style={{ position: 'absolute', right: -46 * s, bottom: -150 * s, fontFamily: ART_SANS, fontWeight: 300, fontStyle: 'italic', fontSize: 780 * s, lineHeight: .7, color: isLight ? 'rgba(14,17,13,.06)' : 'rgba(122,158,63,.07)', zIndex: 0, pointerEvents: 'none', whiteSpace: 'nowrap' }}>X</div>
   )
-  const TopChrome = () => (
+  const topChrome = (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <ArtLogo size={38} dark={isLight} s={s} />
       {counterStr && <span style={{ fontFamily: ART_MONO, fontSize: 20 * s, letterSpacing: '.16em', color: ART_OLIVE_DEEP }}>{counterStr}</span>}
@@ -785,25 +1056,33 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
   )
 
   // Resolve cor do texto a partir do controle de cor
-  const colorMap: Record<TextColor, string> = { cream: '#EDE6D3', ink: ART_INK, olive: ART_OLIVE }
-  const titleFontWeight = copy?.titleWeight ?? 800
+  const colorMap = ART_TEXT_COLOR
+  const titleFontWeight = copy?.titleWeight ?? ART_DISPLAY_WEIGHT
   const titleFontStyle = (copy?.titleItalic ?? false) ? 'italic' : 'normal'
   const titleFontSize = (copy?.titleSize ?? 118) * s
   const titleFontColor = colorMap[copy?.titleColor ?? 'cream']
   const titleStyle: CSSProperties = { fontFamily: ART_SANS, fontWeight: titleFontWeight, fontStyle: titleFontStyle, fontSize: titleFontSize, lineHeight: .96, letterSpacing: '-.04em', color: titleFontColor, margin: 0 }
 
-  const Kicker = ({ text }: { text: string }) => (
+  const renderKicker = (text: string) => (
     <div style={{ fontFamily: ART_MONO, fontSize: 22 * s, letterSpacing: '.18em', textTransform: 'uppercase', color: ART_OLIVE, marginBottom: 36 * s }}>{text}</div>
   )
+
+  if (copy?.elements?.length) {
+    return (
+      <ArtSlideShell w={1080} h={1350} s={s} variant={variant} counter={counter} total={total}>
+        {copy.elements.map(box => <ArtTextBoxView key={box.id} box={box} s={s} />)}
+      </ArtSlideShell>
+    )
+  }
 
   if (type === 'capa') {
     return (
       <div style={outer}>
-        <LeftLine /><DotGrid /><WmX />
+        {leftLine}{dotGrid}{watermarkX}
         <div style={inner}>
-          <TopChrome />
+          {topChrome}
           <div style={body}>
-            {(copy?.kicker || m.shelf) && <Kicker text={copy?.kicker || m.shelf || ''} />}
+            {(copy?.kicker || m.shelf) && renderKicker(copy?.kicker || m.shelf || '')}
             <h2 style={titleStyle}>{parseArtText(copy?.title || item.title, titleFontColor)}</h2>
           </div>
         </div>
@@ -814,11 +1093,11 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
   if (type === 'para-quem') {
     return (
       <div style={outer}>
-        <LeftLine /><DotGrid /><WmX />
+        {leftLine}{dotGrid}{watermarkX}
         <div style={inner}>
-          <TopChrome />
+          {topChrome}
           <div style={body}>
-            {copy?.kicker && <Kicker text={copy.kicker} />}
+            {copy?.kicker && renderKicker(copy.kicker)}
             <h2 style={titleStyle}>{parseArtText(copy?.title || m.paraQuem || 'Pra quem é esse material?', titleFontColor)}</h2>
           </div>
         </div>
@@ -829,15 +1108,15 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
   if (type === 'conteudo') {
     const bens = (copy?.items ?? (m.beneficios ?? [])).filter(b => b?.trim()).slice(0, 4)
     const itemSize = (copy?.titleSize ?? 58) * s
-    const itemWeight = copy?.titleWeight ?? 700
+    const itemWeight = copy?.titleWeight ?? ART_DISPLAY_WEIGHT
     const itemColor = colorMap[copy?.titleColor ?? 'cream']
     return (
       <div style={outer}>
-        <LeftLine /><DotGrid /><WmX />
+        {leftLine}{dotGrid}{watermarkX}
         <div style={inner}>
-          <TopChrome />
+          {topChrome}
           <div style={body}>
-            <Kicker text={copy?.kicker || 'O QUE VEM DENTRO'} />
+            {renderKicker(copy?.kicker || 'O QUE VEM DENTRO')}
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               {bens.map((b, i) => (
                 <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 30 * s, fontFamily: ART_SANS, fontWeight: itemWeight, fontSize: itemSize, letterSpacing: '-.02em', color: itemColor, padding: `${22 * s}px 0`, borderTop: `1.5px solid ${borderColor}`, ...(i === bens.length - 1 ? { borderBottom: `1.5px solid ${borderColor}` } : {}) }}>
@@ -854,16 +1133,16 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
 
   if (type === 'depoimento') {
     const quoteSize = (copy?.titleSize ?? 44) * s
-    const quoteWeight = copy?.titleWeight ?? 600
+    const quoteWeight = copy?.titleWeight ?? ART_DISPLAY_WEIGHT
     const quoteStyle = (copy?.titleItalic ?? true) ? 'italic' : 'normal'
     const quoteColor = colorMap[copy?.titleColor ?? 'cream']
     return (
       <div style={outer}>
-        <LeftLine /><DotGrid /><WmX />
+        {leftLine}{dotGrid}{watermarkX}
         <div style={inner}>
-          <TopChrome />
+          {topChrome}
           <div style={body}>
-            <div style={{ fontSize: 96 * s, lineHeight: .7, color: ART_OLIVE, fontWeight: 900, marginBottom: 30 * s }}>&ldquo;</div>
+            <div style={{ fontSize: 96 * s, lineHeight: .7, color: ART_OLIVE, fontWeight: ART_DISPLAY_WEIGHT, marginBottom: 30 * s }}>&ldquo;</div>
             <div style={{ fontFamily: ART_SANS, fontSize: quoteSize, fontWeight: quoteWeight, fontStyle: quoteStyle, lineHeight: 1.3, color: quoteColor, maxWidth: 860 * s }}>
               {parseArtText(copy?.quote || m.depoimento?.texto || 'Depoimento de quem usou o material.', quoteColor)}
             </div>
@@ -880,13 +1159,13 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
 
   // CTA / fecho
   const ctaSize = (copy?.titleSize ?? 104) * s
-  const ctaWeight = copy?.titleWeight ?? 800
+  const ctaWeight = copy?.titleWeight ?? ART_DISPLAY_WEIGHT
   const ctaColor = colorMap[copy?.titleColor ?? 'cream']
   return (
     <div style={outer}>
-      <LeftLine /><DotGrid /><WmX />
+      {leftLine}{dotGrid}{watermarkX}
       <div style={inner}>
-        <TopChrome />
+        {topChrome}
         <div style={body}>
           <h2 style={{ fontFamily: ART_SANS, fontWeight: ctaWeight, fontSize: ctaSize, lineHeight: .96, letterSpacing: '-.04em', color: ctaColor, margin: `0 0 ${38 * s}px` }}>
             {parseArtText(copy?.title || item.title, ctaColor)}
@@ -909,12 +1188,20 @@ function StoriesSlide({ st, s = 1 }: { st: StoriesState; s?: number }) {
   const W = 1080 * s
   const H = 1920 * s
 
+  if (st.elements?.length) {
+    return (
+      <ArtSlideShell w={1080} h={1920} s={s} variant={st.variant} safeZone>
+        {st.elements.map(box => <ArtTextBoxView key={box.id} box={box} s={s} />)}
+      </ArtSlideShell>
+    )
+  }
+
   return (
     <div style={{ width: W, height: H, position: 'relative', overflow: 'hidden', background: bg, fontFamily: ART_SANS }}>
       {/* Filete oliva 5px topo */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 5 * s, background: ART_OLIVE, zIndex: 3 }} />
       {/* Marca d'agua X gigante */}
-      <div style={{ position: 'absolute', right: -46 * s, bottom: 120 * s, fontFamily: ART_SANS, fontWeight: 800, fontStyle: 'italic', fontSize: 740 * s, lineHeight: .7, color: 'rgba(122,158,63,.06)', zIndex: 0, pointerEvents: 'none', whiteSpace: 'nowrap' }}>X</div>
+      <div style={{ position: 'absolute', right: -46 * s, bottom: 120 * s, fontFamily: ART_SANS, fontWeight: 300, fontStyle: 'italic', fontSize: 740 * s, lineHeight: .7, color: 'rgba(122,158,63,.06)', zIndex: 0, pointerEvents: 'none', whiteSpace: 'nowrap' }}>X</div>
       {/* Inner: padding 100 88 360 */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 2, padding: `${100 * s}px ${88 * s}px ${360 * s}px`, display: 'flex', flexDirection: 'column' }}>
         {/* Logo */}
@@ -926,7 +1213,7 @@ function StoriesSlide({ st, s = 1 }: { st: StoriesState; s?: number }) {
               {st.kicker}
             </div>
           )}
-          <h2 style={{ fontFamily: ART_SANS, fontWeight: 800, fontSize: 138 * s, lineHeight: .95, letterSpacing: '-.04em', color: '#F6F1E0', margin: 0 }}>
+          <h2 style={{ fontFamily: ART_SANS, fontWeight: ART_DISPLAY_WEIGHT, fontSize: 138 * s, lineHeight: .95, letterSpacing: '-.04em', color: ART_CREAM_SOFT, margin: 0 }}>
             {parseArtText(st.gancho)}
           </h2>
           {st.ponte && (
@@ -937,7 +1224,7 @@ function StoriesSlide({ st, s = 1 }: { st: StoriesState; s?: number }) {
         </div>
         {/* CTA pill */}
         <div style={{ display: 'flex' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', background: ART_OLIVE, color: ART_INK, fontFamily: ART_SANS, fontWeight: 800, fontSize: 48 * s, letterSpacing: '-.015em', padding: `${32 * s}px ${50 * s}px`, borderRadius: 16 * s }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', background: ART_OLIVE, color: ART_INK, fontFamily: ART_SANS, fontWeight: ART_DISPLAY_WEIGHT, fontSize: 48 * s, letterSpacing: '-.015em', padding: `${32 * s}px ${50 * s}px`, borderRadius: 16 * s }}>
             {parseArtText(st.cta || 'ARRASTA PRA CIMA ↑')}
           </div>
         </div>
@@ -956,28 +1243,374 @@ function StoriesSlide({ st, s = 1 }: { st: StoriesState; s?: number }) {
 
 async function downloadAsPng(element: HTMLElement, filename: string) {
   const html2canvas = (await import('html2canvas')).default
-  const canvas = await html2canvas(element, { scale: 1, backgroundColor: '#0E110D', useCORS: true, logging: false })
+  const canvas = await html2canvas(element, { scale: 1, backgroundColor: ART_INK, useCORS: true, logging: false })
   const link = document.createElement('a')
   link.download = filename
   link.href = canvas.toDataURL('image/png')
   link.click()
 }
 
-const FIELD_LABELS: Record<string, string> = {
-  kicker: 'Categoria (ex: ADOLESCENTES)',
-  title: 'Frase principal',
-  quote: 'Texto do depoimento',
-  author: 'Quem disse',
-  cta: 'Chamada para ação',
-  footer: 'Rodapé',
+let artSavedRange: Range | null = null
+let artSavedBoxId = ''
+
+function saveArtSelection(editable: HTMLElement, boxId: string) {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return
+  const range = sel.getRangeAt(0)
+  if (!editable.contains(range.commonAncestorContainer)) return
+  artSavedRange = range.cloneRange()
+  artSavedBoxId = boxId
 }
 
-function EditorField({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+function restoreArtSelection(editable: HTMLElement, boxId: string) {
+  const sel = window.getSelection()
+  const currentRange = sel?.rangeCount ? sel.getRangeAt(0) : null
+  if (currentRange && editable.contains(currentRange.commonAncestorContainer) && !currentRange.collapsed) return true
+  if (!artSavedRange || artSavedBoxId !== boxId) return false
+  if (!editable.ownerDocument.contains(artSavedRange.commonAncestorContainer)) return false
+  editable.focus()
+  sel?.removeAllRanges()
+  try {
+    sel?.addRange(artSavedRange.cloneRange())
+  } catch {
+    return false
+  }
+  return true
+}
+
+function wrapCurrentSelection(style: string, editable: HTMLElement, boxId?: string) {
+  if (boxId) restoreArtSelection(editable, boxId)
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return false
+  const range = sel.getRangeAt(0)
+  if (!editable.contains(range.commonAncestorContainer)) return false
+  const span = document.createElement('span')
+  span.setAttribute('style', style)
+  try {
+    range.surroundContents(span)
+  } catch {
+    const frag = range.extractContents()
+    span.appendChild(frag)
+    range.insertNode(span)
+  }
+  const nextRange = document.createRange()
+  nextRange.selectNodeContents(span)
+  sel.removeAllRanges()
+  sel.addRange(nextRange)
+  saveArtSelection(editable, boxId ?? editable.dataset.artBoxId ?? '')
+  return true
+}
+
+function EditableArtTextBox({ box, scale, selected, canvasW, canvasH, onSelect, onChange, onPatch }: {
+  box: ArtTextBox
+  scale: number
+  selected: boolean
+  canvasW: number
+  canvasH: number
+  onSelect: () => void
+  onChange: (html: string) => void
+  onPatch: (patch: Partial<ArtTextBox>) => void
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const skipSync = useRef(false)
+  const drag = useRef<{ kind: 'move' | 'resize'; startX: number; startY: number; x: number; y: number; w: number } | null>(null)
+
+  useEffect(() => {
+    if (!ref.current || skipSync.current) return
+    if (ref.current.innerHTML !== box.html) ref.current.innerHTML = box.html || ''
+  }, [box.html])
+
+  useEffect(() => {
+    const move = (event: PointerEvent) => {
+      if (!drag.current) return
+      const dx = (event.clientX - drag.current.startX) / scale
+      const dy = (event.clientY - drag.current.startY) / scale
+      const draft = drag.current.kind === 'move'
+        ? { ...box, x: drag.current.x + dx, y: drag.current.y + dy }
+        : { ...box, w: Math.max(120, drag.current.w + dx) }
+      const next = clampArtBox(draft, canvasW, canvasH)
+      onPatch({ x: next.x, y: next.y, w: next.w })
+    }
+    const up = () => { drag.current = null }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    return () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+    }
+  }, [box, canvasH, canvasW, onPatch, scale])
+
+  const emit = () => {
+    if (!ref.current) return
+    skipSync.current = true
+    onChange(ref.current.innerHTML)
+    saveArtSelection(ref.current, box.id)
+    requestAnimationFrame(() => { skipSync.current = false })
+  }
+
+  const pasteText = (event: ClipboardEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    const text = event.clipboardData.getData('text/plain')
+    document.execCommand('insertHTML', false, plainToArtHtml(text))
+    emit()
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-      <label style={{ fontFamily: ART_SANS, fontSize: 11, fontWeight: 500, color: 'var(--light)', letterSpacing: '.01em' }}>{label}</label>
-      {children}
-      {hint && <span style={{ fontFamily: ART_SANS, fontSize: 10, color: 'var(--subtle)', lineHeight: 1.5 }}>{hint}</span>}
+    <div style={{ ...styleForArtBox(box, scale), outline: selected ? `${2 * scale}px solid ${ART_OLIVE}` : '1px solid transparent', outlineOffset: 5 * scale, minHeight: Math.max(38, box.fontSize * box.lineHeight) * scale, cursor: 'text' }} onMouseDown={onSelect}>
+      <div
+        ref={ref}
+        data-art-editable="true"
+        data-art-box-id={box.id}
+        contentEditable
+        suppressContentEditableWarning
+        onFocus={onSelect}
+        onInput={emit}
+        onMouseUp={() => ref.current && saveArtSelection(ref.current, box.id)}
+        onKeyUp={() => ref.current && saveArtSelection(ref.current, box.id)}
+        onPaste={pasteText}
+        style={{ outline: 'none', minHeight: '1em' }}
+      />
+      {selected && (
+        <button
+          type="button"
+          title="Mover caixa"
+          onPointerDown={event => {
+            event.preventDefault()
+            event.stopPropagation()
+            onSelect()
+            drag.current = { kind: 'move', startX: event.clientX, startY: event.clientY, x: box.x, y: box.y, w: box.w }
+          }}
+          style={{
+            position: 'absolute', left: -2 * scale, top: -32 * scale,
+            width: 28 * scale, height: 28 * scale, borderRadius: 6 * scale,
+            border: `${1.5 * scale}px solid ${ART_OLIVE}`, background: ART_INK,
+            color: ART_OLIVE, fontFamily: ART_MONO, fontSize: 12 * scale,
+            cursor: 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          ◇
+        </button>
+      )}
+      {selected && (
+        <button
+          type="button"
+          title="Redimensionar caixa"
+          onPointerDown={event => {
+            event.preventDefault()
+            event.stopPropagation()
+            onSelect()
+            drag.current = { kind: 'resize', startX: event.clientX, startY: event.clientY, x: box.x, y: box.y, w: box.w }
+          }}
+          style={{
+            position: 'absolute', right: -10 * scale, bottom: -10 * scale,
+            width: 20 * scale, height: 20 * scale, borderRadius: 4 * scale,
+            border: `${1.5 * scale}px solid ${ART_OLIVE}`, background: ART_INK,
+            color: ART_OLIVE, fontFamily: ART_MONO, fontSize: 10 * scale,
+            cursor: 'nwse-resize', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+function EditableArtCanvas({ w, h, scale, variant, counter, total, safeZone, elements, selectedId, onSelectedId, onElementsChange }: {
+  w: number
+  h: number
+  scale: number
+  variant: FeedVariant
+  counter?: number
+  total?: number
+  safeZone?: boolean
+  elements: ArtTextBox[]
+  selectedId: string
+  onSelectedId: (id: string) => void
+  onElementsChange: (elements: ArtTextBox[]) => void
+}) {
+  const updateBox = (id: string, patch: Partial<ArtTextBox>) => {
+    onElementsChange(elements.map(box => box.id === id ? clampArtBox({ ...box, ...patch }, w, h) : box))
+  }
+  return (
+    <ArtSlideShell w={w} h={h} s={scale} variant={variant} counter={counter} total={total} safeZone={safeZone}>
+      {elements.map(box => (
+        <EditableArtTextBox
+          key={box.id}
+          box={box}
+          scale={scale}
+          selected={selectedId === box.id}
+          canvasW={w}
+          canvasH={h}
+          onSelect={() => onSelectedId(box.id)}
+          onChange={html => updateBox(box.id, { html })}
+          onPatch={patch => updateBox(box.id, patch)}
+        />
+      ))}
+    </ArtSlideShell>
+  )
+}
+
+function ArtToolbar({ box, onPatch, onAdd, onAddSlide, onRemoveSlide, canRemoveSlide, onApplyPreset, variant, onVariantChange, onDownload, downloading, downloadLabel }: {
+  box?: ArtTextBox
+  onPatch: (patch: Partial<ArtTextBox>) => void
+  onAdd: () => void
+  onAddSlide?: () => void
+  onRemoveSlide?: () => void
+  canRemoveSlide?: boolean
+  onApplyPreset?: (preset: ArtLayoutPresetId) => void
+  variant: FeedVariant
+  onVariantChange: (variant: FeedVariant) => void
+  onDownload: () => void
+  downloading: boolean
+  downloadLabel: string
+}) {
+  const syncHtml = () => {
+    if (!box) return
+    const editable = document.querySelector(`[data-art-box-id="${box.id}"]`) as HTMLElement | null
+    if (editable) onPatch({ html: editable.innerHTML })
+  }
+  const applyInline = (style: string, patch: Partial<ArtTextBox>) => {
+    if (!box) return
+    const editable = document.querySelector(`[data-art-box-id="${box.id}"]`) as HTMLElement | null
+    if (editable) {
+      if (wrapCurrentSelection(style, editable, box.id)) {
+        syncHtml()
+        return
+      }
+      editable.focus()
+    }
+    onPatch(patch)
+  }
+  const toggleBold = () => {
+    if (!box) return
+    const editable = document.querySelector(`[data-art-box-id="${box.id}"]`) as HTMLElement | null
+    if (editable && restoreArtSelection(editable, box.id)) {
+      const sel = window.getSelection()
+      const anchor = sel?.anchorNode
+      const anchorEl = anchor instanceof Element ? anchor : anchor?.parentElement
+      const weight = anchorEl ? window.getComputedStyle(anchorEl).fontWeight : ''
+      const numericWeight = weight === 'bold' ? 700 : Number.parseInt(weight, 10)
+      const isBold = document.queryCommandState('bold') || numericWeight >= 700
+      if (sel && !sel.isCollapsed && wrapCurrentSelection(`font-weight:${isBold ? ART_BODY_WEIGHT : ART_DISPLAY_WEIGHT}`, editable, box.id)) {
+        syncHtml()
+        saveArtSelection(editable, box.id)
+        return
+      }
+      document.execCommand('bold', false)
+      syncHtml()
+      saveArtSelection(editable, box.id)
+      return
+    }
+    onPatch({ weight: box.weight >= ART_DISPLAY_WEIGHT ? ART_BODY_WEIGHT : ART_DISPLAY_WEIGHT })
+  }
+  const insertInline = (html: string) => {
+    if (!box) return
+    const editable = document.querySelector(`[data-art-box-id="${box.id}"]`) as HTMLElement | null
+    if (!editable) return
+    restoreArtSelection(editable, box.id)
+    document.execCommand('insertHTML', false, html)
+    syncHtml()
+    saveArtSelection(editable, box.id)
+  }
+  const disabled = !box
+  const tool = (content: ReactNode, fn: () => void, active?: boolean, title?: string, color?: string) => (
+    <button
+      type="button"
+      title={title}
+      disabled={disabled}
+      onMouseDown={event => { event.preventDefault(); fn() }}
+      style={{
+        height: 34, minWidth: 34, padding: '0 9px', borderRadius: 6,
+        border: `1.5px solid ${active ? ART_OLIVE : 'var(--border-2)'}`,
+        background: active ? 'rgba(122,158,63,.16)' : 'var(--ink)',
+        color: color ?? (active ? ART_OLIVE : 'var(--cream)'),
+        fontFamily: ART_SANS, fontSize: 13, fontWeight: ART_DISPLAY_WEIGHT,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? .42 : 1,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      }}
+    >
+      {content}
+    </button>
+  )
+  const divider = <span style={{ width: 1, height: 24, background: 'var(--border-2)', display: 'inline-block', margin: '0 2px' }} />
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, width: '100%', minHeight: 42, overflow: 'hidden', background: 'rgba(0,0,0,.18)', border: '.5px solid var(--border-2)', borderRadius: 9, padding: 5 }}>
+      <button
+        type="button"
+        onClick={onAdd}
+        title="Adicionar caixa de texto"
+        style={{ height: 34, minWidth: 40, padding: '0 10px', borderRadius: 6, border: '.5px solid var(--border-2)', background: ART_OLIVE, color: ART_INK, fontFamily: ART_SANS, fontWeight: ART_DISPLAY_WEIGHT, fontSize: 13, cursor: 'pointer' }}
+      >
+        T+
+      </button>
+      {onAddSlide && (
+        <button
+          type="button"
+          onClick={onAddSlide}
+          title="Adicionar imagem ao carrossel"
+          style={{ height: 34, minWidth: 48, padding: '0 10px', borderRadius: 6, border: '.5px solid var(--border-2)', background: 'var(--ink)', color: 'var(--cream)', fontFamily: ART_SANS, fontWeight: ART_DISPLAY_WEIGHT, fontSize: 12, cursor: 'pointer' }}
+        >
+          Img+
+        </button>
+      )}
+      {onRemoveSlide && (
+        <button
+          type="button"
+          onClick={onRemoveSlide}
+          disabled={!canRemoveSlide}
+          title="Remover imagem atual"
+          style={{ height: 34, minWidth: 48, padding: '0 10px', borderRadius: 6, border: '.5px solid var(--border-2)', background: 'var(--ink)', color: 'var(--muted)', fontFamily: ART_SANS, fontWeight: ART_DISPLAY_WEIGHT, fontSize: 12, cursor: canRemoveSlide ? 'pointer' : 'not-allowed', opacity: canRemoveSlide ? 1 : .45 }}
+        >
+          Img-
+        </button>
+      )}
+      {onApplyPreset && (
+        <select
+          title="Aplicar modelo pronto"
+          defaultValue=""
+          onChange={event => {
+            const preset = event.currentTarget.value as ArtLayoutPresetId
+            if (preset) onApplyPreset(preset)
+            event.currentTarget.value = ''
+          }}
+          style={{ height: 34, width: 116, borderRadius: 6, border: '.5px solid var(--border-2)', background: 'var(--ink)', color: 'var(--cream)', fontFamily: ART_SANS, fontSize: 12, fontWeight: ART_DISPLAY_WEIGHT, cursor: 'pointer' }}
+        >
+          <option value="">Modelo</option>
+          {ART_LAYOUT_PRESETS.map(preset => <option key={preset.id} value={preset.id}>{preset.label}</option>)}
+        </select>
+      )}
+      {divider}
+      {tool('B', toggleBold, (box?.weight ?? 0) >= ART_DISPLAY_WEIGHT, 'Negrito')}
+      {tool(<span style={{ fontStyle: 'italic' }}>I</span>, () => applyInline('font-style:italic', { italic: true }), box?.italic, 'Itálico')}
+      {tool(<span style={{ textDecoration: 'underline' }}>U</span>, () => applyInline('text-decoration:underline', {}), false, 'Sublinhar')}
+      {tool(<span style={{ textDecoration: 'line-through' }}>S</span>, () => applyInline('text-decoration:line-through', {}), false, 'Tachado')}
+      {divider}
+      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_WHITE, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_WHITE}`, { color: 'white' }), box?.color === 'white', 'Cor branco CE.X')}
+      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_CREAM, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_CREAM}`, { color: 'cream' }), box?.color === 'cream', 'Cor creme')}
+      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_CREAM_SOFT, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_CREAM_SOFT}`, { color: 'creamSoft' }), box?.color === 'creamSoft', 'Cor creme claro')}
+      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_OLIVE, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_OLIVE}`, { color: 'olive' }), box?.color === 'olive', 'Cor oliva', ART_OLIVE)}
+      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_OLIVE_SOFT, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_OLIVE_SOFT}`, { color: 'oliveSoft' }), box?.color === 'oliveSoft', 'Cor oliva claro', ART_OLIVE_SOFT)}
+      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_OLIVE_DEEP, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_OLIVE_DEEP}`, { color: 'oliveDeep' }), box?.color === 'oliveDeep', 'Cor oliva profundo', ART_OLIVE_DEEP)}
+      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_MUTED, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_MUTED}`, { color: 'muted' }), box?.color === 'muted', 'Cor cinza muted', ART_MUTED)}
+      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_SUBTLE, marginTop: 2 }} /></span>, () => applyInline(`color:${ART_SUBTLE}`, { color: 'subtle' }), box?.color === 'subtle', 'Cor cinza subtle', ART_SUBTLE)}
+      {tool(<span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>A<span style={{ width: 16, height: 3, background: ART_INK, border: '.5px solid var(--border-2)', marginTop: 2 }} /></span>, () => applyInline(`color:${ART_INK}`, { color: 'ink' }), box?.color === 'ink', 'Cor ink')}
+      {divider}
+      {tool('A+', () => applyInline('font-size:1.16em;line-height:.95', { fontSize: Math.min(180, (box?.fontSize ?? 80) + 10) }), false, 'Aumentar fonte')}
+      {tool('A-', () => applyInline('font-size:.86em;line-height:1.05', { fontSize: Math.max(24, (box?.fontSize ?? 80) - 10) }), false, 'Diminuir fonte')}
+      {tool('Aa', () => onPatch({ uppercase: !box?.uppercase }), box?.uppercase, 'Maiúsculas e minúsculas')}
+      {tool('Limpar', () => applyInline(`font-weight:${ART_BODY_WEIGHT};font-style:normal;text-decoration:none;color:inherit;font-size:1em;line-height:1`, { weight: ART_BODY_WEIGHT, italic: false, uppercase: false, fontSize: 76, lineHeight: 1, color: variant === 'graphite' ? 'ink' : 'cream' }), false, 'Limpar formatação')}
+      {divider}
+      {tool('Ln', () => insertInline('<br>'), false, 'Quebra de linha')}
+      {tool('◆', () => insertInline('◆ '), false, 'Marcador', ART_OLIVE)}
+      {tool('→', () => insertInline('→'), false, 'Seta')}
+      {divider}
+      <button type="button" onClick={() => onVariantChange(variant === 'ink' ? 'graphite' : 'ink')} style={{ height: 34, padding: '0 10px', borderRadius: 6, border: '.5px solid var(--border-2)', background: 'var(--ink)', color: 'var(--muted)', fontFamily: ART_SANS, fontWeight: ART_DISPLAY_WEIGHT, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+        {variant === 'ink' ? 'Escuro' : 'Claro'}
+      </button>
+      <button type="button" onClick={onDownload} disabled={downloading} style={{ height: 34, marginLeft: 'auto', padding: '0 12px', borderRadius: 6, border: 'none', background: ART_OLIVE, color: ART_INK, fontFamily: ART_SANS, fontWeight: ART_DISPLAY_WEIGHT, fontSize: 12, cursor: downloading ? 'wait' : 'pointer', whiteSpace: 'nowrap', opacity: downloading ? .65 : 1 }}>
+        {downloading ? 'Baixando...' : downloadLabel}
+      </button>
     </div>
   )
 }
@@ -985,14 +1618,16 @@ function EditorField({ label, hint, children }: { label: string; hint?: string; 
 function FeedPreview({ item }: { item: Item }) {
   const [active, setActive] = useState(0)
   const [downloading, setDownloading] = useState(false)
-  const [focusedField, setFocusedField] = useState<FeedField>('title')
   const [copies, setCopies] = useState<FeedCopies>(() => buildFeedCopies(item))
+  const [slides, setSlides] = useState<SlideType[]>(() => buildFeedSlides(item))
+  const [selectedId, setSelectedId] = useState('')
   const exportRef = useRef<HTMLDivElement>(null)
   const centerRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(0.38)
-  const slides = buildFeedSlides(item)
-  const activeType = slides[active]
-  const activeCopy = copies[activeType]
+  const activeType = slides[Math.min(active, slides.length - 1)] ?? 'capa'
+  const activeCopy = copies[activeType] ?? buildBlankFeedCopy('Novo texto')
+  const activeElements = activeCopy.elements
+  const selectedBoxId = activeElements.some(el => el.id === selectedId) ? selectedId : activeElements[0]?.id ?? ''
 
   useEffect(() => {
     const el = centerRef.current
@@ -1007,29 +1642,83 @@ function FeedPreview({ item }: { item: Item }) {
   }, [])
 
   const updateActive = (patch: Partial<FeedSlideCopy>) => {
-    setCopies(prev => ({ ...prev, [activeType]: { ...prev[activeType], ...patch } }))
+    setCopies(prev => ({ ...prev, [activeType]: { ...(prev[activeType] ?? activeCopy), ...patch } }))
   }
-  const updateItem = (idx: number, value: string) => {
-    setCopies(prev => {
-      const current = prev[activeType]
-      const items = [...current.items]
-      items[idx] = value
-      return { ...prev, [activeType]: { ...current, items } }
+  const setActiveElements = (elements: ArtTextBox[]) => updateActive({ elements })
+  const clipboardRef = useRef<ArtTextBox | null>(null)
+  const patchSelected = (patch: Partial<ArtTextBox>) => {
+    setActiveElements(activeElements.map(box => box.id === selectedBoxId ? clampArtBox({ ...box, ...patch }, 1080, 1350) : box))
+  }
+  const addBox = () => {
+    const next = artBox(`box-${Date.now().toString(36)}`, 'Novo texto', { x: 120, y: 650, w: 760, fontSize: 82, lineHeight: .96, weight: 400, color: activeCopy.variant === 'graphite' ? 'ink' : 'cream' })
+    setActiveElements([...activeElements, next])
+    setSelectedId(next.id)
+  }
+  const removeBox = () => {
+    if (activeElements.length <= 1) return
+    const next = activeElements.filter(el => el.id !== selectedBoxId)
+    setActiveElements(next)
+    setSelectedId(next[0]?.id ?? '')
+  }
+  const addSlide = () => {
+    const id = `extra-${Date.now().toString(36)}` as SlideType
+    const preset = ART_LAYOUT_PRESET_CYCLE[slides.length % ART_LAYOUT_PRESET_CYCLE.length]
+    const nextCopy = buildFeedPresetCopy(item, preset, slides.length + 1)
+    setCopies(prev => ({ ...prev, [id]: nextCopy }))
+    setSlides(prev => {
+      const next = [...prev]
+      next.splice(active + 1, 0, id)
+      return next
     })
+    setActive(active + 1)
+    setSelectedId(nextCopy.elements[0]?.id ?? '')
   }
-  const insertToken = (token: string) => {
+  const applyPreset = (preset: ArtLayoutPresetId) => {
+    const nextCopy = buildFeedPresetCopy(item, preset, active + 1)
+    updateActive(nextCopy)
+    setSelectedId(nextCopy.elements[0]?.id ?? '')
+  }
+  const removeSlide = () => {
+    if (slides.length <= 1) return
+    const removeId = activeType
+    const nextSlides = slides.filter((_, index) => index !== active)
+    setSlides(nextSlides)
     setCopies(prev => {
-      const current = prev[activeType]
-      if (focusedField.startsWith('item-')) {
-        const idx = Number(focusedField.replace('item-', ''))
-        const items = [...current.items]
-        items[idx] = appendArtToken(items[idx] ?? '', token)
-        return { ...prev, [activeType]: { ...current, items } }
+      const next = { ...prev }
+      delete next[removeId]
+      return next
+    })
+    const nextIndex = Math.max(0, Math.min(active, nextSlides.length - 1))
+    setActive(nextIndex)
+    const nextId = nextSlides[nextIndex]
+    setSelectedId((copies[nextId]?.elements ?? [])[0]?.id ?? '')
+  }
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const isTyping = !!target?.closest('[contenteditable="true"], input, textarea, select')
+      if (isTyping) return
+      const selected = activeElements.find(el => el.id === selectedBoxId)
+      const key = event.key.toLowerCase()
+      if ((event.metaKey || event.ctrlKey) && key === 'c' && selected) {
+        event.preventDefault()
+        clipboardRef.current = selected
       }
-      const key = focusedField as Exclude<FeedField, `item-${number}`>
-      return { ...prev, [activeType]: { ...current, [key]: appendArtToken(String(current[key] ?? ''), token) } }
-    })
-  }
+      if ((event.metaKey || event.ctrlKey) && key === 'v' && clipboardRef.current) {
+        event.preventDefault()
+        const next = clampArtBox(cloneArtBox(clipboardRef.current), 1080, 1350)
+        setActiveElements([...activeElements, next])
+        setSelectedId(next.id)
+      }
+      if ((event.key === 'Backspace' || event.key === 'Delete') && selected && activeElements.length > 1) {
+        event.preventDefault()
+        removeBox()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [activeElements, selectedBoxId])
 
   const handleDownload = async () => {
     setDownloading(true)
@@ -1048,109 +1737,58 @@ function FeedPreview({ item }: { item: Item }) {
     }
   }
 
-  const THUMB_S = 0.065
-  const TW = Math.round(1080 * THUMB_S) // 70
-  const TH = Math.round(1350 * THUMB_S) // 88
+  const THUMB_S = 0.038
+  const TW = Math.round(1080 * THUMB_S)
+  const TH = Math.round(1350 * THUMB_S)
   const windowWidth = useWindowWidth()
   const isMobile = windowWidth < 900
 
-  const BgToggle = ({ v: vActive, onChange }: { v: FeedVariant; onChange: (v: FeedVariant) => void }) => (
-    <div style={{ display: 'flex', gap: 6 }}>
-      {([['ink', 'Escuro'], ['graphite', 'Claro']] as const).map(([v, label]) => (
-        <button key={v} onClick={() => onChange(v as FeedVariant)}
-          style={{ flex: 1, fontFamily: ART_SANS, fontSize: 11, fontWeight: 500, padding: '7px 0', borderRadius: 6, border: `1.5px solid ${vActive === v ? ART_OLIVE : 'var(--border-2)'}`, background: vActive === v ? 'rgba(122,158,63,.14)' : 'var(--ink)', color: vActive === v ? ART_OLIVE : 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-          <span style={{ width: 10, height: 10, borderRadius: '50%', background: v === 'ink' ? ART_INK : ART_CREAM, border: `1.5px solid ${v === 'ink' ? 'var(--border)' : 'rgba(14,17,13,.2)'}`, flexShrink: 0, display: 'inline-block' }} />
-          {label}
-        </button>
-      ))}
-    </div>
-  )
-
-  const ThumbBtn = ({ t, i }: { t: SlideType; i: number }) => {
+  const renderThumbBtn = (t: SlideType, i: number) => {
     const isActive = active === i
     return (
-      <button onClick={() => { setActive(i); setFocusedField(t === 'conteudo' ? 'item-0' : t === 'depoimento' ? 'quote' : 'title') }}
-        style={{ padding: 0, background: 'none', border: `2px solid ${isActive ? ART_OLIVE : 'rgba(255,255,255,.12)'}`, borderRadius: 5, cursor: 'pointer', overflow: 'visible', flexShrink: 0 }}>
+      <button key={i} onClick={() => setActive(i)}
+        style={{ width: TW + 4, height: TH + 18, padding: 0, background: 'var(--ink)', border: `2px solid ${isActive ? ART_OLIVE : 'rgba(255,255,255,.12)'}`, borderRadius: 5, cursor: 'pointer', overflow: 'hidden', flexShrink: 0, boxSizing: 'border-box' }}>
         <div style={{ width: TW, height: TH, position: 'relative', overflow: 'hidden', borderRadius: 3 }}>
           <div style={{ position: 'absolute', top: 0, left: 0, width: 1080, height: 1350, transform: `scale(${THUMB_S})`, transformOrigin: 'top left', pointerEvents: 'none' }}>
             <FeedSlide item={item} type={t} counter={i + 1} total={slides.length} s={1} copy={copies[t]} />
           </div>
         </div>
-        <div style={{ fontFamily: ART_MONO, fontSize: 8, color: isActive ? ART_OLIVE : 'var(--muted)', padding: '3px 0', background: 'var(--ink)', textAlign: 'center' }}>
+        <div style={{ height: 14, lineHeight: '14px', fontFamily: ART_MONO, fontSize: 8, color: isActive ? ART_OLIVE : 'var(--muted)', padding: 0, background: 'var(--ink)', textAlign: 'center' }}>
           {String(i + 1).padStart(2, '0')}
         </div>
       </button>
     )
   }
 
-  const EditPanel = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ fontFamily: ART_SANS, fontSize: 12, fontWeight: 600, color: 'var(--cream)' }}>
-        Slide {active + 1} · {SLIDE_NAMES[activeType]}
-      </div>
-      <EditorField label="Fundo do slide"><BgToggle v={activeCopy.variant} onChange={v => updateActive({ variant: v })} /></EditorField>
-      <ArtFormatBar copy={activeCopy} onUpdate={updateActive} onInsert={insertToken} />
-      {(activeType === 'capa' || activeType === 'para-quem') && (<>
-        <EditorField label="Categoria" hint="Aparece pequeno acima. Ex: ADOLESCENTES">
-          <input className="inp" value={activeCopy.kicker} onFocus={() => setFocusedField('kicker')} onChange={e => updateActive({ kicker: e.target.value })} />
-        </EditorField>
-        <EditorField label="Frase principal">
-          <textarea className="inp ta" style={{ minHeight: 80, resize: 'vertical' }} value={activeCopy.title} onFocus={() => setFocusedField('title')} onChange={e => updateActive({ title: e.target.value })} />
-        </EditorField>
-      </>)}
-      {activeType === 'conteudo' && (<>
-        <EditorField label="Título da lista">
-          <input className="inp" value={activeCopy.kicker} onFocus={() => setFocusedField('kicker')} onChange={e => updateActive({ kicker: e.target.value })} />
-        </EditorField>
-        {activeCopy.items.map((txt, idx) => (
-          <EditorField key={idx} label={`Item ${idx + 1}`}>
-            <input className="inp" value={txt} onFocus={() => setFocusedField(`item-${idx}`)} onChange={e => updateItem(idx, e.target.value)} />
-          </EditorField>
-        ))}
-      </>)}
-      {activeType === 'depoimento' && (<>
-        <EditorField label="Texto do depoimento">
-          <textarea className="inp ta" style={{ minHeight: 100, resize: 'vertical' }} value={activeCopy.quote} onFocus={() => setFocusedField('quote')} onChange={e => updateActive({ quote: e.target.value })} />
-        </EditorField>
-        <EditorField label="Quem disse">
-          <input className="inp" value={activeCopy.author} onFocus={() => setFocusedField('author')} onChange={e => updateActive({ author: e.target.value })} />
-        </EditorField>
-      </>)}
-      {activeType === 'cta' && (<>
-        <EditorField label="Frase principal">
-          <textarea className="inp ta" style={{ minHeight: 70, resize: 'vertical' }} value={activeCopy.title} onFocus={() => setFocusedField('title')} onChange={e => updateActive({ title: e.target.value })} />
-        </EditorField>
-        <EditorField label="Chamada para ação" hint="Ex: R$ 47 → ou Ver agora →">
-          <input className="inp" value={activeCopy.cta} onFocus={() => setFocusedField('cta')} onChange={e => updateActive({ cta: e.target.value })} />
-        </EditorField>
-        <EditorField label="Rodapé">
-          <input className="inp" value={activeCopy.footer} onFocus={() => setFocusedField('footer')} onChange={e => updateActive({ footer: e.target.value })} />
-        </EditorField>
-      </>)}
-      <button onClick={handleDownload} disabled={downloading}
-        style={{ fontFamily: ART_SANS, fontSize: 12, fontWeight: 600, color: ART_INK, background: ART_OLIVE, border: 'none', borderRadius: 6, padding: '10px 0', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
-        {downloading ? 'Baixando...' : `↓ Baixar ${slides.length} slides`}
-      </button>
-    </div>
+  const toolbar = (
+    <ArtToolbar
+      box={activeElements.find(el => el.id === selectedBoxId)}
+      onPatch={patchSelected}
+      onAdd={addBox}
+      onAddSlide={addSlide}
+      onRemoveSlide={removeSlide}
+      canRemoveSlide={slides.length > 1}
+      onApplyPreset={applyPreset}
+      variant={activeCopy.variant}
+      onVariantChange={variant => updateActive({ variant })}
+      onDownload={handleDownload}
+      downloading={downloading}
+      downloadLabel={`Baixar ${slides.length} slides`}
+    />
   )
 
   if (isMobile) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', overflowY: 'auto' }}>
-        {/* Filmstrip horizontal */}
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '4px 0' }}>
-          {slides.map((t, i) => <ThumbBtn key={i} t={t} i={i} />)}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', overflow: 'hidden' }}>
+        {toolbar}
+        <div style={{ display: 'flex', gap: 6, overflow: 'hidden', padding: '2px 0' }}>
+          {slides.map((t, i) => renderThumbBtn(t, i))}
         </div>
-        {/* Preview */}
-        <div ref={centerRef} style={{ width: '100%', aspectRatio: '4/5', position: 'relative', background: 'rgba(0,0,0,.3)', borderRadius: 10, overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, width: Math.round(1080 * scale), height: Math.round(1350 * scale), overflow: 'hidden', borderRadius: 3 }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, width: 1080, height: 1350, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-              <FeedSlide item={item} type={activeType} counter={active + 1} total={slides.length} s={1} copy={activeCopy} />
-            </div>
+        <div ref={centerRef} style={{ width: '100%', flex: 1, minHeight: 260, position: 'relative', background: 'rgba(0,0,0,.3)', borderRadius: 10, overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 12, left: 12, width: Math.round(1080 * scale), height: Math.round(1350 * scale), overflow: 'hidden', borderRadius: 3 }}>
+            <EditableArtCanvas w={1080} h={1350} scale={scale} variant={activeCopy.variant} counter={active + 1} total={slides.length} elements={activeElements} selectedId={selectedBoxId} onSelectedId={setSelectedId} onElementsChange={setActiveElements} />
           </div>
         </div>
-        {/* Edição */}
-        <EditPanel />
         <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none' }}>
           {slides.map((t, i) => <FeedSlide key={i} item={item} type={t} counter={i + 1} total={slides.length} s={1} copy={copies[t]} />)}
         </div>
@@ -1159,22 +1797,17 @@ function FeedPreview({ item }: { item: Item }) {
   }
 
   return (
-    <div style={{ display: 'flex', gap: 0, width: '100%', height: '100%', minHeight: 0 }}>
-      {/* Filmstrip esquerdo */}
-      <div style={{ width: TW + 10, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 6, paddingRight: 10, overflowY: 'auto', overflowX: 'hidden' }}>
-        {slides.map((t, i) => <ThumbBtn key={i} t={t} i={i} />)}
-      </div>
-      {/* Preview central */}
-      <div ref={centerRef} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0, background: 'rgba(0,0,0,.25)', borderRadius: 10, border: '.5px solid var(--border-2)', padding: 12 }}>
-        <div style={{ width: Math.round(1080 * scale), height: Math.round(1350 * scale), position: 'relative', overflow: 'hidden', borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,.5)' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, width: 1080, height: 1350, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-            <FeedSlide item={item} type={activeType} counter={active + 1} total={slides.length} s={1} copy={activeCopy} />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', height: '100%', minHeight: 0, overflow: 'hidden' }}>
+      {toolbar}
+      <div style={{ display: 'flex', gap: 0, flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <div style={{ width: TW + 10, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 5, paddingRight: 8, overflow: 'hidden' }}>
+          {slides.map((t, i) => renderThumbBtn(t, i))}
+        </div>
+        <div ref={centerRef} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0, background: 'rgba(0,0,0,.25)', borderRadius: 10, border: '.5px solid var(--border-2)', padding: 12, overflow: 'hidden' }}>
+          <div style={{ width: Math.round(1080 * scale), height: Math.round(1350 * scale), position: 'relative', overflow: 'hidden', borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,.5)' }}>
+            <EditableArtCanvas w={1080} h={1350} scale={scale} variant={activeCopy.variant} counter={active + 1} total={slides.length} elements={activeElements} selectedId={selectedBoxId} onSelectedId={setSelectedId} onElementsChange={setActiveElements} />
           </div>
         </div>
-      </div>
-      {/* Painel de edição direito */}
-      <div style={{ width: 276, flexShrink: 0, paddingLeft: 14, overflowY: 'auto' }}>
-        <EditPanel />
       </div>
       <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none' }}>
         {slides.map((t, i) => <FeedSlide key={i} item={item} type={t} counter={i + 1} total={slides.length} s={1} copy={copies[t]} />)}
@@ -1185,21 +1818,19 @@ function FeedPreview({ item }: { item: Item }) {
 
 function StoriesPreview({ item }: { item: Item }) {
   const m = item as Material
+  const [active, setActive] = useState(0)
   const [downloading, setDownloading] = useState(false)
-  const [focusedField, setFocusedField] = useState<StoriesField>('gancho')
+  const [selectedId, setSelectedId] = useState('')
+  const [storySlides, setStorySlides] = useState<StoriesState[]>(() => [buildStoryState(item)])
   const exportRef = useRef<HTMLDivElement>(null)
   const centerRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(0.28)
   const windowWidth = useWindowWidth()
   const isMobile = windowWidth < 900
-
-  const [st, setSt] = useState<StoriesState>({
-    kicker: m.shelf ?? item.type,
-    gancho: item.title,
-    ponte: item.desc ?? '',
-    cta: m.hotmart ? 'VER O MATERIAL →' : 'ARRASTA PRA CIMA ↑',
-    variant: 'ink',
-  })
+  const activeIndex = Math.max(0, Math.min(active, storySlides.length - 1))
+  const st = storySlides[activeIndex] ?? buildStoryState(item)
+  const activeElements = st.elements
+  const selectedBoxId = activeElements.some(el => el.id === selectedId) ? selectedId : activeElements[0]?.id ?? ''
 
   useEffect(() => {
     const el = centerRef.current
@@ -1213,82 +1844,158 @@ function StoriesPreview({ item }: { item: Item }) {
     return () => obs.disconnect()
   }, [])
 
+  const updateStory = (patch: Partial<StoriesState>) => {
+    setStorySlides(prev => prev.map((story, index) => index === activeIndex ? { ...story, ...patch } : story))
+  }
+  const setStoryElements = (elements: ArtTextBox[]) => updateStory({ elements })
+  const clipboardRef = useRef<ArtTextBox | null>(null)
+  const patchSelected = (patch: Partial<ArtTextBox>) => {
+    setStoryElements(activeElements.map(box => box.id === selectedBoxId ? clampArtBox({ ...box, ...patch }, 1080, 1920) : box))
+  }
+  const addBox = () => {
+    const next = artBox(`story-box-${Date.now().toString(36)}`, 'Novo texto', { x: 88, y: 860, w: 820, fontSize: 104, lineHeight: .95, weight: 400, color: st.variant === 'graphite' ? 'ink' : 'cream' })
+    setStoryElements([...activeElements, next])
+    setSelectedId(next.id)
+  }
+  const removeBox = () => {
+    if (activeElements.length <= 1) return
+    const next = activeElements.filter(el => el.id !== selectedBoxId)
+    setStoryElements(next)
+    setSelectedId(next[0]?.id ?? '')
+  }
+  const addStory = () => {
+    const preset = ART_LAYOUT_PRESET_CYCLE[storySlides.length % ART_LAYOUT_PRESET_CYCLE.length]
+    const nextStory = buildStoryState(item, st.variant, preset, storySlides.length + 1)
+    setStorySlides(prev => {
+      const next = [...prev]
+      next.splice(activeIndex + 1, 0, nextStory)
+      return next
+    })
+    setActive(activeIndex + 1)
+    setSelectedId(nextStory.elements[0]?.id ?? '')
+  }
+  const applyStoryPreset = (preset: ArtLayoutPresetId) => {
+    const nextStory = buildStoryState(item, st.variant, preset, activeIndex + 1)
+    updateStory(nextStory)
+    setSelectedId(nextStory.elements[0]?.id ?? '')
+  }
+  const removeStory = () => {
+    if (storySlides.length <= 1) return
+    const nextSlides = storySlides.filter((_, index) => index !== activeIndex)
+    const nextIndex = Math.max(0, Math.min(activeIndex, nextSlides.length - 1))
+    setStorySlides(nextSlides)
+    setActive(nextIndex)
+    setSelectedId(nextSlides[nextIndex]?.elements[0]?.id ?? '')
+  }
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const isTyping = !!target?.closest('[contenteditable="true"], input, textarea, select')
+      if (isTyping) return
+      const selected = activeElements.find(el => el.id === selectedBoxId)
+      const key = event.key.toLowerCase()
+      if ((event.metaKey || event.ctrlKey) && key === 'c' && selected) {
+        event.preventDefault()
+        clipboardRef.current = selected
+      }
+      if ((event.metaKey || event.ctrlKey) && key === 'v' && clipboardRef.current) {
+        event.preventDefault()
+        const next = clampArtBox(cloneArtBox(clipboardRef.current), 1080, 1920)
+        setStoryElements([...activeElements, next])
+        setSelectedId(next.id)
+      }
+      if ((event.key === 'Backspace' || event.key === 'Delete') && selected && activeElements.length > 1) {
+        event.preventDefault()
+        removeBox()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [activeElements, selectedBoxId])
+
   const handleDownload = async () => {
     setDownloading(true)
     try {
-      const el = exportRef.current?.children[0] as HTMLElement
-      if (!el) return
+      const container = exportRef.current
+      if (!container) return
       const slug = m.id ?? item.title.toLowerCase().replace(/\s+/g, '-')
-      await downloadAsPng(el, `${slug}-stories.png`)
+      for (let i = 0; i < storySlides.length; i++) {
+        const el = container.children[i] as HTMLElement
+        if (!el) continue
+        await downloadAsPng(el, `${slug}-stories-${i + 1}.png`)
+        await new Promise(r => setTimeout(r, 300))
+      }
     } finally {
       setDownloading(false)
     }
   }
 
-  const insertToken = (token: string) => {
-    setSt(prev => ({ ...prev, [focusedField]: appendArtToken(prev[focusedField], token) }))
+  const THUMB_S = 0.028
+  const TW = Math.round(1080 * THUMB_S)
+  const TH = Math.round(1920 * THUMB_S)
+
+  const renderThumbBtn = (story: StoriesState, i: number) => {
+    const isActive = activeIndex === i
+    return (
+      <button key={i} onClick={() => setActive(i)}
+        style={{ width: TW + 4, height: TH + 18, padding: 0, background: 'var(--ink)', border: `2px solid ${isActive ? ART_OLIVE : 'rgba(255,255,255,.12)'}`, borderRadius: 5, cursor: 'pointer', overflow: 'hidden', flexShrink: 0, boxSizing: 'border-box' }}>
+        <div style={{ width: TW, height: TH, position: 'relative', overflow: 'hidden', borderRadius: 3 }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: 1080, height: 1920, transform: `scale(${THUMB_S})`, transformOrigin: 'top left', pointerEvents: 'none' }}>
+            <StoriesSlide st={story} s={1} />
+          </div>
+        </div>
+        <div style={{ height: 14, lineHeight: '14px', fontFamily: ART_MONO, fontSize: 8, color: isActive ? ART_OLIVE : 'var(--muted)', padding: 0, background: 'var(--ink)', textAlign: 'center' }}>
+          {String(i + 1).padStart(2, '0')}
+        </div>
+      </button>
+    )
   }
 
-  const StoriesEditPanel = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ fontFamily: ART_SANS, fontSize: 12, fontWeight: 600, color: 'var(--cream)' }}>Stories 9:16</div>
-      <EditorField label="Fundo">
-        <div style={{ display: 'flex', gap: 6 }}>
-          {([['ink', 'Escuro'], ['graphite', 'Claro']] as const).map(([v, label]) => (
-            <button key={v} onClick={() => setSt(prev => ({ ...prev, variant: v as FeedVariant }))}
-              style={{ flex: 1, fontFamily: ART_SANS, fontSize: 11, fontWeight: 500, padding: '7px 0', borderRadius: 6, border: `1.5px solid ${st.variant === v ? ART_OLIVE : 'var(--border-2)'}`, background: st.variant === v ? 'rgba(122,158,63,.14)' : 'var(--ink)', color: st.variant === v ? ART_OLIVE : 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: v === 'ink' ? ART_INK : ART_CREAM, border: `1.5px solid ${v === 'ink' ? 'var(--border)' : 'rgba(14,17,13,.2)'}`, flexShrink: 0, display: 'inline-block' }} />
-              {label}
-            </button>
-          ))}
-        </div>
-      </EditorField>
-      <div style={{ background: 'rgba(0,0,0,.18)', border: '.5px solid var(--border-2)', borderRadius: 8, padding: '10px 12px' }}>
-        <div style={{ fontFamily: ART_SANS, fontSize: 10, color: 'var(--muted)', marginBottom: 6 }}>Inserir no texto</div>
-        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-          {[{ l: '*verde*', t: '*destaque*', c: ART_OLIVE }, { l: '_itálico_', t: '_itálico_' }, { l: '↵', t: '\n' }, { l: '◆', t: '◆ ' }, { l: '→', t: '→' }].map(({ l, t, c }) => (
-            <ToolBtn key={l} label={l} color={c} onClick={() => insertToken(t)} mono />
-          ))}
-        </div>
-      </div>
-      <EditorField label="Segmento do público" hint="Aparece pequeno. Ex: LIDER DE IGREJA">
-        <input className="inp" value={st.kicker} onFocus={() => setFocusedField('kicker')} onChange={e => setSt(prev => ({ ...prev, kicker: e.target.value }))} placeholder="LIDER DE IGREJA" />
-      </EditorField>
-      <EditorField label="Frase de impacto" hint="Frase grande que para o scroll. Use *palavra* para verde.">
-        <textarea className="inp ta" style={{ minHeight: 80, resize: 'vertical' }} value={st.gancho} onFocus={() => setFocusedField('gancho')} onChange={e => setSt(prev => ({ ...prev, gancho: e.target.value }))} />
-      </EditorField>
-      <EditorField label="Texto complementar" hint="Frase de apoio, menor.">
-        <input className="inp" value={st.ponte} onFocus={() => setFocusedField('ponte')} onChange={e => setSt(prev => ({ ...prev, ponte: e.target.value }))} />
-      </EditorField>
-      <EditorField label="Botão de ação" hint="Use → ou ↑ no final.">
-        <input className="inp" value={st.cta} onFocus={() => setFocusedField('cta')} onChange={e => setSt(prev => ({ ...prev, cta: e.target.value }))} />
-      </EditorField>
-      <button onClick={handleDownload} disabled={downloading}
-        style={{ fontFamily: ART_SANS, fontSize: 12, fontWeight: 600, color: ART_INK, background: ART_OLIVE, border: 'none', borderRadius: 6, padding: '10px 0', cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? .6 : 1 }}>
-        {downloading ? 'Baixando...' : '↓ Baixar stories'}
-      </button>
-    </div>
+  const toolbar = (
+    <ArtToolbar
+      box={activeElements.find(el => el.id === selectedBoxId)}
+      onPatch={patchSelected}
+      onAdd={addBox}
+      onAddSlide={addStory}
+      onRemoveSlide={removeStory}
+      canRemoveSlide={storySlides.length > 1}
+      onApplyPreset={applyStoryPreset}
+      variant={st.variant}
+      onVariantChange={variant => updateStory({ variant })}
+      onDownload={handleDownload}
+      downloading={downloading}
+      downloadLabel={`Baixar ${storySlides.length} stories`}
+    />
   )
 
-  const PreviewBox = ({ style }: { style?: CSSProperties }) => (
-    <div ref={centerRef} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,.25)', borderRadius: 10, border: '.5px solid var(--border-2)', padding: 12, ...style }}>
+  const renderPreviewBox = (style?: CSSProperties) => (
+    <div ref={centerRef} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,.25)', borderRadius: 10, border: '.5px solid var(--border-2)', padding: 12, overflow: 'hidden', ...style }}>
       <div style={{ width: Math.round(1080 * scale), height: Math.round(1920 * scale), position: 'relative', overflow: 'hidden', borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,.5)' }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, width: 1080, height: 1920, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-          <StoriesSlide st={st} s={1} />
-        </div>
+        <EditableArtCanvas w={1080} h={1920} scale={scale} variant={st.variant} safeZone elements={activeElements} selectedId={selectedBoxId} onSelectedId={setSelectedId} onElementsChange={setStoryElements} />
       </div>
     </div>
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 0, width: '100%', height: isMobile ? 'auto' : '100%', minHeight: 0, overflowY: isMobile ? 'auto' : undefined }}>
-      {!isMobile && <PreviewBox />}
-      {isMobile && <PreviewBox style={{ height: '60vw', minHeight: 260, flex: 'none' }} />}
-      <div style={{ width: isMobile ? '100%' : 276, flexShrink: 0, paddingLeft: isMobile ? 0 : 14, paddingTop: isMobile ? 12 : 0 }}>
-        <StoriesEditPanel />
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', height: isMobile ? 'auto' : '100%', minHeight: 0, overflow: 'hidden' }}>
+      {toolbar}
+      {isMobile && (
+        <div style={{ display: 'flex', gap: 6, overflow: 'hidden', padding: '2px 0' }}>
+          {storySlides.map((story, i) => renderThumbBtn(story, i))}
+        </div>
+      )}
+      {!isMobile && (
+        <div style={{ display: 'flex', gap: 0, flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <div style={{ width: TW + 10, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 5, paddingRight: 8, overflow: 'hidden' }}>
+            {storySlides.map((story, i) => renderThumbBtn(story, i))}
+          </div>
+          {renderPreviewBox()}
+        </div>
+      )}
+      {isMobile && renderPreviewBox({ height: '60vw', minHeight: 260, flex: 'none' })}
       <div ref={exportRef} style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none' }}>
-        <StoriesSlide st={st} s={1} />
+        {storySlides.map((story, i) => <StoriesSlide key={i} st={story} s={1} />)}
       </div>
     </div>
   )
@@ -1972,7 +2679,7 @@ const ACCENT_OPTIONS: { key: string; hex: string; name: string }[] = [
 
 function ShelfEditor({ estante, onSave, onCancel }: { estante: EstanteAdmin | null; onSave: (e: EstanteAdmin) => void; onCancel: () => void }) {
   const isNew = !estante
-  const [form, setForm] = useState<EstanteAdmin>(estante ?? {
+  const [form, setForm] = useState<EstanteAdmin>(() => estante ?? {
     key: `estante-${Date.now()}`, label: '', familia: 'ministrar',
     accent: AC.wheat, faixaEtaria: '', status: 'visible', order: 999,
   })
