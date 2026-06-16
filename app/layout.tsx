@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Head from "next/head";
 import "./loja.css";
 
 export const metadata: Metadata = {
@@ -24,7 +23,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="/pages.css" />
         {/* loja.css importado via module import acima — cache busting automático */}
       </head>
-      <body>{children}</body>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }
