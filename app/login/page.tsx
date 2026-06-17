@@ -7,7 +7,7 @@ import { createClient } from "../lib/supabase-browser";
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const redirect = params.get("redirect") || "/conta";
+  const redirect = params.get("redirect") || "/perfil";
 
   const [mode, setMode] = useState<"login" | "cadastro">("login");
   const [email, setEmail] = useState("");

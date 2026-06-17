@@ -69,7 +69,7 @@ export default function Nav() {
         {user ? (
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <Link
-              href="/conta"
+              href="/perfil"
               style={{
                 color: "var(--cream)",
                 fontSize: 13,
@@ -170,8 +170,8 @@ export default function Nav() {
         ))}
         {user ? (
           <>
-            <Link href="/conta" className="nav-drawer-link" onClick={() => setOpen(false)}>
-              Minha conta
+            <Link href="/perfil" className="nav-drawer-link" onClick={() => setOpen(false)}>
+              Minhas compras
             </Link>
             <button
               onClick={() => { setOpen(false); handleLogout(); }}
@@ -198,7 +198,7 @@ export default function Nav() {
             <Link href="/login" className="nav-drawer-link" onClick={() => setOpen(false)}>
               Entrar
             </Link>
-            <Link href="/login?redirect=/conta" className="nav-drawer-cta" onClick={() => setOpen(false)}>
+            <Link href="/login?redirect=/perfil" className="nav-drawer-cta" onClick={() => setOpen(false)}>
               Criar conta →
             </Link>
           </>

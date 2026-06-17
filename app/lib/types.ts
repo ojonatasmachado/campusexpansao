@@ -28,6 +28,8 @@ export type DbMaterial = {
   formatos: string[]
   preco: string         // 'R$ 47'
   hotmart_url: string
+  hotmart_product_id?: string | null
+  hotmart_offer_id?: string | null
   colecoes: string[]
   pra_quem: string
   conteudo: string[]    // benefícios / itens do que vem dentro

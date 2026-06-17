@@ -1,12 +1,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "../lib/supabase-server";
-import ContaClient from "./ContaClient";
 
 export default async function ContaPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login?redirect=/conta");
+  if (!user) redirect("/login?redirect=/perfil");
 
-  return <ContaClient user={user} />;
+  redirect("/perfil");
 }

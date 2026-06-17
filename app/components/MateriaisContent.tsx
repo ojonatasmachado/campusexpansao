@@ -4,40 +4,16 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ProdCard } from "./ProdCard";
 import type { Modelo } from "./ProdCard";
-import { ACCENTS, HEX_TO_ACCENT } from "../lib/accents";
+import { ACCENTS } from "../lib/accents";
 import type { AccentKey } from "../lib/accents";
-import {
-  MATERIAIS, ESTANTES, ESTANTE_MAP, ESTANTES_MINISTRAR, ESTANTES_LIDERAR,
-  INFANTIL_CHIP, L2_MINISTRAR, INFANTIL_ESTANTES,
-} from "../lib/materiais-data";
-import type { Material, Familia, Colecao, Estante } from "../lib/materiais-data";
+import { MATERIAIS, ESTANTES, ESTANTE_MAP } from "../lib/materiais-data";
+import type { Material, Familia, Estante } from "../lib/materiais-data";
 import type { DbEstante, DbMaterial } from "../lib/types";
+import { dbEstanteToEstante, dbMaterialToMaterial } from "../lib/material-mappers";
 
 const SHELF_CAROUSEL_THRESHOLD = 6;
 
 type FiltroL1 = "tudo" | Familia | "eventos";
-
-function dbEstanteToEstante(e: DbEstante): Estante {
-  return {
-    key: e.key, label: e.label, familia: e.familia as Familia,
-    accent: HEX_TO_ACCENT[e.accent] ?? 'olive',
-    faixaEtaria: e.faixa_etaria,
-  }
-}
-
-function dbMaterialToMaterial(m: DbMaterial): Material {
-  return {
-    id: m.id, familia: m.familia as Familia, estante: m.estante,
-    model: m.model as Material['model'], etiqueta: m.etiqueta, titulo: m.titulo,
-    code: m.code ?? undefined, big: m.big ?? undefined, bigLabel: m.big_label ?? undefined,
-    promessa: m.promessa,
-    meta: { mensagens: m.mensagens ?? undefined, paginas: m.paginas, formatos: m.formatos ?? [] },
-    preco: m.preco, hotmartUrl: m.hotmart_url,
-    colecoes: (m.colecoes ?? []) as Colecao[],
-    praQuem: m.pra_quem, conteudo: m.conteudo ?? [],
-    comoUsar: m.como_usar, faq: m.faq ?? [],
-  }
-}
 
 
 // ─── SHELF CAROUSEL ───────────────────────────────────────────────────────────
@@ -356,7 +332,7 @@ export default function MateriaisContent({
                 Precisa de formação ao vivo, não só de material pronto?
               </p>
             </div>
-            <a href="/cursos" className="btn btn-primary btn-arrow">Conheça os cursos</a>
+            <Link href="/cursos" className="btn btn-primary btn-arrow">Conheça os cursos</Link>
           </div>
         </div>
       )}

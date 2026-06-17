@@ -1,7 +1,7 @@
 import type { AccentKey } from "./accents";
 import { ESTANTE_MAP, MATERIAIS } from "./materiais-data";
 import type { Material } from "./materiais-data";
-import type { Modelo } from "../components/ProdCard";
+import { materialComVisualDoCatalogo as materialComVisualDoCatalogoBase } from "./material-mappers";
 
 export type CompraStatus = "Liberado" | "Pendente";
 
@@ -37,8 +37,6 @@ export type CompraComMaterial = Compra & {
   recursos: RecursoCompra[];
 };
 
-const CARD_MODELS = ["A", "C", "B"] as const;
-
 export const COMPRAS_PERFIL: Compra[] = [
   { id: "CX-1026", materialId: "firmes", data: "16 jun 2026", status: "Liberado" },
   { id: "CX-1027", materialId: "conferencia-lideranca", data: "16 jun 2026", status: "Liberado" },
@@ -50,13 +48,7 @@ export function materialPorId(id: string) {
 }
 
 export function materialComVisualDoCatalogo(material: Material): Material {
-  const shelfMaterials = MATERIAIS.filter((item) => item.estante === material.estante);
-  const shelfIndex = Math.max(0, shelfMaterials.findIndex((item) => item.id === material.id));
-  const model = CARD_MODELS[shelfIndex % CARD_MODELS.length] as Modelo;
-  const big = String(material.meta.mensagens ?? material.meta.paginas);
-  const bigLabel = material.meta.mensagens != null ? "mensagens" : "páginas";
-
-  return { ...material, model, big, bigLabel };
+  return materialComVisualDoCatalogoBase(material, MATERIAIS);
 }
 
 function hasFormato(material: Material, formato: string) {
@@ -71,7 +63,7 @@ export function formatMetaMaterial(material: Material) {
   ].filter(Boolean).join(" · ");
 }
 
-function mensagensDaCompra(material: Material): MensagemCompra[] {
+export function mensagensDaCompra(material: Material): MensagemCompra[] {
   return material.conteudo.map((item, index) => {
     const numero = String(index + 1).padStart(2, "0");
     const label = material.meta.mensagens ? "Mensagem" : "Parte";
@@ -86,7 +78,7 @@ function mensagensDaCompra(material: Material): MensagemCompra[] {
   });
 }
 
-function recursosDaCompra(material: Material): RecursoCompra[] {
+export function recursosDaCompra(material: Material): RecursoCompra[] {
   const slidesLiberados = hasFormato(material, "Slides");
 
   return [

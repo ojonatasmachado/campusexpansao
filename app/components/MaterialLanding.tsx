@@ -10,13 +10,13 @@ import type { DbEstante, DbMaterial } from "../lib/types";
 // ── TEMPLATE FIXO ────────────────────────────────────────────────────────────
 
 const COMO_USAR = [
-  { num: "01", titulo: "Recebe na hora", desc: "Pagamento aprovado, o arquivo cai no seu e-mail pela Hotmart. Acesso vitalício, baixa quando quiser." },
+  { num: "01", titulo: "Recebe na hora", desc: "Ao comprar, o material é liberado direto no seu perfil CE.X. Acesso vitalício, abre quando quiser." },
   { num: "02", titulo: "Abre e prepara", desc: "Vem nos formatos que você já usa. Dá uma lida, separa o material de apoio e está pronto." },
   { num: "03", titulo: "É só ministrar", desc: "Cada encontro já vem estruturado. Você foca em pastorear gente, não em produzir conteúdo." },
 ];
 
 const FAQ_PADRAO = [
-  { q: "Como eu recebo?", a: "Pagamento aprovado, o material cai no seu e-mail na hora, pela Hotmart. Acesso vitalício: baixa quando e quantas vezes quiser." },
+  { q: "Como eu recebo?", a: "O material fica liberado no seu perfil CE.X. Você entra com sua conta e acessa sempre que precisar." },
   { q: "Preciso de algum programa especial?", a: "Não. Você ministra direto do arquivo e usa o material de apoio em qualquer tela ou projetor que já tenha." },
   { q: "Serve pra qualquer tamanho de grupo?", a: "Sim. Funciona com um grupo pequeno ou com o ministério inteiro. A estrutura é a mesma, você ajusta a escala." },
   { q: "É compra única?", a: "Sim. Você paga uma vez e o material é seu, pra sempre. Sem mensalidade." },
@@ -118,6 +118,7 @@ export default function MaterialLanding({
 
   const faixa = estanteDb?.faixa_etaria ?? "";
   const formatos = raw.formatos ?? [];
+  const checkoutHref = `/checkout/${raw.id}`;
   const formato = formatos[0] ?? "PDF";
   const preco = /^R\$/.test(raw.preco ?? "") ? raw.preco : `R$ ${raw.preco}`;
 
@@ -195,7 +196,7 @@ export default function MaterialLanding({
                     {preco}
                   </div>
                 </div>
-                <a href={raw.hotmart_url} target="_blank" rel="noopener noreferrer" className="ld-btn-buy"
+                <a href={checkoutHref} rel="noopener noreferrer" className="ld-btn-buy"
                   style={{ background: ac, boxShadow: `0 12px 30px -14px ${ac}` }}>
                   Comprar material →
                 </a>
@@ -206,7 +207,7 @@ export default function MaterialLanding({
                 display: "flex", alignItems: "center", gap: 8,
               }}>
                 <span style={{ color: ac }}>◇</span>
-                Entrega imediata · {formatos.slice(0, 2).join(" · ")} · pela Hotmart
+                Liberação imediata · {formatos.slice(0, 2).join(" · ")} · no seu perfil
               </div>
             </div>
 
@@ -449,7 +450,7 @@ export default function MaterialLanding({
                 <div style={{ fontSize: 56, fontWeight: 800, letterSpacing: "-0.04em", color: "var(--white)", lineHeight: 1 }}>{preco}</div>
                 <div style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--muted)", marginTop: 6 }}>acesso vitalício ao arquivo</div>
               </div>
-              <a href={raw.hotmart_url} target="_blank" rel="noopener noreferrer" className="ld-btn-buy"
+              <a href={checkoutHref} rel="noopener noreferrer" className="ld-btn-buy"
                 style={{ background: ac }}>
                 Comprar agora →
               </a>
@@ -458,7 +459,7 @@ export default function MaterialLanding({
                 color: "var(--muted)", maxWidth: 230, textAlign: "right", lineHeight: 1.5,
               }}>
                 <span style={{ color: ac }}>◇ </span>
-                Entrega imediata pela Hotmart. Compra protegida e garantia de 7 dias.
+                Liberação imediata no seu perfil. Compra única e acesso vitalício.
               </div>
             </div>
           </div>
@@ -571,7 +572,7 @@ export default function MaterialLanding({
           <p style={{ fontSize: 18, color: "var(--light)", marginTop: 22 }}>
             Leve {raw.titulo} e ministre com chão já no próximo encontro.
           </p>
-          <a href={raw.hotmart_url} target="_blank" rel="noopener noreferrer" className="ld-btn-buy"
+          <a href={checkoutHref} rel="noopener noreferrer" className="ld-btn-buy"
             style={{
               background: ac, display: "inline-flex",
               marginTop: 36, fontSize: 17, padding: "18px 36px",
@@ -584,7 +585,7 @@ export default function MaterialLanding({
             color: "var(--muted)", marginTop: 18,
           }}>
             <span style={{ color: ac }}>◇ </span>
-            Entrega imediata pela Hotmart. Compra única, acesso vitalício.
+            Liberação imediata no seu perfil. Compra única, acesso vitalício.
           </div>
         </div>
       </div>

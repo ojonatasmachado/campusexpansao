@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import Nav from "../components/Nav";
 import Footer from "../components/Footer";
 import { ProdCard } from "../components/ProdCard";
-import { comprasComMaterial } from "../lib/perfil-data";
+import { comprasDoUsuario } from "../lib/compras";
+import { createClient } from "../lib/supabase-server";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -11,8 +13,15 @@ export const metadata: Metadata = {
   description: "Área de perfil da CE.X com as compras do aluno.",
 };
 
-export default function PerfilPage() {
-  const compras = comprasComMaterial();
+export const dynamic = "force-dynamic";
+
+export default async function PerfilPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login?redirect=/perfil");
+
+  const compras = await comprasDoUsuario(user);
 
   return (
     <div className="pg">
@@ -41,18 +50,30 @@ export default function PerfilPage() {
             <Link href="/materiais" className={styles.catalogLink}>Ver catálogo →</Link>
           </div>
 
-          <div className={`loja-shelf-grid ${styles.purchaseGrid}`}>
-            {compras.map(({ id, material, materialVisual, accent }) => (
-              <Link
-                key={id}
-                href={`/perfil/${material.id}`}
-                className={styles.purchaseLink}
-                aria-label={`Abrir compra ${material.titulo}`}
-              >
-                <ProdCard material={materialVisual} accentKey={accent} />
-              </Link>
-            ))}
-          </div>
+          {compras.length > 0 ? (
+            <div className={`loja-shelf-grid ${styles.purchaseGrid}`}>
+              {compras.map(({ id, material, materialVisual, accent }) => (
+                <Link
+                  key={id}
+                  href={`/perfil/${material.id}`}
+                  className={styles.purchaseLink}
+                  aria-label={`Abrir compra ${material.titulo}`}
+                >
+                  <ProdCard material={materialVisual} accentKey={accent} />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.emptyState}>
+              <p className={styles.emptyKicker}>◆ Nenhuma compra liberada</p>
+              <h3>Quando você comprar um material, ele aparece aqui.</h3>
+              <p>
+                Entre, escolha um material no catálogo e use o botão Comprar para liberar o acesso
+                durante os testes controlados.
+              </p>
+              <Link href="/materiais" className={styles.emptyAction}>Ver materiais →</Link>
+            </div>
+          )}
         </section>
       </main>
       <Footer />

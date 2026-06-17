@@ -1,31 +1,25 @@
 import type { CSSProperties } from "react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Nav from "../../components/Nav";
 import Footer from "../../components/Footer";
 import { ProdCard } from "../../components/ProdCard";
 import { ACCENTS } from "../../lib/accents";
-import { compraPorMaterialId, comprasComMaterial, formatMetaMaterial } from "../../lib/perfil-data";
+import { compraDoUsuarioPorMaterialId } from "../../lib/compras";
+import { createClient } from "../../lib/supabase-server";
+import { formatMetaMaterial } from "../../lib/perfil-data";
 import styles from "./page.module.css";
 
-export function generateStaticParams() {
-  return comprasComMaterial().map((compra) => ({ slug: compra.material.id }));
-}
-
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const compra = compraPorMaterialId(slug);
-  if (!compra) return {};
-
-  return {
-    title: `${compra.material.titulo} · Minha compra CE.X`,
-    description: `Acesse tudo que veio com ${compra.material.titulo}.`,
-  };
-}
+export const dynamic = "force-dynamic";
 
 export default async function PerfilCompraPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const compra = compraPorMaterialId(slug);
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) redirect(`/login?redirect=/perfil/${slug}`);
+
+  const compra = await compraDoUsuarioPorMaterialId(user, slug);
   if (!compra) notFound();
 
   const accent = ACCENTS[compra.accent];

@@ -1,37 +1,15 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Nav from "../../../../components/Nav";
 import Footer from "../../../../components/Footer";
 import { ACCENTS } from "../../../../lib/accents";
-import { compraPorMaterialId, comprasComMaterial, mensagemPorId } from "../../../../lib/perfil-data";
+import { compraDoUsuarioPorMaterialId } from "../../../../lib/compras";
+import { createClient } from "../../../../lib/supabase-server";
 import { DocumentEditor } from "../../../_components/DocumentEditor";
 import styles from "./page.module.css";
 import type { CSSProperties } from "react";
 
-export function generateStaticParams() {
-  return comprasComMaterial().flatMap((compra) =>
-    compra.mensagens.map((mensagem) => ({
-      slug: compra.material.id,
-      mensagem: mensagem.id,
-    })),
-  );
-}
-
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string; mensagem: string }>;
-}) {
-  const { slug, mensagem } = await params;
-  const compra = compraPorMaterialId(slug);
-  const mensagemAtual = mensagemPorId(slug, mensagem);
-  if (!compra || !mensagemAtual) return {};
-
-  return {
-    title: `${mensagemAtual.meta} · ${compra.material.titulo} · CE.X`,
-    description: `Editor de texto para ${mensagemAtual.meta.toLowerCase()} de ${compra.material.titulo}.`,
-  };
-}
+export const dynamic = "force-dynamic";
 
 export default async function MensagemEditorPage({
   params,
@@ -39,8 +17,13 @@ export default async function MensagemEditorPage({
   params: Promise<{ slug: string; mensagem: string }>;
 }) {
   const { slug, mensagem } = await params;
-  const compra = compraPorMaterialId(slug);
-  const mensagemAtual = mensagemPorId(slug, mensagem);
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) redirect(`/login?redirect=/perfil/${slug}/mensagens/${mensagem}`);
+
+  const compra = await compraDoUsuarioPorMaterialId(user, slug);
+  const mensagemAtual = compra?.mensagens.find((item) => item.id === mensagem) ?? null;
 
   if (!compra || !mensagemAtual) notFound();
 
