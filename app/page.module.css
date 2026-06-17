@@ -1,5 +1,90 @@
+.homePage {
+  overflow-x: hidden;
+}
+
+.homePage :global(.hero-inner),
+.homePage :global(.hero-title) {
+  max-width: min(760px, 100%);
+}
+
+.homePage :global(.hero-desc) {
+  max-width: min(540px, 100%);
+}
+
+.aboutSection:global(.pg-wrap) {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: clamp(72px, 7vw, 88px) 48px clamp(28px, 3vw, 40px);
+}
+
+.aboutSection :global(.about-lead) {
+  max-width: 780px;
+  font-size: clamp(32px, 4vw, 40px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.aboutSection :global(.about-lead em) {
+  color: var(--olive);
+  font-style: italic;
+}
+
+.aboutSection :global(.about-cols) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 48px;
+}
+
+.aboutSection :global(.about-col p) {
+  margin-bottom: 16px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.aboutSection :global(.about-values) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.aboutSection :global(.value) {
+  min-height: 212px;
+  padding: 28px;
+  border: 0.5px solid var(--border-2);
+  border-radius: var(--r-lg);
+  background: var(--graphite);
+}
+
+.aboutSection :global(.value-letter) {
+  margin-bottom: 16px;
+  color: var(--olive);
+  font-size: 56px;
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.aboutSection :global(.value-title) {
+  margin-bottom: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.aboutSection :global(.value-desc) {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 .materialsIntro:global(.pg-wrap) {
-  padding-top: clamp(56px, 6vw, 96px);
+  max-width: 1080px;
+  margin: 0 auto;
+  padding-right: 48px;
+  padding-left: 48px;
+  padding-top: clamp(24px, 3vw, 36px);
   padding-bottom: 18px;
 }
 
@@ -49,8 +134,38 @@
 }
 
 @media (max-width: 640px) {
+  .aboutSection:global(.pg-wrap) {
+    padding: 56px 20px 28px;
+  }
+
+  .aboutSection :global(.about-lead) {
+    font-size: 24px;
+  }
+
+  .aboutSection :global(.about-cols) {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .aboutSection :global(.about-values) {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .aboutSection :global(.value) {
+    min-height: auto;
+    padding: 20px;
+  }
+
+  .aboutSection :global(.value-letter) {
+    margin-bottom: 10px;
+    font-size: 40px;
+  }
+
   .materialsIntro:global(.pg-wrap) {
-    padding-top: 48px;
+    padding-right: 20px;
+    padding-left: 20px;
+    padding-top: 24px;
     padding-bottom: 16px;
   }
 

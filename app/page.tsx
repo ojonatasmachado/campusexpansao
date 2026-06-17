@@ -6,6 +6,7 @@ import FaqAccordion from "./components/FaqAccordion";
 import ScrollTop from "./components/ScrollTop";
 import styles from "./page.module.css";
 import { supabase } from "./lib/supabase";
+import Link from "next/link";
 
 export const revalidate = 60;
 
@@ -25,7 +26,7 @@ export default async function Home() {
   ]);
 
   return (
-    <div className="pg">
+    <div className={`pg ${styles.homePage}`}>
       <Nav />
 
       {/* HERO */}
@@ -42,15 +43,15 @@ export default async function Home() {
               Estrutura ministerial para líderes de igreja locais. Materiais, formação e ferramentas pra preparar trabalhadores fiéis.
             </p>
             <div className="hero-actions">
-              <a href="/materiais" className="btn btn-primary btn-lg btn-arrow">Conhecer materiais</a>
-              <a href="/cursos" className="btn btn-secondary btn-lg">Conhecer cursos</a>
+              <Link href="/materiais" className="btn btn-primary btn-lg btn-arrow">Conhecer materiais</Link>
+              <Link href="/cursos" className="btn btn-secondary btn-lg">Conhecer cursos</Link>
             </div>
           </div>
         </div>
       </div>
 
       {/* O QUE É A CE.X */}
-      <div id="sobre" className="pg-wrap pg-section">
+      <div id="sobre" className={`pg-wrap pg-section ${styles.aboutSection}`}>
         <div className="psec-eyebrow">◆ O que é a CE.X</div>
         <p className="about-lead" style={{ marginBottom: 40 }}>
           A maioria das igrejas não tem problema de fé. Tem problema de <em>estrutura.</em>
@@ -104,7 +105,7 @@ export default async function Home() {
             <div className="psec-eyebrow">◆ Formação ao vivo</div>
             <div className="psec-title">Cursos &amp; <em>Mentorias</em></div>
           </div>
-          <a href="/cursos" className="btn btn-ghost btn-arrow">Conhecer formação ao vivo</a>
+          <Link href="/cursos" className="btn btn-ghost btn-arrow">Conhecer formação ao vivo</Link>
         </div>
       </div>
       <div className="pg-wrap" style={{ paddingBottom: 64 }}>
@@ -130,7 +131,7 @@ export default async function Home() {
           <h2 className="cta-title">Prepare sua <em>equipe.</em></h2>
           <p className="cta-desc">Escolha o material certo para o seu momento e comece a aplicar esta semana.</p>
           <div className="cta-actions">
-            <a href="/materiais" className="btn btn-ink btn-lg btn-arrow">Ver materiais</a>
+            <Link href="/materiais" className="btn btn-ink btn-lg btn-arrow">Ver materiais</Link>
             <a href="#" className="btn btn-lg" style={{ background: "transparent", color: "var(--ink)", borderColor: "rgba(14,17,13,0.3)" }}>Falar conosco</a>
           </div>
         </div>
