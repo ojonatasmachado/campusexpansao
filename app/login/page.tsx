@@ -30,13 +30,19 @@ function LoginForm() {
       router.push(redirect);
       router.refresh();
     } else {
+      const callbackUrl = new URL("/auth/callback", window.location.origin);
+      callbackUrl.searchParams.set("redirect", redirect);
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: name } },
+        options: {
+          data: { full_name: name },
+          emailRedirectTo: callbackUrl.toString(),
+        },
       });
       if (error) { setError(error.message); setLoading(false); return; }
-      setSuccess("Conta criada. Verifique seu email para confirmar.");
+      setSuccess("Conta criada. Verifique seu e-mail para confirmar e voltar ao CE.X.");
       setLoading(false);
     }
   }
