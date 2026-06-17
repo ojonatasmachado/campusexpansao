@@ -90,6 +90,21 @@ handoff/CSS deriva daqui, ninguém redefine hex em outro lugar.
 | Liderança | `clay` |
 | Multiplicação | `olive` |
 
+### Exceção: editores da área do comprador
+
+Esta exceção vale **somente** para o conteúdo criado/exportado nos editores de arquivos,
+imagens, artes, slides e documentos dentro da área do comprador (`app/perfil/**/editores/**`).
+
+- O canvas, filtros, efeitos, modelos de arte, elementos internos do arquivo e recursos
+  exportáveis podem usar cores, fontes, imagens e estilos fora do brandbook CE.X.
+- Motivo: esses arquivos são artes para igrejas e usuários que podem ter identidade visual
+  própria.
+- O chrome do produto continua CE.X: navegação, páginas do perfil, painéis, botões,
+  formulários, cards, listas, modais, barras de ferramenta e estados de interface seguem
+  a identidade CE.X.
+- Não aplicar esta exceção ao site público, admin, catálogo, landing pages ou qualquer
+  outra área da solução.
+
 ---
 
 ## 3. Cor é da ESTANTE — e a estante é EDITÁVEL no admin
@@ -229,11 +244,9 @@ Contém `AccentKey`, `ACCENTS`, `HEX_TO_ACCENT`, `accentKeyFromHex`.
 - `HEX_TO_ACCENT` converte o hex vindo do banco para `AccentKey`. Fonte única.
 - Nunca declare `const HEX_TO_ACCENT = { ... }` dentro de um componente.
 
-### `app/loja.css` — CSS global ativo
-Importado via `import "./loja.css"` no `app/layout.tsx`. **Este é o arquivo CSS que vale.**
-O arquivo `public/loja.css` não existe mais (foi deletado — era morto).
-
-Classes de landing page definidas aqui:
+### `app/loja.css` — CSS global ativo (overrides Next.js)
+Importado via `import "./loja.css"` no `app/layout.tsx`. Contém overrides e utilitários específicos do projeto.
+Classes definidas aqui:
 - `.ld-wrap` — container centralizado (max-width 1180px, padding responsivo).
 - `.ld-sec` — seção com padding vertical e borda inferior.
 
@@ -242,12 +255,43 @@ dentro de um componente. Use `className="ld-wrap"` e `className="ld-sec"`.
 
 ---
 
+## 12. Biblioteca de componentes CSS — v2.0
+
+Os arquivos em `public/` são a **CE.X Brand Library v2.0**. Referência completa: `evolucoes/cex-brand-library/AGENTS.md`.
+
+| Arquivo | O que contém | Importar quando |
+|---|---|---|
+| `tokens.css` | Variáveis `:root` + classes `.cat-*` de estante | **sempre, primeiro** |
+| `components.css` | Tipografia, logo, botões, forms, card, nav | sempre |
+| `sections.css` | Hero, captura, depoimento, FAQ, CTA, footer | site público |
+| `domain.css` | Capítulo da jornada, estante full-bleed, cards A/C/B, card de curso AO VIVO, calendário | catálogo |
+| `ui.css` | Badges, chips, tabs, modal, toast, skeleton, spinner, accordion | sempre |
+| `admin.css` | Sidebar admin, métricas, tabela, status, seletor de estante | **só admin** |
+| `library.js` | Carrossel arrastável, calendário, tabs, modal, dropdown | sempre |
+| `tokens.json` | Tokens machine-readable (W3C) | build/tooling |
+
+**Ordem de import obrigatória:**
+`tokens.css` → `components.css` → `sections.css` → `domain.css` → `ui.css` → (`admin.css`) → `library.js`
+
+**Nunca edite esses arquivos diretamente.** Novos estilos vão em `app/loja.css`.
+
+**A cor de estante via `.cat-*`:** aplique a classe na fileira/contexto-pai; os cards herdam `--cat` automaticamente.
+```html
+<div class="row cat-clay">   <!-- Adolescentes → --cat = var(--clay) -->
+  <a class="mcard m-a">…</a>   <!-- card herda a cor da fileira -->
+</div>
+```
+
+**Breakpoints:** `980px` (grids/sidebar colapsam) e `860px` (mobile/drawer).
+
+---
+
 ## Estrutura do projeto
 
 ```
 app/
-  layout.tsx         ← metadata, fontes, import "./loja.css"
-  loja.css           ← CSS GLOBAL ATIVO (tokens, layout, landing pages)
+  layout.tsx         ← metadata, fontes, imports CSS, library.js
+  loja.css           ← CSS de override/utilitários Next.js
   page.tsx           ← Home (página-narrativa)
   materiais/         ← catálogo de materiais
   cursos/            ← cursos & mentorias
@@ -260,15 +304,19 @@ app/
     materiais-data.ts
     cursos-data.ts
 public/
-  tokens.css         ← variáveis CSS da marca (IMPORTAR PRIMEIRO)
-  components.css     ← estilos de todos os componentes
-  pages.css          ← estilos de seções de página
-  tokens.json        ← tokens em formato machine-readable
+  tokens.css         ← tokens v2.0 (IMPORTAR PRIMEIRO)
+  components.css     ← tipografia, botões, forms, nav, cards
+  sections.css       ← blocos de página (hero, CTA, footer...)
+  domain.css         ← catálogo: estante Netflix, cards A/C/B, curso AO VIVO
+  ui.css             ← interface: badges, modal, skeleton, tabs...
+  admin.css          ← painel admin (importar só no admin)
+  library.js         ← interações: carrossel, modal, tabs, calendário
+  tokens.json        ← tokens machine-readable
+evolucoes/
+  cex-brand-library/ ← fonte dos arquivos public/ acima (Brand Library v2.0)
+    AGENTS.md        ← referência completa de classes e componentes
+    index.html       ← galeria viva: todos os componentes renderizados
 ```
-
-**Nunca edite** `tokens.css`, `components.css` ou `pages.css` diretamente.
-
-**Ordem de import obrigatória:** `tokens.css` → `components.css` → `pages.css`.
 
 ## Como publicar alterações
 

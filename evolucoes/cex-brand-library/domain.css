@@ -1,0 +1,129 @@
+/* ════════════════════════════════════════════════════════════════
+   CE.X · DOMAIN.CSS — componentes do produto
+   Estante full-bleed (Netflix) · card por POSIÇÃO (A/C/B) ·
+   capítulo da jornada · card de curso (AO VIVO) · calendário.
+   A cor é da ESTANTE: aplique .cat-{token} na fileira; o card herda --cat.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ════════ CAPÍTULO DA JORNADA (divisor de família) ════════ */
+.macro { padding-top:104px; scroll-margin-top:84px; }
+.macro--ministrar { --head:var(--cream); }
+.macro--liderar { --head:var(--olive); }
+.macro-rule { height:2px; background:var(--border-2); position:relative; margin-bottom:30px; }
+.macro-rule::before { content:''; position:absolute; left:0; top:0; width:128px; height:2px; background:var(--head); }
+.macro-head { display:grid; grid-template-columns:auto 1fr auto; gap:0 36px; align-items:start; }
+.macro-ghost { font-family:var(--sans); font-size:128px; font-weight:800; font-style:italic; line-height:0.74; letter-spacing:-0.05em; color:color-mix(in srgb,var(--head) 14%, transparent); user-select:none; margin-top:-6px; }
+.macro-main { align-self:center; }
+.macro-num { font-family:var(--mono); font-size:12px; letter-spacing:0.16em; text-transform:uppercase; color:var(--head); margin-bottom:14px; }
+.macro-num::before { content:'§ '; color:var(--subtle); }
+.macro-name { font-size:52px; font-weight:700; letter-spacing:-0.04em; line-height:0.96; display:flex; align-items:baseline; gap:16px; }
+.macro-name .bullet { width:13px; height:13px; background:var(--head); border-radius:3px; flex:none; transform:translateY(-4px); }
+.macro-name em { font-style:italic; font-weight:600; color:var(--head); }
+.macro-desc { font-size:16px; color:var(--light); line-height:1.55; max-width:460px; margin-top:16px; }
+.macro-count { font-family:var(--mono); font-size:12px; letter-spacing:0.06em; color:var(--muted); text-align:right; white-space:nowrap; align-self:center; line-height:1.7; }
+.macro-count strong { color:var(--head); font-weight:500; font-size:15px; }
+
+/* ════════ ESTANTE (fileira full-bleed estilo Netflix) ════════ */
+.row { margin-top:46px; }
+.row--first { margin-top:40px; }
+.row-head { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:20px; }
+.row-id { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.row-name { font-size:20px; font-weight:600; letter-spacing:-0.02em; color:var(--cream); display:inline-flex; align-items:center; gap:11px; white-space:nowrap; }
+.row-name::before { content:'◆'; font-size:11px; color:var(--cat,var(--olive)); }
+.row-sub { font-family:var(--mono); font-size:12px; letter-spacing:0.04em; color:var(--muted); padding-left:23px; }
+.row-tools { display:flex; align-items:center; gap:16px; flex:none; }
+.row-all { font-family:var(--mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color .15s; white-space:nowrap; }
+.row-all:hover { color:var(--cat,var(--olive)); }
+.row-arrows { display:flex; gap:8px; }
+.row-arrow { width:34px; height:34px; border-radius:100px; border:0.5px solid var(--border-2); background:transparent; color:var(--light); cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+.row-arrow:hover { border-color:var(--cat,var(--olive)); color:var(--cat,var(--olive)); }
+.row-track { display:flex; gap:18px; overflow-x:auto; scroll-snap-type:x proximity; scroll-behavior:smooth; padding:4px var(--pad) 10px; margin:0 calc(-1 * var(--pad)); scrollbar-width:none; cursor:grab; }
+.row-track::-webkit-scrollbar { display:none; }
+.row-track.dragging { cursor:grabbing; scroll-behavior:auto; scroll-snap-type:none; }
+/* Estante fixa (≤6 itens): grade que cabe na tela, sem scroll */
+.row-track.is-fixed { overflow:visible; margin:0; padding:4px 0 10px; flex-wrap:wrap; }
+
+/* ════════ CARD · família de moldura, miolo varia (A/C/B) ════════ */
+.mcard { flex:0 0 254px; scroll-snap-align:start; display:flex; flex-direction:column; height:362px; background:var(--graphite); border:0.5px solid var(--border-2); border-top:2px solid var(--cat,var(--olive)); border-radius:12px; overflow:hidden; text-decoration:none; color:inherit; transition:transform .2s,border-color .2s,box-shadow .2s; }
+.mcard:hover { transform:translateY(-5px); border-color:var(--cat,var(--olive)); box-shadow:0 18px 40px -22px var(--cat,var(--olive)); }
+.art { flex:1; position:relative; display:flex; flex-direction:column; padding:18px; box-sizing:border-box; }
+.cat { font-family:var(--mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cat,var(--olive)); display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+.cat::before { content:'◆'; font-size:7px; }
+.code { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; color:var(--subtle); white-space:nowrap; }
+.cap { display:flex; justify-content:space-between; align-items:flex-start; }
+.ttl { font-size:29px; font-weight:800; letter-spacing:-0.035em; line-height:0.95; color:var(--cream); text-wrap:balance; }
+.ttl-sm { font-size:21px; font-weight:700; letter-spacing:-0.025em; line-height:1.0; }
+/* Modelo A · título */
+.m-a .art { background:var(--ink); justify-content:space-between; }
+/* Modelo C · número */
+.m-c .art { background:var(--graphite-2); justify-content:space-between; background-image:linear-gradient(var(--border) 1px,transparent 1px); background-size:100% 36px; }
+.bignum { display:flex; align-items:baseline; gap:8px; }
+.num { font-size:72px; font-weight:800; line-height:0.78; color:var(--cat,var(--olive)); letter-spacing:-0.05em; }
+.numlabel { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); writing-mode:vertical-rl; transform:rotate(180deg); }
+/* Modelo B · bloco de cor (ÚNICA exceção que pinta cor cheia; máx 1 por fileira) */
+.m-b .art { background:var(--ink); padding:0; justify-content:flex-start; }
+.block { background:var(--cat,var(--olive)); padding:14px 18px; display:flex; justify-content:space-between; align-items:center; }
+.block .cat { color:var(--ink); } .block .cat::before { color:var(--ink); }
+.block .code { color:rgba(14,17,13,0.55); }
+.bbody { flex:1; padding:18px; display:flex; align-items:flex-end; }
+.bbody .ttl { font-size:27px; }
+/* rodapé FIXO — a “família” */
+.foot { padding:14px 18px 16px; border-top:0.5px solid var(--border); display:flex; flex-direction:column; gap:12px; }
+.meta { font-family:var(--mono); font-size:10.5px; letter-spacing:0.03em; color:var(--muted); line-height:1.45; }
+.footrow { display:flex; justify-content:space-between; align-items:flex-end; gap:10px; }
+.price { font-size:16px; font-weight:700; letter-spacing:-0.01em; color:var(--white); white-space:nowrap; }
+.price.free { color:var(--cat,var(--olive)); }
+.cta-tag { font-family:var(--mono); font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:var(--cat,var(--olive)); white-space:nowrap; }
+
+/* ════════ CARD DE CURSO (AO VIVO · fundo escuro, cor só nos detalhes) ════════ */
+.ccard { flex:0 0 280px; display:flex; flex-direction:column; height:340px; background:var(--ink); border:0.5px solid var(--border-2); border-top:2px solid var(--cat,var(--olive)); border-radius:12px; overflow:hidden; text-decoration:none; color:inherit; transition:transform .2s,border-color .2s,box-shadow .2s; }
+.ccard:hover { transform:translateY(-5px); border-color:var(--cat,var(--olive)); box-shadow:0 18px 40px -22px var(--cat,var(--olive)); }
+.ccard-art { flex:1; padding:18px; display:flex; flex-direction:column; background-image:linear-gradient(var(--border) 1px,transparent 1px); background-size:100% 38px; }
+.ccard-top { display:flex; justify-content:space-between; align-items:flex-start; }
+.ccard-level { font-family:var(--mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cat,var(--olive)); display:inline-flex; align-items:center; gap:6px; }
+.ccard-level::before { content:'◆'; font-size:9px; }
+/* Selo AO VIVO = ÚNICO bloco de cor sólida do card */
+.live { display:inline-flex; align-items:center; gap:6px; background:var(--cat,var(--olive)); color:var(--ink); font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; padding:5px 9px; border-radius:4px; }
+.live::before { content:''; width:5px; height:5px; border-radius:50%; background:var(--ink); }
+.ccard-head { margin-top:auto; }
+.ccard-title { font-size:28px; font-weight:800; letter-spacing:-0.03em; line-height:0.98; color:var(--cream); margin-bottom:8px; text-wrap:balance; }
+.ccard-desc { font-size:12.5px; color:var(--muted); line-height:1.5; }
+.ccard-foot { padding:14px 18px 16px; border-top:0.5px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.ccard-stage { font-family:var(--mono); font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--cat,var(--olive)); display:inline-flex; align-items:center; gap:6px; }
+.ccard-stage::before { content:''; width:5px; height:5px; border-radius:50%; background:var(--cat,var(--olive)); }
+.ccard-link { font-family:var(--mono); font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:var(--cream); }
+
+/* ════════ CALENDÁRIO (eventos / datas & campanhas) ════════ */
+.cal { background:var(--graphite); border:0.5px solid var(--border-2); border-radius:var(--r-lg); padding:24px; max-width:380px; }
+.cal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.cal-month { font-size:18px; font-weight:700; letter-spacing:-0.02em; color:var(--cream); }
+.cal-month span { color:var(--muted); font-weight:400; font-family:var(--mono); font-size:13px; margin-left:8px; }
+.cal-nav { display:flex; gap:6px; }
+.cal-nav button { width:30px; height:30px; border-radius:var(--r-sm); border:0.5px solid var(--border-2); background:transparent; color:var(--light); cursor:pointer; font-size:14px; transition:all .15s; }
+.cal-nav button:hover { border-color:var(--olive); color:var(--olive); }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+.cal-dow { font-family:var(--mono); font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:var(--subtle); text-align:center; padding-bottom:8px; }
+.cal-day { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--light); border-radius:var(--r-sm); position:relative; cursor:pointer; transition:background .15s; }
+.cal-day:hover { background:var(--border); }
+.cal-day.muted { color:var(--subtle); }
+.cal-day.today { border:0.5px solid var(--olive-line); color:var(--olive); font-weight:600; }
+.cal-day.event { color:var(--ink); font-weight:600; }
+.cal-day.event::after { content:''; position:absolute; inset:0; background:var(--cat,var(--olive)); border-radius:var(--r-sm); z-index:-1; }
+.cal-day.event.cat-clay { background:transparent; }
+.cal-legend { display:flex; flex-wrap:wrap; gap:14px; margin-top:18px; padding-top:16px; border-top:0.5px solid var(--border); }
+.cal-legend-item { display:inline-flex; align-items:center; gap:7px; font-family:var(--mono); font-size:10px; letter-spacing:0.04em; color:var(--muted); }
+.cal-legend-dot { width:8px; height:8px; border-radius:2px; background:var(--cat,var(--olive)); }
+
+/* ── Variantes (Tweaks de cabeçalho/paleta, do mockup aprovado) ── */
+body[data-head="minimal"] .row-name { font-size:13px; font-weight:500; font-family:var(--mono); letter-spacing:0.1em; text-transform:uppercase; color:var(--cat,var(--olive)); }
+body[data-head="minimal"] .row-name::before { font-size:8px; }
+body[data-head="minimal"] .row-sub { display:inline; padding-left:0; margin-left:10px; }
+body[data-head="minimal"] .row-id { flex-direction:row; align-items:baseline; gap:0; }
+
+@media (max-width:860px) {
+  .macro-head { grid-template-columns:1fr; gap:0; }
+  .macro-count { text-align:left; margin-top:14px; }
+  .macro-ghost { display:none; }
+  .macro-name { font-size:38px; }
+  .row-arrows { display:none; }
+}

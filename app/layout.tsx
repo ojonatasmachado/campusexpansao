@@ -20,8 +20,12 @@ export default function RootLayout({
         />
         <link rel="stylesheet" href="/tokens.css" />
         <link rel="stylesheet" href="/components.css" />
-        <link rel="stylesheet" href="/pages.css" />
+        <link rel="stylesheet" href="/sections.css" />
+        <link rel="stylesheet" href="/domain.css" />
+        <link rel="stylesheet" href="/ui.css" />
         {/* loja.css importado via module import acima — cache busting automático */}
+        {/* admin.css carregado apenas no painel admin */}
+        <script src="/library.js" defer></script>
       </head>
       <body suppressHydrationWarning>{children}</body>
     </html>

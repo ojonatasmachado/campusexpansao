@@ -1,17 +1,37 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "../lib/supabase-browser";
+import type { User } from "@supabase/supabase-js";
 
 export default function Nav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
   const isActive = (href: string) => pathname === href;
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
 
   const links = [
     { href: "/", label: "Início" },
@@ -20,6 +40,8 @@ export default function Nav() {
     { href: pathname === "/" ? "#sobre" : "/#sobre", label: "Sobre", scrollId: pathname === "/" ? "sobre" : undefined },
     { href: "/quiz", label: "Sua Vocação" },
   ];
+
+  const userName = user?.user_metadata?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "";
 
   return (
     <>
@@ -42,7 +64,70 @@ export default function Nav() {
             </li>
           ))}
         </ul>
-        <Link href="/materiais" className="nav-cta">Comece agora</Link>
+
+        {/* Auth area desktop */}
+        {user ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Link
+              href="/conta"
+              style={{
+                color: "var(--cream)",
+                fontSize: 13,
+                fontWeight: 600,
+                textDecoration: "none",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <span style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: "var(--olive)",
+                color: "var(--ink)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 12,
+                fontWeight: 700,
+              }}>
+                {userName[0]?.toUpperCase()}
+              </span>
+              {userName}
+            </Link>
+            <button
+              onClick={handleLogout}
+              style={{
+                background: "none",
+                border: "1px solid var(--border-2)",
+                borderRadius: 6,
+                padding: "5px 12px",
+                color: "var(--muted)",
+                fontFamily: "inherit",
+                fontSize: 12,
+                cursor: "pointer",
+              }}
+            >
+              Sair
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Link
+              href="/login"
+              style={{
+                color: "var(--muted)",
+                fontSize: 13,
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
+            >
+              Entrar
+            </Link>
+            <Link href="/materiais" className="nav-cta">Comece agora</Link>
+          </div>
+        )}
 
         {/* Botão hamburguer (mobile) */}
         <button
@@ -69,9 +154,38 @@ export default function Nav() {
             {l.label}
           </Link>
         ))}
-        <Link href="/materiais" className="nav-drawer-cta" onClick={() => setOpen(false)}>
-          Comece agora →
-        </Link>
+        {user ? (
+          <>
+            <Link href="/conta" className="nav-drawer-link" onClick={() => setOpen(false)}>
+              Minha conta
+            </Link>
+            <button
+              onClick={() => { setOpen(false); handleLogout(); }}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--muted)",
+                fontFamily: "inherit",
+                fontSize: 15,
+                padding: "16px 24px",
+                textAlign: "left",
+                cursor: "pointer",
+                width: "100%",
+              }}
+            >
+              Sair
+            </button>
+          </>
+        ) : (
+          <>
+            <Link href="/login" className="nav-drawer-link" onClick={() => setOpen(false)}>
+              Entrar
+            </Link>
+            <Link href="/login?redirect=/conta" className="nav-drawer-cta" onClick={() => setOpen(false)}>
+              Criar conta →
+            </Link>
+          </>
+        )}
       </div>
     </>
   );

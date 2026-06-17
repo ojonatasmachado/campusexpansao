@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CE.X · Biblioteca de Componentes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="sections.css">
+<link rel="stylesheet" href="domain.css">
+<link rel="stylesheet" href="ui.css">
+<link rel="stylesheet" href="admin.css">
+<link rel="stylesheet" href="gallery.css">
+</head>
+<body>
+<button class="gx-burger" data-gxnav>☰</button>
+<div class="gx">
+
+  <!-- ════════ SIDEBAR ════════ -->
+  <aside class="gx-nav" id="gxnav">
+    <div class="gx-nav-brand"><span>CE</span><span class="dot">.</span><span class="x">X</span></div>
+    <div class="gx-nav-tag">Biblioteca · v2.0</div>
+    <input type="text" class="gx-search" id="gx-search" placeholder="Buscar componente…">
+    <div class="gx-nav-group">Fundamentos</div>
+    <a href="#cores">Cores &amp; estantes</a>
+    <a href="#tipografia">Tipografia</a>
+    <a href="#botoes">Botões</a>
+    <a href="#forms">Formulários</a>
+    <div class="gx-nav-group">Site · navegação</div>
+    <a href="#nav">Navbar + drawer</a>
+    <a href="#hero">Hero</a>
+    <a href="#footer">Rodapé</a>
+    <div class="gx-nav-group">Site · catálogo</div>
+    <a href="#capitulo">Capítulo da jornada</a>
+    <a href="#estante">Estante (fileira)</a>
+    <a href="#cards">Cards A / C / B</a>
+    <a href="#curso">Cards de curso</a>
+    <a href="#lista-mat">Lista de materiais</a>
+    <div class="gx-nav-group">Site · conversão</div>
+    <a href="#captura">Captura de lead</a>
+    <a href="#depoimento">Depoimento</a>
+    <a href="#faq">FAQ</a>
+    <a href="#cta">CTA + evento</a>
+    <div class="gx-nav-group">Interface</div>
+    <a href="#badges">Badges &amp; chips</a>
+    <a href="#tabs">Tabs &amp; segmented</a>
+    <a href="#nav-ui">Breadcrumb &amp; paginação</a>
+    <a href="#feedback">Modal · toast · banner</a>
+    <a href="#progresso">Progresso &amp; stepper</a>
+    <a href="#diversos">Avatar · tooltip · estados</a>
+    <a href="#calendario">Calendário</a>
+    <div class="gx-nav-group">Admin</div>
+    <a href="#adm-metrics">Métricas</a>
+    <a href="#adm-table">Tabela &amp; status</a>
+    <a href="#adm-shelf">Seletor de estante</a>
+    <a href="#adm-editor">Campos do editor</a>
+  </aside>
+
+  <!-- ════════ CONTENT ════════ -->
+  <main class="gx-body">
+    <header class="gx-hero">
+      <div class="gx-hero-x">X</div>
+      <h1>Biblioteca de <em>componentes</em></h1>
+      <p>Tudo que o Codex (ou qualquer agente) precisa para construir o site e o admin da CE.X sem sair do padrão. Cada bloco é renderizado ao vivo, com markup copiável que já carrega a paleta quente, a cor-por-estante e a marca ◆.</p>
+      <div class="gx-hero-meta">
+        <div><strong>40+</strong>componentes</div>
+        <div><strong>7</strong>arquivos CSS</div>
+        <div><strong>0</strong>dependências</div>
+        <div><strong>◆</strong>zero travessão</div>
+      </div>
+    </header>
+
+    <!-- ════════════════ CORES ════════════════ -->
+    <section class="gx-section" id="cores">
+      <div class="gx-section-head">
+        <div class="gx-section-num">01 · Fundamentos</div>
+        <h2 class="gx-section-title">Cores &amp; estantes</h2>
+        <p class="gx-section-desc">Neutros formam ~90% da peça. Oliva é o acento-mestre (≤15%, só Jovens + marca). As 7 cores quentes <strong>não decoram</strong>: cada uma codifica uma estante/nível. A cor é da estante — o card herda via <code>--cat</code>. Nunca há azul.</p>
+      </div>
+      <div class="gx-grid cols-2">
+        <div class="gx-comp" data-name="Neutros + oliva">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Base · neutros + acento</div></div>
+          <div class="gx-demo flush">
+            <div class="gx-swatches" style="padding:24px;">
+              <div class="gx-swatch"><div class="gx-swatch-color" style="background:#0E110D"></div><div class="gx-swatch-info"><div class="gx-swatch-name">Ink</div><div class="gx-swatch-hex">#0E110D</div><div class="gx-swatch-var">--ink</div></div></div>
+              <div class="gx-swatch"><div class="gx-swatch-color" style="background:#181B16"></div><div class="gx-swatch-info"><div class="gx-swatch-name">Graphite</div><div class="gx-swatch-hex">#181B16</div><div class="gx-swatch-var">--graphite</div></div></div>
+              <div class="gx-swatch"><div class="gx-swatch-color" style="background:#EDE6D3"></div><div class="gx-swatch-info"><div class="gx-swatch-name">Cream</div><div class="gx-swatch-hex">#EDE6D3</div><div class="gx-swatch-var">--cream</div></div></div>
+              <div class="gx-swatch"><div class="gx-swatch-color" style="background:#7A9E3F"></div><div class="gx-swatch-info"><div class="gx-swatch-name">Oliva</div><div class="gx-swatch-hex">#7A9E3F</div><div class="gx-swatch-var">--olive</div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Paleta de estante quente">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Estantes · paleta quente <code>.cat-*</code></div></div>
+          <div class="gx-demo flush">
+            <div class="gx-swatches" style="padding:24px;">
+              <div class="gx-swatch"><div class="gx-swatch-color" style="background:#E2D6B4"></div><div class="gx-swatch-info"><div class="gx-swatch-name">Sand</div><div class="gx-swatch-hex">#E2D6B4</div><div class="gx-swatch-var">.cat-sand</div></div></div>
+              <div class="gx-swatch"><div class="gx-swatch-color" style="background:#CBA95C"></div><div class="gx-swatch-info"><div class="gx-swatch-name">Wheat</div><div class="gx-swatch-hex">#CBA95C</div><div class="gx-swatch-var">.cat-wheat</div></div></div>
+              <div class="gx-swatch"><div class="gx-swatch-color" style="background:#D6A23E"></div><div class="gx-swatch-info"><div class="gx-swatch-name">Amber</div><div class="gx-swatch-hex">#D6A23E</div><div class="gx-swatch-var">.cat-amber</div></div></div>
+              <div class="gx-swatch"><div class="gx-swatch-color" style="background:#C5805A"></div><div class="gx-swatch-info"><div class="gx-swatch-name">Clay</div><div class="gx-swatch-hex">#C5805A</div><div class="gx-swatch-var">.cat-clay</div></div></div>
+              <div class="gx-swatch"><div class="gx-swatch-color" style="background:#B5694A"></div><div class="gx-swatch-info"><div class="gx-swatch-name">Terra</div><div class="gx-swatch-hex">#B5694A</div><div class="gx-swatch-var">.cat-terra</div></div></div>
+              <div class="gx-swatch"><div class="gx-swatch-color" style="background:#9C5A33"></div><div class="gx-swatch-info"><div class="gx-swatch-name">Rust</div><div class="gx-swatch-hex">#9C5A33</div><div class="gx-swatch-var">.cat-rust</div></div></div>
+              <div class="gx-swatch"><div class="gx-swatch-color" style="background:#6F523A"></div><div class="gx-swatch-info"><div class="gx-swatch-name">Cocoa</div><div class="gx-swatch-hex">#6F523A</div><div class="gx-swatch-var">.cat-cocoa</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ TIPOGRAFIA ════════════════ -->
+    <section class="gx-section" id="tipografia">
+      <div class="gx-section-head">
+        <div class="gx-section-num">01 · Fundamentos</div>
+        <h2 class="gx-section-title">Tipografia</h2>
+        <p class="gx-section-desc">Inter para tudo (display + texto), JetBrains Mono para metadados. Itálico só em <code>&lt;em&gt;</code>, sempre oliva. A marca de seção é <code>◆</code> — nunca travessão.</p>
+      </div>
+      <div class="gx-grid">
+        <div class="gx-comp" data-name="Escala tipográfica">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Escala</div><div class="gx-comp-tools"><button class="gx-btn" data-toggle-code>ver código</button><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="gx-demo-inner">
+              <div class="gx-type-row"><div class="gx-type-label">.t-display</div><div class="t-display">Nós <em>preparamos</em></div></div>
+              <div class="gx-type-row"><div class="gx-type-label">.t-h1</div><div class="t-h1">Estrutura que <em>multiplica</em></div></div>
+              <div class="gx-type-row"><div class="gx-type-label">.t-h2</div><div class="t-h2">Liderança formada</div></div>
+              <div class="gx-type-row"><div class="gx-type-label">.eyebrow</div><div class="eyebrow">Diagnóstico</div></div>
+              <div class="gx-type-row"><div class="gx-type-label">.t-body</div><div class="t-body">Preparo prático para o líder de igreja local que carrega mais do que consegue sustentar sozinho.</div></div>
+              <div class="gx-type-row"><div class="gx-type-label">.t-small</div><div class="t-small">PDF · 24 páginas · download imediato</div></div>
+            </div>
+            <pre class="gx-code"><code></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ BOTÕES ════════════════ -->
+    <section class="gx-section" id="botoes">
+      <div class="gx-section-head">
+        <div class="gx-section-num">01 · Fundamentos</div>
+        <h2 class="gx-section-title">Botões</h2>
+        <p class="gx-section-desc">Primário oliva sobre escuro, texto sempre tinta. Variantes para fundo claro (cream/ink), tamanhos e estados.</p>
+      </div>
+      <div class="gx-grid cols-2">
+        <div class="gx-comp" data-name="Botões variantes">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Variantes</div><div class="gx-comp-tools"><button class="gx-btn" data-toggle-code>ver código</button><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center">
+            <button class="btn btn-primary btn-arrow">Quero o material</button>
+            <button class="btn btn-secondary">Ver no catálogo</button>
+            <button class="btn btn-ghost">Saiba mais →</button>
+            <button class="btn btn-danger">Remover</button>
+            <button class="btn btn-primary" disabled>Indisponível</button>
+            <pre class="gx-code"><code></code></pre>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Botões tamanhos e cream">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Tamanhos &amp; sobre claro</div><div class="gx-comp-tools"><button class="gx-btn" data-toggle-code>ver código</button><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo cream-bg center">
+            <button class="btn btn-ink btn-lg btn-arrow">Entrar na lista</button>
+            <button class="btn btn-primary">Padrão</button>
+            <button class="btn btn-sm btn-secondary" style="color:#0E110D;border-color:rgba(0,0,0,0.2)">Pequeno</button>
+            <pre class="gx-code"><code></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ FORMS ════════════════ -->
+    <section class="gx-section" id="forms">
+      <div class="gx-section-head">
+        <div class="gx-section-num">01 · Fundamentos</div>
+        <h2 class="gx-section-title">Formulários</h2>
+        <p class="gx-section-desc">Campos, select, checkbox, radio e toggle — todos com foco oliva. Interativos: clique para alternar.</p>
+      </div>
+      <div class="gx-grid cols-2">
+        <div class="gx-comp" data-name="Campos de entrada">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Inputs &amp; select</div><div class="gx-comp-tools"><button class="gx-btn" data-toggle-code>ver código</button><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="field"><label class="field-label">Nome <span class="req">*</span></label><input class="input" placeholder="Como devemos te chamar?"></div>
+            <div class="field"><label class="field-label">E-mail</label><div class="input-icon"><span class="input-icon-mark">@</span><input class="input" placeholder="voce@igreja.com"></div><div class="field-hint">Enviamos o material por aqui.</div></div>
+            <div class="field"><label class="field-label">Faixa que você lidera</label><select class="select"><option>Juniores</option><option>Adolescentes</option><option>Jovens</option><option>Igreja toda</option></select></div>
+            <pre class="gx-code"><code></code></pre>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Seleção e toggle">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Check · radio · toggle</div><div class="gx-comp-tools"><button class="gx-btn" data-toggle-code>ver código</button><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="check-row"><div class="check-box checked"></div><div class="check-label">Quero receber novos materiais por e-mail</div></div>
+            <div class="check-row"><div class="check-box"></div><div class="check-label">Aceito os termos de uso</div></div>
+            <div style="height:1px;background:var(--border);margin:18px 0"></div>
+            <div class="radio-row"><div class="radio-dot checked"></div><div class="check-label">Sou líder de ministério</div></div>
+            <div class="radio-row"><div class="radio-dot"></div><div class="check-label">Sou membro</div></div>
+            <div style="height:1px;background:var(--border);margin:18px 0"></div>
+            <div style="display:flex;align-items:center;gap:14px"><div class="toggle on"></div><span class="check-label">Publicar no catálogo</span></div>
+            <pre class="gx-code"><code></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ NAVBAR ════════════════ -->
+    <section class="gx-section" id="nav">
+      <div class="gx-section-head">
+        <div class="gx-section-num">02 · Site · navegação</div>
+        <h2 class="gx-section-title">Navbar + drawer mobile</h2>
+        <p class="gx-section-desc">Barra fixa com blur, link ativo sublinhado em oliva e CTA. No mobile vira menu gaveta — clique no ☰ do demo.</p>
+      </div>
+      <div class="gx-grid">
+        <div class="gx-comp" data-name="Navbar">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Navbar</div><div class="gx-comp-tools"><button class="gx-btn" data-toggle-code>ver código</button><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo flush">
+            <nav class="nav">
+              <a href="#" class="nav-logo"><span>CE</span><span class="dot">.</span><span class="x">X</span></a>
+              <ul class="nav-links">
+                <li><a class="nav-link active" href="#">Materiais</a></li>
+                <li><a class="nav-link" href="#">Cursos</a></li>
+                <li><a class="nav-link" href="#">Mentorias</a></li>
+                <li><a class="nav-link" href="#">Sobre</a></li>
+              </ul>
+              <a href="#" class="nav-cta">Entrar na lista</a>
+              <button class="nav-burger" data-nav-open data-strip><span></span><span></span><span></span></button>
+            </nav>
+            <pre class="gx-code"><code></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ HERO ════════════════ -->
+    <section class="gx-section" id="hero">
+      <div class="gx-section-head">
+        <div class="gx-section-num">02 · Site · navegação</div>
+        <h2 class="gx-section-title">Hero</h2>
+        <p class="gx-section-desc">Abertura de página: grade luminosa, X-fantasma e tese central da marca.</p>
+      </div>
+      <div class="gx-grid">
+        <div class="gx-comp" data-name="Hero">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Hero principal</div><div class="gx-comp-tools"><button class="gx-btn" data-toggle-code>ver código</button><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo flush">
+            <section class="hero">
+              <div class="hero-grid-bg"></div>
+              <div class="hero-x">X</div>
+              <div class="hero-inner">
+                <div class="hero-eyebrow">Campus Expansão</div>
+                <h1 class="hero-title">Nós preparamos.<br><em>Deus multiplica.</em></h1>
+                <p class="hero-desc">Estrutura ministerial para o líder de igreja local que carrega mais do que consegue sustentar sozinho.</p>
+                <div class="hero-actions">
+                  <a href="#" class="btn btn-primary btn-lg btn-arrow">Ver materiais</a>
+                  <a href="#" class="btn btn-secondary btn-lg">Como funciona</a>
+                </div>
+              </div>
+            </section>
+            <pre class="gx-code"><code></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ CAPÍTULO ════════════════ -->
+    <section class="gx-section" id="capitulo">
+      <div class="gx-section-head">
+        <div class="gx-section-num">03 · Site · catálogo</div>
+        <h2 class="gx-section-title">Capítulo da jornada</h2>
+        <p class="gx-section-desc">Divisor de família com numeral-fantasma, régua e contagem. Marca as duas metades da jornada (Ministrar / Liderar).</p>
+      </div>
+      <div class="gx-grid">
+        <div class="gx-comp" data-name="Capítulo da jornada">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Capítulo <code>.macro</code></div><div class="gx-comp-tools"><button class="gx-btn" data-toggle-code>ver código</button><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="macro macro--ministrar" style="padding-top:0">
+              <div class="macro-rule"></div>
+              <div class="macro-head">
+                <div class="macro-ghost">01</div>
+                <div class="macro-main">
+                  <div class="macro-num">Ministrar</div>
+                  <div class="macro-name"><span class="bullet"></span>Conteúdo que <em>forma</em></div>
+                  <div class="macro-desc">Materiais por faixa etária para quem ensina semana após semana.</div>
+                </div>
+                <div class="macro-count"><strong>14</strong><br>materiais</div>
+              </div>
+            </div>
+            <pre class="gx-code"><code></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ ESTANTE ════════════════ -->
+    <section class="gx-section bleed" id="estante">
+      <div class="gx-section-head">
+        <div class="gx-section-num">03 · Site · catálogo</div>
+        <h2 class="gx-section-title">Estante (fileira full-bleed)</h2>
+        <p class="gx-section-desc">Fileira estilo Netflix: cabeçalho ◆ + faixa, carrossel arrastável (≥7 itens), setas e cor herdada da estante. Arraste ou use as setas.</p>
+      </div>
+      <div class="gx-comp" data-name="Estante carrossel">
+        <div class="gx-comp-bar"><div class="gx-comp-name">Fileira <code>.row.cat-wheat</code></div><div class="gx-comp-tools"><button class="gx-btn" data-toggle-code>ver código</button><button class="gx-btn" data-copy>copiar</button></div></div>
+        <div class="gx-demo">
+          <div class="row row--first cat-wheat">
+            <div class="row-head">
+              <div class="row-id">
+                <div class="row-name">Adolescentes</div>
+                <div class="row-sub">12–15 anos · 6 materiais</div>
+              </div>
+              <div class="row-tools">
+                <a href="#" class="row-all">Ver tudo</a>
+                <div class="row-arrows"><button class="row-arrow" data-strip>‹</button><button class="row-arrow" data-strip>›</button></div>
+              </div>
+            </div>
+            <div class="row-track">
+              <a class="mcard m-a cat-amber" href="#"><div class="art"><div class="cap"><span class="cat">Estudo</span><span class="code">A-04</span></div><div class="ttl">Fé que <em>resiste</em></div></div><div class="foot"><div class="meta">PDF · 32 pág · plano de 8 semanas</div><div class="footrow"><span class="price">R$ 39</span><span class="cta-tag">Comprar →</span></div></div></a>
+              <a class="mcard m-c cat-amber" href="#"><div class="art"><div class="cap"><span class="cat">Série</span><span class="code">C-07</span></div><div class="bignum"><span class="num">08</span><span class="numlabel">Encontros</span></div></div><div class="foot"><div class="meta">Kit de discipulado completo</div><div class="footrow"><span class="price free">Grátis</span><span class="cta-tag">Baixar →</span></div></div></a>
+              <a class="mcard m-a cat-amber" href="#"><div class="art"><div class="cap"><span class="cat">Devocional</span><span class="code">A-11</span></div><div class="ttl ttl-sm">Manhãs com <em>propósito</em></div></div><div class="foot"><div class="meta">eBook · 40 devocionais</div><div class="footrow"><span class="price">R$ 24</span><span class="cta-tag">Comprar →</span></div></div></a>
+              <a class="mcard m-b cat-amber" href="#"><div class="art"><div class="block"><span class="cat">Campanha</span><span class="code">B-02</span></div><div class="bbody"><div class="ttl">Verão <em>Vivo</em></div></div></div><div class="foot"><div class="meta">Material de acampamento</div><div class="footrow"><span class="price">R$ 59</span><span class="cta-tag">Comprar →</span></div></div></a>
+              <a class="mcard m-c cat-amber" href="#"><div class="art"><div class="cap"><span class="cat">Dinâmicas</span><span class="code">C-15</span></div><div class="bignum"><span class="num">21</span><span class="numlabel">Atividades</span></div></div><div class="foot"><div class="meta">Banco de quebra-gelos</div><div class="footrow"><span class="price">R$ 19</span><span class="cta-tag">Comprar →</span></div></div></a>
+              <a class="mcard m-a cat-amber" href="#"><div class="art"><div class="cap"><span class="cat">Estudo</span><span class="code">A-18</span></div><div class="ttl ttl-sm">Identidade <em>em Cristo</em></div></div><div class="foot"><div class="meta">PDF · 6 lições</div><div class="footrow"><span class="price free">Grátis</span><span class="cta-tag">Baixar →</span></div></div></a>
+              <a class="mcard m-c cat-amber" href="#"><div class="art"><div class="cap"><span class="cat">Guia</span><span class="code">C-23</span></div><div class="bignum"><span class="num">12</span><span class="numlabel">Semanas</span></div></div><div class="foot"><div class="meta">Trilha de liderança jovem</div><div class="footrow"><span class="price">R$ 44</span><span class="cta-tag">Comprar →</span></div></div></a>
+            </div>
+          </div>
+          <pre class="gx-code"><code></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ CARDS A/C/B ════════════════ -->
+    <section class="gx-section" id="cards">
+      <div class="gx-section-head">
+        <div class="gx-section-num">03 · Site · catálogo</div>
+        <h2 class="gx-section-title">Cards por posição — A / C / B</h2>
+        <p class="gx-section-desc">Mesma família de moldura (topo colorido + rodapé fixo); o miolo muda por posição na fileira. <strong>A</strong> tipográfico · <strong>C</strong> número · <strong>B</strong> bloco de cor (máx. 1 por fileira). Isso cria ritmo sem repetir layout.</p>
+      </div>
+      <div class="gx-grid cols-3">
+        <div class="gx-comp" data-name="Card modelo A tipográfico">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Modelo A <code>.m-a</code></div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center cat-clay">
+            <a class="mcard m-a cat-clay" href="#"><div class="art"><div class="cap"><span class="cat">Estudo</span><span class="code">A-04</span></div><div class="ttl">Fé que <em>resiste</em></div></div><div class="foot"><div class="meta">PDF · 32 pág · 8 semanas</div><div class="footrow"><span class="price">R$ 39</span><span class="cta-tag">Comprar →</span></div></div></a>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Card modelo C número">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Modelo C <code>.m-c</code></div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center cat-terra">
+            <a class="mcard m-c cat-terra" href="#"><div class="art"><div class="cap"><span class="cat">Série</span><span class="code">C-07</span></div><div class="bignum"><span class="num">08</span><span class="numlabel">Encontros</span></div></div><div class="foot"><div class="meta">Kit de discipulado</div><div class="footrow"><span class="price free">Grátis</span><span class="cta-tag">Baixar →</span></div></div></a>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Card modelo B bloco">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Modelo B <code>.m-b</code></div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center cat-rust">
+            <a class="mcard m-b cat-rust" href="#"><div class="art"><div class="block"><span class="cat">Campanha</span><span class="code">B-02</span></div><div class="bbody"><div class="ttl">Verão <em>Vivo</em></div></div></div><div class="foot"><div class="meta">Material de acampamento</div><div class="footrow"><span class="price">R$ 59</span><span class="cta-tag">Comprar →</span></div></div></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ CURSO ════════════════ -->
+    <section class="gx-section" id="curso">
+      <div class="gx-section-head">
+        <div class="gx-section-num">03 · Site · catálogo</div>
+        <h2 class="gx-section-title">Cards de curso (AO VIVO)</h2>
+        <p class="gx-section-desc">Para mentorias e cursos ao vivo. Fundo escuro, cor só nos detalhes; o selo <code>● AO VIVO</code> é o único bloco de cor sólida.</p>
+      </div>
+      <div class="gx-grid cols-2">
+        <div class="gx-comp" data-name="Card de curso ao vivo">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Curso <code>.ccard</code></div><div class="gx-comp-tools"><button class="gx-btn" data-toggle-code>ver código</button><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center cat-olive">
+            <a class="ccard cat-olive" href="#"><div class="ccard-art"><div class="ccard-top"><span class="ccard-level">Multiplicação</span><span class="live">Ao vivo</span></div><div class="ccard-head"><div class="ccard-title">Plantando <br>com <em>raiz</em></div><div class="ccard-desc">8 encontros · turma de até 20 líderes</div></div></div><div class="ccard-foot"><span class="ccard-stage">Inscrições abertas</span><span class="ccard-link">Lista de espera →</span></div></a>
+        </div></div>
+        <div class="gx-comp" data-name="Card de curso em breve">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Curso · em breve</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center cat-clay">
+            <a class="ccard cat-clay" href="#"><div class="ccard-art"><div class="ccard-top"><span class="ccard-level">Fundação</span><span class="badge badge-cat" data-strip>Em breve</span></div><div class="ccard-head"><div class="ccard-title">Discipulado <em>1 a 1</em></div><div class="ccard-desc">6 semanas · mentoria em grupo</div></div></div><div class="ccard-foot"><span class="ccard-stage">Abre em março</span><span class="ccard-link">Avise-me →</span></div></a>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ════════════════ LISTA MATERIAIS ════════════════ -->
+    <section class="gx-section" id="lista-mat">
+      <div class="gx-section-head">
+        <div class="gx-section-num">03 · Site · catálogo</div>
+        <h2 class="gx-section-title">Lista de materiais (índice)</h2>
+        <p class="gx-section-desc">Visão alternativa à estante: lista densa para páginas de busca/categoria. Hover desloca e revela.</p>
+      </div>
+      <div class="gx-grid">
+        <div class="gx-comp" data-name="Lista de materiais">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Lista <code>.mat-list</code></div><div class="gx-comp-tools"><button class="gx-btn" data-toggle-code>ver código</button><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="mat-list">
+              <a class="mat-item" href="#"><span class="mat-num">01</span><div class="mat-body"><div class="mat-title">Fé que <em>resiste</em></div><div class="mat-meta">Adolescentes · 8 semanas · R$ 39</div></div><span class="mat-type">PDF</span></a>
+              <a class="mat-item" href="#"><span class="mat-num">02</span><div class="mat-body"><div class="mat-title">Manhãs com propósito</div><div class="mat-meta">Jovens · 40 devocionais · Grátis</div></div><span class="mat-type">eBook</span></a>
+              <a class="mat-item" href="#"><span class="mat-num">03</span><div class="mat-body"><div class="mat-title">Plantando com <em>raiz</em></div><div class="mat-meta">Liderança · 8 encontros · Ao vivo</div></div><span class="mat-type">Curso</span></a>
+            </div>
+            <pre class="gx-code"><code></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ CAPTURA ════════════════ -->
+    <section class="gx-section" id="captura">
+      <div class="gx-section-head">
+        <div class="gx-section-num">04 · Site · conversão</div>
+        <h2 class="gx-section-title">Captura de lead</h2>
+        <p class="gx-section-desc">Bloco de e-mail para isca digital / lista de espera.</p>
+      </div>
+      <div class="gx-grid">
+        <div class="gx-comp" data-name="Captura de lead">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Captura <code>.capture</code></div><div class="gx-comp-tools"><button class="gx-btn" data-toggle-code>ver código</button><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo pad-lg">
+            <div class="capture">
+              <div class="capture-x">X</div>
+              <div class="capture-eyebrow">Material gratuito</div>
+              <h3 class="capture-title">Receba o <em>diagnóstico</em> de estrutura</h3>
+              <p class="capture-desc">Um PDF de 12 páginas para mapear onde seu ministério está sobrecarregando você.</p>
+              <form class="capture-form" onsubmit="return false">
+                <input class="input" placeholder="Seu melhor e-mail">
+                <button class="capture-btn">Quero receber</button>
+              </form>
+            </div>
+            <pre class="gx-code"><code></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ DEPOIMENTO ════════════════ -->
+    <section class="gx-section" id="depoimento">
+      <div class="gx-section-head">
+        <div class="gx-section-num">04 · Site · conversão</div>
+        <h2 class="gx-section-title">Depoimento</h2>
+        <p class="gx-section-desc">Prova social sobre fundo cream, aspas-fantasma em oliva.</p>
+      </div>
+      <div class="gx-grid">
+        <div class="gx-comp" data-name="Depoimento">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Depoimento <code>.testimonial</code></div><div class="gx-comp-tools"><button class="gx-btn" data-toggle-code>ver código</button><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo pad-lg">
+            <div class="testimonial">
+              <div class="testi-mark">"</div>
+              <p class="testi-quote">Parei de <em>improvisar</em> todo domingo. Agora tenho uma trilha — e meus líderes sabem para onde estamos indo.</p>
+              <div class="testi-author">
+                <div class="testi-avatar"></div>
+                <div><div class="testi-name">Marcos Vinícius</div><div class="testi-role">Pastor de jovens · Londrina</div></div>
+              </div>
+            </div>
+            <pre class="gx-code"><code></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ FAQ ════════════════ -->
+    <section class="gx-section" id="faq">
+      <div class="gx-section-head">
+        <div class="gx-section-num">04 · Site · conversão</div>
+        <h2 class="gx-section-title">FAQ</h2>
+        <p class="gx-section-desc">Acordeão de objeções. Clique para abrir.</p>
+      </div>
+      <div class="gx-grid">
+        <div class="gx-comp" data-name="FAQ">
+          <div class="gx-comp-bar"><div class="gx-comp-name">FAQ <code>.faq</code></div><div class="gx-comp-tools"><button class="gx-btn" data-toggle-code>ver código</button><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="faq">
+              <div class="faq-item open"><div class="faq-q"><span class="faq-q-text">Os materiais são <em>prontos para usar</em>?</span><span class="faq-icon"></span></div><div class="faq-a">Sim. Cada material vem com plano de aula, dinâmicas e aplicação — você abre e ensina no mesmo dia.</div></div>
+              <div class="faq-item"><div class="faq-q"><span class="faq-q-text">Posso usar com qualquer denominação?</span><span class="faq-icon"></span></div><div class="faq-a">O conteúdo é bíblico e transdenominacional. Você adapta a linguagem ao seu contexto.</div></div>
+              <div class="faq-item"><div class="faq-q"><span class="faq-q-text">Como recebo após a compra?</span><span class="faq-icon"></span></div><div class="faq-a">Download imediato pela Hotmart, mais acesso vitalício às atualizações daquele material.</div></div>
+            </div>
+            <pre class="gx-code"><code></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ CTA + EVENTO ════════════════ -->
+    <section class="gx-section" id="cta">
+      <div class="gx-section-head">
+        <div class="gx-section-num">04 · Site · conversão</div>
+        <h2 class="gx-section-title">CTA &amp; faixa de evento</h2>
+        <p class="gx-section-desc">Fechamento de página em oliva e faixa horizontal para datas/eventos.</p>
+      </div>
+      <div class="gx-grid">
+        <div class="gx-comp" data-name="Bloco CTA">
+          <div class="gx-comp-bar"><div class="gx-comp-name">CTA <code>.cta-block</code></div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo pad-lg">
+            <div class="cta-block">
+              <div class="cta-x">X</div>
+              <div class="cta-eyebrow">Comece hoje</div>
+              <h3 class="cta-title">Estrutura antes do <em>esgotamento</em></h3>
+              <p class="cta-desc">Junte-se a centenas de líderes que pararam de carregar sozinhos.</p>
+              <div class="cta-actions"><a href="#" class="btn btn-ink btn-lg btn-arrow">Ver materiais</a></div>
+            </div>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Faixa de evento">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Evento <code>.ev-card</code></div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="ev-card">
+              <div><div class="eyebrow">Próxima turma</div><div class="ev-h">Mentoria <em>Multiplicação</em> · Março</div></div>
+              <a href="#" class="btn btn-primary btn-arrow">Entrar na lista</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ FOOTER ════════════════ -->
+    <section class="gx-section" id="footer">
+      <div class="gx-section-head">
+        <div class="gx-section-num">02 · Site · navegação</div>
+        <h2 class="gx-section-title">Rodapé</h2>
+        <p class="gx-section-desc">Quatro colunas + X-fantasma + tese da marca.</p>
+      </div>
+      <div class="gx-grid">
+        <div class="gx-comp" data-name="Rodapé">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Rodapé <code>.footer</code></div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo flush">
+            <footer class="footer">
+              <div class="footer-x">X</div>
+              <div class="footer-top">
+                <div>
+                  <div class="footer-brand-logo"><span>CE</span><span class="dot">.</span><span class="x">X</span></div>
+                  <p class="footer-brand-text">Nós preparamos. <em>Deus multiplica.</em></p>
+                </div>
+                <div><div class="footer-col-title">Catálogo</div><ul class="footer-links"><li><a class="footer-link" href="#">Materiais</a></li><li><a class="footer-link" href="#">Cursos</a></li><li><a class="footer-link" href="#">Mentorias</a></li></ul></div>
+                <div><div class="footer-col-title">Marca</div><ul class="footer-links"><li><a class="footer-link" href="#">Sobre</a></li><li><a class="footer-link" href="#">Manifesto</a></li><li><a class="footer-link" href="#">Contato</a></li></ul></div>
+                <div><div class="footer-col-title">Legal</div><ul class="footer-links"><li><a class="footer-link" href="#">Termos</a></li><li><a class="footer-link" href="#">Privacidade</a></li></ul></div>
+              </div>
+              <div class="footer-bottom">
+                <div class="footer-copy">© 2026 CE.X · Campus Expansão</div>
+                <div class="footer-social"><a href="#">Instagram</a><a href="#">YouTube</a></div>
+              </div>
+            </footer>
+            <pre class="gx-code"><code></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ BADGES & CHIPS ════════════════ -->
+    <section class="gx-section" id="badges">
+      <div class="gx-section-head">
+        <div class="gx-section-num">05 · Interface</div>
+        <h2 class="gx-section-title">Badges &amp; chips</h2>
+        <p class="gx-section-desc">Etiquetas de estado e filtros. Chips alternam ao clicar.</p>
+      </div>
+      <div class="gx-grid cols-2">
+        <div class="gx-comp" data-name="Badges">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Badges</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center">
+            <span class="badge">Padrão</span>
+            <span class="badge badge-olive badge-dot">Novo</span>
+            <span class="badge badge-solid">Destaque</span>
+            <span class="badge badge-live">Ao vivo</span>
+            <span class="badge badge-cat cat-clay">Adolescentes</span>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Chips de filtro">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Chips</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="chip-group">
+              <button class="chip active" data-toggle>Todos</button>
+              <button class="chip" data-toggle>Juniores</button>
+              <button class="chip" data-toggle>Adolescentes</button>
+              <button class="chip" data-toggle>Jovens</button>
+              <button class="chip" data-toggle>Grátis <span class="chip-close">×</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ TABS ════════════════ -->
+    <section class="gx-section" id="tabs">
+      <div class="gx-section-head">
+        <div class="gx-section-num">05 · Interface</div>
+        <h2 class="gx-section-title">Tabs &amp; segmented</h2>
+        <p class="gx-section-desc">Abas de conteúdo e controle segmentado (admin). Ambos interativos.</p>
+      </div>
+      <div class="gx-grid cols-2">
+        <div class="gx-comp" data-name="Tabs">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Tabs</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div data-tabs>
+              <div class="tabs"><button class="tab active">Descrição</button><button class="tab">Conteúdo</button><button class="tab">Avaliações</button></div>
+              <div class="tab-panel active"><p class="t-body">Material completo com plano de aula para 8 semanas.</p></div>
+              <div class="tab-panel"><p class="t-body">8 lições · 32 páginas · dinâmicas inclusas.</p></div>
+              <div class="tab-panel"><p class="t-body">★★★★★ · 47 líderes avaliaram.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Segmented">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Segmented</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center">
+            <div class="segmented"><button class="active">Publicados</button><button>Rascunhos</button><button>Todos</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ NAV UI ════════════════ -->
+    <section class="gx-section" id="nav-ui">
+      <div class="gx-section-head">
+        <div class="gx-section-num">05 · Interface</div>
+        <h2 class="gx-section-title">Breadcrumb &amp; paginação</h2>
+      </div>
+      <div class="gx-grid cols-2">
+        <div class="gx-comp" data-name="Breadcrumb">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Breadcrumb</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center">
+            <nav class="breadcrumb"><a href="#">Materiais</a><span class="sep">/</span><a href="#">Adolescentes</a><span class="sep">/</span><span class="current">Fé que resiste</span></nav>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Paginação">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Paginação</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center">
+            <div class="pagination"><button class="page-btn" disabled>‹</button><button class="page-btn active">1</button><button class="page-btn">2</button><button class="page-btn">3</button><span class="page-dots">…</span><button class="page-btn">9</button><button class="page-btn">›</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ FEEDBACK ════════════════ -->
+    <section class="gx-section" id="feedback">
+      <div class="gx-section-head">
+        <div class="gx-section-num">05 · Interface</div>
+        <h2 class="gx-section-title">Modal · toast · banner</h2>
+        <p class="gx-section-desc">Sobreposições e avisos. Clique para acionar o modal.</p>
+      </div>
+      <div class="gx-grid cols-2">
+        <div class="gx-comp" data-name="Modal">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Modal</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center">
+            <button class="btn btn-primary" data-modal-open="demo-modal" data-strip>Abrir modal</button>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Banner">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Banner de topo</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo flush">
+            <div class="banner"><span class="banner-mark">Novo</span><span>Mentoria Multiplicação · turma de março com vagas abertas — <a href="#">entrar na lista</a></span></div>
+            <div class="banner banner-soft" style="margin-top:1px"><span>Frete grátis em materiais impressos até domingo.</span></div>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Toast">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Toast</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center">
+            <div class="toast" style="position:static"><span class="toast-icon">✓</span><div class="toast-body"><div class="toast-title">Material salvo</div><div class="toast-desc">Publicado no catálogo.</div></div></div>
+            <div class="toast err" style="position:static"><span class="toast-icon">!</span><div class="toast-body"><div class="toast-title">Erro ao salvar</div><div class="toast-desc">Verifique os campos.</div></div></div>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Note callout">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Nota / callout</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="ds-note"><span class="ds-note-icon">◆</span><div class="ds-note-body"><strong>Regra do sistema:</strong> a cor é da <em>estante</em>, nunca do card. Defina <code>.cat-*</code> na fileira e tudo herda.</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ PROGRESSO ════════════════ -->
+    <section class="gx-section" id="progresso">
+      <div class="gx-section-head">
+        <div class="gx-section-num">05 · Interface</div>
+        <h2 class="gx-section-title">Progresso &amp; stepper</h2>
+      </div>
+      <div class="gx-grid cols-2">
+        <div class="gx-comp" data-name="Progresso">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Barra de progresso</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="progress-labeled"><div class="progress-meta"><span>Lição 5 de 8</span><span>62%</span></div><div class="progress"><div class="progress-bar" style="width:62%"></div></div></div>
+            <div style="height:20px"></div>
+            <div class="progress-labeled"><div class="progress-meta"><span>Turma preenchida</span><span>17/20</span></div><div class="progress"><div class="progress-bar cat cat-clay" style="width:85%"></div></div></div>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Stepper">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Stepper</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center">
+            <div class="stepper">
+              <div class="step done"><span class="step-dot">✓</span><span class="step-label">Dados</span></div>
+              <span class="step-line"></span>
+              <div class="step active"><span class="step-dot">2</span><span class="step-label">Pagamento</span></div>
+              <span class="step-line"></span>
+              <div class="step"><span class="step-dot">3</span><span class="step-label">Acesso</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ DIVERSOS ════════════════ -->
+    <section class="gx-section" id="diversos">
+      <div class="gx-section-head">
+        <div class="gx-section-num">05 · Interface</div>
+        <h2 class="gx-section-title">Avatar · tooltip · estados</h2>
+      </div>
+      <div class="gx-grid cols-3">
+        <div class="gx-comp" data-name="Avatar">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Avatar</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center">
+            <div class="avatar avatar-lg">MV</div>
+            <div class="avatar-stack"><div class="avatar avatar-sm">A</div><div class="avatar avatar-sm">B</div><div class="avatar avatar-sm">C</div></div>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Tooltip + spinner">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Tooltip · loader</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center">
+            <div class="tooltip"><button class="btn btn-secondary btn-sm">Passe o mouse</button><span class="tooltip-bubble">Cor travada pela estante</span></div>
+            <div class="spinner"></div>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Empty state">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Empty state</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo flush">
+            <div class="empty" style="border:none"><div class="empty-mark">◇</div><div class="empty-title">Nenhum material ainda</div><div class="empty-desc">Crie o primeiro material desta estante.</div><button class="btn btn-primary btn-sm">Novo material</button></div>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Skeleton">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Skeleton</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text" style="width:80%"></div>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Accordion">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Accordion</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="acc">
+              <div class="acc-item open"><div class="acc-head">Módulo 1 · Fundamentos<span class="acc-chevron">›</span></div><div class="acc-body">3 aulas · 42 min</div></div>
+              <div class="acc-item"><div class="acc-head">Módulo 2 · Aplicação<span class="acc-chevron">›</span></div><div class="acc-body">4 aulas · 1h05</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Dropdown">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Dropdown</div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center">
+            <div class="dropdown">
+              <button class="btn btn-secondary btn-sm" data-dropdown data-strip>Ações ▾</button>
+              <div class="dropdown-menu"><a class="dropdown-item">Editar</a><a class="dropdown-item">Duplicar</a><div class="dropdown-sep"></div><a class="dropdown-item">Remover</a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ CALENDÁRIO ════════════════ -->
+    <section class="gx-section" id="calendario">
+      <div class="gx-section-head">
+        <div class="gx-section-num">05 · Interface</div>
+        <h2 class="gx-section-title">Calendário</h2>
+        <p class="gx-section-desc">Para datas de turmas, campanhas e lançamentos. Eventos pintados pela cor da estante. Navegue pelos meses.</p>
+      </div>
+      <div class="gx-grid">
+        <div class="gx-comp" data-name="Calendário">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Calendário <code>[data-calendar]</code></div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo center">
+            <div class="cal" data-calendar data-events='{"2026-06-20":"cat-olive","2026-06-25":"cat-clay","2026-06-28":"cat-amber"}' data-legend='<div class="cal-legend"><span class="cal-legend-item"><span class="cal-legend-dot cat-olive" style="background:var(--olive)"></span>Turma</span><span class="cal-legend-item"><span class="cal-legend-dot" style="background:var(--clay)"></span>Campanha</span><span class="cal-legend-item"><span class="cal-legend-dot" style="background:var(--amber)"></span>Lançamento</span></div>'></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ ADMIN MÉTRICAS ════════════════ -->
+    <section class="gx-section" id="adm-metrics">
+      <div class="gx-section-head">
+        <div class="gx-section-num">06 · Admin</div>
+        <h2 class="gx-section-title">Métricas</h2>
+        <p class="gx-section-desc">Cartões de número para o dashboard do painel.</p>
+      </div>
+      <div class="gx-grid">
+        <div class="gx-comp" data-name="Métricas">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Métricas <code>.metrics</code></div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="metrics">
+              <div class="metric"><div class="metric-label">Materiais</div><div class="metric-value">28</div><div class="metric-delta up">+4 no mês</div></div>
+              <div class="metric"><div class="metric-label">Leads</div><div class="metric-value"><em>1.2k</em></div><div class="metric-delta up">+18%</div></div>
+              <div class="metric"><div class="metric-label">Vendas</div><div class="metric-value">R$ 9,4k</div><div class="metric-delta up">+22%</div></div>
+              <div class="metric"><div class="metric-label">Reembolsos</div><div class="metric-value">2</div><div class="metric-delta down">-1</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ ADMIN TABELA ════════════════ -->
+    <section class="gx-section" id="adm-table">
+      <div class="gx-section-head">
+        <div class="gx-section-num">06 · Admin</div>
+        <h2 class="gx-section-title">Tabela &amp; status</h2>
+        <p class="gx-section-desc">Listagem de catálogo. A barrinha à esquerda do título carrega a cor da estante.</p>
+      </div>
+      <div class="gx-grid">
+        <div class="gx-comp" data-name="Tabela admin">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Tabela <code>.table</code></div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo flush">
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th>Material</th><th>Estante</th><th>Status</th><th>Preço</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td><div class="table-title"><span class="table-swatch cat-clay"></span>Fé que resiste</div></td><td class="table-code">Adolescentes</td><td><span class="status status-pub">Publicado</span></td><td>R$ 39</td><td><div class="table-actions"><button class="table-icon-btn">✎</button><button class="table-icon-btn">⋯</button></div></td></tr>
+                  <tr><td><div class="table-title"><span class="table-swatch cat-olive"></span>Manhãs com propósito</div></td><td class="table-code">Jovens</td><td><span class="status status-draft">Rascunho</span></td><td>Grátis</td><td><div class="table-actions"><button class="table-icon-btn">✎</button><button class="table-icon-btn">⋯</button></div></td></tr>
+                  <tr><td><div class="table-title"><span class="table-swatch cat-rust"></span>Plantando com raiz</div></td><td class="table-code">Liderança</td><td><span class="status status-live">Ao vivo</span></td><td>R$ 290</td><td><div class="table-actions"><button class="table-icon-btn">✎</button><button class="table-icon-btn">⋯</button></div></td></tr>
+                  <tr><td><div class="table-title"><span class="table-swatch cat-amber"></span>Discipulado 1 a 1</div></td><td class="table-code">Fundação</td><td><span class="status status-soon">Em breve</span></td><td>—</td><td><div class="table-actions"><button class="table-icon-btn">✎</button><button class="table-icon-btn">⋯</button></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ ADMIN SHELF SELECT ════════════════ -->
+    <section class="gx-section" id="adm-shelf">
+      <div class="gx-section-head">
+        <div class="gx-section-num">06 · Admin</div>
+        <h2 class="gx-section-title">Seletor de estante (cor travada)</h2>
+        <p class="gx-section-desc">A cor <strong>não</strong> é editável: deriva da estante escolhida. O admin escolhe a estante, o swatch mostra a cor resultante com cadeado.</p>
+      </div>
+      <div class="gx-grid cols-2">
+        <div class="gx-comp" data-name="Seletor de estante">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Estante <code>.shelf-select</code></div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="shelf-select cat-clay">
+              <div class="shelf-select-label">Estante <span class="shelf-select-lock">🔒 cor derivada</span></div>
+              <div class="shelf-select-row">
+                <div class="shelf-swatch"></div>
+                <div class="shelf-select-info"><div class="shelf-select-name">Adolescentes · 12–15</div><div class="shelf-select-hint">Família: Ministrar</div></div>
+                <div class="shelf-select-hex">#C5805A</div>
+              </div>
+              <div class="swatch-rail">
+                <div class="swatch-pick cat-wheat"><span class="sw" style="background:var(--wheat)"></span><span class="nm">Juniores</span></div>
+                <div class="swatch-pick active cat-clay"><span class="sw" style="background:var(--clay)"></span><span class="nm">Adolesc.</span></div>
+                <div class="swatch-pick cat-olive"><span class="sw" style="background:var(--olive)"></span><span class="nm">Jovens</span></div>
+                <div class="swatch-pick cat-cocoa"><span class="sw" style="background:var(--cocoa)"></span><span class="nm">Igreja</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="gx-comp" data-name="Item de gestão">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Item de lista <code>.adm-item</code></div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="adm-item cat-clay" style="margin-bottom:12px">
+              <div class="adm-item-bar"></div>
+              <div><div class="adm-item-title">Fé que resiste</div><div class="adm-item-meta">A-04 · Adolescentes · 8 semanas</div></div>
+              <span class="status status-pub">Publicado</span>
+              <button class="table-icon-btn">⋯</button>
+            </div>
+            <div class="adm-item cat-olive">
+              <div class="adm-item-bar"></div>
+              <div><div class="adm-item-title">Manhãs com propósito</div><div class="adm-item-meta">A-11 · Jovens · 40 devocionais</div></div>
+              <span class="status status-draft">Rascunho</span>
+              <button class="table-icon-btn">⋯</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ ADMIN EDITOR ════════════════ -->
+    <section class="gx-section" id="adm-editor">
+      <div class="gx-section-head">
+        <div class="gx-section-num">06 · Admin</div>
+        <h2 class="gx-section-title">Campos do editor</h2>
+        <p class="gx-section-desc">Painel de formulário do editor de item, com cabeçalho numerado.</p>
+      </div>
+      <div class="gx-grid">
+        <div class="gx-comp" data-name="Painel do editor">
+          <div class="gx-comp-bar"><div class="gx-comp-name">Painel <code>.editor-panel</code></div><div class="gx-comp-tools"><button class="gx-btn" data-copy>copiar</button></div></div>
+          <div class="gx-demo">
+            <div class="editor-panel">
+              <div class="editor-panel-title"><span class="n">01</span> Identificação</div>
+              <div class="field"><label class="field-label">Título <span class="req">*</span></label><input class="input" value="Fé que resiste"></div>
+              <div class="editor-grid-2">
+                <div class="field"><label class="field-label">Código</label><input class="input" value="A-04"></div>
+                <div class="field"><label class="field-label">Preço</label><input class="input" value="R$ 39"></div>
+              </div>
+              <div class="field"><label class="field-label">Descrição</label><textarea class="textarea">Plano de 8 semanas para adolescentes em fase de dúvida.</textarea></div>
+              <div style="display:flex;gap:12px;margin-top:8px"><button class="btn btn-primary">Salvar</button><button class="btn btn-ghost">Cancelar</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- DRAWER mobile (demo navbar) -->
+<div class="nav-drawer">
+  <div class="nav-drawer-head">
+    <span class="nav-logo"><span>CE</span><span class="dot">.</span><span class="x">X</span></span>
+    <button class="nav-drawer-close" data-nav-close>×</button>
+  </div>
+  <ul class="nav-drawer-links">
+    <li><a href="#">Materiais</a></li>
+    <li><a href="#">Cursos</a></li>
+    <li><a href="#">Mentorias</a></li>
+    <li><a href="#">Sobre</a></li>
+  </ul>
+  <a href="#" class="nav-cta" data-nav-close>Entrar na lista</a>
+</div>
+
+<!-- MODAL demo -->
+<div class="modal-overlay" id="demo-modal">
+  <div class="modal">
+    <button class="modal-close" data-modal-close>×</button>
+    <div class="modal-eyebrow">Confirmar</div>
+    <h3 class="modal-title">Publicar <em>material</em>?</h3>
+    <p class="modal-desc">Ele ficará visível no catálogo público imediatamente. Você pode despublicar a qualquer momento.</p>
+    <div class="modal-actions"><button class="btn btn-primary" data-modal-close>Publicar agora</button><button class="btn btn-ghost" data-modal-close>Voltar</button></div>
+  </div>
+</div>
+
+<script>
+  // burger da galeria
+  document.querySelector('[data-gxnav]')?.addEventListener('click', () => {
+    document.getElementById('gxnav').classList.toggle('open');
+  });
+  document.querySelectorAll('.gx-nav a').forEach(a => a.addEventListener('click', () => document.getElementById('gxnav').classList.remove('open')));
+</script>
+<script src="library.js"></script>
+</body>
+</html>

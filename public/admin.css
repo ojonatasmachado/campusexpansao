@@ -1,0 +1,104 @@
+/* ════════════════════════════════════════════════════════════════
+   CE.X · ADMIN.CSS — painel de gestão
+   sidebar, métricas, tabela, status, seletor de estante (TRAVADO),
+   campos do editor, toolbar, card de item da lista.
+   A cor-de-estante NÃO é editável: o swatch é só leitura.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── SHELL ── */
+.adm { display:grid; grid-template-columns:248px 1fr; min-height:100vh; }
+.adm-side { background:var(--graphite); border-right:0.5px solid var(--border-2); padding:24px 16px; display:flex; flex-direction:column; gap:6px; }
+.adm-brand { font-size:24px; font-weight:700; letter-spacing:-0.06em; padding:8px 12px 24px; }
+.adm-brand .dot, .adm-brand .x { color:var(--olive); }
+.adm-navlabel { font-family:var(--mono); font-size:9px; letter-spacing:0.16em; text-transform:uppercase; color:var(--subtle); padding:18px 12px 8px; }
+.adm-navitem { display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:var(--r-sm); font-size:14px; color:var(--light); text-decoration:none; cursor:pointer; transition:all 0.15s; }
+.adm-navitem:hover { background:var(--ink); color:var(--white); }
+.adm-navitem.active { background:var(--olive-dim); color:var(--olive); }
+.adm-navitem .ic { width:16px; text-align:center; font-family:var(--mono); font-size:13px; opacity:0.8; }
+.adm-navitem .count { margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--subtle); }
+.adm-main { padding:32px 40px; min-width:0; }
+
+/* ── TOPBAR ── */
+.adm-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:32px; gap:24px; }
+.adm-top-title { font-size:28px; font-weight:700; letter-spacing:-0.03em; }
+.adm-top-sub { font-size:13px; color:var(--muted); margin-top:4px; }
+.adm-top-actions { display:flex; gap:10px; align-items:center; }
+
+/* ── MÉTRICAS ── */
+.metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:28px; }
+.metric { background:var(--graphite); border:0.5px solid var(--border-2); border-radius:var(--r-md); padding:22px 24px; }
+.metric-label { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
+.metric-value { font-size:38px; font-weight:700; letter-spacing:-0.04em; line-height:1; }
+.metric-value em { font-style:normal; color:var(--olive); }
+.metric-delta { font-family:var(--mono); font-size:11px; margin-top:10px; display:inline-flex; align-items:center; gap:5px; }
+.metric-delta.up { color:var(--olive); }
+.metric-delta.down { color:var(--danger); }
+.metric-delta.up::before { content:'▲'; font-size:8px; }
+.metric-delta.down::before { content:'▼'; font-size:8px; }
+
+/* ── TABELA ── */
+.table-wrap { background:var(--graphite); border:0.5px solid var(--border-2); border-radius:var(--r-md); overflow:hidden; }
+.table { width:100%; border-collapse:collapse; }
+.table th { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--subtle); text-align:left; padding:14px 20px; border-bottom:0.5px solid var(--border-2); font-weight:500; }
+.table td { padding:16px 20px; font-size:14px; color:var(--light); border-bottom:0.5px solid var(--border); }
+.table tr:last-child td { border-bottom:none; }
+.table tbody tr { transition:background 0.14s; cursor:pointer; }
+.table tbody tr:hover { background:var(--ink); }
+.table-title { font-weight:600; color:var(--white); display:flex; align-items:center; gap:12px; }
+.table-swatch { width:4px; height:28px; border-radius:2px; background:var(--cat,var(--olive)); flex-shrink:0; }
+.table-code { font-family:var(--mono); font-size:12px; color:var(--muted); }
+.table-actions { display:flex; gap:6px; justify-content:flex-end; }
+.table-icon-btn { width:30px; height:30px; border-radius:var(--r-sm); border:0.5px solid var(--border-2); background:transparent; color:var(--muted); cursor:pointer; transition:all 0.14s; font-size:13px; }
+.table-icon-btn:hover { border-color:var(--olive-line); color:var(--olive); }
+
+/* ── STATUS BADGE (admin) ── */
+.status { display:inline-flex; align-items:center; gap:7px; font-family:var(--mono); font-size:10px; letter-spacing:0.08em; text-transform:uppercase; padding:5px 11px; border-radius:var(--r-pill); }
+.status::before { content:''; width:6px; height:6px; border-radius:50%; }
+.status-pub { color:var(--olive); background:var(--olive-dim); } .status-pub::before { background:var(--olive); }
+.status-draft { color:var(--muted); background:var(--border); } .status-draft::before { background:var(--muted); }
+.status-live { color:var(--amber); background:color-mix(in srgb,var(--amber) 12%,transparent); } .status-live::before { background:var(--amber); animation:pulse 1.6s infinite; }
+.status-soon { color:var(--clay); background:color-mix(in srgb,var(--clay) 12%,transparent); } .status-soon::before { background:var(--clay); }
+
+/* ── SELETOR DE ESTANTE (TRAVADO — leitura, cor derivada) ── */
+.shelf-select { background:var(--ink); border:0.5px solid var(--border-2); border-radius:var(--r-md); padding:18px 20px; }
+.shelf-select-label { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+.shelf-select-lock { color:var(--subtle); font-size:11px; }
+.shelf-select-row { display:flex; align-items:center; gap:14px; }
+.shelf-swatch { width:40px; height:40px; border-radius:var(--r-sm); background:var(--cat,var(--olive)); flex-shrink:0; position:relative; }
+.shelf-swatch::after { content:'🔒'; position:absolute; bottom:-4px; right:-4px; font-size:10px; filter:grayscale(1); opacity:0.7; }
+.shelf-select-info { min-width:0; }
+.shelf-select-name { font-size:15px; font-weight:600; color:var(--white); }
+.shelf-select-hint { font-size:12px; color:var(--muted); margin-top:2px; }
+.shelf-select-hex { font-family:var(--mono); font-size:11px; color:var(--cat,var(--olive)); letter-spacing:0.04em; }
+/* fileira de swatches travados (escolha de estante, não de cor) */
+.swatch-rail { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+.swatch-pick { display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; padding:8px; border-radius:var(--r-sm); border:0.5px solid transparent; transition:all 0.14s; }
+.swatch-pick:hover { border-color:var(--border-2); }
+.swatch-pick.active { border-color:var(--cat,var(--olive)); background:var(--graphite); }
+.swatch-pick .sw { width:30px; height:30px; border-radius:var(--r-sm); }
+.swatch-pick .nm { font-family:var(--mono); font-size:9px; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); }
+
+/* ── EDITOR (form 2 colunas) ── */
+.editor { display:grid; grid-template-columns:1fr 380px; gap:32px; align-items:start; }
+.editor-panel { background:var(--graphite); border:0.5px solid var(--border-2); border-radius:var(--r-md); padding:28px; }
+.editor-panel-title { font-size:13px; font-weight:600; letter-spacing:-0.01em; color:var(--white); margin-bottom:22px; padding-bottom:14px; border-bottom:0.5px solid var(--border); display:flex; align-items:center; gap:10px; }
+.editor-panel-title .n { font-family:var(--mono); font-size:11px; color:var(--olive); }
+.editor-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.editor-preview { position:sticky; top:24px; }
+.editor-preview-label { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--subtle); margin-bottom:14px; }
+
+/* ── LIST ITEM (card de gestão) ── */
+.adm-item { display:grid; grid-template-columns:4px 1fr auto auto; gap:18px; align-items:center; background:var(--graphite); border:0.5px solid var(--border-2); border-radius:var(--r-md); padding:16px 20px; transition:border-color 0.15s; }
+.adm-item:hover { border-color:var(--olive-line); }
+.adm-item-bar { width:4px; height:46px; border-radius:2px; background:var(--cat,var(--olive)); }
+.adm-item-title { font-size:15px; font-weight:600; color:var(--white); letter-spacing:-0.015em; }
+.adm-item-meta { font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:4px; letter-spacing:0.03em; }
+
+@media (max-width:980px) {
+  .adm { grid-template-columns:1fr; }
+  .adm-side { display:none; }
+  .adm-main { padding:24px 20px; }
+  .metrics { grid-template-columns:1fr 1fr; }
+  .editor { grid-template-columns:1fr; }
+  .editor-preview { position:static; }
+}
