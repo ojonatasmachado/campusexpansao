@@ -115,6 +115,20 @@ export default function Nav() {
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Link
+              href="/perfil"
+              style={{
+                color: "var(--cream)",
+                fontSize: 13,
+                fontWeight: 700,
+                textDecoration: "none",
+                border: "1px solid var(--border-2)",
+                borderRadius: 8,
+                padding: "8px 12px",
+              }}
+            >
+              Área do comprador
+            </Link>
+            <Link
               href="/login"
               style={{
                 color: "var(--muted)",
@@ -178,6 +192,9 @@ export default function Nav() {
           </>
         ) : (
           <>
+            <Link href="/perfil" className="nav-drawer-link" onClick={() => setOpen(false)}>
+              Área do comprador
+            </Link>
             <Link href="/login" className="nav-drawer-link" onClick={() => setOpen(false)}>
               Entrar
             </Link>
