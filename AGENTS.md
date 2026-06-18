@@ -259,6 +259,19 @@ dentro de um componente. Use `className="ld-wrap"` e `className="ld-sec"`.
 
 Os arquivos em `public/` são a **CE.X Brand Library v2.0**. Referência completa: `evolucoes/cex-brand-library/AGENTS.md`.
 
+### Brand Book 3.2 — consulta obrigatória para criações novas
+
+Antes de construir qualquer **página, seção, componente, tela, arte, landing page, editor,
+fluxo visual ou experiência nova**, consulte também o Brand Book completo:
+`brand/CEX Brand Book v3.2 - Standalone (2).html`.
+
+- Use o Brand Book para manter a identidade visual ampla da CE.X: composição, ritmo,
+  hierarquia, uso de logo, aplicações, tom visual e exemplos de peças reais.
+- Use a Brand Library v2.0 para implementar com os componentes, tokens e classes canônicas
+  do site/admin.
+- Se houver conflito entre o Brand Book 3.2, handoffs e este `AGENTS.md`, este `AGENTS.md`
+  continua prevalecendo nas regras de construção do site/admin.
+
 | Arquivo | O que contém | Importar quando |
 |---|---|---|
 | `tokens.css` | Variáveis `:root` + classes `.cat-*` de estante | **sempre, primeiro** |
