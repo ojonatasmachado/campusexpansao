@@ -137,7 +137,8 @@ export default function MaterialLanding({
   const ac = accent.base;
 
   const faixa = estanteDb?.faixa_etaria ?? "";
-  const formatos = raw.formatos ?? [];
+  const formatosValidos = (raw.formatos ?? []).filter(formato => formato.toLowerCase() !== "editável");
+  const formatos = formatosValidos.length ? formatosValidos : ["PDF"];
   const checkoutHref = `/checkout/${raw.id}`;
   const formato = formatos[0] ?? "PDF";
   const preco = /^R\$/.test(raw.preco ?? "") ? raw.preco : `R$ ${raw.preco}`;
@@ -152,7 +153,6 @@ export default function MaterialLanding({
   const ofertaItens = contents.length
     ? contents.map(content => content.note || content.name).filter(Boolean)
     : beneficios;
-  const depoimento = raw.depoimento;
   const faq = raw.faq?.length ? raw.faq : FAQ_PADRAO;
 
   return (
@@ -408,24 +408,6 @@ export default function MaterialLanding({
             </div>
           )}
 
-          {/* depoimento */}
-          {depoimento?.texto && (
-            <blockquote style={{
-              marginTop: 36, borderLeft: `2px solid ${ac}`,
-              padding: "6px 0 6px 24px",
-              fontSize: 21, lineHeight: 1.5, color: "var(--cream)",
-              fontWeight: 500, maxWidth: 760,
-            }}>
-              &ldquo;{depoimento.texto}&rdquo;
-              {depoimento.autor && (
-                <cite style={{
-                  display: "block", fontStyle: "normal",
-                  fontFamily: "var(--mono)", fontSize: 12,
-                  letterSpacing: "0.06em", color: "var(--muted)", marginTop: 16,
-                }}>◇ {depoimento.autor}</cite>
-              )}
-            </blockquote>
-          )}
         </div>
       </div>
 

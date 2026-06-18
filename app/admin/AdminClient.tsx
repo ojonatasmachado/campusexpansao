@@ -8,6 +8,8 @@ import { ESTANTE_MAP } from '../lib/materiais-data'
 type Modelo = 'A' | 'B' | 'C' | 'D'
 type ItemType = 'material' | 'curso' | 'mentoria' | 'evento'
 type MaterialContentKind = 'word' | 'pdf' | 'ppt'
+type StudioDocumentModel = 'branco' | 'devocional' | 'aula' | 'mensagem'
+type MaterialMessage = { nome: string; desc: string }
 
 interface MaterialContent {
   kind: MaterialContentKind
@@ -25,7 +27,7 @@ interface Material {
   title: string; desc: string; messages: number | null; pages: number
   formats: string[]; price: number; hotmart: string; accent: string; image: string | null
   model: Modelo; big: number | null; bigLabel: string
-  messageList: { nome: string; desc: string }[]
+  messageList: MaterialMessage[]
   paraQuem: string; beneficios: string[]; contents: MaterialContent[]
   depoimento: { texto: string; autor: string }
   faq: { q: string; a: string }[]
@@ -182,8 +184,10 @@ function CardMedia({ item, height = 150, big = false, labelOverride }: { item: I
 }
 
 function matMeta(item: Material) {
-  const n = item.messages ? `${item.messages} mensagens` : (item.pages ? `${item.pages} páginas` : null)
-  return [n, 'Editável', (item.formats ?? []).join(' · ') || 'PDF'].filter(Boolean).join(' · ')
+  const n = item.messages
+    ? `${item.messages} ${item.messages === 1 ? 'mensagem' : 'mensagens'}`
+    : (item.pages ? `${item.pages} ${item.pages === 1 ? 'página' : 'páginas'}` : null)
+  return [n, (item.formats ?? []).join(' · ') || 'PDF'].filter(Boolean).join(' · ')
 }
 
 function isMaterialContent(value: unknown): value is MaterialContent {
@@ -226,7 +230,6 @@ function deriveMaterialContentMeta(contents: MaterialContent[]) {
       formats.add('PDF')
       if (content.delivery === 'word') {
         formats.add('Word')
-        formats.add('Editável')
       }
       if (content.pages) pages += content.pages
       if (content.messages) {
@@ -262,12 +265,12 @@ function materialContentSummary(contents: MaterialContent[], fallback: string[] 
 function materialContentMeta(content: MaterialContent) {
   if (content.kind === 'word') {
     return [
-      content.messages ? `${content.messages} mensagens` : null,
-      content.pages ? `${content.pages} páginas` : null,
+      content.messages ? `${content.messages} ${content.messages === 1 ? 'mensagem' : 'mensagens'}` : null,
+      content.pages ? `${content.pages} ${content.pages === 1 ? 'página' : 'páginas'}` : null,
       content.delivery === 'word' ? 'Word + PDF' : 'PDF',
     ].filter(Boolean).join(' · ')
   }
-  if (content.kind === 'pdf') return ['PDF', content.pages ? `${content.pages} páginas` : null].filter(Boolean).join(' · ')
+  if (content.kind === 'pdf') return ['PDF', content.pages ? `${content.pages} ${content.pages === 1 ? 'página' : 'páginas'}` : null].filter(Boolean).join(' · ')
   return ['Slides', content.slides ? `${content.slides} telas` : null].filter(Boolean).join(' · ')
 }
 
@@ -563,7 +566,7 @@ function DetailPreview({ item }: { item: Item }) {
             <ul className="pv-detail-list"><li>{meta}</li>{(m.beneficios ?? []).filter(Boolean).map((b, i) => <li key={i}>{b}</li>)}</ul>
           )}
           {(m.messageList ?? []).some(x => x?.nome) && <>
-            <div className="pv-detail-sec">◆ As {m.messages} mensagens</div>
+            <div className="pv-detail-sec">◆ {m.messages === 1 ? 'A mensagem' : `As ${m.messages} mensagens`}</div>
             <ul className="pv-detail-list">{m.messageList.filter(x => x?.nome).map((x, i) => (
               <li key={i}><span style={{ color: item.accent, fontFamily: 'var(--mono)', marginRight: 8 }}>{String(i + 1).padStart(2, '0')}</span>
                 <strong style={{ color: 'var(--cream)' }}>{x.nome}</strong>
@@ -571,12 +574,6 @@ function DetailPreview({ item }: { item: Item }) {
               </li>
             ))}</ul>
           </>}
-          {m.depoimento?.texto && (
-            <div style={{ borderLeft: `2px solid ${item.accent}`, paddingLeft: 14, margin: '20px 0', fontSize: 13, color: 'var(--light)', lineHeight: 1.6 }}>
-              &ldquo;{m.depoimento.texto}&rdquo;
-              {m.depoimento.autor && <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>{m.depoimento.autor}</div>}
-            </div>
-          )}
           <div className="pv-detail-buybar">
             <span className="pv-detail-price">R$ {m.price}</span>
             <span className="pv-detail-buy">COMPRAR →</span>
@@ -765,6 +762,12 @@ const ART_LAYOUT_PRESETS: { id: ArtLayoutPresetId; label: string }[] = [
   { id: 'cta', label: 'CTA' },
 ]
 const ART_LAYOUT_PRESET_CYCLE: ArtLayoutPresetId[] = ['impacto', 'contraste', 'lista', 'passos', 'claro', 'enfase', 'cta']
+const ART_PREVIEW_PRESETS: { id: ArtLayoutPresetId; label: string }[] = [
+  { id: 'impacto', label: 'M1' },
+  { id: 'contraste', label: 'M2' },
+  { id: 'lista', label: 'M3' },
+  { id: 'passos', label: 'M4' },
+]
 
 const ART_TEXT_COLOR: Record<ArtTextBox['color'], string> = {
   cream: ART_CREAM,
@@ -1000,7 +1003,6 @@ function buildFeedSlides(item: Item): SlideType[] {
     const m = item as Material
     if (m.paraQuem?.trim()) slides.push('para-quem')
     if ((m.beneficios ?? []).some(b => b?.trim())) slides.push('conteudo')
-    if (m.depoimento?.texto?.trim()) slides.push('depoimento')
   }
   slides.push('cta')
   return slides
@@ -1054,7 +1056,7 @@ function artDataFromItem(item: Item) {
   const paraQuem = cleanArtText(material?.paraQuem ?? curso?.paraQuem, desc)
   const benefits = material?.beneficios?.filter(b => b?.trim()).slice(0, 4) ?? []
   const list = benefits.length ? benefits : ['o que fazer', 'como fazer', 'a quem responder', 'quando pedir ajuda']
-  const quote = cleanArtText(material?.depoimento?.texto ?? curso?.depoimento?.texto, paraQuem)
+  const quote = cleanArtText(curso?.depoimento?.texto, paraQuem)
   const cta = item.type === 'material' && material?.price ? `R$ ${material.price} →` : item.type === 'curso' ? 'Entrar na lista →' : 'Ver agora →'
   const footer = `@campus.expansao · ${CEX_DOMAIN}`
   return { title, desc, category, paraQuem, list, quote, cta, footer }
@@ -1133,7 +1135,7 @@ function buildFeedPresetCopy(item: Item, preset: ArtLayoutPresetId, sequence = 1
     title: data.title,
     items: data.list,
     quote: data.quote,
-    author: item.type === 'material' ? (item as Material).depoimento?.autor ?? '' : '',
+    author: '',
     cta: data.cta,
     footer: data.footer,
     ...STYLE_DEFAULTS,
@@ -1353,11 +1355,11 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
           <div style={body}>
             <div style={{ fontSize: 96 * s, lineHeight: .7, color: ART_OLIVE, fontWeight: ART_DISPLAY_WEIGHT, marginBottom: 30 * s }}>&ldquo;</div>
             <div style={{ fontFamily: ART_SANS, fontSize: quoteSize, fontWeight: quoteWeight, fontStyle: quoteStyle, lineHeight: 1.3, color: quoteColor, maxWidth: 860 * s }}>
-              {parseArtText(copy?.quote || m.depoimento?.texto || 'Depoimento de quem usou o material.', quoteColor)}
+              {parseArtText(copy?.quote || 'Escreva o texto principal aqui.', quoteColor)}
             </div>
-            {(copy?.author || m.depoimento?.autor) && (
+            {copy?.author && (
               <div style={{ marginTop: 36 * s, fontFamily: ART_MONO, fontSize: 14 * s, letterSpacing: '.1em', color: textMuted, textTransform: 'uppercase' }}>
-                {copy?.author || m.depoimento?.autor}
+                {copy.author}
               </div>
             )}
           </div>
@@ -2012,11 +2014,17 @@ function ArtToolbar({ box, onPatch, onAdd, onUndo, canUndo, onApplyPreset, varia
   )
 }
 
-function FeedPreview({ item }: { item: Item }) {
+function FeedPreview({ item, initialPreset }: { item: Item; initialPreset?: ArtLayoutPresetId }) {
   const [active, setActive] = useState(0)
   const [downloading, setDownloading] = useState(false)
-  const [copies, setCopies] = useState<FeedCopies>(() => buildFeedCopies(item))
   const [slides, setSlides] = useState<SlideType[]>(() => buildFeedSlides(item))
+  const [copies, setCopies] = useState<FeedCopies>(() => {
+    const base = buildFeedCopies(item)
+    const initialSlides = buildFeedSlides(item)
+    const firstSlide = initialSlides[0] ?? 'capa'
+    if (initialPreset) base[firstSlide] = buildFeedPresetCopy(item, initialPreset, 1)
+    return base
+  })
   const [selectedId, setSelectedId] = useState('')
   const [history, setHistory] = useState<{ copies: FeedCopies; slides: SlideType[]; active: number; selectedId: string }[]>([])
   const [hoveredThumb, setHoveredThumb] = useState<number | null>(null)
@@ -2275,12 +2283,12 @@ function FeedPreview({ item }: { item: Item }) {
   )
 }
 
-function StoriesPreview({ item }: { item: Item }) {
+function StoriesPreview({ item, initialPreset }: { item: Item; initialPreset?: ArtLayoutPresetId }) {
   const m = item as Material
   const [active, setActive] = useState(0)
   const [downloading, setDownloading] = useState(false)
   const [selectedId, setSelectedId] = useState('')
-  const [storySlides, setStorySlides] = useState<StoriesState[]>(() => [buildStoryState(item)])
+  const [storySlides, setStorySlides] = useState<StoriesState[]>(() => [buildStoryState(item, 'ink', initialPreset ?? 'impacto')])
   const [history, setHistory] = useState<{ storySlides: StoriesState[]; active: number; selectedId: string }[]>([])
   const [hoveredThumb, setHoveredThumb] = useState<number | null>(null)
   const storyIdSeq = useRef(0)
@@ -2520,8 +2528,8 @@ function StoriesPreview({ item }: { item: Item }) {
 
 // ── MODAL ARTES PARA INSTAGRAM ────────────────────────────────────────────────
 
-function ArtesModal({ item, onClose }: { item: Item; onClose: () => void }) {
-  const [tab, setTab] = useState<'feed' | 'stories'>('feed')
+function ArtesModal({ item, initialTab, initialPreset, onClose }: { item: Item; initialTab: ArtSurface; initialPreset?: ArtLayoutPresetId; onClose: () => void }) {
+  const [tab, setTab] = useState<ArtSurface>(initialTab)
   const isMobile = useWindowWidth() < 900
 
   return (
@@ -2562,8 +2570,8 @@ function ArtesModal({ item, onClose }: { item: Item; onClose: () => void }) {
 
         {/* Content */}
         <div style={{ flex: 1, minHeight: 0, display: 'flex', overflow: isMobile ? 'auto' : 'hidden' }}>
-          {tab === 'feed' && <FeedPreview item={item} />}
-          {tab === 'stories' && <StoriesPreview item={item} />}
+          {tab === 'feed' && <FeedPreview item={item} initialPreset={initialPreset} />}
+          {tab === 'stories' && <StoriesPreview item={item} initialPreset={initialPreset} />}
         </div>
 
         <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--subtle)', textAlign: 'center', letterSpacing: '.06em' }}>
@@ -2819,15 +2827,44 @@ function SlidesIcon() {
   )
 }
 
-function MaterialContentsField({ value, onChange }: { value: MaterialContent[]; onChange: (v: MaterialContent[]) => void }) {
+function MaterialContentsField({
+  value,
+  onChange,
+  messageList,
+  onMessageListChange,
+}: {
+  value: MaterialContent[]
+  onChange: (v: MaterialContent[]) => void
+  messageList: MaterialMessage[]
+  onMessageListChange: (v: MaterialMessage[]) => void
+}) {
   const contents = value ?? []
   const [active, setActive] = useState(0)
   const [addOpen, setAddOpen] = useState(false)
+  const [studioSetupOpen, setStudioSetupOpen] = useState(false)
   const [studioOpen, setStudioOpen] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [studioDraft, setStudioDraft] = useState<{ name: string; note: string; model: StudioDocumentModel }>({
+    name: '',
+    note: '',
+    model: 'branco',
+  })
+  const studioFrameRef = useRef<HTMLIFrameElement | null>(null)
+  const syncMessageFromContent = (contentIndex: number, content: MaterialContent) => {
+    if (content.kind !== 'word') return
+    const messageIndex = contents.slice(0, contentIndex + 1).filter((item) => item.kind === 'word').length - 1
+    const nextMessages = [...(messageList ?? [])]
+    nextMessages[messageIndex] = {
+      nome: content.name,
+      desc: content.note,
+    }
+    onMessageListChange(nextMessages)
+  }
   const set = (i: number, patch: Partial<MaterialContent>) => {
     const next = [...contents]
     next[i] = { ...next[i], ...patch }
     onChange(next)
+    syncMessageFromContent(i, next[i])
   }
   const add = (kind: MaterialContentKind) => {
     const base: MaterialContent = kind === 'word'
@@ -2841,11 +2878,51 @@ function MaterialContentsField({ value, onChange }: { value: MaterialContent[]; 
   }
   const openDocumentEditor = () => {
     setAddOpen(false)
+    setStudioDraft({ name: '', note: '', model: 'branco' })
+    setStudioSetupOpen(true)
+  }
+  const startStudioDocument = () => {
+    if (!studioDraft.name.trim()) return
+    setStudioSetupOpen(false)
     setStudioOpen(true)
+  }
+  const handleStudioLoad = () => {
+    const target = studioFrameRef.current?.contentWindow
+    if (!target) return
+    window.setTimeout(() => {
+      target.postMessage({ type: 'cex-studio-load', payload: studioDraft }, window.location.origin)
+    }, 80)
+  }
+  const saveStudioToMaterial = () => {
+    const frameDoc = studioFrameRef.current?.contentDocument
+    const editor = frameDoc?.getElementById('editor')
+    const docTitle = frameDoc?.getElementById('docTitle') as HTMLInputElement | null
+    const text = editor?.textContent?.replace(/\s+/g, ' ').trim() ?? ''
+    const words = text ? text.split(/\s+/).filter(Boolean).length : 0
+    const pages = text ? Math.max(1, Math.ceil(words / 430)) : null
+    const title = studioDraft.name.trim() || docTitle?.value.trim() || 'Documento de texto'
+    const nextContent: MaterialContent = {
+      kind: 'word',
+      name: title,
+      note: studioDraft.note.trim(),
+      pages,
+      messages: 1,
+      delivery: 'word',
+    }
+    const nextContents = [...contents, nextContent]
+    onChange(nextContents)
+    onMessageListChange([...(messageList ?? []), { nome: nextContent.name, desc: nextContent.note }])
+    setActive(contents.length)
+    setStudioOpen(false)
   }
   const del = (i: number) => {
     onChange(contents.filter((_, k) => k !== i))
+    if (contents[i]?.kind === 'word') {
+      const messageIndex = contents.slice(0, i + 1).filter((item) => item.kind === 'word').length - 1
+      onMessageListChange((messageList ?? []).filter((_, k) => k !== messageIndex))
+    }
     setActive(Math.max(0, i - 1))
+    setDetailsOpen(false)
   }
   const meta = deriveMaterialContentMeta(contents)
   const activeContent = contents[active]
@@ -2888,7 +2965,10 @@ function MaterialContentsField({ value, onChange }: { value: MaterialContent[]; 
             key={i}
             className="piece"
             type="button"
-            onClick={() => setActive(i)}
+            onClick={() => {
+              setActive(i)
+              setDetailsOpen(true)
+            }}
             style={{ borderColor: active === i ? 'var(--olive)' : undefined, textAlign: 'left' }}
           >
             <span className="piece-edge" style={{ background: 'var(--olive)' }} />
@@ -2941,6 +3021,56 @@ function MaterialContentsField({ value, onChange }: { value: MaterialContent[]; 
           </div>
         </div>
       )}
+      {studioSetupOpen && (
+        <div className="modal-bg" onClick={() => setStudioSetupOpen(false)}>
+          <div className="cmodal" onClick={(e) => e.stopPropagation()}>
+            <div className="cmodal-head">
+              <div>
+                <div className="cmodal-eyebrow">◆ Documento de texto</div>
+                <div className="cmodal-title">Dados da mensagem</div>
+              </div>
+              <button className="cmodal-x" type="button" onClick={() => setStudioSetupOpen(false)}>Fechar</button>
+            </div>
+            <div className="cmodal-body">
+              <Field label="Nome da mensagem">
+                <input
+                  className="inp"
+                  value={studioDraft.name}
+                  onChange={(e) => setStudioDraft((draft) => ({ ...draft, name: e.target.value }))}
+                  placeholder="Ex: Quem é Jesus de verdade?"
+                  autoFocus
+                />
+              </Field>
+              <Field label="Descrição para a landing page">
+                <textarea
+                  className="inp ta"
+                  value={studioDraft.note}
+                  onChange={(e) => setStudioDraft((draft) => ({ ...draft, note: e.target.value }))}
+                  placeholder="Uma frase curta explicando o que essa mensagem entrega."
+                />
+              </Field>
+              <Field label="Modelo">
+                <select
+                  className="inp"
+                  value={studioDraft.model}
+                  onChange={(e) => setStudioDraft((draft) => ({ ...draft, model: e.target.value as StudioDocumentModel }))}
+                >
+                  <option value="branco">Nenhum</option>
+                  <option value="devocional">Devocional</option>
+                  <option value="aula">Aula / Plano</option>
+                  <option value="mensagem">Mensagem</option>
+                </select>
+              </Field>
+              <div className="cmodal-actions">
+                <button className="btn-ghost-add" type="button" onClick={() => setStudioSetupOpen(false)}>Cancelar</button>
+                <button className="btn-pri" type="button" onClick={startStudioDocument} disabled={!studioDraft.name.trim()} style={{ opacity: studioDraft.name.trim() ? 1 : 0.45 }}>
+                  Abrir Studio
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {studioOpen && (
         <div className="studio-bg" role="dialog" aria-modal="true" aria-label="CE.X Studio Documentos">
           <div className="studio-shell">
@@ -2949,57 +3079,69 @@ function MaterialContentsField({ value, onChange }: { value: MaterialContent[]; 
                 <div className="studio-kicker">◆ CE.X Studio</div>
                 <div className="studio-title">Documentos</div>
               </div>
-              <button className="studio-close" type="button" onClick={() => setStudioOpen(false)}>Fechar Studio</button>
+              <div className="studio-actions">
+                <button className="studio-save" type="button" onClick={saveStudioToMaterial}>Salvar no material</button>
+                <button className="studio-close" type="button" onClick={() => setStudioOpen(false)}>Fechar Studio</button>
+              </div>
             </div>
-            <iframe className="studio-frame" src="/admin/studio/documentos" title="CE.X Studio Documentos" />
+            <iframe ref={studioFrameRef} onLoad={handleStudioLoad} className="studio-frame" src="/admin/studio/documentos" title="CE.X Studio Documentos" />
           </div>
         </div>
       )}
-      {activeContent && (
-        <div style={{ padding: 20, borderTop: '.5px dashed var(--border-2)', background: 'var(--graphite)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 14 }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--olive)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
-              ◆ Editando conteúdo {String(active + 1).padStart(2, '0')}
+      {detailsOpen && activeContent && (
+        <div className="modal-bg" onClick={() => setDetailsOpen(false)}>
+          <div className="cmodal" onClick={(e) => e.stopPropagation()}>
+            <div className="cmodal-head">
+              <div>
+                <div className="cmodal-eyebrow">◆ Conteúdo {String(active + 1).padStart(2, '0')}</div>
+                <div className="cmodal-title">Detalhes do arquivo</div>
+              </div>
+              <button className="cmodal-x" type="button" onClick={() => setDetailsOpen(false)}>Fechar</button>
             </div>
-            <button className="lnk-danger" type="button" onClick={() => del(active)}>Remover conteúdo</button>
-          </div>
-          <div className="ed-2col">
-            <Field label="Tipo">
-              <select className="inp" value={activeContent.kind} onChange={(e) => set(active, { kind: e.target.value as MaterialContentKind })}>
-                <option value="word">Texto</option>
-                <option value="pdf">PDF</option>
-                <option value="ppt">Slides</option>
-              </select>
-            </Field>
-            <Field label="Nome deste conteúdo">
-              <input className="inp" value={activeContent.name} onChange={(e) => set(active, { name: e.target.value })} placeholder="Ex: Roteiro das mensagens" />
-            </Field>
-          </div>
-          <Field label="O que entrega">
-            <textarea className="inp ta" value={activeContent.note} onChange={(e) => set(active, { note: e.target.value })} placeholder="Uma linha para o comprador saber o que está levando." />
-          </Field>
-          <div className="ed-3col">
-            {activeContent.kind === 'word' && (
-              <>
-                <Field label="Mensagens"><input className="inp" type="number" min="0" value={activeContent.messages ?? ''} onChange={(e) => set(active, { messages: e.target.value ? +e.target.value : null })} /></Field>
-                <Field label="Páginas"><input className="inp" type="number" min="0" value={activeContent.pages ?? ''} onChange={(e) => set(active, { pages: e.target.value ? +e.target.value : null })} /></Field>
-                <Field label="Entrega"><select className="inp" value={activeContent.delivery ?? 'word'} onChange={(e) => set(active, { delivery: e.target.value as 'word' | 'pdf' })}><option value="word">Word + PDF</option><option value="pdf">PDF</option></select></Field>
-              </>
-            )}
-            {activeContent.kind === 'pdf' && (
-              <>
-                <Field label="Arquivo"><input className="inp" value={activeContent.file ?? ''} onChange={(e) => set(active, { file: e.target.value })} /></Field>
-                <Field label="Páginas"><input className="inp" type="number" min="0" value={activeContent.pages ?? ''} onChange={(e) => set(active, { pages: e.target.value ? +e.target.value : null })} /></Field>
-                <div />
-              </>
-            )}
-            {activeContent.kind === 'ppt' && (
-              <>
-                <Field label="Telas"><input className="inp" type="number" min="0" value={activeContent.slides ?? ''} onChange={(e) => set(active, { slides: e.target.value ? +e.target.value : null })} /></Field>
-                <div />
-                <div />
-              </>
-            )}
+            <div className="cmodal-body">
+              <div className="ed-2col">
+                <Field label="Tipo">
+                  <select className="inp" value={activeContent.kind} onChange={(e) => set(active, { kind: e.target.value as MaterialContentKind })}>
+                    <option value="word">Texto</option>
+                    <option value="pdf">PDF</option>
+                    <option value="ppt">Slides</option>
+                  </select>
+                </Field>
+                <Field label="Nome deste conteúdo">
+                  <input className="inp" value={activeContent.name} onChange={(e) => set(active, { name: e.target.value })} placeholder="Ex: Quem é Jesus de verdade?" />
+                </Field>
+              </div>
+              <Field label="Descrição">
+                <textarea className="inp ta" value={activeContent.note} onChange={(e) => set(active, { note: e.target.value })} placeholder="Uma linha para o comprador saber o que está levando." />
+              </Field>
+              <div className="ed-3col">
+                {activeContent.kind === 'word' && (
+                  <>
+                    <Field label="Mensagens"><input className="inp" type="number" min="0" value={activeContent.messages ?? ''} onChange={(e) => set(active, { messages: e.target.value ? +e.target.value : null })} /></Field>
+                    <Field label="Páginas"><input className="inp" type="number" min="0" value={activeContent.pages ?? ''} onChange={(e) => set(active, { pages: e.target.value ? +e.target.value : null })} /></Field>
+                    <Field label="Entrega"><select className="inp" value={activeContent.delivery ?? 'word'} onChange={(e) => set(active, { delivery: e.target.value as 'word' | 'pdf' })}><option value="word">Word + PDF</option><option value="pdf">PDF</option></select></Field>
+                  </>
+                )}
+                {activeContent.kind === 'pdf' && (
+                  <>
+                    <Field label="Arquivo"><input className="inp" value={activeContent.file ?? ''} onChange={(e) => set(active, { file: e.target.value })} /></Field>
+                    <Field label="Páginas"><input className="inp" type="number" min="0" value={activeContent.pages ?? ''} onChange={(e) => set(active, { pages: e.target.value ? +e.target.value : null })} /></Field>
+                    <div />
+                  </>
+                )}
+                {activeContent.kind === 'ppt' && (
+                  <>
+                    <Field label="Telas"><input className="inp" type="number" min="0" value={activeContent.slides ?? ''} onChange={(e) => set(active, { slides: e.target.value ? +e.target.value : null })} /></Field>
+                    <div />
+                    <div />
+                  </>
+                )}
+              </div>
+              <div className="cmodal-actions">
+                <button className="lnk-danger" type="button" onClick={() => del(active)}>Remover conteúdo</button>
+                <button className="btn-pri" type="button" onClick={() => setDetailsOpen(false)}>Concluir</button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -3007,7 +3149,7 @@ function MaterialContentsField({ value, onChange }: { value: MaterialContent[]; 
   )
 }
 
-function MessageListField({ count, value, accent, onChange }: { count: number; value: { nome: string; desc: string }[]; accent: string; onChange: (v: { nome: string; desc: string }[]) => void }) {
+function MessageListField({ count, value, accent, onChange }: { count: number; value: MaterialMessage[]; accent: string; onChange: (v: MaterialMessage[]) => void }) {
   const rows = Math.max(count || 0, value.length)
   const get = (i: number) => value[i] || { nome: '', desc: '' }
   const set = (i: number, patch: Partial<{ nome: string; desc: string }>) => {
@@ -3146,6 +3288,8 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
   const [d, setD] = useState<Item>({ ...item })
   const [mode, setMode] = useState<'card' | 'pagina'>('card')
   const [artesOpen, setArtesOpen] = useState(false)
+  const [artesTab, setArtesTab] = useState<ArtSurface>('feed')
+  const [artesPreset, setArtesPreset] = useState<ArtLayoutPresetId>('impacto')
   const set = <K extends keyof Item>(k: K, v: Item[K]) => setD((prev) => ({ ...prev, [k]: v }))
   const accent = accentFor(d)
   const accentName = ACCENT_NAME[accent] ?? ''
@@ -3155,6 +3299,11 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
   const men = d as Mentoria
   const ev = d as Evento
   const setFamily = (fam: string) => setD((prev) => ({ ...prev, family: fam, shelf: (SHELVES[fam] ?? [])[0] ?? (prev as Material).shelf } as Item))
+  const openArtes = (tab: ArtSurface, preset = artesPreset) => {
+    setArtesTab(tab)
+    setArtesPreset(preset)
+    setArtesOpen(true)
+  }
   const isNew = !item.id
   const setMaterialContents = (contents: MaterialContent[]) => {
     const meta = deriveMaterialContentMeta(contents)
@@ -3194,7 +3343,12 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
 
         {d.type === 'material' && <>
           <SectionHead mark="Conteúdo" opt="o resto se monta sozinho" />
-          <MaterialContentsField value={m.contents ?? []} onChange={setMaterialContents} />
+          <MaterialContentsField
+            value={m.contents ?? []}
+            onChange={setMaterialContents}
+            messageList={m.messageList ?? []}
+            onMessageListChange={(v) => set('messageList' as never, v as never)}
+          />
 
           <SectionHead mark="Onde fica na loja" />
           <div className="ed-2col">
@@ -3218,16 +3372,11 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
             <Field label="Mensagens"><input className="inp" type="number" value={m.messages ?? ''} onChange={(e) => set('messages' as never, (e.target.value ? +e.target.value : null) as never)} /></Field>
             <Field label="Páginas"><input className="inp" type="number" value={m.pages} onChange={(e) => set('pages' as never, +e.target.value as never)} /></Field>
           </div>
-          <div className="ed-2col">
-            <Field label="Formatos" hint="Derivado dos conteúdos. Ajuste se precisar.">
-              <ListField value={m.formats ?? []} onChange={(v) => set('formats' as never, v as never)} placeholder="Ex: PDF" />
-            </Field>
-            <Field label="Palavras-chave" hint="Para busca e correlação.">
-              <TagsField value={m.keywords ?? []} onChange={(v) => set('keywords' as never, v as never)} />
-            </Field>
-          </div>
+          <Field label="Palavras-chave" hint="Para busca e correlação.">
+            <TagsField value={m.keywords ?? []} onChange={(v) => set('keywords' as never, v as never)} />
+          </Field>
           {m.messages != null && m.messages > 0 && (
-            <Field label={`Detalhe das ${m.messages} mensagens`}>
+            <Field label={m.messages === 1 ? 'Mensagem que aparece na página' : 'Mensagens que aparecem na página'}>
               <MessageListField count={m.messages} value={m.messageList ?? []} accent={accent} onChange={(v) => set('messageList' as never, v as never)} />
             </Field>
           )}
@@ -3249,9 +3398,6 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
           </Field>
 
           <SectionHead mark="Extras" opt="opcional" />
-          <Field label="Depoimento">
-            <DepoimentoField value={m.depoimento} onChange={(v) => set('depoimento' as never, v as never)} />
-          </Field>
           <Field label="Perguntas frequentes (FAQ)" hint="Aparecem na landing page do material.">
             <FaqField value={m.faq ?? []} onChange={(v) => set('faq' as never, v as never)} />
           </Field>
@@ -3367,10 +3513,23 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
                 </button>
               ))}
             </div>
-            <button onClick={() => setArtesOpen(true)}
-              style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--olive)', border: 'none', borderRadius: 6, padding: '7px 12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              ◆ Artes Insta
-            </button>
+            <div className="art-mini" aria-label="Modelos de arte">
+              {ART_PREVIEW_PRESETS.map((preset) => (
+                <button
+                  key={preset.id}
+                  className={`art-mini-btn${artesPreset === preset.id ? ' is-on' : ''}`}
+                  type="button"
+                  title={ART_LAYOUT_PRESETS.find(item => item.id === preset.id)?.label}
+                  onClick={() => openArtes(artesTab, preset.id)}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <div className="art-mini" aria-label="Formatos de arte">
+              <button className="art-mini-btn" type="button" onClick={() => openArtes('feed')}>Feed</button>
+              <button className="art-mini-btn" type="button" onClick={() => openArtes('stories')}>Stories</button>
+            </div>
           </div>
         </div>
         <div className="ed-prevstage">
@@ -3380,7 +3539,7 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
         {d.status === 'Rascunho' && <div className="ed-draftnote">◆ Em rascunho. Não aparece no site até publicar.</div>}
       </div>
 
-      {artesOpen && <ArtesModal item={dv} onClose={() => setArtesOpen(false)} />}
+      {artesOpen && <ArtesModal item={dv} initialTab={artesTab} initialPreset={artesPreset} onClose={() => setArtesOpen(false)} />}
     </div>
   )
 }
@@ -3846,7 +4005,7 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
             conteudo: contentSummary,
             contents: m.contents ?? [],
             mensagens_lista: m.messageList ?? [],
-            depoimento: m.depoimento,
+            depoimento: null,
             como_usar: '', faq: m.faq ?? [],
             keywords: m.keywords ?? [],
             status: m.status,

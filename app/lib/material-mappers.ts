@@ -32,7 +32,7 @@ export function dbMaterialToMaterial(m: DbMaterial): Material {
     meta: {
       mensagens: m.mensagens ?? undefined,
       paginas: m.paginas,
-      formatos: m.formatos ?? [],
+      formatos: (m.formatos ?? []).filter(formato => formato.toLowerCase() !== "editável"),
     },
     preco: m.preco,
     hotmartUrl: m.hotmart_url,
