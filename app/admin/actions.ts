@@ -70,6 +70,14 @@ export async function getMateriais() {
 
 export async function upsertMaterial(m: Record<string, unknown>) {
   const { error } = await supabaseAdmin().from('materiais').upsert(m, { onConflict: 'id' })
+  if (error && 'contents' in m && error.message.toLowerCase().includes('contents')) {
+    const legacyMaterial = { ...m }
+    delete legacyMaterial.contents
+    const retry = await supabaseAdmin().from('materiais').upsert(legacyMaterial, { onConflict: 'id' })
+    if (retry.error) throw retry.error
+    revalidatePath('/materiais'); revalidatePath('/admin')
+    return
+  }
   if (error) throw error
   revalidatePath('/materiais'); revalidatePath('/admin')
 }

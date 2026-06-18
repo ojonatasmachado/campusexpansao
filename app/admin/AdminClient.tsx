@@ -7,6 +7,18 @@ import { ESTANTE_MAP } from '../lib/materiais-data'
 
 type Modelo = 'A' | 'B' | 'C' | 'D'
 type ItemType = 'material' | 'curso' | 'mentoria' | 'evento'
+type MaterialContentKind = 'word' | 'pdf' | 'ppt'
+
+interface MaterialContent {
+  kind: MaterialContentKind
+  name: string
+  note: string
+  pages?: number | null
+  messages?: number | null
+  slides?: number | null
+  delivery?: 'word' | 'pdf' | null
+  file?: string | null
+}
 
 interface Material {
   id: string; type: 'material'; family: string; shelf: string; code: string
@@ -14,7 +26,7 @@ interface Material {
   formats: string[]; price: number; hotmart: string; accent: string; image: string | null
   model: Modelo; big: number | null; bigLabel: string
   messageList: { nome: string; desc: string }[]
-  paraQuem: string; beneficios: string[]
+  paraQuem: string; beneficios: string[]; contents: MaterialContent[]
   depoimento: { texto: string; autor: string }
   faq: { q: string; a: string }[]
   keywords: string[]
@@ -126,6 +138,7 @@ function newItem(type: ItemType): Item {
       formats: ['PDF'], price: 0, hotmart: '', accent: accentFor({ type: 'material', family, shelf } as Material),
       buyClicks: 0, model: 'A', big: null, bigLabel: 'mensagens', messageList: [], paraQuem: '',
       beneficios: ['Editável e pronto pra aplicar na sua igreja', 'White-label CE.X: coloque a marca do seu ministério'],
+      contents: [],
       depoimento: { texto: '', autor: '' }, faq: [], keywords: [] } as Material
   }
   if (type === 'curso') {
@@ -171,6 +184,91 @@ function CardMedia({ item, height = 150, big = false, labelOverride }: { item: I
 function matMeta(item: Material) {
   const n = item.messages ? `${item.messages} mensagens` : (item.pages ? `${item.pages} páginas` : null)
   return [n, 'Editável', (item.formats ?? []).join(' · ') || 'PDF'].filter(Boolean).join(' · ')
+}
+
+function isMaterialContent(value: unknown): value is MaterialContent {
+  if (!value || typeof value !== 'object') return false
+  const item = value as Partial<MaterialContent>
+  return (item.kind === 'word' || item.kind === 'pdf' || item.kind === 'ppt')
+    && typeof item.name === 'string'
+}
+
+function normalizeMaterialContents(raw: unknown, fallback: string[] = []): MaterialContent[] {
+  if (Array.isArray(raw) && raw.every(isMaterialContent)) {
+    return raw.map((item) => ({
+      kind: item.kind,
+      name: item.name ?? '',
+      note: item.note ?? '',
+      pages: item.pages ?? null,
+      messages: item.messages ?? null,
+      slides: item.slides ?? null,
+      delivery: item.delivery ?? null,
+      file: item.file ?? null,
+    }))
+  }
+
+  return fallback.filter(Boolean).map((name) => ({
+    kind: 'pdf',
+    name,
+    note: '',
+    pages: null,
+  }))
+}
+
+function deriveMaterialContentMeta(contents: MaterialContent[]) {
+  const formats = new Set<string>()
+  let pages = 0
+  let messages = 0
+  let hasMessages = false
+
+  contents.forEach((content) => {
+    if (content.kind === 'word') {
+      formats.add('PDF')
+      if (content.delivery === 'word') {
+        formats.add('Word')
+        formats.add('Editável')
+      }
+      if (content.pages) pages += content.pages
+      if (content.messages) {
+        messages += content.messages
+        hasMessages = true
+      }
+    }
+
+    if (content.kind === 'pdf') {
+      formats.add('PDF')
+      if (content.pages) pages += content.pages
+    }
+
+    if (content.kind === 'ppt') {
+      formats.add('Slides')
+    }
+  })
+
+  return {
+    formats: Array.from(formats),
+    pages,
+    messages: hasMessages ? messages : null,
+  }
+}
+
+function materialContentSummary(contents: MaterialContent[], fallback: string[] = []) {
+  const rows = contents
+    .map((content) => content.note?.trim() || content.name.trim())
+    .filter(Boolean)
+  return rows.length ? rows : fallback
+}
+
+function materialContentMeta(content: MaterialContent) {
+  if (content.kind === 'word') {
+    return [
+      content.messages ? `${content.messages} mensagens` : null,
+      content.pages ? `${content.pages} páginas` : null,
+      content.delivery === 'word' ? 'Word + PDF' : 'PDF',
+    ].filter(Boolean).join(' · ')
+  }
+  if (content.kind === 'pdf') return ['PDF', content.pages ? `${content.pages} páginas` : null].filter(Boolean).join(' · ')
+  return ['Slides', content.slides ? `${content.slides} telas` : null].filter(Boolean).join(' · ')
 }
 
 function PreviewFitTitle({
@@ -451,7 +549,19 @@ function DetailPreview({ item }: { item: Item }) {
         {isMaterial && <>
           {m.paraQuem && <><div className="pv-detail-sec">◆ Pra quem é</div><p className="pv-detail-promise" style={{ fontSize: 13 }}>{m.paraQuem}</p></>}
           <div className="pv-detail-sec">◆ O que vem dentro</div>
-          <ul className="pv-detail-list"><li>{meta}</li>{(m.beneficios ?? []).filter(Boolean).map((b, i) => <li key={i}>{b}</li>)}</ul>
+          {(m.contents ?? []).length > 0 ? (
+            <ul className="pv-detail-list">
+              {(m.contents ?? []).map((content, i) => (
+                <li key={i}>
+                  <strong style={{ color: 'var(--cream)' }}>{content.name || 'Conteúdo sem nome'}</strong>
+                  {content.note ? <span style={{ color: 'var(--muted)' }}> · {content.note}</span> : null}
+                  <span className="pv-content-meta">{materialContentMeta(content)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul className="pv-detail-list"><li>{meta}</li>{(m.beneficios ?? []).filter(Boolean).map((b, i) => <li key={i}>{b}</li>)}</ul>
+          )}
           {(m.messageList ?? []).some(x => x?.nome) && <>
             <div className="pv-detail-sec">◆ As {m.messages} mensagens</div>
             <ul className="pv-detail-list">{m.messageList.filter(x => x?.nome).map((x, i) => (
@@ -2633,6 +2743,16 @@ function Field({ label, hint, children, req }: { label: string; hint?: string; c
   )
 }
 
+function SectionHead({ mark, opt }: { mark: string; opt?: string }) {
+  return (
+    <div className="ed-sec">
+      <span className="ed-sec-mark">◆ {mark}</span>
+      <span className="ed-sec-line" />
+      {opt && <span className="ed-sec-opt">{opt}</span>}
+    </div>
+  )
+}
+
 function AccentLock({ value, name }: { value: string; name: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--ink)', border: '1px solid var(--border-2)', borderRadius: 'var(--r-sm)', padding: '11px 14px' }}>
@@ -2640,29 +2760,6 @@ function AccentLock({ value, name }: { value: string; name: string }) {
       <span style={{ fontSize: 14, color: 'var(--light)', fontWeight: 600 }}>{name}</span>
       <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--subtle)', marginLeft: 'auto' }}>{value}</span>
       <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--subtle)', letterSpacing: '.08em' }}>◆ TRAVADA</span>
-    </div>
-  )
-}
-
-function ModelField({ value, onChange, accent }: { value: Modelo; onChange: (v: Modelo) => void; accent: string }) {
-  const opts = [
-    { k: 'A' as Modelo, n: 'Tipográfico', d: 'Título gigante é a arte' },
-    { k: 'B' as Modelo, n: 'Bloco', d: 'Faixa de cor cheia' },
-    { k: 'C' as Modelo, n: 'Número', d: 'O número vende' },
-    { k: 'D' as Modelo, n: 'Foto', d: 'Usa a imagem de capa' },
-  ]
-  return (
-    <div className="ed-2col" style={{ gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-      {opts.map((o) => (
-        <button key={o.k} onClick={() => onChange(o.k)}
-          style={{ textAlign: 'left', padding: '12px 14px', borderRadius: 'var(--r-sm)', border: `1px solid ${value === o.k ? accent : 'var(--border-2)'}`, background: value === o.k ? 'var(--olive-dim)' : 'var(--ink)', transition: 'all .15s', cursor: 'pointer', fontFamily: 'inherit' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 600, color: value === o.k ? accent : 'var(--muted)' }}>{o.k}</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--light)' }}>{o.n}</span>
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--subtle)' }}>{o.d}</div>
-        </button>
-      ))}
     </div>
   )
 }
@@ -2681,6 +2778,231 @@ function ListField({ value, onChange, placeholder }: { value: string[]; onChange
         </div>
       ))}
       <button className="btn-ghost-add" onClick={add}>+ Adicionar item</button>
+    </div>
+  )
+}
+
+function DocumentTextIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 3h8l4 4v14H6z" />
+      <path d="M14 3v5h5" />
+      <path d="M9 12h6" />
+      <path d="M9 16h6" />
+      <path d="M9 8h2" />
+    </svg>
+  )
+}
+
+function PdfFileIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 3h8l4 4v14H6z" />
+      <path d="M14 3v5h5" />
+      <path d="M8.5 15h7" />
+      <path d="M8.5 12h4.5" />
+      <path d="M9 18h2" />
+      <path d="M14 18h1" />
+    </svg>
+  )
+}
+
+function SlidesIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 5h16v11H4z" />
+      <path d="M8 20h8" />
+      <path d="M12 16v4" />
+      <path d="M8 9h8" />
+      <path d="M8 12h5" />
+    </svg>
+  )
+}
+
+function MaterialContentsField({ value, onChange }: { value: MaterialContent[]; onChange: (v: MaterialContent[]) => void }) {
+  const contents = value ?? []
+  const [active, setActive] = useState(0)
+  const [addOpen, setAddOpen] = useState(false)
+  const [studioOpen, setStudioOpen] = useState(false)
+  const set = (i: number, patch: Partial<MaterialContent>) => {
+    const next = [...contents]
+    next[i] = { ...next[i], ...patch }
+    onChange(next)
+  }
+  const add = (kind: MaterialContentKind) => {
+    const base: MaterialContent = kind === 'word'
+      ? { kind, name: '', note: '', pages: null, messages: null, delivery: 'word' }
+      : kind === 'pdf'
+        ? { kind, name: '', note: '', pages: null, file: '' }
+        : { kind, name: '', note: '', slides: null }
+    onChange([...contents, base])
+    setActive(contents.length)
+    setAddOpen(false)
+  }
+  const openDocumentEditor = () => {
+    setAddOpen(false)
+    setStudioOpen(true)
+  }
+  const del = (i: number) => {
+    onChange(contents.filter((_, k) => k !== i))
+    setActive(Math.max(0, i - 1))
+  }
+  const meta = deriveMaterialContentMeta(contents)
+  const activeContent = contents[active]
+
+  return (
+    <div className="wb">
+      <div className="wb-head">
+        <div className="wb-eyebrow" style={{ color: 'var(--olive)' }}>◆ O QUE O COMPRADOR RECEBE</div>
+        <div className={`wb-status ${contents.length ? 'building' : ''}`}>
+          <span className="wb-dot" />
+          {contents.length ? `${contents.length} ${contents.length === 1 ? 'conteúdo' : 'conteúdos'}` : 'Nada ainda'}
+        </div>
+      </div>
+      <div className="wb-totals">
+        <div className="wb-tot"><b>{contents.length || '-'}</b><span>conteúdos</span></div>
+        <div className="wb-tot"><b>{meta.pages || '-'}</b><span>páginas</span></div>
+        <div className="wb-tot"><b>{meta.messages || '-'}</b><span>mensagens</span></div>
+        <div className="wb-tot wb-tot-fmt"><b>{meta.formats.length ? meta.formats.join(' · ') : '-'}</b><span>formatos</span></div>
+      </div>
+      <div className="wb-grid">
+        <div
+          className={`piece add ${addOpen ? 'is-open' : ''}`}
+          role="button"
+          tabIndex={0}
+          onClick={() => setAddOpen((v) => !v)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              setAddOpen((v) => !v)
+            }
+          }}
+        >
+          <div className="add-inner">
+            <span className="add-plus">+</span>
+            <span className="add-tt">Adicionar arquivo</span>
+          </div>
+        </div>
+        {contents.map((content, i) => (
+          <button
+            key={i}
+            className="piece"
+            type="button"
+            onClick={() => setActive(i)}
+            style={{ borderColor: active === i ? 'var(--olive)' : undefined, textAlign: 'left' }}
+          >
+            <span className="piece-edge" style={{ background: 'var(--olive)' }} />
+            <div className="piece-cover">
+              <span className="piece-tag">{content.kind === 'word' ? 'TEXTO' : content.kind === 'pdf' ? 'PDF' : 'SLIDES'}</span>
+              <div className="piece-big">
+                <b>{content.messages ?? content.pages ?? content.slides ?? '-'}</b>
+                <span>{content.messages ? 'msgs' : content.pages ? 'págs' : content.slides ? 'telas' : ''}</span>
+              </div>
+            </div>
+            <div className="piece-foot">
+              <div className="piece-tt">{content.name || 'Conteúdo sem nome'}</div>
+              <div className="piece-sub">{materialContentMeta(content) || 'definir'}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+      {contents.length === 0 && (
+        <div className="wb-empty">Cada peça adicionada vira uma linha na lista que o comprador vê. Nome, descrição e metadados alimentam a página de venda.</div>
+      )}
+      {addOpen && (
+        <div className="modal-bg" onClick={() => setAddOpen(false)}>
+          <div className="cmodal" onClick={(e) => e.stopPropagation()}>
+            <div className="cmodal-head">
+              <div>
+                <div className="cmodal-eyebrow">◆ Novo conteúdo</div>
+                <div className="cmodal-title">O que você quer adicionar?</div>
+              </div>
+              <button className="cmodal-x" type="button" onClick={() => setAddOpen(false)}>Fechar</button>
+            </div>
+            <div className="cmodal-body">
+              <div className="chooser">
+                <button className="chooser-opt" type="button" onClick={openDocumentEditor}>
+                  <span className="chooser-ic" aria-hidden="true"><DocumentTextIcon /></span>
+                  <span className="chooser-tt">Documento de texto</span>
+                  <span className="chooser-sb">Escreva aqui ou cole. Sai em PDF e Word editável.</span>
+                </button>
+                <button className="chooser-opt" type="button" onClick={() => add('pdf')}>
+                  <span className="chooser-ic" aria-hidden="true"><PdfFileIcon /></span>
+                  <span className="chooser-tt">PDF pronto</span>
+                  <span className="chooser-sb">Importe ou cadastre um arquivo PDF já finalizado.</span>
+                </button>
+                <button className="chooser-opt" type="button" onClick={() => add('ppt')}>
+                  <span className="chooser-ic" aria-hidden="true"><SlidesIcon /></span>
+                  <span className="chooser-tt">Apresentação</span>
+                  <span className="chooser-sb">Slides para projetar, a partir dos modelos CE.X.</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {studioOpen && (
+        <div className="studio-bg" role="dialog" aria-modal="true" aria-label="CE.X Studio Documentos">
+          <div className="studio-shell">
+            <div className="studio-head">
+              <div>
+                <div className="studio-kicker">◆ CE.X Studio</div>
+                <div className="studio-title">Documentos</div>
+              </div>
+              <button className="studio-close" type="button" onClick={() => setStudioOpen(false)}>Fechar Studio</button>
+            </div>
+            <iframe className="studio-frame" src="/admin/studio/documentos" title="CE.X Studio Documentos" />
+          </div>
+        </div>
+      )}
+      {activeContent && (
+        <div style={{ padding: 20, borderTop: '.5px dashed var(--border-2)', background: 'var(--graphite)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 14 }}>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--olive)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
+              ◆ Editando conteúdo {String(active + 1).padStart(2, '0')}
+            </div>
+            <button className="lnk-danger" type="button" onClick={() => del(active)}>Remover conteúdo</button>
+          </div>
+          <div className="ed-2col">
+            <Field label="Tipo">
+              <select className="inp" value={activeContent.kind} onChange={(e) => set(active, { kind: e.target.value as MaterialContentKind })}>
+                <option value="word">Texto</option>
+                <option value="pdf">PDF</option>
+                <option value="ppt">Slides</option>
+              </select>
+            </Field>
+            <Field label="Nome deste conteúdo">
+              <input className="inp" value={activeContent.name} onChange={(e) => set(active, { name: e.target.value })} placeholder="Ex: Roteiro das mensagens" />
+            </Field>
+          </div>
+          <Field label="O que entrega">
+            <textarea className="inp ta" value={activeContent.note} onChange={(e) => set(active, { note: e.target.value })} placeholder="Uma linha para o comprador saber o que está levando." />
+          </Field>
+          <div className="ed-3col">
+            {activeContent.kind === 'word' && (
+              <>
+                <Field label="Mensagens"><input className="inp" type="number" min="0" value={activeContent.messages ?? ''} onChange={(e) => set(active, { messages: e.target.value ? +e.target.value : null })} /></Field>
+                <Field label="Páginas"><input className="inp" type="number" min="0" value={activeContent.pages ?? ''} onChange={(e) => set(active, { pages: e.target.value ? +e.target.value : null })} /></Field>
+                <Field label="Entrega"><select className="inp" value={activeContent.delivery ?? 'word'} onChange={(e) => set(active, { delivery: e.target.value as 'word' | 'pdf' })}><option value="word">Word + PDF</option><option value="pdf">PDF</option></select></Field>
+              </>
+            )}
+            {activeContent.kind === 'pdf' && (
+              <>
+                <Field label="Arquivo"><input className="inp" value={activeContent.file ?? ''} onChange={(e) => set(active, { file: e.target.value })} /></Field>
+                <Field label="Páginas"><input className="inp" type="number" min="0" value={activeContent.pages ?? ''} onChange={(e) => set(active, { pages: e.target.value ? +e.target.value : null })} /></Field>
+                <div />
+              </>
+            )}
+            {activeContent.kind === 'ppt' && (
+              <>
+                <Field label="Telas"><input className="inp" type="number" min="0" value={activeContent.slides ?? ''} onChange={(e) => set(active, { slides: e.target.value ? +e.target.value : null })} /></Field>
+                <div />
+                <div />
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -2834,20 +3156,47 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
   const ev = d as Evento
   const setFamily = (fam: string) => setD((prev) => ({ ...prev, family: fam, shelf: (SHELVES[fam] ?? [])[0] ?? (prev as Material).shelf } as Item))
   const isNew = !item.id
+  const setMaterialContents = (contents: MaterialContent[]) => {
+    const meta = deriveMaterialContentMeta(contents)
+    setD((prev) => {
+      if (prev.type !== 'material') return prev
+      return {
+        ...prev,
+        contents,
+        formats: meta.formats.length ? meta.formats : (prev.formats ?? []),
+        pages: meta.pages,
+        messages: meta.messages,
+        big: prev.big ?? meta.messages ?? meta.pages,
+        bigLabel: meta.messages ? 'mensagens' : 'páginas',
+      }
+    })
+  }
 
   return (
     <div className="editor">
       <div className="ed-form">
         <div className="ed-formhead">
-          <div className="ed-eyebrow" style={{ color: accent }}>◆ {d.type.toUpperCase()}</div>
-          <input className="ed-titleinput" value={d.title} placeholder="Título do item"
+          <div className="ed-headrow">
+            <div className="ed-eyebrow" style={{ color: accent }}>◆ {d.type.toUpperCase()}</div>
+            {d.type === 'material' && m.code && (
+              <span className="codebadge"><b>{m.code}</b><span className="sys">código interno</span></span>
+            )}
+          </div>
+          <input className="ed-titleinput" value={d.title} placeholder={d.type === 'material' ? 'Dê um nome ao produto' : 'Título do item'}
             onChange={(e) => set('title', e.target.value as never)} />
+          {d.type === 'material' && (
+            <div className="ed-hero-hint">O produto agora nasce pelo que ele entrega. Monte os conteúdos, confira a prévia e publique quando estiver pronto.</div>
+          )}
         </div>
-        <Field label="Descrição curta" hint="Uma linha. Aparece no card e no topo da página.">
+        {d.type !== 'material' && <Field label="Descrição curta" hint="Uma linha. Aparece no card e no topo da página.">
           <textarea className="inp ta" value={d.desc} onChange={(e) => set('desc', e.target.value as never)} />
-        </Field>
+        </Field>}
 
         {d.type === 'material' && <>
+          <SectionHead mark="Conteúdo" opt="o resto se monta sozinho" />
+          <MaterialContentsField value={m.contents ?? []} onChange={setMaterialContents} />
+
+          <SectionHead mark="Onde fica na loja" />
           <div className="ed-2col">
             <Field label="Família">
               <select className="inp" value={m.family} onChange={(e) => setFamily(e.target.value)}>
@@ -2860,14 +3209,33 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
               </select>
             </Field>
           </div>
+          <SectionHead mark="Detalhes da página" opt="edite só o que precisar" />
+          <Field label="Descrição curta" hint="Uma linha. Aparece no card e no topo da página.">
+            <textarea className="inp ta" value={d.desc} onChange={(e) => set('desc', e.target.value as never)} placeholder="Resumo do produto para o comprador." />
+          </Field>
           <div className="ed-3col">
-            <Field label="Código"><input className="inp" value={m.code} onChange={(e) => set('code' as never, e.target.value as never)} /></Field>
+            <Field label="Código"><input className="inp" value={m.code} onChange={(e) => set('code' as never, e.target.value as never)} placeholder="Ex: S-10" /></Field>
             <Field label="Mensagens"><input className="inp" type="number" value={m.messages ?? ''} onChange={(e) => set('messages' as never, (e.target.value ? +e.target.value : null) as never)} /></Field>
             <Field label="Páginas"><input className="inp" type="number" value={m.pages} onChange={(e) => set('pages' as never, +e.target.value as never)} /></Field>
           </div>
-          <Field label="Formatos" hint="Ex: PDF, PowerPoint, Word. Um por linha.">
-            <ListField value={m.formats ?? []} onChange={(v) => set('formats' as never, v as never)} placeholder="Ex: PDF" />
+          <div className="ed-2col">
+            <Field label="Formatos" hint="Derivado dos conteúdos. Ajuste se precisar.">
+              <ListField value={m.formats ?? []} onChange={(v) => set('formats' as never, v as never)} placeholder="Ex: PDF" />
+            </Field>
+            <Field label="Palavras-chave" hint="Para busca e correlação.">
+              <TagsField value={m.keywords ?? []} onChange={(v) => set('keywords' as never, v as never)} />
+            </Field>
+          </div>
+          {m.messages != null && m.messages > 0 && (
+            <Field label={`Detalhe das ${m.messages} mensagens`}>
+              <MessageListField count={m.messages} value={m.messageList ?? []} accent={accent} onChange={(v) => set('messageList' as never, v as never)} />
+            </Field>
+          )}
+          <Field label="Pra quem é" hint="Uma frase que nomeia a dor.">
+            <textarea className="inp ta" value={m.paraQuem ?? ''} onChange={(e) => set('paraQuem' as never, e.target.value as never)} placeholder="Pra líder que..." />
           </Field>
+
+          <SectionHead mark="Venda" />
           <div className="ed-2col">
             <Field label="Preço (R$)" req><input className="inp" type="number" value={m.price} onChange={(e) => set('price' as never, +e.target.value as never)} /></Field>
             <Field label="Status">
@@ -2879,28 +3247,13 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
           <Field label="Link da Hotmart" req hint="Botão COMPRAR da página de detalhe.">
             <input className="inp" value={m.hotmart} onChange={(e) => set('hotmart' as never, e.target.value as never)} placeholder="https://pay.hotmart.com/..." />
           </Field>
-          <Field label="Modelo do card / banner" hint="Muda o layout na prévia.">
-            <ModelField value={m.model ?? 'A'} accent={accent} onChange={(v) => set('model' as never, v as never)} />
-          </Field>
-          {m.messages != null && m.messages > 0 && (
-            <Field label={`Detalhe das ${m.messages} mensagens`}>
-              <MessageListField count={m.messages} value={m.messageList ?? []} accent={accent} onChange={(v) => set('messageList' as never, v as never)} />
-            </Field>
-          )}
-          <Field label="Pra quem é" hint="Uma frase que nomeia a dor.">
-            <textarea className="inp ta" value={m.paraQuem ?? ''} onChange={(e) => set('paraQuem' as never, e.target.value as never)} placeholder="Pra líder que..." />
-          </Field>
-          <Field label="O que vem dentro">
-            <ListField value={m.beneficios ?? []} onChange={(v) => set('beneficios' as never, v as never)} placeholder="Um benefício do material" />
-          </Field>
+
+          <SectionHead mark="Extras" opt="opcional" />
           <Field label="Depoimento">
             <DepoimentoField value={m.depoimento} onChange={(v) => set('depoimento' as never, v as never)} />
           </Field>
           <Field label="Perguntas frequentes (FAQ)" hint="Aparecem na landing page do material.">
             <FaqField value={m.faq ?? []} onChange={(v) => set('faq' as never, v as never)} />
-          </Field>
-          <Field label="Palavras-chave" hint="Para busca e correlação com outros materiais. Pressione Enter ou vírgula para adicionar.">
-            <TagsField value={m.keywords ?? []} onChange={(v) => set('keywords' as never, v as never)} />
           </Field>
         </>}
 
@@ -2988,9 +3341,11 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
           </Field>
         </>}
 
-        <Field label="Cor de acento" hint="Travada: cada estante / nível tem sua cor.">
-          <AccentLock value={accent} name={accentName} />
-        </Field>
+        {d.type !== 'material' && (
+          <Field label="Cor de acento" hint="Travada: cada estante / nível tem sua cor.">
+            <AccentLock value={accent} name={accentName} />
+          </Field>
+        )}
         <Field label="Imagem de capa">
           <ImageField value={d.image} onChange={(v) => set('image', v as never)} />
         </Field>
@@ -3376,27 +3731,34 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
         status: (e.status as 'visible' | 'hidden') ?? 'visible',
         order: (e.ord as number) ?? 0,
       }))
-      const materiais: Material[] = (initialData.materiais as unknown as Record<string, unknown>[]).map((m) => ({
-        id: m.id as string, type: 'material' as const,
-        family: m.familia === 'ministrar' ? 'Para ministrar' : 'Para liderar',
-        shelf: estantes.find(e => e.key === m.estante)?.label ?? (m.estante as string),
-        code: (m.code as string) ?? '', title: m.titulo as string, desc: m.promessa as string,
-        messages: (m.mensagens as number | null) ?? null, pages: (m.paginas as number) ?? 0,
-        formats: (m.formatos as string[]) ?? ['PDF'],
-        price: parseInt(((m.preco as string) ?? '0').replace(/\D/g, ''), 10),
-        hotmart: (m.hotmart_url as string) ?? '', accent: accentFor({ type: 'material', family: m.familia === 'ministrar' ? 'Para ministrar' : 'Para liderar', shelf: estantes.find(e => e.key === m.estante)?.label ?? '' } as Material),
-        image: null, model: (m.model as Modelo) ?? 'A',
-        big: m.big ? parseInt(m.big as string, 10) : null,
-        bigLabel: (m.big_label as string) ?? '',
-        messageList: (m.mensagens_lista as { nome: string; desc: string }[]) ?? ((m.conteudo as string[]) ?? []).map(c => ({ nome: c, desc: '' })),
-        paraQuem: (m.pra_quem as string) ?? '',
-        beneficios: (m.conteudo as string[]) ?? [],
-        depoimento: (m.depoimento as { texto: string; autor: string }) ?? { texto: '', autor: '' },
-        faq: (m.faq as { q: string; a: string }[]) ?? [],
-        keywords: (m.keywords as string[]) ?? [],
-        status: (m.status as string) ?? 'Publicado',
-        views: 0, buyClicks: 0,
-      }))
+      const materiais: Material[] = (initialData.materiais as unknown as Record<string, unknown>[]).map((m) => {
+        const conteudo = (m.conteudo as string[]) ?? []
+        const contents = normalizeMaterialContents(m.contents, conteudo)
+        const meta = deriveMaterialContentMeta(contents)
+        return {
+          id: m.id as string, type: 'material' as const,
+          family: m.familia === 'ministrar' ? 'Para ministrar' : 'Para liderar',
+          shelf: estantes.find(e => e.key === m.estante)?.label ?? (m.estante as string),
+          code: (m.code as string) ?? '', title: m.titulo as string, desc: m.promessa as string,
+          messages: meta.messages ?? ((m.mensagens as number | null) ?? null),
+          pages: meta.pages || ((m.paginas as number) ?? 0),
+          formats: meta.formats.length ? meta.formats : ((m.formatos as string[]) ?? ['PDF']),
+          price: parseInt(((m.preco as string) ?? '0').replace(/\D/g, ''), 10),
+          hotmart: (m.hotmart_url as string) ?? '', accent: accentFor({ type: 'material', family: m.familia === 'ministrar' ? 'Para ministrar' : 'Para liderar', shelf: estantes.find(e => e.key === m.estante)?.label ?? '' } as Material),
+          image: null, model: (m.model as Modelo) ?? 'A',
+          big: m.big ? parseInt(m.big as string, 10) : null,
+          bigLabel: (m.big_label as string) ?? '',
+          messageList: (m.mensagens_lista as { nome: string; desc: string }[]) ?? conteudo.map(c => ({ nome: c, desc: '' })),
+          paraQuem: (m.pra_quem as string) ?? '',
+          beneficios: conteudo,
+          contents,
+          depoimento: (m.depoimento as { texto: string; autor: string }) ?? { texto: '', autor: '' },
+          faq: (m.faq as { q: string; a: string }[]) ?? [],
+          keywords: (m.keywords as string[]) ?? [],
+          status: (m.status as string) ?? 'Publicado',
+          views: 0, buyClicks: 0,
+        }
+      })
       const NIVEL_LABEL: Record<string, string> = { fundacao: 'Fundação', lideranca: 'Liderança', multiplicacao: 'Multiplicação' }
       const NIVEL_AC: Record<string, string> = { fundacao: AC.wheat, lideranca: AC.clay, multiplicacao: AC.olive }
       const cursos: Curso[] = (initialData.cursos as unknown as Record<string, unknown>[]).map((c) => ({
@@ -3471,6 +3833,7 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
       try {
         if (d.type === 'material') {
           const m = d as Material
+          const contentSummary = materialContentSummary(m.contents ?? [], m.beneficios ?? [])
           await upsertMaterial({
             id: m.id, familia: m.family === 'Para ministrar' ? 'ministrar' : 'liderar',
             estante: Object.entries(ESTANTE_MAP).find(([,v]) => v.label === m.shelf)?.[0] ?? m.shelf,
@@ -3480,7 +3843,8 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
             formatos: (m.formats ?? []).filter(Boolean),
             preco: `R$ ${m.price}`, hotmart_url: m.hotmart,
             colecoes: [], pra_quem: m.paraQuem,
-            conteudo: m.beneficios ?? [],
+            conteudo: contentSummary,
+            contents: m.contents ?? [],
             mensagens_lista: m.messageList ?? [],
             depoimento: m.depoimento,
             como_usar: '', faq: m.faq ?? [],

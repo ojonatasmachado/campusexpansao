@@ -37,6 +37,7 @@ create table if not exists materiais (
   colecoes     text[] not null default '{}',
   pra_quem     text not null default '',
   conteudo     text[] not null default '{}',
+  contents     jsonb not null default '[]',
   como_usar    text not null default '',
   faq          jsonb not null default '[]',
   status       text not null default 'Publicado',
@@ -45,6 +46,7 @@ create table if not exists materiais (
 
 alter table materiais add column if not exists hotmart_product_id text;
 alter table materiais add column if not exists hotmart_offer_id text;
+alter table materiais add column if not exists contents jsonb not null default '[]';
 
 -- Cursos
 create table if not exists cursos (

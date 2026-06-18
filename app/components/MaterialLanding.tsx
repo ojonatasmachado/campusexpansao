@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ACCENTS, HEX_TO_ACCENT } from "../lib/accents";
 import type { AccentKey } from "../lib/accents";
 import { ESTANTE_MAP } from "../lib/materiais-data";
-import type { DbEstante, DbMaterial } from "../lib/types";
+import type { DbEstante, DbMaterial, DbMaterialContent } from "../lib/types";
 
 // ── TEMPLATE FIXO ────────────────────────────────────────────────────────────
 
@@ -98,6 +98,26 @@ function SecMark({ label, accent }: { label: string; accent: string }) {
   );
 }
 
+function contentKindLabel(kind: DbMaterialContent["kind"]) {
+  if (kind === "word") return "Texto";
+  if (kind === "pdf") return "PDF";
+  return "Slides";
+}
+
+function contentMeta(content: DbMaterialContent) {
+  if (content.kind === "word") {
+    return [
+      content.messages ? `${content.messages} mensagens` : null,
+      content.pages ? `${content.pages} páginas` : null,
+      content.delivery === "word" ? "Word + PDF" : "PDF",
+    ].filter(Boolean).join(" · ");
+  }
+  if (content.kind === "pdf") {
+    return ["PDF", content.pages ? `${content.pages} páginas` : null].filter(Boolean).join(" · ");
+  }
+  return ["Slides", content.slides ? `${content.slides} telas` : null].filter(Boolean).join(" · ");
+}
+
 // ── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
 
 export default function MaterialLanding({
@@ -128,6 +148,10 @@ export default function MaterialLanding({
 
   const mensagensLista = (raw.mensagens_lista ?? []).filter(m => m?.nome);
   const beneficios = raw.conteudo ?? [];
+  const contents = (raw.contents ?? []).filter(content => content?.name);
+  const ofertaItens = contents.length
+    ? contents.map(content => content.note || content.name).filter(Boolean)
+    : beneficios;
   const depoimento = raw.depoimento;
   const faq = raw.faq?.length ? raw.faq : FAQ_PADRAO;
 
@@ -292,8 +316,50 @@ export default function MaterialLanding({
             )}
           </div>
 
+          {/* conteúdos estruturados */}
+          {contents.length > 0 && (
+            <div style={{ borderTop: "0.5px solid #25291F" }}>
+              {contents.map((content, i) => (
+                <div key={`${content.kind}-${i}`} style={{
+                  display: "grid", gridTemplateColumns: "54px 1fr",
+                  gap: 14, padding: "20px 0",
+                  borderBottom: "0.5px solid #25291F", alignItems: "baseline",
+                }}>
+                  <span style={{ fontFamily: "var(--mono)", fontSize: 14, color: ac, letterSpacing: "0.04em" }}>
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <div style={{
+                      display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap",
+                    }}>
+                      <div style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--cream)" }}>
+                        {content.name}
+                      </div>
+                      <span style={{
+                        fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.1em",
+                        textTransform: "uppercase", color: ac,
+                      }}>
+                        ◆ {contentKindLabel(content.kind)}
+                      </span>
+                    </div>
+                    {content.note && (
+                      <div style={{ fontSize: 15, color: "var(--muted)", lineHeight: 1.5, marginTop: 5 }}>
+                        {content.note}
+                      </div>
+                    )}
+                    {contentMeta(content) && (
+                      <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--subtle)", marginTop: 8 }}>
+                        {contentMeta(content)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* lista de mensagens */}
-          {mensagensLista.length > 0 && (
+          {contents.length === 0 && mensagensLista.length > 0 && (
             <>
               <div className="ld-sec-grid" style={{ marginBottom: 30 }}>
                 <h2 style={{
@@ -327,7 +393,7 @@ export default function MaterialLanding({
           )}
 
           {/* benefícios (quando não tem lista de mensagens) */}
-          {mensagensLista.length === 0 && beneficios.length > 0 && (
+          {contents.length === 0 && mensagensLista.length === 0 && beneficios.length > 0 && (
             <div style={{ borderTop: "0.5px solid #25291F" }}>
               {beneficios.map((b, i) => (
                 <div key={i} style={{
@@ -433,7 +499,7 @@ export default function MaterialLanding({
                 {raw.mensagens ? ` · ${raw.mensagens} encontros prontos pra ministrar` : ""}
               </h2>
               <ul style={{ marginTop: 22, display: "flex", flexDirection: "column", gap: 11 }}>
-                {[...beneficios, "Acesso vitalício, sem mensalidade", `Entregue em ${formatos.join(" · ")}`].map((b, i) => (
+                {[...ofertaItens, "Acesso vitalício, sem mensalidade", `Entregue em ${formatos.join(" · ")}`].map((b, i) => (
                   <li key={i} style={{
                     listStyle: "none", fontSize: 15, color: "var(--light)",
                     display: "flex", gap: 12, alignItems: "baseline",

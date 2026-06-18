@@ -33,12 +33,24 @@ export type DbMaterial = {
   colecoes: string[]
   pra_quem: string
   conteudo: string[]    // benefícios / itens do que vem dentro
+  contents?: DbMaterialContent[] | null
   como_usar: string
   faq: { q: string; a: string }[]
   mensagens_lista?: { nome: string; desc: string }[] | null
   depoimento?: { texto: string; autor: string } | null
   keywords?: string[] | null
   status: string        // 'Publicado' | 'Rascunho'
+}
+
+export type DbMaterialContent = {
+  kind: "word" | "pdf" | "ppt"
+  name: string
+  note: string
+  pages?: number | null
+  messages?: number | null
+  slides?: number | null
+  delivery?: "word" | "pdf" | null
+  file?: string | null
 }
 
 export type DbCurso = {
