@@ -68,7 +68,7 @@ export default function Nav() {
 
         {/* Auth area desktop */}
         {user ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
+          <div className="nav-auth-actions" style={{ display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
             <button
               type="button"
               onClick={() => setProfileOpen((current) => !current)}
@@ -136,32 +136,8 @@ export default function Nav() {
             )}
           </div>
         ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Link
-              href="/perfil"
-              style={{
-                color: "var(--cream)",
-                fontSize: 13,
-                fontWeight: 700,
-                textDecoration: "none",
-                border: "1px solid var(--border-2)",
-                borderRadius: 8,
-                padding: "8px 12px",
-              }}
-            >
-              Área do comprador
-            </Link>
-            <Link
-              href="/login"
-              style={{
-                color: "var(--muted)",
-                fontSize: 13,
-                fontWeight: 600,
-                textDecoration: "none",
-              }}
-            >
-              Entrar
-            </Link>
+          <div className="nav-auth-actions" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Link href="/login" className="nav-login-cta">Entrar</Link>
             <Link href="/materiais" className="nav-cta">Comece agora</Link>
           </div>
         )}
@@ -218,14 +194,8 @@ export default function Nav() {
           </>
         ) : (
           <>
-            <Link href="/perfil" className="nav-drawer-link" onClick={() => setOpen(false)}>
-              Área do comprador
-            </Link>
-            <Link href="/login" className="nav-drawer-link" onClick={() => setOpen(false)}>
+            <Link href="/login" className="nav-drawer-cta" onClick={() => setOpen(false)}>
               Entrar
-            </Link>
-            <Link href="/login?redirect=/perfil" className="nav-drawer-cta" onClick={() => setOpen(false)}>
-              Criar conta →
             </Link>
           </>
         )}
