@@ -4,6 +4,13 @@ import "./loja.css";
 export const metadata: Metadata = {
   title: "CE.X · Campus Expansão",
   description: "Formação que expande: cursos, materiais e comunidade para quem quer crescer de verdade.",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
