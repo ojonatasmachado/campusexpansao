@@ -24,6 +24,8 @@ export default async function Home() {
     supabase.from('cursos').select('*').eq('status', 'Publicado').order('num'),
     supabase.from('mentorias').select('*').eq('status', 'Publicado').order('created_at'),
   ]);
+  const hasMateriais = (materiais?.length ?? 0) > 0;
+  const hasCursos = ((cursos?.length ?? 0) + (mentorias?.length ?? 0)) > 0;
 
   return (
     <div className={`pg ${styles.homePage}`}>
@@ -42,10 +44,16 @@ export default async function Home() {
             <p className="hero-desc">
               Estrutura ministerial para líderes de igreja locais. Materiais, formação e ferramentas pra preparar trabalhadores fiéis.
             </p>
-            <div className="hero-actions">
-              <Link href="/materiais" className="btn btn-primary btn-lg btn-arrow">Conhecer materiais</Link>
-              <Link href="/cursos" className="btn btn-secondary btn-lg">Conhecer cursos</Link>
-            </div>
+            {(hasMateriais || hasCursos) && (
+              <div className="hero-actions">
+                {hasMateriais && (
+                  <Link href="/materiais" className="btn btn-primary btn-lg btn-arrow">Conhecer materiais</Link>
+                )}
+                {hasCursos && (
+                  <Link href="/cursos" className="btn btn-secondary btn-lg">Conhecer cursos</Link>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

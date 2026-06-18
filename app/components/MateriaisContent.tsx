@@ -156,6 +156,7 @@ export default function MateriaisContent({
   const infantilEstantes  = allEstantes.filter(e => e.key.startsWith("infantil-"))
   const infantilChip      = { key: "infantil", label: "Infantil", accent: "wheat" as AccentKey }
   const l2Ministrar       = [infantilChip, ...estantesMinistrar]
+  const estantePorKey     = Object.fromEntries(allEstantes.map((e) => [e.key, e]))
 
   const [filtroL1, setFiltroL1] = useState<FiltroL1>("tudo");
   const [estanteAtiva, setEstanteAtiva] = useState<string | null>(null);
@@ -238,13 +239,29 @@ export default function MateriaisContent({
 
       <div className="pg-wrap pg-section">
         {filtroL1 === "eventos" && (
-          <div>
+          <div className="loja-familia">
+            <div className="loja-familia-head loja-familia-head--eventos">
+              <div className="loja-familia-num" aria-hidden="true">03</div>
+              <div className="loja-familia-inner">
+                <div className="loja-familia-rule">
+                  <span className="loja-familia-rule-seg loja-familia-rule-seg--terra" />
+                </div>
+                <div className="loja-familia-meta">
+                  <span className="loja-familia-eyebrow loja-familia-eyebrow--terra">§ 03 · Ocasiões</span>
+                  <div className="loja-familia-title loja-familia-title--terra">Eventos</div>
+                  <p className="loja-familia-desc">Materiais para retiros, conferências e datas especiais da igreja local.</p>
+                </div>
+                <div className="loja-familia-counter">
+                  {Object.keys(eventosGrupos).length} coleções
+                </div>
+              </div>
+            </div>
             {Object.entries(eventosGrupos).map(([colecao, mats]) => (
               <div key={colecao} className="loja-eventos-grupo">
                 <div className="loja-eventos-label">{eventosLabels[colecao] ?? colecao}</div>
                 <div className="loja-shelf-grid">
                   {mats.map((m) => {
-                    const e = ESTANTE_MAP[m.estante];
+                    const e = estantePorKey[m.estante] ?? ESTANTE_MAP[m.estante];
                     return (
                       <Link key={m.id} href={`/materiais/${m.id}`} style={{ textDecoration: "none" }}>
                         <ProdCard material={m} accentKey={e?.accent || "olive"} onClick={() => {}} />
@@ -259,24 +276,22 @@ export default function MateriaisContent({
 
         {(filtroL1 === "tudo" || filtroL1 === "ministrar") && (
           <div className="loja-familia">
-            {filtroL1 === "tudo" && (
-              <div className="loja-familia-head">
-                <div className="loja-familia-num" aria-hidden="true">01</div>
-                <div className="loja-familia-inner">
-                  <div className="loja-familia-rule">
-                    <span className="loja-familia-rule-seg" />
-                  </div>
-                  <div className="loja-familia-meta">
-                    <span className="loja-familia-eyebrow">§ 01 · Conteúdo</span>
-                    <div className="loja-familia-title">Para <em>ministrar</em></div>
-                    <p className="loja-familia-desc">Material por faixa e ocasião. Do berçário à igreja toda.</p>
-                  </div>
-                  <div className="loja-familia-counter">
-                    {(infantilEstantes.length + estantesMinistrar.length)} faixas
-                  </div>
+            <div className="loja-familia-head">
+              <div className="loja-familia-num" aria-hidden="true">01</div>
+              <div className="loja-familia-inner">
+                <div className="loja-familia-rule">
+                  <span className="loja-familia-rule-seg" />
+                </div>
+                <div className="loja-familia-meta">
+                  <span className="loja-familia-eyebrow">§ 01 · Conteúdo</span>
+                  <div className="loja-familia-title">Para <em>ministrar</em></div>
+                  <p className="loja-familia-desc">Material por faixa e ocasião. Do berçário à igreja toda.</p>
+                </div>
+                <div className="loja-familia-counter">
+                  {(infantilEstantes.length + estantesMinistrar.length)} faixas
                 </div>
               </div>
-            )}
+            </div>
             {infantilVisiveis().map((e) => (
               <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onVerTodos={setEstanteAberta} />
             ))}
@@ -288,24 +303,22 @@ export default function MateriaisContent({
 
         {(filtroL1 === "tudo" || filtroL1 === "liderar") && (
           <div className="loja-familia">
-            {filtroL1 === "tudo" && (
-              <div className="loja-familia-head loja-familia-head--liderar">
-                <div className="loja-familia-num" aria-hidden="true">02</div>
-                <div className="loja-familia-inner">
-                  <div className="loja-familia-rule">
-                    <span className="loja-familia-rule-seg loja-familia-rule-seg--olive" />
-                  </div>
-                  <div className="loja-familia-meta">
-                    <span className="loja-familia-eyebrow loja-familia-eyebrow--olive">§ 02 · Estrutura</span>
-                    <div className="loja-familia-title loja-familia-title--olive">Para <em>liderar</em></div>
-                    <p className="loja-familia-desc">Ferramentas de gestão, formação e organização ministerial.</p>
-                  </div>
-                  <div className="loja-familia-counter">
-                    {estantesLiderar.length} categorias
-                  </div>
+            <div className="loja-familia-head loja-familia-head--liderar">
+              <div className="loja-familia-num" aria-hidden="true">02</div>
+              <div className="loja-familia-inner">
+                <div className="loja-familia-rule">
+                  <span className="loja-familia-rule-seg loja-familia-rule-seg--olive" />
+                </div>
+                <div className="loja-familia-meta">
+                  <span className="loja-familia-eyebrow loja-familia-eyebrow--olive">§ 02 · Estrutura</span>
+                  <div className="loja-familia-title loja-familia-title--olive">Para <em>liderar</em></div>
+                  <p className="loja-familia-desc">Ferramentas de gestão, formação e organização ministerial.</p>
+                </div>
+                <div className="loja-familia-counter">
+                  {estantesLiderar.length} categorias
                 </div>
               </div>
-            )}
+            </div>
             {estantesVisiveis(estantesLiderar).map((e) => (
               <Shelf key={e.key} estante={e} materiais={materiaisDe(e.key)} onVerTodos={setEstanteAberta} />
             ))}

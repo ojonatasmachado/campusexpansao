@@ -138,7 +138,6 @@ export default function Nav() {
         ) : (
           <div className="nav-auth-actions" style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Link href="/login" className="nav-login-cta">Entrar</Link>
-            <Link href="/materiais" className="nav-cta">Comece agora</Link>
           </div>
         )}
 

@@ -513,7 +513,9 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
 
 .nav-burger-btn { display: none; }
 
-.nav-auth-actions { margin-left: auto; }
+html .nav-auth-actions { margin-left: auto; }
+html .nav-logo { flex-shrink: 0; }
+html .nav-links { margin-left: clamp(28px, 3vw, 48px); }
 
 .nav-login-cta {
   font-family: var(--sans);
@@ -608,6 +610,7 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   user-select: none;
 }
 .loja-familia-head--liderar .loja-familia-num { color: var(--olive); opacity: 0.1; }
+.loja-familia-head--eventos .loja-familia-num { color: var(--terra); opacity: 0.08; }
 
 /* Layout interno */
 .loja-familia-inner {
@@ -633,6 +636,7 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   flex-shrink: 0;
 }
 .loja-familia-rule-seg--olive { background: var(--olive); }
+.loja-familia-rule-seg--terra { background: var(--terra); }
 
 /* Meta: eyebrow + título + desc */
 .loja-familia-meta { display: flex; flex-direction: column; gap: 8px; }
@@ -645,6 +649,7 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   text-transform: uppercase;
 }
 .loja-familia-eyebrow--olive { color: var(--olive); }
+.loja-familia-eyebrow--terra { color: var(--terra); }
 
 .loja-familia-title {
   font-size: 52px;
@@ -656,6 +661,8 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
 .loja-familia-title em { font-style: italic; color: var(--cream); }
 .loja-familia-title--olive { color: var(--olive); }
 .loja-familia-title--olive em { color: var(--olive); }
+.loja-familia-title--terra { color: var(--terra); }
+.loja-familia-title--terra em { color: var(--terra); }
 
 .loja-familia-desc {
   font-size: 16px;

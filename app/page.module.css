@@ -2,6 +2,10 @@
   overflow-x: hidden;
 }
 
+.homePage :global(.home-hero) {
+  padding-top: clamp(124px, 10vw, 148px);
+}
+
 .homePage :global(.hero-inner),
 .homePage :global(.hero-title) {
   max-width: min(760px, 100%);
@@ -12,9 +16,9 @@
 }
 
 .aboutSection:global(.pg-wrap) {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: clamp(72px, 7vw, 88px) 48px clamp(28px, 3vw, 40px);
+  max-width: none;
+  margin: 0;
+  padding: clamp(72px, 7vw, 88px) 4% clamp(28px, 3vw, 40px);
 }
 
 .aboutSection :global(.about-lead) {
@@ -80,10 +84,10 @@
 }
 
 .materialsIntro:global(.pg-wrap) {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding-right: 48px;
-  padding-left: 48px;
+  max-width: none;
+  margin: 0;
+  padding-right: 4%;
+  padding-left: 4%;
   padding-top: clamp(24px, 3vw, 36px);
   padding-bottom: 18px;
 }
@@ -134,6 +138,10 @@
 }
 
 @media (max-width: 640px) {
+  .homePage :global(.home-hero) {
+    padding-top: 88px;
+  }
+
   .aboutSection:global(.pg-wrap) {
     padding: 56px 20px 28px;
   }
