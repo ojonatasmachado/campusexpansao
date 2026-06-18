@@ -10,6 +10,7 @@ export default function Nav() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const isActive = (href: string) => pathname === href;
 
@@ -67,18 +68,25 @@ export default function Nav() {
 
         {/* Auth area desktop */}
         {user ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Link
-              href="/perfil"
+          <div style={{ display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
+            <button
+              type="button"
+              onClick={() => setProfileOpen((current) => !current)}
               style={{
+                background: "transparent",
+                border: "none",
                 color: "var(--cream)",
                 fontSize: 13,
                 fontWeight: 600,
-                textDecoration: "none",
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                padding: 0,
               }}
+              aria-expanded={profileOpen}
+              aria-haspopup="menu"
             >
               <span style={{
                 width: 28,
@@ -95,22 +103,37 @@ export default function Nav() {
                 {userName[0]?.toUpperCase()}
               </span>
               {userName}
-            </Link>
-            <button
-              onClick={handleLogout}
-              style={{
-                background: "none",
-                border: "1px solid var(--border-2)",
-                borderRadius: 6,
-                padding: "5px 12px",
-                color: "var(--muted)",
-                fontFamily: "inherit",
-                fontSize: 12,
-                cursor: "pointer",
-              }}
-            >
-              Sair
             </button>
+            {profileOpen && (
+              <div
+                role="menu"
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  top: 40,
+                  width: 210,
+                  background: "var(--graphite)",
+                  border: "1px solid var(--border-2)",
+                  borderRadius: 8,
+                  padding: 8,
+                  boxShadow: "0 18px 42px rgba(0,0,0,.35)",
+                }}
+              >
+                <Link href="/perfil" role="menuitem" onClick={() => setProfileOpen(false)} style={menuItemStyle}>
+                  Minhas compras
+                </Link>
+                <Link href="/conta" role="menuitem" onClick={() => setProfileOpen(false)} style={menuItemStyle}>
+                  Minha conta
+                </Link>
+                <button
+                  role="menuitem"
+                  onClick={() => { setProfileOpen(false); handleLogout(); }}
+                  style={{ ...menuItemStyle, width: "100%", background: "transparent", border: "none", textAlign: "left" }}
+                >
+                  Sair
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -173,6 +196,9 @@ export default function Nav() {
             <Link href="/perfil" className="nav-drawer-link" onClick={() => setOpen(false)}>
               Minhas compras
             </Link>
+            <Link href="/conta" className="nav-drawer-link" onClick={() => setOpen(false)}>
+              Minha conta
+            </Link>
             <button
               onClick={() => { setOpen(false); handleLogout(); }}
               style={{
@@ -207,3 +233,15 @@ export default function Nav() {
     </>
   );
 }
+
+const menuItemStyle: React.CSSProperties = {
+  borderRadius: 6,
+  color: "var(--light)",
+  cursor: "pointer",
+  display: "block",
+  fontFamily: "inherit",
+  fontSize: 13,
+  fontWeight: 600,
+  padding: "10px 12px",
+  textDecoration: "none",
+};

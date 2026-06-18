@@ -659,3 +659,21 @@ html .pg-wrap { max-width: none; padding: 0 4%; }
   .loja-familia-desc { font-size: 14px; }
   .loja-familia-head { padding: 48px 0 28px; }
 }
+
+/* ── CONTA DO USUÁRIO ─────────────────────────────────────────────────────── */
+
+@media (max-width: 980px) {
+  .account-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .account-layout aside {
+    position: static !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .account-field-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

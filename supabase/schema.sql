@@ -76,6 +76,42 @@ create policy "leitura pública estantes"  on estantes  for select using (true);
 create policy "leitura pública materiais" on materiais for select using (true);
 create policy "leitura pública cursos"    on cursos    for select using (true);
 
+-- Perfis dos usuários
+create table if not exists user_profiles (
+  user_id         uuid primary key references auth.users(id) on delete cascade,
+  email           text not null,
+  full_name       text not null default '',
+  church_name     text not null default '',
+  phone           text not null default '',
+  state           text not null default '',
+  city            text not null default '',
+  church_address  text not null default '',
+  role            text not null default '',
+  ministry_area   text not null default '',
+  denomination    text not null default '',
+  created_at      timestamptz default now(),
+  updated_at      timestamptz default now()
+);
+
+create index if not exists user_profiles_email_idx on user_profiles(lower(email));
+create index if not exists user_profiles_state_idx on user_profiles(state);
+create index if not exists user_profiles_role_idx on user_profiles(role);
+create index if not exists user_profiles_church_name_idx on user_profiles(church_name);
+
+alter table user_profiles enable row level security;
+
+drop policy if exists "usuario le seu perfil" on user_profiles;
+create policy "usuario le seu perfil" on user_profiles
+for select using (auth.uid() = user_id);
+
+drop policy if exists "usuario cria seu perfil" on user_profiles;
+create policy "usuario cria seu perfil" on user_profiles
+for insert with check (auth.uid() = user_id);
+
+drop policy if exists "usuario atualiza seu perfil" on user_profiles;
+create policy "usuario atualiza seu perfil" on user_profiles
+for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
 -- Compras liberadas pela Hotmart
 create table if not exists compras (
   id                  uuid primary key default gen_random_uuid(),

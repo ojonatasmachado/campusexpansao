@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../lib/supabase-server";
+import { ensureUserProfile } from "../../lib/user-profile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +20,11 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error) return NextResponse.redirect(nextUrl);
+    if (!error) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) await ensureUserProfile(user);
+      return NextResponse.redirect(nextUrl);
+    }
   }
 
   const loginUrl = new URL("/login", url.origin);

@@ -73,3 +73,19 @@ export type DbMentoria = {
   waitlist: number
   keywords?: string[] | null
 }
+
+export type DbUserProfile = {
+  user_id: string
+  email: string
+  full_name: string
+  church_name: string
+  phone: string
+  state: string
+  city: string
+  church_address: string
+  role: string
+  ministry_area: string
+  denomination: string
+  created_at: string | null
+  updated_at: string | null
+}
