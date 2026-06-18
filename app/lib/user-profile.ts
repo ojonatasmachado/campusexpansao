@@ -1,5 +1,4 @@
-import type { User } from "@supabase/supabase-js";
-import { supabaseAdmin } from "./supabase";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import type { DbUserProfile } from "./types";
 
 export type UserProfileForm = {
@@ -69,51 +68,55 @@ export function sanitizeProfileForm(form: UserProfileForm): UserProfileForm {
   };
 }
 
-export async function getUserProfile(user: User): Promise<DbUserProfile | null> {
-  try {
-    const { data, error } = await supabaseAdmin()
-      .from("user_profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
+type ProfileDb = Pick<SupabaseClient, "from">;
 
-    if (error) {
-      if (error.code === "42P01") return null;
-      throw error;
-    }
-
-    return (data ?? null) as DbUserProfile | null;
-  } catch (error) {
-    console.error("Erro ao buscar perfil do usuário", error);
-    return null;
-  }
+function isMissingProfileTable(error: { code?: string; message?: string } | null) {
+  return error?.code === "42P01" || error?.message?.toLowerCase().includes("does not exist");
 }
 
-export async function ensureUserProfile(user: User): Promise<DbUserProfile | null> {
-  const existing = await getUserProfile(user);
+export async function getUserProfile(db: ProfileDb, user: User): Promise<DbUserProfile | null> {
+  const { data, error } = await db
+    .from("user_profiles")
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingProfileTable(error)) return null;
+    throw error;
+  }
+
+  return (data ?? null) as DbUserProfile | null;
+}
+
+export async function ensureUserProfile(db: ProfileDb, user: User): Promise<DbUserProfile | null> {
+  const existing = await getUserProfile(db, user);
   if (existing) return existing;
 
+  const fallbackProfile = profileFromUserMetadata(user);
+  const { data, error } = await db
+    .from("user_profiles")
+    .upsert({
+      user_id: user.id,
+      email: user.email?.trim().toLowerCase() ?? "",
+      ...fallbackProfile,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "user_id" })
+    .select("*")
+    .single();
+
+  if (error) {
+    if (isMissingProfileTable(error)) return null;
+    throw error;
+  }
+
+  return data as DbUserProfile;
+}
+
+export async function ensureUserProfileOrNull(db: ProfileDb, user: User): Promise<DbUserProfile | null> {
   try {
-    const fallbackProfile = profileFromUserMetadata(user);
-    const { data, error } = await supabaseAdmin()
-      .from("user_profiles")
-      .upsert({
-        user_id: user.id,
-        email: user.email?.trim().toLowerCase() ?? "",
-        ...fallbackProfile,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "user_id" })
-      .select("*")
-      .single();
-
-    if (error) {
-      if (error.code === "42P01") return null;
-      throw error;
-    }
-
-    return data as DbUserProfile;
-  } catch (error) {
-    console.error("Erro ao criar perfil do usuário", error);
+    return await ensureUserProfile(db, user);
+  } catch {
     return null;
   }
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../lib/supabase-server";
-import { ensureUserProfile } from "../../lib/user-profile";
+import { ensureUserProfileOrNull } from "../../lib/user-profile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
     if (!error) {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) await ensureUserProfile(user);
+      if (user) await ensureUserProfileOrNull(supabase, user);
       return NextResponse.redirect(nextUrl);
     }
   }

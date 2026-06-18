@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "../lib/supabase-server";
-import { dbProfileToForm, ensureUserProfile } from "../lib/user-profile";
+import { dbProfileToForm, ensureUserProfileOrNull } from "../lib/user-profile";
 import ContaClient from "./ContaClient";
 
 export default async function ContaPage() {
@@ -9,7 +9,7 @@ export default async function ContaPage() {
 
   if (!user) redirect("/login?redirect=/conta");
 
-  const profile = await ensureUserProfile(user);
+  const profile = await ensureUserProfileOrNull(supabase, user);
 
   return <ContaClient user={user} initialProfile={dbProfileToForm(profile, user)} />;
 }
