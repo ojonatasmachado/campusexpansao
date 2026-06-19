@@ -281,6 +281,23 @@ function materialContentMeta(content: MaterialContent) {
   return ['Design', content.designs ? `${content.designs} ${content.designs === 1 ? 'arte' : 'artes'}` : null, designFormatLabel(content.designFormat)].filter(Boolean).join(' · ')
 }
 
+function materialContentFormatLabel(content: MaterialContent) {
+  if (content.kind === 'word') return content.delivery === 'word' ? 'Word' : 'PDF'
+  if (content.kind === 'pdf') return 'PDF'
+  if (content.kind === 'ppt') return 'Slides'
+  return 'Design'
+}
+
+function materialMessageFormatRows(contents: MaterialContent[], total: number) {
+  const rows: string[] = []
+  contents.forEach((content) => {
+    if (content.kind !== 'word' && content.kind !== 'pdf') return
+    const count = Math.max(0, content.messages ?? (content.kind === 'word' ? 1 : 0))
+    for (let i = 0; i < count; i += 1) rows.push(materialContentFormatLabel(content))
+  })
+  return Array.from({ length: total }, (_, i) => rows[i] ?? 'Material')
+}
+
 function designFormatLabel(format?: MaterialContent['designFormat']) {
   if (format === 'stories') return 'Stories'
   if (format === 'telao') return 'Telão'
@@ -3061,7 +3078,7 @@ function MaterialContentsField({
         >
           <div className="add-inner">
             <span className="add-plus">+</span>
-            <span className="add-tt">Adicionar arquivo</span>
+            <span className="add-tt">Adicionar material</span>
           </div>
         </div>
         {contents.map((content, i) => (
@@ -3215,7 +3232,7 @@ function MaterialContentsField({
                 <button className="chooser-opt" type="button" onClick={() => saveStudioToMaterial('word')}>
                   <span className="chooser-ic" aria-hidden="true"><DocumentTextIcon /></span>
                   <span className="chooser-tt">Word</span>
-                  <span className="chooser-sb">O comprador recebe como arquivo editável.</span>
+                  <span className="chooser-sb">O comprador recebe como material editável.</span>
                 </button>
                 <button className="chooser-opt" type="button" onClick={() => saveStudioToMaterial('pdf')}>
                   <span className="chooser-ic" aria-hidden="true"><PdfFileIcon /></span>
@@ -3233,7 +3250,7 @@ function MaterialContentsField({
             <div className="cmodal-head">
               <div>
                 <div className="cmodal-eyebrow">◆ Conteúdo {String(active + 1).padStart(2, '0')}</div>
-                <div className="cmodal-title">Detalhes do arquivo</div>
+                <div className="cmodal-title">Detalhes do material</div>
               </div>
               <button className="cmodal-x" type="button" onClick={() => setDetailsOpen(false)}>Fechar</button>
             </div>
@@ -3257,15 +3274,15 @@ function MaterialContentsField({
               <div className="ed-3col">
                 {activeContent.kind === 'word' && (
                   <>
-                    <Field label="Mensagens"><input className="inp" type="number" min="0" value={activeContent.messages ?? ''} onChange={(e) => set(active, { messages: e.target.value ? +e.target.value : null })} /></Field>
-                    <Field label="Páginas"><input className="inp" type="number" min="0" value={activeContent.pages ?? ''} onChange={(e) => set(active, { pages: e.target.value ? +e.target.value : null })} /></Field>
+                    <AutoMeta label="Mensagens" value={activeContent.messages ?? 0} hint="automático" />
+                    <AutoMeta label="Páginas" value={activeContent.pages ?? 0} hint="automático" />
                     <Field label="Entrega"><select className="inp" value={activeContent.delivery ?? 'pdf'} onChange={(e) => set(active, { delivery: e.target.value as 'word' | 'pdf' })}><option value="word">Word</option><option value="pdf">PDF</option></select></Field>
                   </>
                 )}
                 {activeContent.kind === 'pdf' && (
                   <>
-                    <Field label="Arquivo"><input className="inp" value={activeContent.file ?? ''} onChange={(e) => set(active, { file: e.target.value })} /></Field>
-                    <Field label="Páginas"><input className="inp" type="number" min="0" value={activeContent.pages ?? ''} onChange={(e) => set(active, { pages: e.target.value ? +e.target.value : null })} /></Field>
+                    <Field label="Material"><input className="inp" value={activeContent.file ?? ''} onChange={(e) => set(active, { file: e.target.value })} /></Field>
+                    <AutoMeta label="Páginas" value={activeContent.pages ?? 0} hint="automático" />
                     <div />
                   </>
                 )}
@@ -3296,7 +3313,17 @@ function MaterialContentsField({
   )
 }
 
-function MessageListField({ count, value, accent, onChange }: { count: number; value: MaterialMessage[]; accent: string; onChange: (v: MaterialMessage[]) => void }) {
+function AutoMeta({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
+  return (
+    <div className="auto-meta">
+      <span>{label}</span>
+      <b>{value}</b>
+      {hint && <em>{hint}</em>}
+    </div>
+  )
+}
+
+function MessageListField({ count, value, accent, formats, onChange }: { count: number; value: MaterialMessage[]; accent: string; formats: string[]; onChange: (v: MaterialMessage[]) => void }) {
   const rows = Math.max(count || 0, value.length)
   const get = (i: number) => value[i] || { nome: '', desc: '' }
   const set = (i: number, patch: Partial<{ nome: string; desc: string }>) => {
@@ -3304,7 +3331,7 @@ function MessageListField({ count, value, accent, onChange }: { count: number; v
     a[i] = { ...a[i], ...patch }
     onChange(a)
   }
-  if (rows === 0) return <div className="fld-hint">Defina <em>Mensagens</em> acima para detalhar cada uma.</div>
+  if (rows === 0) return <div className="fld-hint">Adicione documentos ou PDFs no conteúdo para listar os materiais inclusos.</div>
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {Array.from({ length: rows }).map((_, i) => {
@@ -3313,6 +3340,7 @@ function MessageListField({ count, value, accent, onChange }: { count: number; v
           <div key={i} style={{ border: '1px solid var(--border-2)', borderRadius: 'var(--r-sm)', padding: '12px 14px', background: 'var(--ink)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <span style={{ fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 600, color: accent }}>{String(i + 1).padStart(2, '0')}</span>
+              <span className="msg-format">{formats[i] ?? 'Material'}</span>
               <input className="inp" style={{ flex: 1 }} value={r.nome} onChange={(e) => set(i, { nome: e.target.value })} placeholder={`Nome da mensagem ${i + 1}`} />
             </div>
             <input className="inp" value={r.desc} onChange={(e) => set(i, { desc: e.target.value })} placeholder="Breve descrição (uma linha)" />
@@ -3339,7 +3367,11 @@ function DepoimentoField({ value, onChange, showCargo }: { value: { texto: strin
 function TagsField({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
   const [input, setInput] = useState('')
   const add = (raw: string) => {
-    const tags = raw.split(',').map(t => t.trim().toLowerCase()).filter(t => t && !value.includes(t))
+    const current = new Set(value.map(t => t.toLowerCase()))
+    const tags = raw
+      .split(/[\s,]+/)
+      .map(t => t.trim().toLowerCase())
+      .filter(t => t && !current.has(t))
     if (tags.length) onChange([...value, ...tags])
     setInput('')
   }
@@ -3349,16 +3381,16 @@ function TagsField({ value, onChange }: { value: string[]; onChange: (v: string[
         {value.map((tag, i) => (
           <span key={i} style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.06em', background: 'var(--graphite)', border: '1px solid var(--border-2)', borderRadius: 100, padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--light)' }}>
             {tag}
-            <button onClick={() => onChange(value.filter((_, k) => k !== i))} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', padding: 0, lineHeight: 1, fontSize: 12 }}>✕</button>
+            <button aria-label={`Remover ${tag}`} onClick={() => onChange(value.filter((_, k) => k !== i))} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', padding: 0, lineHeight: 1, fontSize: 12 }}>x</button>
           </span>
         ))}
         {value.length === 0 && <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--subtle)' }}>Nenhuma palavra-chave ainda</span>}
       </div>
       <input
         className="inp" value={input}
-        placeholder="Digite uma palavra e pressione Enter (ou vírgula para múltiplas)"
+        placeholder="Digite uma palavra e pressione espaço, Enter ou vírgula"
         onChange={e => setInput(e.target.value)}
-        onKeyDown={e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(input) } }}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ',' || e.key === ' ') { e.preventDefault(); add(input) } }}
         onBlur={() => { if (input.trim()) add(input) }}
       />
     </div>
@@ -3445,6 +3477,7 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
   const c = d as Curso
   const men = d as Mentoria
   const ev = d as Evento
+  const keywordItem = d.type !== 'evento' ? d as Material | Curso | Mentoria : null
   const setFamily = (fam: string) => setD((prev) => ({ ...prev, family: fam, shelf: (SHELVES[fam] ?? [])[0] ?? (prev as Material).shelf } as Item))
   const openArtes = (tab: ArtSurface, preset = artesPreset) => {
     setArtesTab(tab)
@@ -3478,7 +3511,7 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
               <span className="codebadge"><b>{m.code}</b><span className="sys">código interno</span></span>
             )}
           </div>
-          <input className="ed-titleinput" value={d.title} placeholder={d.type === 'material' ? 'Dê um nome ao produto' : 'Título do item'}
+          <input className="ed-titleinput" value={d.title} placeholder={d.type === 'material' ? 'Nome do material' : 'Título do item'}
             onChange={(e) => set('title', e.target.value as never)} />
           {d.type === 'material' && (
             <div className="ed-hero-hint">O produto agora nasce pelo que ele entrega. Monte os conteúdos, confira a prévia e publique quando estiver pronto.</div>
@@ -3489,7 +3522,31 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
         </Field>}
 
         {d.type === 'material' && <>
-          <SectionHead mark="Conteúdo" opt="o resto se monta sozinho" />
+          <Field label="Descrição do material" req hint="Resumo curto para card, landing page e artes de divulgação.">
+            <textarea className="inp ta" value={d.desc} onChange={(e) => set('desc', e.target.value as never)} placeholder="Resumo do produto para o comprador." />
+          </Field>
+
+          <Field label="Para quem é" req hint="Nomeie quem mais se beneficia deste material e qual dor ele resolve.">
+            <textarea className="inp ta" value={m.paraQuem ?? ''} onChange={(e) => set('paraQuem' as never, e.target.value as never)} placeholder="Pra líder que..." />
+          </Field>
+
+          <SectionHead mark="Onde fica na loja" opt="obrigatório" />
+          <div className="fld-hint section-copy">Escolha a família e a estante. A estante define a cor do card e onde o material aparece no catálogo.</div>
+          <div className="ed-2col">
+            <Field label="Família" req>
+              <select className="inp" value={m.family} onChange={(e) => setFamily(e.target.value)}>
+                <option>Para ministrar</option><option>Para liderar</option>
+              </select>
+            </Field>
+            <Field label="Estante" req hint="A cor vem da estante e fica travada pela identidade visual.">
+              <select className="inp" value={m.shelf} onChange={(e) => set('shelf' as never, e.target.value as never)}>
+                {(SHELVES[m.family] ?? [m.shelf]).map((s) => <option key={s}>{s}</option>)}
+              </select>
+            </Field>
+          </div>
+
+          <SectionHead mark="Conteúdo" opt="obrigatório" />
+          <div className="fld-hint section-copy">Adicione documentos, PDFs, slides ou designs. Esses itens alimentam os formatos vendidos e o que o comprador recebe.</div>
           <MaterialContentsField
             value={m.contents ?? []}
             onChange={setMaterialContents}
@@ -3497,44 +3554,27 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
             onMessageListChange={(v) => set('messageList' as never, v as never)}
           />
 
-          <SectionHead mark="Onde fica na loja" />
-          <div className="ed-2col">
-            <Field label="Família">
-              <select className="inp" value={m.family} onChange={(e) => setFamily(e.target.value)}>
-                <option>Para ministrar</option><option>Para liderar</option>
-              </select>
-            </Field>
-            <Field label="Estante" hint="Define a cor do card (travada).">
-              <select className="inp" value={m.shelf} onChange={(e) => set('shelf' as never, e.target.value as never)}>
-                {(SHELVES[m.family] ?? [m.shelf]).map((s) => <option key={s}>{s}</option>)}
-              </select>
-            </Field>
+          <SectionHead mark="Detalhes da página" opt="obrigatório" />
+          <div className="fld-hint section-copy">Esses números são calculados automaticamente pelos conteúdos adicionados. O código é apenas identificação interna.</div>
+          <div className="ed-3col auto-meta-grid">
+            <AutoMeta label="Código" value={m.code || 'Automático'} hint="não editável" />
+            <AutoMeta label="Mensagens" value={m.messages ?? 0} hint="calculado pelos conteúdos" />
+            <AutoMeta label="Páginas" value={m.pages ?? 0} hint="calculado pelos materiais" />
           </div>
-          <SectionHead mark="Detalhes da página" opt="edite só o que precisar" />
-          <Field label="Descrição curta" hint="Uma linha. Aparece no card e no topo da página.">
-            <textarea className="inp ta" value={d.desc} onChange={(e) => set('desc', e.target.value as never)} placeholder="Resumo do produto para o comprador." />
-          </Field>
-          <div className="ed-3col">
-            <Field label="Código"><input className="inp" value={m.code} onChange={(e) => set('code' as never, e.target.value as never)} placeholder="Ex: S-10" /></Field>
-            <Field label="Mensagens"><input className="inp" type="number" value={m.messages ?? ''} onChange={(e) => set('messages' as never, (e.target.value ? +e.target.value : null) as never)} /></Field>
-            <Field label="Páginas"><input className="inp" type="number" value={m.pages} onChange={(e) => set('pages' as never, +e.target.value as never)} /></Field>
-          </div>
-          <Field label="Palavras-chave" hint="Para busca e correlação.">
-            <TagsField value={m.keywords ?? []} onChange={(v) => set('keywords' as never, v as never)} />
-          </Field>
+
+          <SectionHead mark="Materiais inclusos" opt="obrigatório" />
+          <div className="fld-hint section-copy">Edite o nome e a descrição de cada item que aparece na landing page. O formato vem do conteúdo criado.</div>
           {m.messages != null && m.messages > 0 && (
-            <Field label={m.messages === 1 ? 'Mensagem que aparece na página' : 'Mensagens que aparecem na página'}>
-              <MessageListField count={m.messages} value={m.messageList ?? []} accent={accent} onChange={(v) => set('messageList' as never, v as never)} />
+            <Field label={m.messages === 1 ? 'Material incluso' : 'Materiais inclusos'} req>
+              <MessageListField count={m.messages} value={m.messageList ?? []} accent={accent} formats={materialMessageFormatRows(m.contents ?? [], m.messages)} onChange={(v) => set('messageList' as never, v as never)} />
             </Field>
           )}
-          <Field label="Pra quem é" hint="Uma frase que nomeia a dor.">
-            <textarea className="inp ta" value={m.paraQuem ?? ''} onChange={(e) => set('paraQuem' as never, e.target.value as never)} placeholder="Pra líder que..." />
-          </Field>
 
-          <SectionHead mark="Venda" />
+          <SectionHead mark="Venda" opt="obrigatório" />
+          <div className="fld-hint section-copy">Defina o preço, status de publicação e o link da Hotmart usado no botão de compra.</div>
           <div className="ed-2col">
             <Field label="Preço (R$)" req><input className="inp" type="number" value={m.price} onChange={(e) => set('price' as never, +e.target.value as never)} /></Field>
-            <Field label="Status">
+            <Field label="Status" req>
               <select className="inp" value={d.status} onChange={(e) => set('status', e.target.value as never)}>
                 <option>Publicado</option><option>Rascunho</option>
               </select>
@@ -3544,9 +3584,22 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
             <input className="inp" value={m.hotmart} onChange={(e) => set('hotmart' as never, e.target.value as never)} placeholder="https://pay.hotmart.com/..." />
           </Field>
 
-          <SectionHead mark="Extras" opt="opcional" />
-          <Field label="Perguntas frequentes (FAQ)" hint="Aparecem na landing page do material.">
+          <SectionHead mark="FAQ" opt="opcional" />
+          <div className="fld-hint section-copy">Perguntas frequentes ajudam o comprador a entender o uso do material antes da compra.</div>
+          <Field label="Perguntas frequentes">
             <FaqField value={m.faq ?? []} onChange={(v) => set('faq' as never, v as never)} />
+          </Field>
+
+          <SectionHead mark="Imagem de capa" opt="opcional" />
+          <div className="fld-hint section-copy">Use uma capa específica quando existir. Sem imagem, o sistema mantém a arte automática CE.X.</div>
+          <Field label="Imagem de capa">
+            <ImageField value={d.image} onChange={(v) => set('image', v as never)} />
+          </Field>
+
+          <SectionHead mark="Palavras-chave" opt="opcional" />
+          <div className="fld-hint section-copy">Use termos de busca e análise. Ao pressionar espaço, cada palavra vira uma tag.</div>
+          <Field label="Palavras-chave">
+            <TagsField value={m.keywords ?? []} onChange={(v) => set('keywords' as never, v as never)} />
           </Field>
         </>}
 
@@ -3591,9 +3644,6 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
           <Field label="Depoimento">
             <DepoimentoField value={c.depoimento} onChange={(v) => set('depoimento' as never, v as never)} showCargo />
           </Field>
-          <Field label="Palavras-chave" hint="Para busca e correlação com outros cursos. Pressione Enter ou vírgula para adicionar.">
-            <TagsField value={c.keywords ?? []} onChange={(v) => set('keywords' as never, v as never)} />
-          </Field>
           <div className="fld">
             <label className="fld-label">Selo AO VIVO</label>
             <div className={`tgl${c.aoVivo ? ' on' : ''}`} onClick={() => set('aoVivo' as never, !c.aoVivo as never)} />
@@ -3611,9 +3661,6 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
               </select>
             </Field>
           </div>
-          <Field label="Palavras-chave" hint="Para busca e correlação. Pressione Enter ou vírgula para adicionar.">
-            <TagsField value={men.keywords ?? []} onChange={(v) => set('keywords' as never, v as never)} />
-          </Field>
         </>}
 
         {d.type === 'evento' && <>
@@ -3639,9 +3686,16 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
             <AccentLock value={accent} name={accentName} />
           </Field>
         )}
-        <Field label="Imagem de capa">
-          <ImageField value={d.image} onChange={(v) => set('image', v as never)} />
-        </Field>
+        {d.type !== 'material' && (
+          <Field label="Imagem de capa">
+            <ImageField value={d.image} onChange={(v) => set('image', v as never)} />
+          </Field>
+        )}
+        {keywordItem && d.type !== 'material' && (
+          <Field label="Palavras-chave" hint="Para buscas e análises. Digite uma palavra e pressione espaço para transformar em tag.">
+            <TagsField value={keywordItem.keywords ?? []} onChange={(v) => set('keywords' as never, v as never)} />
+          </Field>
+        )}
 
         <div className="ed-actions">
           <button className="btn-pri" onClick={() => onSave(dv)}>{isNew ? 'Criar item' : 'Salvar alterações'}</button>
@@ -3954,6 +4008,7 @@ function Row({ item, onEdit, onDelete }: { item: Item; onEdit: () => void; onDel
     : item.type === 'curso' ? `${(item as Curso).weeks} sem`
     : item.type === 'mentoria' ? `${(item as Mentoria).vagas} vagas`
     : `${(item as Evento).vagas} vagas`
+  const desc = item.desc?.trim()
   return (
     <div className="row">
       <div className="row-chip" style={{ background: item.image ? `url(${item.image}) center/cover` : 'var(--ink)' }}>
@@ -3961,6 +4016,7 @@ function Row({ item, onEdit, onDelete }: { item: Item; onEdit: () => void; onDel
       </div>
       <div className="row-main">
         <div className="row-title">{item.title || <em className="row-untitled">Sem título</em>}</div>
+        {desc && <div className="row-desc">{desc}</div>}
         <div className="row-cat">{cat}</div>
       </div>
       <span className={`pill ${item.status === 'Publicado' ? 'pub' : 'draft'}`}>{item.status}</span>
@@ -3982,7 +4038,16 @@ function ListView({ type, items, onNew, onEdit, onDelete }: { type: ItemType; it
     : type === 'curso' ? ['Todos', 'Fundação', 'Liderança', 'Multiplicação']
     : ['Todos', 'Publicado', 'Rascunho']
   const shown = items.filter((it) => {
-    const okQ = !q || (it.title ?? '').toLowerCase().includes(q.toLowerCase())
+    const haystack = [
+      it.title,
+      it.desc,
+      it.type === 'material' ? (it as Material).code : null,
+      it.type === 'material' ? (it as Material).shelf : null,
+      it.type === 'material' ? (it as Material).family : null,
+      it.type === 'curso' ? (it as Curso).level : null,
+      it.type !== 'evento' ? ((it as Material | Curso | Mentoria).keywords ?? []).join(' ') : null,
+    ].filter(Boolean).join(' ').toLowerCase()
+    const okQ = !q || haystack.includes(q.toLowerCase())
     if (filter === 'Todos') return okQ
     if (type === 'material') return okQ && (it as Material).family === filter
     if (type === 'curso') return okQ && (it as Curso).level === filter
