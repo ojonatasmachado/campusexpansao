@@ -80,13 +80,16 @@ export function mensagensDaCompra(material: Material): MensagemCompra[] {
 
 export function recursosDaCompra(material: Material): RecursoCompra[] {
   const slidesLiberados = hasFormato(material, "Slides");
+  const designLiberado = hasFormato(material, "Design");
 
   return [
     {
       id: "artes-redes",
-      titulo: "Artes para redes sociais",
-      meta: "Feed 4:5 · Stories 9:16",
-      desc: "Peças no ID visual CE.X para divulgar este material na igreja e nas redes.",
+      titulo: designLiberado ? "Design do material" : "Artes para redes sociais",
+      meta: designLiberado ? "Arte do mentor · modelos livres" : "Feed 4:5 · Stories 9:16",
+      desc: designLiberado
+        ? "Comece pela arte criada pelo mentor ou escolha qualquer modelo para adaptar do zero."
+        : "Escolha um modelo ou crie uma arte do zero para divulgar este material na igreja e nas redes.",
       tipo: "social",
       status: "Liberado",
     },

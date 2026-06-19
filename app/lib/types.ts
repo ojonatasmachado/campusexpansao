@@ -43,12 +43,14 @@ export type DbMaterial = {
 }
 
 export type DbMaterialContent = {
-  kind: "word" | "pdf" | "ppt"
+  kind: "word" | "pdf" | "ppt" | "design"
   name: string
   note: string
   pages?: number | null
   messages?: number | null
   slides?: number | null
+  designs?: number | null
+  designFormat?: "carousel" | "stories" | "telao" | null
   delivery?: "word" | "pdf" | null
   file?: string | null
 }

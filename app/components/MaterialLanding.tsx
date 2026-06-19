@@ -101,6 +101,7 @@ function SecMark({ label, accent }: { label: string; accent: string }) {
 function contentKindLabel(content: DbMaterialContent) {
   if (content.kind === "word") return content.delivery === "word" ? "Word" : "PDF";
   if (content.kind === "pdf") return "PDF";
+  if (content.kind === "design") return "Design";
   return "Slides";
 }
 
@@ -114,6 +115,10 @@ function contentMeta(content: DbMaterialContent) {
   }
   if (content.kind === "pdf") {
     return ["PDF", content.pages ? `${content.pages} páginas` : null].filter(Boolean).join(" · ");
+  }
+  if (content.kind === "design") {
+    const format = content.designFormat === "stories" ? "Stories" : content.designFormat === "telao" ? "Telão" : "Feed";
+    return ["Design", content.designs ? `${content.designs} artes` : null, format].filter(Boolean).join(" · ");
   }
   return ["Slides", content.slides ? `${content.slides} telas` : null].filter(Boolean).join(" · ");
 }
