@@ -2549,7 +2549,7 @@ function StoriesPreview({ item, initialPreset }: { item: Item; initialPreset?: A
   )
 }
 
-// ── MODAL ARTES PARA INSTAGRAM ────────────────────────────────────────────────
+// ── MODAL DE DIVULGAÇÃO CE.X ──────────────────────────────────────────────────
 
 function ArtesModal({ item, initialTab, initialPreset, onClose }: { item: Item; initialTab: ArtSurface; initialPreset?: ArtLayoutPresetId; onClose: () => void }) {
   const [tab, setTab] = useState<ArtSurface>(initialTab)
@@ -2572,7 +2572,7 @@ function ArtesModal({ item, initialTab, initialPreset, onClose }: { item: Item; 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--olive)', letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 4 }}>
-              ◆ Artes para Instagram
+              ◆ Divulgação CE.X
             </div>
             <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--cream)', letterSpacing: '-.02em', maxWidth: 760, lineHeight: 1.25 }}>
               {item.title}
@@ -2586,7 +2586,7 @@ function ArtesModal({ item, initialTab, initialPreset, onClose }: { item: Item; 
           {(['feed', 'stories'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               style={{ flex: 1, fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '.08em', textTransform: 'uppercase', border: 'none', borderRadius: 6, padding: '8px 0', cursor: 'pointer', transition: 'all .15s', background: tab === t ? 'var(--olive)' : 'transparent', color: tab === t ? 'var(--ink)' : 'var(--muted)', fontWeight: tab === t ? 700 : 400 }}>
-              {t === 'feed' ? 'Feed 4:5' : 'Stories 9:16'}
+              {t === 'feed' ? 'Carrossel 4:5' : 'Stories 9:16'}
             </button>
           ))}
         </div>
@@ -2598,7 +2598,7 @@ function ArtesModal({ item, initialTab, initialPreset, onClose }: { item: Item; 
         </div>
 
         <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--subtle)', textAlign: 'center', letterSpacing: '.06em' }}>
-          Todas as artes levam a identidade CE.X · campusexpansao.com.br
+          Artes para o mentor divulgar este material com a identidade CE.X · campusexpansao.com.br
         </div>
       </div>
     </div>
@@ -3459,9 +3459,7 @@ function EmentaField({ value, onChange }: { value: { titulo: string; desc: strin
 function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => void; onCancel: () => void }) {
   const [d, setD] = useState<Item>({ ...item })
   const [mode, setMode] = useState<'card' | 'pagina'>('card')
-  const [artesOpen, setArtesOpen] = useState(false)
-  const [artesTab, setArtesTab] = useState<ArtSurface>('feed')
-  const [artesPreset, setArtesPreset] = useState<ArtLayoutPresetId>('impacto')
+  const [divulgacaoOpen, setDivulgacaoOpen] = useState(false)
   const set = <K extends keyof Item>(k: K, v: Item[K]) => setD((prev) => ({ ...prev, [k]: v }))
   const accent = accentFor(d)
   const accentName = ACCENT_NAME[accent] ?? ''
@@ -3472,10 +3470,25 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
   const ev = d as Evento
   const keywordItem = d.type !== 'evento' ? d as Material | Curso | Mentoria : null
   const setFamily = (fam: string) => setD((prev) => ({ ...prev, family: fam, shelf: (SHELVES[fam] ?? [])[0] ?? (prev as Material).shelf } as Item))
-  const openArtes = (tab: ArtSurface, preset = artesPreset) => {
-    setArtesTab(tab)
-    setArtesPreset(preset)
-    setArtesOpen(true)
+  const openDivulgacaoStudio = () => {
+    if (d.type !== 'material') return
+    try {
+      window.localStorage.setItem('cex_studio_divulgacao_seed', JSON.stringify({
+        title: d.title,
+        description: d.desc,
+        category: m.shelf || m.family || 'Campus Expansão',
+        audience: m.paraQuem,
+        messages: m.messageList ?? [],
+        format: 'carousel',
+        handle: '@campusexpansao',
+      }))
+      window.localStorage.removeItem('cex_studio_divulgacao_v1')
+      window.localStorage.removeItem('cex_studio_divulgacao_v2')
+      window.localStorage.removeItem('cex_studio_divulgacao_v3')
+    } catch {
+      // O Studio ainda abre; apenas sem seed inicial caso o browser bloqueie o storage.
+    }
+    setDivulgacaoOpen(true)
   }
   const isNew = !item.id
   const setMaterialContents = (contents: MaterialContent[]) => {
@@ -3586,6 +3599,17 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
           <Field label="Palavras-chave">
             <TagsField value={m.keywords ?? []} onChange={(v) => set('keywords' as never, v as never)} />
           </Field>
+
+          <SectionHead mark="Divulgação CE.X" opt="opcional" />
+          <div className="fld-hint section-copy">Gere artes oficiais para o mentor divulgar este material. O conteúdo vem preenchido com nome, descrição, público e materiais inclusos.</div>
+          <div className="promo-panel">
+            <div className="promo-copy">
+              <span className="promo-kicker">Carrossel 1080 x 1350 · Stories 1080 x 1920</span>
+              <strong>Crie peças de divulgação no padrão CE.X</strong>
+              <span>Use variações da marca para postar no Instagram sem liberar estilos fora do brandbook.</span>
+            </div>
+            <button className="btn-pri" type="button" onClick={openDivulgacaoStudio}>Abrir Divulgação</button>
+          </div>
         </>}
 
         {d.type === 'curso' && <>
@@ -3699,10 +3723,6 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
                 </button>
               ))}
             </div>
-            <div className="art-mini" aria-label="Formatos de arte">
-              <button className="art-mini-btn" type="button" onClick={() => openArtes('feed')}>Feed</button>
-              <button className="art-mini-btn" type="button" onClick={() => openArtes('stories')}>Stories</button>
-            </div>
           </div>
         </div>
         <div className="ed-prevstage">
@@ -3712,7 +3732,18 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
         {d.status === 'Rascunho' && <div className="ed-draftnote">◆ Em rascunho. Não aparece no site até publicar.</div>}
       </div>
 
-      {artesOpen && <ArtesModal item={dv} initialTab={artesTab} initialPreset={artesPreset} onClose={() => setArtesOpen(false)} />}
+      {divulgacaoOpen && (
+        <div className="studio-bg" role="dialog" aria-modal="true" aria-label="CE.X Studio Divulgação">
+          <div className="studio-shell">
+            <button className="studio-float-close" type="button" onClick={() => setDivulgacaoOpen(false)}>Fechar Studio</button>
+            <iframe
+              className="studio-frame"
+              src="/admin/studio/divulgacao"
+              title="CE.X Studio Divulgação"
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
