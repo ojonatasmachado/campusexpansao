@@ -792,13 +792,6 @@ const ART_LAYOUT_PRESETS: { id: ArtLayoutPresetId; label: string }[] = [
   { id: 'cta', label: 'CTA' },
 ]
 const ART_LAYOUT_PRESET_CYCLE: ArtLayoutPresetId[] = ['impacto', 'contraste', 'lista', 'passos', 'claro', 'enfase', 'cta']
-const ART_PREVIEW_PRESETS: { id: ArtLayoutPresetId; label: string }[] = [
-  { id: 'impacto', label: 'M1' },
-  { id: 'contraste', label: 'M2' },
-  { id: 'lista', label: 'M3' },
-  { id: 'passos', label: 'M4' },
-]
-
 const ART_TEXT_COLOR: Record<ArtTextBox['color'], string> = {
   cream: ART_CREAM,
   creamSoft: ART_CREAM_SOFT,
@@ -3554,14 +3547,6 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
             onMessageListChange={(v) => set('messageList' as never, v as never)}
           />
 
-          <SectionHead mark="Detalhes da página" opt="obrigatório" />
-          <div className="fld-hint section-copy">Esses números são calculados automaticamente pelos conteúdos adicionados. O código é apenas identificação interna.</div>
-          <div className="ed-3col auto-meta-grid">
-            <AutoMeta label="Código" value={m.code || 'Automático'} hint="não editável" />
-            <AutoMeta label="Mensagens" value={m.messages ?? 0} hint="calculado pelos conteúdos" />
-            <AutoMeta label="Páginas" value={m.pages ?? 0} hint="calculado pelos materiais" />
-          </div>
-
           <SectionHead mark="Materiais inclusos" opt="obrigatório" />
           <div className="fld-hint section-copy">Edite o nome e a descrição de cada item que aparece na landing page. O formato vem do conteúdo criado.</div>
           {m.messages != null && m.messages > 0 && (
@@ -3711,19 +3696,6 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
               {(['card', 'pagina'] as const).map((m) => (
                 <button key={m} className={`seg-btn${mode === m ? ' on' : ''}`} onClick={() => setMode(m)}>
                   {m === 'card' ? 'Card' : 'Página'}
-                </button>
-              ))}
-            </div>
-            <div className="art-mini" aria-label="Modelos de arte">
-              {ART_PREVIEW_PRESETS.map((preset) => (
-                <button
-                  key={preset.id}
-                  className={`art-mini-btn${artesPreset === preset.id ? ' is-on' : ''}`}
-                  type="button"
-                  title={ART_LAYOUT_PRESETS.find(item => item.id === preset.id)?.label}
-                  onClick={() => openArtes(artesTab, preset.id)}
-                >
-                  {preset.label}
                 </button>
               ))}
             </div>
