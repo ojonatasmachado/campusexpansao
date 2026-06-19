@@ -98,9 +98,9 @@ function SecMark({ label, accent }: { label: string; accent: string }) {
   );
 }
 
-function contentKindLabel(kind: DbMaterialContent["kind"]) {
-  if (kind === "word") return "Texto";
-  if (kind === "pdf") return "PDF";
+function contentKindLabel(content: DbMaterialContent) {
+  if (content.kind === "word") return content.delivery === "word" ? "Word" : "PDF";
+  if (content.kind === "pdf") return "PDF";
   return "Slides";
 }
 
@@ -109,7 +109,7 @@ function contentMeta(content: DbMaterialContent) {
     return [
       content.messages ? `${content.messages} mensagens` : null,
       content.pages ? `${content.pages} páginas` : null,
-      content.delivery === "word" ? "Word + PDF" : "PDF",
+      content.delivery === "word" ? "Word" : "PDF",
     ].filter(Boolean).join(" · ");
   }
   if (content.kind === "pdf") {
@@ -339,7 +339,7 @@ export default function MaterialLanding({
                         fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.1em",
                         textTransform: "uppercase", color: ac,
                       }}>
-                        ◆ {contentKindLabel(content.kind)}
+                        ◆ {contentKindLabel(content)}
                       </span>
                     </div>
                     {content.note && (

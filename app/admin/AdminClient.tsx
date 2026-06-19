@@ -9,6 +9,7 @@ type Modelo = 'A' | 'B' | 'C' | 'D'
 type ItemType = 'material' | 'curso' | 'mentoria' | 'evento'
 type MaterialContentKind = 'word' | 'pdf' | 'ppt'
 type StudioDocumentModel = 'branco' | 'devocional' | 'aula' | 'mensagem'
+type StudioMode = 'document' | 'slides'
 type MaterialMessage = { nome: string; desc: string }
 
 interface MaterialContent {
@@ -227,10 +228,7 @@ function deriveMaterialContentMeta(contents: MaterialContent[]) {
 
   contents.forEach((content) => {
     if (content.kind === 'word') {
-      formats.add('PDF')
-      if (content.delivery === 'word') {
-        formats.add('Word')
-      }
+      formats.add(content.delivery === 'word' ? 'Word' : 'PDF')
       if (content.pages) pages += content.pages
       if (content.messages) {
         messages += content.messages
@@ -267,7 +265,7 @@ function materialContentMeta(content: MaterialContent) {
     return [
       content.messages ? `${content.messages} ${content.messages === 1 ? 'mensagem' : 'mensagens'}` : null,
       content.pages ? `${content.pages} ${content.pages === 1 ? 'página' : 'páginas'}` : null,
-      content.delivery === 'word' ? 'Word + PDF' : 'PDF',
+      content.delivery === 'word' ? 'Word' : 'PDF',
     ].filter(Boolean).join(' · ')
   }
   if (content.kind === 'pdf') return ['PDF', content.pages ? `${content.pages} ${content.pages === 1 ? 'página' : 'páginas'}` : null].filter(Boolean).join(' · ')
@@ -2843,6 +2841,8 @@ function MaterialContentsField({
   const [addOpen, setAddOpen] = useState(false)
   const [studioSetupOpen, setStudioSetupOpen] = useState(false)
   const [studioOpen, setStudioOpen] = useState(false)
+  const [studioMode, setStudioMode] = useState<StudioMode>('document')
+  const [deliveryOpen, setDeliveryOpen] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [studioDraft, setStudioDraft] = useState<{ name: string; note: string; model: StudioDocumentModel }>({
     name: '',
@@ -2866,34 +2866,46 @@ function MaterialContentsField({
     onChange(next)
     syncMessageFromContent(i, next[i])
   }
-  const add = (kind: MaterialContentKind) => {
-    const base: MaterialContent = kind === 'word'
-      ? { kind, name: '', note: '', pages: null, messages: null, delivery: 'word' }
-      : kind === 'pdf'
-        ? { kind, name: '', note: '', pages: null, file: '' }
-        : { kind, name: '', note: '', slides: null }
-    onChange([...contents, base])
-    setActive(contents.length)
-    setAddOpen(false)
-  }
   const openDocumentEditor = () => {
     setAddOpen(false)
+    setStudioMode('document')
+    setStudioDraft({ name: '', note: '', model: 'branco' })
+    setStudioSetupOpen(true)
+  }
+  const openSlidesEditor = () => {
+    setAddOpen(false)
+    setStudioMode('slides')
     setStudioDraft({ name: '', note: '', model: 'branco' })
     setStudioSetupOpen(true)
   }
   const startStudioDocument = () => {
     if (!studioDraft.name.trim()) return
+    if (studioMode === 'slides') {
+      try {
+        window.localStorage.setItem('cex_studio_slides_seed', JSON.stringify({
+          title: studioDraft.name.trim(),
+          subtitle: studioDraft.note.trim(),
+          category: 'Campus Expansão',
+          accent: '#7A9E3F',
+          handle: '@suaigreja',
+        }))
+        window.localStorage.removeItem('cex_studio_slides_v2')
+      } catch {
+        // O editor ainda abre; apenas sem seed inicial caso o browser bloqueie o storage.
+      }
+    }
     setStudioSetupOpen(false)
     setStudioOpen(true)
   }
   const handleStudioLoad = () => {
+    if (studioMode !== 'document') return
     const target = studioFrameRef.current?.contentWindow
     if (!target) return
     window.setTimeout(() => {
       target.postMessage({ type: 'cex-studio-load', payload: studioDraft }, window.location.origin)
     }, 80)
   }
-  const saveStudioToMaterial = () => {
+  const saveStudioToMaterial = (delivery: 'word' | 'pdf') => {
     const frameDoc = studioFrameRef.current?.contentDocument
     const editor = frameDoc?.getElementById('editor')
     const docTitle = frameDoc?.getElementById('docTitle') as HTMLInputElement | null
@@ -2907,11 +2919,32 @@ function MaterialContentsField({
       note: studioDraft.note.trim(),
       pages,
       messages: 1,
-      delivery: 'word',
+      delivery,
     }
     const nextContents = [...contents, nextContent]
     onChange(nextContents)
     onMessageListChange([...(messageList ?? []), { nome: nextContent.name, desc: nextContent.note }])
+    setActive(contents.length)
+    setDeliveryOpen(false)
+    setStudioOpen(false)
+  }
+  const saveSlidesToMaterial = () => {
+    const frameWindow = studioFrameRef.current?.contentWindow
+    let slides = 1
+    try {
+      const raw = frameWindow?.localStorage.getItem('cex_studio_slides_v2') ?? window.localStorage.getItem('cex_studio_slides_v2')
+      const state = raw ? JSON.parse(raw) as { pages?: unknown[] } : null
+      slides = Math.max(1, Array.isArray(state?.pages) ? state.pages.length : 1)
+    } catch {
+      slides = 1
+    }
+    const nextContent: MaterialContent = {
+      kind: 'ppt',
+      name: studioDraft.name.trim() || 'Apresentação',
+      note: studioDraft.note.trim(),
+      slides,
+    }
+    onChange([...contents, nextContent])
     setActive(contents.length)
     setStudioOpen(false)
   }
@@ -2973,7 +3006,7 @@ function MaterialContentsField({
           >
             <span className="piece-edge" style={{ background: 'var(--olive)' }} />
             <div className="piece-cover">
-              <span className="piece-tag">{content.kind === 'word' ? 'TEXTO' : content.kind === 'pdf' ? 'PDF' : 'SLIDES'}</span>
+              <span className="piece-tag">{content.kind === 'word' ? (content.delivery === 'word' ? 'WORD' : 'PDF') : content.kind === 'pdf' ? 'PDF' : 'SLIDES'}</span>
               <div className="piece-big">
                 <b>{content.messages ?? content.pages ?? content.slides ?? '-'}</b>
                 <span>{content.messages ? 'msgs' : content.pages ? 'págs' : content.slides ? 'telas' : ''}</span>
@@ -3004,14 +3037,9 @@ function MaterialContentsField({
                 <button className="chooser-opt" type="button" onClick={openDocumentEditor}>
                   <span className="chooser-ic" aria-hidden="true"><DocumentTextIcon /></span>
                   <span className="chooser-tt">Documento de texto</span>
-                  <span className="chooser-sb">Escreva aqui ou cole. Sai em PDF e Word editável.</span>
+                  <span className="chooser-sb">Escreva aqui ou cole. Escolha Word ou PDF ao salvar.</span>
                 </button>
-                <button className="chooser-opt" type="button" onClick={() => add('pdf')}>
-                  <span className="chooser-ic" aria-hidden="true"><PdfFileIcon /></span>
-                  <span className="chooser-tt">PDF pronto</span>
-                  <span className="chooser-sb">Importe ou cadastre um arquivo PDF já finalizado.</span>
-                </button>
-                <button className="chooser-opt" type="button" onClick={() => add('ppt')}>
+                <button className="chooser-opt" type="button" onClick={openSlidesEditor}>
                   <span className="chooser-ic" aria-hidden="true"><SlidesIcon /></span>
                   <span className="chooser-tt">Apresentação</span>
                   <span className="chooser-sb">Slides para projetar, a partir dos modelos CE.X.</span>
@@ -3026,18 +3054,18 @@ function MaterialContentsField({
           <div className="cmodal" onClick={(e) => e.stopPropagation()}>
             <div className="cmodal-head">
               <div>
-                <div className="cmodal-eyebrow">◆ Documento de texto</div>
-                <div className="cmodal-title">Dados da mensagem</div>
+                <div className="cmodal-eyebrow">◆ {studioMode === 'slides' ? 'Apresentação' : 'Documento de texto'}</div>
+                <div className="cmodal-title">{studioMode === 'slides' ? 'Dados da apresentação' : 'Dados da mensagem'}</div>
               </div>
               <button className="cmodal-x" type="button" onClick={() => setStudioSetupOpen(false)}>Fechar</button>
             </div>
             <div className="cmodal-body">
-              <Field label="Nome da mensagem">
+              <Field label={studioMode === 'slides' ? 'Nome da apresentação' : 'Nome da mensagem'}>
                 <input
                   className="inp"
                   value={studioDraft.name}
                   onChange={(e) => setStudioDraft((draft) => ({ ...draft, name: e.target.value }))}
-                  placeholder="Ex: Quem é Jesus de verdade?"
+                  placeholder={studioMode === 'slides' ? 'Ex: Encontro de líderes' : 'Ex: Quem é Jesus de verdade?'}
                   autoFocus
                 />
               </Field>
@@ -3046,25 +3074,27 @@ function MaterialContentsField({
                   className="inp ta"
                   value={studioDraft.note}
                   onChange={(e) => setStudioDraft((draft) => ({ ...draft, note: e.target.value }))}
-                  placeholder="Uma frase curta explicando o que essa mensagem entrega."
+                  placeholder={studioMode === 'slides' ? 'Uma frase curta explicando o que essa apresentação entrega.' : 'Uma frase curta explicando o que essa mensagem entrega.'}
                 />
               </Field>
-              <Field label="Modelo">
-                <select
-                  className="inp"
-                  value={studioDraft.model}
-                  onChange={(e) => setStudioDraft((draft) => ({ ...draft, model: e.target.value as StudioDocumentModel }))}
-                >
-                  <option value="branco">Nenhum</option>
-                  <option value="devocional">Devocional</option>
-                  <option value="aula">Aula / Plano</option>
-                  <option value="mensagem">Mensagem</option>
-                </select>
-              </Field>
+              {studioMode === 'document' && (
+                <Field label="Modelo">
+                  <select
+                    className="inp"
+                    value={studioDraft.model}
+                    onChange={(e) => setStudioDraft((draft) => ({ ...draft, model: e.target.value as StudioDocumentModel }))}
+                  >
+                    <option value="branco">Nenhum</option>
+                    <option value="devocional">Devocional</option>
+                    <option value="aula">Aula / Plano</option>
+                    <option value="mensagem">Mensagem</option>
+                  </select>
+                </Field>
+              )}
               <div className="cmodal-actions">
                 <button className="btn-ghost-add" type="button" onClick={() => setStudioSetupOpen(false)}>Cancelar</button>
                 <button className="btn-pri" type="button" onClick={startStudioDocument} disabled={!studioDraft.name.trim()} style={{ opacity: studioDraft.name.trim() ? 1 : 0.45 }}>
-                  Abrir Studio
+                  {studioMode === 'slides' ? 'Abrir Slides' : 'Abrir Studio'}
                 </button>
               </div>
             </div>
@@ -3072,19 +3102,52 @@ function MaterialContentsField({
         </div>
       )}
       {studioOpen && (
-        <div className="studio-bg" role="dialog" aria-modal="true" aria-label="CE.X Studio Documentos">
+        <div className="studio-bg" role="dialog" aria-modal="true" aria-label={studioMode === 'slides' ? 'CE.X Studio Slides' : 'CE.X Studio Documentos'}>
           <div className="studio-shell">
             <div className="studio-head">
               <div>
                 <div className="studio-kicker">◆ CE.X Studio</div>
-                <div className="studio-title">Documentos</div>
+                <div className="studio-title">{studioMode === 'slides' ? 'Slide' : 'Documentos'}</div>
               </div>
               <div className="studio-actions">
-                <button className="studio-save" type="button" onClick={saveStudioToMaterial}>Salvar no material</button>
+                <button className="studio-save" type="button" onClick={studioMode === 'slides' ? saveSlidesToMaterial : () => setDeliveryOpen(true)}>Salvar no material</button>
                 <button className="studio-close" type="button" onClick={() => setStudioOpen(false)}>Fechar Studio</button>
               </div>
             </div>
-            <iframe ref={studioFrameRef} onLoad={handleStudioLoad} className="studio-frame" src="/admin/studio/documentos" title="CE.X Studio Documentos" />
+            <iframe
+              ref={studioFrameRef}
+              onLoad={handleStudioLoad}
+              className="studio-frame"
+              src={studioMode === 'slides' ? '/admin/studio/slides' : '/admin/studio/documentos'}
+              title={studioMode === 'slides' ? 'CE.X Studio Slides' : 'CE.X Studio Documentos'}
+            />
+          </div>
+        </div>
+      )}
+      {deliveryOpen && (
+        <div className="modal-bg studio-modal-bg" onClick={() => setDeliveryOpen(false)}>
+          <div className="cmodal" onClick={(e) => e.stopPropagation()}>
+            <div className="cmodal-head">
+              <div>
+                <div className="cmodal-eyebrow">◆ Entrega ao comprador</div>
+                <div className="cmodal-title">Como esse documento será vendido?</div>
+              </div>
+              <button className="cmodal-x" type="button" onClick={() => setDeliveryOpen(false)}>Fechar</button>
+            </div>
+            <div className="cmodal-body">
+              <div className="chooser delivery-chooser">
+                <button className="chooser-opt" type="button" onClick={() => saveStudioToMaterial('word')}>
+                  <span className="chooser-ic" aria-hidden="true"><DocumentTextIcon /></span>
+                  <span className="chooser-tt">Word</span>
+                  <span className="chooser-sb">O comprador recebe como arquivo editável.</span>
+                </button>
+                <button className="chooser-opt" type="button" onClick={() => saveStudioToMaterial('pdf')}>
+                  <span className="chooser-ic" aria-hidden="true"><PdfFileIcon /></span>
+                  <span className="chooser-tt">PDF</span>
+                  <span className="chooser-sb">O comprador vê e compra como PDF. O mentor continua editando no Studio.</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -3119,7 +3182,7 @@ function MaterialContentsField({
                   <>
                     <Field label="Mensagens"><input className="inp" type="number" min="0" value={activeContent.messages ?? ''} onChange={(e) => set(active, { messages: e.target.value ? +e.target.value : null })} /></Field>
                     <Field label="Páginas"><input className="inp" type="number" min="0" value={activeContent.pages ?? ''} onChange={(e) => set(active, { pages: e.target.value ? +e.target.value : null })} /></Field>
-                    <Field label="Entrega"><select className="inp" value={activeContent.delivery ?? 'word'} onChange={(e) => set(active, { delivery: e.target.value as 'word' | 'pdf' })}><option value="word">Word + PDF</option><option value="pdf">PDF</option></select></Field>
+                    <Field label="Entrega"><select className="inp" value={activeContent.delivery ?? 'pdf'} onChange={(e) => set(active, { delivery: e.target.value as 'word' | 'pdf' })}><option value="word">Word</option><option value="pdf">PDF</option></select></Field>
                   </>
                 )}
                 {activeContent.kind === 'pdf' && (
