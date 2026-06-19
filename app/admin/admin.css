@@ -365,6 +365,7 @@ select.inp { appearance: none; cursor: pointer; background-image: url("data:imag
 .add-opt-sb { display: block; font-size: 10.5px; color: var(--subtle); margin-top: 1px; }
 
 .cmodal { background: var(--graphite); border: .5px solid var(--border-2); border-radius: var(--r-lg); width: 100%; max-width: 560px; max-height: 88vh; overflow: auto; box-shadow: 0 24px 80px rgba(0,0,0,.55); }
+.cmodal-wide { max-width: 760px; }
 .cmodal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 22px 26px 16px; border-bottom: .5px solid var(--border-2); position: sticky; top: 0; background: var(--graphite); z-index: 1; }
 .cmodal-eyebrow { font-family: var(--mono); font-size: 11px; color: var(--olive); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 7px; }
 .cmodal-title { font-size: 20px; font-weight: 700; letter-spacing: -.02em; color: var(--cream); }
@@ -373,6 +374,7 @@ select.inp { appearance: none; cursor: pointer; background-image: url("data:imag
 .cmodal-body { padding: 22px 26px; }
 .cmodal-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; margin-top: 14px; }
 .chooser { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.chooser-content { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .chooser-opt { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; padding: 18px 18px 16px; border: .5px solid var(--border-2); border-radius: var(--r-md); background: var(--ink); transition: all .16s; cursor: pointer; font-family: inherit; }
 .chooser-opt:hover { border-color: var(--olive-line); background: var(--graphite); transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,.3); }
 .chooser-ic { width: 46px; height: 46px; border-radius: var(--r-sm); background: var(--graphite); border: .5px solid var(--border-2); display: flex; align-items: center; justify-content: center; color: var(--olive); margin-bottom: 8px; transition: background .16s; }
@@ -380,6 +382,9 @@ select.inp { appearance: none; cursor: pointer; background-image: url("data:imag
 .chooser-opt:hover .chooser-ic { background: var(--olive-dim); }
 .chooser-tt { font-size: 15px; font-weight: 600; color: var(--cream); }
 .chooser-sb { font-size: 11.5px; color: var(--subtle); line-height: 1.45; }
+@media (max-width: 760px) {
+  .chooser-content { grid-template-columns: 1fr; }
+}
 
 .studio-bg { position: fixed; inset: 0; z-index: 90; background: rgba(14,17,13,.92); backdrop-filter: blur(5px); padding: 18px; display: flex; }
 .studio-shell { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--ink); border: .5px solid var(--border-2); border-radius: var(--r-lg); overflow: hidden; box-shadow: 0 24px 90px rgba(0,0,0,.62); }

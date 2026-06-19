@@ -3095,7 +3095,7 @@ function MaterialContentsField({
       )}
       {addOpen && (
         <div className="modal-bg" onClick={() => setAddOpen(false)}>
-          <div className="cmodal" onClick={(e) => e.stopPropagation()}>
+          <div className="cmodal cmodal-wide" onClick={(e) => e.stopPropagation()}>
             <div className="cmodal-head">
               <div>
                 <div className="cmodal-eyebrow">◆ Novo conteúdo</div>
@@ -3104,7 +3104,7 @@ function MaterialContentsField({
               <button className="cmodal-x" type="button" onClick={() => setAddOpen(false)}>Fechar</button>
             </div>
             <div className="cmodal-body">
-              <div className="chooser">
+              <div className="chooser chooser-content">
                 <button className="chooser-opt" type="button" onClick={openDocumentEditor}>
                   <span className="chooser-ic" aria-hidden="true"><DocumentTextIcon /></span>
                   <span className="chooser-tt">Documento de texto</span>
@@ -3113,12 +3113,12 @@ function MaterialContentsField({
                 <button className="chooser-opt" type="button" onClick={openSlidesEditor}>
                   <span className="chooser-ic" aria-hidden="true"><SlidesIcon /></span>
                   <span className="chooser-tt">Apresentação</span>
-                  <span className="chooser-sb">Slides para projetar, a partir dos modelos CE.X.</span>
+                  <span className="chooser-sb">Crie apresentações específicas para o seu produto ou comece por um modelo.</span>
                 </button>
                 <button className="chooser-opt" type="button" onClick={openDesignEditor}>
                   <span className="chooser-ic" aria-hidden="true"><DesignIcon /></span>
                   <span className="chooser-tt">Design</span>
-                  <span className="chooser-sb">Arte específica do material para o comprador usar no módulo de design.</span>
+                  <span className="chooser-sb">Crie artes específicas para o seu produto.</span>
                 </button>
               </div>
             </div>
