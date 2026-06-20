@@ -19,11 +19,18 @@ export function isStudioModule(value: string): value is StudioModule {
   return value in STUDIO_MODULE_FILES;
 }
 
-export async function serveStudioModule(module: StudioModule) {
+type ServeStudioModuleOptions = {
+  allowTemplateManagement?: boolean;
+  loadTemplates?: boolean;
+};
+
+export async function serveStudioModule(module: StudioModule, options: ServeStudioModuleOptions = {}) {
   const filePath = path.join(process.cwd(), "cex-studio", "editors", STUDIO_MODULE_FILES[module]);
   const html = await readFile(filePath, "utf8");
-  const session = await checkAuth().catch(() => null);
-  const templates = TEMPLATE_MODULES.has(module)
+  const allowTemplateManagement = options.allowTemplateManagement ?? true;
+  const loadTemplates = options.loadTemplates ?? true;
+  const session = allowTemplateManagement ? await checkAuth().catch(() => null) : null;
+  const templates = loadTemplates && TEMPLATE_MODULES.has(module)
     ? await supabaseAdmin()
         .from("studio_templates")
         .select("id,module,name,description,status,payload,created_at,updated_at")
@@ -34,7 +41,7 @@ export async function serveStudioModule(module: StudioModule) {
     : [];
   const boot = {
     module,
-    canManageTemplates: !!session?.isMaster,
+    canManageTemplates: allowTemplateManagement && !!session?.isMaster,
     templates,
   };
   const bootScript = `<script>window.CEX_STUDIO_BOOT=${JSON.stringify(boot).replace(/</g, "\\u003c")};</script>`;
