@@ -1,11 +1,8 @@
-import type { CSSProperties } from "react";
 import { notFound, redirect } from "next/navigation";
 import Nav from "../../../../components/Nav";
 import Footer from "../../../../components/Footer";
-import { ACCENTS } from "../../../../lib/accents";
 import { compraDoUsuarioPorMaterialId } from "../../../../lib/compras";
 import { createClient } from "../../../../lib/supabase-server";
-import { CreativeEditor } from "../../../_components/CreativeEditor";
 
 const TIPOS = ["artes", "slides"] as const;
 type TipoEditor = (typeof TIPOS)[number];
@@ -30,16 +27,21 @@ export default async function PerfilEditorVisualPage({
   const compra = await compraDoUsuarioPorMaterialId(user, slug);
   if (!compra || !isTipoEditor(tipo)) notFound();
 
-  const accent = ACCENTS[compra.accent];
+  const module = tipo === "slides" ? "slides" : "design";
 
   return (
-    <div className="pg" style={{ "--perfil-accent": accent.base, "--perfil-accent-deep": accent.deep } as CSSProperties}>
+    <div className="pg">
       <Nav />
-      <CreativeEditor
-        mode={tipo}
-        material={compra.material}
-        accent={accent}
-        backHref={`/perfil/${compra.material.id}`}
+      <iframe
+        src={`/studio/${module}?material=${encodeURIComponent(compra.material.id)}&context=comprador`}
+        title={tipo === "slides" ? "CE.X Studio Slides" : "CE.X Studio Design"}
+        style={{
+          width: "100%",
+          minHeight: "calc(100vh - 96px)",
+          border: 0,
+          display: "block",
+          background: "#0E110D",
+        }}
       />
       <Footer />
     </div>

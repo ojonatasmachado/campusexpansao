@@ -152,6 +152,14 @@
   overflow-wrap: break-word;
 }
 
+.studioFrame {
+  width: 100%;
+  min-height: 760px;
+  border: 0.5px solid var(--border-2);
+  border-radius: var(--r-lg);
+  background: var(--ink);
+}
+
 @media (max-width: 980px) {
   .editor {
     padding-top: 56px;

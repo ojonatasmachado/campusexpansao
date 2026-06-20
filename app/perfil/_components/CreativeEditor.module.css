@@ -434,11 +434,12 @@
 
 .scaler {
   position: relative;
+  overflow: visible;
 }
 
 .artboard {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   transform-origin: top left;
   box-shadow: 0 26px 70px rgba(0, 0, 0, 0.55);
   font-family: var(--font-inter), Inter, sans-serif;
@@ -843,6 +844,44 @@
 .textBox[data-active="1"] {
   outline: 2px dashed currentColor;
   outline-offset: 9px;
+}
+
+.selectionRect {
+  position: absolute;
+  z-index: 20;
+  border: 2px solid var(--olive-soft);
+  background: color-mix(in srgb, var(--olive-soft) 16%, transparent);
+  pointer-events: none;
+}
+
+.cutLine {
+  position: absolute;
+  inset: 0;
+  z-index: 18;
+  outline: 1px solid rgba(237, 230, 211, 0.72);
+  outline-offset: 0;
+  pointer-events: none;
+}
+
+.groupBounds {
+  position: absolute;
+  z-index: 24;
+  border: 1px solid var(--olive-soft);
+  pointer-events: none;
+}
+
+.groupResize {
+  position: absolute;
+  right: -16px;
+  bottom: -16px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border: 2px solid var(--olive-soft);
+  border-radius: 5px;
+  background: var(--ink);
+  cursor: nwse-resize;
+  pointer-events: auto;
 }
 
 .textBox[data-editing="1"] {

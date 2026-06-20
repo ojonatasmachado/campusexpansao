@@ -5,7 +5,6 @@ import Footer from "../../../../components/Footer";
 import { ACCENTS } from "../../../../lib/accents";
 import { compraDoUsuarioPorMaterialId } from "../../../../lib/compras";
 import { createClient } from "../../../../lib/supabase-server";
-import { DocumentEditor } from "../../../_components/DocumentEditor";
 import styles from "./page.module.css";
 import type { CSSProperties } from "react";
 
@@ -65,7 +64,11 @@ export default async function MensagemEditorPage({
             ))}
           </aside>
 
-          <DocumentEditor material={compra.material} mensagem={mensagemAtual} status={compra.status} />
+          <iframe
+            className={styles.studioFrame}
+            src={`/studio/documentos?material=${encodeURIComponent(compra.material.id)}&mensagem=${encodeURIComponent(mensagemAtual.id)}&context=comprador`}
+            title={`CE.X Studio Documentos · ${mensagemAtual.titulo}`}
+          />
         </section>
       </main>
       <Footer />

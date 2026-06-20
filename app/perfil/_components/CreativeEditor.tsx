@@ -56,6 +56,7 @@ type Scene = {
   model: ModelId;
   kind: "arte" | "ppt";
   selectedId: string | null;
+  selectedIds: string[];
   boxes: TextBox[];
   photo: PhotoState;
   photoFx: Fx;
@@ -67,9 +68,21 @@ type Scene = {
 };
 
 type DragState =
-  | { type: "move"; id: string; startX: number; startY: number; x: number; y: number; moved: boolean }
-  | { type: "resize"; id: string; startX: number; width: number }
-  | { type: "photo"; startX: number; startY: number; x: number; y: number };
+  | { type: "move"; ids: string[]; id: string; startX: number; startY: number; boxes: { id: string; x: number; y: number }[]; moved: boolean; openEditOnClick: boolean; startScene: Scene }
+  | { type: "resize"; ids: string[]; startX: number; startY: number; bounds: Bounds; boxes: ResizeBoxStart[]; startScene: Scene }
+  | { type: "photo"; startX: number; startY: number; x: number; y: number }
+  | { type: "select"; startX: number; startY: number; x: number; y: number; additive: boolean };
+
+type Bounds = { x: number; y: number; w: number; h: number };
+
+type ResizeBoxStart = {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  size: number;
+  height: number;
+};
 
 type Popover =
   | { kind: "font"; x: number; y: number }
@@ -85,6 +98,17 @@ type CreativeEditorProps = {
   material: Material;
   accent: Accent;
   backHref: string;
+  templates?: StudioTemplateOption[];
+};
+
+type StudioTemplateOption = {
+  id: string;
+  module: "design" | "slides";
+  name: string;
+  description: string;
+  payload: {
+    modelId?: ModelId;
+  };
 };
 
 const DIMS: Record<Format, { w: number; h: number; label: string }> = {
@@ -173,6 +197,7 @@ function shortText(text: string, max = 108) {
 function cloneScene(scene: Scene): Scene {
   return {
     ...scene,
+    selectedIds: [...scene.selectedIds],
     photo: { ...scene.photo },
     boxes: scene.boxes.map((item) => ({ ...item })),
     deco: scene.deco ? { ...scene.deco, rect: { ...scene.deco.rect } } : null,
@@ -181,6 +206,24 @@ function cloneScene(scene: Scene): Scene {
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
+}
+
+function boxHeight(item: TextBox) {
+  const lines = Math.max(1, item.text.split("\n").length);
+  return item.size * item.lineHeight * lines;
+}
+
+function boundsForBoxes(boxes: TextBox[]): Bounds | null {
+  if (!boxes.length) return null;
+  const left = Math.min(...boxes.map((item) => item.x));
+  const top = Math.min(...boxes.map((item) => item.y));
+  const right = Math.max(...boxes.map((item) => item.x + item.width));
+  const bottom = Math.max(...boxes.map((item) => item.y + boxHeight(item)));
+  return { x: left, y: top, w: right - left, h: bottom - top };
+}
+
+function rectsIntersect(a: Bounds, b: Bounds) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
 function box(partial: Partial<TextBox> & Pick<TextBox, "id" | "text">): TextBox {
@@ -212,9 +255,10 @@ function makeScene(model: ModelId, mode: EditorMode, material: Material, accent:
   const firstFormat: Format = fmt ?? (mode === "slides" ? "slide" : "feed");
   const first = stripMessagePrefix(material.conteudo[0] ?? material.promessa);
   const second = stripMessagePrefix(material.conteudo[1] ?? material.comoUsar);
-  const base: Pick<Scene, "photo" | "selectedId" | "counter" | "visualFx"> = {
+  const base: Pick<Scene, "photo" | "selectedId" | "selectedIds" | "counter" | "visualFx"> = {
     photo: { url: null, x: 0, y: 0, zoom: 1 },
     selectedId: "title",
+    selectedIds: ["title"],
     counter: 0,
     visualFx: "none",
   };
@@ -440,7 +484,7 @@ function DecoLayer({ scene, onPointerDown }: { scene: Scene; onPointerDown: (eve
   );
 }
 
-export function CreativeEditor({ mode, material, accent, backHref }: CreativeEditorProps) {
+export function CreativeEditor({ mode, material, accent, backHref, templates = [] }: CreativeEditorProps) {
   const firstModel: ModelId = mode === "slides" ? "capa" : "manchete";
   const [scene, setScene] = useState(() => makeScene(firstModel, mode, material, accent));
   const [past, setPast] = useState<Scene[]>([]);
@@ -449,7 +493,9 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
   const [popover, setPopover] = useState<Popover>(null);
   const [toast, setToast] = useState("");
   const [clipboard, setClipboard] = useState<TextBox | null>(null);
+  const [clipboardGroup, setClipboardGroup] = useState<TextBox[] | null>(null);
   const [paintBuffer, setPaintBuffer] = useState<Partial<TextBox> | null>(null);
+  const [selectionRect, setSelectionRect] = useState<Bounds | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -457,7 +503,29 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
   const lastToast = useRef<number | null>(null);
   const dim = DIMS[scene.fmt];
   const selected = scene.boxes.find((item) => item.id === scene.selectedId) ?? null;
-  const models = mode === "slides" ? MODELS_PPT : MODELS_ARTE;
+  const selectedIds = scene.selectedIds.length ? scene.selectedIds : (scene.selectedId ? [scene.selectedId] : []);
+  const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const selectedBoxes = useMemo(
+    () => scene.boxes.filter((item) => selectedIdSet.has(item.id)),
+    [scene.boxes, selectedIdSet],
+  );
+  const selectedBounds = useMemo(() => boundsForBoxes(selectedBoxes), [selectedBoxes]);
+  const fallbackModels = mode === "slides" ? MODELS_PPT : MODELS_ARTE;
+  const templateModels = templates
+    .filter((template) => template.module === (mode === "slides" ? "slides" : "design"))
+    .map((template) => {
+      const modelId = template.payload?.modelId;
+      const fallback = fallbackModels.find((item) => item.id === modelId);
+      if (!modelId || !fallback) return null;
+      return {
+        id: modelId,
+        label: template.name || fallback.label,
+        desc: template.description || fallback.desc,
+        templateId: template.id,
+      };
+    })
+    .filter((item): item is { id: ModelId; label: string; desc: string; templateId: string } => Boolean(item));
+  const models = templateModels.length ? templateModels : fallbackModels;
   const title = mode === "slides" ? "Apresentação em slides" : "Artes para redes sociais";
 
   const showToast = useCallback((message: string) => {
@@ -494,81 +562,99 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
   }, []);
 
   const applySelected = useCallback((mutator: (box: TextBox) => TextBox) => {
-    if (!selected) return;
+    if (!selectedIds.length) return;
     commit((current) => ({
       ...current,
-      boxes: current.boxes.map((item) => (item.id === selected.id ? mutator({ ...item }) : item)),
+      boxes: current.boxes.map((item) => (selectedIds.includes(item.id) ? mutator({ ...item }) : item)),
     }));
-  }, [commit, selected]);
+  }, [commit, selectedIds]);
 
-  const selectBox = useCallback((id: string) => {
+  const selectBox = useCallback((id: string, additive = false) => {
     if (paintBuffer) {
       commit((current) => ({
         ...current,
         selectedId: id,
+        selectedIds: [id],
         boxes: current.boxes.map((item) => (item.id === id ? { ...item, ...paintBuffer } : item)),
       }));
       setPaintBuffer(null);
       showToast("Estilo aplicado");
       return;
     }
-    updateWithoutHistory((current) => ({ ...current, selectedId: id }));
+    updateWithoutHistory((current) => {
+      if (!additive) return { ...current, selectedId: id, selectedIds: [id] };
+      const exists = current.selectedIds.includes(id);
+      const selectedIds = exists
+        ? current.selectedIds.filter((itemId) => itemId !== id)
+        : [...current.selectedIds, id];
+      return { ...current, selectedId: selectedIds.at(-1) ?? null, selectedIds };
+    });
   }, [commit, paintBuffer, showToast, updateWithoutHistory]);
 
   const undo = useCallback(() => {
     setPast((items) => {
       const previous = items.at(-1);
       if (!previous) return items;
-      setScene(previous);
+      setScene((current) => ({
+        ...previous,
+        selectedId: previous.selectedId ?? current.selectedId,
+        selectedIds: previous.selectedIds.length ? previous.selectedIds : current.selectedIds,
+      }));
       return items.slice(0, -1);
     });
   }, []);
 
   const deleteSelected = useCallback(() => {
-    if (!selected) return;
+    if (!selectedIds.length) return;
     commit((current) => {
-      const boxes = current.boxes.filter((item) => item.id !== selected.id);
-      return { ...current, boxes, selectedId: boxes.at(-1)?.id ?? null };
+      const boxes = current.boxes.filter((item) => !selectedIds.includes(item.id));
+      const selectedId = boxes.at(-1)?.id ?? null;
+      return { ...current, boxes, selectedId, selectedIds: selectedId ? [selectedId] : [] };
     });
-  }, [commit, selected]);
+  }, [commit, selectedIds]);
 
   const pasteBox = useCallback(() => {
-    if (!clipboard) return;
-    const nextId = `box-${Date.now()}`;
+    const source = clipboardGroup?.length ? clipboardGroup : (clipboard ? [clipboard] : []);
+    if (!source.length) return;
+    const stamp = Date.now();
+    const nextIds = source.map((_, index) => `box-${stamp}-${index}`);
     commit((current) => ({
       ...current,
-      counter: current.counter + 1,
-      selectedId: nextId,
+      counter: current.counter + source.length,
+      selectedId: nextIds.at(-1) ?? null,
+      selectedIds: nextIds,
       boxes: [
         ...current.boxes,
-        {
-          ...clipboard,
-          id: nextId,
-          x: clamp(clipboard.x + 40, 0, dim.w - clipboard.width),
-          y: clamp(clipboard.y + 40, 0, dim.h - clipboard.size),
-        },
+        ...source.map((item, index) => ({
+          ...item,
+          id: nextIds[index],
+          x: clamp(item.x + 40, 0, dim.w - item.width),
+          y: clamp(item.y + 40, 0, dim.h - item.size),
+        })),
       ],
     }));
-  }, [clipboard, commit, dim.h, dim.w]);
+  }, [clipboard, clipboardGroup, commit, dim.h, dim.w]);
 
   const duplicateSelected = useCallback(() => {
-    if (!selected) return;
-    const nextId = `box-${Date.now()}`;
+    if (!selectedBoxes.length) return;
+    const stamp = Date.now();
+    const nextIds = selectedBoxes.map((_, index) => `box-${stamp}-${index}`);
     commit((current) => ({
       ...current,
-      counter: current.counter + 1,
-      selectedId: nextId,
+      counter: current.counter + selectedBoxes.length,
+      selectedId: nextIds.at(-1) ?? null,
+      selectedIds: nextIds,
       boxes: [
         ...current.boxes,
-        {
-          ...selected,
-          id: nextId,
-          x: clamp(selected.x + 40, 0, dim.w - selected.width),
-          y: clamp(selected.y + 40, 0, dim.h - selected.size),
-        },
+        ...selectedBoxes.map((item, index) => ({
+          ...item,
+          id: nextIds[index],
+          x: clamp(item.x + 40, 0, dim.w - item.width),
+          y: clamp(item.y + 40, 0, dim.h - item.size),
+        })),
       ],
     }));
-  }, [commit, dim.h, dim.w, selected]);
+  }, [commit, dim.h, dim.w, selectedBoxes]);
 
   const addTextBox = useCallback(() => {
     const nextId = `box-${Date.now()}`;
@@ -576,6 +662,7 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
       ...current,
       counter: current.counter + 1,
       selectedId: nextId,
+      selectedIds: [nextId],
       boxes: [
         ...current.boxes,
         box({
@@ -654,13 +741,37 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
     showToast("Foto carregada");
   }
 
+  function startAreaSelection(event: ReactPointerEvent<HTMLElement>) {
+    const target = event.target as HTMLElement;
+    if (target.closest(`.${styles.textBox}, .${styles.resize}, [data-photo='1']`)) return;
+    const board = boardRef.current;
+    if (!board) return;
+    const rect = board.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / scale;
+    const y = (event.clientY - rect.top) / scale;
+    dragRef.current = {
+      type: "select",
+      startX: event.clientX,
+      startY: event.clientY,
+      x,
+      y,
+      additive: event.shiftKey || event.metaKey || event.ctrlKey,
+    };
+    if (!event.shiftKey && !event.metaKey && !event.ctrlKey) {
+      updateWithoutHistory((current) => ({ ...current, selectedId: null, selectedIds: [] }));
+    }
+    setSelectionRect({ x, y, w: 0, h: 0 });
+    event.preventDefault();
+  }
+
   async function exportPng() {
     if (!boardRef.current) return;
     const node = boardRef.current;
     const selectedId = scene.selectedId;
+    const selectedIds = scene.selectedIds;
     const transform = node.style.transform;
 
-    updateWithoutHistory((current) => ({ ...current, selectedId: null }));
+    updateWithoutHistory((current) => ({ ...current, selectedId: null, selectedIds: [] }));
     await document.fonts?.ready;
     await new Promise((resolve) => window.setTimeout(resolve, 60));
 
@@ -682,7 +793,7 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
       showToast("Erro ao exportar");
     } finally {
       node.style.transform = transform;
-      updateWithoutHistory((current) => ({ ...current, selectedId }));
+      updateWithoutHistory((current) => ({ ...current, selectedId, selectedIds }));
     }
   }
 
@@ -711,6 +822,24 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
       const dx = (event.clientX - drag.startX) / scale;
       const dy = "startY" in drag ? (event.clientY - drag.startY) / scale : 0;
 
+      if (drag.type === "select") {
+        const rect = {
+          x: Math.min(drag.x, drag.x + dx),
+          y: Math.min(drag.y, drag.y + dy),
+          w: Math.abs(dx),
+          h: Math.abs(dy),
+        };
+        setSelectionRect(rect);
+        updateWithoutHistory((current) => {
+          const matched = current.boxes
+            .filter((item) => rectsIntersect(rect, { x: item.x, y: item.y, w: item.width, h: boxHeight(item) }))
+            .map((item) => item.id);
+          const selectedIds = drag.additive ? Array.from(new Set([...current.selectedIds, ...matched])) : matched;
+          return { ...current, selectedId: selectedIds.at(-1) ?? null, selectedIds };
+        });
+        return;
+      }
+
       updateWithoutHistory((current) => ({
         ...current,
         photo: drag.type === "photo"
@@ -718,16 +847,44 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
           : current.photo,
         boxes: current.boxes.map((item) => {
           if (drag.type === "photo") return item;
-          if (item.id !== drag.id) return item;
           if (drag.type === "resize") {
-            return { ...item, width: clamp(drag.width + dx, 120, dim.w - item.x) };
+            const start = drag.boxes.find((boxItem) => boxItem.id === item.id);
+            if (!start) return item;
+            const proportional = event.shiftKey;
+            if (proportional) {
+              const scaleByX = clamp((drag.bounds.w + dx) / Math.max(1, drag.bounds.w), 0.2, 4);
+              const scaleByY = clamp((drag.bounds.h + dy) / Math.max(1, drag.bounds.h), 0.2, 4);
+              const factor = Math.max(scaleByX, scaleByY);
+              const x = drag.bounds.x + (start.x - drag.bounds.x) * factor;
+              const y = drag.bounds.y + (start.y - drag.bounds.y) * factor;
+              return {
+                ...item,
+                x: Math.round(clamp(x, 0, dim.w - item.width)),
+                y: Math.round(clamp(y, 0, dim.h - item.size)),
+                width: Math.round(clamp(start.width * factor, 80, dim.w - x)),
+                size: Math.round(clamp(start.size * factor, 10, 320)),
+              };
+            }
+            const widthFactor = clamp((drag.bounds.w + dx) / Math.max(1, drag.bounds.w), 0.2, 4);
+            const sizeFactor = clamp((drag.bounds.h + dy) / Math.max(1, drag.bounds.h), 0.2, 4);
+            const x = drag.bounds.x + (start.x - drag.bounds.x) * widthFactor;
+            const y = drag.bounds.y + (start.y - drag.bounds.y) * sizeFactor;
+            return {
+              ...item,
+              x: Math.round(clamp(x, 0, dim.w - item.width)),
+              y: Math.round(clamp(y, 0, dim.h - item.size)),
+              width: Math.round(clamp(start.width * widthFactor, 80, dim.w - x)),
+              size: Math.round(clamp(start.size * sizeFactor, 10, 320)),
+            };
           }
           if (drag.type === "move") {
+            const start = drag.boxes.find((boxItem) => boxItem.id === item.id);
+            if (!start) return item;
             drag.moved = true;
             return {
               ...item,
-              x: clamp(drag.x + dx, 0, dim.w - item.width),
-              y: clamp(drag.y + dy, 0, dim.h - item.size),
+              x: clamp(start.x + dx, 0, dim.w - item.width),
+              y: clamp(start.y + dy, 0, dim.h - item.size),
             };
           }
           return item;
@@ -737,8 +894,12 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
 
     function onPointerUp() {
       const drag = dragRef.current;
-      if (drag?.type === "move" && !drag.moved) setEditingId(drag.id);
+      if (drag?.type === "move" && !drag.moved && drag.openEditOnClick) setEditingId(drag.id);
+      if ((drag?.type === "move" && drag.moved) || drag?.type === "resize") {
+        setPast((items) => [...items.slice(-24), cloneScene(drag.startScene)]);
+      }
       dragRef.current = null;
+      setSelectionRect(null);
     }
 
     window.addEventListener("pointermove", onPointerMove);
@@ -764,7 +925,8 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
       if (meta && event.key.toLowerCase() === "c" && selected) {
         event.preventDefault();
         setClipboard({ ...selected });
-        showToast("Caixa copiada");
+        setClipboardGroup(selectedBoxes.map((item) => ({ ...item })));
+        showToast(selectedBoxes.length > 1 ? "Grupo copiado" : "Caixa copiada");
         return;
       }
 
@@ -794,12 +956,12 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
         ArrowDown: [0, step],
       };
       const move = moves[event.key];
-      if (move && selected) {
+      if (move && selectedIds.length) {
         event.preventDefault();
         updateWithoutHistory((current) => ({
           ...current,
           boxes: current.boxes.map((item) =>
-            item.id === selected.id
+            selectedIds.includes(item.id)
               ? {
                   ...item,
                   x: clamp(item.x + move[0], 0, dim.w - item.width),
@@ -813,7 +975,7 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [deleteSelected, dim.h, dim.w, duplicateSelected, editingId, pasteBox, selected, showToast, undo, updateWithoutHistory]);
+  }, [deleteSelected, dim.h, dim.w, duplicateSelected, editingId, pasteBox, selected, selectedBoxes, selectedIds, showToast, undo, updateWithoutHistory]);
 
   useEffect(() => () => {
     if (lastToast.current) window.clearTimeout(lastToast.current);
@@ -959,7 +1121,7 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
             <p>clique para selecionar · clique novamente para editar · arraste para mover</p>
           </div>
 
-          <div className={styles.toolbar} data-disabled={selected ? "0" : "1"}>
+          <div className={styles.toolbar} data-disabled={selectedIds.length ? "0" : "1"}>
             <span className={styles.brand}>CE<span>.X</span></span>
             <span className={styles.sep} />
             <button className={styles.magic} onMouseDown={(event) => openPopover(event, "magic")}>
@@ -1025,10 +1187,10 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
               <PaintIcon />
             </button>
             <button disabled={!past.length} onMouseDown={(event) => { event.preventDefault(); undo(); }}>Desfazer</button>
-            <button disabled={!selected} onMouseDown={(event) => { event.preventDefault(); deleteSelected(); }}>Excluir</button>
+            <button disabled={!selectedIds.length} onMouseDown={(event) => { event.preventDefault(); deleteSelected(); }}>Excluir</button>
           </div>
 
-          <div className={styles.canvasTable}>
+          <div className={styles.canvasTable} onPointerDown={startAreaSelection}>
             <div className={styles.scaler} style={{ width: dim.w * scale, height: dim.h * scale }}>
               <div
                 ref={boardRef}
@@ -1043,7 +1205,7 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
                 } as CSSProperties}
                 onPointerDown={(event) => {
                   if ((event.target as HTMLElement).closest("[data-photo='1']")) {
-                    updateWithoutHistory((current) => ({ ...current, selectedId: null }));
+                    updateWithoutHistory((current) => ({ ...current, selectedId: null, selectedIds: [] }));
                     dragRef.current = {
                       type: "photo",
                       startX: event.clientX,
@@ -1052,6 +1214,7 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
                       y: scene.photo.y,
                     };
                     event.preventDefault();
+                    return;
                   }
                 }}
               >
@@ -1080,8 +1243,56 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
                 />
                 <VisualFxLayer scene={scene} />
                 <div className={styles.watermark} aria-hidden="true">CE.X</div>
+                <div className={styles.cutLine} aria-hidden="true" />
+                {selectionRect ? (
+                  <div
+                    className={styles.selectionRect}
+                    style={{
+                      left: selectionRect.x,
+                      top: selectionRect.y,
+                      width: selectionRect.w,
+                      height: selectionRect.h,
+                    }}
+                  />
+                ) : null}
+                {selectedBounds && selectedIds.length > 1 ? (
+                  <div
+                    className={styles.groupBounds}
+                    style={{
+                      left: selectedBounds.x,
+                      top: selectedBounds.y,
+                      width: selectedBounds.w,
+                      height: selectedBounds.h,
+                    }}
+                  >
+                    <button
+                      className={styles.groupResize}
+                      aria-label="Redimensionar grupo"
+                      onPointerDown={(event) => {
+                        event.stopPropagation();
+                        event.preventDefault();
+                        dragRef.current = {
+                          type: "resize",
+                          ids: selectedIds,
+                          startX: event.clientX,
+                          startY: event.clientY,
+                          bounds: selectedBounds,
+                          boxes: selectedBoxes.map((boxItem) => ({
+                            id: boxItem.id,
+                            x: boxItem.x,
+                            y: boxItem.y,
+                            width: boxItem.width,
+                            size: boxItem.size,
+                            height: boxHeight(boxItem),
+                          })),
+                          startScene: cloneScene(scene),
+                        };
+                      }}
+                    />
+                  </div>
+                ) : null}
                 {scene.boxes.map((item) => {
-                  const active = scene.selectedId === item.id;
+                  const active = selectedIdSet.has(item.id);
                   const isEditing = editingId === item.id;
                   return (
                     <div
@@ -1092,15 +1303,32 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
                       style={boxStyle(item)}
                       onPointerDown={(event) => {
                         if (isEditing) return;
-                        selectBox(item.id);
+                        const additive = event.shiftKey || event.metaKey || event.ctrlKey;
+                        const alreadySelected = selectedIdSet.has(item.id);
+                        const nextIds = additive
+                          ? alreadySelected
+                            ? selectedIds.filter((id) => id !== item.id)
+                            : [...selectedIds, item.id]
+                          : alreadySelected
+                            ? selectedIds
+                            : [item.id];
+                        selectBox(item.id, additive);
+                        if (!nextIds.includes(item.id)) {
+                          event.preventDefault();
+                          return;
+                        }
                         dragRef.current = {
                           type: "move",
+                          ids: nextIds,
                           id: item.id,
                           startX: event.clientX,
                           startY: event.clientY,
-                          x: item.x,
-                          y: item.y,
+                          boxes: scene.boxes
+                            .filter((boxItem) => nextIds.includes(boxItem.id))
+                            .map((boxItem) => ({ id: boxItem.id, x: boxItem.x, y: boxItem.y })),
                           moved: false,
+                          openEditOnClick: !additive && nextIds.length === 1,
+                          startScene: cloneScene(scene),
                         };
                         event.preventDefault();
                       }}
@@ -1126,17 +1354,28 @@ export function CreativeEditor({ mode, material, accent, backHref }: CreativeEdi
                       >
                         {item.text}
                       </span>
-                      {active ? (
+                      {active && selectedBounds && selectedIds.length === 1 ? (
                         <button
                           className={styles.resize}
-                          aria-label="Redimensionar caixa"
+                          aria-label={selectedIds.length > 1 ? "Redimensionar grupo" : "Redimensionar caixa"}
                           onPointerDown={(event) => {
                             event.stopPropagation();
+                            const boxes = selectedBoxes.map((boxItem) => ({
+                              id: boxItem.id,
+                              x: boxItem.x,
+                              y: boxItem.y,
+                              width: boxItem.width,
+                              size: boxItem.size,
+                              height: boxHeight(boxItem),
+                            }));
                             dragRef.current = {
                               type: "resize",
-                              id: item.id,
+                              ids: selectedIds,
                               startX: event.clientX,
-                              width: item.width,
+                              startY: event.clientY,
+                              bounds: selectedBounds,
+                              boxes,
+                              startScene: cloneScene(scene),
                             };
                           }}
                         />

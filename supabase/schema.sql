@@ -3,6 +3,24 @@
 
 create extension if not exists pgcrypto;
 
+-- Usuários administrativos do painel interno
+create table if not exists admin_users (
+  id                  uuid primary key default gen_random_uuid(),
+  username            text not null unique,
+  name                text not null default '',
+  role                text not null default 'admin' check (role in ('master', 'admin')),
+  active              boolean not null default true,
+  password_salt       text not null,
+  password_hash       text not null,
+  created_by          uuid references admin_users(id) on delete set null,
+  created_by_username text,
+  created_at          timestamptz default now(),
+  updated_at          timestamptz default now()
+);
+
+create index if not exists admin_users_username_idx on admin_users(lower(username));
+create index if not exists admin_users_role_idx on admin_users(role);
+
 -- Estantes
 create table if not exists estantes (
   key          text primary key,
@@ -47,6 +65,14 @@ create table if not exists materiais (
 alter table materiais add column if not exists hotmart_product_id text;
 alter table materiais add column if not exists hotmart_offer_id text;
 alter table materiais add column if not exists contents jsonb not null default '[]';
+alter table materiais add column if not exists mensagens_lista jsonb not null default '[]';
+alter table materiais add column if not exists keywords text[] not null default '{}';
+alter table materiais add column if not exists created_by uuid references admin_users(id) on delete set null;
+alter table materiais add column if not exists created_by_username text;
+alter table materiais add column if not exists updated_at timestamptz default now();
+
+create index if not exists materiais_created_by_idx on materiais(created_by);
+create index if not exists materiais_keywords_idx on materiais using gin(keywords);
 
 -- Cursos
 create table if not exists cursos (
@@ -65,18 +91,88 @@ create table if not exists cursos (
   depoimento   jsonb not null default '{}',
   turma        text not null default '',
   status       text not null default 'Publicado',
+  keywords     text[] not null default '{}',
+  created_by   uuid references admin_users(id) on delete set null,
+  created_by_username text,
   created_at   timestamptz default now()
 );
+
+alter table cursos add column if not exists keywords text[] not null default '{}';
+alter table cursos add column if not exists created_by uuid references admin_users(id) on delete set null;
+alter table cursos add column if not exists created_by_username text;
+alter table cursos add column if not exists updated_at timestamptz default now();
+
+create index if not exists cursos_created_by_idx on cursos(created_by);
+create index if not exists cursos_keywords_idx on cursos using gin(keywords);
+
+-- Mentorias
+create table if not exists mentorias (
+  id                  text primary key,
+  title               text not null,
+  desc_text           text not null default '',
+  formato             text not null default '',
+  vagas               integer not null default 0,
+  mentor              text not null default '',
+  accent              text not null default '#7A9E3F',
+  cadencia            text not null default '',
+  status              text not null default 'Publicado',
+  waitlist            integer not null default 0,
+  keywords            text[] not null default '{}',
+  created_by          uuid references admin_users(id) on delete set null,
+  created_by_username text,
+  created_at          timestamptz default now(),
+  updated_at          timestamptz default now()
+);
+
+alter table mentorias add column if not exists keywords text[] not null default '{}';
+alter table mentorias add column if not exists created_by uuid references admin_users(id) on delete set null;
+alter table mentorias add column if not exists created_by_username text;
+alter table mentorias add column if not exists updated_at timestamptz default now();
+
+create index if not exists mentorias_created_by_idx on mentorias(created_by);
+create index if not exists mentorias_keywords_idx on mentorias using gin(keywords);
+
+-- Templates e modelos centrais dos módulos CE.X Studio
+create table if not exists studio_templates (
+  id                  text primary key,
+  module              text not null check (module in ('documentos', 'slides', 'design')),
+  name                text not null,
+  description         text not null default '',
+  status              text not null default 'Rascunho' check (status in ('Ativo', 'Rascunho')),
+  payload             jsonb not null default '{}',
+  created_by          uuid references admin_users(id) on delete set null,
+  created_by_username text,
+  created_at          timestamptz default now(),
+  updated_at          timestamptz default now()
+);
+
+create index if not exists studio_templates_module_idx on studio_templates(module);
+create index if not exists studio_templates_status_idx on studio_templates(status);
 
 -- RLS: habilitado, acesso público por enquanto (apertar depois com service_role)
 alter table estantes  enable row level security;
 alter table materiais enable row level security;
 alter table cursos    enable row level security;
+alter table mentorias enable row level security;
+alter table studio_templates enable row level security;
 
 -- Policies: leitura pública, escrita via service_role (backend)
+drop policy if exists "leitura pública estantes" on estantes;
+drop policy if exists "leitura pública materiais" on materiais;
+drop policy if exists "leitura pública cursos" on cursos;
+drop policy if exists "leitura pública mentorias" on mentorias;
 create policy "leitura pública estantes"  on estantes  for select using (true);
 create policy "leitura pública materiais" on materiais for select using (true);
 create policy "leitura pública cursos"    on cursos    for select using (true);
+create policy "leitura pública mentorias" on mentorias for select using (true);
+
+drop policy if exists "leitura pública templates ativos" on studio_templates;
+create policy "leitura pública templates ativos" on studio_templates
+for select using (status = 'Ativo');
+
+-- Login master inicial do painel:
+-- O código cria automaticamente o usuário jonatas_machado na primeira tentativa de login
+-- com a senha limaza022216. caso ele ainda não exista.
 
 -- Perfis dos usuários
 create table if not exists user_profiles (

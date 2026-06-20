@@ -1,19 +1,80 @@
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { MensagemCompra } from "../../lib/perfil-data";
 import type { Material } from "../../lib/materiais-data";
 import styles from "./DocumentEditor.module.css";
+
+type DocumentModelId = "branco" | "devocional" | "aula" | "mensagem";
+
+type DocumentTemplateOption = {
+  id: string;
+  module: "documentos";
+  name: string;
+  description: string;
+  payload: {
+    modelId?: DocumentModelId;
+  };
+};
 
 type DocumentEditorProps = {
   material: Material;
   mensagem: MensagemCompra;
   status: string;
+  templates?: DocumentTemplateOption[];
 };
 
-export function DocumentEditor({ material, mensagem, status }: DocumentEditorProps) {
+const FALLBACK_TEMPLATES: DocumentTemplateOption[] = [
+  {
+    id: "doc-branco",
+    module: "documentos",
+    name: "Nenhum",
+    description: "Documento livre para começar em branco.",
+    payload: { modelId: "branco" },
+  },
+  {
+    id: "doc-devocional",
+    module: "documentos",
+    name: "Devocional",
+    description: "Estrutura para reflexão bíblica e aplicação prática.",
+    payload: { modelId: "devocional" },
+  },
+  {
+    id: "doc-aula",
+    module: "documentos",
+    name: "Aula / Plano",
+    description: "Roteiro para ensinar, praticar e aplicar em grupo.",
+    payload: { modelId: "aula" },
+  },
+  {
+    id: "doc-mensagem",
+    module: "documentos",
+    name: "Mensagem",
+    description: "Estrutura para pregação ou ministração.",
+    payload: { modelId: "mensagem" },
+  },
+];
+
+function isDocumentModelId(value: unknown): value is DocumentModelId {
+  return value === "branco" || value === "devocional" || value === "aula" || value === "mensagem";
+}
+
+export function DocumentEditor({ material, mensagem, status, templates = [] }: DocumentEditorProps) {
   const docRef = useRef<HTMLDivElement>(null);
   const title = mensagem.titulo.replace(/^Mensagem\s+\d+:\s*/i, "");
+  const activeTemplates = useMemo(() => {
+    const normalized = templates
+      .filter((template) => template.module === "documentos" && isDocumentModelId(template.payload?.modelId))
+      .map((template) => ({
+        ...template,
+        payload: { modelId: template.payload.modelId as DocumentModelId },
+      }));
+
+    return normalized.length ? normalized : FALLBACK_TEMPLATES;
+  }, [templates]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(activeTemplates[0]?.id ?? "doc-branco");
+  const selectedTemplate = activeTemplates.find((template) => template.id === selectedTemplateId) ?? activeTemplates[0];
+  const selectedModel = selectedTemplate?.payload.modelId ?? "branco";
 
   function formatDoc(event: React.MouseEvent<HTMLButtonElement>, command: string) {
     event.preventDefault();
@@ -55,6 +116,27 @@ export function DocumentEditor({ material, mensagem, status }: DocumentEditorPro
         <p className={styles.help}>
           Clique direto no documento para alterar os textos. A moldura visual permanece travada.
         </p>
+
+        <div className={styles.templates} aria-label="Modelos de documento">
+          <label className={styles.templateLabel} htmlFor="document-template">
+            Modelo
+          </label>
+          <select
+            id="document-template"
+            className={styles.templateSelect}
+            value={selectedTemplateId}
+            onChange={(event) => setSelectedTemplateId(event.target.value)}
+          >
+            {activeTemplates.map((template) => (
+              <option key={template.id} value={template.id}>
+                {template.name}
+              </option>
+            ))}
+          </select>
+          {selectedTemplate?.description ? (
+            <p className={styles.templateHint}>{selectedTemplate.description}</p>
+          ) : null}
+        </div>
 
         <div className={styles.docTools} aria-label="Formatação do documento">
           <button onMouseDown={(event) => formatDoc(event, "bold")} aria-label="Negrito">
@@ -101,41 +183,74 @@ export function DocumentEditor({ material, mensagem, status }: DocumentEditorPro
             {title}
           </h1>
 
-          <div className={styles.docVerse} contentEditable suppressContentEditableWarning>
-            {material.promessa}
-          </div>
-
-          <div className={styles.docSec}>
-            <h2>Para quem</h2>
-            <div className={styles.docBody} contentEditable suppressContentEditableWarning>
-              {material.praQuem}
-            </div>
-          </div>
-
-          <div className={styles.docSec}>
-            <h2>Roteiro base</h2>
-            <div className={styles.docBody} contentEditable suppressContentEditableWarning>
-              Desenvolva a abertura, o texto bíblico, a explicação central e a aplicação prática desta mensagem.
-            </div>
-          </div>
-
-          <div className={styles.docSec}>
-            <h2>Perguntas de grupo</h2>
-            <div className={styles.docBody} contentEditable suppressContentEditableWarning>
-              O que esta mensagem confronta? Como ela aponta para Jesus? Qual passo prático a pessoa deve dar nesta semana?
-            </div>
-          </div>
-
-          <div className={styles.docSec}>
-            <h2>Como usar</h2>
-            <div className={styles.docBody} contentEditable suppressContentEditableWarning>
-              {material.comoUsar}
-            </div>
-          </div>
+          <DocumentBody selectedModel={selectedModel} material={material} />
 
           <div className={styles.docFoot}>Material CE.X · adapte livremente para a sua igreja</div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function DocumentBody({ selectedModel, material }: { selectedModel: DocumentModelId; material: Material }) {
+  if (selectedModel === "branco") {
+    return (
+      <div className={styles.docSec}>
+        <h2>Notas do material</h2>
+        <div className={styles.docBody} contentEditable suppressContentEditableWarning>
+          Comece a escrever aqui.
+        </div>
+      </div>
+    );
+  }
+
+  if (selectedModel === "devocional") {
+    return (
+      <>
+        <div className={styles.docVerse} contentEditable suppressContentEditableWarning>
+          {material.promessa}
+        </div>
+        <DocSection title="Versículo">Cole aqui a passagem bíblica e a referência.</DocSection>
+        <DocSection title="Reflexão">Desenvolva a meditação sobre o texto e conecte com a vida da igreja.</DocSection>
+        <DocSection title="Aplicação">Mostre um passo prático para viver esta verdade durante a semana.</DocSection>
+        <DocSection title="Oração">Conduza uma oração curta, simples e pastoral.</DocSection>
+      </>
+    );
+  }
+
+  if (selectedModel === "aula") {
+    return (
+      <>
+        <DocSection title="Objetivo">Defina o que a turma precisa compreender, sentir e praticar.</DocSection>
+        <DocSection title="Abertura">Crie uma pergunta ou dinâmica curta para iniciar a conversa.</DocSection>
+        <DocSection title="Desenvolvimento">Organize os pontos principais da aula em sequência clara.</DocSection>
+        <DocSection title="Atividade">Inclua uma prática em grupo, leitura guiada ou exercício de aplicação.</DocSection>
+        <DocSection title="Fechamento">Retome a ideia central e indique o próximo passo.</DocSection>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className={styles.docVerse} contentEditable suppressContentEditableWarning>
+        {material.promessa}
+      </div>
+      <DocSection title="Introdução">Abra a mensagem com o problema, tensão ou pergunta principal.</DocSection>
+      <DocSection title="Texto bíblico">Explique o texto e destaque a verdade central.</DocSection>
+      <DocSection title="Desenvolvimento">Construa os argumentos, ilustrações e aplicações pastorais.</DocSection>
+      <DocSection title="Aplicação">Mostre como a mensagem encontra a vida real da igreja.</DocSection>
+      <DocSection title="Apelo e oração">Conduza uma resposta prática e uma oração final.</DocSection>
+    </>
+  );
+}
+
+function DocSection({ title, children }: { title: string; children: string }) {
+  return (
+    <div className={styles.docSec}>
+      <h2>{title}</h2>
+      <div className={styles.docBody} contentEditable suppressContentEditableWarning>
+        {children}
+      </div>
     </div>
   );
 }

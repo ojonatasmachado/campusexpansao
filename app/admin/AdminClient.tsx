@@ -1,6 +1,26 @@
 'use client'
 import { useLayoutEffect, useState, useRef, useEffect, useTransition, useCallback, type ReactNode, type CSSProperties, type ClipboardEvent } from 'react'
-import { loginAction, logoutAction, upsertEstante, deleteEstante, reorderEstantes, upsertMaterial, deleteMaterial, upsertCurso, deleteCurso, upsertMentoria, deleteMentoria } from './actions'
+import {
+  createAdminUser,
+  deleteAdminUser,
+  deleteStudioTemplate,
+  loginAction,
+  logoutAction,
+  reorderEstantes,
+  updateAdminUser,
+  upsertEstante,
+  upsertMaterial,
+  upsertCurso,
+  upsertMentoria,
+  deleteEstante,
+  deleteMaterial,
+  deleteCurso,
+  deleteMentoria,
+  upsertStudioTemplate,
+  type AdminSession,
+  type AdminUser,
+  type StudioTemplate,
+} from './actions'
 import { ESTANTE_MAP } from '../lib/materiais-data'
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
@@ -68,6 +88,8 @@ interface EstanteAdmin {
 interface AdminData {
   materiais: Material[]; cursos: Curso[]; mentorias: Mentoria[]; eventos: Evento[]
   estantes: EstanteAdmin[]
+  adminUsers: AdminUser[]
+  studioTemplates: StudioTemplate[]
   metrics: {
     series30: number[]
     kpis: { visitas: number; visitasDelta: number; cliquesComprar: number; cliquesDelta: number; listaEspera: number; listaDelta: number; capturas: number; capturasDelta: number }
@@ -126,7 +148,7 @@ const TYPES = [
 function buildData(): AdminData {
   const series30 = Array(30).fill(0)
   return {
-    materiais: [], cursos: [], mentorias: [], eventos: [], estantes: [],
+    materiais: [], cursos: [], mentorias: [], eventos: [], estantes: [], adminUsers: [], studioTemplates: [],
     metrics: {
       series30,
       kpis: { visitas:0,visitasDelta:0,cliquesComprar:0,cliquesDelta:0,listaEspera:0,listaDelta:0,capturas:0,capturasDelta:0 },
@@ -3204,7 +3226,7 @@ function MaterialContentsField({
               ref={studioFrameRef}
               onLoad={handleStudioLoad}
               className="studio-frame"
-              src={studioMode === 'slides' ? '/admin/studio/slides' : studioMode === 'design' ? '/admin/studio/design' : '/admin/studio/documentos'}
+              src={studioMode === 'slides' ? '/studio/slides' : studioMode === 'design' ? '/studio/design' : '/studio/documentos'}
               title={studioMode === 'slides' ? 'CE.X Studio Slides' : studioMode === 'design' ? 'CE.X Studio Design' : 'CE.X Studio Documentos'}
             />
           </div>
@@ -3738,7 +3760,7 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
             <button className="studio-float-close" type="button" onClick={() => setDivulgacaoOpen(false)}>Fechar Studio</button>
             <iframe
               className="studio-frame"
-              src="/admin/studio/divulgacao"
+              src="/studio/divulgacao"
               title="CE.X Studio Divulgação"
             />
           </div>
@@ -3750,16 +3772,17 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
 
 // ── SHELL ────────────────────────────────────────────────────────────────────
 
-type Route = { screen: 'dashboard' } | { screen: 'list'; type: ItemType } | { screen: 'shelves' }
+type Route = { screen: 'dashboard' } | { screen: 'list'; type: ItemType } | { screen: 'shelves' } | { screen: 'users' } | { screen: 'studio' }
 
 function Login() {
+  const [username, setUsername] = useState('')
   const [pw, setPw] = useState('')
   const [err, setErr] = useState(false)
   const [pending, startTransition] = useTransition()
 
   const submit = () => {
     startTransition(async () => {
-      const ok = await loginAction(pw)
+      const ok = await loginAction(username, pw)
       if (ok) {
         window.location.reload()
       } else {
@@ -3777,9 +3800,11 @@ function Login() {
         <div className="login-logo">CE<span className="ol">.X</span></div>
         <div className="login-eyebrow">◆ PAINEL INTERNO</div>
         <h1 className="login-title">Área restrita</h1>
-        <p className="login-sub">Gestão de materiais, cursos, mentorias e eventos. Acesso só por este endereço.</p>
+        <p className="login-sub">Gestão de materiais, cursos, mentorias, usuários e módulos do Studio.</p>
+        <input className="login-input" type="text" value={username} placeholder="Usuário"
+          autoFocus autoComplete="username" onChange={(e) => setUsername(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} />
         <input className="login-input" type="password" value={pw} placeholder="Senha de acesso"
-          autoFocus onChange={(e) => setPw(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} />
+          autoComplete="current-password" onChange={(e) => setPw(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} />
         <button className="login-btn" onClick={submit} disabled={pending}>
           {pending ? 'Verificando...' : 'Entrar →'}
         </button>
@@ -3970,7 +3995,7 @@ function ShelvesView({ estantes, materiais, onSave, onToggle, onDelete, onReorde
   )
 }
 
-function Sidebar({ route, go, counts, onLogout }: { route: Route; go: (r: Route) => void; counts: Record<string, number>; onLogout: () => void }) {
+function Sidebar({ route, go, counts, onLogout, admin }: { route: Route; go: (r: Route) => void; counts: Record<string, number>; onLogout: () => void; admin: AdminSession }) {
   const isOn = (r: Route) => r.screen === route.screen && (r.screen !== 'list' || (route.screen === 'list' && r.type === route.type))
   return (
     <aside className="adm-sb">
@@ -3988,13 +4013,30 @@ function Sidebar({ route, go, counts, onLogout }: { route: Route; go: (r: Route)
               <span className="adm-sb-count">{counts[t.key]}</span>
             </button>
           ))}
-          <button className={`adm-sb-link${route.screen === 'shelves' ? ' on' : ''}`} onClick={() => go({ screen: 'shelves' })}>
-            <span className="adm-sb-ic">◇</span> Estantes
-            <span className="adm-sb-count">{counts.estante}</span>
-          </button>
+          {admin.isMaster && (
+            <>
+              <button className={`adm-sb-link${route.screen === 'shelves' ? ' on' : ''}`} onClick={() => go({ screen: 'shelves' })}>
+                <span className="adm-sb-ic">◇</span> Estantes
+                <span className="adm-sb-count">{counts.estante}</span>
+              </button>
+              <div className="adm-sb-group">Admin</div>
+              <button className={`adm-sb-link${route.screen === 'users' ? ' on' : ''}`} onClick={() => go({ screen: 'users' })}>
+                <span className="adm-sb-ic">◇</span> Acessos
+                <span className="adm-sb-count">{counts.users}</span>
+              </button>
+              <button className={`adm-sb-link${route.screen === 'studio' ? ' on' : ''}`} onClick={() => go({ screen: 'studio' })}>
+                <span className="adm-sb-ic">◇</span> Studio
+                <span className="adm-sb-count">{counts.templates}</span>
+              </button>
+            </>
+          )}
         </nav>
       </div>
       <div className="adm-sb-bottom">
+        <div className="adm-userbox">
+          <strong>{admin.name || admin.username}</strong>
+          <span>{admin.isMaster ? 'Master' : 'Admin'} · {admin.username}</span>
+        </div>
         <a className="adm-sb-link" href="/" target="_blank" rel="noreferrer"><span className="adm-sb-ic">→</span> Ver o site</a>
         <button className="adm-sb-link" onClick={onLogout}><span className="adm-sb-ic">→</span> Sair</button>
       </div>
@@ -4089,12 +4131,273 @@ function Confirm({ item, onYes, onNo }: { item: Item; onYes: () => void; onNo: (
   )
 }
 
+function AdminUsersView({
+  users,
+  currentAdmin,
+  onCreate,
+  onUpdate,
+  onDelete,
+}: {
+  users: AdminUser[]
+  currentAdmin: AdminSession
+  onCreate: (input: { username: string; name: string; password: string; role: 'master' | 'admin' }) => void
+  onUpdate: (input: { id: string; name: string; role: 'master' | 'admin'; active: boolean; password?: string }) => void
+  onDelete: (id: string) => void
+}) {
+  const [editing, setEditing] = useState<AdminUser | 'new' | null>(null)
+  const [form, setForm] = useState({ username: '', name: '', password: '', role: 'admin' as 'master' | 'admin', active: true })
+
+  const openNew = () => {
+    setForm({ username: '', name: '', password: '', role: 'admin', active: true })
+    setEditing('new')
+  }
+  const openEdit = (user: AdminUser) => {
+    setForm({ username: user.username, name: user.name, password: '', role: user.role, active: user.active })
+    setEditing(user)
+  }
+  const save = () => {
+    if (editing === 'new') {
+      onCreate({ username: form.username, name: form.name, password: form.password, role: form.role })
+    } else if (editing) {
+      onUpdate({ id: editing.id, name: form.name, role: form.role, active: form.active, password: form.password || undefined })
+    }
+    setEditing(null)
+  }
+
+  return (
+    <div className="listview">
+      {editing && (
+        <div className="modal-bg" onClick={() => setEditing(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-title">{editing === 'new' ? 'Novo acesso' : `Editar ${editing.username}`}</div>
+            <div className="fld">
+              <label className="fld-label">Usuário</label>
+              <input className="inp" value={form.username} disabled={editing !== 'new'} onChange={(e) => setForm(f => ({ ...f, username: e.target.value }))} placeholder="nome_sobrenome" />
+            </div>
+            <div className="fld">
+              <label className="fld-label">Nome</label>
+              <input className="inp" value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} />
+            </div>
+            <div className="fld">
+              <label className="fld-label">{editing === 'new' ? 'Senha' : 'Nova senha'}</label>
+              <input className="inp" type="password" value={form.password} onChange={(e) => setForm(f => ({ ...f, password: e.target.value }))} placeholder={editing === 'new' ? 'Obrigatória' : 'Deixe em branco para manter'} />
+            </div>
+            <div className="ed-2col">
+              <Field label="Poderes">
+                <select className="inp" value={form.role} onChange={(e) => setForm(f => ({ ...f, role: e.target.value as 'master' | 'admin' }))}>
+                  <option value="admin">Admin de produtos</option>
+                  <option value="master">Master</option>
+                </select>
+              </Field>
+              <Field label="Status">
+                <select className="inp" value={form.active ? 'active' : 'inactive'} onChange={(e) => setForm(f => ({ ...f, active: e.target.value === 'active' }))}>
+                  <option value="active">Ativo</option>
+                  <option value="inactive">Bloqueado</option>
+                </select>
+              </Field>
+            </div>
+            <div className="modal-acts">
+              <button className="btn-pri" onClick={save} disabled={editing === 'new' && (!form.username.trim() || !form.password.trim())} style={{ opacity: editing === 'new' && (!form.username.trim() || !form.password.trim()) ? .45 : 1 }}>Salvar acesso</button>
+              <button className="btn-sec" onClick={() => setEditing(null)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="lv-toolbar">
+        <div className="section-copy">Crie acessos para quem pode cadastrar produtos. Admin comum vê, edita e exclui somente o que criou.</div>
+        <button className="btn-pri" onClick={openNew}>+ Novo acesso</button>
+      </div>
+      <div className="lv-list">
+        {users.map((user) => (
+          <div className="row admin-row" key={user.id}>
+            <div className="row-chip"><span style={{ color: user.role === 'master' ? 'var(--olive)' : 'var(--wheat)' }}>{user.role === 'master' ? 'M' : 'A'}</span></div>
+            <div className="row-main">
+              <div className="row-title">{user.name || user.username}</div>
+              <div className="row-cat">{user.username} · {user.role === 'master' ? 'Master' : 'Admin de produtos'}</div>
+            </div>
+            <span className={`pill ${user.active ? 'pub' : 'draft'}`}>{user.active ? 'Ativo' : 'Bloqueado'}</span>
+            <div className="row-acts">
+              <button className="row-btn" onClick={() => openEdit(user)}>Editar</button>
+              <button className="row-btn danger" disabled={user.id === currentAdmin.id} onClick={() => onDelete(user.id)}>Excluir</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function StudioTemplatesView({
+  templates,
+  onSave,
+  onDelete,
+}: {
+  templates: StudioTemplate[]
+  onSave: (template: StudioTemplate) => void
+  onDelete: (id: string) => void
+}) {
+  const emptyTemplate = (): StudioTemplate => ({
+    id: `tpl-${Date.now()}`,
+    module: 'documentos',
+    name: '',
+    description: '',
+    status: 'Rascunho',
+    payload: { modelId: 'branco' },
+  })
+  const [editing, setEditing] = useState<StudioTemplate | null>(null)
+  const [payloadText, setPayloadText] = useState('{}')
+  const baseOptions = (module: StudioTemplate['module']) => {
+    if (module === 'slides') return [
+      { id: 'capa', label: 'Capa' },
+      { id: 'titulo', label: 'Título' },
+    ]
+    if (module === 'design') return [
+      { id: 'manchete', label: 'Manchete' },
+      { id: 'cartaz', label: 'Cartaz' },
+      { id: 'editorial', label: 'Editorial' },
+      { id: 'convite', label: 'Convite' },
+    ]
+    return [
+      { id: 'branco', label: 'Nenhum' },
+      { id: 'devocional', label: 'Devocional' },
+      { id: 'aula', label: 'Aula / Plano' },
+      { id: 'mensagem', label: 'Mensagem' },
+    ]
+  }
+  const setEditingPayload = (payload: Record<string, unknown>) => {
+    setEditing(t => t ? { ...t, payload } : t)
+    setPayloadText(JSON.stringify(payload, null, 2))
+  }
+  const openEditor = (module: StudioTemplate['module']) => {
+    window.open(`/studio/${module === 'documentos' ? 'documentos' : module}`, '_blank', 'noopener,noreferrer')
+  }
+  const start = (template?: StudioTemplate) => {
+    const next = template ?? emptyTemplate()
+    setEditing(next)
+    setPayloadText(JSON.stringify(next.payload ?? {}, null, 2))
+  }
+  const save = () => {
+    if (!editing) return
+    let payload: Record<string, unknown> = {}
+    try {
+      payload = JSON.parse(payloadText || '{}') as Record<string, unknown>
+    } catch {
+      alert('O JSON do modelo está inválido.')
+      return
+    }
+    onSave({ ...editing, payload })
+    setEditing(null)
+  }
+  const moduleLabel = (module: StudioTemplate['module']) => module === 'documentos' ? 'Documentos' : module === 'slides' ? 'Slides' : 'Design'
+
+  return (
+    <div className="listview">
+      {editing && (
+        <div className="modal-bg" onClick={() => setEditing(null)}>
+          <div className="modal studio-template-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-title">{editing.name ? `Editar ${editing.name}` : 'Novo modelo do Studio'}</div>
+            <div className="ed-2col">
+              <Field label="Módulo">
+                <select className="inp" value={editing.module} onChange={(e) => {
+                  const nextModule = e.target.value as StudioTemplate['module']
+                  const first = baseOptions(nextModule)[0]?.id
+                  setEditing(t => t ? { ...t, module: nextModule, payload: { ...t.payload, modelId: first } } : t)
+                  setPayloadText(JSON.stringify({ ...(editing.payload ?? {}), modelId: first }, null, 2))
+                }}>
+                  <option value="documentos">Documentos</option>
+                  <option value="slides">Slides</option>
+                  <option value="design">Design</option>
+                </select>
+              </Field>
+              <Field label="Status">
+                <select className="inp" value={editing.status} onChange={(e) => setEditing(t => t ? { ...t, status: e.target.value as StudioTemplate['status'] } : t)}>
+                  <option>Ativo</option>
+                  <option>Rascunho</option>
+                </select>
+              </Field>
+            </div>
+            <Field label="Modelo base" hint="Esse é o modelo real que aparece para o comprador. Excluir ou rascunhar aqui remove da lista dele.">
+              <select
+                className="inp"
+                value={String(editing.payload?.modelId ?? baseOptions(editing.module)[0]?.id ?? '')}
+                onChange={(e) => setEditingPayload({ ...(editing.payload ?? {}), modelId: e.target.value })}
+              >
+                {baseOptions(editing.module).map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+              </select>
+            </Field>
+            <Field label="Nome do modelo">
+              <input className="inp" value={editing.name} onChange={(e) => setEditing(t => t ? { ...t, name: e.target.value } : t)} />
+            </Field>
+            <Field label="Descrição">
+              <textarea className="inp ta" value={editing.description} onChange={(e) => setEditing(t => t ? { ...t, description: e.target.value } : t)} />
+            </Field>
+            <Field label="Payload técnico do modelo" hint="Base para ligar os editores aos templates do comprador. Pode guardar estrutura, ids e variações.">
+              <textarea className="inp ta code-ta" value={payloadText} onChange={(e) => setPayloadText(e.target.value)} />
+            </Field>
+            <div className="modal-acts">
+              <button className="btn-pri" onClick={save} disabled={!editing.name.trim()} style={{ opacity: editing.name.trim() ? 1 : .45 }}>Salvar modelo</button>
+              <button className="btn-sec" onClick={() => setEditing(null)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="studio-admin-hero">
+        <div>
+          <div className="adm-top-crumb">◆ CE.X Studio</div>
+          <h2>Manutenção dos modelos</h2>
+          <p>Área master para acessar os módulos e cadastrar os templates que depois serão consumidos pelos compradores.</p>
+        </div>
+        <button className="btn-pri" onClick={() => start()}>+ Novo modelo</button>
+      </div>
+
+      <div className="studio-module-grid">
+        {(['documentos', 'slides', 'design'] as StudioTemplate['module'][]).map((module) => (
+          <button className="studio-module-card" key={module} onClick={() => openEditor(module)}>
+            <span>◆ {moduleLabel(module)}</span>
+            <strong>Abrir módulo</strong>
+            <em>{templates.filter(t => t.module === module).length} modelo(s) cadastrados</em>
+          </button>
+        ))}
+      </div>
+
+      <div className="lv-list">
+        {templates.length === 0 && <div className="lv-empty">Nenhum modelo cadastrado ainda.</div>}
+        {templates.map((template) => (
+          <div className="row admin-row" key={template.id}>
+            <div className="row-chip"><span style={{ color: 'var(--olive)' }}>X</span></div>
+            <div className="row-main">
+              <div className="row-title">{template.name}</div>
+              <div className="row-desc">{template.description}</div>
+              <div className="row-cat">{moduleLabel(template.module)} · criado por {template.created_by_username ?? 'master'}</div>
+            </div>
+            <span className={`pill ${template.status === 'Ativo' ? 'pub' : 'draft'}`}>{template.status}</span>
+            <div className="row-acts">
+              <button className="row-btn" onClick={() => start(template)}>Editar</button>
+              <button className="row-btn danger" onClick={() => onDelete(template.id)}>Excluir</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── MAIN ─────────────────────────────────────────────────────────────────────
 
-type InitialData = { estantes: EstanteAdmin[]; materiais: Material[]; cursos: Curso[]; mentorias: Mentoria[] } | null
+type InitialData = {
+  estantes: EstanteAdmin[]
+  materiais: Material[]
+  cursos: Curso[]
+  mentorias: Mentoria[]
+  adminUsers: AdminUser[]
+  studioTemplates: StudioTemplate[]
+} | null
 
-export default function AdminClient({ initialAuthed, initialData }: { initialAuthed: boolean; initialData: InitialData }) {
+export default function AdminClient({ initialAuthed, initialAdmin, initialData }: { initialAuthed: boolean; initialAdmin: AdminSession | null; initialData: InitialData }) {
   const [authed, setAuthed] = useState(initialAuthed)
+  const [admin, setAdmin] = useState<AdminSession | null>(initialAdmin)
   const [data, setData] = useState<AdminData>(() => {
     if (initialData) {
       // Map DB rows → admin types
@@ -4171,6 +4474,8 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
       const series30 = Array(30).fill(0)
       return {
         materiais, cursos, mentorias, eventos: [], estantes,
+        adminUsers: initialData.adminUsers ?? [],
+        studioTemplates: initialData.studioTemplates ?? [],
         metrics: { series30, kpis: { visitas:0,visitasDelta:0,cliquesComprar:0,cliquesDelta:0,listaEspera:0,listaDelta:0,capturas:0,capturasDelta:0 }, funil:[{label:'Visitas ao site',value:0},{label:'Abriu um material',value:0},{label:'Clicou em comprar',value:0},{label:'Compra concluída',value:0}], origem:[{label:'Instagram',value:0,color:AC.olive},{label:'Direto',value:0,color:AC.wheat},{label:'Google',value:0,color:AC.clay},{label:'YouTube',value:0,color:AC.oliveDeep}] },
       }
     }
@@ -4181,32 +4486,37 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
   const [confirm, setConfirm] = useState<Item | null>(null)
   const [, startTransition] = useTransition()
 
-  if (!authed) return <Login />
+  if (!authed || !admin) return <Login />
 
   const arrKey = (type: ItemType) => TYPES.find((t) => t.key === type)!.arr
   const counts = {
     material: data.materiais.length, curso: data.cursos.length,
     mentoria: data.mentorias.length, evento: data.eventos.length,
     estante: data.estantes.length,
+    users: data.adminUsers.length,
+    templates: data.studioTemplates.length,
   }
 
-  const go = (r: Route) => { setEditing(null); setRoute(r) }
+  const go = (r: Route) => {
+    if (!admin.isMaster && (r.screen === 'shelves' || r.screen === 'users' || r.screen === 'studio')) return
+    setEditing(null); setRoute(r)
+  }
 
   const save = (d: Item) => {
     const key = arrKey(d.type)
+    const saving = d.id ? d : { ...d, id: `${d.type}-${Date.now()}` } as Item
     // Optimistic update
     setData((prev) => {
       const arr = prev[key] as Item[]
-      if (d.id) return { ...prev, [key]: arr.map((x) => (x.id === d.id ? d : x)) }
-      const withId = { ...d, id: `${d.type}-${Date.now()}` }
-      return { ...prev, [key]: [withId, ...arr] }
+      if (d.id) return { ...prev, [key]: arr.map((x) => (x.id === d.id ? saving : x)) }
+      return { ...prev, [key]: [saving, ...arr] }
     })
     setEditing(null)
     // Persist to Supabase
     startTransition(async () => {
       try {
-        if (d.type === 'material') {
-          const m = d as Material
+        if (saving.type === 'material') {
+          const m = saving as Material
           const contentSummary = materialContentSummary(m.contents ?? [], m.beneficios ?? [])
           await upsertMaterial({
             id: m.id, familia: m.family === 'Para ministrar' ? 'ministrar' : 'liderar',
@@ -4225,8 +4535,8 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
             keywords: m.keywords ?? [],
             status: m.status,
           })
-        } else if (d.type === 'curso') {
-          const c = d as Curso
+        } else if (saving.type === 'curso') {
+          const c = saving as Curso
           const NIVEL_KEY: Record<string,string> = { 'Fundação':'fundacao','Liderança':'lideranca','Multiplicação':'multiplicacao' }
           await upsertCurso({
             slug: c.id, num: String(c.etapa).padStart(2,'0'),
@@ -4239,8 +4549,8 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
             keywords: c.keywords ?? [],
             status: c.status,
           })
-        } else if (d.type === 'mentoria') {
-          const men = d as Mentoria
+        } else if (saving.type === 'mentoria') {
+          const men = saving as Mentoria
           await upsertMentoria({
             id: men.id || `mentoria-${Date.now()}`,
             title: men.title, desc_text: men.desc, formato: men.formato,
@@ -4317,7 +4627,52 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
   const handleLogout = () => {
     startTransition(async () => {
       await logoutAction()
+      setAdmin(null)
       setAuthed(false)
+    })
+  }
+
+  const createUser = (input: { username: string; name: string; password: string; role: 'master' | 'admin' }) => {
+    const optimistic: AdminUser = { id: `tmp-${Date.now()}`, username: input.username, name: input.name || input.username, role: input.role, active: true }
+    setData(prev => ({ ...prev, adminUsers: [...prev.adminUsers, optimistic] }))
+    startTransition(async () => {
+      try { await createAdminUser(input); window.location.reload() }
+      catch (err) { console.error('Erro ao criar acesso:', err) }
+    })
+  }
+
+  const updateUser = (input: { id: string; name: string; role: 'master' | 'admin'; active: boolean; password?: string }) => {
+    setData(prev => ({ ...prev, adminUsers: prev.adminUsers.map(user => user.id === input.id ? { ...user, name: input.name, role: input.role, active: input.active } : user) }))
+    startTransition(async () => {
+      try { await updateAdminUser(input) }
+      catch (err) { console.error('Erro ao atualizar acesso:', err) }
+    })
+  }
+
+  const removeUser = (id: string) => {
+    setData(prev => ({ ...prev, adminUsers: prev.adminUsers.filter(user => user.id !== id) }))
+    startTransition(async () => {
+      try { await deleteAdminUser(id) }
+      catch (err) { console.error('Erro ao excluir acesso:', err) }
+    })
+  }
+
+  const saveStudioTemplate = (template: StudioTemplate) => {
+    setData(prev => {
+      const exists = prev.studioTemplates.some(item => item.id === template.id)
+      return { ...prev, studioTemplates: exists ? prev.studioTemplates.map(item => item.id === template.id ? template : item) : [template, ...prev.studioTemplates] }
+    })
+    startTransition(async () => {
+      try { await upsertStudioTemplate(template) }
+      catch (err) { console.error('Erro ao salvar modelo do Studio:', err) }
+    })
+  }
+
+  const removeStudioTemplate = (id: string) => {
+    setData(prev => ({ ...prev, studioTemplates: prev.studioTemplates.filter(item => item.id !== id) }))
+    startTransition(async () => {
+      try { await deleteStudioTemplate(id) }
+      catch (err) { console.error('Erro ao excluir modelo do Studio:', err) }
     })
   }
 
@@ -4326,11 +4681,13 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
     ? (editing.id ? 'Editar item' : 'Novo item')
     : route.screen === 'dashboard' ? 'Painel de métricas'
     : route.screen === 'shelves' ? 'Estantes'
+    : route.screen === 'users' ? 'Acessos'
+    : route.screen === 'studio' ? 'CE.X Studio'
     : TYPES.find((t) => t.key === currentType)!.plural
 
   return (
     <div className="adm">
-      <Sidebar route={route} go={go} counts={counts} onLogout={handleLogout} />
+      <Sidebar route={route} go={go} counts={counts} onLogout={handleLogout} admin={admin} />
       <main className="adm-main">
         <header className="adm-top">
           <div>
@@ -4352,6 +4709,20 @@ export default function AdminClient({ initialAuthed, initialData }: { initialAut
               onToggle={toggleShelf}
               onDelete={deleteShelf}
               onReorder={reorderShelves}
+            />
+          ) : route.screen === 'users' && admin.isMaster ? (
+            <AdminUsersView
+              users={data.adminUsers}
+              currentAdmin={admin}
+              onCreate={createUser}
+              onUpdate={updateUser}
+              onDelete={removeUser}
+            />
+          ) : route.screen === 'studio' && admin.isMaster ? (
+            <StudioTemplatesView
+              templates={data.studioTemplates}
+              onSave={saveStudioTemplate}
+              onDelete={removeStudioTemplate}
             />
           ) : (
             <ListView type={currentType} items={data[arrKey(currentType)] as Item[]}
