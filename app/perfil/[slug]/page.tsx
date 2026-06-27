@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Nav from "../../components/Nav";
 import Footer from "../../components/Footer";
-import { ProdCard } from "../../components/ProdCard";
 import { compraDoUsuarioPorMaterialId } from "../../lib/compras";
 import { createClient } from "../../lib/supabase-server";
 import { formatMetaMaterial } from "../../lib/perfil-data";
@@ -22,6 +21,10 @@ export default async function PerfilCompraPage({ params }: { params: Promise<{ s
 
   const totalMensagens = compra.mensagens.length;
   const formatos = compra.material.meta.formatos.join(" · ");
+  const primeiraMensagem = compra.mensagens[0] ?? null;
+  const primeiraMensagemHref = primeiraMensagem
+    ? `/perfil/${compra.material.id}/mensagens/${primeiraMensagem.id}`
+    : null;
 
   return (
     <div className="pg">
@@ -34,87 +37,98 @@ export default async function PerfilCompraPage({ params }: { params: Promise<{ s
             <h1 className={styles.title}>{compra.material.titulo}</h1>
             <p className={styles.desc}>{compra.material.promessa}</p>
 
-            <div className={styles.metaGrid} aria-label="Resumo da compra">
-              <div>
-                <span>{compra.id}</span>
-                <strong>pedido</strong>
-              </div>
-              <div>
-                <span>{compra.data}</span>
-                <strong>compra</strong>
-              </div>
-              <div>
-                <span>{totalMensagens}</span>
-                <strong>mensagens</strong>
-              </div>
+            <div className={styles.heroActions}>
+              {primeiraMensagemHref && (
+                <Link href={primeiraMensagemHref} className="btn btn-primary btn-lg btn-arrow">
+                  Abrir primeira mensagem
+                </Link>
+              )}
+              <a href="#recursos" className="btn btn-secondary btn-lg">Abrir recursos</a>
             </div>
           </div>
 
-          <aside className={styles.preview} aria-label={`Banner de ${compra.material.titulo}`}>
-            <ProdCard material={compra.materialVisual} accentKey="olive" />
+          <aside className={styles.accessPanel} aria-label="Resumo do acesso">
+            <div className={styles.panelLogo} aria-hidden="true">
+              <span>CE</span><strong>.X</strong>
+            </div>
+            <span className="badge badge-olive badge-dot">{compra.status}</span>
+            <dl className={styles.panelFacts}>
+              <div>
+                <dt>Pedido</dt>
+                <dd>{compra.id}</dd>
+              </div>
+              <div>
+                <dt>Compra</dt>
+                <dd>{compra.data}</dd>
+              </div>
+              <div>
+                <dt>Conteúdo</dt>
+                <dd>{totalMensagens} mensagens</dd>
+              </div>
+            </dl>
           </aside>
         </section>
 
         <section className={`pg-wrap ${styles.summarySection}`} aria-labelledby="resumo-title">
-          <article className={styles.summaryPanel}>
-            <div className={styles.summaryBrand} aria-hidden="true">
-              <span>CE</span><strong>.X</strong>
-            </div>
-            <div className={styles.summaryCopy}>
-              <p className={styles.sectionKicker}>§ 01 · Resumo</p>
+          <article className={styles.summaryBand}>
+            <span className={styles.summaryMark} aria-hidden="true">◆</span>
+            <div>
+              <p className="psec-eyebrow">§ 01 · Resumo</p>
               <h2 id="resumo-title" className={styles.sectionTitle}>O que este material entrega</h2>
               <p>{compra.material.praQuem}</p>
             </div>
-            <div className={styles.summaryFacts} aria-label="Dados do material">
+            <dl className={styles.summaryFacts} aria-label="Dados do material">
               <div>
-                <span>{formatMetaMaterial(compra.material)}</span>
-                <strong>pacote</strong>
+                <dt>Pacote</dt>
+                <dd>{formatMetaMaterial(compra.material)}</dd>
               </div>
               <div>
-                <span>{compra.material.etiqueta}</span>
-                <strong>estante</strong>
+                <dt>Área</dt>
+                <dd>{compra.material.etiqueta}</dd>
               </div>
               <div>
-                <span>{formatos}</span>
-                <strong>formatos</strong>
+                <dt>Formatos</dt>
+                <dd>{formatos}</dd>
               </div>
-            </div>
+            </dl>
           </article>
         </section>
 
         <section className={`pg-wrap ${styles.contents}`} aria-labelledby="mensagens-title">
-          <div className={styles.sectionHead}>
-            <div>
-              <p className={styles.sectionKicker}>§ 02 · Mensagens</p>
-              <h2 id="mensagens-title" className={styles.sectionTitle}>Roteiros para abrir e editar</h2>
+          <div className="psec-head">
+            <div className="psec-head-left">
+              <p className="psec-eyebrow">§ 02 · Mensagens</p>
+              <h2 id="mensagens-title" className="psec-title">Roteiros para abrir e editar</h2>
+              <p className="psec-desc">Cada mensagem abre no Studio para você adaptar, revisar e preparar a ministração.</p>
             </div>
-            <span className={styles.statusBadge}>◆ {compra.status}</span>
+            <span className="badge badge-olive">{totalMensagens} liberadas</span>
           </div>
 
-          <div className={styles.messageGrid}>
+          <div className={styles.messageList}>
             {compra.mensagens.map((mensagem) => (
               <Link
                 key={mensagem.id}
                 href={`/perfil/${compra.material.id}/mensagens/${mensagem.id}`}
-                className={styles.messageCard}
+                className={styles.messageItem}
               >
-                <div className={styles.messageTop}>
+                <span className={styles.messageNum}>{mensagem.numero}</span>
+                <div className={styles.messageBody}>
                   <span>{mensagem.meta}</span>
-                  <strong>{mensagem.numero}</strong>
+                  <h3>{mensagem.titulo}</h3>
+                  <p>{mensagem.desc}</p>
                 </div>
-                <h3>{mensagem.titulo}</h3>
-                <p>{mensagem.desc}</p>
-                <span className={styles.messageAction}>Abrir no editor →</span>
+                <span className={styles.messageAction}>Abrir →</span>
               </Link>
             ))}
           </div>
         </section>
 
-        <section className={`pg-wrap ${styles.resources}`} aria-labelledby="recursos-title">
-          <div className={styles.sectionHead}>
-            <div>
-              <p className={styles.sectionKicker}>§ 03 · Saídas</p>
-              <h2 id="recursos-title" className={styles.sectionTitle}>Transformar em divulgação</h2>
+        <section id="recursos" className={`pg-wrap ${styles.resources}`} aria-labelledby="recursos-title">
+          <div className="psec-head">
+            <div className="psec-head-left">
+              <p className="psec-eyebrow">§ 03 · Recursos</p>
+              <h2 id="recursos-title" className="psec-title">Transformar em divulgação</h2>
+              <p className="psec-desc">Abra os módulos do Studio para preparar slides, artes e materiais de apoio.</p>
             </div>
           </div>
 
@@ -126,7 +140,7 @@ export default async function PerfilCompraPage({ params }: { params: Promise<{ s
                 <Link
                   key={recurso.id}
                   href={`/perfil/${compra.material.id}/editores/${editorTipo}`}
-                  className={styles.resourceCard}
+                  className={`card ${styles.resourceCard}`}
                 >
                   <div className={styles.resourceIcon} data-kind={recurso.tipo} aria-hidden="true">
                     {recurso.tipo === "social" ? "IG" : "16:9"}
