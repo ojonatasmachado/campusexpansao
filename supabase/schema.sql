@@ -149,12 +149,32 @@ create table if not exists studio_templates (
 create index if not exists studio_templates_module_idx on studio_templates(module);
 create index if not exists studio_templates_status_idx on studio_templates(status);
 
+-- Rascunhos pessoais dos compradores nos módulos visuais do CE.X Studio
+create table if not exists studio_user_drafts (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  material_id text not null,
+  module      text not null check (module in ('design', 'slides')),
+  payload     jsonb not null default '{}',
+  expires_at  timestamptz not null,
+  created_at  timestamptz default now(),
+  updated_at  timestamptz default now()
+);
+
+create unique index if not exists studio_user_drafts_user_material_module_uidx
+  on studio_user_drafts(user_id, material_id, module);
+create index if not exists studio_user_drafts_user_id_idx on studio_user_drafts(user_id);
+create index if not exists studio_user_drafts_material_id_idx on studio_user_drafts(material_id);
+create index if not exists studio_user_drafts_module_idx on studio_user_drafts(module);
+create index if not exists studio_user_drafts_expires_at_idx on studio_user_drafts(expires_at);
+
 -- RLS: habilitado, acesso público por enquanto (apertar depois com service_role)
 alter table estantes  enable row level security;
 alter table materiais enable row level security;
 alter table cursos    enable row level security;
 alter table mentorias enable row level security;
 alter table studio_templates enable row level security;
+alter table studio_user_drafts enable row level security;
 
 -- Policies: leitura pública, escrita via service_role (backend)
 drop policy if exists "leitura pública estantes" on estantes;
@@ -169,6 +189,22 @@ create policy "leitura pública mentorias" on mentorias for select using (true);
 drop policy if exists "leitura pública templates ativos" on studio_templates;
 create policy "leitura pública templates ativos" on studio_templates
 for select using (status = 'Ativo');
+
+drop policy if exists "usuario le seus drafts studio" on studio_user_drafts;
+create policy "usuario le seus drafts studio" on studio_user_drafts
+for select using (auth.uid() = user_id);
+
+drop policy if exists "usuario cria seus drafts studio" on studio_user_drafts;
+create policy "usuario cria seus drafts studio" on studio_user_drafts
+for insert with check (auth.uid() = user_id);
+
+drop policy if exists "usuario atualiza seus drafts studio" on studio_user_drafts;
+create policy "usuario atualiza seus drafts studio" on studio_user_drafts
+for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "usuario exclui seus drafts studio" on studio_user_drafts;
+create policy "usuario exclui seus drafts studio" on studio_user_drafts
+for delete using (auth.uid() = user_id);
 
 -- Login master inicial do painel:
 -- O código cria automaticamente o usuário jonatas_machado na primeira tentativa de login

@@ -16,15 +16,15 @@ function templateId(module: string, name: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const module = request.nextUrl.searchParams.get("module") ?? "";
-  if (!MODULES.has(module)) {
+  const studioModule = request.nextUrl.searchParams.get("module") ?? "";
+  if (!MODULES.has(studioModule)) {
     return NextResponse.json({ error: "Módulo inválido." }, { status: 400 });
   }
 
   const { data, error } = await supabaseAdmin()
     .from("studio_templates")
     .select("id,module,name,description,status,payload,created_at,updated_at")
-    .eq("module", module)
+    .eq("module", studioModule)
     .eq("status", "Ativo")
     .order("updated_at", { ascending: false });
 
@@ -50,15 +50,15 @@ export async function POST(request: NextRequest) {
     payload?: Record<string, unknown>;
   } | null;
 
-  const module = body?.module ?? "";
+  const studioModule = body?.module ?? "";
   const name = body?.name?.trim() ?? "";
-  if (!MODULES.has(module) || !name) {
+  if (!MODULES.has(studioModule) || !name) {
     return NextResponse.json({ error: "Informe módulo e nome do modelo." }, { status: 400 });
   }
 
   const row = {
-    id: body?.id || templateId(module, name),
-    module,
+    id: body?.id || templateId(studioModule, name),
+    module: studioModule,
     name,
     description: body?.description?.trim() ?? "",
     status: body?.status === "Rascunho" ? "Rascunho" : "Ativo",
