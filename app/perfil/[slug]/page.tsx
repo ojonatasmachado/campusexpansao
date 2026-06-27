@@ -1,10 +1,8 @@
-import type { CSSProperties } from "react";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Nav from "../../components/Nav";
 import Footer from "../../components/Footer";
 import { ProdCard } from "../../components/ProdCard";
-import { ACCENTS } from "../../lib/accents";
 import { compraDoUsuarioPorMaterialId } from "../../lib/compras";
 import { createClient } from "../../lib/supabase-server";
 import { formatMetaMaterial } from "../../lib/perfil-data";
@@ -22,17 +20,13 @@ export default async function PerfilCompraPage({ params }: { params: Promise<{ s
   const compra = await compraDoUsuarioPorMaterialId(user, slug);
   if (!compra) notFound();
 
-  const accent = ACCENTS[compra.accent];
   const totalMensagens = compra.mensagens.length;
   const formatos = compra.material.meta.formatos.join(" · ");
 
   return (
     <div className="pg">
       <Nav />
-      <main
-        className={styles.access}
-        style={{ "--perfil-accent": accent.base, "--perfil-accent-deep": accent.deep } as CSSProperties}
-      >
+      <main className={styles.access}>
         <section className={`pg-wrap ${styles.hero}`}>
           <div className={styles.copy}>
             <Link href="/perfil" className={styles.backLink}>Voltar para minhas compras</Link>
@@ -57,7 +51,7 @@ export default async function PerfilCompraPage({ params }: { params: Promise<{ s
           </div>
 
           <aside className={styles.preview} aria-label={`Banner de ${compra.material.titulo}`}>
-            <ProdCard material={compra.materialVisual} accentKey={compra.accent} />
+            <ProdCard material={compra.materialVisual} accentKey="olive" />
           </aside>
         </section>
 

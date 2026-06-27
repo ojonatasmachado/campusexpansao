@@ -2,11 +2,9 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Nav from "../../../../components/Nav";
 import Footer from "../../../../components/Footer";
-import { ACCENTS } from "../../../../lib/accents";
 import { compraDoUsuarioPorMaterialId } from "../../../../lib/compras";
 import { createClient } from "../../../../lib/supabase-server";
 import styles from "./page.module.css";
-import type { CSSProperties } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -26,15 +24,10 @@ export default async function MensagemEditorPage({
 
   if (!compra || !mensagemAtual) notFound();
 
-  const accent = ACCENTS[compra.accent];
-
   return (
     <div className="pg">
       <Nav />
-      <main
-        className={styles.editor}
-        style={{ "--perfil-accent": accent.base, "--perfil-accent-deep": accent.deep } as CSSProperties}
-      >
+      <main className={styles.editor}>
         <section className={`pg-wrap ${styles.hero}`}>
           <div>
             <Link href={`/perfil/${compra.material.id}`} className={styles.backLink}>

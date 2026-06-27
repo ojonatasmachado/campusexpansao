@@ -1,20 +1,23 @@
 .access {
   --perfil-accent: var(--olive);
-  --perfil-accent-deep: var(--olive-deep);
+  --perfil-panel: color-mix(in srgb, var(--graphite) 92%, var(--ink));
   min-height: 76vh;
   background:
-    radial-gradient(circle at 82% 14%, color-mix(in srgb, var(--perfil-accent) 10%, transparent), transparent 30%),
+    radial-gradient(circle at 86% 12%, color-mix(in srgb, var(--perfil-accent) 9%, transparent), transparent 32%),
+    linear-gradient(90deg, color-mix(in srgb, var(--cream) 3%, transparent) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in srgb, var(--cream) 2%, transparent) 1px, transparent 1px),
     var(--ink);
-  padding: 72px 0 124px;
+  background-size: auto, 88px 88px, 88px 88px;
+  padding: clamp(78px, 8vw, 112px) 0 clamp(108px, 10vw, 156px);
   overflow-x: hidden;
 }
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: clamp(28px, 5vw, 72px);
-  align-items: end;
-  padding-bottom: 72px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: clamp(42px, 7vw, 104px);
+  align-items: center;
+  padding-bottom: clamp(72px, 8vw, 104px);
   border-bottom: 0.5px solid var(--border-2);
 }
 
@@ -41,7 +44,7 @@
 
 .backLink {
   display: inline-flex;
-  margin-bottom: 30px;
+  margin-bottom: clamp(34px, 4vw, 48px);
   color: var(--muted);
   font-size: 11px;
   font-weight: 700;
@@ -53,7 +56,7 @@
 }
 
 .eyebrow {
-  margin: 0 0 18px;
+  margin: 0 0 22px;
   color: var(--perfil-accent);
   font-size: 12px;
 }
@@ -69,27 +72,29 @@
 }
 
 .desc {
-  width: min(100%, 620px);
-  margin: 28px 0 0;
-  color: var(--muted);
-  font-size: 18px;
+  width: min(100%, 700px);
+  margin: 34px 0 0;
+  color: var(--light);
+  font-size: clamp(17px, 1.6vw, 22px);
   line-height: 1.6;
   overflow-wrap: break-word;
 }
 
 .metaGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 150px));
-  gap: 10px;
-  margin-top: 30px;
+  grid-template-columns: repeat(3, minmax(0, 170px));
+  gap: 14px;
+  margin-top: 42px;
 }
 
 .metaGrid div {
-  min-height: 86px;
+  min-height: 104px;
   border: 0.5px solid var(--border-2);
   border-radius: var(--r-md);
-  background: var(--graphite);
-  padding: 16px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--perfil-accent) 7%, transparent), transparent 68%),
+    var(--perfil-panel);
+  padding: 18px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -112,6 +117,7 @@
 .preview {
   display: flex;
   justify-content: flex-end;
+  align-self: stretch;
   min-width: 0;
 }
 
@@ -124,20 +130,22 @@
 }
 
 .summarySection {
-  padding-top: 76px;
+  padding-top: clamp(84px, 9vw, 118px);
 }
 
 .summaryPanel {
   display: grid;
   grid-template-columns: minmax(150px, 0.25fr) minmax(0, 1fr) minmax(260px, 0.5fr);
-  gap: clamp(22px, 4vw, 44px);
+  gap: clamp(28px, 4vw, 56px);
   align-items: stretch;
   border: 0.5px solid var(--border-2);
   border-radius: var(--r-lg);
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--perfil-accent) 7%, transparent), transparent 42%),
-    var(--graphite);
-  padding: clamp(22px, 4vw, 38px);
+    linear-gradient(135deg, color-mix(in srgb, var(--perfil-accent) 8%, transparent), transparent 46%),
+    linear-gradient(90deg, color-mix(in srgb, var(--cream) 3%, transparent) 1px, transparent 1px),
+    var(--perfil-panel);
+  background-size: auto, 70px 70px;
+  padding: clamp(28px, 4vw, 48px);
 }
 
 .summaryBrand {
@@ -166,10 +174,10 @@
 
 .summaryCopy p:last-child {
   width: min(100%, 700px);
-  margin: 20px 0 0;
+  margin: 24px 0 0;
   color: var(--light);
   font-size: clamp(18px, 2vw, 26px);
-  line-height: 1.32;
+  line-height: 1.38;
   overflow-wrap: break-word;
 }
 
@@ -182,8 +190,8 @@
 .summaryFacts div {
   border: 0.5px solid var(--border-2);
   border-radius: var(--r-md);
-  background: color-mix(in srgb, var(--ink) 52%, transparent);
-  padding: 15px;
+  background: color-mix(in srgb, var(--ink) 66%, transparent);
+  padding: 18px;
 }
 
 .summaryFacts span {
@@ -204,7 +212,7 @@
 }
 
 .contents {
-  padding-top: 78px;
+  padding-top: clamp(88px, 9vw, 124px);
 }
 
 .sectionHead {
@@ -212,7 +220,7 @@
   justify-content: space-between;
   align-items: end;
   gap: 24px;
-  margin-bottom: 38px;
+  margin-bottom: clamp(34px, 4vw, 48px);
 }
 
 .sectionKicker {
@@ -243,17 +251,17 @@
 .messageGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: 22px;
 }
 
 .messageCard {
-  min-height: 236px;
+  min-height: 268px;
   border: 0.5px solid var(--border-2);
   border-radius: var(--r-lg);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--perfil-accent) 7%, transparent), transparent 46%),
-    var(--graphite);
-  padding: 18px;
+    var(--perfil-panel);
+  padding: clamp(22px, 3vw, 30px);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -283,7 +291,7 @@
 }
 
 .messageCard h3 {
-  margin: 34px 0 0;
+  margin: 42px 0 0;
   color: var(--cream);
   font-size: clamp(23px, 2.4vw, 34px);
   font-weight: 800;
@@ -293,9 +301,9 @@
 }
 
 .messageCard p {
-  margin: 16px 0 0;
-  color: var(--muted);
-  font-size: 14px;
+  margin: 18px 0 0;
+  color: var(--light);
+  font-size: 15px;
   line-height: 1.55;
   overflow-wrap: break-word;
 }
@@ -310,20 +318,20 @@
 }
 
 .resources {
-  padding-top: 82px;
+  padding-top: clamp(88px, 9vw, 124px);
 }
 
 .resourceGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: 22px;
 }
 
 .resourceCard {
   border: 0.5px solid var(--border-2);
   border-radius: var(--r-lg);
-  background: var(--graphite);
-  padding: 20px;
+  background: var(--perfil-panel);
+  padding: clamp(22px, 3vw, 30px);
   display: grid;
   grid-template-columns: 86px minmax(0, 1fr);
   gap: 20px;
@@ -391,8 +399,8 @@
 
 .resourceCard p {
   margin: 14px 0 0;
-  color: var(--muted);
-  font-size: 14px;
+  color: var(--light);
+  font-size: 15px;
   line-height: 1.55;
 }
 
