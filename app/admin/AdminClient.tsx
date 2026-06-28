@@ -29,6 +29,7 @@ import ThemeToggle from '../components/ThemeToggle'
 
 type Modelo = 'A' | 'B' | 'C' | 'D'
 type ItemType = 'material' | 'curso' | 'mentoria' | 'evento'
+type CatalogItemType = Exclude<ItemType, 'evento'>
 type MaterialContentKind = 'word' | 'pdf' | 'ppt' | 'design'
 type StudioDocumentModel = 'branco' | 'devocional' | 'aula' | 'mensagem'
 type StudioMode = 'document' | 'slides' | 'design'
@@ -137,7 +138,6 @@ const TYPES = [
   { key: 'material' as const, plural: 'Materiais', singular: 'material', arr: 'materiais' as const },
   { key: 'curso' as const, plural: 'Cursos', singular: 'curso', arr: 'cursos' as const },
   { key: 'mentoria' as const, plural: 'Mentorias', singular: 'mentoria', arr: 'mentorias' as const },
-  { key: 'evento' as const, plural: 'Eventos', singular: 'evento', arr: 'eventos' as const },
 ]
 
 // ── DADOS INICIAIS ────────────────────────────────────────────────────────────
@@ -3788,7 +3788,7 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => P
 
 // ── SHELL ────────────────────────────────────────────────────────────────────
 
-type Route = { screen: 'dashboard' } | { screen: 'list'; type: ItemType } | { screen: 'shelves' } | { screen: 'users' } | { screen: 'studio' }
+type Route = { screen: 'dashboard' } | { screen: 'list'; type: CatalogItemType } | { screen: 'shelves' } | { screen: 'users' } | { screen: 'studio' }
 
 function Login() {
   const [username, setUsername] = useState('')
@@ -3846,14 +3846,27 @@ const ACCENT_OPTIONS: { key: string; hex: string; name: string }[] = [
   { key: 'olive', hex: '#7A9E3F', name: 'Oliva'     },
 ]
 
-function ShelfEditor({ estante, onSave, onCancel }: { estante: EstanteAdmin | null; onSave: (e: EstanteAdmin) => void; onCancel: () => void }) {
+function ShelfEditor({ estante, onSave, onCancel }: { estante: EstanteAdmin | null; onSave: (e: EstanteAdmin) => Promise<void>; onCancel: () => void }) {
   const isNew = !estante
   const [form, setForm] = useState<EstanteAdmin>(() => estante ?? {
     key: `estante-${Date.now()}`, label: '', familia: 'ministrar',
     accent: AC.wheat, faixaEtaria: '', status: 'visible', order: 999,
   })
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const set = <K extends keyof EstanteAdmin>(k: K, v: EstanteAdmin[K]) => setForm(f => ({ ...f, [k]: v }))
   const valid = form.label.trim().length > 0
+  const handleSave = async () => {
+    if (!valid || isSaving) return
+    setIsSaving(true)
+    setSaveError('')
+    try {
+      await onSave(form)
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Não foi possível salvar a estante no banco.')
+      setIsSaving(false)
+    }
+  }
 
   return (
     <div className="modal-bg" onClick={onCancel}>
@@ -3895,10 +3908,11 @@ function ShelfEditor({ estante, onSave, onCancel }: { estante: EstanteAdmin | nu
         </div>
 
         <div className="modal-acts">
-          <button className="btn-pri" onClick={() => valid && onSave(form)} disabled={!valid} style={{ opacity: valid ? 1 : 0.4 }}>
-            {isNew ? 'Criar estante' : 'Salvar alterações'}
+          {saveError && <div className="ed-save-error" role="alert">{saveError}</div>}
+          <button className="btn-pri" onClick={handleSave} disabled={!valid || isSaving} style={{ opacity: valid && !isSaving ? 1 : 0.4 }}>
+            {isSaving ? 'Salvando...' : isNew ? 'Criar estante' : 'Salvar alterações'}
           </button>
-          <button className="btn-sec" onClick={onCancel}>Cancelar</button>
+          <button className="btn-sec" onClick={onCancel} disabled={isSaving} style={{ opacity: isSaving ? 0.55 : 1 }}>Cancelar</button>
         </div>
       </div>
     </div>
@@ -3908,10 +3922,10 @@ function ShelfEditor({ estante, onSave, onCancel }: { estante: EstanteAdmin | nu
 function ShelvesView({ estantes, materiais, onSave, onToggle, onDelete, onReorder }:{
   estantes: EstanteAdmin[]
   materiais: Material[]
-  onSave: (e: EstanteAdmin) => void
-  onToggle: (key: string) => void
-  onDelete: (key: string) => void
-  onReorder: (orderedKeys: string[]) => void
+  onSave: (e: EstanteAdmin) => Promise<void>
+  onToggle: (key: string) => Promise<void>
+  onDelete: (key: string) => Promise<void>
+  onReorder: (orderedKeys: string[]) => Promise<void>
 }) {
   const [editing, setEditing] = useState<EstanteAdmin | 'new' | null>(null)
   const [toDelete, setToDelete] = useState<EstanteAdmin | null>(null)
@@ -3931,7 +3945,7 @@ function ShelvesView({ estantes, materiais, onSave, onToggle, onDelete, onReorde
     const next = [...sorted]
     const [item] = next.splice(from, 1)
     next.splice(to, 0, item)
-    onReorder(next.map(e => e.key))
+    void onReorder(next.map(e => e.key)).catch(() => undefined)
     dragKey.current = null
     setDragOver(null)
   }
@@ -3940,18 +3954,22 @@ function ShelvesView({ estantes, materiais, onSave, onToggle, onDelete, onReorde
   return (
     <div className="listview">
       {editing === 'new' && (
-        <ShelfEditor estante={null} onSave={e => { onSave(e); setEditing(null) }} onCancel={() => setEditing(null)} />
+        <ShelfEditor estante={null} onSave={async e => { await onSave(e); setEditing(null) }} onCancel={() => setEditing(null)} />
       )}
       {editing && editing !== 'new' && (
-        <ShelfEditor estante={editing} onSave={e => { onSave(e); setEditing(null) }} onCancel={() => setEditing(null)} />
+        <ShelfEditor estante={editing} onSave={async e => { await onSave(e); setEditing(null) }} onCancel={() => setEditing(null)} />
       )}
       {toDelete && (
         <div className="modal-bg" onClick={() => setToDelete(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-title">Excluir estante &ldquo;{toDelete.label}&rdquo;?</div>
-            <p className="modal-text">Os materiais desta estante não serão excluídos, mas ficarão sem estante atribuída. Esta ação não pode ser desfeita.</p>
+            <p className="modal-text">
+              {countFor(toDelete.key) > 0
+                ? `Esta estante tem ${countFor(toDelete.key)} material(is). Mova ou exclua esses materiais antes de remover a estante.`
+                : 'Esta ação remove a estante do catálogo e não pode ser desfeita.'}
+            </p>
             <div className="modal-acts">
-              <button className="btn-danger" onClick={() => { onDelete(toDelete.key); setToDelete(null) }}>Excluir estante</button>
+              <button className="btn-danger" disabled={countFor(toDelete.key) > 0} style={{ opacity: countFor(toDelete.key) > 0 ? 0.45 : 1 }} onClick={async () => { try { await onDelete(toDelete.key); setToDelete(null) } catch {} }}>Excluir estante</button>
               <button className="btn-sec" onClick={() => setToDelete(null)}>Manter</button>
             </div>
           </div>
@@ -4000,7 +4018,7 @@ function ShelvesView({ estantes, materiais, onSave, onToggle, onDelete, onReorde
                 {n} item{n !== 1 ? 's' : ''}
               </span>
               <div className="row-acts">
-                <button className="row-btn" onClick={() => onToggle(e.key)}>
+                <button className="row-btn" onClick={() => { void onToggle(e.key).catch(() => undefined) }}>
                   {e.status === 'visible' ? 'Ocultar' : 'Mostrar'}
                 </button>
                 <button className="row-btn" onClick={() => setEditing(e)}>Editar</button>
@@ -4097,7 +4115,7 @@ function Row({ item, onEdit, onDelete }: { item: Item; onEdit: () => void; onDel
   )
 }
 
-function ListView({ type, items, onNew, onEdit, onDelete }: { type: ItemType; items: Item[]; onNew: () => void; onEdit: (i: Item) => void; onDelete: (i: Item) => void }) {
+function ListView({ type, items, onNew, onEdit, onDelete }: { type: CatalogItemType; items: Item[]; onNew: () => void; onEdit: (i: Item) => void; onDelete: (i: Item) => void }) {
   const meta = TYPES.find((t) => t.key === type)!
   const [q, setQ] = useState('')
   const [filter, setFilter] = useState('Todos')
@@ -4162,28 +4180,42 @@ function AdminUsersView({
 }: {
   users: AdminUser[]
   currentAdmin: AdminSession
-  onCreate: (input: { username: string; name: string; password: string; role: 'master' | 'admin' }) => void
-  onUpdate: (input: { id: string; name: string; role: 'master' | 'admin'; active: boolean; password?: string }) => void
-  onDelete: (id: string) => void
+  onCreate: (input: { username: string; name: string; password: string; role: 'master' | 'admin' }) => Promise<void>
+  onUpdate: (input: { id: string; name: string; role: 'master' | 'admin'; active: boolean; password?: string }) => Promise<void>
+  onDelete: (id: string) => Promise<void>
 }) {
   const [editing, setEditing] = useState<AdminUser | 'new' | null>(null)
   const [form, setForm] = useState({ username: '', name: '', password: '', role: 'admin' as 'master' | 'admin', active: true })
+  const [isSaving, setIsSaving] = useState(false)
+  const [formError, setFormError] = useState('')
 
   const openNew = () => {
     setForm({ username: '', name: '', password: '', role: 'admin', active: true })
+    setFormError('')
+    setIsSaving(false)
     setEditing('new')
   }
   const openEdit = (user: AdminUser) => {
     setForm({ username: user.username, name: user.name, password: '', role: user.role, active: user.active })
+    setFormError('')
+    setIsSaving(false)
     setEditing(user)
   }
-  const save = () => {
-    if (editing === 'new') {
-      onCreate({ username: form.username, name: form.name, password: form.password, role: form.role })
-    } else if (editing) {
-      onUpdate({ id: editing.id, name: form.name, role: form.role, active: form.active, password: form.password || undefined })
+  const save = async () => {
+    if (!editing || isSaving) return
+    setIsSaving(true)
+    setFormError('')
+    try {
+      if (editing === 'new') {
+        await onCreate({ username: form.username, name: form.name, password: form.password, role: form.role })
+      } else {
+        await onUpdate({ id: editing.id, name: form.name, role: form.role, active: form.active, password: form.password || undefined })
+      }
+      setEditing(null)
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : 'Não foi possível salvar o acesso no banco.')
+      setIsSaving(false)
     }
-    setEditing(null)
   }
 
   return (
@@ -4219,8 +4251,11 @@ function AdminUsersView({
               </Field>
             </div>
             <div className="modal-acts">
-              <button className="btn-pri" onClick={save} disabled={editing === 'new' && (!form.username.trim() || !form.password.trim())} style={{ opacity: editing === 'new' && (!form.username.trim() || !form.password.trim()) ? .45 : 1 }}>Salvar acesso</button>
-              <button className="btn-sec" onClick={() => setEditing(null)}>Cancelar</button>
+              {formError && <div className="ed-save-error" role="alert">{formError}</div>}
+              <button className="btn-pri" onClick={save} disabled={isSaving || (editing === 'new' && (!form.username.trim() || !form.password.trim()))} style={{ opacity: isSaving || (editing === 'new' && (!form.username.trim() || !form.password.trim())) ? .45 : 1 }}>
+                {isSaving ? 'Salvando...' : 'Salvar acesso'}
+              </button>
+              <button className="btn-sec" onClick={() => setEditing(null)} disabled={isSaving} style={{ opacity: isSaving ? 0.55 : 1 }}>Cancelar</button>
             </div>
           </div>
         </div>
@@ -4241,7 +4276,7 @@ function AdminUsersView({
             <span className={`pill ${user.active ? 'pub' : 'draft'}`}>{user.active ? 'Ativo' : 'Bloqueado'}</span>
             <div className="row-acts">
               <button className="row-btn" onClick={() => openEdit(user)}>Editar</button>
-              <button className="row-btn danger" disabled={user.id === currentAdmin.id} onClick={() => onDelete(user.id)}>Excluir</button>
+              <button className="row-btn danger" disabled={user.id === currentAdmin.id} onClick={() => { void onDelete(user.id).catch(() => undefined) }}>Excluir</button>
             </div>
           </div>
         ))}
@@ -4256,8 +4291,8 @@ function StudioTemplatesView({
   onDelete,
 }: {
   templates: StudioTemplate[]
-  onSave: (template: StudioTemplate) => void
-  onDelete: (id: string) => void
+  onSave: (template: StudioTemplate) => Promise<void>
+  onDelete: (id: string) => Promise<void>
 }) {
   const emptyTemplate = (): StudioTemplate => ({
     id: `tpl-${Date.now()}`,
@@ -4269,6 +4304,8 @@ function StudioTemplatesView({
   })
   const [editing, setEditing] = useState<StudioTemplate | null>(null)
   const [payloadText, setPayloadText] = useState('{}')
+  const [isSaving, setIsSaving] = useState(false)
+  const [formError, setFormError] = useState('')
   const baseOptions = (module: StudioTemplate['module']) => {
     if (module === 'slides') return [
       { id: 'capa', label: 'Capa' },
@@ -4296,20 +4333,29 @@ function StudioTemplatesView({
   }
   const start = (template?: StudioTemplate) => {
     const next = template ?? emptyTemplate()
+    setFormError('')
+    setIsSaving(false)
     setEditing(next)
     setPayloadText(JSON.stringify(next.payload ?? {}, null, 2))
   }
-  const save = () => {
-    if (!editing) return
+  const save = async () => {
+    if (!editing || isSaving) return
     let payload: Record<string, unknown> = {}
     try {
       payload = JSON.parse(payloadText || '{}') as Record<string, unknown>
     } catch {
-      alert('O JSON do modelo está inválido.')
+      setFormError('O JSON do modelo está inválido.')
       return
     }
-    onSave({ ...editing, payload })
-    setEditing(null)
+    setIsSaving(true)
+    setFormError('')
+    try {
+      await onSave({ ...editing, payload })
+      setEditing(null)
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : 'Não foi possível salvar o modelo no banco.')
+      setIsSaving(false)
+    }
   }
   const moduleLabel = (module: StudioTemplate['module']) => module === 'documentos' ? 'Documentos' : module === 'slides' ? 'Slides' : 'Design'
 
@@ -4358,8 +4404,11 @@ function StudioTemplatesView({
               <textarea className="inp ta code-ta" value={payloadText} onChange={(e) => setPayloadText(e.target.value)} />
             </Field>
             <div className="modal-acts">
-              <button className="btn-pri" onClick={save} disabled={!editing.name.trim()} style={{ opacity: editing.name.trim() ? 1 : .45 }}>Salvar modelo</button>
-              <button className="btn-sec" onClick={() => setEditing(null)}>Cancelar</button>
+              {formError && <div className="ed-save-error" role="alert">{formError}</div>}
+              <button className="btn-pri" onClick={save} disabled={isSaving || !editing.name.trim()} style={{ opacity: !isSaving && editing.name.trim() ? 1 : .45 }}>
+                {isSaving ? 'Salvando...' : 'Salvar modelo'}
+              </button>
+              <button className="btn-sec" onClick={() => setEditing(null)} disabled={isSaving} style={{ opacity: isSaving ? 0.55 : 1 }}>Cancelar</button>
             </div>
           </div>
         </div>
@@ -4397,7 +4446,7 @@ function StudioTemplatesView({
             <span className={`pill ${template.status === 'Ativo' ? 'pub' : 'draft'}`}>{template.status}</span>
             <div className="row-acts">
               <button className="row-btn" onClick={() => start(template)}>Editar</button>
-              <button className="row-btn danger" onClick={() => onDelete(template.id)}>Excluir</button>
+              <button className="row-btn danger" onClick={() => { void onDelete(template.id).catch(() => undefined) }}>Excluir</button>
             </div>
           </div>
         ))}
@@ -4513,11 +4562,18 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
   const [route, setRoute] = useState<Route>({ screen: 'dashboard' })
   const [editing, setEditing] = useState<Item | null>(null)
   const [confirm, setConfirm] = useState<Item | null>(null)
+  const [adminError, setAdminError] = useState('')
   const [, startTransition] = useTransition()
 
   if (!authed || !admin) return <Login />
 
-  const arrKey = (type: ItemType) => TYPES.find((t) => t.key === type)!.arr
+  const arrKey = (type: CatalogItemType) => TYPES.find((t) => t.key === type)!.arr
+  const typePlural = (type: ItemType) => TYPES.find((t) => t.key === type)?.plural ?? 'Itens'
+  const failAdminAction = (error: unknown, fallback: string) => {
+    const message = error instanceof Error ? error.message : fallback
+    setAdminError(message)
+    return error instanceof Error ? error : new Error(message)
+  }
   const counts = {
     material: data.materiais.length, curso: data.cursos.length,
     mentoria: data.mentorias.length, evento: data.eventos.length,
@@ -4532,6 +4588,8 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
   }
 
   const save = async (d: Item) => {
+    setAdminError('')
+    if (d.type === 'evento') throw new Error('Eventos não têm tabela própria. Cadastre esse conteúdo como material em uma estante de eventos.')
     const key = arrKey(d.type)
     const saving = d.id ? d : { ...d, id: `${d.type}-${Date.now()}` } as Item
     if (saving.type === 'material') {
@@ -4586,65 +4644,76 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
     setEditing(null)
   }
 
-  const doDelete = (it: Item) => {
+  const doDelete = async (it: Item) => {
+    setAdminError('')
+    if (it.type === 'evento') throw failAdminAction(new Error('Eventos não têm tabela própria no site.'), 'Eventos não têm tabela própria no site.')
     const key = arrKey(it.type)
-    setData((prev) => ({ ...prev, [key]: (prev[key] as Item[]).filter((x) => x.id !== it.id) }))
-    setConfirm(null)
-    startTransition(async () => {
-      try {
-        if (it.type === 'material') await deleteMaterial(it.id)
-        else if (it.type === 'curso') await deleteCurso(it.id)
-        else if (it.type === 'mentoria') await deleteMentoria(it.id)
-      } catch (err) { console.error('Erro ao excluir:', err) }
-    })
+    try {
+      if (it.type === 'material') await deleteMaterial(it.id)
+      else if (it.type === 'curso') await deleteCurso(it.id)
+      else if (it.type === 'mentoria') await deleteMentoria(it.id)
+      setData((prev) => ({ ...prev, [key]: (prev[key] as Item[]).filter((x) => x.id !== it.id) }))
+      setConfirm(null)
+    } catch (error) {
+      throw failAdminAction(error, 'Não foi possível excluir o item no banco.')
+    }
   }
 
-  const saveShelf = (e: EstanteAdmin) => {
-    setData(prev => {
+  const saveShelf = async (e: EstanteAdmin) => {
+    setAdminError('')
+    try {
+      const current = data.estantes.find(x => x.key === e.key)
+      const maxOrder = Math.max(-1, ...data.estantes.map(x => x.order))
+      const saving = current ? e : { ...e, order: maxOrder + 1 }
+      await upsertEstante({ key: saving.key, label: saving.label, familia: saving.familia, accent: saving.accent, faixa_etaria: saving.faixaEtaria, status: saving.status, ord: saving.order })
+      setData(prev => {
       const exists = prev.estantes.find(x => x.key === e.key)
-      if (exists) return { ...prev, estantes: prev.estantes.map(x => x.key === e.key ? e : x) }
-      const maxOrder = Math.max(-1, ...prev.estantes.map(x => x.order))
-      return { ...prev, estantes: [...prev.estantes, { ...e, order: maxOrder + 1 }] }
-    })
-    startTransition(async () => {
-      try {
-        await upsertEstante({ key: e.key, label: e.label, familia: e.familia, accent: e.accent, faixa_etaria: e.faixaEtaria, status: e.status, ord: e.order })
-      } catch (err) { console.error('Erro ao salvar estante:', err) }
-    })
-  }
-
-  const toggleShelf = (key: string) => {
-    setData(prev => {
-      const updated = prev.estantes.map(e => e.key === key ? { ...e, status: (e.status === 'visible' ? 'hidden' : 'visible') as 'visible'|'hidden' } : e)
-      const shelf = updated.find(e => e.key === key)!
-      startTransition(async () => {
-        try { await upsertEstante({ key: shelf.key, label: shelf.label, familia: shelf.familia, accent: shelf.accent, faixa_etaria: shelf.faixaEtaria, status: shelf.status, ord: shelf.order }) }
-        catch (err) { console.error('Erro ao ocultar estante:', err) }
+      if (exists) return { ...prev, estantes: prev.estantes.map(x => x.key === e.key ? saving : x) }
+      return { ...prev, estantes: [...prev.estantes, saving] }
       })
-      return { ...prev, estantes: updated }
-    })
+    } catch (error) {
+      throw failAdminAction(error, 'Não foi possível salvar a estante no banco.')
+    }
   }
 
-  const deleteShelf = (key: string) => {
-    setData(prev => ({
-      ...prev,
-      estantes: prev.estantes.filter(e => e.key !== key).map((e, i) => ({ ...e, order: i })),
-    }))
-    startTransition(async () => {
-      try { await deleteEstante(key) } catch (err) { console.error('Erro ao excluir estante:', err) }
-    })
+  const toggleShelf = async (key: string) => {
+    setAdminError('')
+    try {
+      const shelf = data.estantes.find(e => e.key === key)
+      if (!shelf) return
+      const saving = { ...shelf, status: (shelf.status === 'visible' ? 'hidden' : 'visible') as 'visible'|'hidden' }
+      await upsertEstante({ key: saving.key, label: saving.label, familia: saving.familia, accent: saving.accent, faixa_etaria: saving.faixaEtaria, status: saving.status, ord: saving.order })
+      setData(prev => ({ ...prev, estantes: prev.estantes.map(e => e.key === key ? saving : e) }))
+    } catch (error) {
+      throw failAdminAction(error, 'Não foi possível alterar a visibilidade da estante no banco.')
+    }
   }
 
-  const reorderShelves = (orderedKeys: string[]) => {
-    setData(prev => {
+  const deleteShelf = async (key: string) => {
+    setAdminError('')
+    try {
+      await deleteEstante(key)
+      setData(prev => ({
+        ...prev,
+        estantes: prev.estantes.filter(e => e.key !== key).map((e, i) => ({ ...e, order: i })),
+      }))
+    } catch (error) {
+      throw failAdminAction(error, 'Não foi possível excluir a estante no banco.')
+    }
+  }
+
+  const reorderShelves = async (orderedKeys: string[]) => {
+    setAdminError('')
+    try {
+      await reorderEstantes(orderedKeys)
+      setData(prev => {
       const map = Object.fromEntries(prev.estantes.map(e => [e.key, e]))
       const reordered = orderedKeys.map((key, i) => ({ ...map[key], order: i }))
-      startTransition(async () => {
-        try { await reorderEstantes(orderedKeys) }
-        catch (err) { console.error('Erro ao reordenar:', err) }
-      })
       return { ...prev, estantes: reordered }
-    })
+      })
+    } catch (error) {
+      throw failAdminAction(error, 'Não foi possível reordenar as estantes no banco.')
+    }
   }
 
   const handleLogout = () => {
@@ -4655,48 +4724,57 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
     })
   }
 
-  const createUser = (input: { username: string; name: string; password: string; role: 'master' | 'admin' }) => {
-    const optimistic: AdminUser = { id: `tmp-${Date.now()}`, username: input.username, name: input.name || input.username, role: input.role, active: true }
-    setData(prev => ({ ...prev, adminUsers: [...prev.adminUsers, optimistic] }))
-    startTransition(async () => {
-      try { await createAdminUser(input); window.location.reload() }
-      catch (err) { console.error('Erro ao criar acesso:', err) }
-    })
+  const createUser = async (input: { username: string; name: string; password: string; role: 'master' | 'admin' }) => {
+    setAdminError('')
+    try {
+      await createAdminUser(input)
+      window.location.reload()
+    } catch (error) {
+      throw failAdminAction(error, 'Não foi possível criar o acesso no banco.')
+    }
   }
 
-  const updateUser = (input: { id: string; name: string; role: 'master' | 'admin'; active: boolean; password?: string }) => {
-    setData(prev => ({ ...prev, adminUsers: prev.adminUsers.map(user => user.id === input.id ? { ...user, name: input.name, role: input.role, active: input.active } : user) }))
-    startTransition(async () => {
-      try { await updateAdminUser(input) }
-      catch (err) { console.error('Erro ao atualizar acesso:', err) }
-    })
+  const updateUser = async (input: { id: string; name: string; role: 'master' | 'admin'; active: boolean; password?: string }) => {
+    setAdminError('')
+    try {
+      await updateAdminUser(input)
+      setData(prev => ({ ...prev, adminUsers: prev.adminUsers.map(user => user.id === input.id ? { ...user, name: input.name, role: input.role, active: input.active } : user) }))
+    } catch (error) {
+      throw failAdminAction(error, 'Não foi possível atualizar o acesso no banco.')
+    }
   }
 
-  const removeUser = (id: string) => {
-    setData(prev => ({ ...prev, adminUsers: prev.adminUsers.filter(user => user.id !== id) }))
-    startTransition(async () => {
-      try { await deleteAdminUser(id) }
-      catch (err) { console.error('Erro ao excluir acesso:', err) }
-    })
+  const removeUser = async (id: string) => {
+    setAdminError('')
+    try {
+      await deleteAdminUser(id)
+      setData(prev => ({ ...prev, adminUsers: prev.adminUsers.filter(user => user.id !== id) }))
+    } catch (error) {
+      throw failAdminAction(error, 'Não foi possível excluir o acesso no banco.')
+    }
   }
 
-  const saveStudioTemplate = (template: StudioTemplate) => {
-    setData(prev => {
-      const exists = prev.studioTemplates.some(item => item.id === template.id)
-      return { ...prev, studioTemplates: exists ? prev.studioTemplates.map(item => item.id === template.id ? template : item) : [template, ...prev.studioTemplates] }
-    })
-    startTransition(async () => {
-      try { await upsertStudioTemplate(template) }
-      catch (err) { console.error('Erro ao salvar modelo do Studio:', err) }
-    })
+  const saveStudioTemplate = async (template: StudioTemplate) => {
+    setAdminError('')
+    try {
+      await upsertStudioTemplate(template)
+      setData(prev => {
+        const exists = prev.studioTemplates.some(item => item.id === template.id)
+        return { ...prev, studioTemplates: exists ? prev.studioTemplates.map(item => item.id === template.id ? template : item) : [template, ...prev.studioTemplates] }
+      })
+    } catch (error) {
+      throw failAdminAction(error, 'Não foi possível salvar o modelo do Studio no banco.')
+    }
   }
 
-  const removeStudioTemplate = (id: string) => {
-    setData(prev => ({ ...prev, studioTemplates: prev.studioTemplates.filter(item => item.id !== id) }))
-    startTransition(async () => {
-      try { await deleteStudioTemplate(id) }
-      catch (err) { console.error('Erro ao excluir modelo do Studio:', err) }
-    })
+  const removeStudioTemplate = async (id: string) => {
+    setAdminError('')
+    try {
+      await deleteStudioTemplate(id)
+      setData(prev => ({ ...prev, studioTemplates: prev.studioTemplates.filter(item => item.id !== id) }))
+    } catch (error) {
+      throw failAdminAction(error, 'Não foi possível excluir o modelo do Studio no banco.')
+    }
   }
 
   const currentType = route.screen === 'list' ? route.type : 'material'
@@ -4706,7 +4784,7 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
     : route.screen === 'shelves' ? 'Estantes'
     : route.screen === 'users' ? 'Acessos'
     : route.screen === 'studio' ? 'CE.X Studio'
-    : TYPES.find((t) => t.key === currentType)!.plural
+    : typePlural(currentType)
 
   return (
     <div className="adm">
@@ -4714,12 +4792,18 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
       <main className="adm-main">
         <header className="adm-top">
           <div>
-            <div className="adm-top-crumb">CE.X · PAINEL{editing ? ' · ' + TYPES.find((t) => t.key === editing.type)!.plural.toUpperCase() : ''}</div>
+            <div className="adm-top-crumb">CE.X · PAINEL{editing ? ' · ' + typePlural(editing.type).toUpperCase() : ''}</div>
             <h1 className="adm-top-title">{pageTitle}</h1>
           </div>
           {editing && <button className="btn-sec" onClick={() => setEditing(null)}>← Voltar à lista</button>}
         </header>
         <div className="adm-content">
+          {adminError && (
+            <div className="adm-save-alert" role="alert">
+              <span>{adminError}</span>
+              <button type="button" onClick={() => setAdminError('')}>Fechar</button>
+            </div>
+          )}
           {editing ? (
             <Editor item={editing} onSave={save} onCancel={() => setEditing(null)} />
           ) : route.screen === 'dashboard' ? (
@@ -4755,7 +4839,7 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
           )}
         </div>
       </main>
-      {confirm && <Confirm item={confirm} onYes={() => doDelete(confirm)} onNo={() => setConfirm(null)} />}
+      {confirm && <Confirm item={confirm} onYes={() => { void doDelete(confirm).catch(() => undefined) }} onNo={() => setConfirm(null)} />}
     </div>
   )
 }

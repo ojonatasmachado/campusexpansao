@@ -129,6 +129,26 @@ async function canEditOwned(table: string, idColumn: string, id: string, admin: 
   return !data || (data as { created_by?: string | null }).created_by === admin.id
 }
 
+async function confirmRowExists(table: string, column: string, value: string, message: string) {
+  const { data, error } = await supabaseAdmin()
+    .from(table)
+    .select(column)
+    .eq(column, value)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) throw new Error(message)
+}
+
+async function confirmRowDeleted(table: string, column: string, value: string, message: string) {
+  const { data, error } = await supabaseAdmin()
+    .from(table)
+    .select(column)
+    .eq(column, value)
+    .maybeSingle()
+  if (error) throw error
+  if (data) throw new Error(message)
+}
+
 function emptyAdminMetrics(): AdminMetrics {
   return {
     series30: Array(30).fill(0),
@@ -392,7 +412,7 @@ export async function createAdminUser(input: { username: string; name: string; p
   const username = input.username.trim().toLowerCase()
   if (!username || !input.password) throw new Error('Usuário e senha são obrigatórios.')
   const pw = hashPassword(input.password)
-  const { error } = await supabaseAdmin().from('admin_users').insert({
+  const { data, error } = await supabaseAdmin().from('admin_users').insert({
     username,
     name: input.name.trim() || username,
     role: input.role,
@@ -401,8 +421,9 @@ export async function createAdminUser(input: { username: string; name: string; p
     password_hash: pw.hash,
     created_by: master.id,
     created_by_username: master.username,
-  })
+  }).select('id').single()
   if (error) throw error
+  if (!data?.id) throw new Error('O acesso não foi confirmado no banco.')
   revalidatePath('/admin')
 }
 
@@ -423,6 +444,7 @@ export async function updateAdminUser(input: { id: string; name: string; role: A
   }
   const { error } = await supabaseAdmin().from('admin_users').update(patch).eq('id', input.id)
   if (error) throw error
+  await confirmRowExists('admin_users', 'id', input.id, 'O acesso não foi confirmado no banco.')
   revalidatePath('/admin')
 }
 
@@ -431,6 +453,7 @@ export async function deleteAdminUser(id: string) {
   if (id === current.id) throw new Error('O master não pode excluir seu próprio acesso.')
   const { error } = await supabaseAdmin().from('admin_users').delete().eq('id', id)
   if (error) throw error
+  await confirmRowDeleted('admin_users', 'id', id, 'O acesso ainda existe no banco.')
   revalidatePath('/admin')
 }
 
@@ -451,23 +474,27 @@ export async function upsertEstante(e: {
   await requireMaster()
   const { error } = await supabaseAdmin().from('estantes').upsert(e, { onConflict: 'key' })
   if (error) throw error
-  revalidatePath('/materiais'); revalidatePath('/admin')
+  await confirmRowExists('estantes', 'key', e.key, 'A estante não foi confirmada no banco.')
+  revalidatePath('/'); revalidatePath('/materiais'); revalidatePath('/admin')
 }
 
 export async function deleteEstante(key: string) {
   await requireMaster()
   const { error } = await supabaseAdmin().from('estantes').delete().eq('key', key)
   if (error) throw error
-  revalidatePath('/materiais'); revalidatePath('/admin')
+  await confirmRowDeleted('estantes', 'key', key, 'A estante ainda existe no banco.')
+  revalidatePath('/'); revalidatePath('/materiais'); revalidatePath('/admin')
 }
 
 export async function reorderEstantes(keys: string[]) {
   await requireMaster()
   const db = supabaseAdmin()
-  await Promise.all(keys.map((key, i) =>
+  const results = await Promise.all(keys.map((key, i) =>
     db.from('estantes').update({ ord: i }).eq('key', key)
   ))
-  revalidatePath('/materiais')
+  const failed = results.find((result) => result.error)
+  if (failed?.error) throw failed.error
+  revalidatePath('/'); revalidatePath('/materiais'); revalidatePath('/admin')
 }
 
 // ── MATERIAIS ────────────────────────────────────────────────────────────────
@@ -509,13 +536,13 @@ export async function upsertMaterial(m: Record<string, unknown>) {
     if (retry.error) throw retry.error
     await confirmSaved()
     await ensureMaterialTranslations(material)
-    revalidatePath('/materiais'); revalidatePath('/admin')
+    revalidatePath('/'); revalidatePath('/materiais'); revalidatePath('/admin')
     return
   }
   if (error) throw error
   await confirmSaved()
   await ensureMaterialTranslations(material)
-  revalidatePath('/materiais'); revalidatePath('/admin')
+  revalidatePath('/'); revalidatePath('/materiais'); revalidatePath('/admin')
 }
 
 export async function deleteMaterial(id: string) {
@@ -523,7 +550,8 @@ export async function deleteMaterial(id: string) {
   if (!(await canEditOwned('materiais', 'id', id, admin))) throw new Error('Você só pode excluir materiais criados por você.')
   const { error } = await supabaseAdmin().from('materiais').delete().eq('id', id)
   if (error) throw error
-  revalidatePath('/materiais'); revalidatePath('/admin')
+  await confirmRowDeleted('materiais', 'id', id, 'O material ainda existe no banco.')
+  revalidatePath('/'); revalidatePath('/materiais'); revalidatePath('/admin')
 }
 
 // ── MENTORIAS ────────────────────────────────────────────────────────────────
@@ -548,7 +576,8 @@ export async function upsertMentoria(m: Record<string, unknown>) {
     updated_at: new Date().toISOString(),
   }, { onConflict: 'id' })
   if (error) throw error
-  revalidatePath('/cursos'); revalidatePath('/admin')
+  await confirmRowExists('mentorias', 'id', id, 'A mentoria não foi confirmada no banco.')
+  revalidatePath('/'); revalidatePath('/cursos'); revalidatePath('/admin')
 }
 
 export async function deleteMentoria(id: string) {
@@ -556,7 +585,8 @@ export async function deleteMentoria(id: string) {
   if (!(await canEditOwned('mentorias', 'id', id, admin))) throw new Error('Você só pode excluir mentorias criadas por você.')
   const { error } = await supabaseAdmin().from('mentorias').delete().eq('id', id)
   if (error) throw error
-  revalidatePath('/cursos'); revalidatePath('/admin')
+  await confirmRowDeleted('mentorias', 'id', id, 'A mentoria ainda existe no banco.')
+  revalidatePath('/'); revalidatePath('/cursos'); revalidatePath('/admin')
 }
 
 // ── CURSOS ───────────────────────────────────────────────────────────────────
@@ -581,7 +611,8 @@ export async function upsertCurso(c: Record<string, unknown>) {
     updated_at: new Date().toISOString(),
   }, { onConflict: 'slug' })
   if (error) throw error
-  revalidatePath('/cursos'); revalidatePath('/admin')
+  await confirmRowExists('cursos', 'slug', slug, 'O curso não foi confirmado no banco.')
+  revalidatePath('/'); revalidatePath('/cursos'); revalidatePath('/admin')
 }
 
 export async function deleteCurso(slug: string) {
@@ -589,7 +620,8 @@ export async function deleteCurso(slug: string) {
   if (!(await canEditOwned('cursos', 'slug', slug, admin))) throw new Error('Você só pode excluir cursos criados por você.')
   const { error } = await supabaseAdmin().from('cursos').delete().eq('slug', slug)
   if (error) throw error
-  revalidatePath('/cursos'); revalidatePath('/admin')
+  await confirmRowDeleted('cursos', 'slug', slug, 'O curso ainda existe no banco.')
+  revalidatePath('/'); revalidatePath('/cursos'); revalidatePath('/admin')
 }
 
 // ── STUDIO TEMPLATES ─────────────────────────────────────────────────────────
@@ -614,12 +646,14 @@ export async function upsertStudioTemplate(t: StudioTemplate) {
     updated_at: new Date().toISOString(),
   }, { onConflict: 'id' })
   if (error) throw error
-  revalidatePath('/admin')
+  await confirmRowExists('studio_templates', 'id', t.id, 'O modelo do Studio não foi confirmado no banco.')
+  revalidatePath('/admin'); revalidatePath(`/studio/${t.module}`)
 }
 
 export async function deleteStudioTemplate(id: string) {
   await requireMaster()
   const { error } = await supabaseAdmin().from('studio_templates').delete().eq('id', id)
   if (error) throw error
+  await confirmRowDeleted('studio_templates', 'id', id, 'O modelo do Studio ainda existe no banco.')
   revalidatePath('/admin')
 }

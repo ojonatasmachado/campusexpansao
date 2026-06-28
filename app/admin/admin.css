@@ -262,7 +262,7 @@
 .modal { background: var(--graphite); border: .5px solid var(--border-2); border-radius: var(--r-lg); padding: 32px; max-width: 420px; width: 100%; }
 .modal-title { font-size: 20px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 10px; }
 .modal-text { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 26px; }
-.modal-acts { display: flex; gap: 12px; }
+.modal-acts { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 .studio-template-modal { max-width: 720px; }
 .code-ta {
   min-height: 160px;
@@ -434,6 +434,8 @@ select.inp { appearance: none; cursor: pointer; background-image: url("data:imag
 .tgl.on::after { left: 22px; background: var(--ink); }
 .ed-actions { display: flex; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: .5px solid var(--border-2); flex-wrap: wrap; align-items: center; }
 .ed-save-error { flex-basis: 100%; border: .5px solid color-mix(in srgb, var(--danger) 60%, transparent); background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--cream); border-radius: var(--r-sm); padding: 12px 14px; font-size: 13px; line-height: 1.45; }
+.adm-save-alert { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 18px; border: .5px solid color-mix(in srgb, var(--danger) 60%, transparent); background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--cream); border-radius: var(--r-md); padding: 13px 15px; font-size: 13px; line-height: 1.45; }
+.adm-save-alert button { border: .5px solid var(--border-2); background: var(--ink); color: var(--cream); border-radius: var(--r-sm); padding: 8px 12px; font: inherit; cursor: pointer; }
 
 /* ── Mesa de montagem do material ── */
 .wb { margin-top: 6px; border: .5px solid var(--border-2); border-radius: var(--r-lg); background: var(--ink); overflow: hidden; }
