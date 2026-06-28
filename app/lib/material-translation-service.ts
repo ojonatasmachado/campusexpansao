@@ -13,7 +13,7 @@ type GeminiResponse = {
 
 type TranslationResponse = {
   sourceLocale: SupportedLocale;
-  translations: Record<SupportedLocale, MaterialTranslationPayload>;
+  translations: Partial<Record<SupportedLocale, MaterialTranslationPayload>>;
 };
 
 const LOCALE_NAMES: Record<SupportedLocale, string> = {
@@ -114,12 +114,16 @@ function promptForMaterial(payload: MaterialTranslationPayload) {
   return [
     "Você é tradutor profissional da CE.X Campus Expansão.",
     "Detecte se o texto original está em pt, en ou es.",
-    "Traduza o conteúdo para pt, en e es. Se um idioma já for o original, apenas preserve e revise levemente.",
+    "Traduza o conteúdo somente para os outros dois idiomas. Não traduza, reescreva, revise nem retorne o idioma original.",
+    "A tradução deve ser integral. Não inserir nada, não remover nada, não resumir, não explicar, não adaptar livremente e não criar conteúdo novo.",
+    "Preserve a estrutura do JSON, as chaves, a ordem e a quantidade de itens de cada lista.",
     "Preserve números, códigos, nomes de arquivos, campos técnicos, kind, delivery, pages, messages, slides, designs e designFormat.",
+    "Em contents, traduza apenas name e note. Nos demais objetos, traduza somente os campos textuais.",
     "Não use travessão longo nem médio. Use vírgula, ponto ou dois pontos.",
+    "Retorne translations somente com os idiomas diferentes de sourceLocale.",
     "Responda somente JSON válido, sem markdown.",
-    "Formato exato:",
-    '{"sourceLocale":"pt","translations":{"pt":{"titulo":"","promessa":"","pra_quem":"","conteudo":[],"contents":[],"mensagens_lista":[],"faq":[],"keywords":[]},"en":{"titulo":"","promessa":"","pra_quem":"","conteudo":[],"contents":[],"mensagens_lista":[],"faq":[],"keywords":[]},"es":{"titulo":"","promessa":"","pra_quem":"","conteudo":[],"contents":[],"mensagens_lista":[],"faq":[],"keywords":[]}}}',
+    "Formato exato quando o original for pt:",
+    '{"sourceLocale":"pt","translations":{"en":{"titulo":"","promessa":"","pra_quem":"","conteudo":[],"contents":[],"mensagens_lista":[],"faq":[],"keywords":[]},"es":{"titulo":"","promessa":"","pra_quem":"","conteudo":[],"contents":[],"mensagens_lista":[],"faq":[],"keywords":[]}}}',
     `Idiomas: ${Object.entries(LOCALE_NAMES).map(([key, label]) => `${key}=${label}`).join(", ")}`,
     `Conteúdo original: ${JSON.stringify(payload)}`,
   ].join("\n");
@@ -154,11 +158,12 @@ async function callGeminiTranslation(payload: MaterialTranslationPayload): Promi
   const answer = data.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
   const parsed = JSON.parse(extractJson(answer)) as Partial<TranslationResponse>;
   const sourceLocale = parseLocale(parsed.sourceLocale);
-  const translations = SUPPORTED_LOCALES.reduce<Record<SupportedLocale, MaterialTranslationPayload>>((acc, locale) => {
+  const translations = SUPPORTED_LOCALES.reduce<Partial<Record<SupportedLocale, MaterialTranslationPayload>>>((acc, locale) => {
+    if (locale === sourceLocale) return acc;
     const translated = parsed.translations?.[locale] as Partial<MaterialTranslationPayload> | undefined;
-    acc[locale] = normalizePayload(translated ?? {}, payload);
+    if (translated) acc[locale] = normalizePayload(translated, payload);
     return acc;
-  }, {} as Record<SupportedLocale, MaterialTranslationPayload>);
+  }, {});
 
   return { sourceLocale, translations };
 }
@@ -172,8 +177,10 @@ export async function ensureMaterialTranslations(material: MaterialRecord) {
     const translated = await callGeminiTranslation(basePayload);
     if (!translated) return;
 
-    const rows = SUPPORTED_LOCALES.map((locale) => {
+    const rows = SUPPORTED_LOCALES.flatMap((locale) => {
+      if (locale === translated.sourceLocale) return [];
       const payload = translated.translations[locale];
+      if (!payload) return [];
       return {
         material_id: materialId,
         locale,
@@ -189,6 +196,7 @@ export async function ensureMaterialTranslations(material: MaterialRecord) {
         updated_at: new Date().toISOString(),
       } satisfies Omit<DbMaterialTranslation, "id" | "created_at">;
     });
+    if (rows.length === 0) return;
 
     const { error } = await supabaseAdmin()
       .from("material_translations")
