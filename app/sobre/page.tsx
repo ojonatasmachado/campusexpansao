@@ -57,7 +57,7 @@ export default function Sobre() {
           <p className="cta-desc">Receba os materiais e comece a estruturar seu ministério hoje.</p>
           <div className="cta-actions">
             <a href="/materiais" className="btn btn-ink btn-lg btn-arrow">Ver materiais</a>
-            <a href="/cursos" className="btn btn-lg" style={{ background: "transparent", color: "var(--ink)", borderColor: "rgba(14,17,13,0.3)" }}>Conhecer cursos</a>
+            <a href="/cursos" className="btn btn-lg" style={{ background: "transparent", color: "var(--accent-ink, #0E110D)", borderColor: "rgba(14,17,13,0.3)" }}>Conhecer cursos</a>
           </div>
         </div>
       </div>

@@ -149,7 +149,7 @@ const buttonStyle: CSSProperties = {
   border: "0.5px solid var(--olive)",
   borderRadius: "var(--r-sm)",
   background: "var(--olive)",
-  color: "var(--ink)",
+  color: "var(--accent-ink, #0E110D)",
   fontSize: 13,
   fontWeight: 800,
   textDecoration: "none",

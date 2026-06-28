@@ -22,6 +22,7 @@ import {
   type StudioTemplate,
 } from './actions'
 import { ESTANTE_MAP } from '../lib/materiais-data'
+import ThemeToggle from '../components/ThemeToggle'
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -3797,6 +3798,9 @@ function Login() {
       <div className="login-grid" />
       <div className="login-x">X</div>
       <div className={`login-card${err ? ' shake' : ''}`}>
+        <div className="login-theme">
+          <ThemeToggle compact />
+        </div>
         <div className="login-logo">CE<span className="ol">.X</span></div>
         <div className="login-eyebrow">◆ PAINEL INTERNO</div>
         <h1 className="login-title">Área restrita</h1>
@@ -4033,6 +4037,9 @@ function Sidebar({ route, go, counts, onLogout, admin }: { route: Route; go: (r:
         </nav>
       </div>
       <div className="adm-sb-bottom">
+        <div className="adm-theme-row">
+          <ThemeToggle />
+        </div>
         <div className="adm-userbox">
           <strong>{admin.name || admin.username}</strong>
           <span>{admin.isMaster ? 'Master' : 'Admin'} · {admin.username}</span>

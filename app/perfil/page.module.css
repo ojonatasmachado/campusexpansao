@@ -173,7 +173,7 @@
 .emptyAction {
   display: inline-flex;
   margin-top: 24px;
-  color: var(--ink);
+  color: var(--accent-ink, #0E110D);
   background: var(--olive);
   border-radius: var(--r-sm);
   padding: 12px 16px;

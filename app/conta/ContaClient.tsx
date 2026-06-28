@@ -315,7 +315,7 @@ const primaryButtonStyle: React.CSSProperties = {
   background: "var(--olive)",
   border: "none",
   borderRadius: 8,
-  color: "var(--ink)",
+  color: "var(--accent-ink, #0E110D)",
   cursor: "pointer",
   fontFamily: "inherit",
   fontSize: 14,
@@ -379,5 +379,5 @@ const dangerGhostStyle: React.CSSProperties = {
 const dangerButtonStyle: React.CSSProperties = {
   ...dangerGhostStyle,
   background: "var(--terra)",
-  color: "var(--ink)",
+  color: "var(--accent-ink, #0E110D)",
 };

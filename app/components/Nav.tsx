@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase-browser";
 import type { User } from "@supabase/supabase-js";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Nav() {
   const pathname = usePathname();
@@ -69,6 +70,7 @@ export default function Nav() {
         {/* Auth area desktop */}
         {user ? (
           <div className="nav-auth-actions" style={{ display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
+            <ThemeToggle compact />
             <button
               type="button"
               onClick={() => setProfileOpen((current) => !current)}
@@ -93,7 +95,7 @@ export default function Nav() {
                 height: 28,
                 borderRadius: "50%",
                 background: "var(--olive)",
-                color: "var(--ink)",
+                color: "var(--accent-ink, #0E110D)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -137,6 +139,7 @@ export default function Nav() {
           </div>
         ) : (
           <div className="nav-auth-actions" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <ThemeToggle compact />
             <Link href="/login" className="nav-login-cta">Entrar</Link>
           </div>
         )}
@@ -166,6 +169,9 @@ export default function Nav() {
             {l.label}
           </Link>
         ))}
+        <div className="nav-drawer-theme">
+          <ThemeToggle />
+        </div>
         {user ? (
           <>
             <Link href="/perfil" className="nav-drawer-link" onClick={() => setOpen(false)}>

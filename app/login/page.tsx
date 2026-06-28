@@ -273,7 +273,7 @@ const inputStyle: React.CSSProperties = {
 const buttonStyle: React.CSSProperties = {
   marginTop: 8,
   background: "var(--olive)",
-  color: "var(--ink)",
+  color: "var(--accent-ink, #0E110D)",
   border: "none",
   borderRadius: 8,
   padding: "13px 24px",
