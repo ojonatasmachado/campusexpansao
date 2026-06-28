@@ -7,6 +7,8 @@ import ScrollTop from "./components/ScrollTop";
 import styles from "./page.module.css";
 import { supabase } from "./lib/supabase";
 import Link from "next/link";
+import { requestLocale } from "./lib/i18n";
+import { applyMaterialTranslations } from "./lib/material-translations";
 
 export const revalidate = 60;
 
@@ -18,12 +20,14 @@ const FAQ_ITEMS = [
 ];
 
 export default async function Home() {
+  const locale = await requestLocale();
   const [{ data: estantes }, { data: materiais }, { data: cursos }, { data: mentorias }] = await Promise.all([
     supabase.from('estantes').select('*').order('ord'),
     supabase.from('materiais').select('*').eq('status', 'Publicado').order('created_at'),
     supabase.from('cursos').select('*').eq('status', 'Publicado').order('num'),
     supabase.from('mentorias').select('*').eq('status', 'Publicado').order('created_at'),
   ]);
+  const translatedMateriais = await applyMaterialTranslations(materiais ?? [], locale);
   const hasMateriais = (materiais?.length ?? 0) > 0;
   const hasCursos = ((cursos?.length ?? 0) + (mentorias?.length ?? 0)) > 0;
 
@@ -102,7 +106,7 @@ export default async function Home() {
           showHero={false}
           showCrossLink={false}
           dbEstantes={estantes ?? undefined}
-          dbMateriais={materiais ?? undefined}
+          dbMateriais={translatedMateriais}
         />
       </div>
 

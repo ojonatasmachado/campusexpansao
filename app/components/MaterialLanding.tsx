@@ -6,6 +6,7 @@ import { ACCENTS, HEX_TO_ACCENT } from "../lib/accents";
 import type { AccentKey } from "../lib/accents";
 import { ESTANTE_MAP } from "../lib/materiais-data";
 import type { DbEstante, DbMaterial, DbMaterialContent } from "../lib/types";
+import { trackMetricEvent } from "../lib/metrics-client";
 
 // ── TEMPLATE FIXO ────────────────────────────────────────────────────────────
 
@@ -226,6 +227,7 @@ export default function MaterialLanding({
                   </div>
                 </div>
                 <a href={checkoutHref} rel="noopener noreferrer" className="ld-btn-buy"
+                  onClick={() => trackMetricEvent({ eventName: "buy_click", materialId: raw.id, metadata: { title: raw.titulo } })}
                   style={{ background: ac, boxShadow: `0 12px 30px -14px ${ac}` }}>
                   Comprar material →
                 </a>

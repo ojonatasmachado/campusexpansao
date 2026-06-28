@@ -6,6 +6,7 @@ import { ACCENTS } from "../lib/accents";
 import type { AccentKey } from "../lib/accents";
 import { CURSOS_EM_ORDEM, NIVEIS } from "../lib/cursos-data";
 import type { CursoDado, NivelKey } from "../lib/cursos-data";
+import { trackMetricEvent } from "../lib/metrics-client";
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 
@@ -100,7 +101,12 @@ export default function CursoLanding({
                   {curso.turma}
                 </div>
               </div>
-              <a href="/landing" className="ld-btn-buy" style={{ background: ac, boxShadow: `0 12px 30px -14px ${ac}` }}>
+              <a
+                href="/landing"
+                className="ld-btn-buy"
+                onClick={() => trackMetricEvent({ eventName: "waitlist_click", cursoSlug: curso.slug, metadata: { title: curso.title } })}
+                style={{ background: ac, boxShadow: `0 12px 30px -14px ${ac}` }}
+              >
                 Entrar na lista de espera →
               </a>
             </div>

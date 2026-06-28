@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import MetricsTracker from "./components/MetricsTracker";
 import "./loja.css";
 
 export const metadata: Metadata = {
@@ -39,7 +41,12 @@ export default function RootLayout({
         {/* admin.css carregado apenas no painel admin */}
         <script src="/library.js" defer></script>
       </head>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        <Suspense fallback={null}>
+          <MetricsTracker />
+        </Suspense>
+        {children}
+      </body>
     </html>
   );
 }

@@ -3,6 +3,8 @@ import { cookies } from 'next/headers'
 import { createHash, randomBytes, timingSafeEqual, pbkdf2Sync } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '../lib/supabase'
+import type { DbMetricEvent } from '../lib/types'
+import { ensureMaterialTranslations } from '../lib/material-translation-service'
 
 export type AdminRole = 'master' | 'admin'
 export type AdminSession = {
@@ -30,6 +32,25 @@ export type StudioTemplate = {
   created_by?: string | null
   created_by_username?: string | null
   created_at?: string
+}
+export type AdminMetrics = {
+  series30: number[]
+  kpis: {
+    visitas: number
+    visitasDelta: number
+    cliquesComprar: number
+    cliquesDelta: number
+    listaEspera: number
+    listaDelta: number
+    capturas: number
+    capturasDelta: number
+  }
+  funil: { label: string; value: number }[]
+  origem: { label: string; value: number; color: string }[]
+  materialViews: Record<string, number>
+  materialBuyClicks: Record<string, number>
+  cursoViews: Record<string, number>
+  cursoWaitlist: Record<string, number>
 }
 
 const MASTER_USERNAME = 'jonatas_machado'
@@ -108,6 +129,75 @@ async function canEditOwned(table: string, idColumn: string, id: string, admin: 
   return !data || (data as { created_by?: string | null }).created_by === admin.id
 }
 
+function emptyAdminMetrics(): AdminMetrics {
+  return {
+    series30: Array(30).fill(0),
+    kpis: { visitas: 0, visitasDelta: 0, cliquesComprar: 0, cliquesDelta: 0, listaEspera: 0, listaDelta: 0, capturas: 0, capturasDelta: 0 },
+    funil: [
+      { label: 'Visitas ao site', value: 0 },
+      { label: 'Abriu um material', value: 0 },
+      { label: 'Clicou em comprar', value: 0 },
+      { label: 'Compra concluída', value: 0 },
+    ],
+    origem: [
+      { label: 'Instagram', value: 0, color: '#7A9E3F' },
+      { label: 'Direto', value: 0, color: '#CBA95C' },
+      { label: 'Google', value: 0, color: '#C5805A' },
+      { label: 'YouTube', value: 0, color: '#4F6B26' },
+    ],
+    materialViews: {},
+    materialBuyClicks: {},
+    cursoViews: {},
+    cursoWaitlist: {},
+  }
+}
+
+function deltaPercent(current: number, previous: number) {
+  if (!previous) return current ? 100 : 0
+  return Math.round(((current - previous) / previous) * 100)
+}
+
+function dateDaysAgo(days: number) {
+  const date = new Date()
+  date.setDate(date.getDate() - days)
+  return date
+}
+
+function dayKey(date: Date) {
+  return date.toISOString().slice(0, 10)
+}
+
+function sourceLabel(source: string | null | undefined) {
+  const value = (source ?? 'direto').toLowerCase()
+  if (value.includes('instagram') || value === 'ig') return 'Instagram'
+  if (value.includes('google')) return 'Google'
+  if (value.includes('youtube') || value.includes('youtu')) return 'YouTube'
+  if (value === 'direto' || value === 'direct') return 'Direto'
+  return 'Outros'
+}
+
+function metricEventInWindow(event: Pick<DbMetricEvent, 'created_at'>, start: Date, end: Date) {
+  const createdAt = event.created_at ? new Date(event.created_at) : null
+  return Boolean(createdAt && createdAt >= start && createdAt < end)
+}
+
+function countByTarget(
+  events: Pick<DbMetricEvent, 'event_name' | 'created_at' | 'material_id' | 'curso_slug'>[],
+  eventName: string,
+  start: Date,
+  end: Date,
+  target: 'material_id' | 'curso_slug'
+) {
+  return events
+    .filter((event) => event.event_name === eventName && metricEventInWindow(event, start, end))
+    .reduce<Record<string, number>>((acc, event) => {
+      const id = event[target]
+      if (!id) return acc
+      acc[id] = (acc[id] ?? 0) + 1
+      return acc
+    }, {})
+}
+
 export async function loginAction(username: string, pw: string): Promise<boolean> {
   const admin = await getAdminByUsername(username)
   if (!admin || !admin.active) return false
@@ -148,6 +238,140 @@ export async function checkAuth(): Promise<AdminSession | null> {
     name: data.name,
     role: data.role as AdminRole,
     isMaster: data.role === 'master',
+  }
+}
+
+// ── MÉTRICAS ────────────────────────────────────────────────────────────────
+
+export async function getAdminMetrics(): Promise<AdminMetrics> {
+  const admin = await requireAdmin()
+  const empty = emptyAdminMetrics()
+  const now = new Date()
+  const currentStart = dateDaysAgo(30)
+  const previousStart = dateDaysAgo(60)
+
+  try {
+    const db = supabaseAdmin()
+    const [{ data: eventsData, error: eventsError }, { data: comprasData, error: comprasError }] = await Promise.all([
+      db
+        .from('metric_events')
+        .select('event_name, created_at, traffic_source, material_id, curso_slug')
+        .gte('created_at', previousStart.toISOString())
+        .lt('created_at', now.toISOString()),
+      db
+        .from('compras')
+        .select('material_id, status, purchased_at')
+        .gte('purchased_at', previousStart.toISOString())
+        .lt('purchased_at', now.toISOString()),
+    ])
+
+    if (eventsError) throw eventsError
+    if (comprasError) throw comprasError
+
+    let ownedMaterialIds: string[] | null = null
+    let ownedCursoSlugs: string[] | null = null
+
+    if (!admin.isMaster) {
+      const [{ data: ownedMaterials, error: materialsError }, { data: ownedCursos, error: cursosError }] = await Promise.all([
+        db.from('materiais').select('id').eq('created_by', admin.id),
+        db.from('cursos').select('slug').eq('created_by', admin.id),
+      ])
+      if (materialsError) throw materialsError
+      if (cursosError) throw cursosError
+      ownedMaterialIds = (ownedMaterials ?? []).map((row) => String(row.id))
+      ownedCursoSlugs = (ownedCursos ?? []).map((row) => String(row.slug))
+    }
+
+    const events = ((eventsData ?? []) as Pick<DbMetricEvent, 'event_name' | 'created_at' | 'traffic_source' | 'material_id' | 'curso_slug'>[])
+      .filter((event) => {
+        if (admin.isMaster) return true
+        return Boolean(
+          (event.material_id && ownedMaterialIds?.includes(event.material_id)) ||
+          (event.curso_slug && ownedCursoSlugs?.includes(event.curso_slug))
+        )
+      })
+
+    const compras = ((comprasData ?? []) as { material_id: string | null; status: string | null; purchased_at: string | null }[])
+      .filter((compra) => {
+        if (compra.status !== 'Liberado') return false
+        if (admin.isMaster) return true
+        return Boolean(compra.material_id && ownedMaterialIds?.includes(compra.material_id))
+      })
+
+    const countEvents = (name: string, start: Date, end: Date) =>
+      events.filter((event) => event.event_name === name && metricEventInWindow(event, start, end)).length
+
+    const countCompras = (start: Date, end: Date) =>
+      compras.filter((compra) => {
+        const purchasedAt = compra.purchased_at ? new Date(compra.purchased_at) : null
+        return purchasedAt && purchasedAt >= start && purchasedAt < end
+      }).length
+
+    const visitas = countEvents('page_view', currentStart, now)
+    const visitasPrev = countEvents('page_view', previousStart, currentStart)
+    const cliquesComprar = countEvents('buy_click', currentStart, now)
+    const cliquesComprarPrev = countEvents('buy_click', previousStart, currentStart)
+    const listaEspera = countEvents('waitlist_click', currentStart, now)
+    const listaEsperaPrev = countEvents('waitlist_click', previousStart, currentStart)
+    const capturas = countEvents('lead_capture', currentStart, now)
+    const capturasPrev = countEvents('lead_capture', previousStart, currentStart)
+    const materiaisAbertos = countEvents('material_view', currentStart, now)
+    const comprasConcluidas = countCompras(currentStart, now)
+
+    const days = Array.from({ length: 30 }, (_, index) => {
+      const date = new Date()
+      date.setHours(0, 0, 0, 0)
+      date.setDate(date.getDate() - (29 - index))
+      return dayKey(date)
+    })
+    const series30 = days.map((key) =>
+      events.filter((event) => event.event_name === 'page_view' && event.created_at?.slice(0, 10) === key).length
+    )
+
+    const sourceCounts = events
+      .filter((event) => event.event_name === 'page_view' && metricEventInWindow(event, currentStart, now))
+      .reduce<Record<string, number>>((acc, event) => {
+        const label = sourceLabel(event.traffic_source)
+        acc[label] = (acc[label] ?? 0) + 1
+        return acc
+      }, {})
+    const sourceTotal = Object.values(sourceCounts).reduce((sum, value) => sum + value, 0)
+
+    const origem = [
+      { label: 'Instagram', color: '#7A9E3F' },
+      { label: 'Direto', color: '#CBA95C' },
+      { label: 'Google', color: '#C5805A' },
+      { label: 'YouTube', color: '#4F6B26' },
+      { label: 'Outros', color: '#B5694A' },
+    ].map((row) => ({ ...row, value: sourceTotal ? Math.round(((sourceCounts[row.label] ?? 0) / sourceTotal) * 100) : 0 }))
+
+    return {
+      series30,
+      kpis: {
+        visitas,
+        visitasDelta: deltaPercent(visitas, visitasPrev),
+        cliquesComprar,
+        cliquesDelta: deltaPercent(cliquesComprar, cliquesComprarPrev),
+        listaEspera,
+        listaDelta: deltaPercent(listaEspera, listaEsperaPrev),
+        capturas,
+        capturasDelta: deltaPercent(capturas, capturasPrev),
+      },
+      funil: [
+        { label: 'Visitas ao site', value: visitas },
+        { label: 'Abriu um material', value: materiaisAbertos },
+        { label: 'Clicou em comprar', value: cliquesComprar },
+        { label: 'Compra concluída', value: comprasConcluidas },
+      ],
+      origem,
+      materialViews: countByTarget(events, 'material_view', currentStart, now, 'material_id'),
+      materialBuyClicks: countByTarget(events, 'buy_click', currentStart, now, 'material_id'),
+      cursoViews: countByTarget(events, 'curso_view', currentStart, now, 'curso_slug'),
+      cursoWaitlist: countByTarget(events, 'waitlist_click', currentStart, now, 'curso_slug'),
+    }
+  } catch (error) {
+    console.error('Erro ao buscar métricas do admin', error)
+    return empty
   }
 }
 
@@ -273,10 +497,12 @@ export async function upsertMaterial(m: Record<string, unknown>) {
     delete legacyMaterial.contents
     const retry = await supabaseAdmin().from('materiais').upsert(legacyMaterial, { onConflict: 'id' })
     if (retry.error) throw retry.error
+    await ensureMaterialTranslations(material)
     revalidatePath('/materiais'); revalidatePath('/admin')
     return
   }
   if (error) throw error
+  await ensureMaterialTranslations(material)
   revalidatePath('/materiais'); revalidatePath('/admin')
 }
 

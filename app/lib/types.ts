@@ -55,6 +55,22 @@ export type DbMaterialContent = {
   file?: string | null
 }
 
+export type DbMaterialTranslation = {
+  material_id: string
+  locale: "pt" | "en" | "es"
+  source_locale: "pt" | "en" | "es"
+  titulo: string
+  promessa: string
+  pra_quem: string
+  conteudo: string[]
+  contents: DbMaterialContent[]
+  mensagens_lista: { nome: string; desc: string }[]
+  faq: { q: string; a: string }[]
+  keywords: string[]
+  created_at: string | null
+  updated_at: string | null
+}
+
 export type DbCurso = {
   slug: string
   num: string           // '01' … '06'
@@ -102,4 +118,23 @@ export type DbUserProfile = {
   denomination: string
   created_at: string | null
   updated_at: string | null
+}
+
+export type DbMetricEvent = {
+  id: string
+  event_name: string
+  path: string
+  referrer: string | null
+  visitor_id: string | null
+  session_id: string | null
+  user_id: string | null
+  material_id: string | null
+  curso_slug: string | null
+  mentoria_id: string | null
+  traffic_source: string
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  metadata: Record<string, unknown>
+  created_at: string | null
 }

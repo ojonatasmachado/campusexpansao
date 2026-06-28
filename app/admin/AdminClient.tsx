@@ -17,6 +17,7 @@ import {
   deleteCurso,
   deleteMentoria,
   upsertStudioTemplate,
+  type AdminMetrics,
   type AdminSession,
   type AdminUser,
   type StudioTemplate,
@@ -91,12 +92,7 @@ interface AdminData {
   estantes: EstanteAdmin[]
   adminUsers: AdminUser[]
   studioTemplates: StudioTemplate[]
-  metrics: {
-    series30: number[]
-    kpis: { visitas: number; visitasDelta: number; cliquesComprar: number; cliquesDelta: number; listaEspera: number; listaDelta: number; capturas: number; capturasDelta: number }
-    funil: { label: string; value: number }[]
-    origem: { label: string; value: number; color: string }[]
-  }
+  metrics: AdminMetrics
 }
 
 // ── PALETA ───────────────────────────────────────────────────────────────────
@@ -155,6 +151,7 @@ function buildData(): AdminData {
       kpis: { visitas:0,visitasDelta:0,cliquesComprar:0,cliquesDelta:0,listaEspera:0,listaDelta:0,capturas:0,capturasDelta:0 },
       funil: [{label:'Visitas ao site',value:0},{label:'Abriu um material',value:0},{label:'Clicou em comprar',value:0},{label:'Compra concluída',value:0}],
       origem: [{label:'Instagram',value:0,color:AC.olive},{label:'Direto',value:0,color:AC.wheat},{label:'Google',value:0,color:AC.clay},{label:'YouTube',value:0,color:AC.oliveDeep}],
+      materialViews: {}, materialBuyClicks: {}, cursoViews: {}, cursoWaitlist: {},
     },
   }
 }
@@ -2677,15 +2674,16 @@ function VisitsChart({ series }: { series: number[] }) {
 }
 
 function Funnel({ steps }: { steps: { label: string; value: number }[] }) {
-  const top = steps[0].value
+  const top = steps[0]?.value ?? 0
   const fmt = (n: number) => n.toLocaleString('pt-BR')
   return (
     <div className="panel">
       <div className="panel-head"><span className="panel-title">Funil de conversão</span></div>
       <div className="funnel">
         {steps.map((s, i) => {
-          const pct = (s.value / top) * 100
-          const conv = i === 0 ? 100 : (s.value / steps[i - 1].value) * 100
+          const previous = steps[i - 1]?.value ?? 0
+          const pct = top ? (s.value / top) * 100 : 0
+          const conv = i === 0 ? (top ? 100 : 0) : (previous ? (s.value / previous) * 100 : 0)
           return (
             <div className="funnel-row" key={i}>
               <div className="funnel-meta">
@@ -4400,6 +4398,7 @@ type InitialData = {
   mentorias: Mentoria[]
   adminUsers: AdminUser[]
   studioTemplates: StudioTemplate[]
+  metrics: AdminMetrics
 } | null
 
 export default function AdminClient({ initialAuthed, initialAdmin, initialData }: { initialAuthed: boolean; initialAdmin: AdminSession | null; initialData: InitialData }) {
@@ -4415,12 +4414,14 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
         status: (e.status as 'visible' | 'hidden') ?? 'visible',
         order: (e.ord as number) ?? 0,
       }))
+      const initialMetrics = initialData.metrics ?? buildData().metrics
       const materiais: Material[] = (initialData.materiais as unknown as Record<string, unknown>[]).map((m) => {
         const conteudo = (m.conteudo as string[]) ?? []
         const contents = normalizeMaterialContents(m.contents, conteudo)
         const meta = deriveMaterialContentMeta(contents)
+        const id = m.id as string
         return {
-          id: m.id as string, type: 'material' as const,
+          id, type: 'material' as const,
           family: m.familia === 'ministrar' ? 'Para ministrar' : 'Para liderar',
           shelf: estantes.find(e => e.key === m.estante)?.label ?? (m.estante as string),
           code: (m.code as string) ?? '', title: m.titulo as string, desc: m.promessa as string,
@@ -4440,34 +4441,39 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
           faq: (m.faq as { q: string; a: string }[]) ?? [],
           keywords: (m.keywords as string[]) ?? [],
           status: (m.status as string) ?? 'Publicado',
-          views: 0, buyClicks: 0,
+          views: initialMetrics.materialViews[id] ?? 0,
+          buyClicks: initialMetrics.materialBuyClicks[id] ?? 0,
         }
       })
       const NIVEL_LABEL: Record<string, string> = { fundacao: 'Fundação', lideranca: 'Liderança', multiplicacao: 'Multiplicação' }
       const NIVEL_AC: Record<string, string> = { fundacao: AC.wheat, lideranca: AC.clay, multiplicacao: AC.olive }
-      const cursos: Curso[] = (initialData.cursos as unknown as Record<string, unknown>[]).map((c) => ({
-        id: c.slug as string, type: 'curso' as const,
-        level: NIVEL_LABEL[c.nivel as string] ?? (c.nivel as string),
-        etapa: parseInt(c.num as string, 10), totalEtapas: 6,
-        title: c.title as string, desc: (c.desc_text as string) ?? '',
-        promessa: (c.promessa as string) ?? '',
-        weeks: ((c.ementa as unknown[]) ?? []).length,
-        mentoria: true, aoVivo: true,
-        mentor: (c.mentor as string) ?? '', mentorBio: (c.mentor_bio as string) ?? '',
-        formato: (c.formato as string) ?? '',
-        accent: NIVEL_AC[c.nivel as string] ?? AC.olive,
-        image: null, status: (c.status as string) ?? 'Publicado',
-        views: 0, waitlist: 0,
-        paraQuem: (c.pra_quem as string) ?? '',
-        depoimento: {
-          texto: ((c.depoimento as Record<string,string>)?.texto) ?? '',
-          autor: ((c.depoimento as Record<string,string>)?.autor) ?? '',
-          cargo: ((c.depoimento as Record<string,string>)?.cargo) ?? '',
-        },
-        ementa: ((c.ementa as {titulo:string; desc:string}[]) ?? []).map(e => ({ titulo: e.titulo ?? '', desc: e.desc ?? '' })),
-        proximaTurma: (c.turma as string) ?? '',
-        keywords: (c.keywords as string[]) ?? [],
-      }))
+      const cursos: Curso[] = (initialData.cursos as unknown as Record<string, unknown>[]).map((c) => {
+        const id = c.slug as string
+        return {
+          id, type: 'curso' as const,
+          level: NIVEL_LABEL[c.nivel as string] ?? (c.nivel as string),
+          etapa: parseInt(c.num as string, 10), totalEtapas: 6,
+          title: c.title as string, desc: (c.desc_text as string) ?? '',
+          promessa: (c.promessa as string) ?? '',
+          weeks: ((c.ementa as unknown[]) ?? []).length,
+          mentoria: true, aoVivo: true,
+          mentor: (c.mentor as string) ?? '', mentorBio: (c.mentor_bio as string) ?? '',
+          formato: (c.formato as string) ?? '',
+          accent: NIVEL_AC[c.nivel as string] ?? AC.olive,
+          image: null, status: (c.status as string) ?? 'Publicado',
+          views: initialMetrics.cursoViews[id] ?? 0,
+          waitlist: initialMetrics.cursoWaitlist[id] ?? 0,
+          paraQuem: (c.pra_quem as string) ?? '',
+          depoimento: {
+            texto: ((c.depoimento as Record<string,string>)?.texto) ?? '',
+            autor: ((c.depoimento as Record<string,string>)?.autor) ?? '',
+            cargo: ((c.depoimento as Record<string,string>)?.cargo) ?? '',
+          },
+          ementa: ((c.ementa as {titulo:string; desc:string}[]) ?? []).map(e => ({ titulo: e.titulo ?? '', desc: e.desc ?? '' })),
+          proximaTurma: (c.turma as string) ?? '',
+          keywords: (c.keywords as string[]) ?? [],
+        }
+      })
       const mentorias: Mentoria[] = (initialData.mentorias as unknown as Record<string, unknown>[]).map((m) => ({
         id: m.id as string, type: 'mentoria' as const,
         title: m.title as string, desc: (m.desc_text as string) ?? '',
@@ -4478,12 +4484,11 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
         cadencia: (m.cadencia as string) ?? '',
         keywords: (m.keywords as string[]) ?? [],
       }))
-      const series30 = Array(30).fill(0)
       return {
         materiais, cursos, mentorias, eventos: [], estantes,
         adminUsers: initialData.adminUsers ?? [],
         studioTemplates: initialData.studioTemplates ?? [],
-        metrics: { series30, kpis: { visitas:0,visitasDelta:0,cliquesComprar:0,cliquesDelta:0,listaEspera:0,listaDelta:0,capturas:0,capturasDelta:0 }, funil:[{label:'Visitas ao site',value:0},{label:'Abriu um material',value:0},{label:'Clicou em comprar',value:0},{label:'Compra concluída',value:0}], origem:[{label:'Instagram',value:0,color:AC.olive},{label:'Direto',value:0,color:AC.wheat},{label:'Google',value:0,color:AC.clay},{label:'YouTube',value:0,color:AC.oliveDeep}] },
+        metrics: initialMetrics,
       }
     }
     return buildData()

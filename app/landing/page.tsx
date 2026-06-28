@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { trackMetricEvent } from "../lib/metrics-client";
 
 export default function Landing() {
   return (
@@ -20,7 +21,10 @@ export default function Landing() {
             <p className="landing-desc">
               64 páginas com os princípios e checklists pra estruturar o discipulado da sua igreja. Do encontro inicial à formação de líderes.
             </p>
-            <form className="landing-form" onSubmit={(e) => e.preventDefault()}>
+            <form className="landing-form" onSubmit={(e) => {
+              e.preventDefault();
+              trackMetricEvent({ eventName: "lead_capture", metadata: { form: "landing_manual" } });
+            }}>
               <input className="input" type="email" placeholder="Seu melhor e-mail" />
               <button type="submit" className="capture-btn">Quero o manual</button>
             </form>

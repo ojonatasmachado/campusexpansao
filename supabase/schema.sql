@@ -74,6 +74,27 @@ alter table materiais add column if not exists updated_at timestamptz default no
 create index if not exists materiais_created_by_idx on materiais(created_by);
 create index if not exists materiais_keywords_idx on materiais using gin(keywords);
 
+-- Traduções de materiais geradas no salvamento administrativo
+create table if not exists material_translations (
+  material_id     text not null references materiais(id) on delete cascade,
+  locale          text not null check (locale in ('pt', 'en', 'es')),
+  source_locale   text not null check (source_locale in ('pt', 'en', 'es')),
+  titulo          text not null default '',
+  promessa        text not null default '',
+  pra_quem        text not null default '',
+  conteudo        text[] not null default '{}',
+  contents        jsonb not null default '[]',
+  mensagens_lista jsonb not null default '[]',
+  faq             jsonb not null default '[]',
+  keywords        text[] not null default '{}',
+  created_at      timestamptz default now(),
+  updated_at      timestamptz default now(),
+  primary key (material_id, locale)
+);
+
+create index if not exists material_translations_locale_idx on material_translations(locale);
+create index if not exists material_translations_material_id_idx on material_translations(material_id);
+
 -- Cursos
 create table if not exists cursos (
   slug         text primary key,
@@ -149,6 +170,33 @@ create table if not exists studio_templates (
 create index if not exists studio_templates_module_idx on studio_templates(module);
 create index if not exists studio_templates_status_idx on studio_templates(status);
 
+-- Eventos flexíveis de métricas do site e dos fluxos de compra
+create table if not exists metric_events (
+  id             uuid primary key default gen_random_uuid(),
+  event_name     text not null,
+  path           text not null default '',
+  referrer       text,
+  visitor_id     text,
+  session_id     text,
+  user_id        uuid references auth.users(id) on delete set null,
+  material_id    text references materiais(id) on delete set null,
+  curso_slug     text,
+  mentoria_id    text,
+  traffic_source text not null default 'direto',
+  utm_source     text,
+  utm_medium     text,
+  utm_campaign   text,
+  metadata       jsonb not null default '{}',
+  created_at     timestamptz default now()
+);
+
+create index if not exists metric_events_event_name_idx on metric_events(event_name);
+create index if not exists metric_events_created_at_idx on metric_events(created_at);
+create index if not exists metric_events_material_id_idx on metric_events(material_id);
+create index if not exists metric_events_curso_slug_idx on metric_events(curso_slug);
+create index if not exists metric_events_traffic_source_idx on metric_events(traffic_source);
+create index if not exists metric_events_visitor_id_idx on metric_events(visitor_id);
+
 -- Rascunhos pessoais dos compradores nos módulos visuais do CE.X Studio
 create table if not exists studio_user_drafts (
   id          uuid primary key default gen_random_uuid(),
@@ -171,18 +219,22 @@ create index if not exists studio_user_drafts_expires_at_idx on studio_user_draf
 -- RLS: habilitado, acesso público por enquanto (apertar depois com service_role)
 alter table estantes  enable row level security;
 alter table materiais enable row level security;
+alter table material_translations enable row level security;
 alter table cursos    enable row level security;
 alter table mentorias enable row level security;
 alter table studio_templates enable row level security;
+alter table metric_events enable row level security;
 alter table studio_user_drafts enable row level security;
 
 -- Policies: leitura pública, escrita via service_role (backend)
 drop policy if exists "leitura pública estantes" on estantes;
 drop policy if exists "leitura pública materiais" on materiais;
+drop policy if exists "leitura pública traduções de materiais" on material_translations;
 drop policy if exists "leitura pública cursos" on cursos;
 drop policy if exists "leitura pública mentorias" on mentorias;
 create policy "leitura pública estantes"  on estantes  for select using (true);
 create policy "leitura pública materiais" on materiais for select using (true);
+create policy "leitura pública traduções de materiais" on material_translations for select using (true);
 create policy "leitura pública cursos"    on cursos    for select using (true);
 create policy "leitura pública mentorias" on mentorias for select using (true);
 
