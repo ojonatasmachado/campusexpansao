@@ -485,23 +485,35 @@ export async function upsertMaterial(m: Record<string, unknown>) {
   const admin = await requireAdmin()
   const id = String(m.id ?? '')
   if (!(await canEditOwned('materiais', 'id', id, admin))) throw new Error('Você só pode editar materiais criados por você.')
+  const db = supabaseAdmin()
   const material: Record<string, unknown> = {
     ...m,
     created_by: admin.isMaster && m.created_by ? m.created_by : admin.id,
     created_by_username: admin.isMaster && m.created_by_username ? m.created_by_username : admin.username,
     updated_at: new Date().toISOString(),
   }
-  const { error } = await supabaseAdmin().from('materiais').upsert(material, { onConflict: 'id' })
+  const confirmSaved = async () => {
+    const { data, error: confirmError } = await db
+      .from('materiais')
+      .select('id')
+      .eq('id', material.id)
+      .maybeSingle()
+    if (confirmError) throw confirmError
+    if (!data) throw new Error('O material não foi confirmado no banco.')
+  }
+  const { error } = await db.from('materiais').upsert(material, { onConflict: 'id' })
   if (error && 'contents' in m && error.message.toLowerCase().includes('contents')) {
     const legacyMaterial = { ...material }
     delete legacyMaterial.contents
-    const retry = await supabaseAdmin().from('materiais').upsert(legacyMaterial, { onConflict: 'id' })
+    const retry = await db.from('materiais').upsert(legacyMaterial, { onConflict: 'id' })
     if (retry.error) throw retry.error
+    await confirmSaved()
     await ensureMaterialTranslations(material)
     revalidatePath('/materiais'); revalidatePath('/admin')
     return
   }
   if (error) throw error
+  await confirmSaved()
   await ensureMaterialTranslations(material)
   revalidatePath('/materiais'); revalidatePath('/admin')
 }

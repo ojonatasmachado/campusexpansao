@@ -432,7 +432,8 @@ select.inp { appearance: none; cursor: pointer; background-image: url("data:imag
 .tgl.on { background: var(--olive); }
 .tgl::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--white); transition: left .2s; }
 .tgl.on::after { left: 22px; background: var(--ink); }
-.ed-actions { display: flex; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: .5px solid var(--border-2); }
+.ed-actions { display: flex; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: .5px solid var(--border-2); flex-wrap: wrap; align-items: center; }
+.ed-save-error { flex-basis: 100%; border: .5px solid color-mix(in srgb, var(--danger) 60%, transparent); background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--cream); border-radius: var(--r-sm); padding: 12px 14px; font-size: 13px; line-height: 1.45; }
 
 /* ── Mesa de montagem do material ── */
 .wb { margin-top: 6px; border: .5px solid var(--border-2); border-radius: var(--r-lg); background: var(--ink); overflow: hidden; }

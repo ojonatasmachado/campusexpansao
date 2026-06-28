@@ -3477,10 +3477,12 @@ function EmentaField({ value, onChange }: { value: { titulo: string; desc: strin
   )
 }
 
-function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => void; onCancel: () => void }) {
+function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => Promise<void>; onCancel: () => void }) {
   const [d, setD] = useState<Item>({ ...item })
   const [mode, setMode] = useState<'card' | 'pagina'>('card')
   const [divulgacaoOpen, setDivulgacaoOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const set = <K extends keyof Item>(k: K, v: Item[K]) => setD((prev) => ({ ...prev, [k]: v }))
   const accent = accentFor(d)
   const accentName = ACCENT_NAME[accent] ?? ''
@@ -3491,6 +3493,18 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
   const ev = d as Evento
   const keywordItem = d.type !== 'evento' ? d as Material | Curso | Mentoria : null
   const setFamily = (fam: string) => setD((prev) => ({ ...prev, family: fam, shelf: (SHELVES[fam] ?? [])[0] ?? (prev as Material).shelf } as Item))
+  const handleSave = async () => {
+    if (isSaving) return
+    setIsSaving(true)
+    setSaveError('')
+    try {
+      await onSave(dv)
+    } catch (error) {
+      console.error('Erro ao salvar:', error)
+      setSaveError(error instanceof Error ? error.message : 'Não foi possível salvar no banco. Tente novamente.')
+      setIsSaving(false)
+    }
+  }
   const openDivulgacaoStudio = () => {
     if (d.type !== 'material') return
     try {
@@ -3728,8 +3742,11 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => v
         )}
 
         <div className="ed-actions">
-          <button className="btn-pri" onClick={() => onSave(dv)}>{isNew ? 'Criar item' : 'Salvar alterações'}</button>
-          <button className="btn-sec" onClick={onCancel}>Cancelar</button>
+          {saveError && <div className="ed-save-error" role="alert">{saveError}</div>}
+          <button className="btn-pri" onClick={handleSave} disabled={isSaving} style={{ opacity: isSaving ? 0.55 : 1 }}>
+            {isSaving ? 'Salvando...' : isNew ? 'Criar item' : 'Salvar alterações'}
+          </button>
+          <button className="btn-sec" onClick={onCancel} disabled={isSaving} style={{ opacity: isSaving ? 0.55 : 1 }}>Cancelar</button>
         </div>
       </div>
 
@@ -4514,65 +4531,59 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
     setEditing(null); setRoute(r)
   }
 
-  const save = (d: Item) => {
+  const save = async (d: Item) => {
     const key = arrKey(d.type)
     const saving = d.id ? d : { ...d, id: `${d.type}-${Date.now()}` } as Item
-    // Optimistic update
+    if (saving.type === 'material') {
+      const m = saving as Material
+      const contentSummary = materialContentSummary(m.contents ?? [], m.beneficios ?? [])
+      await upsertMaterial({
+        id: m.id, familia: m.family === 'Para ministrar' ? 'ministrar' : 'liderar',
+        estante: Object.entries(ESTANTE_MAP).find(([,v]) => v.label === m.shelf)?.[0] ?? m.shelf,
+        model: m.model, etiqueta: m.shelf, titulo: m.title, code: m.code || null,
+        big: m.big ? String(m.big) : null, big_label: m.bigLabel || null,
+        promessa: m.desc, mensagens: m.messages, paginas: m.pages,
+        formatos: (m.formats ?? []).filter(Boolean),
+        preco: `R$ ${m.price}`, hotmart_url: m.hotmart,
+        colecoes: [], pra_quem: m.paraQuem,
+        conteudo: contentSummary,
+        contents: m.contents ?? [],
+        mensagens_lista: m.messageList ?? [],
+        depoimento: null,
+        como_usar: '', faq: m.faq ?? [],
+        keywords: m.keywords ?? [],
+        status: m.status,
+      })
+    } else if (saving.type === 'curso') {
+      const c = saving as Curso
+      const NIVEL_KEY: Record<string,string> = { 'Fundação':'fundacao','Liderança':'lideranca','Multiplicação':'multiplicacao' }
+      await upsertCurso({
+        slug: c.id, num: String(c.etapa).padStart(2,'0'),
+        nivel: NIVEL_KEY[c.level] ?? 'fundacao',
+        title: c.title, desc_text: c.desc, dur: `${c.weeks} semanas`,
+        promessa: c.promessa || c.desc, pra_quem: c.paraQuem,
+        ementa: c.ementa.map((e, i) => ({ semana: i + 1, titulo: e.titulo, desc: e.desc })),
+        formato: c.formato || '', mentor: c.mentor, mentor_bio: c.mentorBio || '',
+        depoimento: c.depoimento, turma: c.proximaTurma,
+        keywords: c.keywords ?? [],
+        status: c.status,
+      })
+    } else if (saving.type === 'mentoria') {
+      const men = saving as Mentoria
+      await upsertMentoria({
+        id: men.id || `mentoria-${Date.now()}`,
+        title: men.title, desc_text: men.desc, formato: men.formato,
+        vagas: men.vagas, mentor: men.mentor, accent: men.accent,
+        cadencia: men.cadencia, status: men.status, waitlist: men.waitlist,
+        keywords: men.keywords ?? [],
+      })
+    }
     setData((prev) => {
       const arr = prev[key] as Item[]
       if (d.id) return { ...prev, [key]: arr.map((x) => (x.id === d.id ? saving : x)) }
       return { ...prev, [key]: [saving, ...arr] }
     })
     setEditing(null)
-    // Persist to Supabase
-    startTransition(async () => {
-      try {
-        if (saving.type === 'material') {
-          const m = saving as Material
-          const contentSummary = materialContentSummary(m.contents ?? [], m.beneficios ?? [])
-          await upsertMaterial({
-            id: m.id, familia: m.family === 'Para ministrar' ? 'ministrar' : 'liderar',
-            estante: Object.entries(ESTANTE_MAP).find(([,v]) => v.label === m.shelf)?.[0] ?? m.shelf,
-            model: m.model, etiqueta: m.shelf, titulo: m.title, code: m.code || null,
-            big: m.big ? String(m.big) : null, big_label: m.bigLabel || null,
-            promessa: m.desc, mensagens: m.messages, paginas: m.pages,
-            formatos: (m.formats ?? []).filter(Boolean),
-            preco: `R$ ${m.price}`, hotmart_url: m.hotmart,
-            colecoes: [], pra_quem: m.paraQuem,
-            conteudo: contentSummary,
-            contents: m.contents ?? [],
-            mensagens_lista: m.messageList ?? [],
-            depoimento: null,
-            como_usar: '', faq: m.faq ?? [],
-            keywords: m.keywords ?? [],
-            status: m.status,
-          })
-        } else if (saving.type === 'curso') {
-          const c = saving as Curso
-          const NIVEL_KEY: Record<string,string> = { 'Fundação':'fundacao','Liderança':'lideranca','Multiplicação':'multiplicacao' }
-          await upsertCurso({
-            slug: c.id, num: String(c.etapa).padStart(2,'0'),
-            nivel: NIVEL_KEY[c.level] ?? 'fundacao',
-            title: c.title, desc_text: c.desc, dur: `${c.weeks} semanas`,
-            promessa: c.promessa || c.desc, pra_quem: c.paraQuem,
-            ementa: c.ementa.map((e, i) => ({ semana: i + 1, titulo: e.titulo, desc: e.desc })),
-            formato: c.formato || '', mentor: c.mentor, mentor_bio: c.mentorBio || '',
-            depoimento: c.depoimento, turma: c.proximaTurma,
-            keywords: c.keywords ?? [],
-            status: c.status,
-          })
-        } else if (saving.type === 'mentoria') {
-          const men = saving as Mentoria
-          await upsertMentoria({
-            id: men.id || `mentoria-${Date.now()}`,
-            title: men.title, desc_text: men.desc, formato: men.formato,
-            vagas: men.vagas, mentor: men.mentor, accent: men.accent,
-            cadencia: men.cadencia, status: men.status, waitlist: men.waitlist,
-            keywords: men.keywords ?? [],
-          })
-        }
-      } catch (err) { console.error('Erro ao salvar:', err) }
-    })
   }
 
   const doDelete = (it: Item) => {
