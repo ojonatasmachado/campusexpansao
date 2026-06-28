@@ -3434,26 +3434,6 @@ function FaqField({ value, onChange }: { value: { q: string; a: string }[]; onCh
   )
 }
 
-function ImageField({ value, onChange }: { value: string | null; onChange: (v: string | null) => void }) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const pick = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]
-    if (f) onChange(URL.createObjectURL(f))
-  }
-  return (
-    <div className="imgfield">
-      <div className="imgdrop" onClick={() => inputRef.current?.click()}>
-        {value ? <img src={value} alt="" className="imgthumb" /> : <span>Arraste uma imagem ou <em>clique para enviar</em></span>}
-      </div>
-      <input ref={inputRef} type="file" accept="image/*" hidden onChange={pick} />
-      <div className="imgactions">
-        {value && <button className="lnk-danger" onClick={() => onChange(null)}>Remover imagem</button>}
-        <span className="fld-hint" style={{ margin: 0 }}>Sem imagem, usa a <em>arte automática CE.X</em>.</span>
-      </div>
-    </div>
-  )
-}
-
 function EmentaField({ value, onChange }: { value: { titulo: string; desc: string }[]; onChange: (v: { titulo: string; desc: string }[]) => void }) {
   const set = (i: number, patch: Partial<{ titulo: string; desc: string }>) => {
     const a = [...value]; a[i] = { ...a[i], ...patch }; onChange(a)
@@ -3623,12 +3603,6 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => P
             <FaqField value={m.faq ?? []} onChange={(v) => set('faq' as never, v as never)} />
           </Field>
 
-          <SectionHead mark="Imagem de capa" opt="opcional" />
-          <div className="fld-hint section-copy">Use uma capa específica quando existir. Sem imagem, o sistema mantém a arte automática CE.X.</div>
-          <Field label="Imagem de capa">
-            <ImageField value={d.image} onChange={(v) => set('image', v as never)} />
-          </Field>
-
           <SectionHead mark="Palavras-chave" opt="opcional" />
           <div className="fld-hint section-copy">Use termos de busca e análise. Ao pressionar espaço, cada palavra vira uma tag.</div>
           <Field label="Palavras-chave">
@@ -3662,7 +3636,6 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => P
           </div>
           <div className="ed-3col">
             <Field label="Etapa nº"><input className="inp" type="number" value={c.etapa} onChange={(e) => set('etapa' as never, +e.target.value as never)} /></Field>
-            <Field label="de (total)"><input className="inp" type="number" value={c.totalEtapas} onChange={(e) => set('totalEtapas' as never, +e.target.value as never)} /></Field>
             <Field label="Semanas"><input className="inp" type="number" value={c.weeks} onChange={(e) => set('weeks' as never, +e.target.value as never)} /></Field>
           </div>
           <Field label="Promessa" hint="Frase de impacto. Aparece no hero da landing page (diferente da descrição curta).">
@@ -3688,10 +3661,6 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => P
           <Field label="Depoimento">
             <DepoimentoField value={c.depoimento} onChange={(v) => set('depoimento' as never, v as never)} showCargo />
           </Field>
-          <div className="fld">
-            <label className="fld-label">Selo AO VIVO</label>
-            <div className={`tgl${c.aoVivo ? ' on' : ''}`} onClick={() => set('aoVivo' as never, !c.aoVivo as never)} />
-          </div>
         </>}
 
         {d.type === 'mentoria' && <>
@@ -3728,11 +3697,6 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => P
         {d.type !== 'material' && (
           <Field label="Cor de acento" hint="Travada: cada estante / nível tem sua cor.">
             <AccentLock value={accent} name={accentName} />
-          </Field>
-        )}
-        {d.type !== 'material' && (
-          <Field label="Imagem de capa">
-            <ImageField value={d.image} onChange={(v) => set('image', v as never)} />
           </Field>
         )}
         {keywordItem && d.type !== 'material' && (
