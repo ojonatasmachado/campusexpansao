@@ -119,6 +119,9 @@
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .catalogLink:hover {
@@ -134,6 +137,7 @@
 .purchaseLink {
   display: block;
   flex: 0 0 auto;
+  min-width: 0;
   text-decoration: none;
 }
 
@@ -172,6 +176,9 @@
 
 .emptyAction {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
   margin-top: 24px;
   color: var(--accent-ink, #0E110D);
   background: var(--olive);
@@ -197,7 +204,7 @@
 
   .summary {
     min-height: 130px;
-    max-width: 260px;
+    max-width: 360px;
   }
 
 }
@@ -222,5 +229,33 @@
   .sectionHead {
     align-items: flex-start;
     flex-direction: column;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .summary {
+    max-width: none;
+    min-height: 116px;
+    padding: 22px;
+  }
+
+  .summaryNumber {
+    font-size: 58px;
+  }
+
+  .purchaseGrid {
+    padding-top: 4px;
+  }
+
+  .purchaseLink {
+    width: 100%;
+  }
+
+  .emptyState {
+    padding: 24px;
+  }
+
+  .emptyAction {
+    width: 100%;
   }
 }

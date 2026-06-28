@@ -118,6 +118,9 @@
   display: inline-flex;
   gap: 11px;
   align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  text-align: center;
   transition: transform 0.15s, box-shadow 0.2s;
 }
 .ld-btn-buy:hover {
@@ -159,8 +162,13 @@
   .ld-rel-grid {
     grid-template-columns: 1fr;
   }
+  .ld-btn-buy,
   .ld-offer-right .ld-btn-buy {
     width: 100%;
     justify-content: center;
+  }
+  .ld-tag,
+  .ld-tag-fmt {
+    min-height: 40px;
   }
 }

@@ -14,7 +14,7 @@ export const revalidate = 60;
 
 const FAQ_ITEMS = [
   { q: "Para quem é a CE.X?", a: "Para líderes de igrejas locais que querem preparar sua equipe com estrutura, independente de denominação ou tamanho da igreja." },
-  { q: "Como funciona a compra dos materiais?", a: "Cada material é adquirido individualmente via Hotmart. Após a compra, você recebe o arquivo editável diretamente — pronto para aplicar na sua igreja." },
+  { q: "Como funciona a compra dos materiais?", a: "Cada material é adquirido individualmente via Hotmart. Após a compra, você recebe o arquivo editável diretamente, pronto para aplicar na sua igreja." },
   { q: "Os cursos têm acompanhamento?", a: "Sim. As turmas ao vivo têm mentoria e acompanhamento direto. O conteúdo gravado fica disponível para assistir no seu ritmo." },
   { q: "Como funciona o método CE.X?", a: "Estrutura ministerial aplicada: diagnóstico, princípios bíblicos e ferramentas práticas que você implementa na mesma semana." },
 ];

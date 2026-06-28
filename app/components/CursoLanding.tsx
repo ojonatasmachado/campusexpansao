@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ACCENTS } from "../lib/accents";
 import type { AccentKey } from "../lib/accents";
 import { CURSOS_EM_ORDEM, NIVEIS } from "../lib/cursos-data";
-import type { CursoDado, NivelKey } from "../lib/cursos-data";
+import type { CursoDado } from "../lib/cursos-data";
 import { trackMetricEvent } from "../lib/metrics-client";
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -23,7 +23,7 @@ function SecMark({ label, accent }: { label: string; accent: string }) {
 }
 
 const FAQ_CURSOS = [
-  { q: "Como funciona a lista de espera?", a: "Você se cadastra, a gente te avisa quando a próxima turma abrir. Não há cobrança agora — só quando a turma for confirmada." },
+  { q: "Como funciona a lista de espera?", a: "Você se cadastra, a gente te avisa quando a próxima turma abrir. Não há cobrança agora. A cobrança só acontece quando a turma for confirmada." },
   { q: "As turmas são ao vivo?", a: "Sim. Os encontros são ao vivo, com mentoria em grupo. Você também recebe acesso à gravação por 12 meses." },
   { q: "Preciso ter feito algum curso antes?", a: "Cada curso da trilha pode ser feito de forma independente. A trilha tem uma sequência sugerida, mas não é obrigatória." },
   { q: "Quantas vagas por turma?", a: "As turmas são pequenas e limitadas justamente para garantir mentoria real. Quando enchem, enchem." },

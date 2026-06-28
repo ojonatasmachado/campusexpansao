@@ -142,6 +142,10 @@ html[data-theme="light"] .loja-filter-bar--section .loja-filter-btn.ativo {
   padding-bottom: 16px; -webkit-overflow-scrolling: touch;
 }
 .loja-shelf-grid::-webkit-scrollbar { display: none; }
+.loja-shelf-grid .cex-card,
+.loja-shelf-grid .cex-course {
+  flex: 0 0 auto;
+}
 
 /* ── CAROUSEL (> SHELF_CAROUSEL_THRESHOLD) ── */
 .loja-shelf-carousel { position: relative; }
@@ -521,7 +525,8 @@ html[data-theme="light"] .loja-modal-bar {
   .loja-hero-desc { font-size: 16px; }
   /* Cards menores em tablet — linha única mantida */
   .loja-shelf-grid { gap: 14px; }
-  .loja-shelf-grid .cex-card { width: 200px; flex-shrink: 0; }
+  .loja-shelf-grid .cex-card,
+  .loja-shelf-grid .cex-course { width: 200px; flex-shrink: 0; }
   .loja-shelf-grid .cex-course__body { height: 190px; }
   .loja-shelf-grid .cex-course__title { font-size: 20px; }
   .loja-shelf-grid .cex-course__foot { height: 110px; }
@@ -554,29 +559,73 @@ html[data-theme="light"] .loja-modal-bar {
   .loja-hero { padding: 48px 0 36px; }
   .loja-hero-title { font-size: 36px; }
   .loja-hero-desc { font-size: 14px; }
-  .loja-shelf-grid { gap: 10px; }
-  .loja-shelf-grid .cex-card { width: 168px; flex-shrink: 0; }
-  .loja-shelf-grid .cex-course__body { height: 160px; }
-  .loja-shelf-grid .cex-course__title { font-size: 17px; }
+  .loja-shelf-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    overflow-x: visible;
+    padding-bottom: 10px;
+  }
+  .loja-shelf-grid .cex-card,
+  .loja-shelf-grid .cex-course {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+  }
+  .loja-shelf-grid .cex-course__body { height: 160px; padding: 14px; }
+  .loja-shelf-grid .cex-course__title { font-size: 16px; line-height: 1; }
+  .loja-shelf-grid .cex-course__desc { font-size: 10.5px; line-height: 1.4; }
+  .loja-shelf-grid .cex-course__eyebrow { font-size: 9px; letter-spacing: .1em; }
+  .loja-shelf-grid .cex-live { font-size: 8px; padding: 4px 6px; }
   .loja-shelf-grid .cex-course__foot { height: 100px; padding: 14px; }
+  .loja-shelf-grid .cex-course__meta,
+  .loja-shelf-grid .cex-course__stage,
+  .loja-shelf-grid .cex-course__more { font-size: 9px; }
+  .loja-shelf-grid .cex-course__foot-row { align-items: flex-start; flex-direction: column; gap: 6px; }
   .loja-shelf-grid .cex-art-a,
   .loja-shelf-grid .cex-art-b,
   .loja-shelf-grid .cex-art-c,
   .loja-shelf-grid .cex-art-d { height: 160px; }
+  .loja-shelf-grid .cex-art-a,
+  .loja-shelf-grid .cex-art-b-body,
+  .loja-shelf-grid .cex-art-c,
+  .loja-shelf-grid .cex-art-d-content { padding: 14px; }
+  .loja-shelf-grid .cex-art-b-header { padding: 12px 14px; }
+  .loja-shelf-grid .cex-eyebrow { font-size: 9px; gap: 6px; letter-spacing: .1em; }
+  .loja-shelf-grid .cex-code { font-size: 8px; }
   .loja-shelf-grid .cex-art-a-title { font-size: 26px; }
   .loja-shelf-grid .cex-art-b-title { font-size: 22px; }
   .loja-shelf-grid .cex-art-c-num { font-size: 44px; }
-  .loja-shelf-grid .cex-art-c-title { font-size: 15px; }
+  .loja-shelf-grid .cex-art-c-title { font-size: 15px; height: 42px; }
+  .loja-shelf-grid .cex-art-c-label { font-size: 9px; }
   .loja-shelf-grid .cex-art-d-title { font-size: 20px; }
   .loja-shelf-grid .cex-card-foot { height: 100px; padding: 12px 14px; }
   .loja-shelf-grid .cex-foot-meta { font-size: 9px; }
   .loja-shelf-grid .cex-foot-price { font-size: 14px; }
+  .loja-shelf-grid .cex-foot-price-row { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .loja-shelf-grid .cex-foot-ver { font-size: 9px; }
   /* Carousel: cards 200px em mobile, altura total forçada */
   .loja-carousel-track .cex-card { flex: 0 0 200px; height: 340px; }
-  .loja-filter-btn { font-size: 10px; padding: 7px 12px; }
+  .loja-filter-btn { min-height: 44px; font-size: 10px; padding: 9px 12px; }
   .loja-familia-title { font-size: 20px; }
   .loja-shelf-name { font-size: 11px; }
   .loja-modal { padding: 0; }
+  html .hero-x { font-size: 360px; bottom: -86px; }
+  html .cta-x { font-size: 300px; bottom: -76px; }
+  html .capture-x { font-size: 220px; bottom: -56px; }
+  html .footer-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+  html .footer-social {
+    justify-content: flex-start;
+    gap: 8px 18px;
+  }
+  html .ld-sec .ld-wrap > a:first-child {
+    min-height: 44px;
+    align-items: center;
+  }
 }
 
 /* ── NAV MOBILE ──────────────────────────────────────────────────────────────── */
@@ -588,6 +637,31 @@ html .nav-logo { flex-shrink: 0; }
 html .nav-links { margin-left: clamp(28px, 3vw, 48px); }
 
 html .nav { background: var(--theme-nav-bg); }
+
+html .nav-logo {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+html .hero-x,
+html .cta-x,
+html .capture-x {
+  right: 0;
+}
+
+html .footer-social {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 100%;
+}
+
+html .footer-link,
+html .footer-social a {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+}
 
 .theme-toggle {
   height: 42px;
@@ -684,6 +758,7 @@ html[data-theme="light"] .nav-drawer-link {
   transition: all 0.18s;
   display: inline-flex;
   align-items: center;
+  min-height: 42px;
   gap: 7px;
 }
 
@@ -693,11 +768,12 @@ html[data-theme="light"] .nav-drawer-link {
 @media (max-width: 768px) {
   .nav-links { display: none !important; }
   .nav-cta   { display: none !important; }
-  .nav-login-cta { display: inline-flex !important; padding: 9px 14px; }
+  .nav-login-cta { display: inline-flex !important; min-height: 44px; padding: 9px 14px; }
   .nav-burger-btn {
     display: flex; flex-direction: column; gap: 5px;
     cursor: pointer; background: none; border: none;
-    padding: 6px; flex-shrink: 0;
+    width: 44px; height: 44px; align-items: center; justify-content: center;
+    padding: 0; flex-shrink: 0;
   }
   .nav-burger-btn span {
     display: block; width: 24px; height: 2px;
@@ -902,6 +978,18 @@ html[data-theme="light"] .check-box.checked::after { color: #0E110D; }
   .loja-familia-title { font-size: 36px; }
   .loja-familia-desc { font-size: 14px; }
   .loja-familia-head { padding: 48px 0 28px; }
+}
+
+@media (max-width: 360px) {
+  html .pg-wrap { padding: 0 14px; }
+  .loja-shelf-grid { gap: 8px; }
+  .loja-shelf-grid .cex-art-a,
+  .loja-shelf-grid .cex-art-b,
+  .loja-shelf-grid .cex-art-c,
+  .loja-shelf-grid .cex-art-d,
+  .loja-shelf-grid .cex-course__body { height: 148px; }
+  .loja-shelf-grid .cex-card-foot,
+  .loja-shelf-grid .cex-course__foot { height: 104px; padding: 11px 12px; }
 }
 
 /* ── CONTA DO USUÁRIO ─────────────────────────────────────────────────────── */

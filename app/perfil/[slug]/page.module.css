@@ -40,8 +40,11 @@
 }
 
 .backLink {
-  display: flex;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   width: max-content;
+  max-width: 100%;
   margin-bottom: clamp(28px, 4vw, 42px);
   color: var(--muted);
   font-size: 11px;
@@ -233,6 +236,7 @@
   grid-template-columns: 54px minmax(0, 1fr) auto;
   gap: clamp(18px, 3vw, 28px);
   align-items: center;
+  min-height: 92px;
   padding: 28px 8px;
   border-bottom: 0.5px solid var(--border-2);
   color: inherit;
@@ -371,6 +375,8 @@
 
 .resourceAction {
   display: inline-flex;
+  align-items: center;
+  min-height: 40px;
   margin-top: 18px;
   color: var(--perfil-accent);
   font-size: 10px;
@@ -428,10 +434,27 @@
     justify-content: center;
   }
 
+  .backLink {
+    width: 100%;
+  }
+
+  .accessPanel {
+    max-width: none;
+  }
+
   .summaryBand,
   .messageItem,
   .resourceCard {
     grid-template-columns: 1fr;
+  }
+
+  .messageItem {
+    gap: 12px;
+    padding: 22px 0;
+  }
+
+  .messageItem:hover {
+    padding-left: 0;
   }
 
   .summaryFacts {
@@ -440,5 +463,24 @@
 
   .messageAction {
     justify-self: start;
+  }
+
+  .resourceCard {
+    gap: 16px;
+  }
+
+  .resourceIcon {
+    width: 64px;
+  }
+
+  .resourceMeta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .resourceMeta strong {
+    text-align: left;
+    white-space: normal;
   }
 }
