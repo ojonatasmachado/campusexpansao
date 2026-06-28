@@ -75,6 +75,9 @@ export async function serveStudioModule(module: StudioModule, options: ServeStud
   const context = options.request?.nextUrl.searchParams.get("context")?.trim() ?? "";
   const draftTtlDays = studioDraftTtlDays();
   const session = allowTemplateManagement ? await checkAuth().catch(() => null) : null;
+  const canManageTemplates = allowTemplateManagement
+    && !!session?.isMaster
+    && (!options.request || context === "template-admin");
   const templates = loadTemplates && TEMPLATE_MODULES.has(module)
     ? await supabaseAdmin()
         .from("studio_templates")
@@ -91,7 +94,7 @@ export async function serveStudioModule(module: StudioModule, options: ServeStud
     context,
     draftTtlDays,
     userDraft,
-    canManageTemplates: allowTemplateManagement && !!session?.isMaster,
+    canManageTemplates,
     templates,
   };
   const bootScript = `<script>window.CEX_STUDIO_BOOT=${JSON.stringify(boot).replace(/</g, "\\u003c")};</script>`;

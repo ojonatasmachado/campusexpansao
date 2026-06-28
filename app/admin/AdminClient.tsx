@@ -3225,7 +3225,7 @@ function MaterialContentsField({
               ref={studioFrameRef}
               onLoad={handleStudioLoad}
               className="studio-frame"
-              src={studioMode === 'slides' ? '/studio/slides' : studioMode === 'design' ? '/studio/design' : '/studio/documentos'}
+              src={studioMode === 'slides' ? '/studio/slides?context=mentor' : studioMode === 'design' ? '/studio/design?context=mentor' : '/studio/documentos?context=mentor'}
               title={studioMode === 'slides' ? 'CE.X Studio Slides' : studioMode === 'design' ? 'CE.X Studio Design' : 'CE.X Studio Documentos'}
             />
           </div>
@@ -4275,7 +4275,7 @@ function StudioTemplatesView({
     setPayloadText(JSON.stringify(payload, null, 2))
   }
   const openEditor = (module: StudioTemplate['module']) => {
-    window.open(`/studio/${module === 'documentos' ? 'documentos' : module}`, '_blank', 'noopener,noreferrer')
+    window.open(`/studio/${module === 'documentos' ? 'documentos' : module}?context=template-admin`, '_blank', 'noopener,noreferrer')
   }
   const start = (template?: StudioTemplate) => {
     const next = template ?? emptyTemplate()
