@@ -472,7 +472,7 @@ export default function MaterialLanding({
       {/* ── OFERTA ─────────────────────────────────────────────────────────── */}
       <div id="oferta" className="ld-sec">
         <div className="ld-wrap">
-          <div className="ld-offer-grid" style={{
+          <div className="ld-offer-grid ld-offer-panel" style={{
             background: "#181B16", border: "0.5px solid #2E3327",
             borderTop: `2px solid ${ac}`, borderRadius: 18,
             padding: "clamp(32px, 5vw, 54px) clamp(24px, 5vw, 56px)",
