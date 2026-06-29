@@ -4571,7 +4571,6 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
         conteudo: contentSummary,
         contents: m.contents ?? [],
         mensagens_lista: m.messageList ?? [],
-        depoimento: null,
         como_usar: '', faq: m.faq ?? [],
         keywords: m.keywords ?? [],
         status: m.status,
