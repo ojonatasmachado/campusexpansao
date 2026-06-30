@@ -1044,6 +1044,22 @@ html[data-theme="light"] .ld-tag {
   --subtle: #555650;
 }
 
+.ld-dark-panel {
+  --ink: #0E110D;
+  --graphite: #181B16;
+  --graphite-2: #14170F;
+  --card: #1F221C;
+  --border: #25291F;
+  --border-2: #2E3327;
+  --cream: #EDE6D3;
+  --cream-soft: #F6F1E0;
+  --white: #FAFAF7;
+  --light: #E6E5DD;
+  --muted: #8B8C82;
+  --subtle: #555650;
+  color: var(--light);
+}
+
 html[data-theme="light"] .card-media {
   --ink: #0E110D;
   --white: #FAFAF7;

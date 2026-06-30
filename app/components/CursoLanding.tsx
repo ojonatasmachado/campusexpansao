@@ -123,7 +123,7 @@ export default function CursoLanding({
       </div>
 
       {/* ── BANDA DE AUTORIDADE ─────────────────────────────────────────────── */}
-      <div style={{
+      <div className="ld-dark-panel" style={{
         borderBottom: "0.5px solid #25291F", background: "#14170F",
         backgroundImage: "linear-gradient(#25291F 1px, transparent 1px)",
         backgroundSize: "100% 46px",
@@ -287,7 +287,7 @@ export default function CursoLanding({
             {/* mentor */}
             <div>
               <SecMark label="Mentor" accent={ac} />
-              <div style={{
+              <div className="ld-dark-panel" style={{
                 display: "flex", gap: 20, alignItems: "flex-start",
                 padding: "24px 28px",
                 background: "#181B16", border: "0.5px solid #2E3327",
@@ -315,7 +315,7 @@ export default function CursoLanding({
       </div>
 
       {/* ── DEPOIMENTO ──────────────────────────────────────────────────────── */}
-      <div className="ld-sec" style={{ background: "#0A0D09" }}>
+      <div className="ld-sec ld-dark-panel" style={{ background: "#0A0D09" }}>
         <div className="ld-wrap">
           <blockquote style={{
             borderLeft: `2px solid ${ac}`,
@@ -363,7 +363,7 @@ export default function CursoLanding({
       {/* ── LISTA DE ESPERA ─────────────────────────────────────────────────── */}
       <div id="lista" className="ld-sec">
         <div className="ld-wrap">
-          <div className="ld-offer-grid ld-offer-panel" style={{
+          <div className="ld-offer-grid ld-offer-panel ld-dark-panel" style={{
             background: "#181B16", border: "0.5px solid #2E3327",
             borderTop: `2px solid ${ac}`, borderRadius: 18,
             padding: "clamp(32px, 5vw, 54px) clamp(24px, 5vw, 56px)",

@@ -30,14 +30,14 @@ function Poster({ etiqueta, titulo, code, faixa, formato, accent }: {
   faixa: string; formato: string; accent: string;
 }) {
   return (
-    <div style={{
+    <div className="ld-dark-panel" style={{
       position: "relative", background: "#0E110D",
       border: "0.5px solid #2E3327", borderTop: `2px solid ${accent}`,
       borderRadius: 14, aspectRatio: "4 / 4.6",
       display: "flex", flexDirection: "column", padding: 30,
       overflow: "hidden", boxShadow: "0 30px 70px -40px rgba(0,0,0,.9)",
     }}>
-      <div style={{
+      <div className="ld-dark-panel" style={{
         position: "absolute", inset: 0,
         background: `radial-gradient(120% 80% at 80% 8%, ${accent}1F 0%, transparent 55%)`,
         pointerEvents: "none",
@@ -247,7 +247,7 @@ export default function MaterialLanding({
       </div>
 
       {/* ── BANDA DE AUTORIDADE ─────────────────────────────────────────────── */}
-      <div style={{
+      <div className="ld-dark-panel" style={{
         borderBottom: "0.5px solid #25291F", background: "#14170F",
         backgroundImage: "linear-gradient(#25291F 1px, transparent 1px)",
         backgroundSize: "100% 46px",
@@ -435,7 +435,7 @@ export default function MaterialLanding({
           </div>
           <div className="ld-steps-grid">
             {COMO_USAR.map(s => (
-              <div key={s.num} style={{
+              <div key={s.num} className="ld-dark-panel" style={{
                 background: "#181B16", border: "0.5px solid #2E3327",
                 borderRadius: 12, padding: "30px 26px",
               }}>
@@ -472,7 +472,7 @@ export default function MaterialLanding({
       {/* ── OFERTA ─────────────────────────────────────────────────────────── */}
       <div id="oferta" className="ld-sec">
         <div className="ld-wrap">
-          <div className="ld-offer-grid ld-offer-panel" style={{
+          <div className="ld-offer-grid ld-offer-panel ld-dark-panel" style={{
             background: "#181B16", border: "0.5px solid #2E3327",
             borderTop: `2px solid ${ac}`, borderRadius: 18,
             padding: "clamp(32px, 5vw, 54px) clamp(24px, 5vw, 56px)",
