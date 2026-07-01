@@ -546,7 +546,7 @@ export default function MaterialLanding({
               {relacionados.map(m => (
                 <Link key={m.id} href={`/materiais/${m.id}`} className="ld-rcard"
                   style={{ borderTop: `2px solid ${ac}` }}>
-                  <div style={{
+                  <div className="ld-dark-panel" style={{
                     flex: 1, background: "#0E110D", padding: 18,
                     display: "flex", flexDirection: "column", justifyContent: "space-between",
                   }}>
