@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { ACCENTS } from "../lib/accents";
 import type { AccentKey } from "../lib/accents";
-import { CURSOS_EM_ORDEM, NIVEIS } from "../lib/cursos-data";
+import { CURSOS_DATA, CURSOS_EM_ORDEM, NIVEIS } from "../lib/cursos-data";
 import type { CursoDado } from "../lib/cursos-data";
 import { trackMetricEvent } from "../lib/metrics-client";
 
@@ -29,6 +29,78 @@ const FAQ_CURSOS = [
   { q: "Quantas vagas por turma?", a: "As turmas são pequenas e limitadas justamente para garantir mentoria real. Quando enchem, enchem." },
 ];
 
+const RELATED_STOP_WORDS = new Set([
+  "para", "pra", "com", "sem", "que", "uma", "um", "dos", "das", "por", "como",
+  "mais", "seu", "sua", "seus", "suas", "esse", "essa", "isso", "onde", "quando",
+  "cada", "todo", "toda", "todos", "todas", "de", "da", "do", "em", "no", "na",
+  "nos", "nas", "ao", "aos", "as", "os", "e", "o", "a",
+]);
+
+function wordsFromText(value: string | null | undefined) {
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length >= 3 && !RELATED_STOP_WORDS.has(word));
+}
+
+function cursoWords(curso: CursoDado) {
+  return [
+    curso.title,
+    curso.desc,
+    curso.promessa,
+    curso.praQuem,
+    curso.nivel,
+    curso.formato,
+    ...curso.ementa.flatMap((item) => [item.titulo, item.desc]),
+  ].flatMap(wordsFromText);
+}
+
+function similarCourses(current: CursoDado, cursos: CursoDado[], excludedSlugs: string[], limit = 6) {
+  const currentWords = new Set(cursoWords(current));
+  const excluded = new Set([current.slug, ...excludedSlugs]);
+
+  return cursos
+    .filter((curso) => !excluded.has(curso.slug))
+    .map((curso) => {
+      const words = new Set(cursoWords(curso));
+      let score = 0;
+      words.forEach((word) => {
+        if (currentWords.has(word)) score += 1;
+      });
+      if (curso.nivel === current.nivel) score += 1;
+      return { curso, score };
+    })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score || Number(a.curso.num) - Number(b.curso.num))
+    .slice(0, limit)
+    .map(({ curso }) => curso);
+}
+
+function RelatedCourseCard({ curso, accent }: { curso: CursoDado; accent: string }) {
+  return (
+    <Link
+      href={`/cursos/${curso.slug}`}
+      className="ld-rcard"
+      style={{ borderTop: `2px solid ${accent}` }}
+    >
+      <div className="ld-dark-panel ld-rcard-art" style={{ background: "#0E110D" }}>
+        <span className="ld-rcard-eyebrow" style={{ color: accent }}>
+          <span style={{ fontSize: 7 }}>◆</span>{NIVEIS.find(n => n.key === curso.nivel)?.label ?? "Curso"}
+        </span>
+        <span className="ld-rcard-title">{curso.title}</span>
+      </div>
+      <div className="ld-rcard-foot ld-rcard-foot--course">
+        <span className="ld-rcard-meta">
+          {curso.dur} · Ao vivo
+        </span>
+        <span className="ld-rcard-link" style={{ color: accent }}>Ver →</span>
+      </div>
+    </Link>
+  );
+}
+
 // ── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
 
 export default function CursoLanding({
@@ -42,6 +114,7 @@ export default function CursoLanding({
   const accentKey: AccentKey = nivel.accent;
   const accent = ACCENTS[accentKey];
   const ac = accent.base;
+  const recomendados = similarCourses(curso, CURSOS_DATA, relacionados.map((item) => item.slug));
 
   return (
     <>
@@ -440,33 +513,40 @@ export default function CursoLanding({
             </div>
             <div className="ld-rel-grid">
               {relacionados.slice(0, 3).map(r => (
-                <Link key={r.slug} href={`/cursos/${r.slug}`} className="ld-rcard"
-                  style={{ borderTop: `2px solid ${ac}` }}>
-                  <div className="ld-dark-panel" style={{
-                    flex: 1, background: "#0E110D", padding: 18,
-                    display: "flex", flexDirection: "column", justifyContent: "space-between",
-                  }}>
-                    <span style={{
-                      fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.14em",
-                      textTransform: "uppercase", color: ac,
-                      display: "inline-flex", gap: 6, alignItems: "center",
-                    }}><span style={{ fontSize: 7 }}>◆</span>{nivel.label}</span>
-                    <span style={{
-                      fontSize: 24, fontWeight: 800, letterSpacing: "-0.035em",
-                      lineHeight: 1.0, color: "#EDE6D3",
-                    }}>{r.title}</span>
-                  </div>
-                  <div style={{
-                    padding: "14px 18px 16px", borderTop: "0.5px solid #25291F",
-                    display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8,
-                  }}>
-                    <span style={{ fontFamily: "var(--mono)", fontSize: 10.5, color: "var(--muted)" }}>
-                      {r.dur} · {r.ementa.length} semanas
-                    </span>
-                    <span style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: ac }}>Ver →</span>
-                  </div>
-                </Link>
+                <RelatedCourseCard key={r.slug} curso={r} accent={ac} />
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {recomendados.length > 0 && (
+        <div className="ld-sec">
+          <div className="ld-wrap">
+            <div style={{
+              display: "flex", alignItems: "flex-end", justifyContent: "space-between",
+              gap: 24, marginBottom: 30, flexWrap: "wrap",
+            }}>
+              <div>
+                <h2 style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.03em", color: "var(--cream)" }}>
+                  Você também pode <em style={{ fontStyle: "italic", color: ac }}>gostar</em>
+                </h2>
+                <div style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: "0.04em", color: "var(--muted)", marginTop: 8 }}>
+                  Cursos com temas e palavras próximas
+                </div>
+              </div>
+              <Link href="/cursos" style={{
+                fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.08em",
+                textTransform: "uppercase", color: "var(--muted)", textDecoration: "none",
+              }}>Ver todos os cursos →</Link>
+            </div>
+            <div className="ld-rel-grid">
+              {recomendados.map((item) => {
+                const itemNivel = NIVEIS.find(n => n.key === item.nivel) ?? NIVEIS[0];
+                return (
+                  <RelatedCourseCard key={item.slug} curso={item} accent={ACCENTS[itemNivel.accent].base} />
+                );
+              })}
             </div>
           </div>
         </div>

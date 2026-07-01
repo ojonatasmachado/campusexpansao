@@ -124,6 +124,87 @@ function contentMeta(content: DbMaterialContent) {
   return ["Slides", content.slides ? `${content.slides} telas` : null].filter(Boolean).join(" · ");
 }
 
+const RELATED_STOP_WORDS = new Set([
+  "para", "pra", "com", "sem", "que", "uma", "um", "dos", "das", "por", "como",
+  "mais", "seu", "sua", "seus", "suas", "esse", "essa", "isso", "onde", "quando",
+  "cada", "todo", "toda", "todos", "todas", "de", "da", "do", "em", "no", "na",
+  "nos", "nas", "ao", "aos", "as", "os", "e", "o", "a",
+]);
+
+function wordsFromText(value: string | null | undefined) {
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length >= 3 && !RELATED_STOP_WORDS.has(word));
+}
+
+function materialWords(material: DbMaterial) {
+  return [
+    ...(material.keywords ?? []),
+    material.titulo,
+    material.promessa,
+    material.pra_quem,
+    material.etiqueta,
+    material.estante,
+    material.familia,
+    ...(material.conteudo ?? []),
+    ...(material.colecoes ?? []),
+    ...((material.contents ?? []).flatMap((content) => [content.name, content.note])),
+    ...((material.mensagens_lista ?? []).flatMap((message) => [message.nome, message.desc])),
+  ].flatMap(wordsFromText);
+}
+
+function similarMaterials(current: DbMaterial, materials: DbMaterial[], excludedIds: string[], limit = 6) {
+  const currentWords = new Set(materialWords(current));
+  const excluded = new Set([current.id, ...excludedIds]);
+
+  return materials
+    .filter((material) => !excluded.has(material.id))
+    .map((material) => {
+      const words = materialWords(material);
+      const uniqueWords = new Set(words);
+      let score = 0;
+      uniqueWords.forEach((word) => {
+        if (currentWords.has(word)) score += 1;
+      });
+      if (material.familia === current.familia) score += 1;
+      if ((material.colecoes ?? []).some((collection) => (current.colecoes ?? []).includes(collection))) score += 2;
+      return { material, score };
+    })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score || a.material.titulo.localeCompare(b.material.titulo))
+    .slice(0, limit)
+    .map(({ material }) => material);
+}
+
+function RelatedMaterialCard({ material, accent }: { material: DbMaterial; accent: string }) {
+  return (
+    <Link
+      href={`/materiais/${material.id}`}
+      className="ld-rcard"
+      style={{ borderTop: `2px solid ${accent}` }}
+    >
+      <div className="ld-dark-panel ld-rcard-art" style={{ background: "#0E110D" }}>
+        <span className="ld-rcard-eyebrow" style={{ color: accent }}>
+          <span style={{ fontSize: 7 }}>◆</span>{material.etiqueta}
+        </span>
+        <span className="ld-rcard-title">{material.titulo}</span>
+      </div>
+      <div className="ld-rcard-foot">
+        <span className="ld-rcard-meta">
+          {[material.mensagens ? `${material.mensagens} mensagens` : "", material.paginas ? `${material.paginas} pág` : ""].filter(Boolean).join(" · ")}
+        </span>
+        <div className="ld-rcard-action">
+          <span className="ld-rcard-price">{/^R\$/.test(material.preco) ? material.preco : `R$ ${material.preco}`}</span>
+          <span className="ld-rcard-link" style={{ color: accent }}>Ver →</span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 // ── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
 
 export default function MaterialLanding({
@@ -152,6 +233,12 @@ export default function MaterialLanding({
   const allMateriais = allDbMateriais ?? [];
   const shelfItems = allMateriais.filter(m => m.estante === raw.estante);
   const relacionados = shelfItems.filter(m => m.id !== raw.id).slice(0, 3);
+  const estanteAccent = (estanteKey: string) => {
+    const shelf = dbEstantes?.find((e) => e.key === estanteKey);
+    const key = shelf ? (HEX_TO_ACCENT[shelf.accent] ?? "olive") : (ESTANTE_MAP[estanteKey]?.accent ?? "olive");
+    return ACCENTS[key].base;
+  };
+  const recomendados = similarMaterials(raw, allMateriais, relacionados.map((m) => m.id));
 
   const mensagensLista = (raw.mensagens_lista ?? []).filter(m => m?.nome);
   const beneficios = raw.conteudo ?? [];
@@ -544,35 +631,36 @@ export default function MaterialLanding({
             </div>
             <div className="ld-rel-grid">
               {relacionados.map(m => (
-                <Link key={m.id} href={`/materiais/${m.id}`} className="ld-rcard"
-                  style={{ borderTop: `2px solid ${ac}` }}>
-                  <div className="ld-dark-panel" style={{
-                    flex: 1, background: "#0E110D", padding: 18,
-                    display: "flex", flexDirection: "column", justifyContent: "space-between",
-                  }}>
-                    <span style={{
-                      fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.14em",
-                      textTransform: "uppercase", color: ac,
-                      display: "inline-flex", gap: 6, alignItems: "center",
-                    }}><span style={{ fontSize: 7 }}>◆</span>{m.etiqueta}</span>
-                    <span style={{
-                      fontSize: 27, fontWeight: 800, letterSpacing: "-0.035em",
-                      lineHeight: 0.95, color: "#EDE6D3",
-                    }}>{m.titulo}</span>
-                  </div>
-                  <div style={{
-                    padding: "14px 18px 16px", borderTop: "0.5px solid #25291F",
-                    display: "flex", flexDirection: "column", gap: 10,
-                  }}>
-                    <span style={{ fontFamily: "var(--mono)", fontSize: 10.5, color: "var(--muted)" }}>
-                      {[m.mensagens ? `${m.mensagens} mensagens` : "", m.paginas ? `${m.paginas} pág` : ""].filter(Boolean).join(" · ")}
-                    </span>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 8 }}>
-                      <span style={{ fontSize: 16, fontWeight: 700, color: "var(--white)" }}>{/^R\$/.test(m.preco) ? m.preco : `R$ ${m.preco}`}</span>
-                      <span style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: ac }}>Ver →</span>
-                    </div>
-                  </div>
-                </Link>
+                <RelatedMaterialCard key={m.id} material={m} accent={ac} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {recomendados.length > 0 && (
+        <div className="ld-sec">
+          <div className="ld-wrap">
+            <div style={{
+              display: "flex", alignItems: "flex-end", justifyContent: "space-between",
+              gap: 24, marginBottom: 30, flexWrap: "wrap",
+            }}>
+              <div>
+                <h2 style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.03em", color: "var(--cream)" }}>
+                  Você também pode <em style={{ fontStyle: "italic", color: ac }}>gostar</em>
+                </h2>
+                <div style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: "0.04em", color: "var(--muted)", marginTop: 8 }}>
+                  Materiais com temas e palavras próximas
+                </div>
+              </div>
+              <Link href="/materiais" style={{
+                fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.08em",
+                textTransform: "uppercase", color: "var(--muted)", textDecoration: "none",
+              }}>Ver todos os materiais →</Link>
+            </div>
+            <div className="ld-rel-grid">
+              {recomendados.map((m) => (
+                <RelatedMaterialCard key={m.id} material={m} accent={estanteAccent(m.estante)} />
               ))}
             </div>
           </div>

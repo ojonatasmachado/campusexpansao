@@ -1060,6 +1060,134 @@ html[data-theme="light"] .ld-tag {
   color: var(--light);
 }
 
+html .ld-rel-grid {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 18px;
+  overflow-x: auto;
+  padding-bottom: 16px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+html .ld-rel-grid::-webkit-scrollbar {
+  display: none;
+}
+
+html .ld-rcard {
+  flex: 0 0 248px;
+  width: 248px;
+  height: 340px;
+}
+
+html .ld-rcard-art {
+  flex: 1;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+html .ld-rcard-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+html .ld-rcard-title {
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  color: #EDE6D3;
+}
+
+html .ld-rcard-foot {
+  height: 120px;
+  padding: 16px 18px;
+  border-top: 0.5px solid #25291F;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+html .ld-rcard-foot--course {
+  justify-content: space-between;
+}
+
+html .ld-rcard-meta {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+html .ld-rcard-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+html .ld-rcard-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+html .ld-rcard-link {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 600px) {
+  html .ld-rel-grid {
+    gap: 10px;
+    padding-bottom: 12px;
+  }
+
+  html .ld-rcard {
+    flex: 0 0 calc((100vw - 50px) / 2);
+    width: calc((100vw - 50px) / 2);
+    height: 260px;
+  }
+
+  html .ld-rcard-art {
+    padding: 14px !important;
+  }
+
+  html .ld-rcard-eyebrow {
+    font-size: 8.5px !important;
+    letter-spacing: 0.1em !important;
+  }
+
+  html .ld-rcard-title {
+    font-size: 20px !important;
+    line-height: 1 !important;
+  }
+
+  html .ld-rcard-foot {
+    height: 100px;
+    padding: 12px 14px !important;
+  }
+
+  html .ld-rcard-meta,
+  html .ld-rcard-link {
+    font-size: 9px !important;
+  }
+
+  html .ld-rcard-price {
+    font-size: 14px;
+  }
+}
+
 html[data-theme="light"] .card-media {
   --ink: #0E110D;
   --white: #FAFAF7;
