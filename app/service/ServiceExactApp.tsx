@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { createServiceBrowserClient } from "./lib/supabase-browser";
 
 type ChurchView = {
   id: string;
+  organizationId: string;
   nome: string;
   cidade: string;
   matriz: boolean;
@@ -183,7 +186,20 @@ type DrawerState =
   | null;
 
 type ModalState =
-  | { title: string; eyebrow: string; subtitle: string; fields: string[] }
+  | {
+      title: string;
+      eyebrow: string;
+      subtitle: string;
+      fields: string[];
+      action?:
+        | { kind: "decision" }
+        | { kind: "baptismClass" }
+        | { kind: "course" }
+        | { kind: "board" }
+        | { kind: "card"; boardId: string; columnId: string }
+        | { kind: "chat" }
+        | { kind: "message"; chatId: string };
+    }
   | null;
 
 const ICONS: Record<string, string> = {
@@ -500,7 +516,16 @@ export default function ServiceExactApp({
             setModal={setModal}
           />
         ) : null}
-        {modal ? <ServiceModal modal={modal} onClose={() => setModal(null)} /> : null}
+        {modal ? (
+          <ServiceModal
+            modal={modal}
+            church={firstChurch}
+            people={people}
+            members={members}
+            ministries={ministries}
+            onClose={() => setModal(null)}
+          />
+        ) : null}
       </div>
     </main>
   );
@@ -1112,7 +1137,7 @@ function Decisoes({
         title="Decisões por Jesus"
         eyebrow="Jornada"
         subtitle="Quem aceitou ou se reconciliou. Cada decisão vira uma pessoa no sistema e começa uma jornada: registre, acompanhe e encaminhe."
-        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Registrar decisão", title: "Nova decisão", subtitle: "Registre quem decidiu, o culto e quem fará o acompanhamento.", fields: ["Nome", "Telefone", "Culto", "Responsável"] })}>+ Registrar decisão</button>}
+        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Registrar decisão", title: "Nova decisão", subtitle: "Registre quem decidiu, o culto e quem fará o acompanhamento.", fields: ["Nome", "Telefone", "Culto", "Responsável"], action: { kind: "decision" } })}>+ Registrar decisão</button>}
       />
       <div className="kpi-row">
         <Kpi icon="visitante" label="Decisões no mês" value={decisions.length} foot="registradas na jornada" />
@@ -1168,7 +1193,7 @@ function Batismos({
   const concluded = baptismClasses.filter((item) => item.status === "concluida").length;
   return (
     <div className="content wide">
-      <PageHead title="Batismos" eyebrow="Jornada" subtitle="Turmas de batismo nas águas. Inscrições, curso pré-batismo, agenda e histórico na linha do tempo da pessoa." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Turma de batismo", title: "Nova turma", subtitle: "Crie a turma, defina data, local e candidatos.", fields: ["Nome da turma", "Data", "Local", "Pastor"] })}>+ Nova turma</button>} />
+      <PageHead title="Batismos" eyebrow="Jornada" subtitle="Turmas de batismo nas águas. Inscrições, curso pré-batismo, agenda e histórico na linha do tempo da pessoa." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Turma de batismo", title: "Nova turma", subtitle: "Crie a turma, defina data, local e candidatos.", fields: ["Nome da turma", "Data", "Local", "Pastor"], action: { kind: "baptismClass" } })}>+ Nova turma</button>} />
       <div className="kpi-row"><Kpi icon="identidade" label="Turmas abertas" value={baptismClasses.filter((item) => item.open_enrollment).length} foot="com inscrições disponíveis" /><Kpi icon="pessoa" label="Candidatos" value={baptismCandidates.length} foot="em preparação" /><Kpi icon="cultos" label="Próximo batismo" value={currentClass?.baptism_date ? "1" : "0"} foot={currentClass?.baptism_date || "sem data"} /><Kpi icon="relatorios" label="Concluídos" value={concluded} foot="histórico da igreja" /></div>
       <div className="dash-2col">
         <div className="panel">
@@ -1195,7 +1220,7 @@ function Batismos({
 function CursosTrilhas({ courses, enrollments, members, setModal }: { courses: CourseView[]; enrollments: EnrollmentView[]; members: MemberView[]; setModal: (modal: ModalState) => void }) {
   return (
     <div className="content wide">
-      <PageHead title="Cursos & Trilhas" eyebrow="Jornada" subtitle="Trilhas internas de formação, aulas e participantes. Não mistura com cursos comerciais CE.X." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Nova trilha", title: "Curso interno", subtitle: "Crie a trilha de formação da igreja.", fields: ["Nome", "Nível", "Descrição"] })}>+ Nova trilha</button>} />
+      <PageHead title="Cursos & Trilhas" eyebrow="Jornada" subtitle="Trilhas internas de formação, aulas e participantes. Não mistura com cursos comerciais CE.X." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Nova trilha", title: "Curso interno", subtitle: "Crie a trilha de formação da igreja.", fields: ["Nome", "Nível", "Descrição"], action: { kind: "course" } })}>+ Nova trilha</button>} />
       <div className="team-grid">
         {courses.map((course) => {
           const courseEnrollments = enrollments.filter((item) => item.course_id === course.id);
@@ -1235,11 +1260,11 @@ function Quadros({
     const ministry = selected.ministry_id ? ministryById.get(selected.ministry_id) : null;
     return (
       <div className="content wide">
-        <div className="ph"><div><button className="back-link" type="button" onClick={() => setBoardId(null)}>Voltar para quadros</button><h1 className="ph-title" style={{ marginTop: 8 }}>{selected.name}</h1><p className="ph-sub">{selected.description || ministry?.description || "Quadro de tarefas da operação."}</p></div><div className="ph-actions"><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo card", title: selected.name, subtitle: "Crie uma responsabilidade para este quadro.", fields: ["Título", "Responsável", "Prazo"] })}>+ Card</button></div></div>
+        <div className="ph"><div><button className="back-link" type="button" onClick={() => setBoardId(null)}>Voltar para quadros</button><h1 className="ph-title" style={{ marginTop: 8 }}>{selected.name}</h1><p className="ph-sub">{selected.description || ministry?.description || "Quadro de tarefas da operação."}</p></div><div className="ph-actions"><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo card", title: selected.name, subtitle: "Crie uma responsabilidade para este quadro.", fields: ["Título", "Responsável", "Prazo"], action: { kind: "card", boardId: selected.id, columnId: columns[0]?.id ?? "todo" } })}>+ Card</button></div></div>
         <div className="kb-board">
           {columns.map((column) => {
             const columnCards = boardCards.filter((card) => card.column_id === column.id);
-            return <div className="kb-col" key={column.id}><div className="kb-col-head"><span className="kb-col-name">{column.name}</span><span className="kb-col-count">{columnCards.length}</span></div><div className="kb-col-body">{columnCards.map((card) => { const assignee = card.assignees[0] ? peopleById.get(card.assignees[0]) : null; return <button className="kb-card" type="button" key={card.id} onClick={() => setModal({ eyebrow: selected.name, title: card.title, subtitle: card.description || "Card do quadro. Responsável, prazo e comentários.", fields: ["Comentário"] })}><div className="kb-card-top"><span className={`prio-dot prio-${card.priority ?? "media"}`} /><span className="kb-origem"><Icon name="cultos" size={11} /> {card.source_type || selected.scope || "tarefa"}</span></div><div className="kb-card-title">{card.title}</div><div className="kb-card-foot"><span className="kb-prazo soon">{card.due || "sem prazo"}</span>{assignee ? <Av name={assignee.name} /> : null}</div></button>; })}<button className="kb-add" type="button" onClick={() => setModal({ eyebrow: "Novo card", title: column.name, subtitle: "Criar card nesta coluna.", fields: ["Título", "Responsável"] })}>+ Card</button></div></div>;
+            return <div className="kb-col" key={column.id}><div className="kb-col-head"><span className="kb-col-name">{column.name}</span><span className="kb-col-count">{columnCards.length}</span></div><div className="kb-col-body">{columnCards.map((card) => { const assignee = card.assignees[0] ? peopleById.get(card.assignees[0]) : null; return <button className="kb-card" type="button" key={card.id} onClick={() => setModal({ eyebrow: selected.name, title: card.title, subtitle: card.description || "Card do quadro. Responsável, prazo e comentários.", fields: ["Comentário"] })}><div className="kb-card-top"><span className={`prio-dot prio-${card.priority ?? "media"}`} /><span className="kb-origem"><Icon name="cultos" size={11} /> {card.source_type || selected.scope || "tarefa"}</span></div><div className="kb-card-title">{card.title}</div><div className="kb-card-foot"><span className="kb-prazo soon">{card.due || "sem prazo"}</span>{assignee ? <Av name={assignee.name} /> : null}</div></button>; })}<button className="kb-add" type="button" onClick={() => setModal({ eyebrow: "Novo card", title: column.name, subtitle: "Criar card nesta coluna.", fields: ["Título", "Responsável", "Prazo"], action: { kind: "card", boardId: selected.id, columnId: column.id } })}>+ Card</button></div></div>;
           })}
         </div>
       </div>
@@ -1247,7 +1272,7 @@ function Quadros({
   }
   return (
     <div className="content wide">
-      <PageHead title="Quadros de tarefas" eyebrow="Operação" subtitle="Um quadro por time ou da Direção. Cada tarefa é um card com responsável, prazo e status." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo quadro", title: "Quadro de tarefas", subtitle: "Crie um quadro para um time ou para a liderança.", fields: ["Nome", "Time", "Descrição"] })}>+ Novo quadro</button>} />
+      <PageHead title="Quadros de tarefas" eyebrow="Operação" subtitle="Um quadro por time ou da Direção. Cada tarefa é um card com responsável, prazo e status." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo quadro", title: "Quadro de tarefas", subtitle: "Crie um quadro para um time ou para a liderança.", fields: ["Nome", "Time", "Descrição"], action: { kind: "board" } })}>+ Novo quadro</button>} />
       <div className="kb-explain"><span className="kb-explain-ic"><Icon name="cultos" size={18} /></span><div><div className="kb-explain-t">De onde vêm os cards</div><div className="kb-explain-s">Toda responsabilidade definida numa reunião pode virar um card aqui, com responsável e prazo já preenchidos.</div></div></div>
       <div className="bd-grid">
         {boards.map((board) => {
@@ -1285,10 +1310,10 @@ function Conversas({
   const chatName = (item: ChatView) => item.name || (item.ministry_id ? ministryById.get(item.ministry_id)?.name : null) || "Conversa";
   return (
     <div className="content wide">
-      <PageHead title="Conversas" eyebrow="Operação" subtitle="Canais por time, grupos e mensagens diretas da equipe. Conversas são privadas para os envolvidos." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Nova conversa", title: "Chamar para conversar", subtitle: "Fale com alguém em particular ou crie um grupo.", fields: ["Tipo", "Participantes", "Mensagem"] })}>+ Nova conversa</button>} />
+      <PageHead title="Conversas" eyebrow="Operação" subtitle="Canais por time, grupos e mensagens diretas da equipe. Conversas são privadas para os envolvidos." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Nova conversa", title: "Chamar para conversar", subtitle: "Fale com alguém em particular ou crie um grupo.", fields: ["Nome", "Participantes", "Mensagem"], action: { kind: "chat" } })}>+ Nova conversa</button>} />
       <div className="chat-layout">
         <div className="chat-list">{chats.map((item) => <button className={`chat-row ${item.id === selected ? "on" : ""}`} type="button" key={item.id} onClick={() => setSelected(item.id)}><span className="chat-row-ic"><Icon name={item.kind === "time" ? "times" : "membros"} size={16} /></span><span className="chat-row-main"><span className="chat-row-top"><b>{chatName(item)}</b><small>agora</small></span><span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || "Canal de alinhamento"}</span></span><span className="chat-row-count">{chatCount(item.id)}</span></button>)}</div>
-        <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; return <div className="chat-msg" key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <div className="empty">Nenhuma mensagem nesta conversa.</div> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." /><button className="btn btn-pri btn-sm" type="button" onClick={() => setModal({ eyebrow: "Mensagem", title: chat ? chatName(chat) : "Conversa", subtitle: "Enviar mensagem nesta conversa.", fields: ["Mensagem"] })}>Enviar</button></div></div></div>
+        <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; return <div className="chat-msg" key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <div className="empty">Nenhuma mensagem nesta conversa.</div> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." /><button className="btn btn-pri btn-sm" type="button" onClick={() => chat ? setModal({ eyebrow: "Mensagem", title: chatName(chat), subtitle: "Enviar mensagem nesta conversa.", fields: ["Mensagem"], action: { kind: "message", chatId: chat.id } }) : undefined}>Enviar</button></div></div></div>
       </div>
     </div>
   );
@@ -1606,7 +1631,216 @@ function DrawerSection({ title, children }: { title: string; children: React.Rea
   );
 }
 
-function ServiceModal({ modal, onClose }: { modal: NonNullable<ModalState>; onClose: () => void }) {
+function normalize(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function findPersonByName(people: PersonView[], value: string) {
+  const term = normalize(value);
+  if (!term) return null;
+  return people.find((person) => normalize(person.name) === term || normalize(person.name).includes(term)) ?? null;
+}
+
+function findMemberByName(members: MemberView[], value: string) {
+  const term = normalize(value);
+  if (!term) return null;
+  return members.find((member) => normalize(member.name) === term || normalize(member.name).includes(term)) ?? null;
+}
+
+function findMinistryByName(ministries: MinistryView[], value: string) {
+  const term = normalize(value);
+  if (!term) return null;
+  return ministries.find((ministry) => normalize(ministry.name) === term || normalize(ministry.name).includes(term)) ?? null;
+}
+
+function friendlyWriteError(message: string) {
+  const lower = message.toLowerCase();
+  if (lower.includes("permission") || lower.includes("row-level security") || lower.includes("rls")) return "O banco bloqueou a gravação por segurança. Confirme se seu usuário tem permissão nesta igreja.";
+  if (lower.includes("violates foreign key")) return "Algum vínculo escolhido não existe mais no banco. Recarregue a página e tente de novo.";
+  if (lower.includes("duplicate key")) return "Esse registro já existe.";
+  if (lower.includes("invalid schema")) return "O schema service não está exposto na API do Supabase.";
+  return message || "Não conseguimos salvar agora.";
+}
+
+function ServiceModal({
+  modal,
+  church,
+  people,
+  members,
+  ministries,
+  onClose,
+}: {
+  modal: NonNullable<ModalState>;
+  church?: ChurchView;
+  people: PersonView[];
+  members: MemberView[];
+  ministries: MinistryView[];
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function save() {
+    setError("");
+    if (!modal.action) {
+      onClose();
+      return;
+    }
+    if (!church?.organizationId || !church.id) {
+      setError("Nenhuma igreja foi encontrada para vincular este registro.");
+      return;
+    }
+
+    const supabase = createServiceBrowserClient();
+    const value = (field: string) => values[field]?.trim() ?? "";
+    const namedPerson = (field: string) => findPersonByName(people, value(field));
+    const namedMember = (field: string) => findMemberByName(members, value(field));
+    const namedMinistry = (field: string) => findMinistryByName(ministries, value(field));
+    let result: { error: { message: string } | null };
+
+    setSaving(true);
+    if (modal.action.kind === "decision") {
+      if (!value("Nome")) {
+        setSaving(false);
+        setError("Digite o nome da pessoa.");
+        return;
+      }
+      result = await supabase.schema("service").from("decisions").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        name: value("Nome"),
+        phone: value("Telefone") || null,
+        service_name: value("Culto") || null,
+        responsible_id: namedPerson("Responsável")?.id ?? null,
+        happened_on: new Date().toLocaleDateString("pt-BR"),
+        kind: "decisao",
+        status: "novo",
+      });
+    } else if (modal.action.kind === "baptismClass") {
+      if (!value("Nome da turma")) {
+        setSaving(false);
+        setError("Digite o nome da turma.");
+        return;
+      }
+      result = await supabase.schema("service").from("baptism_classes").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        label: value("Nome da turma"),
+        baptism_date: value("Data") || null,
+        location: value("Local") || null,
+        pastor: value("Pastor") || null,
+        status: "aberta",
+        open_enrollment: true,
+      });
+    } else if (modal.action.kind === "course") {
+      if (!value("Nome")) {
+        setSaving(false);
+        setError("Digite o nome do curso.");
+        return;
+      }
+      result = await supabase.schema("service").from("courses").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        name: value("Nome"),
+        level: value("Nível") || null,
+        description: value("Descrição") || null,
+        kind: "trilha",
+        category: value("Nível") || "discipulado",
+        color: "clay",
+      });
+    } else if (modal.action.kind === "board") {
+      if (!value("Nome")) {
+        setSaving(false);
+        setError("Digite o nome do quadro.");
+        return;
+      }
+      result = await supabase.schema("service").from("boards").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        name: value("Nome"),
+        ministry_id: namedMinistry("Time")?.id ?? null,
+        description: value("Descrição") || null,
+        scope: namedMinistry("Time") ? "time" : "geral",
+        columns: [
+          { id: "todo", nome: "A fazer" },
+          { id: "doing", nome: "Em andamento" },
+          { id: "done", nome: "Concluído" },
+        ],
+      });
+    } else if (modal.action.kind === "card") {
+      if (!value("Título")) {
+        setSaving(false);
+        setError("Digite o título do card.");
+        return;
+      }
+      const assignee = namedPerson("Responsável");
+      result = await supabase.schema("service").from("cards").insert({
+        organization_id: church.organizationId,
+        board_id: modal.action.boardId,
+        column_id: modal.action.columnId,
+        title: value("Título"),
+        due: value("Prazo") || null,
+        assignees: assignee ? [assignee.id] : [],
+        priority: "media",
+        source_type: "manual",
+      });
+    } else if (modal.action.kind === "chat") {
+      if (!value("Nome")) {
+        setSaving(false);
+        setError("Digite o nome da conversa.");
+        return;
+      }
+      const { data: chat, error: chatError } = await supabase.schema("service").from("chats").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        name: value("Nome"),
+        kind: "grupo",
+      }).select("id").single();
+      if (chatError) {
+        result = { error: chatError };
+      } else {
+        const member = namedMember("Participantes");
+        if (member) {
+          await supabase.schema("service").from("chat_members").insert({
+            organization_id: church.organizationId,
+            chat_id: chat.id,
+            member_id: member.id,
+          });
+        }
+        result = value("Mensagem")
+          ? await supabase.schema("service").from("messages").insert({
+              organization_id: church.organizationId,
+              chat_id: chat.id,
+              sender_id: member?.id ?? null,
+              body: value("Mensagem"),
+            })
+          : { error: null };
+      }
+    } else {
+      if (!value("Mensagem")) {
+        setSaving(false);
+        setError("Digite a mensagem.");
+        return;
+      }
+      result = await supabase.schema("service").from("messages").insert({
+        organization_id: church.organizationId,
+        chat_id: modal.action.chatId,
+        sender_id: members[0]?.id ?? null,
+        body: value("Mensagem"),
+      });
+    }
+
+    setSaving(false);
+    if (result.error) {
+      setError(friendlyWriteError(result.error.message));
+      return;
+    }
+    router.refresh();
+    onClose();
+  }
+
   return (
     <div className="modal-bg" onClick={onClose}>
       <div className="modal" onClick={(event) => event.stopPropagation()}>
@@ -1619,13 +1853,19 @@ function ServiceModal({ modal, onClose }: { modal: NonNullable<ModalState>; onCl
           {modal.fields.map((field) => (
             <label className="field" key={field}>
               <span className="field-label">{field}</span>
-              <input className="input" placeholder={field} />
+              <input
+                className="input"
+                placeholder={field}
+                value={values[field] ?? ""}
+                onChange={(event) => setValues((current) => ({ ...current, [field]: event.target.value }))}
+              />
             </label>
           ))}
+          {error ? <p className="mini-sub" style={{ color: "var(--danger)", marginTop: 12 }}>{error}</p> : null}
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" onClick={onClose}>Salvar</button>
+          <button className="btn btn-sec" type="button" onClick={onClose} disabled={saving}>Cancelar</button>
+          <button className="btn btn-pri" type="button" onClick={save} disabled={saving}>{saving ? "Salvando..." : "Salvar"}</button>
         </div>
       </div>
     </div>
