@@ -205,6 +205,124 @@ type RosterAssignmentView = {
   status: "ok" | "wait" | "no";
 };
 
+type DecisionView = {
+  id: string;
+  name: string;
+  phone: string | null;
+  happened_on: string | null;
+  kind: "decisao" | "reconciliacao" | null;
+  service_name: string | null;
+  responsible_id: string | null;
+  status: "novo" | "acompanhando" | "encaminhado";
+  member_id: string | null;
+  age: number | null;
+  notes: string | null;
+  created_at: string;
+};
+
+type BaptismClassView = {
+  id: string;
+  label: string;
+  baptism_date: string | null;
+  location: string | null;
+  status: "aberta" | "preparacao" | "agendada" | "concluida" | null;
+  pastor: string | null;
+  notes: string | null;
+  open_enrollment: boolean;
+};
+
+type BaptismCandidateView = {
+  id: string;
+  class_id: string;
+  member_id: string | null;
+  decision_id: string | null;
+};
+
+type CourseView = {
+  id: string;
+  name: string;
+  kind: "trilha" | "conteudo" | "presencial" | null;
+  level: string | null;
+  description: string | null;
+  category: string | null;
+};
+
+type EnrollmentView = {
+  id: string;
+  course_id: string;
+  member_id: string;
+  done_count: number;
+  status: "cursando" | "concluido";
+};
+
+type BoardView = {
+  id: string;
+  name: string;
+  scope: "time" | "geral" | null;
+  ministry_id: string | null;
+  description: string | null;
+  columns: Array<{ id: string; nome?: string; name?: string }>;
+};
+
+type CardView = {
+  id: string;
+  board_id: string;
+  column_id: string;
+  title: string;
+  description: string | null;
+  assignees: string[];
+  due: string | null;
+  priority: "alta" | "media" | "baixa" | null;
+  source_type: string | null;
+  moved_days_ago: number | null;
+};
+
+type ChatView = {
+  id: string;
+  kind: "time" | "grupo" | "dm";
+  ministry_id: string | null;
+  name: string | null;
+};
+
+type ChatMemberView = {
+  chat_id: string;
+  member_id: string;
+};
+
+type MessageView = {
+  id: string;
+  chat_id: string;
+  sender_id: string | null;
+  body: string;
+  created_at: string;
+};
+
+type ExtraServiceData = {
+  decisions: DecisionView[];
+  baptismClasses: BaptismClassView[];
+  baptismCandidates: BaptismCandidateView[];
+  courses: CourseView[];
+  enrollments: EnrollmentView[];
+  boards: BoardView[];
+  cards: CardView[];
+  chats: ChatView[];
+  chatMembers: ChatMemberView[];
+  messages: MessageView[];
+};
+
+const emptyExtraServiceData: ExtraServiceData = {
+  decisions: [],
+  baptismClasses: [],
+  baptismCandidates: [],
+  courses: [],
+  enrollments: [],
+  boards: [],
+  cards: [],
+  chats: [],
+  chatMembers: [],
+  messages: [],
+};
+
 function friendlyReadError(message: string) {
   const lower = message.toLowerCase();
   if (lower.includes("invalid schema")) {
@@ -332,6 +450,7 @@ async function getServiceDashboardData(): Promise<{
   members: MemberView[];
   ministries: MinistryView[];
   events: EventView[];
+  extra: ExtraServiceData;
   error: string;
 }> {
   const supabase = await createServiceSupabaseClient();
@@ -349,7 +468,7 @@ async function getServiceDashboardData(): Promise<{
     .order("created_at");
 
   if (churchesError) {
-    return { churches: [], people: [], members: [], ministries: [], events: [], error: friendlyReadError(churchesError.message) };
+    return { churches: [], people: [], members: [], ministries: [], events: [], extra: emptyExtraServiceData, error: friendlyReadError(churchesError.message) };
   }
 
   const { data: peopleData, error: peopleError } = await supabase
@@ -365,6 +484,7 @@ async function getServiceDashboardData(): Promise<{
       members: [],
       ministries: [],
       events: [],
+      extra: emptyExtraServiceData,
       error: friendlyReadError(peopleError.message),
     };
   }
@@ -384,6 +504,7 @@ async function getServiceDashboardData(): Promise<{
       members: [],
       ministries: [],
       events: [],
+      extra: emptyExtraServiceData,
       error: friendlyReadError(membersError.message),
     };
   }
@@ -401,6 +522,7 @@ async function getServiceDashboardData(): Promise<{
       members: ((membersData ?? []) as MemberRow[]).map(toMemberView),
       ministries: [],
       events: [],
+      extra: emptyExtraServiceData,
       error: friendlyReadError(ministriesError.message),
     };
   }
@@ -418,6 +540,7 @@ async function getServiceDashboardData(): Promise<{
       members: ((membersData ?? []) as MemberRow[]).map(toMemberView),
       ministries: [],
       events: [],
+      extra: emptyExtraServiceData,
       error: friendlyReadError(positionsError.message),
     };
   }
@@ -434,6 +557,7 @@ async function getServiceDashboardData(): Promise<{
       members: ((membersData ?? []) as MemberRow[]).map(toMemberView),
       ministries: [],
       events: [],
+      extra: emptyExtraServiceData,
       error: friendlyReadError(linksError.message),
     };
   }
@@ -457,6 +581,7 @@ async function getServiceDashboardData(): Promise<{
         people,
       ),
       events: [],
+      extra: emptyExtraServiceData,
       error: friendlyReadError(eventsError.message),
     };
   }
@@ -479,6 +604,7 @@ async function getServiceDashboardData(): Promise<{
         people,
       ),
       events: [],
+      extra: emptyExtraServiceData,
       error: friendlyReadError(scheduleError.message),
     };
   }
@@ -501,9 +627,47 @@ async function getServiceDashboardData(): Promise<{
         people,
       ),
       events: [],
+      extra: emptyExtraServiceData,
       error: friendlyReadError(setlistError.message),
     };
   }
+
+  const [
+    decisionsResult,
+    baptismClassesResult,
+    baptismCandidatesResult,
+    coursesResult,
+    enrollmentsResult,
+    boardsResult,
+    cardsResult,
+    chatsResult,
+    chatMembersResult,
+    messagesResult,
+  ] = await Promise.all([
+    supabase.schema("service").from("decisions").select("id,name,phone,happened_on,kind,service_name,responsible_id,status,member_id,age,notes,created_at").order("created_at", { ascending: false }),
+    supabase.schema("service").from("baptism_classes").select("id,label,baptism_date,location,status,pastor,notes,open_enrollment").order("created_at", { ascending: false }),
+    supabase.schema("service").from("baptism_candidates").select("id,class_id,member_id,decision_id").order("created_at", { ascending: false }),
+    supabase.schema("service").from("courses").select("id,name,kind,level,description,category").order("created_at", { ascending: false }),
+    supabase.schema("service").from("enrollments").select("id,course_id,member_id,done_count,status").order("created_at", { ascending: false }),
+    supabase.schema("service").from("boards").select("id,name,scope,ministry_id,description,columns").order("created_at", { ascending: false }),
+    supabase.schema("service").from("cards").select("id,board_id,column_id,title,description,assignees,due,priority,source_type,moved_days_ago").order("created_at", { ascending: false }),
+    supabase.schema("service").from("chats").select("id,kind,ministry_id,name").order("created_at", { ascending: false }),
+    supabase.schema("service").from("chat_members").select("chat_id,member_id"),
+    supabase.schema("service").from("messages").select("id,chat_id,sender_id,body,created_at").order("created_at", { ascending: true }),
+  ]);
+
+  const extraError = [
+    decisionsResult.error,
+    baptismClassesResult.error,
+    baptismCandidatesResult.error,
+    coursesResult.error,
+    enrollmentsResult.error,
+    boardsResult.error,
+    cardsResult.error,
+    chatsResult.error,
+    chatMembersResult.error,
+    messagesResult.error,
+  ].find(Boolean);
 
   return {
     churches: ((churchesData ?? []) as ChurchRow[]).map(toChurchView),
@@ -520,12 +684,24 @@ async function getServiceDashboardData(): Promise<{
       (scheduleData ?? []) as ScheduleItemRow[],
       (setlistData ?? []) as SetlistSongRow[],
     ),
-    error: "",
+    extra: {
+      decisions: ((decisionsResult.data ?? []) as DecisionView[]),
+      baptismClasses: ((baptismClassesResult.data ?? []) as BaptismClassView[]),
+      baptismCandidates: ((baptismCandidatesResult.data ?? []) as BaptismCandidateView[]),
+      courses: ((coursesResult.data ?? []) as CourseView[]),
+      enrollments: ((enrollmentsResult.data ?? []) as EnrollmentView[]),
+      boards: ((boardsResult.data ?? []) as BoardView[]),
+      cards: ((cardsResult.data ?? []) as CardView[]),
+      chats: ((chatsResult.data ?? []) as ChatView[]),
+      chatMembers: ((chatMembersResult.data ?? []) as ChatMemberView[]),
+      messages: ((messagesResult.data ?? []) as MessageView[]),
+    },
+    error: extraError ? friendlyReadError(extraError.message) : "",
   };
 }
 
 export default async function ServiceHomePage() {
-  const { churches, people, members, ministries, events, error } = await getServiceDashboardData();
+  const { churches, people, members, ministries, events, extra, error } = await getServiceDashboardData();
   if (!error && churches.length === 0) redirect("/service/onboarding");
 
   const supabase = await createServiceSupabaseClient();
@@ -548,6 +724,16 @@ export default async function ServiceHomePage() {
       events={events}
       roster={((rosterData ?? []) as RosterAssignmentView[])}
       visitorsInCare={visitorsInCare ?? 0}
+      decisions={extra.decisions}
+      baptismClasses={extra.baptismClasses}
+      baptismCandidates={extra.baptismCandidates}
+      courses={extra.courses}
+      enrollments={extra.enrollments}
+      boards={extra.boards}
+      cards={extra.cards}
+      chats={extra.chats}
+      chatMembers={extra.chatMembers}
+      messages={extra.messages}
       error={error}
     />
   );

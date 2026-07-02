@@ -62,6 +62,98 @@ type RosterAssignmentView = {
   status: "ok" | "wait" | "no";
 };
 
+type DecisionView = {
+  id: string;
+  name: string;
+  phone: string | null;
+  happened_on: string | null;
+  kind: "decisao" | "reconciliacao" | null;
+  service_name: string | null;
+  responsible_id: string | null;
+  status: "novo" | "acompanhando" | "encaminhado";
+  member_id: string | null;
+  age: number | null;
+  notes: string | null;
+  created_at: string;
+};
+
+type BaptismClassView = {
+  id: string;
+  label: string;
+  baptism_date: string | null;
+  location: string | null;
+  status: "aberta" | "preparacao" | "agendada" | "concluida" | null;
+  pastor: string | null;
+  notes: string | null;
+  open_enrollment: boolean;
+};
+
+type BaptismCandidateView = {
+  id: string;
+  class_id: string;
+  member_id: string | null;
+  decision_id: string | null;
+};
+
+type CourseView = {
+  id: string;
+  name: string;
+  kind: "trilha" | "conteudo" | "presencial" | null;
+  level: string | null;
+  description: string | null;
+  category: string | null;
+};
+
+type EnrollmentView = {
+  id: string;
+  course_id: string;
+  member_id: string;
+  done_count: number;
+  status: "cursando" | "concluido";
+};
+
+type BoardView = {
+  id: string;
+  name: string;
+  scope: "time" | "geral" | null;
+  ministry_id: string | null;
+  description: string | null;
+  columns: Array<{ id: string; nome?: string; name?: string }>;
+};
+
+type CardView = {
+  id: string;
+  board_id: string;
+  column_id: string;
+  title: string;
+  description: string | null;
+  assignees: string[];
+  due: string | null;
+  priority: "alta" | "media" | "baixa" | null;
+  source_type: string | null;
+  moved_days_ago: number | null;
+};
+
+type ChatView = {
+  id: string;
+  kind: "time" | "grupo" | "dm";
+  ministry_id: string | null;
+  name: string | null;
+};
+
+type ChatMemberView = {
+  chat_id: string;
+  member_id: string;
+};
+
+type MessageView = {
+  id: string;
+  chat_id: string;
+  sender_id: string | null;
+  body: string;
+  created_at: string;
+};
+
 type Props = {
   churches: ChurchView[];
   people: PersonView[];
@@ -70,6 +162,16 @@ type Props = {
   events: EventView[];
   roster: RosterAssignmentView[];
   visitorsInCare: number;
+  decisions: DecisionView[];
+  baptismClasses: BaptismClassView[];
+  baptismCandidates: BaptismCandidateView[];
+  courses: CourseView[];
+  enrollments: EnrollmentView[];
+  boards: BoardView[];
+  cards: CardView[];
+  chats: ChatView[];
+  chatMembers: ChatMemberView[];
+  messages: MessageView[];
   error: string;
 };
 
@@ -176,17 +278,36 @@ function Spark({ value }: { value: number }) {
     <svg viewBox="0 0 240 56" preserveAspectRatio="none" style={{ width: "100%", height: 56 }}>
       <defs>
         <linearGradient id="service-sp" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#7A9E3F" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#7A9E3F" stopOpacity="0" />
+          <stop offset="0%" stopColor="var(--olive)" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="var(--olive)" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={`${line} L236,56 L4,56 Z`} fill="url(#service-sp)" />
-      <path d={line} fill="none" stroke="#7A9E3F" strokeWidth="2" />
+      <path d={line} fill="none" stroke="var(--olive)" strokeWidth="2" />
     </svg>
   );
 }
 
-export default function ServiceExactApp({ churches, people, members, ministries, events, roster, visitorsInCare, error }: Props) {
+export default function ServiceExactApp({
+  churches,
+  people,
+  members,
+  ministries,
+  events,
+  roster,
+  visitorsInCare,
+  decisions,
+  baptismClasses,
+  baptismCandidates,
+  courses,
+  enrollments,
+  boards,
+  cards,
+  chats,
+  chatMembers,
+  messages,
+  error,
+}: Props) {
   const [route, setRoute] = useState<keyof typeof ROUTES>("painel");
   const [drawer, setDrawer] = useState<DrawerState>(null);
   const [modal, setModal] = useState<ModalState>(null);
@@ -234,9 +355,9 @@ export default function ServiceExactApp({ churches, people, members, ministries,
     {
       group: "Jornada",
       items: [
-        { id: "decisoes", icon: "visitante", label: "Decisões" },
-        { id: "batismos", icon: "identidade", label: "Batismos" },
-        { id: "cursos", icon: "relatorios", label: "Cursos & Trilhas" },
+        { id: "decisoes", icon: "visitante", label: "Decisões", count: decisions.length },
+        { id: "batismos", icon: "identidade", label: "Batismos", count: baptismClasses.length },
+        { id: "cursos", icon: "relatorios", label: "Cursos & Trilhas", count: courses.length },
       ],
     },
     {
@@ -331,6 +452,11 @@ export default function ServiceExactApp({ churches, people, members, ministries,
               ["Times", "times"],
               ["Escalas", "escalas"],
               ["Agenda", "cultos"],
+              ["Decisões", "decisoes"],
+              ["Batismos", "batismos"],
+              ["Cursos", "cursos"],
+              ["Quadros", "quadros"],
+              ["Conversas", "conversas"],
               ["Relatórios", "relatorios"],
             ].map(([label, id]) => (
               <button key={id} className={route === id ? "on" : ""} type="button" onClick={() => setRoute(id as keyof typeof ROUTES)}>
@@ -345,17 +471,17 @@ export default function ServiceExactApp({ churches, people, members, ministries,
           {route === "pessoas" ? <Pessoas people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
           {route === "times" ? <Times ministries={ministries} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
           {route === "visitantes" ? <SimpleModule title="Visitantes" subtitle="Acompanhe novos visitantes, etapa de contato e integração." empty="Nenhum visitante em acompanhamento." setModal={setModal} /> : null}
-          {route === "decisoes" ? <Decisoes members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
-          {route === "batismos" ? <Batismos members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
-          {route === "cursos" ? <CursosTrilhas members={members} setModal={setModal} /> : null}
+          {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
+          {route === "batismos" ? <Batismos baptismClasses={baptismClasses} baptismCandidates={baptismCandidates} decisions={decisions} members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
+          {route === "cursos" ? <CursosTrilhas courses={courses} enrollments={enrollments} members={members} setModal={setModal} /> : null}
           {route === "escalas" ? <Escalas gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} setDrawer={setDrawer} setModal={setModal} /> : null}
           {route === "reunioes" ? <SimpleModule title="Reuniões" subtitle="Pautas, decisões e ações pendentes das reuniões." empty="Nenhuma reunião criada." setModal={setModal} /> : null}
           {route === "ensaios" ? <SimpleModule title="Ensaios" subtitle="Ensaios por ministério, presença e repertório." empty="Nenhum ensaio criado." setModal={setModal} /> : null}
-          {route === "quadros" ? <Quadros ministries={ministries} setModal={setModal} /> : null}
+          {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} setModal={setModal} /> : null}
           {route === "cultos" ? <Cultos events={events} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
           {route === "comunicacao" ? <SimpleModule title="Comunicação" subtitle="Avisos, mensagens e conversas da igreja." empty="Nenhuma comunicação recente." setModal={setModal} /> : null}
-          {route === "conversas" ? <Conversas ministries={ministries} members={members} setModal={setModal} /> : null}
-          {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
+          {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} setModal={setModal} /> : null}
+          {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} decisions={decisions} baptismClasses={baptismClasses} courses={courses} boards={boards} chats={chats} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
           {route === "config" ? <Config church={firstChurch} /> : null}
           {route === "identidade" ? <Config church={firstChurch} /> : null}
           {route === "historia" ? <SimpleModule title="Nossa história" subtitle="Linha do tempo da igreja e marcos da comunidade." empty="Nenhum marco cadastrado." setModal={setModal} /> : null}
@@ -963,18 +1089,23 @@ function RosterActionModal({
 }
 
 function Decisoes({
+  decisions,
   members,
   people,
   setDrawer,
   setModal,
 }: {
+  decisions: DecisionView[];
   members: MemberView[];
   people: PersonView[];
   setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
 }) {
-  const decisions = members.filter((member) => member.situation === "novo");
-  const responsible = people[0];
+  const memberById = new Map(members.map((member) => [member.id, member]));
+  const personById = new Map(people.map((person) => [person.id, person]));
+  const newDecisions = decisions.filter((decision) => decision.status === "novo");
+  const following = decisions.filter((decision) => decision.status === "acompanhando");
+  const forwarded = decisions.filter((decision) => decision.status === "encaminhado");
   return (
     <div className="content wide">
       <PageHead
@@ -985,9 +1116,9 @@ function Decisoes({
       />
       <div className="kpi-row">
         <Kpi icon="visitante" label="Decisões no mês" value={decisions.length} foot="registradas na jornada" />
-        <Kpi icon="config" label="A contatar" value={decisions.length} foot="aguardando primeiro contato" amber />
-        <Kpi icon="pessoa" label="Em acompanhamento" value={Math.max(0, members.length - decisions.length)} foot="discipulado em andamento" />
-        <Kpi icon="relatorios" label="Encaminhados" value={members.filter((member) => member.journey.length > 1).length} foot="já viraram membros" />
+        <Kpi icon="config" label="A contatar" value={newDecisions.length} foot="aguardando primeiro contato" amber />
+        <Kpi icon="pessoa" label="Em acompanhamento" value={following.length} foot="discipulado em andamento" />
+        <Kpi icon="relatorios" label="Encaminhados" value={forwarded.length} foot="já viraram membros" />
       </div>
       <div className="toolbar">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome..." /></div>
@@ -997,34 +1128,63 @@ function Decisoes({
       </div>
       <div className="tbl">
         <div className="tr head" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }}><span>Pessoa</span><span>Quando & culto</span><span>Responsável</span><span>Situação</span></div>
-        {(decisions.length ? decisions : members.slice(0, 3)).map((member) => (
-          <button className="tr click" key={member.id} style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }} type="button" onClick={() => setDrawer({ kind: "member", id: member.id })}>
-            <div className="cell-person"><Av name={member.name} size="md" /><div><div className="cell-name">{member.name} <span className="chip chip-ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>Decisão</span></div><div className="cell-sub">{member.phone}</div></div></div>
-            <div><div style={{ fontSize: 13, color: "var(--light)" }}>{member.firstContact}</div><div className="cell-sub">Culto principal</div></div>
+        {decisions.map((decision) => {
+          const member = decision.member_id ? memberById.get(decision.member_id) : null;
+          const responsible = decision.responsible_id ? personById.get(decision.responsible_id) : null;
+          return (
+          <button className="tr click" key={decision.id} style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }} type="button" onClick={() => member ? setDrawer({ kind: "member", id: member.id }) : setModal({ eyebrow: "Decisão", title: decision.name, subtitle: decision.notes || "Pessoa ainda sem vínculo com membro.", fields: ["Responsável", "Observação"] })}>
+            <div className="cell-person"><Av name={decision.name} size="md" /><div><div className="cell-name">{decision.name} <span className="chip chip-ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"}</span></div><div className="cell-sub">{decision.phone || "Telefone não informado"}</div></div></div>
+            <div><div style={{ fontSize: 13, color: "var(--light)" }}>{decision.happened_on || "Data não informada"}</div><div className="cell-sub">{decision.service_name || "Culto não informado"}</div></div>
             <div className="cell-person">{responsible ? <Av name={responsible.name} size="sm" /> : null}<div className="cell-sub" style={{ marginTop: 0 }}>{responsible?.name ?? "a definir"}</div></div>
-            <div><span className="chip chip-wait">A contatar</span></div>
+            <div><Chip status={decision.status === "novo" ? "wait" : decision.status === "encaminhado" ? "ok" : "ativo"} /></div>
           </button>
-        ))}
+          );
+        })}
+        {decisions.length === 0 ? <div className="empty">Nenhuma decisão registrada ainda.</div> : null}
       </div>
     </div>
   );
 }
 
-function Batismos({ members, setDrawer, setModal }: { members: MemberView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
-  const candidates = members.filter((member) => member.journey.length < 2).slice(0, 8);
+function Batismos({
+  baptismClasses,
+  baptismCandidates,
+  decisions,
+  members,
+  setDrawer,
+  setModal,
+}: {
+  baptismClasses: BaptismClassView[];
+  baptismCandidates: BaptismCandidateView[];
+  decisions: DecisionView[];
+  members: MemberView[];
+  setDrawer: (drawer: DrawerState) => void;
+  setModal: (modal: ModalState) => void;
+}) {
+  const memberById = new Map(members.map((member) => [member.id, member]));
+  const decisionById = new Map(decisions.map((decision) => [decision.id, decision]));
+  const currentClass = baptismClasses[0];
+  const currentCandidates = currentClass ? baptismCandidates.filter((candidate) => candidate.class_id === currentClass.id) : [];
+  const concluded = baptismClasses.filter((item) => item.status === "concluida").length;
   return (
     <div className="content wide">
       <PageHead title="Batismos" eyebrow="Jornada" subtitle="Turmas de batismo nas águas. Inscrições, curso pré-batismo, agenda e histórico na linha do tempo da pessoa." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Turma de batismo", title: "Nova turma", subtitle: "Crie a turma, defina data, local e candidatos.", fields: ["Nome da turma", "Data", "Local", "Pastor"] })}>+ Nova turma</button>} />
-      <div className="kpi-row"><Kpi icon="identidade" label="Turmas abertas" value={1} foot="com inscrições disponíveis" /><Kpi icon="pessoa" label="Candidatos" value={candidates.length} foot="em preparação" /><Kpi icon="cultos" label="Próximo batismo" value="1" foot="agenda criada" /><Kpi icon="relatorios" label="Concluídos" value={members.filter((member) => member.journey.length > 1).length} foot="histórico da igreja" /></div>
+      <div className="kpi-row"><Kpi icon="identidade" label="Turmas abertas" value={baptismClasses.filter((item) => item.open_enrollment).length} foot="com inscrições disponíveis" /><Kpi icon="pessoa" label="Candidatos" value={baptismCandidates.length} foot="em preparação" /><Kpi icon="cultos" label="Próximo batismo" value={currentClass?.baptism_date ? "1" : "0"} foot={currentClass?.baptism_date || "sem data"} /><Kpi icon="relatorios" label="Concluídos" value={concluded} foot="histórico da igreja" /></div>
       <div className="dash-2col">
         <div className="panel">
-          <div className="panel-head"><span className="panel-title"><Icon name="identidade" size={14} /> Turma atual</span><span className="chip chip-ok">Inscrições abertas</span></div>
-          <div className="panel-body"><div className="profile-name" style={{ fontSize: 22 }}>Turma de batismo</div><p className="mini-sub">Domingo · Templo · preparação pastoral</p><button className="btn btn-sec btn-sm" style={{ marginTop: 14 }} type="button" onClick={() => setModal({ eyebrow: "Adicionar candidato", title: "Turma de batismo", subtitle: "Escolha quem será batizado nesta turma.", fields: ["Candidato"] })}>+ Adicionar candidato</button></div>
+          <div className="panel-head"><span className="panel-title"><Icon name="identidade" size={14} /> Turma atual</span><span className="chip chip-ok">{currentClass?.status ?? "sem turma"}</span></div>
+          <div className="panel-body"><div className="profile-name" style={{ fontSize: 22 }}>{currentClass?.label ?? "Nenhuma turma criada"}</div><p className="mini-sub">{currentClass?.baptism_date || "Sem data"} · {currentClass?.location || "Local não informado"} · {currentClass?.pastor || "Pastor não informado"}</p><button className="btn btn-sec btn-sm" style={{ marginTop: 14 }} type="button" onClick={() => setModal({ eyebrow: "Adicionar candidato", title: currentClass?.label ?? "Turma de batismo", subtitle: "Escolha quem será batizado nesta turma.", fields: ["Candidato"] })}>+ Adicionar candidato</button></div>
         </div>
         <div className="panel">
-          <div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={14} /> Candidatos</span><span className="panel-meta">{candidates.length} pessoas</span></div>
+          <div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={14} /> Candidatos</span><span className="panel-meta">{currentCandidates.length} pessoas</span></div>
           <div className="panel-body flush">
-            {candidates.map((member) => <button className="mini-row click" type="button" key={member.id} onClick={() => setDrawer({ kind: "member", id: member.id })}><Av name={member.name} /><div className="mini-main"><div className="mini-title">{member.name}</div><div className="mini-sub">{member.phone}</div></div><span className="chip chip-wait">preparação</span></button>)}
+            {currentCandidates.map((candidate) => {
+              const member = candidate.member_id ? memberById.get(candidate.member_id) : null;
+              const decision = candidate.decision_id ? decisionById.get(candidate.decision_id) : null;
+              const name = member?.name ?? decision?.name ?? "Candidato";
+              return <button className="mini-row click" type="button" key={candidate.id} onClick={() => member ? setDrawer({ kind: "member", id: member.id }) : setModal({ eyebrow: "Candidato", title: name, subtitle: "Candidato vindo de uma decisão.", fields: ["Observação"] })}><Av name={name} /><div className="mini-main"><div className="mini-title">{name}</div><div className="mini-sub">{member?.phone ?? decision?.phone ?? "Telefone não informado"}</div></div><span className="chip chip-wait">preparação</span></button>;
+            })}
+            {currentCandidates.length === 0 ? <div className="empty">Nenhum candidato nesta turma.</div> : null}
           </div>
         </div>
       </div>
@@ -1032,37 +1192,55 @@ function Batismos({ members, setDrawer, setModal }: { members: MemberView[]; set
   );
 }
 
-function CursosTrilhas({ members, setModal }: { members: MemberView[]; setModal: (modal: ModalState) => void }) {
-  const courses = [
-    { id: "novos", name: "Novos Convertidos", level: "entrada", count: members.filter((member) => member.situation === "novo").length },
-    { id: "fundamentos", name: "Fundamentos da Fé", level: "discipulado", count: members.filter((member) => member.journey.length > 0).length },
-    { id: "lideranca", name: "Primeiros passos de liderança", level: "liderança", count: 0 },
-  ];
+function CursosTrilhas({ courses, enrollments, members, setModal }: { courses: CourseView[]; enrollments: EnrollmentView[]; members: MemberView[]; setModal: (modal: ModalState) => void }) {
   return (
     <div className="content wide">
       <PageHead title="Cursos & Trilhas" eyebrow="Jornada" subtitle="Trilhas internas de formação, aulas e participantes. Não mistura com cursos comerciais CE.X." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Nova trilha", title: "Curso interno", subtitle: "Crie a trilha de formação da igreja.", fields: ["Nome", "Nível", "Descrição"] })}>+ Nova trilha</button>} />
       <div className="team-grid">
-        {courses.map((course) => <button className="team-card" type="button" key={course.id} onClick={() => setModal({ eyebrow: "Curso", title: course.name, subtitle: "Gerencie módulos, aulas e matrículas.", fields: ["Módulo", "Aula", "Participante"] })}><div className="team-card-top"><div className="team-mark"><Icon name="relatorios" size={20} /></div><span className="chip chip-ok">{course.level}</span></div><div className="team-name">{course.name}</div><div className="team-lead">Matrículas: <em>{course.count}</em></div><p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.55, marginTop: 12 }}>Acompanhamento de progresso e conclusão na linha do tempo do membro.</p><div className="bar" style={{ marginTop: 14 }}><div className="bar-fill" style={{ width: `${Math.min(100, course.count * 20)}%` }} /></div></button>)}
+        {courses.map((course) => {
+          const courseEnrollments = enrollments.filter((item) => item.course_id === course.id);
+          const concluded = courseEnrollments.filter((item) => item.status === "concluido").length;
+          return <button className="team-card" type="button" key={course.id} onClick={() => setModal({ eyebrow: "Curso", title: course.name, subtitle: "Gerencie módulos, aulas e matrículas.", fields: ["Módulo", "Aula", "Participante"] })}><div className="team-card-top"><div className="team-mark"><Icon name="relatorios" size={20} /></div><span className="chip chip-ok">{course.level || course.category || "trilha"}</span></div><div className="team-name">{course.name}</div><div className="team-lead">Matrículas: <em>{courseEnrollments.length}</em></div><p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.55, marginTop: 12 }}>{course.description || "Acompanhamento de progresso e conclusão na linha do tempo do membro."}</p><div className="bar" style={{ marginTop: 14 }}><div className="bar-fill" style={{ width: `${courseEnrollments.length ? (concluded / courseEnrollments.length) * 100 : Math.min(100, members.length * 2)}%` }} /></div></button>;
+        })}
+        {courses.length === 0 ? <div className="empty">Nenhuma trilha interna criada ainda.</div> : null}
       </div>
     </div>
   );
 }
 
-function Quadros({ ministries, setModal }: { ministries: MinistryView[]; setModal: (modal: ModalState) => void }) {
+function Quadros({
+  boards,
+  cards,
+  ministries,
+  people,
+  setModal,
+}: {
+  boards: BoardView[];
+  cards: CardView[];
+  ministries: MinistryView[];
+  people: PersonView[];
+  setModal: (modal: ModalState) => void;
+}) {
   const [boardId, setBoardId] = useState<string | null>(null);
-  const selected = ministries.find((ministry) => ministry.id === boardId);
+  const selected = boards.find((board) => board.id === boardId);
+  const ministryById = new Map(ministries.map((ministry) => [ministry.id, ministry]));
+  const peopleById = new Map(people.map((person) => [person.id, person]));
   if (selected) {
-    const columns = [
+    const columns = selected.columns.length ? selected.columns.map((column) => ({ id: column.id, name: column.nome ?? column.name ?? column.id })) : [
       { id: "todo", name: "A fazer" },
       { id: "doing", name: "Em andamento" },
       { id: "done", name: "Concluído" },
     ];
-    const cards = selected.positions.map((position, index) => ({ id: position.id, title: position.name, col: columns[index % columns.length].id, prio: index === 0 ? "alta" : "media", assignee: selected.people[index % Math.max(1, selected.people.length)] }));
+    const boardCards = cards.filter((card) => card.board_id === selected.id);
+    const ministry = selected.ministry_id ? ministryById.get(selected.ministry_id) : null;
     return (
       <div className="content wide">
-        <div className="ph"><div><button className="back-link" type="button" onClick={() => setBoardId(null)}>Voltar para quadros</button><h1 className="ph-title" style={{ marginTop: 8 }}>{selected.name}</h1><p className="ph-sub">{selected.description}</p></div><div className="ph-actions"><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo card", title: selected.name, subtitle: "Crie uma responsabilidade para este quadro.", fields: ["Título", "Responsável", "Prazo"] })}>+ Card</button></div></div>
+        <div className="ph"><div><button className="back-link" type="button" onClick={() => setBoardId(null)}>Voltar para quadros</button><h1 className="ph-title" style={{ marginTop: 8 }}>{selected.name}</h1><p className="ph-sub">{selected.description || ministry?.description || "Quadro de tarefas da operação."}</p></div><div className="ph-actions"><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo card", title: selected.name, subtitle: "Crie uma responsabilidade para este quadro.", fields: ["Título", "Responsável", "Prazo"] })}>+ Card</button></div></div>
         <div className="kb-board">
-          {columns.map((column) => <div className="kb-col" key={column.id}><div className="kb-col-head"><span className="kb-col-name">{column.name}</span><span className="kb-col-count">{cards.filter((card) => card.col === column.id).length}</span></div><div className="kb-col-body">{cards.filter((card) => card.col === column.id).map((card) => <button className="kb-card" type="button" key={card.id} onClick={() => setModal({ eyebrow: selected.name, title: card.title, subtitle: "Card do quadro. Responsável, prazo e comentários.", fields: ["Comentário"] })}><div className="kb-card-top"><span className={`prio-dot prio-${card.prio}`} /><span className="kb-origem"><Icon name="cultos" size={11} /> reunião</span></div><div className="kb-card-title">{card.title}</div><div className="kb-card-foot"><span className="kb-prazo soon">esta semana</span>{card.assignee ? <Av name={card.assignee.personName} /> : null}</div></button>)}<button className="kb-add" type="button" onClick={() => setModal({ eyebrow: "Novo card", title: column.name, subtitle: "Criar card nesta coluna.", fields: ["Título", "Responsável"] })}>+ Card</button></div></div>)}
+          {columns.map((column) => {
+            const columnCards = boardCards.filter((card) => card.column_id === column.id);
+            return <div className="kb-col" key={column.id}><div className="kb-col-head"><span className="kb-col-name">{column.name}</span><span className="kb-col-count">{columnCards.length}</span></div><div className="kb-col-body">{columnCards.map((card) => { const assignee = card.assignees[0] ? peopleById.get(card.assignees[0]) : null; return <button className="kb-card" type="button" key={card.id} onClick={() => setModal({ eyebrow: selected.name, title: card.title, subtitle: card.description || "Card do quadro. Responsável, prazo e comentários.", fields: ["Comentário"] })}><div className="kb-card-top"><span className={`prio-dot prio-${card.priority ?? "media"}`} /><span className="kb-origem"><Icon name="cultos" size={11} /> {card.source_type || selected.scope || "tarefa"}</span></div><div className="kb-card-title">{card.title}</div><div className="kb-card-foot"><span className="kb-prazo soon">{card.due || "sem prazo"}</span>{assignee ? <Av name={assignee.name} /> : null}</div></button>; })}<button className="kb-add" type="button" onClick={() => setModal({ eyebrow: "Novo card", title: column.name, subtitle: "Criar card nesta coluna.", fields: ["Título", "Responsável"] })}>+ Card</button></div></div>;
+          })}
         </div>
       </div>
     );
@@ -1072,26 +1250,45 @@ function Quadros({ ministries, setModal }: { ministries: MinistryView[]; setModa
       <PageHead title="Quadros de tarefas" eyebrow="Operação" subtitle="Um quadro por time ou da Direção. Cada tarefa é um card com responsável, prazo e status." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo quadro", title: "Quadro de tarefas", subtitle: "Crie um quadro para um time ou para a liderança.", fields: ["Nome", "Time", "Descrição"] })}>+ Novo quadro</button>} />
       <div className="kb-explain"><span className="kb-explain-ic"><Icon name="cultos" size={18} /></span><div><div className="kb-explain-t">De onde vêm os cards</div><div className="kb-explain-s">Toda responsabilidade definida numa reunião pode virar um card aqui, com responsável e prazo já preenchidos.</div></div></div>
       <div className="bd-grid">
-        {ministries.map((ministry) => <button className="bd-card" key={ministry.id} type="button" onClick={() => setBoardId(ministry.id)}><div className="bd-card-top"><div className="bd-mark"><Icon name="times" size={18} /></div></div><div className="bd-name">{ministry.name}</div><div className="bd-desc">{ministry.description}</div><div className="bd-foot"><span className="team-stat"><b>{ministry.positions.length}</b> cards · <b>{ministry.people.length}</b> pessoas</span></div><div className="bar" style={{ marginTop: 10 }}><div className="bar-fill" style={{ width: `${Math.min(100, ministry.positions.length * 25)}%` }} /></div></button>)}
+        {boards.map((board) => {
+          const ministry = board.ministry_id ? ministryById.get(board.ministry_id) : null;
+          const boardCards = cards.filter((card) => card.board_id === board.id);
+          return <button className="bd-card" key={board.id} type="button" onClick={() => setBoardId(board.id)}><div className="bd-card-top"><div className="bd-mark"><Icon name="times" size={18} /></div></div><div className="bd-name">{board.name}</div><div className="bd-desc">{board.description || ministry?.description || "Quadro geral da liderança."}</div><div className="bd-foot"><span className="team-stat"><b>{boardCards.length}</b> cards · <b>{ministry?.people.length ?? 0}</b> pessoas</span></div><div className="bar" style={{ marginTop: 10 }}><div className="bar-fill" style={{ width: `${Math.min(100, boardCards.length * 20)}%` }} /></div></button>;
+        })}
+        {boards.length === 0 ? <div className="empty">Nenhum quadro criado ainda.</div> : null}
       </div>
     </div>
   );
 }
 
-function Conversas({ ministries, members, setModal }: { ministries: MinistryView[]; members: MemberView[]; setModal: (modal: ModalState) => void }) {
-  const [selected, setSelected] = useState(ministries[0]?.id ?? "direcao");
-  const chats = [{ id: "direcao", name: "Direção", kind: "grupo", count: members.length }, ...ministries.map((ministry) => ({ id: ministry.id, name: ministry.name, kind: "time", count: ministry.people.length }))];
+function Conversas({
+  chats,
+  chatMembers,
+  messages,
+  ministries,
+  members,
+  setModal,
+}: {
+  chats: ChatView[];
+  chatMembers: ChatMemberView[];
+  messages: MessageView[];
+  ministries: MinistryView[];
+  members: MemberView[];
+  setModal: (modal: ModalState) => void;
+}) {
+  const [selected, setSelected] = useState(chats[0]?.id ?? "");
+  const ministryById = new Map(ministries.map((ministry) => [ministry.id, ministry]));
+  const memberById = new Map(members.map((member) => [member.id, member]));
   const chat = chats.find((item) => item.id === selected) ?? chats[0];
-  const sampleMessages = [
-    { self: false, name: "Direção", text: "Alinhar a escala e os responsáveis desta semana.", when: "09h20" },
-    { self: true, name: "Você", text: "Vou revisar os pendentes e confirmar com o time.", when: "09h24" },
-  ];
+  const selectedMessages = chat ? messages.filter((message) => message.chat_id === chat.id) : [];
+  const chatCount = (chatId: string) => chatMembers.filter((member) => member.chat_id === chatId).length;
+  const chatName = (item: ChatView) => item.name || (item.ministry_id ? ministryById.get(item.ministry_id)?.name : null) || "Conversa";
   return (
     <div className="content wide">
       <PageHead title="Conversas" eyebrow="Operação" subtitle="Canais por time, grupos e mensagens diretas da equipe. Conversas são privadas para os envolvidos." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Nova conversa", title: "Chamar para conversar", subtitle: "Fale com alguém em particular ou crie um grupo.", fields: ["Tipo", "Participantes", "Mensagem"] })}>+ Nova conversa</button>} />
       <div className="chat-layout">
-        <div className="chat-list">{chats.map((item) => <button className={`chat-row ${item.id === selected ? "on" : ""}`} type="button" key={item.id} onClick={() => setSelected(item.id)}><span className="chat-row-ic"><Icon name={item.kind === "time" ? "times" : "membros"} size={16} /></span><span className="chat-row-main"><span className="chat-row-top"><b>{item.name}</b><small>agora</small></span><span className="chat-row-prev">Canal de alinhamento</span></span><span className="chat-row-count">{item.count}</span></button>)}</div>
-        <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat?.name}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat?.count} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{sampleMessages.map((message, index) => <div className={`chat-msg ${message.self ? "me" : ""}`} key={index}>{!message.self ? <Av name={message.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.text}</div><div className="chat-when">{message.when}</div></div></div>)}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." /><button className="btn btn-pri btn-sm" type="button" onClick={() => setModal({ eyebrow: "Mensagem", title: chat?.name ?? "Conversa", subtitle: "Enviar mensagem nesta conversa.", fields: ["Mensagem"] })}>Enviar</button></div></div></div>
+        <div className="chat-list">{chats.map((item) => <button className={`chat-row ${item.id === selected ? "on" : ""}`} type="button" key={item.id} onClick={() => setSelected(item.id)}><span className="chat-row-ic"><Icon name={item.kind === "time" ? "times" : "membros"} size={16} /></span><span className="chat-row-main"><span className="chat-row-top"><b>{chatName(item)}</b><small>agora</small></span><span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || "Canal de alinhamento"}</span></span><span className="chat-row-count">{chatCount(item.id)}</span></button>)}</div>
+        <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; return <div className="chat-msg" key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <div className="empty">Nenhuma mensagem nesta conversa.</div> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." /><button className="btn btn-pri btn-sm" type="button" onClick={() => setModal({ eyebrow: "Mensagem", title: chat ? chatName(chat) : "Conversa", subtitle: "Enviar mensagem nesta conversa.", fields: ["Mensagem"] })}>Enviar</button></div></div></div>
       </div>
     </div>
   );
@@ -1107,6 +1304,11 @@ function Relatorios({
   members,
   ministries,
   events,
+  decisions,
+  baptismClasses,
+  courses,
+  boards,
+  chats,
   confirmationRate,
   setRoute,
 }: {
@@ -1114,6 +1316,11 @@ function Relatorios({
   members: MemberView[];
   ministries: MinistryView[];
   events: EventView[];
+  decisions: DecisionView[];
+  baptismClasses: BaptismClassView[];
+  courses: CourseView[];
+  boards: BoardView[];
+  chats: ChatView[];
   confirmationRate: number;
   setRoute: (route: keyof typeof ROUTES) => void;
 }) {
@@ -1124,7 +1331,7 @@ function Relatorios({
   return (
     <div className="content wide">
       <PageHead title="Relatórios & indicadores" eyebrow="Gestão" subtitle="A saúde da igreja num lugar: crescimento, integração, cobertura de escala e o bem-estar de quem serve." action={<><button className="btn btn-sec" type="button"><Icon name="cultos" size={14} /> Trimestre</button><button className="btn btn-pri" type="button">Baixar relatório →</button></>} />
-      <div className="kpi-row"><Kpi icon="membros" label="Membros na rede" value={members.length} foot="cadastrados" /><Kpi icon="visitante" label="Retenção de visitantes" value="0%" foot="viram membros" /><Kpi icon="escalas" label="Cobertura de escala" value={`${confirmationRate}%`} foot="das posições preenchidas" /><Kpi icon="cultos" label="Frequência média" value={events.length} foot="cultos na agenda" /></div>
+      <div className="kpi-row"><Kpi icon="membros" label="Membros na rede" value={members.length} foot="cadastrados" /><Kpi icon="visitante" label="Decisões registradas" value={decisions.length} foot="jornada espiritual" /><Kpi icon="escalas" label="Cobertura de escala" value={`${confirmationRate}%`} foot="das posições preenchidas" /><Kpi icon="cultos" label="Cultos na agenda" value={events.length} foot="programação ativa" /></div>
       <div className="dash-3col">
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={13} /> Crescimento de membros</span><span className="panel-meta">12 meses</span></div><div className="panel-body"><div style={{ fontSize: 30, fontWeight: 700 }}>{members.length}<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>membros no total</span></div><div style={{ marginTop: 14 }}><Bars series={series} labels={["mar", "abr", "mai", "jun"]} /></div></div></div>
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="visitante" size={13} /> Funil de visitantes</span><button className="panel-link" type="button" onClick={() => setRoute("visitantes")}>Abrir</button></div><div className="panel-body flush">{["Novo", "Contato", "Integrando", "Membro"].map((label, index) => <div className="dist-row" key={label}><span className="dist-name" style={{ width: 140 }}>{label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${Math.max(10, 80 - index * 18)}%` }} /></div><span className="dist-num">{index === 0 ? 0 : "-"}</span></div>)}</div></div>
@@ -1135,6 +1342,10 @@ function Relatorios({
       <div className="dash-2col" style={{ marginTop: 28 }}>
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="times" size={13} /> Voluntários por ministério</span><button className="panel-link" type="button" onClick={() => setRoute("times")}>Times</button></div><div className="panel-body flush">{ministries.map((ministry) => <div className="dist-row" key={ministry.id}><span className="dist-name">{ministry.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(ministry.people.length / maxMinistry) * 100}%` }} /></div><span className="dist-num">{ministry.people.length}</span></div>)}</div></div>
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por jornada</span><span className="panel-meta">{members.length} pessoas</span></div><div className="panel-body flush">{["Decisão", "Batismo", "Fundamentos", "GC", "Servindo"].map((step, index) => { const count = members.filter((member) => member.journey[index]).length; return <div className="dist-row" key={step}><span className="dist-name">{step}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${members.length ? (count / members.length) * 100 : 0}%` }} /></div><span className="dist-num">{count}</span></div>; })}</div></div>
+      </div>
+      <div className="dash-2col" style={{ marginTop: 28 }}>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="identidade" size={13} /> Jornada e formação</span><span className="panel-meta">Service</span></div><div className="panel-body flush">{[["Decisões", decisions.length], ["Turmas de batismo", baptismClasses.length], ["Cursos internos", courses.length]].map(([label, count]) => <div className="dist-row" key={label}><span className="dist-name">{label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${Math.max(8, Number(count) * 18)}%` }} /></div><span className="dist-num">{count}</span></div>)}</div></div>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={13} /> Operação conectada</span><span className="panel-meta">Kanban & chat</span></div><div className="panel-body flush">{[["Quadros", boards.length], ["Conversas", chats.length], ["Eventos", events.length]].map(([label, count]) => <div className="dist-row" key={label}><span className="dist-name">{label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${Math.max(8, Number(count) * 18)}%` }} /></div><span className="dist-num">{count}</span></div>)}</div></div>
       </div>
     </div>
   );
