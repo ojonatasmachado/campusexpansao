@@ -80,6 +80,50 @@ type DecisionView = {
   created_at: string;
 };
 
+type VisitorView = {
+  id: string;
+  name: string;
+  phone: string | null;
+  stage: "novo" | "contato" | "integrando" | "membro";
+  visited_on: string | null;
+  responsible_id: string | null;
+  due: string | null;
+  due_status: "soon" | "ok" | "late" | null;
+  reply_status: "respondeu" | "sem_resposta" | null;
+  origin: string | null;
+  member_id: string | null;
+  created_at: string;
+};
+
+type VisitorNoteView = {
+  id: string;
+  visitor_id: string;
+  happened_on: string | null;
+  body: string;
+  author: string | null;
+  is_milestone: boolean;
+  created_at: string;
+};
+
+type AnnouncementView = {
+  id: string;
+  title: string;
+  audience: string | null;
+  body: string | null;
+  author: string | null;
+  when_label: string | null;
+};
+
+type WallPostView = {
+  id: string;
+  author: string | null;
+  audience: string | null;
+  body: string;
+  pinned: boolean;
+  channels: string[];
+  created_at: string;
+};
+
 type BaptismClassView = {
   id: string;
   label: string;
@@ -157,6 +201,64 @@ type MessageView = {
   created_at: string;
 };
 
+type MeetingView = {
+  id: string;
+  title: string;
+  meeting_date: string | null;
+  time: string | null;
+  location: string | null;
+  author_id: string | null;
+  status: "agendada" | "realizada";
+  ministries: string[];
+  attendees: string[];
+  agenda: unknown[];
+  minutes: string | null;
+};
+
+type MeetingActionView = {
+  id: string;
+  meeting_id: string;
+  description: string;
+  assignee_id: string | null;
+  status: "pendente" | "andamento" | "feito";
+};
+
+type RehearsalView = {
+  id: string;
+  ministry_id: string | null;
+  title: string;
+  kind: string | null;
+  rehearsal_date: string | null;
+  time: string | null;
+  location: string | null;
+  recurrence: string | null;
+  audience: string | null;
+  attendees: string[];
+  repertoire: unknown[];
+  attachments: unknown[];
+  notes: string | null;
+};
+
+type RoomView = {
+  id: string;
+  name: string;
+  capacity: number | null;
+  location: string | null;
+  resources: string[];
+};
+
+type ReservationView = {
+  id: string;
+  room_id: string;
+  title: string;
+  kind: string | null;
+  reserved_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  source_type: string | null;
+  source_id: string | null;
+};
+
 type Props = {
   churches: ChurchView[];
   people: PersonView[];
@@ -165,6 +267,10 @@ type Props = {
   events: EventView[];
   roster: RosterAssignmentView[];
   visitorsInCare: number;
+  visitors: VisitorView[];
+  visitorNotes: VisitorNoteView[];
+  announcements: AnnouncementView[];
+  wallPosts: WallPostView[];
   decisions: DecisionView[];
   baptismClasses: BaptismClassView[];
   baptismCandidates: BaptismCandidateView[];
@@ -175,6 +281,11 @@ type Props = {
   chats: ChatView[];
   chatMembers: ChatMemberView[];
   messages: MessageView[];
+  meetings: MeetingView[];
+  meetingActions: MeetingActionView[];
+  rehearsals: RehearsalView[];
+  rooms: RoomView[];
+  reservations: ReservationView[];
   error: string;
 };
 
@@ -198,7 +309,14 @@ type ModalState =
         | { kind: "board" }
         | { kind: "card"; boardId: string; columnId: string }
         | { kind: "chat" }
-        | { kind: "message"; chatId: string };
+        | { kind: "message"; chatId: string }
+        | { kind: "visitor" }
+        | { kind: "meeting" }
+        | { kind: "rehearsal" }
+        | { kind: "announcement" }
+        | { kind: "wallPost" }
+        | { kind: "room" }
+        | { kind: "reservation"; roomId?: string };
     }
   | null;
 
@@ -233,6 +351,7 @@ const ROUTES = {
   escalas: "CE.X SERVICE · ESCALAS",
   reunioes: "CE.X SERVICE · REUNIÕES",
   ensaios: "CE.X SERVICE · ENSAIOS",
+  espacos: "CE.X SERVICE · ESPAÇOS",
   quadros: "CE.X SERVICE · QUADROS",
   cultos: "CE.X SERVICE · AGENDA",
   comunicacao: "CE.X SERVICE · COMUNICAÇÃO",
@@ -312,6 +431,10 @@ export default function ServiceExactApp({
   events,
   roster,
   visitorsInCare,
+  visitors,
+  visitorNotes,
+  announcements,
+  wallPosts,
   decisions,
   baptismClasses,
   baptismCandidates,
@@ -322,6 +445,11 @@ export default function ServiceExactApp({
   chats,
   chatMembers,
   messages,
+  meetings,
+  meetingActions,
+  rehearsals,
+  rooms,
+  reservations,
   error,
 }: Props) {
   const [route, setRoute] = useState<keyof typeof ROUTES>("painel");
@@ -353,18 +481,19 @@ export default function ServiceExactApp({
         { id: "membros", icon: "membros", label: "Membros", count: members.length },
         { id: "pessoas", icon: "pessoa", label: "Voluntários", count: people.length },
         { id: "times", icon: "times", label: "Times & Ministérios", count: ministries.length },
-        { id: "visitantes", icon: "visitante", label: "Visitantes", badge: visitorsInCare },
+        { id: "visitantes", icon: "visitante", label: "Visitantes", badge: visitors.length || visitorsInCare },
       ],
     },
     {
       group: "Operação",
       items: [
         { id: "escalas", icon: "escalas", label: "Escalas", badge: gaps.length },
-        { id: "reunioes", icon: "cultos", label: "Reuniões" },
-        { id: "ensaios", icon: "cultos", label: "Ensaios" },
+        { id: "reunioes", icon: "cultos", label: "Reuniões", count: meetings.length },
+        { id: "ensaios", icon: "cultos", label: "Ensaios", count: rehearsals.length },
+        { id: "espacos", icon: "config", label: "Espaços & Reservas", count: rooms.length },
         { id: "quadros", icon: "comunicacao", label: "Quadros" },
         { id: "cultos", icon: "cultos", label: "Cultos & Agenda", count: events.length },
-        { id: "comunicacao", icon: "comunicacao", label: "Comunicação" },
+        { id: "comunicacao", icon: "comunicacao", label: "Comunicação", count: announcements.length + wallPosts.length },
         { id: "conversas", icon: "comunicacao", label: "Conversas" },
       ],
     },
@@ -468,6 +597,7 @@ export default function ServiceExactApp({
               ["Times", "times"],
               ["Escalas", "escalas"],
               ["Agenda", "cultos"],
+              ["Espaços", "espacos"],
               ["Decisões", "decisoes"],
               ["Batismos", "batismos"],
               ["Cursos", "cursos"],
@@ -486,16 +616,17 @@ export default function ServiceExactApp({
           {route === "membros" ? <Membros members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
           {route === "pessoas" ? <Pessoas people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
           {route === "times" ? <Times ministries={ministries} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
-          {route === "visitantes" ? <SimpleModule title="Visitantes" subtitle="Acompanhe novos visitantes, etapa de contato e integração." empty="Nenhum visitante em acompanhamento." setModal={setModal} /> : null}
+          {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} setModal={setModal} /> : null}
           {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
           {route === "batismos" ? <Batismos baptismClasses={baptismClasses} baptismCandidates={baptismCandidates} decisions={decisions} members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
           {route === "cursos" ? <CursosTrilhas courses={courses} enrollments={enrollments} members={members} setModal={setModal} /> : null}
           {route === "escalas" ? <Escalas gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} setDrawer={setDrawer} setModal={setModal} /> : null}
-          {route === "reunioes" ? <SimpleModule title="Reuniões" subtitle="Pautas, decisões e ações pendentes das reuniões." empty="Nenhuma reunião criada." setModal={setModal} /> : null}
-          {route === "ensaios" ? <SimpleModule title="Ensaios" subtitle="Ensaios por ministério, presença e repertório." empty="Nenhum ensaio criado." setModal={setModal} /> : null}
+          {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} setModal={setModal} /> : null}
+          {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} setModal={setModal} /> : null}
+          {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} setModal={setModal} /> : null}
           {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} setModal={setModal} /> : null}
           {route === "cultos" ? <Cultos events={events} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
-          {route === "comunicacao" ? <SimpleModule title="Comunicação" subtitle="Avisos, mensagens e conversas da igreja." empty="Nenhuma comunicação recente." setModal={setModal} /> : null}
+          {route === "comunicacao" ? <Comunicacao announcements={announcements} wallPosts={wallPosts} setModal={setModal} /> : null}
           {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} setModal={setModal} /> : null}
           {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} decisions={decisions} baptismClasses={baptismClasses} courses={courses} boards={boards} chats={chats} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
           {route === "config" ? <Config church={firstChurch} /> : null}
@@ -523,6 +654,7 @@ export default function ServiceExactApp({
             people={people}
             members={members}
             ministries={ministries}
+            rooms={rooms}
             onClose={() => setModal(null)}
           />
         ) : null}
@@ -1113,6 +1245,145 @@ function RosterActionModal({
   );
 }
 
+const VISITOR_STAGES = [
+  { id: "novo", name: "Novo", color: "var(--amber)" },
+  { id: "contato", name: "Contato", color: "var(--clay)" },
+  { id: "integrando", name: "Integrando", color: "var(--olive)" },
+  { id: "membro", name: "Membro", color: "var(--wheat)" },
+] as const;
+
+function Visitantes({
+  visitors,
+  visitorNotes,
+  people,
+  setModal,
+}: {
+  visitors: VisitorView[];
+  visitorNotes: VisitorNoteView[];
+  people: PersonView[];
+  setModal: (modal: ModalState) => void;
+}) {
+  const [view, setView] = useState<"pipe" | "list" | "painel">("pipe");
+  const personById = new Map(people.map((person) => [person.id, person]));
+  const contacted = visitors.filter((visitor) => visitor.reply_status);
+  const answered = visitors.filter((visitor) => visitor.reply_status === "respondeu");
+  const members = visitors.filter((visitor) => visitor.stage === "membro");
+  const replyRate = contacted.length ? Math.round((answered.length / contacted.length) * 100) : 0;
+  const integrationRate = visitors.length ? Math.round((members.length / visitors.length) * 100) : 0;
+  const byService = visitors.reduce<Record<string, number>>((acc, visitor) => {
+    const key = visitor.visited_on || "Sem registro";
+    acc[key] = (acc[key] ?? 0) + 1;
+    return acc;
+  }, {});
+  const maxService = Math.max(...Object.values(byService), 1);
+
+  return (
+    <div className="content wide">
+      <PageHead
+        title="Visitantes"
+        eyebrow="Pessoas"
+        subtitle="Da primeira visita ao discipulado. Cada visitante tem um próximo passo e histórico de contato."
+        action={<><div className="seg"><button className={view === "pipe" ? "on" : ""} type="button" onClick={() => setView("pipe")}>Funil</button><button className={view === "list" ? "on" : ""} type="button" onClick={() => setView("list")}>Lista</button><button className={view === "painel" ? "on" : ""} type="button" onClick={() => setView("painel")}>Painel</button></div><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Visitante", title: "Novo visitante", subtitle: "Registre quem chegou e o próximo contato.", fields: ["Nome", "Telefone", "Como chegou", "Visitou"], action: { kind: "visitor" } })}>+ Visitante</button></>}
+      />
+      <div className="contato-banner">
+        <div className="contato-pill"><span className="contato-pill-n">24h</span><span>1º contato</span></div>
+        <div className="contato-main"><div className="contato-t">Primeiro contato em até <em>24h</em> por <em>WhatsApp</em> · meta de integração: <em>30 dias</em></div><div className="contato-s">A equipe acompanha sem dono fixo: qualquer líder pode registrar contato e avançar a jornada.</div></div>
+        <button className="btn btn-sec btn-sm" type="button">Ajustar</button>
+      </div>
+
+      {view === "painel" ? (
+        <div className="vpanel">
+          <div className="kpi-row"><Kpi icon="visitante" label="Visitantes" value={visitors.length} foot="no acompanhamento" /><Kpi icon="comunicacao" label="Respondem" value={`${replyRate}%`} foot={`${answered.length} de ${contacted.length} contatados`} /><Kpi icon="membros" label="Integram" value={`${integrationRate}%`} foot={`${members.length} de ${visitors.length}`} /><Kpi icon="config" label="Sem resposta" value={visitors.filter((visitor) => visitor.reply_status === "sem_resposta").length} foot="precisam novo contato" amber /></div>
+          <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Visitantes por culto</span></div><div className="panel-body flush">{Object.entries(byService).map(([name, count]) => <div className="dist-row" key={name}><span className="dist-name">{name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(count / maxService) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}{visitors.length === 0 ? <div className="empty">Nenhum visitante ainda.</div> : null}</div></div>
+        </div>
+      ) : view === "pipe" ? (
+        <div className="pipe">
+          {VISITOR_STAGES.map((stage) => {
+            const items = visitors.filter((visitor) => visitor.stage === stage.id);
+            return <div className="pipe-col" key={stage.id}><div className="pipe-head"><span className="pipe-dot" style={{ background: stage.color }} /><span className="pipe-name">{stage.name}</span><span className="pipe-num">{items.length}</span></div><div className="pipe-body">{items.map((visitor) => { const owner = visitor.responsible_id ? personById.get(visitor.responsible_id) : null; return <button className="vcard" type="button" key={visitor.id} onClick={() => setModal({ eyebrow: "Visitante", title: visitor.name, subtitle: visitorNotes.find((note) => note.visitor_id === visitor.id)?.body || "Registrar contato ou avanço.", fields: ["Observação"], action: undefined })}><div className="vcard-top"><Av name={visitor.name} size="sm" /><div style={{ minWidth: 0 }}><div className="vcard-name">{visitor.name}</div><div className="vcard-when">{visitor.origin || "Visitante"}</div></div></div><div className="vcard-foot"><div className="vcard-owner">{owner?.name || visitor.origin || "sem dono"}</div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "próximo contato"}</span></div></button>; })}{items.length === 0 ? <div className="empty" style={{ padding: 14 }}>vazio</div> : null}</div></div>;
+          })}
+        </div>
+      ) : (
+        <div className="tbl">
+          <div className="tr head" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }}><span>Visitante</span><span>Etapa</span><span>Como chegou</span><span>Próximo passo</span><span>Visitou</span></div>
+          {visitors.map((visitor) => <div className="tr" key={visitor.id} style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone || "Telefone não informado"}</div></div></div><div><Chip status={visitor.stage === "membro" ? "ok" : "wait"} /></div><div className="cell-sub">{visitor.origin || "Visitante"}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "sem prazo"}</span></div><div className="mini-right">{visitor.visited_on || "sem data"}</div></div>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Reunioes({ meetings, meetingActions, ministries, people, setModal }: { meetings: MeetingView[]; meetingActions: MeetingActionView[]; ministries: MinistryView[]; people: PersonView[]; setModal: (modal: ModalState) => void }) {
+  const ministryById = new Map(ministries.map((ministry) => [ministry.id, ministry]));
+  const personById = new Map(people.map((person) => [person.id, person]));
+  const scheduled = meetings.filter((meeting) => meeting.status === "agendada");
+  const finished = meetings.filter((meeting) => meeting.status === "realizada");
+  return (
+    <div className="content wide">
+      <PageHead title="Reuniões" eyebrow="Liderança" subtitle="Pautas, ata e responsabilidades para validar na próxima reunião." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Reunião", title: "Marcar reunião", subtitle: "Defina tema, data, local e time envolvido.", fields: ["Título", "Data", "Horário", "Local", "Time"], action: { kind: "meeting" } })}>+ Marcar reunião</button>} />
+      <div className="section-divide"><Icon name="cultos" size={15} /><span className="label">Agendadas</span><span className="line" /></div>
+      <div className="reu-grid">{scheduled.map((meeting) => { const author = meeting.author_id ? personById.get(meeting.author_id) : null; return <button className="reu-card" type="button" key={meeting.id} onClick={() => setModal({ eyebrow: meeting.status === "agendada" ? "Reunião agendada" : "Reunião realizada", title: meeting.title, subtitle: meeting.minutes || "Ata e responsabilidades desta reunião.", fields: ["Ata"] })}><div className="reu-card-top"><div><div className="reu-date">{meeting.meeting_date || "Sem data"} · {meeting.time || "sem horário"}</div><div className="reu-title">{meeting.title}</div></div><span className="chip chip-ok">Agendada</span></div><div className="reu-meta">{meeting.location || "Local não informado"} · marcada por {author?.name.split(" ")[0] || "líder"}</div><div className="reu-foot"><div className="reu-times">{meeting.ministries.map((id) => <span className="tag" key={id}>{ministryById.get(id)?.name || "Time"}</span>)}</div><span className="team-stat"><b>{meeting.attendees.length}</b> presentes</span></div></button>; })}{scheduled.length === 0 ? <div className="empty">Nenhuma reunião agendada.</div> : null}</div>
+      <div className="section-divide"><Icon name="relatorios" size={15} /><span className="label">Realizadas</span><span className="line" /></div>
+      <div className="tbl">{finished.map((meeting) => { const actions = meetingActions.filter((action) => action.meeting_id === meeting.id); const pending = actions.filter((action) => action.status !== "feito").length; return <div className="tr" key={meeting.id} style={{ gridTemplateColumns: "130px 1.6fr 1fr 120px" }}><div style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--olive)" }}>{meeting.meeting_date || "sem data"}</div><div><div className="cell-name">{meeting.title}</div><div className="cell-sub">{meeting.ministries.length} time(s) · {meeting.attendees.length} presentes</div></div><div className="cell-sub">{actions.length} responsabilidade(s)</div><div>{pending > 0 ? <span className="chip chip-wait">{pending} em aberto</span> : <span className="chip chip-ok">Tudo feito</span>}</div></div>; })}</div>
+    </div>
+  );
+}
+
+function Ensaios({ rehearsals, ministries, setModal }: { rehearsals: RehearsalView[]; ministries: MinistryView[]; setModal: (modal: ModalState) => void }) {
+  const ministryById = new Map(ministries.map((ministry) => [ministry.id, ministry]));
+  return (
+    <div className="content wide">
+      <PageHead title="Ensaios" eyebrow="Liderança" subtitle="Ensaios por ministério, presença, repertório e materiais." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Ensaio", title: "Novo ensaio", subtitle: "Marque ensaio com time, data, local e repertório.", fields: ["Título", "Data", "Horário", "Local", "Time"], action: { kind: "rehearsal" } })}>+ Novo ensaio</button>} />
+      <div className="reu-grid">{rehearsals.map((rehearsal) => { const ministry = rehearsal.ministry_id ? ministryById.get(rehearsal.ministry_id) : null; return <button className="ens-card" type="button" key={rehearsal.id} onClick={() => setModal({ eyebrow: rehearsal.kind || "Ensaio", title: rehearsal.title, subtitle: rehearsal.notes || "Detalhes do ensaio.", fields: ["Observação"] })}><div className="ens-top"><span className="ens-rec">{rehearsal.recurrence || "eventual"}</span><span className="ens-pub">{rehearsal.kind || "Ensaio"}</span></div><div className="ens-title">{rehearsal.title}</div><div className="ens-when">{rehearsal.rehearsal_date || "sem data"} · {rehearsal.time || "sem horário"} · {rehearsal.location || "sem local"}</div><div className="ens-team"><span className="ens-team-ic"><Icon name="times" size={15} /></span>{ministry?.name || "Vários times"} · {rehearsal.attendees.length} pessoas</div>{rehearsal.repertoire.length ? <div className="ens-obs"><Icon name="cultos" size={13} /> {rehearsal.repertoire.length} item(ns) no repertório</div> : null}{rehearsal.notes ? <div className="ens-obs">{rehearsal.notes}</div> : null}</button>; })}{rehearsals.length === 0 ? <div className="empty">Nenhum ensaio criado.</div> : null}</div>
+    </div>
+  );
+}
+
+function Comunicacao({ announcements, wallPosts, setModal }: { announcements: AnnouncementView[]; wallPosts: WallPostView[]; setModal: (modal: ModalState) => void }) {
+  return (
+    <div className="content wide">
+      <PageHead title="Comunicação" eyebrow="Operação" subtitle="Avisos oficiais, mural da igreja e mensagens que chegam ao app." action={<><button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Mural", title: "Nova publicação", subtitle: "Publique algo para a igreja ou para um público específico.", fields: ["Mensagem", "Público"], action: { kind: "wallPost" } })}>+ Mural</button><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Aviso", title: "Novo aviso", subtitle: "Envie um aviso oficial para o app.", fields: ["Título", "Mensagem", "Público"], action: { kind: "announcement" } })}>+ Aviso</button></>} />
+      <div className="dash-2col">
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Avisos</span><span className="panel-meta">{announcements.length}</span></div><div className="panel-body flush">{announcements.map((item) => <div className="mini-row" key={item.id}><span className="chat-row-ic"><Icon name="sino" size={15} /></span><div className="mini-main"><div className="mini-title">{item.title}</div><div className="mini-sub">{item.body || "Sem texto"} · {item.audience || "todos"}</div></div><span className="chip chip-ok">{item.when_label || "agora"}</span></div>)}{announcements.length === 0 ? <div className="empty">Nenhum aviso publicado.</div> : null}</div></div>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={14} /> Mural</span><span className="panel-meta">{wallPosts.length}</span></div><div className="panel-body flush">{wallPosts.map((post) => <div className="mini-row" key={post.id}><Av name={post.author || "CE.X"} /><div className="mini-main"><div className="mini-title">{post.author || "Liderança"}</div><div className="mini-sub">{post.body}</div></div>{post.pinned ? <span className="chip chip-wait">fixado</span> : null}</div>)}{wallPosts.length === 0 ? <div className="empty">Nenhuma publicação no mural.</div> : null}</div></div>
+      </div>
+    </div>
+  );
+}
+
+function Espacos({ rooms, reservations, setModal }: { rooms: RoomView[]; reservations: ReservationView[]; setModal: (modal: ModalState) => void }) {
+  const [filter, setFilter] = useState("todas");
+  const roomById = new Map(rooms.map((room) => [room.id, room]));
+  const visibleReservations = reservations.filter((reservation) => filter === "todas" || reservation.room_id === filter);
+  return (
+    <div className="content wide">
+      <PageHead
+        title="Espaços & reservas"
+        eyebrow="Operação"
+        subtitle="Salas da igreja e quem usa cada espaço. Reuniões, eventos, cursos e ensaios reservam aqui sem misturar agenda."
+        action={<><button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Sala", title: "Nova sala", subtitle: "Cadastre um espaço físico da igreja.", fields: ["Nome", "Capacidade", "Local", "Recursos"], action: { kind: "room" } })}>+ Nova sala</button><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Reserva", title: "Reservar espaço", subtitle: "Escolha o compromisso, data e horário.", fields: ["Título", "Tipo", "Data", "Início", "Fim"], action: { kind: "reservation", roomId: filter !== "todas" ? filter : undefined } })}>+ Reservar espaço</button></>}
+      />
+      <div className="sala-grid">
+        {rooms.map((room) => {
+          const count = reservations.filter((reservation) => reservation.room_id === room.id).length;
+          return <button key={room.id} className={`sala-card ${filter === room.id ? "on" : ""}`} type="button" onClick={() => setFilter(filter === room.id ? "todas" : room.id)}><div className="sala-card-top"><span className="sala-mark"><Icon name="config" size={18} /></span><span className="sala-cap">{room.capacity ?? 0} <small>lugares</small></span></div><div className="sala-nome">{room.name}</div><div className="sala-local">{room.location || "Local não informado"}</div>{room.resources.length ? <div className="sala-rec">{room.resources.map((resource) => <span className="tag" key={resource}>{resource}</span>)}</div> : null}<div className="sala-foot">{count} reserva(s)</div></button>;
+        })}
+        {rooms.length === 0 ? <div className="empty">Nenhuma sala cadastrada ainda.</div> : null}
+      </div>
+      <div className="panel" style={{ marginTop: 20 }}>
+        <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Calendário de reservas</span><span className="panel-meta">{visibleReservations.length} reserva(s)</span></div>
+        <div className="panel-body flush">
+          {visibleReservations.map((reservation) => {
+            const room = roomById.get(reservation.room_id);
+            return <div className="mini-row" key={reservation.id}><span className="chat-row-ic"><Icon name="config" size={15} /></span><div className="mini-main"><div className="mini-title">{reservation.title}</div><div className="mini-sub">{room?.name || "Sala"} · {reservation.reserved_date || "sem data"} · {reservation.start_time || "sem início"} até {reservation.end_time || "sem fim"}</div></div><span className="chip chip-ok">{reservation.kind || "reserva"}</span></div>;
+          })}
+          {visibleReservations.length === 0 ? <div className="empty">Nenhuma reserva encontrada.</div> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Decisoes({
   decisions,
   members,
@@ -1668,6 +1939,7 @@ function ServiceModal({
   people,
   members,
   ministries,
+  rooms,
   onClose,
 }: {
   modal: NonNullable<ModalState>;
@@ -1675,6 +1947,7 @@ function ServiceModal({
   people: PersonView[];
   members: MemberView[];
   ministries: MinistryView[];
+  rooms: RoomView[];
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -1688,6 +1961,7 @@ function ServiceModal({
       onClose();
       return;
     }
+    const action = modal.action;
     if (!church?.organizationId || !church.id) {
       setError("Nenhuma igreja foi encontrada para vincular este registro.");
       return;
@@ -1698,10 +1972,10 @@ function ServiceModal({
     const namedPerson = (field: string) => findPersonByName(people, value(field));
     const namedMember = (field: string) => findMemberByName(members, value(field));
     const namedMinistry = (field: string) => findMinistryByName(ministries, value(field));
-    let result: { error: { message: string } | null };
+    let result: { error: { message: string } | null } = { error: null };
 
     setSaving(true);
-    if (modal.action.kind === "decision") {
+    if (action.kind === "decision") {
       if (!value("Nome")) {
         setSaving(false);
         setError("Digite o nome da pessoa.");
@@ -1718,7 +1992,7 @@ function ServiceModal({
         kind: "decisao",
         status: "novo",
       });
-    } else if (modal.action.kind === "baptismClass") {
+    } else if (action.kind === "baptismClass") {
       if (!value("Nome da turma")) {
         setSaving(false);
         setError("Digite o nome da turma.");
@@ -1734,7 +2008,7 @@ function ServiceModal({
         status: "aberta",
         open_enrollment: true,
       });
-    } else if (modal.action.kind === "course") {
+    } else if (action.kind === "course") {
       if (!value("Nome")) {
         setSaving(false);
         setError("Digite o nome do curso.");
@@ -1750,7 +2024,7 @@ function ServiceModal({
         category: value("Nível") || "discipulado",
         color: "clay",
       });
-    } else if (modal.action.kind === "board") {
+    } else if (action.kind === "board") {
       if (!value("Nome")) {
         setSaving(false);
         setError("Digite o nome do quadro.");
@@ -1769,7 +2043,7 @@ function ServiceModal({
           { id: "done", nome: "Concluído" },
         ],
       });
-    } else if (modal.action.kind === "card") {
+    } else if (action.kind === "card") {
       if (!value("Título")) {
         setSaving(false);
         setError("Digite o título do card.");
@@ -1778,15 +2052,15 @@ function ServiceModal({
       const assignee = namedPerson("Responsável");
       result = await supabase.schema("service").from("cards").insert({
         organization_id: church.organizationId,
-        board_id: modal.action.boardId,
-        column_id: modal.action.columnId,
+        board_id: action.boardId,
+        column_id: action.columnId,
         title: value("Título"),
         due: value("Prazo") || null,
         assignees: assignee ? [assignee.id] : [],
         priority: "media",
         source_type: "manual",
       });
-    } else if (modal.action.kind === "chat") {
+    } else if (action.kind === "chat") {
       if (!value("Nome")) {
         setSaving(false);
         setError("Digite o nome da conversa.");
@@ -1818,7 +2092,7 @@ function ServiceModal({
             })
           : { error: null };
       }
-    } else {
+    } else if (action.kind === "message") {
       if (!value("Mensagem")) {
         setSaving(false);
         setError("Digite a mensagem.");
@@ -1826,9 +2100,130 @@ function ServiceModal({
       }
       result = await supabase.schema("service").from("messages").insert({
         organization_id: church.organizationId,
-        chat_id: modal.action.chatId,
+        chat_id: action.chatId,
         sender_id: members[0]?.id ?? null,
         body: value("Mensagem"),
+      });
+    } else if (action.kind === "visitor") {
+      if (!value("Nome")) {
+        setSaving(false);
+        setError("Digite o nome do visitante.");
+        return;
+      }
+      result = await supabase.schema("service").from("visitors").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        name: value("Nome"),
+        phone: value("Telefone") || null,
+        origin: value("Como chegou") || null,
+        visited_on: value("Visitou") || null,
+        stage: "novo",
+        due: "1º contato",
+        due_status: "soon",
+      });
+    } else if (action.kind === "meeting") {
+      if (!value("Título")) {
+        setSaving(false);
+        setError("Digite o título da reunião.");
+        return;
+      }
+      const ministry = namedMinistry("Time");
+      result = await supabase.schema("service").from("meetings").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        title: value("Título"),
+        meeting_date: value("Data") || null,
+        time: value("Horário") || null,
+        location: value("Local") || null,
+        ministries: ministry ? [ministry.id] : [],
+        attendees: [],
+        agenda: [],
+        status: "agendada",
+      });
+    } else if (action.kind === "rehearsal") {
+      if (!value("Título")) {
+        setSaving(false);
+        setError("Digite o título do ensaio.");
+        return;
+      }
+      const ministry = namedMinistry("Time");
+      result = await supabase.schema("service").from("rehearsals").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        title: value("Título"),
+        rehearsal_date: value("Data") || null,
+        time: value("Horário") || null,
+        location: value("Local") || null,
+        ministry_id: ministry?.id ?? null,
+        kind: "louvor",
+        recurrence: "eventual",
+        attendees: [],
+        repertoire: [],
+        attachments: [],
+      });
+    } else if (action.kind === "announcement") {
+      if (!value("Título")) {
+        setSaving(false);
+        setError("Digite o título do aviso.");
+        return;
+      }
+      result = await supabase.schema("service").from("announcements").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        title: value("Título"),
+        body: value("Mensagem") || null,
+        audience: value("Público") || "todos",
+        author: "Liderança",
+        when_label: "agora",
+      });
+    } else if (action.kind === "wallPost") {
+      if (!value("Mensagem")) {
+        setSaving(false);
+        setError("Digite a mensagem do mural.");
+        return;
+      }
+      result = await supabase.schema("service").from("wall_posts").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        body: value("Mensagem"),
+        audience: value("Público") || "todos",
+        author: "Liderança",
+        channels: ["app"],
+      });
+    } else if (action.kind === "room") {
+      if (!value("Nome")) {
+        setSaving(false);
+        setError("Digite o nome da sala.");
+        return;
+      }
+      result = await supabase.schema("service").from("rooms").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        name: value("Nome"),
+        capacity: Number.parseInt(value("Capacidade"), 10) || null,
+        location: value("Local") || null,
+        resources: value("Recursos") ? value("Recursos").split(",").map((item) => item.trim()).filter(Boolean) : [],
+      });
+    } else if (action.kind === "reservation") {
+      if (!value("Título")) {
+        setSaving(false);
+        setError("Digite o título da reserva.");
+        return;
+      }
+      const room = action.roomId ? rooms.find((item) => item.id === action.roomId) : rooms[0];
+      if (!room) {
+        setSaving(false);
+        setError("Crie uma sala antes de reservar.");
+        return;
+      }
+      result = await supabase.schema("service").from("reservations").insert({
+        organization_id: church.organizationId,
+        room_id: room.id,
+        title: value("Título"),
+        kind: value("Tipo") || "outro",
+        reserved_date: value("Data") || null,
+        start_time: value("Início") || null,
+        end_time: value("Fim") || null,
       });
     }
 

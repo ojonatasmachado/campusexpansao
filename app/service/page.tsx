@@ -220,6 +220,50 @@ type DecisionView = {
   created_at: string;
 };
 
+type VisitorView = {
+  id: string;
+  name: string;
+  phone: string | null;
+  stage: "novo" | "contato" | "integrando" | "membro";
+  visited_on: string | null;
+  responsible_id: string | null;
+  due: string | null;
+  due_status: "soon" | "ok" | "late" | null;
+  reply_status: "respondeu" | "sem_resposta" | null;
+  origin: string | null;
+  member_id: string | null;
+  created_at: string;
+};
+
+type VisitorNoteView = {
+  id: string;
+  visitor_id: string;
+  happened_on: string | null;
+  body: string;
+  author: string | null;
+  is_milestone: boolean;
+  created_at: string;
+};
+
+type AnnouncementView = {
+  id: string;
+  title: string;
+  audience: string | null;
+  body: string | null;
+  author: string | null;
+  when_label: string | null;
+};
+
+type WallPostView = {
+  id: string;
+  author: string | null;
+  audience: string | null;
+  body: string;
+  pinned: boolean;
+  channels: string[];
+  created_at: string;
+};
+
 type BaptismClassView = {
   id: string;
   label: string;
@@ -297,7 +341,69 @@ type MessageView = {
   created_at: string;
 };
 
+type MeetingView = {
+  id: string;
+  title: string;
+  meeting_date: string | null;
+  time: string | null;
+  location: string | null;
+  author_id: string | null;
+  status: "agendada" | "realizada";
+  ministries: string[];
+  attendees: string[];
+  agenda: unknown[];
+  minutes: string | null;
+};
+
+type MeetingActionView = {
+  id: string;
+  meeting_id: string;
+  description: string;
+  assignee_id: string | null;
+  status: "pendente" | "andamento" | "feito";
+};
+
+type RehearsalView = {
+  id: string;
+  ministry_id: string | null;
+  title: string;
+  kind: string | null;
+  rehearsal_date: string | null;
+  time: string | null;
+  location: string | null;
+  recurrence: string | null;
+  audience: string | null;
+  attendees: string[];
+  repertoire: unknown[];
+  attachments: unknown[];
+  notes: string | null;
+};
+
+type RoomView = {
+  id: string;
+  name: string;
+  capacity: number | null;
+  location: string | null;
+  resources: string[];
+};
+
+type ReservationView = {
+  id: string;
+  room_id: string;
+  title: string;
+  kind: string | null;
+  reserved_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  source_type: string | null;
+  source_id: string | null;
+};
+
 type ExtraServiceData = {
+  visitors: VisitorView[];
+  visitorNotes: VisitorNoteView[];
+  announcements: AnnouncementView[];
+  wallPosts: WallPostView[];
   decisions: DecisionView[];
   baptismClasses: BaptismClassView[];
   baptismCandidates: BaptismCandidateView[];
@@ -308,9 +414,18 @@ type ExtraServiceData = {
   chats: ChatView[];
   chatMembers: ChatMemberView[];
   messages: MessageView[];
+  meetings: MeetingView[];
+  meetingActions: MeetingActionView[];
+  rehearsals: RehearsalView[];
+  rooms: RoomView[];
+  reservations: ReservationView[];
 };
 
 const emptyExtraServiceData: ExtraServiceData = {
+  visitors: [],
+  visitorNotes: [],
+  announcements: [],
+  wallPosts: [],
   decisions: [],
   baptismClasses: [],
   baptismCandidates: [],
@@ -321,6 +436,11 @@ const emptyExtraServiceData: ExtraServiceData = {
   chats: [],
   chatMembers: [],
   messages: [],
+  meetings: [],
+  meetingActions: [],
+  rehearsals: [],
+  rooms: [],
+  reservations: [],
 };
 
 function friendlyReadError(message: string) {
@@ -643,6 +763,15 @@ async function getServiceDashboardData(): Promise<{
     chatsResult,
     chatMembersResult,
     messagesResult,
+    visitorsResult,
+    visitorNotesResult,
+    announcementsResult,
+    wallPostsResult,
+    meetingsResult,
+    meetingActionsResult,
+    rehearsalsResult,
+    roomsResult,
+    reservationsResult,
   ] = await Promise.all([
     supabase.schema("service").from("decisions").select("id,name,phone,happened_on,kind,service_name,responsible_id,status,member_id,age,notes,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("baptism_classes").select("id,label,baptism_date,location,status,pastor,notes,open_enrollment").order("created_at", { ascending: false }),
@@ -654,6 +783,15 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("chats").select("id,kind,ministry_id,name").order("created_at", { ascending: false }),
     supabase.schema("service").from("chat_members").select("chat_id,member_id"),
     supabase.schema("service").from("messages").select("id,chat_id,sender_id,body,created_at").order("created_at", { ascending: true }),
+    supabase.schema("service").from("visitors").select("id,name,phone,stage,visited_on,responsible_id,due,due_status,reply_status,origin,member_id,created_at").order("created_at", { ascending: false }),
+    supabase.schema("service").from("visitor_notes").select("id,visitor_id,happened_on,body,author,is_milestone,created_at").order("created_at", { ascending: false }),
+    supabase.schema("service").from("announcements").select("id,title,audience,body,author,when_label").order("created_at", { ascending: false }),
+    supabase.schema("service").from("wall_posts").select("id,author,audience,body,pinned,channels,created_at").order("created_at", { ascending: false }),
+    supabase.schema("service").from("meetings").select("id,title,meeting_date,time,location,author_id,status,ministries,attendees,agenda,minutes").order("created_at", { ascending: false }),
+    supabase.schema("service").from("meeting_actions").select("id,meeting_id,description,assignee_id,status").order("created_at", { ascending: false }),
+    supabase.schema("service").from("rehearsals").select("id,ministry_id,title,kind,rehearsal_date,time,location,recurrence,audience,attendees,repertoire,attachments,notes").order("created_at", { ascending: false }),
+    supabase.schema("service").from("rooms").select("id,name,capacity,location,resources").order("created_at", { ascending: false }),
+    supabase.schema("service").from("reservations").select("id,room_id,title,kind,reserved_date,start_time,end_time,source_type,source_id").order("created_at", { ascending: false }),
   ]);
 
   const extraError = [
@@ -667,6 +805,15 @@ async function getServiceDashboardData(): Promise<{
     chatsResult.error,
     chatMembersResult.error,
     messagesResult.error,
+    visitorsResult.error,
+    visitorNotesResult.error,
+    announcementsResult.error,
+    wallPostsResult.error,
+    meetingsResult.error,
+    meetingActionsResult.error,
+    rehearsalsResult.error,
+    roomsResult.error,
+    reservationsResult.error,
   ].find(Boolean);
 
   return {
@@ -685,6 +832,10 @@ async function getServiceDashboardData(): Promise<{
       (setlistData ?? []) as SetlistSongRow[],
     ),
     extra: {
+      visitors: ((visitorsResult.data ?? []) as VisitorView[]),
+      visitorNotes: ((visitorNotesResult.data ?? []) as VisitorNoteView[]),
+      announcements: ((announcementsResult.data ?? []) as AnnouncementView[]),
+      wallPosts: ((wallPostsResult.data ?? []) as WallPostView[]),
       decisions: ((decisionsResult.data ?? []) as DecisionView[]),
       baptismClasses: ((baptismClassesResult.data ?? []) as BaptismClassView[]),
       baptismCandidates: ((baptismCandidatesResult.data ?? []) as BaptismCandidateView[]),
@@ -695,6 +846,11 @@ async function getServiceDashboardData(): Promise<{
       chats: ((chatsResult.data ?? []) as ChatView[]),
       chatMembers: ((chatMembersResult.data ?? []) as ChatMemberView[]),
       messages: ((messagesResult.data ?? []) as MessageView[]),
+      meetings: ((meetingsResult.data ?? []) as MeetingView[]),
+      meetingActions: ((meetingActionsResult.data ?? []) as MeetingActionView[]),
+      rehearsals: ((rehearsalsResult.data ?? []) as RehearsalView[]),
+      rooms: ((roomsResult.data ?? []) as RoomView[]),
+      reservations: ((reservationsResult.data ?? []) as ReservationView[]),
     },
     error: extraError ? friendlyReadError(extraError.message) : "",
   };
@@ -724,6 +880,10 @@ export default async function ServiceHomePage() {
       events={events}
       roster={((rosterData ?? []) as RosterAssignmentView[])}
       visitorsInCare={visitorsInCare ?? 0}
+      visitors={extra.visitors}
+      visitorNotes={extra.visitorNotes}
+      announcements={extra.announcements}
+      wallPosts={extra.wallPosts}
       decisions={extra.decisions}
       baptismClasses={extra.baptismClasses}
       baptismCandidates={extra.baptismCandidates}
@@ -734,6 +894,11 @@ export default async function ServiceHomePage() {
       chats={extra.chats}
       chatMembers={extra.chatMembers}
       messages={extra.messages}
+      meetings={extra.meetings}
+      meetingActions={extra.meetingActions}
+      rehearsals={extra.rehearsals}
+      rooms={extra.rooms}
+      reservations={extra.reservations}
       error={error}
     />
   );
