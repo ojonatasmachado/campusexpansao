@@ -13,6 +13,7 @@ import MinistriesManager from "./MinistriesManager";
 import MinistriesSeedButton from "./MinistriesSeedButton";
 import PeopleSeedButton from "./PeopleSeedButton";
 import PeopleManager from "./PeopleManager";
+import RemainingServiceManager from "./RemainingServiceManager";
 import RosterManager from "./RosterManager";
 import VisitorsManager from "./VisitorsManager";
 
@@ -567,6 +568,7 @@ export default async function ServiceHomePage() {
     ["Decisões", "service-decisions"],
     ["Kanban", "service-boards"],
     ["Conversas", "service-chats"],
+    ["Completar", "service-complete"],
   ];
 
   return (
@@ -1191,6 +1193,29 @@ export default async function ServiceHomePage() {
                 members={members.map((member) => ({ id: member.id, name: member.name }))}
                 churchId={firstChurch.id}
                 organizationId={firstChurch.organizationId}
+              />
+            )}
+
+            <div className="divider" style={{ margin: "34px 0" }} />
+
+            <p className="eyebrow" id="service-complete" style={{ color: "var(--wheat)", scrollMarginTop: 24 }}>
+              ◆ SERVICE · COMPLETAR PACOTE
+            </p>
+            <h2 className="t-h2" style={{ color: "var(--cream)", marginTop: 10 }}>
+              Módulos finais
+            </h2>
+            <p className="t-body" style={{ color: "var(--light)", marginTop: 8 }}>
+              Identidade, comunicação, batismos, cursos internos, grupos, salas, reservas, reuniões, ensaios, check-in e relatórios.
+            </p>
+
+            {firstChurch && (
+              <RemainingServiceManager
+                churchId={firstChurch.id}
+                organizationId={firstChurch.organizationId}
+                people={people.map((person) => ({ id: person.id, name: person.name }))}
+                members={members.map((member) => ({ id: member.id, name: member.name, journey: member.journey }))}
+                ministries={ministries.map((ministry) => ({ id: ministry.id, name: ministry.name }))}
+                events={events.map((event) => ({ id: event.id, name: event.name }))}
               />
             )}
           </div>
