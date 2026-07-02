@@ -313,7 +313,7 @@ export default function MaterialLanding({
                     {preco}
                   </div>
                 </div>
-                <a href={checkoutHref} rel="noopener noreferrer" className="ld-btn-buy"
+                <a href={checkoutHref} className="ld-btn-buy"
                   onClick={() => trackMetricEvent({ eventName: "buy_click", materialId: raw.id, metadata: { title: raw.titulo } })}
                   style={{ background: ac, boxShadow: `0 12px 30px -14px ${ac}` }}>
                   Comprar material →
@@ -592,7 +592,7 @@ export default function MaterialLanding({
                 <div style={{ fontSize: 56, fontWeight: 800, letterSpacing: "-0.04em", color: "var(--white)", lineHeight: 1 }}>{preco}</div>
                 <div style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--muted)", marginTop: 6 }}>acesso vitalício ao arquivo</div>
               </div>
-              <a href={checkoutHref} rel="noopener noreferrer" className="ld-btn-buy"
+              <a href={checkoutHref} className="ld-btn-buy"
                 style={{ background: ac }}>
                 Comprar agora →
               </a>
@@ -715,7 +715,7 @@ export default function MaterialLanding({
           <p style={{ fontSize: 18, color: "var(--light)", marginTop: 22 }}>
             Leve {raw.titulo} e ministre com chão já no próximo encontro.
           </p>
-          <a href={checkoutHref} rel="noopener noreferrer" className="ld-btn-buy"
+          <a href={checkoutHref} className="ld-btn-buy"
             style={{
               background: ac, display: "inline-flex",
               marginTop: 36, fontSize: 17, padding: "18px 36px",

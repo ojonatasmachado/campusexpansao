@@ -4,20 +4,39 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "../lib/supabase-browser";
 
+function authErrorMessage(message: string) {
+  const lower = message.toLowerCase();
+  if (lower.includes("invalid login")) return "E-mail ou senha incorretos.";
+  if (lower.includes("email not confirmed")) return "Seu e-mail ainda não foi confirmado. Confira sua caixa de entrada e confirme a conta antes de entrar.";
+  if (lower.includes("already registered") || lower.includes("already been registered")) return "Este e-mail já tem uma conta. Tente entrar com sua senha.";
+  if (lower.includes("password")) return "A senha precisa ter pelo menos 6 caracteres.";
+  return message || "Não conseguimos concluir agora.";
+}
+
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const redirect = params.get("redirect") || "/perfil";
+  const callbackError = params.get("erro");
+  const initialError = callbackError === "confirmacao"
+    ? "Não conseguimos confirmar seu acesso por esse link. Tente entrar ou peça um novo e-mail de confirmação."
+    : "";
 
   const [step, setStep] = useState<"email" | "login" | "cadastro">("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialError);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
 
   const supabase = createClient();
+
+  function confirmationUrl() {
+    const callbackUrl = new URL("/auth/callback", window.location.origin);
+    callbackUrl.searchParams.set("redirect", redirect);
+    return callbackUrl.toString();
+  }
 
   function changeEmail(value: string) {
     setEmail(value);
@@ -28,8 +47,7 @@ function LoginForm() {
     setStep("email");
   }
 
-  async function handleEmailSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function chooseAccessStep(nextStep: "login" | "cadastro") {
     setError("");
     setSuccess("");
 
@@ -39,56 +57,93 @@ function LoginForm() {
       return;
     }
 
-    setLoading(true);
-
-    try {
-      const response = await fetch("/api/auth/check-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: normalizedEmail }),
-      });
-      const result = await response.json();
-
-      if (!response.ok) {
-        setError(result.error || "Não conseguimos validar este e-mail agora.");
-        return;
-      }
-
-      setEmail(normalizedEmail);
-      setStep(result.exists ? "login" : "cadastro");
-    } catch {
-      setError("Não conseguimos validar este e-mail agora.");
-    } finally {
-      setLoading(false);
-    }
+    setEmail(normalizedEmail);
+    setStep(nextStep);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
 
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail || !normalizedEmail.includes("@")) {
+      setError("Digite um e-mail válido.");
+      setLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("A senha precisa ter pelo menos 6 caracteres.");
+      setLoading(false);
+      return;
+    }
+
+    if (step === "cadastro" && !name.trim()) {
+      setError("Digite seu nome.");
+      setLoading(false);
+      return;
+    }
+
     if (step === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) { setError("Email ou senha incorretos."); setLoading(false); return; }
+      const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+      if (error) { setError(authErrorMessage(error.message)); setLoading(false); return; }
       router.push(redirect);
       router.refresh();
     } else {
-      const callbackUrl = new URL("/auth/callback", window.location.origin);
-      callbackUrl.searchParams.set("redirect", redirect);
-
-      const { error } = await supabase.auth.signUp({
-        email,
+      const { data, error } = await supabase.auth.signUp({
+        email: normalizedEmail,
         password,
         options: {
-          data: { full_name: name },
-          emailRedirectTo: callbackUrl.toString(),
+          data: { full_name: name.trim() },
+          emailRedirectTo: confirmationUrl(),
         },
       });
-      if (error) { setError(error.message); setLoading(false); return; }
-      setSuccess("Conta criada. Verifique seu e-mail para confirmar e voltar ao CE.X.");
+      if (error) {
+        setError(authErrorMessage(error.message));
+        if (error.message.toLowerCase().includes("registered")) setStep("login");
+        setLoading(false);
+        return;
+      }
+
+      if (data.session) {
+        router.push(redirect);
+        router.refresh();
+        return;
+      }
+
+      setSuccess("Conta criada. Confirme seu e-mail e o material será liberado na volta ao CE.X.");
       setLoading(false);
     }
+  }
+
+  async function resendConfirmation() {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !normalizedEmail.includes("@")) {
+      setError("Digite o e-mail cadastrado para reenviar a confirmação.");
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: normalizedEmail,
+      options: { emailRedirectTo: confirmationUrl() },
+    });
+
+    setLoading(false);
+
+    if (error) {
+      setError(authErrorMessage(error.message));
+      return;
+    }
+
+    setSuccess("E-mail de confirmação reenviado. Confira sua caixa de entrada e também o spam.");
   }
 
   return (
@@ -137,10 +192,10 @@ function LoginForm() {
           </h1>
           <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
             {step === "email"
-              ? "Vamos verificar se você já tem acesso ou se precisa criar uma conta."
+              ? "Digite seu e-mail e escolha se quer entrar ou criar uma conta."
               : step === "login"
-                ? "Encontramos sua conta. Agora coloque sua senha para continuar."
-                : "Não encontramos uma conta com este e-mail. Complete o cadastro para continuar."}
+                ? "Coloque sua senha para continuar."
+                : "Complete o cadastro para liberar o material de teste."}
           </p>
         </div>
 
@@ -149,7 +204,7 @@ function LoginForm() {
             {success}
           </p>
         ) : step === "email" ? (
-          <form onSubmit={handleEmailSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <form onSubmit={(event) => event.preventDefault()} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div>
               <label style={labelStyle}>Email</label>
               <input
@@ -164,12 +219,55 @@ function LoginForm() {
             </div>
 
             {error && (
-              <p style={{ color: "var(--terra)", fontSize: 13, margin: 0 }}>{error}</p>
+              <div>
+                <p style={{ color: "var(--terra)", fontSize: 13, margin: 0 }}>{error}</p>
+                {error.includes("ainda não foi confirmado") && (
+                  <button
+                    type="button"
+                    onClick={resendConfirmation}
+                    disabled={loading}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid var(--border-2)",
+                      borderRadius: 8,
+                      color: "var(--cream)",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      fontSize: 13,
+                      marginTop: 10,
+                      padding: "10px 12px",
+                    }}
+                  >
+                    {loading ? "Reenviando..." : "Reenviar confirmação"}
+                  </button>
+                )}
+              </div>
             )}
 
-            <button type="submit" disabled={loading} style={buttonStyle}>
-              {loading ? "Validando..." : "Continuar"}
-            </button>
+            <div style={{ display: "grid", gap: 10 }}>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => chooseAccessStep("login")}
+                style={buttonStyle}
+              >
+                Entrar
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => chooseAccessStep("cadastro")}
+                style={{
+                  ...buttonStyle,
+                  background: "transparent",
+                  border: "1px solid var(--border-2)",
+                  color: "var(--cream)",
+                  marginTop: 0,
+                }}
+              >
+                Criar conta
+              </button>
+            </div>
           </form>
         ) : (
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
