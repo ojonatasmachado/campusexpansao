@@ -200,7 +200,7 @@ export default function MuitoBarulho() {
           <div className="capture-eyebrow">◆ Acompanhe os lançamentos</div>
           <h3 className="capture-title">Mais séries <em>chegando</em></h3>
           <p className="capture-desc">
-            Cadastre-se para receber as próximas séries em primeira mão, com acesso antecipado quando forem para o Hotmart.
+            Cadastre-se para receber as próximas séries em primeira mão, com acesso antecipado quando abrirem no checkout.
           </p>
           <form className="capture-form" onSubmit={(e) => e.preventDefault()}>
             <input className="input" type="email" placeholder="Seu melhor e-mail" />

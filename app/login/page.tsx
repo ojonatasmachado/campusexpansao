@@ -1,5 +1,6 @@
 "use client";
 import { useState, Suspense } from "react";
+import type { User } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "../lib/supabase-browser";
@@ -31,6 +32,35 @@ function LoginForm() {
   const [success, setSuccess] = useState("");
 
   const supabase = createClient();
+
+  async function ensureProfileForUser(user: User, fullName = "") {
+    const email = user.email?.trim().toLowerCase();
+    if (!email) return;
+
+    const { data: existing } = await supabase
+      .from("user_profiles")
+      .select("user_id,full_name")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (existing) {
+      if (!existing.full_name && fullName.trim()) {
+        await supabase
+          .from("user_profiles")
+          .update({ full_name: fullName.trim(), updated_at: new Date().toISOString() })
+          .eq("user_id", user.id);
+      }
+      return;
+    }
+
+    await supabase
+      .from("user_profiles")
+      .insert({
+        user_id: user.id,
+        email,
+        full_name: fullName.trim() || user.user_metadata?.full_name || "",
+      });
+  }
 
   function confirmationUrl() {
     const callbackUrl = new URL("/auth/callback", window.location.origin);
@@ -88,8 +118,9 @@ function LoginForm() {
     }
 
     if (step === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
       if (error) { setError(authErrorMessage(error.message)); setLoading(false); return; }
+      if (data.user) await ensureProfileForUser(data.user);
       router.push(redirect);
       router.refresh();
     } else {
@@ -109,6 +140,7 @@ function LoginForm() {
       }
 
       if (data.session) {
+        if (data.user) await ensureProfileForUser(data.user, name);
         router.push(redirect);
         router.refresh();
         return;

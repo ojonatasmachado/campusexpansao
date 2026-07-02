@@ -628,7 +628,7 @@ function DetailPreview({ item }: { item: Item }) {
             <span className="pv-detail-price">R$ {m.price}</span>
             <span className="pv-detail-buy">COMPRAR →</span>
           </div>
-          <div className="pv-detail-hot">Hotmart: <code>{m.hotmart}</code></div>
+          <div className="pv-detail-hot">Checkout: <code>{m.hotmart}</code></div>
           {m.id && (
             <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
               <code style={{ fontSize: 11, color: 'var(--muted)', background: 'var(--graphite)', padding: '4px 8px', borderRadius: 4, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -2766,7 +2766,7 @@ function Dashboard({ data }: { data: AdminData }) {
     <div className="dash">
       <div className="kpi-row">
         <KpiCard label="Visitas (30d)" value={fmt(m.kpis.visitas)} delta={m.kpis.visitasDelta} sub="vs. período anterior" />
-        <KpiCard label="Cliques em comprar" value={fmt(m.kpis.cliquesComprar)} delta={m.kpis.cliquesDelta} sub="Hotmart" />
+        <KpiCard label="Cliques em comprar" value={fmt(m.kpis.cliquesComprar)} delta={m.kpis.cliquesDelta} sub="checkout" />
         <KpiCard label="Lista de espera" value={fmt(m.kpis.listaEspera)} delta={m.kpis.listaDelta} sub="cursos ao vivo" />
         <KpiCard label="Capturas de e-mail" value={fmt(m.kpis.capturas)} delta={m.kpis.capturasDelta} sub="capturas de e-mail" />
       </div>
@@ -3584,7 +3584,7 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => P
           )}
 
           <SectionHead mark="Venda" opt="obrigatório" />
-          <div className="fld-hint section-copy">Defina o preço, status de publicação e o link da Hotmart usado no botão de compra.</div>
+          <div className="fld-hint section-copy">Defina o preço, status de publicação e o link de checkout usado no botão de compra.</div>
           <div className="ed-2col">
             <Field label="Preço (R$)" req><input className="inp" type="number" value={m.price} onChange={(e) => set('price' as never, +e.target.value as never)} /></Field>
             <Field label="Status" req>
@@ -3593,8 +3593,8 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => P
               </select>
             </Field>
           </div>
-          <Field label="Link da Hotmart" req hint="Botão COMPRAR da página de detalhe.">
-            <input className="inp" value={m.hotmart} onChange={(e) => set('hotmart' as never, e.target.value as never)} placeholder="https://pay.hotmart.com/..." />
+          <Field label="Link de checkout" req hint="Botão COMPRAR da página de detalhe.">
+            <input className="inp" value={m.hotmart} onChange={(e) => set('hotmart' as never, e.target.value as never)} placeholder="https://checkout.stripe.com/..." />
           </Field>
 
           <SectionHead mark="FAQ" opt="opcional" />
@@ -3689,8 +3689,8 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => P
               </select>
             </Field>
           </div>
-          <Field label="Link de inscrição (Hotmart)">
-            <input className="inp" value={ev.hotmart ?? ''} onChange={(e) => set('hotmart' as never, e.target.value as never)} placeholder="https://pay.hotmart.com/..." />
+          <Field label="Link de inscrição">
+            <input className="inp" value={ev.hotmart ?? ''} onChange={(e) => set('hotmart' as never, e.target.value as never)} placeholder="https://checkout.stripe.com/..." />
           </Field>
         </>}
 
