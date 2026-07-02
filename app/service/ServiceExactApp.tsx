@@ -305,12 +305,22 @@ type DrawerState =
   | { kind: "rehearsal"; id: string }
   | null;
 
+type FieldDef =
+  | { k: string; label: string; type: "text"; req?: boolean; half?: boolean; ph?: string; hint?: string }
+  | { k: string; label: string; type: "area"; req?: boolean; half?: boolean; ph?: string; hint?: string; big?: boolean }
+  | { k: string; label: string; type: "select"; req?: boolean; half?: boolean; ph?: string; hint?: string; options: { v: string; l: string }[] }
+  | { k: string; label: string; type: "date"; req?: boolean; half?: boolean; hint?: string }
+  | { k: string; label: string; type: "time"; req?: boolean; half?: boolean; hint?: string }
+  | { k: string; label: string; type: "toggle"; req?: boolean; half?: boolean; hint?: string; onLabel?: string; offLabel?: string }
+  | { k: string; label: string; type: "checks"; req?: boolean; half?: boolean; hint?: string; options: { v: string; l: string }[] };
+
 type ModalState =
   | {
       title: string;
       eyebrow: string;
       subtitle: string;
-      fields: string[];
+      saveLabel?: string;
+      formFields: FieldDef[];
       action?:
         | { kind: "decision" }
         | { kind: "baptismClass" }
@@ -325,7 +335,10 @@ type ModalState =
         | { kind: "announcement" }
         | { kind: "wallPost" }
         | { kind: "room" }
-        | { kind: "reservation"; roomId?: string };
+        | { kind: "reservation"; roomId?: string }
+        | { kind: "member" }
+        | { kind: "event" }
+        | { kind: "ministry" };
     }
   | null;
 
@@ -1152,7 +1165,7 @@ function Membros({ members, ministries, setDrawer, setModal }: { members: Member
     ministries.filter((min) => min.people.some((p) => p.personName === name));
   return (
     <div className="content wide">
-      <PageHead title="Membros" eyebrow="Pessoas" subtitle="Toda a congregação. Veja quem serve, em que jornada está e o histórico desde que chegou." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo membro", title: "Quem chegou na igreja", subtitle: "Cadastre contato, situação e primeiros passos da jornada.", fields: ["Nome completo", "Telefone", "E-mail", "Bairro"] })}>+ Novo membro</button>} />
+      <PageHead title="Membros" eyebrow="Pessoas" subtitle="Toda a congregação. Veja quem serve, em que jornada está e o histórico desde que chegou." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Cadastro de quem já é da casa. Os dados completos liberam o acesso ao app.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Os 4 últimos dígitos viram a senha inicial do app." }, { k:"email", label:"E-mail", type:"text", half:true, req:true, ph:"usado para entrar no app" }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }], action: { kind: "member" } })}>+ Novo membro</button>} />
       <div className="kpi-row">
         <Kpi icon="membros" label="Membros" value={members.length} foot="na congregação" />
         <Kpi icon="decisoes" label="Novos convertidos" value={novos.length} foot="em discipulado inicial" />
@@ -1196,7 +1209,7 @@ function Membros({ members, ministries, setDrawer, setModal }: { members: Member
 function Pessoas({ people, setDrawer, setModal }: { people: PersonView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
   return (
     <div className="content">
-      <PageHead title="Voluntários" eyebrow="Pessoas" subtitle="Quem serve, em quais times e funções. Toque para ver perfil, disponibilidade e histórico." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo voluntário", title: "Quem vai servir", subtitle: "Cadastre e já escolha os ministérios. Depois dá para ajustar funções e disponibilidade no perfil.", fields: ["Nome completo", "Telefone", "E-mail", "Frentes"] })}>+ Novo voluntário</button>} />
+      <PageHead title="Voluntários" eyebrow="Pessoas" subtitle="Quem serve, em quais times e funções. Toque para ver perfil, disponibilidade e histórico." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo voluntário", subtitle: "Cadastre e já escolha os ministérios.", saveLabel: "Adicionar voluntário", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"e-mail da pessoa" }], action: { kind: "member" } })}>+ Novo voluntário</button>} />
       <div className="toolbar"><div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome..." /></div><div className="seg"><button className="on">Todos</button><button>Ativos</button><button>Pausa</button></div><div className="tb-spacer" /><span className="panel-meta">{people.length} pessoas</span></div>
       <div className="tbl">
         <div className="tr th"><div>Voluntário</div><div>Disponibilidade</div><div>Frentes</div><div>Status</div></div>
@@ -1209,7 +1222,7 @@ function Pessoas({ people, setDrawer, setModal }: { people: PersonView[]; setDra
 function Times({ ministries, people, setDrawer, setModal }: { ministries: MinistryView[]; people: PersonView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
   return (
     <div className="content">
-      <PageHead title="Times & Ministérios" eyebrow="Pessoas" subtitle="Times, líderes, funções e voluntários vinculados." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo time", title: "Ministério da igreja", subtitle: "Crie o time, defina funções e depois vincule voluntários.", fields: ["Nome do time", "Descrição", "Funções necessárias"] })}>+ Novo time</button>} />
+      <PageHead title="Times & Ministérios" eyebrow="Pessoas" subtitle="Times, líderes, funções e voluntários vinculados." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo time / ministério", subtitle: "Crie o ministério e já conte o propósito dele.", saveLabel: "Criar ministério", formFields: [{ k:"nome", label:"Nome do ministério", type:"text", req:true, ph:"ex: Louvor & Adoração" }, { k:"desc", label:"Descrição curta", type:"text", ph:"Uma linha sobre o time" }, { k:"proposito", label:"Propósito", type:"area", ph:"Por que esse time existe?" }, { k:"aberto", label:"Recebendo voluntários?", type:"toggle", onLabel:"Aberto a novos", offLabel:"Equipe completa" }], action: { kind: "ministry" } })}>+ Novo time</button>} />
       <div className="team-grid">
         {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => <Av key={link.personId} name={people.find((person) => person.id === link.personId)?.name ?? link.personName} />)}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName ?? "a definir"}</em></div><div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> voluntários</span><span className="team-stat"><b>{ministry.positions.length}</b> funções</span></div></button>)}
       </div>
@@ -1275,10 +1288,10 @@ function Escalas({
         subtitle="Escolha o culto e monte a escala. Cada coluna é um time. Toque numa pessoa para confirmar, trocar ou remover; na vaga para escalar."
         action={
           <>
-            <button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Delegar gestão da escala", title: "Quem mais pode montar a escala", subtitle: "As pessoas escolhidas passam a ver e gerir a escala deste time.", fields: ["Voluntário", "Time"] })}><Icon name="membros" size={15} /> Delegar</button>
+            <button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Delegar", title: "Delegar gestão da escala", subtitle: "As pessoas escolhidas passam a ver e gerir a escala deste time.", formFields: [{ k:"voluntario", label:"Voluntário", type:"text", ph:"Nome do voluntário" }, { k:"time", label:"Time", type:"text", ph:"Nome do time" }] })}><Icon name="membros" size={15} /> Delegar</button>
             <button className="btn btn-sec" type="button" onClick={() => setCheckinEventId(selectedEvent?.id ?? null)} disabled={!selectedEvent}><Icon name="cultos" size={15} /> QR Check-in</button>
-            <button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Relatório", title: "Baixar escala", subtitle: "Exportar a escala atual para conferência da equipe.", fields: ["Formato"] })}><Icon name="relatorios" size={15} /> Baixar</button>
-            <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Publicar", title: "Publicar & avisar", subtitle: "A equipe recebe a escala pelo app e pelas notificações configuradas.", fields: ["Mensagem"] })}>Publicar & avisar →</button>
+            <button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Exportar", title: "Baixar escala", subtitle: "Exportar a escala atual para conferência da equipe.", formFields: [{ k:"formato", label:"Formato", type:"select", options:[{v:"pdf",l:"PDF"},{v:"csv",l:"CSV"},{v:"png",l:"PNG"}] }] })}><Icon name="relatorios" size={15} /> Baixar</button>
+            <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Publicar", title: "Publicar & avisar", subtitle: "A equipe recebe a escala pelo app e pelas notificações configuradas.", saveLabel: "Publicar & avisar →", formFields: [{ k:"msg", label:"Mensagem (opcional)", type:"area", ph:"Recado que vai junto com a escala..." }] })}>Publicar & avisar →</button>
           </>
         }
       />
@@ -1300,7 +1313,7 @@ function Escalas({
           {mode === "automatico" ? "O sistema gera e já confirma. Na recusa, chama o próximo apto." : null}
         </span>
         <span className="tb-spacer" />
-        <button className="esc-modo-cfg" type="button" onClick={() => setModal({ eyebrow: "Regras", title: "Configuração padrão", subtitle: "Defina intervalo, folgas e prioridade de rodízio.", fields: ["Intervalo mínimo", "Limite por pessoa", "Prioridade"] })}><Icon name="config" size={13} /> Regras</button>
+        <button className="esc-modo-cfg" type="button" onClick={() => setModal({ eyebrow: "Configurar", title: "Configuração padrão", subtitle: "Defina intervalo, folgas e prioridade de rodízio.", formFields: [{ k:"intervalo", label:"Intervalo mínimo (semanas)", type:"text", ph:"ex: 2" }, { k:"limite", label:"Limite por pessoa / mês", type:"text", ph:"ex: 3" }, { k:"prioridade", label:"Prioridade", type:"select", options:[{v:"disponibilidade",l:"Disponibilidade"},{v:"rodizio",l:"Rodízio igual"},{v:"engajamento",l:"Mais engajados primeiro"}] }] })}><Icon name="config" size={13} /> Regras</button>
       </div>
 
       <div className="esc-events">
@@ -1335,7 +1348,7 @@ function Escalas({
                   <div className="esc-col-tmeta">{ministryConfirmed}/{ministryNeed} confirmados</div>
                 </div>
                 <span className={`esc-col-badge ${complete ? "ok" : ""}`}>{complete ? "completo" : `${Math.max(0, ministryNeed - ministryConfirmed)} falta`}</span>
-                <button className="esc-col-edit" title="Editar funções deste time" type="button" onClick={() => setModal({ eyebrow: `Funções · ${ministry.name}`, title: "Quem o time precisa", subtitle: "Adicione, renomeie ou remova funções e diga quantas pessoas cada uma precisa.", fields: ["Função", "Quantidade"] })}><Icon name="config" size={14} /></button>
+                <button className="esc-col-edit" title="Editar funções deste time" type="button" onClick={() => setModal({ eyebrow: `Funções · ${ministry.name}`, title: "Quem o time precisa", subtitle: "Adicione funções e diga quantas pessoas cada uma precisa.", formFields: [{ k:"funcao", label:"Função", type:"text", ph:"ex: Vocal, Baixo, Recepcionista" }, { k:"qtd", label:"Quantidade de vagas", type:"text", half:true, ph:"ex: 2" }] })}><Icon name="config" size={14} /></button>
               </div>
               <div className="esc-col-body">
                 {ministryPositions.map((position) => {
@@ -1420,7 +1433,7 @@ function Escalas({
 function Cultos({ events, ministries, setDrawer, setModal, setCheckinEventId, setShareEventId }: { events: EventView[]; ministries: MinistryView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; setCheckinEventId: (id: string) => void; setShareEventId: (id: string) => void }) {
   return (
     <div className="content">
-      <PageHead title="Cultos & Agenda" eyebrow="Operação" subtitle="Agenda, roteiro, setlist e ministérios envolvidos em cada culto." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo culto", title: "Agenda da igreja", subtitle: "Crie o culto, defina local, horário e os ministérios envolvidos.", fields: ["Nome", "Data", "Horário", "Local"] })}>+ Novo culto</button>} />
+      <PageHead title="Cultos & Agenda" eyebrow="Operação" subtitle="Agenda, roteiro, setlist e ministérios envolvidos em cada culto." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo culto ou evento", subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Culto da Manhã, Conferência de Jovens" }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:[{v:"Culto",l:"Culto"},{v:"Evento",l:"Evento"},{v:"Treinamento",l:"Treinamento"},{v:"Retiro",l:"Retiro"}] }, { k:"local", label:"Local", type:"text", half:true, ph:"Templo, Anexo..." }, { k:"data", label:"Data", type:"date", half:true }, { k:"hora", label:"Horário de início", type:"time", half:true }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }], action: { kind: "event" } })}>+ Novo culto</button>} />
       <div className="grid-2">
         {events.map((event) => (
           <div className="panel" key={event.id} style={{ position: "relative" }}>
@@ -1481,13 +1494,13 @@ function RosterActionModal({
           </div>
           <div className="modal-body">
             <div style={{ display: "grid", gap: 8 }}>
-              <button className="btn btn-pri" style={{ justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Confirmar escala", title: assignedPerson?.name ?? "Voluntário", subtitle: "Marcar como confirmado nesta escala.", fields: ["Observação"] })}>✓ Marcar como confirmado</button>
-              <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Reenviar convite", title: action.event.name, subtitle: "Deixar pendente e reenviar convite pelo app.", fields: ["Mensagem"] })}>Deixar pendente</button>
-              <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Recusa", title: assignedPerson?.name ?? "Voluntário", subtitle: "Registrar recusa e chamar próxima pessoa apta.", fields: ["Motivo"] })}>Marcar que recusou</button>
-              <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Check-in", title: action.event.name, subtitle: "Registrar presença no culto.", fields: ["Presença", "Observação"] })}>● Check-in</button>
-              <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Pedir troca", title: action.position.name, subtitle: "Escolha quem pode substituir nesta função.", fields: ["Substituto", "Mensagem"] })}>⇄ Pedir troca / substituir</button>
+              <button className="btn btn-pri" style={{ justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Confirmar", title: assignedPerson?.name ?? "Voluntário", subtitle: "Marcar como confirmado nesta escala.", formFields: [{ k:"obs", label:"Observação (opcional)", type:"text", ph:"..." }] })}>✓ Marcar como confirmado</button>
+              <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Reenviar", title: action.event.name, subtitle: "Deixar pendente e reenviar convite pelo app.", formFields: [{ k:"msg", label:"Mensagem (opcional)", type:"text", ph:"..." }] })}>Deixar pendente</button>
+              <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Recusa", title: assignedPerson?.name ?? "Voluntário", subtitle: "Registrar recusa e chamar próxima pessoa apta.", formFields: [{ k:"motivo", label:"Motivo (opcional)", type:"text", ph:"..." }] })}>Marcar que recusou</button>
+              <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Check-in", title: action.event.name, subtitle: "Registrar presença no culto.", formFields: [{ k:"presenca", label:"Presença", type:"select", options:[{v:"presente",l:"Presente"},{v:"falta",l:"Falta"},{v:"atrasou",l:"Atrasou"}] }, { k:"obs", label:"Observação (opcional)", type:"text", ph:"..." }] })}>● Check-in</button>
+              <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Pedir troca", title: action.position.name, subtitle: "Escolha quem pode substituir nesta função.", formFields: [{ k:"substituto", label:"Substituto", type:"text", ph:"Nome do substituto" }, { k:"msg", label:"Mensagem (opcional)", type:"text", ph:"..." }] })}>⇄ Pedir troca / substituir</button>
               {assignedPerson ? <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setDrawer({ kind: "person", id: assignedPerson.id })}>Ver perfil do voluntário</button> : null}
-              <button className="btn btn-danger" style={{ justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Remover da escala", title: assignedPerson?.name ?? "Voluntário", subtitle: "Remover esta pessoa da escala atual.", fields: ["Motivo"] })}>Remover da escala</button>
+              <button className="btn btn-danger" style={{ justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Remover", title: assignedPerson?.name ?? "Voluntário", subtitle: "Remover esta pessoa da escala atual.", formFields: [{ k:"motivo", label:"Motivo (opcional)", type:"text", ph:"..." }] })}>Remover da escala</button>
             </div>
           </div>
         </div>
@@ -1508,7 +1521,7 @@ function RosterActionModal({
           {people.map((person) => {
             const occupied = occupiedPeople.has(person.id);
             return (
-              <button className={`cand ${occupied ? "is-block" : ""}`} type="button" key={person.id} onClick={() => occupied ? undefined : setModal({ eyebrow: "Escalar", title: person.name, subtitle: `${action.position.name} · ${action.event.name}`, fields: ["Mensagem do convite"] })}>
+              <button className={`cand ${occupied ? "is-block" : ""}`} type="button" key={person.id} onClick={() => occupied ? undefined : setModal({ eyebrow: "Escalar", title: person.name, subtitle: `${action.position.name} · ${action.event.name}`, formFields: [{ k:"msg", label:"Mensagem do convite (opcional)", type:"text", ph:"..." }] })}>
                 <Av name={person.name} size="md" />
                 <div className="cand-main">
                   <div className="cand-name">{person.name}</div>
@@ -1565,7 +1578,7 @@ function Visitantes({
         title="Visitantes"
         eyebrow="Pessoas"
         subtitle="Da primeira visita ao discipulado. Cada visitante tem um próximo passo e histórico de contato."
-        action={<><div className="seg"><button className={view === "pipe" ? "on" : ""} type="button" onClick={() => setView("pipe")}>Funil</button><button className={view === "list" ? "on" : ""} type="button" onClick={() => setView("list")}>Lista</button><button className={view === "painel" ? "on" : ""} type="button" onClick={() => setView("painel")}>Painel</button></div><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Visitante", title: "Novo visitante", subtitle: "Registre quem chegou e o próximo contato.", fields: ["Nome", "Telefone", "Como chegou", "Visitou"], action: { kind: "visitor" } })}>+ Visitante</button></>}
+        action={<><div className="seg"><button className={view === "pipe" ? "on" : ""} type="button" onClick={() => setView("pipe")}>Funil</button><button className={view === "list" ? "on" : ""} type="button" onClick={() => setView("list")}>Lista</button><button className={view === "painel" ? "on" : ""} type="button" onClick={() => setView("painel")}>Painel</button></div><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo visitante", subtitle: "Quem chegou pela primeira vez. Entra no acompanhamento automaticamente.", saveLabel: "Registrar visitante", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem visitou" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"origem", label:"Como chegou", type:"select", half:true, options:[{v:"Convite de membro",l:"Convite de membro"},{v:"Instagram",l:"Instagram"},{v:"Indicação",l:"Indicação"},{v:"Evangelismo",l:"Evangelismo"},{v:"Tomou decisão no culto",l:"Tomou decisão no culto"},{v:"Passava na rua",l:"Passava na rua"}] }], action: { kind: "visitor" } })}>+ Visitante</button></>}
       />
       <div className="contato-banner">
         <div className="contato-pill"><span className="contato-pill-n">24h</span><span>1º contato</span></div>
@@ -1602,7 +1615,7 @@ function Reunioes({ meetings, meetingActions, ministries, people, setDrawer, set
   const finished = meetings.filter((meeting) => meeting.status === "realizada");
   return (
     <div className="content wide">
-      <PageHead title="Reuniões" eyebrow="Liderança" subtitle="Pautas, ata e responsabilidades para validar na próxima reunião." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Reunião", title: "Marcar reunião", subtitle: "Defina tema, data, local e time envolvido.", fields: ["Título", "Data", "Horário", "Local", "Time"], action: { kind: "meeting" } })}>+ Marcar reunião</button>} />
+      <PageHead title="Reuniões" eyebrow="Liderança" subtitle="Pautas, ata e responsabilidades para validar na próxima reunião." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Marcar reunião", subtitle: "Defina tema, data, local e time envolvido.", saveLabel: "Criar reunião", formFields: [{ k:"titulo", label:"Título", type:"text", req:true, ph:"ex: Reunião de planejamento" }, { k:"data", label:"Data", type:"date", half:true }, { k:"hora", label:"Horário", type:"time", half:true }, { k:"local", label:"Local", type:"text", half:true, ph:"Sala de reuniões..." }, { k:"time", label:"Ministério", type:"text", half:true, ph:"ex: Liderança" }], action: { kind: "meeting" } })}>+ Marcar reunião</button>} />
       <div className="section-divide"><Icon name="cultos" size={15} /><span className="label">Agendadas</span><span className="line" /></div>
       <div className="reu-grid">
         {scheduled.map((meeting) => {
@@ -1640,7 +1653,7 @@ function Ensaios({ rehearsals, ministries, setDrawer, setModal }: { rehearsals: 
   const ministryById = new Map(ministries.map((ministry) => [ministry.id, ministry]));
   return (
     <div className="content wide">
-      <PageHead title="Ensaios" eyebrow="Liderança" subtitle="Ensaios por ministério, presença, repertório e materiais." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Ensaio", title: "Novo ensaio", subtitle: "Marque ensaio com time, data, local e repertório.", fields: ["Título", "Data", "Horário", "Local", "Time"], action: { kind: "rehearsal" } })}>+ Novo ensaio</button>} />
+      <PageHead title="Ensaios" eyebrow="Liderança" subtitle="Ensaios por ministério, presença, repertório e materiais." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo ensaio", subtitle: "Louvor, teatro, dança… Escolha quem participa e defina o repertório.", saveLabel: "Criar ensaio", formFields: [{ k:"titulo", label:"Nome do ensaio", type:"text", req:true, ph:"ex: Ensaio do Louvor, Peça de Natal" }, { k:"tipo", label:"Tipo de ensaio", type:"select", half:true, options:[{v:"louvor",l:"Louvor / música"},{v:"teatro",l:"Teatro"},{v:"danca",l:"Dança"},{v:"coreografia",l:"Coreografia"},{v:"geral",l:"Geral"},{v:"outro",l:"Outro"}] }, { k:"time", label:"Ministério", type:"text", half:true, ph:"ex: Louvor" }, { k:"data", label:"Dia", type:"date", half:true }, { k:"hora", label:"Horário", type:"time", half:true }, { k:"local", label:"Local", type:"text", half:true, ph:"Templo, Sala 2..." }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }, { k:"obs", label:"Observação", type:"area", ph:"Detalhes do ensaio" }], action: { kind: "rehearsal" } })}>+ Novo ensaio</button>} />
       <div className="reu-grid">
         {rehearsals.map((rehearsal) => {
           const ministry = rehearsal.ministry_id ? ministryById.get(rehearsal.ministry_id) : null;
@@ -2040,7 +2053,7 @@ function Espacos({ rooms, reservations, setModal }: { rooms: RoomView[]; reserva
         title="Espaços & reservas"
         eyebrow="Operação"
         subtitle="Salas da igreja e quem usa cada espaço. Reuniões, eventos, cursos e ensaios reservam aqui sem misturar agenda."
-        action={<><button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Sala", title: "Nova sala", subtitle: "Cadastre um espaço físico da igreja.", fields: ["Nome", "Capacidade", "Local", "Recursos"], action: { kind: "room" } })}>+ Nova sala</button><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Reserva", title: "Reservar espaço", subtitle: "Escolha o compromisso, data e horário.", fields: ["Título", "Tipo", "Data", "Início", "Fim"], action: { kind: "reservation", roomId: filter !== "todas" ? filter : undefined } })}>+ Reservar espaço</button></>}
+        action={<><button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova sala / espaço", subtitle: "Um espaço físico da igreja disponível para reservas.", saveLabel: "Criar sala", formFields: [{ k:"nome", label:"Nome do espaço", type:"text", req:true, ph:"ex: Sala 3, Salão de festas" }, { k:"capacidade", label:"Capacidade (pessoas)", type:"text", half:true, ph:"ex: 30" }, { k:"local", label:"Onde fica", type:"text", half:true, ph:"ex: 1º andar, Anexo" }, { k:"recursos", label:"Recursos disponíveis", type:"text", ph:"Som, Projeção, Piano", hint:"Separe por vírgula." }], action: { kind: "room" } })}>+ Nova sala</button><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Reservar espaço", subtitle: "Escolha o compromisso, data e horário.", saveLabel: "Criar reserva", formFields: [{ k:"titulo", label:"Título", type:"text", req:true, ph:"ex: Reunião de liderança" }, { k:"tipo", label:"Tipo", type:"select", half:true, options:[{v:"reuniao",l:"Reunião"},{v:"ensaio",l:"Ensaio"},{v:"evento",l:"Evento"},{v:"treinamento",l:"Treinamento"},{v:"outro",l:"Outro"}] }, { k:"data", label:"Data", type:"date", half:true }, { k:"inicio", label:"Início", type:"time", half:true }, { k:"fim", label:"Fim", type:"time", half:true }], action: { kind: "reservation", roomId: filter !== "todas" ? filter : undefined } })}>+ Reservar espaço</button></>}
       />
       <div className="sala-grid">
         {rooms.map((room) => {
@@ -2093,7 +2106,7 @@ function Decisoes({
         title="Decisões por Jesus"
         eyebrow="Jornada"
         subtitle="Quem aceitou ou se reconciliou. Cada decisão vira uma pessoa no sistema e começa uma jornada: registre, acompanhe e encaminhe."
-        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Registrar decisão", title: "Nova decisão", subtitle: "Registre quem decidiu, o culto e quem fará o acompanhamento.", fields: ["Nome", "Telefone", "Culto", "Responsável"], action: { kind: "decision" } })}>+ Registrar decisão</button>}
+        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova decisão", subtitle: "Registre quem decidiu, o culto e quem fará o acompanhamento.", saveLabel: "Registrar decisão", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem decidiu" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"culto", label:"Culto", type:"text", half:true, ph:"ex: Culto da Manhã" }, { k:"responsavel", label:"Responsável pelo acompanhamento", type:"text", ph:"Quem vai acompanhar" }], action: { kind: "decision" } })}>+ Registrar decisão</button>}
       />
       <div className="kpi-row">
         <Kpi icon="visitante" label="Decisões no mês" value={decisions.length} foot="registradas na jornada" />
@@ -2160,7 +2173,7 @@ function Batismos({
   const concluded = baptismClasses.filter((c) => c.status === "concluida");
   return (
     <div className="content wide">
-      <PageHead title="Batismos" eyebrow="Jornada" subtitle="Turmas de batismo nas águas. Inscrições, curso pré-batismo, agenda e histórico na linha do tempo da pessoa." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Turma de batismo", title: "Nova turma", subtitle: "Crie a turma, defina data, local e candidatos.", fields: ["Nome da turma", "Data", "Local", "Pastor"], action: { kind: "baptismClass" } })}>+ Nova turma</button>} />
+      <PageHead title="Batismos" eyebrow="Jornada" subtitle="Turmas de batismo nas águas. Inscrições, curso pré-batismo, agenda e histórico na linha do tempo da pessoa." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova turma de batismo", subtitle: "Crie a turma, defina data, local e quem vai oficiar.", saveLabel: "Criar turma", formFields: [{ k:"label", label:"Nome da turma", type:"text", req:true, ph:"ex: Batismo de Julho 2025" }, { k:"data", label:"Data do batismo", type:"date", half:true }, { k:"local", label:"Local", type:"text", half:true, ph:"Templo..." }, { k:"pastor", label:"Pastor responsável", type:"text", ph:"Quem vai oficiar" }], action: { kind: "baptismClass" } })}>+ Nova turma</button>} />
       <div className="kpi-row">
         <Kpi icon="identidade" label="Turmas abertas" value={baptismClasses.filter((c) => c.open_enrollment).length} foot="com inscrições disponíveis" />
         <Kpi icon="pessoa" label="Candidatos" value={baptismCandidates.length} foot="em preparação" />
@@ -2743,7 +2756,7 @@ function Quadros({
           <p className="ph-sub">Um quadro por time ou da Direção. Cada tarefa é um card com responsável, prazo e status.</p>
         </div>
         <div className="ph-actions">
-          <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo quadro", title: "Quadro de tarefas", subtitle: "Crie um quadro para um time ou para a liderança.", fields: ["Nome", "Time", "Descrição"], action: { kind: "board" } })}>+ Novo quadro</button>
+          <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo quadro", subtitle: "Um quadro de tarefas para organizar o trabalho de um time ou da liderança.", saveLabel: "Criar quadro", formFields: [{ k:"nome", label:"Nome do quadro", type:"text", req:true, ph:"ex: Louvor · Julho" }, { k:"time", label:"Time dono", type:"text", half:true, ph:"ex: Louvor (ou deixe em branco para geral)" }, { k:"desc", label:"Descrição", type:"text", half:true, ph:"Para que serve" }], action: { kind: "board" } })}>+ Novo quadro</button>
         </div>
       </div>
       <div className="kb-explain">
@@ -2806,10 +2819,10 @@ function Conversas({
   const chatName = (item: ChatView) => item.name || (item.ministry_id ? ministryById.get(item.ministry_id)?.name : null) || "Conversa";
   return (
     <div className="content wide">
-      <PageHead title="Conversas" eyebrow="Operação" subtitle="Canais por time, grupos e mensagens diretas da equipe. Conversas são privadas para os envolvidos." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Nova conversa", title: "Chamar para conversar", subtitle: "Fale com alguém em particular ou crie um grupo.", fields: ["Nome", "Participantes", "Mensagem"], action: { kind: "chat" } })}>+ Nova conversa</button>} />
+      <PageHead title="Conversas" eyebrow="Operação" subtitle="Canais por time, grupos e mensagens diretas da equipe. Conversas são privadas para os envolvidos." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova conversa", subtitle: "Fale com alguém em particular ou crie um grupo.", saveLabel: "Criar conversa", formFields: [{ k:"nome", label:"Nome do grupo / conversa", type:"text", req:true, ph:"ex: Louvor, Liderança" }, { k:"participantes", label:"Participante (nome)", type:"text", ph:"Quem entra na conversa" }, { k:"msg", label:"Primeira mensagem (opcional)", type:"text", ph:"..." }], action: { kind: "chat" } })}>+ Nova conversa</button>} />
       <div className="chat-layout">
         <div className="chat-list">{chats.map((item) => <button className={`chat-row ${item.id === selected ? "on" : ""}`} type="button" key={item.id} onClick={() => setSelected(item.id)}><span className="chat-row-ic"><Icon name={item.kind === "time" ? "times" : "membros"} size={16} /></span><span className="chat-row-main"><span className="chat-row-top"><b>{chatName(item)}</b><small>agora</small></span><span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || "Canal de alinhamento"}</span></span><span className="chat-row-count">{chatCount(item.id)}</span></button>)}</div>
-        <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; return <div className="chat-msg" key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <div className="empty">Nenhuma mensagem nesta conversa.</div> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." /><button className="btn btn-pri btn-sm" type="button" onClick={() => chat ? setModal({ eyebrow: "Mensagem", title: chatName(chat), subtitle: "Enviar mensagem nesta conversa.", fields: ["Mensagem"], action: { kind: "message", chatId: chat.id } }) : undefined}>Enviar</button></div></div></div>
+        <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; return <div className="chat-msg" key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <div className="empty">Nenhuma mensagem nesta conversa.</div> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." /><button className="btn btn-pri btn-sm" type="button" onClick={() => chat ? setModal({ eyebrow: "Enviar", title: chatName(chat), subtitle: "Enviar mensagem nesta conversa.", saveLabel: "Enviar", formFields: [{ k:"msg", label:"Mensagem", type:"area", req:true, ph:"Escreva sua mensagem..." }], action: { kind: "message", chatId: chat.id } }) : undefined}>Enviar</button></div></div></div>
       </div>
     </div>
   );
@@ -3226,7 +3239,7 @@ function Identidade({ church, setModal }: { church?: ChurchView; setModal: (moda
         title="Identidade & propósito"
         eyebrow="Nossa igreja"
         subtitle="Missão, visão, valores e tema atual da comunidade. Exibido no app do membro e na vitrine da Igreja."
-        action={<button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Identidade", title: "Editar identidade", subtitle: "Atualize a declaração de missão e visão da Igreja.", fields: ["Missão", "Visão", "Versículo"] })}>Editar</button>}
+        action={<button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Editar", title: "Identidade da Igreja", subtitle: "Atualize a declaração de missão e visão da Igreja.", formFields: [{ k:"missao", label:"Missão", type:"area", ph:"A missão da Igreja..." }, { k:"visao", label:"Visão", type:"area", ph:"A visão da Igreja..." }, { k:"versiculo", label:"Versículo", type:"text", ph:"ex: Mateus 28:19" }] })}>Editar</button>}
       />
       <div className="ident-hero">
         <div className="ident-hero-label">Declaração de missão</div>
@@ -3296,7 +3309,7 @@ function Historia({ church, setModal }: { church?: ChurchView; setModal: (modal:
         title="Nossa história"
         eyebrow="Nossa igreja"
         subtitle="Marcos, momentos e a linha do tempo de como chegamos até aqui. Cada capítulo é uma prova da fidelidade de Deus."
-        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Marco histórico", title: "Adicionar marco", subtitle: "Registre um momento importante da história da Igreja.", fields: ["Ano", "Título", "Descrição"], action: undefined })}>+ Marco</button>}
+        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Marco histórico", subtitle: "Registre um momento importante da história da Igreja.", saveLabel: "Adicionar marco", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:"ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:"ex: Fundação da Igreja" }, { k:"desc", label:"Descrição", type:"area", ph:"O que aconteceu..." }] })}>+ Marco</button>}
       />
       <div className="hist">
         {marcos.map((marco) => (
@@ -3309,7 +3322,7 @@ function Historia({ church, setModal }: { church?: ChurchView; setModal: (modal:
               <div className="hist-t">{marco.title}</div>
               <div className="hist-x">{marco.text}</div>
               <div className="hist-foot">
-                <button className="hist-edit" type="button" onClick={() => setModal({ eyebrow: "Marco histórico", title: marco.title, subtitle: "Edite este marco da história da Igreja.", fields: ["Ano", "Título", "Descrição"] })}>Editar</button>
+                <button className="hist-edit" type="button" onClick={() => setModal({ eyebrow: "Editar", title: marco.title, subtitle: "Edite este marco da história da Igreja.", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:"ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:marco.title }, { k:"desc", label:"Descrição", type:"area", ph:"O que aconteceu..." }] })}>Editar</button>
               </div>
             </div>
           </div>
@@ -3322,7 +3335,7 @@ function Historia({ church, setModal }: { church?: ChurchView; setModal: (modal:
 function SimpleModule({ title, subtitle, empty, setModal }: { title: string; subtitle: string; empty: string; setModal: (modal: ModalState) => void }) {
   return (
     <div className="content">
-      <PageHead title={title} eyebrow="Service" subtitle={subtitle} action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: title, title: `Criar ${title.toLowerCase()}`, subtitle, fields: ["Nome", "Responsável", "Observações"] })}>+ Criar</button>} />
+      <PageHead title={title} eyebrow="Service" subtitle={subtitle} action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: `Criar ${title.toLowerCase()}`, subtitle, formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Nome" }, { k:"responsavel", label:"Responsável", type:"text", ph:"Responsável" }, { k:"obs", label:"Observações", type:"area", ph:"Observações..." }] })}>+ Criar</button>} />
       <div className="empty"><div className="empty-mark">0</div><h3 className="empty-title">{empty}</h3><p className="empty-desc">Este módulo está pronto para receber os registros do banco.</p></div>
     </div>
   );
@@ -3766,7 +3779,7 @@ function EntityDrawer({
           </DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
             <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { setDrawer(null); setRoute("escalas"); }}>Escalar</button>
-            <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Mensagem", title: person.name, subtitle: "Abrir conversa com o voluntário.", fields: ["Mensagem"] })}>Enviar mensagem</button>
+            <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Mensagem", title: person.name, subtitle: "Abrir conversa com o voluntário.", formFields: [{ k:"msg", label:"Mensagem", type:"area", ph:"Escreva sua mensagem..." }] })}>Enviar mensagem</button>
           </div>
         </div>
       </DrawerShell>
@@ -3852,9 +3865,9 @@ function EntityDrawer({
           <DrawerSection title="Jornada de integração"><PersonTimeline member={member} compact /></DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
             {isServing
-              ? <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Jornada", title: member.name, subtitle: "Atualize o próximo passo de acompanhamento.", fields: ["Próximo passo", "Responsável", "Data"] })}>Atualizar jornada</button>
-              : <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Convidar para servir", title: member.name, subtitle: "Convide esta pessoa para entrar em um ministério.", fields: ["Ministério", "Mensagem"] })}>Convidar para servir</button>}
-            <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Mensagem", title: member.name, subtitle: "Abrir conversa com o membro.", fields: ["Mensagem"] })}>Enviar mensagem</button>
+              ? <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Jornada", title: member.name, subtitle: "Atualize o próximo passo de acompanhamento.", formFields: [{ k:"passo", label:"Próximo passo", type:"text", ph:"ex: Convidar para batismo" }, { k:"responsavel", label:"Responsável", type:"text", ph:"Quem acompanha" }, { k:"data", label:"Data limite", type:"date" }] })}>Atualizar jornada</button>
+              : <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Convidar", title: member.name, subtitle: "Convide esta pessoa para entrar em um ministério.", saveLabel: "Enviar convite", formFields: [{ k:"ministerio", label:"Ministério", type:"text", ph:"Nome do ministério" }, { k:"msg", label:"Mensagem (opcional)", type:"area", ph:"Mensagem de convite..." }] })}>Convidar para servir</button>}
+            <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Mensagem", title: member.name, subtitle: "Abrir conversa com o membro.", formFields: [{ k:"msg", label:"Mensagem", type:"area", ph:"Escreva sua mensagem..." }] })}>Enviar mensagem</button>
           </div>
         </div>
       </DrawerShell>
@@ -3917,7 +3930,7 @@ function EntityDrawer({
           </DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
             <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { setDrawer(null); setRoute("escalas"); }}>Ver escala do time →</button>
-            <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Adicionar ao time", title: ministry.name, subtitle: "Escolha voluntários para incluir neste ministério.", fields: ["Voluntário", "Função"] })}>Adicionar pessoa</button>
+            <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Adicionar", title: ministry.name, subtitle: "Escolha voluntários para incluir neste ministério.", saveLabel: "Adicionar pessoa", formFields: [{ k:"voluntario", label:"Voluntário", type:"text", ph:"Nome do voluntário" }, { k:"funcao", label:"Função no time", type:"text", ph:"ex: Vocal, Câmera" }] })}>Adicionar pessoa</button>
           </div>
         </div>
       </DrawerShell>
@@ -4082,7 +4095,7 @@ function EventDrawer({
         )}
         <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
           <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { onClose(); setRoute("escalas"); }}>Editar escala →</button>
-          <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Setup da celebração", title: event.name, subtitle: "Compartilhe cronograma, posições e observações do culto.", fields: ["Mensagem", "Equipe"] })}><Icon name="comunicacao" size={15} /> Setup da celebração</button>
+          <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Setup", title: event.name, subtitle: "Compartilhe cronograma, posições e observações do culto.", formFields: [{ k:"msg", label:"Mensagem para a equipe", type:"area", ph:"Detalhes do culto, posições, observações..." }, { k:"equipe", label:"Destinatários", type:"text", ph:"ex: Todos / Louvor" }] })}><Icon name="comunicacao" size={15} /> Setup da celebração</button>
         </div>
       </div>
     </DrawerShell>
@@ -4138,6 +4151,113 @@ function friendlyWriteError(message: string) {
   return message || "Não conseguimos salvar agora.";
 }
 
+const DP_MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const DP_MESES_FULL = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const DP_DIAS_MES = [31,29,31,30,31,30,31,31,30,31,30,31];
+
+function DatePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const parse = () => {
+    if (!value) return { d: null as number | null, m: 0 };
+    const p = value.split(" ");
+    const mi = DP_MESES.findIndex((x) => x.toLowerCase() === (p[1] || "").toLowerCase());
+    return { d: parseInt(p[0], 10) || null, m: mi < 0 ? 0 : mi };
+  };
+  const init = parse();
+  const [open, setOpen] = useState(false);
+  const [mes, setMes] = useState(init.m);
+  const dia = init.d;
+  const pick = (d: number) => { onChange(d + " " + DP_MESES[mes].toLowerCase()); setOpen(false); };
+  return (
+    <div className="dp">
+      <button type="button" className="dp-trigger" onClick={() => setOpen((o) => !o)}>
+        <span className={value ? "" : "dp-ph"}>{value ? `${dia} de ${DP_MESES_FULL[mes]}` : "Escolher dia e mês"}</span>
+        <span className="dp-ic">▾</span>
+      </button>
+      {open && (
+        <div className="dp-pop">
+          <div className="dp-head">
+            <button type="button" onClick={() => setMes((m) => (m + 11) % 12)}>‹</button>
+            <span>{DP_MESES_FULL[mes]}</span>
+            <button type="button" onClick={() => setMes((m) => (m + 1) % 12)}>›</button>
+          </div>
+          <div className="dp-grid">
+            {Array.from({ length: DP_DIAS_MES[mes] }, (_, i) => i + 1).map((d) => (
+              <button type="button" key={d} className={`dp-day${dia === d && init.m === mes ? " on" : ""}`} onClick={() => pick(d)}>{d}</button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TimePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const p = (value || "").match(/(\d{1,2})[h:](\d{2})/);
+  const hh = p ? +p[1] : 19;
+  const mm = p ? +p[2] : 0;
+  const set = (h: number, m: number) => onChange(String(h).padStart(2, "0") + "h" + String(m).padStart(2, "0"));
+  return (
+    <div className="dp">
+      <button type="button" className="dp-trigger" onClick={() => setOpen((o) => !o)}>
+        <span className={value ? "" : "dp-ph"}>{value || "Escolher horário"}</span>
+        <span className="dp-ic">▾</span>
+      </button>
+      {open && (
+        <div className="dp-pop tp-pop">
+          <div className="tp-col">
+            <div className="tp-col-h">Hora</div>
+            <div className="tp-scroll">
+              {Array.from({ length: 24 }, (_, h) => h).map((h) => (
+                <button type="button" key={h} className={`tp-opt${hh === h ? " on" : ""}`} onClick={() => set(h, mm)}>{String(h).padStart(2, "0")}</button>
+              ))}
+            </div>
+          </div>
+          <div className="tp-col">
+            <div className="tp-col-h">Min</div>
+            <div className="tp-scroll">
+              {[0, 15, 30, 45].map((m) => (
+                <button type="button" key={m} className={`tp-opt${mm === m ? " on" : ""}`} onClick={() => { set(hh, m); setOpen(false); }}>{String(m).padStart(2, "0")}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FField({ field, value, onChange }: { field: FieldDef; value: string; onChange: (v: string) => void }) {
+  if (field.type === "area")
+    return <textarea className="textarea" value={value} placeholder={field.ph} style={field.big ? { minHeight: 110 } : undefined} onChange={(e) => onChange(e.target.value)} />;
+  if (field.type === "select")
+    return (
+      <select className="select" value={value} onChange={(e) => onChange(e.target.value)}>
+        {field.ph && <option value="">{field.ph}</option>}
+        {field.options.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+      </select>
+    );
+  if (field.type === "toggle")
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <button type="button" className={`sw${value === "true" ? " on" : ""}`} onClick={() => onChange(value === "true" ? "false" : "true")} />
+        <span style={{ fontSize: 13, color: "var(--muted)" }}>{value === "true" ? (field.onLabel || "Sim") : (field.offLabel || "Não")}</span>
+      </div>
+    );
+  if (field.type === "checks") {
+    const arr = value ? value.split(",") : [];
+    const tog = (v: string) => onChange(arr.includes(v) ? arr.filter((x) => x !== v).join(",") : [...arr, v].join(","));
+    return (
+      <div className="seg-check">
+        {field.options.map((o) => <button type="button" key={o.v} className={`seg-chip${arr.includes(o.v) ? " on" : ""}`} onClick={() => tog(o.v)}>{o.l}</button>)}
+      </div>
+    );
+  }
+  if (field.type === "date") return <DatePicker value={value} onChange={onChange} />;
+  if (field.type === "time") return <TimePicker value={value} onChange={onChange} />;
+  return <input className="input" value={value} placeholder={field.ph} onChange={(e) => onChange(e.target.value)} />;
+}
+
 function ServiceModal({
   modal,
   church,
@@ -4180,8 +4300,47 @@ function ServiceModal({
     let result: { error: { message: string } | null } = { error: null };
 
     setSaving(true);
-    if (action.kind === "decision") {
-      if (!value("Nome")) {
+    if (action.kind === "member") {
+      if (!value("nome")) { setSaving(false); setError("Digite o nome do membro."); return; }
+      result = await supabase.schema("service").from("members").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        name: value("nome"),
+        phone: value("tel") || null,
+        email: value("email") || null,
+        birthday: value("nasc") || null,
+        neighborhood: value("bairro") || null,
+        situation: "membro",
+        journey: [1, 0, 0, 0, 0],
+      });
+    } else if (action.kind === "event") {
+      if (!value("nome")) { setSaving(false); setError("Digite o nome do culto."); return; }
+      result = await supabase.schema("service").from("events").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        title: value("nome"),
+        kind: value("tipo") || "Culto",
+        event_date: value("data") || null,
+        time: value("hora") || null,
+        location: value("local") || null,
+        recurrence: value("recorrencia") || "semanal",
+        ministry_ids: [],
+        roster: [],
+        cronogram: [],
+      });
+    } else if (action.kind === "ministry") {
+      if (!value("nome")) { setSaving(false); setError("Digite o nome do ministério."); return; }
+      result = await supabase.schema("service").from("ministries").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        name: value("nome"),
+        icon: "times",
+        description: value("desc") || null,
+        positions: [],
+        people: [],
+      });
+    } else if (action.kind === "decision") {
+      if (!value("nome")) {
         setSaving(false);
         setError("Digite o nome da pessoa.");
         return;
@@ -4189,16 +4348,16 @@ function ServiceModal({
       result = await supabase.schema("service").from("decisions").insert({
         organization_id: church.organizationId,
         church_id: church.id,
-        name: value("Nome"),
-        phone: value("Telefone") || null,
-        service_name: value("Culto") || null,
-        responsible_id: namedPerson("Responsável")?.id ?? null,
+        name: value("nome"),
+        phone: value("tel") || null,
+        service_name: value("culto") || null,
+        responsible_id: namedPerson("responsavel")?.id ?? null,
         happened_on: new Date().toLocaleDateString("pt-BR"),
         kind: "decisao",
         status: "novo",
       });
     } else if (action.kind === "baptismClass") {
-      if (!value("Nome da turma")) {
+      if (!value("label")) {
         setSaving(false);
         setError("Digite o nome da turma.");
         return;
@@ -4206,15 +4365,15 @@ function ServiceModal({
       result = await supabase.schema("service").from("baptism_classes").insert({
         organization_id: church.organizationId,
         church_id: church.id,
-        label: value("Nome da turma"),
-        baptism_date: value("Data") || null,
-        location: value("Local") || null,
-        pastor: value("Pastor") || null,
+        label: value("label"),
+        baptism_date: value("data") || null,
+        location: value("local") || null,
+        pastor: value("pastor") || null,
         status: "aberta",
         open_enrollment: true,
       });
     } else if (action.kind === "course") {
-      if (!value("Nome")) {
+      if (!value("nome")) {
         setSaving(false);
         setError("Digite o nome do curso.");
         return;
@@ -4222,15 +4381,15 @@ function ServiceModal({
       result = await supabase.schema("service").from("courses").insert({
         organization_id: church.organizationId,
         church_id: church.id,
-        name: value("Nome"),
-        level: value("Nível") || null,
-        description: value("Descrição") || null,
-        kind: "trilha",
-        category: value("Nível") || "discipulado",
+        name: value("nome"),
+        level: value("nivel") || null,
+        description: value("desc") || null,
+        kind: value("tipo") || "trilha",
+        category: value("nivel") || "discipulado",
         color: "clay",
       });
     } else if (action.kind === "board") {
-      if (!value("Nome")) {
+      if (!value("nome")) {
         setSaving(false);
         setError("Digite o nome do quadro.");
         return;
@@ -4238,10 +4397,10 @@ function ServiceModal({
       result = await supabase.schema("service").from("boards").insert({
         organization_id: church.organizationId,
         church_id: church.id,
-        name: value("Nome"),
-        ministry_id: namedMinistry("Time")?.id ?? null,
-        description: value("Descrição") || null,
-        scope: namedMinistry("Time") ? "time" : "geral",
+        name: value("nome"),
+        ministry_id: namedMinistry("time")?.id ?? null,
+        description: value("desc") || null,
+        scope: namedMinistry("time") ? "time" : "geral",
         columns: [
           { id: "todo", nome: "A fazer" },
           { id: "doing", nome: "Em andamento" },
@@ -4249,24 +4408,24 @@ function ServiceModal({
         ],
       });
     } else if (action.kind === "card") {
-      if (!value("Título")) {
+      if (!value("titulo")) {
         setSaving(false);
         setError("Digite o título do card.");
         return;
       }
-      const assignee = namedPerson("Responsável");
+      const assignee = namedPerson("responsavel");
       result = await supabase.schema("service").from("cards").insert({
         organization_id: church.organizationId,
         board_id: action.boardId,
         column_id: action.columnId,
-        title: value("Título"),
-        due: value("Prazo") || null,
+        title: value("titulo"),
+        due: value("prazo") || null,
         assignees: assignee ? [assignee.id] : [],
         priority: "media",
         source_type: "manual",
       });
     } else if (action.kind === "chat") {
-      if (!value("Nome")) {
+      if (!value("nome")) {
         setSaving(false);
         setError("Digite o nome da conversa.");
         return;
@@ -4274,13 +4433,13 @@ function ServiceModal({
       const { data: chat, error: chatError } = await supabase.schema("service").from("chats").insert({
         organization_id: church.organizationId,
         church_id: church.id,
-        name: value("Nome"),
+        name: value("nome"),
         kind: "grupo",
       }).select("id").single();
       if (chatError) {
         result = { error: chatError };
       } else {
-        const member = namedMember("Participantes");
+        const member = namedMember("participantes");
         if (member) {
           await supabase.schema("service").from("chat_members").insert({
             organization_id: church.organizationId,
@@ -4288,17 +4447,17 @@ function ServiceModal({
             member_id: member.id,
           });
         }
-        result = value("Mensagem")
+        result = value("msg")
           ? await supabase.schema("service").from("messages").insert({
               organization_id: church.organizationId,
               chat_id: chat.id,
               sender_id: member?.id ?? null,
-              body: value("Mensagem"),
+              body: value("msg"),
             })
           : { error: null };
       }
     } else if (action.kind === "message") {
-      if (!value("Mensagem")) {
+      if (!value("msg")) {
         setSaving(false);
         setError("Digite a mensagem.");
         return;
@@ -4307,7 +4466,7 @@ function ServiceModal({
         organization_id: church.organizationId,
         chat_id: action.chatId,
         sender_id: members[0]?.id ?? null,
-        body: value("Mensagem"),
+        body: value("msg"),
       });
     } else if (action.kind === "visitor") {
       if (!value("Nome")) {
@@ -4318,56 +4477,56 @@ function ServiceModal({
       result = await supabase.schema("service").from("visitors").insert({
         organization_id: church.organizationId,
         church_id: church.id,
-        name: value("Nome"),
-        phone: value("Telefone") || null,
-        origin: value("Como chegou") || null,
-        visited_on: value("Visitou") || null,
+        name: value("nome"),
+        phone: value("tel") || null,
+        origin: value("origem") || null,
+        visited_on: value("visitou") || null,
         stage: "novo",
         due: "1º contato",
         due_status: "soon",
       });
     } else if (action.kind === "meeting") {
-      if (!value("Título")) {
+      if (!value("titulo")) {
         setSaving(false);
         setError("Digite o título da reunião.");
         return;
       }
-      const ministry = namedMinistry("Time");
+      const ministry = namedMinistry("time");
       result = await supabase.schema("service").from("meetings").insert({
         organization_id: church.organizationId,
         church_id: church.id,
-        title: value("Título"),
-        meeting_date: value("Data") || null,
-        time: value("Horário") || null,
-        location: value("Local") || null,
+        title: value("titulo"),
+        meeting_date: value("data") || null,
+        time: value("hora") || null,
+        location: value("local") || null,
         ministries: ministry ? [ministry.id] : [],
         attendees: [],
         agenda: [],
         status: "agendada",
       });
     } else if (action.kind === "rehearsal") {
-      if (!value("Título")) {
+      if (!value("titulo")) {
         setSaving(false);
         setError("Digite o título do ensaio.");
         return;
       }
-      const ministry = namedMinistry("Time");
+      const ministry = namedMinistry("time");
       result = await supabase.schema("service").from("rehearsals").insert({
         organization_id: church.organizationId,
         church_id: church.id,
-        title: value("Título"),
-        rehearsal_date: value("Data") || null,
-        time: value("Horário") || null,
-        location: value("Local") || null,
+        title: value("titulo"),
+        rehearsal_date: value("data") || null,
+        time: value("hora") || null,
+        location: value("local") || null,
         ministry_id: ministry?.id ?? null,
-        kind: "louvor",
-        recurrence: "eventual",
+        kind: value("tipo") || "louvor",
+        recurrence: value("recorrencia") || "eventual",
         attendees: [],
         repertoire: [],
         attachments: [],
       });
     } else if (action.kind === "announcement") {
-      if (!value("Título")) {
+      if (!value("titulo")) {
         setSaving(false);
         setError("Digite o título do aviso.");
         return;
@@ -4375,14 +4534,14 @@ function ServiceModal({
       result = await supabase.schema("service").from("announcements").insert({
         organization_id: church.organizationId,
         church_id: church.id,
-        title: value("Título"),
-        body: value("Mensagem") || null,
-        audience: value("Público") || "todos",
+        title: value("titulo"),
+        body: value("msg") || null,
+        audience: value("publico") || "todos",
         author: "Liderança",
         when_label: "agora",
       });
     } else if (action.kind === "wallPost") {
-      if (!value("Mensagem")) {
+      if (!value("msg")) {
         setSaving(false);
         setError("Digite a mensagem do mural.");
         return;
@@ -4390,13 +4549,13 @@ function ServiceModal({
       result = await supabase.schema("service").from("wall_posts").insert({
         organization_id: church.organizationId,
         church_id: church.id,
-        body: value("Mensagem"),
-        audience: value("Público") || "todos",
+        body: value("msg"),
+        audience: value("publico") || "todos",
         author: "Liderança",
         channels: ["app"],
       });
     } else if (action.kind === "room") {
-      if (!value("Nome")) {
+      if (!value("nome")) {
         setSaving(false);
         setError("Digite o nome da sala.");
         return;
@@ -4404,13 +4563,13 @@ function ServiceModal({
       result = await supabase.schema("service").from("rooms").insert({
         organization_id: church.organizationId,
         church_id: church.id,
-        name: value("Nome"),
-        capacity: Number.parseInt(value("Capacidade"), 10) || null,
-        location: value("Local") || null,
-        resources: value("Recursos") ? value("Recursos").split(",").map((item) => item.trim()).filter(Boolean) : [],
+        name: value("nome"),
+        capacity: Number.parseInt(value("capacidade"), 10) || null,
+        location: value("local") || null,
+        resources: value("recursos") ? value("recursos").split(",").map((item) => item.trim()).filter(Boolean) : [],
       });
     } else if (action.kind === "reservation") {
-      if (!value("Título")) {
+      if (!value("titulo")) {
         setSaving(false);
         setError("Digite o título da reserva.");
         return;
@@ -4424,11 +4583,11 @@ function ServiceModal({
       result = await supabase.schema("service").from("reservations").insert({
         organization_id: church.organizationId,
         room_id: room.id,
-        title: value("Título"),
-        kind: value("Tipo") || "outro",
-        reserved_date: value("Data") || null,
-        start_time: value("Início") || null,
-        end_time: value("Fim") || null,
+        title: value("titulo"),
+        kind: value("tipo") || "outro",
+        reserved_date: value("data") || null,
+        start_time: value("inicio") || null,
+        end_time: value("fim") || null,
       });
     }
 
@@ -4441,31 +4600,42 @@ function ServiceModal({
     onClose();
   }
 
+  const hasHalf = modal.formFields.some((f) => f.half);
+
   return (
     <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
+      <div className={`modal${hasHalf ? " wide" : ""}`} onClick={(event) => event.stopPropagation()}>
         <div className="modal-head">
           <div className="modal-eyebrow">{modal.eyebrow}</div>
           <div className="modal-title">{modal.title}</div>
-          <div className="modal-sub">{modal.subtitle}</div>
+          {modal.subtitle && <div className="modal-sub">{modal.subtitle}</div>}
         </div>
         <div className="modal-body" style={{ display: "block" }}>
-          {modal.fields.map((field) => (
-            <label className="field" key={field}>
-              <span className="field-label">{field}</span>
-              <input
-                className="input"
-                placeholder={field}
-                value={values[field] ?? ""}
-                onChange={(event) => setValues((current) => ({ ...current, [field]: event.target.value }))}
-              />
-            </label>
-          ))}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0 16px" }}>
+            {modal.formFields.map((field) => (
+              <div
+                className="field"
+                key={field.k}
+                style={field.half ? { flex: "1 1 calc(50% - 8px)", minWidth: 160 } : { flex: "1 1 100%" }}
+              >
+                <label className="field-label">
+                  {field.label}
+                  {field.req && <span style={{ color: "var(--olive)" }}> *</span>}
+                </label>
+                <FField
+                  field={field}
+                  value={values[field.k] ?? ""}
+                  onChange={(v) => setValues((cur) => ({ ...cur, [field.k]: v }))}
+                />
+                {field.hint && <div style={{ fontSize: 11, color: "var(--subtle)", marginTop: 5 }}>{field.hint}</div>}
+              </div>
+            ))}
+          </div>
           {error ? <p className="mini-sub" style={{ color: "var(--danger)", marginTop: 12 }}>{error}</p> : null}
         </div>
         <div className="modal-foot">
           <button className="btn btn-sec" type="button" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button className="btn btn-pri" type="button" onClick={save} disabled={saving}>{saving ? "Salvando..." : "Salvar"}</button>
+          <button className="btn btn-pri" type="button" onClick={save} disabled={saving}>{saving ? "Salvando..." : (modal.saveLabel || "Salvar")}</button>
         </div>
       </div>
     </div>
