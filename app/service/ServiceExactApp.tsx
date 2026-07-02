@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 
 type ChurchView = {
@@ -322,21 +322,61 @@ type ModalState =
 
 const ICONS: Record<string, string> = {
   painel: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/><path d="M9.5 21v-6h5v6"/>',
+  relatorios: '<path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-6"/>',
+  config: '<path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M2 14h4"/><path d="M10 8h4"/><path d="M18 16h4"/>',
+  identidade: '<circle cx="12" cy="12" r="9.5"/><path d="m15.8 8.2-2.6 5-5 2.6 2.6-5 5-2.6Z"/>',
+  historia: '<circle cx="12" cy="12" r="9.5"/><path d="M12 6.5V12l3.5 2"/>',
   membros: '<path d="M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1"/><circle cx="9" cy="7.5" r="3.5"/><path d="M22 19v-1a4 4 0 0 0-3-3.87"/><path d="M16 3.63a4 4 0 0 1 0 7.75"/>',
   pessoa: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
   times: '<rect x="3" y="3" width="7.5" height="7.5" rx="1.2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.2"/>',
   visitante: '<path d="M15 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/>',
+  decisoes: '<path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7A5 5 0 1 0 3.2 12.7l8.8 8.8 8.8-8.8a5 5 0 0 0 0-7.1Z"/>',
+  batismos: '<path d="M12 3s6 5.7 6 10a6 6 0 0 1-12 0c0-4.3 6-10 6-10Z"/>',
+  cursos: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>',
   escalas: '<path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 10h18"/><path d="m9 15 2 2 4-4"/>',
   cultos: '<path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 10h18"/>',
+  reunioes: '<path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1Z"/><path d="M8 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2"/><path d="m9 14 2 2 4-4"/>',
+  ensaios: '<path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
+  quadros: '<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M9 5v14"/><path d="M15 5v14"/>',
+  espacos: '<path d="M3 21V5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v16"/><path d="M15 9h4a1 1 0 0 1 1 1v11"/><path d="M2 21h20"/><path d="M11 8h.01"/>',
+  agenda: '<path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/>',
   comunicacao: '<path d="M3 11 18 5v14L3 13Z"/><path d="M7 12.5V18a1 1 0 0 0 1 1h2"/><path d="M18 9a3 3 0 0 1 0 6"/>',
-  relatorios: '<path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-6"/>',
-  config: '<path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M2 14h4"/><path d="M10 8h4"/><path d="M18 16h4"/>',
-  identidade: '<circle cx="12" cy="12" r="9.5"/><path d="m15.8 8.2-2.6 5-5 2.6 2.6-5 5-2.6Z"/>',
+  conversas: '<path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/>',
+  inicio: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/>',
+  tarefas: '<path d="m9 11 3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  perfil: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  oracao: '<path d="M12 3v9"/><path d="M8 7c0-2 1.8-4 4-4s4 2 4 4c0 3-4 5-4 5s-4-2-4-5Z"/><path d="M5 21c1.5-3 4-4.5 7-4.5s5.5 1.5 7 4.5"/>',
+  louvor: '<path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
+  recepcao: '<path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  kids: '<circle cx="12" cy="12" r="9.5"/><path d="M9 10h.01"/><path d="M15 10h.01"/><path d="M8.5 15a4 4 0 0 0 7 0"/>',
+  midia: '<rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3Z"/>',
+  diaconia: '<path d="M3 7h18l-1.2 13a1 1 0 0 1-1 .9H5.2a1 1 0 0 1-1-.9Z"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/>',
+  intercessao: '<path d="M12 3v9"/><path d="M8 7c0-2 1.8-4 4-4s4 2 4 4c0 3-4 5-4 5s-4-2-4-5Z"/><path d="M5 21c1.5-3 4-4.5 7-4.5s5.5 1.5 7 4.5"/>',
+  ok: '<circle cx="12" cy="12" r="9.5"/><path d="m8.5 12 2.5 2.5 4.5-4.5"/>',
+  pendente: '<circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3 2"/>',
+  recusou: '<circle cx="12" cy="12" r="9.5"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/>',
+  alerta: '<path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  add: '<path d="M12 5v14"/><path d="M5 12h14"/>',
+  editar: '<path d="M11 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-6"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>',
   buscar: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  filtro: '<path d="M22 3H2l8 9.5V19l4 2v-8.5Z"/>',
+  voltar: '<path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>',
+  avancar: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
   sino: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  enviar: '<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/>',
+  telefone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.2a2 2 0 0 1 2.1-.5c.9.4 1.8.6 2.7.7a2 2 0 0 1 1.7 2Z"/>',
   globo: '<circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19"/><path d="M12 2.5a14.5 14.5 0 0 1 0 19 14.5 14.5 0 0 1 0-19Z"/>',
   sair: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
   sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.9 4.9 1.4 1.4"/><path d="m17.7 17.7 1.4 1.4"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.3 17.7-1.4 1.4"/><path d="m19.1 4.9-1.4 1.4"/>',
+  lua: '<path d="M12 3a6.5 6.5 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+};
+
+const CEX_ICON_FOR: Record<string, string> = {
+  painel: "painel", membros: "membros", pessoas: "pessoa", times: "times", visitantes: "visitante",
+  decisoes: "decisoes", batismos: "batismos", cursos: "cursos",
+  escalas: "escalas", reunioes: "reunioes", ensaios: "ensaios", quadros: "quadros", espacos: "espacos",
+  cultos: "cultos", comunicacao: "comunicacao", conversas: "conversas",
+  relatorios: "relatorios", config: "config", identidade: "identidade", historia: "historia",
 };
 
 const ROUTES = {
@@ -363,7 +403,8 @@ const ROUTES = {
 };
 
 function Icon({ name, size = 18, stroke = 1.75 }: { name: string; size?: number; stroke?: number }) {
-  const inner = ICONS[name] ?? ICONS.painel;
+  const inner = ICONS[name];
+  if (!inner) return <span style={{ fontSize: size * 0.7 }}>◆</span>;
   return (
     <svg
       className="cex-ic"
@@ -378,6 +419,132 @@ function Icon({ name, size = 18, stroke = 1.75 }: { name: string; size?: number;
       aria-hidden="true"
       dangerouslySetInnerHTML={{ __html: inner }}
     />
+  );
+}
+
+function TeamMark({ ministry, size = 16 }: { ministry?: { icon?: string; name?: string }; size?: number }) {
+  const iconName = (ministry?.icon && ICONS[ministry.icon]) ? ministry.icon :
+    (ministry?.name?.toLowerCase().includes("louvor") ? "louvor" :
+    ministry?.name?.toLowerCase().includes("kids") ? "kids" :
+    ministry?.name?.toLowerCase().includes("mídia") || ministry?.name?.toLowerCase().includes("media") ? "midia" :
+    ministry?.name?.toLowerCase().includes("recep") ? "recepcao" :
+    ministry?.name?.toLowerCase().includes("diacon") ? "diaconia" :
+    ministry?.name?.toLowerCase().includes("intercess") ? "intercessao" : "times");
+  return <Icon name={iconName} size={size} />;
+}
+
+function IgrejaLogo() {
+  return (
+    <div className="brand brand-row">
+      <span className="sb-logo">CE<span className="ol">.X</span></span>
+      <span className="brand-div" aria-hidden="true" />
+      <span className="brand-service">Service</span>
+    </div>
+  );
+}
+
+function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchView[]; activeId: string; setActiveId: (id: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const active = churches.find((c) => c.id === activeId) ?? churches[0];
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div className="cong" ref={ref}>
+      <button className="cong-btn" type="button" onClick={() => setOpen((o) => !o)}>
+        <span className="cong-mark"><Icon name="identidade" size={16} /></span>
+        <span className="cong-info">
+          <span className="cong-name">{active?.nome ?? "CE.X Central"}</span>
+          <span className="cong-role">{active?.matriz ? "Matriz · rede" : "Congregação"}</span>
+        </span>
+        <span className="cong-caret">▾</span>
+      </button>
+      {open && churches.length > 1 && (
+        <div className="cong-menu">
+          <div className="cong-group">Matriz</div>
+          {churches.filter((c) => c.matriz).map((c) => (
+            <button key={c.id} className={`cong-opt ${c.id === activeId ? "on" : ""}`} type="button"
+              onClick={() => { setActiveId(c.id); setOpen(false); }}>
+              <span className="cong-opt-mark"><Icon name="identidade" size={14} /></span>
+              <span className="cong-opt-info">
+                <span className="cong-opt-name">{c.nome}</span>
+                <span className="cong-opt-sub">{c.cidade}</span>
+              </span>
+            </button>
+          ))}
+          {churches.some((c) => !c.matriz) && (
+            <>
+              <div className="cong-group">Congregações</div>
+              {churches.filter((c) => !c.matriz).map((c) => (
+                <button key={c.id} className={`cong-opt ${c.id === activeId ? "on" : ""}`} type="button"
+                  onClick={() => { setActiveId(c.id); setOpen(false); }}>
+                  <span className="cong-opt-mark"><Icon name="identidade" size={14} /></span>
+                  <span className="cong-opt-info">
+                    <span className="cong-opt-name">{c.nome}</span>
+                    <span className="cong-opt-sub">{c.cidade}</span>
+                  </span>
+                </button>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ViewSwitcher({ ministries }: { ministries: MinistryView[] }) {
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState<string>("direcao");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const activeMinistry = ministries.find((m) => m.id === view);
+  const label = view === "direcao" ? "Direção" : activeMinistry?.name ?? "Time";
+  const role = view === "direcao" ? "Visão geral · master" : "Líder de time";
+
+  return (
+    <div className="view-sw" ref={ref}>
+      <button className="view-sw-btn" type="button" onClick={() => setOpen((o) => !o)}>
+        <span className="view-sw-ic"><Icon name={view === "direcao" ? "identidade" : "times"} size={14} /></span>
+        <span className="view-sw-info">
+          <span className="view-sw-name">{label}</span>
+          <span className="view-sw-role">{role}</span>
+        </span>
+        <span className="view-sw-caret">▾</span>
+      </button>
+      {open && (
+        <div className="view-sw-menu">
+          <div className="view-sw-group">Perspectiva</div>
+          <button className={`view-sw-opt ${view === "direcao" ? "on" : ""}`} type="button"
+            onClick={() => { setView("direcao"); setOpen(false); }}>
+            <span className="view-sw-opt-ic"><Icon name="identidade" size={14} /></span>
+            <span className="view-sw-opt-main"><b>Direção</b><small>Visão completa da Igreja</small></span>
+          </button>
+          {ministries.slice(0, 8).map((m) => (
+            <button key={m.id} className={`view-sw-opt ${view === m.id ? "on" : ""}`} type="button"
+              onClick={() => { setView(m.id); setOpen(false); }}>
+              <span className="view-sw-opt-ic"><TeamMark ministry={m} size={14} /></span>
+              <span className="view-sw-opt-main"><b>{m.name}</b><small>Líder · {m.people.length} vol.</small></span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -455,7 +622,15 @@ export default function ServiceExactApp({
   const [route, setRoute] = useState<keyof typeof ROUTES>("painel");
   const [drawer, setDrawer] = useState<DrawerState>(null);
   const [modal, setModal] = useState<ModalState>(null);
-  const firstChurch = churches[0];
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [activeChurchId, setActiveChurchId] = useState<string>(churches[0]?.id ?? "");
+
+  useEffect(() => {
+    document.body.dataset.theme = theme === "light" ? "light" : "";
+    return () => { document.body.dataset.theme = ""; };
+  }, [theme]);
+
+  const firstChurch = churches.find((c) => c.id === activeChurchId) ?? churches[0];
   const activePeople = people.filter((person) => person.status === "ativo").length;
   const rosterOk = roster.filter((assignment) => assignment.status === "ok").length;
   const confirmationRate = roster.length ? Math.round((rosterOk / roster.length) * 100) : 0;
@@ -485,24 +660,23 @@ export default function ServiceExactApp({
       ],
     },
     {
-      group: "Operação",
+      group: "Jornada",
       items: [
-        { id: "escalas", icon: "escalas", label: "Escalas", badge: gaps.length },
-        { id: "reunioes", icon: "cultos", label: "Reuniões", count: meetings.length },
-        { id: "ensaios", icon: "cultos", label: "Ensaios", count: rehearsals.length },
-        { id: "espacos", icon: "config", label: "Espaços & Reservas", count: rooms.length },
-        { id: "quadros", icon: "comunicacao", label: "Quadros" },
-        { id: "cultos", icon: "cultos", label: "Cultos & Agenda", count: events.length },
-        { id: "comunicacao", icon: "comunicacao", label: "Comunicação", count: announcements.length + wallPosts.length },
-        { id: "conversas", icon: "comunicacao", label: "Conversas" },
+        { id: "decisoes", icon: "decisoes", label: "Decisões", count: decisions.length },
+        { id: "batismos", icon: "batismos", label: "Batismos", count: baptismClasses.length },
+        { id: "cursos", icon: "cursos", label: "Cursos & Trilhas", count: courses.length },
       ],
     },
     {
-      group: "Jornada",
+      group: "Operação",
       items: [
-        { id: "decisoes", icon: "visitante", label: "Decisões", count: decisions.length },
-        { id: "batismos", icon: "identidade", label: "Batismos", count: baptismClasses.length },
-        { id: "cursos", icon: "relatorios", label: "Cursos & Trilhas", count: courses.length },
+        { id: "escalas", icon: "escalas", label: "Escalas", badge: gaps.length },
+        { id: "reunioes", icon: "reunioes", label: "Reuniões", count: meetings.length },
+        { id: "ensaios", icon: "ensaios", label: "Ensaios", count: rehearsals.length },
+        { id: "quadros", icon: "quadros", label: "Quadros" },
+        { id: "cultos", icon: "cultos", label: "Cultos & Agenda", count: events.length },
+        { id: "comunicacao", icon: "comunicacao", label: "Comunicação", count: announcements.length + wallPosts.length },
+        { id: "conversas", icon: "conversas", label: "Conversas" },
       ],
     },
     {
@@ -516,150 +690,118 @@ export default function ServiceExactApp({
       group: "Nossa igreja",
       items: [
         { id: "identidade", icon: "identidade", label: "Identidade & propósito" },
-        { id: "historia", icon: "relatorios", label: "Nossa história" },
+        { id: "historia", icon: "historia", label: "Nossa história" },
       ],
     },
   ] as const;
 
   return (
-    <main className="service-exact" data-theme="dark">
-      <div className="app">
-        <aside className="sb">
-          <div className="sb-top">
-            <div className="brand brand-row">
-              <div className="sb-logo">CE<span className="ol">.X</span></div>
-              <span className="brand-div" aria-hidden="true" />
-              <span className="brand-service">Service</span>
-            </div>
-          </div>
-          <div className="cong">
-            <button className="cong-btn" type="button">
-              <span className="cong-mark"><Icon name="identidade" size={16} /></span>
-              <span className="cong-info">
-                <span className="cong-name">{firstChurch?.nome ?? "CE.X Central"}</span>
-                <span className="cong-role">{firstChurch?.matriz ? "Matriz · rede" : "Congregação"}</span>
-              </span>
-              <span className="cong-caret">▾</span>
-            </button>
-          </div>
-          <nav className="sb-nav">
-            {nav.map((group) => (
-              <div key={group.group}>
-                <div className="sb-group">{group.group}</div>
-                {group.items.map((item) => (
-                  <button key={item.id} className={`sb-link ${route === item.id ? "on" : ""}`} type="button" onClick={() => setRoute(item.id as keyof typeof ROUTES)}>
-                    <span className="sb-ic"><Icon name={item.icon} size={17} /></span>
-                    {item.label}
-                    {"badge" in item && item.badge ? <span className="sb-badge">{item.badge}</span> : null}
-                    {"count" in item && item.count !== undefined ? <span className="sb-count">{item.count}</span> : null}
-                  </button>
-                ))}
-              </div>
-            ))}
-          </nav>
-          <div className="sb-bottom">
-            <Link className="sb-link" href="/">
-              <span className="sb-ic"><Icon name="globo" size={17} /></span> Ver o site público
-            </Link>
-            <Link className="sb-link" href="/service/login">
-              <span className="sb-ic"><Icon name="sair" size={17} /></span> Sair
-            </Link>
-          </div>
-        </aside>
-
-        <div className="main">
-          <header className="top">
-            <div className="top-crumb">{ROUTES[route]}</div>
-            <div className="top-search">
-              <span className="si"><Icon name="buscar" size={15} /></span>
-              <GlobalSearch
-                people={people}
-                members={members}
-                ministries={ministries}
-                setRoute={setRoute}
-                setDrawer={setDrawer}
-              />
-            </div>
-            <div className="top-actions">
-              <button className="theme-tog" type="button" title="Mudar tema"><Icon name="sol" size={16} /></button>
-              <button className="top-icon" type="button" title="Avisos"><Icon name="sino" size={17} /></button>
-              <button className="top-icon" type="button" title="Notificações"><span className="dot" /><Icon name="comunicacao" size={17} /></button>
-              <div className="top-me">
-                <div className="av av-md self">VL</div>
-              </div>
-            </div>
-          </header>
-          <nav className="service-mobile-routebar" aria-label="Módulos do Service">
-            {[
-              ["Painel", "painel"],
-              ["Membros", "membros"],
-              ["Voluntários", "pessoas"],
-              ["Times", "times"],
-              ["Escalas", "escalas"],
-              ["Agenda", "cultos"],
-              ["Espaços", "espacos"],
-              ["Decisões", "decisoes"],
-              ["Batismos", "batismos"],
-              ["Cursos", "cursos"],
-              ["Quadros", "quadros"],
-              ["Conversas", "conversas"],
-              ["Relatórios", "relatorios"],
-            ].map(([label, id]) => (
-              <button key={id} className={route === id ? "on" : ""} type="button" onClick={() => setRoute(id as keyof typeof ROUTES)}>
-                {label}
-              </button>
-            ))}
-          </nav>
-
-          {error ? <ErrorPanel message={error} /> : null}
-          {route === "painel" ? <Painel people={people} activePeople={activePeople} confirmationRate={confirmationRate} gaps={gaps} events={events} visitorsInCare={visitorsInCare} setRoute={setRoute} setDrawer={setDrawer} /> : null}
-          {route === "membros" ? <Membros members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
-          {route === "pessoas" ? <Pessoas people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
-          {route === "times" ? <Times ministries={ministries} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
-          {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} setModal={setModal} /> : null}
-          {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
-          {route === "batismos" ? <Batismos baptismClasses={baptismClasses} baptismCandidates={baptismCandidates} decisions={decisions} members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
-          {route === "cursos" ? <CursosTrilhas courses={courses} enrollments={enrollments} members={members} setModal={setModal} /> : null}
-          {route === "escalas" ? <Escalas gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} setDrawer={setDrawer} setModal={setModal} /> : null}
-          {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} setModal={setModal} /> : null}
-          {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} setModal={setModal} /> : null}
-          {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} setModal={setModal} /> : null}
-          {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} setModal={setModal} /> : null}
-          {route === "cultos" ? <Cultos events={events} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
-          {route === "comunicacao" ? <Comunicacao announcements={announcements} wallPosts={wallPosts} setModal={setModal} /> : null}
-          {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} setModal={setModal} /> : null}
-          {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} decisions={decisions} baptismClasses={baptismClasses} courses={courses} boards={boards} chats={chats} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
-          {route === "config" ? <Config church={firstChurch} /> : null}
-          {route === "identidade" ? <Config church={firstChurch} /> : null}
-          {route === "historia" ? <SimpleModule title="Nossa história" subtitle="Linha do tempo da igreja e marcos da comunidade." empty="Nenhum marco cadastrado." setModal={setModal} /> : null}
+    <div className="app">
+      <aside className="sb">
+        <div className="sb-top">
+          <IgrejaLogo />
         </div>
-        <button className="mob-launch" type="button">◷ Ver app do voluntário</button>
-        {drawer ? (
-          <EntityDrawer
-            drawer={drawer}
-            people={people}
-            members={members}
-            ministries={ministries}
-            events={events}
-            roster={roster}
-            setDrawer={setDrawer}
-            setRoute={setRoute}
-            setModal={setModal}
-          />
-        ) : null}
-        {modal ? (
-          <ServiceModal
-            modal={modal}
-            church={firstChurch}
-            people={people}
-            members={members}
-            ministries={ministries}
-            rooms={rooms}
-            onClose={() => setModal(null)}
-          />
-        ) : null}
+        <CongSwitcher churches={churches} activeId={activeChurchId} setActiveId={setActiveChurchId} />
+        <nav className="sb-nav">
+          {nav.map((group) => (
+            <div key={group.group}>
+              <div className="sb-group">{group.group}</div>
+              {group.items.map((item) => (
+                <button key={item.id} className={`sb-link ${route === item.id ? "on" : ""}`} type="button" onClick={() => setRoute(item.id as keyof typeof ROUTES)}>
+                  <span className="sb-ic"><Icon name={CEX_ICON_FOR[item.id] ?? item.icon} size={17} /></span>
+                  {item.label}
+                  {"badge" in item && item.badge ? <span className="sb-badge">{item.badge}</span> : null}
+                  {"count" in item && item.count !== undefined ? <span className="sb-count">{item.count}</span> : null}
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
+        <div className="sb-bottom">
+          <Link className="sb-link" href="/">
+            <span className="sb-ic"><Icon name="globo" size={17} /></span> Ver o site público
+          </Link>
+          <Link className="sb-link" href="/service/login">
+            <span className="sb-ic"><Icon name="sair" size={17} /></span> Sair
+          </Link>
+        </div>
+      </aside>
+
+      <div className="main">
+        <header className="top">
+          <div className="top-crumb">{ROUTES[route]}</div>
+          <div className="top-search">
+            <span className="si"><Icon name="buscar" size={15} /></span>
+            <GlobalSearch
+              people={people}
+              members={members}
+              ministries={ministries}
+              setRoute={setRoute}
+              setDrawer={setDrawer}
+            />
+          </div>
+          <div className="top-actions">
+            <ViewSwitcher ministries={ministries} />
+            <button className="theme-tog" type="button" title="Mudar tema" onClick={() => setTheme((t) => t === "dark" ? "light" : "dark")}>
+              <Icon name={theme === "dark" ? "sol" : "lua"} size={16} />
+            </button>
+            <button className="top-icon" type="button" title="Avisos"><Icon name="sino" size={17} /></button>
+            <div className="av av-md" style={{ background: "var(--olive-dim)", color: "var(--olive)", border: "0.5px solid var(--olive-line)", cursor: "pointer" }}>
+              {firstChurch?.nome ? firstChurch.nome.slice(0, 2).toUpperCase() : "CE"}
+            </div>
+          </div>
+        </header>
+
+        {error ? <ErrorPanel message={error} /> : null}
+        {route === "painel" ? <Painel people={people} activePeople={activePeople} confirmationRate={confirmationRate} gaps={gaps} events={events} visitorsInCare={visitorsInCare} setRoute={setRoute} setDrawer={setDrawer} /> : null}
+        {route === "membros" ? <Membros members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "pessoas" ? <Pessoas people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "times" ? <Times ministries={ministries} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} setModal={setModal} /> : null}
+        {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "batismos" ? <Batismos baptismClasses={baptismClasses} baptismCandidates={baptismCandidates} decisions={decisions} members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "cursos" ? <CursosTrilhas courses={courses} enrollments={enrollments} members={members} setModal={setModal} /> : null}
+        {route === "escalas" ? <Escalas gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} setModal={setModal} /> : null}
+        {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} setModal={setModal} /> : null}
+        {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} setModal={setModal} /> : null}
+        {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} setModal={setModal} /> : null}
+        {route === "cultos" ? <Cultos events={events} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "comunicacao" ? <Comunicacao announcements={announcements} wallPosts={wallPosts} setModal={setModal} /> : null}
+        {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} setModal={setModal} /> : null}
+        {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} decisions={decisions} baptismClasses={baptismClasses} courses={courses} boards={boards} chats={chats} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
+        {route === "config" ? <Config church={firstChurch} /> : null}
+        {route === "identidade" ? <Identidade church={firstChurch} setModal={setModal} /> : null}
+        {route === "historia" ? <Historia church={firstChurch} setModal={setModal} /> : null}
       </div>
-    </main>
+
+      <button className="mob-launch" type="button">◷ Ver app do voluntário</button>
+
+      {drawer ? (
+        <EntityDrawer
+          drawer={drawer}
+          people={people}
+          members={members}
+          ministries={ministries}
+          events={events}
+          roster={roster}
+          setDrawer={setDrawer}
+          setRoute={setRoute}
+          setModal={setModal}
+        />
+      ) : null}
+      {modal ? (
+        <ServiceModal
+          modal={modal}
+          church={firstChurch}
+          people={people}
+          members={members}
+          ministries={ministries}
+          rooms={rooms}
+          onClose={() => setModal(null)}
+        />
+      ) : null}
+    </div>
   );
 }
 
@@ -948,7 +1090,7 @@ function Times({ ministries, people, setDrawer, setModal }: { ministries: Minist
     <div className="content">
       <PageHead title="Times & Ministérios" eyebrow="Pessoas" subtitle="Times, líderes, funções e voluntários vinculados." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo time", title: "Ministério da igreja", subtitle: "Crie o time, defina funções e depois vincule voluntários.", fields: ["Nome do time", "Descrição", "Funções necessárias"] })}>+ Novo time</button>} />
       <div className="team-grid">
-        {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><Icon name="times" size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => <Av key={link.personId} name={people.find((person) => person.id === link.personId)?.name ?? link.personName} />)}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName ?? "a definir"}</em></div><div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> voluntários</span><span className="team-stat"><b>{ministry.positions.length}</b> funções</span></div></button>)}
+        {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => <Av key={link.personId} name={people.find((person) => person.id === link.personId)?.name ?? link.personName} />)}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName ?? "a definir"}</em></div><div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> voluntários</span><span className="team-stat"><b>{ministry.positions.length}</b> funções</span></div></button>)}
       </div>
     </div>
   );
@@ -1656,6 +1798,106 @@ function Config({ church }: { church?: ChurchView }) {
   );
 }
 
+function Identidade({ church, setModal }: { church?: ChurchView; setModal: (modal: ModalState) => void }) {
+  return (
+    <div className="content wide">
+      <PageHead
+        title="Identidade & propósito"
+        eyebrow="Nossa igreja"
+        subtitle="Missão, visão, valores e tema atual da comunidade. Exibido no app do membro e na vitrine da Igreja."
+        action={<button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Identidade", title: "Editar identidade", subtitle: "Atualize a declaração de missão e visão da Igreja.", fields: ["Missão", "Visão", "Versículo"] })}>Editar</button>}
+      />
+      <div className="ident-hero">
+        <div className="ident-hero-label">Declaração de missão</div>
+        <div className="ident-hero-text">
+          {church?.nome ? `${church.nome} existe para fazer discípulos de Jesus Cristo que transformem a cidade.` : "A Igreja existe para fazer discípulos de Jesus Cristo que transformem a cidade."}
+        </div>
+        <div className="ident-verse">§ Mateus 28:18-20 · A Grande Comissão</div>
+      </div>
+      <div className="ident-grid">
+        <div className="ident-card">
+          <div className="ident-card-ic"><Icon name="identidade" size={18} /></div>
+          <div className="ident-card-t">Missão</div>
+          <div className="ident-card-x">Fazer discípulos que transformam a cidade pela graça de Deus.</div>
+        </div>
+        <div className="ident-card">
+          <div className="ident-card-ic"><Icon name="painel" size={18} /></div>
+          <div className="ident-card-t">Visão</div>
+          <div className="ident-card-x">Uma rede de igrejas saudáveis que impacta cada bairro da cidade.</div>
+        </div>
+      </div>
+      <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">Valores</span><span className="line" /></div>
+      <div className="val-grid">
+        {[
+          { ic: "membros", t: "Comunidade", x: "Somos família. A vida cristã é vivida juntos, não individualmente." },
+          { ic: "identidade", t: "Palavra", x: "A Bíblia é nossa autoridade suprema em doutrina e prática." },
+          { ic: "decisoes", t: "Missão", x: "Existimos para os de fora. Toda nossa estrutura serve ao alcance." },
+        ].map(({ ic, t, x }) => (
+          <div className="val-card" key={t}>
+            <div className="val-ic"><Icon name={ic} size={14} /></div>
+            <div className="val-t">{t}</div>
+            <div className="val-x">{x}</div>
+          </div>
+        ))}
+      </div>
+      <div className="section-divide" style={{ marginTop: 28 }}><span className="num">03</span><span className="label">Tema do ciclo atual</span><span className="line" /></div>
+      <div className="ciclo">
+        <div className="ciclo-banner">
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(150deg, var(--olive-deep), #2d3d18)" }} />
+          <span className="ciclo-banner-tag">2026 · 1º semestre</span>
+        </div>
+        <div className="ciclo-body">
+          <div className="ciclo-tema">Raízes profundas</div>
+          <div className="ciclo-verse">§ Salmos 1:3 · "Será como árvore plantada junto a ribeiros de águas"</div>
+          <div className="ciclo-text">Um chamado a aprofundar a vida com Deus — na Palavra, na oração e na comunidade — para que o crescimento externo seja fruto de raízes internas sólidas.</div>
+          <div className="ciclo-obj" style={{ marginTop: 22 }}>
+            <div className="ciclo-obj-t">Objetivos do ciclo</div>
+            {["Crescimento pessoal na leitura bíblica diária", "Multiplicação de grupos de discipulado", "Integração de 80% dos visitantes em GCs"].map((obj, i) => (
+              <div className="ciclo-obj-row" key={obj}><span className="ciclo-obj-n">0{i + 1}</span>{obj}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Historia({ church, setModal }: { church?: ChurchView; setModal: (modal: ModalState) => void }) {
+  const marcos = [
+    { year: "2012", title: "Fundação", text: "Início do ministério com 12 pessoas comprometidas com a visão de alcançar a cidade por meio de discipulado intencional.", rev: false },
+    { year: "2016", title: "Primeira expansão", text: "Abertura da primeira congregação em bairro vizinho. A rede começa a tomar forma: mesma visão, mesma doutrina, mesma cultura.", rev: true },
+    { year: "2020", title: "Transformação digital", text: "Migração completa para plataforma digital durante a pandemia. A comunidade descobriu a força dos grupos online.", rev: false },
+    { year: "2024", title: "CE.X Service", text: "Lançamento da plataforma de gestão ministerial: pessoas, escala, jornada e comunicação num único lugar.", rev: true },
+  ];
+  return (
+    <div className="content wide">
+      <PageHead
+        title="Nossa história"
+        eyebrow="Nossa igreja"
+        subtitle="Marcos, momentos e a linha do tempo de como chegamos até aqui. Cada capítulo é uma prova da fidelidade de Deus."
+        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Marco histórico", title: "Adicionar marco", subtitle: "Registre um momento importante da história da Igreja.", fields: ["Ano", "Título", "Descrição"], action: undefined })}>+ Marco</button>}
+      />
+      <div className="hist">
+        {marcos.map((marco) => (
+          <div key={marco.year} className={`hist-item ${marco.rev ? "rev" : ""}`}>
+            <div className="hist-photo">
+              <div style={{ position: "absolute", inset: 0, background: marco.rev ? "linear-gradient(150deg, var(--olive-deep), #243012)" : "linear-gradient(150deg, #7a6526, #3d3415)" }} />
+              <span className="hist-year">{marco.year}</span>
+            </div>
+            <div className="hist-text">
+              <div className="hist-t">{marco.title}</div>
+              <div className="hist-x">{marco.text}</div>
+              <div className="hist-foot">
+                <button className="hist-edit" type="button" onClick={() => setModal({ eyebrow: "Marco histórico", title: marco.title, subtitle: "Edite este marco da história da Igreja.", fields: ["Ano", "Título", "Descrição"] })}>Editar</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SimpleModule({ title, subtitle, empty, setModal }: { title: string; subtitle: string; empty: string; setModal: (modal: ModalState) => void }) {
   return (
     <div className="content">
@@ -1762,7 +2004,7 @@ function EntityDrawer({
       <DrawerShell onClose={() => setDrawer(null)}>
         <div className="drawer-head">
           <button className="drawer-close" type="button" onClick={() => setDrawer(null)}>✕</button>
-          <div className="profile-top"><div className="team-mark" style={{ width: 56, height: 56 }}><Icon name="times" size={26} /></div><div><div className="profile-name">{ministry.name}</div><div className="profile-role">Líder: <span style={{ color: "var(--olive)" }}>{leader?.personName ?? "a definir"}</span> · {ministry.people.length} voluntários</div></div></div>
+          <div className="profile-top"><div className="team-mark" style={{ width: 56, height: 56 }}><TeamMark ministry={ministry} size={26} /></div><div><div className="profile-name">{ministry.name}</div><div className="profile-role">Líder: <span style={{ color: "var(--olive)" }}>{leader?.personName ?? "a definir"}</span> · {ministry.people.length} voluntários</div></div></div>
           <p style={{ fontSize: 13.5, color: "var(--muted)", lineHeight: 1.6, marginTop: 14 }}>{ministry.description}</p>
         </div>
         <div className="drawer-body">
