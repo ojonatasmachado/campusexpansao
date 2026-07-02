@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
+import MobileOverlay from "./MobileApp";
+import { QRCheckinModal } from "./CheckIn";
+import EventoShare from "./EventoShare";
+import CursoEditor from "./CursoEditor";
 
 type ChurchView = {
   id: string;
@@ -294,6 +298,11 @@ type DrawerState =
   | { kind: "member"; id: string }
   | { kind: "ministry"; id: string }
   | { kind: "event"; id: string }
+  | { kind: "decision"; id: string }
+  | { kind: "baptismClass"; id: string }
+  | { kind: "visitor"; id: string }
+  | { kind: "meeting"; id: string }
+  | { kind: "rehearsal"; id: string }
   | null;
 
 type ModalState =
@@ -624,6 +633,9 @@ export default function ServiceExactApp({
   const [modal, setModal] = useState<ModalState>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [activeChurchId, setActiveChurchId] = useState<string>(churches[0]?.id ?? "");
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [checkinEventId, setCheckinEventId] = useState<string | null>(null);
+  const [shareEventId, setShareEventId] = useState<string | null>(null);
 
   useEffect(() => {
     document.body.dataset.theme = theme === "light" ? "light" : "";
@@ -662,7 +674,6 @@ export default function ServiceExactApp({
     {
       group: "Jornada",
       items: [
-        { id: "decisoes", icon: "decisoes", label: "Decisões", count: decisions.length },
         { id: "batismos", icon: "batismos", label: "Batismos", count: baptismClasses.length },
         { id: "cursos", icon: "cursos", label: "Cursos & Trilhas", count: courses.length },
       ],
@@ -754,28 +765,76 @@ export default function ServiceExactApp({
 
         {error ? <ErrorPanel message={error} /> : null}
         {route === "painel" ? <Painel people={people} activePeople={activePeople} confirmationRate={confirmationRate} gaps={gaps} events={events} visitorsInCare={visitorsInCare} setRoute={setRoute} setDrawer={setDrawer} /> : null}
-        {route === "membros" ? <Membros members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "membros" ? <Membros members={members} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "pessoas" ? <Pessoas people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Times ministries={ministries} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
-        {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} setModal={setModal} /> : null}
+        {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "batismos" ? <Batismos baptismClasses={baptismClasses} baptismCandidates={baptismCandidates} decisions={decisions} members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
-        {route === "cursos" ? <CursosTrilhas courses={courses} enrollments={enrollments} members={members} setModal={setModal} /> : null}
-        {route === "escalas" ? <Escalas gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} setDrawer={setDrawer} setModal={setModal} /> : null}
-        {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} setModal={setModal} /> : null}
-        {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} setModal={setModal} /> : null}
+        {route === "cursos" ? <CursosTrilhas courses={courses} enrollments={enrollments} members={members} church={firstChurch} /> : null}
+        {route === "escalas" ? <Escalas gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} /> : null}
+        {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} setModal={setModal} /> : null}
-        {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} setModal={setModal} /> : null}
-        {route === "cultos" ? <Cultos events={events} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
-        {route === "comunicacao" ? <Comunicacao announcements={announcements} wallPosts={wallPosts} setModal={setModal} /> : null}
+        {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} church={firstChurch} setModal={setModal} /> : null}
+        {route === "cultos" ? <Cultos events={events} ministries={ministries} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
+        {route === "comunicacao" ? <Comunicacao announcements={announcements} wallPosts={wallPosts} ministries={ministries} setModal={setModal} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} setModal={setModal} /> : null}
-        {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} decisions={decisions} baptismClasses={baptismClasses} courses={courses} boards={boards} chats={chats} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
-        {route === "config" ? <Config church={firstChurch} /> : null}
+        {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} decisions={decisions} baptismClasses={baptismClasses} courses={courses} boards={boards} chats={chats} visitors={visitors} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
+        {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} theme={theme} setTheme={setTheme} /> : null}
         {route === "identidade" ? <Identidade church={firstChurch} setModal={setModal} /> : null}
         {route === "historia" ? <Historia church={firstChurch} setModal={setModal} /> : null}
       </div>
 
-      <button className="mob-launch" type="button">◷ Ver app do voluntário</button>
+      <button className="mob-launch" type="button" onClick={() => setMobileOpen(true)}>
+        ◷ Ver app do voluntario
+      </button>
+
+      {mobileOpen && (
+        <MobileOverlay
+          people={people}
+          members={members}
+          ministries={ministries}
+          events={events}
+          roster={roster}
+          cards={cards}
+          boards={boards}
+          courses={courses}
+          enrollments={enrollments}
+          visitors={visitors}
+          baptismClasses={baptismClasses}
+          announcements={announcements}
+          chats={chats}
+          chatMembers={chatMembers}
+          messages={messages}
+          onClose={() => setMobileOpen(false)}
+        />
+      )}
+
+      {checkinEventId && (() => {
+        const checkinEvent = events.find((e) => e.id === checkinEventId);
+        if (!checkinEvent) return null;
+        return (
+          <QRCheckinModal
+            event={checkinEvent}
+            roster={roster}
+            people={people}
+            onClose={() => setCheckinEventId(null)}
+          />
+        );
+      })()}
+
+      {shareEventId && (() => {
+        const shareEvent = events.find((e) => e.id === shareEventId);
+        if (!shareEvent) return null;
+        return (
+          <EventoShare
+            event={shareEvent}
+            ministries={ministries}
+            onClose={() => setShareEventId(null)}
+          />
+        );
+      })()}
 
       {drawer ? (
         <EntityDrawer
@@ -785,6 +844,17 @@ export default function ServiceExactApp({
           ministries={ministries}
           events={events}
           roster={roster}
+          decisions={decisions}
+          baptismClasses={baptismClasses}
+          baptismCandidates={baptismCandidates}
+          visitors={visitors}
+          visitorNotes={visitorNotes}
+          courses={courses}
+          enrollments={enrollments}
+          meetings={meetings}
+          meetingActions={meetingActions}
+          rehearsals={rehearsals}
+          church={firstChurch}
           setDrawer={setDrawer}
           setRoute={setRoute}
           setModal={setModal}
@@ -1059,14 +1129,65 @@ function PersonMini({ person, index, setDrawer }: { person: PersonView; index: n
   );
 }
 
-function Membros({ members, setDrawer, setModal }: { members: MemberView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
+function JrnPips({ journey }: { journey: number[] }) {
   return (
-    <div className="content">
-      <PageHead title="Membros" eyebrow="Pessoas" subtitle="Membros, novos decididos e jornada de acompanhamento." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo membro", title: "Quem chegou na igreja", subtitle: "Cadastre contato, situação e primeiros passos da jornada.", fields: ["Nome completo", "Telefone", "E-mail", "Bairro"] })}>+ Novo membro</button>} />
-      <div className="toolbar"><div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar membro..." /></div><div className="seg"><button className="on">Todos</button><button>Novos</button><button>Membros</button></div><div className="tb-spacer" /><span className="panel-meta">{members.length} membros</span></div>
+    <div className="jrn-mini">
+      {journey.slice(0, 5).map((v, i) => <span key={i} className={`jrn-pip ${v ? "on" : ""}`} />)}
+    </div>
+  );
+}
+
+function Membros({ members, ministries, setDrawer, setModal }: { members: MemberView[]; ministries: MinistryView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
+  const [q, setQ] = useState("");
+  const [sit, setSit] = useState<"todos" | "servindo" | "novo">("todos");
+  const novos = members.filter((m) => m.situation === "novo");
+  const integrando = members.filter((m) => m.journey.filter(Boolean).length < 5);
+  const servindo = members.filter((m) => !!m.journey[4]);
+  const visible = members.filter((m) => {
+    const okQ = !q || m.name.toLowerCase().includes(q.toLowerCase()) || (m.phone ?? "").includes(q);
+    const okS = sit === "todos" || (sit === "novo" && m.situation === "novo") || (sit === "servindo" && !!m.journey[4]);
+    return okQ && okS;
+  });
+  const getMemberMinistries = (name: string) =>
+    ministries.filter((min) => min.people.some((p) => p.personName === name));
+  return (
+    <div className="content wide">
+      <PageHead title="Membros" eyebrow="Pessoas" subtitle="Toda a congregação. Veja quem serve, em que jornada está e o histórico desde que chegou." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo membro", title: "Quem chegou na igreja", subtitle: "Cadastre contato, situação e primeiros passos da jornada.", fields: ["Nome completo", "Telefone", "E-mail", "Bairro"] })}>+ Novo membro</button>} />
+      <div className="kpi-row">
+        <Kpi icon="membros" label="Membros" value={members.length} foot="na congregação" />
+        <Kpi icon="decisoes" label="Novos convertidos" value={novos.length} foot="em discipulado inicial" />
+        <Kpi icon="cursos" label="Em integração" value={integrando.length} foot="jornada ainda incompleta" amber />
+        <Kpi icon="times" label="Já servindo" value={servindo.length} foot={`${Math.round((servindo.length / Math.max(members.length, 1)) * 100)}% da congregação`} />
+      </div>
+      <div className="toolbar">
+        <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar membro..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        <div className="seg">
+          <button className={sit === "todos" ? "on" : ""} type="button" onClick={() => setSit("todos")}>Todos</button>
+          <button className={sit === "servindo" ? "on" : ""} type="button" onClick={() => setSit("servindo")}>Servindo</button>
+          <button className={sit === "novo" ? "on" : ""} type="button" onClick={() => setSit("novo")}>Novos</button>
+        </div>
+        <div className="tb-spacer" />
+        <span className="panel-meta">{visible.length} membros</span>
+      </div>
       <div className="tbl">
-        <div className="tr th"><div>Membro</div><div>Contato</div><div>Jornada</div><div>Status</div></div>
-        {members.map((member) => <button className="tr click" type="button" key={member.id} onClick={() => setDrawer({ kind: "member", id: member.id })}><div className="who"><Av name={member.name} /><div><strong>{member.name}</strong><small>{member.neighborhood}</small></div></div><div>{member.phone}<small>{member.email}</small></div><div>{member.journey.length} passos</div><div><Chip status={member.situation} /></div></button>)}
+        <div className="tr head" style={{ gridTemplateColumns: "1.6fr 0.8fr 1.1fr 1fr" }}><span>Membro</span><span>Membro desde</span><span>Serve</span><span>Jornada</span></div>
+        {visible.map((m) => {
+          const mins = getMemberMinistries(m.name);
+          const isLeader = mins.some((min) => min.people.find((p) => p.personName === m.name)?.isLeader);
+          return (
+            <button className="tr click" type="button" key={m.id} style={{ gridTemplateColumns: "1.6fr 0.8fr 1.1fr 1fr" }} onClick={() => setDrawer({ kind: "member", id: m.id })}>
+              <div className="cell-person"><Av name={m.name} size="md" /><div><div className="cell-name">{m.name}</div><div className="cell-sub">{m.phone || m.neighborhood || "—"}</div></div></div>
+              <div><div style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.02em" }}>{m.firstContact || "—"}</div><div className="cell-sub">na casa</div></div>
+              <div>
+                {mins.length > 0
+                  ? <div className="cell-tags">{mins.map((min) => <span key={min.id} className="tag">{min.name.split(" ")[0]}</span>)}{isLeader && <span className="lider-tag">Líder</span>}</div>
+                  : <span style={{ fontSize: 13, color: "var(--subtle)" }}>ainda não serve</span>}
+              </div>
+              <div><JrnPips journey={m.journey} /></div>
+            </button>
+          );
+        })}
+        {visible.length === 0 && <div className="empty">Nenhum membro encontrado.</div>}
       </div>
     </div>
   );
@@ -1104,6 +1225,7 @@ function Escalas({
   events,
   setDrawer,
   setModal,
+  setCheckinEventId,
 }: {
   gaps: Array<{ event: EventView; ministry: MinistryView; position: { id: string; name: string } }>;
   roster: RosterAssignmentView[];
@@ -1112,6 +1234,7 @@ function Escalas({
   events: EventView[];
   setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
+  setCheckinEventId: (id: string | null) => void;
 }) {
   const [eventId, setEventId] = useState(events[0]?.id ?? "");
   const [mode, setMode] = useState<"manual" | "assistido" | "automatico">("manual");
@@ -1153,7 +1276,7 @@ function Escalas({
         action={
           <>
             <button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Delegar gestão da escala", title: "Quem mais pode montar a escala", subtitle: "As pessoas escolhidas passam a ver e gerir a escala deste time.", fields: ["Voluntário", "Time"] })}><Icon name="membros" size={15} /> Delegar</button>
-            <button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "QR Check-in", title: selectedEvent?.name ?? "Culto", subtitle: "Mostre este acesso para registrar presença no culto.", fields: ["Código", "Responsável"] })}><Icon name="cultos" size={15} /> QR Check-in</button>
+            <button className="btn btn-sec" type="button" onClick={() => setCheckinEventId(selectedEvent?.id ?? null)} disabled={!selectedEvent}><Icon name="cultos" size={15} /> QR Check-in</button>
             <button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Relatório", title: "Baixar escala", subtitle: "Exportar a escala atual para conferência da equipe.", fields: ["Formato"] })}><Icon name="relatorios" size={15} /> Baixar</button>
             <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Publicar", title: "Publicar & avisar", subtitle: "A equipe recebe a escala pelo app e pelas notificações configuradas.", fields: ["Mensagem"] })}>Publicar & avisar →</button>
           </>
@@ -1294,12 +1417,27 @@ function Escalas({
   );
 }
 
-function Cultos({ events, ministries, setDrawer, setModal }: { events: EventView[]; ministries: MinistryView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
+function Cultos({ events, ministries, setDrawer, setModal, setCheckinEventId, setShareEventId }: { events: EventView[]; ministries: MinistryView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; setCheckinEventId: (id: string) => void; setShareEventId: (id: string) => void }) {
   return (
     <div className="content">
       <PageHead title="Cultos & Agenda" eyebrow="Operação" subtitle="Agenda, roteiro, setlist e ministérios envolvidos em cada culto." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo culto", title: "Agenda da igreja", subtitle: "Crie o culto, defina local, horário e os ministérios envolvidos.", fields: ["Nome", "Data", "Horário", "Local"] })}>+ Novo culto</button>} />
       <div className="grid-2">
-        {events.map((event) => <button className="panel click" type="button" key={event.id} onClick={() => setDrawer({ kind: "event", id: event.id })}><div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> {event.name}</span><span className="panel-meta">{event.time}</span></div><div className="panel-body"><p className="mini-sub">{event.weekday} · {event.eventDate} · {event.location}</p><div className="divider" style={{ margin: "14px 0" }} />{event.schedule.slice(0, 4).map((item) => <div className="mini-row" key={item.id} style={{ paddingInline: 0 }}><div className="mini-main"><div className="mini-title">{item.item}</div><div className="mini-sub">{item.time ?? "sem horário"} · {item.category ?? "roteiro"}</div></div></div>)}<div className="mini-sub">{event.ministries.map((id) => ministries.find((ministry) => ministry.id === id)?.name).filter(Boolean).join(" · ")}</div></div></button>)}
+        {events.map((event) => (
+          <div className="panel" key={event.id} style={{ position: "relative" }}>
+            <button className="panel click" type="button" style={{ width: "100%", textAlign: "left", background: "none", border: "none", padding: 0 }} onClick={() => setDrawer({ kind: "event", id: event.id })}>
+              <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> {event.name}</span><span className="panel-meta">{event.time}</span></div>
+              <div className="panel-body"><p className="mini-sub">{event.weekday} · {event.eventDate} · {event.location}</p><div className="divider" style={{ margin: "14px 0" }} />{event.schedule.slice(0, 4).map((item) => <div className="mini-row" key={item.id} style={{ paddingInline: 0 }}><div className="mini-main"><div className="mini-title">{item.item}</div><div className="mini-sub">{item.time ?? "sem horário"} · {item.category ?? "roteiro"}</div></div></div>)}<div className="mini-sub">{event.ministries.map((id) => ministries.find((ministry) => ministry.id === id)?.name).filter(Boolean).join(" · ")}</div></div>
+            </button>
+            <div style={{ padding: "0 22px 16px", display: "flex", gap: 8 }}>
+              <button className="btn btn-sec btn-sm" type="button" onClick={(e) => { e.stopPropagation(); setCheckinEventId(event.id); }}>
+                <Icon name="cultos" size={13} /> Check-in QR
+              </button>
+              <button className="btn btn-sec btn-sm" type="button" onClick={(e) => { e.stopPropagation(); setShareEventId(event.id); }}>
+                <Icon name="relatorios" size={13} /> Arte
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -1396,13 +1534,15 @@ const VISITOR_STAGES = [
 
 function Visitantes({
   visitors,
-  visitorNotes,
+  visitorNotes: _visitorNotes,
   people,
+  setDrawer,
   setModal,
 }: {
   visitors: VisitorView[];
   visitorNotes: VisitorNoteView[];
   people: PersonView[];
+  setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
 }) {
   const [view, setView] = useState<"pipe" | "list" | "painel">("pipe");
@@ -1442,20 +1582,20 @@ function Visitantes({
         <div className="pipe">
           {VISITOR_STAGES.map((stage) => {
             const items = visitors.filter((visitor) => visitor.stage === stage.id);
-            return <div className="pipe-col" key={stage.id}><div className="pipe-head"><span className="pipe-dot" style={{ background: stage.color }} /><span className="pipe-name">{stage.name}</span><span className="pipe-num">{items.length}</span></div><div className="pipe-body">{items.map((visitor) => { const owner = visitor.responsible_id ? personById.get(visitor.responsible_id) : null; return <button className="vcard" type="button" key={visitor.id} onClick={() => setModal({ eyebrow: "Visitante", title: visitor.name, subtitle: visitorNotes.find((note) => note.visitor_id === visitor.id)?.body || "Registrar contato ou avanço.", fields: ["Observação"], action: undefined })}><div className="vcard-top"><Av name={visitor.name} size="sm" /><div style={{ minWidth: 0 }}><div className="vcard-name">{visitor.name}</div><div className="vcard-when">{visitor.origin || "Visitante"}</div></div></div><div className="vcard-foot"><div className="vcard-owner">{owner?.name || visitor.origin || "sem dono"}</div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "próximo contato"}</span></div></button>; })}{items.length === 0 ? <div className="empty" style={{ padding: 14 }}>vazio</div> : null}</div></div>;
+            return <div className="pipe-col" key={stage.id}><div className="pipe-head"><span className="pipe-dot" style={{ background: stage.color }} /><span className="pipe-name">{stage.name}</span><span className="pipe-num">{items.length}</span></div><div className="pipe-body">{items.map((visitor) => { const owner = visitor.responsible_id ? personById.get(visitor.responsible_id) : null; return <button className="vcard" type="button" key={visitor.id} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="vcard-top"><Av name={visitor.name} size="sm" /><div style={{ minWidth: 0 }}><div className="vcard-name">{visitor.name}</div><div className="vcard-when">{visitor.origin || "Visitante"}</div></div></div><div className="vcard-foot"><div className="vcard-owner">{owner?.name || visitor.origin || "sem dono"}</div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "próximo contato"}</span></div></button>; })}{items.length === 0 ? <div className="empty" style={{ padding: 14 }}>vazio</div> : null}</div></div>;
           })}
         </div>
       ) : (
         <div className="tbl">
           <div className="tr head" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }}><span>Visitante</span><span>Etapa</span><span>Como chegou</span><span>Próximo passo</span><span>Visitou</span></div>
-          {visitors.map((visitor) => <div className="tr" key={visitor.id} style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone || "Telefone não informado"}</div></div></div><div><Chip status={visitor.stage === "membro" ? "ok" : "wait"} /></div><div className="cell-sub">{visitor.origin || "Visitante"}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "sem prazo"}</span></div><div className="mini-right">{visitor.visited_on || "sem data"}</div></div>)}
+          {visitors.map((visitor) => <button className="tr click" key={visitor.id} type="button" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone || "Telefone não informado"}</div></div></div><div><Chip status={visitor.stage === "membro" ? "ok" : "wait"} /></div><div className="cell-sub">{visitor.origin || "Visitante"}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "sem prazo"}</span></div><div className="mini-right">{visitor.visited_on || "sem data"}</div></button>)}
         </div>
       )}
     </div>
   );
 }
 
-function Reunioes({ meetings, meetingActions, ministries, people, setModal }: { meetings: MeetingView[]; meetingActions: MeetingActionView[]; ministries: MinistryView[]; people: PersonView[]; setModal: (modal: ModalState) => void }) {
+function Reunioes({ meetings, meetingActions, ministries, people, setDrawer, setModal }: { meetings: MeetingView[]; meetingActions: MeetingActionView[]; ministries: MinistryView[]; people: PersonView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
   const ministryById = new Map(ministries.map((ministry) => [ministry.id, ministry]));
   const personById = new Map(people.map((person) => [person.id, person]));
   const scheduled = meetings.filter((meeting) => meeting.status === "agendada");
@@ -1464,31 +1604,428 @@ function Reunioes({ meetings, meetingActions, ministries, people, setModal }: { 
     <div className="content wide">
       <PageHead title="Reuniões" eyebrow="Liderança" subtitle="Pautas, ata e responsabilidades para validar na próxima reunião." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Reunião", title: "Marcar reunião", subtitle: "Defina tema, data, local e time envolvido.", fields: ["Título", "Data", "Horário", "Local", "Time"], action: { kind: "meeting" } })}>+ Marcar reunião</button>} />
       <div className="section-divide"><Icon name="cultos" size={15} /><span className="label">Agendadas</span><span className="line" /></div>
-      <div className="reu-grid">{scheduled.map((meeting) => { const author = meeting.author_id ? personById.get(meeting.author_id) : null; return <button className="reu-card" type="button" key={meeting.id} onClick={() => setModal({ eyebrow: meeting.status === "agendada" ? "Reunião agendada" : "Reunião realizada", title: meeting.title, subtitle: meeting.minutes || "Ata e responsabilidades desta reunião.", fields: ["Ata"] })}><div className="reu-card-top"><div><div className="reu-date">{meeting.meeting_date || "Sem data"} · {meeting.time || "sem horário"}</div><div className="reu-title">{meeting.title}</div></div><span className="chip chip-ok">Agendada</span></div><div className="reu-meta">{meeting.location || "Local não informado"} · marcada por {author?.name.split(" ")[0] || "líder"}</div><div className="reu-foot"><div className="reu-times">{meeting.ministries.map((id) => <span className="tag" key={id}>{ministryById.get(id)?.name || "Time"}</span>)}</div><span className="team-stat"><b>{meeting.attendees.length}</b> presentes</span></div></button>; })}{scheduled.length === 0 ? <div className="empty">Nenhuma reunião agendada.</div> : null}</div>
+      <div className="reu-grid">
+        {scheduled.map((meeting) => {
+          const author = meeting.author_id ? personById.get(meeting.author_id) : null;
+          return (
+            <button className="reu-card" type="button" key={meeting.id} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
+              <div className="reu-card-top"><div><div className="reu-date">{meeting.meeting_date || "Sem data"} · {meeting.time || "sem horário"}</div><div className="reu-title">{meeting.title}</div></div><span className="chip chip-ok">Agendada</span></div>
+              <div className="reu-meta">{meeting.location || "Local não informado"} · marcada por {author?.name.split(" ")[0] || "líder"}</div>
+              <div className="reu-foot"><div className="reu-times">{meeting.ministries.map((id) => <span className="tag" key={id}>{ministryById.get(id)?.name || "Time"}</span>)}</div><span className="team-stat"><b>{meeting.attendees.length}</b> presentes</span></div>
+            </button>
+          );
+        })}
+        {scheduled.length === 0 ? <div className="empty">Nenhuma reunião agendada.</div> : null}
+      </div>
       <div className="section-divide"><Icon name="relatorios" size={15} /><span className="label">Realizadas</span><span className="line" /></div>
-      <div className="tbl">{finished.map((meeting) => { const actions = meetingActions.filter((action) => action.meeting_id === meeting.id); const pending = actions.filter((action) => action.status !== "feito").length; return <div className="tr" key={meeting.id} style={{ gridTemplateColumns: "130px 1.6fr 1fr 120px" }}><div style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--olive)" }}>{meeting.meeting_date || "sem data"}</div><div><div className="cell-name">{meeting.title}</div><div className="cell-sub">{meeting.ministries.length} time(s) · {meeting.attendees.length} presentes</div></div><div className="cell-sub">{actions.length} responsabilidade(s)</div><div>{pending > 0 ? <span className="chip chip-wait">{pending} em aberto</span> : <span className="chip chip-ok">Tudo feito</span>}</div></div>; })}</div>
+      <div className="tbl">
+        {finished.map((meeting) => {
+          const actions = meetingActions.filter((action) => action.meeting_id === meeting.id);
+          const pending = actions.filter((action) => action.status !== "feito").length;
+          return (
+            <button className="tr click" type="button" key={meeting.id} style={{ gridTemplateColumns: "130px 1.6fr 1fr 120px" }} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
+              <div style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--olive)" }}>{meeting.meeting_date || "sem data"}</div>
+              <div><div className="cell-name">{meeting.title}</div><div className="cell-sub">{meeting.ministries.length} time(s) · {meeting.attendees.length} presentes</div></div>
+              <div className="cell-sub">{actions.length} responsabilidade(s)</div>
+              <div>{pending > 0 ? <span className="chip chip-wait">{pending} em aberto</span> : <span className="chip chip-ok">Tudo feito</span>}</div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-function Ensaios({ rehearsals, ministries, setModal }: { rehearsals: RehearsalView[]; ministries: MinistryView[]; setModal: (modal: ModalState) => void }) {
+function Ensaios({ rehearsals, ministries, setDrawer, setModal }: { rehearsals: RehearsalView[]; ministries: MinistryView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
   const ministryById = new Map(ministries.map((ministry) => [ministry.id, ministry]));
   return (
     <div className="content wide">
       <PageHead title="Ensaios" eyebrow="Liderança" subtitle="Ensaios por ministério, presença, repertório e materiais." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Ensaio", title: "Novo ensaio", subtitle: "Marque ensaio com time, data, local e repertório.", fields: ["Título", "Data", "Horário", "Local", "Time"], action: { kind: "rehearsal" } })}>+ Novo ensaio</button>} />
-      <div className="reu-grid">{rehearsals.map((rehearsal) => { const ministry = rehearsal.ministry_id ? ministryById.get(rehearsal.ministry_id) : null; return <button className="ens-card" type="button" key={rehearsal.id} onClick={() => setModal({ eyebrow: rehearsal.kind || "Ensaio", title: rehearsal.title, subtitle: rehearsal.notes || "Detalhes do ensaio.", fields: ["Observação"] })}><div className="ens-top"><span className="ens-rec">{rehearsal.recurrence || "eventual"}</span><span className="ens-pub">{rehearsal.kind || "Ensaio"}</span></div><div className="ens-title">{rehearsal.title}</div><div className="ens-when">{rehearsal.rehearsal_date || "sem data"} · {rehearsal.time || "sem horário"} · {rehearsal.location || "sem local"}</div><div className="ens-team"><span className="ens-team-ic"><Icon name="times" size={15} /></span>{ministry?.name || "Vários times"} · {rehearsal.attendees.length} pessoas</div>{rehearsal.repertoire.length ? <div className="ens-obs"><Icon name="cultos" size={13} /> {rehearsal.repertoire.length} item(ns) no repertório</div> : null}{rehearsal.notes ? <div className="ens-obs">{rehearsal.notes}</div> : null}</button>; })}{rehearsals.length === 0 ? <div className="empty">Nenhum ensaio criado.</div> : null}</div>
+      <div className="reu-grid">
+        {rehearsals.map((rehearsal) => {
+          const ministry = rehearsal.ministry_id ? ministryById.get(rehearsal.ministry_id) : null;
+          return (
+            <button className="ens-card" type="button" key={rehearsal.id} onClick={() => setDrawer({ kind: "rehearsal", id: rehearsal.id })}>
+              <div className="ens-top"><span className="ens-rec">{rehearsal.recurrence || "eventual"}</span><span className="ens-pub">{rehearsal.kind || "Ensaio"}</span></div>
+              <div className="ens-title">{rehearsal.title}</div>
+              <div className="ens-when">{rehearsal.rehearsal_date || "sem data"} · {rehearsal.time || "sem horário"} · {rehearsal.location || "sem local"}</div>
+              <div className="ens-team"><span className="ens-team-ic"><Icon name="times" size={15} /></span>{ministry?.name || "Vários times"} · {rehearsal.attendees.length} pessoas</div>
+              {rehearsal.repertoire.length ? <div className="ens-obs"><Icon name="cultos" size={13} /> {rehearsal.repertoire.length} item(ns) no repertório</div> : null}
+              {rehearsal.notes ? <div className="ens-obs">{rehearsal.notes}</div> : null}
+            </button>
+          );
+        })}
+        {rehearsals.length === 0 ? <div className="empty">Nenhum ensaio criado.</div> : null}
+      </div>
     </div>
   );
 }
 
-function Comunicacao({ announcements, wallPosts, setModal }: { announcements: AnnouncementView[]; wallPosts: WallPostView[]; setModal: (modal: ModalState) => void }) {
+function ReuniaoDrawer({
+  meeting,
+  actions,
+  ministries,
+  people,
+  onClose,
+}: {
+  meeting: MeetingView;
+  actions: MeetingActionView[];
+  ministries: MinistryView[];
+  people: PersonView[];
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const ministryById = new Map(ministries.map((m) => [m.id, m]));
+  const personById = new Map(people.map((p) => [p.id, p]));
+  const [ata, setAta] = useState(meeting.minutes ?? "");
+  const [saving, setSaving] = useState(false);
+  const pauta = Array.isArray(meeting.agenda) ? (meeting.agenda as string[]) : [];
+
+  const salvarAta = async () => {
+    setSaving(true);
+    await createServiceBrowserClient()
+      .schema("service")
+      .from("meetings")
+      .update({ minutes: ata, status: meeting.status === "agendada" ? "realizada" : meeting.status })
+      .eq("id", meeting.id);
+    setSaving(false);
+    router.refresh();
+  };
+
+  return (
+    <DrawerShell onClose={onClose}>
+      <div className="drawer-head">
+        <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+        <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{meeting.status === "agendada" ? "Reunião agendada" : "Reunião realizada"}</div>
+        <div className="profile-name">{meeting.title}</div>
+        <div className="profile-role">{meeting.meeting_date || "sem data"} · {meeting.time || ""} · {meeting.location || "sem local"}</div>
+      </div>
+      <div className="drawer-body">
+        <DrawerSection title="Times & presentes">
+          <div className="cell-tags" style={{ marginBottom: 12 }}>
+            {meeting.ministries.map((id) => <span key={id} className="tag">{ministryById.get(id)?.name || "Time"}</span>)}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {meeting.attendees.map((pid) => {
+              const p = personById.get(pid);
+              return p ? (
+                <div className="cand" key={pid}>
+                  <Av name={p.name} size="sm" />
+                  <div className="cand-main"><div className="cand-name">{p.name}</div><div className="cand-meta">{p.tags.join(" · ") || "Participante"}</div></div>
+                </div>
+              ) : null;
+            })}
+            {meeting.attendees.length === 0 && <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum presente registrado.</div>}
+          </div>
+        </DrawerSection>
+
+        {pauta.length > 0 && (
+          <DrawerSection title="Pauta">
+            <div className="step-stack">
+              {pauta.map((item, i) => (
+                <div className="step-do" key={i}>
+                  <span className="step-ic">{String(i + 1).padStart(2, "0")}</span> {item}
+                </div>
+              ))}
+            </div>
+          </DrawerSection>
+        )}
+
+        <DrawerSection title="Ata · o que foi discutido">
+          <textarea
+            className="textarea"
+            style={{ minHeight: 90 }}
+            placeholder="Registre as decisões e os pontos principais da reunião..."
+            value={ata}
+            onChange={(e) => setAta(e.target.value)}
+          />
+        </DrawerSection>
+
+        {actions.length > 0 && (
+          <DrawerSection title="Responsabilidades">
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {actions.map((action) => {
+                const assignee = action.assignee_id ? personById.get(action.assignee_id) : null;
+                const stMap: Record<string, { label: string; cls: string }> = {
+                  pendente: { label: "A fazer", cls: "chip-wait" },
+                  andamento: { label: "Em andamento", cls: "chip-wait" },
+                  feito: { label: "Concluído", cls: "chip-ok" },
+                };
+                const st = stMap[action.status] ?? stMap.pendente;
+                return (
+                  <div className="acao-row" key={action.id}>
+                    <div className="acao-main">
+                      <div className="acao-o">{action.description}</div>
+                      <div className="acao-quem">{assignee?.name.split(" ")[0] ?? "a definir"}</div>
+                    </div>
+                    <div className="acao-side"><span className={`chip ${st.cls}`}>{st.label}</span></div>
+                  </div>
+                );
+              })}
+            </div>
+          </DrawerSection>
+        )}
+
+        <button
+          className="btn btn-pri"
+          style={{ width: "100%", justifyContent: "center", marginTop: 20 }}
+          type="button"
+          disabled={saving}
+          onClick={salvarAta}
+        >
+          {saving ? "Salvando..." : meeting.status === "agendada" ? "Salvar ata & marcar realizada" : "Salvar ata"}
+        </button>
+      </div>
+    </DrawerShell>
+  );
+}
+
+function EnsaioDrawer({
+  rehearsal,
+  ministries,
+  people,
+  onClose,
+}: {
+  rehearsal: RehearsalView;
+  ministries: MinistryView[];
+  people: PersonView[];
+  onClose: () => void;
+}) {
+  const ministryById = new Map(ministries.map((m) => [m.id, m]));
+  const personById = new Map(people.map((p) => [p.id, p]));
+  const ministry = rehearsal.ministry_id ? ministryById.get(rehearsal.ministry_id) : undefined;
+  type SongItem = { titulo: string; tom?: string; youtube?: string; cifra?: string };
+  type AttachItem = { tipo: string; nome: string; url?: string };
+  const repertoire = (rehearsal.repertoire as SongItem[]) ?? [];
+  const attachments = (rehearsal.attachments as AttachItem[]) ?? [];
+
+  return (
+    <DrawerShell onClose={onClose}>
+      <div className="drawer-head">
+        <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+        <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{rehearsal.kind || "Ensaio"} · {rehearsal.recurrence || "eventual"}</div>
+        <div className="profile-name">{rehearsal.title}</div>
+        <div className="profile-role">{rehearsal.rehearsal_date || "sem data"} · {rehearsal.time || ""} · {rehearsal.location || "sem local"}{rehearsal.audience ? " · " + rehearsal.audience : ""}</div>
+      </div>
+      <div className="drawer-body">
+        {ministry && (
+          <DrawerSection title="Time">
+            <div className="cell-tags"><span className="tag lead">{ministry.name}</span></div>
+          </DrawerSection>
+        )}
+
+        {rehearsal.attendees.length > 0 && (
+          <DrawerSection title={`Quem participa · ${rehearsal.attendees.length}`}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {rehearsal.attendees.map((pid) => {
+                const p = personById.get(pid);
+                return p ? (
+                  <div className="cand" key={pid}>
+                    <Av name={p.name} size="sm" />
+                    <div className="cand-main"><div className="cand-name">{p.name}</div><div className="cand-meta">{p.tags.join(" · ") || "Participante"}</div></div>
+                  </div>
+                ) : null;
+              })}
+            </div>
+          </DrawerSection>
+        )}
+
+        {repertoire.length > 0 && (
+          <DrawerSection title={`Repertório · ${repertoire.length}`}>
+            <div className="setlist-list">
+              {repertoire.map((song, i) => (
+                <div className="setlist-row" key={i}>
+                  <span className="setlist-n">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="setlist-titulo">{song.titulo}</span>
+                  {song.tom && <span className="setlist-tom">{song.tom}</span>}
+                  {song.youtube && <a className="setlist-link" href={song.youtube} target="_blank" rel="noreferrer">vídeo</a>}
+                  {song.cifra && <a className="setlist-link" href={song.cifra} target="_blank" rel="noreferrer">cifra</a>}
+                </div>
+              ))}
+            </div>
+          </DrawerSection>
+        )}
+
+        {attachments.length > 0 && (
+          <DrawerSection title="Materiais">
+            <div className="anx-list">
+              {attachments.map((a, i) => (
+                a.url
+                  ? <a className="anx-item" key={i} href={a.url} target="_blank" rel="noreferrer"><span className="anx-tag">{a.tipo}</span><span className="anx-nome">{a.nome}</span></a>
+                  : <div className="anx-item" key={i}><span className="anx-tag">{a.tipo}</span><span className="anx-nome">{a.nome}</span></div>
+              ))}
+            </div>
+          </DrawerSection>
+        )}
+
+        {rehearsal.notes && (
+          <DrawerSection title="Observação">
+            <p style={{ fontSize: 13.5, color: "var(--muted)", lineHeight: 1.6 }}>{rehearsal.notes}</p>
+          </DrawerSection>
+        )}
+      </div>
+    </DrawerShell>
+  );
+}
+
+function ComposerModal({
+  ministries,
+  onClose,
+}: {
+  ministries: MinistryView[];
+  onClose: () => void;
+}) {
+  const [alvos, setAlvos] = useState<string[]>(["Todos"]);
+  const [canais, setCanais] = useState<string[]>(["app", "push"]);
+  const [msg, setMsg] = useState("");
+  const toggle = (arr: string[], setArr: (a: string[]) => void, v: string) =>
+    setArr(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
+  const opcoes = ["Todos", ...ministries.map((m) => m.name)];
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">Novo comunicado</div>
+          <div className="modal-title">Falar com a equipe</div>
+          <div className="modal-sub">Escreva uma vez e escolha quem recebe e por onde. O voluntário vê no app e na notificação.</div>
+        </div>
+        <div className="modal-body" style={{ display: "block" }}>
+          <div className="field">
+            <label className="field-label">Mensagem</label>
+            <textarea className="textarea" placeholder="Ex.: Ensaio geral sábado 16h. Chegada 15h45." value={msg} onChange={(e) => setMsg(e.target.value)} />
+          </div>
+          <div className="field">
+            <label className="field-label">Para quem</label>
+            <div className="seg-check">
+              {opcoes.map((o) => (
+                <button key={o} type="button" className={`seg-chip ${alvos.includes(o) ? "on" : ""}`} onClick={() => toggle(alvos, setAlvos, o)}>
+                  {o.split(" ")[0]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label className="field-label">Canais</label>
+            <div className="seg-check">
+              {([ ["app", "No app"], ["push", "Notificação push"], ["email", "E-mail"] ] as [string, string][]).map(([id, l]) => (
+                <button key={id} type="button" className={`seg-chip ${canais.includes(id) ? "on" : ""}`} onClick={() => toggle(canais, setCanais, id)}>{l}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-ghost" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-pri" type="button" disabled={!msg.trim()} onClick={onClose}>Enviar para {alvos.length} grupo(s) →</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Comunicacao({
+  announcements,
+  wallPosts,
+  ministries,
+  setModal: _setModal,
+}: {
+  announcements: AnnouncementView[];
+  wallPosts: WallPostView[];
+  ministries: MinistryView[];
+  setModal: (modal: ModalState) => void;
+}) {
+  const [view, setView] = useState<"mural" | "avisos">("mural");
+  const [selected, setSelected] = useState(announcements[0]?.id ?? "");
+  const [compose, setCompose] = useState(false);
+  const selAviso = announcements.find((a) => a.id === selected);
   return (
     <div className="content wide">
-      <PageHead title="Comunicação" eyebrow="Operação" subtitle="Avisos oficiais, mural da igreja e mensagens que chegam ao app." action={<><button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Mural", title: "Nova publicação", subtitle: "Publique algo para a igreja ou para um público específico.", fields: ["Mensagem", "Público"], action: { kind: "wallPost" } })}>+ Mural</button><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Aviso", title: "Novo aviso", subtitle: "Envie um aviso oficial para o app.", fields: ["Título", "Mensagem", "Público"], action: { kind: "announcement" } })}>+ Aviso</button></>} />
-      <div className="dash-2col">
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Avisos</span><span className="panel-meta">{announcements.length}</span></div><div className="panel-body flush">{announcements.map((item) => <div className="mini-row" key={item.id}><span className="chat-row-ic"><Icon name="sino" size={15} /></span><div className="mini-main"><div className="mini-title">{item.title}</div><div className="mini-sub">{item.body || "Sem texto"} · {item.audience || "todos"}</div></div><span className="chip chip-ok">{item.when_label || "agora"}</span></div>)}{announcements.length === 0 ? <div className="empty">Nenhum aviso publicado.</div> : null}</div></div>
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={14} /> Mural</span><span className="panel-meta">{wallPosts.length}</span></div><div className="panel-body flush">{wallPosts.map((post) => <div className="mini-row" key={post.id}><Av name={post.author || "CE.X"} /><div className="mini-main"><div className="mini-title">{post.author || "Liderança"}</div><div className="mini-sub">{post.body}</div></div>{post.pinned ? <span className="chip chip-wait">fixado</span> : null}</div>)}{wallPosts.length === 0 ? <div className="empty">Nenhuma publicação no mural.</div> : null}</div></div>
-      </div>
+      <PageHead
+        title="Comunicação"
+        eyebrow="Operação"
+        subtitle="Mural em tempo real e avisos segmentados. O voluntário recebe no app e por notificação, e você vê quem leu."
+        action={<>
+          <div className="seg">
+            <button className={view === "mural" ? "on" : ""} type="button" onClick={() => setView("mural")}>Mural</button>
+            <button className={view === "avisos" ? "on" : ""} type="button" onClick={() => setView("avisos")}>Avisos</button>
+          </div>
+          <button className="btn btn-pri" type="button" onClick={() => setCompose(true)}>+ Novo comunicado</button>
+        </>}
+      />
+
+      {view === "mural" ? (
+        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 16, alignItems: "start" }}>
+          <div className="feed">
+            {wallPosts.length === 0 && <div className="empty">Nenhuma publicação no mural ainda.</div>}
+            {wallPosts.map((post) => (
+              <div className={`post ${post.pinned ? "pin" : ""}`} key={post.id}>
+                <div className="post-top">
+                  <Av name={post.author || "CE.X"} size="md" />
+                  <div className="post-who">
+                    <div className="post-name">
+                      {post.author || "Liderança"}
+                      {post.pinned && <span className="post-pin">fixado</span>}
+                    </div>
+                    <div className="post-meta">para {post.audience || "todos"} · {new Date(post.created_at).toLocaleDateString("pt-BR")}</div>
+                  </div>
+                </div>
+                <p className="post-txt">{post.body}</p>
+                <div className="post-foot">
+                  {post.channels.map((c) => (
+                    <span key={c} className="chan">{c === "push" ? "push" : c === "email" ? "e-mail" : "app"}</span>
+                  ))}
+                  {post.channels.length === 0 && <span className="chan">app</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="panel" style={{ position: "sticky", top: 88 }}>
+            <div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={14} /> Resumo</span></div>
+            <div className="panel-body">
+              <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em" }}>{wallPosts.length}<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>publicações</span></div>
+              <div style={{ marginTop: 12, fontSize: 13, color: "var(--muted)" }}>{announcements.length} aviso(s) · {wallPosts.filter((p) => p.pinned).length} fixado(s)</div>
+              <button className="btn btn-sec btn-sm" style={{ width: "100%", justifyContent: "center", marginTop: 16 }} type="button" onClick={() => setCompose(true)}>Novo comunicado →</button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 16 }}>
+          <div className="tbl">
+            {announcements.map((a) => (
+              <button key={a.id} className="mini-row click" type="button" style={{ background: a.id === selected ? "var(--olive-dim)" : "transparent" }} onClick={() => setSelected(a.id)}>
+                <div className="mini-main">
+                  <div className="mini-title">{a.title}</div>
+                  <div className="mini-sub">{a.audience || "todos"} · {a.when_label || "agora"}</div>
+                </div>
+              </button>
+            ))}
+            {announcements.length === 0 && <div style={{ padding: "22px 16px", fontSize: 13, color: "var(--subtle)" }}>Nenhum aviso publicado.</div>}
+          </div>
+          {selAviso ? (
+            <div className="panel">
+              <div className="panel-head">
+                <span className="panel-title"><Icon name="comunicacao" size={14} /> {selAviso.title}</span>
+                <span className="panel-meta">{selAviso.when_label || "agora"}</span>
+              </div>
+              <div className="panel-body">
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+                  <Av name={selAviso.author || "CE.X"} size="sm" />
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{selAviso.author || "Liderança"}</div>
+                    <div style={{ fontSize: 12, color: "var(--muted)" }}>para {selAviso.audience || "todos"}</div>
+                  </div>
+                </div>
+                <p style={{ fontSize: 15, color: "var(--light)", lineHeight: 1.7 }}>{selAviso.body || "Sem texto."}</p>
+                <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
+                  <button className="btn btn-pri btn-sm" type="button">Reenviar notificação</button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="panel"><div className="panel-body"><div className="empty">Selecione um aviso para ver os detalhes.</div></div></div>
+          )}
+        </div>
+      )}
+      {compose && <ComposerModal ministries={ministries} onClose={() => setCompose(false)} />}
     </div>
   );
 }
@@ -1539,11 +2076,17 @@ function Decisoes({
   setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
 }) {
-  const memberById = new Map(members.map((member) => [member.id, member]));
+  const [q, setQ] = useState("");
+  const [f, setF] = useState<"todas" | "novo" | "acompanhando" | "encaminhado">("todas");
   const personById = new Map(people.map((person) => [person.id, person]));
-  const newDecisions = decisions.filter((decision) => decision.status === "novo");
-  const following = decisions.filter((decision) => decision.status === "acompanhando");
-  const forwarded = decisions.filter((decision) => decision.status === "encaminhado");
+  const newDecisions = decisions.filter((d) => d.status === "novo");
+  const following = decisions.filter((d) => d.status === "acompanhando");
+  const forwarded = decisions.filter((d) => d.status === "encaminhado");
+  const visible = decisions.filter((d) => {
+    const matchQ = !q || d.name.toLowerCase().includes(q.toLowerCase()) || (d.phone ?? "").includes(q);
+    const matchF = f === "todas" || d.status === f;
+    return matchQ && matchF;
+  });
   return (
     <div className="content wide">
       <PageHead
@@ -1559,36 +2102,50 @@ function Decisoes({
         <Kpi icon="relatorios" label="Encaminhados" value={forwarded.length} foot="já viraram membros" />
       </div>
       <div className="toolbar">
-        <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome..." /></div>
-        <div className="seg"><button className="on">Todas</button><button>A contatar</button><button>Acompanhando</button><button>Encaminhados</button></div>
+        <div className="tb-search">
+          <span className="si"><Icon name="buscar" size={13} /></span>
+          <input placeholder="Buscar por nome..." value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
+        <div className="seg">
+          <button className={f === "todas" ? "on" : ""} type="button" onClick={() => setF("todas")}>Todas</button>
+          <button className={f === "novo" ? "on" : ""} type="button" onClick={() => setF("novo")}>A contatar</button>
+          <button className={f === "acompanhando" ? "on" : ""} type="button" onClick={() => setF("acompanhando")}>Acompanhando</button>
+          <button className={f === "encaminhado" ? "on" : ""} type="button" onClick={() => setF("encaminhado")}>Encaminhados</button>
+        </div>
         <div className="tb-spacer" />
-        <span className="panel-meta">{decisions.length} decisões</span>
+        <span className="panel-meta">{visible.length} de {decisions.length} decisões</span>
       </div>
       <div className="tbl">
         <div className="tr head" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }}><span>Pessoa</span><span>Quando & culto</span><span>Responsável</span><span>Situação</span></div>
-        {decisions.map((decision) => {
-          const member = decision.member_id ? memberById.get(decision.member_id) : null;
+        {visible.map((decision) => {
           const responsible = decision.responsible_id ? personById.get(decision.responsible_id) : null;
           return (
-          <button className="tr click" key={decision.id} style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }} type="button" onClick={() => member ? setDrawer({ kind: "member", id: member.id }) : setModal({ eyebrow: "Decisão", title: decision.name, subtitle: decision.notes || "Pessoa ainda sem vínculo com membro.", fields: ["Responsável", "Observação"] })}>
-            <div className="cell-person"><Av name={decision.name} size="md" /><div><div className="cell-name">{decision.name} <span className="chip chip-ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"}</span></div><div className="cell-sub">{decision.phone || "Telefone não informado"}</div></div></div>
-            <div><div style={{ fontSize: 13, color: "var(--light)" }}>{decision.happened_on || "Data não informada"}</div><div className="cell-sub">{decision.service_name || "Culto não informado"}</div></div>
-            <div className="cell-person">{responsible ? <Av name={responsible.name} size="sm" /> : null}<div className="cell-sub" style={{ marginTop: 0 }}>{responsible?.name ?? "a definir"}</div></div>
-            <div><Chip status={decision.status === "novo" ? "wait" : decision.status === "encaminhado" ? "ok" : "ativo"} /></div>
-          </button>
+            <button className="tr click" key={decision.id} style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }} type="button" onClick={() => setDrawer({ kind: "decision", id: decision.id })}>
+              <div className="cell-person"><Av name={decision.name} size="md" /><div><div className="cell-name">{decision.name} <span className="chip chip-ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"}</span></div><div className="cell-sub">{decision.phone || "Telefone não informado"}</div></div></div>
+              <div><div style={{ fontSize: 13, color: "var(--light)" }}>{decision.happened_on || "Data não informada"}</div><div className="cell-sub">{decision.service_name || "Culto não informado"}</div></div>
+              <div className="cell-person">{responsible ? <Av name={responsible.name} size="sm" /> : null}<div className="cell-sub" style={{ marginTop: 0 }}>{responsible?.name ?? "a definir"}</div></div>
+              <div><Chip status={decision.status === "novo" ? "wait" : decision.status === "encaminhado" ? "ok" : "ativo"} /></div>
+            </button>
           );
         })}
-        {decisions.length === 0 ? <div className="empty">Nenhuma decisão registrada ainda.</div> : null}
+        {visible.length === 0 ? <div className="empty">Nenhuma decisão encontrada.</div> : null}
       </div>
     </div>
   );
 }
 
+const BAT_ST_MAP: Record<string, { label: string; cls: string }> = {
+  aberta: { label: "Inscrições abertas", cls: "chip-ok" },
+  preparacao: { label: "Em preparação", cls: "chip-wait" },
+  agendada: { label: "Agendada", cls: "chip-ok" },
+  concluida: { label: "Concluída", cls: "chip-neutral" },
+};
+
 function Batismos({
   baptismClasses,
   baptismCandidates,
-  decisions,
-  members,
+  decisions: _decisions,
+  members: _members,
   setDrawer,
   setModal,
 }: {
@@ -1599,49 +2156,533 @@ function Batismos({
   setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
 }) {
-  const memberById = new Map(members.map((member) => [member.id, member]));
-  const decisionById = new Map(decisions.map((decision) => [decision.id, decision]));
-  const currentClass = baptismClasses[0];
-  const currentCandidates = currentClass ? baptismCandidates.filter((candidate) => candidate.class_id === currentClass.id) : [];
-  const concluded = baptismClasses.filter((item) => item.status === "concluida").length;
+  const upcoming = baptismClasses.filter((c) => c.status !== "concluida");
+  const concluded = baptismClasses.filter((c) => c.status === "concluida");
   return (
     <div className="content wide">
       <PageHead title="Batismos" eyebrow="Jornada" subtitle="Turmas de batismo nas águas. Inscrições, curso pré-batismo, agenda e histórico na linha do tempo da pessoa." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Turma de batismo", title: "Nova turma", subtitle: "Crie a turma, defina data, local e candidatos.", fields: ["Nome da turma", "Data", "Local", "Pastor"], action: { kind: "baptismClass" } })}>+ Nova turma</button>} />
-      <div className="kpi-row"><Kpi icon="identidade" label="Turmas abertas" value={baptismClasses.filter((item) => item.open_enrollment).length} foot="com inscrições disponíveis" /><Kpi icon="pessoa" label="Candidatos" value={baptismCandidates.length} foot="em preparação" /><Kpi icon="cultos" label="Próximo batismo" value={currentClass?.baptism_date ? "1" : "0"} foot={currentClass?.baptism_date || "sem data"} /><Kpi icon="relatorios" label="Concluídos" value={concluded} foot="histórico da igreja" /></div>
-      <div className="dash-2col">
-        <div className="panel">
-          <div className="panel-head"><span className="panel-title"><Icon name="identidade" size={14} /> Turma atual</span><span className="chip chip-ok">{currentClass?.status ?? "sem turma"}</span></div>
-          <div className="panel-body"><div className="profile-name" style={{ fontSize: 22 }}>{currentClass?.label ?? "Nenhuma turma criada"}</div><p className="mini-sub">{currentClass?.baptism_date || "Sem data"} · {currentClass?.location || "Local não informado"} · {currentClass?.pastor || "Pastor não informado"}</p><button className="btn btn-sec btn-sm" style={{ marginTop: 14 }} type="button" onClick={() => setModal({ eyebrow: "Adicionar candidato", title: currentClass?.label ?? "Turma de batismo", subtitle: "Escolha quem será batizado nesta turma.", fields: ["Candidato"] })}>+ Adicionar candidato</button></div>
+      <div className="kpi-row">
+        <Kpi icon="identidade" label="Turmas abertas" value={baptismClasses.filter((c) => c.open_enrollment).length} foot="com inscrições disponíveis" />
+        <Kpi icon="pessoa" label="Candidatos" value={baptismCandidates.length} foot="em preparação" />
+        <Kpi icon="cultos" label="Próximas turmas" value={upcoming.length} foot={upcoming[0]?.baptism_date || "sem data agendada"} />
+        <Kpi icon="relatorios" label="Concluídos" value={concluded.length} foot="histórico da igreja" />
+      </div>
+      <div className="section-divide">
+        <span className="num">{upcoming.length}</span>
+        <span className="label">PRÓXIMAS TURMAS</span>
+        <div className="line" />
+      </div>
+      {upcoming.length > 0 ? (
+        <div className="bat-grid">
+          {upcoming.map((cls) => {
+            const count = baptismCandidates.filter((c) => c.class_id === cls.id).length;
+            const st = BAT_ST_MAP[cls.status ?? "aberta"];
+            return (
+              <button className="bat-card" key={cls.id} type="button" onClick={() => setDrawer({ kind: "baptismClass", id: cls.id })}>
+                <div className="bat-card-top">
+                  <div>
+                    <div className="bat-date">{cls.baptism_date ?? "Sem data"}</div>
+                    <div className="bat-turma">{cls.label}</div>
+                  </div>
+                  <div className="bat-mark"><Icon name="batismos" size={20} /></div>
+                </div>
+                <div className="bat-meta">{cls.location || "Local não informado"} · {cls.pastor || "Pastor não informado"}</div>
+                <div className="bat-foot">
+                  <span className={`chip ${st?.cls ?? "chip-wait"}`}>{st?.label ?? cls.status}</span>
+                  <span className="panel-meta">{count} candidato{count !== 1 ? "s" : ""}</span>
+                </div>
+              </button>
+            );
+          })}
         </div>
-        <div className="panel">
-          <div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={14} /> Candidatos</span><span className="panel-meta">{currentCandidates.length} pessoas</span></div>
-          <div className="panel-body flush">
-            {currentCandidates.map((candidate) => {
-              const member = candidate.member_id ? memberById.get(candidate.member_id) : null;
-              const decision = candidate.decision_id ? decisionById.get(candidate.decision_id) : null;
-              const name = member?.name ?? decision?.name ?? "Candidato";
-              return <button className="mini-row click" type="button" key={candidate.id} onClick={() => member ? setDrawer({ kind: "member", id: member.id }) : setModal({ eyebrow: "Candidato", title: name, subtitle: "Candidato vindo de uma decisão.", fields: ["Observação"] })}><Av name={name} /><div className="mini-main"><div className="mini-title">{name}</div><div className="mini-sub">{member?.phone ?? decision?.phone ?? "Telefone não informado"}</div></div><span className="chip chip-wait">preparação</span></button>;
-            })}
-            {currentCandidates.length === 0 ? <div className="empty">Nenhum candidato nesta turma.</div> : null}
+      ) : (
+        <div className="empty">Nenhuma turma em andamento.</div>
+      )}
+      {concluded.length > 0 && (
+        <>
+          <div className="section-divide" style={{ marginTop: 32 }}>
+            <span className="num">{concluded.length}</span>
+            <span className="label">HISTÓRICO</span>
+            <div className="line" />
           </div>
+          <div className="tbl">
+            <div className="tr head" style={{ gridTemplateColumns: "2fr 1fr 1fr 100px" }}><span>Turma</span><span>Data</span><span>Local</span><span>Candidatos</span></div>
+            {concluded.map((cls) => {
+              const count = baptismCandidates.filter((c) => c.class_id === cls.id).length;
+              return (
+                <button className="tr click" key={cls.id} type="button" style={{ gridTemplateColumns: "2fr 1fr 1fr 100px" }} onClick={() => setDrawer({ kind: "baptismClass", id: cls.id })}>
+                  <div className="cell-name">{cls.label}</div>
+                  <div style={{ fontSize: 13, color: "var(--light)" }}>{cls.baptism_date ?? "—"}</div>
+                  <div className="cell-sub">{cls.location ?? "—"}</div>
+                  <div><span className="chip chip-neutral">{count} pessoas</span></div>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function CursosTrilhas({
+  courses, enrollments, members, church,
+}: {
+  courses: CourseView[];
+  enrollments: EnrollmentView[];
+  members: MemberView[];
+  church?: ChurchView;
+}) {
+  const [editingId, setEditingId] = useState<string | "new" | null>(null);
+
+  if (editingId !== null && church) {
+    return (
+      <CursoEditor
+        courseId={editingId === "new" ? null : editingId}
+        church={{ id: church.id, organizationId: church.organizationId }}
+        allCourses={courses.map((c) => ({ id: c.id, name: c.name }))}
+        onClose={() => setEditingId(null)}
+      />
+    );
+  }
+
+  return (
+    <div className="content wide">
+      <PageHead
+        title="Cursos & Trilhas"
+        eyebrow="Jornada"
+        subtitle="Trilhas internas de formação, aulas e participantes. Não mistura com cursos comerciais CE.X."
+        action={
+          <button className="btn btn-pri" type="button" onClick={() => setEditingId("new")}>
+            + Nova trilha
+          </button>
+        }
+      />
+      <div className="team-grid">
+        {courses.map((course) => {
+          const courseEnrollments = enrollments.filter((item) => item.course_id === course.id);
+          const concluded = courseEnrollments.filter((item) => item.status === "concluido").length;
+          return (
+            <button
+              className="team-card"
+              type="button"
+              key={course.id}
+              onClick={() => setEditingId(course.id)}
+            >
+              <div className="team-card-top">
+                <div className="team-mark"><Icon name="relatorios" size={20} /></div>
+                <span className="chip chip-ok">{course.level || course.category || "trilha"}</span>
+              </div>
+              <div className="team-name">{course.name}</div>
+              <div className="team-lead">Matrículas: <em>{courseEnrollments.length}</em></div>
+              <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.55, marginTop: 12 }}>
+                {course.description || "Acompanhamento de progresso e conclusão na linha do tempo do membro."}
+              </p>
+              <div className="bar" style={{ marginTop: 14 }}>
+                <div className="bar-fill" style={{ width: `${courseEnrollments.length ? (concluded / courseEnrollments.length) * 100 : Math.min(100, members.length * 2)}%` }} />
+              </div>
+            </button>
+          );
+        })}
+        {courses.length === 0 && <div className="empty">Nenhuma trilha interna criada ainda.</div>}
+      </div>
+    </div>
+  );
+}
+
+const PRIO_COLOR: Record<string, string> = {
+  alta: "var(--danger)",
+  media: "var(--amber)",
+  baixa: "var(--olive)",
+};
+
+function KbCard({
+  card,
+  peopleById,
+  atrasado,
+  parado,
+  onOpen,
+  onDragStart,
+  onDragEnd,
+}: {
+  card: CardView;
+  peopleById: Map<string, PersonView>;
+  atrasado: boolean;
+  parado: boolean;
+  onOpen: () => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+}) {
+  return (
+    <div
+      className={`kb-card${atrasado ? " atrasado" : ""}`}
+      draggable
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      onClick={onOpen}
+    >
+      <div className="kb-card-top">
+        <span className={`prio-dot prio-${card.priority ?? "media"}`} style={{ background: PRIO_COLOR[card.priority ?? "media"] }} />
+        {card.source_type && card.source_type !== "manual" && (
+          <span className="kb-origem"><Icon name="cultos" size={11} /> {card.source_type}</span>
+        )}
+        {parado && !atrasado && <span className="kb-parado">parado</span>}
+      </div>
+      <div className="kb-card-title">{card.title}</div>
+      <div className="kb-card-foot">
+        {card.due && <span className={`kb-prazo${atrasado ? " late" : ""}`}>{card.due}</span>}
+        <div className="av-stack">
+          {card.assignees.slice(0, 3).map((id) => {
+            const p = peopleById.get(id);
+            return p ? <Av key={id} name={p.name} size="xs" /> : null;
+          })}
         </div>
       </div>
     </div>
   );
 }
 
-function CursosTrilhas({ courses, enrollments, members, setModal }: { courses: CourseView[]; enrollments: EnrollmentView[]; members: MemberView[]; setModal: (modal: ModalState) => void }) {
+function CardDrawer({
+  card: initCard,
+  board,
+  columns,
+  people,
+  church,
+  onClose,
+  onMoveParent,
+  onRefresh,
+}: {
+  card: CardView;
+  board: BoardView;
+  columns: { id: string; name: string }[];
+  people: PersonView[];
+  church: ChurchView | undefined;
+  onClose: () => void;
+  onMoveParent: (cardId: string, colId: string) => void;
+  onRefresh: () => void;
+}) {
+  const [lc, setLc] = useState(initCard);
+  const [comments, setComments] = useState<{ id: string; author: string; body: string; created_at: string }[]>([]);
+  const [commentText, setCommentText] = useState("");
+
+  useEffect(() => {
+    createServiceBrowserClient()
+      .schema("service")
+      .from("card_comments")
+      .select("*")
+      .eq("card_id", initCard.id)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => { if (data) setComments(data as typeof comments); });
+  }, [initCard.id]);
+
+  const mutate = async (updates: Partial<Pick<CardView, "column_id" | "priority" | "assignees">>) => {
+    setLc((prev) => ({ ...prev, ...updates }));
+    await createServiceBrowserClient().schema("service").from("cards").update(updates).eq("id", lc.id);
+    onRefresh();
+  };
+
+  const addComment = async () => {
+    if (!commentText.trim()) return;
+    const body = commentText.trim();
+    setCommentText("");
+    const { data } = await createServiceBrowserClient()
+      .schema("service")
+      .from("card_comments")
+      .insert({ organization_id: church?.organizationId ?? "", card_id: lc.id, author: "Equipe", body })
+      .select()
+      .single();
+    if (data) setComments((prev) => [...prev, data as (typeof comments)[0]]);
+  };
+
+  const deleteCard = async () => {
+    await createServiceBrowserClient().schema("service").from("cards").delete().eq("id", lc.id);
+    onRefresh();
+    onClose();
+  };
+
+  return (
+    <>
+      <div className="drawer-bg" onClick={onClose} />
+      <div className="drawer drawer-wide">
+        <div className="drawer-head">
+          <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+          <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{board.name}</div>
+          <div className="profile-name" style={{ fontSize: 22 }}>{lc.title}</div>
+        </div>
+        <div className="drawer-body">
+          {lc.description && <p style={{ fontSize: 14, color: "var(--light)", lineHeight: 1.6, marginBottom: 12 }}>{lc.description}</p>}
+
+          <div className="dsec" style={{ marginTop: 8 }}>
+            <div className="dsec-title">Situação</div>
+            <div className="kb-move">
+              {columns.map((col) => (
+                <button key={col.id} type="button" className={`seg-chip${lc.column_id === col.id ? " on" : ""}`}
+                  onClick={() => { mutate({ column_id: col.id }); onMoveParent(lc.id, col.id); }}>
+                  {col.name}
+                </button>
+              ))}
+            </div>
+            <dl className="kv" style={{ marginTop: 14 }}>
+              <dt>Prazo</dt>
+              <dd>{lc.due || <span style={{ color: "var(--subtle)" }}>sem prazo</span>}</dd>
+              <dt>Prioridade</dt>
+              <dd>
+                <div className="seg seg-sm" style={{ display: "inline-flex" }}>
+                  {(["alta", "media", "baixa"] as const).map((p) => (
+                    <button key={p} type="button" className={lc.priority === p ? "on" : ""} onClick={() => mutate({ priority: p })}>
+                      {p === "alta" ? "Alta" : p === "media" ? "Média" : "Baixa"}
+                    </button>
+                  ))}
+                </div>
+              </dd>
+            </dl>
+          </div>
+
+          <div className="dsec">
+            <div className="dsec-title">Responsáveis</div>
+            <div className="cand-pick">
+              {people.slice(0, 12).map((p) => {
+                const on = lc.assignees.includes(p.id);
+                return (
+                  <button key={p.id} type="button" className={`cand-chip${on ? " on" : ""}`}
+                    onClick={() => mutate({ assignees: on ? lc.assignees.filter((x) => x !== p.id) : [...lc.assignees, p.id] })}>
+                    <Av name={p.name} size="xs" /> {p.name.split(" ")[0]} {on && "✓"}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="dsec">
+            <div className="dsec-title">Comentários · {comments.length}</div>
+            <div className="kb-comments">
+              {comments.map((cm) => (
+                <div className="kb-coment" key={cm.id}>
+                  <Av name={cm.author || "?"} size="sm" />
+                  <div className="kb-coment-body">
+                    <div className="kb-coment-top">
+                      <b>{cm.author || "Equipe"}</b>
+                      <span>{new Date(cm.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                    </div>
+                    <div className="kb-coment-txt">{cm.body}</div>
+                  </div>
+                </div>
+              ))}
+              {comments.length === 0 && <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum comentário ainda.</div>}
+            </div>
+            <div className="kb-coment-add">
+              <input className="input" placeholder="Escreva um comentário..." value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addComment()} />
+              <button className="btn btn-sec btn-sm" type="button" onClick={addComment}>Enviar</button>
+            </div>
+          </div>
+
+          <button className="btn btn-ghost btn-sm" type="button" style={{ marginTop: 8 }} onClick={deleteCard}>Excluir card</button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function NovoCard({
+  board,
+  colId,
+  people,
+  church,
+  onClose,
+  onRefresh,
+}: {
+  board: BoardView;
+  colId: string;
+  people: PersonView[];
+  church: ChurchView;
+  onClose: () => void;
+  onRefresh: () => void;
+}) {
+  const [titulo, setTitulo] = useState("");
+  const [desc, setDesc] = useState("");
+  const [due, setDue] = useState("");
+  const [prio, setPrio] = useState<"alta" | "media" | "baixa">("media");
+  const [resp, setResp] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const criar = async () => {
+    if (!titulo.trim()) return;
+    setSaving(true);
+    await createServiceBrowserClient().schema("service").from("cards").insert({
+      organization_id: church.organizationId,
+      board_id: board.id,
+      column_id: colId,
+      title: titulo.trim(),
+      description: desc.trim() || null,
+      due: due || null,
+      priority: prio,
+      assignees: resp,
+      source_type: "manual",
+    });
+    onRefresh();
+    onClose();
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">{board.name}</div>
+          <div className="modal-title">Novo card</div>
+        </div>
+        <div className="modal-body">
+          <div className="field"><label className="field-label">Título</label><input className="input" autoFocus value={titulo} placeholder="O que precisa ser feito" onChange={(e) => setTitulo(e.target.value)} /></div>
+          <div className="field"><label className="field-label">Descrição</label><textarea className="textarea" value={desc} placeholder="Detalhes (opcional)" onChange={(e) => setDesc(e.target.value)} /></div>
+          <div className="field field-half"><label className="field-label">Prazo</label><input className="input" type="date" value={due} onChange={(e) => setDue(e.target.value)} /></div>
+          <div className="field field-half"><label className="field-label">Prioridade</label>
+            <div className="seg seg-sm">
+              {(["alta", "media", "baixa"] as const).map((p) => (
+                <button key={p} type="button" className={prio === p ? "on" : ""} onClick={() => setPrio(p)}>
+                  {p === "alta" ? "Alta" : p === "media" ? "Média" : "Baixa"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="field"><label className="field-label">Responsáveis</label>
+            <div className="cand-pick">
+              {people.slice(0, 12).map((p) => {
+                const on = resp.includes(p.id);
+                return (
+                  <button key={p.id} type="button" className={`cand-chip${on ? " on" : ""}`}
+                    onClick={() => setResp(on ? resp.filter((x) => x !== p.id) : [...resp, p.id])}>
+                    <Av name={p.name} size="xs" /> {p.name.split(" ")[0]} {on && "✓"}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-pri" type="button" disabled={saving} onClick={criar}>Adicionar card</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BoardView({
+  board,
+  boardCards,
+  people,
+  peopleById,
+  church,
+  onBack,
+  onMoveCard,
+  onRefresh,
+}: {
+  board: BoardView;
+  boardCards: CardView[];
+  people: PersonView[];
+  peopleById: Map<string, PersonView>;
+  church: ChurchView | undefined;
+  onBack: () => void;
+  onMoveCard: (cardId: string, colId: string) => void;
+  onRefresh: () => void;
+}) {
+  const [openCard, setOpenCard] = useState<CardView | null>(null);
+  const [novoCol, setNovoCol] = useState<string | null>(null);
+  const [drag, setDrag] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const [fPrio, setFPrio] = useState("todas");
+  const [fEstado, setFEstado] = useState("todos");
+
+  const columns = board.columns.length
+    ? board.columns.map((c) => ({ id: c.id, name: c.nome ?? c.name ?? c.id }))
+    : [{ id: "todo", name: "A fazer" }, { id: "doing", name: "Em andamento" }, { id: "done", name: "Concluído" }];
+
+  const isAtrasado = (c: CardView) => {
+    if (!c.due) return false;
+    try { return new Date(c.due) < new Date(); } catch { return false; }
+  };
+  const isParado = (c: CardView) => (c.moved_days_ago ?? 0) > 7;
+
+  const match = (c: CardView) => {
+    if (q && !c.title.toLowerCase().includes(q.toLowerCase())) return false;
+    if (fPrio !== "todas" && c.priority !== fPrio) return false;
+    if (fEstado === "atrasados" && !isAtrasado(c)) return false;
+    if (fEstado === "parados" && !isParado(c)) return false;
+    return true;
+  };
+
+  const atrasados = boardCards.filter(isAtrasado).length;
+  const parados = boardCards.filter(isParado).length;
+
   return (
     <div className="content wide">
-      <PageHead title="Cursos & Trilhas" eyebrow="Jornada" subtitle="Trilhas internas de formação, aulas e participantes. Não mistura com cursos comerciais CE.X." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Nova trilha", title: "Curso interno", subtitle: "Crie a trilha de formação da igreja.", fields: ["Nome", "Nível", "Descrição"], action: { kind: "course" } })}>+ Nova trilha</button>} />
-      <div className="team-grid">
-        {courses.map((course) => {
-          const courseEnrollments = enrollments.filter((item) => item.course_id === course.id);
-          const concluded = courseEnrollments.filter((item) => item.status === "concluido").length;
-          return <button className="team-card" type="button" key={course.id} onClick={() => setModal({ eyebrow: "Curso", title: course.name, subtitle: "Gerencie módulos, aulas e matrículas.", fields: ["Módulo", "Aula", "Participante"] })}><div className="team-card-top"><div className="team-mark"><Icon name="relatorios" size={20} /></div><span className="chip chip-ok">{course.level || course.category || "trilha"}</span></div><div className="team-name">{course.name}</div><div className="team-lead">Matrículas: <em>{courseEnrollments.length}</em></div><p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.55, marginTop: 12 }}>{course.description || "Acompanhamento de progresso e conclusão na linha do tempo do membro."}</p><div className="bar" style={{ marginTop: 14 }}><div className="bar-fill" style={{ width: `${courseEnrollments.length ? (concluded / courseEnrollments.length) * 100 : Math.min(100, members.length * 2)}%` }} /></div></button>;
-        })}
-        {courses.length === 0 ? <div className="empty">Nenhuma trilha interna criada ainda.</div> : null}
+      <div className="ph">
+        <div>
+          <button className="back-link" type="button" onClick={onBack}>← Quadros</button>
+          <h1 className="ph-title" style={{ marginTop: 8 }}>{board.name}</h1>
+          <p className="ph-sub">{board.description || "Quadro de tarefas da operação."}</p>
+        </div>
       </div>
+
+      <div className="toolbar">
+        <div className="tb-search">
+          <span className="si">⌕</span>
+          <input placeholder="Buscar card..." value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
+        <div className="seg">
+          {([["todos", "Todos"], ["atrasados", `Atrasados${atrasados ? ` ${atrasados}` : ""}`], ["parados", `Parados${parados ? ` ${parados}` : ""}`]] as [string, string][]).map(([k, l]) => (
+            <button key={k} type="button" className={fEstado === k ? "on" : ""} onClick={() => setFEstado(k)}>{l}</button>
+          ))}
+        </div>
+        <div className="seg">
+          {([["todas", "Prioridade"], ["alta", "Alta"], ["media", "Média"], ["baixa", "Baixa"]] as [string, string][]).map(([k, l]) => (
+            <button key={k} type="button" className={fPrio === k ? "on" : ""} onClick={() => setFPrio(k)}>{l}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="kb-board">
+        {columns.map((col) => {
+          const colCards = boardCards.filter((c) => c.column_id === col.id && match(c));
+          return (
+            <div key={col.id} className={`kb-col${drag ? " drop" : ""}`}
+              onDragOver={(e) => { if (drag) e.preventDefault(); }}
+              onDrop={() => { if (drag) { onMoveCard(drag, col.id); setDrag(null); } }}>
+              <div className="kb-col-head">
+                <span className="kb-col-name">{col.name}</span>
+                <span className="kb-col-count">{colCards.length}</span>
+              </div>
+              <div className="kb-col-body">
+                {colCards.map((c) => (
+                  <KbCard key={c.id} card={c} peopleById={peopleById}
+                    atrasado={isAtrasado(c)} parado={isParado(c)}
+                    onOpen={() => setOpenCard(c)}
+                    onDragStart={() => setDrag(c.id)}
+                    onDragEnd={() => setDrag(null)} />
+                ))}
+                <button className="kb-add" type="button" onClick={() => setNovoCol(col.id)}>+ Card</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {openCard && (
+        <CardDrawer
+          card={openCard}
+          board={board}
+          columns={columns}
+          people={people}
+          church={church}
+          onClose={() => setOpenCard(null)}
+          onMoveParent={(cardId, colId) => { onMoveCard(cardId, colId); setOpenCard((prev) => prev ? { ...prev, column_id: colId } : null); }}
+          onRefresh={onRefresh}
+        />
+      )}
+      {novoCol && church && (
+        <NovoCard board={board} colId={novoCol} people={people} church={church} onClose={() => setNovoCol(null)} onRefresh={onRefresh} />
+      )}
     </div>
   );
 }
@@ -1651,49 +2692,91 @@ function Quadros({
   cards,
   ministries,
   people,
+  church,
   setModal,
 }: {
   boards: BoardView[];
   cards: CardView[];
   ministries: MinistryView[];
   people: PersonView[];
+  church: ChurchView | undefined;
   setModal: (modal: ModalState) => void;
 }) {
+  const router = useRouter();
   const [boardId, setBoardId] = useState<string | null>(null);
-  const selected = boards.find((board) => board.id === boardId);
-  const ministryById = new Map(ministries.map((ministry) => [ministry.id, ministry]));
-  const peopleById = new Map(people.map((person) => [person.id, person]));
+  const [localCards, setLocalCards] = useState<CardView[]>(cards);
+
+  useEffect(() => { setLocalCards(cards); }, [cards]);
+
+  const ministryById = new Map(ministries.map((m) => [m.id, m]));
+  const peopleById = new Map(people.map((p) => [p.id, p]));
+
+  const moverCard = async (cardId: string, colId: string) => {
+    setLocalCards((prev) => prev.map((c) => c.id === cardId ? { ...c, column_id: colId } : c));
+    await createServiceBrowserClient().schema("service").from("cards").update({ column_id: colId }).eq("id", cardId);
+    router.refresh();
+  };
+
+  const selected = boards.find((b) => b.id === boardId);
+
   if (selected) {
-    const columns = selected.columns.length ? selected.columns.map((column) => ({ id: column.id, name: column.nome ?? column.name ?? column.id })) : [
-      { id: "todo", name: "A fazer" },
-      { id: "doing", name: "Em andamento" },
-      { id: "done", name: "Concluído" },
-    ];
-    const boardCards = cards.filter((card) => card.board_id === selected.id);
-    const ministry = selected.ministry_id ? ministryById.get(selected.ministry_id) : null;
     return (
-      <div className="content wide">
-        <div className="ph"><div><button className="back-link" type="button" onClick={() => setBoardId(null)}>Voltar para quadros</button><h1 className="ph-title" style={{ marginTop: 8 }}>{selected.name}</h1><p className="ph-sub">{selected.description || ministry?.description || "Quadro de tarefas da operação."}</p></div><div className="ph-actions"><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo card", title: selected.name, subtitle: "Crie uma responsabilidade para este quadro.", fields: ["Título", "Responsável", "Prazo"], action: { kind: "card", boardId: selected.id, columnId: columns[0]?.id ?? "todo" } })}>+ Card</button></div></div>
-        <div className="kb-board">
-          {columns.map((column) => {
-            const columnCards = boardCards.filter((card) => card.column_id === column.id);
-            return <div className="kb-col" key={column.id}><div className="kb-col-head"><span className="kb-col-name">{column.name}</span><span className="kb-col-count">{columnCards.length}</span></div><div className="kb-col-body">{columnCards.map((card) => { const assignee = card.assignees[0] ? peopleById.get(card.assignees[0]) : null; return <button className="kb-card" type="button" key={card.id} onClick={() => setModal({ eyebrow: selected.name, title: card.title, subtitle: card.description || "Card do quadro. Responsável, prazo e comentários.", fields: ["Comentário"] })}><div className="kb-card-top"><span className={`prio-dot prio-${card.priority ?? "media"}`} /><span className="kb-origem"><Icon name="cultos" size={11} /> {card.source_type || selected.scope || "tarefa"}</span></div><div className="kb-card-title">{card.title}</div><div className="kb-card-foot"><span className="kb-prazo soon">{card.due || "sem prazo"}</span>{assignee ? <Av name={assignee.name} /> : null}</div></button>; })}<button className="kb-add" type="button" onClick={() => setModal({ eyebrow: "Novo card", title: column.name, subtitle: "Criar card nesta coluna.", fields: ["Título", "Responsável", "Prazo"], action: { kind: "card", boardId: selected.id, columnId: column.id } })}>+ Card</button></div></div>;
-          })}
-        </div>
-      </div>
+      <BoardView
+        board={selected}
+        boardCards={localCards.filter((c) => c.board_id === selected.id)}
+        people={people}
+        peopleById={peopleById}
+        church={church}
+        onBack={() => setBoardId(null)}
+        onMoveCard={moverCard}
+        onRefresh={() => router.refresh()}
+      />
     );
   }
+
   return (
     <div className="content wide">
-      <PageHead title="Quadros de tarefas" eyebrow="Operação" subtitle="Um quadro por time ou da Direção. Cada tarefa é um card com responsável, prazo e status." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo quadro", title: "Quadro de tarefas", subtitle: "Crie um quadro para um time ou para a liderança.", fields: ["Nome", "Time", "Descrição"], action: { kind: "board" } })}>+ Novo quadro</button>} />
-      <div className="kb-explain"><span className="kb-explain-ic"><Icon name="cultos" size={18} /></span><div><div className="kb-explain-t">De onde vêm os cards</div><div className="kb-explain-s">Toda responsabilidade definida numa reunião pode virar um card aqui, com responsável e prazo já preenchidos.</div></div></div>
+      <div className="ph">
+        <div>
+          <div className="ph-eyebrow">Operação</div>
+          <h1 className="ph-title">Quadros de <em>tarefas</em></h1>
+          <p className="ph-sub">Um quadro por time ou da Direção. Cada tarefa é um card com responsável, prazo e status.</p>
+        </div>
+        <div className="ph-actions">
+          <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Novo quadro", title: "Quadro de tarefas", subtitle: "Crie um quadro para um time ou para a liderança.", fields: ["Nome", "Time", "Descrição"], action: { kind: "board" } })}>+ Novo quadro</button>
+        </div>
+      </div>
+      <div className="kb-explain">
+        <span className="kb-explain-ic"><Icon name="reunioes" size={18} /></span>
+        <div>
+          <div className="kb-explain-t">De onde vêm os cards</div>
+          <div className="kb-explain-s">Toda responsabilidade definida numa reunião pode virar um card aqui, com responsável e prazo já preenchidos.</div>
+        </div>
+      </div>
       <div className="bd-grid">
         {boards.map((board) => {
           const ministry = board.ministry_id ? ministryById.get(board.ministry_id) : null;
-          const boardCards = cards.filter((card) => card.board_id === board.id);
-          return <button className="bd-card" key={board.id} type="button" onClick={() => setBoardId(board.id)}><div className="bd-card-top"><div className="bd-mark"><Icon name="times" size={18} /></div></div><div className="bd-name">{board.name}</div><div className="bd-desc">{board.description || ministry?.description || "Quadro geral da liderança."}</div><div className="bd-foot"><span className="team-stat"><b>{boardCards.length}</b> cards · <b>{ministry?.people.length ?? 0}</b> pessoas</span></div><div className="bar" style={{ marginTop: 10 }}><div className="bar-fill" style={{ width: `${Math.min(100, boardCards.length * 20)}%` }} /></div></button>;
+          const boardCards = localCards.filter((c) => c.board_id === board.id);
+          const doneCol = board.columns.find((col) => (col.nome ?? col.name ?? col.id).toLowerCase().includes("conclu") || col.id === "done");
+          const feitos = doneCol ? boardCards.filter((c) => c.column_id === doneCol.id).length : 0;
+          const pct = boardCards.length ? Math.round((feitos / boardCards.length) * 100) : 0;
+          return (
+            <button className="bd-card" key={board.id} type="button" onClick={() => setBoardId(board.id)}>
+              <div className="bd-card-top">
+                <div className="bd-mark"><Icon name="times" size={18} /></div>
+              </div>
+              <div className="bd-name">{board.name}</div>
+              <div className="bd-desc">{board.description || ministry?.description || "Quadro da operação."}</div>
+              <div className="bd-foot">
+                <span className="team-stat"><b>{boardCards.length}</b> cards · <b>{feitos}</b> feitos</span>
+              </div>
+              <div className="bar" style={{ marginTop: 10 }}>
+                <div className="bar-fill" style={{ width: `${pct}%` }} />
+              </div>
+            </button>
+          );
         })}
-        {boards.length === 0 ? <div className="empty">Nenhum quadro criado ainda.</div> : null}
+        {boards.length === 0 && <div className="empty">Nenhum quadro criado ainda.</div>}
       </div>
     </div>
   );
@@ -1747,6 +2830,7 @@ function Relatorios({
   courses,
   boards,
   chats,
+  visitors,
   confirmationRate,
   setRoute,
 }: {
@@ -1759,24 +2843,39 @@ function Relatorios({
   courses: CourseView[];
   boards: BoardView[];
   chats: ChatView[];
+  visitors: VisitorView[];
   confirmationRate: number;
   setRoute: (route: keyof typeof ROUTES) => void;
 }) {
-  const activePeople = people.filter((person) => person.status === "ativo").length;
-  const attention = people.filter((person) => (person.engagement ?? 0) < 70 || person.status !== "ativo");
-  const series = [members.length - 5, members.length - 3, members.length - 2, members.length].map((value) => Math.max(0, value));
-  const maxMinistry = Math.max(...ministries.map((ministry) => ministry.people.length), 1);
+  const saudavel = people.filter((p) => p.status === "ativo" && (p.engagement ?? 0) >= 70);
+  const atencao = people.filter((p) => p.status === "ativo" && (p.engagement ?? 0) < 70);
+  const sobrecarga = people.filter((p) => p.status === "ativo" && (p.engagement ?? 0) >= 90);
+  const afastando = people.filter((p) => p.status === "pausa");
+  const wellRows = [
+    ...atencao.map((p) => ({ person: p, cls: "atencao", tag: "Atenção" })),
+    ...afastando.map((p) => ({ person: p, cls: "afastando", tag: "Afastando" })),
+  ];
+  const series = [members.length - 5, members.length - 3, members.length - 2, members.length].map((v) => Math.max(0, v));
+  const maxMinistry = Math.max(...ministries.map((m) => m.people.length), 1);
+  const FUNNEL_STAGES: { id: VisitorView["stage"]; label: string }[] = [
+    { id: "novo", label: "Novo" },
+    { id: "contato", label: "Em contato" },
+    { id: "integrando", label: "Integrando" },
+    { id: "membro", label: "Virou membro" },
+  ];
+  const funnelCounts = FUNNEL_STAGES.map((s) => visitors.filter((v) => v.stage === s.id).length);
+  const funnelMax = Math.max(...funnelCounts, 1);
   return (
     <div className="content wide">
       <PageHead title="Relatórios & indicadores" eyebrow="Gestão" subtitle="A saúde da igreja num lugar: crescimento, integração, cobertura de escala e o bem-estar de quem serve." action={<><button className="btn btn-sec" type="button"><Icon name="cultos" size={14} /> Trimestre</button><button className="btn btn-pri" type="button">Baixar relatório →</button></>} />
-      <div className="kpi-row"><Kpi icon="membros" label="Membros na rede" value={members.length} foot="cadastrados" /><Kpi icon="visitante" label="Decisões registradas" value={decisions.length} foot="jornada espiritual" /><Kpi icon="escalas" label="Cobertura de escala" value={`${confirmationRate}%`} foot="das posições preenchidas" /><Kpi icon="cultos" label="Cultos na agenda" value={events.length} foot="programação ativa" /></div>
+      <div className="kpi-row"><Kpi icon="membros" label="Membros na rede" value={members.length} foot="cadastrados" /><Kpi icon="visitante" label="Visitantes ativos" value={visitors.length} foot="em acompanhamento" /><Kpi icon="escalas" label="Cobertura de escala" value={`${confirmationRate}%`} foot="das posições preenchidas" /><Kpi icon="cultos" label="Cultos na agenda" value={events.length} foot="programação ativa" /></div>
       <div className="dash-3col">
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={13} /> Crescimento de membros</span><span className="panel-meta">12 meses</span></div><div className="panel-body"><div style={{ fontSize: 30, fontWeight: 700 }}>{members.length}<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>membros no total</span></div><div style={{ marginTop: 14 }}><Bars series={series} labels={["mar", "abr", "mai", "jun"]} /></div></div></div>
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="visitante" size={13} /> Funil de visitantes</span><button className="panel-link" type="button" onClick={() => setRoute("visitantes")}>Abrir</button></div><div className="panel-body flush">{["Novo", "Contato", "Integrando", "Membro"].map((label, index) => <div className="dist-row" key={label}><span className="dist-name" style={{ width: 140 }}>{label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${Math.max(10, 80 - index * 18)}%` }} /></div><span className="dist-num">{index === 0 ? 0 : "-"}</span></div>)}</div></div>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={13} /> Crescimento de membros</span><span className="panel-meta">últimos meses</span></div><div className="panel-body"><div style={{ fontSize: 30, fontWeight: 700 }}>{members.length}<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>membros no total</span></div><div style={{ marginTop: 14 }}><Bars series={series} labels={["mar", "abr", "mai", "jun"]} /></div></div></div>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="visitante" size={13} /> Funil de visitantes</span><button className="panel-link" type="button" onClick={() => setRoute("visitantes")}>Abrir</button></div><div className="panel-body flush">{FUNNEL_STAGES.map((s, i) => <div className="dist-row" key={s.id}><span className="dist-name" style={{ width: 140 }}>{s.label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${Math.max(4, (funnelCounts[i] / funnelMax) * 100)}%` }} /></div><span className="dist-num">{funnelCounts[i]}</span></div>)}</div></div>
       </div>
       <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">Termômetro de bem-estar</span><span className="line" /></div>
-      <div className="well-sum">{[["saudavel", activePeople], ["atencao", attention.length], ["sobrecarga", 0], ["afastando", people.filter((person) => person.status === "pausa").length]].map(([level, count]) => <div className="well-pill" key={level}><div className="n">{count}</div><div className="l"><span className={`well-dot ${level}`} />{String(level)}</div></div>)}</div>
-      <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={13} /> Quem precisa de atenção</span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>Voluntários</button></div><div className="panel-body flush">{(attention.length ? attention : people).slice(0, 8).map((person) => <div className="well-row" key={person.id}><Av name={person.name} size="md" /><div className="mini-main"><div className="mini-title">{person.name}</div><div className="mini-sub">{person.status !== "ativo" ? "Em pausa ou férias." : "Engajamento abaixo da média."}</div></div><div className="well-meter"><div className="well-track"><div className="well-fill atencao" style={{ width: `${person.engagement ?? 50}%` }} /></div><div className="well-tag atencao">Atenção</div></div></div>)}</div></div>
+      <div className="well-sum">{[["saudavel", saudavel.length, "Saudável"], ["atencao", atencao.length, "Atenção"], ["sobrecarga", sobrecarga.length, "Sobrecarga"], ["afastando", afastando.length, "Afastando"]].map(([level, count, label]) => <div className="well-pill" key={level}><div className="n">{count}</div><div className="l"><span className={`well-dot ${level}`} />{label}</div></div>)}</div>
+      <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={13} /> Quem precisa de atenção</span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>Voluntários</button></div><div className="panel-body flush">{(wellRows.length ? wellRows : people.slice(0, 8).map((p) => ({ person: p, cls: "atencao", tag: "Atenção" }))).slice(0, 8).map(({ person, cls, tag }) => <div className="well-row" key={person.id}><Av name={person.name} size="md" /><div className="mini-main"><div className="mini-title">{person.name}</div><div className="mini-sub">{person.status !== "ativo" ? "Em pausa ou férias." : "Engajamento abaixo da média."}</div></div><div className="well-meter"><div className="well-track"><div className={`well-fill ${cls}`} style={{ width: `${person.engagement ?? 50}%` }} /></div><div className={`well-tag ${cls}`}>{tag}</div></div></div>)}</div></div>
       <div className="dash-2col" style={{ marginTop: 28 }}>
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="times" size={13} /> Voluntários por ministério</span><button className="panel-link" type="button" onClick={() => setRoute("times")}>Times</button></div><div className="panel-body flush">{ministries.map((ministry) => <div className="dist-row" key={ministry.id}><span className="dist-name">{ministry.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(ministry.people.length / maxMinistry) * 100}%` }} /></div><span className="dist-num">{ministry.people.length}</span></div>)}</div></div>
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por jornada</span><span className="panel-meta">{members.length} pessoas</span></div><div className="panel-body flush">{["Decisão", "Batismo", "Fundamentos", "GC", "Servindo"].map((step, index) => { const count = members.filter((member) => member.journey[index]).length; return <div className="dist-row" key={step}><span className="dist-name">{step}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${members.length ? (count / members.length) * 100 : 0}%` }} /></div><span className="dist-num">{count}</span></div>; })}</div></div>
@@ -1789,11 +2888,333 @@ function Relatorios({
   );
 }
 
-function Config({ church }: { church?: ChurchView }) {
+const CFG_TABS = [
+  { id: "igreja", label: "Igreja" },
+  { id: "min", label: "Ministérios & funções" },
+  { id: "operacao", label: "Escala & presença" },
+  { id: "visual", label: "Personalização" },
+  { id: "rede", label: "Congregações" },
+];
+
+const ACCENTS = [
+  { id: "olive", nome: "Oliva", hex: "#7ea850" },
+  { id: "wheat", nome: "Trigo", hex: "#c9a85c" },
+  { id: "clay", nome: "Argila", hex: "#b87059" },
+  { id: "amber", nome: "Âmbar", hex: "#d4923e" },
+];
+
+function MinisterioEditModal({ ministry, onClose, onRefresh }: {
+  ministry: MinistryView;
+  onClose: () => void;
+  onRefresh: () => void;
+}) {
+  const [nome, setNome] = useState(ministry.name);
+  const [desc, setDesc] = useState(ministry.description);
+  const [saving, setSaving] = useState(false);
+
+  const salvar = async () => {
+    if (!nome.trim()) return;
+    setSaving(true);
+    await createServiceBrowserClient()
+      .schema("service")
+      .from("ministries")
+      .update({ name: nome.trim(), description: desc.trim() || null, updated_at: new Date().toISOString() })
+      .eq("id", ministry.id);
+    onRefresh();
+    onClose();
+  };
+
   return (
-    <div className="content">
-      <PageHead title="Configurações" eyebrow="Gestão" subtitle="Identidade da igreja, preferências e ajustes do Service." />
-      <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="identidade" size={14} /> Igreja</span></div><div className="panel-body"><div className="cfg-row"><div><div className="cfg-row-t">{church?.nome ?? "Igreja"}</div><div className="cfg-row-s">{church?.cidade ?? "Cidade não informada"}</div></div><button className="btn btn-sec btn-sm" type="button">Editar</button></div></div></div>
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">Editar ministério</div>
+          <div className="modal-title">{ministry.name}</div>
+          <div className="modal-sub">Nome e descrição. Para funções, use o painel de Ministérios.</div>
+        </div>
+        <div className="modal-body" style={{ display: "block" }}>
+          <div className="field"><label className="field-label">Nome</label><input className="input" value={nome} onChange={(e) => setNome(e.target.value)} /></div>
+          <div className="field"><label className="field-label">Descrição</label><input className="input" value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
+          <div className="field">
+            <label className="field-label">Funções</label>
+            <div className="cell-tags">
+              {ministry.positions.map((p) => <span key={p.id} className="tag">{p.name}</span>)}
+              {ministry.positions.length === 0 && <span style={{ fontSize: 12, color: "var(--subtle)" }}>Nenhuma função cadastrada.</span>}
+            </div>
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>Salvar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Config({
+  church,
+  churches,
+  ministries,
+  people: _people,
+  theme,
+  setTheme,
+}: {
+  church?: ChurchView;
+  churches: ChurchView[];
+  ministries: MinistryView[];
+  people: PersonView[];
+  theme: "dark" | "light";
+  setTheme: (t: "dark" | "light") => void;
+}) {
+  const router = useRouter();
+  const [tab, setTab] = useState("igreja");
+
+  const [igrejaForm, setIgrejaForm] = useState({ nome: church?.nome ?? "", cidade: church?.cidade ?? "" });
+  const [igrejaLoading, setIgrejaLoading] = useState(false);
+  const [igrejaMsg, setIgrejaMsg] = useState("");
+
+  const saveIgreja = async () => {
+    if (!church?.id) return;
+    setIgrejaLoading(true);
+    await createServiceBrowserClient()
+      .schema("service")
+      .from("churches")
+      .update({ name: igrejaForm.nome.trim() || church.nome, city: igrejaForm.cidade.trim() || null })
+      .eq("id", church.id);
+    setIgrejaMsg("Salvo!");
+    setIgrejaLoading(false);
+    router.refresh();
+    setTimeout(() => setIgrejaMsg(""), 2000);
+  };
+
+  const [editMin, setEditMin] = useState<MinistryView | null>(null);
+
+  const [escalaCfg, setEscalaCfg] = useState<Record<string, unknown>>(() => {
+    try {
+      const s = localStorage.getItem("cex_escala_cfg");
+      return s ? (JSON.parse(s) as Record<string, unknown>) : { modo: "assistido", maxPorMes: 4, folgaSemanas: 0, considerarFerias: true };
+    } catch { return { modo: "assistido", maxPorMes: 4, folgaSemanas: 0, considerarFerias: true }; }
+  });
+  const setEscala = (k: string, v: unknown) => {
+    setEscalaCfg((prev) => {
+      const next = { ...prev, [k]: v };
+      try { localStorage.setItem("cex_escala_cfg", JSON.stringify(next)); } catch { /* noop */ }
+      return next;
+    });
+  };
+
+  const [accent, setAccent] = useState<string>(() => {
+    try { return localStorage.getItem("cex_accent") ?? "olive"; } catch { return "olive"; }
+  });
+  const applyAccent = (id: string) => {
+    setAccent(id);
+    try { localStorage.setItem("cex_accent", id); } catch { /* noop */ }
+  };
+
+  return (
+    <div className="content wide">
+      <div className="ph">
+        <div>
+          <div className="ph-eyebrow">Gestão</div>
+          <h1 className="ph-title">Configurações</h1>
+          <p className="ph-sub">Os dados da igreja, escalas, o visual do app e as congregações da rede.</p>
+        </div>
+      </div>
+
+      <div className="cfg-tabs">
+        {CFG_TABS.map((t) => (
+          <button key={t.id} type="button" className={`cfg-tab${tab === t.id ? " on" : ""}`} onClick={() => setTab(t.id)}>{t.label}</button>
+        ))}
+      </div>
+
+      {/* ─── IGREJA ─── */}
+      {tab === "igreja" && (
+        <div className="cfg-grid2">
+          <div className="cfg-card">
+            <div className="cfg-card-t">Identificação</div>
+            <div className="cfg-card-s">Como sua igreja aparece no app e nos comunicados.</div>
+            <div className="field">
+              <label className="field-label">Nome da igreja</label>
+              <input className="input" value={igrejaForm.nome} onChange={(e) => setIgrejaForm((p) => ({ ...p, nome: e.target.value }))} />
+            </div>
+            <div className="field">
+              <label className="field-label">Cidade</label>
+              <input className="input" value={igrejaForm.cidade} onChange={(e) => setIgrejaForm((p) => ({ ...p, cidade: e.target.value }))} />
+            </div>
+            <button className="btn btn-pri btn-sm" type="button" disabled={igrejaLoading} onClick={saveIgreja}>
+              {igrejaLoading ? "Salvando…" : igrejaMsg || "Salvar"}
+            </button>
+          </div>
+          <div className="cfg-card">
+            <div className="cfg-card-t">Sobre a unidade</div>
+            <div className="cfg-card-s">Informações estruturais desta congregação.</div>
+            <dl className="kv" style={{ marginTop: 0 }}>
+              <dt>Tipo</dt>
+              <dd>{church?.matriz ? <span className="chip chip-ok">Matriz</span> : <span className="tag">Congregação</span>}</dd>
+              <dt>ID da org.</dt>
+              <dd><span style={{ fontFamily: "var(--mono)", fontSize: 12 }}>{(church?.organizationId ?? "—").slice(0, 8)}…</span></dd>
+              <dt>Voluntários</dt>
+              <dd>{_people.length}</dd>
+            </dl>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MINISTÉRIOS & FUNÇÕES ─── */}
+      {tab === "min" && (
+        <div className="cfg-card">
+          <div className="cfg-card-t">Ministérios & funções</div>
+          <div className="cfg-card-s">Cada ministério tem um líder e suas funções. As funções alimentam a escala e as habilidades de cada voluntário.</div>
+          {ministries.map((m) => {
+            const leader = m.people.find((p) => p.isLeader);
+            return (
+              <div className="cfg-row" key={m.id}>
+                <div className="bd-mark"><Icon name={m.icon || "times"} size={18} /></div>
+                <div className="cfg-row-main">
+                  <div className="cfg-row-t">
+                    {m.name}
+                    {leader && <span style={{ color: "var(--subtle)", fontWeight: 400, fontSize: 12 }}> · líder {leader.personName.split(" ")[0]}</span>}
+                  </div>
+                  <div className="cell-tags" style={{ marginTop: 7 }}>
+                    {m.positions.map((p) => <span key={p.id} className="tag">{p.name}</span>)}
+                    {m.positions.length === 0 && <span style={{ fontSize: 12, color: "var(--subtle)" }}>Sem funções</span>}
+                  </div>
+                </div>
+                <button className="btn btn-sec btn-sm" type="button" onClick={() => setEditMin(m)}>Editar</button>
+              </div>
+            );
+          })}
+          {ministries.length === 0 && <div className="empty">Nenhum ministério ainda.</div>}
+        </div>
+      )}
+
+      {/* ─── ESCALA & PRESENÇA ─── */}
+      {tab === "operacao" && (
+        <>
+          <div className="cfg-card">
+            <div className="cfg-card-t">Regras de escala</div>
+            <div className="cfg-card-s">Como a escala é gerada e os limites para não sobrecarregar ninguém. Estas preferências ficam salvas neste navegador.</div>
+            <div className="field" style={{ marginTop: 4 }}>
+              <label className="field-label">Geração</label>
+              <div className="opt-row" style={{ flexWrap: "wrap" }}>
+                {([["manual", "Manual", "O líder monta tudo na mão."], ["assistido", "Assistida", "O sistema sugere; o líder confirma cada nome."], ["automatico", "Automática", "O sistema gera e já confirma, sem ação."]] as [string, string, string][]).map(([k, t, s]) => (
+                  <button key={k} type="button" className={`opt${escalaCfg.modo === k ? " on" : ""}`} onClick={() => setEscala("modo", k)}>
+                    <div className="opt-t">{t}</div>
+                    <div className="opt-s">{s}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="crit-row">
+              <div className="cfg-row-main">
+                <div className="cfg-row-t">Máximo de vezes por mês</div>
+                <div className="cfg-row-s">teto para não sobrecarregar a mesma pessoa</div>
+              </div>
+              <div className="stepper">
+                <button type="button" onClick={() => setEscala("maxPorMes", Math.max(1, (escalaCfg.maxPorMes as number) - 1))}>−</button>
+                <span>{escalaCfg.maxPorMes as number}×</span>
+                <button type="button" onClick={() => setEscala("maxPorMes", (escalaCfg.maxPorMes as number) + 1)}>+</button>
+              </div>
+            </div>
+            <div className="crit-row">
+              <div className="cfg-row-main">
+                <div className="cfg-row-t">Semanas de folga após servir</div>
+                <div className="cfg-row-s">descanso sugerido entre escalas (0 = sem folga)</div>
+              </div>
+              <div className="stepper">
+                <button type="button" onClick={() => setEscala("folgaSemanas", Math.max(0, (escalaCfg.folgaSemanas as number) - 1))}>−</button>
+                <span>{escalaCfg.folgaSemanas as number}</span>
+                <button type="button" onClick={() => setEscala("folgaSemanas", (escalaCfg.folgaSemanas as number) + 1)}>+</button>
+              </div>
+            </div>
+            <div className="cfg-row" style={{ borderBottom: "none" }}>
+              <div className="cfg-row-main">
+                <div className="cfg-row-t">Respeitar período de férias</div>
+                <div className="cfg-row-s">{escalaCfg.considerarFerias ? "Quem está de férias fica fora da geração" : "Férias não bloqueiam a escala"}</div>
+              </div>
+              <button type="button" className={`sw${escalaCfg.considerarFerias ? " on" : ""}`} onClick={() => setEscala("considerarFerias", !escalaCfg.considerarFerias)} />
+            </div>
+          </div>
+          <div className="cfg-card" style={{ marginTop: 16 }}>
+            <div className="cfg-card-t">Status dos voluntários</div>
+            <div className="cfg-card-s">O status é calculado automaticamente com base na frequência nas escalas.</div>
+            <div className="crit-legend" style={{ marginTop: 0 }}>
+              <span><i className="dot ok" /> Ativo — presente nas escalas</span>
+              <span><i className="dot warn" /> Inativando — com ausências</span>
+              <span><i className="dot off" /> Inativo — afastado</span>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ─── PERSONALIZAÇÃO ─── */}
+      {tab === "visual" && (
+        <div className="cfg-grid2">
+          <div className="cfg-card">
+            <div className="cfg-card-t">Tema da interface</div>
+            <div className="cfg-card-s">Modo escuro (padrão CE.X) ou modo claro em papel cream para quem prefere telas claras.</div>
+            <div className="opt-row">
+              <button type="button" className={`opt${theme === "dark" ? " on" : ""}`} onClick={() => setTheme("dark")}>
+                <div className="opt-t">◑ Escuro</div>
+                <div className="opt-s">Ink profundo · padrão</div>
+              </button>
+              <button type="button" className={`opt${theme === "light" ? " on" : ""}`} onClick={() => setTheme("light")}>
+                <div className="opt-t">◐ Claro</div>
+                <div className="opt-s">Papel cream CE.X</div>
+              </button>
+            </div>
+          </div>
+          <div className="cfg-card">
+            <div className="cfg-card-t">Cor de destaque</div>
+            <div className="cfg-card-s">A oliva é a cor da marca. As alternativas vêm todas da paleta quente CE.X.</div>
+            <div className="swatch-row">
+              {ACCENTS.map((a) => (
+                <button key={a.id} type="button" className={`swatch${accent === a.id ? " on" : ""}`} style={{ background: a.hex, color: a.hex }} title={a.nome} onClick={() => applyAccent(a.id)} />
+              ))}
+            </div>
+            <div style={{ fontSize: 12, color: "var(--subtle)", marginTop: 14 }}>
+              Selecionado: <em style={{ color: "var(--olive)", fontStyle: "normal" }}>{ACCENTS.find((a) => a.id === accent)?.nome ?? "Oliva"}</em>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── CONGREGAÇÕES ─── */}
+      {tab === "rede" && (
+        <div className="cfg-card">
+          <div className="cfg-card-t">Sua igreja na rede</div>
+          <div className="cfg-card-s">Toda igreja começa pela matriz — a sede cadastrada na contratação. Se houver outras unidades, elas aparecem aqui como congregações; cada uma tem seus times e escalas, e a matriz enxerga tudo.</div>
+          {churches.filter((c) => c.matriz).map((c) => (
+            <div key={c.id} className="cong-matriz">
+              <div className="cong-mark"><Icon name="identidade" size={20} /></div>
+              <div className="cfg-row-main">
+                <div className="cfg-row-t">{c.nome} <span className="chip chip-ok" style={{ marginLeft: 6 }}>matriz</span></div>
+                <div className="cfg-row-s">{c.cidade || "Sede da rede"}</div>
+              </div>
+            </div>
+          ))}
+          {churches.filter((c) => !c.matriz).length > 0 && (
+            <>
+              <div className="cfg-card-t" style={{ marginTop: 26 }}>Outras congregações · {churches.filter((c) => !c.matriz).length}</div>
+              {churches.filter((c) => !c.matriz).map((c) => (
+                <div className="cfg-row" key={c.id}>
+                  <div className="cong-mark"><Icon name="globo" size={16} /></div>
+                  <div className="cfg-row-main">
+                    <div className="cfg-row-t">{c.nome}</div>
+                    <div className="cfg-row-s">{c.cidade || "Cidade não informada"}</div>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+          {churches.length === 0 && <div className="empty">Nenhuma congregação encontrada.</div>}
+        </div>
+      )}
+
+      {editMin && (
+        <MinisterioEditModal ministry={editMin} onClose={() => setEditMin(null)} onRefresh={() => router.refresh()} />
+      )}
     </div>
   );
 }
@@ -1907,6 +3328,361 @@ function SimpleModule({ title, subtitle, empty, setModal }: { title: string; sub
   );
 }
 
+const JRN_STEPS = [
+  { label: "Decisão", kind: "decisao", icon: "decisoes" },
+  { label: "Batismo nas águas", kind: "batismo", icon: "batismos" },
+  { label: "Fundamentos", kind: "curso", icon: "cursos" },
+  { label: "Grupo de comunhão", kind: "integracao", icon: "pessoa" },
+  { label: "Servindo", kind: "time", icon: "times" },
+];
+
+function PersonTimeline({ member, compact }: { member: MemberView; compact?: boolean }) {
+  const done = JRN_STEPS.filter((_, i) => !!member.journey[i]);
+  if (!done.length) return <div style={{ fontSize: 13, color: "var(--subtle)", padding: "12px 0" }}>Nenhuma etapa concluída ainda.</div>;
+  return (
+    <div className={`tl jrn-tl${compact ? " compact" : ""}`}>
+      {JRN_STEPS.map((step, i) => {
+        if (!member.journey[i]) return null;
+        return (
+          <div className="tl-item ol tone-olive" key={step.kind}>
+            <div className="tl-dot" />
+            <div className="tl-when"><span className="jrn-tl-kind"><Icon name={step.icon} size={11} /> {step.label}</span></div>
+            <div className="tl-text"><b>{step.label}</b> — etapa concluída</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function DecisaoDrawer({
+  decision, people, members, onClose, onOpenMember,
+}: {
+  decision: DecisionView; people: PersonView[]; members: MemberView[];
+  onClose: () => void; onOpenMember: (id: string) => void;
+}) {
+  const router = useRouter();
+  const responsible = decision.responsible_id ? people.find((p) => p.id === decision.responsible_id) : null;
+  const linkedMember = decision.member_id ? members.find((m) => m.id === decision.member_id) : null;
+  const [loading, setLoading] = useState(false);
+
+  const encaminhar = async () => {
+    setLoading(true);
+    await createServiceBrowserClient().schema("service").from("decisions").update({ status: "acompanhando" }).eq("id", decision.id);
+    router.refresh();
+    setLoading(false);
+    onClose();
+  };
+
+  const DEC_CHIP: Record<string, { label: string; cls: string }> = {
+    novo: { label: "A contatar", cls: "chip-wait" },
+    acompanhando: { label: "Acompanhando", cls: "chip-ok" },
+    encaminhado: { label: "Encaminhado", cls: "chip-neutral" },
+  };
+  const chip = DEC_CHIP[decision.status] ?? DEC_CHIP.novo;
+
+  return (
+    <DrawerShell onClose={onClose}>
+      <div className="drawer-head">
+        <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+        <div className="profile-top">
+          <Av name={decision.name} size="lg" />
+          <div>
+            <div className="profile-name">{decision.name}</div>
+            <div className="profile-role">{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"} · {decision.happened_on || "sem data"}{decision.age ? ` · ${decision.age} anos` : ""}</div>
+            <div style={{ marginTop: 10 }}><span className={`chip ${chip.cls}`}>{chip.label}</span></div>
+          </div>
+        </div>
+      </div>
+      <div className="drawer-body">
+        <DrawerSection title="Registro da decisão">
+          <dl className="kv">
+            <dt>Telefone</dt><dd>{decision.phone || "—"}</dd>
+            <dt>Culto</dt><dd>{decision.service_name || "—"}</dd>
+            <dt>Responsável</dt><dd>{responsible?.name || "a definir"}</dd>
+          </dl>
+          {decision.notes && (
+            <div style={{ marginTop: 14, fontSize: 13.5, color: "var(--light)", lineHeight: 1.6, padding: "14px 16px", background: "var(--ink)", borderRadius: "var(--r-md)", border: "0.5px solid var(--border-2)" }}>
+              <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--subtle)", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Observação</span>
+              {decision.notes}
+            </div>
+          )}
+        </DrawerSection>
+        {linkedMember && (
+          <DrawerSection title="Jornada do membro">
+            <PersonTimeline member={linkedMember} compact />
+          </DrawerSection>
+        )}
+        <DrawerSection title="Próximos passos">
+          <div className="step-stack">
+            <div className="step-do"><span className="step-ic">→</span> Fazer o primeiro contato (ligar · WhatsApp)</div>
+            <div className="step-do"><span className="step-ic">→</span> Iniciar acompanhamento 1-a-1</div>
+            <div className="step-do"><span className="step-ic">→</span> Matricular em Novos Convertidos</div>
+            <div className="step-do"><span className="step-ic">→</span> Inserir num Grupo de Comunhão</div>
+          </div>
+        </DrawerSection>
+        <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
+          {linkedMember
+            ? <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { onClose(); onOpenMember(linkedMember.id); }}>Ver ficha do membro →</button>
+            : <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={encaminhar} disabled={loading}>{loading ? "Salvando…" : "Encaminhar p/ acompanhamento →"}</button>
+          }
+        </div>
+      </div>
+    </DrawerShell>
+  );
+}
+
+function AddCandidatoModal({
+  classData, existingIds, members, church, onClose, onRefresh,
+}: {
+  classData: BaptismClassView; existingIds: string[]; members: MemberView[];
+  church: ChurchView; onClose: () => void; onRefresh: () => void;
+}) {
+  const [q, setQ] = useState("");
+  const [saving, setSaving] = useState<string | null>(null);
+  const available = members.filter((m) => !existingIds.includes(m.id) && (!q || m.name.toLowerCase().includes(q.toLowerCase())));
+
+  const addCandidate = async (memberId: string) => {
+    setSaving(memberId);
+    await createServiceBrowserClient().schema("service").from("baptism_candidates").insert({ organization_id: church.organizationId, class_id: classData.id, member_id: memberId });
+    onRefresh();
+    setSaving(null);
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="drawer-bg" onClick={onClose} style={{ zIndex: 1 }} />
+      <div className="modal" style={{ position: "relative", zIndex: 2 }}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">Adicionar candidato</div>
+          <div className="modal-title">{classData.label}</div>
+          <div className="modal-sub">Escolha quem será batizado nesta turma.</div>
+        </div>
+        <div className="modal-body" style={{ display: "block", maxHeight: 360, overflowY: "auto" }}>
+          <div className="tb-search" style={{ marginBottom: 12 }}>
+            <span className="si"><Icon name="buscar" size={13} /></span>
+            <input placeholder="Buscar membro…" value={q} onChange={(e) => setQ(e.target.value)} />
+          </div>
+          {available.map((m) => (
+            <div className="flag-row" key={m.id} style={{ cursor: "pointer" }} onClick={() => addCandidate(m.id)}>
+              <Av name={m.name} size="sm" />
+              <div className="flag-main">
+                <div className="flag-nome">{m.name}</div>
+                <div className="flag-meta">{m.neighborhood || "Membro"}</div>
+              </div>
+              <span className="btn btn-ghost btn-sm">{saving === m.id ? "…" : "Adicionar"}</span>
+            </div>
+          ))}
+          {available.length === 0 && <div style={{ fontSize: 13, color: "var(--subtle)", padding: "16px 0" }}>Nenhum membro disponível.</div>}
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-pri" type="button" onClick={onClose}>Concluído</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BatismoDrawer({
+  classData, candidates, members, decisions, church, onClose, onOpenMember, onRefresh,
+}: {
+  classData: BaptismClassView; candidates: BaptismCandidateView[]; members: MemberView[];
+  decisions: DecisionView[]; church: ChurchView | undefined;
+  onClose: () => void; onOpenMember: (id: string) => void; onRefresh: () => void;
+}) {
+  const [showAdd, setShowAdd] = useState(false);
+  const classCandidates = candidates.filter((c) => c.class_id === classData.id);
+  const memberById = new Map(members.map((m) => [m.id, m]));
+  const decisionById = new Map(decisions.map((d) => [d.id, d]));
+  const existingMemberIds = classCandidates.map((c) => c.member_id).filter(Boolean) as string[];
+  const st = BAT_ST_MAP[classData.status ?? "aberta"];
+
+  return (
+    <DrawerShell onClose={onClose}>
+      <div className="drawer-head">
+        <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+        <div className="profile-top">
+          <div className="bat-mark"><Icon name="batismos" size={22} /></div>
+          <div>
+            <div className="profile-name">{classData.label}</div>
+            <div className="profile-role">{classData.baptism_date || "Sem data"} · {classData.location || "Local não informado"}</div>
+            <div style={{ marginTop: 10 }}><span className={`chip ${st?.cls ?? "chip-wait"}`}>{st?.label ?? classData.status}</span></div>
+          </div>
+        </div>
+      </div>
+      <div className="drawer-body">
+        <DrawerSection title="Detalhes">
+          <dl className="kv">
+            <dt>Data</dt><dd>{classData.baptism_date || "—"}</dd>
+            <dt>Local</dt><dd>{classData.location || "—"}</dd>
+            <dt>Pastor</dt><dd>{classData.pastor || "—"}</dd>
+            {classData.notes ? <><dt>Observação</dt><dd>{classData.notes}</dd></> : null}
+          </dl>
+        </DrawerSection>
+        <DrawerSection title={`Candidatos · ${classCandidates.length}`}>
+          {classCandidates.map((cand) => {
+            const member = cand.member_id ? memberById.get(cand.member_id) : null;
+            const decision = cand.decision_id ? decisionById.get(cand.decision_id) : null;
+            const name = member?.name ?? decision?.name ?? "Candidato";
+            return (
+              <div key={cand.id} className="cand" style={member ? { cursor: "pointer" } : {}} onClick={() => member && onOpenMember(member.id)}>
+                <Av name={name} size="sm" />
+                <div className="cand-main">
+                  <div className="cand-name">{name}</div>
+                  <div className="cand-meta">{member ? "Membro" : "Nova decisão"}</div>
+                </div>
+                {member ? <span className="cand-fit good">ver →</span> : <span className="cand-fit busy">decisão</span>}
+              </div>
+            );
+          })}
+          {classCandidates.length === 0 && <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum candidato ainda.</div>}
+        </DrawerSection>
+        <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
+          <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setShowAdd(true)}>+ Adicionar candidato</button>
+          {classData.status !== "concluida" && <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button">Avisar candidatos</button>}
+        </div>
+      </div>
+      {showAdd && church && (
+        <AddCandidatoModal
+          classData={classData}
+          existingIds={existingMemberIds}
+          members={members}
+          church={church}
+          onClose={() => setShowAdd(false)}
+          onRefresh={onRefresh}
+        />
+      )}
+    </DrawerShell>
+  );
+}
+
+function VisitanteDrawer({
+  visitor: initVisitor, notes, church, people, onClose, onOpenMember,
+}: {
+  visitor: VisitorView; notes: VisitorNoteView[]; church: ChurchView | undefined;
+  people: PersonView[]; onClose: () => void; onOpenMember: (id: string) => void;
+}) {
+  const router = useRouter();
+  const [nota, setNota] = useState("");
+  const [resp, setResp] = useState<"" | "respondeu" | "sem_resposta">("");
+  const [saving, setSaving] = useState(false);
+  const [currentStage, setCurrentStage] = useState(initVisitor.stage);
+  const [currentReply, setCurrentReply] = useState(initVisitor.reply_status);
+  const stageIdx = VISITOR_STAGES.findIndex((s) => s.id === currentStage);
+  const owner = initVisitor.responsible_id ? people.find((p) => p.id === initVisitor.responsible_id) : null;
+  const visitorNotes = notes.filter((n) => n.visitor_id === initVisitor.id);
+
+  const addNota = async () => {
+    if (!nota.trim() && !resp) return;
+    setSaving(true);
+    const sb = createServiceBrowserClient().schema("service");
+    if (resp) {
+      await sb.from("visitors").update({ reply_status: resp }).eq("id", initVisitor.id);
+      setCurrentReply(resp as "respondeu" | "sem_resposta");
+    }
+    if (nota.trim() || resp) {
+      const body = nota.trim() || (resp === "respondeu" ? "Contato registrado: respondeu." : "Contato registrado: sem resposta.");
+      await sb.from("visitor_notes").insert({ organization_id: church?.organizationId, visitor_id: initVisitor.id, body, author: "Equipe", is_milestone: false });
+    }
+    router.refresh();
+    setNota("");
+    setResp("");
+    setSaving(false);
+  };
+
+  const avancar = async () => {
+    if (stageIdx >= VISITOR_STAGES.length - 1) return;
+    const next = VISITOR_STAGES[stageIdx + 1];
+    setSaving(true);
+    const sb = createServiceBrowserClient().schema("service");
+    await sb.from("visitors").update({ stage: next.id }).eq("id", initVisitor.id);
+    await sb.from("visitor_notes").insert({ organization_id: church?.organizationId, visitor_id: initVisitor.id, body: `Avançou para "${next.name}".`, author: "Equipe", is_milestone: true });
+    setCurrentStage(next.id as VisitorView["stage"]);
+    router.refresh();
+    setSaving(false);
+  };
+
+  return (
+    <DrawerShell onClose={onClose}>
+      <div className="drawer-head">
+        <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+        <div className="profile-top">
+          <Av name={initVisitor.name} size="lg" />
+          <div>
+            <div className="profile-name">{initVisitor.name}</div>
+            <div className="profile-role">{initVisitor.origin || "Visitante"} · primeira visita {initVisitor.visited_on || "sem data"}</div>
+            <div style={{ marginTop: 10 }}>
+              <span className="chip chip-neutral" style={{ color: VISITOR_STAGES[stageIdx]?.color }}>{VISITOR_STAGES[stageIdx]?.name ?? currentStage}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="drawer-body">
+        <DrawerSection title="Contato">
+          <dl className="kv">
+            <dt>Telefone</dt><dd>{initVisitor.phone || "—"}</dd>
+            <dt>Como chegou</dt><dd>{initVisitor.origin || "Visitante"}</dd>
+            <dt>Responsável</dt><dd>{owner?.name || "sem dono fixo"}</dd>
+            <dt>Próximo passo</dt><dd><span className={`vcard-due ${initVisitor.due_status || "ok"}`}>{initVisitor.due || "sem prazo"}</span></dd>
+          </dl>
+        </DrawerSection>
+        <DrawerSection title="Jornada de integração">
+          <div style={{ display: "flex", gap: 6 }}>
+            {VISITOR_STAGES.map((s, i) => (
+              <div key={s.id} style={{ flex: 1, textAlign: "center" }}>
+                <div style={{ height: 5, borderRadius: 3, background: i <= stageIdx ? s.color : "var(--ink)" }} />
+                <div style={{ fontFamily: "var(--mono)", fontSize: 9, color: i <= stageIdx ? "var(--light)" : "var(--subtle)", marginTop: 7, letterSpacing: "0.04em" }}>{s.name}</div>
+              </div>
+            ))}
+          </div>
+          {stageIdx < VISITOR_STAGES.length - 1
+            ? <button className="btn btn-pri btn-sm" style={{ marginTop: 16, width: "100%", justifyContent: "center" }} type="button" onClick={avancar} disabled={saving}>Avançar para "{VISITOR_STAGES[stageIdx + 1]?.name}" →</button>
+            : (
+              <div className="vmember-cta">
+                <div className="vmember-t"><Icon name="ok" size={13} /> Chegou a membro</div>
+                <div className="vmember-s">Complete os dados cadastrais para liberar o acesso ao app.</div>
+                {initVisitor.member_id
+                  ? <button className="btn btn-pri btn-sm" style={{ width: "100%", justifyContent: "center", marginTop: 12 }} type="button" onClick={() => { onClose(); onOpenMember(initVisitor.member_id!); }}>Ver ficha do membro →</button>
+                  : null}
+              </div>
+            )
+          }
+        </DrawerSection>
+        <DrawerSection title="Registrar contato">
+          {currentReply && <div className={`vresp-now ${currentReply}`}>{currentReply === "respondeu" ? "◆ Último contato: respondeu" : "◇ Último contato: sem resposta — refazer"}</div>}
+          <textarea className="textarea" placeholder="O que rolou nesse contato? (ligação, WhatsApp, visita...)" value={nota} onChange={(e) => setNota(e.target.value)} />
+          <div className="vresp-pick">
+            <span className="vresp-lbl">A pessoa respondeu?</span>
+            <div className="seg-check">
+              <button className={`seg-chip ${resp === "respondeu" ? "on" : ""}`} type="button" onClick={() => setResp(resp === "respondeu" ? "" : "respondeu")}>Respondeu</button>
+              <button className={`seg-chip ${resp === "sem_resposta" ? "on" : ""}`} type="button" onClick={() => setResp(resp === "sem_resposta" ? "" : "sem_resposta")}>Não respondeu</button>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            <button className="btn btn-pri btn-sm" type="button" onClick={addNota} disabled={saving}>{saving ? "Salvando…" : "Salvar no histórico"}</button>
+          </div>
+        </DrawerSection>
+        <DrawerSection title="Histórico de contato">
+          {visitorNotes.length > 0
+            ? (
+              <div className="tl">
+                {visitorNotes.map((n) => (
+                  <div className={`tl-item ${n.is_milestone ? "ol" : ""}`} key={n.id}>
+                    <div className="tl-dot" />
+                    <div className="tl-when">{n.happened_on || n.created_at?.slice(0, 10) || "—"}</div>
+                    <div className="tl-text">{n.body}</div>
+                    {n.author && <div className="tl-by">por {n.author}</div>}
+                  </div>
+                ))}
+              </div>
+            )
+            : <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum contato registrado ainda.</div>}
+        </DrawerSection>
+      </div>
+    </DrawerShell>
+  );
+}
+
 function EntityDrawer({
   drawer,
   people,
@@ -1914,6 +3690,17 @@ function EntityDrawer({
   ministries,
   events,
   roster,
+  decisions,
+  baptismClasses,
+  baptismCandidates,
+  visitors,
+  visitorNotes,
+  courses,
+  enrollments,
+  meetings,
+  meetingActions,
+  rehearsals,
+  church,
   setDrawer,
   setRoute,
   setModal,
@@ -1924,6 +3711,17 @@ function EntityDrawer({
   ministries: MinistryView[];
   events: EventView[];
   roster: RosterAssignmentView[];
+  decisions: DecisionView[];
+  baptismClasses: BaptismClassView[];
+  baptismCandidates: BaptismCandidateView[];
+  visitors: VisitorView[];
+  visitorNotes: VisitorNoteView[];
+  courses: CourseView[];
+  enrollments: EnrollmentView[];
+  meetings: MeetingView[];
+  meetingActions: MeetingActionView[];
+  rehearsals: RehearsalView[];
+  church: ChurchView | undefined;
   setDrawer: (drawer: DrawerState) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
   setModal: (modal: ModalState) => void;
@@ -1978,17 +3776,84 @@ function EntityDrawer({
   if (drawer.kind === "member") {
     const member = members.find((item) => item.id === drawer.id);
     if (!member) return null;
+    const linkedMinistries = ministries.filter((m) => m.people.some((p) => p.personName === member.name));
+    const memberEnrollments = enrollments.filter((e) => e.member_id === member.id).map((e) => {
+      const course = courses.find((c) => c.id === e.course_id);
+      return course ? { ...e, course } : null;
+    }).filter(Boolean) as (EnrollmentView & { course: CourseView })[];
+    const isServing = member.journey[4] || linkedMinistries.length > 0;
     return (
       <DrawerShell onClose={() => setDrawer(null)}>
         <div className="drawer-head">
           <button className="drawer-close" type="button" onClick={() => setDrawer(null)}>✕</button>
-          <div className="profile-top"><Av name={member.name} size="lg" /><div><div className="profile-name">{member.name}</div><div className="profile-role">{member.situation} · {member.neighborhood}</div><div style={{ marginTop: 10 }}><Chip status={member.situation} /></div></div></div>
+          <div className="profile-top">
+            <Av name={member.name} size="lg" />
+            <div>
+              <div className="profile-name">{member.name}</div>
+              <div className="profile-role">na casa desde {member.firstContact}</div>
+              <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <Chip status={member.situation} />
+                {isServing && <span className="chip chip-ok">Servindo</span>}
+              </div>
+            </div>
+          </div>
         </div>
         <div className="drawer-body">
-          <DrawerSection title="Contato"><dl className="kv"><dt>Telefone</dt><dd>{member.phone}</dd><dt>E-mail</dt><dd>{member.email}</dd><dt>Primeiro contato</dt><dd>{member.firstContact}</dd></dl></DrawerSection>
-          <DrawerSection title="Jornada"><div className="journey-steps">{["Decisão", "Batismo", "Fundamentos", "GC", "Servindo"].map((step, index) => <div className={`journey-step ${member.journey[index] ? "done" : ""}`} key={step}><span>{index + 1}</span><b>{step}</b></div>)}</div></DrawerSection>
+          <DrawerSection title="Dados cadastrais">
+            <dl className="kv">
+              <dt>Telefone</dt><dd>{member.phone || <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
+              <dt>E-mail</dt><dd>{member.email || <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
+              <dt>Bairro</dt><dd>{member.neighborhood || <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
+              <dt>Acesso ao app</dt><dd>{member.email ? <span style={{ color: "var(--olive-soft)" }}>liberado</span> : <span style={{ color: "var(--amber)" }}>pendente (falta e-mail)</span>}</dd>
+            </dl>
+          </DrawerSection>
+          <DrawerSection title="Serve & cargo">
+            {linkedMinistries.length > 0 ? (
+              <div className="ov-serve">
+                {linkedMinistries.map((m) => {
+                  const link = m.people.find((p) => p.personName === member.name);
+                  return (
+                    <button className="ov-serve-row" type="button" key={m.id} onClick={() => setDrawer({ kind: "ministry", id: m.id })}>
+                      <span className="ov-serve-ic"><TeamMark ministry={m} size={14} /></span>
+                      <span className="ov-serve-name">{m.name}</span>
+                      {link?.isLeader ? <span className="lider-tag">Líder</span> : <span className="ov-serve-fn">{link?.functions.join(" · ") || "Voluntário"}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ fontSize: 13, color: "var(--subtle)" }}>Ainda não serve em nenhum ministério.</div>
+            )}
+          </DrawerSection>
+          <DrawerSection title="Cursos matriculados">
+            {memberEnrollments.length > 0 ? (
+              <div className="mc-list">
+                {memberEnrollments.map(({ id, course, done_count, status }) => {
+                  const pct = status === "concluido" ? 100 : 50;
+                  return (
+                    <div className="mc-row" key={id}>
+                      <div className="mc-bar tone-olive" />
+                      <div className="mc-main">
+                        <div className="mc-head">
+                          <div className="mc-name">{course.name}</div>
+                          {status === "concluido" ? <span className="chip chip-ok">Concluído</span> : <span className="mc-pct">{pct}%</span>}
+                        </div>
+                        <div className="mc-meta">{course.level || course.kind || "curso"} · {done_count} aula(s)</div>
+                        <div className="bar" style={{ marginTop: 8 }}><div className={`bar-fill ${status === "concluido" ? "" : "amber"}`} style={{ width: `${pct}%` }} /></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum curso matriculado ainda.</div>
+            )}
+          </DrawerSection>
+          <DrawerSection title="Jornada de integração"><PersonTimeline member={member} compact /></DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
-            <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Jornada", title: member.name, subtitle: "Atualize o próximo passo de acompanhamento.", fields: ["Próximo passo", "Responsável", "Data"] })}>Atualizar jornada</button>
+            {isServing
+              ? <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Jornada", title: member.name, subtitle: "Atualize o próximo passo de acompanhamento.", fields: ["Próximo passo", "Responsável", "Data"] })}>Atualizar jornada</button>
+              : <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Convidar para servir", title: member.name, subtitle: "Convide esta pessoa para entrar em um ministério.", fields: ["Ministério", "Mensagem"] })}>Convidar para servir</button>}
             <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Mensagem", title: member.name, subtitle: "Abrir conversa com o membro.", fields: ["Mensagem"] })}>Enviar mensagem</button>
           </div>
         </div>
@@ -2000,16 +3865,55 @@ function EntityDrawer({
     const ministry = ministries.find((item) => item.id === drawer.id);
     if (!ministry) return null;
     const leader = ministry.people.find((link) => link.isLeader);
+    const totalSlots = ministry.positions.reduce((s, p) => s + p.need_count, 0);
+    const isOpen = ministry.people.length < totalSlots || totalSlots === 0;
     return (
       <DrawerShell onClose={() => setDrawer(null)}>
         <div className="drawer-head">
           <button className="drawer-close" type="button" onClick={() => setDrawer(null)}>✕</button>
-          <div className="profile-top"><div className="team-mark" style={{ width: 56, height: 56 }}><TeamMark ministry={ministry} size={26} /></div><div><div className="profile-name">{ministry.name}</div><div className="profile-role">Líder: <span style={{ color: "var(--olive)" }}>{leader?.personName ?? "a definir"}</span> · {ministry.people.length} voluntários</div></div></div>
-          <p style={{ fontSize: 13.5, color: "var(--muted)", lineHeight: 1.6, marginTop: 14 }}>{ministry.description}</p>
+          <div className="profile-top">
+            <div className="team-mark" style={{ width: 56, height: 56 }}><TeamMark ministry={ministry} size={26} /></div>
+            <div>
+              <div className="profile-name">{ministry.name}</div>
+              <div className="profile-role">Líder: <span style={{ color: "var(--olive)" }}>{leader?.personName ?? "a definir"}</span> · {ministry.people.length} voluntários</div>
+            </div>
+          </div>
+          <div style={{ marginTop: 14 }}>
+            <span className={`topen ${isOpen ? "yes" : "no"}`}>{isOpen ? "Recebendo voluntários" : "Equipe completa por ora"}</span>
+          </div>
         </div>
         <div className="drawer-body">
+          {ministry.description && (
+            <div style={{ marginTop: 4, marginBottom: 22 }}>
+              <div className="dsec-title" style={{ marginBottom: 10 }}>Sobre o time</div>
+              <div className="tinfo">
+                <div className="tinfo-block">
+                  <div className="tinfo-label"><Icon name="identidade" size={13} /> Propósito</div>
+                  <div className="tinfo-x">{ministry.description}</div>
+                </div>
+              </div>
+            </div>
+          )}
           <DrawerSection title="Funções & quem cobre">
-            {ministry.positions.map((position) => <div key={position.id} style={{ marginBottom: 18 }}><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}><div className="esc-fn">{position.name}</div><span className="panel-meta">{position.need_count} vaga(s)</span></div>{ministry.people.map((link) => <button className="cand" type="button" key={`${position.id}-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}><Av name={link.personName} /><div className="cand-main"><div className="cand-name">{link.personName}</div><div className="cand-meta">{link.isLeader ? "Líder do time" : "Voluntário"}</div></div></button>)}</div>)}
+            {ministry.positions.map((position) => (
+              <div key={position.id} style={{ marginBottom: 18 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <div className="esc-fn">{position.name}</div>
+                  <span className="panel-meta">{position.need_count} vaga(s)</span>
+                </div>
+                {ministry.people.length === 0 && <div style={{ fontSize: 12, color: "var(--subtle)", fontFamily: "var(--mono)" }}>Ninguém neste time ainda.</div>}
+                {ministry.people.map((link) => (
+                  <button className="cand" type="button" key={`${position.id}-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
+                    <Av name={link.personName} />
+                    <div className="cand-main">
+                      <div className="cand-name">{link.personName}</div>
+                      <div className="cand-meta">{link.isLeader ? "Líder do time" : link.functions.join(" · ") || "Voluntário"}</div>
+                    </div>
+                    {link.isLeader && <span className="lider-tag">Líder</span>}
+                  </button>
+                ))}
+              </div>
+            ))}
           </DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
             <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { setDrawer(null); setRoute("escalas"); }}>Ver escala do time →</button>
@@ -2018,6 +3922,65 @@ function EntityDrawer({
         </div>
       </DrawerShell>
     );
+  }
+
+  if (drawer.kind === "visitor") {
+    const visitor = visitors.find((v) => v.id === drawer.id);
+    if (!visitor) return null;
+    return (
+      <VisitanteDrawer
+        visitor={visitor}
+        notes={visitorNotes}
+        church={church}
+        people={people}
+        onClose={() => setDrawer(null)}
+        onOpenMember={(id) => setDrawer({ kind: "member", id })}
+      />
+    );
+  }
+
+  if (drawer.kind === "decision") {
+    const decision = decisions.find((d) => d.id === drawer.id);
+    if (!decision) return null;
+    return (
+      <DecisaoDrawer
+        decision={decision}
+        people={people}
+        members={members}
+        onClose={() => setDrawer(null)}
+        onOpenMember={(id) => setDrawer({ kind: "member", id })}
+      />
+    );
+  }
+
+  if (drawer.kind === "baptismClass") {
+    const classData = baptismClasses.find((c) => c.id === drawer.id);
+    if (!classData) return null;
+    return (
+      <BatismoDrawer
+        classData={classData}
+        candidates={baptismCandidates}
+        members={members}
+        decisions={decisions}
+        church={church}
+        onClose={() => setDrawer(null)}
+        onOpenMember={(id) => setDrawer({ kind: "member", id })}
+        onRefresh={() => setDrawer(null)}
+      />
+    );
+  }
+
+  if (drawer.kind === "meeting") {
+    const meeting = meetings.find((m) => m.id === drawer.id);
+    if (!meeting) return null;
+    const mActions = meetingActions.filter((a) => a.meeting_id === meeting.id);
+    return <ReuniaoDrawer meeting={meeting} actions={mActions} ministries={ministries} people={people} onClose={() => setDrawer(null)} />;
+  }
+
+  if (drawer.kind === "rehearsal") {
+    const rehearsal = rehearsals.find((r) => r.id === drawer.id);
+    if (!rehearsal) return null;
+    return <EnsaioDrawer rehearsal={rehearsal} ministries={ministries} people={people} onClose={() => setDrawer(null)} />;
   }
 
   const event = events.find((item) => item.id === drawer.id);
