@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -80,6 +80,7 @@ export type MobileOverlayProps = {
   chats: Chat[];
   chatMembers: ChatMember[];
   messages: Message[];
+  onReadAnnouncement?: (personId: string, announcementId: string) => void;
   onClose: () => void;
 };
 
@@ -864,10 +865,29 @@ function TabBatismo({ baptismClasses }: { baptismClasses: BaptismClass[] }) {
 
 // ── aba: Avisos / Oracao ──────────────────────────────────────────────────────
 
-function TabAvisos({ announcements }: { announcements: Announcement[] }) {
+function TabAvisos({
+  announcements,
+  person,
+  onReadAnnouncement,
+}: {
+  announcements: Announcement[];
+  person: P;
+  onReadAnnouncement?: (personId: string, announcementId: string) => void;
+}) {
   const [tipo, setTipo] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [texto, setTexto] = useState("");
+  const readSent = useRef(new Set<string>());
+
+  useEffect(() => {
+    if (!onReadAnnouncement) return;
+    announcements.forEach((a) => {
+      const key = `${person.id}:${a.id}`;
+      if (readSent.current.has(key)) return;
+      readSent.current.add(key);
+      onReadAnnouncement(person.id, a.id);
+    });
+  }, [announcements, person.id, onReadAnnouncement]);
 
   return (
     <>
@@ -1198,7 +1218,7 @@ function MobileMembro({
     try { return !!localStorage.getItem(`cex_onboarded_${person.id}`); } catch { return false; }
   });
   const { ministries, events, roster, cards, boards, courses, enrollments,
-          visitors, baptismClasses, announcements, chats, chatMembers, messages, members } = rest;
+          visitors, baptismClasses, announcements, chats, chatMembers, messages, members, onReadAnnouncement } = rest;
 
   const isRecep = isRecepPerson(person, ministries);
 
@@ -1253,7 +1273,7 @@ function MobileMembro({
             <TabCursos member={member} courses={courses} enrollments={enrollments} baptismClasses={baptismClasses} setTab={setTab} />
           )}
           {tab === "batismo" && <TabBatismo baptismClasses={baptismClasses} />}
-          {tab === "avisos" && <TabAvisos announcements={announcements} />}
+          {tab === "avisos" && <TabAvisos announcements={announcements} person={person} onReadAnnouncement={onReadAnnouncement} />}
           {tab === "perfil" && <TabPerfil person={person} member={member} />}
         </div>
 

@@ -148,6 +148,7 @@ type AnnouncementView = {
   body: string | null;
   author: string | null;
   when_label: string | null;
+  created_at: string;
 };
 
 type WallPostView = {
@@ -158,6 +159,13 @@ type WallPostView = {
   pinned: boolean;
   channels: string[];
   created_at: string;
+};
+
+type AnnouncementReadView = {
+  id: string;
+  announcement_id: string;
+  person_id: string;
+  read_at: string;
 };
 
 type BaptismClassView = {
@@ -356,6 +364,7 @@ type Props = {
   visitors: VisitorView[];
   visitorNotes: VisitorNoteView[];
   announcements: AnnouncementView[];
+  announcementReads?: AnnouncementReadView[];
   wallPosts: WallPostView[];
   decisions: DecisionView[];
   baptismClasses: BaptismClassView[];
@@ -418,8 +427,6 @@ type ModalState =
         | { kind: "course" }
         | { kind: "board" }
         | { kind: "card"; boardId: string; columnId: string }
-        | { kind: "chat" }
-        | { kind: "message"; chatId: string }
         | { kind: "visitor" }
         | { kind: "meeting" }
         | { kind: "rehearsal" }
@@ -755,6 +762,7 @@ export default function ServiceExactApp({
   visitors,
   visitorNotes,
   announcements,
+  announcementReads = [],
   wallPosts,
   decisions,
   baptismClasses,
@@ -797,6 +805,15 @@ export default function ServiceExactApp({
   }, [theme]);
 
   const firstChurch = churches.find((c) => c.id === activeChurchId) ?? churches[0];
+  const router = useRouter();
+  const markAnnouncementRead = async (personId: string, announcementId: string) => {
+    if (!firstChurch?.organizationId) return;
+    await createServiceBrowserClient().schema("service").from("announcement_reads").upsert(
+      { organization_id: firstChurch.organizationId, announcement_id: announcementId, person_id: personId },
+      { onConflict: "announcement_id,person_id", ignoreDuplicates: true },
+    );
+    router.refresh();
+  };
   const activePeople = people.filter((person) => person.status === "ativo").length;
   const rosterOk = roster.filter((assignment) => assignment.status === "ok").length;
   const confirmationRate = roster.length ? Math.round((rosterOk / roster.length) * 100) : 0;
@@ -941,8 +958,8 @@ export default function ServiceExactApp({
         {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} setModal={setModal} /> : null}
         {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} setModal={setModal} /> : null}
         {route === "cultos" ? <Cultos events={events} ministries={ministries} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
-        {route === "comunicacao" ? <Comunicacao announcements={announcements} wallPosts={wallPosts} ministries={ministries} setModal={setModal} /> : null}
-        {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} setModal={setModal} /> : null}
+        {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} wallPosts={wallPosts} ministries={ministries} people={people} setModal={setModal} /> : null}
+        {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} decisions={decisions} baptismClasses={baptismClasses} courses={courses} boards={boards} chats={chats} visitors={visitors} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
         {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} theme={theme} setTheme={setTheme} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
         {route === "identidade" ? <Identidade church={firstChurch} identity={churchIdentity} cycle={cycles.find((c) => c.is_active) ?? cycles[0]} setModal={setModal} /> : null}
@@ -970,6 +987,7 @@ export default function ServiceExactApp({
           chats={chats}
           chatMembers={chatMembers}
           messages={messages}
+          onReadAnnouncement={markAnnouncementRead}
           onClose={() => setMobileOpen(false)}
         />
       )}
@@ -1029,7 +1047,6 @@ export default function ServiceExactApp({
           modal={modal}
           church={firstChurch}
           people={people}
-          members={members}
           ministries={ministries}
           rooms={rooms}
           onClose={() => setModal(null)}
@@ -2537,21 +2554,86 @@ function ComposerModal({
   );
 }
 
+function VerQuemLeuButton({ aviso, reads, people }: { aviso: AnnouncementView; reads: AnnouncementReadView[]; people: PersonView[] }) {
+  const [open, setOpen] = useState(false);
+  const readerIds = new Set(reads.filter((r) => r.announcement_id === aviso.id).map((r) => r.person_id));
+  const leram = people.filter((p) => readerIds.has(p.id));
+  const naoLeram = people.filter((p) => !readerIds.has(p.id));
+  return (
+    <>
+      <button className="btn btn-sec btn-sm" type="button" onClick={() => setOpen(true)}>Ver quem leu</button>
+      {open && (
+        <div className="modal-bg" onClick={() => setOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div className="modal-eyebrow">Confirmação de leitura</div>
+              <div className="modal-title">{aviso.title}</div>
+              <div className="modal-sub">{leram.length} de {people.length} já leram este aviso.</div>
+            </div>
+            <div className="modal-body">
+              <div className="dsec-title" style={{ marginBottom: 8 }}>Leram · {leram.length}</div>
+              {leram.map((p) => (
+                <div className="flag-row" key={p.id} style={{ cursor: "default" }}>
+                  <Av name={p.name} size="sm" />
+                  <div className="flag-main"><div className="flag-nome">{p.name}</div></div>
+                  <span style={{ marginLeft: "auto", color: "var(--olive)" }}><Icon name="ok" size={16} /></span>
+                </div>
+              ))}
+              {naoLeram.length > 0 && <div className="dsec-title" style={{ margin: "14px 0 8px" }}>Ainda não leram · {naoLeram.length}</div>}
+              {naoLeram.map((p) => (
+                <div className="flag-row" key={p.id} style={{ cursor: "default", opacity: 0.6 }}>
+                  <Av name={p.name} size="sm" />
+                  <div className="flag-main"><div className="flag-nome">{p.name}</div></div>
+                  <span className="cand-fit busy" style={{ marginLeft: "auto" }}>pendente</span>
+                </div>
+              ))}
+            </div>
+            <div className="modal-foot"><button className="btn btn-pri" type="button" onClick={() => setOpen(false)}>Fechar</button></div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 function Comunicacao({
   announcements,
+  announcementReads,
   wallPosts,
   ministries,
+  people,
   setModal: _setModal,
 }: {
   announcements: AnnouncementView[];
+  announcementReads: AnnouncementReadView[];
   wallPosts: WallPostView[];
   ministries: MinistryView[];
+  people: PersonView[];
   setModal: (modal: ModalState) => void;
 }) {
   const [view, setView] = useState<"mural" | "avisos">("mural");
   const [selected, setSelected] = useState(announcements[0]?.id ?? "");
   const [compose, setCompose] = useState(false);
+  const [actionMsg, setActionMsg] = useState("");
   const selAviso = announcements.find((a) => a.id === selected);
+
+  const dispararAcao = (msg: string) => {
+    setActionMsg(msg);
+    setTimeout(() => setActionMsg(""), 2500);
+  };
+
+  // eslint-disable-next-line react-hooks/purity -- filtro por "últimos 7 dias" precisa do relógio real
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const weeklyIds = new Set(announcements.filter((a) => new Date(a.created_at).getTime() >= weekAgo).map((a) => a.id));
+  const weeklyReaderIds = new Set(announcementReads.filter((r) => weeklyIds.has(r.announcement_id)).map((r) => r.person_id));
+  const pctAlcance = people.length ? Math.round((weeklyReaderIds.size / people.length) * 100) : 0;
+  const distribuicaoTimes = ministries.slice(0, 4).map((ministry) => {
+    const idsDoTime = ministry.people.map((link) => link.personId);
+    const total = idsDoTime.length;
+    const leram = idsDoTime.filter((id) => weeklyReaderIds.has(id)).length;
+    return { ministry, pct: total ? Math.round((leram / total) * 100) : 0 };
+  });
+
   return (
     <div className="content wide">
       <PageHead
@@ -2594,11 +2676,22 @@ function Comunicacao({
             ))}
           </div>
           <div className="panel" style={{ position: "sticky", top: 88 }}>
-            <div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={14} /> Resumo</span></div>
+            <div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={14} /> Alcance da semana</span></div>
             <div className="panel-body">
-              <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em" }}>{wallPosts.length}<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>publicações</span></div>
-              <div style={{ marginTop: 12, fontSize: 13, color: "var(--muted)" }}>{announcements.length} aviso(s) · {wallPosts.filter((p) => p.pinned).length} fixado(s)</div>
-              <button className="btn btn-sec btn-sm" style={{ width: "100%", justifyContent: "center", marginTop: 16 }} type="button" onClick={() => setCompose(true)}>Novo comunicado →</button>
+              <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em" }}>{pctAlcance}%<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>taxa de leitura</span></div>
+              <div style={{ marginTop: 12, fontSize: 12, color: "var(--muted)" }}>{weeklyReaderIds.size} de {people.length} voluntário(s) leram algum aviso publicado nos últimos 7 dias.</div>
+              <div style={{ marginTop: 14 }}>
+                {distribuicaoTimes.map(({ ministry, pct }) => (
+                  <div className="dist-row" key={ministry.id} style={{ padding: "10px 0" }}>
+                    <span className="dist-name" style={{ width: 120 }}>{ministry.name.split(" ")[0]}</span>
+                    <div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${pct}%`, background: pct < 80 ? "var(--amber)" : "var(--olive)" }} /></div>
+                    <span className="dist-num">{pct}%</span>
+                  </div>
+                ))}
+                {distribuicaoTimes.length === 0 && <div style={{ fontSize: 12, color: "var(--subtle)" }}>Nenhum time cadastrado ainda.</div>}
+              </div>
+              <button className="btn btn-sec btn-sm" style={{ width: "100%", justifyContent: "center", marginTop: 16 }} type="button" onClick={() => dispararAcao("Cobrança enviada a quem não leu.")}>Cobrar quem não leu</button>
+              {actionMsg && view === "mural" && <div style={{ marginTop: 10, fontSize: 12.5, color: "var(--olive-soft)", textAlign: "right" }}>✓ {actionMsg}</div>}
             </div>
           </div>
         </div>
@@ -2630,9 +2723,11 @@ function Comunicacao({
                   </div>
                 </div>
                 <p style={{ fontSize: 15, color: "var(--light)", lineHeight: 1.7 }}>{selAviso.body || "Sem texto."}</p>
-                <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
-                  <button className="btn btn-pri btn-sm" type="button">Reenviar notificação</button>
+                <div style={{ display: "flex", gap: 10, marginTop: 24, alignItems: "center" }}>
+                  <button className="btn btn-pri btn-sm" type="button" onClick={() => dispararAcao("Notificação reenviada à equipe.")}>Reenviar notificação</button>
+                  <VerQuemLeuButton aviso={selAviso} reads={announcementReads} people={people} />
                 </div>
+                {actionMsg && view === "avisos" && <div style={{ marginTop: 12, fontSize: 12.5, color: "var(--olive-soft)" }}>✓ {actionMsg}</div>}
               </div>
             </div>
           ) : (
@@ -3423,35 +3518,164 @@ function Quadros({
   );
 }
 
+function NovaConversaModal({
+  members,
+  church,
+  onClose,
+  onCreated,
+}: {
+  members: MemberView[];
+  church: ChurchView | undefined;
+  onClose: () => void;
+  onCreated: (chatId: string) => void;
+}) {
+  const router = useRouter();
+  const [tipo, setTipo] = useState<"dm" | "grupo">("dm");
+  const [nome, setNome] = useState("");
+  const [sel, setSel] = useState<string[]>([]);
+  const [primeiraMsg, setPrimeiraMsg] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const eu = members[0]?.id ?? null;
+  const candidatos = members.filter((m) => m.id !== eu);
+  const isGrupo = tipo === "grupo" || sel.length > 1;
+
+  const tog = (id: string) => setSel((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+
+  const criar = async () => {
+    if (sel.length === 0) { setError("Escolha pelo menos uma pessoa."); return; }
+    if (!church?.organizationId || !church.id) { setError("Nenhuma igreja encontrada para vincular esta conversa."); return; }
+    setSaving(true);
+    setError("");
+    const supabase = createServiceBrowserClient();
+    const { data: chatRow, error: chatError } = await supabase.schema("service").from("chats").insert({
+      organization_id: church.organizationId,
+      church_id: church.id,
+      kind: isGrupo ? "grupo" : "dm",
+      name: isGrupo ? (nome.trim() || "Novo grupo") : null,
+    }).select("id").single();
+    if (chatError || !chatRow) {
+      setSaving(false);
+      setError(chatError?.message ?? "Não foi possível criar a conversa.");
+      return;
+    }
+    const participantIds = [...new Set([...(eu ? [eu] : []), ...sel])];
+    await supabase.schema("service").from("chat_members").insert(
+      participantIds.map((memberId) => ({ organization_id: church.organizationId, chat_id: chatRow.id, member_id: memberId })),
+    );
+    if (primeiraMsg.trim()) {
+      await supabase.schema("service").from("messages").insert({
+        organization_id: church.organizationId,
+        chat_id: chatRow.id,
+        sender_id: eu,
+        body: primeiraMsg.trim(),
+      });
+    }
+    router.refresh();
+    onCreated(chatRow.id);
+    onClose();
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">Nova conversa</div>
+          <div className="modal-title">Chamar para conversar</div>
+          <div className="modal-sub">Fale com alguém em particular ou crie um grupo com parte da equipe.</div>
+        </div>
+        <div className="modal-body" style={{ display: "block" }}>
+          <div className="field">
+            <label className="field-label">Tipo</label>
+            <div className="seg">
+              <button type="button" className={tipo === "dm" ? "on" : ""} onClick={() => setTipo("dm")}>Individual</button>
+              <button type="button" className={tipo === "grupo" ? "on" : ""} onClick={() => setTipo("grupo")}>Em grupo</button>
+            </div>
+          </div>
+          {isGrupo && (
+            <div className="field">
+              <label className="field-label">Nome do grupo</label>
+              <input className="input" value={nome} placeholder="ex: Apoio do domingo" onChange={(e) => setNome(e.target.value)} />
+            </div>
+          )}
+          <div className="field">
+            <label className="field-label">Quem participa</label>
+            <div className="cand-pick">
+              {candidatos.map((m) => {
+                const on = sel.includes(m.id);
+                return (
+                  <button key={m.id} type="button" className={`cand-chip ${on ? "on" : ""}`} onClick={() => tog(m.id)}>
+                    <Av name={m.name} size="xs" /> {m.name.split(" ")[0]} {on && "✓"}
+                  </button>
+                );
+              })}
+              {candidatos.length === 0 && <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhum membro disponível.</span>}
+            </div>
+          </div>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label className="field-label">Primeira mensagem (opcional)</label>
+            <textarea className="textarea" value={primeiraMsg} placeholder="..." onChange={(e) => setPrimeiraMsg(e.target.value)} />
+          </div>
+          {error && <div style={{ marginTop: 10, fontSize: 12.5, color: "var(--danger)" }}>{error}</div>}
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-pri" type="button" disabled={saving} onClick={criar}>{saving ? "Criando…" : "Iniciar conversa"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Conversas({
   chats,
   chatMembers,
   messages,
   ministries,
   members,
-  setModal,
+  church,
 }: {
   chats: ChatView[];
   chatMembers: ChatMemberView[];
   messages: MessageView[];
   ministries: MinistryView[];
   members: MemberView[];
-  setModal: (modal: ModalState) => void;
+  church: ChurchView | undefined;
 }) {
+  const router = useRouter();
   const [selected, setSelected] = useState(chats[0]?.id ?? "");
+  const [nova, setNova] = useState(false);
+  const [texto, setTexto] = useState("");
+  const [sending, setSending] = useState(false);
   const ministryById = new Map(ministries.map((ministry) => [ministry.id, ministry]));
   const memberById = new Map(members.map((member) => [member.id, member]));
   const chat = chats.find((item) => item.id === selected) ?? chats[0];
   const selectedMessages = chat ? messages.filter((message) => message.chat_id === chat.id) : [];
   const chatCount = (chatId: string) => chatMembers.filter((member) => member.chat_id === chatId).length;
   const chatName = (item: ChatView) => item.name || (item.ministry_id ? ministryById.get(item.ministry_id)?.name : null) || "Conversa";
+
+  const enviar = async () => {
+    if (!texto.trim() || !chat || sending) return;
+    setSending(true);
+    await createServiceBrowserClient().schema("service").from("messages").insert({
+      organization_id: church?.organizationId,
+      chat_id: chat.id,
+      sender_id: members[0]?.id ?? null,
+      body: texto.trim(),
+    });
+    setTexto("");
+    router.refresh();
+    setSending(false);
+  };
+
   return (
     <div className="content wide">
-      <PageHead title="Conversas" eyebrow="Operação" subtitle="Canais por time, grupos e mensagens diretas da equipe. Conversas são privadas para os envolvidos." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova conversa", subtitle: "Fale com alguém em particular ou crie um grupo.", saveLabel: "Criar conversa", formFields: [{ k:"nome", label:"Nome do grupo / conversa", type:"text", req:true, ph:"ex: Louvor, Liderança" }, { k:"participantes", label:"Participante (nome)", type:"text", ph:"Quem entra na conversa" }, { k:"msg", label:"Primeira mensagem (opcional)", type:"text", ph:"..." }], action: { kind: "chat" } })}>+ Nova conversa</button>} />
+      <PageHead title="Conversas" eyebrow="Operação" subtitle="Canais por time, grupos e mensagens diretas da equipe. Conversas são privadas para os envolvidos." action={<button className="btn btn-pri" type="button" onClick={() => setNova(true)}>+ Nova conversa</button>} />
       <div className="chat-layout">
         <div className="chat-list">{chats.map((item) => <button className={`chat-row ${item.id === selected ? "on" : ""}`} type="button" key={item.id} onClick={() => setSelected(item.id)}><span className="chat-row-ic"><Icon name={item.kind === "time" ? "times" : "membros"} size={16} /></span><span className="chat-row-main"><span className="chat-row-top"><b>{chatName(item)}</b><small>agora</small></span><span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || "Canal de alinhamento"}</span></span><span className="chat-row-count">{chatCount(item.id)}</span></button>)}</div>
-        <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; return <div className="chat-msg" key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <div className="empty">Nenhuma mensagem nesta conversa.</div> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." /><button className="btn btn-pri btn-sm" type="button" onClick={() => chat ? setModal({ eyebrow: "Enviar", title: chatName(chat), subtitle: "Enviar mensagem nesta conversa.", saveLabel: "Enviar", formFields: [{ k:"msg", label:"Mensagem", type:"area", req:true, ph:"Escreva sua mensagem..." }], action: { kind: "message", chatId: chat.id } }) : undefined}>Enviar</button></div></div></div>
+        <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; return <div className="chat-msg" key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <div className="empty">Nenhuma mensagem nesta conversa.</div> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enviar()} disabled={!chat} /><button className="btn btn-pri btn-sm" type="button" disabled={!chat || sending || !texto.trim()} onClick={enviar}>Enviar</button></div></div></div>
       </div>
+      {nova && <NovaConversaModal members={members} church={church} onClose={() => setNova(false)} onCreated={(id) => setSelected(id)} />}
     </div>
   );
 }
@@ -5006,11 +5230,6 @@ function findPersonByName(people: PersonView[], value: string) {
   return people.find((person) => normalize(person.name) === term || normalize(person.name).includes(term)) ?? null;
 }
 
-function findMemberByName(members: MemberView[], value: string) {
-  const term = normalize(value);
-  if (!term) return null;
-  return members.find((member) => normalize(member.name) === term || normalize(member.name).includes(term)) ?? null;
-}
 
 function findMinistryByName(ministries: MinistryView[], value: string) {
   const term = normalize(value);
@@ -5138,7 +5357,6 @@ function ServiceModal({
   modal,
   church,
   people,
-  members,
   ministries,
   rooms,
   onClose,
@@ -5146,7 +5364,6 @@ function ServiceModal({
   modal: NonNullable<ModalState>;
   church?: ChurchView;
   people: PersonView[];
-  members: MemberView[];
   ministries: MinistryView[];
   rooms: RoomView[];
   onClose: () => void;
@@ -5171,7 +5388,6 @@ function ServiceModal({
     const supabase = createServiceBrowserClient();
     const value = (field: string) => values[field]?.trim() ?? "";
     const namedPerson = (field: string) => findPersonByName(people, value(field));
-    const namedMember = (field: string) => findMemberByName(members, value(field));
     const namedMinistry = (field: string) => findMinistryByName(ministries, value(field));
     let result: { error: { message: string } | null } = { error: null };
 
@@ -5299,50 +5515,6 @@ function ServiceModal({
         assignees: assignee ? [assignee.id] : [],
         priority: "media",
         source_type: "manual",
-      });
-    } else if (action.kind === "chat") {
-      if (!value("nome")) {
-        setSaving(false);
-        setError("Digite o nome da conversa.");
-        return;
-      }
-      const { data: chat, error: chatError } = await supabase.schema("service").from("chats").insert({
-        organization_id: church.organizationId,
-        church_id: church.id,
-        name: value("nome"),
-        kind: "grupo",
-      }).select("id").single();
-      if (chatError) {
-        result = { error: chatError };
-      } else {
-        const member = namedMember("participantes");
-        if (member) {
-          await supabase.schema("service").from("chat_members").insert({
-            organization_id: church.organizationId,
-            chat_id: chat.id,
-            member_id: member.id,
-          });
-        }
-        result = value("msg")
-          ? await supabase.schema("service").from("messages").insert({
-              organization_id: church.organizationId,
-              chat_id: chat.id,
-              sender_id: member?.id ?? null,
-              body: value("msg"),
-            })
-          : { error: null };
-      }
-    } else if (action.kind === "message") {
-      if (!value("msg")) {
-        setSaving(false);
-        setError("Digite a mensagem.");
-        return;
-      }
-      result = await supabase.schema("service").from("messages").insert({
-        organization_id: church.organizationId,
-        chat_id: action.chatId,
-        sender_id: members[0]?.id ?? null,
-        body: value("msg"),
       });
     } else if (action.kind === "visitor") {
       if (!value("Nome")) {

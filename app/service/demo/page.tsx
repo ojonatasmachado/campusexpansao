@@ -240,8 +240,8 @@ const RESERVATIONS = [
 ];
 
 const ANNOUNCEMENTS = [
-  { id: "an-1", title: "Retiro de jovens — inscrições abertas!", body: "Vagas limitadas. Garanta a sua até dia 15.", audience: "todos", author: "Liderança", when_label: "até 15/jul" },
-  { id: "an-2", title: "Escalas de julho disponíveis", body: "Acesse o app do voluntário para confirmar sua participação.", audience: "voluntários", author: "Equipe de escalas", when_label: "agora" },
+  { id: "an-1", title: "Retiro de jovens — inscrições abertas!", body: "Vagas limitadas. Garanta a sua até dia 15.", audience: "todos", author: "Liderança", when_label: "até 15/jul", created_at: new Date().toISOString() },
+  { id: "an-2", title: "Escalas de julho disponíveis", body: "Acesse o app do voluntário para confirmar sua participação.", audience: "voluntários", author: "Equipe de escalas", when_label: "agora", created_at: new Date().toISOString() },
 ];
 
 const WALL_POSTS = [

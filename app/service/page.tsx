@@ -324,6 +324,7 @@ type AnnouncementView = {
   body: string | null;
   author: string | null;
   when_label: string | null;
+  created_at: string;
 };
 
 type WallPostView = {
@@ -334,6 +335,13 @@ type WallPostView = {
   pinned: boolean;
   channels: string[];
   created_at: string;
+};
+
+type AnnouncementReadView = {
+  id: string;
+  announcement_id: string;
+  person_id: string;
+  read_at: string;
 };
 
 type BaptismClassView = {
@@ -475,6 +483,7 @@ type ExtraServiceData = {
   visitors: VisitorView[];
   visitorNotes: VisitorNoteView[];
   announcements: AnnouncementView[];
+  announcementReads: AnnouncementReadView[];
   wallPosts: WallPostView[];
   decisions: DecisionView[];
   baptismClasses: BaptismClassView[];
@@ -503,6 +512,7 @@ const emptyExtraServiceData: ExtraServiceData = {
   visitors: [],
   visitorNotes: [],
   announcements: [],
+  announcementReads: [],
   wallPosts: [],
   decisions: [],
   baptismClasses: [],
@@ -860,6 +870,7 @@ async function getServiceDashboardData(): Promise<{
     visitorsResult,
     visitorNotesResult,
     announcementsResult,
+    announcementReadsResult,
     wallPostsResult,
     meetingsResult,
     meetingActionsResult,
@@ -885,7 +896,8 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("messages").select("id,chat_id,sender_id,body,created_at").order("created_at", { ascending: true }),
     supabase.schema("service").from("visitors").select("id,name,phone,stage,visited_on,responsible_id,due,due_status,reply_status,origin,member_id,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("visitor_notes").select("id,visitor_id,happened_on,body,author,is_milestone,created_at").order("created_at", { ascending: false }),
-    supabase.schema("service").from("announcements").select("id,title,audience,body,author,when_label").order("created_at", { ascending: false }),
+    supabase.schema("service").from("announcements").select("id,title,audience,body,author,when_label,created_at").order("created_at", { ascending: false }),
+    supabase.schema("service").from("announcement_reads").select("id,announcement_id,person_id,read_at"),
     supabase.schema("service").from("wall_posts").select("id,author,audience,body,pinned,channels,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("meetings").select("id,title,meeting_date,time,location,author_id,status,ministries,attendees,agenda,minutes").order("created_at", { ascending: false }),
     supabase.schema("service").from("meeting_actions").select("id,meeting_id,description,assignee_id,status").order("created_at", { ascending: false }),
@@ -914,6 +926,7 @@ async function getServiceDashboardData(): Promise<{
     visitorsResult.error,
     visitorNotesResult.error,
     announcementsResult.error,
+    announcementReadsResult.error,
     wallPostsResult.error,
     meetingsResult.error,
     meetingActionsResult.error,
@@ -947,6 +960,7 @@ async function getServiceDashboardData(): Promise<{
       visitors: ((visitorsResult.data ?? []) as VisitorView[]),
       visitorNotes: ((visitorNotesResult.data ?? []) as VisitorNoteView[]),
       announcements: ((announcementsResult.data ?? []) as AnnouncementView[]),
+      announcementReads: ((announcementReadsResult.data ?? []) as AnnouncementReadView[]),
       wallPosts: ((wallPostsResult.data ?? []) as WallPostView[]),
       decisions: ((decisionsResult.data ?? []) as DecisionView[]),
       baptismClasses: ((baptismClassesResult.data ?? []) as BaptismClassView[]),
@@ -1030,6 +1044,7 @@ export default async function ServiceHomePage() {
       visitors={extra.visitors}
       visitorNotes={extra.visitorNotes}
       announcements={extra.announcements}
+      announcementReads={extra.announcementReads}
       wallPosts={extra.wallPosts}
       decisions={extra.decisions}
       baptismClasses={extra.baptismClasses}
