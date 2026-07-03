@@ -63,7 +63,7 @@ const MEMBERS = [
 
 const MINISTRIES = [
   {
-    id: "min-1", name: "Louvor", icon: "louvor", description: "Time de música e adoração. Ensaios toda semana.",
+    id: "min-1", organizationId: ORG, name: "Louvor", icon: "louvor", description: "Time de música e adoração. Ensaios toda semana.",
     positions: [
       { id: "pos-1-1", ministry_id: "min-1", name: "Vocal", need_count: 3, sort_order: 0 },
       { id: "pos-1-2", ministry_id: "min-1", name: "Instrumentista", need_count: 4, sort_order: 1 },
@@ -74,7 +74,7 @@ const MINISTRIES = [
     ],
   },
   {
-    id: "min-2", name: "Mídia & Comunicação", icon: "midia", description: "Transmissão, design e redes sociais.",
+    id: "min-2", organizationId: ORG, name: "Mídia & Comunicação", icon: "midia", description: "Transmissão, design e redes sociais.",
     positions: [
       { id: "pos-2-1", ministry_id: "min-2", name: "Operador", need_count: 2, sort_order: 0 },
     ],
@@ -83,7 +83,7 @@ const MINISTRIES = [
     ],
   },
   {
-    id: "min-3", name: "Recepção", icon: "recepcao", description: "Acolhimento e recepção de visitantes no domingo.",
+    id: "min-3", organizationId: ORG, name: "Recepção", icon: "recepcao", description: "Acolhimento e recepção de visitantes no domingo.",
     positions: [
       { id: "pos-3-1", ministry_id: "min-3", name: "Recepcionista", need_count: 4, sort_order: 0 },
     ],
@@ -93,7 +93,7 @@ const MINISTRIES = [
     ],
   },
   {
-    id: "min-4", name: "Kids", icon: "kids", description: "Ministério infantil e escola bíblica.",
+    id: "min-4", organizationId: ORG, name: "Kids", icon: "kids", description: "Ministério infantil e escola bíblica.",
     positions: [
       { id: "pos-4-1", ministry_id: "min-4", name: "Professor", need_count: 2, sort_order: 0 },
     ],
@@ -105,8 +105,8 @@ const MINISTRIES = [
 
 const EVENTS = [
   {
-    id: "ev-1", name: "Culto de domingo manhã", kind: "culto", weekday: "Dom",
-    eventDate: "06/07/2026", time: "10h00", location: "Templo principal",
+    id: "ev-1", organizationId: ORG, name: "Culto de domingo manhã", kind: "culto", weekday: "Dom",
+    eventDate: "06/07/2026", time: "10h00", slot: "dom_m", location: "Templo principal",
     ministries: ["min-1", "min-2", "min-3"],
     schedule: [
       { id: "sc-1", item: "Abertura e boas-vindas", time: "10:00", category: "recepcao" },
@@ -122,8 +122,8 @@ const EVENTS = [
     ],
   },
   {
-    id: "ev-2", name: "Culto de domingo noite", kind: "culto", weekday: "Dom",
-    eventDate: "06/07/2026", time: "19h00", location: "Templo principal",
+    id: "ev-2", organizationId: ORG, name: "Culto de domingo noite", kind: "culto", weekday: "Dom",
+    eventDate: "06/07/2026", time: "19h00", slot: "dom_n", location: "Templo principal",
     ministries: ["min-1", "min-2"],
     schedule: [
       { id: "sc-6", item: "Abertura", time: "19:00", category: "geral" },

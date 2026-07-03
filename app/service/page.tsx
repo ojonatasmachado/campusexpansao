@@ -14,6 +14,7 @@ type ChurchRow = {
   postal_code: string | null;
   email: string | null;
   phone: string | null;
+  settings: Record<string, unknown> | null;
   created_at: string;
 };
 
@@ -30,6 +31,7 @@ type ChurchView = {
   postalCode: string | null;
   email: string | null;
   phone: string | null;
+  settings: Record<string, unknown>;
 };
 
 type ChurchIdentityRow = {
@@ -82,6 +84,8 @@ type TagRow = {
   leaders: string[] | null;
 };
 
+type PersonMeta = { recusasSeguidas?: number; diasIndisponivel?: number };
+
 type PersonRow = {
   id: string;
   organization_id: string;
@@ -95,6 +99,7 @@ type PersonRow = {
   engagement: number | null;
   availability: Record<string, boolean> | null;
   tags: string[] | null;
+  meta: PersonMeta | null;
   created_at: string;
 };
 
@@ -111,6 +116,7 @@ type PersonView = {
   engagement: number | null;
   availability: Record<string, boolean>;
   tags: string[];
+  meta: PersonMeta;
   createdAt: string;
 };
 
@@ -542,6 +548,7 @@ function toChurchView(row: ChurchRow): ChurchView {
     postalCode: row.postal_code,
     email: row.email,
     phone: row.phone,
+    settings: row.settings ?? {},
   };
 }
 
@@ -559,6 +566,7 @@ function toPersonView(row: PersonRow): PersonView {
     engagement: row.engagement,
     availability: row.availability ?? {},
     tags: row.tags ?? [],
+    meta: row.meta ?? {},
     createdAt: row.created_at,
   };
 }
@@ -663,7 +671,7 @@ async function getServiceDashboardData(): Promise<{
   const { data: churchesData, error: churchesError } = await supabase
     .schema("service")
     .from("churches")
-    .select("id,organization_id,name,city,is_headquarters,doc,founded_year,address,postal_code,email,phone,created_at")
+    .select("id,organization_id,name,city,is_headquarters,doc,founded_year,address,postal_code,email,phone,settings,created_at")
     .order("is_headquarters", { ascending: false })
     .order("created_at");
 
@@ -674,7 +682,7 @@ async function getServiceDashboardData(): Promise<{
   const { data: peopleData, error: peopleError } = await supabase
     .schema("service")
     .from("people")
-    .select("id,organization_id,church_id,user_id,name,phone,email,since_year,status,engagement,availability,tags,created_at")
+    .select("id,organization_id,church_id,user_id,name,phone,email,since_year,status,engagement,availability,tags,meta,created_at")
     .order("name");
 
   if (peopleError) {
