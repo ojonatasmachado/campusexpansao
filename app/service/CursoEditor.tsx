@@ -347,10 +347,10 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
             nome: (l.name ?? "") as string,
             tipo: (l.kind ?? "video") as AulaState["tipo"],
             dur: (l.duration ?? "") as string,
-            link: "",
-            conteudo: "",
-            prova: null,
-            minAcertos: 0,
+            link: (l.link ?? "") as string,
+            conteudo: (l.conteudo ?? "") as string,
+            prova: Array.isArray(l.prova) ? (l.prova as QuizQ[]) : null,
+            minAcertos: (l.min_acertos ?? 0) as number,
           })),
       }));
 
@@ -358,11 +358,11 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
         nome: (row.name ?? "") as string,
         nivel: (row.level ?? "") as string,
         tipo: (row.kind ?? "trilha") as CursoLocal["tipo"],
-        modalidade: "remoto",
+        modalidade: (row.modalidade ?? "remoto") as CursoLocal["modalidade"],
         cor: (row.color ?? "clay") as string,
         desc: (row.description ?? "") as string,
-        divulgacao: "",
-        materiais: [],
+        divulgacao: (row.divulgacao ?? "") as string,
+        materiais: Array.isArray(row.materiais) ? (row.materiais as Material[]) : [],
         preReqs: Array.isArray(row.prereqs) ? (row.prereqs as string[]) : [],
         modulos: mods.length ? mods : [{ id: uid(), nome: "Módulo 1", aulas: [] }],
       });
@@ -438,6 +438,9 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
           description: c.desc.trim() || null,
           category: c.nivel.trim() || null,
           prereqs: c.preReqs,
+          divulgacao: c.divulgacao || null,
+          materiais: c.materiais,
+          modalidade: c.modalidade,
         }).eq("id", courseId);
         if (upErr) throw upErr;
 
@@ -454,6 +457,9 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
           description: c.desc.trim() || null,
           category: c.nivel.trim() || "discipulado",
           prereqs: c.preReqs,
+          divulgacao: c.divulgacao || null,
+          materiais: c.materiais,
+          modalidade: c.modalidade,
         }).select("id").single();
         if (insErr) throw insErr;
         savedCourseId = newCourse.id as string;
@@ -479,6 +485,10 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
             duration: aula.dur.trim() || null,
             kind: aula.tipo,
             sort_order: ai + 1,
+            link: aula.link.trim() || null,
+            conteudo: aula.conteudo || null,
+            prova: aula.prova,
+            min_acertos: aula.minAcertos,
           });
           if (aulaErr) throw aulaErr;
         }

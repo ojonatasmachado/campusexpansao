@@ -369,6 +369,11 @@ type CourseView = {
   level: string | null;
   description: string | null;
   category: string | null;
+  color: string | null;
+  prereqs: string[];
+  divulgacao: string | null;
+  materiais: Array<{ id: string; tipo: string; titulo: string; url: string }>;
+  modalidade: string | null;
 };
 
 type EnrollmentView = {
@@ -377,6 +382,37 @@ type EnrollmentView = {
   member_id: string;
   done_count: number;
   status: "cursando" | "concluido";
+};
+
+type ModuleView = {
+  id: string;
+  course_id: string;
+  name: string;
+  sort_order: number;
+};
+
+type LessonView = {
+  id: string;
+  module_id: string;
+  name: string;
+  duration: string | null;
+  kind: "video" | "texto" | "presencial" | null;
+  sort_order: number;
+  link: string | null;
+  conteudo: string | null;
+  prova: Array<{ q: string; opts: string[]; correta: number }> | null;
+  min_acertos: number;
+  checkin_token: string | null;
+  checkin_active: boolean;
+};
+
+type LessonAttendanceView = {
+  id: string;
+  course_id: string;
+  lesson_id: string;
+  member_id: string;
+  checked_in_at: string;
+  via: "qr" | "manual";
 };
 
 type BoardView = {
@@ -491,6 +527,9 @@ type ExtraServiceData = {
   baptismCandidates: BaptismCandidateView[];
   courses: CourseView[];
   enrollments: EnrollmentView[];
+  courseModules: ModuleView[];
+  courseLessons: LessonView[];
+  lessonAttendance: LessonAttendanceView[];
   boards: BoardView[];
   cards: CardView[];
   chats: ChatView[];
@@ -520,6 +559,9 @@ const emptyExtraServiceData: ExtraServiceData = {
   baptismCandidates: [],
   courses: [],
   enrollments: [],
+  courseModules: [],
+  courseLessons: [],
+  lessonAttendance: [],
   boards: [],
   cards: [],
   chats: [],
@@ -863,6 +905,9 @@ async function getServiceDashboardData(): Promise<{
     baptismCandidatesResult,
     coursesResult,
     enrollmentsResult,
+    courseModulesResult,
+    courseLessonsResult,
+    lessonAttendanceResult,
     boardsResult,
     cardsResult,
     chatsResult,
@@ -888,8 +933,11 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("decisions").select("id,name,phone,happened_on,kind,service_name,responsible_id,status,member_id,age,notes,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("baptism_classes").select("id,label,baptism_date,location,status,pastor,notes,open_enrollment").order("created_at", { ascending: false }),
     supabase.schema("service").from("baptism_candidates").select("id,class_id,member_id,decision_id").order("created_at", { ascending: false }),
-    supabase.schema("service").from("courses").select("id,name,kind,level,description,category").order("created_at", { ascending: false }),
+    supabase.schema("service").from("courses").select("id,name,kind,level,description,category,color,prereqs,divulgacao,materiais,modalidade").order("created_at", { ascending: false }),
     supabase.schema("service").from("enrollments").select("id,course_id,member_id,done_count,status").order("created_at", { ascending: false }),
+    supabase.schema("service").from("course_modules").select("id,course_id,name,sort_order").order("sort_order", { ascending: true }),
+    supabase.schema("service").from("course_lessons").select("id,module_id,name,duration,kind,sort_order,link,conteudo,prova,min_acertos,checkin_token,checkin_active").order("sort_order", { ascending: true }),
+    supabase.schema("service").from("lesson_attendance").select("id,course_id,lesson_id,member_id,checked_in_at,via"),
     supabase.schema("service").from("boards").select("id,name,scope,ministry_id,description,columns").order("created_at", { ascending: false }),
     supabase.schema("service").from("cards").select("id,board_id,column_id,title,description,assignees,due,priority,source_type,source_id,moved_days_ago").order("created_at", { ascending: false }),
     supabase.schema("service").from("chats").select("id,kind,ministry_id,name").order("created_at", { ascending: false }),
@@ -919,6 +967,9 @@ async function getServiceDashboardData(): Promise<{
     baptismCandidatesResult.error,
     coursesResult.error,
     enrollmentsResult.error,
+    courseModulesResult.error,
+    courseLessonsResult.error,
+    lessonAttendanceResult.error,
     boardsResult.error,
     cardsResult.error,
     chatsResult.error,
@@ -968,6 +1019,9 @@ async function getServiceDashboardData(): Promise<{
       baptismCandidates: ((baptismCandidatesResult.data ?? []) as BaptismCandidateView[]),
       courses: ((coursesResult.data ?? []) as CourseView[]),
       enrollments: ((enrollmentsResult.data ?? []) as EnrollmentView[]),
+      courseModules: ((courseModulesResult.data ?? []) as ModuleView[]),
+      courseLessons: ((courseLessonsResult.data ?? []) as LessonView[]),
+      lessonAttendance: ((lessonAttendanceResult.data ?? []) as LessonAttendanceView[]),
       boards: ((boardsResult.data ?? []) as BoardView[]),
       cards: ((cardsResult.data ?? []) as CardView[]),
       chats: ((chatsResult.data ?? []) as ChatView[]),
@@ -1052,6 +1106,9 @@ export default async function ServiceHomePage() {
       baptismCandidates={extra.baptismCandidates}
       courses={extra.courses}
       enrollments={extra.enrollments}
+      courseModules={extra.courseModules}
+      courseLessons={extra.courseLessons}
+      lessonAttendance={extra.lessonAttendance}
       boards={extra.boards}
       cards={extra.cards}
       chats={extra.chats}

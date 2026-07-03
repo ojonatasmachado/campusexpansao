@@ -167,14 +167,32 @@ const BAPTISM_CANDIDATES = [
 ];
 
 const COURSES = [
-  { id: "c1", name: "Fundamentos da Fé", level: "Básico", category: "discipulado", kind: "trilha" as const, color: "olive", description: "Introdução à doutrina cristã e vida na comunidade." },
-  { id: "c2", name: "Liderança servidora", level: "Avançado", category: "liderança", kind: "trilha" as const, color: "wheat", description: "Formação de líderes para ministério." },
+  { id: "c1", name: "Fundamentos da Fé", level: "Básico", category: "discipulado", kind: "trilha" as const, color: "olive", description: "Introdução à doutrina cristã e vida na comunidade.", prereqs: [], divulgacao: "<p>Para quem decidiu seguir Jesus e quer entender os fundamentos da fé: quem é Deus, quem somos nós, e como viver em comunidade.</p>", materiais: [{ id: "mat-1", tipo: "video", titulo: "Trailer do curso", url: "https://youtube.com" }], modalidade: "presencial" },
+  { id: "c2", name: "Liderança servidora", level: "Avançado", category: "lideranca", kind: "trilha" as const, color: "wheat", description: "Formação de líderes para ministério.", prereqs: ["c1"], divulgacao: "<p>Para quem já serve e está sendo preparado para liderar uma frente ou ministério.</p>", materiais: [], modalidade: "hibrido" },
 ];
 
 const ENROLLMENTS = [
-  { id: "e1", course_id: "c1", member_id: "m1", status: "concluido" as const, done_count: 8 },
-  { id: "e2", course_id: "c1", member_id: "m2", status: "cursando" as const, done_count: 5 },
-  { id: "e3", course_id: "c2", member_id: "m1", status: "cursando" as const, done_count: 3 },
+  { id: "e1", course_id: "c1", member_id: "m1", status: "concluido" as const, done_count: 3 },
+  { id: "e2", course_id: "c1", member_id: "m2", status: "cursando" as const, done_count: 1 },
+  { id: "e3", course_id: "c2", member_id: "m1", status: "cursando" as const, done_count: 0 },
+];
+
+const COURSE_MODULES = [
+  { id: "mod-1", course_id: "c1", name: "Quem é Deus", sort_order: 1 },
+  { id: "mod-2", course_id: "c1", name: "Vivendo em comunidade", sort_order: 2 },
+  { id: "mod-3", course_id: "c2", name: "Servir para liderar", sort_order: 1 },
+];
+
+const COURSE_LESSONS = [
+  { id: "les-1", module_id: "mod-1", name: "A Trindade", duration: "12 min", kind: "video" as const, sort_order: 1, link: "https://youtube.com", conteudo: "", prova: [{ q: "Quantas pessoas na Trindade?", opts: ["1", "2", "3"], correta: 2 }], min_acertos: 1, checkin_token: null, checkin_active: true },
+  { id: "les-2", module_id: "mod-1", name: "A Bíblia como Palavra de Deus", duration: "8 min", kind: "texto" as const, sort_order: 2, link: "", conteudo: "<p>A Bíblia é a revelação escrita de Deus...</p>", prova: null, min_acertos: 0, checkin_token: null, checkin_active: true },
+  { id: "les-3", module_id: "mod-2", name: "Encontro presencial · Comunidade", duration: "1h30", kind: "presencial" as const, sort_order: 1, link: "", conteudo: "", prova: null, min_acertos: 0, checkin_token: "demo-token-les3", checkin_active: true },
+  { id: "les-4", module_id: "mod-3", name: "O líder que serve", duration: "15 min", kind: "video" as const, sort_order: 1, link: "https://youtube.com", conteudo: "", prova: null, min_acertos: 0, checkin_token: null, checkin_active: true },
+  { id: "les-5", module_id: "mod-3", name: "Encontro presencial · Mentoria", duration: "2h", kind: "presencial" as const, sort_order: 2, link: "", conteudo: "", prova: null, min_acertos: 0, checkin_token: "demo-token-les5", checkin_active: true },
+];
+
+const LESSON_ATTENDANCE = [
+  { id: "la-1", course_id: "c1", lesson_id: "les-3", member_id: "m1", checked_in_at: "2026-06-20T20:00:00Z", via: "qr" as const },
 ];
 
 const BOARDS = [
@@ -272,6 +290,9 @@ export default function ServiceDemoPage() {
       baptismCandidates={BAPTISM_CANDIDATES}
       courses={COURSES}
       enrollments={ENROLLMENTS}
+      courseModules={COURSE_MODULES}
+      courseLessons={COURSE_LESSONS}
+      lessonAttendance={LESSON_ATTENDANCE}
       boards={BOARDS}
       cards={CARDS}
       chats={CHATS}

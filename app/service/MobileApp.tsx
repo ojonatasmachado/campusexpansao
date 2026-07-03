@@ -44,6 +44,8 @@ type Card = {
 type Board = { id: string; name: string; columns: Array<{ id: string; nome?: string; name?: string }> };
 type Course = { id: string; name: string; kind: string | null; level: string | null; description: string | null };
 type Enrollment = { id: string; course_id: string; member_id: string; done_count: number; status: string };
+type CourseModule = { id: string; course_id: string; name: string; sort_order: number };
+type CourseLesson = { id: string; module_id: string; name: string };
 type Visitor = { id: string; name: string; phone: string | null; stage: string; origin: string | null };
 type BaptismClass = {
   id: string;
@@ -75,6 +77,8 @@ export type MobileOverlayProps = {
   boards: Board[];
   courses: Course[];
   enrollments: Enrollment[];
+  courseModules?: CourseModule[];
+  courseLessons?: CourseLesson[];
   visitors: Visitor[];
   baptismClasses: BaptismClass[];
   announcements: Announcement[];
@@ -755,11 +759,13 @@ function TabVisitantes({ visitors }: { visitors: Visitor[] }) {
 // ── aba: Cursos ───────────────────────────────────────────────────────────────
 
 function TabCursos({
-  member, courses, enrollments, baptismClasses, setTab,
+  member, courses, enrollments, courseModules, courseLessons, baptismClasses, setTab,
 }: {
   member: M | null;
   courses: Course[];
   enrollments: Enrollment[];
+  courseModules: CourseModule[];
+  courseLessons: CourseLesson[];
   baptismClasses: BaptismClass[];
   setTab: (t: string) => void;
 }) {
@@ -790,7 +796,9 @@ function TabCursos({
       {myEnrollments.map((en) => {
         const course = courses.find((c) => c.id === en.course_id);
         if (!course) return null;
-        const pct = Math.min(100, en.done_count * 10);
+        const courseModuleIds = new Set(courseModules.filter((m) => m.course_id === course.id).map((m) => m.id));
+        const totalAulas = courseLessons.filter((l) => courseModuleIds.has(l.module_id)).length;
+        const pct = totalAulas ? Math.min(100, Math.round((en.done_count / totalAulas) * 100)) : 0;
         return (
           <div className="m-card" key={en.id}>
             <div className="m-card-top">
@@ -1247,7 +1255,7 @@ function MobileMembro({
   const [onboarded, setOnboarded] = useState<boolean>(() => {
     try { return !!localStorage.getItem(`cex_onboarded_${person.id}`); } catch { return false; }
   });
-  const { ministries, events, roster, cards, boards, courses, enrollments,
+  const { ministries, events, roster, cards, boards, courses, enrollments, courseModules = [], courseLessons = [],
           visitors, baptismClasses, announcements, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment } = rest;
 
   const isRecep = isRecepPerson(person, ministries);
@@ -1300,7 +1308,7 @@ function MobileMembro({
           )}
           {tab === "visitantes" && <TabVisitantes visitors={visitors} />}
           {tab === "cursos" && (
-            <TabCursos member={member} courses={courses} enrollments={enrollments} baptismClasses={baptismClasses} setTab={setTab} />
+            <TabCursos member={member} courses={courses} enrollments={enrollments} courseModules={courseModules} courseLessons={courseLessons} baptismClasses={baptismClasses} setTab={setTab} />
           )}
           {tab === "batismo" && <TabBatismo baptismClasses={baptismClasses} />}
           {tab === "avisos" && <TabAvisos announcements={announcements} person={person} onReadAnnouncement={onReadAnnouncement} />}

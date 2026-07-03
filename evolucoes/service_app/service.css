@@ -653,6 +653,9 @@ body[data-theme="light"] .av { box-shadow:none; }
 .cb-card-bar.tone-olive { background:var(--olive); }
 .cb-card-bar.tone-wheat { background:var(--wheat); }
 .cb-card-bar.tone-clay { background:var(--clay); }
+.cb-card-bar.tone-terra { background:var(--terra); }
+.cb-card-bar.tone-sand { background:var(--sand); }
+.cb-card-bar.tone-amber { background:var(--amber); }
 .cb-card-main { flex:1; min-width:0; padding:12px 12px; }
 .cb-card-name { font-size:13.5px; font-weight:600; letter-spacing:-0.01em; }
 .cb-card-meta { font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:4px; }
@@ -807,6 +810,9 @@ body[data-theme="light"] .av { box-shadow:none; }
 .mc-bar.tone-olive { background:var(--olive); }
 .mc-bar.tone-wheat { background:var(--wheat); }
 .mc-bar.tone-clay { background:var(--clay); }
+.mc-bar.tone-terra { background:var(--terra); }
+.mc-bar.tone-sand { background:var(--sand); }
+.mc-bar.tone-amber { background:var(--amber); }
 .mc-main { flex:1; padding:12px 14px; min-width:0; }
 .mc-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .mc-name { font-size:14px; font-weight:600; letter-spacing:-0.01em; }

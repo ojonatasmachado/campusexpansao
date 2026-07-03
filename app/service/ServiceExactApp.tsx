@@ -8,6 +8,7 @@ import MobileOverlay from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
 import EventoShare from "./EventoShare";
 import CursoEditor from "./CursoEditor";
+import CursoDrawer from "./CursoDrawer";
 
 /* regras de escala + delegação + presets de funções, guardados em
    service.churches.settings (jsonb) — ver 0005_service_foundation.sql:24. */
@@ -27,6 +28,7 @@ type ChurchSettings = {
   checkinPermitirExtra?: boolean;
   statusCfg?: StatusCriterios;
   tiposEvento?: string[];
+  cursoGrupos?: { id: string; nome: string; desc?: string }[];
   [key: string]: unknown;
 };
 
@@ -206,6 +208,11 @@ type CourseView = {
   level: string | null;
   description: string | null;
   category: string | null;
+  color: string | null;
+  prereqs: string[];
+  divulgacao: string | null;
+  materiais: Array<{ id: string; tipo: string; titulo: string; url: string }>;
+  modalidade: string | null;
 };
 
 type EnrollmentView = {
@@ -214,6 +221,37 @@ type EnrollmentView = {
   member_id: string;
   done_count: number;
   status: "cursando" | "concluido";
+};
+
+type ModuleView = {
+  id: string;
+  course_id: string;
+  name: string;
+  sort_order: number;
+};
+
+type LessonView = {
+  id: string;
+  module_id: string;
+  name: string;
+  duration: string | null;
+  kind: "video" | "texto" | "presencial" | "ao_vivo" | null;
+  sort_order: number;
+  link: string | null;
+  conteudo: string | null;
+  prova: Array<{ q: string; opts: string[]; correta: number }> | null;
+  min_acertos: number;
+  checkin_token: string | null;
+  checkin_active: boolean;
+};
+
+type LessonAttendanceView = {
+  id: string;
+  course_id: string;
+  lesson_id: string;
+  member_id: string;
+  checked_in_at: string;
+  via: "qr" | "manual";
 };
 
 type BoardView = {
@@ -385,6 +423,9 @@ type Props = {
   baptismCandidates: BaptismCandidateView[];
   courses: CourseView[];
   enrollments: EnrollmentView[];
+  courseModules: ModuleView[];
+  courseLessons: LessonView[];
+  lessonAttendance: LessonAttendanceView[];
   boards: BoardView[];
   cards: CardView[];
   chats: ChatView[];
@@ -798,6 +839,9 @@ export default function ServiceExactApp({
   baptismCandidates,
   courses,
   enrollments,
+  courseModules,
+  courseLessons,
+  lessonAttendance,
   boards,
   cards,
   chats,
@@ -1013,7 +1057,17 @@ export default function ServiceExactApp({
         {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "batismos" ? <Batismos baptismClasses={baptismClasses} baptismCandidates={baptismCandidates} decisions={decisions} members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
-        {route === "cursos" ? <CursosTrilhas courses={courses} enrollments={enrollments} members={members} church={firstChurch} /> : null}
+        {route === "cursos" ? (
+          <CursosTrilhas
+            courses={courses}
+            enrollments={enrollments}
+            courseModules={courseModules}
+            courseLessons={courseLessons}
+            lessonAttendance={lessonAttendance}
+            members={members}
+            church={firstChurch}
+          />
+        ) : null}
         {route === "escalas" ? <Escalas gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} setRoute={setRoute} setCheckinEventId={setCheckinEventId} /> : null}
         {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} rooms={rooms} reservations={reservations} church={firstChurch} setDrawer={setDrawer} /> : null}
         {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
@@ -1043,6 +1097,8 @@ export default function ServiceExactApp({
           boards={boards}
           courses={courses}
           enrollments={enrollments}
+          courseModules={courseModules}
+          courseLessons={courseLessons}
           visitors={visitors}
           baptismClasses={baptismClasses}
           announcements={announcements}
@@ -1098,6 +1154,8 @@ export default function ServiceExactApp({
           visitorNotes={visitorNotes}
           courses={courses}
           enrollments={enrollments}
+          courseModules={courseModules}
+          courseLessons={courseLessons}
           meetings={meetings}
           meetingActions={meetingActions}
           rehearsals={rehearsals}
@@ -3314,15 +3372,33 @@ function Batismos({
   );
 }
 
+function normCat(s: string) {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
+const CURSO_FILTROS = [
+  { v: "todos", l: "Todos" },
+  { v: "trilha", l: "Trilhas" },
+  { v: "conteudo", l: "Conteúdo" },
+  { v: "presencial", l: "Presenciais" },
+] as const;
+
 function CursosTrilhas({
-  courses, enrollments, members, church,
+  courses, enrollments, courseModules, courseLessons, lessonAttendance, members, church,
 }: {
   courses: CourseView[];
   enrollments: EnrollmentView[];
+  courseModules: ModuleView[];
+  courseLessons: LessonView[];
+  lessonAttendance: LessonAttendanceView[];
   members: MemberView[];
   church?: ChurchView;
 }) {
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
+  const [view, setView] = useState<"galeria" | "org">("galeria");
+  const [filtro, setFiltro] = useState<(typeof CURSO_FILTROS)[number]["v"]>("todos");
+  const [novoGrupo, setNovoGrupo] = useState<string | null>(null);
 
   if (editingId !== null && church) {
     return (
@@ -3334,6 +3410,12 @@ function CursosTrilhas({
       />
     );
   }
+
+  const totMatric = enrollments.length;
+  const totConcl = enrollments.filter((e) => e.status === "concluido").length;
+  const liderancaIds = new Set(courses.filter((c) => c.category && normCat(c.category) === "lideranca").map((c) => c.id));
+  const emFormacao = enrollments.filter((e) => liderancaIds.has(e.course_id)).length;
+  const cursos = courses.filter((c) => filtro === "todos" || c.kind === filtro);
 
   return (
     <div className="content wide">
@@ -3347,33 +3429,226 @@ function CursosTrilhas({
           </button>
         }
       />
-      <div className="team-grid">
-        {courses.map((course) => {
-          const courseEnrollments = enrollments.filter((item) => item.course_id === course.id);
-          const concluded = courseEnrollments.filter((item) => item.status === "concluido").length;
-          return (
-            <button
-              className="team-card"
-              type="button"
-              key={course.id}
-              onClick={() => setEditingId(course.id)}
-            >
-              <div className="team-card-top">
-                <div className="team-mark"><Icon name="relatorios" size={20} /></div>
-                <span className="chip chip-ok">{course.level || course.category || "trilha"}</span>
-              </div>
-              <div className="team-name">{course.name}</div>
-              <div className="team-lead">Matrículas: <em>{courseEnrollments.length}</em></div>
-              <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.55, marginTop: 12 }}>
-                {course.description || "Acompanhamento de progresso e conclusão na linha do tempo do membro."}
-              </p>
-              <div className="bar" style={{ marginTop: 14 }}>
-                <div className="bar-fill" style={{ width: `${courseEnrollments.length ? (concluded / courseEnrollments.length) * 100 : Math.min(100, members.length * 2)}%` }} />
-              </div>
-            </button>
-          );
-        })}
-        {courses.length === 0 && <div className="empty">Nenhuma trilha interna criada ainda.</div>}
+
+      <div className="kpi-row">
+        <Kpi icon="cursos" label="Cursos ativos" value={courses.length} foot="trilhas, conteúdo e presenciais" />
+        <Kpi icon="membros" label="Matrículas" value={totMatric} foot="pessoas cursando agora" />
+        <Kpi icon="ok" label="Conclusões" value={totConcl} foot={totMatric ? `${Math.round((totConcl / totMatric) * 100)}% de conclusão` : "sem matrículas ainda"} />
+        <Kpi icon="times" label="Em formação de líderes" value={emFormacao} foot="na trilha de liderança" />
+      </div>
+
+      <div className="toolbar" style={{ marginBottom: 18 }}>
+        <div className="seg-check">
+          <button className={`seg-chip${view === "galeria" ? " on" : ""}`} type="button" onClick={() => setView("galeria")}>Galeria</button>
+          <button className={`seg-chip${view === "org" ? " on" : ""}`} type="button" onClick={() => setView("org")}>Organizar</button>
+        </div>
+        {view === "galeria" && (
+          <div className="seg-check">
+            {CURSO_FILTROS.map((f) => (
+              <button key={f.v} className={`seg-chip${filtro === f.v ? " on" : ""}`} type="button" onClick={() => setFiltro(f.v)}>{f.l}</button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {view === "galeria" ? (
+        <div className="team-grid">
+          {cursos.map((course) => {
+            const courseEnrollments = enrollments.filter((item) => item.course_id === course.id);
+            const concluded = courseEnrollments.filter((item) => item.status === "concluido").length;
+            const pct = courseEnrollments.length ? Math.round((concluded / courseEnrollments.length) * 100) : 0;
+            return (
+              <button
+                className="team-card"
+                type="button"
+                key={course.id}
+                onClick={() => setViewingId(course.id)}
+              >
+                <div className="team-card-top">
+                  <div className="team-mark"><Icon name="relatorios" size={20} /></div>
+                  <span className="chip chip-ok">{course.level || course.category || "trilha"}</span>
+                </div>
+                <div className="team-name">{course.name}</div>
+                <div className="team-lead">Matrículas: <em>{courseEnrollments.length}</em></div>
+                <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.55, marginTop: 12 }}>
+                  {course.description || "Acompanhamento de progresso e conclusão na linha do tempo do membro."}
+                </p>
+                <div className="bar" style={{ marginTop: 14 }}>
+                  <div className="bar-fill" style={{ width: `${pct}%` }} />
+                </div>
+              </button>
+            );
+          })}
+          {cursos.length === 0 && <div className="empty">Nenhuma trilha interna criada ainda.</div>}
+        </div>
+      ) : (
+        <CursoBuilder
+          courses={courses}
+          church={church}
+          onOpenEditor={(id) => setEditingId(id)}
+          onOpenDrawer={(id) => setViewingId(id)}
+          novoGrupo={novoGrupo}
+          setNovoGrupo={setNovoGrupo}
+        />
+      )}
+
+      {viewingId && (() => {
+        const course = courses.find((c) => c.id === viewingId);
+        if (!course || !church) return null;
+        return (
+          <CursoDrawer
+            course={course}
+            allCourses={courses}
+            modules={courseModules}
+            lessons={courseLessons}
+            enrollments={enrollments}
+            lessonAttendance={lessonAttendance}
+            members={members}
+            church={{ id: church.id, organizationId: church.organizationId }}
+            onClose={() => setViewingId(null)}
+            onEdit={() => { setViewingId(null); setEditingId(course.id); }}
+          />
+        );
+      })()}
+    </div>
+  );
+}
+
+function CursoBuilderColuna({
+  id, nome, lista, allCourses, drag, setDrag, mover, onOpenEditor, onOpenDrawer,
+}: {
+  id: string | null;
+  nome: string;
+  lista: CourseView[];
+  allCourses: CourseView[];
+  drag: string | null;
+  setDrag: (id: string | null) => void;
+  mover: (courseId: string, categoria: string | null) => void;
+  onOpenEditor: (id: string | "new") => void;
+  onOpenDrawer: (id: string) => void;
+}) {
+  return (
+    <div
+      className="cb-col"
+      onDragOver={(e) => { if (drag) e.preventDefault(); }}
+      onDrop={() => { if (drag) mover(drag, id); setDrag(null); }}
+    >
+      <div className="cb-col-head">
+        <div className="cb-col-name">{nome}</div>
+        <span className="cb-col-n">{lista.length}</span>
+      </div>
+      <div className="cb-col-body">
+        {lista.map((c) => (
+          <button
+            className="cb-card"
+            type="button"
+            key={c.id}
+            draggable
+            onDragStart={() => setDrag(c.id)}
+            onDragEnd={() => setDrag(null)}
+            onClick={() => onOpenDrawer(c.id)}
+          >
+            <div className={`cb-card-bar tone-${c.color ?? "olive"}`} />
+            <div className="cb-card-main">
+              <div className="cb-card-name">{c.name}</div>
+              {c.prereqs.length > 0 && (
+                <div className="cb-req">
+                  exige: {c.prereqs.map((pid) => allCourses.find((x) => x.id === pid)?.name).filter(Boolean).join(", ")}
+                </div>
+              )}
+            </div>
+          </button>
+        ))}
+        {id && <button className="cb-add" type="button" onClick={() => onOpenEditor("new")}>+ curso neste grupo</button>}
+      </div>
+    </div>
+  );
+}
+
+function CursoBuilder({
+  courses, church, onOpenEditor, onOpenDrawer, novoGrupo, setNovoGrupo,
+}: {
+  courses: CourseView[];
+  church?: ChurchView;
+  onOpenEditor: (id: string | "new") => void;
+  onOpenDrawer: (id: string) => void;
+  novoGrupo: string | null;
+  setNovoGrupo: (v: string | null) => void;
+}) {
+  const router = useRouter();
+  const [drag, setDrag] = useState<string | null>(null);
+  const [nomeGrupo, setNomeGrupo] = useState("");
+
+  const grupos = church?.settings?.cursoGrupos ?? [];
+  const knownIds = new Set(grupos.map((g) => g.id));
+  const categoriasExtras = Array.from(
+    new Set(courses.map((c) => c.category).filter((c): c is string => !!c && !knownIds.has(c))),
+  );
+  const colunas = [...grupos, ...categoriasExtras.map((id) => ({ id, nome: id }))];
+  const semGrupo = courses.filter((c) => !c.category);
+
+  const mover = async (courseId: string, categoria: string | null) => {
+    if (!church) return;
+    await createServiceBrowserClient().schema("service").from("courses").update({ category: categoria }).eq("id", courseId);
+    router.refresh();
+  };
+
+  const criarGrupo = async () => {
+    if (!church || !nomeGrupo.trim()) return;
+    const id = normCat(nomeGrupo.trim()).replace(/\s+/g, "-");
+    const next = [...grupos, { id, nome: nomeGrupo.trim() }];
+    await createServiceBrowserClient().schema("service").from("churches").update({ settings: { ...church.settings, cursoGrupos: next } }).eq("id", church.id);
+    setNomeGrupo("");
+    setNovoGrupo(null);
+    router.refresh();
+  };
+
+  return (
+    <div className="cb-board">
+      {colunas.map((g) => (
+        <CursoBuilderColuna
+          key={g.id}
+          id={g.id}
+          nome={g.nome}
+          lista={courses.filter((c) => c.category === g.id)}
+          allCourses={courses}
+          drag={drag}
+          setDrag={setDrag}
+          mover={mover}
+          onOpenEditor={onOpenEditor}
+          onOpenDrawer={onOpenDrawer}
+        />
+      ))}
+      <CursoBuilderColuna
+        id={null}
+        nome="Sem grupo"
+        lista={semGrupo}
+        allCourses={courses}
+        drag={drag}
+        setDrag={setDrag}
+        mover={mover}
+        onOpenEditor={onOpenEditor}
+        onOpenDrawer={onOpenDrawer}
+      />
+      <div className="cb-col" style={{ justifyContent: "center", padding: 12 }}>
+        {novoGrupo !== null ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <input
+              className="input"
+              placeholder="Nome do grupo"
+              value={nomeGrupo}
+              onChange={(e) => setNomeGrupo(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && criarGrupo()}
+              autoFocus
+            />
+            <div style={{ display: "flex", gap: 6 }}>
+              <button className="btn btn-pri btn-sm" type="button" onClick={criarGrupo}>Criar</button>
+              <button className="btn btn-sec btn-sm" type="button" onClick={() => { setNovoGrupo(null); setNomeGrupo(""); }}>Cancelar</button>
+            </div>
+          </div>
+        ) : (
+          <button className="cb-add" type="button" onClick={() => setNovoGrupo("")}>+ Novo grupo</button>
+        )}
       </div>
     </div>
   );
@@ -5419,6 +5694,8 @@ function EntityDrawer({
   visitorNotes,
   courses,
   enrollments,
+  courseModules,
+  courseLessons,
   meetings,
   meetingActions,
   rehearsals,
@@ -5442,6 +5719,8 @@ function EntityDrawer({
   visitorNotes: VisitorNoteView[];
   courses: CourseView[];
   enrollments: EnrollmentView[];
+  courseModules: ModuleView[];
+  courseLessons: LessonView[];
   meetings: MeetingView[];
   meetingActions: MeetingActionView[];
   rehearsals: RehearsalView[];
@@ -5555,16 +5834,18 @@ function EntityDrawer({
             {memberEnrollments.length > 0 ? (
               <div className="mc-list">
                 {memberEnrollments.map(({ id, course, done_count, status }) => {
-                  const pct = status === "concluido" ? 100 : 50;
+                  const courseModuleIds = new Set(courseModules.filter((m) => m.course_id === course.id).map((m) => m.id));
+                  const totalAulas = courseLessons.filter((l) => courseModuleIds.has(l.module_id)).length;
+                  const pct = totalAulas ? Math.min(100, Math.round((done_count / totalAulas) * 100)) : 0;
                   return (
                     <div className="mc-row" key={id}>
-                      <div className="mc-bar tone-olive" />
+                      <div className={`mc-bar tone-${course.color ?? "olive"}`} />
                       <div className="mc-main">
                         <div className="mc-head">
                           <div className="mc-name">{course.name}</div>
                           {status === "concluido" ? <span className="chip chip-ok">Concluído</span> : <span className="mc-pct">{pct}%</span>}
                         </div>
-                        <div className="mc-meta">{course.level || course.kind || "curso"} · {done_count} aula(s)</div>
+                        <div className="mc-meta">{course.level || course.kind || "curso"} · {done_count} de {totalAulas} aula(s)</div>
                         <div className="bar" style={{ marginTop: 8 }}><div className={`bar-fill ${status === "concluido" ? "" : "amber"}`} style={{ width: `${pct}%` }} /></div>
                       </div>
                     </div>
