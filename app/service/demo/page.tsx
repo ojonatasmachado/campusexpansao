@@ -183,9 +183,9 @@ const BOARDS = [
 ];
 
 const CARDS = [
-  { id: "cd-1", board_id: "bd-1", column_id: "todo", title: "Definir tema do 2º semestre", description: null, priority: "alta" as const, due: "15/07/2026", assignees: ["p1"], source_type: "manual", moved_days_ago: null },
-  { id: "cd-2", board_id: "bd-1", column_id: "doing", title: "Planejar retiro de líderes", description: "Logística e programação", priority: "media" as const, due: "30/07/2026", assignees: ["p2"], source_type: "manual", moved_days_ago: 3 },
-  { id: "cd-3", board_id: "bd-2", column_id: "todo", title: "Aprender 'Oceanos'", description: null, priority: "baixa" as const, due: null, assignees: [], source_type: "manual", moved_days_ago: null },
+  { id: "cd-1", board_id: "bd-1", column_id: "todo", title: "Definir tema do 2º semestre", description: null, priority: "alta" as const, due: "15/07/2026", assignees: ["p1"], source_type: "manual", source_id: null, moved_days_ago: null },
+  { id: "cd-2", board_id: "bd-1", column_id: "doing", title: "Planejar retiro de líderes", description: "Logística e programação", priority: "media" as const, due: "30/07/2026", assignees: ["p2"], source_type: "manual", source_id: null, moved_days_ago: 3 },
+  { id: "cd-3", board_id: "bd-2", column_id: "todo", title: "Aprender 'Oceanos'", description: null, priority: "baixa" as const, due: null, assignees: [], source_type: "manual", source_id: null, moved_days_ago: null },
 ];
 
 const CHATS = [
@@ -209,7 +209,7 @@ const MEETINGS = [
   {
     id: "mt-1", title: "Reunião de liderança", meeting_date: "10/07/2026", time: "19h00",
     location: "Sala de reuniões", ministries: ["min-1", "min-2"],
-    attendees: ["p1", "p2"], agenda: [{ item: "Planejamento do semestre" }, { item: "Relatório de crescimento" }],
+    attendees: ["p1", "p2"], agenda: ["Planejamento do semestre", "Relatório de crescimento"],
     status: "agendada" as const, author_id: null, minutes: null,
   },
 ];
@@ -235,8 +235,8 @@ const ROOMS = [
 ];
 
 const RESERVATIONS = [
-  { id: "rv-1", room_id: "rm-1", title: "Culto domingo manhã", kind: "culto", reserved_date: "06/07/2026", start_time: "09:00", end_time: "12:00", source_type: "evento", source_id: "ev-1" },
-  { id: "rv-2", room_id: "rm-2", title: "Reunião de liderança", kind: "reuniao", reserved_date: "10/07/2026", start_time: "19:00", end_time: "21:00", source_type: "reuniao", source_id: "mt-1" },
+  { id: "rv-1", room_id: "rm-1", title: "Culto domingo manhã", kind: "culto", reserved_date: "2026-07-06", start_time: "09h00", end_time: "12h00", source_type: "evento", source_id: "ev-1" },
+  { id: "rv-2", room_id: "rm-2", title: "Reunião de liderança", kind: "reuniao", reserved_date: "2026-07-10", start_time: "19h00", end_time: "21h00", source_type: "reuniao", source_id: "mt-1" },
 ];
 
 const ANNOUNCEMENTS = [

@@ -398,6 +398,7 @@ type CardView = {
   due: string | null;
   priority: "alta" | "media" | "baixa" | null;
   source_type: string | null;
+  source_id: string | null;
   moved_days_ago: number | null;
 };
 
@@ -890,7 +891,7 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("courses").select("id,name,kind,level,description,category").order("created_at", { ascending: false }),
     supabase.schema("service").from("enrollments").select("id,course_id,member_id,done_count,status").order("created_at", { ascending: false }),
     supabase.schema("service").from("boards").select("id,name,scope,ministry_id,description,columns").order("created_at", { ascending: false }),
-    supabase.schema("service").from("cards").select("id,board_id,column_id,title,description,assignees,due,priority,source_type,moved_days_ago").order("created_at", { ascending: false }),
+    supabase.schema("service").from("cards").select("id,board_id,column_id,title,description,assignees,due,priority,source_type,source_id,moved_days_ago").order("created_at", { ascending: false }),
     supabase.schema("service").from("chats").select("id,kind,ministry_id,name").order("created_at", { ascending: false }),
     supabase.schema("service").from("chat_members").select("chat_id,member_id"),
     supabase.schema("service").from("messages").select("id,chat_id,sender_id,body,created_at").order("created_at", { ascending: true }),

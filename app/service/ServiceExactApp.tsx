@@ -235,6 +235,7 @@ type CardView = {
   due: string | null;
   priority: "alta" | "media" | "baixa" | null;
   source_type: string | null;
+  source_id: string | null;
   moved_days_ago: number | null;
 };
 
@@ -441,7 +442,6 @@ type ModalState =
         | { kind: "board" }
         | { kind: "card"; boardId: string; columnId: string }
         | { kind: "visitor" }
-        | { kind: "meeting" }
         | { kind: "rehearsal" }
         | { kind: "announcement" }
         | { kind: "wallPost" }
@@ -1015,7 +1015,7 @@ export default function ServiceExactApp({
         {route === "batismos" ? <Batismos baptismClasses={baptismClasses} baptismCandidates={baptismCandidates} decisions={decisions} members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "cursos" ? <CursosTrilhas courses={courses} enrollments={enrollments} members={members} church={firstChurch} /> : null}
         {route === "escalas" ? <Escalas gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} setRoute={setRoute} setCheckinEventId={setCheckinEventId} /> : null}
-        {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} rooms={rooms} reservations={reservations} church={firstChurch} setDrawer={setDrawer} /> : null}
         {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} setModal={setModal} /> : null}
         {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} setModal={setModal} /> : null}
@@ -1101,6 +1101,8 @@ export default function ServiceExactApp({
           meetings={meetings}
           meetingActions={meetingActions}
           rehearsals={rehearsals}
+          boards={boards}
+          cards={cards}
           church={firstChurch}
           setDrawer={setDrawer}
           setRoute={setRoute}
@@ -2299,14 +2301,145 @@ function Visitantes({
   );
 }
 
-function Reunioes({ meetings, meetingActions, ministries, people, setDrawer, setModal }: { meetings: MeetingView[]; meetingActions: MeetingActionView[]; ministries: MinistryView[]; people: PersonView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
+function ReuniaoForm({
+  ministries,
+  people,
+  rooms,
+  reservations,
+  church,
+  onClose,
+}: {
+  ministries: MinistryView[];
+  people: PersonView[];
+  rooms: RoomView[];
+  reservations: ReservationView[];
+  church: ChurchView | undefined;
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const [titulo, setTitulo] = useState("");
+  const [data, setData] = useState("");
+  const [hora, setHora] = useState("20h00");
+  const [fim, setFim] = useState("21h30");
+  const [local, setLocal] = useState("");
+  const [salaId, setSalaId] = useState("");
+  const [presentes, setPresentes] = useState<string[]>([]);
+  const [pauta, setPauta] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const isoDate = data ? dpToIsoDate(data) : null;
+  const conflito = salaId && isoDate ? findRoomConflict(reservations, salaId, isoDate, hora, fim) : null;
+  const salaEscolhida = rooms.find((r) => r.id === salaId);
+
+  const togglePessoa = (id: string) => setPresentes((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  const criar = async () => {
+    if (!titulo.trim()) { setError("Dê um título à reunião."); return; }
+    if (!church?.organizationId || !church.id) { setError("Nenhuma igreja encontrada para vincular esta reunião."); return; }
+    if (conflito) { setError(`A sala já tem "${conflito.title}" em ${conflito.start_time}–${conflito.end_time} nesse dia.`); return; }
+    setSaving(true);
+    setError("");
+    const supabase = createServiceBrowserClient();
+    const meetingMinistries = ministries.filter((m) => m.people.some((link) => presentes.includes(link.personId))).map((m) => m.id);
+    const { data: meetingRow, error: meetingError } = await supabase.schema("service").from("meetings").insert({
+      organization_id: church.organizationId,
+      church_id: church.id,
+      title: titulo.trim(),
+      meeting_date: data || null,
+      time: hora,
+      location: salaEscolhida ? salaEscolhida.name : (local || null),
+      ministries: meetingMinistries,
+      attendees: presentes,
+      agenda: pauta.split("\n").map((s) => s.trim()).filter(Boolean),
+      status: "agendada",
+    }).select("id").single();
+    if (meetingError || !meetingRow) {
+      setSaving(false);
+      setError(meetingError?.message ?? "Não foi possível marcar a reunião.");
+      return;
+    }
+    if (salaId && isoDate) {
+      await supabase.schema("service").from("reservations").insert({
+        organization_id: church.organizationId,
+        room_id: salaId,
+        title: titulo.trim(),
+        kind: "reuniao",
+        reserved_date: isoDate,
+        start_time: hora,
+        end_time: fim,
+        source_type: "reuniao",
+        source_id: meetingRow.id,
+      });
+    }
+    router.refresh();
+    onClose();
+  };
+
+  return (
+    <DrawerShell onClose={onClose} wide>
+      <div className="drawer-head">
+        <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+        <div className="ph-eyebrow" style={{ marginBottom: 8 }}>Nova reunião</div>
+        <input className="ce-title-input" placeholder="Título da reunião" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+      </div>
+      <div className="drawer-body">
+        <DrawerSection title="Quando & onde">
+          <div className="ce-grid">
+            <div className="field"><label className="field-label">Data</label><DatePicker value={data} onChange={setData} /></div>
+            <div className="field"><label className="field-label">Início</label><TimePicker value={hora} onChange={setHora} /></div>
+            <div className="field"><label className="field-label">Fim</label><TimePicker value={fim} onChange={setFim} /></div>
+          </div>
+          <div className="ce-grid" style={{ marginTop: 4 }}>
+            <div className="field">
+              <label className="field-label">Reservar uma sala</label>
+              <select className="select" value={salaId} onChange={(e) => setSalaId(e.target.value)}>
+                <option value="">Sem reserva de sala</option>
+                {rooms.map((room) => <option key={room.id} value={room.id}>{room.name}{room.capacity ? ` · ${room.capacity} lug.` : ""}</option>)}
+              </select>
+            </div>
+            {!salaId ? <div className="field"><label className="field-label">Local (texto livre)</label><input className="input" value={local} onChange={(e) => setLocal(e.target.value)} placeholder="ex: Sala de reuniões" /></div> : null}
+          </div>
+          {conflito ? <div className="reserva-warn"><Icon name="alerta" size={14} /> A sala já tem &quot;{conflito.title}&quot; em {conflito.start_time}–{conflito.end_time} nesse dia.</div> : null}
+        </DrawerSection>
+
+        <DrawerSection title="Quem participa">
+          <div className="cand-pick">
+            {people.map((person) => {
+              const on = presentes.includes(person.id);
+              return (
+                <button key={person.id} type="button" className={`cand-chip ${on ? "on" : ""}`} onClick={() => togglePessoa(person.id)}>
+                  <Av name={person.name} size="xs" /> {person.name.split(" ")[0]} {on && "✓"}
+                </button>
+              );
+            })}
+            {people.length === 0 ? <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhum voluntário cadastrado.</span> : null}
+          </div>
+        </DrawerSection>
+
+        <DrawerSection title="Pauta · um item por linha">
+          <textarea className="textarea" style={{ minHeight: 90 }} placeholder={"Balanço do mês\nEscala de julho\nCuidado com a equipe"} value={pauta} onChange={(e) => setPauta(e.target.value)} />
+        </DrawerSection>
+
+        {error ? <div style={{ fontSize: 12.5, color: "var(--danger)", marginBottom: 12 }}>{error}</div> : null}
+        <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
+          <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" disabled={saving || !!conflito} onClick={criar}>{saving ? "Marcando…" : "Marcar reunião"}</button>
+          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
+        </div>
+      </div>
+    </DrawerShell>
+  );
+}
+
+function Reunioes({ meetings, meetingActions, ministries, people, rooms, reservations, church, setDrawer }: { meetings: MeetingView[]; meetingActions: MeetingActionView[]; ministries: MinistryView[]; people: PersonView[]; rooms: RoomView[]; reservations: ReservationView[]; church: ChurchView | undefined; setDrawer: (drawer: DrawerState) => void }) {
   const ministryById = new Map(ministries.map((ministry) => [ministry.id, ministry]));
   const personById = new Map(people.map((person) => [person.id, person]));
   const scheduled = meetings.filter((meeting) => meeting.status === "agendada");
   const finished = meetings.filter((meeting) => meeting.status === "realizada");
+  const [novaOpen, setNovaOpen] = useState(false);
   return (
     <div className="content wide">
-      <PageHead title="Reuniões" eyebrow="Liderança" subtitle="Pautas, ata e responsabilidades para validar na próxima reunião." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Marcar reunião", subtitle: "Defina tema, data, local e time envolvido.", saveLabel: "Criar reunião", formFields: [{ k:"titulo", label:"Título", type:"text", req:true, ph:"ex: Reunião de planejamento" }, { k:"data", label:"Data", type:"date", half:true }, { k:"hora", label:"Horário", type:"time", half:true }, { k:"local", label:"Local", type:"text", half:true, ph:"Sala de reuniões..." }, { k:"time", label:"Ministério", type:"text", half:true, ph:"ex: Liderança" }], action: { kind: "meeting" } })}>+ Marcar reunião</button>} />
+      <PageHead title="Reuniões" eyebrow="Liderança" subtitle="Pautas, ata e responsabilidades para validar na próxima reunião." action={<button className="btn btn-pri" type="button" onClick={() => setNovaOpen(true)}>+ Marcar reunião</button>} />
       <div className="section-divide"><Icon name="cultos" size={15} /><span className="label">Agendadas</span><span className="line" /></div>
       <div className="reu-grid">
         {scheduled.map((meeting) => {
@@ -2336,6 +2469,7 @@ function Reunioes({ meetings, meetingActions, ministries, people, setDrawer, set
           );
         })}
       </div>
+      {novaOpen ? <ReuniaoForm ministries={ministries} people={people} rooms={rooms} reservations={reservations} church={church} onClose={() => setNovaOpen(false)} /> : null}
     </div>
   );
 }
@@ -2365,25 +2499,109 @@ function Ensaios({ rehearsals, ministries, setDrawer, setModal }: { rehearsals: 
   );
 }
 
+function BoardChooser({
+  title,
+  boards,
+  church,
+  onPick,
+  onClose,
+}: {
+  title: string;
+  boards: BoardView[];
+  church: ChurchView | undefined;
+  onPick: (boardId: string) => void;
+  onClose: () => void;
+}) {
+  const [novo, setNovo] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const criar = async () => {
+    const nome = novo.trim();
+    if (!nome || !church?.organizationId || !church.id || saving) return;
+    setSaving(true);
+    const { data } = await createServiceBrowserClient().schema("service").from("boards").insert({
+      organization_id: church.organizationId,
+      church_id: church.id,
+      name: nome,
+      ministry_id: null,
+      description: "Criado a partir de uma reunião.",
+      scope: "geral",
+      columns: [{ id: "todo", nome: "A fazer" }, { id: "doing", nome: "Em andamento" }, { id: "done", nome: "Concluído" }],
+    }).select("id").single();
+    setSaving(false);
+    if (data) onPick(data.id);
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">Responsabilidades</div>
+          <div className="modal-title">{title}</div>
+          <div className="modal-sub">Mande para um quadro que já existe ou crie um novo. As responsabilidades viram cards com o responsável marcado.</div>
+        </div>
+        <div className="modal-body" style={{ display: "block" }}>
+          <div className="dsec-title" style={{ marginBottom: 10 }}>Quadros existentes</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {boards.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>Nenhum quadro ainda, crie um abaixo.</div>}
+            {boards.map((board) => (
+              <button className="cand" type="button" key={board.id} onClick={() => onPick(board.id)}>
+                <span className="esc-col-mark" style={{ width: 30, height: 30 }}><Icon name="quadros" size={15} /></span>
+                <div className="cand-main"><div className="cand-name">{board.name}</div><div className="cand-meta">{board.scope === "geral" ? "Liderança" : "Time"}</div></div>
+              </button>
+            ))}
+          </div>
+          <div className="dsec-title" style={{ margin: "20px 0 10px" }}>Ou crie um novo</div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <input className="input" style={{ flex: 1 }} placeholder="Nome do novo quadro" value={novo} onChange={(e) => setNovo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && criar()} />
+            <button className="btn btn-pri" type="button" disabled={saving} onClick={criar}>Criar e usar</button>
+          </div>
+        </div>
+        <div className="modal-foot"><button className="btn btn-ghost" type="button" onClick={onClose}>Cancelar</button></div>
+      </div>
+    </div>
+  );
+}
+
+const CARD_COLUMN_STATUS: Record<string, { label: string; cls: string }> = {
+  todo: { label: "A fazer", cls: "chip-wait" },
+  doing: { label: "Em andamento", cls: "chip-wait" },
+  done: { label: "Concluído", cls: "chip-ok" },
+};
+
 function ReuniaoDrawer({
   meeting,
   actions,
   ministries,
   people,
+  boards,
+  cards,
+  church,
   onClose,
+  setRoute,
 }: {
   meeting: MeetingView;
   actions: MeetingActionView[];
   ministries: MinistryView[];
   people: PersonView[];
+  boards: BoardView[];
+  cards: CardView[];
+  church: ChurchView | undefined;
   onClose: () => void;
+  setRoute: (route: keyof typeof ROUTES) => void;
 }) {
   const router = useRouter();
   const ministryById = new Map(ministries.map((m) => [m.id, m]));
   const personById = new Map(people.map((p) => [p.id, p]));
   const [ata, setAta] = useState(meeting.minutes ?? "");
   const [saving, setSaving] = useState(false);
+  const [novaDescricao, setNovaDescricao] = useState("");
+  const [novoResponsavel, setNovoResponsavel] = useState("");
+  const [chooser, setChooser] = useState<{ scope: "all" | string } | null>(null);
   const pauta = Array.isArray(meeting.agenda) ? (meeting.agenda as string[]) : [];
+
+  const cardFor = (actionId: string) => cards.find((c) => c.source_type === "meeting_action" && c.source_id === actionId);
+  const pendentes = actions.filter((a) => !cardFor(a.id));
 
   const salvarAta = async () => {
     setSaving(true);
@@ -2396,7 +2614,49 @@ function ReuniaoDrawer({
     router.refresh();
   };
 
+  const addAcao = async () => {
+    if (!novaDescricao.trim() || !church?.organizationId) return;
+    await createServiceBrowserClient().schema("service").from("meeting_actions").insert({
+      organization_id: church.organizationId,
+      meeting_id: meeting.id,
+      description: novaDescricao.trim(),
+      assignee_id: novoResponsavel || null,
+      status: "pendente",
+    });
+    setNovaDescricao("");
+    setNovoResponsavel("");
+    router.refresh();
+  };
+
+  const enviarParaBoard = async (actionId: string, boardId: string) => {
+    if (!church?.organizationId) return;
+    const action = actions.find((a) => a.id === actionId);
+    if (!action) return;
+    await createServiceBrowserClient().schema("service").from("cards").insert({
+      organization_id: church.organizationId,
+      board_id: boardId,
+      column_id: "todo",
+      title: action.description,
+      assignees: action.assignee_id ? [action.assignee_id] : [],
+      priority: "media",
+      source_type: "meeting_action",
+      source_id: action.id,
+    });
+  };
+
+  const onPickBoard = async (boardId: string) => {
+    if (!chooser) return;
+    if (chooser.scope === "all") {
+      await Promise.all(pendentes.map((a) => enviarParaBoard(a.id, boardId)));
+    } else {
+      await enviarParaBoard(chooser.scope, boardId);
+    }
+    setChooser(null);
+    router.refresh();
+  };
+
   return (
+    <>
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
         <button className="drawer-close" type="button" onClick={onClose}>✕</button>
@@ -2445,30 +2705,50 @@ function ReuniaoDrawer({
           />
         </DrawerSection>
 
-        {actions.length > 0 && (
-          <DrawerSection title="Responsabilidades">
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <DrawerSection title="Responsabilidades · anote durante a reunião">
+          <div className="reu-quadro-note" style={{ marginBottom: 12 }}>Cada responsabilidade vira um <b>card no quadro</b>. O andamento é acompanhado lá.</div>
+          {actions.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
               {actions.map((action) => {
                 const assignee = action.assignee_id ? personById.get(action.assignee_id) : null;
-                const stMap: Record<string, { label: string; cls: string }> = {
-                  pendente: { label: "A fazer", cls: "chip-wait" },
-                  andamento: { label: "Em andamento", cls: "chip-wait" },
-                  feito: { label: "Concluído", cls: "chip-ok" },
-                };
-                const st = stMap[action.status] ?? stMap.pendente;
+                const card = cardFor(action.id);
+                const cardStatus = card ? (CARD_COLUMN_STATUS[card.column_id] ?? CARD_COLUMN_STATUS.todo) : null;
                 return (
                   <div className="acao-row" key={action.id}>
                     <div className="acao-main">
                       <div className="acao-o">{action.description}</div>
                       <div className="acao-quem">{assignee?.name.split(" ")[0] ?? "a definir"}</div>
                     </div>
-                    <div className="acao-side"><span className={`chip ${st.cls}`}>{st.label}</span></div>
+                    <div className="acao-side">
+                      {card && cardStatus ? (
+                        <>
+                          <span className={`chip ${cardStatus.cls}`}>{cardStatus.label}</span>
+                          <button className="btn btn-ghost btn-sm" type="button" onClick={() => { onClose(); setRoute("quadros"); }}>Ver no quadro →</button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="acao-semquadro">fora do quadro</span>
+                          <button className="btn btn-ghost btn-sm" type="button" onClick={() => setChooser({ scope: action.id })}>→ Quadro</button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
-          </DrawerSection>
-        )}
+          )}
+          <div className="acao-add">
+            <input className="input" placeholder="O que ficou combinado (ex: Revisar escala de julho)" value={novaDescricao} onChange={(e) => setNovaDescricao(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addAcao()} />
+            <select className="select acao-add-quem" value={novoResponsavel} onChange={(e) => setNovoResponsavel(e.target.value)}>
+              <option value="">Responsável…</option>
+              {meeting.attendees.map((pid) => { const p = personById.get(pid); return p ? <option key={pid} value={pid}>{p.name}</option> : null; })}
+            </select>
+            <button className="btn btn-sec btn-sm" type="button" onClick={addAcao}>+ Anotar</button>
+          </div>
+          {pendentes.length > 0 && (
+            <button className="btn btn-ghost btn-sm" type="button" style={{ marginTop: 10 }} onClick={() => setChooser({ scope: "all" })}>Enviar todas ao quadro →</button>
+          )}
+        </DrawerSection>
 
         <button
           className="btn btn-pri"
@@ -2481,6 +2761,16 @@ function ReuniaoDrawer({
         </button>
       </div>
     </DrawerShell>
+    {chooser ? (
+      <BoardChooser
+        title={chooser.scope === "all" ? "Onde colocar as responsabilidades?" : "Mandar para qual quadro?"}
+        boards={boards}
+        church={church}
+        onPick={onPickBoard}
+        onClose={() => setChooser(null)}
+      />
+    ) : null}
+    </>
   );
 }
 
@@ -5132,6 +5422,8 @@ function EntityDrawer({
   meetings,
   meetingActions,
   rehearsals,
+  boards,
+  cards,
   church,
   setDrawer,
   setRoute,
@@ -5153,6 +5445,8 @@ function EntityDrawer({
   meetings: MeetingView[];
   meetingActions: MeetingActionView[];
   rehearsals: RehearsalView[];
+  boards: BoardView[];
+  cards: CardView[];
   church: ChurchView | undefined;
   setDrawer: (drawer: DrawerState) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
@@ -5406,7 +5700,7 @@ function EntityDrawer({
     const meeting = meetings.find((m) => m.id === drawer.id);
     if (!meeting) return null;
     const mActions = meetingActions.filter((a) => a.meeting_id === meeting.id);
-    return <ReuniaoDrawer meeting={meeting} actions={mActions} ministries={ministries} people={people} onClose={() => setDrawer(null)} />;
+    return <ReuniaoDrawer meeting={meeting} actions={mActions} ministries={ministries} people={people} boards={boards} cards={cards} church={church} onClose={() => setDrawer(null)} setRoute={setRoute} />;
   }
 
   if (drawer.kind === "rehearsal") {
@@ -5568,6 +5862,40 @@ function friendlyWriteError(message: string) {
 const DP_MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const DP_MESES_FULL = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 const DP_DIAS_MES = [31,29,31,30,31,30,31,31,30,31,30,31];
+
+/* o DatePicker devolve "10 jul" (sem ano, pensado pra colunas text como
+   meetings.meeting_date). service.reservations.reserved_date é uma coluna
+   date de verdade — precisa de ISO. Assume o ano corrente, rolando pro
+   próximo ano se o dia já passou. */
+function dpToIsoDate(value: string): string | null {
+  const [dayStr, monStr] = (value || "").split(" ");
+  const day = parseInt(dayStr, 10);
+  const monthIndex = DP_MESES.findIndex((m) => m.toLowerCase() === (monStr || "").toLowerCase());
+  if (!day || monthIndex < 0) return null;
+  const now = new Date();
+  let year = now.getFullYear();
+  if (new Date(year, monthIndex, day) < new Date(year, now.getMonth(), now.getDate())) year += 1;
+  return `${year}-${String(monthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function timeToMinutes(value: string): number | null {
+  const m = (value || "").match(/(\d{1,2})[h:](\d{2})/);
+  return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : null;
+}
+
+/* conflito de horário numa sala: mesma sala, mesma data, faixas que se cruzam */
+function findRoomConflict(reservations: ReservationView[], roomId: string, isoDate: string, start: string, end: string): ReservationView | null {
+  const startMin = timeToMinutes(start);
+  const endMin = timeToMinutes(end);
+  if (startMin === null || endMin === null) return null;
+  return reservations.find((r) => {
+    if (r.room_id !== roomId || r.reserved_date !== isoDate) return false;
+    const rStart = timeToMinutes(r.start_time ?? "");
+    const rEnd = timeToMinutes(r.end_time ?? "");
+    if (rStart === null || rEnd === null) return false;
+    return startMin < rEnd && rStart < endMin;
+  }) ?? null;
+}
 
 function DatePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const parse = () => {
@@ -5852,25 +6180,6 @@ function ServiceModal({
         due: "1º contato",
         due_status: "soon",
       });
-    } else if (action.kind === "meeting") {
-      if (!value("titulo")) {
-        setSaving(false);
-        setError("Digite o título da reunião.");
-        return;
-      }
-      const ministry = namedMinistry("time");
-      result = await supabase.schema("service").from("meetings").insert({
-        organization_id: church.organizationId,
-        church_id: church.id,
-        title: value("titulo"),
-        meeting_date: value("data") || null,
-        time: value("hora") || null,
-        location: value("local") || null,
-        ministries: ministry ? [ministry.id] : [],
-        attendees: [],
-        agenda: [],
-        status: "agendada",
-      });
     } else if (action.kind === "rehearsal") {
       if (!value("titulo")) {
         setSaving(false);
@@ -5952,7 +6261,7 @@ function ServiceModal({
         room_id: room.id,
         title: value("titulo"),
         kind: value("tipo") || "outro",
-        reserved_date: value("data") || null,
+        reserved_date: dpToIsoDate(value("data")),
         start_time: value("inicio") || null,
         end_time: value("fim") || null,
       });
