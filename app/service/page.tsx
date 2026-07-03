@@ -14,6 +14,7 @@ type ChurchRow = {
   postal_code: string | null;
   email: string | null;
   phone: string | null;
+  logo_url: string | null;
   settings: Record<string, unknown> | null;
   created_at: string;
 };
@@ -31,6 +32,7 @@ type ChurchView = {
   postalCode: string | null;
   email: string | null;
   phone: string | null;
+  logoUrl: string | null;
   settings: Record<string, unknown>;
 };
 
@@ -59,6 +61,7 @@ type HistoryEntryRow = {
   title: string;
   body: string | null;
   link: string | null;
+  photo_url: string | null;
   sort_order: number;
 };
 
@@ -605,6 +608,7 @@ function toChurchView(row: ChurchRow): ChurchView {
     postalCode: row.postal_code,
     email: row.email,
     phone: row.phone,
+    logoUrl: row.logo_url,
     settings: row.settings ?? {},
   };
 }
@@ -730,7 +734,7 @@ async function getServiceDashboardData(): Promise<{
   const { data: churchesData, error: churchesError } = await supabase
     .schema("service")
     .from("churches")
-    .select("id,organization_id,name,city,is_headquarters,doc,founded_year,address,postal_code,email,phone,settings,created_at")
+    .select("id,organization_id,name,city,is_headquarters,doc,founded_year,address,postal_code,email,phone,logo_url,settings,created_at")
     .order("is_headquarters", { ascending: false })
     .order("created_at");
 
@@ -955,7 +959,7 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("reservations").select("id,room_id,title,kind,reserved_date,start_time,end_time,source_type,source_id").order("created_at", { ascending: false }),
     supabase.schema("service").from("church_identity").select("church_id,purpose,mission,vision,verse,values").eq("church_id", churchesData?.[0]?.id ?? "").maybeSingle(),
     supabase.schema("service").from("cycles").select("id,year,theme,verse,body,objectives,is_active").order("created_at", { ascending: false }),
-    supabase.schema("service").from("history_entries").select("id,year,title,body,link,sort_order").order("sort_order", { ascending: true }),
+    supabase.schema("service").from("history_entries").select("id,year,title,body,link,photo_url,sort_order").order("sort_order", { ascending: true }),
     supabase.schema("service").from("ministerial_titles").select("id,name,sort_order").order("sort_order", { ascending: true }),
     supabase.schema("service").from("fellowship_groups").select("id,name,leader_person_id,weekday,time,neighborhood").order("created_at", { ascending: false }),
     supabase.schema("service").from("tags").select("id,name,color,leaders").order("created_at", { ascending: false }),

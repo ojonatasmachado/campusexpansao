@@ -23,10 +23,10 @@ const CYCLES = [
 ];
 
 const HISTORY_ENTRIES = [
-  { id: "he-1", year: "2012", title: "Fundação", body: "Início do ministério com 12 pessoas comprometidas com a visão de alcançar a cidade por meio de discipulado intencional.", link: null, sort_order: 0 },
-  { id: "he-2", year: "2016", title: "Primeira expansão", body: "Abertura da primeira congregação em bairro vizinho. A rede começa a tomar forma: mesma visão, mesma doutrina, mesma cultura.", link: null, sort_order: 1 },
-  { id: "he-3", year: "2020", title: "Transformação digital", body: "Migração completa para plataforma digital durante a pandemia. A comunidade descobriu a força dos grupos online.", link: null, sort_order: 2 },
-  { id: "he-4", year: "2024", title: "CE.X Service", body: "Lançamento da plataforma de gestão ministerial: pessoas, escala, jornada e comunicação num único lugar.", link: null, sort_order: 3 },
+  { id: "he-1", year: "2012", title: "Fundação", body: "Início do ministério com 12 pessoas comprometidas com a visão de alcançar a cidade por meio de discipulado intencional.", link: null, photo_url: "https://picsum.photos/seed/cex-2012/800/600", sort_order: 0 },
+  { id: "he-2", year: "2016", title: "Primeira expansão", body: "Abertura da primeira congregação em bairro vizinho. A rede começa a tomar forma: mesma visão, mesma doutrina, mesma cultura.", link: null, photo_url: null, sort_order: 1 },
+  { id: "he-3", year: "2020", title: "Transformação digital", body: "Migração completa para plataforma digital durante a pandemia. A comunidade descobriu a força dos grupos online.", link: null, photo_url: null, sort_order: 2 },
+  { id: "he-4", year: "2024", title: "CE.X Service", body: "Lançamento da plataforma de gestão ministerial: pessoas, escala, jornada e comunicação num único lugar.", link: null, photo_url: null, sort_order: 3 },
 ];
 
 const MINISTERIAL_TITLES = [

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
+import { uploadServiceImage, imageExtension } from "./lib/upload-image";
 import MobileOverlay from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
 import EventoShare from "./EventoShare";
@@ -55,6 +56,7 @@ type ChurchView = {
   postalCode?: string | null;
   email?: string | null;
   phone?: string | null;
+  logoUrl?: string | null;
   settings?: ChurchSettings;
 };
 
@@ -368,6 +370,7 @@ type HistoryEntryView = {
   title: string;
   body: string | null;
   link: string | null;
+  photo_url: string | null;
   sort_order: number;
 };
 
@@ -648,10 +651,14 @@ function TeamMark({ ministry, size = 16 }: { ministry?: { icon?: string; name?: 
   return <Icon name={iconName} size={size} />;
 }
 
-function IgrejaLogo() {
+function IgrejaLogo({ logoUrl, nome }: { logoUrl?: string | null; nome?: string }) {
   return (
     <div className="brand brand-row">
-      <span className="sb-logo">CE<span className="ol">.X</span></span>
+      {logoUrl ? (
+        <img className="brand-img" src={logoUrl} alt={nome || "Logo da igreja"} />
+      ) : (
+        <span className="sb-logo">CE<span className="ol">.X</span></span>
+      )}
       <span className="brand-div" aria-hidden="true" />
       <span className="brand-service">Service</span>
     </div>
@@ -989,7 +996,7 @@ export default function ServiceExactApp({
       {navOpen ? <div className="sb-backdrop" onClick={() => setNavOpen(false)} /> : null}
       <aside className={`sb${navOpen ? " open" : ""}`}>
         <div className="sb-top">
-          <IgrejaLogo />
+          <IgrejaLogo logoUrl={firstChurch?.logoUrl} nome={firstChurch?.nome} />
           <button className="sb-close" type="button" onClick={() => setNavOpen(false)} aria-label="Fechar menu">✕</button>
         </div>
         <CongSwitcher churches={churches} activeId={activeChurchId} setActiveId={setActiveChurchId} />
@@ -4789,6 +4796,64 @@ function CongregacaoEditModal({
   );
 }
 
+function ImageUpload({
+  label, hint, url, round, onUpload, onRemove,
+}: {
+  label: string;
+  hint?: string;
+  url?: string | null;
+  round?: boolean;
+  onUpload: (file: File) => Promise<void>;
+  onRemove: () => void | Promise<void>;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleFile = async (file: File | undefined) => {
+    if (!file) return;
+    setBusy(true);
+    setError("");
+    try {
+      await onUpload(file);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível enviar a imagem.");
+    } finally {
+      setBusy(false);
+      if (ref.current) ref.current.value = "";
+    }
+  };
+
+  return (
+    <div className="img-up">
+      <button
+        type="button"
+        className={`img-up-slot${round ? " round" : ""}`}
+        onClick={() => ref.current?.click()}
+        style={url ? { backgroundImage: `url(${url})` } : undefined}
+      >
+        {!url && <span className="img-up-plus">+</span>}
+      </button>
+      <div className="img-up-main">
+        <div className="cfg-row-t">{label}</div>
+        {hint && <div className="cfg-row-s">{hint}</div>}
+        {error && <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 6 }}>{error}</div>}
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <button className="btn btn-sec btn-sm" type="button" disabled={busy} onClick={() => ref.current?.click()}>
+            {busy ? "Enviando..." : url ? "Trocar" : "Enviar imagem"}
+          </button>
+          {url && (
+            <button className="btn btn-ghost btn-sm" type="button" disabled={busy} onClick={() => onRemove()}>
+              Remover
+            </button>
+          )}
+        </div>
+      </div>
+      <input ref={ref} type="file" accept="image/*" hidden onChange={(e) => handleFile(e.target.files?.[0])} />
+    </div>
+  );
+}
+
 function Config({
   church,
   churches,
@@ -5378,6 +5443,27 @@ function Config({
               Selecionado: <em style={{ color: "var(--olive)", fontStyle: "normal" }}>{ACCENTS.find((a) => a.id === accent)?.nome ?? "Oliva"}</em>
             </div>
           </div>
+          <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
+            <div className="cfg-card-t">Marca da sua igreja</div>
+            <div className="cfg-card-s">Suba o logo da sua igreja. Ele aparece na barra lateral e no login, no lugar do CE.X (o &quot;Service&quot; continua embaixo).</div>
+            <ImageUpload
+              label="Logotipo da igreja"
+              hint="Tamanho ideal: 480×160px (proporção 3:1), PNG com fundo transparente."
+              url={church?.logoUrl}
+              onUpload={async (file) => {
+                if (!church) return;
+                const path = `logos/${church.organizationId}/${church.id}.${imageExtension(file)}`;
+                const url = await uploadServiceImage(createServiceBrowserClient(), file, path);
+                await createServiceBrowserClient().schema("service").from("churches").update({ logo_url: url }).eq("id", church.id);
+                router.refresh();
+              }}
+              onRemove={async () => {
+                if (!church) return;
+                await createServiceBrowserClient().schema("service").from("churches").update({ logo_url: null }).eq("id", church.id);
+                router.refresh();
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -5540,8 +5626,27 @@ function Identidade({ church: _church, identity, cycle, setModal }: { church?: C
   );
 }
 
-function Historia({ church: _church, historyEntries, setModal }: { church?: ChurchView; historyEntries: HistoryEntryView[]; setModal: (modal: ModalState) => void }) {
+function Historia({ church, historyEntries, setModal }: { church?: ChurchView; historyEntries: HistoryEntryView[]; setModal: (modal: ModalState) => void }) {
+  const router = useRouter();
   const capitulos = [...historyEntries].sort((a, b) => a.sort_order - b.sort_order);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const trocarFoto = async (capituloId: string, file: File | undefined) => {
+    if (!file || !church) return;
+    setUploadingId(capituloId);
+    try {
+      const path = `history/${church.organizationId}/${capituloId}.${imageExtension(file)}`;
+      const url = await uploadServiceImage(createServiceBrowserClient(), file, path);
+      await createServiceBrowserClient().schema("service").from("history_entries").update({ photo_url: url }).eq("id", capituloId);
+      router.refresh();
+    } catch {
+      window.alert("Não foi possível enviar a foto agora.");
+    } finally {
+      setUploadingId(null);
+    }
+  };
+
   return (
     <div className="content wide">
       <PageHead
@@ -5555,8 +5660,27 @@ function Historia({ church: _church, historyEntries, setModal }: { church?: Chur
         {capitulos.map((capitulo, i) => (
           <div key={capitulo.id} className={`hist-item ${i % 2 === 1 ? "rev" : ""}`}>
             <div className="hist-photo">
-              <div style={{ position: "absolute", inset: 0, background: i % 2 === 1 ? "linear-gradient(150deg, var(--olive-deep), #243012)" : "linear-gradient(150deg, #7a6526, #3d3415)" }} />
+              {capitulo.photo_url ? (
+                <img className="hist-photo-img" src={capitulo.photo_url} alt={capitulo.title} />
+              ) : (
+                <div style={{ position: "absolute", inset: 0, background: i % 2 === 1 ? "linear-gradient(150deg, var(--olive-deep), #243012)" : "linear-gradient(150deg, #7a6526, #3d3415)" }} />
+              )}
               <span className="hist-year">{capitulo.year || "—"}</span>
+              <button
+                type="button"
+                className="hist-photo-tog"
+                disabled={uploadingId === capitulo.id}
+                onClick={() => fileRefs.current[capitulo.id]?.click()}
+              >
+                {uploadingId === capitulo.id ? "Enviando..." : capitulo.photo_url ? "Trocar foto" : "+ Foto"}
+              </button>
+              <input
+                ref={(el) => { fileRefs.current[capitulo.id] = el; }}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => { void trocarFoto(capitulo.id, e.target.files?.[0]); e.target.value = ""; }}
+              />
             </div>
             <div className="hist-text">
               <div className="hist-t">{capitulo.title}</div>
