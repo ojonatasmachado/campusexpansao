@@ -460,6 +460,7 @@ type ModalState =
   | null;
 
 const ICONS: Record<string, string> = {
+  menu: '<path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/>',
   painel: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/><path d="M9.5 21v-6h5v6"/>',
   relatorios: '<path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-6"/>',
   config: '<path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M2 14h4"/><path d="M10 8h4"/><path d="M18 16h4"/>',
@@ -824,6 +825,7 @@ export default function ServiceExactApp({
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [activeChurchId, setActiveChurchId] = useState<string>(churches[0]?.id ?? "");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
   const [checkinEventId, setCheckinEventId] = useState<string | null>(null);
   const [shareEventId, setShareEventId] = useState<string | null>(null);
 
@@ -939,9 +941,11 @@ export default function ServiceExactApp({
 
   return (
     <div className="app">
-      <aside className="sb">
+      {navOpen ? <div className="sb-backdrop" onClick={() => setNavOpen(false)} /> : null}
+      <aside className={`sb${navOpen ? " open" : ""}`}>
         <div className="sb-top">
           <IgrejaLogo />
+          <button className="sb-close" type="button" onClick={() => setNavOpen(false)} aria-label="Fechar menu">✕</button>
         </div>
         <CongSwitcher churches={churches} activeId={activeChurchId} setActiveId={setActiveChurchId} />
         <nav className="sb-nav">
@@ -952,7 +956,7 @@ export default function ServiceExactApp({
               <div key={group.group}>
                 <div className="sb-group">{group.group}</div>
                 {visibleItems.map((item) => (
-                  <button key={item.id} className={`sb-link ${route === item.id ? "on" : ""}`} type="button" onClick={() => setRoute(item.id as keyof typeof ROUTES)}>
+                  <button key={item.id} className={`sb-link ${route === item.id ? "on" : ""}`} type="button" onClick={() => { setRoute(item.id as keyof typeof ROUTES); setNavOpen(false); }}>
                     <span className="sb-ic"><Icon name={CEX_ICON_FOR[item.id] ?? item.icon} size={17} /></span>
                     {item.label}
                     {"badge" in item && item.badge ? <span className="sb-badge">{item.badge}</span> : null}
@@ -975,6 +979,9 @@ export default function ServiceExactApp({
 
       <div className="main">
         <header className="top">
+          <button className="top-menu" type="button" onClick={() => setNavOpen(true)} aria-label="Abrir menu">
+            <Icon name="menu" size={18} />
+          </button>
           <div className="top-crumb">{ROUTES[route]}</div>
           <div className="top-search">
             <span className="si"><Icon name="buscar" size={15} /></span>
