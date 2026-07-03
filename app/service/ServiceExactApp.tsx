@@ -93,6 +93,7 @@ type MinistryView = {
   name: string;
   icon: string;
   description: string;
+  profile: Record<string, unknown>;
   positions: Array<{ id: string; ministry_id: string; name: string; need_count: number }>;
   people: Array<{ personId: string; personName: string; isLeader: boolean; functions: string[] }>;
 };
@@ -1112,7 +1113,7 @@ export default function ServiceExactApp({
         {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} wallPosts={wallPosts} ministries={ministries} people={people} setModal={setModal} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} decisions={decisions} baptismClasses={baptismClasses} courses={courses} boards={boards} chats={chats} visitors={visitors} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
-        {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} currentRole={currentRole} theme={theme} setTheme={setTheme} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
+        {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} currentRole={currentRole} theme={theme} setTheme={setTheme} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
         {route === "identidade" ? <Identidade church={firstChurch} identity={churchIdentity} cycle={cycles.find((c) => c.is_active) ?? cycles[0]} setModal={setModal} /> : null}
         {route === "historia" ? <Historia church={firstChurch} historyEntries={historyEntries} setModal={setModal} /> : null}
       </div>
@@ -4610,14 +4611,23 @@ function matrizComFallback(fromDb: Record<string, Record<string, boolean>>): Mat
   ) as MatrizV2;
 }
 
-function MinisterioEditModal({ ministry, onClose, onRefresh }: {
+function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
   ministry: MinistryView;
+  courses: CourseView[];
   onClose: () => void;
   onRefresh: () => void;
 }) {
+  const profile = ministry.profile as { comoTrabalhamos?: string; chegada?: string; responsabilidades?: string[]; preRequisitos?: string[] };
   const [nome, setNome] = useState(ministry.name);
   const [desc, setDesc] = useState(ministry.description);
+  const [comoTrabalhamos, setComoTrabalhamos] = useState(profile.comoTrabalhamos ?? "");
+  const [chegada, setChegada] = useState(profile.chegada ?? "");
+  const [responsabilidades, setResponsabilidades] = useState((profile.responsabilidades ?? []).join("\n"));
+  const [preRequisitos, setPreRequisitos] = useState<string[]>(profile.preRequisitos ?? []);
   const [saving, setSaving] = useState(false);
+
+  const togPreReq = (id: string) =>
+    setPreRequisitos((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   const salvar = async () => {
     if (!nome.trim()) return;
@@ -4625,7 +4635,17 @@ function MinisterioEditModal({ ministry, onClose, onRefresh }: {
     await createServiceBrowserClient()
       .schema("service")
       .from("ministries")
-      .update({ name: nome.trim(), description: desc.trim() || null, updated_at: new Date().toISOString() })
+      .update({
+        name: nome.trim(),
+        description: desc.trim() || null,
+        profile: {
+          comoTrabalhamos: comoTrabalhamos.trim() || undefined,
+          chegada: chegada.trim() || undefined,
+          responsabilidades: responsabilidades.split("\n").map((s) => s.trim()).filter(Boolean),
+          preRequisitos,
+        },
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", ministry.id);
     onRefresh();
     onClose();
@@ -4633,15 +4653,31 @@ function MinisterioEditModal({ ministry, onClose, onRefresh }: {
 
   return (
     <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <div className="modal-eyebrow">Editar ministério</div>
           <div className="modal-title">{ministry.name}</div>
-          <div className="modal-sub">Nome e descrição. Para funções, use o painel de Ministérios.</div>
+          <div className="modal-sub">Nome, descrição e o &quot;Sobre o time&quot; completo. Para funções, use o painel de Ministérios.</div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
           <div className="field"><label className="field-label">Nome</label><input className="input" value={nome} onChange={(e) => setNome(e.target.value)} /></div>
-          <div className="field"><label className="field-label">Descrição</label><input className="input" value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
+          <div className="field"><label className="field-label">Propósito</label><input className="input" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Por que esse time existe" /></div>
+          <div className="field"><label className="field-label">Como trabalhamos</label><textarea className="textarea" value={comoTrabalhamos} onChange={(e) => setComoTrabalhamos(e.target.value)} placeholder="Rotina, ensaios, escala..." /></div>
+          <div className="field"><label className="field-label">Horário de chegada</label><input className="input" value={chegada} onChange={(e) => setChegada(e.target.value)} placeholder="ex: 1h antes do culto" /></div>
+          <div className="field">
+            <label className="field-label">O que esperamos (uma por linha)</label>
+            <textarea className="textarea" value={responsabilidades} onChange={(e) => setResponsabilidades(e.target.value)} placeholder={"ex: Chegar no horário\nAvisar com antecedência se não puder servir"} />
+          </div>
+          {courses.length > 0 && (
+            <div className="field">
+              <label className="field-label">Pré-requisitos (cursos)</label>
+              <div className="seg-check">
+                {courses.map((c) => (
+                  <button key={c.id} className={`seg-chip${preRequisitos.includes(c.id) ? " on" : ""}`} type="button" onClick={() => togPreReq(c.id)}>{c.name}</button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="field">
             <label className="field-label">Funções</label>
             <div className="cell-tags">
@@ -4981,6 +5017,7 @@ function Config({
   ministerialTitles,
   fellowshipGroups,
   tags,
+  courses,
   setModal,
   permissionsMatrix,
 }: {
@@ -4996,6 +5033,7 @@ function Config({
   ministerialTitles: MinisterialTitleView[];
   fellowshipGroups: FellowshipGroupView[];
   tags: TagView[];
+  courses: CourseView[];
   setModal: (modal: ModalState) => void;
   permissionsMatrix: Record<string, Record<string, boolean>>;
 }) {
@@ -5640,7 +5678,7 @@ function Config({
       )}
 
       {editMin && (
-        <MinisterioEditModal ministry={editMin} onClose={() => setEditMin(null)} onRefresh={() => router.refresh()} />
+        <MinisterioEditModal ministry={editMin} courses={courses} onClose={() => setEditMin(null)} onRefresh={() => router.refresh()} />
       )}
 
       {elencoTag && (
@@ -6244,6 +6282,72 @@ function MemberEditModal({
   );
 }
 
+function AddToMinistryModal({
+  ministry, people, church, onClose,
+}: {
+  ministry: MinistryView;
+  people: PersonView[];
+  church: { id: string; organizationId: string };
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  const [positionId, setPositionId] = useState("");
+  const inMinistryIds = new Set(ministry.people.map((link) => link.personId));
+  const fora = people.filter((p) => !inMinistryIds.has(p.id) && (!q || p.name.toLowerCase().includes(q.toLowerCase())));
+
+  const add = async (personId: string) => {
+    const position = ministry.positions.find((p) => p.id === positionId);
+    await createServiceBrowserClient().schema("service").from("person_ministries").insert({
+      organization_id: church.organizationId,
+      ministry_id: ministry.id,
+      person_id: personId,
+      is_leader: false,
+      functions: position ? [position.name] : [],
+    });
+    router.refresh();
+    onClose();
+  };
+
+  return (
+    <div className="modal-bg" style={{ zIndex: 80 }} onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">Adicionar ao time</div>
+          <div className="modal-title">{ministry.name}</div>
+          <div className="modal-sub">Escolha o voluntário e, se souber, a função dele neste ministério.</div>
+        </div>
+        <div className="modal-body" style={{ display: "block" }}>
+          {ministry.positions.length > 0 && (
+            <div className="field" style={{ marginBottom: 14 }}>
+              <label className="field-label">Função (opcional)</label>
+              <select className="select" value={positionId} onChange={(e) => setPositionId(e.target.value)}>
+                <option value="">Sem função definida</option>
+                {ministry.positions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+          )}
+          <div className="tb-search" style={{ marginBottom: 12 }}>
+            <span className="si"><Icon name="buscar" size={13} /></span>
+            <input placeholder="Buscar voluntário..." value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
+          </div>
+          {fora.map((p) => (
+            <div className="flag-row" key={p.id} style={{ cursor: "pointer" }} onClick={() => add(p.id)}>
+              <Av name={p.name} size="sm" />
+              <div className="flag-main"><div className="flag-nome">{p.name}</div></div>
+              <span className="btn btn-ghost btn-sm" style={{ marginLeft: "auto" }}>Adicionar</span>
+            </div>
+          ))}
+          {fora.length === 0 && <div className="empty">{q ? "Nenhum resultado." : "Todos os voluntários já estão no time."}</div>}
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-sec" type="button" onClick={onClose}>Fechar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EntityDrawer({
   drawer,
   people,
@@ -6299,6 +6403,8 @@ function EntityDrawer({
 }) {
   const router = useRouter();
   const [editingMember, setEditingMember] = useState(false);
+  const [editingMinistry, setEditingMinistry] = useState(false);
+  const [addingPerson, setAddingPerson] = useState(false);
 
   if (drawer.kind === "person") {
     const person = people.find((item) => item.id === drawer.id);
@@ -6471,7 +6577,16 @@ function EntityDrawer({
     const leader = ministry.people.find((link) => link.isLeader);
     const totalSlots = ministry.positions.reduce((s, p) => s + p.need_count, 0);
     const isOpen = ministry.people.length < totalSlots || totalSlots === 0;
+    const profile = ministry.profile as { comoTrabalhamos?: string; chegada?: string; responsabilidades?: string[]; preRequisitos?: string[] };
+    const matchesPosition = (link: MinistryView["people"][number], positionName: string) =>
+      link.functions.some((f) => f.toLowerCase() === positionName.toLowerCase());
+    const porFuncao = ministry.positions.map((position) => ({
+      position,
+      pessoas: ministry.people.filter((link) => matchesPosition(link, position.name)),
+    }));
+    const semFuncao = ministry.people.filter((link) => !ministry.positions.some((p) => matchesPosition(link, p.name)));
     return (
+      <>
       <DrawerShell onClose={() => setDrawer(null)}>
         <div className="drawer-head">
           <button className="drawer-close" type="button" onClick={() => setDrawer(null)}>✕</button>
@@ -6487,26 +6602,59 @@ function EntityDrawer({
           </div>
         </div>
         <div className="drawer-body">
-          {ministry.description && (
+          {(ministry.description || profile.comoTrabalhamos || profile.chegada || (profile.responsabilidades?.length ?? 0) > 0 || (profile.preRequisitos?.length ?? 0) > 0) && (
             <div style={{ marginTop: 4, marginBottom: 22 }}>
               <div className="dsec-title" style={{ marginBottom: 10 }}>Sobre o time</div>
               <div className="tinfo">
-                <div className="tinfo-block">
-                  <div className="tinfo-label"><Icon name="identidade" size={13} /> Propósito</div>
-                  <div className="tinfo-x">{ministry.description}</div>
-                </div>
+                {ministry.description && (
+                  <div className="tinfo-block">
+                    <div className="tinfo-label"><Icon name="identidade" size={13} /> Propósito</div>
+                    <div className="tinfo-x">{ministry.description}</div>
+                  </div>
+                )}
+                {profile.comoTrabalhamos && (
+                  <div className="tinfo-block">
+                    <div className="tinfo-label"><Icon name="times" size={13} /> Como trabalhamos</div>
+                    <div className="tinfo-x">{profile.comoTrabalhamos}</div>
+                  </div>
+                )}
+                {profile.chegada && (
+                  <div className="tinfo-block">
+                    <div className="tinfo-label"><Icon name="agenda" size={13} /> Horário de chegada</div>
+                    <div className="tinfo-x">{profile.chegada}</div>
+                  </div>
+                )}
+                {(profile.responsabilidades?.length ?? 0) > 0 && (
+                  <div className="tinfo-block">
+                    <div className="tinfo-label">→ O que esperamos</div>
+                    {profile.responsabilidades!.map((r, i) => <div className="tinfo-li" key={i}>{r}</div>)}
+                  </div>
+                )}
+                {(profile.preRequisitos?.length ?? 0) > 0 && (
+                  <div className="tinfo-block">
+                    <div className="tinfo-label"><Icon name="cursos" size={13} /> Pré-requisitos</div>
+                    {profile.preRequisitos!.map((cid) => {
+                      const course = courses.find((c) => c.id === cid);
+                      return <div className="tinfo-li" key={cid}>Concluir o curso <b style={{ color: "var(--white)" }}>{course ? course.name : cid}</b></div>;
+                    })}
+                  </div>
+                )}
               </div>
+              <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={() => setEditingMinistry(true)}>Editar</button>
             </div>
           )}
+          {!ministry.description && !profile.comoTrabalhamos && !profile.chegada && !(profile.responsabilidades?.length) && !(profile.preRequisitos?.length) && (
+            <button className="btn btn-sec btn-sm" type="button" style={{ marginBottom: 22 }} onClick={() => setEditingMinistry(true)}>+ Contar sobre o time</button>
+          )}
           <DrawerSection title="Funções & quem cobre">
-            {ministry.positions.map((position) => (
+            {porFuncao.map(({ position, pessoas }) => (
               <div key={position.id} style={{ marginBottom: 18 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                   <div className="esc-fn">{position.name}</div>
                   <span className="panel-meta">{position.need_count} vaga(s)</span>
                 </div>
-                {ministry.people.length === 0 && <div style={{ fontSize: 12, color: "var(--subtle)", fontFamily: "var(--mono)" }}>Ninguém neste time ainda.</div>}
-                {ministry.people.map((link) => (
+                {pessoas.length === 0 && <div style={{ fontSize: 12, color: "var(--subtle)", fontFamily: "var(--mono)" }}>Ninguém habilitado ainda.</div>}
+                {pessoas.map((link) => (
                   <button className="cand" type="button" key={`${position.id}-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
                     <Av name={link.personName} />
                     <div className="cand-main">
@@ -6518,13 +6666,48 @@ function EntityDrawer({
                 ))}
               </div>
             ))}
+            {semFuncao.length > 0 && (
+              <div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <div className="esc-fn">Sem função definida</div>
+                </div>
+                {semFuncao.map((link) => (
+                  <button className="cand" type="button" key={`semfuncao-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
+                    <Av name={link.personName} />
+                    <div className="cand-main">
+                      <div className="cand-name">{link.personName}</div>
+                      <div className="cand-meta">{link.isLeader ? "Líder do time" : "Voluntário"}</div>
+                    </div>
+                    {link.isLeader && <span className="lider-tag">Líder</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+            {ministry.people.length === 0 && <div style={{ fontSize: 12, color: "var(--subtle)", fontFamily: "var(--mono)" }}>Ninguém neste time ainda.</div>}
           </DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
             <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { setDrawer(null); setRoute("escalas"); }}>Ver escala do time →</button>
-            <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Adicionar", title: ministry.name, subtitle: "Escolha voluntários para incluir neste ministério.", saveLabel: "Adicionar pessoa", formFields: [{ k:"voluntario", label:"Voluntário", type:"text", ph:"Nome do voluntário" }, { k:"funcao", label:"Função no time", type:"text", ph:"ex: Vocal, Câmera" }] })}>Adicionar pessoa</button>
+            <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setAddingPerson(true)}>Adicionar pessoa</button>
           </div>
         </div>
       </DrawerShell>
+      {editingMinistry && (
+        <MinisterioEditModal
+          ministry={ministry}
+          courses={courses}
+          onClose={() => setEditingMinistry(false)}
+          onRefresh={() => router.refresh()}
+        />
+      )}
+      {addingPerson && church && (
+        <AddToMinistryModal
+          ministry={ministry}
+          people={people}
+          church={{ id: church.id, organizationId: church.organizationId }}
+          onClose={() => setAddingPerson(false)}
+        />
+      )}
+      </>
     );
   }
 

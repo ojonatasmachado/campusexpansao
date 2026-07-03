@@ -64,41 +64,50 @@ const MEMBERS = [
 const MINISTRIES = [
   {
     id: "min-1", organizationId: ORG, name: "Louvor", icon: "louvor", description: "Time de música e adoração. Ensaios toda semana.",
+    profile: {
+      comoTrabalhamos: "Ensaio geral toda quinta às 20h. Passagem de som 1h antes de cada culto.",
+      chegada: "1h antes do culto",
+      responsabilidades: ["Chegar no horário combinado", "Avisar com antecedência se não puder servir", "Participar do ensaio geral"],
+      preRequisitos: [],
+    },
     positions: [
       { id: "pos-1-1", ministry_id: "min-1", name: "Vocal", need_count: 3, sort_order: 0 },
       { id: "pos-1-2", ministry_id: "min-1", name: "Instrumentista", need_count: 4, sort_order: 1 },
     ],
     people: [
-      { personId: "p1", personName: "Ana Lima", isLeader: true, functions: ["vocal"] },
-      { personId: "p4", personName: "Diego Ferreira", isLeader: false, functions: ["guitarra"] },
+      { personId: "p1", personName: "Ana Lima", isLeader: true, functions: ["Vocal"] },
+      { personId: "p4", personName: "Diego Ferreira", isLeader: false, functions: ["Instrumentista"] },
     ],
   },
   {
     id: "min-2", organizationId: ORG, name: "Mídia & Comunicação", icon: "midia", description: "Transmissão, design e redes sociais.",
+    profile: {},
     positions: [
       { id: "pos-2-1", ministry_id: "min-2", name: "Operador", need_count: 2, sort_order: 0 },
     ],
     people: [
-      { personId: "p2", personName: "Bruno Costa", isLeader: true, functions: ["operador"] },
+      { personId: "p2", personName: "Bruno Costa", isLeader: true, functions: ["Operador"] },
     ],
   },
   {
     id: "min-3", organizationId: ORG, name: "Recepção", icon: "recepcao", description: "Acolhimento e recepção de visitantes no domingo.",
+    profile: {},
     positions: [
       { id: "pos-3-1", ministry_id: "min-3", name: "Recepcionista", need_count: 4, sort_order: 0 },
     ],
     people: [
-      { personId: "p3", personName: "Carla Santos", isLeader: true, functions: ["recepcao"] },
-      { personId: "p5", personName: "Eduarda Nunes", isLeader: false, functions: ["recepcao"] },
+      { personId: "p3", personName: "Carla Santos", isLeader: true, functions: ["Recepcionista"] },
+      { personId: "p5", personName: "Eduarda Nunes", isLeader: false, functions: [] },
     ],
   },
   {
     id: "min-4", organizationId: ORG, name: "Kids", icon: "kids", description: "Ministério infantil e escola bíblica.",
+    profile: {},
     positions: [
       { id: "pos-4-1", ministry_id: "min-4", name: "Professor", need_count: 2, sort_order: 0 },
     ],
     people: [
-      { personId: "p4", personName: "Diego Ferreira", isLeader: false, functions: ["professor"] },
+      { personId: "p4", personName: "Diego Ferreira", isLeader: false, functions: ["Professor"] },
     ],
   },
 ];
