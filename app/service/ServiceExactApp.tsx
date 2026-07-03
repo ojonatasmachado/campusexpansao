@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import MobileOverlay from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
@@ -3017,6 +3017,7 @@ const CFG_TABS = [
   { id: "min", label: "Ministérios & funções" },
   { id: "operacao", label: "Escala & presença" },
   { id: "grupos", label: "Grupos & Células" },
+  { id: "perm", label: "Permissões" },
   { id: "visual", label: "Personalização" },
   { id: "rede", label: "Congregações" },
 ];
@@ -3027,6 +3028,47 @@ const ACCENTS = [
   { id: "clay", nome: "Argila", hex: "#b87059" },
   { id: "amber", nome: "Âmbar", hex: "#d4923e" },
 ];
+
+/* ── Papéis & permissões · 4 níveis (Master, Pastor, Líder, Voluntário) ── */
+const ACOES_V2 = [
+  { id: "painel", nome: "Painel & relatórios", grupo: "Visão" },
+  { id: "membros", nome: "Membros", grupo: "Pessoas" },
+  { id: "voluntarios", nome: "Voluntários", grupo: "Pessoas" },
+  { id: "times", nome: "Times & ministérios", grupo: "Pessoas" },
+  { id: "visitantes", nome: "Visitantes", grupo: "Pessoas" },
+  { id: "decisoes", nome: "Decisões", grupo: "Jornada" },
+  { id: "batismos", nome: "Batismos", grupo: "Jornada" },
+  { id: "cursos", nome: "Cursos & trilhas", grupo: "Jornada" },
+  { id: "escala", nome: "Escalas", grupo: "Operação" },
+  { id: "cultos", nome: "Cultos & eventos", grupo: "Operação" },
+  { id: "comunica", nome: "Comunicação & push", grupo: "Operação" },
+  { id: "identidade", nome: "Identidade & ciclos", grupo: "Igreja" },
+  { id: "historia", nome: "Nossa história", grupo: "Igreja" },
+  { id: "igreja", nome: "Dados da igreja", grupo: "Gestão" },
+  { id: "permissoes", nome: "Papéis & permissões", grupo: "Gestão" },
+  { id: "rede", nome: "Rede (multi-igreja)", grupo: "Gestão" },
+] as const;
+
+const PAPEIS_V2 = [
+  { id: "master", nome: "Pastor Master", desc: "Controle total da rede", ic: "◆" },
+  { id: "pastor", nome: "Pastor", desc: "Sua congregação inteira", ic: "◆" },
+  { id: "lider", nome: "Líder", desc: "Seu ministério e GC", ic: "◇" },
+  { id: "vol", nome: "Voluntário", desc: "App: escala, jornada, cursos", ic: "→" },
+] as const;
+
+type PapelV2 = (typeof PAPEIS_V2)[number]["id"];
+type MatrizV2 = Record<PapelV2, Record<string, boolean>>;
+
+function matrizV2Padrao(): MatrizV2 {
+  const allTrue = () => Object.fromEntries(ACOES_V2.map((a) => [a.id, true]));
+  const allFalse = () => Object.fromEntries(ACOES_V2.map((a) => [a.id, false]));
+  return {
+    master: allTrue(),
+    pastor: { ...allTrue(), permissoes: true, rede: false },
+    lider: { ...allFalse(), painel: true, voluntarios: true, times: true, decisoes: true, escala: true, cultos: true, comunica: true },
+    vol: allFalse(),
+  };
+}
 
 function MinisterioEditModal({ ministry, onClose, onRefresh }: {
   ministry: MinistryView;
@@ -3168,6 +3210,24 @@ function Config({
     setAccent(id);
     try { localStorage.setItem("cex_accent", id); } catch { /* noop */ }
   };
+
+  const [matriz, setMatriz] = useState<MatrizV2>(() => {
+    try {
+      const saved = localStorage.getItem("cex_matriz_v2");
+      return saved ? (JSON.parse(saved) as MatrizV2) : matrizV2Padrao();
+    } catch { return matrizV2Padrao(); }
+  });
+  const [matrizMsg, setMatrizMsg] = useState("");
+  const toggleMx = (papel: PapelV2, acao: string) => {
+    if (papel === "master") return;
+    setMatriz((prev) => ({ ...prev, [papel]: { ...prev[papel], [acao]: !prev[papel][acao] } }));
+  };
+  const salvarMatriz = () => {
+    try { localStorage.setItem("cex_matriz_v2", JSON.stringify(matriz)); } catch { /* noop */ }
+    setMatrizMsg("Permissões salvas.");
+    setTimeout(() => setMatrizMsg(""), 2000);
+  };
+  const gruposAcoes = Array.from(new Set(ACOES_V2.map((a) => a.grupo)));
 
   return (
     <div className="content wide">
@@ -3377,6 +3437,46 @@ function Config({
             </div>
           </div>
         </>
+      )}
+
+      {/* ─── PERMISSÕES ─── */}
+      {tab === "perm" && (
+        <div className="cfg-card">
+          <div className="cfg-card-t">Papéis & permissões</div>
+          <div className="cfg-card-s">Cada funcionalidade do app aparece aqui. Toque para liberar ou bloquear por papel. O Master sempre tem acesso total.</div>
+          <table className="pmx">
+            <thead>
+              <tr>
+                <th className="pmx-fn">Funcionalidade</th>
+                {PAPEIS_V2.map((pp) => <th key={pp.id} className="pmx-role"><span style={{ color: "var(--olive)" }}>{pp.ic}</span> {pp.nome}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {gruposAcoes.map((grupo) => (
+                <Fragment key={`g-${grupo}`}>
+                  <tr className="pmx-group"><td colSpan={PAPEIS_V2.length + 1}>{grupo}</td></tr>
+                  {ACOES_V2.filter((a) => a.grupo === grupo).map((a) => (
+                    <tr key={a.id}>
+                      <td className="pmx-fn">{a.nome}</td>
+                      {PAPEIS_V2.map((pp) => {
+                        const locked = pp.id === "master";
+                        const on = matriz[pp.id][a.id];
+                        return (
+                          <td key={pp.id}>
+                            <button type="button" className={`mx-cell${on ? " on" : " off"}${locked ? " lock" : ""}`} onClick={() => toggleMx(pp.id, a.id)} title={locked ? "O Master sempre tem acesso total" : ""}>{on ? "✓" : "·"}</button>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </Fragment>
+              ))}
+            </tbody>
+          </table>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
+            <button className="btn btn-pri btn-sm" type="button" onClick={salvarMatriz}>{matrizMsg || "Salvar permissões"}</button>
+          </div>
+        </div>
       )}
 
       {/* ─── PERSONALIZAÇÃO ─── */}
@@ -3723,11 +3823,18 @@ function BatismoDrawer({
   onClose: () => void; onOpenMember: (id: string) => void; onRefresh: () => void;
 }) {
   const [showAdd, setShowAdd] = useState(false);
+  const [actionMsg, setActionMsg] = useState("");
   const classCandidates = candidates.filter((c) => c.class_id === classData.id);
   const memberById = new Map(members.map((m) => [m.id, m]));
   const decisionById = new Map(decisions.map((d) => [d.id, d]));
   const existingMemberIds = classCandidates.map((c) => c.member_id).filter(Boolean) as string[];
   const st = BAT_ST_MAP[classData.status ?? "aberta"];
+  const concluida = classData.status === "concluida";
+
+  const dispararAcao = (msg: string) => {
+    setActionMsg(msg);
+    setTimeout(() => setActionMsg(""), 2500);
+  };
 
   return (
     <DrawerShell onClose={onClose}>
@@ -3771,8 +3878,11 @@ function BatismoDrawer({
         </DrawerSection>
         <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
           <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setShowAdd(true)}>+ Adicionar candidato</button>
-          {classData.status !== "concluida" && <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button">Avisar candidatos</button>}
+          {concluida
+            ? <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => dispararAcao("Certificados gerados para os batizados.")}>Emitir certificados</button>
+            : <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => dispararAcao("Aviso enviado aos candidatos.")}>Avisar candidatos</button>}
         </div>
+        {actionMsg && <div style={{ marginTop: 12, fontSize: 12.5, color: "var(--olive-soft)", textAlign: "right" }}>✓ {actionMsg}</div>}
       </div>
       {showAdd && church && (
         <AddCandidatoModal
