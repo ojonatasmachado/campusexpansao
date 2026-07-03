@@ -496,7 +496,8 @@ type ModalState =
         | { kind: "cycle"; id?: string }
         | { kind: "title" }
         | { kind: "tag" }
-        | { kind: "group" };
+        | { kind: "group" }
+        | { kind: "congregacao" };
     }
   | null;
 
@@ -4419,6 +4420,16 @@ const CFG_TABS = [
   { id: "rede", label: "Congregações" },
 ];
 
+const TAG_CORES = [
+  { v: "olive", l: "Oliva" },
+  { v: "wheat", l: "Trigo" },
+  { v: "clay", l: "Argila" },
+  { v: "terra", l: "Terracota" },
+  { v: "sand", l: "Areia" },
+  { v: "amber", l: "Âmbar" },
+  { v: "rust", l: "Ferrugem" },
+];
+
 const ACCENTS = [
   { id: "olive", nome: "Oliva", hex: "#7ea850" },
   { id: "wheat", nome: "Trigo", hex: "#c9a85c" },
@@ -4617,11 +4628,172 @@ function AcessosCard({
   );
 }
 
+function TagElencoModal({
+  tag, people, onClose,
+}: {
+  tag: TagView;
+  people: PersonView[];
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  const [localTag, setLocalTag] = useState(tag);
+  const [localPeople, setLocalPeople] = useState(people);
+
+  const lista = localPeople.filter((p) => !q || p.name.toLowerCase().includes(q.toLowerCase()));
+  const dentro = localPeople.filter((p) => p.tags.includes(tag.id)).length;
+
+  const toggleElenco = async (personId: string) => {
+    const pessoa = localPeople.find((p) => p.id === personId);
+    if (!pessoa) return;
+    const dentroAgora = pessoa.tags.includes(tag.id);
+    const nextTags = dentroAgora ? pessoa.tags.filter((x) => x !== tag.id) : [...pessoa.tags, tag.id];
+    const removendoLider = dentroAgora && localTag.leaders.includes(personId);
+    const nextLeaders = removendoLider ? localTag.leaders.filter((x) => x !== personId) : localTag.leaders;
+
+    setLocalPeople((prev) => prev.map((p) => (p.id === personId ? { ...p, tags: nextTags } : p)));
+    if (removendoLider) setLocalTag((prev) => ({ ...prev, leaders: nextLeaders }));
+
+    const supabase = createServiceBrowserClient();
+    await supabase.schema("service").from("people").update({ tags: nextTags }).eq("id", personId);
+    if (removendoLider) await supabase.schema("service").from("tags").update({ leaders: nextLeaders }).eq("id", tag.id);
+    router.refresh();
+  };
+
+  const toggleLider = async (personId: string) => {
+    const ehLider = localTag.leaders.includes(personId);
+    const nextLeaders = ehLider ? localTag.leaders.filter((x) => x !== personId) : [...localTag.leaders, personId];
+    const pessoa = localPeople.find((p) => p.id === personId);
+    const precisaEntrarNoElenco = !ehLider && pessoa && !pessoa.tags.includes(tag.id);
+    const nextTags = precisaEntrarNoElenco ? [...(pessoa?.tags ?? []), tag.id] : pessoa?.tags ?? [];
+
+    setLocalTag((prev) => ({ ...prev, leaders: nextLeaders }));
+    if (precisaEntrarNoElenco) setLocalPeople((prev) => prev.map((p) => (p.id === personId ? { ...p, tags: nextTags } : p)));
+
+    const supabase = createServiceBrowserClient();
+    await supabase.schema("service").from("tags").update({ leaders: nextLeaders }).eq("id", tag.id);
+    if (precisaEntrarNoElenco) await supabase.schema("service").from("people").update({ tags: nextTags }).eq("id", personId);
+    router.refresh();
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">Frente · {tag.name}</div>
+          <div className="modal-title">Quem serve nos {tag.name}</div>
+          <div className="modal-sub">
+            Marque os voluntários que fazem parte desta frente. Toque na estrela para definir quem é líder da frente. {dentro} marcado(s).
+          </div>
+        </div>
+        <div className="modal-body" style={{ display: "block" }}>
+          <div className="tb-search" style={{ marginBottom: 14 }}>
+            <span className="si"><Icon name="buscar" size={13} /></span>
+            <input placeholder="Buscar voluntário..." value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
+          </div>
+          {lista.map((p) => {
+            const on = p.tags.includes(tag.id);
+            const lider = localTag.leaders.includes(p.id);
+            return (
+              <div className={`flag-row${on ? " on" : ""}`} key={p.id} style={{ cursor: "pointer" }} onClick={() => toggleElenco(p.id)}>
+                <Av name={p.name} size="sm" />
+                <div className="flag-main">
+                  <div className="flag-nome">{p.name}{lider && <span style={{ marginLeft: 8, fontSize: 11, color: "var(--amber)" }}>★ líder</span>}</div>
+                </div>
+                <button
+                  type="button"
+                  title={lider ? "Remover como líder" : "Tornar líder da frente"}
+                  onClick={(e) => { e.stopPropagation(); toggleLider(p.id); }}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: lider ? "var(--amber)" : "var(--subtle)" }}
+                >
+                  ★
+                </button>
+              </div>
+            );
+          })}
+          {lista.length === 0 && <div className="empty">Ninguém encontrado.</div>}
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-pri" type="button" onClick={onClose}>Concluído</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CongregacaoEditModal({
+  churchRow, onClose, onRefresh,
+}: {
+  churchRow: ChurchView;
+  onClose: () => void;
+  onRefresh: () => void;
+}) {
+  const [form, setForm] = useState({
+    nome: churchRow.nome,
+    cidade: churchRow.cidade ?? "",
+    doc: churchRow.doc ?? "",
+    fundada: churchRow.foundedYear ?? "",
+    endereco: churchRow.address ?? "",
+    cep: churchRow.postalCode ?? "",
+    email: churchRow.email ?? "",
+    tel: churchRow.phone ?? "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  const salvar = async () => {
+    if (!form.nome.trim()) return;
+    setSaving(true);
+    await createServiceBrowserClient()
+      .schema("service")
+      .from("churches")
+      .update({
+        name: form.nome.trim(),
+        city: form.cidade.trim() || null,
+        doc: form.doc.trim() || null,
+        founded_year: form.fundada.trim() || null,
+        address: form.endereco.trim() || null,
+        postal_code: form.cep.trim() || null,
+        email: form.email.trim() || null,
+        phone: form.tel.trim() || null,
+      })
+      .eq("id", churchRow.id);
+    setSaving(false);
+    onRefresh();
+    onClose();
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">{churchRow.matriz ? "Matriz · rede" : "Congregação"}</div>
+          <div className="modal-title">{churchRow.nome}</div>
+          <div className="modal-sub">Dados da congregação.</div>
+        </div>
+        <div className="modal-body" style={{ display: "block" }}>
+          <div className="field"><label className="field-label">Nome</label><input className="input" value={form.nome} onChange={(e) => setForm((p) => ({ ...p, nome: e.target.value }))} /></div>
+          <div className="field"><label className="field-label">Cidade / bairro</label><input className="input" value={form.cidade} onChange={(e) => setForm((p) => ({ ...p, cidade: e.target.value }))} /></div>
+          <div className="field"><label className="field-label">CNPJ</label><input className="input" value={form.doc} onChange={(e) => setForm((p) => ({ ...p, doc: e.target.value }))} /></div>
+          <div className="field"><label className="field-label">Ano de fundação</label><input className="input" value={form.fundada} onChange={(e) => setForm((p) => ({ ...p, fundada: e.target.value }))} /></div>
+          <div className="field"><label className="field-label">Endereço</label><input className="input" value={form.endereco} onChange={(e) => setForm((p) => ({ ...p, endereco: e.target.value }))} /></div>
+          <div className="field"><label className="field-label">CEP</label><input className="input" value={form.cep} onChange={(e) => setForm((p) => ({ ...p, cep: e.target.value }))} /></div>
+          <div className="field"><label className="field-label">E-mail</label><input className="input" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} /></div>
+          <div className="field"><label className="field-label">Telefone</label><input className="input" value={form.tel} onChange={(e) => setForm((p) => ({ ...p, tel: e.target.value }))} /></div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>Salvar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Config({
   church,
   churches,
   ministries,
-  people: _people,
+  people,
   rooms,
   reservations,
   currentRole,
@@ -4650,6 +4822,10 @@ function Config({
 }) {
   const router = useRouter();
   const [tab, setTab] = useState("igreja");
+  const [editTagId, setEditTagId] = useState<string | null>(null);
+  const [tagNomeEdit, setTagNomeEdit] = useState("");
+  const [elencoTag, setElencoTag] = useState<TagView | null>(null);
+  const [gerirCongId, setGerirCongId] = useState<string | null>(null);
 
   const [igrejaForm, setIgrejaForm] = useState({
     nome: church?.nome ?? "",
@@ -4692,6 +4868,17 @@ function Config({
     await createServiceBrowserClient().schema("service").from(table).delete().eq("id", id);
     router.refresh();
   }
+
+  const renomearTag = async (id: string, name: string) => {
+    if (!name.trim()) return;
+    await createServiceBrowserClient().schema("service").from("tags").update({ name: name.trim() }).eq("id", id);
+    router.refresh();
+  };
+
+  const recolorirTag = async (id: string, color: string) => {
+    await createServiceBrowserClient().schema("service").from("tags").update({ color }).eq("id", id);
+    router.refresh();
+  };
 
   const [editMin, setEditMin] = useState<MinistryView | null>(null);
 
@@ -4845,7 +5032,7 @@ function Config({
               <dt>ID da org.</dt>
               <dd><span style={{ fontFamily: "var(--mono)", fontSize: 12 }}>{(church?.organizationId ?? "—").slice(0, 8)}…</span></dd>
               <dt>Voluntários</dt>
-              <dd>{_people.length}</dd>
+              <dd>{people.length}</dd>
             </dl>
           </div>
         </div>
@@ -4901,16 +5088,58 @@ function Config({
           <div className="cfg-card-t">Frentes / tags</div>
           <div className="cfg-card-s">Etiquetas livres como Jovens, Kids ou Casais. Uma pessoa pode ter várias — servem para montar o elenco de uma frente sem depender do time (ministério).</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "4px 0 14px" }}>
-            {tags.map((t) => (
-              <div className="cfg-row" key={t.id}>
-                <div className="cong-mark" style={{ background: "var(--ink)" }}><span style={{ width: 9, height: 9, borderRadius: "50%", background: `var(--${t.color})`, display: "inline-block" }} /></div>
-                <div className="cfg-row-main"><div className="cfg-row-t">{t.name}</div></div>
-                <button className="btn btn-sec btn-sm" type="button" onClick={() => removeRow("tags", t.id)}>Remover</button>
-              </div>
-            ))}
+            {tags.map((t) => {
+              const dentro = people.filter((p) => p.tags.includes(t.id)).length;
+              const lideres = t.leaders.map((id) => people.find((p) => p.id === id)?.name.split(" ")[0]).filter(Boolean);
+              return (
+                <div className="cfg-row" key={t.id}>
+                  <div className="cong-mark" style={{ background: "var(--ink)" }}><span style={{ width: 9, height: 9, borderRadius: "50%", background: `var(--${t.color})`, display: "inline-block" }} /></div>
+                  <div className="cfg-row-main">
+                    {editTagId === t.id ? (
+                      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                        <input
+                          className="input"
+                          style={{ flex: "1 1 140px" }}
+                          value={tagNomeEdit}
+                          onChange={(e) => setTagNomeEdit(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && renomearTag(t.id, tagNomeEdit)}
+                          autoFocus
+                        />
+                        <span style={{ display: "flex", gap: 6 }}>
+                          {TAG_CORES.map((c) => (
+                            <button
+                              key={c.v}
+                              type="button"
+                              title={c.l}
+                              onClick={() => recolorirTag(t.id, c.v)}
+                              style={{ width: 20, height: 20, borderRadius: "50%", background: `var(--${c.v})`, border: t.color === c.v ? "2px solid var(--white)" : "2px solid transparent", cursor: "pointer", padding: 0 }}
+                            />
+                          ))}
+                        </span>
+                        <button className="btn btn-sec btn-sm" type="button" onClick={() => { renomearTag(t.id, tagNomeEdit); setEditTagId(null); }}>Pronto</button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="cfg-row-t">{t.name}</div>
+                        <div className="cfg-row-s">
+                          {dentro} voluntário(s){lideres.length > 0 ? <> · líder: <span style={{ color: "var(--olive-soft)" }}>{lideres.join(", ")}</span></> : " · sem líder"}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {editTagId !== t.id && (
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <button className="btn btn-sec btn-sm" type="button" onClick={() => setElencoTag(t)}>Elenco</button>
+                      <button className="btn btn-sec btn-sm" type="button" onClick={() => { setEditTagId(t.id); setTagNomeEdit(t.name); }}>Editar</button>
+                      <button className="btn btn-sec btn-sm" type="button" onClick={() => removeRow("tags", t.id)}>Remover</button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             {tags.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>Nenhuma frente cadastrada.</div>}
           </div>
-          <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova frente / tag", subtitle: "Etiqueta livre para agrupar voluntários (ex: Jovens, Casais).", saveLabel: "Criar frente", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Jovens" }, { k:"cor", label:"Cor", type:"select", options:[{v:"olive",l:"Oliva"},{v:"wheat",l:"Trigo"},{v:"clay",l:"Argila"},{v:"terra",l:"Terracota"},{v:"sand",l:"Areia"},{v:"amber",l:"Âmbar"},{v:"rust",l:"Ferrugem"}] }], action: { kind: "tag" } })}>+ Frente</button>
+          <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova frente / tag", subtitle: "Etiqueta livre para agrupar voluntários (ex: Jovens, Casais).", saveLabel: "Criar frente", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Jovens" }, { k:"cor", label:"Cor", type:"select", options: TAG_CORES }], action: { kind: "tag" } })}>+ Frente</button>
         </div>
       )}
 
@@ -4920,7 +5149,7 @@ function Config({
           <div className="cfg-card-t">Grupos de Comunhão · {fellowshipGroups.length}</div>
           <div className="cfg-card-s">Células, GCs, pequenos grupos... a estrutura de comunhão em casas. Cada grupo tem um líder, um dia e um bairro.</div>
           {fellowshipGroups.map((g) => {
-            const leader = _people.find((p) => p.id === g.leader_person_id);
+            const leader = people.find((p) => p.id === g.leader_person_id);
             return (
               <div className="cfg-row" key={g.id}>
                 <div className="cong-mark"><Icon name="identidade" size={16} /></div>
@@ -4933,7 +5162,7 @@ function Config({
             );
           })}
           {fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhum grupo cadastrado ainda.</div>}
-          <button className="btn btn-pri btn-sm" type="button" style={{ marginTop: 18 }} onClick={() => setModal({ eyebrow: "Criar", title: "Novo Grupo de Comunhão", subtitle: "Nome, líder, dia, horário e bairro do grupo.", saveLabel: "Criar grupo", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: GC Centro" }, { k:"lider", label:"Líder", type:"select", half:true, ph:"A definir", options: _people.map((p) => ({ v: p.name, l: p.name })) }, { k:"dia", label:"Dia", type:"text", half:true, ph:"ex: Quarta-feira" }, { k:"hora", label:"Horário", type:"text", half:true, ph:"ex: 20h" }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"ex: Centro" }], action: { kind: "group" } })}>+ Novo grupo</button>
+          <button className="btn btn-pri btn-sm" type="button" style={{ marginTop: 18 }} onClick={() => setModal({ eyebrow: "Criar", title: "Novo Grupo de Comunhão", subtitle: "Nome, líder, dia, horário e bairro do grupo.", saveLabel: "Criar grupo", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: GC Centro" }, { k:"lider", label:"Líder", type:"select", half:true, ph:"A definir", options: people.map((p) => ({ v: p.name, l: p.name })) }, { k:"dia", label:"Dia", type:"text", half:true, ph:"ex: Quarta-feira" }, { k:"hora", label:"Horário", type:"text", half:true, ph:"ex: 20h" }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"ex: Centro" }], action: { kind: "group" } })}>+ Novo grupo</button>
         </div>
       )}
 
@@ -5118,7 +5347,7 @@ function Config({
       )}
 
       {/* ─── ACESSOS POR PESSOA ─── */}
-      {tab === "acessos" && <AcessosCard people={_people} church={church} currentRole={currentRole} />}
+      {tab === "acessos" && <AcessosCard people={people} church={church} currentRole={currentRole} />}
 
       {/* ─── PERSONALIZAÇÃO ─── */}
       {tab === "visual" && (
@@ -5164,6 +5393,7 @@ function Config({
                 <div className="cfg-row-t">{c.nome} <span className="chip chip-ok" style={{ marginLeft: 6 }}>matriz</span></div>
                 <div className="cfg-row-s">{c.cidade || "Sede da rede"}</div>
               </div>
+              <button className="btn btn-sec btn-sm" type="button" onClick={() => setGerirCongId(c.id)}>Gerir</button>
             </div>
           ))}
           {churches.filter((c) => !c.matriz).length > 0 && (
@@ -5176,17 +5406,54 @@ function Config({
                     <div className="cfg-row-t">{c.nome}</div>
                     <div className="cfg-row-s">{c.cidade || "Cidade não informada"}</div>
                   </div>
+                  <button className="btn btn-sec btn-sm" type="button" onClick={() => setGerirCongId(c.id)}>Gerir</button>
                 </div>
               ))}
             </>
           )}
           {churches.length === 0 && <div className="empty">Nenhuma congregação encontrada.</div>}
+          <button
+            className="btn btn-pri btn-sm"
+            type="button"
+            style={{ marginTop: 18 }}
+            onClick={() => setModal({
+              eyebrow: "Criar",
+              title: "Adicionar congregação",
+              subtitle: "Nova unidade da rede, com seus próprios times e escalas.",
+              saveLabel: "Adicionar congregação",
+              formFields: [
+                { k: "nome", label: "Nome", type: "text", req: true, ph: "ex: CE.X Zona Norte" },
+                { k: "cidade", label: "Cidade / bairro", type: "text", half: true },
+                { k: "doc", label: "CNPJ", type: "text", half: true },
+                { k: "fundada", label: "Ano de fundação", type: "text", half: true },
+                { k: "endereco", label: "Endereço", type: "text", half: true },
+                { k: "cep", label: "CEP", type: "text", half: true },
+                { k: "email", label: "E-mail", type: "text", half: true },
+                { k: "tel", label: "Telefone", type: "text", half: true },
+              ],
+              action: { kind: "congregacao" },
+            })}
+          >
+            + Adicionar congregação
+          </button>
         </div>
       )}
 
       {editMin && (
         <MinisterioEditModal ministry={editMin} onClose={() => setEditMin(null)} onRefresh={() => router.refresh()} />
       )}
+
+      {elencoTag && (
+        <TagElencoModal tag={elencoTag} people={people} onClose={() => setElencoTag(null)} />
+      )}
+
+      {gerirCongId && (() => {
+        const c = churches.find((x) => x.id === gerirCongId);
+        if (!c) return null;
+        return (
+          <CongregacaoEditModal churchRow={c} onClose={() => setGerirCongId(null)} onRefresh={() => router.refresh()} />
+        );
+      })()}
     </div>
   );
 }
@@ -6613,6 +6880,20 @@ function ServiceModal({
         weekday: value("dia") || null,
         time: value("hora") || null,
         neighborhood: value("bairro") || null,
+      });
+    } else if (action.kind === "congregacao") {
+      if (!value("nome")) { setSaving(false); setError("Digite o nome da congregação."); return; }
+      result = await supabase.schema("service").from("churches").insert({
+        organization_id: church.organizationId,
+        name: value("nome"),
+        city: value("cidade") || null,
+        is_headquarters: false,
+        doc: value("doc") || null,
+        founded_year: value("fundada") || null,
+        address: value("endereco") || null,
+        postal_code: value("cep") || null,
+        email: value("email") || null,
+        phone: value("tel") || null,
       });
     }
 
