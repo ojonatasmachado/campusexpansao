@@ -5,8 +5,44 @@ const CHURCH_1 = "ch-1";
 const CHURCH_2 = "ch-2";
 
 const CHURCHES = [
-  { id: CHURCH_1, organizationId: ORG, nome: "CE.X Central", cidade: "São Paulo", matriz: true },
+  { id: CHURCH_1, organizationId: ORG, nome: "CE.X Central", cidade: "São Paulo", matriz: true, doc: "12.345.678/0001-90", foundedYear: "2012", address: "Rua das Missões, 120", postalCode: "01234-000", email: "contato@cexcentral.org", phone: "(11) 4002-8922" },
   { id: CHURCH_2, organizationId: ORG, nome: "CE.X Norte", cidade: "São Paulo", matriz: false },
+];
+
+const CHURCH_IDENTITY = {
+  church_id: CHURCH_1,
+  purpose: "Existimos para os de fora. Toda a nossa estrutura serve ao alcance da cidade.",
+  mission: "CE.X Central existe para fazer discípulos de Jesus Cristo que transformem a cidade.",
+  vision: "Uma rede de igrejas saudáveis que impacta cada bairro da cidade.",
+  verse: "Mateus 28:18-20 · A Grande Comissão",
+  values: [{ title: "Comunidade" }, { title: "Palavra" }, { title: "Missão" }],
+};
+
+const CYCLES = [
+  { id: "cy-1", year: "2026 · 1º semestre", theme: "Raízes profundas", verse: "Salmos 1:3 · \"Será como árvore plantada junto a ribeiros de águas\"", body: "Um chamado a aprofundar a vida com Deus — na Palavra, na oração e na comunidade — para que o crescimento externo seja fruto de raízes internas sólidas.", objectives: [{ title: "Crescimento pessoal na leitura bíblica diária" }, { title: "Multiplicação de grupos de discipulado" }, { title: "Integração de 80% dos visitantes em GCs" }], is_active: true },
+];
+
+const HISTORY_ENTRIES = [
+  { id: "he-1", year: "2012", title: "Fundação", body: "Início do ministério com 12 pessoas comprometidas com a visão de alcançar a cidade por meio de discipulado intencional.", link: null, sort_order: 0 },
+  { id: "he-2", year: "2016", title: "Primeira expansão", body: "Abertura da primeira congregação em bairro vizinho. A rede começa a tomar forma: mesma visão, mesma doutrina, mesma cultura.", link: null, sort_order: 1 },
+  { id: "he-3", year: "2020", title: "Transformação digital", body: "Migração completa para plataforma digital durante a pandemia. A comunidade descobriu a força dos grupos online.", link: null, sort_order: 2 },
+  { id: "he-4", year: "2024", title: "CE.X Service", body: "Lançamento da plataforma de gestão ministerial: pessoas, escala, jornada e comunicação num único lugar.", link: null, sort_order: 3 },
+];
+
+const MINISTERIAL_TITLES = [
+  { id: "mt-1", name: "Pastor", sort_order: 0 },
+  { id: "mt-2", name: "Diácono", sort_order: 1 },
+  { id: "mt-3", name: "Presbítero", sort_order: 2 },
+];
+
+const FELLOWSHIP_GROUPS = [
+  { id: "fg-1", name: "GC Centro", leader_person_id: "p1", weekday: "Quarta-feira", time: "20h", neighborhood: "Centro" },
+  { id: "fg-2", name: "GC Vila Madalena", leader_person_id: "p2", weekday: "Terça-feira", time: "19h30", neighborhood: "Vila Madalena" },
+];
+
+const TAGS = [
+  { id: "tg-1", name: "Jovens", color: "olive", leaders: ["p1"] },
+  { id: "tg-2", name: "Kids", color: "wheat", leaders: ["p4"] },
 ];
 
 const PEOPLE = [
@@ -244,6 +280,12 @@ export default function ServiceDemoPage() {
       rehearsals={REHEARSALS}
       rooms={ROOMS}
       reservations={RESERVATIONS}
+      churchIdentity={CHURCH_IDENTITY}
+      cycles={CYCLES}
+      historyEntries={HISTORY_ENTRIES}
+      ministerialTitles={MINISTERIAL_TITLES}
+      fellowshipGroups={FELLOWSHIP_GROUPS}
+      tags={TAGS}
       error=""
     />
   );

@@ -15,6 +15,12 @@ type ChurchView = {
   nome: string;
   cidade: string;
   matriz: boolean;
+  doc?: string | null;
+  foundedYear?: string | null;
+  address?: string | null;
+  postalCode?: string | null;
+  email?: string | null;
+  phone?: string | null;
 };
 
 type PersonView = {
@@ -251,6 +257,56 @@ type RoomView = {
   resources: string[];
 };
 
+type ChurchIdentityView = {
+  church_id: string;
+  purpose: string | null;
+  mission: string | null;
+  vision: string | null;
+  verse: string | null;
+  values: Array<{ title: string }>;
+};
+
+type CycleView = {
+  id: string;
+  year: string;
+  theme: string;
+  verse: string | null;
+  body: string | null;
+  objectives: Array<{ title: string }>;
+  is_active: boolean;
+};
+
+type HistoryEntryView = {
+  id: string;
+  year: string | null;
+  title: string;
+  body: string | null;
+  link: string | null;
+  sort_order: number;
+};
+
+type MinisterialTitleView = {
+  id: string;
+  name: string;
+  sort_order: number;
+};
+
+type FellowshipGroupView = {
+  id: string;
+  name: string;
+  leader_person_id: string | null;
+  weekday: string | null;
+  time: string | null;
+  neighborhood: string | null;
+};
+
+type TagView = {
+  id: string;
+  name: string;
+  color: string;
+  leaders: string[];
+};
+
 type ReservationView = {
   id: string;
   room_id: string;
@@ -290,6 +346,12 @@ type Props = {
   rehearsals: RehearsalView[];
   rooms: RoomView[];
   reservations: ReservationView[];
+  churchIdentity?: ChurchIdentityView | null;
+  cycles?: CycleView[];
+  historyEntries?: HistoryEntryView[];
+  ministerialTitles?: MinisterialTitleView[];
+  fellowshipGroups?: FellowshipGroupView[];
+  tags?: TagView[];
   error: string;
 };
 
@@ -338,7 +400,13 @@ type ModalState =
         | { kind: "reservation"; roomId?: string }
         | { kind: "member" }
         | { kind: "event" }
-        | { kind: "ministry" };
+        | { kind: "ministry" }
+        | { kind: "identity" }
+        | { kind: "historyEntry"; id?: string }
+        | { kind: "cycle" }
+        | { kind: "title" }
+        | { kind: "tag" }
+        | { kind: "group" };
     }
   | null;
 
@@ -639,6 +707,12 @@ export default function ServiceExactApp({
   rehearsals,
   rooms,
   reservations,
+  churchIdentity = null,
+  cycles = [],
+  historyEntries = [],
+  ministerialTitles = [],
+  fellowshipGroups = [],
+  tags = [],
   error,
 }: Props) {
   const [route, setRoute] = useState<keyof typeof ROUTES>("painel");
@@ -794,9 +868,9 @@ export default function ServiceExactApp({
         {route === "comunicacao" ? <Comunicacao announcements={announcements} wallPosts={wallPosts} ministries={ministries} setModal={setModal} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} setModal={setModal} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} decisions={decisions} baptismClasses={baptismClasses} courses={courses} boards={boards} chats={chats} visitors={visitors} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
-        {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} theme={theme} setTheme={setTheme} /> : null}
-        {route === "identidade" ? <Identidade church={firstChurch} setModal={setModal} /> : null}
-        {route === "historia" ? <Historia church={firstChurch} setModal={setModal} /> : null}
+        {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} theme={theme} setTheme={setTheme} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} setModal={setModal} /> : null}
+        {route === "identidade" ? <Identidade church={firstChurch} identity={churchIdentity} cycle={cycles.find((c) => c.is_active) ?? cycles[0]} setModal={setModal} /> : null}
+        {route === "historia" ? <Historia church={firstChurch} historyEntries={historyEntries} setModal={setModal} /> : null}
       </div>
 
       <button className="mob-launch" type="button" onClick={() => setMobileOpen(true)}>
@@ -1183,12 +1257,12 @@ function Membros({ members, ministries, setDrawer, setModal }: { members: Member
         <span className="panel-meta">{visible.length} membros</span>
       </div>
       <div className="tbl">
-        <div className="tr head" style={{ gridTemplateColumns: "1.6fr 0.8fr 1.1fr 1fr" }}><span>Membro</span><span>Membro desde</span><span>Serve</span><span>Jornada</span></div>
+        <div className="tr head" style={{ gridTemplateColumns: "1.6fr 0.8fr 1.1fr 1.1fr" }}><span>Membro</span><span>Membro desde</span><span>Serve</span><span>Jornada</span></div>
         {visible.map((m) => {
           const mins = getMemberMinistries(m.name);
           const isLeader = mins.some((min) => min.people.find((p) => p.personName === m.name)?.isLeader);
           return (
-            <button className="tr click" type="button" key={m.id} style={{ gridTemplateColumns: "1.6fr 0.8fr 1.1fr 1fr" }} onClick={() => setDrawer({ kind: "member", id: m.id })}>
+            <button className="tr click" type="button" key={m.id} style={{ gridTemplateColumns: "1.6fr 0.8fr 1.1fr 1.1fr" }} onClick={() => setDrawer({ kind: "member", id: m.id })}>
               <div className="cell-person"><Av name={m.name} size="md" /><div><div className="cell-name">{m.name}</div><div className="cell-sub">{m.phone || m.neighborhood || "—"}</div></div></div>
               <div><div style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.02em" }}>{m.firstContact || "—"}</div><div className="cell-sub">na casa</div></div>
               <div>
@@ -1212,8 +1286,8 @@ function Pessoas({ people, setDrawer, setModal }: { people: PersonView[]; setDra
       <PageHead title="Voluntários" eyebrow="Pessoas" subtitle="Quem serve, em quais times e funções. Toque para ver perfil, disponibilidade e histórico." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo voluntário", subtitle: "Cadastre e já escolha os ministérios.", saveLabel: "Adicionar voluntário", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"e-mail da pessoa" }], action: { kind: "member" } })}>+ Novo voluntário</button>} />
       <div className="toolbar"><div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome..." /></div><div className="seg"><button className="on">Todos</button><button>Ativos</button><button>Pausa</button></div><div className="tb-spacer" /><span className="panel-meta">{people.length} pessoas</span></div>
       <div className="tbl">
-        <div className="tr th"><div>Voluntário</div><div>Disponibilidade</div><div>Frentes</div><div>Status</div></div>
-        {people.map((person) => <button className="tr click" type="button" key={person.id} onClick={() => setDrawer({ kind: "person", id: person.id })}><div className="who"><Av name={person.name} /><div><strong>{person.name}</strong><small>{person.phone}</small></div></div><div>{formatAvailability(person.availability)}</div><div>{person.tags.join(" · ") || "sem tags"}</div><div><Chip status={person.status} /></div></button>)}
+        <div className="tr head tr-people"><div>Voluntário</div><div>Disponibilidade</div><div>Frentes</div><div>Status</div></div>
+        {people.map((person) => <button className="tr click tr-people" type="button" key={person.id} onClick={() => setDrawer({ kind: "person", id: person.id })}><div className="who"><Av name={person.name} /><div><strong>{person.name}</strong><small>{person.phone}</small></div></div><div>{formatAvailability(person.availability)}</div><div>{person.tags.join(" · ") || "sem tags"}</div><div><Chip status={person.status} /></div></button>)}
       </div>
     </div>
   );
@@ -1224,7 +1298,7 @@ function Times({ ministries, people, setDrawer, setModal }: { ministries: Minist
     <div className="content">
       <PageHead title="Times & Ministérios" eyebrow="Pessoas" subtitle="Times, líderes, funções e voluntários vinculados." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo time / ministério", subtitle: "Crie o ministério e já conte o propósito dele.", saveLabel: "Criar ministério", formFields: [{ k:"nome", label:"Nome do ministério", type:"text", req:true, ph:"ex: Louvor & Adoração" }, { k:"desc", label:"Descrição curta", type:"text", ph:"Uma linha sobre o time" }, { k:"proposito", label:"Propósito", type:"area", ph:"Por que esse time existe?" }, { k:"aberto", label:"Recebendo voluntários?", type:"toggle", onLabel:"Aberto a novos", offLabel:"Equipe completa" }], action: { kind: "ministry" } })}>+ Novo time</button>} />
       <div className="team-grid">
-        {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => <Av key={link.personId} name={people.find((person) => person.id === link.personId)?.name ?? link.personName} />)}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName ?? "a definir"}</em></div><div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> voluntários</span><span className="team-stat"><b>{ministry.positions.length}</b> funções</span></div></button>)}
+        {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => <Av key={link.personId} name={people.find((person) => person.id === link.personId)?.name ?? link.personName} />)}{ministry.people.length > 4 && <div className="av-more">+{ministry.people.length - 4}</div>}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName ?? "a definir"}</em></div><div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> voluntários</span><span className="team-stat"><b>{ministry.positions.length}</b> funções</span></div></button>)}
       </div>
     </div>
   );
@@ -1588,20 +1662,57 @@ function Visitantes({
 
       {view === "painel" ? (
         <div className="vpanel">
-          <div className="kpi-row"><Kpi icon="visitante" label="Visitantes" value={visitors.length} foot="no acompanhamento" /><Kpi icon="comunicacao" label="Respondem" value={`${replyRate}%`} foot={`${answered.length} de ${contacted.length} contatados`} /><Kpi icon="membros" label="Integram" value={`${integrationRate}%`} foot={`${members.length} de ${visitors.length}`} /><Kpi icon="config" label="Sem resposta" value={visitors.filter((visitor) => visitor.reply_status === "sem_resposta").length} foot="precisam novo contato" amber /></div>
-          <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Visitantes por culto</span></div><div className="panel-body flush">{Object.entries(byService).map(([name, count]) => <div className="dist-row" key={name}><span className="dist-name">{name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(count / maxService) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}{visitors.length === 0 ? <div className="empty">Nenhum visitante ainda.</div> : null}</div></div>
+          <div className="kpi-row"><Kpi icon="visitante" label="Visitantes" value={visitors.length} foot="no acompanhamento" /><Kpi icon="comunicacao" label="Respondem o contato" value={`${replyRate}%`} foot={`${answered.length} de ${contacted.length} contatados`} /><Kpi icon="ok" label="Integram (viram membro)" value={`${integrationRate}%`} foot={`${members.length} de ${visitors.length} · ${visitors.filter((v) => v.stage === "integrando" || v.stage === "membro").length} em integração`} /><Kpi icon="alerta" label="Sem resposta" value={visitors.filter((visitor) => visitor.reply_status === "sem_resposta").length} foot="precisam de novo contato" amber /></div>
+          <div className="vpanel-grid">
+            <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Visitantes por culto</span></div><div className="panel-body flush">{Object.entries(byService).map(([name, count]) => <div className="dist-row" key={name}><span className="dist-name">{name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(count / maxService) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}{visitors.length === 0 ? <div className="empty">Nenhum visitante ainda.</div> : null}</div></div>
+            <div className="panel">
+              <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Resposta ao 1º contato</span></div>
+              <div className="panel-body">
+                {(() => {
+                  const semResposta = visitors.filter((v) => v.reply_status === "sem_resposta");
+                  const naoContatados = visitors.filter((v) => !v.reply_status);
+                  return (
+                    <>
+                      <div className="resp-split">
+                        <div className="resp-seg respondeu" style={{ flex: Math.max(answered.length, 0.001) }} title="Responderam" />
+                        <div className="resp-seg sem" style={{ flex: Math.max(semResposta.length, 0.001) }} title="Sem resposta" />
+                        <div className="resp-seg nao" style={{ flex: Math.max(naoContatados.length, 0.001) }} title="Ainda não contatados" />
+                      </div>
+                      <div className="resp-legend">
+                        <span><i className="resp-dot respondeu" /> {answered.length} responderam</span>
+                        <span><i className="resp-dot sem" /> {semResposta.length} sem resposta</span>
+                        <span><i className="resp-dot nao" /> {naoContatados.length} a contatar</span>
+                      </div>
+                      <div className="dsec-title" style={{ margin: "18px 0 8px" }}>Não responderam · refazer contato</div>
+                      {semResposta.length === 0 && <div style={{ fontSize: 12.5, color: "var(--subtle)" }}>Ninguém sem resposta.</div>}
+                      {semResposta.map((visitor) => {
+                        const owner = visitor.responsible_id ? personById.get(visitor.responsible_id) : null;
+                        return (
+                          <button className="flag-row click" type="button" key={visitor.id} style={{ cursor: "pointer" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}>
+                            <Av name={visitor.name} size="sm" />
+                            <div className="flag-main"><div className="flag-nome">{visitor.name}</div><div className="flag-meta">{visitor.visited_on || "sem data"} · {owner ? `resp. ${owner.name.split(" ")[0]}` : "sem dono"}</div></div>
+                            <span className="vcard-noresp" style={{ marginLeft: "auto" }}>sem resposta</span>
+                          </button>
+                        );
+                      })}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
         </div>
       ) : view === "pipe" ? (
         <div className="pipe">
           {VISITOR_STAGES.map((stage) => {
             const items = visitors.filter((visitor) => visitor.stage === stage.id);
-            return <div className="pipe-col" key={stage.id}><div className="pipe-head"><span className="pipe-dot" style={{ background: stage.color }} /><span className="pipe-name">{stage.name}</span><span className="pipe-num">{items.length}</span></div><div className="pipe-body">{items.map((visitor) => { const owner = visitor.responsible_id ? personById.get(visitor.responsible_id) : null; return <button className="vcard" type="button" key={visitor.id} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="vcard-top"><Av name={visitor.name} size="sm" /><div style={{ minWidth: 0 }}><div className="vcard-name">{visitor.name}</div><div className="vcard-when">{visitor.origin || "Visitante"}</div></div></div><div className="vcard-foot"><div className="vcard-owner">{owner?.name || visitor.origin || "sem dono"}</div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "próximo contato"}</span></div></button>; })}{items.length === 0 ? <div className="empty" style={{ padding: 14 }}>vazio</div> : null}</div></div>;
+            return <div className="pipe-col" key={stage.id}><div className="pipe-head"><span className="pipe-dot" style={{ background: stage.color }} /><span className="pipe-name">{stage.name}</span><span className="pipe-num">{items.length}</span></div><div className="pipe-body">{items.map((visitor) => { return <button className="vcard" type="button" key={visitor.id} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="vcard-top"><Av name={visitor.name} size="sm" /><div style={{ minWidth: 0 }}><div className="vcard-name">{visitor.name}</div><div className="vcard-when">{visitor.origin || "Visitante"}</div></div></div><div className="vcard-foot">{visitor.reply_status === "sem_resposta" ? <span className="vcard-noresp">sem resposta</span> : visitor.reply_status === "respondeu" ? <span className="vcard-resp">respondeu</span> : <div className="vcard-owner">{visitor.origin || "Visitante"}</div>}<span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "próximo contato"}</span></div></button>; })}{items.length === 0 ? <div className="empty" style={{ padding: 14 }}>vazio</div> : null}</div></div>;
           })}
         </div>
       ) : (
         <div className="tbl">
           <div className="tr head" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }}><span>Visitante</span><span>Etapa</span><span>Como chegou</span><span>Próximo passo</span><span>Visitou</span></div>
-          {visitors.map((visitor) => <button className="tr click" key={visitor.id} type="button" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone || "Telefone não informado"}</div></div></div><div><Chip status={visitor.stage === "membro" ? "ok" : "wait"} /></div><div className="cell-sub">{visitor.origin || "Visitante"}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "sem prazo"}</span></div><div className="mini-right">{visitor.visited_on || "sem data"}</div></button>)}
+          {visitors.map((visitor) => { const stage = VISITOR_STAGES.find((s) => s.id === visitor.stage); return <button className="tr click" key={visitor.id} type="button" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone || "Telefone não informado"}</div></div></div><div><span className="chip chip-neutral" style={{ color: stage?.color, borderColor: "var(--border-2)" }}>{stage?.name ?? visitor.stage}</span></div><div className="cell-sub">{visitor.origin || "Visitante"}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "sem prazo"}</span></div><div className="mini-right">{visitor.visited_on || "sem data"}</div></button>; })}
         </div>
       )}
     </div>
@@ -2905,6 +3016,7 @@ const CFG_TABS = [
   { id: "igreja", label: "Igreja" },
   { id: "min", label: "Ministérios & funções" },
   { id: "operacao", label: "Escala & presença" },
+  { id: "grupos", label: "Grupos & Células" },
   { id: "visual", label: "Personalização" },
   { id: "rede", label: "Congregações" },
 ];
@@ -2972,6 +3084,10 @@ function Config({
   people: _people,
   theme,
   setTheme,
+  ministerialTitles,
+  fellowshipGroups,
+  tags,
+  setModal,
 }: {
   church?: ChurchView;
   churches: ChurchView[];
@@ -2979,11 +3095,24 @@ function Config({
   people: PersonView[];
   theme: "dark" | "light";
   setTheme: (t: "dark" | "light") => void;
+  ministerialTitles: MinisterialTitleView[];
+  fellowshipGroups: FellowshipGroupView[];
+  tags: TagView[];
+  setModal: (modal: ModalState) => void;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState("igreja");
 
-  const [igrejaForm, setIgrejaForm] = useState({ nome: church?.nome ?? "", cidade: church?.cidade ?? "" });
+  const [igrejaForm, setIgrejaForm] = useState({
+    nome: church?.nome ?? "",
+    cidade: church?.cidade ?? "",
+    doc: church?.doc ?? "",
+    fundada: church?.foundedYear ?? "",
+    endereco: church?.address ?? "",
+    cep: church?.postalCode ?? "",
+    email: church?.email ?? "",
+    tel: church?.phone ?? "",
+  });
   const [igrejaLoading, setIgrejaLoading] = useState(false);
   const [igrejaMsg, setIgrejaMsg] = useState("");
 
@@ -2993,13 +3122,28 @@ function Config({
     await createServiceBrowserClient()
       .schema("service")
       .from("churches")
-      .update({ name: igrejaForm.nome.trim() || church.nome, city: igrejaForm.cidade.trim() || null })
+      .update({
+        name: igrejaForm.nome.trim() || church.nome,
+        city: igrejaForm.cidade.trim() || null,
+        doc: igrejaForm.doc.trim() || null,
+        founded_year: igrejaForm.fundada.trim() || null,
+        address: igrejaForm.endereco.trim() || null,
+        postal_code: igrejaForm.cep.trim() || null,
+        email: igrejaForm.email.trim() || null,
+        phone: igrejaForm.tel.trim() || null,
+      })
       .eq("id", church.id);
     setIgrejaMsg("Salvo!");
     setIgrejaLoading(false);
     router.refresh();
     setTimeout(() => setIgrejaMsg(""), 2000);
   };
+
+  async function removeRow(table: string, id: string) {
+    if (!window.confirm("Remover este registro?")) return;
+    await createServiceBrowserClient().schema("service").from(table).delete().eq("id", id);
+    router.refresh();
+  }
 
   const [editMin, setEditMin] = useState<MinistryView | null>(null);
 
@@ -3051,15 +3195,31 @@ function Config({
               <label className="field-label">Nome da igreja</label>
               <input className="input" value={igrejaForm.nome} onChange={(e) => setIgrejaForm((p) => ({ ...p, nome: e.target.value }))} />
             </div>
-            <div className="field">
-              <label className="field-label">Cidade</label>
-              <input className="input" value={igrejaForm.cidade} onChange={(e) => setIgrejaForm((p) => ({ ...p, cidade: e.target.value }))} />
+            <div className="cfg-grid2" style={{ gap: "0 16px" }}>
+              <div className="field"><label className="field-label">CNPJ</label><input className="input" value={igrejaForm.doc} onChange={(e) => setIgrejaForm((p) => ({ ...p, doc: e.target.value }))} /></div>
+              <div className="field"><label className="field-label">Fundada em</label><input className="input" value={igrejaForm.fundada} onChange={(e) => setIgrejaForm((p) => ({ ...p, fundada: e.target.value }))} /></div>
             </div>
             <button className="btn btn-pri btn-sm" type="button" disabled={igrejaLoading} onClick={saveIgreja}>
               {igrejaLoading ? "Salvando…" : igrejaMsg || "Salvar"}
             </button>
           </div>
           <div className="cfg-card">
+            <div className="cfg-card-t">Endereço & contato</div>
+            <div className="cfg-card-s">Onde a igreja se reúne e como falar com a secretaria.</div>
+            <div className="field"><label className="field-label">Endereço</label><input className="input" value={igrejaForm.endereco} onChange={(e) => setIgrejaForm((p) => ({ ...p, endereco: e.target.value }))} /></div>
+            <div className="cfg-grid2" style={{ gap: "0 16px" }}>
+              <div className="field"><label className="field-label">Cidade</label><input className="input" value={igrejaForm.cidade} onChange={(e) => setIgrejaForm((p) => ({ ...p, cidade: e.target.value }))} /></div>
+              <div className="field"><label className="field-label">CEP</label><input className="input" value={igrejaForm.cep} onChange={(e) => setIgrejaForm((p) => ({ ...p, cep: e.target.value }))} /></div>
+            </div>
+            <div className="cfg-grid2" style={{ gap: "0 16px" }}>
+              <div className="field"><label className="field-label">E-mail</label><input className="input" value={igrejaForm.email} onChange={(e) => setIgrejaForm((p) => ({ ...p, email: e.target.value }))} /></div>
+              <div className="field"><label className="field-label">Telefone</label><input className="input" value={igrejaForm.tel} onChange={(e) => setIgrejaForm((p) => ({ ...p, tel: e.target.value }))} /></div>
+            </div>
+            <button className="btn btn-pri btn-sm" type="button" disabled={igrejaLoading} onClick={saveIgreja}>
+              {igrejaLoading ? "Salvando…" : igrejaMsg || "Salvar"}
+            </button>
+          </div>
+          <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
             <div className="cfg-card-t">Sobre a unidade</div>
             <div className="cfg-card-s">Informações estruturais desta congregação.</div>
             <dl className="kv" style={{ marginTop: 0 }}>
@@ -3099,6 +3259,64 @@ function Config({
             );
           })}
           {ministries.length === 0 && <div className="empty">Nenhum ministério ainda.</div>}
+        </div>
+      )}
+
+      {tab === "min" && (
+        <div className="cfg-card" style={{ marginTop: 16 }}>
+          <div className="cfg-card-t">Papéis ministeriais</div>
+          <div className="cfg-card-s">Os títulos que a sua igreja reconhece (Pastor, Diácono, Presbítero...). Atribuídos aos membros na ficha de cada um.</div>
+          <div className="cell-tags" style={{ gap: 8, marginBottom: 16 }}>
+            {ministerialTitles.map((t) => (
+              <span key={t.id} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                {t.name}
+                <button type="button" onClick={() => removeRow("ministerial_titles", t.id)} style={{ background: "none", border: "none", color: "var(--subtle)", fontSize: 12, padding: 0, cursor: "pointer" }}>✕</button>
+              </span>
+            ))}
+            {ministerialTitles.length === 0 && <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhum papel cadastrado.</span>}
+          </div>
+          <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo papel ministerial", subtitle: "ex: Pastor, Diácono, Presbítero.", saveLabel: "Adicionar papel", formFields: [{ k:"nome", label:"Nome do papel", type:"text", req:true, ph:"ex: Diácono" }], action: { kind: "title" } })}>+ Papel ministerial</button>
+        </div>
+      )}
+
+      {tab === "min" && (
+        <div className="cfg-card" style={{ marginTop: 16 }}>
+          <div className="cfg-card-t">Frentes / tags</div>
+          <div className="cfg-card-s">Etiquetas livres como Jovens, Kids ou Casais. Uma pessoa pode ter várias — servem para montar o elenco de uma frente sem depender do time (ministério).</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "4px 0 14px" }}>
+            {tags.map((t) => (
+              <div className="cfg-row" key={t.id}>
+                <div className="cong-mark" style={{ background: "var(--ink)" }}><span style={{ width: 9, height: 9, borderRadius: "50%", background: `var(--${t.color})`, display: "inline-block" }} /></div>
+                <div className="cfg-row-main"><div className="cfg-row-t">{t.name}</div></div>
+                <button className="btn btn-sec btn-sm" type="button" onClick={() => removeRow("tags", t.id)}>Remover</button>
+              </div>
+            ))}
+            {tags.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>Nenhuma frente cadastrada.</div>}
+          </div>
+          <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova frente / tag", subtitle: "Etiqueta livre para agrupar voluntários (ex: Jovens, Casais).", saveLabel: "Criar frente", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Jovens" }, { k:"cor", label:"Cor", type:"select", options:[{v:"olive",l:"Oliva"},{v:"wheat",l:"Trigo"},{v:"clay",l:"Argila"},{v:"terra",l:"Terracota"},{v:"sand",l:"Areia"},{v:"amber",l:"Âmbar"},{v:"rust",l:"Ferrugem"}] }], action: { kind: "tag" } })}>+ Frente</button>
+        </div>
+      )}
+
+      {/* ─── GRUPOS & CÉLULAS ─── */}
+      {tab === "grupos" && (
+        <div className="cfg-card">
+          <div className="cfg-card-t">Grupos de Comunhão · {fellowshipGroups.length}</div>
+          <div className="cfg-card-s">Células, GCs, pequenos grupos... a estrutura de comunhão em casas. Cada grupo tem um líder, um dia e um bairro.</div>
+          {fellowshipGroups.map((g) => {
+            const leader = _people.find((p) => p.id === g.leader_person_id);
+            return (
+              <div className="cfg-row" key={g.id}>
+                <div className="cong-mark"><Icon name="identidade" size={16} /></div>
+                <div className="cfg-row-main">
+                  <div className="cfg-row-t">{g.name}</div>
+                  <div className="cfg-row-s">{[g.weekday, g.time, g.neighborhood].filter(Boolean).join(" · ") || "sem dia/local definido"}{leader ? ` · líder ${leader.name.split(" ")[0]}` : ""}</div>
+                </div>
+                <button className="btn btn-sec btn-sm" type="button" onClick={() => removeRow("fellowship_groups", g.id)}>Remover</button>
+              </div>
+            );
+          })}
+          {fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhum grupo cadastrado ainda.</div>}
+          <button className="btn btn-pri btn-sm" type="button" style={{ marginTop: 18 }} onClick={() => setModal({ eyebrow: "Criar", title: "Novo Grupo de Comunhão", subtitle: "Nome, líder, dia, horário e bairro do grupo.", saveLabel: "Criar grupo", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: GC Centro" }, { k:"lider", label:"Líder", type:"select", half:true, ph:"A definir", options: _people.map((p) => ({ v: p.name, l: p.name })) }, { k:"dia", label:"Dia", type:"text", half:true, ph:"ex: Quarta-feira" }, { k:"hora", label:"Horário", type:"text", half:true, ph:"ex: 20h" }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"ex: Centro" }], action: { kind: "group" } })}>+ Novo grupo</button>
         </div>
       )}
 
@@ -3232,97 +3450,98 @@ function Config({
   );
 }
 
-function Identidade({ church, setModal }: { church?: ChurchView; setModal: (modal: ModalState) => void }) {
+function Identidade({ church, identity, cycle, setModal }: { church?: ChurchView; identity?: ChurchIdentityView | null; cycle?: CycleView; setModal: (modal: ModalState) => void }) {
+  const values = identity?.values?.length ? identity.values : [{ title: "Comunidade" }, { title: "Palavra" }, { title: "Missão" }];
   return (
     <div className="content wide">
       <PageHead
         title="Identidade & propósito"
         eyebrow="Nossa igreja"
         subtitle="Missão, visão, valores e tema atual da comunidade. Exibido no app do membro e na vitrine da Igreja."
-        action={<button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Editar", title: "Identidade da Igreja", subtitle: "Atualize a declaração de missão e visão da Igreja.", formFields: [{ k:"missao", label:"Missão", type:"area", ph:"A missão da Igreja..." }, { k:"visao", label:"Visão", type:"area", ph:"A visão da Igreja..." }, { k:"versiculo", label:"Versículo", type:"text", ph:"ex: Mateus 28:19" }] })}>Editar</button>}
+        action={<button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Editar", title: "Identidade da Igreja", subtitle: "Atualize propósito, missão, visão e valores da Igreja.", saveLabel: "Salvar", formFields: [{ k:"proposito", label:"Propósito", type:"area", ph:identity?.purpose ?? "Por que a Igreja existe..." }, { k:"missao", label:"Missão", type:"area", ph:identity?.mission ?? "A missão da Igreja..." }, { k:"visao", label:"Visão", type:"area", ph:identity?.vision ?? "A visão da Igreja..." }, { k:"versiculo", label:"Versículo", type:"text", half:true, ph:identity?.verse ?? "ex: Mateus 28:19" }, { k:"valores", label:"Valores (separados por vírgula)", type:"text", half:true, ph:values.map((v) => v.title).join(", ") }], action: { kind: "identity" } })}>Editar</button>}
       />
       <div className="ident-hero">
         <div className="ident-hero-label">Declaração de missão</div>
         <div className="ident-hero-text">
-          {church?.nome ? `${church.nome} existe para fazer discípulos de Jesus Cristo que transformem a cidade.` : "A Igreja existe para fazer discípulos de Jesus Cristo que transformem a cidade."}
+          {identity?.mission || (church?.nome ? `${church.nome} existe para fazer discípulos de Jesus Cristo que transformem a cidade.` : "A Igreja existe para fazer discípulos de Jesus Cristo que transformem a cidade.")}
         </div>
-        <div className="ident-verse">§ Mateus 28:18-20 · A Grande Comissão</div>
+        {identity?.verse && <div className="ident-verse">§ {identity.verse}</div>}
       </div>
       <div className="ident-grid">
         <div className="ident-card">
           <div className="ident-card-ic"><Icon name="identidade" size={18} /></div>
-          <div className="ident-card-t">Missão</div>
-          <div className="ident-card-x">Fazer discípulos que transformam a cidade pela graça de Deus.</div>
+          <div className="ident-card-t">Propósito</div>
+          <div className="ident-card-x">{identity?.purpose || "Ainda não definido. Toque em Editar para registrar."}</div>
         </div>
         <div className="ident-card">
           <div className="ident-card-ic"><Icon name="painel" size={18} /></div>
           <div className="ident-card-t">Visão</div>
-          <div className="ident-card-x">Uma rede de igrejas saudáveis que impacta cada bairro da cidade.</div>
+          <div className="ident-card-x">{identity?.vision || "Ainda não definida. Toque em Editar para registrar."}</div>
         </div>
       </div>
       <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">Valores</span><span className="line" /></div>
       <div className="val-grid">
-        {[
-          { ic: "membros", t: "Comunidade", x: "Somos família. A vida cristã é vivida juntos, não individualmente." },
-          { ic: "identidade", t: "Palavra", x: "A Bíblia é nossa autoridade suprema em doutrina e prática." },
-          { ic: "decisoes", t: "Missão", x: "Existimos para os de fora. Toda nossa estrutura serve ao alcance." },
-        ].map(({ ic, t, x }) => (
-          <div className="val-card" key={t}>
-            <div className="val-ic"><Icon name={ic} size={14} /></div>
-            <div className="val-t">{t}</div>
-            <div className="val-x">{x}</div>
+        {values.map((v, i) => (
+          <div className="val-card" key={v.title + i}>
+            <div className="val-ic"><Icon name={["membros", "identidade", "decisoes"][i % 3]} size={14} /></div>
+            <div className="val-t">{v.title}</div>
           </div>
         ))}
       </div>
       <div className="section-divide" style={{ marginTop: 28 }}><span className="num">03</span><span className="label">Tema do ciclo atual</span><span className="line" /></div>
-      <div className="ciclo">
-        <div className="ciclo-banner">
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(150deg, var(--olive-deep), #2d3d18)" }} />
-          <span className="ciclo-banner-tag">2026 · 1º semestre</span>
-        </div>
-        <div className="ciclo-body">
-          <div className="ciclo-tema">Raízes profundas</div>
-          <div className="ciclo-verse">§ Salmos 1:3 · "Será como árvore plantada junto a ribeiros de águas"</div>
-          <div className="ciclo-text">Um chamado a aprofundar a vida com Deus — na Palavra, na oração e na comunidade — para que o crescimento externo seja fruto de raízes internas sólidas.</div>
-          <div className="ciclo-obj" style={{ marginTop: 22 }}>
-            <div className="ciclo-obj-t">Objetivos do ciclo</div>
-            {["Crescimento pessoal na leitura bíblica diária", "Multiplicação de grupos de discipulado", "Integração de 80% dos visitantes em GCs"].map((obj, i) => (
-              <div className="ciclo-obj-row" key={obj}><span className="ciclo-obj-n">0{i + 1}</span>{obj}</div>
-            ))}
+      {cycle ? (
+        <div className="ciclo">
+          <div className="ciclo-banner">
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(150deg, var(--olive-deep), #2d3d18)" }} />
+            <span className="ciclo-banner-tag">{cycle.year}</span>
+          </div>
+          <div className="ciclo-body">
+            <div className="ciclo-tema">{cycle.theme}</div>
+            {cycle.verse && <div className="ciclo-verse">§ {cycle.verse}</div>}
+            {cycle.body && <div className="ciclo-text">{cycle.body}</div>}
+            {cycle.objectives.length > 0 && (
+              <div className="ciclo-obj" style={{ marginTop: 22 }}>
+                <div className="ciclo-obj-t">Objetivos do ciclo</div>
+                {cycle.objectives.map((obj, i) => (
+                  <div className="ciclo-obj-row" key={obj.title}><span className="ciclo-obj-n">0{i + 1}</span>{obj.title}</div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
+      ) : (
+        <div className="empty">Nenhum ciclo cadastrado ainda.</div>
+      )}
+      <div style={{ marginTop: 16 }}>
+        <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo ciclo anual", subtitle: "O tema que guia a Igreja neste período.", saveLabel: "Criar ciclo", formFields: [{ k:"ano", label:"Ano / período", type:"text", half:true, req:true, ph:"ex: 2026 · 1º semestre" }, { k:"tema", label:"Tema", type:"text", half:true, req:true, ph:"ex: Raízes profundas" }, { k:"versiculo", label:"Versículo", type:"text", ph:"ex: Salmos 1:3" }, { k:"desc", label:"Descrição", type:"area", ph:"O que esse tema significa para a Igreja..." }, { k:"objetivos", label:"Objetivos (separados por vírgula)", type:"text", ph:"ex: Leitura bíblica diária, Multiplicar GCs" }], action: { kind: "cycle" } })}>+ Novo ciclo</button>
       </div>
     </div>
   );
 }
 
-function Historia({ church, setModal }: { church?: ChurchView; setModal: (modal: ModalState) => void }) {
-  const marcos = [
-    { year: "2012", title: "Fundação", text: "Início do ministério com 12 pessoas comprometidas com a visão de alcançar a cidade por meio de discipulado intencional.", rev: false },
-    { year: "2016", title: "Primeira expansão", text: "Abertura da primeira congregação em bairro vizinho. A rede começa a tomar forma: mesma visão, mesma doutrina, mesma cultura.", rev: true },
-    { year: "2020", title: "Transformação digital", text: "Migração completa para plataforma digital durante a pandemia. A comunidade descobriu a força dos grupos online.", rev: false },
-    { year: "2024", title: "CE.X Service", text: "Lançamento da plataforma de gestão ministerial: pessoas, escala, jornada e comunicação num único lugar.", rev: true },
-  ];
+function Historia({ church: _church, historyEntries, setModal }: { church?: ChurchView; historyEntries: HistoryEntryView[]; setModal: (modal: ModalState) => void }) {
+  const marcos = [...historyEntries].sort((a, b) => a.sort_order - b.sort_order);
   return (
     <div className="content wide">
       <PageHead
         title="Nossa história"
         eyebrow="Nossa igreja"
         subtitle="Marcos, momentos e a linha do tempo de como chegamos até aqui. Cada capítulo é uma prova da fidelidade de Deus."
-        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Marco histórico", subtitle: "Registre um momento importante da história da Igreja.", saveLabel: "Adicionar marco", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:"ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:"ex: Fundação da Igreja" }, { k:"desc", label:"Descrição", type:"area", ph:"O que aconteceu..." }] })}>+ Marco</button>}
+        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Marco histórico", subtitle: "Registre um momento importante da história da Igreja.", saveLabel: "Adicionar marco", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:"ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:"ex: Fundação da Igreja" }, { k:"desc", label:"Descrição", type:"area", ph:"O que aconteceu..." }], action: { kind: "historyEntry" } })}>+ Marco</button>}
       />
+      {marcos.length === 0 && <div className="empty">Nenhum marco cadastrado ainda. Adicione o primeiro.</div>}
       <div className="hist">
-        {marcos.map((marco) => (
-          <div key={marco.year} className={`hist-item ${marco.rev ? "rev" : ""}`}>
+        {marcos.map((marco, i) => (
+          <div key={marco.id} className={`hist-item ${i % 2 === 1 ? "rev" : ""}`}>
             <div className="hist-photo">
-              <div style={{ position: "absolute", inset: 0, background: marco.rev ? "linear-gradient(150deg, var(--olive-deep), #243012)" : "linear-gradient(150deg, #7a6526, #3d3415)" }} />
-              <span className="hist-year">{marco.year}</span>
+              <div style={{ position: "absolute", inset: 0, background: i % 2 === 1 ? "linear-gradient(150deg, var(--olive-deep), #243012)" : "linear-gradient(150deg, #7a6526, #3d3415)" }} />
+              <span className="hist-year">{marco.year || "—"}</span>
             </div>
             <div className="hist-text">
               <div className="hist-t">{marco.title}</div>
-              <div className="hist-x">{marco.text}</div>
+              <div className="hist-x">{marco.body}</div>
               <div className="hist-foot">
-                <button className="hist-edit" type="button" onClick={() => setModal({ eyebrow: "Editar", title: marco.title, subtitle: "Edite este marco da história da Igreja.", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:"ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:marco.title }, { k:"desc", label:"Descrição", type:"area", ph:"O que aconteceu..." }] })}>Editar</button>
+                <button className="hist-edit" type="button" onClick={() => setModal({ eyebrow: "Editar", title: marco.title, subtitle: "Edite este marco da história da Igreja.", saveLabel: "Salvar", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:marco.year ?? "ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:marco.title }, { k:"desc", label:"Descrição", type:"area", ph:marco.body ?? "O que aconteceu..." }], action: { kind: "historyEntry", id: marco.id } })}>Editar</button>
               </div>
             </div>
           </div>
@@ -4588,6 +4807,68 @@ function ServiceModal({
         reserved_date: value("data") || null,
         start_time: value("inicio") || null,
         end_time: value("fim") || null,
+      });
+    } else if (action.kind === "identity") {
+      result = await supabase.schema("service").from("church_identity").upsert({
+        church_id: church.id,
+        organization_id: church.organizationId,
+        purpose: value("proposito") || null,
+        mission: value("missao") || null,
+        vision: value("visao") || null,
+        verse: value("versiculo") || null,
+        values: value("valores") ? value("valores").split(",").map((title) => ({ title: title.trim() })).filter((v) => v.title) : [],
+        updated_at: new Date().toISOString(),
+      });
+    } else if (action.kind === "historyEntry") {
+      if (!value("titulo")) { setSaving(false); setError("Digite o título do marco."); return; }
+      const payload = {
+        organization_id: church.organizationId,
+        church_id: church.id,
+        year: value("ano") || null,
+        title: value("titulo"),
+        body: value("desc") || null,
+        updated_at: new Date().toISOString(),
+      };
+      result = action.id
+        ? await supabase.schema("service").from("history_entries").update(payload).eq("id", action.id)
+        : await supabase.schema("service").from("history_entries").insert(payload);
+    } else if (action.kind === "cycle") {
+      if (!value("ano") || !value("tema")) { setSaving(false); setError("Digite o ano e o tema do ciclo."); return; }
+      result = await supabase.schema("service").from("cycles").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        year: value("ano"),
+        theme: value("tema"),
+        verse: value("versiculo") || null,
+        body: value("desc") || null,
+        objectives: value("objetivos") ? value("objetivos").split(",").map((title) => ({ title: title.trim() })).filter((o) => o.title) : [],
+        is_active: true,
+      });
+    } else if (action.kind === "title") {
+      if (!value("nome")) { setSaving(false); setError("Digite o nome do papel ministerial."); return; }
+      result = await supabase.schema("service").from("ministerial_titles").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        name: value("nome"),
+      });
+    } else if (action.kind === "tag") {
+      if (!value("nome")) { setSaving(false); setError("Digite o nome da frente."); return; }
+      result = await supabase.schema("service").from("tags").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        name: value("nome"),
+        color: value("cor") || "wheat",
+      });
+    } else if (action.kind === "group") {
+      if (!value("nome")) { setSaving(false); setError("Digite o nome do grupo."); return; }
+      result = await supabase.schema("service").from("fellowship_groups").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        name: value("nome"),
+        leader_person_id: namedPerson("lider")?.id ?? null,
+        weekday: value("dia") || null,
+        time: value("hora") || null,
+        neighborhood: value("bairro") || null,
       });
     }
 

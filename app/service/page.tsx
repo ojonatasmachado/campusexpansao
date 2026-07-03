@@ -8,6 +8,12 @@ type ChurchRow = {
   name: string;
   city: string | null;
   is_headquarters: boolean;
+  doc: string | null;
+  founded_year: string | null;
+  address: string | null;
+  postal_code: string | null;
+  email: string | null;
+  phone: string | null;
   created_at: string;
 };
 
@@ -18,6 +24,62 @@ type ChurchView = {
   cidade: string;
   matriz: boolean;
   criadaEm: string;
+  doc: string | null;
+  foundedYear: string | null;
+  address: string | null;
+  postalCode: string | null;
+  email: string | null;
+  phone: string | null;
+};
+
+type ChurchIdentityRow = {
+  church_id: string;
+  purpose: string | null;
+  mission: string | null;
+  vision: string | null;
+  verse: string | null;
+  values: Array<{ title: string }> | null;
+};
+
+type CycleRow = {
+  id: string;
+  year: string;
+  theme: string;
+  verse: string | null;
+  body: string | null;
+  objectives: Array<{ title: string }> | null;
+  is_active: boolean;
+};
+
+type HistoryEntryRow = {
+  id: string;
+  year: string | null;
+  title: string;
+  body: string | null;
+  link: string | null;
+  sort_order: number;
+};
+
+type MinisterialTitleRow = {
+  id: string;
+  name: string;
+  sort_order: number;
+};
+
+type FellowshipGroupRow = {
+  id: string;
+  name: string;
+  leader_person_id: string | null;
+  weekday: string | null;
+  time: string | null;
+  neighborhood: string | null;
+};
+
+type TagRow = {
+  id: string;
+  name: string;
+  color: string | null;
+  leaders: string[] | null;
 };
 
 type PersonRow = {
@@ -419,6 +481,12 @@ type ExtraServiceData = {
   rehearsals: RehearsalView[];
   rooms: RoomView[];
   reservations: ReservationView[];
+  churchIdentity: ChurchIdentityRow | null;
+  cycles: CycleRow[];
+  historyEntries: HistoryEntryRow[];
+  ministerialTitles: MinisterialTitleRow[];
+  fellowshipGroups: FellowshipGroupRow[];
+  tags: TagRow[];
 };
 
 const emptyExtraServiceData: ExtraServiceData = {
@@ -441,6 +509,12 @@ const emptyExtraServiceData: ExtraServiceData = {
   rehearsals: [],
   rooms: [],
   reservations: [],
+  churchIdentity: null,
+  cycles: [],
+  historyEntries: [],
+  ministerialTitles: [],
+  fellowshipGroups: [],
+  tags: [],
 };
 
 function friendlyReadError(message: string) {
@@ -462,6 +536,12 @@ function toChurchView(row: ChurchRow): ChurchView {
     cidade: row.city || "Cidade não informada",
     matriz: row.is_headquarters,
     criadaEm: row.created_at,
+    doc: row.doc,
+    foundedYear: row.founded_year,
+    address: row.address,
+    postalCode: row.postal_code,
+    email: row.email,
+    phone: row.phone,
   };
 }
 
@@ -583,7 +663,7 @@ async function getServiceDashboardData(): Promise<{
   const { data: churchesData, error: churchesError } = await supabase
     .schema("service")
     .from("churches")
-    .select("id,organization_id,name,city,is_headquarters,created_at")
+    .select("id,organization_id,name,city,is_headquarters,doc,founded_year,address,postal_code,email,phone,created_at")
     .order("is_headquarters", { ascending: false })
     .order("created_at");
 
@@ -772,6 +852,12 @@ async function getServiceDashboardData(): Promise<{
     rehearsalsResult,
     roomsResult,
     reservationsResult,
+    churchIdentityResult,
+    cyclesResult,
+    historyEntriesResult,
+    ministerialTitlesResult,
+    fellowshipGroupsResult,
+    tagsResult,
   ] = await Promise.all([
     supabase.schema("service").from("decisions").select("id,name,phone,happened_on,kind,service_name,responsible_id,status,member_id,age,notes,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("baptism_classes").select("id,label,baptism_date,location,status,pastor,notes,open_enrollment").order("created_at", { ascending: false }),
@@ -792,6 +878,12 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("rehearsals").select("id,ministry_id,title,kind,rehearsal_date,time,location,recurrence,audience,attendees,repertoire,attachments,notes").order("created_at", { ascending: false }),
     supabase.schema("service").from("rooms").select("id,name,capacity,location,resources").order("created_at", { ascending: false }),
     supabase.schema("service").from("reservations").select("id,room_id,title,kind,reserved_date,start_time,end_time,source_type,source_id").order("created_at", { ascending: false }),
+    supabase.schema("service").from("church_identity").select("church_id,purpose,mission,vision,verse,values").eq("church_id", churchesData?.[0]?.id ?? "").maybeSingle(),
+    supabase.schema("service").from("cycles").select("id,year,theme,verse,body,objectives,is_active").order("created_at", { ascending: false }),
+    supabase.schema("service").from("history_entries").select("id,year,title,body,link,sort_order").order("sort_order", { ascending: true }),
+    supabase.schema("service").from("ministerial_titles").select("id,name,sort_order").order("sort_order", { ascending: true }),
+    supabase.schema("service").from("fellowship_groups").select("id,name,leader_person_id,weekday,time,neighborhood").order("created_at", { ascending: false }),
+    supabase.schema("service").from("tags").select("id,name,color,leaders").order("created_at", { ascending: false }),
   ]);
 
   const extraError = [
@@ -814,6 +906,12 @@ async function getServiceDashboardData(): Promise<{
     rehearsalsResult.error,
     roomsResult.error,
     reservationsResult.error,
+    churchIdentityResult.error,
+    cyclesResult.error,
+    historyEntriesResult.error,
+    ministerialTitlesResult.error,
+    fellowshipGroupsResult.error,
+    tagsResult.error,
   ].find(Boolean);
 
   return {
@@ -851,6 +949,12 @@ async function getServiceDashboardData(): Promise<{
       rehearsals: ((rehearsalsResult.data ?? []) as RehearsalView[]),
       rooms: ((roomsResult.data ?? []) as RoomView[]),
       reservations: ((reservationsResult.data ?? []) as ReservationView[]),
+      churchIdentity: (churchIdentityResult.data ?? null) as ChurchIdentityRow | null,
+      cycles: ((cyclesResult.data ?? []) as CycleRow[]),
+      historyEntries: ((historyEntriesResult.data ?? []) as HistoryEntryRow[]),
+      ministerialTitles: ((ministerialTitlesResult.data ?? []) as MinisterialTitleRow[]),
+      fellowshipGroups: ((fellowshipGroupsResult.data ?? []) as FellowshipGroupRow[]),
+      tags: ((tagsResult.data ?? []) as TagRow[]),
     },
     error: extraError ? friendlyReadError(extraError.message) : "",
   };
@@ -899,6 +1003,12 @@ export default async function ServiceHomePage() {
       rehearsals={extra.rehearsals}
       rooms={extra.rooms}
       reservations={extra.reservations}
+      churchIdentity={extra.churchIdentity ? { ...extra.churchIdentity, values: extra.churchIdentity.values ?? [] } : null}
+      cycles={extra.cycles.map((cycle) => ({ ...cycle, objectives: cycle.objectives ?? [] }))}
+      historyEntries={extra.historyEntries}
+      ministerialTitles={extra.ministerialTitles}
+      fellowshipGroups={extra.fellowshipGroups}
+      tags={extra.tags.map((tag) => ({ ...tag, color: tag.color ?? "wheat", leaders: tag.leaders ?? [] }))}
       error={error}
     />
   );

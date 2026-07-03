@@ -76,6 +76,9 @@ em { font-style:italic; }
 .cong-opt.on { background:var(--olive-dim); }
 .cong-opt-dot { width:6px; height:6px; border-radius:50%; background:var(--subtle); flex-shrink:0; }
 .cong-opt.on .cong-opt-dot { background:var(--olive); }
+.cong-opt-mark { width:26px; height:26px; border-radius:7px; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:var(--ink); color:var(--olive); border:0.5px solid var(--border-2); }
+.cong-opt-info { min-width:0; flex:1; display:flex; flex-direction:column; }
+.cong-opt-sub { font-family:var(--mono); font-size:9.5px; color:var(--subtle); letter-spacing:0.06em; margin-top:2px; }
 .cong-opt-name { font-size:13px; color:var(--light); flex:1; letter-spacing:-0.01em; }
 .cong-opt.matriz .cong-opt-name { color:var(--white); font-weight:600; }
 .cong-opt-tag { font-family:var(--mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--olive); }
@@ -186,6 +189,7 @@ em { font-style:italic; }
 .panel-body.flush { padding:0; }
 .dash-2col { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; }
 .dash-3col { display:grid; grid-template-columns:1.4fr 1fr; gap:16px; margin-top:16px; }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 
 /* listrinhas internas */
 .mini-row { display:flex; align-items:center; gap:13px; padding:13px 22px; border-bottom:0.5px solid var(--border); transition:background .12s; }
@@ -223,13 +227,16 @@ em { font-style:italic; }
 
 /* ════════ TABLE / PEOPLE LIST ════════ */
 .tbl { background:var(--graphite); border:0.5px solid var(--border-2); border-radius:var(--r-lg); overflow:hidden; }
-.tr { display:grid; align-items:center; gap:16px; padding:14px 22px; border-bottom:0.5px solid var(--border); transition:background .12s; }
+.tr { display:grid; align-items:center; gap:16px; padding:14px 22px; border-bottom:0.5px solid var(--border); transition:background .12s; width:100%; text-align:left; background:none; border-left:none; border-right:none; border-top:none; font:inherit; color:inherit; }
 .tr:last-child { border-bottom:none; }
 .tr.head { padding:12px 22px; }
 .tr.head span { font-family:var(--mono); font-size:9px; color:var(--subtle); letter-spacing:0.14em; text-transform:uppercase; }
 .tr.click { cursor:pointer; }
 .tr.click:hover { background:rgba(255,255,255,0.02); }
 .tr-people { grid-template-columns:1.6fr 1.4fr 1fr 110px; }
+.who { display:flex; align-items:center; gap:13px; min-width:0; }
+.who strong { display:block; font-size:14px; font-weight:500; color:var(--white); letter-spacing:-0.01em; }
+.who small { display:block; font-size:12px; color:var(--muted); margin-top:2px; }
 .cell-person { display:flex; align-items:center; gap:13px; min-width:0; }
 .cell-name { font-size:14px; font-weight:500; color:var(--white); letter-spacing:-0.01em; }
 .cell-sub { font-size:12px; color:var(--muted); margin-top:2px; }
@@ -445,7 +452,7 @@ em { font-style:italic; }
   .app { grid-template-columns:1fr; }
   .sb { display:none; }
   .kpi-row { grid-template-columns:repeat(2,1fr); }
-  .dash-2col, .dash-3col, .team-grid { grid-template-columns:1fr; }
+  .dash-2col, .dash-3col, .team-grid, .grid-2 { grid-template-columns:1fr; }
   .pipe { grid-template-columns:1fr 1fr; }
 }
 
