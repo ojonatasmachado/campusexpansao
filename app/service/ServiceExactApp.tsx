@@ -352,6 +352,9 @@ type Props = {
   ministerialTitles?: MinisterialTitleView[];
   fellowshipGroups?: FellowshipGroupView[];
   tags?: TagView[];
+  currentRole?: "master" | "pastor" | "lider" | "vol";
+  permissionsMatrix?: Record<string, Record<string, boolean>>;
+  currentPersonId?: string | null;
   error: string;
 };
 
@@ -468,6 +471,24 @@ const CEX_ICON_FOR: Record<string, string> = {
   cultos: "cultos", comunicacao: "comunicacao", conversas: "conversas",
   relatorios: "relatorios", config: "config", identidade: "identidade", historia: "historia",
 };
+
+/* item de menu → código de ACOES_V2 (sem o prefixo "service."). Itens sem entrada
+   aqui (quadros, reunioes, ensaios, conversas, relatorios) não têm ação própria no
+   catálogo — ficam visíveis pra qualquer papel que não seja "vol". */
+const NAV_PERMISSION_CODE: Record<string, string> = {
+  membros: "membros", pessoas: "voluntarios", times: "times", visitantes: "visitantes",
+  decisoes: "decisoes", batismos: "batismos", cursos: "cursos",
+  escalas: "escala", cultos: "cultos", comunicacao: "comunica",
+  identidade: "identidade", historia: "historia", config: "permissoes",
+};
+
+function podeVerNav(itemId: string, currentRole: string, matrix: Record<string, Record<string, boolean>>) {
+  if (currentRole === "master") return true;
+  if (currentRole === "vol") return false;
+  const code = NAV_PERMISSION_CODE[itemId];
+  if (!code) return true;
+  return matrix[currentRole]?.[code] ?? true;
+}
 
 const ROUTES = {
   painel: "CE.X SERVICE · PAINEL",
@@ -590,10 +611,25 @@ function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchVie
   );
 }
 
-function ViewSwitcher({ ministries }: { ministries: MinistryView[] }) {
+const ROLE_LABEL: Record<string, string> = { master: "Master", pastor: "Pastor", lider: "Líder de time", vol: "Voluntário" };
+
+/* permissões do Kanban por papel (equivalente ao kanbanPerm()/S.KANBAN_PERMS do
+   protótipo): master/pastor administram o quadro; líder cria, comenta e move os
+   próprios cards mas não apaga; voluntário não deveria nem abrir esta tela (usa o
+   app mobile), então fica tudo bloqueado por padrão. */
+function kanbanPerm(role: string): { criarCard: boolean; comentar: boolean; editarBoard: boolean; moverQualquer: boolean } {
+  if (role === "master" || role === "pastor") return { criarCard: true, comentar: true, editarBoard: true, moverQualquer: true };
+  if (role === "lider") return { criarCard: true, comentar: true, editarBoard: false, moverQualquer: true };
+  return { criarCard: false, comentar: false, editarBoard: false, moverQualquer: false };
+}
+
+function ViewSwitcher({ ministries, currentRole }: { ministries: MinistryView[]; currentRole: "master" | "pastor" | "lider" | "vol" }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<string>("direcao");
   const ref = useRef<HTMLDivElement>(null);
+  /* só master/pastor podem pré-visualizar o app como líder de um time específico —
+     líder e voluntário só veem o próprio papel real, sem esse toggle. */
+  const podePrevisualizar = currentRole === "master" || currentRole === "pastor";
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -604,20 +640,22 @@ function ViewSwitcher({ ministries }: { ministries: MinistryView[] }) {
   }, []);
 
   const activeMinistry = ministries.find((m) => m.id === view);
-  const label = view === "direcao" ? "Direção" : activeMinistry?.name ?? "Time";
-  const role = view === "direcao" ? "Visão geral · master" : "Líder de time";
+  const label = podePrevisualizar ? (view === "direcao" ? "Direção" : activeMinistry?.name ?? "Time") : ROLE_LABEL[currentRole];
+  const role = podePrevisualizar
+    ? (view === "direcao" ? `Visão geral · ${currentRole}` : "Líder de time (pré-visualização)")
+    : ROLE_LABEL[currentRole];
 
   return (
     <div className="view-sw" ref={ref}>
-      <button className="view-sw-btn" type="button" onClick={() => setOpen((o) => !o)}>
-        <span className="view-sw-ic"><Icon name={view === "direcao" ? "identidade" : "times"} size={14} /></span>
+      <button className="view-sw-btn" type="button" style={podePrevisualizar ? undefined : { cursor: "default" }} onClick={() => podePrevisualizar && setOpen((o) => !o)}>
+        <span className="view-sw-ic"><Icon name={!podePrevisualizar || view === "direcao" ? "identidade" : "times"} size={14} /></span>
         <span className="view-sw-info">
           <span className="view-sw-name">{label}</span>
           <span className="view-sw-role">{role}</span>
         </span>
-        <span className="view-sw-caret">▾</span>
+        {podePrevisualizar ? <span className="view-sw-caret">▾</span> : null}
       </button>
-      {open && (
+      {open && podePrevisualizar && (
         <div className="view-sw-menu">
           <div className="view-sw-group">Perspectiva</div>
           <button className={`view-sw-opt ${view === "direcao" ? "on" : ""}`} type="button"
@@ -713,6 +751,9 @@ export default function ServiceExactApp({
   ministerialTitles = [],
   fellowshipGroups = [],
   tags = [],
+  currentRole = "master",
+  permissionsMatrix = {},
+  currentPersonId = null,
   error,
 }: Props) {
   const [route, setRoute] = useState<keyof typeof ROUTES>("painel");
@@ -746,6 +787,11 @@ export default function ServiceExactApp({
   const gaps = positionsByEvent.filter(({ event, position }) =>
     !roster.some((assignment) => assignment.event_id === event.id && assignment.position_id === position.id && assignment.status !== "no"),
   );
+
+  /* mescla com o padrão (allTrue/allFalse por papel) pra qualquer ação que a org
+     ainda não tenha uma linha salva em core.role_permissions não "vazar" visível
+     por engano — sem isso, uma chave ausente cairia no fallback `?? true`. */
+  const matrizEfetiva = matrizComFallback(permissionsMatrix);
 
   const nav = [
     { group: "Visão geral", items: [{ id: "painel", icon: "painel", label: "Painel" }] },
@@ -801,19 +847,23 @@ export default function ServiceExactApp({
         </div>
         <CongSwitcher churches={churches} activeId={activeChurchId} setActiveId={setActiveChurchId} />
         <nav className="sb-nav">
-          {nav.map((group) => (
-            <div key={group.group}>
-              <div className="sb-group">{group.group}</div>
-              {group.items.map((item) => (
-                <button key={item.id} className={`sb-link ${route === item.id ? "on" : ""}`} type="button" onClick={() => setRoute(item.id as keyof typeof ROUTES)}>
-                  <span className="sb-ic"><Icon name={CEX_ICON_FOR[item.id] ?? item.icon} size={17} /></span>
-                  {item.label}
-                  {"badge" in item && item.badge ? <span className="sb-badge">{item.badge}</span> : null}
-                  {"count" in item && item.count !== undefined ? <span className="sb-count">{item.count}</span> : null}
-                </button>
-              ))}
-            </div>
-          ))}
+          {nav.map((group) => {
+            const visibleItems = group.items.filter((item) => podeVerNav(item.id, currentRole, matrizEfetiva));
+            if (visibleItems.length === 0) return null;
+            return (
+              <div key={group.group}>
+                <div className="sb-group">{group.group}</div>
+                {visibleItems.map((item) => (
+                  <button key={item.id} className={`sb-link ${route === item.id ? "on" : ""}`} type="button" onClick={() => setRoute(item.id as keyof typeof ROUTES)}>
+                    <span className="sb-ic"><Icon name={CEX_ICON_FOR[item.id] ?? item.icon} size={17} /></span>
+                    {item.label}
+                    {"badge" in item && item.badge ? <span className="sb-badge">{item.badge}</span> : null}
+                    {"count" in item && item.count !== undefined ? <span className="sb-count">{item.count}</span> : null}
+                  </button>
+                ))}
+              </div>
+            );
+          })}
         </nav>
         <div className="sb-bottom">
           <Link className="sb-link" href="/">
@@ -839,7 +889,7 @@ export default function ServiceExactApp({
             />
           </div>
           <div className="top-actions">
-            <ViewSwitcher ministries={ministries} />
+            <ViewSwitcher ministries={ministries} currentRole={currentRole} />
             <button className="theme-tog" type="button" title="Mudar tema" onClick={() => setTheme((t) => t === "dark" ? "light" : "dark")}>
               <Icon name={theme === "dark" ? "sol" : "lua"} size={16} />
             </button>
@@ -863,12 +913,12 @@ export default function ServiceExactApp({
         {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} setModal={setModal} /> : null}
-        {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} church={firstChurch} setModal={setModal} /> : null}
+        {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} setModal={setModal} /> : null}
         {route === "cultos" ? <Cultos events={events} ministries={ministries} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
         {route === "comunicacao" ? <Comunicacao announcements={announcements} wallPosts={wallPosts} ministries={ministries} setModal={setModal} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} setModal={setModal} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} decisions={decisions} baptismClasses={baptismClasses} courses={courses} boards={boards} chats={chats} visitors={visitors} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
-        {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} theme={theme} setTheme={setTheme} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} setModal={setModal} /> : null}
+        {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} theme={theme} setTheme={setTheme} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
         {route === "identidade" ? <Identidade church={firstChurch} identity={churchIdentity} cycle={cycles.find((c) => c.is_active) ?? cycles[0]} setModal={setModal} /> : null}
         {route === "historia" ? <Historia church={firstChurch} historyEntries={historyEntries} setModal={setModal} /> : null}
       </div>
@@ -2472,6 +2522,7 @@ function CardDrawer({
   columns,
   people,
   church,
+  perm,
   onClose,
   onMoveParent,
   onRefresh,
@@ -2481,6 +2532,7 @@ function CardDrawer({
   columns: { id: string; name: string }[];
   people: PersonView[];
   church: ChurchView | undefined;
+  perm: { criarCard: boolean; comentar: boolean; editarBoard: boolean; moverQualquer: boolean };
   onClose: () => void;
   onMoveParent: (cardId: string, colId: string) => void;
   onRefresh: () => void;
@@ -2594,15 +2646,17 @@ function CardDrawer({
               ))}
               {comments.length === 0 && <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum comentário ainda.</div>}
             </div>
-            <div className="kb-coment-add">
-              <input className="input" placeholder="Escreva um comentário..." value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addComment()} />
-              <button className="btn btn-sec btn-sm" type="button" onClick={addComment}>Enviar</button>
-            </div>
+            {perm.comentar ? (
+              <div className="kb-coment-add">
+                <input className="input" placeholder="Escreva um comentário..." value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addComment()} />
+                <button className="btn btn-sec btn-sm" type="button" onClick={addComment}>Enviar</button>
+              </div>
+            ) : null}
           </div>
 
-          <button className="btn btn-ghost btn-sm" type="button" style={{ marginTop: 8 }} onClick={deleteCard}>Excluir card</button>
+          {perm.editarBoard ? <button className="btn btn-ghost btn-sm" type="button" style={{ marginTop: 8 }} onClick={deleteCard}>Excluir card</button> : null}
         </div>
       </div>
     </>
@@ -2698,6 +2752,8 @@ function BoardView({
   people,
   peopleById,
   church,
+  currentRole,
+  currentPersonId,
   onBack,
   onMoveCard,
   onRefresh,
@@ -2707,10 +2763,13 @@ function BoardView({
   people: PersonView[];
   peopleById: Map<string, PersonView>;
   church: ChurchView | undefined;
+  currentRole: "master" | "pastor" | "lider" | "vol";
+  currentPersonId: string | null;
   onBack: () => void;
   onMoveCard: (cardId: string, colId: string) => void;
   onRefresh: () => void;
 }) {
+  const perm = kanbanPerm(currentRole);
   const [openCard, setOpenCard] = useState<CardView | null>(null);
   const [novoCol, setNovoCol] = useState<string | null>(null);
   const [drag, setDrag] = useState<string | null>(null);
@@ -2772,7 +2831,17 @@ function BoardView({
           return (
             <div key={col.id} className={`kb-col${drag ? " drop" : ""}`}
               onDragOver={(e) => { if (drag) e.preventDefault(); }}
-              onDrop={() => { if (drag) { onMoveCard(drag, col.id); setDrag(null); } }}>
+              onDrop={() => {
+                if (!drag) return;
+                const dragged = boardCards.find((c) => c.id === drag);
+                if (!perm.moverQualquer && !(dragged && currentPersonId && dragged.assignees.includes(currentPersonId))) {
+                  window.alert("Você só move cards onde é responsável.");
+                  setDrag(null);
+                  return;
+                }
+                onMoveCard(drag, col.id);
+                setDrag(null);
+              }}>
               <div className="kb-col-head">
                 <span className="kb-col-name">{col.name}</span>
                 <span className="kb-col-count">{colCards.length}</span>
@@ -2785,7 +2854,7 @@ function BoardView({
                     onDragStart={() => setDrag(c.id)}
                     onDragEnd={() => setDrag(null)} />
                 ))}
-                <button className="kb-add" type="button" onClick={() => setNovoCol(col.id)}>+ Card</button>
+                {perm.criarCard ? <button className="kb-add" type="button" onClick={() => setNovoCol(col.id)}>+ Card</button> : null}
               </div>
             </div>
           );
@@ -2799,12 +2868,13 @@ function BoardView({
           columns={columns}
           people={people}
           church={church}
+          perm={perm}
           onClose={() => setOpenCard(null)}
           onMoveParent={(cardId, colId) => { onMoveCard(cardId, colId); setOpenCard((prev) => prev ? { ...prev, column_id: colId } : null); }}
           onRefresh={onRefresh}
         />
       )}
-      {novoCol && church && (
+      {novoCol && church && perm.criarCard && (
         <NovoCard board={board} colId={novoCol} people={people} church={church} onClose={() => setNovoCol(null)} onRefresh={onRefresh} />
       )}
     </div>
@@ -2817,6 +2887,8 @@ function Quadros({
   ministries,
   people,
   church,
+  currentRole,
+  currentPersonId,
   setModal,
 }: {
   boards: BoardView[];
@@ -2824,6 +2896,8 @@ function Quadros({
   ministries: MinistryView[];
   people: PersonView[];
   church: ChurchView | undefined;
+  currentRole: "master" | "pastor" | "lider" | "vol";
+  currentPersonId: string | null;
   setModal: (modal: ModalState) => void;
 }) {
   const router = useRouter();
@@ -2851,6 +2925,8 @@ function Quadros({
         people={people}
         peopleById={peopleById}
         church={church}
+        currentRole={currentRole}
+        currentPersonId={currentPersonId}
         onBack={() => setBoardId(null)}
         onMoveCard={moverCard}
         onRefresh={() => router.refresh()}
@@ -3070,6 +3146,17 @@ function matrizV2Padrao(): MatrizV2 {
   };
 }
 
+/* mescla a matriz vinda do banco (core.role_permissions, já sem prefixo "service.")
+   com o padrão, pra cobrir qualquer ação nova que a org ainda não tenha uma linha
+   salva (ex.: org criada antes de algum ACOES_V2 novo existir). */
+function matrizComFallback(fromDb: Record<string, Record<string, boolean>>): MatrizV2 {
+  const fallback = matrizV2Padrao();
+  const roles = Object.keys(fallback) as PapelV2[];
+  return Object.fromEntries(
+    roles.map((role) => [role, { ...fallback[role], ...(fromDb[role] ?? {}) }]),
+  ) as MatrizV2;
+}
+
 function MinisterioEditModal({ ministry, onClose, onRefresh }: {
   ministry: MinistryView;
   onClose: () => void;
@@ -3130,6 +3217,7 @@ function Config({
   fellowshipGroups,
   tags,
   setModal,
+  permissionsMatrix,
 }: {
   church?: ChurchView;
   churches: ChurchView[];
@@ -3141,6 +3229,7 @@ function Config({
   fellowshipGroups: FellowshipGroupView[];
   tags: TagView[];
   setModal: (modal: ModalState) => void;
+  permissionsMatrix: Record<string, Record<string, boolean>>;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState("igreja");
@@ -3211,20 +3300,31 @@ function Config({
     try { localStorage.setItem("cex_accent", id); } catch { /* noop */ }
   };
 
-  const [matriz, setMatriz] = useState<MatrizV2>(() => {
-    try {
-      const saved = localStorage.getItem("cex_matriz_v2");
-      return saved ? (JSON.parse(saved) as MatrizV2) : matrizV2Padrao();
-    } catch { return matrizV2Padrao(); }
-  });
+  const [matriz, setMatriz] = useState<MatrizV2>(() => matrizComFallback(permissionsMatrix));
   const [matrizMsg, setMatrizMsg] = useState("");
+  const [matrizSaving, setMatrizSaving] = useState(false);
   const toggleMx = (papel: PapelV2, acao: string) => {
     if (papel === "master") return;
     setMatriz((prev) => ({ ...prev, [papel]: { ...prev[papel], [acao]: !prev[papel][acao] } }));
   };
-  const salvarMatriz = () => {
-    try { localStorage.setItem("cex_matriz_v2", JSON.stringify(matriz)); } catch { /* noop */ }
+  const salvarMatriz = async () => {
+    if (!church?.organizationId) return;
+    setMatrizSaving(true);
+    const rows = (Object.keys(matriz) as PapelV2[]).flatMap((papel) =>
+      Object.entries(matriz[papel]).map(([acao, allowed]) => ({
+        organization_id: church.organizationId,
+        role: papel,
+        permission_code: `service.${acao}`,
+        allowed,
+      })),
+    );
+    await createServiceBrowserClient()
+      .schema("core")
+      .from("role_permissions")
+      .upsert(rows, { onConflict: "organization_id,role,permission_code" });
+    setMatrizSaving(false);
     setMatrizMsg("Permissões salvas.");
+    router.refresh();
     setTimeout(() => setMatrizMsg(""), 2000);
   };
   const gruposAcoes = Array.from(new Set(ACOES_V2.map((a) => a.grupo)));
@@ -3474,7 +3574,7 @@ function Config({
             </tbody>
           </table>
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
-            <button className="btn btn-pri btn-sm" type="button" onClick={salvarMatriz}>{matrizMsg || "Salvar permissões"}</button>
+            <button className="btn btn-pri btn-sm" type="button" disabled={matrizSaving} onClick={salvarMatriz}>{matrizSaving ? "Salvando…" : (matrizMsg || "Salvar permissões")}</button>
           </div>
         </div>
       )}

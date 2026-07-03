@@ -975,6 +975,35 @@ export default async function ServiceHomePage() {
     .select("id", { count: "exact", head: true })
     .neq("stage", "membro");
 
+  /* papel real do usuário logado + matriz de permissões da org (core.memberships /
+     core.role_permissions, já semeadas no bootstrap da igreja) — ver
+     supabase/migrations/0002_core.sql e 0009_bootstrap.sql. */
+  const organizationId = churches[0]?.organizationId ?? "";
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let currentRole: "master" | "pastor" | "lider" | "vol" = "vol";
+  let currentPersonId: string | null = null;
+  const permissionsMatrix: Record<string, Record<string, boolean>> = {};
+
+  if (user && organizationId) {
+    const [{ data: membershipRow }, { data: rolePermRows }, { data: personRow }] = await Promise.all([
+      supabase.schema("core").from("memberships").select("role").eq("user_id", user.id).eq("organization_id", organizationId).maybeSingle(),
+      supabase.schema("core").from("role_permissions").select("role,permission_code,allowed").eq("organization_id", organizationId),
+      supabase.schema("service").from("people").select("id").eq("user_id", user.id).maybeSingle(),
+    ]);
+
+    const membershipRole = (membershipRow as { role?: string } | null)?.role;
+    if (membershipRole === "owner" || membershipRole === "master") currentRole = "master";
+    else if (membershipRole === "pastor" || membershipRole === "lider" || membershipRole === "vol") currentRole = membershipRole;
+
+    ((rolePermRows ?? []) as { role: string; permission_code: string; allowed: boolean }[]).forEach((row) => {
+      const code = row.permission_code.replace(/^service\./, "");
+      (permissionsMatrix[row.role] ??= {})[code] = row.allowed;
+    });
+
+    currentPersonId = (personRow as { id?: string } | null)?.id ?? null;
+  }
+
   return (
     <ServiceExactApp
       churches={churches}
@@ -1009,6 +1038,9 @@ export default async function ServiceHomePage() {
       ministerialTitles={extra.ministerialTitles}
       fellowshipGroups={extra.fellowshipGroups}
       tags={extra.tags.map((tag) => ({ ...tag, color: tag.color ?? "wheat", leaders: tag.leaders ?? [] }))}
+      currentRole={currentRole}
+      permissionsMatrix={permissionsMatrix}
+      currentPersonId={currentPersonId}
       error={error}
     />
   );
