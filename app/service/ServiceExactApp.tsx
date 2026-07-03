@@ -23,8 +23,21 @@ type ChurchSettings = {
   escala?: EscalaSettings;
   escalaDelegados?: Record<string, string[]>;
   escalaPresets?: EscalaPreset[];
+  acessoDelegados?: string[];
+  checkinPermitirExtra?: boolean;
+  statusCfg?: StatusCriterios;
+  tiposEvento?: string[];
   [key: string]: unknown;
 };
+
+type StatusCriterios = {
+  recusasInativando: number;
+  recusasInativo: number;
+  diasIndispInativo: number;
+  considerarFerias: boolean;
+};
+
+const STATUS_CFG_DEFAULT: StatusCriterios = { recusasInativando: 2, recusasInativo: 4, diasIndispInativo: 30, considerarFerias: false };
 
 const ESCALA_DEFAULT: EscalaSettings = { modo: "assistido", maxPorMes: 4, folgaSemanas: 0, considerarFerias: true, naRecusa: "proximo" };
 
@@ -52,7 +65,7 @@ type PersonView = {
   engagement: number | null;
   availability: Record<string, boolean>;
   tags: string[];
-  meta?: { recusasSeguidas?: number; diasIndisponivel?: number };
+  meta?: { recusasSeguidas?: number; diasIndisponivel?: number; extraAccess?: string[] };
 };
 
 type MemberView = {
@@ -515,8 +528,23 @@ const NAV_PERMISSION_CODE: Record<string, string> = {
   identidade: "identidade", historia: "historia", config: "permissoes",
 };
 
-function podeVerNav(itemId: string, currentRole: string, matrix: Record<string, Record<string, boolean>>) {
+/* telas extras liberáveis pessoa a pessoa, além do que o papel já dá
+   (Configurações → Acessos por pessoa). Só rotas que já têm entrada real
+   no menu lateral. */
+const ACESSO_ROTAS: { id: string; label: string }[] = [
+  { id: "painel", label: "Painel & visão geral" },
+  { id: "membros", label: "Membros" },
+  { id: "pessoas", label: "Voluntários" },
+  { id: "times", label: "Times & Ministérios" },
+  { id: "visitantes", label: "Visitantes" },
+  { id: "batismos", label: "Batismos" },
+  { id: "cursos", label: "Cursos & Trilhas" },
+  { id: "relatorios", label: "Relatórios" },
+];
+
+function podeVerNav(itemId: string, currentRole: string, matrix: Record<string, Record<string, boolean>>, extraAccess: string[] = []) {
   if (currentRole === "master") return true;
+  if (extraAccess.includes(itemId)) return true;
   if (currentRole === "vol") return false;
   const code = NAV_PERMISSION_CODE[itemId];
   if (!code) return true;
@@ -835,6 +863,7 @@ export default function ServiceExactApp({
      ainda não tenha uma linha salva em core.role_permissions não "vazar" visível
      por engano — sem isso, uma chave ausente cairia no fallback `?? true`. */
   const matrizEfetiva = matrizComFallback(permissionsMatrix);
+  const currentExtraAccess = people.find((person) => person.id === currentPersonId)?.meta?.extraAccess ?? [];
 
   const nav = [
     { group: "Visão geral", items: [{ id: "painel", icon: "painel", label: "Painel" }] },
@@ -891,7 +920,7 @@ export default function ServiceExactApp({
         <CongSwitcher churches={churches} activeId={activeChurchId} setActiveId={setActiveChurchId} />
         <nav className="sb-nav">
           {nav.map((group) => {
-            const visibleItems = group.items.filter((item) => podeVerNav(item.id, currentRole, matrizEfetiva));
+            const visibleItems = group.items.filter((item) => podeVerNav(item.id, currentRole, matrizEfetiva, currentExtraAccess));
             if (visibleItems.length === 0) return null;
             return (
               <div key={group.group}>
@@ -957,11 +986,11 @@ export default function ServiceExactApp({
         {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} setModal={setModal} /> : null}
         {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} setModal={setModal} /> : null}
-        {route === "cultos" ? <Cultos events={events} ministries={ministries} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
+        {route === "cultos" ? <Cultos events={events} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
         {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} wallPosts={wallPosts} ministries={ministries} people={people} setModal={setModal} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} decisions={decisions} baptismClasses={baptismClasses} courses={courses} boards={boards} chats={chats} visitors={visitors} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
-        {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} theme={theme} setTheme={setTheme} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
+        {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} currentRole={currentRole} theme={theme} setTheme={setTheme} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
         {route === "identidade" ? <Identidade church={firstChurch} identity={churchIdentity} cycle={cycles.find((c) => c.is_active) ?? cycles[0]} setModal={setModal} /> : null}
         {route === "historia" ? <Historia church={firstChurch} historyEntries={historyEntries} setModal={setModal} /> : null}
       </div>
@@ -1001,6 +1030,7 @@ export default function ServiceExactApp({
             roster={roster}
             people={people}
             ministries={ministries}
+            permitirExtra={!!firstChurch?.settings?.checkinPermitirExtra}
             onClose={() => setCheckinEventId(null)}
           />
         );
@@ -1993,10 +2023,17 @@ function Escalas({
   );
 }
 
-function Cultos({ events, ministries, setDrawer, setModal, setCheckinEventId, setShareEventId }: { events: EventView[]; ministries: MinistryView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; setCheckinEventId: (id: string) => void; setShareEventId: (id: string) => void }) {
+function Cultos({ events, ministries, church, setDrawer, setModal, setCheckinEventId, setShareEventId }: { events: EventView[]; ministries: MinistryView[]; church?: ChurchView; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; setCheckinEventId: (id: string) => void; setShareEventId: (id: string) => void }) {
+  const tipoOptions = [
+    { v: "Culto", l: "Culto" },
+    { v: "Evento", l: "Evento" },
+    { v: "Treinamento", l: "Treinamento" },
+    { v: "Retiro", l: "Retiro" },
+    ...(church?.settings?.tiposEvento ?? []).map((t) => ({ v: t, l: t })),
+  ];
   return (
     <div className="content">
-      <PageHead title="Cultos & Agenda" eyebrow="Operação" subtitle="Agenda, roteiro, setlist e ministérios envolvidos em cada culto." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo culto ou evento", subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Culto da Manhã, Conferência de Jovens" }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:[{v:"Culto",l:"Culto"},{v:"Evento",l:"Evento"},{v:"Treinamento",l:"Treinamento"},{v:"Retiro",l:"Retiro"}] }, { k:"local", label:"Local", type:"text", half:true, ph:"Templo, Anexo..." }, { k:"data", label:"Data", type:"date", half:true }, { k:"hora", label:"Horário de início", type:"time", half:true }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }], action: { kind: "event" } })}>+ Novo culto</button>} />
+      <PageHead title="Cultos & Agenda" eyebrow="Operação" subtitle="Agenda, roteiro, setlist e ministérios envolvidos em cada culto." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo culto ou evento", subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Culto da Manhã, Conferência de Jovens" }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"text", half:true, ph:"Templo, Anexo..." }, { k:"data", label:"Data", type:"date", half:true }, { k:"hora", label:"Horário de início", type:"time", half:true }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }], action: { kind: "event" } })}>+ Novo culto</button>} />
       <div className="grid-2">
         {events.map((event) => (
           <div className="panel" key={event.id} style={{ position: "relative" }}>
@@ -2740,18 +2777,34 @@ function Comunicacao({
   );
 }
 
-function Espacos({ rooms, reservations, setModal }: { rooms: RoomView[]; reservations: ReservationView[]; setModal: (modal: ModalState) => void }) {
+function Espacos({ rooms, reservations, setModal, embed }: { rooms: RoomView[]; reservations: ReservationView[]; setModal: (modal: ModalState) => void; embed?: boolean }) {
   const [filter, setFilter] = useState("todas");
   const roomById = new Map(rooms.map((room) => [room.id, room]));
   const visibleReservations = reservations.filter((reservation) => filter === "todas" || reservation.room_id === filter);
-  return (
-    <div className="content wide">
-      <PageHead
-        title="Espaços & reservas"
-        eyebrow="Operação"
-        subtitle="Salas da igreja e quem usa cada espaço. Reuniões, eventos, cursos e ensaios reservam aqui sem misturar agenda."
-        action={<><button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova sala / espaço", subtitle: "Um espaço físico da igreja disponível para reservas.", saveLabel: "Criar sala", formFields: [{ k:"nome", label:"Nome do espaço", type:"text", req:true, ph:"ex: Sala 3, Salão de festas" }, { k:"capacidade", label:"Capacidade (pessoas)", type:"text", half:true, ph:"ex: 30" }, { k:"local", label:"Onde fica", type:"text", half:true, ph:"ex: 1º andar, Anexo" }, { k:"recursos", label:"Recursos disponíveis", type:"text", ph:"Som, Projeção, Piano", hint:"Separe por vírgula." }], action: { kind: "room" } })}>+ Nova sala</button><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Reservar espaço", subtitle: "Escolha o compromisso, data e horário.", saveLabel: "Criar reserva", formFields: [{ k:"titulo", label:"Título", type:"text", req:true, ph:"ex: Reunião de liderança" }, { k:"tipo", label:"Tipo", type:"select", half:true, options:[{v:"reuniao",l:"Reunião"},{v:"ensaio",l:"Ensaio"},{v:"evento",l:"Evento"},{v:"treinamento",l:"Treinamento"},{v:"outro",l:"Outro"}] }, { k:"data", label:"Data", type:"date", half:true }, { k:"inicio", label:"Início", type:"time", half:true }, { k:"fim", label:"Fim", type:"time", half:true }], action: { kind: "reservation", roomId: filter !== "todas" ? filter : undefined } })}>+ Reservar espaço</button></>}
-      />
+  const openNewRoom = () => setModal({ eyebrow: "Criar", title: "Nova sala / espaço", subtitle: "Um espaço físico da igreja disponível para reservas.", saveLabel: "Criar sala", formFields: [{ k:"nome", label:"Nome do espaço", type:"text", req:true, ph:"ex: Sala 3, Salão de festas" }, { k:"capacidade", label:"Capacidade (pessoas)", type:"text", half:true, ph:"ex: 30" }, { k:"local", label:"Onde fica", type:"text", half:true, ph:"ex: 1º andar, Anexo" }, { k:"recursos", label:"Recursos disponíveis", type:"text", ph:"Som, Projeção, Piano", hint:"Separe por vírgula." }], action: { kind: "room" } });
+  const openNewReservation = () => setModal({ eyebrow: "Criar", title: "Reservar espaço", subtitle: "Escolha o compromisso, data e horário.", saveLabel: "Criar reserva", formFields: [{ k:"titulo", label:"Título", type:"text", req:true, ph:"ex: Reunião de liderança" }, { k:"tipo", label:"Tipo", type:"select", half:true, options:[{v:"reuniao",l:"Reunião"},{v:"ensaio",l:"Ensaio"},{v:"evento",l:"Evento"},{v:"treinamento",l:"Treinamento"},{v:"outro",l:"Outro"}] }, { k:"data", label:"Data", type:"date", half:true }, { k:"inicio", label:"Início", type:"time", half:true }, { k:"fim", label:"Fim", type:"time", half:true }], action: { kind: "reservation", roomId: filter !== "todas" ? filter : undefined } });
+  const header = embed ? (
+    <div className="cfg-card-head-row">
+      <div>
+        <div className="cfg-card-t">Espaços & reservas</div>
+        <div className="cfg-card-s">Salas da igreja e quem usa cada espaço. Reuniões, eventos, cursos e ensaios reservam aqui sem misturar agenda.</div>
+      </div>
+      <div className="ph-actions">
+        <button className="btn btn-sec btn-sm" type="button" onClick={openNewRoom}>+ Nova sala</button>
+        <button className="btn btn-pri btn-sm" type="button" onClick={openNewReservation}>+ Reservar</button>
+      </div>
+    </div>
+  ) : (
+    <PageHead
+      title="Espaços & reservas"
+      eyebrow="Operação"
+      subtitle="Salas da igreja e quem usa cada espaço. Reuniões, eventos, cursos e ensaios reservam aqui sem misturar agenda."
+      action={<><button className="btn btn-sec" type="button" onClick={openNewRoom}>+ Nova sala</button><button className="btn btn-pri" type="button" onClick={openNewReservation}>+ Reservar espaço</button></>}
+    />
+  );
+  const inner = (
+    <>
+      {header}
       <div className="sala-grid">
         {rooms.map((room) => {
           const count = reservations.filter((reservation) => reservation.room_id === room.id).length;
@@ -2769,8 +2822,9 @@ function Espacos({ rooms, reservations, setModal }: { rooms: RoomView[]; reserva
           {visibleReservations.length === 0 ? <div className="empty">Nenhuma reserva encontrada.</div> : null}
         </div>
       </div>
-    </div>
+    </>
   );
+  return embed ? inner : <div className="content wide">{inner}</div>;
 }
 
 function Decisoes({
@@ -3758,7 +3812,9 @@ const CFG_TABS = [
   { id: "min", label: "Ministérios & funções" },
   { id: "operacao", label: "Escala & presença" },
   { id: "grupos", label: "Grupos & Células" },
+  { id: "espacos", label: "Espaços & Salas" },
   { id: "perm", label: "Permissões" },
+  { id: "acessos", label: "Acessos por pessoa" },
   { id: "visual", label: "Personalização" },
   { id: "rede", label: "Congregações" },
 ];
@@ -3871,11 +3927,104 @@ function MinisterioEditModal({ ministry, onClose, onRefresh }: {
   );
 }
 
+/* acessos individuais por pessoa (telas extras além do papel) + delegação
+   de quem pode conceder esses acessos ── Config → aba "Acessos por pessoa" */
+function AcessosCard({
+  people,
+  church,
+  currentRole,
+}: {
+  people: PersonView[];
+  church: ChurchView | undefined;
+  currentRole: "master" | "pastor" | "lider" | "vol";
+}) {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const podeDelegar = currentRole === "master";
+  const delegados = church?.settings?.acessoDelegados ?? [];
+  const pessoa = people.find((p) => p.id === selectedId) ?? null;
+  const lista = people.filter((p) => !q || p.name.toLowerCase().includes(q.toLowerCase()));
+
+  const toggleAcesso = async (routeId: string) => {
+    if (!pessoa) return;
+    const atual = pessoa.meta?.extraAccess ?? [];
+    const next = atual.includes(routeId) ? atual.filter((r) => r !== routeId) : [...atual, routeId];
+    await createServiceBrowserClient().schema("service").from("people").update({ meta: { ...pessoa.meta, extraAccess: next } }).eq("id", pessoa.id);
+    router.refresh();
+  };
+
+  const toggleDelegado = async () => {
+    if (!pessoa || !church?.id) return;
+    const next = delegados.includes(pessoa.id) ? delegados.filter((id) => id !== pessoa.id) : [...delegados, pessoa.id];
+    await createServiceBrowserClient().schema("service").from("churches").update({ settings: { ...church.settings, acessoDelegados: next } }).eq("id", church.id);
+    router.refresh();
+  };
+
+  return (
+    <div className="cfg-grid2">
+      <div className="cfg-card">
+        <div className="cfg-card-t">Quem pode acessar o quê</div>
+        <div className="cfg-card-s">Líderes já enxergam toda a Operação. Aqui você abre telas extras para uma pessoa específica, Membros, Visitantes, Times... Escolha a pessoa e marque o que ela pode ver.</div>
+        <div className="tb-search" style={{ marginBottom: 12 }}>
+          <span className="si"><Icon name="buscar" size={13} /></span>
+          <input placeholder="Buscar pessoa pelo nome..." value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
+        <div className="acesso-list">
+          {lista.slice(0, 40).map((p) => {
+            const n = p.meta?.extraAccess?.length ?? 0;
+            return (
+              <button key={p.id} type="button" className={`flag-row${selectedId === p.id ? " on" : ""}`} onClick={() => setSelectedId(p.id)}>
+                <Av name={p.name} size="sm" />
+                <div className="flag-main"><div className="flag-nome">{p.name}</div><div className="flag-meta">{n ? `${n} acesso(s) extra` : "sem acesso extra"}</div></div>
+              </button>
+            );
+          })}
+          {lista.length === 0 && <div className="empty" style={{ padding: "16px 0" }}>Ninguém encontrado.</div>}
+        </div>
+      </div>
+
+      <div className="cfg-card">
+        {!pessoa && <div className="empty" style={{ padding: "30px 0" }}>Escolha uma pessoa à esquerda para liberar telas.</div>}
+        {pessoa && (
+          <>
+            <div className="cfg-card-t">Acessos de {pessoa.name.split(" ")[0]}</div>
+            <div className="cfg-card-s">Marque as telas que {pessoa.name.split(" ")[0]} pode abrir além do padrão do papel.</div>
+            <div className="acesso-toggles">
+              {ACESSO_ROTAS.map((r) => {
+                const on = (pessoa.meta?.extraAccess ?? []).includes(r.id);
+                return (
+                  <button key={r.id} type="button" className={`acesso-tog${on ? " on" : ""}`} onClick={() => toggleAcesso(r.id)}>
+                    <span className="acesso-tog-ic"><Icon name={CEX_ICON_FOR[r.id] ?? "config"} size={15} /></span>
+                    <span className="acesso-tog-l">{r.label}</span>
+                    <span className={`acesso-tog-sw${on ? " on" : ""}`} />
+                  </button>
+                );
+              })}
+            </div>
+            <div className="cfg-row" style={{ marginTop: 18 }}>
+              <div className="cfg-row-main">
+                <div className="cfg-row-t">Pode liberar acessos a outras pessoas</div>
+                <div className="cfg-row-s">{delegados.includes(pessoa.id) ? "É um delegado de acessos" : "Só vê os próprios acessos"}</div>
+              </div>
+              <button type="button" className={`sw${delegados.includes(pessoa.id) ? " on" : ""}`} disabled={!podeDelegar} onClick={toggleDelegado} />
+            </div>
+            {!podeDelegar && <div style={{ fontSize: 11.5, color: "var(--subtle)", marginTop: 8 }}>Só a Direção (master) define quem pode delegar acessos.</div>}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Config({
   church,
   churches,
   ministries,
   people: _people,
+  rooms,
+  reservations,
+  currentRole,
   theme,
   setTheme,
   ministerialTitles,
@@ -3888,6 +4037,9 @@ function Config({
   churches: ChurchView[];
   ministries: MinistryView[];
   people: PersonView[];
+  rooms: RoomView[];
+  reservations: ReservationView[];
+  currentRole: "master" | "pastor" | "lider" | "vol";
   theme: "dark" | "light";
   setTheme: (t: "dark" | "light") => void;
   ministerialTitles: MinisterialTitleView[];
@@ -3952,6 +4104,47 @@ function Config({
       .schema("service")
       .from("churches")
       .update({ settings: { ...church.settings, escala: next } })
+      .eq("id", church.id);
+    router.refresh();
+  };
+
+  const [statusCfg, setStatusCfg] = useState<StatusCriterios>(() => ({ ...STATUS_CFG_DEFAULT, ...(church?.settings?.statusCfg ?? {}) }));
+  const setStatus = async (k: keyof StatusCriterios, v: number | boolean) => {
+    const next = { ...statusCfg, [k]: v } as StatusCriterios;
+    setStatusCfg(next);
+    if (!church?.id) return;
+    await createServiceBrowserClient()
+      .schema("service")
+      .from("churches")
+      .update({ settings: { ...church.settings, statusCfg: next } })
+      .eq("id", church.id);
+    router.refresh();
+  };
+
+  const [tiposEvento, setTiposEventoState] = useState<string[]>(() => church?.settings?.tiposEvento ?? []);
+  const [novoTipoEvento, setNovoTipoEvento] = useState("");
+  const saveTiposEvento = async (next: string[]) => {
+    setTiposEventoState(next);
+    if (!church?.id) return;
+    await createServiceBrowserClient()
+      .schema("service")
+      .from("churches")
+      .update({ settings: { ...church.settings, tiposEvento: next } })
+      .eq("id", church.id);
+    router.refresh();
+  };
+  const addTipoEvento = () => {
+    const v = novoTipoEvento.trim();
+    if (v && !tiposEvento.includes(v)) saveTiposEvento([...tiposEvento, v]);
+    setNovoTipoEvento("");
+  };
+
+  const setCheckinPermitirExtra = async (v: boolean) => {
+    if (!church?.id) return;
+    await createServiceBrowserClient()
+      .schema("service")
+      .from("churches")
+      .update({ settings: { ...church.settings, checkinPermitirExtra: v } })
       .eq("id", church.id);
     router.refresh();
   };
@@ -4144,6 +4337,13 @@ function Config({
         </div>
       )}
 
+      {/* ─── ESPAÇOS & SALAS ─── */}
+      {tab === "espacos" && (
+        <div className="cfg-card">
+          <Espacos rooms={rooms} reservations={reservations} setModal={setModal} embed />
+        </div>
+      )}
+
       {/* ─── ESCALA & PRESENÇA ─── */}
       {tab === "operacao" && (
         <>
@@ -4199,12 +4399,79 @@ function Config({
             </div>
           </div>
           <div className="cfg-card" style={{ marginTop: 16 }}>
-            <div className="cfg-card-t">Status dos voluntários</div>
-            <div className="cfg-card-s">O status é calculado automaticamente com base na frequência nas escalas.</div>
-            <div className="crit-legend" style={{ marginTop: 0 }}>
-              <span><i className="dot ok" /> Ativo — presente nas escalas</span>
-              <span><i className="dot warn" /> Inativando — com ausências</span>
-              <span><i className="dot off" /> Inativo — afastado</span>
+            <div className="cfg-card-t">Quando um voluntário fica inativo</div>
+            <div className="cfg-card-s">Cada igreja define os critérios. Assim os líderes enxergam quem está se afastando e podem fazer contato a tempo. Férias avisadas não contam.</div>
+            <div className="crit-row">
+              <div className="cfg-row-main">
+                <div className="cfg-row-t">Marcar como <em style={{ color: "var(--amber)", fontStyle: "normal" }}>inativando</em></div>
+                <div className="cfg-row-s">após recusar escalas seguidas</div>
+              </div>
+              <div className="stepper">
+                <button type="button" onClick={() => setStatus("recusasInativando", Math.max(1, statusCfg.recusasInativando - 1))}>−</button>
+                <span>{statusCfg.recusasInativando}</span>
+                <button type="button" onClick={() => setStatus("recusasInativando", statusCfg.recusasInativando + 1)}>+</button>
+              </div>
+            </div>
+            <div className="crit-row">
+              <div className="cfg-row-main">
+                <div className="cfg-row-t">Marcar como <em style={{ color: "var(--danger)", fontStyle: "normal" }}>inativo</em></div>
+                <div className="cfg-row-s">após recusar escalas seguidas</div>
+              </div>
+              <div className="stepper">
+                <button type="button" onClick={() => setStatus("recusasInativo", Math.max(2, statusCfg.recusasInativo - 1))}>−</button>
+                <span>{statusCfg.recusasInativo}</span>
+                <button type="button" onClick={() => setStatus("recusasInativo", statusCfg.recusasInativo + 1)}>+</button>
+              </div>
+            </div>
+            <div className="crit-row">
+              <div className="cfg-row-main">
+                <div className="cfg-row-t">Inativo por indisponibilidade</div>
+                <div className="cfg-row-s">dias seguidos marcado como indisponível</div>
+              </div>
+              <div className="stepper">
+                <button type="button" onClick={() => setStatus("diasIndispInativo", Math.max(7, statusCfg.diasIndispInativo - 7))}>−</button>
+                <span>{statusCfg.diasIndispInativo}d</span>
+                <button type="button" onClick={() => setStatus("diasIndispInativo", statusCfg.diasIndispInativo + 7)}>+</button>
+              </div>
+            </div>
+            <div className="cfg-row" style={{ borderBottom: "none" }}>
+              <div className="cfg-row-main">
+                <div className="cfg-row-t">Contar período de férias avisado</div>
+                <div className="cfg-row-s">{statusCfg.considerarFerias ? "Férias contam como afastamento" : "Férias avisadas não pesam no status"}</div>
+              </div>
+              <button type="button" className={`sw${statusCfg.considerarFerias ? " on" : ""}`} onClick={() => setStatus("considerarFerias", !statusCfg.considerarFerias)} />
+            </div>
+            <div className="crit-legend">
+              <span><i className="dot ok" /> Ativo</span>
+              <span><i className="dot warn" /> Inativando — vale um contato</span>
+              <span><i className="dot off" /> Inativo</span>
+            </div>
+          </div>
+          <div className="cfg-card" style={{ marginTop: 16 }}>
+            <div className="cfg-card-t">Check-in por QR Code</div>
+            <div className="cfg-card-s">Cada culto ou evento tem um QR Code único. O voluntário escaneia com o celular e confirma presença pela conta logada.</div>
+            <div className="cfg-row" style={{ borderBottom: "none" }}>
+              <div className="cfg-row-main">
+                <div className="cfg-row-t">Presença de quem não está escalado</div>
+                <div className="cfg-row-s">{church?.settings?.checkinPermitirExtra ? "Quem não está escalado pode fazer check-in como presença extra." : "Só quem está escalado consegue fazer check-in. Os demais são bloqueados."}</div>
+              </div>
+              <button type="button" className={`sw${church?.settings?.checkinPermitirExtra ? " on" : ""}`} onClick={() => setCheckinPermitirExtra(!church?.settings?.checkinPermitirExtra)} />
+            </div>
+          </div>
+          <div className="cfg-card" style={{ marginTop: 16 }}>
+            <div className="cfg-card-t">Tipos de evento</div>
+            <div className="cfg-card-s">Os tipos que aparecem ao criar um culto ou evento. Já vêm pré-preenchidos no cadastro; se faltar algum, dá pra criar na hora.</div>
+            <div className="cell-tags" style={{ gap: 8, marginBottom: 16 }}>
+              {tiposEvento.map((t) => (
+                <span key={t} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  {t}<button type="button" onClick={() => saveTiposEvento(tiposEvento.filter((x) => x !== t))} style={{ background: "none", border: "none", color: "var(--subtle)", fontSize: 12, padding: 0 }}>✕</button>
+                </span>
+              ))}
+              {tiposEvento.length === 0 && <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhum tipo cadastrado.</span>}
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <input className="input" style={{ flex: 1 }} placeholder="ex: Culto, Conferência, Vigília" value={novoTipoEvento} onChange={(e) => setNovoTipoEvento(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTipoEvento()} />
+              <button className="btn btn-sec" type="button" onClick={addTipoEvento}>Adicionar</button>
             </div>
           </div>
         </>
@@ -4249,6 +4516,9 @@ function Config({
           </div>
         </div>
       )}
+
+      {/* ─── ACESSOS POR PESSOA ─── */}
+      {tab === "acessos" && <AcessosCard people={_people} church={church} currentRole={currentRole} />}
 
       {/* ─── PERSONALIZAÇÃO ─── */}
       {tab === "visual" && (

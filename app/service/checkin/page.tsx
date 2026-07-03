@@ -32,7 +32,7 @@ export default async function ServiceCheckinPage({
   const { data: eventRow } = await supabase
     .schema("service")
     .from("events")
-    .select("id,organization_id,name,weekday,event_date,time,location,checkin_token,checkin_active")
+    .select("id,organization_id,church_id,name,weekday,event_date,time,location,checkin_token,checkin_active")
     .eq("id", eventId)
     .maybeSingle();
 
@@ -54,26 +54,39 @@ export default async function ServiceCheckinPage({
   } else if (token && eventRow.checkin_token && token !== eventRow.checkin_token) {
     result = { ok: false, motivo: "QR Code inválido ou expirado. Peça o atual à liderança." };
   } else {
-    const { data: rosterRows } = await supabase
-      .schema("service")
-      .from("roster_assignments")
-      .select("id")
-      .eq("event_id", eventId)
-      .eq("person_id", personRow.id)
-      .neq("status", "no");
+    const [{ data: rosterRows }, { data: churchRow }] = await Promise.all([
+      supabase
+        .schema("service")
+        .from("roster_assignments")
+        .select("id")
+        .eq("event_id", eventId)
+        .eq("person_id", personRow.id)
+        .neq("status", "no"),
+      supabase
+        .schema("service")
+        .from("churches")
+        .select("settings")
+        .eq("id", eventRow.church_id)
+        .maybeSingle(),
+    ]);
     const escalado = (rosterRows?.length ?? 0) > 0;
+    const permitirExtra = !!(churchRow?.settings as { checkinPermitirExtra?: boolean } | null)?.checkinPermitirExtra;
 
-    const { error: insertError } = await supabase
-      .schema("service")
-      .from("event_attendance")
-      .insert({ organization_id: eventRow.organization_id, event_id: eventId, person_id: personRow.id, via: "qr", is_extra: !escalado });
-
-    if (insertError) {
-      result = (insertError as { code?: string }).code === "23505"
-        ? { ok: false, dup: true, motivo: "Seu check-in neste evento já foi registrado." }
-        : { ok: false, motivo: "Não foi possível registrar agora." };
+    if (!escalado && !permitirExtra) {
+      result = { ok: false, bloq: true, motivo: "Você não está escalado neste evento. Fale com a liderança." };
     } else {
-      result = { ok: true, extra: !escalado };
+      const { error: insertError } = await supabase
+        .schema("service")
+        .from("event_attendance")
+        .insert({ organization_id: eventRow.organization_id, event_id: eventId, person_id: personRow.id, via: "qr", is_extra: !escalado });
+
+      if (insertError) {
+        result = (insertError as { code?: string }).code === "23505"
+          ? { ok: false, dup: true, motivo: "Seu check-in neste evento já foi registrado." }
+          : { ok: false, motivo: "Não foi possível registrar agora." };
+      } else {
+        result = { ok: true, extra: !escalado };
+      }
     }
   }
 

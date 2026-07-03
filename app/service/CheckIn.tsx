@@ -395,12 +395,14 @@ export function QRCheckinModal({
   roster,
   people,
   ministries,
+  permitirExtra = false,
   onClose,
 }: {
   event: EventView;
   roster: RosterAssignmentView[];
   people: PersonView[];
   ministries: MinistryLite[];
+  permitirExtra?: boolean;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -413,7 +415,6 @@ export function QRCheckinModal({
     person: PersonView | null;
     result: CheckinResult;
   } | null>(null);
-  const [permitirExtra] = useState(false);
 
   /* gera o token na primeira vez que o modal abre pra um evento que ainda não tem um. */
   useEffect(() => {

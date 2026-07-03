@@ -84,7 +84,7 @@ type TagRow = {
   leaders: string[] | null;
 };
 
-type PersonMeta = { recusasSeguidas?: number; diasIndisponivel?: number };
+type PersonMeta = { recusasSeguidas?: number; diasIndisponivel?: number; extraAccess?: string[] };
 
 type PersonRow = {
   id: string;
