@@ -1,17 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
+import { createServiceBrowserClient } from "./lib/supabase-browser";
 
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
 type EventView = {
   id: string;
+  organizationId: string;
   name: string;
   weekday: string;
   eventDate: string;
   time: string;
   location: string;
+  checkinToken: string | null;
+  checkinActive: boolean;
 };
 
 type PersonView = {
@@ -29,16 +34,21 @@ type RosterAssignmentView = {
   status: "ok" | "wait" | "no";
 };
 
-// ── tipos internos ────────────────────────────────────────────────────────────
-
-type AttendanceRecord = {
-  personId: string;
-  when: number;
-  via: "qr" | "manual";
-  extra: boolean;
+type MinistryLite = {
+  id: string;
+  name: string;
+  positions: Array<{ id: string; name: string }>;
 };
 
-type QRState = { token: string; active: boolean };
+// ── tipos internos ────────────────────────────────────────────────────────────
+
+type AttendanceRow = {
+  id: string;
+  person_id: string;
+  checked_in_at: string;
+  via: "qr" | "manual";
+  is_extra: boolean;
+};
 
 type CheckinResult = {
   ok: boolean;
@@ -57,9 +67,9 @@ function generateToken() {
   );
 }
 
-function timeCurto(ts: number) {
+function timeCurto(iso: string) {
   try {
-    return new Date(ts).toLocaleTimeString("pt-BR", {
+    return new Date(iso).toLocaleTimeString("pt-BR", {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -74,13 +84,22 @@ function ini(name: string) {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
+/* nome legível da posição (ex: "Louvor · Vocal") em vez do position_id bruto. */
+function positionLabel(ministries: MinistryLite[], positionId: string): string | null {
+  for (const ministry of ministries) {
+    const position = ministry.positions.find((p) => p.id === positionId);
+    if (position) return `${ministry.name.split(" ")[0]} · ${position.name}`;
+  }
+  return null;
+}
+
 function Av({ name, size = "sm" }: { name: string; size?: "sm" | "md" }) {
   return <div className={`av av-${size}`}>{ini(name)}</div>;
 }
 
-// ── CheckinLanding: tela de resultado (simulação de scan) ─────────────────────
+// ── CheckinLanding: tela de resultado (usada aqui e na rota pública /service/checkin) ─
 
-function CheckinLanding({
+export function CheckinLanding({
   event,
   person,
   result,
@@ -179,6 +198,7 @@ function ManualCheckinModal({
   event,
   roster,
   people,
+  ministries,
   present,
   permitirExtra,
   onAdd,
@@ -187,13 +207,14 @@ function ManualCheckinModal({
   event: EventView;
   roster: RosterAssignmentView[];
   people: PersonView[];
-  present: AttendanceRecord[];
+  ministries: MinistryLite[];
+  present: AttendanceRow[];
   permitirExtra: boolean;
-  onAdd: (record: AttendanceRecord) => void;
+  onAdd: (personId: string) => void;
   onClose: () => void;
 }) {
   const [q, setQ] = useState("");
-  const presentIds = new Set(present.map((r) => r.personId));
+  const presentIds = new Set(present.map((r) => r.person_id));
   const escaladoIds = new Set(
     roster.filter((r) => r.event_id === event.id && r.status !== "no").map((r) => r.person_id),
   );
@@ -204,12 +225,6 @@ function ManualCheckinModal({
       (escaladoIds.has(p.id) || permitirExtra) &&
       (!q || p.name.toLowerCase().includes(q.toLowerCase())),
   );
-
-  const marcar = (person: PersonView) => {
-    const extra = !escaladoIds.has(person.id);
-    onAdd({ personId: person.id, when: Date.now(), via: "manual", extra });
-    onClose();
-  };
 
   return (
     <div className="modal-bg" style={{ zIndex: 80 }} onClick={onClose}>
@@ -240,15 +255,16 @@ function ManualCheckinModal({
           )}
           {lista.map((p) => {
             const escalado = escaladoIds.has(p.id);
-            const slotFn = roster.find(
+            const slot = roster.find(
               (r) => r.event_id === event.id && r.person_id === p.id && r.status !== "no",
-            )?.position_id;
+            );
+            const slotFn = slot ? positionLabel(ministries, slot.position_id) : null;
             return (
               <div
                 className="flag-row"
                 key={p.id}
                 style={{ cursor: "pointer" }}
-                onClick={() => marcar(p)}
+                onClick={() => { onAdd(p.id); onClose(); }}
               >
                 <Av name={p.name} size="sm" />
                 <div className="flag-main">
@@ -281,15 +297,15 @@ function CheckinRoster({
   attendance,
   roster,
   people,
-  permitirExtra,
+  ministries,
   onRemove,
   onManualAdd,
 }: {
   event: EventView;
-  attendance: AttendanceRecord[];
+  attendance: AttendanceRow[];
   roster: RosterAssignmentView[];
   people: PersonView[];
-  permitirExtra: boolean;
+  ministries: MinistryLite[];
   onRemove: (personId: string) => void;
   onManualAdd: (personId: string) => void;
 }) {
@@ -297,16 +313,16 @@ function CheckinRoster({
     .filter((r) => r.event_id === event.id && r.status !== "no")
     .map((r) => r.person_id);
 
-  const presentIds = new Set(attendance.map((r) => r.personId));
+  const presentIds = new Set(attendance.map((r) => r.person_id));
   const faltam = escaladoIds.filter((id) => !presentIds.has(id));
 
-  const sorted = [...attendance].sort((a, b) => a.when - b.when);
+  const sorted = [...attendance].sort((a, b) => a.checked_in_at.localeCompare(b.checked_in_at));
 
   const getFn = (personId: string) => {
     const slot = roster.find(
       (r) => r.event_id === event.id && r.person_id === personId && r.status !== "no",
     );
-    return slot?.position_id ?? null;
+    return slot ? positionLabel(ministries, slot.position_id) : null;
   };
 
   return (
@@ -316,30 +332,30 @@ function CheckinRoster({
       )}
 
       {sorted.map((rec) => {
-        const p = people.find((x) => x.id === rec.personId);
+        const p = people.find((x) => x.id === rec.person_id);
         if (!p) return null;
-        const fn = getFn(rec.personId);
+        const fn = getFn(rec.person_id);
         return (
-          <div className="ck-row" key={rec.personId}>
+          <div className="ck-row" key={rec.person_id}>
             <span className="ck-check">✓</span>
             <Av name={p.name} size="sm" />
             <div className="ck-row-main">
               <div className="ck-row-name">
                 {p.name}
-                {rec.extra && <span className="ck-extra">extra</span>}
+                {rec.is_extra && <span className="ck-extra">extra</span>}
               </div>
               <div className="ck-row-meta">
-                {fn ?? (rec.extra ? "Presença extra" : "Escalado")}
+                {fn ?? (rec.is_extra ? "Presença extra" : "Escalado")}
                 {" · "}
                 {rec.via === "manual" ? "manual" : "QR"}
                 {" · "}
-                {timeCurto(rec.when)}
+                {timeCurto(rec.checked_in_at)}
               </div>
             </div>
             <button
               className="ck-undo"
               title="Desfazer presença"
-              onClick={() => onRemove(rec.personId)}
+              onClick={() => onRemove(rec.person_id)}
             >
               ✕
             </button>
@@ -378,16 +394,20 @@ export function QRCheckinModal({
   event,
   roster,
   people,
+  ministries,
   onClose,
 }: {
   event: EventView;
   roster: RosterAssignmentView[];
   people: PersonView[];
+  ministries: MinistryLite[];
   onClose: () => void;
 }) {
+  const router = useRouter();
   const [tab, setTab] = useState<"qr" | "presenca">("qr");
-  const [qr, setQr] = useState<QRState>(() => ({ token: generateToken(), active: true }));
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [qrToken, setQrToken] = useState<string | null>(event.checkinToken);
+  const [qrActive, setQrActive] = useState<boolean>(event.checkinActive);
+  const [attendance, setAttendance] = useState<AttendanceRow[]>([]);
   const [showManual, setShowManual] = useState(false);
   const [landing, setLanding] = useState<{
     person: PersonView | null;
@@ -395,36 +415,69 @@ export function QRCheckinModal({
   } | null>(null);
   const [permitirExtra] = useState(false);
 
+  /* gera o token na primeira vez que o modal abre pra um evento que ainda não tem um. */
+  useEffect(() => {
+    if (qrToken) return;
+    const token = generateToken();
+    setQrToken(token);
+    createServiceBrowserClient().schema("service").from("events").update({ checkin_token: token }).eq("id", event.id).then(() => router.refresh());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    createServiceBrowserClient()
+      .schema("service")
+      .from("event_attendance")
+      .select("id,person_id,checked_in_at,via,is_extra")
+      .eq("event_id", event.id)
+      .then(({ data }) => { if (data) setAttendance(data as AttendanceRow[]); });
+  }, [event.id]);
+
   const checkinLink =
     typeof window !== "undefined"
-      ? `${window.location.origin}/service?checkin=${encodeURIComponent(event.id)}&t=${encodeURIComponent(qr.token)}`
-      : `/service?checkin=${event.id}&t=${qr.token}`;
+      ? `${window.location.origin}/service/checkin?event=${encodeURIComponent(event.id)}&t=${encodeURIComponent(qrToken ?? "")}`
+      : `/service/checkin?event=${event.id}&t=${qrToken ?? ""}`;
 
   const escaladoIds = new Set(
     roster.filter((r) => r.event_id === event.id && r.status !== "no").map((r) => r.person_id),
   );
-  const presentIds = new Set(attendance.map((r) => r.personId));
+  const presentIds = new Set(attendance.map((r) => r.person_id));
   const presentes = attendance.length;
   const escalados = escaladoIds.size;
   const presentesEscala = [...escaladoIds].filter((id) => presentIds.has(id)).length;
   const faltam = Math.max(0, escalados - presentesEscala);
-  const extras = attendance.filter((r) => r.extra).length;
+  const extras = attendance.filter((r) => r.is_extra).length;
 
-  const registrar = (personId: string, via: "qr" | "manual", token?: string): CheckinResult => {
+  const registrar = async (personId: string, via: "qr" | "manual", token?: string): Promise<CheckinResult> => {
     if (via === "qr") {
-      if (!qr.active) return { ok: false, motivo: "Este QR Code está desativado. Procure a liderança." };
-      if (token && token !== qr.token) return { ok: false, motivo: "QR Code inválido ou expirado. Peça o atual à liderança." };
+      if (!qrActive) return { ok: false, motivo: "Este QR Code está desativado. Procure a liderança." };
+      if (token && token !== qrToken) return { ok: false, motivo: "QR Code inválido ou expirado. Peça o atual à liderança." };
     }
     if (presentIds.has(personId)) return { ok: false, dup: true, motivo: "Você já fez check-in neste evento." };
     const escalado = escaladoIds.has(personId);
     if (!escalado && !permitirExtra) return { ok: false, bloq: true, motivo: "Você não está escalado neste evento. Fale com a liderança." };
     const extra = !escalado;
-    setAttendance((prev) => [...prev, { personId, when: Date.now(), via, extra }]);
+    const { data, error } = await createServiceBrowserClient()
+      .schema("service")
+      .from("event_attendance")
+      .insert({ organization_id: event.organizationId, event_id: event.id, person_id: personId, via, is_extra: extra })
+      .select()
+      .single();
+    if (error) {
+      if (error.code === "23505") return { ok: false, dup: true, motivo: "Você já fez check-in neste evento." };
+      return { ok: false, motivo: "Não foi possível registrar agora." };
+    }
+    setAttendance((prev) => [...prev, data as AttendanceRow]);
+    router.refresh();
     return { ok: true, extra };
   };
 
-  const remover = (personId: string) => {
-    setAttendance((prev) => prev.filter((r) => r.personId !== personId));
+  const remover = async (personId: string) => {
+    const rec = attendance.find((a) => a.person_id === personId);
+    if (!rec) return;
+    setAttendance((prev) => prev.filter((a) => a.id !== rec.id));
+    await createServiceBrowserClient().schema("service").from("event_attendance").delete().eq("id", rec.id);
+    router.refresh();
   };
 
   const copiar = () => {
@@ -449,10 +502,56 @@ export function QRCheckinModal({
     w.document.close();
   };
 
-  const simularScan = () => {
+  const salvar = () => {
+    if (!qrToken) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const pad = 48;
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width + pad * 2;
+      canvas.height = img.height + pad * 2 + 70;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.fillStyle = "#FAFAF7";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, pad, pad);
+      ctx.fillStyle = "#0E110D";
+      ctx.textAlign = "center";
+      ctx.font = "700 26px Inter, sans-serif";
+      ctx.fillText(event.name, canvas.width / 2, img.height + pad + 38);
+      ctx.fillStyle = "#555650";
+      ctx.font = "500 16px Inter, sans-serif";
+      ctx.fillText(`${event.weekday} ${event.eventDate} · ${event.time}`, canvas.width / 2, img.height + pad + 62);
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/png");
+      a.download = `checkin-${event.id}.png`;
+      a.click();
+    };
+    img.onerror = () => window.alert("Não consegui gerar a imagem agora.");
+    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(checkinLink)}`;
+  };
+
+  const toggleActive = async () => {
+    const next = !qrActive;
+    setQrActive(next);
+    await createServiceBrowserClient().schema("service").from("events").update({ checkin_active: next }).eq("id", event.id);
+    router.refresh();
+  };
+
+  const regenerar = async () => {
+    if (!window.confirm("Gerar um novo QR Code? O anterior deixa de funcionar.")) return;
+    const token = generateToken();
+    setQrToken(token);
+    setQrActive(true);
+    await createServiceBrowserClient().schema("service").from("events").update({ checkin_token: token, checkin_active: true }).eq("id", event.id);
+    router.refresh();
+  };
+
+  const simularScan = async () => {
     const demo = people.find((p) => p.status === "ativo" && !presentIds.has(p.id)) ?? null;
     const result = demo
-      ? registrar(demo.id, "qr", qr.token)
+      ? await registrar(demo.id, "qr", qrToken ?? undefined)
       : { ok: false, motivo: "Nenhum voluntário ativo disponível para demonstração." };
     setLanding({ person: demo, result });
   };
@@ -489,8 +588,8 @@ export function QRCheckinModal({
           <div className="modal-body" style={{ display: "block" }}>
             {tab === "qr" && (
               <div className="ck-qr-wrap">
-                <div className={`ck-qr ${!qr.active ? "off" : ""}`}>
-                  {qr.active ? (
+                <div className={`ck-qr ${!qrActive ? "off" : ""}`}>
+                  {qrActive && qrToken ? (
                     <QRCode
                       value={checkinLink}
                       size={200}
@@ -506,9 +605,9 @@ export function QRCheckinModal({
                 </div>
 
                 <div className="ck-qr-side">
-                  <div className={`ck-status ${qr.active ? "on" : "off"}`}>
+                  <div className={`ck-status ${qrActive ? "on" : "off"}`}>
                     <span className="ck-dot" />
-                    {qr.active ? "Ativo — aceitando check-ins" : "Desativado"}
+                    {qrActive ? "Ativo — aceitando check-ins" : "Desativado"}
                   </div>
 
                   <div className="ck-link">
@@ -516,26 +615,19 @@ export function QRCheckinModal({
                   </div>
 
                   <div className="ck-actions">
+                    <button className="btn btn-sec btn-sm" onClick={salvar}>
+                      Salvar
+                    </button>
                     <button className="btn btn-sec btn-sm" onClick={imprimir}>
                       Imprimir
                     </button>
                     <button className="btn btn-sec btn-sm" onClick={copiar}>
                       Copiar link
                     </button>
-                    <button
-                      className="btn btn-sec btn-sm"
-                      onClick={() => setQr((q) => ({ ...q, active: !q.active }))}
-                    >
-                      {qr.active ? "Desativar" : "Ativar"}
+                    <button className="btn btn-sec btn-sm" onClick={toggleActive}>
+                      {qrActive ? "Desativar" : "Ativar"}
                     </button>
-                    <button
-                      className="btn btn-sec btn-sm"
-                      onClick={() => {
-                        if (window.confirm("Gerar um novo QR Code? O anterior deixa de funcionar.")) {
-                          setQr({ token: generateToken(), active: true });
-                        }
-                      }}
-                    >
+                    <button className="btn btn-sec btn-sm" onClick={regenerar}>
                       Regenerar
                     </button>
                   </div>
@@ -584,10 +676,10 @@ export function QRCheckinModal({
                   attendance={attendance}
                   roster={roster}
                   people={people}
-                  permitirExtra={permitirExtra}
+                  ministries={ministries}
                   onRemove={remover}
-                  onManualAdd={(pid) => {
-                    const r = registrar(pid, "manual");
+                  onManualAdd={async (pid) => {
+                    const r = await registrar(pid, "manual");
                     if (!r.ok) window.alert(r.motivo);
                   }}
                 />
@@ -616,9 +708,13 @@ export function QRCheckinModal({
           event={event}
           roster={roster}
           people={people}
+          ministries={ministries}
           present={attendance}
           permitirExtra={permitirExtra}
-          onAdd={(rec) => setAttendance((prev) => [...prev, rec])}
+          onAdd={async (personId) => {
+            const r = await registrar(personId, "manual");
+            if (!r.ok) window.alert(r.motivo);
+          }}
           onClose={() => setShowManual(false)}
         />
       )}

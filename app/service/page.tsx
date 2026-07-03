@@ -219,6 +219,8 @@ type EventRow = {
   location: string | null;
   ministries: string[] | null;
   tags: string[] | null;
+  checkin_token: string | null;
+  checkin_active: boolean | null;
   created_at: string;
 };
 
@@ -262,6 +264,8 @@ type EventView = {
   tags: string[];
   schedule: ScheduleItemRow[];
   setlist: SetlistSongRow[];
+  checkinToken: string | null;
+  checkinActive: boolean;
   createdAt: string;
 };
 
@@ -648,6 +652,8 @@ function toEventViews(
     setlist: setlistSongs
       .filter((song) => song.event_id === event.id)
       .sort((a, b) => a.sort_order - b.sort_order),
+    checkinToken: event.checkin_token,
+    checkinActive: event.checkin_active ?? true,
     createdAt: event.created_at,
   }));
 }
@@ -773,7 +779,7 @@ async function getServiceDashboardData(): Promise<{
   const { data: eventsData, error: eventsError } = await supabase
     .schema("service")
     .from("events")
-    .select("id,organization_id,church_id,name,kind,weekday,event_date,time,slot,location,ministries,tags,created_at")
+    .select("id,organization_id,church_id,name,kind,weekday,event_date,time,slot,location,ministries,tags,checkin_token,checkin_active,created_at")
     .order("event_date", { ascending: true, nullsFirst: false })
     .order("time");
 

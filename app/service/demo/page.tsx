@@ -120,6 +120,7 @@ const EVENTS = [
       { id: "sl-2", title: "Teu Reino", song_key: "D" },
       { id: "sl-3", title: "Imensidão", song_key: "A" },
     ],
+    checkinToken: null, checkinActive: true,
   },
   {
     id: "ev-2", organizationId: ORG, name: "Culto de domingo noite", kind: "culto", weekday: "Dom",
@@ -134,6 +135,7 @@ const EVENTS = [
       { id: "sl-4", title: "Hosana", song_key: "E" },
       { id: "sl-5", title: "Alvo Mais que a Neve", song_key: "C" },
     ],
+    checkinToken: null, checkinActive: true,
   },
 ];
 

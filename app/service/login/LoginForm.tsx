@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 
@@ -18,7 +18,9 @@ function errorMessage(message: string) {
 
 export default function ServiceLoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createServiceBrowserClient();
+  const redirectTarget = searchParams.get("redirect") || "/service/onboarding";
   const [mode, setMode] = useState<Mode>("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -69,7 +71,7 @@ export default function ServiceLoginForm() {
         return;
       }
 
-      router.push("/service/onboarding");
+      router.push(redirectTarget);
       router.refresh();
       return;
     }
@@ -90,7 +92,7 @@ export default function ServiceLoginForm() {
     }
 
     if (data.session) {
-      router.push("/service/onboarding");
+      router.push(redirectTarget);
       router.refresh();
       return;
     }

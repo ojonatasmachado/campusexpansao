@@ -89,6 +89,8 @@ type EventView = {
   ministries: string[];
   schedule: Array<{ id: string; item: string; time: string | null; category: string | null }>;
   setlist: Array<{ id: string; title: string; song_key: string | null }>;
+  checkinToken: string | null;
+  checkinActive: boolean;
 };
 
 type RosterAssignmentView = {
@@ -980,6 +982,7 @@ export default function ServiceExactApp({
             event={checkinEvent}
             roster={roster}
             people={people}
+            ministries={ministries}
             onClose={() => setCheckinEventId(null)}
           />
         );
