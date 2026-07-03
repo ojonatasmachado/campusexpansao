@@ -185,6 +185,12 @@ type AnnouncementReadView = {
   read_at: string;
 };
 
+type EventAttendanceView = {
+  id: string;
+  event_id: string;
+  person_id: string;
+};
+
 type BaptismClassView = {
   id: string;
   label: string;
@@ -420,6 +426,7 @@ type Props = {
   visitorNotes: VisitorNoteView[];
   announcements: AnnouncementView[];
   announcementReads?: AnnouncementReadView[];
+  eventAttendance?: EventAttendanceView[];
   wallPosts: WallPostView[];
   decisions: DecisionView[];
   baptismClasses: BaptismClassView[];
@@ -841,6 +848,7 @@ export default function ServiceExactApp({
   visitorNotes,
   announcements,
   announcementReads = [],
+  eventAttendance = [],
   wallPosts,
   decisions,
   baptismClasses,
@@ -1058,7 +1066,22 @@ export default function ServiceExactApp({
         </header>
 
         {error ? <ErrorPanel message={error} /> : null}
-        {route === "painel" ? <Painel people={people} activePeople={activePeople} confirmationRate={confirmationRate} gaps={gaps} events={events} visitorsInCare={visitorsInCare} setRoute={setRoute} setDrawer={setDrawer} /> : null}
+        {route === "painel" ? (
+          <Painel
+            people={people}
+            activePeople={activePeople}
+            confirmationRate={confirmationRate}
+            gaps={gaps}
+            events={events}
+            visitorsInCare={visitorsInCare}
+            announcements={announcements}
+            eventAttendance={eventAttendance}
+            setRoute={setRoute}
+            setDrawer={setDrawer}
+            setModal={setModal}
+            setCheckinEventId={setCheckinEventId}
+          />
+        ) : null}
         {route === "membros" ? <Membros members={members} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "pessoas" ? <Pessoas people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Times ministries={ministries} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
@@ -1321,8 +1344,12 @@ function Painel({
   gaps,
   events,
   visitorsInCare,
+  announcements,
+  eventAttendance,
   setRoute,
   setDrawer,
+  setModal,
+  setCheckinEventId,
 }: {
   people: PersonView[];
   activePeople: number;
@@ -1330,10 +1357,15 @@ function Painel({
   gaps: Array<{ event: EventView; ministry: MinistryView; position: { id: string; name: string } }>;
   events: EventView[];
   visitorsInCare: number;
+  announcements: AnnouncementView[];
+  eventAttendance: EventAttendanceView[];
   setRoute: (route: keyof typeof ROUTES) => void;
   setDrawer: (drawer: DrawerState) => void;
+  setModal: (modal: ModalState) => void;
+  setCheckinEventId: (id: string | null) => void;
 }) {
   const topPeople = [...people].sort((a, b) => (b.engagement ?? 0) - (a.engagement ?? 0)).slice(0, 5);
+  const recentAnnouncements = [...announcements].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 3);
   return (
     <div className="content wide">
       <div className="ph">
@@ -1343,6 +1375,13 @@ function Painel({
           <p className="ph-sub">Visão da semana: quem está escalado, o que falta preencher e quem precisa de acompanhamento.</p>
         </div>
         <div className="ph-actions">
+          <button
+            className="btn btn-sec"
+            type="button"
+            onClick={() => setModal({ eyebrow: "Criar", title: "Novo voluntário", subtitle: "Cadastre e já escolha os ministérios.", saveLabel: "Adicionar voluntário", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"e-mail da pessoa" }], action: { kind: "member" } })}
+          >
+            + Novo voluntário
+          </button>
           <button className="btn btn-sec" type="button" onClick={() => setRoute("cultos")}>Ver agenda</button>
           <button className="btn btn-pri" type="button" onClick={() => setRoute("escalas")}>Montar escala →</button>
         </div>
@@ -1384,7 +1423,15 @@ function Painel({
           <div className="panel">
             <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Próximos cultos</span><button className="panel-link" type="button" onClick={() => setRoute("cultos")}>Agenda</button></div>
             <div className="panel-body flush">
-            {events.slice(0, 3).map((event) => <MiniEvent key={event.id} event={event} setDrawer={setDrawer} />)}
+            {events.slice(0, 3).map((event) => (
+              <MiniEvent
+                key={event.id}
+                event={event}
+                setDrawer={setDrawer}
+                attendanceCount={eventAttendance.filter((a) => a.event_id === event.id).length}
+                onCheckin={() => setCheckinEventId(event.id)}
+              />
+            ))}
             </div>
           </div>
         </div>
@@ -1399,7 +1446,17 @@ function Painel({
         <div className="panel">
           <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Comunicação recente</span><button className="panel-link" type="button" onClick={() => setRoute("comunicacao")}>Ver tudo</button></div>
           <div className="panel-body flush">
-            <div className="mini-row"><div className="mini-main"><div className="mini-title">Agenda da semana</div><div className="mini-sub">Liderança · agora</div></div></div>
+            {recentAnnouncements.map((a) => (
+              <button className="mini-row click" type="button" key={a.id} onClick={() => setRoute("comunicacao")}>
+                <div className="mini-main">
+                  <div className="mini-title">{a.title}</div>
+                  <div className="mini-sub">{a.audience || "Todos"} · {a.when_label || "agora"}</div>
+                </div>
+              </button>
+            ))}
+            {recentAnnouncements.length === 0 && (
+              <div className="mini-row"><div className="mini-main"><div className="mini-title">Nenhum aviso ainda</div><div className="mini-sub">Publique em Comunicação</div></div></div>
+            )}
           </div>
         </div>
       </div>
@@ -1417,14 +1474,36 @@ function Kpi({ icon, label, value, foot, amber }: { icon: string; label: string;
   );
 }
 
-function MiniEvent({ event, setDrawer }: { event: EventView; setDrawer: (drawer: DrawerState) => void }) {
+function MiniEvent({
+  event, setDrawer, attendanceCount, onCheckin,
+}: {
+  event: EventView;
+  setDrawer: (drawer: DrawerState) => void;
+  attendanceCount?: number;
+  onCheckin?: () => void;
+}) {
   return (
     <button className="mini-row click" type="button" onClick={() => setDrawer({ kind: "event", id: event.id })}>
       <div className="mini-main">
         <div className="mini-title">{event.name}</div>
         <div className="mini-sub">{event.weekday} · {event.eventDate} · {event.location}</div>
       </div>
-      <div className="mini-right">{event.time}</div>
+      <div className="mini-right" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span>{event.time}</span>
+        {onCheckin && (
+          <span
+            className="painel-qr"
+            role="button"
+            tabIndex={0}
+            title="QR check-in / presença"
+            onClick={(e) => { e.stopPropagation(); onCheckin(); }}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onCheckin(); } }}
+          >
+            {!!attendanceCount && <span className="painel-qr-count">{attendanceCount}</span>}
+            <Icon name="cultos" size={14} />
+          </span>
+        )}
+      </div>
     </button>
   );
 }

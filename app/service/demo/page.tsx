@@ -262,6 +262,11 @@ const ANNOUNCEMENTS = [
   { id: "an-2", title: "Escalas de julho disponíveis", body: "Acesse o app do voluntário para confirmar sua participação.", audience: "voluntários", author: "Equipe de escalas", when_label: "agora", created_at: new Date().toISOString() },
 ];
 
+const EVENT_ATTENDANCE = [
+  { id: "ea-1", event_id: "ev-1", person_id: "p1" },
+  { id: "ea-2", event_id: "ev-1", person_id: "p2" },
+];
+
 const WALL_POSTS = [
   { id: "wp-1", body: "Que culto incrível ontem! Deus esteve no meio de nós de forma especial. Gratidão a toda a equipe que serviu.", author: "Pr. João", audience: "todos", channels: ["app", "mural"], pinned: true, created_at: new Date().toISOString() },
   { id: "wp-2", body: "Novo ponto de oração às quartas, 7h da manhã. Venha interceder pela cidade!", author: "Equipe de intercessão", audience: "todos", channels: ["app"], pinned: false, created_at: new Date().toISOString() },
@@ -284,6 +289,7 @@ export default function ServiceDemoPage() {
       visitors={VISITORS}
       visitorNotes={VISITOR_NOTES}
       announcements={ANNOUNCEMENTS}
+      eventAttendance={EVENT_ATTENDANCE}
       wallPosts={WALL_POSTS}
       decisions={DECISIONS}
       baptismClasses={BAPTISM_CLASSES}
