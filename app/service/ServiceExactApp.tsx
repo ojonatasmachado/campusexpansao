@@ -79,8 +79,12 @@ type MemberView = {
   email: string;
   situation: "membro" | "novo";
   firstContact: string;
-  neighborhood: string;
+  neighborhood: string | null;
   journey: number[];
+  birth: string | null;
+  family: string | null;
+  groupId: string | null;
+  volunteerId: string | null;
 };
 
 type MinistryView = {
@@ -1083,7 +1087,7 @@ export default function ServiceExactApp({
           />
         ) : null}
         {route === "membros" ? <Membros members={members} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
-        {route === "pessoas" ? <Pessoas people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "pessoas" ? <Pessoas people={people} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Times ministries={ministries} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
@@ -1193,6 +1197,7 @@ export default function ServiceExactApp({
           boards={boards}
           cards={cards}
           church={firstChurch}
+          fellowshipGroups={fellowshipGroups}
           setDrawer={setDrawer}
           setRoute={setRoute}
           setModal={setModal}
@@ -1586,14 +1591,44 @@ function Membros({ members, ministries, setDrawer, setModal }: { members: Member
   );
 }
 
-function Pessoas({ people, setDrawer, setModal }: { people: PersonView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
+function Pessoas({ people, currentPersonId, setDrawer, setModal }: { people: PersonView[]; currentPersonId?: string | null; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
+  const [q, setQ] = useState("");
+  const [status, setStatus] = useState<"todos" | "ativo" | "pausa">("todos");
+  const visible = people.filter((person) => {
+    const okQ = !q || person.name.toLowerCase().includes(q.toLowerCase());
+    const okStatus = status === "todos" || person.status === status;
+    return okQ && okStatus;
+  });
   return (
     <div className="content">
       <PageHead title="Voluntários" eyebrow="Pessoas" subtitle="Quem serve, em quais times e funções. Toque para ver perfil, disponibilidade e histórico." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo voluntário", subtitle: "Cadastre e já escolha os ministérios.", saveLabel: "Adicionar voluntário", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"e-mail da pessoa" }], action: { kind: "member" } })}>+ Novo voluntário</button>} />
-      <div className="toolbar"><div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome..." /></div><div className="seg"><button className="on">Todos</button><button>Ativos</button><button>Pausa</button></div><div className="tb-spacer" /><span className="panel-meta">{people.length} pessoas</span></div>
+      <div className="toolbar">
+        <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        <div className="seg">
+          <button className={status === "todos" ? "on" : ""} type="button" onClick={() => setStatus("todos")}>Todos</button>
+          <button className={status === "ativo" ? "on" : ""} type="button" onClick={() => setStatus("ativo")}>Ativos</button>
+          <button className={status === "pausa" ? "on" : ""} type="button" onClick={() => setStatus("pausa")}>Pausa</button>
+        </div>
+        <div className="tb-spacer" />
+        <span className="panel-meta">{visible.length} pessoas</span>
+      </div>
       <div className="tbl">
         <div className="tr head tr-people"><div>Voluntário</div><div>Disponibilidade</div><div>Frentes</div><div>Status</div></div>
-        {people.map((person) => <button className="tr click tr-people" type="button" key={person.id} onClick={() => setDrawer({ kind: "person", id: person.id })}><div className="who"><Av name={person.name} /><div><strong>{person.name}</strong><small>{person.phone}</small></div></div><div>{formatAvailability(person.availability)}</div><div>{person.tags.join(" · ") || "sem tags"}</div><div><Chip status={person.status} /></div></button>)}
+        {visible.map((person) => (
+          <button className="tr click tr-people" type="button" key={person.id} onClick={() => setDrawer({ kind: "person", id: person.id })}>
+            <div className="who">
+              <Av name={person.name} />
+              <div>
+                <strong>{person.name}{person.id === currentPersonId && <span style={{ color: "var(--olive)", fontSize: 11, marginLeft: 7, fontFamily: "var(--mono)" }}>você</span>}</strong>
+                <small>{person.phone}</small>
+              </div>
+            </div>
+            <div>{formatAvailability(person.availability)}</div>
+            <div>{person.tags.join(" · ") || "sem tags"}</div>
+            <div><Chip status={person.status} /></div>
+          </button>
+        ))}
+        {visible.length === 0 && <div className="empty">Ninguém encontrado.</div>}
       </div>
     </div>
   );
@@ -6150,6 +6185,65 @@ function VisitanteDrawer({
   );
 }
 
+function MemberEditModal({
+  member, fellowshipGroups, onClose, onRefresh,
+}: {
+  member: MemberView;
+  fellowshipGroups: FellowshipGroupView[];
+  onClose: () => void;
+  onRefresh: () => void;
+}) {
+  const [birth, setBirth] = useState(member.birth ?? "");
+  const [neighborhood, setNeighborhood] = useState(member.neighborhood ?? "");
+  const [groupId, setGroupId] = useState(member.groupId ?? "");
+  const [family, setFamily] = useState(member.family ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const salvar = async () => {
+    setSaving(true);
+    await createServiceBrowserClient()
+      .schema("service")
+      .from("members")
+      .update({
+        birth: birth || null,
+        neighborhood: neighborhood.trim() || null,
+        group_id: groupId || null,
+        family: family.trim() || null,
+      })
+      .eq("id", member.id);
+    onRefresh();
+    onClose();
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">Editar dados</div>
+          <div className="modal-title">{member.name}</div>
+          <div className="modal-sub">Aniversário, bairro, grupo de comunhão e família.</div>
+        </div>
+        <div className="modal-body" style={{ display: "block" }}>
+          <div className="field"><label className="field-label">Aniversário</label><input className="input" type="date" value={birth} onChange={(e) => setBirth(e.target.value)} /></div>
+          <div className="field"><label className="field-label">Bairro</label><input className="input" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Onde mora" /></div>
+          <div className="field">
+            <label className="field-label">Grupo de Comunhão</label>
+            <select className="select" value={groupId} onChange={(e) => setGroupId(e.target.value)}>
+              <option value="">Sem grupo</option>
+              {fellowshipGroups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+          </div>
+          <div className="field"><label className="field-label">Família</label><input className="input" value={family} onChange={(e) => setFamily(e.target.value)} placeholder="ex: Família Lima (agrupa parentes na ficha)" /></div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>Salvar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EntityDrawer({
   drawer,
   people,
@@ -6172,6 +6266,7 @@ function EntityDrawer({
   boards,
   cards,
   church,
+  fellowshipGroups,
   setDrawer,
   setRoute,
   setModal,
@@ -6197,10 +6292,14 @@ function EntityDrawer({
   boards: BoardView[];
   cards: CardView[];
   church: ChurchView | undefined;
+  fellowshipGroups: FellowshipGroupView[];
   setDrawer: (drawer: DrawerState) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
   setModal: (modal: ModalState) => void;
 }) {
+  const router = useRouter();
+  const [editingMember, setEditingMember] = useState(false);
+
   if (drawer.kind === "person") {
     const person = people.find((item) => item.id === drawer.id);
     if (!person) return null;
@@ -6257,7 +6356,11 @@ function EntityDrawer({
       return course ? { ...e, course } : null;
     }).filter(Boolean) as (EnrollmentView & { course: CourseView })[];
     const isServing = member.journey[4] || linkedMinistries.length > 0;
+    const grupo = fellowshipGroups.find((g) => g.id === member.groupId) ?? null;
+    const grupoLider = grupo ? people.find((p) => p.id === grupo.leader_person_id) ?? null : null;
+    const familiares = member.family ? members.filter((m) => m.family === member.family && m.id !== member.id) : [];
     return (
+      <>
       <DrawerShell onClose={() => setDrawer(null)}>
         <div className="drawer-head">
           <button className="drawer-close" type="button" onClick={() => setDrawer(null)}>✕</button>
@@ -6278,10 +6381,25 @@ function EntityDrawer({
             <dl className="kv">
               <dt>Telefone</dt><dd>{member.phone || <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
               <dt>E-mail</dt><dd>{member.email || <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
+              <dt>Aniversário</dt><dd>{member.birth || <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
               <dt>Bairro</dt><dd>{member.neighborhood || <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
+              <dt>Grupo de Comunhão</dt><dd>{grupo ? <>{grupo.name}{grupoLider && <span style={{ color: "var(--subtle)" }}> · líder {grupoLider.name.split(" ")[0]}</span>}</> : <span style={{ color: "var(--subtle)" }}>sem grupo</span>}</dd>
               <dt>Acesso ao app</dt><dd>{member.email ? <span style={{ color: "var(--olive-soft)" }}>liberado</span> : <span style={{ color: "var(--amber)" }}>pendente (falta e-mail)</span>}</dd>
             </dl>
+            <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 14 }} onClick={() => setEditingMember(true)}>Editar dados</button>
           </DrawerSection>
+          {familiares.length > 0 && (
+            <DrawerSection title={`Família · ${familiares.length}`}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {familiares.map((f) => (
+                  <button className="cand" type="button" style={{ width: "100%", textAlign: "left" }} key={f.id} onClick={() => setDrawer({ kind: "member", id: f.id })}>
+                    <Av name={f.name} size="sm" />
+                    <div className="cand-main"><div className="cand-name">{f.name}</div></div>
+                  </button>
+                ))}
+              </div>
+            </DrawerSection>
+          )}
           <DrawerSection title="Serve & cargo">
             {linkedMinistries.length > 0 ? (
               <div className="ov-serve">
@@ -6335,6 +6453,15 @@ function EntityDrawer({
           </div>
         </div>
       </DrawerShell>
+      {editingMember && (
+        <MemberEditModal
+          member={member}
+          fellowshipGroups={fellowshipGroups}
+          onClose={() => setEditingMember(false)}
+          onRefresh={() => router.refresh()}
+        />
+      )}
+      </>
     );
   }
 
@@ -6798,7 +6925,7 @@ function ServiceModal({
         name: value("nome"),
         phone: value("tel") || null,
         email: value("email") || null,
-        birthday: value("nasc") || null,
+        birth: value("nasc") || null,
         neighborhood: value("bairro") || null,
         situation: "membro",
         journey: [1, 0, 0, 0, 0],

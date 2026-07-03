@@ -19,7 +19,7 @@ type M = {
   email: string;
   situation: string;
   firstContact: string;
-  neighborhood: string;
+  neighborhood: string | null;
   journey: number[];
 };
 type Ministry = {

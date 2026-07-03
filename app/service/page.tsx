@@ -153,12 +153,12 @@ type MemberView = {
   name: string;
   phone: string;
   email: string;
-  birth: string;
+  birth: string | null;
   sinceYear: string;
   situation: "membro" | "novo";
   firstContact: string;
-  neighborhood: string;
-  family: string;
+  neighborhood: string | null;
+  family: string | null;
   journey: number[];
   createdAt: string;
 };
@@ -651,12 +651,12 @@ function toMemberView(row: MemberRow): MemberView {
     name: row.name,
     phone: row.phone || "Telefone não informado",
     email: row.email || "E-mail não informado",
-    birth: row.birth || "Nascimento não informado",
+    birth: row.birth,
     sinceYear: row.since_year || "Ano não informado",
     situation: row.situation,
     firstContact: row.first_contact || "Primeiro contato não informado",
-    neighborhood: row.neighborhood || "Bairro não informado",
-    family: row.family || "Família não informada",
+    neighborhood: row.neighborhood,
+    family: row.family,
     journey: Array.isArray(row.journey) ? row.journey : [],
     createdAt: row.created_at,
   };
