@@ -65,7 +65,7 @@ type PersonView = {
   engagement: number | null;
   availability: Record<string, boolean>;
   tags: string[];
-  meta?: { recusasSeguidas?: number; diasIndisponivel?: number; extraAccess?: string[] };
+  meta?: { recusasSeguidas?: number; diasIndisponivel?: number; extraAccess?: string[]; birthday?: string; neighborhood?: string };
 };
 
 type MemberView = {
@@ -452,7 +452,7 @@ type ModalState =
         | { kind: "ministry" }
         | { kind: "identity" }
         | { kind: "historyEntry"; id?: string }
-        | { kind: "cycle" }
+        | { kind: "cycle"; id?: string }
         | { kind: "title" }
         | { kind: "tag" }
         | { kind: "group" };
@@ -842,6 +842,32 @@ export default function ServiceExactApp({
     );
     router.refresh();
   };
+  const completeOnboarding = async (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string }) => {
+    const supabase = createServiceBrowserClient();
+    const targetPerson = people.find((p) => p.id === personId);
+    await supabase.schema("service").from("people").update({
+      email: data.email || null,
+      meta: { ...targetPerson?.meta, birthday: data.nasc || targetPerson?.meta?.birthday, neighborhood: data.bairro || targetPerson?.meta?.neighborhood },
+    }).eq("id", personId);
+    if (memberId) {
+      await supabase.schema("service").from("members").update({
+        email: data.email || null,
+        birth: data.nasc || null,
+        neighborhood: data.bairro || null,
+      }).eq("id", memberId);
+    }
+    router.refresh();
+  };
+  const addCardCommentMobile = async (cardId: string, author: string, body: string) => {
+    if (!firstChurch?.organizationId) return;
+    await createServiceBrowserClient().schema("service").from("card_comments").insert({
+      organization_id: firstChurch.organizationId,
+      card_id: cardId,
+      author,
+      body,
+    });
+    router.refresh();
+  };
   const activePeople = people.filter((person) => person.status === "ativo").length;
   const rosterOk = roster.filter((assignment) => assignment.status === "ok").length;
   const confirmationRate = roster.length ? Math.round((rosterOk / roster.length) * 100) : 0;
@@ -1017,6 +1043,8 @@ export default function ServiceExactApp({
           chatMembers={chatMembers}
           messages={messages}
           onReadAnnouncement={markAnnouncementRead}
+          onCompleteOnboarding={completeOnboarding}
+          onAddCardComment={addCardCommentMobile}
           onClose={() => setMobileOpen(false)}
         />
       )}
@@ -4591,8 +4619,8 @@ function Config({
   );
 }
 
-function Identidade({ church, identity, cycle, setModal }: { church?: ChurchView; identity?: ChurchIdentityView | null; cycle?: CycleView; setModal: (modal: ModalState) => void }) {
-  const values = identity?.values?.length ? identity.values : [{ title: "Comunidade" }, { title: "Palavra" }, { title: "Missão" }];
+function Identidade({ church: _church, identity, cycle, setModal }: { church?: ChurchView; identity?: ChurchIdentityView | null; cycle?: CycleView; setModal: (modal: ModalState) => void }) {
+  const values = identity?.values ?? [];
   return (
     <div className="content wide">
       <PageHead
@@ -4601,35 +4629,48 @@ function Identidade({ church, identity, cycle, setModal }: { church?: ChurchView
         subtitle="Missão, visão, valores e tema atual da comunidade. Exibido no app do membro e na vitrine da Igreja."
         action={<button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Editar", title: "Identidade da Igreja", subtitle: "Atualize propósito, missão, visão e valores da Igreja.", saveLabel: "Salvar", formFields: [{ k:"proposito", label:"Propósito", type:"area", ph:identity?.purpose ?? "Por que a Igreja existe..." }, { k:"missao", label:"Missão", type:"area", ph:identity?.mission ?? "A missão da Igreja..." }, { k:"visao", label:"Visão", type:"area", ph:identity?.vision ?? "A visão da Igreja..." }, { k:"versiculo", label:"Versículo", type:"text", half:true, ph:identity?.verse ?? "ex: Mateus 28:19" }, { k:"valores", label:"Valores (separados por vírgula)", type:"text", half:true, ph:values.map((v) => v.title).join(", ") }], action: { kind: "identity" } })}>Editar</button>}
       />
-      <div className="ident-hero">
-        <div className="ident-hero-label">Declaração de missão</div>
-        <div className="ident-hero-text">
-          {identity?.mission || (church?.nome ? `${church.nome} existe para fazer discípulos de Jesus Cristo que transformem a cidade.` : "A Igreja existe para fazer discípulos de Jesus Cristo que transformem a cidade.")}
+      {identity?.mission ? (
+        <div className="ident-hero">
+          <div className="ident-hero-label">Declaração de missão</div>
+          <div className="ident-hero-text">{identity.mission}</div>
+          {identity?.verse && <div className="ident-verse">§ {identity.verse}</div>}
         </div>
-        {identity?.verse && <div className="ident-verse">§ {identity.verse}</div>}
-      </div>
-      <div className="ident-grid">
-        <div className="ident-card">
-          <div className="ident-card-ic"><Icon name="identidade" size={18} /></div>
-          <div className="ident-card-t">Propósito</div>
-          <div className="ident-card-x">{identity?.purpose || "Ainda não definido. Toque em Editar para registrar."}</div>
+      ) : null}
+      {(identity?.purpose || identity?.vision) ? (
+        <div className="ident-grid">
+          {identity?.purpose ? (
+            <div className="ident-card">
+              <div className="ident-card-ic"><Icon name="identidade" size={18} /></div>
+              <div className="ident-card-t">Propósito</div>
+              <div className="ident-card-x">{identity.purpose}</div>
+            </div>
+          ) : null}
+          {identity?.vision ? (
+            <div className="ident-card">
+              <div className="ident-card-ic"><Icon name="painel" size={18} /></div>
+              <div className="ident-card-t">Visão</div>
+              <div className="ident-card-x">{identity.vision}</div>
+            </div>
+          ) : null}
         </div>
-        <div className="ident-card">
-          <div className="ident-card-ic"><Icon name="painel" size={18} /></div>
-          <div className="ident-card-t">Visão</div>
-          <div className="ident-card-x">{identity?.vision || "Ainda não definida. Toque em Editar para registrar."}</div>
-        </div>
-      </div>
-      <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">Valores</span><span className="line" /></div>
-      <div className="val-grid">
-        {values.map((v, i) => (
-          <div className="val-card" key={v.title + i}>
-            <div className="val-ic"><Icon name={["membros", "identidade", "decisoes"][i % 3]} size={14} /></div>
-            <div className="val-t">{v.title}</div>
+      ) : null}
+      {values.length > 0 ? (
+        <>
+          <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">Valores</span><span className="line" /></div>
+          <div className="val-grid">
+            {values.map((v, i) => (
+              <div className="val-card" key={v.title + i}>
+                <div className="val-ic"><Icon name={["membros", "identidade", "decisoes"][i % 3]} size={14} /></div>
+                <div className="val-t">{v.title}</div>
+              </div>
+            ))}
           </div>
-        ))}
+        </>
+      ) : null}
+      <div className="section-divide" style={{ marginTop: 28 }}>
+        <span className="num">03</span><span className="label">Tema do ciclo atual</span><span className="line" />
+        {cycle ? <button className="panel-link" type="button" onClick={() => setModal({ eyebrow: "Editar", title: `Ciclo ${cycle.year}`, subtitle: "A visão do ano que todos enxergam.", saveLabel: "Salvar", formFields: [{ k:"ano", label:"Ano / período", type:"text", half:true, req:true, ph:cycle.year }, { k:"tema", label:"Tema", type:"text", half:true, req:true, ph:cycle.theme }, { k:"versiculo", label:"Versículo", type:"text", ph:cycle.verse ?? "ex: Salmos 1:3" }, { k:"desc", label:"Descrição", type:"area", ph:cycle.body ?? "O que esse tema significa para a Igreja..." }, { k:"objetivos", label:"Objetivos (separados por vírgula)", type:"text", ph:cycle.objectives.map((o) => o.title).join(", ") }], action: { kind: "cycle", id: cycle.id } })}>Editar ciclo</button> : null}
       </div>
-      <div className="section-divide" style={{ marginTop: 28 }}><span className="num">03</span><span className="label">Tema do ciclo atual</span><span className="line" /></div>
       {cycle ? (
         <div className="ciclo">
           <div className="ciclo-banner">
@@ -4661,28 +4702,29 @@ function Identidade({ church, identity, cycle, setModal }: { church?: ChurchView
 }
 
 function Historia({ church: _church, historyEntries, setModal }: { church?: ChurchView; historyEntries: HistoryEntryView[]; setModal: (modal: ModalState) => void }) {
-  const marcos = [...historyEntries].sort((a, b) => a.sort_order - b.sort_order);
+  const capitulos = [...historyEntries].sort((a, b) => a.sort_order - b.sort_order);
   return (
     <div className="content wide">
       <PageHead
         title="Nossa história"
         eyebrow="Nossa igreja"
-        subtitle="Marcos, momentos e a linha do tempo de como chegamos até aqui. Cada capítulo é uma prova da fidelidade de Deus."
-        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Marco histórico", subtitle: "Registre um momento importante da história da Igreja.", saveLabel: "Adicionar marco", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:"ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:"ex: Fundação da Igreja" }, { k:"desc", label:"Descrição", type:"area", ph:"O que aconteceu..." }], action: { kind: "historyEntry" } })}>+ Marco</button>}
+        subtitle="Cada capítulo de fé que nos trouxe até aqui. Um mural para lembrar de onde viemos e de Quem nos sustentou."
+        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo capítulo", subtitle: "Registre um momento importante da história da Igreja.", saveLabel: "Adicionar capítulo", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:"ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:"ex: Fundação da Igreja" }, { k:"desc", label:"História", type:"area", ph:"Conte esse momento..." }, { k:"link", label:"Link (opcional)", type:"text", ph:"https://…", hint:"Vídeo, matéria ou álbum de fotos." }], action: { kind: "historyEntry" } })}>+ Adicionar capítulo</button>}
       />
-      {marcos.length === 0 && <div className="empty">Nenhum marco cadastrado ainda. Adicione o primeiro.</div>}
+      {capitulos.length === 0 && <div className="empty">Ainda não há capítulos. Adicione o primeiro.</div>}
       <div className="hist">
-        {marcos.map((marco, i) => (
-          <div key={marco.id} className={`hist-item ${i % 2 === 1 ? "rev" : ""}`}>
+        {capitulos.map((capitulo, i) => (
+          <div key={capitulo.id} className={`hist-item ${i % 2 === 1 ? "rev" : ""}`}>
             <div className="hist-photo">
               <div style={{ position: "absolute", inset: 0, background: i % 2 === 1 ? "linear-gradient(150deg, var(--olive-deep), #243012)" : "linear-gradient(150deg, #7a6526, #3d3415)" }} />
-              <span className="hist-year">{marco.year || "—"}</span>
+              <span className="hist-year">{capitulo.year || "—"}</span>
             </div>
             <div className="hist-text">
-              <div className="hist-t">{marco.title}</div>
-              <div className="hist-x">{marco.body}</div>
+              <div className="hist-t">{capitulo.title}</div>
+              <div className="hist-x">{capitulo.body}</div>
               <div className="hist-foot">
-                <button className="hist-edit" type="button" onClick={() => setModal({ eyebrow: "Editar", title: marco.title, subtitle: "Edite este marco da história da Igreja.", saveLabel: "Salvar", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:marco.year ?? "ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:marco.title }, { k:"desc", label:"Descrição", type:"area", ph:marco.body ?? "O que aconteceu..." }], action: { kind: "historyEntry", id: marco.id } })}>Editar</button>
+                {capitulo.link ? <a className="hist-link" href={capitulo.link} target="_blank" rel="noreferrer">Ver mais →</a> : null}
+                <button className="hist-edit" type="button" onClick={() => setModal({ eyebrow: "Editar", title: `Capítulo de ${capitulo.year ?? capitulo.title}`, subtitle: "Edite este capítulo da história da Igreja.", saveLabel: "Salvar", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:capitulo.year ?? "ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:capitulo.title }, { k:"desc", label:"História", type:"area", ph:capitulo.body ?? "Conte esse momento..." }, { k:"link", label:"Link (opcional)", type:"text", ph:capitulo.link ?? "https://…", hint:"Vídeo, matéria ou álbum de fotos." }], action: { kind: "historyEntry", id: capitulo.id } })}>Editar</button>
               </div>
             </div>
           </div>
@@ -5919,13 +5961,14 @@ function ServiceModal({
         updated_at: new Date().toISOString(),
       });
     } else if (action.kind === "historyEntry") {
-      if (!value("titulo")) { setSaving(false); setError("Digite o título do marco."); return; }
+      if (!value("titulo")) { setSaving(false); setError("Digite o título do capítulo."); return; }
       const payload = {
         organization_id: church.organizationId,
         church_id: church.id,
         year: value("ano") || null,
         title: value("titulo"),
         body: value("desc") || null,
+        link: value("link") || null,
         updated_at: new Date().toISOString(),
       };
       result = action.id
@@ -5933,16 +5976,21 @@ function ServiceModal({
         : await supabase.schema("service").from("history_entries").insert(payload);
     } else if (action.kind === "cycle") {
       if (!value("ano") || !value("tema")) { setSaving(false); setError("Digite o ano e o tema do ciclo."); return; }
-      result = await supabase.schema("service").from("cycles").insert({
-        organization_id: church.organizationId,
-        church_id: church.id,
+      const payload = {
         year: value("ano"),
         theme: value("tema"),
         verse: value("versiculo") || null,
         body: value("desc") || null,
         objectives: value("objetivos") ? value("objetivos").split(",").map((title) => ({ title: title.trim() })).filter((o) => o.title) : [],
-        is_active: true,
-      });
+      };
+      result = action.id
+        ? await supabase.schema("service").from("cycles").update(payload).eq("id", action.id)
+        : await supabase.schema("service").from("cycles").insert({
+            organization_id: church.organizationId,
+            church_id: church.id,
+            ...payload,
+            is_active: true,
+          });
     } else if (action.kind === "title") {
       if (!value("nome")) { setSaving(false); setError("Digite o nome do papel ministerial."); return; }
       result = await supabase.schema("service").from("ministerial_titles").insert({

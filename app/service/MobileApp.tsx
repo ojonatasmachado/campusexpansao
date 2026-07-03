@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createServiceBrowserClient } from "./lib/supabase-browser";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -81,6 +82,8 @@ export type MobileOverlayProps = {
   chatMembers: ChatMember[];
   messages: Message[];
   onReadAnnouncement?: (personId: string, announcementId: string) => void;
+  onCompleteOnboarding?: (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string }) => void;
+  onAddCardComment?: (cardId: string, author: string, body: string) => void;
   onClose: () => void;
 };
 
@@ -392,20 +395,46 @@ function TabEscala({ person, events, roster }: { person: P; events: Ev[]; roster
 
 // ── aba: Tarefas ──────────────────────────────────────────────────────────────
 
-function TabTarefas({ person, cards, boards }: { person: P; cards: Card[]; boards: Board[] }) {
+function TabTarefas({ person, cards, boards, onAddCardComment }: { person: P; cards: Card[]; boards: Board[]; onAddCardComment?: (cardId: string, author: string, body: string) => void }) {
   const [open, setOpen] = useState<string | null>(null);
   const [commentTexts, setCommentTexts] = useState<Record<string, string>>({});
-  const [savedComments, setSavedComments] = useState<Record<string, string[]>>({});
+  const [savedComments, setSavedComments] = useState<Record<string, { author: string; body: string }[]>>({});
+  const [localCards, setLocalCards] = useState<Card[]>(cards);
 
-  const myCards = cards.filter((c) => c.assignees.includes(person.id));
+  useEffect(() => { setLocalCards(cards); }, [cards]);
+
+  const myCards = localCards.filter((c) => c.assignees.includes(person.id));
   const pending = myCards.filter((c) => c.column_id !== "done");
   const done = myCards.filter((c) => c.column_id === "done");
+
+  const loadComments = (cardId: string) => {
+    createServiceBrowserClient()
+      .schema("service")
+      .from("card_comments")
+      .select("author,body")
+      .eq("card_id", cardId)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => { if (data) setSavedComments((p) => ({ ...p, [cardId]: data as { author: string; body: string }[] })); });
+  };
+
+  const toggleOpen = (cardId: string) => {
+    const next = open === cardId ? null : cardId;
+    setOpen(next);
+    if (next) loadComments(next);
+  };
+
+  const moveCard = (cardId: string, colId: string) => {
+    setLocalCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, column_id: colId } : c)));
+    createServiceBrowserClient().schema("service").from("cards").update({ column_id: colId }).eq("id", cardId);
+  };
 
   const addComment = (cardId: string) => {
     const t = commentTexts[cardId]?.trim();
     if (!t) return;
-    setSavedComments((p) => ({ ...p, [cardId]: [...(p[cardId] ?? []), t] }));
     setCommentTexts((p) => ({ ...p, [cardId]: "" }));
+    const author = person.name.split(" ")[0];
+    setSavedComments((p) => ({ ...p, [cardId]: [...(p[cardId] ?? []), { author, body: t }] }));
+    onAddCardComment?.(cardId, author, t);
   };
 
   const cardEl = (c: Card) => {
@@ -414,7 +443,7 @@ function TabTarefas({ person, cards, boards }: { person: P; cards: Card[]; board
     const isLate = c.moved_days_ago !== null && c.moved_days_ago > 7;
     return (
       <div className={`m-task ${isLate ? "late" : ""}`} key={c.id}>
-        <button className="m-task-head" onClick={() => setOpen(isOpen ? null : c.id)}>
+        <button className="m-task-head" onClick={() => toggleOpen(c.id)}>
           <span className={`prio-dot prio-${c.priority ?? "media"}`} />
           <div className="m-task-main">
             <div className="m-task-title">{c.title}</div>
@@ -428,17 +457,17 @@ function TabTarefas({ person, cards, boards }: { person: P; cards: Card[]; board
             {board && (
               <div className="m-task-cols">
                 {board.columns.map((col) => (
-                  <span key={col.id} className={`seg-chip ${c.column_id === col.id ? "on" : ""}`}>
+                  <button key={col.id} type="button" className={`seg-chip ${c.column_id === col.id ? "on" : ""}`} onClick={() => moveCard(c.id, col.id)}>
                     {col.nome ?? col.name ?? col.id}
-                  </span>
+                  </button>
                 ))}
               </div>
             )}
             <div className="m-task-comments">
               {(savedComments[c.id] ?? []).map((cm, i) => (
                 <div className="m-task-cm" key={i}>
-                  <b>{person.name.split(" ")[0]}</b> <span>agora</span>
-                  <div>{cm}</div>
+                  <b>{cm.author}</b>
+                  <div>{cm.body}</div>
                 </div>
               ))}
               <div className="m-task-cm-add">
@@ -1065,7 +1094,7 @@ function FotoUpload({
   );
 }
 
-function Onboarding({ person, member, onDone }: { person: P; member: M | null; onDone: () => void }) {
+function Onboarding({ person, member, onCompleteOnboarding, onDone }: { person: P; member: M | null; onCompleteOnboarding?: (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string }) => void; onDone: () => void }) {
   const [step, setStep] = useState(0);
   const [d, setD] = useState({
     email: member?.email ?? person.name.toLowerCase().replace(/\s+/g, ".") + "@email.com",
@@ -1165,6 +1194,7 @@ function Onboarding({ person, member, onDone }: { person: P; member: M | null; o
       setStep(step + 1);
     } else {
       try { localStorage.setItem(`cex_onboarded_${person.id}`, "1"); } catch {}
+      onCompleteOnboarding?.(person.id, member?.id ?? null, { email: d.email, nasc: d.nasc, bairro: d.bairro });
       onDone();
     }
   };
@@ -1218,7 +1248,7 @@ function MobileMembro({
     try { return !!localStorage.getItem(`cex_onboarded_${person.id}`); } catch { return false; }
   });
   const { ministries, events, roster, cards, boards, courses, enrollments,
-          visitors, baptismClasses, announcements, chats, chatMembers, messages, members, onReadAnnouncement } = rest;
+          visitors, baptismClasses, announcements, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment } = rest;
 
   const isRecep = isRecepPerson(person, ministries);
 
@@ -1238,7 +1268,7 @@ function MobileMembro({
       <div className="phone">
         <div className="phone-screen">
           <div className="phone-notch" />
-          <Onboarding person={person} member={member} onDone={() => setOnboarded(true)} />
+          <Onboarding person={person} member={member} onCompleteOnboarding={onCompleteOnboarding} onDone={() => setOnboarded(true)} />
         </div>
       </div>
     );
@@ -1264,7 +1294,7 @@ function MobileMembro({
             <TabInicio person={person} member={member} ministries={ministries} events={events} roster={roster} cards={cards} setTab={setTab} />
           )}
           {tab === "escalas" && <TabEscala person={person} events={events} roster={roster} />}
-          {tab === "tarefas" && <TabTarefas person={person} cards={cards} boards={boards} />}
+          {tab === "tarefas" && <TabTarefas person={person} cards={cards} boards={boards} onAddCardComment={onAddCardComment} />}
           {tab === "conversas" && (
             <TabConversas member={member} chats={chats} chatMembers={chatMembers} messages={messages} members={members} />
           )}
@@ -1366,7 +1396,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
       </div>
 
       <div onClick={(e) => e.stopPropagation()}>
-        <MobileMembro {...props} person={person} member={member} />
+        <MobileMembro key={person.id} {...props} person={person} member={member} />
       </div>
     </div>
   );
