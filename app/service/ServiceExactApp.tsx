@@ -515,7 +515,6 @@ type ModalState =
         | { kind: "announcement" }
         | { kind: "wallPost" }
         | { kind: "room" }
-        | { kind: "reservation"; roomId?: string }
         | { kind: "member" }
         | { kind: "event" }
         | { kind: "ministry" }
@@ -1120,7 +1119,7 @@ export default function ServiceExactApp({
         {route === "escalas" ? <Escalas gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} setRoute={setRoute} setCheckinEventId={setCheckinEventId} /> : null}
         {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} rooms={rooms} reservations={reservations} church={firstChurch} setDrawer={setDrawer} /> : null}
         {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
-        {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} setModal={setModal} /> : null}
+        {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} church={firstChurch} setModal={setModal} /> : null}
         {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} setModal={setModal} /> : null}
         {route === "cultos" ? <Cultos events={events} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
         {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} wallPosts={wallPosts} ministries={ministries} people={people} setModal={setModal} /> : null}
@@ -1224,7 +1223,6 @@ export default function ServiceExactApp({
           church={firstChurch}
           people={people}
           ministries={ministries}
-          rooms={rooms}
           onClose={() => setModal(null)}
         />
       ) : null}
@@ -3368,8 +3366,8 @@ const CAL_SEM = ["D", "S", "T", "Q", "Q", "S", "S"];
 
 type CalEvent = { date: Date; label: string; sub?: string; tone?: "olive" | "amber"; onClick?: () => void };
 
-/* calendário mensal reaproveitável (perfil da pessoa hoje; Espaços numa fase futura). */
-function MiniCalendar({ events }: { events: CalEvent[] }) {
+/* calendário mensal reaproveitável (perfil da pessoa e Espaços & Salas). */
+function MiniCalendar({ events, onAdd }: { events: CalEvent[]; onAdd?: (dateStr: string) => void }) {
   const initial = events[0]?.date ?? new Date();
   const [year, setYear] = useState(initial.getFullYear());
   const [month, setMonth] = useState(initial.getMonth());
@@ -3428,17 +3426,22 @@ function MiniCalendar({ events }: { events: CalEvent[] }) {
             </div>
           </button>
         ))}
+        {selDay && onAdd && <button type="button" className="cal-add" onClick={() => onAdd(`${selDay} ${DP_MESES[month].toLowerCase()}`)}>+ Reservar em {selDay} {DP_MESES[month].toLowerCase()}</button>}
       </div>
     </div>
   );
 }
 
-function Espacos({ rooms, reservations, setModal, embed }: { rooms: RoomView[]; reservations: ReservationView[]; setModal: (modal: ModalState) => void; embed?: boolean }) {
+const RESERVA_TONE: Record<string, "olive" | "amber"> = { reuniao: "olive", ensaio: "olive", evento: "amber", treinamento: "olive", outro: "olive" };
+const RESERVA_TIPOS = [{ v: "reuniao", l: "Reunião" }, { v: "ensaio", l: "Ensaio" }, { v: "evento", l: "Evento" }, { v: "treinamento", l: "Treinamento" }, { v: "outro", l: "Outro" }];
+
+function Espacos({ rooms, reservations, church, setModal, embed }: { rooms: RoomView[]; reservations: ReservationView[]; church?: ChurchView; setModal: (modal: ModalState) => void; embed?: boolean }) {
   const [filter, setFilter] = useState("todas");
+  const [reservar, setReservar] = useState<{ salaInicial?: string; dataInicial?: string } | null>(null);
   const roomById = new Map(rooms.map((room) => [room.id, room]));
   const visibleReservations = reservations.filter((reservation) => filter === "todas" || reservation.room_id === filter);
   const openNewRoom = () => setModal({ eyebrow: "Criar", title: "Nova sala / espaço", subtitle: "Um espaço físico da igreja disponível para reservas.", saveLabel: "Criar sala", formFields: [{ k:"nome", label:"Nome do espaço", type:"text", req:true, ph:"ex: Sala 3, Salão de festas" }, { k:"capacidade", label:"Capacidade (pessoas)", type:"text", half:true, ph:"ex: 30" }, { k:"local", label:"Onde fica", type:"text", half:true, ph:"ex: 1º andar, Anexo" }, { k:"recursos", label:"Recursos disponíveis", type:"text", ph:"Som, Projeção, Piano", hint:"Separe por vírgula." }], action: { kind: "room" } });
-  const openNewReservation = () => setModal({ eyebrow: "Criar", title: "Reservar espaço", subtitle: "Escolha o compromisso, data e horário.", saveLabel: "Criar reserva", formFields: [{ k:"titulo", label:"Título", type:"text", req:true, ph:"ex: Reunião de liderança" }, { k:"tipo", label:"Tipo", type:"select", half:true, options:[{v:"reuniao",l:"Reunião"},{v:"ensaio",l:"Ensaio"},{v:"evento",l:"Evento"},{v:"treinamento",l:"Treinamento"},{v:"outro",l:"Outro"}] }, { k:"data", label:"Data", type:"date", half:true }, { k:"inicio", label:"Início", type:"time", half:true }, { k:"fim", label:"Fim", type:"time", half:true }], action: { kind: "reservation", roomId: filter !== "todas" ? filter : undefined } });
+  const openNewReservation = () => setReservar({ salaInicial: filter !== "todas" ? filter : undefined });
   const header = embed ? (
     <div className="cfg-card-head-row">
       <div>
@@ -3458,6 +3461,16 @@ function Espacos({ rooms, reservations, setModal, embed }: { rooms: RoomView[]; 
       action={<><button className="btn btn-sec" type="button" onClick={openNewRoom}>+ Nova sala</button><button className="btn btn-pri" type="button" onClick={openNewReservation}>+ Reservar espaço</button></>}
     />
   );
+  const calEvents: CalEvent[] = visibleReservations.map((reservation): CalEvent | null => {
+    const room = roomById.get(reservation.room_id);
+    const date = parseFlexDate(reservation.reserved_date);
+    return date ? {
+      date,
+      label: reservation.title,
+      sub: `${room?.name || "Sala"} · ${reservation.start_time || "sem início"} até ${reservation.end_time || "sem fim"}`,
+      tone: RESERVA_TONE[reservation.kind || "outro"] ?? "olive",
+    } : null;
+  }).filter((e): e is CalEvent => e !== null);
   const inner = (
     <>
       {header}
@@ -3468,19 +3481,91 @@ function Espacos({ rooms, reservations, setModal, embed }: { rooms: RoomView[]; 
         })}
         {rooms.length === 0 ? <div className="empty">Nenhuma sala cadastrada ainda.</div> : null}
       </div>
-      <div className="panel" style={{ marginTop: 20 }}>
-        <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Calendário de reservas</span><span className="panel-meta">{visibleReservations.length} reserva(s)</span></div>
-        <div className="panel-body flush">
-          {visibleReservations.map((reservation) => {
-            const room = roomById.get(reservation.room_id);
-            return <div className="mini-row" key={reservation.id}><span className="chat-row-ic"><Icon name="config" size={15} /></span><div className="mini-main"><div className="mini-title">{reservation.title}</div><div className="mini-sub">{room?.name || "Sala"} · {reservation.reserved_date || "sem data"} · {reservation.start_time || "sem início"} até {reservation.end_time || "sem fim"}</div></div><span className="chip chip-ok">{reservation.kind || "reserva"}</span></div>;
-          })}
-          {visibleReservations.length === 0 ? <div className="empty">Nenhuma reserva encontrada.</div> : null}
+      <div className="esp-cal-wrap" style={{ marginTop: 20 }}>
+        <div className="toolbar" style={{ marginBottom: 12 }}>
+          <span className="panel-meta">Calendário de reservas{filter !== "todas" ? <> · <b style={{ color: "var(--light)" }}>{roomById.get(filter)?.name}</b></> : ""}</span>
+          <div className="tb-spacer" />
+          {filter !== "todas" && <button className="btn btn-ghost btn-sm" type="button" onClick={() => setFilter("todas")}>Ver todas as salas</button>}
+        </div>
+        <MiniCalendar events={calEvents} onAdd={(dataStr) => setReservar({ salaInicial: filter !== "todas" ? filter : undefined, dataInicial: dataStr })} />
+        <div className="cal-legend">
+          {RESERVA_TIPOS.map((t) => <span key={t.v} className="cal-legend-i"><i className={`cal-dot ${RESERVA_TONE[t.v] === "amber" ? "amber" : ""}`} />{t.l}</span>)}
         </div>
       </div>
+      {reservar && church && <ReservaModal rooms={rooms} reservations={reservations} church={church} salaInicial={reservar.salaInicial} dataInicial={reservar.dataInicial} onClose={() => setReservar(null)} />}
     </>
   );
   return embed ? inner : <div className="content wide">{inner}</div>;
+}
+
+function ReservaModal({ rooms, reservations, church, salaInicial, dataInicial, onClose }: { rooms: RoomView[]; reservations: ReservationView[]; church: ChurchView; salaInicial?: string; dataInicial?: string; onClose: () => void }) {
+  const router = useRouter();
+  const [salaId, setSalaId] = useState(salaInicial || rooms[0]?.id || "");
+  const [titulo, setTitulo] = useState("");
+  const [tipo, setTipo] = useState("reuniao");
+  const [data, setData] = useState(dataInicial || "");
+  const [inicio, setInicio] = useState("19h00");
+  const [fim, setFim] = useState("21h00");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const isoDate = data ? dpToIsoDate(data) : null;
+  const conflito = salaId && isoDate ? findRoomConflict(reservations, salaId, isoDate, inicio, fim) : null;
+
+  const salvar = async () => {
+    if (!titulo.trim()) { setError("Dê um nome ao compromisso."); return; }
+    if (!isoDate) { setError("Escolha o dia no calendário."); return; }
+    if (conflito) { setError(`Já existe "${conflito.title}" nesta sala em ${conflito.start_time}–${conflito.end_time}.`); return; }
+    setSaving(true);
+    setError("");
+    await createServiceBrowserClient().schema("service").from("reservations").insert({
+      organization_id: church.organizationId,
+      room_id: salaId,
+      title: titulo.trim(),
+      kind: tipo,
+      reserved_date: isoDate,
+      start_time: inicio,
+      end_time: fim,
+    });
+    router.refresh();
+    onClose();
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">Reservar espaço</div>
+          <div className="modal-title">Novo compromisso na sala</div>
+          <div className="modal-sub">Não deixamos duas reservas se cruzarem no mesmo espaço e horário.</div>
+        </div>
+        <div className="modal-body">
+          <div className="field"><label className="field-label">Título</label><input className="input" placeholder="ex: Reunião de líderes" value={titulo} onChange={(e) => setTitulo(e.target.value)} /></div>
+          <div className="field field-half">
+            <label className="field-label">Sala</label>
+            <select className="select" value={salaId} onChange={(e) => setSalaId(e.target.value)}>
+              {rooms.map((room) => <option key={room.id} value={room.id}>{room.name}{room.capacity ? ` · ${room.capacity} lug.` : ""}</option>)}
+            </select>
+          </div>
+          <div className="field field-half">
+            <label className="field-label">Tipo</label>
+            <select className="select" value={tipo} onChange={(e) => setTipo(e.target.value)}>
+              {RESERVA_TIPOS.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
+            </select>
+          </div>
+          <div className="field field-half"><label className="field-label">Dia</label><DatePicker value={data} onChange={setData} /></div>
+          <div className="field field-half"><label className="field-label">Início</label><TimePicker value={inicio} onChange={setInicio} /></div>
+          <div className="field field-half"><label className="field-label">Fim</label><TimePicker value={fim} onChange={setFim} /></div>
+          {conflito ? <div className="reserva-warn" style={{ gridColumn: "1 / -1" }}><Icon name="alerta" size={14} /> Já existe &quot;{conflito.title}&quot; aqui em {conflito.start_time}–{conflito.end_time}.</div> : null}
+          {error ? <div style={{ gridColumn: "1 / -1", fontSize: 12.5, color: "var(--danger)" }}>{error}</div> : null}
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-pri" type="button" disabled={saving || !!conflito} onClick={salvar}>Reservar</button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function Decisoes({
@@ -5536,7 +5621,7 @@ function Config({
       {/* ─── ESPAÇOS & SALAS ─── */}
       {tab === "espacos" && (
         <div className="cfg-card">
-          <Espacos rooms={rooms} reservations={reservations} setModal={setModal} embed />
+          <Espacos rooms={rooms} reservations={reservations} church={church} setModal={setModal} embed />
         </div>
       )}
 
@@ -7405,14 +7490,12 @@ function ServiceModal({
   church,
   people,
   ministries,
-  rooms,
   onClose,
 }: {
   modal: NonNullable<ModalState>;
   church?: ChurchView;
   people: PersonView[];
   ministries: MinistryView[];
-  rooms: RoomView[];
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -7643,27 +7726,6 @@ function ServiceModal({
         capacity: Number.parseInt(value("capacidade"), 10) || null,
         location: value("local") || null,
         resources: value("recursos") ? value("recursos").split(",").map((item) => item.trim()).filter(Boolean) : [],
-      });
-    } else if (action.kind === "reservation") {
-      if (!value("titulo")) {
-        setSaving(false);
-        setError("Digite o título da reserva.");
-        return;
-      }
-      const room = action.roomId ? rooms.find((item) => item.id === action.roomId) : rooms[0];
-      if (!room) {
-        setSaving(false);
-        setError("Crie uma sala antes de reservar.");
-        return;
-      }
-      result = await supabase.schema("service").from("reservations").insert({
-        organization_id: church.organizationId,
-        room_id: room.id,
-        title: value("titulo"),
-        kind: value("tipo") || "outro",
-        reserved_date: dpToIsoDate(value("data")),
-        start_time: value("inicio") || null,
-        end_time: value("fim") || null,
       });
     } else if (action.kind === "identity") {
       result = await supabase.schema("service").from("church_identity").upsert({
