@@ -118,11 +118,11 @@ const EVENTS = [
     eventDate: "06/07/2026", time: "10h00", slot: "dom_m", location: "Templo principal",
     ministries: ["min-1", "min-2", "min-3"],
     schedule: [
-      { id: "sc-1", item: "Abertura e boas-vindas", time: "10:00", category: "recepcao" },
-      { id: "sc-2", item: "Louvor (3 músicas)", time: "10:10", category: "louvor" },
-      { id: "sc-3", item: "Anúncios", time: "10:35", category: "comunicacao" },
-      { id: "sc-4", item: "Mensagem", time: "10:45", category: "palavra" },
-      { id: "sc-5", item: "Oferta e encerramento", time: "11:25", category: "geral" },
+      { id: "sc-1", item: "Abertura e boas-vindas", time: "10:00", category: "recepcao", duration_min: 10, ministry_id: "min-3", person_id: "p3", notes: null, sort_order: 0 },
+      { id: "sc-2", item: "Louvor (3 músicas)", time: "10:10", category: "louvor", duration_min: 25, ministry_id: "min-1", person_id: "p1", notes: null, sort_order: 1 },
+      { id: "sc-3", item: "Anúncios", time: "10:35", category: "comunicacao", duration_min: 10, ministry_id: null, person_id: null, notes: null, sort_order: 2 },
+      { id: "sc-4", item: "Mensagem", time: "10:45", category: "palavra", duration_min: 40, ministry_id: null, person_id: null, notes: null, sort_order: 3 },
+      { id: "sc-5", item: "Oferta e encerramento", time: "11:25", category: "geral", duration_min: 15, ministry_id: null, person_id: null, notes: null, sort_order: 4 },
     ],
     setlist: [
       { id: "sl-1", title: "Grande é o Senhor", song_key: "G" },
@@ -136,9 +136,9 @@ const EVENTS = [
     eventDate: "06/07/2026", time: "19h00", slot: "dom_n", location: "Templo principal",
     ministries: ["min-1", "min-2"],
     schedule: [
-      { id: "sc-6", item: "Abertura", time: "19:00", category: "geral" },
-      { id: "sc-7", item: "Louvor", time: "19:10", category: "louvor" },
-      { id: "sc-8", item: "Mensagem", time: "19:45", category: "palavra" },
+      { id: "sc-6", item: "Abertura", time: "19:00", category: "geral", duration_min: 10, ministry_id: null, person_id: null, notes: null, sort_order: 0 },
+      { id: "sc-7", item: "Louvor", time: "19:10", category: "louvor", duration_min: 35, ministry_id: "min-1", person_id: "p1", notes: null, sort_order: 1 },
+      { id: "sc-8", item: "Mensagem", time: "19:45", category: "palavra", duration_min: 30, ministry_id: null, person_id: null, notes: null, sort_order: 2 },
     ],
     setlist: [
       { id: "sl-4", title: "Hosana", song_key: "E" },

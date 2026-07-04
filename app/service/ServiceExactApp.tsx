@@ -109,7 +109,7 @@ type EventView = {
   slot: string;
   location: string;
   ministries: string[];
-  schedule: Array<{ id: string; item: string; time: string | null; category: string | null }>;
+  schedule: Array<{ id: string; item: string; time: string | null; category: string | null; duration_min: number | null; ministry_id: string | null; person_id: string | null; notes: string | null; sort_order: number }>;
   setlist: Array<{ id: string; title: string; song_key: string | null }>;
   checkinToken: string | null;
   checkinActive: boolean;
@@ -1202,6 +1202,7 @@ export default function ServiceExactApp({
           setDrawer={setDrawer}
           setRoute={setRoute}
           setModal={setModal}
+          setShareEventId={setShareEventId}
         />
       ) : null}
       {modal ? (
@@ -3279,6 +3280,87 @@ function Comunicacao({
         </div>
       )}
       {compose && <ComposerModal ministries={ministries} onClose={() => setCompose(false)} />}
+    </div>
+  );
+}
+
+/* datas de produção vêm em YYYY-MM-DD (coluna `date` do Postgres) ou DD/MM/YYYY
+   (mock de /service/demo) — tolera as duas. */
+function parseFlexDate(str: string | null | undefined): Date | null {
+  if (!str) return null;
+  const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
+  const br = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (br) return new Date(+br[3], +br[2] - 1, +br[1]);
+  return null;
+}
+
+const CAL_MESES_FULL = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+const CAL_SEM = ["D", "S", "T", "Q", "Q", "S", "S"];
+
+type CalEvent = { date: Date; label: string; sub?: string; tone?: "olive" | "amber"; onClick?: () => void };
+
+/* calendário mensal reaproveitável (perfil da pessoa hoje; Espaços numa fase futura). */
+function MiniCalendar({ events }: { events: CalEvent[] }) {
+  const initial = events[0]?.date ?? new Date();
+  const [year, setYear] = useState(initial.getFullYear());
+  const [month, setMonth] = useState(initial.getMonth());
+  const [selDay, setSelDay] = useState<number | null>(null);
+
+  const changeMonth = (delta: number) => {
+    let m = month + delta, y = year;
+    if (m < 0) { m = 11; y -= 1; }
+    if (m > 11) { m = 0; y += 1; }
+    setMonth(m); setYear(y); setSelDay(null);
+  };
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const offset = new Date(year, month, 1).getDay();
+  const byDay = new Map<number, CalEvent[]>();
+  events.forEach((e) => {
+    if (e.date.getFullYear() === year && e.date.getMonth() === month) {
+      const d = e.date.getDate();
+      byDay.set(d, [...(byDay.get(d) ?? []), e]);
+    }
+  });
+  const cells: Array<number | null> = [];
+  for (let i = 0; i < offset; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  const selEvents = selDay ? byDay.get(selDay) ?? [] : [];
+
+  return (
+    <div className="cal">
+      <div className="cal-head">
+        <button type="button" className="cal-nav" onClick={() => changeMonth(-1)}>‹</button>
+        <span className="cal-title">{CAL_MESES_FULL[month]} {year}</span>
+        <button type="button" className="cal-nav" onClick={() => changeMonth(1)}>›</button>
+      </div>
+      <div className="cal-grid">
+        {CAL_SEM.map((s, i) => <span key={`h${i}`} className="cal-dow">{s}</span>)}
+        {cells.map((d, i) => {
+          if (!d) return <span key={`e${i}`} className="cal-cell empty" />;
+          const has = byDay.get(d);
+          return (
+            <button type="button" key={`d${d}`} className={`cal-cell${has ? " has" : ""}${selDay === d ? " sel" : ""}`} onClick={() => setSelDay(d)}>
+              <span className="cal-num">{d}</span>
+              {has && <span className="cal-dots">{has.slice(0, 3).map((e, k) => <i key={k} className={`cal-dot${e.tone === "amber" ? " amber" : ""}`} />)}</span>}
+            </button>
+          );
+        })}
+      </div>
+      <div className="cal-agenda">
+        {!selDay && <div className="cal-agenda-empty">Toque num dia para ver os compromissos.</div>}
+        {selDay && selEvents.length === 0 && <div className="cal-agenda-empty">Nada em {selDay} de {CAL_MESES_FULL[month]}.</div>}
+        {selEvents.map((e, i) => (
+          <button type="button" key={i} className="cal-ev" onClick={() => e.onClick?.()}>
+            <span className={`cal-ev-bar${e.tone === "amber" ? " amber" : ""}`} />
+            <div className="cal-ev-main">
+              <div className="cal-ev-label">{e.label}</div>
+              {e.sub && <div className="cal-ev-sub">{e.sub}</div>}
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -6374,6 +6456,7 @@ function EntityDrawer({
   setDrawer,
   setRoute,
   setModal,
+  setShareEventId,
 }: {
   drawer: NonNullable<DrawerState>;
   people: PersonView[];
@@ -6400,6 +6483,7 @@ function EntityDrawer({
   setDrawer: (drawer: DrawerState) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
   setModal: (modal: ModalState) => void;
+  setShareEventId: (id: string) => void;
 }) {
   const router = useRouter();
   const [editingMember, setEditingMember] = useState(false);
@@ -6411,6 +6495,34 @@ function EntityDrawer({
     if (!person) return null;
     const personRoster = roster.filter((item) => item.person_id === person.id);
     const linkedMinistries = ministries.filter((ministry) => ministry.people.some((link) => link.personId === person.id));
+    const personCalEvents: CalEvent[] = [];
+    personRoster.forEach((assignment) => {
+      const ev = events.find((item) => item.id === assignment.event_id);
+      const date = parseFlexDate(ev?.eventDate);
+      if (!ev || !date) return;
+      let posName = "Escala", ministryName = "";
+      for (const ministry of ministries) {
+        const position = ministry.positions.find((p) => p.id === assignment.position_id);
+        if (position) { posName = position.name; ministryName = ministry.name; break; }
+      }
+      personCalEvents.push({
+        date,
+        label: ministryName ? `${posName} · ${ministryName}` : posName,
+        sub: `${ev.name} · ${ev.time}`,
+        tone: assignment.status === "no" ? "amber" : "olive",
+        onClick: () => setDrawer({ kind: "event", id: ev.id }),
+      });
+    });
+    meetings.filter((meeting) => meeting.attendees.includes(person.id)).forEach((meeting) => {
+      const date = parseFlexDate(meeting.meeting_date);
+      if (!date) return;
+      personCalEvents.push({ date, label: meeting.title, sub: `Reunião · ${meeting.time ?? "sem horário"}`, tone: "amber", onClick: () => setDrawer({ kind: "meeting", id: meeting.id }) });
+    });
+    rehearsals.filter((rehearsal) => rehearsal.attendees.includes(person.id)).forEach((rehearsal) => {
+      const date = parseFlexDate(rehearsal.rehearsal_date);
+      if (!date) return;
+      personCalEvents.push({ date, label: rehearsal.title, sub: `Ensaio · ${rehearsal.time ?? "sem horário"}`, tone: "olive", onClick: () => setDrawer({ kind: "rehearsal", id: rehearsal.id }) });
+    });
     return (
       <DrawerShell onClose={() => setDrawer(null)}>
         <div className="drawer-head">
@@ -6441,8 +6553,8 @@ function EntityDrawer({
               ].map(([key, label]) => <span key={key} className={`avail-day ${person.availability[key] ? "free" : "block"}`}>{label}</span>)}
             </div>
           </DrawerSection>
-          <DrawerSection title={`Meu calendário · ${personRoster.length} compromisso(s)`}>
-            {personRoster.length ? personRoster.map((item) => <div className="mini-row" key={item.id}><div className="mini-main"><div className="mini-title">Escala</div><div className="mini-sub">Status: {item.status}</div></div><Chip status={item.status} /></div>) : <p className="mini-sub">Nenhum compromisso encontrado.</p>}
+          <DrawerSection title={`Meu calendário · ${personCalEvents.length} compromisso(s)`}>
+            <MiniCalendar events={personCalEvents} />
           </DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
             <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { setDrawer(null); setRoute("escalas"); }}>Escalar</button>
@@ -6781,7 +6893,7 @@ function EntityDrawer({
       onClose={() => setDrawer(null)}
       setDrawer={setDrawer}
       setRoute={setRoute}
-      setModal={setModal}
+      setShareEventId={setShareEventId}
     />
   );
 }
@@ -6794,7 +6906,7 @@ function EventDrawer({
   onClose,
   setDrawer,
   setRoute,
-  setModal,
+  setShareEventId,
 }: {
   event: EventView;
   ministries: MinistryView[];
@@ -6803,8 +6915,9 @@ function EventDrawer({
   onClose: () => void;
   setDrawer: (drawer: DrawerState) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
-  setModal: (modal: ModalState) => void;
+  setShareEventId: (id: string) => void;
 }) {
+  const router = useRouter();
   const [tab, setTab] = useState<"crono" | "posicoes">("crono");
   const eventRoster = roster.filter((assignment) => assignment.event_id === event.id);
   const eventMinistries = event.ministries.length ? ministries.filter((ministry) => event.ministries.includes(ministry.id)) : ministries;
@@ -6825,7 +6938,7 @@ function EventDrawer({
         {tab === "crono" ? (
           <>
             <DrawerSection title="Roteiro do culto · etapa por etapa">
-              {event.schedule.length ? event.schedule.map((item) => <div className="mini-row" key={item.id}><div className="mini-main"><div className="mini-title">{item.item}</div><div className="mini-sub">{item.time ?? "sem horário"} · {item.category ?? "roteiro"}</div></div></div>) : <p className="mini-sub">Nenhum item de cronograma.</p>}
+              <CronogramaEditor event={event} ministries={eventMinistries} onRefresh={() => router.refresh()} />
             </DrawerSection>
             <DrawerSection title="Setlist">
               {event.setlist.length ? event.setlist.map((song) => <div className="mini-row" key={song.id}><div className="mini-main"><div className="mini-title">{song.title}</div><div className="mini-sub">Tom: {song.song_key ?? "não informado"}</div></div></div>) : <p className="mini-sub">Nenhuma música cadastrada.</p>}
@@ -6869,10 +6982,168 @@ function EventDrawer({
         )}
         <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
           <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { onClose(); setRoute("escalas"); }}>Editar escala →</button>
-          <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Setup", title: event.name, subtitle: "Compartilhe cronograma, posições e observações do culto.", formFields: [{ k:"msg", label:"Mensagem para a equipe", type:"area", ph:"Detalhes do culto, posições, observações..." }, { k:"equipe", label:"Destinatários", type:"text", ph:"ex: Todos / Louvor" }] })}><Icon name="comunicacao" size={15} /> Setup da celebração</button>
+          <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setShareEventId(event.id)}><Icon name="comunicacao" size={15} /> Setup da celebração</button>
         </div>
       </div>
     </DrawerShell>
+  );
+}
+
+/* roteiro etapa por etapa: duração soma o horário automaticamente a partir do
+   início do culto (event.time é a âncora). service.event_schedule_items já tem
+   duration_min/ministry_id/person_id/notes/sort_order desde a fundação (0006). */
+type CronoStep = EventView["schedule"][number];
+
+function parseHoraMin(h: string | null): number {
+  const m = String(h || "").match(/(\d{1,2})[h:](\d{0,2})/);
+  return m ? (+m[1]) * 60 + (+(m[2] || 0)) : 19 * 60;
+}
+function minToHora(min: number): string {
+  min = ((min % 1440) + 1440) % 1440;
+  return String(Math.floor(min / 60)).padStart(2, "0") + "h" + String(min % 60).padStart(2, "0");
+}
+function fmtDuracaoMin(min: number): string {
+  const h = Math.floor(min / 60), m = min % 60;
+  return (h ? h + "h" : "") + (m || !h ? String(m).padStart(h ? 2 : 1, "0") + "min" : "");
+}
+
+function CronogramaEditor({ event, ministries, onRefresh }: { event: EventView; ministries: MinistryView[]; onRefresh: () => void }) {
+  const [steps, setSteps] = useState<CronoStep[]>(event.schedule);
+  const [horaInicio, setHoraInicio] = useState(event.time);
+  const client = () => createServiceBrowserClient().schema("service");
+
+  const leaderOf = (ministryId: string | null) => {
+    if (!ministryId) return null;
+    return ministries.find((m) => m.id === ministryId)?.people.find((p) => p.isLeader) ?? null;
+  };
+  const leaderName = (ministryId: string | null) => leaderOf(ministryId)?.personName ?? "a definir";
+
+  const recalc = (list: CronoStep[], anchor: string) => {
+    let acc = parseHoraMin(anchor);
+    return list.map((s) => {
+      const time = minToHora(acc);
+      acc += s.duration_min || 0;
+      return { ...s, time };
+    });
+  };
+
+  const commit = async (list: CronoStep[]) => {
+    const recalced = recalc(list, horaInicio);
+    setSteps(recalced);
+    await Promise.all(recalced.map((s) => client().from("event_schedule_items").update({ time: s.time }).eq("id", s.id)));
+    onRefresh();
+  };
+
+  const setHora = async (v: string) => {
+    setHoraInicio(v);
+    await client().from("events").update({ time: v }).eq("id", event.id);
+    const recalced = recalc(steps, v);
+    setSteps(recalced);
+    await Promise.all(recalced.map((s) => client().from("event_schedule_items").update({ time: s.time }).eq("id", s.id)));
+    onRefresh();
+  };
+
+  const addStep = async () => {
+    const { data } = await client().from("event_schedule_items").insert({
+      organization_id: event.organizationId, event_id: event.id, item: "", duration_min: 15, sort_order: steps.length,
+    }).select().single();
+    if (data) await commit([...steps, data as CronoStep]);
+  };
+
+  const removeStep = async (id: string) => {
+    await client().from("event_schedule_items").delete().eq("id", id);
+    await commit(steps.filter((s) => s.id !== id));
+  };
+
+  const moveStep = async (index: number, delta: number) => {
+    const j = index + delta;
+    if (j < 0 || j >= steps.length) return;
+    const next = [...steps];
+    [next[index], next[j]] = [next[j], next[index]];
+    await Promise.all([
+      client().from("event_schedule_items").update({ sort_order: index }).eq("id", next[index].id),
+      client().from("event_schedule_items").update({ sort_order: j }).eq("id", next[j].id),
+    ]);
+    await commit(next);
+  };
+
+  const patch = (id: string, fields: Partial<CronoStep>) => setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, ...fields } : s)));
+  const commitField = async (id: string, fields: Record<string, unknown>) => {
+    await client().from("event_schedule_items").update(fields).eq("id", id);
+    onRefresh();
+  };
+  const setDuracao = async (id: string, dur: number) => {
+    await commit(steps.map((s) => (s.id === id ? { ...s, duration_min: dur } : s)));
+    await client().from("event_schedule_items").update({ duration_min: dur }).eq("id", id);
+  };
+  const setMinistryId = async (id: string, ministryId: string) => {
+    const leader = leaderOf(ministryId || null);
+    const fields = { ministry_id: ministryId || null, person_id: leader?.personId ?? null };
+    patch(id, fields);
+    await commitField(id, fields);
+  };
+
+  const totalGeral = steps.reduce((sum, s) => sum + (s.duration_min || 0), 0);
+  const fimCulto = minToHora(parseHoraMin(horaInicio) + totalGeral);
+
+  return (
+    <div className="crono">
+      <div className="crono-anchor">
+        <div className="crono-anchor-f">
+          <label>Início do culto</label>
+          <TimePicker value={horaInicio} onChange={setHora} />
+        </div>
+        <div className="crono-anchor-note">As etapas seguem em sequência somando as durações — você só informa quanto dura cada uma. Término previsto: <b>{fimCulto}</b>.</div>
+      </div>
+      {steps.length === 0 && <div className="crono-empty">Sem cronograma ainda. Monte o roteiro do culto, etapa por etapa, a duração e o time responsável. O horário é calculado sozinho.</div>}
+      <div className="crono-list">
+        {steps.map((s, i) => (
+          <div className="crono-step" key={s.id}>
+            <div className="crono-rail">
+              <div className="crono-hora">{s.time ?? minToHora(parseHoraMin(horaInicio))}</div>
+              <div className="crono-dot" />
+              {i < steps.length - 1 && <div className="crono-line" />}
+            </div>
+            <div className="crono-body">
+              <div className="crono-row1">
+                <input className="crono-item-in" placeholder="Etapa do culto (ex: Momento de louvor)" value={s.item} onChange={(e) => patch(s.id, { item: e.target.value })} onBlur={(e) => commitField(s.id, { item: e.target.value })} />
+                <div className="crono-actions">
+                  <button type="button" className="crono-mini" title="Subir" onClick={() => moveStep(i, -1)} disabled={i === 0}>↑</button>
+                  <button type="button" className="crono-mini" title="Descer" onClick={() => moveStep(i, 1)} disabled={i === steps.length - 1}>↓</button>
+                  <button type="button" className="crono-mini danger" title="Remover" onClick={() => removeStep(s.id)}>✕</button>
+                </div>
+              </div>
+              <div className="crono-fields">
+                <div className="crono-f crono-f-dur">
+                  <label>Duração</label>
+                  <div className="crono-dur"><input type="number" min={0} step={5} value={s.duration_min ?? 0} onChange={(e) => setDuracao(s.id, +e.target.value)} /><span>min</span></div>
+                </div>
+                <div className="crono-f">
+                  <label>Time (opcional)</label>
+                  <select className="select" value={s.ministry_id ?? ""} onChange={(e) => setMinistryId(s.id, e.target.value)}>
+                    <option value="">— sem time</option>
+                    {ministries.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  </select>
+                </div>
+                {s.ministry_id && (
+                  <div className="crono-f crono-f-full">
+                    <label>Responsável (líder do time)</label>
+                    <div className="crono-resp-ro">{leaderName(s.ministry_id)}</div>
+                  </div>
+                )}
+              </div>
+              <input className="crono-obs" placeholder="Observação (opcional)" value={s.notes ?? ""} onChange={(e) => patch(s.id, { notes: e.target.value })} onBlur={(e) => commitField(s.id, { notes: e.target.value })} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <button type="button" className="btn btn-sec btn-sm crono-add" onClick={addStep}>+ Adicionar etapa</button>
+      {steps.length > 0 && (
+        <div className="crono-totais">
+          <div className="crono-tot-geral"><span>Duração total do culto</span><b>{fmtDuracaoMin(totalGeral)}</b></div>
+        </div>
+      )}
+    </div>
   );
 }
 
