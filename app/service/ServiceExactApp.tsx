@@ -4018,6 +4018,17 @@ const PRIO_COLOR: Record<string, string> = {
   baixa: "var(--olive)",
 };
 
+function isDoneColumn(colId: string, columns: BoardView["columns"]) {
+  const col = columns.find((c) => c.id === colId);
+  const label = (col?.nome ?? col?.name ?? col?.id ?? "").toLowerCase();
+  return col?.id === "done" || label.includes("conclu");
+}
+
+function isCardAtrasado(card: CardView, columns: BoardView["columns"]) {
+  if (!card.due || isDoneColumn(card.column_id, columns)) return false;
+  try { return new Date(card.due) < new Date(); } catch { return false; }
+}
+
 function KbCard({
   card,
   peopleById,
@@ -4071,6 +4082,7 @@ function CardDrawer({
   people,
   church,
   perm,
+  currentPersonId,
   onClose,
   onMoveParent,
   onRefresh,
@@ -4081,6 +4093,7 @@ function CardDrawer({
   people: PersonView[];
   church: ChurchView | undefined;
   perm: { criarCard: boolean; comentar: boolean; editarBoard: boolean; moverQualquer: boolean };
+  currentPersonId: string | null;
   onClose: () => void;
   onMoveParent: (cardId: string, colId: string) => void;
   onRefresh: () => void;
@@ -4088,6 +4101,7 @@ function CardDrawer({
   const [lc, setLc] = useState(initCard);
   const [comments, setComments] = useState<{ id: string; author: string; body: string; created_at: string }[]>([]);
   const [commentText, setCommentText] = useState("");
+  const canMove = perm.moverQualquer || (currentPersonId != null && lc.assignees.includes(currentPersonId));
 
   useEffect(() => {
     createServiceBrowserClient()
@@ -4141,7 +4155,11 @@ function CardDrawer({
             <div className="kb-move">
               {columns.map((col) => (
                 <button key={col.id} type="button" className={`seg-chip${lc.column_id === col.id ? " on" : ""}`}
-                  onClick={() => { mutate({ column_id: col.id }); onMoveParent(lc.id, col.id); }}>
+                  onClick={() => {
+                    if (col.id === lc.column_id) return;
+                    if (!canMove) { window.alert("Você só move cards onde é responsável."); return; }
+                    mutate({ column_id: col.id }); onMoveParent(lc.id, col.id);
+                  }}>
                   {col.name}
                 </button>
               ))}
@@ -4329,10 +4347,7 @@ function BoardView({
     ? board.columns.map((c) => ({ id: c.id, name: c.nome ?? c.name ?? c.id }))
     : [{ id: "todo", name: "A fazer" }, { id: "doing", name: "Em andamento" }, { id: "done", name: "Concluído" }];
 
-  const isAtrasado = (c: CardView) => {
-    if (!c.due) return false;
-    try { return new Date(c.due) < new Date(); } catch { return false; }
-  };
+  const isAtrasado = (c: CardView) => isCardAtrasado(c, board.columns);
   const isParado = (c: CardView) => (c.moved_days_ago ?? 0) > 7;
 
   const match = (c: CardView) => {
@@ -4340,6 +4355,7 @@ function BoardView({
     if (fPrio !== "todas" && c.priority !== fPrio) return false;
     if (fEstado === "atrasados" && !isAtrasado(c)) return false;
     if (fEstado === "parados" && !isParado(c)) return false;
+    if (fEstado === "meus" && !(currentPersonId && c.assignees.includes(currentPersonId))) return false;
     return true;
   };
 
@@ -4362,7 +4378,7 @@ function BoardView({
           <input placeholder="Buscar card..." value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <div className="seg">
-          {([["todos", "Todos"], ["atrasados", `Atrasados${atrasados ? ` ${atrasados}` : ""}`], ["parados", `Parados${parados ? ` ${parados}` : ""}`]] as [string, string][]).map(([k, l]) => (
+          {([["todos", "Todos"], ["meus", "Meus"], ["atrasados", `Atrasados${atrasados ? ` ${atrasados}` : ""}`], ["parados", `Parados${parados ? ` ${parados}` : ""}`]] as [string, string][]).map(([k, l]) => (
             <button key={k} type="button" className={fEstado === k ? "on" : ""} onClick={() => setFEstado(k)}>{l}</button>
           ))}
         </div>
@@ -4417,6 +4433,7 @@ function BoardView({
           people={people}
           church={church}
           perm={perm}
+          currentPersonId={currentPersonId}
           onClose={() => setOpenCard(null)}
           onMoveParent={(cardId, colId) => { onMoveCard(cardId, colId); setOpenCard((prev) => prev ? { ...prev, column_id: colId } : null); }}
           onRefresh={onRefresh}
@@ -4508,10 +4525,12 @@ function Quadros({
           const doneCol = board.columns.find((col) => (col.nome ?? col.name ?? col.id).toLowerCase().includes("conclu") || col.id === "done");
           const feitos = doneCol ? boardCards.filter((c) => c.column_id === doneCol.id).length : 0;
           const pct = boardCards.length ? Math.round((feitos / boardCards.length) * 100) : 0;
+          const atrasados = boardCards.filter((c) => isCardAtrasado(c, board.columns)).length;
           return (
             <button className="bd-card" key={board.id} type="button" onClick={() => setBoardId(board.id)}>
               <div className="bd-card-top">
                 <div className="bd-mark"><Icon name="times" size={18} /></div>
+                {atrasados > 0 && <span className="chip chip-no">{atrasados} atrasado(s)</span>}
               </div>
               <div className="bd-name">{board.name}</div>
               <div className="bd-desc">{board.description || ministry?.description || "Quadro da operação."}</div>

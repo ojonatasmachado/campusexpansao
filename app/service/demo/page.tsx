@@ -210,8 +210,8 @@ const BOARDS = [
 ];
 
 const CARDS = [
-  { id: "cd-1", board_id: "bd-1", column_id: "todo", title: "Definir tema do 2º semestre", description: null, priority: "alta" as const, due: "15/07/2026", assignees: ["p1"], source_type: "manual", source_id: null, moved_days_ago: null },
-  { id: "cd-2", board_id: "bd-1", column_id: "doing", title: "Planejar retiro de líderes", description: "Logística e programação", priority: "media" as const, due: "30/07/2026", assignees: ["p2"], source_type: "manual", source_id: null, moved_days_ago: 3 },
+  { id: "cd-1", board_id: "bd-1", column_id: "todo", title: "Definir tema do 2º semestre", description: null, priority: "alta" as const, due: "2026-06-20", assignees: ["p1"], source_type: "manual", source_id: null, moved_days_ago: null },
+  { id: "cd-2", board_id: "bd-1", column_id: "doing", title: "Planejar retiro de líderes", description: "Logística e programação", priority: "media" as const, due: "2026-07-30", assignees: ["p2"], source_type: "manual", source_id: null, moved_days_ago: 3 },
   { id: "cd-3", board_id: "bd-2", column_id: "todo", title: "Aprender 'Oceanos'", description: null, priority: "baixa" as const, due: null, assignees: [], source_type: "manual", source_id: null, moved_days_ago: null },
 ];
 
