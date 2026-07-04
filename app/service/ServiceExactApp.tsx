@@ -1663,8 +1663,8 @@ function Membros({ members, ministries, setDrawer, setModal }: { members: Member
     const okS = sit === "todos" || (sit === "novo" && m.situation === "novo") || (sit === "servindo" && !!m.journey[4]);
     return okQ && okS;
   });
-  const getMemberMinistries = (name: string) =>
-    ministries.filter((min) => min.people.some((p) => p.personName === name));
+  const getMemberMinistries = (volunteerId: string | null) =>
+    ministries.filter((min) => min.people.some((p) => p.personId === volunteerId));
   return (
     <div className="content wide">
       <PageHead title="Membros" eyebrow="Pessoas" subtitle="Toda a congregação. Veja quem serve, em que jornada está e o histórico desde que chegou." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Cadastro de quem já é da casa. Os dados completos liberam o acesso ao app.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Os 4 últimos dígitos viram a senha inicial do app." }, { k:"email", label:"E-mail", type:"text", half:true, req:true, ph:"usado para entrar no app" }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }], action: { kind: "member" } })}>+ Novo membro</button>} />
@@ -1687,8 +1687,8 @@ function Membros({ members, ministries, setDrawer, setModal }: { members: Member
       <div className="tbl">
         <div className="tr head" style={{ gridTemplateColumns: "1.6fr 0.8fr 1.1fr 1.1fr" }}><span>Membro</span><span>Membro desde</span><span>Serve</span><span>Jornada</span></div>
         {visible.map((m) => {
-          const mins = getMemberMinistries(m.name);
-          const isLeader = mins.some((min) => min.people.find((p) => p.personName === m.name)?.isLeader);
+          const mins = getMemberMinistries(m.volunteerId);
+          const isLeader = mins.some((min) => min.people.find((p) => p.personId === m.volunteerId)?.isLeader);
           return (
             <button className="tr click" type="button" key={m.id} style={{ gridTemplateColumns: "1.6fr 0.8fr 1.1fr 1.1fr" }} onClick={() => setDrawer({ kind: "member", id: m.id })}>
               <div className="cell-person"><Av name={m.name} size="md" /><div><div className="cell-name">{m.name}</div><div className="cell-sub">{m.phone || m.neighborhood || "—"}</div></div></div>
@@ -4215,6 +4215,7 @@ function CardDrawer({
   board,
   columns,
   people,
+  ministries,
   church,
   perm,
   currentPersonId,
@@ -4226,6 +4227,7 @@ function CardDrawer({
   board: BoardView;
   columns: { id: string; name: string }[];
   people: PersonView[];
+  ministries: MinistryView[];
   church: ChurchView | undefined;
   perm: { criarCard: boolean; comentar: boolean; editarBoard: boolean; moverQualquer: boolean };
   currentPersonId: string | null;
@@ -4233,6 +4235,10 @@ function CardDrawer({
   onMoveParent: (cardId: string, colId: string) => void;
   onRefresh: () => void;
 }) {
+  const boardMinistry = ministries.find((m) => m.id === board.ministry_id);
+  const candidatos = board.ministry_id
+    ? people.filter((p) => boardMinistry?.people.some((link) => link.personId === p.id))
+    : people;
   const [lc, setLc] = useState(initCard);
   const [comments, setComments] = useState<{ id: string; author: string; body: string; created_at: string }[]>([]);
   const [commentText, setCommentText] = useState("");
@@ -4318,7 +4324,7 @@ function CardDrawer({
           <div className="dsec">
             <div className="dsec-title">Responsáveis</div>
             <div className="cand-pick">
-              {people.slice(0, 12).map((p) => {
+              {candidatos.slice(0, 12).map((p) => {
                 const on = lc.assignees.includes(p.id);
                 return (
                   <button key={p.id} type="button" className={`cand-chip${on ? " on" : ""}`}
@@ -4368,6 +4374,7 @@ function NovoCard({
   board,
   colId,
   people,
+  ministries,
   church,
   onClose,
   onRefresh,
@@ -4375,10 +4382,15 @@ function NovoCard({
   board: BoardView;
   colId: string;
   people: PersonView[];
+  ministries: MinistryView[];
   church: ChurchView;
   onClose: () => void;
   onRefresh: () => void;
 }) {
+  const boardMinistry = ministries.find((m) => m.id === board.ministry_id);
+  const candidatos = board.ministry_id
+    ? people.filter((p) => boardMinistry?.people.some((link) => link.personId === p.id))
+    : people;
   const [titulo, setTitulo] = useState("");
   const [desc, setDesc] = useState("");
   const [due, setDue] = useState("");
@@ -4426,7 +4438,7 @@ function NovoCard({
           </div>
           <div className="field"><label className="field-label">Responsáveis</label>
             <div className="cand-pick">
-              {people.slice(0, 12).map((p) => {
+              {candidatos.slice(0, 12).map((p) => {
                 const on = resp.includes(p.id);
                 return (
                   <button key={p.id} type="button" className={`cand-chip${on ? " on" : ""}`}
@@ -4452,6 +4464,7 @@ function BoardView({
   boardCards,
   people,
   peopleById,
+  ministries,
   church,
   currentRole,
   currentPersonId,
@@ -4463,6 +4476,7 @@ function BoardView({
   boardCards: CardView[];
   people: PersonView[];
   peopleById: Map<string, PersonView>;
+  ministries: MinistryView[];
   church: ChurchView | undefined;
   currentRole: "master" | "pastor" | "lider" | "vol";
   currentPersonId: string | null;
@@ -4566,6 +4580,7 @@ function BoardView({
           board={board}
           columns={columns}
           people={people}
+          ministries={ministries}
           church={church}
           perm={perm}
           currentPersonId={currentPersonId}
@@ -4575,7 +4590,7 @@ function BoardView({
         />
       )}
       {novoCol && church && perm.criarCard && (
-        <NovoCard board={board} colId={novoCol} people={people} church={church} onClose={() => setNovoCol(null)} onRefresh={onRefresh} />
+        <NovoCard board={board} colId={novoCol} people={people} ministries={ministries} church={church} onClose={() => setNovoCol(null)} onRefresh={onRefresh} />
       )}
     </div>
   );
@@ -4632,6 +4647,7 @@ function Quadros({
         boardCards={localCards.filter((c) => c.board_id === selected.id)}
         people={people}
         peopleById={peopleById}
+        ministries={ministries}
         church={church}
         currentRole={currentRole}
         currentPersonId={currentPersonId}
@@ -7009,7 +7025,7 @@ function EntityDrawer({
   if (drawer.kind === "member") {
     const member = members.find((item) => item.id === drawer.id);
     if (!member) return null;
-    const linkedMinistries = ministries.filter((m) => m.people.some((p) => p.personName === member.name));
+    const linkedMinistries = ministries.filter((m) => m.people.some((p) => p.personId === member.volunteerId));
     const memberEnrollments = enrollments.filter((e) => e.member_id === member.id).map((e) => {
       const course = courses.find((c) => c.id === e.course_id);
       return course ? { ...e, course } : null;
@@ -7018,6 +7034,7 @@ function EntityDrawer({
     const grupo = fellowshipGroups.find((g) => g.id === member.groupId) ?? null;
     const grupoLider = grupo ? people.find((p) => p.id === grupo.leader_person_id) ?? null : null;
     const familiares = member.family ? members.filter((m) => m.family === member.family && m.id !== member.id) : [];
+    const linkedPerson = member.volunteerId ? people.find((p) => p.id === member.volunteerId) ?? null : null;
     return (
       <>
       <DrawerShell onClose={() => setDrawer(null)}>
@@ -7063,7 +7080,7 @@ function EntityDrawer({
             {linkedMinistries.length > 0 ? (
               <div className="ov-serve">
                 {linkedMinistries.map((m) => {
-                  const link = m.people.find((p) => p.personName === member.name);
+                  const link = m.people.find((p) => p.personId === member.volunteerId);
                   return (
                     <button className="ov-serve-row" type="button" key={m.id} onClick={() => setDrawer({ kind: "ministry", id: m.id })}>
                       <span className="ov-serve-ic"><TeamMark ministry={m} size={14} /></span>
@@ -7109,6 +7126,9 @@ function EntityDrawer({
               ? <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Jornada", title: member.name, subtitle: "Atualize o próximo passo de acompanhamento.", formFields: [{ k:"passo", label:"Próximo passo", type:"text", ph:"ex: Convidar para batismo" }, { k:"responsavel", label:"Responsável", type:"text", ph:"Quem acompanha" }, { k:"data", label:"Data limite", type:"date" }] })}>Atualizar jornada</button>
               : <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Convidar", title: member.name, subtitle: "Convide esta pessoa para entrar em um ministério.", saveLabel: "Enviar convite", formFields: [{ k:"ministerio", label:"Ministério", type:"text", ph:"Nome do ministério" }, { k:"msg", label:"Mensagem (opcional)", type:"area", ph:"Mensagem de convite..." }] })}>Convidar para servir</button>}
             <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => onStartChatWithMember(member.id)}>Enviar mensagem</button>
+            {linkedPerson && (
+              <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setDrawer({ kind: "person", id: linkedPerson.id })}>Ver como voluntário →</button>
+            )}
           </div>
         </div>
       </DrawerShell>
