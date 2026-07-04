@@ -905,6 +905,12 @@ export default function ServiceExactApp({
   const [navOpen, setNavOpen] = useState(false);
   const [checkinEventId, setCheckinEventId] = useState<string | null>(null);
   const [shareEventId, setShareEventId] = useState<string | null>(null);
+  const [pendingChatMemberId, setPendingChatMemberId] = useState<string | null>(null);
+  const startChatWithMember = (memberId: string) => {
+    setDrawer(null);
+    setPendingChatMemberId(memberId);
+    setRoute("conversas");
+  };
   /* perspectiva: master/pastor pode pré-visualizar o app como líder de um time
      específico (equivalente a window.cexView() em evolucoes/service_app/shell.jsx).
      null = "Direção" (vê tudo). */
@@ -925,20 +931,27 @@ export default function ServiceExactApp({
     );
     router.refresh();
   };
-  const completeOnboarding = async (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string }) => {
+  const completeOnboarding = async (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string; senha: string }) => {
     const supabase = createServiceBrowserClient();
     const targetPerson = people.find((p) => p.id === personId);
-    await supabase.schema("service").from("people").update({
-      email: data.email || null,
-      meta: { ...targetPerson?.meta, birthday: data.nasc || targetPerson?.meta?.birthday, neighborhood: data.bairro || targetPerson?.meta?.neighborhood },
-    }).eq("id", personId);
-    if (memberId) {
-      await supabase.schema("service").from("members").update({
+    await Promise.all([
+      supabase.schema("service").from("people").update({
         email: data.email || null,
-        birth: data.nasc || null,
-        neighborhood: data.bairro || null,
-      }).eq("id", memberId);
-    }
+        meta: { ...targetPerson?.meta, birthday: data.nasc || targetPerson?.meta?.birthday, neighborhood: data.bairro || targetPerson?.meta?.neighborhood },
+      }).eq("id", personId),
+      memberId
+        ? supabase.schema("service").from("members").update({
+            email: data.email || null,
+            birth: data.nasc || null,
+            neighborhood: data.bairro || null,
+          }).eq("id", memberId)
+        : Promise.resolve(),
+      data.senha
+        ? supabase.auth.updateUser({ password: data.senha }).then(({ error }) => {
+            if (error) console.error("Falha ao salvar senha do onboarding:", error);
+          })
+        : Promise.resolve(),
+    ]);
     router.refresh();
   };
   const addCardCommentMobile = async (cardId: string, author: string, body: string) => {
@@ -948,6 +961,33 @@ export default function ServiceExactApp({
       card_id: cardId,
       author,
       body,
+    });
+    router.refresh();
+  };
+  const advanceVisitorStageMobile = async (visitorId: string, nextStageId: string) => {
+    const sb = createServiceBrowserClient().schema("service");
+    const nextStage = VISITOR_STAGES.find((s) => s.id === nextStageId);
+    await sb.from("visitors").update({ stage: nextStageId }).eq("id", visitorId);
+    await sb.from("visitor_notes").insert({
+      organization_id: firstChurch?.organizationId,
+      visitor_id: visitorId,
+      body: `Avançou para "${nextStage?.name ?? nextStageId}".`,
+      author: "Equipe",
+      is_milestone: true,
+    });
+    router.refresh();
+  };
+  const registerVisitorMobile = async (data: { name: string; phone: string; origin: string }) => {
+    if (!firstChurch?.organizationId || !firstChurch.id) return;
+    await createServiceBrowserClient().schema("service").from("visitors").insert({
+      organization_id: firstChurch.organizationId,
+      church_id: firstChurch.id,
+      name: data.name,
+      phone: data.phone || null,
+      origin: data.origin || null,
+      stage: "novo",
+      due: "1º contato",
+      due_status: "soon",
     });
     router.refresh();
   };
@@ -1143,7 +1183,7 @@ export default function ServiceExactApp({
         {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} scopeMinistryIds={scopeMinistryIds} setModal={setModal} /> : null}
         {route === "cultos" ? <Cultos events={events} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
         {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} wallPosts={wallPosts} ministries={ministries} people={people} setModal={setModal} /> : null}
-        {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} currentPersonId={perspectivePersonId} scopeMinistryIds={scopeMinistryIds} /> : null}
+        {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} currentPersonId={perspectivePersonId} scopeMinistryIds={scopeMinistryIds} pendingChatMemberId={pendingChatMemberId} onConsumePendingChatMember={() => setPendingChatMemberId(null)} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
         {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} currentRole={currentRole} theme={theme} setTheme={setTheme} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
         {route === "identidade" ? <Identidade church={firstChurch} identity={churchIdentity} cycle={cycles.find((c) => c.is_active) ?? cycles[0]} setModal={setModal} /> : null}
@@ -1176,6 +1216,8 @@ export default function ServiceExactApp({
           onReadAnnouncement={markAnnouncementRead}
           onCompleteOnboarding={completeOnboarding}
           onAddCardComment={addCardCommentMobile}
+          onAdvanceVisitorStage={advanceVisitorStageMobile}
+          onRegisterVisitor={registerVisitorMobile}
           onClose={() => setMobileOpen(false)}
         />
       )}
@@ -1235,6 +1277,7 @@ export default function ServiceExactApp({
           setRoute={setRoute}
           setModal={setModal}
           setShareEventId={setShareEventId}
+          onStartChatWithMember={startChatWithMember}
         />
       ) : null}
       {modal ? (
@@ -4612,19 +4655,21 @@ function NovaConversaModal({
   members,
   church,
   currentPersonId,
+  initialSelectedMemberIds,
   onClose,
   onCreated,
 }: {
   members: MemberView[];
   church: ChurchView | undefined;
   currentPersonId: string | null;
+  initialSelectedMemberIds?: string[];
   onClose: () => void;
   onCreated: (chatId: string) => void;
 }) {
   const router = useRouter();
   const [tipo, setTipo] = useState<"dm" | "grupo">("dm");
   const [nome, setNome] = useState("");
-  const [sel, setSel] = useState<string[]>([]);
+  const [sel, setSel] = useState<string[]>(initialSelectedMemberIds ?? []);
   const [primeiraMsg, setPrimeiraMsg] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -4728,6 +4773,8 @@ function Conversas({
   church,
   currentPersonId,
   scopeMinistryIds,
+  pendingChatMemberId,
+  onConsumePendingChatMember,
 }: {
   chats: ChatView[];
   chatMembers: ChatMemberView[];
@@ -4737,6 +4784,8 @@ function Conversas({
   church: ChurchView | undefined;
   currentPersonId: string | null;
   scopeMinistryIds: string[] | null;
+  pendingChatMemberId?: string | null;
+  onConsumePendingChatMember?: () => void;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
@@ -4753,6 +4802,24 @@ function Conversas({
   const visibleChats = currentMember
     ? chats.filter((c) => chatMembers.some((cm) => cm.chat_id === c.id && cm.member_id === currentMember.id))
     : [];
+
+  /* "Enviar mensagem" num drawer de pessoa/membro cai aqui já mirando alguém:
+     reaproveita a DM existente com essa pessoa se houver, senão abre "Nova conversa"
+     pré-selecionada, em vez de sempre criar uma conversa duplicada. */
+  useEffect(() => {
+    if (!pendingChatMemberId || !currentMember) return;
+    const existingDm = chats.find((c) => (
+      c.kind === "dm"
+      && chatMembers.some((cm) => cm.chat_id === c.id && cm.member_id === pendingChatMemberId)
+      && chatMembers.some((cm) => cm.chat_id === c.id && cm.member_id === currentMember.id)
+    ));
+    if (existingDm) {
+      setSelected(existingDm.id);
+      onConsumePendingChatMember?.();
+    } else {
+      setNova(true);
+    }
+  }, [pendingChatMemberId, currentMember, chats, chatMembers, onConsumePendingChatMember]);
 
   const chat = visibleChats.find((item) => item.id === selected) ?? visibleChats[0] ?? null;
   const selectedMessages = chat ? messages.filter((message) => message.chat_id === chat.id) : [];
@@ -4783,7 +4850,16 @@ function Conversas({
         <div className="chat-list">{visibleChats.map((item) => <button className={`chat-row ${chat?.id === item.id ? "on" : ""}`} type="button" key={item.id} onClick={() => setSelected(item.id)}><span className="chat-row-ic"><Icon name={item.kind === "time" ? "times" : "membros"} size={16} /></span><span className="chat-row-main"><span className="chat-row-top"><b>{chatName(item)}</b><small>agora</small></span><span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || "Canal de alinhamento"}</span></span><span className="chat-row-count">{chatCount(item.id)}</span></button>)}{visibleChats.length === 0 && <div className="empty" style={{ margin: 8 }}>Nenhuma conversa ainda.</div>}</div>
         <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; return <div className="chat-msg" key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <div className="empty">Nenhuma mensagem nesta conversa.</div> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enviar()} disabled={!chat} /><button className="btn btn-pri btn-sm" type="button" disabled={!chat || sending || !texto.trim()} onClick={enviar}>Enviar</button></div></div></div>
       </div>
-      {nova && <NovaConversaModal members={members} church={church} currentPersonId={currentPersonId} onClose={() => setNova(false)} onCreated={(id) => setSelected(id)} />}
+      {nova && (
+        <NovaConversaModal
+          members={members}
+          church={church}
+          currentPersonId={currentPersonId}
+          initialSelectedMemberIds={pendingChatMemberId ? [pendingChatMemberId] : undefined}
+          onClose={() => { setNova(false); onConsumePendingChatMember?.(); }}
+          onCreated={(id) => { setSelected(id); onConsumePendingChatMember?.(); }}
+        />
+      )}
     </div>
   );
 }
@@ -6270,9 +6346,9 @@ function PersonTimeline({ member, compact }: { member: MemberView; compact?: boo
 }
 
 function DecisaoDrawer({
-  decision, people, members, onClose, onOpenMember,
+  decision, people, members, church, onClose, onOpenMember,
 }: {
-  decision: DecisionView; people: PersonView[]; members: MemberView[];
+  decision: DecisionView; people: PersonView[]; members: MemberView[]; church: ChurchView | undefined;
   onClose: () => void; onOpenMember: (id: string) => void;
 }) {
   const router = useRouter();
@@ -6282,7 +6358,22 @@ function DecisaoDrawer({
 
   const encaminhar = async () => {
     setLoading(true);
-    await createServiceBrowserClient().schema("service").from("decisions").update({ status: "acompanhando" }).eq("id", decision.id);
+    const sb = createServiceBrowserClient().schema("service");
+    if (church?.organizationId && church.id) {
+      await sb.from("visitors").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        name: decision.name,
+        phone: decision.phone || null,
+        origin: "Decisão no culto",
+        visited_on: decision.happened_on || null,
+        responsible_id: decision.responsible_id || null,
+        stage: "novo",
+        due: "1º contato",
+        due_status: "soon",
+      });
+    }
+    await sb.from("decisions").update({ status: "acompanhando" }).eq("id", decision.id);
     router.refresh();
     setLoading(false);
     onClose();
@@ -6759,6 +6850,7 @@ function EntityDrawer({
   setRoute,
   setModal,
   setShareEventId,
+  onStartChatWithMember,
 }: {
   drawer: NonNullable<DrawerState>;
   people: PersonView[];
@@ -6786,6 +6878,7 @@ function EntityDrawer({
   setRoute: (route: keyof typeof ROUTES) => void;
   setModal: (modal: ModalState) => void;
   setShareEventId: (id: string) => void;
+  onStartChatWithMember: (memberId: string) => void;
 }) {
   const router = useRouter();
   const [editingMember, setEditingMember] = useState(false);
@@ -6860,7 +6953,12 @@ function EntityDrawer({
           </DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
             <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { setDrawer(null); setRoute("escalas"); }}>Escalar</button>
-            <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Mensagem", title: person.name, subtitle: "Abrir conversa com o voluntário.", formFields: [{ k:"msg", label:"Mensagem", type:"area", ph:"Escreva sua mensagem..." }] })}>Enviar mensagem</button>
+            {(() => {
+              const linkedMember = members.find((m) => m.volunteerId === person.id);
+              return (
+                <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" disabled={!linkedMember} onClick={() => linkedMember && onStartChatWithMember(linkedMember.id)}>Enviar mensagem</button>
+              );
+            })()}
           </div>
         </div>
       </DrawerShell>
@@ -6969,7 +7067,7 @@ function EntityDrawer({
             {isServing
               ? <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Jornada", title: member.name, subtitle: "Atualize o próximo passo de acompanhamento.", formFields: [{ k:"passo", label:"Próximo passo", type:"text", ph:"ex: Convidar para batismo" }, { k:"responsavel", label:"Responsável", type:"text", ph:"Quem acompanha" }, { k:"data", label:"Data limite", type:"date" }] })}>Atualizar jornada</button>
               : <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Convidar", title: member.name, subtitle: "Convide esta pessoa para entrar em um ministério.", saveLabel: "Enviar convite", formFields: [{ k:"ministerio", label:"Ministério", type:"text", ph:"Nome do ministério" }, { k:"msg", label:"Mensagem (opcional)", type:"area", ph:"Mensagem de convite..." }] })}>Convidar para servir</button>}
-            <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Mensagem", title: member.name, subtitle: "Abrir conversa com o membro.", formFields: [{ k:"msg", label:"Mensagem", type:"area", ph:"Escreva sua mensagem..." }] })}>Enviar mensagem</button>
+            <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => onStartChatWithMember(member.id)}>Enviar mensagem</button>
           </div>
         </div>
       </DrawerShell>
@@ -7148,6 +7246,7 @@ function EntityDrawer({
         decision={decision}
         people={people}
         members={members}
+        church={church}
         onClose={() => setDrawer(null)}
         onOpenMember={(id) => setDrawer({ kind: "member", id })}
       />
@@ -7796,7 +7895,7 @@ function ServiceModal({
         source_type: "manual",
       });
     } else if (action.kind === "visitor") {
-      if (!value("Nome")) {
+      if (!value("nome")) {
         setSaving(false);
         setError("Digite o nome do visitante.");
         return;

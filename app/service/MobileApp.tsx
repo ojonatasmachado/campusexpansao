@@ -86,8 +86,10 @@ export type MobileOverlayProps = {
   chatMembers: ChatMember[];
   messages: Message[];
   onReadAnnouncement?: (personId: string, announcementId: string) => void;
-  onCompleteOnboarding?: (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string }) => void;
+  onCompleteOnboarding?: (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string; senha: string }) => void;
   onAddCardComment?: (cardId: string, author: string, body: string) => void;
+  onAdvanceVisitorStage?: (visitorId: string, nextStageId: string) => void;
+  onRegisterVisitor?: (data: { name: string; phone: string; origin: string }) => void;
   onClose: () => void;
 };
 
@@ -621,30 +623,22 @@ function TabConversas({
 
 // ── aba: Visitantes (Recepcao) ────────────────────────────────────────────────
 
-type LocalVisitor = { id: string; name: string; phone: string; origin: string; stage: string };
-
-function TabVisitantes({ visitors }: { visitors: Visitor[] }) {
+function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisitor }: {
+  visitors: Visitor[];
+  onAdvanceVisitorStage?: (visitorId: string, nextStageId: string) => void;
+  onRegisterVisitor?: (data: { name: string; phone: string; origin: string }) => void;
+}) {
   const [novo, setNovo] = useState(false);
   const [aberto, setAberto] = useState<string | null>(null);
-  const [stages, setStages] = useState<Record<string, string>>({});
-  const [novos, setNovos] = useState<LocalVisitor[]>([]);
   const [form, setForm] = useState({ name: "", phone: "", origin: "Primeira visita" });
 
-  const allVisitors: LocalVisitor[] = [
-    ...visitors
-      .filter((v) => v.stage !== "membro")
-      .map((v) => ({ id: v.id, name: v.name, phone: v.phone ?? "", origin: v.origin ?? "", stage: v.stage })),
-    ...novos,
-  ];
-
-  const getStage = (id: string, base: string) => stages[id] ?? base;
+  const allVisitors = visitors
+    .filter((v) => v.stage !== "membro")
+    .map((v) => ({ id: v.id, name: v.name, phone: v.phone ?? "", origin: v.origin ?? "", stage: v.stage }));
 
   const salvar = () => {
     if (!form.name.trim()) return;
-    setNovos((p) => [
-      ...p,
-      { id: `new_${Date.now()}`, name: form.name.trim(), phone: form.phone, origin: form.origin, stage: "novo" },
-    ]);
+    onRegisterVisitor?.({ name: form.name.trim(), phone: form.phone, origin: form.origin });
     setForm({ name: "", phone: "", origin: "Primeira visita" });
     setNovo(false);
   };
@@ -694,8 +688,7 @@ function TabVisitantes({ visitors }: { visitors: Visitor[] }) {
       )}
 
       {allVisitors.map((v) => {
-        const stageId = getStage(v.id, v.stage);
-        const etIdx = ETAPAS.findIndex((e) => e.id === stageId);
+        const etIdx = ETAPAS.findIndex((e) => e.id === v.stage);
         const et = ETAPAS[Math.max(0, etIdx)];
         const isOpen = aberto === v.id;
         return (
@@ -737,7 +730,7 @@ function TabVisitantes({ visitors }: { visitors: Visitor[] }) {
                     className="m-btn m-btn-ok"
                     style={{ width: "100%", marginTop: 8 }}
                     onClick={() => {
-                      setStages((p) => ({ ...p, [v.id]: ETAPAS[etIdx + 1].id }));
+                      onAdvanceVisitorStage?.(v.id, ETAPAS[etIdx + 1].id);
                       setAberto(null);
                     }}
                   >
@@ -1102,7 +1095,7 @@ function FotoUpload({
   );
 }
 
-function Onboarding({ person, member, onCompleteOnboarding, onDone }: { person: P; member: M | null; onCompleteOnboarding?: (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string }) => void; onDone: () => void }) {
+function Onboarding({ person, member, onCompleteOnboarding, onDone }: { person: P; member: M | null; onCompleteOnboarding?: (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string; senha: string }) => void; onDone: () => void }) {
   const [step, setStep] = useState(0);
   const [d, setD] = useState({
     email: member?.email ?? person.name.toLowerCase().replace(/\s+/g, ".") + "@email.com",
@@ -1176,7 +1169,7 @@ function Onboarding({ person, member, onCompleteOnboarding, onDone }: { person: 
         <div className="ob-form">
           <div className="field">
             <label className="field-label">Nova senha</label>
-            <input className="input" type="password" value={d.senha} placeholder="ao menos 4 caracteres" onChange={(e) => set("senha", e.target.value)} />
+            <input className="input" type="password" value={d.senha} placeholder="ao menos 6 caracteres" onChange={(e) => set("senha", e.target.value)} />
           </div>
           <div className="field">
             <label className="field-label">Repita a senha</label>
@@ -1191,7 +1184,7 @@ function Onboarding({ person, member, onCompleteOnboarding, onDone }: { person: 
         </div>
       ),
       ok: "Entrar no app →",
-      valid: !d.senha || (d.senha.length >= 4 && d.senha === d.senha2),
+      valid: !d.senha || (d.senha.length >= 6 && d.senha === d.senha2),
     },
   ] as const;
 
@@ -1202,7 +1195,7 @@ function Onboarding({ person, member, onCompleteOnboarding, onDone }: { person: 
       setStep(step + 1);
     } else {
       try { localStorage.setItem(`cex_onboarded_${person.id}`, "1"); } catch {}
-      onCompleteOnboarding?.(person.id, member?.id ?? null, { email: d.email, nasc: d.nasc, bairro: d.bairro });
+      onCompleteOnboarding?.(person.id, member?.id ?? null, { email: d.email, nasc: d.nasc, bairro: d.bairro, senha: d.senha });
       onDone();
     }
   };
@@ -1256,7 +1249,8 @@ function MobileMembro({
     try { return !!localStorage.getItem(`cex_onboarded_${person.id}`); } catch { return false; }
   });
   const { ministries, events, roster, cards, boards, courses, enrollments, courseModules = [], courseLessons = [],
-          visitors, baptismClasses, announcements, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment } = rest;
+          visitors, baptismClasses, announcements, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment,
+          onAdvanceVisitorStage, onRegisterVisitor } = rest;
 
   const isRecep = isRecepPerson(person, ministries);
 
@@ -1306,7 +1300,7 @@ function MobileMembro({
           {tab === "conversas" && (
             <TabConversas member={member} chats={chats} chatMembers={chatMembers} messages={messages} members={members} />
           )}
-          {tab === "visitantes" && <TabVisitantes visitors={visitors} />}
+          {tab === "visitantes" && <TabVisitantes visitors={visitors} onAdvanceVisitorStage={onAdvanceVisitorStage} onRegisterVisitor={onRegisterVisitor} />}
           {tab === "cursos" && (
             <TabCursos member={member} courses={courses} enrollments={enrollments} courseModules={courseModules} courseLessons={courseLessons} baptismClasses={baptismClasses} setTab={setTab} />
           )}
