@@ -55,10 +55,10 @@ const PEOPLE = [
 ];
 
 const MEMBERS = [
-  { id: "m1", name: "Ana Lima", phone: "(11) 9 8765-4321", email: "ana@cex.com", situation: "membro" as const, firstContact: "2019-03-12", neighborhood: "Pinheiros", journey: [1, 1, 1, 1, 1], birth: "1990-04-12", family: "fam-lima", groupId: "fg-1", volunteerId: "p1" },
-  { id: "m2", name: "Bruno Costa", phone: "(11) 9 7654-3210", email: "bruno@cex.com", situation: "membro" as const, firstContact: "2020-07-08", neighborhood: "Vila Madalena", journey: [1, 1, 1, 0, 1], birth: null, family: "fam-lima", groupId: null, volunteerId: "p2" },
-  { id: "m3", name: "Diego Ferreira", phone: "(11) 9 5432-1098", email: "diego@cex.com", situation: "membro" as const, firstContact: "2021-01-15", neighborhood: "Santana", journey: [1, 1, 0, 0, 0], birth: null, family: null, groupId: "fg-2", volunteerId: "p4" },
-  { id: "m4", name: "Eduarda Nunes", phone: "(11) 9 4321-0987", email: "edu@cex.com", situation: "novo" as const, firstContact: "2024-09-03", neighborhood: "Mooca", journey: [1, 0, 0, 0, 0], birth: null, family: null, groupId: null, volunteerId: "p5" },
+  { id: "m1", name: "Ana Lima", phone: "(11) 9 8765-4321", email: "ana@cex.com", situation: "membro" as const, firstContact: "2019-03-12", neighborhood: "Pinheiros", journey: [1, 1, 1, 1, 1], birth: "1990-04-12", family: "fam-lima", groupId: "fg-1", volunteerId: "p1", createdAt: "2019-03-12T12:00:00.000Z" },
+  { id: "m2", name: "Bruno Costa", phone: "(11) 9 7654-3210", email: "bruno@cex.com", situation: "membro" as const, firstContact: "2020-07-08", neighborhood: "Vila Madalena", journey: [1, 1, 1, 0, 1], birth: null, family: "fam-lima", groupId: null, volunteerId: "p2", createdAt: "2026-06-25T12:00:00.000Z" },
+  { id: "m3", name: "Diego Ferreira", phone: "(11) 9 5432-1098", email: "diego@cex.com", situation: "membro" as const, firstContact: "2021-01-15", neighborhood: "Santana", journey: [1, 1, 0, 0, 0], birth: null, family: null, groupId: "fg-2", volunteerId: "p4", createdAt: "2026-06-18T12:00:00.000Z" },
+  { id: "m4", name: "Eduarda Nunes", phone: "(11) 9 4321-0987", email: "edu@cex.com", situation: "novo" as const, firstContact: "2024-09-03", neighborhood: "Mooca", journey: [1, 0, 0, 0, 0], birth: null, family: null, groupId: null, volunteerId: "p5", createdAt: "2026-05-25T12:00:00.000Z" },
 ];
 
 const MINISTRIES = [
@@ -115,7 +115,7 @@ const MINISTRIES = [
 const EVENTS = [
   {
     id: "ev-1", organizationId: ORG, name: "Culto de domingo manhã", kind: "culto", weekday: "Dom",
-    eventDate: "06/07/2026", time: "10h00", slot: "dom_m", location: "Templo principal",
+    eventDate: "2026-07-06", time: "10h00", slot: "dom_m", location: "Templo principal",
     ministries: ["min-1", "min-2", "min-3"],
     schedule: [
       { id: "sc-1", item: "Abertura e boas-vindas", time: "10:00", category: "recepcao", duration_min: 10, ministry_id: "min-3", person_id: "p3", notes: null, sort_order: 0 },
@@ -133,7 +133,7 @@ const EVENTS = [
   },
   {
     id: "ev-2", organizationId: ORG, name: "Culto de domingo noite", kind: "culto", weekday: "Dom",
-    eventDate: "06/07/2026", time: "19h00", slot: "dom_n", location: "Templo principal",
+    eventDate: "2026-07-06", time: "19h00", slot: "dom_n", location: "Templo principal",
     ministries: ["min-1", "min-2"],
     schedule: [
       { id: "sc-6", item: "Abertura", time: "19:00", category: "geral", duration_min: 10, ministry_id: null, person_id: null, notes: null, sort_order: 0 },

@@ -98,6 +98,7 @@ type MemberView = {
   family: string | null;
   groupId: string | null;
   volunteerId: string | null;
+  createdAt: string;
 };
 
 type MinistryView = {
@@ -1124,7 +1125,7 @@ export default function ServiceExactApp({
         {route === "cultos" ? <Cultos events={events} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
         {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} wallPosts={wallPosts} ministries={ministries} people={people} setModal={setModal} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} /> : null}
-        {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} decisions={decisions} baptismClasses={baptismClasses} courses={courses} boards={boards} chats={chats} visitors={visitors} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
+        {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
         {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} currentRole={currentRole} theme={theme} setTheme={setTheme} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
         {route === "identidade" ? <Identidade church={firstChurch} identity={churchIdentity} cycle={cycles.find((c) => c.is_active) ?? cycles[0]} setModal={setModal} /> : null}
         {route === "historia" ? <Historia church={firstChurch} historyEntries={historyEntries} setModal={setModal} /> : null}
@@ -1704,6 +1705,33 @@ function cargaDoMes(roster: RosterAssignmentView[], events: EventView[], targetE
     if (seen.has(key)) return;
     seen.add(key);
     counts[assignment.person_id] = (counts[assignment.person_id] ?? 0) + 1;
+  });
+  return counts;
+}
+
+/* carga da semana corrente (segunda a domingo contendo hoje) por pessoa:
+   nº de posições escaladas (status != "no") e nº de recusas ("no") — equivalente
+   a cargaVol() em evolucoes/service_app/relatorios.jsx:6-16, usado pelo
+   termômetro de bem-estar pra classificar sobrecarga sem depender de engajamento. */
+function cargaDaSemana(roster: RosterAssignmentView[], events: EventView[]): Record<string, { escalas: number; recusas: number }> {
+  const eventById = new Map(events.map((e) => [e.id, e]));
+  const hoje = new Date();
+  const offsetSegunda = hoje.getDay() === 0 ? 6 : hoje.getDay() - 1;
+  const segunda = new Date(hoje);
+  segunda.setDate(hoje.getDate() - offsetSegunda);
+  const domingo = new Date(segunda);
+  domingo.setDate(segunda.getDate() + 6);
+  const toIso = (d: Date) => d.toISOString().slice(0, 10);
+  const inicioSemana = toIso(segunda);
+  const fimSemana = toIso(domingo);
+  const counts: Record<string, { escalas: number; recusas: number }> = {};
+  roster.forEach((assignment) => {
+    const ev = eventById.get(assignment.event_id);
+    if (!ev || ev.eventDate < inicioSemana || ev.eventDate > fimSemana) return;
+    const atual = counts[assignment.person_id] ?? { escalas: 0, recusas: 0 };
+    if (assignment.status === "no") atual.recusas += 1;
+    else atual.escalas += 1;
+    counts[assignment.person_id] = atual;
   });
   return counts;
 }
@@ -4721,12 +4749,12 @@ function Relatorios({
   members,
   ministries,
   events,
-  decisions,
-  baptismClasses,
-  courses,
   boards,
   chats,
   visitors,
+  roster,
+  eventAttendance,
+  fellowshipGroups,
   confirmationRate,
   setRoute,
 }: {
@@ -4734,25 +4762,78 @@ function Relatorios({
   members: MemberView[];
   ministries: MinistryView[];
   events: EventView[];
-  decisions: DecisionView[];
-  baptismClasses: BaptismClassView[];
-  courses: CourseView[];
   boards: BoardView[];
   chats: ChatView[];
   visitors: VisitorView[];
+  roster: RosterAssignmentView[];
+  eventAttendance: EventAttendanceView[];
+  fellowshipGroups: FellowshipGroupView[];
   confirmationRate: number;
   setRoute: (route: keyof typeof ROUTES) => void;
 }) {
-  const saudavel = people.filter((p) => p.status === "ativo" && (p.engagement ?? 0) >= 70);
-  const atencao = people.filter((p) => p.status === "ativo" && (p.engagement ?? 0) < 70);
-  const sobrecarga = people.filter((p) => p.status === "ativo" && (p.engagement ?? 0) >= 90);
-  const afastando = people.filter((p) => p.status === "pausa");
-  const wellRows = [
-    ...atencao.map((p) => ({ person: p, cls: "atencao", tag: "Atenção" })),
-    ...afastando.map((p) => ({ person: p, cls: "afastando", tag: "Afastando" })),
-  ];
+  const hoje = Date.now();
+  const diasAtras = (iso: string) => (hoje - new Date(iso).getTime()) / 86400000;
+
+  /* membros na rede: delta = novos nos últimos 30 dias vs. 30 dias anteriores (member.createdAt real) */
+  const membrosDelta = members.filter((m) => diasAtras(m.createdAt) <= 30).length - members.filter((m) => diasAtras(m.createdAt) > 30 && diasAtras(m.createdAt) <= 60).length;
+
+  /* retenção de visitantes: % que viraram membro, comparando uma safra madura (60-120 dias, já teve tempo real de converter) com a safra anterior (120-220 dias) */
+  const retencaoAtual = visitors.length ? Math.round((visitors.filter((v) => v.stage === "membro").length / visitors.length) * 100) : 0;
+  const retencaoPeriodo = (min: number, max: number) => {
+    const cohort = visitors.filter((v) => diasAtras(v.created_at) >= min && diasAtras(v.created_at) < max);
+    return cohort.length ? Math.round((cohort.filter((v) => v.stage === "membro").length / cohort.length) * 100) : null;
+  };
+  const retencaoRecente = retencaoPeriodo(60, 120);
+  const retencaoAnterior = retencaoPeriodo(120, 220);
+  const retencaoDelta = retencaoRecente !== null && retencaoAnterior !== null ? retencaoRecente - retencaoAnterior : null;
+
+  /* cobertura de escala: mesma fórmula global de confirmationRate, com delta comparando eventos dos últimos 30 dias x 30 dias anteriores */
+  const eventById = new Map(events.map((e) => [e.id, e]));
+  const coberturaPeriodo = (min: number, max: number) => {
+    const assignments = roster.filter((a) => { const ev = eventById.get(a.event_id); return ev && diasAtras(ev.eventDate) >= min && diasAtras(ev.eventDate) < max; });
+    return assignments.length ? Math.round((assignments.filter((a) => a.status === "ok").length / assignments.length) * 100) : null;
+  };
+  const coberturaRecente = coberturaPeriodo(0, 30);
+  const coberturaAnterior = coberturaPeriodo(30, 60);
+  const coberturaDelta = coberturaRecente !== null && coberturaAnterior !== null ? coberturaRecente - coberturaAnterior : null;
+
+  /* frequência média: check-ins reais (event_attendance) por culto nos últimos 30 dias x 30 dias anteriores */
+  const cultoIds = new Set(events.filter((e) => e.kind.toLowerCase() === "culto").map((e) => e.id));
+  const frequenciaPeriodo = (min: number, max: number) => {
+    const cultosPeriodo = events.filter((e) => cultoIds.has(e.id) && diasAtras(e.eventDate) >= min && diasAtras(e.eventDate) < max);
+    if (!cultosPeriodo.length) return null;
+    const total = cultosPeriodo.reduce((sum, ev) => sum + eventAttendance.filter((a) => a.event_id === ev.id).length, 0);
+    return Math.round(total / cultosPeriodo.length);
+  };
+  const freqRecente = frequenciaPeriodo(0, 30);
+  const freqAnterior = frequenciaPeriodo(30, 60);
+  const freqDelta = freqRecente !== null && freqAnterior !== null ? freqRecente - freqAnterior : null;
+  const cultosTodos = events.filter((e) => cultoIds.has(e.id));
+  const freqGeral = cultosTodos.length ? Math.round(cultosTodos.reduce((sum, ev) => sum + eventAttendance.filter((a) => a.event_id === ev.id).length, 0) / cultosTodos.length) : 0;
+
+  const foot = (delta: number | null, unidade: string, fallback: string) => delta === null ? fallback : `${delta >= 0 ? "▲" : "▼"} ${Math.abs(delta)}${unidade} vs. 30d anteriores`;
+
+  /* termômetro de bem-estar sem sobreposição: carga real da semana via roster, não engajamento alto ‒
+     equivalente a bemEstar() em evolucoes/service_app/relatorios.jsx:19-27, sem o override de sinais (mock-only) */
+  const carga = cargaDaSemana(roster, events);
+  const nivelDe = (p: PersonView): "saudavel" | "atencao" | "sobrecarga" | "afastando" => {
+    const { escalas = 0, recusas = 0 } = carga[p.id] ?? {};
+    if (p.status === "pausa") return "afastando";
+    if (recusas >= 1 && (p.engagement ?? 0) < 75) return "afastando";
+    if (escalas >= 3) return "sobrecarga";
+    if ((p.engagement ?? 0) < 70 || escalas === 0) return "atencao";
+    return "saudavel";
+  };
+  const niveis = people.map((p) => ({ person: p, nivel: nivelDe(p) }));
+  const contar = (n: string) => niveis.filter((v) => v.nivel === n).length;
+  const NIVEL_TAG: Record<string, string> = { atencao: "Atenção", sobrecarga: "Sobrecarga", afastando: "Afastando" };
+  const wellRows = niveis.filter((v) => v.nivel !== "saudavel").map(({ person, nivel }) => ({ person, cls: nivel, tag: NIVEL_TAG[nivel] }));
+
   const series = [members.length - 5, members.length - 3, members.length - 2, members.length].map((v) => Math.max(0, v));
   const maxMinistry = Math.max(...ministries.map((m) => m.people.length), 1);
+  const gcCounts = fellowshipGroups.map((g) => ({ group: g, n: members.filter((m) => m.groupId === g.id).length }));
+  const maxGc = Math.max(...gcCounts.map((x) => x.n), 1);
+  const maxOps = Math.max(boards.length, chats.length, events.length, 1);
   const FUNNEL_STAGES: { id: VisitorView["stage"]; label: string }[] = [
     { id: "novo", label: "Novo" },
     { id: "contato", label: "Em contato" },
@@ -4764,21 +4845,21 @@ function Relatorios({
   return (
     <div className="content wide">
       <PageHead title="Relatórios & indicadores" eyebrow="Gestão" subtitle="A saúde da igreja num lugar: crescimento, integração, cobertura de escala e o bem-estar de quem serve." action={<><button className="btn btn-sec" type="button"><Icon name="cultos" size={14} /> Trimestre</button><button className="btn btn-pri" type="button">Baixar relatório →</button></>} />
-      <div className="kpi-row"><Kpi icon="membros" label="Membros na rede" value={members.length} foot="cadastrados" /><Kpi icon="visitante" label="Visitantes ativos" value={visitors.length} foot="em acompanhamento" /><Kpi icon="escalas" label="Cobertura de escala" value={`${confirmationRate}%`} foot="das posições preenchidas" /><Kpi icon="cultos" label="Cultos na agenda" value={events.length} foot="programação ativa" /></div>
+      <div className="kpi-row"><Kpi icon="membros" label="Membros na rede" value={members.length} foot={foot(membrosDelta, " novos", "cadastrados")} /><Kpi icon="visitante" label="Retenção de visitantes" value={`${retencaoAtual}%`} foot={foot(retencaoDelta, "%", "viram membros")} /><Kpi icon="escalas" label="Cobertura de escala" value={`${confirmationRate}%`} foot={foot(coberturaDelta, "pp", "das posições preenchidas")} /><Kpi icon="cultos" label="Frequência média" value={freqRecente ?? freqGeral} foot={foot(freqDelta, "", "por culto")} /></div>
       <div className="dash-3col">
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={13} /> Crescimento de membros</span><span className="panel-meta">últimos meses</span></div><div className="panel-body"><div style={{ fontSize: 30, fontWeight: 700 }}>{members.length}<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>membros no total</span></div><div style={{ marginTop: 14 }}><Bars series={series} labels={["mar", "abr", "mai", "jun"]} /></div></div></div>
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="visitante" size={13} /> Funil de visitantes</span><button className="panel-link" type="button" onClick={() => setRoute("visitantes")}>Abrir</button></div><div className="panel-body flush">{FUNNEL_STAGES.map((s, i) => <div className="dist-row" key={s.id}><span className="dist-name" style={{ width: 140 }}>{s.label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${Math.max(4, (funnelCounts[i] / funnelMax) * 100)}%` }} /></div><span className="dist-num">{funnelCounts[i]}</span></div>)}</div></div>
       </div>
       <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">Termômetro de bem-estar</span><span className="line" /></div>
-      <div className="well-sum">{[["saudavel", saudavel.length, "Saudável"], ["atencao", atencao.length, "Atenção"], ["sobrecarga", sobrecarga.length, "Sobrecarga"], ["afastando", afastando.length, "Afastando"]].map(([level, count, label]) => <div className="well-pill" key={level}><div className="n">{count}</div><div className="l"><span className={`well-dot ${level}`} />{label}</div></div>)}</div>
+      <div className="well-sum">{[["saudavel", contar("saudavel"), "Saudável"], ["atencao", contar("atencao"), "Atenção"], ["sobrecarga", contar("sobrecarga"), "Sobrecarga"], ["afastando", contar("afastando"), "Afastando"]].map(([level, count, label]) => <div className="well-pill" key={level}><div className="n">{count}</div><div className="l"><span className={`well-dot ${level}`} />{label}</div></div>)}</div>
       <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={13} /> Quem precisa de atenção</span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>Voluntários</button></div><div className="panel-body flush">{(wellRows.length ? wellRows : people.slice(0, 8).map((p) => ({ person: p, cls: "atencao", tag: "Atenção" }))).slice(0, 8).map(({ person, cls, tag }) => <div className="well-row" key={person.id}><Av name={person.name} size="md" /><div className="mini-main"><div className="mini-title">{person.name}</div><div className="mini-sub">{person.status !== "ativo" ? "Em pausa ou férias." : "Engajamento abaixo da média."}</div></div><div className="well-meter"><div className="well-track"><div className={`well-fill ${cls}`} style={{ width: `${person.engagement ?? 50}%` }} /></div><div className={`well-tag ${cls}`}>{tag}</div></div></div>)}</div></div>
       <div className="dash-2col" style={{ marginTop: 28 }}>
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="times" size={13} /> Voluntários por ministério</span><button className="panel-link" type="button" onClick={() => setRoute("times")}>Times</button></div><div className="panel-body flush">{ministries.map((ministry) => <div className="dist-row" key={ministry.id}><span className="dist-name">{ministry.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(ministry.people.length / maxMinistry) * 100}%` }} /></div><span className="dist-num">{ministry.people.length}</span></div>)}</div></div>
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por jornada</span><span className="panel-meta">{members.length} pessoas</span></div><div className="panel-body flush">{["Decisão", "Batismo", "Fundamentos", "GC", "Servindo"].map((step, index) => { const count = members.filter((member) => member.journey[index]).length; return <div className="dist-row" key={step}><span className="dist-name">{step}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${members.length ? (count / members.length) * 100 : 0}%` }} /></div><span className="dist-num">{count}</span></div>; })}</div></div>
       </div>
       <div className="dash-2col" style={{ marginTop: 28 }}>
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="identidade" size={13} /> Jornada e formação</span><span className="panel-meta">Service</span></div><div className="panel-body flush">{[["Decisões", decisions.length], ["Turmas de batismo", baptismClasses.length], ["Cursos internos", courses.length]].map(([label, count]) => <div className="dist-row" key={label}><span className="dist-name">{label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${Math.max(8, Number(count) * 18)}%` }} /></div><span className="dist-num">{count}</span></div>)}</div></div>
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={13} /> Operação conectada</span><span className="panel-meta">Kanban & chat</span></div><div className="panel-body flush">{[["Quadros", boards.length], ["Conversas", chats.length], ["Eventos", events.length]].map(([label, count]) => <div className="dist-row" key={label}><span className="dist-name">{label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${Math.max(8, Number(count) * 18)}%` }} /></div><span className="dist-num">{count}</span></div>)}</div></div>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por GC</span><span className="panel-meta">{fellowshipGroups.length} grupos</span></div><div className="panel-body flush">{gcCounts.map(({ group, n }) => <div className="dist-row" key={group.id}><span className="dist-name">{group.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(n / maxGc) * 100}%` }} /></div><span className="dist-num">{n}</span></div>)}{fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "12px 0" }}>Nenhum grupo cadastrado ainda.</div>}</div></div>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={13} /> Operação conectada</span><span className="panel-meta">Kanban & chat</span></div><div className="panel-body flush">{[["Quadros", boards.length], ["Conversas", chats.length], ["Eventos", events.length]].map(([label, count]) => <div className="dist-row" key={label}><span className="dist-name">{label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(Number(count) / maxOps) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}</div></div>
       </div>
     </div>
   );
