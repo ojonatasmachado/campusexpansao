@@ -759,9 +759,8 @@ function kanbanPerm(role: string): { criarCard: boolean; comentar: boolean; edit
   return { criarCard: false, comentar: false, editarBoard: false, moverQualquer: false };
 }
 
-function ViewSwitcher({ ministries, currentRole }: { ministries: MinistryView[]; currentRole: "master" | "pastor" | "lider" | "vol" }) {
+function ViewSwitcher({ ministries, currentRole, previewMinistryId, setPreviewMinistryId }: { ministries: MinistryView[]; currentRole: "master" | "pastor" | "lider" | "vol"; previewMinistryId: string | null; setPreviewMinistryId: (id: string | null) => void }) {
   const [open, setOpen] = useState(false);
-  const [view, setView] = useState<string>("direcao");
   const ref = useRef<HTMLDivElement>(null);
   /* só master/pastor podem pré-visualizar o app como líder de um time específico —
      líder e voluntário só veem o próprio papel real, sem esse toggle. */
@@ -775,16 +774,16 @@ function ViewSwitcher({ ministries, currentRole }: { ministries: MinistryView[];
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const activeMinistry = ministries.find((m) => m.id === view);
-  const label = podePrevisualizar ? (view === "direcao" ? "Direção" : activeMinistry?.name ?? "Time") : ROLE_LABEL[currentRole];
+  const activeMinistry = ministries.find((m) => m.id === previewMinistryId);
+  const label = podePrevisualizar ? (previewMinistryId ? activeMinistry?.name ?? "Time" : "Direção") : ROLE_LABEL[currentRole];
   const role = podePrevisualizar
-    ? (view === "direcao" ? `Visão geral · ${currentRole}` : "Líder de time (pré-visualização)")
+    ? (previewMinistryId ? "Líder de time (pré-visualização)" : `Visão geral · ${currentRole}`)
     : ROLE_LABEL[currentRole];
 
   return (
     <div className="view-sw" ref={ref}>
       <button className="view-sw-btn" type="button" style={podePrevisualizar ? undefined : { cursor: "default" }} onClick={() => podePrevisualizar && setOpen((o) => !o)}>
-        <span className="view-sw-ic"><Icon name={!podePrevisualizar || view === "direcao" ? "identidade" : "times"} size={14} /></span>
+        <span className="view-sw-ic"><Icon name={!podePrevisualizar || !previewMinistryId ? "identidade" : "times"} size={14} /></span>
         <span className="view-sw-info">
           <span className="view-sw-name">{label}</span>
           <span className="view-sw-role">{role}</span>
@@ -794,14 +793,14 @@ function ViewSwitcher({ ministries, currentRole }: { ministries: MinistryView[];
       {open && podePrevisualizar && (
         <div className="view-sw-menu">
           <div className="view-sw-group">Perspectiva</div>
-          <button className={`view-sw-opt ${view === "direcao" ? "on" : ""}`} type="button"
-            onClick={() => { setView("direcao"); setOpen(false); }}>
+          <button className={`view-sw-opt ${!previewMinistryId ? "on" : ""}`} type="button"
+            onClick={() => { setPreviewMinistryId(null); setOpen(false); }}>
             <span className="view-sw-opt-ic"><Icon name="identidade" size={14} /></span>
             <span className="view-sw-opt-main"><b>Direção</b><small>Visão completa da Igreja</small></span>
           </button>
           {ministries.slice(0, 8).map((m) => (
-            <button key={m.id} className={`view-sw-opt ${view === m.id ? "on" : ""}`} type="button"
-              onClick={() => { setView(m.id); setOpen(false); }}>
+            <button key={m.id} className={`view-sw-opt ${previewMinistryId === m.id ? "on" : ""}`} type="button"
+              onClick={() => { setPreviewMinistryId(m.id); setOpen(false); }}>
               <span className="view-sw-opt-ic"><TeamMark ministry={m} size={14} /></span>
               <span className="view-sw-opt-main"><b>{m.name}</b><small>Líder · {m.people.length} vol.</small></span>
             </button>
@@ -906,6 +905,10 @@ export default function ServiceExactApp({
   const [navOpen, setNavOpen] = useState(false);
   const [checkinEventId, setCheckinEventId] = useState<string | null>(null);
   const [shareEventId, setShareEventId] = useState<string | null>(null);
+  /* perspectiva: master/pastor pode pré-visualizar o app como líder de um time
+     específico (equivalente a window.cexView() em evolucoes/service_app/shell.jsx).
+     null = "Direção" (vê tudo). */
+  const [previewMinistryId, setPreviewMinistryId] = useState<string | null>(null);
 
   useEffect(() => {
     document.body.dataset.theme = theme === "light" ? "light" : "";
@@ -970,6 +973,22 @@ export default function ServiceExactApp({
      por engano — sem isso, uma chave ausente cairia no fallback `?? true`. */
   const matrizEfetiva = matrizComFallback(permissionsMatrix);
   const currentExtraAccess = people.find((person) => person.id === currentPersonId)?.meta?.extraAccess ?? [];
+
+  /* perspectiva efetiva: líder real vê só os times que lidera; master/pastor
+     pré-visualizando vê só o time escolhido; do contrário, sem restrição (null).
+     Equivalente a view.papel/view.timeId em evolucoes/service_app/shell.jsx. */
+  const podePrevisualizar = currentRole === "master" || currentRole === "pastor";
+  const misteriosQueLidero = currentPersonId
+    ? ministries.filter((ministry) => ministry.people.some((link) => link.personId === currentPersonId && link.isLeader)).map((ministry) => ministry.id)
+    : [];
+  const scopeMinistryIds: string[] | null = podePrevisualizar
+    ? (previewMinistryId ? [previewMinistryId] : null)
+    : (currentRole === "lider" ? misteriosQueLidero : null);
+  /* identidade efetiva pra Conversas: em pré-visualização, "eu" viro o líder do time escolhido */
+  const previewLeaderPersonId = previewMinistryId
+    ? ministries.find((ministry) => ministry.id === previewMinistryId)?.people.find((link) => link.isLeader)?.personId ?? null
+    : null;
+  const perspectivePersonId = podePrevisualizar && previewMinistryId ? previewLeaderPersonId : currentPersonId;
 
   const nav = [
     { group: "Visão geral", items: [{ id: "painel", icon: "painel", label: "Painel" }] },
@@ -1072,7 +1091,7 @@ export default function ServiceExactApp({
             />
           </div>
           <div className="top-actions">
-            <ViewSwitcher ministries={ministries} currentRole={currentRole} />
+            <ViewSwitcher ministries={ministries} currentRole={currentRole} previewMinistryId={previewMinistryId} setPreviewMinistryId={setPreviewMinistryId} />
             <button className="theme-tog" type="button" title="Mudar tema" onClick={() => setTheme((t) => t === "dark" ? "light" : "dark")}>
               <Icon name={theme === "dark" ? "sol" : "lua"} size={16} />
             </button>
@@ -1117,14 +1136,14 @@ export default function ServiceExactApp({
             church={firstChurch}
           />
         ) : null}
-        {route === "escalas" ? <Escalas gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} setRoute={setRoute} setCheckinEventId={setCheckinEventId} /> : null}
+        {route === "escalas" ? <Escalas gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} church={firstChurch} scopeMinistryIds={scopeMinistryIds} setDrawer={setDrawer} setModal={setModal} setRoute={setRoute} setCheckinEventId={setCheckinEventId} /> : null}
         {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} rooms={rooms} reservations={reservations} church={firstChurch} setDrawer={setDrawer} /> : null}
         {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} church={firstChurch} setModal={setModal} /> : null}
-        {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} setModal={setModal} /> : null}
+        {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} scopeMinistryIds={scopeMinistryIds} setModal={setModal} /> : null}
         {route === "cultos" ? <Cultos events={events} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
         {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} wallPosts={wallPosts} ministries={ministries} people={people} setModal={setModal} /> : null}
-        {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} /> : null}
+        {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} currentPersonId={perspectivePersonId} scopeMinistryIds={scopeMinistryIds} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
         {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} currentRole={currentRole} theme={theme} setTheme={setTheme} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
         {route === "identidade" ? <Identidade church={firstChurch} identity={churchIdentity} cycle={cycles.find((c) => c.is_active) ?? cycles[0]} setModal={setModal} /> : null}
@@ -1934,8 +1953,7 @@ function Escalas({
   ministries,
   events,
   church,
-  currentRole,
-  currentPersonId,
+  scopeMinistryIds,
   setDrawer,
   setModal,
   setRoute,
@@ -1947,8 +1965,7 @@ function Escalas({
   ministries: MinistryView[];
   events: EventView[];
   church: ChurchView | undefined;
-  currentRole: "master" | "pastor" | "lider" | "vol";
-  currentPersonId: string | null;
+  scopeMinistryIds: string[] | null;
   setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
@@ -1975,9 +1992,10 @@ function Escalas({
   const misteriosDoEvento = selectedEvent?.ministries.length
     ? ministries.filter((ministry) => selectedEvent.ministries.includes(ministry.id))
     : ministries;
-  /* líder só vê os times que lidera; master/pastor veem todos (Fase 0 deixou isso pendente). */
-  const visibleMinistries = currentRole === "lider" && currentPersonId
-    ? misteriosDoEvento.filter((ministry) => ministry.people.some((link) => link.personId === currentPersonId && link.isLeader))
+  /* líder real (ou master/pastor pré-visualizando como líder) só vê os times do escopo;
+     equivalente a view.papel/timesVis em evolucoes/service_app/escalas.jsx:384. */
+  const visibleMinistries = scopeMinistryIds
+    ? misteriosDoEvento.filter((ministry) => scopeMinistryIds.includes(ministry.id))
     : misteriosDoEvento;
   const confirmed = eventRoster.filter((assignment) => assignment.status === "ok").length;
   const totalSlots = visibleMinistries.reduce((sum, ministry) => sum + ministry.positions.reduce((total, position) => total + Math.max(1, position.need_count), 0), 0);
@@ -2118,12 +2136,17 @@ function Escalas({
     router.refresh();
   };
 
+  /* texto de perspectiva por papel, equivalente a evolucoes/service_app/escalas.jsx:384 */
+  const perspectiveText = scopeMinistryIds
+    ? (visibleMinistries.length > 1 ? `Você está vendo os ${visibleMinistries.length} times que lidera.` : `Você está vendo só o ${visibleMinistries[0]?.name ?? "seu time"}.`)
+    : "A Direção vê todos os times.";
+
   return (
     <div className="content wide">
       <PageHead
         title="Escalas por evento"
         eyebrow="Operação"
-        subtitle="Escolha o culto e monte a escala. Cada coluna é um time. Toque numa pessoa para confirmar, trocar ou remover; na vaga para escalar."
+        subtitle={`Escolha o culto e monte a escala. Cada coluna é um time. ${perspectiveText} Toque numa pessoa para confirmar, trocar ou remover; na vaga para escalar.`}
         action={
           <>
             <button className="btn btn-sec" type="button" onClick={() => setDelegarOpen(true)}><Icon name="membros" size={15} /> Delegar</button>
@@ -4482,6 +4505,7 @@ function Quadros({
   church,
   currentRole,
   currentPersonId,
+  scopeMinistryIds,
   setModal,
 }: {
   boards: BoardView[];
@@ -4491,6 +4515,7 @@ function Quadros({
   church: ChurchView | undefined;
   currentRole: "master" | "pastor" | "lider" | "vol";
   currentPersonId: string | null;
+  scopeMinistryIds: string[] | null;
   setModal: (modal: ModalState) => void;
 }) {
   const router = useRouter();
@@ -4502,13 +4527,19 @@ function Quadros({
   const ministryById = new Map(ministries.map((m) => [m.id, m]));
   const peopleById = new Map(people.map((p) => [p.id, p]));
 
+  /* líder (real ou pré-visualizando) só vê os quadros do próprio time; quadros
+     "gerais" (sem time dono) são só da Direção — equivalente a kanban.jsx:44. */
+  const visibleBoards = scopeMinistryIds
+    ? boards.filter((board) => board.ministry_id && scopeMinistryIds.includes(board.ministry_id))
+    : boards;
+
   const moverCard = async (cardId: string, colId: string) => {
     setLocalCards((prev) => prev.map((c) => c.id === cardId ? { ...c, column_id: colId } : c));
     await createServiceBrowserClient().schema("service").from("cards").update({ column_id: colId }).eq("id", cardId);
     router.refresh();
   };
 
-  const selected = boards.find((b) => b.id === boardId);
+  const selected = visibleBoards.find((b) => b.id === boardId);
 
   if (selected) {
     return (
@@ -4533,7 +4564,7 @@ function Quadros({
         <div>
           <div className="ph-eyebrow">Operação</div>
           <h1 className="ph-title">Quadros de <em>tarefas</em></h1>
-          <p className="ph-sub">Um quadro por time ou da Direção. Cada tarefa é um card com responsável, prazo e status.</p>
+          <p className="ph-sub">{scopeMinistryIds ? `Os quadros do ${ministries.find((m) => m.id === scopeMinistryIds[0])?.name ?? "seu time"}. A Direção vê todos.` : "Um quadro por time ou da Direção. Cada tarefa é um card com responsável, prazo e status."}</p>
         </div>
         <div className="ph-actions">
           <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo quadro", subtitle: "Um quadro de tarefas para organizar o trabalho de um time ou da liderança.", saveLabel: "Criar quadro", formFields: [{ k:"nome", label:"Nome do quadro", type:"text", req:true, ph:"ex: Louvor · Julho" }, { k:"time", label:"Time dono", type:"text", half:true, ph:"ex: Louvor (ou deixe em branco para geral)" }, { k:"desc", label:"Descrição", type:"text", half:true, ph:"Para que serve" }], action: { kind: "board" } })}>+ Novo quadro</button>
@@ -4547,7 +4578,7 @@ function Quadros({
         </div>
       </div>
       <div className="bd-grid">
-        {boards.map((board) => {
+        {visibleBoards.map((board) => {
           const ministry = board.ministry_id ? ministryById.get(board.ministry_id) : null;
           const boardCards = localCards.filter((c) => c.board_id === board.id);
           const doneCol = board.columns.find((col) => (col.nome ?? col.name ?? col.id).toLowerCase().includes("conclu") || col.id === "done");
@@ -4571,7 +4602,7 @@ function Quadros({
             </button>
           );
         })}
-        {boards.length === 0 && <div className="empty">Nenhum quadro criado ainda.</div>}
+        {visibleBoards.length === 0 && <div className="empty">Nenhum quadro criado ainda.</div>}
       </div>
     </div>
   );
@@ -4580,11 +4611,13 @@ function Quadros({
 function NovaConversaModal({
   members,
   church,
+  currentPersonId,
   onClose,
   onCreated,
 }: {
   members: MemberView[];
   church: ChurchView | undefined;
+  currentPersonId: string | null;
   onClose: () => void;
   onCreated: (chatId: string) => void;
 }) {
@@ -4595,7 +4628,7 @@ function NovaConversaModal({
   const [primeiraMsg, setPrimeiraMsg] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const eu = members[0]?.id ?? null;
+  const eu = members.find((m) => m.volunteerId === currentPersonId)?.id ?? null;
   const candidatos = members.filter((m) => m.id !== eu);
   const isGrupo = tipo === "grupo" || sel.length > 1;
 
@@ -4693,6 +4726,8 @@ function Conversas({
   ministries,
   members,
   church,
+  currentPersonId,
+  scopeMinistryIds,
 }: {
   chats: ChatView[];
   chatMembers: ChatMemberView[];
@@ -4700,26 +4735,40 @@ function Conversas({
   ministries: MinistryView[];
   members: MemberView[];
   church: ChurchView | undefined;
+  currentPersonId: string | null;
+  scopeMinistryIds: string[] | null;
 }) {
   const router = useRouter();
-  const [selected, setSelected] = useState(chats[0]?.id ?? "");
+  const [selected, setSelected] = useState<string | null>(null);
   const [nova, setNova] = useState(false);
   const [texto, setTexto] = useState("");
   const [sending, setSending] = useState(false);
   const ministryById = new Map(ministries.map((ministry) => [ministry.id, ministry]));
   const memberById = new Map(members.map((member) => [member.id, member]));
-  const chat = chats.find((item) => item.id === selected) ?? chats[0];
+
+  /* privacidade: só quem de fato participa vê a conversa, sem exceção de papel
+     (inclusive Direção) — equivalente a S.chatsDaView() em
+     evolucoes/service_app/data-chat.js:65-70. */
+  const currentMember = members.find((member) => member.volunteerId === currentPersonId) ?? null;
+  const visibleChats = currentMember
+    ? chats.filter((c) => chatMembers.some((cm) => cm.chat_id === c.id && cm.member_id === currentMember.id))
+    : [];
+
+  const chat = visibleChats.find((item) => item.id === selected) ?? visibleChats[0] ?? null;
   const selectedMessages = chat ? messages.filter((message) => message.chat_id === chat.id) : [];
   const chatCount = (chatId: string) => chatMembers.filter((member) => member.chat_id === chatId).length;
   const chatName = (item: ChatView) => item.name || (item.ministry_id ? ministryById.get(item.ministry_id)?.name : null) || "Conversa";
+  const perspectiveText = scopeMinistryIds
+    ? `Canal do ${ministries.find((m) => m.id === scopeMinistryIds[0])?.name ?? "seu time"}, grupos e mensagens diretas da sua equipe. Conversas são privadas: só os envolvidos veem.`
+    : "Só as conversas das quais você participa aparecem aqui. Conversas são privadas: só os envolvidos veem.";
 
   const enviar = async () => {
-    if (!texto.trim() || !chat || sending) return;
+    if (!texto.trim() || !chat || sending || !currentMember) return;
     setSending(true);
     await createServiceBrowserClient().schema("service").from("messages").insert({
       organization_id: church?.organizationId,
       chat_id: chat.id,
-      sender_id: members[0]?.id ?? null,
+      sender_id: currentMember.id,
       body: texto.trim(),
     });
     setTexto("");
@@ -4729,12 +4778,12 @@ function Conversas({
 
   return (
     <div className="content wide">
-      <PageHead title="Conversas" eyebrow="Operação" subtitle="Canais por time, grupos e mensagens diretas da equipe. Conversas são privadas para os envolvidos." action={<button className="btn btn-pri" type="button" onClick={() => setNova(true)}>+ Nova conversa</button>} />
+      <PageHead title="Conversas" eyebrow="Operação" subtitle={perspectiveText} action={<button className="btn btn-pri" type="button" onClick={() => setNova(true)}>+ Nova conversa</button>} />
       <div className="chat-layout">
-        <div className="chat-list">{chats.map((item) => <button className={`chat-row ${item.id === selected ? "on" : ""}`} type="button" key={item.id} onClick={() => setSelected(item.id)}><span className="chat-row-ic"><Icon name={item.kind === "time" ? "times" : "membros"} size={16} /></span><span className="chat-row-main"><span className="chat-row-top"><b>{chatName(item)}</b><small>agora</small></span><span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || "Canal de alinhamento"}</span></span><span className="chat-row-count">{chatCount(item.id)}</span></button>)}</div>
+        <div className="chat-list">{visibleChats.map((item) => <button className={`chat-row ${chat?.id === item.id ? "on" : ""}`} type="button" key={item.id} onClick={() => setSelected(item.id)}><span className="chat-row-ic"><Icon name={item.kind === "time" ? "times" : "membros"} size={16} /></span><span className="chat-row-main"><span className="chat-row-top"><b>{chatName(item)}</b><small>agora</small></span><span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || "Canal de alinhamento"}</span></span><span className="chat-row-count">{chatCount(item.id)}</span></button>)}{visibleChats.length === 0 && <div className="empty" style={{ margin: 8 }}>Nenhuma conversa ainda.</div>}</div>
         <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; return <div className="chat-msg" key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <div className="empty">Nenhuma mensagem nesta conversa.</div> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enviar()} disabled={!chat} /><button className="btn btn-pri btn-sm" type="button" disabled={!chat || sending || !texto.trim()} onClick={enviar}>Enviar</button></div></div></div>
       </div>
-      {nova && <NovaConversaModal members={members} church={church} onClose={() => setNova(false)} onCreated={(id) => setSelected(id)} />}
+      {nova && <NovaConversaModal members={members} church={church} currentPersonId={currentPersonId} onClose={() => setNova(false)} onCreated={(id) => setSelected(id)} />}
     </div>
   );
 }
