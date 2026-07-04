@@ -436,7 +436,6 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
           level: c.nivel.trim() || null,
           color: c.cor,
           description: c.desc.trim() || null,
-          category: c.nivel.trim() || null,
           prereqs: c.preReqs,
           divulgacao: c.divulgacao || null,
           materiais: c.materiais,

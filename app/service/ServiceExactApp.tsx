@@ -490,7 +490,7 @@ type DrawerState =
   | null;
 
 type FieldDef =
-  | { k: string; label: string; type: "text"; req?: boolean; half?: boolean; ph?: string; hint?: string }
+  | { k: string; label: string; type: "text"; req?: boolean; half?: boolean; ph?: string; hint?: string; value?: string }
   | { k: string; label: string; type: "area"; req?: boolean; half?: boolean; ph?: string; hint?: string; big?: boolean }
   | { k: string; label: string; type: "select"; req?: boolean; half?: boolean; ph?: string; hint?: string; options: { v: string; l: string }[] }
   | { k: string; label: string; type: "date"; req?: boolean; half?: boolean; hint?: string }
@@ -516,7 +516,7 @@ type ModalState =
         | { kind: "announcement" }
         | { kind: "wallPost" }
         | { kind: "room" }
-        | { kind: "member" }
+        | { kind: "member"; visitorId?: string }
         | { kind: "event" }
         | { kind: "ministry" }
         | { kind: "identity" }
@@ -2988,13 +2988,15 @@ function ReuniaoDrawer({
 
   const salvarAta = async () => {
     setSaving(true);
+    const wasAgendada = meeting.status === "agendada";
     await createServiceBrowserClient()
       .schema("service")
       .from("meetings")
-      .update({ minutes: ata, status: meeting.status === "agendada" ? "realizada" : meeting.status })
+      .update({ minutes: ata, status: wasAgendada ? "realizada" : meeting.status })
       .eq("id", meeting.id);
     setSaving(false);
     router.refresh();
+    if (wasAgendada && pendentes.length > 0) setChooser({ scope: "all" });
   };
 
   const addAcao = async () => {
@@ -6629,10 +6631,11 @@ function BatismoDrawer({
 }
 
 function VisitanteDrawer({
-  visitor: initVisitor, notes, church, people, onClose, onOpenMember,
+  visitor: initVisitor, notes, church, people, onClose, onOpenMember, setModal,
 }: {
   visitor: VisitorView; notes: VisitorNoteView[]; church: ChurchView | undefined;
   people: PersonView[]; onClose: () => void; onOpenMember: (id: string) => void;
+  setModal: (modal: ModalState) => void;
 }) {
   const router = useRouter();
   const [nota, setNota] = useState("");
@@ -6715,7 +6718,22 @@ function VisitanteDrawer({
                 <div className="vmember-s">Complete os dados cadastrais para liberar o acesso ao app.</div>
                 {initVisitor.member_id
                   ? <button className="btn btn-pri btn-sm" style={{ width: "100%", justifyContent: "center", marginTop: 12 }} type="button" onClick={() => { onClose(); onOpenMember(initVisitor.member_id!); }}>Ver ficha do membro →</button>
-                  : null}
+                  : (
+                    <button className="btn btn-pri btn-sm" style={{ width: "100%", justifyContent: "center", marginTop: 12 }} type="button" onClick={() => setModal({
+                      eyebrow: "Criar",
+                      title: "Completar dados de membro",
+                      subtitle: "Finalize o cadastro para liberar o acesso ao app.",
+                      saveLabel: "Adicionar membro",
+                      formFields: [
+                        { k: "nome", label: "Nome completo", type: "text", req: true, ph: "Como a pessoa se chama", value: initVisitor.name },
+                        { k: "tel", label: "Telefone (WhatsApp)", type: "text", half: true, ph: "(11) 9...", value: initVisitor.phone ?? "" },
+                        { k: "email", label: "E-mail", type: "text", half: true, req: true, ph: "usado para entrar no app" },
+                        { k: "nasc", label: "Aniversário", type: "date", half: true },
+                        { k: "bairro", label: "Bairro", type: "text", half: true, ph: "Onde mora" },
+                      ],
+                      action: { kind: "member", visitorId: initVisitor.id },
+                    })}>Completar dados de membro →</button>
+                  )}
               </div>
             )
           }
@@ -7295,6 +7313,7 @@ function EntityDrawer({
         people={people}
         onClose={() => setDrawer(null)}
         onOpenMember={(id) => setDrawer({ kind: "member", id })}
+        setModal={setModal}
       />
     );
   }
@@ -7808,7 +7827,13 @@ function ServiceModal({
   onClose: () => void;
 }) {
   const router = useRouter();
-  const [values, setValues] = useState<Record<string, string>>({});
+  const [values, setValues] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      modal.formFields
+        .filter((f): f is typeof f & { value?: string } => "value" in f && !!(f as { value?: string }).value)
+        .map((f) => [f.k, (f as { value?: string }).value as string]),
+    )
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -7833,7 +7858,7 @@ function ServiceModal({
     setSaving(true);
     if (action.kind === "member") {
       if (!value("nome")) { setSaving(false); setError("Digite o nome do membro."); return; }
-      result = await supabase.schema("service").from("members").insert({
+      const { data: newMember, error: memberError } = await supabase.schema("service").from("members").insert({
         organization_id: church.organizationId,
         church_id: church.id,
         name: value("nome"),
@@ -7843,7 +7868,11 @@ function ServiceModal({
         neighborhood: value("bairro") || null,
         situation: "membro",
         journey: [1, 0, 0, 0, 0],
-      });
+      }).select("id").single();
+      result = { error: memberError };
+      if (!memberError && newMember && action.visitorId) {
+        await supabase.schema("service").from("visitors").update({ member_id: newMember.id }).eq("id", action.visitorId);
+      }
     } else if (action.kind === "event") {
       if (!value("nome")) { setSaving(false); setError("Digite o nome do culto."); return; }
       result = await supabase.schema("service").from("events").insert({
