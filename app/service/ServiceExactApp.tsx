@@ -991,6 +991,45 @@ export default function ServiceExactApp({
     });
     router.refresh();
   };
+  const sendMessageMobile = async (chatId: string, senderId: string, body: string) => {
+    if (!firstChurch?.organizationId || !body.trim()) return;
+    await createServiceBrowserClient().schema("service").from("messages").insert({
+      organization_id: firstChurch.organizationId,
+      chat_id: chatId,
+      sender_id: senderId,
+      body: body.trim(),
+    });
+    router.refresh();
+  };
+  const startChatMobile = async (selfMemberId: string, targetMemberId: string, firstMessage: string) => {
+    if (!firstChurch?.organizationId || !firstChurch.id) return null;
+    const sb = createServiceBrowserClient().schema("service");
+    const existing = chats.find((c) => c.kind === "dm"
+      && chatMembers.some((cm) => cm.chat_id === c.id && cm.member_id === selfMemberId)
+      && chatMembers.some((cm) => cm.chat_id === c.id && cm.member_id === targetMemberId));
+    if (existing) { router.refresh(); return existing.id; }
+    const { data: chatRow, error } = await sb.from("chats").insert({
+      organization_id: firstChurch.organizationId,
+      church_id: firstChurch.id,
+      kind: "dm",
+      name: null,
+    }).select("id").single();
+    if (error || !chatRow) return null;
+    await sb.from("chat_members").insert([
+      { organization_id: firstChurch.organizationId, chat_id: chatRow.id, member_id: selfMemberId },
+      { organization_id: firstChurch.organizationId, chat_id: chatRow.id, member_id: targetMemberId },
+    ]);
+    if (firstMessage.trim()) {
+      await sb.from("messages").insert({
+        organization_id: firstChurch.organizationId,
+        chat_id: chatRow.id,
+        sender_id: selfMemberId,
+        body: firstMessage.trim(),
+      });
+    }
+    router.refresh();
+    return chatRow.id;
+  };
   const activePeople = people.filter((person) => person.status === "ativo").length;
   const rosterOk = roster.filter((assignment) => assignment.status === "ok").length;
   const confirmationRate = roster.length ? Math.round((rosterOk / roster.length) * 100) : 0;
@@ -1218,6 +1257,8 @@ export default function ServiceExactApp({
           onAddCardComment={addCardCommentMobile}
           onAdvanceVisitorStage={advanceVisitorStageMobile}
           onRegisterVisitor={registerVisitorMobile}
+          onSendMessage={sendMessageMobile}
+          onStartChat={startChatMobile}
           onClose={() => setMobileOpen(false)}
         />
       )}
@@ -4848,7 +4889,7 @@ function Conversas({
       <PageHead title="Conversas" eyebrow="Operação" subtitle={perspectiveText} action={<button className="btn btn-pri" type="button" onClick={() => setNova(true)}>+ Nova conversa</button>} />
       <div className="chat-layout">
         <div className="chat-list">{visibleChats.map((item) => <button className={`chat-row ${chat?.id === item.id ? "on" : ""}`} type="button" key={item.id} onClick={() => setSelected(item.id)}><span className="chat-row-ic"><Icon name={item.kind === "time" ? "times" : "membros"} size={16} /></span><span className="chat-row-main"><span className="chat-row-top"><b>{chatName(item)}</b><small>agora</small></span><span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || "Canal de alinhamento"}</span></span><span className="chat-row-count">{chatCount(item.id)}</span></button>)}{visibleChats.length === 0 && <div className="empty" style={{ margin: 8 }}>Nenhuma conversa ainda.</div>}</div>
-        <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; return <div className="chat-msg" key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <div className="empty">Nenhuma mensagem nesta conversa.</div> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enviar()} disabled={!chat} /><button className="btn btn-pri btn-sm" type="button" disabled={!chat || sending || !texto.trim()} onClick={enviar}>Enviar</button></div></div></div>
+        <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; const isMine = currentMember && message.sender_id === currentMember.id; return <div className={`chat-msg${isMine ? " me" : ""}`} key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <div className="empty">Nenhuma mensagem nesta conversa.</div> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enviar()} disabled={!chat} /><button className="btn btn-pri btn-sm" type="button" disabled={!chat || sending || !texto.trim()} onClick={enviar}>Enviar</button></div></div></div>
       </div>
       {nova && (
         <NovaConversaModal

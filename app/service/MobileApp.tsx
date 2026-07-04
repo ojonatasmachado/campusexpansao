@@ -21,6 +21,7 @@ type M = {
   firstContact: string;
   neighborhood: string | null;
   journey: number[];
+  volunteerId: string | null;
 };
 type Ministry = {
   id: string;
@@ -90,6 +91,8 @@ export type MobileOverlayProps = {
   onAddCardComment?: (cardId: string, author: string, body: string) => void;
   onAdvanceVisitorStage?: (visitorId: string, nextStageId: string) => void;
   onRegisterVisitor?: (data: { name: string; phone: string; origin: string }) => void;
+  onSendMessage?: (chatId: string, senderId: string, body: string) => void;
+  onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
   onClose: () => void;
 };
 
@@ -524,15 +527,22 @@ function TabTarefas({ person, cards, boards, onAddCardComment }: { person: P; ca
 // ── aba: Conversas ────────────────────────────────────────────────────────────
 
 function TabConversas({
-  member, chats, chatMembers, messages, members,
+  member, chats, chatMembers, messages, members, ministries, onSendMessage, onStartChat,
 }: {
   member: M | null;
   chats: Chat[];
   chatMembers: ChatMember[];
   messages: Message[];
   members: M[];
+  ministries: Ministry[];
+  onSendMessage?: (chatId: string, senderId: string, body: string) => void;
+  onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
 }) {
   const [selId, setSelId] = useState<string | null>(null);
+  const [texto, setTexto] = useState("");
+  const [novo, setNovo] = useState(false);
+  const [novoMsg, setNovoMsg] = useState("");
+  const [starting, setStarting] = useState(false);
 
   const myChats = member
     ? chats.filter((c) =>
@@ -541,6 +551,49 @@ function TabConversas({
     : [];
 
   const chat = myChats.find((c) => c.id === selId);
+
+  const souLider = member
+    ? ministries.some((min) => min.people.some((p) => p.personId === member.volunteerId && p.isLeader))
+    : false;
+
+  const candidatos = member
+    ? (souLider
+        ? members.filter((m) => m.id !== member.id)
+        : (() => {
+            const liderIds = new Set<string>();
+            ministries.forEach((min) => {
+              const lider = min.people.find((p) => p.isLeader);
+              const liderMember = lider ? members.find((m) => m.volunteerId === lider.personId) : undefined;
+              if (liderMember && liderMember.id !== member.id) liderIds.add(liderMember.id);
+            });
+            return members.filter((m) => liderIds.has(m.id));
+          })())
+    : [];
+
+  const nomeTimeDoLider = (targetId: string) => {
+    const min = ministries.find((m) => {
+      const lider = m.people.find((p) => p.isLeader);
+      const liderMember = lider ? members.find((mm) => mm.volunteerId === lider.personId) : undefined;
+      return liderMember?.id === targetId;
+    });
+    return min ? `Líder · ${min.name}` : "";
+  };
+
+  const enviar = () => {
+    if (!texto.trim() || !chat || !member) return;
+    onSendMessage?.(chat.id, member.id, texto.trim());
+    setTexto("");
+  };
+
+  const abrir = async (targetMemberId: string) => {
+    if (!member || starting) return;
+    setStarting(true);
+    const id = await onStartChat?.(member.id, targetMemberId, novoMsg);
+    setStarting(false);
+    setNovo(false);
+    setNovoMsg("");
+    if (id) setSelId(id);
+  };
 
   if (chat) {
     const chatMsgs = messages.filter((m) => m.chat_id === chat.id);
@@ -581,6 +634,16 @@ function TabConversas({
               );
             })}
           </div>
+          <div className="chat-compose">
+            <input
+              className="input"
+              placeholder="Escreva uma mensagem..."
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && enviar()}
+            />
+            <button className="btn btn-pri btn-sm" type="button" disabled={!texto.trim()} onClick={enviar}>Enviar</button>
+          </div>
         </div>
       </div>
     );
@@ -588,10 +651,39 @@ function TabConversas({
 
   return (
     <>
-      <div className="m-section-t">Conversas</div>
-      <div style={{ fontSize: 12.5, color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>
-        Fale com o seu time, com o seu lider ou com um pastor.
+      <div className="m-section-row">
+        <div className="m-section-t" style={{ margin: 0 }}>Conversas</div>
+        <button className="m-mini-btn" onClick={() => setNovo((n) => !n)}>{novo ? "Fechar" : "+ Nova"}</button>
       </div>
+      <div style={{ fontSize: 12.5, color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>
+        {souLider ? "Fale com qualquer pessoa do time." : "Fale com o seu lider ou com um pastor."}
+      </div>
+
+      {novo && (
+        <div className="m-card" style={{ marginBottom: 14 }}>
+          <div className="m-section-t" style={{ marginTop: 0 }}>Começar conversa com</div>
+          <input
+            className="input"
+            placeholder="Primeira mensagem (opcional)"
+            value={novoMsg}
+            onChange={(e) => setNovoMsg(e.target.value)}
+            style={{ marginBottom: 10 }}
+          />
+          {candidatos.map((m) => (
+            <button className="m-conv" key={m.id} onClick={() => abrir(m.id)} disabled={starting}>
+              <span className="m-conv-ic">→</span>
+              <div className="m-conv-main">
+                <div className="m-conv-name">{m.name}</div>
+                <div className="m-conv-prev">{nomeTimeDoLider(m.id)}</div>
+              </div>
+            </button>
+          ))}
+          {candidatos.length === 0 && (
+            <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum lider disponivel ainda.</div>
+          )}
+        </div>
+      )}
+
       {myChats.length === 0 && (
         <div className="m-card">
           <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhuma conversa ainda.</div>
@@ -1250,7 +1342,7 @@ function MobileMembro({
   });
   const { ministries, events, roster, cards, boards, courses, enrollments, courseModules = [], courseLessons = [],
           visitors, baptismClasses, announcements, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment,
-          onAdvanceVisitorStage, onRegisterVisitor } = rest;
+          onAdvanceVisitorStage, onRegisterVisitor, onSendMessage, onStartChat } = rest;
 
   const isRecep = isRecepPerson(person, ministries);
 
@@ -1298,7 +1390,7 @@ function MobileMembro({
           {tab === "escalas" && <TabEscala person={person} events={events} roster={roster} />}
           {tab === "tarefas" && <TabTarefas person={person} cards={cards} boards={boards} onAddCardComment={onAddCardComment} />}
           {tab === "conversas" && (
-            <TabConversas member={member} chats={chats} chatMembers={chatMembers} messages={messages} members={members} />
+            <TabConversas member={member} chats={chats} chatMembers={chatMembers} messages={messages} members={members} ministries={ministries} onSendMessage={onSendMessage} onStartChat={onStartChat} />
           )}
           {tab === "visitantes" && <TabVisitantes visitors={visitors} onAdvanceVisitorStage={onAdvanceVisitorStage} onRegisterVisitor={onRegisterVisitor} />}
           {tab === "cursos" && (
@@ -1334,10 +1426,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
 
   const person = personas[idx] ?? people[0];
   const member = person
-    ? (members.find(
-        (m) =>
-          m.name.split(" ")[0].toLowerCase() === person.name.split(" ")[0].toLowerCase(),
-      ) ?? null)
+    ? (members.find((m) => m.volunteerId === person.id) ?? null)
     : null;
 
   if (!person) {
@@ -1368,9 +1457,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
         <div className="mob-persona">
           <div className="mob-persona-t">Pre-visualizar como</div>
           {personas.map((p, i) => {
-            const m = members.find(
-              (m) => m.name.split(" ")[0].toLowerCase() === p.name.split(" ")[0].toLowerCase(),
-            );
+            const m = members.find((m) => m.volunteerId === p.id);
             return (
               <button
                 key={p.id}
