@@ -30,6 +30,7 @@ type ChurchSettings = {
   statusCfg?: StatusCriterios;
   tiposEvento?: string[];
   cursoGrupos?: { id: string; nome: string; desc?: string }[];
+  contatoCfg?: ContatoCfg;
   [key: string]: unknown;
 };
 
@@ -41,6 +42,18 @@ type StatusCriterios = {
 };
 
 const STATUS_CFG_DEFAULT: StatusCriterios = { recusasInativando: 2, recusasInativo: 4, diasIndispInativo: 30, considerarFerias: false };
+
+/* prazo/canal/abordagem do 1º contato com visitante, guardado em
+   service.churches.settings.contatoCfg (mesmo jsonb de sempre). */
+type ContatoCfg = { prazoHoras: number; canal: string; metaIntegracaoDias: number; mensagem: string; abordagem: string };
+
+const CONTATO_CFG_DEFAULT: ContatoCfg = {
+  prazoHoras: 48,
+  canal: "WhatsApp",
+  metaIntegracaoDias: 90,
+  mensagem: "Oi {nome}! Que alegria ter você com a gente no {evento}. Somos a {igreja} e queremos te conhecer melhor. Posso te ajudar com algo essa semana?",
+  abordagem: "Acolher sem pressão. Ouvir a história, oferecer oração e convidar para um Grupo de Comunhão. Sem cobrança, só cuidado genuíno.",
+};
 
 const ESCALA_DEFAULT: EscalaSettings = { modo: "assistido", maxPorMes: 4, folgaSemanas: 0, considerarFerias: true, naRecusa: "proximo" };
 
@@ -1090,7 +1103,7 @@ export default function ServiceExactApp({
         {route === "membros" ? <Membros members={members} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "pessoas" ? <Pessoas people={people} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Times ministries={ministries} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
-        {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} church={firstChurch} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "batismos" ? <Batismos baptismClasses={baptismClasses} baptismCandidates={baptismCandidates} decisions={decisions} members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "cursos" ? (
@@ -2387,16 +2400,21 @@ function Visitantes({
   visitors,
   visitorNotes: _visitorNotes,
   people,
+  church,
   setDrawer,
   setModal,
 }: {
   visitors: VisitorView[];
   visitorNotes: VisitorNoteView[];
   people: PersonView[];
+  church?: ChurchView;
   setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
 }) {
+  const router = useRouter();
   const [view, setView] = useState<"pipe" | "list" | "painel">("pipe");
+  const [cfgOpen, setCfgOpen] = useState(false);
+  const cc: ContatoCfg = { ...CONTATO_CFG_DEFAULT, ...(church?.settings?.contatoCfg ?? {}) };
   const personById = new Map(people.map((person) => [person.id, person]));
   const contacted = visitors.filter((visitor) => visitor.reply_status);
   const answered = visitors.filter((visitor) => visitor.reply_status === "respondeu");
@@ -2419,10 +2437,11 @@ function Visitantes({
         action={<><div className="seg"><button className={view === "pipe" ? "on" : ""} type="button" onClick={() => setView("pipe")}>Funil</button><button className={view === "list" ? "on" : ""} type="button" onClick={() => setView("list")}>Lista</button><button className={view === "painel" ? "on" : ""} type="button" onClick={() => setView("painel")}>Painel</button></div><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo visitante", subtitle: "Quem chegou pela primeira vez. Entra no acompanhamento automaticamente.", saveLabel: "Registrar visitante", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem visitou" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"origem", label:"Como chegou", type:"select", half:true, options:[{v:"Convite de membro",l:"Convite de membro"},{v:"Instagram",l:"Instagram"},{v:"Indicação",l:"Indicação"},{v:"Evangelismo",l:"Evangelismo"},{v:"Tomou decisão no culto",l:"Tomou decisão no culto"},{v:"Passava na rua",l:"Passava na rua"}] }], action: { kind: "visitor" } })}>+ Visitante</button></>}
       />
       <div className="contato-banner">
-        <div className="contato-pill"><span className="contato-pill-n">24h</span><span>1º contato</span></div>
-        <div className="contato-main"><div className="contato-t">Primeiro contato em até <em>24h</em> por <em>WhatsApp</em> · meta de integração: <em>30 dias</em></div><div className="contato-s">A equipe acompanha sem dono fixo: qualquer líder pode registrar contato e avançar a jornada.</div></div>
-        <button className="btn btn-sec btn-sm" type="button">Ajustar</button>
+        <div className="contato-pill"><span className="contato-pill-n">{cc.prazoHoras}h</span><span>1º contato</span></div>
+        <div className="contato-main"><div className="contato-t">Primeiro contato em até <em>{cc.prazoHoras}h</em> por <em>{cc.canal}</em> · meta de integração: <em>{cc.metaIntegracaoDias} dias</em></div><div className="contato-s">{cc.abordagem}</div></div>
+        <button className="btn btn-sec btn-sm" type="button" onClick={() => setCfgOpen(true)}>Ajustar</button>
       </div>
+      {cfgOpen && church && <ContatoCfgModal church={church} cfg={cc} onClose={() => setCfgOpen(false)} onRefresh={() => router.refresh()} />}
 
       {view === "painel" ? (
         <div className="vpanel">
@@ -2479,6 +2498,55 @@ function Visitantes({
           {visitors.map((visitor) => { const stage = VISITOR_STAGES.find((s) => s.id === visitor.stage); return <button className="tr click" key={visitor.id} type="button" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone || "Telefone não informado"}</div></div></div><div><span className="chip chip-neutral" style={{ color: stage?.color, borderColor: "var(--border-2)" }}>{stage?.name ?? visitor.stage}</span></div><div className="cell-sub">{visitor.origin || "Visitante"}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "sem prazo"}</span></div><div className="mini-right">{visitor.visited_on || "sem data"}</div></button>; })}
         </div>
       )}
+    </div>
+  );
+}
+
+function ContatoCfgModal({ church, cfg, onClose, onRefresh }: { church: ChurchView; cfg: ContatoCfg; onClose: () => void; onRefresh: () => void }) {
+  const [prazoHoras, setPrazoHoras] = useState(cfg.prazoHoras);
+  const [canal, setCanal] = useState(cfg.canal);
+  const [metaIntegracaoDias, setMetaIntegracaoDias] = useState(cfg.metaIntegracaoDias);
+  const [mensagem, setMensagem] = useState(cfg.mensagem);
+  const [abordagem, setAbordagem] = useState(cfg.abordagem);
+  const [saving, setSaving] = useState(false);
+
+  const salvar = async () => {
+    setSaving(true);
+    const next: ContatoCfg = { prazoHoras, canal, metaIntegracaoDias, mensagem, abordagem };
+    await createServiceBrowserClient().schema("service").from("churches").update({ settings: { ...church.settings, contatoCfg: next } }).eq("id", church.id);
+    onRefresh();
+    onClose();
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">Líder da integração</div>
+          <div className="modal-title">Como acolhemos quem chega</div>
+          <div className="modal-sub">Defina o prazo e a abordagem do primeiro contato. Fica claro para a equipe e deixa visível quanto tempo leva para integrar.</div>
+        </div>
+        <div className="modal-body" style={{ display: "block" }}>
+          <div className="field field-half"><label className="field-label">Prazo do 1º contato (horas)</label><input className="input" type="number" value={prazoHoras} onChange={(e) => setPrazoHoras(+e.target.value)} /></div>
+          <div className="field field-half">
+            <label className="field-label">Canal</label>
+            <select className="select" value={canal} onChange={(e) => setCanal(e.target.value)}>
+              {["WhatsApp", "Ligação", "Mensagem", "Presencial"].map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          <div className="field field-half"><label className="field-label">Meta de integração (dias)</label><input className="input" type="number" value={metaIntegracaoDias} onChange={(e) => setMetaIntegracaoDias(+e.target.value)} /></div>
+          <div className="field">
+            <label className="field-label">Mensagem padrão</label>
+            <textarea className="textarea" value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
+            <div style={{ fontSize: 11, color: "var(--subtle)", marginTop: 6 }}>Use {"{nome}"}, {"{evento}"} e {"{igreja}"} — preenchemos automaticamente.</div>
+          </div>
+          <div className="field"><label className="field-label">Abordagem / postura</label><textarea className="textarea" value={abordagem} onChange={(e) => setAbordagem(e.target.value)} /></div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>Salvar</button>
+        </div>
+      </div>
     </div>
   );
 }
