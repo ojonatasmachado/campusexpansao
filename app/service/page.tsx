@@ -320,6 +320,18 @@ type VisitorNoteView = {
   created_at: string;
 };
 
+type TimelineEventView = {
+  id: string;
+  member_id: string;
+  event_type: string;
+  title: string;
+  body: string | null;
+  by_whom: string | null;
+  sort_key: number | null;
+  when_label: string | null;
+  created_at: string;
+};
+
 type AnnouncementView = {
   id: string;
   title: string;
@@ -556,6 +568,7 @@ type ExtraServiceData = {
   ministerialTitles: MinisterialTitleRow[];
   fellowshipGroups: FellowshipGroupRow[];
   tags: TagRow[];
+  timelineEvents: TimelineEventView[];
 };
 
 const emptyExtraServiceData: ExtraServiceData = {
@@ -589,6 +602,7 @@ const emptyExtraServiceData: ExtraServiceData = {
   ministerialTitles: [],
   fellowshipGroups: [],
   tags: [],
+  timelineEvents: [],
 };
 
 function friendlyReadError(message: string) {
@@ -942,6 +956,7 @@ async function getServiceDashboardData(): Promise<{
     ministerialTitlesResult,
     fellowshipGroupsResult,
     tagsResult,
+    timelineEventsResult,
   ] = await Promise.all([
     supabase.schema("service").from("decisions").select("id,name,phone,happened_on,kind,service_name,responsible_id,status,member_id,age,notes,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("baptism_classes").select("id,label,baptism_date,location,status,pastor,notes,open_enrollment").order("created_at", { ascending: false }),
@@ -973,6 +988,7 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("ministerial_titles").select("id,name,sort_order").order("sort_order", { ascending: true }),
     supabase.schema("service").from("fellowship_groups").select("id,name,leader_person_id,weekday,time,neighborhood").order("created_at", { ascending: false }),
     supabase.schema("service").from("tags").select("id,name,color,leaders").order("created_at", { ascending: false }),
+    supabase.schema("service").from("timeline_events").select("id,member_id,event_type,title,body,by_whom,sort_key,when_label,created_at").order("sort_key", { ascending: false }),
   ]);
 
   const extraError = [
@@ -1006,6 +1022,7 @@ async function getServiceDashboardData(): Promise<{
     ministerialTitlesResult.error,
     fellowshipGroupsResult.error,
     tagsResult.error,
+    timelineEventsResult.error,
   ].find(Boolean);
 
   return {
@@ -1054,6 +1071,7 @@ async function getServiceDashboardData(): Promise<{
       ministerialTitles: ((ministerialTitlesResult.data ?? []) as MinisterialTitleRow[]),
       fellowshipGroups: ((fellowshipGroupsResult.data ?? []) as FellowshipGroupRow[]),
       tags: ((tagsResult.data ?? []) as TagRow[]),
+      timelineEvents: ((timelineEventsResult.data ?? []) as TimelineEventView[]),
     },
     error: extraError ? friendlyReadError(extraError.message) : "",
   };
@@ -1142,6 +1160,7 @@ export default async function ServiceHomePage() {
       ministerialTitles={extra.ministerialTitles}
       fellowshipGroups={extra.fellowshipGroups}
       tags={extra.tags.map((tag) => ({ ...tag, color: tag.color ?? "wheat", leaders: tag.leaders ?? [] }))}
+      timelineEvents={extra.timelineEvents}
       currentRole={currentRole}
       permissionsMatrix={permissionsMatrix}
       currentPersonId={currentPersonId}

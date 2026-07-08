@@ -30,7 +30,7 @@ type EnrollmentView = {
   status: "cursando" | "concluido";
 };
 
-type MemberView = { id: string; name: string };
+type MemberView = { id: string; name: string; journey?: number[] };
 
 type AttendanceRow = {
   id: string;
@@ -265,11 +265,28 @@ export function AulaCheckinModal({
     );
     doneCount.add(lesson.id);
     const enrollment = enrollments.find((e) => e.member_id === memberId);
+    const justCompleted = !!enrollment && enrollment.status !== "concluido" && doneCount.size >= totalAulas && totalAulas > 0;
     if (enrollment) {
       await supabase.schema("service").from("enrollments").update({
         done_count: doneCount.size,
-        status: doneCount.size >= totalAulas && totalAulas > 0 ? "concluido" : "cursando",
+        status: justCompleted ? "concluido" : "cursando",
       }).eq("id", enrollment.id);
+    }
+    if (justCompleted) {
+      const member = members.find((m) => m.id === memberId);
+      await supabase.schema("service").from("timeline_events").insert({
+        organization_id: church.organizationId,
+        member_id: memberId,
+        event_type: "curso",
+        title: `Concluiu "${course.name}"`,
+        sort_key: Number(`${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}${String(new Date().getDate()).padStart(2, "0")}`),
+        when_label: new Date().toLocaleDateString("pt-BR"),
+      });
+      if (member) {
+        const journey = [...(member.journey ?? [0, 0, 0, 0, 0])];
+        journey[2] = 1;
+        await supabase.schema("service").from("members").update({ journey }).eq("id", memberId);
+      }
     }
 
     router.refresh();

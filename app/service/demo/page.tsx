@@ -61,6 +61,11 @@ const MEMBERS = [
   { id: "m4", name: "Eduarda Nunes", phone: "(11) 9 4321-0987", email: "edu@cex.com", situation: "novo" as const, firstContact: "2024-09-03", neighborhood: "Mooca", journey: [1, 0, 0, 0, 0], birth: null, family: null, groupId: null, volunteerId: "p5", createdAt: "2026-05-25T12:00:00.000Z" },
 ];
 
+const TIMELINE_EVENTS = [
+  { id: "te-1", member_id: "m1", event_type: "decisao", title: "Decisão por Jesus", body: null, by_whom: null, sort_key: 20190312, when_label: "12/03/2019", created_at: "2019-03-12T12:00:00.000Z" },
+  { id: "te-2", member_id: "m1", event_type: "batismo", title: "Batismo nas águas", body: null, by_whom: null, sort_key: 20190520, when_label: "20/05/2019", created_at: "2019-05-20T12:00:00.000Z" },
+];
+
 const MINISTRIES = [
   {
     id: "min-1", organizationId: ORG, name: "Louvor", icon: "louvor", description: "Time de música e adoração. Ensaios toda semana.",
@@ -324,6 +329,7 @@ export default function ServiceDemoPage() {
       ministerialTitles={MINISTERIAL_TITLES}
       fellowshipGroups={FELLOWSHIP_GROUPS}
       tags={TAGS}
+      timelineEvents={TIMELINE_EVENTS}
       currentPersonId="p1"
       error=""
     />

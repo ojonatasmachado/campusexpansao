@@ -55,7 +55,7 @@ type LessonAttendanceView = {
   via: "qr" | "manual";
 };
 
-type MemberView = { id: string; name: string };
+type MemberView = { id: string; name: string; journey?: number[] };
 
 /* ─── helpers ─────────────────────────────────────────────────────────── */
 

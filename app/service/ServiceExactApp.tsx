@@ -421,6 +421,18 @@ type TagView = {
   leaders: string[];
 };
 
+type TimelineEventView = {
+  id: string;
+  member_id: string;
+  event_type: string;
+  title: string;
+  body: string | null;
+  by_whom: string | null;
+  sort_key: number | null;
+  when_label: string | null;
+  created_at: string;
+};
+
 type ReservationView = {
   id: string;
   room_id: string;
@@ -471,6 +483,7 @@ type Props = {
   ministerialTitles?: MinisterialTitleView[];
   fellowshipGroups?: FellowshipGroupView[];
   tags?: TagView[];
+  timelineEvents?: TimelineEventView[];
   currentRole?: "master" | "pastor" | "lider" | "vol";
   permissionsMatrix?: Record<string, Record<string, boolean>>;
   currentPersonId?: string | null;
@@ -891,6 +904,7 @@ export default function ServiceExactApp({
   ministerialTitles = [],
   fellowshipGroups = [],
   tags = [],
+  timelineEvents = [],
   currentRole = "master",
   permissionsMatrix = {},
   currentPersonId = null,
@@ -1314,6 +1328,7 @@ export default function ServiceExactApp({
           cards={cards}
           church={firstChurch}
           fellowshipGroups={fellowshipGroups}
+          timelineEvents={timelineEvents}
           setDrawer={setDrawer}
           setRoute={setRoute}
           setModal={setModal}
@@ -6377,6 +6392,19 @@ function SimpleModule({ title, subtitle, empty, setModal }: { title: string; sub
   );
 }
 
+function timelineEventPayload(organizationId: string, memberId: string, eventType: string, title: string, dateStr?: string | null) {
+  const d = dateStr ? new Date(`${dateStr}T12:00:00`) : new Date();
+  const sortKey = Number(`${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`);
+  return {
+    organization_id: organizationId,
+    member_id: memberId,
+    event_type: eventType,
+    title,
+    sort_key: sortKey,
+    when_label: d.toLocaleDateString("pt-BR"),
+  };
+}
+
 const JRN_STEPS = [
   { label: "Decisão", kind: "decisao", icon: "decisoes" },
   { label: "Batismo nas águas", kind: "batismo", icon: "batismos" },
@@ -6385,29 +6413,41 @@ const JRN_STEPS = [
   { label: "Servindo", kind: "time", icon: "times" },
 ];
 
-function PersonTimeline({ member, compact }: { member: MemberView; compact?: boolean }) {
-  const done = JRN_STEPS.filter((_, i) => !!member.journey[i]);
-  if (!done.length) return <div style={{ fontSize: 13, color: "var(--subtle)", padding: "12px 0" }}>Nenhuma etapa concluída ainda.</div>;
+function PersonTimeline({ member, events, compact }: { member: MemberView; events: TimelineEventView[]; compact?: boolean }) {
+  const sorted = [...events].sort((a, b) => (b.sort_key ?? 0) - (a.sort_key ?? 0));
+  const stepsWithoutEvent = JRN_STEPS.filter((step, i) => !!member.journey[i] && !events.some((e) => e.event_type === step.kind));
+
+  if (!sorted.length && !stepsWithoutEvent.length) {
+    return <div style={{ fontSize: 13, color: "var(--subtle)", padding: "12px 0" }}>Nenhuma etapa concluída ainda.</div>;
+  }
   return (
     <div className={`tl jrn-tl${compact ? " compact" : ""}`}>
-      {JRN_STEPS.map((step, i) => {
-        if (!member.journey[i]) return null;
+      {sorted.map((event) => {
+        const step = JRN_STEPS.find((s) => s.kind === event.event_type);
         return (
-          <div className="tl-item ol tone-olive" key={step.kind}>
+          <div className="tl-item ol tone-olive" key={event.id}>
             <div className="tl-dot" />
-            <div className="tl-when"><span className="jrn-tl-kind"><Icon name={step.icon} size={11} /> {step.label}</span></div>
-            <div className="tl-text"><b>{step.label}</b> — etapa concluída</div>
+            <div className="tl-when"><span className="jrn-tl-kind">{step && <Icon name={step.icon} size={11} />} {event.when_label ?? new Date(event.created_at).toLocaleDateString("pt-BR")}</span></div>
+            <div className="tl-text"><b>{event.title}</b>{event.body ? ` — ${event.body}` : ""}</div>
           </div>
         );
       })}
+      {stepsWithoutEvent.map((step) => (
+        <div className="tl-item ol tone-olive" key={step.kind}>
+          <div className="tl-dot" />
+          <div className="tl-when"><span className="jrn-tl-kind"><Icon name={step.icon} size={11} /> {step.label}</span></div>
+          <div className="tl-text"><b>{step.label}</b> — etapa concluída</div>
+        </div>
+      ))}
     </div>
   );
 }
 
 function DecisaoDrawer({
-  decision, people, members, church, onClose, onOpenMember,
+  decision, people, members, church, timelineEvents, onClose, onOpenMember,
 }: {
   decision: DecisionView; people: PersonView[]; members: MemberView[]; church: ChurchView | undefined;
+  timelineEvents: TimelineEventView[];
   onClose: () => void; onOpenMember: (id: string) => void;
 }) {
   const router = useRouter();
@@ -6474,7 +6514,7 @@ function DecisaoDrawer({
         </DrawerSection>
         {linkedMember && (
           <DrawerSection title="Jornada do membro">
-            <PersonTimeline member={linkedMember} compact />
+            <PersonTimeline member={linkedMember} events={timelineEvents.filter((e) => e.member_id === linkedMember.id)} compact />
           </DrawerSection>
         )}
         <DrawerSection title="Próximos passos">
@@ -6556,6 +6596,7 @@ function BatismoDrawer({
 }) {
   const [showAdd, setShowAdd] = useState(false);
   const [actionMsg, setActionMsg] = useState("");
+  const [concluindo, setConcluindo] = useState(false);
   const classCandidates = candidates.filter((c) => c.class_id === classData.id);
   const memberById = new Map(members.map((m) => [m.id, m]));
   const decisionById = new Map(decisions.map((d) => [d.id, d]));
@@ -6566,6 +6607,26 @@ function BatismoDrawer({
   const dispararAcao = (msg: string) => {
     setActionMsg(msg);
     setTimeout(() => setActionMsg(""), 2500);
+  };
+
+  const concluirTurma = async () => {
+    if (!church?.organizationId) return;
+    setConcluindo(true);
+    const sb = createServiceBrowserClient().schema("service");
+    await sb.from("baptism_classes").update({ status: "concluida" }).eq("id", classData.id);
+    for (const cand of classCandidates) {
+      if (!cand.member_id) continue;
+      const member = memberById.get(cand.member_id);
+      if (!member) continue;
+      await sb.from("timeline_events").insert(
+        timelineEventPayload(church.organizationId, member.id, "batismo", "Batismo nas águas", classData.baptism_date),
+      );
+      const journey = [...member.journey];
+      journey[1] = 1;
+      await sb.from("members").update({ journey }).eq("id", member.id);
+    }
+    setConcluindo(false);
+    onRefresh();
   };
 
   return (
@@ -6614,6 +6675,11 @@ function BatismoDrawer({
             ? <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => dispararAcao("Certificados gerados para os batizados.")}>Emitir certificados</button>
             : <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => dispararAcao("Aviso enviado aos candidatos.")}>Avisar candidatos</button>}
         </div>
+        {!concluida && (
+          <button className="btn btn-pri" style={{ width: "100%", justifyContent: "center", marginTop: 10 }} type="button" disabled={concluindo} onClick={concluirTurma}>
+            {concluindo ? "Concluindo…" : "Marcar turma como realizada →"}
+          </button>
+        )}
         {actionMsg && <div style={{ marginTop: 12, fontSize: 12.5, color: "var(--olive-soft)", textAlign: "right" }}>✓ {actionMsg}</div>}
       </div>
       {showAdd && church && (
@@ -6774,10 +6840,11 @@ function VisitanteDrawer({
 }
 
 function MemberEditModal({
-  member, fellowshipGroups, onClose, onRefresh,
+  member, fellowshipGroups, church, onClose, onRefresh,
 }: {
   member: MemberView;
   fellowshipGroups: FellowshipGroupView[];
+  church: ChurchView | undefined;
   onClose: () => void;
   onRefresh: () => void;
 }) {
@@ -6789,16 +6856,22 @@ function MemberEditModal({
 
   const salvar = async () => {
     setSaving(true);
-    await createServiceBrowserClient()
-      .schema("service")
-      .from("members")
-      .update({
-        birth: birth || null,
-        neighborhood: neighborhood.trim() || null,
-        group_id: groupId || null,
-        family: family.trim() || null,
-      })
-      .eq("id", member.id);
+    const sb = createServiceBrowserClient().schema("service");
+    await sb.from("members").update({
+      birth: birth || null,
+      neighborhood: neighborhood.trim() || null,
+      group_id: groupId || null,
+      family: family.trim() || null,
+    }).eq("id", member.id);
+    if (groupId && groupId !== (member.groupId ?? "") && church?.organizationId) {
+      const group = fellowshipGroups.find((g) => g.id === groupId);
+      await sb.from("timeline_events").insert(
+        timelineEventPayload(church.organizationId, member.id, "integracao", `Entrou no Grupo "${group?.name ?? "Comunhão"}"`),
+      );
+      const journey = [...member.journey];
+      journey[3] = 1;
+      await sb.from("members").update({ journey }).eq("id", member.id);
+    }
     onRefresh();
     onClose();
   };
@@ -6833,10 +6906,11 @@ function MemberEditModal({
 }
 
 function AddToMinistryModal({
-  ministry, people, church, onClose,
+  ministry, people, members, church, onClose,
 }: {
   ministry: MinistryView;
   people: PersonView[];
+  members: MemberView[];
   church: { id: string; organizationId: string };
   onClose: () => void;
 }) {
@@ -6855,6 +6929,16 @@ function AddToMinistryModal({
       is_leader: false,
       functions: position ? [position.name] : [],
     });
+    const member = members.find((m) => m.volunteerId === personId);
+    if (member) {
+      const sb = createServiceBrowserClient().schema("service");
+      await sb.from("timeline_events").insert(
+        timelineEventPayload(church.organizationId, member.id, "time", `Começou a servir em "${ministry.name}"`),
+      );
+      const journey = [...member.journey];
+      journey[4] = 1;
+      await sb.from("members").update({ journey }).eq("id", member.id);
+    }
     router.refresh();
     onClose();
   };
@@ -6921,6 +7005,7 @@ function EntityDrawer({
   cards,
   church,
   fellowshipGroups,
+  timelineEvents,
   setDrawer,
   setRoute,
   setModal,
@@ -6949,6 +7034,7 @@ function EntityDrawer({
   cards: CardView[];
   church: ChurchView | undefined;
   fellowshipGroups: FellowshipGroupView[];
+  timelineEvents: TimelineEventView[];
   setDrawer: (drawer: DrawerState) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
   setModal: (modal: ModalState) => void;
@@ -7138,7 +7224,7 @@ function EntityDrawer({
               <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum curso matriculado ainda.</div>
             )}
           </DrawerSection>
-          <DrawerSection title="Jornada de integração"><PersonTimeline member={member} compact /></DrawerSection>
+          <DrawerSection title="Jornada de integração"><PersonTimeline member={member} events={timelineEvents.filter((e) => e.member_id === member.id)} compact /></DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
             {isServing
               ? <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Jornada", title: member.name, subtitle: "Atualize o próximo passo de acompanhamento.", formFields: [{ k:"passo", label:"Próximo passo", type:"text", ph:"ex: Convidar para batismo" }, { k:"responsavel", label:"Responsável", type:"text", ph:"Quem acompanha" }, { k:"data", label:"Data limite", type:"date" }] })}>Atualizar jornada</button>
@@ -7154,6 +7240,7 @@ function EntityDrawer({
         <MemberEditModal
           member={member}
           fellowshipGroups={fellowshipGroups}
+          church={church}
           onClose={() => setEditingMember(false)}
           onRefresh={() => router.refresh()}
         />
@@ -7294,6 +7381,7 @@ function EntityDrawer({
         <AddToMinistryModal
           ministry={ministry}
           people={people}
+          members={members}
           church={{ id: church.id, organizationId: church.organizationId }}
           onClose={() => setAddingPerson(false)}
         />
@@ -7327,6 +7415,7 @@ function EntityDrawer({
         people={people}
         members={members}
         church={church}
+        timelineEvents={timelineEvents}
         onClose={() => setDrawer(null)}
         onOpenMember={(id) => setDrawer({ kind: "member", id })}
       />
@@ -7872,6 +7961,11 @@ function ServiceModal({
       result = { error: memberError };
       if (!memberError && newMember && action.visitorId) {
         await supabase.schema("service").from("visitors").update({ member_id: newMember.id }).eq("id", action.visitorId);
+      }
+      if (!memberError && newMember) {
+        await supabase.schema("service").from("timeline_events").insert(
+          timelineEventPayload(church.organizationId, newMember.id, "decisao", "Decisão por Jesus"),
+        );
       }
     } else if (action.kind === "event") {
       if (!value("nome")) { setSaving(false); setError("Digite o nome do culto."); return; }
