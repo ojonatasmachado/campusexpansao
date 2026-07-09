@@ -41,8 +41,8 @@ const FELLOWSHIP_GROUPS = [
 ];
 
 const TAGS = [
-  { id: "tg-1", name: "Jovens", color: "olive", leaders: ["p1"] },
-  { id: "tg-2", name: "Kids", color: "wheat", leaders: ["p4"] },
+  { id: "tg-1", churchId: CHURCH_1, name: "Jovens", color: "olive", leaders: ["p1"] },
+  { id: "tg-2", churchId: CHURCH_1, name: "Kids", color: "wheat", leaders: ["p4"] },
 ];
 
 const PEOPLE = [
@@ -68,7 +68,7 @@ const TIMELINE_EVENTS = [
 
 const MINISTRIES = [
   {
-    id: "min-1", organizationId: ORG, name: "Louvor", icon: "louvor", description: "Time de música e adoração. Ensaios toda semana.",
+    id: "min-1", organizationId: ORG, churchId: CHURCH_1, name: "Louvor", icon: "louvor", description: "Time de música e adoração. Ensaios toda semana.",
     profile: {
       comoTrabalhamos: "Ensaio geral toda quinta às 20h. Passagem de som 1h antes de cada culto.",
       chegada: "1h antes do culto",
@@ -85,7 +85,7 @@ const MINISTRIES = [
     ],
   },
   {
-    id: "min-2", organizationId: ORG, name: "Mídia & Comunicação", icon: "midia", description: "Transmissão, design e redes sociais.",
+    id: "min-2", organizationId: ORG, churchId: CHURCH_1, name: "Mídia & Comunicação", icon: "midia", description: "Transmissão, design e redes sociais.",
     profile: {},
     positions: [
       { id: "pos-2-1", ministry_id: "min-2", name: "Operador", need_count: 2, sort_order: 0 },
@@ -95,7 +95,7 @@ const MINISTRIES = [
     ],
   },
   {
-    id: "min-3", organizationId: ORG, name: "Recepção", icon: "recepcao", description: "Acolhimento e recepção de visitantes no domingo.",
+    id: "min-3", organizationId: ORG, churchId: CHURCH_1, name: "Recepção", icon: "recepcao", description: "Acolhimento e recepção de visitantes no domingo.",
     profile: {},
     positions: [
       { id: "pos-3-1", ministry_id: "min-3", name: "Recepcionista", need_count: 4, sort_order: 0 },
@@ -106,7 +106,7 @@ const MINISTRIES = [
     ],
   },
   {
-    id: "min-4", organizationId: ORG, name: "Kids", icon: "kids", description: "Ministério infantil e escola bíblica.",
+    id: "min-4", organizationId: ORG, churchId: CHURCH_1, name: "Kids", icon: "kids", description: "Ministério infantil e escola bíblica.",
     profile: {},
     positions: [
       { id: "pos-4-1", ministry_id: "min-4", name: "Professor", need_count: 2, sort_order: 0 },

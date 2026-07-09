@@ -18,7 +18,7 @@ type EscalaSettings = {
   maxPorMes: number;
   folgaSemanas: number;
   considerarFerias: boolean;
-  naRecusa: "proximo" | "nenhum";
+  naRecusa: "proximo" | "avisar";
 };
 type EscalaPreset = { id: string; nome: string; posicoes: Record<string, Array<{ name: string; need_count: number }>> };
 type ChurchSettings = {
@@ -31,6 +31,7 @@ type ChurchSettings = {
   tiposEvento?: string[];
   cursoGrupos?: { id: string; nome: string; desc?: string }[];
   contatoCfg?: ContatoCfg;
+  gruposCfg?: GruposCfg;
   [key: string]: unknown;
 };
 
@@ -42,6 +43,11 @@ type StatusCriterios = {
 };
 
 const STATUS_CFG_DEFAULT: StatusCriterios = { recusasInativando: 2, recusasInativo: 4, diasIndispInativo: 30, considerarFerias: false };
+
+/* nome customizável + toggle mestre de Grupos & Células, guardado em
+   service.churches.settings.gruposCfg (mesmo jsonb de sempre). */
+type GruposCfg = { ativo: boolean; termo: string; termoP: string; sigla: string };
+const GRUPOS_CFG_DEFAULT: GruposCfg = { ativo: true, termo: "Grupos de Comunhão", termoP: "Grupo de Comunhão", sigla: "GC" };
 
 /* prazo/canal/abordagem do 1º contato com visitante, guardado em
    service.churches.settings.contatoCfg (mesmo jsonb de sempre). */
@@ -104,6 +110,7 @@ type MemberView = {
 type MinistryView = {
   id: string;
   organizationId: string;
+  churchId: string;
   name: string;
   icon: string;
   description: string;
@@ -376,7 +383,7 @@ type ChurchIdentityView = {
   mission: string | null;
   vision: string | null;
   verse: string | null;
-  values: Array<{ title: string }>;
+  values: Array<{ title: string; texto?: string }>;
 };
 
 type CycleView = {
@@ -416,6 +423,7 @@ type FellowshipGroupView = {
 
 type TagView = {
   id: string;
+  churchId: string;
   name: string;
   color: string;
   leaders: string[];
@@ -1044,6 +1052,12 @@ export default function ServiceExactApp({
     router.refresh();
     return chatRow.id;
   };
+  const notificarLiderRecusa = async (leaderPersonId: string, volunteerPersonId: string, texto: string) => {
+    const leaderMember = members.find((m) => m.volunteerId === leaderPersonId);
+    const volunteerMember = members.find((m) => m.volunteerId === volunteerPersonId);
+    if (!leaderMember || !volunteerMember || leaderMember.id === volunteerMember.id) return;
+    await startChatMobile(volunteerMember.id, leaderMember.id, texto);
+  };
   const activePeople = people.filter((person) => person.status === "ativo").length;
   const rosterOk = roster.filter((assignment) => assignment.status === "ok").length;
   const confirmationRate = roster.length ? Math.round((rosterOk / roster.length) * 100) : 0;
@@ -1229,7 +1243,7 @@ export default function ServiceExactApp({
             church={firstChurch}
           />
         ) : null}
-        {route === "escalas" ? <Escalas gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} church={firstChurch} scopeMinistryIds={scopeMinistryIds} setDrawer={setDrawer} setModal={setModal} setRoute={setRoute} setCheckinEventId={setCheckinEventId} /> : null}
+        {route === "escalas" ? <Escalas gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} church={firstChurch} scopeMinistryIds={scopeMinistryIds} setDrawer={setDrawer} setModal={setModal} setRoute={setRoute} setCheckinEventId={setCheckinEventId} onNotifyLeaderRecusa={notificarLiderRecusa} /> : null}
         {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} rooms={rooms} reservations={reservations} church={firstChurch} setDrawer={setDrawer} /> : null}
         {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} church={firstChurch} setModal={setModal} /> : null}
@@ -1237,7 +1251,7 @@ export default function ServiceExactApp({
         {route === "cultos" ? <Cultos events={events} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
         {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} wallPosts={wallPosts} ministries={ministries} people={people} setModal={setModal} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} currentPersonId={perspectivePersonId} scopeMinistryIds={scopeMinistryIds} pendingChatMemberId={pendingChatMemberId} onConsumePendingChatMember={() => setPendingChatMemberId(null)} /> : null}
-        {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} confirmationRate={confirmationRate} setRoute={setRoute} /> : null}
+        {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} confirmationRate={confirmationRate} setRoute={setRoute} church={firstChurch} /> : null}
         {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} currentRole={currentRole} theme={theme} setTheme={setTheme} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
         {route === "identidade" ? <Identidade church={firstChurch} identity={churchIdentity} cycle={cycles.find((c) => c.is_active) ?? cycles[0]} setModal={setModal} /> : null}
         {route === "historia" ? <Historia church={firstChurch} historyEntries={historyEntries} setModal={setModal} /> : null}
@@ -1682,7 +1696,7 @@ function Membros({ members, ministries, setDrawer, setModal }: { members: Member
     ministries.filter((min) => min.people.some((p) => p.personId === volunteerId));
   return (
     <div className="content wide">
-      <PageHead title="Membros" eyebrow="Pessoas" subtitle="Toda a congregação. Veja quem serve, em que jornada está e o histórico desde que chegou." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Cadastro de quem já é da casa. Os dados completos liberam o acesso ao app.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Os 4 últimos dígitos viram a senha inicial do app." }, { k:"email", label:"E-mail", type:"text", half:true, req:true, ph:"usado para entrar no app" }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }], action: { kind: "member" } })}>+ Novo membro</button>} />
+      <PageHead title="Membros" eyebrow="Pessoas" subtitle="Toda a congregação. Veja quem serve, em que jornada está e o histórico desde que chegou." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Cadastro de quem já é da casa. Os dados completos liberam o acesso ao app.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Os 6 últimos dígitos viram a senha inicial do app." }, { k:"email", label:"E-mail", type:"text", half:true, req:true, ph:"usado para entrar no app" }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }], action: { kind: "member" } })}>+ Novo membro</button>} />
       <div className="kpi-row">
         <Kpi icon="membros" label="Membros" value={members.length} foot="na congregação" />
         <Kpi icon="decisoes" label="Novos convertidos" value={novos.length} foot="em discipulado inicial" />
@@ -2057,6 +2071,7 @@ function Escalas({
   setModal,
   setRoute,
   setCheckinEventId,
+  onNotifyLeaderRecusa,
 }: {
   gaps: Array<{ event: EventView; ministry: MinistryView; position: { id: string; name: string } }>;
   roster: RosterAssignmentView[];
@@ -2069,6 +2084,7 @@ function Escalas({
   setModal: (modal: ModalState) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
   setCheckinEventId: (id: string | null) => void;
+  onNotifyLeaderRecusa: (leaderPersonId: string, volunteerPersonId: string, texto: string) => void;
 }) {
   const [eventId, setEventId] = useState(events[0]?.id ?? "");
   const router = useRouter();
@@ -2160,6 +2176,14 @@ function Escalas({
         await createServiceBrowserClient().schema("service").from("roster_assignments").insert({
           organization_id: selectedEvent.organizationId, event_id: selectedEvent.id, position_id: assignment.position_id, person_id: proximo.person.id, status: "ok",
         });
+      }
+    }
+    if (escalaCfg.naRecusa === "avisar") {
+      const lider = ministry.people.find((p) => p.isLeader);
+      const voluntario = people.find((p) => p.id === assignment.person_id);
+      const posicao = positionsOf(ministry).find((pos) => pos.id === assignment.position_id);
+      if (lider && voluntario) {
+        onNotifyLeaderRecusa(lider.personId, assignment.person_id, `🔔 ${voluntario.name} recusou a escala de ${posicao?.name ?? ministry.name} em ${selectedEvent?.name ?? "um evento"}${selectedEvent?.eventDate ? ` · ${selectedEvent.eventDate}` : ""} — vaga em aberto.`);
       }
     }
     router.refresh();
@@ -4956,6 +4980,7 @@ function Relatorios({
   fellowshipGroups,
   confirmationRate,
   setRoute,
+  church,
 }: {
   people: PersonView[];
   members: MemberView[];
@@ -4969,7 +4994,10 @@ function Relatorios({
   fellowshipGroups: FellowshipGroupView[];
   confirmationRate: number;
   setRoute: (route: keyof typeof ROUTES) => void;
+  church: ChurchView | undefined;
 }) {
+  const gruposAtivo = church?.settings?.gruposCfg?.ativo ?? true;
+  const gruposSigla = church?.settings?.gruposCfg?.sigla ?? "GC";
   const hoje = Date.now();
   const diasAtras = (iso: string) => (hoje - new Date(iso).getTime()) / 86400000;
 
@@ -5054,10 +5082,10 @@ function Relatorios({
       <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={13} /> Quem precisa de atenção</span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>Voluntários</button></div><div className="panel-body flush">{(wellRows.length ? wellRows : people.slice(0, 8).map((p) => ({ person: p, cls: "atencao", tag: "Atenção" }))).slice(0, 8).map(({ person, cls, tag }) => <div className="well-row" key={person.id}><Av name={person.name} size="md" /><div className="mini-main"><div className="mini-title">{person.name}</div><div className="mini-sub">{person.status !== "ativo" ? "Em pausa ou férias." : "Engajamento abaixo da média."}</div></div><div className="well-meter"><div className="well-track"><div className={`well-fill ${cls}`} style={{ width: `${person.engagement ?? 50}%` }} /></div><div className={`well-tag ${cls}`}>{tag}</div></div></div>)}</div></div>
       <div className="dash-2col" style={{ marginTop: 28 }}>
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="times" size={13} /> Voluntários por ministério</span><button className="panel-link" type="button" onClick={() => setRoute("times")}>Times</button></div><div className="panel-body flush">{ministries.map((ministry) => <div className="dist-row" key={ministry.id}><span className="dist-name">{ministry.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(ministry.people.length / maxMinistry) * 100}%` }} /></div><span className="dist-num">{ministry.people.length}</span></div>)}</div></div>
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por jornada</span><span className="panel-meta">{members.length} pessoas</span></div><div className="panel-body flush">{["Decisão", "Batismo", "Fundamentos", "GC", "Servindo"].map((step, index) => { const count = members.filter((member) => member.journey[index]).length; return <div className="dist-row" key={step}><span className="dist-name">{step}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${members.length ? (count / members.length) * 100 : 0}%` }} /></div><span className="dist-num">{count}</span></div>; })}</div></div>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por jornada</span><span className="panel-meta">{members.length} pessoas</span></div><div className="panel-body flush">{["Decisão", "Batismo", "Fundamentos", gruposSigla, "Servindo"].map((step, index) => { const count = members.filter((member) => member.journey[index]).length; return <div className="dist-row" key={step}><span className="dist-name">{step}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${members.length ? (count / members.length) * 100 : 0}%` }} /></div><span className="dist-num">{count}</span></div>; })}</div></div>
       </div>
       <div className="dash-2col" style={{ marginTop: 28 }}>
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por GC</span><span className="panel-meta">{fellowshipGroups.length} grupos</span></div><div className="panel-body flush">{gcCounts.map(({ group, n }) => <div className="dist-row" key={group.id}><span className="dist-name">{group.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(n / maxGc) * 100}%` }} /></div><span className="dist-num">{n}</span></div>)}{fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "12px 0" }}>Nenhum grupo cadastrado ainda.</div>}</div></div>
+        {gruposAtivo && <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por {gruposSigla}</span><span className="panel-meta">{fellowshipGroups.length} grupos</span></div><div className="panel-body flush">{gcCounts.map(({ group, n }) => <div className="dist-row" key={group.id}><span className="dist-name">{group.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(n / maxGc) * 100}%` }} /></div><span className="dist-num">{n}</span></div>)}{fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "12px 0" }}>Nenhum grupo cadastrado ainda.</div>}</div></div>}
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={13} /> Operação conectada</span><span className="panel-meta">Kanban & chat</span></div><div className="panel-body flush">{[["Quadros", boards.length], ["Conversas", chats.length], ["Eventos", events.length]].map(([label, count]) => <div className="dist-row" key={label}><span className="dist-name">{label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(Number(count) / maxOps) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}</div></div>
       </div>
     </div>
@@ -5413,12 +5441,16 @@ function TagElencoModal({
 }
 
 function CongregacaoEditModal({
-  churchRow, onClose, onRefresh,
+  churchRow, ministries, tags, onClose, onRefresh,
 }: {
   churchRow: ChurchView;
+  ministries: MinistryView[];
+  tags: TagView[];
   onClose: () => void;
   onRefresh: () => void;
 }) {
+  const churchMinistries = ministries.filter((m) => m.churchId === churchRow.id);
+  const churchTags = tags.filter((t) => t.churchId === churchRow.id);
   const [form, setForm] = useState({
     nome: churchRow.nome,
     cidade: churchRow.cidade ?? "",
@@ -5470,6 +5502,28 @@ function CongregacaoEditModal({
           <div className="field"><label className="field-label">CEP</label><input className="input" value={form.cep} onChange={(e) => setForm((p) => ({ ...p, cep: e.target.value }))} /></div>
           <div className="field"><label className="field-label">E-mail</label><input className="input" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} /></div>
           <div className="field"><label className="field-label">Telefone</label><input className="input" value={form.tel} onChange={(e) => setForm((p) => ({ ...p, tel: e.target.value }))} /></div>
+
+          <div className="cfg-card-t" style={{ marginTop: 22 }}>Governança própria</div>
+          <div className="cfg-card-s">Times e ministérios cadastrados nesta congregação.</div>
+          {churchMinistries.map((m) => {
+            const leader = m.people.find((p) => p.isLeader);
+            return (
+              <div className="cfg-row" key={m.id}>
+                <div className="cfg-row-main">
+                  <div className="cfg-row-t">{m.name}</div>
+                  <div className="cfg-row-s">{leader ? `líder ${leader.personName}` : "sem líder definido"}</div>
+                </div>
+              </div>
+            );
+          })}
+          {churchMinistries.length === 0 && <div className="empty" style={{ padding: "14px 0" }}>Nenhum time cadastrado nesta congregação.</div>}
+
+          <div className="cfg-card-t" style={{ marginTop: 22 }}>Frentes / tags</div>
+          <div className="cfg-card-s">Etiquetas livres cadastradas nesta congregação.</div>
+          <div className="cell-tags" style={{ gap: 8 }}>
+            {churchTags.map((t) => <span key={t.id} className="papel-tag">{t.name}</span>)}
+            {churchTags.length === 0 && <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhuma frente cadastrada nesta congregação.</span>}
+          </div>
         </div>
         <div className="modal-foot">
           <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
@@ -5687,6 +5741,18 @@ function Config({
     router.refresh();
   };
 
+  const [gruposCfg, setGruposCfgState] = useState<GruposCfg>(() => ({ ...GRUPOS_CFG_DEFAULT, ...(church?.settings?.gruposCfg ?? {}) }));
+  const saveGruposCfg = async (next: GruposCfg) => {
+    setGruposCfgState(next);
+    if (!church?.id) return;
+    await createServiceBrowserClient()
+      .schema("service")
+      .from("churches")
+      .update({ settings: { ...church.settings, gruposCfg: next } })
+      .eq("id", church.id);
+    router.refresh();
+  };
+
   const [accent, setAccent] = useState<string>(() => {
     try { return localStorage.getItem("cex_accent") ?? "olive"; } catch { return "olive"; }
   });
@@ -5896,25 +5962,47 @@ function Config({
 
       {/* ─── GRUPOS & CÉLULAS ─── */}
       {tab === "grupos" && (
-        <div className="cfg-card">
-          <div className="cfg-card-t">Grupos de Comunhão · {fellowshipGroups.length}</div>
-          <div className="cfg-card-s">Células, GCs, pequenos grupos... a estrutura de comunhão em casas. Cada grupo tem um líder, um dia e um bairro.</div>
-          {fellowshipGroups.map((g) => {
-            const leader = people.find((p) => p.id === g.leader_person_id);
-            return (
-              <div className="cfg-row" key={g.id}>
-                <div className="cong-mark"><Icon name="identidade" size={16} /></div>
-                <div className="cfg-row-main">
-                  <div className="cfg-row-t">{g.name}</div>
-                  <div className="cfg-row-s">{[g.weekday, g.time, g.neighborhood].filter(Boolean).join(" · ") || "sem dia/local definido"}{leader ? ` · líder ${leader.name.split(" ")[0]}` : ""}</div>
-                </div>
-                <button className="btn btn-sec btn-sm" type="button" onClick={() => removeRow("fellowship_groups", g.id)}>Remover</button>
+        <>
+          <div className="cfg-card">
+            <div className="cfg-card-t">Habilitar grupos</div>
+            <div className="cfg-card-s">Desligue se sua igreja não trabalha com células/GCs. O recurso some do resto do app, mas nada é apagado.</div>
+            <div className="cfg-row" style={{ borderBottom: gruposCfg.ativo ? "0.5px solid var(--border-2)" : "none" }}>
+              <div className="cfg-row-main">
+                <div className="cfg-row-t">{gruposCfg.ativo ? "Ativado" : "Desativado"}</div>
+                <div className="cfg-row-s">{gruposCfg.ativo ? "Grupos aparecem no cadastro de membro e nos relatórios." : "Grupos escondidos em todo o app."}</div>
               </div>
-            );
-          })}
-          {fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhum grupo cadastrado ainda.</div>}
-          <button className="btn btn-pri btn-sm" type="button" style={{ marginTop: 18 }} onClick={() => setModal({ eyebrow: "Criar", title: "Novo Grupo de Comunhão", subtitle: "Nome, líder, dia, horário e bairro do grupo.", saveLabel: "Criar grupo", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: GC Centro" }, { k:"lider", label:"Líder", type:"select", half:true, ph:"A definir", options: people.map((p) => ({ v: p.name, l: p.name })) }, { k:"dia", label:"Dia", type:"text", half:true, ph:"ex: Quarta-feira" }, { k:"hora", label:"Horário", type:"text", half:true, ph:"ex: 20h" }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"ex: Centro" }], action: { kind: "group" } })}>+ Novo grupo</button>
-        </div>
+              <button type="button" className={`sw${gruposCfg.ativo ? " on" : ""}`} onClick={() => saveGruposCfg({ ...gruposCfg, ativo: !gruposCfg.ativo })} />
+            </div>
+            {gruposCfg.ativo && (
+              <div className="cfg-grid2" style={{ gap: "0 16px", marginTop: 16 }}>
+                <div className="field"><label className="field-label">Nome (plural)</label><input className="input" value={gruposCfg.termo} onChange={(e) => setGruposCfgState({ ...gruposCfg, termo: e.target.value })} onBlur={() => saveGruposCfg(gruposCfg)} placeholder="ex: Grupos de Comunhão" /></div>
+                <div className="field"><label className="field-label">Nome (singular)</label><input className="input" value={gruposCfg.termoP} onChange={(e) => setGruposCfgState({ ...gruposCfg, termoP: e.target.value })} onBlur={() => saveGruposCfg(gruposCfg)} placeholder="ex: Grupo de Comunhão" /></div>
+                <div className="field"><label className="field-label">Sigla</label><input className="input" value={gruposCfg.sigla} onChange={(e) => setGruposCfgState({ ...gruposCfg, sigla: e.target.value })} onBlur={() => saveGruposCfg(gruposCfg)} placeholder="ex: GC" /></div>
+              </div>
+            )}
+          </div>
+          {gruposCfg.ativo && (
+            <div className="cfg-card" style={{ marginTop: 16 }}>
+              <div className="cfg-card-t">{gruposCfg.termo} · {fellowshipGroups.length}</div>
+              <div className="cfg-card-s">Células, GCs, pequenos grupos... a estrutura de comunhão em casas. Cada grupo tem um líder, um dia e um bairro.</div>
+              {fellowshipGroups.map((g) => {
+                const leader = people.find((p) => p.id === g.leader_person_id);
+                return (
+                  <div className="cfg-row" key={g.id}>
+                    <div className="cong-mark"><Icon name="identidade" size={16} /></div>
+                    <div className="cfg-row-main">
+                      <div className="cfg-row-t">{g.name}</div>
+                      <div className="cfg-row-s">{[g.weekday, g.time, g.neighborhood].filter(Boolean).join(" · ") || "sem dia/local definido"}{leader ? ` · líder ${leader.name.split(" ")[0]}` : ""}</div>
+                    </div>
+                    <button className="btn btn-sec btn-sm" type="button" onClick={() => removeRow("fellowship_groups", g.id)}>Remover</button>
+                  </div>
+                );
+              })}
+              {fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhum grupo cadastrado ainda.</div>}
+              <button className="btn btn-pri btn-sm" type="button" style={{ marginTop: 18 }} onClick={() => setModal({ eyebrow: "Criar", title: `Novo ${gruposCfg.termoP}`, subtitle: "Nome, líder, dia, horário e bairro do grupo.", saveLabel: "Criar grupo", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: GC Centro" }, { k:"lider", label:"Líder", type:"select", half:true, ph:"A definir", options: people.map((p) => ({ v: p.name, l: p.name })) }, { k:"dia", label:"Dia", type:"text", half:true, ph:"ex: Quarta-feira" }, { k:"hora", label:"Horário", type:"text", half:true, ph:"ex: 20h" }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"ex: Centro" }], action: { kind: "group" } })}>+ Novo grupo</button>
+            </div>
+          )}
+        </>
       )}
 
       {/* ─── ESPAÇOS & SALAS ─── */}
@@ -5972,10 +6060,13 @@ function Config({
             </div>
             <div className="cfg-row" style={{ borderBottom: "none" }}>
               <div className="cfg-row-main">
-                <div className="cfg-row-t">Na recusa, chamar o próximo automaticamente</div>
-                <div className="cfg-row-s">{escalaCfg.naRecusa === "proximo" ? "Vale só no modo automático" : "Recusas ficam só marcadas, sem chamar ninguém"}</div>
+                <div className="cfg-row-t">Quando alguém recusa</div>
+                <div className="cfg-row-s">{escalaCfg.naRecusa === "proximo" ? "Chama o próximo apto automaticamente (só no modo automático)." : "Avisa o líder do time por mensagem e deixa a vaga aberta."}</div>
+                <div className="seg seg-sm" style={{ marginTop: 10 }}>
+                  <button type="button" className={escalaCfg.naRecusa === "proximo" ? "on" : ""} onClick={() => setEscala("naRecusa", "proximo")}>Chamar o próximo</button>
+                  <button type="button" className={escalaCfg.naRecusa === "avisar" ? "on" : ""} onClick={() => setEscala("naRecusa", "avisar")}>Avisar o líder</button>
+                </div>
               </div>
-              <button type="button" className={`sw${escalaCfg.naRecusa === "proximo" ? " on" : ""}`} onClick={() => setEscala("naRecusa", escalaCfg.naRecusa === "proximo" ? "nenhum" : "proximo")} />
             </div>
           </div>
           <div className="cfg-card" style={{ marginTop: 16 }}>
@@ -6223,22 +6314,87 @@ function Config({
         const c = churches.find((x) => x.id === gerirCongId);
         if (!c) return null;
         return (
-          <CongregacaoEditModal churchRow={c} onClose={() => setGerirCongId(null)} onRefresh={() => router.refresh()} />
+          <CongregacaoEditModal churchRow={c} ministries={ministries} tags={tags} onClose={() => setGerirCongId(null)} onRefresh={() => router.refresh()} />
         );
       })()}
     </div>
   );
 }
 
-function Identidade({ church: _church, identity, cycle, setModal }: { church?: ChurchView; identity?: ChurchIdentityView | null; cycle?: CycleView; setModal: (modal: ModalState) => void }) {
+function ValoresEditModal({ church, identity, onClose, onRefresh }: {
+  church: ChurchView | undefined;
+  identity?: ChurchIdentityView | null;
+  onClose: () => void;
+  onRefresh: () => void;
+}) {
+  const [rows, setRows] = useState<Array<{ title: string; texto: string }>>(
+    () => (identity?.values ?? []).map((v) => ({ title: v.title, texto: v.texto ?? "" })),
+  );
+  const [saving, setSaving] = useState(false);
+
+  const setRow = (i: number, patch: Partial<{ title: string; texto: string }>) =>
+    setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  const addRow = () => setRows((prev) => [...prev, { title: "", texto: "" }]);
+  const removeRow = (i: number) => setRows((prev) => prev.filter((_, idx) => idx !== i));
+
+  const salvar = async () => {
+    if (!church?.id) return;
+    setSaving(true);
+    const cleaned = rows.map((r) => ({ title: r.title.trim(), texto: r.texto.trim() })).filter((r) => r.title);
+    await createServiceBrowserClient()
+      .schema("service")
+      .from("church_identity")
+      .upsert({
+        church_id: church.id,
+        organization_id: church.organizationId,
+        values: cleaned,
+        updated_at: new Date().toISOString(),
+      });
+    onRefresh();
+    onClose();
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">Editar</div>
+          <div className="modal-title">Valores da Igreja</div>
+          <div className="modal-sub">Cada valor tem um nome e uma descrição curta do que ele significa na prática.</div>
+        </div>
+        <div className="modal-body" style={{ display: "block" }}>
+          {rows.map((r, i) => (
+            <div key={i} className="cfg-row" style={{ alignItems: "flex-start" }}>
+              <div className="cfg-row-main">
+                <div className="field"><label className="field-label">Valor {i + 1}</label><input className="input" value={r.title} onChange={(e) => setRow(i, { title: e.target.value })} placeholder="ex: Acolhimento" /></div>
+                <div className="field"><label className="field-label">Descrição</label><textarea className="textarea" value={r.texto} onChange={(e) => setRow(i, { texto: e.target.value })} placeholder="O que esse valor significa na prática" /></div>
+              </div>
+              <button className="btn btn-sec btn-sm" type="button" onClick={() => removeRow(i)}>Remover</button>
+            </div>
+          ))}
+          {rows.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhum valor cadastrado ainda.</div>}
+          <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 10 }} onClick={addRow}>+ Adicionar valor</button>
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>{saving ? "Salvando…" : "Salvar"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Identidade({ church, identity, cycle, setModal }: { church?: ChurchView; identity?: ChurchIdentityView | null; cycle?: CycleView; setModal: (modal: ModalState) => void }) {
+  const router = useRouter();
   const values = identity?.values ?? [];
+  const [editingValores, setEditingValores] = useState(false);
   return (
     <div className="content wide">
       <PageHead
         title="Identidade & propósito"
         eyebrow="Nossa igreja"
         subtitle="Missão, visão, valores e tema atual da comunidade. Exibido no app do membro e na vitrine da Igreja."
-        action={<button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Editar", title: "Identidade da Igreja", subtitle: "Atualize propósito, missão, visão e valores da Igreja.", saveLabel: "Salvar", formFields: [{ k:"proposito", label:"Propósito", type:"area", ph:identity?.purpose ?? "Por que a Igreja existe..." }, { k:"missao", label:"Missão", type:"area", ph:identity?.mission ?? "A missão da Igreja..." }, { k:"visao", label:"Visão", type:"area", ph:identity?.vision ?? "A visão da Igreja..." }, { k:"versiculo", label:"Versículo", type:"text", half:true, ph:identity?.verse ?? "ex: Mateus 28:19" }, { k:"valores", label:"Valores (separados por vírgula)", type:"text", half:true, ph:values.map((v) => v.title).join(", ") }], action: { kind: "identity" } })}>Editar</button>}
+        action={<button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Editar", title: "Identidade da Igreja", subtitle: "Atualize propósito, missão e visão da Igreja. Para os valores, use \"Editar valores\" abaixo.", saveLabel: "Salvar", formFields: [{ k:"proposito", label:"Propósito", type:"area", ph:identity?.purpose ?? "Por que a Igreja existe..." }, { k:"missao", label:"Missão", type:"area", ph:identity?.mission ?? "A missão da Igreja..." }, { k:"visao", label:"Visão", type:"area", ph:identity?.vision ?? "A visão da Igreja..." }, { k:"versiculo", label:"Versículo", type:"text", ph:identity?.verse ?? "ex: Mateus 28:19" }], action: { kind: "identity" } })}>Editar</button>}
       />
       {identity?.mission ? (
         <div className="ident-hero">
@@ -6265,19 +6421,24 @@ function Identidade({ church: _church, identity, cycle, setModal }: { church?: C
           ) : null}
         </div>
       ) : null}
+      <div className="section-divide" style={{ marginTop: 28 }}>
+        <span className="num">02</span><span className="label">Valores</span><span className="line" />
+        <button className="panel-link" type="button" onClick={() => setEditingValores(true)}>Editar valores</button>
+      </div>
       {values.length > 0 ? (
-        <>
-          <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">Valores</span><span className="line" /></div>
-          <div className="val-grid">
-            {values.map((v, i) => (
-              <div className="val-card" key={v.title + i}>
-                <div className="val-ic"><Icon name={["membros", "identidade", "decisoes"][i % 3]} size={14} /></div>
-                <div className="val-t">{v.title}</div>
-              </div>
-            ))}
-          </div>
-        </>
-      ) : null}
+        <div className="val-grid">
+          {values.map((v, i) => (
+            <div className="val-card" key={v.title + i}>
+              <div className="val-ic"><Icon name={["membros", "identidade", "decisoes"][i % 3]} size={14} /></div>
+              <div className="val-t">{v.title}</div>
+              {v.texto ? <div className="val-x">{v.texto}</div> : null}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="empty" style={{ padding: "20px 0" }}>Nenhum valor cadastrado ainda.</div>
+      )}
+      {editingValores && <ValoresEditModal church={church} identity={identity} onClose={() => setEditingValores(false)} onRefresh={() => router.refresh()} />}
       <div className="section-divide" style={{ marginTop: 28 }}>
         <span className="num">03</span><span className="label">Tema do ciclo atual</span><span className="line" />
         {cycle ? <button className="panel-link" type="button" onClick={() => setModal({ eyebrow: "Editar", title: `Ciclo ${cycle.year}`, subtitle: "A visão do ano que todos enxergam.", saveLabel: "Salvar", formFields: [{ k:"ano", label:"Ano / período", type:"text", half:true, req:true, ph:cycle.year }, { k:"tema", label:"Tema", type:"text", half:true, req:true, ph:cycle.theme }, { k:"versiculo", label:"Versículo", type:"text", ph:cycle.verse ?? "ex: Salmos 1:3" }, { k:"desc", label:"Descrição", type:"area", ph:cycle.body ?? "O que esse tema significa para a Igreja..." }, { k:"objetivos", label:"Objetivos (separados por vírgula)", type:"text", ph:cycle.objectives.map((o) => o.title).join(", ") }], action: { kind: "cycle", id: cycle.id } })}>Editar ciclo</button> : null}
@@ -6522,7 +6683,7 @@ function DecisaoDrawer({
             <div className="step-do"><span className="step-ic">→</span> Fazer o primeiro contato (ligar · WhatsApp)</div>
             <div className="step-do"><span className="step-ic">→</span> Iniciar acompanhamento 1-a-1</div>
             <div className="step-do"><span className="step-ic">→</span> Matricular em Novos Convertidos</div>
-            <div className="step-do"><span className="step-ic">→</span> Inserir num Grupo de Comunhão</div>
+            {(church?.settings?.gruposCfg?.ativo ?? true) && <div className="step-do"><span className="step-ic">→</span> Inserir num {church?.settings?.gruposCfg?.termoP ?? "Grupo de Comunhão"}</div>}
           </div>
         </DrawerSection>
         <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
@@ -6887,13 +7048,15 @@ function MemberEditModal({
         <div className="modal-body" style={{ display: "block" }}>
           <div className="field"><label className="field-label">Aniversário</label><input className="input" type="date" value={birth} onChange={(e) => setBirth(e.target.value)} /></div>
           <div className="field"><label className="field-label">Bairro</label><input className="input" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Onde mora" /></div>
-          <div className="field">
-            <label className="field-label">Grupo de Comunhão</label>
-            <select className="select" value={groupId} onChange={(e) => setGroupId(e.target.value)}>
-              <option value="">Sem grupo</option>
-              {fellowshipGroups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-            </select>
-          </div>
+          {(church?.settings?.gruposCfg?.ativo ?? true) && (
+            <div className="field">
+              <label className="field-label">{church?.settings?.gruposCfg?.termoP ?? "Grupo de Comunhão"}</label>
+              <select className="select" value={groupId} onChange={(e) => setGroupId(e.target.value)}>
+                <option value="">Sem grupo</option>
+                {fellowshipGroups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </select>
+            </div>
+          )}
           <div className="field"><label className="field-label">Família</label><input className="input" value={family} onChange={(e) => setFamily(e.target.value)} placeholder="ex: Família Lima (agrupa parentes na ficha)" /></div>
         </div>
         <div className="modal-foot">
@@ -7163,8 +7326,8 @@ function EntityDrawer({
               <dt>E-mail</dt><dd>{member.email || <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
               <dt>Aniversário</dt><dd>{member.birth || <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
               <dt>Bairro</dt><dd>{member.neighborhood || <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
-              <dt>Grupo de Comunhão</dt><dd>{grupo ? <>{grupo.name}{grupoLider && <span style={{ color: "var(--subtle)" }}> · líder {grupoLider.name.split(" ")[0]}</span>}</> : <span style={{ color: "var(--subtle)" }}>sem grupo</span>}</dd>
-              <dt>Acesso ao app</dt><dd>{member.email ? <span style={{ color: "var(--olive-soft)" }}>liberado</span> : <span style={{ color: "var(--amber)" }}>pendente (falta e-mail)</span>}</dd>
+              {(church?.settings?.gruposCfg?.ativo ?? true) && <><dt>{church?.settings?.gruposCfg?.termoP ?? "Grupo de Comunhão"}</dt><dd>{grupo ? <>{grupo.name}{grupoLider && <span style={{ color: "var(--subtle)" }}> · líder {grupoLider.name.split(" ")[0]}</span>}</> : <span style={{ color: "var(--subtle)" }}>sem grupo</span>}</dd></>}
+              <dt>Acesso ao app</dt><dd>{member.volunteerId ? <span style={{ color: "var(--olive-soft)" }}>liberado</span> : member.email ? <span style={{ color: "var(--amber)" }}>pendente (criando acesso…)</span> : <span style={{ color: "var(--amber)" }}>pendente (falta e-mail)</span>}</dd>
             </dl>
             <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 14 }} onClick={() => setEditingMember(true)}>Editar dados</button>
           </DrawerSection>
@@ -7966,6 +8129,20 @@ function ServiceModal({
         await supabase.schema("service").from("timeline_events").insert(
           timelineEventPayload(church.organizationId, newMember.id, "decisao", "Decisão por Jesus"),
         );
+        if (value("email")) {
+          fetch("/api/service/members/create-account", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              organizationId: church.organizationId,
+              churchId: church.id,
+              memberId: newMember.id,
+              name: value("nome"),
+              email: value("email"),
+              phone: value("tel") || null,
+            }),
+          }).catch((err) => console.error("Não foi possível criar o acesso ao app deste membro agora:", err));
+        }
       }
     } else if (action.kind === "event") {
       if (!value("nome")) { setSaving(false); setError("Digite o nome do culto."); return; }
@@ -8167,7 +8344,6 @@ function ServiceModal({
         mission: value("missao") || null,
         vision: value("visao") || null,
         verse: value("versiculo") || null,
-        values: value("valores") ? value("valores").split(",").map((title) => ({ title: title.trim() })).filter((v) => v.title) : [],
         updated_at: new Date().toISOString(),
       });
     } else if (action.kind === "historyEntry") {

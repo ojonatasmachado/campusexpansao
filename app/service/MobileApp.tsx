@@ -1256,7 +1256,7 @@ function Onboarding({ person, member, onCompleteOnboarding, onDone }: { person: 
     },
     {
       t: "Crie sua senha",
-      s: "Troque a senha inicial (os 4 ultimos do telefone) por uma so sua.",
+      s: "Troque a senha inicial (os 6 ultimos do telefone) por uma so sua.",
       body: (
         <div className="ob-form">
           <div className="field">

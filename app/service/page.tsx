@@ -82,6 +82,7 @@ type FellowshipGroupRow = {
 
 type TagRow = {
   id: string;
+  church_id: string;
   name: string;
   color: string | null;
   leaders: string[] | null;
@@ -987,7 +988,7 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("history_entries").select("id,year,title,body,link,photo_url,sort_order").order("sort_order", { ascending: true }),
     supabase.schema("service").from("ministerial_titles").select("id,name,sort_order").order("sort_order", { ascending: true }),
     supabase.schema("service").from("fellowship_groups").select("id,name,leader_person_id,weekday,time,neighborhood").order("created_at", { ascending: false }),
-    supabase.schema("service").from("tags").select("id,name,color,leaders").order("created_at", { ascending: false }),
+    supabase.schema("service").from("tags").select("id,church_id,name,color,leaders").order("created_at", { ascending: false }),
     supabase.schema("service").from("timeline_events").select("id,member_id,event_type,title,body,by_whom,sort_key,when_label,created_at").order("sort_key", { ascending: false }),
   ]);
 
@@ -1159,7 +1160,7 @@ export default async function ServiceHomePage() {
       historyEntries={extra.historyEntries}
       ministerialTitles={extra.ministerialTitles}
       fellowshipGroups={extra.fellowshipGroups}
-      tags={extra.tags.map((tag) => ({ ...tag, color: tag.color ?? "wheat", leaders: tag.leaders ?? [] }))}
+      tags={extra.tags.map((tag) => ({ id: tag.id, churchId: tag.church_id, name: tag.name, color: tag.color ?? "wheat", leaders: tag.leaders ?? [] }))}
       timelineEvents={extra.timelineEvents}
       currentRole={currentRole}
       permissionsMatrix={permissionsMatrix}
