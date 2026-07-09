@@ -190,8 +190,7 @@ e telas em dois apps (desktop + mobile) — reconferir com o usuário as
 perguntas em aberto da seção (aprovação de edição de líder, escopo do
 backfill em massa) antes de desenhar o schema.
 
-**Pendências de infraestrutura acumuladas, fora do escopo de qualquer
-fase** (o usuário precisa agir, não é código): rodar `supabase db push`
-(migrações 0011-0015 nunca aplicadas) e copiar as chaves VAPID geradas em
-`.env.local` (Fase 23) pras env vars do projeto na Vercel, senão push não
-funciona em produção.
+**Pendências de infraestrutura: RESOLVIDAS em 2026-07-09.** O usuário
+rodou `supabase db push` (migrações 0011-0015 aplicadas, confirmado via
+`supabase migration list`) e copiou as chaves VAPID pras env vars da
+Vercel + redeploy. Nada bloqueado pra começar a Fase 24.

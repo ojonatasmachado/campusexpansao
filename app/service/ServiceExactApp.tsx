@@ -442,6 +442,21 @@ type TimelineEventView = {
   created_at: string;
 };
 
+type JourneyStepKind = "decisao" | "batismo" | "curso" | "integracao" | "time";
+
+type JourneyChangeRequestView = {
+  id: string;
+  memberId: string;
+  step: JourneyStepKind;
+  eventDate: string | null;
+  note: string | null;
+  requestedBy: string;
+  status: "pendente" | "aprovado" | "rejeitado";
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+};
+
 type ReservationView = {
   id: string;
   room_id: string;
@@ -493,6 +508,7 @@ type Props = {
   fellowshipGroups?: FellowshipGroupView[];
   tags?: TagView[];
   timelineEvents?: TimelineEventView[];
+  journeyRequests?: JourneyChangeRequestView[];
   currentRole?: "master" | "pastor" | "lider" | "vol";
   permissionsMatrix?: Record<string, Record<string, boolean>>;
   currentPersonId?: string | null;
@@ -914,6 +930,7 @@ export default function ServiceExactApp({
   fellowshipGroups = [],
   tags = [],
   timelineEvents = [],
+  journeyRequests = [],
   currentRole = "master",
   permissionsMatrix = {},
   currentPersonId = null,
@@ -1094,6 +1111,64 @@ export default function ServiceExactApp({
     if (!leaderMember || !volunteerMember || leaderMember.id === volunteerMember.id) return;
     await startChatMobile(volunteerMember.id, leaderMember.id, texto);
   };
+  const submitJourneyRequest = async (memberId: string, step: JourneyStepKind, eventDate: string, note: string) => {
+    if (!firstChurch?.organizationId || !currentPersonId) return;
+    await createServiceBrowserClient().schema("service").from("journey_change_requests").insert({
+      organization_id: firstChurch.organizationId,
+      member_id: memberId,
+      step,
+      event_date: eventDate || null,
+      note: note.trim() || null,
+      requested_by: currentPersonId,
+    });
+    const member = members.find((m) => m.id === memberId);
+    const stepLabel = JRN_STEPS.find((s) => s.kind === step)?.label ?? step;
+    if (member) {
+      const leaderMemberIds = responsibleLeadersFor(member, fellowshipGroups, ministries)
+        .map((personId) => members.find((m) => m.volunteerId === personId)?.id)
+        .filter((id): id is string => !!id);
+      if (leaderMemberIds.length) {
+        notifyPush(firstChurch.organizationId, leaderMemberIds, member.name, `Pediu pra marcar "${stepLabel}" na jornada. Aprovar?`);
+      }
+    }
+    router.refresh();
+  };
+  const approveJourneyRequest = async (request: JourneyChangeRequestView) => {
+    if (!firstChurch?.organizationId || !currentPersonId) return;
+    const member = members.find((m) => m.id === request.memberId);
+    if (!member) return;
+    await writeJourneyStep(firstChurch.organizationId, member, request.step, request.eventDate);
+    await createServiceBrowserClient().schema("service").from("journey_change_requests").update({
+      status: "aprovado",
+      reviewed_by: currentPersonId,
+      reviewed_at: new Date().toISOString(),
+    }).eq("id", request.id);
+    const stepLabel = JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step;
+    notifyPush(firstChurch.organizationId, [member.id], "Jornada aprovada", `"${stepLabel}" foi confirmado na sua jornada.`);
+    router.refresh();
+  };
+  const confirmarEscalaMobile = async (assignmentId: string) => {
+    await createServiceBrowserClient().schema("service").from("roster_assignments").update({ status: "ok" }).eq("id", assignmentId);
+    router.refresh();
+  };
+  const recusarEscalaMobile = async (assignmentId: string) => {
+    await createServiceBrowserClient().schema("service").from("roster_assignments").update({ status: "no" }).eq("id", assignmentId);
+    router.refresh();
+  };
+  const rejectJourneyRequest = async (request: JourneyChangeRequestView, motivo?: string) => {
+    if (!firstChurch?.organizationId || !currentPersonId) return;
+    await createServiceBrowserClient().schema("service").from("journey_change_requests").update({
+      status: "rejeitado",
+      reviewed_by: currentPersonId,
+      reviewed_at: new Date().toISOString(),
+    }).eq("id", request.id);
+    const member = members.find((m) => m.id === request.memberId);
+    const stepLabel = JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step;
+    if (member) {
+      notifyPush(firstChurch.organizationId, [member.id], "Jornada", `Seu pedido de "${stepLabel}" não foi aprovado.${motivo ? ` Motivo: ${motivo}` : ""}`);
+    }
+    router.refresh();
+  };
   const activePeople = people.filter((person) => person.status === "ativo").length;
   const rosterOk = roster.filter((assignment) => assignment.status === "ok").length;
   const confirmationRate = roster.length ? Math.round((rosterOk / roster.length) * 100) : 0;
@@ -1132,6 +1207,18 @@ export default function ServiceExactApp({
     ? ministries.find((ministry) => ministry.id === previewMinistryId)?.people.find((link) => link.isLeader)?.personId ?? null
     : null;
   const perspectivePersonId = podePrevisualizar && previewMinistryId ? previewLeaderPersonId : currentPersonId;
+
+  /* fila de aprovação da jornada: Direção sem pré-visualização vê tudo;
+     líder (real ou pré-visualizado) só vê pedidos de quem está no
+     time/GC dele — mesmo espírito de escopo de Escalas/Kanban. */
+  const visibleJourneyRequests = journeyRequests.filter((request) => {
+    if (podePrevisualizar && !previewMinistryId) return true;
+    const scopePersonId = podePrevisualizar ? previewLeaderPersonId : currentPersonId;
+    if (!scopePersonId) return false;
+    const member = members.find((m) => m.id === request.memberId);
+    if (!member) return false;
+    return responsibleLeadersFor(member, fellowshipGroups, ministries).includes(scopePersonId);
+  });
 
   const nav = [
     { group: "Visão geral", items: [{ id: "painel", icon: "painel", label: "Painel" }] },
@@ -1249,6 +1336,7 @@ export default function ServiceExactApp({
         {route === "painel" ? (
           <Painel
             people={people}
+            members={members}
             activePeople={activePeople}
             confirmationRate={confirmationRate}
             gaps={gaps}
@@ -1256,6 +1344,9 @@ export default function ServiceExactApp({
             visitorsInCare={visitorsInCare}
             announcements={announcements}
             eventAttendance={eventAttendance}
+            journeyRequests={visibleJourneyRequests}
+            onApproveJourney={approveJourneyRequest}
+            onRejectJourney={rejectJourneyRequest}
             setRoute={setRoute}
             setDrawer={setDrawer}
             setModal={setModal}
@@ -1328,6 +1419,10 @@ export default function ServiceExactApp({
           setTheme={setTheme}
           onChangePassword={changePasswordMobile}
           onUpdateProfile={updateProfileMobile}
+          journeyRequests={journeyRequests}
+          onRequestJourneyStep={submitJourneyRequest}
+          onConfirmarEscala={confirmarEscalaMobile}
+          onRecusarEscala={recusarEscalaMobile}
           onClose={() => setMobileOpen(false)}
         />
       )}
@@ -1555,6 +1650,7 @@ function GlobalSearch({
 
 function Painel({
   people,
+  members,
   activePeople,
   confirmationRate,
   gaps,
@@ -1562,12 +1658,16 @@ function Painel({
   visitorsInCare,
   announcements,
   eventAttendance,
+  journeyRequests,
+  onApproveJourney,
+  onRejectJourney,
   setRoute,
   setDrawer,
   setModal,
   setCheckinEventId,
 }: {
   people: PersonView[];
+  members: MemberView[];
   activePeople: number;
   confirmationRate: number;
   gaps: Array<{ event: EventView; ministry: MinistryView; position: { id: string; name: string } }>;
@@ -1575,6 +1675,9 @@ function Painel({
   visitorsInCare: number;
   announcements: AnnouncementView[];
   eventAttendance: EventAttendanceView[];
+  journeyRequests: JourneyChangeRequestView[];
+  onApproveJourney: (request: JourneyChangeRequestView) => void;
+  onRejectJourney: (request: JourneyChangeRequestView) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
   setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
@@ -1652,6 +1755,33 @@ function Painel({
           </div>
         </div>
       </div>
+      {journeyRequests.length > 0 && (
+        <div className="panel" style={{ marginTop: 24 }}>
+          <div className="panel-head">
+            <span className="panel-title"><Icon name="membros" size={14} /> Jornada pendente</span>
+            <span className="panel-meta">{journeyRequests.length} pedido(s)</span>
+          </div>
+          <div className="panel-body flush">
+            {journeyRequests.map((request) => {
+              const member = members.find((m) => m.id === request.memberId);
+              const stepLabel = JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step;
+              return (
+                <div className="gap-row" key={request.id}>
+                  <div className="gap-ic wait">!</div>
+                  <div className="mini-main">
+                    <div className="mini-title">{member?.name ?? "Alguém"} <span style={{ color: "var(--subtle)", fontWeight: 400 }}>· {stepLabel}</span></div>
+                    <div className="mini-sub">{request.eventDate ?? "sem data informada"}{request.note ? ` · ${request.note}` : ""}</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button className="btn btn-sec btn-sm" type="button" onClick={() => onRejectJourney(request)}>Rejeitar</button>
+                    <button className="btn btn-pri btn-sm" type="button" onClick={() => onApproveJourney(request)}>Aprovar</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
       <div className="dash-2col">
         <div className="panel">
           <div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={14} /> Voluntários mais engajados</span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>Todos</button></div>
@@ -6637,13 +6767,40 @@ function timelineEventPayload(organizationId: string, memberId: string, eventTyp
   };
 }
 
-const JRN_STEPS = [
+const JRN_STEPS: Array<{ label: string; kind: JourneyStepKind; icon: string }> = [
   { label: "Decisão", kind: "decisao", icon: "decisoes" },
   { label: "Batismo nas águas", kind: "batismo", icon: "batismos" },
   { label: "Fundamentos", kind: "curso", icon: "cursos" },
   { label: "Grupo de comunhão", kind: "integracao", icon: "pessoa" },
   { label: "Servindo", kind: "time", icon: "times" },
 ];
+
+const JORNADA_KIND_INDEX: Record<JourneyStepKind, number> = { decisao: 0, batismo: 1, curso: 2, integracao: 3, time: 4 };
+
+function responsibleLeadersFor(member: MemberView, fellowshipGroups: FellowshipGroupView[], ministries: MinistryView[]): string[] {
+  const leaders = new Set<string>();
+  const group = fellowshipGroups.find((g) => g.id === member.groupId);
+  if (group?.leader_person_id) leaders.add(group.leader_person_id);
+  if (member.volunteerId) {
+    ministries.forEach((ministry) => {
+      const isMember = ministry.people.some((link) => link.personId === member.volunteerId);
+      if (!isMember) return;
+      ministry.people.filter((link) => link.isLeader).forEach((link) => leaders.add(link.personId));
+    });
+  }
+  return [...leaders];
+}
+
+async function writeJourneyStep(organizationId: string, member: MemberView, step: JourneyStepKind, eventDate?: string | null) {
+  const stepDef = JRN_STEPS.find((s) => s.kind === step);
+  const sb = createServiceBrowserClient().schema("service");
+  await sb.from("timeline_events").insert(
+    timelineEventPayload(organizationId, member.id, step, stepDef?.label ?? step, eventDate),
+  );
+  const journey = [...member.journey];
+  journey[JORNADA_KIND_INDEX[step]] = 1;
+  await sb.from("members").update({ journey }).eq("id", member.id);
+}
 
 function PersonTimeline({ member, events, compact }: { member: MemberView; events: TimelineEventView[]; compact?: boolean }) {
   const sorted = [...events].sort((a, b) => (b.sort_key ?? 0) - (a.sort_key ?? 0));
@@ -7139,6 +7296,77 @@ function MemberEditModal({
   );
 }
 
+function JornadaEditModal({
+  member, events, church, onClose, onRefresh,
+}: {
+  member: MemberView;
+  events: TimelineEventView[];
+  church: ChurchView | undefined;
+  onClose: () => void;
+  onRefresh: () => void;
+}) {
+  const [rows, setRows] = useState<Record<JourneyStepKind, { done: boolean; date: string }>>(() =>
+    Object.fromEntries(JRN_STEPS.map((step) => [step.kind, { done: false, date: "" }])) as Record<JourneyStepKind, { done: boolean; date: string }>,
+  );
+  const [saving, setSaving] = useState(false);
+
+  const marcar = (kind: JourneyStepKind) => setRows((prev) => ({ ...prev, [kind]: { ...prev[kind], done: true } }));
+  const setData = (kind: JourneyStepKind, date: string) => setRows((prev) => ({ ...prev, [kind]: { ...prev[kind], date } }));
+
+  const salvar = async () => {
+    if (!church?.organizationId) return;
+    setSaving(true);
+    for (const step of JRN_STEPS) {
+      const jaConcluido = !!member.journey[JORNADA_KIND_INDEX[step.kind]];
+      if (!jaConcluido && rows[step.kind].done) {
+        await writeJourneyStep(church.organizationId, member, step.kind, rows[step.kind].date || null);
+      }
+    }
+    setSaving(false);
+    onRefresh();
+    onClose();
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">Jornada</div>
+          <div className="modal-title">{member.name}</div>
+          <div className="modal-sub">Marque as etapas já concluídas, com a data real de cada uma.</div>
+        </div>
+        <div className="modal-body" style={{ display: "block" }}>
+          {JRN_STEPS.map((step) => {
+            const jaConcluido = !!member.journey[JORNADA_KIND_INDEX[step.kind]];
+            const event = events.find((e) => e.event_type === step.kind);
+            return (
+              <div className="cfg-row" key={step.kind} style={{ alignItems: "flex-start" }}>
+                <div className="cfg-row-main">
+                  <div className="cfg-row-t">{step.label}</div>
+                  {jaConcluido ? (
+                    <div className="cfg-row-s">Concluído{event?.when_label ? ` em ${event.when_label}` : ""}</div>
+                  ) : rows[step.kind].done ? (
+                    <div className="field" style={{ marginTop: 8 }}>
+                      <label className="field-label">Data</label>
+                      <input className="input" type="date" value={rows[step.kind].date} onChange={(e) => setData(step.kind, e.target.value)} />
+                    </div>
+                  ) : (
+                    <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 8 }} onClick={() => marcar(step.kind)}>Marcar como concluído</button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>Salvar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AddToMinistryModal({
   ministry, people, members, church, onClose,
 }: {
@@ -7277,6 +7505,7 @@ function EntityDrawer({
 }) {
   const router = useRouter();
   const [editingMember, setEditingMember] = useState(false);
+  const [editingJourney, setEditingJourney] = useState(false);
   const [editingMinistry, setEditingMinistry] = useState(false);
   const [addingPerson, setAddingPerson] = useState(false);
 
@@ -7460,9 +7689,7 @@ function EntityDrawer({
           </DrawerSection>
           <DrawerSection title="Jornada de integração"><PersonTimeline member={member} events={timelineEvents.filter((e) => e.member_id === member.id)} compact /></DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
-            {isServing
-              ? <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Jornada", title: member.name, subtitle: "Atualize o próximo passo de acompanhamento.", formFields: [{ k:"passo", label:"Próximo passo", type:"text", ph:"ex: Convidar para batismo" }, { k:"responsavel", label:"Responsável", type:"text", ph:"Quem acompanha" }, { k:"data", label:"Data limite", type:"date" }] })}>Atualizar jornada</button>
-              : <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setModal({ eyebrow: "Convidar", title: member.name, subtitle: "Convide esta pessoa para entrar em um ministério.", saveLabel: "Enviar convite", formFields: [{ k:"ministerio", label:"Ministério", type:"text", ph:"Nome do ministério" }, { k:"msg", label:"Mensagem (opcional)", type:"area", ph:"Mensagem de convite..." }] })}>Convidar para servir</button>}
+            <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setEditingJourney(true)}>Atualizar jornada</button>
             <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => onStartChatWithMember(member.id)}>Enviar mensagem</button>
             {linkedPerson && (
               <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setDrawer({ kind: "person", id: linkedPerson.id })}>Ver como voluntário →</button>
@@ -7476,6 +7703,15 @@ function EntityDrawer({
           fellowshipGroups={fellowshipGroups}
           church={church}
           onClose={() => setEditingMember(false)}
+          onRefresh={() => router.refresh()}
+        />
+      )}
+      {editingJourney && (
+        <JornadaEditModal
+          member={member}
+          events={timelineEvents.filter((e) => e.member_id === member.id)}
+          church={church}
+          onClose={() => setEditingJourney(false)}
           onRefresh={() => router.refresh()}
         />
       )}

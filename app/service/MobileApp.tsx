@@ -30,6 +30,15 @@ type Ministry = {
   icon: string;
   people: Array<{ personId: string; isLeader: boolean; functions: string[] }>;
 };
+type JourneyStep = "decisao" | "batismo" | "curso" | "integracao" | "time";
+type JourneyRequest = {
+  id: string;
+  memberId: string;
+  step: JourneyStep;
+  eventDate: string | null;
+  note: string | null;
+  status: "pendente" | "aprovado" | "rejeitado";
+};
 type Ev = { id: string; name: string; weekday: string; eventDate: string; time: string };
 type Slot = { id: string; event_id: string; position_id: string; person_id: string; status: "ok" | "wait" | "no" };
 type Card = {
@@ -99,12 +108,17 @@ export type MobileOverlayProps = {
   setTheme?: (t: "dark" | "light") => void;
   onChangePassword?: (senha: string) => Promise<{ error?: string }>;
   onUpdateProfile?: (personId: string, memberId: string | null, data: { phone: string; nasc: string; bairro: string }) => void;
+  journeyRequests?: JourneyRequest[];
+  onRequestJourneyStep?: (memberId: string, step: JourneyStep, eventDate: string, note: string) => void;
+  onConfirmarEscala?: (assignmentId: string) => void;
+  onRecusarEscala?: (assignmentId: string) => void;
   onClose: () => void;
 };
 
 // ── constantes ────────────────────────────────────────────────────────────────
 
 const JORNADA = ["Decisao", "Batismo", "Fundamentos", "GC", "Servindo"];
+const JORNADA_STEPS: JourneyStep[] = ["decisao", "batismo", "curso", "integracao", "time"];
 const AVAIL_LABELS: Record<string, string> = { dom_m: "Domingo manha", dom_n: "Domingo noite", qua: "Quarta" };
 const ETAPAS = [
   { id: "novo", nome: "Novo" },
@@ -298,14 +312,18 @@ function TabInicio({
 
 // ── aba: Escala ───────────────────────────────────────────────────────────────
 
-function TabEscala({ person, events, roster }: { person: P; events: Ev[]; roster: Slot[] }) {
+function TabEscala({ person, events, roster, onConfirmarEscala, onRecusarEscala }: { person: P; events: Ev[]; roster: Slot[]; onConfirmarEscala?: (assignmentId: string) => void; onRecusarEscala?: (assignmentId: string) => void }) {
   const mySlots = roster.filter((r) => r.person_id === person.id);
   const [stMap, setStMap] = useState<Record<string, "ok" | "wait" | "no">>(
     () => Object.fromEntries(mySlots.map((r) => [r.id, r.status])),
   );
   const [swapId, setSwapId] = useState<string | null>(null);
   const [avail, setAvail] = useState<Record<string, boolean>>({ ...(person.availability ?? {}) });
-  const setSt = (id: string, v: "ok" | "wait" | "no") => setStMap((p) => ({ ...p, [id]: v }));
+  const setSt = (id: string, v: "ok" | "wait" | "no") => {
+    setStMap((p) => ({ ...p, [id]: v }));
+    if (v === "ok") onConfirmarEscala?.(id);
+    else if (v === "no") onRecusarEscala?.(id);
+  };
 
   return (
     <>
@@ -1100,7 +1118,7 @@ function TabAvisos({
 // ── aba: Perfil ───────────────────────────────────────────────────────────────
 
 function TabPerfil({
-  person, member, organizationId, theme, setTheme, onChangePassword, onUpdateProfile,
+  person, member, organizationId, theme, setTheme, onChangePassword, onUpdateProfile, journeyRequests, onRequestJourneyStep,
 }: {
   person: P;
   member: M | null;
@@ -1109,9 +1127,31 @@ function TabPerfil({
   setTheme?: (t: "dark" | "light") => void;
   onChangePassword?: (senha: string) => Promise<{ error?: string }>;
   onUpdateProfile?: (personId: string, memberId: string | null, data: { phone: string; nasc: string; bairro: string }) => void;
+  journeyRequests?: JourneyRequest[];
+  onRequestJourneyStep?: (memberId: string, step: JourneyStep, eventDate: string, note: string) => void;
 }) {
   const journey = member?.journey ?? [];
   const done = journey.filter(Boolean).length;
+  const meusPedidosPendentes = new Set(
+    (journeyRequests ?? []).filter((r) => r.memberId === member?.id && r.status === "pendente").map((r) => r.step),
+  );
+  const [requestingStep, setRequestingStep] = useState<JourneyStep | null>(null);
+  const [reqDate, setReqDate] = useState("");
+  const [reqNote, setReqNote] = useState("");
+  const [reqMsg, setReqMsg] = useState("");
+
+  const abrirPedidoJornada = (step: JourneyStep) => {
+    setRequestingStep(step);
+    setReqDate("");
+    setReqNote("");
+    setReqMsg("");
+  };
+  const enviarPedidoJornada = () => {
+    if (!requestingStep || !member || !onRequestJourneyStep) return;
+    onRequestJourneyStep(member.id, requestingStep, reqDate, reqNote);
+    setReqMsg("Pedido enviado. Aguardando aprovação do líder.");
+    setRequestingStep(null);
+  };
 
   const [editing, setEditing] = useState(false);
   const [phone, setPhone] = useState(member?.phone ?? "");
@@ -1277,13 +1317,41 @@ function TabPerfil({
           </div>
         </div>
         <div className="m-journey-pips">
-          {JORNADA.map((s, i) => (
-            <div className={`m-jp ${journey[i] ? "on" : ""}`} key={i}>
-              <span>{journey[i] ? "✓" : i + 1}</span>
-              <small>{s}</small>
-            </div>
-          ))}
+          {JORNADA.map((s, i) => {
+            const kind = JORNADA_STEPS[i];
+            const feito = !!journey[i];
+            const pendente = meusPedidosPendentes.has(kind);
+            const podeClicar = !feito && !pendente && !!onRequestJourneyStep && !!member;
+            return (
+              <div
+                className={`m-jp ${feito ? "on" : ""}`}
+                key={i}
+                style={{ opacity: pendente ? 0.6 : 1, cursor: podeClicar ? "pointer" : "default" }}
+                onClick={() => podeClicar && abrirPedidoJornada(kind)}
+              >
+                <span>{feito ? "✓" : pendente ? "…" : i + 1}</span>
+                <small>{s}{pendente ? " (pendente)" : ""}</small>
+              </div>
+            );
+          })}
         </div>
+        {requestingStep && (
+          <div style={{ marginTop: 14 }}>
+            <div className="field">
+              <label className="field-label">Quando foi &quot;{JORNADA[JORNADA_STEPS.indexOf(requestingStep)]}&quot;?</label>
+              <input className="input" type="date" value={reqDate} onChange={(e) => setReqDate(e.target.value)} />
+            </div>
+            <div className="field">
+              <label className="field-label">Nota (opcional)</label>
+              <input className="input" value={reqNote} onChange={(e) => setReqNote(e.target.value)} placeholder="ex: aconteceu na igreja anterior" />
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-sec btn-sm" type="button" onClick={() => setRequestingStep(null)}>Cancelar</button>
+              <button className="btn btn-pri btn-sm" type="button" onClick={enviarPedidoJornada}>Enviar pedido</button>
+            </div>
+          </div>
+        )}
+        {reqMsg && <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 10 }}>{reqMsg}</div>}
       </div>
 
       {onChangePassword && (
@@ -1508,7 +1576,8 @@ function MobileMembro({
   const { ministries, events, roster, cards, boards, courses, enrollments, courseModules = [], courseLessons = [],
           visitors, baptismClasses, announcements, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment,
           onAdvanceVisitorStage, onRegisterVisitor, onSendMessage, onStartChat,
-          organizationId, theme, setTheme, onChangePassword, onUpdateProfile } = rest;
+          organizationId, theme, setTheme, onChangePassword, onUpdateProfile,
+          journeyRequests, onRequestJourneyStep, onConfirmarEscala, onRecusarEscala } = rest;
 
   const isRecep = isRecepPerson(person, ministries);
 
@@ -1553,7 +1622,7 @@ function MobileMembro({
           {tab === "inicio" && (
             <TabInicio person={person} member={member} ministries={ministries} events={events} roster={roster} cards={cards} setTab={setTab} />
           )}
-          {tab === "escalas" && <TabEscala person={person} events={events} roster={roster} />}
+          {tab === "escalas" && <TabEscala person={person} events={events} roster={roster} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} />}
           {tab === "tarefas" && <TabTarefas person={person} cards={cards} boards={boards} onAddCardComment={onAddCardComment} />}
           {tab === "conversas" && (
             <TabConversas member={member} chats={chats} chatMembers={chatMembers} messages={messages} members={members} ministries={ministries} onSendMessage={onSendMessage} onStartChat={onStartChat} />
@@ -1573,6 +1642,8 @@ function MobileMembro({
               setTheme={setTheme}
               onChangePassword={onChangePassword}
               onUpdateProfile={onUpdateProfile}
+              journeyRequests={journeyRequests}
+              onRequestJourneyStep={onRequestJourneyStep}
             />
           )}
         </div>

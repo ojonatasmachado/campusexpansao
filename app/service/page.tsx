@@ -333,6 +333,35 @@ type TimelineEventView = {
   created_at: string;
 };
 
+type JourneyStepKind = "decisao" | "batismo" | "curso" | "integracao" | "time";
+type JourneyRequestStatus = "pendente" | "aprovado" | "rejeitado";
+
+type JourneyChangeRequestRow = {
+  id: string;
+  member_id: string;
+  step: JourneyStepKind;
+  event_date: string | null;
+  note: string | null;
+  requested_by: string;
+  status: JourneyRequestStatus;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+};
+
+type JourneyChangeRequestView = {
+  id: string;
+  memberId: string;
+  step: JourneyStepKind;
+  eventDate: string | null;
+  note: string | null;
+  requestedBy: string;
+  status: JourneyRequestStatus;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+};
+
 type AnnouncementView = {
   id: string;
   title: string;
@@ -570,6 +599,7 @@ type ExtraServiceData = {
   fellowshipGroups: FellowshipGroupRow[];
   tags: TagRow[];
   timelineEvents: TimelineEventView[];
+  journeyRequests: JourneyChangeRequestView[];
 };
 
 const emptyExtraServiceData: ExtraServiceData = {
@@ -604,6 +634,7 @@ const emptyExtraServiceData: ExtraServiceData = {
   fellowshipGroups: [],
   tags: [],
   timelineEvents: [],
+  journeyRequests: [],
 };
 
 function friendlyReadError(message: string) {
@@ -958,6 +989,7 @@ async function getServiceDashboardData(): Promise<{
     fellowshipGroupsResult,
     tagsResult,
     timelineEventsResult,
+    journeyRequestsResult,
   ] = await Promise.all([
     supabase.schema("service").from("decisions").select("id,name,phone,happened_on,kind,service_name,responsible_id,status,member_id,age,notes,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("baptism_classes").select("id,label,baptism_date,location,status,pastor,notes,open_enrollment").order("created_at", { ascending: false }),
@@ -990,6 +1022,7 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("fellowship_groups").select("id,name,leader_person_id,weekday,time,neighborhood").order("created_at", { ascending: false }),
     supabase.schema("service").from("tags").select("id,church_id,name,color,leaders").order("created_at", { ascending: false }),
     supabase.schema("service").from("timeline_events").select("id,member_id,event_type,title,body,by_whom,sort_key,when_label,created_at").order("sort_key", { ascending: false }),
+    supabase.schema("service").from("journey_change_requests").select("id,member_id,step,event_date,note,requested_by,status,reviewed_by,reviewed_at,created_at").order("created_at", { ascending: false }),
   ]);
 
   const extraError = [
@@ -1024,6 +1057,7 @@ async function getServiceDashboardData(): Promise<{
     fellowshipGroupsResult.error,
     tagsResult.error,
     timelineEventsResult.error,
+    journeyRequestsResult.error,
   ].find(Boolean);
 
   return {
@@ -1073,6 +1107,18 @@ async function getServiceDashboardData(): Promise<{
       fellowshipGroups: ((fellowshipGroupsResult.data ?? []) as FellowshipGroupRow[]),
       tags: ((tagsResult.data ?? []) as TagRow[]),
       timelineEvents: ((timelineEventsResult.data ?? []) as TimelineEventView[]),
+      journeyRequests: ((journeyRequestsResult.data ?? []) as JourneyChangeRequestRow[]).map((row) => ({
+        id: row.id,
+        memberId: row.member_id,
+        step: row.step,
+        eventDate: row.event_date,
+        note: row.note,
+        requestedBy: row.requested_by,
+        status: row.status,
+        reviewedBy: row.reviewed_by,
+        reviewedAt: row.reviewed_at,
+        createdAt: row.created_at,
+      })) as JourneyChangeRequestView[],
     },
     error: extraError ? friendlyReadError(extraError.message) : "",
   };
@@ -1162,6 +1208,7 @@ export default async function ServiceHomePage() {
       fellowshipGroups={extra.fellowshipGroups}
       tags={extra.tags.map((tag) => ({ id: tag.id, churchId: tag.church_id, name: tag.name, color: tag.color ?? "wheat", leaders: tag.leaders ?? [] }))}
       timelineEvents={extra.timelineEvents}
+      journeyRequests={extra.journeyRequests}
       currentRole={currentRole}
       permissionsMatrix={permissionsMatrix}
       currentPersonId={currentPersonId}

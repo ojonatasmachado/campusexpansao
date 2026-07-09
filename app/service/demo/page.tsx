@@ -66,6 +66,10 @@ const TIMELINE_EVENTS = [
   { id: "te-2", member_id: "m1", event_type: "batismo", title: "Batismo nas águas", body: null, by_whom: null, sort_key: 20190520, when_label: "20/05/2019", created_at: "2019-05-20T12:00:00.000Z" },
 ];
 
+const JOURNEY_REQUESTS = [
+  { id: "jr-1", memberId: "m3", step: "curso" as const, eventDate: "2024-11-10", note: "Fiz Fundamentos na igreja anterior", requestedBy: "p4", status: "pendente" as const, reviewedBy: null, reviewedAt: null, createdAt: new Date().toISOString() },
+];
+
 const MINISTRIES = [
   {
     id: "min-1", organizationId: ORG, churchId: CHURCH_1, name: "Louvor", icon: "louvor", description: "Time de música e adoração. Ensaios toda semana.",
@@ -330,6 +334,7 @@ export default function ServiceDemoPage() {
       fellowshipGroups={FELLOWSHIP_GROUPS}
       tags={TAGS}
       timelineEvents={TIMELINE_EVENTS}
+      journeyRequests={JOURNEY_REQUESTS}
       currentPersonId="p1"
       error=""
     />
