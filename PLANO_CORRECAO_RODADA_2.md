@@ -179,16 +179,19 @@ Padrão comum: a UI parece funcionar mas a ação não persiste em lugar nenhum
 
 ## Como retomar
 
-Quando o usuário pedir pra começar: entrar em Plan Mode pra **Fase 18**,
-reconferir cada item contra o código atual (a lista pode ter ficado
-desatualizada entre esta sessão e a próxima — mesma lição da Fase 15),
-escrever o plano específico da fase, implementar, testar em `/service/demo`,
-commitar. Repetir fase a fase na ordem acima, ajustando se o usuário quiser
-outra prioridade.
+**Fases 18-23 fechadas** (commits `7587018`, `1fd6368`, `7ad08e4`, `b234d05`,
+`59a30a5`, `513016e`), cada uma reconferida contra o código atual antes de
+implementar (mesma lição da Fase 15) e testada ao vivo em `/service/demo`.
 
-**Fase 24 é a última**, de propósito: só entrar nela depois de fechar 22 e 23
-(decisão explícita do usuário em 2026-07-08). É a maior e mais nova da
-rodada, precisa de Plan Mode dedicado por ter tabela nova, RLS por linha e
-telas em dois apps (desktop + mobile) — reconferir com o usuário as
+**Próximo passo: Fase 24**, a última do plano, de propósito deixada por
+último (decisão explícita do usuário em 2026-07-08). É a maior e mais nova
+da rodada, precisa de Plan Mode dedicado por ter tabela nova, RLS por linha
+e telas em dois apps (desktop + mobile) — reconferir com o usuário as
 perguntas em aberto da seção (aprovação de edição de líder, escopo do
 backfill em massa) antes de desenhar o schema.
+
+**Pendências de infraestrutura acumuladas, fora do escopo de qualquer
+fase** (o usuário precisa agir, não é código): rodar `supabase db push`
+(migrações 0011-0015 nunca aplicadas) e copiar as chaves VAPID geradas em
+`.env.local` (Fase 23) pras env vars do projeto na Vercel, senão push não
+funciona em produção.
