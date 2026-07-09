@@ -144,6 +144,7 @@ type EventView = {
   time: string;
   slot: string;
   location: string;
+  roomId?: string | null;
   ministries: string[];
   schedule: Array<{ id: string; item: string; time: string | null; category: string | null; duration_min: number | null; ministry_id: string | null; person_id: string | null; notes: string | null; sort_order: number }>;
   setlist: Array<{ id: string; title: string; song_key: string | null }>;
@@ -237,6 +238,7 @@ type BaptismClassView = {
   label: string;
   baptism_date: string | null;
   location: string | null;
+  room_id?: string | null;
   status: "aberta" | "preparacao" | "agendada" | "concluida" | null;
   pastor: string | null;
   notes: string | null;
@@ -376,6 +378,7 @@ type RehearsalView = {
   rehearsal_date: string | null;
   time: string | null;
   location: string | null;
+  room_id?: string | null;
   recurrence: string | null;
   audience: string | null;
   attendees: string[];
@@ -390,6 +393,7 @@ type RoomView = {
   capacity: number | null;
   location: string | null;
   resources: string[];
+  allows_meetings?: boolean;
 };
 
 type ChurchIdentityView = {
@@ -553,6 +557,7 @@ type KidsEventView = {
   event_date: string | null;
   time: string | null;
   location: string | null;
+  room_id?: string | null;
   capacity: number | null;
   open_enrollment: boolean;
 };
@@ -635,7 +640,7 @@ type FieldDef =
   | { k: string; label: string; type: "select"; req?: boolean; half?: boolean; ph?: string; hint?: string; options: { v: string; l: string }[] }
   | { k: string; label: string; type: "date"; req?: boolean; half?: boolean; hint?: string }
   | { k: string; label: string; type: "time"; req?: boolean; half?: boolean; hint?: string }
-  | { k: string; label: string; type: "toggle"; req?: boolean; half?: boolean; hint?: string; onLabel?: string; offLabel?: string }
+  | { k: string; label: string; type: "toggle"; req?: boolean; half?: boolean; hint?: string; onLabel?: string; offLabel?: string; value?: string }
   | { k: string; label: string; type: "checks"; req?: boolean; half?: boolean; hint?: string; options: { v: string; l: string }[] }
   | { k: string; label: string; type: "icon"; req?: boolean; half?: boolean; hint?: string; value?: string };
 
@@ -1443,7 +1448,7 @@ export default function ServiceExactApp({
         {route === "pessoas" ? <Pessoas people={people} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Times ministries={ministries} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} church={firstChurch} setDrawer={setDrawer} setModal={setModal} /> : null}
-        {route === "criancas" ? <Criancas kidsChildren={kidsChildren} kidsClasses={kidsClasses} childGuardians={childGuardians} people={people} kidsEvents={kidsEvents} church={firstChurch} /> : null}
+        {route === "criancas" ? <Criancas kidsChildren={kidsChildren} kidsClasses={kidsClasses} childGuardians={childGuardians} people={people} kidsEvents={kidsEvents} rooms={rooms} church={firstChurch} /> : null}
         {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "batismos" ? <Batismos baptismClasses={baptismClasses} baptismCandidates={baptismCandidates} decisions={decisions} members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "cursos" ? (
@@ -1459,10 +1464,10 @@ export default function ServiceExactApp({
         ) : null}
         {route === "escalas" ? <Escalas gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} church={firstChurch} scopeMinistryIds={scopeMinistryIds} setDrawer={setDrawer} setModal={setModal} setRoute={setRoute} setCheckinEventId={setCheckinEventId} onNotifyLeaderRecusa={notificarLiderRecusa} /> : null}
         {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} rooms={rooms} reservations={reservations} church={firstChurch} setDrawer={setDrawer} /> : null}
-        {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} rooms={rooms} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} church={firstChurch} setModal={setModal} /> : null}
         {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} scopeMinistryIds={scopeMinistryIds} setModal={setModal} /> : null}
-        {route === "cultos" ? <Cultos events={events} ministries={ministries} church={firstChurch} kidsClasses={kidsClasses} kidsSessions={kidsSessions} kidsChildren={kidsChildren} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
+        {route === "cultos" ? <Cultos events={events} ministries={ministries} church={firstChurch} kidsClasses={kidsClasses} kidsSessions={kidsSessions} kidsChildren={kidsChildren} rooms={rooms} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
         {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} wallPosts={wallPosts} ministries={ministries} people={people} setModal={setModal} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} currentPersonId={perspectivePersonId} scopeMinistryIds={scopeMinistryIds} pendingChatMemberId={pendingChatMemberId} onConsumePendingChatMember={() => setPendingChatMemberId(null)} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} confirmationRate={confirmationRate} setRoute={setRoute} church={firstChurch} /> : null}
@@ -2773,9 +2778,11 @@ function Escalas({
   );
 }
 
-function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChildren, setDrawer, setModal, setCheckinEventId, setShareEventId }: { events: EventView[]; ministries: MinistryView[]; church?: ChurchView; kidsClasses: KidsClassView[]; kidsSessions: KidsSessionView[]; kidsChildren: ChildView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; setCheckinEventId: (id: string) => void; setShareEventId: (id: string) => void }) {
+function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChildren, rooms, setDrawer, setModal, setCheckinEventId, setShareEventId }: { events: EventView[]; ministries: MinistryView[]; church?: ChurchView; kidsClasses: KidsClassView[]; kidsSessions: KidsSessionView[]; kidsChildren: ChildView[]; rooms: RoomView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; setCheckinEventId: (id: string) => void; setShareEventId: (id: string) => void }) {
   const [kidsPickerEventId, setKidsPickerEventId] = useState<string | null>(null);
   const [kidsModal, setKidsModal] = useState<{ eventId: string; classId: string } | null>(null);
+  const meetingRooms = rooms.filter((room) => room.allows_meetings !== false);
+  const localOptions = meetingRooms.map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` }));
   const tipoOptions = [
     { v: "Culto", l: "Culto" },
     { v: "Evento", l: "Evento" },
@@ -2785,7 +2792,7 @@ function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChi
   ];
   return (
     <div className="content">
-      <PageHead title="Cultos & Agenda" eyebrow="Operação" subtitle="Agenda, roteiro, setlist e ministérios envolvidos em cada culto." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo culto ou evento", subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Culto da Manhã, Conferência de Jovens" }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"text", half:true, ph:"Templo, Anexo..." }, { k:"data", label:"Data", type:"date", half:true }, { k:"hora", label:"Horário de início", type:"time", half:true }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }], action: { kind: "event" } })}>+ Novo culto</button>} />
+      <PageHead title="Cultos & Agenda" eyebrow="Operação" subtitle="Agenda, roteiro, setlist e ministérios envolvidos em cada culto." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo culto ou evento", subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Culto da Manhã, Conferência de Jovens" }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"data", label:"Data", type:"date", half:true }, { k:"hora", label:"Horário de início", type:"time", half:true }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }], action: { kind: "event" } })}>+ Novo culto</button>} />
       <div className="grid-2">
         {events.map((event) => (
           <div className="panel" key={event.id} style={{ position: "relative" }}>
@@ -3120,12 +3127,12 @@ function ReuniaoForm({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const meetingRooms = rooms.filter((room) => room.allows_meetings !== false);
   const [titulo, setTitulo] = useState("");
   const [data, setData] = useState("");
   const [hora, setHora] = useState("20h00");
   const [fim, setFim] = useState("21h30");
-  const [local, setLocal] = useState("");
-  const [salaId, setSalaId] = useState("");
+  const [salaId, setSalaId] = useState(meetingRooms[0]?.id ?? "");
   const [presentes, setPresentes] = useState<string[]>([]);
   const [pauta, setPauta] = useState("");
   const [saving, setSaving] = useState(false);
@@ -3140,6 +3147,7 @@ function ReuniaoForm({
   const criar = async () => {
     if (!titulo.trim()) { setError("Dê um título à reunião."); return; }
     if (!church?.organizationId || !church.id) { setError("Nenhuma igreja encontrada para vincular esta reunião."); return; }
+    if (!salaEscolhida) { setError("Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
     if (conflito) { setError(`A sala já tem "${conflito.title}" em ${conflito.start_time} a ${conflito.end_time} nesse dia.`); return; }
     setSaving(true);
     setError("");
@@ -3151,7 +3159,7 @@ function ReuniaoForm({
       title: titulo.trim(),
       meeting_date: data || null,
       time: hora,
-      location: salaEscolhida ? salaEscolhida.name : (local || null),
+      location: salaEscolhida.name,
       ministries: meetingMinistries,
       attendees: presentes,
       agenda: pauta.split("\n").map((s) => s.trim()).filter(Boolean),
@@ -3195,13 +3203,13 @@ function ReuniaoForm({
           </div>
           <div className="ce-grid" style={{ marginTop: 4 }}>
             <div className="field">
-              <label className="field-label">Reservar uma sala</label>
+              <label className="field-label req">Sala (espaço já cadastrado)</label>
               <select className="select" value={salaId} onChange={(e) => setSalaId(e.target.value)}>
-                <option value="">Sem reserva de sala</option>
-                {rooms.map((room) => <option key={room.id} value={room.id}>{room.name}{room.capacity ? ` · ${room.capacity} lug.` : ""}</option>)}
+                <option value="">Selecione uma sala</option>
+                {meetingRooms.map((room) => <option key={room.id} value={room.id}>{room.name}{room.capacity ? ` · ${room.capacity} lug.` : ""}</option>)}
               </select>
+              {meetingRooms.length === 0 ? <div className="cell-sub" style={{ marginTop: 6 }}>Nenhuma sala liberada pra reunião ainda. Cadastre em Configurações → Espaços & Salas.</div> : null}
             </div>
-            {!salaId ? <div className="field"><label className="field-label">Local (texto livre)</label><input className="input" value={local} onChange={(e) => setLocal(e.target.value)} placeholder="ex: Sala de reuniões" /></div> : null}
           </div>
           {conflito ? <div className="reserva-warn"><Icon name="alerta" size={14} /> A sala já tem &quot;{conflito.title}&quot; em {conflito.start_time} a {conflito.end_time} nesse dia.</div> : null}
         </DrawerSection>
@@ -3226,7 +3234,7 @@ function ReuniaoForm({
 
         {error ? <div style={{ fontSize: 12.5, color: "var(--danger)", marginBottom: 12 }}>{error}</div> : null}
         <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
-          <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" disabled={saving || !!conflito} onClick={criar}>{saving ? "Marcando…" : "Marcar reunião"}</button>
+          <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" disabled={saving || !!conflito || !salaId} onClick={criar}>{saving ? "Marcando…" : "Marcar reunião"}</button>
           <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
         </div>
       </div>
@@ -3277,11 +3285,12 @@ function Reunioes({ meetings, meetingActions, ministries, people, rooms, reserva
   );
 }
 
-function Ensaios({ rehearsals, ministries, setDrawer, setModal }: { rehearsals: RehearsalView[]; ministries: MinistryView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
+function Ensaios({ rehearsals, ministries, rooms, setDrawer, setModal }: { rehearsals: RehearsalView[]; ministries: MinistryView[]; rooms: RoomView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
   const ministryById = new Map(ministries.map((ministry) => [ministry.id, ministry]));
+  const localOptions = rooms.filter((room) => room.allows_meetings !== false).map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` }));
   return (
     <div className="content wide">
-      <PageHead title="Ensaios" eyebrow="Liderança" subtitle="Ensaios por ministério, presença, repertório e materiais." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo ensaio", subtitle: "Louvor, teatro, dança… Escolha quem participa e defina o repertório.", saveLabel: "Criar ensaio", formFields: [{ k:"titulo", label:"Nome do ensaio", type:"text", req:true, ph:"ex: Ensaio do Louvor, Peça de Natal" }, { k:"tipo", label:"Tipo de ensaio", type:"select", half:true, options:[{v:"louvor",l:"Louvor / música"},{v:"teatro",l:"Teatro"},{v:"danca",l:"Dança"},{v:"coreografia",l:"Coreografia"},{v:"geral",l:"Geral"},{v:"outro",l:"Outro"}] }, { k:"time", label:"Ministério", type:"text", half:true, ph:"ex: Louvor" }, { k:"data", label:"Dia", type:"date", half:true }, { k:"hora", label:"Horário", type:"time", half:true }, { k:"local", label:"Local", type:"text", half:true, ph:"Templo, Sala 2..." }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }, { k:"obs", label:"Observação", type:"area", ph:"Detalhes do ensaio" }], action: { kind: "rehearsal" } })}>+ Novo ensaio</button>} />
+      <PageHead title="Ensaios" eyebrow="Liderança" subtitle="Ensaios por ministério, presença, repertório e materiais." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo ensaio", subtitle: "Louvor, teatro, dança… Escolha quem participa e defina o repertório.", saveLabel: "Criar ensaio", formFields: [{ k:"titulo", label:"Nome do ensaio", type:"text", req:true, ph:"ex: Ensaio do Louvor, Peça de Natal" }, { k:"tipo", label:"Tipo de ensaio", type:"select", half:true, options:[{v:"louvor",l:"Louvor / música"},{v:"teatro",l:"Teatro"},{v:"danca",l:"Dança"},{v:"coreografia",l:"Coreografia"},{v:"geral",l:"Geral"},{v:"outro",l:"Outro"}] }, { k:"time", label:"Ministério", type:"text", half:true, ph:"ex: Louvor" }, { k:"data", label:"Dia", type:"date", half:true }, { k:"hora", label:"Horário", type:"time", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }, { k:"obs", label:"Observação", type:"area", ph:"Detalhes do ensaio" }], action: { kind: "rehearsal" } })}>+ Novo ensaio</button>} />
       <div className="reu-grid">
         {rehearsals.map((rehearsal) => {
           const ministry = rehearsal.ministry_id ? ministryById.get(rehearsal.ministry_id) : null;
@@ -3997,7 +4006,7 @@ function Espacos({ rooms, reservations, church, setModal, embed }: { rooms: Room
   const [reservar, setReservar] = useState<{ salaInicial?: string; dataInicial?: string } | null>(null);
   const roomById = new Map(rooms.map((room) => [room.id, room]));
   const visibleReservations = reservations.filter((reservation) => filter === "todas" || reservation.room_id === filter);
-  const openNewRoom = () => setModal({ eyebrow: "Criar", title: "Nova sala / espaço", subtitle: "Um espaço físico da igreja disponível para reservas.", saveLabel: "Criar sala", formFields: [{ k:"nome", label:"Nome do espaço", type:"text", req:true, ph:"ex: Sala 3, Salão de festas" }, { k:"capacidade", label:"Capacidade (pessoas)", type:"text", half:true, ph:"ex: 30" }, { k:"local", label:"Onde fica", type:"text", half:true, ph:"ex: 1º andar, Anexo" }, { k:"recursos", label:"Recursos disponíveis", type:"text", ph:"Som, Projeção, Piano", hint:"Separe por vírgula." }], action: { kind: "room" } });
+  const openNewRoom = () => setModal({ eyebrow: "Criar", title: "Nova sala / espaço", subtitle: "Um espaço físico da igreja disponível para reservas. Todo culto, ensaio, reunião ou evento passa a escolher o local aqui, com capacidade sempre visível.", saveLabel: "Criar sala", formFields: [{ k:"nome", label:"Nome do espaço", type:"text", req:true, ph:"ex: Sala 3, Salão de festas" }, { k:"capacidade", label:"Capacidade (pessoas)", type:"text", half:true, ph:"ex: 30" }, { k:"local", label:"Onde fica", type:"text", half:true, ph:"ex: 1º andar, Anexo" }, { k:"recursos", label:"Recursos disponíveis", type:"text", ph:"Som, Projeção, Piano", hint:"Separe por vírgula." }, { k:"permiteReuniao", label:"Serve pra reunião/culto/ensaio de adultos?", type:"toggle", value:"true", onLabel:"Sim", offLabel:"Não (ex: Berçário)" }], action: { kind: "room" } });
   const openNewReservation = () => setReservar({ salaInicial: filter !== "todas" ? filter : undefined });
   const header = embed ? (
     <div className="cfg-card-head-row">
@@ -4034,7 +4043,7 @@ function Espacos({ rooms, reservations, church, setModal, embed }: { rooms: Room
       <div className="sala-grid">
         {rooms.map((room) => {
           const count = reservations.filter((reservation) => reservation.room_id === room.id).length;
-          return <button key={room.id} className={`sala-card ${filter === room.id ? "on" : ""}`} type="button" onClick={() => setFilter(filter === room.id ? "todas" : room.id)}><div className="sala-card-top"><span className="sala-mark"><Icon name="config" size={18} /></span><span className="sala-cap">{room.capacity ?? 0} <small>lugares</small></span></div><div className="sala-nome">{room.name}</div><div className="sala-local">{room.location || "Local não informado"}</div>{room.resources.length ? <div className="sala-rec">{room.resources.map((resource) => <span className="tag" key={resource}>{resource}</span>)}</div> : null}<div className="sala-foot">{count} reserva(s)</div></button>;
+          return <button key={room.id} className={`sala-card ${filter === room.id ? "on" : ""}`} type="button" onClick={() => setFilter(filter === room.id ? "todas" : room.id)}><div className="sala-card-top"><span className="sala-mark"><Icon name="config" size={18} /></span><span className="sala-cap">{room.capacity ?? 0} <small>lugares</small></span></div><div className="sala-nome">{room.name}</div><div className="sala-local">{room.location || "Local não informado"}</div>{room.resources.length ? <div className="sala-rec">{room.resources.map((resource) => <span className="tag" key={resource}>{resource}</span>)}</div> : null}<div className="sala-foot">{count} reserva(s){room.allows_meetings === false ? " · não serve pra reunião" : ""}</div></button>;
         })}
         {rooms.length === 0 ? <div className="empty">Nenhuma sala cadastrada ainda.</div> : null}
       </div>
@@ -4109,6 +4118,7 @@ function Criancas({
   childGuardians,
   people,
   kidsEvents,
+  rooms,
   church,
 }: {
   kidsChildren: ChildView[];
@@ -4116,6 +4126,7 @@ function Criancas({
   childGuardians: ChildGuardianView[];
   people: PersonView[];
   kidsEvents: KidsEventView[];
+  rooms: RoomView[];
   church?: ChurchView;
 }) {
   const [q, setQ] = useState("");
@@ -4124,6 +4135,7 @@ function Criancas({
   const [eventModal, setEventModal] = useState(false);
   const classById = new Map(kidsClasses.map((kc) => [kc.id, kc]));
   const personById = new Map(people.map((person) => [person.id, person]));
+  const kidsLocalOptions = rooms.map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` }));
 
   const visible = kidsChildren.filter((child) => {
     const okQ = !q || child.name.toLowerCase().includes(q.toLowerCase());
@@ -4196,7 +4208,7 @@ function Criancas({
       )}
       {eventModal && church && (
         <ServiceModal
-          modal={{ eyebrow: "Criar", title: "Novo evento Kids", subtitle: "Evento infantil com inscrição aberta pelos responsáveis no app.", saveLabel: "Criar evento", formFields: [{ k: "titulo", label: "Título", type: "text", req: true, ph: "ex: Páscoa Kids" }, { k: "data", label: "Data", type: "date", half: true }, { k: "hora", label: "Horário", type: "text", half: true, ph: "ex: 10h" }, { k: "local", label: "Local", type: "text", half: true, ph: "ex: Salão Kids" }, { k: "capacidade", label: "Vagas", type: "text", half: true, ph: "ex: 30" }, { k: "desc", label: "Descrição", type: "area", ph: "O que vai acontecer" }], action: { kind: "kidsEvent" } }}
+          modal={{ eyebrow: "Criar", title: "Novo evento Kids", subtitle: "Evento infantil com inscrição aberta pelos responsáveis no app.", saveLabel: "Criar evento", formFields: [{ k: "titulo", label: "Título", type: "text", req: true, ph: "ex: Páscoa Kids" }, { k: "data", label: "Data", type: "date", half: true }, { k: "hora", label: "Horário", type: "text", half: true, ph: "ex: 10h" }, { k: "local", label: "Local", type: "select", req: true, half: true, ph: "Selecione um espaço cadastrado", options: kidsLocalOptions }, { k: "capacidade", label: "Vagas", type: "text", half: true, ph: "ex: 30" }, { k: "desc", label: "Descrição", type: "area", ph: "O que vai acontecer" }], action: { kind: "kidsEvent" } }}
           church={church}
           people={people}
           ministries={[]}
@@ -4441,9 +4453,9 @@ function ChildFormModal({
 
 function ReservaModal({ rooms, reservations, church, salaInicial, dataInicial, onClose }: { rooms: RoomView[]; reservations: ReservationView[]; church: ChurchView; salaInicial?: string; dataInicial?: string; onClose: () => void }) {
   const router = useRouter();
-  const [salaId, setSalaId] = useState(salaInicial || rooms[0]?.id || "");
-  const [titulo, setTitulo] = useState("");
   const [tipo, setTipo] = useState("reuniao");
+  const [salaId, setSalaId] = useState(salaInicial || rooms.filter((room) => room.allows_meetings !== false)[0]?.id || "");
+  const [titulo, setTitulo] = useState("");
   const [data, setData] = useState(dataInicial || "");
   const [inicio, setInicio] = useState("19h00");
   const [fim, setFim] = useState("21h00");
@@ -4452,9 +4464,11 @@ function ReservaModal({ rooms, reservations, church, salaInicial, dataInicial, o
 
   const isoDate = data ? dpToIsoDate(data) : null;
   const conflito = salaId && isoDate ? findRoomConflict(reservations, salaId, isoDate, inicio, fim) : null;
+  const roomsForTipo = tipo === "reuniao" ? rooms.filter((room) => room.allows_meetings !== false) : rooms;
 
   const salvar = async () => {
     if (!titulo.trim()) { setError("Dê um nome ao compromisso."); return; }
+    if (!salaId) { setError("Selecione uma sala."); return; }
     if (!isoDate) { setError("Escolha o dia no calendário."); return; }
     if (conflito) { setError(`Já existe "${conflito.title}" nesta sala em ${conflito.start_time} a ${conflito.end_time}.`); return; }
     setSaving(true);
@@ -4485,12 +4499,13 @@ function ReservaModal({ rooms, reservations, church, salaInicial, dataInicial, o
           <div className="field field-half">
             <label className="field-label">Sala</label>
             <select className="select" value={salaId} onChange={(e) => setSalaId(e.target.value)}>
-              {rooms.map((room) => <option key={room.id} value={room.id}>{room.name}{room.capacity ? ` · ${room.capacity} lug.` : ""}</option>)}
+              <option value="">Selecione uma sala</option>
+              {roomsForTipo.map((room) => <option key={room.id} value={room.id}>{room.name}{room.capacity ? ` · ${room.capacity} lug.` : ""}</option>)}
             </select>
           </div>
           <div className="field field-half">
             <label className="field-label">Tipo</label>
-            <select className="select" value={tipo} onChange={(e) => setTipo(e.target.value)}>
+            <select className="select" value={tipo} onChange={(e) => { const nextTipo = e.target.value; setTipo(nextTipo); const allowed = nextTipo === "reuniao" ? rooms.filter((room) => room.allows_meetings !== false) : rooms; if (!allowed.some((room) => room.id === salaId)) setSalaId(""); }}>
               {RESERVA_TIPOS.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
             </select>
           </div>
@@ -4502,7 +4517,7 @@ function ReservaModal({ rooms, reservations, church, salaInicial, dataInicial, o
         </div>
         <div className="modal-foot">
           <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving || !!conflito} onClick={salvar}>Reservar</button>
+          <button className="btn btn-pri" type="button" disabled={saving || !!conflito || !salaId} onClick={salvar}>Reservar</button>
         </div>
       </div>
     </div>
@@ -9179,6 +9194,8 @@ function ServiceModal({
       }
     } else if (action.kind === "event") {
       if (!value("nome")) { setSaving(false); setError("Digite o nome do culto."); return; }
+      const eventRoom = namedRoom("local");
+      if (!eventRoom) { setSaving(false); setError("Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
       result = await supabase.schema("service").from("events").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -9186,7 +9203,8 @@ function ServiceModal({
         kind: value("tipo") || "Culto",
         event_date: value("data") || null,
         time: value("hora") || null,
-        location: value("local") || null,
+        location: eventRoom.name,
+        room_id: eventRoom.id,
         recurrence: value("recorrencia") || "semanal",
         ministry_ids: [],
         roster: [],
@@ -9312,13 +9330,16 @@ function ServiceModal({
         return;
       }
       const ministry = namedMinistry("time");
+      const rehearsalRoom = namedRoom("local");
+      if (!rehearsalRoom) { setSaving(false); setError("Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
       result = await supabase.schema("service").from("rehearsals").insert({
         organization_id: church.organizationId,
         church_id: church.id,
         title: value("titulo"),
         rehearsal_date: value("data") || null,
         time: value("hora") || null,
-        location: value("local") || null,
+        location: rehearsalRoom.name,
+        room_id: rehearsalRoom.id,
         ministry_id: ministry?.id ?? null,
         kind: value("tipo") || "louvor",
         recurrence: value("recorrencia") || "eventual",
@@ -9368,6 +9389,7 @@ function ServiceModal({
         capacity: Number.parseInt(value("capacidade"), 10) || null,
         location: value("local") || null,
         resources: value("recursos") ? value("recursos").split(",").map((item) => item.trim()).filter(Boolean) : [],
+        allows_meetings: value("permiteReuniao") !== "false",
       });
     } else if (action.kind === "kidsClass") {
       if (!value("nome")) { setSaving(false); setError("Digite o nome da turma."); return; }
@@ -9386,6 +9408,8 @@ function ServiceModal({
         : await supabase.schema("service").from("kids_classes").insert(payload);
     } else if (action.kind === "kidsEvent") {
       if (!value("titulo")) { setSaving(false); setError("Digite o título do evento."); return; }
+      const kidsEventRoom = namedRoom("local");
+      if (!kidsEventRoom) { setSaving(false); setError("Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
       result = await supabase.schema("service").from("kids_events").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -9393,7 +9417,8 @@ function ServiceModal({
         description: value("desc") || null,
         event_date: value("data") || null,
         time: value("hora") || null,
-        location: value("local") || null,
+        location: kidsEventRoom.name,
+        room_id: kidsEventRoom.id,
         capacity: value("capacidade") ? Number.parseInt(value("capacidade"), 10) : null,
         open_enrollment: true,
       });

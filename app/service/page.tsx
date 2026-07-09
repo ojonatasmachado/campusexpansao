@@ -223,6 +223,7 @@ type EventRow = {
   time: string | null;
   slot: string | null;
   location: string | null;
+  room_id: string | null;
   ministries: string[] | null;
   tags: string[] | null;
   checkin_token: string | null;
@@ -266,6 +267,7 @@ type EventView = {
   time: string;
   slot: string;
   location: string;
+  roomId: string | null;
   ministries: string[];
   tags: string[];
   schedule: ScheduleItemRow[];
@@ -402,6 +404,7 @@ type BaptismClassView = {
   label: string;
   baptism_date: string | null;
   location: string | null;
+  room_id: string | null;
   status: "aberta" | "preparacao" | "agendada" | "concluida" | null;
   pastor: string | null;
   notes: string | null;
@@ -541,6 +544,7 @@ type RehearsalView = {
   rehearsal_date: string | null;
   time: string | null;
   location: string | null;
+  room_id: string | null;
   recurrence: string | null;
   audience: string | null;
   attendees: string[];
@@ -555,6 +559,7 @@ type RoomView = {
   capacity: number | null;
   location: string | null;
   resources: string[];
+  allows_meetings: boolean;
 };
 
 type ReservationView = {
@@ -639,6 +644,7 @@ type KidsEventView = {
   event_date: string | null;
   time: string | null;
   location: string | null;
+  room_id: string | null;
   capacity: number | null;
   open_enrollment: boolean;
 };
@@ -853,6 +859,7 @@ function toEventViews(
     time: event.time || "Horário não informado",
     slot: event.slot || "slot não informado",
     location: event.location || "Local não informado",
+    roomId: event.room_id,
     ministries: event.ministries ?? [],
     tags: event.tags ?? [],
     schedule: scheduleItems
@@ -988,7 +995,7 @@ async function getServiceDashboardData(): Promise<{
   const { data: eventsData, error: eventsError } = await supabase
     .schema("service")
     .from("events")
-    .select("id,organization_id,church_id,name,kind,weekday,event_date,time,slot,location,ministries,tags,checkin_token,checkin_active,created_at")
+    .select("id,organization_id,church_id,name,kind,weekday,event_date,time,slot,location,room_id,ministries,tags,checkin_token,checkin_active,created_at")
     .order("event_date", { ascending: true, nullsFirst: false })
     .order("time");
 
@@ -1097,7 +1104,7 @@ async function getServiceDashboardData(): Promise<{
     journeyRequestsResult,
   ] = await Promise.all([
     supabase.schema("service").from("decisions").select("id,name,phone,happened_on,kind,service_name,responsible_id,status,member_id,age,notes,created_at").order("created_at", { ascending: false }),
-    supabase.schema("service").from("baptism_classes").select("id,label,baptism_date,location,status,pastor,notes,open_enrollment").order("created_at", { ascending: false }),
+    supabase.schema("service").from("baptism_classes").select("id,label,baptism_date,location,room_id,status,pastor,notes,open_enrollment").order("created_at", { ascending: false }),
     supabase.schema("service").from("baptism_candidates").select("id,class_id,member_id,decision_id").order("created_at", { ascending: false }),
     supabase.schema("service").from("courses").select("id,name,kind,level,description,category,color,prereqs,divulgacao,materiais,modalidade").order("created_at", { ascending: false }),
     supabase.schema("service").from("enrollments").select("id,course_id,member_id,done_count,status").order("created_at", { ascending: false }),
@@ -1117,15 +1124,15 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("wall_posts").select("id,author,audience,body,pinned,channels,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("meetings").select("id,title,meeting_date,time,location,author_id,status,ministries,attendees,agenda,minutes").order("created_at", { ascending: false }),
     supabase.schema("service").from("meeting_actions").select("id,meeting_id,description,assignee_id,status").order("created_at", { ascending: false }),
-    supabase.schema("service").from("rehearsals").select("id,ministry_id,title,kind,rehearsal_date,time,location,recurrence,audience,attendees,repertoire,attachments,notes").order("created_at", { ascending: false }),
-    supabase.schema("service").from("rooms").select("id,name,capacity,location,resources").order("created_at", { ascending: false }),
+    supabase.schema("service").from("rehearsals").select("id,ministry_id,title,kind,rehearsal_date,time,location,room_id,recurrence,audience,attendees,repertoire,attachments,notes").order("created_at", { ascending: false }),
+    supabase.schema("service").from("rooms").select("id,name,capacity,location,resources,allows_meetings").order("created_at", { ascending: false }),
     supabase.schema("service").from("reservations").select("id,room_id,title,kind,reserved_date,start_time,end_time,source_type,source_id").order("created_at", { ascending: false }),
     supabase.schema("service").from("kids_classes").select("id,church_id,name,min_age_months,max_age_months,room_id,capacity,accent").order("name"),
     supabase.schema("service").from("children").select("id,church_id,class_id,name,birth,photo_url,allergies,notes,gender,emergency_contact_name,emergency_contact_phone,image_authorized,dietary_restrictions,health_insurance,medication").order("name"),
     supabase.schema("service").from("child_guardians").select("id,child_id,guardian_person_id,relationship,can_pickup"),
     supabase.schema("service").from("kids_sessions").select("id,event_id,class_id,checkin_token,checkin_active"),
     supabase.schema("service").from("kids_attendance").select("id,session_id,child_id,status,dropped_off_by,dropped_off_at,dropped_off_via,pickup_requested_by,pickup_requested_at,picked_up_by,picked_up_confirmed_by,picked_up_at,picked_up_via,notes").order("dropped_off_at", { ascending: false }),
-    supabase.schema("service").from("kids_events").select("id,church_id,title,description,event_date,time,location,capacity,open_enrollment").order("created_at", { ascending: false }),
+    supabase.schema("service").from("kids_events").select("id,church_id,title,description,event_date,time,location,room_id,capacity,open_enrollment").order("created_at", { ascending: false }),
     supabase.schema("service").from("kids_event_enrollments").select("id,kids_event_id,child_id,enrolled_by"),
     supabase.schema("service").from("church_identity").select("church_id,purpose,mission,vision,verse,values").eq("church_id", churchesData?.[0]?.id ?? "").maybeSingle(),
     supabase.schema("service").from("cycles").select("id,year,theme,verse,body,objectives,is_active").order("created_at", { ascending: false }),
