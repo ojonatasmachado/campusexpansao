@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import MetricsTracker from "./components/MetricsTracker";
-import "./loja.css";
 
 export const metadata: Metadata = {
   title: "CE.X · Campus Expansão",
@@ -37,14 +36,10 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet"
         />
-        <link rel="stylesheet" href="/tokens.css" />
-        <link rel="stylesheet" href="/components.css" />
-        <link rel="stylesheet" href="/sections.css" />
-        <link rel="stylesheet" href="/domain.css" />
-        <link rel="stylesheet" href="/ui.css" />
-        {/* loja.css importado via module import acima — cache busting automático */}
+        {/* Brand Library v2.0 (tokens/components/sections/domain/ui + loja.css)
+            carregada em app/(site)/layout.tsx: só as rotas do site público e
+            do admin herdam. /service tem seu próprio sistema de CSS. */}
         {/* admin.css carregado apenas no painel admin */}
-        <script src="/library.js" defer></script>
       </head>
       <body suppressHydrationWarning>
         <Suspense fallback={null}>

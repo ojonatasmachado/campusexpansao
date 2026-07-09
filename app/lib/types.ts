@@ -1,4 +1,4 @@
-// ── FONTE ÚNICA DE VERDADE — tipos do banco Supabase ────────────────────────
+// ── FONTE ÚNICA DE VERDADE : tipos do banco Supabase ────────────────────────
 // Qualquer componente que leia dados do Supabase importa daqui.
 // Se mudar um campo no banco, muda aqui e o TS grita em todos os lugares certos.
 

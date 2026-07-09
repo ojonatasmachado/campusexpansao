@@ -38,7 +38,7 @@
 /* líder de frente (no picker de elenco) */
 .frente-lider-tog { margin-left: auto; flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; background: transparent; border: 0.5px solid var(--border-2); color: var(--subtle); font-size: 14px; line-height: 1; display: grid; place-items: center; transition: all .14s; }
 .frente-lider-tog:hover { color: var(--olive); border-color: var(--olive-line); }
-.frente-lider-tog.on { color: var(--ink); background: var(--olive); border-color: var(--olive); }
+.frente-lider-tog.on { color:var(--accent-ink); background: var(--olive); border-color: var(--olive); }
 .frente-lider-badge { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--olive-soft); border: 0.5px solid var(--olive-line); background: var(--olive-dim); border-radius: var(--r-pill); padding: 1px 7px; margin-left: 8px; vertical-align: 1px; }
 
 .esc-cols { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; align-items: flex-start; margin-top: 4px; }
@@ -92,7 +92,7 @@
 /* repertório: ordem, links, leitura, autorizados */
 .setlist-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .setlist-ord { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
-.setlist-mv { background: transparent; border: 0.5px solid var(--border-2); color: var(--muted); border-radius: 5px; width: 22px; height: 22px; cursor: pointer; font-size: 11px; line-height: 1; }
+.setlist-mv { background: transparent; border: 0.5px solid var(--border-2); color: var(--muted); border-radius: 5px; width: 22px; height: 22px; cursor: pointer; font-size: 11px; line-height: 1; display: flex; align-items: center; justify-content: center; }
 .setlist-mv:hover:not(:disabled) { border-color: var(--olive); color: var(--olive); }
 .setlist-mv:disabled { opacity: 0.3; cursor: default; }
 .setlist-link { display: inline-flex; align-items: center; gap: 4px; }
@@ -118,7 +118,7 @@
 .acesso-tog:hover { border-color: var(--olive-line); }
 .acesso-tog.on { background: var(--olive-dim); border-color: var(--olive-line); }
 .acesso-tog-ic { width: 30px; height: 30px; border-radius: 8px; background: var(--graphite); color: var(--olive); display: grid; place-items: center; flex-shrink: 0; }
-.acesso-tog.on .acesso-tog-ic { background: var(--olive); color: var(--ink); }
+.acesso-tog.on .acesso-tog-ic { background: var(--olive); color:var(--accent-ink); }
 .acesso-tog-l { flex: 1; font-size: 13.5px; color: var(--light); font-weight: 500; }
 .acesso-tog-sw { width: 34px; height: 20px; border-radius: 10px; background: var(--border-2); position: relative; flex-shrink: 0; transition: background .15s; }
 .acesso-tog-sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--subtle); transition: transform .15s, background .15s; }
@@ -168,13 +168,13 @@
 
 /* ── CALENDÁRIO ─────────────────────────────────────────────────── */
 .esp-cal-wrap { background: var(--graphite); border: 0.5px solid var(--border-2); border-radius: var(--r-lg); padding: 18px; }
-.cal { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.cal { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; }
 @media (min-width: 760px) { .esp-cal-wrap .cal { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-items: start; } }
 .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; grid-column: 1 / -1; }
 .cal-title { font-size: 14px; font-weight: 700; color: var(--white); letter-spacing: -0.01em; }
-.cal-nav { width: 30px; height: 30px; border-radius: 8px; background: var(--ink); border: 0.5px solid var(--border-2); color: var(--muted); cursor: pointer; font-size: 15px; }
+.cal-nav { width: 30px; height: 30px; border-radius: 8px; background: var(--ink); border: 0.5px solid var(--border-2); color: var(--muted); cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; }
 .cal-nav:hover { border-color: var(--olive); color: var(--olive); }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; min-width: 0; }
 .cal-dow { text-align: center; font-family: var(--mono); font-size: 10px; color: var(--subtle); padding-bottom: 4px; }
 .cal-cell { position: relative; aspect-ratio: 1 / 1; border: 0.5px solid transparent; border-radius: 8px; background: var(--ink); color: var(--light); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 12.5px; padding: 0; }
 .cal-cell.empty { background: transparent; border: none; cursor: default; }
@@ -211,7 +211,7 @@
 .crono-item-in { flex: 1; background: var(--graphite); border: 0.5px solid var(--border-2); border-radius: var(--r-md); padding: 9px 12px; color: var(--white); font-size: 13.5px; font-weight: 600; }
 .crono-item-in:focus { outline: none; border-color: var(--olive-line); }
 .crono-actions { display: flex; gap: 4px; }
-.crono-mini { width: 28px; height: 28px; border-radius: 7px; background: var(--graphite); border: 0.5px solid var(--border); color: var(--muted); cursor: pointer; font-size: 12px; }
+.crono-mini { width: 28px; height: 28px; border-radius: 7px; background: var(--graphite); border: 0.5px solid var(--border); color: var(--muted); cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
 .crono-mini:hover:not(:disabled) { border-color: var(--olive-line); color: var(--olive); }
 .crono-mini:disabled { opacity: 0.3; cursor: default; }
 .crono-mini.danger:hover { border-color: var(--danger); color: var(--danger); }
@@ -265,7 +265,7 @@
 .chat-msg.me .chat-bubble-wrap { align-items: flex-end; }
 .chat-msg-name { font-size: 10.5px; color: var(--olive-soft); font-weight: 600; padding-left: 2px; }
 .chat-bubble { background: var(--graphite-2, #1a1d17); border: 0.5px solid var(--border); border-radius: 14px 14px 14px 4px; padding: 9px 13px; font-size: 13.5px; color: var(--light); line-height: 1.5; }
-.chat-msg.me .chat-bubble { background: var(--olive); color: #1a1f12; border-color: transparent; border-radius: 14px 14px 4px 14px; font-weight: 500; }
+.chat-msg.me .chat-bubble { background: var(--olive); color: var(--accent-ink); border-color: transparent; border-radius: 14px 14px 4px 14px; font-weight: 500; }
 .chat-when { font-family: var(--mono); font-size: 9px; color: var(--subtle); padding: 0 3px; }
 .chat-compose { display: flex; gap: 8px; padding: 12px 14px; border-top: 0.5px solid var(--border); }
 .chat-compose .input { flex: 1; }
@@ -381,8 +381,10 @@
 
 /* ── ARTE DO EVENTO v2 (coluna, com respiro, sem sobreposição) ──── */
 .evt2-wrap { display: flex; gap: 0; background: var(--graphite); border: 0.5px solid var(--border-3); border-radius: var(--r-lg); overflow: hidden; max-width: 94vw; max-height: 92vh; }
-.evt2-stage { padding: 26px; background: var(--ink); display: flex; align-items: center; justify-content: center; }
+.evt2-stage { padding: 26px; background: var(--ink); display: flex; align-items: center; justify-content: center; overflow-y: auto; max-height: 92vh; }
+.evt2-stage:has(.evt2-art.full) { align-items: flex-start; }
 .evt2-art { width: 360px; height: 640px; border-radius: 22px; overflow: hidden; position: relative; color: #fff; flex-shrink: 0; font-family: var(--sans); display: flex; flex-direction: column; justify-content: space-between; padding: 34px 30px 30px; box-sizing: border-box; }
+.evt2-art.full { height: auto; min-height: 640px; overflow: visible; }
 .evt2-bg { position: absolute; inset: 0; background: linear-gradient(160deg, var(--evt-deep) 0%, #14160F 56%, #0A0C07 100%); z-index: 0; }
 .evt2-bg::after { content: ''; position: absolute; left: -25%; top: -8%; width: 150%; height: 52%; background: radial-gradient(ellipse at center, var(--evt-accent) 0%, transparent 64%); opacity: 0.28; }
 .evt2-art > div:not(.evt2-bg) { position: relative; z-index: 1; }
@@ -495,7 +497,7 @@
 .ck-undo:hover { color: var(--danger); border-color: var(--danger-line); }
 
 /* tela do voluntário (landing) */
-.ck-land { position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center; padding: 24px; background: radial-gradient(ellipse at 50% 0%, rgba(122,158,63,0.08), transparent 60%), var(--ink); overflow: auto; }
+.ck-land { position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center; padding: 24px; background: radial-gradient(ellipse at 50% 0%, var(--olive-dim), transparent 60%), var(--ink); overflow: auto; }
 .ck-land-card { width: 100%; max-width: 420px; background: var(--graphite); border: 0.5px solid var(--border-2); border-radius: var(--r-lg); padding: 30px 28px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
 .ck-land-logo { margin-bottom: 22px; }
 .ck-land-event { text-align: center; padding-bottom: 20px; border-bottom: 0.5px solid var(--border); margin-bottom: 22px; }
@@ -511,7 +513,7 @@
 /* botão de QR no painel (próximos cultos) */
 .painel-qr { position: relative; width: 30px; height: 30px; border-radius: var(--r-sm); background: var(--ink); border: 0.5px solid var(--border-2); color: var(--muted); display: grid; place-items: center; transition: all .14s; }
 .painel-qr:hover { color: var(--olive); border-color: var(--olive-line); }
-.painel-qr-count { position: absolute; top: -6px; right: -6px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: var(--r-pill); background: var(--olive); color: var(--ink); font-family: var(--mono); font-size: 9px; font-weight: 700; display: grid; place-items: center; }
+.painel-qr-count { position: absolute; top: -6px; right: -6px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: var(--r-pill); background: var(--olive); color:var(--accent-ink); font-family: var(--mono); font-size: 9px; font-weight: 700; display: grid; place-items: center; }
 
 /* ════════════════════════════════════════════════════════════════
    CURSOS · editor de texto rico, materiais, prova
@@ -560,7 +562,7 @@
 /* aula: linha com bot�o de QR de presen�a (professor) */
 .aula-line { display: flex; align-items: center; gap: 6px; }
 .aula-qr { flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--olive-soft); background: var(--olive-dim); border: 0.5px solid var(--olive-line); border-radius: var(--r-sm); padding: 5px 9px; cursor: pointer; transition: all .16s; }
-.aula-qr:hover { color: var(--ink); background: var(--olive); border-color: var(--olive); }
+.aula-qr:hover { color:var(--accent-ink); background: var(--olive); border-color: var(--olive); }
 
 /* ════════════════════════════════════════════════════════════════
    EDITOR DE CURSO · PÁGINA CHEIA (não mais drawer)

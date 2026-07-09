@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Icon } from "./lib/icons";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => void;
@@ -78,10 +79,10 @@ export default function PwaBootstrap() {
 
   return (
     <div className="pwa-banner">
-      <span className="pwa-banner-ic">◆</span>
+      <span className="pwa-banner-ic"><Icon name="baixar" size={18} /></span>
       <div className="pwa-banner-main">
-        <b>Instale o CE.X Service</b>
-        <small>Adicione à tela inicial e use como app — abre rápido e recebe notificações.</small>
+        <b>Instale o Service</b>
+        <small>Adicione à tela inicial e use como app, abre rápido e recebe notificações.</small>
       </div>
       <button className="btn btn-pri btn-sm" type="button" onClick={instalar}>
         {installable ? "Instalar" : "Como instalar"}

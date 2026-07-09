@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef } from "react";
+import { useState, useRef } from "react";
 import { toPng } from "html-to-image";
+import { formatDateBR } from "./lib/date";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -34,14 +35,22 @@ export type EventoShareProps = {
 
 // ── componente principal ──────────────────────────────────────────────────────
 
-export default function EventoShare({ event, ministries, churchName = "CE.X Service", logoUrl, onClose }: EventoShareProps) {
+/* "Arte do evento" é um cartão pra avisar a EQUIPE internamente (grupo do
+   WhatsApp da igreja) : roteiro, quem serve e repertório. Não é peça de
+   divulgação pública (sem CTA de convite, sem framing de "stories"). Tem
+   duas versões : simplificada (a de sempre, compacta) e completa (tudo,
+   sem cortar nada — pode ficar bem alta verticalmente, sem problema). */
+export default function EventoShare({ event, ministries, churchName = "Service", logoUrl, onClose }: EventoShareProps) {
   const artRef = useRef<HTMLDivElement>(null);
+  const [modo, setModo] = useState<"simples" | "completa">("simples");
+  const completa = modo === "completa";
 
   const envolvidos = ministries.filter((m) => event.ministries.includes(m.id));
-  const passos = event.schedule.filter((s) => s.item).slice(0, 7);
-  const setlist = event.setlist.slice(0, 6);
-
-  const nomeCurto = (name: string) => name.split(" ").slice(0, 2).join(" ");
+  const roteiroCompleto = event.schedule.filter((s) => s.item);
+  const passos = completa ? roteiroCompleto : roteiroCompleto.slice(0, 7);
+  const setlistCompleto = event.setlist;
+  const setlist = completa ? setlistCompleto : setlistCompleto.slice(0, 6);
+  const dataFmt = formatDateBR(event.eventDate);
 
   const baixar = async () => {
     if (!artRef.current) return;
@@ -49,7 +58,7 @@ export default function EventoShare({ event, ministries, churchName = "CE.X Serv
       const url = await toPng(artRef.current, { pixelRatio: 3, cacheBust: true });
       const a = document.createElement("a");
       a.href = url;
-      a.download = `evento-${event.name.toLowerCase().replace(/\s+/g, "-")}.png`;
+      a.download = `evento-${event.name.toLowerCase().replace(/\s+/g, "-")}-${modo}.png`;
       a.click();
     } catch {
       alert("Não consegui exportar agora. Tente novamente.");
@@ -59,28 +68,37 @@ export default function EventoShare({ event, ministries, churchName = "CE.X Serv
   const copiarTexto = () => {
     const L: string[] = [];
     L.push(`◆ ${event.name.toUpperCase()}`);
-    L.push(`${event.weekday}${event.eventDate ? " · " + event.eventDate : ""} · ${event.time}`);
+    L.push(`${event.weekday}${dataFmt ? " · " + dataFmt : ""} · ${event.time}`);
     L.push(`◇ ${event.location}`);
     if (envolvidos.length) {
       L.push("");
-      L.push("Equipes: " + envolvidos.map((m) => m.name).join(", "));
+      if (completa) {
+        L.push("Equipes escaladas:");
+        envolvidos.forEach((m) => {
+          L.push(`${m.name}:`);
+          m.people.forEach((p) => {
+            L.push(`  · ${p.personName}${p.functions.length ? " — " + p.functions.join(", ") : ""}${p.isLeader ? " (líder)" : ""}`);
+          });
+        });
+      } else {
+        L.push("Equipes: " + envolvidos.map((m) => m.name).join(", "));
+      }
     }
-    if (passos.length) {
+    if (roteiroCompleto.length) {
       L.push("");
       L.push("Programação:");
-      event.schedule.filter((s) => s.item).slice(0, 14).forEach((s) => {
+      roteiroCompleto.forEach((s) => {
         L.push((s.time ? s.time + "  " : "") + s.item);
       });
     }
-    if (setlist.length) {
+    if (setlistCompleto.length) {
       L.push("");
       L.push(
         "Repertório: " +
-          setlist.map((x) => x.title + (x.song_key ? " (" + x.song_key + ")" : "")).join(", "),
+          setlistCompleto.map((x) => x.title + (x.song_key ? " (" + x.song_key + ")" : "")).join(", "),
       );
     }
     L.push("");
-    L.push("Te esperamos. Traga alguém. →");
     L.push(`${churchName} · Service`);
 
     const txt = L.join("\n");
@@ -99,7 +117,7 @@ export default function EventoShare({ event, ministries, churchName = "CE.X Serv
         <div className="evt2-stage">
           <div
             ref={artRef}
-            className="evt2-art"
+            className={`evt2-art${completa ? " full" : ""}`}
             style={
               {
                 "--evt-accent": "var(--olive)",
@@ -123,26 +141,48 @@ export default function EventoShare({ event, ministries, churchName = "CE.X Serv
             <div className="evt2-hero">
               <div className="evt2-dia">
                 {event.weekday}
-                {event.eventDate ? " · " + event.eventDate : ""}
+                {dataFmt ? " · " + dataFmt : ""}
               </div>
               <div className="evt2-nome">{event.name}</div>
               <div className="evt2-hora">{event.time}</div>
               <div className="evt2-local">◇ {event.location}</div>
             </div>
 
-            {/* programação ou equipes */}
-            {passos.length > 0 ? (
+            {/* programação */}
+            {passos.length > 0 && (
               <div className="evt2-prog">
                 <div className="evt2-prog-t">Programação</div>
                 <div className="evt2-prog-list">
                   {passos.map((s, i) => (
                     <div className="evt2-prog-row" key={i}>
-                      <span className="evt2-prog-h">{s.time || "—"}</span>
+                      <span className="evt2-prog-h">{s.time || "-"}</span>
                       <span className="evt2-prog-i">{s.item}</span>
                     </div>
                   ))}
                 </div>
-                {envolvidos.length > 0 && (
+              </div>
+            )}
+
+            {/* equipes : chips (simples) ou roteiro completo com funções (completa) */}
+            {envolvidos.length > 0 && (
+              <div className="evt2-prog">
+                <div className="evt2-prog-t">Equipes escaladas</div>
+                {completa ? (
+                  <div className="evt2-prog-list">
+                    {envolvidos.map((m) => (
+                      <div key={m.id} style={{ marginBottom: 10 }}>
+                        <div className="evt2-prog-i" style={{ fontWeight: 700, marginBottom: 4 }}>{m.name}</div>
+                        {m.people.map((p) => (
+                          <div className="evt2-prog-row" key={p.personId}>
+                            <span className="evt2-prog-i">{p.personName}</span>
+                            <span className="evt2-prog-r">{p.functions[0] || (p.isLeader ? "Líder" : "")}</span>
+                          </div>
+                        ))}
+                        {m.people.length === 0 && <div className="evt2-prog-row"><span className="evt2-prog-i" style={{ opacity: 0.6 }}>Ninguém escalado ainda</span></div>}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
                   <div className="evt2-equipes">
                     {envolvidos.map((m) => (
                       <span className="evt2-eqchip" key={m.id}>
@@ -152,30 +192,27 @@ export default function EventoShare({ event, ministries, churchName = "CE.X Serv
                   </div>
                 )}
               </div>
-            ) : envolvidos.length > 0 ? (
+            )}
+
+            {/* repertório completo (só no modo completa, já que no simples entra no rodapé do painel) */}
+            {completa && setlist.length > 0 && (
               <div className="evt2-prog">
-                <div className="evt2-prog-t">Equipes</div>
+                <div className="evt2-prog-t">Repertório</div>
                 <div className="evt2-prog-list">
-                  {envolvidos.slice(0, 6).map((m, i) => {
-                    const lider = m.people.find((p) => p.isLeader);
-                    return (
-                      <div className="evt2-prog-row" key={i}>
-                        <span className="evt2-prog-i">{m.name}</span>
-                        {lider && (
-                          <span className="evt2-prog-q">{nomeCurto(lider.personName)}</span>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {setlist.map((s, i) => (
+                    <div className="evt2-prog-row" key={i}>
+                      <span className="evt2-prog-i">{s.title}</span>
+                      <span className="evt2-prog-h">{s.song_key || ""}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ) : (
-              <div className="evt2-spacer" />
             )}
+
+            {passos.length === 0 && envolvidos.length === 0 && !completa && <div className="evt2-spacer" />}
 
             {/* rodapé */}
             <div className="evt2-foot">
-              <div className="evt2-cta">Te esperamos. Traga alguém. →</div>
               <div className="evt2-sig">{churchName} · Service</div>
             </div>
           </div>
@@ -185,11 +222,16 @@ export default function EventoShare({ event, ministries, churchName = "CE.X Serv
         <div className="evt2-side">
           <div className="evt2-side-t">Arte do evento</div>
           <div className="evt2-side-s">
-            Story 1080×1920 pronta para os grupos, com programação, equipes e repertório.
-            Baixe a imagem ou copie o texto formatado para colar no WhatsApp.
+            Cartão pra avisar a equipe internamente : roteiro, quem serve e repertório do culto.
+            Baixe a imagem ou copie o texto formatado pra colar no grupo da igreja.
           </div>
 
-          {setlist.length > 0 && (
+          <div className="seg" style={{ marginBottom: 18 }}>
+            <button type="button" className={modo === "simples" ? "on" : ""} onClick={() => setModo("simples")}>Simplificada</button>
+            <button type="button" className={modo === "completa" ? "on" : ""} onClick={() => setModo("completa")}>Completa</button>
+          </div>
+
+          {!completa && setlist.length > 0 && (
             <div style={{ marginBottom: 20 }}>
               <div
                 style={{
@@ -242,7 +284,9 @@ export default function EventoShare({ event, ministries, churchName = "CE.X Serv
           </button>
 
           <div className="evt2-side-tip">
-            A imagem traz o card; o texto traz a programação completa para colar na conversa.
+            {completa
+              ? "Versão completa : todo o roteiro, todas as equipes com função de cada um e o repertório inteiro. Pode ficar alta, é só rolar."
+              : "A imagem traz o resumo; o texto traz a programação completa pra colar na conversa."}
           </div>
         </div>
       </div>

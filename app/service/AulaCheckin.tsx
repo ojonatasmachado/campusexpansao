@@ -306,17 +306,18 @@ export function AulaCheckinModal({
   const imprimir = () => {
     const w = window.open("", "_blank", "width=520,height=720");
     if (!w) return;
+    const accent = getComputedStyle(document.documentElement).getPropertyValue("--olive").trim() || "#7A9E3F";
     w.document.write(`<!doctype html><html><head><title>Check-in · ${lesson.name}</title>
       <style>*{margin:0;font-family:Inter,Arial,sans-serif}body{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;padding:32px}
-      .ey{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#7A9E3F;margin-bottom:18px}
+      .ey{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:${accent};margin-bottom:18px}
       .qr-wrap{width:340px;height:340px;background:#fff;padding:20px;box-sizing:border-box;margin:0 auto}
-      h1{font-size:30px;margin:22px 0 6px}p{color:#555;font-size:17px}.cex{margin-top:30px;font-weight:700;font-size:18px}.cex span{color:#7A9E3F}.in{margin-top:8px;font-size:13px;color:#888}</style>
+      h1{font-size:30px;margin:22px 0 6px}p{color:#555;font-size:17px}.cex{margin-top:30px;font-weight:700;font-size:18px}.in{margin-top:8px;font-size:13px;color:#888}</style>
       </head><body>
       <div class="ey">◆ Check-in de aula</div>
       <div class="qr-wrap"><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(checkinLink)}" style="width:300px;height:300px"/></div>
       <h1>${lesson.name}</h1><p>${course.name}</p>
       <p class="in">Escaneie com a câmera do celular e confirme sua presença no app.</p>
-      <div class="cex">CE<span>.X</span> Service</div>
+      <div class="cex">Service</div>
       <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
     w.document.close();
   };
@@ -407,7 +408,7 @@ export function AulaCheckinModal({
                 <div className="ck-qr-side">
                   <div className={`ck-status ${qrActive ? "on" : "off"}`}>
                     <span className="ck-dot" />
-                    {qrActive ? "Ativo — aceitando check-ins" : "Desativado"}
+                    {qrActive ? "Ativo, aceitando check-ins" : "Desativado"}
                   </div>
                   <div className="ck-link"><span className="ck-link-txt">{checkinLink}</span></div>
                   <div className="ck-actions">

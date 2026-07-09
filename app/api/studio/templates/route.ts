@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkAuth } from "../../../admin/actions";
+import { checkAuth } from "../../../(site)/admin/actions";
 import { supabaseAdmin } from "../../../lib/supabase";
 
 const MODULES = new Set(["documentos", "slides", "design"]);

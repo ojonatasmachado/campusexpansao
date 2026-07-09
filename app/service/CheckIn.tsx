@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
+import { formatDateBR } from "./lib/date";
 
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
@@ -160,7 +161,7 @@ export function CheckinLanding({
             <div className="ck-land-ey">◆ Check-in de voluntário</div>
             <div className="ck-land-name">{event.name}</div>
             <div className="ck-land-when">
-              {event.weekday} {event.eventDate} · {event.time} · {event.location}
+              {event.weekday} {formatDateBR(event.eventDate)} · {event.time} · {event.location}
             </div>
           </div>
           <div className="ck-land-result">
@@ -396,6 +397,8 @@ export function QRCheckinModal({
   people,
   ministries,
   permitirExtra = false,
+  churchName,
+  logoUrl,
   onClose,
 }: {
   event: EventView;
@@ -403,6 +406,8 @@ export function QRCheckinModal({
   people: PersonView[];
   ministries: MinistryLite[];
   permitirExtra?: boolean;
+  churchName?: string;
+  logoUrl?: string | null;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -488,17 +493,21 @@ export function QRCheckinModal({
   const imprimir = () => {
     const w = window.open("", "_blank", "width=520,height=720");
     if (!w) return;
+    const accent = getComputedStyle(document.documentElement).getPropertyValue("--olive").trim() || "#7A9E3F";
+    const marca = logoUrl
+      ? `<img src="${logoUrl}" alt="${churchName ?? ""}" style="height:22px;object-fit:contain;margin-bottom:6px"/><div class="cex">Service</div>`
+      : `<div class="cex">${churchName ? churchName + " · " : ""}Service</div>`;
     w.document.write(`<!doctype html><html><head><title>Check-in · ${event.name}</title>
       <style>*{margin:0;font-family:Inter,Arial,sans-serif}body{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;padding:32px}
-      .ey{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#7A9E3F;margin-bottom:18px}
+      .ey{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:${accent};margin-bottom:18px}
       .qr-wrap{width:340px;height:340px;background:#fff;padding:20px;box-sizing:border-box;margin:0 auto}
-      h1{font-size:30px;margin:22px 0 6px}p{color:#555;font-size:17px}.cex{margin-top:30px;font-weight:700;font-size:18px}.cex span{color:#7A9E3F}.in{margin-top:8px;font-size:13px;color:#888}</style>
+      h1{font-size:30px;margin:22px 0 6px}p{color:#555;font-size:17px}.cex{margin-top:30px;font-weight:700;font-size:18px}.in{margin-top:8px;font-size:13px;color:#888}</style>
       </head><body>
       <div class="ey">◆ Check-in de voluntários</div>
       <div class="qr-wrap"><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(checkinLink)}" style="width:300px;height:300px"/></div>
-      <h1>${event.name}</h1><p>${event.weekday} ${event.eventDate} · ${event.time} · ${event.location}</p>
+      <h1>${event.name}</h1><p>${event.weekday} ${formatDateBR(event.eventDate)} · ${event.time} · ${event.location}</p>
       <p class="in">Escaneie com a câmera do celular e confirme sua presença no app.</p>
-      <div class="cex">CE<span>.X</span> Service</div>
+      ${marca}
       <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
     w.document.close();
   };
@@ -523,7 +532,7 @@ export function QRCheckinModal({
       ctx.fillText(event.name, canvas.width / 2, img.height + pad + 38);
       ctx.fillStyle = "#555650";
       ctx.font = "500 16px Inter, sans-serif";
-      ctx.fillText(`${event.weekday} ${event.eventDate} · ${event.time}`, canvas.width / 2, img.height + pad + 62);
+      ctx.fillText(`${event.weekday} ${formatDateBR(event.eventDate)} · ${event.time}`, canvas.width / 2, img.height + pad + 62);
       const a = document.createElement("a");
       a.href = canvas.toDataURL("image/png");
       a.download = `checkin-${event.id}.png`;
@@ -563,7 +572,7 @@ export function QRCheckinModal({
         <div className="modal wide" onClick={(e) => e.stopPropagation()}>
           <div className="modal-head">
             <div className="modal-eyebrow">
-              ◆ Check-in · {event.weekday} {event.eventDate} · {event.time}
+              ◆ Check-in · {event.weekday} {formatDateBR(event.eventDate)} · {event.time}
             </div>
             <div className="modal-title">{event.name}</div>
             <div className="modal-sub">
@@ -608,7 +617,7 @@ export function QRCheckinModal({
                 <div className="ck-qr-side">
                   <div className={`ck-status ${qrActive ? "on" : "off"}`}>
                     <span className="ck-dot" />
-                    {qrActive ? "Ativo — aceitando check-ins" : "Desativado"}
+                    {qrActive ? "Ativo, aceitando check-ins" : "Desativado"}
                   </div>
 
                   <div className="ck-link">

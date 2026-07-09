@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
+import { Icon } from "./lib/icons";
+import { formatDateBR } from "./lib/date";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -104,6 +106,8 @@ export type MobileOverlayProps = {
   onSendMessage?: (chatId: string, senderId: string, body: string) => void;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
   organizationId?: string;
+  churchName?: string;
+  churchLogoUrl?: string | null;
   theme?: "dark" | "light";
   setTheme?: (t: "dark" | "light") => void;
   onChangePassword?: (senha: string) => Promise<{ error?: string }>;
@@ -127,16 +131,6 @@ const ETAPAS = [
   { id: "membro", nome: "Membro" },
 ];
 
-const ICONS: Record<string, string> = {
-  inicio:    '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/>',
-  escalas:   '<path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 10h18"/><path d="m9 15 2 2 4-4"/>',
-  tarefas:   '<path d="m9 11 3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
-  conversas: '<path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/>',
-  cursos:    '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>',
-  visitante: '<path d="M15 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/>',
-  perfil:    '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
-};
-
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 function ini(name: string) {
@@ -155,22 +149,7 @@ function ChipSt({ status, label }: { status: "ok" | "wait" | "no"; label?: strin
 }
 
 function TabIcon({ name, size = 18 }: { name: string; size?: number }) {
-  const inner = ICONS[name];
-  if (!inner) return <span style={{ fontSize: size * 0.7 }}>◆</span>;
-  return (
-    <svg
-      className="cex-ic"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      dangerouslySetInnerHTML={{ __html: inner }}
-    />
-  );
+  return <Icon name={name} size={size} />;
 }
 
 function isRecepPerson(person: P, ministries: Ministry[]) {
@@ -207,7 +186,7 @@ function TabInicio({
     <>
       {pending.length > 0 && (
         <div className="m-alert" onClick={() => setTab("escalas")} style={{ cursor: "pointer" }}>
-          <span className="m-alert-ic">!</span>
+          <span className="m-alert-ic"><Icon name="alerta" size={15} /></span>
           <div>
             <b>{pending.length} escala(s) pra confirmar</b>
             <small>Toque para responder</small>
@@ -229,7 +208,7 @@ function TabInicio({
             className="m-alert-ic"
             style={lateTasks.length ? undefined : { background: "var(--olive)", color: "var(--ink)" }}
           >
-            ◆
+            <Icon name={lateTasks.length ? "alerta" : "ok"} size={15} />
           </span>
           <div>
             <b>{myCards.length} tarefa(s) com voce</b>
@@ -275,7 +254,7 @@ function TabInicio({
           <div className="m-card" onClick={() => setTab("escalas")} style={{ cursor: "pointer" }}>
             <div className="m-card-top">
               <span className="m-when">
-                {proxEvent.weekday} · {proxEvent.eventDate} · {proxEvent.time}
+                {proxEvent.weekday} · {formatDateBR(proxEvent.eventDate)} · {proxEvent.time}
               </span>
               <ChipSt status={proxSlot!.status} label={proxSlot!.status === "wait" ? "Responder" : undefined} />
             </div>
@@ -288,21 +267,21 @@ function TabInicio({
       <div className="m-section-t">Atalhos</div>
       <div className="m-quick">
         <button className="m-quick-b" onClick={() => setTab("tarefas")}>
-          <span style={{ color: "var(--olive)" }}>◇</span>Minhas tarefas
+          <span style={{ color: "var(--olive)" }}><Icon name="tarefas" size={15} /></span>Minhas tarefas
         </button>
         <button className="m-quick-b" onClick={() => setTab("conversas")}>
-          <span style={{ color: "var(--olive)" }}>→</span>Conversas
+          <span style={{ color: "var(--olive)" }}><Icon name="conversas" size={15} /></span>Conversas
         </button>
         <button className="m-quick-b" onClick={() => setTab("cursos")}>
-          <span style={{ color: "var(--olive)" }}>◆</span>Meus cursos
+          <span style={{ color: "var(--olive)" }}><Icon name="cursos" size={15} /></span>Meus cursos
         </button>
         {isRecep ? (
           <button className="m-quick-b" onClick={() => setTab("visitantes")}>
-            <span style={{ color: "var(--olive)" }}>◇</span>Visitantes
+            <span style={{ color: "var(--olive)" }}><Icon name="visitante" size={15} /></span>Visitantes
           </button>
         ) : (
           <button className="m-quick-b" onClick={() => setTab("avisos")}>
-            <span style={{ color: "var(--olive)" }}>◆</span>Pedir oracao
+            <span style={{ color: "var(--olive)" }}><Icon name="oracao" size={15} /></span>Pedir oracao
           </button>
         )}
       </div>
@@ -341,7 +320,7 @@ function TabEscala({ person, events, roster, onConfirmarEscala, onRecusarEscala 
           <div className={`m-card ${st === "wait" ? "urgent" : ""}`} key={slot.id}>
             <div className="m-card-top">
               <span className="m-when">
-                {ev.weekday} · {ev.eventDate} · {ev.time}
+                {ev.weekday} · {formatDateBR(ev.eventDate)} · {ev.time}
               </span>
               {st === "ok" && <ChipSt status="ok" />}
               {st === "no" && <ChipSt status="no" />}
@@ -971,7 +950,7 @@ function TabBatismo({ baptismClasses }: { baptismClasses: BaptismClass[] }) {
       {openClasses.map((b) => (
         <div className="m-card" key={b.id}>
           <div className="m-card-top">
-            <span className="m-when">{b.baptism_date ?? "A definir"}</span>
+            <span className="m-when">{formatDateBR(b.baptism_date) || "A definir"}</span>
             {b.open_enrollment ? (
               <ChipSt status="ok" label="Inscricoes abertas" />
             ) : (
@@ -1043,13 +1022,13 @@ function TabAvisos({
           className={`m-quick-b ${tipo === "oracao" ? "on" : ""}`}
           onClick={() => { setTipo("oracao"); setSent(false); setTexto(""); }}
         >
-          <span style={{ color: "var(--olive)" }}>◆</span>Pedir oracao
+          <span style={{ color: "var(--olive)" }}><Icon name="oracao" size={15} /></span>Pedir oracao
         </button>
         <button
           className={`m-quick-b ${tipo === "testemunho" ? "on" : ""}`}
           onClick={() => { setTipo("testemunho"); setSent(false); setTexto(""); }}
         >
-          <span style={{ color: "var(--olive)" }}>◇</span>Compartilhar testemunho
+          <span style={{ color: "var(--olive)" }}><Icon name="comunicacao" size={15} /></span>Compartilhar testemunho
         </button>
       </div>
       {tipo && !sent && (
@@ -1262,7 +1241,7 @@ function TabPerfil({
         <Av name={person.name} size="xl" />
         <div className="m-profile-name">{person.name}</div>
         <div className="m-profile-role">
-          Voluntario{member?.firstContact ? ` · desde ${member.firstContact}` : ""}
+          Voluntario{member?.firstContact ? ` · desde ${formatDateBR(member.firstContact)}` : ""}
         </div>
       </div>
 
@@ -1420,7 +1399,7 @@ function FotoUpload({
   );
 }
 
-function Onboarding({ person, member, onCompleteOnboarding, onDone }: { person: P; member: M | null; onCompleteOnboarding?: (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string; senha: string }) => void; onDone: () => void }) {
+function Onboarding({ person, member, churchName, churchLogoUrl, onCompleteOnboarding, onDone }: { person: P; member: M | null; churchName?: string; churchLogoUrl?: string | null; onCompleteOnboarding?: (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string; senha: string }) => void; onDone: () => void }) {
   const [step, setStep] = useState(0);
   const [d, setD] = useState({
     email: member?.email ?? person.name.toLowerCase().replace(/\s+/g, ".") + "@email.com",
@@ -1436,11 +1415,11 @@ function Onboarding({ person, member, onCompleteOnboarding, onDone }: { person: 
 
   const steps = [
     {
-      t: `Bem-vindo(a) a casa`,
+      t: churchName ? `Bem-vindo(a) a ${churchName}` : "Bem-vindo(a) a casa",
       s: `Que bom ter voce aqui, ${nome}. Vamos completar seu cadastro em um minuto.`,
       body: (
         <div className="ob-welcome">
-          <div className="ob-mark">◆</div>
+          <div className="ob-mark"><Icon name="ok" size={28} /></div>
           <div className="ob-welcome-x">
             Seu acesso foi liberado. Antes de comecar, confirme seus dados, escolha uma foto e crie sua senha.
           </div>
@@ -1534,9 +1513,13 @@ function Onboarding({ person, member, onCompleteOnboarding, onDone }: { person: 
           ))}
         </div>
         <div className="ob-logo">
-          <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: -0.5 }}>
-            CE<span style={{ color: "var(--olive)" }}>.X</span>
-          </span>
+          {churchLogoUrl ? (
+            <img src={churchLogoUrl} alt={churchName || "Logo da igreja"} style={{ height: 22, maxWidth: 140, objectFit: "contain" }} />
+          ) : (
+            <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: -0.5 }}>
+              CE<span style={{ color: "var(--olive)" }}>.X</span>
+            </span>
+          )}
           <span style={{ fontSize: 11, color: "var(--muted)", fontFamily: "var(--mono)", marginLeft: 8 }}>Service</span>
         </div>
         <div className="ob-eyebrow">Primeiro acesso · passo {step + 1} de {steps.length}</div>
@@ -1576,7 +1559,7 @@ function MobileMembro({
   const { ministries, events, roster, cards, boards, courses, enrollments, courseModules = [], courseLessons = [],
           visitors, baptismClasses, announcements, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment,
           onAdvanceVisitorStage, onRegisterVisitor, onSendMessage, onStartChat,
-          organizationId, theme, setTheme, onChangePassword, onUpdateProfile,
+          organizationId, churchName, churchLogoUrl, theme, setTheme, onChangePassword, onUpdateProfile,
           journeyRequests, onRequestJourneyStep, onConfirmarEscala, onRecusarEscala } = rest;
 
   const isRecep = isRecepPerson(person, ministries);
@@ -1597,7 +1580,7 @@ function MobileMembro({
       <div className="phone">
         <div className="phone-screen">
           <div className="phone-notch" />
-          <Onboarding person={person} member={member} onCompleteOnboarding={onCompleteOnboarding} onDone={() => setOnboarded(true)} />
+          <Onboarding person={person} member={member} churchName={churchName} churchLogoUrl={churchLogoUrl} onCompleteOnboarding={onCompleteOnboarding} onDone={() => setOnboarded(true)} />
         </div>
       </div>
     );
@@ -1609,7 +1592,7 @@ function MobileMembro({
         <div className="phone-notch" />
         <div className="m-statusbar">
           <span>9:41</span>
-          <span>CE.X ◆</span>
+          <span>{churchName || "Service"} ◆</span>
         </div>
         <div className="m-head">
           <div className="m-app">Service · {isRecep ? "Recepcao" : "Voluntario"}</div>
@@ -1731,7 +1714,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
         <button className="mob-close" onClick={onClose}>← Voltar ao painel</button>
       </div>
 
-      <div onClick={(e) => e.stopPropagation()}>
+      <div className="mob-phone-wrap" onClick={(e) => e.stopPropagation()}>
         <MobileMembro key={person.id} {...props} person={person} member={member} />
       </div>
     </div>

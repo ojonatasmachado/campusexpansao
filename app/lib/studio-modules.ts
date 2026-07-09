@@ -1,7 +1,7 @@
 import { readFile } from "fs/promises";
 import type { NextRequest } from "next/server";
 import path from "path";
-import { checkAuth } from "../admin/actions";
+import { checkAuth } from "../(site)/admin/actions";
 import { compraDoUsuarioPorMaterialId } from "./compras";
 import { supabaseAdmin } from "./supabase";
 import { createClient } from "./supabase-server";

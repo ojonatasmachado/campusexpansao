@@ -721,7 +721,7 @@ function toMinistryViews(
     organizationId: ministry.organization_id,
     churchId: ministry.church_id,
     name: ministry.name,
-    icon: ministry.icon || "◆",
+    icon: ministry.icon || "",
     description: ministry.description || "Descrição não informada",
     profile: ministry.profile ?? {},
     positions: positions
@@ -1140,7 +1140,7 @@ export default async function ServiceHomePage() {
     .neq("stage", "membro");
 
   /* papel real do usuário logado + matriz de permissões da org (core.memberships /
-     core.role_permissions, já semeadas no bootstrap da igreja) — ver
+     core.role_permissions, já semeadas no bootstrap da igreja): ver
      supabase/migrations/0002_core.sql e 0009_bootstrap.sql. */
   const organizationId = churches[0]?.organizationId ?? "";
   const { data: { user } } = await supabase.auth.getUser();
