@@ -20,6 +20,7 @@ type M = {
   situation: string;
   firstContact: string;
   neighborhood: string | null;
+  birth: string | null;
   journey: number[];
   volunteerId: string | null;
 };
@@ -93,6 +94,11 @@ export type MobileOverlayProps = {
   onRegisterVisitor?: (data: { name: string; phone: string; origin: string }) => void;
   onSendMessage?: (chatId: string, senderId: string, body: string) => void;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
+  organizationId?: string;
+  theme?: "dark" | "light";
+  setTheme?: (t: "dark" | "light") => void;
+  onChangePassword?: (senha: string) => Promise<{ error?: string }>;
+  onUpdateProfile?: (personId: string, memberId: string | null, data: { phone: string; nasc: string; bairro: string }) => void;
   onClose: () => void;
 };
 
@@ -1093,9 +1099,122 @@ function TabAvisos({
 
 // ── aba: Perfil ───────────────────────────────────────────────────────────────
 
-function TabPerfil({ person, member }: { person: P; member: M | null }) {
+function TabPerfil({
+  person, member, organizationId, theme, setTheme, onChangePassword, onUpdateProfile,
+}: {
+  person: P;
+  member: M | null;
+  organizationId?: string;
+  theme?: "dark" | "light";
+  setTheme?: (t: "dark" | "light") => void;
+  onChangePassword?: (senha: string) => Promise<{ error?: string }>;
+  onUpdateProfile?: (personId: string, memberId: string | null, data: { phone: string; nasc: string; bairro: string }) => void;
+}) {
   const journey = member?.journey ?? [];
   const done = journey.filter(Boolean).length;
+
+  const [editing, setEditing] = useState(false);
+  const [phone, setPhone] = useState(member?.phone ?? "");
+  const [nasc, setNasc] = useState(member?.birth ?? "");
+  const [bairro, setBairro] = useState(member?.neighborhood ?? "");
+
+  const salvarPerfil = () => {
+    onUpdateProfile?.(person.id, member?.id ?? null, { phone, nasc, bairro });
+    setEditing(false);
+  };
+
+  const [senha, setSenha] = useState("");
+  const [senha2, setSenha2] = useState("");
+  const [senhaMsg, setSenhaMsg] = useState("");
+  const [senhaSaving, setSenhaSaving] = useState(false);
+  const senhaValida = senha.length >= 6 && senha === senha2;
+
+  const trocarSenha = async () => {
+    if (!senhaValida || !onChangePassword) return;
+    setSenhaSaving(true);
+    setSenhaMsg("");
+    const { error } = await onChangePassword(senha);
+    setSenhaSaving(false);
+    if (error) {
+      setSenhaMsg(error);
+    } else {
+      setSenhaMsg("Senha atualizada.");
+      setSenha("");
+      setSenha2("");
+    }
+  };
+
+  const [pushOn, setPushOn] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushMsg, setPushMsg] = useState("");
+  const pushSupported = typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
+
+  useEffect(() => {
+    if (!pushSupported) return;
+    navigator.serviceWorker.ready
+      .then((reg) => reg.pushManager.getSubscription())
+      .then((sub) => setPushOn(!!sub))
+      .catch(() => {});
+  }, [pushSupported]);
+
+  const urlBase64ToUint8Array = (base64: string) => {
+    const padding = "=".repeat((4 - (base64.length % 4)) % 4);
+    const base64Safe = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const raw = atob(base64Safe);
+    return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+  };
+
+  const ligarPush = async () => {
+    if (!pushSupported || !organizationId) return;
+    setPushBusy(true);
+    setPushMsg("");
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") {
+        setPushMsg(perm === "denied" ? "Bloqueado no navegador. Libere nas configurações do site." : "Permissão não concedida.");
+        return;
+      }
+      const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!publicKey) { setPushMsg("Push não configurado neste ambiente."); return; }
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      });
+      const json = sub.toJSON();
+      await fetch("/api/service/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ organizationId, endpoint: json.endpoint, keys: json.keys }),
+      });
+      setPushOn(true);
+    } catch {
+      setPushMsg("Não foi possível ativar agora.");
+    } finally {
+      setPushBusy(false);
+    }
+  };
+
+  const desligarPush = async () => {
+    setPushBusy(true);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        await fetch("/api/service/push/unsubscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint: sub.endpoint }),
+        });
+        await sub.unsubscribe();
+      }
+      setPushOn(false);
+    } catch {
+      setPushMsg("Não foi possível desligar agora.");
+    } finally {
+      setPushBusy(false);
+    }
+  };
 
   return (
     <>
@@ -1111,23 +1230,36 @@ function TabPerfil({ person, member }: { person: P; member: M | null }) {
         <>
           <div className="m-section-t">Meus dados</div>
           <div className="m-card">
-            {member.phone && (
-              <div className="m-data">
-                <span>Telefone</span>
-                <b>{member.phone}</b>
-              </div>
-            )}
-            {member.email && (
-              <div className="m-data">
-                <span>Email</span>
-                <b>{member.email}</b>
-              </div>
-            )}
-            {member.neighborhood && (
-              <div className="m-data" style={{ borderBottom: "none" }}>
-                <span>Bairro</span>
-                <b>{member.neighborhood}</b>
-              </div>
+            {!editing ? (
+              <>
+                <div className="m-data">
+                  <span>Telefone</span>
+                  <b>{member.phone || "a completar"}</b>
+                </div>
+                {member.email && (
+                  <div className="m-data">
+                    <span>Email</span>
+                    <b>{member.email}</b>
+                  </div>
+                )}
+                <div className="m-data" style={{ borderBottom: "none" }}>
+                  <span>Bairro</span>
+                  <b>{member.neighborhood || "a completar"}</b>
+                </div>
+                {onUpdateProfile && (
+                  <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={() => setEditing(true)}>Editar</button>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="field"><label className="field-label">Telefone</label><input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+                <div className="field"><label className="field-label">Aniversario</label><input className="input" type="date" value={nasc} onChange={(e) => setNasc(e.target.value)} /></div>
+                <div className="field"><label className="field-label">Bairro</label><input className="input" value={bairro} onChange={(e) => setBairro(e.target.value)} /></div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button className="btn btn-sec btn-sm" type="button" onClick={() => setEditing(false)}>Cancelar</button>
+                  <button className="btn btn-pri btn-sm" type="button" onClick={salvarPerfil}>Salvar</button>
+                </div>
+              </>
             )}
           </div>
         </>
@@ -1152,6 +1284,39 @@ function TabPerfil({ person, member }: { person: P; member: M | null }) {
             </div>
           ))}
         </div>
+      </div>
+
+      {onChangePassword && (
+        <>
+          <div className="m-section-t" style={{ marginTop: 22 }}>Segurança</div>
+          <div className="m-card">
+            <div className="field"><label className="field-label">Nova senha</label><input className="input" type="password" placeholder="ao menos 6 caracteres" value={senha} onChange={(e) => setSenha(e.target.value)} /></div>
+            <div className="field"><label className="field-label">Confirmar senha</label><input className="input" type="password" value={senha2} onChange={(e) => setSenha2(e.target.value)} /></div>
+            <button className="btn btn-pri btn-sm" type="button" disabled={!senhaValida || senhaSaving} onClick={trocarSenha}>{senhaSaving ? "Salvando…" : "Trocar senha"}</button>
+            {senhaMsg && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 8 }}>{senhaMsg}</div>}
+          </div>
+        </>
+      )}
+
+      <div className="m-section-t" style={{ marginTop: 22 }}>Preferencias</div>
+      <div className="m-card">
+        {theme && setTheme && (
+          <div className="m-data">
+            <span>Tema escuro</span>
+            <button type="button" className={`m-toggle ${theme === "dark" ? "on" : ""}`} onClick={() => setTheme(theme === "dark" ? "light" : "dark")} />
+          </div>
+        )}
+        <div className="m-data" style={{ borderBottom: "none" }}>
+          <span>Notificacoes push</span>
+          <button
+            type="button"
+            className={`m-toggle ${pushOn ? "on" : ""}`}
+            disabled={!pushSupported || pushBusy}
+            onClick={() => (pushOn ? desligarPush() : ligarPush())}
+          />
+        </div>
+        {!pushSupported && <div style={{ fontSize: 11.5, color: "var(--subtle)", marginTop: 8 }}>Disponivel quando instalado como app.</div>}
+        {pushMsg && <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 8 }}>{pushMsg}</div>}
       </div>
     </>
   );
@@ -1342,7 +1507,8 @@ function MobileMembro({
   });
   const { ministries, events, roster, cards, boards, courses, enrollments, courseModules = [], courseLessons = [],
           visitors, baptismClasses, announcements, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment,
-          onAdvanceVisitorStage, onRegisterVisitor, onSendMessage, onStartChat } = rest;
+          onAdvanceVisitorStage, onRegisterVisitor, onSendMessage, onStartChat,
+          organizationId, theme, setTheme, onChangePassword, onUpdateProfile } = rest;
 
   const isRecep = isRecepPerson(person, ministries);
 
@@ -1398,7 +1564,17 @@ function MobileMembro({
           )}
           {tab === "batismo" && <TabBatismo baptismClasses={baptismClasses} />}
           {tab === "avisos" && <TabAvisos announcements={announcements} person={person} onReadAnnouncement={onReadAnnouncement} />}
-          {tab === "perfil" && <TabPerfil person={person} member={member} />}
+          {tab === "perfil" && (
+            <TabPerfil
+              person={person}
+              member={member}
+              organizationId={organizationId}
+              theme={theme}
+              setTheme={setTheme}
+              onChangePassword={onChangePassword}
+              onUpdateProfile={onUpdateProfile}
+            />
+          )}
         </div>
 
         <div className="m-tab">

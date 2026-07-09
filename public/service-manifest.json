@@ -1,0 +1,19 @@
+{
+  "name": "CE.X Service — Gestão da Igreja",
+  "short_name": "CE.X Service",
+  "description": "Gestão ministerial: jornada da pessoa, membros, escalas, cursos e batismos. Para a liderança e para o membro.",
+  "id": "/service",
+  "start_url": "/service",
+  "scope": "/service",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E110D",
+  "theme_color": "#0E110D",
+  "categories": ["productivity", "lifestyle"],
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

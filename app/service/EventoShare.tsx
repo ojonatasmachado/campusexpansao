@@ -28,12 +28,13 @@ export type EventoShareProps = {
   event: EventView;
   ministries: MinistryView[];
   churchName?: string;
+  logoUrl?: string | null;
   onClose: () => void;
 };
 
 // ── componente principal ──────────────────────────────────────────────────────
 
-export default function EventoShare({ event, ministries, churchName = "CE.X Service", onClose }: EventoShareProps) {
+export default function EventoShare({ event, ministries, churchName = "CE.X Service", logoUrl, onClose }: EventoShareProps) {
   const artRef = useRef<HTMLDivElement>(null);
 
   const envolvidos = ministries.filter((m) => event.ministries.includes(m.id));
@@ -110,7 +111,11 @@ export default function EventoShare({ event, ministries, churchName = "CE.X Serv
 
             {/* cabeçalho */}
             <div className="evt2-head">
-              <div className="evt2-logo-txt">{churchName}</div>
+              {logoUrl ? (
+                <img src={logoUrl} alt={churchName} style={{ height: 22, maxWidth: 140, objectFit: "contain" }} />
+              ) : (
+                <div className="evt2-logo-txt">{churchName}</div>
+              )}
               <div className="evt2-kicker">{event.kind || "Celebração"}</div>
             </div>
 

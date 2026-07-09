@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
+import { notifyPush } from "./lib/notify-push";
 import { uploadServiceImage, imageExtension } from "./lib/upload-image";
 import MobileOverlay from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
@@ -976,6 +977,24 @@ export default function ServiceExactApp({
     ]);
     router.refresh();
   };
+  const changePasswordMobile = async (senha: string) => {
+    const { error } = await createServiceBrowserClient().auth.updateUser({ password: senha });
+    return { error: error?.message };
+  };
+  const updateProfileMobile = async (personId: string, memberId: string | null, data: { phone: string; nasc: string; bairro: string }) => {
+    const supabase = createServiceBrowserClient();
+    await Promise.all([
+      supabase.schema("service").from("people").update({ phone: data.phone || null }).eq("id", personId),
+      memberId
+        ? supabase.schema("service").from("members").update({
+            phone: data.phone || null,
+            birth: data.nasc || null,
+            neighborhood: data.bairro || null,
+          }).eq("id", memberId)
+        : Promise.resolve(),
+    ]);
+    router.refresh();
+  };
   const addCardCommentMobile = async (cardId: string, author: string, body: string) => {
     if (!firstChurch?.organizationId) return;
     await createServiceBrowserClient().schema("service").from("card_comments").insert({
@@ -1021,15 +1040,31 @@ export default function ServiceExactApp({
       sender_id: senderId,
       body: body.trim(),
     });
+    const recipients = chatMembers.filter((cm) => cm.chat_id === chatId && cm.member_id !== senderId).map((cm) => cm.member_id);
+    const senderName = members.find((m) => m.id === senderId)?.name ?? "Alguém";
+    notifyPush(firstChurch.organizationId, recipients, senderName, body.trim());
     router.refresh();
   };
   const startChatMobile = async (selfMemberId: string, targetMemberId: string, firstMessage: string) => {
     if (!firstChurch?.organizationId || !firstChurch.id) return null;
     const sb = createServiceBrowserClient().schema("service");
+    const senderName = members.find((m) => m.id === selfMemberId)?.name ?? "Alguém";
     const existing = chats.find((c) => c.kind === "dm"
       && chatMembers.some((cm) => cm.chat_id === c.id && cm.member_id === selfMemberId)
       && chatMembers.some((cm) => cm.chat_id === c.id && cm.member_id === targetMemberId));
-    if (existing) { router.refresh(); return existing.id; }
+    if (existing) {
+      if (firstMessage.trim()) {
+        await sb.from("messages").insert({
+          organization_id: firstChurch.organizationId,
+          chat_id: existing.id,
+          sender_id: selfMemberId,
+          body: firstMessage.trim(),
+        });
+        notifyPush(firstChurch.organizationId, [targetMemberId], senderName, firstMessage.trim());
+      }
+      router.refresh();
+      return existing.id;
+    }
     const { data: chatRow, error } = await sb.from("chats").insert({
       organization_id: firstChurch.organizationId,
       church_id: firstChurch.id,
@@ -1048,6 +1083,7 @@ export default function ServiceExactApp({
         sender_id: selfMemberId,
         body: firstMessage.trim(),
       });
+      notifyPush(firstChurch.organizationId, [targetMemberId], senderName, firstMessage.trim());
     }
     router.refresh();
     return chatRow.id;
@@ -1105,7 +1141,7 @@ export default function ServiceExactApp({
         { id: "membros", icon: "membros", label: "Membros", count: members.length },
         { id: "pessoas", icon: "pessoa", label: "Voluntários", count: people.length },
         { id: "times", icon: "times", label: "Times & Ministérios", count: ministries.length },
-        { id: "visitantes", icon: "visitante", label: "Visitantes", badge: visitors.length || visitorsInCare },
+        { id: "visitantes", icon: "visitante", label: "Visitantes", badge: visitorsInCare },
       ],
     },
     {
@@ -1287,6 +1323,11 @@ export default function ServiceExactApp({
           onRegisterVisitor={registerVisitorMobile}
           onSendMessage={sendMessageMobile}
           onStartChat={startChatMobile}
+          organizationId={firstChurch?.organizationId ?? ""}
+          theme={theme}
+          setTheme={setTheme}
+          onChangePassword={changePasswordMobile}
+          onUpdateProfile={updateProfileMobile}
           onClose={() => setMobileOpen(false)}
         />
       )}
@@ -1313,6 +1354,8 @@ export default function ServiceExactApp({
           <EventoShare
             event={shareEvent}
             ministries={ministries}
+            churchName={firstChurch?.nome}
+            logoUrl={firstChurch?.logoUrl}
             onClose={() => setShareEventId(null)}
           />
         );
@@ -1446,6 +1489,28 @@ function GlobalSearch({
               setDrawer({ kind: "ministry", id: ministry.id });
             },
           })),
+        ...(() => {
+          const funcoes = new Map<string, MinistryView[]>();
+          ministries.forEach((ministry) => {
+            ministry.positions.forEach((position) => {
+              if (!position.name.toLowerCase().includes(term)) return;
+              const times = funcoes.get(position.name) ?? [];
+              if (!times.some((m) => m.id === ministry.id)) times.push(ministry);
+              funcoes.set(position.name, times);
+            });
+          });
+          return Array.from(funcoes.entries()).slice(0, 6).map(([name, times]) => ({
+            key: `func-${name}`,
+            type: "Função",
+            icon: "escalas",
+            name,
+            sub: times.map((m) => m.name.split(" ")[0]).join(", "),
+            action: () => {
+              setRoute("times");
+              setDrawer({ kind: "ministry", id: times[0].id });
+            },
+          }));
+        })(),
       ]
     : [];
 
@@ -4805,6 +4870,8 @@ function NovaConversaModal({
         sender_id: eu,
         body: primeiraMsg.trim(),
       });
+      const senderName = members.find((m) => m.id === eu)?.name ?? "Alguém";
+      notifyPush(church.organizationId, sel.filter((id) => id !== eu), senderName, primeiraMsg.trim());
     }
     router.refresh();
     onCreated(chatRow.id);
@@ -4936,6 +5003,10 @@ function Conversas({
       sender_id: currentMember.id,
       body: texto.trim(),
     });
+    if (church?.organizationId) {
+      const recipients = chatMembers.filter((cm) => cm.chat_id === chat.id && cm.member_id !== currentMember.id).map((cm) => cm.member_id);
+      notifyPush(church.organizationId, recipients, currentMember.name, texto.trim());
+    }
     setTexto("");
     router.refresh();
     setSending(false);
