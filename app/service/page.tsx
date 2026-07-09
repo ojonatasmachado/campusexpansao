@@ -567,6 +567,80 @@ type ReservationView = {
   source_id: string | null;
 };
 
+type KidsClassView = {
+  id: string;
+  church_id: string;
+  name: string;
+  min_age_months: number | null;
+  max_age_months: number | null;
+  room_id: string | null;
+  capacity: number | null;
+  accent: string | null;
+};
+
+type ChildView = {
+  id: string;
+  church_id: string;
+  class_id: string | null;
+  name: string;
+  birth: string | null;
+  photo_url: string | null;
+  allergies: string | null;
+  notes: string | null;
+};
+
+type ChildGuardianView = {
+  id: string;
+  child_id: string;
+  guardian_person_id: string;
+  relationship: string | null;
+  can_pickup: boolean;
+};
+
+type KidsSessionView = {
+  id: string;
+  event_id: string;
+  class_id: string;
+  checkin_token: string | null;
+  checkin_active: boolean;
+};
+
+type KidsAttendanceView = {
+  id: string;
+  session_id: string;
+  child_id: string;
+  status: "presente" | "retirada_pendente" | "retirado";
+  dropped_off_by: string | null;
+  dropped_off_at: string;
+  dropped_off_via: "qr" | "manual";
+  pickup_requested_by: string | null;
+  pickup_requested_at: string | null;
+  picked_up_by: string | null;
+  picked_up_confirmed_by: string | null;
+  picked_up_at: string | null;
+  picked_up_via: "qr" | "manual" | null;
+  notes: string | null;
+};
+
+type KidsEventView = {
+  id: string;
+  church_id: string;
+  title: string;
+  description: string | null;
+  event_date: string | null;
+  time: string | null;
+  location: string | null;
+  capacity: number | null;
+  open_enrollment: boolean;
+};
+
+type KidsEventEnrollmentView = {
+  id: string;
+  kids_event_id: string;
+  child_id: string;
+  enrolled_by: string | null;
+};
+
 type ExtraServiceData = {
   visitors: VisitorView[];
   visitorNotes: VisitorNoteView[];
@@ -592,6 +666,13 @@ type ExtraServiceData = {
   rehearsals: RehearsalView[];
   rooms: RoomView[];
   reservations: ReservationView[];
+  kidsClasses: KidsClassView[];
+  kidsChildren: ChildView[];
+  childGuardians: ChildGuardianView[];
+  kidsSessions: KidsSessionView[];
+  kidsAttendance: KidsAttendanceView[];
+  kidsEvents: KidsEventView[];
+  kidsEventEnrollments: KidsEventEnrollmentView[];
   churchIdentity: ChurchIdentityRow | null;
   cycles: CycleRow[];
   historyEntries: HistoryEntryRow[];
@@ -627,6 +708,13 @@ const emptyExtraServiceData: ExtraServiceData = {
   rehearsals: [],
   rooms: [],
   reservations: [],
+  kidsClasses: [],
+  kidsChildren: [],
+  childGuardians: [],
+  kidsSessions: [],
+  kidsAttendance: [],
+  kidsEvents: [],
+  kidsEventEnrollments: [],
   churchIdentity: null,
   cycles: [],
   historyEntries: [],
@@ -982,6 +1070,13 @@ async function getServiceDashboardData(): Promise<{
     rehearsalsResult,
     roomsResult,
     reservationsResult,
+    kidsClassesResult,
+    childrenResult,
+    childGuardiansResult,
+    kidsSessionsResult,
+    kidsAttendanceResult,
+    kidsEventsResult,
+    kidsEventEnrollmentsResult,
     churchIdentityResult,
     cyclesResult,
     historyEntriesResult,
@@ -1015,6 +1110,13 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("rehearsals").select("id,ministry_id,title,kind,rehearsal_date,time,location,recurrence,audience,attendees,repertoire,attachments,notes").order("created_at", { ascending: false }),
     supabase.schema("service").from("rooms").select("id,name,capacity,location,resources").order("created_at", { ascending: false }),
     supabase.schema("service").from("reservations").select("id,room_id,title,kind,reserved_date,start_time,end_time,source_type,source_id").order("created_at", { ascending: false }),
+    supabase.schema("service").from("kids_classes").select("id,church_id,name,min_age_months,max_age_months,room_id,capacity,accent").order("name"),
+    supabase.schema("service").from("children").select("id,church_id,class_id,name,birth,photo_url,allergies,notes").order("name"),
+    supabase.schema("service").from("child_guardians").select("id,child_id,guardian_person_id,relationship,can_pickup"),
+    supabase.schema("service").from("kids_sessions").select("id,event_id,class_id,checkin_token,checkin_active"),
+    supabase.schema("service").from("kids_attendance").select("id,session_id,child_id,status,dropped_off_by,dropped_off_at,dropped_off_via,pickup_requested_by,pickup_requested_at,picked_up_by,picked_up_confirmed_by,picked_up_at,picked_up_via,notes").order("dropped_off_at", { ascending: false }),
+    supabase.schema("service").from("kids_events").select("id,church_id,title,description,event_date,time,location,capacity,open_enrollment").order("created_at", { ascending: false }),
+    supabase.schema("service").from("kids_event_enrollments").select("id,kids_event_id,child_id,enrolled_by"),
     supabase.schema("service").from("church_identity").select("church_id,purpose,mission,vision,verse,values").eq("church_id", churchesData?.[0]?.id ?? "").maybeSingle(),
     supabase.schema("service").from("cycles").select("id,year,theme,verse,body,objectives,is_active").order("created_at", { ascending: false }),
     supabase.schema("service").from("history_entries").select("id,year,title,body,link,photo_url,sort_order").order("sort_order", { ascending: true }),
@@ -1050,6 +1152,13 @@ async function getServiceDashboardData(): Promise<{
     rehearsalsResult.error,
     roomsResult.error,
     reservationsResult.error,
+    kidsClassesResult.error,
+    childrenResult.error,
+    childGuardiansResult.error,
+    kidsSessionsResult.error,
+    kidsAttendanceResult.error,
+    kidsEventsResult.error,
+    kidsEventEnrollmentsResult.error,
     churchIdentityResult.error,
     cyclesResult.error,
     historyEntriesResult.error,
@@ -1100,6 +1209,13 @@ async function getServiceDashboardData(): Promise<{
       rehearsals: ((rehearsalsResult.data ?? []) as RehearsalView[]),
       rooms: ((roomsResult.data ?? []) as RoomView[]),
       reservations: ((reservationsResult.data ?? []) as ReservationView[]),
+      kidsClasses: ((kidsClassesResult.data ?? []) as KidsClassView[]),
+      kidsChildren: ((childrenResult.data ?? []) as ChildView[]),
+      childGuardians: ((childGuardiansResult.data ?? []) as ChildGuardianView[]),
+      kidsSessions: ((kidsSessionsResult.data ?? []) as KidsSessionView[]),
+      kidsAttendance: ((kidsAttendanceResult.data ?? []) as KidsAttendanceView[]),
+      kidsEvents: ((kidsEventsResult.data ?? []) as KidsEventView[]),
+      kidsEventEnrollments: ((kidsEventEnrollmentsResult.data ?? []) as KidsEventEnrollmentView[]),
       churchIdentity: (churchIdentityResult.data ?? null) as ChurchIdentityRow | null,
       cycles: ((cyclesResult.data ?? []) as CycleRow[]),
       historyEntries: ((historyEntriesResult.data ?? []) as HistoryEntryRow[]),
@@ -1201,6 +1317,13 @@ export default async function ServiceHomePage() {
       rehearsals={extra.rehearsals}
       rooms={extra.rooms}
       reservations={extra.reservations}
+      kidsClasses={extra.kidsClasses}
+      kidsChildren={extra.kidsChildren}
+      childGuardians={extra.childGuardians}
+      kidsSessions={extra.kidsSessions}
+      kidsAttendance={extra.kidsAttendance}
+      kidsEvents={extra.kidsEvents}
+      kidsEventEnrollments={extra.kidsEventEnrollments}
       churchIdentity={extra.churchIdentity ? { ...extra.churchIdentity, values: extra.churchIdentity.values ?? [] } : null}
       cycles={extra.cycles.map((cycle) => ({ ...cycle, objectives: cycle.objectives ?? [] }))}
       historyEntries={extra.historyEntries}

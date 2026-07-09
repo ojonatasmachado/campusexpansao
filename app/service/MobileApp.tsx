@@ -79,6 +79,21 @@ type Announcement = {
 type Chat = { id: string; kind: string; ministry_id: string | null; name: string | null };
 type ChatMember = { chat_id: string; member_id: string };
 type Message = { id: string; chat_id: string; sender_id: string | null; body: string; created_at: string };
+type KidsClass = { id: string; church_id: string; name: string; min_age_months: number | null; max_age_months: number | null };
+type Child = { id: string; church_id: string; class_id: string | null; name: string; birth: string | null; allergies: string | null };
+type ChildGuardian = { id: string; child_id: string; guardian_person_id: string; relationship: string | null; can_pickup: boolean };
+type KidsSession = { id: string; event_id: string; class_id: string; checkin_active: boolean };
+type KidsAttendance = {
+  id: string;
+  session_id: string;
+  child_id: string;
+  status: "presente" | "retirada_pendente" | "retirado";
+  dropped_off_at: string;
+  dropped_off_via: "qr" | "manual";
+};
+type KidsEvent = { id: string; church_id: string; title: string; description: string | null; event_date: string | null; time: string | null; location: string | null; capacity: number | null; open_enrollment: boolean };
+type KidsEventEnrollment = { id: string; kids_event_id: string; child_id: string; enrolled_by: string | null };
+type WallPost = { id: string; author: string | null; audience: string | null; body: string; pinned: boolean; created_at: string };
 
 export type MobileOverlayProps = {
   people: P[];
@@ -98,6 +113,14 @@ export type MobileOverlayProps = {
   chats: Chat[];
   chatMembers: ChatMember[];
   messages: Message[];
+  kidsClasses?: KidsClass[];
+  kidsChildren?: Child[];
+  childGuardians?: ChildGuardian[];
+  kidsSessions?: KidsSession[];
+  kidsAttendance?: KidsAttendance[];
+  kidsEvents?: KidsEvent[];
+  kidsEventEnrollments?: KidsEventEnrollment[];
+  wallPosts?: WallPost[];
   onReadAnnouncement?: (personId: string, announcementId: string) => void;
   onCompleteOnboarding?: (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string; senha: string }) => void;
   onAddCardComment?: (cardId: string, author: string, body: string) => void;
@@ -154,6 +177,10 @@ function TabIcon({ name, size = 18 }: { name: string; size?: number }) {
 
 function isRecepPerson(person: P, ministries: Ministry[]) {
   return ministries.some((m) => /recep/i.test(m.name) && m.people.some((mp) => mp.personId === person.id));
+}
+
+function isKidsPerson(person: P, ministries: Ministry[]) {
+  return ministries.some((m) => /kids|infantil/i.test(m.name) && m.people.some((mp) => mp.personId === person.id));
 }
 
 // ── aba: Inicio ───────────────────────────────────────────────────────────────
@@ -844,6 +871,185 @@ function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisitor }: {
   );
 }
 
+// ── aba: Kids (professor) ───────────────────────────────────────────────────────
+
+function TabKids({
+  person,
+  members,
+  events,
+  kidsClasses,
+  kidsChildren,
+  childGuardians,
+  kidsSessions,
+  kidsAttendance,
+  organizationId,
+  churchId,
+}: {
+  person: P;
+  members: M[];
+  events: Ev[];
+  kidsClasses: KidsClass[];
+  kidsChildren: Child[];
+  childGuardians: ChildGuardian[];
+  kidsSessions: KidsSession[];
+  kidsAttendance: KidsAttendance[];
+  organizationId?: string;
+  churchId?: string;
+}) {
+  const [attendance, setAttendance] = useState(kidsAttendance);
+  const [sessionId, setSessionId] = useState<string | null>(kidsSessions.find((s) => s.checkin_active)?.id ?? null);
+  const [q, setQ] = useState("");
+  const [novaFicha, setNovaFicha] = useState(false);
+  const [form, setForm] = useState({ nome: "", nascimento: "", turmaId: "", respNome: "", respTel: "", respParentesco: "" });
+
+  const activeSessions = kidsSessions.filter((s) => s.checkin_active);
+  const session = activeSessions.find((s) => s.id === sessionId) ?? activeSessions[0] ?? null;
+  const event = session ? events.find((e) => e.id === session.event_id) : null;
+  const kidsClass = session ? kidsClasses.find((c) => c.id === session.class_id) : null;
+  const childById = new Map(kidsChildren.map((c) => [c.id, c]));
+  const guardianOf = (childId: string) => childGuardians.filter((g) => g.child_id === childId);
+  const memberByPersonId = new Map(members.filter((m) => m.volunteerId).map((m) => [m.volunteerId as string, m]));
+
+  const sessionAttendance = session ? attendance.filter((a) => a.session_id === session.id) : [];
+  const present = sessionAttendance.filter((a) => a.status === "presente");
+  const pending = sessionAttendance.filter((a) => a.status === "retirada_pendente");
+  const notYetIn = kidsChildren.filter(
+    (c) => q && !sessionAttendance.some((a) => a.child_id === c.id && a.status !== "retirado") && c.name.toLowerCase().includes(q.toLowerCase()),
+  );
+
+  const avisarResponsavel = async (childId: string) => {
+    const guardians = guardianOf(childId);
+    const targetMember = guardians.map((g) => memberByPersonId.get(g.guardian_person_id)).find(Boolean);
+    if (!targetMember || !organizationId) { window.alert("Nao encontrei um contato de app pra esse responsavel."); return; }
+    const child = childById.get(childId);
+    await fetch("/api/service/push/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ organizationId, recipientMemberIds: [targetMember.id], title: "Aviso da sala Kids", body: `${child?.name ?? "Seu filho"} precisa de voce na sala Kids.` }),
+    }).catch(() => {});
+    window.alert("Aviso enviado.");
+  };
+
+  const confirmarRetirada = async (att: KidsAttendance) => {
+    setAttendance((prev) => prev.map((a) => (a.id === att.id ? { ...a, status: "retirado" } : a)));
+    await createServiceBrowserClient().schema("service").from("kids_attendance").update({ status: "retirado", picked_up_at: new Date().toISOString(), picked_up_via: "manual" }).eq("id", att.id);
+  };
+
+  const checkinManual = async (childId: string) => {
+    if (!session || !organizationId) return;
+    const { data } = await createServiceBrowserClient()
+      .schema("service")
+      .from("kids_attendance")
+      .insert({ organization_id: organizationId, session_id: session.id, child_id: childId, dropped_off_via: "manual" })
+      .select("id,session_id,child_id,status,dropped_off_at,dropped_off_via")
+      .single();
+    if (data) setAttendance((prev) => [...prev, data as KidsAttendance]);
+    setQ("");
+  };
+
+  const criarFicha = async () => {
+    if (!form.nome.trim() || !organizationId || !churchId) return;
+    const supabase = createServiceBrowserClient();
+    const { data: newPerson } = await supabase.schema("service").from("people").insert({ organization_id: organizationId, church_id: churchId, name: form.respNome.trim() || "Responsavel", phone: form.respTel.trim() || null, status: "ativo" }).select("id").single();
+    const { data: newChild } = await supabase.schema("service").from("children").insert({ organization_id: organizationId, church_id: churchId, class_id: form.turmaId || null, name: form.nome.trim(), birth: form.nascimento || null }).select("id").single();
+    if (newPerson && newChild) {
+      await supabase.schema("service").from("child_guardians").insert({ organization_id: organizationId, child_id: newChild.id, guardian_person_id: newPerson.id, relationship: form.respParentesco.trim() || null, can_pickup: true });
+      if (session) {
+        const { data } = await supabase.schema("service").from("kids_attendance").insert({ organization_id: organizationId, session_id: session.id, child_id: newChild.id, dropped_off_via: "manual" }).select("id,session_id,child_id,status,dropped_off_at,dropped_off_via").single();
+        if (data) setAttendance((prev) => [...prev, data as KidsAttendance]);
+      }
+      if (form.respNome.trim()) {
+        await supabase.schema("service").from("visitors").insert({ organization_id: organizationId, church_id: churchId, name: form.respNome.trim(), phone: form.respTel.trim() || null, stage: "novo", origin: "Kids", due: "1o contato", due_status: "soon" });
+      }
+    }
+    setForm({ nome: "", nascimento: "", turmaId: "", respNome: "", respTel: "", respParentesco: "" });
+    setNovaFicha(false);
+  };
+
+  if (!session) {
+    return (
+      <>
+        <div className="m-section-t">Kids</div>
+        <div className="empty" style={{ marginTop: 12 }}>Nenhuma sessao Kids aberta agora. Peca pra liderança abrir o QR do culto de hoje em Cultos & Agenda.</div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="m-section-t">Kids · {kidsClass?.name ?? "Turma"}</div>
+      <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 12 }}>{event?.name} · {event?.weekday} {event?.eventDate ? formatDateBR(event.eventDate) : ""}</div>
+
+      {activeSessions.length > 1 && (
+        <select className="select" style={{ marginBottom: 12 }} value={session.id} onChange={(e) => setSessionId(e.target.value)}>
+          {activeSessions.map((s) => <option key={s.id} value={s.id}>{kidsClasses.find((c) => c.id === s.class_id)?.name ?? "Turma"}</option>)}
+        </select>
+      )}
+
+      {pending.length > 0 && (
+        <>
+          <div className="m-when" style={{ marginBottom: 8 }}>Retirada pendente</div>
+          {pending.map((att) => {
+            const child = childById.get(att.child_id);
+            return (
+              <div className="m-card" key={att.id} style={{ borderColor: "var(--amber-line)" }}>
+                <div className="m-culto">{child?.name ?? "Crianca"}</div>
+                <div className="m-fn">Compare o responsavel na porta antes de confirmar.</div>
+                <button className="m-btn m-btn-ok" style={{ width: "100%", marginTop: 8 }} onClick={() => confirmarRetirada(att)}>Confirmar retirada</button>
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      <div className="m-when" style={{ marginBottom: 8, marginTop: pending.length ? 14 : 0 }}>Na sala · {present.length}</div>
+      {present.length === 0 && <div className="empty">Nenhuma crianca na sala ainda.</div>}
+      {present.map((att) => {
+        const child = childById.get(att.child_id);
+        return (
+          <div className="m-card" key={att.id}>
+            <div className="m-vis-head">
+              <Av name={child?.name ?? "?"} size="sm" />
+              <div className="m-vis-main">
+                <div className="m-culto" style={{ fontSize: 14 }}>{child?.name ?? "Crianca"}</div>
+                <div className="m-fn">{child?.allergies ? `⚠ ${child.allergies}` : (att.dropped_off_via === "manual" ? "manual" : "QR")}</div>
+              </div>
+              <button className="m-btn m-btn-swap" style={{ padding: "6px 10px" }} onClick={() => avisarResponsavel(att.child_id)}>Avisar</button>
+            </div>
+          </div>
+        );
+      })}
+
+      <input className="input" placeholder="Buscar crianca pra check-in manual..." value={q} onChange={(e) => setQ(e.target.value)} style={{ marginTop: 16, marginBottom: 8 }} />
+      {notYetIn.slice(0, 5).map((child) => (
+        <div className="m-vis-head" key={child.id} style={{ cursor: "pointer" }} onClick={() => checkinManual(child.id)}>
+          <Av name={child.name} size="sm" />
+          <div className="m-vis-main"><div className="m-culto" style={{ fontSize: 14 }}>{child.name}</div></div>
+          <span style={{ color: "var(--olive)", fontSize: 12 }}>+ check-in</span>
+        </div>
+      ))}
+
+      <button className="m-btn m-btn-swap" style={{ width: "100%", marginTop: 16 }} onClick={() => setNovaFicha((v) => !v)}>
+        {novaFicha ? "Cancelar" : "+ Criar ficha na hora"}
+      </button>
+      {novaFicha && (
+        <div className="m-card" style={{ borderColor: "var(--olive-line)", marginTop: 10 }}>
+          <input className="input" placeholder="Nome da crianca" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginBottom: 8 }} />
+          <input className="input" type="date" value={form.nascimento} onChange={(e) => setForm((f) => ({ ...f, nascimento: e.target.value }))} style={{ marginBottom: 8 }} />
+          <select className="select" value={form.turmaId} onChange={(e) => setForm((f) => ({ ...f, turmaId: e.target.value }))} style={{ marginBottom: 8 }}>
+            <option value="">Turma</option>
+            {kidsClasses.map((kc) => <option key={kc.id} value={kc.id}>{kc.name}</option>)}
+          </select>
+          <input className="input" placeholder="Nome do responsavel" value={form.respNome} onChange={(e) => setForm((f) => ({ ...f, respNome: e.target.value }))} style={{ marginBottom: 8 }} />
+          <input className="input" placeholder="Telefone do responsavel" value={form.respTel} onChange={(e) => setForm((f) => ({ ...f, respTel: e.target.value }))} style={{ marginBottom: 8 }} />
+          <input className="input" placeholder="Parentesco (mae, avo...)" value={form.respParentesco} onChange={(e) => setForm((f) => ({ ...f, respParentesco: e.target.value }))} style={{ marginBottom: 10 }} />
+          <button className="m-btn m-btn-ok" style={{ width: "100%" }} onClick={criarFicha}>Salvar e fazer check-in</button>
+        </div>
+      )}
+    </>
+  );
+}
+
 // ── aba: Cursos ───────────────────────────────────────────────────────────────
 
 function TabCursos({
@@ -1097,7 +1303,7 @@ function TabAvisos({
 // ── aba: Perfil ───────────────────────────────────────────────────────────────
 
 function TabPerfil({
-  person, member, organizationId, theme, setTheme, onChangePassword, onUpdateProfile, journeyRequests, onRequestJourneyStep,
+  person, member, organizationId, theme, setTheme, onChangePassword, onUpdateProfile, journeyRequests, onRequestJourneyStep, setTab,
 }: {
   person: P;
   member: M | null;
@@ -1108,6 +1314,7 @@ function TabPerfil({
   onUpdateProfile?: (personId: string, memberId: string | null, data: { phone: string; nasc: string; bairro: string }) => void;
   journeyRequests?: JourneyRequest[];
   onRequestJourneyStep?: (memberId: string, step: JourneyStep, eventDate: string, note: string) => void;
+  setTab?: (tab: string) => void;
 }) {
   const journey = member?.journey ?? [];
   const done = journey.filter(Boolean).length;
@@ -1244,6 +1451,12 @@ function TabPerfil({
           Voluntario{member?.firstContact ? ` · desde ${formatDateBR(member.firstContact)}` : ""}
         </div>
       </div>
+
+      <button className="m-vis-head" style={{ cursor: "pointer" }} onClick={() => setTab?.("kids-area")}>
+        <span className="av av-sm"><Icon name="kids" size={16} /></span>
+        <div className="m-vis-main"><div className="m-culto" style={{ fontSize: 14 }}>Kids</div><div className="m-fn">Meus filhos, mural e eventos</div></div>
+        <span className="m-task-caret">→</span>
+      </button>
 
       {member && (
         <>
@@ -1547,6 +1760,143 @@ function Onboarding({ person, member, churchName, churchLogoUrl, onCompleteOnboa
   );
 }
 
+// ── aba: Kids (area do responsavel, drill-down do Perfil) ────────────────────────
+
+function TabKidsArea({
+  person,
+  kidsClasses,
+  kidsChildren,
+  childGuardians,
+  kidsAttendance,
+  kidsEvents,
+  kidsEventEnrollments,
+  wallPosts,
+  organizationId,
+  churchId,
+  setTab,
+}: {
+  person: P;
+  kidsClasses: KidsClass[];
+  kidsChildren: Child[];
+  childGuardians: ChildGuardian[];
+  kidsAttendance: KidsAttendance[];
+  kidsEvents: KidsEvent[];
+  kidsEventEnrollments: KidsEventEnrollment[];
+  wallPosts: WallPost[];
+  organizationId?: string;
+  churchId?: string;
+  setTab?: (tab: string) => void;
+}) {
+  const [novaFicha, setNovaFicha] = useState(false);
+  const [form, setForm] = useState({ nome: "", nascimento: "", turmaId: "" });
+  const [enrollments, setEnrollments] = useState(kidsEventEnrollments);
+  const [myChildren, setMyChildren] = useState(kidsChildren);
+  const [myGuardians, setMyGuardians] = useState(childGuardians);
+
+  const meusFilhos = myChildren.filter((c) => myGuardians.some((g) => g.child_id === c.id && g.guardian_person_id === person.id));
+  const kidsWall = wallPosts.filter((w) => (w.audience ?? "").toLowerCase().includes("kids")).slice(0, 5);
+
+  const criarFilho = async () => {
+    if (!form.nome.trim() || !organizationId || !churchId) return;
+    const supabase = createServiceBrowserClient();
+    const { data: newChild } = await supabase.schema("service").from("children").insert({ organization_id: organizationId, church_id: churchId, class_id: form.turmaId || null, name: form.nome.trim(), birth: form.nascimento || null }).select("id,church_id,class_id,name,birth,allergies").single();
+    if (newChild) {
+      await supabase.schema("service").from("child_guardians").insert({ organization_id: organizationId, child_id: newChild.id, guardian_person_id: person.id, relationship: "responsavel", can_pickup: true });
+      setMyChildren((prev) => [...prev, newChild as Child]);
+      setMyGuardians((prev) => [...prev, { id: `local-${newChild.id}`, child_id: newChild.id as string, guardian_person_id: person.id, relationship: "responsavel", can_pickup: true }]);
+    }
+    setForm({ nome: "", nascimento: "", turmaId: "" });
+    setNovaFicha(false);
+  };
+
+  const inscrever = async (eventId: string, childId: string) => {
+    if (!organizationId) return;
+    const { data } = await createServiceBrowserClient().schema("service").from("kids_event_enrollments").insert({ organization_id: organizationId, kids_event_id: eventId, child_id: childId, enrolled_by: person.id }).select("id,kids_event_id,child_id,enrolled_by").single();
+    if (data) setEnrollments((prev) => [...prev, data as KidsEventEnrollment]);
+  };
+
+  return (
+    <>
+      <button className="m-vis-head" style={{ cursor: "pointer", marginBottom: 12 }} onClick={() => setTab?.("perfil")}>
+        <span className="m-task-caret" style={{ transform: "scaleX(-1)" }}>→</span>
+        <div className="m-vis-main"><div className="m-culto" style={{ fontSize: 14 }}>Voltar ao perfil</div></div>
+      </button>
+
+      <div className="m-section-t">Meus filhos</div>
+      {meusFilhos.map((child) => {
+        const turma = kidsClasses.find((kc) => kc.id === child.class_id);
+        const historico = kidsAttendance.filter((a) => a.child_id === child.id).sort((a, b) => b.dropped_off_at.localeCompare(a.dropped_off_at)).slice(0, 3);
+        return (
+          <div className="m-card" key={child.id}>
+            <div className="m-vis-head">
+              <Av name={child.name} size="sm" />
+              <div className="m-vis-main">
+                <div className="m-culto" style={{ fontSize: 14 }}>{child.name}</div>
+                <div className="m-fn">{turma?.name ?? "sem turma"}{child.allergies ? ` · ⚠ ${child.allergies}` : ""}</div>
+              </div>
+            </div>
+            {historico.length > 0 && (
+              <div style={{ marginTop: 10, fontSize: 11.5, color: "var(--subtle)" }}>
+                {historico.map((h) => <div key={h.id}>{formatDateBR(h.dropped_off_at.slice(0, 10))} · {h.status === "retirado" ? "retirado" : "na sala"}</div>)}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {meusFilhos.length === 0 && <div className="empty">Nenhuma crianca vinculada ao seu cadastro ainda.</div>}
+
+      <button className="m-btn m-btn-swap" style={{ width: "100%", marginTop: 10 }} onClick={() => setNovaFicha((v) => !v)}>
+        {novaFicha ? "Cancelar" : "+ Adicionar filho"}
+      </button>
+      {novaFicha && (
+        <div className="m-card" style={{ borderColor: "var(--olive-line)", marginTop: 10 }}>
+          <input className="input" placeholder="Nome da crianca" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginBottom: 8 }} />
+          <input className="input" type="date" value={form.nascimento} onChange={(e) => setForm((f) => ({ ...f, nascimento: e.target.value }))} style={{ marginBottom: 8 }} />
+          <select className="select" value={form.turmaId} onChange={(e) => setForm((f) => ({ ...f, turmaId: e.target.value }))} style={{ marginBottom: 10 }}>
+            <option value="">Turma (sugerida por idade)</option>
+            {kidsClasses.map((kc) => <option key={kc.id} value={kc.id}>{kc.name}</option>)}
+          </select>
+          <button className="m-btn m-btn-ok" style={{ width: "100%" }} onClick={criarFilho}>Salvar</button>
+        </div>
+      )}
+
+      {kidsWall.length > 0 && (
+        <>
+          <div className="m-section-t" style={{ marginTop: 22 }}>Mural dos professores</div>
+          {kidsWall.map((post) => (
+            <div className="m-card" key={post.id}>
+              <div className="m-fn">{post.author ?? "Kids"}</div>
+              <div style={{ fontSize: 13.5, marginTop: 4 }}>{post.body}</div>
+            </div>
+          ))}
+        </>
+      )}
+
+      {kidsEvents.length > 0 && meusFilhos.length > 0 && (
+        <>
+          <div className="m-section-t" style={{ marginTop: 22 }}>Eventos de criancas</div>
+          {kidsEvents.map((event) => (
+            <div className="m-card" key={event.id}>
+              <div className="m-culto">{event.title}</div>
+              <div className="m-fn">{[event.event_date, event.time, event.location].filter(Boolean).join(" · ") || "sem data definida"}</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                {meusFilhos.map((child) => {
+                  const inscrito = enrollments.some((e) => e.kids_event_id === event.id && e.child_id === child.id);
+                  return (
+                    <button key={child.id} className={`chip ${inscrito ? "chip-ok" : "chip-neutral"}`} type="button" disabled={inscrito} onClick={() => inscrever(event.id, child.id)}>
+                      {child.name.split(" ")[0]}{inscrito ? " ✓" : " + inscrever"}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+    </>
+  );
+}
+
 // ── frame: celular ────────────────────────────────────────────────────────────
 
 function MobileMembro({
@@ -1560,16 +1910,21 @@ function MobileMembro({
           visitors, baptismClasses, announcements, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment,
           onAdvanceVisitorStage, onRegisterVisitor, onSendMessage, onStartChat,
           organizationId, churchName, churchLogoUrl, theme, setTheme, onChangePassword, onUpdateProfile,
-          journeyRequests, onRequestJourneyStep, onConfirmarEscala, onRecusarEscala } = rest;
+          journeyRequests, onRequestJourneyStep, onConfirmarEscala, onRecusarEscala,
+          kidsClasses = [], kidsChildren = [], childGuardians = [], kidsSessions = [], kidsAttendance = [],
+          kidsEvents = [], kidsEventEnrollments = [], wallPosts = [] } = rest;
 
   const isRecep = isRecepPerson(person, ministries);
+  const isKids = isKidsPerson(person, ministries);
 
   const TABS = [
     { id: "inicio",     ic: "inicio",     l: "Inicio"   },
     { id: "escalas",    ic: "escalas",    l: "Escala"   },
     { id: "tarefas",    ic: "tarefas",    l: "Tarefas"  },
     { id: "conversas",  ic: "conversas",  l: "Chat"     },
-    isRecep
+    isKids
+      ? { id: "kids",       ic: "kids",      l: "Kids"     }
+      : isRecep
       ? { id: "visitantes", ic: "visitante", l: "Visitas" }
       : { id: "cursos",     ic: "cursos",    l: "Cursos"  },
     { id: "perfil",     ic: "perfil",     l: "Perfil"   },
@@ -1611,6 +1966,20 @@ function MobileMembro({
             <TabConversas member={member} chats={chats} chatMembers={chatMembers} messages={messages} members={members} ministries={ministries} onSendMessage={onSendMessage} onStartChat={onStartChat} />
           )}
           {tab === "visitantes" && <TabVisitantes visitors={visitors} onAdvanceVisitorStage={onAdvanceVisitorStage} onRegisterVisitor={onRegisterVisitor} />}
+          {tab === "kids" && (
+            <TabKids
+              person={person}
+              members={members}
+              events={events}
+              kidsClasses={kidsClasses}
+              kidsChildren={kidsChildren}
+              childGuardians={childGuardians}
+              kidsSessions={kidsSessions}
+              kidsAttendance={kidsAttendance}
+              organizationId={organizationId}
+              churchId={kidsClasses[0]?.church_id}
+            />
+          )}
           {tab === "cursos" && (
             <TabCursos member={member} courses={courses} enrollments={enrollments} courseModules={courseModules} courseLessons={courseLessons} baptismClasses={baptismClasses} setTab={setTab} />
           )}
@@ -1627,6 +1996,22 @@ function MobileMembro({
               onUpdateProfile={onUpdateProfile}
               journeyRequests={journeyRequests}
               onRequestJourneyStep={onRequestJourneyStep}
+              setTab={setTab}
+            />
+          )}
+          {tab === "kids-area" && (
+            <TabKidsArea
+              person={person}
+              kidsClasses={kidsClasses}
+              kidsChildren={kidsChildren}
+              childGuardians={childGuardians}
+              kidsAttendance={kidsAttendance}
+              kidsEvents={kidsEvents}
+              kidsEventEnrollments={kidsEventEnrollments}
+              wallPosts={wallPosts}
+              organizationId={organizationId}
+              churchId={kidsClasses[0]?.church_id}
+              setTab={setTab}
             />
           )}
         </div>

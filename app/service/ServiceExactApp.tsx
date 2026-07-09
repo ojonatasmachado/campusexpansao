@@ -11,6 +11,7 @@ import { deriveAccentVars, isValidHex, normalizeHex, contrastRatio, contrastLabe
 import { formatDateBR } from "./lib/date";
 import MobileOverlay from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
+import { KidsQRModal } from "./KidsCheckin";
 import EventoShare from "./EventoShare";
 import CursoEditor from "./CursoEditor";
 import CursoDrawer from "./CursoDrawer";
@@ -480,6 +481,80 @@ type ReservationView = {
   source_id: string | null;
 };
 
+type KidsClassView = {
+  id: string;
+  church_id: string;
+  name: string;
+  min_age_months: number | null;
+  max_age_months: number | null;
+  room_id: string | null;
+  capacity: number | null;
+  accent: string | null;
+};
+
+type ChildView = {
+  id: string;
+  church_id: string;
+  class_id: string | null;
+  name: string;
+  birth: string | null;
+  photo_url: string | null;
+  allergies: string | null;
+  notes: string | null;
+};
+
+type ChildGuardianView = {
+  id: string;
+  child_id: string;
+  guardian_person_id: string;
+  relationship: string | null;
+  can_pickup: boolean;
+};
+
+type KidsSessionView = {
+  id: string;
+  event_id: string;
+  class_id: string;
+  checkin_token: string | null;
+  checkin_active: boolean;
+};
+
+type KidsAttendanceView = {
+  id: string;
+  session_id: string;
+  child_id: string;
+  status: "presente" | "retirada_pendente" | "retirado";
+  dropped_off_by: string | null;
+  dropped_off_at: string;
+  dropped_off_via: "qr" | "manual";
+  pickup_requested_by: string | null;
+  pickup_requested_at: string | null;
+  picked_up_by: string | null;
+  picked_up_confirmed_by: string | null;
+  picked_up_at: string | null;
+  picked_up_via: "qr" | "manual" | null;
+  notes: string | null;
+};
+
+type KidsEventView = {
+  id: string;
+  church_id: string;
+  title: string;
+  description: string | null;
+  event_date: string | null;
+  time: string | null;
+  location: string | null;
+  capacity: number | null;
+  open_enrollment: boolean;
+};
+
+type KidsEventEnrollmentView = {
+  id: string;
+  kids_event_id: string;
+  child_id: string;
+  enrolled_by: string | null;
+};
+
 type Props = {
   churches: ChurchView[];
   people: PersonView[];
@@ -512,6 +587,13 @@ type Props = {
   rehearsals: RehearsalView[];
   rooms: RoomView[];
   reservations: ReservationView[];
+  kidsClasses?: KidsClassView[];
+  kidsChildren?: ChildView[];
+  childGuardians?: ChildGuardianView[];
+  kidsSessions?: KidsSessionView[];
+  kidsAttendance?: KidsAttendanceView[];
+  kidsEvents?: KidsEventView[];
+  kidsEventEnrollments?: KidsEventEnrollmentView[];
   churchIdentity?: ChurchIdentityView | null;
   cycles?: CycleView[];
   historyEntries?: HistoryEntryView[];
@@ -566,6 +648,8 @@ type ModalState =
         | { kind: "announcement" }
         | { kind: "wallPost" }
         | { kind: "room" }
+        | { kind: "kidsClass"; id?: string }
+        | { kind: "kidsEvent" }
         | { kind: "member"; visitorId?: string }
         | { kind: "event" }
         | { kind: "ministry" }
@@ -584,7 +668,7 @@ type ModalState =
 const ICONS = ICON_PATHS;
 
 const CEX_ICON_FOR: Record<string, string> = {
-  painel: "painel", membros: "membros", pessoas: "pessoa", times: "times", visitantes: "visitante",
+  painel: "painel", membros: "membros", pessoas: "pessoa", times: "times", visitantes: "visitante", criancas: "kids",
   decisoes: "decisoes", batismos: "batismos", cursos: "cursos",
   escalas: "escalas", reunioes: "reunioes", ensaios: "ensaios", quadros: "quadros", espacos: "espacos",
   cultos: "cultos", comunicacao: "comunicacao", conversas: "conversas",
@@ -595,7 +679,7 @@ const CEX_ICON_FOR: Record<string, string> = {
    aqui (quadros, reunioes, ensaios, conversas, relatorios) não têm ação própria no
    catálogo : ficam visíveis pra qualquer papel que não seja "vol". */
 const NAV_PERMISSION_CODE: Record<string, string> = {
-  membros: "membros", pessoas: "voluntarios", times: "times", visitantes: "visitantes",
+  membros: "membros", pessoas: "voluntarios", times: "times", visitantes: "visitantes", criancas: "kids",
   decisoes: "decisoes", batismos: "batismos", cursos: "cursos",
   escalas: "escala", cultos: "cultos", comunicacao: "comunica",
   identidade: "identidade", historia: "historia", config: "permissoes",
@@ -632,6 +716,7 @@ const ROUTES = {
   pessoas: "SERVICE · VOLUNTÁRIOS",
   times: "SERVICE · TIMES",
   visitantes: "SERVICE · VISITANTES",
+  criancas: "SERVICE · CRIANÇAS",
   decisoes: "SERVICE · DECISÕES",
   batismos: "SERVICE · BATISMOS",
   cursos: "SERVICE · CURSOS",
@@ -883,6 +968,13 @@ export default function ServiceExactApp({
   rehearsals,
   rooms,
   reservations,
+  kidsClasses = [],
+  kidsChildren = [],
+  childGuardians = [],
+  kidsSessions = [],
+  kidsAttendance = [],
+  kidsEvents = [],
+  kidsEventEnrollments = [],
   churchIdentity = null,
   cycles = [],
   historyEntries = [],
@@ -1210,6 +1302,7 @@ export default function ServiceExactApp({
         { id: "pessoas", icon: "pessoa", label: "Voluntários", count: people.length },
         { id: "times", icon: "times", label: "Times & Ministérios", count: ministries.length },
         { id: "visitantes", icon: "visitante", label: "Visitantes", badge: visitorsInCare },
+        { id: "criancas", icon: "kids", label: "Crianças", count: kidsChildren.length },
       ],
     },
     {
@@ -1326,6 +1419,9 @@ export default function ServiceExactApp({
             announcements={announcements}
             eventAttendance={eventAttendance}
             journeyRequests={visibleJourneyRequests}
+            kidsClasses={kidsClasses}
+            kidsChildren={kidsChildren}
+            kidsAttendance={kidsAttendance}
             onApproveJourney={approveJourneyRequest}
             onRejectJourney={rejectJourneyRequest}
             setRoute={setRoute}
@@ -1338,6 +1434,7 @@ export default function ServiceExactApp({
         {route === "pessoas" ? <Pessoas people={people} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Times ministries={ministries} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} church={firstChurch} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "criancas" ? <Criancas kidsChildren={kidsChildren} kidsClasses={kidsClasses} childGuardians={childGuardians} people={people} kidsEvents={kidsEvents} church={firstChurch} /> : null}
         {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "batismos" ? <Batismos baptismClasses={baptismClasses} baptismCandidates={baptismCandidates} decisions={decisions} members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "cursos" ? (
@@ -1356,11 +1453,11 @@ export default function ServiceExactApp({
         {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} church={firstChurch} setModal={setModal} /> : null}
         {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} scopeMinistryIds={scopeMinistryIds} setModal={setModal} /> : null}
-        {route === "cultos" ? <Cultos events={events} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
+        {route === "cultos" ? <Cultos events={events} ministries={ministries} church={firstChurch} kidsClasses={kidsClasses} kidsSessions={kidsSessions} kidsChildren={kidsChildren} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
         {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} wallPosts={wallPosts} ministries={ministries} people={people} setModal={setModal} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} currentPersonId={perspectivePersonId} scopeMinistryIds={scopeMinistryIds} pendingChatMemberId={pendingChatMemberId} onConsumePendingChatMember={() => setPendingChatMemberId(null)} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} confirmationRate={confirmationRate} setRoute={setRoute} church={firstChurch} /> : null}
-        {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} currentRole={currentRole} currentExtraAccess={currentExtraAccess} theme={theme} setTheme={setTheme} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
+        {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} theme={theme} setTheme={setTheme} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
         {route === "identidade" ? <Identidade church={firstChurch} identity={churchIdentity} cycle={cycles.find((c) => c.is_active) ?? cycles[0]} setModal={setModal} /> : null}
         {route === "historia" ? <Historia church={firstChurch} historyEntries={historyEntries} setModal={setModal} /> : null}
       </div>
@@ -1388,6 +1485,14 @@ export default function ServiceExactApp({
           chats={chats}
           chatMembers={chatMembers}
           messages={messages}
+          kidsClasses={kidsClasses}
+          kidsChildren={kidsChildren}
+          childGuardians={childGuardians}
+          kidsSessions={kidsSessions}
+          kidsAttendance={kidsAttendance}
+          kidsEvents={kidsEvents}
+          kidsEventEnrollments={kidsEventEnrollments}
+          wallPosts={wallPosts}
           onReadAnnouncement={markAnnouncementRead}
           onCompleteOnboarding={completeOnboarding}
           onAddCardComment={addCardCommentMobile}
@@ -1479,6 +1584,7 @@ export default function ServiceExactApp({
           church={firstChurch}
           people={people}
           ministries={ministries}
+          rooms={rooms}
           onClose={() => setModal(null)}
         />
       ) : null}
@@ -1644,6 +1750,9 @@ function Painel({
   announcements,
   eventAttendance,
   journeyRequests,
+  kidsClasses,
+  kidsChildren,
+  kidsAttendance,
   onApproveJourney,
   onRejectJourney,
   setRoute,
@@ -1661,6 +1770,9 @@ function Painel({
   announcements: AnnouncementView[];
   eventAttendance: EventAttendanceView[];
   journeyRequests: JourneyChangeRequestView[];
+  kidsClasses: KidsClassView[];
+  kidsChildren: ChildView[];
+  kidsAttendance: KidsAttendanceView[];
   onApproveJourney: (request: JourneyChangeRequestView) => void;
   onRejectJourney: (request: JourneyChangeRequestView) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
@@ -1791,6 +1903,51 @@ function Painel({
           </div>
         </div>
       </div>
+      {kidsClasses.length > 0 && (
+        <div className="dash-2col" style={{ marginTop: 20 }}>
+          <div className="panel">
+            <div className="panel-head"><span className="panel-title"><Icon name="kids" size={14} /> Crianças por turma</span><button className="panel-link" type="button" onClick={() => setRoute("criancas")}>Ver todas</button></div>
+            <div className="panel-body flush">
+              {kidsClasses.map((kc) => {
+                const count = kidsChildren.filter((child) => child.class_id === kc.id).length;
+                const max = Math.max(...kidsClasses.map((k) => kidsChildren.filter((c) => c.class_id === k.id).length), 1);
+                return (
+                  <div className="dist-row" key={kc.id}>
+                    <span className="dist-name">{kc.name}</span>
+                    <div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(count / max) * 100}%` }} /></div>
+                    <span className="dist-num">{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="panel">
+            <div className="panel-head"><span className="panel-title"><Icon name="alerta" size={14} /> Crianças sumindo</span><span className="panel-meta">sem vir há mais tempo</span></div>
+            <div className="panel-body flush">
+              {kidsChildren
+                .map((child) => {
+                  const lastSeen = kidsAttendance
+                    .filter((a) => a.child_id === child.id)
+                    .map((a) => a.dropped_off_at)
+                    .sort()
+                    .pop();
+                  return { child, lastSeen };
+                })
+                .sort((a, b) => (a.lastSeen ?? "").localeCompare(b.lastSeen ?? ""))
+                .slice(0, 5)
+                .map(({ child, lastSeen }) => (
+                  <div className="mini-row" key={child.id}>
+                    <div className="mini-main">
+                      <div className="mini-title">{child.name}</div>
+                      <div className="mini-sub">{lastSeen ? `Última vez em ${formatDateBR(lastSeen.slice(0, 10))}` : "Nunca fez check-in"}</div>
+                    </div>
+                  </div>
+                ))}
+              {kidsChildren.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhuma criança cadastrada ainda.</div>}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2607,7 +2764,9 @@ function Escalas({
   );
 }
 
-function Cultos({ events, ministries, church, setDrawer, setModal, setCheckinEventId, setShareEventId }: { events: EventView[]; ministries: MinistryView[]; church?: ChurchView; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; setCheckinEventId: (id: string) => void; setShareEventId: (id: string) => void }) {
+function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChildren, setDrawer, setModal, setCheckinEventId, setShareEventId }: { events: EventView[]; ministries: MinistryView[]; church?: ChurchView; kidsClasses: KidsClassView[]; kidsSessions: KidsSessionView[]; kidsChildren: ChildView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; setCheckinEventId: (id: string) => void; setShareEventId: (id: string) => void }) {
+  const [kidsPickerEventId, setKidsPickerEventId] = useState<string | null>(null);
+  const [kidsModal, setKidsModal] = useState<{ eventId: string; classId: string } | null>(null);
   const tipoOptions = [
     { v: "Culto", l: "Culto" },
     { v: "Evento", l: "Evento" },
@@ -2632,10 +2791,43 @@ function Cultos({ events, ministries, church, setDrawer, setModal, setCheckinEve
               <button className="btn btn-sec btn-sm" type="button" onClick={(e) => { e.stopPropagation(); setShareEventId(event.id); }}>
                 <Icon name="relatorios" size={13} /> Arte
               </button>
+              {kidsClasses.length > 0 && (
+                <div style={{ position: "relative" }}>
+                  <button className="btn btn-sec btn-sm" type="button" onClick={(e) => { e.stopPropagation(); setKidsPickerEventId(kidsPickerEventId === event.id ? null : event.id); }}>
+                    <Icon name="kids" size={13} /> Kids
+                  </button>
+                  {kidsPickerEventId === event.id && (
+                    <div className="cong-menu" style={{ right: 0, left: "auto" }} onClick={(e) => e.stopPropagation()}>
+                      <div className="cong-group">Abrir turma</div>
+                      {kidsClasses.map((kc) => (
+                        <button key={kc.id} className="cong-opt" type="button" onClick={() => { setKidsModal({ eventId: event.id, classId: kc.id }); setKidsPickerEventId(null); }}>
+                          <span className="cong-opt-mark"><Icon name="kids" size={14} /></span>
+                          <span className="cong-opt-info"><span className="cong-opt-name">{kc.name}</span></span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ))}
       </div>
+      {kidsModal && church && (() => {
+        const event = events.find((e) => e.id === kidsModal.eventId);
+        const kidsClass = kidsClasses.find((kc) => kc.id === kidsModal.classId);
+        if (!event || !kidsClass) return null;
+        const session = kidsSessions.find((s) => s.event_id === event.id && s.class_id === kidsClass.id) ?? null;
+        return (
+          <KidsQRModal
+            event={{ id: event.id, organizationId: church.organizationId, name: event.name, weekday: event.weekday, eventDate: event.eventDate, time: event.time }}
+            kidsClass={{ id: kidsClass.id, name: kidsClass.name }}
+            session={session}
+            kidsChildren={kidsChildren}
+            onClose={() => setKidsModal(null)}
+          />
+        );
+      })()}
     </div>
   );
 }
@@ -3852,6 +4044,292 @@ function Espacos({ rooms, reservations, church, setModal, embed }: { rooms: Room
     </>
   );
   return embed ? inner : <div className="content wide">{inner}</div>;
+}
+
+function TurmasKids({ kidsClasses, rooms, setModal }: { kidsClasses: KidsClassView[]; rooms: RoomView[]; setModal: (modal: ModalState) => void }) {
+  const roomById = new Map(rooms.map((room) => [room.id, room]));
+  const openForm = (existing?: KidsClassView) => setModal({
+    eyebrow: existing ? "Editar" : "Criar",
+    title: existing ? `Editar ${existing.name}` : "Nova turma Kids",
+    subtitle: "A faixa etária sugere a turma no cadastro da criança, sempre dá pra ajustar na mão.",
+    saveLabel: existing ? "Salvar" : "Criar turma",
+    formFields: [
+      { k: "nome", label: "Nome da turma", type: "text", req: true, ph: "ex: Berçário", value: existing?.name },
+      { k: "min", label: "Idade mínima (meses)", type: "text", half: true, ph: "ex: 0", value: existing?.min_age_months != null ? String(existing.min_age_months) : undefined },
+      { k: "max", label: "Idade máxima (meses)", type: "text", half: true, ph: "ex: 23", value: existing?.max_age_months != null ? String(existing.max_age_months) : undefined },
+      { k: "capacidade", label: "Capacidade", type: "text", half: true, ph: "ex: 15", value: existing?.capacity != null ? String(existing.capacity) : undefined },
+      { k: "sala", label: "Sala vinculada", type: "select", half: true, ph: "Sem sala fixa", options: rooms.map((room) => ({ v: room.name, l: room.name })) },
+    ],
+    action: { kind: "kidsClass", id: existing?.id },
+  });
+
+  return (
+    <>
+      <div className="cfg-card-head-row">
+        <div>
+          <div className="cfg-card-t">Turmas Kids</div>
+          <div className="cfg-card-s">Berçário, Maternal, Primários... cada turma abre a própria sessão de check-in no dia do culto.</div>
+        </div>
+        <button className="btn btn-pri btn-sm" type="button" onClick={() => openForm()}>+ Nova turma</button>
+      </div>
+      <div className="sala-grid" style={{ marginTop: 16 }}>
+        {kidsClasses.map((kc) => (
+          <button key={kc.id} className="sala-card" type="button" onClick={() => openForm(kc)}>
+            <div className="sala-card-top"><span className="sala-mark"><Icon name="kids" size={18} /></span><span className="sala-cap">{kc.capacity ?? 0} <small>vagas</small></span></div>
+            <div className="sala-nome">{kc.name}</div>
+            <div className="sala-local">{kc.min_age_months != null || kc.max_age_months != null ? `${kc.min_age_months ?? 0} a ${kc.max_age_months ?? "?"} meses` : "Faixa etária não definida"}</div>
+            {kc.room_id ? <div className="sala-rec"><span className="tag">{roomById.get(kc.room_id)?.name ?? "Sala"}</span></div> : null}
+          </button>
+        ))}
+        {kidsClasses.length === 0 ? <div className="empty">Nenhuma turma cadastrada ainda.</div> : null}
+      </div>
+    </>
+  );
+}
+
+function childAgeLabel(birth: string | null): string {
+  if (!birth) return "Nascimento não informado";
+  const b = new Date(birth);
+  if (Number.isNaN(b.getTime())) return "Nascimento não informado";
+  const now = new Date();
+  let months = (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth());
+  if (now.getDate() < b.getDate()) months -= 1;
+  if (months < 24) return `${Math.max(months, 0)} meses`;
+  return `${Math.floor(months / 12)} anos`;
+}
+
+function Criancas({
+  kidsChildren,
+  kidsClasses,
+  childGuardians,
+  people,
+  kidsEvents,
+  church,
+}: {
+  kidsChildren: ChildView[];
+  kidsClasses: KidsClassView[];
+  childGuardians: ChildGuardianView[];
+  people: PersonView[];
+  kidsEvents: KidsEventView[];
+  church?: ChurchView;
+}) {
+  const [q, setQ] = useState("");
+  const [classFilter, setClassFilter] = useState("todas");
+  const [form, setForm] = useState<{ open: boolean; child?: ChildView }>({ open: false });
+  const [eventModal, setEventModal] = useState(false);
+  const classById = new Map(kidsClasses.map((kc) => [kc.id, kc]));
+  const personById = new Map(people.map((person) => [person.id, person]));
+
+  const visible = kidsChildren.filter((child) => {
+    const okQ = !q || child.name.toLowerCase().includes(q.toLowerCase());
+    const okClass = classFilter === "todas" || child.class_id === classFilter;
+    return okQ && okClass;
+  });
+
+  return (
+    <div className="content wide">
+      <PageHead
+        title="Crianças"
+        eyebrow="Pessoas"
+        subtitle="Ficha de cada criança, turma sugerida por idade e quem são os responsáveis autorizados a retirar."
+        action={<button className="btn btn-pri" type="button" onClick={() => setForm({ open: true })}>+ Nova criança</button>}
+      />
+      <div className="toolbar">
+        <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar criança..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        <div className="seg">
+          <button className={classFilter === "todas" ? "on" : ""} type="button" onClick={() => setClassFilter("todas")}>Todas</button>
+          {kidsClasses.map((kc) => (
+            <button key={kc.id} className={classFilter === kc.id ? "on" : ""} type="button" onClick={() => setClassFilter(kc.id)}>{kc.name}</button>
+          ))}
+        </div>
+        <div className="tb-spacer" />
+        <span className="panel-meta">{visible.length} criança(s)</span>
+      </div>
+      <div className="tbl">
+        <div className="tr head" style={{ gridTemplateColumns: "1.6fr 1fr 1fr 1.4fr" }}><span>Criança</span><span>Idade</span><span>Turma</span><span>Responsáveis</span></div>
+        {visible.map((child) => {
+          const guardians = childGuardians.filter((g) => g.child_id === child.id);
+          return (
+            <button className="tr click" type="button" key={child.id} style={{ gridTemplateColumns: "1.6fr 1fr 1fr 1.4fr" }} onClick={() => setForm({ open: true, child })}>
+              <div className="cell-person"><Av name={child.name} size="md" /><div><div className="cell-name">{child.name}</div>{child.allergies ? <div className="cell-sub">⚠ {child.allergies}</div> : null}</div></div>
+              <div className="cell-sub">{childAgeLabel(child.birth)}</div>
+              <div>{child.class_id ? <span className="tag">{classById.get(child.class_id)?.name ?? "Turma"}</span> : <span className="cell-sub">sem turma</span>}</div>
+              <div className="cell-sub">{guardians.length ? guardians.map((g) => personById.get(g.guardian_person_id)?.name.split(" ")[0]).filter(Boolean).join(", ") : "sem responsável"}</div>
+            </button>
+          );
+        })}
+        {visible.length === 0 ? <div className="empty">Nenhuma criança encontrada.</div> : null}
+      </div>
+
+      <div className="panel" style={{ marginTop: 28 }}>
+        <div className="panel-head">
+          <span className="panel-title"><Icon name="presente" size={14} /> Eventos Kids</span>
+          <button className="btn btn-sec btn-sm" type="button" onClick={() => setEventModal(true)}>+ Criar evento</button>
+        </div>
+        <div className="panel-body flush">
+          {kidsEvents.map((ev) => (
+            <div className="mini-row" key={ev.id}>
+              <div className="mini-main">
+                <div className="mini-title">{ev.title}</div>
+                <div className="mini-sub">{[ev.event_date, ev.time, ev.location].filter(Boolean).join(" · ") || "sem data definida"}</div>
+              </div>
+            </div>
+          ))}
+          {kidsEvents.length === 0 ? <div className="empty" style={{ padding: "20px 0" }}>Nenhum evento Kids criado ainda.</div> : null}
+        </div>
+      </div>
+
+      {form.open && church && (
+        <ChildFormModal
+          child={form.child}
+          kidsClasses={kidsClasses}
+          people={people}
+          childGuardians={form.child ? childGuardians.filter((g) => g.child_id === form.child!.id) : []}
+          church={church}
+          onClose={() => setForm({ open: false })}
+        />
+      )}
+      {eventModal && church && (
+        <ServiceModal
+          modal={{ eyebrow: "Criar", title: "Novo evento Kids", subtitle: "Evento infantil com inscrição aberta pelos responsáveis no app.", saveLabel: "Criar evento", formFields: [{ k: "titulo", label: "Título", type: "text", req: true, ph: "ex: Páscoa Kids" }, { k: "data", label: "Data", type: "date", half: true }, { k: "hora", label: "Horário", type: "text", half: true, ph: "ex: 10h" }, { k: "local", label: "Local", type: "text", half: true, ph: "ex: Salão Kids" }, { k: "capacidade", label: "Vagas", type: "text", half: true, ph: "ex: 30" }, { k: "desc", label: "Descrição", type: "area", ph: "O que vai acontecer" }], action: { kind: "kidsEvent" } }}
+          church={church}
+          people={people}
+          ministries={[]}
+          onClose={() => setEventModal(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function ChildFormModal({
+  child,
+  kidsClasses,
+  people,
+  childGuardians,
+  church,
+  onClose,
+}: {
+  child?: ChildView;
+  kidsClasses: KidsClassView[];
+  people: PersonView[];
+  childGuardians: ChildGuardianView[];
+  church: ChurchView;
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const [name, setName] = useState(child?.name ?? "");
+  const [birth, setBirth] = useState(child?.birth ?? "");
+  const [classId, setClassId] = useState(child?.class_id ?? "");
+  const [allergies, setAllergies] = useState(child?.allergies ?? "");
+  const [notes, setNotes] = useState(child?.notes ?? "");
+  const [guardians, setGuardians] = useState<{ name: string; relationship: string; canPickup: boolean }[]>(
+    childGuardians.length
+      ? childGuardians.map((g) => ({ name: people.find((p) => p.id === g.guardian_person_id)?.name ?? "", relationship: g.relationship ?? "", canPickup: g.can_pickup }))
+      : [{ name: "", relationship: "", canPickup: true }],
+  );
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const addGuardian = () => setGuardians((prev) => [...prev, { name: "", relationship: "", canPickup: true }]);
+  const removeGuardian = (index: number) => setGuardians((prev) => prev.filter((_, i) => i !== index));
+  const updateGuardian = (index: number, patch: Partial<{ name: string; relationship: string; canPickup: boolean }>) =>
+    setGuardians((prev) => prev.map((g, i) => (i === index ? { ...g, ...patch } : g)));
+
+  const salvar = async () => {
+    if (!name.trim()) { setError("Digite o nome da criança."); return; }
+    setSaving(true);
+    setError("");
+    const supabase = createServiceBrowserClient();
+    const payload = {
+      organization_id: church.organizationId,
+      church_id: church.id,
+      class_id: classId || null,
+      name: name.trim(),
+      birth: birth || null,
+      allergies: allergies.trim() || null,
+      notes: notes.trim() || null,
+    };
+    const { data: savedChild, error: childError } = child
+      ? await supabase.schema("service").from("children").update(payload).eq("id", child.id).select("id").single()
+      : await supabase.schema("service").from("children").insert(payload).select("id").single();
+
+    if (childError || !savedChild) {
+      setSaving(false);
+      setError(friendlyWriteError(childError?.message ?? "Não foi possível salvar a criança."));
+      return;
+    }
+
+    const childId = savedChild.id as string;
+    await supabase.schema("service").from("child_guardians").delete().eq("child_id", childId);
+    const guardianRows = guardians
+      .map((g) => ({ guardian: findPersonByName(people, g.name), relationship: g.relationship.trim() || null, canPickup: g.canPickup }))
+      .filter((g): g is { guardian: PersonView; relationship: string | null; canPickup: boolean } => !!g.guardian)
+      .map((g) => ({
+        organization_id: church.organizationId,
+        child_id: childId,
+        guardian_person_id: g.guardian.id,
+        relationship: g.relationship,
+        can_pickup: g.canPickup,
+      }));
+    if (guardianRows.length) {
+      await supabase.schema("service").from("child_guardians").insert(guardianRows);
+    }
+
+    setSaving(false);
+    router.refresh();
+    onClose();
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">{child ? "Editar" : "Criar"}</div>
+          <div className="modal-title">{child ? `Editar ${child.name}` : "Nova criança"}</div>
+          <div className="modal-sub">Nome, turma, alergias/observações e quem são os responsáveis autorizados a retirar.</div>
+        </div>
+        <div className="modal-body">
+          <div className="field"><label className="field-label">Nome da criança</label><input className="input" placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} /></div>
+          <div className="field field-half"><label className="field-label">Nascimento</label><input className="input" type="date" value={birth} onChange={(e) => setBirth(e.target.value)} /></div>
+          <div className="field field-half">
+            <label className="field-label">Turma</label>
+            <select className="select" value={classId} onChange={(e) => setClassId(e.target.value)}>
+              <option value="">Sugerir depois</option>
+              {kidsClasses.map((kc) => <option key={kc.id} value={kc.id}>{kc.name}</option>)}
+            </select>
+          </div>
+          <div className="field"><label className="field-label">Alergias / observações</label><input className="input" placeholder="ex: alergia a amendoim" value={allergies} onChange={(e) => setAllergies(e.target.value)} /></div>
+          <div className="field"><label className="field-label">Notas</label><textarea className="textarea" placeholder="Observações gerais" value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+
+          <div className="field" style={{ gridColumn: "1 / -1" }}>
+            <label className="field-label">Responsáveis autorizados a retirar</label>
+            {guardians.map((g, index) => (
+              <div key={index} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
+                <input className="input" style={{ flex: 1.4 }} list="service-people-names" placeholder="Nome do responsável" value={g.name} onChange={(e) => updateGuardian(index, { name: e.target.value })} />
+                <input className="input" style={{ flex: 1 }} placeholder="Parentesco (mãe, avó...)" value={g.relationship} onChange={(e) => updateGuardian(index, { relationship: e.target.value })} />
+                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--muted)", whiteSpace: "nowrap" }}>
+                  <input type="checkbox" checked={g.canPickup} onChange={(e) => updateGuardian(index, { canPickup: e.target.checked })} /> pode retirar
+                </label>
+                <button className="btn btn-ghost btn-sm" type="button" onClick={() => removeGuardian(index)}>Remover</button>
+              </div>
+            ))}
+            <datalist id="service-people-names">
+              {people.map((person) => <option key={person.id} value={person.name} />)}
+            </datalist>
+            <button className="btn btn-sec btn-sm" type="button" onClick={addGuardian}>+ Adicionar responsável</button>
+            <div className="cell-sub" style={{ marginTop: 6 }}>O responsável precisa já ter um cadastro de voluntário/membro no Service pra aparecer aqui.</div>
+          </div>
+
+          {error ? <div style={{ gridColumn: "1 / -1", fontSize: 12.5, color: "var(--danger)" }}>{error}</div> : null}
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>{child ? "Salvar" : "Criar criança"}</button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function ReservaModal({ rooms, reservations, church, salaInicial, dataInicial, onClose }: { rooms: RoomView[]; reservations: ReservationView[]; church: ChurchView; salaInicial?: string; dataInicial?: string; onClose: () => void }) {
@@ -5284,6 +5762,7 @@ const CFG_TABS = [
   { id: "operacao", label: "Escala & presença" },
   { id: "grupos", label: "Grupos & Células" },
   { id: "espacos", label: "Espaços & Salas" },
+  { id: "kids", label: "Turmas Kids" },
   { id: "perm", label: "Permissões" },
   { id: "acessos", label: "Acessos por pessoa" },
   { id: "visual", label: "Personalização" },
@@ -5894,6 +6373,7 @@ function Config({
   people,
   rooms,
   reservations,
+  kidsClasses,
   currentRole,
   currentExtraAccess = [],
   theme,
@@ -5911,6 +6391,7 @@ function Config({
   people: PersonView[];
   rooms: RoomView[];
   reservations: ReservationView[];
+  kidsClasses: KidsClassView[];
   currentRole: "master" | "pastor" | "lider" | "vol";
   currentExtraAccess?: string[];
   theme: "dark" | "light";
@@ -6321,6 +6802,13 @@ function Config({
       {tab === "espacos" && (
         <div className="cfg-card">
           <Espacos rooms={rooms} reservations={reservations} church={church} setModal={setModal} embed />
+        </div>
+      )}
+
+      {/* ─── TURMAS KIDS ─── */}
+      {tab === "kids" && (
+        <div className="cfg-card">
+          <TurmasKids kidsClasses={kidsClasses} rooms={rooms} setModal={setModal} />
         </div>
       )}
 
@@ -8341,6 +8829,12 @@ function findMinistryByName(ministries: MinistryView[], value: string) {
   return ministries.find((ministry) => normalize(ministry.name) === term || normalize(ministry.name).includes(term)) ?? null;
 }
 
+function findRoomByName(rooms: RoomView[], value: string) {
+  const term = normalize(value);
+  if (!term) return null;
+  return rooms.find((room) => normalize(room.name) === term || normalize(room.name).includes(term)) ?? null;
+}
+
 function friendlyWriteError(message: string) {
   const lower = message.toLowerCase();
   if (lower.includes("permission") || lower.includes("row-level security") || lower.includes("rls")) return "O banco bloqueou a gravação por segurança. Confirme se seu usuário tem permissão nesta igreja.";
@@ -8499,12 +8993,14 @@ function ServiceModal({
   church,
   people,
   ministries,
+  rooms = [],
   onClose,
 }: {
   modal: NonNullable<ModalState>;
   church?: ChurchView;
   people: PersonView[];
   ministries: MinistryView[];
+  rooms?: RoomView[];
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -8534,6 +9030,7 @@ function ServiceModal({
     const value = (field: string) => values[field]?.trim() ?? "";
     const namedPerson = (field: string) => findPersonByName(people, value(field));
     const namedMinistry = (field: string) => findMinistryByName(ministries, value(field));
+    const namedRoom = (field: string) => findRoomByName(rooms, value(field));
     let result: { error: { message: string } | null } = { error: null };
 
     setSaving(true);
@@ -8764,6 +9261,34 @@ function ServiceModal({
         capacity: Number.parseInt(value("capacidade"), 10) || null,
         location: value("local") || null,
         resources: value("recursos") ? value("recursos").split(",").map((item) => item.trim()).filter(Boolean) : [],
+      });
+    } else if (action.kind === "kidsClass") {
+      if (!value("nome")) { setSaving(false); setError("Digite o nome da turma."); return; }
+      const payload = {
+        organization_id: church.organizationId,
+        church_id: church.id,
+        name: value("nome"),
+        min_age_months: value("min") ? Number.parseInt(value("min"), 10) : null,
+        max_age_months: value("max") ? Number.parseInt(value("max"), 10) : null,
+        capacity: value("capacidade") ? Number.parseInt(value("capacidade"), 10) : null,
+        accent: value("cor") || "wheat",
+        room_id: namedRoom("sala")?.id ?? null,
+      };
+      result = action.id
+        ? await supabase.schema("service").from("kids_classes").update(payload).eq("id", action.id)
+        : await supabase.schema("service").from("kids_classes").insert(payload);
+    } else if (action.kind === "kidsEvent") {
+      if (!value("titulo")) { setSaving(false); setError("Digite o título do evento."); return; }
+      result = await supabase.schema("service").from("kids_events").insert({
+        organization_id: church.organizationId,
+        church_id: church.id,
+        title: value("titulo"),
+        description: value("desc") || null,
+        event_date: value("data") || null,
+        time: value("hora") || null,
+        location: value("local") || null,
+        capacity: value("capacidade") ? Number.parseInt(value("capacidade"), 10) : null,
+        open_enrollment: true,
       });
     } else if (action.kind === "identity") {
       result = await supabase.schema("service").from("church_identity").upsert({
