@@ -179,18 +179,14 @@ Padrão comum: a UI parece funcionar mas a ação não persiste em lugar nenhum
 
 ## Como retomar
 
-**Fases 18-23 fechadas** (commits `7587018`, `1fd6368`, `7ad08e4`, `b234d05`,
-`59a30a5`, `513016e`), cada uma reconferida contra o código atual antes de
-implementar (mesma lição da Fase 15) e testada ao vivo em `/service/demo`.
-
-**Próximo passo: Fase 24**, a última do plano, de propósito deixada por
-último (decisão explícita do usuário em 2026-07-08). É a maior e mais nova
-da rodada, precisa de Plan Mode dedicado por ter tabela nova, RLS por linha
-e telas em dois apps (desktop + mobile) — reconferir com o usuário as
-perguntas em aberto da seção (aprovação de edição de líder, escopo do
-backfill em massa) antes de desenhar o schema.
+**Plano CONCLUÍDO.** Fases 18-24 todas fechadas (commits `7587018`,
+`1fd6368`, `7ad08e4`, `b234d05`, `59a30a5`, `513016e`, `c2e38ed`), cada uma
+reconferida contra o código atual antes de implementar (mesma lição da
+Fase 15) e testada ao vivo em `/service/demo`. Não há próxima fase definida
+neste documento — aguardar nova demanda do usuário.
 
 **Pendências de infraestrutura: RESOLVIDAS em 2026-07-09.** O usuário
-rodou `supabase db push` (migrações 0011-0015 aplicadas, confirmado via
+rodou `supabase db push` (migrações 0011-0016 aplicadas, confirmado via
 `supabase migration list`) e copiou as chaves VAPID pras env vars da
-Vercel + redeploy. Nada bloqueado pra começar a Fase 24.
+Vercel + redeploy. Falta só rodar `db push` de novo pra aplicar a 0016
+(criada na Fase 24, ainda não aplicada no banco real).
