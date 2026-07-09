@@ -9,6 +9,7 @@ import { uploadServiceImage, imageExtension } from "./lib/upload-image";
 import { ICON_PATHS, ICON_CATEGORIES, DEFAULT_ICON, Icon, IconPicker } from "./lib/icons";
 import { deriveAccentVars, isValidHex, normalizeHex, contrastRatio, contrastLabel, buildColorWheel, hslToHex } from "./lib/color";
 import { formatDateBR } from "./lib/date";
+import { ageInMonths, suggestKidsClassId } from "./lib/kids";
 import MobileOverlay from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
 import { KidsQRModal } from "./KidsCheckin";
@@ -102,6 +103,7 @@ type PersonView = {
   availability: Record<string, boolean>;
   tags: string[];
   meta?: { recusasSeguidas?: number; diasIndisponivel?: number; extraAccess?: string[]; birthday?: string; neighborhood?: string };
+  photoUrl?: string | null;
 };
 
 type MemberView = {
@@ -501,6 +503,13 @@ type ChildView = {
   photo_url: string | null;
   allergies: string | null;
   notes: string | null;
+  gender: "menino" | "menina" | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  image_authorized: boolean;
+  dietary_restrictions: string | null;
+  health_insurance: string | null;
+  medication: string | null;
 };
 
 type ChildGuardianView = {
@@ -4088,13 +4097,9 @@ function TurmasKids({ kidsClasses, rooms, setModal }: { kidsClasses: KidsClassVi
 }
 
 function childAgeLabel(birth: string | null): string {
-  if (!birth) return "Nascimento não informado";
-  const b = new Date(birth);
-  if (Number.isNaN(b.getTime())) return "Nascimento não informado";
-  const now = new Date();
-  let months = (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth());
-  if (now.getDate() < b.getDate()) months -= 1;
-  if (months < 24) return `${Math.max(months, 0)} meses`;
+  const months = ageInMonths(birth);
+  if (months === null) return "Nascimento não informado";
+  if (months < 24) return `${months} meses`;
   return `${Math.floor(months / 12)} anos`;
 }
 
@@ -4202,6 +4207,33 @@ function Criancas({
   );
 }
 
+function MiniFotoUpload({
+  label,
+  photoUrl,
+  onUpload,
+  busy,
+}: {
+  label: string;
+  photoUrl: string | null | undefined;
+  onUpload: (file: File) => void;
+  busy?: boolean;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      {photoUrl ? (
+        <img src={photoUrl} alt={label} style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover" }} />
+      ) : (
+        <div className="av av-sm" style={{ background: "var(--danger-dim)", color: "var(--danger)" }}>!</div>
+      )}
+      <button className="btn btn-ghost btn-sm" type="button" disabled={busy} onClick={() => inputRef.current?.click()}>
+        {busy ? "Enviando..." : photoUrl ? "Trocar foto" : "Adicionar foto"}
+      </button>
+      <input ref={inputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { const file = e.target.files?.[0]; if (file) onUpload(file); e.target.value = ""; }} />
+    </div>
+  );
+}
+
 function ChildFormModal({
   child,
   kidsClasses,
@@ -4220,24 +4252,73 @@ function ChildFormModal({
   const router = useRouter();
   const [name, setName] = useState(child?.name ?? "");
   const [birth, setBirth] = useState(child?.birth ?? "");
-  const [classId, setClassId] = useState(child?.class_id ?? "");
   const [allergies, setAllergies] = useState(child?.allergies ?? "");
   const [notes, setNotes] = useState(child?.notes ?? "");
-  const [guardians, setGuardians] = useState<{ name: string; relationship: string; canPickup: boolean }[]>(
+  const [gender, setGender] = useState(child?.gender ?? "");
+  const [emergencyName, setEmergencyName] = useState(child?.emergency_contact_name ?? "");
+  const [emergencyPhone, setEmergencyPhone] = useState(child?.emergency_contact_phone ?? "");
+  const [imageAuthorized, setImageAuthorized] = useState(child?.image_authorized ?? false);
+  const [dietaryRestrictions, setDietaryRestrictions] = useState(child?.dietary_restrictions ?? "");
+  const [healthInsurance, setHealthInsurance] = useState(child?.health_insurance ?? "");
+  const [medication, setMedication] = useState(child?.medication ?? "");
+  const [photoUrl, setPhotoUrl] = useState(child?.photo_url ?? null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const childId = useMemo(() => child?.id ?? crypto.randomUUID(), [child?.id]);
+  const suggestedClassId = useMemo(() => suggestKidsClassId(birth, kidsClasses), [birth, kidsClasses]);
+  const classId = suggestedClassId ?? child?.class_id ?? null;
+  const classLabel = kidsClasses.find((kc) => kc.id === classId)?.name;
+  const [guardians, setGuardians] = useState<{ name: string; relationship: string; canPickup: boolean; photoUrl: string | null }[]>(
     childGuardians.length
-      ? childGuardians.map((g) => ({ name: people.find((p) => p.id === g.guardian_person_id)?.name ?? "", relationship: g.relationship ?? "", canPickup: g.can_pickup }))
-      : [{ name: "", relationship: "", canPickup: true }],
+      ? childGuardians.map((g) => {
+          const p = people.find((person) => person.id === g.guardian_person_id);
+          return { name: p?.name ?? "", relationship: g.relationship ?? "", canPickup: g.can_pickup, photoUrl: p?.photoUrl ?? null };
+        })
+      : [{ name: "", relationship: "", canPickup: true, photoUrl: null }],
   );
+  const [uploadingGuardian, setUploadingGuardian] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const addGuardian = () => setGuardians((prev) => [...prev, { name: "", relationship: "", canPickup: true }]);
+  const addGuardian = () => setGuardians((prev) => [...prev, { name: "", relationship: "", canPickup: true, photoUrl: null }]);
   const removeGuardian = (index: number) => setGuardians((prev) => prev.filter((_, i) => i !== index));
-  const updateGuardian = (index: number, patch: Partial<{ name: string; relationship: string; canPickup: boolean }>) =>
+  const updateGuardian = (index: number, patch: Partial<{ name: string; relationship: string; canPickup: boolean; photoUrl: string | null }>) =>
     setGuardians((prev) => prev.map((g, i) => (i === index ? { ...g, ...patch } : g)));
+
+  const uploadChildPhoto = async (file: File) => {
+    setUploadingPhoto(true);
+    try {
+      const supabase = createServiceBrowserClient();
+      const url = await uploadServiceImage(supabase, file, `${church.organizationId}/kids/children/${childId}.${imageExtension(file)}`);
+      setPhotoUrl(url);
+    } catch {
+      setError("Não foi possível enviar a foto agora.");
+    }
+    setUploadingPhoto(false);
+  };
+
+  const uploadGuardianPhoto = async (index: number, file: File) => {
+    const matched = findPersonByName(people, guardians[index].name);
+    if (!matched) { setError("Digite o nome do responsável (já cadastrado) antes de enviar a foto."); return; }
+    setUploadingGuardian(index);
+    try {
+      const supabase = createServiceBrowserClient();
+      const url = await uploadServiceImage(supabase, file, `${church.organizationId}/kids/guardians/${matched.id}.${imageExtension(file)}`);
+      await supabase.schema("service").from("people").update({ photo_url: url }).eq("id", matched.id);
+      updateGuardian(index, { photoUrl: url });
+    } catch {
+      setError("Não foi possível enviar a foto do responsável agora.");
+    }
+    setUploadingGuardian(null);
+  };
 
   const salvar = async () => {
     if (!name.trim()) { setError("Digite o nome da criança."); return; }
+    if (!photoUrl) { setError("A foto da criança é obrigatória."); return; }
+    const matchedGuardians = guardians.map((g) => ({ ...g, person: findPersonByName(people, g.name) }));
+    if (matchedGuardians.some((g) => g.name.trim() && !g.person)) { setError("Um dos responsáveis não foi encontrado. Confira o nome ou cadastre a pessoa antes."); return; }
+    const withPerson = matchedGuardians.filter((g) => g.person);
+    if (withPerson.some((g) => !g.photoUrl)) { setError("Todo responsável precisa ter uma foto (pra o professor confirmar na retirada)."); return; }
+
     setSaving(true);
     setError("");
     const supabase = createServiceBrowserClient();
@@ -4247,31 +4328,35 @@ function ChildFormModal({
       class_id: classId || null,
       name: name.trim(),
       birth: birth || null,
+      photo_url: photoUrl,
       allergies: allergies.trim() || null,
       notes: notes.trim() || null,
+      gender: gender || null,
+      emergency_contact_name: emergencyName.trim() || null,
+      emergency_contact_phone: emergencyPhone.trim() || null,
+      image_authorized: imageAuthorized,
+      dietary_restrictions: dietaryRestrictions.trim() || null,
+      health_insurance: healthInsurance.trim() || null,
+      medication: medication.trim() || null,
     };
-    const { data: savedChild, error: childError } = child
-      ? await supabase.schema("service").from("children").update(payload).eq("id", child.id).select("id").single()
-      : await supabase.schema("service").from("children").insert(payload).select("id").single();
+    const { error: childError } = child
+      ? await supabase.schema("service").from("children").update(payload).eq("id", child.id)
+      : await supabase.schema("service").from("children").insert({ id: childId, ...payload });
 
-    if (childError || !savedChild) {
+    if (childError) {
       setSaving(false);
-      setError(friendlyWriteError(childError?.message ?? "Não foi possível salvar a criança."));
+      setError(friendlyWriteError(childError.message ?? "Não foi possível salvar a criança."));
       return;
     }
 
-    const childId = savedChild.id as string;
     await supabase.schema("service").from("child_guardians").delete().eq("child_id", childId);
-    const guardianRows = guardians
-      .map((g) => ({ guardian: findPersonByName(people, g.name), relationship: g.relationship.trim() || null, canPickup: g.canPickup }))
-      .filter((g): g is { guardian: PersonView; relationship: string | null; canPickup: boolean } => !!g.guardian)
-      .map((g) => ({
-        organization_id: church.organizationId,
-        child_id: childId,
-        guardian_person_id: g.guardian.id,
-        relationship: g.relationship,
-        can_pickup: g.canPickup,
-      }));
+    const guardianRows = withPerson.map((g) => ({
+      organization_id: church.organizationId,
+      child_id: childId,
+      guardian_person_id: g.person!.id,
+      relationship: g.relationship.trim() || null,
+      can_pickup: g.canPickup,
+    }));
     if (guardianRows.length) {
       await supabase.schema("service").from("child_guardians").insert(guardianRows);
     }
@@ -4287,27 +4372,49 @@ function ChildFormModal({
         <div className="modal-head">
           <div className="modal-eyebrow">{child ? "Editar" : "Criar"}</div>
           <div className="modal-title">{child ? `Editar ${child.name}` : "Nova criança"}</div>
-          <div className="modal-sub">Nome, turma, alergias/observações e quem são os responsáveis autorizados a retirar.</div>
+          <div className="modal-sub">Foto, dados de saúde e quem são os responsáveis autorizados a retirar.</div>
         </div>
         <div className="modal-body">
+          <div className="field" style={{ gridColumn: "1 / -1" }}>
+            <label className="field-label req">Foto da criança</label>
+            <MiniFotoUpload label={name || "Criança"} photoUrl={photoUrl} onUpload={uploadChildPhoto} busy={uploadingPhoto} />
+          </div>
           <div className="field"><label className="field-label">Nome da criança</label><input className="input" placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} /></div>
           <div className="field field-half"><label className="field-label">Nascimento</label><input className="input" type="date" value={birth} onChange={(e) => setBirth(e.target.value)} /></div>
           <div className="field field-half">
-            <label className="field-label">Turma</label>
-            <select className="select" value={classId} onChange={(e) => setClassId(e.target.value)}>
-              <option value="">Sugerir depois</option>
-              {kidsClasses.map((kc) => <option key={kc.id} value={kc.id}>{kc.name}</option>)}
+            <label className="field-label">Gênero</label>
+            <select className="select" value={gender} onChange={(e) => setGender(e.target.value as "menino" | "menina" | "")}>
+              <option value="">Não informado</option>
+              <option value="menino">Menino</option>
+              <option value="menina">Menina</option>
             </select>
           </div>
+          <div className="field field-half">
+            <label className="field-label">Turma</label>
+            <div className="input" style={{ display: "flex", alignItems: "center", color: classLabel ? "var(--white)" : "var(--subtle)" }}>
+              {classLabel ?? (birth ? "Nenhuma turma cobre essa idade ainda" : "Calculada pelo nascimento")}
+            </div>
+          </div>
+          <div className="field field-half"><label className="field-label">Autorização de imagem</label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, height: 44 }}>
+              <input type="checkbox" checked={imageAuthorized} onChange={(e) => setImageAuthorized(e.target.checked)} />
+              <span style={{ fontSize: 13, color: "var(--light)" }}>Pode aparecer em fotos/vídeos da igreja</span>
+            </label>
+          </div>
           <div className="field"><label className="field-label">Alergias / observações</label><input className="input" placeholder="ex: alergia a amendoim" value={allergies} onChange={(e) => setAllergies(e.target.value)} /></div>
+          <div className="field field-half"><label className="field-label">Restrições alimentares</label><input className="input" placeholder="ex: vegetariano, sem lactose" value={dietaryRestrictions} onChange={(e) => setDietaryRestrictions(e.target.value)} /></div>
+          <div className="field field-half"><label className="field-label">Medicamento em uso contínuo</label><input className="input" placeholder="ex: nenhum" value={medication} onChange={(e) => setMedication(e.target.value)} /></div>
+          <div className="field field-half"><label className="field-label">Plano de saúde / convênio</label><input className="input" placeholder="ex: Amil, SUS" value={healthInsurance} onChange={(e) => setHealthInsurance(e.target.value)} /></div>
+          <div className="field field-half"><label className="field-label">Contato de emergência</label><input className="input" placeholder="Nome" value={emergencyName} onChange={(e) => setEmergencyName(e.target.value)} style={{ marginBottom: 6 }} /><input className="input" placeholder="Telefone" value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} /></div>
           <div className="field"><label className="field-label">Notas</label><textarea className="textarea" placeholder="Observações gerais" value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
 
           <div className="field" style={{ gridColumn: "1 / -1" }}>
-            <label className="field-label">Responsáveis autorizados a retirar</label>
+            <label className="field-label req">Responsáveis autorizados a retirar (com foto)</label>
             {guardians.map((g, index) => (
-              <div key={index} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
-                <input className="input" style={{ flex: 1.4 }} list="service-people-names" placeholder="Nome do responsável" value={g.name} onChange={(e) => updateGuardian(index, { name: e.target.value })} />
-                <input className="input" style={{ flex: 1 }} placeholder="Parentesco (mãe, avó...)" value={g.relationship} onChange={(e) => updateGuardian(index, { relationship: e.target.value })} />
+              <div key={index} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <input className="input" style={{ flex: 1.2 }} list="service-people-names" placeholder="Nome do responsável" value={g.name} onChange={(e) => updateGuardian(index, { name: e.target.value, photoUrl: findPersonByName(people, e.target.value)?.photoUrl ?? null })} />
+                <input className="input" style={{ flex: 0.8 }} placeholder="Parentesco (mãe, avó...)" value={g.relationship} onChange={(e) => updateGuardian(index, { relationship: e.target.value })} />
+                <MiniFotoUpload label={g.name || "Responsável"} photoUrl={g.photoUrl} onUpload={(file) => uploadGuardianPhoto(index, file)} busy={uploadingGuardian === index} />
                 <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--muted)", whiteSpace: "nowrap" }}>
                   <input type="checkbox" checked={g.canPickup} onChange={(e) => updateGuardian(index, { canPickup: e.target.checked })} /> pode retirar
                 </label>

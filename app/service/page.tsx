@@ -104,6 +104,7 @@ type PersonRow = {
   availability: Record<string, boolean> | null;
   tags: string[] | null;
   meta: PersonMeta | null;
+  photo_url: string | null;
   created_at: string;
 };
 
@@ -121,6 +122,7 @@ type PersonView = {
   availability: Record<string, boolean>;
   tags: string[];
   meta: PersonMeta;
+  photoUrl: string | null;
   createdAt: string;
 };
 
@@ -587,6 +589,13 @@ type ChildView = {
   photo_url: string | null;
   allergies: string | null;
   notes: string | null;
+  gender: "menino" | "menina" | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  image_authorized: boolean;
+  dietary_restrictions: string | null;
+  health_insurance: string | null;
+  medication: string | null;
 };
 
 type ChildGuardianView = {
@@ -770,6 +779,7 @@ function toPersonView(row: PersonRow): PersonView {
     availability: row.availability ?? {},
     tags: row.tags ?? [],
     meta: row.meta ?? {},
+    photoUrl: row.photo_url,
     createdAt: row.created_at,
   };
 }
@@ -887,7 +897,7 @@ async function getServiceDashboardData(): Promise<{
   const { data: peopleData, error: peopleError } = await supabase
     .schema("service")
     .from("people")
-    .select("id,organization_id,church_id,user_id,name,phone,email,since_year,status,engagement,availability,tags,meta,created_at")
+    .select("id,organization_id,church_id,user_id,name,phone,email,since_year,status,engagement,availability,tags,meta,photo_url,created_at")
     .order("name");
 
   if (peopleError) {
@@ -1111,7 +1121,7 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("rooms").select("id,name,capacity,location,resources").order("created_at", { ascending: false }),
     supabase.schema("service").from("reservations").select("id,room_id,title,kind,reserved_date,start_time,end_time,source_type,source_id").order("created_at", { ascending: false }),
     supabase.schema("service").from("kids_classes").select("id,church_id,name,min_age_months,max_age_months,room_id,capacity,accent").order("name"),
-    supabase.schema("service").from("children").select("id,church_id,class_id,name,birth,photo_url,allergies,notes").order("name"),
+    supabase.schema("service").from("children").select("id,church_id,class_id,name,birth,photo_url,allergies,notes,gender,emergency_contact_name,emergency_contact_phone,image_authorized,dietary_restrictions,health_insurance,medication").order("name"),
     supabase.schema("service").from("child_guardians").select("id,child_id,guardian_person_id,relationship,can_pickup"),
     supabase.schema("service").from("kids_sessions").select("id,event_id,class_id,checkin_token,checkin_active"),
     supabase.schema("service").from("kids_attendance").select("id,session_id,child_id,status,dropped_off_by,dropped_off_at,dropped_off_via,pickup_requested_by,pickup_requested_at,picked_up_by,picked_up_confirmed_by,picked_up_at,picked_up_via,notes").order("dropped_off_at", { ascending: false }),
