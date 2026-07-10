@@ -9,7 +9,7 @@ import { uploadServiceImage, imageExtension } from "./lib/upload-image";
 import { ICON_PATHS, ICON_CATEGORIES, DEFAULT_ICON, Icon, IconPicker } from "./lib/icons";
 import { deriveAccentVars, isValidHex, normalizeHex, contrastRatio, contrastLabel, buildColorWheel, hslToHex } from "./lib/color";
 import { formatDateBR } from "./lib/date";
-import { ageInMonths, suggestKidsClassId } from "./lib/kids";
+import { ageInMonths, suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import MobileOverlay from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
 import { KidsQRModal } from "./KidsCheckin";
@@ -4369,12 +4369,6 @@ function ChildFormModal({
               {classLabel ?? (birth ? "Nenhuma turma cobre essa idade ainda" : "Calculada pelo nascimento")}
             </div>
           </div>
-          <div className="field field-half"><label className="field-label">Autorização de imagem</label>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, height: 44 }}>
-              <input type="checkbox" checked={imageAuthorized} onChange={(e) => setImageAuthorized(e.target.checked)} />
-              <span style={{ fontSize: 13, color: "var(--light)" }}>Pode aparecer em fotos/vídeos da igreja</span>
-            </label>
-          </div>
           <div className="field"><label className="field-label">Alergias / observações</label><input className="input" placeholder="ex: alergia a amendoim" value={allergies} onChange={(e) => setAllergies(e.target.value)} /></div>
           <div className="field field-half"><label className="field-label">Restrições alimentares</label><input className="input" placeholder="ex: vegetariano, sem lactose" value={dietaryRestrictions} onChange={(e) => setDietaryRestrictions(e.target.value)} /></div>
           <div className="field field-half"><label className="field-label">Medicamento em uso contínuo</label><input className="input" placeholder="ex: nenhum" value={medication} onChange={(e) => setMedication(e.target.value)} /></div>
@@ -4415,6 +4409,11 @@ function ChildFormModal({
             <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={addGuardian}>+ Adicionar responsável</button>
             <div className="cell-sub" style={{ marginTop: 6 }}>O responsável precisa já ter um cadastro de voluntário/membro no Service pra aparecer aqui.</div>
           </div>
+
+          <label className="field" style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
+            <input type="checkbox" checked={imageAuthorized} onChange={(e) => setImageAuthorized(e.target.checked)} style={{ marginTop: 3 }} />
+            <span style={{ fontSize: 13, color: "var(--light)", lineHeight: 1.4 }}>{imageAuthorizationCopy(name)}</span>
+          </label>
 
           {error ? <div style={{ gridColumn: "1 / -1", fontSize: 12.5, color: "var(--danger)" }}>{error}</div> : null}
         </div>

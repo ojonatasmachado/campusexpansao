@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon } from "./lib/icons";
 import { formatDateBR } from "./lib/date";
-import { suggestKidsClassId } from "./lib/kids";
+import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import { PhotoPicker } from "./PhotoPicker";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
@@ -893,6 +893,7 @@ function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisitor }: {
 
 function TabKids({
   person,
+  people,
   members,
   events,
   kidsClasses,
@@ -904,6 +905,7 @@ function TabKids({
   churchId,
 }: {
   person: P;
+  people: P[];
   members: M[];
   events: Ev[];
   kidsClasses: KidsClass[];
@@ -971,17 +973,26 @@ function TabKids({
   };
 
   const [fichaError, setFichaError] = useState("");
+  const respMatch = form.respNome.trim() ? people.find((p) => p.name.toLowerCase().trim() === form.respNome.toLowerCase().trim()) : null;
+  const fotoRespEfetiva = respMatch?.photoUrl ?? fotoResp;
 
   const criarFicha = async () => {
     if (!form.nome.trim() || !organizationId || !churchId) return;
     if (!fotoCrianca) { setFichaError("A foto da crianca e obrigatoria."); return; }
-    if (!fotoResp) { setFichaError("A foto do responsavel e obrigatoria."); return; }
+    if (!fotoRespEfetiva) { setFichaError("A foto do responsavel e obrigatoria."); return; }
     setFichaError("");
     const supabase = createServiceBrowserClient();
-    const { error: personError } = await supabase.schema("service").from("people").insert({ id: fichaIds.personId, organization_id: organizationId, church_id: churchId, name: form.respNome.trim() || "Responsavel", phone: form.respTel.trim() || null, status: "ativo", photo_url: fotoResp });
+    const guardianPersonId = respMatch?.id ?? fichaIds.personId;
+    let personError = null;
+    if (!respMatch) {
+      const { error } = await supabase.schema("service").from("people").insert({ id: fichaIds.personId, organization_id: organizationId, church_id: churchId, name: form.respNome.trim() || "Responsavel", phone: form.respTel.trim() || null, status: "ativo", photo_url: fotoResp });
+      personError = error;
+    } else if (fotoResp) {
+      await supabase.schema("service").from("people").update({ photo_url: fotoResp }).eq("id", respMatch.id);
+    }
     const { error: childError } = await supabase.schema("service").from("children").insert({ id: fichaIds.childId, organization_id: organizationId, church_id: churchId, class_id: sugestaoTurmaId ?? session?.class_id ?? null, name: form.nome.trim(), birth: form.nascimento || null, photo_url: fotoCrianca, gender: form.genero || null, emergency_contact_name: form.emergenciaNome.trim() || null, emergency_contact_phone: form.emergenciaTel.trim() || null, image_authorized: form.autorizaImagem });
     if (!personError && !childError) {
-      await supabase.schema("service").from("child_guardians").insert({ organization_id: organizationId, child_id: fichaIds.childId, guardian_person_id: fichaIds.personId, relationship: form.respParentesco.trim() || null, can_pickup: true, is_primary: true });
+      await supabase.schema("service").from("child_guardians").insert({ organization_id: organizationId, child_id: fichaIds.childId, guardian_person_id: guardianPersonId, relationship: form.respParentesco.trim() || null, can_pickup: true, is_primary: true });
       if (session) {
         const { data } = await supabase.schema("service").from("kids_attendance").insert({ organization_id: organizationId, session_id: session.id, child_id: fichaIds.childId, dropped_off_via: "manual" }).select("id,session_id,child_id,status,dropped_off_at,dropped_off_via").single();
         if (data) setAttendance((prev) => [...prev, data as KidsAttendance]);
@@ -1076,16 +1087,25 @@ function TabKids({
             <option value="menina">Menina</option>
           </select>
           <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 10 }}>Turma: {sugestaoTurma?.name ?? (session ? kidsClasses.find((kc) => kc.id === session.class_id)?.name ?? "nenhuma turma cobre essa idade" : "informe o nascimento")}</div>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, fontSize: 13 }}>
-            <input type="checkbox" checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))} /> Autoriza uso de imagem
-          </label>
 
-          <PhotoPicker label="Foto do responsavel (obrigatoria)" photoUrl={fotoResp} path={`${organizationId}/kids/guardians/${fichaIds.personId}`} onUploaded={setFotoResp} />
-          <input className="input" placeholder="Nome do responsavel" value={form.respNome} onChange={(e) => setForm((f) => ({ ...f, respNome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
-          <input className="input" placeholder="Telefone do responsavel" value={form.respTel} onChange={(e) => setForm((f) => ({ ...f, respTel: e.target.value }))} style={{ marginBottom: 8 }} />
+          <input className="input" list="service-kids-people-names" placeholder="Nome do responsavel" value={form.respNome} onChange={(e) => setForm((f) => ({ ...f, respNome: e.target.value }))} style={{ marginBottom: 8 }} />
+          <datalist id="service-kids-people-names">
+            {people.map((p) => <option key={p.id} value={p.name} />)}
+          </datalist>
+          {respMatch ? (
+            <div className="cell-sub" style={{ marginBottom: 8 }}>Ja tem cadastro no Service{fotoRespEfetiva ? ", foto reaproveitada do perfil" : ""}.</div>
+          ) : (
+            <PhotoPicker label="Foto do responsavel (obrigatoria)" photoUrl={fotoResp} path={`${organizationId}/kids/guardians/${fichaIds.personId}`} onUploaded={setFotoResp} />
+          )}
+          <input className="input" placeholder="Telefone do responsavel" value={form.respTel} onChange={(e) => setForm((f) => ({ ...f, respTel: e.target.value }))} style={{ marginTop: 8, marginBottom: 8 }} />
           <input className="input" placeholder="Parentesco (mae, avo...)" value={form.respParentesco} onChange={(e) => setForm((f) => ({ ...f, respParentesco: e.target.value }))} style={{ marginBottom: 8 }} />
           <input className="input" placeholder="Contato de emergencia: nome" value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
-          <input className="input" placeholder="Contato de emergencia: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 10 }} />
+          <input className="input" placeholder="Contato de emergencia: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
+
+          <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 12, fontSize: 13, lineHeight: 1.4 }}>
+            <input type="checkbox" checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))} style={{ marginTop: 3 }} />
+            <span>{imageAuthorizationCopy(form.nome)}</span>
+          </label>
           {fichaError && <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8 }}>{fichaError}</div>}
           <button className="m-btn m-btn-ok" style={{ width: "100%" }} onClick={criarFicha}>Salvar e fazer check-in</button>
         </div>
@@ -1941,15 +1961,16 @@ function TabKidsArea({
         <option value="menina">Menina</option>
       </select>
       <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 10 }}>Turma: {sugestaoTurma?.name ?? (form.nascimento ? "nenhuma turma cobre essa idade ainda" : "calculada pelo nascimento")}</div>
-      <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, fontSize: 13 }}>
-        <input type="checkbox" checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))} /> Autoriza uso de imagem
-      </label>
       <input className="input" placeholder="Alergias" value={form.alergias} onChange={(e) => setForm((f) => ({ ...f, alergias: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Restricoes alimentares" value={form.restricoes} onChange={(e) => setForm((f) => ({ ...f, restricoes: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Plano de saude / convenio" value={form.saude} onChange={(e) => setForm((f) => ({ ...f, saude: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Medicamento em uso continuo" value={form.medicamento} onChange={(e) => setForm((f) => ({ ...f, medicamento: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Contato de emergencia: nome" value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
-      <input className="input" placeholder="Contato de emergencia: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 10 }} />
+      <input className="input" placeholder="Contato de emergencia: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
+      <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 12, fontSize: 13, lineHeight: 1.4 }}>
+        <input type="checkbox" checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))} style={{ marginTop: 3 }} />
+        <span>{imageAuthorizationCopy(form.nome)}</span>
+      </label>
       {ficarError && <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8 }}>{ficarError}</div>}
       <button className="m-btn m-btn-ok" style={{ width: "100%" }} onClick={salvarFilho}>Salvar</button>
     </div>
@@ -2035,7 +2056,7 @@ function TabKidsArea({
           </div>
         );
       })}
-      {meusFilhos.length === 0 && <div className="empty">Nenhuma crianca vinculada ao seu cadastro ainda.</div>}
+      {meusFilhos.length === 0 && <div className="cell-sub" style={{ marginBottom: 4 }}>Você ainda não tem nenhum filho vinculado por aqui.</div>}
 
       <button className="m-btn m-btn-swap" style={{ width: "100%", marginTop: 10 }} onClick={abrirNovo}>
         {editingId === "novo" ? "Cancelar" : "+ Adicionar filho"}
@@ -2151,6 +2172,7 @@ function MobileMembro({
           {tab === "kids" && (
             <TabKids
               person={person}
+              people={people}
               members={members}
               events={events}
               kidsClasses={kidsClasses}

@@ -23,3 +23,10 @@ export function suggestKidsClassId(
   );
   return match?.id ?? null;
 }
+
+/* Mesmo texto em qualquer formulário que peça essa autorização (admin,
+   professor, responsável) : um tom feliz, não uma linha seca de checkbox. */
+export function imageAuthorizationCopy(childName?: string): string {
+  const nome = childName?.trim() || "essa criança";
+  return `Adoramos guardar esses momentos! Autorizo que fotos e vídeos de ${nome} apareçam no mural e nas redes sociais da igreja.`;
+}
