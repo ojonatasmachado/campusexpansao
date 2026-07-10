@@ -60,7 +60,7 @@ function Shelf({ estante, materiais, onVerTodos }: {
         {estante.faixaEtaria && (
           <span className="loja-shelf-count">· {estante.faixaEtaria}</span>
         )}
-        <span className="loja-shelf-count">{materiais.length} {materiais.length === 1 ? "material" : "materiais"}</span>
+        <span className="loja-shelf-count">· {materiais.length} {materiais.length === 1 ? "material" : "materiais"}</span>
         {isCarousel && (
           <button className="loja-shelf-ver" style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }} onClick={() => onVerTodos(estante)}>
             Ver todos

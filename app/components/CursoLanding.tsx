@@ -158,7 +158,6 @@ export default function CursoLanding({
             {/* chips de meta */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 26 }}>
               <span className="ld-tag">{curso.dur}</span>
-              <span className="ld-tag">{curso.ementa.length} semanas</span>
               <span className="ld-tag-fmt" style={{ color: ac, borderColor: `${ac}55` }}>
                 <span style={{ fontSize: 7 }}>◆</span> Ao vivo
               </span>
