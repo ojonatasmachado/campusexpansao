@@ -53,6 +53,7 @@ export type DbMaterialContent = {
   designFormat?: "carousel" | "stories" | "telao" | null
   delivery?: "word" | "pdf" | null
   file?: string | null
+  roteiro?: string | null
 }
 
 export type DbMaterialTranslation = {

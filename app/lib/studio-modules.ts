@@ -17,7 +17,7 @@ export const STUDIO_MODULE_FILES = {
 export type StudioModule = keyof typeof STUDIO_MODULE_FILES;
 
 const TEMPLATE_MODULES = new Set<StudioModule>(["documentos", "slides", "design"]);
-const USER_DRAFT_MODULES = new Set<StudioModule>(["slides", "design"]);
+const USER_DRAFT_MODULES = new Set<StudioModule>(["slides", "design", "documentos", "pdf"]);
 
 export function isStudioModule(value: string): value is StudioModule {
   return value in STUDIO_MODULE_FILES;
@@ -34,7 +34,7 @@ function studioDraftTtlDays() {
   return Number.isFinite(value) && value > 0 ? Math.floor(value) : 30;
 }
 
-async function loadUserDraft(module: StudioModule, material: string, context: string) {
+async function loadUserDraft(module: StudioModule, material: string, mensagem: string, context: string) {
   if (context !== "comprador" || !material || !USER_DRAFT_MODULES.has(module)) return null;
 
   try {
@@ -47,10 +47,11 @@ async function loadUserDraft(module: StudioModule, material: string, context: st
 
     const { data, error } = await supabaseAdmin()
       .from("studio_user_drafts")
-      .select("id,module,material_id,payload,expires_at,created_at,updated_at")
+      .select("id,module,material_id,mensagem,payload,expires_at,created_at,updated_at")
       .eq("user_id", user.id)
       .eq("material_id", material)
       .eq("module", module)
+      .eq("mensagem", mensagem)
       .gt("expires_at", new Date().toISOString())
       .maybeSingle();
 
@@ -62,6 +63,25 @@ async function loadUserDraft(module: StudioModule, material: string, context: st
     return data ?? null;
   } catch (error) {
     console.error("Erro ao preparar draft do Studio", error);
+    return null;
+  }
+}
+
+async function loadPdfUrl(module: StudioModule, material: string, mensagem: string, context: string) {
+  if (module !== "pdf" || context !== "comprador" || !material || !mensagem) return null;
+
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) return null;
+
+    const compra = await compraDoUsuarioPorMaterialId(user, material);
+    if (!compra) return null;
+
+    const mensagemAtual = compra.mensagens.find((item) => item.id === mensagem);
+    return mensagemAtual?.pdfUrl ?? null;
+  } catch (error) {
+    console.error("Erro ao preparar PDF do Studio", error);
     return null;
   }
 }
@@ -88,7 +108,8 @@ export async function serveStudioModule(module: StudioModule, options: ServeStud
         .order("updated_at", { ascending: false })
         .then(({ data }) => data ?? [])
     : [];
-  const userDraft = await loadUserDraft(module, material, context);
+  const userDraft = await loadUserDraft(module, material, mensagem, context);
+  const pdfUrl = await loadPdfUrl(module, material, mensagem, context);
   const boot = {
     module,
     material,
@@ -96,6 +117,7 @@ export async function serveStudioModule(module: StudioModule, options: ServeStud
     context,
     draftTtlDays,
     userDraft,
+    pdfUrl,
     canManageTemplates,
     templates,
   };

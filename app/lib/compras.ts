@@ -5,9 +5,11 @@ import { ESTANTE_MAP } from "./materiais-data";
 import type { Material } from "./materiais-data";
 import { dbMaterialToMaterial, materialComVisualDoCatalogo } from "./material-mappers";
 import { supabaseAdmin } from "./supabase";
-import type { DbEstante, DbMaterial } from "./types";
+import type { DbEstante, DbMaterial, DbMaterialContent } from "./types";
 import type { CompraComMaterial, CompraStatus } from "./perfil-data";
 import { mensagensDaCompra, recursosDaCompra } from "./perfil-data";
+import { requestLocale } from "./i18n";
+import { materialTranslationFor } from "./material-translations";
 
 type CompraRow = {
   id: string;
@@ -19,6 +21,7 @@ type CompraRow = {
   hotmart_transaction: string | null;
   purchased_at: string | null;
   created_at: string | null;
+  contents_snapshot: DbMaterialContent[] | null;
 };
 
 type CompraLiberada = {
@@ -36,6 +39,7 @@ const COMPRA_COLUMNS = [
   "hotmart_transaction",
   "purchased_at",
   "created_at",
+  "contents_snapshot",
 ].join(",");
 
 const VISIBLE_STATUSES = ["Liberado", "Pendente"];
@@ -114,17 +118,47 @@ async function purchaseRowsForUser(user: User) {
   );
 }
 
-function compraComMaterialDb(
+function mergeSnapshotWithTranslation(
+  snapshot: DbMaterialContent[],
+  translatedContents: DbMaterialContent[] | undefined,
+): DbMaterialContent[] {
+  // Só aplica se a tradução tiver a mesma quantidade de itens do snapshot
+  // congelado na compra: uma tradução gerada depois de o material mudar de
+  // estrutura (item adicionado/removido) não bate item a item por posição,
+  // e é mais seguro manter o snapshot original do que arriscar misturar.
+  if (!translatedContents || translatedContents.length !== snapshot.length) return snapshot;
+  return snapshot.map((item, index) => {
+    const translated = translatedContents[index];
+    if (!translated || translated.kind !== item.kind) return item;
+    return {
+      ...item,
+      name: translated.name || item.name,
+      note: translated.note || item.note,
+      roteiro: translated.roteiro || item.roteiro,
+    };
+  });
+}
+
+async function compraComMaterialDb(
   row: CompraRow,
   materialDb: DbMaterial,
   materialPool: Material[],
   estantes: DbEstante[],
-): CompraComMaterial {
+): Promise<CompraComMaterial> {
   const material = dbMaterialToMaterial(materialDb);
   const estanteDb = estantes.find((estante) => estante.key === material.estante);
   const accent: AccentKey = estanteDb
     ? HEX_TO_ACCENT[estanteDb.accent] ?? "olive"
     : ESTANTE_MAP[material.estante]?.accent ?? "olive";
+
+  // O conteúdo do comprador fica congelado no que existia no momento da
+  // compra (contents_snapshot). Edições do mentor depois disso só valem
+  // pras próximas compras: comprar de novo grava um snapshot mais recente.
+  const snapshot = row.contents_snapshot ?? materialDb.contents ?? [];
+  const locale = await requestLocale();
+  const contentsParaComprador = locale === "pt"
+    ? snapshot
+    : mergeSnapshotWithTranslation(snapshot, (await materialTranslationFor(materialDb.id, locale))?.contents);
 
   return {
     id: row.hotmart_transaction || row.id.slice(0, 8).toUpperCase(),
@@ -134,7 +168,7 @@ function compraComMaterialDb(
     material,
     accent,
     materialVisual: materialComVisualDoCatalogo(material, materialPool),
-    mensagens: mensagensDaCompra(material),
+    mensagens: mensagensDaCompra(material, contentsParaComprador),
     recursos: recursosDaCompra(material),
   };
 }
@@ -168,12 +202,13 @@ export async function comprasDoUsuario(user: User) {
   const materialPool = materiais.map(dbMaterialToMaterial);
   const materialMap = new Map(materiais.map((material) => [material.id, material]));
 
-  return rows
-    .map((row) => {
-      const material = materialMap.get(row.material_id);
-      return material ? compraComMaterialDb(row, material, materialPool, estantes) : null;
-    })
-    .filter(Boolean) as CompraComMaterial[];
+  const pares = rows
+    .map((row) => ({ row, material: materialMap.get(row.material_id) }))
+    .filter((item): item is { row: CompraRow; material: DbMaterial } => Boolean(item.material));
+
+  return Promise.all(
+    pares.map(({ row, material }) => compraComMaterialDb(row, material, materialPool, estantes)),
+  );
 }
 
 export async function compraDoUsuarioPorMaterialId(user: User, materialId: string) {
@@ -181,6 +216,9 @@ export async function compraDoUsuarioPorMaterialId(user: User, materialId: strin
   return compras.find((compra) => compra.material.id === materialId) ?? null;
 }
 
+// Único lugar que hoje cria linhas em `compras` (o webhook real da Hotmart
+// em app/api/hotmart/webhook/ ainda não tem handler implementado). Quando
+// ele existir, precisa gravar `contents_snapshot` da mesma forma daqui.
 export async function liberarCompraTeste(user: User, materialId: string): Promise<CompraLiberada> {
   const email = user.email?.trim().toLowerCase();
   if (!email) return { ok: false, error: "Usuário sem e-mail confirmado." };
@@ -197,7 +235,7 @@ export async function liberarCompraTeste(user: User, materialId: string): Promis
 
   const { data: material, error: materialError } = await db
     .from("materiais")
-    .select("id")
+    .select("id,contents")
     .eq("id", materialId)
     .eq("status", "Publicado")
     .maybeSingle();
@@ -208,6 +246,10 @@ export async function liberarCompraTeste(user: User, materialId: string): Promis
   const now = new Date().toISOString();
   const transaction = `cex-test:${user.id}:${materialId}`;
 
+  // Congela o conteúdo atual do material na compra (contents_snapshot).
+  // Editar o material depois disso não muda o que esse comprador vê;
+  // pra pegar uma atualização, precisa "comprar" de novo (o que atualiza
+  // o snapshot desta mesma linha, já que a transação de teste é fixa).
   const { error } = await db
     .from("compras")
     .upsert(
@@ -218,6 +260,7 @@ export async function liberarCompraTeste(user: User, materialId: string): Promis
         status: "Liberado",
         source: "checkout_teste",
         hotmart_transaction: transaction,
+        contents_snapshot: (material as { contents?: DbMaterialContent[] }).contents ?? [],
         raw_payload: {
           mode: "checkout_teste",
           material_id: materialId,

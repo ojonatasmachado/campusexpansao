@@ -105,21 +105,41 @@ export default async function PerfilCompraPage({ params }: { params: Promise<{ s
           </div>
 
           <div className={styles.messageList}>
-            {compra.mensagens.map((mensagem) => (
-              <Link
-                key={mensagem.id}
-                href={`/perfil/${compra.material.id}/mensagens/${mensagem.id}`}
-                className={styles.messageItem}
-              >
-                <span className={styles.messageNum}>{mensagem.numero}</span>
-                <div className={styles.messageBody}>
-                  <span>{mensagem.meta}</span>
-                  <h3>{mensagem.titulo}</h3>
-                  <p>{mensagem.desc}</p>
-                </div>
-                <span className={styles.messageAction}>Abrir →</span>
-              </Link>
-            ))}
+            {compra.mensagens.map((mensagem) => {
+              const conteudo = (
+                <>
+                  <span className={styles.messageNum}>{mensagem.numero}</span>
+                  <div className={styles.messageBody}>
+                    <span>{mensagem.meta}</span>
+                    <h3>{mensagem.titulo}</h3>
+                    <p>{mensagem.desc}</p>
+                  </div>
+                  {mensagem.delivery === "pdf" ? (
+                    <span className={styles.messageAction}>PDF</span>
+                  ) : (
+                    <span className={styles.messageAction}>Abrir →</span>
+                  )}
+                </>
+              );
+
+              if (mensagem.delivery === "pdf") {
+                return (
+                  <div key={mensagem.id} className={styles.messageItem}>
+                    {conteudo}
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={mensagem.id}
+                  href={`/perfil/${compra.material.id}/mensagens/${mensagem.id}`}
+                  className={styles.messageItem}
+                >
+                  {conteudo}
+                </Link>
+              );
+            })}
           </div>
         </section>
 

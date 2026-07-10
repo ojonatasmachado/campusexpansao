@@ -24,6 +24,7 @@ import {
 } from './actions'
 import { ESTANTE_MAP } from '../../lib/materiais-data'
 import ThemeToggle from '../../components/ThemeToggle'
+import { roteiroToPdfBlob } from './lib/roteiro-to-pdf'
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ interface MaterialContent {
   designFormat?: 'carousel' | 'stories' | 'telao' | null
   delivery?: 'word' | 'pdf' | null
   file?: string | null
+  roteiro?: string | null
 }
 
 interface Material {
@@ -233,6 +235,7 @@ function normalizeMaterialContents(raw: unknown, fallback: string[] = []): Mater
       designFormat: item.designFormat ?? null,
       delivery: item.delivery ?? null,
       file: item.file ?? null,
+      roteiro: item.roteiro ?? null,
     }))
   }
 
@@ -2888,11 +2891,13 @@ function MaterialContentsField({
   onChange,
   messageList,
   onMessageListChange,
+  materialId,
 }: {
   value: MaterialContent[]
   onChange: (v: MaterialContent[]) => void
   messageList: MaterialMessage[]
   onMessageListChange: (v: MaterialMessage[]) => void
+  materialId: string
 }) {
   const contents = value ?? []
   const [active, setActive] = useState(0)
@@ -2901,6 +2906,7 @@ function MaterialContentsField({
   const [studioOpen, setStudioOpen] = useState(false)
   const [studioMode, setStudioMode] = useState<StudioMode>('document')
   const [deliveryOpen, setDeliveryOpen] = useState(false)
+  const [savingDelivery, setSavingDelivery] = useState<'word' | 'pdf' | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [studioDraft, setStudioDraft] = useState<{ name: string; note: string; model: StudioDocumentModel }>({
     name: '',
@@ -2983,7 +2989,7 @@ function MaterialContentsField({
       target.postMessage({ type: 'cex-studio-load', payload: studioDraft }, window.location.origin)
     }, 80)
   }
-  const saveStudioToMaterial = (delivery: 'word' | 'pdf') => {
+  const saveStudioToMaterial = async (delivery: 'word' | 'pdf') => {
     const frameDoc = studioFrameRef.current?.contentDocument
     const editor = frameDoc?.getElementById('editor')
     const docTitle = frameDoc?.getElementById('docTitle') as HTMLInputElement | null
@@ -2991,6 +2997,7 @@ function MaterialContentsField({
     const words = text ? text.split(/\s+/).filter(Boolean).length : 0
     const pages = text ? Math.max(1, Math.ceil(words / 430)) : null
     const title = studioDraft.name.trim() || docTitle?.value.trim() || 'Documento de texto'
+    const roteiroHtml = editor?.innerHTML ?? ''
     const nextContent: MaterialContent = {
       kind: 'word',
       name: title,
@@ -2998,7 +3005,27 @@ function MaterialContentsField({
       pages,
       messages: 1,
       delivery,
+      roteiro: roteiroHtml,
     }
+
+    if (delivery === 'pdf') {
+      setSavingDelivery('pdf')
+      try {
+        const blob = await roteiroToPdfBlob(title, roteiroHtml)
+        const form = new FormData()
+        form.append('file', blob, `${title}.pdf`)
+        form.append('materialId', materialId)
+        const res = await fetch('/api/admin/materiais/pdf-upload', { method: 'POST', body: form })
+        const data = await res.json().catch(() => null)
+        if (!res.ok) throw new Error((data && data.error) || 'Erro ao gerar o PDF.')
+        nextContent.file = data.url
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Não foi possível gerar o PDF automaticamente. O roteiro foi salvo mesmo assim.')
+      } finally {
+        setSavingDelivery(null)
+      }
+    }
+
     const nextContents = [...contents, nextContent]
     onChange(nextContents)
     onMessageListChange([...(messageList ?? []), { nome: nextContent.name, desc: nextContent.note }])
@@ -3243,14 +3270,14 @@ function MaterialContentsField({
             </div>
             <div className="cmodal-body">
               <div className="chooser delivery-chooser">
-                <button className="chooser-opt" type="button" onClick={() => saveStudioToMaterial('word')}>
+                <button className="chooser-opt" type="button" disabled={!!savingDelivery} onClick={() => saveStudioToMaterial('word')}>
                   <span className="chooser-ic" aria-hidden="true"><DocumentTextIcon /></span>
                   <span className="chooser-tt">Word</span>
                   <span className="chooser-sb">O comprador recebe como material editável.</span>
                 </button>
-                <button className="chooser-opt" type="button" onClick={() => saveStudioToMaterial('pdf')}>
+                <button className="chooser-opt" type="button" disabled={!!savingDelivery} onClick={() => saveStudioToMaterial('pdf')}>
                   <span className="chooser-ic" aria-hidden="true"><PdfFileIcon /></span>
-                  <span className="chooser-tt">PDF</span>
+                  <span className="chooser-tt">{savingDelivery === 'pdf' ? 'Gerando PDF…' : 'PDF'}</span>
                   <span className="chooser-sb">O comprador vê e compra como PDF. O mentor continua editando no Studio.</span>
                 </button>
               </div>
@@ -3573,6 +3600,7 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => P
             onChange={setMaterialContents}
             messageList={m.messageList ?? []}
             onMessageListChange={(v) => set('messageList' as never, v as never)}
+            materialId={m.id}
           />
 
           <SectionHead mark="Materiais inclusos" opt="obrigatório" />

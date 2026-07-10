@@ -58,13 +58,31 @@ export default async function MensagemEditorPage({
             ))}
           </aside>
 
-          <StudioDocFrame
-            className={styles.studioFrame}
-            src={`/studio/documentos?material=${encodeURIComponent(compra.material.id)}&mensagem=${encodeURIComponent(mensagemAtual.id)}&context=comprador`}
-            title={`CE.X Studio Documentos · ${mensagemAtual.titulo}`}
-            titulo={mensagemAtual.titulo}
-            draftKey={`cex_studio_doc_v2::${compra.material.id}::${mensagemAtual.id}`}
-          />
+          {mensagemAtual.delivery === "pdf" ? (
+            mensagemAtual.pdfUrl ? (
+              <iframe
+                className={styles.studioFrame}
+                src={`/studio/pdf?material=${encodeURIComponent(compra.material.id)}&mensagem=${encodeURIComponent(mensagemAtual.id)}&context=comprador`}
+                title={`CE.X Studio Leitor de PDF · ${mensagemAtual.titulo}`}
+              />
+            ) : (
+              <div className={styles.pdfNotice}>
+                <p className={styles.pdfNoticeTitle}>PDF ainda não disponível</p>
+                <p className={styles.pdfNoticeDesc}>
+                  Este conteúdo é entregue em PDF, mas o arquivo ainda não foi gerado pelo mentor.
+                </p>
+              </div>
+            )
+          ) : (
+            <StudioDocFrame
+              className={styles.studioFrame}
+              src={`/studio/documentos?material=${encodeURIComponent(compra.material.id)}&mensagem=${encodeURIComponent(mensagemAtual.id)}&context=comprador`}
+              title={`CE.X Studio Documentos · ${mensagemAtual.titulo}`}
+              titulo={mensagemAtual.titulo}
+              roteiro={mensagemAtual.roteiro}
+              draftKey={`cex_studio_doc_v2::${compra.material.id}::${mensagemAtual.id}`}
+            />
+          )}
         </section>
       </main>
       <Footer />

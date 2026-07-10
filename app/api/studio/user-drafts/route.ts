@@ -5,7 +5,7 @@ import { createClient } from "../../../lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 
-const MODULES = new Set(["design", "slides"]);
+const MODULES = new Set(["design", "slides", "documentos", "pdf"]);
 
 function errorResponse(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -45,6 +45,7 @@ function sanitizePayload(payload: unknown) {
 export async function GET(request: NextRequest) {
   const studioModule = request.nextUrl.searchParams.get("module")?.trim() ?? "";
   const material = request.nextUrl.searchParams.get("material")?.trim() ?? "";
+  const mensagem = request.nextUrl.searchParams.get("mensagem")?.trim() ?? "";
 
   if (!MODULES.has(studioModule) || !material) {
     return errorResponse("Informe módulo e material válidos.", 400);
@@ -55,10 +56,11 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabaseAdmin()
     .from("studio_user_drafts")
-    .select("id,module,material_id,payload,expires_at,created_at,updated_at")
+    .select("id,module,material_id,mensagem,payload,expires_at,created_at,updated_at")
     .eq("user_id", user.id)
     .eq("material_id", material)
     .eq("module", studioModule)
+    .eq("mensagem", mensagem)
     .gt("expires_at", new Date().toISOString())
     .maybeSingle();
 
@@ -76,11 +78,13 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null) as {
     module?: string;
     material?: string;
+    mensagem?: string;
     payload?: unknown;
   } | null;
 
   const studioModule = body?.module?.trim() ?? "";
   const material = body?.material?.trim() ?? "";
+  const mensagem = body?.mensagem?.trim() ?? "";
 
   if (!MODULES.has(studioModule) || !material) {
     return errorResponse("Informe módulo e material válidos.", 400);
@@ -96,11 +100,12 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         material_id: material,
         module: studioModule,
+        mensagem,
         payload: sanitizePayload(body?.payload),
         expires_at: expiresAt(),
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "user_id,material_id,module" },
+      { onConflict: "user_id,material_id,module,mensagem" },
     );
 
   if (error) {

@@ -49,6 +49,7 @@ function normalizeContent(value: unknown): DbMaterialContent[] {
       designFormat: item.designFormat === "stories" || item.designFormat === "telao" || item.designFormat === "carousel" ? item.designFormat : null,
       delivery: item.delivery === "word" || item.delivery === "pdf" ? item.delivery : null,
       file: typeof item.file === "string" ? item.file : null,
+      roteiro: typeof item.roteiro === "string" ? text(item.roteiro) : null,
     }));
 }
 
@@ -118,7 +119,8 @@ function promptForMaterial(payload: MaterialTranslationPayload) {
     "A tradução deve ser integral. Não inserir nada, não remover nada, não resumir, não explicar, não adaptar livremente e não criar conteúdo novo.",
     "Preserve a estrutura do JSON, as chaves, a ordem e a quantidade de itens de cada lista.",
     "Preserve números, códigos, nomes de arquivos, campos técnicos, kind, delivery, pages, messages, slides, designs e designFormat.",
-    "Em contents, traduza apenas name e note. Nos demais objetos, traduza somente os campos textuais.",
+    "Em contents, traduza name, note e roteiro. Nos demais objetos, traduza somente os campos textuais.",
+    "Quando um item de contents tiver roteiro (uma string HTML com tags como h1, h2, p, blockquote, ul, li), traduza somente o texto visível dentro das tags. Preserve todas as tags, atributos e a estrutura HTML exatamente iguais, sem adicionar, remover ou reordenar tags.",
     "Não use travessão longo nem médio. Use vírgula, ponto ou dois pontos.",
     "Retorne translations somente com os idiomas diferentes de sourceLocale.",
     "Responda somente JSON válido, sem markdown.",

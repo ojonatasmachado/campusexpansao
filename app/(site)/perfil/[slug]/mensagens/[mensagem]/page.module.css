@@ -178,6 +178,34 @@
   background: var(--ink);
 }
 
+.pdfNotice {
+  width: 100%;
+  min-height: 220px;
+  border: 0.5px solid var(--border-2);
+  border-radius: var(--r-lg);
+  background: var(--perfil-panel);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  padding: 40px;
+}
+
+.pdfNoticeTitle {
+  color: var(--cream);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.pdfNoticeDesc {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 420px;
+}
+
 @media (max-width: 980px) {
   .editor {
     padding-top: 56px;

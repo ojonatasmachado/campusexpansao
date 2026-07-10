@@ -2,6 +2,7 @@ import type { AccentKey } from "./accents";
 import { ESTANTE_MAP, MATERIAIS } from "./materiais-data";
 import type { Material } from "./materiais-data";
 import { materialComVisualDoCatalogo as materialComVisualDoCatalogoBase } from "./material-mappers";
+import type { DbMaterialContent } from "./types";
 
 export type CompraStatus = "Liberado" | "Pendente";
 
@@ -18,6 +19,9 @@ export type MensagemCompra = {
   titulo: string;
   meta: string;
   desc: string;
+  delivery: "word" | "pdf";
+  roteiro: string;
+  pdfUrl: string | null;
 };
 
 export type RecursoCompra = {
@@ -63,10 +67,30 @@ export function formatMetaMaterial(material: Material) {
   ].filter(Boolean).join(" · ");
 }
 
-export function mensagensDaCompra(material: Material): MensagemCompra[] {
+export function mensagensDaCompra(material: Material, dbContents: DbMaterialContent[] = []): MensagemCompra[] {
+  const label = material.meta.mensagens ? "Mensagem" : "Parte";
+  const conteudosAutorados = dbContents.filter((item) => item.kind === "word");
+
+  if (conteudosAutorados.length > 0) {
+    return conteudosAutorados.map((item, index) => {
+      const numero = String(index + 1).padStart(2, "0");
+      const delivery = item.delivery === "pdf" ? "pdf" : "word";
+
+      return {
+        id: numero,
+        numero,
+        titulo: item.name,
+        meta: `${label} ${numero}`,
+        desc: item.note || "Abra para adaptar o roteiro, ajustar aplicações e preparar a ministração.",
+        delivery,
+        roteiro: item.roteiro ?? "",
+        pdfUrl: item.file ?? null,
+      };
+    });
+  }
+
   return material.conteudo.map((item, index) => {
     const numero = String(index + 1).padStart(2, "0");
-    const label = material.meta.mensagens ? "Mensagem" : "Parte";
 
     return {
       id: numero,
@@ -74,6 +98,9 @@ export function mensagensDaCompra(material: Material): MensagemCompra[] {
       titulo: item,
       meta: `${label} ${numero}`,
       desc: "Abra para adaptar o roteiro, ajustar aplicações e preparar a ministração.",
+      delivery: "word",
+      roteiro: "",
+      pdfUrl: null,
     };
   });
 }
