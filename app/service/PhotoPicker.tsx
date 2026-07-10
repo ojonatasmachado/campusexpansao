@@ -41,9 +41,9 @@ export function PhotoPicker({
   };
 
   return (
-    <div>
+    <div style={{ textAlign: "center" }}>
       {label ? <div className="field-label" style={{ marginBottom: 8 }}>{label}</div> : null}
-      <div className="ob-foto-area" onClick={() => inputRef.current?.click()} style={{ cursor: "pointer" }}>
+      <div className="ob-foto-area" onClick={() => inputRef.current?.click()} style={{ cursor: "pointer", margin: "0 auto" }}>
         {photoUrl ? (
           <img src={photoUrl} alt={label ?? "Foto"} className="ob-foto-img" />
         ) : (

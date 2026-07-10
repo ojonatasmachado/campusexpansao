@@ -950,7 +950,7 @@ function TabKids({
     await fetch("/api/service/push/notify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ organizationId, recipientMemberIds: [targetMember.id], title: "Aviso da sala Kids", body: `${child?.name ?? "Seu filho"} precisa de voce na sala Kids.` }),
+      body: JSON.stringify({ organizationId, recipientMemberIds: [targetMember.id], title: "Aviso da sala Kids", body: `${child?.name ?? "Sua crianca"} precisa de voce na sala Kids.` }),
     }).catch(() => {});
     window.alert("Aviso enviado.");
   };
@@ -1519,7 +1519,7 @@ function TabPerfil({
 
       <button className="m-vis-head" style={{ cursor: "pointer" }} onClick={() => setTab?.("kids-area")}>
         <span className="av av-sm"><Icon name="kids" size={16} /></span>
-        <div className="m-vis-main"><div className="m-culto" style={{ fontSize: 14 }}>Kids</div><div className="m-fn">Meus filhos, mural e eventos</div></div>
+        <div className="m-vis-main"><div className="m-culto" style={{ fontSize: 14 }}>Kids</div><div className="m-fn">Minhas crianças, mural e eventos</div></div>
         <span className="m-task-caret">→</span>
       </button>
 
@@ -1985,9 +1985,8 @@ function TabKidsArea({
 
       <div className="m-section-t">Sua foto de responsavel</div>
       <PhotoPicker label="Foto do responsavel" photoUrl={minhaFoto} path={`${organizationId}/kids/guardians/${person.id}`} onUploaded={salvarMinhaFoto} />
-      <div className="cell-sub" style={{ marginTop: 6, marginBottom: 16 }}>É essa foto que o professor compara na hora da retirada.</div>
 
-      <div className="m-section-t">Meus filhos</div>
+      <div className="m-section-t">Minhas crianças</div>
       {meusFilhos.map((child) => {
         const turma = kidsClasses.find((kc) => kc.id === child.class_id);
         const historico = kidsAttendance.filter((a) => a.child_id === child.id).sort((a, b) => b.dropped_off_at.localeCompare(a.dropped_off_at)).slice(0, 3);
@@ -2056,10 +2055,10 @@ function TabKidsArea({
           </div>
         );
       })}
-      {meusFilhos.length === 0 && <div className="cell-sub" style={{ marginBottom: 4 }}>Você ainda não tem nenhum filho vinculado por aqui.</div>}
+      {meusFilhos.length === 0 && <div className="cell-sub" style={{ marginBottom: 4 }}>Você ainda não tem nenhuma criança vinculada por aqui.</div>}
 
       <button className="m-btn m-btn-swap" style={{ width: "100%", marginTop: 10 }} onClick={abrirNovo}>
-        {editingId === "novo" ? "Cancelar" : "+ Adicionar filho"}
+        {editingId === "novo" ? "Cancelar" : "+ Adicionar criança"}
       </button>
       {editingId === "novo" && fichaForm}
 

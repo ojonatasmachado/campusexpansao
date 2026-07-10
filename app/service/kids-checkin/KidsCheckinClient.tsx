@@ -113,7 +113,7 @@ export default function KidsCheckinClient({
             <div className="ck-land-result">
               <div className="ck-land-ic" style={{ color: "var(--amber)", borderColor: "var(--amber)", fontSize: 28, fontWeight: 700 }}>!</div>
               <div className="ck-land-title">Nenhuma criança vinculada</div>
-              <div className="ck-land-txt">Seu cadastro ainda não tem nenhum filho vinculado. Fale com a professora pra cadastrar.</div>
+              <div className="ck-land-txt">Seu cadastro ainda não tem nenhuma criança vinculada. Fale com a professora pra cadastrar.</div>
             </div>
           ) : (
             <div style={{ width: "100%", display: "grid", gap: 10, marginTop: 8 }}>
