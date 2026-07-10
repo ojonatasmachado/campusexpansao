@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
-import { uploadServiceImage, imageExtension } from "./lib/upload-image";
 import { Icon } from "./lib/icons";
 import { formatDateBR } from "./lib/date";
 import { suggestKidsClassId } from "./lib/kids";
+import { PhotoPicker } from "./PhotoPicker";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -99,7 +99,7 @@ type Child = {
   health_insurance?: string | null;
   medication?: string | null;
 };
-type ChildGuardian = { id: string; child_id: string; guardian_person_id: string; relationship: string | null; can_pickup: boolean };
+type ChildGuardian = { id: string; child_id: string; guardian_person_id: string; relationship: string | null; can_pickup: boolean; is_primary?: boolean };
 type KidsSession = { id: string; event_id: string; class_id: string; checkin_active: boolean };
 type KidsAttendance = {
   id: string;
@@ -921,7 +921,6 @@ function TabKids({
   const [form, setForm] = useState({ nome: "", nascimento: "", genero: "", respNome: "", respTel: "", respParentesco: "", emergenciaNome: "", emergenciaTel: "", autorizaImagem: false });
   const [fotoCrianca, setFotoCrianca] = useState<string | null>(null);
   const [fotoResp, setFotoResp] = useState<string | null>(null);
-  const [enviandoFoto, setEnviandoFoto] = useState<"crianca" | "resp" | null>(null);
   const [fichaIds, setFichaIds] = useState(() => ({ childId: crypto.randomUUID(), personId: crypto.randomUUID() }));
   const sugestaoTurmaId = suggestKidsClassId(form.nascimento, kidsClasses);
   const sugestaoTurma = kidsClasses.find((kc) => kc.id === sugestaoTurmaId);
@@ -973,26 +972,6 @@ function TabKids({
 
   const [fichaError, setFichaError] = useState("");
 
-  const enviarFotoCrianca = async (file: File) => {
-    if (!organizationId) return;
-    setEnviandoFoto("crianca");
-    try {
-      const url = await uploadServiceImage(createServiceBrowserClient(), file, `${organizationId}/kids/children/${fichaIds.childId}.${imageExtension(file)}`);
-      setFotoCrianca(url);
-    } catch { setFichaError("Nao consegui enviar a foto da crianca agora."); }
-    setEnviandoFoto(null);
-  };
-
-  const enviarFotoResp = async (file: File) => {
-    if (!organizationId) return;
-    setEnviandoFoto("resp");
-    try {
-      const url = await uploadServiceImage(createServiceBrowserClient(), file, `${organizationId}/kids/guardians/${fichaIds.personId}.${imageExtension(file)}`);
-      setFotoResp(url);
-    } catch { setFichaError("Nao consegui enviar a foto do responsavel agora."); }
-    setEnviandoFoto(null);
-  };
-
   const criarFicha = async () => {
     if (!form.nome.trim() || !organizationId || !churchId) return;
     if (!fotoCrianca) { setFichaError("A foto da crianca e obrigatoria."); return; }
@@ -1002,7 +981,7 @@ function TabKids({
     const { error: personError } = await supabase.schema("service").from("people").insert({ id: fichaIds.personId, organization_id: organizationId, church_id: churchId, name: form.respNome.trim() || "Responsavel", phone: form.respTel.trim() || null, status: "ativo", photo_url: fotoResp });
     const { error: childError } = await supabase.schema("service").from("children").insert({ id: fichaIds.childId, organization_id: organizationId, church_id: churchId, class_id: sugestaoTurmaId ?? session?.class_id ?? null, name: form.nome.trim(), birth: form.nascimento || null, photo_url: fotoCrianca, gender: form.genero || null, emergency_contact_name: form.emergenciaNome.trim() || null, emergency_contact_phone: form.emergenciaTel.trim() || null, image_authorized: form.autorizaImagem });
     if (!personError && !childError) {
-      await supabase.schema("service").from("child_guardians").insert({ organization_id: organizationId, child_id: fichaIds.childId, guardian_person_id: fichaIds.personId, relationship: form.respParentesco.trim() || null, can_pickup: true });
+      await supabase.schema("service").from("child_guardians").insert({ organization_id: organizationId, child_id: fichaIds.childId, guardian_person_id: fichaIds.personId, relationship: form.respParentesco.trim() || null, can_pickup: true, is_primary: true });
       if (session) {
         const { data } = await supabase.schema("service").from("kids_attendance").insert({ organization_id: organizationId, session_id: session.id, child_id: fichaIds.childId, dropped_off_via: "manual" }).select("id,session_id,child_id,status,dropped_off_at,dropped_off_via").single();
         if (data) setAttendance((prev) => [...prev, data as KidsAttendance]);
@@ -1088,7 +1067,7 @@ function TabKids({
       </button>
       {novaFicha && (
         <div className="m-card" style={{ borderColor: "var(--olive-line)", marginTop: 10 }}>
-          <MiniFotoMobile label="Foto da crianca (obrigatoria)" photoUrl={fotoCrianca} busy={enviandoFoto === "crianca"} onUpload={enviarFotoCrianca} />
+          <PhotoPicker label="Foto da crianca (obrigatoria)" photoUrl={fotoCrianca} path={`${organizationId}/kids/children/${fichaIds.childId}`} onUploaded={setFotoCrianca} />
           <input className="input" placeholder="Nome da crianca" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
           <input className="input" type="date" value={form.nascimento} onChange={(e) => setForm((f) => ({ ...f, nascimento: e.target.value }))} style={{ marginBottom: 8 }} />
           <select className="select" value={form.genero} onChange={(e) => setForm((f) => ({ ...f, genero: e.target.value }))} style={{ marginBottom: 8 }}>
@@ -1101,7 +1080,7 @@ function TabKids({
             <input type="checkbox" checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))} /> Autoriza uso de imagem
           </label>
 
-          <MiniFotoMobile label="Foto do responsavel (obrigatoria)" photoUrl={fotoResp} busy={enviandoFoto === "resp"} onUpload={enviarFotoResp} />
+          <PhotoPicker label="Foto do responsavel (obrigatoria)" photoUrl={fotoResp} path={`${organizationId}/kids/guardians/${fichaIds.personId}`} onUploaded={setFotoResp} />
           <input className="input" placeholder="Nome do responsavel" value={form.respNome} onChange={(e) => setForm((f) => ({ ...f, respNome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
           <input className="input" placeholder="Telefone do responsavel" value={form.respTel} onChange={(e) => setForm((f) => ({ ...f, respTel: e.target.value }))} style={{ marginBottom: 8 }} />
           <input className="input" placeholder="Parentesco (mae, avo...)" value={form.respParentesco} onChange={(e) => setForm((f) => ({ ...f, respParentesco: e.target.value }))} style={{ marginBottom: 8 }} />
@@ -1115,22 +1094,6 @@ function TabKids({
   );
 }
 
-function MiniFotoMobile({ label, photoUrl, busy, onUpload }: { label: string; photoUrl: string | null; busy?: boolean; onUpload: (file: File) => void }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      {photoUrl ? (
-        <img src={photoUrl} alt={label} style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover" }} />
-      ) : (
-        <div className="av av-sm" style={{ background: "var(--danger-dim)", color: "var(--danger)" }}>!</div>
-      )}
-      <button className="m-btn m-btn-swap" type="button" disabled={busy} onClick={() => inputRef.current?.click()} style={{ flex: 1 }}>
-        {busy ? "Enviando..." : label}
-      </button>
-      <input ref={inputRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }} onChange={(e) => { const file = e.target.files?.[0]; if (file) onUpload(file); e.target.value = ""; }} />
-    </div>
-  );
-}
 
 // ── aba: Cursos ───────────────────────────────────────────────────────────────
 
@@ -1666,35 +1629,8 @@ function TabPerfil({
 
 // ── Onboarding (primeiro acesso do membro) ───────────────────────────────────
 
-function FotoUpload({
-  preview, onPreview,
-}: {
-  preview: string | null; onPreview: (url: string | null) => void;
-}) {
-  const ref = useRef<HTMLInputElement>(null);
-  const pick = () => ref.current?.click();
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const url = URL.createObjectURL(f);
-    onPreview(url);
-  };
-  return (
-    <div className="ob-foto-area" onClick={pick} style={{ cursor: "pointer" }}>
-      {preview
-        ? <img src={preview} alt="Foto de perfil" className="ob-foto-img" />
-        : (
-          <div className="ob-foto-placeholder">
-            <span>+</span>
-            <small>Toque para enviar</small>
-          </div>
-        )}
-      <input ref={ref} type="file" accept="image/*" style={{ display: "none" }} onChange={onChange} />
-    </div>
-  );
-}
 
-function Onboarding({ person, member, churchName, churchLogoUrl, onCompleteOnboarding, onDone }: { person: P; member: M | null; churchName?: string; churchLogoUrl?: string | null; onCompleteOnboarding?: (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string; senha: string }) => void; onDone: () => void }) {
+function Onboarding({ person, member, churchName, churchLogoUrl, organizationId, onCompleteOnboarding, onDone }: { person: P; member: M | null; churchName?: string; churchLogoUrl?: string | null; organizationId?: string; onCompleteOnboarding?: (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string; senha: string }) => void; onDone: () => void }) {
   const [step, setStep] = useState(0);
   const [d, setD] = useState({
     email: member?.email ?? person.name.toLowerCase().replace(/\s+/g, ".") + "@email.com",
@@ -1750,12 +1686,14 @@ function Onboarding({ person, member, churchName, churchLogoUrl, onCompleteOnboa
       s: "Coloque uma foto sua. Aparece no lugar das iniciais e deixa tudo com mais cara de casa.",
       body: (
         <div className="ob-foto">
-          <FotoUpload preview={foto} onPreview={setFoto} />
-          {foto && (
-            <button className="ob-foto-remover" type="button" onClick={() => setFoto(null)}>
-              Remover foto
-            </button>
-          )}
+          <PhotoPicker
+            photoUrl={foto}
+            path={`${organizationId}/kids/guardians/${person.id}`}
+            onUploaded={(url) => {
+              setFoto(url);
+              createServiceBrowserClient().schema("service").from("people").update({ photo_url: url }).eq("id", person.id);
+            }}
+          />
         </div>
       ),
       ok: foto ? "Continuar →" : "Pular por agora →",
@@ -1846,6 +1784,7 @@ function Onboarding({ person, member, churchName, churchLogoUrl, onCompleteOnboa
 
 function TabKidsArea({
   person,
+  people,
   kidsClasses,
   kidsChildren,
   childGuardians,
@@ -1858,6 +1797,7 @@ function TabKidsArea({
   setTab,
 }: {
   person: P;
+  people: P[];
   kidsClasses: KidsClass[];
   kidsChildren: Child[];
   childGuardians: ChildGuardian[];
@@ -1873,29 +1813,21 @@ function TabKidsArea({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [fotoFilho, setFotoFilho] = useState<string | null>(null);
-  const [enviandoFotoFilho, setEnviandoFotoFilho] = useState(false);
   const [novoFilhoId, setNovoFilhoId] = useState(() => crypto.randomUUID());
   const [ficarError, setFicarError] = useState("");
   const [enrollments, setEnrollments] = useState(kidsEventEnrollments);
   const [myChildren, setMyChildren] = useState(kidsChildren);
   const [myGuardians, setMyGuardians] = useState(childGuardians);
   const [minhaFoto, setMinhaFoto] = useState(person.photoUrl ?? null);
-  const [enviandoMinhaFoto, setEnviandoMinhaFoto] = useState(false);
   const sugestaoTurmaId = suggestKidsClassId(form.nascimento, kidsClasses);
   const sugestaoTurma = kidsClasses.find((kc) => kc.id === sugestaoTurmaId);
 
   const meusFilhos = myChildren.filter((c) => myGuardians.some((g) => g.child_id === c.id && g.guardian_person_id === person.id));
   const kidsWall = wallPosts.filter((w) => (w.audience ?? "").toLowerCase().includes("kids")).slice(0, 5);
 
-  const enviarMinhaFoto = async (file: File) => {
-    if (!organizationId) return;
-    setEnviandoMinhaFoto(true);
-    try {
-      const url = await uploadServiceImage(createServiceBrowserClient(), file, `${organizationId}/kids/guardians/${person.id}.${imageExtension(file)}`);
-      await createServiceBrowserClient().schema("service").from("people").update({ photo_url: url }).eq("id", person.id);
-      setMinhaFoto(url);
-    } catch { /* falha silenciosa, tenta de novo depois */ }
-    setEnviandoMinhaFoto(false);
+  const salvarMinhaFoto = (url: string) => {
+    setMinhaFoto(url);
+    createServiceBrowserClient().schema("service").from("people").update({ photo_url: url }).eq("id", person.id);
   };
 
   const abrirNovo = () => {
@@ -1925,16 +1857,7 @@ function TabKidsArea({
     setFicarError("");
   };
 
-  const enviarFotoFilho = async (file: File) => {
-    if (!organizationId) return;
-    const targetId = editingId && editingId !== "novo" ? editingId : novoFilhoId;
-    setEnviandoFotoFilho(true);
-    try {
-      const url = await uploadServiceImage(createServiceBrowserClient(), file, `${organizationId}/kids/children/${targetId}.${imageExtension(file)}`);
-      setFotoFilho(url);
-    } catch { setFicarError("Nao consegui enviar a foto agora."); }
-    setEnviandoFotoFilho(false);
-  };
+  const fotoFilhoTargetId = editingId && editingId !== "novo" ? editingId : novoFilhoId;
 
   const salvarFilho = async () => {
     if (!form.nome.trim() || !organizationId || !churchId) return;
@@ -1962,9 +1885,9 @@ function TabKidsArea({
     } else {
       const { error } = await supabase.schema("service").from("children").insert({ id: novoFilhoId, organization_id: organizationId, church_id: churchId, ...payload });
       if (!error) {
-        await supabase.schema("service").from("child_guardians").insert({ organization_id: organizationId, child_id: novoFilhoId, guardian_person_id: person.id, relationship: "responsavel", can_pickup: true });
+        await supabase.schema("service").from("child_guardians").insert({ organization_id: organizationId, child_id: novoFilhoId, guardian_person_id: person.id, relationship: "responsavel", can_pickup: true, is_primary: true });
         setMyChildren((prev) => [...prev, { id: novoFilhoId, church_id: churchId, ...payload } as Child]);
-        setMyGuardians((prev) => [...prev, { id: `local-${novoFilhoId}`, child_id: novoFilhoId, guardian_person_id: person.id, relationship: "responsavel", can_pickup: true }]);
+        setMyGuardians((prev) => [...prev, { id: `local-${novoFilhoId}`, child_id: novoFilhoId, guardian_person_id: person.id, relationship: "responsavel", can_pickup: true, is_primary: true }]);
       } else { setFicarError("Nao consegui salvar agora."); return; }
     }
     setEditingId(null);
@@ -1978,9 +1901,38 @@ function TabKidsArea({
     if (data) setEnrollments((prev) => [...prev, data as KidsEventEnrollment]);
   };
 
+  const isPrimaryFor = (childId: string) => myGuardians.some((g) => g.child_id === childId && g.guardian_person_id === person.id && g.is_primary);
+  const guardiansOf = (childId: string) => myGuardians.filter((g) => g.child_id === childId);
+
+  const [coForm, setCoForm] = useState({ nome: "", relationship: "", canPickup: true, photoUrl: null as string | null });
+  const [coError, setCoError] = useState("");
+
+  const adicionarCoResponsavel = async (childId: string) => {
+    if (!organizationId) return;
+    setCoError("");
+    const matched = people.find((p) => p.name.toLowerCase().trim() === coForm.nome.toLowerCase().trim());
+    if (!matched) { setCoError("Pessoa nao encontrada. Precisa ja ter cadastro no Service."); return; }
+    if (matched.id === person.id) { setCoError("Voce ja e responsavel."); return; }
+    if (guardiansOf(childId).some((g) => g.guardian_person_id === matched.id)) { setCoError("Essa pessoa ja e responsavel."); return; }
+    const photo = coForm.photoUrl ?? matched.photoUrl ?? null;
+    if (!photo) { setCoError("O co-responsavel precisa ter uma foto (envie abaixo)."); return; }
+    const { data } = await createServiceBrowserClient().schema("service").from("child_guardians").insert({ organization_id: organizationId, child_id: childId, guardian_person_id: matched.id, relationship: coForm.relationship.trim() || null, can_pickup: coForm.canPickup, is_primary: false }).select("id,child_id,guardian_person_id,relationship,can_pickup,is_primary").single();
+    if (data) {
+      setMyGuardians((prev) => [...prev, data as ChildGuardian]);
+      setCoForm({ nome: "", relationship: "", canPickup: true, photoUrl: null });
+    } else {
+      setCoError("Nao consegui adicionar agora.");
+    }
+  };
+
+  const removerCoResponsavel = async (guardianRowId: string) => {
+    await createServiceBrowserClient().schema("service").from("child_guardians").delete().eq("id", guardianRowId);
+    setMyGuardians((prev) => prev.filter((g) => g.id !== guardianRowId));
+  };
+
   const fichaForm = (
     <div className="m-card" style={{ borderColor: "var(--olive-line)", marginTop: 10 }}>
-      <MiniFotoMobile label="Foto da crianca (obrigatoria)" photoUrl={fotoFilho} busy={enviandoFotoFilho} onUpload={enviarFotoFilho} />
+      <PhotoPicker label="Foto da crianca (obrigatoria)" photoUrl={fotoFilho} path={`${organizationId}/kids/children/${fotoFilhoTargetId}`} onUploaded={setFotoFilho} />
       <input className="input" placeholder="Nome da crianca" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
       <input className="input" type="date" value={form.nascimento} onChange={(e) => setForm((f) => ({ ...f, nascimento: e.target.value }))} style={{ marginBottom: 8 }} />
       <select className="select" value={form.genero} onChange={(e) => setForm((f) => ({ ...f, genero: e.target.value }))} style={{ marginBottom: 8 }}>
@@ -2011,7 +1963,7 @@ function TabKidsArea({
       </button>
 
       <div className="m-section-t">Sua foto de responsavel</div>
-      <MiniFotoMobile label="Foto do responsavel" photoUrl={minhaFoto} busy={enviandoMinhaFoto} onUpload={enviarMinhaFoto} />
+      <PhotoPicker label="Foto do responsavel" photoUrl={minhaFoto} path={`${organizationId}/kids/guardians/${person.id}`} onUploaded={salvarMinhaFoto} />
       <div className="cell-sub" style={{ marginTop: 6, marginBottom: 16 }}>É essa foto que o professor compara na hora da retirada.</div>
 
       <div className="m-section-t">Meus filhos</div>
@@ -2035,7 +1987,51 @@ function TabKidsArea({
                 </div>
               )}
             </button>
-            {editingId === child.id && fichaForm}
+            {editingId === child.id && (
+              <>
+                {fichaForm}
+                <div className="m-card" style={{ marginTop: 8 }}>
+                  <div className="m-when" style={{ marginBottom: 8 }}>Responsaveis autorizados a retirar</div>
+                  {guardiansOf(child.id).map((g) => {
+                    const p = people.find((pp) => pp.id === g.guardian_person_id);
+                    return (
+                      <div className="m-vis-head" key={g.id} style={{ marginBottom: 8 }}>
+                        {p?.photoUrl ? <img src={p.photoUrl} alt={p.name} style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover" }} /> : <Av name={p?.name ?? "?"} size="sm" />}
+                        <div className="m-vis-main">
+                          <div className="m-culto" style={{ fontSize: 13 }}>{p?.name ?? "Responsavel"}{g.is_primary ? " · principal" : ""}</div>
+                          <div className="m-fn">{g.relationship || "sem parentesco informado"}</div>
+                        </div>
+                        {isPrimaryFor(child.id) && !g.is_primary && (
+                          <button className="ob-foto-remover" type="button" onClick={() => removerCoResponsavel(g.id)}>Remover</button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {isPrimaryFor(child.id) ? (
+                    <>
+                      <div className="cell-sub" style={{ margin: "10px 0" }}>Só voce, como responsavel principal, pode adicionar co-responsaveis.</div>
+                      <input className="input" list="service-mobile-people-names" placeholder="Nome (ja precisa ter cadastro)" value={coForm.nome} onChange={(e) => setCoForm((f) => ({ ...f, nome: e.target.value, photoUrl: people.find((p) => p.name === e.target.value)?.photoUrl ?? null }))} style={{ marginBottom: 8 }} />
+                      <datalist id="service-mobile-people-names">
+                        {people.map((p) => <option key={p.id} value={p.name} />)}
+                      </datalist>
+                      <input className="input" placeholder="Parentesco (mae, avo, tio...)" value={coForm.relationship} onChange={(e) => setCoForm((f) => ({ ...f, relationship: e.target.value }))} style={{ marginBottom: 8 }} />
+                      {coForm.nome && !coForm.photoUrl && (
+                        <div style={{ marginBottom: 8 }}>
+                          <PhotoPicker label="Foto do co-responsavel (obrigatoria)" photoUrl={coForm.photoUrl} path={`${organizationId}/kids/guardians/${people.find((p) => p.name === coForm.nome)?.id ?? "novo"}`} onUploaded={(url) => setCoForm((f) => ({ ...f, photoUrl: url }))} />
+                        </div>
+                      )}
+                      <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontSize: 13 }}>
+                        <input type="checkbox" checked={coForm.canPickup} onChange={(e) => setCoForm((f) => ({ ...f, canPickup: e.target.checked }))} /> Pode retirar
+                      </label>
+                      {coError && <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8 }}>{coError}</div>}
+                      <button className="m-btn m-btn-swap" style={{ width: "100%" }} onClick={() => adicionarCoResponsavel(child.id)}>+ Adicionar co-responsavel</button>
+                    </>
+                  ) : (
+                    <div className="cell-sub">Só o responsavel principal pode adicionar outros co-responsaveis.</div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         );
       })}
@@ -2092,7 +2088,7 @@ function MobileMembro({
   const [onboarded, setOnboarded] = useState<boolean>(() => {
     try { return !!localStorage.getItem(`cex_onboarded_${person.id}`); } catch { return false; }
   });
-  const { ministries, events, roster, cards, boards, courses, enrollments, courseModules = [], courseLessons = [],
+  const { people, ministries, events, roster, cards, boards, courses, enrollments, courseModules = [], courseLessons = [],
           visitors, baptismClasses, announcements, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment,
           onAdvanceVisitorStage, onRegisterVisitor, onSendMessage, onStartChat,
           organizationId, churchName, churchLogoUrl, theme, setTheme, onChangePassword, onUpdateProfile,
@@ -2121,7 +2117,7 @@ function MobileMembro({
       <div className="phone">
         <div className="phone-screen">
           <div className="phone-notch" />
-          <Onboarding person={person} member={member} churchName={churchName} churchLogoUrl={churchLogoUrl} onCompleteOnboarding={onCompleteOnboarding} onDone={() => setOnboarded(true)} />
+          <Onboarding person={person} member={member} churchName={churchName} churchLogoUrl={churchLogoUrl} organizationId={organizationId} onCompleteOnboarding={onCompleteOnboarding} onDone={() => setOnboarded(true)} />
         </div>
       </div>
     );
@@ -2188,6 +2184,7 @@ function MobileMembro({
           {tab === "kids-area" && (
             <TabKidsArea
               person={person}
+              people={people}
               kidsClasses={kidsClasses}
               kidsChildren={kidsChildren}
               childGuardians={childGuardians}

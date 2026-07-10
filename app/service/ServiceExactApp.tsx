@@ -13,6 +13,7 @@ import { ageInMonths, suggestKidsClassId } from "./lib/kids";
 import MobileOverlay from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
 import { KidsQRModal } from "./KidsCheckin";
+import { PhotoPicker } from "./PhotoPicker";
 import EventoShare from "./EventoShare";
 import CursoEditor from "./CursoEditor";
 import CursoDrawer from "./CursoDrawer";
@@ -522,6 +523,7 @@ type ChildGuardianView = {
   guardian_person_id: string;
   relationship: string | null;
   can_pickup: boolean;
+  is_primary?: boolean;
 };
 
 type KidsSessionView = {
@@ -634,15 +636,19 @@ type DrawerState =
   | { kind: "rehearsal"; id: string }
   | null;
 
+type ShowIf = { field: string; equals: string };
+
 type FieldDef =
-  | { k: string; label: string; type: "text"; req?: boolean; half?: boolean; ph?: string; hint?: string; value?: string }
-  | { k: string; label: string; type: "area"; req?: boolean; half?: boolean; ph?: string; hint?: string; big?: boolean }
-  | { k: string; label: string; type: "select"; req?: boolean; half?: boolean; ph?: string; hint?: string; options: { v: string; l: string }[] }
-  | { k: string; label: string; type: "date"; req?: boolean; half?: boolean; hint?: string }
-  | { k: string; label: string; type: "time"; req?: boolean; half?: boolean; hint?: string }
-  | { k: string; label: string; type: "toggle"; req?: boolean; half?: boolean; hint?: string; onLabel?: string; offLabel?: string; value?: string }
-  | { k: string; label: string; type: "checks"; req?: boolean; half?: boolean; hint?: string; options: { v: string; l: string }[] }
-  | { k: string; label: string; type: "icon"; req?: boolean; half?: boolean; hint?: string; value?: string };
+  | { k: string; label: string; type: "text"; req?: boolean; half?: boolean; ph?: string; hint?: string; value?: string; showIf?: ShowIf }
+  | { k: string; label: string; type: "area"; req?: boolean; half?: boolean; ph?: string; hint?: string; big?: boolean; showIf?: ShowIf }
+  | { k: string; label: string; type: "select"; req?: boolean; half?: boolean; ph?: string; hint?: string; options: { v: string; l: string }[]; showIf?: ShowIf }
+  | { k: string; label: string; type: "date"; req?: boolean; half?: boolean; hint?: string; showIf?: ShowIf }
+  | { k: string; label: string; type: "time"; req?: boolean; half?: boolean; hint?: string; showIf?: ShowIf }
+  | { k: string; label: string; type: "toggle"; req?: boolean; half?: boolean; hint?: string; onLabel?: string; offLabel?: string; value?: string; showIf?: ShowIf }
+  | { k: string; label: string; type: "checks"; req?: boolean; half?: boolean; hint?: string; options: { v: string; l: string }[]; showIf?: ShowIf }
+  | { k: string; label: string; type: "icon"; req?: boolean; half?: boolean; hint?: string; value?: string; showIf?: ShowIf };
+
+const OUTRO_LOCAL = "__outro__";
 
 type ModalState =
   | {
@@ -1450,7 +1456,7 @@ export default function ServiceExactApp({
         {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} church={firstChurch} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "criancas" ? <Criancas kidsChildren={kidsChildren} kidsClasses={kidsClasses} childGuardians={childGuardians} people={people} kidsEvents={kidsEvents} rooms={rooms} church={firstChurch} /> : null}
         {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
-        {route === "batismos" ? <Batismos baptismClasses={baptismClasses} baptismCandidates={baptismCandidates} decisions={decisions} members={members} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "batismos" ? <Batismos baptismClasses={baptismClasses} baptismCandidates={baptismCandidates} decisions={decisions} members={members} rooms={rooms} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "cursos" ? (
           <CursosTrilhas
             courses={courses}
@@ -2782,7 +2788,7 @@ function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChi
   const [kidsPickerEventId, setKidsPickerEventId] = useState<string | null>(null);
   const [kidsModal, setKidsModal] = useState<{ eventId: string; classId: string } | null>(null);
   const meetingRooms = rooms.filter((room) => room.allows_meetings !== false);
-  const localOptions = meetingRooms.map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` }));
+  const localOptions = [...meetingRooms.map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` })), { v: OUTRO_LOCAL, l: "Outro espaço (fora da igreja)" }];
   const tipoOptions = [
     { v: "Culto", l: "Culto" },
     { v: "Evento", l: "Evento" },
@@ -2792,7 +2798,7 @@ function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChi
   ];
   return (
     <div className="content">
-      <PageHead title="Cultos & Agenda" eyebrow="Operação" subtitle="Agenda, roteiro, setlist e ministérios envolvidos em cada culto." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo culto ou evento", subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Culto da Manhã, Conferência de Jovens" }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"data", label:"Data", type:"date", half:true }, { k:"hora", label:"Horário de início", type:"time", half:true }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }], action: { kind: "event" } })}>+ Novo culto</button>} />
+      <PageHead title="Cultos & Agenda" eyebrow="Operação" subtitle="Agenda, roteiro, setlist e ministérios envolvidos em cada culto." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo culto ou evento", subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Culto da Manhã, Conferência de Jovens" }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"data", label:"Data", type:"date", half:true }, { k:"hora", label:"Horário de início", type:"time", half:true }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }], action: { kind: "event" } })}>+ Novo culto</button>} />
       <div className="grid-2">
         {events.map((event) => (
           <div className="panel" key={event.id} style={{ position: "relative" }}>
@@ -3133,21 +3139,24 @@ function ReuniaoForm({
   const [hora, setHora] = useState("20h00");
   const [fim, setFim] = useState("21h30");
   const [salaId, setSalaId] = useState(meetingRooms[0]?.id ?? "");
+  const [endereco, setEndereco] = useState("");
   const [presentes, setPresentes] = useState<string[]>([]);
   const [pauta, setPauta] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const isOutro = salaId === OUTRO_LOCAL;
   const isoDate = data ? dpToIsoDate(data) : null;
-  const conflito = salaId && isoDate ? findRoomConflict(reservations, salaId, isoDate, hora, fim) : null;
+  const conflito = !isOutro && salaId && isoDate ? findRoomConflict(reservations, salaId, isoDate, hora, fim) : null;
   const salaEscolhida = rooms.find((r) => r.id === salaId);
+  const localValido = isOutro ? !!endereco.trim() : !!salaEscolhida;
 
   const togglePessoa = (id: string) => setPresentes((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   const criar = async () => {
     if (!titulo.trim()) { setError("Dê um título à reunião."); return; }
     if (!church?.organizationId || !church.id) { setError("Nenhuma igreja encontrada para vincular esta reunião."); return; }
-    if (!salaEscolhida) { setError("Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
+    if (!localValido) { setError(isOutro ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
     if (conflito) { setError(`A sala já tem "${conflito.title}" em ${conflito.start_time} a ${conflito.end_time} nesse dia.`); return; }
     setSaving(true);
     setError("");
@@ -3159,7 +3168,7 @@ function ReuniaoForm({
       title: titulo.trim(),
       meeting_date: data || null,
       time: hora,
-      location: salaEscolhida.name,
+      location: isOutro ? endereco.trim() : salaEscolhida!.name,
       ministries: meetingMinistries,
       attendees: presentes,
       agenda: pauta.split("\n").map((s) => s.trim()).filter(Boolean),
@@ -3170,7 +3179,7 @@ function ReuniaoForm({
       setError(meetingError?.message ?? "Não foi possível marcar a reunião.");
       return;
     }
-    if (salaId && isoDate) {
+    if (!isOutro && salaId && isoDate) {
       await supabase.schema("service").from("reservations").insert({
         organization_id: church.organizationId,
         room_id: salaId,
@@ -3207,9 +3216,11 @@ function ReuniaoForm({
               <select className="select" value={salaId} onChange={(e) => setSalaId(e.target.value)}>
                 <option value="">Selecione uma sala</option>
                 {meetingRooms.map((room) => <option key={room.id} value={room.id}>{room.name}{room.capacity ? ` · ${room.capacity} lug.` : ""}</option>)}
+                <option value={OUTRO_LOCAL}>Outro espaço (fora da igreja)</option>
               </select>
               {meetingRooms.length === 0 ? <div className="cell-sub" style={{ marginTop: 6 }}>Nenhuma sala liberada pra reunião ainda. Cadastre em Configurações → Espaços & Salas.</div> : null}
             </div>
+            {isOutro ? <div className="field"><label className="field-label">Endereço do espaço</label><input className="input" value={endereco} onChange={(e) => setEndereco(e.target.value)} placeholder="Rua, número, bairro..." /></div> : null}
           </div>
           {conflito ? <div className="reserva-warn"><Icon name="alerta" size={14} /> A sala já tem &quot;{conflito.title}&quot; em {conflito.start_time} a {conflito.end_time} nesse dia.</div> : null}
         </DrawerSection>
@@ -3234,7 +3245,7 @@ function ReuniaoForm({
 
         {error ? <div style={{ fontSize: 12.5, color: "var(--danger)", marginBottom: 12 }}>{error}</div> : null}
         <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
-          <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" disabled={saving || !!conflito || !salaId} onClick={criar}>{saving ? "Marcando…" : "Marcar reunião"}</button>
+          <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" disabled={saving || !!conflito || !localValido} onClick={criar}>{saving ? "Marcando…" : "Marcar reunião"}</button>
           <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
         </div>
       </div>
@@ -3287,10 +3298,10 @@ function Reunioes({ meetings, meetingActions, ministries, people, rooms, reserva
 
 function Ensaios({ rehearsals, ministries, rooms, setDrawer, setModal }: { rehearsals: RehearsalView[]; ministries: MinistryView[]; rooms: RoomView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
   const ministryById = new Map(ministries.map((ministry) => [ministry.id, ministry]));
-  const localOptions = rooms.filter((room) => room.allows_meetings !== false).map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` }));
+  const localOptions = [...rooms.filter((room) => room.allows_meetings !== false).map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` })), { v: OUTRO_LOCAL, l: "Outro espaço (fora da igreja)" }];
   return (
     <div className="content wide">
-      <PageHead title="Ensaios" eyebrow="Liderança" subtitle="Ensaios por ministério, presença, repertório e materiais." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo ensaio", subtitle: "Louvor, teatro, dança… Escolha quem participa e defina o repertório.", saveLabel: "Criar ensaio", formFields: [{ k:"titulo", label:"Nome do ensaio", type:"text", req:true, ph:"ex: Ensaio do Louvor, Peça de Natal" }, { k:"tipo", label:"Tipo de ensaio", type:"select", half:true, options:[{v:"louvor",l:"Louvor / música"},{v:"teatro",l:"Teatro"},{v:"danca",l:"Dança"},{v:"coreografia",l:"Coreografia"},{v:"geral",l:"Geral"},{v:"outro",l:"Outro"}] }, { k:"time", label:"Ministério", type:"text", half:true, ph:"ex: Louvor" }, { k:"data", label:"Dia", type:"date", half:true }, { k:"hora", label:"Horário", type:"time", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }, { k:"obs", label:"Observação", type:"area", ph:"Detalhes do ensaio" }], action: { kind: "rehearsal" } })}>+ Novo ensaio</button>} />
+      <PageHead title="Ensaios" eyebrow="Liderança" subtitle="Ensaios por ministério, presença, repertório e materiais." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo ensaio", subtitle: "Louvor, teatro, dança… Escolha quem participa e defina o repertório.", saveLabel: "Criar ensaio", formFields: [{ k:"titulo", label:"Nome do ensaio", type:"text", req:true, ph:"ex: Ensaio do Louvor, Peça de Natal" }, { k:"tipo", label:"Tipo de ensaio", type:"select", half:true, options:[{v:"louvor",l:"Louvor / música"},{v:"teatro",l:"Teatro"},{v:"danca",l:"Dança"},{v:"coreografia",l:"Coreografia"},{v:"geral",l:"Geral"},{v:"outro",l:"Outro"}] }, { k:"time", label:"Ministério", type:"text", half:true, ph:"ex: Louvor" }, { k:"data", label:"Dia", type:"date", half:true }, { k:"hora", label:"Horário", type:"time", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }, { k:"obs", label:"Observação", type:"area", ph:"Detalhes do ensaio" }], action: { kind: "rehearsal" } })}>+ Novo ensaio</button>} />
       <div className="reu-grid">
         {rehearsals.map((rehearsal) => {
           const ministry = rehearsal.ministry_id ? ministryById.get(rehearsal.ministry_id) : null;
@@ -4135,7 +4146,7 @@ function Criancas({
   const [eventModal, setEventModal] = useState(false);
   const classById = new Map(kidsClasses.map((kc) => [kc.id, kc]));
   const personById = new Map(people.map((person) => [person.id, person]));
-  const kidsLocalOptions = rooms.map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` }));
+  const kidsLocalOptions = [...rooms.map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` })), { v: OUTRO_LOCAL, l: "Outro espaço (fora da igreja)" }];
 
   const visible = kidsChildren.filter((child) => {
     const okQ = !q || child.name.toLowerCase().includes(q.toLowerCase());
@@ -4208,40 +4219,13 @@ function Criancas({
       )}
       {eventModal && church && (
         <ServiceModal
-          modal={{ eyebrow: "Criar", title: "Novo evento Kids", subtitle: "Evento infantil com inscrição aberta pelos responsáveis no app.", saveLabel: "Criar evento", formFields: [{ k: "titulo", label: "Título", type: "text", req: true, ph: "ex: Páscoa Kids" }, { k: "data", label: "Data", type: "date", half: true }, { k: "hora", label: "Horário", type: "text", half: true, ph: "ex: 10h" }, { k: "local", label: "Local", type: "select", req: true, half: true, ph: "Selecione um espaço cadastrado", options: kidsLocalOptions }, { k: "capacidade", label: "Vagas", type: "text", half: true, ph: "ex: 30" }, { k: "desc", label: "Descrição", type: "area", ph: "O que vai acontecer" }], action: { kind: "kidsEvent" } }}
+          modal={{ eyebrow: "Criar", title: "Novo evento Kids", subtitle: "Evento infantil com inscrição aberta pelos responsáveis no app.", saveLabel: "Criar evento", formFields: [{ k: "titulo", label: "Título", type: "text", req: true, ph: "ex: Páscoa Kids" }, { k: "data", label: "Data", type: "date", half: true }, { k: "hora", label: "Horário", type: "text", half: true, ph: "ex: 10h" }, { k: "local", label: "Local", type: "select", req: true, half: true, ph: "Selecione um espaço cadastrado", options: kidsLocalOptions }, { k: "endereco", label: "Endereço do espaço", type: "text", half: true, ph: "Rua, número, bairro...", showIf: { field: "local", equals: OUTRO_LOCAL } }, { k: "capacidade", label: "Vagas", type: "text", half: true, ph: "ex: 30" }, { k: "desc", label: "Descrição", type: "area", ph: "O que vai acontecer" }], action: { kind: "kidsEvent" } }}
           church={church}
           people={people}
           ministries={[]}
           onClose={() => setEventModal(false)}
         />
       )}
-    </div>
-  );
-}
-
-function MiniFotoUpload({
-  label,
-  photoUrl,
-  onUpload,
-  busy,
-}: {
-  label: string;
-  photoUrl: string | null | undefined;
-  onUpload: (file: File) => void;
-  busy?: boolean;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      {photoUrl ? (
-        <img src={photoUrl} alt={label} style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover" }} />
-      ) : (
-        <div className="av av-sm" style={{ background: "var(--danger-dim)", color: "var(--danger)" }}>!</div>
-      )}
-      <button className="btn btn-ghost btn-sm" type="button" disabled={busy} onClick={() => inputRef.current?.click()}>
-        {busy ? "Enviando..." : photoUrl ? "Trocar foto" : "Adicionar foto"}
-      </button>
-      <input ref={inputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { const file = e.target.files?.[0]; if (file) onUpload(file); e.target.value = ""; }} />
     </div>
   );
 }
@@ -4274,7 +4258,6 @@ function ChildFormModal({
   const [healthInsurance, setHealthInsurance] = useState(child?.health_insurance ?? "");
   const [medication, setMedication] = useState(child?.medication ?? "");
   const [photoUrl, setPhotoUrl] = useState(child?.photo_url ?? null);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const childId = useMemo(() => child?.id ?? crypto.randomUUID(), [child?.id]);
   const suggestedClassId = useMemo(() => suggestKidsClassId(birth, kidsClasses), [birth, kidsClasses]);
   const classId = suggestedClassId ?? child?.class_id ?? null;
@@ -4287,7 +4270,6 @@ function ChildFormModal({
         })
       : [{ name: "", relationship: "", canPickup: true, photoUrl: null }],
   );
-  const [uploadingGuardian, setUploadingGuardian] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -4296,31 +4278,10 @@ function ChildFormModal({
   const updateGuardian = (index: number, patch: Partial<{ name: string; relationship: string; canPickup: boolean; photoUrl: string | null }>) =>
     setGuardians((prev) => prev.map((g, i) => (i === index ? { ...g, ...patch } : g)));
 
-  const uploadChildPhoto = async (file: File) => {
-    setUploadingPhoto(true);
-    try {
-      const supabase = createServiceBrowserClient();
-      const url = await uploadServiceImage(supabase, file, `${church.organizationId}/kids/children/${childId}.${imageExtension(file)}`);
-      setPhotoUrl(url);
-    } catch {
-      setError("Não foi possível enviar a foto agora.");
-    }
-    setUploadingPhoto(false);
-  };
-
-  const uploadGuardianPhoto = async (index: number, file: File) => {
+  const uploadGuardianPhoto = async (index: number, url: string) => {
     const matched = findPersonByName(people, guardians[index].name);
-    if (!matched) { setError("Digite o nome do responsável (já cadastrado) antes de enviar a foto."); return; }
-    setUploadingGuardian(index);
-    try {
-      const supabase = createServiceBrowserClient();
-      const url = await uploadServiceImage(supabase, file, `${church.organizationId}/kids/guardians/${matched.id}.${imageExtension(file)}`);
-      await supabase.schema("service").from("people").update({ photo_url: url }).eq("id", matched.id);
-      updateGuardian(index, { photoUrl: url });
-    } catch {
-      setError("Não foi possível enviar a foto do responsável agora.");
-    }
-    setUploadingGuardian(null);
+    if (matched) await createServiceBrowserClient().schema("service").from("people").update({ photo_url: url }).eq("id", matched.id);
+    updateGuardian(index, { photoUrl: url });
   };
 
   const salvar = async () => {
@@ -4362,12 +4323,14 @@ function ChildFormModal({
     }
 
     await supabase.schema("service").from("child_guardians").delete().eq("child_id", childId);
+    const primaryPersonId = matchedGuardians[0]?.person?.id;
     const guardianRows = withPerson.map((g) => ({
       organization_id: church.organizationId,
       child_id: childId,
       guardian_person_id: g.person!.id,
       relationship: g.relationship.trim() || null,
       can_pickup: g.canPickup,
+      is_primary: g.person!.id === primaryPersonId,
     }));
     if (guardianRows.length) {
       await supabase.schema("service").from("child_guardians").insert(guardianRows);
@@ -4388,8 +4351,7 @@ function ChildFormModal({
         </div>
         <div className="modal-body">
           <div className="field" style={{ gridColumn: "1 / -1" }}>
-            <label className="field-label req">Foto da criança</label>
-            <MiniFotoUpload label={name || "Criança"} photoUrl={photoUrl} onUpload={uploadChildPhoto} busy={uploadingPhoto} />
+            <PhotoPicker label="Foto da criança (obrigatória)" photoUrl={photoUrl} path={`${church.organizationId}/kids/children/${childId}`} onUploaded={setPhotoUrl} />
           </div>
           <div className="field"><label className="field-label">Nome da criança</label><input className="input" placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} /></div>
           <div className="field field-half"><label className="field-label">Nascimento</label><input className="input" type="date" value={birth} onChange={(e) => setBirth(e.target.value)} /></div>
@@ -4422,21 +4384,35 @@ function ChildFormModal({
 
           <div className="field" style={{ gridColumn: "1 / -1" }}>
             <label className="field-label req">Responsáveis autorizados a retirar (com foto)</label>
-            {guardians.map((g, index) => (
-              <div key={index} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center", flexWrap: "wrap" }}>
-                <input className="input" style={{ flex: 1.2 }} list="service-people-names" placeholder="Nome do responsável" value={g.name} onChange={(e) => updateGuardian(index, { name: e.target.value, photoUrl: findPersonByName(people, e.target.value)?.photoUrl ?? null })} />
-                <input className="input" style={{ flex: 0.8 }} placeholder="Parentesco (mãe, avó...)" value={g.relationship} onChange={(e) => updateGuardian(index, { relationship: e.target.value })} />
-                <MiniFotoUpload label={g.name || "Responsável"} photoUrl={g.photoUrl} onUpload={(file) => uploadGuardianPhoto(index, file)} busy={uploadingGuardian === index} />
-                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--muted)", whiteSpace: "nowrap" }}>
-                  <input type="checkbox" checked={g.canPickup} onChange={(e) => updateGuardian(index, { canPickup: e.target.checked })} /> pode retirar
-                </label>
-                <button className="btn btn-ghost btn-sm" type="button" onClick={() => removeGuardian(index)}>Remover</button>
-              </div>
-            ))}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12, marginTop: 8 }}>
+              {guardians.map((g, index) => {
+                const matched = findPersonByName(people, g.name);
+                return (
+                  <div key={index} className="panel" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      {index === 0 ? <span className="tag" style={{ fontSize: 10 }}>Responsável principal</span> : <span />}
+                      <button className="btn btn-ghost btn-sm" type="button" onClick={() => removeGuardian(index)}>Remover</button>
+                    </div>
+                    {matched ? (
+                      <PhotoPicker photoUrl={g.photoUrl} path={`${church.organizationId}/kids/guardians/${matched.id}`} onUploaded={(url) => uploadGuardianPhoto(index, url)} placeholder="Foto obrigatória" />
+                    ) : (
+                      <div className="ob-foto-area" style={{ cursor: "default" }}>
+                        <div className="ob-foto-placeholder"><span>?</span><small>Digite um nome já cadastrado</small></div>
+                      </div>
+                    )}
+                    <input className="input" list="service-people-names" placeholder="Nome do responsável" value={g.name} onChange={(e) => updateGuardian(index, { name: e.target.value, photoUrl: findPersonByName(people, e.target.value)?.photoUrl ?? null })} />
+                    <input className="input" placeholder="Parentesco (mãe, avó...)" value={g.relationship} onChange={(e) => updateGuardian(index, { relationship: e.target.value })} />
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--muted)" }}>
+                      <input type="checkbox" checked={g.canPickup} onChange={(e) => updateGuardian(index, { canPickup: e.target.checked })} /> pode retirar
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
             <datalist id="service-people-names">
               {people.map((person) => <option key={person.id} value={person.name} />)}
             </datalist>
-            <button className="btn btn-sec btn-sm" type="button" onClick={addGuardian}>+ Adicionar responsável</button>
+            <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={addGuardian}>+ Adicionar responsável</button>
             <div className="cell-sub" style={{ marginTop: 6 }}>O responsável precisa já ter um cadastro de voluntário/membro no Service pra aparecer aqui.</div>
           </div>
 
@@ -4607,6 +4583,7 @@ function Batismos({
   baptismCandidates,
   decisions: _decisions,
   members: _members,
+  rooms,
   setDrawer,
   setModal,
 }: {
@@ -4614,14 +4591,16 @@ function Batismos({
   baptismCandidates: BaptismCandidateView[];
   decisions: DecisionView[];
   members: MemberView[];
+  rooms: RoomView[];
   setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
 }) {
   const upcoming = baptismClasses.filter((c) => c.status !== "concluida");
   const concluded = baptismClasses.filter((c) => c.status === "concluida");
+  const localOptions = [...rooms.map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` })), { v: OUTRO_LOCAL, l: "Outro espaço (rio, praia, sítio...)" }];
   return (
     <div className="content wide">
-      <PageHead title="Batismos" eyebrow="Jornada" subtitle="Turmas de batismo nas águas. Inscrições, curso pré-batismo, agenda e histórico na linha do tempo da pessoa." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova turma de batismo", subtitle: "Crie a turma, defina data, local e quem vai oficiar.", saveLabel: "Criar turma", formFields: [{ k:"label", label:"Nome da turma", type:"text", req:true, ph:"ex: Batismo de Julho 2025" }, { k:"data", label:"Data do batismo", type:"date", half:true }, { k:"local", label:"Local", type:"text", half:true, ph:"Templo..." }, { k:"pastor", label:"Pastor responsável", type:"text", ph:"Quem vai oficiar" }], action: { kind: "baptismClass" } })}>+ Nova turma</button>} />
+      <PageHead title="Batismos" eyebrow="Jornada" subtitle="Turmas de batismo nas águas. Inscrições, curso pré-batismo, agenda e histórico na linha do tempo da pessoa." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova turma de batismo", subtitle: "Crie a turma, defina data, local e quem vai oficiar.", saveLabel: "Criar turma", formFields: [{ k:"label", label:"Nome da turma", type:"text", req:true, ph:"ex: Batismo de Julho 2025" }, { k:"data", label:"Data do batismo", type:"date", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"ex: Rio Tietê, Praia de Santos...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"pastor", label:"Pastor responsável", type:"text", ph:"Quem vai oficiar" }], action: { kind: "baptismClass" } })}>+ Nova turma</button>} />
       <div className="kpi-row">
         <Kpi icon="identidade" label="Turmas abertas" value={baptismClasses.filter((c) => c.open_enrollment).length} foot="com inscrições disponíveis" />
         <Kpi icon="pessoa" label="Candidatos" value={baptismCandidates.length} foot="em preparação" />
@@ -8957,6 +8936,18 @@ function findRoomByName(rooms: RoomView[], value: string) {
   return rooms.find((room) => normalize(room.name) === term || normalize(room.name).includes(term)) ?? null;
 }
 
+/* Resolve o campo "local" (select de sala + opção "Outro" com endereço livre)
+   pros formulários genéricos. Mesma regra em qualquer módulo : sala cadastrada
+   dá room_id + nome real; "Outro" dá só o endereço digitado, sem room_id. */
+function resolveLocalField(localValue: string, enderecoValue: string, rooms: RoomView[]): { name: string; roomId: string | null } | null {
+  if (localValue === OUTRO_LOCAL) {
+    const address = enderecoValue.trim();
+    return address ? { name: address, roomId: null } : null;
+  }
+  const room = findRoomByName(rooms, localValue);
+  return room ? { name: room.name, roomId: room.id } : null;
+}
+
 function friendlyWriteError(message: string) {
   const lower = message.toLowerCase();
   if (lower.includes("permission") || lower.includes("row-level security") || lower.includes("rls")) return "O banco bloqueou a gravação por segurança. Confirme se seu usuário tem permissão nesta igreja.";
@@ -9194,8 +9185,8 @@ function ServiceModal({
       }
     } else if (action.kind === "event") {
       if (!value("nome")) { setSaving(false); setError("Digite o nome do culto."); return; }
-      const eventRoom = namedRoom("local");
-      if (!eventRoom) { setSaving(false); setError("Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
+      const eventLocal = resolveLocalField(value("local"), value("endereco"), rooms);
+      if (!eventLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
       result = await supabase.schema("service").from("events").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -9203,8 +9194,8 @@ function ServiceModal({
         kind: value("tipo") || "Culto",
         event_date: value("data") || null,
         time: value("hora") || null,
-        location: eventRoom.name,
-        room_id: eventRoom.id,
+        location: eventLocal.name,
+        room_id: eventLocal.roomId,
         recurrence: value("recorrencia") || "semanal",
         ministry_ids: [],
         roster: [],
@@ -9244,12 +9235,15 @@ function ServiceModal({
         setError("Digite o nome da turma.");
         return;
       }
+      const baptismLocal = resolveLocalField(value("local"), value("endereco"), rooms);
+      if (!baptismLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
       result = await supabase.schema("service").from("baptism_classes").insert({
         organization_id: church.organizationId,
         church_id: church.id,
         label: value("label"),
         baptism_date: value("data") || null,
-        location: value("local") || null,
+        location: baptismLocal.name,
+        room_id: baptismLocal.roomId,
         pastor: value("pastor") || null,
         status: "aberta",
         open_enrollment: true,
@@ -9330,16 +9324,16 @@ function ServiceModal({
         return;
       }
       const ministry = namedMinistry("time");
-      const rehearsalRoom = namedRoom("local");
-      if (!rehearsalRoom) { setSaving(false); setError("Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
+      const rehearsalLocal = resolveLocalField(value("local"), value("endereco"), rooms);
+      if (!rehearsalLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
       result = await supabase.schema("service").from("rehearsals").insert({
         organization_id: church.organizationId,
         church_id: church.id,
         title: value("titulo"),
         rehearsal_date: value("data") || null,
         time: value("hora") || null,
-        location: rehearsalRoom.name,
-        room_id: rehearsalRoom.id,
+        location: rehearsalLocal.name,
+        room_id: rehearsalLocal.roomId,
         ministry_id: ministry?.id ?? null,
         kind: value("tipo") || "louvor",
         recurrence: value("recorrencia") || "eventual",
@@ -9408,8 +9402,8 @@ function ServiceModal({
         : await supabase.schema("service").from("kids_classes").insert(payload);
     } else if (action.kind === "kidsEvent") {
       if (!value("titulo")) { setSaving(false); setError("Digite o título do evento."); return; }
-      const kidsEventRoom = namedRoom("local");
-      if (!kidsEventRoom) { setSaving(false); setError("Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
+      const kidsEventLocal = resolveLocalField(value("local"), value("endereco"), rooms);
+      if (!kidsEventLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
       result = await supabase.schema("service").from("kids_events").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -9417,8 +9411,8 @@ function ServiceModal({
         description: value("desc") || null,
         event_date: value("data") || null,
         time: value("hora") || null,
-        location: kidsEventRoom.name,
-        room_id: kidsEventRoom.id,
+        location: kidsEventLocal.name,
+        room_id: kidsEventLocal.roomId,
         capacity: value("capacidade") ? Number.parseInt(value("capacidade"), 10) : null,
         open_enrollment: true,
       });
@@ -9526,7 +9520,7 @@ function ServiceModal({
         </div>
         <div className="modal-body" style={{ display: "block" }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0 16px" }}>
-            {modal.formFields.map((field) => (
+            {modal.formFields.filter((field) => !field.showIf || values[field.showIf.field] === field.showIf.equals).map((field) => (
               <div
                 className="field"
                 key={field.k}

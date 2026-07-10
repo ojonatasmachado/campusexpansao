@@ -609,6 +609,7 @@ type ChildGuardianView = {
   guardian_person_id: string;
   relationship: string | null;
   can_pickup: boolean;
+  is_primary: boolean;
 };
 
 type KidsSessionView = {
@@ -1129,7 +1130,7 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("reservations").select("id,room_id,title,kind,reserved_date,start_time,end_time,source_type,source_id").order("created_at", { ascending: false }),
     supabase.schema("service").from("kids_classes").select("id,church_id,name,min_age_months,max_age_months,room_id,capacity,accent").order("name"),
     supabase.schema("service").from("children").select("id,church_id,class_id,name,birth,photo_url,allergies,notes,gender,emergency_contact_name,emergency_contact_phone,image_authorized,dietary_restrictions,health_insurance,medication").order("name"),
-    supabase.schema("service").from("child_guardians").select("id,child_id,guardian_person_id,relationship,can_pickup"),
+    supabase.schema("service").from("child_guardians").select("id,child_id,guardian_person_id,relationship,can_pickup,is_primary"),
     supabase.schema("service").from("kids_sessions").select("id,event_id,class_id,checkin_token,checkin_active"),
     supabase.schema("service").from("kids_attendance").select("id,session_id,child_id,status,dropped_off_by,dropped_off_at,dropped_off_via,pickup_requested_by,pickup_requested_at,picked_up_by,picked_up_confirmed_by,picked_up_at,picked_up_via,notes").order("dropped_off_at", { ascending: false }),
     supabase.schema("service").from("kids_events").select("id,church_id,title,description,event_date,time,location,room_id,capacity,open_enrollment").order("created_at", { ascending: false }),
