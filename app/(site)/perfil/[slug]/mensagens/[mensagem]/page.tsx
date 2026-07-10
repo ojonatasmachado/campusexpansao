@@ -4,6 +4,7 @@ import Nav from "../../../../../components/Nav";
 import Footer from "../../../../../components/Footer";
 import { compraDoUsuarioPorMaterialId } from "../../../../../lib/compras";
 import { createClient } from "../../../../../lib/supabase-server";
+import { StudioDocFrame } from "./StudioDocFrame";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -57,10 +58,12 @@ export default async function MensagemEditorPage({
             ))}
           </aside>
 
-          <iframe
+          <StudioDocFrame
             className={styles.studioFrame}
             src={`/studio/documentos?material=${encodeURIComponent(compra.material.id)}&mensagem=${encodeURIComponent(mensagemAtual.id)}&context=comprador`}
             title={`CE.X Studio Documentos · ${mensagemAtual.titulo}`}
+            titulo={mensagemAtual.titulo}
+            draftKey={`cex_studio_doc_v2::${compra.material.id}::${mensagemAtual.id}`}
           />
         </section>
       </main>

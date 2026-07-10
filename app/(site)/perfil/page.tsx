@@ -37,7 +37,7 @@ export default async function PerfilPage() {
           </div>
           <div className={styles.summary} aria-label="Resumo das compras">
             <span className={styles.summaryNumber}>{compras.length}</span>
-            <span className={styles.summaryLabel}>itens liberados</span>
+            <span className={styles.summaryLabel}>{compras.length === 1 ? "item liberado" : "itens liberados"}</span>
           </div>
         </section>
 

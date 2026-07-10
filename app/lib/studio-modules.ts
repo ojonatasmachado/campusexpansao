@@ -72,6 +72,7 @@ export async function serveStudioModule(module: StudioModule, options: ServeStud
   const allowTemplateManagement = options.allowTemplateManagement ?? true;
   const loadTemplates = options.loadTemplates ?? true;
   const material = options.request?.nextUrl.searchParams.get("material")?.trim() ?? "";
+  const mensagem = options.request?.nextUrl.searchParams.get("mensagem")?.trim() ?? "";
   const context = options.request?.nextUrl.searchParams.get("context")?.trim() ?? "";
   const draftTtlDays = studioDraftTtlDays();
   const session = allowTemplateManagement ? await checkAuth().catch(() => null) : null;
@@ -91,6 +92,7 @@ export async function serveStudioModule(module: StudioModule, options: ServeStud
   const boot = {
     module,
     material,
+    mensagem,
     context,
     draftTtlDays,
     userDraft,
