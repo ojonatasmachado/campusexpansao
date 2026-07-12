@@ -144,7 +144,6 @@ export default async function Home() {
           <p className="cta-desc">Escolha o material certo para o seu momento e comece a aplicar esta semana.</p>
           <div className="cta-actions">
             <Link href="/materiais" className="btn btn-ink btn-lg btn-arrow">Ver materiais</Link>
-            <a href="#" className="btn btn-lg" style={{ background: "transparent", color: "var(--accent-ink, #0E110D)", borderColor: "rgba(14,17,13,0.3)" }}>Falar conosco</a>
           </div>
         </div>
       </div>

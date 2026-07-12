@@ -2,31 +2,37 @@ import { notFound } from "next/navigation";
 import Nav from "../../../components/Nav";
 import Footer from "../../../components/Footer";
 import CursoLanding from "../../../components/CursoLanding";
-import { CURSOS_DATA } from "../../../lib/cursos-data";
+import { dbCursoToCursoDado } from "../../../lib/cursos-data";
+import { supabase } from "../../../lib/supabase";
 import "../landing.css";
 
-export function generateStaticParams() {
-  return CURSOS_DATA.map(c => ({ slug: c.slug }));
-}
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const curso = CURSOS_DATA.find(c => c.slug === slug);
-  if (!curso) return {};
-  return { title: `${curso.title} · CE.X`, description: curso.promessa };
+  const { data } = await supabase.from("cursos").select("title,promessa").eq("slug", slug).single();
+  if (!data) return {};
+  return { title: `${data.title} · CE.X`, description: data.promessa };
 }
 
 export default async function CursoDetalhe({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const curso = CURSOS_DATA.find(c => c.slug === slug);
-  if (!curso) notFound();
 
-  const relacionados = CURSOS_DATA.filter(c => c.nivel === curso.nivel && c.slug !== curso.slug);
+  const [{ data: cursoDb }, { data: cursosDb }] = await Promise.all([
+    supabase.from("cursos").select("*").eq("slug", slug).eq("status", "Publicado").single(),
+    supabase.from("cursos").select("*").eq("status", "Publicado").order("num"),
+  ]);
+
+  if (!cursoDb) notFound();
+
+  const allCursos = (cursosDb ?? []).map(dbCursoToCursoDado);
+  const curso = dbCursoToCursoDado(cursoDb);
+  const relacionados = allCursos.filter(c => c.nivel === curso.nivel && c.slug !== curso.slug);
 
   return (
     <div className="pg">
       <Nav />
-      <CursoLanding curso={curso} relacionados={relacionados} />
+      <CursoLanding curso={curso} relacionados={relacionados} allCursos={allCursos} />
       <Footer />
     </div>
   );

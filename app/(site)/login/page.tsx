@@ -151,6 +151,33 @@ function LoginForm() {
     }
   }
 
+  async function handleForgotPassword() {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !normalizedEmail.includes("@")) {
+      setError("Digite o e-mail cadastrado para redefinir a senha.");
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    const callbackUrl = new URL("/auth/callback", window.location.origin);
+    callbackUrl.searchParams.set("redirect", "/redefinir-senha");
+    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+      redirectTo: callbackUrl.toString(),
+    });
+
+    setLoading(false);
+
+    if (error) {
+      setError(authErrorMessage(error.message));
+      return;
+    }
+
+    setSuccess("Te mandamos um e-mail com o link pra escolher uma senha nova. Confira sua caixa de entrada e também o spam.");
+  }
+
   async function resendConfirmation() {
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail || !normalizedEmail.includes("@")) {
@@ -355,21 +382,41 @@ function LoginForm() {
             >
               {loading ? "Aguarde..." : step === "login" ? "Entrar" : "Criar conta"}
             </button>
-            <button
-              type="button"
-              onClick={() => changeEmail("")}
-              style={{
-                background: "transparent",
-                border: "none",
-                color: "var(--muted)",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                fontSize: 13,
-                padding: 0,
-              }}
-            >
-              Usar outro e-mail
-            </button>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => changeEmail("")}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--muted)",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  fontSize: 13,
+                  padding: 0,
+                }}
+              >
+                Usar outro e-mail
+              </button>
+              {step === "login" && (
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={loading}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "var(--olive)",
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    fontSize: 13,
+                    padding: 0,
+                  }}
+                >
+                  Esqueci minha senha
+                </button>
+              )}
+            </div>
           </form>
         )}
       </div>

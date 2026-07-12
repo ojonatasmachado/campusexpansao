@@ -2,23 +2,12 @@
 import React from "react";
 import Link from "next/link";
 import { ACCENTS } from "../lib/accents";
-import { NIVEIS, CURSOS_DATA } from "../lib/cursos-data";
+import { NIVEIS, CURSOS_DATA, dbCursoToCursoDado } from "../lib/cursos-data";
 import type { CursoDado } from "../lib/cursos-data";
 import type { DbCurso, DbMentoria } from "../lib/types";
 
 export type { CursoDado };
-export { NIVEIS, CURSOS_DATA };
-
-function dbCursoToCursoDado(c: DbCurso): CursoDado {
-  return {
-    num: c.num, slug: c.slug, nivel: c.nivel as CursoDado['nivel'],
-    title: c.title, desc: c.desc_text, dur: c.dur,
-    promessa: '', praQuem: '', ementa: [], formato: '',
-    mentor: c.mentor, mentorBio: '',
-    depoimento: { texto: '', autor: '', cargo: '' },
-    turma: c.turma,
-  }
-}
+export { NIVEIS, CURSOS_DATA, dbCursoToCursoDado };
 
 // ─── CARD ─────────────────────────────────────────────────────────────────────
 export function CursoCard({ curso }: { curso: CursoDado }) {

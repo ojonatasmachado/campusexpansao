@@ -6,10 +6,6 @@ export default function Footer({ minimal = false }: { minimal?: boolean }) {
         <div className="pg-wrap">
           <div className="footer-bottom" style={{ borderTop: "none", paddingTop: 0 }}>
             <div className="footer-copy">© 2026 Campus Expansão · campusexpansao.com</div>
-            <div className="footer-social">
-              <a href="#">Instagram</a>
-              <a href="#">YouTube</a>
-            </div>
           </div>
         </div>
       </footer>
@@ -34,8 +30,6 @@ export default function Footer({ minimal = false }: { minimal?: boolean }) {
             <ul className="footer-links">
               <li><a href="/materiais" className="footer-link">Materiais</a></li>
               <li><a href="/cursos" className="footer-link">Cursos</a></li>
-              <li><a href="#" className="footer-link">Blog</a></li>
-              <li><a href="#" className="footer-link">Eventos</a></li>
             </ul>
           </div>
           <div>
@@ -43,24 +37,17 @@ export default function Footer({ minimal = false }: { minimal?: boolean }) {
             <ul className="footer-links">
               <li><a href="/sobre" className="footer-link">Sobre</a></li>
               <li><a href="/sobre" className="footer-link">Missão</a></li>
-              <li><a href="#" className="footer-link">Contato</a></li>
             </ul>
           </div>
           <div>
             <div className="footer-col-title">Comece</div>
             <ul className="footer-links">
               <li><a href="/landing" className="footer-link">Baixar manual</a></li>
-              <li><a href="#" className="footer-link">Próximo retiro</a></li>
             </ul>
           </div>
         </div>
         <div className="footer-bottom">
           <div className="footer-copy">© 2026 Campus Expansão · campusexpansao.com</div>
-          <div className="footer-social">
-            <a href="#">Instagram</a>
-            <a href="#">YouTube</a>
-            <a href="#">Spotify</a>
-          </div>
         </div>
       </div>
     </footer>

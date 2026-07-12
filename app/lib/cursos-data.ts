@@ -1,4 +1,5 @@
 import type { AccentKey } from "./accents";
+import type { DbCurso } from "./types";
 
 export type NivelKey = "fundacao" | "lideranca" | "multiplicacao";
 
@@ -27,6 +28,17 @@ export interface CursoDado {
   mentorBio: string;
   depoimento: { texto: string; autor: string; cargo: string };
   turma: string;
+}
+
+export function dbCursoToCursoDado(c: DbCurso): CursoDado {
+  return {
+    num: c.num, slug: c.slug, nivel: c.nivel as CursoDado['nivel'],
+    title: c.title, desc: c.desc_text, dur: c.dur,
+    promessa: c.promessa, praQuem: c.pra_quem, ementa: c.ementa, formato: c.formato,
+    mentor: c.mentor, mentorBio: c.mentor_bio,
+    depoimento: c.depoimento,
+    turma: c.turma,
+  }
 }
 
 export const CURSOS_DATA: CursoDado[] = [

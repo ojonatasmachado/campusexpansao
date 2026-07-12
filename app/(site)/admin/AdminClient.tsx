@@ -574,111 +574,6 @@ function CatalogCardPreview({ item }: { item: Item }) {
   return <EventoCardPv item={item as Evento} />
 }
 
-function DetailPreview({ item }: { item: Item }) {
-  const isMaterial = item.type === 'material'
-  const isCurso = item.type === 'curso'
-  const isMentoria = item.type === 'mentoria'
-  const isEvento = item.type === 'evento'
-  const m = item as Material
-  const c = item as Curso
-  const men = item as Mentoria
-  const ev = item as Evento
-  const meta = [m.messages ? `${m.messages} mensagens` : null, m.pages ? `${m.pages} páginas` : null, (m.formats ?? []).join(' · ') || 'PDF'].filter(Boolean).join(' · ')
-
-  return (
-    <div className="pv-detail">
-      <div className="pv-detail-nav">
-        <span className="pv-detail-logo">CE<span className="pv-ol">.X</span></span>
-        <span className="pv-detail-navlinks">Início · Materiais · Cursos · Sobre</span>
-      </div>
-      {isMaterial ? <ModelArt item={m} height={180} /> : <CardMedia item={item} height={180} big labelOverride={c.level ?? item.type} />}
-      <div className="pv-detail-body">
-        <div className="pv-detail-eyebrow" style={{ color: item.accent }}>
-          {isCurso ? `◆ ${c.level} · ETAPA ${String(c.etapa).padStart(2, '0')} DE ${c.totalEtapas}` :
-           isMentoria ? '◇ MENTORIA ACOMPANHADA' :
-           isEvento ? `◆ ${ev.data}` : `◆ ${m.shelf}`}
-          {isCurso && <span className="pv-ccard-live" style={{ background: item.accent, marginLeft: 10 }}>● AO VIVO</span>}
-        </div>
-        <h1 className="pv-detail-title">{item.title}</h1>
-        <p className="pv-detail-promise">{item.desc}</p>
-
-        {isMaterial && <>
-          {m.paraQuem && <><div className="pv-detail-sec">◆ Pra quem é</div><p className="pv-detail-promise" style={{ fontSize: 13 }}>{m.paraQuem}</p></>}
-          <div className="pv-detail-sec">◆ O que vem dentro</div>
-          {(m.contents ?? []).length > 0 ? (
-            <ul className="pv-detail-list">
-              {(m.contents ?? []).map((content, i) => (
-                <li key={i}>
-                  <strong style={{ color: 'var(--cream)' }}>{content.name || 'Conteúdo sem nome'}</strong>
-                  {content.note ? <span style={{ color: 'var(--muted)' }}> · {content.note}</span> : null}
-                  <span className="pv-content-meta">{materialContentMeta(content)}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <ul className="pv-detail-list"><li>{meta}</li>{(m.beneficios ?? []).filter(Boolean).map((b, i) => <li key={i}>{b}</li>)}</ul>
-          )}
-          {(m.messageList ?? []).some(x => x?.nome) && <>
-            <div className="pv-detail-sec">◆ {m.messages === 1 ? 'A mensagem' : `As ${m.messages} mensagens`}</div>
-            <ul className="pv-detail-list">{m.messageList.filter(x => x?.nome).map((x, i) => (
-              <li key={i}><span style={{ color: item.accent, fontFamily: 'var(--mono)', marginRight: 8 }}>{String(i + 1).padStart(2, '0')}</span>
-                <strong style={{ color: 'var(--cream)' }}>{x.nome}</strong>
-                {x.desc ? <span style={{ color: 'var(--muted)' }}> · {x.desc}</span> : null}
-              </li>
-            ))}</ul>
-          </>}
-          <div className="pv-detail-buybar">
-            <span className="pv-detail-price">R$ {m.price}</span>
-            <span className="pv-detail-buy">COMPRAR →</span>
-          </div>
-          <div className="pv-detail-hot">Checkout: <code>{m.hotmart}</code></div>
-          {m.id && (
-            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <code style={{ fontSize: 11, color: 'var(--muted)', background: 'var(--graphite)', padding: '4px 8px', borderRadius: 4, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                campusexpansao.com/materiais/{m.id}
-              </code>
-              <button
-                onClick={() => { navigator.clipboard.writeText(`https://campusexpansao.com/materiais/${m.id}`) }}
-                style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink)', background: 'var(--wheat)', border: 'none', borderRadius: 4, padding: '4px 10px', cursor: 'pointer', whiteSpace: 'nowrap' }}
-              >
-                Copiar
-              </button>
-            </div>
-          )}
-        </>}
-
-        {isCurso && <>
-          {c.paraQuem && <><div className="pv-detail-sec">◆ Pra quem é</div><p className="pv-detail-promise" style={{ fontSize: 13 }}>{c.paraQuem}</p></>}
-          <div className="pv-detail-sec">◆ Ementa por semana</div>
-          <ul className="pv-detail-list">{c.ementa.map((e, i) => <li key={i}><span style={{ color: item.accent, fontFamily: 'var(--mono)', marginRight: 8 }}>S{i + 1}</span>{e.titulo}</li>)}</ul>
-          <div className="pv-detail-buybar">
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)' }}>{c.proximaTurma}</span>
-            <span className="pv-detail-buy" style={{ background: item.accent }}>Entrar na lista de espera →</span>
-          </div>
-        </>}
-
-        {isMentoria && <>
-          <div className="pv-detail-sec">◆ Como funciona</div>
-          <ul className="pv-detail-list"><li>{men.formato}</li><li>{men.cadencia}</li><li>Conduzida por {men.mentor}</li></ul>
-          <div className="pv-detail-buybar">
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)' }}>Vagas limitadas</span>
-            <span className="pv-detail-buy" style={{ background: item.accent }}>Quero ser mentorado →</span>
-          </div>
-        </>}
-
-        {isEvento && <>
-          <div className="pv-detail-sec">◆ O evento</div>
-          <ul className="pv-detail-list"><li>{ev.data}</li><li>{ev.local}</li><li>{ev.vagas} vagas · {ev.inscritos} inscritos</li></ul>
-          <div className="pv-detail-buybar">
-            <span className="pv-detail-price" style={{ fontSize: 18 }}>Inscrições abertas</span>
-            <span className="pv-detail-buy">Garantir vaga →</span>
-          </div>
-        </>}
-      </div>
-    </div>
-  )
-}
-
 // ── PRÉVIA PÁGINA (iframe) ────────────────────────────────────────────────────
 
 function PagePreview({ item }: { item: Item }) {
@@ -2601,7 +2496,7 @@ function ArtesModal({ item, initialTab, initialPreset, onClose }: { item: Item; 
               {item.title}
             </div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: '.5px solid var(--border-2)', borderRadius: 8, color: 'var(--muted)', fontSize: 18, cursor: 'pointer', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: '.5px solid var(--border-2)', borderRadius: 8, color: 'var(--muted)', cursor: 'pointer', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CloseIcon size={16} /></button>
         </div>
 
         {/* Tabs */}
@@ -2829,11 +2724,21 @@ function ListField({ value, onChange, placeholder }: { value: string[]; onChange
         <div className="ementa-row" key={i}>
           <span className="ementa-num">→</span>
           <input className="inp" value={e} onChange={(ev) => set(i, ev.target.value)} placeholder={placeholder} />
-          <button className="ementa-del" onClick={() => del(i)}>✕</button>
+          <button className="ementa-del" onClick={() => del(i)}><CloseIcon size={12} /></button>
         </div>
       ))}
       <button className="btn-ghost-add" onClick={add}>+ Adicionar item</button>
     </div>
+  )
+}
+
+function CloseIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true"
+      fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+      <path d="M5 5l14 14" />
+      <path d="M19 5L5 19" />
+    </svg>
   )
 }
 
@@ -3450,7 +3355,7 @@ function FaqField({ value, onChange }: { value: { q: string; a: string }[]; onCh
         <div key={i} style={{ border: '1px solid var(--border-2)', borderRadius: 'var(--r-sm)', padding: '12px 14px', background: 'var(--ink)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)', letterSpacing: '.08em' }}>PERGUNTA {i + 1}</span>
-            <button className="ementa-del" onClick={() => del(i)}>✕</button>
+            <button className="ementa-del" onClick={() => del(i)}><CloseIcon size={12} /></button>
           </div>
           <input className="inp" value={f.q} onChange={e => set(i, { q: e.target.value })} placeholder="Pergunta..." style={{ marginBottom: 8 }} />
           <textarea className="inp ta" value={f.a} onChange={e => set(i, { a: e.target.value })} placeholder="Resposta..." />
@@ -3474,7 +3379,7 @@ function EmentaField({ value, onChange }: { value: { titulo: string; desc: strin
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
             <span className="ementa-num">S{i + 1}</span>
             <input className="inp" style={{ flex: 1 }} value={e.titulo} onChange={(ev) => set(i, { titulo: ev.target.value })} placeholder={`Título da semana ${i + 1}`} />
-            <button className="ementa-del" onClick={() => del(i)}>✕</button>
+            <button className="ementa-del" onClick={() => del(i)}><CloseIcon size={12} /></button>
           </div>
           <input className="inp" value={e.desc} onChange={(ev) => set(i, { desc: ev.target.value })} placeholder="Descrição breve (o que o aluno aprende e leva)" />
         </div>

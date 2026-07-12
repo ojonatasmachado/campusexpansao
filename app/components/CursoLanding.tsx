@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { ACCENTS } from "../lib/accents";
 import type { AccentKey } from "../lib/accents";
-import { CURSOS_DATA, CURSOS_EM_ORDEM, NIVEIS } from "../lib/cursos-data";
+import { NIVEIS } from "../lib/cursos-data";
 import type { CursoDado } from "../lib/cursos-data";
 import { trackMetricEvent } from "../lib/metrics-client";
 
@@ -106,15 +106,18 @@ function RelatedCourseCard({ curso, accent }: { curso: CursoDado; accent: string
 export default function CursoLanding({
   curso,
   relacionados,
+  allCursos,
 }: {
   curso: CursoDado;
   relacionados: CursoDado[];
+  allCursos: CursoDado[];
 }) {
   const nivel = NIVEIS.find(n => n.key === curso.nivel) ?? NIVEIS[0];
   const accentKey: AccentKey = nivel.accent;
   const accent = ACCENTS[accentKey];
   const ac = accent.base;
-  const recomendados = similarCourses(curso, CURSOS_DATA, relacionados.map((item) => item.slug));
+  const recomendados = similarCourses(curso, allCursos, relacionados.map((item) => item.slug));
+  const cursosEmOrdem = [...allCursos].sort((a, b) => Number(a.num) - Number(b.num));
 
   return (
     <>
@@ -142,7 +145,7 @@ export default function CursoLanding({
               <span style={{
                 fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.08em",
                 color: "var(--muted)",
-              }}>ETAPA {curso.num.padStart(2, "0")} de 06 · {curso.dur}</span>
+              }}>ETAPA {curso.num.padStart(2, "0")} de {String(allCursos.length).padStart(2, "0")} · {curso.dur}</span>
             </div>
 
             <h1 style={{
@@ -251,14 +254,14 @@ export default function CursoLanding({
             }}>
               Etapa{" "}
               <em style={{ fontStyle: "normal", color: ac }}>{curso.num.padStart(2, "0")}</em>{" "}
-              de 06
+              de {String(allCursos.length).padStart(2, "0")}
             </h2>
             <p style={{ fontSize: 17, lineHeight: 1.6, color: "var(--light)" }}>
               Cada curso da trilha é uma etapa da jornada. Você entra onde está e avança no seu ritmo.
             </p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {CURSOS_EM_ORDEM.map((c) => {
+            {cursosEmOrdem.map((c) => {
               const isAtual = c.slug === curso.slug;
               const nivelItem = NIVEIS.find(n => n.key === c.nivel) ?? NIVEIS[0];
               const acItem = ACCENTS[nivelItem.accent].base;
