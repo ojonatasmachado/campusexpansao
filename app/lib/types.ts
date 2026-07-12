@@ -54,6 +54,7 @@ export type DbMaterialContent = {
   delivery?: "word" | "pdf" | null
   file?: string | null
   roteiro?: string | null
+  payload?: Record<string, unknown> | null
 }
 
 export type DbMaterialTranslation = {

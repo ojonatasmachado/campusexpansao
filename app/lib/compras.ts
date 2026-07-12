@@ -169,7 +169,7 @@ async function compraComMaterialDb(
     accent,
     materialVisual: materialComVisualDoCatalogo(material, materialPool),
     mensagens: mensagensDaCompra(material, contentsParaComprador),
-    recursos: recursosDaCompra(material),
+    recursos: recursosDaCompra(material, contentsParaComprador),
   };
 }
 

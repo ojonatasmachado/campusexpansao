@@ -3,6 +3,7 @@ import Nav from "../../../../../components/Nav";
 import Footer from "../../../../../components/Footer";
 import { compraDoUsuarioPorMaterialId } from "../../../../../lib/compras";
 import { createClient } from "../../../../../lib/supabase-server";
+import { StudioVisualFrame } from "./StudioVisualFrame";
 
 const TIPOS = ["artes", "slides"] as const;
 type TipoEditor = (typeof TIPOS)[number];
@@ -28,13 +29,17 @@ export default async function PerfilEditorVisualPage({
   if (!compra || !isTipoEditor(tipo)) notFound();
 
   const module = tipo === "slides" ? "slides" : "design";
+  const recurso = compra.recursos.find((item) => item.tipo === (tipo === "slides" ? "slides" : "social"));
+  const seedKey = tipo === "slides" ? "cex_studio_slides_seed" : "cex_studio_art_seed";
 
   return (
     <div className="pg">
       <Nav />
-      <iframe
+      <StudioVisualFrame
         src={`/studio/${module}?material=${encodeURIComponent(compra.material.id)}&context=comprador`}
         title={tipo === "slides" ? "CE.X Studio Slides" : "CE.X Studio Design"}
+        seedKey={seedKey}
+        payload={recurso?.payload}
         style={{
           width: "100%",
           minHeight: "calc(100vh - 96px)",

@@ -48,6 +48,7 @@ interface MaterialContent {
   delivery?: 'word' | 'pdf' | null
   file?: string | null
   roteiro?: string | null
+  payload?: Record<string, unknown> | null
 }
 
 interface Material {
@@ -2941,10 +2942,12 @@ function MaterialContentsField({
   const saveSlidesToMaterial = () => {
     const frameWindow = studioFrameRef.current?.contentWindow
     let slides = 1
+    let payload: Record<string, unknown> | null = null
     try {
       const raw = frameWindow?.localStorage.getItem('cex_studio_slides_v2') ?? window.localStorage.getItem('cex_studio_slides_v2')
       const state = raw ? JSON.parse(raw) as { pages?: unknown[] } : null
       slides = Math.max(1, Array.isArray(state?.pages) ? state.pages.length : 1)
+      payload = state && Array.isArray(state.pages) && state.pages.length ? (state as Record<string, unknown>) : null
     } catch {
       slides = 1
     }
@@ -2953,6 +2956,7 @@ function MaterialContentsField({
       name: studioDraft.name.trim() || 'Apresentação',
       note: studioDraft.note.trim(),
       slides,
+      payload,
     }
     onChange([...contents, nextContent])
     setActive(contents.length)
@@ -2962,11 +2966,13 @@ function MaterialContentsField({
     const frameWindow = studioFrameRef.current?.contentWindow
     let designs = 1
     let designFormat: MaterialContent['designFormat'] = 'carousel'
+    let payload: Record<string, unknown> | null = null
     try {
       const raw = frameWindow?.localStorage.getItem('cex_studio_art_v2') ?? window.localStorage.getItem('cex_studio_art_v2')
       const state = raw ? JSON.parse(raw) as { pages?: unknown[]; format?: MaterialContent['designFormat'] } : null
       designs = Math.max(1, Array.isArray(state?.pages) ? state.pages.length : 1)
       designFormat = state?.format === 'stories' || state?.format === 'telao' ? state.format : 'carousel'
+      payload = state && Array.isArray(state.pages) && state.pages.length ? (state as Record<string, unknown>) : null
     } catch {
       designs = 1
       designFormat = 'carousel'
@@ -2977,6 +2983,7 @@ function MaterialContentsField({
       note: studioDraft.note.trim(),
       designs,
       designFormat,
+      payload,
     }
     onChange([...contents, nextContent])
     setActive(contents.length)

@@ -31,6 +31,7 @@ export type RecursoCompra = {
   desc: string;
   tipo: "social" | "slides";
   status: CompraStatus;
+  payload?: Record<string, unknown> | null;
 };
 
 export type CompraComMaterial = Compra & {
@@ -105,9 +106,11 @@ export function mensagensDaCompra(material: Material, dbContents: DbMaterialCont
   });
 }
 
-export function recursosDaCompra(material: Material): RecursoCompra[] {
+export function recursosDaCompra(material: Material, dbContents: DbMaterialContent[] = []): RecursoCompra[] {
   const slidesLiberados = hasFormato(material, "Slides");
   const designLiberado = hasFormato(material, "Design");
+  const designContent = dbContents.find((item) => item.kind === "design" && item.payload);
+  const pptContent = dbContents.find((item) => item.kind === "ppt" && item.payload);
 
   return [
     {
@@ -119,6 +122,7 @@ export function recursosDaCompra(material: Material): RecursoCompra[] {
         : "Escolha um modelo ou crie uma arte do zero para divulgar este material na igreja e nas redes.",
       tipo: "social",
       status: "Liberado",
+      payload: designContent?.payload ?? null,
     },
     {
       id: "apresentacao-slides",
@@ -127,6 +131,7 @@ export function recursosDaCompra(material: Material): RecursoCompra[] {
       desc: "Base visual para projetar, ensinar e conduzir o encontro com a mesma identidade.",
       tipo: "slides",
       status: "Liberado",
+      payload: pptContent?.payload ?? null,
     },
   ];
 }

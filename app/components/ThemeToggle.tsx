@@ -20,6 +20,32 @@ function applyTheme(theme: ThemeName) {
   document.documentElement.style.colorScheme = theme;
 }
 
+function SunIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width={16} height={16} aria-hidden="true"
+      fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2" />
+      <path d="M12 20v2" />
+      <path d="m4.9 4.9 1.4 1.4" />
+      <path d="m17.7 17.7 1.4 1.4" />
+      <path d="M2 12h2" />
+      <path d="M20 12h2" />
+      <path d="m6.3 17.7-1.4 1.4" />
+      <path d="m19.1 4.9-1.4 1.4" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width={16} height={16} aria-hidden="true"
+      fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3a6.5 6.5 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+    </svg>
+  );
+}
+
 export default function ThemeToggle({ compact = false }: { compact?: boolean }) {
   const [theme, setTheme] = useState<ThemeName>("dark");
 
@@ -58,7 +84,7 @@ export default function ThemeToggle({ compact = false }: { compact?: boolean }) 
       aria-label={`Alternar para tema ${nextLabel}`}
       title={`Alternar para tema ${nextLabel}`}
     >
-      <span className="theme-toggle-icon" aria-hidden="true" />
+      <span className="theme-toggle-icon">{theme === "dark" ? <SunIcon /> : <MoonIcon />}</span>
       {!compact && <span className="theme-toggle-label">{currentLabel}</span>}
     </button>
   );
