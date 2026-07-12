@@ -2814,6 +2814,7 @@ function MaterialContentsField({
   const [deliveryOpen, setDeliveryOpen] = useState(false)
   const [savingDelivery, setSavingDelivery] = useState<'word' | 'pdf' | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
+  const [editingContentIndex, setEditingContentIndex] = useState<number | null>(null)
   const [studioDraft, setStudioDraft] = useState<{ name: string; note: string; model: StudioDocumentModel }>({
     name: '',
     note: '',
@@ -2840,19 +2841,44 @@ function MaterialContentsField({
     setAddOpen(false)
     setStudioMode('document')
     setStudioDraft({ name: '', note: '', model: 'branco' })
+    setEditingContentIndex(null)
     setStudioSetupOpen(true)
   }
   const openSlidesEditor = () => {
     setAddOpen(false)
     setStudioMode('slides')
     setStudioDraft({ name: '', note: '', model: 'branco' })
+    setEditingContentIndex(null)
     setStudioSetupOpen(true)
   }
   const openDesignEditor = () => {
     setAddOpen(false)
     setStudioMode('design')
     setStudioDraft({ name: '', note: '', model: 'branco' })
+    setEditingContentIndex(null)
     setStudioSetupOpen(true)
+  }
+  const openExistingVisualEditor = (index: number) => {
+    const item = contents[index]
+    if (!item || (item.kind !== 'design' && item.kind !== 'ppt')) return
+    const mode: StudioMode = item.kind === 'design' ? 'design' : 'slides'
+    const seedKey = mode === 'design' ? 'cex_studio_art_seed' : 'cex_studio_slides_seed'
+    const draftKey = mode === 'design' ? 'cex_studio_art_v2' : 'cex_studio_slides_v2'
+    try {
+      if (item.payload) {
+        window.localStorage.setItem(seedKey, JSON.stringify({ ...item.payload, full: true }))
+      } else {
+        window.localStorage.removeItem(seedKey)
+      }
+      window.localStorage.removeItem(draftKey)
+    } catch {
+      // O editor ainda abre; apenas sem seed caso o browser bloqueie o storage.
+    }
+    setStudioMode(mode)
+    setStudioDraft({ name: item.name, note: item.note, model: 'branco' })
+    setEditingContentIndex(index)
+    setDetailsOpen(false)
+    setStudioOpen(true)
   }
   const startStudioDocument = () => {
     if (!studioDraft.name.trim()) return
@@ -2958,8 +2984,16 @@ function MaterialContentsField({
       slides,
       payload,
     }
-    onChange([...contents, nextContent])
-    setActive(contents.length)
+    if (editingContentIndex != null && contents[editingContentIndex]?.kind === 'ppt') {
+      const next = [...contents]
+      next[editingContentIndex] = nextContent
+      onChange(next)
+      setActive(editingContentIndex)
+    } else {
+      onChange([...contents, nextContent])
+      setActive(contents.length)
+    }
+    setEditingContentIndex(null)
     setStudioOpen(false)
   }
   const saveDesignToMaterial = () => {
@@ -2985,8 +3019,16 @@ function MaterialContentsField({
       designFormat,
       payload,
     }
-    onChange([...contents, nextContent])
-    setActive(contents.length)
+    if (editingContentIndex != null && contents[editingContentIndex]?.kind === 'design') {
+      const next = [...contents]
+      next[editingContentIndex] = nextContent
+      onChange(next)
+      setActive(editingContentIndex)
+    } else {
+      onChange([...contents, nextContent])
+      setActive(contents.length)
+    }
+    setEditingContentIndex(null)
     setStudioOpen(false)
   }
   const del = (i: number) => {
@@ -3157,7 +3199,7 @@ function MaterialContentsField({
               </div>
               <div className="studio-actions">
                 <button className="studio-save" type="button" onClick={studioMode === 'slides' ? saveSlidesToMaterial : studioMode === 'design' ? saveDesignToMaterial : () => setDeliveryOpen(true)}>Salvar no material</button>
-                <button className="studio-close" type="button" onClick={() => setStudioOpen(false)}>Fechar Studio</button>
+                <button className="studio-close" type="button" onClick={() => { setStudioOpen(false); setEditingContentIndex(null) }}>Fechar Studio</button>
               </div>
             </div>
             <iframe
@@ -3256,6 +3298,11 @@ function MaterialContentsField({
               </div>
               <div className="cmodal-actions">
                 <button className="lnk-danger" type="button" onClick={() => del(active)}>Remover conteúdo</button>
+                {(activeContent.kind === 'design' || activeContent.kind === 'ppt') && (
+                  <button className="btn-ghost-add" type="button" onClick={() => openExistingVisualEditor(active)}>
+                    {activeContent.kind === 'design' ? 'Editar arte no Studio' : 'Editar apresentação no Studio'}
+                  </button>
+                )}
                 <button className="btn-pri" type="button" onClick={() => setDetailsOpen(false)}>Concluir</button>
               </div>
             </div>
