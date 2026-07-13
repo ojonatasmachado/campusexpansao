@@ -1,7 +1,8 @@
 'use client'
 import { useLayoutEffect, useState, useRef, useEffect, useTransition, useCallback, type ReactNode, type CSSProperties, type ClipboardEvent } from 'react'
 import {
-  createAdminUser,
+  createAdminInvite,
+  regenerateAdminInvite,
   deleteAdminUser,
   deleteStudioTemplate,
   loginAction,
@@ -4256,16 +4257,50 @@ function Confirm({ item, onYes, onNo }: { item: Item; onYes: () => void; onNo: (
   )
 }
 
+function InviteLinkModal({ url, onDone }: { url: string; onDone: () => void }) {
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1800)
+    } catch {
+      // clipboard indisponível: o link já está selecionável no campo abaixo.
+    }
+  }
+  return (
+    <div className="modal-bg" onClick={onDone}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-title">◆ Link de configuração pronto</div>
+        <p className="section-copy" style={{ marginBottom: 14 }}>
+          Envie esse link pro mentor por WhatsApp, e-mail ou como preferir. Ele funciona uma
+          única vez e expira em 48h. Só quem abrir o link escolhe a senha — você não vai saber
+          qual é.
+        </p>
+        <div className="fld">
+          <input className="inp" value={url} readOnly onFocus={(e) => e.target.select()} />
+        </div>
+        <div className="modal-acts">
+          <button className="btn-pri" onClick={copy}>{copied ? 'Copiado ✓' : 'Copiar link'}</button>
+          <button className="btn-sec" onClick={onDone}>Concluído</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function AdminUsersView({
   users,
   currentAdmin,
-  onCreate,
+  onCreateInvite,
+  onRegenerateInvite,
   onUpdate,
   onDelete,
 }: {
   users: AdminUser[]
   currentAdmin: AdminSession
-  onCreate: (input: { username: string; name: string; password: string; role: 'master' | 'admin' }) => Promise<void>
+  onCreateInvite: (input: { username: string; name: string; role: 'master' | 'admin' }) => Promise<string | undefined>
+  onRegenerateInvite: (id: string) => Promise<string | undefined>
   onUpdate: (input: { id: string; name: string; role: 'master' | 'admin'; active: boolean; password?: string }) => Promise<void>
   onDelete: (id: string) => Promise<void>
 }) {
@@ -4273,6 +4308,7 @@ function AdminUsersView({
   const [form, setForm] = useState({ username: '', name: '', password: '', role: 'admin' as 'master' | 'admin', active: true })
   const [isSaving, setIsSaving] = useState(false)
   const [formError, setFormError] = useState('')
+  const [inviteLink, setInviteLink] = useState<string | null>(null)
 
   const openNew = () => {
     setForm({ username: '', name: '', password: '', role: 'admin', active: true })
@@ -4292,19 +4328,35 @@ function AdminUsersView({
     setFormError('')
     try {
       if (editing === 'new') {
-        await onCreate({ username: form.username, name: form.name, password: form.password, role: form.role })
+        const url = await onCreateInvite({ username: form.username, name: form.name, role: form.role })
+        setEditing(null)
+        if (url) setInviteLink(url)
       } else {
         await onUpdate({ id: editing.id, name: form.name, role: form.role, active: form.active, password: form.password || undefined })
+        setEditing(null)
       }
-      setEditing(null)
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'Não foi possível salvar o acesso no banco.')
       setIsSaving(false)
     }
   }
+  const regenerate = async (user: AdminUser) => {
+    setFormError('')
+    try {
+      const url = await onRegenerateInvite(user.id)
+      if (url) setInviteLink(url)
+    } catch {
+      // erro já é reportado pelo failAdminAction do chamador (adminError global).
+    }
+  }
+  const closeInviteLink = () => {
+    setInviteLink(null)
+    window.location.reload()
+  }
 
   return (
     <div className="listview">
+      {inviteLink && <InviteLinkModal url={inviteLink} onDone={closeInviteLink} />}
       {editing && (
         <div className="modal-bg" onClick={() => setEditing(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -4317,10 +4369,18 @@ function AdminUsersView({
               <label className="fld-label">Nome</label>
               <input className="inp" value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} />
             </div>
-            <div className="fld">
-              <label className="fld-label">{editing === 'new' ? 'Senha' : 'Nova senha'}</label>
-              <input className="inp" type="password" value={form.password} onChange={(e) => setForm(f => ({ ...f, password: e.target.value }))} placeholder={editing === 'new' ? 'Obrigatória' : 'Deixe em branco para manter'} />
-            </div>
+            {editing === 'new' ? (
+              <div className="fld-hint" style={{ marginBottom: 14 }}>
+                Sem senha aqui: ao salvar, você recebe um link de configuração de uso único pra
+                enviar ao mentor. Quem escolhe a senha é ele.
+              </div>
+            ) : (
+              <div className="fld">
+                <label className="fld-label">Nova senha</label>
+                <input className="inp" type="password" value={form.password} onChange={(e) => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Deixe em branco para manter" />
+                <div className="fld-hint">Prefere não digitar a senha dele? Feche e use &ldquo;Gerar link&rdquo; na lista.</div>
+              </div>
+            )}
             <div className="ed-2col">
               <Field label="Poderes">
                 <select className="inp" value={form.role} onChange={(e) => setForm(f => ({ ...f, role: e.target.value as 'master' | 'admin' }))}>
@@ -4337,8 +4397,8 @@ function AdminUsersView({
             </div>
             <div className="modal-acts">
               {formError && <div className="ed-save-error" role="alert">{formError}</div>}
-              <button className="btn-pri" onClick={save} disabled={isSaving || (editing === 'new' && (!form.username.trim() || !form.password.trim()))} style={{ opacity: isSaving || (editing === 'new' && (!form.username.trim() || !form.password.trim())) ? .45 : 1 }}>
-                {isSaving ? 'Salvando...' : 'Salvar acesso'}
+              <button className="btn-pri" onClick={save} disabled={isSaving || (editing === 'new' && !form.username.trim())} style={{ opacity: isSaving || (editing === 'new' && !form.username.trim()) ? .45 : 1 }}>
+                {isSaving ? 'Salvando...' : editing === 'new' ? 'Criar e gerar link' : 'Salvar acesso'}
               </button>
               <button className="btn-sec" onClick={() => setEditing(null)} disabled={isSaving} style={{ opacity: isSaving ? 0.55 : 1 }}>Cancelar</button>
             </div>
@@ -4358,8 +4418,10 @@ function AdminUsersView({
               <div className="row-title">{user.name || user.username}</div>
               <div className="row-cat">{user.username} · {user.role === 'master' ? 'Master' : 'Admin de produtos'}</div>
             </div>
+            {!user.hasPassword && <span className="pill draft">Aguardando configuração</span>}
             <span className={`pill ${user.active ? 'pub' : 'draft'}`}>{user.active ? 'Ativo' : 'Bloqueado'}</span>
             <div className="row-acts">
+              <button className="row-btn" onClick={() => regenerate(user)}>{user.hasPassword ? 'Gerar link' : 'Reenviar link'}</button>
               <button className="row-btn" onClick={() => openEdit(user)}>Editar</button>
               <button className="row-btn danger" disabled={user.id === currentAdmin.id} onClick={() => { void onDelete(user.id).catch(() => undefined) }}>Excluir</button>
             </div>
@@ -4809,13 +4871,23 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
     })
   }
 
-  const createUser = async (input: { username: string; name: string; password: string; role: 'master' | 'admin' }) => {
+  const createInvite = async (input: { username: string; name: string; role: 'master' | 'admin' }) => {
     setAdminError('')
     try {
-      await createAdminUser(input)
-      window.location.reload()
+      const { setupUrl } = await createAdminInvite(input)
+      return setupUrl
     } catch (error) {
       throw failAdminAction(error, 'Não foi possível criar o acesso no banco.')
+    }
+  }
+
+  const regenerateInvite = async (id: string) => {
+    setAdminError('')
+    try {
+      const { setupUrl } = await regenerateAdminInvite(id)
+      return setupUrl
+    } catch (error) {
+      throw failAdminAction(error, 'Não foi possível gerar o link no banco.')
     }
   }
 
@@ -4906,7 +4978,8 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
             <AdminUsersView
               users={data.adminUsers}
               currentAdmin={admin}
-              onCreate={createUser}
+              onCreateInvite={createInvite}
+              onRegenerateInvite={regenerateInvite}
               onUpdate={updateUser}
               onDelete={removeUser}
             />

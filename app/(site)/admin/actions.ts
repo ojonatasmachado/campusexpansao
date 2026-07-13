@@ -1,5 +1,5 @@
 'use server'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { createHash, randomBytes, timingSafeEqual, pbkdf2Sync } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '../../lib/supabase'
@@ -21,6 +21,7 @@ export type AdminUser = {
   role: AdminRole
   active: boolean
   created_at?: string
+  hasPassword: boolean
 }
 export type StudioTemplate = {
   id: string
@@ -104,7 +105,7 @@ async function getAdminByUsername(username: string) {
     .eq('username', username.trim().toLowerCase())
     .maybeSingle()
   if (error) throw error
-  return data as (AdminUser & { password_salt: string; password_hash: string }) | null
+  return data as (Omit<AdminUser, 'hasPassword'> & { password_salt: string | null; password_hash: string | null }) | null
 }
 
 async function requireAdmin(): Promise<AdminSession> {
@@ -236,6 +237,7 @@ function countComprasByMaterial(
 export async function loginAction(username: string, pw: string): Promise<boolean> {
   const admin = await getAdminByUsername(username)
   if (!admin || !admin.active) return false
+  if (!admin.password_salt || !admin.password_hash) return false // conta ainda pendente de configuração (convite não usado)
   if (!verifyPassword(pw, admin.password_salt, admin.password_hash)) return false
   ;(await cookies()).set('adm', sessionToken(admin.id, admin.username, admin.password_hash), {
     httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 30,
@@ -417,30 +419,116 @@ export async function getAdminUsers() {
   await requireMaster()
   const { data, error } = await supabaseAdmin()
     .from('admin_users')
-    .select('id, username, name, role, active, created_at')
+    .select('id, username, name, role, active, created_at, password_hash')
     .order('created_at')
   if (error) throw error
-  return data as AdminUser[]
+  return (data ?? []).map((row) => {
+    const { password_hash, ...rest } = row as { password_hash: string | null } & Omit<AdminUser, 'hasPassword'>
+    return { ...rest, hasPassword: Boolean(password_hash) } as AdminUser
+  })
 }
 
-export async function createAdminUser(input: { username: string; name: string; password: string; role: AdminRole }) {
+async function siteBaseUrl() {
+  const h = await headers()
+  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'localhost:3000'
+  const proto = h.get('x-forwarded-proto') ?? (host.startsWith('localhost') ? 'http' : 'https')
+  return `${proto}://${host}`
+}
+
+function generateSetupToken() {
+  const token = randomBytes(32).toString('hex')
+  const tokenHash = createHash('sha256').update(token).digest('hex')
+  const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString()
+  return { token, tokenHash, expiresAt }
+}
+
+// Cria o acesso SEM senha e devolve um link de configuração de uso único
+// (válido por 48h). O master compartilha o link por fora; quem escolhe a
+// senha é o próprio convidado, na página /admin/convite/[token].
+export async function createAdminInvite(input: { username: string; name: string; role: AdminRole }) {
   const master = await requireMaster()
   const username = input.username.trim().toLowerCase()
-  if (!username || !input.password) throw new Error('Usuário e senha são obrigatórios.')
-  const pw = hashPassword(input.password)
+  if (!username) throw new Error('Usuário é obrigatório.')
+  const { token, tokenHash, expiresAt } = generateSetupToken()
   const { data, error } = await supabaseAdmin().from('admin_users').insert({
     username,
     name: input.name.trim() || username,
     role: input.role,
     active: true,
-    password_salt: pw.salt,
-    password_hash: pw.hash,
+    password_salt: null,
+    password_hash: null,
+    setup_token_hash: tokenHash,
+    setup_token_expires_at: expiresAt,
     created_by: master.id,
     created_by_username: master.username,
   }).select('id').single()
   if (error) throw error
   if (!data?.id) throw new Error('O acesso não foi confirmado no banco.')
   revalidatePath('/admin')
+  return { setupUrl: `${await siteBaseUrl()}/admin/convite/${token}` }
+}
+
+// Gera um novo link de configuração pra um acesso já existente (onboarding
+// que não foi concluído, ou reset de senha sem o master ficar sabendo a nova).
+export async function regenerateAdminInvite(id: string) {
+  await requireMaster()
+  const { token, tokenHash, expiresAt } = generateSetupToken()
+  const { error } = await supabaseAdmin().from('admin_users').update({
+    setup_token_hash: tokenHash,
+    setup_token_expires_at: expiresAt,
+    updated_at: new Date().toISOString(),
+  }).eq('id', id)
+  if (error) throw error
+  await confirmRowExists('admin_users', 'id', id, 'O acesso não foi confirmado no banco.')
+  revalidatePath('/admin')
+  return { setupUrl: `${await siteBaseUrl()}/admin/convite/${token}` }
+}
+
+// ── sem autenticação: usadas pela página pública /admin/convite/[token] ──────
+
+export async function getAdminInviteInfo(token: string): Promise<{ name: string; username: string } | null> {
+  if (!token) return null
+  const tokenHash = createHash('sha256').update(token).digest('hex')
+  const { data, error } = await supabaseAdmin()
+    .from('admin_users')
+    .select('name, username, setup_token_expires_at')
+    .eq('setup_token_hash', tokenHash)
+    .maybeSingle()
+  if (error || !data) return null
+  if (!data.setup_token_expires_at || new Date(data.setup_token_expires_at) < new Date()) return null
+  return { name: data.name, username: data.username }
+}
+
+export async function completeAdminSetup(token: string, password: string): Promise<boolean> {
+  if (!token || !password || password.length < 8) return false
+  const tokenHash = createHash('sha256').update(token).digest('hex')
+  const { data, error } = await supabaseAdmin()
+    .from('admin_users')
+    .select('id, username, setup_token_expires_at, active')
+    .eq('setup_token_hash', tokenHash)
+    .maybeSingle()
+  if (error || !data || !data.active) return false
+  if (!data.setup_token_expires_at || new Date(data.setup_token_expires_at) < new Date()) return false
+
+  const pw = hashPassword(password)
+  const { error: updateError } = await supabaseAdmin().from('admin_users').update({
+    password_salt: pw.salt,
+    password_hash: pw.hash,
+    setup_token_hash: null,
+    setup_token_expires_at: null,
+    updated_at: new Date().toISOString(),
+  }).eq('id', data.id)
+  if (updateError) return false
+
+  ;(await cookies()).set('adm', sessionToken(data.id, data.username, pw.hash), {
+    httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 30,
+    secure: process.env.NODE_ENV === 'production', path: '/',
+  })
+  ;(await cookies()).set('adm_uid', data.id, {
+    httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 30,
+    secure: process.env.NODE_ENV === 'production', path: '/',
+  })
+  return true
 }
 
 export async function updateAdminUser(input: { id: string; name: string; role: AdminRole; active: boolean; password?: string }) {
