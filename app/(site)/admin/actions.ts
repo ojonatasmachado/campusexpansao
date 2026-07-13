@@ -55,8 +55,13 @@ export type AdminMetrics = {
   cursoWaitlist: Record<string, number>
 }
 
-const MASTER_USERNAME = 'jonatas_machado'
-const MASTER_PASSWORD = 'limaza022216.'
+// Só usadas pra criar a PRIMEIRA conta master, se `admin_users` estiver vazia
+// (banco novo). Depois que essa conta existe, essas variáveis nunca mais são
+// lidas — a senha de verdade vive só como hash no banco. Configure em
+// .env.local (nunca commitado, ver .gitignore) e pode remover depois do
+// primeiro acesso.
+const MASTER_USERNAME = process.env.ADMIN_BOOTSTRAP_USERNAME ?? 'jonatas_machado'
+const MASTER_PASSWORD = process.env.ADMIN_BOOTSTRAP_PASSWORD
 
 const sessionToken = (id: string, username: string, hash: string) =>
   createHash('sha256').update(`${id}:${username}:${hash}`).digest('hex')
@@ -84,6 +89,9 @@ async function ensureMasterAdmin() {
     .maybeSingle()
   if (error) throw error
   if (data) return
+  if (!MASTER_PASSWORD) {
+    throw new Error('Nenhum acesso master existe ainda e ADMIN_BOOTSTRAP_PASSWORD não está configurada. Defina essa variável de ambiente (com uma senha forte) e tente entrar de novo.')
+  }
 
   const pw = hashPassword(MASTER_PASSWORD)
   const { error: insertError } = await db.from('admin_users').insert({
