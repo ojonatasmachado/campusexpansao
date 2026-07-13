@@ -8188,6 +8188,25 @@ function AddToMinistryModal({
   );
 }
 
+/* Senha inicial do app = 6 últimos dígitos do telefone (mesma regra do backend,
+   ver app/api/service/members/create-account/route.ts:derivePasswordFromPhone). */
+function derivePasswordFromPhone(phone: string | null | undefined): string {
+  const digits = (phone ?? "").replace(/\D/g, "");
+  if (digits.length >= 6) return digits.slice(-6);
+  return digits.padStart(6, "0");
+}
+
+function buildMemberAccessWhatsappUrl(member: { name: string; phone: string | null; email: string | null }, churchName: string): string | null {
+  if (!member.phone || !member.email) return null;
+  const digits = member.phone.replace(/\D/g, "");
+  if (!digits) return null;
+  const waPhone = digits.length <= 11 ? `55${digits}` : digits;
+  const password = derivePasswordFromPhone(member.phone);
+  const loginUrl = `${window.location.origin}/service/login`;
+  const msg = `Oi, ${member.name.split(" ")[0]}! Bem-vindo(a) ao app da ${churchName} no CE.X Service. 🙏\n\nAcesse por aqui: ${loginUrl}\nE-mail: ${member.email}\nSenha: ${password}\n\nVocê pode trocar a senha depois de entrar.`;
+  return `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
+}
+
 function EntityDrawer({
   drawer,
   people,
@@ -8252,6 +8271,33 @@ function EntityDrawer({
   const [editingJourney, setEditingJourney] = useState(false);
   const [editingMinistry, setEditingMinistry] = useState(false);
   const [addingPerson, setAddingPerson] = useState(false);
+  const [sendingAccess, setSendingAccess] = useState(false);
+
+  const sendMemberAccessWhatsapp = async (member: MemberView) => {
+    if (!member.phone || !member.email || sendingAccess) return;
+    setSendingAccess(true);
+    try {
+      if (!member.volunteerId && church) {
+        await fetch("/api/service/members/create-account", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            organizationId: church.organizationId,
+            churchId: church.id,
+            memberId: member.id,
+            name: member.name,
+            email: member.email,
+            phone: member.phone,
+          }),
+        }).catch(() => {});
+        router.refresh();
+      }
+      const url = buildMemberAccessWhatsappUrl(member, church?.nome ?? "sua igreja");
+      if (url) window.open(url, "_blank");
+    } finally {
+      setSendingAccess(false);
+    }
+  };
 
   if (drawer.kind === "person") {
     const person = people.find((item) => item.id === drawer.id);
@@ -8373,7 +8419,14 @@ function EntityDrawer({
               {(church?.settings?.gruposCfg?.ativo ?? true) && <><dt>{church?.settings?.gruposCfg?.termoP ?? "Grupo de Comunhão"}</dt><dd>{grupo ? <>{grupo.name}{grupoLider && <span style={{ color: "var(--subtle)" }}> · líder {grupoLider.name.split(" ")[0]}</span>}</> : <span style={{ color: "var(--subtle)" }}>sem grupo</span>}</dd></>}
               <dt>Acesso ao app</dt><dd>{member.volunteerId ? <span style={{ color: "var(--olive-soft)" }}>liberado</span> : member.email ? <span style={{ color: "var(--amber)" }}>pendente (criando acesso…)</span> : <span style={{ color: "var(--amber)" }}>pendente (falta e-mail)</span>}</dd>
             </dl>
-            <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 14 }} onClick={() => setEditingMember(true)}>Editar dados</button>
+            <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
+              <button className="btn btn-sec btn-sm" type="button" onClick={() => setEditingMember(true)}>Editar dados</button>
+              {member.phone && member.email && (
+                <button className="btn btn-sec btn-sm" type="button" disabled={sendingAccess} onClick={() => sendMemberAccessWhatsapp(member)}>
+                  {sendingAccess ? "Preparando…" : member.volunteerId ? "Reenviar acesso pelo WhatsApp" : "Enviar acesso pelo WhatsApp"}
+                </button>
+              )}
+            </div>
           </DrawerSection>
           {familiares.length > 0 && (
             <DrawerSection title={`Família · ${familiares.length}`}>
