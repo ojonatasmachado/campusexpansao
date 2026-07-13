@@ -40,6 +40,7 @@ type ChurchSettings = {
   horariosCulto?: string[];
   cursoGrupos?: { id: string; nome: string; desc?: string }[];
   contatoCfg?: ContatoCfg;
+  acessoMsgCfg?: AcessoMsgCfg;
   gruposCfg?: GruposCfg;
   brandCfg?: BrandCfg;
   [key: string]: unknown;
@@ -69,6 +70,15 @@ type ContatoCfg = { prazoHoras: number; canal: string; metaIntegracaoDias: numbe
    um produto genérico CE.X : só "Service" continua sempre visível. */
 type BrandCfg = { accentDark?: string; accentLight?: string; editorIds?: string[] };
 const BRAND_DEFAULT: Required<Pick<BrandCfg, "accentDark" | "accentLight">> = { accentDark: "#7A9E3F", accentLight: "#6E8F37" };
+
+/* mensagem que abre pronta no WhatsApp do líder quando ele manda o acesso ao
+   app pra um membro novo, guardada em service.churches.settings.acessoMsgCfg
+   (mesmo jsonb de sempre). Placeholders trocados na hora do envio, ver
+   buildMemberAccessWhatsappUrl: {nome} {igreja} {link} {email} {senha}. */
+type AcessoMsgCfg = { mensagem: string };
+const ACESSO_MSG_DEFAULT: AcessoMsgCfg = {
+  mensagem: "Parabéns, {nome}! Que alegria ter você como membro da {igreja}.\n\nSeu acesso ao app já está pronto. Para entrar, é só seguir os passos:\n1. Abra este link → {link}\n2. Use o e-mail: {email}\n3. Use a senha: {senha}\n4. Depois de entrar, você pode trocar a senha quando quiser.\n\nQualquer dúvida, é só chamar por aqui.",
+};
 
 const CONTATO_CFG_DEFAULT: ContatoCfg = {
   prazoHoras: 48,
@@ -1452,7 +1462,7 @@ export default function ServiceExactApp({
             setCheckinEventId={setCheckinEventId}
           />
         ) : null}
-        {route === "membros" ? <Membros members={members} ministries={ministries} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "membros" ? <Membros members={members} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "pessoas" ? <Pessoas people={people} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Times ministries={ministries} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} church={firstChurch} setDrawer={setDrawer} setModal={setModal} /> : null}
@@ -2040,9 +2050,12 @@ function JrnPips({ journey }: { journey: number[] }) {
   );
 }
 
-function Membros({ members, ministries, setDrawer, setModal }: { members: MemberView[]; ministries: MinistryView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
+function Membros({ members, ministries, church, setDrawer, setModal }: { members: MemberView[]; ministries: MinistryView[]; church?: ChurchView; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
+  const router = useRouter();
   const [q, setQ] = useState("");
   const [sit, setSit] = useState<"todos" | "servindo" | "novo">("todos");
+  const [msgCfgOpen, setMsgCfgOpen] = useState(false);
+  const acessoMsgCfg: AcessoMsgCfg = { ...ACESSO_MSG_DEFAULT, ...(church?.settings?.acessoMsgCfg ?? {}) };
   const novos = members.filter((m) => m.situation === "novo");
   const integrando = members.filter((m) => m.journey.filter(Boolean).length < 5);
   const servindo = members.filter((m) => !!m.journey[4]);
@@ -2056,6 +2069,14 @@ function Membros({ members, ministries, setDrawer, setModal }: { members: Member
   return (
     <div className="content wide">
       <PageHead title="Membros" eyebrow="Pessoas" subtitle="Toda a congregação. Veja quem serve, em que jornada está e o histórico desde que chegou." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Cadastro de quem já é da casa. Os dados completos liberam o acesso ao app.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Os 6 últimos dígitos viram a senha inicial do app." }, { k:"email", label:"E-mail", type:"text", half:true, req:true, ph:"usado para entrar no app" }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }], action: { kind: "member" } })}>+ Novo membro</button>} />
+      {church && (
+        <div className="contato-banner">
+          <div className="contato-pill"><span style={{ color: "var(--olive)" }}><Icon name="whatsapp" size={16} /></span></div>
+          <div className="contato-main"><div className="contato-t">Mensagem de boas-vindas pelo WhatsApp</div><div className="contato-s">O texto que abre pronto quando você envia o acesso a um membro novo. Padrão: felicitação + passo a passo de como entrar.</div></div>
+          <button className="btn btn-sec btn-sm" type="button" onClick={() => setMsgCfgOpen(true)}>Ajustar</button>
+        </div>
+      )}
+      {msgCfgOpen && church && <AcessoMsgModal church={church} cfg={acessoMsgCfg} onClose={() => setMsgCfgOpen(false)} onRefresh={() => router.refresh()} />}
       <div className="kpi-row">
         <Kpi icon="membros" label="Membros" value={members.length} foot="na congregação" />
         <Kpi icon="decisoes" label="Novos convertidos" value={novos.length} foot="em discipulado inicial" />
@@ -3109,6 +3130,47 @@ function ContatoCfgModal({ church, cfg, onClose, onRefresh }: { church: ChurchVi
             <div style={{ fontSize: 11, color: "var(--subtle)", marginTop: 6 }}>Use {"{nome}"}, {"{evento}"} e {"{igreja}"}: preenchemos automaticamente.</div>
           </div>
           <div className="field"><label className="field-label">Abordagem / postura</label><textarea className="textarea" value={abordagem} onChange={(e) => setAbordagem(e.target.value)} /></div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>Salvar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AcessoMsgModal({ church, cfg, onClose, onRefresh }: { church: ChurchView; cfg: AcessoMsgCfg; onClose: () => void; onRefresh: () => void }) {
+  const [mensagem, setMensagem] = useState(cfg.mensagem);
+  const [saving, setSaving] = useState(false);
+
+  const salvar = async () => {
+    setSaving(true);
+    const next: AcessoMsgCfg = { mensagem };
+    await createServiceBrowserClient().schema("service").from("churches").update({ settings: { ...church.settings, acessoMsgCfg: next } }).eq("id", church.id);
+    onRefresh();
+    onClose();
+  };
+
+  const restaurar = () => setMensagem(ACESSO_MSG_DEFAULT.mensagem);
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-eyebrow">Membros</div>
+          <div className="modal-title">Mensagem de boas-vindas pelo WhatsApp</div>
+          <div className="modal-sub">É o texto que abre pronto no WhatsApp quando você manda o acesso ao app pra um membro novo. Edite à vontade: o padrão é de felicitação, com o passo a passo de como entrar.</div>
+        </div>
+        <div className="modal-body" style={{ display: "block" }}>
+          <div className="field">
+            <label className="field-label">Mensagem</label>
+            <textarea className="textarea" rows={8} value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
+            <div style={{ fontSize: 11, color: "var(--subtle)", marginTop: 6 }}>
+              Use {"{nome}"}, {"{igreja}"}, {"{link}"}, {"{email}"} e {"{senha}"}: preenchemos automaticamente na hora de enviar.
+            </div>
+          </div>
+          <button className="btn btn-ghost btn-sm" type="button" onClick={restaurar}>Restaurar mensagem padrão</button>
         </div>
         <div className="modal-foot">
           <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
@@ -8196,14 +8258,33 @@ function derivePasswordFromPhone(phone: string | null | undefined): string {
   return digits.padStart(6, "0");
 }
 
-function buildMemberAccessWhatsappUrl(member: { name: string; phone: string | null; email: string | null }, churchName: string): string | null {
+function fillAcessoMsgTemplate(template: string, vars: { nome: string; igreja: string; link: string; email: string; senha: string }): string {
+  return template
+    .replaceAll("{nome}", vars.nome)
+    .replaceAll("{igreja}", vars.igreja)
+    .replaceAll("{link}", vars.link)
+    .replaceAll("{email}", vars.email)
+    .replaceAll("{senha}", vars.senha);
+}
+
+function buildMemberAccessWhatsappUrl(
+  member: { name: string; phone: string | null; email: string | null },
+  churchName: string,
+  template: string = ACESSO_MSG_DEFAULT.mensagem,
+): string | null {
   if (!member.phone || !member.email) return null;
   const digits = member.phone.replace(/\D/g, "");
   if (!digits) return null;
   const waPhone = digits.length <= 11 ? `55${digits}` : digits;
   const password = derivePasswordFromPhone(member.phone);
   const loginUrl = `${window.location.origin}/service/login`;
-  const msg = `Oi, ${member.name.split(" ")[0]}! Bem-vindo(a) ao app da ${churchName} no CE.X Service. 🙏\n\nAcesse por aqui: ${loginUrl}\nE-mail: ${member.email}\nSenha: ${password}\n\nVocê pode trocar a senha depois de entrar.`;
+  const msg = fillAcessoMsgTemplate(template, {
+    nome: member.name.split(" ")[0],
+    igreja: churchName,
+    link: loginUrl,
+    email: member.email,
+    senha: password,
+  });
   return `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
 }
 
@@ -8292,7 +8373,7 @@ function EntityDrawer({
         }).catch(() => {});
         router.refresh();
       }
-      const url = buildMemberAccessWhatsappUrl(member, church?.nome ?? "sua igreja");
+      const url = buildMemberAccessWhatsappUrl(member, church?.nome ?? "sua igreja", church?.settings?.acessoMsgCfg?.mensagem || ACESSO_MSG_DEFAULT.mensagem);
       if (url) window.open(url, "_blank");
     } finally {
       setSendingAccess(false);
@@ -8428,6 +8509,14 @@ function EntityDrawer({
                 </button>
               )}
             </div>
+            {member.phone && member.email && (
+              <div style={{ fontSize: 12, color: "var(--subtle)", marginTop: 10, lineHeight: 1.5 }}>
+                Ao clicar, se {member.name.split(" ")[0]} ainda não tiver login, o app cria o acesso dela
+                na hora (e-mail e uma senha inicial). Depois, abre o WhatsApp no seu celular já com a
+                mensagem de boas-vindas e os dados de acesso escritos, prontos pra você conferir e
+                mandar. Nada é enviado sozinho: você sempre aperta enviar por último.
+              </div>
+            )}
           </DrawerSection>
           {familiares.length > 0 && (
             <DrawerSection title={`Família · ${familiares.length}`}>
