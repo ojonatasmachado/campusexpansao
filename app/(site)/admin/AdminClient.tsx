@@ -2854,8 +2854,14 @@ function MaterialContentsField({
     setEditingContentIndex(null)
     setStudioSetupOpen(true)
   }
+  const [slidesChoiceOpen, setSlidesChoiceOpen] = useState(false)
   const openSlidesEditor = () => {
     setAddOpen(false)
+    setPptxImportError(null)
+    setSlidesChoiceOpen(true)
+  }
+  const startBlankSlides = () => {
+    setSlidesChoiceOpen(false)
     setStudioMode('slides')
     setStudioDraft({ name: '', note: '', model: 'branco' })
     setEditingContentIndex(null)
@@ -2899,6 +2905,7 @@ function MaterialContentsField({
         console.warn('Avisos da importação de PowerPoint:', data.warnings)
       }
       setAddOpen(false)
+      setSlidesChoiceOpen(false)
       setStudioMode('slides')
       setStudioDraft({ name: file.name.replace(/\.pptx$/i, ''), note: '', model: 'branco' })
       setEditingContentIndex(null)
@@ -3183,10 +3190,32 @@ function MaterialContentsField({
                   <span className="chooser-tt">Design</span>
                   <span className="chooser-sb">Crie artes específicas para o seu produto.</span>
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {slidesChoiceOpen && (
+        <div className="modal-bg" onClick={() => setSlidesChoiceOpen(false)}>
+          <div className="cmodal cmodal-wide" onClick={(e) => e.stopPropagation()}>
+            <div className="cmodal-head">
+              <div>
+                <div className="cmodal-eyebrow">◆ Apresentação</div>
+                <div className="cmodal-title">Como você quer começar?</div>
+              </div>
+              <button className="cmodal-x" type="button" onClick={() => setSlidesChoiceOpen(false)}>Fechar</button>
+            </div>
+            <div className="cmodal-body">
+              <div className="chooser chooser-content">
                 <button className="chooser-opt" type="button" onClick={openPptxImport} disabled={pptxImporting}>
                   <span className="chooser-ic" aria-hidden="true"><UploadIcon /></span>
                   <span className="chooser-tt">{pptxImporting ? 'Importando…' : 'Importar PowerPoint'}</span>
                   <span className="chooser-sb">Suba um .pptx pronto e edite os slides aqui. Texto, imagens e formas simples viram editáveis; o que não der pra migrar (gráfico, SmartArt, tabela complexa) fica marcado no slide pra você revisar.</span>
+                </button>
+                <button className="chooser-opt" type="button" onClick={startBlankSlides}>
+                  <span className="chooser-ic" aria-hidden="true"><SlidesIcon /></span>
+                  <span className="chooser-tt">Construir um modelo novo</span>
+                  <span className="chooser-sb">Comece do zero ou por um dos layouts prontos do Studio.</span>
                 </button>
               </div>
               {pptxImportError && (
