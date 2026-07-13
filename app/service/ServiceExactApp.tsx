@@ -37,6 +37,7 @@ type ChurchSettings = {
   checkinPermitirExtra?: boolean;
   statusCfg?: StatusCriterios;
   tiposEvento?: string[];
+  horariosCulto?: string[];
   cursoGrupos?: { id: string; nome: string; desc?: string }[];
   contatoCfg?: ContatoCfg;
   gruposCfg?: GruposCfg;
@@ -6614,6 +6615,24 @@ function Config({
     setNovoTipoEvento("");
   };
 
+  const [horariosCulto, setHorariosCultoState] = useState<string[]>(() => church?.settings?.horariosCulto ?? []);
+  const [novoHorarioCulto, setNovoHorarioCulto] = useState("");
+  const saveHorariosCulto = async (next: string[]) => {
+    setHorariosCultoState(next);
+    if (!church?.id) return;
+    await createServiceBrowserClient()
+      .schema("service")
+      .from("churches")
+      .update({ settings: { ...church.settings, horariosCulto: next } })
+      .eq("id", church.id);
+    router.refresh();
+  };
+  const addHorarioCulto = () => {
+    const v = novoHorarioCulto.trim();
+    if (v && !horariosCulto.includes(v)) saveHorariosCulto([...horariosCulto, v]);
+    setNovoHorarioCulto("");
+  };
+
   const setCheckinPermitirExtra = async (v: boolean) => {
     if (!church?.id) return;
     await createServiceBrowserClient()
@@ -6733,6 +6752,23 @@ function Config({
             <button className="btn btn-pri btn-sm" type="button" disabled={igrejaLoading} onClick={saveIgreja}>
               {igrejaLoading ? "Salvando…" : igrejaMsg || "Salvar"}
             </button>
+          </div>
+          <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
+            <div className="cfg-card-t">Horários de culto</div>
+            <div className="cfg-card-s">Aparecem na agenda e ajudam a montar as escalas.</div>
+            <div className="cell-tags" style={{ gap: 8, marginBottom: 16 }}>
+              {horariosCulto.map((h) => (
+                <span key={h} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <Icon name="cultos" size={12} /> {h}
+                  <button type="button" onClick={() => saveHorariosCulto(horariosCulto.filter((x) => x !== h))} style={{ background: "none", border: "none", color: "var(--subtle)", fontSize: 12, padding: 0 }}>✕</button>
+                </span>
+              ))}
+              {horariosCulto.length === 0 && <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhum horário cadastrado.</span>}
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <input className="input" style={{ flex: 1 }} placeholder="ex: Domingo 19h" value={novoHorarioCulto} onChange={(e) => setNovoHorarioCulto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addHorarioCulto()} />
+              <button className="btn btn-sec" type="button" onClick={addHorarioCulto}>Adicionar</button>
+            </div>
           </div>
           <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
             <div className="cfg-card-t">Sobre a unidade</div>
