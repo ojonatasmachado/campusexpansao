@@ -61,7 +61,7 @@ interface Material {
   depoimento: { texto: string; autor: string }
   faq: { q: string; a: string }[]
   keywords: string[]
-  status: string; views: number; buyClicks: number
+  status: string; views: number; buyClicks: number; purchases: number
 }
 interface Curso {
   id: string; type: 'curso'; level: string; etapa: number; totalEtapas: number
@@ -154,7 +154,7 @@ function buildData(): AdminData {
       kpis: { visitas:0,visitasDelta:0,cliquesComprar:0,cliquesDelta:0,listaEspera:0,listaDelta:0,capturas:0,capturasDelta:0 },
       funil: [{label:'Visitas ao site',value:0},{label:'Abriu um material',value:0},{label:'Clicou em comprar',value:0},{label:'Compra concluída',value:0}],
       origem: [{label:'Instagram',value:0,color:AC.olive},{label:'Direto',value:0,color:AC.wheat},{label:'Google',value:0,color:AC.clay},{label:'YouTube',value:0,color:AC.oliveDeep}],
-      materialViews: {}, materialBuyClicks: {}, cursoViews: {}, cursoWaitlist: {},
+      materialViews: {}, materialBuyClicks: {}, materialPurchases: {}, cursoViews: {}, cursoWaitlist: {},
     },
   }
 }
@@ -164,7 +164,7 @@ function newItem(type: ItemType): Item {
     const family = 'Para ministrar', shelf = 'Juniores'
     return { ...base, type: 'material', family, shelf, code: '', messages: null, pages: 0,
       formats: ['PDF'], price: 0, hotmart: '', accent: accentFor({ type: 'material', family, shelf } as Material),
-      buyClicks: 0, model: 'A', big: null, bigLabel: 'mensagens', messageList: [], paraQuem: '',
+      buyClicks: 0, purchases: 0, model: 'A', big: null, bigLabel: 'mensagens', messageList: [], paraQuem: '',
       beneficios: ['Editável e pronto pra aplicar na sua igreja', 'White-label CE.X: coloque a marca do seu ministério'],
       contents: [],
       depoimento: { texto: '', autor: '' }, faq: [], keywords: [] } as Material
@@ -2657,6 +2657,42 @@ function ListaEspera({ cursos }: { cursos: Curso[] }) {
   )
 }
 
+function MaterialFunnel({ materiais }: { materiais: Material[] }) {
+  const fmt = (n: number) => n.toLocaleString('pt-BR')
+  const rows = [...materiais]
+    .filter((m) => m.status === 'Publicado' && (m.views > 0 || m.buyClicks > 0 || m.purchases > 0))
+    .sort((a, b) => b.purchases - a.purchases || b.views - a.views)
+  return (
+    <div className="panel">
+      <div className="panel-head"><span className="panel-title">Materiais em venda</span><span className="panel-meta">30 dias</span></div>
+      <div className="mf-table">
+        <div className="mf-row mf-head">
+          <span>Material</span>
+          <span className="mf-num">Visualizou</span>
+          <span className="mf-num">Clicou em comprar</span>
+          <span className="mf-num">Comprou</span>
+          <span className="mf-num">Conversão</span>
+        </div>
+        {rows.map((m) => {
+          const conv = m.views ? (m.purchases / m.views) * 100 : 0
+          return (
+            <div className="mf-row" key={m.id}>
+              <span className="mf-title">{m.title}</span>
+              <span className="mf-num" data-label="Visualizou">{fmt(m.views)}</span>
+              <span className="mf-num" data-label="Clicou em comprar">{fmt(m.buyClicks)}</span>
+              <span className="mf-num mf-purchases" data-label="Comprou">{fmt(m.purchases)}</span>
+              <span className="mf-num mf-conv" data-label="Conversão">{conv.toFixed(1)}%</span>
+            </div>
+          )
+        })}
+        {!rows.length && (
+          <div className="wb-empty">Nenhum material publicado com movimento nos últimos 30 dias.</div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function Dashboard({ data }: { data: AdminData }) {
   const m = data.metrics
   const fmt = (n: number) => n.toLocaleString('pt-BR')
@@ -2674,6 +2710,7 @@ function Dashboard({ data }: { data: AdminData }) {
         <Funnel steps={m.funil} />
         <Origem rows={m.origem} />
       </div>
+      <MaterialFunnel materiais={data.materiais} />
       <div className="dash-2col">
         <TopItens items={allItems} />
         <ListaEspera cursos={data.cursos} />
@@ -4557,6 +4594,7 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
           status: (m.status as string) ?? 'Publicado',
           views: initialMetrics.materialViews[id] ?? 0,
           buyClicks: initialMetrics.materialBuyClicks[id] ?? 0,
+          purchases: initialMetrics.materialPurchases[id] ?? 0,
         }
       })
       const NIVEL_LABEL: Record<string, string> = { fundacao: 'Fundação', lideranca: 'Liderança', multiplicacao: 'Multiplicação' }

@@ -49,6 +49,7 @@ export type AdminMetrics = {
   origem: { label: string; value: number; color: string }[]
   materialViews: Record<string, number>
   materialBuyClicks: Record<string, number>
+  materialPurchases: Record<string, number>
   cursoViews: Record<string, number>
   cursoWaitlist: Record<string, number>
 }
@@ -167,6 +168,7 @@ function emptyAdminMetrics(): AdminMetrics {
     ],
     materialViews: {},
     materialBuyClicks: {},
+    materialPurchases: {},
     cursoViews: {},
     cursoWaitlist: {},
   }
@@ -216,6 +218,19 @@ function countByTarget(
       acc[id] = (acc[id] ?? 0) + 1
       return acc
     }, {})
+}
+
+function countComprasByMaterial(
+  compras: { material_id: string | null; purchased_at: string | null }[],
+  start: Date,
+  end: Date
+) {
+  return compras.reduce<Record<string, number>>((acc, compra) => {
+    const purchasedAt = compra.purchased_at ? new Date(compra.purchased_at) : null
+    if (!compra.material_id || !purchasedAt || purchasedAt < start || purchasedAt >= end) return acc
+    acc[compra.material_id] = (acc[compra.material_id] ?? 0) + 1
+    return acc
+  }, {})
 }
 
 export async function loginAction(username: string, pw: string): Promise<boolean> {
@@ -386,6 +401,7 @@ export async function getAdminMetrics(): Promise<AdminMetrics> {
       origem,
       materialViews: countByTarget(events, 'material_view', currentStart, now, 'material_id'),
       materialBuyClicks: countByTarget(events, 'buy_click', currentStart, now, 'material_id'),
+      materialPurchases: countComprasByMaterial(compras, currentStart, now),
       cursoViews: countByTarget(events, 'curso_view', currentStart, now, 'curso_slug'),
       cursoWaitlist: countByTarget(events, 'waitlist_click', currentStart, now, 'curso_slug'),
     }
