@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase-browser";
 import type { User } from "@supabase/supabase-js";
 import ThemeToggle from "./ThemeToggle";
+import Logo from "./Logo";
 
 export default function Nav() {
   const pathname = usePathname();
@@ -49,7 +50,7 @@ export default function Nav() {
     <>
       <nav className="nav" style={{ position: "sticky", top: 0, zIndex: 100 }}>
         <Link href="/" className="nav-logo" onClick={() => setOpen(false)}>
-          CE<span className="dot">.</span><span className="x">X</span>
+          <Logo />
         </Link>
 
         {/* Links desktop */}

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "../../lib/supabase-browser";
+import Logo from "../../components/Logo";
 
 function authErrorMessage(message: string) {
   const lower = message.toLowerCase();
@@ -72,8 +73,8 @@ export default function RedefinirSenhaPage() {
         padding: "40px 36px",
       }}>
         <Link href="/" style={{ display: "block", marginBottom: 32, textDecoration: "none" }}>
-          <span style={{ fontWeight: 700, fontSize: 22, color: "var(--cream)", letterSpacing: "-0.5px" }}>
-            CE<span style={{ color: "var(--olive)" }}>.X</span>
+          <span style={{ fontSize: 22, color: "var(--cream)", letterSpacing: "-0.5px" }}>
+            <Logo />
           </span>
         </Link>
 

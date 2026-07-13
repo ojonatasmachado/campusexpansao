@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { formatDateBR } from "../lib/date";
+import Logo from "../../components/Logo";
 
 type SessionInfo = { id: string; organizationId: string; checkinActive: boolean; tokenValid: boolean };
 type EventInfo = { name: string; weekday: string; eventDate: string; time: string; location: string };
@@ -86,8 +87,8 @@ export default function KidsCheckinClient({
     <div className="modal-bg" style={{ zIndex: 110, borderRadius: 0 }} onClick={() => router.push("/service")}>
       <div className="ck-land" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }} onClick={(e) => e.stopPropagation()}>
         <div className="ck-land-card">
-          <div className="ck-land-logo" style={{ fontWeight: 800, fontSize: 22, letterSpacing: "-0.04em" }}>
-            CE<span style={{ color: "var(--olive)" }}>.X</span>
+          <div className="ck-land-logo" style={{ fontSize: 22, letterSpacing: "-0.04em" }}>
+            <Logo />
           </div>
           {event && kidsClass && (
             <div className="ck-land-event">

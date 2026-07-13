@@ -1,3 +1,5 @@
+import Logo from "./Logo";
+
 export default function Footer({ minimal = false }: { minimal?: boolean }) {
   if (minimal) {
     return (
@@ -19,7 +21,7 @@ export default function Footer({ minimal = false }: { minimal?: boolean }) {
         <div className="footer-top">
           <div>
             <div className="footer-brand-logo">
-              CE<span className="dot">.</span><span className="x">X</span>
+              <Logo />
             </div>
             <p className="footer-brand-text">
               Preparamos trabalhadores para a <em>Grande Comissão</em>.

@@ -5,6 +5,7 @@ import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon } from "./lib/icons";
 import { formatDateBR } from "./lib/date";
 import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
+import Logo from "../components/Logo";
 import { PhotoPicker } from "./PhotoPicker";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
@@ -1769,8 +1770,8 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
           {churchLogoUrl ? (
             <img src={churchLogoUrl} alt={churchName || "Logo da igreja"} style={{ height: 22, maxWidth: 140, objectFit: "contain" }} />
           ) : (
-            <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: -0.5 }}>
-              CE<span style={{ color: "var(--olive)" }}>.X</span>
+            <span style={{ fontSize: 18, letterSpacing: -0.5 }}>
+              <Logo />
             </span>
           )}
           <span style={{ fontSize: 11, color: "var(--muted)", fontFamily: "var(--mono)", marginLeft: 8 }}>Service</span>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
+import Logo from "../../components/Logo";
 
 type Mode = "login" | "signup";
 
@@ -133,7 +134,7 @@ export default function ServiceLoginForm() {
         <section className="card" style={{ maxWidth: 520, margin: "0 auto" }}>
           <div className="card-body">
             <Link href="/" className="nav-logo" style={{ textDecoration: "none" }}>
-              CE<span>.X</span>
+              <Logo />
             </Link>
 
             <p className="eyebrow" style={{ color: "var(--wheat)", marginTop: 28 }}>

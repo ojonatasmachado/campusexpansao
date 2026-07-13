@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServiceSupabaseClient } from "../lib/supabase";
 import BootstrapChurchForm from "./BootstrapChurchForm";
+import Logo from "../../components/Logo";
 
 async function getExistingChurchCount() {
   const supabase = await createServiceSupabaseClient();
@@ -29,7 +30,7 @@ export default async function ServiceOnboardingPage() {
         <section className="card" style={{ maxWidth: 620, margin: "0 auto" }}>
           <div className="card-body">
             <Link href="/" className="nav-logo" style={{ textDecoration: "none" }}>
-              CE<span>.X</span>
+              <Logo />
             </Link>
             <p className="eyebrow" style={{ color: "var(--wheat)", marginTop: 28 }}>
               ◆ SERVICE · PRIMEIRA IGREJA

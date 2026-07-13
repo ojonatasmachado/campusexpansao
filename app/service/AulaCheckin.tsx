@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
+import Logo from "../components/Logo";
 
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
@@ -119,8 +120,8 @@ export function AulaCheckinLanding({
     <div className="modal-bg" style={{ zIndex: 110, borderRadius: 0 }} onClick={onDone}>
       <div className="ck-land" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }} onClick={(e) => e.stopPropagation()}>
         <div className="ck-land-card">
-          <div className="ck-land-logo" style={{ fontWeight: 800, fontSize: 22, letterSpacing: "-0.04em" }}>
-            CE<span style={{ color: "var(--olive)" }}>.X</span>
+          <div className="ck-land-logo" style={{ fontSize: 22, letterSpacing: "-0.04em" }}>
+            <Logo />
           </div>
           <div className="ck-land-event">
             <div className="ck-land-ey">◆ Check-in de aula</div>

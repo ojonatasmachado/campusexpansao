@@ -6,6 +6,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { notifyPush } from "./lib/notify-push";
 import { uploadServiceImage, imageExtension } from "./lib/upload-image";
+import Logo from "../components/Logo";
 import { ICON_PATHS, ICON_CATEGORIES, DEFAULT_ICON, Icon, IconPicker } from "./lib/icons";
 import { deriveAccentVars, isValidHex, normalizeHex, contrastRatio, contrastLabel, buildColorWheel, hslToHex } from "./lib/color";
 import { formatDateBR } from "./lib/date";
@@ -785,7 +786,7 @@ function IgrejaLogo({ logoUrl, nome }: { logoUrl?: string | null; nome?: string 
       {logoUrl ? (
         <img className="brand-img" src={logoUrl} alt={nome || "Logo da igreja"} />
       ) : (
-        <span className="sb-logo">CE<span className="ol">.X</span></span>
+        <span className="sb-logo"><Logo /></span>
       )}
       <span className="brand-div" aria-hidden="true" />
       <span className="brand-service">Service</span>

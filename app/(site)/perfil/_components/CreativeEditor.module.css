@@ -298,12 +298,14 @@
 .brand {
   color: var(--ink);
   font-size: 15px;
-  font-weight: 900;
+  font-weight: 700;
   padding: 0 8px;
 }
 
 .brand span {
   color: var(--olive);
+  font-weight: 700;
+  font-style: normal;
 }
 
 .sep {

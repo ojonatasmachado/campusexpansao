@@ -47,7 +47,7 @@
       line-height: 1;
       color: var(--branco);
     }
-    .logo .x { font-style: italic; color: var(--oliva); }
+    .logo .x { font-style: normal; color: var(--oliva); }
 
     .eyebrow {
       font-family: 'Fira Code', 'SF Mono', monospace;
@@ -4262,7 +4262,7 @@ function generateMinistryReport(cardDataUrl = '') {
 body{font-family:'Inter',system-ui,sans-serif;background:#f7f7f4;color:#1a1c18;line-height:1.72}
 .cover{background:#0E110D;padding:52px 48px 60px;color:#FAFAF7}
 .c-logo{font-size:36px;font-weight:700}
-.c-logo em{color:#7A9E3F;font-style:italic}
+.c-logo span{color:#7A9E3F;font-style:normal}
 .c-eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#555650;margin-top:4px;margin-bottom:32px}
 .c-name{font-size:28px;font-weight:700}
 .c-sub{font-size:14px;color:#8B8C82;margin-top:8px}
@@ -4297,7 +4297,7 @@ ${DEEP_CSS}
 </head>
 <body>
 <div class="cover">
-  <div class="c-logo">CE<em>.X</em></div>
+  <div class="c-logo">CE<span>.X</span></div>
   <p class="c-eyebrow">Campus Expansão</p>
   <p class="c-name">${userName}</p>
   <p class="c-sub">${reportTitle}</p>

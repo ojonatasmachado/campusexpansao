@@ -24,6 +24,7 @@ import {
   type StudioTemplate,
 } from './actions'
 import { ESTANTE_MAP } from '../../lib/materiais-data'
+import Logo from '../../components/Logo'
 import ThemeToggle from '../../components/ThemeToggle'
 import { roteiroToPdfBlob } from './lib/roteiro-to-pdf'
 
@@ -3902,7 +3903,7 @@ function Login() {
         <div className="login-theme">
           <ThemeToggle compact />
         </div>
-        <div className="login-logo">CE<span className="ol">.X</span></div>
+        <div className="login-logo"><Logo /></div>
         <div className="login-eyebrow">◆ PAINEL INTERNO</div>
         <h1 className="login-title">Área restrita</h1>
         <p className="login-sub">Gestão de materiais, cursos, mentorias, usuários e módulos do Studio.</p>
@@ -4123,7 +4124,7 @@ function Sidebar({ route, go, counts, onLogout, admin }: { route: Route; go: (r:
   return (
     <aside className="adm-sb">
       <div>
-        <div className="adm-sb-logo">CE<span className="ol">.X</span></div>
+        <div className="adm-sb-logo"><Logo /></div>
         <div className="adm-sb-sub">Painel interno</div>
         <nav className="adm-sb-nav">
           <button className={`adm-sb-link${route.screen === 'dashboard' ? ' on' : ''}`} onClick={() => go({ screen: 'dashboard' })}>

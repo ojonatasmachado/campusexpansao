@@ -4,6 +4,7 @@ import type { User } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "../../lib/supabase-browser";
+import Logo from "../../components/Logo";
 
 function authErrorMessage(message: string) {
   const lower = message.toLowerCase();
@@ -224,8 +225,8 @@ function LoginForm() {
       }}>
         {/* Logo */}
         <Link href="/" style={{ display: "block", marginBottom: 32, textDecoration: "none" }}>
-          <span style={{ fontWeight: 700, fontSize: 22, color: "var(--cream)", letterSpacing: "-0.5px" }}>
-            CE<span style={{ color: "var(--olive)" }}>.X</span>
+          <span style={{ fontSize: 22, color: "var(--cream)", letterSpacing: "-0.5px" }}>
+            <Logo />
           </span>
         </Link>
 

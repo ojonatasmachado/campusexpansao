@@ -104,14 +104,15 @@
   margin-bottom: 34px;
   color: var(--cream);
   font-size: clamp(42px, 4.5vw, 62px);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 0.9;
   letter-spacing: 0;
 }
 
 .panelLogo strong {
   color: var(--perfil-accent);
-  font-weight: 800;
+  font-weight: 700;
+  font-style: normal;
 }
 
 .panelFacts {

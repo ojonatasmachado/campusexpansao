@@ -1,6 +1,7 @@
 'use client'
 import { useState, useTransition } from 'react'
 import { completeAdminSetup } from '../../actions'
+import Logo from '../../../../components/Logo'
 
 export default function SetupAccessClient({
   token,
@@ -21,7 +22,7 @@ export default function SetupAccessClient({
         <div className="login-grid" />
         <div className="login-x">X</div>
         <div className="login-card">
-          <div className="login-logo">CE<span className="ol">.X</span></div>
+          <div className="login-logo"><Logo /></div>
           <div className="login-eyebrow">◆ CONVITE</div>
           <h1 className="login-title">Link inválido ou expirado</h1>
           <p className="login-sub">Esse link de configuração já foi usado, expirou ou não existe. Peça ao administrador master pra gerar um novo.</p>
@@ -52,7 +53,7 @@ export default function SetupAccessClient({
       <div className="login-grid" />
       <div className="login-x">X</div>
       <div className={`login-card${err ? ' shake' : ''}`}>
-        <div className="login-logo">CE<span className="ol">.X</span></div>
+        <div className="login-logo"><Logo /></div>
         <div className="login-eyebrow">◆ CONFIGURAR ACESSO</div>
         <h1 className="login-title">Bem-vindo(a), {invite.name || invite.username}</h1>
         <p className="login-sub">Escolha a sua senha de acesso ao painel interno. Usuário: <strong>{invite.username}</strong></p>
