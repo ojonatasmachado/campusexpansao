@@ -2792,6 +2792,16 @@ function DesignIcon() {
   )
 }
 
+function UploadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 15V4" />
+      <path d="M7 9l5-5 5 5" />
+      <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+    </svg>
+  )
+}
+
 function MaterialContentsField({
   value,
   onChange,
@@ -2857,6 +2867,47 @@ function MaterialContentsField({
     setStudioDraft({ name: '', note: '', model: 'branco' })
     setEditingContentIndex(null)
     setStudioSetupOpen(true)
+  }
+  const pptxInputRef = useRef<HTMLInputElement | null>(null)
+  const [pptxImporting, setPptxImporting] = useState(false)
+  const [pptxImportError, setPptxImportError] = useState<string | null>(null)
+  const openPptxImport = () => {
+    setPptxImportError(null)
+    pptxInputRef.current?.click()
+  }
+  const handlePptxFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setPptxImporting(true)
+    setPptxImportError(null)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/studio/import-pptx', { method: 'POST', body: formData })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?.pages) throw new Error(data?.error || 'Falha ao importar o arquivo.')
+      window.localStorage.setItem('cex_studio_slides_seed', JSON.stringify({
+        format: 'slide',
+        current: 0,
+        accent: '#7A9E3F',
+        pages: data.pages,
+        full: true,
+      }))
+      window.localStorage.removeItem('cex_studio_slides_v2')
+      if (Array.isArray(data.warnings) && data.warnings.length) {
+        console.warn('Avisos da importação de PowerPoint:', data.warnings)
+      }
+      setAddOpen(false)
+      setStudioMode('slides')
+      setStudioDraft({ name: file.name.replace(/\.pptx$/i, ''), note: '', model: 'branco' })
+      setEditingContentIndex(null)
+      setStudioOpen(true)
+    } catch (err) {
+      setPptxImportError(err instanceof Error ? err.message : 'Falha ao importar o arquivo.')
+    } finally {
+      setPptxImporting(false)
+    }
   }
   const openExistingVisualEditor = (index: number) => {
     const item = contents[index]
@@ -3132,7 +3183,22 @@ function MaterialContentsField({
                   <span className="chooser-tt">Design</span>
                   <span className="chooser-sb">Crie artes específicas para o seu produto.</span>
                 </button>
+                <button className="chooser-opt" type="button" onClick={openPptxImport} disabled={pptxImporting}>
+                  <span className="chooser-ic" aria-hidden="true"><UploadIcon /></span>
+                  <span className="chooser-tt">{pptxImporting ? 'Importando…' : 'Importar PowerPoint'}</span>
+                  <span className="chooser-sb">Suba um .pptx pronto e edite os slides aqui. Texto, imagens e formas simples viram editáveis; o que não der pra migrar (gráfico, SmartArt, tabela complexa) fica marcado no slide pra você revisar.</span>
+                </button>
               </div>
+              {pptxImportError && (
+                <div className="wb-empty" style={{ color: 'var(--rust, #9C5A33)', marginTop: 12 }}>{pptxImportError}</div>
+              )}
+              <input
+                ref={pptxInputRef}
+                type="file"
+                accept=".pptx"
+                hidden
+                onChange={handlePptxFile}
+              />
             </div>
           </div>
         </div>
