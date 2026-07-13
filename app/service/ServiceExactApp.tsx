@@ -8422,7 +8422,8 @@ function EntityDrawer({
             <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
               <button className="btn btn-sec btn-sm" type="button" onClick={() => setEditingMember(true)}>Editar dados</button>
               {member.phone && member.email && (
-                <button className="btn btn-sec btn-sm" type="button" disabled={sendingAccess} onClick={() => sendMemberAccessWhatsapp(member)}>
+                <button className="btn btn-pri btn-sm" type="button" disabled={sendingAccess} onClick={() => sendMemberAccessWhatsapp(member)}>
+                  <Icon name="whatsapp" size={14} />
                   {sendingAccess ? "Preparando…" : member.volunteerId ? "Reenviar acesso pelo WhatsApp" : "Enviar acesso pelo WhatsApp"}
                 </button>
               )}

@@ -100,6 +100,7 @@ export const ICON_PATHS: Record<string, string> = {
   sino: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
   enviar: '<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/>',
   telefone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.2a2 2 0 0 1 2.1-.5c.9.4 1.8.6 2.7.7a2 2 0 0 1 1.7 2Z"/>',
+  whatsapp: '<path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Z"/><path d="M8.6 9.6c-.2.6.1 1.7 1 2.8s1.9 1.5 2.6 1.3c.3-.1.6-.6.8-1 .1-.2 0-.5-.2-.6l-1-.6c-.2-.1-.4-.1-.6.1l-.4.5a4 4 0 0 1-1.4-1.4l.5-.4c.2-.1.2-.3.1-.5l-.6-1c-.1-.2-.3-.3-.6-.2-.4.1-1 .5-1.2 1Z"/>',
   globo: '<circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19"/><path d="M12 2.5a14.5 14.5 0 0 1 0 19 14.5 14.5 0 0 1 0-19Z"/>',
   sair: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
   sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.9 4.9 1.4 1.4"/><path d="m17.7 17.7 1.4 1.4"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.3 17.7-1.4 1.4"/><path d="m19.1 4.9-1.4 1.4"/>',
@@ -131,7 +132,7 @@ export const ICON_CATEGORIES: { label: string; icons: IconName[] }[] = [
   { label: "Pessoas", icons: ["pessoa", "membros", "visitante", "usuarioadd", "perfil"] },
   { label: "Jornada & agenda", icons: ["decisoes", "cursos", "escalas", "cultos", "reunioes", "ensaios", "quadros", "espacos", "agenda", "identidade", "historia"] },
   { label: "Financeiro", icons: ["moeda", "carteira", "presente", "trofeu", "meta"] },
-  { label: "Interface", icons: ["comunicacao", "conversas", "sino", "enviar", "telefone", "globo", "lixeira", "copiar", "compartilhar", "baixar", "imagem", "documento", "pasta", "lampada", "chave", "cadeado", "bandeira", "mapapin", "play", "link", "anexo", "lista", "circulo", "quadrado", "triangulo"] },
+  { label: "Interface", icons: ["comunicacao", "conversas", "sino", "enviar", "telefone", "whatsapp", "globo", "lixeira", "copiar", "compartilhar", "baixar", "imagem", "documento", "pasta", "lampada", "chave", "cadeado", "bandeira", "mapapin", "play", "link", "anexo", "lista", "circulo", "quadrado", "triangulo"] },
 ];
 
 export const DEFAULT_ICON: IconName = "times";
