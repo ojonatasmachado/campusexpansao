@@ -94,8 +94,11 @@ export default function BootstrapChurchForm() {
       setError("Digite o nome da igreja.");
       return;
     }
-    if (cnpjDigits.length !== 14 || !lookup?.valid || !lookup?.active) {
-      setError("Confirme um CNPJ válido e ativo antes de continuar.");
+    // CNPJ temporariamente opcional (fase de teste controlado, ver commit).
+    // Se a pessoa preencheu algo, exige que tenha validado certinho; se deixou
+    // em branco, deixa passar sem CNPJ nenhum.
+    if (cnpjDigits.length > 0 && (!lookup?.valid || !lookup?.active)) {
+      setError("Confirme um CNPJ válido e ativo, ou deixe o campo em branco.");
       return;
     }
     if (!email.trim()) {
@@ -112,7 +115,7 @@ export default function BootstrapChurchForm() {
       .schema("core")
       .rpc("bootstrap_church_org_v2", {
         p_org_name: orgName.trim(),
-        p_cnpj: cnpjDigits,
+        p_cnpj: cnpjDigits || null,
         p_email: email.trim(),
         p_phone: phone.trim(),
         p_city: city.trim() || null,
@@ -135,7 +138,7 @@ export default function BootstrapChurchForm() {
   return (
     <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16, marginTop: 24 }}>
       <label className="field">
-        <span className="field-label req">CNPJ da igreja</span>
+        <span className="field-label">CNPJ da igreja (opcional por enquanto)</span>
         <input
           className="input"
           value={formatCnpj(cnpj)}
