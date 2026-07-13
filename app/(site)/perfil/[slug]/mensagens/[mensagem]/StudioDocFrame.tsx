@@ -49,5 +49,5 @@ export function StudioDocFrame({
 
   if (!ready) return <div className={className} />;
 
-  return <iframe className={className} src={src} title={title} />;
+  return <iframe className={className} src={src} title={title} allowFullScreen />;
 }

@@ -3208,6 +3208,7 @@ function MaterialContentsField({
               className="studio-frame"
               src={studioMode === 'slides' ? '/studio/slides?context=mentor' : studioMode === 'design' ? '/studio/design?context=mentor' : '/studio/documentos?context=mentor'}
               title={studioMode === 'slides' ? 'CE.X Studio Slides' : studioMode === 'design' ? 'CE.X Studio Design' : 'CE.X Studio Documentos'}
+              allowFullScreen
             />
           </div>
         </div>
@@ -3729,6 +3730,7 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => P
               className="studio-frame"
               src="/studio/divulgacao"
               title="CE.X Studio Divulgação"
+              allowFullScreen
             />
           </div>
         </div>

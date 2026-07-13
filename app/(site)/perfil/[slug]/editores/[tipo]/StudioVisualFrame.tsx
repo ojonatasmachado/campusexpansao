@@ -36,5 +36,5 @@ export function StudioVisualFrame({
 
   if (!ready) return <div className={className} style={style} />;
 
-  return <iframe className={className} src={src} title={title} style={style} />;
+  return <iframe className={className} src={src} title={title} style={style} allowFullScreen />;
 }
