@@ -4,6 +4,7 @@ import MateriaisContent from "../components/MateriaisContent";
 import { CursosNiveis } from "../components/CursoCard";
 import FaqAccordion from "../components/FaqAccordion";
 import ScrollTop from "../components/ScrollTop";
+import HashScroll from "../components/HashScroll";
 import styles from "./page.module.css";
 import { supabase } from "../lib/supabase";
 import Link from "next/link";
@@ -33,6 +34,7 @@ export default async function Home() {
 
   return (
     <div className={`pg ${styles.homePage}`}>
+      <HashScroll />
       <Nav />
 
       {/* HERO */}
