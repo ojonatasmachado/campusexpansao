@@ -32,7 +32,7 @@ export default function Sobre() {
         <div className="psec-eyebrow">◆ A equação da marca</div>
         <div className="about-values">
           <div className="value">
-            <div className="value-letter">CE</div>
+            <div className="value-letter value-letter-ce">CE</div>
             <div className="value-title">Campus Expansão</div>
             <div className="value-desc">A parte que cabe a nós: ensino, estrutura, preparo, formação.</div>
           </div>

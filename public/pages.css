@@ -42,7 +42,8 @@
 .about-col p { font-size:15px; color:var(--muted); line-height:1.75; margin-bottom:16px; }
 .about-values { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:24px; }
 .value { background:var(--graphite); border:0.5px solid var(--border-2); border-radius:var(--r-lg); padding:28px; }
-.value-letter { font-size:56px; font-weight:700; font-style:italic; color:var(--olive); line-height:1; margin-bottom:16px; }
+.value-letter { font-size:56px; font-weight:700; font-style:normal; color:var(--olive); line-height:1; margin-bottom:16px; }
+.value-letter-ce { color:var(--cream); }
 .value-title { font-size:18px; font-weight:700; letter-spacing:-0.02em; margin-bottom:8px; }
 .value-desc { font-size:13px; color:var(--muted); line-height:1.6; }
 

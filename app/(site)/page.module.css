@@ -65,9 +65,13 @@
   margin-bottom: 16px;
   color: var(--olive);
   font-size: 56px;
-  font-style: italic;
+  font-style: normal;
   font-weight: 700;
   line-height: 1;
+}
+
+.aboutSection :global(.value-letter-ce) {
+  color: var(--cream);
 }
 
 .aboutSection :global(.value-title) {

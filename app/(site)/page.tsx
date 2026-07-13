@@ -80,7 +80,7 @@ export default async function Home() {
         </div>
         <div className="about-values" style={{ marginTop: 40 }}>
           <div className="value">
-            <div className="value-letter">CE</div>
+            <div className="value-letter value-letter-ce">CE</div>
             <div className="value-title">Campus Expansão</div>
             <div className="value-desc">A parte que cabe a nós: ensino, estrutura, preparo, formação.</div>
           </div>
