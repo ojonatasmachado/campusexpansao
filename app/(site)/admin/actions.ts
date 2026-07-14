@@ -116,13 +116,13 @@ async function getAdminByUsername(username: string) {
   return data as (Omit<AdminUser, 'hasPassword'> & { password_salt: string | null; password_hash: string | null }) | null
 }
 
-async function requireAdmin(): Promise<AdminSession> {
+export async function requireAdmin(): Promise<AdminSession> {
   const session = await checkAuth()
   if (!session) throw new Error('Acesso administrativo expirado.')
   return session
 }
 
-async function requireMaster(): Promise<AdminSession> {
+export async function requireMaster(): Promise<AdminSession> {
   const session = await requireAdmin()
   if (!session.isMaster) throw new Error('Somente o administrador master pode executar esta ação.')
   return session

@@ -23,6 +23,7 @@ import {
   type AdminUser,
   type StudioTemplate,
 } from './actions'
+import { extendServiceTrial, bulkExtendServiceTrials, expireServiceOrgNow, getServiceOrgHistory, type ServiceOrgRow, type ServiceOrgHistoryEntry, type ServiceMetrics } from './service-ops-actions'
 import { ESTANTE_MAP } from '../../lib/materiais-data'
 import Logo from '../../components/Logo'
 import ThemeToggle from '../../components/ThemeToggle'
@@ -3875,7 +3876,7 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => P
 
 // ── SHELL ────────────────────────────────────────────────────────────────────
 
-type Route = { screen: 'dashboard' } | { screen: 'list'; type: CatalogItemType } | { screen: 'shelves' } | { screen: 'users' } | { screen: 'studio' }
+type Route = { screen: 'dashboard' } | { screen: 'list'; type: CatalogItemType } | { screen: 'shelves' } | { screen: 'users' } | { screen: 'studio' } | { screen: 'service-ops' }
 
 function Login() {
   const [username, setUsername] = useState('')
@@ -4151,6 +4152,10 @@ function Sidebar({ route, go, counts, onLogout, admin }: { route: Route; go: (r:
               <button className={`adm-sb-link${route.screen === 'studio' ? ' on' : ''}`} onClick={() => go({ screen: 'studio' })}>
                 <span className="adm-sb-ic">◇</span> Studio
                 <span className="adm-sb-count">{counts.templates}</span>
+              </button>
+              <button className={`adm-sb-link${route.screen === 'service-ops' ? ' on' : ''}`} onClick={() => go({ screen: 'service-ops' })}>
+                <span className="adm-sb-ic">◇</span> Operação Service
+                <span className="adm-sb-count">{counts.serviceOrgs}</span>
               </button>
             </>
           )}
@@ -4603,6 +4608,379 @@ function StudioTemplatesView({
   )
 }
 
+// ── OPERAÇÃO SERVICE (igrejas, trial, isenções) ─────────────────────────────
+
+function daysUntil(iso: string | null): number | null {
+  if (!iso) return null
+  return Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000)
+}
+
+function serviceOrgStatusLabel(org: ServiceOrgRow): { label: string; cls: 'pub' | 'draft' } {
+  const days = daysUntil(org.currentPeriodEnd)
+  if (org.subStatus === 'expired' || org.subStatus === 'canceled') return { label: 'Expirado', cls: 'draft' }
+  if (org.subStatus === 'active') return { label: 'Pago', cls: 'pub' }
+  if (org.subStatus === 'trialing') {
+    if (days === null) return { label: 'Em trial', cls: 'pub' }
+    if (days < 0) return { label: `Venceu há ${Math.abs(days)}d`, cls: 'draft' }
+    return { label: `Trial · ${days}d restantes`, cls: days <= 7 ? 'draft' : 'pub' }
+  }
+  return { label: 'Sem assinatura', cls: 'draft' }
+}
+
+type ServiceOrgFilter = 'todos' | 'trial' | 'vencendo' | 'pago' | 'expirado'
+
+function serviceOrgFilterKey(org: ServiceOrgRow): Exclude<ServiceOrgFilter, 'todos'> | 'sem_assinatura' {
+  if (org.subStatus === 'expired' || org.subStatus === 'canceled') return 'expirado'
+  if (org.subStatus === 'active') return 'pago'
+  if (org.subStatus === 'trialing') {
+    const days = daysUntil(org.currentPeriodEnd)
+    if (days !== null && days < 0) return 'expirado'
+    if (days !== null && days <= 7) return 'vencendo'
+    return 'trial'
+  }
+  return 'sem_assinatura'
+}
+
+function summarizeHistoryEntry(entry: ServiceOrgHistoryEntry): string {
+  const b = entry.before as Record<string, unknown> | null
+  const a = entry.after as Record<string, unknown> | null
+  if (entry.action === 'insert' && a) {
+    return `Assinatura criada · status ${a.status} · ${a.provider_ref ?? 'sem origem'}`
+  }
+  if (entry.action === 'delete') return 'Assinatura removida'
+  if (entry.action === 'update' && a) {
+    const parts: string[] = []
+    if (b && b.status !== a.status) parts.push(`status ${b.status} → ${a.status}`)
+    if (b && b.current_period_end !== a.current_period_end) {
+      const fmt = (v: unknown) => (v ? new Date(v as string).toLocaleDateString('pt-BR') : 'sem data')
+      parts.push(`vencimento ${fmt(b.current_period_end)} → ${fmt(a.current_period_end)}`)
+    }
+    if (a.notes && b?.notes !== a.notes) parts.push(`nota: ${a.notes}`)
+    return parts.length ? parts.join(' · ') : 'Atualização sem mudança visível'
+  }
+  return 'Alteração registrada'
+}
+
+function ServiceOrgDetailDrawer({
+  org,
+  history,
+  loadingHistory,
+  onClose,
+}: {
+  org: ServiceOrgRow
+  history: ServiceOrgHistoryEntry[]
+  loadingHistory: boolean
+  onClose: () => void
+}) {
+  const status = serviceOrgStatusLabel(org)
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" style={{ maxWidth: 560 }} onClick={(e) => e.stopPropagation()}>
+        <div className="modal-title">{org.name}</div>
+        <div className="fld-hint" style={{ marginBottom: 18 }}>
+          {org.city || 'Cidade não informada'}{org.doc ? ` · CNPJ ${org.doc}` : ''} · entrou em {new Date(org.createdAt).toLocaleDateString('pt-BR')}
+        </div>
+        <div className="ed-2col" style={{ marginBottom: 18 }}>
+          <Field label="Status"><span className={`pill ${status.cls}`}>{status.label}</span></Field>
+          <Field label="Igrejas/unidades"><div className="kpi-value" style={{ fontSize: 22 }}>{org.churchCount}</div></Field>
+          <Field label="Contas de login"><div className="kpi-value" style={{ fontSize: 22 }}>{org.loginCount}</div></Field>
+          <Field label="Pessoas cadastradas"><div className="kpi-value" style={{ fontSize: 22 }}>{org.peopleCount}</div></Field>
+        </div>
+        {org.notes && <div className="fld" style={{ marginBottom: 18 }}><label className="fld-label">Última observação</label><div className="fld-hint">{org.notes}</div></div>}
+        <div className="fld-label" style={{ marginBottom: 10 }}>Histórico de alterações</div>
+        <div className="lv-list" style={{ maxHeight: 280, overflowY: 'auto' }}>
+          {loadingHistory && <div className="lv-empty">Carregando...</div>}
+          {!loadingHistory && history.length === 0 && <div className="lv-empty">Sem alterações registradas ainda.</div>}
+          {!loadingHistory && history.map((entry, i) => (
+            <div className="row" key={i} style={{ gridTemplateColumns: '1fr', padding: '10px 4px' }}>
+              <div className="row-main">
+                <div className="row-cat">{new Date(entry.occurredAt).toLocaleString('pt-BR')}</div>
+                <div className="row-desc">{summarizeHistoryEntry(entry)}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="modal-acts" style={{ marginTop: 20 }}>
+          <button className="btn-sec" onClick={onClose}>Fechar</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ExtendTrialModal({ title, onConfirm, onClose }: { title: string; onConfirm: (newPeriodEnd: string, notes?: string) => Promise<void>; onClose: () => void }) {
+  const [dias, setDias] = useState(30)
+  const [notes, setNotes] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const confirm = async () => {
+    setSaving(true)
+    setError('')
+    try {
+      const newPeriodEnd = new Date(Date.now() + dias * 86400000).toISOString()
+      await onConfirm(newPeriodEnd, notes || undefined)
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível salvar.')
+      setSaving(false)
+    }
+  }
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-title">{title}</div>
+        <div className="fld">
+          <label className="fld-label">Estender por (dias a partir de hoje)</label>
+          <input className="inp" type="number" min={1} value={dias} onChange={(e) => setDias(Math.max(1, parseInt(e.target.value, 10) || 1))} />
+        </div>
+        <div className="fld">
+          <label className="fld-label">Motivo (opcional, só pra você lembrar depois)</label>
+          <input className="inp" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="ex: presente de lançamento" />
+        </div>
+        {error && <div className="ed-save-error" role="alert">{error}</div>}
+        <div className="modal-acts">
+          <button className="btn-pri" disabled={saving} onClick={() => { void confirm() }}>{saving ? 'Salvando...' : 'Confirmar'}</button>
+          <button className="btn-sec" onClick={onClose}>Cancelar</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ServiceSignupsChart({ weeks }: { weeks: { weekStart: string; count: number }[] }) {
+  const w = 760, h = 200, pad = 8
+  const series = weeks.map((wk) => wk.count)
+  const max = Math.max(1, ...series)
+  const x = (i: number) => pad + (i * (w - pad * 2)) / Math.max(1, series.length - 1)
+  const y = (v: number) => h - pad - (v / max) * (h - pad * 2 - 18)
+  const line = series.map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ')
+  const area = `${line} L${x(series.length - 1).toFixed(1)},${h} L${x(0).toFixed(1)},${h} Z`
+  const total = series.reduce((a, b) => a + b, 0)
+  const peak = series.indexOf(max === 1 && !series.includes(1) ? -1 : max)
+  return (
+    <div className="panel">
+      <div className="panel-head">
+        <span className="panel-title">Cadastros de igrejas · últimas 12 semanas</span>
+        <span className="panel-meta">{total.toLocaleString('pt-BR')} no período</span>
+      </div>
+      {total === 0 ? (
+        <div className="lv-empty">Ainda sem cadastros nesse período.</div>
+      ) : (
+        <svg viewBox={`0 0 ${w} ${h}`} className="chart" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="svc-signups-g" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#7A9E3F" stopOpacity="0.32" />
+              <stop offset="100%" stopColor="#7A9E3F" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {[0.25, 0.5, 0.75].map((g, i) => <line key={i} x1="0" x2={w} y1={h * g} y2={h * g} className="chart-grid" />)}
+          <path d={area} fill="url(#svc-signups-g)" />
+          <path d={line} fill="none" stroke="#7A9E3F" strokeWidth="2" />
+          {peak >= 0 && <circle cx={x(peak)} cy={y(max)} r="3.5" fill="#94B85C" />}
+        </svg>
+      )}
+    </div>
+  )
+}
+
+const STATUS_BREAKDOWN_META: { key: keyof ServiceMetrics['statusBreakdown']; label: string; color: string }[] = [
+  { key: 'pago', label: 'Pago', color: 'var(--olive)' },
+  { key: 'trial', label: 'Em trial', color: 'var(--wheat)' },
+  { key: 'vencendo', label: 'Vencendo em 7d', color: 'var(--amber)' },
+  { key: 'expirado', label: 'Expirado', color: 'var(--danger)' },
+  { key: 'semAssinatura', label: 'Sem assinatura', color: 'var(--muted)' },
+]
+
+function ServiceStatusChart({ breakdown }: { breakdown: ServiceMetrics['statusBreakdown'] }) {
+  const total = STATUS_BREAKDOWN_META.reduce((sum, m) => sum + breakdown[m.key], 0)
+  return (
+    <div className="panel">
+      <div className="panel-head"><span className="panel-title">Distribuição por status</span></div>
+      {total === 0 ? (
+        <div className="lv-empty">Nenhuma organização cadastrada ainda.</div>
+      ) : (
+        <div className="origem">
+          {STATUS_BREAKDOWN_META.map((m) => {
+            const value = breakdown[m.key]
+            const pct = total ? Math.round((value / total) * 100) : 0
+            return (
+              <div className="origem-row" key={m.key}>
+                <span className="origem-label">{m.label}</span>
+                <div className="origem-track"><div className="origem-fill" style={{ width: `${pct}%`, background: m.color }} /></div>
+                <span className="origem-val">{value} · {pct}%</span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ServiceChurnCards({ churn }: { churn: ServiceMetrics['churn'] }) {
+  if (churn.resolved === 0) {
+    return (
+      <div className="panel">
+        <div className="panel-head"><span className="panel-title">Conversão &amp; churn de trial</span></div>
+        <div className="lv-empty">Ainda sem trials que chegaram ao fim (convertido ou expirado) pra calcular taxa.</div>
+      </div>
+    )
+  }
+  return (
+    <div className="panel">
+      <div className="panel-head">
+        <span className="panel-title">Conversão &amp; churn de trial</span>
+        <span className="panel-meta">{churn.resolved} trial{churn.resolved === 1 ? '' : 's'} com desfecho</span>
+      </div>
+      <div className="kpi-row" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+        <div className="kpi">
+          <div className="kpi-label">Taxa de conversão</div>
+          <div className="kpi-value" style={{ color: 'var(--olive)' }}>{churn.conversionRate}%</div>
+          <div className="kpi-foot"><span className="kpi-sub">{churn.converted} converteu pra pago</span></div>
+        </div>
+        <div className="kpi">
+          <div className="kpi-label">Taxa de churn</div>
+          <div className="kpi-value" style={{ color: 'var(--danger)' }}>{churn.churnRate}%</div>
+          <div className="kpi-foot"><span className="kpi-sub">{churn.expired} expirou sem converter</span></div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const SERVICE_OPS_FILTERS: { key: ServiceOrgFilter; label: string }[] = [
+  { key: 'todos', label: 'Todos' },
+  { key: 'trial', label: 'Em trial' },
+  { key: 'vencendo', label: 'Vencendo em 7d' },
+  { key: 'pago', label: 'Pago' },
+  { key: 'expirado', label: 'Expirado' },
+]
+
+function ServiceOpsView({
+  orgs,
+  metrics,
+  onExtend,
+  onBulkExtend,
+  onExpireNow,
+  onLoadHistory,
+}: {
+  orgs: ServiceOrgRow[]
+  metrics: ServiceMetrics
+  onExtend: (organizationId: string, newPeriodEnd: string, notes?: string) => Promise<void>
+  onBulkExtend: (organizationIds: string[], newPeriodEnd: string, notes?: string) => Promise<void>
+  onExpireNow: (organizationId: string) => Promise<void>
+  onLoadHistory: (organizationId: string) => Promise<ServiceOrgHistoryEntry[]>
+}) {
+  const [q, setQ] = useState('')
+  const [filter, setFilter] = useState<ServiceOrgFilter>('todos')
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [modal, setModal] = useState<{ kind: 'single'; org: ServiceOrgRow } | { kind: 'bulk' } | null>(null)
+  const [detail, setDetail] = useState<ServiceOrgRow | null>(null)
+  const [history, setHistory] = useState<ServiceOrgHistoryEntry[]>([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
+
+  const totals = {
+    orgs: orgs.length,
+    emTrial: orgs.filter((o) => serviceOrgFilterKey(o) === 'trial').length,
+    vencendo: orgs.filter((o) => serviceOrgFilterKey(o) === 'vencendo').length,
+    expiradas: orgs.filter((o) => serviceOrgFilterKey(o) === 'expirado').length,
+    unidades: orgs.reduce((sum, o) => sum + o.churchCount, 0),
+    pessoas: orgs.reduce((sum, o) => sum + o.peopleCount, 0),
+  }
+
+  const shown = orgs.filter((org) => {
+    const okFilter = filter === 'todos' || serviceOrgFilterKey(org) === filter
+    if (!okFilter) return false
+    if (!q) return true
+    const haystack = [org.name, org.city, org.doc, org.slug].filter(Boolean).join(' ').toLowerCase()
+    return haystack.includes(q.toLowerCase())
+  })
+
+  const toggle = (id: string) => setSelected((prev) => {
+    const next = new Set(prev)
+    if (next.has(id)) next.delete(id); else next.add(id)
+    return next
+  })
+
+  const openDetail = (org: ServiceOrgRow) => {
+    setDetail(org)
+    setHistory([])
+    setLoadingHistory(true)
+    onLoadHistory(org.organizationId).then(setHistory).finally(() => setLoadingHistory(false))
+  }
+
+  return (
+    <div className="listview">
+      {modal?.kind === 'single' && (
+        <ExtendTrialModal
+          title={`Estender/presentear · ${modal.org.name}`}
+          onClose={() => setModal(null)}
+          onConfirm={(newPeriodEnd, notes) => onExtend(modal.org.organizationId, newPeriodEnd, notes)}
+        />
+      )}
+      {modal?.kind === 'bulk' && (
+        <ExtendTrialModal
+          title={`Presentear ${selected.size} organização(ões) selecionada(s)`}
+          onClose={() => setModal(null)}
+          onConfirm={async (newPeriodEnd, notes) => { await onBulkExtend([...selected], newPeriodEnd, notes); setSelected(new Set()) }}
+        />
+      )}
+      {detail && (
+        <ServiceOrgDetailDrawer org={detail} history={history} loadingHistory={loadingHistory} onClose={() => setDetail(null)} />
+      )}
+
+      <div className="kpi-row" style={{ marginBottom: 20 }}>
+        <div className="kpi"><div className="kpi-label">Organizações</div><div className="kpi-value">{totals.orgs}</div></div>
+        <div className="kpi"><div className="kpi-label">Em trial ativo</div><div className="kpi-value">{totals.emTrial}</div></div>
+        <div className="kpi"><div className="kpi-label">Vencendo em 7 dias</div><div className="kpi-value">{totals.vencendo}</div></div>
+        <div className="kpi"><div className="kpi-label">Expiradas</div><div className="kpi-value">{totals.expiradas}</div></div>
+      </div>
+      <div className="lv-count" style={{ marginBottom: 18 }}>{totals.unidades} igreja{totals.unidades === 1 ? '' : 's'}/unidades no total · {totals.pessoas} pessoa{totals.pessoas === 1 ? '' : 's'} cadastrada{totals.pessoas === 1 ? '' : 's'}</div>
+
+      <ServiceSignupsChart weeks={metrics.signupsByWeek} />
+      <div className="dash-2col" style={{ marginTop: 20, marginBottom: 20 }}>
+        <ServiceStatusChart breakdown={metrics.statusBreakdown} />
+        <ServiceChurnCards churn={metrics.churn} />
+      </div>
+
+      <div className="lv-toolbar">
+        <input className="lv-search" placeholder="Buscar por nome, cidade ou CNPJ..." value={q} onChange={(e) => setQ(e.target.value)} />
+        <div className="lv-filters">
+          {SERVICE_OPS_FILTERS.map((f) => <button key={f.key} className={`chip${filter === f.key ? ' on' : ''}`} onClick={() => setFilter(f.key)}>{f.label}</button>)}
+        </div>
+        {selected.size > 0 && <button className="btn-pri" onClick={() => setModal({ kind: 'bulk' })}>Presentear {selected.size} selecionada(s)</button>}
+      </div>
+      <div className="lv-count">{shown.length} de {orgs.length} organizaç{orgs.length === 1 ? 'ão' : 'ões'}</div>
+
+      <div className="lv-list">
+        {shown.length === 0 && <div className="lv-empty">Nenhuma organização encontrada.</div>}
+        {shown.map((org) => {
+          const status = serviceOrgStatusLabel(org)
+          return (
+            <div className="row" key={org.organizationId}>
+              <input type="checkbox" checked={selected.has(org.organizationId)} onChange={() => toggle(org.organizationId)} style={{ marginRight: 4 }} />
+              <div className="row-main" style={{ cursor: 'pointer' }} onClick={() => openDetail(org)}>
+                <div className="row-title">{org.name}</div>
+                <div className="row-cat">
+                  {org.city || 'cidade não informada'} · entrou em {new Date(org.createdAt).toLocaleDateString('pt-BR')} · {org.churchCount} unidade{org.churchCount === 1 ? '' : 's'} · {org.loginCount} login{org.loginCount === 1 ? '' : 's'} · {org.peopleCount} pessoa{org.peopleCount === 1 ? '' : 's'}
+                  {org.notes ? ` · ${org.notes}` : ''}
+                </div>
+              </div>
+              <span className={`pill ${status.cls}`}>{status.label}</span>
+              <div className="row-acts">
+                <button className="row-btn" onClick={() => setModal({ kind: 'single', org })}>Estender/presentear</button>
+                {org.subStatus !== 'expired' && (
+                  <button className="row-btn danger" onClick={() => { void onExpireNow(org.organizationId).catch(() => undefined) }}>Encerrar agora</button>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ── MAIN ─────────────────────────────────────────────────────────────────────
 
 type InitialData = {
@@ -4612,6 +4990,8 @@ type InitialData = {
   mentorias: Mentoria[]
   adminUsers: AdminUser[]
   studioTemplates: StudioTemplate[]
+  serviceOrgs: ServiceOrgRow[]
+  serviceMetrics: ServiceMetrics
   metrics: AdminMetrics
 } | null
 
@@ -4708,6 +5088,12 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
     }
     return buildData()
   })
+  const [serviceOrgs, setServiceOrgs] = useState<ServiceOrgRow[]>(initialData?.serviceOrgs ?? [])
+  const [serviceMetrics] = useState<ServiceMetrics>(initialData?.serviceMetrics ?? {
+    signupsByWeek: [],
+    statusBreakdown: { pago: 0, trial: 0, vencendo: 0, expirado: 0, semAssinatura: 0 },
+    churn: { converted: 0, expired: 0, resolved: 0, conversionRate: null, churnRate: null },
+  })
   const [route, setRoute] = useState<Route>({ screen: 'dashboard' })
   const [editing, setEditing] = useState<Item | null>(null)
   const [confirm, setConfirm] = useState<Item | null>(null)
@@ -4729,6 +5115,7 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
     estante: data.estantes.length,
     users: data.adminUsers.length,
     templates: data.studioTemplates.length,
+    serviceOrgs: serviceOrgs.length,
   }
 
   const go = (r: Route) => {
@@ -4935,6 +5322,41 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
     }
   }
 
+  const extendTrial = async (organizationId: string, newPeriodEnd: string, notes?: string) => {
+    setAdminError('')
+    try {
+      await extendServiceTrial(organizationId, newPeriodEnd, notes)
+      setServiceOrgs(prev => prev.map(org => org.organizationId === organizationId
+        ? { ...org, subStatus: 'trialing', currentPeriodEnd: newPeriodEnd, notes: notes || org.notes }
+        : org))
+    } catch (error) {
+      throw failAdminAction(error, 'Não foi possível estender o trial no banco.')
+    }
+  }
+
+  const bulkExtendTrials = async (organizationIds: string[], newPeriodEnd: string, notes?: string) => {
+    setAdminError('')
+    try {
+      await bulkExtendServiceTrials(organizationIds, newPeriodEnd, notes)
+      const ids = new Set(organizationIds)
+      setServiceOrgs(prev => prev.map(org => ids.has(org.organizationId)
+        ? { ...org, subStatus: 'trialing', currentPeriodEnd: newPeriodEnd, notes: notes || org.notes }
+        : org))
+    } catch (error) {
+      throw failAdminAction(error, 'Não foi possível aplicar em lote no banco.')
+    }
+  }
+
+  const expireOrgNow = async (organizationId: string) => {
+    setAdminError('')
+    try {
+      await expireServiceOrgNow(organizationId)
+      setServiceOrgs(prev => prev.map(org => org.organizationId === organizationId ? { ...org, subStatus: 'expired' } : org))
+    } catch (error) {
+      throw failAdminAction(error, 'Não foi possível encerrar o acesso no banco.')
+    }
+  }
+
   const currentType = route.screen === 'list' ? route.type : 'material'
   const pageTitle = editing
     ? (editing.id ? 'Editar item' : 'Novo item')
@@ -4942,6 +5364,7 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
     : route.screen === 'shelves' ? 'Estantes'
     : route.screen === 'users' ? 'Acessos'
     : route.screen === 'studio' ? 'CE.X Studio'
+    : route.screen === 'service-ops' ? 'Operação Service'
     : typePlural(currentType)
 
   return (
@@ -4989,6 +5412,15 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
               templates={data.studioTemplates}
               onSave={saveStudioTemplate}
               onDelete={removeStudioTemplate}
+            />
+          ) : route.screen === 'service-ops' && admin.isMaster ? (
+            <ServiceOpsView
+              orgs={serviceOrgs}
+              metrics={serviceMetrics}
+              onExtend={extendTrial}
+              onBulkExtend={bulkExtendTrials}
+              onExpireNow={expireOrgNow}
+              onLoadHistory={getServiceOrgHistory}
             />
           ) : (
             <ListView type={currentType} items={data[arrKey(currentType)] as Item[]}
