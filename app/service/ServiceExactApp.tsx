@@ -932,8 +932,12 @@ function initials(name: string) {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
-function Av({ name, size = "sm" }: { name: string; size?: "xs" | "sm" | "md" | "lg" }) {
-  return <div className={`av av-${size}`}>{initials(name)}</div>;
+function Av({ name, size = "sm", photoUrl }: { name: string; size?: "xs" | "sm" | "md" | "lg"; photoUrl?: string | null }) {
+  return (
+    <div className={`av av-${size}${photoUrl ? " has-foto" : ""}`} style={photoUrl ? { backgroundImage: `url(${photoUrl})` } : undefined}>
+      {initials(name)}
+    </div>
+  );
 }
 
 function Chip({ status }: { status: string }) {
@@ -2032,7 +2036,7 @@ function PersonMini({ person, index, setDrawer }: { person: PersonView; index: n
   return (
     <button className="mini-row click" type="button" onClick={() => setDrawer({ kind: "person", id: person.id })}>
       <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--subtle)", width: 18 }}>{String(index + 1).padStart(2, "0")}</span>
-      <Av name={person.name} />
+      <Av name={person.name} photoUrl={person.photoUrl} />
       <div className="mini-main">
         <div className="mini-title">{person.name}</div>
         <div className="mini-sub">{person.tags.join(" · ") || person.status}</div>
@@ -2143,7 +2147,7 @@ function Pessoas({ people, currentPersonId, setDrawer, setModal }: { people: Per
         {visible.map((person) => (
           <button className="tr click tr-people" type="button" key={person.id} onClick={() => setDrawer({ kind: "person", id: person.id })}>
             <div className="who">
-              <Av name={person.name} />
+              <Av name={person.name} photoUrl={person.photoUrl} />
               <div>
                 <strong>{person.name}{person.id === currentPersonId && <span style={{ color: "var(--olive)", fontSize: 11, marginLeft: 7, fontFamily: "var(--mono)" }}>você</span>}</strong>
                 <small>{person.phone}</small>
@@ -2165,7 +2169,7 @@ function Times({ ministries, people, setDrawer, setModal }: { ministries: Minist
     <div className="content">
       <PageHead title="Times & Ministérios" eyebrow="Pessoas" subtitle="Times, líderes, funções e voluntários vinculados." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo time / ministério", subtitle: "Crie o ministério e já conte o propósito dele.", saveLabel: "Criar ministério", formFields: [{ k:"nome", label:"Nome do ministério", type:"text", req:true, ph:"ex: Louvor & Adoração" }, { k:"icon", label:"Ícone do time", type:"icon", value: DEFAULT_ICON }, { k:"desc", label:"Descrição curta", type:"text", ph:"Uma linha sobre o time" }, { k:"proposito", label:"Propósito", type:"area", ph:"Por que esse time existe?" }, { k:"aberto", label:"Recebendo voluntários?", type:"toggle", onLabel:"Aberto a novos", offLabel:"Equipe completa" }], action: { kind: "ministry" } })}>+ Novo time</button>} />
       <div className="team-grid">
-        {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => <Av key={link.personId} name={people.find((person) => person.id === link.personId)?.name ?? link.personName} />)}{ministry.people.length > 4 && <div className="av-more">+{ministry.people.length - 4}</div>}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName ?? "a definir"}</em></div><div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> voluntários</span><span className="team-stat"><b>{ministry.positions.length}</b> funções</span></div></button>)}
+        {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => { const linkPerson = people.find((person) => person.id === link.personId); return <Av key={link.personId} name={linkPerson?.name ?? link.personName} photoUrl={linkPerson?.photoUrl} />; })}{ministry.people.length > 4 && <div className="av-more">+{ministry.people.length - 4}</div>}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName ?? "a definir"}</em></div><div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> voluntários</span><span className="team-stat"><b>{ministry.positions.length}</b> funções</span></div></button>)}
       </div>
     </div>
   );
@@ -2740,7 +2744,7 @@ function Escalas({
                               type="button"
                               onClick={() => selectedEvent && setSlotAction({ kind: "slot", event: selectedEvent, ministry, position, assignment })}
                             >
-                              <Av name={person?.name ?? "Voluntário"} size="xs" />
+                              <Av name={person?.name ?? "Voluntário"} size="xs" photoUrl={person?.photoUrl} />
                               <span className="esc-person-name">{person?.name.split(" ")[0] ?? "Pessoa"}</span>
                               <span className={`slot-st ${assignment.status}`} />
                             </button>
@@ -2918,7 +2922,7 @@ function RosterActionModal({
           <div className="modal-head">
             <div className="modal-eyebrow">{action.position.name} · {action.ministry.name} · {action.event.weekday}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
-              <Av name={assignedPerson?.name ?? "Voluntário"} size="lg" />
+              <Av name={assignedPerson?.name ?? "Voluntário"} size="lg" photoUrl={assignedPerson?.photoUrl} />
               <div>
                 <div className="modal-title">{assignedPerson?.name ?? "Voluntário"}</div>
                 <div style={{ marginTop: 7 }}><Chip status={assignment.status} /></div>
@@ -2963,7 +2967,7 @@ function RosterActionModal({
                 onClose();
               }}
             >
-              <Av name={person.name} size="md" />
+              <Av name={person.name} size="md" photoUrl={person.photoUrl} />
               <div className="cand-main">
                 <div className="cand-name">{person.name}</div>
                 <div className="cand-meta">{person.tags.join(" · ") || person.status} · {person.engagement ?? 0}% engajamento</div>
@@ -3295,7 +3299,7 @@ function ReuniaoForm({
               const on = presentes.includes(person.id);
               return (
                 <button key={person.id} type="button" className={`cand-chip ${on ? "on" : ""}`} onClick={() => togglePessoa(person.id)}>
-                  <Av name={person.name} size="xs" /> {person.name.split(" ")[0]} {on && "✓"}
+                  <Av name={person.name} size="xs" photoUrl={person.photoUrl} /> {person.name.split(" ")[0]} {on && "✓"}
                 </button>
               );
             })}
@@ -3563,7 +3567,7 @@ function ReuniaoDrawer({
               const p = personById.get(pid);
               return p ? (
                 <div className="cand" key={pid}>
-                  <Av name={p.name} size="sm" />
+                  <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
                   <div className="cand-main"><div className="cand-name">{p.name}</div><div className="cand-meta">{p.tags.join(" · ") || "Participante"}</div></div>
                 </div>
               ) : null;
@@ -3704,7 +3708,7 @@ function EnsaioDrawer({
                 const p = personById.get(pid);
                 return p ? (
                   <div className="cand" key={pid}>
-                    <Av name={p.name} size="sm" />
+                    <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
                     <div className="cand-main"><div className="cand-name">{p.name}</div><div className="cand-meta">{p.tags.join(" · ") || "Participante"}</div></div>
                   </div>
                 ) : null;
@@ -3825,7 +3829,7 @@ function VerQuemLeuButton({ aviso, reads, people }: { aviso: AnnouncementView; r
               <div className="dsec-title" style={{ marginBottom: 8 }}>Leram · {leram.length}</div>
               {leram.map((p) => (
                 <div className="flag-row" key={p.id} style={{ cursor: "default" }}>
-                  <Av name={p.name} size="sm" />
+                  <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
                   <div className="flag-main"><div className="flag-nome">{p.name}</div></div>
                   <span style={{ marginLeft: "auto", color: "var(--olive)" }}><Icon name="ok" size={16} /></span>
                 </div>
@@ -3833,7 +3837,7 @@ function VerQuemLeuButton({ aviso, reads, people }: { aviso: AnnouncementView; r
               {naoLeram.length > 0 && <div className="dsec-title" style={{ margin: "14px 0 8px" }}>Ainda não leram · {naoLeram.length}</div>}
               {naoLeram.map((p) => (
                 <div className="flag-row" key={p.id} style={{ cursor: "default", opacity: 0.6 }}>
-                  <Av name={p.name} size="sm" />
+                  <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
                   <div className="flag-main"><div className="flag-nome">{p.name}</div></div>
                   <span className="cand-fit busy" style={{ marginLeft: "auto" }}>pendente</span>
                 </div>
@@ -4243,7 +4247,7 @@ function Criancas({
           const guardians = childGuardians.filter((g) => g.child_id === child.id);
           return (
             <button className="tr click" type="button" key={child.id} style={{ gridTemplateColumns: "1.6fr 1fr 1fr 1.4fr" }} onClick={() => setForm({ open: true, child })}>
-              <div className="cell-person"><Av name={child.name} size="md" /><div><div className="cell-name">{child.name}</div>{child.allergies ? <div className="cell-sub">⚠ {child.allergies}</div> : null}</div></div>
+              <div className="cell-person"><Av name={child.name} size="md" photoUrl={child.photo_url} /><div><div className="cell-name">{child.name}</div>{child.allergies ? <div className="cell-sub">⚠ {child.allergies}</div> : null}</div></div>
               <div className="cell-sub">{childAgeLabel(child.birth)}</div>
               <div>{child.class_id ? <span className="tag">{classById.get(child.class_id)?.name ?? "Turma"}</span> : <span className="cell-sub">sem turma</span>}</div>
               <div className="cell-sub">{guardians.length ? guardians.map((g) => personById.get(g.guardian_person_id)?.name.split(" ")[0]).filter(Boolean).join(", ") : "sem responsável"}</div>
@@ -4623,7 +4627,7 @@ function Decisoes({
             <button className="tr click" key={decision.id} style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }} type="button" onClick={() => setDrawer({ kind: "decision", id: decision.id })}>
               <div className="cell-person"><Av name={decision.name} size="md" /><div><div className="cell-name">{decision.name} <span className="chip chip-ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"}</span></div><div className="cell-sub">{decision.phone || "Telefone não informado"}</div></div></div>
               <div><div style={{ fontSize: 13, color: "var(--light)" }}>{formatDateBR(decision.happened_on) || "Data não informada"}</div><div className="cell-sub">{decision.service_name || "Culto não informado"}</div></div>
-              <div className="cell-person">{responsible ? <Av name={responsible.name} size="sm" /> : null}<div className="cell-sub" style={{ marginTop: 0 }}>{responsible?.name ?? "a definir"}</div></div>
+              <div className="cell-person">{responsible ? <Av name={responsible.name} size="sm" photoUrl={responsible.photoUrl} /> : null}<div className="cell-sub" style={{ marginTop: 0 }}>{responsible?.name ?? "a definir"}</div></div>
               <div><Chip status={decision.status === "novo" ? "wait" : decision.status === "encaminhado" ? "ok" : "ativo"} /></div>
             </button>
           );
@@ -5065,7 +5069,7 @@ function KbCard({
         <div className="av-stack">
           {card.assignees.slice(0, 3).map((id) => {
             const p = peopleById.get(id);
-            return p ? <Av key={id} name={p.name} size="xs" /> : null;
+            return p ? <Av key={id} name={p.name} size="xs" photoUrl={p.photoUrl} /> : null;
           })}
         </div>
       </div>
@@ -5192,7 +5196,7 @@ function CardDrawer({
                 return (
                   <button key={p.id} type="button" className={`cand-chip${on ? " on" : ""}`}
                     onClick={() => mutate({ assignees: on ? lc.assignees.filter((x) => x !== p.id) : [...lc.assignees, p.id] })}>
-                    <Av name={p.name} size="xs" /> {p.name.split(" ")[0]} {on && "✓"}
+                    <Av name={p.name} size="xs" photoUrl={p.photoUrl} /> {p.name.split(" ")[0]} {on && "✓"}
                   </button>
                 );
               })}
@@ -5306,7 +5310,7 @@ function NovoCard({
                 return (
                   <button key={p.id} type="button" className={`cand-chip${on ? " on" : ""}`}
                     onClick={() => setResp(on ? resp.filter((x) => x !== p.id) : [...resp, p.id])}>
-                    <Av name={p.name} size="xs" /> {p.name.split(" ")[0]} {on && "✓"}
+                    <Av name={p.name} size="xs" photoUrl={p.photoUrl} /> {p.name.split(" ")[0]} {on && "✓"}
                   </button>
                 );
               })}
@@ -5907,7 +5911,7 @@ function Relatorios({
       </div>
       <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">Termômetro de bem-estar</span><span className="line" /></div>
       <div className="well-sum">{[["saudavel", contar("saudavel"), "Saudável"], ["atencao", contar("atencao"), "Atenção"], ["sobrecarga", contar("sobrecarga"), "Sobrecarga"], ["afastando", contar("afastando"), "Afastando"]].map(([level, count, label]) => <div className="well-pill" key={level}><div className="n">{count}</div><div className="l"><span className={`well-dot ${level}`} />{label}</div></div>)}</div>
-      <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={13} /> Quem precisa de atenção</span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>Voluntários</button></div><div className="panel-body flush">{(wellRows.length ? wellRows : people.slice(0, 8).map((p) => ({ person: p, cls: "atencao", tag: "Atenção" }))).slice(0, 8).map(({ person, cls, tag }) => <div className="well-row" key={person.id}><Av name={person.name} size="md" /><div className="mini-main"><div className="mini-title">{person.name}</div><div className="mini-sub">{person.status !== "ativo" ? "Em pausa ou férias." : "Engajamento abaixo da média."}</div></div><div className="well-meter"><div className="well-track"><div className={`well-fill ${cls}`} style={{ width: `${person.engagement ?? 50}%` }} /></div><div className={`well-tag ${cls}`}>{tag}</div></div></div>)}</div></div>
+      <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={13} /> Quem precisa de atenção</span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>Voluntários</button></div><div className="panel-body flush">{(wellRows.length ? wellRows : people.slice(0, 8).map((p) => ({ person: p, cls: "atencao", tag: "Atenção" }))).slice(0, 8).map(({ person, cls, tag }) => <div className="well-row" key={person.id}><Av name={person.name} size="md" photoUrl={person.photoUrl} /><div className="mini-main"><div className="mini-title">{person.name}</div><div className="mini-sub">{person.status !== "ativo" ? "Em pausa ou férias." : "Engajamento abaixo da média."}</div></div><div className="well-meter"><div className="well-track"><div className={`well-fill ${cls}`} style={{ width: `${person.engagement ?? 50}%` }} /></div><div className={`well-tag ${cls}`}>{tag}</div></div></div>)}</div></div>
       <div className="dash-2col" style={{ marginTop: 28 }}>
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="times" size={13} /> Voluntários por ministério</span><button className="panel-link" type="button" onClick={() => setRoute("times")}>Times</button></div><div className="panel-body flush">{ministries.map((ministry) => <div className="dist-row" key={ministry.id}><span className="dist-name">{ministry.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(ministry.people.length / maxMinistry) * 100}%` }} /></div><span className="dist-num">{ministry.people.length}</span></div>)}</div></div>
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por jornada</span><span className="panel-meta">{members.length} pessoas</span></div><div className="panel-body flush">{["Decisão", "Batismo", "Fundamentos", gruposSigla, "Servindo"].map((step, index) => { const count = members.filter((member) => member.journey[index]).length; return <div className="dist-row" key={step}><span className="dist-name">{step}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${members.length ? (count / members.length) * 100 : 0}%` }} /></div><span className="dist-num">{count}</span></div>; })}</div></div>
@@ -6137,7 +6141,7 @@ function AcessosCard({
             const n = p.meta?.extraAccess?.length ?? 0;
             return (
               <button key={p.id} type="button" className={`flag-row${selectedId === p.id ? " on" : ""}`} onClick={() => setSelectedId(p.id)}>
-                <Av name={p.name} size="sm" />
+                <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
                 <div className="flag-main"><div className="flag-nome">{p.name}</div><div className="flag-meta">{n ? `${n} acesso(s) extra` : "sem acesso extra"}</div></div>
               </button>
             );
@@ -6247,7 +6251,7 @@ function TagElencoModal({
             const lider = localTag.leaders.includes(p.id);
             return (
               <div className={`flag-row${on ? " on" : ""}`} key={p.id} style={{ cursor: "pointer" }} onClick={() => toggleElenco(p.id)}>
-                <Av name={p.name} size="sm" />
+                <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
                 <div className="flag-main">
                   <div className="flag-nome">{p.name}{lider && <span style={{ marginLeft: 8, fontSize: 11, color: "var(--amber)" }}>★ líder</span>}</div>
                 </div>
@@ -8235,7 +8239,7 @@ function AddToMinistryModal({
           </div>
           {fora.map((p) => (
             <div className="flag-row" key={p.id} style={{ cursor: "pointer" }} onClick={() => add(p.id)}>
-              <Av name={p.name} size="sm" />
+              <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
               <div className="flag-main"><div className="flag-nome">{p.name}</div></div>
               <span className="btn btn-ghost btn-sm" style={{ marginLeft: "auto" }}>Adicionar</span>
             </div>
@@ -8418,7 +8422,7 @@ function EntityDrawer({
         <div className="drawer-head">
           <button className="drawer-close" type="button" onClick={() => setDrawer(null)}>✕</button>
           <div className="profile-top">
-            <Av name={person.name} size="lg" />
+            <Av name={person.name} size="lg" photoUrl={person.photoUrl} />
             <div>
               <div className="profile-name">{person.name}</div>
               <div className="profile-role">Voluntário · desde o cadastro</div>
@@ -8479,7 +8483,7 @@ function EntityDrawer({
         <div className="drawer-head">
           <button className="drawer-close" type="button" onClick={() => setDrawer(null)}>✕</button>
           <div className="profile-top">
-            <Av name={member.name} size="lg" />
+            <Av name={member.name} size="lg" photoUrl={linkedPerson?.photoUrl} />
             <div>
               <div className="profile-name">{member.name}</div>
               <div className="profile-role">na casa desde {formatDateBR(member.firstContact)}</div>
@@ -8691,7 +8695,7 @@ function EntityDrawer({
                 {pessoas.length === 0 && <div style={{ fontSize: 12, color: "var(--subtle)", fontFamily: "var(--mono)" }}>Ninguém habilitado ainda.</div>}
                 {pessoas.map((link) => (
                   <button className="cand" type="button" key={`${position.id}-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
-                    <Av name={link.personName} />
+                    <Av name={link.personName} photoUrl={people.find((pp) => pp.id === link.personId)?.photoUrl} />
                     <div className="cand-main">
                       <div className="cand-name">{link.personName}</div>
                       <div className="cand-meta">{link.isLeader ? "Líder do time" : link.functions.join(" · ") || "Voluntário"}</div>
@@ -8708,7 +8712,7 @@ function EntityDrawer({
                 </div>
                 {semFuncao.map((link) => (
                   <button className="cand" type="button" key={`semfuncao-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
-                    <Av name={link.personName} />
+                    <Av name={link.personName} photoUrl={people.find((pp) => pp.id === link.personId)?.photoUrl} />
                     <div className="cand-main">
                       <div className="cand-name">{link.personName}</div>
                       <div className="cand-meta">{link.isLeader ? "Líder do time" : "Voluntário"}</div>
@@ -8890,7 +8894,7 @@ function EventDrawer({
                           const person = people.find((candidate) => candidate.id === assignment.person_id);
                           return (
                             <button key={assignment.id} className="slot" style={{ margin: 0, width: "auto" }} type="button" onClick={() => person && setDrawer({ kind: "person", id: person.id })}>
-                              <Av name={person?.name ?? "Voluntário"} size="xs" />
+                              <Av name={person?.name ?? "Voluntário"} size="xs" photoUrl={person?.photoUrl} />
                               <span className="slot-name" style={{ maxWidth: 120 }}>{person?.name.split(" ")[0] ?? "Pessoa"}</span>
                               <span className={`slot-st ${assignment.status}`} />
                             </button>

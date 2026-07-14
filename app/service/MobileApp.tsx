@@ -181,8 +181,12 @@ function ini(name: string) {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
-function Av({ name, size = "sm" }: { name: string; size?: "xs" | "sm" | "md" | "lg" | "xl" }) {
-  return <div className={`av av-${size}`}>{ini(name)}</div>;
+function Av({ name, size = "sm", photoUrl }: { name: string; size?: "xs" | "sm" | "md" | "lg" | "xl"; photoUrl?: string | null }) {
+  return (
+    <div className={`av av-${size}${photoUrl ? " has-foto" : ""}`} style={photoUrl ? { backgroundImage: `url(${photoUrl})` } : undefined}>
+      {ini(name)}
+    </div>
+  );
 }
 
 function ChipSt({ status, label }: { status: "ok" | "wait" | "no"; label?: string }) {
@@ -1054,7 +1058,7 @@ function TabKids({
         return (
           <div className="m-card" key={att.id}>
             <div className="m-vis-head">
-              <Av name={child?.name ?? "?"} size="sm" />
+              <Av name={child?.name ?? "?"} size="sm" photoUrl={child?.photo_url} />
               <div className="m-vis-main">
                 <div className="m-culto" style={{ fontSize: 14 }}>{child?.name ?? "Crianca"}</div>
                 <div className="m-fn">{child?.allergies ? `⚠ ${child.allergies}` : (att.dropped_off_via === "manual" ? "manual" : "QR")}</div>
@@ -1068,7 +1072,7 @@ function TabKids({
       <input className="input" placeholder="Buscar crianca pra check-in manual..." value={q} onChange={(e) => setQ(e.target.value)} style={{ marginTop: 16, marginBottom: 8 }} />
       {notYetIn.slice(0, 5).map((child) => (
         <div className="m-vis-head" key={child.id} style={{ cursor: "pointer" }} onClick={() => checkinManual(child.id)}>
-          <Av name={child.name} size="sm" />
+          <Av name={child.name} size="sm" photoUrl={child.photo_url} />
           <div className="m-vis-main"><div className="m-culto" style={{ fontSize: 14 }}>{child.name}</div></div>
           <span style={{ color: "var(--olive)", fontSize: 12 }}>+ check-in</span>
         </div>
@@ -1511,7 +1515,7 @@ function TabPerfil({
   return (
     <>
       <div className="m-profile">
-        <Av name={person.name} size="xl" />
+        <Av name={person.name} size="xl" photoUrl={person.photoUrl} />
         <div className="m-profile-name">{person.name}</div>
         <div className="m-profile-role">
           Voluntario{member?.firstContact ? ` · desde ${formatDateBR(member.firstContact)}` : ""}
@@ -1995,7 +1999,7 @@ function TabKidsArea({
           <div key={child.id}>
             <button className="m-card" style={{ width: "100%", textAlign: "left", cursor: "pointer" }} onClick={() => abrirEdicao(child)}>
               <div className="m-vis-head">
-                {child.photo_url ? <img src={child.photo_url} alt={child.name} style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} /> : <Av name={child.name} size="sm" />}
+                <Av name={child.name} size="sm" photoUrl={child.photo_url} />
                 <div className="m-vis-main">
                   <div className="m-culto" style={{ fontSize: 14 }}>{child.name}</div>
                   <div className="m-fn">{turma?.name ?? "sem turma"}{child.allergies ? ` · ⚠ ${child.allergies}` : ""}</div>
@@ -2017,7 +2021,7 @@ function TabKidsArea({
                     const p = people.find((pp) => pp.id === g.guardian_person_id);
                     return (
                       <div className="m-vis-head" key={g.id} style={{ marginBottom: 8 }}>
-                        {p?.photoUrl ? <img src={p.photoUrl} alt={p.name} style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover" }} /> : <Av name={p?.name ?? "?"} size="sm" />}
+                        <Av name={p?.name ?? "?"} size="sm" photoUrl={p?.photoUrl} />
                         <div className="m-vis-main">
                           <div className="m-culto" style={{ fontSize: 13 }}>{p?.name ?? "Responsavel"}{g.is_primary ? " · principal" : ""}</div>
                           <div className="m-fn">{g.relationship || "sem parentesco informado"}</div>
@@ -2284,7 +2288,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
                 className={`mob-persona-opt ${i === idx ? "on" : ""}`}
                 onClick={() => setIdx(i)}
               >
-                <Av name={p.name} size="sm" />
+                <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
                 <div>
                   <b>{p.name}</b>
                   <small>
