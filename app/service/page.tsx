@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { createServiceSupabaseClient } from "./lib/supabase";
+import { resolverEnqueteElegivel } from "./lib/enquetes";
+import { resolverPesquisaElegivel } from "./lib/pesquisas";
 import ServiceExactApp from "./ServiceExactApp";
 
 type ChurchRow = {
@@ -1302,6 +1304,69 @@ export default async function ServiceHomePage() {
     currentPersonId = (personRow as { id?: string } | null)?.id ?? null;
   }
 
+  let enqueteElegivel = null as Awaited<ReturnType<typeof resolverEnqueteElegivel>>;
+  if (currentPersonId) {
+    const minhasEquipes = ministries.filter((m) => m.people.some((p) => p.personId === currentPersonId)).map((m) => m.name);
+    const [{ data: confirmacoes }, { count: membrosCount }] = await Promise.all([
+      supabase
+        .schema("service")
+        .from("roster_assignments")
+        .select("updated_at")
+        .eq("person_id", currentPersonId)
+        .eq("status", "ok")
+        .order("updated_at", { ascending: false })
+        .limit(1),
+      supabase
+        .schema("service")
+        .from("members")
+        .select("id", { count: "exact", head: true })
+        .eq("volunteer_id", currentPersonId),
+    ]);
+    const rosterConfirmadoEm = ((confirmacoes ?? [])[0] as { updated_at?: string } | undefined)?.updated_at ?? null;
+    try {
+      enqueteElegivel = await resolverEnqueteElegivel(supabase, {
+        personId: currentPersonId,
+        papel: currentRole,
+        times: minhasEquipes,
+        ehMembro: (membrosCount ?? 0) > 0,
+        rosterConfirmadoEm,
+      });
+    } catch (err) {
+      console.error("Não foi possível resolver a avaliação de experiência elegível:", err);
+    }
+  }
+
+  /* pulso pós-escala da própria igreja (service.pesquisas, ver app/service/lib/pesquisas.ts):
+     "pós-escala" = a escala mais recente em que a pessoa está confirmada (status='ok') e cujo
+     evento já aconteceu (event_date no passado) — diferente de rosterConfirmadoEm acima, que é
+     só a confirmação de presença da enquete cross-tenant da CE.X. */
+  let pesquisaElegivel = null as Awaited<ReturnType<typeof resolverPesquisaElegivel>>;
+  if (currentPersonId && organizationId) {
+    const minhasEquipes = ministries.filter((m) => m.people.some((p) => p.personId === currentPersonId)).map((m) => m.name);
+    const hoje = new Date().toISOString().slice(0, 10);
+    const { data: escalasServidas } = await supabase
+      .schema("service")
+      .from("roster_assignments")
+      .select("event_id, events!inner(event_date)")
+      .eq("person_id", currentPersonId)
+      .eq("status", "ok")
+      .lt("events.event_date", hoje)
+      .order("event_date", { foreignTable: "events", ascending: false })
+      .limit(1);
+    const ultimaEscalaEventId = ((escalasServidas ?? [])[0] as { event_id?: string } | undefined)?.event_id ?? null;
+    try {
+      pesquisaElegivel = await resolverPesquisaElegivel(supabase, {
+        organizationId,
+        personId: currentPersonId,
+        papel: currentRole,
+        times: minhasEquipes,
+        ultimaEscalaServida: ultimaEscalaEventId ? { eventId: ultimaEscalaEventId } : null,
+      });
+    } catch (err) {
+      console.error("Não foi possível resolver a pesquisa pós-escala elegível:", err);
+    }
+  }
+
   return (
     <ServiceExactApp
       churches={churches}
@@ -1353,6 +1418,8 @@ export default async function ServiceHomePage() {
       currentRole={currentRole}
       permissionsMatrix={permissionsMatrix}
       currentPersonId={currentPersonId}
+      enqueteElegivel={enqueteElegivel}
+      pesquisaElegivel={pesquisaElegivel}
       error={error}
     />
   );

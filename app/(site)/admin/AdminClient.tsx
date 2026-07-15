@@ -24,6 +24,7 @@ import {
   type StudioTemplate,
 } from './actions'
 import { extendServiceTrial, bulkExtendServiceTrials, expireServiceOrgNow, getServiceOrgHistory, type ServiceOrgRow, type ServiceOrgHistoryEntry, type ServiceMetrics } from './service-ops-actions'
+import { getEnquetes, saveEnquete, deleteEnquete, emitirCampanha, setEnqueteStatus, getEnqueteRespostas, type EnqueteRow, type PerguntaRow, type RespostaRow, type Contexto as EnqContexto, type TipoPergunta } from './enquetes-actions'
 import { ESTANTE_MAP } from '../../lib/materiais-data'
 import Logo from '../../components/Logo'
 import ThemeToggle from '../../components/ThemeToggle'
@@ -3876,7 +3877,7 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => P
 
 // ── SHELL ────────────────────────────────────────────────────────────────────
 
-type Route = { screen: 'dashboard' } | { screen: 'list'; type: CatalogItemType } | { screen: 'shelves' } | { screen: 'users' } | { screen: 'studio' } | { screen: 'service-ops' }
+type Route = { screen: 'dashboard' } | { screen: 'list'; type: CatalogItemType } | { screen: 'shelves' } | { screen: 'users' } | { screen: 'studio' } | { screen: 'service-ops' } | { screen: 'avaliacao' }
 
 function Login() {
   const [username, setUsername] = useState('')
@@ -4156,6 +4157,10 @@ function Sidebar({ route, go, counts, onLogout, admin }: { route: Route; go: (r:
               <button className={`adm-sb-link${route.screen === 'service-ops' ? ' on' : ''}`} onClick={() => go({ screen: 'service-ops' })}>
                 <span className="adm-sb-ic">◇</span> Operação Service
                 <span className="adm-sb-count">{counts.serviceOrgs}</span>
+              </button>
+              <button className={`adm-sb-link${route.screen === 'avaliacao' ? ' on' : ''}`} onClick={() => go({ screen: 'avaliacao' })}>
+                <span className="adm-sb-ic">◇</span> Avaliação de experiência
+                <span className="adm-sb-count">{counts.enquetes}</span>
               </button>
             </>
           )}
@@ -4981,6 +4986,472 @@ function ServiceOpsView({
   )
 }
 
+// ── AVALIAÇÃO DE EXPERIÊNCIA ───────────────────────────────────────────────
+// Cross-tenant (Service) / global (Site): a CE.X cria a enquete uma vez e ela
+// vale pra qualquer igreja cliente ou qualquer visitante do site. Ver
+// HANDOFF Avaliação de Experiência + AGENTS.md §9. `service`/`cex` são
+// schemas separados (nunca uma tabela genérica), mas o admin fala com os
+// dois pelo mesmo componente, só trocando `contexto`.
+
+type EnqueteDraft = Omit<EnqueteRow, 'criadoEm' | 'totalRespostas'>
+
+// Cargo (core.memberships.role) + o sentinela 'membro', que não é cargo
+// nenhum — é "está cadastrado em service.members" (pessoa da congregação,
+// domínio separado de quem serve). O resolver (app/service/lib/enquetes.ts)
+// trata os dois eixos separadamente.
+const PAPEIS_SERVICE = [
+  { key: 'pastor', label: 'Pastor' },
+  { key: 'lider', label: 'Líder de time' },
+  { key: 'vol', label: 'Voluntário' },
+  { key: 'membro', label: 'Membro da congregação' },
+]
+
+const SEG_MODES_SERVICE = [
+  { key: 'todos' as const, label: 'Todos os usuários', hint: 'Qualquer pessoa logada no Service, em qualquer igreja.' },
+  { key: 'papel' as const, label: 'Por papel', hint: 'Pastor, líder de time, voluntário ou membro da congregação.' },
+  { key: 'time' as const, label: 'Por time/ministério', hint: 'Só quem serve num time com esse nome — bate pelo nome, em qualquer igreja.' },
+]
+const SEG_MODES_SITE = [
+  { key: 'todos' as const, label: 'Todos os usuários', hint: 'Qualquer usuário logado no site.' },
+  { key: 'estante' as const, label: 'Por estante', hint: 'Só quem comprou algum material de uma estante específica (entre as ativas).' },
+]
+const segModesFor = (c: EnqContexto) => (c === 'site' ? SEG_MODES_SITE : SEG_MODES_SERVICE)
+
+const DISPARO_MODES_SERVICE = [
+  { key: 'livre' as const, label: 'Livre', hint: 'Sempre disponível pelo atalho no painel do Service.' },
+  { key: 'periodica' as const, label: 'Periódica', hint: 'Reaparece a cada X dias até responder.' },
+  { key: 'posescala' as const, label: 'Pós-escala', hint: 'Elegível N horas depois da pessoa confirmar presença numa escala.' },
+  { key: 'campanha' as const, label: 'Campanha', hint: 'Aparece uma única vez depois de você clicar em "Emitir agora".' },
+]
+const DISPARO_MODES_SITE = [
+  { key: 'livre' as const, label: 'Livre', hint: 'Sempre disponível pelo botão fixo no site.' },
+  { key: 'periodica' as const, label: 'Periódica', hint: 'Reaparece a cada X dias até responder.' },
+  { key: 'posdownload' as const, label: 'Pós-acesso', hint: 'Elegível logo depois da pessoa abrir um material comprado.' },
+  { key: 'campanha' as const, label: 'Campanha', hint: 'Aparece uma única vez depois de você clicar em "Emitir agora".' },
+]
+const disparoModesFor = (c: EnqContexto) => (c === 'site' ? DISPARO_MODES_SITE : DISPARO_MODES_SERVICE)
+
+const QUESTION_LABEL: Record<TipoPergunta, string> = { nota: 'NPS', texto: 'Texto livre', emoji: 'Reação', multipla: 'Múltipla escolha', simnao: 'Sim / Não' }
+
+const newEnqueteDraft = (contexto: EnqContexto): EnqueteDraft => ({
+  id: `novo-${Date.now()}`,
+  nome: '',
+  contexto,
+  status: 'ativa',
+  perguntas: [{ id: `nova-${Date.now()}`, ordem: 0, tipo: 'nota', texto: '', escala: 10, opcoes: null }],
+  segmentacao: { modo: 'todos', valores: [] },
+  disparo: { modo: 'livre', ativoComoLivre: false, intervaloDias: 7, horasDepois: 3, emitidaEm: null },
+})
+
+function segLabel(seg: EnqueteRow['segmentacao']) {
+  if (seg.modo === 'todos') return 'Todos os usuários'
+  if (seg.modo === 'papel') return `Papel: ${seg.valores.join(', ') || '—'}`
+  if (seg.modo === 'time') return `Time: ${seg.valores.join(', ') || '—'}`
+  if (seg.modo === 'estante') return `Estante: ${seg.valores.join(', ') || '—'}`
+  return `Lista manual (${seg.valores.length})`
+}
+function disparoLabel(d: EnqueteRow['disparo']) {
+  if (d.modo === 'livre') return 'Livre' + (d.ativoComoLivre ? ' · ativa' : '')
+  if (d.modo === 'periodica') return `Periódica · ${d.intervaloDias ?? 7}d`
+  if (d.modo === 'posescala') return `Pós-escala · ${d.horasDepois ?? 3}h`
+  if (d.modo === 'posdownload') return 'Pós-acesso'
+  return d.emitidaEm ? `Campanha · emitida em ${new Date(d.emitidaEm).toLocaleDateString('pt-BR')}` : 'Campanha · não emitida'
+}
+
+function SectionDivide({ n, label }: { n: string; label: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '22px 0 12px' }}>
+      <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--olive)', letterSpacing: '.1em' }}>{n}</span>
+      <span style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{label}</span>
+      <span style={{ flex: 1, height: 1, background: 'var(--border-2)' }} />
+    </div>
+  )
+}
+
+type EnqRoute = { screen: 'lista' } | { screen: 'editor'; draft: EnqueteDraft } | { screen: 'resultados'; enquete: EnqueteRow }
+
+function EnquetesView({ enquetes, timesDisponiveis, estantesAtivas, onSave, onDelete, onEmitir, onSetStatus, onLoadRespostas }: {
+  enquetes: EnqueteRow[]
+  timesDisponiveis: string[]
+  estantesAtivas: { key: string; label: string }[]
+  onSave: (d: EnqueteDraft) => Promise<void>
+  onDelete: (contexto: EnqContexto, id: string) => Promise<void>
+  onEmitir: (contexto: EnqContexto, id: string) => Promise<void>
+  onSetStatus: (contexto: EnqContexto, id: string, status: 'ativa' | 'pausada' | 'encerrada') => Promise<void>
+  onLoadRespostas: (contexto: EnqContexto, id: string) => Promise<RespostaRow[]>
+}) {
+  const [route, setRoute] = useState<EnqRoute>({ screen: 'lista' })
+  const [tab, setTab] = useState<EnqContexto>('service')
+  const [q, setQ] = useState('')
+  const [toDelete, setToDelete] = useState<EnqueteRow | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+
+  if (route.screen === 'editor') {
+    return (
+      <EnqueteEditor
+        draft={route.draft}
+        timesDisponiveis={timesDisponiveis}
+        estantesAtivas={estantesAtivas}
+        saving={saving}
+        saveError={saveError}
+        onCancel={() => { setSaveError(''); setRoute({ screen: 'lista' }) }}
+        onSave={async (d) => {
+          setSaving(true); setSaveError('')
+          try { await onSave(d); setRoute({ screen: 'lista' }) }
+          catch (error) { setSaveError(error instanceof Error ? error.message : 'Não foi possível salvar no banco.') }
+          finally { setSaving(false) }
+        }}
+      />
+    )
+  }
+  if (route.screen === 'resultados') {
+    const enquete = route.enquete
+    return <EnqueteResultados enquete={enquete} onVoltar={() => setRoute({ screen: 'lista' })} onLoad={() => onLoadRespostas(enquete.contexto, enquete.id)} />
+  }
+
+  const shown = enquetes.filter((e) => e.contexto === tab && (!q || e.nome.toLowerCase().includes(q.toLowerCase())))
+
+  return (
+    <div className="listview">
+      {toDelete && (
+        <div className="modal-bg" onClick={() => setToDelete(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-title">Excluir enquete &ldquo;{toDelete.nome}&rdquo;?</div>
+            <p className="modal-text">Remove a enquete, as perguntas e todas as respostas já recebidas. Não pode ser desfeito.</p>
+            <div className="modal-acts">
+              <button className="btn-danger" onClick={async () => { try { await onDelete(toDelete.contexto, toDelete.id); setToDelete(null) } catch { /* erro já fica visível no alert do topo */ } }}>Excluir enquete</button>
+              <button className="btn-sec" onClick={() => setToDelete(null)}>Manter</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="kpi-row" style={{ marginBottom: 20 }}>
+        <div className="kpi"><div className="kpi-label">Enquetes ativas</div><div className="kpi-value">{enquetes.filter((e) => e.status === 'ativa').length}</div></div>
+        <div className="kpi"><div className="kpi-label">Respostas totais</div><div className="kpi-value">{enquetes.reduce((a, e) => a + e.totalRespostas, 0)}</div></div>
+        <div className="kpi"><div className="kpi-label">Livre no Service</div><div className="kpi-value" style={{ fontSize: 15 }}>{enquetes.find((e) => e.contexto === 'service' && e.disparo.ativoComoLivre)?.nome ?? '— nenhuma —'}</div></div>
+        <div className="kpi"><div className="kpi-label">Livre no Site</div><div className="kpi-value" style={{ fontSize: 15 }}>{enquetes.find((e) => e.contexto === 'site' && e.disparo.ativoComoLivre)?.nome ?? '— nenhuma —'}</div></div>
+      </div>
+      <div className="lv-toolbar">
+        <input className="lv-search" placeholder="Buscar enquete..." value={q} onChange={(e) => setQ(e.target.value)} />
+        <div className="lv-filters">
+          <button className={`chip${tab === 'service' ? ' on' : ''}`} onClick={() => setTab('service')}>Service</button>
+          <button className={`chip${tab === 'site' ? ' on' : ''}`} onClick={() => setTab('site')}>Site de materiais</button>
+        </div>
+        <button className="btn-pri" onClick={() => setRoute({ screen: 'editor', draft: newEnqueteDraft(tab) })}>+ Nova enquete</button>
+      </div>
+      <div className="lv-count">{shown.length} enquete{shown.length === 1 ? '' : 's'} · {tab === 'service' ? 'Service' : 'Site de materiais'}</div>
+      <div className="lv-list">
+        {shown.length === 0 && <div className="lv-empty">Nenhuma enquete ainda. Clique em <em>+ Nova enquete</em> para criar.</div>}
+        {shown.map((e) => (
+          <div className="row" key={e.id}>
+            <div className="row-chip"><span style={{ color: 'var(--olive)' }}>◆</span></div>
+            <div className="row-main" style={{ cursor: 'pointer' }} onClick={() => setRoute({ screen: 'resultados', enquete: e })}>
+              <div className="row-title">{e.nome}</div>
+              <div className="row-cat">{e.perguntas.length} pergunta{e.perguntas.length === 1 ? '' : 's'} · {segLabel(e.segmentacao)} · {disparoLabel(e.disparo)}</div>
+            </div>
+            <span className={`pill ${e.status === 'ativa' ? 'pub' : 'draft'}`}>{e.status === 'ativa' ? 'Ativa' : e.status === 'pausada' ? 'Pausada' : 'Encerrada'}</span>
+            <span className="row-right">{e.totalRespostas} resposta{e.totalRespostas === 1 ? '' : 's'}</span>
+            <div className="row-acts">
+              {e.disparo.modo === 'campanha' && !e.disparo.emitidaEm && (
+                <button className="row-btn" onClick={() => { void onEmitir(e.contexto, e.id).catch(() => undefined) }}>Emitir agora</button>
+              )}
+              {e.status === 'ativa' && (
+                <button className="row-btn" onClick={() => { void onSetStatus(e.contexto, e.id, 'pausada').catch(() => undefined) }}>Pausar</button>
+              )}
+              {e.status === 'pausada' && (
+                <button className="row-btn" onClick={() => { void onSetStatus(e.contexto, e.id, 'ativa').catch(() => undefined) }}>Reativar</button>
+              )}
+              {e.status !== 'encerrada' && (
+                <button className="row-btn" onClick={() => { void onSetStatus(e.contexto, e.id, 'encerrada').catch(() => undefined) }}>Encerrar</button>
+              )}
+              {e.status === 'encerrada' && (
+                <button className="row-btn" onClick={() => { void onSetStatus(e.contexto, e.id, 'ativa').catch(() => undefined) }}>Reabrir</button>
+              )}
+              <button className="row-btn" onClick={() => setRoute({ screen: 'editor', draft: e })}>Editar</button>
+              <button className="row-btn danger" onClick={() => setToDelete(e)}>Excluir</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function EnqueteEditor({ draft: initial, timesDisponiveis, estantesAtivas, onSave, onCancel, saving, saveError }: {
+  draft: EnqueteDraft
+  timesDisponiveis: string[]
+  estantesAtivas: { key: string; label: string }[]
+  onSave: (d: EnqueteDraft) => Promise<void>
+  onCancel: () => void
+  saving: boolean
+  saveError: string
+}) {
+  const [d, setD] = useState<EnqueteDraft>(initial)
+  const isNew = initial.id.startsWith('novo-')
+  const segModes = segModesFor(d.contexto)
+  const disparoModes = disparoModesFor(d.contexto)
+  const disparoAtual = disparoModes.find((m) => m.key === d.disparo.modo) ?? disparoModes[0]
+  const setPerguntas = (arr: PerguntaRow[]) => setD({ ...d, perguntas: arr })
+
+  return (
+    <div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+        <div style={{ minWidth: 0 }}>
+          <div className="adm-top-crumb">AVALIAÇÃO DE EXPERIÊNCIA</div>
+          <h1 className="adm-top-title">{isNew ? 'Nova enquete' : 'Editar enquete'}</h1>
+        </div>
+      </div>
+      {saveError && (
+        <div className="adm-save-alert" role="alert"><span>{saveError}</span></div>
+      )}
+      <div className="panel" style={{ marginBottom: 16 }}>
+        <div className="panel-body">
+          <Field label="Nome da enquete" req>
+            <input className="inp" value={d.nome} onChange={(e) => setD({ ...d, nome: e.target.value })} placeholder="Ex.: Pulso mensal de bem-estar" />
+          </Field>
+          <Field label="Onde aparece" hint={isNew ? undefined : 'Não dá pra mudar depois de criada.'}>
+            <div className="seg" style={{ width: '100%' }}>
+              {(['service', 'site'] as const).map((c) => (
+                <button key={c} type="button" disabled={!isNew} style={{ flex: 1, opacity: !isNew && d.contexto !== c ? 0.5 : 1 }}
+                  className={`seg-btn${d.contexto === c ? ' on' : ''}`}
+                  onClick={() => isNew && setD({ ...d, contexto: c, segmentacao: { modo: 'todos', valores: [] }, disparo: { modo: 'livre', ativoComoLivre: false, intervaloDias: 7, horasDepois: 3, emitidaEm: null } })}>
+                  {c === 'service' ? 'Service (app)' : 'Site de materiais'}
+                </button>
+              ))}
+            </div>
+          </Field>
+        </div>
+      </div>
+
+      <SectionDivide n="01" label="Segmentação · quem recebe" />
+      <div className="panel" style={{ marginBottom: 16 }}>
+        <div className="panel-body">
+          {segModes.map((m) => (
+            <label key={m.key} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 0', borderBottom: '0.5px solid var(--border)', cursor: 'pointer' }}>
+              <input type="radio" checked={d.segmentacao.modo === m.key} onChange={() => setD({ ...d, segmentacao: { modo: m.key, valores: [] } })} style={{ marginTop: 3 }} />
+              <div><div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--light)' }}>{m.label}</div><div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{m.hint}</div></div>
+            </label>
+          ))}
+          {d.segmentacao.modo === 'papel' && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
+              {PAPEIS_SERVICE.map((p) => (
+                <button key={p.key} type="button" className={`chip${d.segmentacao.valores.includes(p.key) ? ' on' : ''}`}
+                  onClick={() => { const v = d.segmentacao.valores; setD({ ...d, segmentacao: { ...d.segmentacao, valores: v.includes(p.key) ? v.filter((x) => x !== p.key) : [...v, p.key] } }) }}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {d.segmentacao.modo === 'time' && (
+            <div style={{ marginTop: 14 }}>
+              {timesDisponiveis.length === 0 ? (
+                <div style={{ fontSize: 12.5, color: 'var(--subtle)' }}>Nenhum time cadastrado em nenhuma igreja ainda.</div>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {timesDisponiveis.map((t) => (
+                    <button key={t} type="button" className={`chip${d.segmentacao.valores.includes(t) ? ' on' : ''}`}
+                      onClick={() => { const v = d.segmentacao.valores; setD({ ...d, segmentacao: { ...d.segmentacao, valores: v.includes(t) ? v.filter((x) => x !== t) : [...v, t] } }) }}>
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div style={{ fontSize: 11.5, color: 'var(--subtle)', marginTop: 8 }}>Times já cadastrados em alguma igreja cliente — o nome bate por igualdade exata em qualquer organização.</div>
+            </div>
+          )}
+          {d.segmentacao.modo === 'estante' && (
+            <div style={{ marginTop: 14 }}>
+              {estantesAtivas.length === 0 ? (
+                <div style={{ fontSize: 12.5, color: 'var(--subtle)' }}>Nenhuma estante ativa no catálogo.</div>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {estantesAtivas.map((e) => (
+                    <button key={e.key} type="button" className={`chip${d.segmentacao.valores.includes(e.key) ? ' on' : ''}`}
+                      onClick={() => { const v = d.segmentacao.valores; setD({ ...d, segmentacao: { ...d.segmentacao, valores: v.includes(e.key) ? v.filter((x) => x !== e.key) : [...v, e.key] } }) }}>
+                      {e.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <SectionDivide n="02" label="Perguntas · o que perguntar" />
+      <div className="panel" style={{ marginBottom: 16 }}>
+        <div className="panel-body">
+          {d.perguntas.map((p, idx) => (
+            <div key={p.id} style={{ background: 'var(--ink)', border: '0.5px solid var(--border-2)', borderRadius: 'var(--r-md)', padding: 16, marginBottom: 12 }}>
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--light)', marginBottom: 8 }}>Texto da pergunta</label>
+                <input
+                  className="inp"
+                  style={{ fontSize: 16, fontWeight: 600, padding: '14px 16px' }}
+                  placeholder="Ex.: De 0 a 10, o quanto você indicaria a CE.X?"
+                  value={p.texto}
+                  onChange={(e) => { const arr = [...d.perguntas]; arr[idx] = { ...p, texto: e.target.value }; setPerguntas(arr) }}
+                />
+              </div>
+              <div style={{ marginBottom: 10, maxWidth: 220 }}>
+                <label style={{ display: 'block', fontSize: 11.5, color: 'var(--muted)', marginBottom: 6 }}>Tipo de pergunta</label>
+                <select className="inp" value={p.tipo} onChange={(e) => { const arr = [...d.perguntas]; const tipo = e.target.value as TipoPergunta; arr[idx] = { ...p, tipo, escala: tipo === 'nota' ? 10 : null, opcoes: tipo === 'multipla' ? ['', ''] : null }; setPerguntas(arr) }}>
+                  {(Object.keys(QUESTION_LABEL) as TipoPergunta[]).map((t) => <option key={t} value={t}>{QUESTION_LABEL[t]}</option>)}
+                </select>
+              </div>
+              {p.tipo === 'nota' && (
+                <select className="inp" style={{ width: '100%', marginBottom: 8 }} value={p.escala ?? 10} onChange={(e) => { const arr = [...d.perguntas]; arr[idx] = { ...p, escala: Number(e.target.value) as 5 | 10 }; setPerguntas(arr) }}>
+                  <option value={5}>Escala 1 a 5</option>
+                  <option value={10}>Escala 0 a 10 (NPS)</option>
+                </select>
+              )}
+              {p.tipo === 'multipla' && (
+                <input className="inp" style={{ marginBottom: 8 }} placeholder="Opções separadas por vírgula" value={(p.opcoes ?? []).join(', ')} onChange={(e) => { const arr = [...d.perguntas]; arr[idx] = { ...p, opcoes: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) }; setPerguntas(arr) }} />
+              )}
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button type="button" className="row-btn danger" disabled={d.perguntas.length <= 1} onClick={() => setPerguntas(d.perguntas.filter((x) => x.id !== p.id))}>Remover</button>
+              </div>
+            </div>
+          ))}
+          <button type="button" className="btn-sec" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setPerguntas([...d.perguntas, { id: `nova-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, ordem: d.perguntas.length, tipo: 'nota', texto: '', escala: 10, opcoes: null }])}>+ Adicionar pergunta</button>
+        </div>
+      </div>
+
+      <SectionDivide n="03" label="Disparo · quando aparece" />
+      <div className="panel" style={{ marginBottom: 16 }}>
+        <div className="panel-body">
+          <div className="seg" style={{ width: '100%', marginBottom: 10 }}>
+            {disparoModes.map((m) => (
+              <button key={m.key} type="button" style={{ flex: 1 }} className={`seg-btn${d.disparo.modo === m.key ? ' on' : ''}`}
+                onClick={() => setD({ ...d, disparo: { ...d.disparo, modo: m.key, ativoComoLivre: m.key === 'livre' ? d.disparo.ativoComoLivre : false } })}>
+                {m.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16 }}>{disparoAtual.hint}</div>
+          {d.disparo.modo === 'livre' && (
+            <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: 'var(--light)', cursor: 'pointer' }}>
+              <input type="checkbox" checked={d.disparo.ativoComoLivre} onChange={(e) => setD({ ...d, disparo: { ...d.disparo, ativoComoLivre: e.target.checked } })} style={{ marginTop: 2 }} />
+              Ativar como a avaliação livre {d.contexto === 'site' ? 'do site de materiais' : 'do Service'} (só uma pode estar ativa por vez).
+            </label>
+          )}
+          {d.disparo.modo === 'periodica' && (
+            <Field label="Reaparece a cada quantos dias">
+              <input className="inp" type="number" min={1} value={d.disparo.intervaloDias ?? 7} onChange={(e) => setD({ ...d, disparo: { ...d.disparo, intervaloDias: Number(e.target.value) } })} />
+            </Field>
+          )}
+          {d.disparo.modo === 'posescala' && (
+            <Field label="Horas depois de confirmar presença">
+              <input className="inp" type="number" min={1} value={d.disparo.horasDepois ?? 3} onChange={(e) => setD({ ...d, disparo: { ...d.disparo, horasDepois: Number(e.target.value) } })} />
+            </Field>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+        <button type="button" className="btn-sec" onClick={onCancel} disabled={saving}>Cancelar</button>
+        <button type="button" className="btn-pri" disabled={saving || !d.nome || d.perguntas.some((p) => !p.texto)} onClick={() => { void onSave(d) }}>{saving ? 'Salvando...' : 'Salvar enquete'}</button>
+      </div>
+    </div>
+  )
+}
+
+function EnqueteResultados({ enquete, onVoltar, onLoad }: { enquete: EnqueteRow; onVoltar: () => void; onLoad: () => Promise<RespostaRow[]> }) {
+  const [respostas, setRespostas] = useState<RespostaRow[] | null>(null)
+  const [periodo, setPeriodo] = useState('todos')
+  const [papel, setPapel] = useState('todos')
+
+  useEffect(() => {
+    let alive = true
+    onLoad().then((r) => { if (alive) setRespostas(r) })
+    return () => { alive = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enquete.id])
+
+  const now = Date.now()
+  const filtered = (respostas ?? []).filter((r) => {
+    if (papel !== 'todos' && r.papel !== papel) return false
+    if (periodo !== 'todos') {
+      const dias = { '7': 7, '30': 30, '90': 90 }[periodo]
+      if (dias && (now - new Date(r.data).getTime()) / 86400000 > dias) return false
+    }
+    return true
+  })
+  const papeisDisponiveis = Array.from(new Set((respostas ?? []).map((r) => r.papel))).filter(Boolean)
+
+  return (
+    <div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 20 }}>
+        <div style={{ minWidth: 0 }}>
+          <div className="adm-top-crumb">AVALIAÇÃO DE EXPERIÊNCIA · RESULTADOS</div>
+          <h1 className="adm-top-title" style={{ wordBreak: 'break-word' }}>{enquete.nome}</h1>
+          <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>{respostas === null ? 'Carregando...' : `${filtered.length} de ${respostas.length} respostas no filtro atual`}</p>
+        </div>
+        <button className="btn-sec" onClick={onVoltar}>← Voltar</button>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+        <select className="inp" style={{ width: 190 }} value={periodo} onChange={(e) => setPeriodo(e.target.value)}>
+          <option value="todos">Todo o período</option>
+          <option value="7">Últimos 7 dias</option>
+          <option value="30">Últimos 30 dias</option>
+          <option value="90">Últimos 90 dias</option>
+        </select>
+        <select className="inp" style={{ width: 190 }} value={papel} onChange={(e) => setPapel(e.target.value)}>
+          <option value="todos">Todos os papéis</option>
+          {papeisDisponiveis.map((p) => <option key={p} value={p}>{p}</option>)}
+        </select>
+      </div>
+      {respostas !== null && enquete.perguntas.map((p) => {
+        const vals = filtered.map((r) => r.respostasPerguntas.find((a) => a.perguntaId === p.id)?.valor).filter((v): v is string => v !== undefined)
+        if (p.tipo === 'texto') {
+          const items = vals.filter(Boolean).slice(0, 8)
+          return (
+            <div className="panel" key={p.id} style={{ marginBottom: 16 }}>
+              <div className="panel-head"><span className="panel-title">{p.texto}</span></div>
+              <div className="panel-body">
+                {items.length ? items.map((t, i) => <div key={i} style={{ padding: '9px 0', borderBottom: '0.5px solid var(--border)', fontSize: 13.5, color: 'var(--light)' }}>&ldquo;{t}&rdquo;</div>) : <div style={{ fontSize: 13, color: 'var(--subtle)' }}>Sem respostas no período.</div>}
+              </div>
+            </div>
+          )
+        }
+        let rows: { k: string; n: number }[] = []
+        let meta = ''
+        if (p.tipo === 'nota') {
+          const max = p.escala ?? 10
+          const dist: Record<number, number> = {}
+          for (let i = 0; i <= max; i++) dist[i] = 0
+          vals.forEach((v) => { const n = Number(v); if (!Number.isNaN(n)) dist[n] = (dist[n] ?? 0) + 1 })
+          const avg = vals.length ? (vals.reduce((a, b) => a + Number(b), 0) / vals.length).toFixed(1) : '0.0'
+          rows = Object.keys(dist).map((k) => ({ k: `Nota ${k}`, n: dist[Number(k)] }))
+          meta = `média ${avg}`
+        } else {
+          const counts: Record<string, number> = {}
+          vals.forEach((v) => { counts[v] = (counts[v] ?? 0) + 1 })
+          rows = Object.keys(counts).map((k) => ({ k, n: counts[k] }))
+        }
+        return (
+          <div className="panel" key={p.id} style={{ marginBottom: 16 }}>
+            <div className="panel-head"><span className="panel-title">{p.texto}</span>{meta && <span className="panel-meta">{meta}</span>}</div>
+            <div className="panel-body">
+              {rows.map((r) => {
+                const pct = filtered.length ? Math.round((r.n / filtered.length) * 100) : 0
+                return (
+                  <div key={r.k} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 9 }}>
+                    <div style={{ width: 110, fontSize: 12.5, color: 'var(--light)', flexShrink: 0 }}>{r.k}</div>
+                    <div style={{ flex: 1, height: 18, background: 'var(--border)', borderRadius: 'var(--r-sm)', overflow: 'hidden' }}><div style={{ height: '100%', width: `${pct}%`, background: 'var(--olive)' }} /></div>
+                    <div style={{ width: 40, textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>{r.n}</div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── MAIN ─────────────────────────────────────────────────────────────────────
 
 type InitialData = {
@@ -4992,6 +5463,8 @@ type InitialData = {
   studioTemplates: StudioTemplate[]
   serviceOrgs: ServiceOrgRow[]
   serviceMetrics: ServiceMetrics
+  enquetes: EnqueteRow[]
+  timesDisponiveis: string[]
   metrics: AdminMetrics
 } | null
 
@@ -5088,6 +5561,8 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
     }
     return buildData()
   })
+  const [enquetes, setEnquetes] = useState<EnqueteRow[]>(initialData?.enquetes ?? [])
+  const [timesDisponiveis] = useState<string[]>(initialData?.timesDisponiveis ?? [])
   const [serviceOrgs, setServiceOrgs] = useState<ServiceOrgRow[]>(initialData?.serviceOrgs ?? [])
   const [serviceMetrics] = useState<ServiceMetrics>(initialData?.serviceMetrics ?? {
     signupsByWeek: [],
@@ -5116,6 +5591,7 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
     users: data.adminUsers.length,
     templates: data.studioTemplates.length,
     serviceOrgs: serviceOrgs.length,
+    enquetes: enquetes.length,
   }
 
   const go = (r: Route) => {
@@ -5357,6 +5833,31 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
     }
   }
 
+  const refreshEnquetes = async () => {
+    const [svc, site] = await Promise.all([getEnquetes('service'), getEnquetes('site')])
+    setEnquetes([...svc, ...site])
+  }
+  const saveEnq = async (d: EnqueteDraft) => {
+    setAdminError('')
+    try { await saveEnquete(d); await refreshEnquetes() }
+    catch (error) { throw failAdminAction(error, 'Não foi possível salvar a enquete no banco.') }
+  }
+  const deleteEnq = async (contexto: EnqContexto, id: string) => {
+    setAdminError('')
+    try { await deleteEnquete(contexto, id); await refreshEnquetes() }
+    catch (error) { throw failAdminAction(error, 'Não foi possível excluir a enquete no banco.') }
+  }
+  const emitirCampanhaEnq = async (contexto: EnqContexto, id: string) => {
+    setAdminError('')
+    try { await emitirCampanha(contexto, id); await refreshEnquetes() }
+    catch (error) { throw failAdminAction(error, 'Não foi possível emitir a campanha no banco.') }
+  }
+  const setStatusEnq = async (contexto: EnqContexto, id: string, status: 'ativa' | 'pausada' | 'encerrada') => {
+    setAdminError('')
+    try { await setEnqueteStatus(contexto, id, status); await refreshEnquetes() }
+    catch (error) { throw failAdminAction(error, 'Não foi possível mudar o status da enquete no banco.') }
+  }
+
   const currentType = route.screen === 'list' ? route.type : 'material'
   const pageTitle = editing
     ? (editing.id ? 'Editar item' : 'Novo item')
@@ -5365,6 +5866,7 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
     : route.screen === 'users' ? 'Acessos'
     : route.screen === 'studio' ? 'CE.X Studio'
     : route.screen === 'service-ops' ? 'Operação Service'
+    : route.screen === 'avaliacao' ? 'Avaliação de experiência'
     : typePlural(currentType)
 
   return (
@@ -5421,6 +5923,17 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
               onBulkExtend={bulkExtendTrials}
               onExpireNow={expireOrgNow}
               onLoadHistory={getServiceOrgHistory}
+            />
+          ) : route.screen === 'avaliacao' && admin.isMaster ? (
+            <EnquetesView
+              enquetes={enquetes}
+              timesDisponiveis={timesDisponiveis}
+              estantesAtivas={data.estantes.filter((e) => e.status === 'visible').map((e) => ({ key: e.key, label: e.label }))}
+              onSave={saveEnq}
+              onDelete={deleteEnq}
+              onEmitir={emitirCampanhaEnq}
+              onSetStatus={setStatusEnq}
+              onLoadRespostas={getEnqueteRespostas}
             />
           ) : (
             <ListView type={currentType} items={data[arrKey(currentType)] as Item[]}

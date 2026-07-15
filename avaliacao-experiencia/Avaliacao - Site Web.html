@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CE.X · Site de Materiais · Avaliação de Experiência</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../cex-brand-library/tokens.css">
+<link rel="stylesheet" href="../cex-brand-library/components.css">
+<link rel="stylesheet" href="../cex-brand-library/sections.css">
+<link rel="stylesheet" href="../cex-brand-library/domain.css">
+<link rel="stylesheet" href="../cex-brand-library/ui.css">
+<script src="../cex-brand-library/library.js" defer></script>
+<script src="avaliacao-data.js"></script>
+<style>
+.cex-hero{padding:64px 64px 40px}
+.cex-hero .eyebrow{margin-bottom:18px}
+.cex-mock-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:0 64px 64px}
+.cex-mock-card{background:var(--graphite);border:0.5px solid var(--border-2);border-radius:var(--r-lg);padding:24px;height:150px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px}
+.cex-mock-card .k{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.cex-mock-card .t{font-size:17px;font-weight:600;color:var(--white)}
+.cex-fab{position:fixed;right:28px;bottom:28px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.cex-modal{max-width:520px}
+.cex-modal .eyebrow{margin-bottom:14px}
+.cex-q-title{font-size:20px;font-weight:700;letter-spacing:-.02em;line-height:1.25;margin-bottom:22px}
+.cex-nota-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.cex-nota-btn{width:38px;height:38px;border-radius:var(--r-sm);border:0.5px solid var(--border-2);background:var(--ink);color:var(--light);font-family:var(--mono);font-size:13px;cursor:pointer;transition:all .14s}
+.cex-nota-btn:hover{border-color:var(--olive-line);color:var(--white)}
+.cex-nota-btn.on{background:var(--olive);border-color:var(--olive);color:var(--ink)}
+.cex-nota-labels{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--subtle);letter-spacing:.04em;margin-bottom:8px}
+.cex-modal-foot{display:flex;justify-content:space-between;align-items:center;margin-top:28px;padding-top:20px;border-top:0.5px solid var(--border)}
+.cex-dots{display:flex;gap:6px}
+.cex-dot{width:6px;height:6px;border-radius:50%;background:var(--border-2)}
+.cex-dot.on{background:var(--olive)}
+.cex-thanks{text-align:center;padding:20px 0}
+.cex-thanks .mark{font-size:40px;color:var(--olive);margin-bottom:16px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-logo logo" href="#">CE<span class="dot">.</span><span class="x">X</span></a>
+  <ul class="nav-links">
+    <li><a class="nav-link active" href="#">Materiais</a></li>
+    <li><a class="nav-link" href="#">Cursos</a></li>
+    <li><a class="nav-link" href="#">Mentorias</a></li>
+  </ul>
+  <a class="nav-cta" href="#">Entrar</a>
+</nav>
+
+<header class="cex-hero">
+  <div class="eyebrow">§ Protótipo · site de materiais (web)</div>
+  <h1 class="t-h1">Página do site <em>(exemplo)</em></h1>
+  <p class="t-body" style="max-width:560px;margin-top:10px">Versão web da avaliação de experiência: botão fixo pra avaliação livre e pop-ups de campanha/periódica, no vocabulário do site público.</p>
+</header>
+<div class="cex-mock-grid">
+  <div class="cex-mock-card"><div class="k">Juniores</div><div class="t">Pequenos Grandes</div></div>
+  <div class="cex-mock-card"><div class="k">Jovens</div><div class="t">Alta Performance</div></div>
+  <div class="cex-mock-card"><div class="k">Liderança</div><div class="t">Formação de Líderes</div></div>
+</div>
+
+<button class="btn btn-primary cex-fab" id="cexFabBtn">◆ Avaliar experiência</button>
+<div class="modal-overlay" id="cexOverlay"><div class="modal cex-modal" id="cexModal"></div></div>
+
+<script>
+function cexRenderQuestionField(q){
+  if(q.tipo==='nota'){ const max=q.escala||10; let btns=''; for(let i=0;i<=max;i++) btns+=`<button type="button" class="cex-nota-btn" data-v="${i}">${i}</button>`;
+    return `<div class="cex-nota-row">${btns}</div><div class="cex-nota-labels"><span>pouco provável</span><span>muito provável</span></div>`; }
+  if(q.tipo==='texto') return `<textarea class="textarea" placeholder="Escreva aqui..."></textarea>`;
+  if(q.tipo==='emoji') return `<div class="chip-group">${REACOES.map(r=>`<button type="button" class="chip" data-v="${r}">${r}</button>`).join('')}</div>`;
+  if(q.tipo==='simnao') return `<div class="chip-group"><button type="button" class="chip" data-v="Sim">Sim</button><button type="button" class="chip" data-v="Não">Não</button></div>`;
+  if(q.tipo==='multipla') return `<div class="chip-group">${(q.opcoes||[]).map(o=>`<button type="button" class="chip" data-v="${o}">${o}</button>`).join('')}</div>`;
+  return '';
+}
+let surveys = cexLoadSurveys();
+let activeSurvey=null, qIndex=0, answers={};
+function findLivreSite(){ return surveys.find(s=>s.contexto==='site' && s.disparo.ativoComoLivre && s.status==='ativa'); }
+function openSurvey(survey){ if(!survey){ alert('Nenhuma enquete de site ativa como livre. Crie uma no admin.'); return; } activeSurvey=survey; qIndex=0; answers={}; document.getElementById('cexOverlay').classList.add('open'); renderStep(); }
+function closeSurvey(){ document.getElementById('cexOverlay').classList.remove('open'); }
+function renderStep(){
+  const modal=document.getElementById('cexModal'); const q=activeSurvey.perguntas[qIndex]; const total=activeSurvey.perguntas.length;
+  const dots=activeSurvey.perguntas.map((_,i)=>`<span class="cex-dot ${i===qIndex?'on':''}"></span>`).join('');
+  modal.innerHTML=`<button class="modal-close" id="cexClose">&times;</button><div class="eyebrow">◆ ${activeSurvey.nome}</div><div class="cex-q-title">${q.texto}</div><div id="cexField">${cexRenderQuestionField(q)}</div><div class="cex-modal-foot"><div class="cex-dots">${dots}</div><button class="btn btn-primary" id="cexNext">${qIndex===total-1?'Enviar':'Próxima →'}</button></div>`;
+  document.getElementById('cexClose').onclick=closeSurvey; wireField(q); document.getElementById('cexNext').onclick=()=>nextStep(q);
+}
+function wireField(q){
+  const field=document.getElementById('cexField');
+  if(q.tipo==='nota'){ field.querySelectorAll('.cex-nota-btn').forEach(b=>b.onclick=()=>{ field.querySelectorAll('.cex-nota-btn').forEach(x=>x.classList.remove('on')); b.classList.add('on'); answers[q.id]=b.dataset.v; }); }
+  else if(q.tipo==='emoji'||q.tipo==='simnao'||q.tipo==='multipla'){ field.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ field.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); b.classList.add('active'); answers[q.id]=b.dataset.v; }); }
+  else if(q.tipo==='texto'){ field.querySelector('textarea').oninput=(e)=>{ answers[q.id]=e.target.value; }; }
+}
+function nextStep(q){ if(qIndex<activeSurvey.perguntas.length-1){ qIndex++; renderStep(); } else submitSurvey(); }
+function submitSurvey(){
+  const resp={ id:cexUid('r'), papel:'Líder', data:new Date().toISOString().slice(0,10), respostasPerguntas:Object.keys(answers).map(k=>({perguntaId:k, valor:answers[k]})) };
+  activeSurvey.respostas.push(resp); cexSaveSurveys(surveys);
+  document.getElementById('cexModal').innerHTML=`<button class="modal-close" id="cexClose">&times;</button><div class="cex-thanks"><div class="mark">◆</div><div class="t-h3">Obrigado pela resposta.</div><p class="t-small" style="margin-top:8px">Isso ajuda a CE.X a preparar melhor os próximos líderes.</p></div>`;
+  document.getElementById('cexClose').onclick=closeSurvey;
+}
+document.getElementById('cexFabBtn').onclick=()=>openSurvey(findLivreSite());
+document.getElementById('cexOverlay').addEventListener('click',(e)=>{ if(e.target.id==='cexOverlay') closeSurvey(); });
+</script>
+</body>
+</html>

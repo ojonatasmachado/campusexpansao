@@ -2595,3 +2595,11 @@ html[data-theme="light"] .check-box.checked::after { color: #0E110D; }
   padding: 14px 18px 18px;
 }
 
+/* Avaliação de Experiência: botão fixo, visível em qualquer página do site */
+.avaliacao-fixed-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 60;
+}
+

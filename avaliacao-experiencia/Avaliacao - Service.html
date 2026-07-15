@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CE.X Service · Avaliação de Experiência</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../service_app/service.css">
+<link rel="stylesheet" href="../service_app/service-v2.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="avaliacao-data.js"></script>
+<script type="text/babel" src="../service_app/icons.jsx"></script>
+<script type="text/babel" src="avaliacao.jsx"></script>
+<style>
+body{padding:40px;min-height:100vh}
+.demo-wrap{display:flex;gap:40px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.demo-col{display:flex;flex-direction:column;gap:16px;align-items:center}
+.demo-col-label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--olive);display:inline-flex;align-items:center;gap:8px}
+.demo-col-label::before{content:'◆'}
+.demo-admin{width:900px;max-width:92vw}
+.demo-note{max-width:900px;margin:0 auto 32px;font-size:13px;color:var(--muted);line-height:1.6;text-align:center}
+.demo-toggle{display:flex;justify-content:center;margin-bottom:28px}
+.demo-frame{width:340px;height:710px;border:none;border-radius:46px}
+</style>
+</head>
+<body>
+<p class="demo-note">Protótipo montado com os componentes reais do CE.X Service (<code>service.css</code>, <code>icons.jsx</code>): telão do app do membro (bottom sheet, ícones de traço, tab bar) e do admin (kpi, tabela, painel). Abrir duas abas mostra o fluxo completo: criar/emitir no admin → responder no app.</p>
+<div class="demo-toggle"><div class="seg" id="ctxToggle"><button data-c="service" class="on">Service (app)</button><button data-c="site">Site de materiais (web)</button></div></div>
+<div class="demo-wrap">
+  <div class="demo-col">
+    <div class="demo-col-label" id="colLabel">App do membro</div>
+    <div id="memberRoot"></div>
+    <iframe class="demo-frame" id="siteFrame" src="Avaliacao - Site Web.html" style="display:none"></iframe>
+  </div>
+  <div class="demo-col demo-admin">
+    <div class="demo-col-label">Admin</div>
+    <div id="adminRoot"></div>
+  </div>
+</div>
+<script type="text/babel">
+ReactDOM.createRoot(document.getElementById('memberRoot')).render(<AvaliacaoMemberDemo />);
+ReactDOM.createRoot(document.getElementById('adminRoot')).render(<AvaliacaoAdminDemo />);
+document.getElementById('ctxToggle').addEventListener('click',(e)=>{
+  const b=e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#ctxToggle button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+  const isSite = b.dataset.c==='site';
+  document.getElementById('memberRoot').style.display = isSite ? 'none' : 'block';
+  document.getElementById('siteFrame').style.display = isSite ? 'block' : 'none';
+  document.getElementById('colLabel').textContent = isSite ? 'Site de materiais (web)' : 'App do membro (Service)';
+});
+</script>
+</body>
+</html>

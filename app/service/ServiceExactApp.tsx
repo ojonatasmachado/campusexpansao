@@ -11,6 +11,8 @@ import { ICON_PATHS, ICON_CATEGORIES, DEFAULT_ICON, Icon, IconPicker } from "./l
 import { deriveAccentVars, isValidHex, normalizeHex, contrastRatio, contrastLabel, buildColorWheel, hslToHex } from "./lib/color";
 import { formatDateBR } from "./lib/date";
 import { ageInMonths, suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
+import type { EnqueteElegivelView } from "./lib/enquetes";
+import type { PesquisaElegivelView, TipoPergunta as TipoPerguntaPesquisa } from "./lib/pesquisas";
 import MobileOverlay from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
 import { KidsQRModal } from "./KidsCheckin";
@@ -633,6 +635,8 @@ type Props = {
   currentRole?: "master" | "pastor" | "lider" | "vol";
   permissionsMatrix?: Record<string, Record<string, boolean>>;
   currentPersonId?: string | null;
+  enqueteElegivel?: EnqueteElegivelView | null;
+  pesquisaElegivel?: PesquisaElegivelView | null;
   error: string;
 };
 
@@ -652,8 +656,8 @@ type ShowIf = { field: string; equals: string };
 
 type FieldDef =
   | { k: string; label: string; type: "text"; req?: boolean; half?: boolean; ph?: string; hint?: string; value?: string; showIf?: ShowIf }
-  | { k: string; label: string; type: "area"; req?: boolean; half?: boolean; ph?: string; hint?: string; big?: boolean; showIf?: ShowIf }
-  | { k: string; label: string; type: "select"; req?: boolean; half?: boolean; ph?: string; hint?: string; options: { v: string; l: string }[]; showIf?: ShowIf }
+  | { k: string; label: string; type: "area"; req?: boolean; half?: boolean; ph?: string; hint?: string; big?: boolean; value?: string; showIf?: ShowIf }
+  | { k: string; label: string; type: "select"; req?: boolean; half?: boolean; ph?: string; hint?: string; options: { v: string; l: string }[]; value?: string; showIf?: ShowIf }
   | { k: string; label: string; type: "date"; req?: boolean; half?: boolean; hint?: string; showIf?: ShowIf }
   | { k: string; label: string; type: "time"; req?: boolean; half?: boolean; hint?: string; showIf?: ShowIf }
   | { k: string; label: string; type: "toggle"; req?: boolean; half?: boolean; hint?: string; onLabel?: string; offLabel?: string; value?: string; showIf?: ShowIf }
@@ -682,6 +686,8 @@ type ModalState =
         | { kind: "room" }
         | { kind: "kidsClass"; id?: string }
         | { kind: "kidsEvent" }
+        | { kind: "avaliacaoResposta"; enquete: EnqueteElegivelView }
+        | { kind: "pesquisaResposta"; pesquisa: PesquisaElegivelView }
         | { kind: "member"; visitorId?: string }
         | { kind: "event" }
         | { kind: "ministry" }
@@ -730,12 +736,13 @@ const ACESSO_ROTAS: { id: string; label: string }[] = [
   { id: "cursos", label: "Cursos & Trilhas" },
   { id: "relatorios", label: "Relatórios" },
   { id: "marca", label: "Marca & aparência (cores, logo)" },
+  { id: "pesquisas", label: "Pesquisas (Configurações)" },
 ];
 
 function podeVerNav(itemId: string, currentRole: string, matrix: Record<string, Record<string, boolean>>, extraAccess: string[] = []) {
   if (currentRole === "master") return true;
   if (extraAccess.includes(itemId)) return true;
-  if (itemId === "config" && extraAccess.includes("marca")) return true;
+  if (itemId === "config" && (extraAccess.includes("marca") || extraAccess.includes("pesquisas"))) return true;
   if (currentRole === "vol") return false;
   const code = NAV_PERMISSION_CODE[itemId];
   if (!code) return true;
@@ -1022,6 +1029,8 @@ export default function ServiceExactApp({
   currentRole = "master",
   permissionsMatrix = {},
   currentPersonId = null,
+  enqueteElegivel = null,
+  pesquisaElegivel = null,
   error,
 }: Props) {
   const [route, setRoute] = useState<keyof typeof ROUTES>("painel");
@@ -1458,6 +1467,8 @@ export default function ServiceExactApp({
             kidsClasses={kidsClasses}
             kidsChildren={kidsChildren}
             kidsAttendance={kidsAttendance}
+            enqueteElegivel={enqueteElegivel}
+            pesquisaElegivel={pesquisaElegivel}
             onApproveJourney={approveJourneyRequest}
             onRejectJourney={rejectJourneyRequest}
             setRoute={setRoute}
@@ -1621,6 +1632,8 @@ export default function ServiceExactApp({
           people={people}
           ministries={ministries}
           rooms={rooms}
+          currentPersonId={currentPersonId}
+          currentRole={currentRole}
           onClose={() => setModal(null)}
         />
       ) : null}
@@ -1775,6 +1788,57 @@ function GlobalSearch({
   );
 }
 
+const REACOES_ENQUETE = ["Ótimo", "Bom", "Neutro", "Ruim", "Péssimo"];
+/* Emoji real do WhatsApp, exceção pontual à regra "zero emoji" do AGENTS.md — só
+   nas perguntas tipo 'emoji' das pesquisas da própria igreja (service.pesquisas),
+   pedido explícito do usuário pro pulso pós-escala. Não usar fora daqui. */
+const REACOES_PESQUISA = ["😡", "😕", "😐", "🙂", "😍"];
+
+function buildAvaliacaoModal(enquete: EnqueteElegivelView): NonNullable<ModalState> {
+  const formFields: FieldDef[] = enquete.perguntas.map((p) => {
+    if (p.tipo === "texto") return { k: p.id, label: p.texto, type: "area", req: true, ph: "Escreva aqui..." };
+    if (p.tipo === "nota") {
+      const max = p.escala ?? 10;
+      const options = Array.from({ length: max + 1 }, (_, i) => ({ v: String(i), l: String(i) }));
+      return { k: p.id, label: p.texto, type: "select", req: true, ph: "Escolha uma nota", options };
+    }
+    if (p.tipo === "emoji") return { k: p.id, label: p.texto, type: "select", req: true, ph: "Escolha uma reação", options: REACOES_ENQUETE.map((r) => ({ v: r, l: r })) };
+    if (p.tipo === "simnao") return { k: p.id, label: p.texto, type: "select", req: true, ph: "Escolha uma opção", options: [{ v: "Sim", l: "Sim" }, { v: "Não", l: "Não" }] };
+    return { k: p.id, label: p.texto, type: "select", req: true, ph: "Escolha uma opção", options: (p.opcoes ?? []).map((o) => ({ v: o, l: o })) };
+  });
+  return {
+    eyebrow: "Avaliação de experiência",
+    title: enquete.nome,
+    subtitle: "Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time.",
+    saveLabel: "Enviar",
+    formFields,
+    action: { kind: "avaliacaoResposta", enquete },
+  };
+}
+
+function buildPesquisaModal(pesquisa: PesquisaElegivelView): NonNullable<ModalState> {
+  const formFields: FieldDef[] = pesquisa.perguntas.map((p) => {
+    const valorAnterior = pesquisa.respostasAnteriores[p.id];
+    if (p.tipo === "texto") return { k: p.id, label: p.texto, type: "area", req: p.obrigatoria, ph: "Escreva aqui...", value: valorAnterior };
+    if (p.tipo === "nota") {
+      const max = p.escala ?? 5;
+      const options = Array.from({ length: max + 1 }, (_, i) => ({ v: String(i), l: String(i) }));
+      return { k: p.id, label: p.texto, type: "select", req: p.obrigatoria, ph: "Escolha uma nota", options, value: valorAnterior };
+    }
+    if (p.tipo === "emoji") return { k: p.id, label: p.texto, type: "select", req: p.obrigatoria, ph: "Escolha uma reação", options: REACOES_PESQUISA.map((r) => ({ v: r, l: r })), value: valorAnterior };
+    if (p.tipo === "simnao") return { k: p.id, label: p.texto, type: "select", req: p.obrigatoria, ph: "Escolha uma opção", options: [{ v: "Sim", l: "Sim" }, { v: "Não", l: "Não" }], value: valorAnterior };
+    return { k: p.id, label: p.texto, type: "select", req: p.obrigatoria, ph: "Escolha uma opção", options: (p.opcoes ?? []).map((o) => ({ v: o, l: o })), value: valorAnterior };
+  });
+  return {
+    eyebrow: pesquisa.pendente ? "Pesquisa da igreja" : "Sua resposta",
+    title: pesquisa.nome,
+    subtitle: pesquisa.pendente ? "Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time." : "Você já respondeu. Pode rever ou atualizar quando quiser, principalmente se algo mudou.",
+    saveLabel: pesquisa.pendente ? "Enviar" : "Atualizar resposta",
+    formFields,
+    action: { kind: "pesquisaResposta", pesquisa },
+  };
+}
+
 function Painel({
   people,
   members,
@@ -1789,6 +1853,8 @@ function Painel({
   kidsClasses,
   kidsChildren,
   kidsAttendance,
+  enqueteElegivel,
+  pesquisaElegivel,
   onApproveJourney,
   onRejectJourney,
   setRoute,
@@ -1809,6 +1875,8 @@ function Painel({
   kidsClasses: KidsClassView[];
   kidsChildren: ChildView[];
   kidsAttendance: KidsAttendanceView[];
+  enqueteElegivel: EnqueteElegivelView | null;
+  pesquisaElegivel: PesquisaElegivelView | null;
   onApproveJourney: (request: JourneyChangeRequestView) => void;
   onRejectJourney: (request: JourneyChangeRequestView) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
@@ -1886,6 +1954,24 @@ function Painel({
             ))}
             </div>
           </div>
+          {enqueteElegivel && (
+            <div className="panel" style={{ cursor: "pointer" }} onClick={() => setModal(buildAvaliacaoModal(enqueteElegivel))}>
+              <div className="panel-head"><span className="panel-title"><Icon name="estrela" size={14} /> Avaliação de experiência</span></div>
+              <div className="panel-body">
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{enqueteElegivel.nome}</div>
+                <div style={{ fontSize: 12.5, color: "var(--muted)" }}>Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time.</div>
+              </div>
+            </div>
+          )}
+          {pesquisaElegivel && (
+            <div className="panel" style={{ cursor: "pointer" }} onClick={() => setModal(buildPesquisaModal(pesquisaElegivel))}>
+              <div className="panel-head"><span className="panel-title"><Icon name="reacao" size={14} /> {pesquisaElegivel.pendente ? "Pulso da escala" : "Sua última resposta"}</span></div>
+              <div className="panel-body">
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{pesquisaElegivel.nome}</div>
+                <div style={{ fontSize: 12.5, color: "var(--muted)" }}>{pesquisaElegivel.pendente ? "Leva menos de um minuto. Conta como foi pra você." : "Já respondida. Toque pra rever ou atualizar quando quiser."}</div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       {journeyRequests.length > 0 && (
@@ -5933,6 +6019,7 @@ const CFG_TABS = [
   { id: "kids", label: "Turmas Kids" },
   { id: "perm", label: "Permissões" },
   { id: "acessos", label: "Acessos por pessoa" },
+  { id: "pesquisas", label: "Pesquisas" },
   { id: "visual", label: "Personalização" },
   { id: "rede", label: "Congregações" },
 ];
@@ -6179,6 +6266,489 @@ function AcessosCard({
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/* Pesquisas da PRÓPRIA igreja pra própria congregação/voluntariado (ex.:
+   pulso pós-escala) — ver app/service/lib/pesquisas.ts. Gerido aqui, dentro
+   do Service (Config → Pesquisas), por master/pastor/líder. Não confundir
+   com a Avaliação de Experiência (buildAvaliacaoModal acima), que é
+   cross-tenant e pertence à CE.X. */
+
+type PesquisaPerguntaDraft = {
+  id: string;
+  ordem: number;
+  tipo: TipoPerguntaPesquisa;
+  texto: string;
+  obrigatoria: boolean;
+  escala: 5 | 10 | null;
+  opcoes: string[] | null;
+};
+
+type PesquisaAdminRow = {
+  id: string;
+  nome: string;
+  status: "ativa" | "pausada" | "encerrada";
+  segmentacaoModo: "todos" | "papel" | "time";
+  segmentacaoValores: string[];
+  disparoModo: "livre" | "periodica" | "posescala" | "campanha";
+  ativoComoLivre: boolean;
+  intervaloDias: number | null;
+  recorrentePorEscala: boolean;
+  emitidaEm: string | null;
+  perguntas: PesquisaPerguntaDraft[];
+  totalRespostas: number;
+};
+
+type PesquisaDraft = Omit<PesquisaAdminRow, "totalRespostas">;
+
+const novaPesquisaDraft = (): PesquisaDraft => ({
+  id: `nova-${Date.now()}`,
+  nome: "",
+  status: "ativa",
+  segmentacaoModo: "todos",
+  segmentacaoValores: [],
+  disparoModo: "posescala",
+  ativoComoLivre: false,
+  intervaloDias: null,
+  recorrentePorEscala: true,
+  emitidaEm: null,
+  perguntas: [],
+});
+
+const modeloPulsoPosEscala = (): PesquisaDraft => {
+  const base = Date.now();
+  return {
+    ...novaPesquisaDraft(),
+    nome: "Pulso pós-escala",
+    perguntas: [
+      { id: `nova-${base}-1`, ordem: 0, tipo: "emoji", texto: "Como foi o culto pra você?", obrigatoria: true, escala: null, opcoes: null },
+      { id: `nova-${base}-2`, ordem: 1, tipo: "emoji", texto: "Como foi servir na escala dessa vez?", obrigatoria: true, escala: null, opcoes: null },
+      { id: `nova-${base}-3`, ordem: 2, tipo: "emoji", texto: "Como você está, de um jeito geral?", obrigatoria: true, escala: null, opcoes: null },
+      { id: `nova-${base}-4`, ordem: 3, tipo: "texto", texto: "Quer contar mais alguma coisa pra sua liderança?", obrigatoria: false, escala: null, opcoes: null },
+    ],
+  };
+};
+
+function disparoLabelPesquisa(p: Pick<PesquisaAdminRow, "disparoModo" | "recorrentePorEscala" | "ativoComoLivre" | "emitidaEm">): string {
+  if (p.disparoModo === "posescala") return p.recorrentePorEscala ? "Pós-escala · recorrente" : "Pós-escala · uma vez";
+  if (p.disparoModo === "campanha") return p.emitidaEm ? "Campanha · disparada" : "Campanha · não disparada";
+  if (p.disparoModo === "periodica") return "Periódica";
+  return p.ativoComoLivre ? "Livre · atalho ativo" : "Livre · atalho desligado";
+}
+
+function toPesquisaDraft(p: PesquisaAdminRow): PesquisaDraft {
+  const { totalRespostas: _totalRespostas, ...draft } = p;
+  return draft;
+}
+
+async function fetchPesquisas(organizationId: string): Promise<PesquisaAdminRow[]> {
+  const db = createServiceBrowserClient().schema("service");
+  const { data: pesquisasData, error: pError } = await db
+    .from("pesquisas")
+    .select("id,nome,status,segmentacao_modo,segmentacao_valores,disparo_modo,ativo_como_livre,intervalo_dias,recorrente_por_escala,emitida_em")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false });
+  if (pError) throw pError;
+  const pesquisas = (pesquisasData ?? []) as {
+    id: string; nome: string; status: "ativa" | "pausada" | "encerrada";
+    segmentacao_modo: "todos" | "papel" | "time"; segmentacao_valores: string[];
+    disparo_modo: "livre" | "periodica" | "posescala" | "campanha";
+    ativo_como_livre: boolean; intervalo_dias: number | null; recorrente_por_escala: boolean; emitida_em: string | null;
+  }[];
+  if (pesquisas.length === 0) return [];
+  const ids = pesquisas.map((p) => p.id);
+  const [{ data: perguntasData, error: qError }, { data: respostasData, error: rError }] = await Promise.all([
+    db.from("pesquisas_perguntas").select("id,pesquisa_id,ordem,tipo,texto,obrigatoria,escala,opcoes").in("pesquisa_id", ids).order("ordem", { ascending: true }),
+    db.from("pesquisas_respostas").select("id,pesquisa_id").in("pesquisa_id", ids),
+  ]);
+  if (qError) throw qError;
+  if (rError) throw rError;
+  const perguntasPor = new Map<string, PesquisaPerguntaDraft[]>();
+  for (const q of (perguntasData ?? []) as { id: string; pesquisa_id: string; ordem: number; tipo: TipoPerguntaPesquisa; texto: string; obrigatoria: boolean; escala: 5 | 10 | null; opcoes: string[] | null }[]) {
+    const arr = perguntasPor.get(q.pesquisa_id) ?? [];
+    arr.push({ id: q.id, ordem: q.ordem, tipo: q.tipo, texto: q.texto, obrigatoria: q.obrigatoria, escala: q.escala, opcoes: q.opcoes });
+    perguntasPor.set(q.pesquisa_id, arr);
+  }
+  const respostasPor = new Map<string, number>();
+  for (const r of (respostasData ?? []) as { id: string; pesquisa_id: string }[]) respostasPor.set(r.pesquisa_id, (respostasPor.get(r.pesquisa_id) ?? 0) + 1);
+
+  return pesquisas.map((p) => ({
+    id: p.id, nome: p.nome, status: p.status,
+    segmentacaoModo: p.segmentacao_modo, segmentacaoValores: p.segmentacao_valores ?? [],
+    disparoModo: p.disparo_modo, ativoComoLivre: p.ativo_como_livre, intervaloDias: p.intervalo_dias,
+    recorrentePorEscala: p.recorrente_por_escala, emitidaEm: p.emitida_em,
+    perguntas: perguntasPor.get(p.id) ?? [], totalRespostas: respostasPor.get(p.id) ?? 0,
+  }));
+}
+
+async function savePesquisa(organizationId: string, draft: PesquisaDraft): Promise<void> {
+  const db = createServiceBrowserClient().schema("service");
+  const isNew = draft.id.startsWith("nova-");
+
+  if (draft.disparoModo === "livre" && draft.ativoComoLivre) {
+    let query = db.from("pesquisas").update({ ativo_como_livre: false }).eq("organization_id", organizationId).eq("disparo_modo", "livre");
+    if (!isNew) query = query.neq("id", draft.id);
+    await query;
+  }
+
+  const payload = {
+    organization_id: organizationId,
+    nome: draft.nome,
+    status: draft.status,
+    segmentacao_modo: draft.segmentacaoModo,
+    segmentacao_valores: draft.segmentacaoValores,
+    disparo_modo: draft.disparoModo,
+    ativo_como_livre: draft.disparoModo === "livre" ? draft.ativoComoLivre : false,
+    intervalo_dias: draft.disparoModo === "periodica" ? draft.intervaloDias : null,
+    recorrente_por_escala: draft.disparoModo === "posescala" ? draft.recorrentePorEscala : false,
+  };
+
+  let pesquisaId = draft.id;
+  if (isNew) {
+    const { data, error } = await db.from("pesquisas").insert(payload).select("id").single();
+    if (error) throw error;
+    pesquisaId = (data as { id: string }).id;
+  } else {
+    const { error } = await db.from("pesquisas").update(payload).eq("id", draft.id);
+    if (error) throw error;
+  }
+
+  const { data: existentes } = await db.from("pesquisas_perguntas").select("id").eq("pesquisa_id", pesquisaId);
+  const idsAtuais = new Set(draft.perguntas.filter((p) => !p.id.startsWith("nova-")).map((p) => p.id));
+  const idsRemover = ((existentes ?? []) as { id: string }[]).map((p) => p.id).filter((id) => !idsAtuais.has(id));
+  if (idsRemover.length) {
+    const { error } = await db.from("pesquisas_perguntas").delete().in("id", idsRemover);
+    if (error) throw error;
+  }
+  for (const [ordem, p] of draft.perguntas.entries()) {
+    const perguntaPayload = {
+      pesquisa_id: pesquisaId, ordem, tipo: p.tipo, texto: p.texto, obrigatoria: p.obrigatoria,
+      escala: p.tipo === "nota" ? (p.escala ?? 5) : null,
+      opcoes: p.tipo === "multipla" ? (p.opcoes ?? []) : null,
+    };
+    if (p.id.startsWith("nova-")) {
+      const { error } = await db.from("pesquisas_perguntas").insert(perguntaPayload);
+      if (error) throw error;
+    } else {
+      const { error } = await db.from("pesquisas_perguntas").update(perguntaPayload).eq("id", p.id);
+      if (error) throw error;
+    }
+  }
+}
+
+async function deletePesquisaRemota(id: string): Promise<void> {
+  const { error } = await createServiceBrowserClient().schema("service").from("pesquisas").delete().eq("id", id);
+  if (error) throw error;
+}
+
+async function setStatusPesquisa(id: string, status: "ativa" | "pausada" | "encerrada"): Promise<void> {
+  const { error } = await createServiceBrowserClient().schema("service").from("pesquisas").update({ status }).eq("id", id);
+  if (error) throw error;
+}
+
+async function emitirCampanhaPesquisa(id: string): Promise<void> {
+  const { error } = await createServiceBrowserClient().schema("service").from("pesquisas").update({ emitida_em: new Date().toISOString() }).eq("id", id);
+  if (error) throw error;
+}
+
+async function fetchRespostasPesquisa(pesquisaId: string): Promise<{ perguntaId: string; valor: string }[]> {
+  const db = createServiceBrowserClient().schema("service");
+  const { data: respostas, error } = await db.from("pesquisas_respostas").select("id").eq("pesquisa_id", pesquisaId);
+  if (error) throw error;
+  const ids = ((respostas ?? []) as { id: string }[]).map((r) => r.id);
+  if (ids.length === 0) return [];
+  const { data: itens, error: itensErr } = await db.from("pesquisas_respostas_perguntas").select("pergunta_id,valor").in("resposta_id", ids);
+  if (itensErr) throw itensErr;
+  return ((itens ?? []) as { pergunta_id: string; valor: string }[]).map((i) => ({ perguntaId: i.pergunta_id, valor: i.valor }));
+}
+
+function PesquisasView({ organizationId, ministries }: { organizationId: string; ministries: MinistryView[] }) {
+  const [pesquisas, setPesquisas] = useState<PesquisaAdminRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [route, setRoute] = useState<{ screen: "lista" } | { screen: "editor"; draft: PesquisaDraft } | { screen: "resultados"; pesquisa: PesquisaAdminRow }>({ screen: "lista" });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [toDelete, setToDelete] = useState<PesquisaAdminRow | null>(null);
+
+  const carregar = async () => {
+    setLoading(true);
+    try {
+      setPesquisas(await fetchPesquisas(organizationId));
+      setErrorMsg("");
+    } catch (err) {
+      console.error("PesquisasView: falhou ao carregar", err);
+      setErrorMsg("Não foi possível carregar as pesquisas.");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { void carregar(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [organizationId]);
+
+  if (route.screen === "editor") {
+    return (
+      <PesquisaEditor
+        draft={route.draft}
+        ministries={ministries}
+        saving={saving}
+        saveError={saveError}
+        onCancel={() => { setSaveError(""); setRoute({ screen: "lista" }); }}
+        onSave={async (draft) => {
+          setSaving(true); setSaveError("");
+          try { await savePesquisa(organizationId, draft); await carregar(); setRoute({ screen: "lista" }); }
+          catch (err) { console.error("PesquisasView: falhou ao salvar", err); setSaveError("Não foi possível salvar a pesquisa."); }
+          setSaving(false);
+        }}
+      />
+    );
+  }
+
+  if (route.screen === "resultados") {
+    return <PesquisaResultados pesquisa={route.pesquisa} onVoltar={() => setRoute({ screen: "lista" })} />;
+  }
+
+  return (
+    <div className="cfg-card">
+      <div className="cfg-card-t">Pesquisas da igreja</div>
+      <div className="cfg-card-s">Pesquise a própria congregação: pulso pós-escala, satisfação, o que quiser saber. Master, pastor e líder veem as respostas e podem criar pesquisas novas.</div>
+      {errorMsg ? <p className="field-error">{errorMsg}</p> : null}
+      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+        <button className="btn btn-pri btn-sm" type="button" onClick={() => setRoute({ screen: "editor", draft: novaPesquisaDraft() })}>+ Nova pesquisa</button>
+        {!loading && !pesquisas.some((p) => p.disparoModo === "posescala") && (
+          <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute({ screen: "editor", draft: modeloPulsoPosEscala() })}>+ Usar modelo: Pulso pós-escala</button>
+        )}
+      </div>
+      {loading && <div className="empty">Carregando...</div>}
+      {!loading && pesquisas.length === 0 && <div className="empty">Nenhuma pesquisa ainda. Clique em <em>+ Nova pesquisa</em> pra criar.</div>}
+      <div className="acesso-list">
+        {pesquisas.map((p) => (
+          <div key={p.id} className="flag-row" style={{ cursor: "default" }}>
+            <div className="flag-main" style={{ cursor: "pointer" }} onClick={() => setRoute({ screen: "resultados", pesquisa: p })}>
+              <div className="flag-nome">{p.nome || "Sem nome"}</div>
+              <div className="flag-meta">{disparoLabelPesquisa(p)} · {p.totalRespostas} resposta{p.totalRespostas === 1 ? "" : "s"} · {p.status}</div>
+            </div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {p.disparoModo === "campanha" && !p.emitidaEm && (
+                <button className="btn btn-sec btn-sm" type="button" onClick={() => { void emitirCampanhaPesquisa(p.id).then(carregar); }}>Disparar agora</button>
+              )}
+              <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute({ screen: "editor", draft: toPesquisaDraft(p) })}>Editar</button>
+              <button className="btn btn-sec btn-sm" type="button" onClick={() => { void setStatusPesquisa(p.id, p.status === "ativa" ? "pausada" : "ativa").then(carregar); }}>
+                {p.status === "ativa" ? "Pausar" : "Reativar"}
+              </button>
+              <button className="btn btn-danger btn-sm" type="button" onClick={() => setToDelete(p)}>Excluir</button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {toDelete && (
+        <div className="modal-bg" onClick={() => setToDelete(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div className="modal-title">Excluir &ldquo;{toDelete.nome}&rdquo;?</div>
+              <div className="modal-sub">Remove a pesquisa, as perguntas e todas as respostas já recebidas. Não pode ser desfeito.</div>
+            </div>
+            <div className="modal-body">
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                <button className="btn btn-sec" type="button" onClick={() => setToDelete(null)}>Cancelar</button>
+                <button
+                  className="btn btn-danger"
+                  type="button"
+                  onClick={async () => { try { await deletePesquisaRemota(toDelete.id); setToDelete(null); await carregar(); } catch (err) { console.error(err); } }}
+                >
+                  Excluir pesquisa
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave, onCancel }: {
+  draft: PesquisaDraft;
+  ministries: MinistryView[];
+  saving: boolean;
+  saveError: string;
+  onSave: (d: PesquisaDraft) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [d, setD] = useState<PesquisaDraft>(initial);
+  const isNew = initial.id.startsWith("nova-");
+  const times = Array.from(new Set(ministries.map((m) => m.name))).sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+  const addPergunta = () => {
+    setD((prev) => ({ ...prev, perguntas: [...prev.perguntas, { id: `nova-${Date.now()}`, ordem: prev.perguntas.length, tipo: "emoji", texto: "", obrigatoria: true, escala: null, opcoes: null }] }));
+  };
+  const updatePergunta = (id: string, patch: Partial<PesquisaPerguntaDraft>) => {
+    setD((prev) => ({ ...prev, perguntas: prev.perguntas.map((p) => (p.id === id ? { ...p, ...patch } : p)) }));
+  };
+  const removePergunta = (id: string) => {
+    setD((prev) => ({ ...prev, perguntas: prev.perguntas.filter((p) => p.id !== id) }));
+  };
+  const toggleValor = (valor: string) => {
+    setD((prev) => ({ ...prev, segmentacaoValores: prev.segmentacaoValores.includes(valor) ? prev.segmentacaoValores.filter((v) => v !== valor) : [...prev.segmentacaoValores, valor] }));
+  };
+
+  return (
+    <div className="cfg-card">
+      <div className="cfg-card-t">{isNew ? "Nova pesquisa" : "Editar pesquisa"}</div>
+      <div className="field"><label className="field-label">Nome da pesquisa</label><input className="input" placeholder="ex: Pulso pós-escala" value={d.nome} onChange={(e) => setD({ ...d, nome: e.target.value })} /></div>
+
+      <div className="field">
+        <label className="field-label">Quem vê essa pesquisa</label>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+          {(["todos", "papel", "time"] as const).map((m) => (
+            <button key={m} type="button" className={`seg-chip${d.segmentacaoModo === m ? " on" : ""}`} onClick={() => setD({ ...d, segmentacaoModo: m, segmentacaoValores: [] })}>
+              {m === "todos" ? "Todo mundo" : m === "papel" ? "Por papel" : "Por time"}
+            </button>
+          ))}
+        </div>
+        {d.segmentacaoModo === "papel" && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {PAPEIS_V2.map((pp) => (
+              <button key={pp.id} type="button" className={`seg-chip${d.segmentacaoValores.includes(pp.id) ? " on" : ""}`} onClick={() => toggleValor(pp.id)}>{pp.nome}</button>
+            ))}
+          </div>
+        )}
+        {d.segmentacaoModo === "time" && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {times.length === 0 && <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhum time cadastrado ainda.</span>}
+            {times.map((t) => (
+              <button key={t} type="button" className={`seg-chip${d.segmentacaoValores.includes(t) ? " on" : ""}`} onClick={() => toggleValor(t)}>{t}</button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="field">
+        <label className="field-label">Quando aparece</label>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+          {(["posescala", "campanha", "periodica", "livre"] as const).map((m) => (
+            <button key={m} type="button" className={`seg-chip${d.disparoModo === m ? " on" : ""}`} onClick={() => setD({ ...d, disparoModo: m })}>
+              {m === "posescala" ? "Pós-escala" : m === "campanha" ? "Campanha pontual" : m === "periodica" ? "Periódica" : "Atalho livre"}
+            </button>
+          ))}
+        </div>
+        {d.disparoModo === "posescala" && (
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--light)" }}>
+            <input type="checkbox" checked={d.recorrentePorEscala} onChange={(e) => setD({ ...d, recorrentePorEscala: e.target.checked })} />
+            Repete a cada escala nova (senão, responde só uma vez)
+          </label>
+        )}
+        {d.disparoModo === "periodica" && (
+          <div className="field field-half"><label className="field-label">Intervalo (dias)</label><input className="input" type="number" min={1} value={d.intervaloDias ?? 30} onChange={(e) => setD({ ...d, intervaloDias: Number(e.target.value) })} /></div>
+        )}
+        {d.disparoModo === "livre" && (
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--light)" }}>
+            <input type="checkbox" checked={d.ativoComoLivre} onChange={(e) => setD({ ...d, ativoComoLivre: e.target.checked })} />
+            Ativa como atalho livre (só uma por igreja; ligar essa desliga qualquer outra)
+          </label>
+        )}
+        {d.disparoModo === "campanha" && (
+          <p style={{ fontSize: 12.5, color: "var(--subtle)" }}>{d.emitidaEm ? `Disparada em ${formatDateBR(d.emitidaEm.slice(0, 10))}.` : "Salve e depois clique em “Disparar agora” na lista."}</p>
+        )}
+      </div>
+
+      <div className="field">
+        <label className="field-label">Perguntas</label>
+        <div style={{ display: "grid", gap: 12 }}>
+          {d.perguntas.map((p, idx) => (
+            <div key={p.id} className="cfg-card" style={{ padding: 14 }}>
+              <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <span style={{ fontSize: 11.5, color: "var(--subtle)" }}>#{idx + 1}</span>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", flex: 1 }}>
+                  {(["emoji", "nota", "texto", "simnao", "multipla"] as const).map((t) => (
+                    <button key={t} type="button" className={`seg-chip${p.tipo === t ? " on" : ""}`} onClick={() => updatePergunta(p.id, { tipo: t })}>
+                      {t === "emoji" ? "Emoji" : t === "nota" ? "Nota" : t === "texto" ? "Texto livre" : t === "simnao" ? "Sim/Não" : "Múltipla escolha"}
+                    </button>
+                  ))}
+                </div>
+                <button type="button" className="btn btn-sec btn-sm" onClick={() => removePergunta(p.id)}>Remover</button>
+              </div>
+              <input className="input" placeholder="Texto da pergunta" value={p.texto} onChange={(e) => updatePergunta(p.id, { texto: e.target.value })} style={{ marginBottom: 8 }} />
+              {p.tipo === "emoji" && <div style={{ display: "flex", gap: 6, fontSize: 20 }}>{REACOES_PESQUISA.map((r) => <span key={r}>{r}</span>)}</div>}
+              {p.tipo === "nota" && (
+                <div style={{ display: "flex", gap: 8 }}>
+                  {[5, 10].map((s) => <button key={s} type="button" className={`seg-chip${(p.escala ?? 5) === s ? " on" : ""}`} onClick={() => updatePergunta(p.id, { escala: s as 5 | 10 })}>0 a {s}</button>)}
+                </div>
+              )}
+              {p.tipo === "multipla" && (
+                <input className="input" placeholder="Opções separadas por vírgula" value={(p.opcoes ?? []).join(", ")} onChange={(e) => updatePergunta(p.id, { opcoes: e.target.value.split(",").map((o) => o.trim()).filter(Boolean) })} />
+              )}
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: "var(--subtle)", marginTop: 8 }}>
+                <input type="checkbox" checked={p.obrigatoria} onChange={(e) => updatePergunta(p.id, { obrigatoria: e.target.checked })} />
+                Obrigatória
+              </label>
+            </div>
+          ))}
+        </div>
+        <button type="button" className="btn btn-sec btn-sm" style={{ marginTop: 10 }} onClick={addPergunta}>+ Adicionar pergunta</button>
+      </div>
+
+      {saveError ? <p className="field-error">{saveError}</p> : null}
+      <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 18 }}>
+        <button type="button" className="btn btn-sec" onClick={onCancel} disabled={saving}>Cancelar</button>
+        <button type="button" className="btn btn-pri" disabled={saving || !d.nome || d.perguntas.length === 0 || d.perguntas.some((p) => !p.texto)} onClick={() => { void onSave(d); }}>
+          {saving ? "Salvando..." : "Salvar pesquisa"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PesquisaResultados({ pesquisa, onVoltar }: { pesquisa: PesquisaAdminRow; onVoltar: () => void }) {
+  const [itens, setItens] = useState<{ perguntaId: string; valor: string }[] | null>(null);
+
+  useEffect(() => {
+    let ativo = true;
+    fetchRespostasPesquisa(pesquisa.id).then((data) => { if (ativo) setItens(data); }).catch((err) => { console.error(err); if (ativo) setItens([]); });
+    return () => { ativo = false; };
+  }, [pesquisa.id]);
+
+  return (
+    <div className="cfg-card">
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+        <button type="button" className="btn btn-sec btn-sm" onClick={onVoltar}>← Voltar</button>
+        <div className="cfg-card-t" style={{ margin: 0 }}>{pesquisa.nome}</div>
+      </div>
+      <div className="cfg-card-s">{pesquisa.totalRespostas} resposta{pesquisa.totalRespostas === 1 ? "" : "s"} · {disparoLabelPesquisa(pesquisa)}</div>
+      {itens === null && <div className="empty">Carregando respostas...</div>}
+      {itens !== null && pesquisa.perguntas.map((p) => {
+        const valores = itens.filter((i) => i.perguntaId === p.id).map((i) => i.valor);
+        if (p.tipo === "texto") {
+          return (
+            <div key={p.id} className="panel" style={{ marginTop: 14 }}>
+              <div className="panel-head"><span className="panel-title">{p.texto}</span></div>
+              <div className="panel-body flush">
+                {valores.length === 0 && <div className="empty">Ninguém respondeu ainda.</div>}
+                {valores.map((v, i) => <div key={i} className="mini-row"><div className="mini-main"><div className="mini-sub">{v}</div></div></div>)}
+              </div>
+            </div>
+          );
+        }
+        const contagem = new Map<string, number>();
+        for (const v of valores) contagem.set(v, (contagem.get(v) ?? 0) + 1);
+        const max = Math.max(1, ...Array.from(contagem.values()));
+        return (
+          <div key={p.id} className="panel" style={{ marginTop: 14 }}>
+            <div className="panel-head"><span className="panel-title">{p.texto}</span></div>
+            <div className="panel-body flush">
+              {valores.length === 0 && <div className="empty">Ninguém respondeu ainda.</div>}
+              {Array.from(contagem.entries()).map(([valor, count]) => (
+                <div className="dist-row" key={valor}>
+                  <span className="dist-name">{valor}</span>
+                  <div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(count / max) * 100}%` }} /></div>
+                  <span className="dist-num">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -6572,11 +7142,13 @@ function Config({
   permissionsMatrix: Record<string, Record<string, boolean>>;
 }) {
   const router = useRouter();
-  /* alguém sem acesso geral a Configurações, mas liberado só pra "Marca &
-     aparência" (Config → Acessos por pessoa), só enxerga a aba Personalização. */
-  const apenasMarca = currentRole !== "master" && currentRole !== "pastor" && currentExtraAccess.includes("marca");
-  const cfgTabs = apenasMarca ? CFG_TABS.filter((t) => t.id === "visual") : CFG_TABS;
-  const [tab, setTab] = useState(apenasMarca ? "visual" : "igreja");
+  /* alguém sem acesso geral a Configurações, mas liberado só pra abas específicas
+     (Config → Acessos por pessoa: "marca" ou "pesquisas"), só enxerga essas abas. */
+  const somenteExtras = currentRole !== "master" && currentRole !== "pastor"
+    ? CFG_TABS.filter((t) => (t.id === "visual" && currentExtraAccess.includes("marca")) || (t.id === "pesquisas" && currentExtraAccess.includes("pesquisas")))
+    : null;
+  const cfgTabs = somenteExtras && somenteExtras.length > 0 ? somenteExtras : CFG_TABS;
+  const [tab, setTab] = useState(cfgTabs[0]?.id ?? "igreja");
   const [editTagId, setEditTagId] = useState<string | null>(null);
   const [tagNomeEdit, setTagNomeEdit] = useState("");
   const [elencoTag, setElencoTag] = useState<TagView | null>(null);
@@ -7193,6 +7765,8 @@ function Config({
 
       {/* ─── ACESSOS POR PESSOA ─── */}
       {tab === "acessos" && <AcessosCard people={people} church={church} currentRole={currentRole} />}
+
+      {tab === "pesquisas" && church?.organizationId && <PesquisasView organizationId={church.organizationId} ministries={ministries} />}
 
       {/* ─── PERSONALIZAÇÃO ─── */}
       {tab === "visual" && (
@@ -9290,6 +9864,8 @@ function ServiceModal({
   people,
   ministries,
   rooms = [],
+  currentPersonId = null,
+  currentRole = "vol",
   onClose,
 }: {
   modal: NonNullable<ModalState>;
@@ -9297,6 +9873,8 @@ function ServiceModal({
   people: PersonView[];
   ministries: MinistryView[];
   rooms?: RoomView[];
+  currentPersonId?: string | null;
+  currentRole?: "master" | "pastor" | "lider" | "vol";
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -9599,6 +10177,59 @@ function ServiceModal({
         capacity: value("capacidade") ? Number.parseInt(value("capacidade"), 10) : null,
         open_enrollment: true,
       });
+    } else if (action.kind === "avaliacaoResposta") {
+      if (!currentPersonId) { setSaving(false); setError("Não foi possível identificar seu cadastro de voluntário."); return; }
+      const minhasEquipes = ministries.filter((m) => m.people.some((p) => p.personId === currentPersonId)).map((m) => m.name);
+      const { data: novaResposta, error: respostaError } = await supabase.schema("service").from("respostas").insert({
+        enquete_id: action.enquete.id,
+        organization_id: church.organizationId,
+        person_id: currentPersonId,
+        papel: currentRole,
+        times_acessados: minhasEquipes,
+        data: new Date().toISOString().slice(0, 10),
+      }).select("id").single();
+      if (respostaError || !novaResposta) {
+        result = { error: respostaError };
+      } else {
+        const itens = action.enquete.perguntas.map((p) => ({
+          resposta_id: novaResposta.id,
+          pergunta_id: p.id,
+          organization_id: church.organizationId,
+          valor: value(p.id),
+        }));
+        result = await supabase.schema("service").from("respostas_perguntas").insert(itens);
+        if (!result.error) {
+          await supabase.schema("service").from("enquete_visto").upsert(
+            { enquete_id: action.enquete.id, person_id: currentPersonId, organization_id: church.organizationId, visto_em: new Date().toISOString() },
+            { onConflict: "enquete_id,person_id" },
+          );
+        }
+      }
+    } else if (action.kind === "pesquisaResposta") {
+      if (!currentPersonId) { setSaving(false); setError("Não foi possível identificar seu cadastro de voluntário."); return; }
+      const pesquisa = action.pesquisa;
+      let respostaId = pesquisa.respostaId;
+      if (!respostaId) {
+        const { data: novaResposta, error: respostaError } = await supabase.schema("service").from("pesquisas_respostas").insert({
+          pesquisa_id: pesquisa.id,
+          organization_id: church.organizationId,
+          person_id: currentPersonId,
+          papel: currentRole,
+          event_id: pesquisa.eventoId,
+          data: new Date().toISOString().slice(0, 10),
+        }).select("id").single();
+        if (respostaError || !novaResposta) result = { error: respostaError };
+        else respostaId = (novaResposta as { id: string }).id;
+      }
+      if (respostaId) {
+        const itens = pesquisa.perguntas.map((p) => ({
+          resposta_id: respostaId as string,
+          pergunta_id: p.id,
+          organization_id: church.organizationId,
+          valor: value(p.id),
+        }));
+        result = await supabase.schema("service").from("pesquisas_respostas_perguntas").upsert(itens, { onConflict: "resposta_id,pergunta_id" });
+      }
     } else if (action.kind === "identity") {
       result = await supabase.schema("service").from("church_identity").upsert({
         church_id: church.id,

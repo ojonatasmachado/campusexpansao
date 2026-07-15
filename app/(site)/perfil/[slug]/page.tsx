@@ -5,6 +5,7 @@ import Footer from "../../../components/Footer";
 import { compraDoUsuarioPorMaterialId } from "../../../lib/compras";
 import { createClient } from "../../../lib/supabase-server";
 import { formatMetaMaterial } from "../../../lib/perfil-data";
+import { registrarAcessoMaterial } from "../../../lib/enquetes-site";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,11 @@ export default async function PerfilCompraPage({ params }: { params: Promise<{ s
 
   const compra = await compraDoUsuarioPorMaterialId(user, slug);
   if (!compra) notFound();
+
+  // Sinal de "acessou o material" pra Avaliação de Experiência (segmentação
+  // por estante + disparo pós-download/acesso) — não existia nenhum registro
+  // disso antes (ver HANDOFF Avaliação de Experiência §7 "pontos em aberto").
+  await registrarAcessoMaterial(compra.material.id, compra.material.estante ?? null);
 
   const totalMensagens = compra.mensagens.length;
   const formatos = compra.material.meta.formatos.join(" · ");

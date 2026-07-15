@@ -1,4 +1,5 @@
 import "../loja.css";
+import AvaliacaoModal from "../components/AvaliacaoModal";
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,6 +13,10 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       {/* loja.css importado via module import acima: cache busting automático */}
       <script src="/library.js" defer></script>
       {children}
+      {/* Só renderiza quando há usuário logado (cex.user_profiles) com
+          enquete elegível — some sozinho no /admin (auth diferente, sem
+          sessão Supabase). Ver app/lib/enquetes-site.ts. */}
+      <AvaliacaoModal />
     </>
   );
 }
