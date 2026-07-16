@@ -169,17 +169,28 @@ const BASELINE_KEY = "cex_setup_baseline";
 const HIDE_KEY = "cex_setup_hide";
 
 export function SetupChecklist({ counts, setRoute }: { counts: SetupCounts; setRoute: (route: string) => void }) {
-  const [hidden, setHidden] = useState(() => {
-    try { return localStorage.getItem(HIDE_KEY) === "1"; } catch { return false; }
-  });
-  const [baseline] = useState<SetupCounts>(() => {
+  /* hidden/baseline nascem com valor neutro (igual no servidor e no cliente,
+     antes da hidratação) e só recebem o que está salvo no localStorage
+     depois, num useEffect — ler localStorage direto no useState causava
+     hydration mismatch (SSR não tem localStorage, cliente tem), reproduzível
+     em todo load pra quem já tinha usado o Service antes. */
+  const [hidden, setHidden] = useState(false);
+  const [baseline, setBaseline] = useState<SetupCounts>(counts);
+
+  useEffect(() => {
+    try {
+      setHidden(localStorage.getItem(HIDE_KEY) === "1");
+    } catch { /* localStorage indisponível : segue visível */ }
     try {
       const raw = localStorage.getItem(BASELINE_KEY);
-      if (raw) return JSON.parse(raw) as SetupCounts;
+      if (raw) {
+        setBaseline(JSON.parse(raw) as SetupCounts);
+      } else {
+        localStorage.setItem(BASELINE_KEY, JSON.stringify(counts));
+      }
     } catch { /* localStorage indisponível : segue sem baseline salva */ }
-    try { localStorage.setItem(BASELINE_KEY, JSON.stringify(counts)); } catch { /* idem */ }
-    return counts;
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const onShow = () => setHidden(false);

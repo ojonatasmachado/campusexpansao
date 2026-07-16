@@ -8,7 +8,7 @@ import { notifyPush } from "./lib/notify-push";
 import { uploadServiceImage, imageExtension } from "./lib/upload-image";
 import Logo from "../components/Logo";
 import { ICON_PATHS, ICON_CATEGORIES, DEFAULT_ICON, Icon, IconPicker } from "./lib/icons";
-import { deriveAccentVars, isValidHex, normalizeHex, contrastRatio, contrastLabel, buildColorWheel, hslToHex } from "./lib/color";
+import { deriveAccentVars, isValidHex } from "./lib/color";
 import { formatDateBR } from "./lib/date";
 import { ageInMonths, suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import type { EnqueteElegivelView } from "./lib/enquetes";
@@ -17,6 +17,10 @@ import MobileOverlay from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
 import { KidsQRModal } from "./KidsCheckin";
 import { PhotoPicker } from "./PhotoPicker";
+import { ImageUpload } from "./ImageUpload";
+import { AccentField } from "./AccentField";
+import { PublicPageEditor } from "./PublicPageEditor";
+import type { PaginaCfg } from "../lib/church-page";
 import EventoShare from "./EventoShare";
 import CursoEditor from "./CursoEditor";
 import CursoDrawer from "./CursoDrawer";
@@ -46,6 +50,7 @@ type ChurchSettings = {
   acessoMsgCfg?: AcessoMsgCfg;
   gruposCfg?: GruposCfg;
   brandCfg?: BrandCfg;
+  paginaCfg?: PaginaCfg;
   [key: string]: unknown;
 };
 
@@ -106,6 +111,7 @@ type ChurchView = {
   email?: string | null;
   phone?: string | null;
   logoUrl?: string | null;
+  slug?: string | null;
   settings?: ChurchSettings;
 };
 
@@ -881,7 +887,6 @@ function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchVie
   );
 }
 
-const ROLE_LABEL: Record<string, string> = { master: "Master", pastor: "Pastor", lider: "Líder de time", vol: "Voluntário" };
 
 /* permissões do Kanban por papel (equivalente ao kanbanPerm()/S.KANBAN_PERMS do
    protótipo): master/pastor administram o quadro; líder cria, comenta e move os
@@ -891,58 +896,6 @@ function kanbanPerm(role: string): { criarCard: boolean; comentar: boolean; edit
   if (role === "master" || role === "pastor") return { criarCard: true, comentar: true, editarBoard: true, moverQualquer: true };
   if (role === "lider") return { criarCard: true, comentar: true, editarBoard: false, moverQualquer: true };
   return { criarCard: false, comentar: false, editarBoard: false, moverQualquer: false };
-}
-
-function ViewSwitcher({ ministries, currentRole, previewMinistryId, setPreviewMinistryId }: { ministries: MinistryView[]; currentRole: "master" | "pastor" | "lider" | "vol"; previewMinistryId: string | null; setPreviewMinistryId: (id: string | null) => void }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  /* só master/pastor podem pré-visualizar o app como líder de um time específico:
-     líder e voluntário só veem o próprio papel real, sem esse toggle. */
-  const podePrevisualizar = currentRole === "master" || currentRole === "pastor";
-
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const activeMinistry = ministries.find((m) => m.id === previewMinistryId);
-  const label = podePrevisualizar ? (previewMinistryId ? activeMinistry?.name ?? "Time" : "Direção") : ROLE_LABEL[currentRole];
-  const role = podePrevisualizar
-    ? (previewMinistryId ? "Líder de time (pré-visualização)" : `Visão geral · ${currentRole}`)
-    : ROLE_LABEL[currentRole];
-
-  return (
-    <div className="view-sw" ref={ref}>
-      <button className="view-sw-btn" type="button" style={podePrevisualizar ? undefined : { cursor: "default" }} onClick={() => podePrevisualizar && setOpen((o) => !o)}>
-        <span className="view-sw-ic"><Icon name={!podePrevisualizar || !previewMinistryId ? "identidade" : "times"} size={14} /></span>
-        <span className="view-sw-info">
-          <span className="view-sw-name">{label}</span>
-          <span className="view-sw-role">{role}</span>
-        </span>
-        {podePrevisualizar ? <span className="view-sw-caret">▾</span> : null}
-      </button>
-      {open && podePrevisualizar && (
-        <div className="view-sw-menu">
-          <div className="view-sw-group">Perspectiva</div>
-          <button className={`view-sw-opt ${!previewMinistryId ? "on" : ""}`} type="button"
-            onClick={() => { setPreviewMinistryId(null); setOpen(false); }}>
-            <span className="view-sw-opt-ic"><Icon name="identidade" size={14} /></span>
-            <span className="view-sw-opt-main"><b>Direção</b><small>Visão completa da Igreja</small></span>
-          </button>
-          {ministries.slice(0, 8).map((m) => (
-            <button key={m.id} className={`view-sw-opt ${previewMinistryId === m.id ? "on" : ""}`} type="button"
-              onClick={() => { setPreviewMinistryId(m.id); setOpen(false); }}>
-              <span className="view-sw-opt-ic"><TeamMark ministry={m} size={14} /></span>
-              <span className="view-sw-opt-main"><b>{m.name}</b><small>Líder · {m.people.length} vol.</small></span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
 }
 
 function initials(name: string) {
@@ -1061,11 +1014,6 @@ export default function ServiceExactApp({
     setPendingChatMemberId(memberId);
     setRoute("conversas");
   };
-  /* perspectiva: master/pastor pode pré-visualizar o app como líder de um time
-     específico (equivalente a window.cexView() em evolucoes/service_app/shell.jsx).
-     null = "Direção" (vê tudo). */
-  const [previewMinistryId, setPreviewMinistryId] = useState<string | null>(null);
-
   useEffect(() => {
     document.body.dataset.theme = theme === "light" ? "light" : "";
     return () => { document.body.dataset.theme = ""; };
@@ -1375,31 +1323,22 @@ export default function ServiceExactApp({
   const currentExtraAccess = people.find((person) => person.id === currentPersonId)?.meta?.extraAccess ?? [];
 
   /* perspectiva efetiva: líder real vê só os times que lidera; master/pastor
-     pré-visualizando vê só o time escolhido; do contrário, sem restrição (null).
-     Equivalente a view.papel/view.timeId em evolucoes/service_app/shell.jsx. */
+     vê tudo, sem restrição (null). */
   const podePrevisualizar = currentRole === "master" || currentRole === "pastor";
   const misteriosQueLidero = currentPersonId
     ? ministries.filter((ministry) => ministry.people.some((link) => link.personId === currentPersonId && link.isLeader)).map((ministry) => ministry.id)
     : [];
-  const scopeMinistryIds: string[] | null = podePrevisualizar
-    ? (previewMinistryId ? [previewMinistryId] : null)
-    : (currentRole === "lider" ? misteriosQueLidero : null);
-  /* identidade efetiva pra Conversas: em pré-visualização, "eu" viro o líder do time escolhido */
-  const previewLeaderPersonId = previewMinistryId
-    ? ministries.find((ministry) => ministry.id === previewMinistryId)?.people.find((link) => link.isLeader)?.personId ?? null
-    : null;
-  const perspectivePersonId = podePrevisualizar && previewMinistryId ? previewLeaderPersonId : currentPersonId;
+  const scopeMinistryIds: string[] | null = podePrevisualizar ? null : (currentRole === "lider" ? misteriosQueLidero : null);
+  const perspectivePersonId = currentPersonId;
 
-  /* fila de aprovação da jornada: Direção sem pré-visualização vê tudo;
-     líder (real ou pré-visualizado) só vê pedidos de quem está no
-     time/GC dele : mesmo espírito de escopo de Escalas/Kanban. */
+  /* fila de aprovação da jornada: Direção vê tudo; líder só vê pedidos de
+     quem está no time/GC dele : mesmo espírito de escopo de Escalas/Kanban. */
   const visibleJourneyRequests = journeyRequests.filter((request) => {
-    if (podePrevisualizar && !previewMinistryId) return true;
-    const scopePersonId = podePrevisualizar ? previewLeaderPersonId : currentPersonId;
-    if (!scopePersonId) return false;
+    if (podePrevisualizar) return true;
+    if (!currentPersonId) return false;
     const member = members.find((m) => m.id === request.memberId);
     if (!member) return false;
-    return responsibleLeadersFor(member, fellowshipGroups, ministries).includes(scopePersonId);
+    return responsibleLeadersFor(member, fellowshipGroups, ministries).includes(currentPersonId);
   });
 
   const nav = [
@@ -1504,7 +1443,6 @@ export default function ServiceExactApp({
             />
           </div>
           <div className="top-actions">
-            <ViewSwitcher ministries={ministries} currentRole={currentRole} previewMinistryId={previewMinistryId} setPreviewMinistryId={setPreviewMinistryId} />
             <button className="theme-tog" type="button" title="Mudar tema" onClick={() => setTheme((t) => t === "dark" ? "light" : "dark")}>
               <Icon name={theme === "dark" ? "sol" : "lua"} size={16} />
             </button>
@@ -6110,6 +6048,7 @@ const CFG_TABS = [
   { id: "acessos", label: "Acessos por pessoa" },
   { id: "pesquisas", label: "Pesquisas" },
   { id: "visual", label: "Personalização" },
+  { id: "pagina", label: "Página pública" },
   { id: "rede", label: "Congregações" },
 ];
 
@@ -7029,170 +6968,6 @@ function CongregacaoEditModal({
   );
 }
 
-function ImageUpload({
-  label, hint, url, round, onUpload, onRemove,
-}: {
-  label: string;
-  hint?: string;
-  url?: string | null;
-  round?: boolean;
-  onUpload: (file: File) => Promise<void>;
-  onRemove: () => void | Promise<void>;
-}) {
-  const ref = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleFile = async (file: File | undefined) => {
-    if (!file) return;
-    setBusy(true);
-    setError("");
-    try {
-      await onUpload(file);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível enviar a imagem.");
-    } finally {
-      setBusy(false);
-      if (ref.current) ref.current.value = "";
-    }
-  };
-
-  return (
-    <div className="img-up">
-      <button
-        type="button"
-        className={`img-up-slot${round ? " round" : ""}`}
-        onClick={() => ref.current?.click()}
-        style={url ? { backgroundImage: `url(${url})` } : undefined}
-      >
-        {!url && <span className="img-up-plus">+</span>}
-      </button>
-      <div className="img-up-main">
-        <div className="cfg-row-t">{label}</div>
-        {hint && <div className="cfg-row-s">{hint}</div>}
-        {error && <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 6 }}>{error}</div>}
-        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-          <button className="btn btn-sec btn-sm" type="button" disabled={busy} onClick={() => ref.current?.click()}>
-            {busy ? "Enviando..." : url ? "Trocar" : "Enviar imagem"}
-          </button>
-          {url && (
-            <button className="btn btn-ghost btn-sm" type="button" disabled={busy} onClick={() => onRemove()}>
-              Remover
-            </button>
-          )}
-        </div>
-      </div>
-      <input ref={ref} type="file" accept="image/*" hidden onChange={(e) => handleFile(e.target.files?.[0])} />
-    </div>
-  );
-}
-
-/* roda de cores em favo de mel (matiz + saturação pela posição, luminosidade
-   decrescendo pra fora) : calculada uma única vez, reaproveitada pelos dois
-   campos (escuro/claro). Bem mais rica que uma paleta fixa de poucos tons. */
-const COLOR_WHEEL = buildColorWheel(6);
-const COLOR_WHEEL_MAX_DIST = Math.max(...COLOR_WHEEL.map((c) => Math.hypot(c.x, c.y)));
-const GRAYSCALE_STEPS = [0.97, 0.85, 0.7, 0.55, 0.4, 0.25, 0.12, 0.02].map((l) => hslToHex(0, 0, l));
-
-/* grade hexagonal de cores prontas pra escolher rápido, sem digitar hex +
-   tira de cinzas embaixo. Usada dentro de AccentField, ao lado do campo
-   detalhado (hex + seletor nativo). */
-function ColorWheelPicker({ onPick }: { onPick: (hex: string) => void }) {
-  const containerR = 92;
-  const scale = containerR / COLOR_WHEEL_MAX_DIST;
-  const hexW = Math.sqrt(3) * scale;
-  const hexH = 2 * scale;
-  return (
-    <div className="color-wheel-wrap">
-      <div className="color-wheel" style={{ width: containerR * 2, height: containerR * 2 }}>
-        {COLOR_WHEEL.map((cell, i) => (
-          <button
-            key={i}
-            type="button"
-            className="color-wheel-cell"
-            style={{ width: hexW + 1.5, height: hexH + 1.5, left: `calc(50% + ${cell.x * scale}px)`, top: `calc(50% + ${cell.y * scale}px)`, background: cell.hex }}
-            title={cell.hex}
-            onClick={() => onPick(cell.hex)}
-          />
-        ))}
-      </div>
-      <div className="color-wheel-gray">
-        {GRAYSCALE_STEPS.map((hex) => (
-          <button key={hex} type="button" className="color-wheel-gray-cell" style={{ background: hex }} title={hex} onClick={() => onPick(hex)} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* editor de uma cor de destaque : roda de cores pronta + hex livre/seletor
-   nativo com leitura de contraste ao vivo (WCAG), e um botão "Aplicar"
-   explícito (nada se salva sozinho ao digitar ou trocar de campo). */
-function AccentField({ label, bgHex, value, defaultHex, onChange }: { label: string; bgHex: string; value: string; defaultHex: string; onChange: (hex: string) => void }) {
-  const [draft, setDraft] = useState(value);
-  const [savedMsg, setSavedMsg] = useState(false);
-  useEffect(() => setDraft(value), [value]);
-
-  const valid = isValidHex(draft);
-  const hex = valid ? normalizeHex(draft) : value;
-  const vars = deriveAccentVars(hex, bgHex === "#0E110D" ? "dark" : "light");
-  const bgContrast = contrastRatio(hex, bgHex);
-  const bgLabel = contrastLabel(bgContrast);
-  const dirty = valid && hex.toLowerCase() !== value.toLowerCase();
-
-  const aplicar = () => {
-    if (!valid) return;
-    onChange(hex);
-    setSavedMsg(true);
-    setTimeout(() => setSavedMsg(false), 1600);
-  };
-
-  return (
-    <div className="brand-accent-field">
-      <div className="brand-accent-head">
-        <span>{label}</span>
-        {draft.toLowerCase() !== defaultHex.toLowerCase() && (
-          <button type="button" className="brand-accent-reset" onClick={() => setDraft(defaultHex)}>
-            Restaurar padrão
-          </button>
-        )}
-      </div>
-
-      <ColorWheelPicker onPick={setDraft} />
-
-      <div className="brand-accent-row">
-        <input
-          type="color"
-          className="brand-accent-swatch"
-          value={valid ? hex : defaultHex}
-          onChange={(e) => setDraft(e.target.value)}
-          aria-label={`Cor de destaque : ${label}`}
-        />
-        <input
-          className="input brand-accent-hex"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="#7A9E3F"
-        />
-        <button type="button" className="brand-accent-preview" style={{ background: hex, color: vars.accentInk }} disabled>
-          Aa
-        </button>
-      </div>
-
-      {!valid && <div className="brand-accent-warn">Use um hex válido, tipo #7A9E3F.</div>}
-      {valid && (
-        <div className={`brand-accent-contrast${bgLabel.ok ? "" : " low"}`}>
-          {bgLabel.label} · {bgContrast.toFixed(2)}:1 contra o fundo. Texto dos botões ajustado sozinho pra continuar legível.
-        </div>
-      )}
-
-      <button type="button" className="btn btn-pri btn-sm brand-accent-apply" disabled={!valid || !dirty} onClick={aplicar}>
-        {savedMsg ? <><Icon name="ok" size={14} /> Aplicado</> : "Aplicar"}
-      </button>
-    </div>
-  );
-}
-
 function Config({
   church,
   churches,
@@ -7892,9 +7667,10 @@ function Config({
               label="Logotipo da igreja"
               hint="Tamanho ideal: 480×160px (proporção 3:1), PNG com fundo transparente."
               url={church?.logoUrl}
+              aspectRatio={3}
               onUpload={async (file) => {
                 if (!church) return;
-                const path = `logos/${church.organizationId}/${church.id}.${imageExtension(file)}`;
+                const path = `${church.organizationId}/logos/${church.id}.${imageExtension(file)}`;
                 const url = await uploadServiceImage(createServiceBrowserClient(), file, path);
                 await createServiceBrowserClient().schema("service").from("churches").update({ logo_url: url }).eq("id", church.id);
                 router.refresh();
@@ -7917,6 +7693,9 @@ function Config({
           )}
         </div>
       )}
+
+      {/* ─── PÁGINA PÚBLICA ─── */}
+      {tab === "pagina" && church && <PublicPageEditor church={church} currentRole={currentRole} />}
 
       {/* ─── CONGREGAÇÕES ─── */}
       {tab === "rede" && (
@@ -8158,7 +7937,7 @@ function Historia({ church, historyEntries, setModal }: { church?: ChurchView; h
     if (!file || !church) return;
     setUploadingId(capituloId);
     try {
-      const path = `history/${church.organizationId}/${capituloId}.${imageExtension(file)}`;
+      const path = `${church.organizationId}/history/${capituloId}.${imageExtension(file)}`;
       const url = await uploadServiceImage(createServiceBrowserClient(), file, path);
       await createServiceBrowserClient().schema("service").from("history_entries").update({ photo_url: url }).eq("id", capituloId);
       router.refresh();

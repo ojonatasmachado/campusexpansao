@@ -17,6 +17,7 @@ type ChurchRow = {
   email: string | null;
   phone: string | null;
   logo_url: string | null;
+  slug: string | null;
   settings: Record<string, unknown> | null;
   created_at: string;
 };
@@ -35,6 +36,7 @@ type ChurchView = {
   email: string | null;
   phone: string | null;
   logoUrl: string | null;
+  slug: string | null;
   settings: Record<string, unknown>;
 };
 
@@ -779,6 +781,7 @@ function toChurchView(row: ChurchRow): ChurchView {
     email: row.email,
     phone: row.phone,
     logoUrl: row.logo_url,
+    slug: row.slug,
     settings: row.settings ?? {},
   };
 }
@@ -906,7 +909,7 @@ async function getServiceDashboardData(): Promise<{
   const { data: churchesData, error: churchesError } = await supabase
     .schema("service")
     .from("churches")
-    .select("id,organization_id,name,city,is_headquarters,doc,founded_year,address,postal_code,email,phone,logo_url,settings,created_at")
+    .select("id,organization_id,name,city,is_headquarters,doc,founded_year,address,postal_code,email,phone,logo_url,slug,settings,created_at")
     .order("is_headquarters", { ascending: false })
     .order("created_at");
 

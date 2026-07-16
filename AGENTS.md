@@ -90,18 +90,24 @@ handoff/CSS deriva daqui, ninguém redefine hex em outro lugar.
 | Liderança | `clay` |
 | Multiplicação | `olive` |
 
-### Exceção: editores da área do comprador
+### Exceção: editores da área do comprador + página pública da igreja (Service)
 
-Esta exceção vale **somente** para o conteúdo criado/exportado nos editores de arquivos,
-imagens, artes, slides e documentos dentro da área do comprador (`app/perfil/**/editores/**`).
+Esta exceção vale para o conteúdo criado/exportado nos editores de arquivos, imagens,
+artes, slides e documentos dentro da área do comprador (`app/perfil/**/editores/**`) e
+para a página pública link-in-bio de cada igreja no Service (`app/igreja/[slug]/**`).
 
 - O canvas, filtros, efeitos, modelos de arte, elementos internos do arquivo e recursos
-  exportáveis podem usar cores, fontes, imagens e estilos fora do brandbook CE.X.
-- Motivo: esses arquivos são artes para igrejas e usuários que podem ter identidade visual
-  própria.
+  exportáveis (área do comprador) e as cores/logo/template escolhidos pela igreja pra sua
+  própria página pública (`app/igreja/[slug]`) podem usar cores, fontes, imagens e estilos
+  fora do brandbook CE.X.
+- Motivo: esses arquivos e essa página são identidade visual da igreja/usuário, não da
+  CE.X — a igreja escolhe suas próprias cores/logo pra colocar na bio do Instagram, do
+  jeito que já faz num Linktree.
 - O chrome do produto continua CE.X: navegação, páginas do perfil, painéis, botões,
   formulários, cards, listas, modais, barras de ferramenta e estados de interface seguem
-  a identidade CE.X.
+  a identidade CE.X — inclusive o editor da página pública dentro de Configurações do
+  Service (`app/service/PublicPageEditor.tsx`), que é 100% CE.X; só a página renderizada
+  em `/igreja/[slug]` é livre.
 - Não aplicar esta exceção ao site público, admin, catálogo, landing pages ou qualquer
   outra área da solução.
 
