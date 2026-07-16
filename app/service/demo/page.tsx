@@ -335,6 +335,7 @@ export default function ServiceDemoPage() {
       tags={TAGS}
       timelineEvents={TIMELINE_EVENTS}
       journeyRequests={JOURNEY_REQUESTS}
+      bibleMarks={[]}
       currentPersonId="p1"
       error=""
     />

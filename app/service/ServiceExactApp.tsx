@@ -491,6 +491,16 @@ type JourneyChangeRequestView = {
   createdAt: string;
 };
 
+type BibleMarkView = {
+  id: string;
+  book: string;
+  chapter: number;
+  verse: number;
+  color: string | null;
+  note: string | null;
+  updated_at: string;
+};
+
 type ReservationView = {
   id: string;
   room_id: string;
@@ -633,6 +643,7 @@ type Props = {
   tags?: TagView[];
   timelineEvents?: TimelineEventView[];
   journeyRequests?: JourneyChangeRequestView[];
+  bibleMarks?: BibleMarkView[];
   currentRole?: "master" | "pastor" | "lider" | "vol";
   permissionsMatrix?: Record<string, Record<string, boolean>>;
   currentPersonId?: string | null;
@@ -1027,6 +1038,7 @@ export default function ServiceExactApp({
   tags = [],
   timelineEvents = [],
   journeyRequests = [],
+  bibleMarks = [],
   currentRole = "master",
   permissionsMatrix = {},
   currentPersonId = null,
@@ -1066,13 +1078,19 @@ export default function ServiceExactApp({
      liderança (nunca pro papel "vol", que usa o app pelo celular). */
   const [showTour, setShowTour] = useState(false);
   useEffect(() => {
+    /* localStorage só existe no cliente : precisa ficar num efeito (não num
+       initializer de useState) pra não divergir do HTML renderizado no
+       servidor. abre a sidebar (navOpen) junto pro holofote já nascer visível. */
     if (currentRole === "vol") return;
     let tourDone = true;
     try { tourDone = localStorage.getItem("cex_tour_done") === "1"; } catch { /* segue sem tour automático */ }
-    if (!tourDone) setShowTour(true);
+    if (!tourDone) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 1ª visita: precisa ler localStorage no cliente antes de decidir
+      setShowTour(true);
+      setNavOpen(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  useEffect(() => { if (showTour) setNavOpen(true); }, [showTour]);
   const closeTour = () => {
     setShowTour(false);
     try { localStorage.setItem("cex_tour_done", "1"); } catch { /* fecha mesmo sem conseguir gravar */ }
@@ -1175,6 +1193,28 @@ export default function ServiceExactApp({
       author: "Equipe",
       is_milestone: true,
     });
+    router.refresh();
+  };
+  const saveBibleMarkMobile = async (book: string, chapter: number, verse: number, data: { color: string | null; note: string | null }) => {
+    if (!firstChurch?.organizationId || !currentPersonId) return;
+    const semConteudo = !data.color && !(data.note && data.note.trim());
+    const sb = createServiceBrowserClient().schema("service");
+    if (semConteudo) {
+      await sb.from("bible_marks").delete()
+        .eq("person_id", currentPersonId).eq("version", "acf")
+        .eq("book", book).eq("chapter", chapter).eq("verse", verse);
+    } else {
+      await sb.from("bible_marks").upsert({
+        organization_id: firstChurch.organizationId,
+        person_id: currentPersonId,
+        version: "acf",
+        book,
+        chapter,
+        verse,
+        color: data.color,
+        note: data.note,
+      }, { onConflict: "person_id,version,book,chapter,verse" });
+    }
     router.refresh();
   };
   const registerVisitorMobile = async (data: { name: string; phone: string; origin: string }) => {
@@ -1540,7 +1580,7 @@ export default function ServiceExactApp({
 
       {currentRole !== "vol" ? (
         <HelpFab
-          onTour={() => setShowTour(true)}
+          onTour={() => { setShowTour(true); setNavOpen(true); }}
           onSetup={() => {
             try { localStorage.removeItem("cex_setup_hide"); } catch { /* segue mesmo sem conseguir gravar */ }
             setRoute("painel");
@@ -1577,6 +1617,8 @@ export default function ServiceExactApp({
           kidsEvents={kidsEvents}
           kidsEventEnrollments={kidsEventEnrollments}
           wallPosts={wallPosts}
+          bibleMarks={bibleMarks}
+          onSaveBibleMark={saveBibleMarkMobile}
           onReadAnnouncement={markAnnouncementRead}
           onCompleteOnboarding={completeOnboarding}
           onAddCardComment={addCardCommentMobile}

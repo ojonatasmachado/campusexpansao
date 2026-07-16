@@ -388,6 +388,16 @@ type WallPostView = {
   created_at: string;
 };
 
+type BibleMarkView = {
+  id: string;
+  book: string;
+  chapter: number;
+  verse: number;
+  color: string | null;
+  note: string | null;
+  updated_at: string;
+};
+
 type AnnouncementReadView = {
   id: string;
   announcement_id: string;
@@ -1367,6 +1377,18 @@ export default async function ServiceHomePage() {
     }
   }
 
+  /* Marcações/anotações da Bíblia (service.bible_marks, ver 0036_service_biblia.sql):
+     100% privado, então busca só as da própria pessoa logada, nunca da igreja toda. */
+  let bibleMarks: BibleMarkView[] = [];
+  if (currentPersonId) {
+    const { data: bibleMarksData } = await supabase
+      .schema("service")
+      .from("bible_marks")
+      .select("id,book,chapter,verse,color,note,updated_at")
+      .eq("person_id", currentPersonId);
+    bibleMarks = (bibleMarksData ?? []) as BibleMarkView[];
+  }
+
   return (
     <ServiceExactApp
       churches={churches}
@@ -1415,6 +1437,7 @@ export default async function ServiceHomePage() {
       tags={extra.tags.map((tag) => ({ id: tag.id, churchId: tag.church_id, name: tag.name, color: tag.color ?? "wheat", leaders: tag.leaders ?? [] }))}
       timelineEvents={extra.timelineEvents}
       journeyRequests={extra.journeyRequests}
+      bibleMarks={bibleMarks}
       currentRole={currentRole}
       permissionsMatrix={permissionsMatrix}
       currentPersonId={currentPersonId}

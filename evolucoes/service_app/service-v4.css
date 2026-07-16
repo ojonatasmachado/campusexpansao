@@ -1,0 +1,77 @@
+/* ════════════════════════════════════════════════════════════════
+   CE.X SERVICE · estilos v4 — Bíblia no app do membro : leitura,
+   marcação por cor, anotação privada e busca. Usa os mesmos tokens
+   da identidade (paleta quente, sem azul). Completa aqui o 8º
+   acento canônico (--cocoa) que o Service ainda não tinha.
+   ════════════════════════════════════════════════════════════════ */
+
+:root { --cocoa: #6F523A; }
+body[data-theme="light"] { --cocoa: #5A4230; }
+
+/* ── tons de marcação (mesma paleta de estante do brandbook) ─────── */
+.tone-sand  { --mark: var(--sand); }
+.tone-wheat { --mark: var(--wheat); }
+.tone-amber { --mark: var(--amber); }
+.tone-clay  { --mark: var(--clay); }
+.tone-terra { --mark: var(--terra); }
+.tone-rust  { --mark: var(--rust); }
+.tone-cocoa { --mark: var(--cocoa); }
+.tone-olive { --mark: var(--olive); }
+
+/* ── busca ─────────────────────────────────────────────────────── */
+.bib-search { margin-bottom: 16px; }
+.bib-search .input { width: 100%; }
+
+/* ── CTA "minhas marcações" ───────────────────────────────────── */
+.bib-marks-cta { width: 100%; display: flex; align-items: center; gap: 12px; background: var(--olive-dim); border: 0.5px solid var(--olive-line); border-radius: var(--r-lg); padding: 13px 15px; margin-bottom: 18px; cursor: pointer; text-align: left; }
+.bib-marks-cta-ic { width: 30px; height: 30px; border-radius: 50%; background: var(--olive); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.bib-marks-cta b { font-size: 13.5px; color: var(--white); }
+.bib-marks-cta small { display: block; font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+
+/* ── grade de livros ───────────────────────────────────────────── */
+.bib-books { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 6px; }
+.bib-book { min-width: 0; background: var(--graphite); border: 0.5px solid var(--border-2); border-radius: var(--r-md); padding: 11px 6px; font-size: 11.5px; color: var(--light); text-align: center; line-height: 1.3; overflow-wrap: break-word; hyphens: auto; transition: border-color .14s, background .14s; }
+.bib-book:hover { border-color: var(--olive-line); }
+
+/* ── grade de capítulos ───────────────────────────────────────── */
+.bib-chapters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.bib-chapter { min-width: 0; aspect-ratio: 1; background: var(--graphite); border: 0.5px solid var(--border-2); border-radius: var(--r-md); font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--light); display: flex; align-items: center; justify-content: center; transition: border-color .14s, background .14s; }
+.bib-chapter:hover { border-color: var(--olive-line); background: var(--olive-dim); }
+
+/* ── cabeçalho do leitor ─────────────────────────────────────── */
+.bib-reader-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.bib-reader-head .m-h1 { margin: 0; flex: 1; text-align: center; }
+.bib-chnav { width: 34px; height: 34px; border-radius: 50%; background: var(--graphite); border: 0.5px solid var(--border-2); color: var(--light); font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.bib-chnav:disabled { opacity: 0.35; }
+
+/* ── versículos ────────────────────────────────────────────────── */
+.bib-verses { display: flex; flex-direction: column; gap: 2px; }
+.bib-verse { display: flex; align-items: flex-start; gap: 10px; width: 100%; text-align: left; background: transparent; border: none; border-left: 3px solid transparent; border-radius: 0 var(--r-sm) var(--r-sm) 0; padding: 8px 10px 8px 11px; transition: background .14s; }
+.bib-verse:hover { background: var(--graphite); }
+.bib-verse.marked { border-left-color: var(--mark); background: color-mix(in srgb, var(--mark) 14%, transparent); }
+.bib-verse-n { font-family: var(--mono); font-size: 10.5px; color: var(--subtle); flex-shrink: 0; margin-top: 3px; min-width: 16px; }
+.bib-verse.marked .bib-verse-n { color: var(--mark); font-weight: 700; }
+.bib-verse-t { font-size: 14.5px; line-height: 1.6; color: var(--light); }
+.bib-verse-note-ic { flex-shrink: 0; color: var(--mark, var(--olive)); margin-top: 3px; }
+
+/* ── resultados (busca e minhas marcações) ───────────────────── */
+.bib-result { display: block; width: 100%; text-align: left; background: var(--graphite); border: 0.5px solid var(--border-2); border-left: 3px solid var(--border-2); border-radius: var(--r-md); padding: 10px 13px; margin-bottom: 8px; }
+.bib-result.tone-sand, .bib-result.tone-wheat, .bib-result.tone-amber, .bib-result.tone-clay,
+.bib-result.tone-terra, .bib-result.tone-rust, .bib-result.tone-cocoa, .bib-result.tone-olive { border-left-color: var(--mark); }
+.bib-result b { display: block; font-size: 12.5px; color: var(--white); font-weight: 600; margin-bottom: 3px; }
+.bib-result small { display: block; font-size: 12px; color: var(--muted); line-height: 1.45; }
+
+/* ── folha de ação do versículo ──────────────────────────────── */
+.bib-action-ref { font-family: var(--mono); font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--olive-soft, var(--olive)); margin-bottom: 8px; }
+.bib-action-text { font-size: 14px; line-height: 1.6; color: var(--light); margin: 0; }
+.bib-swatches { display: flex; align-items: center; gap: 9px; margin-top: 16px; flex-wrap: wrap; }
+.bib-swatch { width: 28px; height: 28px; border-radius: 50%; background: var(--mark); border: 2px solid transparent; transition: transform .14s, border-color .14s; }
+.bib-swatch:hover { transform: scale(1.08); }
+.bib-swatch.on { border-color: var(--white); }
+.bib-swatch-clear { width: 28px; height: 28px; border-radius: 50%; background: var(--ink); border: 0.5px solid var(--border-2); color: var(--subtle); font-size: 12px; display: flex; align-items: center; justify-content: center; }
+.bib-copy { display: inline-flex; align-items: center; gap: 6px; }
+
+@media (max-width: 380px) {
+  .bib-books { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bib-chapters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
