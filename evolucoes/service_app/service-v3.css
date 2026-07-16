@@ -1,0 +1,123 @@
+/* ════════════════════════════════════════════════════════════════
+   CE.X SERVICE · estilos v3 — sistema de ajuda e primeiro uso.
+   Ponto de interrogação (?) reaproveitável junto de título/KPI/botão,
+   tour guiado com holofote sobre a sidebar real, botão flutuante de
+   ajuda e a jornada de configuração inicial do painel. Mesmos tokens
+   da identidade (paleta quente, sem azul) : nada aqui declara cor
+   fora de var(--*) definido em service.css.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── HELP DOT · "?" ao lado de título, KPI ou botão ──────────────── */
+.help-dot-wrap { position: relative; display: inline-flex; vertical-align: middle; margin-left: 6px; }
+.help-dot {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--olive-dim); color: var(--olive-soft, var(--olive));
+  border: 0.5px solid var(--olive-line);
+  font-family: var(--mono); font-size: 10px; font-weight: 700; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .14s, border-color .14s, transform .14s;
+  flex-shrink: 0;
+}
+.help-dot:hover, .help-dot:focus-visible { background: var(--olive); color: var(--accent-ink); border-color: var(--olive); transform: scale(1.08); outline: none; }
+.help-pop {
+  position: absolute; z-index: 90; top: calc(100% + 8px); left: 0; width: 240px;
+  background: var(--graphite-2, var(--graphite)); border: 0.5px solid var(--border-2);
+  border-radius: var(--r-md); padding: 11px 13px; box-shadow: 0 16px 40px -10px rgba(0,0,0,0.55);
+  font-size: 12.5px; line-height: 1.5; color: var(--light); letter-spacing: -0.005em;
+  animation: fade .14s;
+}
+.kpi-label .help-dot-wrap, .panel-title .help-dot-wrap { top: -1px; }
+.ph-title .help-dot-wrap { top: -6px; }
+
+/* ── HELP FAB · botão flutuante de ajuda, sempre por perto ───────── */
+.help-fab-wrap { position: fixed; bottom: 26px; right: 96px; z-index: 90; }
+@media (max-width: 740px) { .help-fab-wrap { bottom: 92px; right: 20px; } }
+.help-fab {
+  width: 44px; height: 44px; border-radius: 50%; background: var(--graphite);
+  border: 0.5px solid var(--border-2); color: var(--olive-soft, var(--olive));
+  font-family: var(--mono); font-size: 16px; font-weight: 700;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: transform .16s, border-color .16s;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.help-fab:hover { border-color: var(--olive-line); transform: scale(1.05); }
+.help-fab-menu {
+  position: absolute; bottom: calc(100% + 10px); right: 0; width: 250px;
+  background: var(--graphite-2, var(--graphite)); border: 0.5px solid var(--border-2);
+  border-radius: var(--r-lg); padding: 8px; box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+  animation: fade .16s;
+}
+.help-fab-menu button {
+  width: 100%; display: flex; align-items: center; gap: 10px; background: transparent;
+  border: none; border-radius: var(--r-md); padding: 10px 10px; text-align: left;
+  font-size: 13px; color: var(--white); cursor: pointer; transition: background .14s;
+}
+.help-fab-menu button:hover { background: var(--ink); }
+.help-fab-menu .ic { color: var(--olive); flex-shrink: 0; }
+
+/* ── COACHMARK · tour guiado com holofote sobre a tela real ──────── */
+.coach-layer { position: fixed; inset: 0; z-index: 200; pointer-events: none; }
+.coach-spot {
+  position: fixed; border-radius: var(--r-md);
+  box-shadow: 0 0 0 4000px rgba(8,10,7,0.72);
+  border: 1.5px solid var(--olive); transition: top .22s ease, left .22s ease, width .22s ease, height .22s ease, opacity .22s ease;
+  pointer-events: none;
+}
+.coach-pop {
+  position: fixed; width: 320px; max-width: calc(100vw - 32px);
+  background: var(--graphite-2, var(--graphite)); border: 0.5px solid var(--olive-line);
+  border-radius: var(--r-lg); padding: 18px 20px; box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+  pointer-events: auto; transition: top .22s ease, left .22s ease;
+}
+.coach-pop-eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--olive-soft, var(--olive)); margin-bottom: 8px; }
+.coach-pop-t { font-size: 16px; font-weight: 700; letter-spacing: -0.015em; color: var(--white); margin-bottom: 6px; }
+.coach-pop-s { font-size: 13px; line-height: 1.55; color: var(--muted); }
+.coach-pop-actions { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+.coach-skip { background: transparent; border: none; color: var(--subtle); font-size: 12.5px; cursor: pointer; padding: 8px 2px; transition: color .14s; }
+.coach-skip:hover { color: var(--muted); }
+
+/* ── SETUP CHECKLIST · jornada de configuração inicial (painel) ──── */
+.setup-card { background: var(--graphite); border: 0.5px solid var(--olive-line); border-radius: var(--r-lg); padding: 20px 22px; margin-bottom: 24px; }
+.setup-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.setup-eyebrow { display: flex; align-items: center; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--olive-soft, var(--olive)); margin-bottom: 6px; }
+.setup-title { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; color: var(--white); }
+.setup-close { flex-shrink: 0; width: 28px; height: 28px; border-radius: var(--r-md); background: transparent; border: none; color: var(--subtle); font-size: 13px; cursor: pointer; transition: background .14s, color .14s; }
+.setup-close:hover { background: var(--ink); color: var(--muted); }
+.setup-bar { height: 6px; border-radius: var(--r-pill); background: var(--ink); overflow: hidden; margin: 16px 0 4px; }
+.setup-bar-fill { height: 100%; border-radius: var(--r-pill); background: var(--olive); transition: width .3s ease; }
+.setup-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 14px; }
+.setup-item {
+  display: flex; align-items: center; gap: 11px; text-align: left; background: var(--ink);
+  border: 0.5px solid var(--border-2); border-radius: var(--r-md); padding: 12px 13px;
+  cursor: pointer; transition: border-color .14s, background .14s;
+}
+.setup-item:hover { border-color: var(--olive-line); }
+.setup-item.ok { cursor: default; opacity: 0.62; }
+.setup-item.ok:hover { border-color: var(--border-2); }
+.setup-item-check {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  background: var(--olive-dim); color: var(--olive); border: 0.5px solid var(--olive-line); font-size: 13px; font-weight: 700;
+}
+.setup-item.ok .setup-item-check { background: var(--olive); color: var(--accent-ink); border-color: var(--olive); }
+.setup-item-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.setup-item-main b { font-size: 13px; color: var(--white); font-weight: 600; letter-spacing: -0.01em; }
+.setup-item-main small { font-size: 11.5px; color: var(--muted); line-height: 1.35; }
+.setup-item-go { margin-left: auto; flex-shrink: 0; font-family: var(--mono); font-size: 10.5px; color: var(--olive-soft, var(--olive)); white-space: nowrap; }
+
+/* ── ONBOARDING DO MEMBRO · grade "conheça o app" (mobile) ───────── */
+.ob-tabs-grid { display: flex; flex-direction: column; gap: 10px; }
+.ob-tab-item { display: flex; align-items: center; gap: 12px; background: var(--ink); border: 0.5px solid var(--border-2); border-radius: var(--r-md); padding: 11px 13px; }
+.ob-tab-ic { width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--olive-dim); color: var(--olive); border: 0.5px solid var(--olive-line); }
+.ob-tab-item b { display: block; font-size: 13px; color: var(--white); font-weight: 600; letter-spacing: -0.01em; }
+.ob-tab-item small { display: block; font-size: 11.5px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
+
+/* ── tema claro ────────────────────────────────────────────────── */
+body[data-theme="light"] .help-pop,
+body[data-theme="light"] .help-fab-menu,
+body[data-theme="light"] .coach-pop,
+body[data-theme="light"] .setup-item { box-shadow: 0 10px 28px rgba(80,70,40,0.14); }
+body[data-theme="light"] .coach-spot { box-shadow: 0 0 0 4000px rgba(20,24,12,0.42); }
+
+@media (max-width: 640px) {
+  .coach-pop { width: calc(100vw - 32px); }
+  .setup-list { grid-template-columns: 1fr; }
+}

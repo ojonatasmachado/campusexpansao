@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "../../evolucoes/service_app/service.css";
 import "../../evolucoes/service_app/service-v2.css";
+import "../../evolucoes/service_app/service-v3.css";
 import PwaBootstrap from "./PwaBootstrap";
 
 export const metadata: Metadata = {

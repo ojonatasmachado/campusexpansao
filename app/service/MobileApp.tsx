@@ -1444,6 +1444,7 @@ function TabPerfil({
   const [pushBusy, setPushBusy] = useState(false);
   const [pushMsg, setPushMsg] = useState("");
   const pushSupported = typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
+  const [tour, setTour] = useState(false);
 
   useEffect(() => {
     if (!pushSupported) return;
@@ -1648,11 +1649,54 @@ function TabPerfil({
         {!pushSupported && <div style={{ fontSize: 11.5, color: "var(--subtle)", marginTop: 8 }}>Disponivel quando instalado como app.</div>}
         {pushMsg && <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 8 }}>{pushMsg}</div>}
       </div>
+
+      <div className="m-section-t" style={{ marginTop: 22 }}>Ajuda</div>
+      <div className="m-card">
+        <div className="m-data" style={{ borderBottom: "none" }}>
+          <span>Conheca o app</span>
+          <button className="btn btn-sec btn-sm" type="button" onClick={() => setTour(true)}>Rever</button>
+        </div>
+      </div>
+      {tour && <AppTourModal onClose={() => setTour(false)} />}
     </>
   );
 }
 
 // ── Onboarding (primeiro acesso do membro) ───────────────────────────────────
+
+const APP_TABS_INFO = [
+  { ic: "inicio", t: "Inicio", s: "Sua caminhada, avisos e o que precisa da sua atencao." },
+  { ic: "escalas", t: "Escala", s: "Veja onde voce foi escalado e confirme ou peca troca." },
+  { ic: "tarefas", t: "Tarefas", s: "O que o quadro do seu time colocou com o seu nome." },
+  { ic: "conversas", t: "Conversas", s: "Fale com seu time e sua lideranca direto por aqui." },
+  { ic: "cursos", t: "Cursos", s: "Suas trilhas de formacao, no seu tempo." },
+  { ic: "perfil", t: "Perfil", s: "Seus dados, tema do app e pedidos de oracao." },
+];
+
+function AppTabsInfoGrid() {
+  return (
+    <div className="ob-tabs-grid">
+      {APP_TABS_INFO.map((x) => (
+        <div className="ob-tab-item" key={x.t}>
+          <span className="ob-tab-ic"><Icon name={x.ic} size={18} /></span>
+          <div><b>{x.t}</b><small>{x.s}</small></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AppTourModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="m-sheet-bg" onClick={onClose}>
+      <div className="ob-card" style={{ maxWidth: 320 }} onClick={(e) => e.stopPropagation()}>
+        <div className="ob-welcome-x" style={{ marginBottom: 14, fontWeight: 700, fontSize: 15 }}>Conheca o app</div>
+        <AppTabsInfoGrid />
+        <button className="btn btn-pri" type="button" style={{ width: "100%", marginTop: 16 }} onClick={onClose}>Fechar</button>
+      </div>
+    </div>
+  );
+}
 
 
 function Onboarding({ person, member, churchName, churchLogoUrl, organizationId, onCompleteOnboarding, onDone }: { person: P; member: M | null; churchName?: string; churchLogoUrl?: string | null; organizationId?: string; onCompleteOnboarding?: (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string; senha: string }) => void; onDone: () => void }) {
@@ -1745,8 +1789,15 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
           </div>
         </div>
       ),
-      ok: "Entrar no app →",
+      ok: "Continuar →",
       valid: !d.senha || (d.senha.length >= 6 && d.senha === d.senha2),
+    },
+    {
+      t: "Conheca o app",
+      s: "Rapidinho: veja pra que serve cada aba la embaixo da tela.",
+      body: <AppTabsInfoGrid />,
+      ok: "Entrar no app →",
+      valid: true,
     },
   ] as const;
 
