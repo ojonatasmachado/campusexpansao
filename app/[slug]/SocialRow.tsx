@@ -1,5 +1,5 @@
-import LinkIcon from "../../lib/LinkIcon";
-import type { PaginaSocial } from "../../lib/church-page";
+import LinkIcon from "../lib/LinkIcon";
+import type { PaginaSocial } from "../lib/church-page";
 
 const ORDER: (keyof PaginaSocial)[] = ["whatsapp", "instagram", "youtube", "facebook", "tiktok", "site"];
 

@@ -1,5 +1,6 @@
-import type { ChurchPageData } from "../../../lib/church-page";
+import type { ChurchPageData } from "../../lib/church-page";
 import LinkThumb from "../LinkThumb";
+import LogoMark from "../LogoMark";
 import TrackedLink from "../TrackedLink";
 import { groupLinks, formatPostDate } from "../group-links";
 
@@ -12,8 +13,8 @@ export default function TemplateSimples({ data, preview }: { data: ChurchPageDat
   return (
     <>
       <header className="cx-header">
-        {data.logoUrl && <img src={data.logoUrl} alt={data.name} className="cx-logo" />}
-        <h1 className="cx-name">{data.name}</h1>
+        <LogoMark data={data} />
+        {data.pagina.logoMode !== "texto" && <h1 className="cx-name">{data.name}</h1>}
         {data.pagina.bio && <p className="cx-bio">{data.pagina.bio}</p>}
       </header>
 

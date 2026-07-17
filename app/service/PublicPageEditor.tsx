@@ -6,14 +6,15 @@ import { toPng } from "html-to-image";
 import QRCode from "react-qr-code";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { uploadServiceImage, imageExtension } from "./lib/upload-image";
+import { useChurchSettingsField } from "./lib/settings-field";
 import { Icon } from "./lib/icons";
 import { ImageUpload } from "./ImageUpload";
 import { AccentField } from "./AccentField";
 import LinkIconView from "../lib/LinkIcon";
 import { LINK_ICON_NAMES, DEFAULT_LINK_ICON } from "../lib/link-icons";
-import { PAGINA_CFG_DEFAULT } from "../lib/church-page";
-import type { PaginaCfg, PaginaSocial, PaginaTemplate, ChurchPageData } from "../lib/church-page";
-import ChurchPageView from "../igreja/[slug]/ChurchPageView";
+import { PAGINA_CFG_DEFAULT, IDENTIDADE_CFG_DEFAULT, mergeChurchIdentity } from "../lib/church-page";
+import type { PaginaCfg, PaginaSocial, PaginaTemplate, ChurchPageData, IdentidadeCfg } from "../lib/church-page";
+import ChurchPageView from "../[slug]/ChurchPageView";
 
 /* Editor da Página pública (link-in-bio) da igreja, aba "Página pública" em
    Configurações. Arquivo próprio (não dentro de ServiceExactApp.tsx, que já
@@ -21,11 +22,28 @@ import ChurchPageView from "../igreja/[slug]/ChurchPageView";
    reordenação, CRUD de notícias, seletor de modelo, QR code, preview ao
    vivo). Reaproveita AccentField (cor), ImageUpload (capa) e o próprio
    ChurchPageView da rota pública pra a pré-visualização ser exatamente igual
-   ao que sai no ar, não uma imitação. */
+   ao que sai no ar, não uma imitação.
 
+   Logo/fundo/cor do texto/cor das caixas NÃO são configuração desta página :
+   são identidade da igreja (settings.identidadeCfg), editada em
+   Configurações → Personalização (ver IdentidadeFields.tsx) e só consumida
+   aqui pro preview. accentColor continua aqui como override intencional : a
+   Página pública pode ter uma cor de destaque diferente do resto do
+   Service. */
+
+/* Toda rota real que já existe na raiz do domínio (app/<rota>), pra um
+   app/[slug]/page.tsx na raiz nunca colidir com elas (Next 16 : rota
+   estática sempre vence a dinâmica no mesmo nível) : admin, api, auth,
+   checkout, comprado, conta, cursos, igreja, landing, links, login,
+   materiais, perfil, quiz, redefinir-senha, series, service, sobre, studio,
+   teste-design. "entrar" também entra : é a rota do login temático dentro
+   de cada igreja (app/[slug]/entrar). O resto são palavras genéricas
+   reservadas por segurança, sem rota real hoje. */
 const RESERVED_SLUGS = new Set([
-  "admin", "api", "app", "www", "service", "perfil", "materiais", "cursos",
-  "sobre", "login", "cadastro", "novo", "editar", "home", "inicio", "igreja",
+  "admin", "api", "auth", "checkout", "comprado", "conta", "cursos", "igreja",
+  "landing", "links", "login", "materiais", "perfil", "quiz", "redefinir-senha",
+  "series", "service", "sobre", "studio", "teste-design", "entrar",
+  "app", "www", "cadastro", "novo", "editar", "home", "inicio",
 ]);
 
 type ChurchProp = {
@@ -34,7 +52,7 @@ type ChurchProp = {
   nome: string;
   logoUrl?: string | null;
   slug?: string | null;
-  settings?: { paginaCfg?: PaginaCfg; [key: string]: unknown };
+  settings?: { paginaCfg?: PaginaCfg; identidadeCfg?: IdentidadeCfg; brandCfg?: { accentDark?: string }; [key: string]: unknown };
 };
 
 type LinkItem = {
@@ -77,7 +95,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
   const router = useRouter();
   const canEdit = currentRole === "master" || currentRole === "pastor" || currentRole === "owner";
 
-  const [pagina, setPagina] = useState<PaginaCfg>(() => ({ ...PAGINA_CFG_DEFAULT, ...(church.settings?.paginaCfg ?? {}) }));
+  const [pagina, setPagina, savePagina] = useChurchSettingsField<PaginaCfg>("paginaCfg", PAGINA_CFG_DEFAULT, church, () => router.refresh());
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,29 +156,8 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
   }, [church.id]);
 
   useEffect(() => {
-    setPagina({ ...PAGINA_CFG_DEFAULT, ...(church.settings?.paginaCfg ?? {}) });
-  }, [church.settings]);
-
-  useEffect(() => {
     setSlugDraft(church.slug ?? "");
   }, [church.slug]);
-
-  const savePagina = async (patch: Partial<PaginaCfg>) => {
-    setPagina((prev) => ({ ...prev, ...patch }));
-    /* lê o settings mais recente do banco antes de gravar, em vez de
-       montar o objeto a partir do estado local (que pode estar
-       desatualizado) : duas fotos salvas em sequência rápida (upload é
-       assíncrono, demora) cada uma escrevendo a partir do `pagina`/`church`
-       "congelados" no fechamento da função apagava o campo que a outra
-       tinha acabado de salvar. Ler fresco por último reduz essa janela de
-       corrida ao tamanho de uma consulta, não ao tempo de dois uploads. */
-    const { data: currentRow } = await client().from("churches").select("settings").eq("id", church.id).maybeSingle();
-    const currentSettings = (currentRow as { settings?: Record<string, unknown> } | null)?.settings ?? church.settings ?? {};
-    const currentPagina = (currentSettings.paginaCfg as PaginaCfg | undefined) ?? {};
-    const merged = { ...currentSettings, paginaCfg: { ...currentPagina, ...patch } };
-    await client().from("churches").update({ settings: merged }).eq("id", church.id);
-    router.refresh();
-  };
 
   const saveSocial = (key: keyof PaginaSocial, value: string) => {
     savePagina({ social: { ...(pagina.social ?? {}), [key]: value || undefined } });
@@ -271,21 +268,19 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
     }
   };
 
-  const pageUrl = origin && church.slug ? `${origin}/igreja/${church.slug}` : "";
-  const effectiveBgHex = pagina.bgMode === "imagem" ? "#0E110D" : pagina.bgMode === "degrade" ? (pagina.bgFrom ?? PAGINA_CFG_DEFAULT.bgFrom) : (pagina.bgColor ?? PAGINA_CFG_DEFAULT.bgColor);
+  const pageUrl = origin && church.slug ? `${origin}/${church.slug}` : "";
+  const loginUrl = origin && church.slug ? `${origin}/${church.slug}/entrar` : "";
+  const identidade: IdentidadeCfg = { ...IDENTIDADE_CFG_DEFAULT, ...(church.settings?.identidadeCfg ?? {}) };
+  const serviceAccent = church.settings?.brandCfg?.accentDark || PAGINA_CFG_DEFAULT.accentColor;
+  const effectiveBgHex = identidade.bgMode === "imagem" ? "#0E110D" : identidade.bgMode === "degrade" ? (identidade.bgFrom ?? IDENTIDADE_CFG_DEFAULT.bgFrom) : (identidade.bgColor ?? IDENTIDADE_CFG_DEFAULT.bgColor);
 
   const previewData: ChurchPageData = {
     id: church.id,
     slug: church.slug || slugDraft || "sua-igreja",
     name: church.nome,
     logoUrl: church.logoUrl ?? null,
-    pagina: {
-      ...PAGINA_CFG_DEFAULT,
-      ...pagina,
-      bio: pagina.bio ?? "",
-      coverUrl: pagina.coverUrl ?? null,
-      social: pagina.social ?? {},
-    },
+    pagina: mergeChurchIdentity(church.settings?.identidadeCfg, pagina, church.settings?.brandCfg?.accentDark),
+    serviceAccent,
     published: true,
     links: links.filter((l) => l.active).map((l) => ({ id: l.id, label: l.label, url: l.url, icon: l.icon, imageUrl: l.imageUrl, groupLabel: l.groupLabel || null })),
     posts: posts.map((p) => ({ id: p.id, title: p.title, body: p.body || null, coverUrl: p.coverUrl, pinned: p.pinned, publishedAt: p.publishedAt })),
@@ -313,7 +308,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
 
         <div className="field-label" style={{ marginTop: 14 }}>Endereço da página</div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <span style={{ fontSize: 13, color: "var(--subtle)" }}>{origin.replace(/^https?:\/\//, "")}/igreja/</span>
+          <span style={{ fontSize: 13, color: "var(--subtle)" }}>{origin.replace(/^https?:\/\//, "")}/</span>
           <input
             className="input"
             style={{ maxWidth: 220 }}
@@ -334,10 +329,22 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
         {slugStatus === "taken" && <div className="brand-accent-warn">Já tem outra igreja com este endereço.</div>}
         {slugStatus === "ok" && <div className="brand-accent-contrast">Disponível.</div>}
 
+        {loginUrl && (
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 14 }}>
+            <div className="cfg-row-main" style={{ flex: "none" }}>
+              <div className="field-label" style={{ marginTop: 0 }}>Acesso da equipe (login com a cara da igreja)</div>
+              <span style={{ fontSize: 13, color: "var(--subtle)" }}>{loginUrl.replace(/^https?:\/\//, "")}</span>
+            </div>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(loginUrl)}>
+              <Icon name="copiar" size={13} /> Copiar link
+            </button>
+          </div>
+        )}
+
         {church.slug && (
           <div style={{ display: "flex", gap: 18, alignItems: "center", marginTop: 18, flexWrap: "wrap" }}>
             <div ref={qrRef} style={{ background: "#fff", padding: 10, borderRadius: 10 }}>
-              <QRCode value={pageUrl || `${origin}/igreja/${church.slug}`} size={104} style={{ height: "auto", maxWidth: "100%", width: 104 }} viewBox="0 0 104 104" />
+              <QRCode value={pageUrl || `${origin}/${church.slug}`} size={104} style={{ height: "auto", maxWidth: "100%", width: 104 }} viewBox="0 0 104 104" />
             </div>
             <div>
               <div className="cfg-row-s">QR code pronto pra colocar em boletim, cartaz ou tela de projeção.</div>
@@ -364,7 +371,10 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
       {/* ─── Aparência ─── */}
       <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
         <div className="cfg-card-t">Aparência</div>
-        <div className="cfg-card-s">O logo é o mesmo já enviado em Personalização. Aqui vão a bio, a capa e as cores só desta página.</div>
+        <div className="cfg-card-s">
+          Bio, capa e cor de destaque só desta página. Logo, fundo e as demais cores são a
+          identidade da igreja, editada em Configurações → Personalização.
+        </div>
 
         <div className="field-label" style={{ marginTop: 10 }}>Bio (aparece embaixo do nome da igreja)</div>
         <textarea
@@ -391,11 +401,18 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
           />
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
-          <BackgroundField pagina={pagina} onSave={savePagina} organizationId={church.organizationId} churchId={church.id} />
-          <AccentField compact label="Cor do texto" bgHex={effectiveBgHex} value={pagina.textColor ?? PAGINA_CFG_DEFAULT.textColor} defaultHex={PAGINA_CFG_DEFAULT.textColor} onChange={(hex) => savePagina({ textColor: hex })} />
-          <AccentField compact label="Cor de destaque (ícones e selos)" bgHex={effectiveBgHex} value={pagina.accentColor ?? PAGINA_CFG_DEFAULT.accentColor} defaultHex={PAGINA_CFG_DEFAULT.accentColor} onChange={(hex) => savePagina({ accentColor: hex })} />
-          <AccentField compact label="Cor das caixas e balões" bgHex={effectiveBgHex} value={pagina.boxColor ?? PAGINA_CFG_DEFAULT.boxColor} defaultHex={PAGINA_CFG_DEFAULT.boxColor} onChange={(hex) => savePagina({ boxColor: hex })} />
+        <div style={{ marginTop: 14 }}>
+          <AccentField
+            compact
+            label="Cor de destaque (ícones e selos)"
+            bgHex={effectiveBgHex}
+            value={pagina.accentColor ?? serviceAccent}
+            defaultHex={serviceAccent}
+            onChange={(hex) => savePagina({ accentColor: hex })}
+          />
+          <div className="cfg-card-s" style={{ marginTop: 6 }}>
+            Usa a cor de destaque do Service por padrão. Mude aqui só se quiser diferente nesta página.
+          </div>
         </div>
       </div>
 
@@ -522,105 +539,6 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
           onSave={(draft) => savePost(draft, postModal.isNew)}
           onDelete={postModal.isNew ? undefined : () => deletePost(postModal.draft.id)}
         />
-      )}
-    </div>
-  );
-}
-
-const BG_ANGLE_PRESETS: { angle: number; label: string }[] = [
-  { angle: 180, label: "↓" },
-  { angle: 135, label: "↘" },
-  { angle: 90, label: "→" },
-  { angle: 45, label: "↗" },
-];
-
-/* Cor de fundo da página : sólida, degradê (como no Studio) ou uma foto
-   (com uma camada escura por cima, ajustável, pra sempre continuar dando
-   pra ler o texto e os botões). Fica no próprio PublicPageEditor, não em
-   AccentField.tsx, porque essa lógica é específica de fundo de página : não
-   faz sentido pra cor de texto/destaque. */
-function BackgroundField({ pagina, onSave, organizationId, churchId }: { pagina: PaginaCfg; onSave: (patch: Partial<PaginaCfg>) => void; organizationId: string; churchId: string }) {
-  const mode = pagina.bgMode ?? "solida";
-  const from = pagina.bgFrom ?? PAGINA_CFG_DEFAULT.bgFrom;
-  const to = pagina.bgTo ?? PAGINA_CFG_DEFAULT.bgTo;
-  const angle = pagina.bgAngle ?? PAGINA_CFG_DEFAULT.bgAngle;
-  const overlay = pagina.bgOverlay ?? PAGINA_CFG_DEFAULT.bgOverlay;
-
-  return (
-    <div>
-      <div className="field-label" style={{ marginBottom: 8 }}>Cor de fundo</div>
-      <div className="opt-row" style={{ marginBottom: 10 }}>
-        <button type="button" className={`opt${mode === "solida" ? " on" : ""}`} style={{ padding: "8px 14px" }} onClick={() => onSave({ bgMode: "solida" })}>
-          <div className="opt-t">Sólida</div>
-        </button>
-        <button type="button" className={`opt${mode === "degrade" ? " on" : ""}`} style={{ padding: "8px 14px" }} onClick={() => onSave({ bgMode: "degrade" })}>
-          <div className="opt-t">Degradê</div>
-        </button>
-        <button type="button" className={`opt${mode === "imagem" ? " on" : ""}`} style={{ padding: "8px 14px" }} onClick={() => onSave({ bgMode: "imagem" })}>
-          <div className="opt-t">Imagem</div>
-        </button>
-      </div>
-
-      {mode === "solida" && (
-        <AccentField compact label="Cor de fundo" bgHex="#0E110D" value={pagina.bgColor ?? PAGINA_CFG_DEFAULT.bgColor} defaultHex={PAGINA_CFG_DEFAULT.bgColor} onChange={(hex) => onSave({ bgColor: hex })} />
-      )}
-
-      {mode === "degrade" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ height: 40, borderRadius: 10, background: `linear-gradient(${angle}deg, ${from}, ${to})`, border: "1px solid var(--border-2)" }} />
-          <AccentField compact label="Cor inicial" bgHex="#0E110D" value={from} defaultHex={PAGINA_CFG_DEFAULT.bgFrom} onChange={(hex) => onSave({ bgFrom: hex })} />
-          <AccentField compact label="Cor final" bgHex="#0E110D" value={to} defaultHex={PAGINA_CFG_DEFAULT.bgTo} onChange={(hex) => onSave({ bgTo: hex })} />
-          <div>
-            <div className="field-label" style={{ marginBottom: 6 }}>Direção</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {BG_ANGLE_PRESETS.map((p) => (
-                <button
-                  key={p.angle}
-                  type="button"
-                  className={`opt${angle === p.angle ? " on" : ""}`}
-                  style={{ width: 44, height: 44, padding: 0, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}
-                  onClick={() => onSave({ bgAngle: p.angle })}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {mode === "imagem" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <ImageUpload
-            label="Foto de fundo"
-            hint="Cobre a página inteira. Escureça um pouco pra manter os botões legíveis."
-            url={pagina.bgImageUrl}
-            aspectRatio={0.75}
-            onUpload={async (file) => {
-              const path = `${organizationId}/paginas/${churchId}-fundo.${imageExtension(file)}`;
-              const url = await uploadServiceImage(createServiceBrowserClient(), file, path);
-              await onSave({ bgImageUrl: url });
-            }}
-            onRemove={() => onSave({ bgImageUrl: undefined })}
-          />
-          {pagina.bgImageUrl && (
-            <div>
-              <div className="field-label" style={{ marginBottom: 6 }}>Escurecer a foto</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <input
-                  type="range"
-                  min={0}
-                  max={0.85}
-                  step={0.01}
-                  value={overlay}
-                  onChange={(e) => onSave({ bgOverlay: Number(e.target.value) })}
-                  style={{ flex: 1 }}
-                />
-                <span style={{ fontSize: 12, color: "var(--subtle)", width: 34, textAlign: "right" }}>{Math.round(overlay * 100)}%</span>
-              </div>
-            </div>
-          )}
-        </div>
       )}
     </div>
   );

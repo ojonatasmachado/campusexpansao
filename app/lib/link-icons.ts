@@ -1,4 +1,4 @@
-/* Ícones dos links da página pública da igreja (app/igreja/[slug]) e do
+/* Ícones dos links da página pública da igreja (app/[slug]) e do
    respectivo seletor no editor (app/service/PublicPageEditor.tsx). Fonte
    única : os dois lados importam daqui, ninguém redeclara. Curadoria pequena
    e própria (não a de app/service/lib/icons.tsx, que é a biblioteca geral do

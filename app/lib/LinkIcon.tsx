@@ -1,7 +1,7 @@
 import { LINK_ICON_PATHS, DEFAULT_LINK_ICON } from "./link-icons";
 
 /* Renderiza um ícone de app/lib/link-icons.ts. Fica em app/lib (não em
-   app/igreja/[slug]) porque é reaproveitado tanto pela página pública quanto
+   app/[slug]) porque é reaproveitado tanto pela página pública quanto
    pelo seletor de ícone do editor em Configurações
    (app/service/PublicPageEditor.tsx) — os dois precisam enxergar exatamente
    o mesmo conjunto de ícones, senão o que a igreja escolhe no editor não bate

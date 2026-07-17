@@ -39,6 +39,7 @@
 }
 
 .cx-name { font-size: 20px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+.cx-logo-text { font-size: 30px; line-height: 1.15; margin: 0 0 8px; word-break: break-word; }
 .cx-bio { font-size: 14px; opacity: 0.78; line-height: 1.5; margin: 0; white-space: pre-wrap; }
 
 .cx-cover {
@@ -196,3 +197,55 @@
 .cx-notpublished-card { max-width: 320px; }
 .cx-notpublished-card h1 { font-size: 17px; margin: 0 0 8px; }
 .cx-notpublished-card p { font-size: 13.5px; opacity: 0.7; line-height: 1.5; margin: 0; }
+
+/* Login temático (app/[slug]/entrar) : mesmo sistema de tokens --cx-* da
+   Página pública, --cx-accent aqui vem de brandCfg.accentDark (cor de
+   destaque do Service), não de paginaCfg.accentColor. */
+.cx-login { max-width: 380px; margin: 60px auto 0; }
+.cx-login-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+  margin: 0 0 8px;
+  text-align: center;
+}
+.cx-form { display: flex; flex-direction: column; gap: 14px; margin-top: 22px; }
+.cx-field { display: flex; flex-direction: column; gap: 6px; }
+.cx-field-label { font-size: 12.5px; font-weight: 600; opacity: 0.75; }
+.cx-input {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--cx-box, #FFFFFF) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cx-box, #FFFFFF) 14%, transparent);
+  color: var(--cx-text, #EDE6D3);
+  font-size: 15px;
+  font-family: inherit;
+}
+.cx-input::placeholder { color: color-mix(in srgb, var(--cx-text, #EDE6D3) 55%, transparent); }
+.cx-input:focus { outline: none; border-color: var(--cx-accent, #7A9E3F); }
+.cx-btn {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: none;
+  background: var(--cx-accent, #7A9E3F);
+  color: var(--cx-accent-ink, #0E110D);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.cx-btn:disabled { opacity: 0.6; cursor: default; }
+.cx-error { font-size: 13px; color: #E08585; margin: 0; }
+.cx-login-back {
+  display: block;
+  text-align: center;
+  margin-top: 24px;
+  font-size: 12.5px;
+  opacity: 0.55;
+  text-decoration: none;
+  color: inherit;
+}

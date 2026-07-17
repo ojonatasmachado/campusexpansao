@@ -66,10 +66,15 @@ export const TOUR_DESKTOP: CoachStep[] = [
   { sel: '[data-tour="ajuda-fab"]', t: "Sempre por perto", s: 'Ficou com dúvida depois? Clique aqui a qualquer momento pra rever este tour. E em qualquer tela, o "?" ao lado de títulos, números e botões explica o que aquilo faz.' },
 ];
 
-export function Coachmark({ steps, go, onDone }: { steps: CoachStep[]; go?: (route: string) => void; onDone: () => void }) {
-  const [i, setI] = useState(0);
+export function Coachmark({ steps, go, onDone, startAt = 0, onStepChange }: { steps: CoachStep[]; go?: (route: string) => void; onDone: () => void; startAt?: number; onStepChange?: (i: number) => void }) {
+  const [i, setI] = useState(startAt);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const step = steps[i];
+
+  useEffect(() => {
+    onStepChange?.(i);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i]);
 
   useEffect(() => {
     if (!step) return;
@@ -80,6 +85,12 @@ export function Coachmark({ steps, go, onDone }: { steps: CoachStep[]; go?: (rou
       setRect(visible ? el!.getBoundingClientRect() : null);
     };
     const raf1 = requestAnimationFrame(() => {
+      /* rola o item real pra dentro da área visível (sidebar tem seu
+         próprio scroll) antes de medir : sem isso, um item mais abaixo na
+         lista fica com coordenadas fora da tela e o holofote acaba pousando
+         em cima de outro menu que por acaso está na mesma posição. */
+      const el = step.sel ? document.querySelector<HTMLElement>(step.sel) : null;
+      if (el && (el.offsetWidth || el.offsetHeight)) el.scrollIntoView({ block: "center", inline: "nearest" });
       const raf2 = requestAnimationFrame(measure);
       cleanups.push(() => cancelAnimationFrame(raf2));
     });

@@ -1,4 +1,4 @@
-import LinkIcon from "../../lib/LinkIcon";
+import LinkIcon from "../lib/LinkIcon";
 
 /* Miniatura de um link : foto pequena enviada pela igreja, se houver, senão
    o ícone escolhido. Fonte única pros 3 templates não repetirem essa

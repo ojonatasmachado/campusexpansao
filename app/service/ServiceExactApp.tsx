@@ -20,7 +20,10 @@ import { PhotoPicker } from "./PhotoPicker";
 import { ImageUpload } from "./ImageUpload";
 import { AccentField } from "./AccentField";
 import { PublicPageEditor } from "./PublicPageEditor";
-import type { PaginaCfg } from "../lib/church-page";
+import { LogoField, BackgroundField } from "./IdentidadeFields";
+import { useChurchSettingsField } from "./lib/settings-field";
+import { IDENTIDADE_CFG_DEFAULT } from "../lib/church-page";
+import type { PaginaCfg, IdentidadeCfg } from "../lib/church-page";
 import EventoShare from "./EventoShare";
 import CursoEditor from "./CursoEditor";
 import CursoDrawer from "./CursoDrawer";
@@ -51,6 +54,7 @@ type ChurchSettings = {
   gruposCfg?: GruposCfg;
   brandCfg?: BrandCfg;
   paginaCfg?: PaginaCfg;
+  identidadeCfg?: IdentidadeCfg;
   [key: string]: unknown;
 };
 
@@ -680,7 +684,8 @@ type FieldDef =
   | { k: string; label: string; type: "time"; req?: boolean; half?: boolean; hint?: string; showIf?: ShowIf }
   | { k: string; label: string; type: "toggle"; req?: boolean; half?: boolean; hint?: string; onLabel?: string; offLabel?: string; value?: string; showIf?: ShowIf }
   | { k: string; label: string; type: "checks"; req?: boolean; half?: boolean; hint?: string; options: { v: string; l: string }[]; showIf?: ShowIf }
-  | { k: string; label: string; type: "icon"; req?: boolean; half?: boolean; hint?: string; value?: string; showIf?: ShowIf };
+  | { k: string; label: string; type: "icon"; req?: boolean; half?: boolean; hint?: string; value?: string; showIf?: ShowIf }
+  | { k: string; label: string; type: "cep"; req?: boolean; half?: boolean; ph?: string; hint?: string; showIf?: ShowIf; autofill?: { street?: string; neighborhood?: string; city?: string; state?: string } };
 
 const OUTRO_LOCAL = "__outro__";
 
@@ -846,7 +851,9 @@ function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchVie
   return (
     <div className="cong" ref={ref}>
       <button className="cong-btn" type="button" onClick={() => setOpen((o) => !o)}>
-        <span className="cong-mark"><Icon name="identidade" size={16} /></span>
+        <span className="cong-mark">
+          {active?.logoUrl ? <img src={active.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /> : <Icon name="identidade" size={16} />}
+        </span>
         <span className="cong-info">
           <span className="cong-name">{active?.nome ?? "Sua igreja"}</span>
           <span className="cong-role">{active?.matriz ? "Matriz · rede" : "Congregação"}</span>
@@ -859,7 +866,9 @@ function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchVie
           {churches.filter((c) => c.matriz).map((c) => (
             <button key={c.id} className={`cong-opt ${c.id === activeId ? "on" : ""}`} type="button"
               onClick={() => { setActiveId(c.id); setOpen(false); }}>
-              <span className="cong-opt-mark"><Icon name="identidade" size={14} /></span>
+              <span className="cong-opt-mark">
+                {c.logoUrl ? <img src={c.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /> : <Icon name="identidade" size={14} />}
+              </span>
               <span className="cong-opt-info">
                 <span className="cong-opt-name">{c.nome}</span>
                 <span className="cong-opt-sub">{c.cidade}</span>
@@ -872,7 +881,9 @@ function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchVie
               {churches.filter((c) => !c.matriz).map((c) => (
                 <button key={c.id} className={`cong-opt ${c.id === activeId ? "on" : ""}`} type="button"
                   onClick={() => { setActiveId(c.id); setOpen(false); }}>
-                  <span className="cong-opt-mark"><Icon name="identidade" size={14} /></span>
+                  <span className="cong-opt-mark">
+                {c.logoUrl ? <img src={c.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /> : <Icon name="identidade" size={14} />}
+              </span>
                   <span className="cong-opt-info">
                     <span className="cong-opt-name">{c.nome}</span>
                     <span className="cong-opt-sub">{c.cidade}</span>
@@ -1025,23 +1036,44 @@ export default function ServiceExactApp({
   /* tour guiado + botão de ajuda : dispara sozinho no 1º login de
      liderança (nunca pro papel "vol", que usa o app pelo celular). */
   const [showTour, setShowTour] = useState(false);
+  const [tourStart, setTourStart] = useState(0);
+  /* passo != null : já teve um tour incompleto (fechou a aba/atualizou no
+     meio) e a pergunta de retomar ainda não foi respondida. Sem isso, toda
+     visita seguinte reabria o tour do zero a partir do passo 1. */
+  const [tourResumeStep, setTourResumeStep] = useState<number | null>(null);
   useEffect(() => {
     /* localStorage só existe no cliente : precisa ficar num efeito (não num
        initializer de useState) pra não divergir do HTML renderizado no
        servidor. abre a sidebar (navOpen) junto pro holofote já nascer visível. */
     if (currentRole === "vol") return;
     let tourDone = true;
+    let savedStep = 0;
     try { tourDone = localStorage.getItem("cex_tour_done") === "1"; } catch { /* segue sem tour automático */ }
+    try { savedStep = Number(localStorage.getItem("cex_tour_step") || "0") || 0; } catch { /* sem passo salvo */ }
     if (!tourDone) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- 1ª visita: precisa ler localStorage no cliente antes de decidir
-      setShowTour(true);
-      setNavOpen(true);
+      if (savedStep > 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- 1ª visita: precisa ler localStorage no cliente antes de decidir
+        setTourResumeStep(savedStep);
+      } else {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setShowTour(true);
+        setNavOpen(true);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const closeTour = () => {
     setShowTour(false);
-    try { localStorage.setItem("cex_tour_done", "1"); } catch { /* fecha mesmo sem conseguir gravar */ }
+    try { localStorage.setItem("cex_tour_done", "1"); localStorage.removeItem("cex_tour_step"); } catch { /* fecha mesmo sem conseguir gravar */ }
+  };
+  const saveTourStep = (i: number) => {
+    try { localStorage.setItem("cex_tour_step", String(i)); } catch { /* segue sem salvar o passo atual */ }
+  };
+  const startTourFrom = (step: number) => {
+    setTourResumeStep(null);
+    setTourStart(step);
+    setShowTour(true);
+    setNavOpen(true);
   };
   const setupCounts: SetupCounts = useMemo(() => ({
     igreja: [firstChurch?.nome, firstChurch?.cidade, firstChurch?.address].join("|"),
@@ -1526,7 +1558,29 @@ export default function ServiceExactApp({
           }}
         />
       ) : null}
-      {showTour ? <Coachmark steps={TOUR_DESKTOP} go={(r) => setRoute(r as keyof typeof ROUTES)} onDone={closeTour} /> : null}
+      {showTour ? (
+        <Coachmark
+          steps={TOUR_DESKTOP}
+          go={(r) => setRoute(r as keyof typeof ROUTES)}
+          onDone={closeTour}
+          startAt={tourStart}
+          onStepChange={saveTourStep}
+        />
+      ) : null}
+      {tourResumeStep !== null ? (
+        <div className="coach-layer">
+          <div className="coach-pop" style={{ top: "40%", left: "50%", transform: "translate(-50%, -50%)" }}>
+            <div className="coach-pop-eyebrow">Tour guiado</div>
+            <div className="coach-pop-t">Retomar de onde parou?</div>
+            <div className="coach-pop-s">Você não terminou o tour da última vez. Parou no passo {tourResumeStep + 1} de {TOUR_DESKTOP.length}.</div>
+            <div className="coach-pop-actions">
+              <button className="coach-skip" type="button" onClick={closeTour}>Não, obrigado</button>
+              <div style={{ flex: 1 }} />
+              <button className="btn btn-pri btn-sm" type="button" onClick={() => startTourFrom(tourResumeStep)}>Continuar →</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {mobileOpen && (
         <MobileOverlay
@@ -1914,13 +1968,6 @@ function Painel({
           <p className="ph-sub">Visão da semana: quem está escalado, o que falta preencher e quem precisa de acompanhamento.</p>
         </div>
         <div className="ph-actions">
-          <button
-            className="btn btn-sec"
-            type="button"
-            onClick={() => setModal({ eyebrow: "Criar", title: "Novo voluntário", subtitle: "Cadastre e já escolha os ministérios.", saveLabel: "Adicionar voluntário", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"e-mail da pessoa" }], action: { kind: "member" } })}
-          >
-            + Novo voluntário
-          </button>
           <button className="btn btn-sec" type="button" onClick={() => setRoute("cultos")}>Ver agenda</button>
           <button className="btn btn-pri" type="button" onClick={() => setRoute("escalas")}>Montar escala →</button>
         </div>
@@ -2178,7 +2225,7 @@ function Membros({ members, ministries, church, setDrawer, setModal }: { members
     ministries.filter((min) => min.people.some((p) => p.personId === volunteerId));
   return (
     <div className="content wide">
-      <PageHead title="Membros" eyebrow="Pessoas" subtitle="Toda a congregação. Veja quem serve, em que jornada está e o histórico desde que chegou." help="Toda a congregação entra aqui, sirva ou não em um ministério. É diferente de Voluntários, que lista só quem já serve ativamente." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Cadastro de quem já é da casa. Os dados completos liberam o acesso ao app.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Os 6 últimos dígitos viram a senha inicial do app." }, { k:"email", label:"E-mail", type:"text", half:true, req:true, ph:"usado para entrar no app" }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }], action: { kind: "member" } })}>+ Novo membro</button>} />
+      <PageHead title="Membros" eyebrow="Pessoas" subtitle="Toda a congregação. Veja quem serve, em que jornada está e o histórico desde que chegou." help="Toda a congregação entra aqui, sirva ou não em um ministério. É diferente de Voluntários, que lista só quem já serve ativamente." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Cadastro de quem já é da casa. Os dados completos liberam o acesso ao app.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Os 6 últimos dígitos viram a senha inicial do app." }, { k:"email", label:"E-mail", type:"text", half:true, req:true, ph:"usado para entrar no app" }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"cep", label:"CEP", type:"cep", half:true, ph:"00000-000", hint:"Preenche rua, bairro, cidade e estado sozinho.", autofill:{ street:"rua", neighborhood:"bairro", city:"cidade", state:"estado" } }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }, { k:"rua", label:"Rua", type:"text", half:true, ph:"Nome da rua" }, { k:"cidade", label:"Cidade", type:"text", half:true }, { k:"estado", label:"Estado", type:"text", half:true, ph:"UF" }], action: { kind: "member" } })}>+ Novo membro</button>} />
       {church && (
         <div className="contato-banner">
           <div className="contato-pill"><span style={{ color: "var(--olive)" }}><Icon name="whatsapp" size={16} /></span></div>
@@ -7018,12 +7065,22 @@ function Config({
   const [elencoTag, setElencoTag] = useState<TagView | null>(null);
   const [gerirCongId, setGerirCongId] = useState<string | null>(null);
 
+  /* church.address guarda rua + número já combinados numa string só (mesmo
+     formato que o lookup de CNPJ monta : "logradouro, numero"). Pra poder
+     reaproveitar isso no autopreenchimento por CEP, separa na 1ª vírgula ao
+     carregar : dado legado sem vírgula cai inteiro em "rua", sem número. */
+  const [addrLegacyRua, addrLegacyNumero] = (() => {
+    const full = church?.address ?? "";
+    const idx = full.indexOf(",");
+    return idx === -1 ? [full, ""] : [full.slice(0, idx).trim(), full.slice(idx + 1).trim()];
+  })();
   const [igrejaForm, setIgrejaForm] = useState({
     nome: church?.nome ?? "",
     cidade: church?.cidade ?? "",
     doc: church?.doc ?? "",
     fundada: church?.foundedYear ?? "",
-    endereco: church?.address ?? "",
+    rua: addrLegacyRua,
+    numero: addrLegacyNumero,
     cep: church?.postalCode ?? "",
     email: church?.email ?? "",
     tel: church?.phone ?? "",
@@ -7034,6 +7091,7 @@ function Config({
   const saveIgreja = async () => {
     if (!church?.id) return;
     setIgrejaLoading(true);
+    const endereco = [igrejaForm.rua.trim(), igrejaForm.numero.trim()].filter(Boolean).join(", ");
     await createServiceBrowserClient()
       .schema("service")
       .from("churches")
@@ -7042,7 +7100,7 @@ function Config({
         city: igrejaForm.cidade.trim() || null,
         doc: igrejaForm.doc.trim() || null,
         founded_year: igrejaForm.fundada.trim() || null,
-        address: igrejaForm.endereco.trim() || null,
+        address: endereco || null,
         postal_code: igrejaForm.cep.trim() || null,
         email: igrejaForm.email.trim() || null,
         phone: igrejaForm.tel.trim() || null,
@@ -7176,6 +7234,9 @@ function Config({
     setTimeout(() => setBrandMsg(""), 1600);
   };
 
+  const [identidade, , saveIdentidade] = useChurchSettingsField<IdentidadeCfg>("identidadeCfg", IDENTIDADE_CFG_DEFAULT, church, () => router.refresh());
+  const identidadeBgHex = identidade.bgMode === "imagem" ? "#0E110D" : identidade.bgMode === "degrade" ? (identidade.bgFrom ?? IDENTIDADE_CFG_DEFAULT.bgFrom) : (identidade.bgColor ?? IDENTIDADE_CFG_DEFAULT.bgColor);
+
   const [matriz, setMatriz] = useState<MatrizV2>(() => matrizComFallback(permissionsMatrix));
   const [matrizMsg, setMatrizMsg] = useState("");
   const [matrizSaving, setMatrizSaving] = useState(false);
@@ -7224,9 +7285,9 @@ function Config({
       {/* ─── IGREJA ─── */}
       {tab === "igreja" && (
         <div className="cfg-grid2">
-          <div className="cfg-card">
-            <div className="cfg-card-t">Identificação</div>
-            <div className="cfg-card-s">Como sua igreja aparece no app e nos comunicados.</div>
+          <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
+            <div className="cfg-card-t">Dados da igreja</div>
+            <div className="cfg-card-s">Como sua igreja aparece no app, nos comunicados e como a secretaria pode ser encontrada.</div>
             <div className="field">
               <label className="field-label">Nome da igreja</label>
               <input className="input" value={igrejaForm.nome} onChange={(e) => setIgrejaForm((p) => ({ ...p, nome: e.target.value }))} />
@@ -7235,17 +7296,23 @@ function Config({
               <div className="field"><label className="field-label">CNPJ</label><input className="input" value={igrejaForm.doc} onChange={(e) => setIgrejaForm((p) => ({ ...p, doc: e.target.value }))} /></div>
               <div className="field"><label className="field-label">Fundada em</label><input className="input" value={igrejaForm.fundada} onChange={(e) => setIgrejaForm((p) => ({ ...p, fundada: e.target.value }))} /></div>
             </div>
-            <button className="btn btn-pri btn-sm" type="button" disabled={igrejaLoading} onClick={saveIgreja}>
-              {igrejaLoading ? "Salvando…" : igrejaMsg || "Salvar"}
-            </button>
-          </div>
-          <div className="cfg-card">
-            <div className="cfg-card-t">Endereço & contato</div>
-            <div className="cfg-card-s">Onde a igreja se reúne e como falar com a secretaria.</div>
-            <div className="field"><label className="field-label">Endereço</label><input className="input" value={igrejaForm.endereco} onChange={(e) => setIgrejaForm((p) => ({ ...p, endereco: e.target.value }))} /></div>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
+              <div className="field">
+                <label className="field-label">CEP</label>
+                <CepInput
+                  value={igrejaForm.cep}
+                  onChange={(v) => setIgrejaForm((p) => ({ ...p, cep: v }))}
+                  onResult={(data) => {
+                    if (!data) return;
+                    setIgrejaForm((p) => ({ ...p, rua: data.street || p.rua, cidade: data.city || p.cidade }));
+                  }}
+                />
+              </div>
+              <div className="field"><label className="field-label">Número</label><input className="input" value={igrejaForm.numero} onChange={(e) => setIgrejaForm((p) => ({ ...p, numero: e.target.value }))} /></div>
+            </div>
+            <div className="cfg-grid2" style={{ gap: "0 16px" }}>
+              <div className="field"><label className="field-label">Rua</label><input className="input" value={igrejaForm.rua} onChange={(e) => setIgrejaForm((p) => ({ ...p, rua: e.target.value }))} /></div>
               <div className="field"><label className="field-label">Cidade</label><input className="input" value={igrejaForm.cidade} onChange={(e) => setIgrejaForm((p) => ({ ...p, cidade: e.target.value }))} /></div>
-              <div className="field"><label className="field-label">CEP</label><input className="input" value={igrejaForm.cep} onChange={(e) => setIgrejaForm((p) => ({ ...p, cep: e.target.value }))} /></div>
             </div>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
               <div className="field"><label className="field-label">E-mail</label><input className="input" value={igrejaForm.email} onChange={(e) => setIgrejaForm((p) => ({ ...p, email: e.target.value }))} /></div>
@@ -7271,18 +7338,6 @@ function Config({
               <input className="input" style={{ flex: 1 }} placeholder="ex: Domingo 19h" value={novoHorarioCulto} onChange={(e) => setNovoHorarioCulto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addHorarioCulto()} />
               <button className="btn btn-sec" type="button" onClick={addHorarioCulto}>Adicionar</button>
             </div>
-          </div>
-          <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
-            <div className="cfg-card-t">Sobre a unidade</div>
-            <div className="cfg-card-s">Informações estruturais desta congregação.</div>
-            <dl className="kv" style={{ marginTop: 0 }}>
-              <dt>Tipo</dt>
-              <dd>{church?.matriz ? <span className="chip chip-ok">Matriz</span> : <span className="tag">Congregação</span>}</dd>
-              <dt>ID da org.</dt>
-              <dd><span style={{ fontFamily: "var(--mono)", fontSize: 12 }}>{(church?.organizationId ?? "-").slice(0, 8)}…</span></dd>
-              <dt>Voluntários</dt>
-              <dd>{people.length}</dd>
-            </dl>
           </div>
         </div>
       )}
@@ -7661,26 +7716,38 @@ function Config({
             </div>
           </div>
           <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
-            <div className="cfg-card-t">Marca da sua igreja</div>
-            <div className="cfg-card-s">Suba o logo da sua igreja. Ele aparece na barra lateral e no login, no lugar do logotipo padrão (o &quot;Service&quot; continua embaixo).</div>
-            <ImageUpload
-              label="Logotipo da igreja"
-              hint="Tamanho ideal: 480×160px (proporção 3:1), PNG com fundo transparente."
-              url={church?.logoUrl}
-              aspectRatio={3}
-              onUpload={async (file) => {
-                if (!church) return;
-                const path = `${church.organizationId}/logos/${church.id}.${imageExtension(file)}`;
-                const url = await uploadServiceImage(createServiceBrowserClient(), file, path);
-                await createServiceBrowserClient().schema("service").from("churches").update({ logo_url: url }).eq("id", church.id);
-                router.refresh();
-              }}
-              onRemove={async () => {
-                if (!church) return;
-                await createServiceBrowserClient().schema("service").from("churches").update({ logo_url: null }).eq("id", church.id);
-                router.refresh();
-              }}
-            />
+            <div className="cfg-card-t">Identidade da igreja</div>
+            <div className="cfg-card-s">
+              Logo, fundo, cor do texto e das caixas : a identidade visual única da sua igreja.
+              A Página pública e o login da equipe usam essa identidade automaticamente (o
+              &quot;Service&quot; continua sempre visível no login).
+            </div>
+            {church && (
+              <>
+                <div style={{ marginTop: 10 }}>
+                  <LogoField
+                    identidade={identidade}
+                    onSave={saveIdentidade}
+                    logoUrl={church.logoUrl}
+                    onUploadLogo={async (file) => {
+                      const path = `${church.organizationId}/logos/${church.id}.${imageExtension(file)}`;
+                      const url = await uploadServiceImage(createServiceBrowserClient(), file, path);
+                      await createServiceBrowserClient().schema("service").from("churches").update({ logo_url: url }).eq("id", church.id);
+                      router.refresh();
+                    }}
+                    onRemoveLogo={async () => {
+                      await createServiceBrowserClient().schema("service").from("churches").update({ logo_url: null }).eq("id", church.id);
+                      router.refresh();
+                    }}
+                  />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
+                  <BackgroundField identidade={identidade} onSave={saveIdentidade} organizationId={church.organizationId} churchId={church.id} />
+                  <AccentField compact label="Cor do texto" bgHex={identidadeBgHex} value={identidade.textColor ?? IDENTIDADE_CFG_DEFAULT.textColor} defaultHex={IDENTIDADE_CFG_DEFAULT.textColor} onChange={(hex) => saveIdentidade({ textColor: hex })} />
+                  <AccentField compact label="Cor das caixas e balões" bgHex={identidadeBgHex} value={identidade.boxColor ?? IDENTIDADE_CFG_DEFAULT.boxColor} defaultHex={IDENTIDADE_CFG_DEFAULT.boxColor} onChange={(hex) => saveIdentidade({ boxColor: hex })} />
+                </div>
+              </>
+            )}
           </div>
           {(currentRole === "master" || currentRole === "pastor") && (
             <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
@@ -7704,7 +7771,9 @@ function Config({
           <div className="cfg-card-s">Toda igreja começa pela matriz: a sede cadastrada na contratação. Se houver outras unidades, elas aparecem aqui como congregações; cada uma tem seus times e escalas, e a matriz enxerga tudo.</div>
           {churches.filter((c) => c.matriz).map((c) => (
             <div key={c.id} className="cong-matriz">
-              <div className="cong-mark"><Icon name="identidade" size={20} /></div>
+              <div className="cong-mark">
+                {c.logoUrl ? <img src={c.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /> : <Icon name="identidade" size={20} />}
+              </div>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">{c.nome} <span className="chip chip-ok" style={{ marginLeft: 6 }}>matriz</span></div>
                 <div className="cfg-row-s">{c.cidade || "Sede da rede"}</div>
@@ -7717,7 +7786,9 @@ function Config({
               <div className="cfg-card-t" style={{ marginTop: 26 }}>Outras congregações · {churches.filter((c) => !c.matriz).length}</div>
               {churches.filter((c) => !c.matriz).map((c) => (
                 <div className="cfg-row" key={c.id}>
-                  <div className="cong-mark"><Icon name="globo" size={16} /></div>
+                  <div className="cong-mark">
+                    {c.logoUrl ? <img src={c.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /> : <Icon name="globo" size={16} />}
+                  </div>
                   <div className="cfg-row-main">
                     <div className="cfg-row-t">{c.nome}</div>
                     <div className="cfg-row-s">{c.cidade || "Cidade não informada"}</div>
@@ -9694,7 +9765,94 @@ function TimePicker({ value, onChange }: { value: string; onChange: (v: string) 
   );
 }
 
-function FField({ field, value, onChange }: { field: FieldDef; value: string; onChange: (v: string) => void }) {
+function formatCep(value: string) {
+  /* limpa não-dígitos antes de formatar : o valor pode já vir com traço do
+     banco (postal_code salvo por um fluxo antigo, ex.: "01234-000"), não só
+     dígitos crus digitados agora. */
+  const d = value.replace(/\D/g, "").slice(0, 8);
+  return d.replace(/^(\d{5})(\d)/, "$1-$2");
+}
+
+type CepResult = { street?: string | null; neighborhood?: string | null; city?: string | null; state?: string | null };
+
+/* CEP com autopreenchimento : ao completar 8 dígitos, consulta
+   /api/service/cep-lookup (BrasilAPI, mesma API já usada pro CNPJ) e devolve
+   o endereço via onResult, pra quem estiver usando decidir o que fazer com
+   ele (sem número : o CEP não devolve número mesmo). Fonte única : usada
+   tanto pelo campo genérico de formulário (CepField, sistema FieldDef)
+   quanto direto no formulário da própria igreja (aba Configurações →
+   Igreja). */
+function CepInput({ value, onChange, onResult, placeholder }: { value: string; onChange: (v: string) => void; onResult: (data: CepResult | null, error?: string) => void; placeholder?: string }) {
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState("");
+
+  async function lookup(digits: string) {
+    setChecking(true);
+    setError("");
+    try {
+      const res = await fetch("/api/service/cep-lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cep: digits }),
+      });
+      const data = (await res.json()) as { valid: boolean; error?: string } & CepResult;
+      if (data.valid) {
+        onResult({ street: data.street, neighborhood: data.neighborhood, city: data.city, state: data.state });
+      } else {
+        const msg = data.error || "CEP não encontrado.";
+        setError(msg);
+        onResult(null, msg);
+      }
+    } catch {
+      const msg = "Não conseguimos consultar o CEP agora.";
+      setError(msg);
+      onResult(null, msg);
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  return (
+    <div>
+      <input
+        className="input"
+        value={formatCep(value)}
+        placeholder={placeholder || "00000-000"}
+        inputMode="numeric"
+        onChange={(e) => {
+          const digits = e.target.value.replace(/\D/g, "").slice(0, 8);
+          onChange(digits);
+          setError("");
+          if (digits.length === 8) lookup(digits);
+        }}
+      />
+      {checking && <div style={{ fontSize: 11, color: "var(--subtle)", marginTop: 4 }}>Buscando endereço...</div>}
+      {error && <div style={{ fontSize: 11, color: "var(--amber)", marginTop: 4 }}>{error}</div>}
+    </div>
+  );
+}
+
+function CepField({ field, value, onChange, onPatch }: { field: Extract<FieldDef, { type: "cep" }>; value: string; onChange: (v: string) => void; onPatch?: (patch: Record<string, string>) => void }) {
+  return (
+    <CepInput
+      value={value}
+      onChange={onChange}
+      placeholder={field.ph}
+      onResult={(data) => {
+        if (!data || !field.autofill) return;
+        const patch: Record<string, string> = {};
+        if (field.autofill.street && data.street) patch[field.autofill.street] = data.street;
+        if (field.autofill.neighborhood && data.neighborhood) patch[field.autofill.neighborhood] = data.neighborhood;
+        if (field.autofill.city && data.city) patch[field.autofill.city] = data.city;
+        if (field.autofill.state && data.state) patch[field.autofill.state] = data.state;
+        onPatch?.(patch);
+      }}
+    />
+  );
+}
+
+function FField({ field, value, onChange, onPatch }: { field: FieldDef; value: string; onChange: (v: string) => void; onPatch?: (patch: Record<string, string>) => void }) {
+  if (field.type === "cep") return <CepField field={field} value={value} onChange={onChange} onPatch={onPatch} />;
   if (field.type === "area")
     return <textarea className="textarea" value={value} placeholder={field.ph} style={field.big ? { minHeight: 110 } : undefined} onChange={(e) => onChange(e.target.value)} />;
   if (field.type === "select")
@@ -9788,6 +9946,10 @@ function ServiceModal({
         email: value("email") || null,
         birth: value("nasc") || null,
         neighborhood: value("bairro") || null,
+        postal_code: value("cep") || null,
+        street: value("rua") || null,
+        city: value("cidade") || null,
+        state: value("estado") || null,
         situation: "membro",
         journey: [1, 0, 0, 0, 0],
       }).select("id").single();
@@ -10218,6 +10380,7 @@ function ServiceModal({
                   field={field}
                   value={values[field.k] ?? ""}
                   onChange={(v) => setValues((cur) => ({ ...cur, [field.k]: v }))}
+                  onPatch={(patch) => setValues((cur) => ({ ...cur, ...patch }))}
                 />
                 {field.hint && <div style={{ fontSize: 11, color: "var(--subtle)", marginTop: 5 }}>{field.hint}</div>}
               </div>

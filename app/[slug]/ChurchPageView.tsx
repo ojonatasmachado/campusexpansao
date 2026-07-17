@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
-import type { ChurchPageData } from "../../lib/church-page";
-import { accentInk, resolveBackground } from "../../lib/church-page";
+import type { ChurchPageData } from "../lib/church-page";
+import { accentInk, resolveBackground } from "../lib/church-page";
 import TemplateSimples from "./templates/TemplateSimples";
 import TemplateVitrine from "./templates/TemplateVitrine";
 import TemplateEditorial from "./templates/TemplateEditorial";

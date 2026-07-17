@@ -1,4 +1,4 @@
-import type { ChurchLinkView } from "../../lib/church-page";
+import type { ChurchLinkView } from "../lib/church-page";
 
 export function groupLinks(links: ChurchLinkView[]): { label: string; items: ChurchLinkView[] }[] {
   const groups: { label: string; items: ChurchLinkView[] }[] = [];
