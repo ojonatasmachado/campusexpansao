@@ -112,6 +112,8 @@ type ChurchView = {
   foundedYear?: string | null;
   address?: string | null;
   postalCode?: string | null;
+  neighborhood?: string | null;
+  state?: string | null;
   email?: string | null;
   phone?: string | null;
   logoUrl?: string | null;
@@ -688,6 +690,8 @@ type FieldDef =
   | { k: string; label: string; type: "cep"; req?: boolean; half?: boolean; ph?: string; hint?: string; showIf?: ShowIf; autofill?: { street?: string; neighborhood?: string; city?: string; state?: string } };
 
 const OUTRO_LOCAL = "__outro__";
+
+const DIAS_SEMANA = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 type ModalState =
   | {
@@ -6088,7 +6092,7 @@ const CFG_TABS = [
   { id: "igreja", label: "Igreja" },
   { id: "min", label: "Ministérios & funções" },
   { id: "operacao", label: "Escala & presença" },
-  { id: "grupos", label: "Grupos & Células" },
+  { id: "grupos", label: "Grupos" },
   { id: "espacos", label: "Espaços & Salas" },
   { id: "kids", label: "Turmas Kids" },
   { id: "perm", label: "Permissões" },
@@ -7081,6 +7085,8 @@ function Config({
     fundada: church?.foundedYear ?? "",
     rua: addrLegacyRua,
     numero: addrLegacyNumero,
+    bairro: church?.neighborhood ?? "",
+    estado: church?.state ?? "",
     cep: church?.postalCode ?? "",
     email: church?.email ?? "",
     tel: church?.phone ?? "",
@@ -7102,6 +7108,8 @@ function Config({
         founded_year: igrejaForm.fundada.trim() || null,
         address: endereco || null,
         postal_code: igrejaForm.cep.trim() || null,
+        neighborhood: igrejaForm.bairro.trim() || null,
+        state: igrejaForm.estado.trim() || null,
         email: igrejaForm.email.trim() || null,
         phone: igrejaForm.tel.trim() || null,
       })
@@ -7176,7 +7184,8 @@ function Config({
   };
 
   const [horariosCulto, setHorariosCultoState] = useState<string[]>(() => church?.settings?.horariosCulto ?? []);
-  const [novoHorarioCulto, setNovoHorarioCulto] = useState("");
+  const [novoHorarioDia, setNovoHorarioDia] = useState(DIAS_SEMANA[0]);
+  const [novoHorarioHora, setNovoHorarioHora] = useState("");
   const saveHorariosCulto = async (next: string[]) => {
     setHorariosCultoState(next);
     if (!church?.id) return;
@@ -7188,9 +7197,12 @@ function Config({
     router.refresh();
   };
   const addHorarioCulto = () => {
-    const v = novoHorarioCulto.trim();
-    if (v && !horariosCulto.includes(v)) saveHorariosCulto([...horariosCulto, v]);
-    setNovoHorarioCulto("");
+    if (!novoHorarioHora) return;
+    const v = `${novoHorarioDia} ${novoHorarioHora}`;
+    if (!horariosCulto.includes(v)) {
+      saveHorariosCulto([...horariosCulto, v]);
+      setNovoHorarioHora("");
+    }
   };
 
   const setCheckinPermitirExtra = async (v: boolean) => {
@@ -7304,7 +7316,13 @@ function Config({
                   onChange={(v) => setIgrejaForm((p) => ({ ...p, cep: v }))}
                   onResult={(data) => {
                     if (!data) return;
-                    setIgrejaForm((p) => ({ ...p, rua: data.street || p.rua, cidade: data.city || p.cidade }));
+                    setIgrejaForm((p) => ({
+                      ...p,
+                      rua: data.street || p.rua,
+                      bairro: data.neighborhood || p.bairro,
+                      cidade: data.city || p.cidade,
+                      estado: data.state || p.estado,
+                    }));
                   }}
                 />
               </div>
@@ -7312,7 +7330,11 @@ function Config({
             </div>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
               <div className="field"><label className="field-label">Rua</label><input className="input" value={igrejaForm.rua} onChange={(e) => setIgrejaForm((p) => ({ ...p, rua: e.target.value }))} /></div>
+              <div className="field"><label className="field-label">Bairro</label><input className="input" value={igrejaForm.bairro} onChange={(e) => setIgrejaForm((p) => ({ ...p, bairro: e.target.value }))} /></div>
+            </div>
+            <div className="cfg-grid2" style={{ gap: "0 16px" }}>
               <div className="field"><label className="field-label">Cidade</label><input className="input" value={igrejaForm.cidade} onChange={(e) => setIgrejaForm((p) => ({ ...p, cidade: e.target.value }))} /></div>
+              <div className="field"><label className="field-label">Estado</label><input className="input" value={igrejaForm.estado} onChange={(e) => setIgrejaForm((p) => ({ ...p, estado: e.target.value }))} /></div>
             </div>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
               <div className="field"><label className="field-label">E-mail</label><input className="input" value={igrejaForm.email} onChange={(e) => setIgrejaForm((p) => ({ ...p, email: e.target.value }))} /></div>
@@ -7334,9 +7356,16 @@ function Config({
               ))}
               {horariosCulto.length === 0 && <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhum horário cadastrado.</span>}
             </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+              {DIAS_SEMANA.map((dia) => (
+                <button key={dia} type="button" className={`opt${novoHorarioDia === dia ? " on" : ""}`} style={{ padding: "8px 12px" }} onClick={() => setNovoHorarioDia(dia)}>
+                  {dia.slice(0, 3)}
+                </button>
+              ))}
+            </div>
             <div style={{ display: "flex", gap: 10 }}>
-              <input className="input" style={{ flex: 1 }} placeholder="ex: Domingo 19h" value={novoHorarioCulto} onChange={(e) => setNovoHorarioCulto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addHorarioCulto()} />
-              <button className="btn btn-sec" type="button" onClick={addHorarioCulto}>Adicionar</button>
+              <TimePicker value={novoHorarioHora} onChange={setNovoHorarioHora} />
+              <button className="btn btn-sec" type="button" disabled={!novoHorarioHora} onClick={addHorarioCulto}>Adicionar</button>
             </div>
           </div>
         </div>

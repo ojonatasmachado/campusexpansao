@@ -12,6 +12,7 @@ export default function ServiceLoginForm() {
     password, setPassword,
     loading, resending,
     error, success,
+    invalidCredentials, switchToSignup,
     handleSubmit, resendConfirmation,
   } = useServiceLoginForm();
 
@@ -93,6 +94,16 @@ export default function ServiceLoginForm() {
                       style={{ marginTop: 10 }}
                     >
                       {resending ? "Reenviando..." : "Reenviar confirmação"}
+                    </button>
+                  )}
+                  {invalidCredentials && (
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      type="button"
+                      onClick={switchToSignup}
+                      style={{ marginTop: 10 }}
+                    >
+                      Não tem conta com esse e-mail ainda? Criar igreja nova →
                     </button>
                   )}
                 </div>

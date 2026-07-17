@@ -33,6 +33,12 @@ export function useServiceLoginForm() {
   const [resending, setResending] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  /* true só quando "Entrar" falha por credenciais inválidas (não em outros
+     erros, tipo e-mail não confirmado) : o Supabase nunca diz se foi o
+     e-mail que não existe ou a senha errada (proteção contra descobrir
+     quais e-mails têm conta), então a UI usa isto pra sugerir criar uma
+     igreja nova com esse e-mail, sem afirmar que ele não existe. */
+  const [invalidCredentials, setInvalidCredentials] = useState(false);
 
   function callbackUrl() {
     const url = new URL("/auth/callback", window.location.origin);
@@ -44,6 +50,7 @@ export function useServiceLoginForm() {
     event.preventDefault();
     setError("");
     setSuccess("");
+    setInvalidCredentials(false);
 
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail || !normalizedEmail.includes("@")) {
@@ -72,6 +79,7 @@ export function useServiceLoginForm() {
       setLoading(false);
       if (signInError) {
         setError(errorMessage(signInError.message));
+        if (signInError.message.toLowerCase().includes("invalid login")) setInvalidCredentials(true);
         return;
       }
 
@@ -131,6 +139,12 @@ export function useServiceLoginForm() {
     setSuccess("E-mail de confirmação reenviado. Veja sua caixa de entrada e também o spam.");
   }
 
+  function switchToSignup() {
+    setInvalidCredentials(false);
+    setError("");
+    setMode("signup");
+  }
+
   return {
     mode, setMode,
     name, setName,
@@ -138,6 +152,7 @@ export function useServiceLoginForm() {
     password, setPassword,
     loading, resending,
     error, success,
+    invalidCredentials, switchToSignup,
     handleSubmit, resendConfirmation,
   };
 }

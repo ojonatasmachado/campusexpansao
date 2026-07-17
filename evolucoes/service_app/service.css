@@ -20,8 +20,12 @@
   --mono:'JetBrains Mono','SF Mono',monospace;
 }
 * { box-sizing:border-box; margin:0; padding:0; }
-html { scroll-behavior:smooth; overflow-x:hidden; }
-body { background:var(--ink); color:var(--white); font-family:var(--sans); -webkit-font-smoothing:antialiased; font-feature-settings:'ss01'; line-height:1.5; overflow-x:hidden; }
+/* overflow-x:clip (não hidden) : hidden faz o html/body virarem "scroll
+   container", o que quebra position:sticky de tudo dentro (sidebar .sb,
+   topbar .top) em vários navegadores. clip barra o scroll horizontal do
+   mesmo jeito, sem esse efeito colateral. */
+html { scroll-behavior:smooth; overflow-x:clip; }
+body { background:var(--ink); color:var(--white); font-family:var(--sans); -webkit-font-smoothing:antialiased; font-feature-settings:'ss01'; line-height:1.5; overflow-x:clip; }
 #root { min-height:100vh; }
 ::selection { background:var(--olive-dim); }
 button { font-family:inherit; cursor:pointer; background:none; border:none; color:inherit; text-align:left; }
