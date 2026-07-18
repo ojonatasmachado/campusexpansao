@@ -84,6 +84,16 @@ const TEMPLATES: { id: PaginaTemplate; label: string; desc: string }[] = [
   { id: "editorial", label: "Editorial", desc: "Última notícia em destaque." },
 ];
 
+type PageEditorTab = "publicar" | "modelo" | "aparencia" | "links" | "redes" | "noticias";
+const PAGE_EDITOR_TABS: { id: PageEditorTab; label: string }[] = [
+  { id: "publicar", label: "Publicar" },
+  { id: "modelo", label: "Modelo" },
+  { id: "aparencia", label: "Aparência" },
+  { id: "links", label: "Links" },
+  { id: "redes", label: "Redes sociais" },
+  { id: "noticias", label: "Notícias" },
+];
+
 function toDatetimeLocal(iso: string | null): string {
   if (!iso) return "";
   const d = new Date(iso);
@@ -106,6 +116,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "ok" | "taken" | "invalid" | "reserved">("idle");
   const [viewCount, setViewCount] = useState<number | null>(null);
   const qrRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<PageEditorTab>("publicar");
 
   const client = () => createServiceBrowserClient().schema("service");
 
@@ -291,227 +302,247 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
   }
 
   return (
-    <div className="cfg-grid2">
+    <div className="pge-layout">
       <link rel="stylesheet" href="/igreja-page.css" />
 
-      {/* ─── Publicar + endereço ─── */}
-      <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
-        <div className="cfg-card-t">Publicar página</div>
-        <div className="cfg-card-s">Enquanto estiver desligada, a página existe mas mostra "ainda não publicada" pra quem acessar.</div>
-        <div className="cfg-row" style={{ padding: "10px 0" }}>
-          <div className="cfg-row-main">
-            <div className="cfg-row-t">{pagina.enabled ? "Publicada" : "Despublicada"}</div>
-            <div className="cfg-row-s">{viewCount !== null ? `${viewCount} visualizações até agora` : "Carregando estatísticas..."}</div>
-          </div>
-          <button type="button" className={`sw${pagina.enabled ? " on" : ""}`} onClick={() => savePagina({ enabled: !pagina.enabled })} />
-        </div>
-
-        <div className="field-label" style={{ marginTop: 14 }}>Endereço da página</div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <span style={{ fontSize: 13, color: "var(--subtle)" }}>{origin.replace(/^https?:\/\//, "")}/</span>
-          <input
-            className="input"
-            style={{ maxWidth: 220 }}
-            value={slugDraft}
-            placeholder="minha-igreja"
-            onChange={(e) => { setSlugDraft(e.target.value.toLowerCase()); setSlugStatus("idle"); }}
-            onBlur={checkSlug}
-          />
-          <button type="button" className="btn btn-sec btn-sm" disabled={slugStatus !== "ok"} onClick={saveSlug}>Salvar endereço</button>
-          {pageUrl && (
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(pageUrl)}>
-              <Icon name="copiar" size={13} /> Copiar link
-            </button>
-          )}
-        </div>
-        {slugStatus === "invalid" && <div className="brand-accent-warn">Use só letras minúsculas, números e hífen, de 3 a 40 caracteres.</div>}
-        {slugStatus === "reserved" && <div className="brand-accent-warn">Este endereço é reservado, escolha outro.</div>}
-        {slugStatus === "taken" && <div className="brand-accent-warn">Já tem outra igreja com este endereço.</div>}
-        {slugStatus === "ok" && <div className="brand-accent-contrast">Disponível.</div>}
-
-        {loginUrl && (
-          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 14 }}>
-            <div className="cfg-row-main" style={{ flex: "none" }}>
-              <div className="field-label" style={{ marginTop: 0 }}>Acesso da equipe (login com a cara da igreja)</div>
-              <span style={{ fontSize: 13, color: "var(--subtle)" }}>{loginUrl.replace(/^https?:\/\//, "")}</span>
-            </div>
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(loginUrl)}>
-              <Icon name="copiar" size={13} /> Copiar link
-            </button>
-          </div>
-        )}
-
-        {church.slug && (
-          <div style={{ display: "flex", gap: 18, alignItems: "center", marginTop: 18, flexWrap: "wrap" }}>
-            <div ref={qrRef} style={{ background: "#fff", padding: 10, borderRadius: 10 }}>
-              <QRCode value={pageUrl || `${origin}/${church.slug}`} size={104} style={{ height: "auto", maxWidth: "100%", width: 104 }} viewBox="0 0 104 104" />
-            </div>
-            <div>
-              <div className="cfg-row-s">QR code pronto pra colocar em boletim, cartaz ou tela de projeção.</div>
-              <button type="button" className="btn btn-sec btn-sm" style={{ marginTop: 8 }} onClick={baixarQr}>Baixar QR code</button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ─── Modelo ─── */}
-      <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
-        <div className="cfg-card-t">Modelo</div>
-        <div className="cfg-card-s">Muda o layout da página. As cores e os links continuam os mesmos.</div>
-        <div className="opt-row">
-          {TEMPLATES.map((tpl) => (
-            <button key={tpl.id} type="button" className={`opt${pagina.template === tpl.id ? " on" : ""}`} onClick={() => savePagina({ template: tpl.id })}>
-              <div className="opt-t">{tpl.label}</div>
-              <div className="opt-s">{tpl.desc}</div>
-            </button>
+      <div className="pge-main">
+        <div className="cfg-tabs">
+          {PAGE_EDITOR_TABS.map((t) => (
+            <button key={t.id} type="button" className={`cfg-tab${activeTab === t.id ? " on" : ""}`} onClick={() => setActiveTab(t.id)}>{t.label}</button>
           ))}
         </div>
-      </div>
 
-      {/* ─── Aparência ─── */}
-      <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
-        <div className="cfg-card-t">Aparência</div>
-        <div className="cfg-card-s">
-          Bio, capa e cor de destaque só desta página. Logo, fundo e as demais cores são a
-          identidade da igreja, editada em Configurações → Personalização.
-        </div>
+        {/* ─── Publicar + endereço ─── */}
+        {activeTab === "publicar" && (
+          <div className="cfg-card">
+            <div className="cfg-card-t">Publicar página</div>
+            <div className="cfg-card-s">Enquanto estiver desligada, a página existe mas mostra "ainda não publicada" pra quem acessar.</div>
+            <div className="cfg-row" style={{ padding: "10px 0" }}>
+              <div className="cfg-row-main">
+                <div className="cfg-row-t">{pagina.enabled ? "Publicada" : "Despublicada"}</div>
+                <div className="cfg-row-s">{viewCount !== null ? `${viewCount} visualizações até agora` : "Carregando estatísticas..."}</div>
+              </div>
+              <button type="button" className={`sw${pagina.enabled ? " on" : ""}`} onClick={() => savePagina({ enabled: !pagina.enabled })} />
+            </div>
 
-        <div className="field-label" style={{ marginTop: 10 }}>Bio (aparece embaixo do nome da igreja)</div>
-        <textarea
-          className="input"
-          rows={2}
-          value={pagina.bio ?? ""}
-          onChange={(e) => setPagina((p) => ({ ...p, bio: e.target.value }))}
-          onBlur={(e) => savePagina({ bio: e.target.value })}
-          placeholder="Uma frase curta sobre a igreja"
-        />
-
-        <div style={{ marginTop: 14 }}>
-          <ImageUpload
-            label="Capa (banner do topo, modelo Vitrine)"
-            hint="Tamanho ideal: 1200×500px."
-            url={pagina.coverUrl}
-            aspectRatio={2.4}
-            onUpload={async (file) => {
-              const path = `${church.organizationId}/paginas/${church.id}-capa.${imageExtension(file)}`;
-              const url = await uploadServiceImage(createServiceBrowserClient(), file, path);
-              await savePagina({ coverUrl: url });
-            }}
-            onRemove={() => savePagina({ coverUrl: undefined })}
-          />
-        </div>
-
-        <div style={{ marginTop: 14 }}>
-          <AccentField
-            compact
-            label="Cor de destaque (ícones e selos)"
-            bgHex={effectiveBgHex}
-            value={pagina.accentColor ?? serviceAccent}
-            defaultHex={serviceAccent}
-            onChange={(hex) => savePagina({ accentColor: hex })}
-          />
-          <div className="cfg-card-s" style={{ marginTop: 6 }}>
-            Usa a cor de destaque do Service por padrão. Mude aqui só se quiser diferente nesta página.
-          </div>
-        </div>
-      </div>
-
-      {/* ─── Links ─── */}
-      <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
-        <div className="panel-head" style={{ padding: 0, marginBottom: 10 }}>
-          <span className="panel-title">Links</span>
-          <button
-            type="button"
-            className="btn btn-pri btn-sm"
-            onClick={() => setLinkModal({ isNew: true, draft: { id: crypto.randomUUID(), label: "", url: "", icon: DEFAULT_LINK_ICON, imageUrl: null, groupLabel: "", startsAt: "", endsAt: "", active: true, position: links.length, clickCount: 0 } })}
-          >
-            + Link
-          </button>
-        </div>
-        {loading && <div className="empty">Carregando...</div>}
-        {!loading && links.length === 0 && <div className="empty">Nenhum link ainda. Adicione o primeiro.</div>}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {links.map((link, idx) => (
-            <div className="cfg-row" key={link.id}>
-              {link.imageUrl ? (
-                <img src={link.imageUrl} alt="" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover", flex: "none" }} />
-              ) : (
-                <span className="cx-link-icon" style={{ background: "var(--olive)", color: "#0E110D" }}><LinkIconView name={link.icon} size={16} /></span>
+            <div className="field-label" style={{ marginTop: 14 }}>Endereço da página</div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ fontSize: 13, color: "var(--subtle)" }}>{origin.replace(/^https?:\/\//, "")}/</span>
+              <input
+                className="input"
+                style={{ maxWidth: 220 }}
+                value={slugDraft}
+                placeholder="minha-igreja"
+                onChange={(e) => { setSlugDraft(e.target.value.toLowerCase()); setSlugStatus("idle"); }}
+                onBlur={checkSlug}
+              />
+              <button type="button" className="btn btn-sec btn-sm" disabled={slugStatus !== "ok"} onClick={saveSlug}>Salvar endereço</button>
+              {pageUrl && (
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(pageUrl)}>
+                  <Icon name="copiar" size={13} /> Copiar link
+                </button>
               )}
-              <div className="cfg-row-main">
-                <div className="cfg-row-t">{link.label || "(sem título)"} {!link.active && <span className="chip">oculto</span>}</div>
-                <div className="cfg-row-s">{link.groupLabel ? `${link.groupLabel} · ` : ""}{link.url} · {link.clickCount} cliques</div>
+            </div>
+            {slugStatus === "invalid" && <div className="brand-accent-warn">Use só letras minúsculas, números e hífen, de 3 a 40 caracteres.</div>}
+            {slugStatus === "reserved" && <div className="brand-accent-warn">Este endereço é reservado, escolha outro.</div>}
+            {slugStatus === "taken" && <div className="brand-accent-warn">Já tem outra igreja com este endereço.</div>}
+            {slugStatus === "ok" && <div className="brand-accent-contrast">Disponível.</div>}
+
+            {loginUrl && (
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 14 }}>
+                <div className="cfg-row-main" style={{ flex: "none" }}>
+                  <div className="field-label" style={{ marginTop: 0 }}>Acesso da equipe (login com a cara da igreja)</div>
+                  <span style={{ fontSize: 13, color: "var(--subtle)" }}>{loginUrl.replace(/^https?:\/\//, "")}</span>
+                </div>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(loginUrl)}>
+                  <Icon name="copiar" size={13} /> Copiar link
+                </button>
               </div>
-              <div style={{ display: "flex", gap: 4 }}>
-                <button type="button" className="btn btn-ghost btn-sm" disabled={idx === 0} onClick={() => moveLink(link.id, -1)}>↑</button>
-                <button type="button" className="btn btn-ghost btn-sm" disabled={idx === links.length - 1} onClick={() => moveLink(link.id, 1)}>↓</button>
-                <button type="button" className="btn btn-sec btn-sm" onClick={() => setLinkModal({ isNew: false, draft: link })}>Editar</button>
+            )}
+
+            {church.slug && (
+              <div style={{ display: "flex", gap: 18, alignItems: "center", marginTop: 18, flexWrap: "wrap" }}>
+                <div ref={qrRef} style={{ background: "#fff", padding: 10, borderRadius: 10 }}>
+                  <QRCode value={pageUrl || `${origin}/${church.slug}`} size={104} style={{ height: "auto", maxWidth: "100%", width: 104 }} viewBox="0 0 104 104" />
+                </div>
+                <div>
+                  <div className="cfg-row-s">QR code pronto pra colocar em boletim, cartaz ou tela de projeção.</div>
+                  <button type="button" className="btn btn-sec btn-sm" style={{ marginTop: 8 }} onClick={baixarQr}>Baixar QR code</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ─── Modelo ─── */}
+        {activeTab === "modelo" && (
+          <div className="cfg-card">
+            <div className="cfg-card-t">Modelo</div>
+            <div className="cfg-card-s">Muda o layout da página. As cores e os links continuam os mesmos.</div>
+            <div className="opt-row">
+              {TEMPLATES.map((tpl) => (
+                <button key={tpl.id} type="button" className={`opt${pagina.template === tpl.id ? " on" : ""}`} onClick={() => savePagina({ template: tpl.id })}>
+                  <div className="opt-t">{tpl.label}</div>
+                  <div className="opt-s">{tpl.desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ─── Aparência ─── */}
+        {activeTab === "aparencia" && (
+          <div className="cfg-card">
+            <div className="cfg-card-t">Aparência</div>
+            <div className="cfg-card-s">
+              Bio, capa e cor de destaque só desta página. Logo, fundo e as demais cores são a
+              identidade da igreja, editada em Configurações → Personalização.
+            </div>
+
+            <div className="field-label" style={{ marginTop: 10 }}>Bio (aparece embaixo do nome da igreja)</div>
+            <textarea
+              className="input"
+              rows={2}
+              value={pagina.bio ?? ""}
+              onChange={(e) => setPagina((p) => ({ ...p, bio: e.target.value }))}
+              onBlur={(e) => savePagina({ bio: e.target.value })}
+              placeholder="Uma frase curta sobre a igreja"
+            />
+
+            <div style={{ marginTop: 14 }}>
+              <ImageUpload
+                label="Capa (banner do topo, modelo Vitrine)"
+                hint="Tamanho ideal: 1200×500px."
+                url={pagina.coverUrl}
+                aspectRatio={2.4}
+                onUpload={async (file) => {
+                  const path = `${church.organizationId}/paginas/${church.id}-capa.${imageExtension(file)}`;
+                  const url = await uploadServiceImage(createServiceBrowserClient(), file, path);
+                  await savePagina({ coverUrl: url });
+                }}
+                onRemove={() => savePagina({ coverUrl: undefined })}
+              />
+            </div>
+
+            <div style={{ marginTop: 14 }}>
+              <AccentField
+                compact
+                label="Cor de destaque (ícones e selos)"
+                bgHex={effectiveBgHex}
+                value={pagina.accentColor ?? serviceAccent}
+                defaultHex={serviceAccent}
+                onChange={(hex) => savePagina({ accentColor: hex })}
+              />
+              <div className="cfg-card-s" style={{ marginTop: 6 }}>
+                Usa a cor de destaque do Service por padrão. Mude aqui só se quiser diferente nesta página.
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+        )}
 
-      {/* ─── Redes sociais ─── */}
-      <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
-        <div className="cfg-card-t">Redes sociais</div>
-        <div className="cfg-card-s">Aparecem como ícones no rodapé da página. Deixe em branco o que não usar.</div>
-        <div className="cfg-grid2" style={{ marginTop: 10 }}>
-          <div>
-            <div className="field-label">WhatsApp (só números, com DDD)</div>
-            <input className="input" defaultValue={pagina.social?.whatsapp ?? ""} placeholder="5511999999999" onBlur={(e) => saveSocial("whatsapp", e.target.value)} />
-          </div>
-          <div>
-            <div className="field-label">Instagram (link completo)</div>
-            <input className="input" defaultValue={pagina.social?.instagram ?? ""} placeholder="https://instagram.com/suaigreja" onBlur={(e) => saveSocial("instagram", e.target.value)} />
-          </div>
-          <div>
-            <div className="field-label">YouTube (link completo)</div>
-            <input className="input" defaultValue={pagina.social?.youtube ?? ""} placeholder="https://youtube.com/@suaigreja" onBlur={(e) => saveSocial("youtube", e.target.value)} />
-          </div>
-          <div>
-            <div className="field-label">Facebook (link completo)</div>
-            <input className="input" defaultValue={pagina.social?.facebook ?? ""} placeholder="https://facebook.com/suaigreja" onBlur={(e) => saveSocial("facebook", e.target.value)} />
-          </div>
-          <div>
-            <div className="field-label">TikTok (link completo)</div>
-            <input className="input" defaultValue={pagina.social?.tiktok ?? ""} placeholder="https://tiktok.com/@suaigreja" onBlur={(e) => saveSocial("tiktok", e.target.value)} />
-          </div>
-          <div>
-            <div className="field-label">Site (link completo)</div>
-            <input className="input" defaultValue={pagina.social?.site ?? ""} placeholder="https://suaigreja.com" onBlur={(e) => saveSocial("site", e.target.value)} />
-          </div>
-        </div>
-      </div>
-
-      {/* ─── Notícias e avisos ─── */}
-      <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
-        <div className="panel-head" style={{ padding: 0, marginBottom: 10 }}>
-          <span className="panel-title">Notícias e avisos</span>
-          <button
-            type="button"
-            className="btn btn-pri btn-sm"
-            onClick={() => setPostModal({ isNew: true, draft: { id: crypto.randomUUID(), title: "", body: "", coverUrl: null, pinned: false, publishedAt: new Date().toISOString() } })}
-          >
-            + Notícia
-          </button>
-        </div>
-        {!loading && posts.length === 0 && <div className="empty">Nenhuma notícia publicada ainda.</div>}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {posts.map((post) => (
-            <div className="cfg-row" key={post.id}>
-              <div className="cfg-row-main">
-                <div className="cfg-row-t">{post.title} {post.pinned && <span className="chip chip-ok">fixado</span>}</div>
-                <div className="cfg-row-s">{new Date(post.publishedAt).toLocaleDateString("pt-BR")}</div>
-              </div>
-              <button type="button" className="btn btn-sec btn-sm" onClick={() => setPostModal({ isNew: false, draft: post })}>Editar</button>
+        {/* ─── Links ─── */}
+        {activeTab === "links" && (
+          <div className="cfg-card">
+            <div className="panel-head" style={{ padding: 0, marginBottom: 10 }}>
+              <span className="panel-title">Links</span>
+              <button
+                type="button"
+                className="btn btn-pri btn-sm"
+                onClick={() => setLinkModal({ isNew: true, draft: { id: crypto.randomUUID(), label: "", url: "", icon: DEFAULT_LINK_ICON, imageUrl: null, groupLabel: "", startsAt: "", endsAt: "", active: true, position: links.length, clickCount: 0 } })}
+              >
+                + Link
+              </button>
             </div>
-          ))}
-        </div>
+            {loading && <div className="empty">Carregando...</div>}
+            {!loading && links.length === 0 && <div className="empty">Nenhum link ainda. Adicione o primeiro.</div>}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {links.map((link, idx) => (
+                <div className="cfg-row" key={link.id}>
+                  {link.imageUrl ? (
+                    <img src={link.imageUrl} alt="" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover", flex: "none" }} />
+                  ) : (
+                    <span className="cx-link-icon" style={{ background: "var(--olive)", color: "#0E110D" }}><LinkIconView name={link.icon} size={16} /></span>
+                  )}
+                  <div className="cfg-row-main">
+                    <div className="cfg-row-t">{link.label || "(sem título)"} {!link.active && <span className="chip">oculto</span>}</div>
+                    <div className="cfg-row-s">{link.groupLabel ? `${link.groupLabel} · ` : ""}{link.url} · {link.clickCount} cliques</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <button type="button" className="btn btn-ghost btn-sm" disabled={idx === 0} onClick={() => moveLink(link.id, -1)}>↑</button>
+                    <button type="button" className="btn btn-ghost btn-sm" disabled={idx === links.length - 1} onClick={() => moveLink(link.id, 1)}>↓</button>
+                    <button type="button" className="btn btn-sec btn-sm" onClick={() => setLinkModal({ isNew: false, draft: link })}>Editar</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ─── Redes sociais ─── */}
+        {activeTab === "redes" && (
+          <div className="cfg-card">
+            <div className="cfg-card-t">Redes sociais</div>
+            <div className="cfg-card-s">Aparecem como ícones no rodapé da página. Deixe em branco o que não usar.</div>
+            <div className="cfg-grid2" style={{ marginTop: 10 }}>
+              <div>
+                <div className="field-label">WhatsApp (só números, com DDD)</div>
+                <input className="input" defaultValue={pagina.social?.whatsapp ?? ""} placeholder="5511999999999" onBlur={(e) => saveSocial("whatsapp", e.target.value)} />
+              </div>
+              <div>
+                <div className="field-label">Instagram (link completo)</div>
+                <input className="input" defaultValue={pagina.social?.instagram ?? ""} placeholder="https://instagram.com/suaigreja" onBlur={(e) => saveSocial("instagram", e.target.value)} />
+              </div>
+              <div>
+                <div className="field-label">YouTube (link completo)</div>
+                <input className="input" defaultValue={pagina.social?.youtube ?? ""} placeholder="https://youtube.com/@suaigreja" onBlur={(e) => saveSocial("youtube", e.target.value)} />
+              </div>
+              <div>
+                <div className="field-label">Facebook (link completo)</div>
+                <input className="input" defaultValue={pagina.social?.facebook ?? ""} placeholder="https://facebook.com/suaigreja" onBlur={(e) => saveSocial("facebook", e.target.value)} />
+              </div>
+              <div>
+                <div className="field-label">TikTok (link completo)</div>
+                <input className="input" defaultValue={pagina.social?.tiktok ?? ""} placeholder="https://tiktok.com/@suaigreja" onBlur={(e) => saveSocial("tiktok", e.target.value)} />
+              </div>
+              <div>
+                <div className="field-label">Site (link completo)</div>
+                <input className="input" defaultValue={pagina.social?.site ?? ""} placeholder="https://suaigreja.com" onBlur={(e) => saveSocial("site", e.target.value)} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── Notícias e avisos ─── */}
+        {activeTab === "noticias" && (
+          <div className="cfg-card">
+            <div className="panel-head" style={{ padding: 0, marginBottom: 10 }}>
+              <span className="panel-title">Notícias e avisos</span>
+              <button
+                type="button"
+                className="btn btn-pri btn-sm"
+                onClick={() => setPostModal({ isNew: true, draft: { id: crypto.randomUUID(), title: "", body: "", coverUrl: null, pinned: false, publishedAt: new Date().toISOString() } })}
+              >
+                + Notícia
+              </button>
+            </div>
+            {!loading && posts.length === 0 && <div className="empty">Nenhuma notícia publicada ainda.</div>}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {posts.map((post) => (
+                <div className="cfg-row" key={post.id}>
+                  <div className="cfg-row-main">
+                    <div className="cfg-row-t">{post.title} {post.pinned && <span className="chip chip-ok">fixado</span>}</div>
+                    <div className="cfg-row-s">{new Date(post.publishedAt).toLocaleDateString("pt-BR")}</div>
+                  </div>
+                  <button type="button" className="btn btn-sec btn-sm" onClick={() => setPostModal({ isNew: false, draft: post })}>Editar</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* ─── Preview ao vivo ─── */}
-      <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
+      {/* ─── Preview ao vivo : fica fixo à direita durante o scroll ─── */}
+      <div className="pge-preview">
         <div className="cfg-card-t">Preview</div>
         <div className="cfg-card-s">Exatamente como a página fica pro visitante (os links não abrem aqui).</div>
         <div style={{ width: 300, maxWidth: "100%", height: 560, overflowY: "auto", borderRadius: 28, border: "8px solid #14170F", margin: "14px auto 0" }}>

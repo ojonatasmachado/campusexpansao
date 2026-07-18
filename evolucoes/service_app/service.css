@@ -639,6 +639,18 @@ body[data-theme="light"] .av { box-shadow:none; }
 .cfg-card-t { font-size:15px; font-weight:700; letter-spacing:-0.02em; margin-bottom:4px; }
 .cfg-card-s { font-size:12.5px; color:var(--muted); margin-bottom:18px; line-height:1.5; }
 
+/* editor da Página pública : conteúdo (abas) + preview ao vivo fixo à
+   direita. Preview gruda logo abaixo da topbar (.top é sticky top:0) e
+   acompanha o scroll do conteúdo ao lado, até a página estreitar (aí some
+   a divisão em colunas e o preview desce pro fim, mobile-first). */
+.pge-layout { display:grid; grid-template-columns:1fr 320px; gap:20px; align-items:start; }
+.pge-main { min-width:0; }
+.pge-preview { position:sticky; top:92px; background:var(--graphite); border:0.5px solid var(--border-2); border-radius:var(--r-lg); padding:24px; }
+@media (max-width:980px) {
+  .pge-layout { grid-template-columns:1fr; }
+  .pge-preview { position:static; }
+}
+
 /* ════════ MARCA & APARÊNCIA (cor de destaque por igreja) ════════ */
 .brand-accent-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
 .brand-accent-field { display:flex; flex-direction:column; gap:10px; }
@@ -729,6 +741,19 @@ body[data-theme="light"] .av { box-shadow:none; }
 .iconpick-trigger:hover { border-color:var(--olive-line); }
 .iconpick-cur { width:34px; height:34px; border-radius:var(--r-sm); background:var(--olive-dim); border:0.5px solid var(--olive-line); color:var(--olive); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
 .iconpick-pop { position:absolute; z-index:30; top:calc(100% + 6px); left:0; right:0; background:var(--graphite); border:0.5px solid var(--border-3); border-radius:var(--r-md); padding:12px; box-shadow:0 16px 40px rgba(0,0,0,0.5); max-height:280px; overflow-y:auto; }
+
+/* select customizado : troca o <select> nativo (dropdown claro do SO) por
+   um popover escuro, mesmo padrão do iconpick/dp acima. Usado por todo
+   campo do tipo "select" do formulário genérico (FField). */
+.sel-wrap { position:relative; width:100%; }
+.sel-trigger { width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--ink); border:1px solid var(--border-2); border-radius:var(--r-sm); padding:11px 14px; font-size:14px; color:var(--white); text-align:left; transition:border-color .16s; }
+.sel-trigger:hover { border-color:var(--olive-line); }
+.sel-ph { color:var(--subtle); }
+.sel-arrow { color:var(--subtle); font-size:11px; flex-shrink:0; }
+.sel-pop { position:absolute; z-index:30; top:calc(100% + 6px); left:0; right:0; background:var(--graphite); border:0.5px solid var(--border-3); border-radius:var(--r-md); padding:6px; box-shadow:0 16px 40px rgba(0,0,0,0.5); max-height:260px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; }
+.sel-opt { width:100%; text-align:left; padding:9px 12px; border-radius:var(--r-sm); background:transparent; border:none; color:var(--light); font-size:13.5px; transition:background .12s; }
+.sel-opt:hover { background:rgba(255,255,255,0.04); }
+.sel-opt.on { background:var(--olive-dim); color:var(--olive-soft); font-weight:600; }
 
 /* editor de funções */
 .func-ed { display:flex; flex-direction:column; gap:12px; }

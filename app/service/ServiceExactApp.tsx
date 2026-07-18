@@ -6551,6 +6551,15 @@ function PesquisasView({ organizationId, ministries }: { organizationId: string;
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [toDelete, setToDelete] = useState<PesquisaAdminRow | null>(null);
+  const [novaMenuOpen, setNovaMenuOpen] = useState(false);
+  const novaMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!novaMenuOpen) return;
+    const onClickAway = (e: MouseEvent) => { if (novaMenuRef.current && !novaMenuRef.current.contains(e.target as Node)) setNovaMenuOpen(false); };
+    document.addEventListener("mousedown", onClickAway);
+    return () => document.removeEventListener("mousedown", onClickAway);
+  }, [novaMenuOpen]);
 
   const carregar = async () => {
     setLoading(true);
@@ -6593,11 +6602,27 @@ function PesquisasView({ organizationId, ministries }: { organizationId: string;
       <div className="cfg-card-t">Pesquisas da igreja</div>
       <div className="cfg-card-s">Pesquise a própria congregação: pulso pós-escala, satisfação, o que quiser saber. Master, pastor e líder veem as respostas e podem criar pesquisas novas.</div>
       {errorMsg ? <p className="field-error">{errorMsg}</p> : null}
-      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-        <button className="btn btn-pri btn-sm" type="button" onClick={() => setRoute({ screen: "editor", draft: novaPesquisaDraft() })}>+ Nova pesquisa</button>
-        {!loading && !pesquisas.some((p) => p.disparoModo === "posescala") && (
-          <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute({ screen: "editor", draft: modeloPulsoPosEscala() })}>+ Usar modelo: Pulso pós-escala</button>
-        )}
+      <div style={{ marginBottom: 16 }}>
+        {(() => {
+          const temPulso = pesquisas.some((p) => p.disparoModo === "posescala");
+          return (
+            <div style={{ position: "relative", display: "inline-block" }} ref={novaMenuRef}>
+              <button
+                className="btn btn-pri btn-sm"
+                type="button"
+                onClick={() => (temPulso ? setRoute({ screen: "editor", draft: novaPesquisaDraft() }) : setNovaMenuOpen((o) => !o))}
+              >
+                + Nova pesquisa
+              </button>
+              {novaMenuOpen && !temPulso && (
+                <div className="sel-pop" style={{ left: 0, right: "auto", width: 260 }}>
+                  <button type="button" className="sel-opt" onClick={() => { setNovaMenuOpen(false); setRoute({ screen: "editor", draft: novaPesquisaDraft() }); }}>Em branco</button>
+                  <button type="button" className="sel-opt" onClick={() => { setNovaMenuOpen(false); setRoute({ screen: "editor", draft: modeloPulsoPosEscala() }); }}>Modelo: Pulso pós-escala</button>
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </div>
       {loading && <div className="empty">Carregando...</div>}
       {!loading && pesquisas.length === 0 && <div className="empty">Nenhuma pesquisa ainda. Clique em <em>+ Nova pesquisa</em> pra criar.</div>}
@@ -7227,26 +7252,35 @@ function Config({
     router.refresh();
   };
 
+  /* Personalização (marca + identidade) : os campos só mexem em estado
+     local (patchBrand/patchIdentidade) enquanto a pessoa ajusta cor, logo,
+     fundo... Nada grava sozinho no banco : um único "Salvar personalização"
+     no fim da aba manda tudo de uma vez, mesmo padrão do "Dados da igreja"
+     (Aba Igreja) — apply/salvar consistente em vez de um botão por campo. */
   const [brand, setBrand] = useState<Required<Pick<BrandCfg, "accentDark" | "accentLight">>>(() => ({
     ...BRAND_DEFAULT,
     ...(church?.settings?.brandCfg ?? {}),
   }));
-  const [brandMsg, setBrandMsg] = useState("");
-  const saveBrand = async (patch: Partial<BrandCfg>) => {
-    const next = { ...brand, ...patch };
-    setBrand(next);
+  const patchBrand = (patch: Partial<BrandCfg>) => setBrand((prev) => ({ ...prev, ...patch }));
+
+  const [identidade, setIdentidade] = useChurchSettingsField<IdentidadeCfg>("identidadeCfg", IDENTIDADE_CFG_DEFAULT, church, () => router.refresh());
+  const patchIdentidade = (patch: Partial<IdentidadeCfg>) => setIdentidade((prev) => ({ ...prev, ...patch }));
+
+  const [personalizacaoSaving, setPersonalizacaoSaving] = useState(false);
+  const [personalizacaoMsg, setPersonalizacaoMsg] = useState("");
+  const salvarPersonalizacao = async () => {
     if (!church?.id) return;
+    setPersonalizacaoSaving(true);
     await createServiceBrowserClient()
       .schema("service")
       .from("churches")
-      .update({ settings: { ...church.settings, brandCfg: next } })
+      .update({ settings: { ...church.settings, brandCfg: brand, identidadeCfg: identidade } })
       .eq("id", church.id);
-    setBrandMsg("Salvo!");
+    setPersonalizacaoSaving(false);
+    setPersonalizacaoMsg("Salvo!");
     router.refresh();
-    setTimeout(() => setBrandMsg(""), 1600);
+    setTimeout(() => setPersonalizacaoMsg(""), 2000);
   };
-
-  const [identidade, , saveIdentidade] = useChurchSettingsField<IdentidadeCfg>("identidadeCfg", IDENTIDADE_CFG_DEFAULT, church, () => router.refresh());
   const identidadeBgHex = identidade.bgMode === "imagem" ? "#0E110D" : identidade.bgMode === "degrade" ? (identidade.bgFrom ?? IDENTIDADE_CFG_DEFAULT.bgFrom) : (identidade.bgColor ?? IDENTIDADE_CFG_DEFAULT.bgColor);
 
   const [matriz, setMatriz] = useState<MatrizV2>(() => matrizComFallback(permissionsMatrix));
@@ -7737,11 +7771,11 @@ function Config({
             <div className="cfg-card-t">Cor de destaque da sua igreja</div>
             <div className="cfg-card-s">
               Troque a oliva pela cor da identidade visual da sua igreja. Vale uma cor pro modo escuro e outra pro
-              modo claro, porque nem toda cor lê bem nos dois fundos. {brandMsg && <em style={{ color: "var(--olive)", fontStyle: "normal" }}>· {brandMsg}</em>}
+              modo claro, porque nem toda cor lê bem nos dois fundos.
             </div>
-            <div className="brand-accent-grid">
-              <AccentField label="Modo escuro" bgHex="#0E110D" value={brand.accentDark} defaultHex={BRAND_DEFAULT.accentDark} onChange={(hex) => saveBrand({ accentDark: hex })} />
-              <AccentField label="Modo claro" bgHex="#E7DFC8" value={brand.accentLight} defaultHex={BRAND_DEFAULT.accentLight} onChange={(hex) => saveBrand({ accentLight: hex })} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <AccentField compact label="Modo escuro" bgHex="#0E110D" value={brand.accentDark} defaultHex={BRAND_DEFAULT.accentDark} onChange={(hex) => patchBrand({ accentDark: hex })} />
+              <AccentField compact label="Modo claro" bgHex="#E7DFC8" value={brand.accentLight} defaultHex={BRAND_DEFAULT.accentLight} onChange={(hex) => patchBrand({ accentLight: hex })} />
             </div>
           </div>
           <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
@@ -7756,7 +7790,7 @@ function Config({
                 <div style={{ marginTop: 10 }}>
                   <LogoField
                     identidade={identidade}
-                    onSave={saveIdentidade}
+                    onSave={patchIdentidade}
                     logoUrl={church.logoUrl}
                     onUploadLogo={async (file) => {
                       const path = `${church.organizationId}/logos/${church.id}.${imageExtension(file)}`;
@@ -7771,9 +7805,9 @@ function Config({
                   />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
-                  <BackgroundField identidade={identidade} onSave={saveIdentidade} organizationId={church.organizationId} churchId={church.id} />
-                  <AccentField compact label="Cor do texto" bgHex={identidadeBgHex} value={identidade.textColor ?? IDENTIDADE_CFG_DEFAULT.textColor} defaultHex={IDENTIDADE_CFG_DEFAULT.textColor} onChange={(hex) => saveIdentidade({ textColor: hex })} />
-                  <AccentField compact label="Cor das caixas e balões" bgHex={identidadeBgHex} value={identidade.boxColor ?? IDENTIDADE_CFG_DEFAULT.boxColor} defaultHex={IDENTIDADE_CFG_DEFAULT.boxColor} onChange={(hex) => saveIdentidade({ boxColor: hex })} />
+                  <BackgroundField identidade={identidade} onSave={patchIdentidade} organizationId={church.organizationId} churchId={church.id} />
+                  <AccentField compact label="Cor do texto" bgHex={identidadeBgHex} value={identidade.textColor ?? IDENTIDADE_CFG_DEFAULT.textColor} defaultHex={IDENTIDADE_CFG_DEFAULT.textColor} onChange={(hex) => patchIdentidade({ textColor: hex })} />
+                  <AccentField compact label="Cor das caixas e balões" bgHex={identidadeBgHex} value={identidade.boxColor ?? IDENTIDADE_CFG_DEFAULT.boxColor} defaultHex={IDENTIDADE_CFG_DEFAULT.boxColor} onChange={(hex) => patchIdentidade({ boxColor: hex })} />
                 </div>
               </>
             )}
@@ -7787,6 +7821,14 @@ function Config({
               </div>
             </div>
           )}
+          <div className="cfg-card" style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <div className="cfg-card-s" style={{ margin: 0 }}>
+              As cores e a identidade só valem depois de salvar.
+            </div>
+            <button className="btn btn-pri" type="button" disabled={personalizacaoSaving} onClick={salvarPersonalizacao}>
+              {personalizacaoSaving ? "Salvando…" : personalizacaoMsg || "Salvar personalização"}
+            </button>
+          </div>
         </div>
       )}
 
@@ -8906,7 +8948,12 @@ function EntityDrawer({
     if (!member.phone || !member.email || sendingAccess) return;
     setSendingAccess(true);
     try {
-      if (!member.volunteerId && church) {
+      /* Sempre sincroniza a senha no backend antes de montar a mensagem,
+         mesmo em reenvio (member.volunteerId já setado) : a senha derivada
+         do telefone pode ter ficado diferente da senha real da conta (ex:
+         telefone editado depois da criação), e sem isto o WhatsApp manda
+         uma senha que não bate mais com o login no app mobile. */
+      if (church) {
         await fetch("/api/service/members/create-account", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -9880,17 +9927,50 @@ function CepField({ field, value, onChange, onPatch }: { field: Extract<FieldDef
   );
 }
 
+/* Select customizado, escuro : troca o <select> nativo (que abre o
+   dropdown do sistema operacional, claro e fora do visual do app) por um
+   popover no mesmo padrão do IconPicker/DatePicker. Único ponto de render
+   de "type: select" no form genérico, então conserta todo campo desse tipo
+   no app inteiro de uma vez, não só um formulário específico. */
+function SelectField({ value, onChange, options, placeholder }: { value: string; onChange: (v: string) => void; options: { v: string; l: string }[]; placeholder?: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClickAway = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", onClickAway);
+    return () => document.removeEventListener("mousedown", onClickAway);
+  }, [open]);
+
+  const current = options.find((o) => o.v === value);
+
+  return (
+    <div className="sel-wrap" ref={ref}>
+      <button type="button" className="sel-trigger" onClick={() => setOpen((o) => !o)}>
+        <span className={current ? "" : "sel-ph"}>{current ? current.l : (placeholder || "Selecione")}</span>
+        <span className="sel-arrow">{open ? "▴" : "▾"}</span>
+      </button>
+      {open && (
+        <div className="sel-pop">
+          {placeholder && (
+            <button type="button" className={`sel-opt${!value ? " on" : ""}`} onClick={() => { onChange(""); setOpen(false); }}>{placeholder}</button>
+          )}
+          {options.map((o) => (
+            <button key={o.v} type="button" className={`sel-opt${value === o.v ? " on" : ""}`} onClick={() => { onChange(o.v); setOpen(false); }}>{o.l}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function FField({ field, value, onChange, onPatch }: { field: FieldDef; value: string; onChange: (v: string) => void; onPatch?: (patch: Record<string, string>) => void }) {
   if (field.type === "cep") return <CepField field={field} value={value} onChange={onChange} onPatch={onPatch} />;
   if (field.type === "area")
     return <textarea className="textarea" value={value} placeholder={field.ph} style={field.big ? { minHeight: 110 } : undefined} onChange={(e) => onChange(e.target.value)} />;
   if (field.type === "select")
-    return (
-      <select className="select" value={value} onChange={(e) => onChange(e.target.value)}>
-        {field.ph && <option value="">{field.ph}</option>}
-        {field.options.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
-      </select>
-    );
+    return <SelectField value={value} onChange={onChange} options={field.options} placeholder={field.ph} />;
   if (field.type === "toggle")
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

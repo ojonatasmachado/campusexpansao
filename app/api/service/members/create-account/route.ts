@@ -85,6 +85,12 @@ export async function POST(request: Request) {
         page += 1;
       }
       if (!authUserId) throw createError;
+      /* A conta já existia (ex: reenvio de acesso). A mensagem de WhatsApp
+         sempre mostra a senha derivada do telefone atual, então a senha
+         real precisa ser sincronizada aqui : sem isto, quem já tinha conta
+         recebia uma senha que não abria o app no celular. */
+      const { error: updateError } = await db.auth.admin.updateUserById(authUserId, { password });
+      if (updateError) throw updateError;
     } else {
       authUserId = createdUser.user?.id ?? null;
       created = true;
