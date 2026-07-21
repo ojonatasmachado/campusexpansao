@@ -826,7 +826,7 @@ function toMemberView(row: MemberRow): MemberView {
     birth: row.birth,
     sinceYear: row.since_year || "Ano não informado",
     situation: row.situation,
-    firstContact: row.first_contact || "Primeiro contato não informado",
+    firstContact: row.first_contact || "",
     neighborhood: row.neighborhood,
     family: row.family,
     journey: Array.isArray(row.journey) ? row.journey : [],

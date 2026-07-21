@@ -162,6 +162,13 @@ export type MobileOverlayProps = {
   onConfirmarEscala?: (assignmentId: string) => void;
   onRecusarEscala?: (assignmentId: string) => void;
   onClose: () => void;
+  /* "preview" (padrão) : lideranca espiando o app do voluntario, com
+     seletor de pessoa e texto de marketing. "self" : o proprio voluntario
+     logado de verdade, direto na conta dele, sem seletor e sem "voltar
+     ao painel" (nao existe painel pra essa pessoa). */
+  mode?: "preview" | "self";
+  selfPersonId?: string | null;
+  onLogout?: () => void;
 };
 
 // ── constantes ────────────────────────────────────────────────────────────────
@@ -1999,7 +2006,7 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
   const [step, setStep] = useState(0);
   const [d, setD] = useState({
     email: member?.email ?? person.name.toLowerCase().replace(/\s+/g, ".") + "@email.com",
-    nasc: "",
+    nasc: member?.birth ?? "",
     bairro: member?.neighborhood ?? "",
     senha: "",
     senha2: "",
@@ -2034,7 +2041,7 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
             <input className="input" value={d.email} onChange={(e) => set("email", e.target.value)} />
           </div>
           <div className="field">
-            <label className="field-label">Aniversario</label>
+            <label className="field-label req">Aniversario</label>
             <input className="input" type="date" value={d.nasc} onChange={(e) => set("nasc", e.target.value)} />
           </div>
           <div className="field">
@@ -2591,69 +2598,81 @@ function MobileMembro({
 // ── overlay principal (desktop) ───────────────────────────────────────────────
 
 export default function MobileOverlay(props: MobileOverlayProps) {
-  const { people, members, onClose } = props;
+  const { people, members, onClose, mode = "preview", selfPersonId, onLogout } = props;
+  const isSelf = mode === "self";
 
-  const personas = people.filter((p) => p.status === "ativo").slice(0, 3);
+  const personas = isSelf ? [] : people.filter((p) => p.status === "ativo").slice(0, 3);
   const [idx, setIdx] = useState(0);
 
-  const person = personas[idx] ?? people[0];
+  const person = isSelf ? (people.find((p) => p.id === selfPersonId) ?? null) : (personas[idx] ?? people[0]);
   const member = person
     ? (members.find((m) => m.volunteerId === person.id) ?? null)
     : null;
 
+  const closeAction = isSelf ? onLogout ?? onClose : onClose;
+  const closeLabel = isSelf ? "Sair" : "← Voltar ao painel";
+
   if (!person) {
     return (
-      <div className="mob-bg" onClick={onClose}>
+      <div className="mob-bg" onClick={isSelf ? undefined : onClose}>
         <div className="mob-side" onClick={(e) => e.stopPropagation()}>
           <div className="mob-side-eyebrow">App do voluntario</div>
-          <h3>Nenhum voluntario ativo</h3>
-          <p>Cadastre voluntarios em Pessoas para pre-visualizar o app deles aqui.</p>
-          <button className="mob-close" onClick={onClose}>← Voltar ao painel</button>
+          <h3>{isSelf ? "Cadastro não encontrado" : "Nenhum voluntario ativo"}</h3>
+          <p>
+            {isSelf
+              ? "Não encontramos seu cadastro de pessoa nesta igreja. Fale com a liderança."
+              : "Cadastre voluntarios em Pessoas para pre-visualizar o app deles aqui."}
+          </p>
+          <button className="mob-close" onClick={closeAction}>{closeLabel}</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mob-bg" onClick={onClose}>
+    <div className={`mob-bg${isSelf ? " mob-self" : ""}`} onClick={isSelf ? undefined : onClose}>
       <div className="mob-side" onClick={(e) => e.stopPropagation()}>
-        <div className="mob-side-eyebrow">Mesma conta · outra superficie</div>
-        <h3>
-          O app do <span className="ol">voluntario</span>
-        </h3>
-        <p>
-          O membro acompanha a jornada, confirma escala, resolve tarefas do quadro,
-          conversa com o time e o lider, faz cursos e pede oracao, tudo pelo celular.
-        </p>
+        {!isSelf && (
+          <>
+            <div className="mob-side-eyebrow">Mesma conta · outra superficie</div>
+            <h3>
+              O app do <span className="ol">voluntario</span>
+            </h3>
+            <p>
+              O membro acompanha a jornada, confirma escala, resolve tarefas do quadro,
+              conversa com o time e o lider, faz cursos e pede oracao, tudo pelo celular.
+            </p>
 
-        <div className="mob-persona">
-          <div className="mob-persona-t">Pre-visualizar como</div>
-          {personas.map((p, i) => {
-            const m = members.find((m) => m.volunteerId === p.id);
-            return (
-              <button
-                key={p.id}
-                className={`mob-persona-opt ${i === idx ? "on" : ""}`}
-                onClick={() => setIdx(i)}
-              >
-                <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
-                <div>
-                  <b>{p.name}</b>
-                  <small>
-                    {m ? "Membro" : "Voluntario"}
-                    {p.tags.length > 0 ? ` · ${p.tags[0]}` : ""}
-                  </small>
-                </div>
-                {i === idx && <span className="mob-persona-chk">●</span>}
-              </button>
-            );
-          })}
-          <div className="mob-persona-hint">
-            O voluntario da Recepcao ve o modulo de visitantes no lugar de Cursos.
-          </div>
-        </div>
+            <div className="mob-persona">
+              <div className="mob-persona-t">Pre-visualizar como</div>
+              {personas.map((p, i) => {
+                const m = members.find((m) => m.volunteerId === p.id);
+                return (
+                  <button
+                    key={p.id}
+                    className={`mob-persona-opt ${i === idx ? "on" : ""}`}
+                    onClick={() => setIdx(i)}
+                  >
+                    <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
+                    <div>
+                      <b>{p.name}</b>
+                      <small>
+                        {m ? "Membro" : "Voluntario"}
+                        {p.tags.length > 0 ? ` · ${p.tags[0]}` : ""}
+                      </small>
+                    </div>
+                    {i === idx && <span className="mob-persona-chk">●</span>}
+                  </button>
+                );
+              })}
+              <div className="mob-persona-hint">
+                O voluntario da Recepcao ve o modulo de visitantes no lugar de Cursos.
+              </div>
+            </div>
+          </>
+        )}
 
-        <button className="mob-close" onClick={onClose}>← Voltar ao painel</button>
+        <button className="mob-close" onClick={closeAction}>{closeLabel}</button>
       </div>
 
       <div className="mob-phone-wrap" onClick={(e) => e.stopPropagation()}>

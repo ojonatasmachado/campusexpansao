@@ -1377,6 +1377,72 @@ export default function ServiceExactApp({
     return responsibleLeadersFor(member, fellowshipGroups, ministries).includes(currentPersonId);
   });
 
+  /* papel "vol" nunca vê o menu de liderança : é direto pro app do
+     voluntario, na propria pessoa (currentPersonId), sem passar pela
+     casca de admin (que ficaria com o menu praticamente vazio pra ele,
+     ver podeVerNav acima). Só pode vir depois de todos os hooks acima
+     (regra dos hooks : nada de return condicional antes deles). */
+  if (currentRole === "vol") {
+    const handleLogoutSelf = async () => {
+      await createServiceBrowserClient().auth.signOut();
+      router.push("/service/login");
+      router.refresh();
+    };
+    return (
+      <MobileOverlay
+        people={people}
+        members={members}
+        ministries={ministries}
+        events={events}
+        roster={roster}
+        cards={cards}
+        boards={boards}
+        courses={courses}
+        enrollments={enrollments}
+        courseModules={courseModules}
+        courseLessons={courseLessons}
+        visitors={visitors}
+        baptismClasses={baptismClasses}
+        announcements={announcements}
+        chats={chats}
+        chatMembers={chatMembers}
+        messages={messages}
+        kidsClasses={kidsClasses}
+        kidsChildren={kidsChildren}
+        childGuardians={childGuardians}
+        kidsSessions={kidsSessions}
+        kidsAttendance={kidsAttendance}
+        kidsEvents={kidsEvents}
+        kidsEventEnrollments={kidsEventEnrollments}
+        wallPosts={wallPosts}
+        bibleMarks={bibleMarks}
+        onSaveBibleMark={saveBibleMarkMobile}
+        onReadAnnouncement={markAnnouncementRead}
+        onCompleteOnboarding={completeOnboarding}
+        onAddCardComment={addCardCommentMobile}
+        onAdvanceVisitorStage={advanceVisitorStageMobile}
+        onRegisterVisitor={registerVisitorMobile}
+        onSendMessage={sendMessageMobile}
+        onStartChat={startChatMobile}
+        organizationId={firstChurch?.organizationId ?? ""}
+        churchName={firstChurch?.nome ?? ""}
+        churchLogoUrl={firstChurch?.logoUrl ?? null}
+        theme={theme}
+        setTheme={setTheme}
+        onChangePassword={changePasswordMobile}
+        onUpdateProfile={updateProfileMobile}
+        journeyRequests={journeyRequests}
+        onRequestJourneyStep={submitJourneyRequest}
+        onConfirmarEscala={confirmarEscalaMobile}
+        onRecusarEscala={recusarEscalaMobile}
+        mode="self"
+        selfPersonId={currentPersonId}
+        onLogout={handleLogoutSelf}
+        onClose={handleLogoutSelf}
+      />
+    );
+  }
+
   const nav = [
     { group: "Visão geral", items: [{ id: "painel", icon: "painel", label: "Painel" }] },
     {
@@ -1456,9 +1522,17 @@ export default function ServiceExactApp({
           <Link className="sb-link" href="/">
             <span className="sb-ic"><Icon name="globo" size={17} /></span> Ver o site público
           </Link>
-          <Link className="sb-link" href="/service/login">
+          <button
+            className="sb-link"
+            type="button"
+            onClick={async () => {
+              await createServiceBrowserClient().auth.signOut();
+              router.push("/service/login");
+              router.refresh();
+            }}
+          >
             <span className="sb-ic"><Icon name="sair" size={17} /></span> Sair
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -1552,16 +1626,14 @@ export default function ServiceExactApp({
         ◷ Ver app do voluntario
       </button>
 
-      {currentRole !== "vol" ? (
-        <HelpFab
-          onTour={() => { setShowTour(true); setNavOpen(true); }}
-          onSetup={() => {
-            try { localStorage.removeItem("cex_setup_hide"); } catch { /* segue mesmo sem conseguir gravar */ }
-            setRoute("painel");
-            window.dispatchEvent(new Event("cex-setup-show"));
-          }}
-        />
-      ) : null}
+      <HelpFab
+        onTour={() => { setShowTour(true); setNavOpen(true); }}
+        onSetup={() => {
+          try { localStorage.removeItem("cex_setup_hide"); } catch { /* segue mesmo sem conseguir gravar */ }
+          setRoute("painel");
+          window.dispatchEvent(new Event("cex-setup-show"));
+        }}
+      />
       {showTour ? (
         <Coachmark
           steps={TOUR_DESKTOP}
@@ -2288,7 +2360,7 @@ function Pessoas({ people, currentPersonId, setDrawer, setModal }: { people: Per
   });
   return (
     <div className="content">
-      <PageHead title="Voluntários" eyebrow="Pessoas" subtitle="Quem serve, em quais times e funções. Toque para ver perfil, disponibilidade e histórico." help="Quem já serve ativamente em algum ministério: funções, disponibilidade e engajamento nas escalas." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo voluntário", subtitle: "Cadastre e já escolha os ministérios.", saveLabel: "Adicionar voluntário", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"e-mail da pessoa" }], action: { kind: "member" } })}>+ Novo voluntário</button>} />
+      <PageHead title="Voluntários" eyebrow="Pessoas" subtitle="Todo mundo com cadastro de voluntário, sirva ou não em um time ainda. Toque para ver perfil, disponibilidade e histórico." help="Todo mundo com acesso de voluntário na igreja, mesmo quem ainda não está em nenhum time. Veja funções, disponibilidade e engajamento nas escalas." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo voluntário", subtitle: "Cadastre e já escolha os ministérios.", saveLabel: "Adicionar voluntário", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"e-mail da pessoa" }], action: { kind: "member" } })}>+ Novo voluntário</button>} />
       <div className="toolbar">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <div className="seg">
@@ -2354,7 +2426,11 @@ function candidatosDisponiveis(
       if (usadosNoEvento.has(p.id)) motivo = "já escalado neste evento";
       else if (p.status === "ferias" && cfg.considerarFerias) motivo = "de férias";
       else if (cfg.maxPorMes && (cargaPorPessoa[p.id] ?? 0) >= cfg.maxPorMes) motivo = "no teto do mês";
-      const fit: Candidato["fit"] = motivo ? "block" : (p.availability[event.slot] ? "good" : "busy");
+      /* disponibilidade ausente (nunca configurada) conta como disponível : só
+         vira "busy" quando a pessoa marcou explicitamente que não pode nesse
+         horário, senão todo voluntário novo aparecia "ocupado" sem nunca ter
+         recusado nada. */
+      const fit: Candidato["fit"] = motivo ? "block" : (p.availability[event.slot] === false ? "busy" : "good");
       return { person: p, fit, motivo };
     })
     .sort((a, b) => {
@@ -2983,7 +3059,7 @@ function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChi
   ];
   return (
     <div className="content">
-      <PageHead title="Cultos & Agenda" eyebrow="Operação" subtitle="Agenda, roteiro, setlist e ministérios envolvidos em cada culto." help="Seus cultos e eventos ficam aqui. Cada um pode virar uma escala, ganhar roteiro e setlist." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo culto ou evento", subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Culto da Manhã, Conferência de Jovens" }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"data", label:"Data", type:"date", half:true }, { k:"hora", label:"Horário de início", type:"time", half:true }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }], action: { kind: "event" } })}>+ Novo culto</button>} />
+      <PageHead title="Cultos & Agenda" eyebrow="Operação" subtitle="Agenda, roteiro, setlist e ministérios envolvidos em cada culto." help="Seus cultos e eventos ficam aqui. Cada um pode virar uma escala, ganhar roteiro e setlist." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo culto ou evento", subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Culto da Manhã, Conferência de Jovens" }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"data", label:"Data", type:"date", half:true }, { k:"hora", label:"Horário de início", type:"time", half:true }], action: { kind: "event" } })}>+ Novo culto</button>} />
       <div className="grid-2">
         {events.map((event) => (
           <div className="panel" key={event.id} style={{ position: "relative" }}>
@@ -7287,7 +7363,7 @@ function Config({
   const [matrizMsg, setMatrizMsg] = useState("");
   const [matrizSaving, setMatrizSaving] = useState(false);
   const toggleMx = (papel: PapelV2, acao: string) => {
-    if (papel === "master") return;
+    if (papel === "master" || papel === "vol") return;
     setMatriz((prev) => ({ ...prev, [papel]: { ...prev[papel], [acao]: !prev[papel][acao] } }));
   };
   const salvarMatriz = async () => {
@@ -7725,11 +7801,16 @@ function Config({
                     <tr key={a.id}>
                       <td className="pmx-fn">{a.nome}</td>
                       {PAPEIS_V2.map((pp) => {
-                        const locked = pp.id === "master";
+                        const locked = pp.id === "master" || pp.id === "vol";
                         const on = matriz[pp.id][a.id];
+                        const lockTitle = pp.id === "master"
+                          ? "O Master sempre tem acesso total"
+                          : pp.id === "vol"
+                          ? "Voluntário usa o app dedicado (Início, Escala, Tarefas...); essas permissões não afetam o que ele vê ali."
+                          : "";
                         return (
                           <td key={pp.id}>
-                            <button type="button" className={`mx-cell${on ? " on" : " off"}${locked ? " lock" : ""}`} onClick={() => toggleMx(pp.id, a.id)} title={locked ? "O Master sempre tem acesso total" : ""}>{on ? "✓" : "·"}</button>
+                            <button type="button" className={`mx-cell${on ? " on" : " off"}${locked ? " lock" : ""}`} onClick={() => toggleMx(pp.id, a.id)} title={lockTitle}>{on ? "✓" : "·"}</button>
                           </td>
                         );
                       })}
@@ -7992,6 +8073,9 @@ function Identidade({ church, identity, cycle, setModal }: { church?: ChurchView
         help="Visão, valores e o chamado da igreja. Aparece pro membro no app e na página pública da igreja."
         action={<button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Editar", title: "Identidade da Igreja", subtitle: "Atualize propósito, missão e visão da Igreja. Para os valores, use \"Editar valores\" abaixo.", saveLabel: "Salvar", formFields: [{ k:"proposito", label:"Propósito", type:"area", ph:identity?.purpose ?? "Por que a Igreja existe..." }, { k:"missao", label:"Missão", type:"area", ph:identity?.mission ?? "A missão da Igreja..." }, { k:"visao", label:"Visão", type:"area", ph:identity?.vision ?? "A visão da Igreja..." }, { k:"versiculo", label:"Versículo", type:"text", ph:identity?.verse ?? "ex: Mateus 28:19" }], action: { kind: "identity" } })}>Editar</button>}
       />
+      <div className="section-divide">
+        <span className="num">01</span><span className="label">Missão & propósito</span><span className="line" />
+      </div>
       {identity?.mission ? (
         <div className="ident-hero">
           <div className="ident-hero-label">Declaração de missão</div>
@@ -8016,6 +8100,9 @@ function Identidade({ church, identity, cycle, setModal }: { church?: ChurchView
             </div>
           ) : null}
         </div>
+      ) : null}
+      {!identity?.mission && !identity?.purpose && !identity?.vision ? (
+        <div className="empty" style={{ padding: "20px 0" }}>Nenhuma missão, propósito ou visão cadastrado ainda.</div>
       ) : null}
       <div className="section-divide" style={{ marginTop: 28 }}>
         <span className="num">02</span><span className="label">Valores</span><span className="line" />
@@ -9077,7 +9164,7 @@ function EntityDrawer({
             <Av name={member.name} size="lg" photoUrl={linkedPerson?.photoUrl} />
             <div>
               <div className="profile-name">{member.name}</div>
-              <div className="profile-role">na casa desde {formatDateBR(member.firstContact)}</div>
+              <div className="profile-role">na casa{member.firstContact ? ` desde ${formatDateBR(member.firstContact)}` : ""}</div>
               <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <Chip status={member.situation} />
                 {isServing && <span className="chip chip-ok">Servindo</span>}
@@ -9722,6 +9809,14 @@ function resolveLocalField(localValue: string, enderecoValue: string, rooms: Roo
   return room ? { name: room.name, roomId: room.id } : null;
 }
 
+const WEEKDAY_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+function weekdayShortFromDate(dateStr: string | null | undefined): string | null {
+  if (!dateStr) return null;
+  const d = new Date(`${dateStr}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  return WEEKDAY_SHORT[d.getDay()];
+}
+
 function friendlyWriteError(message: string) {
   const lower = message.toLowerCase();
   if (lower.includes("permission") || lower.includes("row-level security") || lower.includes("rls")) return "O banco bloqueou a gravação por segurança. Confirme se seu usuário tem permissão nesta igreja.";
@@ -10089,20 +10184,36 @@ function ServiceModal({
       if (!value("nome")) { setSaving(false); setError("Digite o nome do culto."); return; }
       const eventLocal = resolveLocalField(value("local"), value("endereco"), rooms);
       if (!eventLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
-      result = await supabase.schema("service").from("events").insert({
+      const eventDate = value("data") || null;
+      const { data: eventRow, error: eventError } = await supabase.schema("service").from("events").insert({
         organization_id: church.organizationId,
         church_id: church.id,
-        title: value("nome"),
+        name: value("nome"),
         kind: value("tipo") || "Culto",
-        event_date: value("data") || null,
+        event_date: eventDate,
+        weekday: weekdayShortFromDate(eventDate),
         time: value("hora") || null,
         location: eventLocal.name,
         room_id: eventLocal.roomId,
-        recurrence: value("recorrencia") || "semanal",
-        ministry_ids: [],
-        roster: [],
-        cronogram: [],
-      });
+        ministries: [],
+      }).select("id").single();
+      if (eventError || !eventRow) {
+        result = { error: eventError };
+      } else {
+        if (eventLocal.roomId && eventDate) {
+          await supabase.schema("service").from("reservations").insert({
+            organization_id: church.organizationId,
+            room_id: eventLocal.roomId,
+            title: value("nome"),
+            kind: "culto",
+            reserved_date: eventDate,
+            start_time: value("hora") || null,
+            source_type: "evento",
+            source_id: eventRow.id,
+          });
+        }
+        result = { error: null };
+      }
     } else if (action.kind === "ministry") {
       if (!value("nome")) { setSaving(false); setError("Digite o nome do ministério."); return; }
       result = await supabase.schema("service").from("ministries").insert({
@@ -10111,8 +10222,6 @@ function ServiceModal({
         name: value("nome"),
         icon: value("icon") || DEFAULT_ICON,
         description: value("desc") || null,
-        positions: [],
-        people: [],
       });
     } else if (action.kind === "decision") {
       if (!value("nome")) {
