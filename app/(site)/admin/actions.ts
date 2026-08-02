@@ -641,19 +641,24 @@ export async function upsertMaterial(m: Record<string, unknown>) {
     if (!data) throw new Error('O material não foi confirmado no banco.')
   }
   const { error } = await db.from('materiais').upsert(material, { onConflict: 'id' })
+  // jonatas_machado sempre traduz os materiais dele mesmo (en/es entregues prontos
+  // e gravados direto em material_translations) e não precisa da tradução
+  // automática por Gemini, que é lenta pra materiais grandes. Só chama pros
+  // demais mentores, que dependem da tradução automática.
+  const shouldAutoTranslate = admin.username !== MASTER_USERNAME
   if (error && 'contents' in m && error.message.toLowerCase().includes('contents')) {
     const legacyMaterial = { ...material }
     delete legacyMaterial.contents
     const retry = await db.from('materiais').upsert(legacyMaterial, { onConflict: 'id' })
     if (retry.error) throw retry.error
     await confirmSaved()
-    await ensureMaterialTranslations(material)
+    if (shouldAutoTranslate) await ensureMaterialTranslations(material)
     revalidatePath('/'); revalidatePath('/materiais'); revalidatePath('/admin')
     return
   }
   if (error) throw error
   await confirmSaved()
-  await ensureMaterialTranslations(material)
+  if (shouldAutoTranslate) await ensureMaterialTranslations(material)
   revalidatePath('/'); revalidatePath('/materiais'); revalidatePath('/admin')
 }
 

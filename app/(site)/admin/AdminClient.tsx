@@ -62,6 +62,7 @@ interface Material {
   model: Modelo; big: number | null; bigLabel: string
   messageList: MaterialMessage[]
   paraQuem: string; beneficios: string[]; contents: MaterialContent[]
+  comoUsar: string
   depoimento: { texto: string; autor: string }
   faq: { q: string; a: string }[]
   keywords: string[]
@@ -170,7 +171,7 @@ function newItem(type: ItemType): Item {
       formats: ['PDF'], price: 0, hotmart: '', accent: accentFor({ type: 'material', family, shelf } as Material),
       buyClicks: 0, purchases: 0, model: 'A', big: null, bigLabel: 'mensagens', messageList: [], paraQuem: '',
       beneficios: ['Editável e pronto pra aplicar na sua igreja', 'White-label CE.X: coloque a marca do seu ministério'],
-      contents: [],
+      contents: [], comoUsar: '',
       depoimento: { texto: '', autor: '' }, faq: [], keywords: [] } as Material
   }
   if (type === 'curso') {
@@ -3674,6 +3675,10 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => P
             <textarea className="inp ta" value={m.paraQuem ?? ''} onChange={(e) => set('paraQuem' as never, e.target.value as never)} placeholder="Pra líder que..." />
           </Field>
 
+          <Field label="Sobre a série" hint="Texto mais longo pra página do produto: o problema que a série resolve, objetivo, resultado esperado e uso responsável. Aparece na landing como 'Sobre a série'.">
+            <textarea className="inp ta" style={{ minHeight: 160 }} value={m.comoUsar ?? ''} onChange={(e) => set('comoUsar' as never, e.target.value as never)} placeholder="O problema que esta série enfrenta..." />
+          </Field>
+
           <SectionHead mark="Onde fica na loja" opt="obrigatório" />
           <div className="fld-hint section-copy">Escolha a família e a estante. A estante define a cor do card e onde o material aparece no catálogo.</div>
           <div className="ed-2col">
@@ -5504,6 +5509,7 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
           paraQuem: (m.pra_quem as string) ?? '',
           beneficios: conteudo,
           contents,
+          comoUsar: (m.como_usar as string) ?? '',
           depoimento: (m.depoimento as { texto: string; autor: string }) ?? { texto: '', autor: '' },
           faq: (m.faq as { q: string; a: string }[]) ?? [],
           keywords: (m.keywords as string[]) ?? [],
@@ -5619,7 +5625,7 @@ export default function AdminClient({ initialAuthed, initialAdmin, initialData }
         conteudo: contentSummary,
         contents: m.contents ?? [],
         mensagens_lista: m.messageList ?? [],
-        como_usar: '', faq: m.faq ?? [],
+        como_usar: m.comoUsar ?? '', faq: m.faq ?? [],
         keywords: m.keywords ?? [],
         status: m.status,
       })

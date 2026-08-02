@@ -39,6 +39,9 @@ yarn-error.log*
 # supabase local CLI state
 supabase/.temp/
 
+# pasta local de rascunhos de material (mensagens + apresentação), nunca versionar
+/content-intake/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

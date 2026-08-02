@@ -381,6 +381,20 @@ export default function MaterialLanding({
         </div>
       )}
 
+      {/* ── SOBRE A SÉRIE ──────────────────────────────────────────────────── */}
+      {raw.como_usar && (
+        <div className="ld-sec">
+          <div className="ld-wrap">
+            <SecMark label="Sobre a série" accent={ac} />
+            <div style={{ maxWidth: 780, display: "flex", flexDirection: "column", gap: 18 }}>
+              {raw.como_usar.split("\n\n").filter(Boolean).map((paragrafo, i) => (
+                <p key={i} style={{ fontSize: 17, lineHeight: 1.7, color: "var(--light)" }}>{paragrafo}</p>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── O QUE VEM DENTRO ───────────────────────────────────────────────── */}
       <div className="ld-sec">
         <div className="ld-wrap">
