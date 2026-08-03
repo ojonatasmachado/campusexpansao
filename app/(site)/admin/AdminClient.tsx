@@ -197,7 +197,7 @@ function AutoArt({ accent, label, height = 150, big = false }: { accent: string;
     <div className="pv-art" style={{ height }}>
       <div className="pv-art-grid" />
       <div className="pv-art-x" style={{ color: accent, opacity: big ? 0.16 : 0.13, fontSize: big ? 360 : 190 }}>X</div>
-      {label && <div className="pv-art-mark" style={{ color: accent }}>◆ {label}</div>}
+      {label && <div className="pv-art-mark" style={{ color: accent }}>{label}</div>}
     </div>
   )
 }
@@ -207,7 +207,7 @@ function CardMedia({ item, height = 150, big = false, labelOverride }: { item: I
   if (item.image) {
     return (
       <div className="pv-art" style={{ height, backgroundImage: `url(${item.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-        {label && <div className="pv-art-mark" style={{ color: '#EDE6D3', background: 'rgba(14,17,13,.55)', padding: '4px 10px', borderRadius: 100, backdropFilter: 'blur(6px)' }}>◆ {label}</div>}
+        {label && <div className="pv-art-mark" style={{ color: '#EDE6D3', background: 'rgba(14,17,13,.55)', padding: '4px 10px', borderRadius: 100, backdropFilter: 'blur(6px)' }}>{label}</div>}
       </div>
     )
   }
@@ -451,7 +451,7 @@ function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
       <div style={{ height, position: 'relative', overflow: 'hidden', ...bg }}>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,rgba(14,17,13,.15),rgba(14,17,13,.9))' }} />
         <div style={{ position: 'absolute', inset: 0, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div style={{ ...eb, color: 'var(--cream-soft)' }}><span style={{ fontSize: 9 }}>◆</span>{etiqueta}</div>
+          <div style={{ ...eb, color: 'var(--cream-soft)' }}>{etiqueta}</div>
           <PreviewFitTitle title={title} max={42} min={13} color="var(--white)" boxStyle={{ flex: 1, paddingTop: 18 }} />
         </div>
       </div>
@@ -460,7 +460,7 @@ function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
   if (item.model === 'C') {
     return (
       <div style={{ height, padding: 20, position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'var(--ink)', backgroundImage: 'linear-gradient(var(--border) 1px, transparent 1px)', backgroundSize: '100% 38px' }}>
-        <div style={{ ...eb, color: 'var(--sand)' }}><span style={{ fontSize: 9 }}>◆</span>{etiqueta}</div>
+        <div style={{ ...eb, color: 'var(--sand)' }}>{etiqueta}</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
           <span style={{ fontFamily: 'var(--sans)', fontWeight: 700, fontSize: 78, lineHeight: .8, color: ac, letterSpacing: '-.05em' }}>{big}</span>
           <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>{item.bigLabel ?? ''}</span>
@@ -473,7 +473,7 @@ function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
     return (
       <div style={{ height, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
         <div style={{ background: ac, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ ...eb, color: 'var(--ink)' }}><span style={{ fontSize: 9 }}>◆</span>{etiqueta}</div>
+          <div style={{ ...eb, color: 'var(--ink)' }}>{etiqueta}</div>
           <span style={{ ...codeStyle, color: 'rgba(14,17,13,.5)' }}>{item.code}</span>
         </div>
         <div style={{ flex: 1, padding: 20, display: 'flex', alignItems: 'stretch' }}>
@@ -486,7 +486,7 @@ function ModelArt({ item, height = 220 }: { item: Material; height?: number }) {
   return (
     <div style={{ height, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'var(--ink)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div style={{ ...eb, color: ac }}><span style={{ fontSize: 9 }}>◆</span>{etiqueta}</div>
+        <div style={{ ...eb, color: ac }}>{etiqueta}</div>
         <span style={codeStyle}>{item.code}</span>
       </div>
       <PreviewFitTitle title={title} max={46} min={13} lineHeight={.9} boxStyle={{ flex: 1, paddingTop: 18 }} />
@@ -514,7 +514,7 @@ function CourseCardPv({ item }: { item: Curso }) {
     <div className="pv-ccard">
       <div className="pv-ccard-core">
         <div className="pv-ccard-top">
-          <span className="pv-ccard-level" style={{ color: item.accent }}>◆ {item.level}</span>
+          <span className="pv-ccard-level" style={{ color: item.accent }}>{item.level}</span>
           {item.aoVivo && <span className="pv-ccard-live" style={{ background: item.accent }}>● AO VIVO</span>}
         </div>
         <div className="pv-ccard-title">{item.title}</div>
@@ -539,7 +539,7 @@ function MentoriaCardPv({ item }: { item: Mentoria }) {
     <div className="pv-ccard">
       <div className="pv-ccard-core">
         <div className="pv-ccard-top">
-          <span className="pv-ccard-level" style={{ color: item.accent }}>◇ MENTORIA</span>
+          <span className="pv-ccard-level" style={{ color: item.accent }}>MENTORIA</span>
           <span className="pv-ccard-live" style={{ background: item.accent }}>● ACOMPANHADA</span>
         </div>
         <div className="pv-ccard-title">{item.title}</div>
@@ -561,7 +561,7 @@ function EventoCardPv({ item }: { item: Evento }) {
     <div className="pv-mcard">
       <CardMedia item={item} labelOverride="EVENTO" />
       <div className="pv-mcard-body">
-        <div className="pv-mcard-eyebrow" style={{ color: item.accent }}>◆ {item.data}</div>
+        <div className="pv-mcard-eyebrow" style={{ color: item.accent }}>{item.data}</div>
         <div className="pv-mcard-title">{item.title}</div>
         <div className="pv-mcard-meta">{item.local} · {item.vagas} vagas</div>
         <div className="pv-mcard-foot">
@@ -595,7 +595,6 @@ function PagePreview({ item }: { item: Item }) {
   if (!href) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 340, color: 'var(--muted)', fontFamily: 'var(--mono)', fontSize: 12, textAlign: 'center', flexDirection: 'column', gap: 10 }}>
-        <span style={{ fontSize: 22 }}>◆</span>
         Salve o item primeiro para ver a prévia da página.
       </div>
     )
@@ -1015,7 +1014,7 @@ function buildPresetElements(item: Item, preset: ArtLayoutPresetId, surface: Art
   const y = (feedY: number, storyY: number) => story ? storyY : feedY
   const fs = (feedSize: number, storySize: number) => story ? storySize : feedSize
   const id = (name: string) => artUniqueId(`${surface}-${preset}-${name}`)
-  const lineList = data.list.slice(0, 4).map(line => `◆ ${line}`).join('\n')
+  const lineList = data.list.slice(0, 4).map(line => `${line}`).join('\n')
 
   if (preset === 'contraste') {
     const green = highlightWord(data.paraQuem)
@@ -1278,7 +1277,6 @@ function FeedSlide({ item, type, counter, total, s = 1, copy }: {
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               {bens.map((b, i) => (
                 <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 30 * s, fontFamily: ART_SANS, fontWeight: itemWeight, fontSize: itemSize, letterSpacing: '-.02em', color: itemColor, padding: `${22 * s}px 0`, borderTop: `1.5px solid ${borderColor}`, ...(i === bens.length - 1 ? { borderBottom: `1.5px solid ${borderColor}` } : {}) }}>
-                  <span style={{ color: ART_OLIVE, fontWeight: 500, flexShrink: 0, fontSize: 24 * s }}>◆</span>
                   <span>{parseArtText(b, itemColor)}</span>
                 </li>
               ))}
@@ -1547,8 +1545,7 @@ function EditableArtTextBox({ box, scale, selected, canvasW, canvasH, onSelect, 
             cursor: 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >
-          ◇
-        </button>
+          </button>
       )}
       {selected && (
         <button
@@ -1833,7 +1830,6 @@ function ArtToolbar({ box, onPatch, onAdd, onUndo, canUndo, onApplyPreset, varia
               cursor: 'pointer', whiteSpace: 'nowrap',
             }}
           >
-            <span style={{ color: ART_OLIVE }}>◆</span>
             Modelos
           </button>
           {presetMenuOpen && (
@@ -1864,7 +1860,6 @@ function ArtToolbar({ box, onPatch, onAdd, onUndo, canUndo, onApplyPreset, varia
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  <span style={{ color: ART_OLIVE }}>◆</span>
                   {preset.label}
                 </button>
               ))}
@@ -1948,7 +1943,7 @@ function ArtToolbar({ box, onPatch, onAdd, onUndo, canUndo, onApplyPreset, varia
       {tool('Limpar', () => applyInline(`font-weight:${ART_BODY_WEIGHT};font-style:normal;text-decoration:none;color:inherit;font-size:1em;line-height:1`, { weight: ART_BODY_WEIGHT, italic: false, uppercase: false, fontSize: 76, lineHeight: 1, color: variant === 'graphite' ? 'ink' : 'cream' }), false, 'Limpar formatação')}
       {divider}
       {tool('Ln', () => insertInline('<br>'), false, 'Quebra de linha')}
-      {tool('◆', () => insertInline('◆ '), false, 'Marcador', ART_OLIVE)}
+      {tool('', () => insertInline(''), false, 'Marcador', ART_OLIVE)}
       {tool('→', () => insertInline('→'), false, 'Seta')}
       {divider}
       <button type="button" onClick={() => onVariantChange(variant === 'ink' ? 'graphite' : 'ink')} style={{ height: 34, padding: '0 10px', borderRadius: 6, border: '.5px solid var(--border-2)', background: 'var(--ink)', color: 'var(--muted)', fontFamily: ART_SANS, fontWeight: ART_DISPLAY_WEIGHT, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
@@ -2496,7 +2491,7 @@ function ArtesModal({ item, initialTab, initialPreset, onClose }: { item: Item; 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--olive)', letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 4 }}>
-              ◆ Divulgação CE.X
+              Divulgação CE.X
             </div>
             <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--cream)', letterSpacing: '-.02em', maxWidth: 760, lineHeight: 1.25 }}>
               {item.title}
@@ -2652,7 +2647,7 @@ function ListaEspera({ cursos }: { cursos: Curso[] }) {
       <div className="toplist">
         {rows.map((c) => (
           <div className="top-row" key={c.id}>
-            <span className="le-tag" style={{ color: c.accent, borderColor: c.accent }}>◆ {c.level}</span>
+            <span className="le-tag" style={{ color: c.accent, borderColor: c.accent }}>{c.level}</span>
             <div className="top-main"><div className="top-title">{c.title}</div></div>
             <span className="top-views" style={{ color: c.accent }}>{fmt(c.waitlist)}</span>
           </div>
@@ -2729,7 +2724,7 @@ function Dashboard({ data }: { data: AdminData }) {
 function Field({ label, hint, children, req }: { label: string; hint?: string; children: ReactNode; req?: boolean }) {
   return (
     <div className="fld">
-      <label className="fld-label">{label}{req && <span className="fld-req"> ◆</span>}</label>
+      <label className="fld-label">{label}{req && <span style={{ color: "var(--olive)" }}> *</span>}</label>
       {children}
       {hint && <div className="fld-hint">{hint}</div>}
     </div>
@@ -2739,7 +2734,7 @@ function Field({ label, hint, children, req }: { label: string; hint?: string; c
 function SectionHead({ mark, opt }: { mark: string; opt?: string }) {
   return (
     <div className="ed-sec">
-      <span className="ed-sec-mark">◆ {mark}</span>
+      <span className="ed-sec-mark">{mark}</span>
       <span className="ed-sec-line" />
       {opt && <span className="ed-sec-opt">{opt}</span>}
     </div>
@@ -2752,7 +2747,7 @@ function AccentLock({ value, name }: { value: string; name: string }) {
       <span style={{ width: 26, height: 26, borderRadius: 6, background: value, flexShrink: 0, border: '.5px solid rgba(255,255,255,.14)' }} />
       <span style={{ fontSize: 14, color: 'var(--light)', fontWeight: 600 }}>{name}</span>
       <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--subtle)', marginLeft: 'auto' }}>{value}</span>
-      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--subtle)', letterSpacing: '.08em' }}>◆ TRAVADA</span>
+      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--subtle)', letterSpacing: '.08em' }}>TRAVADA</span>
     </div>
   )
 }
@@ -3146,7 +3141,7 @@ function MaterialContentsField({
   return (
     <div className="wb">
       <div className="wb-head">
-        <div className="wb-eyebrow" style={{ color: 'var(--olive)' }}>◆ O QUE O COMPRADOR RECEBE</div>
+        <div className="wb-eyebrow" style={{ color: 'var(--olive)' }}>O QUE O COMPRADOR RECEBE</div>
         <div className={`wb-status ${contents.length ? 'building' : ''}`}>
           <span className="wb-dot" />
           {contents.length ? `${contents.length} ${contents.length === 1 ? 'conteúdo' : 'conteúdos'}` : 'Nada ainda'}
@@ -3210,7 +3205,7 @@ function MaterialContentsField({
           <div className="cmodal cmodal-wide" onClick={(e) => e.stopPropagation()}>
             <div className="cmodal-head">
               <div>
-                <div className="cmodal-eyebrow">◆ Novo conteúdo</div>
+                <div className="cmodal-eyebrow">Novo conteúdo</div>
                 <div className="cmodal-title">O que você quer adicionar?</div>
               </div>
               <button className="cmodal-x" type="button" onClick={() => setAddOpen(false)}>Fechar</button>
@@ -3242,7 +3237,7 @@ function MaterialContentsField({
           <div className="cmodal cmodal-wide" onClick={(e) => e.stopPropagation()}>
             <div className="cmodal-head">
               <div>
-                <div className="cmodal-eyebrow">◆ Apresentação</div>
+                <div className="cmodal-eyebrow">Apresentação</div>
                 <div className="cmodal-title">Como você quer começar?</div>
               </div>
               <button className="cmodal-x" type="button" onClick={() => setSlidesChoiceOpen(false)}>Fechar</button>
@@ -3279,7 +3274,7 @@ function MaterialContentsField({
           <div className="cmodal" onClick={(e) => e.stopPropagation()}>
             <div className="cmodal-head">
               <div>
-                <div className="cmodal-eyebrow">◆ {studioMode === 'slides' ? 'Apresentação' : studioMode === 'design' ? 'Design' : 'Documento de texto'}</div>
+                <div className="cmodal-eyebrow">{studioMode === 'slides' ? 'Apresentação' : studioMode === 'design' ? 'Design' : 'Documento de texto'}</div>
                 <div className="cmodal-title">{studioMode === 'slides' ? 'Dados da apresentação' : studioMode === 'design' ? 'Dados da arte' : 'Dados da mensagem'}</div>
               </div>
               <button className="cmodal-x" type="button" onClick={() => setStudioSetupOpen(false)}>Fechar</button>
@@ -3331,7 +3326,7 @@ function MaterialContentsField({
           <div className="studio-shell">
             <div className="studio-head">
               <div>
-                <div className="studio-kicker">◆ CE.X Studio</div>
+                <div className="studio-kicker">CE.X Studio</div>
                 <div className="studio-title">{studioMode === 'slides' ? 'Slide' : studioMode === 'design' ? 'Design' : 'Documentos'}</div>
               </div>
               <div className="studio-actions">
@@ -3355,7 +3350,7 @@ function MaterialContentsField({
           <div className="cmodal" onClick={(e) => e.stopPropagation()}>
             <div className="cmodal-head">
               <div>
-                <div className="cmodal-eyebrow">◆ Entrega ao comprador</div>
+                <div className="cmodal-eyebrow">Entrega ao comprador</div>
                 <div className="cmodal-title">Como esse documento será vendido?</div>
               </div>
               <button className="cmodal-x" type="button" onClick={() => setDeliveryOpen(false)}>Fechar</button>
@@ -3382,7 +3377,7 @@ function MaterialContentsField({
           <div className="cmodal" onClick={(e) => e.stopPropagation()}>
             <div className="cmodal-head">
               <div>
-                <div className="cmodal-eyebrow">◆ Conteúdo {String(active + 1).padStart(2, '0')}</div>
+                <div className="cmodal-eyebrow">Conteúdo {String(active + 1).padStart(2, '0')}</div>
                 <div className="cmodal-title">Detalhes do material</div>
               </div>
               <button className="cmodal-x" type="button" onClick={() => setDetailsOpen(false)}>Fechar</button>
@@ -3651,7 +3646,7 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => P
       <div className="ed-form">
         <div className="ed-formhead">
           <div className="ed-headrow">
-            <div className="ed-eyebrow" style={{ color: accent }}>◆ {d.type.toUpperCase()}</div>
+            <div className="ed-eyebrow" style={{ color: accent }}>{d.type.toUpperCase()}</div>
             {d.type === 'material' && m.code && (
               <span className="codebadge"><b>{m.code}</b><span className="sys">código interno</span></span>
             )}
@@ -3860,7 +3855,7 @@ function Editor({ item, onSave, onCancel }: { item: Item; onSave: (d: Item) => P
           {mode === 'card' && <div className="prev-center"><CatalogCardPreview item={dv} /></div>}
           {mode === 'pagina' && <div style={{ width: '100%' }}><PagePreview item={dv} /></div>}
         </div>
-        {d.status === 'Rascunho' && <div className="ed-draftnote">◆ Em rascunho. Não aparece no site até publicar.</div>}
+        {d.status === 'Rascunho' && <div className="ed-draftnote">Em rascunho. Não aparece no site até publicar.</div>}
       </div>
 
       {divulgacaoOpen && (
@@ -3911,7 +3906,7 @@ function Login() {
           <ThemeToggle compact />
         </div>
         <div className="login-logo"><Logo /></div>
-        <div className="login-eyebrow">◆ PAINEL INTERNO</div>
+        <div className="login-eyebrow">PAINEL INTERNO</div>
         <h1 className="login-title">Área restrita</h1>
         <p className="login-sub">Gestão de materiais, cursos, mentorias, usuários e módulos do Studio.</p>
         <input className="login-input" type="text" value={username} placeholder="Usuário"
@@ -3968,7 +3963,7 @@ function ShelfEditor({ estante, onSave, onCancel }: { estante: EstanteAdmin | nu
         <div className="modal-title">{isNew ? 'Nova estante' : `Editar · ${estante!.label}`}</div>
 
         <div className="fld">
-          <label className="fld-label">Nome da estante <span className="fld-req">◆</span></label>
+          <label className="fld-label">Nome da estante </label>
           <input className="inp" value={form.label} onChange={e => set('label', e.target.value)} placeholder="ex: Casais" />
         </div>
 
@@ -4099,8 +4094,7 @@ function ShelvesView({ estantes, materiais, onSave, onToggle, onDelete, onReorde
               {/* Handle de drag */}
               <div className="shelf-drag" aria-label="Arrastar estante">⠿</div>
               <div className="row-chip" style={{ background: e.accent, flexShrink: 0 }}>
-                <span style={{ color: '#0E110D', fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700 }}>◆</span>
-              </div>
+                </div>
               <div className="row-main">
                 <div className="row-title" style={{ color: e.status === 'hidden' ? 'var(--subtle)' : 'var(--cream)' }}>
                   {e.label}
@@ -4135,36 +4129,36 @@ function Sidebar({ route, go, counts, onLogout, admin }: { route: Route; go: (r:
         <div className="adm-sb-sub">Painel interno</div>
         <nav className="adm-sb-nav">
           <button className={`adm-sb-link${route.screen === 'dashboard' ? ' on' : ''}`} onClick={() => go({ screen: 'dashboard' })}>
-            <span className="adm-sb-ic">◆</span> Painel
+            Painel
           </button>
           <div className="adm-sb-group">Catálogo</div>
           {TYPES.map((t) => (
             <button key={t.key} className={`adm-sb-link${isOn({ screen: 'list', type: t.key }) ? ' on' : ''}`} onClick={() => go({ screen: 'list', type: t.key })}>
-              <span className="adm-sb-ic">◇</span> {t.plural}
+              {t.plural}
               <span className="adm-sb-count">{counts[t.key]}</span>
             </button>
           ))}
           {admin.isMaster && (
             <>
               <button className={`adm-sb-link${route.screen === 'shelves' ? ' on' : ''}`} onClick={() => go({ screen: 'shelves' })}>
-                <span className="adm-sb-ic">◇</span> Estantes
+                Estantes
                 <span className="adm-sb-count">{counts.estante}</span>
               </button>
               <div className="adm-sb-group">Admin</div>
               <button className={`adm-sb-link${route.screen === 'users' ? ' on' : ''}`} onClick={() => go({ screen: 'users' })}>
-                <span className="adm-sb-ic">◇</span> Acessos
+                Acessos
                 <span className="adm-sb-count">{counts.users}</span>
               </button>
               <button className={`adm-sb-link${route.screen === 'studio' ? ' on' : ''}`} onClick={() => go({ screen: 'studio' })}>
-                <span className="adm-sb-ic">◇</span> Studio
+                Studio
                 <span className="adm-sb-count">{counts.templates}</span>
               </button>
               <button className={`adm-sb-link${route.screen === 'service-ops' ? ' on' : ''}`} onClick={() => go({ screen: 'service-ops' })}>
-                <span className="adm-sb-ic">◇</span> Operação Service
+                Operação Service
                 <span className="adm-sb-count">{counts.serviceOrgs}</span>
               </button>
               <button className={`adm-sb-link${route.screen === 'avaliacao' ? ' on' : ''}`} onClick={() => go({ screen: 'avaliacao' })}>
-                <span className="adm-sb-ic">◇</span> Avaliação de experiência
+                Avaliação de experiência
                 <span className="adm-sb-count">{counts.enquetes}</span>
               </button>
             </>
@@ -4287,7 +4281,7 @@ function InviteLinkModal({ url, onDone }: { url: string; onDone: () => void }) {
   return (
     <div className="modal-bg" onClick={onDone}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-title">◆ Link de configuração pronto</div>
+        <div className="modal-title">Link de configuração pronto</div>
         <p className="section-copy" style={{ marginBottom: 14 }}>
           Envie esse link pro mentor por WhatsApp, e-mail ou como preferir. Ele funciona uma
           única vez e expira em 48h. Só quem abrir o link escolhe a senha — você não vai saber
@@ -4579,7 +4573,7 @@ function StudioTemplatesView({
 
       <div className="studio-admin-hero">
         <div>
-          <div className="adm-top-crumb">◆ CE.X Studio</div>
+          <div className="adm-top-crumb">CE.X Studio</div>
           <h2>Manutenção dos modelos</h2>
           <p>Área master para acessar os módulos e cadastrar os templates que depois serão consumidos pelos compradores.</p>
         </div>
@@ -4589,7 +4583,7 @@ function StudioTemplatesView({
       <div className="studio-module-grid">
         {(['documentos', 'slides', 'design'] as StudioTemplate['module'][]).map((module) => (
           <button className="studio-module-card" key={module} onClick={() => openEditor(module)}>
-            <span>◆ {moduleLabel(module)}</span>
+            <span>{moduleLabel(module)}</span>
             <strong>Abrir módulo</strong>
             <em>{templates.filter(t => t.module === module).length} modelo(s) cadastrados</em>
           </button>
@@ -5150,7 +5144,7 @@ function EnquetesView({ enquetes, timesDisponiveis, estantesAtivas, onSave, onDe
         {shown.length === 0 && <div className="lv-empty">Nenhuma enquete ainda. Clique em <em>+ Nova enquete</em> para criar.</div>}
         {shown.map((e) => (
           <div className="row" key={e.id}>
-            <div className="row-chip"><span style={{ color: 'var(--olive)' }}>◆</span></div>
+            <div className="row-chip"></div>
             <div className="row-main" style={{ cursor: 'pointer' }} onClick={() => setRoute({ screen: 'resultados', enquete: e })}>
               <div className="row-title">{e.nome}</div>
               <div className="row-cat">{e.perguntas.length} pergunta{e.perguntas.length === 1 ? '' : 's'} · {segLabel(e.segmentacao)} · {disparoLabel(e.disparo)}</div>

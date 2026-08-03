@@ -239,7 +239,7 @@ function LoginForm() {
             textTransform: "uppercase",
             margin: "0 0 10px",
           }}>
-            ◆ Acesso CE.X
+            Acesso CE.X
           </p>
           <h1 style={{
             color: "var(--cream)",

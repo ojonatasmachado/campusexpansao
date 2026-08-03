@@ -64,7 +64,7 @@ export default async function ServiceConnectionPage() {
         <section className="card" style={{ maxWidth: 760 }}>
           <div className="card-body">
             <p className="eyebrow" style={{ color: "var(--wheat)" }}>
-              ◆ SERVICE · FASE 1
+              SERVICE · FASE 1
             </p>
             <h1 className="t-h1" style={{ color: "var(--cream)", marginTop: 12 }}>
               Teste de conexao Supabase

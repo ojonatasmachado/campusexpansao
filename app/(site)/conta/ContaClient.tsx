@@ -116,7 +116,7 @@ export default function ContaClient({ user, initialProfile }: { user: User; init
               position: "sticky",
               top: 96,
             }}>
-              <p style={eyebrowStyle}>◆ Minha conta</p>
+              <p style={eyebrowStyle}>Minha conta</p>
               <h1 style={{
                 color: "var(--cream)",
                 fontSize: 34,
@@ -157,7 +157,7 @@ export default function ContaClient({ user, initialProfile }: { user: User; init
               padding: 32,
             }}>
               <div style={{ marginBottom: 28 }}>
-                <p style={eyebrowStyle}>◆ Dados do líder</p>
+                <p style={eyebrowStyle}>Dados do líder</p>
                 <h2 style={{
                   color: "var(--cream)",
                   fontSize: 24,
@@ -232,7 +232,7 @@ export default function ContaClient({ user, initialProfile }: { user: User; init
                 paddingTop: 28,
                 borderTop: "1px solid var(--border)",
               }}>
-                <p style={eyebrowStyle}>◆ Cancelar conta</p>
+                <p style={eyebrowStyle}>Cancelar conta</p>
                 <h3 style={{ color: "var(--cream)", fontSize: 18, margin: "0 0 8px" }}>
                   Encerrar acesso CE.X
                 </h3>

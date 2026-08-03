@@ -31,10 +31,10 @@ export default async function MensagemEditorPage({
       <main className={styles.editor}>
         <section className={`pg-wrap ${styles.hero}`}>
           <div>
-            <Link href={`/perfil/${compra.material.id}`} className={styles.backLink}>
-              Voltar para {compra.material.titulo}
+            <Link href={`/perfil/${compra.material.id}`} className={`btn btn-secondary btn-sm ${styles.backLink}`}>
+              ← Voltar para {compra.material.titulo}
             </Link>
-            <p className={styles.eyebrow}>◆ Editor de mensagem</p>
+            <p className={styles.eyebrow}>Editor de mensagem</p>
             <h1 className={styles.title}>{mensagemAtual.titulo}</h1>
           </div>
           <div className={styles.docMeta} aria-label="Dados da mensagem">

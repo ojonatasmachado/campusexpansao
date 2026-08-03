@@ -7,7 +7,7 @@ export default function Sobre() {
       <Nav />
 
       <div className="pg-wrap about-hero">
-        <div className="hero-eyebrow" style={{ display: "flex" }}>◆ Quem somos</div>
+        <div className="hero-eyebrow" style={{ display: "flex" }}>Quem somos</div>
         <p className="about-lead">
           A CE.X existe para <em>preparar trabalhadores</em>, porque a colheita é grande e o preparo não pode ser negligente.
         </p>
@@ -29,7 +29,7 @@ export default function Sobre() {
       </div>
 
       <div className="pg-wrap pg-section tight">
-        <div className="psec-eyebrow">◆ A equação da marca</div>
+        <div className="psec-eyebrow">A equação da marca</div>
         <div className="about-values">
           <div className="value">
             <div className="value-letter value-letter-ce">CE</div>
@@ -52,7 +52,7 @@ export default function Sobre() {
       <div className="pg-wrap pg-section">
         <div className="cta-block">
           <div className="cta-x">X</div>
-          <div className="cta-eyebrow">◆ Faça parte</div>
+          <div className="cta-eyebrow">Faça parte</div>
           <h2 className="cta-title">Caminhe <em>conosco.</em></h2>
           <p className="cta-desc">Receba os materiais e comece a estruturar seu ministério hoje.</p>
           <div className="cta-actions">

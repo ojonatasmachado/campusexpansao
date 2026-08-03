@@ -8677,7 +8677,7 @@ function VisitanteDrawer({
           }
         </DrawerSection>
         <DrawerSection title="Registrar contato">
-          {currentReply && <div className={`vresp-now ${currentReply}`}>{currentReply === "respondeu" ? "◆ Último contato: respondeu" : "◇ Último contato: sem resposta, refazer"}</div>}
+          {currentReply && <div className={`vresp-now ${currentReply}`}>{currentReply === "respondeu" ? "Último contato: respondeu" : "Último contato: sem resposta, refazer"}</div>}
           <textarea className="textarea" placeholder="O que rolou nesse contato? (ligação, WhatsApp, visita...)" value={nota} onChange={(e) => setNota(e.target.value)} />
           <div className="vresp-pick">
             <span className="vresp-lbl">A pessoa respondeu?</span>

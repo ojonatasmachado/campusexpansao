@@ -1445,7 +1445,7 @@ function TabCursos({
     <>
       <button className="m-card m-curso-bat" style={{ width: "100%", textAlign: "left" }} onClick={() => setTab("batismo")}>
         <div className="m-card-top">
-          <span className="m-when">◆ Batismo nas aguas</span>
+          <span className="m-when">Batismo nas aguas</span>
           {openClasses.length > 0 && (
             <span className="m-when" style={{ color: "var(--olive-soft)" }}>{openClasses.length} turma(s)</span>
           )}
@@ -2508,7 +2508,7 @@ function MobileMembro({
         <div className="phone-notch" />
         <div className="m-statusbar">
           <span>9:41</span>
-          <span>{churchName || "Service"} ◆</span>
+          <span>{churchName || "Service"} </span>
         </div>
         <div className="m-head">
           <div className="m-app">Service · {isRecep ? "Recepcao" : "Voluntario"}</div>

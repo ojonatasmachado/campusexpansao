@@ -92,7 +92,7 @@ export default function KidsCheckinClient({
           </div>
           {event && kidsClass && (
             <div className="ck-land-event">
-              <div className="ck-land-ey">◆ Kids · {kidsClass.name}</div>
+              <div className="ck-land-ey">Kids · {kidsClass.name}</div>
               <div className="ck-land-name">{event.name}</div>
               <div className="ck-land-when">{event.weekday} {formatDateBR(event.eventDate)} · {event.time} · {event.location}</div>
             </div>

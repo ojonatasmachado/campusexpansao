@@ -66,7 +66,7 @@ export default function MuitoBarulho() {
       <div className="pg-wrap pg-section">
         <div className="psec-head">
           <div className="psec-head-left">
-            <div className="psec-eyebrow">◆ Base bíblica · 1 Samuel 3:1-10</div>
+            <div className="psec-eyebrow">Base bíblica · 1 Samuel 3:1-10</div>
             <div className="psec-title">Sobre a <em>série</em></div>
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function MuitoBarulho() {
 
       {/* JORNADA DAS MENSAGENS */}
       <div className="pg-wrap" style={{ paddingBottom: 32 }}>
-        <div className="psec-eyebrow" style={{ marginBottom: 32 }}>◆ A jornada em cinco etapas</div>
+        <div className="psec-eyebrow" style={{ marginBottom: 32 }}>A jornada em cinco etapas</div>
         <div className="course-grid">
           <div className="course">
             <div className="course-num">01</div>
@@ -154,7 +154,7 @@ export default function MuitoBarulho() {
       <div className="pg-wrap pg-section" id="mensagens">
         <div className="psec-head">
           <div className="psec-head-left">
-            <div className="psec-eyebrow">◆ As mensagens</div>
+            <div className="psec-eyebrow">As mensagens</div>
             <div className="psec-title">As 5 <em>mensagens</em></div>
             <p className="psec-desc">Cada arquivo em Word, pronto para adaptar à linguagem do seu pregador.</p>
           </div>
@@ -197,7 +197,7 @@ export default function MuitoBarulho() {
       <div className="pg-wrap pg-section">
         <div className="capture">
           <div className="capture-x">X</div>
-          <div className="capture-eyebrow">◆ Acompanhe os lançamentos</div>
+          <div className="capture-eyebrow">Acompanhe os lançamentos</div>
           <h3 className="capture-title">Mais séries <em>chegando</em></h3>
           <p className="capture-desc">
             Cadastre-se para receber as próximas séries em primeira mão, com acesso antecipado quando abrirem no checkout.

@@ -66,7 +66,7 @@ export default async function Home() {
 
       {/* O QUE É A CE.X */}
       <div id="sobre" className={`pg-wrap pg-section ${styles.aboutSection}`}>
-        <div className="psec-eyebrow">◆ O que é a CE.X</div>
+        <div className="psec-eyebrow">O que é a CE.X</div>
         <p className="about-lead" style={{ marginBottom: 40 }}>
           A maioria das igrejas não tem problema de fé. Tem problema de <em>estrutura.</em>
         </p>
@@ -116,7 +116,7 @@ export default async function Home() {
       <div id="cursos" className="pg-wrap pg-section" style={{ paddingBottom: 0 }}>
         <div className="psec-head">
           <div className="psec-head-left">
-            <div className="psec-eyebrow">◆ Formação ao vivo</div>
+            <div className="psec-eyebrow">Formação ao vivo</div>
             <div className="psec-title">Cursos &amp; <em>Mentorias</em></div>
           </div>
           <Link href="/cursos" className="btn btn-ghost btn-arrow">Conhecer formação ao vivo</Link>
@@ -130,7 +130,7 @@ export default async function Home() {
       <div className={`pg-wrap pg-section ${styles.faqSection}`}>
         <div className="psec-head">
           <div className="psec-head-left">
-            <div className="psec-eyebrow">◆ Dúvidas frequentes</div>
+            <div className="psec-eyebrow">Dúvidas frequentes</div>
             <div className="psec-title">Perguntas</div>
           </div>
         </div>
@@ -141,7 +141,7 @@ export default async function Home() {
       <div className={`pg-wrap pg-section ${styles.finalCtaSection}`}>
         <div className="cta-block">
           <div className="cta-x">X</div>
-          <div className="cta-eyebrow">◆ Comece hoje</div>
+          <div className="cta-eyebrow">Comece hoje</div>
           <h2 className="cta-title">Prepare sua <em>equipe.</em></h2>
           <p className="cta-desc">Escolha o material certo para o seu momento e comece a aplicar esta semana.</p>
           <div className="cta-actions">
@@ -154,7 +154,7 @@ export default async function Home() {
       <div className={`pg-wrap pg-section ${styles.quizSection}`}>
         <div className="capture">
           <div className="capture-x">X</div>
-          <div className="capture-eyebrow">◆ Descubra seu chamado</div>
+          <div className="capture-eyebrow">Descubra seu chamado</div>
           <h3 className="capture-title">Sua <em>Vocação</em></h3>
           <p className="capture-desc">
             Qual dos cinco ministérios de Efésios 4:11 representa o seu chamado? Responda 12 perguntas e descubra onde sua liderança tem mais impacto.

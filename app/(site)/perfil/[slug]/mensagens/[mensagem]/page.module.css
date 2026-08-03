@@ -33,17 +33,8 @@
 }
 
 .backLink {
-  display: flex;
   width: max-content;
   margin-bottom: clamp(34px, 4vw, 48px);
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.backLink:hover {
-  color: var(--cream);
 }
 
 .eyebrow {

@@ -255,7 +255,7 @@ export default function CursoDrawer({
                         </div>
                         {(les.prova?.length ?? 0) > 0 && (
                           <div className="ce-prova on" style={{ cursor: "default" }}>
-                            ◆ Prova · {les.prova?.length} pergunta(s){les.min_acertos ? ` · min. ${les.min_acertos}` : ""}
+                            Prova · {les.prova?.length} pergunta(s){les.min_acertos ? ` · min. ${les.min_acertos}` : ""}
                           </div>
                         )}
                         {comQR && (

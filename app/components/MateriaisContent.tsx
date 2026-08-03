@@ -56,7 +56,7 @@ function Shelf({ estante, materiais, onVerTodos }: {
   return (
     <div className="loja-shelf">
       <div className="loja-shelf-head">
-        <span className="loja-shelf-name" style={{ color: accent.base }}>◆ {estante.label}</span>
+        <span className="loja-shelf-name" style={{ color: accent.base }}>{estante.label}</span>
         {estante.faixaEtaria && (
           <span className="loja-shelf-count">· {estante.faixaEtaria}</span>
         )}
@@ -113,7 +113,7 @@ function ShelfModal({ estante, materiais, onClose }: {
         </div>
         <div className="loja-detail">
           <div style={{ marginBottom: 32 }}>
-            <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: accent.base, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>◆ Estante</div>
+            <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: accent.base, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>Estante</div>
             <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.03em", color: "var(--white)" }}>{estante.label}</div>
             <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{materiais.length} materiais disponíveis</div>
           </div>
@@ -187,7 +187,7 @@ export default function MateriaisContent({
     <>
       {showHero && (
         <div className="loja-hero pg-wrap">
-          <div className="loja-hero-tag">◆ Materiais editáveis</div>
+          <div className="loja-hero-tag">Materiais editáveis</div>
           <h1 className="loja-hero-title">
             Para <em>ministrar.</em><br />Para <em>liderar.</em>
           </h1>
@@ -340,7 +340,7 @@ export default function MateriaisContent({
             flexWrap: "wrap",
           }}>
             <div>
-              <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--olive)", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>◆ Quer ir além do material pronto?</div>
+              <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--olive)", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>Quer ir além do material pronto?</div>
               <p style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--white)" }}>
                 Precisa de formação ao vivo, não só de material pronto?
               </p>

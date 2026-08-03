@@ -67,9 +67,9 @@ export default function EventoShare({ event, ministries, churchName = "Service",
 
   const copiarTexto = () => {
     const L: string[] = [];
-    L.push(`◆ ${event.name.toUpperCase()}`);
+    L.push(`${event.name.toUpperCase()}`);
     L.push(`${event.weekday}${dataFmt ? " · " + dataFmt : ""} · ${event.time}`);
-    L.push(`◇ ${event.location}`);
+    L.push(`${event.location}`);
     if (envolvidos.length) {
       L.push("");
       if (completa) {
@@ -145,7 +145,7 @@ export default function EventoShare({ event, ministries, churchName = "Service",
               </div>
               <div className="evt2-nome">{event.name}</div>
               <div className="evt2-hora">{event.time}</div>
-              <div className="evt2-local">◇ {event.location}</div>
+              <div className="evt2-local">{event.location}</div>
             </div>
 
             {/* programação */}
@@ -273,7 +273,7 @@ export default function EventoShare({ event, ministries, churchName = "Service",
             style={{ width: "100%", justifyContent: "center", marginTop: 10 }}
             onClick={copiarTexto}
           >
-            ◇ Copiar texto p/ WhatsApp
+            Copiar texto p/ WhatsApp
           </button>
           <button
             className="btn btn-ghost"

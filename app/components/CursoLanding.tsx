@@ -15,9 +15,9 @@ function SecMark({ label, accent }: { label: string; accent: string }) {
     <div style={{
       fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.16em",
       textTransform: "uppercase", color: accent,
-      display: "inline-flex", alignItems: "center", gap: 9, marginBottom: 22,
+      display: "inline-flex", alignItems: "center", marginBottom: 22,
     }}>
-      <span style={{ fontSize: 8 }}>◆</span> {label}
+      {label}
     </div>
   );
 }
@@ -87,7 +87,7 @@ function RelatedCourseCard({ curso, accent }: { curso: CursoDado; accent: string
     >
       <div className="ld-dark-panel ld-rcard-art" style={{ background: "#0E110D" }}>
         <span className="ld-rcard-eyebrow" style={{ color: accent }}>
-          <span style={{ fontSize: 7 }}>◆</span>{NIVEIS.find(n => n.key === curso.nivel)?.label ?? "Curso"}
+          {NIVEIS.find(n => n.key === curso.nivel)?.label ?? "Curso"}
         </span>
         <span className="ld-rcard-title">{curso.title}</span>
       </div>
@@ -136,7 +136,7 @@ export default function CursoLanding({
               <span style={{
                 fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.14em",
                 textTransform: "uppercase", color: ac,
-              }}>◆ {nivel.label}</span>
+              }}>{nivel.label}</span>
               <span style={{
                 fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.10em",
                 textTransform: "uppercase", background: ac,
@@ -162,7 +162,7 @@ export default function CursoLanding({
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 26 }}>
               <span className="ld-tag">{curso.dur}</span>
               <span className="ld-tag-fmt" style={{ color: ac, borderColor: `${ac}55` }}>
-                <span style={{ fontSize: 7 }}>◆</span> Ao vivo
+                Ao vivo
               </span>
             </div>
 
@@ -190,7 +190,6 @@ export default function CursoLanding({
               color: "var(--muted)", marginTop: 16,
               display: "flex", alignItems: "center", gap: 8,
             }}>
-              <span style={{ color: ac }}>◇</span>
               Vagas limitadas · Mentoria inclusa · Sem cobrança agora
             </div>
           </div>
@@ -217,7 +216,7 @@ export default function CursoLanding({
             textTransform: "uppercase", color: "var(--muted)",
             marginTop: 26, display: "inline-flex", gap: 10, alignItems: "center",
           }}>
-            <span style={{ color: ac }}>◇</span> Tese CE.X · Campus Expansão
+            Tese CE.X · Campus Expansão
           </div>
         </div>
       </div>
@@ -408,7 +407,7 @@ export default function CursoLanding({
               fontFamily: "var(--mono)", fontSize: 12,
               letterSpacing: "0.06em", color: "var(--muted)", marginTop: 20,
             }}>
-              ◇ {curso.depoimento.autor} · {curso.depoimento.cargo}
+              {curso.depoimento.autor} · {curso.depoimento.cargo}
             </cite>
           </blockquote>
         </div>
@@ -420,7 +419,7 @@ export default function CursoLanding({
           <div style={{
             fontFamily: "var(--mono)", fontSize: 12, letterSpacing: "0.16em",
             textTransform: "uppercase", color: "rgba(14,17,13,.6)",
-          }}>◆ Campus Expansão</div>
+          }}>Campus Expansão</div>
           <div style={{
             fontSize: "clamp(34px, 6vw, 64px)", fontWeight: 800,
             letterSpacing: "-0.04em", lineHeight: 0.98,
@@ -484,7 +483,6 @@ export default function CursoLanding({
                 fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.04em",
                 color: "var(--muted)", maxWidth: 230, textAlign: "right", lineHeight: 1.5,
               }}>
-                <span style={{ color: ac }}>◇ </span>
                 Você é avisado primeiro. As vagas abrem só pra lista.
               </div>
             </div>
@@ -574,7 +572,6 @@ export default function CursoLanding({
                     fontSize: 19, fontWeight: 600, letterSpacing: "-0.02em",
                     color: "var(--cream)", display: "flex", gap: 12, alignItems: "baseline",
                   }}>
-                    <span style={{ color: ac, fontFamily: "var(--mono)", fontSize: 13, flexShrink: 0 }}>◆</span>
                     {f.q}
                   </div>
                   <div style={{
@@ -613,7 +610,6 @@ export default function CursoLanding({
             fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.04em",
             color: "var(--muted)", marginTop: 18,
           }}>
-            <span style={{ color: ac }}>◇ </span>
             Sem compromisso agora. As vagas abrem primeiro pra lista.
           </div>
         </div>

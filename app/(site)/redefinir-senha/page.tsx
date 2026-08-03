@@ -83,7 +83,7 @@ export default function RedefinirSenhaPage() {
             color: "var(--olive)", fontFamily: "var(--mono)", fontSize: 11,
             letterSpacing: "0.14em", textTransform: "uppercase", margin: "0 0 10px",
           }}>
-            ◆ Acesso CE.X
+            Acesso CE.X
           </p>
           <h1 style={{
             color: "var(--cream)", fontSize: 28, lineHeight: 1.05,

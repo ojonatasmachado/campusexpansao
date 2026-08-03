@@ -38,8 +38,8 @@ export default async function PerfilCompraPage({ params }: { params: Promise<{ s
       <main className={styles.access}>
         <section className={`pg-wrap ${styles.hero}`}>
           <div className={styles.copy}>
-            <Link href="/perfil" className={styles.backLink}>Voltar para minhas compras</Link>
-            <p className={styles.eyebrow}>◆ Compra liberada</p>
+            <Link href="/perfil" className={`btn btn-secondary btn-sm ${styles.backLink}`}>← Voltar para minhas compras</Link>
+            <p className={styles.eyebrow}>Compra liberada</p>
             <h1 className={styles.title}>{compra.material.titulo}</h1>
             <p className={styles.desc}>{compra.material.promessa}</p>
 
@@ -77,7 +77,6 @@ export default async function PerfilCompraPage({ params }: { params: Promise<{ s
 
         <section className={`pg-wrap ${styles.summarySection}`} aria-labelledby="resumo-title">
           <article className={styles.summaryBand}>
-            <span className={styles.summaryMark} aria-hidden="true">◆</span>
             <div>
               <p className="psec-eyebrow">§ 01 · Resumo</p>
               <h2 id="resumo-title" className={styles.sectionTitle}>O que este material entrega</h2>

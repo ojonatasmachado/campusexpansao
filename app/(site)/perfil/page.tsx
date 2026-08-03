@@ -29,7 +29,7 @@ export default async function PerfilPage() {
       <main className={styles.profile}>
         <section className={`pg-wrap ${styles.hero}`}>
           <div>
-            <p className={styles.eyebrow}>◆ Perfil</p>
+            <p className={styles.eyebrow}>Perfil</p>
             <h1 className={styles.title}>Minhas compras</h1>
             <p className={styles.desc}>
               Seus materiais comprados ficam organizados em um só lugar para abrir, retomar e continuar usando no ministério.
@@ -65,7 +65,7 @@ export default async function PerfilPage() {
             </div>
           ) : (
             <div className={styles.emptyState}>
-              <p className={styles.emptyKicker}>◆ Nenhuma compra liberada</p>
+              <p className={styles.emptyKicker}>Nenhuma compra liberada</p>
               <h3>Quando você comprar um material, ele aparece aqui.</h3>
               <p>
                 Entre, escolha um material no catálogo e use o botão Comprar para liberar o acesso

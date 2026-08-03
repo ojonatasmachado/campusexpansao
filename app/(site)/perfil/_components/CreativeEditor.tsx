@@ -1020,14 +1020,14 @@ export function CreativeEditor({ mode, material, accent, backHref, templates = [
       <header className={styles.top}>
         <a href={backHref} className={styles.back}>Voltar ao material</a>
         <div>
-          <p>◆ Editor visual</p>
+          <p>Editor visual</p>
           <h1>{title}</h1>
         </div>
       </header>
 
       <section className={styles.editor}>
         <aside className={styles.panel}>
-          <p className={styles.sec}>◆ Modelo</p>
+          <p className={styles.sec}>Modelo</p>
           <div className={styles.models}>
             {models.map((item) => (
               <button key={item.id} data-on={scene.model === item.id ? "1" : "0"} onClick={() => chooseModel(item.id)}>
@@ -1037,13 +1037,13 @@ export function CreativeEditor({ mode, material, accent, backHref, templates = [
             ))}
           </div>
 
-          <p className={styles.sec}>◆ Edição <span>use a barra sobre a arte</span></p>
+          <p className={styles.sec}>Edição <span>use a barra sobre a arte</span></p>
           <p className={styles.help}>
             Clique para selecionar. Clique novamente ou dê dois cliques para editar o texto. Arraste para mover. Use Ctrl+C, Ctrl+V, Delete e setas para posicionar.
           </p>
           <input ref={fileRef} className={styles.file} type="file" accept="image/*" onChange={(event) => setBackgroundPhoto(event.target.files?.[0])} />
 
-          <p className={styles.sec}>◆ Filtro da foto <span>arraste a foto para mover</span></p>
+          <p className={styles.sec}>Filtro da foto <span>arraste a foto para mover</span></p>
           <div className={styles.effects}>
             {PHOTO_EFFECTS.map((item) => (
               <button
@@ -1058,7 +1058,7 @@ export function CreativeEditor({ mode, material, accent, backHref, templates = [
             ))}
           </div>
 
-          <p className={styles.sec}>◆ Efeito visual <span>camada sobre a arte</span></p>
+          <p className={styles.sec}>Efeito visual <span>camada sobre a arte</span></p>
           <div className={styles.effects}>
             {VISUAL_EFFECTS.map((item) => (
               <button
@@ -1334,7 +1334,6 @@ export function CreativeEditor({ mode, material, accent, backHref, templates = [
                       }}
                       onDoubleClick={() => setEditingId(item.id)}
                     >
-                      {item.gem ? <span className={styles.gem}>◆ </span> : null}
                       <span
                         className={styles.boxText}
                         contentEditable={isEditing}

@@ -40,7 +40,7 @@ export default function ThemedLoginForm({ data }: { data: ChurchPageData }) {
             {data.pagina.logoMode !== "texto" && <h1 className="cx-name">{data.name}</h1>}
           </header>
 
-          <p className="cx-login-eyebrow">◆ Acesso da equipe</p>
+          <p className="cx-login-eyebrow">Acesso da equipe</p>
 
           <form className="cx-form" onSubmit={handleSubmit}>
             <label className="cx-field">

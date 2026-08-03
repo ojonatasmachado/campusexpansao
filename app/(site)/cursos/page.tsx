@@ -17,7 +17,7 @@ export default async function Cursos() {
 
       {/* HERO : mesma estrutura da página de Materiais */}
       <div className="loja-hero pg-wrap" style={{ paddingTop: 80, paddingBottom: 56 }}>
-        <div className="loja-hero-tag">◆ Formação ao vivo</div>
+        <div className="loja-hero-tag">Formação ao vivo</div>
         <h1 className="loja-hero-title">
           Cursos &amp;<br />Mentorias
         </h1>
@@ -45,7 +45,7 @@ export default async function Cursos() {
           flexWrap: "wrap",
         }}>
           <div>
-            <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--olive)", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>◆ Comece antes da próxima turma</div>
+            <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--olive)", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>Comece antes da próxima turma</div>
             <p style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--white)", margin: 0 }}>
               Quer começar agora, sem esperar turma?
             </p>
@@ -58,7 +58,7 @@ export default async function Cursos() {
       <div className="pg-wrap" style={{ paddingBottom: 80 }}>
         <div className="cta-block">
           <div className="cta-x">X</div>
-          <div className="cta-eyebrow">◆ Próxima turma</div>
+          <div className="cta-eyebrow">Próxima turma</div>
           <h2 className="cta-title">Garanta sua <em>vaga.</em></h2>
           <p className="cta-desc">As turmas ao vivo são limitadas. Entre na lista de espera e seja avisado primeiro.</p>
           <div className="cta-actions">

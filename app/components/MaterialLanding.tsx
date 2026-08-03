@@ -56,7 +56,7 @@ function Poster({ etiqueta, titulo, code, faixa, formato, accent }: {
           textTransform: "uppercase", color: accent,
           display: "inline-flex", gap: 7, alignItems: "center",
         }}>
-          <span style={{ fontSize: 8 }}>◆</span>{etiqueta}
+          {etiqueta}
         </span>
         {code && (
           <span style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.1em", color: "#555650" }}>
@@ -92,9 +92,9 @@ function SecMark({ label, accent }: { label: string; accent: string }) {
     <div style={{
       fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.16em",
       textTransform: "uppercase", color: accent,
-      display: "inline-flex", alignItems: "center", gap: 9, marginBottom: 22,
+      display: "inline-flex", alignItems: "center", marginBottom: 22,
     }}>
-      <span style={{ fontSize: 8 }}>◆</span> {label}
+      {label}
     </div>
   );
 }
@@ -188,7 +188,7 @@ function RelatedMaterialCard({ material, accent }: { material: DbMaterial; accen
     >
       <div className="ld-dark-panel ld-rcard-art" style={{ background: "#0E110D" }}>
         <span className="ld-rcard-eyebrow" style={{ color: accent }}>
-          <span style={{ fontSize: 7 }}>◆</span>{material.etiqueta}
+          {material.etiqueta}
         </span>
         <span className="ld-rcard-title">{material.titulo}</span>
       </div>
@@ -298,7 +298,7 @@ export default function MaterialLanding({
                 )}
                 {formatos.map(f => (
                   <span key={f} className="ld-tag-fmt" style={{ color: ac, borderColor: `${ac}55` }}>
-                    <span style={{ fontSize: 7 }}>◆</span> {f}
+                    {f}
                   </span>
                 ))}
               </div>
@@ -324,7 +324,6 @@ export default function MaterialLanding({
                 color: "var(--muted)", marginTop: 16,
                 display: "flex", alignItems: "center", gap: 8,
               }}>
-                <span style={{ color: ac }}>◇</span>
                 Liberação imediata · {formatos.slice(0, 2).join(" · ")} · no seu perfil
               </div>
             </div>
@@ -353,7 +352,7 @@ export default function MaterialLanding({
             textTransform: "uppercase", color: "var(--muted)",
             marginTop: 26, display: "inline-flex", gap: 10, alignItems: "center",
           }}>
-            <span style={{ color: ac }}>◇</span> Tese CE.X · Campus Expansão
+            Tese CE.X · Campus Expansão
           </div>
         </div>
       </div>
@@ -447,7 +446,7 @@ export default function MaterialLanding({
                         fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.1em",
                         textTransform: "uppercase", color: ac,
                       }}>
-                        ◆ {contentKindLabel(content)}
+                        {contentKindLabel(content)}
                       </span>
                     </div>
                     {content.note && (
@@ -555,7 +554,7 @@ export default function MaterialLanding({
           <div style={{
             fontFamily: "var(--mono)", fontSize: 12, letterSpacing: "0.16em",
             textTransform: "uppercase", color: "rgba(14,17,13,.6)",
-          }}>◆ Campus Expansão</div>
+          }}>Campus Expansão</div>
           <div style={{
             fontSize: "clamp(34px, 6vw, 64px)", fontWeight: 800,
             letterSpacing: "-0.04em", lineHeight: 0.98,
@@ -614,7 +613,6 @@ export default function MaterialLanding({
                 fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.04em",
                 color: "var(--muted)", maxWidth: 230, textAlign: "right", lineHeight: 1.5,
               }}>
-                <span style={{ color: ac }}>◇ </span>
                 Liberação imediata no seu perfil. Compra única e acesso vitalício.
               </div>
             </div>
@@ -701,7 +699,6 @@ export default function MaterialLanding({
                     fontSize: 19, fontWeight: 600, letterSpacing: "-0.02em",
                     color: "var(--cream)", display: "flex", gap: 12, alignItems: "baseline",
                   }}>
-                    <span style={{ color: ac, fontFamily: "var(--mono)", fontSize: 13, flexShrink: 0 }}>◆</span>
                     {f.q}
                   </div>
                   <div style={{
@@ -741,7 +738,6 @@ export default function MaterialLanding({
             fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.04em",
             color: "var(--muted)", marginTop: 18,
           }}>
-            <span style={{ color: ac }}>◇ </span>
             Liberação imediata no seu perfil. Compra única, acesso vitalício.
           </div>
         </div>

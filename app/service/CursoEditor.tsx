@@ -699,7 +699,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
                       onClick={() => setQuiz({ mi, ai })}
                     >
                       {aula.prova?.length
-                        ? `◆ Prova · ${aula.prova.length} pergunta(s)${aula.minAcertos ? ` · min. ${aula.minAcertos}` : ""}`
+                        ? `Prova · ${aula.prova.length} pergunta(s)${aula.minAcertos ? ` · min. ${aula.minAcertos}` : ""}`
                         : "+ Adicionar prova ao fim da aula"}
                     </button>
                   </div>

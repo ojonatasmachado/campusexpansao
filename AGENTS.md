@@ -75,7 +75,7 @@ handoff/CSS deriva daqui, ninguém redefine hex em outro lugar.
 > acima — `sand, wheat, amber, clay, terra, rust, cocoa, olive` — são as **únicas** opções
 > que o seletor de cor do admin mostra (swatches travados, **sem picker livre de hex**).
 
-- A cor **codifica a estante** e entra **só como acento** (borda-topo do card, etiqueta ◆,
+- A cor **codifica a estante** e entra **só como acento** (borda-topo do card, etiqueta,
   número, selo, bolinha, hover). **Nunca** pinta o fundo do card (exceção única: bloco do
   Modelo B, 1 por fileira — §4).
 - **Nunca inventar cor fora desta lista.** Mapeamento de cores antigas → canônicas:
@@ -194,11 +194,13 @@ Tabela de estantes (estado inicial — editável no admin):
 
 ## 8. Tipografia semiótica e travessões
 
-- **Marca de seção sempre `◆`** (mono, caixa-alta, espaçada, cor de acento). **Nunca `—`.**
+- **Sem losango.** `◆` e `◇` foram **extintos** da identidade visual (decisão de
+  2026-08-03). Cabeçalho/etiqueta de seção usa só texto: mono, caixa-alta,
+  espaçado, cor de acento — sem símbolo na frente. **Nunca `—`.**
 - **Zero travessão renderizado:** o caractere `—` (em dash) e `–` (en dash) **não podem
   existir** em nada visível. Reescreva frases com ponto, vírgula ou dois-pontos.
 - **Manter** o ponto-do-meio `·` (ex. "PDF · 64 páginas") e as setas `→`.
-- **Sem emoji.** Marcas permitidas: `◆ ◇ → §` e a bolinha `●` (só no selo AO VIVO).
+- **Sem emoji.** Marcas permitidas: `→ §` e a bolinha `●` (só no selo AO VIVO).
 
 ---
 
@@ -227,7 +229,7 @@ Este arquivo é a **lei**. O **como executar cada tarefa** está em:
 4. Acento colore **detalhes**, nunca o fundo do card (exceto bloco do Modelo B, 1 por fileira).
 5. Texto sobre acento é sempre tinta escura `#0E110D`.
 6. **Oliva ≤ 15%** (só Jovens + marca).
-7. **Zero `—`/`–`** renderizado. Marca de seção sempre `◆`. Manter `·` e `→`. Sem emoji.
+7. **Zero `—`/`–`** renderizado. **Sem losango** (`◆`/`◇` extintos). Manter `·` e `→`. Sem emoji.
 8. Logo `CE.X` = `CE` 700 + `.X` 700 oliva, sem itálico. Fonte Inter, não trocar.
 9. Mobile-first. Estante vazia não renderiza. Rascunho não aparece no site.
 

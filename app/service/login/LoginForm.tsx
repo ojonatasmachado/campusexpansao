@@ -26,7 +26,7 @@ export default function ServiceLoginForm() {
             </Link>
 
             <p className="eyebrow" style={{ color: "var(--wheat)", marginTop: 28 }}>
-              ◆ SERVICE · ACESSO
+              SERVICE · ACESSO
             </p>
             <h1 className="t-h1" style={{ color: "var(--cream)", marginTop: 12 }}>
               {mode === "login" ? "Entrar no Service" : "Criar conta do Service"}

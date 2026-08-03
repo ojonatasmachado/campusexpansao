@@ -94,7 +94,7 @@ export function CursosNiveis({ dbCursos, dbMentorias }: { dbCursos?: DbCurso[]; 
         return (
           <div key={nivel.key} className="loja-shelf">
             <div className="loja-shelf-head">
-              <span className="loja-shelf-name" style={{ color: accent.base }}>◆ {nivel.label}</span>
+              <span className="loja-shelf-name" style={{ color: accent.base }}>{nivel.label}</span>
               <span className="loja-shelf-count">· {cursosDoNivel.length} {cursosDoNivel.length === 1 ? "curso" : "cursos"}</span>
             </div>
             <div className="loja-shelf-grid">
@@ -106,7 +106,7 @@ export function CursosNiveis({ dbCursos, dbMentorias }: { dbCursos?: DbCurso[]; 
       {mentorias.length > 0 && (
         <div className="loja-shelf">
           <div className="loja-shelf-head">
-            <span className="loja-shelf-name" style={{ color: 'var(--olive)' }}>◆ Mentorias</span>
+            <span className="loja-shelf-name" style={{ color: 'var(--olive)' }}>Mentorias</span>
             <span className="loja-shelf-count">· {mentorias.length} {mentorias.length === 1 ? 'mentoria' : 'mentorias'}</span>
           </div>
           <div className="loja-shelf-grid">

@@ -28,9 +28,8 @@
 .row--first { margin-top:40px; }
 .row-head { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:20px; }
 .row-id { display:flex; flex-direction:column; gap:6px; min-width:0; }
-.row-name { font-size:20px; font-weight:600; letter-spacing:-0.02em; color:var(--cream); display:inline-flex; align-items:center; gap:11px; white-space:nowrap; }
-.row-name::before { content:'◆'; font-size:11px; color:var(--cat,var(--olive)); }
-.row-sub { font-family:var(--mono); font-size:12px; letter-spacing:0.04em; color:var(--muted); padding-left:23px; }
+.row-name { font-size:20px; font-weight:600; letter-spacing:-0.02em; color:var(--cream); display:inline-flex; align-items:center; white-space:nowrap; }
+.row-sub { font-family:var(--mono); font-size:12px; letter-spacing:0.04em; color:var(--muted); padding-left:0; }
 .row-tools { display:flex; align-items:center; gap:16px; flex:none; }
 .row-all { font-family:var(--mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color .15s; white-space:nowrap; }
 .row-all:hover { color:var(--cat,var(--olive)); }
@@ -47,8 +46,7 @@
 .mcard { flex:0 0 254px; scroll-snap-align:start; display:flex; flex-direction:column; height:362px; background:var(--graphite); border:0.5px solid var(--border-2); border-top:2px solid var(--cat,var(--olive)); border-radius:12px; overflow:hidden; text-decoration:none; color:inherit; transition:transform .2s,border-color .2s,box-shadow .2s; }
 .mcard:hover { transform:translateY(-5px); border-color:var(--cat,var(--olive)); box-shadow:0 18px 40px -22px var(--cat,var(--olive)); }
 .art { flex:1; position:relative; display:flex; flex-direction:column; padding:18px; box-sizing:border-box; }
-.cat { font-family:var(--mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cat,var(--olive)); display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
-.cat::before { content:'◆'; font-size:7px; }
+.cat { font-family:var(--mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cat,var(--olive)); display:inline-flex; align-items:center; white-space:nowrap; }
 .code { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; color:var(--subtle); white-space:nowrap; }
 .cap { display:flex; justify-content:space-between; align-items:flex-start; }
 .ttl { font-size:29px; font-weight:800; letter-spacing:-0.035em; line-height:0.95; color:var(--cream); text-wrap:balance; }
@@ -63,7 +61,7 @@
 /* Modelo B · bloco de cor (ÚNICA exceção que pinta cor cheia; máx 1 por fileira) */
 .m-b .art { background:var(--ink); padding:0; justify-content:flex-start; }
 .block { background:var(--cat,var(--olive)); padding:14px 18px; display:flex; justify-content:space-between; align-items:center; }
-.block .cat { color:var(--ink); } .block .cat::before { color:var(--ink); }
+.block .cat { color:var(--ink); }
 .block .code { color:rgba(14,17,13,0.55); }
 .bbody { flex:1; padding:18px; display:flex; align-items:flex-end; }
 .bbody .ttl { font-size:27px; }
@@ -80,8 +78,7 @@
 .ccard:hover { transform:translateY(-5px); border-color:var(--cat,var(--olive)); box-shadow:0 18px 40px -22px var(--cat,var(--olive)); }
 .ccard-art { flex:1; padding:18px; display:flex; flex-direction:column; background-image:linear-gradient(var(--border) 1px,transparent 1px); background-size:100% 38px; }
 .ccard-top { display:flex; justify-content:space-between; align-items:flex-start; }
-.ccard-level { font-family:var(--mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cat,var(--olive)); display:inline-flex; align-items:center; gap:6px; }
-.ccard-level::before { content:'◆'; font-size:9px; }
+.ccard-level { font-family:var(--mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cat,var(--olive)); display:inline-flex; align-items:center; }
 /* Selo AO VIVO = ÚNICO bloco de cor sólida do card */
 .live { display:inline-flex; align-items:center; gap:6px; background:var(--cat,var(--olive)); color:var(--ink); font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; padding:5px 9px; border-radius:4px; }
 .live::before { content:''; width:5px; height:5px; border-radius:50%; background:var(--ink); }

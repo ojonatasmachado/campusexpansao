@@ -886,7 +886,7 @@ html[data-theme="light"] .loja-filter-bar--section .loja-filter-btn.ativo {
 }
 .cex-card:hover { transform: translateY(-3px); border-color: var(--cex-accent, #7A9E3F); position: relative; z-index: 2; }
 
-/* ── EYEBROW: ◆ label (geral) ── */
+/* ── EYEBROW: label de seção, só texto (geral) ── */
 .cex-eyebrow {
   font-family: var(--mono);
   font-size: 11px;
@@ -895,21 +895,16 @@ html[data-theme="light"] .loja-filter-bar--section .loja-filter-btn.ativo {
   color: var(--cex-accent, #7A9E3F);
   display: flex;
   align-items: center;
-  gap: 8px;
 }
-.cex-eyebrow::before { content: '◆'; font-size: 9px; }
 
 /* eyebrow sobre cor cheia (modelo B) — tinta escura */
 .cex-eyebrow-dark { color: #0E110D; font-weight: 500; }
-.cex-eyebrow-dark::before { color: #0E110D; }
 
 /* eyebrow areia (modelo C) */
 .cex-eyebrow-sand { color: #C9BFA0; }
-.cex-eyebrow-sand::before { color: #C9BFA0; }
 
 /* eyebrow cream (modelo D) */
 .cex-eyebrow-cream { color: #F6F1E0; }
-.cex-eyebrow-cream::before { color: #F6F1E0; }
 
 /* ── CODE · canto superior direito ── */
 .cex-code { font-family: var(--mono); font-size: 10px; color: #555650; letter-spacing: 0.08em; }
@@ -1109,8 +1104,7 @@ html[data-theme="light"] .loja-modal-bar {
 .loja-detail-sec-label { font-family: var(--mono); font-size: 10px; color: var(--olive); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 14px; }
 .loja-detail-text { font-size: 15px; color: var(--muted); line-height: 1.7; }
 .loja-detail-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-.loja-detail-list li { font-size: 13px; color: var(--light); padding: 10px 14px; background: var(--card); border: 0.5px solid var(--border-2); border-radius: var(--r-md); display: flex; align-items: center; gap: 10px; }
-.loja-detail-list li::before { content: '◆'; color: var(--olive); font-size: 7px; flex-shrink: 0; }
+.loja-detail-list li { font-size: 13px; color: var(--light); padding: 10px 14px; background: var(--card); border: 0.5px solid var(--border-2); border-radius: var(--r-md); display: flex; align-items: center; }
 .loja-detail-formatos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .loja-detail-formato { font-family: var(--mono); font-size: 10px; color: var(--olive); border: 0.5px solid var(--olive-line); padding: 5px 12px; border-radius: var(--r-pill); letter-spacing: 0.06em; text-transform: uppercase; }
 .loja-detail-preco-block { display: flex; align-items: center; gap: 24px; padding: 24px; background: var(--card); border: 0.5px solid var(--olive-line); border-radius: var(--r-lg); }
@@ -1162,9 +1156,7 @@ html[data-theme="light"] .loja-modal-bar {
   color: var(--cex-ac, #7A9E3F);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
 }
-.cex-course__eyebrow::before { content: '◆'; font-size: 9px; }
 
 .cex-live {
   display: inline-flex;

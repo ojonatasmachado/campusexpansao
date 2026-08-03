@@ -112,7 +112,7 @@ export function DocumentEditor({ material, mensagem, status, templates = [] }: D
   return (
     <div className={styles.wrap}>
       <aside className={styles.panel}>
-        <p className={styles.sec}>◆ Editor do documento</p>
+        <p className={styles.sec}>Editor do documento</p>
         <p className={styles.help}>
           Clique direto no documento para alterar os textos. A moldura visual permanece travada.
         </p>
@@ -171,7 +171,7 @@ export function DocumentEditor({ material, mensagem, status, templates = [] }: D
       <section className={styles.stage} aria-label="Documento editável">
         <div className={styles.docPage} id="doc-page" ref={docRef}>
           <div className={styles.docTop}>
-            <div className={styles.docBrand}>◆ {mensagem.meta.toUpperCase()}</div>
+            <div className={styles.docBrand}>{mensagem.meta.toUpperCase()}</div>
             <div className={styles.docChurch} contentEditable suppressContentEditableWarning>
               CE.X
               <br />

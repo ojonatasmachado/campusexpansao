@@ -159,7 +159,7 @@ export function CheckinLanding({
             <Logo />
           </div>
           <div className="ck-land-event">
-            <div className="ck-land-ey">◆ Check-in de voluntário</div>
+            <div className="ck-land-ey">Check-in de voluntário</div>
             <div className="ck-land-name">{event.name}</div>
             <div className="ck-land-when">
               {event.weekday} {formatDateBR(event.eventDate)} · {event.time} · {event.location}
@@ -504,7 +504,7 @@ export function QRCheckinModal({
       .qr-wrap{width:340px;height:340px;background:#fff;padding:20px;box-sizing:border-box;margin:0 auto}
       h1{font-size:30px;margin:22px 0 6px}p{color:#555;font-size:17px}.cex{margin-top:30px;font-weight:700;font-size:18px}.in{margin-top:8px;font-size:13px;color:#888}</style>
       </head><body>
-      <div class="ey">◆ Check-in de voluntários</div>
+      <div class="ey">Check-in de voluntários</div>
       <div class="qr-wrap"><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(checkinLink)}" style="width:300px;height:300px"/></div>
       <h1>${event.name}</h1><p>${event.weekday} ${formatDateBR(event.eventDate)} · ${event.time} · ${event.location}</p>
       <p class="in">Escaneie com a câmera do celular e confirme sua presença no app.</p>
@@ -573,7 +573,7 @@ export function QRCheckinModal({
         <div className="modal wide" onClick={(e) => e.stopPropagation()}>
           <div className="modal-head">
             <div className="modal-eyebrow">
-              ◆ Check-in · {event.weekday} {formatDateBR(event.eventDate)} · {event.time}
+              Check-in · {event.weekday} {formatDateBR(event.eventDate)} · {event.time}
             </div>
             <div className="modal-title">{event.name}</div>
             <div className="modal-sub">

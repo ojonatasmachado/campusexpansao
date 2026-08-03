@@ -47,7 +47,7 @@ export default async function CompraConcluidaPage({
                 textTransform: "uppercase",
               }}
             >
-              ◆ Compra liberada
+              Compra liberada
             </p>
             <h1
               style={{

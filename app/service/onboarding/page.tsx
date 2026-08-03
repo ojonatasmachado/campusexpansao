@@ -33,7 +33,7 @@ export default async function ServiceOnboardingPage() {
               <Logo />
             </Link>
             <p className="eyebrow" style={{ color: "var(--wheat)", marginTop: 28 }}>
-              ◆ SERVICE · PRIMEIRA IGREJA
+              SERVICE · PRIMEIRA IGREJA
             </p>
             <h1 className="t-h1" style={{ color: "var(--cream)", marginTop: 12 }}>
               Crie a igreja matriz
