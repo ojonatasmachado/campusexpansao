@@ -69,6 +69,7 @@ export type DbMaterialTranslation = {
   mensagens_lista: { nome: string; desc: string }[]
   faq: { q: string; a: string }[]
   keywords: string[]
+  como_usar: string
   created_at: string | null
   updated_at: string | null
 }

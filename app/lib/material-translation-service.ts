@@ -79,6 +79,7 @@ function payloadFromMaterial(material: MaterialRecord): MaterialTranslationPaylo
     mensagens_lista: normalizeMessages(material.mensagens_lista),
     faq: normalizeFaq(material.faq),
     keywords: textArray(material.keywords).map((keyword) => keyword.toLowerCase()),
+    como_usar: text(material.como_usar),
   };
 }
 
@@ -92,6 +93,7 @@ function normalizePayload(payload: Partial<MaterialTranslationPayload>, fallback
     mensagens_lista: normalizeMessages(payload.mensagens_lista).length ? normalizeMessages(payload.mensagens_lista) : fallback.mensagens_lista,
     faq: normalizeFaq(payload.faq).length ? normalizeFaq(payload.faq) : fallback.faq,
     keywords: textArray(payload.keywords).length ? textArray(payload.keywords).map((keyword) => keyword.toLowerCase()) : fallback.keywords,
+    como_usar: text(payload.como_usar) || fallback.como_usar,
   };
 }
 
@@ -125,7 +127,7 @@ function promptForMaterial(payload: MaterialTranslationPayload) {
     "Retorne translations somente com os idiomas diferentes de sourceLocale.",
     "Responda somente JSON válido, sem markdown.",
     "Formato exato quando o original for pt:",
-    '{"sourceLocale":"pt","translations":{"en":{"titulo":"","promessa":"","pra_quem":"","conteudo":[],"contents":[],"mensagens_lista":[],"faq":[],"keywords":[]},"es":{"titulo":"","promessa":"","pra_quem":"","conteudo":[],"contents":[],"mensagens_lista":[],"faq":[],"keywords":[]}}}',
+    '{"sourceLocale":"pt","translations":{"en":{"titulo":"","promessa":"","pra_quem":"","conteudo":[],"contents":[],"mensagens_lista":[],"faq":[],"keywords":[],"como_usar":""},"es":{"titulo":"","promessa":"","pra_quem":"","conteudo":[],"contents":[],"mensagens_lista":[],"faq":[],"keywords":[],"como_usar":""}}}',
     `Idiomas: ${Object.entries(LOCALE_NAMES).map(([key, label]) => `${key}=${label}`).join(", ")}`,
     `Conteúdo original: ${JSON.stringify(payload)}`,
   ].join("\n");
@@ -195,6 +197,7 @@ export async function ensureMaterialTranslations(material: MaterialRecord) {
         mensagens_lista: payload.mensagens_lista,
         faq: payload.faq,
         keywords: payload.keywords,
+        como_usar: payload.como_usar,
         updated_at: new Date().toISOString(),
       } satisfies Omit<DbMaterialTranslation, "id" | "created_at">;
     });

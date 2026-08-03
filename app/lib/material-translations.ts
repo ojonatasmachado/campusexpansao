@@ -6,7 +6,7 @@ type TranslationMap = Map<string, DbMaterialTranslation>;
 
 export type MaterialTranslationPayload = Pick<
   DbMaterialTranslation,
-  "titulo" | "promessa" | "pra_quem" | "conteudo" | "contents" | "mensagens_lista" | "faq" | "keywords"
+  "titulo" | "promessa" | "pra_quem" | "conteudo" | "contents" | "mensagens_lista" | "faq" | "keywords" | "como_usar"
 >;
 
 export function applyMaterialTranslation(
@@ -24,6 +24,7 @@ export function applyMaterialTranslation(
     mensagens_lista: translation.mensagens_lista?.length ? translation.mensagens_lista : material.mensagens_lista,
     faq: translation.faq?.length ? translation.faq : material.faq,
     keywords: translation.keywords?.length ? translation.keywords : material.keywords,
+    como_usar: translation.como_usar || material.como_usar,
   };
 }
 
