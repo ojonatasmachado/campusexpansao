@@ -10,7 +10,7 @@ import { useServiceLoginForm } from "../../service/login/useServiceLoginForm";
 /* UI do login temático, em cima do mesmo useServiceLoginForm do login
    genérico (app/service/login/LoginForm.tsx) : zero duplicação da lógica de
    autenticação, só uma casca visual diferente (--cx-* em vez do CSS do
-   Service). --cx-accent vem de data.serviceAccent (brandCfg.accentDark),
+   Service). --cx-accent vem de data.serviceAccent (brandCfg.accent, ou accentDark legado),
    não de data.pagina.accentColor : login usa a cor do Service, não o
    override da Página pública. Só "Entrar" : criar conta aqui abriria uma
    organização nova sem relação com esta igreja. */

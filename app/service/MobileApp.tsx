@@ -5,7 +5,6 @@ import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon } from "./lib/icons";
 import { formatDateBR } from "./lib/date";
 import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
-import Logo from "../components/Logo";
 import { PhotoPicker } from "./PhotoPicker";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
@@ -273,7 +272,7 @@ function TabInicio({
         >
           <span
             className="m-alert-ic"
-            style={lateTasks.length ? undefined : { background: "var(--olive)", color: "var(--ink)" }}
+            style={lateTasks.length ? undefined : { background: "var(--olive)", color: "var(--accent-ink)" }}
           >
             <Icon name={lateTasks.length ? "alerta" : "ok"} size={15} />
           </span>
@@ -2031,7 +2030,7 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
         <div className="ob-welcome">
           <div className="ob-mark"><Icon name="ok" size={28} /></div>
           <div className="ob-welcome-x">
-            Seu acesso foi liberado. Antes de comecar, confirme seus dados, escolha uma foto e crie sua senha.
+            Seu acesso foi liberado. Antes de começar, confirme seus dados e escolha uma foto.
           </div>
         </div>
       ),
@@ -2111,8 +2110,8 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
           {churchLogoUrl ? (
             <img src={churchLogoUrl} alt={churchName || "Logo da igreja"} style={{ height: 22, maxWidth: 140, objectFit: "contain" }} />
           ) : (
-            <span style={{ fontSize: 18, letterSpacing: -0.5 }}>
-              <Logo />
+            <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--white)" }}>
+              {churchName || "Sua igreja"}
             </span>
           )}
           <span style={{ fontSize: 11, color: "var(--muted)", fontFamily: "var(--mono)", marginLeft: 8 }}>Service</span>
@@ -2494,7 +2493,7 @@ function MobileMembro({
           <span>{churchName || "Service"} </span>
         </div>
         <div className="m-head">
-          <div className="m-app">Service · {isRecep ? "Recepcao" : "Voluntario"}</div>
+          <div className="m-app">{churchName ? `${churchName} · Service` : "Service"}</div>
           <div className="m-h1">
             Ola, <em>{person.name.split(" ")[0]}</em>
           </div>
@@ -2619,7 +2618,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
           <>
             <div className="mob-side-eyebrow">Mesma conta · outra superficie</div>
             <h3>
-              O app do <span className="ol">voluntario</span>
+              O app do <span className="ol">membro</span>
             </h3>
             <p>
               O membro acompanha a jornada, confirma escala, resolve tarefas do quadro,

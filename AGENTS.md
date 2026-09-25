@@ -111,6 +111,32 @@ para a página pública link-in-bio de cada igreja no Service (`app/igreja/[slug
 - Não aplicar esta exceção ao site público, admin, catálogo, landing pages ou qualquer
   outra área da solução.
 
+### Exceção: tema da igreja no app do Service (decisão de 2026-09-25)
+
+O Service é uma ferramenta de várias igrejas, e cada igreja deve sentir que o app é dela.
+Por isso **as cores do app do Service (`app/service/**`) são da igreja**, escolhidas pela
+gestão em Configurações → Personalização. Isto substitui, só para o Service, a regra de
+"chrome 100% CE.X" da exceção acima.
+
+- **O que é da igreja:** cor de destaque (qualquer cor), família de neutros do modo escuro
+  e do claro, modo padrão, logo e nome da igreja na marca do app.
+- **O que continua CE.X:** fonte Inter (+ mono nos metadados), estrutura, componentes,
+  espaçamentos, o sufixo **SERVICE** fixo na marca, e as regras de §8 (sem travessão,
+  sem losango, sem emoji).
+- **Neutros não são livres.** A igreja escolhe uma família pronta de
+  `app/service/lib/theme.ts` (`NEUTRAL_FAMILIES`), nunca hex solto. Família nova só entra
+  se passar em `npx tsx scripts/check-theme-contrast.ts`.
+- **A cor de destaque é ajustada pelo sistema** (`adaptAccent`) pra ter contraste mínimo
+  nos dois modos, e o texto sobre ela vem de `--accent-ink`. Nunca escrever `color: var(--ink)`
+  ou `#0E110D` sobre `var(--olive)` no Service: use `var(--accent-ink)`.
+- **No CSS e no código do Service, cor só por variável** (`--ink`, `--graphite`, `--white`,
+  `--muted`, `--olive`...). Nada de hex fixo que prenda o app no verde ou no creme CE.X;
+  derivações usam `color-mix()` sobre as variáveis. O nome `--olive` ficou por
+  compatibilidade: no Service ele significa "cor da igreja".
+- O membro só alterna claro/escuro no próprio app; todo o resto é decidido no admin.
+- O tema é renderizado no servidor com `themeCss()` (sem piscar a cor CE.X). Tela nova do
+  Service que carrega a igreja deve incluir o `<style>` do `themeCss(brandCfg)`.
+
 ---
 
 ## 3. Cor é da ESTANTE — e a estante é EDITÁVEL no admin

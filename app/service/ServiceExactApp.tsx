@@ -6,9 +6,8 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { notifyPush } from "./lib/notify-push";
 import { uploadServiceImage, imageExtension } from "./lib/upload-image";
-import Logo from "../components/Logo";
 import { ICON_PATHS, ICON_CATEGORIES, DEFAULT_ICON, Icon, IconPicker } from "./lib/icons";
-import { deriveAccentVars, isValidHex } from "./lib/color";
+import { THEME_COOKIE, type BrandCfg } from "./lib/theme";
 import { formatDateBR } from "./lib/date";
 import { ageInMonths, suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import type { EnqueteElegivelView } from "./lib/enquetes";
@@ -19,6 +18,7 @@ import { KidsQRModal } from "./KidsCheckin";
 import { PhotoPicker } from "./PhotoPicker";
 import { ImageUpload } from "./ImageUpload";
 import { AccentField } from "./AccentField";
+import ThemePicker from "./ThemePicker";
 import { PublicPageEditor } from "./PublicPageEditor";
 import { LogoField, BackgroundField } from "./IdentidadeFields";
 import { useChurchSettingsField } from "./lib/settings-field";
@@ -82,8 +82,6 @@ type ContatoCfg = { prazoHoras: number; canal: string; metaIntegracaoDias: numbe
    service.churches.settings.brandCfg (mesmo jsonb de sempre). Permite que
    cada igreja pareça uma ferramenta própria dela (logo + nome + cor), não
    um produto genérico CE.X : só "Service" continua sempre visível. */
-type BrandCfg = { accentDark?: string; accentLight?: string; editorIds?: string[] };
-const BRAND_DEFAULT: Required<Pick<BrandCfg, "accentDark" | "accentLight">> = { accentDark: "#7A9E3F", accentLight: "#6E8F37" };
 
 /* mensagem que abre pronta no WhatsApp do líder quando ele manda o acesso ao
    app pra um membro novo, guardada em service.churches.settings.acessoMsgCfg
@@ -666,6 +664,7 @@ type Props = {
   currentPersonId?: string | null;
   enqueteElegivel?: EnqueteElegivelView | null;
   pesquisaElegivel?: PesquisaElegivelView | null;
+  initialTheme?: "dark" | "light";
   error: string;
 };
 
@@ -830,16 +829,22 @@ function TeamMark({ ministry, size = 16 }: { ministry?: { icon?: string; name?: 
   return <Icon name={iconName} size={size} />;
 }
 
+/* Marca do app: é o app DA igreja. Logo + nome da igreja, com o sufixo
+   SERVICE fixo embaixo (a parte que continua sendo CE.X). Sem logo, as
+   iniciais da igreja num selo na cor dela. */
 function IgrejaLogo({ logoUrl, nome }: { logoUrl?: string | null; nome?: string }) {
+  const iniciais = (nome || "Igreja").split(/\s+/).filter((w) => w.length > 2 || /^[A-Z]/.test(w)).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
   return (
-    <div className="brand brand-row">
+    <div className="brand-church">
       {logoUrl ? (
-        <img className="brand-img" src={logoUrl} alt={nome || "Logo da igreja"} />
+        <img className="brand-church-logo" src={logoUrl} alt="" />
       ) : (
-        <span className="sb-logo"><Logo /></span>
+        <span className="brand-church-mark" aria-hidden="true">{iniciais || "IG"}</span>
       )}
-      <span className="brand-div" aria-hidden="true" />
-      <span className="brand-service">Service</span>
+      <span className="brand-church-text">
+        <span className="brand-church-name">{nome || "Sua igreja"}</span>
+        <span className="brand-church-suffix">Service</span>
+      </span>
     </div>
   );
 }
@@ -1019,12 +1024,23 @@ export default function ServiceExactApp({
   currentPersonId = null,
   enqueteElegivel = null,
   pesquisaElegivel = null,
+  initialTheme = "dark",
   error,
 }: Props) {
   const [route, setRoute] = useState<keyof typeof ROUTES>("painel");
   const [drawer, setDrawer] = useState<DrawerState>(null);
   const [modal, setModal] = useState<ModalState>(null);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  /* modo desta pessoa: o servidor já resolveu (cookie cex_theme ou modo
+     padrão da igreja, ver lib/theme.ts resolveMode). A troca feita no app
+     grava o cookie, pra próxima página já vir no modo certo. */
+  const [theme, setThemeState] = useState<"dark" | "light">(initialTheme);
+  const setTheme = (next: "dark" | "light" | ((t: "dark" | "light") => "dark" | "light")) => {
+    setThemeState((prev) => {
+      const value = typeof next === "function" ? next(prev) : next;
+      document.cookie = `${THEME_COOKIE}=${value}; path=/; max-age=31536000; samesite=lax`;
+      return value;
+    });
+  };
   const [activeChurchId, setActiveChurchId] = useState<string>(churches[0]?.id ?? "");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
@@ -1037,7 +1053,7 @@ export default function ServiceExactApp({
     setRoute("conversas");
   };
   useEffect(() => {
-    document.body.dataset.theme = theme === "light" ? "light" : "";
+    document.body.dataset.theme = theme;
     return () => { document.body.dataset.theme = ""; };
   }, [theme]);
 
@@ -1094,25 +1110,6 @@ export default function ServiceExactApp({
     escalados: roster.length,
   }), [firstChurch?.nome, firstChurch?.cidade, firstChurch?.address, ministries.length, events.length, members.length, roster.length]);
 
-  /* Aplica a marca da igreja (cor de destaque por tema) como variáveis CSS
-     no elemento raiz : sobrescreve --olive/--olive-soft/--olive-deep/
-     --olive-dim/--olive-line/--accent-ink de service.css. Sem igreja
-     customizando nada, os valores batem com o CSS padrão (ver BRAND_DEFAULT). */
-  useEffect(() => {
-    const brand = firstChurch?.settings?.brandCfg;
-    const hex = theme === "light" ? (brand?.accentLight || BRAND_DEFAULT.accentLight) : (brand?.accentDark || BRAND_DEFAULT.accentDark);
-    const vars = deriveAccentVars(isValidHex(hex) ? hex : (theme === "light" ? BRAND_DEFAULT.accentLight : BRAND_DEFAULT.accentDark), theme);
-    const root = document.documentElement.style;
-    root.setProperty("--olive", vars.olive);
-    root.setProperty("--olive-soft", vars.oliveSoft);
-    root.setProperty("--olive-deep", vars.oliveDeep);
-    root.setProperty("--olive-dim", vars.oliveDim);
-    root.setProperty("--olive-line", vars.oliveLine);
-    root.setProperty("--accent-ink", vars.accentInk);
-    return () => {
-      ["--olive", "--olive-soft", "--olive-deep", "--olive-dim", "--olive-line", "--accent-ink"].forEach((k) => root.removeProperty(k));
-    };
-  }, [firstChurch?.settings?.brandCfg, theme]);
 
   const markAnnouncementRead = async (personId: string, announcementId: string) => {
     if (!firstChurch?.organizationId) return;
@@ -1514,7 +1511,7 @@ export default function ServiceExactApp({
       {navOpen ? <div className="sb-backdrop" onClick={() => !showTour && setNavOpen(false)} /> : null}
       <aside className={`sb${navOpen ? " open" : ""}`}>
         <div className="sb-top">
-          <IgrejaLogo logoUrl={firstChurch?.logoUrl} nome={firstChurch?.nome} />
+          <IgrejaLogo logoUrl={(churches.find((c) => c.matriz) ?? firstChurch)?.logoUrl} nome={(churches.find((c) => c.matriz) ?? firstChurch)?.nome} />
           <button className="sb-close" type="button" onClick={() => setNavOpen(false)} aria-label="Fechar menu">✕</button>
         </div>
         <CongSwitcher churches={churches} activeId={activeChurchId} setActiveId={setActiveChurchId} />
@@ -1636,13 +1633,13 @@ export default function ServiceExactApp({
         {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} wallPosts={wallPosts} ministries={ministries} people={people} setModal={setModal} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} currentPersonId={perspectivePersonId} scopeMinistryIds={scopeMinistryIds} pendingChatMemberId={pendingChatMemberId} onConsumePendingChatMember={() => setPendingChatMemberId(null)} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} confirmationRate={confirmationRate} setRoute={setRoute} church={firstChurch} /> : null}
-        {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} theme={theme} setTheme={setTheme} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
+        {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
         {route === "identidade" ? <Identidade church={firstChurch} identity={churchIdentity} cycle={cycles.find((c) => c.is_active) ?? cycles[0]} setModal={setModal} /> : null}
         {route === "historia" ? <Historia church={firstChurch} historyEntries={historyEntries} setModal={setModal} /> : null}
       </div>
 
       <button className="mob-launch" type="button" onClick={() => setMobileOpen(true)}>
-        ◷ Ver app do voluntario
+        ◷ Ver app do membro
       </button>
 
       <HelpFab
@@ -7203,8 +7200,6 @@ function Config({
   kidsClasses,
   currentRole,
   currentExtraAccess = [],
-  theme,
-  setTheme,
   ministerialTitles,
   fellowshipGroups,
   tags,
@@ -7221,8 +7216,6 @@ function Config({
   kidsClasses: KidsClassView[];
   currentRole: "master" | "pastor" | "lider" | "membro";
   currentExtraAccess?: string[];
-  theme: "dark" | "light";
-  setTheme: (t: "dark" | "light") => void;
   ministerialTitles: MinisterialTitleView[];
   fellowshipGroups: FellowshipGroupView[];
   tags: TagView[];
@@ -7406,10 +7399,11 @@ function Config({
      fundo... Nada grava sozinho no banco : um único "Salvar personalização"
      no fim da aba manda tudo de uma vez, mesmo padrão do "Dados da igreja"
      (Aba Igreja) — apply/salvar consistente em vez de um botão por campo. */
-  const [brand, setBrand] = useState<Required<Pick<BrandCfg, "accentDark" | "accentLight">>>(() => ({
-    ...BRAND_DEFAULT,
-    ...(church?.settings?.brandCfg ?? {}),
-  }));
+  /* a marca do app é da organização: mora na igreja matriz, mesmo quando a
+     gestão está olhando uma congregação (a identidade da página pública
+     continua por igreja) */
+  const sede = churches.find((c) => c.matriz) ?? church;
+  const [brand, setBrand] = useState<BrandCfg>(() => ({ ...(sede?.settings?.brandCfg ?? {}) }));
   const patchBrand = (patch: Partial<BrandCfg>) => setBrand((prev) => ({ ...prev, ...patch }));
 
   const [identidade, setIdentidade] = useChurchSettingsField<IdentidadeCfg>("identidadeCfg", IDENTIDADE_CFG_DEFAULT, church, () => router.refresh());
@@ -7420,13 +7414,16 @@ function Config({
   const salvarPersonalizacao = async () => {
     if (!church?.id) return;
     setPersonalizacaoSaving(true);
-    await createServiceBrowserClient()
-      .schema("service")
-      .from("churches")
-      .update({ settings: { ...church.settings, brandCfg: brand, identidadeCfg: identidade } })
-      .eq("id", church.id);
+    const db = createServiceBrowserClient().schema("service").from("churches");
+    const mesmaIgreja = !sede || sede.id === church.id;
+    const results = await Promise.all([
+      db.update({ settings: { ...church.settings, identidadeCfg: identidade, ...(mesmaIgreja ? { brandCfg: brand } : {}) } }).eq("id", church.id).select("id"),
+      ...(mesmaIgreja ? [] : [db.update({ settings: { ...sede.settings, brandCfg: brand } }).eq("id", sede.id).select("id")]),
+    ]);
     setPersonalizacaoSaving(false);
-    setPersonalizacaoMsg("Salvo!");
+    /* sem linha de volta = o banco não gravou (sem permissão ou igreja inexistente) */
+    const falhou = results.some((r) => r.error || !r.data?.length);
+    setPersonalizacaoMsg(falhou ? "Não foi possível salvar" : "Salvo!");
     router.refresh();
     setTimeout(() => setPersonalizacaoMsg(""), 2000);
   };
@@ -7908,31 +7905,7 @@ function Config({
       {/* ─── PERSONALIZAÇÃO ─── */}
       {tab === "visual" && (
         <div className="cfg-grid2">
-          <div className="cfg-card">
-            <div className="cfg-card-t">Tema da interface</div>
-            <div className="cfg-card-s">Modo escuro (padrão) ou modo claro, para quem prefere telas claras.</div>
-            <div className="opt-row">
-              <button type="button" className={`opt${theme === "dark" ? " on" : ""}`} onClick={() => setTheme("dark")}>
-                <div className="opt-t">◑ Escuro</div>
-                <div className="opt-s">Fundo escuro · padrão</div>
-              </button>
-              <button type="button" className={`opt${theme === "light" ? " on" : ""}`} onClick={() => setTheme("light")}>
-                <div className="opt-t">◐ Claro</div>
-                <div className="opt-s">Fundo claro</div>
-              </button>
-            </div>
-          </div>
-          <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
-            <div className="cfg-card-t">Cor de destaque da sua igreja</div>
-            <div className="cfg-card-s">
-              Troque a oliva pela cor da identidade visual da sua igreja. Vale uma cor pro modo escuro e outra pro
-              modo claro, porque nem toda cor lê bem nos dois fundos.
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <AccentField compact label="Modo escuro" bgHex="#0E110D" value={brand.accentDark} defaultHex={BRAND_DEFAULT.accentDark} onChange={(hex) => patchBrand({ accentDark: hex })} />
-              <AccentField compact label="Modo claro" bgHex="#E7DFC8" value={brand.accentLight} defaultHex={BRAND_DEFAULT.accentLight} onChange={(hex) => patchBrand({ accentLight: hex })} />
-            </div>
-          </div>
+          <ThemePicker brand={brand} onChange={patchBrand} />
           <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
             <div className="cfg-card-t">Identidade da igreja</div>
             <div className="cfg-card-s">

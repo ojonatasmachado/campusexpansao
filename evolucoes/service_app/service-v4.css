@@ -75,3 +75,12 @@ body[data-theme="light"] { --cocoa: #5A4230; }
   .bib-books { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bib-chapters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+/* ════════ MARCA DA IGREJA NO APP ════════
+   Logo + nome da igreja + sufixo SERVICE fixo (ver IgrejaLogo). */
+.brand-church { display:flex; align-items:center; gap:11px; min-width:0; }
+.brand-church-logo { width:40px; height:40px; object-fit:contain; border-radius:var(--r-md); flex-shrink:0; }
+.brand-church-mark { width:40px; height:40px; border-radius:var(--r-md); background:var(--olive); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; letter-spacing:-0.02em; flex-shrink:0; }
+.brand-church-text { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.brand-church-name { font-size:15px; font-weight:700; letter-spacing:-0.02em; color:var(--white); line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.brand-church-suffix { font-family:var(--mono); font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); }

@@ -4,6 +4,9 @@ import { resolverEnqueteElegivel } from "./lib/enquetes";
 import { resolverPesquisaElegivel } from "./lib/pesquisas";
 import ServiceExactApp from "./ServiceExactApp";
 import type { RequirementRow } from "./lib/requirements";
+import { resolveMode, THEME_COOKIE, type BrandCfg } from "./lib/theme";
+import { cookies } from "next/headers";
+import ServiceTheme from "./ServiceTheme";
 
 type ChurchRow = {
   id: string;
@@ -1416,7 +1419,15 @@ export default async function ServiceHomePage() {
     bibleMarks = (bibleMarksData ?? []) as BibleMarkView[];
   }
 
+  /* a marca é da organização: mora na igreja matriz (ver salvarPersonalizacao) */
+  const brandCfg = ((churches.find((c) => c.matriz) ?? churches[0])?.settings as { brandCfg?: BrandCfg } | undefined)?.brandCfg;
+
+  const themeMode = resolveMode((await cookies()).get(THEME_COOKIE)?.value, brandCfg);
+
   return (
+    <>
+    {/* tema da igreja (neutros + cor de destaque), ver app/service/lib/theme.ts */}
+    <ServiceTheme brand={brandCfg} mode={themeMode} />
     <ServiceExactApp
       churches={churches}
       people={people}
@@ -1472,7 +1483,9 @@ export default async function ServiceHomePage() {
       currentPersonId={currentPersonId}
       enqueteElegivel={enqueteElegivel}
       pesquisaElegivel={pesquisaElegivel}
+      initialTheme={themeMode}
       error={error}
     />
+    </>
   );
 }

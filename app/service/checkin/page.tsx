@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { createServiceSupabaseClient } from "../lib/supabase";
 import CheckinLandingClient from "./CheckinLandingClient";
+import { resolveMode, THEME_COOKIE, type BrandCfg } from "../lib/theme";
+import { cookies } from "next/headers";
+import ServiceTheme from "../ServiceTheme";
 
 type CheckinResult = {
   ok: boolean;
@@ -44,6 +47,7 @@ export default async function ServiceCheckinPage({
     .maybeSingle();
 
   let result: CheckinResult;
+  let brandCfg: BrandCfg | undefined;
 
   if (!eventRow) {
     result = { ok: false, motivo: "Este QR Code não aponta para um evento válido." };
@@ -70,6 +74,15 @@ export default async function ServiceCheckinPage({
         .maybeSingle(),
     ]);
     const escalado = (rosterRows?.length ?? 0) > 0;
+    /* a marca é da organização e mora na igreja matriz */
+    const { data: matrizRow } = await supabase
+      .schema("service")
+      .from("churches")
+      .select("settings")
+      .eq("organization_id", eventRow.organization_id)
+      .eq("is_headquarters", true)
+      .maybeSingle();
+    brandCfg = ((matrizRow ?? churchRow)?.settings as { brandCfg?: BrandCfg } | null)?.brandCfg;
     const permitirExtra = !!(churchRow?.settings as { checkinPermitirExtra?: boolean } | null)?.checkinPermitirExtra;
 
     if (!escalado && !permitirExtra) {
@@ -90,7 +103,11 @@ export default async function ServiceCheckinPage({
     }
   }
 
+  const themeMode = resolveMode((await cookies()).get(THEME_COOKIE)?.value, brandCfg);
+
   return (
+    <>
+    <ServiceTheme brand={brandCfg} mode={themeMode} />
     <CheckinLandingClient
       event={{
         id: eventRow?.id ?? eventId,
@@ -106,5 +123,6 @@ export default async function ServiceCheckinPage({
       person={personRow ? { id: personRow.id, name: personRow.name, status: personRow.status, tags: personRow.tags ?? [] } : null}
       result={result}
     />
+    </>
   );
 }

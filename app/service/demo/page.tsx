@@ -1,4 +1,7 @@
 import ServiceExactApp from "../ServiceExactApp";
+import { resolveMode, THEME_COOKIE, type BrandCfg } from "../lib/theme";
+import { cookies } from "next/headers";
+import ServiceTheme from "../ServiceTheme";
 
 const ORG = "org-demo";
 const CHURCH_1 = "ch-1";
@@ -306,10 +309,24 @@ const REQUIREMENTS = [
 ];
 const PERSON_GRANTS = [{ personId: "p2", code: "visitantes" }];
 
-export default function ServiceDemoPage() {
+/* marca pela URL pra testar/mostrar o app com as cores de uma igreja:
+   /service/demo?cor=%232F6FDB&escuro=noite&claro=gelo&modo=light */
+export default async function ServiceDemoPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const q = await searchParams;
+  const brand: BrandCfg = {
+    accent: q.cor,
+    neutralDark: q.escuro,
+    neutralLight: q.claro,
+    defaultMode: q.modo === "light" ? "light" : q.modo === "dark" ? "dark" : undefined,
+  };
+  const churches = CHURCHES.map((c, i) => (i === 0 ? { ...c, settings: { brandCfg: brand } } : c));
+  const themeMode = resolveMode((await cookies()).get(THEME_COOKIE)?.value, brand);
+
   return (
+    <>
+    <ServiceTheme brand={brand} mode={themeMode} />
     <ServiceExactApp
-      churches={CHURCHES}
+      churches={churches}
       people={PEOPLE}
       members={MEMBERS}
       ministries={MINISTRIES}
@@ -351,7 +368,9 @@ export default function ServiceDemoPage() {
       journeyRequests={JOURNEY_REQUESTS}
       bibleMarks={[]}
       currentPersonId="p1"
+      initialTheme={themeMode}
       error=""
     />
+    </>
   );
 }

@@ -52,7 +52,7 @@ type ChurchProp = {
   nome: string;
   logoUrl?: string | null;
   slug?: string | null;
-  settings?: { paginaCfg?: PaginaCfg; identidadeCfg?: IdentidadeCfg; brandCfg?: { accentDark?: string }; [key: string]: unknown };
+  settings?: { paginaCfg?: PaginaCfg; identidadeCfg?: IdentidadeCfg; brandCfg?: { accent?: string; accentDark?: string }; [key: string]: unknown };
 };
 
 type LinkItem = {
@@ -282,7 +282,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
   const pageUrl = origin && church.slug ? `${origin}/${church.slug}` : "";
   const loginUrl = origin && church.slug ? `${origin}/${church.slug}/entrar` : "";
   const identidade: IdentidadeCfg = { ...IDENTIDADE_CFG_DEFAULT, ...(church.settings?.identidadeCfg ?? {}) };
-  const serviceAccent = church.settings?.brandCfg?.accentDark || PAGINA_CFG_DEFAULT.accentColor;
+  const serviceAccent = (church.settings?.brandCfg?.accent || church.settings?.brandCfg?.accentDark) || PAGINA_CFG_DEFAULT.accentColor;
   const effectiveBgHex = identidade.bgMode === "imagem" ? "#0E110D" : identidade.bgMode === "degrade" ? (identidade.bgFrom ?? IDENTIDADE_CFG_DEFAULT.bgFrom) : (identidade.bgColor ?? IDENTIDADE_CFG_DEFAULT.bgColor);
 
   const previewData: ChurchPageData = {
@@ -290,7 +290,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
     slug: church.slug || slugDraft || "sua-igreja",
     name: church.nome,
     logoUrl: church.logoUrl ?? null,
-    pagina: mergeChurchIdentity(church.settings?.identidadeCfg, pagina, church.settings?.brandCfg?.accentDark),
+    pagina: mergeChurchIdentity(church.settings?.identidadeCfg, pagina, (church.settings?.brandCfg?.accent || church.settings?.brandCfg?.accentDark)),
     serviceAccent,
     published: true,
     links: links.filter((l) => l.active).map((l) => ({ id: l.id, label: l.label, url: l.url, icon: l.icon, imageUrl: l.imageUrl, groupLabel: l.groupLabel || null })),
@@ -461,7 +461,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                   {link.imageUrl ? (
                     <img src={link.imageUrl} alt="" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover", flex: "none" }} />
                   ) : (
-                    <span className="cx-link-icon" style={{ background: "var(--olive)", color: "#0E110D" }}><LinkIconView name={link.icon} size={16} /></span>
+                    <span className="cx-link-icon" style={{ background: "var(--olive)", color: "var(--accent-ink)" }}><LinkIconView name={link.icon} size={16} /></span>
                   )}
                   <div className="cfg-row-main">
                     <div className="cfg-row-t">{link.label || "(sem título)"} {!link.active && <span className="chip">oculto</span>}</div>

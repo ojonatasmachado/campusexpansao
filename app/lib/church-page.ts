@@ -120,7 +120,7 @@ export function resolveBackground(identidade: Pick<IdentidadeCfg, "bgMode" | "bg
    accentColor) no mesmo formato `pagina` que os templates, LogoMark e
    resolveBackground já esperam : fonte única, usada tanto por
    getChurchPageBySlug quanto pelo preview do editor (PublicPageEditor).
-   serviceAccent é o brandCfg.accentDark da igreja (cor de destaque do
+   serviceAccent é o brandCfg.accent da igreja (ou accentDark, legado) (cor de destaque do
    Service inteiro) : fallback de accentColor quando a página não tem uma
    cor de destaque própria. */
 export function mergeChurchIdentity(
@@ -167,7 +167,7 @@ export type ChurchPageData = {
   name: string;
   logoUrl: string | null;
   pagina: typeof PAGINA_CFG_DEFAULT & typeof IDENTIDADE_CFG_DEFAULT & { bio: string; coverUrl: string | null; logoText: string; social: PaginaSocial };
-  /* brandCfg.accentDark : cor de destaque do Service inteiro (painel interno
+  /* brandCfg.accent (ou accentDark, legado) : cor de destaque do Service inteiro (painel interno
      + login temático). Separado de pagina.accentColor porque a Página
      pública pode ter uma cor de destaque própria (override), mas o login
      sempre usa a cor do Service, nunca o override da página. */
@@ -182,7 +182,7 @@ type ChurchRow = {
   name: string;
   slug: string | null;
   logo_url: string | null;
-  settings: { paginaCfg?: PaginaCfg; identidadeCfg?: IdentidadeCfg; brandCfg?: { accentDark?: string } } | null;
+  settings: { paginaCfg?: PaginaCfg; identidadeCfg?: IdentidadeCfg; brandCfg?: { accent?: string; accentDark?: string } } | null;
 };
 
 type LinkRow = {
@@ -230,7 +230,7 @@ export async function getChurchPageBySlug(slug: string): Promise<ChurchPageData 
   const church = churchRow as ChurchRow | null;
   if (!church) return null;
 
-  const pagina = mergeChurchIdentity(church.settings?.identidadeCfg, church.settings?.paginaCfg, church.settings?.brandCfg?.accentDark);
+  const pagina = mergeChurchIdentity(church.settings?.identidadeCfg, church.settings?.paginaCfg, (church.settings?.brandCfg?.accent || church.settings?.brandCfg?.accentDark));
   const published = pagina.enabled === true;
 
   let links: ChurchLinkView[] = [];
@@ -283,7 +283,7 @@ export async function getChurchPageBySlug(slug: string): Promise<ChurchPageData 
     name: church.name,
     logoUrl: church.logo_url,
     pagina,
-    serviceAccent: church.settings?.brandCfg?.accentDark || PAGINA_CFG_DEFAULT.accentColor,
+    serviceAccent: (church.settings?.brandCfg?.accent || church.settings?.brandCfg?.accentDark) || PAGINA_CFG_DEFAULT.accentColor,
     published,
     links,
     posts,
