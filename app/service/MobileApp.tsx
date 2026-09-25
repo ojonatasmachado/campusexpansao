@@ -2072,30 +2072,6 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
       valid: true,
     },
     {
-      t: "Crie sua senha",
-      s: "Troque a senha inicial (os 6 ultimos do telefone) por uma so sua.",
-      body: (
-        <div className="ob-form">
-          <div className="field">
-            <label className="field-label">Nova senha</label>
-            <input className="input" type="password" value={d.senha} placeholder="ao menos 6 caracteres" onChange={(e) => set("senha", e.target.value)} />
-          </div>
-          <div className="field">
-            <label className="field-label">Repita a senha</label>
-            <input className="input" type="password" value={d.senha2} onChange={(e) => set("senha2", e.target.value)} />
-          </div>
-          {d.senha && d.senha !== d.senha2 && (
-            <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 4 }}>As senhas nao conferem.</div>
-          )}
-          <div style={{ fontSize: 12, color: "var(--subtle)", marginTop: 8 }}>
-            Quer trocar depois? Pode pular e fazer no seu perfil.
-          </div>
-        </div>
-      ),
-      ok: "Continuar →",
-      valid: !d.senha || (d.senha.length >= 6 && d.senha === d.senha2),
-    },
-    {
       t: "Conheca o app",
       s: "Rapidinho: veja pra que serve cada aba la embaixo da tela.",
       body: <AppTabsInfoGrid />,

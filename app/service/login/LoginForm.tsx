@@ -32,7 +32,7 @@ export default function ServiceLoginForm() {
               {mode === "login" ? "Entrar no Service" : "Criar conta do Service"}
             </h1>
             <p className="t-body" style={{ color: "var(--light)", marginTop: 10 }}>
-              Use seu e-mail e senha. A primeira igreja será criada no próximo passo.
+              Use seu e-mail e senha. Membro de igreja entra pelo link de convite que o líder manda.
             </p>
 
             <div className="segmented" style={{ marginTop: 24 }}>
@@ -103,7 +103,7 @@ export default function ServiceLoginForm() {
                       onClick={switchToSignup}
                       style={{ marginTop: 10 }}
                     >
-                      Não tem conta com esse e-mail ainda? Criar igreja nova →
+                      Não tem conta com esse e-mail ainda? Criar conta →
                     </button>
                   )}
                 </div>

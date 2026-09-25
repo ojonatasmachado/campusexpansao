@@ -1,18 +1,13 @@
 import { NextResponse } from "next/server";
+import type { User } from "@supabase/supabase-js";
 import { createClient } from "../../../../lib/supabase-server";
 import { supabaseAdmin } from "../../../../lib/supabase";
+import { inviteUrl, isInvitePending, newInvite } from "../../../../lib/service-invite";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const LEAD_ROLES = ["owner", "master", "pastor", "lider"];
-
-function derivePasswordFromPhone(phone: string | null | undefined): string {
-  const digits = (phone ?? "").replace(/\D/g, "");
-  if (digits.length >= 6) return digits.slice(-6);
-  if (digits.length > 0) return digits.padStart(6, "0");
-  return Math.random().toString(36).slice(2, 8);
-}
 
 type Payload = {
   organizationId?: string;
@@ -23,10 +18,14 @@ type Payload = {
   phone?: string;
 };
 
+/* Cria (ou vincula) a conta do membro e devolve o link de acesso que o líder
+   manda pelo WhatsApp. Nunca define nem redefine senha: conta nova nasce sem
+   senha e com convite pendente (a pessoa cria a senha em /service/convite);
+   conta que já existia só é vinculada à igreja e entra com a senha que já tem.
+   Ver app/lib/service-invite.ts. */
 export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-
   if (userError || !user) {
     return NextResponse.json({ error: "Você precisa estar logado." }, { status: 401 });
   }
@@ -43,7 +42,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Dados incompletos." }, { status: 400 });
   }
   if (!email) {
-    return NextResponse.json({ ok: true, created: false, reason: "sem e-mail" });
+    return NextResponse.json({ error: "O e-mail é obrigatório para criar o acesso ao app." }, { status: 400 });
   }
 
   const { data: membership, error: membershipError } = await supabase
@@ -59,50 +58,76 @@ export async function POST(request: Request) {
   }
 
   const normalizedEmail = email.trim().toLowerCase();
+  const origin = new URL(request.url).origin;
 
   try {
     const db = supabaseAdmin();
-    const password = derivePasswordFromPhone(phone);
 
-    let authUserId: string | null = null;
+    /* o membro precisa ser desta igreja: impede usar um memberId de outra org */
+    const { data: memberRow } = await db
+      .schema("service")
+      .from("members")
+      .select("id")
+      .eq("id", memberId)
+      .eq("organization_id", organizationId)
+      .maybeSingle();
+    if (!memberRow) {
+      return NextResponse.json({ error: "Membro não encontrado nesta igreja." }, { status: 404 });
+    }
+
+    let authUser: User | null = null;
     let created = false;
+    const invite = newInvite();
+
     const { data: createdUser, error: createError } = await db.auth.admin.createUser({
       email: normalizedEmail,
-      password,
       email_confirm: true,
       user_metadata: { full_name: name, phone: phone ?? null },
+      app_metadata: invite.meta,
     });
 
     if (createError) {
       let page = 1;
       const perPage = 1000;
-      while (page <= 10 && !authUserId) {
+      while (page <= 10 && !authUser) {
         const { data: listData, error: listError } = await db.auth.admin.listUsers({ page, perPage });
         if (listError) throw listError;
-        const found = (listData.users ?? []).find((u) => u.email?.trim().toLowerCase() === normalizedEmail);
-        if (found) authUserId = found.id;
+        authUser = (listData.users ?? []).find((u) => u.email?.trim().toLowerCase() === normalizedEmail) ?? null;
         if ((listData.users ?? []).length < perPage) break;
         page += 1;
       }
-      if (!authUserId) throw createError;
-      /* A conta já existia (ex: reenvio de acesso). A mensagem de WhatsApp
-         sempre mostra a senha derivada do telefone atual, então a senha
-         real precisa ser sincronizada aqui : sem isto, quem já tinha conta
-         recebia uma senha que não abria o app no celular. */
-      const { error: updateError } = await db.auth.admin.updateUserById(authUserId, { password });
-      if (updateError) throw updateError;
+      if (!authUser) throw createError;
     } else {
-      authUserId = createdUser.user?.id ?? null;
+      authUser = createdUser.user;
       created = true;
     }
+    if (!authUser) throw new Error("Não foi possível determinar o usuário.");
+    const authUserId = authUser.id;
 
-    if (!authUserId) throw new Error("Não foi possível determinar o usuário.");
+    /* Link de acesso: conta criada pelo convite e ainda sem senha ganha um
+       token novo (reenvio invalida o anterior). Conta com senha própria só
+       recebe o link de login: a senha dela nunca é tocada aqui. */
+    let accessLink: string;
+    let needsPassword: boolean;
+    if (created) {
+      accessLink = inviteUrl(origin, authUserId, invite.token);
+      needsPassword = true;
+    } else if (isInvitePending(authUser)) {
+      const { error: updateError } = await db.auth.admin.updateUserById(authUserId, { app_metadata: invite.meta });
+      if (updateError) throw updateError;
+      accessLink = inviteUrl(origin, authUserId, invite.token);
+      needsPassword = true;
+    } else {
+      accessLink = new URL("/service/login", origin).toString();
+      needsPassword = false;
+    }
 
     const { data: existingPerson } = await db
       .schema("service")
       .from("people")
       .select("id")
       .eq("user_id", authUserId)
+      .eq("organization_id", organizationId)
       .maybeSingle();
 
     let personId: string | null = existingPerson?.id ?? null;
@@ -125,7 +150,7 @@ export async function POST(request: Request) {
       personId = newPerson.id;
     }
 
-    await db.schema("service").from("members").update({ volunteer_id: personId }).eq("id", memberId);
+    await db.schema("service").from("members").update({ volunteer_id: personId }).eq("id", memberId).eq("organization_id", organizationId);
 
     await db
       .schema("core")
@@ -135,7 +160,7 @@ export async function POST(request: Request) {
         { onConflict: "user_id,organization_id", ignoreDuplicates: true },
       );
 
-    return NextResponse.json({ ok: true, created, userId: authUserId });
+    return NextResponse.json({ ok: true, created, userId: authUserId, accessLink, needsPassword });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível criar o acesso.";
     return NextResponse.json({ error: message }, { status: 500 });

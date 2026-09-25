@@ -89,7 +89,7 @@ const BRAND_DEFAULT: Required<Pick<BrandCfg, "accentDark" | "accentLight">> = { 
    buildMemberAccessWhatsappUrl: {nome} {igreja} {link} {email} {senha}. */
 type AcessoMsgCfg = { mensagem: string };
 const ACESSO_MSG_DEFAULT: AcessoMsgCfg = {
-  mensagem: "Parabéns, {nome}! Que alegria ter você como membro da {igreja}.\n\nSeu acesso ao app já está pronto. Para entrar, é só seguir os passos:\n1. Abra este link → {link}\n2. Use o e-mail: {email}\n3. Use a senha: {senha}\n4. Depois de entrar, você pode trocar a senha quando quiser.\n\nQualquer dúvida, é só chamar por aqui.",
+  mensagem: "Parabéns, {nome}! Que alegria ter você como membro da {igreja}.\n\nSeu acesso ao app já está pronto. Para entrar, é só seguir os passos:\n1. Abra este link → {link}\n2. Seu e-mail de acesso: {email}\n3. Senha: {senha}\n\nO link é só seu e vale por 7 dias. Qualquer dúvida, é só chamar por aqui.",
 };
 
 const CONTATO_CFG_DEFAULT: ContatoCfg = {
@@ -2301,7 +2301,7 @@ function Membros({ members, ministries, church, setDrawer, setModal }: { members
     ministries.filter((min) => min.people.some((p) => p.personId === volunteerId));
   return (
     <div className="content wide">
-      <PageHead title="Membros" eyebrow="Pessoas" subtitle="Toda a congregação. Veja quem serve, em que jornada está e o histórico desde que chegou." help="Toda a congregação entra aqui, sirva ou não em um ministério. É diferente de Voluntários, que lista só quem já serve ativamente." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Cadastro de quem já é da casa. Os dados completos liberam o acesso ao app.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Os 6 últimos dígitos viram a senha inicial do app." }, { k:"email", label:"E-mail", type:"text", half:true, req:true, ph:"usado para entrar no app" }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"cep", label:"CEP", type:"cep", half:true, ph:"00000-000", hint:"Preenche rua, bairro, cidade e estado sozinho.", autofill:{ street:"rua", neighborhood:"bairro", city:"cidade", state:"estado" } }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }, { k:"rua", label:"Rua", type:"text", half:true, ph:"Nome da rua" }, { k:"cidade", label:"Cidade", type:"text", half:true }, { k:"estado", label:"Estado", type:"text", half:true, ph:"UF" }], action: { kind: "member" } })}>+ Novo membro</button>} />
+      <PageHead title="Membros" eyebrow="Pessoas" subtitle="Toda a congregação. Veja quem serve, em que jornada está e o histórico desde que chegou." help="Toda a congregação entra aqui, sirva ou não em um ministério. É diferente de Voluntários, que lista só quem já serve ativamente." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Cadastro de quem já é da casa. Os dados completos liberam o acesso ao app.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"É por aqui que você manda o convite do app." }, { k:"email", label:"E-mail", type:"text", half:true, req:true, ph:"usado para entrar no app", hint:"Obrigatório para o acesso ao app." }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"cep", label:"CEP", type:"cep", half:true, ph:"00000-000", hint:"Preenche rua, bairro, cidade e estado sozinho.", autofill:{ street:"rua", neighborhood:"bairro", city:"cidade", state:"estado" } }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }, { k:"rua", label:"Rua", type:"text", half:true, ph:"Nome da rua" }, { k:"cidade", label:"Cidade", type:"text", half:true }, { k:"estado", label:"Estado", type:"text", half:true, ph:"UF" }], action: { kind: "member" } })}>+ Novo membro</button>} />
       {church && (
         <div className="contato-banner">
           <div className="contato-pill"><span style={{ color: "var(--olive)" }}><Icon name="whatsapp" size={16} /></span></div>
@@ -3406,7 +3406,7 @@ function AcessoMsgModal({ church, cfg, onClose, onRefresh }: { church: ChurchVie
             <label className="field-label">Mensagem</label>
             <textarea className="textarea" rows={8} value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
             <div style={{ fontSize: 11, color: "var(--subtle)", marginTop: 6 }}>
-              Use {"{nome}"}, {"{igreja}"}, {"{link}"}, {"{email}"} e {"{senha}"}: preenchemos automaticamente na hora de enviar.
+              Use {"{nome}"}, {"{igreja}"}, {"{link}"}, {"{email}"} e {"{senha}"}: preenchemos automaticamente na hora de enviar. O link é um convite só da pessoa, onde ela cria a própria senha. Nenhuma senha vai na mensagem.
             </div>
           </div>
           <button className="btn btn-ghost btn-sm" type="button" onClick={restaurar}>Restaurar mensagem padrão</button>
@@ -8927,14 +8927,6 @@ function AddToMinistryModal({
   );
 }
 
-/* Senha inicial do app = 6 últimos dígitos do telefone (mesma regra do backend,
-   ver app/api/service/members/create-account/route.ts:derivePasswordFromPhone). */
-function derivePasswordFromPhone(phone: string | null | undefined): string {
-  const digits = (phone ?? "").replace(/\D/g, "");
-  if (digits.length >= 6) return digits.slice(-6);
-  return digits.padStart(6, "0");
-}
-
 function fillAcessoMsgTemplate(template: string, vars: { nome: string; igreja: string; link: string; email: string; senha: string }): string {
   return template
     .replaceAll("{nome}", vars.nome)
@@ -8944,23 +8936,26 @@ function fillAcessoMsgTemplate(template: string, vars: { nome: string; igreja: s
     .replaceAll("{senha}", vars.senha);
 }
 
+/* {link} é o convite de uso único (a pessoa cria a própria senha nele) ou,
+   se a conta já tinha senha, o link de login. Nunca vai senha na mensagem:
+   {senha} só explica o que fazer, pra templates antigos que ainda usam. Ver
+   app/api/service/members/create-account/route.ts. */
 function buildMemberAccessWhatsappUrl(
   member: { name: string; phone: string | null; email: string | null },
   churchName: string,
+  access: { link: string; needsPassword: boolean },
   template: string = ACESSO_MSG_DEFAULT.mensagem,
 ): string | null {
   if (!member.phone || !member.email) return null;
   const digits = member.phone.replace(/\D/g, "");
   if (!digits) return null;
   const waPhone = digits.length <= 11 ? `55${digits}` : digits;
-  const password = derivePasswordFromPhone(member.phone);
-  const loginUrl = `${window.location.origin}/service/login`;
   const msg = fillAcessoMsgTemplate(template, {
     nome: member.name.split(" ")[0],
     igreja: churchName,
-    link: loginUrl,
+    link: access.link,
     email: member.email,
-    senha: password,
+    senha: access.needsPassword ? "você cria no link acima" : "a mesma que você já usa",
   });
   return `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
 }
@@ -9032,31 +9027,40 @@ function EntityDrawer({
   const [sendingAccess, setSendingAccess] = useState(false);
 
   const sendMemberAccessWhatsapp = async (member: MemberView) => {
-    if (!member.phone || !member.email || sendingAccess) return;
+    if (!member.phone || !member.email || !church || sendingAccess) return;
     setSendingAccess(true);
+    /* a aba abre já no clique (senão o navegador bloqueia o pop-up depois do
+       await) e recebe o link do WhatsApp quando o convite fica pronto */
+    const tab = window.open("", "_blank");
     try {
-      /* Sempre sincroniza a senha no backend antes de montar a mensagem,
-         mesmo em reenvio (member.volunteerId já setado) : a senha derivada
-         do telefone pode ter ficado diferente da senha real da conta (ex:
-         telefone editado depois da criação), e sem isto o WhatsApp manda
-         uma senha que não bate mais com o login no app mobile. */
-      if (church) {
-        await fetch("/api/service/members/create-account", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            organizationId: church.organizationId,
-            churchId: church.id,
-            memberId: member.id,
-            name: member.name,
-            email: member.email,
-            phone: member.phone,
-          }),
-        }).catch(() => {});
-        router.refresh();
+      const res = await fetch("/api/service/members/create-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          organizationId: church.organizationId,
+          churchId: church.id,
+          memberId: member.id,
+          name: member.name,
+          email: member.email,
+          phone: member.phone,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.accessLink) {
+        tab?.close();
+        window.alert(data.error ?? "Não foi possível gerar o acesso agora. Tente de novo.");
+        return;
       }
-      const url = buildMemberAccessWhatsappUrl(member, church?.nome ?? "sua igreja", church?.settings?.acessoMsgCfg?.mensagem || ACESSO_MSG_DEFAULT.mensagem);
-      if (url) window.open(url, "_blank");
+      router.refresh();
+      const url = buildMemberAccessWhatsappUrl(
+        member,
+        church.nome ?? "sua igreja",
+        { link: data.accessLink, needsPassword: Boolean(data.needsPassword) },
+        church.settings?.acessoMsgCfg?.mensagem || ACESSO_MSG_DEFAULT.mensagem,
+      );
+      if (url && tab) tab.location.href = url;
+      else if (url) window.open(url, "_blank");
+      else tab?.close();
     } finally {
       setSendingAccess(false);
     }
@@ -9193,10 +9197,10 @@ function EntityDrawer({
             </div>
             {member.phone && member.email && (
               <div style={{ fontSize: 12, color: "var(--subtle)", marginTop: 10, lineHeight: 1.5 }}>
-                Ao clicar, se {member.name.split(" ")[0]} ainda não tiver login, o app cria o acesso dela
-                na hora (e-mail e uma senha inicial). Depois, abre o WhatsApp no seu celular já com a
-                mensagem de boas-vindas e os dados de acesso escritos, prontos pra você conferir e
-                mandar. Nada é enviado sozinho: você sempre aperta enviar por último.
+                Ao clicar, o app gera um convite só de {member.name.split(" ")[0]}, válido por 7 dias,
+                onde a pessoa cria a própria senha. Depois, abre o WhatsApp no seu celular já com a
+                mensagem de boas-vindas e o link, prontos pra você conferir e mandar. Nada é enviado
+                sozinho: você sempre aperta enviar por último.
               </div>
             )}
           </DrawerSection>
