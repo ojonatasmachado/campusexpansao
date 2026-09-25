@@ -1,7 +1,7 @@
 "use client";
 
 import { AccentField } from "./AccentField";
-import { ACCENT_PRESETS, DEFAULT_ACCENT, NEUTRAL_FAMILIES, adaptAccent, familyById, type BrandCfg, type NeutralFamily, type ThemeMode } from "./lib/theme";
+import { ACCENT_PRESETS, DEFAULT_ACCENT, NEUTRAL_FAMILIES, adaptAccent, familyById, themeCss, type BrandCfg, type NeutralFamily, type ThemeMode } from "./lib/theme";
 import { bestOnColor } from "./lib/color";
 
 /* Tela de marca do app da igreja (Configurações → Personalização): cor da
@@ -15,6 +15,10 @@ export default function ThemePicker({ brand, onChange }: { brand: BrandCfg; onCh
 
   return (
     <>
+      {/* prévia ao vivo: enquanto esta tela está aberta, o app inteiro já
+          aparece com as escolhas ainda não salvas (vem depois do <style> do
+          servidor, então sobrescreve). Saiu da tela sem salvar, volta ao salvo. */}
+      <style dangerouslySetInnerHTML={{ __html: themeCss(brand) }} />
       <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
         <div className="cfg-card-t">Cor da igreja</div>
         <div className="cfg-card-s">

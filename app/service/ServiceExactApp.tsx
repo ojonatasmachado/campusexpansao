@@ -7949,9 +7949,9 @@ function Config({
               </div>
             </div>
           )}
-          <div className="cfg-card" style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          <div className="cfg-card" style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", bottom: 84, zIndex: 5 }}>
             <div className="cfg-card-s" style={{ margin: 0 }}>
-              As cores e a identidade só valem depois de salvar.
+              Você já está vendo a prévia. Salve para valer para todos da igreja.
             </div>
             <button className="btn btn-pri" type="button" disabled={personalizacaoSaving} onClick={salvarPersonalizacao}>
               {personalizacaoSaving ? "Salvando…" : personalizacaoMsg || "Salvar personalização"}
