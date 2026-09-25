@@ -34,6 +34,7 @@ type Ministry = {
   id: string;
   name: string;
   icon: string;
+  appModules?: string[];
   people: Array<{ personId: string; isLeader: boolean; functions: string[] }>;
 };
 type JourneyStep = "decisao" | "batismo" | "curso" | "integracao" | "time";
@@ -208,12 +209,18 @@ function TabIcon({ name, size = 18 }: { name: string; size?: number }) {
   return <Icon name={name} size={size} />;
 }
 
+/* módulo extra vem do time (ministries.app_modules, escolhido em Editar
+   ministério), não do nome do time */
+function hasTeamModule(person: P, ministries: Ministry[], module: string) {
+  return ministries.some((m) => (m.appModules ?? []).includes(module) && m.people.some((mp) => mp.personId === person.id));
+}
+
 function isRecepPerson(person: P, ministries: Ministry[]) {
-  return ministries.some((m) => /recep/i.test(m.name) && m.people.some((mp) => mp.personId === person.id));
+  return hasTeamModule(person, ministries, "visitantes");
 }
 
 function isKidsPerson(person: P, ministries: Ministry[]) {
-  return ministries.some((m) => /kids|infantil/i.test(m.name) && m.people.some((mp) => mp.personId === person.id));
+  return hasTeamModule(person, ministries, "kids");
 }
 
 // ── aba: Inicio ───────────────────────────────────────────────────────────────

@@ -2,9 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServiceSupabaseClient } from "../lib/supabase";
 import BootstrapChurchForm from "./BootstrapChurchForm";
+import ConvitesPendentes from "./ConvitesPendentes";
 import Logo from "../../components/Logo";
 
-async function getExistingChurchCount() {
+async function getOnboardingState() {
   const supabase = await createServiceSupabaseClient();
   const {
     data: { user },
@@ -17,16 +18,48 @@ async function getExistingChurchCount() {
     .from("churches")
     .select("id", { count: "exact", head: true });
 
-  return count ?? 0;
+  const { data: invites } = await supabase.schema("core").rpc("my_pending_invites");
+  const pending = ((invites ?? []) as { organization_id: string; church_name: string }[]).map((i) => ({
+    organizationId: i.organization_id,
+    churchName: i.church_name,
+  }));
+
+  return { count: count ?? 0, pending };
 }
 
 /* Quem chega aqui sem igreja pode ser um membro que se cadastrou sozinho em
    vez de usar o convite. Criar igreja só com escolha explícita (?nova=1):
    sem isso, membro acabava abrindo uma igreja nova sem querer. */
 export default async function ServiceOnboardingPage({ searchParams }: { searchParams: Promise<{ nova?: string }> }) {
-  const churchCount = await getExistingChurchCount();
+  const { count: churchCount, pending } = await getOnboardingState();
   if (churchCount > 0) redirect("/service");
   const { nova } = await searchParams;
+
+  if (pending.length > 0 && nova !== "1") {
+    return (
+      <main className="ld-sec" style={{ minHeight: "100vh", background: "var(--ink)" }}>
+        <div className="ld-wrap">
+          <section className="card" style={{ maxWidth: 620, margin: "0 auto" }}>
+            <div className="card-body">
+              <Link href="/" className="nav-logo" style={{ textDecoration: "none" }}>
+                <Logo />
+              </Link>
+              <p className="eyebrow" style={{ color: "var(--wheat)", marginTop: 28 }}>
+                SERVICE · CONVITE
+              </p>
+              <h1 className="t-h1" style={{ color: "var(--cream)", marginTop: 12 }}>
+                {pending.length === 1 ? "Você foi convidado para uma igreja" : "Você foi convidado para igrejas"}
+              </h1>
+              <p className="t-body" style={{ color: "var(--light)", marginTop: 10 }}>
+                Aceite para entrar no app da sua igreja com a conta que você já tem.
+              </p>
+              <ConvitesPendentes invites={pending} />
+            </div>
+          </section>
+        </div>
+      </main>
+    );
+  }
 
   if (nova !== "1") {
     return (

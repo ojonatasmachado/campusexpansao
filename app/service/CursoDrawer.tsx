@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { AulaCheckinModal } from "./AulaCheckin";
+import { useServiceAccess } from "./AccessContext";
+import { requirementsFor, requirementLabel } from "./lib/requirements";
 
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
@@ -135,7 +137,7 @@ function MatricularModal({
 /* ─── CursoDrawer (export principal) ────────────────────────────────────── */
 
 export default function CursoDrawer({
-  course, allCourses, modules, lessons, enrollments, lessonAttendance, members, church, onClose, onEdit,
+  course, modules, lessons, enrollments, lessonAttendance, members, church, onClose, onEdit,
 }: {
   course: CourseView;
   allCourses: CourseView[];
@@ -148,6 +150,8 @@ export default function CursoDrawer({
   onClose: () => void;
   onEdit: () => void;
 }) {
+  const access = useServiceAccess();
+  const requisitos = requirementsFor(access.requirements, "course", course.id);
   const router = useRouter();
   const supabase = createServiceBrowserClient();
   const [showMatricular, setShowMatricular] = useState(false);
@@ -220,14 +224,11 @@ export default function CursoDrawer({
             </div>
           )}
 
-          {course.prereqs.length > 0 && (
+          {requisitos.length > 0 && (
             <div className="dsec">
               <div className="dsec-title">Pré-requisitos</div>
               <div className="seg-check">
-                {course.prereqs.map((id) => {
-                  const c = allCourses.find((x) => x.id === id);
-                  return c ? <span key={id} className="seg-chip on">{c.name}</span> : null;
-                })}
+                {requisitos.map((r) => <span key={`${r.kind}-${r.ref}`} className="seg-chip on">{requirementLabel(r, access)}</span>)}
               </div>
             </div>
           )}

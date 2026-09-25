@@ -27,6 +27,9 @@ import type { PaginaCfg, IdentidadeCfg } from "../lib/church-page";
 import EventoShare from "./EventoShare";
 import CursoEditor from "./CursoEditor";
 import CursoDrawer from "./CursoDrawer";
+import { ServiceAccessProvider, useServiceAccess, type PersonGrant } from "./AccessContext";
+import RequisitosEditor from "./RequisitosEditor";
+import { requirementsFor, requirementLabel, saveRequirements, type Requirement, type RequirementRow } from "./lib/requirements";
 import { HelpDot, Coachmark, HelpFab, TOUR_DESKTOP, SetupChecklist, type SetupCounts } from "./HelpSystem";
 
 /* regras de escala + delegação + presets de funções, guardados em
@@ -43,7 +46,6 @@ type ChurchSettings = {
   escala?: EscalaSettings;
   escalaDelegados?: Record<string, string[]>;
   escalaPresets?: EscalaPreset[];
-  acessoDelegados?: string[];
   checkinPermitirExtra?: boolean;
   statusCfg?: StatusCriterios;
   tiposEvento?: string[];
@@ -130,7 +132,7 @@ type PersonView = {
   engagement: number | null;
   availability: Record<string, boolean>;
   tags: string[];
-  meta?: { recusasSeguidas?: number; diasIndisponivel?: number; extraAccess?: string[]; birthday?: string; neighborhood?: string };
+  meta?: { recusasSeguidas?: number; diasIndisponivel?: number; birthday?: string; neighborhood?: string };
   photoUrl?: string | null;
 };
 
@@ -158,6 +160,7 @@ type MinistryView = {
   icon: string;
   description: string;
   profile: Record<string, unknown>;
+  appModules: string[];
   positions: Array<{ id: string; ministry_id: string; name: string; need_count: number }>;
   people: Array<{ personId: string; personName: string; isLeader: boolean; functions: string[] }>;
 };
@@ -655,8 +658,10 @@ type Props = {
   tags?: TagView[];
   timelineEvents?: TimelineEventView[];
   journeyRequests?: JourneyChangeRequestView[];
+  requirements?: RequirementRow[];
+  personGrants?: PersonGrant[];
   bibleMarks?: BibleMarkView[];
-  currentRole?: "master" | "pastor" | "lider" | "vol";
+  currentRole?: "master" | "pastor" | "lider" | "membro";
   permissionsMatrix?: Record<string, Record<string, boolean>>;
   currentPersonId?: string | null;
   enqueteElegivel?: EnqueteElegivelView | null;
@@ -742,7 +747,7 @@ const CEX_ICON_FOR: Record<string, string> = {
 
 /* item de menu → código de ACOES_V2 (sem o prefixo "service."). Itens sem entrada
    aqui (quadros, reunioes, ensaios, conversas, relatorios) não têm ação própria no
-   catálogo : ficam visíveis pra qualquer papel que não seja "vol". */
+   catálogo : ficam visíveis pra qualquer papel que não seja "membro". */
 const NAV_PERMISSION_CODE: Record<string, string> = {
   membros: "membros", pessoas: "voluntarios", times: "times", visitantes: "visitantes", criancas: "kids",
   decisoes: "decisoes", batismos: "batismos", cursos: "cursos",
@@ -770,7 +775,7 @@ function podeVerNav(itemId: string, currentRole: string, matrix: Record<string, 
   if (currentRole === "master") return true;
   if (extraAccess.includes(itemId)) return true;
   if (itemId === "config" && (extraAccess.includes("marca") || extraAccess.includes("pesquisas"))) return true;
-  if (currentRole === "vol") return false;
+  if (currentRole === "membro") return false;
   const code = NAV_PERMISSION_CODE[itemId];
   if (!code) return true;
   return matrix[currentRole]?.[code] ?? true;
@@ -1006,6 +1011,8 @@ export default function ServiceExactApp({
   tags = [],
   timelineEvents = [],
   journeyRequests = [],
+  requirements = [],
+  personGrants = [],
   bibleMarks = [],
   currentRole = "master",
   permissionsMatrix = {},
@@ -1038,7 +1045,7 @@ export default function ServiceExactApp({
   const router = useRouter();
 
   /* tour guiado + botão de ajuda : dispara sozinho no 1º login de
-     liderança (nunca pro papel "vol", que usa o app pelo celular). */
+     liderança (nunca pro papel "membro", que usa o app pelo celular). */
   const [showTour, setShowTour] = useState(false);
   const [tourStart, setTourStart] = useState(0);
   /* passo != null : já teve um tour incompleto (fechou a aba/atualizou no
@@ -1049,7 +1056,7 @@ export default function ServiceExactApp({
     /* localStorage só existe no cliente : precisa ficar num efeito (não num
        initializer de useState) pra não divergir do HTML renderizado no
        servidor. abre a sidebar (navOpen) junto pro holofote já nascer visível. */
-    if (currentRole === "vol") return;
+    if (currentRole === "membro") return;
     let tourDone = true;
     let savedStep = 0;
     try { tourDone = localStorage.getItem("cex_tour_done") === "1"; } catch { /* segue sem tour automático */ }
@@ -1356,7 +1363,16 @@ export default function ServiceExactApp({
      ainda não tenha uma linha salva em core.role_permissions não "vazar" visível
      por engano : sem isso, uma chave ausente cairia no fallback `?? true`. */
   const matrizEfetiva = matrizComFallback(permissionsMatrix);
-  const currentExtraAccess = people.find((person) => person.id === currentPersonId)?.meta?.extraAccess ?? [];
+  const currentExtraAccess = personGrants.filter((g) => g.personId === currentPersonId).map((g) => g.code);
+  const accessData = {
+    organizationId: firstChurch?.organizationId ?? "",
+    currentPersonId,
+    requirements,
+    personGrants,
+    courses: courses.map((c) => ({ id: c.id, name: c.name })),
+    events: events.map((e) => ({ id: e.id, name: e.name, eventDate: e.eventDate })),
+    groupsLabel: firstChurch?.settings?.gruposCfg?.sigla ?? "GC",
+  };
 
   /* perspectiva efetiva: líder real vê só os times que lidera; master/pastor
      vê tudo, sem restrição (null). */
@@ -1377,12 +1393,14 @@ export default function ServiceExactApp({
     return responsibleLeadersFor(member, fellowshipGroups, ministries).includes(currentPersonId);
   });
 
-  /* papel "vol" nunca vê o menu de liderança : é direto pro app do
-     voluntario, na propria pessoa (currentPersonId), sem passar pela
-     casca de admin (que ficaria com o menu praticamente vazio pra ele,
-     ver podeVerNav acima). Só pode vir depois de todos os hooks acima
-     (regra dos hooks : nada de return condicional antes deles). */
-  if (currentRole === "vol") {
+  /* membro sem nenhuma tela do painel liberada vai direto pro app, na
+     própria pessoa (currentPersonId), sem passar pela casca de admin (que
+     ficaria vazia pra ele, ver podeVerNav acima). Membro com liberação
+     manual (Acessos por pessoa) vê o painel só com as telas liberadas.
+     Só pode vir depois de todos os hooks acima (regra dos hooks : nada de
+     return condicional antes deles). */
+  const temTelaLiberada = currentExtraAccess.some((code) => ACESSO_ROTAS.some((r) => r.id === code));
+  if (currentRole === "membro" && !temTelaLiberada) {
     const handleLogoutSelf = async () => {
       await createServiceBrowserClient().auth.signOut();
       router.push("/service/login");
@@ -1491,6 +1509,7 @@ export default function ServiceExactApp({
   ] as const;
 
   return (
+    <ServiceAccessProvider value={accessData}>
     <div className="app">
       {navOpen ? <div className="sb-backdrop" onClick={() => !showTour && setNavOpen(false)} /> : null}
       <aside className={`sb${navOpen ? " open" : ""}`}>
@@ -1785,6 +1804,7 @@ export default function ServiceExactApp({
         />
       ) : null}
     </div>
+    </ServiceAccessProvider>
   );
 }
 
@@ -5127,6 +5147,7 @@ function CursoBuilderColuna({
   onOpenEditor: (id: string | "new") => void;
   onOpenDrawer: (id: string) => void;
 }) {
+  const access = useServiceAccess();
   return (
     <div
       className="cb-col"
@@ -5151,9 +5172,9 @@ function CursoBuilderColuna({
             <div className={`cb-card-bar tone-${c.color ?? "olive"}`} />
             <div className="cb-card-main">
               <div className="cb-card-name">{c.name}</div>
-              {c.prereqs.length > 0 && (
+              {requirementsFor(access.requirements, "course", c.id).length > 0 && (
                 <div className="cb-req">
-                  exige: {c.prereqs.map((pid) => allCourses.find((x) => x.id === pid)?.name).filter(Boolean).join(", ")}
+                  exige: {requirementsFor(access.requirements, "course", c.id).map((r) => requirementLabel(r, access).replace(/^[^:]+: /, "")).join(", ")}
                 </div>
               )}
             </div>
@@ -5585,7 +5606,7 @@ function BoardView({
   peopleById: Map<string, PersonView>;
   ministries: MinistryView[];
   church: ChurchView | undefined;
-  currentRole: "master" | "pastor" | "lider" | "vol";
+  currentRole: "master" | "pastor" | "lider" | "membro";
   currentPersonId: string | null;
   onBack: () => void;
   onMoveCard: (cardId: string, colId: string) => void;
@@ -5719,7 +5740,7 @@ function Quadros({
   ministries: MinistryView[];
   people: PersonView[];
   church: ChurchView | undefined;
-  currentRole: "master" | "pastor" | "lider" | "vol";
+  currentRole: "master" | "pastor" | "lider" | "membro";
   currentPersonId: string | null;
   scopeMinistryIds: string[] | null;
   setModal: (modal: ModalState) => void;
@@ -6220,7 +6241,7 @@ const PAPEIS_V2 = [
   { id: "master", nome: "Pastor Master", desc: "Controle total da rede", ic: "globo" },
   { id: "pastor", nome: "Pastor", desc: "Sua congregação inteira", ic: "identidade" },
   { id: "lider", nome: "Líder", desc: "Seu ministério e GC", ic: "times" },
-  { id: "vol", nome: "Voluntário", desc: "App: escala, jornada, cursos", ic: "pessoa" },
+  { id: "membro", nome: "Membro", desc: "App: jornada, cursos e o que for liberado", ic: "pessoa" },
 ] as const;
 
 type PapelV2 = (typeof PAPEIS_V2)[number]["id"];
@@ -6233,7 +6254,7 @@ function matrizV2Padrao(): MatrizV2 {
     master: allTrue(),
     pastor: { ...allTrue(), permissoes: true, rede: false },
     lider: { ...allFalse(), painel: true, voluntarios: true, times: true, decisoes: true, escala: true, cultos: true, comunica: true },
-    vol: allFalse(),
+    membro: allFalse(),
   };
 }
 
@@ -6248,44 +6269,60 @@ function matrizComFallback(fromDb: Record<string, Record<string, boolean>>): Mat
   ) as MatrizV2;
 }
 
+/* módulos extras que um time libera no app pros seus membros (ministries.app_modules) */
+const APP_MODULES_TIME = [
+  { id: "visitantes", label: "Visitantes (recepção)" },
+  { id: "kids", label: "Kids (check-in)" },
+];
+
 function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
   ministry: MinistryView;
   courses: CourseView[];
   onClose: () => void;
   onRefresh: () => void;
 }) {
-  const profile = ministry.profile as { comoTrabalhamos?: string; chegada?: string; responsabilidades?: string[]; preRequisitos?: string[] };
+  const profile = ministry.profile as { comoTrabalhamos?: string; chegada?: string; responsabilidades?: string[] };
+  const access = useServiceAccess();
   const [nome, setNome] = useState(ministry.name);
   const [icon, setIcon] = useState(ministry.icon || DEFAULT_ICON);
   const [desc, setDesc] = useState(ministry.description);
   const [comoTrabalhamos, setComoTrabalhamos] = useState(profile.comoTrabalhamos ?? "");
   const [chegada, setChegada] = useState(profile.chegada ?? "");
   const [responsabilidades, setResponsabilidades] = useState((profile.responsabilidades ?? []).join("\n"));
-  const [preRequisitos, setPreRequisitos] = useState<string[]>(profile.preRequisitos ?? []);
+  const [requisitos, setRequisitos] = useState<Requirement[]>(() => requirementsFor(access.requirements, "ministry", ministry.id));
+  const [appModules, setAppModules] = useState<string[]>(ministry.appModules);
   const [saving, setSaving] = useState(false);
+  const [erro, setErro] = useState("");
 
-  const togPreReq = (id: string) =>
-    setPreRequisitos((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const togModule = (id: string) =>
+    setAppModules((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   const salvar = async () => {
     if (!nome.trim()) return;
     setSaving(true);
-    await createServiceBrowserClient()
+    setErro("");
+    const { error } = await createServiceBrowserClient()
       .schema("service")
       .from("ministries")
       .update({
         name: nome.trim(),
         icon: icon || DEFAULT_ICON,
         description: desc.trim() || null,
+        app_modules: appModules,
         profile: {
           comoTrabalhamos: comoTrabalhamos.trim() || undefined,
           chegada: chegada.trim() || undefined,
           responsabilidades: responsabilidades.split("\n").map((s) => s.trim()).filter(Boolean),
-          preRequisitos,
         },
         updated_at: new Date().toISOString(),
       })
       .eq("id", ministry.id);
+    const reqResult = error ? { error: error.message } : await saveRequirements(ministry.organizationId, "ministry", ministry.id, requisitos);
+    if (reqResult.error) {
+      setSaving(false);
+      setErro("Não foi possível salvar. Tente de novo.");
+      return;
+    }
     onRefresh();
     onClose();
   };
@@ -6308,16 +6345,19 @@ function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
             <label className="field-label">O que esperamos (uma por linha)</label>
             <textarea className="textarea" value={responsabilidades} onChange={(e) => setResponsabilidades(e.target.value)} placeholder={"ex: Chegar no horário\nAvisar com antecedência se não puder servir"} />
           </div>
-          {courses.length > 0 && (
-            <div className="field">
-              <label className="field-label">Pré-requisitos (cursos)</label>
-              <div className="seg-check">
-                {courses.map((c) => (
-                  <button key={c.id} className={`seg-chip${preRequisitos.includes(c.id) ? " on" : ""}`} type="button" onClick={() => togPreReq(c.id)}>{c.name}</button>
-                ))}
-              </div>
+          <div className="field">
+            <label className="field-label">Pré-requisitos para entrar no time</label>
+            <RequisitosEditor value={requisitos} onChange={setRequisitos} courses={courses.map((c) => ({ id: c.id, name: c.name }))} events={access.events} groupsLabel={access.groupsLabel} />
+          </div>
+          <div className="field">
+            <label className="field-label">Módulos extras no app</label>
+            <div className="seg-check">
+              {APP_MODULES_TIME.map((m) => (
+                <button key={m.id} type="button" className={`seg-chip${appModules.includes(m.id) ? " on" : ""}`} onClick={() => togModule(m.id)}>{m.label}</button>
+              ))}
             </div>
-          )}
+            <div style={{ fontSize: 12, color: "var(--subtle)", marginTop: 6 }}>Quem está neste time passa a ver esses módulos no app.</div>
+          </div>
           <div className="field">
             <label className="field-label">Funções</label>
             <div className="cell-tags">
@@ -6326,6 +6366,7 @@ function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
             </div>
           </div>
         </div>
+        {erro && <div className="field-error" style={{ padding: "0 24px 12px" }}>{erro}</div>}
         <div className="modal-foot">
           <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
           <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>Salvar</button>
@@ -6337,6 +6378,37 @@ function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
 
 /* acessos individuais por pessoa (telas extras além do papel) + delegação
    de quem pode conceder esses acessos ── Config → aba "Acessos por pessoa" */
+/* "Quero servir" (pedir pra entrar num time) : a própria igreja define o que
+   a pessoa precisa ter feito antes. Cada time ainda pode ter os seus
+   requisitos (Editar ministério). Ver app/service/lib/requirements.ts. */
+function RequisitosServirCard() {
+  const router = useRouter();
+  const access = useServiceAccess();
+  const [reqs, setReqs] = useState<Requirement[]>(() => requirementsFor(access.requirements, "serve", null));
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+  const salvar = async () => {
+    if (!access.organizationId) return;
+    setSaving(true);
+    setMsg("");
+    const { error } = await saveRequirements(access.organizationId, "serve", null, reqs);
+    setSaving(false);
+    setMsg(error ? "Não foi possível salvar. Tente de novo." : "Salvo.");
+    if (!error) router.refresh();
+  };
+  return (
+    <div className="cfg-card" style={{ marginTop: 16 }}>
+      <div className="cfg-card-t">Requisitos para servir</div>
+      <div className="cfg-card-s">O que a pessoa precisa ter feito antes de pedir para entrar em qualquer time pelo app. Cada time ainda pode ter os próprios requisitos, em Editar ministério.</div>
+      <RequisitosEditor value={reqs} onChange={setReqs} courses={access.courses} events={access.events} groupsLabel={access.groupsLabel} />
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
+        <button className="btn btn-pri btn-sm" type="button" disabled={saving} onClick={salvar}>{saving ? "Salvando..." : "Salvar requisitos"}</button>
+        {msg && <span style={{ fontSize: 12, color: "var(--subtle)" }}>{msg}</span>}
+      </div>
+    </div>
+  );
+}
+
 function AcessosCard({
   people,
   church,
@@ -6344,31 +6416,31 @@ function AcessosCard({
 }: {
   people: PersonView[];
   church: ChurchView | undefined;
-  currentRole: "master" | "pastor" | "lider" | "vol";
+  currentRole: "master" | "pastor" | "lider" | "membro";
 }) {
   const router = useRouter();
+  const { personGrants, currentPersonId } = useServiceAccess();
   const [q, setQ] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [erro, setErro] = useState("");
   const podeDelegar = currentRole === "master";
-  const delegados = church?.settings?.acessoDelegados ?? [];
   const pessoa = people.find((p) => p.id === selectedId) ?? null;
   const lista = people.filter((p) => !q || p.name.toLowerCase().includes(q.toLowerCase()));
-
-  const toggleAcesso = async (routeId: string) => {
-    if (!pessoa) return;
-    const atual = pessoa.meta?.extraAccess ?? [];
-    const next = atual.includes(routeId) ? atual.filter((r) => r !== routeId) : [...atual, routeId];
-    await createServiceBrowserClient().schema("service").from("people").update({ meta: { ...pessoa.meta, extraAccess: next } }).eq("id", pessoa.id);
+  const grantsDe = (personId: string) => personGrants.filter((g) => g.personId === personId).map((g) => g.code);
+  const pessoaGrants = pessoa ? grantsDe(pessoa.id) : [];
+  const ehDelegado = pessoaGrants.includes("acessos.delegar");
+  /* liberações vivem em service.person_grants (migração 0043); o banco só
+     deixa master/pastor/delegado gravar, e só master mexe em 'acessos.delegar' */
+  const toggleGrant = async (code: string) => {
+    if (!pessoa || !church?.organizationId) return;
+    setErro("");
+    const db = createServiceBrowserClient().schema("service").from("person_grants");
+    const { error } = pessoaGrants.includes(code)
+      ? await db.delete().eq("person_id", pessoa.id).eq("grant_code", code)
+      : await db.insert({ organization_id: church.organizationId, person_id: pessoa.id, grant_code: code, granted_by: currentPersonId });
+    if (error) setErro("Não foi possível salvar. Você pode não ter permissão para liberar esse acesso.");
     router.refresh();
   };
-
-  const toggleDelegado = async () => {
-    if (!pessoa || !church?.id) return;
-    const next = delegados.includes(pessoa.id) ? delegados.filter((id) => id !== pessoa.id) : [...delegados, pessoa.id];
-    await createServiceBrowserClient().schema("service").from("churches").update({ settings: { ...church.settings, acessoDelegados: next } }).eq("id", church.id);
-    router.refresh();
-  };
-
   return (
     <div className="cfg-grid2">
       <div className="cfg-card">
@@ -6380,7 +6452,7 @@ function AcessosCard({
         </div>
         <div className="acesso-list">
           {lista.slice(0, 40).map((p) => {
-            const n = p.meta?.extraAccess?.length ?? 0;
+            const n = grantsDe(p.id).filter((c) => c !== "acessos.delegar").length;
             return (
               <button key={p.id} type="button" className={`flag-row${selectedId === p.id ? " on" : ""}`} onClick={() => setSelectedId(p.id)}>
                 <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
@@ -6400,9 +6472,9 @@ function AcessosCard({
             <div className="cfg-card-s">Marque as telas que {pessoa.name.split(" ")[0]} pode abrir além do padrão do papel.</div>
             <div className="acesso-toggles">
               {ACESSO_ROTAS.map((r) => {
-                const on = (pessoa.meta?.extraAccess ?? []).includes(r.id);
+                const on = pessoaGrants.includes(r.id);
                 return (
-                  <button key={r.id} type="button" className={`acesso-tog${on ? " on" : ""}`} onClick={() => toggleAcesso(r.id)}>
+                  <button key={r.id} type="button" className={`acesso-tog${on ? " on" : ""}`} onClick={() => toggleGrant(r.id)}>
                     <span className="acesso-tog-ic"><Icon name={CEX_ICON_FOR[r.id] ?? "config"} size={15} /></span>
                     <span className="acesso-tog-l">{r.label}</span>
                     <span className={`acesso-tog-sw${on ? " on" : ""}`} />
@@ -6413,10 +6485,11 @@ function AcessosCard({
             <div className="cfg-row" style={{ marginTop: 18 }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Pode liberar acessos a outras pessoas</div>
-                <div className="cfg-row-s">{delegados.includes(pessoa.id) ? "É um delegado de acessos" : "Só vê os próprios acessos"}</div>
+                <div className="cfg-row-s">{ehDelegado ? "É um delegado de acessos" : "Só vê os próprios acessos"}</div>
               </div>
-              <button type="button" className={`sw${delegados.includes(pessoa.id) ? " on" : ""}`} disabled={!podeDelegar} onClick={toggleDelegado} />
+              <button type="button" className={`sw${ehDelegado ? " on" : ""}`} disabled={!podeDelegar} onClick={() => toggleGrant("acessos.delegar")} />
             </div>
+            {erro && <div className="field-error" style={{ marginTop: 8 }}>{erro}</div>}
             {!podeDelegar && <div style={{ fontSize: 11.5, color: "var(--subtle)", marginTop: 8 }}>Só a Direção (master) define quem pode delegar acessos.</div>}
           </>
         )}
@@ -7146,7 +7219,7 @@ function Config({
   rooms: RoomView[];
   reservations: ReservationView[];
   kidsClasses: KidsClassView[];
-  currentRole: "master" | "pastor" | "lider" | "vol";
+  currentRole: "master" | "pastor" | "lider" | "membro";
   currentExtraAccess?: string[];
   theme: "dark" | "light";
   setTheme: (t: "dark" | "light") => void;
@@ -7363,7 +7436,7 @@ function Config({
   const [matrizMsg, setMatrizMsg] = useState("");
   const [matrizSaving, setMatrizSaving] = useState(false);
   const toggleMx = (papel: PapelV2, acao: string) => {
-    if (papel === "master" || papel === "vol") return;
+    if (papel === "master" || papel === "membro") return;
     setMatriz((prev) => ({ ...prev, [papel]: { ...prev[papel], [acao]: !prev[papel][acao] } }));
   };
   const salvarMatriz = async () => {
@@ -7526,6 +7599,7 @@ function Config({
         </div>
       )}
 
+      {tab === "min" && <RequisitosServirCard />}
       {tab === "min" && (
         <div className="cfg-card" style={{ marginTop: 16 }}>
           <div className="cfg-card-t">Frentes / tags</div>
@@ -7801,12 +7875,12 @@ function Config({
                     <tr key={a.id}>
                       <td className="pmx-fn">{a.nome}</td>
                       {PAPEIS_V2.map((pp) => {
-                        const locked = pp.id === "master" || pp.id === "vol";
+                        const locked = pp.id === "master" || pp.id === "membro";
                         const on = matriz[pp.id][a.id];
                         const lockTitle = pp.id === "master"
                           ? "O Master sempre tem acesso total"
-                          : pp.id === "vol"
-                          ? "Voluntário usa o app dedicado (Início, Escala, Tarefas...); essas permissões não afetam o que ele vê ali."
+                          : pp.id === "membro"
+                          ? "Membro usa o app. Para abrir uma tela do painel pra uma pessoa, use Acessos."
                           : "";
                         return (
                           <td key={pp.id}>
@@ -9025,6 +9099,7 @@ function EntityDrawer({
   const [editingMinistry, setEditingMinistry] = useState(false);
   const [addingPerson, setAddingPerson] = useState(false);
   const [sendingAccess, setSendingAccess] = useState(false);
+  const access = useServiceAccess();
 
   const sendMemberAccessWhatsapp = async (member: MemberView) => {
     if (!member.phone || !member.email || !church || sendingAccess) return;
@@ -9298,7 +9373,8 @@ function EntityDrawer({
     const leader = ministry.people.find((link) => link.isLeader);
     const totalSlots = ministry.positions.reduce((s, p) => s + p.need_count, 0);
     const isOpen = ministry.people.length < totalSlots || totalSlots === 0;
-    const profile = ministry.profile as { comoTrabalhamos?: string; chegada?: string; responsabilidades?: string[]; preRequisitos?: string[] };
+    const profile = ministry.profile as { comoTrabalhamos?: string; chegada?: string; responsabilidades?: string[] };
+    const requisitosTime = requirementsFor(access.requirements, "ministry", ministry.id);
     const matchesPosition = (link: MinistryView["people"][number], positionName: string) =>
       link.functions.some((f) => f.toLowerCase() === positionName.toLowerCase());
     const porFuncao = ministry.positions.map((position) => ({
@@ -9323,7 +9399,7 @@ function EntityDrawer({
           </div>
         </div>
         <div className="drawer-body">
-          {(ministry.description || profile.comoTrabalhamos || profile.chegada || (profile.responsabilidades?.length ?? 0) > 0 || (profile.preRequisitos?.length ?? 0) > 0) && (
+          {(ministry.description || profile.comoTrabalhamos || profile.chegada || (profile.responsabilidades?.length ?? 0) > 0 || requisitosTime.length > 0) && (
             <div style={{ marginTop: 4, marginBottom: 22 }}>
               <div className="dsec-title" style={{ marginBottom: 10 }}>Sobre o time</div>
               <div className="tinfo">
@@ -9351,20 +9427,19 @@ function EntityDrawer({
                     {profile.responsabilidades!.map((r, i) => <div className="tinfo-li" key={i}>{r}</div>)}
                   </div>
                 )}
-                {(profile.preRequisitos?.length ?? 0) > 0 && (
+                {requisitosTime.length > 0 && (
                   <div className="tinfo-block">
                     <div className="tinfo-label"><Icon name="cursos" size={13} /> Pré-requisitos</div>
-                    {profile.preRequisitos!.map((cid) => {
-                      const course = courses.find((c) => c.id === cid);
-                      return <div className="tinfo-li" key={cid}>Concluir o curso <b style={{ color: "var(--white)" }}>{course ? course.name : cid}</b></div>;
-                    })}
+                    {requisitosTime.map((r) => (
+                      <div className="tinfo-li" key={`${r.kind}-${r.ref}`}>{requirementLabel(r, access)}</div>
+                    ))}
                   </div>
                 )}
               </div>
               <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={() => setEditingMinistry(true)}>Editar</button>
             </div>
           )}
-          {!ministry.description && !profile.comoTrabalhamos && !profile.chegada && !(profile.responsabilidades?.length) && !(profile.preRequisitos?.length) && (
+          {!ministry.description && !profile.comoTrabalhamos && !profile.chegada && !(profile.responsabilidades?.length) && !requisitosTime.length && (
             <button className="btn btn-sec btn-sm" type="button" style={{ marginBottom: 22 }} onClick={() => setEditingMinistry(true)}>+ Contar sobre o time</button>
           )}
           <DrawerSection title="Funções & quem cobre">
@@ -10101,7 +10176,7 @@ function ServiceModal({
   ministries,
   rooms = [],
   currentPersonId = null,
-  currentRole = "vol",
+  currentRole = "membro",
   onClose,
 }: {
   modal: NonNullable<ModalState>;
@@ -10110,7 +10185,7 @@ function ServiceModal({
   ministries: MinistryView[];
   rooms?: RoomView[];
   currentPersonId?: string | null;
-  currentRole?: "master" | "pastor" | "lider" | "vol";
+  currentRole?: "master" | "pastor" | "lider" | "membro";
   onClose: () => void;
 }) {
   const router = useRouter();

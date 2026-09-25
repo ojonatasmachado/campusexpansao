@@ -73,11 +73,11 @@ const JOURNEY_REQUESTS = [
 const MINISTRIES = [
   {
     id: "min-1", organizationId: ORG, churchId: CHURCH_1, name: "Louvor", icon: "louvor", description: "Time de música e adoração. Ensaios toda semana.",
+    appModules: [],
     profile: {
       comoTrabalhamos: "Ensaio geral toda quinta às 20h. Passagem de som 1h antes de cada culto.",
       chegada: "1h antes do culto",
       responsabilidades: ["Chegar no horário combinado", "Avisar com antecedência se não puder servir", "Participar do ensaio geral"],
-      preRequisitos: [],
     },
     positions: [
       { id: "pos-1-1", ministry_id: "min-1", name: "Vocal", need_count: 3, sort_order: 0 },
@@ -90,6 +90,7 @@ const MINISTRIES = [
   },
   {
     id: "min-2", organizationId: ORG, churchId: CHURCH_1, name: "Mídia & Comunicação", icon: "midia", description: "Transmissão, design e redes sociais.",
+    appModules: [],
     profile: {},
     positions: [
       { id: "pos-2-1", ministry_id: "min-2", name: "Operador", need_count: 2, sort_order: 0 },
@@ -100,6 +101,7 @@ const MINISTRIES = [
   },
   {
     id: "min-3", organizationId: ORG, churchId: CHURCH_1, name: "Recepção", icon: "recepcao", description: "Acolhimento e recepção de visitantes no domingo.",
+    appModules: ["visitantes"],
     profile: {},
     positions: [
       { id: "pos-3-1", ministry_id: "min-3", name: "Recepcionista", need_count: 4, sort_order: 0 },
@@ -111,6 +113,7 @@ const MINISTRIES = [
   },
   {
     id: "min-4", organizationId: ORG, churchId: CHURCH_1, name: "Kids", icon: "kids", description: "Ministério infantil e escola bíblica.",
+    appModules: ["kids"],
     profile: {},
     positions: [
       { id: "pos-4-1", ministry_id: "min-4", name: "Professor", need_count: 2, sort_order: 0 },
@@ -294,6 +297,15 @@ const VISITOR_NOTES = [
   { id: "vn-1", visitor_id: "v1", body: "Veio com o irmão. Interesse em GC.", author: "Ana Lima", happened_on: null, is_milestone: false, created_at: new Date().toISOString() },
 ];
 
+/* requisitos e liberações de exemplo (service.requirements / person_grants) */
+const REQUIREMENTS = [
+  { target_kind: "course" as const, target_id: "c2", req_kind: "course" as const, req_ref: "c1" },
+  { target_kind: "ministry" as const, target_id: "min-4", req_kind: "journey" as const, req_ref: "batismo" },
+  { target_kind: "ministry" as const, target_id: "min-4", req_kind: "course" as const, req_ref: "c1" },
+  { target_kind: "serve" as const, target_id: null, req_kind: "journey" as const, req_ref: "decisao" },
+];
+const PERSON_GRANTS = [{ personId: "p2", code: "visitantes" }];
+
 export default function ServiceDemoPage() {
   return (
     <ServiceExactApp
@@ -302,6 +314,8 @@ export default function ServiceDemoPage() {
       members={MEMBERS}
       ministries={MINISTRIES}
       events={EVENTS}
+      requirements={REQUIREMENTS}
+      personGrants={PERSON_GRANTS}
       roster={ROSTER}
       visitorsInCare={VISITORS.length}
       visitors={VISITORS}

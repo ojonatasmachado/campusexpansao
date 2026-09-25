@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
+import { useServiceAccess } from "./AccessContext";
+import RequisitosEditor from "./RequisitosEditor";
+import { requirementsFor, saveRequirements, type Requirement } from "./lib/requirements";
 
 /* ─── tipos internos do editor ─────────────────────────────── */
 
@@ -37,7 +40,7 @@ type CursoLocal = {
   desc: string;
   divulgacao: string;
   materiais: Material[];
-  preReqs: string[];
+  preReqs: Requirement[];
   modulos: ModuloState[];
 };
 
@@ -308,6 +311,7 @@ function QuizEditor({
 export default function CursoEditor({ courseId, church, allCourses, onClose }: CursoEditorProps) {
   const router = useRouter();
   const supabase = createServiceBrowserClient();
+  const access = useServiceAccess();
 
   const [c, setC] = useState<CursoLocal>(blankCurso);
   const [loading, setLoading] = useState(!!courseId);
@@ -363,7 +367,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
         desc: (row.description ?? "") as string,
         divulgacao: (row.divulgacao ?? "") as string,
         materiais: Array.isArray(row.materiais) ? (row.materiais as Material[]) : [],
-        preReqs: Array.isArray(row.prereqs) ? (row.prereqs as string[]) : [],
+        preReqs: requirementsFor(access.requirements, "course", courseId),
         modulos: mods.length ? mods : [{ id: uid(), nome: "Módulo 1", aulas: [] }],
       });
       setLoading(false);
@@ -413,11 +417,6 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
       return { ...p, modulos: m };
     });
 
-  const togReq = (id: string) =>
-    set("preReqs", c.preReqs.includes(id)
-      ? c.preReqs.filter((x) => x !== id)
-      : [...c.preReqs, id]);
-
   const totalAulas = c.modulos.reduce((n, m) => n + m.aulas.length, 0);
   const outros = allCourses.filter((x) => x.id !== courseId);
 
@@ -436,7 +435,6 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
           level: c.nivel.trim() || null,
           color: c.cor,
           description: c.desc.trim() || null,
-          prereqs: c.preReqs,
           divulgacao: c.divulgacao || null,
           materiais: c.materiais,
           modalidade: c.modalidade,
@@ -455,13 +453,18 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
           color: c.cor,
           description: c.desc.trim() || null,
           category: c.nivel.trim() || "discipulado",
-          prereqs: c.preReqs,
           divulgacao: c.divulgacao || null,
           materiais: c.materiais,
           modalidade: c.modalidade,
         }).select("id").single();
         if (insErr) throw insErr;
         savedCourseId = newCourse.id as string;
+      }
+
+      /* pré-requisitos vivem em service.requirements (migração 0043) */
+      if (savedCourseId) {
+        const { error: reqErr } = await saveRequirements(church.organizationId, "course", savedCourseId, c.preReqs);
+        if (reqErr) throw new Error(reqErr);
       }
 
       /* inserir módulos e aulas */
@@ -605,23 +608,10 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
           </div>
 
           {/* pré-requisitos */}
-          {outros.length > 0 && (
-            <div className="dsec">
-              <div className="dsec-title">Pré-requisitos para se inscrever</div>
-              <div className="seg-check">
-                {outros.map((o) => (
-                  <button
-                    key={o.id}
-                    className={`seg-chip${c.preReqs.includes(o.id) ? " on" : ""}`}
-                    type="button"
-                    onClick={() => togReq(o.id)}
-                  >
-                    {o.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="dsec">
+            <div className="dsec-title">Pré-requisitos para se inscrever</div>
+            <RequisitosEditor value={c.preReqs} onChange={(v) => set("preReqs", v)} courses={outros} events={access.events} groupsLabel={access.groupsLabel} />
+          </div>
 
           {/* conteúdo */}
           <div className="dsec">

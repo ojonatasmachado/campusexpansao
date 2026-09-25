@@ -3,6 +3,7 @@ import { createServiceSupabaseClient } from "./lib/supabase";
 import { resolverEnqueteElegivel } from "./lib/enquetes";
 import { resolverPesquisaElegivel } from "./lib/pesquisas";
 import ServiceExactApp from "./ServiceExactApp";
+import type { RequirementRow } from "./lib/requirements";
 
 type ChurchRow = {
   id: string;
@@ -96,7 +97,9 @@ type TagRow = {
   leaders: string[] | null;
 };
 
-type PersonMeta = { recusasSeguidas?: number; diasIndisponivel?: number; extraAccess?: string[]; birthday?: string; neighborhood?: string };
+type PersonMeta = { recusasSeguidas?: number; diasIndisponivel?: number; birthday?: string; neighborhood?: string };
+
+type PersonGrantView = { personId: string; code: string };
 
 type PersonRow = {
   id: string;
@@ -182,6 +185,7 @@ type MinistryRow = {
   icon: string | null;
   description: string | null;
   profile: Record<string, unknown> | null;
+  app_modules: string[] | null;
   created_at: string;
 };
 
@@ -210,6 +214,7 @@ type MinistryView = {
   icon: string;
   description: string;
   profile: Record<string, unknown>;
+  appModules: string[];
   positions: MinistryPositionRow[];
   people: Array<{
     personId: string;
@@ -715,6 +720,8 @@ type ExtraServiceData = {
   tags: TagRow[];
   timelineEvents: TimelineEventView[];
   journeyRequests: JourneyChangeRequestView[];
+  requirements: RequirementRow[];
+  personGrants: PersonGrantView[];
 };
 
 const emptyExtraServiceData: ExtraServiceData = {
@@ -757,6 +764,8 @@ const emptyExtraServiceData: ExtraServiceData = {
   tags: [],
   timelineEvents: [],
   journeyRequests: [],
+  requirements: [],
+  personGrants: [],
 };
 
 function friendlyReadError(message: string) {
@@ -850,6 +859,7 @@ function toMinistryViews(
     icon: ministry.icon || "",
     description: ministry.description || "Descrição não informada",
     profile: ministry.profile ?? {},
+    appModules: ministry.app_modules ?? [],
     positions: positions
       .filter((position) => position.ministry_id === ministry.id)
       .sort((a, b) => a.sort_order - b.sort_order),
@@ -964,7 +974,7 @@ async function getServiceDashboardData(): Promise<{
   const { data: ministriesData, error: ministriesError } = await supabase
     .schema("service")
     .from("ministries")
-    .select("id,organization_id,church_id,name,icon,description,profile,created_at")
+    .select("id,organization_id,church_id,name,icon,description,profile,app_modules,created_at")
     .order("name");
 
   if (ministriesError) {
@@ -1124,6 +1134,8 @@ async function getServiceDashboardData(): Promise<{
     tagsResult,
     timelineEventsResult,
     journeyRequestsResult,
+    requirementsResult,
+    personGrantsResult,
   ] = await Promise.all([
     supabase.schema("service").from("decisions").select("id,name,phone,happened_on,kind,service_name,responsible_id,status,member_id,age,notes,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("baptism_classes").select("id,label,baptism_date,location,room_id,status,pastor,notes,open_enrollment").order("created_at", { ascending: false }),
@@ -1164,6 +1176,8 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("tags").select("id,church_id,name,color,leaders").order("created_at", { ascending: false }),
     supabase.schema("service").from("timeline_events").select("id,member_id,event_type,title,body,by_whom,sort_key,when_label,created_at").order("sort_key", { ascending: false }),
     supabase.schema("service").from("journey_change_requests").select("id,member_id,step,event_date,note,requested_by,status,reviewed_by,reviewed_at,created_at").order("created_at", { ascending: false }),
+    supabase.schema("service").from("requirements").select("target_kind,target_id,req_kind,req_ref"),
+    supabase.schema("service").from("person_grants").select("person_id,grant_code"),
   ]);
 
   const extraError = [
@@ -1206,6 +1220,8 @@ async function getServiceDashboardData(): Promise<{
     tagsResult.error,
     timelineEventsResult.error,
     journeyRequestsResult.error,
+    requirementsResult.error,
+    personGrantsResult.error,
   ].find(Boolean);
 
   return {
@@ -1274,6 +1290,8 @@ async function getServiceDashboardData(): Promise<{
         reviewedAt: row.reviewed_at,
         createdAt: row.created_at,
       })) as JourneyChangeRequestView[],
+      requirements: ((requirementsResult.data ?? []) as RequirementRow[]),
+      personGrants: ((personGrantsResult.data ?? []) as { person_id: string; grant_code: string }[]).map((g) => ({ personId: g.person_id, code: g.grant_code })),
     },
     error: extraError ? friendlyReadError(extraError.message) : "",
   };
@@ -1300,7 +1318,7 @@ export default async function ServiceHomePage() {
   const organizationId = churches[0]?.organizationId ?? "";
   const { data: { user } } = await supabase.auth.getUser();
 
-  let currentRole: "master" | "pastor" | "lider" | "vol" = "vol";
+  let currentRole: "master" | "pastor" | "lider" | "membro" = "membro";
   let currentPersonId: string | null = null;
   const permissionsMatrix: Record<string, Record<string, boolean>> = {};
 
@@ -1313,7 +1331,7 @@ export default async function ServiceHomePage() {
 
     const membershipRole = (membershipRow as { role?: string } | null)?.role;
     if (membershipRole === "owner" || membershipRole === "master") currentRole = "master";
-    else if (membershipRole === "pastor" || membershipRole === "lider" || membershipRole === "vol") currentRole = membershipRole;
+    else if (membershipRole === "pastor" || membershipRole === "lider" || membershipRole === "membro") currentRole = membershipRole;
 
     ((rolePermRows ?? []) as { role: string; permission_code: string; allowed: boolean }[]).forEach((row) => {
       const code = row.permission_code.replace(/^service\./, "");
@@ -1446,6 +1464,8 @@ export default async function ServiceHomePage() {
       tags={extra.tags.map((tag) => ({ id: tag.id, churchId: tag.church_id, name: tag.name, color: tag.color ?? "wheat", leaders: tag.leaders ?? [] }))}
       timelineEvents={extra.timelineEvents}
       journeyRequests={extra.journeyRequests}
+      requirements={extra.requirements}
+      personGrants={extra.personGrants}
       bibleMarks={bibleMarks}
       currentRole={currentRole}
       permissionsMatrix={permissionsMatrix}

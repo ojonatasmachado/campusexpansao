@@ -152,11 +152,14 @@ export async function POST(request: Request) {
 
     await db.schema("service").from("members").update({ volunteer_id: personId }).eq("id", memberId).eq("organization_id", organizationId);
 
+    /* quem entra pelo link do convite já está aceitando; conta que já existia
+       fica 'invited' até a pessoa aceitar (core.accept_membership, tela do
+       onboarding), pra ninguém ser colocado numa igreja sem saber */
     await db
       .schema("core")
       .from("memberships")
       .upsert(
-        { user_id: authUserId, organization_id: organizationId, role: "vol", status: "active" },
+        { user_id: authUserId, organization_id: organizationId, role: "membro", status: needsPassword ? "active" : "invited" },
         { onConflict: "user_id,organization_id", ignoreDuplicates: true },
       );
 
