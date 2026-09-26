@@ -87,10 +87,10 @@ type ContatoCfg = { prazoHoras: number; canal: string; metaIntegracaoDias: numbe
 /* mensagem que abre pronta no WhatsApp do líder quando ele manda o acesso ao
    app pra um membro novo, guardada em service.churches.settings.acessoMsgCfg
    (mesmo jsonb de sempre). Placeholders trocados na hora do envio, ver
-   buildMemberAccessWhatsappUrl: {nome} {igreja} {link} {email} {senha}. */
+   openMemberInviteWhatsapp: {nome} {igreja} {link} ({email}/{senha} de templates antigos). */
 type AcessoMsgCfg = { mensagem: string };
 const ACESSO_MSG_DEFAULT: AcessoMsgCfg = {
-  mensagem: "Parabéns, {nome}! Que alegria ter você como membro da {igreja}.\n\nSeu acesso ao app já está pronto. Para entrar, é só seguir os passos:\n1. Abra este link → {link}\n2. Seu e-mail de acesso: {email}\n3. Senha: {senha}\n\nO link é só seu e vale por 7 dias. Qualquer dúvida, é só chamar por aqui.",
+  mensagem: "Parabéns, {nome}! Que alegria ter você na {igreja}.\n\nSeu acesso ao app da igreja já está pronto. É só abrir este link, colocar seu e-mail, criar uma senha e o seu CEP:\n{link}\n\nO link é só seu e vale por 7 dias. Qualquer dúvida, é só chamar por aqui.",
 };
 
 const CONTATO_CFG_DEFAULT: ContatoCfg = {
@@ -2321,7 +2321,7 @@ function Membros({ members, ministries, church, setDrawer, setModal }: { members
     ministries.filter((min) => min.people.some((p) => p.personId === volunteerId));
   return (
     <div className="content wide">
-      <PageHead title="Membros" eyebrow="Pessoas" subtitle="Toda a congregação. Veja quem serve, em que jornada está e o histórico desde que chegou." help="Toda a congregação entra aqui, sirva ou não em um ministério. É diferente de Voluntários, que lista só quem já serve ativamente." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Cadastro de quem já é da casa. Os dados completos liberam o acesso ao app.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"É por aqui que você manda o convite do app." }, { k:"email", label:"E-mail", type:"text", half:true, req:true, ph:"usado para entrar no app", hint:"Obrigatório para o acesso ao app." }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"cep", label:"CEP", type:"cep", half:true, ph:"00000-000", hint:"Preenche rua, bairro, cidade e estado sozinho.", autofill:{ street:"rua", neighborhood:"bairro", city:"cidade", state:"estado" } }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }, { k:"rua", label:"Rua", type:"text", half:true, ph:"Nome da rua" }, { k:"cidade", label:"Cidade", type:"text", half:true }, { k:"estado", label:"Estado", type:"text", half:true, ph:"UF" }], action: { kind: "member" } })}>+ Novo membro</button>} />
+      <PageHead title="Membros" eyebrow="Pessoas" subtitle="Toda a congregação. Veja quem serve, em que jornada está e o histórico desde que chegou." help="Toda a congregação entra aqui, sirva ou não em um ministério. É diferente de Voluntários, que lista só quem já serve ativamente." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Nome, sobrenome e telefone bastam: o convite do app vai pelo WhatsApp e a pessoa completa o resto.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome e sobrenome", type:"text", req:true, ph:"Como a pessoa se chama", hint:"A pessoa pode ajustar depois no app." }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Ao salvar, o WhatsApp abre com o convite do app para este número." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"opcional", hint:"Opcional: a pessoa informa no convite." }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"cep", label:"CEP", type:"cep", half:true, ph:"00000-000", hint:"Preenche rua, bairro, cidade e estado sozinho.", autofill:{ street:"rua", neighborhood:"bairro", city:"cidade", state:"estado" } }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }, { k:"rua", label:"Rua", type:"text", half:true, ph:"Nome da rua" }, { k:"cidade", label:"Cidade", type:"text", half:true }, { k:"estado", label:"Estado", type:"text", half:true, ph:"UF" }], action: { kind: "member" } })}>+ Novo membro</button>} />
       {church && (
         <div className="contato-banner">
           <div className="contato-pill"><span style={{ color: "var(--olive)" }}><Icon name="whatsapp" size={16} /></span></div>
@@ -3426,7 +3426,7 @@ function AcessoMsgModal({ church, cfg, onClose, onRefresh }: { church: ChurchVie
             <label className="field-label">Mensagem</label>
             <textarea className="textarea" rows={8} value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
             <div style={{ fontSize: 11, color: "var(--subtle)", marginTop: 6 }}>
-              Use {"{nome}"}, {"{igreja}"}, {"{link}"}, {"{email}"} e {"{senha}"}: preenchemos automaticamente na hora de enviar. O link é um convite só da pessoa, onde ela cria a própria senha. Nenhuma senha vai na mensagem.
+              Use {"{nome}"}, {"{igreja}"} e {"{link}"}: preenchemos automaticamente na hora de enviar. O link é um convite só da pessoa, onde ela informa o e-mail, cria a senha e coloca o CEP. Nenhuma senha vai na mensagem.
             </div>
           </div>
           <button className="btn btn-ghost btn-sm" type="button" onClick={restaurar}>Restaurar mensagem padrão</button>
@@ -8986,28 +8986,48 @@ function fillAcessoMsgTemplate(template: string, vars: { nome: string; igreja: s
     .replaceAll("{senha}", vars.senha);
 }
 
-/* {link} é o convite de uso único (a pessoa cria a própria senha nele) ou,
-   se a conta já tinha senha, o link de login. Nunca vai senha na mensagem:
-   {senha} só explica o que fazer, pra templates antigos que ainda usam. Ver
-   app/api/service/members/create-account/route.ts. */
-function buildMemberAccessWhatsappUrl(
-  member: { name: string; phone: string | null; email: string | null },
-  churchName: string,
-  access: { link: string; needsPassword: boolean },
-  template: string = ACESSO_MSG_DEFAULT.mensagem,
-): string | null {
-  if (!member.phone || !member.email) return null;
-  const digits = member.phone.replace(/\D/g, "");
-  if (!digits) return null;
-  const waPhone = digits.length <= 11 ? `55${digits}` : digits;
-  const msg = fillAcessoMsgTemplate(template, {
-    nome: member.name.split(" ")[0],
-    igreja: churchName,
-    link: access.link,
-    email: member.email,
-    senha: access.needsPassword ? "você cria no link acima" : "a mesma que você já usa",
+/* Convite do membro pelo WhatsApp do líder: gera o link de uso único
+   (app/api/service/members/invite, a pessoa cria e-mail, senha e CEP nele)
+   ou, se ela já tem acesso, o login da igreja, e abre o wa.me com a mensagem
+   da igreja. A aba precisa ser aberta no clique (antes de qualquer await),
+   senão o navegador bloqueia o pop-up: quem chama passa essa aba em `tab`.
+   Fonte única: cadastro de membro novo e botão "mandar acesso" da ficha. */
+async function openMemberInviteWhatsapp(opts: {
+  memberId: string;
+  name: string;
+  phone: string | null;
+  churchName: string;
+  template?: string;
+  tab: Window | null;
+}): Promise<{ error?: string }> {
+  const digits = (opts.phone ?? "").replace(/\D/g, "");
+  if (digits.length < 10) {
+    opts.tab?.close();
+    return { error: "Cadastre o telefone com DDD para mandar o convite." };
+  }
+  const res = await fetch("/api/service/members/invite", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ memberId: opts.memberId }),
   });
-  return `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.link) {
+    opts.tab?.close();
+    return { error: data.error ?? "Não foi possível gerar o convite agora. Tente de novo." };
+  }
+  const waPhone = digits.length <= 11 ? `55${digits}` : digits;
+  const msg = fillAcessoMsgTemplate(opts.template || ACESSO_MSG_DEFAULT.mensagem, {
+    nome: opts.name.split(" ")[0],
+    igreja: opts.churchName,
+    link: data.link,
+    /* templates antigos ainda podem ter {email}/{senha}: a pessoa cria os dois no link */
+    email: data.alreadyHasAccess ? "o que você já usa" : "você informa no link",
+    senha: data.alreadyHasAccess ? "a mesma que você já usa" : "você cria no link",
+  });
+  const url = `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
+  if (opts.tab) opts.tab.location.href = url;
+  else window.open(url, "_blank");
+  return {};
 }
 
 function EntityDrawer({
@@ -9078,40 +9098,20 @@ function EntityDrawer({
   const access = useServiceAccess();
 
   const sendMemberAccessWhatsapp = async (member: MemberView) => {
-    if (!member.phone || !member.email || !church || sendingAccess) return;
+    if (!church || sendingAccess) return;
     setSendingAccess(true);
-    /* a aba abre já no clique (senão o navegador bloqueia o pop-up depois do
-       await) e recebe o link do WhatsApp quando o convite fica pronto */
     const tab = window.open("", "_blank");
     try {
-      const res = await fetch("/api/service/members/create-account", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          organizationId: church.organizationId,
-          churchId: church.id,
-          memberId: member.id,
-          name: member.name,
-          email: member.email,
-          phone: member.phone,
-        }),
+      const { error } = await openMemberInviteWhatsapp({
+        memberId: member.id,
+        name: member.name,
+        phone: member.phone,
+        churchName: church.nome ?? "sua igreja",
+        template: church.settings?.acessoMsgCfg?.mensagem,
+        tab,
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.accessLink) {
-        tab?.close();
-        window.alert(data.error ?? "Não foi possível gerar o acesso agora. Tente de novo.");
-        return;
-      }
-      router.refresh();
-      const url = buildMemberAccessWhatsappUrl(
-        member,
-        church.nome ?? "sua igreja",
-        { link: data.accessLink, needsPassword: Boolean(data.needsPassword) },
-        church.settings?.acessoMsgCfg?.mensagem || ACESSO_MSG_DEFAULT.mensagem,
-      );
-      if (url && tab) tab.location.href = url;
-      else if (url) window.open(url, "_blank");
-      else tab?.close();
+      if (error) window.alert(error);
+      else router.refresh();
     } finally {
       setSendingAccess(false);
     }
@@ -9200,6 +9200,7 @@ function EntityDrawer({
   if (drawer.kind === "member") {
     const member = members.find((item) => item.id === drawer.id);
     if (!member) return null;
+    const temTelefone = (member.phone ?? "").replace(/\D/g, "").length >= 10;
     const linkedMinistries = ministries.filter((m) => m.people.some((p) => p.personId === member.volunteerId));
     const memberEnrollments = enrollments.filter((e) => e.member_id === member.id).map((e) => {
       const course = courses.find((c) => c.id === e.course_id);
@@ -9235,23 +9236,23 @@ function EntityDrawer({
               <dt>Aniversário</dt><dd>{member.birth ? formatDateBR(member.birth) : <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
               <dt>Bairro</dt><dd>{member.neighborhood || <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
               {(church?.settings?.gruposCfg?.ativo ?? true) && <><dt>{church?.settings?.gruposCfg?.termoP ?? "Grupo de Comunhão"}</dt><dd>{grupo ? <>{grupo.name}{grupoLider && <span style={{ color: "var(--subtle)" }}> · líder {grupoLider.name.split(" ")[0]}</span>}</> : <span style={{ color: "var(--subtle)" }}>sem grupo</span>}</dd></>}
-              <dt>Acesso ao app</dt><dd>{member.volunteerId ? <span style={{ color: "var(--olive-soft)" }}>liberado</span> : member.email ? <span style={{ color: "var(--amber)" }}>pendente (criando acesso…)</span> : <span style={{ color: "var(--amber)" }}>pendente (falta e-mail)</span>}</dd>
+              <dt>Acesso ao app</dt><dd>{member.volunteerId ? <span style={{ color: "var(--olive-soft)" }}>liberado</span> : temTelefone ? <span style={{ color: "var(--amber)" }}>convite ainda não aceito</span> : <span style={{ color: "var(--amber)" }}>falta o telefone</span>}</dd>
             </dl>
             <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
               <button className="btn btn-sec btn-sm" type="button" onClick={() => setEditingMember(true)}>Editar dados</button>
-              {member.phone && member.email && (
+              {temTelefone && (
                 <button className="btn btn-pri btn-sm" type="button" disabled={sendingAccess} onClick={() => sendMemberAccessWhatsapp(member)}>
                   <Icon name="whatsapp" size={14} />
                   {sendingAccess ? "Preparando…" : member.volunteerId ? "Reenviar acesso pelo WhatsApp" : "Enviar acesso pelo WhatsApp"}
                 </button>
               )}
             </div>
-            {member.phone && member.email && (
+            {temTelefone && (
               <div style={{ fontSize: 12, color: "var(--subtle)", marginTop: 10, lineHeight: 1.5 }}>
                 Ao clicar, o app gera um convite só de {member.name.split(" ")[0]}, válido por 7 dias,
-                onde a pessoa cria a própria senha. Depois, abre o WhatsApp no seu celular já com a
-                mensagem de boas-vindas e o link, prontos pra você conferir e mandar. Nada é enviado
-                sozinho: você sempre aperta enviar por último.
+                onde a pessoa informa o e-mail, cria a senha e coloca o CEP. Depois, abre o WhatsApp no
+                seu celular já com a mensagem de boas-vindas e o link, prontos pra você conferir e
+                mandar. Nada é enviado sozinho: você sempre aperta enviar por último.
               </div>
             )}
           </DrawerSection>
@@ -10129,7 +10130,11 @@ function ServiceModal({
 
     setSaving(true);
     if (action.kind === "member") {
-      if (!value("nome")) { setSaving(false); setError("Digite o nome do membro."); return; }
+      if (value("nome").split(/\s+/).length < 2) { setSaving(false); setError("Coloque nome e sobrenome."); return; }
+      if (value("tel").replace(/\D/g, "").length < 10) { setSaving(false); setError("Coloque o telefone com DDD: o convite do app vai por WhatsApp."); return; }
+      /* aba do WhatsApp aberta ainda no clique (antes do primeiro await),
+         senão o navegador bloqueia; recebe o convite quando o membro existir */
+      const conviteTab = window.open("", "_blank");
       const { data: newMember, error: memberError } = await supabase.schema("service").from("members").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -10153,20 +10158,17 @@ function ServiceModal({
         await supabase.schema("service").from("timeline_events").insert(
           timelineEventPayload(church.organizationId, newMember.id, "decisao", "Decisão por Jesus"),
         );
-        if (value("email")) {
-          fetch("/api/service/members/create-account", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              organizationId: church.organizationId,
-              churchId: church.id,
-              memberId: newMember.id,
-              name: value("nome"),
-              email: value("email"),
-              phone: value("tel") || null,
-            }),
-          }).catch((err) => console.error("Não foi possível criar o acesso ao app deste membro agora:", err));
-        }
+        const { error: conviteError } = await openMemberInviteWhatsapp({
+          memberId: newMember.id,
+          name: value("nome"),
+          phone: value("tel"),
+          churchName: church.nome ?? "sua igreja",
+          template: church.settings?.acessoMsgCfg?.mensagem,
+          tab: conviteTab,
+        });
+        if (conviteError) window.alert(`Membro cadastrado, mas o convite não saiu: ${conviteError} Use "Enviar acesso pelo WhatsApp" na ficha dele.`);
+      } else {
+        conviteTab?.close();
       }
     } else if (action.kind === "event") {
       if (!value("nome")) { setSaving(false); setError("Digite o nome do culto."); return; }

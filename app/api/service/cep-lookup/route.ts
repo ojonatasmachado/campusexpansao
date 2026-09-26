@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { createClient } from "../../../lib/supabase-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /* Consulta de CEP : mesma API gratuita (BrasilAPI) já usada em
    /api/service/cnpj-lookup, agora pro endereço do membro no cadastro. Sem
-   número : só rua, bairro, cidade e estado, que é o que o CEP devolve. */
+   número : só rua, bairro, cidade e estado, que é o que o CEP devolve.
+   Não exige login: o link do convite pede o CEP antes de a conta existir, e
+   a BrasilAPI já é pública (esta rota só repassa a consulta). */
 
 type BrasilApiCep = {
   cep?: string;
@@ -16,12 +17,26 @@ type BrasilApiCep = {
   state?: string;
 };
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+/* limite simples por IP (por instância do servidor): a rota não exige login,
+   então não pode virar proxy aberto pra BrasilAPI. Uma pessoa digitando o
+   CEP faz 1 ou 2 consultas; 20 por minuto sobra. */
+const JANELA_MS = 60_000;
+const LIMITE = 20;
+const consultas = new Map<string, number[]>();
 
-  if (userError || !user) {
-    return NextResponse.json({ error: "Você precisa estar logado." }, { status: 401 });
+function passouDoLimite(ip: string): boolean {
+  const agora = Date.now();
+  const recentes = (consultas.get(ip) ?? []).filter((t) => agora - t < JANELA_MS);
+  recentes.push(agora);
+  consultas.set(ip, recentes);
+  if (consultas.size > 5000) consultas.clear();
+  return recentes.length > LIMITE;
+}
+
+export async function POST(request: Request) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  if (passouDoLimite(ip)) {
+    return NextResponse.json({ valid: false, error: "Muitas consultas de CEP. Espere um minuto e tente de novo." }, { status: 429 });
   }
 
   let body: { cep?: string };

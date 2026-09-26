@@ -32,7 +32,7 @@ export default function ServiceLoginForm() {
               {mode === "login" ? "Entrar no Service" : "Criar conta do Service"}
             </h1>
             <p className="t-body" style={{ color: "var(--light)", marginTop: 10 }}>
-              Use seu e-mail e senha. Membro de igreja entra pelo link de convite que o líder manda.
+              Área da gestão da igreja. Membro entra pelo endereço da própria igreja ou pelo link de convite que o líder manda.
             </p>
 
             <div className="segmented" style={{ marginTop: 24 }}>

@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, type CSSProperties } from "react";
 import Link from "next/link";
 import type { ChurchPageData } from "../../lib/church-page";
 import { accentInk, resolveBackground } from "../../lib/church-page";
@@ -15,6 +15,12 @@ import { useServiceLoginForm } from "../../service/login/useServiceLoginForm";
    override da Página pública. Só "Entrar" : criar conta aqui abriria uma
    organização nova sem relação com esta igreja. */
 export default function ThemedLoginForm({ data }: { data: ChurchPageData }) {
+  /* login do membro é o da igreja dele: lembra qual é, pra quando a sessão
+     cair o /service mandar de volta pra cá e não pro login da gestão */
+  useEffect(() => {
+    document.cookie = `cex_church_slug=${data.slug}; path=/; max-age=31536000; samesite=lax`;
+  }, [data.slug]);
+
   const {
     email, setEmail,
     password, setPassword,
@@ -40,7 +46,7 @@ export default function ThemedLoginForm({ data }: { data: ChurchPageData }) {
             {data.pagina.logoMode !== "texto" && <h1 className="cx-name">{data.name}</h1>}
           </header>
 
-          <p className="cx-login-eyebrow">Acesso da equipe</p>
+          <p className="cx-login-eyebrow">Entrar no app da igreja</p>
 
           <form className="cx-form" onSubmit={handleSubmit}>
             <label className="cx-field">
@@ -85,7 +91,7 @@ export default function ThemedLoginForm({ data }: { data: ChurchPageData }) {
           </form>
 
           <Link href="/service/login" className="cx-login-back">
-            Entrar com outra conta
+            É da gestão da igreja? Entre por aqui →
           </Link>
         </div>
       </div>

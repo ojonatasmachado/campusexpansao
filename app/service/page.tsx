@@ -938,7 +938,12 @@ async function getServiceDashboardData(): Promise<{
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/service/login");
+  if (!user) {
+    /* membro volta pro login da igreja dele (cookie gravado no login temático
+       e no convite); a gestão usa /service/login */
+    const slug = (await cookies()).get("cex_church_slug")?.value;
+    redirect(slug && /^[a-z0-9-]{3,40}$/.test(slug) ? `/${slug}/entrar` : "/service/login");
+  }
 
   const { data: churchesData, error: churchesError } = await supabase
     .schema("service")

@@ -53,9 +53,11 @@ async function main() {
   const membro2 = await as("membro2@teste.local");
   const outra = await as("outra@teste.local");
 
-  // liderança enxerga a igreja inteira
+  // liderança enxerga a igreja inteira (total real, pra não quebrar quando
+  // um teste manual cadastra alguém)
+  const { count: totalMembers } = await admin.schema("service").from("members").select("*", { count: "exact", head: true }).eq("organization_id", orgA);
   for (const [who, c] of [["master", master], ["lider", lider]] as const) {
-    expect(who, "members (congregação)", await count(c, "members", inA), 4);
+    expect(who, "members (congregação)", await count(c, "members", inA), totalMembers ?? 0);
     expect(who, "people", await count(c, "people", inA), (n) => n >= 4);
     expect(who, "visitors", await count(c, "visitors", inA), 1);
   }

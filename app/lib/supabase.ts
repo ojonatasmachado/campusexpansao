@@ -7,7 +7,7 @@ const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 // db.schema: 'cex' → todo .from(...) daqui aponta pro schema da loja CE.X por
 // padrão (ver AGENTS.md §0/§11 e HANDOFF - Banco de Dados). Precisa de
 // .schema("core"|"service") explícito pra sair desse padrão (ex: rotas que
-// tocam o Service, como create-account).
+// tocam o Service, como a de convite de membro).
 export const supabase = createClient(url, anon, { db: { schema: 'cex' } })
 
 // Cliente administrativo: usado APENAS em Server Actions (service_role bypassa RLS)
