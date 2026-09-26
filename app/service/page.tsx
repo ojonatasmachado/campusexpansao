@@ -4,6 +4,7 @@ import { resolverEnqueteElegivel } from "./lib/enquetes";
 import { resolverPesquisaElegivel } from "./lib/pesquisas";
 import ServiceExactApp from "./ServiceExactApp";
 import type { RequirementRow } from "./lib/requirements";
+import type { MissingRequirement, ServeRequest } from "./MobileApp";
 import { resolveMode, THEME_COOKIE, type BrandCfg } from "./lib/theme";
 import { cookies } from "next/headers";
 import ServiceTheme from "./ServiceTheme";
@@ -734,6 +735,8 @@ type ExtraServiceData = {
   journeyRequests: JourneyChangeRequestView[];
   requirements: RequirementRow[];
   personGrants: PersonGrantView[];
+  missingRequirements: MissingRequirement[];
+  serveRequests: ServeRequest[];
 };
 
 const emptyExtraServiceData: ExtraServiceData = {
@@ -778,6 +781,8 @@ const emptyExtraServiceData: ExtraServiceData = {
   journeyRequests: [],
   requirements: [],
   personGrants: [],
+  missingRequirements: [],
+  serveRequests: [],
 };
 
 function friendlyReadError(message: string) {
@@ -1159,6 +1164,8 @@ async function getServiceDashboardData(): Promise<{
     journeyRequestsResult,
     requirementsResult,
     personGrantsResult,
+    missingResult,
+    serveRequestsResult,
   ] = await Promise.all([
     supabase.schema("service").from("decisions").select("id,name,phone,happened_on,kind,service_name,responsible_id,status,member_id,age,notes,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("baptism_classes").select("id,label,baptism_date,location,room_id,status,pastor,notes,open_enrollment").order("created_at", { ascending: false }),
@@ -1201,6 +1208,8 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("journey_change_requests").select("id,member_id,step,event_date,note,requested_by,status,reviewed_by,reviewed_at,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("requirements").select("target_kind,target_id,req_kind,req_ref"),
     supabase.schema("service").from("person_grants").select("person_id,grant_code"),
+    supabase.schema("service").rpc("my_missing_requirements"),
+    supabase.schema("service").from("serve_requests").select("id,member_id,ministry_id,status").order("created_at", { ascending: false }),
   ]);
 
   const extraError = [
@@ -1245,6 +1254,8 @@ async function getServiceDashboardData(): Promise<{
     journeyRequestsResult.error,
     requirementsResult.error,
     personGrantsResult.error,
+    missingResult.error,
+    serveRequestsResult.error,
   ].find(Boolean);
 
   return {
@@ -1315,6 +1326,8 @@ async function getServiceDashboardData(): Promise<{
       })) as JourneyChangeRequestView[],
       requirements: ((requirementsResult.data ?? []) as RequirementRow[]),
       personGrants: ((personGrantsResult.data ?? []) as { person_id: string; grant_code: string }[]).map((g) => ({ personId: g.person_id, code: g.grant_code })),
+      missingRequirements: ((missingResult.data ?? []) as MissingRequirement[]),
+      serveRequests: ((serveRequestsResult.data ?? []) as ServeRequest[]),
     },
     error: extraError ? friendlyReadError(extraError.message) : "",
   };
@@ -1497,6 +1510,8 @@ export default async function ServiceHomePage() {
       journeyRequests={extra.journeyRequests}
       requirements={extra.requirements}
       personGrants={extra.personGrants}
+      missingRequirements={extra.missingRequirements}
+      serveRequests={extra.serveRequests}
       bibleMarks={bibleMarks}
       currentRole={currentRole}
       permissionsMatrix={permissionsMatrix}

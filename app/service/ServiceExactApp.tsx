@@ -12,7 +12,7 @@ import { formatDateBR } from "./lib/date";
 import { ageInMonths, suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import type { EnqueteElegivelView } from "./lib/enquetes";
 import type { PesquisaElegivelView, TipoPergunta as TipoPerguntaPesquisa } from "./lib/pesquisas";
-import MobileOverlay, { type MemberContactInput } from "./MobileApp";
+import MobileOverlay, { type MemberContactInput, type MissingRequirement, type ServeRequest } from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
 import { KidsQRModal } from "./KidsCheckin";
 import { PhotoPicker } from "./PhotoPicker";
@@ -664,6 +664,8 @@ type Props = {
   journeyRequests?: JourneyChangeRequestView[];
   requirements?: RequirementRow[];
   personGrants?: PersonGrant[];
+  missingRequirements?: MissingRequirement[];
+  serveRequests?: ServeRequest[];
   bibleMarks?: BibleMarkView[];
   currentRole?: "master" | "pastor" | "lider" | "membro";
   permissionsMatrix?: Record<string, Record<string, boolean>>;
@@ -1024,6 +1026,8 @@ export default function ServiceExactApp({
   journeyRequests = [],
   requirements = [],
   personGrants = [],
+  missingRequirements = [],
+  serveRequests = [],
   bibleMarks = [],
   currentRole = "master",
   permissionsMatrix = {},
@@ -1128,6 +1132,15 @@ export default function ServiceExactApp({
   /* dados de contato do próprio membro (primeiro acesso e perfil): a pessoa
      (people) ele mesmo edita; a ficha de membro só pelos campos de contato,
      via função do banco (0044 update_my_member_contact) */
+  /* ações da jornada do membro (0046): a função do banco confere os
+     requisitos e devolve "ok" ou o motivo */
+  const journeyRpc = async (fn: string, args: Record<string, unknown>): Promise<string> => {
+    const { data, error } = await createServiceBrowserClient().schema("service").rpc(fn, args);
+    if (error) return "erro";
+    if (data === "ok") router.refresh();
+    return String(data);
+  };
+
   const saveMemberContact = async (personId: string, memberId: string | null, data: MemberContactInput): Promise<{ error?: string }> => {
     const supabase = createServiceBrowserClient();
     const targetPerson = people.find((p) => p.id === personId);
@@ -1451,6 +1464,12 @@ export default function ServiceExactApp({
         onUpdateProfile={saveMemberContact}
         journeyRequests={journeyRequests}
         onRequestJourneyStep={submitJourneyRequest}
+        missingRequirements={missingRequirements}
+        serveRequests={serveRequests}
+        baptismCandidates={baptismCandidates}
+        onEnrollCourse={(courseId) => journeyRpc("enroll_me", { p_course: courseId })}
+        onRequestBaptism={(classId) => journeyRpc("request_baptism", { p_class: classId })}
+        onRequestServe={(ministryId) => journeyRpc("request_to_serve", { p_ministry: ministryId })}
         onConfirmarEscala={confirmarEscalaMobile}
         onRecusarEscala={recusarEscalaMobile}
         mode="self"
@@ -1611,7 +1630,7 @@ export default function ServiceExactApp({
         ) : null}
         {route === "membros" ? <Membros members={members} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "pessoas" ? <Pessoas people={people} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} /> : null}
-        {route === "times" ? <Times ministries={ministries} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "times" ? <Times ministries={ministries} people={people} members={members} serveRequests={serveRequests} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} church={firstChurch} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "criancas" ? <Criancas kidsChildren={kidsChildren} kidsClasses={kidsClasses} childGuardians={childGuardians} people={people} kidsEvents={kidsEvents} rooms={rooms} church={firstChurch} /> : null}
         {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
@@ -1722,6 +1741,12 @@ export default function ServiceExactApp({
           onUpdateProfile={saveMemberContact}
           journeyRequests={journeyRequests}
           onRequestJourneyStep={submitJourneyRequest}
+          missingRequirements={missingRequirements}
+          serveRequests={serveRequests}
+          baptismCandidates={baptismCandidates}
+          onEnrollCourse={(courseId) => journeyRpc("enroll_me", { p_course: courseId })}
+          onRequestBaptism={(classId) => journeyRpc("request_baptism", { p_class: classId })}
+          onRequestServe={(ministryId) => journeyRpc("request_to_serve", { p_ministry: ministryId })}
           onConfirmarEscala={confirmarEscalaMobile}
           onRecusarEscala={recusarEscalaMobile}
           onClose={() => setMobileOpen(false)}
@@ -2413,10 +2438,57 @@ function Pessoas({ people, currentPersonId, setDrawer, setModal }: { people: Per
   );
 }
 
-function Times({ ministries, people, setDrawer, setModal }: { ministries: MinistryView[]; people: PersonView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
+/* Pedidos do app ("Quero servir", 0046): o membro já passou pelos
+   requisitos da igreja e do time; aqui a liderança aprova (entra no time) ou
+   recusa. service.review_serve_request confere o papel no servidor. */
+function PedidosParaServir({ serveRequests, members, ministries }: { serveRequests: ServeRequest[]; members: MemberView[]; ministries: MinistryView[] }) {
+  const router = useRouter();
+  const [ocupado, setOcupado] = useState<string | null>(null);
+  const [erro, setErro] = useState("");
+  const pendentes = serveRequests.filter((r) => r.status === "pendente");
+  if (pendentes.length === 0) return null;
+  const revisar = async (id: string, aprovar: boolean) => {
+    setOcupado(id);
+    setErro("");
+    const { data, error } = await createServiceBrowserClient().schema("service").rpc("review_serve_request", { p_request: id, p_approve: aprovar });
+    setOcupado(null);
+    if (error || data !== "ok") {
+      setErro(data === "sem_acesso_ao_app" ? "Essa pessoa ainda não aceitou o convite do app: mande o acesso pela ficha dela antes de aprovar." : "Não foi possível salvar. Tente de novo.");
+      return;
+    }
+    router.refresh();
+  };
+  return (
+    <div className="cfg-card" style={{ marginBottom: 18 }}>
+      <div className="cfg-card-t">Pedidos para servir · {pendentes.length}</div>
+      <div className="cfg-card-s">Pedidos feitos pelo app. A pessoa já cumpre os pré-requisitos que a igreja definiu para servir e para o time.</div>
+      {pendentes.map((r) => {
+        const membro = members.find((m) => m.id === r.member_id);
+        const time = ministries.find((m) => m.id === r.ministry_id);
+        return (
+          <div className="cfg-row" key={r.id}>
+            <Av name={membro?.name ?? "?"} size="sm" />
+            <div className="cfg-row-main">
+              <div className="cfg-row-t">{membro?.name ?? "Membro"}</div>
+              <div className="cfg-row-s">quer servir em {time?.name ?? "um time"}</div>
+            </div>
+            <span style={{ display: "flex", gap: 8 }}>
+              <button className="btn btn-sec btn-sm" type="button" disabled={ocupado === r.id} onClick={() => revisar(r.id, false)}>Recusar</button>
+              <button className="btn btn-pri btn-sm" type="button" disabled={ocupado === r.id} onClick={() => revisar(r.id, true)}>Aprovar</button>
+            </span>
+          </div>
+        );
+      })}
+      {erro && <div className="field-error" style={{ marginTop: 8 }}>{erro}</div>}
+    </div>
+  );
+}
+
+function Times({ ministries, people, members, serveRequests, setDrawer, setModal }: { ministries: MinistryView[]; people: PersonView[]; members: MemberView[]; serveRequests: ServeRequest[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
   return (
     <div className="content">
       <PageHead title="Times & Ministérios" eyebrow="Pessoas" subtitle="Times, líderes, funções e voluntários vinculados." help="Louvor, Recepção, Kids... cada ministério é um time, com um líder e suas funções próprias." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo time / ministério", subtitle: "Crie o ministério e já conte o propósito dele.", saveLabel: "Criar ministério", formFields: [{ k:"nome", label:"Nome do ministério", type:"text", req:true, ph:"ex: Louvor & Adoração" }, { k:"icon", label:"Ícone do time", type:"icon", value: DEFAULT_ICON }, { k:"desc", label:"Descrição curta", type:"text", ph:"Uma linha sobre o time" }, { k:"proposito", label:"Propósito", type:"area", ph:"Por que esse time existe?" }, { k:"aberto", label:"Recebendo voluntários?", type:"toggle", onLabel:"Aberto a novos", offLabel:"Equipe completa" }], action: { kind: "ministry" } })}>+ Novo time</button>} />
+      <PedidosParaServir serveRequests={serveRequests} members={members} ministries={ministries} />
       <div className="team-grid">
         {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => { const linkPerson = people.find((person) => person.id === link.personId); return <Av key={link.personId} name={linkPerson?.name ?? link.personName} photoUrl={linkPerson?.photoUrl} />; })}{ministry.people.length > 4 && <div className="av-more">+{ministry.people.length - 4}</div>}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName ?? "a definir"}</em></div><div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> voluntários</span><span className="team-stat"><b>{ministry.positions.length}</b> funções</span></div></button>)}
       </div>

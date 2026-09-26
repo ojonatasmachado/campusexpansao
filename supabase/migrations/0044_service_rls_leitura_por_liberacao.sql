@@ -91,6 +91,18 @@ language sql stable security definer set search_path = service, public as $$
   )
 $$;
 
+-- conversas em que o usuário logado participa (lê chat_members sem cair na
+-- RLS dela: chats e chat_members se referenciam, e uma policy chamando a
+-- outra dá "infinite recursion")
+create or replace function service.my_chats()
+returns uuid[]
+language sql stable security definer set search_path = service, public as $$
+  select coalesce(array_agg(distinct cm.chat_id), '{}')
+  from service.chat_members cm
+  where cm.member_id = any(service.my_members())
+$$;
+
+grant execute on function service.my_chats() to authenticated;
 grant execute on function service.is_lead(uuid) to authenticated;
 grant execute on function service.my_people() to authenticated;
 grant execute on function service.my_members() to authenticated;
@@ -275,10 +287,7 @@ create policy svc_r_scope on service.chats as restrictive for select to authenti
   using (
     service.is_lead(organization_id)
     or ministry_id in (select unnest(service.my_ministries()))
-    or id in (
-      select cm.chat_id from service.chat_members cm
-      where cm.member_id in (select unnest(service.my_members()))
-    )
+    or id in (select unnest(service.my_chats()))
   );
 
 drop policy if exists svc_r_scope on service.chat_members;

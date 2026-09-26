@@ -105,6 +105,59 @@ async function main() {
   const { data: okMinha } = await membro.schema("service").rpc("update_my_member_contact", { p_member: minha.id, p_neighborhood: "Bairro Teste" });
   expect("membro", "edita o contato da própria ficha", okMinha === true ? 1 : 0, 1);
 
+  // Fase 4: ações do membro passam pelos requisitos da igreja (0046)
+  const svcA = admin.schema("service");
+  /* começa limpo: testes manuais no navegador podem ter deixado requisitos e pedidos */
+  await svcA.from("serve_requests").delete().eq("organization_id", orgA);
+  await svcA.from("requirements").delete().eq("organization_id", orgA);
+  const { data: chA } = await svcA.from("churches").select("id").eq("organization_id", orgA).limit(1).single();
+  const { data: cursos } = await svcA.from("courses").insert([
+    { organization_id: orgA, church_id: chA!.id, name: "Curso Base (teste)", kind: "trilha", prereqs: [] },
+    { organization_id: orgA, church_id: chA!.id, name: "Curso Avançado (teste)", kind: "trilha", prereqs: [] },
+  ]).select("id,name");
+  const base = cursos!.find((c) => c.name.startsWith("Curso Base"))!.id;
+  const avancado = cursos!.find((c) => c.name.startsWith("Curso Avançado"))!.id;
+  const { data: louvor } = await svcA.from("ministries").select("id").eq("organization_id", orgA).eq("name", "Louvor").single();
+  await svcA.from("requirements").insert([
+    { organization_id: orgA, target_kind: "course", target_id: avancado, req_kind: "course", req_ref: base },
+    { organization_id: orgA, target_kind: "serve", target_id: null, req_kind: "journey", req_ref: "batismo" },
+    { organization_id: orgA, target_kind: "ministry", target_id: recep!.id, req_kind: "course", req_ref: base },
+  ]);
+  const rpc = async (c: SupabaseClient, fn: string, args: Record<string, unknown>) => (await c.schema("service").rpc(fn, args)).data as string;
+
+  expect("membro2", "inscreve no curso sem requisito", (await rpc(membro2, "enroll_me", { p_course: base })) === "ok" ? 1 : 0, 1);
+  expect("membro2", "bloqueado no curso com requisito", (await rpc(membro2, "enroll_me", { p_course: avancado })) === "faltam_requisitos" ? 1 : 0, 1);
+  const { data: faltas } = await membro2.schema("service").rpc("my_missing_requirements");
+  expect("membro2", "app sabe o que falta (cadeados)", (faltas as unknown[] | null)?.length ?? 0, (n) => n >= 3);
+  expect("membro2", "Quero servir barrado (sem batismo)", (await rpc(membro2, "request_to_serve", { p_ministry: louvor!.id })) === "faltam_requisitos" ? 1 : 0, 1);
+  expect("membro", "Quero servir: já serve no Louvor", (await rpc(membro, "request_to_serve", { p_ministry: louvor!.id })) === "ja_serve" ? 1 : 0, 1);
+  expect("membro", "Recepção barrada (falta o curso)", (await rpc(membro, "request_to_serve", { p_ministry: recep!.id })) === "faltam_requisitos" ? 1 : 0, 1);
+
+  // Maria conclui o curso base: aí pode pedir a Recepção, e o líder aprova
+  const { data: maria } = await svcA.from("members").select("id").eq("email", "membro@teste.local").single();
+  await svcA.from("enrollments").insert({ organization_id: orgA, course_id: base, member_id: maria!.id, status: "concluido" });
+  expect("membro", "Recepção liberada após o curso", (await rpc(membro, "request_to_serve", { p_ministry: recep!.id })) === "ok" ? 1 : 0, 1);
+  const { data: pedido } = await svcA.from("serve_requests").select("id").eq("member_id", maria!.id).eq("ministry_id", recep!.id).eq("status", "pendente").single();
+  expect("membro", "não aprova o próprio pedido", (await rpc(membro, "review_serve_request", { p_request: pedido!.id, p_approve: true })) === "sem_permissao" ? 1 : 0, 1);
+  expect("lider", "aprova o pedido", (await rpc(lider, "review_serve_request", { p_request: pedido!.id, p_approve: true })) === "ok" ? 1 : 0, 1);
+  expect("membro", "agora vê visitantes (entrou na Recepção)", await count(membro, "visitors", inA), 1);
+
+  // limpa o que o teste criou
+  const { data: mariaPessoa } = await svcA.from("people").select("id").eq("email", "membro@teste.local").single();
+  await svcA.from("person_ministries").delete().eq("ministry_id", recep!.id).eq("person_id", mariaPessoa!.id);
+  await svcA.from("serve_requests").delete().eq("organization_id", orgA);
+  await svcA.from("requirements").delete().eq("organization_id", orgA);
+  await svcA.from("courses").delete().in("id", [base, avancado]);
+
+  // toda tabela sensível precisa responder sem erro pra cada papel (pega
+  // recursão de RLS, como a que houve entre chats e chat_members)
+  const sensiveis = ["people", "members", "person_ministries", "roster_assignments", "event_attendance", "visitors", "visitor_notes", "decisions", "baptism_candidates", "enrollments", "lesson_attendance", "timeline_events", "journey_change_requests", "prayer_requests", "announcement_reads", "push_subscriptions", "meetings", "meeting_actions", "rehearsals", "boards", "cards", "card_comments", "chats", "chat_members", "messages", "children", "child_guardians", "kids_attendance", "kids_event_enrollments", "person_grants", "requirements", "serve_requests"];
+  for (const [who, c] of [["master", master], ["lider", lider], ["membro", membro], ["membro2", membro2]] as const) {
+    const quebradas: string[] = [];
+    for (const t of sensiveis) if ((await count(c, t)) === -1) quebradas.push(t);
+    expect(who, `lê todas as tabelas sem erro${quebradas.length ? ` (${quebradas.join(", ")})` : ""}`, quebradas.length, 0);
+  }
+
   // outra igreja não vê nada da igreja A
   for (const t of ["members", "people", "visitors", "events", "ministries"]) {
     expect("outra", `${t} da igreja A`, await count(outra, t, inA), 0);

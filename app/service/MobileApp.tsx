@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon } from "./lib/icons";
 import { formatDateBR } from "./lib/date";
 import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import { PhotoPicker } from "./PhotoPicker";
 import CepInput from "./CepInput";
+import { requirementLabel, type RequirementKind } from "./lib/requirements";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -84,6 +85,42 @@ type Card = {
 type Board = { id: string; name: string; columns: Array<{ id: string; nome?: string; name?: string }> };
 type Course = { id: string; name: string; kind: string | null; level: string | null; description: string | null };
 type Enrollment = { id: string; course_id: string; member_id: string; done_count: number; status: string };
+
+/* ── jornada do membro no app (Fase 4, migração 0046) ─────────────────────────
+   O que falta pra cada curso/time/"Quero servir" vem do banco
+   (service.my_missing_requirements) e as ações passam por funções que
+   conferem os requisitos no servidor. As abas leem daqui via contexto. */
+export type MissingRequirement = { target_kind: "course" | "ministry" | "serve"; target_id: string | null; req_kind: RequirementKind; req_ref: string };
+export type ServeRequest = { id: string; member_id: string; ministry_id: string; status: "pendente" | "aprovado" | "recusado" };
+export type BaptismCandidateRef = { class_id: string; member_id: string | null };
+type JourneyActions = {
+  missing: MissingRequirement[];
+  serveRequests: ServeRequest[];
+  baptismCandidates: BaptismCandidateRef[];
+  onEnrollCourse?: (courseId: string) => Promise<string>;
+  onRequestBaptism?: (classId: string) => Promise<string>;
+  onRequestServe?: (ministryId: string) => Promise<string>;
+  /* nomes pra explicar o que falta ("Concluiu: Fundamentos") */
+  names: { courses: { id: string; name: string }[]; events: { id: string; name: string }[]; groupsLabel?: string };
+};
+const JourneyContext = createContext<JourneyActions>({ missing: [], serveRequests: [], baptismCandidates: [], names: { courses: [], events: [] } });
+
+/* o que falta pra um alvo, já em texto */
+function useFaltas() {
+  const j = useContext(JourneyContext);
+  return (kind: MissingRequirement["target_kind"], id: string | null) =>
+    j.missing
+      .filter((m) => m.target_kind === kind && (m.target_id ?? null) === id)
+      .map((m) => requirementLabel({ kind: m.req_kind, ref: m.req_ref }, j.names));
+}
+
+const RESULTADO_ACAO: Record<string, string> = {
+  faltam_requisitos: "Ainda falta cumprir os pré-requisitos.",
+  inscricoes_fechadas: "As inscrições desta turma estão fechadas.",
+  ja_serve: "Você já serve neste time.",
+  sem_ficha: "Sua ficha ainda não está ligada ao app. Fale com a liderança.",
+};
+const mensagemAcao = (r: string) => RESULTADO_ACAO[r] ?? "Não foi possível agora. Tente de novo.";
 type CourseModule = { id: string; course_id: string; name: string; sort_order: number };
 type CourseLesson = { id: string; module_id: string; name: string };
 type Visitor = { id: string; name: string; phone: string | null; stage: string; origin: string | null };
@@ -182,6 +219,12 @@ export type MobileOverlayProps = {
   onUpdateProfile?: (personId: string, memberId: string | null, data: MemberContactInput) => Promise<{ error?: string }>;
   journeyRequests?: JourneyRequest[];
   onRequestJourneyStep?: (memberId: string, step: JourneyStep, eventDate: string, note: string) => void;
+  missingRequirements?: MissingRequirement[];
+  serveRequests?: ServeRequest[];
+  baptismCandidates?: BaptismCandidateRef[];
+  onEnrollCourse?: (courseId: string) => Promise<string>;
+  onRequestBaptism?: (classId: string) => Promise<string>;
+  onRequestServe?: (ministryId: string) => Promise<string>;
   onConfirmarEscala?: (assignmentId: string) => void;
   onRecusarEscala?: (assignmentId: string) => void;
   onClose: () => void;
@@ -1467,7 +1510,7 @@ function TabCursos({
 }) {
   const myEnrollments = member ? enrollments.filter((e) => e.member_id === member.id) : [];
   const enrolledIds = new Set(myEnrollments.map((e) => e.course_id));
-  const toExplore = courses.filter((c) => !enrolledIds.has(c.id)).slice(0, 4);
+  const toExplore = courses.filter((c) => !enrolledIds.has(c.id));
   const openClasses = baptismClasses.filter((b) => b.status !== "concluida");
 
   return (
@@ -1530,9 +1573,7 @@ function TabCursos({
                   {c.description}
                 </div>
               )}
-              <button className="m-btn m-btn-ok ghost" style={{ width: "100%", marginTop: 12 }}>
-                Inscrever-se
-              </button>
+              <CursoInscricao courseId={c.id} />
             </div>
           ))}
         </>
@@ -1541,10 +1582,115 @@ function TabCursos({
   );
 }
 
+/* "Quero servir" (service.request_to_serve): times em que a pessoa ainda não
+   está. A igreja define o que precisa antes (requisitos de "servir" e do
+   time); com algo faltando, o app mostra o que falta. O pedido vai pra
+   liderança aprovar no painel (Times & Ministérios). */
+function ServirSection({ person, member, ministries }: { person: P; member: M | null; ministries: Ministry[] }) {
+  const j = useContext(JourneyContext);
+  const faltas = useFaltas();
+  const [enviados, setEnviados] = useState<Record<string, string>>({});
+  if (!member || !j.onRequestServe) return null;
+  const fora = ministries.filter((m) => !m.people.some((mp) => mp.personId === person.id));
+  if (fora.length === 0) return null;
+  const faltasServir = faltas("serve", null);
+  const pendente = (ministryId: string) =>
+    enviados[ministryId] === "ok" || j.serveRequests.some((r) => r.member_id === member.id && r.ministry_id === ministryId && r.status === "pendente");
+
+  return (
+    <>
+      <div className="m-section-t" style={{ marginTop: 22 }}>Quero servir</div>
+      {faltasServir.length > 0 ? (
+        <div className="m-card">
+          <div className="m-fn" style={{ marginBottom: 0 }}>
+            <b>Antes de servir num time:</b> {faltasServir.join(" · ")}
+          </div>
+        </div>
+      ) : (
+        fora.map((m) => {
+          const faltasTime = faltas("ministry", m.id);
+          const resultado = enviados[m.id];
+          return (
+            <div className="m-card" key={m.id}>
+              <div className="m-culto" style={{ fontSize: 15, display: "flex", alignItems: "center", gap: 8 }}>
+                <Icon name={m.icon || "times"} size={15} /> {m.name}
+              </div>
+              {pendente(m.id) ? (
+                <div className="m-confirmed" style={{ marginTop: 10 }}>✓ Pedido enviado. A liderança vai te chamar.</div>
+              ) : faltasTime.length > 0 ? (
+                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 8, lineHeight: 1.5 }}>
+                  <b style={{ color: "var(--light)" }}>Para entrar:</b> {faltasTime.join(" · ")}
+                </div>
+              ) : (
+                <>
+                  <button
+                    className="m-btn m-btn-ok ghost"
+                    style={{ width: "100%", marginTop: 10 }}
+                    disabled={resultado === "enviando"}
+                    onClick={async () => {
+                      setEnviados((p) => ({ ...p, [m.id]: "enviando" }));
+                      const r = await j.onRequestServe!(m.id);
+                      setEnviados((p) => ({ ...p, [m.id]: r === "ok" ? "ok" : mensagemAcao(r) }));
+                    }}
+                  >
+                    {resultado === "enviando" ? "Enviando..." : "Quero servir neste time"}
+                  </button>
+                  {resultado && resultado !== "enviando" && resultado !== "ok" && (
+                    <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 6 }}>{resultado}</div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })
+      )}
+    </>
+  );
+}
+
+/* Inscrição de verdade (service.enroll_me): com pré-requisito faltando, mostra
+   o que falta em vez do botão */
+function CursoInscricao({ courseId }: { courseId: string }) {
+  const j = useContext(JourneyContext);
+  const faltas = useFaltas()("course", courseId);
+  const [estado, setEstado] = useState<"" | "enviando" | "ok" | string>("");
+  if (faltas.length > 0) {
+    return (
+      <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 12, lineHeight: 1.5 }}>
+        <b style={{ color: "var(--light)" }}>Para se inscrever:</b> {faltas.join(" · ")}
+      </div>
+    );
+  }
+  if (estado === "ok") return <div className="m-confirmed" style={{ marginTop: 12 }}>✓ Inscrição feita. O curso aparece em Meus cursos.</div>;
+  return (
+    <>
+      <button
+        className="m-btn m-btn-ok ghost"
+        style={{ width: "100%", marginTop: 12 }}
+        disabled={estado === "enviando" || !j.onEnrollCourse}
+        onClick={async () => {
+          if (!j.onEnrollCourse) return;
+          setEstado("enviando");
+          const r = await j.onEnrollCourse(courseId);
+          setEstado(r === "ok" ? "ok" : mensagemAcao(r));
+        }}
+      >
+        {estado === "enviando" ? "Inscrevendo..." : "Inscrever-se"}
+      </button>
+      {estado && estado !== "enviando" && estado !== "ok" && <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 6 }}>{estado}</div>}
+    </>
+  );
+}
+
 // ── aba: Batismo ──────────────────────────────────────────────────────────────
 
-function TabBatismo({ baptismClasses }: { baptismClasses: BaptismClass[] }) {
-  const [inscrito, setInscrito] = useState<Record<string, boolean>>({});
+function TabBatismo({ baptismClasses, memberId }: { baptismClasses: BaptismClass[]; memberId: string | null }) {
+  /* inscrição de verdade (service.request_baptism): antes só mudava a tela */
+  const j = useContext(JourneyContext);
+  const [inscrito, setInscrito] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(j.baptismCandidates.filter((c) => memberId && c.member_id === memberId).map((c) => [c.class_id, true])),
+  );
+  const [erro, setErro] = useState<Record<string, string>>({});
   const openClasses = baptismClasses.filter((b) => b.status !== "concluida");
 
   return (
@@ -1574,22 +1720,29 @@ function TabBatismo({ baptismClasses }: { baptismClasses: BaptismClass[] }) {
           {b.open_enrollment ? (
             inscrito[b.id] ? (
               <div className="m-confirmed" style={{ marginTop: 12 }}>
-                ✓ Inscricao enviada! O responsavel vai te chamar.
+                ✓ Inscrição enviada! O responsável vai te chamar.
               </div>
             ) : (
               <button
                 className="m-btn m-btn-ok"
                 style={{ width: "100%", marginTop: 12 }}
-                onClick={() => setInscrito((p) => ({ ...p, [b.id]: true }))}
+                disabled={!j.onRequestBaptism}
+                onClick={async () => {
+                  if (!j.onRequestBaptism) return;
+                  const r = await j.onRequestBaptism(b.id);
+                  if (r === "ok") setInscrito((p) => ({ ...p, [b.id]: true }));
+                  else setErro((p) => ({ ...p, [b.id]: mensagemAcao(r) }));
+                }}
               >
                 Quero me inscrever →
               </button>
             )
           ) : (
             <div style={{ fontSize: 12, color: "var(--subtle)", marginTop: 12 }}>
-              Inscricoes ainda nao abertas para esta turma.
+              Inscrições ainda não abertas para esta turma.
             </div>
           )}
+          {erro[b.id] && <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 8 }}>{erro[b.id]}</div>}
         </div>
       ))}
     </>
@@ -2561,15 +2714,25 @@ function MobileMembro({
           organizationId, churchName, churchLogoUrl, theme, setTheme, onChangePassword, onUpdateProfile,
           journeyRequests, onRequestJourneyStep, onConfirmarEscala, onRecusarEscala,
           kidsClasses = [], kidsChildren = [], childGuardians = [], kidsSessions = [], kidsAttendance = [],
-          kidsEvents = [], kidsEventEnrollments = [], wallPosts = [], bibleMarks = [], onSaveBibleMark } = rest;
+          kidsEvents = [], kidsEventEnrollments = [], wallPosts = [], bibleMarks = [], onSaveBibleMark,
+          missingRequirements = [], serveRequests = [], baptismCandidates = [], onEnrollCourse, onRequestBaptism, onRequestServe } = rest;
+  const journey: JourneyActions = {
+    missing: missingRequirements, serveRequests, baptismCandidates, onEnrollCourse, onRequestBaptism, onRequestServe,
+    names: { courses: courses.map((c) => ({ id: c.id, name: c.name })), events: events.map((e) => ({ id: e.id, name: e.name })) },
+  };
 
   const isRecep = isRecepPerson(person, ministries);
   const isKids = isKidsPerson(person, ministries);
 
+  /* Escala e Tarefas são de quem serve: aparecem quando a pessoa entra num
+     time (pelo "Quero servir" aprovado ou pela liderança) */
+  const servesInTeam = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
   const TABS = [
     { id: "inicio",     ic: "inicio",     l: "Inicio"   },
-    { id: "escalas",    ic: "escalas",    l: "Escala"   },
-    { id: "tarefas",    ic: "tarefas",    l: "Tarefas"  },
+    ...(servesInTeam ? [
+      { id: "escalas",    ic: "escalas",    l: "Escala"   },
+      { id: "tarefas",    ic: "tarefas",    l: "Tarefas"  },
+    ] : []),
     { id: "conversas",  ic: "conversas",  l: "Chat"     },
     isKids
       ? { id: "kids",       ic: "kids",      l: "Kids"     }
@@ -2591,6 +2754,7 @@ function MobileMembro({
   }
 
   return (
+    <JourneyContext.Provider value={journey}>
     <div className="phone">
       <div className="phone-screen">
         <div className="phone-notch" />
@@ -2607,10 +2771,13 @@ function MobileMembro({
 
         <div className="m-scroll">
           {tab === "inicio" && (
-            <TabInicio person={person} member={member} ministries={ministries} events={events} roster={roster} cards={cards} setTab={setTab} />
+            <>
+              <TabInicio person={person} member={member} ministries={ministries} events={events} roster={roster} cards={cards} setTab={setTab} />
+              <ServirSection person={person} member={member} ministries={ministries} />
+            </>
           )}
-          {tab === "escalas" && <TabEscala person={person} events={events} roster={roster} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} />}
-          {tab === "tarefas" && <TabTarefas person={person} cards={cards} boards={boards} onAddCardComment={onAddCardComment} />}
+          {servesInTeam && tab === "escalas" && <TabEscala person={person} events={events} roster={roster} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} />}
+          {servesInTeam && tab === "tarefas" && <TabTarefas person={person} cards={cards} boards={boards} onAddCardComment={onAddCardComment} />}
           {tab === "conversas" && (
             <TabConversas member={member} chats={chats} chatMembers={chatMembers} messages={messages} members={members} ministries={ministries} onSendMessage={onSendMessage} onStartChat={onStartChat} />
           )}
@@ -2634,7 +2801,7 @@ function MobileMembro({
           {tab === "cursos" && (
             <TabCursos member={member} courses={courses} enrollments={enrollments} courseModules={courseModules} courseLessons={courseLessons} baptismClasses={baptismClasses} setTab={setTab} />
           )}
-          {tab === "batismo" && <TabBatismo baptismClasses={baptismClasses} />}
+          {tab === "batismo" && <TabBatismo baptismClasses={baptismClasses} memberId={member?.id ?? null} />}
           {tab === "avisos" && <TabAvisos announcements={announcements} person={person} onReadAnnouncement={onReadAnnouncement} />}
           {tab === "perfil" && (
             <TabPerfil
@@ -2680,6 +2847,7 @@ function MobileMembro({
         </div>
       </div>
     </div>
+    </JourneyContext.Provider>
   );
 }
 
