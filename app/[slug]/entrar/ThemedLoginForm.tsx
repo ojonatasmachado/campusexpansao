@@ -26,7 +26,7 @@ export default function ThemedLoginForm({ data }: { data: ChurchPageData }) {
     password, setPassword,
     loading, resending,
     error, success,
-    handleSubmit, resendConfirmation,
+    handleSubmit, resendConfirmation, forgotPassword,
   } = useServiceLoginForm();
 
   const vars = {
@@ -87,6 +87,9 @@ export default function ThemedLoginForm({ data }: { data: ChurchPageData }) {
 
             <button className="cx-btn" type="submit" disabled={loading}>
               {loading ? "Aguarde..." : "Entrar"}
+            </button>
+            <button type="button" className="cx-login-back" onClick={forgotPassword} disabled={resending} style={{ background: "none", border: 0, cursor: "pointer" }}>
+              {resending ? "Enviando..." : "Esqueci minha senha"}
             </button>
           </form>
 

@@ -223,14 +223,30 @@ export async function getChurchPageBySlug(slug: string): Promise<ChurchPageData 
 
   const { data: churchRow } = await admin
     .from("churches")
-    .select("id, name, slug, logo_url, settings")
+    .select("id, name, slug, logo_url, settings, organization_id, is_headquarters")
     .eq("slug", cleanSlug)
     .maybeSingle();
 
-  const church = churchRow as ChurchRow | null;
+  const church = churchRow as (ChurchRow & { organization_id: string; is_headquarters: boolean }) | null;
   if (!church) return null;
 
-  const pagina = mergeChurchIdentity(church.settings?.identidadeCfg, church.settings?.paginaCfg, (church.settings?.brandCfg?.accent || church.settings?.brandCfg?.accentDark));
+  /* a cor do app (brandCfg) e o logo são da organização e moram na matriz:
+     congregação sem os próprios usa os da matriz (ver app/service/lib/theme.ts) */
+  let brand = church.settings?.brandCfg;
+  let logoUrl = church.logo_url;
+  if (!church.is_headquarters && (!(brand?.accent || brand?.accentDark) || !logoUrl)) {
+    const { data: sede } = await admin
+      .from("churches")
+      .select("settings, logo_url")
+      .eq("organization_id", church.organization_id)
+      .eq("is_headquarters", true)
+      .maybeSingle();
+    if (!(brand?.accent || brand?.accentDark)) brand = (sede?.settings as ChurchRow["settings"] | null)?.brandCfg ?? brand;
+    logoUrl = logoUrl ?? (sede?.logo_url as string | null) ?? null;
+  }
+  const brandAccent = brand?.accent || brand?.accentDark;
+
+  const pagina = mergeChurchIdentity(church.settings?.identidadeCfg, church.settings?.paginaCfg, brandAccent);
   const published = pagina.enabled === true;
 
   let links: ChurchLinkView[] = [];
@@ -281,9 +297,9 @@ export async function getChurchPageBySlug(slug: string): Promise<ChurchPageData 
     id: church.id,
     slug: church.slug ?? cleanSlug,
     name: church.name,
-    logoUrl: church.logo_url,
+    logoUrl,
     pagina,
-    serviceAccent: (church.settings?.brandCfg?.accent || church.settings?.brandCfg?.accentDark) || PAGINA_CFG_DEFAULT.accentColor,
+    serviceAccent: brandAccent || PAGINA_CFG_DEFAULT.accentColor,
     published,
     links,
     posts,

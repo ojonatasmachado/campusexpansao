@@ -139,6 +139,28 @@ export function useServiceLoginForm() {
     setSuccess("E-mail de confirmação reenviado. Veja sua caixa de entrada e também o spam.");
   }
 
+  /* "Esqueci minha senha": o link do e-mail passa pelo /auth/callback (troca o
+     código por sessão) e cai em /service/nova-senha, que grava a senha nova */
+  async function forgotPassword() {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !normalizedEmail.includes("@")) {
+      setError("Digite o e-mail da sua conta e toque de novo em Esqueci minha senha.");
+      return;
+    }
+    setError("");
+    setSuccess("");
+    setResending(true);
+    const url = new URL("/auth/callback", window.location.origin);
+    url.searchParams.set("redirect", "/service/nova-senha");
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, { redirectTo: url.toString() });
+    setResending(false);
+    if (resetError) {
+      setError(errorMessage(resetError.message));
+      return;
+    }
+    setSuccess("Se esse e-mail tiver conta, chega um link para você criar uma senha nova. Veja também o spam.");
+  }
+
   function switchToSignup() {
     setInvalidCredentials(false);
     setError("");
@@ -153,6 +175,6 @@ export function useServiceLoginForm() {
     loading, resending,
     error, success,
     invalidCredentials, switchToSignup,
-    handleSubmit, resendConfirmation,
+    handleSubmit, resendConfirmation, forgotPassword,
   };
 }

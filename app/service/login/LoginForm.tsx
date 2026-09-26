@@ -13,7 +13,7 @@ export default function ServiceLoginForm() {
     loading, resending,
     error, success,
     invalidCredentials, switchToSignup,
-    handleSubmit, resendConfirmation,
+    handleSubmit, resendConfirmation, forgotPassword,
   } = useServiceLoginForm();
 
   return (
@@ -117,6 +117,11 @@ export default function ServiceLoginForm() {
               <button className="btn btn-primary btn-lg" type="submit" disabled={loading}>
                 {loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
               </button>
+              {mode === "login" && (
+                <button className="btn btn-ghost btn-sm" type="button" onClick={forgotPassword} disabled={resending}>
+                  {resending ? "Enviando..." : "Esqueci minha senha"}
+                </button>
+              )}
             </form>
           </div>
         </section>
