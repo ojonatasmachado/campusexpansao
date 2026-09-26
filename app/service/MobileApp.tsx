@@ -6,6 +6,7 @@ import { Icon } from "./lib/icons";
 import { formatDateBR } from "./lib/date";
 import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import { PhotoPicker } from "./PhotoPicker";
+import CepInput from "./CepInput";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -26,9 +27,31 @@ type M = {
   firstContact: string;
   neighborhood: string | null;
   birth: string | null;
+  postalCode?: string | null;
+  street?: string | null;
+  city?: string | null;
+  state?: string | null;
+  /* ficha com e-mail, telefone, aniversário e CEP (calculado no servidor):
+     sem isso o app abre no primeiro acesso, em qualquer aparelho */
+  contactComplete?: boolean;
   journey: number[];
   volunteerId: string | null;
 };
+
+/* dados de contato que o membro preenche no primeiro acesso e no perfil */
+export type MemberContactInput = { name: string; email: string; phone: string; nasc: string; cep: string; rua: string; bairro: string; cidade: string; estado: string };
+
+/* o servidor troca vazio por "Telefone não informado" / "E-mail não
+   informado" (page.tsx toMemberView); em campo editável isso vira vazio */
+const realValue = (v: string | null | undefined) => (v && !/não informado$/.test(v) ? v : "");
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const contactErrors = (c: MemberContactInput) => ({
+  name: c.name.trim().split(/\s+/).length < 2 ? "Coloque nome e sobrenome." : "",
+  email: !EMAIL_RE.test(c.email.trim()) ? "Coloque um e-mail válido." : "",
+  phone: c.phone.replace(/\D/g, "").length < 10 ? "Coloque o telefone com DDD." : "",
+  nasc: !c.nasc ? "Coloque a data do seu aniversário." : "",
+  cep: c.cep.replace(/\D/g, "").length !== 8 ? "Coloque o CEP com 8 números." : "",
+});
 type Ministry = {
   id: string;
   name: string;
@@ -144,7 +167,7 @@ export type MobileOverlayProps = {
   bibleMarks?: BibleMark[];
   onSaveBibleMark?: (book: string, chapter: number, verse: number, data: { color: string | null; note: string | null }) => void;
   onReadAnnouncement?: (personId: string, announcementId: string) => void;
-  onCompleteOnboarding?: (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string; senha: string }) => void;
+  onCompleteOnboarding?: (personId: string, memberId: string | null, data: MemberContactInput) => Promise<{ error?: string }>;
   onAddCardComment?: (cardId: string, author: string, body: string) => void;
   onAdvanceVisitorStage?: (visitorId: string, nextStageId: string) => void;
   onRegisterVisitor?: (data: { name: string; phone: string; origin: string }) => void;
@@ -156,7 +179,7 @@ export type MobileOverlayProps = {
   theme?: "dark" | "light";
   setTheme?: (t: "dark" | "light") => void;
   onChangePassword?: (senha: string) => Promise<{ error?: string }>;
-  onUpdateProfile?: (personId: string, memberId: string | null, data: { phone: string; nasc: string; bairro: string }) => void;
+  onUpdateProfile?: (personId: string, memberId: string | null, data: MemberContactInput) => Promise<{ error?: string }>;
   journeyRequests?: JourneyRequest[];
   onRequestJourneyStep?: (memberId: string, step: JourneyStep, eventDate: string, note: string) => void;
   onConfirmarEscala?: (assignmentId: string) => void;
@@ -1690,7 +1713,7 @@ function TabPerfil({
   theme?: "dark" | "light";
   setTheme?: (t: "dark" | "light") => void;
   onChangePassword?: (senha: string) => Promise<{ error?: string }>;
-  onUpdateProfile?: (personId: string, memberId: string | null, data: { phone: string; nasc: string; bairro: string }) => void;
+  onUpdateProfile?: (personId: string, memberId: string | null, data: MemberContactInput) => Promise<{ error?: string }>;
   journeyRequests?: JourneyRequest[];
   onRequestJourneyStep?: (memberId: string, step: JourneyStep, eventDate: string, note: string) => void;
   setTab?: (tab: string) => void;
@@ -1719,12 +1742,33 @@ function TabPerfil({
   };
 
   const [editing, setEditing] = useState(false);
-  const [phone, setPhone] = useState(member?.phone ?? "");
-  const [nasc, setNasc] = useState(member?.birth ?? "");
-  const [bairro, setBairro] = useState(member?.neighborhood ?? "");
+  const [perfil, setPerfil] = useState<MemberContactInput>({
+    name: member?.name ?? person.name,
+    email: realValue(member?.email),
+    phone: realValue(member?.phone),
+    nasc: member?.birth ?? "",
+    cep: member?.postalCode ?? "",
+    rua: member?.street ?? "",
+    bairro: member?.neighborhood ?? "",
+    cidade: member?.city ?? "",
+    estado: member?.state ?? "",
+  });
+  const [perfilTentou, setPerfilTentou] = useState(false);
+  const perfilErros = contactErrors(perfil);
 
-  const salvarPerfil = () => {
-    onUpdateProfile?.(person.id, member?.id ?? null, { phone, nasc, bairro });
+  const [perfilErroSalvar, setPerfilErroSalvar] = useState("");
+  const salvarPerfil = async () => {
+    if (Object.values(perfilErros).some(Boolean)) {
+      setPerfilTentou(true);
+      return;
+    }
+    if (!onUpdateProfile) return;
+    setPerfilErroSalvar("");
+    const { error } = await onUpdateProfile(person.id, member?.id ?? null, perfil);
+    if (error) {
+      setPerfilErroSalvar(error);
+      return;
+    }
     setEditing(false);
   };
 
@@ -1846,17 +1890,15 @@ function TabPerfil({
               <>
                 <div className="m-data">
                   <span>Telefone</span>
-                  <b>{member.phone || "a completar"}</b>
+                  <b>{realValue(member.phone) || "a completar"}</b>
                 </div>
-                {member.email && (
-                  <div className="m-data">
-                    <span>Email</span>
-                    <b>{member.email}</b>
-                  </div>
-                )}
+                <div className="m-data">
+                  <span>E-mail</span>
+                  <b>{realValue(member.email) || "a completar"}</b>
+                </div>
                 <div className="m-data" style={{ borderBottom: "none" }}>
-                  <span>Bairro</span>
-                  <b>{member.neighborhood || "a completar"}</b>
+                  <span>Endereço</span>
+                  <b>{[member.neighborhood, member.city].filter(Boolean).join(", ") || "a completar"}</b>
                 </div>
                 {onUpdateProfile && (
                   <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={() => setEditing(true)}>Editar</button>
@@ -1864,9 +1906,8 @@ function TabPerfil({
               </>
             ) : (
               <>
-                <div className="field"><label className="field-label">Telefone</label><input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
-                <div className="field"><label className="field-label">Aniversario</label><input className="input" type="date" value={nasc} onChange={(e) => setNasc(e.target.value)} /></div>
-                <div className="field"><label className="field-label">Bairro</label><input className="input" value={bairro} onChange={(e) => setBairro(e.target.value)} /></div>
+                <MemberContactFields d={perfil} set={(k, v) => setPerfil((p) => ({ ...p, [k]: v }))} erros={perfilTentou ? perfilErros : null} />
+                {perfilErroSalvar && <div style={{ fontSize: 12.5, color: "var(--danger)", marginBottom: 10 }}>{perfilErroSalvar}</div>}
                 <div style={{ display: "flex", gap: 10 }}>
                   <button className="btn btn-sec btn-sm" type="button" onClick={() => setEditing(false)}>Cancelar</button>
                   <button className="btn btn-pri btn-sm" type="button" onClick={salvarPerfil}>Salvar</button>
@@ -2008,17 +2049,26 @@ function AppTourModal({ onClose }: { onClose: () => void }) {
 }
 
 
-function Onboarding({ person, member, churchName, churchLogoUrl, organizationId, onCompleteOnboarding, onDone }: { person: P; member: M | null; churchName?: string; churchLogoUrl?: string | null; organizationId?: string; onCompleteOnboarding?: (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string; senha: string }) => void; onDone: () => void }) {
+function Onboarding({ person, member, churchName, churchLogoUrl, organizationId, onCompleteOnboarding, onDone }: { person: P; member: M | null; churchName?: string; churchLogoUrl?: string | null; organizationId?: string; onCompleteOnboarding?: (personId: string, memberId: string | null, data: MemberContactInput) => Promise<{ error?: string }>; onDone: () => void }) {
   const [step, setStep] = useState(0);
-  const [d, setD] = useState({
-    email: member?.email ?? person.name.toLowerCase().replace(/\s+/g, ".") + "@email.com",
+  const [d, setD] = useState<MemberContactInput>({
+    name: member?.name ?? person.name,
+    email: realValue(member?.email),
+    phone: realValue(member?.phone),
     nasc: member?.birth ?? "",
+    cep: member?.postalCode ?? "",
+    rua: member?.street ?? "",
     bairro: member?.neighborhood ?? "",
-    senha: "",
-    senha2: "",
+    cidade: member?.city ?? "",
+    estado: member?.state ?? "",
   });
   const [foto, setFoto] = useState<string | null>(null);
-  const set = (k: keyof typeof d, v: string) => setD((p) => ({ ...p, [k]: v }));
+  const [tentou, setTentou] = useState(false);
+  const [salvando, setSalvando] = useState(false);
+  const [erroSalvar, setErroSalvar] = useState("");
+  const set = (k: keyof MemberContactInput, v: string) => setD((p) => ({ ...p, [k]: v }));
+  const erros = contactErrors(d);
+  const dadosOk = !Object.values(erros).some(Boolean);
 
   const nome = person.name.split(" ")[0];
 
@@ -2039,25 +2089,11 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
     },
     {
       t: "Seus dados",
-      s: "Confirme as informacoes para mantermos contato e celebrar suas datas.",
-      body: (
-        <div className="ob-form">
-          <div className="field">
-            <label className="field-label">E-mail</label>
-            <input className="input" value={d.email} onChange={(e) => set("email", e.target.value)} />
-          </div>
-          <div className="field">
-            <label className="field-label req">Aniversario</label>
-            <input className="input" type="date" value={d.nasc} onChange={(e) => set("nasc", e.target.value)} />
-          </div>
-          <div className="field">
-            <label className="field-label">Bairro</label>
-            <input className="input" value={d.bairro} placeholder="Onde voce mora" onChange={(e) => set("bairro", e.target.value)} />
-          </div>
-        </div>
-      ),
+      s: "Confirme as informações para a igreja manter contato com você e celebrar suas datas.",
+      body: <MemberContactFields d={d} set={set} erros={tentou ? erros : null} />,
       ok: "Continuar →",
-      valid: !!d.nasc,
+      valid: dadosOk,
+      onInvalid: () => setTentou(true),
     },
     {
       t: "Sua foto",
@@ -2088,14 +2124,26 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
 
   const cur = steps[step];
 
-  const next = () => {
-    if (step < steps.length - 1) {
-      setStep(step + 1);
-    } else {
-      try { localStorage.setItem(`cex_onboarded_${person.id}`, "1"); } catch {}
-      onCompleteOnboarding?.(person.id, member?.id ?? null, { email: d.email, nasc: d.nasc, bairro: d.bairro, senha: d.senha });
-      onDone();
+  const next = async () => {
+    if (!cur.valid) {
+      cur.onInvalid?.();
+      return;
     }
+    /* grava os dados já ao sair do passo "Seus dados" e só avança se gravou:
+       se a pessoa fechar o app na foto, a ficha já está completa e o
+       primeiro acesso não volta */
+    if (step === 1 && onCompleteOnboarding) {
+      setSalvando(true);
+      setErroSalvar("");
+      const { error } = await onCompleteOnboarding(person.id, member?.id ?? null, d);
+      setSalvando(false);
+      if (error) {
+        setErroSalvar(error);
+        return;
+      }
+    }
+    if (step < steps.length - 1) setStep(step + 1);
+    else onDone();
   };
 
   return (
@@ -2120,6 +2168,7 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
         <h2 className="ob-title">{cur.t}</h2>
         <p className="ob-sub">{cur.s}</p>
         <div className="ob-body">{cur.body}</div>
+        {erroSalvar && <div style={{ fontSize: 12.5, color: "var(--danger)", marginBottom: 10 }}>{erroSalvar}</div>}
         <div className="ob-actions">
           {step > 0 && (
             <button className="btn btn-sec" type="button" onClick={() => setStep(step - 1)}>
@@ -2130,12 +2179,68 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
             className="btn btn-pri"
             type="button"
             style={{ flex: 1, justifyContent: "center" }}
-            disabled={!cur.valid}
+            disabled={salvando}
             onClick={next}
           >
-            {cur.ok}
+            {salvando ? "Salvando..." : cur.ok}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* Campos de contato do membro, obrigatórios: usados no primeiro acesso e na
+   edição do perfil (fonte única). O CEP consulta a API pública e preenche
+   rua, bairro, cidade e estado, que ficam na ficha pra análises da igreja. */
+export function MemberContactFields({ d, set, erros }: { d: MemberContactInput; set: (k: keyof MemberContactInput, v: string) => void; erros: ReturnType<typeof contactErrors> | null }) {
+  const err = (k: keyof ReturnType<typeof contactErrors>) =>
+    erros?.[k] ? <div style={{ fontSize: 11.5, color: "var(--danger)", marginTop: 4 }}>{erros[k]}</div> : null;
+  return (
+    <div className="ob-form">
+      <div className="field">
+        <label className="field-label req">Nome e sobrenome</label>
+        <input className="input" value={d.name} autoComplete="name" onChange={(e) => set("name", e.target.value)} />
+        {err("name")}
+      </div>
+      <div className="field">
+        <label className="field-label req">E-mail</label>
+        <input className="input" type="email" value={d.email} autoComplete="email" placeholder="voce@email.com" onChange={(e) => set("email", e.target.value)} />
+        {err("email")}
+      </div>
+      <div className="field">
+        <label className="field-label req">Telefone (WhatsApp)</label>
+        <input className="input" type="tel" value={d.phone} autoComplete="tel" placeholder="(11) 90000-0000" onChange={(e) => set("phone", e.target.value)} />
+        {err("phone")}
+      </div>
+      <div className="field">
+        <label className="field-label req">Aniversário</label>
+        <input className="input" type="date" value={d.nasc} onChange={(e) => set("nasc", e.target.value)} />
+        {err("nasc")}
+      </div>
+      <div className="field">
+        <label className="field-label req">CEP</label>
+        <CepInput
+          value={d.cep}
+          onChange={(v) => set("cep", v)}
+          onResult={(r) => {
+            if (!r) return;
+            if (r.street) set("rua", r.street);
+            if (r.neighborhood) set("bairro", r.neighborhood);
+            if (r.city) set("cidade", r.city);
+            if (r.state) set("estado", r.state);
+          }}
+        />
+        {err("cep")}
+        {(d.cidade || d.rua) && (
+          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 6 }}>
+            {[d.rua, d.cidade && d.estado ? `${d.cidade}/${d.estado}` : d.cidade].filter(Boolean).join(" · ")}
+          </div>
+        )}
+      </div>
+      <div className="field">
+        <label className="field-label">Bairro</label>
+        <input className="input" value={d.bairro} placeholder="Onde você mora" onChange={(e) => set("bairro", e.target.value)} />
       </div>
     </div>
   );
@@ -2446,9 +2551,10 @@ function MobileMembro({
   person, member, ...rest
 }: MobileOverlayProps & { person: P; member: M | null }) {
   const [tab, setTab] = useState("inicio");
-  const [onboarded, setOnboarded] = useState<boolean>(() => {
-    try { return !!localStorage.getItem(`cex_onboarded_${person.id}`); } catch { return false; }
-  });
+  /* primeiro acesso termina quando a ficha tem os dados obrigatórios
+     (member.contactComplete, calculado no servidor): vale em qualquer
+     aparelho e não diverge entre o HTML do servidor e o do navegador */
+  const [onboarded, setOnboarded] = useState<boolean>(() => !member || !!member.contactComplete);
   const { people, ministries, events, roster, cards, boards, courses, enrollments, courseModules = [], courseLessons = [],
           visitors, baptismClasses, announcements, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment,
           onAdvanceVisitorStage, onRegisterVisitor, onSendMessage, onStartChat,

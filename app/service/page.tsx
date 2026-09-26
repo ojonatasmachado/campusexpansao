@@ -158,6 +158,10 @@ type MemberRow = {
   family: string | null;
   journey: number[] | null;
   created_at: string;
+  postal_code: string | null;
+  street: string | null;
+  city: string | null;
+  state: string | null;
 };
 
 type MemberView = {
@@ -178,6 +182,11 @@ type MemberView = {
   family: string | null;
   journey: number[];
   createdAt: string;
+  postalCode: string | null;
+  street: string | null;
+  city: string | null;
+  state: string | null;
+  contactComplete: boolean;
 };
 
 type MinistryRow = {
@@ -843,6 +852,12 @@ function toMemberView(row: MemberRow): MemberView {
     family: row.family,
     journey: Array.isArray(row.journey) ? row.journey : [],
     createdAt: row.created_at,
+    postalCode: row.postal_code,
+    street: row.street,
+    city: row.city,
+    state: row.state,
+    /* obrigatórios do membro: sem eles o app abre no primeiro acesso */
+    contactComplete: !!(row.email && row.phone && row.birth && (row.postal_code ?? "").replace(/\D/g, "").length === 8),
   };
 }
 
@@ -959,7 +974,7 @@ async function getServiceDashboardData(): Promise<{
   const { data: membersData, error: membersError } = await supabase
     .schema("service")
     .from("members")
-    .select("id,organization_id,church_id,volunteer_id,group_id,title_id,name,phone,email,birth,since_year,situation,first_contact,neighborhood,family,journey,created_at")
+    .select("id,organization_id,church_id,volunteer_id,group_id,title_id,name,phone,email,birth,since_year,situation,first_contact,neighborhood,family,journey,created_at,postal_code,street,city,state")
     .order("name");
 
   if (membersError) {

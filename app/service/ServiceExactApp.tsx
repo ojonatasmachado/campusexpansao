@@ -12,7 +12,7 @@ import { formatDateBR } from "./lib/date";
 import { ageInMonths, suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import type { EnqueteElegivelView } from "./lib/enquetes";
 import type { PesquisaElegivelView, TipoPergunta as TipoPerguntaPesquisa } from "./lib/pesquisas";
-import MobileOverlay from "./MobileApp";
+import MobileOverlay, { type MemberContactInput } from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
 import { KidsQRModal } from "./KidsCheckin";
 import { PhotoPicker } from "./PhotoPicker";
@@ -29,6 +29,7 @@ import CursoEditor from "./CursoEditor";
 import CursoDrawer from "./CursoDrawer";
 import { ServiceAccessProvider, useServiceAccess, type PersonGrant } from "./AccessContext";
 import RequisitosEditor from "./RequisitosEditor";
+import CepInput from "./CepInput";
 import { requirementsFor, requirementLabel, saveRequirements, type Requirement, type RequirementRow } from "./lib/requirements";
 import { HelpDot, Coachmark, HelpFab, TOUR_DESKTOP, SetupChecklist, type SetupCounts } from "./HelpSystem";
 
@@ -148,6 +149,11 @@ type MemberView = {
   groupId: string | null;
   volunteerId: string | null;
   createdAt: string;
+  postalCode?: string | null;
+  street?: string | null;
+  city?: string | null;
+  state?: string | null;
+  contactComplete?: boolean;
 };
 
 type MinistryView = {
@@ -1119,46 +1125,43 @@ export default function ServiceExactApp({
     );
     router.refresh();
   };
-  const completeOnboarding = async (personId: string, memberId: string | null, data: { email: string; nasc: string; bairro: string; senha: string }) => {
+  /* dados de contato do próprio membro (primeiro acesso e perfil): a pessoa
+     (people) ele mesmo edita; a ficha de membro só pelos campos de contato,
+     via função do banco (0044 update_my_member_contact) */
+  const saveMemberContact = async (personId: string, memberId: string | null, data: MemberContactInput): Promise<{ error?: string }> => {
     const supabase = createServiceBrowserClient();
     const targetPerson = people.find((p) => p.id === personId);
-    await Promise.all([
+    const cep = data.cep.replace(/\D/g, "");
+    const [pessoa, ficha] = await Promise.all([
       supabase.schema("service").from("people").update({
-        email: data.email || null,
+        name: data.name.trim(),
+        email: data.email.trim() || null,
+        phone: data.phone.trim() || null,
         meta: { ...targetPerson?.meta, birthday: data.nasc || targetPerson?.meta?.birthday, neighborhood: data.bairro || targetPerson?.meta?.neighborhood },
       }).eq("id", personId),
       memberId
-        ? supabase.schema("service").from("members").update({
-            email: data.email || null,
-            birth: data.nasc || null,
-            neighborhood: data.bairro || null,
-          }).eq("id", memberId)
-        : Promise.resolve(),
-      data.senha
-        ? supabase.auth.updateUser({ password: data.senha }).then(({ error }) => {
-            if (error) console.error("Falha ao salvar senha do onboarding:", error);
+        ? supabase.schema("service").rpc("update_my_member_contact", {
+            p_member: memberId,
+            p_name: data.name.trim(),
+            p_email: data.email.trim(),
+            p_phone: data.phone.trim(),
+            p_birth: data.nasc,
+            p_postal_code: cep,
+            p_street: data.rua,
+            p_neighborhood: data.bairro,
+            p_city: data.cidade,
+            p_state: data.estado,
           })
-        : Promise.resolve(),
+        : Promise.resolve({ data: true, error: null }),
     ]);
+    /* a função devolve false quando a ficha não é da pessoa logada */
+    if (pessoa.error || ficha.error || ficha.data === false) return { error: "Não foi possível salvar seus dados. Tente de novo." };
     router.refresh();
+    return {};
   };
   const changePasswordMobile = async (senha: string) => {
     const { error } = await createServiceBrowserClient().auth.updateUser({ password: senha });
     return { error: error?.message };
-  };
-  const updateProfileMobile = async (personId: string, memberId: string | null, data: { phone: string; nasc: string; bairro: string }) => {
-    const supabase = createServiceBrowserClient();
-    await Promise.all([
-      supabase.schema("service").from("people").update({ phone: data.phone || null }).eq("id", personId),
-      memberId
-        ? supabase.schema("service").from("members").update({
-            phone: data.phone || null,
-            birth: data.nasc || null,
-            neighborhood: data.bairro || null,
-          }).eq("id", memberId)
-        : Promise.resolve(),
-    ]);
-    router.refresh();
   };
   const addCardCommentMobile = async (cardId: string, author: string, body: string) => {
     if (!firstChurch?.organizationId) return;
@@ -1433,7 +1436,7 @@ export default function ServiceExactApp({
         bibleMarks={bibleMarks}
         onSaveBibleMark={saveBibleMarkMobile}
         onReadAnnouncement={markAnnouncementRead}
-        onCompleteOnboarding={completeOnboarding}
+        onCompleteOnboarding={saveMemberContact}
         onAddCardComment={addCardCommentMobile}
         onAdvanceVisitorStage={advanceVisitorStageMobile}
         onRegisterVisitor={registerVisitorMobile}
@@ -1445,7 +1448,7 @@ export default function ServiceExactApp({
         theme={theme}
         setTheme={setTheme}
         onChangePassword={changePasswordMobile}
-        onUpdateProfile={updateProfileMobile}
+        onUpdateProfile={saveMemberContact}
         journeyRequests={journeyRequests}
         onRequestJourneyStep={submitJourneyRequest}
         onConfirmarEscala={confirmarEscalaMobile}
@@ -1704,7 +1707,7 @@ export default function ServiceExactApp({
           bibleMarks={bibleMarks}
           onSaveBibleMark={saveBibleMarkMobile}
           onReadAnnouncement={markAnnouncementRead}
-          onCompleteOnboarding={completeOnboarding}
+          onCompleteOnboarding={saveMemberContact}
           onAddCardComment={addCardCommentMobile}
           onAdvanceVisitorStage={advanceVisitorStageMobile}
           onRegisterVisitor={registerVisitorMobile}
@@ -1716,7 +1719,7 @@ export default function ServiceExactApp({
           theme={theme}
           setTheme={setTheme}
           onChangePassword={changePasswordMobile}
-          onUpdateProfile={updateProfileMobile}
+          onUpdateProfile={saveMemberContact}
           journeyRequests={journeyRequests}
           onRequestJourneyStep={submitJourneyRequest}
           onConfirmarEscala={confirmarEscalaMobile}
@@ -9984,73 +9987,6 @@ function TimePicker({ value, onChange }: { value: string; onChange: (v: string) 
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function formatCep(value: string) {
-  /* limpa não-dígitos antes de formatar : o valor pode já vir com traço do
-     banco (postal_code salvo por um fluxo antigo, ex.: "01234-000"), não só
-     dígitos crus digitados agora. */
-  const d = value.replace(/\D/g, "").slice(0, 8);
-  return d.replace(/^(\d{5})(\d)/, "$1-$2");
-}
-
-type CepResult = { street?: string | null; neighborhood?: string | null; city?: string | null; state?: string | null };
-
-/* CEP com autopreenchimento : ao completar 8 dígitos, consulta
-   /api/service/cep-lookup (BrasilAPI, mesma API já usada pro CNPJ) e devolve
-   o endereço via onResult, pra quem estiver usando decidir o que fazer com
-   ele (sem número : o CEP não devolve número mesmo). Fonte única : usada
-   tanto pelo campo genérico de formulário (CepField, sistema FieldDef)
-   quanto direto no formulário da própria igreja (aba Configurações →
-   Igreja). */
-function CepInput({ value, onChange, onResult, placeholder }: { value: string; onChange: (v: string) => void; onResult: (data: CepResult | null, error?: string) => void; placeholder?: string }) {
-  const [checking, setChecking] = useState(false);
-  const [error, setError] = useState("");
-
-  async function lookup(digits: string) {
-    setChecking(true);
-    setError("");
-    try {
-      const res = await fetch("/api/service/cep-lookup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cep: digits }),
-      });
-      const data = (await res.json()) as { valid: boolean; error?: string } & CepResult;
-      if (data.valid) {
-        onResult({ street: data.street, neighborhood: data.neighborhood, city: data.city, state: data.state });
-      } else {
-        const msg = data.error || "CEP não encontrado.";
-        setError(msg);
-        onResult(null, msg);
-      }
-    } catch {
-      const msg = "Não conseguimos consultar o CEP agora.";
-      setError(msg);
-      onResult(null, msg);
-    } finally {
-      setChecking(false);
-    }
-  }
-
-  return (
-    <div>
-      <input
-        className="input"
-        value={formatCep(value)}
-        placeholder={placeholder || "00000-000"}
-        inputMode="numeric"
-        onChange={(e) => {
-          const digits = e.target.value.replace(/\D/g, "").slice(0, 8);
-          onChange(digits);
-          setError("");
-          if (digits.length === 8) lookup(digits);
-        }}
-      />
-      {checking && <div style={{ fontSize: 11, color: "var(--subtle)", marginTop: 4 }}>Buscando endereço...</div>}
-      {error && <div style={{ fontSize: 11, color: "var(--amber)", marginTop: 4 }}>{error}</div>}
     </div>
   );
 }

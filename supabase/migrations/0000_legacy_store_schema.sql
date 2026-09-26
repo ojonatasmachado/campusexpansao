@@ -1,0 +1,343 @@
+-- CE.X · 0000 · Tabelas legadas da loja (só em banco vazio)
+-- As 11 tabelas da loja/Studio nasceram em public via supabase/schema.sql,
+-- antes das migrations existirem, e a 0021-0023 partem delas. Em produção
+-- elas já existem (hoje no schema cex), então este bloco não faz nada lá. Ele
+-- só roda num banco novo (ex: Supabase local de teste, `supabase start`), pra
+-- sequência de migrations aplicar do zero.
+do $outer$
+begin
+  if exists (select 1 from pg_tables where tablename = 'admin_users') then
+    return;
+  end if;
+  execute $ddl$
+-- ── CE.X · Schema Supabase ────────────────────────────────────────────────────
+-- Rode este arquivo no SQL Editor do seu projeto Supabase (uma vez).
+
+create extension if not exists pgcrypto;
+
+-- Usuários administrativos do painel interno
+create table if not exists admin_users (
+  id                  uuid primary key default gen_random_uuid(),
+  username            text not null unique,
+  name                text not null default '',
+  role                text not null default 'admin' check (role in ('master', 'admin')),
+  active              boolean not null default true,
+  password_salt       text not null,
+  password_hash       text not null,
+  created_by          uuid references admin_users(id) on delete set null,
+  created_by_username text,
+  created_at          timestamptz default now(),
+  updated_at          timestamptz default now()
+);
+
+create index if not exists admin_users_username_idx on admin_users(lower(username));
+create index if not exists admin_users_role_idx on admin_users(role);
+
+-- Estantes
+create table if not exists estantes (
+  key          text primary key,
+  label        text not null,
+  familia      text not null check (familia in ('ministrar', 'liderar')),
+  accent       text not null,
+  faixa_etaria text not null default '',
+  status       text not null default 'visible' check (status in ('visible', 'hidden')),
+  ord          integer not null default 0,
+  created_at   timestamptz default now()
+);
+
+-- Materiais
+create table if not exists materiais (
+  id           text primary key,
+  familia      text not null check (familia in ('ministrar', 'liderar')),
+  estante      text not null references estantes(key) on delete set null,
+  model        text not null check (model in ('A','B','C','D')),
+  etiqueta     text not null default '',
+  titulo       text not null,
+  code         text,
+  big          text,
+  big_label    text,
+  promessa     text not null default '',
+  mensagens    integer,
+  paginas      integer not null default 0,
+  formatos     text[] not null default '{}',
+  preco        text not null default '',
+  hotmart_url  text not null default '',
+  hotmart_product_id text,
+  hotmart_offer_id text,
+  colecoes     text[] not null default '{}',
+  pra_quem     text not null default '',
+  conteudo     text[] not null default '{}',
+  contents     jsonb not null default '[]',
+  como_usar    text not null default '',
+  faq          jsonb not null default '[]',
+  status       text not null default 'Publicado',
+  created_at   timestamptz default now()
+);
+
+alter table materiais add column if not exists hotmart_product_id text;
+alter table materiais add column if not exists hotmart_offer_id text;
+alter table materiais add column if not exists contents jsonb not null default '[]';
+alter table materiais add column if not exists mensagens_lista jsonb not null default '[]';
+alter table materiais add column if not exists keywords text[] not null default '{}';
+alter table materiais add column if not exists created_by uuid references admin_users(id) on delete set null;
+alter table materiais add column if not exists created_by_username text;
+alter table materiais add column if not exists updated_at timestamptz default now();
+
+create index if not exists materiais_created_by_idx on materiais(created_by);
+create index if not exists materiais_keywords_idx on materiais using gin(keywords);
+
+-- Traduções de materiais geradas no salvamento administrativo
+create table if not exists material_translations (
+  material_id     text not null references materiais(id) on delete cascade,
+  locale          text not null check (locale in ('pt', 'en', 'es')),
+  source_locale   text not null check (source_locale in ('pt', 'en', 'es')),
+  titulo          text not null default '',
+  promessa        text not null default '',
+  pra_quem        text not null default '',
+  conteudo        text[] not null default '{}',
+  contents        jsonb not null default '[]',
+  mensagens_lista jsonb not null default '[]',
+  faq             jsonb not null default '[]',
+  keywords        text[] not null default '{}',
+  created_at      timestamptz default now(),
+  updated_at      timestamptz default now(),
+  primary key (material_id, locale)
+);
+
+create index if not exists material_translations_locale_idx on material_translations(locale);
+create index if not exists material_translations_material_id_idx on material_translations(material_id);
+
+-- Cursos
+create table if not exists cursos (
+  slug         text primary key,
+  num          text not null,
+  nivel        text not null check (nivel in ('fundacao','lideranca','multiplicacao')),
+  title        text not null,
+  desc_text    text not null default '',
+  dur          text not null default '',
+  promessa     text not null default '',
+  pra_quem     text not null default '',
+  ementa       jsonb not null default '[]',
+  formato      text not null default '',
+  mentor       text not null default '',
+  mentor_bio   text not null default '',
+  depoimento   jsonb not null default '{}',
+  turma        text not null default '',
+  status       text not null default 'Publicado',
+  keywords     text[] not null default '{}',
+  created_by   uuid references admin_users(id) on delete set null,
+  created_by_username text,
+  created_at   timestamptz default now()
+);
+
+alter table cursos add column if not exists keywords text[] not null default '{}';
+alter table cursos add column if not exists created_by uuid references admin_users(id) on delete set null;
+alter table cursos add column if not exists created_by_username text;
+alter table cursos add column if not exists updated_at timestamptz default now();
+
+create index if not exists cursos_created_by_idx on cursos(created_by);
+create index if not exists cursos_keywords_idx on cursos using gin(keywords);
+
+-- Mentorias
+create table if not exists mentorias (
+  id                  text primary key,
+  title               text not null,
+  desc_text           text not null default '',
+  formato             text not null default '',
+  vagas               integer not null default 0,
+  mentor              text not null default '',
+  accent              text not null default '#7A9E3F',
+  cadencia            text not null default '',
+  status              text not null default 'Publicado',
+  waitlist            integer not null default 0,
+  keywords            text[] not null default '{}',
+  created_by          uuid references admin_users(id) on delete set null,
+  created_by_username text,
+  created_at          timestamptz default now(),
+  updated_at          timestamptz default now()
+);
+
+alter table mentorias add column if not exists keywords text[] not null default '{}';
+alter table mentorias add column if not exists created_by uuid references admin_users(id) on delete set null;
+alter table mentorias add column if not exists created_by_username text;
+alter table mentorias add column if not exists updated_at timestamptz default now();
+
+create index if not exists mentorias_created_by_idx on mentorias(created_by);
+create index if not exists mentorias_keywords_idx on mentorias using gin(keywords);
+
+-- Templates e modelos centrais dos módulos CE.X Studio
+create table if not exists studio_templates (
+  id                  text primary key,
+  module              text not null check (module in ('documentos', 'slides', 'design')),
+  name                text not null,
+  description         text not null default '',
+  status              text not null default 'Rascunho' check (status in ('Ativo', 'Rascunho')),
+  payload             jsonb not null default '{}',
+  created_by          uuid references admin_users(id) on delete set null,
+  created_by_username text,
+  created_at          timestamptz default now(),
+  updated_at          timestamptz default now()
+);
+
+create index if not exists studio_templates_module_idx on studio_templates(module);
+create index if not exists studio_templates_status_idx on studio_templates(status);
+
+-- Eventos flexíveis de métricas do site e dos fluxos de compra
+create table if not exists metric_events (
+  id             uuid primary key default gen_random_uuid(),
+  event_name     text not null,
+  path           text not null default '',
+  referrer       text,
+  visitor_id     text,
+  session_id     text,
+  user_id        uuid references auth.users(id) on delete set null,
+  material_id    text references materiais(id) on delete set null,
+  curso_slug     text,
+  mentoria_id    text,
+  traffic_source text not null default 'direto',
+  utm_source     text,
+  utm_medium     text,
+  utm_campaign   text,
+  metadata       jsonb not null default '{}',
+  created_at     timestamptz default now()
+);
+
+create index if not exists metric_events_event_name_idx on metric_events(event_name);
+create index if not exists metric_events_created_at_idx on metric_events(created_at);
+create index if not exists metric_events_material_id_idx on metric_events(material_id);
+create index if not exists metric_events_curso_slug_idx on metric_events(curso_slug);
+create index if not exists metric_events_traffic_source_idx on metric_events(traffic_source);
+create index if not exists metric_events_visitor_id_idx on metric_events(visitor_id);
+
+-- Rascunhos pessoais dos compradores nos módulos visuais do CE.X Studio
+create table if not exists studio_user_drafts (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  material_id text not null,
+  module      text not null check (module in ('design', 'slides')),
+  payload     jsonb not null default '{}',
+  expires_at  timestamptz not null,
+  created_at  timestamptz default now(),
+  updated_at  timestamptz default now()
+);
+
+create unique index if not exists studio_user_drafts_user_material_module_uidx
+  on studio_user_drafts(user_id, material_id, module);
+create index if not exists studio_user_drafts_user_id_idx on studio_user_drafts(user_id);
+create index if not exists studio_user_drafts_material_id_idx on studio_user_drafts(material_id);
+create index if not exists studio_user_drafts_module_idx on studio_user_drafts(module);
+create index if not exists studio_user_drafts_expires_at_idx on studio_user_drafts(expires_at);
+
+-- RLS: habilitado, acesso público por enquanto (apertar depois com service_role)
+alter table estantes  enable row level security;
+alter table materiais enable row level security;
+alter table material_translations enable row level security;
+alter table cursos    enable row level security;
+alter table mentorias enable row level security;
+alter table studio_templates enable row level security;
+alter table metric_events enable row level security;
+alter table studio_user_drafts enable row level security;
+
+-- Policies: leitura pública, escrita via service_role (backend)
+drop policy if exists "leitura pública estantes" on estantes;
+drop policy if exists "leitura pública materiais" on materiais;
+drop policy if exists "leitura pública traduções de materiais" on material_translations;
+drop policy if exists "leitura pública cursos" on cursos;
+drop policy if exists "leitura pública mentorias" on mentorias;
+create policy "leitura pública estantes"  on estantes  for select using (true);
+create policy "leitura pública materiais" on materiais for select using (true);
+create policy "leitura pública traduções de materiais" on material_translations for select using (true);
+create policy "leitura pública cursos"    on cursos    for select using (true);
+create policy "leitura pública mentorias" on mentorias for select using (true);
+
+drop policy if exists "leitura pública templates ativos" on studio_templates;
+create policy "leitura pública templates ativos" on studio_templates
+for select using (status = 'Ativo');
+
+drop policy if exists "usuario le seus drafts studio" on studio_user_drafts;
+create policy "usuario le seus drafts studio" on studio_user_drafts
+for select using (auth.uid() = user_id);
+
+drop policy if exists "usuario cria seus drafts studio" on studio_user_drafts;
+create policy "usuario cria seus drafts studio" on studio_user_drafts
+for insert with check (auth.uid() = user_id);
+
+drop policy if exists "usuario atualiza seus drafts studio" on studio_user_drafts;
+create policy "usuario atualiza seus drafts studio" on studio_user_drafts
+for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "usuario exclui seus drafts studio" on studio_user_drafts;
+create policy "usuario exclui seus drafts studio" on studio_user_drafts
+for delete using (auth.uid() = user_id);
+
+-- Login master inicial do painel:
+-- O código cria automaticamente o usuário jonatas_machado na primeira tentativa de login
+-- com a senha limaza022216. caso ele ainda não exista.
+
+-- Perfis dos usuários
+create table if not exists user_profiles (
+  user_id         uuid primary key references auth.users(id) on delete cascade,
+  email           text not null,
+  full_name       text not null default '',
+  church_name     text not null default '',
+  phone           text not null default '',
+  state           text not null default '',
+  city            text not null default '',
+  church_address  text not null default '',
+  role            text not null default '',
+  ministry_area   text not null default '',
+  denomination    text not null default '',
+  created_at      timestamptz default now(),
+  updated_at      timestamptz default now()
+);
+
+create index if not exists user_profiles_email_idx on user_profiles(lower(email));
+create index if not exists user_profiles_state_idx on user_profiles(state);
+create index if not exists user_profiles_role_idx on user_profiles(role);
+create index if not exists user_profiles_church_name_idx on user_profiles(church_name);
+
+alter table user_profiles enable row level security;
+
+drop policy if exists "usuario le seu perfil" on user_profiles;
+create policy "usuario le seu perfil" on user_profiles
+for select using (auth.uid() = user_id);
+
+drop policy if exists "usuario cria seu perfil" on user_profiles;
+create policy "usuario cria seu perfil" on user_profiles
+for insert with check (auth.uid() = user_id);
+
+drop policy if exists "usuario atualiza seu perfil" on user_profiles;
+create policy "usuario atualiza seu perfil" on user_profiles
+for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Compras liberadas pela Hotmart
+create table if not exists compras (
+  id                  uuid primary key default gen_random_uuid(),
+  user_id             uuid references auth.users(id) on delete set null,
+  buyer_email         text not null,
+  material_id         text not null references materiais(id) on delete cascade,
+  status              text not null default 'Liberado' check (status in ('Liberado','Pendente','Cancelado','Reembolsado')),
+  source              text not null default 'hotmart',
+  hotmart_transaction text unique,
+  hotmart_product_id  text,
+  raw_payload         jsonb not null default '{}',
+  purchased_at        timestamptz default now(),
+  created_at          timestamptz default now(),
+  updated_at          timestamptz default now()
+);
+
+create index if not exists compras_user_id_idx on compras(user_id);
+create index if not exists compras_buyer_email_idx on compras(lower(buyer_email));
+create index if not exists compras_material_id_idx on compras(material_id);
+
+alter table compras enable row level security;
+
+drop policy if exists "usuario le suas compras" on compras;
+create policy "usuario le suas compras" on compras
+for select using (
+  auth.uid() = user_id
+  or lower(buyer_email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+);
+
+$ddl$;
+end $outer$;

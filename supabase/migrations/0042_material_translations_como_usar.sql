@@ -9,5 +9,5 @@
 -- em português mesmo pro visitante em inglês/espanhol.
 -- ═══════════════════════════════════════════════════════════════════════════
 
-alter table material_translations
+alter table cex.material_translations
   add column if not exists como_usar text not null default '';
