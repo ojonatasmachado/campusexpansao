@@ -233,6 +233,8 @@ export type MobileOverlayProps = {
      logado de verdade, direto na conta dele, sem seletor e sem "voltar
      ao painel" (nao existe painel pra essa pessoa). */
   mode?: "preview" | "self";
+  /* só pra quem tem função de gestão: volta pro painel */
+  onSwitchToPanel?: () => void;
   selfPersonId?: string | null;
   onLogout?: () => void;
 };
@@ -2854,7 +2856,7 @@ function MobileMembro({
 // ── overlay principal (desktop) ───────────────────────────────────────────────
 
 export default function MobileOverlay(props: MobileOverlayProps) {
-  const { people, members, onClose, mode = "preview", selfPersonId, onLogout } = props;
+  const { people, members, onClose, mode = "preview", selfPersonId, onLogout, onSwitchToPanel } = props;
   const isSelf = mode === "self";
 
   const personas = isSelf ? [] : people.filter((p) => p.status === "ativo").slice(0, 3);
@@ -2880,6 +2882,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
               : "Cadastre voluntarios em Pessoas para pre-visualizar o app deles aqui."}
           </p>
           <button className="mob-close" onClick={closeAction}>{closeLabel}</button>
+          {isSelf && onSwitchToPanel && <button className="mob-close mob-to-panel" onClick={onSwitchToPanel}>Gerenciar →</button>}
         </div>
       </div>
     );
@@ -2929,6 +2932,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
         )}
 
         <button className="mob-close" onClick={closeAction}>{closeLabel}</button>
+        {isSelf && onSwitchToPanel && <button className="mob-close mob-to-panel" onClick={onSwitchToPanel}>Gerenciar →</button>}
       </div>
 
       <div className="mob-phone-wrap" onClick={(e) => e.stopPropagation()}>

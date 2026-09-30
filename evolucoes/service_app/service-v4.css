@@ -108,3 +108,8 @@ body[data-theme="light"] { --cocoa: #5A4230; }
    sem suporte ignora a linha e fica com o 100vh de antes) */
 .app { min-height:100dvh; }
 .sb { height:100dvh; }
+
+/* troca entre app de membro e painel (só pra quem tem função de gestão) */
+.mob-bg.mob-self .mob-to-panel { margin-left:auto; color:var(--olive); border-color:var(--olive-line); }
+.top-meu-app { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+@media (max-width:640px) { .top-meu-app { padding:7px 10px; } }

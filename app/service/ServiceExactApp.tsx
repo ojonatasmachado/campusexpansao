@@ -672,6 +672,7 @@ type Props = {
   enqueteElegivel?: EnqueteElegivelView | null;
   pesquisaElegivel?: PesquisaElegivelView | null;
   initialTheme?: "dark" | "light";
+  initialView?: "app" | "gestao";
   error: string;
 };
 
@@ -1034,6 +1035,7 @@ export default function ServiceExactApp({
   enqueteElegivel = null,
   pesquisaElegivel = null,
   initialTheme = "dark",
+  initialView = "gestao",
   error,
 }: Props) {
   const [route, setRoute] = useState<keyof typeof ROUTES>("painel");
@@ -1043,6 +1045,13 @@ export default function ServiceExactApp({
      padrão da igreja, ver lib/theme.ts resolveMode). A troca feita no app
      grava o cookie, pra próxima página já vir no modo certo. */
   const [theme, setThemeState] = useState<"dark" | "light">(initialTheme);
+  /* quem tem função de gestão alterna entre o próprio app de membro e o
+     painel; a escolha fica no aparelho (cookie cex_view, lido no servidor) */
+  const [view, setViewState] = useState<"app" | "gestao">(initialView);
+  const setView = (next: "app" | "gestao") => {
+    document.cookie = `cex_view=${next}; path=/; max-age=31536000; samesite=lax`;
+    setViewState(next);
+  };
   const setTheme = (next: "dark" | "light" | ((t: "dark" | "light") => "dark" | "light")) => {
     setThemeState((prev) => {
       const value = typeof next === "function" ? next(prev) : next;
@@ -1051,7 +1060,6 @@ export default function ServiceExactApp({
     });
   };
   const [activeChurchId, setActiveChurchId] = useState<string>(churches[0]?.id ?? "");
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [checkinEventId, setCheckinEventId] = useState<string | null>(null);
   const [shareEventId, setShareEventId] = useState<string | null>(null);
@@ -1412,7 +1420,10 @@ export default function ServiceExactApp({
      Só pode vir depois de todos os hooks acima (regra dos hooks : nada de
      return condicional antes deles). */
   const temTelaLiberada = currentExtraAccess.some((code) => ACESSO_ROTAS.some((r) => r.id === code));
-  if (currentRole === "membro" && !temTelaLiberada) {
+  /* função de gestão = papel líder/pastor/master ou alguma tela do painel
+     liberada. Sem isso, a pessoa só vê o app de membro, sem botão de troca. */
+  const podeGerenciar = currentRole !== "membro" || temTelaLiberada;
+  if (!podeGerenciar || view === "app") {
     const handleLogoutSelf = async () => {
       await createServiceBrowserClient().auth.signOut();
       router.push("/service/login");
@@ -1475,6 +1486,7 @@ export default function ServiceExactApp({
         selfPersonId={currentPersonId}
         onLogout={handleLogoutSelf}
         onClose={handleLogoutSelf}
+        onSwitchToPanel={podeGerenciar ? () => setView("gestao") : undefined}
       />
     );
   }
@@ -1590,6 +1602,9 @@ export default function ServiceExactApp({
             />
           </div>
           <div className="top-actions">
+            <button className="btn btn-sec btn-sm top-meu-app" type="button" onClick={() => setView("app")} title="Ver o app como membro">
+              <Icon name="perfil" size={14} /> Meu app
+            </button>
             <button className="theme-tog" type="button" title="Mudar tema" onClick={() => setTheme((t) => t === "dark" ? "light" : "dark")}>
               <Icon name={theme === "dark" ? "sol" : "lua"} size={16} />
             </button>
@@ -1659,10 +1674,6 @@ export default function ServiceExactApp({
         {route === "historia" ? <Historia church={firstChurch} historyEntries={historyEntries} setModal={setModal} /> : null}
       </div>
 
-      <button className="mob-launch" type="button" onClick={() => setMobileOpen(true)}>
-        ◷ Ver app do membro
-      </button>
-
       <HelpFab
         onTour={() => { setShowTour(true); setNavOpen(true); }}
         onSetup={() => {
@@ -1695,62 +1706,6 @@ export default function ServiceExactApp({
         </div>
       ) : null}
 
-      {mobileOpen && (
-        <MobileOverlay
-          people={people}
-          members={members}
-          ministries={ministries}
-          events={events}
-          roster={roster}
-          cards={cards}
-          boards={boards}
-          courses={courses}
-          enrollments={enrollments}
-          courseModules={courseModules}
-          courseLessons={courseLessons}
-          visitors={visitors}
-          baptismClasses={baptismClasses}
-          announcements={announcements}
-          chats={chats}
-          chatMembers={chatMembers}
-          messages={messages}
-          kidsClasses={kidsClasses}
-          kidsChildren={kidsChildren}
-          childGuardians={childGuardians}
-          kidsSessions={kidsSessions}
-          kidsAttendance={kidsAttendance}
-          kidsEvents={kidsEvents}
-          kidsEventEnrollments={kidsEventEnrollments}
-          wallPosts={wallPosts}
-          bibleMarks={bibleMarks}
-          onSaveBibleMark={saveBibleMarkMobile}
-          onReadAnnouncement={markAnnouncementRead}
-          onCompleteOnboarding={saveMemberContact}
-          onAddCardComment={addCardCommentMobile}
-          onAdvanceVisitorStage={advanceVisitorStageMobile}
-          onRegisterVisitor={registerVisitorMobile}
-          onSendMessage={sendMessageMobile}
-          onStartChat={startChatMobile}
-          organizationId={firstChurch?.organizationId ?? ""}
-          churchName={firstChurch?.nome ?? ""}
-          churchLogoUrl={firstChurch?.logoUrl ?? null}
-          theme={theme}
-          setTheme={setTheme}
-          onChangePassword={changePasswordMobile}
-          onUpdateProfile={saveMemberContact}
-          journeyRequests={journeyRequests}
-          onRequestJourneyStep={submitJourneyRequest}
-          missingRequirements={missingRequirements}
-          serveRequests={serveRequests}
-          baptismCandidates={baptismCandidates}
-          onEnrollCourse={(courseId) => journeyRpc("enroll_me", { p_course: courseId })}
-          onRequestBaptism={(classId) => journeyRpc("request_baptism", { p_class: classId })}
-          onRequestServe={(ministryId) => journeyRpc("request_to_serve", { p_ministry: ministryId })}
-          onConfirmarEscala={confirmarEscalaMobile}
-          onRecusarEscala={recusarEscalaMobile}
-          onClose={() => setMobileOpen(false)}
-        />
-      )}
 
       {checkinEventId && (() => {
         const checkinEvent = events.find((e) => e.id === checkinEventId);

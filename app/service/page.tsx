@@ -6,7 +6,7 @@ import ServiceExactApp from "./ServiceExactApp";
 import type { RequirementRow } from "./lib/requirements";
 import type { MissingRequirement, ServeRequest } from "./MobileApp";
 import { resolveMode, THEME_COOKIE, type BrandCfg } from "./lib/theme";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import ServiceTheme from "./ServiceTheme";
 
 type ChurchRow = {
@@ -949,6 +949,10 @@ async function getServiceDashboardData(): Promise<{
     redirect(slug && /^[a-z0-9-]{3,40}$/.test(slug) ? `/${slug}/entrar` : "/service/login");
   }
 
+  /* toda pessoa com login tem ficha de membro (liderança também usa o app
+     como qualquer pessoa); cria a que faltar antes de carregar os dados */
+  await supabase.schema("service").rpc("ensure_my_member");
+
   const { data: churchesData, error: churchesError } = await supabase
     .schema("service")
     .from("churches")
@@ -1454,7 +1458,14 @@ export default async function ServiceHomePage() {
   /* a marca é da organização: mora na igreja matriz (ver salvarPersonalizacao) */
   const brandCfg = ((churches.find((c) => c.matriz) ?? churches[0])?.settings as { brandCfg?: BrandCfg } | undefined)?.brandCfg;
 
-  const themeMode = resolveMode((await cookies()).get(THEME_COOKIE)?.value, brandCfg);
+  const jar = await cookies();
+  const themeMode = resolveMode(jar.get(THEME_COOKIE)?.value, brandCfg);
+  /* por onde entra quem tem função de gestão: a escolha salva no aparelho
+     (cex_view), ou pelo aparelho: celular abre o app de membro, computador
+     abre o painel. Quem só é membro sempre vê o app. */
+  const savedView = jar.get("cex_view")?.value;
+  const isPhone = /Mobi|Android|iPhone|iPod/i.test((await headers()).get("user-agent") ?? "");
+  const initialView: "app" | "gestao" = savedView === "app" || savedView === "gestao" ? savedView : isPhone ? "app" : "gestao";
 
   return (
     <>
@@ -1518,6 +1529,7 @@ export default async function ServiceHomePage() {
       enqueteElegivel={enqueteElegivel}
       pesquisaElegivel={pesquisaElegivel}
       initialTheme={themeMode}
+      initialView={initialView}
       error={error}
     />
     </>
