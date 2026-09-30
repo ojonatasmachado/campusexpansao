@@ -84,3 +84,27 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 .brand-church-text { display:flex; flex-direction:column; gap:3px; min-width:0; }
 .brand-church-name { font-size:15px; font-weight:700; letter-spacing:-0.02em; color:var(--white); line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .brand-church-suffix { font-family:var(--mono); font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); }
+
+/* ════════ APP DO MEMBRO EM TELA CHEIA (mode="self") ════════
+   A moldura de celular (.phone 340x710, notch, relógio "9:41") é da PRÉVIA
+   que a liderança abre no painel. Pro membro de verdade o app ocupa a tela
+   em qualquer largura: antes só virava tela cheia até 480px, e num celular
+   deitado, num tablet ou num navegador interno de app aparecia a moldura,
+   que não cabe e obrigava a rolar pros lados e pra cima e pra baixo.
+   No fim do arquivo (o último CSS carregado) pra vencer .mob-bg/.phone/.ob. */
+.mob-bg.mob-self { flex-direction:column; align-items:stretch; justify-content:flex-start; padding:0; gap:0; backdrop-filter:none; background:var(--ink); overflow:hidden; }
+.mob-bg.mob-self .mob-side { position:static; max-width:none; width:100%; text-align:left; padding:10px 14px; border-bottom:0.5px solid var(--border-2); display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.mob-bg.mob-self .mob-close { flex-shrink:0; padding:8px 12px; }
+.mob-bg.mob-self .mob-phone-wrap { flex:1; min-height:0; display:flex; justify-content:center; }
+.mob-bg.mob-self .phone { width:100%; max-width:560px; height:auto; flex:1; min-height:0; border-radius:0; padding:0; box-shadow:none; background:var(--ink); }
+.mob-bg.mob-self .phone-screen { border-radius:0; }
+.mob-bg.mob-self .phone-notch,
+.mob-bg.mob-self .m-statusbar { display:none; }
+.mob-bg.mob-self .ob { padding:0; align-items:flex-start; }
+.mob-bg.mob-self .ob-card { max-width:none; width:100%; min-height:100%; border-radius:0; box-shadow:none; }
+
+/* altura de tela no celular: 100vh inclui a área atrás da barra de endereço
+   e sobrava rolagem vertical; 100dvh é a altura realmente visível (navegador
+   sem suporte ignora a linha e fica com o 100vh de antes) */
+.app { min-height:100dvh; }
+.sb { height:100dvh; }

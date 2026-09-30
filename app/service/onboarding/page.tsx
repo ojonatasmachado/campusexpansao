@@ -37,7 +37,7 @@ export default async function ServiceOnboardingPage({ searchParams }: { searchPa
 
   if (pending.length > 0 && nova !== "1") {
     return (
-      <main className="ld-sec" style={{ minHeight: "100vh", background: "var(--ink)" }}>
+      <main className="ld-sec" style={{ minHeight: "100dvh", background: "var(--ink)" }}>
         <div className="ld-wrap">
           <section className="card" style={{ maxWidth: 620, margin: "0 auto" }}>
             <div className="card-body">
@@ -63,7 +63,7 @@ export default async function ServiceOnboardingPage({ searchParams }: { searchPa
 
   if (nova !== "1") {
     return (
-      <main className="ld-sec" style={{ minHeight: "100vh", background: "var(--ink)" }}>
+      <main className="ld-sec" style={{ minHeight: "100dvh", background: "var(--ink)" }}>
         <div className="ld-wrap">
           <section className="card" style={{ maxWidth: 620, margin: "0 auto" }}>
             <div className="card-body">
@@ -97,7 +97,7 @@ export default async function ServiceOnboardingPage({ searchParams }: { searchPa
   }
 
   return (
-    <main className="ld-sec" style={{ minHeight: "100vh", background: "var(--ink)" }}>
+    <main className="ld-sec" style={{ minHeight: "100dvh", background: "var(--ink)" }}>
       <div className="ld-wrap">
         <section className="card" style={{ maxWidth: 620, margin: "0 auto" }}>
           <div className="card-body">

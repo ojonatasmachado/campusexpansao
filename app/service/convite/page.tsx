@@ -34,7 +34,7 @@ export default async function ServiceConvitePage({ searchParams }: { searchParam
   const firstName = invite?.member.name.split(" ")[0] ?? "";
 
   return (
-    <main className="ld-sec" style={{ minHeight: "100vh", background: "var(--ink)" }}>
+    <main className="ld-sec" style={{ minHeight: "100dvh", background: "var(--ink)" }}>
       <ServiceTheme brand={brand} mode={mode} />
       <div className="ld-wrap">
         <section className="card" style={{ maxWidth: 520, margin: "0 auto" }}>

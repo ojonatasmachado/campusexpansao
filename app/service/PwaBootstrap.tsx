@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Icon } from "./lib/icons";
 
 type BeforeInstallPromptEvent = Event & {
@@ -10,7 +11,10 @@ type BeforeInstallPromptEvent = Event & {
 
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
 
+const TELAS_DE_ENTRADA = /^\/service\/(login|convite|nova-senha|onboarding)(\/|$)/;
+
 export default function PwaBootstrap() {
+  const pathname = usePathname();
   const [installable, setInstallable] = useState(false);
   const [installed, setInstalled] = useState(false);
   const [dismissed, setDismissed] = useState(true);
@@ -75,7 +79,10 @@ export default function PwaBootstrap() {
     }
   };
 
-  if (installed || dismissed) return null;
+  /* telas de entrada (login, convite, senha nova, primeiro cadastro): o aviso
+     cobria o rodapé do formulário no celular, e instalar só faz sentido
+     depois de entrar */
+  if (installed || dismissed || TELAS_DE_ENTRADA.test(pathname ?? "")) return null;
 
   return (
     <div className="pwa-banner">

@@ -59,7 +59,7 @@ export default async function ServiceConnectionPage() {
   const foundService = state.kind === "ok" && state.products.some((product) => product.code === "service");
 
   return (
-    <main className="ld-sec" style={{ minHeight: "100vh", background: "var(--ink)" }}>
+    <main className="ld-sec" style={{ minHeight: "100dvh", background: "var(--ink)" }}>
       <div className="ld-wrap">
         <section className="card" style={{ maxWidth: 760 }}>
           <div className="card-body">

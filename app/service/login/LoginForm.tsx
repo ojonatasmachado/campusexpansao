@@ -17,7 +17,7 @@ export default function ServiceLoginForm() {
   } = useServiceLoginForm();
 
   return (
-    <main className="ld-sec" style={{ minHeight: "100vh", background: "var(--ink)" }}>
+    <main className="ld-sec" style={{ minHeight: "100dvh", background: "var(--ink)" }}>
       <div className="ld-wrap">
         <section className="card" style={{ maxWidth: 520, margin: "0 auto" }}>
           <div className="card-body">

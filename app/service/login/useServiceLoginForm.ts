@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { createServiceBrowserClient } from "../lib/supabase-browser";
+import { createServiceBrowserClient, createServiceRecoveryClient } from "../lib/supabase-browser";
 
 export type LoginMode = "login" | "signup";
 
@@ -139,8 +139,9 @@ export function useServiceLoginForm() {
     setSuccess("E-mail de confirmação reenviado. Veja sua caixa de entrada e também o spam.");
   }
 
-  /* "Esqueci minha senha": o link do e-mail passa pelo /auth/callback (troca o
-     código por sessão) e cai em /service/nova-senha, que grava a senha nova */
+  /* "Esqueci minha senha": o link do e-mail leva direto pra
+     /service/nova-senha com a autorização no próprio link (fluxo implicit,
+     ver createServiceRecoveryClient), então funciona em qualquer aparelho */
   async function forgotPassword() {
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail || !normalizedEmail.includes("@")) {
@@ -150,9 +151,9 @@ export function useServiceLoginForm() {
     setError("");
     setSuccess("");
     setResending(true);
-    const url = new URL("/auth/callback", window.location.origin);
-    url.searchParams.set("redirect", "/service/nova-senha");
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, { redirectTo: url.toString() });
+    const { error: resetError } = await createServiceRecoveryClient().auth.resetPasswordForEmail(normalizedEmail, {
+      redirectTo: new URL("/service/nova-senha", window.location.origin).toString(),
+    });
     setResending(false);
     if (resetError) {
       setError(errorMessage(resetError.message));
