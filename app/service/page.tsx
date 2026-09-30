@@ -462,7 +462,6 @@ type CourseView = {
   description: string | null;
   category: string | null;
   color: string | null;
-  prereqs: string[];
   divulgacao: string | null;
   materiais: Array<{ id: string; tipo: string; titulo: string; url: string }>;
   modalidade: string | null;
@@ -1170,7 +1169,7 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("decisions").select("id,name,phone,happened_on,kind,service_name,responsible_id,status,member_id,age,notes,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("baptism_classes").select("id,label,baptism_date,location,room_id,status,pastor,notes,open_enrollment").order("created_at", { ascending: false }),
     supabase.schema("service").from("baptism_candidates").select("id,class_id,member_id,decision_id").order("created_at", { ascending: false }),
-    supabase.schema("service").from("courses").select("id,name,kind,level,description,category,color,prereqs,divulgacao,materiais,modalidade").order("created_at", { ascending: false }),
+    supabase.schema("service").from("courses").select("id,name,kind,level,description,category,color,divulgacao,materiais,modalidade").order("created_at", { ascending: false }),
     supabase.schema("service").from("enrollments").select("id,course_id,member_id,done_count,status").order("created_at", { ascending: false }),
     supabase.schema("service").from("course_modules").select("id,course_id,name,sort_order").order("sort_order", { ascending: true }),
     supabase.schema("service").from("course_lessons").select("id,module_id,name,duration,kind,sort_order,link,conteudo,prova,min_acertos,checkin_token,checkin_active").order("sort_order", { ascending: true }),

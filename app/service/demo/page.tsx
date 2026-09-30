@@ -191,8 +191,8 @@ const BAPTISM_CANDIDATES = [
 ];
 
 const COURSES = [
-  { id: "c1", name: "Fundamentos da Fé", level: "Básico", category: "discipulado", kind: "trilha" as const, color: "olive", description: "Introdução à doutrina cristã e vida na comunidade.", prereqs: [], divulgacao: "<p>Para quem decidiu seguir Jesus e quer entender os fundamentos da fé: quem é Deus, quem somos nós, e como viver em comunidade.</p>", materiais: [{ id: "mat-1", tipo: "video", titulo: "Trailer do curso", url: "https://youtube.com" }], modalidade: "presencial" },
-  { id: "c2", name: "Liderança servidora", level: "Avançado", category: "lideranca", kind: "trilha" as const, color: "wheat", description: "Formação de líderes para ministério.", prereqs: ["c1"], divulgacao: "<p>Para quem já serve e está sendo preparado para liderar uma frente ou ministério.</p>", materiais: [], modalidade: "hibrido" },
+  { id: "c1", name: "Fundamentos da Fé", level: "Básico", category: "discipulado", kind: "trilha" as const, color: "olive", description: "Introdução à doutrina cristã e vida na comunidade.", divulgacao: "<p>Para quem decidiu seguir Jesus e quer entender os fundamentos da fé: quem é Deus, quem somos nós, e como viver em comunidade.</p>", materiais: [{ id: "mat-1", tipo: "video", titulo: "Trailer do curso", url: "https://youtube.com" }], modalidade: "presencial" },
+  { id: "c2", name: "Liderança servidora", level: "Avançado", category: "lideranca", kind: "trilha" as const, color: "wheat", description: "Formação de líderes para ministério.", divulgacao: "<p>Para quem já serve e está sendo preparado para liderar uma frente ou ministério.</p>", materiais: [], modalidade: "hibrido" },
 ];
 
 const ENROLLMENTS = [

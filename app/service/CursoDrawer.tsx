@@ -17,7 +17,6 @@ type CourseView = {
   description: string | null;
   category: string | null;
   color: string | null;
-  prereqs: string[];
   divulgacao: string | null;
   materiais: Array<{ id: string; tipo: string; titulo: string; url: string }>;
   modalidade: string | null;

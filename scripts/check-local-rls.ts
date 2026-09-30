@@ -112,8 +112,8 @@ async function main() {
   await svcA.from("requirements").delete().eq("organization_id", orgA);
   const { data: chA } = await svcA.from("churches").select("id").eq("organization_id", orgA).limit(1).single();
   const { data: cursos } = await svcA.from("courses").insert([
-    { organization_id: orgA, church_id: chA!.id, name: "Curso Base (teste)", kind: "trilha", prereqs: [] },
-    { organization_id: orgA, church_id: chA!.id, name: "Curso Avançado (teste)", kind: "trilha", prereqs: [] },
+    { organization_id: orgA, church_id: chA!.id, name: "Curso Base (teste)", kind: "trilha" },
+    { organization_id: orgA, church_id: chA!.id, name: "Curso Avançado (teste)", kind: "trilha" },
   ]).select("id,name");
   const base = cursos!.find((c) => c.name.startsWith("Curso Base"))!.id;
   const avancado = cursos!.find((c) => c.name.startsWith("Curso Avançado"))!.id;
