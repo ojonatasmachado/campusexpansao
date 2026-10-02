@@ -113,3 +113,48 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 .mob-bg.mob-self .mob-to-panel { margin-left:auto; color:var(--olive); border-color:var(--olive-line); }
 .top-meu-app { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
 @media (max-width:640px) { .top-meu-app { padding:7px 10px; } }
+
+/* ════════ RESPONSIVIDADE DO PAINEL (auditoria 2026-10-02) ════════
+   Achados medindo todas as telas em 390px (iPhone) e no computador, com
+   nomes e telefones reais: colunas de tabela espremidas (o texto de uma
+   invadia a outra), botões do cabeçalho sem quebrar linha, linhas-botão
+   crescendo até o tamanho do conteúdo, grades de colunas fixas e campos
+   com letra < 16px (o iPhone dá zoom ao tocar e a página "estoura"). */
+
+/* em qualquer largura: célula de tabela/linha pode encolher e o texto quebra
+   em vez de vazar pra coluna vizinha */
+.tr > *, .mini-row > *, .dist-row > *, .well-row > * { min-width:0; }
+.cell-name, .cell-sub, .tr { overflow-wrap:anywhere; }
+.mini-row { width:100%; min-width:0; }
+.ph-actions { flex-wrap:wrap; }
+
+@media (max-width:860px), (pointer:coarse) {
+  /* iPhone dá zoom ao focar campo com letra menor que 16px */
+  input, select, textarea, .input, .textarea, .select, .top-search input { font-size:16px; }
+}
+
+@media (max-width:640px) {
+  /* tabelas viram cartões: primeira célula (pessoa/nome) em cima, o resto
+     embaixo em linha; o cabeçalho de colunas some (cada célula já se explica) */
+  .tr.head { display:none; }
+  .tr:not(.head) { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; padding:14px 16px; }
+  .tr:not(.head) > :first-child { flex:1 1 100%; }
+
+  /* barra do topo: busca ocupa o espaço; "Meu app" vira só ícone; avisos e
+     sigla da igreja saem (a igreja já aparece no menu) */
+  .top { gap:8px; padding:10px 12px; }
+  .top-search { flex:1; min-width:0; max-width:none; }
+  .top-meu-app-l, .top-avisos, .top-av { display:none; }
+  .top-meu-app { padding:8px 10px; }
+  .gsearch-pop { position:fixed; left:12px; right:12px; top:62px; max-height:70dvh; overflow-y:auto; z-index:120; }
+
+  .well-sum { grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .dist-name { width:auto; flex:0 1 110px; }
+  .ph-title { font-size:30px; }
+}
+
+/* caixa de ajuda do "?" fora do cartão (HelpDot): no computador ao lado do
+   "?" e dentro da tela; no celular, folha na parte de baixo */
+.help-pop.help-pop-fixed { position:fixed; z-index:400; width:min(280px, calc(100vw - 24px)); font-size:13px; }
+.help-pop.help-pop-sheet { left:12px; right:12px; bottom:12px; top:auto; width:auto; font-size:15px; line-height:1.55; padding:16px 18px; display:flex; flex-direction:column; gap:12px; box-shadow:0 -10px 40px rgba(0,0,0,0.35); }
+.help-pop-close { align-self:flex-end; background:var(--olive); color:var(--accent-ink); border:none; border-radius:var(--r-sm); padding:8px 16px; font-size:14px; font-weight:600; }

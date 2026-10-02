@@ -1603,13 +1603,13 @@ export default function ServiceExactApp({
           </div>
           <div className="top-actions">
             <button className="btn btn-sec btn-sm top-meu-app" type="button" onClick={() => setView("app")} title="Ver o app como membro">
-              <Icon name="perfil" size={14} /> Meu app
+              <Icon name="perfil" size={14} /> <span className="top-meu-app-l">Meu app</span>
             </button>
             <button className="theme-tog" type="button" title="Mudar tema" onClick={() => setTheme((t) => t === "dark" ? "light" : "dark")}>
               <Icon name={theme === "dark" ? "sol" : "lua"} size={16} />
             </button>
-            <button className="top-icon" type="button" title="Avisos"><Icon name="sino" size={17} /></button>
-            <div className="av av-md" style={{ background: "var(--olive-dim)", color: "var(--olive)", border: "0.5px solid var(--olive-line)", cursor: "pointer" }}>
+            <button className="top-icon top-avisos" type="button" title="Avisos"><Icon name="sino" size={17} /></button>
+            <div className="av av-md top-av" style={{ background: "var(--olive-dim)", color: "var(--olive)", border: "0.5px solid var(--olive-line)", cursor: "pointer" }}>
               {firstChurch?.nome ? firstChurch.nome.slice(0, 2).toUpperCase() : "CE"}
             </div>
           </div>

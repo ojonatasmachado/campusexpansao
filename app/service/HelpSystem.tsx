@@ -6,23 +6,78 @@
    (SetupChecklist). Fonte única : ServiceExactApp.tsx e MobileApp.tsx
    importam daqui, ninguém reimplementa um "?" ou um checklist local. */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "./lib/icons";
 
 /* ── HELP DOT · "?" ao lado de título, KPI ou botão ───────────────── */
 
+/* A caixa abre FORA do cartão (portal no body, position:fixed): dentro do
+   cartão ela era cortada pelo overflow dele e, perto da borda, passava da
+   tela. No computador fica abaixo do "?" (ou acima, se não couber) e sempre
+   dentro da tela; no celular vira uma folha legível na parte de baixo. */
+const HELP_MOBILE_MAX = 640;
+const HELP_W = 280;
+const HELP_GAP = 8;
+const HELP_MARGIN = 12;
+
 export function HelpDot({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
   const ref = useRef<HTMLSpanElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+  const isMobile = () => window.innerWidth <= HELP_MOBILE_MAX;
 
   useEffect(() => {
     if (!open) return;
-    const onClickAway = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const fora = (e: Event) => {
+      const t = e.target as Node;
+      if (ref.current?.contains(t) || popRef.current?.contains(t)) return;
+      setOpen(false);
+    };
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
-    document.addEventListener("mousedown", onClickAway);
+    const fechar = () => setOpen(false);
+    document.addEventListener("mousedown", fora);
+    document.addEventListener("touchstart", fora);
     window.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("mousedown", onClickAway); window.removeEventListener("keydown", onKey); };
+    window.addEventListener("resize", fechar);
+    /* rolar a página tira o "?" do lugar: no computador a caixa fecha */
+    if (!isMobile()) window.addEventListener("scroll", fechar, true);
+    return () => {
+      document.removeEventListener("mousedown", fora);
+      document.removeEventListener("touchstart", fora);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", fechar);
+      window.removeEventListener("scroll", fechar, true);
+    };
   }, [open]);
+
+  /* posição medida depois de desenhar (precisa da altura real da caixa) */
+  useLayoutEffect(() => {
+    if (!open || isMobile() || !ref.current || !popRef.current) return;
+    const btn = ref.current.getBoundingClientRect();
+    const h = popRef.current.offsetHeight;
+    const w = Math.min(HELP_W, window.innerWidth - HELP_MARGIN * 2);
+    const left = Math.min(Math.max(btn.left, HELP_MARGIN), window.innerWidth - w - HELP_MARGIN);
+    const cabeAbaixo = btn.bottom + HELP_GAP + h <= window.innerHeight - HELP_MARGIN;
+    const top = cabeAbaixo ? btn.bottom + HELP_GAP : Math.max(HELP_MARGIN, btn.top - HELP_GAP - h);
+    setPos({ left, top });
+  }, [open]);
+
+  const pop = open ? (
+    <div
+      ref={popRef}
+      className={`help-pop help-pop-fixed${typeof window !== "undefined" && isMobile() ? " help-pop-sheet" : ""}`}
+      role="dialog"
+      style={pos && !isMobile() ? { left: pos.left, top: pos.top } : { visibility: isMobile() ? "visible" : "hidden" }}
+      onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+    >
+      {text}
+      {isMobile() && (
+        <button type="button" className="help-pop-close" onClick={(e) => { e.stopPropagation(); setOpen(false); }}>Entendi</button>
+      )}
+    </div>
+  ) : null;
 
   return (
     <span className="help-dot-wrap" ref={ref}>
@@ -30,11 +85,12 @@ export function HelpDot({ text }: { text: string }) {
         type="button"
         className="help-dot"
         aria-label="Ajuda"
-        onClick={(e) => { e.stopPropagation(); e.preventDefault(); setOpen((o) => !o); }}
+        aria-expanded={open}
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); setPos(null); setOpen((o) => !o); }}
       >
         ?
       </button>
-      {open ? <div className="help-pop" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>{text}</div> : null}
+      {pop ? createPortal(pop, document.body) : null}
     </span>
   );
 }
