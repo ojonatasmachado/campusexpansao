@@ -4,6 +4,9 @@
    Cor só por variável do tema (app/service/lib/theme.ts).
    ════════════════════════════════════════════════════════════════ */
 
+/* ── 0. reservas: o tema da igreja (themeCss, no servidor) sobrescreve ── */
+:root{--accent-fill:var(--olive);--ok:#5CC995;--ok-dim:rgba(92,201,149,0.14);--ok-line:rgba(92,201,149,0.34);--warn:var(--amber)}
+
 /* ── 1. celular e tablet: nada rola para o lado, 2 colunas viram 1 ── */
 
 /* Comunicação: mural + alcance */
@@ -19,7 +22,7 @@
 .pmx-mob{display:none}
 .pmx-mob-roles{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 14px}
 .pmx-mob-role{min-height:40px;padding:0 14px;border-radius:var(--r-pill);border:0.5px solid var(--border-2);background:var(--ink);font-size:14px;font-weight:600;color:var(--light);text-align:center}
-.pmx-mob-role.on{background:var(--olive);border-color:var(--olive);color:var(--accent-ink)}
+.pmx-mob-role.on{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--accent-ink)}
 .pmx-mob-note{margin-bottom:12px;padding:12px 14px;border-radius:var(--r-md);background:var(--ink);border:0.5px solid var(--border-2);font-size:13px;line-height:1.5;color:var(--muted)}
 .pmx-mob-group+.pmx-mob-group{margin-top:14px}
 .pmx-mob-gt{padding:6px 0;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)}
@@ -65,3 +68,67 @@
 .m-tab-l{font-size:12px;line-height:16px;font-weight:600;letter-spacing:0;white-space:nowrap}
 .m-tab button.on{color:var(--olive)}
 .m-tab button.on .m-tab-l{font-weight:700}
+
+/* ── 2. estados: palavra + ícone + cor do sistema (S4) ─────────────
+   Nunca só cor e nunca a cor da igreja. O ícone sai de uma máscara SVG
+   pintada com a cor do texto (currentColor), então muda junto com o tema. */
+:root{
+  --ic-ok:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+  --ic-wait:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7.5V12l3 2'/%3E%3C/svg%3E");
+  --ic-no:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M6.5 6.5l11 11M17.5 6.5l-11 11'/%3E%3C/svg%3E");
+  --ic-open:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E");
+  --ic-alert:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M12 6v8M12 18.5v.2'/%3E%3C/svg%3E");
+}
+.chip::before,.slot-st,.well-dot,.crit-legend .dot{-webkit-mask:var(--st-ic,none) center/contain no-repeat;mask:var(--st-ic,none) center/contain no-repeat;border-radius:0}
+.chip::before{width:12px;height:12px;background:currentColor}
+.chip-ok{--st-ic:var(--ic-ok);color:var(--ok);border-color:var(--ok-line);background:var(--ok-dim)}
+.chip-ok::before{background:currentColor}
+.chip-wait{--st-ic:var(--ic-wait)}
+.chip-wait::before{background:currentColor}
+.chip-no{--st-ic:var(--ic-no)}
+.chip-no::before{background:currentColor}
+.chip-open{--st-ic:var(--ic-open);color:var(--muted);border:0.5px dashed var(--border-3);background:transparent}
+.chip-open::before{background:currentColor}
+.chip-neutral::before{display:none}
+.st-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+
+/* pessoa na escala: ícone do estado no lugar da bolinha */
+.slot-st{width:13px;height:13px}
+.slot-st.ok{--st-ic:var(--ic-ok);background:var(--ok)}
+.slot-st.wait{--st-ic:var(--ic-wait);background:var(--warn)}
+.slot-st.no{--st-ic:var(--ic-no);background:var(--danger)}
+
+/* termômetro (Relatórios) e critérios de status (Configurações) */
+.well-dot{width:13px;height:13px}
+.well-dot.saudavel{--st-ic:var(--ic-ok);background:var(--ok)}
+.well-dot.atencao{--st-ic:var(--ic-wait);background:var(--warn)}
+.well-dot.sobrecarga,.well-dot.afastando{--st-ic:var(--ic-alert);background:var(--danger)}
+.crit-legend .dot{width:13px;height:13px}
+.crit-legend .dot.ok{--st-ic:var(--ic-ok);background:var(--ok)}
+.crit-legend .dot.warn{--st-ic:var(--ic-wait);background:var(--warn)}
+.crit-legend .dot.off{--st-ic:var(--ic-no);background:var(--muted)}
+
+/* ── Personalização: aviso de ajuste e prévia do app do membro ── */
+.tp-note{margin-top:12px;padding:10px 12px;border-radius:var(--r-md);background:var(--ink);border:0.5px solid var(--border-2);font-size:13px;line-height:1.5;color:var(--light)}
+.tp-prev-row{display:grid;grid-template-columns:repeat(2,minmax(0,280px));gap:16px;margin-top:12px}
+.tp-prev{margin:0;color:var(--white)}
+.tp-cap{margin-bottom:8px;font-family:var(--mono);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)}
+.tp-screen{display:flex;flex-direction:column;gap:10px;padding:16px 14px 0;border-radius:22px;background:var(--ink);border:0.5px solid var(--border-2);overflow:hidden}
+.tp-head .brand-row{color:var(--white)}
+.tp-h1{font-size:22px;font-weight:700;letter-spacing:-0.02em;color:var(--white)}
+.tp-h1 em{font-style:normal;color:var(--olive)}
+.tp-lbl{font-family:var(--mono);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)}
+.tp-card{padding:12px;border-radius:var(--r-md);background:var(--graphite);border:0.5px solid var(--border-2)}
+.tp-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tp-t{font-size:15px;font-weight:600;color:var(--white)}
+.tp-s{margin-top:2px;font-size:13px;color:var(--muted)}
+.tp-btns{display:flex;gap:8px;margin-top:10px}
+.tp-btn{flex:1;display:grid;place-items:center;min-height:38px;border-radius:var(--r-sm);font-size:14px;font-weight:600}
+.tp-btn.pri{background:var(--accent-fill);color:var(--accent-ink)}
+.tp-btn.sec{border:0.5px solid var(--border-3);color:var(--white)}
+.tp-tabs{display:flex;justify-content:space-around;margin:4px -14px 0;padding:8px 0 10px;background:var(--graphite);border-top:0.5px solid var(--border)}
+.tp-tab{color:var(--muted)}
+.tp-tab-ic{display:grid;place-items:center;width:44px;height:26px;border-radius:var(--r-pill)}
+.tp-tab.on{color:var(--olive)}
+.tp-tab.on .tp-tab-ic{background:var(--olive-dim)}
+@media (max-width:640px){.tp-prev-row{grid-template-columns:1fr}}

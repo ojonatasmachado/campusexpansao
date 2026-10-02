@@ -10,7 +10,6 @@ import { uploadServiceImage, imageExtension } from "./lib/upload-image";
 import { useChurchSettingsField } from "./lib/settings-field";
 import { Icon } from "./lib/icons";
 import { ImageUpload } from "./ImageUpload";
-import { AccentField } from "./AccentField";
 import LinkIconView from "../lib/LinkIcon";
 import { LINK_ICON_NAMES, DEFAULT_LINK_ICON } from "../lib/link-icons";
 import { PAGINA_CFG_DEFAULT, IDENTIDADE_CFG_DEFAULT, mergeChurchIdentity } from "../lib/church-page";
@@ -284,7 +283,6 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
   const loginUrl = origin && church.slug ? `${origin}/${church.slug}/entrar` : "";
   const identidade: IdentidadeCfg = { ...IDENTIDADE_CFG_DEFAULT, ...(church.settings?.identidadeCfg ?? {}) };
   const serviceAccent = (church.settings?.brandCfg?.accent || church.settings?.brandCfg?.accentDark) || PAGINA_CFG_DEFAULT.accentColor;
-  const effectiveBgHex = identidade.bgMode === "imagem" ? "#0E110D" : identidade.bgMode === "degrade" ? (identidade.bgFrom ?? IDENTIDADE_CFG_DEFAULT.bgFrom) : (identidade.bgColor ?? IDENTIDADE_CFG_DEFAULT.bgColor);
 
   const previewData: ChurchPageData = {
     id: church.id,
@@ -425,18 +423,8 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
               />
             </div>
 
-            <div style={{ marginTop: 14 }}>
-              <AccentField
-                compact
-                label="Cor de destaque (ícones e selos)"
-                bgHex={effectiveBgHex}
-                value={pagina.accentColor ?? serviceAccent}
-                defaultHex={serviceAccent}
-                onChange={(hex) => savePagina({ accentColor: hex })}
-              />
-              <div className="cfg-card-s" style={{ marginTop: 6 }}>
-                Usa a cor de destaque do Service por padrão. Mude aqui só se quiser diferente nesta página.
-              </div>
+            <div className="cfg-card-s" style={{ marginTop: 14 }}>
+              Ícones e selos usam a cor da igreja, escolhida em Personalização.
             </div>
           </div>
         )}
@@ -462,7 +450,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                   {link.imageUrl ? (
                     <img src={link.imageUrl} alt="" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover", flex: "none" }} />
                   ) : (
-                    <span className="cx-link-icon" style={{ background: "var(--olive)", color: "var(--accent-ink)" }}><LinkIconView name={link.icon} size={16} /></span>
+                    <span className="cx-link-icon" style={{ background: "var(--accent-fill)", color: "var(--accent-ink)" }}><LinkIconView name={link.icon} size={16} /></span>
                   )}
                   <div className="cfg-row-main">
                     <div className="cfg-row-t">{link.label || "(sem título)"} {!link.active && <span className="chip">oculto</span>}</div>

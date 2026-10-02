@@ -135,7 +135,8 @@ export function mergeChurchIdentity(
     ...IDENTIDADE_CFG_DEFAULT,
     ...pagina,
     ...identidade,
-    accentColor: pagina.accentColor || serviceAccent || PAGINA_CFG_DEFAULT.accentColor,
+    /* uma cor só por igreja (Personalização); o accentColor antigo da página fica só de reserva */
+    accentColor: serviceAccent || pagina.accentColor || PAGINA_CFG_DEFAULT.accentColor,
     bio: pagina.bio ?? "",
     coverUrl: pagina.coverUrl ?? null,
     logoText: identidade.logoText ?? "",

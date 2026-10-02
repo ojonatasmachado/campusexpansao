@@ -1,17 +1,32 @@
 "use client";
 
 import { AccentField } from "./AccentField";
-import { ACCENT_PRESETS, DEFAULT_ACCENT, NEUTRAL_FAMILIES, adaptAccent, familyById, themeCss, type BrandCfg, type NeutralFamily, type ThemeMode } from "./lib/theme";
+import type { CSSProperties } from "react";
+import { ACCENT_PRESETS, DEFAULT_ACCENT, NEUTRAL_FAMILIES, accentReport, adaptAccent, familyById, themeCss, themeVars, type BrandCfg, type NeutralFamily, type ThemeMode } from "./lib/theme";
 import { bestOnColor } from "./lib/color";
+import { Icon } from "./lib/icons";
+import ChurchLockup from "./ChurchLockup";
 
 /* Tela de marca do app da igreja (Configurações → Personalização): cor da
    igreja, fundos do modo escuro e do claro, e o modo padrão. Tudo aqui é
    decidido pela gestão; o membro só alterna claro/escuro no próprio app.
    Ver app/service/lib/theme.ts. */
-export default function ThemePicker({ brand, onChange }: { brand: BrandCfg; onChange: (patch: Partial<BrandCfg>) => void }) {
+export default function ThemePicker({
+  brand,
+  onChange,
+  churchName,
+  logoUrl,
+}: {
+  brand: BrandCfg;
+  onChange: (patch: Partial<BrandCfg>) => void;
+  churchName?: string;
+  logoUrl?: string | null;
+}) {
   const accent = brand.accent || brand.accentDark || DEFAULT_ACCENT;
   const darkFam = familyById(brand.neutralDark, "dark");
   const defaultMode = brand.defaultMode ?? "dark";
+  const report = accentReport(brand);
+  const ajustada = report.dark.adjusted || report.light.adjusted;
 
   return (
     <>
@@ -39,6 +54,21 @@ export default function ThemePicker({ brand, onChange }: { brand: BrandCfg; onCh
           ))}
         </div>
         <AccentField compact label="Outra cor (hex)" bgHex={darkFam.tokens.graphite} value={accent} defaultHex={DEFAULT_ACCENT} onChange={(hex) => onChange({ accent: hex })} />
+        {ajustada && (
+          <p className="tp-note">
+            Os botões usam a sua cor exata. Nos textos e ícones em destaque, {report.dark.adjusted && report.light.adjusted ? "nos dois modos" : report.light.adjusted ? "no modo claro" : "no modo escuro"}, escurecemos ou clareamos um pouco para garantir a leitura.
+          </p>
+        )}
+      </div>
+
+      <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
+        <div className="cfg-card-t">Prévia do app do membro</div>
+        <div className="cfg-card-s">Assim fica o Início no celular, no modo claro e no escuro, com as escolhas desta tela.</div>
+        <div className="tp-prev-row">
+          {(["light", "dark"] as ThemeMode[]).map((m) => (
+            <ThemePreview key={m} brand={brand} mode={m} churchName={churchName} logoUrl={logoUrl} />
+          ))}
+        </div>
       </div>
 
       <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
@@ -101,5 +131,40 @@ function FamilyPreview({ family, accent }: { family: NeutralFamily; accent: stri
         </div>
       </div>
     </div>
+  );
+}
+
+/* Início do app do membro em miniatura, com as variáveis do tema aplicadas
+   só neste bloco (não mexe no resto da tela). */
+function ThemePreview({ brand, mode, churchName, logoUrl }: { brand: BrandCfg; mode: ThemeMode; churchName?: string; logoUrl?: string | null }) {
+  const vars = themeVars(brand, mode) as CSSProperties;
+  return (
+    <figure className="tp-prev" style={vars} aria-label={`Prévia no modo ${mode === "dark" ? "escuro" : "claro"}`}>
+      <figcaption className="tp-cap">{mode === "dark" ? "Modo escuro" : "Modo claro"}</figcaption>
+      <div className="tp-screen">
+        <div className="tp-head">
+          <ChurchLockup size="sm" logoUrl={logoUrl} name={churchName} />
+        </div>
+        <div className="tp-h1">Boa tarde, <em>Maria</em></div>
+        <div className="tp-lbl">Para você agora</div>
+        <div className="tp-card">
+          <div className="tp-t">Culto de domingo</div>
+          <div className="tp-s">Domingo · 19:00 · Louvor</div>
+          <div className="tp-btns">
+            <span className="tp-btn pri">Confirmar</span>
+            <span className="tp-btn sec">Não posso</span>
+          </div>
+        </div>
+        <div className="tp-card tp-row">
+          <span className="tp-t">Fundamentos da fé</span>
+          <span className="chip chip-ok">Concluída</span>
+        </div>
+        <div className="tp-tabs" aria-hidden="true">
+          {(["inicio", "agenda", "conversas", "cursos", "perfil"] as const).map((ic, i) => (
+            <span key={ic} className={`tp-tab${i === 0 ? " on" : ""}`}><span className="tp-tab-ic"><Icon name={ic} size={18} /></span></span>
+          ))}
+        </div>
+      </div>
+    </figure>
   );
 }

@@ -344,7 +344,7 @@ function TabInicio({
         >
           <span
             className="m-alert-ic"
-            style={lateTasks.length ? undefined : { background: "var(--olive)", color: "var(--accent-ink)" }}
+            style={lateTasks.length ? undefined : { background: "var(--accent-fill)", color: "var(--accent-ink)" }}
           >
             <Icon name={lateTasks.length ? "alerta" : "ok"} size={15} />
           </span>

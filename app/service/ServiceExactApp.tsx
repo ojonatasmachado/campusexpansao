@@ -942,9 +942,11 @@ function Av({ name, size = "sm", photoUrl }: { name: string; size?: "xs" | "sm" 
   );
 }
 
+const CHIP_LABEL: Record<string, string> = { ativo: "Ativo", pausa: "Em pausa", ferias: "Férias", membro: "Membro", ok: "Confirmado", wait: "Aguardando", no: "Não pode" };
+
 function Chip({ status }: { status: string }) {
   const cls = status === "ativo" || status === "membro" || status === "ok" ? "chip-ok" : status === "pausa" || status === "wait" ? "chip-wait" : "chip-neutral";
-  return <span className={`chip ${cls}`}>{status}</span>;
+  return <span className={`chip ${cls}`}>{CHIP_LABEL[status] ?? status}</span>;
 }
 
 function formatAvailability(value: Record<string, boolean>) {
@@ -3088,13 +3090,11 @@ function Escalas({
         {visibleMinistries.length === 0 ? <div className="empty" style={{ flex: 1 }}>Nenhum time neste evento.</div> : null}
       </div>
 
-      <div style={{ display: "flex", gap: 18, marginTop: 18, flexWrap: "wrap" }}>
-        {[["ok", "Confirmado"], ["wait", "Pendente"], ["no", "Recusou"], ["vago", "Vaga aberta"]].map(([key, label]) => (
-          <span key={key} style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "var(--mono)", fontSize: 11, color: "var(--muted)", letterSpacing: "0.04em" }}>
-            {key === "vago" ? <span style={{ width: 11, height: 11, border: "1px dashed var(--border-3)", borderRadius: 3 }} /> : <span className={`slot-st ${key}`} style={{ width: 9, height: 9 }} />}
-            {label}
-          </span>
-        ))}
+      <div className="st-legend">
+        <span className="chip chip-ok">Confirmado</span>
+        <span className="chip chip-wait">Aguardando</span>
+        <span className="chip chip-no">Não pode</span>
+        <span className="chip chip-open">Vaga aberta</span>
       </div>
 
       {gaps.length > 0 ? (
@@ -8003,13 +8003,11 @@ function Config({
       {/* ─── PERSONALIZAÇÃO ─── */}
       {tab === "visual" && (
         <div className="cfg-grid2">
-          <ThemePicker brand={brand} onChange={patchBrand} />
           <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
-            <div className="cfg-card-t">Identidade da igreja</div>
+            <div className="cfg-card-t">Logo da igreja</div>
             <div className="cfg-card-s">
-              Logo, fundo, cor do texto e das caixas : a identidade visual única da sua igreja.
-              A Página pública e o login da equipe usam essa identidade automaticamente (o
-              &quot;Service&quot; continua sempre visível no login).
+              Aparece ao lado de &quot;Service&quot; em todo lugar: login, convite, app do membro, painel e página da igreja.
+              Sem logo, aparece o nome da igreja.
             </div>
             {church && (
               <>
@@ -8030,6 +8028,17 @@ function Config({
                     }}
                   />
                 </div>
+              </>
+            )}
+          </div>
+          <ThemePicker brand={brand} onChange={patchBrand} churchName={sede?.nome ?? church?.nome} logoUrl={sede?.logoUrl ?? church?.logoUrl} />
+          <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
+            <div className="cfg-card-t">Fundo da página da igreja</div>
+            <div className="cfg-card-s">
+              Só para a página da igreja (o link da bio). Os botões e destaques dela usam a cor da igreja escolhida acima.
+            </div>
+            {church && (
+              <>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
                   <BackgroundField identidade={identidade} onSave={patchIdentidade} organizationId={church.organizationId} churchId={church.id} />
                   <AccentField compact label="Cor do texto" bgHex={identidadeBgHex} value={identidade.textColor ?? IDENTIDADE_CFG_DEFAULT.textColor} defaultHex={IDENTIDADE_CFG_DEFAULT.textColor} onChange={(hex) => patchIdentidade({ textColor: hex })} />

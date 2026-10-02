@@ -1,4 +1,4 @@
-import { contrastRatio, deriveAccentVars, isValidHex, mix, normalizeHex } from "./color";
+import { contrastRatio, deriveAccentVars, isValidHex, mix, normalizeHex, withAlpha } from "./color";
 
 /* Tema da igreja no Service. A igreja escolhe no admin (Configurações →
    Personalização) uma família de neutros pro modo escuro, outra pro claro,
@@ -42,7 +42,7 @@ export const NEUTRAL_FAMILIES: NeutralFamily[] = [
   /* ── claros ── */
   {
     id: "papel", label: "Papel", hint: "Creme quente, o padrão CE.X", mode: "light",
-    tokens: { ink: "#E7DFC8", graphite: "#FBF8EF", graphite2: "#F2EBD8", card: "#E3D9BD", border: "#DDD3B6", border2: "#D0C4A1", border3: "#BEB088", white: "#1A1E13", light: "#34392A", cream: "#23271A", creamSoft: "#2A2E20", muted: "#666A57", subtle: "#8A8C79", faint: "#B3AB92" },
+    tokens: { ink: "#E7DFC8", graphite: "#FBF8EF", graphite2: "#F2EBD8", card: "#E3D9BD", border: "#DDD3B6", border2: "#D0C4A1", border3: "#BEB088", white: "#1A1E13", light: "#34392A", cream: "#23271A", creamSoft: "#2A2E20", muted: "#5A5E4C", subtle: "#8A8C79", faint: "#B3AB92" },
   },
   {
     id: "branco", label: "Branco", hint: "Branco e cinza claro puros", mode: "light",
@@ -84,7 +84,7 @@ export const CONTRAST_RULES: { a: keyof NeutralTokens; b: keyof NeutralTokens; m
   { a: "white", b: "ink", min: 10, what: "texto principal no fundo" },
   { a: "light", b: "graphite", min: 9, what: "texto de apoio no card" },
   { a: "muted", b: "graphite", min: 4.5, what: "texto secundário no card" },
-  { a: "muted", b: "ink", min: 4, what: "texto secundário no fundo" },
+  { a: "muted", b: "ink", min: 4.5, what: "texto secundário no fundo" },
   { a: "subtle", b: "graphite", min: 2.2, what: "legenda/placeholder no card" },
   { a: "border2", b: "graphite", min: 1.25, what: "borda visível no card" },
   { a: "graphite", b: "ink", min: 1.05, what: "card separado do fundo" },
@@ -125,20 +125,59 @@ export type BrandCfg = {
 
 export const DEFAULT_ACCENT = "#7A9E3F";
 
-/* Todas as variáveis CSS do tema, prontas pra aplicar no :root. */
+/* Cores de estado: do sistema, nunca derivadas da cor da igreja, pra que
+   "confirmado", "aguardando" e "não pode" signifiquem o mesmo em toda igreja.
+   Sempre acompanhadas de palavra e ícone (componente Status). */
+const STATUS_COLORS: Record<ThemeMode, { ok: string; warn: string; danger: string }> = {
+  dark: { ok: "#5CC995", warn: "#E5AD4A", danger: "#F06A6E" },
+  light: { ok: "#1F7A4D", warn: "#8F5B00", danger: "#C62828" },
+};
+
+/* A cor escolhida pela igreja, como ela digitou (ou o legado). */
+export function rawAccent(brand: BrandCfg | undefined, mode: ThemeMode): string {
+  const legacy = mode === "dark" ? brand?.accentDark : brand?.accentLight;
+  return normalizeHex([brand?.accent, legacy, DEFAULT_ACCENT].find((h) => h && isValidHex(h))!);
+}
+
+/* Quanto a cor precisou de ajuste pra virar texto legível (4,5:1 sobre o
+   card) em cada modo. A tela de Personalização avisa quando isso acontece. */
+export function accentReport(brand: BrandCfg | undefined): Record<ThemeMode, { fill: string; text: string; onFill: string; adjusted: boolean }> {
+  const out = {} as Record<ThemeMode, { fill: string; text: string; onFill: string; adjusted: boolean }>;
+  for (const mode of ["dark", "light"] as ThemeMode[]) {
+    const fam = familyById(mode === "dark" ? brand?.neutralDark : brand?.neutralLight, mode).tokens;
+    const fill = rawAccent(brand, mode);
+    const text = adaptAccent(fill, fam.graphite, mode, 4.5);
+    out[mode] = { fill, text, onFill: deriveAccentVars(fill, mode).accentInk, adjusted: text.toUpperCase() !== fill.toUpperCase() };
+  }
+  return out;
+}
+
+/* Todas as variáveis CSS do tema, prontas pra aplicar no :root.
+   · --accent-fill: a cor da igreja exata, para fundos (botão, chave ligada,
+     aba ativa). O texto em cima dela é --accent-ink (claro ou escuro, o que
+     der mais contraste).
+   · --olive / --olive-soft: a cor da igreja como TEXTO e ícone, escurecida
+     ou clareada até 4,5:1 sobre o card.
+   · --ok/--warn/--danger (+ -dim, -line): estados do sistema. */
 export function themeVars(brand: BrandCfg | undefined, mode: ThemeMode): Record<string, string> {
   const fam = familyById(mode === "dark" ? brand?.neutralDark : brand?.neutralLight, mode).tokens;
-  const legacy = mode === "dark" ? brand?.accentDark : brand?.accentLight;
-  const raw = [brand?.accent, legacy, DEFAULT_ACCENT].find((h) => h && isValidHex(h))!;
-  const accent = adaptAccent(raw, fam.graphite, mode);
-  const a = deriveAccentVars(accent, mode);
+  const fill = rawAccent(brand, mode);
+  const text = adaptAccent(fill, fam.graphite, mode, 4.5);
+  const a = deriveAccentVars(fill, mode);
+  const st = STATUS_COLORS[mode];
+  const dimA = mode === "dark" ? 0.14 : 0.1;
+  const lineA = mode === "dark" ? 0.34 : 0.4;
   return {
     "--ink": fam.ink, "--graphite": fam.graphite, "--graphite-2": fam.graphite2, "--card": fam.card,
     "--border": fam.border, "--border-2": fam.border2, "--border-3": fam.border3,
     "--white": fam.white, "--light": fam.light, "--cream": fam.cream, "--cream-soft": fam.creamSoft,
     "--muted": fam.muted, "--subtle": fam.subtle, "--faint": fam.faint,
-    "--olive": a.olive, "--olive-soft": a.oliveSoft, "--olive-deep": a.oliveDeep,
-    "--olive-dim": a.oliveDim, "--olive-line": a.oliveLine, "--accent-ink": a.accentInk,
+    "--accent-fill": fill, "--accent-ink": a.accentInk,
+    "--olive": text, "--olive-soft": text, "--olive-deep": a.oliveDeep,
+    "--olive-dim": a.oliveDim, "--olive-line": a.oliveLine,
+    "--ok": st.ok, "--ok-dim": withAlpha(st.ok, dimA), "--ok-line": withAlpha(st.ok, lineA),
+    "--warn": st.warn, "--amber": st.warn, "--amber-dim": withAlpha(st.warn, dimA), "--amber-line": withAlpha(st.warn, lineA),
+    "--danger": st.danger, "--danger-dim": withAlpha(st.danger, dimA), "--danger-line": withAlpha(st.danger, lineA),
   };
 }
 

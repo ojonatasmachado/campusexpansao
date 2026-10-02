@@ -121,7 +121,7 @@ a.login-choice:hover,button.login-choice:hover{border-color:var(--olive-line)}
 .m-tab button{position:relative;min-height:58px;padding:9px 2px 11px;gap:5px;font-size:var(--fs-cap);font-weight:500;letter-spacing:0;text-align:center}
 .m-tab button .ic{line-height:0}
 .m-tab button.on{font-weight:600}
-.m-tab button.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;border-radius:0 0 2px 2px;background:var(--olive)}
+.m-tab button.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;border-radius:0 0 2px 2px;background:var(--accent-fill)}
 /* legibilidade do app do membro */
 .m-app{font-size:10.5px}
 .m-section-t{font-size:var(--fs-cap);color:var(--muted)}

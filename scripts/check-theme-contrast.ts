@@ -17,10 +17,10 @@ for (const fam of NEUTRAL_FAMILIES) {
   failed += fails.length;
 }
 
-console.log("\nCores de destaque ajustadas (contraste com o card, mínimo 3):");
+console.log("\nCores de destaque ajustadas (contraste com o card, mínimo 4,5):");
 for (const fam of NEUTRAL_FAMILIES) {
   const row = ACCENT_PRESETS.map((p) => {
-    const c = adaptAccent(p.hex, fam.tokens.graphite, fam.mode);
+    const c = adaptAccent(p.hex, fam.tokens.graphite, fam.mode, 4.5);
     return `${p.label}=${contrastRatio(c, fam.tokens.graphite).toFixed(1)}${c !== p.hex.toUpperCase() ? "*" : ""}`;
   }).join(" ");
   console.log(`${fam.id.padEnd(7)} ${row}`);
