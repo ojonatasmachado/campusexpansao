@@ -136,6 +136,18 @@ gestão em Configurações → Personalização. Isto substitui, só para o Serv
 - O membro só alterna claro/escuro no próprio app; todo o resto é decidido no admin.
 - O tema é renderizado no servidor com `themeCss()` (sem piscar a cor CE.X). Tela nova do
   Service que carrega a igreja deve incluir o `<style>` do `themeCss(brandCfg)`.
+- **Marca do app:** sempre `ChurchLockup` (logo da igreja | Service, Inter 700). Sem logo, o nome da
+  igreja em texto; sem igreja conhecida, CE.X | Service. Não criar outra variação.
+- **Telas de entrada** (login, login da igreja, convite, senha nova, primeiro acesso da conta):
+  sempre `AuthShell` + classes `.login-*`. Não usar classes do site (`.ld-*`, `.card`, `.t-h1`).
+- **App do membro** (`MobileOverlay mode="self"`) não tem moldura de celular; a moldura é só da
+  pré-visualização do líder.
+- Tamanho mínimo: texto de leitura 12px; etiqueta mono em caixa-alta 10,5px (11px no app do membro);
+  campo de formulário 16px em tela de toque.
+- **Área segura:** tudo que é fixo na borda da tela (barra, rodapé com botão, aviso, menu, botão
+  flutuante) soma `var(--safe-*)` ao espaçamento. `viewport-fit=cover` só no Service.
+- **Contadores:** plural com `plural()` (`app/service/lib/plural.ts`), nunca "vaga(s)". Aviso na tela
+  com `avisar()` (`app/service/lib/avisar.ts`), nunca `window.alert`.
 
 ---
 
