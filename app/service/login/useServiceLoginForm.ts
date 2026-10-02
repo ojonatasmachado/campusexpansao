@@ -12,6 +12,9 @@ function errorMessage(message: string) {
   if (lower.includes("email not confirmed")) return "Seu e-mail ainda não foi confirmado. Abra o e-mail de confirmação que enviamos (veja também o spam) e depois entre.";
   if (lower.includes("already registered")) return "Este e-mail já tem uma conta. Tente entrar.";
   if (lower.includes("password")) return "A senha precisa ter pelo menos 6 caracteres.";
+  if (lower.includes("rate limit")) return "Muitas tentativas seguidas. Espere alguns minutos e tente de novo.";
+  if (lower.includes("signups not allowed") || lower.includes("signup is disabled")) return "O cadastro de novas contas está fechado agora.";
+  if (lower.includes("failed to fetch") || lower.includes("network")) return "Sem conexão com a internet. Confira e tente de novo.";
   console.error("[service] login:", message);
   return "Não conseguimos entrar agora. Tente de novo em instantes.";
 }
