@@ -7978,7 +7978,7 @@ function Config({
               </div>
             </div>
           )}
-          <div className="cfg-card" style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", bottom: 84, zIndex: 5 }}>
+          <div className="cfg-card" style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", bottom: "calc(84px + var(--safe-bottom))", zIndex: 5 }}>
             <div className="cfg-card-s" style={{ margin: 0 }}>
               Você já está vendo a prévia. Salve para valer para todos da igreja.
             </div>
@@ -8502,9 +8502,8 @@ function AddCandidatoModal({
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div className="drawer-bg" onClick={onClose} style={{ zIndex: 1 }} />
-      <div className="modal" style={{ position: "relative", zIndex: 2 }}>
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <div className="modal-eyebrow">Adicionar candidato</div>
           <div className="modal-title">{classData.label}</div>

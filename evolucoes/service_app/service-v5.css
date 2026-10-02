@@ -1,0 +1,237 @@
+/* ════════════════════════════════════════════════════════════════
+   CE.X SERVICE · estilos v5 : marca da igreja, telas de entrada,
+   app do membro sem moldura de celular, legibilidade pra quem é leigo e
+   áreas seguras do celular (notch, Dynamic Island, barra de gestos).
+   Carregar DEPOIS do v4 em app/service/layout.tsx e em
+   app/[slug]/entrar/layout.tsx. Cor só por variável do tema
+   (app/service/lib/theme.ts): nada de hex fixo aqui.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── 0. escala de tipo ────────────────────────────────────────────
+   Texto de leitura nunca abaixo de 12px. Etiqueta mono em caixa-alta
+   nunca abaixo de 10.5px no painel e 11px no app do membro. */
+:root{--fs-cap:11px;--fs-xs:12px;--fs-sm:13px;--fs-base:14px;--fs-md:15px;--fs-lg:17px;--fs-xl:20px;--fs-2xl:26px;--fs-3xl:28px}
+/* áreas do sistema no celular (seção 6). Valem 0 no computador. */
+:root{--safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px)}
+
+/* ── 1. marca: logo da igreja | Service ──────────────────────────
+   Markup do protótipo (ChurchLockup.tsx). A base já existe:
+   .brand .brand-img .brand-lg .sb-logo (service.css) e
+   .brand-row .brand-div .brand-service (service-v2.css).
+   Aqui entram só o nome em texto (igreja sem logo) e o tamanho sm. */
+.brand-row{min-width:0}
+.brand-row .brand-img{display:block;flex-shrink:0}
+.brand-service{white-space:nowrap;flex-shrink:0}
+.brand-name{font-size:var(--fs-lg);font-weight:700;letter-spacing:-0.03em;line-height:1.15;color:var(--white);max-width:150px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:balance}
+.brand-lg .brand-name{font-size:24px;max-width:240px}
+.brand-sm{gap:9px}
+.brand-sm .sb-logo{font-size:20px}
+.brand-sm .brand-img{max-height:36px;max-width:140px}
+.brand-sm .brand-div{height:18px}
+.brand-sm .brand-service{font-size:var(--fs-lg)}
+.brand-sm .brand-name{font-size:var(--fs-md);max-width:170px}
+.brand-center{justify-content:center}
+/* barra lateral tem 212px úteis: logo largo não pode empurrar o Service */
+.sb-top .brand-img{max-width:118px;max-height:44px}
+.sb-top .brand-name{max-width:118px;font-size:var(--fs-md)}
+
+/* ── 2. telas de entrada (login, convite, senha nova, primeiro acesso) ──
+   Casca única AuthShell.tsx em cima das classes .login-* do protótipo
+   (service.css). Substitui os remendos .ld-sec/.card/.t-h1. */
+.login{min-height:100dvh;padding:calc(40px + var(--safe-top)) calc(20px + var(--safe-right)) calc(40px + var(--safe-bottom)) calc(20px + var(--safe-left))}
+.login-x{display:none}
+.login-card{width:440px;max-width:100%;padding:40px 40px 34px;box-shadow:0 30px 80px -30px rgba(0,0,0,0.45)}
+.login-logo{margin-bottom:30px;font-size:inherit;letter-spacing:normal}
+.login-eyebrow{font-size:var(--fs-cap);letter-spacing:0.16em;margin-bottom:10px;color:var(--olive-soft,var(--olive))}
+.login-title{font-size:var(--fs-3xl);line-height:1.12;margin-bottom:8px;text-wrap:balance}
+.login-sub{font-size:14.5px;line-height:1.55;margin-bottom:24px;text-wrap:pretty}
+.login-form{display:grid;gap:16px}
+.login-field{display:grid;gap:7px;min-width:0}
+.login-label{font-size:var(--fs-sm);font-weight:600;color:var(--light);letter-spacing:-0.005em}
+.login-help{font-size:12.5px;line-height:1.45;color:var(--muted)}
+.login-form .login-input,.login-field .input{margin:0;font-size:16px;padding:13px 14px;min-height:50px;border-radius:var(--r-sm)}
+.login-input::placeholder,.login-field .input::placeholder{color:var(--subtle)}
+.login-pass{position:relative}
+.login-pass .login-input{padding-right:92px}
+.login-pass-tog{position:absolute;top:50%;right:6px;transform:translateY(-50%);height:38px;padding:0 12px;border-radius:var(--r-sm);font-size:var(--fs-sm);font-weight:600;color:var(--muted);text-align:center}
+.login-pass-tog:hover{color:var(--white);background:var(--graphite)}
+.login-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;font-size:15.5px;text-align:center}
+.login-btn:disabled{opacity:.6;cursor:default}
+a.login-btn{text-decoration:none}
+.login-link{display:block;width:100%;padding:10px 8px;border-radius:var(--r-sm);font-size:var(--fs-base);font-weight:500;color:var(--muted);text-align:center;text-decoration:none}
+.login-link:hover{color:var(--white)}
+.login-link:disabled{opacity:.6;cursor:default}
+.login-link b{font-weight:600;color:var(--olive-soft,var(--olive))}
+.login-alert{padding:12px 14px;border-radius:var(--r-md);border:0.5px solid var(--danger-line);background:var(--danger-dim);font-size:13.5px;line-height:1.5;color:var(--white);text-wrap:pretty}
+.login-alert.ok{border-color:var(--olive-line);background:var(--olive-dim)}
+.login-alert-actions{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px}
+.login-alert-actions button{padding:4px 0;font-size:var(--fs-sm);font-weight:600;color:var(--olive-soft,var(--olive))}
+.login-sep{height:0.5px;background:var(--border-2);margin:26px 0 18px}
+.login-note{font-size:var(--fs-sm);line-height:1.55;color:var(--muted);text-align:center;text-wrap:pretty}
+.login-note a,.login-note button{font-size:inherit;font-weight:600;color:var(--white);text-align:center;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--border-3)}
+.login-choices{display:grid;gap:10px}
+.login-choice{display:flex;align-items:flex-start;gap:13px;width:100%;padding:15px 16px;border-radius:var(--r-md);background:var(--ink);border:0.5px solid var(--border-2);color:inherit;text-align:left;text-decoration:none;transition:border-color .14s}
+a.login-choice:hover,button.login-choice:hover{border-color:var(--olive-line)}
+.login-choice-ic{width:34px;height:34px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--olive-dim);color:var(--olive);border:0.5px solid var(--olive-line)}
+.login-choice b{display:block;font-size:14.5px;font-weight:600;letter-spacing:-0.01em;color:var(--white)}
+.login-choice small{display:block;margin-top:3px;font-size:var(--fs-sm);line-height:1.5;color:var(--muted)}
+.login-choice-go{margin-left:auto;align-self:center;flex-shrink:0;font-size:var(--fs-sm);font-weight:600;color:var(--olive-soft,var(--olive));white-space:nowrap}
+.login-invite{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 16px;border-radius:var(--r-md);background:var(--ink);border:0.5px solid var(--border-2)}
+.login-invite b{font-size:var(--fs-md);font-weight:600;color:var(--white)}
+.login-invite-actions{display:flex;gap:8px}
+/* formulário antigo dentro da casca nova (ex.: BootstrapChurchForm com
+   .field/.input/.btn-lg): mesmo ritmo, sem margem somada ao gap */
+.login-card .field{display:grid;gap:7px;margin:0}
+.login-card .field-label{margin:0;font-size:var(--fs-sm)}
+.login-card .input{font-size:16px;padding:13px 14px;min-height:50px}
+.login-card .btn-lg{width:100%;min-height:52px}
+.login-card .field-error{padding:12px 14px;margin:0;border-radius:var(--r-md);border:0.5px solid var(--danger-line);background:var(--danger-dim);font-size:13.5px;line-height:1.5;color:var(--white)}
+@media (max-width:520px){
+  .login{padding:0;align-items:stretch;background:var(--graphite)}
+  .login-grid{display:none}
+  .login-card{width:100%;border:0;border-radius:0;box-shadow:none;background:transparent;padding:calc(34px + var(--safe-top)) calc(22px + var(--safe-right)) calc(28px + var(--safe-bottom)) calc(22px + var(--safe-left))}
+  .login-title{font-size:var(--fs-2xl)}
+}
+
+/* ── 3. app do membro de verdade (MobileOverlay mode="self") ──────
+   A moldura de celular é só da pré-visualização do líder. No celular
+   do membro: tela cheia, sem relógio 9:41 falso, sem barra com Sair
+   no topo (o Sair vai pro fim do Perfil), respeitando a área segura
+   do iPhone. No computador: coluna central de até 560px. */
+.mob-bg.mob-self{position:fixed;inset:0;z-index:80;display:block;padding:0 var(--safe-right) 0 var(--safe-left);background:var(--ink);backdrop-filter:none;animation:none}
+.mob-bg.mob-self .mob-side{display:none}
+.mob-bg.mob-self .mob-phone-wrap{display:flex;height:100%;min-height:0;max-width:560px;margin:0 auto}
+.mob-bg.mob-self .phone{flex:1;width:100%;height:100%;padding:0;border-radius:0;background:var(--ink);box-shadow:none}
+.mob-bg.mob-self .phone-screen{border-radius:0}
+.mob-bg.mob-self .phone-notch,.mob-bg.mob-self .m-statusbar{display:none}
+.mob-bg.mob-self .m-head{padding:calc(16px + var(--safe-top)) 20px 16px}
+.mob-bg.mob-self .m-scroll{padding:18px 18px 28px}
+.mob-bg.mob-self .m-tab{padding-bottom:var(--safe-bottom)}
+@media (min-width:600px){
+  .mob-bg.mob-self{background:var(--graphite-2)}
+  .mob-bg.mob-self .mob-phone-wrap{border-left:0.5px solid var(--border-2);border-right:0.5px solid var(--border-2)}
+}
+/* cabeçalho: marca da igreja + avatar (abre o Perfil) + saudação */
+.m-head-top{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;margin-bottom:14px}
+.m-head-av{flex-shrink:0;padding:0;border-radius:50%;line-height:0}
+.m-head-av .av{width:36px;height:36px;font-size:12.5px}
+.m-h1{font-size:24px;line-height:1.15}
+/* barra de abas: rótulo legível e alvo de toque de 58px */
+.m-tab{background:var(--graphite)}
+.m-tab button{position:relative;min-height:58px;padding:9px 2px 11px;gap:5px;font-size:var(--fs-cap);font-weight:500;letter-spacing:0;text-align:center}
+.m-tab button .ic{line-height:0}
+.m-tab button.on{font-weight:600}
+.m-tab button.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;border-radius:0 0 2px 2px;background:var(--olive)}
+/* legibilidade do app do membro */
+.m-app{font-size:10.5px}
+.m-section-t{font-size:var(--fs-cap);color:var(--muted)}
+.m-when{font-size:var(--fs-cap)}
+.m-quick-b{min-height:50px;font-size:13.5px}
+.m-jp small{font-size:10px}
+.ob-eyebrow{font-size:var(--fs-cap)}
+.ob-logo{margin-bottom:22px}
+.ob-form{gap:16px}
+.ob-form .field{margin:0}
+.ob-form .field-label{margin-bottom:7px}
+.ob-actions .btn{min-height:48px}
+.m-perfil-sair{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:50px;margin-top:22px;border-radius:var(--r-md);border:0.5px solid var(--border-2);background:transparent;font-size:14px;font-weight:600;color:var(--danger);text-align:center}
+.m-perfil-sair:hover{border-color:var(--danger-line);background:var(--danger-dim)}
+
+/* ── 4. painel da liderança ──────────────────────────────────────── */
+/* botão esticado (grid, width:100%) centraliza o rótulo */
+.btn{justify-content:center}
+/* etiquetas pequenas demais para ler */
+.sb-group{font-size:10.5px;color:var(--muted)}
+.tr.head span{font-size:10.5px}
+.cong-role{font-size:10.5px}
+.kpi-label,.ph-eyebrow,.top-crumb{font-size:var(--fs-cap)}
+.chip{font-size:10.5px}
+.view-sw-role,.view-sw-group{font-size:10.5px}
+/* seletor de congregação com uma igreja só: não finge que abre */
+.cong-btn.static{cursor:default}
+.cong-btn.static .cong-caret{display:none}
+/* avatar da pessoa logada + menu (substitui iniciais da igreja e o sino sem ação) */
+.top-user{position:relative}
+.top-user-btn{display:flex;align-items:center;gap:9px;padding:3px 12px 3px 3px;border-radius:var(--r-pill);border:0.5px solid var(--border-2);background:var(--graphite);transition:border-color .14s}
+.top-user-btn:hover{border-color:var(--border-3)}
+.top-user-btn .av{width:32px;height:32px;font-size:12px}
+.top-user-name{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-sm);font-weight:600;color:var(--white)}
+.top-user-pop{position:absolute;right:0;top:calc(100% + 8px);z-index:40;width:250px;padding:6px;border-radius:var(--r-lg);background:var(--graphite-2,var(--graphite));border:0.5px solid var(--border-2);box-shadow:0 24px 60px rgba(0,0,0,0.45);animation:fade .14s}
+.top-user-head{padding:10px 10px 12px;margin-bottom:6px;border-bottom:0.5px solid var(--border)}
+.top-user-head b{display:block;font-size:13.5px;color:var(--white)}
+.top-user-head small{display:block;margin-top:2px;font-size:var(--fs-xs);color:var(--muted)}
+.top-user-pop button,.top-user-pop a{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border-radius:var(--r-md);font-size:13.5px;color:var(--light);text-decoration:none}
+.top-user-pop button:hover,.top-user-pop a:hover{background:var(--ink);color:var(--white)}
+.top-user-pop .ic{color:var(--muted)}
+body[data-theme="light"] .top-user-pop{box-shadow:0 18px 44px rgba(80,70,40,0.16)}
+@media (max-width:640px){.top-user-btn{padding:3px}.top-user-name{display:none}}
+/* valor vazio: texto neutro, nunca uma frase no lugar do dado */
+.nd{color:var(--muted)}
+
+/* ── 5. acessibilidade básica ─────────────────────────────────────── */
+:where(button,a,[role="button"],summary):focus-visible{outline:2px solid var(--olive);outline-offset:2px}
+/* iPhone dá zoom em campo com fonte menor que 16px */
+@media (pointer:coarse){.input,.textarea,.select,.login-input{font-size:16px}}
+
+/* ── 6. áreas seguras do celular ──────────────────────────────────
+   Notch e Dynamic Island do iPhone, linha de início embaixo, câmera
+   dentro da tela e barra de gestos do Android. Precisa de viewportFit
+   "cover" (app/service/layout.tsx e app/[slug]/entrar/layout.tsx).
+   Onde não existe área do sistema, --safe-* vale 0 e nada muda.
+   Regra: o que é fixo na borda (abas, rodapé com botão, aviso, menu,
+   botão flutuante) fica fora dessas áreas; o que rola pode passar por
+   baixo, como em qualquer app. */
+
+/* app do membro */
+.mob-bg.mob-self .ob{padding:calc(24px + var(--safe-top)) 24px calc(24px + var(--safe-bottom))}
+.mob-bg.mob-self .m-sheet-bg{border-radius:0}
+.m-sheet{padding-bottom:calc(22px + var(--safe-bottom))}
+/* folha do versículo: folha de baixo com a largura do app
+   (tirar o style maxWidth 340 do .ob-card em MobileApp.tsx) */
+.m-sheet-bg>.ob-card{width:100%;max-width:560px;min-height:0;margin:0 auto;border-radius:24px 24px 0 0;border-bottom:0;padding:22px 20px calc(22px + var(--safe-bottom));box-shadow:0 -18px 50px rgba(0,0,0,0.4)}
+@media (max-width:480px){
+  .mob-bg{padding:0 var(--safe-right) 0 var(--safe-left)}
+  .mob-side{padding-top:calc(10px + var(--safe-top))}
+  .mob-bg .m-tab{padding-bottom:var(--safe-bottom)}
+  .m-sheet-bg{border-radius:0}
+  .mob-bg.mob-self .ob{padding:0}
+  .mob-bg .ob>.ob-card{padding-bottom:calc(32px + var(--safe-bottom))}
+  .mob-bg.mob-self .ob>.ob-card{padding-top:calc(32px + var(--safe-top))}
+}
+
+/* avisos por cima da tela */
+.toast-host{bottom:calc(24px + var(--safe-bottom))}
+.pwa-banner{left:calc(24px + var(--safe-left));bottom:calc(24px + var(--safe-bottom))}
+.pwa-banner-x{width:36px;height:36px;border-radius:var(--r-sm)}
+.help-fab-wrap{right:calc(96px + var(--safe-right));bottom:calc(26px + var(--safe-bottom))}
+.mob-launch{right:calc(26px + var(--safe-right));bottom:calc(26px + var(--safe-bottom))}
+@media (max-width:740px){.help-fab-wrap{right:calc(20px + var(--safe-right));bottom:calc(92px + var(--safe-bottom))}}
+@media (max-width:620px){.pwa-banner{left:calc(12px + var(--safe-left));right:calc(12px + var(--safe-right));bottom:calc(12px + var(--safe-bottom))}}
+/* no app do membro: acima da barra de abas. O convite pra instalar
+   ficava atrás do app (z-index 45 contra 80) e o membro nunca via. */
+body:has(.mob-bg.mob-self) .toast-host{bottom:calc(74px + var(--safe-bottom))}
+body:has(.mob-bg.mob-self) .pwa-banner{z-index:85;bottom:calc(70px + var(--safe-bottom))}
+
+/* painel da liderança */
+.sb{height:100dvh}
+.main{padding-left:var(--safe-left);padding-right:var(--safe-right);padding-bottom:var(--safe-bottom)}
+.top{padding-top:calc(16px + var(--safe-top))}
+@media (max-width:1040px){.sb{width:calc(280px + var(--safe-left));padding:var(--safe-top) 0 var(--safe-bottom) var(--safe-left)}}
+@media (max-width:640px){.top{padding-top:calc(12px + var(--safe-top))}}
+.chat-layout{height:calc(100dvh - 230px)}
+
+/* gavetas, telas cheias e check-in */
+.drawer{padding-right:var(--safe-right);padding-bottom:var(--safe-bottom)}
+.drawer-head{padding-top:calc(22px + var(--safe-top))}
+.drawer-close{top:calc(20px + var(--safe-top))}
+.ce-page{padding:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left)}
+.ck-land{padding:calc(24px + var(--safe-top)) calc(24px + var(--safe-right)) calc(24px + var(--safe-bottom)) calc(24px + var(--safe-left))}
+
+/* janela maior que a tela (celular pequeno, deitado ou com teclado):
+   cabeçalho e botões sempre visíveis, só o meio rola. Antes o fundo
+   não rolava e o botão Salvar podia ficar fora da tela. */
+.modal-bg{padding:calc(24px + var(--safe-top)) calc(24px + var(--safe-right)) calc(24px + var(--safe-bottom)) calc(24px + var(--safe-left))}
+.modal{display:flex;flex-direction:column;max-height:100%}
+.modal>form{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
+.modal-head,.modal-foot{flex-shrink:0}
+.modal-body{flex:1 1 auto;min-height:0}

@@ -1104,7 +1104,7 @@ function TabBiblia({
 
       {actionVerse != null && book && chapter && (
         <div className="m-sheet-bg" onClick={() => setActionVerse(null)}>
-          <div className="ob-card" style={{ maxWidth: 340 }} onClick={(e) => e.stopPropagation()}>
+          <div className="ob-card" onClick={(e) => e.stopPropagation()}>
             <div className="bib-action-ref">{book.name} {chapter}:{actionVerse}</div>
             <p className="bib-action-text">{versesAtuais?.[actionVerse - 1]}</p>
             <button className="btn btn-sec btn-sm bib-copy" type="button" onClick={copiarVerso} style={{ marginTop: 10 }}>
