@@ -1,131 +1,149 @@
 "use client";
 
-import Link from "next/link";
-import Logo from "../../components/Logo";
+import AuthShell from "../AuthShell";
+import PasswordInput from "../PasswordInput";
 import { useServiceLoginForm } from "./useServiceLoginForm";
 
-export default function ServiceLoginForm() {
-  const {
-    mode, setMode,
-    name, setName,
-    email, setEmail,
-    password, setPassword,
-    loading, resending,
-    error, success,
-    invalidCredentials, switchToSignup,
-    handleSubmit, resendConfirmation, forgotPassword,
-  } = useServiceLoginForm();
+/* UI única de login, em cima do useServiceLoginForm (lógica intacta).
+   variant "service" = /service/login (gestão da igreja) · variant "igreja" =
+   /[slug]/entrar (app do membro). As duas portas continuam separadas: o
+   membro entra pelo endereço da igreja, a liderança por aqui. "Criar conta"
+   saiu do topo: só serve pra quem vai cadastrar uma igreja nova, e fica no
+   rodapé da gestão, com o nome certo. */
+export default function ServiceLoginForm({
+  churchName = null,
+  logoUrl = null,
+  churchSlug = null,
+  variant = "service",
+}: {
+  churchName?: string | null;
+  logoUrl?: string | null;
+  churchSlug?: string | null;
+  variant?: "service" | "igreja";
+}) {
+  const f = useServiceLoginForm();
+  const signup = f.mode === "signup";
+  const naoConfirmado = f.error.includes("ainda não foi confirmado");
+
+  const trocarIgreja = () => {
+    document.cookie = "cex_church_slug=; path=/; max-age=0; samesite=lax";
+    window.location.reload();
+  };
+
+  let eyebrow = "Gestão da igreja";
+  let title: string = "Entrar na gestão";
+  let subtitle = "Para pastores e líderes. Membros entram pelo app da igreja, no link que a liderança mandou.";
+  let footer: React.ReactNode = (
+    <>
+      Sua igreja ainda não usa o Service?{" "}
+      <button type="button" onClick={f.switchToSignup}>Cadastrar minha igreja</button>
+    </>
+  );
+
+  if (variant === "igreja") {
+    eyebrow = "App da igreja";
+    title = "Entrar no app";
+    subtitle = "Use o e-mail e a senha que você criou quando abriu o convite.";
+    footer = <>Primeiro acesso? Abra o link de convite que a liderança mandou no seu WhatsApp.</>;
+  } else if (signup) {
+    eyebrow = "Nova igreja";
+    title = "Cadastrar minha igreja";
+    subtitle = "Comece criando o seu acesso. Depois de confirmar o e-mail, você preenche os dados da igreja em um minuto.";
+    footer = (
+      <>
+        Já tem acesso? <button type="button" onClick={() => f.setMode("login")}>Entrar</button>
+      </>
+    );
+  } else if (churchName) {
+    footer = (
+      <>
+        {churchSlug ? (
+          <>
+            É membro? <a href={`/${churchSlug}/entrar`}>Entrar no app da igreja</a>
+            <br />
+          </>
+        ) : null}
+        Não é da {churchName}? <button type="button" onClick={trocarIgreja}>Entrar por outra igreja</button>
+      </>
+    );
+  }
 
   return (
-    <main className="ld-sec" style={{ minHeight: "100dvh", background: "var(--ink)" }}>
-      <div className="ld-wrap">
-        <section className="card" style={{ maxWidth: 520, margin: "0 auto" }}>
-          <div className="card-body">
-            <Link href="/" className="nav-logo" style={{ textDecoration: "none" }}>
-              <Logo />
-            </Link>
+    <AuthShell churchName={churchName} logoUrl={logoUrl} eyebrow={eyebrow} title={title} subtitle={subtitle} footer={footer}>
+      <form className="login-form" onSubmit={f.handleSubmit} noValidate>
+        {signup && (
+          <label className="login-field">
+            <span className="login-label">Seu nome</span>
+            <input
+              className="login-input"
+              value={f.name}
+              onChange={(event) => f.setName(event.target.value)}
+              autoComplete="name"
+              placeholder="Nome e sobrenome"
+            />
+          </label>
+        )}
 
-            <p className="eyebrow" style={{ color: "var(--wheat)", marginTop: 28 }}>
-              SERVICE · ACESSO
-            </p>
-            <h1 className="t-h1" style={{ color: "var(--cream)", marginTop: 12 }}>
-              {mode === "login" ? "Entrar no Service" : "Criar conta do Service"}
-            </h1>
-            <p className="t-body" style={{ color: "var(--light)", marginTop: 10 }}>
-              Área da gestão da igreja. Membro entra pelo endereço da própria igreja ou pelo link de convite que o líder manda.
-            </p>
+        <label className="login-field">
+          <span className="login-label">E-mail</span>
+          <input
+            className="login-input"
+            type="email"
+            inputMode="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            value={f.email}
+            onChange={(event) => f.setEmail(event.target.value)}
+            autoComplete="email"
+            placeholder="voce@email.com"
+          />
+        </label>
 
-            <div className="segmented" style={{ marginTop: 24 }}>
-              <button className={mode === "login" ? "active" : ""} type="button" onClick={() => setMode("login")}>
-                Entrar
-              </button>
-              <button className={mode === "signup" ? "active" : ""} type="button" onClick={() => setMode("signup")}>
-                Criar conta
-              </button>
-            </div>
+        <label className="login-field">
+          <span className="login-label">{signup ? "Crie uma senha" : "Senha"}</span>
+          <PasswordInput
+            value={f.password}
+            onChange={f.setPassword}
+            autoComplete={signup ? "new-password" : "current-password"}
+            placeholder={signup ? "Mínimo 6 caracteres" : "Sua senha"}
+          />
+        </label>
 
-            <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16, marginTop: 24 }}>
-              {mode === "signup" && (
-                <label className="field">
-                  <span className="field-label req">Nome</span>
-                  <input
-                    className="input"
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    autoComplete="name"
-                    placeholder="Seu nome"
-                  />
-                </label>
-              )}
-
-              <label className="field">
-                <span className="field-label req">E-mail</span>
-                <input
-                  className="input"
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  autoComplete="email"
-                  placeholder="voce@igreja.com"
-                />
-              </label>
-
-              <label className="field">
-                <span className="field-label req">Senha</span>
-                <input
-                  className="input"
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  placeholder="Mínimo 6 caracteres"
-                />
-              </label>
-
-              {error && (
-                <div>
-                  <p className="field-error">{error}</p>
-                  {error.includes("ainda não foi confirmado") && (
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      type="button"
-                      onClick={resendConfirmation}
-                      disabled={resending}
-                      style={{ marginTop: 10 }}
-                    >
-                      {resending ? "Reenviando..." : "Reenviar confirmação"}
-                    </button>
-                  )}
-                  {invalidCredentials && (
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      type="button"
-                      onClick={switchToSignup}
-                      style={{ marginTop: 10 }}
-                    >
-                      Não tem conta com esse e-mail ainda? Criar conta →
-                    </button>
-                  )}
-                </div>
-              )}
-              {success && (
-                <div className="banner banner-soft">
-                  <strong style={{ color: "var(--olive-soft)" }}>{success}</strong>
-                </div>
-              )}
-
-              <button className="btn btn-primary btn-lg" type="submit" disabled={loading}>
-                {loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
-              </button>
-              {mode === "login" && (
-                <button className="btn btn-ghost btn-sm" type="button" onClick={forgotPassword} disabled={resending}>
-                  {resending ? "Enviando..." : "Esqueci minha senha"}
-                </button>
-              )}
-            </form>
+        {f.error ? (
+          <div className="login-alert" role="alert">
+            {f.error}
+            {(naoConfirmado || f.invalidCredentials) && (
+              <div className="login-alert-actions">
+                {naoConfirmado && (
+                  <button type="button" onClick={f.resendConfirmation} disabled={f.resending}>
+                    {f.resending ? "Reenviando..." : "Reenviar e-mail de confirmação"}
+                  </button>
+                )}
+                {f.invalidCredentials && (
+                  <button type="button" onClick={f.forgotPassword} disabled={f.resending}>
+                    {f.resending ? "Enviando..." : "Criar uma senha nova"}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-        </section>
-      </div>
-    </main>
+        ) : null}
+        {f.success ? (
+          <div className="login-alert ok" role="status">
+            {f.success}
+          </div>
+        ) : null}
+
+        <button className="login-btn" type="submit" disabled={f.loading}>
+          {f.loading ? "Aguarde..." : signup ? "Criar meu acesso" : "Entrar"}
+        </button>
+        {!signup && (
+          <button className="login-link" type="button" onClick={f.forgotPassword} disabled={f.resending}>
+            {f.resending ? "Enviando..." : "Esqueci minha senha"}
+          </button>
+        )}
+      </form>
+    </AuthShell>
   );
 }

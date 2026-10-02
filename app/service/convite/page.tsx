@@ -4,12 +4,14 @@ import { supabaseAdmin } from "../../lib/supabase";
 import { findOpenInvite } from "../../lib/service-invite";
 import { resolveMode, THEME_COOKIE, type BrandCfg } from "../lib/theme";
 import ServiceTheme from "../ServiceTheme";
+import AuthShell from "../AuthShell";
 import ConviteForm from "./ConviteForm";
 
 export const dynamic = "force-dynamic";
 
 /* Link do convite (WhatsApp do líder): a pessoa informa e-mail, senha e CEP
-   e a conta nasce aqui. Com a cara da igreja (tema da matriz + logo). */
+   e a conta nasce aqui. Com a cara da igreja (tema da matriz + logo).
+   Lógica igual à anterior; só a casca mudou pra AuthShell. */
 export default async function ServiceConvitePage({ searchParams }: { searchParams: Promise<{ t?: string }> }) {
   const { t } = await searchParams;
   const db = supabaseAdmin();
@@ -30,53 +32,40 @@ export default async function ServiceConvitePage({ searchParams }: { searchParam
     logoUrl = (sede?.logo_url ?? own?.logo_url ?? null) as string | null;
     brand = (sede?.settings as { brandCfg?: BrandCfg } | null)?.brandCfg;
   }
-  const mode = resolveMode((await cookies()).get(THEME_COOKIE)?.value, brand);
+  const jar = await cookies();
+  const mode = resolveMode(jar.get(THEME_COOKIE)?.value, brand);
+  /* convite vencido: quem já criou o acesso entra pelo app da igreja do aparelho */
+  const slug = jar.get("cex_church_slug")?.value;
+  const loginHref = slug && /^[a-z0-9-]{3,40}$/.test(slug) ? `/${slug}/entrar` : "/service/login";
   const firstName = invite?.member.name.split(" ")[0] ?? "";
 
   return (
-    <main className="ld-sec" style={{ minHeight: "100dvh", background: "var(--ink)" }}>
+    <>
       <ServiceTheme brand={brand} mode={mode} />
-      <div className="ld-wrap">
-        <section className="card" style={{ maxWidth: 520, margin: "0 auto" }}>
-          <div className="card-body">
-            <div className="brand-church">
-              {logoUrl ? (
-                <img className="brand-church-logo" src={logoUrl} alt="" />
-              ) : (
-                <span className="brand-church-mark" aria-hidden="true">{(churchName || "IG").slice(0, 2).toUpperCase()}</span>
-              )}
-              <span className="brand-church-text">
-                <span className="brand-church-name">{churchName || "Sua igreja"}</span>
-                <span className="brand-church-suffix">Service</span>
-              </span>
-            </div>
-            {invite && t ? (
-              <>
-                <h1 className="t-h1" style={{ color: "var(--cream)", marginTop: 28 }}>
-                  {firstName ? `Bem-vindo(a), ${firstName}` : "Bem-vindo(a)"}
-                </h1>
-                <p className="t-body" style={{ color: "var(--light)", marginTop: 10 }}>
-                  Crie seu acesso ao app da {churchName || "sua igreja"}. Só você vai saber essa senha.
-                </p>
-                <ConviteForm t={t} />
-              </>
-            ) : (
-              <>
-                <h1 className="t-h1" style={{ color: "var(--cream)", marginTop: 28 }}>
-                  Este convite não vale mais
-                </h1>
-                <p className="t-body" style={{ color: "var(--light)", marginTop: 10 }}>
-                  O link já foi usado ou passou do prazo de 7 dias. Peça um novo link ao líder da sua igreja.
-                  Se você já criou seu acesso, é só entrar.
-                </p>
-                <Link href="/service/login" className="btn btn-primary btn-lg" style={{ marginTop: 24 }}>
-                  Entrar no app →
-                </Link>
-              </>
-            )}
-          </div>
-        </section>
-      </div>
-    </main>
+      {invite && t ? (
+        <AuthShell
+          churchName={churchName}
+          logoUrl={logoUrl}
+          eyebrow="Convite"
+          title={firstName ? `Bem-vindo(a), ${firstName}` : "Bem-vindo(a)"}
+          subtitle="Crie sua senha para entrar no app da igreja. Só você vai saber essa senha."
+          footer={<>O link é só seu e vale por 7 dias.</>}
+        >
+          <ConviteForm t={t} />
+        </AuthShell>
+      ) : (
+        <AuthShell
+          churchName={churchName}
+          logoUrl={logoUrl}
+          eyebrow="Convite"
+          title="Este convite não vale mais"
+          subtitle="O link já foi usado ou passou do prazo de 7 dias. Peça um novo ao líder da sua igreja. Se você já criou seu acesso, é só entrar."
+        >
+          <Link href={loginHref} className="login-btn">
+            Entrar no app →
+          </Link>
+        </AuthShell>
+      )}
+    </>
   );
 }

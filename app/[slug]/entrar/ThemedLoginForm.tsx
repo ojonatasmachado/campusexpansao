@@ -1,103 +1,18 @@
 "use client";
 
-import { useEffect, type CSSProperties } from "react";
-import Link from "next/link";
-import type { ChurchPageData } from "../../lib/church-page";
-import { accentInk, resolveBackground } from "../../lib/church-page";
-import LogoMark from "../LogoMark";
-import { useServiceLoginForm } from "../../service/login/useServiceLoginForm";
+import { useEffect } from "react";
+import ServiceLoginForm from "../../service/login/LoginForm";
 
-/* UI do login temático, em cima do mesmo useServiceLoginForm do login
-   genérico (app/service/login/LoginForm.tsx) : zero duplicação da lógica de
-   autenticação, só uma casca visual diferente (--cx-* em vez do CSS do
-   Service). --cx-accent vem de data.serviceAccent (brandCfg.accent, ou accentDark legado),
-   não de data.pagina.accentColor : login usa a cor do Service, não o
-   override da Página pública. Só "Entrar" : criar conta aqui abriria uma
-   organização nova sem relação com esta igreja. */
-export default function ThemedLoginForm({ data }: { data: ChurchPageData }) {
-  /* login do membro é o da igreja dele: lembra qual é, pra quando a sessão
-     cair o /service mandar de volta pra cá e não pro login da gestão */
+/* Login da igreja: a mesma UI do /service/login (variant "igreja"), sem
+   "Cadastrar minha igreja" (aqui abriria uma organização nova sem relação
+   com esta igreja). Zero duplicação: lógica no useServiceLoginForm, UI no
+   LoginForm. */
+export default function ThemedLoginForm({ slug, churchName, logoUrl }: { slug: string; churchName: string; logoUrl: string | null }) {
+  /* lembra a igreja deste aparelho: quando a sessão cair, o /service manda
+     de volta pra cá, e o /service/login já abre com a marca dela */
   useEffect(() => {
-    document.cookie = `cex_church_slug=${data.slug}; path=/; max-age=31536000; samesite=lax`;
-  }, [data.slug]);
+    document.cookie = `cex_church_slug=${slug}; path=/; max-age=31536000; samesite=lax`;
+  }, [slug]);
 
-  const {
-    email, setEmail,
-    password, setPassword,
-    loading, resending,
-    error, success,
-    handleSubmit, resendConfirmation, forgotPassword,
-  } = useServiceLoginForm();
-
-  const vars = {
-    "--cx-bg": resolveBackground(data.pagina),
-    "--cx-text": data.pagina.textColor,
-    "--cx-accent": data.serviceAccent,
-    "--cx-accent-ink": accentInk(data.serviceAccent),
-    "--cx-box": data.pagina.boxColor,
-  } as CSSProperties;
-
-  return (
-    <div className="cx-page" style={vars}>
-      <div className="cx-shell">
-        <div className="cx-login">
-          <header className="cx-header">
-            <LogoMark data={data} />
-            {data.pagina.logoMode !== "texto" && <h1 className="cx-name">{data.name}</h1>}
-          </header>
-
-          <p className="cx-login-eyebrow">Entrar no app da igreja</p>
-
-          <form className="cx-form" onSubmit={handleSubmit}>
-            <label className="cx-field">
-              <span className="cx-field-label">E-mail</span>
-              <input
-                className="cx-input"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                autoComplete="email"
-                placeholder="voce@igreja.com"
-              />
-            </label>
-
-            <label className="cx-field">
-              <span className="cx-field-label">Senha</span>
-              <input
-                className="cx-input"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete="current-password"
-                placeholder="Sua senha"
-              />
-            </label>
-
-            {error && (
-              <div>
-                <p className="cx-error">{error}</p>
-                {error.includes("ainda não foi confirmado") && (
-                  <button type="button" className="cx-btn" style={{ marginTop: 10 }} onClick={resendConfirmation} disabled={resending}>
-                    {resending ? "Reenviando..." : "Reenviar confirmação"}
-                  </button>
-                )}
-              </div>
-            )}
-            {success && <p className="cx-error" style={{ color: "var(--cx-accent)" }}>{success}</p>}
-
-            <button className="cx-btn" type="submit" disabled={loading}>
-              {loading ? "Aguarde..." : "Entrar"}
-            </button>
-            <button type="button" className="cx-login-back" onClick={forgotPassword} disabled={resending} style={{ background: "none", border: 0, cursor: "pointer" }}>
-              {resending ? "Enviando..." : "Esqueci minha senha"}
-            </button>
-          </form>
-
-          <Link href="/service/login" className="cx-login-back">
-            É da gestão da igreja? Entre por aqui →
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
+  return <ServiceLoginForm variant="igreja" churchName={churchName} logoUrl={logoUrl} />;
 }

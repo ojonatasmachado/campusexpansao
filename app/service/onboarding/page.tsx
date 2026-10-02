@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServiceSupabaseClient } from "../lib/supabase";
+import { Icon } from "../lib/icons";
+import AuthShell from "../AuthShell";
 import BootstrapChurchForm from "./BootstrapChurchForm";
 import ConvitesPendentes from "./ConvitesPendentes";
-import Logo from "../../components/Logo";
 
 async function getOnboardingState() {
   const supabase = await createServiceSupabaseClient();
@@ -29,7 +30,9 @@ async function getOnboardingState() {
 
 /* Quem chega aqui sem igreja pode ser um membro que se cadastrou sozinho em
    vez de usar o convite. Criar igreja só com escolha explícita (?nova=1):
-   sem isso, membro acabava abrindo uma igreja nova sem querer. */
+   sem isso, membro acabava abrindo uma igreja nova sem querer.
+   Mesma lógica e os mesmos 3 estados de antes; casca AuthShell (ainda sem
+   igreja, então a marca é CE.X | Service) e texto sem termo técnico. */
 export default async function ServiceOnboardingPage({ searchParams }: { searchParams: Promise<{ nova?: string }> }) {
   const { count: churchCount, pending } = await getOnboardingState();
   if (churchCount > 0) redirect("/service");
@@ -37,87 +40,51 @@ export default async function ServiceOnboardingPage({ searchParams }: { searchPa
 
   if (pending.length > 0 && nova !== "1") {
     return (
-      <main className="ld-sec" style={{ minHeight: "100dvh", background: "var(--ink)" }}>
-        <div className="ld-wrap">
-          <section className="card" style={{ maxWidth: 620, margin: "0 auto" }}>
-            <div className="card-body">
-              <Link href="/" className="nav-logo" style={{ textDecoration: "none" }}>
-                <Logo />
-              </Link>
-              <p className="eyebrow" style={{ color: "var(--wheat)", marginTop: 28 }}>
-                SERVICE · CONVITE
-              </p>
-              <h1 className="t-h1" style={{ color: "var(--cream)", marginTop: 12 }}>
-                {pending.length === 1 ? "Você foi convidado para uma igreja" : "Você foi convidado para igrejas"}
-              </h1>
-              <p className="t-body" style={{ color: "var(--light)", marginTop: 10 }}>
-                Aceite para entrar no app da sua igreja com a conta que você já tem.
-              </p>
-              <ConvitesPendentes invites={pending} />
-            </div>
-          </section>
-        </div>
-      </main>
+      <AuthShell
+        eyebrow="Convite"
+        title={pending.length === 1 ? "Você foi convidado(a) para uma igreja" : "Você foi convidado(a) para igrejas"}
+        subtitle="Aceite para entrar no app da igreja com a conta que você já tem."
+      >
+        <ConvitesPendentes invites={pending} />
+      </AuthShell>
     );
   }
 
   if (nova !== "1") {
     return (
-      <main className="ld-sec" style={{ minHeight: "100dvh", background: "var(--ink)" }}>
-        <div className="ld-wrap">
-          <section className="card" style={{ maxWidth: 620, margin: "0 auto" }}>
-            <div className="card-body">
-              <Link href="/" className="nav-logo" style={{ textDecoration: "none" }}>
-                <Logo />
-              </Link>
-              <p className="eyebrow" style={{ color: "var(--wheat)", marginTop: 28 }}>
-                SERVICE · PRIMEIRO ACESSO
-              </p>
-              <h1 className="t-h1" style={{ color: "var(--cream)", marginTop: 12 }}>
-                Sua conta ainda não está ligada a uma igreja
-              </h1>
-              <div className="banner banner-soft" style={{ marginTop: 24 }}>
-                <strong style={{ color: "var(--cream)" }}>Você é membro de uma igreja que usa o Service?</strong>
-                <p className="t-body" style={{ color: "var(--light)", marginTop: 8 }}>
-                  Peça ao líder da sua igreja o link de convite. Ele chega pelo WhatsApp e já te coloca
-                  dentro do app da sua igreja.
-                </p>
-              </div>
-              <p className="t-body" style={{ color: "var(--light)", marginTop: 24 }}>
-                Você é da liderança e quer cadastrar a sua igreja no Service?
-              </p>
-              <Link href="/service/onboarding?nova=1" className="btn btn-sec" style={{ marginTop: 12 }}>
-                Cadastrar minha igreja →
-              </Link>
-            </div>
-          </section>
+      <AuthShell
+        eyebrow="Primeiro acesso"
+        title="Sua conta ainda não está ligada a uma igreja"
+        subtitle="Escolha o que combina com você."
+      >
+        <div className="login-choices">
+          <div className="login-choice">
+            <span className="login-choice-ic"><Icon name="membros" size={17} /></span>
+            <span>
+              <b>Sou membro de uma igreja</b>
+              <small>Peça ao seu líder o link de convite. Ele chega pelo WhatsApp e já coloca você dentro do app da sua igreja.</small>
+            </span>
+          </div>
+          <Link href="/service/onboarding?nova=1" className="login-choice">
+            <span className="login-choice-ic"><Icon name="identidade" size={17} /></span>
+            <span>
+              <b>Sou da liderança</b>
+              <small>Quero cadastrar a minha igreja no Service.</small>
+            </span>
+            <span className="login-choice-go">Cadastrar →</span>
+          </Link>
         </div>
-      </main>
+      </AuthShell>
     );
   }
 
   return (
-    <main className="ld-sec" style={{ minHeight: "100dvh", background: "var(--ink)" }}>
-      <div className="ld-wrap">
-        <section className="card" style={{ maxWidth: 620, margin: "0 auto" }}>
-          <div className="card-body">
-            <Link href="/" className="nav-logo" style={{ textDecoration: "none" }}>
-              <Logo />
-            </Link>
-            <p className="eyebrow" style={{ color: "var(--wheat)", marginTop: 28 }}>
-              SERVICE · PRIMEIRA IGREJA
-            </p>
-            <h1 className="t-h1" style={{ color: "var(--cream)", marginTop: 12 }}>
-              Crie a igreja matriz
-            </h1>
-            <p className="t-body" style={{ color: "var(--light)", marginTop: 10 }}>
-              Esta etapa chama a função segura do banco e cria sua organização, seu papel master,
-              o acesso ao Service e a primeira igreja.
-            </p>
-            <BootstrapChurchForm />
-          </div>
-        </section>
-      </div>
-    </main>
+    <AuthShell
+      eyebrow="Nova igreja"
+      title="Cadastre sua igreja"
+      subtitle="Leva um minuto. Você fica como responsável pelo Service da igreja e depois convida a liderança e os membros."
+    >
+      <BootstrapChurchForm />
+    </AuthShell>
   );
 }

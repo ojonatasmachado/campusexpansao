@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
+import { Icon } from "../lib/icons";
 
 function friendlyBootstrapError(message: string) {
   const lower = message.toLowerCase();
@@ -10,15 +11,16 @@ function friendlyBootstrapError(message: string) {
     return "Sua sessão expirou. Entre novamente e tente criar a igreja.";
   }
   if (lower.includes("could not find the function") || lower.includes("schema cache")) {
-    return "O Supabase ainda não encontrou a função bootstrap. Aguarde um minuto e tente de novo.";
+    return "O cadastro está indisponível agora. Tente de novo em alguns minutos.";
   }
   if (lower.includes("permission") || lower.includes("row-level security")) {
-    return "O banco bloqueou a operação por segurança. Confirme se você está logado.";
+    return "Não conseguimos confirmar sua conta. Saia, entre de novo e tente outra vez.";
   }
   if (lower.includes("já está cadastrado")) {
     return "Este CNPJ já está cadastrado em outra igreja no CE.X Service.";
   }
-  return message || "Não conseguimos criar a igreja agora.";
+  console.error("[service] cadastro da igreja:", message);
+  return "Não conseguimos criar a igreja agora. Tente de novo em instantes.";
 }
 
 function formatCnpj(digits: string) {
@@ -138,7 +140,7 @@ export default function BootstrapChurchForm() {
   return (
     <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16, marginTop: 24 }}>
       <label className="field">
-        <span className="field-label">CNPJ da igreja (opcional por enquanto)</span>
+        <span className="field-label">CNPJ da igreja (opcional)</span>
         <input
           className="input"
           value={formatCnpj(cnpj)}
@@ -153,8 +155,8 @@ export default function BootstrapChurchForm() {
         />
         {checking && <div style={{ fontSize: 12, color: "var(--subtle)", marginTop: 6 }}>Consultando a Receita Federal…</div>}
         {lookup && lookup.valid && lookup.active && (
-          <div style={{ fontSize: 12, color: "var(--olive-soft)", marginTop: 6 }}>
-            ✓ CNPJ ativo{lookup.razaoSocial ? ` · ${lookup.razaoSocial}` : ""}
+          <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--olive-soft)", marginTop: 6 }}>
+            <Icon name="ok" size={13} /> CNPJ ativo{lookup.razaoSocial ? ` · ${lookup.razaoSocial}` : ""}
           </div>
         )}
         {lookup && !lookup.active && (

@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import CepInput, { type CepResult } from "../CepInput";
+import PasswordInput from "../PasswordInput";
 
 /* E-mail, senha e CEP obrigatórios no convite: o CEP entra aqui (e não só
-   no primeiro acesso) porque depois a pessoa pode não preencher. */
+   no primeiro acesso) porque depois a pessoa pode não preencher.
+   Lógica igual à anterior; markup nas classes .login-* (service-v5.css). */
 export default function ConviteForm({ t }: { t: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -56,31 +58,46 @@ export default function ConviteForm({ t }: { t: string }) {
     }
   };
 
+  const enderecoTexto = endereco
+    ? [endereco.street, endereco.neighborhood, endereco.city && endereco.state ? `${endereco.city}/${endereco.state}` : endereco.city].filter(Boolean).join(" · ")
+    : "";
+
   return (
-    <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16, marginTop: 24 }}>
-      <label className="field">
-        <span className="field-label req">E-mail</span>
-        <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="voce@email.com" />
+    <form className="login-form" onSubmit={handleSubmit} noValidate>
+      <label className="login-field">
+        <span className="login-label">E-mail</span>
+        <input
+          className="login-input"
+          type="email"
+          inputMode="email"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
+          placeholder="voce@email.com"
+        />
       </label>
-      <label className="field">
-        <span className="field-label req">Senha</span>
-        <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" placeholder="Mínimo 6 caracteres" />
+      <label className="login-field">
+        <span className="login-label">Crie uma senha</span>
+        <PasswordInput value={password} onChange={setPassword} autoComplete="new-password" placeholder="Mínimo 6 caracteres" />
       </label>
-      <label className="field">
-        <span className="field-label req">Repita a senha</span>
-        <input className="input" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
+      <label className="login-field">
+        <span className="login-label">Repita a senha</span>
+        <PasswordInput value={confirm} onChange={setConfirm} autoComplete="new-password" />
       </label>
-      <div className="field">
-        <span className="field-label req">CEP de onde você mora</span>
+      <div className="login-field">
+        <span className="login-label">CEP de onde você mora</span>
         <CepInput value={cep} onChange={setCep} onResult={(r) => setEndereco(r)} />
-        {endereco && (endereco.street || endereco.city) && (
-          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 6 }}>
-            {[endereco.street, endereco.neighborhood, endereco.city && endereco.state ? `${endereco.city}/${endereco.state}` : endereco.city].filter(Boolean).join(" · ")}
-          </div>
-        )}
+        <span className="login-help">{enderecoTexto || "A igreja usa pra saber a sua região."}</span>
       </div>
-      {error && <p className="field-error">{error}</p>}
-      <button className="btn btn-primary btn-lg" type="submit" disabled={loading}>
+      {error && (
+        <div className="login-alert" role="alert">
+          {error}
+        </div>
+      )}
+      <button className="login-btn" type="submit" disabled={loading}>
         {loading ? "Aguarde..." : "Criar acesso e entrar"}
       </button>
     </form>

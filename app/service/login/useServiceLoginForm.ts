@@ -9,10 +9,11 @@ export type LoginMode = "login" | "signup";
 function errorMessage(message: string) {
   const lower = message.toLowerCase();
   if (lower.includes("invalid login")) return "E-mail ou senha incorretos.";
-  if (lower.includes("email not confirmed")) return "Seu e-mail ainda não foi confirmado. Abra o e-mail do Supabase e confirme a conta antes de entrar.";
+  if (lower.includes("email not confirmed")) return "Seu e-mail ainda não foi confirmado. Abra o e-mail de confirmação que enviamos (veja também o spam) e depois entre.";
   if (lower.includes("already registered")) return "Este e-mail já tem uma conta. Tente entrar.";
   if (lower.includes("password")) return "A senha precisa ter pelo menos 6 caracteres.";
-  return message || "Não conseguimos concluir agora.";
+  console.error("[service] login:", message);
+  return "Não conseguimos entrar agora. Tente de novo em instantes.";
 }
 
 /* Estado + lógica de autenticação do login do Service (entrar / criar conta

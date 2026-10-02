@@ -1,20 +1,28 @@
 import { redirect } from "next/navigation";
-import { getChurchPageBySlug } from "../../lib/church-page";
+import { cookies } from "next/headers";
+import ServiceTheme from "../../service/ServiceTheme";
+import { getAuthChurchBySlug } from "../../service/lib/auth-church";
+import { resolveMode, THEME_COOKIE } from "../../service/lib/theme";
 import ThemedLoginForm from "./ThemedLoginForm";
-
-/* Login temático da igreja : mesmo login do Service por baixo (mesma
-   autenticação genérica, ver useServiceLoginForm), só com a cara da igreja
-   (logo + cor de destaque do Service) em vez do verde CE.X. Funciona mesmo
-   com a Página pública despublicada : entrar não depende de published,
-   só de a igreja existir. */
 
 export const dynamic = "force-dynamic";
 
+/* Login da igreja (o endereço que o membro guarda). Mesma autenticação do
+   /service/login (useServiceLoginForm) e agora a mesma cara do app que ele
+   abre em seguida: logo da igreja | Service, com os neutros e a cor do
+   Service da igreja (brandCfg da matriz). Continua funcionando com a
+   Página pública despublicada: entrar só depende de a igreja existir. */
 export default async function EntrarPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const data = await getChurchPageBySlug(slug);
+  const church = await getAuthChurchBySlug(slug);
+  if (!church) redirect("/service/login");
 
-  if (!data) redirect("/service/login");
+  const mode = resolveMode((await cookies()).get(THEME_COOKIE)?.value, church.brand);
 
-  return <ThemedLoginForm data={data} />;
+  return (
+    <>
+      <ServiceTheme brand={church.brand} mode={mode} />
+      <ThemedLoginForm slug={church.slug} churchName={church.name} logoUrl={church.logoUrl} />
+    </>
+  );
 }
