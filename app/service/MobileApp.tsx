@@ -7,6 +7,7 @@ import { formatDateBR } from "./lib/date";
 import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import { PhotoPicker } from "./PhotoPicker";
 import CepInput from "./CepInput";
+import ChurchLockup from "./ChurchLockup";
 import { requirementLabel, type RequirementKind } from "./lib/requirements";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
@@ -315,6 +316,8 @@ function TabInicio({
     : null;
 
   const isRecep = isRecepPerson(person, ministries);
+  /* "Minhas tarefas" só pra quem serve: a aba só existe nesse caso */
+  const serve = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
 
   return (
     <>
@@ -403,9 +406,11 @@ function TabInicio({
         <button className="m-quick-b" onClick={() => setTab("biblia")}>
           <span style={{ color: "var(--olive)" }}><Icon name="biblia" size={15} /></span>Biblia
         </button>
-        <button className="m-quick-b" onClick={() => setTab("tarefas")}>
-          <span style={{ color: "var(--olive)" }}><Icon name="tarefas" size={15} /></span>Minhas tarefas
-        </button>
+        {serve && (
+          <button className="m-quick-b" onClick={() => setTab("tarefas")}>
+            <span style={{ color: "var(--olive)" }}><Icon name="tarefas" size={15} /></span>Minhas tarefas
+          </button>
+        )}
         <button className="m-quick-b" onClick={() => setTab("conversas")}>
           <span style={{ color: "var(--olive)" }}><Icon name="conversas" size={15} /></span>Conversas
         </button>
@@ -1860,8 +1865,10 @@ function TabAvisos({
 // ── aba: Perfil ───────────────────────────────────────────────────────────────
 
 function TabPerfil({
-  person, member, organizationId, theme, setTheme, onChangePassword, onUpdateProfile, journeyRequests, onRequestJourneyStep, setTab,
+  person, member, organizationId, theme, setTheme, onChangePassword, onUpdateProfile, journeyRequests, onRequestJourneyStep, setTab, onLogout, onSwitchToPanel,
 }: {
+  onLogout?: () => void;
+  onSwitchToPanel?: () => void;
   person: P;
   member: M | null;
   organizationId?: string;
@@ -2163,7 +2170,23 @@ function TabPerfil({
         </div>
       </div>
       {tour && <AppTourModal onClose={() => setTour(false)} />}
+      {/* a barra do topo com Sair e Gerenciar saiu: os dois moram aqui */}
+      {onSwitchToPanel && (
+        <button className="btn btn-sec" type="button" style={{ width: "100%", minHeight: 50, marginTop: 22 }} onClick={onSwitchToPanel}>
+          Abrir o painel da igreja →
+        </button>
+      )}
+      {onLogout && <SairDaConta onLogout={onLogout} />}
     </>
+  );
+}
+
+function SairDaConta({ onLogout }: { onLogout: () => void }) {
+  const [confirmar, setConfirmar] = useState(false);
+  return (
+    <button className="m-perfil-sair" type="button" onClick={() => (confirmar ? onLogout() : setConfirmar(true))}>
+      <Icon name="sair" size={17} /> {confirmar ? "Toque de novo para sair" : "Sair da conta"}
+    </button>
   );
 }
 
@@ -2310,14 +2333,7 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
           ))}
         </div>
         <div className="ob-logo">
-          {churchLogoUrl ? (
-            <img src={churchLogoUrl} alt={churchName || "Logo da igreja"} style={{ height: 22, maxWidth: 140, objectFit: "contain" }} />
-          ) : (
-            <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--white)" }}>
-              {churchName || "Sua igreja"}
-            </span>
-          )}
-          <span style={{ fontSize: 11, color: "var(--muted)", fontFamily: "var(--mono)", marginLeft: 8 }}>Service</span>
+          <ChurchLockup size="sm" logoUrl={churchLogoUrl} name={churchName} />
         </div>
         <div className="ob-eyebrow">Primeiro acesso · passo {step + 1} de {steps.length}</div>
         <h2 className="ob-title">{cur.t}</h2>
@@ -2717,7 +2733,8 @@ function MobileMembro({
           journeyRequests, onRequestJourneyStep, onConfirmarEscala, onRecusarEscala,
           kidsClasses = [], kidsChildren = [], childGuardians = [], kidsSessions = [], kidsAttendance = [],
           kidsEvents = [], kidsEventEnrollments = [], wallPosts = [], bibleMarks = [], onSaveBibleMark,
-          missingRequirements = [], serveRequests = [], baptismCandidates = [], onEnrollCourse, onRequestBaptism, onRequestServe } = rest;
+          missingRequirements = [], serveRequests = [], baptismCandidates = [], onEnrollCourse, onRequestBaptism, onRequestServe,
+          mode, onLogout, onSwitchToPanel } = rest;
   const journey: JourneyActions = {
     missing: missingRequirements, serveRequests, baptismCandidates, onEnrollCourse, onRequestBaptism, onRequestServe,
     names: { courses: courses.map((c) => ({ id: c.id, name: c.name })), events: events.map((e) => ({ id: e.id, name: e.name })) },
@@ -2765,10 +2782,13 @@ function MobileMembro({
           <span>{churchName || "Service"} </span>
         </div>
         <div className="m-head">
-          <div className="m-app">{churchName ? `${churchName} · Service` : "Service"}</div>
-          <div className="m-h1">
-            Ola, <em>{person.name.split(" ")[0]}</em>
+          <div className="m-head-top">
+            <ChurchLockup size="sm" logoUrl={churchLogoUrl} name={churchName} />
+            <button className="m-head-av" type="button" onClick={() => setTab("perfil")} aria-label="Abrir meu perfil">
+              <Av name={person.name} size="sm" photoUrl={person.photoUrl} />
+            </button>
           </div>
+          <div className="m-h1">Olá, <em>{person.name.split(" ")[0]}</em></div>
         </div>
 
         <div className="m-scroll">
@@ -2817,6 +2837,8 @@ function MobileMembro({
               journeyRequests={journeyRequests}
               onRequestJourneyStep={onRequestJourneyStep}
               setTab={setTab}
+              onLogout={mode === "self" ? onLogout : undefined}
+              onSwitchToPanel={mode === "self" ? onSwitchToPanel : undefined}
             />
           )}
           {tab === "kids-area" && (
