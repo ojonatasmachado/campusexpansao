@@ -1,5 +1,6 @@
 "use client";
 
+import { avisar } from "./lib/avisar";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
@@ -351,7 +352,7 @@ export function AulaCheckinModal({
       a.download = `checkin-aula-${lesson.id}.png`;
       a.click();
     };
-    img.onerror = () => window.alert("Não consegui gerar a imagem agora.");
+    img.onerror = () => avisar("Não consegui gerar a imagem agora.", "warn");
     img.src = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(checkinLink)}`;
   };
 
@@ -466,7 +467,7 @@ export function AulaCheckinModal({
                         <div className="ck-row-name">{m.name}</div>
                         <div className="ck-row-meta">não chegou</div>
                       </div>
-                      <button className="btn btn-ghost btn-sm" onClick={() => registrar(m.id, "manual").then((r) => { if (!r.ok) window.alert(r.motivo); })}>
+                      <button className="btn btn-ghost btn-sm" onClick={() => registrar(m.id, "manual").then((r) => { if (!r.ok) avisar(r.motivo ?? "Não foi possível registrar agora.", "warn"); })}>
                         Marcar presente
                       </button>
                     </div>
@@ -490,7 +491,7 @@ export function AulaCheckinModal({
         <ManualAulaCheckinModal
           matriculados={matriculados}
           present={lessonAttendance}
-          onAdd={(memberId) => { registrar(memberId, "manual").then((r) => { if (!r.ok) window.alert(r.motivo); }); }}
+          onAdd={(memberId) => { registrar(memberId, "manual").then((r) => { if (!r.ok) avisar(r.motivo ?? "Não foi possível registrar agora.", "warn"); }); }}
           onClose={() => setShowManual(false)}
         />
       )}

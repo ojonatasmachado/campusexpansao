@@ -1,5 +1,6 @@
 "use client";
 
+import { plural } from "./lib/plural";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
@@ -615,7 +616,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
 
           {/* conteúdo */}
           <div className="dsec">
-            <div className="dsec-title">Conteúdo · {c.modulos.length} módulo(s) · {totalAulas} aula(s)</div>
+            <div className="dsec-title">Conteúdo · {plural(c.modulos.length, "módulo")} · {plural(totalAulas, "aula")}</div>
             {c.modulos.map((mod, mi) => (
               <div className="ce-mod" key={mod.id}>
                 <div className="ce-mod-head">
@@ -689,7 +690,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
                       onClick={() => setQuiz({ mi, ai })}
                     >
                       {aula.prova?.length
-                        ? `Prova · ${aula.prova.length} pergunta(s)${aula.minAcertos ? ` · min. ${aula.minAcertos}` : ""}`
+                        ? `Prova · ${plural(aula.prova.length, "pergunta")}${aula.minAcertos ? ` · min. ${aula.minAcertos}` : ""}`
                         : "+ Adicionar prova ao fim da aula"}
                     </button>
                   </div>

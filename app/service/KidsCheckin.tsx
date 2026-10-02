@@ -1,5 +1,6 @@
 "use client";
 
+import { plural } from "./lib/plural";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
@@ -155,7 +156,7 @@ export function KidsQRModal({
           <div className="modal-sub">QR Code próprio desta turma neste culto. O responsável escaneia, escolhe o filho e confirma o check-in ou pede a retirada.</div>
           <div className="ck-tabs">
             <button className={`ck-tab ${tab === "qr" ? "on" : ""}`} onClick={() => setTab("qr")}>QR Code</button>
-            <button className={`ck-tab ${tab === "sala" ? "on" : ""}`} onClick={() => setTab("sala")}>Quem está na sala · {present.length}{pending.length > 0 ? ` · ${pending.length} retirada(s)` : ""}</button>
+            <button className={`ck-tab ${tab === "sala" ? "on" : ""}`} onClick={() => setTab("sala")}>Quem está na sala · {present.length}{pending.length > 0 ? ` · ${plural(pending.length, "retirada")}` : ""}</button>
           </div>
         </div>
 

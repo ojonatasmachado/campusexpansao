@@ -1,5 +1,6 @@
 "use client";
 
+import { avisar } from "./lib/avisar";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Icon } from "./lib/icons";
@@ -57,7 +58,7 @@ export default function PwaBootstrap() {
 
   const instalar = async () => {
     if (!deferredPrompt) {
-      window.alert('No celular: toque em Compartilhar → "Adicionar à Tela de Início".\nNo desktop: ícone de instalar na barra de endereço.');
+      avisar('No celular: toque em Compartilhar → "Adicionar à Tela de Início". No computador: ícone de instalar na barra de endereço.', "info");
       return;
     }
     deferredPrompt.prompt();

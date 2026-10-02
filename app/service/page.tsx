@@ -787,12 +787,13 @@ const emptyExtraServiceData: ExtraServiceData = {
 function friendlyReadError(message: string) {
   const lower = message.toLowerCase();
   if (lower.includes("invalid schema")) {
-    return "O schema service ainda não está exposto na API do Supabase.";
+    return "O app está fora do ar por alguns minutos. Tente de novo daqui a pouco.";
   }
   if (lower.includes("permission") || lower.includes("row-level security") || lower.includes("rls")) {
-    return "O banco bloqueou a leitura por segurança. Confirme se você está logado na organização certa.";
+    return "Você não tem acesso a esta igreja. Saia e entre de novo com a conta certa.";
   }
-  return message || "Não conseguimos ler as igrejas agora.";
+  console.error("[service] erro ao ler:", message);
+  return "Não conseguimos abrir os dados da igreja agora. Tente de novo em instantes.";
 }
 
 function toChurchView(row: ChurchRow): ChurchView {

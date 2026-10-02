@@ -1,5 +1,6 @@
 "use client";
 
+import { avisar } from "./lib/avisar";
 import { useState, useRef } from "react";
 import { toPng } from "html-to-image";
 import { formatDateBR } from "./lib/date";
@@ -61,7 +62,7 @@ export default function EventoShare({ event, ministries, churchName = "Service",
       a.download = `evento-${event.name.toLowerCase().replace(/\s+/g, "-")}-${modo}.png`;
       a.click();
     } catch {
-      alert("Não consegui exportar agora. Tente novamente.");
+      avisar("Não consegui exportar agora. Tente novamente.", "warn");
     }
   };
 

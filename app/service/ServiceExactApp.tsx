@@ -1,5 +1,7 @@
 "use client";
 
+import { plural } from "./lib/plural";
+import { avisar } from "./lib/avisar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
@@ -2066,8 +2068,8 @@ function Painel({
       <SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} />
       <div className="kpi-row">
         <Kpi icon="pessoa" label="Voluntários ativos" value={activePeople} foot={`${people.length} cadastrados`} help="Pessoas que servem em algum ministério e estão com o status ativo, sem contar quem está em pausa ou de férias." />
-        <Kpi icon="identidade" label="Taxa de confirmação" value={`${confirmationRate}%`} foot="da escala da semana" help="De todo mundo escalado nesta semana, quantos já confirmaram presença no app." />
-        <Kpi icon="config" label="Vagas em aberto" value={gaps.length} foot={`${gaps.length} pendência(s) nesta semana`} amber help="Posições da escala desta semana que ainda não têm ninguém confirmado. Resolva em Escalas." />
+        <Kpi icon="ok" label="Taxa de confirmação" value={`${confirmationRate}%`} foot="da escala da semana" help="De todo mundo escalado nesta semana, quantos já confirmaram presença no app." />
+        <Kpi icon="alerta" label="Vagas em aberto" value={gaps.length} foot={`${gaps.length} ${gaps.length === 1 ? "pendência" : "pendências"} nesta semana`} amber help="Posições da escala desta semana que ainda não têm ninguém confirmado. Resolva em Escalas." />
         <Kpi icon="visitante" label="Visitantes em acomp." value={visitorsInCare} foot="a contatar esta semana" help="Visitantes que ainda estão na jornada de acompanhamento, antes de virarem membros." />
       </div>
       <div className="dash-3col">
@@ -2082,12 +2084,12 @@ function Painel({
                 <div className="gap-ic wait">!</div>
                 <div className="mini-main">
                   <div className="mini-title">{gap.position.name} <span style={{ color: "var(--subtle)", fontWeight: 400 }}>· {gap.ministry.name}</span></div>
-                  <div className="mini-sub">{gap.event.weekday} · {gap.event.time} · 1 vaga(s)</div>
+                  <div className="mini-sub">{gap.event.weekday} · {gap.event.time}</div>
                 </div>
                 <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("escalas")}>Escalar</button>
               </div>
             ))}
-            {gaps.length === 0 ? <div className="mini-row"><div className="mini-main"><div className="mini-title">Escala coberta</div><div className="mini-sub">Nenhuma pendência no recorte atual.</div></div></div> : null}
+            {gaps.length === 0 ? <div className="mini-row"><div className="mini-main"><div className="mini-title">Escala coberta</div><div className="mini-sub">Nenhuma vaga aberta nesta semana.</div></div></div> : null}
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -2145,7 +2147,7 @@ function Painel({
         <div className="panel" style={{ marginTop: 24 }}>
           <div className="panel-head">
             <span className="panel-title"><Icon name="membros" size={14} /> Jornada pendente <HelpDot text="Pedidos de avanço na jornada (decisão, batismo, curso...) esperando aprovação da liderança." /></span>
-            <span className="panel-meta">{journeyRequests.length} pedido(s)</span>
+            <span className="panel-meta">{journeyRequests.length} {journeyRequests.length === 1 ? "pedido" : "pedidos"}</span>
           </div>
           <div className="panel-body flush">
             {journeyRequests.map((request) => {
@@ -3658,8 +3660,8 @@ function Reunioes({ meetings, meetingActions, ministries, people, rooms, reserva
           return (
             <button className="tr click" type="button" key={meeting.id} style={{ gridTemplateColumns: "130px 1.6fr 1fr 120px" }} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
               <div style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--olive)" }}>{formatDateBR(meeting.meeting_date) || "sem data"}</div>
-              <div><div className="cell-name">{meeting.title}</div><div className="cell-sub">{meeting.ministries.length} time(s) · {meeting.attendees.length} presentes</div></div>
-              <div className="cell-sub">{actions.length} responsabilidade(s)</div>
+              <div><div className="cell-name">{meeting.title}</div><div className="cell-sub">{plural(meeting.ministries.length, "time")} · {meeting.attendees.length} presentes</div></div>
+              <div className="cell-sub">{plural(actions.length, "responsabilidade")}</div>
               <div>{pending > 0 ? <span className="chip chip-wait">{pending} em aberto</span> : <span className="chip chip-ok">Tudo feito</span>}</div>
             </button>
           );
@@ -4108,7 +4110,7 @@ function ComposerModal({
         </div>
         <div className="modal-foot">
           <button className="btn btn-ghost" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={!msg.trim()} onClick={onClose}>Enviar para {alvos.length} grupo(s) →</button>
+          <button className="btn btn-pri" type="button" disabled={!msg.trim()} onClick={onClose}>Enviar para {plural(alvos.length, "grupo")} →</button>
         </div>
       </div>
     </div>
@@ -4241,7 +4243,7 @@ function Comunicacao({
             <div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={14} /> Alcance da semana <HelpDot text="Quantas pessoas o aviso ou mural alcançou nesta semana." /></span></div>
             <div className="panel-body">
               <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em" }}>{pctAlcance}%<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>taxa de leitura</span></div>
-              <div style={{ marginTop: 12, fontSize: 12, color: "var(--muted)" }}>{weeklyReaderIds.size} de {people.length} voluntário(s) leram algum aviso publicado nos últimos 7 dias.</div>
+              <div style={{ marginTop: 12, fontSize: 12, color: "var(--muted)" }}>{weeklyReaderIds.size} de {plural(people.length, "voluntário")} leram algum aviso publicado nos últimos 7 dias.</div>
               <div style={{ marginTop: 14 }}>
                 {distribuicaoTimes.map(({ ministry, pct }) => (
                   <div className="dist-row" key={ministry.id} style={{ padding: "10px 0" }}>
@@ -4430,7 +4432,7 @@ function Espacos({ rooms, reservations, church, setModal, embed }: { rooms: Room
       <div className="sala-grid">
         {rooms.map((room) => {
           const count = reservations.filter((reservation) => reservation.room_id === room.id).length;
-          return <button key={room.id} className={`sala-card ${filter === room.id ? "on" : ""}`} type="button" onClick={() => setFilter(filter === room.id ? "todas" : room.id)}><div className="sala-card-top"><span className="sala-mark"><Icon name="config" size={18} /></span><span className="sala-cap">{room.capacity ?? 0} <small>lugares</small></span></div><div className="sala-nome">{room.name}</div><div className="sala-local">{room.location || "Local não informado"}</div>{room.resources.length ? <div className="sala-rec">{room.resources.map((resource) => <span className="tag" key={resource}>{resource}</span>)}</div> : null}<div className="sala-foot">{count} reserva(s){room.allows_meetings === false ? " · não serve pra reunião" : ""}</div></button>;
+          return <button key={room.id} className={`sala-card ${filter === room.id ? "on" : ""}`} type="button" onClick={() => setFilter(filter === room.id ? "todas" : room.id)}><div className="sala-card-top"><span className="sala-mark"><Icon name="config" size={18} /></span><span className="sala-cap">{room.capacity ?? 0} <small>lugares</small></span></div><div className="sala-nome">{room.name}</div><div className="sala-local">{room.location || "Local não informado"}</div>{room.resources.length ? <div className="sala-rec">{room.resources.map((resource) => <span className="tag" key={resource}>{resource}</span>)}</div> : null}<div className="sala-foot">{plural(count, "reserva")}{room.allows_meetings === false ? " · não serve pra reunião" : ""}</div></button>;
         })}
         {rooms.length === 0 ? <div className="empty">Nenhuma sala cadastrada ainda.</div> : null}
       </div>
@@ -4548,7 +4550,7 @@ function Criancas({
           ))}
         </div>
         <div className="tb-spacer" />
-        <span className="panel-meta">{visible.length} criança(s)</span>
+        <span className="panel-meta">{plural(visible.length, "criança")}</span>
       </div>
       <div className="tbl">
         <div className="tr head" style={{ gridTemplateColumns: "1.6fr 1fr 1fr 1.4fr" }}><span>Criança</span><span>Idade</span><span>Turma</span><span>Responsáveis</span></div>
@@ -5477,7 +5479,7 @@ function CardDrawer({
                 <button key={col.id} type="button" className={`seg-chip${lc.column_id === col.id ? " on" : ""}`}
                   onClick={() => {
                     if (col.id === lc.column_id) return;
-                    if (!canMove) { window.alert("Você só move cards onde é responsável."); return; }
+                    if (!canMove) { avisar("Você só move cards onde é responsável.", "warn"); return; }
                     mutate({ column_id: col.id }); onMoveParent(lc.id, col.id);
                   }}>
                   {col.name}
@@ -5727,7 +5729,7 @@ function BoardView({
                 if (!drag) return;
                 const dragged = boardCards.find((c) => c.id === drag);
                 if (!perm.moverQualquer && !(dragged && currentPersonId && dragged.assignees.includes(currentPersonId))) {
-                  window.alert("Você só move cards onde é responsável.");
+                  avisar("Você só move cards onde é responsável.", "warn");
                   setDrag(null);
                   return;
                 }
@@ -5868,7 +5870,7 @@ function Quadros({
             <button className="bd-card" key={board.id} type="button" onClick={() => setBoardId(board.id)}>
               <div className="bd-card-top">
                 <div className="bd-mark"><Icon name="times" size={18} /></div>
-                {atrasados > 0 && <span className="chip chip-no">{atrasados} atrasado(s)</span>}
+                {atrasados > 0 && <span className="chip chip-no">{plural(atrasados, "atrasado")}</span>}
               </div>
               <div className="bd-name">{board.name}</div>
               <div className="bd-desc">{board.description || ministry?.description || "Quadro da operação."}</div>
@@ -6507,7 +6509,7 @@ function AcessosCard({
             return (
               <button key={p.id} type="button" className={`flag-row${selectedId === p.id ? " on" : ""}`} onClick={() => setSelectedId(p.id)}>
                 <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
-                <div className="flag-main"><div className="flag-nome">{p.name}</div><div className="flag-meta">{n ? `${n} acesso(s) extra` : "sem acesso extra"}</div></div>
+                <div className="flag-main"><div className="flag-nome">{p.name}</div><div className="flag-meta">{n ? `${plural(n, "acesso extra", "acessos extras")}` : "sem acesso extra"}</div></div>
               </button>
             );
           })}
@@ -7112,7 +7114,7 @@ function TagElencoModal({
           <div className="modal-eyebrow">Frente · {tag.name}</div>
           <div className="modal-title">Quem serve nos {tag.name}</div>
           <div className="modal-sub">
-            Marque os voluntários que fazem parte desta frente. Toque na estrela para definir quem é líder da frente. {dentro} marcado(s).
+            Marque os voluntários que fazem parte desta frente. Toque na estrela para definir quem é líder da frente. {plural(dentro, "marcado")}.
           </div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
@@ -7690,7 +7692,7 @@ function Config({
                       <>
                         <div className="cfg-row-t">{t.name}</div>
                         <div className="cfg-row-s">
-                          {dentro} voluntário(s){lideres.length > 0 ? <> · líder: <span style={{ color: "var(--olive-soft)" }}>{lideres.join(", ")}</span></> : " · sem líder"}
+                          {plural(dentro, "voluntário")}{lideres.length > 0 ? <> · líder: <span style={{ color: "var(--olive-soft)" }}>{lideres.join(", ")}</span></> : " · sem líder"}
                         </div>
                       </>
                     )}
@@ -8272,7 +8274,7 @@ function Historia({ church, historyEntries, setModal }: { church?: ChurchView; h
       await createServiceBrowserClient().schema("service").from("history_entries").update({ photo_url: url }).eq("id", capituloId);
       router.refresh();
     } catch {
-      window.alert("Não foi possível enviar a foto agora.");
+      avisar("Não foi possível enviar a foto agora.", "warn");
     } finally {
       setUploadingId(null);
     }
@@ -9160,7 +9162,7 @@ function EntityDrawer({
         template: church.settings?.acessoMsgCfg?.mensagem,
         tab,
       });
-      if (error) window.alert(error);
+      if (error) avisar(error, "warn");
       else router.refresh();
     } finally {
       setSendingAccess(false);
@@ -9230,7 +9232,7 @@ function EntityDrawer({
               ].map(([key, label]) => <span key={key} className={`avail-day ${person.availability[key] ? "free" : "block"}`}>{label}</span>)}
             </div>
           </DrawerSection>
-          <DrawerSection title={`Meu calendário · ${personCalEvents.length} compromisso(s)`}>
+          <DrawerSection title={`Meu calendário · ${plural(personCalEvents.length, "compromisso")}`}>
             <MiniCalendar events={personCalEvents} />
           </DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
@@ -9351,7 +9353,7 @@ function EntityDrawer({
                           <div className="mc-name">{course.name}</div>
                           {status === "concluido" ? <span className="chip chip-ok">Concluído</span> : <span className="mc-pct">{pct}%</span>}
                         </div>
-                        <div className="mc-meta">{course.level || course.kind || "curso"} · {done_count} de {totalAulas} aula(s)</div>
+                        <div className="mc-meta">{course.level || course.kind || "curso"} · {done_count} de {plural(totalAulas, "aula")}</div>
                         <div className="bar" style={{ marginTop: 8 }}><div className={`bar-fill ${status === "concluido" ? "" : "amber"}`} style={{ width: `${pct}%` }} /></div>
                       </div>
                     </div>
@@ -9474,7 +9476,7 @@ function EntityDrawer({
               <div key={position.id} style={{ marginBottom: 18 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                   <div className="esc-fn">{position.name}</div>
-                  <span className="panel-meta">{position.need_count} vaga(s)</span>
+                  <span className="panel-meta">{position.need_count} {position.need_count === 1 ? "vaga" : "vagas"}</span>
                 </div>
                 {pessoas.length === 0 && <div style={{ fontSize: 12, color: "var(--subtle)", fontFamily: "var(--mono)" }}>Ninguém habilitado ainda.</div>}
                 {pessoas.map((link) => (
@@ -9925,11 +9927,11 @@ function weekdayShortFromDate(dateStr: string | null | undefined): string | null
 
 function friendlyWriteError(message: string) {
   const lower = message.toLowerCase();
-  if (lower.includes("permission") || lower.includes("row-level security") || lower.includes("rls")) return "O banco bloqueou a gravação por segurança. Confirme se seu usuário tem permissão nesta igreja.";
-  if (lower.includes("violates foreign key")) return "Algum vínculo escolhido não existe mais no banco. Recarregue a página e tente de novo.";
-  if (lower.includes("duplicate key")) return "Esse registro já existe.";
-  if (lower.includes("invalid schema")) return "O schema service não está exposto na API do Supabase.";
-  return message || "Não conseguimos salvar agora.";
+  if (lower.includes("permission") || lower.includes("row-level security") || lower.includes("rls")) return "Você não tem permissão para fazer isso nesta igreja. Fale com quem cuida do Service da sua igreja.";
+  if (lower.includes("violates foreign key")) return "Algo que você escolheu foi apagado. Recarregue a página e tente de novo.";
+  if (lower.includes("duplicate key")) return "Isso já está cadastrado.";
+  console.error("[service] erro ao gravar:", message);
+  return "Não conseguimos salvar agora. Tente de novo em instantes.";
 }
 
 const DP_MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
@@ -10216,7 +10218,7 @@ function ServiceModal({
           template: church.settings?.acessoMsgCfg?.mensagem,
           tab: conviteTab,
         });
-        if (conviteError) window.alert(`Membro cadastrado, mas o convite não saiu: ${conviteError} Use "Enviar acesso pelo WhatsApp" na ficha dele.`);
+        if (conviteError) avisar(`Membro cadastrado, mas o convite não saiu: ${conviteError} Use "Enviar acesso pelo WhatsApp" na ficha dele.`, "warn");
       } else {
         conviteTab?.close();
       }

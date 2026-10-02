@@ -1,5 +1,6 @@
 "use client";
 
+import { avisar } from "./lib/avisar";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon } from "./lib/icons";
@@ -325,7 +326,7 @@ function TabInicio({
         <div className="m-alert" onClick={() => setTab("escalas")} style={{ cursor: "pointer" }}>
           <span className="m-alert-ic"><Icon name="alerta" size={15} /></span>
           <div>
-            <b>{pending.length} escala(s) pra confirmar</b>
+            <b>{pending.length} {pending.length === 1 ? "escala para confirmar" : "escalas para confirmar"}</b>
             <small>Toque para responder</small>
           </div>
           <span className="m-alert-go">→</span>
@@ -348,8 +349,8 @@ function TabInicio({
             <Icon name={lateTasks.length ? "alerta" : "ok"} size={15} />
           </span>
           <div>
-            <b>{myCards.length} tarefa(s) com voce</b>
-            <small>{lateTasks.length ? `${lateTasks.length} atrasada(s)` : "no seu quadro"}</small>
+            <b>{myCards.length} {myCards.length === 1 ? "tarefa com você" : "tarefas com você"}</b>
+            <small>{lateTasks.length ? `${lateTasks.length} ${lateTasks.length === 1 ? "atrasada" : "atrasadas"}` : "no seu quadro"}</small>
           </div>
           <span className="m-alert-go">→</span>
         </div>
@@ -361,9 +362,9 @@ function TabInicio({
           <div className="m-journey">
             <div className="m-journey-top">
               <div>
-                <div className="m-journey-step">{done}/5 etapas</div>
+                <div className="m-journey-step">{done} de 5 etapas</div>
                 <div className="m-journey-next">
-                  Proximo: <em>{nextStep}</em>
+                  Próximo: <em>{nextStep}</em>
                 </div>
               </div>
               <div
@@ -387,7 +388,7 @@ function TabInicio({
 
       {proxEvent && (
         <>
-          <div className="m-section-t">Sua proxima escala</div>
+          <div className="m-section-t">Sua próxima escala</div>
           <div className="m-card" onClick={() => setTab("escalas")} style={{ cursor: "pointer" }}>
             <div className="m-card-top">
               <span className="m-when">
@@ -404,7 +405,7 @@ function TabInicio({
       <div className="m-section-t">Atalhos</div>
       <div className="m-quick">
         <button className="m-quick-b" onClick={() => setTab("biblia")}>
-          <span style={{ color: "var(--olive)" }}><Icon name="biblia" size={15} /></span>Biblia
+          <span style={{ color: "var(--olive)" }}><Icon name="biblia" size={15} /></span>Bíblia
         </button>
         {serve && (
           <button className="m-quick-b" onClick={() => setTab("tarefas")}>
@@ -423,7 +424,7 @@ function TabInicio({
           </button>
         ) : (
           <button className="m-quick-b" onClick={() => setTab("avisos")}>
-            <span style={{ color: "var(--olive)" }}><Icon name="oracao" size={15} /></span>Pedir oracao
+            <span style={{ color: "var(--olive)" }}><Icon name="oracao" size={15} /></span>Pedir oração
           </button>
         )}
       </div>
@@ -451,7 +452,7 @@ function TabEscala({ person, events, roster, onConfirmarEscala, onRecusarEscala 
       <div className="m-section-t">Suas proximas escalas · {mySlots.length}</div>
       {mySlots.length === 0 && (
         <div className="m-card">
-          <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhuma escala agendada para voce.</div>
+          <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhuma escala agendada para você.</div>
         </div>
       )}
       {mySlots.map((slot) => {
@@ -471,7 +472,7 @@ function TabEscala({ person, events, roster, onConfirmarEscala, onRecusarEscala 
             <div className="m-culto">{ev.name}</div>
             {st === "ok" ? (
               <div className="m-confirmed">
-                ✓ Voce confirmou
+                ✓ Você confirmou
                 <button
                   className="m-btn m-btn-swap"
                   style={{ marginLeft: "auto", padding: "6px 12px" }}
@@ -482,7 +483,7 @@ function TabEscala({ person, events, roster, onConfirmarEscala, onRecusarEscala 
               </div>
             ) : st === "no" ? (
               <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--danger)", padding: "8px 0" }}>
-                Voce recusou
+                Você recusou
                 <button
                   className="m-btn m-btn-ok ghost"
                   style={{ marginLeft: "auto", padding: "6px 14px" }}
@@ -504,7 +505,7 @@ function TabEscala({ person, events, roster, onConfirmarEscala, onRecusarEscala 
 
       {Object.keys(avail).length > 0 && (
         <>
-          <div className="m-section-t" style={{ marginTop: 22 }}>Em quais cultos voce pode servir</div>
+          <div className="m-section-t" style={{ marginTop: 22 }}>Em quais cultos você pode servir</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {Object.entries(avail).map(([key, on]) => (
               <div className="m-avail" key={key}>
@@ -528,7 +529,7 @@ function TabEscala({ person, events, roster, onConfirmarEscala, onRecusarEscala 
           <div className="m-card" style={{ width: "86%", margin: 0 }} onClick={(e) => e.stopPropagation()}>
             <div className="m-when" style={{ marginBottom: 10 }}>Pedir troca</div>
             <div style={{ fontSize: 14, color: "var(--light)", lineHeight: 1.55, marginBottom: 16 }}>
-              Vamos avisar o seu lider para aprovar a troca de posicao.
+              Vamos avisar o seu líder para aprovar a troca de posição.
             </div>
             <button
               className="m-btn m-btn-ok"
@@ -649,13 +650,13 @@ function TabTarefas({ person, cards, boards, onAddCardComment }: { person: P; ca
 
   return (
     <>
-      <div className="m-section-t">Tarefas com voce · {pending.length} aberta(s)</div>
+      <div className="m-section-t">Tarefas com você · {pending.length} {pending.length === 1 ? "aberta" : "abertas"}</div>
       <div style={{ fontSize: 12.5, color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>
-        O que a lideranca deixou no quadro para voce. Atualize e comente.
+        O que a liderança deixou no quadro para você. Atualize e comente.
       </div>
       {pending.length === 0 && (
         <div className="m-card">
-          <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nada pendente com voce agora.</div>
+          <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nada pendente com você agora.</div>
         </div>
       )}
       {pending.map(cardEl)}
@@ -801,7 +802,7 @@ function TabConversas({
         <button className="m-mini-btn" onClick={() => setNovo((n) => !n)}>{novo ? "Fechar" : "+ Nova"}</button>
       </div>
       <div style={{ fontSize: 12.5, color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>
-        {souLider ? "Fale com qualquer pessoa do time." : "Fale com o seu lider ou com um pastor."}
+        {souLider ? "Fale com qualquer pessoa do time." : "Fale com o seu líder ou com um pastor."}
       </div>
 
       {novo && (
@@ -824,7 +825,7 @@ function TabConversas({
             </button>
           ))}
           {candidatos.length === 0 && (
-            <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum lider disponivel ainda.</div>
+            <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum líder disponível ainda.</div>
           )}
         </div>
       )}
@@ -994,10 +995,10 @@ function TabBiblia({
   if (!bible) {
     return (
       <>
-        <button className="back-link" type="button" onClick={onBack}>← Inicio</button>
+        <button className="back-link" type="button" onClick={onBack}>← Início</button>
         <div className="empty" style={{ marginTop: 12 }}>
           <div className="empty-mark"><Icon name="biblia" size={22} /></div>
-          <h3 className="empty-title">Baixando a Biblia...</h3>
+          <h3 className="empty-title">Baixando a Bíblia...</h3>
           <p className="empty-desc">So acontece uma vez. Depois fica salva no seu celular.</p>
         </div>
       </>
@@ -1008,13 +1009,13 @@ function TabBiblia({
     <>
       {view === "livros" && (
         <>
-          <button className="back-link" type="button" onClick={onBack}>← Inicio</button>
+          <button className="back-link" type="button" onClick={onBack}>← Início</button>
           <div className="bib-search">
             <input className="input" placeholder="Buscar palavra ou trecho..." value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
           {debouncedQuery.length >= 3 ? (
             <>
-              <div className="m-section-t">{searchResults.length} resultado(s)</div>
+              <div className="m-section-t">{searchResults.length} {searchResults.length === 1 ? "resultado" : "resultados"}</div>
               {searchResults.map((r) => (
                 <button key={`${r.abbrev}${r.chapter}:${r.verse}`} className="bib-result" onClick={() => irPara(r.abbrev, r.chapter)}>
                   <b>{r.name} {r.chapter}:{r.verse}</b>
@@ -1027,7 +1028,7 @@ function TabBiblia({
             <>
               <button className="bib-marks-cta" type="button" onClick={() => setView("marcacoes")}>
                 <span className="bib-marks-cta-ic"><Icon name="estrela" size={16} /></span>
-                <div><b>Minhas marcacoes</b><small>{bibleMarks.length} versiculo(s) marcado(s) ou anotado(s)</small></div>
+                <div><b>Minhas marcações</b><small>{bibleMarks.length} {bibleMarks.length === 1 ? "versículo marcado ou anotado" : "versículos marcados ou anotados"}</small></div>
                 <span className="m-alert-go">→</span>
               </button>
               <div className="m-section-t">Antigo Testamento</div>
@@ -1090,8 +1091,8 @@ function TabBiblia({
       {view === "marcacoes" && (
         <>
           <button className="back-link" type="button" onClick={() => setView("livros")}>← Livros</button>
-          <div className="m-h1" style={{ fontSize: 20, marginBottom: 14 }}>Minhas marcacoes</div>
-          {bibleMarks.length === 0 && <div className="empty"><p className="empty-desc">Toque num versiculo na leitura pra marcar ou anotar.</p></div>}
+          <div className="m-h1" style={{ fontSize: 20, marginBottom: 14 }}>Minhas marcações</div>
+          {bibleMarks.length === 0 && <div className="empty"><p className="empty-desc">Toque num versículo na leitura pra marcar ou anotar.</p></div>}
           {bibleMarks
             .slice()
             .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
@@ -1113,7 +1114,7 @@ function TabBiblia({
             <div className="bib-action-ref">{book.name} {chapter}:{actionVerse}</div>
             <p className="bib-action-text">{versesAtuais?.[actionVerse - 1]}</p>
             <button className="btn btn-sec btn-sm bib-copy" type="button" onClick={copiarVerso} style={{ marginTop: 10 }}>
-              <Icon name="copiar" size={13} /> {copied ? "Copiado!" : "Copiar versiculo"}
+              <Icon name="copiar" size={13} /> {copied ? "Copiado!" : "Copiar versículo"}
             </button>
             <div className="bib-swatches">
               {BIBLE_CORES.map((c) => (
@@ -1131,11 +1132,11 @@ function TabBiblia({
             </div>
             <div className="field" style={{ marginTop: 14 }}>
               <label className="field-label">Anotacao</label>
-              <textarea className="input" rows={3} placeholder="O que esse versiculo significa pra voce?" value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} />
+              <textarea className="input" rows={3} placeholder="O que esse versículo significa pra você?" value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} />
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
               {(marcaAtual?.color || marcaAtual?.note) && (
-                <button className="btn btn-sec btn-sm" type="button" onClick={removerMarcacao}>Remover marcacao</button>
+                <button className="btn btn-sec btn-sm" type="button" onClick={removerMarcacao}>Remover marcação</button>
               )}
               <div style={{ flex: 1 }} />
               <button className="btn btn-sec btn-sm" type="button" onClick={() => setActionVerse(null)}>Fechar</button>
@@ -1332,14 +1333,14 @@ function TabKids({
   const avisarResponsavel = async (childId: string) => {
     const guardians = guardianOf(childId);
     const targetMember = guardians.map((g) => memberByPersonId.get(g.guardian_person_id)).find(Boolean);
-    if (!targetMember || !organizationId) { window.alert("Nao encontrei um contato de app pra esse responsavel."); return; }
+    if (!targetMember || !organizationId) { avisar("Não encontrei um contato no app para esse responsável.", "warn"); return; }
     const child = childById.get(childId);
     await fetch("/api/service/push/notify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ organizationId, recipientMemberIds: [targetMember.id], title: "Aviso da sala Kids", body: `${child?.name ?? "Sua crianca"} precisa de voce na sala Kids.` }),
+      body: JSON.stringify({ organizationId, recipientMemberIds: [targetMember.id], title: "Aviso da sala Kids", body: `${child?.name ?? "Sua criança"} precisa de você na sala Kids.` }),
     }).catch(() => {});
-    window.alert("Aviso enviado.");
+    avisar("Aviso enviado.");
   };
 
   const confirmarRetirada = async (att: KidsAttendance) => {
@@ -1365,8 +1366,8 @@ function TabKids({
 
   const criarFicha = async () => {
     if (!form.nome.trim() || !organizationId || !churchId) return;
-    if (!fotoCrianca) { setFichaError("A foto da crianca e obrigatoria."); return; }
-    if (!fotoRespEfetiva) { setFichaError("A foto do responsavel e obrigatoria."); return; }
+    if (!fotoCrianca) { setFichaError("A foto da criança é obrigatória."); return; }
+    if (!fotoRespEfetiva) { setFichaError("A foto do responsável é obrigatória."); return; }
     setFichaError("");
     const supabase = createServiceBrowserClient();
     const guardianPersonId = respMatch?.id ?? fichaIds.personId;
@@ -1393,7 +1394,7 @@ function TabKids({
       setFichaIds({ childId: crypto.randomUUID(), personId: crypto.randomUUID() });
       setNovaFicha(false);
     } else {
-      setFichaError("Nao foi possivel salvar a ficha agora.");
+      setFichaError("Não foi possível salvar a ficha agora.");
     }
   };
 
@@ -1401,7 +1402,7 @@ function TabKids({
     return (
       <>
         <div className="m-section-t">Kids</div>
-        <div className="empty" style={{ marginTop: 12 }}>Nenhuma sessao Kids aberta agora. Peca pra liderança abrir o QR do culto de hoje em Cultos & Agenda.</div>
+        <div className="empty" style={{ marginTop: 12 }}>Nenhuma sessão Kids aberta agora. Peça para a liderança abrir o QR do culto de hoje em Cultos & Agenda.</div>
       </>
     );
   }
@@ -1425,7 +1426,7 @@ function TabKids({
             return (
               <div className="m-card" key={att.id} style={{ borderColor: "var(--amber-line)" }}>
                 <div className="m-culto">{child?.name ?? "Crianca"}</div>
-                <div className="m-fn">Compare o responsavel na porta antes de confirmar.</div>
+                <div className="m-fn">Compare o responsável na porta antes de confirmar.</div>
                 <button className="m-btn m-btn-ok" style={{ width: "100%", marginTop: 8 }} onClick={() => confirmarRetirada(att)}>Confirmar retirada</button>
               </div>
             );
@@ -1434,7 +1435,7 @@ function TabKids({
       )}
 
       <div className="m-when" style={{ marginBottom: 8, marginTop: pending.length ? 14 : 0 }}>Na sala · {present.length}</div>
-      {present.length === 0 && <div className="empty">Nenhuma crianca na sala ainda.</div>}
+      {present.length === 0 && <div className="empty">Nenhuma criança na sala ainda.</div>}
       {present.map((att) => {
         const child = childById.get(att.child_id);
         return (
@@ -1451,7 +1452,7 @@ function TabKids({
         );
       })}
 
-      <input className="input" placeholder="Buscar crianca pra check-in manual..." value={q} onChange={(e) => setQ(e.target.value)} style={{ marginTop: 16, marginBottom: 8 }} />
+      <input className="input" placeholder="Buscar criança para check-in manual..." value={q} onChange={(e) => setQ(e.target.value)} style={{ marginTop: 16, marginBottom: 8 }} />
       {notYetIn.slice(0, 5).map((child) => (
         <div className="m-vis-head" key={child.id} style={{ cursor: "pointer" }} onClick={() => checkinManual(child.id)}>
           <Av name={child.name} size="sm" photoUrl={child.photo_url} />
@@ -1465,8 +1466,8 @@ function TabKids({
       </button>
       {novaFicha && (
         <div className="m-card" style={{ borderColor: "var(--olive-line)", marginTop: 10 }}>
-          <PhotoPicker label="Foto da crianca (obrigatoria)" photoUrl={fotoCrianca} path={`${organizationId}/kids/children/${fichaIds.childId}`} onUploaded={setFotoCrianca} />
-          <input className="input" placeholder="Nome da crianca" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
+          <PhotoPicker label="Foto da criança (obrigatória)" photoUrl={fotoCrianca} path={`${organizationId}/kids/children/${fichaIds.childId}`} onUploaded={setFotoCrianca} />
+          <input className="input" placeholder="Nome da criança" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
           <input className="input" type="date" value={form.nascimento} onChange={(e) => setForm((f) => ({ ...f, nascimento: e.target.value }))} style={{ marginBottom: 8 }} />
           <select className="select" value={form.genero} onChange={(e) => setForm((f) => ({ ...f, genero: e.target.value }))} style={{ marginBottom: 8 }}>
             <option value="">Genero (opcional)</option>
@@ -1475,17 +1476,17 @@ function TabKids({
           </select>
           <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 10 }}>Turma: {sugestaoTurma?.name ?? (session ? kidsClasses.find((kc) => kc.id === session.class_id)?.name ?? "nenhuma turma cobre essa idade" : "informe o nascimento")}</div>
 
-          <input className="input" list="service-kids-people-names" placeholder="Nome do responsavel" value={form.respNome} onChange={(e) => setForm((f) => ({ ...f, respNome: e.target.value }))} style={{ marginBottom: 8 }} />
+          <input className="input" list="service-kids-people-names" placeholder="Nome do responsável" value={form.respNome} onChange={(e) => setForm((f) => ({ ...f, respNome: e.target.value }))} style={{ marginBottom: 8 }} />
           <datalist id="service-kids-people-names">
             {people.map((p) => <option key={p.id} value={p.name} />)}
           </datalist>
           {respMatch ? (
             <div className="cell-sub" style={{ marginBottom: 8 }}>Ja tem cadastro no Service{fotoRespEfetiva ? ", foto reaproveitada do perfil" : ""}.</div>
           ) : (
-            <PhotoPicker label="Foto do responsavel (obrigatoria)" photoUrl={fotoResp} path={`${organizationId}/kids/guardians/${fichaIds.personId}`} onUploaded={setFotoResp} />
+            <PhotoPicker label="Foto do responsável (obrigatória)" photoUrl={fotoResp} path={`${organizationId}/kids/guardians/${fichaIds.personId}`} onUploaded={setFotoResp} />
           )}
-          <input className="input" placeholder="Telefone do responsavel" value={form.respTel} onChange={(e) => setForm((f) => ({ ...f, respTel: e.target.value }))} style={{ marginTop: 8, marginBottom: 8 }} />
-          <input className="input" placeholder="Parentesco (mae, avo...)" value={form.respParentesco} onChange={(e) => setForm((f) => ({ ...f, respParentesco: e.target.value }))} style={{ marginBottom: 8 }} />
+          <input className="input" placeholder="Telefone do responsável" value={form.respTel} onChange={(e) => setForm((f) => ({ ...f, respTel: e.target.value }))} style={{ marginTop: 8, marginBottom: 8 }} />
+          <input className="input" placeholder="Parentesco (mãe, avó...)" value={form.respParentesco} onChange={(e) => setForm((f) => ({ ...f, respParentesco: e.target.value }))} style={{ marginBottom: 8 }} />
           <input className="input" placeholder="Contato de emergencia: nome" value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
           <input className="input" placeholder="Contato de emergencia: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
 
@@ -1526,12 +1527,12 @@ function TabCursos({
         <div className="m-card-top">
           <span className="m-when">Batismo nas aguas</span>
           {openClasses.length > 0 && (
-            <span className="m-when" style={{ color: "var(--olive-soft)" }}>{openClasses.length} turma(s)</span>
+            <span className="m-when" style={{ color: "var(--olive-soft)" }}>{openClasses.length} {openClasses.length === 1 ? "turma" : "turmas"}</span>
           )}
         </div>
         <div className="m-culto" style={{ fontSize: 16 }}>Decidiu seguir Jesus nas aguas?</div>
         <div style={{ fontSize: 12.5, color: "var(--muted)", lineHeight: 1.5, marginTop: 6 }}>
-          Inscreva-se numa turma e faca o curso pre-batismo.
+          Inscreva-se numa turma e faça o curso pré-batismo.
         </div>
         <span className="m-btn m-btn-ok ghost" style={{ display: "block", textAlign: "center", marginTop: 12 }}>
           Ver batismos →
@@ -1702,7 +1703,7 @@ function TabBatismo({ baptismClasses, memberId }: { baptismClasses: BaptismClass
 
   return (
     <>
-      <div className="m-section-t">Proximos batismos</div>
+      <div className="m-section-t">Próximos batismos</div>
       {openClasses.length === 0 && (
         <div className="m-card">
           <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhuma turma agendada por ora.</div>
@@ -1713,9 +1714,9 @@ function TabBatismo({ baptismClasses, memberId }: { baptismClasses: BaptismClass
           <div className="m-card-top">
             <span className="m-when">{formatDateBR(b.baptism_date) || "A definir"}</span>
             {b.open_enrollment ? (
-              <ChipSt status="ok" label="Inscricoes abertas" />
+              <ChipSt status="ok" label="Inscrições abertas" />
             ) : (
-              <ChipSt status="wait" label="Em preparacao" />
+              <ChipSt status="wait" label="Em preparação" />
             )}
           </div>
           <div className="m-culto" style={{ fontSize: 16 }}>{b.label}</div>
@@ -1784,13 +1785,13 @@ function TabAvisos({
 
   return (
     <>
-      <div className="m-section-t">Pedir oracao</div>
+      <div className="m-section-t">Pedir oração</div>
       <div className="m-quick" style={{ marginBottom: 18 }}>
         <button
           className={`m-quick-b ${tipo === "oracao" ? "on" : ""}`}
           onClick={() => { setTipo("oracao"); setSent(false); setTexto(""); }}
         >
-          <span style={{ color: "var(--olive)" }}><Icon name="oracao" size={15} /></span>Pedir oracao
+          <span style={{ color: "var(--olive)" }}><Icon name="oracao" size={15} /></span>Pedir oração
         </button>
         <button
           className={`m-quick-b ${tipo === "testemunho" ? "on" : ""}`}
@@ -1820,7 +1821,7 @@ function TabAvisos({
         <div className="m-card" style={{ borderColor: "var(--olive-line)", textAlign: "center" }}>
           <div style={{ color: "var(--olive-soft)", fontWeight: 600, fontSize: 14 }}>✓ Enviado</div>
           <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 6 }}>
-            A lideranca recebeu e vai te responder.
+            A liderança recebeu e vai te responder.
           </div>
         </div>
       )}
@@ -2083,7 +2084,7 @@ function TabPerfil({
       <div className="m-section-t" style={{ marginTop: 22 }}>Minha jornada</div>
       <div className="m-card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 700 }}>{done}/5 etapas</div>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>{done} de 5 etapas</div>
           <div
             className="m-ring"
             style={{ "--p": `${Math.round((done / 5) * 100)}%` } as React.CSSProperties}
@@ -2150,7 +2151,7 @@ function TabPerfil({
           </div>
         )}
         <div className="m-data" style={{ borderBottom: "none" }}>
-          <span>Notificacoes push</span>
+          <span>Notificações push</span>
           <button
             type="button"
             className={`m-toggle ${pushOn ? "on" : ""}`}
@@ -2158,14 +2159,14 @@ function TabPerfil({
             onClick={() => (pushOn ? desligarPush() : ligarPush())}
           />
         </div>
-        {!pushSupported && <div style={{ fontSize: 11.5, color: "var(--subtle)", marginTop: 8 }}>Disponivel quando instalado como app.</div>}
+        {!pushSupported && <div style={{ fontSize: 11.5, color: "var(--subtle)", marginTop: 8 }}>Disponível quando instalado como app.</div>}
         {pushMsg && <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 8 }}>{pushMsg}</div>}
       </div>
 
       <div className="m-section-t" style={{ marginTop: 22 }}>Ajuda</div>
       <div className="m-card">
         <div className="m-data" style={{ borderBottom: "none" }}>
-          <span>Conheca o app</span>
+          <span>Conheça o app</span>
           <button className="btn btn-sec btn-sm" type="button" onClick={() => setTour(true)}>Rever</button>
         </div>
       </div>
@@ -2193,12 +2194,12 @@ function SairDaConta({ onLogout }: { onLogout: () => void }) {
 // ── Onboarding (primeiro acesso do membro) ───────────────────────────────────
 
 const APP_TABS_INFO = [
-  { ic: "inicio", t: "Inicio", s: "Sua caminhada, avisos e o que precisa da sua atencao." },
-  { ic: "escalas", t: "Escala", s: "Veja onde voce foi escalado e confirme ou peca troca." },
+  { ic: "inicio", t: "Início", s: "Sua caminhada, avisos e o que precisa da sua atenção." },
+  { ic: "escalas", t: "Escala", s: "Veja onde você foi escalado e confirme ou peça troca." },
   { ic: "tarefas", t: "Tarefas", s: "O que o quadro do seu time colocou com o seu nome." },
-  { ic: "conversas", t: "Conversas", s: "Fale com seu time e sua lideranca direto por aqui." },
-  { ic: "cursos", t: "Cursos", s: "Suas trilhas de formacao, no seu tempo." },
-  { ic: "perfil", t: "Perfil", s: "Seus dados, tema do app e pedidos de oracao." },
+  { ic: "conversas", t: "Conversas", s: "Fale com seu time e sua liderança direto por aqui." },
+  { ic: "cursos", t: "Cursos", s: "Suas trilhas de formação, no seu tempo." },
+  { ic: "perfil", t: "Perfil", s: "Seus dados, tema do app e pedidos de oração." },
 ];
 
 function AppTabsInfoGrid() {
@@ -2218,7 +2219,7 @@ function AppTourModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="m-sheet-bg" onClick={onClose}>
       <div className="ob-card" style={{ maxWidth: 320 }} onClick={(e) => e.stopPropagation()}>
-        <div className="ob-welcome-x" style={{ marginBottom: 14, fontWeight: 700, fontSize: 15 }}>Conheca o app</div>
+        <div className="ob-welcome-x" style={{ marginBottom: 14, fontWeight: 700, fontSize: 15 }}>Conheça o app</div>
         <AppTabsInfoGrid />
         <button className="btn btn-pri" type="button" style={{ width: "100%", marginTop: 16 }} onClick={onClose}>Fechar</button>
       </div>
@@ -2252,8 +2253,8 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
 
   const steps = [
     {
-      t: churchName ? `Bem-vindo(a) a ${churchName}` : "Bem-vindo(a) a casa",
-      s: `Que bom ter voce aqui, ${nome}. Vamos completar seu cadastro em um minuto.`,
+      t: `Bem-vindo(a), ${nome}`,
+      s: "Que bom ter você aqui. Vamos completar seu cadastro, leva um minuto.",
       body: (
         <div className="ob-welcome">
           <div className="ob-mark"><Icon name="ok" size={28} /></div>
@@ -2262,7 +2263,7 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
           </div>
         </div>
       ),
-      ok: "Comecar →",
+      ok: "Começar →",
       valid: true,
     },
     {
@@ -2292,8 +2293,8 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
       valid: true,
     },
     {
-      t: "Conheca o app",
-      s: "Rapidinho: veja pra que serve cada aba la embaixo da tela.",
+      t: "Conheça o app",
+      s: "Rapidinho: veja para que serve cada aba lá embaixo da tela.",
       body: <AppTabsInfoGrid />,
       ok: "Entrar no app →",
       valid: true,
@@ -2498,7 +2499,7 @@ function TabKidsArea({
 
   const salvarFilho = async () => {
     if (!form.nome.trim() || !organizationId || !churchId) return;
-    if (!fotoFilho) { setFicarError("A foto da crianca e obrigatoria."); return; }
+    if (!fotoFilho) { setFicarError("A foto da criança é obrigatória."); return; }
     setFicarError("");
     const supabase = createServiceBrowserClient();
     const payload = {
@@ -2518,14 +2519,14 @@ function TabKidsArea({
     if (editingId && editingId !== "novo") {
       const { error } = await supabase.schema("service").from("children").update(payload).eq("id", editingId);
       if (!error) setMyChildren((prev) => prev.map((c) => (c.id === editingId ? { ...c, ...payload } : c)));
-      else { setFicarError("Nao consegui salvar agora."); return; }
+      else { setFicarError("Não consegui salvar agora."); return; }
     } else {
       const { error } = await supabase.schema("service").from("children").insert({ id: novoFilhoId, organization_id: organizationId, church_id: churchId, ...payload });
       if (!error) {
         await supabase.schema("service").from("child_guardians").insert({ organization_id: organizationId, child_id: novoFilhoId, guardian_person_id: person.id, relationship: "responsavel", can_pickup: true, is_primary: true });
         setMyChildren((prev) => [...prev, { id: novoFilhoId, church_id: churchId, ...payload } as Child]);
         setMyGuardians((prev) => [...prev, { id: `local-${novoFilhoId}`, child_id: novoFilhoId, guardian_person_id: person.id, relationship: "responsavel", can_pickup: true, is_primary: true }]);
-      } else { setFicarError("Nao consegui salvar agora."); return; }
+      } else { setFicarError("Não consegui salvar agora."); return; }
     }
     setEditingId(null);
     setForm(emptyForm);
@@ -2548,17 +2549,17 @@ function TabKidsArea({
     if (!organizationId) return;
     setCoError("");
     const matched = people.find((p) => p.name.toLowerCase().trim() === coForm.nome.toLowerCase().trim());
-    if (!matched) { setCoError("Pessoa nao encontrada. Precisa ja ter cadastro no Service."); return; }
-    if (matched.id === person.id) { setCoError("Voce ja e responsavel."); return; }
-    if (guardiansOf(childId).some((g) => g.guardian_person_id === matched.id)) { setCoError("Essa pessoa ja e responsavel."); return; }
+    if (!matched) { setCoError("Pessoa não encontrada. Ela precisa já ter cadastro no Service."); return; }
+    if (matched.id === person.id) { setCoError("Você já é responsável."); return; }
+    if (guardiansOf(childId).some((g) => g.guardian_person_id === matched.id)) { setCoError("Essa pessoa já é responsável."); return; }
     const photo = coForm.photoUrl ?? matched.photoUrl ?? null;
-    if (!photo) { setCoError("O co-responsavel precisa ter uma foto (envie abaixo)."); return; }
+    if (!photo) { setCoError("O corresponsável precisa ter uma foto (envie abaixo)."); return; }
     const { data } = await createServiceBrowserClient().schema("service").from("child_guardians").insert({ organization_id: organizationId, child_id: childId, guardian_person_id: matched.id, relationship: coForm.relationship.trim() || null, can_pickup: coForm.canPickup, is_primary: false }).select("id,child_id,guardian_person_id,relationship,can_pickup,is_primary").single();
     if (data) {
       setMyGuardians((prev) => [...prev, data as ChildGuardian]);
       setCoForm({ nome: "", relationship: "", canPickup: true, photoUrl: null });
     } else {
-      setCoError("Nao consegui adicionar agora.");
+      setCoError("Não consegui adicionar agora.");
     }
   };
 
@@ -2569,8 +2570,8 @@ function TabKidsArea({
 
   const fichaForm = (
     <div className="m-card" style={{ borderColor: "var(--olive-line)", marginTop: 10 }}>
-      <PhotoPicker label="Foto da crianca (obrigatoria)" photoUrl={fotoFilho} path={`${organizationId}/kids/children/${fotoFilhoTargetId}`} onUploaded={setFotoFilho} />
-      <input className="input" placeholder="Nome da crianca" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
+      <PhotoPicker label="Foto da criança (obrigatória)" photoUrl={fotoFilho} path={`${organizationId}/kids/children/${fotoFilhoTargetId}`} onUploaded={setFotoFilho} />
+      <input className="input" placeholder="Nome da criança" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
       <input className="input" type="date" value={form.nascimento} onChange={(e) => setForm((f) => ({ ...f, nascimento: e.target.value }))} style={{ marginBottom: 8 }} />
       <select className="select" value={form.genero} onChange={(e) => setForm((f) => ({ ...f, genero: e.target.value }))} style={{ marginBottom: 8 }}>
         <option value="">Genero (opcional)</option>
@@ -2579,8 +2580,8 @@ function TabKidsArea({
       </select>
       <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 10 }}>Turma: {sugestaoTurma?.name ?? (form.nascimento ? "nenhuma turma cobre essa idade ainda" : "calculada pelo nascimento")}</div>
       <input className="input" placeholder="Alergias" value={form.alergias} onChange={(e) => setForm((f) => ({ ...f, alergias: e.target.value }))} style={{ marginBottom: 8 }} />
-      <input className="input" placeholder="Restricoes alimentares" value={form.restricoes} onChange={(e) => setForm((f) => ({ ...f, restricoes: e.target.value }))} style={{ marginBottom: 8 }} />
-      <input className="input" placeholder="Plano de saude / convenio" value={form.saude} onChange={(e) => setForm((f) => ({ ...f, saude: e.target.value }))} style={{ marginBottom: 8 }} />
+      <input className="input" placeholder="Restrições alimentares" value={form.restricoes} onChange={(e) => setForm((f) => ({ ...f, restricoes: e.target.value }))} style={{ marginBottom: 8 }} />
+      <input className="input" placeholder="Plano de saúde ou convênio" value={form.saude} onChange={(e) => setForm((f) => ({ ...f, saude: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Medicamento em uso continuo" value={form.medicamento} onChange={(e) => setForm((f) => ({ ...f, medicamento: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Contato de emergencia: nome" value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Contato de emergencia: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
@@ -2600,8 +2601,8 @@ function TabKidsArea({
         <div className="m-vis-main"><div className="m-culto" style={{ fontSize: 14 }}>Voltar ao perfil</div></div>
       </button>
 
-      <div className="m-section-t">Sua foto de responsavel</div>
-      <PhotoPicker label="Foto do responsavel" photoUrl={minhaFoto} path={`${organizationId}/kids/guardians/${person.id}`} onUploaded={salvarMinhaFoto} />
+      <div className="m-section-t">Sua foto de responsável</div>
+      <PhotoPicker label="Foto do responsável" photoUrl={minhaFoto} path={`${organizationId}/kids/guardians/${person.id}`} onUploaded={salvarMinhaFoto} />
 
       <div className="m-section-t">Minhas crianças</div>
       {meusFilhos.map((child) => {
@@ -2646,25 +2647,25 @@ function TabKidsArea({
                   })}
                   {isPrimaryFor(child.id) ? (
                     <>
-                      <div className="cell-sub" style={{ margin: "10px 0" }}>Só voce, como responsavel principal, pode adicionar co-responsaveis.</div>
-                      <input className="input" list="service-mobile-people-names" placeholder="Nome (ja precisa ter cadastro)" value={coForm.nome} onChange={(e) => setCoForm((f) => ({ ...f, nome: e.target.value, photoUrl: people.find((p) => p.name === e.target.value)?.photoUrl ?? null }))} style={{ marginBottom: 8 }} />
+                      <div className="cell-sub" style={{ margin: "10px 0" }}>Só você, como responsável principal, pode adicionar corresponsáveis.</div>
+                      <input className="input" list="service-mobile-people-names" placeholder="Nome (já precisa ter cadastro)" value={coForm.nome} onChange={(e) => setCoForm((f) => ({ ...f, nome: e.target.value, photoUrl: people.find((p) => p.name === e.target.value)?.photoUrl ?? null }))} style={{ marginBottom: 8 }} />
                       <datalist id="service-mobile-people-names">
                         {people.map((p) => <option key={p.id} value={p.name} />)}
                       </datalist>
-                      <input className="input" placeholder="Parentesco (mae, avo, tio...)" value={coForm.relationship} onChange={(e) => setCoForm((f) => ({ ...f, relationship: e.target.value }))} style={{ marginBottom: 8 }} />
+                      <input className="input" placeholder="Parentesco (mãe, avó, tio...)" value={coForm.relationship} onChange={(e) => setCoForm((f) => ({ ...f, relationship: e.target.value }))} style={{ marginBottom: 8 }} />
                       {coForm.nome && !coForm.photoUrl && (
                         <div style={{ marginBottom: 8 }}>
-                          <PhotoPicker label="Foto do co-responsavel (obrigatoria)" photoUrl={coForm.photoUrl} path={`${organizationId}/kids/guardians/${people.find((p) => p.name === coForm.nome)?.id ?? "novo"}`} onUploaded={(url) => setCoForm((f) => ({ ...f, photoUrl: url }))} />
+                          <PhotoPicker label="Foto do corresponsável (obrigatória)" photoUrl={coForm.photoUrl} path={`${organizationId}/kids/guardians/${people.find((p) => p.name === coForm.nome)?.id ?? "novo"}`} onUploaded={(url) => setCoForm((f) => ({ ...f, photoUrl: url }))} />
                         </div>
                       )}
                       <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontSize: 13 }}>
                         <input type="checkbox" checked={coForm.canPickup} onChange={(e) => setCoForm((f) => ({ ...f, canPickup: e.target.checked }))} /> Pode retirar
                       </label>
                       {coError && <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8 }}>{coError}</div>}
-                      <button className="m-btn m-btn-swap" style={{ width: "100%" }} onClick={() => adicionarCoResponsavel(child.id)}>+ Adicionar co-responsavel</button>
+                      <button className="m-btn m-btn-swap" style={{ width: "100%" }} onClick={() => adicionarCoResponsavel(child.id)}>+ Adicionar corresponsável</button>
                     </>
                   ) : (
-                    <div className="cell-sub">Só o responsavel principal pode adicionar outros co-responsaveis.</div>
+                    <div className="cell-sub">Só o responsável principal pode adicionar outros corresponsáveis.</div>
                   )}
                 </div>
               </>
@@ -2693,7 +2694,7 @@ function TabKidsArea({
 
       {kidsEvents.length > 0 && meusFilhos.length > 0 && (
         <>
-          <div className="m-section-t" style={{ marginTop: 22 }}>Eventos de criancas</div>
+          <div className="m-section-t" style={{ marginTop: 22 }}>Eventos de crianças</div>
           {kidsEvents.map((event) => (
             <div className="m-card" key={event.id}>
               <div className="m-culto">{event.title}</div>
@@ -2747,7 +2748,7 @@ function MobileMembro({
      time (pelo "Quero servir" aprovado ou pela liderança) */
   const servesInTeam = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
   const TABS = [
-    { id: "inicio",     ic: "inicio",     l: "Inicio"   },
+    { id: "inicio",     ic: "inicio",     l: "Início"   },
     ...(servesInTeam ? [
       { id: "escalas",    ic: "escalas",    l: "Escala"   },
       { id: "tarefas",    ic: "tarefas",    l: "Tarefas"  },
@@ -2896,12 +2897,12 @@ export default function MobileOverlay(props: MobileOverlayProps) {
     return (
       <div className="mob-bg" onClick={isSelf ? undefined : onClose}>
         <div className="mob-side" onClick={(e) => e.stopPropagation()}>
-          <div className="mob-side-eyebrow">App do voluntario</div>
-          <h3>{isSelf ? "Cadastro não encontrado" : "Nenhum voluntario ativo"}</h3>
+          <div className="mob-side-eyebrow">App do voluntário</div>
+          <h3>{isSelf ? "Cadastro não encontrado" : "Nenhum voluntário ativo"}</h3>
           <p>
             {isSelf
               ? "Não encontramos seu cadastro de pessoa nesta igreja. Fale com a liderança."
-              : "Cadastre voluntarios em Pessoas para pre-visualizar o app deles aqui."}
+              : "Cadastre voluntários em Pessoas para pré-visualizar o app deles aqui."}
           </p>
           <button className="mob-close" onClick={closeAction}>{closeLabel}</button>
           {isSelf && onSwitchToPanel && <button className="mob-close mob-to-panel" onClick={onSwitchToPanel}>Gerenciar →</button>}
@@ -2915,17 +2916,17 @@ export default function MobileOverlay(props: MobileOverlayProps) {
       <div className="mob-side" onClick={(e) => e.stopPropagation()}>
         {!isSelf && (
           <>
-            <div className="mob-side-eyebrow">Mesma conta · outra superficie</div>
+            <div className="mob-side-eyebrow">Mesma conta · outra superfície</div>
             <h3>
               O app do <span className="ol">membro</span>
             </h3>
             <p>
               O membro acompanha a jornada, confirma escala, resolve tarefas do quadro,
-              conversa com o time e o lider, faz cursos e pede oracao, tudo pelo celular.
+              conversa com o time e o líder, faz cursos e pede oração, tudo pelo celular.
             </p>
 
             <div className="mob-persona">
-              <div className="mob-persona-t">Pre-visualizar como</div>
+              <div className="mob-persona-t">Pré-visualizar como</div>
               {personas.map((p, i) => {
                 const m = members.find((m) => m.volunteerId === p.id);
                 return (
@@ -2947,7 +2948,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
                 );
               })}
               <div className="mob-persona-hint">
-                O voluntario da Recepcao ve o modulo de visitantes no lugar de Cursos.
+                O voluntário da Recepção vê o módulo de visitantes no lugar de Cursos.
               </div>
             </div>
           </>

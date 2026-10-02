@@ -1,5 +1,6 @@
 "use client";
 
+import { avisar } from "./lib/avisar";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toPng } from "html-to-image";
@@ -275,7 +276,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
       a.download = `qr-${church.slug || "pagina"}.png`;
       a.click();
     } catch {
-      alert("Não consegui gerar o QR agora. Tente de novo.");
+      avisar("Não consegui gerar o QR agora. Tente de novo.", "warn");
     }
   };
 

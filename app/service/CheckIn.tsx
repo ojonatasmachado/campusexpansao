@@ -1,5 +1,6 @@
 "use client";
 
+import { avisar } from "./lib/avisar";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
@@ -543,7 +544,7 @@ export function QRCheckinModal({
       a.download = `checkin-${event.id}.png`;
       a.click();
     };
-    img.onerror = () => window.alert("Não consegui gerar a imagem agora.");
+    img.onerror = () => avisar("Não consegui gerar a imagem agora.", "warn");
     img.src = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(checkinLink)}`;
   };
 
@@ -695,7 +696,7 @@ export function QRCheckinModal({
                   onRemove={remover}
                   onManualAdd={async (pid) => {
                     const r = await registrar(pid, "manual");
-                    if (!r.ok) window.alert(r.motivo);
+                    if (!r.ok) avisar(r.motivo ?? "Não foi possível registrar agora.", "warn");
                   }}
                 />
 
@@ -728,7 +729,7 @@ export function QRCheckinModal({
           permitirExtra={permitirExtra}
           onAdd={async (personId) => {
             const r = await registrar(personId, "manual");
-            if (!r.ok) window.alert(r.motivo);
+            if (!r.ok) avisar(r.motivo ?? "Não foi possível registrar agora.", "warn");
           }}
           onClose={() => setShowManual(false)}
         />

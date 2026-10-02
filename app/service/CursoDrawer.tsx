@@ -1,5 +1,6 @@
 "use client";
 
+import { plural } from "./lib/plural";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
@@ -192,7 +193,7 @@ export default function CursoDrawer({
           </div>
           <div className="profile-role">
             {course.modalidade ? `${MODALIDADE_LABEL[course.modalidade] ?? course.modalidade} · ` : ""}
-            {courseModules.length} módulo(s) · {totalAulas} aula(s)
+            {plural(courseModules.length, "módulo")} · {plural(totalAulas, "aula")}
           </div>
         </div>
 
@@ -233,7 +234,7 @@ export default function CursoDrawer({
           )}
 
           <div className="dsec">
-            <div className="dsec-title">Conteúdo · {courseModules.length} módulo(s) · {totalAulas} aula(s)</div>
+            <div className="dsec-title">Conteúdo · {plural(courseModules.length, "módulo")} · {plural(totalAulas, "aula")}</div>
             {courseModules.map((mod, mi) => {
               const modLessons = courseLessons
                 .filter((l) => l.module_id === mod.id)
@@ -255,7 +256,7 @@ export default function CursoDrawer({
                         </div>
                         {(les.prova?.length ?? 0) > 0 && (
                           <div className="ce-prova on" style={{ cursor: "default" }}>
-                            Prova · {les.prova?.length} pergunta(s){les.min_acertos ? ` · min. ${les.min_acertos}` : ""}
+                            Prova · {plural(les.prova?.length ?? 0, "pergunta")}{les.min_acertos ? ` · min. ${les.min_acertos}` : ""}
                           </div>
                         )}
                         {comQR && (
