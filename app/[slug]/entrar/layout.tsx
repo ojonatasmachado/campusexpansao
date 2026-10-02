@@ -7,6 +7,7 @@ import "../../../evolucoes/service_app/service-v2.css";
 import "../../../evolucoes/service_app/service-v3.css";
 import "../../../evolucoes/service_app/service-v4.css";
 import "../../../evolucoes/service_app/service-v5.css";
+import "../../../evolucoes/service_app/service-v6.css";
 
 /* mesmo viewport do /service (áreas seguras do celular, service-v5.css §6) */
 export const viewport: Viewport = {

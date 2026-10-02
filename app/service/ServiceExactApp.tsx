@@ -10,7 +10,7 @@ import { notifyPush } from "./lib/notify-push";
 import { uploadServiceImage, imageExtension } from "./lib/upload-image";
 import { ICON_PATHS, ICON_CATEGORIES, DEFAULT_ICON, Icon, IconPicker } from "./lib/icons";
 import { THEME_COOKIE, type BrandCfg } from "./lib/theme";
-import { formatDateBR } from "./lib/date";
+import { formatDateBR, joinDot, todayISO, toISODate } from "./lib/date";
 import { ageInMonths, suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import type { EnqueteElegivelView } from "./lib/enquetes";
 import type { PesquisaElegivelView, TipoPergunta as TipoPerguntaPesquisa } from "./lib/pesquisas";
@@ -950,7 +950,7 @@ function Chip({ status }: { status: string }) {
 function formatAvailability(value: Record<string, boolean>) {
   const labels: Record<string, string> = { dom_m: "Domingo manhã", dom_n: "Domingo noite", qua: "Quarta" };
   const items = Object.entries(value).filter(([, ok]) => ok).map(([key]) => labels[key] ?? key);
-  return items.length ? items.join(" · ") : "Disponibilidade não informada";
+  return items.join(" · ");
 }
 
 function Spark({ value }: { value: number }) {
@@ -2084,7 +2084,7 @@ function Painel({
                 <div className="gap-ic wait">!</div>
                 <div className="mini-main">
                   <div className="mini-title">{gap.position.name} <span style={{ color: "var(--subtle)", fontWeight: 400 }}>· {gap.ministry.name}</span></div>
-                  <div className="mini-sub">{gap.event.weekday} · {gap.event.time}</div>
+                  <div className="mini-sub">{joinDot(gap.event.weekday, gap.event.time)}</div>
                 </div>
                 <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("escalas")}>Escalar</button>
               </div>
@@ -2265,7 +2265,7 @@ function MiniEvent({
     <button className="mini-row click" type="button" onClick={() => setDrawer({ kind: "event", id: event.id })}>
       <div className="mini-main">
         <div className="mini-title">{event.name}</div>
-        <div className="mini-sub">{event.weekday} · {formatDateBR(event.eventDate)} · {event.location}</div>
+        <div className="mini-sub">{joinDot(event.weekday, formatDateBR(event.eventDate), event.location)}</div>
       </div>
       <div className="mini-right" style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span>{event.time}</span>
@@ -2360,11 +2360,11 @@ function Membros({ members, ministries, church, setDrawer, setModal }: { members
           return (
             <button className="tr click" type="button" key={m.id} style={{ gridTemplateColumns: "1.6fr 0.8fr 1.1fr 1.1fr" }} onClick={() => setDrawer({ kind: "member", id: m.id })}>
               <div className="cell-person"><Av name={m.name} size="md" /><div><div className="cell-name">{m.name}</div><div className="cell-sub">{m.phone || m.neighborhood || "-"}</div></div></div>
-              <div><div style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.02em" }}>{formatDateBR(m.firstContact) || "-"}</div><div className="cell-sub">na casa</div></div>
+              <div><div style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.02em" }}>{formatDateBR(m.firstContact)}</div></div>
               <div>
                 {mins.length > 0
                   ? <div className="cell-tags">{mins.map((min) => <span key={min.id} className="tag">{min.name.split(" ")[0]}</span>)}{isLeader && <span className="lider-tag">Líder</span>}</div>
-                  : <span style={{ fontSize: 13, color: "var(--subtle)" }}>ainda não serve</span>}
+                  : null}
               </div>
               <div><JrnPips journey={m.journey} /></div>
             </button>
@@ -2409,7 +2409,7 @@ function Pessoas({ people, currentPersonId, setDrawer, setModal }: { people: Per
               </div>
             </div>
             <div>{formatAvailability(person.availability)}</div>
-            <div>{person.tags.join(" · ") || "sem tags"}</div>
+            <div>{person.tags.join(" · ")}</div>
             <div><Chip status={person.status} /></div>
           </button>
         ))}
@@ -2543,7 +2543,7 @@ function cargaDaSemana(roster: RosterAssignmentView[], events: EventView[]): Rec
   segunda.setDate(hoje.getDate() - offsetSegunda);
   const domingo = new Date(segunda);
   domingo.setDate(segunda.getDate() + 6);
-  const toIso = (d: Date) => d.toISOString().slice(0, 10);
+  const toIso = toISODate;
   const inicioSemana = toIso(segunda);
   const fimSemana = toIso(domingo);
   const counts: Record<string, { escalas: number; recusas: number }> = {};
@@ -2787,6 +2787,13 @@ function Escalas({
     assignment?: RosterAssignmentView;
   } | null>(null);
   const [funcEdit, setFuncEdit] = useState<MinistryView | null>(null);
+  /* no celular os times ficam empilhados e cada um recolhe (service-v6.css) */
+  const [timesFechados, setTimesFechados] = useState<Set<string>>(() => new Set());
+  const alternarTime = (id: string) => setTimesFechados((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
   const [delegarOpen, setDelegarOpen] = useState(false);
   const [presetSaveOpen, setPresetSaveOpen] = useState(false);
   const [gerando, setGerando] = useState(false);
@@ -2999,15 +3006,15 @@ function Escalas({
       <div className="esc-events">
         {events.map((event) => (
           <button className={`esc-event ${selectedEvent?.id === event.id ? "on" : ""}`} key={event.id} type="button" onClick={() => setEventId(event.id)}>
-            <span className="esc-event-day">{event.weekday} · {formatDateBR(event.eventDate)}</span>
+            <span className="esc-event-day">{joinDot(event.weekday, formatDateBR(event.eventDate))}</span>
             <span className="esc-event-name">{event.name}</span>
-            <span className="esc-event-time">{event.time} · {event.location}</span>
+            <span className="esc-event-time">{joinDot(event.time, event.location)}</span>
           </button>
         ))}
       </div>
 
       <div className="toolbar" style={{ marginTop: 4 }}>
-        <span className="panel-meta">{selectedEvent ? <><b style={{ color: "var(--light)" }}>{selectedEvent.name}</b> · {selectedEvent.weekday} · {selectedEvent.time}</> : "Selecione um evento"}</span>
+        <span className="panel-meta">{selectedEvent ? <><b style={{ color: "var(--light)" }}>{selectedEvent.name}</b>{joinDot(selectedEvent.weekday, selectedEvent.time) ? ` · ${joinDot(selectedEvent.weekday, selectedEvent.time)}` : ""}</> : "Selecione um evento"}</span>
         <div className="tb-spacer" />
         <span className="panel-meta" style={{ marginRight: 14 }}><span style={{ color: "var(--olive-soft)" }}>{confirmed}</span> confirmados</span>
         {openSlots > 0 ? <span className="panel-meta"><span style={{ color: "var(--amber)" }}>{openSlots}</span> vagas</span> : null}
@@ -3020,7 +3027,7 @@ function Escalas({
           const ministryConfirmed = ministryPositions.reduce((sum, position) => sum + assignmentsFor(position.id).filter((assignment) => assignment.status === "ok").length, 0);
           const complete = ministryConfirmed >= ministryNeed;
           return (
-            <div className="esc-col" key={ministry.id}>
+            <div className={`esc-col${timesFechados.has(ministry.id) ? " closed" : ""}`} key={ministry.id}>
               <div className="esc-col-head">
                 <span className="esc-col-mark"><Icon name="times" size={17} /></span>
                 <div className="esc-col-info">
@@ -3029,6 +3036,9 @@ function Escalas({
                 </div>
                 <span className={`esc-col-badge ${complete ? "ok" : ""}`}>{complete ? "completo" : `${Math.max(0, ministryNeed - ministryConfirmed)} falta`}</span>
                 <button className="esc-col-edit" title="Editar funções deste time" type="button" onClick={() => setFuncEdit(ministry)}><Icon name="config" size={14} /></button>
+                <button className="esc-col-tog" type="button" aria-expanded={!timesFechados.has(ministry.id)} aria-label={timesFechados.has(ministry.id) ? `Abrir ${ministry.name}` : `Recolher ${ministry.name}`} onClick={() => alternarTime(ministry.id)}>
+                  <Icon name="avancar" size={15} />
+                </button>
               </div>
               <div className="esc-col-body">
                 {ministryPositions.map((position) => {
@@ -3091,7 +3101,7 @@ function Escalas({
         <div className="panel" style={{ marginTop: 18 }}>
           <div className="panel-head"><span className="panel-title"><Icon name="escalas" size={14} /> Pendências da semana <HelpDot text="Vagas da escala desta semana que ainda não têm ninguém confirmado." /></span><span className="panel-meta">{gaps.length} vagas</span></div>
           <div className="panel-body flush">
-            {gaps.slice(0, 5).map((gap) => <div className="gap-row" key={`${gap.event.id}-${gap.position.id}`}><div className="gap-ic wait">!</div><div className="mini-main"><div className="mini-title">{gap.position.name} <span style={{ color: "var(--subtle)", fontWeight: 400 }}>· {gap.ministry.name}</span></div><div className="mini-sub">{gap.event.name} · {gap.event.time}</div></div></div>)}
+            {gaps.slice(0, 5).map((gap) => <div className="gap-row" key={`${gap.event.id}-${gap.position.id}`}><div className="gap-ic wait">!</div><div className="mini-main"><div className="mini-title">{gap.position.name} <span style={{ color: "var(--subtle)", fontWeight: 400 }}>· {gap.ministry.name}</span></div><div className="mini-sub">{joinDot(gap.event.name, gap.event.time)}</div></div></div>)}
           </div>
         </div>
       ) : null}
@@ -3138,7 +3148,7 @@ function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChi
           <div className="panel" key={event.id} style={{ position: "relative" }}>
             <button className="panel click" type="button" style={{ width: "100%", textAlign: "left", background: "none", border: "none", padding: 0 }} onClick={() => setDrawer({ kind: "event", id: event.id })}>
               <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> {event.name}</span><span className="panel-meta">{event.time}</span></div>
-              <div className="panel-body"><p className="mini-sub">{event.weekday} · {formatDateBR(event.eventDate)} · {event.location}</p><div className="divider" style={{ margin: "14px 0" }} />{event.schedule.slice(0, 4).map((item) => <div className="mini-row" key={item.id} style={{ paddingInline: 0 }}><div className="mini-main"><div className="mini-title">{item.item}</div><div className="mini-sub">{item.time ?? "sem horário"} · {item.category ?? "roteiro"}</div></div></div>)}<div className="mini-sub">{event.ministries.map((id) => ministries.find((ministry) => ministry.id === id)?.name).filter(Boolean).join(" · ")}</div></div>
+              <div className="panel-body"><p className="mini-sub">{joinDot(event.weekday, formatDateBR(event.eventDate), event.location)}</p><div className="divider" style={{ margin: "14px 0" }} />{event.schedule.slice(0, 4).map((item) => <div className="mini-row" key={item.id} style={{ paddingInline: 0 }}><div className="mini-main"><div className="mini-title">{item.item}</div><div className="mini-sub">{item.time ?? "sem horário"} · {item.category ?? "roteiro"}</div></div></div>)}<div className="mini-sub">{event.ministries.map((id) => ministries.find((ministry) => ministry.id === id)?.name).filter(Boolean).join(" · ")}</div></div>
             </button>
             <div style={{ padding: "0 22px 16px", display: "flex", gap: 8 }}>
               <button className="btn btn-sec btn-sm" type="button" onClick={(e) => { e.stopPropagation(); setCheckinEventId(event.id); }}>
@@ -3227,7 +3237,7 @@ function RosterActionModal({
       <div className="modal-bg" onClick={onClose}>
         <div className="modal" onClick={(event) => event.stopPropagation()}>
           <div className="modal-head">
-            <div className="modal-eyebrow">{action.position.name} · {action.ministry.name} · {action.event.weekday}</div>
+            <div className="modal-eyebrow">{joinDot(action.position.name, action.ministry.name, action.event.weekday)}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
               <Av name={assignedPerson?.name ?? "Voluntário"} size="lg" photoUrl={assignedPerson?.photoUrl} />
               <div>
@@ -3258,7 +3268,7 @@ function RosterActionModal({
         <div className="modal-head">
           <div className="modal-eyebrow">{isSwap ? "Pedir troca" : "Escalar"} · {action.position.name} · {action.ministry.name}</div>
           <div className="modal-title">{action.event.name}</div>
-          <div className="modal-sub">{action.event.weekday} · {action.event.time}. Verde: disponível. Quem já está em outro time aparece travado.</div>
+          <div className="modal-sub">{joinDot(action.event.weekday, action.event.time)}{joinDot(action.event.weekday, action.event.time) ? ". " : ""}Verde: disponível. Quem já está em outro time aparece travado.</div>
         </div>
         <div className="modal-body">
           {candidatos.length === 0 ? <div className="empty">Ninguém disponível neste time.</div> : null}
@@ -3396,7 +3406,7 @@ function Visitantes({
       ) : (
         <div className="tbl">
           <div className="tr head" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }}><span>Visitante</span><span>Etapa</span><span>Como chegou</span><span>Próximo passo</span><span>Visitou</span></div>
-          {visitors.map((visitor) => { const stage = VISITOR_STAGES.find((s) => s.id === visitor.stage); return <button className="tr click" key={visitor.id} type="button" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone || "Telefone não informado"}</div></div></div><div><span className="chip chip-neutral" style={{ color: stage?.color, borderColor: "var(--border-2)" }}>{stage?.name ?? visitor.stage}</span></div><div className="cell-sub">{visitor.origin || "Visitante"}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "sem prazo"}</span></div><div className="mini-right">{formatDateBR(visitor.visited_on) || "sem data"}</div></button>; })}
+          {visitors.map((visitor) => { const stage = VISITOR_STAGES.find((s) => s.id === visitor.stage); return <button className="tr click" key={visitor.id} type="button" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone}</div></div></div><div><span className="chip chip-neutral" style={{ color: stage?.color, borderColor: "var(--border-2)" }}>{stage?.name ?? visitor.stage}</span></div><div className="cell-sub">{visitor.origin || "Visitante"}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "sem prazo"}</span></div><div className="mini-right">{formatDateBR(visitor.visited_on) || "sem data"}</div></button>; })}
         </div>
       )}
     </div>
@@ -3645,7 +3655,7 @@ function Reunioes({ meetings, meetingActions, ministries, people, rooms, reserva
           return (
             <button className="reu-card" type="button" key={meeting.id} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
               <div className="reu-card-top"><div><div className="reu-date">{formatDateBR(meeting.meeting_date) || "Sem data"} · {meeting.time || "sem horário"}</div><div className="reu-title">{meeting.title}</div></div><span className="chip chip-ok">Agendada</span></div>
-              <div className="reu-meta">{meeting.location || "Local não informado"} · marcada por {author?.name.split(" ")[0] || "líder"}</div>
+              <div className="reu-meta">{joinDot(meeting.location, `marcada por ${author?.name.split(" ")[0] || "líder"}`)}</div>
               <div className="reu-foot"><div className="reu-times">{meeting.ministries.map((id) => <span className="tag" key={id}>{ministryById.get(id)?.name || "Time"}</span>)}</div><span className="team-stat"><b>{meeting.attendees.length}</b> presentes</span></div>
             </button>
           );
@@ -4214,7 +4224,7 @@ function Comunicacao({
       />
 
       {view === "mural" ? (
-        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 16, alignItems: "start" }}>
+        <div className="com-grid">
           <div className="feed">
             {wallPosts.length === 0 && <div className="empty">Nenhuma publicação no mural ainda.</div>}
             {wallPosts.map((post) => (
@@ -4239,7 +4249,7 @@ function Comunicacao({
               </div>
             ))}
           </div>
-          <div className="panel" style={{ position: "sticky", top: 88 }}>
+          <div className="panel com-alcance">
             <div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={14} /> Alcance da semana <HelpDot text="Quantas pessoas o aviso ou mural alcançou nesta semana." /></span></div>
             <div className="panel-body">
               <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em" }}>{pctAlcance}%<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>taxa de leitura</span></div>
@@ -4432,7 +4442,7 @@ function Espacos({ rooms, reservations, church, setModal, embed }: { rooms: Room
       <div className="sala-grid">
         {rooms.map((room) => {
           const count = reservations.filter((reservation) => reservation.room_id === room.id).length;
-          return <button key={room.id} className={`sala-card ${filter === room.id ? "on" : ""}`} type="button" onClick={() => setFilter(filter === room.id ? "todas" : room.id)}><div className="sala-card-top"><span className="sala-mark"><Icon name="config" size={18} /></span><span className="sala-cap">{room.capacity ?? 0} <small>lugares</small></span></div><div className="sala-nome">{room.name}</div><div className="sala-local">{room.location || "Local não informado"}</div>{room.resources.length ? <div className="sala-rec">{room.resources.map((resource) => <span className="tag" key={resource}>{resource}</span>)}</div> : null}<div className="sala-foot">{plural(count, "reserva")}{room.allows_meetings === false ? " · não serve pra reunião" : ""}</div></button>;
+          return <button key={room.id} className={`sala-card ${filter === room.id ? "on" : ""}`} type="button" onClick={() => setFilter(filter === room.id ? "todas" : room.id)}><div className="sala-card-top"><span className="sala-mark"><Icon name="config" size={18} /></span><span className="sala-cap">{room.capacity ?? 0} <small>lugares</small></span></div><div className="sala-nome">{room.name}</div>{room.location ? <div className="sala-local">{room.location}</div> : null}{room.resources.length ? <div className="sala-rec">{room.resources.map((resource) => <span className="tag" key={resource}>{resource}</span>)}</div> : null}<div className="sala-foot">{plural(count, "reserva")}{room.allows_meetings === false ? " · não serve pra reunião" : ""}</div></button>;
         })}
         {rooms.length === 0 ? <div className="empty">Nenhuma sala cadastrada ainda.</div> : null}
       </div>
@@ -4496,7 +4506,7 @@ function TurmasKids({ kidsClasses, rooms, setModal }: { kidsClasses: KidsClassVi
 
 function childAgeLabel(birth: string | null): string {
   const months = ageInMonths(birth);
-  if (months === null) return "Nascimento não informado";
+  if (months === null) return "";
   if (months < 24) return `${months} meses`;
   return `${Math.floor(months / 12)} anos`;
 }
@@ -4937,8 +4947,8 @@ function Decisoes({
           const responsible = decision.responsible_id ? personById.get(decision.responsible_id) : null;
           return (
             <button className="tr click" key={decision.id} style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }} type="button" onClick={() => setDrawer({ kind: "decision", id: decision.id })}>
-              <div className="cell-person"><Av name={decision.name} size="md" /><div><div className="cell-name">{decision.name} <span className="chip chip-ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"}</span></div><div className="cell-sub">{decision.phone || "Telefone não informado"}</div></div></div>
-              <div><div style={{ fontSize: 13, color: "var(--light)" }}>{formatDateBR(decision.happened_on) || "Data não informada"}</div><div className="cell-sub">{decision.service_name || "Culto não informado"}</div></div>
+              <div className="cell-person"><Av name={decision.name} size="md" /><div><div className="cell-name">{decision.name} <span className="chip chip-ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"}</span></div><div className="cell-sub">{decision.phone}</div></div></div>
+              <div><div style={{ fontSize: 13, color: "var(--light)" }}>{formatDateBR(decision.happened_on)}</div><div className="cell-sub">{decision.service_name || "Culto não informado"}</div></div>
               <div className="cell-person">{responsible ? <Av name={responsible.name} size="sm" photoUrl={responsible.photoUrl} /> : null}<div className="cell-sub" style={{ marginTop: 0 }}>{responsible?.name ?? "a definir"}</div></div>
               <div><Chip status={decision.status === "novo" ? "wait" : decision.status === "encaminhado" ? "ok" : "ativo"} /></div>
             </button>
@@ -5005,7 +5015,7 @@ function Batismos({
                   </div>
                   <div className="bat-mark"><Icon name="batismos" size={20} /></div>
                 </div>
-                <div className="bat-meta">{cls.location || "Local não informado"} · {cls.pastor || "Pastor não informado"}</div>
+                <div className="bat-meta">{joinDot(cls.location, cls.pastor)}</div>
                 <div className="bat-foot">
                   <span className={`chip ${st?.cls ?? "chip-wait"}`}>{st?.label ?? cls.status}</span>
                   <span className="panel-meta">{count} candidato{count !== 1 ? "s" : ""}</span>
@@ -6518,7 +6528,7 @@ function AcessosCard({
       </div>
 
       <div className="cfg-card">
-        {!pessoa && <div className="empty" style={{ padding: "30px 0" }}>Escolha uma pessoa à esquerda para liberar telas.</div>}
+        {!pessoa && <div className="empty" style={{ padding: "30px 0" }}>Escolha uma pessoa na lista para liberar telas.</div>}
         {pessoa && (
           <>
             <div className="cfg-card-t">Acessos de {pessoa.name.split(" ")[0]}</div>
@@ -7486,6 +7496,8 @@ function Config({
   const identidadeBgHex = identidade.bgMode === "imagem" ? "#0E110D" : identidade.bgMode === "degrade" ? (identidade.bgFrom ?? IDENTIDADE_CFG_DEFAULT.bgFrom) : (identidade.bgColor ?? IDENTIDADE_CFG_DEFAULT.bgColor);
 
   const [matriz, setMatriz] = useState<MatrizV2>(() => matrizComFallback(permissionsMatrix));
+  /* no celular a matriz vira: escolhe o papel em cima, liga e desliga embaixo */
+  const [papelMob, setPapelMob] = useState<PapelV2>("pastor");
   const [matrizMsg, setMatrizMsg] = useState("");
   const [matrizSaving, setMatrizSaving] = useState(false);
   const toggleMx = (papel: PapelV2, acao: string) => {
@@ -7913,6 +7925,36 @@ function Config({
         <div className="cfg-card">
           <div className="cfg-card-t">Papéis & permissões</div>
           <div className="cfg-card-s">Cada funcionalidade do app aparece aqui. Toque para liberar ou bloquear por papel. O Master sempre tem acesso total.</div>
+          <div className="pmx-mob">
+            <div className="pmx-mob-roles" role="tablist" aria-label="Papel">
+              {PAPEIS_V2.map((pp) => (
+                <button key={pp.id} type="button" role="tab" aria-selected={papelMob === pp.id} className={`pmx-mob-role${papelMob === pp.id ? " on" : ""}`} onClick={() => setPapelMob(pp.id)}>
+                  {pp.nome}
+                </button>
+              ))}
+            </div>
+            {(papelMob === "master" || papelMob === "membro") && (
+              <div className="pmx-mob-note">
+                {papelMob === "master" ? "O Master sempre tem acesso total." : "Membro usa o app. Para abrir uma tela do painel pra uma pessoa, use Acessos por pessoa."}
+              </div>
+            )}
+            {gruposAcoes.map((grupo) => (
+              <div key={`mg-${grupo}`} className="pmx-mob-group">
+                <div className="pmx-mob-gt">{grupo}</div>
+                {ACOES_V2.filter((a) => a.grupo === grupo).map((a) => {
+                  const on = matriz[papelMob][a.id];
+                  const locked = papelMob === "master" || papelMob === "membro";
+                  return (
+                    <div key={a.id} className="pmx-mob-row">
+                      <span className="pmx-mob-name">{a.nome}</span>
+                      <span className="pmx-mob-state">{on ? "Liberado" : "Bloqueado"}</span>
+                      <button type="button" role="switch" aria-checked={!!on} aria-label={a.nome} disabled={locked} className={`m-toggle${on ? " on" : ""}`} onClick={() => toggleMx(papelMob, a.id)} />
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
           <table className="pmx">
             <thead>
               <tr>
@@ -8046,7 +8088,7 @@ function Config({
                   </div>
                   <div className="cfg-row-main">
                     <div className="cfg-row-t">{c.nome}</div>
-                    <div className="cfg-row-s">{c.cidade || "Cidade não informada"}</div>
+                    {c.cidade ? <div className="cfg-row-s">{c.cidade}</div> : null}
                   </div>
                   <button className="btn btn-sec btn-sm" type="button" onClick={() => setGerirCongId(c.id)}>Gerir</button>
                 </div>
@@ -8611,7 +8653,7 @@ function BatismoDrawer({
           <div className="bat-mark"><Icon name="batismos" size={22} /></div>
           <div>
             <div className="profile-name">{classData.label}</div>
-            <div className="profile-role">{formatDateBR(classData.baptism_date) || "Sem data"} · {classData.location || "Local não informado"}</div>
+            <div className="profile-role">{joinDot(formatDateBR(classData.baptism_date), classData.location)}</div>
             <div style={{ marginTop: 10 }}><span className={`chip ${st?.cls ?? "chip-wait"}`}>{st?.label ?? classData.status}</span></div>
           </div>
         </div>
@@ -9187,7 +9229,7 @@ function EntityDrawer({
       personCalEvents.push({
         date,
         label: ministryName ? `${posName} · ${ministryName}` : posName,
-        sub: `${ev.name} · ${ev.time}`,
+        sub: joinDot(ev.name, ev.time),
         tone: assignment.status === "no" ? "amber" : "olive",
         onClick: () => setDrawer({ kind: "event", id: ev.id }),
       });
@@ -9221,7 +9263,7 @@ function EntityDrawer({
           </DrawerSection>
           <DrawerSection title="Times & funções">
             <div className="cell-tags" style={{ gap: 8 }}>{linkedMinistries.map((ministry) => <button className="tag" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}>{ministry.name}</button>)}</div>
-            <div style={{ marginTop: 12, fontSize: 13, color: "var(--muted)" }}>Frentes: {person.tags.join(" · ") || "sem tags"}</div>
+            {person.tags.length > 0 && <div style={{ marginTop: 12, fontSize: 13, color: "var(--muted)" }}>Times: {person.tags.join(" · ")}</div>}
           </DrawerSection>
           <DrawerSection title="Disponibilidade">
             <div className="avail">
@@ -9263,6 +9305,13 @@ function EntityDrawer({
     const grupoLider = grupo ? people.find((p) => p.id === grupo.leader_person_id) ?? null : null;
     const familiares = member.family ? members.filter((m) => m.family === member.family && m.id !== member.id) : [];
     const linkedPerson = member.volunteerId ? people.find((p) => p.id === member.volunteerId) ?? null : null;
+    /* um aviso só, no lugar de "a completar" em cada campo */
+    const faltando = [
+      !member.phone && "telefone",
+      !member.email && "e-mail",
+      !member.birth && "aniversário",
+      (member.postalCode ?? "").replace(/\D/g, "").length !== 8 && "CEP",
+    ].filter(Boolean) as string[];
     return (
       <>
       <DrawerShell onClose={() => setDrawer(null)}>
@@ -9272,7 +9321,7 @@ function EntityDrawer({
             <Av name={member.name} size="lg" photoUrl={linkedPerson?.photoUrl} />
             <div>
               <div className="profile-name">{member.name}</div>
-              <div className="profile-role">na casa{member.firstContact ? ` desde ${formatDateBR(member.firstContact)}` : ""}</div>
+              {member.firstContact ? <div className="profile-role">Membro desde {formatDateBR(member.firstContact)}</div> : null}
               <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <Chip status={member.situation} />
                 {isServing && <span className="chip chip-ok">Servindo</span>}
@@ -9281,12 +9330,18 @@ function EntityDrawer({
           </div>
         </div>
         <div className="drawer-body">
+          {faltando.length > 0 && (
+            <div className="cadastro-incompleto">
+              <span><b>Cadastro incompleto</b> · falta {faltando.join(", ")}</span>
+              <button className="btn btn-sec btn-sm" type="button" onClick={() => setEditingMember(true)}>Completar →</button>
+            </div>
+          )}
           <DrawerSection title="Dados cadastrais">
             <dl className="kv">
-              <dt>Telefone</dt><dd>{member.phone || <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
-              <dt>E-mail</dt><dd>{member.email || <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
-              <dt>Aniversário</dt><dd>{member.birth ? formatDateBR(member.birth) : <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
-              <dt>Bairro</dt><dd>{member.neighborhood || <span style={{ color: "var(--subtle)" }}>a completar</span>}</dd>
+              <dt>Telefone</dt><dd>{member.phone}</dd>
+              <dt>E-mail</dt><dd>{member.email}</dd>
+              <dt>Aniversário</dt><dd>{formatDateBR(member.birth)}</dd>
+              <dt>Bairro</dt><dd>{member.neighborhood}</dd>
               {(church?.settings?.gruposCfg?.ativo ?? true) && <><dt>{church?.settings?.gruposCfg?.termoP ?? "Grupo de Comunhão"}</dt><dd>{grupo ? <>{grupo.name}{grupoLider && <span style={{ color: "var(--subtle)" }}> · líder {grupoLider.name.split(" ")[0]}</span>}</> : <span style={{ color: "var(--subtle)" }}>sem grupo</span>}</dd></>}
               <dt>Acesso ao app</dt><dd>{member.volunteerId ? <span style={{ color: "var(--olive-soft)" }}>liberado</span> : temTelefone ? <span style={{ color: "var(--amber)" }}>convite ainda não aceito</span> : <span style={{ color: "var(--amber)" }}>falta o telefone</span>}</dd>
             </dl>
@@ -9643,9 +9698,9 @@ function EventDrawer({
     <DrawerShell onClose={onClose} wide>
       <div className="drawer-head">
         <button className="drawer-close" type="button" onClick={onClose}>✕</button>
-        <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{event.weekday} · {formatDateBR(event.eventDate)}</div>
+        <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{joinDot(event.weekday, formatDateBR(event.eventDate))}</div>
         <div className="profile-name">{event.name}</div>
-        <div className="profile-role">{event.time} · {event.location} · {event.kind}</div>
+        <div className="profile-role">{joinDot(event.time, event.location, event.kind)}</div>
         <div className="seg" style={{ marginTop: 14 }}>
           <button className={tab === "crono" ? "on" : ""} type="button" onClick={() => setTab("crono")}>Cronograma</button>
           <button className={tab === "posicoes" ? "on" : ""} type="button" onClick={() => setTab("posicoes")}>Posições</button>
@@ -9658,7 +9713,7 @@ function EventDrawer({
               <CronogramaEditor event={event} ministries={eventMinistries} onRefresh={() => router.refresh()} />
             </DrawerSection>
             <DrawerSection title="Setlist">
-              {event.setlist.length ? event.setlist.map((song) => <div className="mini-row" key={song.id}><div className="mini-main"><div className="mini-title">{song.title}</div><div className="mini-sub">Tom: {song.song_key ?? "não informado"}</div></div></div>) : <p className="mini-sub">Nenhuma música cadastrada.</p>}
+              {event.setlist.length ? event.setlist.map((song) => <div className="mini-row" key={song.id}><div className="mini-main"><div className="mini-title">{song.title}</div>{song.song_key ? <div className="mini-sub">Tom: {song.song_key}</div> : null}</div></div>) : <p className="mini-sub">Nenhuma música cadastrada.</p>}
             </DrawerSection>
           </>
         ) : (
@@ -10278,7 +10333,7 @@ function ServiceModal({
         phone: value("tel") || null,
         service_name: value("culto") || null,
         responsible_id: namedPerson("responsavel")?.id ?? null,
-        happened_on: new Date().toISOString().slice(0, 10),
+        happened_on: todayISO(),
         kind: "decisao",
         status: "novo",
       });
@@ -10478,7 +10533,7 @@ function ServiceModal({
         person_id: currentPersonId,
         papel: currentRole,
         times_acessados: minhasEquipes,
-        data: new Date().toISOString().slice(0, 10),
+        data: todayISO(),
       }).select("id").single();
       if (respostaError || !novaResposta) {
         result = { error: respostaError };
@@ -10508,7 +10563,7 @@ function ServiceModal({
           person_id: currentPersonId,
           papel: currentRole,
           event_id: pesquisa.eventoId,
-          data: new Date().toISOString().slice(0, 10),
+          data: todayISO(),
         }).select("id").single();
         if (respostaError || !novaResposta) result = { error: respostaError };
         else respostaId = (novaResposta as { id: string }).id;

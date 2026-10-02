@@ -1,11 +1,12 @@
+import { parseISODate } from "./date";
 /* Idade e turma da criança são sempre calculadas a partir do nascimento,
    nunca escolhidas na mão : fonte única pra admin, professor e responsável
    não divergirem. */
 
 export function ageInMonths(birth: string | null): number | null {
   if (!birth) return null;
-  const b = new Date(birth);
-  if (Number.isNaN(b.getTime())) return null;
+  const b = parseISODate(birth);
+  if (!b) return null;
   const now = new Date();
   let months = (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth());
   if (now.getDate() < b.getDate()) months -= 1;

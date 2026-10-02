@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
-import { formatDateBR } from "../lib/date";
+import { formatDateBR, joinDot } from "../lib/date";
 import ChurchLockup from "../ChurchLockup";
 
 type SessionInfo = { id: string; organizationId: string; checkinActive: boolean; tokenValid: boolean };
@@ -98,7 +98,7 @@ export default function KidsCheckinClient({
             <div className="ck-land-event">
               <div className="ck-land-ey">Kids · {kidsClass.name}</div>
               <div className="ck-land-name">{event.name}</div>
-              <div className="ck-land-when">{event.weekday} {formatDateBR(event.eventDate)} · {event.time} · {event.location}</div>
+              <div className="ck-land-when">{joinDot(`${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time, event.location)}</div>
             </div>
           )}
 

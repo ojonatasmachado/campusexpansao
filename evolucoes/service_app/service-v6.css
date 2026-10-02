@@ -1,0 +1,67 @@
+/* ════════════════════════════════════════════════════════════════
+   CE.X SERVICE · estilos v6. Carregar DEPOIS do v5 em
+   app/service/layout.tsx e app/[slug]/entrar/layout.tsx.
+   Cor só por variável do tema (app/service/lib/theme.ts).
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── 1. celular e tablet: nada rola para o lado, 2 colunas viram 1 ── */
+
+/* Comunicação: mural + alcance */
+.com-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;align-items:start}
+.com-alcance{position:sticky;top:88px}
+
+/* Escalas: chave de recolher o time só aparece no celular */
+.esc-col-tog{display:none;flex-shrink:0;width:36px;height:36px;margin-right:-6px;place-items:center;border-radius:var(--r-sm);color:var(--muted)}
+.esc-col-tog .ic,.esc-col-tog svg{transition:transform .15s;transform:rotate(90deg)}
+.esc-col.closed .esc-col-tog svg{transform:rotate(0deg)}
+
+/* Permissões: versão do celular escondida no computador */
+.pmx-mob{display:none}
+.pmx-mob-roles{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 14px}
+.pmx-mob-role{min-height:40px;padding:0 14px;border-radius:var(--r-pill);border:0.5px solid var(--border-2);background:var(--ink);font-size:14px;font-weight:600;color:var(--light);text-align:center}
+.pmx-mob-role.on{background:var(--olive);border-color:var(--olive);color:var(--accent-ink)}
+.pmx-mob-note{margin-bottom:12px;padding:12px 14px;border-radius:var(--r-md);background:var(--ink);border:0.5px solid var(--border-2);font-size:13px;line-height:1.5;color:var(--muted)}
+.pmx-mob-group+.pmx-mob-group{margin-top:14px}
+.pmx-mob-gt{padding:6px 0;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)}
+.pmx-mob-row{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 0;border-bottom:0.5px solid var(--border)}
+.pmx-mob-name{flex:1;min-width:0;font-size:15px;color:var(--white)}
+.pmx-mob-state{font-size:13px;color:var(--muted)}
+.pmx-mob-row .m-toggle:disabled{opacity:.55;cursor:default}
+
+@media (max-width:767px){
+  .com-grid{grid-template-columns:1fr}
+  .com-alcance{position:static}
+
+  .esc-cols{flex-direction:column;overflow:visible;gap:12px}
+  .esc-col{flex:none;width:100%;min-width:0}
+  .esc-col-tog{display:grid}
+  .esc-col.closed .esc-col-body{display:none}
+  .esc-col.closed .esc-col-head{border-bottom:0}
+
+  .pmx{display:none}
+  .pmx-mob{display:block}
+
+  .cfg-grid2{grid-template-columns:1fr}
+  .opt-row{flex-direction:column}
+  .cfg-card-head-row{flex-direction:column;align-items:stretch;gap:12px}
+  .cfg-card-head-row .ph-actions{flex-wrap:wrap}
+}
+
+/* ficha da pessoa: um aviso só quando faltam dados */
+.cadastro-incompleto{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 14px;margin-bottom:18px;padding:12px 14px;border-radius:var(--r-md);background:var(--amber-dim);border:0.5px solid var(--amber-line,var(--border-2));font-size:13.5px;line-height:1.5;color:var(--light)}
+.cadastro-incompleto b{color:var(--white);font-weight:600}
+
+/* ── app do membro: barra de abas (S14) ─────────────────────────
+   O app é uma coluna de altura fixa (.phone-screen, flex) com o meio
+   rolando: a barra fica sempre colada no rodapé, mesmo com pouco
+   conteúdo, e soma a área de gestos do celular. */
+.mob-bg.mob-self .phone-screen{height:100%}
+.mob-bg.mob-self .m-scroll{flex:1 1 auto;min-height:0}
+.m-tab{flex-shrink:0;padding-bottom:var(--safe-bottom);background:var(--graphite);border-top:0.5px solid var(--border)}
+.m-tab button{min-height:56px;padding:6px 2px 8px;gap:3px;color:var(--muted)}
+.m-tab button.on::before{content:none}
+.m-tab button .ic{display:grid;place-items:center;width:56px;height:30px;border-radius:var(--r-pill);transition:background .15s}
+.m-tab button.on .ic{background:var(--olive-dim)}
+.m-tab-l{font-size:12px;line-height:16px;font-weight:600;letter-spacing:0;white-space:nowrap}
+.m-tab button.on{color:var(--olive)}
+.m-tab button.on .m-tab-l{font-weight:700}

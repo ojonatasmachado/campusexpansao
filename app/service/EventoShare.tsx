@@ -3,7 +3,7 @@
 import { avisar } from "./lib/avisar";
 import { useState, useRef } from "react";
 import { toPng } from "html-to-image";
-import { formatDateBR } from "./lib/date";
+import { formatDateBR, joinDot } from "./lib/date";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -69,8 +69,8 @@ export default function EventoShare({ event, ministries, churchName = "Service",
   const copiarTexto = () => {
     const L: string[] = [];
     L.push(`${event.name.toUpperCase()}`);
-    L.push(`${event.weekday}${dataFmt ? " · " + dataFmt : ""} · ${event.time}`);
-    L.push(`${event.location}`);
+    L.push(joinDot(event.weekday, dataFmt, event.time));
+    if (event.location) L.push(event.location);
     if (envolvidos.length) {
       L.push("");
       if (completa) {
@@ -141,8 +141,7 @@ export default function EventoShare({ event, ministries, churchName = "Service",
             {/* hero: data, nome, hora, local */}
             <div className="evt2-hero">
               <div className="evt2-dia">
-                {event.weekday}
-                {dataFmt ? " · " + dataFmt : ""}
+                {joinDot(event.weekday, dataFmt)}
               </div>
               <div className="evt2-nome">{event.name}</div>
               <div className="evt2-hora">{event.time}</div>

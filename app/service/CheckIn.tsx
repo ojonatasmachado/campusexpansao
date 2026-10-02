@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import ChurchLockup from "./ChurchLockup";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
-import { formatDateBR } from "./lib/date";
+import { formatDateBR, joinDot } from "./lib/date";
 
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
@@ -167,7 +167,7 @@ export function CheckinLanding({
             <div className="ck-land-ey">Check-in de voluntário</div>
             <div className="ck-land-name">{event.name}</div>
             <div className="ck-land-when">
-              {event.weekday} {formatDateBR(event.eventDate)} · {event.time} · {event.location}
+              {joinDot(`${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time, event.location)}
             </div>
           </div>
           <div className="ck-land-result">
@@ -511,7 +511,7 @@ export function QRCheckinModal({
       </head><body>
       <div class="ey">Check-in de voluntários</div>
       <div class="qr-wrap"><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(checkinLink)}" style="width:300px;height:300px"/></div>
-      <h1>${event.name}</h1><p>${event.weekday} ${formatDateBR(event.eventDate)} · ${event.time} · ${event.location}</p>
+      <h1>${event.name}</h1><p>${joinDot(`${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time, event.location)}</p>
       <p class="in">Escaneie com a câmera do celular e confirme sua presença no app.</p>
       ${marca}
       <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
@@ -538,7 +538,7 @@ export function QRCheckinModal({
       ctx.fillText(event.name, canvas.width / 2, img.height + pad + 38);
       ctx.fillStyle = "#555650";
       ctx.font = "500 16px Inter, sans-serif";
-      ctx.fillText(`${event.weekday} ${formatDateBR(event.eventDate)} · ${event.time}`, canvas.width / 2, img.height + pad + 62);
+      ctx.fillText(joinDot(`${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time), canvas.width / 2, img.height + pad + 62);
       const a = document.createElement("a");
       a.href = canvas.toDataURL("image/png");
       a.download = `checkin-${event.id}.png`;
@@ -578,7 +578,7 @@ export function QRCheckinModal({
         <div className="modal wide" onClick={(e) => e.stopPropagation()}>
           <div className="modal-head">
             <div className="modal-eyebrow">
-              Check-in · {event.weekday} {formatDateBR(event.eventDate)} · {event.time}
+              {joinDot("Check-in", `${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time)}
             </div>
             <div className="modal-title">{event.name}</div>
             <div className="modal-sub">

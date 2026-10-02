@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { weekdayFromISO } from "../lib/date";
 import { createServiceSupabaseClient } from "../lib/supabase";
 import CheckinLandingClient from "./CheckinLandingClient";
 import { resolveMode, THEME_COOKIE, type BrandCfg } from "../lib/theme";
@@ -117,7 +118,7 @@ export default async function ServiceCheckinPage({
         id: eventRow?.id ?? eventId,
         organizationId: eventRow?.organization_id ?? "",
         name: eventRow?.name ?? "Evento",
-        weekday: eventRow?.weekday ?? "",
+        weekday: weekdayFromISO(eventRow?.event_date) || eventRow?.weekday || "",
         eventDate: eventRow?.event_date ?? "",
         time: eventRow?.time ?? "",
         location: eventRow?.location ?? "",

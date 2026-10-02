@@ -4,7 +4,7 @@ import { avisar } from "./lib/avisar";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon } from "./lib/icons";
-import { formatDateBR } from "./lib/date";
+import { formatDateBR, joinDot } from "./lib/date";
 import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import { PhotoPicker } from "./PhotoPicker";
 import CepInput from "./CepInput";
@@ -392,7 +392,7 @@ function TabInicio({
           <div className="m-card" onClick={() => setTab("escalas")} style={{ cursor: "pointer" }}>
             <div className="m-card-top">
               <span className="m-when">
-                {proxEvent.weekday} · {formatDateBR(proxEvent.eventDate)} · {proxEvent.time}
+                {joinDot(proxEvent.weekday, formatDateBR(proxEvent.eventDate), proxEvent.time)}
               </span>
               <ChipSt status={proxSlot!.status} label={proxSlot!.status === "wait" ? "Responder" : undefined} />
             </div>
@@ -463,7 +463,7 @@ function TabEscala({ person, events, roster, onConfirmarEscala, onRecusarEscala 
           <div className={`m-card ${st === "wait" ? "urgent" : ""}`} key={slot.id}>
             <div className="m-card-top">
               <span className="m-when">
-                {ev.weekday} · {formatDateBR(ev.eventDate)} · {ev.time}
+                {joinDot(ev.weekday, formatDateBR(ev.eventDate), ev.time)}
               </span>
               {st === "ok" && <ChipSt status="ok" />}
               {st === "no" && <ChipSt status="no" />}
@@ -1410,7 +1410,7 @@ function TabKids({
   return (
     <>
       <div className="m-section-t">Kids · {kidsClass?.name ?? "Turma"}</div>
-      <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 12 }}>{event?.name} · {event?.weekday} {event?.eventDate ? formatDateBR(event.eventDate) : ""}</div>
+      <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 12 }}>{joinDot(event?.name, `${event?.weekday ?? ""} ${formatDateBR(event?.eventDate)}`.trim())}</div>
 
       {activeSessions.length > 1 && (
         <select className="select" style={{ marginBottom: 12 }} value={session.id} onChange={(e) => setSessionId(e.target.value)}>
@@ -2862,11 +2862,11 @@ function MobileMembro({
 
         <div className="m-tab">
           {TABS.map((t) => (
-            <button key={t.id} className={tab === t.id ? "on" : ""} onClick={() => setTab(t.id)}>
+            <button key={t.id} type="button" className={tab === t.id ? "on" : ""} aria-current={tab === t.id ? "page" : undefined} onClick={() => setTab(t.id)}>
               <span className="ic">
-                <TabIcon name={t.ic} size={19} />
+                <TabIcon name={t.ic} size={24} />
               </span>
-              {t.l}
+              <span className="m-tab-l">{t.l}</span>
             </button>
           ))}
         </div>

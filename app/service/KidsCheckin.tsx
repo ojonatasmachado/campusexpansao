@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
-import { formatDateBR } from "./lib/date";
+import { formatDateBR, joinDot } from "./lib/date";
 import { Icon } from "./lib/icons";
 
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
@@ -151,7 +151,7 @@ export function KidsQRModal({
     <div className="modal-bg" onClick={onClose}>
       <div className="modal wide" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <div className="modal-eyebrow">Kids · {event.weekday} {formatDateBR(event.eventDate)} · {event.time}</div>
+          <div className="modal-eyebrow">{joinDot("Kids", `${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time)}</div>
           <div className="modal-title">{kidsClass.name}</div>
           <div className="modal-sub">QR Code próprio desta turma neste culto. O responsável escaneia, escolhe o filho e confirma o check-in ou pede a retirada.</div>
           <div className="ck-tabs">

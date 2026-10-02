@@ -22,3 +22,41 @@ export function formatDateTimeBR(date?: string | null, time?: string | null): st
   if (!d) return time ?? "";
   return time ? `${d} · ${time}` : d;
 }
+
+/* Datas "AAAA-MM-DD" são dias do calendário, não instantes: sempre lidas e
+   escritas no horário LOCAL. new Date("2026-10-04") é meia-noite em UTC,
+   que no Brasil ainda é o dia anterior; toISOString() faz o mesmo erro no
+   sentido contrário depois das 21h. */
+
+/** "2026-10-04" → Date local (meia-noite daqui). null se não reconhecer. */
+export function parseISODate(value?: string | null): Date | null {
+  const m = (value ?? "").slice(0, 10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  const d = new Date(+m[1], +m[2] - 1, +m[3]);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** Date → "AAAA-MM-DD" no dia local. */
+export function toISODate(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** Hoje, "AAAA-MM-DD", no horário de Brasília. Vale igual no navegador e
+ *  no servidor (que roda em UTC na Vercel). */
+export function todayISO(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+}
+
+const DIAS_SEMANA = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+
+/** "2026-10-04" → "Domingo". Sempre calculado da data, nunca de um campo salvo à parte. */
+export function weekdayFromISO(value?: string | null): string {
+  const d = parseISODate(value);
+  return d ? DIAS_SEMANA[d.getDay()] : "";
+}
+
+/** Junta só as partes preenchidas: joinDot("Domingo", "", "19:00") → "Domingo · 19:00". */
+export function joinDot(...parts: Array<string | null | undefined | false>): string {
+  return parts.filter((p): p is string => typeof p === "string" && p.trim() !== "").join(" · ");
+}

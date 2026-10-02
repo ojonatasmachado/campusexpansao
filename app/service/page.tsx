@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { todayISO, weekdayFromISO } from "./lib/date";
 import { createServiceSupabaseClient } from "./lib/supabase";
 import { resolverEnqueteElegivel } from "./lib/enquetes";
 import { resolverPesquisaElegivel } from "./lib/pesquisas";
@@ -801,7 +802,7 @@ function toChurchView(row: ChurchRow): ChurchView {
     id: row.id,
     organizationId: row.organization_id,
     nome: row.name,
-    cidade: row.city || "Cidade não informada",
+    cidade: row.city || "",
     matriz: row.is_headquarters,
     criadaEm: row.created_at,
     doc: row.doc,
@@ -825,9 +826,9 @@ function toPersonView(row: PersonRow): PersonView {
     churchId: row.church_id,
     userId: row.user_id,
     name: row.name,
-    phone: row.phone || "Telefone não informado",
-    email: row.email || "E-mail não informado",
-    sinceYear: row.since_year || "Ano não informado",
+    phone: row.phone || "",
+    email: row.email || "",
+    sinceYear: row.since_year || "",
     status: row.status,
     engagement: row.engagement,
     availability: row.availability ?? {},
@@ -847,10 +848,10 @@ function toMemberView(row: MemberRow): MemberView {
     groupId: row.group_id,
     titleId: row.title_id,
     name: row.name,
-    phone: row.phone || "Telefone não informado",
-    email: row.email || "E-mail não informado",
+    phone: row.phone || "",
+    email: row.email || "",
     birth: row.birth,
-    sinceYear: row.since_year || "Ano não informado",
+    sinceYear: row.since_year || "",
     situation: row.situation,
     firstContact: row.first_contact || "",
     neighborhood: row.neighborhood,
@@ -880,7 +881,7 @@ function toMinistryViews(
     churchId: ministry.church_id,
     name: ministry.name,
     icon: ministry.icon || "",
-    description: ministry.description || "Descrição não informada",
+    description: ministry.description || "",
     profile: ministry.profile ?? {},
     appModules: ministry.app_modules ?? [],
     positions: positions
@@ -909,11 +910,11 @@ function toEventViews(
     churchId: event.church_id,
     name: event.name,
     kind: event.kind || "Culto",
-    weekday: event.weekday || "Dia não informado",
-    eventDate: event.event_date || "Data não informada",
-    time: event.time || "Horário não informado",
-    slot: event.slot || "slot não informado",
-    location: event.location || "Local não informado",
+    weekday: weekdayFromISO(event.event_date) || event.weekday || "",
+    eventDate: event.event_date || "",
+    time: event.time || "",
+    slot: event.slot || "",
+    location: event.location || "",
     roomId: event.room_id,
     ministries: event.ministries ?? [],
     tags: event.tags ?? [],
@@ -1420,7 +1421,7 @@ export default async function ServiceHomePage() {
   let pesquisaElegivel = null as Awaited<ReturnType<typeof resolverPesquisaElegivel>>;
   if (currentPersonId && organizationId) {
     const minhasEquipes = ministries.filter((m) => m.people.some((p) => p.personId === currentPersonId)).map((m) => m.name);
-    const hoje = new Date().toISOString().slice(0, 10);
+    const hoje = todayISO();
     const { data: escalasServidas } = await supabase
       .schema("service")
       .from("roster_assignments")

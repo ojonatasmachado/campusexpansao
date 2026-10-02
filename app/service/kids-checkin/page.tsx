@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { weekdayFromISO } from "../lib/date";
 import { createServiceSupabaseClient } from "../lib/supabase";
 import { cookies } from "next/headers";
 import KidsCheckinClient from "./KidsCheckinClient";
@@ -80,7 +81,7 @@ export default async function ServiceKidsCheckinPage({
       churchName={marca?.name}
       logoUrl={marca?.logoUrl}
       session={sessionRow ? { id: sessionRow.id, organizationId: sessionRow.organization_id, checkinActive: sessionRow.checkin_active, tokenValid } : null}
-      event={eventRow ? { name: eventRow.name, weekday: eventRow.weekday, eventDate: eventRow.event_date, time: eventRow.time, location: eventRow.location } : null}
+      event={eventRow ? { name: eventRow.name, weekday: weekdayFromISO(eventRow.event_date) || eventRow.weekday || "", eventDate: eventRow.event_date, time: eventRow.time, location: eventRow.location } : null}
       kidsClass={classRow ? { name: classRow.name } : null}
       person={personRow ? { id: personRow.id, name: personRow.name } : null}
       guardianChildren={guardianChildren}
