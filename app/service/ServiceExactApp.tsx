@@ -7973,7 +7973,7 @@ function Config({
             <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
               <div className="cfg-card-t">Quem mais pode editar a marca</div>
               <div className="cfg-card-s">
-                Além de você, libere pessoas específicas em <b>Acessos por pessoa</b> marcando &quot;Marca &amp;
+                Além de você, libere pessoas específicas em <b>Acessos por pessoa</b>{" "}marcando &quot;Marca &amp;
                 aparência&quot;. Elas conseguem abrir só esta aba, sem acesso ao resto de Configurações.
               </div>
             </div>
