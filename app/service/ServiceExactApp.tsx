@@ -31,6 +31,7 @@ import { ServiceAccessProvider, useServiceAccess, type PersonGrant } from "./Acc
 import RequisitosEditor from "./RequisitosEditor";
 import CepInput from "./CepInput";
 import ChurchLockup from "./ChurchLockup";
+import TopUserMenu from "./TopUserMenu";
 import { requirementsFor, requirementLabel, saveRequirements, type Requirement, type RequirementRow } from "./lib/requirements";
 import { HelpDot, Coachmark, HelpFab, TOUR_DESKTOP, SetupChecklist, type SetupCounts } from "./HelpSystem";
 
@@ -838,6 +839,8 @@ function TeamMark({ ministry, size = 16 }: { ministry?: { icon?: string; name?: 
   return <Icon name={iconName} size={size} />;
 }
 
+const ROLE_LABEL: Record<string, string> = { master: "Pastor master", pastor: "Pastor", lider: "Líder", membro: "Membro" };
+
 /* Marca do app: sempre ChurchLockup (logo da igreja | Service). */
 function IgrejaLogo({ logoUrl, nome }: { logoUrl?: string | null; nome?: string }) {
   return <ChurchLockup logoUrl={logoUrl} name={nome} />;
@@ -1357,6 +1360,30 @@ export default function ServiceExactApp({
   const activePeople = people.filter((person) => person.status === "ativo").length;
   const rosterOk = roster.filter((assignment) => assignment.status === "ok").length;
   const confirmationRate = roster.length ? Math.round((rosterOk / roster.length) * 100) : 0;
+  /* presença de verdade: de quem foi escalado (e não recusou) nos cultos dos
+     últimos 90 dias, quantos fizeram check-in. null = ainda sem presença registrada */
+  const presenceRate = useMemo(() => {
+    if (eventAttendance.length === 0) return null;
+    const hoje = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const fim = iso(hoje);
+    const inicio = iso(new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - 90));
+    const passados = new Set(events.filter((e) => e.eventDate && e.eventDate >= inicio && e.eventDate <= fim).map((e) => e.id));
+    const escalados = roster.filter((r) => passados.has(r.event_id) && r.status !== "no");
+    if (escalados.length === 0) return null;
+    const presentes = new Set(eventAttendance.map((a) => `${a.event_id}:${a.person_id}`));
+    const vieram = escalados.filter((r) => presentes.has(`${r.event_id}:${r.person_id}`)).length;
+    return Math.round((vieram / escalados.length) * 100);
+  }, [eventAttendance, events, roster]);
+  const eu = people.find((p) => p.id === currentPersonId);
+  const matrizChurch = churches.find((c) => c.matriz) ?? firstChurch;
+  const paginaUrl = matrizChurch?.slug && matrizChurch.settings?.paginaCfg?.enabled ? `/${matrizChurch.slug}` : null;
+  const sair = async () => {
+    await createServiceBrowserClient().auth.signOut();
+    router.push("/service/login");
+    router.refresh();
+  };
   const positionsByEvent = useMemo(() => {
     return events.flatMap((event) => {
       const eventMinistries = event.ministries.length ? new Set(event.ministries) : null;
@@ -1560,18 +1587,12 @@ export default function ServiceExactApp({
           })}
         </nav>
         <div className="sb-bottom">
-          <Link className="sb-link" href="/">
-            <span className="sb-ic"><Icon name="globo" size={17} /></span> Ver o site público
-          </Link>
-          <button
-            className="sb-link"
-            type="button"
-            onClick={async () => {
-              await createServiceBrowserClient().auth.signOut();
-              router.push("/service/login");
-              router.refresh();
-            }}
-          >
+          {paginaUrl ? (
+            <a className="sb-link" href={paginaUrl} target="_blank" rel="noreferrer">
+              <span className="sb-ic"><Icon name="globo" size={17} /></span> Ver a página da igreja
+            </a>
+          ) : null}
+          <button className="sb-link" type="button" onClick={sair}>
             <span className="sb-ic"><Icon name="sair" size={17} /></span> Sair
           </button>
         </div>
@@ -1600,10 +1621,7 @@ export default function ServiceExactApp({
             <button className="theme-tog" type="button" title="Mudar tema" onClick={() => setTheme((t) => t === "dark" ? "light" : "dark")}>
               <Icon name={theme === "dark" ? "sol" : "lua"} size={16} />
             </button>
-            <button className="top-icon top-avisos" type="button" title="Avisos"><Icon name="sino" size={17} /></button>
-            <div className="av av-md top-av" style={{ background: "var(--olive-dim)", color: "var(--olive)", border: "0.5px solid var(--olive-line)", cursor: "pointer" }}>
-              {firstChurch?.nome ? firstChurch.nome.slice(0, 2).toUpperCase() : "CE"}
-            </div>
+            <TopUserMenu name={eu?.name ?? "Você"} roleLabel={ROLE_LABEL[currentRole] ?? "Liderança"} photoUrl={eu?.photoUrl} churchPageUrl={paginaUrl} onLogout={sair} />
           </div>
         </header>
 
@@ -1614,6 +1632,8 @@ export default function ServiceExactApp({
             members={members}
             activePeople={activePeople}
             confirmationRate={confirmationRate}
+            presenceRate={presenceRate}
+            userName={eu?.name}
             gaps={gaps}
             events={events}
             visitorsInCare={visitorsInCare}
@@ -1982,6 +2002,8 @@ function Painel({
   members,
   activePeople,
   confirmationRate,
+  presenceRate,
+  userName,
   gaps,
   events,
   visitorsInCare,
@@ -2005,6 +2027,8 @@ function Painel({
   members: MemberView[];
   activePeople: number;
   confirmationRate: number;
+  presenceRate: number | null;
+  userName?: string;
   gaps: Array<{ event: EventView; ministry: MinistryView; position: { id: string; name: string } }>;
   events: EventView[];
   visitorsInCare: number;
@@ -2031,7 +2055,7 @@ function Painel({
       <div className="ph">
         <div>
           <div className="ph-eyebrow">Painel</div>
-          <h1 className="ph-title">Bom domingo, <em>liderança</em> <HelpDot text="Seu resumo do domingo: próximos cultos, vagas em aberto na escala e o que precisa da sua atenção agora." /></h1>
+          <h1 className="ph-title">Olá, <em>{userName?.split(" ")[0] ?? "liderança"}</em> <HelpDot text="Seu resumo da semana: próximos cultos, vagas em aberto na escala e o que precisa da sua atenção agora." /></h1>
           <p className="ph-sub">Visão da semana: quem está escalado, o que falta preencher e quem precisa de acompanhamento.</p>
         </div>
         <div className="ph-actions">
@@ -2070,8 +2094,17 @@ function Painel({
           <div className="panel">
             <div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={14} /> Engajamento <HelpDot text="Presença média de quem foi escalado nos últimos 90 dias." /></span><span className="panel-meta">90 dias</span></div>
             <div className="panel-body">
-              <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: "-0.04em" }}>{confirmationRate || 82}%<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>presença média</span></div>
-              <div style={{ marginTop: 6 }}><Spark value={confirmationRate || 82} /></div>
+              {presenceRate === null ? (
+                <>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>Sem dados ainda</div>
+                  <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, lineHeight: 1.5 }}>Os números aparecem depois do primeiro culto com escala confirmada.</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: "-0.04em" }}>{presenceRate}%<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>presença média</span></div>
+                  <div style={{ marginTop: 6 }}><Spark value={presenceRate} /></div>
+                </>
+              )}
             </div>
           </div>
           <div className="panel">
