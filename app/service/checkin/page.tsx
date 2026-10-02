@@ -4,6 +4,7 @@ import CheckinLandingClient from "./CheckinLandingClient";
 import { resolveMode, THEME_COOKIE, type BrandCfg } from "../lib/theme";
 import { cookies } from "next/headers";
 import ServiceTheme from "../ServiceTheme";
+import { getChurchBrandByOrg } from "../lib/auth-church";
 
 type CheckinResult = {
   ok: boolean;
@@ -103,12 +104,15 @@ export default async function ServiceCheckinPage({
     }
   }
 
+  const marca = await getChurchBrandByOrg(eventRow?.organization_id as string | undefined);
   const themeMode = resolveMode((await cookies()).get(THEME_COOKIE)?.value, brandCfg);
 
   return (
     <>
     <ServiceTheme brand={brandCfg} mode={themeMode} />
     <CheckinLandingClient
+      churchName={marca?.name}
+      logoUrl={marca?.logoUrl}
       event={{
         id: eventRow?.id ?? eventId,
         organizationId: eventRow?.organization_id ?? "",

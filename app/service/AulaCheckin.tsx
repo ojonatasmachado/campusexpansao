@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
-import Logo from "../components/Logo";
+import ChurchLockup from "./ChurchLockup";
 
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
@@ -79,8 +79,10 @@ function Av({ name, size = "sm" }: { name: string; size?: "sm" | "md" }) {
 /* ─── tela de resultado (usada aqui e na rota pública /service/aula-checkin) ─── */
 
 export function AulaCheckinLanding({
-  courseName, lessonName, person, result, onDone,
+  courseName, lessonName, person, result, onDone, churchName, logoUrl,
 }: {
+  churchName?: string;
+  logoUrl?: string | null;
   courseName: string;
   lessonName: string;
   person: MemberView | null;
@@ -120,8 +122,8 @@ export function AulaCheckinLanding({
     <div className="modal-bg" style={{ zIndex: 110, borderRadius: 0 }} onClick={onDone}>
       <div className="ck-land" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }} onClick={(e) => e.stopPropagation()}>
         <div className="ck-land-card">
-          <div className="ck-land-logo" style={{ fontSize: 22, letterSpacing: "-0.04em" }}>
-            <Logo />
+          <div className="ck-land-logo">
+            <ChurchLockup logoUrl={logoUrl} name={churchName} />
           </div>
           <div className="ck-land-event">
             <div className="ck-land-ey">Check-in de aula</div>

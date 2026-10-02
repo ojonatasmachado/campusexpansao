@@ -30,6 +30,7 @@ import CursoDrawer from "./CursoDrawer";
 import { ServiceAccessProvider, useServiceAccess, type PersonGrant } from "./AccessContext";
 import RequisitosEditor from "./RequisitosEditor";
 import CepInput from "./CepInput";
+import ChurchLockup from "./ChurchLockup";
 import { requirementsFor, requirementLabel, saveRequirements, type Requirement, type RequirementRow } from "./lib/requirements";
 import { HelpDot, Coachmark, HelpFab, TOUR_DESKTOP, SetupChecklist, type SetupCounts } from "./HelpSystem";
 
@@ -837,24 +838,9 @@ function TeamMark({ ministry, size = 16 }: { ministry?: { icon?: string; name?: 
   return <Icon name={iconName} size={size} />;
 }
 
-/* Marca do app: é o app DA igreja. Logo + nome da igreja, com o sufixo
-   SERVICE fixo embaixo (a parte que continua sendo CE.X). Sem logo, as
-   iniciais da igreja num selo na cor dela. */
+/* Marca do app: sempre ChurchLockup (logo da igreja | Service). */
 function IgrejaLogo({ logoUrl, nome }: { logoUrl?: string | null; nome?: string }) {
-  const iniciais = (nome || "Igreja").split(/\s+/).filter((w) => w.length > 2 || /^[A-Z]/.test(w)).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-  return (
-    <div className="brand-church">
-      {logoUrl ? (
-        <img className="brand-church-logo" src={logoUrl} alt="" />
-      ) : (
-        <span className="brand-church-mark" aria-hidden="true">{iniciais || "IG"}</span>
-      )}
-      <span className="brand-church-text">
-        <span className="brand-church-name">{nome || "Sua igreja"}</span>
-        <span className="brand-church-suffix">Service</span>
-      </span>
-    </div>
-  );
+  return <ChurchLockup logoUrl={logoUrl} name={nome} />;
 }
 
 function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchView[]; activeId: string; setActiveId: (id: string) => void }) {
@@ -870,16 +856,22 @@ function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchVie
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  /* o logo já está na marca logo acima: aqui é ícone. Com uma igreja só o
+     seletor não finge que abre. */
+  const unica = churches.length <= 1;
+  const marca = <span className="cong-mark"><Icon name={active?.matriz ? "identidade" : "globo"} size={16} /></span>;
+  const info = (
+    <span className="cong-info">
+      <span className="cong-name">{active?.nome ?? "Sua igreja"}</span>
+      <span className="cong-role">{active?.matriz ? (unica ? "Matriz" : "Matriz · rede") : "Congregação"}</span>
+    </span>
+  );
+  if (unica) return <div className="cong"><div className="cong-btn static">{marca}{info}</div></div>;
+
   return (
     <div className="cong" ref={ref}>
       <button className="cong-btn" type="button" onClick={() => setOpen((o) => !o)}>
-        <span className="cong-mark">
-          {active?.logoUrl ? <img src={active.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /> : <Icon name="identidade" size={16} />}
-        </span>
-        <span className="cong-info">
-          <span className="cong-name">{active?.nome ?? "Sua igreja"}</span>
-          <span className="cong-role">{active?.matriz ? "Matriz · rede" : "Congregação"}</span>
-        </span>
+        {marca}{info}
         <span className="cong-caret">▾</span>
       </button>
       {open && churches.length > 1 && (
@@ -889,7 +881,7 @@ function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchVie
             <button key={c.id} className={`cong-opt ${c.id === activeId ? "on" : ""}`} type="button"
               onClick={() => { setActiveId(c.id); setOpen(false); }}>
               <span className="cong-opt-mark">
-                {c.logoUrl ? <img src={c.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /> : <Icon name="identidade" size={14} />}
+                <Icon name={c.matriz ? "identidade" : "globo"} size={14} />
               </span>
               <span className="cong-opt-info">
                 <span className="cong-opt-name">{c.nome}</span>
@@ -904,7 +896,7 @@ function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchVie
                 <button key={c.id} className={`cong-opt ${c.id === activeId ? "on" : ""}`} type="button"
                   onClick={() => { setActiveId(c.id); setOpen(false); }}>
                   <span className="cong-opt-mark">
-                {c.logoUrl ? <img src={c.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /> : <Icon name="identidade" size={14} />}
+                <Icon name={c.matriz ? "identidade" : "globo"} size={14} />
               </span>
                   <span className="cong-opt-info">
                     <span className="cong-opt-name">{c.nome}</span>

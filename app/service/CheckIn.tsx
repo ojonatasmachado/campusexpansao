@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
-import Logo from "../components/Logo";
+import ChurchLockup from "./ChurchLockup";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { formatDateBR } from "./lib/date";
 
@@ -106,11 +106,15 @@ export function CheckinLanding({
   person,
   result,
   onDone,
+  churchName,
+  logoUrl,
 }: {
   event: EventView;
   person: PersonView | null;
   result: CheckinResult | null;
   onDone: () => void;
+  churchName?: string;
+  logoUrl?: string | null;
 }) {
   let cor = "var(--olive)";
   let titulo = "Verificando...";
@@ -155,8 +159,8 @@ export function CheckinLanding({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="ck-land-card">
-          <div className="ck-land-logo" style={{ fontSize: 22, letterSpacing: "-0.04em" }}>
-            <Logo />
+          <div className="ck-land-logo">
+            <ChurchLockup logoUrl={logoUrl} name={churchName} />
           </div>
           <div className="ck-land-event">
             <div className="ck-land-ey">Check-in de voluntário</div>

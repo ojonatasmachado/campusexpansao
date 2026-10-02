@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation";
 import { createServiceSupabaseClient } from "../lib/supabase";
+import { cookies } from "next/headers";
 import KidsCheckinClient from "./KidsCheckinClient";
+import ServiceTheme from "../ServiceTheme";
+import { getChurchBrandByOrg } from "../lib/auth-church";
+import { resolveMode, THEME_COOKIE } from "../lib/theme";
 
 export default async function ServiceKidsCheckinPage({
   searchParams,
@@ -66,8 +70,15 @@ export default async function ServiceKidsCheckinPage({
 
   const tokenValid = !token || !sessionRow?.checkin_token || token === sessionRow.checkin_token;
 
+  const marca = await getChurchBrandByOrg(sessionRow?.organization_id as string | undefined);
+  const themeMode = resolveMode((await cookies()).get(THEME_COOKIE)?.value, marca?.brand);
+
   return (
+    <>
+    <ServiceTheme brand={marca?.brand} mode={themeMode} />
     <KidsCheckinClient
+      churchName={marca?.name}
+      logoUrl={marca?.logoUrl}
       session={sessionRow ? { id: sessionRow.id, organizationId: sessionRow.organization_id, checkinActive: sessionRow.checkin_active, tokenValid } : null}
       event={eventRow ? { name: eventRow.name, weekday: eventRow.weekday, eventDate: eventRow.event_date, time: eventRow.time, location: eventRow.location } : null}
       kidsClass={classRow ? { name: classRow.name } : null}
@@ -75,5 +86,6 @@ export default async function ServiceKidsCheckinPage({
       guardianChildren={guardianChildren}
       attendanceByChild={attendanceByChild}
     />
+    </>
   );
 }

@@ -13,8 +13,10 @@ type CheckinResult = {
 };
 
 export default function AulaCheckinLandingClient({
-  courseName, lessonName, person, result,
+  courseName, lessonName, person, result, churchName, logoUrl,
 }: {
+  churchName?: string;
+  logoUrl?: string | null;
   courseName: string;
   lessonName: string;
   person: MemberView | null;
@@ -27,6 +29,8 @@ export default function AulaCheckinLandingClient({
       lessonName={lessonName}
       person={person}
       result={result}
+      churchName={churchName}
+      logoUrl={logoUrl}
       onDone={() => router.push("/service")}
     />
   );

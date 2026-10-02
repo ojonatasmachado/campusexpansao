@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // pacotes de ajuste do Service (fora do git)
+    "ajustes_service_*/**",
   ]),
 ]);
 

@@ -34,10 +34,14 @@ export default function CheckinLandingClient({
   event,
   person,
   result,
+  churchName,
+  logoUrl,
 }: {
   event: EventView;
   person: PersonView | null;
   result: CheckinResult;
+  churchName?: string;
+  logoUrl?: string | null;
 }) {
   const router = useRouter();
   return (
@@ -45,6 +49,8 @@ export default function CheckinLandingClient({
       event={event}
       person={person}
       result={result}
+      churchName={churchName}
+      logoUrl={logoUrl}
       onDone={() => router.push("/service")}
     />
   );

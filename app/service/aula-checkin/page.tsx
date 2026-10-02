@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation";
 import { createServiceSupabaseClient } from "../lib/supabase";
+import { cookies } from "next/headers";
 import AulaCheckinLandingClient from "./AulaCheckinLandingClient";
+import ServiceTheme from "../ServiceTheme";
+import { getChurchBrandByOrg } from "../lib/auth-church";
+import { resolveMode, THEME_COOKIE } from "../lib/theme";
 
 type CheckinResult = {
   ok: boolean;
@@ -109,12 +113,20 @@ export default async function AulaCheckinPage({
     }
   }
 
+  const marca = await getChurchBrandByOrg(courseRow?.organization_id as string | undefined);
+  const themeMode = resolveMode((await cookies()).get(THEME_COOKIE)?.value, marca?.brand);
+
   return (
+    <>
+    <ServiceTheme brand={marca?.brand} mode={themeMode} />
     <AulaCheckinLandingClient
+      churchName={marca?.name}
+      logoUrl={marca?.logoUrl}
       courseName={courseRow?.name ?? "Curso"}
       lessonName={lessonRow?.name ?? "Aula"}
       person={memberRow ? { id: memberRow.id, name: memberRow.name } : null}
       result={result}
     />
+    </>
   );
 }
