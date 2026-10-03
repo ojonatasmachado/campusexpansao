@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 /* viewportFit "cover": o app ocupa a tela inteira do celular e o CSS v5
    afasta o que é fixo do notch, da Dynamic Island e da barra de gestos
    (--safe-*, seção 6 do service-v5.css). Só no Service: o site e a
-   Página pública da igreja continuam sem cover. */
+   Página da igreja continuam sem cover. */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,

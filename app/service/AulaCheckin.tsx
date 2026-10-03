@@ -1,5 +1,6 @@
 "use client";
 
+import { Icon } from "./lib/icons";
 import { avisar } from "./lib/avisar";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -132,7 +133,7 @@ export function AulaCheckinLanding({
             <div className="ck-land-when">{courseName}</div>
           </div>
           <div className="ck-land-result">
-            <div className="ck-land-ic" style={{ color: cor, borderColor: cor, fontSize: 28, fontWeight: 700 }}>{icone}</div>
+            <div className="ck-land-ic" style={{ color: cor, borderColor: cor, fontSize: 28, fontWeight: 700 }}>{icone === "✓" ? <Icon name="ok" size={30} /> : icone}</div>
             {person && (
               <div className="ck-land-pessoa">
                 <Av name={person.name} size="md" />
@@ -449,7 +450,7 @@ export function AulaCheckinModal({
                     if (!m) return null;
                     return (
                       <div className="ck-row" key={rec.member_id}>
-                        <span className="ck-check">✓</span>
+                        <span className="ck-check"><Icon name="ok" size={14} /></span>
                         <Av name={m.name} size="sm" />
                         <div className="ck-row-main">
                           <div className="ck-row-name">{m.name}</div>

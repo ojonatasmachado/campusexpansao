@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 /* Corte + zoom antes de enviar qualquer imagem do Service (logo, capa da
-   Página pública, imagem de notícia...). Arrasta pra reposicionar, controla
+   Página da igreja, imagem de notícia...). Arrasta pra reposicionar, controla
    o zoom no slider, e só sai daqui uma imagem já no enquadramento certo —
    sem precisar de editor externo. Sem dependência nova : só canvas nativo.
 

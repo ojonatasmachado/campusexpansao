@@ -132,3 +132,44 @@
 .tp-tab.on{color:var(--olive)}
 .tp-tab.on .tp-tab-ic{background:var(--olive-dim)}
 @media (max-width:640px){.tp-prev-row{grid-template-columns:1fr}}
+
+/* ── tamanho do texto do app do membro (S6) ─────────────────────
+   zoom na coluna do conteúdo: tudo cresce junto e o texto quebra na
+   largura da tela, então nada rola para o lado. A barra de abas fica
+   de fora e o rótulo dela cresce no máximo 1,15x. */
+.mob-bg.mob-self .m-head,.mob-bg.mob-self .m-scroll,.mob-bg.mob-self .ob{zoom:var(--m-scale,1)}
+.mob-bg.mob-self .m-tab-l{font-size:calc(12px * min(var(--m-scale,1), 1.15))}
+.ts-pick{display:grid;gap:8px;width:100%}
+.ts-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:var(--r-md);background:var(--ink);border:0.5px solid var(--border-2)}
+.ts-seg button{min-height:44px;border-radius:var(--r-sm);font-size:14px;font-weight:600;color:var(--muted);text-align:center}
+.ts-seg button.on{background:var(--accent-fill);color:var(--accent-ink)}
+.ts-prev{margin:0;font-size:15px;color:var(--light)}
+.m-data.m-data-col{flex-direction:column;align-items:stretch;gap:10px}
+.ob-textsize{margin-top:18px;text-align:left}
+
+/* ── componentes base (S10, S11, S12) ───────────────────────────── */
+/* "Como calculamos": link de texto no lugar do "?" em números e painéis */
+.help-link{display:inline;margin-left:6px;padding:0;border:0;background:none;font-family:var(--font, inherit);font-size:13px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--border-3);cursor:pointer}
+.help-link:hover{color:var(--white)}
+.kpi-how{margin-top:6px}
+.kpi-how .help-link{margin-left:0}
+/* estado vazio: mesmo alinhamento em todo lugar */
+.empty{text-align:left;padding:24px 20px;color:var(--muted);font-size:14px;line-height:1.5}
+.empty-state{display:grid;justify-items:start;gap:6px;padding:24px 20px}
+.empty-state-t{font-size:17px;font-weight:600;letter-spacing:-0.01em;color:var(--white)}
+.empty-state-s{margin:0 0 8px;max-width:440px;font-size:14px;line-height:1.5;color:var(--muted)}
+/* alvos de toque */
+@media (pointer:coarse),(max-width:767px){
+  .main .btn,.drawer .btn,.modal .btn{min-height:44px}
+  .main .btn-sm,.drawer .btn-sm,.modal .btn-sm{min-height:44px;padding-left:14px;padding-right:14px}
+}
+.mob-bg.mob-self .btn{min-height:48px}
+.mob-bg.mob-self .btn-pri{min-height:52px}
+.mob-bg.mob-self .m-quick-b,.mob-bg.mob-self .m-data .btn-sm{min-height:48px}
+
+/* app do membro: mínimo de 12px também onde o v5 usava --fs-cap (11px) */
+.mob-bg .m-section-t,.mob-bg .m-when,.mob-bg .chip,.mob-bg .m-jp small{font-size:12px}
+/* etapas da caminhada dividem a largura (nomes longos quebram linha) */
+.m-journey-pips{gap:4px}
+.m-journey-pips .m-jp{flex:1 1 0;min-width:0}
+.m-journey-pips .m-jp small{display:block;overflow-wrap:anywhere;hyphens:auto;line-height:1.2;text-align:center}

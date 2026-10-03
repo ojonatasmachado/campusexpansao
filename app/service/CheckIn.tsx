@@ -1,5 +1,6 @@
 "use client";
 
+import { Icon } from "./lib/icons";
 import { avisar } from "./lib/avisar";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -175,7 +176,7 @@ export function CheckinLanding({
               className="ck-land-ic"
               style={{ color: cor, borderColor: cor, fontSize: 28, fontWeight: 700 }}
             >
-              {icone}
+              {icone === "✓" ? <Icon name="ok" size={30} /> : icone}
             </div>
             {person && (
               <div className="ck-land-pessoa">
@@ -344,7 +345,7 @@ function CheckinRoster({
         const fn = getFn(rec.person_id);
         return (
           <div className="ck-row" key={rec.person_id}>
-            <span className="ck-check">✓</span>
+            <span className="ck-check"><Icon name="ok" size={14} /></span>
             <Av name={p.name} size="sm" />
             <div className="ck-row-main">
               <div className="ck-row-name">

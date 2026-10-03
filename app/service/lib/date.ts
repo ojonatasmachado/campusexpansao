@@ -60,3 +60,10 @@ export function weekdayFromISO(value?: string | null): string {
 export function joinDot(...parts: Array<string | null | undefined | false>): string {
   return parts.filter((p): p is string => typeof p === "string" && p.trim() !== "").join(" · ");
 }
+
+/** "Bom dia" / "Boa tarde" / "Boa noite" pela hora de Brasília (igual no
+ *  servidor e no navegador, sem diferença na hidratação). */
+export function saudacao(): string {
+  const h = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "America/Sao_Paulo", hour: "2-digit", hour12: false }).format(new Date())) % 24;
+  return h >= 5 && h < 12 ? "Bom dia" : h >= 12 && h < 18 ? "Boa tarde" : "Boa noite";
+}

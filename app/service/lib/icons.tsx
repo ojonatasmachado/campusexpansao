@@ -53,7 +53,7 @@ export const ICON_PATHS: Record<string, string> = {
   codigo: '<path d="m9 8-5 4 5 4"/><path d="m15 8 5 4-5 4"/>',
   wifi: '<path d="M2 8.5a15.3 15.3 0 0 1 20 0"/><path d="M5.5 12a10.5 10.5 0 0 1 13 0"/><path d="M9 15.5a5.8 5.8 0 0 1 6 0"/><path d="M12 19h.01"/>',
 
-  // ── jornada, cursos, agenda ──────────────────────────────────────────────
+  // ── caminhada, cursos, agenda ──────────────────────────────────────────────
   decisoes: '<path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7A5 5 0 1 0 3.2 12.7l8.8 8.8 8.8-8.8a5 5 0 0 0 0-7.1Z"/>',
   batismos: '<path d="M12 3s6 5.7 6 10a6 6 0 0 1-12 0c0-4.3 6-10 6-10Z"/>',
   cursos: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>',
@@ -132,10 +132,10 @@ export const ICON_PATHS: Record<string, string> = {
 
 /* categorias pra organizar o seletor visual (ordem de exibição) */
 export const ICON_CATEGORIES: { label: string; icons: IconName[] }[] = [
-  { label: "Times & ministérios", icons: ["times", "louvor", "midia", "recepcao", "diaconia", "intercessao", "missoes", "jovens", "casais", "kids", "bercario", "seguranca", "estacionamento", "som", "transmissao", "fotografia", "limpeza", "manutencao", "transporte", "copa", "microfone", "pincel", "codigo", "wifi"] },
-  { label: "Fé & crescimento", icons: ["cruz", "biblia", "oracao", "coracao", "estrela", "semente", "arvore", "escada", "multiplicar", "batismos"] },
+  { label: "Times", icons: ["times", "louvor", "midia", "recepcao", "diaconia", "intercessao", "missoes", "jovens", "casais", "kids", "bercario", "seguranca", "estacionamento", "som", "transmissao", "fotografia", "limpeza", "manutencao", "transporte", "copa", "microfone", "pincel", "codigo", "wifi"] },
+  { label: "Fé e crescimento", icons: ["cruz", "biblia", "oracao", "coracao", "estrela", "semente", "arvore", "escada", "multiplicar", "batismos"] },
   { label: "Pessoas", icons: ["pessoa", "membros", "visitante", "usuarioadd", "perfil"] },
-  { label: "Jornada & agenda", icons: ["decisoes", "cursos", "escalas", "cultos", "reunioes", "ensaios", "quadros", "espacos", "agenda", "identidade", "historia"] },
+  { label: "Caminhada e agenda", icons: ["decisoes", "cursos", "escalas", "cultos", "reunioes", "ensaios", "quadros", "espacos", "agenda", "identidade", "historia"] },
   { label: "Financeiro", icons: ["moeda", "carteira", "presente", "trofeu", "meta"] },
   { label: "Interface", icons: ["comunicacao", "conversas", "sino", "enviar", "telefone", "whatsapp", "instagram", "youtube", "facebook", "tiktok", "globo", "lixeira", "copiar", "compartilhar", "baixar", "imagem", "documento", "pasta", "lampada", "chave", "cadeado", "bandeira", "mapapin", "play", "link", "anexo", "lista", "circulo", "quadrado", "triangulo"] },
 ];
@@ -180,7 +180,7 @@ export function IconPicker({ value, onChange }: { value: string; onChange: (name
       <button type="button" className="icon-picker-trigger" onClick={() => setOpen((o) => !o)}>
         <Icon name={value || DEFAULT_ICON} size={20} />
         <span>{value || "Escolher ícone"}</span>
-        <span className="icon-picker-trigger-x">{open ? "Fechar ▴" : "Trocar ▾"}</span>
+        <span className="icon-picker-trigger-x">{open ? "Fechar" : "Trocar"} <Caret open={open} /></span>
       </button>
       {open && (
         <div className="icon-picker-panel">
@@ -217,5 +217,14 @@ export function IconPicker({ value, onChange }: { value: string; onChange: (name
         </div>
       )}
     </div>
+  );
+}
+
+/* seta de abrir/fechar (no lugar de ▾ ▴ em texto) */
+export function Caret({ open = false, size = 14 }: { open?: boolean; size?: number }) {
+  return (
+    <svg className="cex-caret" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: open ? "rotate(180deg)" : undefined, transition: "transform .15s", flexShrink: 0 }}>
+      <path d="m6 9 6 6 6-6" />
+    </svg>
   );
 }

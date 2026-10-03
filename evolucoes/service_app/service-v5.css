@@ -123,11 +123,11 @@ a.login-choice:hover,button.login-choice:hover{border-color:var(--olive-line)}
 .m-tab button.on{font-weight:600}
 .m-tab button.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;border-radius:0 0 2px 2px;background:var(--accent-fill)}
 /* legibilidade do app do membro */
-.m-app{font-size:10.5px}
+.m-app{font-size:12px}
 .m-section-t{font-size:var(--fs-cap);color:var(--muted)}
 .m-when{font-size:var(--fs-cap)}
 .m-quick-b{min-height:50px;font-size:13.5px}
-.m-jp small{font-size:10px}
+.m-jp small{font-size:12px}
 .ob-eyebrow{font-size:var(--fs-cap)}
 .ob-logo{margin-bottom:22px}
 .ob-form{gap:16px}
@@ -141,12 +141,12 @@ a.login-choice:hover,button.login-choice:hover{border-color:var(--olive-line)}
 /* botão esticado (grid, width:100%) centraliza o rótulo */
 .btn{justify-content:center}
 /* etiquetas pequenas demais para ler */
-.sb-group{font-size:10.5px;color:var(--muted)}
-.tr.head span{font-size:10.5px}
-.cong-role{font-size:10.5px}
+.sb-group{font-size:11px;color:var(--muted)}
+.tr.head span{font-size:11px}
+.cong-role{font-size:11px}
 .kpi-label,.ph-eyebrow,.top-crumb{font-size:var(--fs-cap)}
-.chip{font-size:10.5px}
-.view-sw-role,.view-sw-group{font-size:10.5px}
+.chip{font-size:11px}
+.view-sw-role,.view-sw-group{font-size:11px}
 /* seletor de congregação com uma igreja só: não finge que abre */
 .cong-btn.static{cursor:default}
 .cong-btn.static .cong-caret{display:none}

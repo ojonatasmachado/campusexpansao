@@ -1,5 +1,6 @@
 "use client";
 
+import { Icon } from "./lib/icons";
 import { plural } from "./lib/plural";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -282,7 +283,7 @@ function QuizEditor({
                     onClick={() => setQ(i, "correta", oi)}
                     title="Correta"
                   >
-                    {q.correta === oi ? "●" : "○"}
+                    {q.correta === oi ? <Icon name="ok" size={14} /> : <Icon name="circulo" size={14} />}
                   </button>
                   <input
                     className="input"

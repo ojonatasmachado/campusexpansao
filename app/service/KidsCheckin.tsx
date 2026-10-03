@@ -210,7 +210,7 @@ export function KidsQRModal({
                   const child = childById.get(att.child_id);
                   return (
                     <div className="ck-row" key={att.id}>
-                      <span className="ck-check">✓</span>
+                      <span className="ck-check"><Icon name="ok" size={14} /></span>
                       <div className="av av-sm">{child ? ini(child.name) : "?"}</div>
                       <div className="ck-row-main">
                         <div className="ck-row-name">{child?.name ?? "Criança"}{child?.allergies ? <span className="ck-extra">⚠ alergia</span> : null}</div>

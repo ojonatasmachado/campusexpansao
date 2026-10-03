@@ -49,7 +49,7 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 .bib-verse { display: flex; align-items: flex-start; gap: 10px; width: 100%; text-align: left; background: transparent; border: none; border-left: 3px solid transparent; border-radius: 0 var(--r-sm) var(--r-sm) 0; padding: 8px 10px 8px 11px; transition: background .14s; }
 .bib-verse:hover { background: var(--graphite); }
 .bib-verse.marked { border-left-color: var(--mark); background: color-mix(in srgb, var(--mark) 14%, transparent); }
-.bib-verse-n { font-family: var(--mono); font-size: 10.5px; color: var(--subtle); flex-shrink: 0; margin-top: 3px; min-width: 16px; }
+.bib-verse-n { font-family: var(--mono); font-size: 11px; color: var(--subtle); flex-shrink: 0; margin-top: 3px; min-width: 16px; }
 .bib-verse.marked .bib-verse-n { color: var(--mark); font-weight: 700; }
 .bib-verse-t { font-size: 14.5px; line-height: 1.6; color: var(--light); }
 .bib-verse-note-ic { flex-shrink: 0; color: var(--mark, var(--olive)); margin-top: 3px; }
@@ -83,7 +83,7 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 .brand-church-mark { width:40px; height:40px; border-radius:var(--r-md); background:var(--accent-fill); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; letter-spacing:-0.02em; flex-shrink:0; }
 .brand-church-text { display:flex; flex-direction:column; gap:3px; min-width:0; }
 .brand-church-name { font-size:15px; font-weight:700; letter-spacing:-0.02em; color:var(--white); line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.brand-church-suffix { font-family:var(--mono); font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); }
+.brand-church-suffix { font-family:var(--mono); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); }
 
 /* ════════ APP DO MEMBRO EM TELA CHEIA (mode="self") ════════
    A moldura de celular (.phone 340x710, notch, relógio "9:41") é da PRÉVIA

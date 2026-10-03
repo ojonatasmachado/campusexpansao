@@ -3,12 +3,13 @@
 import { avisar } from "./lib/avisar";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
-import { Icon } from "./lib/icons";
-import { formatDateBR, joinDot } from "./lib/date";
+import { Icon, Caret } from "./lib/icons";
+import { formatDateBR, joinDot, saudacao } from "./lib/date";
 import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import { PhotoPicker } from "./PhotoPicker";
 import CepInput from "./CepInput";
 import ChurchLockup from "./ChurchLockup";
+import { TEXT_SCALES, useTextScale } from "./lib/text-scale";
 import { requirementLabel, type RequirementKind } from "./lib/requirements";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
@@ -88,7 +89,7 @@ type Board = { id: string; name: string; columns: Array<{ id: string; nome?: str
 type Course = { id: string; name: string; kind: string | null; level: string | null; description: string | null };
 type Enrollment = { id: string; course_id: string; member_id: string; done_count: number; status: string };
 
-/* ── jornada do membro no app (Fase 4, migração 0046) ─────────────────────────
+/* ── caminhada do membro no app (Fase 4, migração 0046) ─────────────────────────
    O que falta pra cada curso/time/"Quero servir" vem do banco
    (service.my_missing_requirements) e as ações passam por funções que
    conferem os requisitos no servidor. As abas leem daqui via contexto. */
@@ -239,11 +240,19 @@ export type MobileOverlayProps = {
   onSwitchToPanel?: () => void;
   selfPersonId?: string | null;
   onLogout?: () => void;
+  /* nome que a igreja dá aos pequenos grupos (gruposCfg.termoP) */
+  groupTerm?: string;
 };
 
 // ── constantes ────────────────────────────────────────────────────────────────
 
-const JORNADA = ["Decisao", "Batismo", "Fundamentos", "GC", "Servindo"];
+/* etapas da caminhada; a 4ª usa o nome que a igreja deu aos grupos
+   (Configurações → Grupos), nunca a sigla */
+const GroupTermContext = createContext("Grupo");
+function useJornada() {
+  const grupo = useContext(GroupTermContext);
+  return ["Decisão", "Batismo", "Fundamentos", grupo, "Servindo"];
+}
 const JORNADA_STEPS: JourneyStep[] = ["decisao", "batismo", "curso", "integracao", "time"];
 const AVAIL_LABELS: Record<string, string> = { dom_m: "Domingo manha", dom_n: "Domingo noite", qua: "Quarta" };
 const ETAPAS = [
@@ -308,6 +317,7 @@ function TabInicio({
 
   const journey = member?.journey ?? [];
   const done = journey.filter(Boolean).length;
+  const JORNADA = useJornada();
   const nextStep = JORNADA.find((_, i) => !journey[i]) ?? "Completo";
 
   const proxSlot = mySlots[0];
@@ -377,7 +387,7 @@ function TabInicio({
             <div className="m-journey-pips">
               {JORNADA.map((s, i) => (
                 <div className={`m-jp ${journey[i] ? "on" : ""}`} key={i}>
-                  <span>{journey[i] ? "✓" : i + 1}</span>
+                  <span>{journey[i] ? <Icon name="ok" size={13} /> : i + 1}</span>
                   <small>{s}</small>
                 </div>
               ))}
@@ -472,7 +482,7 @@ function TabEscala({ person, events, roster, onConfirmarEscala, onRecusarEscala 
             <div className="m-culto">{ev.name}</div>
             {st === "ok" ? (
               <div className="m-confirmed">
-                ✓ Você confirmou
+                <Icon name="ok" size={15} /> Você confirmou
                 <button
                   className="m-btn m-btn-swap"
                   style={{ marginLeft: "auto", padding: "6px 12px" }}
@@ -604,7 +614,7 @@ function TabTarefas({ person, cards, boards, onAddCardComment }: { person: P; ca
             <div className="m-task-title">{c.title}</div>
             <div className="m-task-meta">{board?.name ?? "Quadro"}</div>
           </div>
-          <span className="m-task-caret">{isOpen ? "▴" : "▾"}</span>
+          <span className="m-task-caret"><Caret open={isOpen} /></span>
         </button>
         {isOpen && (
           <div className="m-task-body">
@@ -761,7 +771,7 @@ function TabConversas({
                   {!isMine && sender && (
                     <div
                       style={{
-                        fontSize: 10,
+                        fontSize: 12,
                         color: "var(--muted)",
                         marginBottom: 3,
                         fontFamily: "var(--mono)",
@@ -1230,7 +1240,7 @@ function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisitor }: {
                   {v.origin ? ` · ${v.origin}` : ""}
                 </div>
               </div>
-              <span className="m-task-caret">{isOpen ? "▴" : "▾"}</span>
+              <span className="m-task-caret"><Caret open={isOpen} /></span>
             </button>
             {isOpen && (
               <div style={{ marginTop: 12 }}>
@@ -1243,7 +1253,7 @@ function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisitor }: {
                       <div
                         style={{
                           fontFamily: "var(--mono)",
-                          fontSize: 8.5,
+                          fontSize: 12,
                           color: i <= etIdx ? "var(--light)" : "var(--subtle)",
                           marginTop: 6,
                         }}
@@ -1266,7 +1276,7 @@ function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisitor }: {
                   </button>
                 )}
                 {etIdx === ETAPAS.length - 1 && (
-                  <div className="m-confirmed" style={{ marginTop: 10 }}>✓ Pronto para virar membro</div>
+                  <div className="m-confirmed" style={{ marginTop: 10 }}><Icon name="ok" size={15} /> Pronto para virar membro</div>
                 )}
               </div>
             )}
@@ -1593,7 +1603,7 @@ function TabCursos({
 /* "Quero servir" (service.request_to_serve): times em que a pessoa ainda não
    está. A igreja define o que precisa antes (requisitos de "servir" e do
    time); com algo faltando, o app mostra o que falta. O pedido vai pra
-   liderança aprovar no painel (Times & Ministérios). */
+   liderança aprovar no painel (Times). */
 function ServirSection({ person, member, ministries }: { person: P; member: M | null; ministries: Ministry[] }) {
   const j = useContext(JourneyContext);
   const faltas = useFaltas();
@@ -1624,7 +1634,7 @@ function ServirSection({ person, member, ministries }: { person: P; member: M | 
                 <Icon name={m.icon || "times"} size={15} /> {m.name}
               </div>
               {pendente(m.id) ? (
-                <div className="m-confirmed" style={{ marginTop: 10 }}>✓ Pedido enviado. A liderança vai te chamar.</div>
+                <div className="m-confirmed" style={{ marginTop: 10 }}><Icon name="ok" size={15} /> Pedido enviado. A liderança vai te chamar.</div>
               ) : faltasTime.length > 0 ? (
                 <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 8, lineHeight: 1.5 }}>
                   <b style={{ color: "var(--light)" }}>Para entrar:</b> {faltasTime.join(" · ")}
@@ -1669,7 +1679,7 @@ function CursoInscricao({ courseId }: { courseId: string }) {
       </div>
     );
   }
-  if (estado === "ok") return <div className="m-confirmed" style={{ marginTop: 12 }}>✓ Inscrição feita. O curso aparece em Meus cursos.</div>;
+  if (estado === "ok") return <div className="m-confirmed" style={{ marginTop: 12 }}><Icon name="ok" size={15} /> Inscrição feita. O curso aparece em Meus cursos.</div>;
   return (
     <>
       <button
@@ -1728,7 +1738,7 @@ function TabBatismo({ baptismClasses, memberId }: { baptismClasses: BaptismClass
           {b.open_enrollment ? (
             inscrito[b.id] ? (
               <div className="m-confirmed" style={{ marginTop: 12 }}>
-                ✓ Inscrição enviada! O responsável vai te chamar.
+                <Icon name="ok" size={15} /> Inscrição enviada! O responsável vai te chamar.
               </div>
             ) : (
               <button
@@ -1819,7 +1829,7 @@ function TabAvisos({
       )}
       {sent && (
         <div className="m-card" style={{ borderColor: "var(--olive-line)", textAlign: "center" }}>
-          <div style={{ color: "var(--olive-soft)", fontWeight: 600, fontSize: 14 }}>✓ Enviado</div>
+          <div style={{ color: "var(--olive-soft)", fontWeight: 600, fontSize: 14 }}><Icon name="ok" size={15} /> Enviado</div>
           <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 6 }}>
             A liderança recebeu e vai te responder.
           </div>
@@ -1846,7 +1856,7 @@ function TabAvisos({
                 <div
                   style={{
                     fontFamily: "var(--mono)",
-                    fontSize: 10,
+                    fontSize: 12,
                     color: "var(--subtle)",
                     marginTop: 10,
                     letterSpacing: "0.06em",
@@ -1881,6 +1891,7 @@ function TabPerfil({
   onRequestJourneyStep?: (memberId: string, step: JourneyStep, eventDate: string, note: string) => void;
   setTab?: (tab: string) => void;
 }) {
+  const JORNADA = useJornada();
   const journey = member?.journey ?? [];
   const done = journey.filter(Boolean).length;
   const meusPedidosPendentes = new Set(
@@ -2081,7 +2092,7 @@ function TabPerfil({
         </>
       )}
 
-      <div className="m-section-t" style={{ marginTop: 22 }}>Minha jornada</div>
+      <div className="m-section-t" style={{ marginTop: 22 }}>Minha caminhada</div>
       <div className="m-card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ fontSize: 16, fontWeight: 700 }}>{done} de 5 etapas</div>
@@ -2105,7 +2116,7 @@ function TabPerfil({
                 style={{ opacity: pendente ? 0.6 : 1, cursor: podeClicar ? "pointer" : "default" }}
                 onClick={() => podeClicar && abrirPedidoJornada(kind)}
               >
-                <span>{feito ? "✓" : pendente ? "…" : i + 1}</span>
+                <span>{feito ? <Icon name="ok" size={13} /> : pendente ? <Icon name="pendente" size={13} /> : i + 1}</span>
                 <small>{s}{pendente ? " (pendente)" : ""}</small>
               </div>
             );
@@ -2127,7 +2138,7 @@ function TabPerfil({
             </div>
           </div>
         )}
-        {reqMsg && <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 10 }}>{reqMsg}</div>}
+        {reqMsg && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>{reqMsg}</div>}
       </div>
 
       {onChangePassword && (
@@ -2142,8 +2153,12 @@ function TabPerfil({
         </>
       )}
 
-      <div className="m-section-t" style={{ marginTop: 22 }}>Preferencias</div>
+      <div className="m-section-t" style={{ marginTop: 22 }}>Preferências</div>
       <div className="m-card">
+        <div className="m-data m-data-col">
+          <span>Tamanho do texto</span>
+          <TextSizePicker />
+        </div>
         {theme && setTheme && (
           <div className="m-data">
             <span>Tema escuro</span>
@@ -2159,8 +2174,8 @@ function TabPerfil({
             onClick={() => (pushOn ? desligarPush() : ligarPush())}
           />
         </div>
-        {!pushSupported && <div style={{ fontSize: 11.5, color: "var(--subtle)", marginTop: 8 }}>Disponível quando instalado como app.</div>}
-        {pushMsg && <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 8 }}>{pushMsg}</div>}
+        {!pushSupported && <div style={{ fontSize: 12, color: "var(--subtle)", marginTop: 8 }}>Disponível quando instalado como app.</div>}
+        {pushMsg && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 8 }}>{pushMsg}</div>}
       </div>
 
       <div className="m-section-t" style={{ marginTop: 22 }}>Ajuda</div>
@@ -2260,6 +2275,10 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
           <div className="ob-mark"><Icon name="ok" size={28} /></div>
           <div className="ob-welcome-x">
             Seu acesso foi liberado. Antes de começar, confirme seus dados e escolha uma foto.
+          </div>
+          <div className="ob-textsize">
+            <div className="field-label">Tamanho do texto</div>
+            <TextSizePicker />
           </div>
         </div>
       ),
@@ -2367,7 +2386,7 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
    rua, bairro, cidade e estado, que ficam na ficha pra análises da igreja. */
 export function MemberContactFields({ d, set, erros }: { d: MemberContactInput; set: (k: keyof MemberContactInput, v: string) => void; erros: ReturnType<typeof contactErrors> | null }) {
   const err = (k: keyof ReturnType<typeof contactErrors>) =>
-    erros?.[k] ? <div style={{ fontSize: 11.5, color: "var(--danger)", marginTop: 4 }}>{erros[k]}</div> : null;
+    erros?.[k] ? <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 4 }}>{erros[k]}</div> : null;
   return (
     <div className="ob-form">
       <div className="field">
@@ -2620,7 +2639,7 @@ function TabKidsArea({
                 <span className="m-task-caret">✎</span>
               </div>
               {historico.length > 0 && (
-                <div style={{ marginTop: 10, fontSize: 11.5, color: "var(--subtle)" }}>
+                <div style={{ marginTop: 10, fontSize: 12, color: "var(--subtle)" }}>
                   {historico.map((h) => <div key={h.id}>{formatDateBR(h.dropped_off_at.slice(0, 10))} · {h.status === "retirado" ? "retirado" : "na sala"}</div>)}
                 </div>
               )}
@@ -2704,7 +2723,7 @@ function TabKidsArea({
                   const inscrito = enrollments.some((e) => e.kids_event_id === event.id && e.child_id === child.id);
                   return (
                     <button key={child.id} className={`chip ${inscrito ? "chip-ok" : "chip-neutral"}`} type="button" disabled={inscrito} onClick={() => inscrever(event.id, child.id)}>
-                      {child.name.split(" ")[0]}{inscrito ? " ✓" : " + inscrever"}
+                      {child.name.split(" ")[0]}{inscrito ? <> <Icon name="ok" size={13} /></> : " + inscrever"}
                     </button>
                   );
                 })}
@@ -2723,6 +2742,7 @@ function MobileMembro({
   person, member, ...rest
 }: MobileOverlayProps & { person: P; member: M | null }) {
   const [tab, setTab] = useState("inicio");
+  const [textScale] = useTextScale();
   /* primeiro acesso termina quando a ficha tem os dados obrigatórios
      (member.contactComplete, calculado no servidor): vale em qualquer
      aparelho e não diverge entre o HTML do servidor e o do navegador */
@@ -2735,7 +2755,7 @@ function MobileMembro({
           kidsClasses = [], kidsChildren = [], childGuardians = [], kidsSessions = [], kidsAttendance = [],
           kidsEvents = [], kidsEventEnrollments = [], wallPosts = [], bibleMarks = [], onSaveBibleMark,
           missingRequirements = [], serveRequests = [], baptismCandidates = [], onEnrollCourse, onRequestBaptism, onRequestServe,
-          mode, onLogout, onSwitchToPanel } = rest;
+          mode, onLogout, onSwitchToPanel, groupTerm } = rest;
   const journey: JourneyActions = {
     missing: missingRequirements, serveRequests, baptismCandidates, onEnrollCourse, onRequestBaptism, onRequestServe,
     names: { courses: courses.map((c) => ({ id: c.id, name: c.name })), events: events.map((e) => ({ id: e.id, name: e.name })) },
@@ -2753,7 +2773,7 @@ function MobileMembro({
       { id: "escalas",    ic: "escalas",    l: "Escala"   },
       { id: "tarefas",    ic: "tarefas",    l: "Tarefas"  },
     ] : []),
-    { id: "conversas",  ic: "conversas",  l: "Chat"     },
+    { id: "conversas",  ic: "conversas",  l: "Mensagens" },
     isKids
       ? { id: "kids",       ic: "kids",      l: "Kids"     }
       : isRecep
@@ -2764,7 +2784,7 @@ function MobileMembro({
 
   if (!onboarded) {
     return (
-      <div className="phone">
+      <div className="phone" style={{ "--m-scale": textScale } as React.CSSProperties}>
         <div className="phone-screen">
           <div className="phone-notch" />
           <Onboarding person={person} member={member} churchName={churchName} churchLogoUrl={churchLogoUrl} organizationId={organizationId} onCompleteOnboarding={onCompleteOnboarding} onDone={() => setOnboarded(true)} />
@@ -2774,8 +2794,9 @@ function MobileMembro({
   }
 
   return (
+    <GroupTermContext.Provider value={groupTerm || "Grupo"}>
     <JourneyContext.Provider value={journey}>
-    <div className="phone">
+    <div className="phone" style={{ "--m-scale": textScale } as React.CSSProperties}>
       <div className="phone-screen">
         <div className="phone-notch" />
         <div className="m-statusbar">
@@ -2789,7 +2810,7 @@ function MobileMembro({
               <Av name={person.name} size="sm" photoUrl={person.photoUrl} />
             </button>
           </div>
-          <div className="m-h1">Olá, <em>{person.name.split(" ")[0]}</em></div>
+          <div className="m-h1">{saudacao()}, <em>{person.name.split(" ")[0]}</em></div>
         </div>
 
         <div className="m-scroll">
@@ -2873,6 +2894,7 @@ function MobileMembro({
       </div>
     </div>
     </JourneyContext.Provider>
+    </GroupTermContext.Provider>
   );
 }
 
@@ -2921,7 +2943,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
               O app do <span className="ol">membro</span>
             </h3>
             <p>
-              O membro acompanha a jornada, confirma escala, resolve tarefas do quadro,
+              O membro acompanha a caminhada, confirma escala, resolve tarefas do quadro,
               conversa com o time e o líder, faz cursos e pede oração, tudo pelo celular.
             </p>
 
@@ -2943,7 +2965,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
                         {p.tags.length > 0 ? ` · ${p.tags[0]}` : ""}
                       </small>
                     </div>
-                    {i === idx && <span className="mob-persona-chk">●</span>}
+                    {i === idx && <span className="mob-persona-chk"><Icon name="ok" size={14} /></span>}
                   </button>
                 );
               })}
@@ -2961,6 +2983,24 @@ export default function MobileOverlay(props: MobileOverlayProps) {
       <div className="mob-phone-wrap" onClick={(e) => e.stopPropagation()}>
         <MobileMembro key={person.id} {...props} person={person} member={member} />
       </div>
+    </div>
+  );
+}
+
+/* Padrão · Grande · Muito grande, com a prévia logo abaixo (a escala já
+   vale no app inteiro ao tocar). */
+function TextSizePicker() {
+  const [scale, setScale] = useTextScale();
+  return (
+    <div className="ts-pick">
+      <div className="ts-seg" role="radiogroup" aria-label="Tamanho do texto">
+        {TEXT_SCALES.map((o) => (
+          <button key={o.value} type="button" role="radio" aria-checked={scale === o.value} className={scale === o.value ? "on" : ""} onClick={() => setScale(o.value)}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+      <p className="ts-prev">Assim fica o texto do app.</p>
     </div>
   );
 }

@@ -30,7 +30,7 @@ export function requirementLabel(
   if (req.kind === "journey") {
     const step = JOURNEY_REQ_STEPS.find((s) => s.ref === req.ref);
     const label = step?.ref === "integracao" && names.groupsLabel ? names.groupsLabel : step?.label ?? req.ref;
-    return `Jornada: ${label}`;
+    return `Caminhada: ${label}`;
   }
   if (req.kind === "course") return `Concluiu: ${names.courses.find((c) => c.id === req.ref)?.name ?? "curso removido"}`;
   const ev = names.events.find((e) => e.id === req.ref);

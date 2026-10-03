@@ -16,7 +16,7 @@ import { PAGINA_CFG_DEFAULT, IDENTIDADE_CFG_DEFAULT, mergeChurchIdentity } from 
 import type { PaginaCfg, PaginaSocial, PaginaTemplate, ChurchPageData, IdentidadeCfg } from "../lib/church-page";
 import ChurchPageView from "../[slug]/ChurchPageView";
 
-/* Editor da Página pública (link-in-bio) da igreja, aba "Página pública" em
+/* Editor da Página da igreja (link-in-bio) da igreja, aba "Página da igreja" em
    Configurações. Arquivo próprio (não dentro de ServiceExactApp.tsx, que já
    tem 10k+ linhas) : essa funcionalidade tem peso real (CRUD de links com
    reordenação, CRUD de notícias, seletor de modelo, QR code, preview ao
@@ -28,7 +28,7 @@ import ChurchPageView from "../[slug]/ChurchPageView";
    são identidade da igreja (settings.identidadeCfg), editada em
    Configurações → Personalização (ver IdentidadeFields.tsx) e só consumida
    aqui pro preview. accentColor continua aqui como override intencional : a
-   Página pública pode ter uma cor de destaque diferente do resto do
+   Página da igreja pode ter uma cor de destaque diferente do resto do
    Service. */
 
 /* Toda rota real que já existe na raiz do domínio (app/<rota>), pra um
@@ -297,7 +297,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
   };
 
   if (!canEdit) {
-    return <div className="empty">Só master ou pastor pode configurar a página pública.</div>;
+    return <div className="empty">Só master ou pastor pode configurar a página da igreja.</div>;
   }
 
   return (
@@ -501,11 +501,11 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
           </div>
         )}
 
-        {/* ─── Notícias e avisos ─── */}
+        {/* ─── Publicações ─── */}
         {activeTab === "noticias" && (
           <div className="cfg-card">
             <div className="panel-head" style={{ padding: 0, marginBottom: 10 }}>
-              <span className="panel-title">Notícias e avisos</span>
+              <span className="panel-title">Publicações</span>
               <button
                 type="button"
                 className="btn btn-pri btn-sm"

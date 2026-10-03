@@ -7,7 +7,7 @@ import { JOURNEY_REQ_STEPS, requirementLabel, type Requirement } from "./lib/req
 const SUBLABEL = { color: "var(--muted)", fontWeight: 500 } as const;
 
 /* Editor único de pré-requisitos (curso, time e "Quero servir"). A igreja
-   escolhe etapas da jornada, cursos concluídos e eventos com presença
+   escolhe etapas da caminhada, cursos concluídos e eventos com presença
    registrada; a pessoa precisa cumprir todos. Ver app/service/lib/requirements.ts. */
 export default function RequisitosEditor({
   value,
@@ -31,7 +31,7 @@ export default function RequisitosEditor({
   return (
     <div style={{ display: "grid", gap: 14 }}>
       <div>
-        <div className="field-label" style={SUBLABEL}>Etapas da jornada</div>
+        <div className="field-label" style={SUBLABEL}>Etapas da caminhada</div>
         <div className="seg-check">
           {JOURNEY_REQ_STEPS.map((s) => (
             <button key={s.ref} type="button" className={`seg-chip${has("journey", s.ref) ? " on" : ""}`} onClick={() => toggle("journey", s.ref)}>

@@ -8,9 +8,9 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { notifyPush } from "./lib/notify-push";
 import { uploadServiceImage, imageExtension } from "./lib/upload-image";
-import { ICON_PATHS, ICON_CATEGORIES, DEFAULT_ICON, Icon, IconPicker } from "./lib/icons";
+import { ICON_PATHS, ICON_CATEGORIES, DEFAULT_ICON, Icon, IconPicker, Caret } from "./lib/icons";
 import { THEME_COOKIE, type BrandCfg } from "./lib/theme";
-import { formatDateBR, joinDot, todayISO, toISODate } from "./lib/date";
+import { formatDateBR, joinDot, todayISO, toISODate, saudacao } from "./lib/date";
 import { ageInMonths, suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import type { EnqueteElegivelView } from "./lib/enquetes";
 import type { PesquisaElegivelView, TipoPergunta as TipoPerguntaPesquisa } from "./lib/pesquisas";
@@ -770,13 +770,13 @@ const NAV_PERMISSION_CODE: Record<string, string> = {
    (Configurações → Acessos por pessoa). Só rotas que já têm entrada real
    no menu lateral. */
 const ACESSO_ROTAS: { id: string; label: string }[] = [
-  { id: "painel", label: "Painel & visão geral" },
+  { id: "painel", label: "Painel e visão geral" },
   { id: "membros", label: "Membros" },
   { id: "pessoas", label: "Voluntários" },
-  { id: "times", label: "Times & Ministérios" },
+  { id: "times", label: "Times" },
   { id: "visitantes", label: "Visitantes" },
   { id: "batismos", label: "Batismos" },
-  { id: "cursos", label: "Cursos & Trilhas" },
+  { id: "cursos", label: "Cursos e Trilhas" },
   { id: "relatorios", label: "Relatórios" },
   { id: "marca", label: "Marca & aparência (cores, logo)" },
   { id: "pesquisas", label: "Pesquisas (Configurações)" },
@@ -877,7 +877,7 @@ function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchVie
     <div className="cong" ref={ref}>
       <button className="cong-btn" type="button" onClick={() => setOpen((o) => !o)}>
         {marca}{info}
-        <span className="cong-caret">▾</span>
+        <span className="cong-caret"><Caret /></span>
       </button>
       {open && churches.length > 1 && (
         <div className="cong-menu">
@@ -1138,7 +1138,7 @@ export default function ServiceExactApp({
   /* dados de contato do próprio membro (primeiro acesso e perfil): a pessoa
      (people) ele mesmo edita; a ficha de membro só pelos campos de contato,
      via função do banco (0044 update_my_member_contact) */
-  /* ações da jornada do membro (0046): a função do banco confere os
+  /* ações da caminhada do membro (0046): a função do banco confere os
      requisitos e devolve "ok" ou o motivo */
   const journeyRpc = async (fn: string, args: Record<string, unknown>): Promise<string> => {
     const { data, error } = await createServiceBrowserClient().schema("service").rpc(fn, args);
@@ -1320,7 +1320,7 @@ export default function ServiceExactApp({
         .map((personId) => members.find((m) => m.volunteerId === personId)?.id)
         .filter((id): id is string => !!id);
       if (leaderMemberIds.length) {
-        notifyPush(firstChurch.organizationId, leaderMemberIds, member.name, `Pediu pra marcar "${stepLabel}" na jornada. Aprovar?`);
+        notifyPush(firstChurch.organizationId, leaderMemberIds, member.name, `Pediu pra marcar "${stepLabel}" na caminhada. Aprovar?`);
       }
     }
     router.refresh();
@@ -1336,7 +1336,7 @@ export default function ServiceExactApp({
       reviewed_at: new Date().toISOString(),
     }).eq("id", request.id);
     const stepLabel = JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step;
-    notifyPush(firstChurch.organizationId, [member.id], "Jornada aprovada", `"${stepLabel}" foi confirmado na sua jornada.`);
+    notifyPush(firstChurch.organizationId, [member.id], "Caminhada aprovada", `"${stepLabel}" foi confirmado na sua caminhada.`);
     router.refresh();
   };
   const confirmarEscalaMobile = async (assignmentId: string) => {
@@ -1357,7 +1357,7 @@ export default function ServiceExactApp({
     const member = members.find((m) => m.id === request.memberId);
     const stepLabel = JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step;
     if (member) {
-      notifyPush(firstChurch.organizationId, [member.id], "Jornada", `Seu pedido de "${stepLabel}" não foi aprovado.${motivo ? ` Motivo: ${motivo}` : ""}`);
+      notifyPush(firstChurch.organizationId, [member.id], "Caminhada", `Seu pedido de "${stepLabel}" não foi aprovado.${motivo ? ` Motivo: ${motivo}` : ""}`);
     }
     router.refresh();
   };
@@ -1426,7 +1426,7 @@ export default function ServiceExactApp({
   const scopeMinistryIds: string[] | null = podePrevisualizar ? null : (currentRole === "lider" ? misteriosQueLidero : null);
   const perspectivePersonId = currentPersonId;
 
-  /* fila de aprovação da jornada: Direção vê tudo; líder só vê pedidos de
+  /* fila de aprovação da caminhada: Direção vê tudo; líder só vê pedidos de
      quem está no time/GC dele : mesmo espírito de escopo de Escalas/Kanban. */
   const visibleJourneyRequests = journeyRequests.filter((request) => {
     if (podePrevisualizar) return true;
@@ -1454,6 +1454,7 @@ export default function ServiceExactApp({
     };
     return (
       <MobileOverlay
+        groupTerm={firstChurch?.settings?.gruposCfg?.termoP}
         people={people}
         members={members}
         ministries={ministries}
@@ -1521,16 +1522,16 @@ export default function ServiceExactApp({
       items: [
         { id: "membros", icon: "membros", label: "Membros", count: members.length },
         { id: "pessoas", icon: "pessoa", label: "Voluntários", count: people.length },
-        { id: "times", icon: "times", label: "Times & Ministérios", count: ministries.length },
+        { id: "times", icon: "times", label: "Times", count: ministries.length },
         { id: "visitantes", icon: "visitante", label: "Visitantes", badge: visitorsInCare },
         { id: "criancas", icon: "kids", label: "Crianças", count: kidsChildren.length },
       ],
     },
     {
-      group: "Jornada",
+      group: "Caminhada",
       items: [
         { id: "batismos", icon: "batismos", label: "Batismos", count: baptismClasses.length },
-        { id: "cursos", icon: "cursos", label: "Cursos & Trilhas", count: courses.length },
+        { id: "cursos", icon: "cursos", label: "Cursos e Trilhas", count: courses.length },
       ],
     },
     {
@@ -1540,7 +1541,7 @@ export default function ServiceExactApp({
         { id: "reunioes", icon: "reunioes", label: "Reuniões", count: meetings.length },
         { id: "ensaios", icon: "ensaios", label: "Ensaios", count: rehearsals.length },
         { id: "quadros", icon: "quadros", label: "Quadros" },
-        { id: "cultos", icon: "cultos", label: "Cultos & Agenda", count: events.length },
+        { id: "cultos", icon: "cultos", label: "Cultos e Agenda", count: events.length },
         { id: "comunicacao", icon: "comunicacao", label: "Comunicação", count: announcements.length + wallPosts.length },
         { id: "conversas", icon: "conversas", label: "Conversas" },
       ],
@@ -1555,7 +1556,7 @@ export default function ServiceExactApp({
     {
       group: "Nossa igreja",
       items: [
-        { id: "identidade", icon: "identidade", label: "Identidade & propósito" },
+        { id: "identidade", icon: "identidade", label: "Identidade e propósito" },
         { id: "historia", icon: "historia", label: "Nossa história" },
       ],
     },
@@ -2059,7 +2060,7 @@ function Painel({
       <div className="ph">
         <div>
           <div className="ph-eyebrow">Painel</div>
-          <h1 className="ph-title">Olá, <em>{userName?.split(" ")[0] ?? "liderança"}</em> <HelpDot text="Seu resumo da semana: próximos cultos, vagas em aberto na escala e o que precisa da sua atenção agora." /></h1>
+          <h1 className="ph-title">{saudacao()}, <em>{userName?.split(" ")[0] ?? "liderança"}</em> <HelpDot text="Seu resumo da semana: próximos cultos, vagas em aberto na escala e o que precisa da sua atenção agora." /></h1>
           <p className="ph-sub">Visão da semana: quem está escalado, o que falta preencher e quem precisa de acompanhamento.</p>
         </div>
         <div className="ph-actions">
@@ -2069,15 +2070,15 @@ function Painel({
       </div>
       <SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} />
       <div className="kpi-row">
-        <Kpi icon="pessoa" label="Voluntários ativos" value={activePeople} foot={`${people.length} cadastrados`} help="Pessoas que servem em algum ministério e estão com o status ativo, sem contar quem está em pausa ou de férias." />
+        <Kpi icon="pessoa" label="Voluntários ativos" value={activePeople} foot={`${people.length} cadastrados`} help="Pessoas que servem em algum time e estão com o status ativo, sem contar quem está em pausa ou de férias." />
         <Kpi icon="ok" label="Taxa de confirmação" value={`${confirmationRate}%`} foot="da escala da semana" help="De todo mundo escalado nesta semana, quantos já confirmaram presença no app." />
         <Kpi icon="alerta" label="Vagas em aberto" value={gaps.length} foot={`${gaps.length} ${gaps.length === 1 ? "pendência" : "pendências"} nesta semana`} amber help="Posições da escala desta semana que ainda não têm ninguém confirmado. Resolva em Escalas." />
-        <Kpi icon="visitante" label="Visitantes em acomp." value={visitorsInCare} foot="a contatar esta semana" help="Visitantes que ainda estão na jornada de acompanhamento, antes de virarem membros." />
+        <Kpi icon="visitante" label="Visitantes em acomp." value={visitorsInCare} foot="a contatar esta semana" help="Visitantes que ainda estão na fase de acompanhamento, antes de virarem membros." />
       </div>
       <div className="dash-3col">
         <div className="panel">
           <div className="panel-head">
-            <span className="panel-title"><Icon name="escalas" size={14} /> Pendências da escala <HelpDot text="Posições da escala desta semana que ainda não têm ninguém confirmado." /></span>
+            <span className="panel-title"><Icon name="escalas" size={14} /> Pendências da escala <HelpDot label="Como calculamos" text="Posições da escala desta semana que ainda não têm ninguém confirmado." /></span>
             <button className="panel-link" type="button" onClick={() => setRoute("escalas")}>Resolver</button>
           </div>
           <div className="panel-body flush">
@@ -2096,7 +2097,7 @@ function Painel({
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div className="panel">
-            <div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={14} /> Engajamento <HelpDot text="Presença média de quem foi escalado nos últimos 90 dias." /></span><span className="panel-meta">90 dias</span></div>
+            <div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={14} /> Engajamento <HelpDot label="Como calculamos" text="Presença média de quem foi escalado nos últimos 90 dias." /></span><span className="panel-meta">90 dias</span></div>
             <div className="panel-body">
               {presenceRate === null ? (
                 <>
@@ -2112,7 +2113,7 @@ function Painel({
             </div>
           </div>
           <div className="panel">
-            <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Próximos cultos <HelpDot text="Os próximos cultos ou eventos da agenda, na ordem em que vão acontecer." /></span><button className="panel-link" type="button" onClick={() => setRoute("cultos")}>Agenda</button></div>
+            <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Próximos cultos <HelpDot label="Como calculamos" text="Os próximos cultos ou eventos da agenda, na ordem em que vão acontecer." /></span><button className="panel-link" type="button" onClick={() => setRoute("cultos")}>Agenda</button></div>
             <div className="panel-body flush">
             {events.slice(0, 3).map((event) => (
               <MiniEvent
@@ -2127,7 +2128,7 @@ function Painel({
           </div>
           {enqueteElegivel && (
             <div className="panel" style={{ cursor: "pointer" }} onClick={() => setModal(buildAvaliacaoModal(enqueteElegivel))}>
-              <div className="panel-head"><span className="panel-title"><Icon name="estrela" size={14} /> Avaliação de experiência <HelpDot text="Pesquisa rápida sobre como foi servir. Aparece só quando você está elegível pra responder." /></span></div>
+              <div className="panel-head"><span className="panel-title"><Icon name="estrela" size={14} /> Avaliação de experiência <HelpDot label="Como calculamos" text="Pesquisa rápida sobre como foi servir. Aparece só quando você está elegível pra responder." /></span></div>
               <div className="panel-body">
                 <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{enqueteElegivel.nome}</div>
                 <div style={{ fontSize: 12.5, color: "var(--muted)" }}>Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time.</div>
@@ -2136,7 +2137,7 @@ function Painel({
           )}
           {pesquisaElegivel && (
             <div className="panel" style={{ cursor: "pointer" }} onClick={() => setModal(buildPesquisaModal(pesquisaElegivel))}>
-              <div className="panel-head"><span className="panel-title"><Icon name="reacao" size={14} /> {pesquisaElegivel.pendente ? "Pulso da escala" : "Sua última resposta"} <HelpDot text="Pesquisa da própria igreja sobre como foi servir nesta escala. Diferente da avaliação de experiência." /></span></div>
+              <div className="panel-head"><span className="panel-title"><Icon name="reacao" size={14} /> {pesquisaElegivel.pendente ? "Pulso da escala" : "Sua última resposta"} <HelpDot label="Como calculamos" text="Pesquisa da própria igreja sobre como foi servir nesta escala. Diferente da avaliação de experiência." /></span></div>
               <div className="panel-body">
                 <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{pesquisaElegivel.nome}</div>
                 <div style={{ fontSize: 12.5, color: "var(--muted)" }}>{pesquisaElegivel.pendente ? "Leva menos de um minuto. Conta como foi pra você." : "Já respondida. Toque pra rever ou atualizar quando quiser."}</div>
@@ -2148,7 +2149,7 @@ function Painel({
       {journeyRequests.length > 0 && (
         <div className="panel" style={{ marginTop: 24 }}>
           <div className="panel-head">
-            <span className="panel-title"><Icon name="membros" size={14} /> Jornada pendente <HelpDot text="Pedidos de avanço na jornada (decisão, batismo, curso...) esperando aprovação da liderança." /></span>
+            <span className="panel-title"><Icon name="membros" size={14} /> Caminhada pendente <HelpDot label="Como calculamos" text="Pedidos de avanço na caminhada (decisão, batismo, curso...) esperando aprovação da liderança." /></span>
             <span className="panel-meta">{journeyRequests.length} {journeyRequests.length === 1 ? "pedido" : "pedidos"}</span>
           </div>
           <div className="panel-body flush">
@@ -2174,13 +2175,13 @@ function Painel({
       )}
       <div className="dash-2col">
         <div className="panel">
-          <div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={14} /> Voluntários mais engajados <HelpDot text="Quem tem a maior taxa de engajamento nas últimas escalas." /></span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>Todos</button></div>
+          <div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={14} /> Voluntários mais engajados <HelpDot label="Como calculamos" text="Quem tem a maior taxa de engajamento nas últimas escalas." /></span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>Todos</button></div>
           <div className="panel-body flush">
             {topPeople.map((person, index) => <PersonMini key={person.id} person={person} index={index} setDrawer={setDrawer} />)}
           </div>
         </div>
         <div className="panel">
-          <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Comunicação recente <HelpDot text="Os últimos avisos e posts do mural enviados pra igreja." /></span><button className="panel-link" type="button" onClick={() => setRoute("comunicacao")}>Ver tudo</button></div>
+          <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Comunicação recente <HelpDot label="Como calculamos" text="Os últimos avisos e posts do mural enviados pra igreja." /></span><button className="panel-link" type="button" onClick={() => setRoute("comunicacao")}>Ver tudo</button></div>
           <div className="panel-body flush">
             {recentAnnouncements.map((a) => (
               <button className="mini-row click" type="button" key={a.id} onClick={() => setRoute("comunicacao")}>
@@ -2199,7 +2200,7 @@ function Painel({
       {kidsClasses.length > 0 && (
         <div className="dash-2col" style={{ marginTop: 20 }}>
           <div className="panel">
-            <div className="panel-head"><span className="panel-title"><Icon name="kids" size={14} /> Crianças por turma <HelpDot text="Quantas crianças estão em cada turma do ministério infantil." /></span><button className="panel-link" type="button" onClick={() => setRoute("criancas")}>Ver todas</button></div>
+            <div className="panel-head"><span className="panel-title"><Icon name="kids" size={14} /> Crianças por turma <HelpDot label="Como calculamos" text="Quantas crianças estão em cada turma do Kids." /></span><button className="panel-link" type="button" onClick={() => setRoute("criancas")}>Ver todas</button></div>
             <div className="panel-body flush">
               {kidsClasses.map((kc) => {
                 const count = kidsChildren.filter((child) => child.class_id === kc.id).length;
@@ -2215,7 +2216,7 @@ function Painel({
             </div>
           </div>
           <div className="panel">
-            <div className="panel-head"><span className="panel-title"><Icon name="alerta" size={14} /> Crianças sumindo <HelpDot text="Crianças que não aparecem faz tempo. Vale um contato com a família." /></span><span className="panel-meta">sem vir há mais tempo</span></div>
+            <div className="panel-head"><span className="panel-title"><Icon name="alerta" size={14} /> Crianças sumindo <HelpDot label="Como calculamos" text="Crianças que não aparecem faz tempo. Vale um contato com a família." /></span><span className="panel-meta">sem vir há mais tempo</span></div>
             <div className="panel-body flush">
               {kidsChildren
                 .map((child) => {
@@ -2245,12 +2246,25 @@ function Painel({
   );
 }
 
+/* estado vazio único: título curto, uma frase do que vai aparecer ali e,
+   quando houver, o botão da primeira ação */
+function EmptyState({ title, text, action }: { title: string; text: string; action?: { label: string; onClick: () => void } }) {
+  return (
+    <div className="empty-state">
+      <div className="empty-state-t">{title}</div>
+      <p className="empty-state-s">{text}</p>
+      {action ? <button className="btn btn-pri btn-sm" type="button" onClick={action.onClick}>{action.label}</button> : null}
+    </div>
+  );
+}
+
 function Kpi({ icon, label, value, foot, amber, help }: { icon: string; label: string; value: string | number; foot: string; amber?: boolean; help?: string }) {
   return (
     <div className="kpi">
-      <div className="kpi-label"><Icon name={icon} size={13} /> {label} {help ? <HelpDot text={help} /> : null}</div>
+      <div className="kpi-label"><Icon name={icon} size={13} /> {label}</div>
       <div className="kpi-value" style={amber ? { color: "var(--amber)" } : undefined}>{value}</div>
       <div className="kpi-foot">{foot}</div>
+      {help ? <div className="kpi-how"><HelpDot label="Como calculamos" text={help} /></div> : null}
     </div>
   );
 }
@@ -2329,7 +2343,7 @@ function Membros({ members, ministries, church, setDrawer, setModal }: { members
     ministries.filter((min) => min.people.some((p) => p.personId === volunteerId));
   return (
     <div className="content wide">
-      <PageHead title="Membros" eyebrow="Pessoas" subtitle="Toda a congregação. Veja quem serve, em que jornada está e o histórico desde que chegou." help="Toda a congregação entra aqui, sirva ou não em um ministério. É diferente de Voluntários, que lista só quem já serve ativamente." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Nome, sobrenome e telefone bastam: o convite do app vai pelo WhatsApp e a pessoa completa o resto.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome e sobrenome", type:"text", req:true, ph:"Como a pessoa se chama", hint:"A pessoa pode ajustar depois no app." }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Ao salvar, o WhatsApp abre com o convite do app para este número." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"opcional", hint:"Opcional: a pessoa informa no convite." }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"cep", label:"CEP", type:"cep", half:true, ph:"00000-000", hint:"Preenche rua, bairro, cidade e estado sozinho.", autofill:{ street:"rua", neighborhood:"bairro", city:"cidade", state:"estado" } }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }, { k:"rua", label:"Rua", type:"text", half:true, ph:"Nome da rua" }, { k:"cidade", label:"Cidade", type:"text", half:true }, { k:"estado", label:"Estado", type:"text", half:true, ph:"UF" }], action: { kind: "member" } })}>+ Novo membro</button>} />
+      <PageHead title="Membros" eyebrow="Pessoas" subtitle="Toda a congregação. Veja quem serve, em que caminhada está e o histórico desde que chegou." help="Toda a congregação entra aqui, sirva ou não em um time. É diferente de Voluntários, que lista só quem já serve ativamente." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Nome, sobrenome e telefone bastam: o convite do app vai pelo WhatsApp e a pessoa completa o resto.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome e sobrenome", type:"text", req:true, ph:"Como a pessoa se chama", hint:"A pessoa pode ajustar depois no app." }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Ao salvar, o WhatsApp abre com o convite do app para este número." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"opcional", hint:"Opcional: a pessoa informa no convite." }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"cep", label:"CEP", type:"cep", half:true, ph:"00000-000", hint:"Preenche rua, bairro, cidade e estado sozinho.", autofill:{ street:"rua", neighborhood:"bairro", city:"cidade", state:"estado" } }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }, { k:"rua", label:"Rua", type:"text", half:true, ph:"Nome da rua" }, { k:"cidade", label:"Cidade", type:"text", half:true }, { k:"estado", label:"Estado", type:"text", half:true, ph:"UF" }], action: { kind: "member" } })}>+ Novo membro</button>} />
       {church && (
         <div className="contato-banner">
           <div className="contato-pill"><span style={{ color: "var(--olive)" }}><Icon name="whatsapp" size={16} /></span></div>
@@ -2339,10 +2353,10 @@ function Membros({ members, ministries, church, setDrawer, setModal }: { members
       )}
       {msgCfgOpen && church && <AcessoMsgModal church={church} cfg={acessoMsgCfg} onClose={() => setMsgCfgOpen(false)} onRefresh={() => router.refresh()} />}
       <div className="kpi-row">
-        <Kpi icon="membros" label="Membros" value={members.length} foot="na congregação" help="Toda a congregação cadastrada, sirva ou não em um ministério." />
-        <Kpi icon="decisoes" label="Novos convertidos" value={novos.length} foot="em discipulado inicial" help="Quem decidiu por Jesus e ainda está no começo da jornada." />
-        <Kpi icon="cursos" label="Em integração" value={integrando.length} foot="jornada ainda incompleta" amber help="Membros que ainda não completaram os passos básicos da jornada (batismo, curso, GC...)." />
-        <Kpi icon="times" label="Já servindo" value={servindo.length} foot={`${Math.round((servindo.length / Math.max(members.length, 1)) * 100)}% da congregação`} help="Membros que já servem ativamente em algum ministério." />
+        <Kpi icon="membros" label="Membros" value={members.length} foot="na congregação" help="Toda a congregação cadastrada, sirva ou não em um time." />
+        <Kpi icon="decisoes" label="Novos convertidos" value={novos.length} foot="em discipulado inicial" help="Quem decidiu por Jesus e ainda está no começo da caminhada." />
+        <Kpi icon="cursos" label="Em integração" value={integrando.length} foot="caminhada ainda incompleta" amber help="Membros que ainda não completaram os passos básicos da caminhada (batismo, curso, GC...)." />
+        <Kpi icon="times" label="Já servindo" value={servindo.length} foot={`${Math.round((servindo.length / Math.max(members.length, 1)) * 100)}% da congregação`} help="Membros que já servem ativamente em algum time." />
       </div>
       <div className="toolbar">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar membro..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
@@ -2355,7 +2369,7 @@ function Membros({ members, ministries, church, setDrawer, setModal }: { members
         <span className="panel-meta">{visible.length} membros</span>
       </div>
       <div className="tbl">
-        <div className="tr head" style={{ gridTemplateColumns: "1.6fr 0.8fr 1.1fr 1.1fr" }}><span>Membro</span><span>Membro desde</span><span>Serve</span><span>Jornada</span></div>
+        <div className="tr head" style={{ gridTemplateColumns: "1.6fr 0.8fr 1.1fr 1.1fr" }}><span>Membro</span><span>Membro desde</span><span>Serve</span><span>Caminhada</span></div>
         {visible.map((m) => {
           const mins = getMemberMinistries(m.volunteerId);
           const isLeader = mins.some((min) => min.people.find((p) => p.personId === m.volunteerId)?.isLeader);
@@ -2372,7 +2386,7 @@ function Membros({ members, ministries, church, setDrawer, setModal }: { members
             </button>
           );
         })}
-        {visible.length === 0 && <div className="empty">Nenhum membro encontrado.</div>}
+        {visible.length === 0 && <EmptyState title="Nenhum membro por aqui" text="Quem você cadastrar aparece nesta lista. Se usou a busca ou um filtro, tente limpar." />}
       </div>
     </div>
   );
@@ -2388,7 +2402,7 @@ function Pessoas({ people, currentPersonId, setDrawer, setModal }: { people: Per
   });
   return (
     <div className="content">
-      <PageHead title="Voluntários" eyebrow="Pessoas" subtitle="Todo mundo com cadastro de voluntário, sirva ou não em um time ainda. Toque para ver perfil, disponibilidade e histórico." help="Todo mundo com acesso de voluntário na igreja, mesmo quem ainda não está em nenhum time. Veja funções, disponibilidade e engajamento nas escalas." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo voluntário", subtitle: "Cadastre e já escolha os ministérios.", saveLabel: "Adicionar voluntário", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"e-mail da pessoa" }], action: { kind: "member" } })}>+ Novo voluntário</button>} />
+      <PageHead title="Voluntários" eyebrow="Pessoas" subtitle="Todo mundo com cadastro de voluntário, sirva ou não em um time ainda. Toque para ver perfil, disponibilidade e histórico." help="Todo mundo com acesso de voluntário na igreja, mesmo quem ainda não está em nenhum time. Veja funções, disponibilidade e engajamento nas escalas." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo voluntário", subtitle: "Cadastre e já escolha os times.", saveLabel: "Adicionar voluntário", formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"e-mail da pessoa" }], action: { kind: "member" } })}>+ Novo voluntário</button>} />
       <div className="toolbar">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <div className="seg">
@@ -2400,7 +2414,7 @@ function Pessoas({ people, currentPersonId, setDrawer, setModal }: { people: Per
         <span className="panel-meta">{visible.length} pessoas</span>
       </div>
       <div className="tbl">
-        <div className="tr head tr-people"><div>Voluntário</div><div>Disponibilidade</div><div>Frentes</div><div>Status</div></div>
+        <div className="tr head tr-people"><div>Voluntário</div><div>Disponibilidade</div><div>Etiquetas</div><div>Status</div></div>
         {visible.map((person) => (
           <button className="tr click tr-people" type="button" key={person.id} onClick={() => setDrawer({ kind: "person", id: person.id })}>
             <div className="who">
@@ -2470,7 +2484,7 @@ function PedidosParaServir({ serveRequests, members, ministries }: { serveReques
 function Times({ ministries, people, members, serveRequests, setDrawer, setModal }: { ministries: MinistryView[]; people: PersonView[]; members: MemberView[]; serveRequests: ServeRequest[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
   return (
     <div className="content">
-      <PageHead title="Times & Ministérios" eyebrow="Pessoas" subtitle="Times, líderes, funções e voluntários vinculados." help="Louvor, Recepção, Kids... cada ministério é um time, com um líder e suas funções próprias." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo time / ministério", subtitle: "Crie o ministério e já conte o propósito dele.", saveLabel: "Criar ministério", formFields: [{ k:"nome", label:"Nome do ministério", type:"text", req:true, ph:"ex: Louvor & Adoração" }, { k:"icon", label:"Ícone do time", type:"icon", value: DEFAULT_ICON }, { k:"desc", label:"Descrição curta", type:"text", ph:"Uma linha sobre o time" }, { k:"proposito", label:"Propósito", type:"area", ph:"Por que esse time existe?" }, { k:"aberto", label:"Recebendo voluntários?", type:"toggle", onLabel:"Aberto a novos", offLabel:"Equipe completa" }], action: { kind: "ministry" } })}>+ Novo time</button>} />
+      <PageHead title="Times" eyebrow="Pessoas" subtitle="Times, líderes, funções e voluntários vinculados." help="Louvor, Recepção, Kids... cada time tem um líder e suas funções próprias." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo time", subtitle: "Crie o time e já conte o propósito dele.", saveLabel: "Criar time", formFields: [{ k:"nome", label:"Nome do time", type:"text", req:true, ph:"ex: Louvor e Adoração" }, { k:"icon", label:"Ícone do time", type:"icon", value: DEFAULT_ICON }, { k:"desc", label:"Descrição curta", type:"text", ph:"Uma linha sobre o time" }, { k:"proposito", label:"Propósito", type:"area", ph:"Por que esse time existe?" }, { k:"aberto", label:"Recebendo voluntários?", type:"toggle", onLabel:"Aberto a novos", offLabel:"Equipe completa" }], action: { kind: "ministry" } })}>+ Novo time</button>} />
       <PedidosParaServir serveRequests={serveRequests} members={members} ministries={ministries} />
       <div className="team-grid">
         {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => { const linkPerson = people.find((person) => person.id === link.personId); return <Av key={link.personId} name={linkPerson?.name ?? link.personName} photoUrl={linkPerson?.photoUrl} />; })}{ministry.people.length > 4 && <div className="av-more">+{ministry.people.length - 4}</div>}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName ?? "a definir"}</em></div><div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> voluntários</span><span className="team-stat"><b>{ministry.positions.length}</b> funções</span></div></button>)}
@@ -2692,7 +2706,7 @@ function DelegarModal({
             const on = delegados.includes(link.personId);
             return (
               <button type="button" className={`flag-row${on ? " on" : ""}`} key={link.personId} disabled={saving} onClick={() => toggle(link.personId)}>
-                <span className={`flag-check${on ? " on" : ""}`}>{on ? "✓" : ""}</span>
+                <span className={`flag-check${on ? " on" : ""}`}>{on ? <Icon name="ok" size={13} /> : null}</span>
                 <Av name={link.personName} size="sm" />
                 <div className="flag-main"><div className="flag-nome">{link.personName}</div><div className="flag-meta">{link.functions.join(" · ") || "Voluntário"}</div></div>
               </button>
@@ -2975,7 +2989,7 @@ function Escalas({
             <button className="btn btn-sec" type="button" onClick={() => setDelegarOpen(true)}><Icon name="membros" size={15} /> Delegar</button>
             <button className="btn btn-sec" type="button" onClick={() => setCheckinEventId(selectedEvent?.id ?? null)} disabled={!selectedEvent}><Icon name="cultos" size={15} /> QR Check-in</button>
             <button className="btn btn-sec" type="button" onClick={baixarCSV} disabled={!selectedEvent}><Icon name="relatorios" size={15} /> Baixar</button>
-            <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Publicar", title: "Publicar & avisar", subtitle: "A equipe recebe a escala pelo app e pelas notificações configuradas.", saveLabel: "Publicar & avisar →", formFields: [{ k:"msg", label:"Mensagem (opcional)", type:"area", ph:"Recado que vai junto com a escala..." }] })}>Publicar & avisar →</button>
+            <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Publicar", title: "Publicar e avisar", subtitle: "A equipe recebe a escala pelo app e pelas notificações configuradas.", saveLabel: "Publicar e avisar →", formFields: [{ k:"msg", label:"Mensagem (opcional)", type:"area", ph:"Recado que vai junto com a escala..." }] })}>Publicar & avisar →</button>
           </>
         }
       />
@@ -3099,7 +3113,7 @@ function Escalas({
 
       {gaps.length > 0 ? (
         <div className="panel" style={{ marginTop: 18 }}>
-          <div className="panel-head"><span className="panel-title"><Icon name="escalas" size={14} /> Pendências da semana <HelpDot text="Vagas da escala desta semana que ainda não têm ninguém confirmado." /></span><span className="panel-meta">{gaps.length} vagas</span></div>
+          <div className="panel-head"><span className="panel-title"><Icon name="escalas" size={14} /> Pendências da semana <HelpDot label="Como calculamos" text="Vagas da escala desta semana que ainda não têm ninguém confirmado." /></span><span className="panel-meta">{gaps.length} vagas</span></div>
           <div className="panel-body flush">
             {gaps.slice(0, 5).map((gap) => <div className="gap-row" key={`${gap.event.id}-${gap.position.id}`}><div className="gap-ic wait">!</div><div className="mini-main"><div className="mini-title">{gap.position.name} <span style={{ color: "var(--subtle)", fontWeight: 400 }}>· {gap.ministry.name}</span></div><div className="mini-sub">{joinDot(gap.event.name, gap.event.time)}</div></div></div>)}
           </div>
@@ -3142,7 +3156,7 @@ function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChi
   ];
   return (
     <div className="content">
-      <PageHead title="Cultos & Agenda" eyebrow="Operação" subtitle="Agenda, roteiro, setlist e ministérios envolvidos em cada culto." help="Seus cultos e eventos ficam aqui. Cada um pode virar uma escala, ganhar roteiro e setlist." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo culto ou evento", subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Culto da Manhã, Conferência de Jovens" }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"data", label:"Data", type:"date", half:true }, { k:"hora", label:"Horário de início", type:"time", half:true }], action: { kind: "event" } })}>+ Novo culto</button>} />
+      <PageHead title="Cultos e Agenda" eyebrow="Operação" subtitle="Agenda, roteiro, setlist e times envolvidos em cada culto." help="Seus cultos e eventos ficam aqui. Cada um pode virar uma escala, ganhar roteiro e setlist." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo culto ou evento", subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Culto da Manhã, Conferência de Jovens" }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"data", label:"Data", type:"date", half:true }, { k:"hora", label:"Horário de início", type:"time", half:true }], action: { kind: "event" } })}>+ Novo culto</button>} />
       <div className="grid-2">
         {events.map((event) => (
           <div className="panel" key={event.id} style={{ position: "relative" }}>
@@ -3248,7 +3262,7 @@ function RosterActionModal({
           </div>
           <div className="modal-body">
             <div style={{ display: "grid", gap: 8 }}>
-              <button className="btn btn-pri" style={{ justifyContent: "center" }} type="button" onClick={() => { onConfirmar(assignment.id); onClose(); }}>✓ Marcar como confirmado</button>
+              <button className="btn btn-pri" style={{ justifyContent: "center" }} type="button" onClick={() => { onConfirmar(assignment.id); onClose(); }}><Icon name="ok" size={15} /> Marcar como confirmado</button>
               <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => { onPendente(assignment.id); onClose(); }}>Deixar pendente (reenviar convite)</button>
               <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => { onRecusar(assignment); onClose(); }}>Marcar que recusou</button>
               <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setTrocando(true)}>⇄ Pedir troca / substituir</button>
@@ -3289,7 +3303,7 @@ function RosterActionModal({
                 <div className="cand-name">{person.name}</div>
                 <div className="cand-meta">{person.tags.join(" · ") || person.status} · {person.engagement ?? 0}% engajamento</div>
               </div>
-              <span className={`cand-fit ${fit}`}>{fit === "good" ? "● disponível" : fit === "busy" ? "○ ocupado" : `✕ ${motivo}`}</span>
+              <span className={`cand-fit ${fit}`}>{fit === "good" ? <><Icon name="ok" size={13} /> disponível</> : fit === "busy" ? <><Icon name="pendente" size={13} /> ocupado</> : <><Icon name="recusou" size={13} /> {motivo}</>}</span>
             </button>
           ))}
         </div>
@@ -3358,9 +3372,9 @@ function Visitantes({
         <div className="vpanel">
           <div className="kpi-row"><Kpi icon="visitante" label="Visitantes" value={visitors.length} foot="no acompanhamento" help="Todo mundo que visitou e ainda está sendo acompanhado, antes de virar membro." /><Kpi icon="comunicacao" label="Respondem o contato" value={`${replyRate}%`} foot={`${answered.length} de ${contacted.length} contatados`} help="De quem a equipe já contatou, quantos responderam de volta." /><Kpi icon="ok" label="Integram (viram membro)" value={`${integrationRate}%`} foot={`${members.length} de ${visitors.length} · ${visitors.filter((v) => v.stage === "integrando" || v.stage === "membro").length} em integração`} help="De todos os visitantes, quantos completaram o caminho até virar membro." /><Kpi icon="alerta" label="Sem resposta" value={visitors.filter((visitor) => visitor.reply_status === "sem_resposta").length} foot="precisam de novo contato" amber help="Visitantes contatados que ainda não responderam. Vale tentar de novo." /></div>
           <div className="vpanel-grid">
-            <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Visitantes por culto <HelpDot text="Em qual culto os visitantes mais chegam." /></span></div><div className="panel-body flush">{Object.entries(byService).map(([name, count]) => <div className="dist-row" key={name}><span className="dist-name">{name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(count / maxService) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}{visitors.length === 0 ? <div className="empty">Nenhum visitante ainda.</div> : null}</div></div>
+            <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Visitantes por culto <HelpDot label="Como calculamos" text="Em qual culto os visitantes mais chegam." /></span></div><div className="panel-body flush">{Object.entries(byService).map(([name, count]) => <div className="dist-row" key={name}><span className="dist-name">{name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(count / maxService) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}{visitors.length === 0 ? <div className="empty">Nenhum visitante ainda.</div> : null}</div></div>
             <div className="panel">
-              <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Resposta ao 1º contato <HelpDot text="Quantos visitantes já responderam o primeiro contato da equipe." /></span></div>
+              <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Resposta ao 1º contato <HelpDot label="Como calculamos" text="Quantos visitantes já responderam o primeiro contato da equipe." /></span></div>
               <div className="panel-body">
                 {(() => {
                   const semResposta = visitors.filter((v) => v.reply_status === "sem_resposta");
@@ -3542,7 +3556,7 @@ function ReuniaoForm({
   const criar = async () => {
     if (!titulo.trim()) { setError("Dê um título à reunião."); return; }
     if (!church?.organizationId || !church.id) { setError("Nenhuma igreja encontrada para vincular esta reunião."); return; }
-    if (!localValido) { setError(isOutro ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
+    if (!localValido) { setError(isOutro ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços e Salas."); return; }
     if (conflito) { setError(`A sala já tem "${conflito.title}" em ${conflito.start_time} a ${conflito.end_time} nesse dia.`); return; }
     setSaving(true);
     setError("");
@@ -3590,7 +3604,7 @@ function ReuniaoForm({
         <input className="ce-title-input" placeholder="Título da reunião" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
       </div>
       <div className="drawer-body">
-        <DrawerSection title="Quando & onde">
+        <DrawerSection title="Quando e onde">
           <div className="ce-grid">
             <div className="field"><label className="field-label">Data</label><DatePicker value={data} onChange={setData} /></div>
             <div className="field"><label className="field-label">Início</label><TimePicker value={hora} onChange={setHora} /></div>
@@ -3617,7 +3631,7 @@ function ReuniaoForm({
               const on = presentes.includes(person.id);
               return (
                 <button key={person.id} type="button" className={`cand-chip ${on ? "on" : ""}`} onClick={() => togglePessoa(person.id)}>
-                  <Av name={person.name} size="xs" photoUrl={person.photoUrl} /> {person.name.split(" ")[0]} {on && "✓"}
+                  <Av name={person.name} size="xs" photoUrl={person.photoUrl} /> {person.name.split(" ")[0]} {on && <Icon name="ok" size={13} />}
                 </button>
               );
             })}
@@ -3660,7 +3674,7 @@ function Reunioes({ meetings, meetingActions, ministries, people, rooms, reserva
             </button>
           );
         })}
-        {scheduled.length === 0 ? <div className="empty">Nenhuma reunião agendada.</div> : null}
+        {scheduled.length === 0 ? <EmptyState title="Nenhuma reunião agendada" text="As reuniões de liderança e de time aparecem aqui, com pauta e presença." action={{ label: "Agendar reunião", onClick: () => setNovaOpen(true) }} /> : null}
       </div>
       <div className="section-divide"><Icon name="relatorios" size={15} /><span className="label">Realizadas</span><span className="line" /></div>
       <div className="tbl">
@@ -3687,7 +3701,7 @@ function Ensaios({ rehearsals, ministries, rooms, setDrawer, setModal }: { rehea
   const localOptions = [...rooms.filter((room) => room.allows_meetings !== false).map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` })), { v: OUTRO_LOCAL, l: "Outro espaço (fora da igreja)" }];
   return (
     <div className="content wide">
-      <PageHead title="Ensaios" eyebrow="Liderança" subtitle="Ensaios por ministério, presença, repertório e materiais." help="Ensaios de louvor, teatro, dança... com participantes e repertório ou materiais anexados." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo ensaio", subtitle: "Louvor, teatro, dança… Escolha quem participa e defina o repertório.", saveLabel: "Criar ensaio", formFields: [{ k:"titulo", label:"Nome do ensaio", type:"text", req:true, ph:"ex: Ensaio do Louvor, Peça de Natal" }, { k:"tipo", label:"Tipo de ensaio", type:"select", half:true, options:[{v:"louvor",l:"Louvor / música"},{v:"teatro",l:"Teatro"},{v:"danca",l:"Dança"},{v:"coreografia",l:"Coreografia"},{v:"geral",l:"Geral"},{v:"outro",l:"Outro"}] }, { k:"time", label:"Ministério", type:"text", half:true, ph:"ex: Louvor" }, { k:"data", label:"Dia", type:"date", half:true }, { k:"hora", label:"Horário", type:"time", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }, { k:"obs", label:"Observação", type:"area", ph:"Detalhes do ensaio" }], action: { kind: "rehearsal" } })}>+ Novo ensaio</button>} />
+      <PageHead title="Ensaios" eyebrow="Liderança" subtitle="Ensaios por time, presença, repertório e materiais." help="Ensaios de louvor, teatro, dança... com participantes e repertório ou materiais anexados." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo ensaio", subtitle: "Louvor, teatro, dança… Escolha quem participa e defina o repertório.", saveLabel: "Criar ensaio", formFields: [{ k:"titulo", label:"Nome do ensaio", type:"text", req:true, ph:"ex: Ensaio do Louvor, Peça de Natal" }, { k:"tipo", label:"Tipo de ensaio", type:"select", half:true, options:[{v:"louvor",l:"Louvor / música"},{v:"teatro",l:"Teatro"},{v:"danca",l:"Dança"},{v:"coreografia",l:"Coreografia"},{v:"geral",l:"Geral"},{v:"outro",l:"Outro"}] }, { k:"time", label:"Ministério", type:"text", half:true, ph:"ex: Louvor" }, { k:"data", label:"Dia", type:"date", half:true }, { k:"hora", label:"Horário", type:"time", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }, { k:"obs", label:"Observação", type:"area", ph:"Detalhes do ensaio" }], action: { kind: "rehearsal" } })}>+ Novo ensaio</button>} />
       <div className="reu-grid">
         {rehearsals.map((rehearsal) => {
           const ministry = rehearsal.ministry_id ? ministryById.get(rehearsal.ministry_id) : null;
@@ -3702,7 +3716,7 @@ function Ensaios({ rehearsals, ministries, rooms, setDrawer, setModal }: { rehea
             </button>
           );
         })}
-        {rehearsals.length === 0 ? <div className="empty">Nenhum ensaio criado.</div> : null}
+        {rehearsals.length === 0 ? <EmptyState title="Nenhum ensaio ainda" text="Os ensaios aparecem aqui com participantes, repertório e materiais." /> : null}
       </div>
     </div>
   );
@@ -3876,7 +3890,7 @@ function ReuniaoDrawer({
         <div className="profile-role">{formatDateBR(meeting.meeting_date) || "sem data"} · {meeting.time || ""} · {meeting.location || "sem local"}</div>
       </div>
       <div className="drawer-body">
-        <DrawerSection title="Times & presentes">
+        <DrawerSection title="Times e presentes">
           <div className="cell-tags" style={{ marginBottom: 12 }}>
             {meeting.ministries.map((id) => <span key={id} className="tag">{ministryById.get(id)?.name || "Time"}</span>)}
           </div>
@@ -3968,7 +3982,7 @@ function ReuniaoDrawer({
           disabled={saving}
           onClick={salvarAta}
         >
-          {saving ? "Salvando..." : meeting.status === "agendada" ? "Salvar ata & marcar realizada" : "Salvar ata"}
+          {saving ? "Salvando..." : meeting.status === "agendada" ? "Salvar ata e marcar realizada" : "Salvar ata"}
         </button>
       </div>
     </DrawerShell>
@@ -4090,7 +4104,7 @@ function ComposerModal({
     <div className="modal-bg" onClick={onClose}>
       <div className="modal wide" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <div className="modal-eyebrow">Novo comunicado</div>
+          <div className="modal-eyebrow">Nova publicação</div>
           <div className="modal-title">Falar com a equipe</div>
           <div className="modal-sub">Escreva uma vez e escolha quem recebe e por onde. O voluntário vê no app e na notificação.</div>
         </div>
@@ -4213,20 +4227,20 @@ function Comunicacao({
         title="Comunicação"
         eyebrow="Operação"
         subtitle="Mural em tempo real e avisos segmentados. O voluntário recebe no app e por notificação, e você vê quem leu."
-        help="Mande avisos pro time todo ou só pra um ministério específico. O Mural fica visível pra todo mundo, os avisos podem ser segmentados."
+        help="Mande avisos pro time todo ou só pra um time específico. O Mural fica visível pra todo mundo, os avisos podem ser segmentados."
         action={<>
           <div className="seg">
             <button className={view === "mural" ? "on" : ""} type="button" onClick={() => setView("mural")}>Mural</button>
             <button className={view === "avisos" ? "on" : ""} type="button" onClick={() => setView("avisos")}>Avisos</button>
           </div>
-          <button className="btn btn-pri" type="button" onClick={() => setCompose(true)}>+ Novo comunicado</button>
+          <button className="btn btn-pri" type="button" onClick={() => setCompose(true)}>+ Nova publicação</button>
         </>}
       />
 
       {view === "mural" ? (
         <div className="com-grid">
           <div className="feed">
-            {wallPosts.length === 0 && <div className="empty">Nenhuma publicação no mural ainda.</div>}
+            {wallPosts.length === 0 && <EmptyState title="Nada no mural ainda" text="O que você publicar aparece aqui e no app de quem escolher." action={{ label: "Nova publicação", onClick: () => setCompose(true) }} />}
             {wallPosts.map((post) => (
               <div className={`post ${post.pinned ? "pin" : ""}`} key={post.id}>
                 <div className="post-top">
@@ -4250,7 +4264,7 @@ function Comunicacao({
             ))}
           </div>
           <div className="panel com-alcance">
-            <div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={14} /> Alcance da semana <HelpDot text="Quantas pessoas o aviso ou mural alcançou nesta semana." /></span></div>
+            <div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={14} /> Alcance da semana <HelpDot label="Como calculamos" text="Quantas pessoas o aviso ou mural alcançou nesta semana." /></span></div>
             <div className="panel-body">
               <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em" }}>{pctAlcance}%<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>taxa de leitura</span></div>
               <div style={{ marginTop: 12, fontSize: 12, color: "var(--muted)" }}>{weeklyReaderIds.size} de {plural(people.length, "voluntário")} leram algum aviso publicado nos últimos 7 dias.</div>
@@ -4265,7 +4279,7 @@ function Comunicacao({
                 {distribuicaoTimes.length === 0 && <div style={{ fontSize: 12, color: "var(--subtle)" }}>Nenhum time cadastrado ainda.</div>}
               </div>
               <button className="btn btn-sec btn-sm" style={{ width: "100%", justifyContent: "center", marginTop: 16 }} type="button" onClick={() => dispararAcao("Cobrança enviada a quem não leu.")}>Cobrar quem não leu</button>
-              {actionMsg && view === "mural" && <div style={{ marginTop: 10, fontSize: 12.5, color: "var(--olive-soft)", textAlign: "right" }}>✓ {actionMsg}</div>}
+              {actionMsg && view === "mural" && <div style={{ marginTop: 10, fontSize: 12.5, color: "var(--olive-soft)", textAlign: "right" }}><Icon name="ok" size={14} /> {actionMsg}</div>}
             </div>
           </div>
         </div>
@@ -4301,7 +4315,7 @@ function Comunicacao({
                   <button className="btn btn-pri btn-sm" type="button" onClick={() => dispararAcao("Notificação reenviada à equipe.")}>Reenviar notificação</button>
                   <VerQuemLeuButton aviso={selAviso} reads={announcementReads} people={people} />
                 </div>
-                {actionMsg && view === "avisos" && <div style={{ marginTop: 12, fontSize: 12.5, color: "var(--olive-soft)" }}>✓ {actionMsg}</div>}
+                {actionMsg && view === "avisos" && <div style={{ marginTop: 12, fontSize: 12.5, color: "var(--olive-soft)" }}><Icon name="ok" size={14} /> {actionMsg}</div>}
               </div>
             </div>
           ) : (
@@ -4419,7 +4433,7 @@ function Espacos({ rooms, reservations, church, setModal, embed }: { rooms: Room
     </div>
   ) : (
     <PageHead
-      title="Espaços & reservas"
+      title="Espaços e reservas"
       eyebrow="Operação"
       subtitle="Salas da igreja e quem usa cada espaço. Reuniões, eventos, cursos e ensaios reservam aqui sem misturar agenda."
       help="Cadastre as salas e espaços físicos da igreja. Reuniões, ensaios e cultos reservam um espaço daqui pra não haver choque de agenda."
@@ -4548,7 +4562,7 @@ function Criancas({
         title="Crianças"
         eyebrow="Pessoas"
         subtitle="Ficha de cada criança, turma sugerida por idade e quem são os responsáveis autorizados a retirar."
-        help="Cadastro, turmas por idade e check-in do ministério infantil, separado do restante da congregação."
+        help="Cadastro, turmas por idade e check-in do Kids, separado do restante da congregação."
         action={<button className="btn btn-pri" type="button" onClick={() => setForm({ open: true })}>+ Nova criança</button>}
       />
       <div className="toolbar">
@@ -4580,7 +4594,7 @@ function Criancas({
 
       <div className="panel" style={{ marginTop: 28 }}>
         <div className="panel-head">
-          <span className="panel-title"><Icon name="presente" size={14} /> Eventos Kids <HelpDot text="Eventos extras do ministério infantil, com inscrição própria e comunicado pros responsáveis." /></span>
+          <span className="panel-title"><Icon name="presente" size={14} /> Eventos Kids <HelpDot label="Como calculamos" text="Eventos extras do Kids, com inscrição própria e aviso pros responsáveis." /></span>
           <button className="btn btn-sec btn-sm" type="button" onClick={() => setEventModal(true)}>+ Criar evento</button>
         </div>
         <div className="panel-body flush">
@@ -4592,7 +4606,7 @@ function Criancas({
               </div>
             </div>
           ))}
-          {kidsEvents.length === 0 ? <div className="empty" style={{ padding: "20px 0" }}>Nenhum evento Kids criado ainda.</div> : null}
+          {kidsEvents.length === 0 ? <EmptyState title="Nenhum evento Kids" text="Eventos extras do Kids, com inscrição própria, aparecem aqui." action={{ label: "Criar evento Kids", onClick: () => setEventModal(true) }} /> : null}
         </div>
       </div>
 
@@ -4773,7 +4787,7 @@ function ChildFormModal({
                 return (
                   <div key={index} className="panel" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      {index === 0 ? <span className="tag" style={{ fontSize: 10 }}>Responsável principal</span> : <span />}
+                      {index === 0 ? <span className="tag" style={{ fontSize: 11 }}>Responsável principal</span> : <span />}
                       <button className="btn btn-ghost btn-sm" type="button" onClick={() => removeGuardian(index)}>Remover</button>
                     </div>
                     {matched ? (
@@ -4916,13 +4930,13 @@ function Decisoes({
     <div className="content wide">
       <PageHead
         title="Decisões por Jesus"
-        eyebrow="Jornada"
-        subtitle="Quem aceitou ou se reconciliou. Cada decisão vira uma pessoa no sistema e começa uma jornada: registre, acompanhe e encaminhe."
-        help="Todo mundo que decidiu por Jesus ou se reconciliou num culto. A decisão inicia a jornada da pessoa até o batismo."
+        eyebrow="Caminhada"
+        subtitle="Quem aceitou ou se reconciliou. Cada decisão vira uma pessoa no sistema e começa uma caminhada: registre, acompanhe e encaminhe."
+        help="Todo mundo que decidiu por Jesus ou se reconciliou num culto. A decisão inicia a caminhada da pessoa até o batismo."
         action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova decisão", subtitle: "Registre quem decidiu, o culto e quem fará o acompanhamento.", saveLabel: "Registrar decisão", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem decidiu" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"culto", label:"Culto", type:"text", half:true, ph:"ex: Culto da Manhã" }, { k:"responsavel", label:"Responsável pelo acompanhamento", type:"text", ph:"Quem vai acompanhar" }], action: { kind: "decision" } })}>+ Registrar decisão</button>}
       />
       <div className="kpi-row">
-        <Kpi icon="visitante" label="Decisões no mês" value={decisions.length} foot="registradas na jornada" help="Quantas decisões por Jesus ou reconciliações foram registradas neste mês." />
+        <Kpi icon="visitante" label="Decisões no mês" value={decisions.length} foot="registradas na caminhada" help="Quantas decisões por Jesus ou reconciliações foram registradas neste mês." />
         <Kpi icon="config" label="A contatar" value={newDecisions.length} foot="aguardando primeiro contato" amber help="Decisões novas que ainda não tiveram o primeiro contato da equipe de acompanhamento." />
         <Kpi icon="pessoa" label="Em acompanhamento" value={following.length} foot="discipulado em andamento" help="Quem já foi contatado e está no meio do discipulado inicial." />
         <Kpi icon="relatorios" label="Encaminhados" value={forwarded.length} foot="já viraram membros" help="Decisões que já completaram o caminho e viraram membros da igreja." />
@@ -4954,7 +4968,7 @@ function Decisoes({
             </button>
           );
         })}
-        {visible.length === 0 ? <div className="empty">Nenhuma decisão encontrada.</div> : null}
+        {visible.length === 0 ? <EmptyState title="Nenhuma decisão por aqui" text="Quem decidir por Jesus ou se reconciliar num culto aparece nesta lista." /> : null}
       </div>
     </div>
   );
@@ -4989,7 +5003,7 @@ function Batismos({
   const localOptions = [...rooms.map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` })), { v: OUTRO_LOCAL, l: "Outro espaço (rio, praia, sítio...)" }];
   return (
     <div className="content wide">
-      <PageHead title="Batismos" eyebrow="Jornada" subtitle="Turmas de batismo nas águas. Inscrições, curso pré-batismo, agenda e histórico na linha do tempo da pessoa." help="Turmas de batismo: quem vai ser batizado, quando e onde. Fecha um passo importante na jornada da pessoa." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova turma de batismo", subtitle: "Crie a turma, defina data, local e quem vai oficiar.", saveLabel: "Criar turma", formFields: [{ k:"label", label:"Nome da turma", type:"text", req:true, ph:"ex: Batismo de Julho 2025" }, { k:"data", label:"Data do batismo", type:"date", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"ex: Rio Tietê, Praia de Santos...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"pastor", label:"Pastor responsável", type:"text", ph:"Quem vai oficiar" }], action: { kind: "baptismClass" } })}>+ Nova turma</button>} />
+      <PageHead title="Batismos" eyebrow="Caminhada" subtitle="Turmas de batismo nas águas. Inscrições, curso pré-batismo, agenda e histórico na linha do tempo da pessoa." help="Turmas de batismo: quem vai ser batizado, quando e onde. Fecha um passo importante na caminhada da pessoa." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova turma de batismo", subtitle: "Crie a turma, defina data, local e quem vai oficiar.", saveLabel: "Criar turma", formFields: [{ k:"label", label:"Nome da turma", type:"text", req:true, ph:"ex: Batismo de Julho 2025" }, { k:"data", label:"Data do batismo", type:"date", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"ex: Rio Tietê, Praia de Santos...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"pastor", label:"Pastor responsável", type:"text", ph:"Quem vai oficiar" }], action: { kind: "baptismClass" } })}>+ Nova turma</button>} />
       <div className="kpi-row">
         <Kpi icon="identidade" label="Turmas abertas" value={baptismClasses.filter((c) => c.open_enrollment).length} foot="com inscrições disponíveis" help="Turmas de batismo que ainda estão aceitando novas inscrições." />
         <Kpi icon="pessoa" label="Candidatos" value={baptismCandidates.length} foot="em preparação" help="Quem está inscrito numa turma, fazendo o curso pré-batismo." />
@@ -5102,10 +5116,10 @@ function CursosTrilhas({
   return (
     <div className="content wide">
       <PageHead
-        title="Cursos & Trilhas"
-        eyebrow="Jornada"
+        title="Cursos e Trilhas"
+        eyebrow="Caminhada"
         subtitle="Trilhas internas de formação, aulas e participantes. Não mistura com cursos comerciais da plataforma."
-        help="Formações da igreja, da decisão à liderança. Cada aula concluída entra na jornada da pessoa."
+        help="Formações da igreja, da decisão à liderança. Cada aula concluída entra na caminhada da pessoa."
         action={
           <button className="btn btn-pri" type="button" onClick={() => setEditingId("new")}>
             + Nova trilha
@@ -5162,7 +5176,7 @@ function CursosTrilhas({
               </button>
             );
           })}
-          {cursos.length === 0 && <div className="empty">Nenhuma trilha interna criada ainda.</div>}
+          {cursos.length === 0 && <EmptyState title="Nenhum curso ainda" text="Os cursos e trilhas da igreja aparecem aqui, com aulas e presença." action={{ label: "Criar curso", onClick: () => setEditingId("new") }} />}
         </div>
       ) : (
         <CursoBuilder
@@ -5520,7 +5534,7 @@ function CardDrawer({
                 return (
                   <button key={p.id} type="button" className={`cand-chip${on ? " on" : ""}`}
                     onClick={() => mutate({ assignees: on ? lc.assignees.filter((x) => x !== p.id) : [...lc.assignees, p.id] })}>
-                    <Av name={p.name} size="xs" photoUrl={p.photoUrl} /> {p.name.split(" ")[0]} {on && "✓"}
+                    <Av name={p.name} size="xs" photoUrl={p.photoUrl} /> {p.name.split(" ")[0]} {on && <Icon name="ok" size={13} />}
                   </button>
                 );
               })}
@@ -5634,7 +5648,7 @@ function NovoCard({
                 return (
                   <button key={p.id} type="button" className={`cand-chip${on ? " on" : ""}`}
                     onClick={() => setResp(on ? resp.filter((x) => x !== p.id) : [...resp, p.id])}>
-                    <Av name={p.name} size="xs" photoUrl={p.photoUrl} /> {p.name.split(" ")[0]} {on && "✓"}
+                    <Av name={p.name} size="xs" photoUrl={p.photoUrl} /> {p.name.split(" ")[0]} {on && <Icon name="ok" size={13} />}
                   </button>
                 );
               })}
@@ -5992,7 +6006,7 @@ function NovaConversaModal({
                 const on = sel.includes(m.id);
                 return (
                   <button key={m.id} type="button" className={`cand-chip ${on ? "on" : ""}`} onClick={() => tog(m.id)}>
-                    <Av name={m.name} size="xs" /> {m.name.split(" ")[0]} {on && "✓"}
+                    <Av name={m.name} size="xs" /> {m.name.split(" ")[0]} {on && <Icon name="ok" size={13} />}
                   </button>
                 );
               })}
@@ -6194,7 +6208,7 @@ function Relatorios({
   const cultosTodos = events.filter((e) => cultoIds.has(e.id));
   const freqGeral = cultosTodos.length ? Math.round(cultosTodos.reduce((sum, ev) => sum + eventAttendance.filter((a) => a.event_id === ev.id).length, 0) / cultosTodos.length) : 0;
 
-  const foot = (delta: number | null, unidade: string, fallback: string) => delta === null ? fallback : `${delta >= 0 ? "▲" : "▼"} ${Math.abs(delta)}${unidade} vs. 30d anteriores`;
+  const foot = (delta: number | null, unidade: string, fallback: string) => delta === null ? fallback : `${delta >= 0 ? "+" : "−"}${Math.abs(delta)}${unidade} em relação aos 30 dias anteriores`;
 
   /* termômetro de bem-estar sem sobreposição: carga real da semana via roster, não engajamento alto ‒
      equivalente a bemEstar() em evolucoes/service_app/relatorios.jsx:19-27, sem o override de sinais (mock-only) */
@@ -6227,22 +6241,22 @@ function Relatorios({
   const funnelMax = Math.max(...funnelCounts, 1);
   return (
     <div className="content wide">
-      <PageHead title="Relatórios & indicadores" eyebrow="Gestão" subtitle="A saúde da igreja num lugar: crescimento, integração, cobertura de escala e o bem-estar de quem serve." help="A saúde da igreja num lugar: crescimento, cobertura de escala e o bem-estar de quem serve. Use o recorte de trimestre pra comparar." action={<><button className="btn btn-sec" type="button"><Icon name="cultos" size={14} /> Trimestre</button><button className="btn btn-pri" type="button">Baixar relatório →</button></>} />
+      <PageHead title="Relatórios e indicadores" eyebrow="Gestão" subtitle="A saúde da igreja num lugar: crescimento, integração, cobertura de escala e o bem-estar de quem serve." help="A saúde da igreja num lugar: crescimento, cobertura de escala e o bem-estar de quem serve. Use o recorte de trimestre pra comparar." action={<><button className="btn btn-sec" type="button"><Icon name="cultos" size={14} /> Trimestre</button><button className="btn btn-pri" type="button">Baixar relatório →</button></>} />
       <div className="kpi-row"><Kpi icon="membros" label="Membros na rede" value={members.length} foot={foot(membrosDelta, " novos", "cadastrados")} help="Toda a congregação, somando todas as congregações da rede." /><Kpi icon="visitante" label="Retenção de visitantes" value={`${retencaoAtual}%`} foot={foot(retencaoDelta, "%", "viram membros")} help="De todos os visitantes, quantos completaram o caminho até virar membro." /><Kpi icon="escalas" label="Cobertura de escala" value={`${confirmationRate}%`} foot={foot(coberturaDelta, "pp", "das posições preenchidas")} help="Das vagas de escala em aberto, quantas já têm alguém confirmado." /><Kpi icon="cultos" label="Frequência média" value={freqRecente ?? freqGeral} foot={foot(freqDelta, "", "por culto")} help="Quantas pessoas em média marcam presença por culto." /></div>
       <div className="dash-3col">
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={13} /> Crescimento de membros <HelpDot text="Quantos membros novos entraram nos últimos meses." /></span><span className="panel-meta">últimos meses</span></div><div className="panel-body"><div style={{ fontSize: 30, fontWeight: 700 }}>{members.length}<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>membros no total</span></div><div style={{ marginTop: 14 }}><Bars series={series} labels={["mar", "abr", "mai", "jun"]} /></div></div></div>
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="visitante" size={13} /> Funil de visitantes <HelpDot text="Quantos visitantes estão em cada etapa, da primeira visita até virar membro." /></span><button className="panel-link" type="button" onClick={() => setRoute("visitantes")}>Abrir</button></div><div className="panel-body flush">{FUNNEL_STAGES.map((s, i) => <div className="dist-row" key={s.id}><span className="dist-name" style={{ width: 140 }}>{s.label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${Math.max(4, (funnelCounts[i] / funnelMax) * 100)}%` }} /></div><span className="dist-num">{funnelCounts[i]}</span></div>)}</div></div>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={13} /> Crescimento de membros <HelpDot label="Como calculamos" text="Quantos membros novos entraram nos últimos meses." /></span><span className="panel-meta">últimos meses</span></div><div className="panel-body"><div style={{ fontSize: 30, fontWeight: 700 }}>{members.length}<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>membros no total</span></div><div style={{ marginTop: 14 }}><Bars series={series} labels={["mar", "abr", "mai", "jun"]} /></div></div></div>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="visitante" size={13} /> Funil de visitantes <HelpDot label="Como calculamos" text="Quantos visitantes estão em cada etapa, da primeira visita até virar membro." /></span><button className="panel-link" type="button" onClick={() => setRoute("visitantes")}>Abrir</button></div><div className="panel-body flush">{FUNNEL_STAGES.map((s, i) => <div className="dist-row" key={s.id}><span className="dist-name" style={{ width: 140 }}>{s.label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${Math.max(4, (funnelCounts[i] / funnelMax) * 100)}%` }} /></div><span className="dist-num">{funnelCounts[i]}</span></div>)}</div></div>
       </div>
       <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">Termômetro de bem-estar</span><span className="line" /></div>
       <div className="well-sum">{[["saudavel", contar("saudavel"), "Saudável"], ["atencao", contar("atencao"), "Atenção"], ["sobrecarga", contar("sobrecarga"), "Sobrecarga"], ["afastando", contar("afastando"), "Afastando"]].map(([level, count, label]) => <div className="well-pill" key={level}><div className="n">{count}</div><div className="l"><span className={`well-dot ${level}`} />{label}</div></div>)}</div>
-      <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={13} /> Quem precisa de atenção <HelpDot text="Voluntários em pausa, de férias ou com engajamento abaixo da média nas últimas escalas." /></span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>Voluntários</button></div><div className="panel-body flush">{(wellRows.length ? wellRows : people.slice(0, 8).map((p) => ({ person: p, cls: "atencao", tag: "Atenção" }))).slice(0, 8).map(({ person, cls, tag }) => <div className="well-row" key={person.id}><Av name={person.name} size="md" photoUrl={person.photoUrl} /><div className="mini-main"><div className="mini-title">{person.name}</div><div className="mini-sub">{person.status !== "ativo" ? "Em pausa ou férias." : "Engajamento abaixo da média."}</div></div><div className="well-meter"><div className="well-track"><div className={`well-fill ${cls}`} style={{ width: `${person.engagement ?? 50}%` }} /></div><div className={`well-tag ${cls}`}>{tag}</div></div></div>)}</div></div>
+      <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={13} /> Quem precisa de atenção <HelpDot label="Como calculamos" text="Voluntários em pausa, de férias ou com engajamento abaixo da média nas últimas escalas." /></span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>Voluntários</button></div><div className="panel-body flush">{(wellRows.length ? wellRows : people.slice(0, 8).map((p) => ({ person: p, cls: "atencao", tag: "Atenção" }))).slice(0, 8).map(({ person, cls, tag }) => <div className="well-row" key={person.id}><Av name={person.name} size="md" photoUrl={person.photoUrl} /><div className="mini-main"><div className="mini-title">{person.name}</div><div className="mini-sub">{person.status !== "ativo" ? "Em pausa ou férias." : "Engajamento abaixo da média."}</div></div><div className="well-meter"><div className="well-track"><div className={`well-fill ${cls}`} style={{ width: `${person.engagement ?? 50}%` }} /></div><div className={`well-tag ${cls}`}>{tag}</div></div></div>)}</div></div>
       <div className="dash-2col" style={{ marginTop: 28 }}>
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="times" size={13} /> Voluntários por ministério <HelpDot text="Quantos voluntários cada ministério tem hoje." /></span><button className="panel-link" type="button" onClick={() => setRoute("times")}>Times</button></div><div className="panel-body flush">{ministries.map((ministry) => <div className="dist-row" key={ministry.id}><span className="dist-name">{ministry.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(ministry.people.length / maxMinistry) * 100}%` }} /></div><span className="dist-num">{ministry.people.length}</span></div>)}</div></div>
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por jornada <HelpDot text="Em qual etapa da jornada (decisão, batismo, curso, GC, servindo) cada membro está." /></span><span className="panel-meta">{members.length} pessoas</span></div><div className="panel-body flush">{["Decisão", "Batismo", "Fundamentos", gruposSigla, "Servindo"].map((step, index) => { const count = members.filter((member) => member.journey[index]).length; return <div className="dist-row" key={step}><span className="dist-name">{step}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${members.length ? (count / members.length) * 100 : 0}%` }} /></div><span className="dist-num">{count}</span></div>; })}</div></div>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="times" size={13} /> Voluntários por time <HelpDot label="Como calculamos" text="Quantos voluntários cada time tem hoje." /></span><button className="panel-link" type="button" onClick={() => setRoute("times")}>Times</button></div><div className="panel-body flush">{ministries.map((ministry) => <div className="dist-row" key={ministry.id}><span className="dist-name">{ministry.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(ministry.people.length / maxMinistry) * 100}%` }} /></div><span className="dist-num">{ministry.people.length}</span></div>)}</div></div>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por caminhada <HelpDot label="Como calculamos" text="Em qual etapa da caminhada (decisão, batismo, curso, GC, servindo) cada membro está." /></span><span className="panel-meta">{members.length} pessoas</span></div><div className="panel-body flush">{["Decisão", "Batismo", "Fundamentos", gruposSigla, "Servindo"].map((step, index) => { const count = members.filter((member) => member.journey[index]).length; return <div className="dist-row" key={step}><span className="dist-name">{step}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${members.length ? (count / members.length) * 100 : 0}%` }} /></div><span className="dist-num">{count}</span></div>; })}</div></div>
       </div>
       <div className="dash-2col" style={{ marginTop: 28 }}>
-        {gruposAtivo && <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por {gruposSigla} <HelpDot text="Quantos membros cada grupo tem hoje." /></span><span className="panel-meta">{fellowshipGroups.length} grupos</span></div><div className="panel-body flush">{gcCounts.map(({ group, n }) => <div className="dist-row" key={group.id}><span className="dist-name">{group.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(n / maxGc) * 100}%` }} /></div><span className="dist-num">{n}</span></div>)}{fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "12px 0" }}>Nenhum grupo cadastrado ainda.</div>}</div></div>}
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={13} /> Operação conectada <HelpDot text="O quanto o time usa quadros de tarefas, conversas e a agenda de eventos." /></span><span className="panel-meta">Kanban & chat</span></div><div className="panel-body flush">{[["Quadros", boards.length], ["Conversas", chats.length], ["Eventos", events.length]].map(([label, count]) => <div className="dist-row" key={label}><span className="dist-name">{label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(Number(count) / maxOps) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}</div></div>
+        {gruposAtivo && <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por {gruposSigla} <HelpDot label="Como calculamos" text="Quantos membros cada grupo tem hoje." /></span><span className="panel-meta">{fellowshipGroups.length} grupos</span></div><div className="panel-body flush">{gcCounts.map(({ group, n }) => <div className="dist-row" key={group.id}><span className="dist-name">{group.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(n / maxGc) * 100}%` }} /></div><span className="dist-num">{n}</span></div>)}{fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "12px 0" }}>Nenhum grupo cadastrado ainda.</div>}</div></div>}
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={13} /> Operação conectada <HelpDot label="Como calculamos" text="O quanto o time usa quadros de tarefas, conversas e a agenda de eventos." /></span><span className="panel-meta">Kanban & chat</span></div><div className="panel-body flush">{[["Quadros", boards.length], ["Conversas", chats.length], ["Eventos", events.length]].map(([label, count]) => <div className="dist-row" key={label}><span className="dist-name">{label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(Number(count) / maxOps) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}</div></div>
       </div>
     </div>
   );
@@ -6250,16 +6264,16 @@ function Relatorios({
 
 const CFG_TABS = [
   { id: "igreja", label: "Igreja" },
-  { id: "min", label: "Ministérios & funções" },
-  { id: "operacao", label: "Escala & presença" },
+  { id: "min", label: "Times e funções" },
+  { id: "operacao", label: "Escala e presença" },
   { id: "grupos", label: "Grupos" },
-  { id: "espacos", label: "Espaços & Salas" },
+  { id: "espacos", label: "Espaços e Salas" },
   { id: "kids", label: "Turmas Kids" },
   { id: "perm", label: "Permissões" },
   { id: "acessos", label: "Acessos por pessoa" },
   { id: "pesquisas", label: "Pesquisas" },
   { id: "visual", label: "Personalização" },
-  { id: "pagina", label: "Página pública" },
+  { id: "pagina", label: "Página da igreja" },
   { id: "rede", label: "Congregações" },
 ];
 
@@ -6282,29 +6296,29 @@ const ACCENTS = [
 
 /* ── Papéis & permissões · 4 níveis (Master, Pastor, Líder, Voluntário) ── */
 const ACOES_V2 = [
-  { id: "painel", nome: "Painel & relatórios", grupo: "Visão" },
+  { id: "painel", nome: "Painel e relatórios", grupo: "Visão" },
   { id: "membros", nome: "Membros", grupo: "Pessoas" },
   { id: "voluntarios", nome: "Voluntários", grupo: "Pessoas" },
-  { id: "times", nome: "Times & ministérios", grupo: "Pessoas" },
+  { id: "times", nome: "Times", grupo: "Pessoas" },
   { id: "visitantes", nome: "Visitantes", grupo: "Pessoas" },
-  { id: "decisoes", nome: "Decisões", grupo: "Jornada" },
-  { id: "batismos", nome: "Batismos", grupo: "Jornada" },
-  { id: "cursos", nome: "Cursos & trilhas", grupo: "Jornada" },
+  { id: "decisoes", nome: "Decisões", grupo: "Caminhada" },
+  { id: "batismos", nome: "Batismos", grupo: "Caminhada" },
+  { id: "cursos", nome: "Cursos e trilhas", grupo: "Caminhada" },
   { id: "escala", nome: "Escalas", grupo: "Operação" },
-  { id: "cultos", nome: "Cultos & eventos", grupo: "Operação" },
-  { id: "comunica", nome: "Comunicação & push", grupo: "Operação" },
-  { id: "identidade", nome: "Identidade & ciclos", grupo: "Igreja" },
+  { id: "cultos", nome: "Cultos e eventos", grupo: "Operação" },
+  { id: "comunica", nome: "Comunicação e push", grupo: "Operação" },
+  { id: "identidade", nome: "Identidade e ciclos", grupo: "Igreja" },
   { id: "historia", nome: "Nossa história", grupo: "Igreja" },
   { id: "igreja", nome: "Dados da igreja", grupo: "Gestão" },
-  { id: "permissoes", nome: "Papéis & permissões", grupo: "Gestão" },
+  { id: "permissoes", nome: "Papéis e permissões", grupo: "Gestão" },
   { id: "rede", nome: "Rede (multi-igreja)", grupo: "Gestão" },
 ] as const;
 
 const PAPEIS_V2 = [
   { id: "master", nome: "Pastor Master", desc: "Controle total da rede", ic: "globo" },
   { id: "pastor", nome: "Pastor", desc: "Sua congregação inteira", ic: "identidade" },
-  { id: "lider", nome: "Líder", desc: "Seu ministério e GC", ic: "times" },
-  { id: "membro", nome: "Membro", desc: "App: jornada, cursos e o que for liberado", ic: "pessoa" },
+  { id: "lider", nome: "Líder", desc: "Seu time e grupo", ic: "times" },
+  { id: "membro", nome: "Membro", desc: "App: caminhada, cursos e o que for liberado", ic: "pessoa" },
 ] as const;
 
 type PapelV2 = (typeof PAPEIS_V2)[number]["id"];
@@ -6394,9 +6408,9 @@ function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
     <div className="modal-bg" onClick={onClose}>
       <div className="modal wide" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <div className="modal-eyebrow">Editar ministério</div>
+          <div className="modal-eyebrow">Editar time</div>
           <div className="modal-title">{ministry.name}</div>
-          <div className="modal-sub">Nome, descrição e o &quot;Sobre o time&quot; completo. Para funções, use o painel de Ministérios.</div>
+          <div className="modal-sub">Nome, descrição e o &quot;Sobre o time&quot; completo. Para funções, use o painel de Times.</div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
           <div className="field"><label className="field-label">Nome</label><input className="input" value={nome} onChange={(e) => setNome(e.target.value)} /></div>
@@ -6443,7 +6457,7 @@ function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
    de quem pode conceder esses acessos ── Config → aba "Acessos por pessoa" */
 /* "Quero servir" (pedir pra entrar num time) : a própria igreja define o que
    a pessoa precisa ter feito antes. Cada time ainda pode ter os seus
-   requisitos (Editar ministério). Ver app/service/lib/requirements.ts. */
+   requisitos (Editar time). Ver app/service/lib/requirements.ts. */
 function RequisitosServirCard() {
   const router = useRouter();
   const access = useServiceAccess();
@@ -6462,7 +6476,7 @@ function RequisitosServirCard() {
   return (
     <div className="cfg-card" style={{ marginTop: 16 }}>
       <div className="cfg-card-t">Requisitos para servir</div>
-      <div className="cfg-card-s">O que a pessoa precisa ter feito antes de pedir para entrar em qualquer time pelo app. Cada time ainda pode ter os próprios requisitos, em Editar ministério.</div>
+      <div className="cfg-card-s">O que a pessoa precisa ter feito antes de pedir para entrar em qualquer time pelo app. Cada time ainda pode ter os próprios requisitos, em Editar time.</div>
       <RequisitosEditor value={reqs} onChange={setReqs} courses={access.courses} events={access.events} groupsLabel={access.groupsLabel} />
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
         <button className="btn btn-pri btn-sm" type="button" disabled={saving} onClick={salvar}>{saving ? "Salvando..." : "Salvar requisitos"}</button>
@@ -7143,7 +7157,7 @@ function TagElencoModal({
                 </div>
                 <button
                   type="button"
-                  title={lider ? "Remover como líder" : "Tornar líder da frente"}
+                  title={lider ? "Remover como líder" : "Tornar líder do time"}
                   onClick={(e) => { e.stopPropagation(); toggleLider(p.id); }}
                   style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: lider ? "var(--amber)" : "var(--subtle)" }}
                 >
@@ -7226,7 +7240,7 @@ function CongregacaoEditModal({
           <div className="field"><label className="field-label">Telefone</label><input className="input" value={form.tel} onChange={(e) => setForm((p) => ({ ...p, tel: e.target.value }))} /></div>
 
           <div className="cfg-card-t" style={{ marginTop: 22 }}>Governança própria</div>
-          <div className="cfg-card-s">Times e ministérios cadastrados nesta congregação.</div>
+          <div className="cfg-card-s">Times cadastrados nesta congregação.</div>
           {churchMinistries.map((m) => {
             const leader = m.people.find((p) => p.isLeader);
             return (
@@ -7240,11 +7254,11 @@ function CongregacaoEditModal({
           })}
           {churchMinistries.length === 0 && <div className="empty" style={{ padding: "14px 0" }}>Nenhum time cadastrado nesta congregação.</div>}
 
-          <div className="cfg-card-t" style={{ marginTop: 22 }}>Frentes / tags</div>
+          <div className="cfg-card-t" style={{ marginTop: 22 }}>Etiquetas</div>
           <div className="cfg-card-s">Etiquetas livres cadastradas nesta congregação.</div>
           <div className="cell-tags" style={{ gap: 8 }}>
             {churchTags.map((t) => <span key={t.id} className="papel-tag">{t.name}</span>)}
-            {churchTags.length === 0 && <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhuma frente cadastrada nesta congregação.</span>}
+            {churchTags.length === 0 && <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhuma etiqueta cadastrada nesta congregação.</span>}
           </div>
         </div>
         <div className="modal-foot">
@@ -7466,7 +7480,7 @@ function Config({
      no fim da aba manda tudo de uma vez, mesmo padrão do "Dados da igreja"
      (Aba Igreja) — apply/salvar consistente em vez de um botão por campo. */
   /* a marca do app é da organização: mora na igreja matriz, mesmo quando a
-     gestão está olhando uma congregação (a identidade da página pública
+     gestão está olhando uma congregação (a identidade da página da igreja
      continua por igreja) */
   const sede = churches.find((c) => c.matriz) ?? church;
   const [brand, setBrand] = useState<BrandCfg>(() => ({ ...(sede?.settings?.brandCfg ?? {}) }));
@@ -7547,7 +7561,7 @@ function Config({
         <div className="cfg-grid2">
           <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
             <div className="cfg-card-t">Dados da igreja</div>
-            <div className="cfg-card-s">Como sua igreja aparece no app, nos comunicados e como a secretaria pode ser encontrada.</div>
+            <div className="cfg-card-s">Como sua igreja aparece no app, nas publicações e como a secretaria pode ser encontrada.</div>
             <div className="field">
               <label className="field-label">Nome da igreja</label>
               <input className="input" value={igrejaForm.nome} onChange={(e) => setIgrejaForm((p) => ({ ...p, nome: e.target.value }))} />
@@ -7622,8 +7636,8 @@ function Config({
       {/* ─── MINISTÉRIOS & FUNÇÕES ─── */}
       {tab === "min" && (
         <div className="cfg-card">
-          <div className="cfg-card-t">Ministérios & funções</div>
-          <div className="cfg-card-s">Cada ministério tem um líder e suas funções. As funções alimentam a escala e as habilidades de cada voluntário.</div>
+          <div className="cfg-card-t">Times e funções</div>
+          <div className="cfg-card-s">Cada time tem um líder e suas funções. As funções alimentam a escala e as habilidades de cada voluntário.</div>
           {ministries.map((m) => {
             const leader = m.people.find((p) => p.isLeader);
             return (
@@ -7643,7 +7657,7 @@ function Config({
               </div>
             );
           })}
-          {ministries.length === 0 && <div className="empty">Nenhum ministério ainda.</div>}
+          {ministries.length === 0 && <div className="empty">Nenhum time ainda.</div>}
         </div>
       )}
 
@@ -7667,8 +7681,8 @@ function Config({
       {tab === "min" && <RequisitosServirCard />}
       {tab === "min" && (
         <div className="cfg-card" style={{ marginTop: 16 }}>
-          <div className="cfg-card-t">Frentes / tags</div>
-          <div className="cfg-card-s">Etiquetas livres como Jovens, Kids ou Casais. Uma pessoa pode ter várias: servem para montar o elenco de uma frente sem depender do time (ministério).</div>
+          <div className="cfg-card-t">Etiquetas</div>
+          <div className="cfg-card-s">Etiquetas livres como Jovens, Kids ou Casais. Uma pessoa pode ter várias: servem para juntar pessoas de times diferentes num mesmo grupo.</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "4px 0 14px" }}>
             {tags.map((t) => {
               const dentro = people.filter((p) => p.tags.includes(t.id)).length;
@@ -7719,9 +7733,9 @@ function Config({
                 </div>
               );
             })}
-            {tags.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>Nenhuma frente cadastrada.</div>}
+            {tags.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>Nenhuma etiqueta cadastrada.</div>}
           </div>
-          <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova frente / tag", subtitle: "Etiqueta livre para agrupar voluntários (ex: Jovens, Casais).", saveLabel: "Criar frente", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Jovens" }, { k:"cor", label:"Cor", type:"select", options: TAG_CORES }], action: { kind: "tag" } })}>+ Frente</button>
+          <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova etiqueta", subtitle: "Etiqueta livre para agrupar voluntários (ex: Jovens, Casais).", saveLabel: "Criar etiqueta", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Jovens" }, { k:"cor", label:"Cor", type:"select", options: TAG_CORES }], action: { kind: "tag" } })}>+ Etiqueta</button>
         </div>
       )}
 
@@ -7979,7 +7993,7 @@ function Config({
                           : "";
                         return (
                           <td key={pp.id}>
-                            <button type="button" className={`mx-cell${on ? " on" : " off"}${locked ? " lock" : ""}`} onClick={() => toggleMx(pp.id, a.id)} title={lockTitle}>{on ? "✓" : "·"}</button>
+                            <button type="button" className={`mx-cell${on ? " on" : " off"}${locked ? " lock" : ""}`} onClick={() => toggleMx(pp.id, a.id)} title={lockTitle}>{on ? <Icon name="ok" size={14} /> : "·"}</button>
                           </td>
                         );
                       })}
@@ -8051,7 +8065,7 @@ function Config({
             <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
               <div className="cfg-card-t">Quem mais pode editar a marca</div>
               <div className="cfg-card-s">
-                Além de você, libere pessoas específicas em <b>Acessos por pessoa</b>{" "}marcando &quot;Marca &amp;
+                Além de você, libere pessoas específicas em <b>Acessos por pessoa</b>{" "}marcando &quot;Marca e
                 aparência&quot;. Elas conseguem abrir só esta aba, sem acesso ao resto de Configurações.
               </div>
             </div>
@@ -8221,10 +8235,10 @@ function Identidade({ church, identity, cycle, setModal }: { church?: ChurchView
   return (
     <div className="content wide">
       <PageHead
-        title="Identidade & propósito"
+        title="Identidade e propósito"
         eyebrow="Nossa igreja"
-        subtitle="Missão, visão, valores e tema atual da comunidade. Exibido no app do membro e na vitrine da Igreja."
-        help="Visão, valores e o chamado da igreja. Aparece pro membro no app e na página pública da igreja."
+        subtitle="Missão, visão, valores e tema atual da comunidade. Exibido no app do membro e na página da igreja."
+        help="Visão, valores e o chamado da igreja. Aparece pro membro no app e na página da igreja da igreja."
         action={<button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Editar", title: "Identidade da Igreja", subtitle: "Atualize propósito, missão e visão da Igreja. Para os valores, use \"Editar valores\" abaixo.", saveLabel: "Salvar", formFields: [{ k:"proposito", label:"Propósito", type:"area", ph:identity?.purpose ?? "Por que a Igreja existe..." }, { k:"missao", label:"Missão", type:"area", ph:identity?.mission ?? "A missão da Igreja..." }, { k:"visao", label:"Visão", type:"area", ph:identity?.vision ?? "A visão da Igreja..." }, { k:"versiculo", label:"Versículo", type:"text", ph:identity?.verse ?? "ex: Mateus 28:19" }], action: { kind: "identity" } })}>Editar</button>}
       />
       <div className="section-divide">
@@ -8533,13 +8547,13 @@ function DecisaoDrawer({
           </dl>
           {decision.notes && (
             <div style={{ marginTop: 14, fontSize: 13.5, color: "var(--light)", lineHeight: 1.6, padding: "14px 16px", background: "var(--ink)", borderRadius: "var(--r-md)", border: "0.5px solid var(--border-2)" }}>
-              <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--subtle)", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Observação</span>
+              <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--subtle)", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Observação</span>
               {decision.notes}
             </div>
           )}
         </DrawerSection>
         {linkedMember && (
-          <DrawerSection title="Jornada do membro">
+          <DrawerSection title="Caminhada do membro">
             <PersonTimeline member={linkedMember} events={timelineEvents.filter((e) => e.member_id === linkedMember.id)} compact />
           </DrawerSection>
         )}
@@ -8705,7 +8719,7 @@ function BatismoDrawer({
             {concluindo ? "Concluindo…" : "Marcar turma como realizada →"}
           </button>
         )}
-        {actionMsg && <div style={{ marginTop: 12, fontSize: 12.5, color: "var(--olive-soft)", textAlign: "right" }}>✓ {actionMsg}</div>}
+        {actionMsg && <div style={{ marginTop: 12, fontSize: 12.5, color: "var(--olive-soft)", textAlign: "right" }}><Icon name="ok" size={14} /> {actionMsg}</div>}
       </div>
       {showAdd && church && (
         <AddCandidatoModal
@@ -8792,12 +8806,12 @@ function VisitanteDrawer({
             <dt>Próximo passo</dt><dd><span className={`vcard-due ${initVisitor.due_status || "ok"}`}>{initVisitor.due || "sem prazo"}</span></dd>
           </dl>
         </DrawerSection>
-        <DrawerSection title="Jornada de integração">
+        <DrawerSection title="Caminhada de integração">
           <div style={{ display: "flex", gap: 6 }}>
             {VISITOR_STAGES.map((s, i) => (
               <div key={s.id} style={{ flex: 1, textAlign: "center" }}>
                 <div style={{ height: 5, borderRadius: 3, background: i <= stageIdx ? s.color : "var(--ink)" }} />
-                <div style={{ fontFamily: "var(--mono)", fontSize: 9, color: i <= stageIdx ? "var(--light)" : "var(--subtle)", marginTop: 7, letterSpacing: "0.04em" }}>{s.name}</div>
+                <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: i <= stageIdx ? "var(--light)" : "var(--subtle)", marginTop: 7, letterSpacing: "0.04em" }}>{s.name}</div>
               </div>
             ))}
           </div>
@@ -8967,7 +8981,7 @@ function JornadaEditModal({
     <div className="modal-bg" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <div className="modal-eyebrow">Jornada</div>
+          <div className="modal-eyebrow">Caminhada</div>
           <div className="modal-title">{member.name}</div>
           <div className="modal-sub">Marque as etapas já concluídas, com a data real de cada uma.</div>
         </div>
@@ -9047,7 +9061,7 @@ function AddToMinistryModal({
         <div className="modal-head">
           <div className="modal-eyebrow">Adicionar ao time</div>
           <div className="modal-title">{ministry.name}</div>
-          <div className="modal-sub">Escolha o voluntário e, se souber, a função dele neste ministério.</div>
+          <div className="modal-sub">Escolha o voluntário e, se souber, a função dele neste time.</div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
           {ministry.positions.length > 0 && (
@@ -9270,9 +9284,9 @@ function EntityDrawer({
           <DrawerSection title="Contato">
             <dl className="kv"><dt>Telefone</dt><dd>{person.phone}</dd><dt>E-mail</dt><dd>{person.email}</dd><dt>Engajamento</dt><dd>{person.engagement ?? 0}% nos últimos 90 dias</dd></dl>
           </DrawerSection>
-          <DrawerSection title="Times & funções">
+          <DrawerSection title="Times e funções">
             <div className="cell-tags" style={{ gap: 8 }}>{linkedMinistries.map((ministry) => <button className="tag" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}>{ministry.name}</button>)}</div>
-            {person.tags.length > 0 && <div style={{ marginTop: 12, fontSize: 13, color: "var(--muted)" }}>Times: {person.tags.join(" · ")}</div>}
+            {person.tags.length > 0 && <div style={{ marginTop: 12, fontSize: 13, color: "var(--muted)" }}>Etiquetas: {person.tags.join(" · ")}</div>}
           </DrawerSection>
           <DrawerSection title="Disponibilidade">
             <div className="avail">
@@ -9384,7 +9398,7 @@ function EntityDrawer({
               </div>
             </DrawerSection>
           )}
-          <DrawerSection title="Serve & cargo">
+          <DrawerSection title="Serve e cargo">
             {linkedMinistries.length > 0 ? (
               <div className="ov-serve">
                 {linkedMinistries.map((m) => {
@@ -9399,7 +9413,7 @@ function EntityDrawer({
                 })}
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: "var(--subtle)" }}>Ainda não serve em nenhum ministério.</div>
+              <div style={{ fontSize: 13, color: "var(--subtle)" }}>Ainda não serve em nenhum time.</div>
             )}
           </DrawerSection>
           <DrawerSection title="Cursos matriculados">
@@ -9428,9 +9442,9 @@ function EntityDrawer({
               <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum curso matriculado ainda.</div>
             )}
           </DrawerSection>
-          <DrawerSection title="Jornada de integração"><PersonTimeline member={member} events={timelineEvents.filter((e) => e.member_id === member.id)} compact /></DrawerSection>
+          <DrawerSection title="Caminhada de integração"><PersonTimeline member={member} events={timelineEvents.filter((e) => e.member_id === member.id)} compact /></DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
-            <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setEditingJourney(true)}>Atualizar jornada</button>
+            <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setEditingJourney(true)}>Atualizar caminhada</button>
             <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => onStartChatWithMember(member.id)}>Enviar mensagem</button>
             {linkedPerson && (
               <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setDrawer({ kind: "person", id: linkedPerson.id })}>Ver como voluntário →</button>
@@ -9535,7 +9549,7 @@ function EntityDrawer({
           {!ministry.description && !profile.comoTrabalhamos && !profile.chegada && !(profile.responsabilidades?.length) && !requisitosTime.length && (
             <button className="btn btn-sec btn-sm" type="button" style={{ marginBottom: 22 }} onClick={() => setEditingMinistry(true)}>+ Contar sobre o time</button>
           )}
-          <DrawerSection title="Funções & quem cobre">
+          <DrawerSection title="Funções e quem cobre">
             {porFuncao.map(({ position, pessoas }) => (
               <div key={position.id} style={{ marginBottom: 18 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
@@ -10052,7 +10066,7 @@ function DatePicker({ value, onChange }: { value: string; onChange: (v: string) 
     <div className="dp">
       <button type="button" className="dp-trigger" onClick={() => setOpen((o) => !o)}>
         <span className={value ? "" : "dp-ph"}>{value ? `${dia} de ${DP_MESES_FULL[mes]}` : "Escolher dia e mês"}</span>
-        <span className="dp-ic">▾</span>
+        <span className="dp-ic"><Caret /></span>
       </button>
       {open && (
         <div className="dp-pop">
@@ -10082,7 +10096,7 @@ function TimePicker({ value, onChange }: { value: string; onChange: (v: string) 
     <div className="dp">
       <button type="button" className="dp-trigger" onClick={() => setOpen((o) => !o)}>
         <span className={value ? "" : "dp-ph"}>{value || "Escolher horário"}</span>
-        <span className="dp-ic">▾</span>
+        <span className="dp-ic"><Caret /></span>
       </button>
       {open && (
         <div className="dp-pop tp-pop">
@@ -10149,7 +10163,7 @@ function SelectField({ value, onChange, options, placeholder }: { value: string;
     <div className="sel-wrap" ref={ref}>
       <button type="button" className="sel-trigger" onClick={() => setOpen((o) => !o)}>
         <span className={current ? "" : "sel-ph"}>{current ? current.l : (placeholder || "Selecione")}</span>
-        <span className="sel-arrow">{open ? "▴" : "▾"}</span>
+        <span className="sel-arrow"><Caret open={open} /></span>
       </button>
       {open && (
         <div className="sel-pop">
@@ -10289,7 +10303,7 @@ function ServiceModal({
     } else if (action.kind === "event") {
       if (!value("nome")) { setSaving(false); setError("Digite o nome do culto."); return; }
       const eventLocal = resolveLocalField(value("local"), value("endereco"), rooms);
-      if (!eventLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
+      if (!eventLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços e Salas."); return; }
       const eventDate = value("data") || null;
       const { data: eventRow, error: eventError } = await supabase.schema("service").from("events").insert({
         organization_id: church.organizationId,
@@ -10321,7 +10335,7 @@ function ServiceModal({
         result = { error: null };
       }
     } else if (action.kind === "ministry") {
-      if (!value("nome")) { setSaving(false); setError("Digite o nome do ministério."); return; }
+      if (!value("nome")) { setSaving(false); setError("Digite o nome do time."); return; }
       result = await supabase.schema("service").from("ministries").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -10353,7 +10367,7 @@ function ServiceModal({
         return;
       }
       const baptismLocal = resolveLocalField(value("local"), value("endereco"), rooms);
-      if (!baptismLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
+      if (!baptismLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços e Salas."); return; }
       result = await supabase.schema("service").from("baptism_classes").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -10442,7 +10456,7 @@ function ServiceModal({
       }
       const ministry = namedMinistry("time");
       const rehearsalLocal = resolveLocalField(value("local"), value("endereco"), rooms);
-      if (!rehearsalLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
+      if (!rehearsalLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços e Salas."); return; }
       result = await supabase.schema("service").from("rehearsals").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -10520,7 +10534,7 @@ function ServiceModal({
     } else if (action.kind === "kidsEvent") {
       if (!value("titulo")) { setSaving(false); setError("Digite o título do evento."); return; }
       const kidsEventLocal = resolveLocalField(value("local"), value("endereco"), rooms);
-      if (!kidsEventLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços & Salas."); return; }
+      if (!kidsEventLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços e Salas."); return; }
       result = await supabase.schema("service").from("kids_events").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -10635,7 +10649,7 @@ function ServiceModal({
         name: value("nome"),
       });
     } else if (action.kind === "tag") {
-      if (!value("nome")) { setSaving(false); setError("Digite o nome da frente."); return; }
+      if (!value("nome")) { setSaving(false); setError("Digite o nome da etiqueta."); return; }
       result = await supabase.schema("service").from("tags").insert({
         organization_id: church.organizationId,
         church_id: church.id,

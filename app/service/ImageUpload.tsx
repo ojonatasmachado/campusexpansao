@@ -6,7 +6,7 @@ import { ImageCropper } from "./ImageCropper";
 /* Upload de imagem retangular (logo, capa/banner...), com preview de fundo e
    botão trocar/remover. Extraído de ServiceExactApp.tsx (era local/não
    exportado, usado só pro logo da igreja) pra poder ser reaproveitado também
-   pelo editor da Página pública (PublicPageEditor.tsx). Pra foto redonda de
+   pelo editor da Página da igreja (PublicPageEditor.tsx). Pra foto redonda de
    pessoa, o componente certo é PhotoPicker.tsx, não este.
 
    Toda imagem passa pelo ImageCropper antes de subir : dá pra cortar e dar

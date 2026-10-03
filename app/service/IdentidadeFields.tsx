@@ -10,7 +10,7 @@ import type { IdentidadeCfg, LogoFontKey } from "../lib/church-page";
 
 /* Campos da identidade única da igreja (logo, fundo, texto, caixas) :
    editados uma vez em Configurações → Personalização, consumidos pela
-   Página pública e pelo login temático. Reaproveitados só ali (não dentro
+   Página da igreja e pelo login temático. Reaproveitados só ali (não dentro
    de ServiceExactApp.tsx, que já tem 10k+ linhas), mesmo padrão de extração
    do ImageUpload/AccentField. */
 
