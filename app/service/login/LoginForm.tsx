@@ -5,20 +5,17 @@ import PasswordInput from "../PasswordInput";
 import { useServiceLoginForm } from "./useServiceLoginForm";
 
 /* UI única de login, em cima do useServiceLoginForm (lógica intacta).
-   variant "service" = /service/login (gestão da igreja) · variant "igreja" =
-   /[slug]/entrar (app do membro). As duas portas continuam separadas: o
-   membro entra pelo endereço da igreja, a liderança por aqui. "Criar conta"
-   saiu do topo: só serve pra quem vai cadastrar uma igreja nova, e fica no
-   rodapé da gestão, com o nome certo. */
+   variant "service" = /service/login · variant "igreja" = /[slug]/entrar.
+   Os dois endereços mostram a mesma entrada (S28); a diferença é só que o
+   endereço da igreja já vem com a marca dela e não oferece trocar de igreja
+   nem cadastrar uma igreja nova. */
 export default function ServiceLoginForm({
   churchName = null,
   logoUrl = null,
-  churchSlug = null,
   variant = "service",
 }: {
   churchName?: string | null;
   logoUrl?: string | null;
-  churchSlug?: string | null;
   variant?: "service" | "igreja";
 }) {
   const f = useServiceLoginForm();
@@ -30,40 +27,37 @@ export default function ServiceLoginForm({
     window.location.reload();
   };
 
-  let eyebrow = "Gestão da igreja";
-  let title: string = "Entrar na gestão";
-  let subtitle = "Para pastores e líderes. Membros entram pelo app da igreja, no link que a liderança mandou.";
-  let footer: React.ReactNode = (
+  /* uma porta só (S28): membro e liderança entram pela mesma tela. Depois
+     do login o /service abre o app (celular) ou o painel (computador, para
+     quem tem função de gestão); o líder troca entre os dois quando quiser. */
+  let eyebrow = "Acesso";
+  let title: string = churchName ? "Entrar" : "Entrar no Service";
+  let subtitle = "Use o e-mail e a senha do seu cadastro.";
+  let footer: React.ReactNode = churchName ? (
     <>
-      Sua igreja ainda não usa o Service?{" "}
-      <button type="button" onClick={f.switchToSignup}>Cadastrar minha igreja</button>
+      Primeiro acesso? Abra o link de convite que a liderança mandou no seu WhatsApp.
+      {variant === "service" && (
+        <>
+          <br />
+          Não é da {churchName}? <button type="button" onClick={trocarIgreja}>Entrar por outra igreja</button>
+        </>
+      )}
+    </>
+  ) : (
+    <>
+      Primeiro acesso? Abra o link de convite que a liderança mandou.
+      <br />
+      Sua igreja ainda não usa o Service? <button type="button" onClick={f.switchToSignup}>Cadastrar minha igreja</button>
     </>
   );
 
-  if (variant === "igreja") {
-    eyebrow = "App da igreja";
-    title = "Entrar no app";
-    subtitle = "Use o e-mail e a senha que você criou quando abriu o convite.";
-    footer = <>Primeiro acesso? Abra o link de convite que a liderança mandou no seu WhatsApp.</>;
-  } else if (signup) {
+  if (signup) {
     eyebrow = "Nova igreja";
     title = "Cadastrar minha igreja";
     subtitle = "Comece criando o seu acesso. Depois de confirmar o e-mail, você preenche os dados da igreja em um minuto.";
     footer = (
       <>
         Já tem acesso? <button type="button" onClick={() => f.setMode("login")}>Entrar</button>
-      </>
-    );
-  } else if (churchName) {
-    footer = (
-      <>
-        {churchSlug ? (
-          <>
-            É membro? <a href={`/${churchSlug}/entrar`}>Entrar no app da igreja</a>
-            <br />
-          </>
-        ) : null}
-        Não é da {churchName}? <button type="button" onClick={trocarIgreja}>Entrar por outra igreja</button>
       </>
     );
   }
