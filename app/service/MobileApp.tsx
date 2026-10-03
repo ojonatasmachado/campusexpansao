@@ -1859,7 +1859,7 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
 
   const steps = [
     {
-      t: `Bem-vindo(a), ${nome}`,
+      t: `Que bom ter você aqui, ${nome}`,
       s: "Que bom ter você aqui. Vamos completar seu cadastro, leva um minuto.",
       body: (
         <div className="ob-welcome">

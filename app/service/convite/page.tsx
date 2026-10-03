@@ -4,6 +4,7 @@ import { supabaseAdmin } from "../../lib/supabase";
 import { findOpenInvite } from "../../lib/service-invite";
 import { resolveMode, THEME_COOKIE, type BrandCfg } from "../lib/theme";
 import ServiceTheme from "../ServiceTheme";
+import { getAuthChurchBySlug } from "../lib/auth-church";
 import AuthShell from "../AuthShell";
 import ConviteForm from "./ConviteForm";
 
@@ -33,10 +34,15 @@ export default async function ServiceConvitePage({ searchParams }: { searchParam
     brand = (sede?.settings as { brandCfg?: BrandCfg } | null)?.brandCfg;
   }
   const jar = await cookies();
+  /* convite vencido: a marca e o login são os da igreja que este aparelho já conhece */
+  const igrejaDoAparelho = invite ? null : await getAuthChurchBySlug(jar.get("cex_church_slug")?.value);
+  if (igrejaDoAparelho) {
+    churchName = igrejaDoAparelho.name;
+    logoUrl = igrejaDoAparelho.logoUrl;
+    brand = igrejaDoAparelho.brand;
+  }
   const mode = resolveMode(jar.get(THEME_COOKIE)?.value, brand);
-  /* convite vencido: quem já criou o acesso entra pelo app da igreja do aparelho */
-  const slug = jar.get("cex_church_slug")?.value;
-  const loginHref = slug && /^[a-z0-9-]{3,40}$/.test(slug) ? `/${slug}/entrar` : "/service/login";
+  const loginHref = igrejaDoAparelho ? `/${igrejaDoAparelho.slug}/entrar` : "/service/login";
   const firstName = invite?.member.name.split(" ")[0] ?? "";
 
   return (
@@ -47,7 +53,7 @@ export default async function ServiceConvitePage({ searchParams }: { searchParam
           churchName={churchName}
           logoUrl={logoUrl}
           eyebrow="Convite"
-          title={firstName ? `Bem-vindo(a), ${firstName}` : "Bem-vindo(a)"}
+          title={firstName ? `Que bom ter você, ${firstName}` : "Que bom ter você aqui"}
           subtitle="Crie sua senha para entrar no app da igreja. Só você vai saber essa senha."
           footer={<>O link é só seu e vale por 7 dias.</>}
         >

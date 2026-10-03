@@ -42,7 +42,7 @@ export default async function ServiceOnboardingPage({ searchParams }: { searchPa
     return (
       <AuthShell
         eyebrow="Convite"
-        title={pending.length === 1 ? "Você foi convidado(a) para uma igreja" : "Você foi convidado(a) para igrejas"}
+        title={pending.length === 1 ? "Chegou um convite para você" : "Chegaram convites para você"}
         subtitle="Aceite para entrar no app da igreja com a conta que você já tem."
       >
         <ConvitesPendentes invites={pending} />
