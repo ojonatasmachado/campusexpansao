@@ -5,8 +5,8 @@
 -- gravam "desligado" para o líder em toda permissão fora de uma lista fixa,
 -- então uma igreja nova nasceria com o líder sem essas cinco telas. Aqui as
 -- duas funções são refeitas iguais às atuais, só com a lista maior.
--- Sem "select ... into": o SQL Editor do Supabase confunde com criação de
--- tabela e quebra a função. Idempotente.
+-- Variáveis preenchidas com := (o SQL Editor do Supabase confunde a outra forma com criação de
+-- tabela e quebra a função). Idempotente.
 
 CREATE OR REPLACE FUNCTION core.bootstrap_church_org(p_org_name text, p_city text DEFAULT NULL::text, p_trial boolean DEFAULT true)
  RETURNS TABLE(organization_id uuid, church_id uuid)
