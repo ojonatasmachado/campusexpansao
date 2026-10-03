@@ -247,7 +247,10 @@ type AnnouncementView = {
   author: string | null;
   when_label: string | null;
   created_at: string;
+  /* aviso · evento (com Vou/Não vou) · acao. Só existe depois da 0049. */
+  kind?: string | null;
 };
+type AnnouncementResponseView = { announcement_id: string; person_id: string; response: "vou" | "nao" };
 
 type WallPostView = {
   id: string;
@@ -630,6 +633,7 @@ type Props = {
   visitorNotes: VisitorNoteView[];
   announcements: AnnouncementView[];
   announcementReads?: AnnouncementReadView[];
+  announcementResponses?: AnnouncementResponseView[];
   eventAttendance?: EventAttendanceView[];
   wallPosts: WallPostView[];
   decisions: DecisionView[];
@@ -988,6 +992,7 @@ export default function ServiceExactApp({
   visitorNotes,
   announcements,
   announcementReads = [],
+  announcementResponses = [],
   eventAttendance = [],
   wallPosts,
   decisions,
@@ -1258,6 +1263,15 @@ export default function ServiceExactApp({
     if (!firstChurch?.organizationId || !firstChurch.id) return null;
     const sb = createServiceBrowserClient().schema("service");
     const senderName = members.find((m) => m.id === selfMemberId)?.name ?? "Alguém";
+    /* conversa pela função do banco (0049): o membro não consegue criar a
+       conversa direto (as regras de leitura escondem a conversa recém-criada) */
+    const viaRpc = await sb.rpc("start_dm", { p_target_member: targetMemberId, p_body: firstMessage.trim() || null });
+    if (!viaRpc.error && viaRpc.data) {
+      if (firstMessage.trim()) notifyPush(firstChurch.organizationId, [targetMemberId], senderName, firstMessage.trim());
+      router.refresh();
+      return viaRpc.data as string;
+    }
+    if (viaRpc.error && !rpcFaltando(viaRpc.error)) { avisar("Não conseguimos abrir a conversa agora.", "warn"); return null; }
     const existing = chats.find((c) => c.kind === "dm"
       && chatMembers.some((cm) => cm.chat_id === c.id && cm.member_id === selfMemberId)
       && chatMembers.some((cm) => cm.chat_id === c.id && cm.member_id === targetMemberId));
@@ -1339,13 +1353,28 @@ export default function ServiceExactApp({
     notifyPush(firstChurch.organizationId, [member.id], "Caminhada aprovada", `"${stepLabel}" foi confirmado na sua caminhada.`);
     router.refresh();
   };
-  const confirmarEscalaMobile = async (assignmentId: string) => {
-    await createServiceBrowserClient().schema("service").from("roster_assignments").update({ status: "ok" }).eq("id", assignmentId);
+  /* o membro responde a própria escala pela função do banco (0049); antes
+     dela o update direto era barrado pelas regras de acesso */
+  const responderEscala = async (assignmentId: string, status: "ok" | "no") => {
+    const sb = createServiceBrowserClient().schema("service");
+    const { error } = await sb.rpc("respond_my_assignment", { p_assignment: assignmentId, p_status: status });
+    if (error && rpcFaltando(error)) await sb.from("roster_assignments").update({ status }).eq("id", assignmentId);
+    else if (error) avisar("Não conseguimos registrar sua resposta. Tente de novo.", "warn");
     router.refresh();
   };
-  const recusarEscalaMobile = async (assignmentId: string) => {
-    await createServiceBrowserClient().schema("service").from("roster_assignments").update({ status: "no" }).eq("id", assignmentId);
+  const confirmarEscalaMobile = (assignmentId: string) => responderEscala(assignmentId, "ok");
+  const recusarEscalaMobile = (assignmentId: string) => responderEscala(assignmentId, "no");
+  const salvarDisponibilidade = async (availability: Record<string, boolean>) => {
+    const { error } = await createServiceBrowserClient().schema("service").rpc("update_my_availability", { p_availability: availability });
+    if (error) { avisar("Não conseguimos salvar agora. Tente de novo.", "warn"); return false; }
     router.refresh();
+    return true;
+  };
+  const responderMural = async (announcementId: string, response: "vou" | "nao" | null) => {
+    const { error } = await createServiceBrowserClient().schema("service").rpc("respond_announcement", { p_announcement: announcementId, p_response: response });
+    if (error) { avisar("Não conseguimos enviar sua resposta agora.", "warn"); return false; }
+    router.refresh();
+    return true;
   };
   const rejectJourneyRequest = async (request: JourneyChangeRequestView, motivo?: string) => {
     if (!firstChurch?.organizationId || !currentPersonId) return;
@@ -1455,6 +1484,12 @@ export default function ServiceExactApp({
     return (
       <MobileOverlay
         groupTerm={firstChurch?.settings?.gruposCfg?.termoP}
+        readAnnouncementIds={announcementReads.filter((r) => r.person_id === currentPersonId).map((r) => r.announcement_id)}
+        churchPurpose={(() => {
+          const ciclo = cycles.find((c) => c.is_active);
+          const titulo = churchIdentity?.purpose || churchIdentity?.mission || ciclo?.theme;
+          return titulo ? { kick: ciclo ? joinDot(`Ciclo ${ciclo.year}`, ciclo.theme) : null, title: titulo, text: churchIdentity?.vision ?? ciclo?.body ?? null } : null;
+        })()}
         people={people}
         members={members}
         ministries={ministries}
@@ -1505,6 +1540,9 @@ export default function ServiceExactApp({
         onRequestBaptism={(classId) => journeyRpc("request_baptism", { p_class: classId })}
         onRequestServe={(ministryId) => journeyRpc("request_to_serve", { p_ministry: ministryId })}
         onConfirmarEscala={confirmarEscalaMobile}
+        onSaveAvailability={salvarDisponibilidade}
+        onRespondAnnouncement={responderMural}
+        announcementResponses={announcementResponses.filter((r) => r.person_id === currentPersonId)}
         onRecusarEscala={recusarEscalaMobile}
         mode="self"
         selfPersonId={currentPersonId}
@@ -10001,6 +10039,11 @@ function weekdayShortFromDate(dateStr: string | null | undefined): string | null
   const d = new Date(`${dateStr}T12:00:00`);
   if (Number.isNaN(d.getTime())) return null;
   return WEEKDAY_SHORT[d.getDay()];
+}
+
+/* função do banco ainda não criada (migração não aplicada): o app usa o caminho antigo */
+function rpcFaltando(error: { code?: string; message?: string }) {
+  return error.code === "PGRST202" || error.code === "42883" || /could not find the function/i.test(error.message ?? "");
 }
 
 function friendlyWriteError(message: string) {

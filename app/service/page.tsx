@@ -401,7 +401,10 @@ type AnnouncementView = {
   author: string | null;
   when_label: string | null;
   created_at: string;
+  /* aviso · evento (com Vou/Não vou) · acao. Só existe depois da 0049. */
+  kind?: string | null;
 };
+type AnnouncementResponseView = { announcement_id: string; person_id: string; response: "vou" | "nao" };
 
 type WallPostView = {
   id: string;
@@ -466,6 +469,8 @@ type CourseView = {
   divulgacao: string | null;
   materiais: Array<{ id: string; tipo: string; titulo: string; url: string }>;
   modalidade: string | null;
+  /* false: fora do app do membro. Só existe depois da 0049. */
+  published?: boolean;
 };
 
 type EnrollmentView = {
@@ -698,6 +703,7 @@ type ExtraServiceData = {
   visitorNotes: VisitorNoteView[];
   announcements: AnnouncementView[];
   announcementReads: AnnouncementReadView[];
+  announcementResponses: AnnouncementResponseView[];
   eventAttendance: EventAttendanceView[];
   wallPosts: WallPostView[];
   decisions: DecisionView[];
@@ -744,6 +750,7 @@ const emptyExtraServiceData: ExtraServiceData = {
   visitorNotes: [],
   announcements: [],
   announcementReads: [],
+  announcementResponses: [],
   eventAttendance: [],
   wallPosts: [],
   decisions: [],
@@ -1175,7 +1182,7 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("decisions").select("id,name,phone,happened_on,kind,service_name,responsible_id,status,member_id,age,notes,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("baptism_classes").select("id,label,baptism_date,location,room_id,status,pastor,notes,open_enrollment").order("created_at", { ascending: false }),
     supabase.schema("service").from("baptism_candidates").select("id,class_id,member_id,decision_id").order("created_at", { ascending: false }),
-    supabase.schema("service").from("courses").select("id,name,kind,level,description,category,color,divulgacao,materiais,modalidade").order("created_at", { ascending: false }),
+    supabase.schema("service").from("courses").select("*").order("created_at", { ascending: false }),
     supabase.schema("service").from("enrollments").select("id,course_id,member_id,done_count,status").order("created_at", { ascending: false }),
     supabase.schema("service").from("course_modules").select("id,course_id,name,sort_order").order("sort_order", { ascending: true }),
     supabase.schema("service").from("course_lessons").select("id,module_id,name,duration,kind,sort_order,link,conteudo,prova,min_acertos,checkin_token,checkin_active").order("sort_order", { ascending: true }),
@@ -1187,7 +1194,7 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("messages").select("id,chat_id,sender_id,body,created_at").order("created_at", { ascending: true }),
     supabase.schema("service").from("visitors").select("id,name,phone,stage,visited_on,responsible_id,due,due_status,reply_status,origin,member_id,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("visitor_notes").select("id,visitor_id,happened_on,body,author,is_milestone,created_at").order("created_at", { ascending: false }),
-    supabase.schema("service").from("announcements").select("id,title,audience,body,author,when_label,created_at").order("created_at", { ascending: false }),
+    supabase.schema("service").from("announcements").select("*").order("created_at", { ascending: false }),
     supabase.schema("service").from("announcement_reads").select("id,announcement_id,person_id,read_at"),
     supabase.schema("service").from("event_attendance").select("id,event_id,person_id"),
     supabase.schema("service").from("wall_posts").select("id,author,audience,body,pinned,channels,created_at").order("created_at", { ascending: false }),
@@ -1216,6 +1223,10 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").rpc("my_missing_requirements"),
     supabase.schema("service").from("serve_requests").select("id,member_id,ministry_id,status").order("created_at", { ascending: false }),
   ]);
+  /* respostas "Vou / Não vou" do Mural (0049). Fora do Promise.all de
+     propósito: antes da migração a tabela não existe e a tela segue sem elas. */
+  const { data: responsesData } = await supabase.schema("service").from("announcement_responses").select("announcement_id,person_id,response");
+  const announcementResponses = (responsesData ?? []) as AnnouncementResponseView[];
 
   const extraError = [
     decisionsResult.error,
@@ -1283,6 +1294,7 @@ async function getServiceDashboardData(): Promise<{
       visitorNotes: ((visitorNotesResult.data ?? []) as VisitorNoteView[]),
       announcements: ((announcementsResult.data ?? []) as AnnouncementView[]),
       announcementReads: ((announcementReadsResult.data ?? []) as AnnouncementReadView[]),
+      announcementResponses,
       eventAttendance: ((eventAttendanceResult.data ?? []) as EventAttendanceView[]),
       wallPosts: ((wallPostsResult.data ?? []) as WallPostView[]),
       decisions: ((decisionsResult.data ?? []) as DecisionView[]),
@@ -1485,6 +1497,7 @@ export default async function ServiceHomePage() {
       visitorNotes={extra.visitorNotes}
       announcements={extra.announcements}
       announcementReads={extra.announcementReads}
+      announcementResponses={extra.announcementResponses}
       eventAttendance={extra.eventAttendance}
       wallPosts={extra.wallPosts}
       decisions={extra.decisions}

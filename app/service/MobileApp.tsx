@@ -4,7 +4,8 @@ import { avisar } from "./lib/avisar";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon, Caret } from "./lib/icons";
-import { formatDateBR, joinDot, saudacao } from "./lib/date";
+import { formatDateBR, joinDot, parseISODate, saudacao, todayISO, weekdayFromISO } from "./lib/date";
+import { plural } from "./lib/plural";
 import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import { PhotoPicker } from "./PhotoPicker";
 import CepInput from "./CepInput";
@@ -60,6 +61,8 @@ type Ministry = {
   id: string;
   name: string;
   icon: string;
+  description?: string | null;
+  positions?: Array<{ id: string; name: string }>;
   appModules?: string[];
   people: Array<{ personId: string; isLeader: boolean; functions: string[] }>;
 };
@@ -72,7 +75,7 @@ type JourneyRequest = {
   note: string | null;
   status: "pendente" | "aprovado" | "rejeitado";
 };
-type Ev = { id: string; name: string; weekday: string; eventDate: string; time: string };
+type Ev = { id: string; name: string; weekday: string; eventDate: string; time: string; location?: string; kind?: string };
 type Slot = { id: string; event_id: string; position_id: string; person_id: string; status: "ok" | "wait" | "no" };
 type Card = {
   id: string;
@@ -86,7 +89,7 @@ type Card = {
   moved_days_ago: number | null;
 };
 type Board = { id: string; name: string; columns: Array<{ id: string; nome?: string; name?: string }> };
-type Course = { id: string; name: string; kind: string | null; level: string | null; description: string | null };
+type Course = { id: string; name: string; kind: string | null; level: string | null; description: string | null; published?: boolean };
 type Enrollment = { id: string; course_id: string; member_id: string; done_count: number; status: string };
 
 /* ── caminhada do membro no app (Fase 4, migração 0046) ─────────────────────────
@@ -142,6 +145,7 @@ type Announcement = {
   body: string | null;
   when_label: string | null;
   audience: string | null;
+  kind?: string | null;
 };
 type Chat = { id: string; kind: string; ministry_id: string | null; name: string | null };
 type ChatMember = { chat_id: string; member_id: string };
@@ -242,6 +246,15 @@ export type MobileOverlayProps = {
   onLogout?: () => void;
   /* nome que a igreja dá aos pequenos grupos (gruposCfg.termoP) */
   groupTerm?: string;
+  /* publicações do Mural que esta pessoa já leu (service.announcement_reads) */
+  readAnnouncementIds?: string[];
+  /* cartão "Nossa igreja" na Caminhada (Identidade e propósito) */
+  churchPurpose?: { kick?: string | null; title?: string | null; text?: string | null } | null;
+  /* "Quando posso servir" (0049) */
+  onSaveAvailability?: (availability: Record<string, boolean>) => Promise<boolean>;
+  /* "Vou / Não vou" nas publicações de evento do Mural (0049) */
+  onRespondAnnouncement?: (announcementId: string, response: "vou" | "nao" | null) => Promise<boolean>;
+  announcementResponses?: { announcement_id: string; response: "vou" | "nao" }[];
 };
 
 // ── constantes ────────────────────────────────────────────────────────────────
@@ -253,8 +266,6 @@ function useJornada() {
   const grupo = useContext(GroupTermContext);
   return ["Decisão", "Batismo", "Fundamentos", grupo, "Servindo"];
 }
-const JORNADA_STEPS: JourneyStep[] = ["decisao", "batismo", "curso", "integracao", "time"];
-const AVAIL_LABELS: Record<string, string> = { dom_m: "Domingo manha", dom_n: "Domingo noite", qua: "Quarta" };
 const ETAPAS = [
   { id: "novo", nome: "Novo" },
   { id: "contato", nome: "Contato" },
@@ -302,261 +313,6 @@ function isKidsPerson(person: P, ministries: Ministry[]) {
 }
 
 // ── aba: Inicio ───────────────────────────────────────────────────────────────
-
-function TabInicio({
-  person, member, ministries, events, roster, cards, setTab,
-}: {
-  person: P; member: M | null;
-  ministries: Ministry[]; events: Ev[]; roster: Slot[]; cards: Card[];
-  setTab: (t: string) => void;
-}) {
-  const mySlots = roster.filter((r) => r.person_id === person.id);
-  const pending = mySlots.filter((r) => r.status === "wait");
-  const myCards = cards.filter((c) => c.assignees.includes(person.id) && c.column_id !== "done");
-  const lateTasks = myCards.filter((c) => c.moved_days_ago !== null && c.moved_days_ago > 7);
-
-  const journey = member?.journey ?? [];
-  const done = journey.filter(Boolean).length;
-  const JORNADA = useJornada();
-  const nextStep = JORNADA.find((_, i) => !journey[i]) ?? "Completo";
-
-  const proxSlot = mySlots[0];
-  const proxEvent = proxSlot ? events.find((e) => e.id === proxSlot.event_id) : null;
-  const proxMin = proxSlot
-    ? ministries.find((m) => m.people.some((mp) => mp.personId === person.id))
-    : null;
-
-  const isRecep = isRecepPerson(person, ministries);
-  /* "Minhas tarefas" só pra quem serve: a aba só existe nesse caso */
-  const serve = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
-
-  return (
-    <>
-      {pending.length > 0 && (
-        <div className="m-alert" onClick={() => setTab("escalas")} style={{ cursor: "pointer" }}>
-          <span className="m-alert-ic"><Icon name="alerta" size={15} /></span>
-          <div>
-            <b>{pending.length} {pending.length === 1 ? "escala para confirmar" : "escalas para confirmar"}</b>
-            <small>Toque para responder</small>
-          </div>
-          <span className="m-alert-go">→</span>
-        </div>
-      )}
-      {myCards.length > 0 && (
-        <div
-          className="m-alert"
-          style={
-            lateTasks.length
-              ? undefined
-              : { borderColor: "var(--olive-line)", background: "var(--olive-dim)", cursor: "pointer" }
-          }
-          onClick={() => setTab("tarefas")}
-        >
-          <span
-            className="m-alert-ic"
-            style={lateTasks.length ? undefined : { background: "var(--accent-fill)", color: "var(--accent-ink)" }}
-          >
-            <Icon name={lateTasks.length ? "alerta" : "ok"} size={15} />
-          </span>
-          <div>
-            <b>{myCards.length} {myCards.length === 1 ? "tarefa com você" : "tarefas com você"}</b>
-            <small>{lateTasks.length ? `${lateTasks.length} ${lateTasks.length === 1 ? "atrasada" : "atrasadas"}` : "no seu quadro"}</small>
-          </div>
-          <span className="m-alert-go">→</span>
-        </div>
-      )}
-
-      {member && (
-        <>
-          <div className="m-section-t">Sua caminhada</div>
-          <div className="m-journey">
-            <div className="m-journey-top">
-              <div>
-                <div className="m-journey-step">{done} de 5 etapas</div>
-                <div className="m-journey-next">
-                  Próximo: <em>{nextStep}</em>
-                </div>
-              </div>
-              <div
-                className="m-ring"
-                style={{ "--p": `${Math.round((done / 5) * 100)}%` } as React.CSSProperties}
-              >
-                <span>{Math.round((done / 5) * 100)}%</span>
-              </div>
-            </div>
-            <div className="m-journey-pips">
-              {JORNADA.map((s, i) => (
-                <div className={`m-jp ${journey[i] ? "on" : ""}`} key={i}>
-                  <span>{journey[i] ? <Icon name="ok" size={13} /> : i + 1}</span>
-                  <small>{s}</small>
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-
-      {proxEvent && (
-        <>
-          <div className="m-section-t">Sua próxima escala</div>
-          <div className="m-card" onClick={() => setTab("escalas")} style={{ cursor: "pointer" }}>
-            <div className="m-card-top">
-              <span className="m-when">
-                {joinDot(proxEvent.weekday, formatDateBR(proxEvent.eventDate), proxEvent.time)}
-              </span>
-              <ChipSt status={proxSlot!.status} label={proxSlot!.status === "wait" ? "Responder" : undefined} />
-            </div>
-            <div className="m-culto">{proxEvent.name}</div>
-            {proxMin && <div className="m-fn">{proxMin.name}</div>}
-          </div>
-        </>
-      )}
-
-      <div className="m-section-t">Atalhos</div>
-      <div className="m-quick">
-        <button className="m-quick-b" onClick={() => setTab("biblia")}>
-          <span style={{ color: "var(--olive)" }}><Icon name="biblia" size={15} /></span>Bíblia
-        </button>
-        {serve && (
-          <button className="m-quick-b" onClick={() => setTab("tarefas")}>
-            <span style={{ color: "var(--olive)" }}><Icon name="tarefas" size={15} /></span>Minhas tarefas
-          </button>
-        )}
-        <button className="m-quick-b" onClick={() => setTab("conversas")}>
-          <span style={{ color: "var(--olive)" }}><Icon name="conversas" size={15} /></span>Conversas
-        </button>
-        <button className="m-quick-b" onClick={() => setTab("cursos")}>
-          <span style={{ color: "var(--olive)" }}><Icon name="cursos" size={15} /></span>Meus cursos
-        </button>
-        {isRecep ? (
-          <button className="m-quick-b" onClick={() => setTab("visitantes")}>
-            <span style={{ color: "var(--olive)" }}><Icon name="visitante" size={15} /></span>Visitantes
-          </button>
-        ) : (
-          <button className="m-quick-b" onClick={() => setTab("avisos")}>
-            <span style={{ color: "var(--olive)" }}><Icon name="oracao" size={15} /></span>Pedir oração
-          </button>
-        )}
-      </div>
-    </>
-  );
-}
-
-// ── aba: Escala ───────────────────────────────────────────────────────────────
-
-function TabEscala({ person, events, roster, onConfirmarEscala, onRecusarEscala }: { person: P; events: Ev[]; roster: Slot[]; onConfirmarEscala?: (assignmentId: string) => void; onRecusarEscala?: (assignmentId: string) => void }) {
-  const mySlots = roster.filter((r) => r.person_id === person.id);
-  const [stMap, setStMap] = useState<Record<string, "ok" | "wait" | "no">>(
-    () => Object.fromEntries(mySlots.map((r) => [r.id, r.status])),
-  );
-  const [swapId, setSwapId] = useState<string | null>(null);
-  const [avail, setAvail] = useState<Record<string, boolean>>({ ...(person.availability ?? {}) });
-  const setSt = (id: string, v: "ok" | "wait" | "no") => {
-    setStMap((p) => ({ ...p, [id]: v }));
-    if (v === "ok") onConfirmarEscala?.(id);
-    else if (v === "no") onRecusarEscala?.(id);
-  };
-
-  return (
-    <>
-      <div className="m-section-t">Suas proximas escalas · {mySlots.length}</div>
-      {mySlots.length === 0 && (
-        <div className="m-card">
-          <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhuma escala agendada para você.</div>
-        </div>
-      )}
-      {mySlots.map((slot) => {
-        const ev = events.find((e) => e.id === slot.event_id);
-        if (!ev) return null;
-        const st = stMap[slot.id] ?? slot.status;
-        return (
-          <div className={`m-card ${st === "wait" ? "urgent" : ""}`} key={slot.id}>
-            <div className="m-card-top">
-              <span className="m-when">
-                {joinDot(ev.weekday, formatDateBR(ev.eventDate), ev.time)}
-              </span>
-              {st === "ok" && <ChipSt status="ok" />}
-              {st === "no" && <ChipSt status="no" />}
-              {st === "wait" && <ChipSt status="wait" label="Responder" />}
-            </div>
-            <div className="m-culto">{ev.name}</div>
-            {st === "ok" ? (
-              <div className="m-confirmed">
-                <Icon name="ok" size={15} /> Você confirmou
-                <button
-                  className="m-btn m-btn-swap"
-                  style={{ marginLeft: "auto", padding: "6px 12px" }}
-                  onClick={() => setSwapId(slot.id)}
-                >
-                  Pedir troca
-                </button>
-              </div>
-            ) : st === "no" ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--danger)", padding: "8px 0" }}>
-                Você recusou
-                <button
-                  className="m-btn m-btn-ok ghost"
-                  style={{ marginLeft: "auto", padding: "6px 14px" }}
-                  onClick={() => setSt(slot.id, "ok")}
-                >
-                  Mudei de ideia
-                </button>
-              </div>
-            ) : (
-              <div className="m-actions three">
-                <button className="m-btn m-btn-ok" onClick={() => setSt(slot.id, "ok")}>Confirmar</button>
-                <button className="m-btn m-btn-swap" onClick={() => setSwapId(slot.id)}>Trocar</button>
-                <button className="m-btn m-btn-no" onClick={() => setSt(slot.id, "no")}>Recusar</button>
-              </div>
-            )}
-          </div>
-        );
-      })}
-
-      {Object.keys(avail).length > 0 && (
-        <>
-          <div className="m-section-t" style={{ marginTop: 22 }}>Em quais cultos você pode servir</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {Object.entries(avail).map(([key, on]) => (
-              <div className="m-avail" key={key}>
-                <div className="m-avail-day">{AVAIL_LABELS[key] ?? key}</div>
-                <button
-                  className={`m-toggle ${on ? "on" : ""}`}
-                  onClick={() => setAvail((p) => ({ ...p, [key]: !p[key] }))}
-                />
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {swapId && (
-        <div
-          className="modal-bg"
-          style={{ position: "absolute", borderRadius: 36 }}
-          onClick={() => setSwapId(null)}
-        >
-          <div className="m-card" style={{ width: "86%", margin: 0 }} onClick={(e) => e.stopPropagation()}>
-            <div className="m-when" style={{ marginBottom: 10 }}>Pedir troca</div>
-            <div style={{ fontSize: 14, color: "var(--light)", lineHeight: 1.55, marginBottom: 16 }}>
-              Vamos avisar o seu líder para aprovar a troca de posição.
-            </div>
-            <button
-              className="m-btn m-btn-ok"
-              style={{ width: "100%", marginBottom: 8 }}
-              onClick={() => setSwapId(null)}
-            >
-              Enviar pedido →
-            </button>
-            <button className="m-btn m-btn-swap" style={{ width: "100%" }} onClick={() => setSwapId(null)}>
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
 
 // ── aba: Tarefas ──────────────────────────────────────────────────────────────
 
@@ -683,8 +439,14 @@ function TabTarefas({ person, cards, boards, onAddCardComment }: { person: P; ca
 // ── aba: Conversas ────────────────────────────────────────────────────────────
 
 function TabConversas({
-  member, chats, chatMembers, messages, members, ministries, onSendMessage, onStartChat,
+  member, chats, chatMembers, messages, members, ministries, onSendMessage, onStartChat, openChatId, startNew, onChatOpen,
 }: {
+  /* abre direto nesta conversa (ex.: depois de "Pedir troca") */
+  openChatId?: string | null;
+  /* abre já na escolha de com quem falar ("Nova mensagem → Falar com um líder") */
+  startNew?: boolean;
+  /* avisa a casca quando entra ou sai de uma conversa (título e voltar) */
+  onChatOpen?: (name: string | null) => void;
   member: M | null;
   chats: Chat[];
   chatMembers: ChatMember[];
@@ -694,9 +456,9 @@ function TabConversas({
   onSendMessage?: (chatId: string, senderId: string, body: string) => void;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
 }) {
-  const [selId, setSelId] = useState<string | null>(null);
+  const [selId, setSelIdRaw] = useState<string | null>(openChatId ?? null);
   const [texto, setTexto] = useState("");
-  const [novo, setNovo] = useState(false);
+  const [novo, setNovo] = useState(!!startNew);
   const [novoMsg, setNovoMsg] = useState("");
   const [starting, setStarting] = useState(false);
 
@@ -707,6 +469,10 @@ function TabConversas({
     : [];
 
   const chat = myChats.find((c) => c.id === selId);
+  const setSelId = (id: string | null) => {
+    setSelIdRaw(id);
+    onChatOpen?.(id ? (myChats.find((c) => c.id === id)?.name ?? "Conversa") : null);
+  };
 
   const souLider = member
     ? ministries.some((min) => min.people.some((p) => p.personId === member.volunteerId && p.isLeader))
@@ -755,9 +521,11 @@ function TabConversas({
     const chatMsgs = messages.filter((m) => m.chat_id === chat.id);
     return (
       <div className="m-chat">
-        <button className="m-chat-back" onClick={() => setSelId(null)}>
-          ← {chat.name ?? "Conversa"}
-        </button>
+        {!onChatOpen && (
+          <button className="m-chat-back" onClick={() => setSelId(null)}>
+            ← {chat.name ?? "Conversa"}
+          </button>
+        )}
         <div className="chat-thread">
           <div className="chat-msgs" style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14 }}>
             {chatMsgs.length === 0 && (
@@ -807,17 +575,11 @@ function TabConversas({
 
   return (
     <>
-      <div className="m-section-row">
-        <div className="m-section-t" style={{ margin: 0 }}>Conversas</div>
-        <button className="m-mini-btn" onClick={() => setNovo((n) => !n)}>{novo ? "Fechar" : "+ Nova"}</button>
-      </div>
-      <div style={{ fontSize: 12.5, color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>
-        {souLider ? "Fale com qualquer pessoa do time." : "Fale com o seu líder ou com um pastor."}
-      </div>
+      <div className="m-section-t">Conversas</div>
 
       {novo && (
         <div className="m-card" style={{ marginBottom: 14 }}>
-          <div className="m-section-t" style={{ marginTop: 0 }}>Começar conversa com</div>
+          <div className="m-section-t" style={{ marginTop: 0 }}>{souLider ? "Falar com alguém do time" : "Falar com um líder"}</div>
           <input
             className="input"
             placeholder="Primeira mensagem (opcional)"
@@ -842,7 +604,7 @@ function TabConversas({
 
       {myChats.length === 0 && (
         <div className="m-card">
-          <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhuma conversa ainda.</div>
+          <div style={{ fontSize: 15, color: "var(--muted)" }}>Nenhuma conversa ainda. Toque em Nova mensagem para falar com um líder.</div>
         </div>
       )}
       {myChats.map((c) => {
@@ -901,11 +663,10 @@ const BIBLE_CORES: { key: string; label: string }[] = [
 ];
 
 function TabBiblia({
-  bibleMarks, onSaveBibleMark, onBack,
+  bibleMarks, onSaveBibleMark,
 }: {
   bibleMarks: BibleMark[];
   onSaveBibleMark?: (book: string, chapter: number, verse: number, data: { color: string | null; note: string | null }) => void;
-  onBack: () => void;
 }) {
   const [bible, setBible] = useState<BibleBook[] | null>(bibleCache);
   const [view, setView] = useState<"livros" | "capitulos" | "leitor" | "marcacoes">("livros");
@@ -1005,7 +766,6 @@ function TabBiblia({
   if (!bible) {
     return (
       <>
-        <button className="back-link" type="button" onClick={onBack}>← Início</button>
         <div className="empty" style={{ marginTop: 12 }}>
           <div className="empty-mark"><Icon name="biblia" size={22} /></div>
           <h3 className="empty-title">Baixando a Bíblia...</h3>
@@ -1019,7 +779,6 @@ function TabBiblia({
     <>
       {view === "livros" && (
         <>
-          <button className="back-link" type="button" onClick={onBack}>← Início</button>
           <div className="bib-search">
             <input className="input" placeholder="Buscar palavra ou trecho..." value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
@@ -1516,38 +1275,20 @@ function TabKids({
 // ── aba: Cursos ───────────────────────────────────────────────────────────────
 
 function TabCursos({
-  member, courses, enrollments, courseModules, courseLessons, baptismClasses, setTab,
+  member, courses, enrollments, courseModules, courseLessons,
 }: {
   member: M | null;
   courses: Course[];
   enrollments: Enrollment[];
   courseModules: CourseModule[];
   courseLessons: CourseLesson[];
-  baptismClasses: BaptismClass[];
-  setTab: (t: string) => void;
 }) {
   const myEnrollments = member ? enrollments.filter((e) => e.member_id === member.id) : [];
   const enrolledIds = new Set(myEnrollments.map((e) => e.course_id));
   const toExplore = courses.filter((c) => !enrolledIds.has(c.id));
-  const openClasses = baptismClasses.filter((b) => b.status !== "concluida");
 
   return (
     <>
-      <button className="m-card m-curso-bat" style={{ width: "100%", textAlign: "left" }} onClick={() => setTab("batismo")}>
-        <div className="m-card-top">
-          <span className="m-when">Batismo nas aguas</span>
-          {openClasses.length > 0 && (
-            <span className="m-when" style={{ color: "var(--olive-soft)" }}>{openClasses.length} {openClasses.length === 1 ? "turma" : "turmas"}</span>
-          )}
-        </div>
-        <div className="m-culto" style={{ fontSize: 16 }}>Decidiu seguir Jesus nas aguas?</div>
-        <div style={{ fontSize: 12.5, color: "var(--muted)", lineHeight: 1.5, marginTop: 6 }}>
-          Inscreva-se numa turma e faça o curso pré-batismo.
-        </div>
-        <span className="m-btn m-btn-ok ghost" style={{ display: "block", textAlign: "center", marginTop: 12 }}>
-          Ver batismos →
-        </span>
-      </button>
 
       <div className="m-section-t">Meus cursos · {myEnrollments.length}</div>
       {myEnrollments.map((en) => {
@@ -1561,7 +1302,7 @@ function TabCursos({
             <div className="m-card-top">
               <span className="m-when">{course.level ?? "Curso"}</span>
               {en.status === "concluido" ? (
-                <ChipSt status="ok" label="Concluido" />
+                <ChipSt status="ok" label="Concluído" />
               ) : (
                 <span className="m-when" style={{ color: "var(--amber)" }}>{pct}%</span>
               )}
@@ -1604,7 +1345,7 @@ function TabCursos({
    está. A igreja define o que precisa antes (requisitos de "servir" e do
    time); com algo faltando, o app mostra o que falta. O pedido vai pra
    liderança aprovar no painel (Times). */
-function ServirSection({ person, member, ministries }: { person: P; member: M | null; ministries: Ministry[] }) {
+function ServirSection({ person, member, ministries, members = [], people = [] }: { person: P; member: M | null; ministries: Ministry[]; members?: M[]; people?: P[] }) {
   const j = useContext(JourneyContext);
   const faltas = useFaltas();
   const [enviados, setEnviados] = useState<Record<string, string>>({});
@@ -1617,8 +1358,7 @@ function ServirSection({ person, member, ministries }: { person: P; member: M | 
 
   return (
     <>
-      <div className="m-section-t" style={{ marginTop: 22 }}>Quero servir</div>
-      {faltasServir.length > 0 ? (
+            {faltasServir.length > 0 ? (
         <div className="m-card">
           <div className="m-fn" style={{ marginBottom: 0 }}>
             <b>Antes de servir num time:</b> {faltasServir.join(" · ")}
@@ -1630,11 +1370,17 @@ function ServirSection({ person, member, ministries }: { person: P; member: M | 
           const resultado = enviados[m.id];
           return (
             <div className="m-card" key={m.id}>
-              <div className="m-culto" style={{ fontSize: 15, display: "flex", alignItems: "center", gap: 8 }}>
-                <Icon name={m.icon || "times"} size={15} /> {m.name}
+              <div className="m-culto" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Icon name={m.icon || "times"} size={18} /> {m.name}
               </div>
+              {m.description && <p className="m6-txt" style={{ margin: "6px 0 0" }}>{m.description}</p>}
+              {(() => {
+                const lider = m.people.find((x) => x.isLeader);
+                const nome = lider ? (people.find((pp) => pp.id === lider.personId)?.name ?? members.find((mm) => mm.volunteerId === lider.personId)?.name) : null;
+                return nome ? <div className="m6-meta" style={{ marginTop: 4 }}>Líder · {nome}</div> : null;
+              })()}
               {pendente(m.id) ? (
-                <div className="m-confirmed" style={{ marginTop: 10 }}><Icon name="ok" size={15} /> Pedido enviado. A liderança vai te chamar.</div>
+                <div className="m-confirmed" style={{ marginTop: 10 }}><Icon name="ok" size={15} /> Pedido enviado · o líder vai falar com você.</div>
               ) : faltasTime.length > 0 ? (
                 <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 8, lineHeight: 1.5 }}>
                   <b style={{ color: "var(--light)" }}>Para entrar:</b> {faltasTime.join(" · ")}
@@ -1767,211 +1513,14 @@ function TabBatismo({ baptismClasses, memberId }: { baptismClasses: BaptismClass
   );
 }
 
-// ── aba: Avisos / Oracao ──────────────────────────────────────────────────────
-
-function TabAvisos({
-  announcements,
-  person,
-  onReadAnnouncement,
-}: {
-  announcements: Announcement[];
-  person: P;
-  onReadAnnouncement?: (personId: string, announcementId: string) => void;
-}) {
-  const [tipo, setTipo] = useState<string | null>(null);
-  const [sent, setSent] = useState(false);
-  const [texto, setTexto] = useState("");
-  const readSent = useRef(new Set<string>());
-
-  useEffect(() => {
-    if (!onReadAnnouncement) return;
-    announcements.forEach((a) => {
-      const key = `${person.id}:${a.id}`;
-      if (readSent.current.has(key)) return;
-      readSent.current.add(key);
-      onReadAnnouncement(person.id, a.id);
-    });
-  }, [announcements, person.id, onReadAnnouncement]);
-
-  return (
-    <>
-      <div className="m-section-t">Pedir oração</div>
-      <div className="m-quick" style={{ marginBottom: 18 }}>
-        <button
-          className={`m-quick-b ${tipo === "oracao" ? "on" : ""}`}
-          onClick={() => { setTipo("oracao"); setSent(false); setTexto(""); }}
-        >
-          <span style={{ color: "var(--olive)" }}><Icon name="oracao" size={15} /></span>Pedir oração
-        </button>
-        <button
-          className={`m-quick-b ${tipo === "testemunho" ? "on" : ""}`}
-          onClick={() => { setTipo("testemunho"); setSent(false); setTexto(""); }}
-        >
-          <span style={{ color: "var(--olive)" }}><Icon name="comunicacao" size={15} /></span>Compartilhar testemunho
-        </button>
-      </div>
-      {tipo && !sent && (
-        <div className="m-card">
-          <div className="m-when" style={{ marginBottom: 8 }}>
-            {tipo === "oracao" ? "Seu pedido" : "Seu testemunho"}
-          </div>
-          <textarea
-            className="textarea"
-            placeholder={tipo === "oracao" ? "Escreva seu pedido..." : "Conte o que Deus fez..."}
-            style={{ fontSize: 13, minHeight: 70 }}
-            value={texto}
-            onChange={(e) => setTexto(e.target.value)}
-          />
-          <button className="m-btn m-btn-ok" style={{ width: "100%", marginTop: 10 }} onClick={() => setSent(true)}>
-            Enviar
-          </button>
-        </div>
-      )}
-      {sent && (
-        <div className="m-card" style={{ borderColor: "var(--olive-line)", textAlign: "center" }}>
-          <div style={{ color: "var(--olive-soft)", fontWeight: 600, fontSize: 14 }}><Icon name="ok" size={15} /> Enviado</div>
-          <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 6 }}>
-            A liderança recebeu e vai te responder.
-          </div>
-        </div>
-      )}
-
-      {announcements.length > 0 && (
-        <>
-          <div className="m-section-t" style={{ marginTop: 22 }}>Avisos dos seus times</div>
-          {announcements.map((a) => (
-            <div className="m-card" key={a.id}>
-              {a.when_label && (
-                <div className="m-card-top" style={{ marginBottom: 6 }}>
-                  <span className="m-when">{a.when_label}</span>
-                </div>
-              )}
-              <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 6 }}>
-                {a.title}
-              </div>
-              {a.body && (
-                <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.55 }}>{a.body}</div>
-              )}
-              {a.audience && (
-                <div
-                  style={{
-                    fontFamily: "var(--mono)",
-                    fontSize: 12,
-                    color: "var(--subtle)",
-                    marginTop: 10,
-                    letterSpacing: "0.06em",
-                  }}
-                >
-                  {a.audience.toUpperCase()}
-                </div>
-              )}
-            </div>
-          ))}
-        </>
-      )}
-    </>
-  );
-}
-
 // ── aba: Perfil ───────────────────────────────────────────────────────────────
 
-function TabPerfil({
-  person, member, organizationId, theme, setTheme, onChangePassword, onUpdateProfile, journeyRequests, onRequestJourneyStep, setTab, onLogout, onSwitchToPanel,
-}: {
-  onLogout?: () => void;
-  onSwitchToPanel?: () => void;
-  person: P;
-  member: M | null;
-  organizationId?: string;
-  theme?: "dark" | "light";
-  setTheme?: (t: "dark" | "light") => void;
-  onChangePassword?: (senha: string) => Promise<{ error?: string }>;
-  onUpdateProfile?: (personId: string, memberId: string | null, data: MemberContactInput) => Promise<{ error?: string }>;
-  journeyRequests?: JourneyRequest[];
-  onRequestJourneyStep?: (memberId: string, step: JourneyStep, eventDate: string, note: string) => void;
-  setTab?: (tab: string) => void;
-}) {
-  const JORNADA = useJornada();
-  const journey = member?.journey ?? [];
-  const done = journey.filter(Boolean).length;
-  const meusPedidosPendentes = new Set(
-    (journeyRequests ?? []).filter((r) => r.memberId === member?.id && r.status === "pendente").map((r) => r.step),
-  );
-  const [requestingStep, setRequestingStep] = useState<JourneyStep | null>(null);
-  const [reqDate, setReqDate] = useState("");
-  const [reqNote, setReqNote] = useState("");
-  const [reqMsg, setReqMsg] = useState("");
-
-  const abrirPedidoJornada = (step: JourneyStep) => {
-    setRequestingStep(step);
-    setReqDate("");
-    setReqNote("");
-    setReqMsg("");
-  };
-  const enviarPedidoJornada = () => {
-    if (!requestingStep || !member || !onRequestJourneyStep) return;
-    onRequestJourneyStep(member.id, requestingStep, reqDate, reqNote);
-    setReqMsg("Pedido enviado. Aguardando aprovação do líder.");
-    setRequestingStep(null);
-  };
-
-  const [editing, setEditing] = useState(false);
-  const [perfil, setPerfil] = useState<MemberContactInput>({
-    name: member?.name ?? person.name,
-    email: realValue(member?.email),
-    phone: realValue(member?.phone),
-    nasc: member?.birth ?? "",
-    cep: member?.postalCode ?? "",
-    rua: member?.street ?? "",
-    bairro: member?.neighborhood ?? "",
-    cidade: member?.city ?? "",
-    estado: member?.state ?? "",
-  });
-  const [perfilTentou, setPerfilTentou] = useState(false);
-  const perfilErros = contactErrors(perfil);
-
-  const [perfilErroSalvar, setPerfilErroSalvar] = useState("");
-  const salvarPerfil = async () => {
-    if (Object.values(perfilErros).some(Boolean)) {
-      setPerfilTentou(true);
-      return;
-    }
-    if (!onUpdateProfile) return;
-    setPerfilErroSalvar("");
-    const { error } = await onUpdateProfile(person.id, member?.id ?? null, perfil);
-    if (error) {
-      setPerfilErroSalvar(error);
-      return;
-    }
-    setEditing(false);
-  };
-
-  const [senha, setSenha] = useState("");
-  const [senha2, setSenha2] = useState("");
-  const [senhaMsg, setSenhaMsg] = useState("");
-  const [senhaSaving, setSenhaSaving] = useState(false);
-  const senhaValida = senha.length >= 6 && senha === senha2;
-
-  const trocarSenha = async () => {
-    if (!senhaValida || !onChangePassword) return;
-    setSenhaSaving(true);
-    setSenhaMsg("");
-    const { error } = await onChangePassword(senha);
-    setSenhaSaving(false);
-    if (error) {
-      setSenhaMsg(error);
-    } else {
-      setSenhaMsg("Senha atualizada.");
-      setSenha("");
-      setSenha2("");
-    }
-  };
-
+/* notificações do celular (push): usado no Perfil e no primeiro acesso */
+function usePush(organizationId?: string) {
   const [pushOn, setPushOn] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
   const [pushMsg, setPushMsg] = useState("");
   const pushSupported = typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
-  const [tour, setTour] = useState(false);
 
   useEffect(() => {
     if (!pushSupported) return;
@@ -2040,181 +1589,222 @@ function TabPerfil({
     }
   };
 
-  return (
-    <>
-      <div className="m-profile">
-        <Av name={person.name} size="xl" photoUrl={person.photoUrl} />
-        <div className="m-profile-name">{person.name}</div>
-        <div className="m-profile-role">
-          Voluntario{member?.firstContact ? ` · desde ${formatDateBR(member.firstContact)}` : ""}
-        </div>
-      </div>
+  return { pushOn, pushBusy, pushMsg, pushSupported, ligarPush, desligarPush };
+}
 
-      <button className="m-vis-head" style={{ cursor: "pointer" }} onClick={() => setTab?.("kids-area")}>
-        <span className="av av-sm"><Icon name="kids" size={16} /></span>
-        <div className="m-vis-main"><div className="m-culto" style={{ fontSize: 14 }}>Kids</div><div className="m-fn">Minhas crianças, mural e eventos</div></div>
-        <span className="m-task-caret">→</span>
-      </button>
+function TabPerfil({
+  person, member, organizationId, theme, setTheme, onChangePassword, onUpdateProfile, onLogout, onSwitchToPanel, view = "home", openSub,
+}: {
+  view?: "home" | "dados" | "senha";
+  openSub?: (sub: string) => void;
+  onLogout?: () => void;
+  onSwitchToPanel?: () => void;
+  person: P;
+  member: M | null;
+  organizationId?: string;
+  theme?: "dark" | "light";
+  setTheme?: (t: "dark" | "light") => void;
+  onChangePassword?: (senha: string) => Promise<{ error?: string }>;
+  onUpdateProfile?: (personId: string, memberId: string | null, data: MemberContactInput) => Promise<{ error?: string }>;
+}) {
+  const [sair, setSair] = useState(false);
 
-      {member && (
-        <>
-          <div className="m-section-t">Meus dados</div>
-          <div className="m-card">
+  const [editing, setEditing] = useState(false);
+  const [perfil, setPerfil] = useState<MemberContactInput>({
+    name: member?.name ?? person.name,
+    email: realValue(member?.email),
+    phone: realValue(member?.phone),
+    nasc: member?.birth ?? "",
+    cep: member?.postalCode ?? "",
+    rua: member?.street ?? "",
+    bairro: member?.neighborhood ?? "",
+    cidade: member?.city ?? "",
+    estado: member?.state ?? "",
+  });
+  const [perfilTentou, setPerfilTentou] = useState(false);
+  const perfilErros = contactErrors(perfil);
+
+  const [perfilErroSalvar, setPerfilErroSalvar] = useState("");
+  const salvarPerfil = async () => {
+    if (Object.values(perfilErros).some(Boolean)) {
+      setPerfilTentou(true);
+      return;
+    }
+    if (!onUpdateProfile) return;
+    setPerfilErroSalvar("");
+    const { error } = await onUpdateProfile(person.id, member?.id ?? null, perfil);
+    if (error) {
+      setPerfilErroSalvar(error);
+      return;
+    }
+    setEditing(false);
+  };
+
+  const [senha, setSenha] = useState("");
+  const [senha2, setSenha2] = useState("");
+  const [senhaMsg, setSenhaMsg] = useState("");
+  const [senhaSaving, setSenhaSaving] = useState(false);
+  const senhaValida = senha.length >= 6 && senha === senha2;
+
+  const trocarSenha = async () => {
+    if (!senhaValida || !onChangePassword) return;
+    setSenhaSaving(true);
+    setSenhaMsg("");
+    const { error } = await onChangePassword(senha);
+    setSenhaSaving(false);
+    if (error) {
+      setSenhaMsg(error);
+    } else {
+      setSenhaMsg("Senha atualizada.");
+      setSenha("");
+      setSenha2("");
+    }
+  };
+
+  const { pushOn, pushBusy, pushMsg, pushSupported, ligarPush, desligarPush } = usePush(organizationId);
+  const [tour, setTour] = useState(false);
+
+  /* Perfil no modelo de Ajustes do celular (S24): a lista abre telas
+     próprias (Meus dados, Trocar senha, Minha família) com "voltar" no topo */
+  if (view === "dados") {
+    return (
+      <div className="m6-sec0">
+        {member ? (
+          <div className="m6-card">
             {!editing ? (
               <>
-                <div className="m-data">
-                  <span>Telefone</span>
-                  <b>{realValue(member.phone) || "a completar"}</b>
-                </div>
-                <div className="m-data">
-                  <span>E-mail</span>
-                  <b>{realValue(member.email) || "a completar"}</b>
-                </div>
-                <div className="m-data" style={{ borderBottom: "none" }}>
-                  <span>Endereço</span>
-                  <b>{[member.neighborhood, member.city].filter(Boolean).join(", ") || "a completar"}</b>
-                </div>
+                <ul className="m6-facts">
+                  <li><Icon name="telefone" size={20} /><span>{realValue(member.phone)}</span></li>
+                  <li><Icon name="link" size={20} /><span>{realValue(member.email)}</span></li>
+                  {member.birth && <li><Icon name="presente" size={20} /><span>Aniversário · {formatDateBR(member.birth)}</span></li>}
+                  {(member.neighborhood || member.city) && <li><Icon name="mapapin" size={20} /><span>{[member.neighborhood, member.city].filter(Boolean).join(", ")}</span></li>}
+                </ul>
                 {onUpdateProfile && (
-                  <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={() => setEditing(true)}>Editar</button>
+                  <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => setEditing(true)}>Editar meus dados</button></div>
                 )}
               </>
             ) : (
               <>
                 <MemberContactFields d={perfil} set={(k, v) => setPerfil((p) => ({ ...p, [k]: v }))} erros={perfilTentou ? perfilErros : null} />
-                {perfilErroSalvar && <div style={{ fontSize: 12.5, color: "var(--danger)", marginBottom: 10 }}>{perfilErroSalvar}</div>}
-                <div style={{ display: "flex", gap: 10 }}>
-                  <button className="btn btn-sec btn-sm" type="button" onClick={() => setEditing(false)}>Cancelar</button>
-                  <button className="btn btn-pri btn-sm" type="button" onClick={salvarPerfil}>Salvar</button>
+                {perfilErroSalvar && <div className="m6-err">{perfilErroSalvar}</div>}
+                <div className="m6-btns">
+                  <button className="m6-btn sec" type="button" onClick={() => setEditing(false)}>Cancelar</button>
+                  <button className="m6-btn pri" type="button" onClick={salvarPerfil}>Salvar</button>
                 </div>
               </>
             )}
           </div>
-        </>
-      )}
-
-      <div className="m-section-t" style={{ marginTop: 22 }}>Minha caminhada</div>
-      <div className="m-card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 700 }}>{done} de 5 etapas</div>
-          <div
-            className="m-ring"
-            style={{ "--p": `${Math.round((done / 5) * 100)}%` } as React.CSSProperties}
-          >
-            <span>{Math.round((done / 5) * 100)}%</span>
-          </div>
-        </div>
-        <div className="m-journey-pips">
-          {JORNADA.map((s, i) => {
-            const kind = JORNADA_STEPS[i];
-            const feito = !!journey[i];
-            const pendente = meusPedidosPendentes.has(kind);
-            const podeClicar = !feito && !pendente && !!onRequestJourneyStep && !!member;
-            return (
-              <div
-                className={`m-jp ${feito ? "on" : ""}`}
-                key={i}
-                style={{ opacity: pendente ? 0.6 : 1, cursor: podeClicar ? "pointer" : "default" }}
-                onClick={() => podeClicar && abrirPedidoJornada(kind)}
-              >
-                <span>{feito ? <Icon name="ok" size={13} /> : pendente ? <Icon name="pendente" size={13} /> : i + 1}</span>
-                <small>{s}{pendente ? " (pendente)" : ""}</small>
-              </div>
-            );
-          })}
-        </div>
-        {requestingStep && (
-          <div style={{ marginTop: 14 }}>
-            <div className="field">
-              <label className="field-label">Quando foi &quot;{JORNADA[JORNADA_STEPS.indexOf(requestingStep)]}&quot;?</label>
-              <input className="input" type="date" value={reqDate} onChange={(e) => setReqDate(e.target.value)} />
-            </div>
-            <div className="field">
-              <label className="field-label">Nota (opcional)</label>
-              <input className="input" value={reqNote} onChange={(e) => setReqNote(e.target.value)} placeholder="ex: aconteceu na igreja anterior" />
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-sec btn-sm" type="button" onClick={() => setRequestingStep(null)}>Cancelar</button>
-              <button className="btn btn-pri btn-sm" type="button" onClick={enviarPedidoJornada}>Enviar pedido</button>
-            </div>
-          </div>
+        ) : (
+          <div className="m6-card"><div className="m6-meta">Sua ficha ainda não está ligada ao app. Fale com a liderança.</div></div>
         )}
-        {reqMsg && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>{reqMsg}</div>}
       </div>
+    );
+  }
 
-      {onChangePassword && (
-        <>
-          <div className="m-section-t" style={{ marginTop: 22 }}>Segurança</div>
-          <div className="m-card">
-            <div className="field"><label className="field-label">Nova senha</label><input className="input" type="password" placeholder="ao menos 6 caracteres" value={senha} onChange={(e) => setSenha(e.target.value)} /></div>
-            <div className="field"><label className="field-label">Confirmar senha</label><input className="input" type="password" value={senha2} onChange={(e) => setSenha2(e.target.value)} /></div>
-            <button className="btn btn-pri btn-sm" type="button" disabled={!senhaValida || senhaSaving} onClick={trocarSenha}>{senhaSaving ? "Salvando…" : "Trocar senha"}</button>
-            {senhaMsg && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 8 }}>{senhaMsg}</div>}
-          </div>
-        </>
-      )}
-
-      <div className="m-section-t" style={{ marginTop: 22 }}>Preferências</div>
-      <div className="m-card">
-        <div className="m-data m-data-col">
-          <span>Tamanho do texto</span>
-          <TextSizePicker />
-        </div>
-        {theme && setTheme && (
-          <div className="m-data">
-            <span>Tema escuro</span>
-            <button type="button" className={`m-toggle ${theme === "dark" ? "on" : ""}`} onClick={() => setTheme(theme === "dark" ? "light" : "dark")} />
-          </div>
-        )}
-        <div className="m-data" style={{ borderBottom: "none" }}>
-          <span>Notificações push</span>
-          <button
-            type="button"
-            className={`m-toggle ${pushOn ? "on" : ""}`}
-            disabled={!pushSupported || pushBusy}
-            onClick={() => (pushOn ? desligarPush() : ligarPush())}
-          />
-        </div>
-        {!pushSupported && <div style={{ fontSize: 12, color: "var(--subtle)", marginTop: 8 }}>Disponível quando instalado como app.</div>}
-        {pushMsg && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 8 }}>{pushMsg}</div>}
-      </div>
-
-      <div className="m-section-t" style={{ marginTop: 22 }}>Ajuda</div>
-      <div className="m-card">
-        <div className="m-data" style={{ borderBottom: "none" }}>
-          <span>Conheça o app</span>
-          <button className="btn btn-sec btn-sm" type="button" onClick={() => setTour(true)}>Rever</button>
+  if (view === "senha") {
+    return (
+      <div className="m6-sec0">
+        <div className="m6-card">
+          <div className="field"><label className="field-label">Senha nova</label><input className="input" type="password" autoComplete="new-password" placeholder="Pelo menos 6 caracteres" value={senha} onChange={(e) => setSenha(e.target.value)} /></div>
+          <div className="field"><label className="field-label">Repita a senha</label><input className="input" type="password" autoComplete="new-password" value={senha2} onChange={(e) => setSenha2(e.target.value)} /></div>
+          {senhaMsg && <div className="m6-meta" style={{ marginBottom: 8 }}>{senhaMsg}</div>}
+          <div className="m6-btns"><button className="m6-btn pri" type="button" disabled={!senhaValida || senhaSaving || !onChangePassword} onClick={trocarSenha}>{senhaSaving ? "Salvando..." : "Salvar senha nova"}</button></div>
         </div>
       </div>
-      {tour && <AppTourModal onClose={() => setTour(false)} />}
-      {/* a barra do topo com Sair e Gerenciar saiu: os dois moram aqui */}
-      {onSwitchToPanel && (
-        <button className="btn btn-sec" type="button" style={{ width: "100%", minHeight: 50, marginTop: 22 }} onClick={onSwitchToPanel}>
-          Abrir o painel da igreja →
-        </button>
-      )}
-      {onLogout && <SairDaConta onLogout={onLogout} />}
-    </>
-  );
-}
+    );
+  }
 
-function SairDaConta({ onLogout }: { onLogout: () => void }) {
-  const [confirmar, setConfirmar] = useState(false);
+  const papel = onSwitchToPanel ? "Liderança" : "Membro";
   return (
-    <button className="m-perfil-sair" type="button" onClick={() => (confirmar ? onLogout() : setConfirmar(true))}>
-      <Icon name="sair" size={17} /> {confirmar ? "Toque de novo para sair" : "Sair da conta"}
-    </button>
+    <>
+      <div className="m6-sec0">
+        <div className="m6-card m6-me">
+          <Av name={person.name} size="xl" photoUrl={person.photoUrl} />
+          <div className="m6-rb">
+            <div className="m6-ct">{person.name}</div>
+            <div className="m6-meta">{papel}</div>
+            {member?.firstContact ? <div className="m6-meta">Na igreja desde {formatDateBR(member.firstContact)}</div> : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="m6-sec">
+        <div className="m6-lbl">Você</div>
+        <div className="m6-list">
+          <M6Row ic="pessoa" t="Meus dados" s="Telefone, e-mail, endereço e aniversário" onClick={() => openSub?.("dados")} />
+          <M6Row ic="kids" t="Minha família" s="Filhos no Kids, check-in e eventos" onClick={() => openSub?.("familia")} />
+        </div>
+      </div>
+
+      <div className="m6-sec">
+        <div className="m6-lbl">Preferências</div>
+        <div className="m6-card">
+          <div className="m6-rt">Tamanho do texto</div>
+          <div className="m6-meta">Vale para o app inteiro.</div>
+          <TextSizePicker />
+          {theme && setTheme && (
+            <>
+              <div className="m6-hr" />
+              <div className="m6-rt">Tema</div>
+              <div className="ts-seg two" role="radiogroup" aria-label="Tema">
+                {(["light", "dark"] as const).map((m) => (
+                  <button key={m} type="button" role="radio" aria-checked={theme === m} className={theme === m ? "on" : ""} onClick={() => setTheme(m)}>{m === "light" ? "Claro" : "Escuro"}</button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+        <div className="m6-list">
+          <div className="m6-row">
+            <span className="m6-ic"><Icon name="sino" size={22} /></span>
+            <span className="m6-rb">
+              <span className="m6-rt">Notificações</span>
+              <span className="m6-rs">{pushMsg || (pushSupported ? (pushOn ? "Escala, Mural e conversas chegam no celular" : "Desligadas") : "Disponível quando o app está instalado")}</span>
+            </span>
+            <button type="button" role="switch" aria-checked={pushOn} aria-label="Notificações" className={`m6-tg${pushOn ? " on" : ""}`} disabled={!pushSupported || pushBusy} onClick={() => (pushOn ? desligarPush() : ligarPush())} />
+          </div>
+        </div>
+      </div>
+
+      <div className="m6-sec">
+        <div className="m6-lbl">Conta</div>
+        <div className="m6-list">
+          {onChangePassword && <M6Row ic="cadeado" t="Trocar senha" onClick={() => openSub?.("senha")} />}
+          <M6Row ic="lampada" t="Conheça o app" s="Um passeio de um minuto" onClick={() => setTour(true)} />
+          {onSwitchToPanel && <M6Row ic="painel" t="Abrir o painel da igreja" s="Gestão de pessoas, escalas e agenda" onClick={onSwitchToPanel} />}
+        </div>
+      </div>
+
+      {onLogout && (
+        <div className="m6-sec">
+          <div className="m6-list">
+            <M6Row cls="m6-danger" ic="sair" t="Sair do app" right={null} onClick={() => setSair(true)} />
+          </div>
+        </div>
+      )}
+      {tour && <AppTourModal onClose={() => setTour(false)} />}
+      {sair && onLogout && (
+        <M6Sheet onClose={() => setSair(false)}>
+          <h2 className="m6-sh">Sair do app?</h2>
+          <p className="m6-txt">Para entrar de novo, você vai precisar do seu e-mail e da sua senha.</p>
+          <div className="m6-btns col">
+            <button className="m6-btn danger" type="button" onClick={onLogout}>Sair</button>
+            <button className="m6-btn sec" type="button" onClick={() => setSair(false)}>Cancelar</button>
+          </div>
+        </M6Sheet>
+      )}
+    </>
   );
 }
 
 // ── Onboarding (primeiro acesso do membro) ───────────────────────────────────
 
 const APP_TABS_INFO = [
-  { ic: "inicio", t: "Início", s: "Sua caminhada, avisos e o que precisa da sua atenção." },
-  { ic: "escalas", t: "Escala", s: "Veja onde você foi escalado e confirme ou peça troca." },
-  { ic: "tarefas", t: "Tarefas", s: "O que o quadro do seu time colocou com o seu nome." },
-  { ic: "conversas", t: "Conversas", s: "Fale com seu time e sua liderança direto por aqui." },
-  { ic: "cursos", t: "Cursos", s: "Suas trilhas de formação, no seu tempo." },
-  { ic: "perfil", t: "Perfil", s: "Seus dados, tema do app e pedidos de oração." },
+  { ic: "inicio", t: "Início", s: "O que precisa de você agora e o que acontece na igreja." },
+  { ic: "agenda", t: "Agenda", s: "Sua escala, suas tarefas e a agenda da igreja." },
+  { ic: "conversas", t: "Mensagens", s: "O Mural da igreja e as conversas com a liderança." },
+  { ic: "cursos", t: "Caminhada", s: "Seus passos na igreja, cursos e a Bíblia." },
+  { ic: "perfil", t: "Perfil", s: "Seus dados, família, tamanho do texto e tema." },
 ];
 
 function AppTabsInfoGrid() {
@@ -2265,6 +1855,7 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
   const dadosOk = !Object.values(erros).some(Boolean);
 
   const nome = person.name.split(" ")[0];
+  const push = usePush(organizationId);
 
   const steps = [
     {
@@ -2274,11 +1865,7 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
         <div className="ob-welcome">
           <div className="ob-mark"><Icon name="ok" size={28} /></div>
           <div className="ob-welcome-x">
-            Seu acesso foi liberado. Antes de começar, confirme seus dados e escolha uma foto.
-          </div>
-          <div className="ob-textsize">
-            <div className="field-label">Tamanho do texto</div>
-            <TextSizePicker />
+            Seu acesso foi liberado. Antes de começar, confirme seus dados. O resto dá para pular.
           </div>
         </div>
       ),
@@ -2312,9 +1899,43 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
       valid: true,
     },
     {
-      t: "Conheça o app",
-      s: "Rapidinho: veja para que serve cada aba lá embaixo da tela.",
-      body: <AppTabsInfoGrid />,
+      t: "Tamanho do texto",
+      s: "Escolha como fica mais confortável ler. Dá para mudar depois no Perfil.",
+      body: (
+        <div className="ob-textsize">
+          <TextSizePicker />
+        </div>
+      ),
+      ok: "Continuar →",
+      valid: true,
+    },
+    {
+      t: "Notificações",
+      s: "Avisamos quando você for escalado, quando a igreja publicar no Mural e quando alguém responder suas mensagens. Nada além disso.",
+      body: (
+        <div className="ob-textsize">
+          {push.pushOn ? (
+            <div className="m-confirmed"><Icon name="ok" size={15} /> Notificações ligadas</div>
+          ) : push.pushSupported ? (
+            <button className="m6-btn pri full" type="button" disabled={push.pushBusy} onClick={push.ligarPush}><Icon name="sino" size={20} />Ligar notificações</button>
+          ) : (
+            <p className="ob-sub" style={{ margin: 0 }}>No iPhone, as notificações funcionam depois de colocar o app na tela de início (próximo passo).</p>
+          )}
+          {push.pushMsg && <p className="ob-sub" style={{ margin: "8px 0 0" }}>{push.pushMsg}</p>}
+        </div>
+      ),
+      ok: push.pushOn ? "Continuar →" : "Pular por agora →",
+      valid: true,
+    },
+    {
+      t: "Na tela de início",
+      s: "Coloque o app da igreja junto dos outros apps do celular, para abrir com um toque.",
+      body: (
+        <ul className="m6-facts ob-home">
+          <li><Icon name="compartilhar" size={20} /><span><b>iPhone:</b> no Safari, toque em Compartilhar e depois em &quot;Adicionar à Tela de Início&quot;.</span></li>
+          <li><Icon name="menu" size={20} /><span><b>Android:</b> no Chrome, toque no menu de três pontos e depois em &quot;Instalar app&quot;.</span></li>
+        </ul>
+      ),
       ok: "Entrar no app →",
       valid: true,
     },
@@ -2451,7 +2072,6 @@ function TabKidsArea({
   wallPosts,
   organizationId,
   churchId,
-  setTab,
 }: {
   person: P;
   people: P[];
@@ -2615,11 +2235,6 @@ function TabKidsArea({
 
   return (
     <>
-      <button className="m-vis-head" style={{ cursor: "pointer", marginBottom: 12 }} onClick={() => setTab?.("perfil")}>
-        <span className="m-task-caret" style={{ transform: "scaleX(-1)" }}>→</span>
-        <div className="m-vis-main"><div className="m-culto" style={{ fontSize: 14 }}>Voltar ao perfil</div></div>
-      </button>
-
       <div className="m-section-t">Sua foto de responsável</div>
       <PhotoPicker label="Foto do responsável" photoUrl={minhaFoto} path={`${organizationId}/kids/guardians/${person.id}`} onUploaded={salvarMinhaFoto} />
 
@@ -2738,24 +2353,733 @@ function TabKidsArea({
 
 // ── frame: celular ────────────────────────────────────────────────────────────
 
+// ── App do membro v6: 5 destinos fixos, uma ação por cartão ───────────────────
+/* Início · Agenda · Mensagens · Caminhada · Perfil, na mesma ordem para todo
+   mundo (S15). Cada função mora numa aba de casa (registro MEMBER_MODULES) e
+   pode aparecer como cartão em "Para você agora". Nenhum módulo cria aba:
+   um módulo novo (Contribuir, Eventos com inscrição, Meu grupo) entra no
+   registro sem mexer na barra. */
+
+type MemberTab = "inicio" | "agenda" | "mensagens" | "caminhada" | "perfil";
+const MEMBER_TABS: { id: MemberTab; l: string; ic: string }[] = [
+  { id: "inicio", l: "Início", ic: "inicio" },
+  { id: "agenda", l: "Agenda", ic: "agenda" },
+  { id: "mensagens", l: "Mensagens", ic: "conversas" },
+  { id: "caminhada", l: "Caminhada", ic: "cursos" },
+  { id: "perfil", l: "Perfil", ic: "perfil" },
+];
+
+type ModuleCtx = { serves: boolean; isRecep: boolean; isKids: boolean; isGuardian: boolean };
+type MemberModule = {
+  id: string;
+  /* aba onde o módulo mora */
+  home: MemberTab;
+  /* título da tela própria (quando abre como subtela com "voltar") */
+  title?: string;
+  /* quem vê */
+  visible: (c: ModuleCtx) => boolean;
+  /* tipo de notificação que o módulo dispara (push) */
+  notify?: "escala" | "mural" | "mensagem" | "caminhada";
+};
+const MEMBER_MODULES: MemberModule[] = [
+  { id: "escala", home: "agenda", visible: (c) => c.serves, notify: "escala" },
+  { id: "tarefas", home: "agenda", visible: (c) => c.serves },
+  { id: "visitantes", home: "agenda", title: "Visitantes", visible: (c) => c.isRecep },
+  { id: "kids-sala", home: "agenda", title: "Sala do Kids", visible: (c) => c.isKids },
+  { id: "mural", home: "mensagens", title: "Mural da igreja", visible: () => true, notify: "mural" },
+  { id: "conversas", home: "mensagens", visible: () => true, notify: "mensagem" },
+  { id: "cursos", home: "caminhada", title: "Cursos", visible: () => true, notify: "caminhada" },
+  { id: "batismo", home: "caminhada", title: "Batismo", visible: () => true },
+  { id: "biblia", home: "caminhada", title: "Bíblia", visible: () => true },
+  { id: "dados", home: "perfil", title: "Meus dados", visible: () => true },
+  { id: "senha", home: "perfil", title: "Trocar senha", visible: () => true },
+  { id: "familia", home: "perfil", title: "Minha família", visible: () => true },
+];
+const moduleTitle = (id: string) => MEMBER_MODULES.find((m) => m.id === id)?.title ?? "";
+
+/* casca: folha de baixo, aviso com "Desfazer" e navegação entre abas */
+type MemberUi = {
+  go: (tab: MemberTab, sub?: string | null, extra?: { agSeg?: "minha" | "igreja"; chatId?: string | null; newChat?: boolean }) => void;
+  sheet: (el: React.ReactNode | null) => void;
+  toast: (msg: string, action?: { label: string; fn: () => void }) => void;
+};
+const MemberUiContext = createContext<MemberUi>({ go: () => {}, sheet: () => {}, toast: () => {} });
+
+function M6Row({ ic, t, s, onClick, right, cls }: { ic?: string; t: React.ReactNode; s?: React.ReactNode; onClick?: () => void; right?: React.ReactNode | null; cls?: string }) {
+  return (
+    <button type="button" className={`m6-row${cls ? ` ${cls}` : ""}`} onClick={onClick}>
+      {ic && <span className="m6-ic"><Icon name={ic} size={22} /></span>}
+      <span className="m6-rb">
+        <span className="m6-rt">{t}</span>
+        {s ? <span className="m6-rs">{s}</span> : null}
+      </span>
+      {right !== undefined ? right : <span className="m6-chev"><Icon name="avancar" size={18} /></span>}
+    </button>
+  );
+}
+
+function M6Sheet({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="m6-scrim" onClick={onClose}>
+      <div className="m6-sheet" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+        <div className="m6-grab" />
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function M6St({ k, ic, children }: { k: "ok" | "warn" | "neutral" | "danger"; ic?: string; children: React.ReactNode }) {
+  return <span className={`m6-st ${k}`}>{ic && <Icon name={ic} size={16} />}<span>{children}</span></span>;
+}
+
+/* data em bloquinho: "DOM 04" */
+function M6Date({ iso }: { iso: string }) {
+  const d = parseISODate(iso);
+  if (!d) return <span className="m6-date"><span>·</span><b>·</b></span>;
+  const dia = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"][d.getDay()];
+  return <span className="m6-date"><span>{dia}</span><b>{String(d.getDate()).padStart(2, "0")}</b></span>;
+}
+
+const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+function dataLonga(iso?: string | null) {
+  const d = parseISODate(iso);
+  if (!d) return "";
+  return `${weekdayFromISO(iso)}, ${d.getDate()} de ${MESES[d.getMonth()]}`;
+}
+
+/* quem lidera os times da pessoa (ou qualquer líder, se ela não serve) */
+function leadersFor(person: P, ministries: Ministry[], members: M[], only?: (m: Ministry) => boolean) {
+  const mine = ministries.filter((m) => m.people.some((mp) => mp.personId === person.id));
+  const pool = (only ? ministries.filter(only) : mine.length ? mine : ministries);
+  const out: { member: M; ministry: Ministry }[] = [];
+  for (const min of pool) {
+    for (const lp of min.people.filter((x) => x.isLeader)) {
+      const lm = members.find((m) => m.volunteerId === lp.personId);
+      if (lm && lm.volunteerId !== person.id && !out.some((o) => o.member.id === lm.id)) out.push({ member: lm, ministry: min });
+    }
+  }
+  return out;
+}
+
+// ── cartão de escala (S18) ────────────────────────────────────────────────────
+/* Confirmar e Não posso de 52px. A resposta só vai pro banco depois de alguns
+   segundos: dá tempo de tocar em "Desfazer" no aviso. Pedir troca abre uma
+   conversa com o líder do time, com a mensagem já escrita. */
+const UNDO_MS = 5000;
+function EscalaCard({ slot, ev, ministry, person, member, members, onConfirmarEscala, onRecusarEscala, onStartChat }: {
+  slot: Slot; ev: Ev; ministry?: Ministry; person: P; member: M | null; members: M[];
+  onConfirmarEscala?: (id: string) => void; onRecusarEscala?: (id: string) => void;
+  onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
+}) {
+  const ui = useContext(MemberUiContext);
+  const [st, setSt] = useState(slot.status);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  const funcao = ministry?.positions?.find((p) => p.id === slot.position_id)?.name;
+  const responder = (v: "ok" | "no") => {
+    const antes = st;
+    setSt(v);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      timer.current = null;
+      if (v === "ok") onConfirmarEscala?.(slot.id); else onRecusarEscala?.(slot.id);
+    }, UNDO_MS);
+    ui.toast(v === "ok" ? "Presença confirmada" : `Avisamos o líder${ministry ? ` do ${ministry.name}` : ""}`, {
+      label: "Desfazer",
+      fn: () => { if (timer.current) clearTimeout(timer.current); timer.current = null; setSt(antes); },
+    });
+  };
+  const pedirTroca = async () => {
+    const lider = ministry ? leadersFor(person, [ministry], members, () => true)[0] : leadersFor(person, [], members)[0];
+    if (!member || !lider || !onStartChat) { ui.toast("Não achamos o líder do time. Fale com a liderança."); return; }
+    const id = await onStartChat(member.id, lider.member.id, `Oi! Preciso trocar minha escala de ${joinDot(ev.name, dataLonga(ev.eventDate), ev.time)}. Pode me ajudar?`);
+    if (id) { ui.toast("Pedido de troca enviado ao líder"); ui.go("mensagens", null, { chatId: id }); }
+  };
+  return (
+    <div className="m6-card">
+      <div className="m6-kick">{st === "wait" ? "Escala para confirmar" : "Sua escala"}</div>
+      <div className="m6-ct">{ev.name}</div>
+      <ul className="m6-facts">
+        <li><Icon name="agenda" size={20} /><span>{joinDot(dataLonga(ev.eventDate) || ev.weekday, ev.time)}</span></li>
+        {(ministry || funcao) && <li><Icon name="times" size={20} /><span>{joinDot(ministry?.name, funcao)}</span></li>}
+        {ev.location && <li><Icon name="mapapin" size={20} /><span>{ev.location}</span></li>}
+      </ul>
+      {st === "wait" && (
+        <div className="m6-btns">
+          <button className="m6-btn pri" type="button" onClick={() => responder("ok")}><Icon name="ok" size={20} />Confirmar</button>
+          <button className="m6-btn sec" type="button" onClick={() => responder("no")}>Não posso</button>
+        </div>
+      )}
+      {st === "ok" && (
+        <div className="m6-after">
+          <M6St k="ok" ic="ok">Presença confirmada</M6St>
+          {onStartChat && <button type="button" className="m6-link" onClick={pedirTroca}>Pedir troca</button>}
+        </div>
+      )}
+      {st === "no" && (
+        <div className="m6-after">
+          <M6St k="warn" ic="recusou">Você avisou que não pode</M6St>
+          <button type="button" className="m6-link" onClick={() => responder("ok")}>Mudei de ideia</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EventoRow({ ev }: { ev: Ev }) {
+  return (
+    <div className="m6-row">
+      <M6Date iso={ev.eventDate} />
+      <div className="m6-rb">
+        <div className="m6-rt">{ev.name}</div>
+        <div className="m6-rs">{joinDot(ev.weekday, ev.time, ev.location)}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── pedido de oração: vai como conversa para quem cuida da intercessão ──────
+function SheetOracao({ person, member, ministries, members, onStartChat }: {
+  person: P; member: M | null; ministries: Ministry[]; members: M[];
+  onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
+}) {
+  const ui = useContext(MemberUiContext);
+  const [txt, setTxt] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [ok, setOk] = useState(false);
+  const interc = (m: Ministry) => m.icon === "intercessao" || /interce|ora[cç][aã]o/i.test(m.name);
+  const destino = leadersFor(person, ministries, members, interc)[0] ?? leadersFor(person, ministries, members)[0];
+  if (ok) {
+    return (
+      <div className="m6-donesh">
+        <span className="m6-dot feito big"><Icon name="ok" size={28} /></span>
+        <h2 className="m6-sh">Pedido enviado</h2>
+        <p className="m6-txt">{destino ? `${destino.member.name.split(" ")[0]} recebeu e vai orar por você.` : "A liderança recebeu seu pedido."} A conversa fica em Mensagens.</p>
+        <div className="m6-btns"><button className="m6-btn pri" type="button" onClick={() => ui.sheet(null)}>Fechar</button></div>
+      </div>
+    );
+  }
+  return (
+    <div>
+      <h2 className="m6-sh">Pedido de oração</h2>
+      <div className="m6-meta">{destino ? `Vai para ${destino.member.name.split(" ")[0]}${interc(destino.ministry) ? ", da intercessão" : ", da liderança"}. Só essa pessoa lê.` : "Ainda não há um líder no app para receber."}</div>
+      <textarea className="m6-ta" value={txt} onChange={(e) => setTxt(e.target.value)} placeholder="Pelo que podemos orar?" aria-label="Pedido de oração" />
+      <div className="m6-btns">
+        <button className="m6-btn pri" type="button" disabled={!txt.trim() || !destino || !member || !onStartChat || enviando} onClick={async () => {
+          if (!destino || !member || !onStartChat) return;
+          setEnviando(true);
+          const id = await onStartChat(member.id, destino.member.id, `Pedido de oração: ${txt.trim()}`);
+          setEnviando(false);
+          if (id) setOk(true); else ui.toast("Não foi possível enviar agora. Tente de novo.");
+        }}>{enviando ? "Enviando..." : "Enviar pedido"}</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Início (S17) ──────────────────────────────────────────────────────────────
+function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, onServir }: {
+  person: P; member: M | null; ministries: Ministry[]; members: M[]; events: Ev[]; roster: Slot[]; cards: Card[];
+  announcements: Announcement[]; unreadIds: Set<string>; kidsChildren: Child[]; childGuardians: ChildGuardian[];
+  onConfirmarEscala?: (id: string) => void; onRecusarEscala?: (id: string) => void;
+  onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
+  nextStep: StepView | null;
+  onServir: () => void;
+}) {
+  const ui = useContext(MemberUiContext);
+  const hoje = todayISO();
+  const serve = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
+  const evById = new Map(events.map((e) => [e.id, e]));
+  const aConfirmar = roster
+    .filter((r) => r.person_id === person.id && r.status === "wait")
+    .filter((r) => (evById.get(r.event_id)?.eventDate ?? "") >= hoje)
+    .sort((a, b) => (evById.get(a.event_id)?.eventDate ?? "").localeCompare(evById.get(b.event_id)?.eventDate ?? ""));
+  const minhasTarefas = cards.filter((c) => c.assignees.includes(person.id) && c.column_id !== "done" && c.due);
+  const tarefa = [...minhasTarefas].sort((a, b) => (a.due ?? "").localeCompare(b.due ?? ""))[0];
+  const novo = announcements.find((a) => unreadIds.has(a.id));
+  const meusFilhos = childGuardians.filter((g) => g.guardian_person_id === person.id).map((g) => kidsChildren.find((c) => c.id === g.child_id)).filter(Boolean) as Child[];
+  const cultoHoje = events.find((e) => e.eventDate === hoje);
+  const proximos = events.filter((e) => e.eventDate >= hoje).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
+  const timesAbertos = ministries.filter((m) => !m.people.some((mp) => mp.personId === person.id));
+  const ministryOf = (slot: Slot) => ministries.find((m) => m.positions?.some((p) => p.id === slot.position_id)) ?? ministries.find((m) => m.people.some((mp) => mp.personId === person.id));
+  const incompleto = member && !member.contactComplete;
+
+  return (
+    <>
+      <div className="m6-sec0">
+        <div className="m6-lbl">Para você agora</div>
+        {incompleto && (
+          <div className="m6-card">
+            <div className="m6-kick">Seu cadastro</div>
+            <div className="m6-ct">Complete seu cadastro</div>
+            <div className="m6-meta">Faltam alguns dados para a igreja manter contato com você.</div>
+            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => ui.go("perfil", "dados")}>Completar →</button></div>
+          </div>
+        )}
+        {aConfirmar.slice(0, 2).map((slot) => {
+          const ev = evById.get(slot.event_id);
+          return ev ? <EscalaCard key={slot.id} slot={slot} ev={ev} ministry={ministryOf(slot)} person={person} member={member} members={members} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat} /> : null;
+        })}
+        {meusFilhos.length > 0 && cultoHoje && (
+          <div className="m6-card">
+            <div className="m6-kick">Kids hoje</div>
+            <div className="m6-ct">{meusFilhos.map((c) => c.name.split(" ")[0]).join(" e ")}</div>
+            <div className="m6-meta">{joinDot(cultoHoje.name, cultoHoje.time)}. O check-in fica em Minha família.</div>
+            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => ui.go("perfil", "familia")}>Ver o check-in</button></div>
+          </div>
+        )}
+        {serve && tarefa && (
+          <div className="m6-card">
+            <div className="m6-kick">Tarefa com prazo</div>
+            <div className="m6-ct">{tarefa.title}</div>
+            <div className="m6-meta">Prazo · {formatDateBR(tarefa.due)}</div>
+            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => ui.go("agenda", null, { agSeg: "minha" })}>Ver minhas tarefas</button></div>
+          </div>
+        )}
+        {novo && (
+          <div className="m6-card">
+            <div className="m6-kick"><Icon name="bandeira" size={16} />Novo no Mural</div>
+            <div className="m6-ct">{novo.title}</div>
+            {novo.when_label && <div className="m6-meta">{novo.when_label}</div>}
+            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => ui.go("mensagens", "mural")}>Ler a publicação</button></div>
+          </div>
+        )}
+        {nextStep && (
+          <div className="m6-card">
+            <div className="m6-kick">Seu próximo passo</div>
+            <div className="m6-ct">{nextStep.nome}</div>
+            {nextStep.info && <div className="m6-meta">{nextStep.info}</div>}
+            <div className="m6-btns"><button className={`m6-btn ${nextStep.st === "andamento" ? "pri" : "sec"}`} type="button" onClick={() => (nextStep.run ? nextStep.run() : ui.go("caminhada"))}>{nextStep.acao ?? "Ver a caminhada"} →</button></div>
+          </div>
+        )}
+        {!serve && timesAbertos.length > 0 && (
+          <div className="m6-card">
+            <div className="m6-kick">Servir</div>
+            <div className="m6-ct">{timesAbertos.length === 1 ? "1 time procura pessoas" : `${timesAbertos.length} times procuram pessoas`}</div>
+            <div className="m6-meta">{timesAbertos.slice(0, 3).map((m) => m.name).join(", ")}. Veja o que cada um faz antes de decidir.</div>
+            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={onServir}>Conhecer os times</button></div>
+          </div>
+        )}
+        {!incompleto && aConfirmar.length === 0 && !tarefa && !novo && !nextStep && (serve || timesAbertos.length === 0) && (
+          <div className="m6-card"><div className="m6-ct">Tudo em dia</div><div className="m6-meta">Quando a liderança precisar de você, aparece aqui.</div></div>
+        )}
+      </div>
+
+      <div className="m6-sec">
+        <div className="m6-lbl">Na igreja</div>
+        {proximos.length > 0 ? (
+          <div className="m6-list">{proximos.slice(0, 3).map((ev) => <EventoRow key={ev.id} ev={ev} />)}</div>
+        ) : (
+          <div className="m6-card"><div className="m6-meta">Os próximos cultos e eventos aparecem aqui.</div></div>
+        )}
+        <div className="m6-more"><button type="button" className="m6-link" onClick={() => ui.go("agenda", null, { agSeg: "igreja" })}>Ver a agenda completa →</button></div>
+      </div>
+
+      <div className="m6-sec">
+        <div className="m6-card">
+          <div className="m6-ct">Podemos orar por você?</div>
+          <div className="m6-meta">Seu pedido vai para quem cuida da intercessão, com cuidado.</div>
+          <div className="m6-btns">
+            <button className="m6-btn sec" type="button" onClick={() => ui.sheet(<SheetOracao person={person} member={member} ministries={ministries} members={members} onStartChat={onStartChat} />)}>
+              <Icon name="coracao" size={20} />Enviar pedido de oração
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Agenda (S19) ──────────────────────────────────────────────────────────────
+function AgendaV6({ seg, setSeg, person, member, members, ministries, events, roster, cards, boards, isRecep, isKids, onConfirmarEscala, onRecusarEscala, onStartChat, onAddCardComment, onSaveAvailability }: {
+  onSaveAvailability?: (availability: Record<string, boolean>) => Promise<boolean>;
+  seg: "minha" | "igreja"; setSeg: (s: "minha" | "igreja") => void;
+  person: P; member: M | null; members: M[]; ministries: Ministry[]; events: Ev[]; roster: Slot[]; cards: Card[]; boards: Board[];
+  isRecep: boolean; isKids: boolean;
+  onConfirmarEscala?: (id: string) => void; onRecusarEscala?: (id: string) => void;
+  onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
+  onAddCardComment?: (cardId: string, author: string, body: string) => void;
+}) {
+  const ui = useContext(MemberUiContext);
+  const serve = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
+  const atual = serve ? seg : "igreja";
+  const hoje = todayISO();
+  const evById = new Map(events.map((e) => [e.id, e]));
+  const meus = roster
+    .filter((r) => r.person_id === person.id && (evById.get(r.event_id)?.eventDate ?? "") >= hoje)
+    .sort((a, b) => (evById.get(a.event_id)?.eventDate ?? "").localeCompare(evById.get(b.event_id)?.eventDate ?? ""));
+  const pend = meus.filter((r) => r.status === "wait");
+  const outras = meus.filter((r) => r.status !== "wait");
+  const ministryOf = (slot: Slot) => ministries.find((m) => m.positions?.some((p) => p.id === slot.position_id)) ?? ministries.find((m) => m.people.some((mp) => mp.personId === person.id));
+  const avisarFalta = async () => {
+    const lider = leadersFor(person, ministries, members)[0];
+    if (!member || !lider || !onStartChat) { ui.toast("Não achamos o líder do seu time."); return; }
+    const id = await onStartChat(member.id, lider.member.id, "Oi! Queria avisar que vou faltar num dos próximos cultos. Posso te contar qual?");
+    if (id) ui.go("mensagens", null, { chatId: id });
+  };
+  const futuros = events.filter((e) => e.eventDate >= hoje).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
+  const semanaDe = (iso: string) => {
+    const d = parseISODate(iso);
+    if (!d) return "Sem data";
+    const h = parseISODate(hoje)!;
+    const dias = Math.floor((d.getTime() - h.getTime()) / 86400000);
+    if (dias < 7 - h.getDay()) return "Esta semana";
+    if (dias < 14 - h.getDay()) return "Próxima semana";
+    return `${MESES[d.getMonth()].charAt(0).toUpperCase()}${MESES[d.getMonth()].slice(1)}`;
+  };
+  const grupos = [...new Set(futuros.map((e) => semanaDe(e.eventDate)))];
+
+  return (
+    <>
+      {serve && (
+        <div className="m6-segwrap">
+          <div className="ts-seg two m6-seg" role="radiogroup" aria-label="O que ver">
+            {([["minha", "Minha escala"], ["igreja", "Igreja"]] as const).map(([v, l]) => (
+              <button key={v} type="button" role="radio" aria-checked={atual === v} className={atual === v ? "on" : ""} onClick={() => setSeg(v)}>{l}</button>
+            ))}
+          </div>
+        </div>
+      )}
+      {atual === "minha" ? (
+        <>
+          {pend.length > 0 && (
+            <div className="m6-sec">
+              <div className="m6-lbl">A confirmar · {pend.length}</div>
+              {pend.map((slot) => {
+                const ev = evById.get(slot.event_id);
+                return ev ? <EscalaCard key={slot.id} slot={slot} ev={ev} ministry={ministryOf(slot)} person={person} member={member} members={members} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat} /> : null;
+              })}
+            </div>
+          )}
+          <div className="m6-sec">
+            <div className="m6-lbl">Próximas</div>
+            {outras.length > 0 ? (
+              <div className="m6-list">
+                {outras.map((slot) => {
+                  const ev = evById.get(slot.event_id);
+                  if (!ev) return null;
+                  const min = ministryOf(slot);
+                  return (
+                    <div className="m6-row" key={slot.id}>
+                      <M6Date iso={ev.eventDate} />
+                      <div className="m6-rb">
+                        <div className="m6-rt">{ev.name}</div>
+                        <div className="m6-rs">{joinDot(ev.time, min?.name, min?.positions?.find((p) => p.id === slot.position_id)?.name)}</div>
+                        <div className="m6-mt">{slot.status === "ok" ? <M6St k="ok" ic="ok">Confirmado</M6St> : <M6St k="warn" ic="recusou">Você não pode</M6St>}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="m6-card"><div className="m6-meta">{pend.length ? "As escalas confirmadas aparecem aqui." : "Nenhuma escala marcada para você por enquanto."}</div></div>
+            )}
+          </div>
+          <div className="m6-sec m6-legacy">
+            <TabTarefas person={person} cards={cards} boards={boards} onAddCardComment={onAddCardComment} />
+          </div>
+          {(isRecep || isKids) && (
+            <div className="m6-sec">
+              <div className="m6-lbl">No seu time</div>
+              <div className="m6-list">
+                {isRecep && <M6Row ic="visitante" t="Visitantes" s="Cadastrar e acompanhar quem chegou" onClick={() => ui.go("agenda", "visitantes")} />}
+                {isKids && <M6Row ic="kids" t="Sala do Kids" s="Check-in, presença e retirada" onClick={() => ui.go("agenda", "kids-sala")} />}
+              </div>
+            </div>
+          )}
+          <div className="m6-sec">
+            <div className="m6-lbl">Quando posso servir</div>
+            {onSaveAvailability ? <Disponibilidade person={person} onSave={onSaveAvailability} /> : null}
+            <div className="m6-pad"><button className="m6-btn sec full" type="button" onClick={avisarFalta}>Avisar que vou faltar</button></div>
+          </div>
+        </>
+      ) : (
+        futuros.length > 0 ? grupos.map((g) => (
+          <div className="m6-sec" key={g}>
+            <div className="m6-lbl">{g}</div>
+            <div className="m6-list">{futuros.filter((e) => semanaDe(e.eventDate) === g).map((ev) => <EventoRow key={ev.id} ev={ev} />)}</div>
+          </div>
+        )) : (
+          <div className="m6-sec"><div className="m6-card"><div className="m6-ct">Agenda vazia</div><div className="m6-meta">Os cultos e eventos da igreja aparecem aqui assim que forem marcados.</div></div></div>
+        )
+      )}
+    </>
+  );
+}
+
+// ── Mensagens (S20) ───────────────────────────────────────────────────────────
+function RespostaEvento({ id, inicial, onRespond }: { id: string; inicial: "vou" | "nao" | null; onRespond: (id: string, r: "vou" | "nao" | null) => Promise<boolean> }) {
+  const ui = useContext(MemberUiContext);
+  const [r, setR] = useState(inicial);
+  const set = async (v: "vou" | "nao" | null) => {
+    const antes = r;
+    setR(v);
+    const ok = await onRespond(id, v);
+    if (!ok) setR(antes);
+    else if (v) ui.toast(`Resposta enviada · ${v === "vou" ? "Vou" : "Não vou"}`);
+  };
+  if (r) {
+    return (
+      <div className="m6-after">
+        <M6St k={r === "vou" ? "ok" : "neutral"} ic={r === "vou" ? "ok" : "recusou"}>{r === "vou" ? "Você vai" : "Você não vai"}</M6St>
+        <button type="button" className="m6-link" onClick={() => set(null)}>Mudar resposta</button>
+      </div>
+    );
+  }
+  return (
+    <div className="m6-btns">
+      <button className="m6-btn pri" type="button" onClick={() => set("vou")}>Vou</button>
+      <button className="m6-btn sec" type="button" onClick={() => set("nao")}>Não vou</button>
+    </div>
+  );
+}
+
+/* "Quando posso servir": uma chave por culto que se repete (S19) */
+const DISPONIBILIDADE: { key: string; nome: string }[] = [
+  { key: "dom_m", nome: "Domingo de manhã" },
+  { key: "dom_n", nome: "Domingo à noite" },
+  { key: "qua", nome: "Quarta à noite" },
+];
+function Disponibilidade({ person, onSave }: { person: P; onSave: (a: Record<string, boolean>) => Promise<boolean> }) {
+  const [disp, setDisp] = useState<Record<string, boolean>>(() => {
+    const atual = person.availability ?? {};
+    return Object.fromEntries(DISPONIBILIDADE.map((d) => [d.key, atual[d.key] ?? true]));
+  });
+  const trocar = async (key: string) => {
+    const novo = { ...disp, [key]: !disp[key] };
+    setDisp(novo);
+    if (!(await onSave(novo))) setDisp(disp);
+  };
+  return (
+    <div className="m6-list">
+      {DISPONIBILIDADE.map((d) => (
+        <div className="m6-row" key={d.key}>
+          <span className="m6-rb">
+            <span className="m6-rt">{d.nome}</span>
+            <span className="m6-rs">{disp[d.key] ? "O líder pode escalar você" : "O líder não vai escalar você"}</span>
+          </span>
+          <button type="button" role="switch" aria-checked={disp[d.key]} aria-label={d.nome} className={`m6-tg${disp[d.key] ? " on" : ""}`} onClick={() => trocar(d.key)} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MuralV6({ announcements, unreadIds, person, onReadAnnouncement, responses = [], onRespond }: {
+  announcements: Announcement[]; unreadIds: Set<string>; person: P;
+  onReadAnnouncement?: (personId: string, announcementId: string) => void;
+  responses?: { announcement_id: string; response: "vou" | "nao" }[];
+  onRespond?: (announcementId: string, response: "vou" | "nao" | null) => Promise<boolean>;
+}) {
+  /* "Nova" fica marcada nesta visita; abrir o Mural registra a leitura */
+  const [novas] = useState(() => new Set(unreadIds));
+  const enviado = useRef(new Set<string>());
+  useEffect(() => {
+    announcements.forEach((a) => {
+      if (!unreadIds.has(a.id) || enviado.current.has(a.id)) return;
+      enviado.current.add(a.id);
+      onReadAnnouncement?.(person.id, a.id);
+    });
+  }, [announcements, unreadIds, person.id, onReadAnnouncement]);
+  if (announcements.length === 0) {
+    return <div className="m6-sec0"><div className="m6-card"><div className="m6-ct">Nada no Mural ainda</div><div className="m6-meta">As publicações da igreja aparecem aqui.</div></div></div>;
+  }
+  return (
+    <div className="m6-sec0">
+      {announcements.map((a) => (
+        <article className="m6-card" key={a.id}>
+          {novas.has(a.id) && <span className="m6-new">Nova</span>}
+          <div className="m6-ct">{a.title}</div>
+          {a.body && <p className="m6-txt">{a.body}</p>}
+          <div className="m6-meta">{joinDot(a.when_label, a.audience ? `para ${a.audience}` : null)}</div>
+          {a.kind === "evento" && onRespond && <RespostaEvento id={a.id} inicial={responses.find((r) => r.announcement_id === a.id)?.response ?? null} onRespond={onRespond} />}
+        </article>
+      ))}
+      <p className="m6-help">Quando você abre o Mural, a igreja sabe que a mensagem chegou.</p>
+    </div>
+  );
+}
+
+// ── Caminhada (S21, S22, S23, S43) ────────────────────────────────────────────
+type StepView = { id: JourneyStep; nome: string; st: "feito" | "andamento" | "afazer"; info?: string; acao?: string; run?: () => void };
+const STW = { feito: "Concluída", andamento: "Em andamento", afazer: "A fazer" } as const;
+
+function useSteps({ person, member, ministries, courses, enrollments, baptismClasses, journeyRequests, onOpenSub, onRequestStep, onServir }: {
+  person: P; member: M | null; ministries: Ministry[]; courses: Course[]; enrollments: Enrollment[]; baptismClasses: BaptismClass[];
+  journeyRequests: JourneyRequest[]; onOpenSub: (sub: string) => void; onRequestStep: (step: JourneyStep) => void; onServir: () => void;
+}): StepView[] {
+  const j = useContext(JourneyContext);
+  const JORNADA = useJornada();
+  const journey = member?.journey ?? [];
+  const pedidos = new Set(journeyRequests.filter((r) => r.memberId === member?.id && r.status === "pendente").map((r) => r.step));
+  const cursando = member ? enrollments.find((e) => e.member_id === member.id && e.status !== "concluido") : undefined;
+  const cursoNome = cursando ? courses.find((c) => c.id === cursando.course_id)?.name : undefined;
+  const turmaInscrita = member ? baptismClasses.find((b) => j.baptismCandidates.some((c) => c.class_id === b.id && c.member_id === member.id)) : undefined;
+  const turmaAberta = baptismClasses.find((b) => b.open_enrollment && b.status !== "concluida");
+  const pedidoServir = member ? j.serveRequests.find((r) => r.member_id === member.id && r.status === "pendente") : undefined;
+  const serve = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
+  const ids: JourneyStep[] = ["decisao", "batismo", "curso", "integracao", "time"];
+  return ids.map((id, i) => {
+    const nome = JORNADA[i];
+    if (journey[i] || (id === "time" && serve)) return { id, nome, st: "feito" };
+    if (pedidos.has(id)) return { id, nome, st: "andamento", info: "Pedido enviado · aguardando a liderança" };
+    if (id === "batismo") {
+      if (turmaInscrita) return { id, nome, st: "andamento", info: joinDot("Inscrição feita", turmaInscrita.label, formatDateBR(turmaInscrita.baptism_date)) };
+      if (turmaAberta) return { id, nome, st: "afazer", info: joinDot("Inscrições abertas", turmaAberta.label), acao: "Quero me batizar", run: () => onOpenSub("batismo") };
+      return { id, nome, st: "afazer", acao: "Já fui batizado", run: () => onRequestStep(id) };
+    }
+    if (id === "curso") {
+      if (cursando) return { id, nome, st: "andamento", info: cursoNome, acao: "Continuar", run: () => onOpenSub("cursos") };
+      return { id, nome, st: "afazer", acao: "Ver os cursos", run: () => onOpenSub("cursos") };
+    }
+    if (id === "time") {
+      if (pedidoServir) return { id, nome, st: "andamento", info: "Pedido enviado · o líder vai falar com você" };
+      return { id, nome, st: "afazer", acao: "Conhecer os times", run: onServir };
+    }
+    if (id === "integracao") return { id, nome, st: "afazer", acao: "Já participo", run: () => onRequestStep(id) };
+    return { id, nome, st: "afazer", acao: "Contar que já decidi", run: () => onRequestStep(id) };
+  });
+}
+
+function SheetPedidoEtapa({ step, nome, member, onRequestJourneyStep }: { step: JourneyStep; nome: string; member: M | null; onRequestJourneyStep?: (memberId: string, step: JourneyStep, eventDate: string, note: string) => void }) {
+  const ui = useContext(MemberUiContext);
+  const [data, setData] = useState("");
+  const [nota, setNota] = useState("");
+  return (
+    <div>
+      <h2 className="m6-sh">{nome}</h2>
+      <div className="m6-meta">Conte quando aconteceu. A liderança confirma e a etapa fica marcada na sua caminhada.</div>
+      <div className="field" style={{ marginTop: 14 }}><label className="field-label">Quando foi?</label><input className="input" type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
+      <div className="field"><label className="field-label">Quer contar mais? (opcional)</label><input className="input" value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ex.: aconteceu em outra igreja" /></div>
+      <div className="m6-btns">
+        <button className="m6-btn pri" type="button" disabled={!data || !member || !onRequestJourneyStep} onClick={() => {
+          if (!member || !onRequestJourneyStep) return;
+          onRequestJourneyStep(member.id, step, data, nota);
+          ui.sheet(null);
+          ui.toast("Pedido enviado · a liderança vai confirmar");
+        }}>Enviar</button>
+      </div>
+    </div>
+  );
+}
+
+function SheetTimes({ person, member, ministries, members, people }: { person: P; member: M | null; ministries: Ministry[]; members: M[]; people: P[] }) {
+  return (
+    <div>
+      <h2 className="m6-sh">Times que procuram pessoas</h2>
+      <div className="m6-meta">Escolha um time. O líder recebe seu pedido e fala com você.</div>
+      <ServirSection person={person} member={member} ministries={ministries} members={members} people={people} />
+    </div>
+  );
+}
+
+function CaminhadaV6({ steps, courses, purpose }: { steps: StepView[]; courses: React.ReactNode; purpose?: { kick?: string | null; title?: string | null; text?: string | null } | null }) {
+  const ui = useContext(MemberUiContext);
+  const done = steps.filter((s) => s.st === "feito").length;
+  return (
+    <>
+      <div className="m6-sec0">
+        <div className="m6-card">
+          <div className="m6-ct">{done} de {steps.length} etapas concluídas</div>
+          <div className="m6-segbar">{steps.map((s) => <i key={s.id} className={s.st} />)}</div>
+          <div className="m6-meta">Cada etapa acontece no seu tempo, em qualquer ordem.</div>
+        </div>
+      </div>
+      <div className="m6-sec">
+        <div className="m6-lbl">Etapas</div>
+        <div className="m6-steps">
+          {steps.map((s) => (
+            <div className="m6-step" key={s.id}>
+              <span className={`m6-dot ${s.st}`}>{s.st === "feito" ? <Icon name="ok" size={18} /> : s.st === "andamento" ? <Icon name="pendente" size={18} /> : null}</span>
+              <div className="m6-rb">
+                <div className="m6-rt">{s.nome}</div>
+                <div className="m6-stw"><b>{STW[s.st]}</b>{s.info ? ` · ${s.info}` : ""}</div>
+                {s.acao && s.run && <div className="m6-mt"><button className={`m6-btn small ${s.st === "andamento" ? "pri" : "sec"}`} type="button" onClick={s.run}>{s.acao} →</button></div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="m6-sec">
+        <div className="m6-lbl">Cursos</div>
+        {courses}
+      </div>
+      <div className="m6-sec">
+        <div className="m6-lbl">Bíblia</div>
+        <div className="m6-list"><M6Row ic="biblia" t="Ler a Bíblia" s="Marque versículos e faça anotações" onClick={() => ui.go("caminhada", "biblia")} /></div>
+      </div>
+      {purpose && (purpose.title || purpose.text) && (
+        <div className="m6-sec">
+          <div className="m6-lbl">Nossa igreja</div>
+          <div className="m6-card">
+            {purpose.kick && <div className="m6-kick">{purpose.kick}</div>}
+            {purpose.title && <div className="m6-ct">{purpose.title}</div>}
+            {purpose.text && <p className="m6-txt">{purpose.text}</p>}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* cursos em andamento, disponíveis (sem os já cumpridos) e concluídos */
+function CursosResumo({ member, courses, enrollments, courseModules, courseLessons }: { member: M | null; courses: Course[]; enrollments: Enrollment[]; courseModules: CourseModule[]; courseLessons: CourseLesson[] }) {
+  const ui = useContext(MemberUiContext);
+  const meus = member ? enrollments.filter((e) => e.member_id === member.id) : [];
+  const andando = meus.find((e) => e.status !== "concluido");
+  const feitos = meus.filter((e) => e.status === "concluido").length;
+  const disponiveis = courses.filter((c) => !meus.some((e) => e.course_id === c.id));
+  const curso = andando ? courses.find((c) => c.id === andando.course_id) : undefined;
+  const total = curso ? courseLessons.filter((l) => courseModules.some((m) => m.id === l.module_id && m.course_id === curso.id)).length : 0;
+  const pct = andando && total ? Math.min(100, Math.round((andando.done_count / total) * 100)) : 0;
+  return (
+    <>
+      {curso && andando && (
+        <div className="m6-card">
+          <div className="m6-kick">Em andamento</div>
+          <div className="m6-ct">{curso.name}</div>
+          {total > 0 && <div className="m6-meta">{andando.done_count} de {plural(total, "aula")}</div>}
+          <div className="m6-prog"><i style={{ width: `${pct}%` }} /></div>
+        </div>
+      )}
+      <div className="m6-list">
+        {disponiveis.slice(0, 3).map((c) => <M6Row key={c.id} ic="cursos" t={c.name} s={c.level ?? c.description ?? undefined} onClick={() => ui.go("caminhada", "cursos")} />)}
+        {feitos > 0 && <M6Row ic="ok" t={`Concluídos · ${feitos}`} onClick={() => ui.go("caminhada", "cursos")} />}
+        {disponiveis.length === 0 && feitos === 0 && !curso && <div className="m6-row"><span className="m6-rb"><span className="m6-rs">Os cursos da igreja aparecem aqui quando forem publicados.</span></span></div>}
+      </div>
+    </>
+  );
+}
+
 function MobileMembro({
   person, member, ...rest
 }: MobileOverlayProps & { person: P; member: M | null }) {
-  const [tab, setTab] = useState("inicio");
+  const [tab, setTab] = useState<MemberTab>("inicio");
+  const [sub, setSub] = useState<string | null>(null);
+  const [agSeg, setAgSeg] = useState<"minha" | "igreja">("minha");
+  const [chatTarget, setChatTarget] = useState<{ id: string | null; novo: boolean; n: number }>({ id: null, novo: false, n: 0 });
+  const [chatAberto, setChatAberto] = useState<string | null>(null);
+  const [sheetEl, setSheetEl] = useState<React.ReactNode | null>(null);
+  const [toastO, setToastO] = useState<{ msg: string; action?: { label: string; fn: () => void }; id: number } | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [textScale] = useTextScale();
   /* primeiro acesso termina quando a ficha tem os dados obrigatórios
      (member.contactComplete, calculado no servidor): vale em qualquer
      aparelho e não diverge entre o HTML do servidor e o do navegador */
   const [onboarded, setOnboarded] = useState<boolean>(() => !member || !!member.contactComplete);
-  const { people, ministries, events, roster, cards, boards, courses, enrollments, courseModules = [], courseLessons = [],
+  const { people, ministries, events, roster, cards, boards, enrollments, courseModules = [], courseLessons = [],
           visitors, baptismClasses, announcements, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment,
           onAdvanceVisitorStage, onRegisterVisitor, onSendMessage, onStartChat,
           organizationId, churchName, churchLogoUrl, theme, setTheme, onChangePassword, onUpdateProfile,
-          journeyRequests, onRequestJourneyStep, onConfirmarEscala, onRecusarEscala,
+          journeyRequests = [], onRequestJourneyStep, onConfirmarEscala, onRecusarEscala,
           kidsClasses = [], kidsChildren = [], childGuardians = [], kidsSessions = [], kidsAttendance = [],
           kidsEvents = [], kidsEventEnrollments = [], wallPosts = [], bibleMarks = [], onSaveBibleMark,
           missingRequirements = [], serveRequests = [], baptismCandidates = [], onEnrollCourse, onRequestBaptism, onRequestServe,
-          mode, onLogout, onSwitchToPanel, groupTerm } = rest;
+          mode, onLogout, onSwitchToPanel, groupTerm, readAnnouncementIds = [], churchPurpose,
+          onSaveAvailability, onRespondAnnouncement, announcementResponses = [] } = rest;
+  /* curso em rascunho não aparece no app */
+  const courses = rest.courses.filter((c) => c.published !== false);
   const journey: JourneyActions = {
     missing: missingRequirements, serveRequests, baptismCandidates, onEnrollCourse, onRequestBaptism, onRequestServe,
     names: { courses: courses.map((c) => ({ id: c.id, name: c.name })), events: events.map((e) => ({ id: e.id, name: e.name })) },
@@ -2763,24 +3087,48 @@ function MobileMembro({
 
   const isRecep = isRecepPerson(person, ministries);
   const isKids = isKidsPerson(person, ministries);
+  const serves = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
+  const isGuardian = childGuardians.some((g) => g.guardian_person_id === person.id);
+  const ctx: ModuleCtx = { serves, isRecep, isKids, isGuardian };
+  const subAllowed = (id: string | null) => !id || (MEMBER_MODULES.find((m) => m.id === id)?.visible(ctx) ?? false);
 
-  /* Escala e Tarefas são de quem serve: aparecem quando a pessoa entra num
-     time (pelo "Quero servir" aprovado ou pela liderança) */
-  const servesInTeam = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
-  const TABS = [
-    { id: "inicio",     ic: "inicio",     l: "Início"   },
-    ...(servesInTeam ? [
-      { id: "escalas",    ic: "escalas",    l: "Escala"   },
-      { id: "tarefas",    ic: "tarefas",    l: "Tarefas"  },
-    ] : []),
-    { id: "conversas",  ic: "conversas",  l: "Mensagens" },
-    isKids
-      ? { id: "kids",       ic: "kids",      l: "Kids"     }
-      : isRecep
-      ? { id: "visitantes", ic: "visitante", l: "Visitas" }
-      : { id: "cursos",     ic: "cursos",    l: "Cursos"  },
-    { id: "perfil",     ic: "perfil",     l: "Perfil"   },
-  ];
+  const lidos = useMemo(() => new Set(readAnnouncementIds), [readAnnouncementIds]);
+  const [lidosAgora, setLidosAgora] = useState<Set<string>>(() => new Set());
+  const unreadIds = useMemo(() => new Set(announcements.filter((a) => !lidos.has(a.id) && !lidosAgora.has(a.id)).map((a) => a.id)), [announcements, lidos, lidosAgora]);
+  const marcarLido = (personId: string, id: string) => {
+    setLidosAgora((p) => (p.has(id) ? p : new Set(p).add(id)));
+    onReadAnnouncement?.(personId, id);
+  };
+  const hoje = todayISO();
+  const evDate = new Map(events.map((e) => [e.id, e.eventDate]));
+  const pendEscala = roster.filter((r) => r.person_id === person.id && r.status === "wait" && (evDate.get(r.event_id) ?? "") >= hoje).length;
+  const badges: Partial<Record<MemberTab, number>> = { agenda: serves ? pendEscala : 0, mensagens: unreadIds.size };
+
+  const toast = (msg: string, action?: { label: string; fn: () => void }) => setToastO({ msg, action, id: Date.now() });
+  useEffect(() => {
+    if (!toastO) return;
+    const h = setTimeout(() => setToastO(null), toastO.action ? UNDO_MS : 3600);
+    return () => clearTimeout(h);
+  }, [toastO]);
+  useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }); }, [tab, sub]);
+
+  const go: MemberUi["go"] = (t, s = null, extra = {}) => {
+    /* tocar na aba ativa volta ao topo */
+    if (t === tab && !s && !sub && !extra.chatId && !extra.newChat) scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    if (extra.agSeg) setAgSeg(extra.agSeg);
+    if (extra.chatId !== undefined || extra.newChat) setChatTarget((c) => ({ id: extra.chatId ?? null, novo: !!extra.newChat, n: c.n + 1 }));
+    else if (t === "mensagens" && !s) setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 }));
+    setChatAberto(null);
+    setTab(t);
+    setSub(subAllowed(s) ? s : null);
+  };
+  const ui: MemberUi = { go, sheet: setSheetEl, toast };
+
+  const pedirEtapa = (step: JourneyStep) => {
+    const nome = { decisao: "Decisão", batismo: "Batismo", curso: "Fundamentos", integracao: groupTerm || "Grupo", time: "Servindo" }[step];
+    setSheetEl(<SheetPedidoEtapa step={step} nome={nome} member={member} onRequestJourneyStep={onRequestJourneyStep} />);
+  };
+  const abrirTimes = () => setSheetEl(<SheetTimes person={person} member={member} ministries={ministries} members={members} people={people} />);
 
   if (!onboarded) {
     return (
@@ -2793,9 +3141,19 @@ function MobileMembro({
     );
   }
 
+  const tabTitle = MEMBER_TABS.find((t) => t.id === tab)!.l;
+  const subTitle = sub === "chat" ? (chatAberto ?? "Conversa") : sub ? moduleTitle(sub) : "";
+  const voltar = () => { if (sub === "chat") { setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 })); setChatAberto(null); } setSub(null); };
+
   return (
     <GroupTermContext.Provider value={groupTerm || "Grupo"}>
     <JourneyContext.Provider value={journey}>
+    <MemberUiContext.Provider value={ui}>
+    <StepsHost
+      person={person} member={member} ministries={ministries} courses={courses} enrollments={enrollments} baptismClasses={baptismClasses}
+      journeyRequests={journeyRequests} onOpenSub={(s) => go("caminhada", s)} onRequestStep={pedirEtapa} onServir={abrirTimes}
+    >
+    {(steps) => (
     <div className="phone" style={{ "--m-scale": textScale } as React.CSSProperties}>
       <div className="phone-screen">
         <div className="phone-notch" />
@@ -2804,50 +3162,104 @@ function MobileMembro({
           <span>{churchName || "Service"} </span>
         </div>
         <div className="m-head">
-          <div className="m-head-top">
-            <ChurchLockup size="sm" logoUrl={churchLogoUrl} name={churchName} />
-            <button className="m-head-av" type="button" onClick={() => setTab("perfil")} aria-label="Abrir meu perfil">
-              <Av name={person.name} size="sm" photoUrl={person.photoUrl} />
-            </button>
-          </div>
-          <div className="m-h1">{saudacao()}, <em>{person.name.split(" ")[0]}</em></div>
-        </div>
-
-        <div className="m-scroll">
-          {tab === "inicio" && (
+          {sub ? (
             <>
-              <TabInicio person={person} member={member} ministries={ministries} events={events} roster={roster} cards={cards} setTab={setTab} />
-              <ServirSection person={person} member={member} ministries={ministries} />
+              <button type="button" className="m6-back" onClick={voltar}><span className="m6-back-ic"><Icon name="voltar" size={22} /></span>{tabTitle}</button>
+              <h1 className="m-h1 sub">{subTitle}</h1>
+            </>
+          ) : (
+            <>
+              <div className="m-head-top">
+                <ChurchLockup size="sm" logoUrl={churchLogoUrl} name={churchName} />
+                <button className="m-head-av" type="button" onClick={() => go("perfil")} aria-label="Abrir meu perfil">
+                  <Av name={person.name} size="sm" photoUrl={person.photoUrl} />
+                </button>
+              </div>
+              {tab === "inicio" ? (
+                <>
+                  <h1 className="m-h1">{saudacao()}, <em>{person.name.split(" ")[0]}</em></h1>
+                  <p className="m-hsub">{dataLonga(hoje)}</p>
+                </>
+              ) : (
+                <h1 className="m-h1">{tabTitle}</h1>
+              )}
             </>
           )}
-          {servesInTeam && tab === "escalas" && <TabEscala person={person} events={events} roster={roster} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} />}
-          {servesInTeam && tab === "tarefas" && <TabTarefas person={person} cards={cards} boards={boards} onAddCardComment={onAddCardComment} />}
-          {tab === "conversas" && (
-            <TabConversas member={member} chats={chats} chatMembers={chatMembers} messages={messages} members={members} ministries={ministries} onSendMessage={onSendMessage} onStartChat={onStartChat} />
+        </div>
+
+        <div className="m-scroll" ref={scrollRef}>
+          {tab === "inicio" && (
+            <InicioV6 person={person} member={member} ministries={ministries} members={members} events={events} roster={roster} cards={cards}
+              announcements={announcements} unreadIds={unreadIds} kidsChildren={kidsChildren} childGuardians={childGuardians}
+              onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat}
+              nextStep={steps.find((s) => s.st === "andamento" && s.acao) ?? steps.find((s) => s.st === "afazer" && s.acao && s.id !== "time") ?? null}
+              onServir={abrirTimes} />
           )}
-          {tab === "biblia" && <TabBiblia bibleMarks={bibleMarks} onSaveBibleMark={onSaveBibleMark} onBack={() => setTab("inicio")} />}
-          {tab === "visitantes" && <TabVisitantes visitors={visitors} onAdvanceVisitorStage={onAdvanceVisitorStage} onRegisterVisitor={onRegisterVisitor} />}
-          {tab === "kids" && (
-            <TabKids
-              person={person}
-              people={people}
-              members={members}
-              events={events}
-              kidsClasses={kidsClasses}
-              kidsChildren={kidsChildren}
-              childGuardians={childGuardians}
-              kidsSessions={kidsSessions}
-              kidsAttendance={kidsAttendance}
-              organizationId={organizationId}
-              churchId={kidsClasses[0]?.church_id}
-            />
+
+          {tab === "agenda" && !sub && (
+            <AgendaV6 seg={agSeg} setSeg={setAgSeg} person={person} member={member} members={members} ministries={ministries} events={events} roster={roster}
+              cards={cards} boards={boards} isRecep={isRecep} isKids={isKids} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala}
+              onStartChat={onStartChat} onAddCardComment={onAddCardComment} onSaveAvailability={onSaveAvailability} />
           )}
-          {tab === "cursos" && (
-            <TabCursos member={member} courses={courses} enrollments={enrollments} courseModules={courseModules} courseLessons={courseLessons} baptismClasses={baptismClasses} setTab={setTab} />
+          {tab === "agenda" && sub === "visitantes" && <div className="m6-legacy"><TabVisitantes visitors={visitors} onAdvanceVisitorStage={onAdvanceVisitorStage} onRegisterVisitor={onRegisterVisitor} /></div>}
+          {tab === "agenda" && sub === "kids-sala" && (
+            <div className="m6-legacy">
+            <TabKids person={person} people={people} members={members} events={events} kidsClasses={kidsClasses} kidsChildren={kidsChildren}
+              childGuardians={childGuardians} kidsSessions={kidsSessions} kidsAttendance={kidsAttendance} organizationId={organizationId} churchId={kidsClasses[0]?.church_id} />
+            </div>
           )}
-          {tab === "batismo" && <TabBatismo baptismClasses={baptismClasses} memberId={member?.id ?? null} />}
-          {tab === "avisos" && <TabAvisos announcements={announcements} person={person} onReadAnnouncement={onReadAnnouncement} />}
-          {tab === "perfil" && (
+
+          {tab === "mensagens" && sub === "mural" && <MuralV6 announcements={announcements} unreadIds={unreadIds} person={person} onReadAnnouncement={marcarLido} responses={announcementResponses} onRespond={onRespondAnnouncement} />}
+          {tab === "mensagens" && (!sub || sub === "chat") && (
+            <>
+              {!sub && (
+                <div className="m6-sec0">
+                  <div className="m6-list">
+                    <button type="button" className="m6-row" onClick={() => go("mensagens", "mural")}>
+                      <span className="m6-ic accent"><Icon name="bandeira" size={22} /></span>
+                      <span className="m6-rb">
+                        <span className="m6-rt">Mural da igreja</span>
+                        <span className={`m6-rs m6-1l${unreadIds.size ? " m6-strong" : ""}`}>{announcements[0]?.title ?? "As publicações da igreja ficam aqui"}</span>
+                      </span>
+                      {unreadIds.size > 0 && <span className="m6-count">{unreadIds.size}</span>}
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div className={sub ? "" : "m6-sec m6-conv"}>
+                <TabConversas key={chatTarget.n} member={member} chats={chats} chatMembers={chatMembers} messages={messages} members={members} ministries={ministries}
+                  onSendMessage={onSendMessage} onStartChat={onStartChat} openChatId={chatTarget.id} startNew={chatTarget.novo}
+                  onChatOpen={(name) => { setChatAberto(name); setSub(name ? "chat" : null); }} />
+              </div>
+              {!sub && (
+                <div className="m6-pad">
+                  <button className="m6-btn pri full" type="button" onClick={() => setSheetEl(
+                    <div>
+                      <h2 className="m6-sh">Nova mensagem</h2>
+                      <div className="m6-list flat">
+                        <M6Row ic="conversas" t="Falar com um líder" s="Pastor ou líder do seu time" onClick={() => { setSheetEl(null); go("mensagens", null, { newChat: true }); }} />
+                        <M6Row ic="coracao" t="Pedido de oração" s="Vai para quem cuida da intercessão" onClick={() => setSheetEl(<SheetOracao person={person} member={member} ministries={ministries} members={members} onStartChat={onStartChat} />)} />
+                      </div>
+                    </div>,
+                  )}><Icon name="add" size={20} />Nova mensagem</button>
+                </div>
+              )}
+            </>
+          )}
+
+          {tab === "caminhada" && !sub && (
+            <CaminhadaV6 steps={steps} purpose={churchPurpose}
+              courses={<CursosResumo member={member} courses={courses} enrollments={enrollments} courseModules={courseModules} courseLessons={courseLessons} />} />
+          )}
+          {tab === "caminhada" && sub === "cursos" && (
+            <div className="m6-legacy">
+            <TabCursos member={member} courses={courses} enrollments={enrollments} courseModules={courseModules} courseLessons={courseLessons} />
+            </div>
+          )}
+          {tab === "caminhada" && sub === "batismo" && <div className="m6-legacy"><TabBatismo baptismClasses={baptismClasses} memberId={member?.id ?? null} /></div>}
+          {tab === "caminhada" && sub === "biblia" && <div className="m6-legacy"><TabBiblia bibleMarks={bibleMarks} onSaveBibleMark={onSaveBibleMark} /></div>}
+
+          {tab === "perfil" && (!sub || sub === "dados" || sub === "senha") && (
             <TabPerfil
               person={person}
               member={member}
@@ -2856,14 +3268,14 @@ function MobileMembro({
               setTheme={setTheme}
               onChangePassword={onChangePassword}
               onUpdateProfile={onUpdateProfile}
-              journeyRequests={journeyRequests}
-              onRequestJourneyStep={onRequestJourneyStep}
-              setTab={setTab}
               onLogout={mode === "self" ? onLogout : undefined}
               onSwitchToPanel={mode === "self" ? onSwitchToPanel : undefined}
+              view={sub === "dados" ? "dados" : sub === "senha" ? "senha" : "home"}
+              openSub={(s) => go("perfil", s)}
             />
           )}
-          {tab === "kids-area" && (
+          {tab === "perfil" && sub === "familia" && (
+            <div className="m6-legacy">
             <TabKidsArea
               person={person}
               people={people}
@@ -2876,26 +3288,48 @@ function MobileMembro({
               wallPosts={wallPosts}
               organizationId={organizationId}
               churchId={kidsClasses[0]?.church_id}
-              setTab={setTab}
             />
+            </div>
           )}
         </div>
 
-        <div className="m-tab">
-          {TABS.map((t) => (
-            <button key={t.id} type="button" className={tab === t.id ? "on" : ""} aria-current={tab === t.id ? "page" : undefined} onClick={() => setTab(t.id)}>
-              <span className="ic">
-                <TabIcon name={t.ic} size={24} />
-              </span>
-              <span className="m-tab-l">{t.l}</span>
-            </button>
-          ))}
-        </div>
+        <nav className="m-tab" aria-label="Navegação principal">
+          {MEMBER_TABS.map((t) => {
+            const on = tab === t.id;
+            const b = badges[t.id] ?? 0;
+            return (
+              <button key={t.id} type="button" className={on ? "on" : ""} aria-current={on ? "page" : undefined} onClick={() => go(t.id)}>
+                <span className="ic">
+                  <TabIcon name={t.ic} size={24} />
+                  {b > 0 && <span className="m6-badge" aria-label={`${b} novos`}>{b}</span>}
+                </span>
+                <span className="m-tab-l">{t.l}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {toastO && (
+          <div className="m6-toast" key={toastO.id} role="status">
+            <span>{toastO.msg}</span>
+            {toastO.action && <button type="button" onClick={() => { toastO.action!.fn(); setToastO(null); }}>{toastO.action.label}</button>}
+          </div>
+        )}
+        {sheetEl && <M6Sheet onClose={() => setSheetEl(null)}>{sheetEl}</M6Sheet>}
       </div>
     </div>
+    )}
+    </StepsHost>
+    </MemberUiContext.Provider>
     </JourneyContext.Provider>
     </GroupTermContext.Provider>
   );
+}
+
+/* calcula as etapas dentro dos contextos (precisa do JourneyContext) */
+function StepsHost({ children, ...p }: Parameters<typeof useSteps>[0] & { children: (steps: StepView[]) => React.ReactNode }) {
+  const steps = useSteps(p);
+  return <>{children(steps)}</>;
 }
 
 // ── overlay principal (desktop) ───────────────────────────────────────────────
