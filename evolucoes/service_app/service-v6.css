@@ -287,3 +287,84 @@ div.m6-row{cursor:default}
 /* telas que vieram do app anterior (Bíblia, Cursos, Kids, Visitantes, Tarefas) */
 .m6-legacy{padding:0 16px}
 .m6-legacy .m-section-t:first-child{margin-top:0}
+
+/* ── painel v6: menu, Pessoas, Mural ─────────────────────────────── */
+.sb-group-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding-right:12px;background:none;border:0;text-align:left;cursor:pointer}
+.sb-group-btn:hover{color:var(--white)}
+.sb-sec.closed{margin-bottom:2px}
+.seg-n{margin-left:4px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.seg.seg-wrap{flex-wrap:wrap}
+.mural-list{display:grid;gap:14px}
+.mural-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.mural-meta{font-size:13px;color:var(--muted)}
+.mural-t{margin:10px 0 4px;font-size:17px;font-weight:600;line-height:1.35;color:var(--white)}
+.mural-txt{margin:0;font-size:15px;line-height:1.55;color:var(--light);white-space:pre-line}
+.mural-reach{display:grid;gap:6px;margin-top:14px}
+.mural-reach-n{font-size:13px;color:var(--muted)}
+.mural-reach-n b{color:var(--white);font-weight:600}
+.mural-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.field-hint{margin-top:6px;font-size:13px;color:var(--muted)}
+/* celular (S47, S48): título da tela na barra, busca em ícone, indicadores 2x2 */
+.top-search-btn{display:none}
+@media (max-width:640px){
+  .top-crumb{display:block;flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-family:var(--font, inherit);font-size:17px;font-weight:600;letter-spacing:-0.01em;text-transform:none;color:var(--white)}
+  .top-search{display:none}
+  .top-search-btn{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;border-radius:var(--r-md);color:var(--light)}
+  .top.search-open .top-crumb,.top.search-open .top-actions,.top.search-open .top-menu{display:none}
+  .top.search-open .top-search{display:block;flex:1}
+  .top.search-open .top-search-btn{order:2}
+  .kpi-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi{min-width:0}
+}
+/* configuração inicial: no celular, uma linha só */
+.setup-line{display:none}
+@media (max-width:640px){
+  .setup-card{display:none}
+  .setup-line{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:52px;margin-bottom:16px;padding:12px 16px;border-radius:var(--r-md);background:var(--graphite);border:0.5px solid var(--border-2);font-size:15px;color:var(--light);text-align:left}
+  .setup-line b{color:var(--white)}
+  .setup-line-go{font-weight:600;color:var(--olive);white-space:nowrap}
+}
+/* Início do painel: o que pede ação primeiro */
+.agora-list{display:grid;gap:8px;margin-bottom:20px}
+.agora-row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:12px 16px;border-radius:var(--r-md);background:var(--graphite);border:0.5px solid var(--border-2);text-align:left;color:var(--white)}
+.agora-row:hover{border-color:var(--border-3)}
+.agora-ic{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:50%;background:var(--amber-dim);color:var(--warn)}
+.agora-main{flex:1;min-width:0}
+.agora-t{font-size:15px;font-weight:600}
+.agora-s{font-size:13px;color:var(--muted)}
+.agora-go{font-size:14px;font-weight:600;color:var(--olive);white-space:nowrap}
+/* Escalas: geração recolhida em "Como gerar" */
+.esc-gerar{margin:4px 0 14px;border-radius:var(--r-md);background:var(--graphite);border:0.5px solid var(--border-2)}
+.esc-gerar>summary{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 16px;list-style:none;cursor:pointer;font-size:14px;font-weight:600;color:var(--white)}
+.esc-gerar>summary::-webkit-details-marker{display:none}
+.esc-gerar>summary .cex-caret{margin-left:auto}
+.esc-gerar[open]>summary .cex-caret{transform:rotate(180deg)}
+.esc-gerar-modo{font-weight:500;color:var(--muted)}
+.esc-gerar .esc-modo{margin:0;border:0;border-top:0.5px solid var(--border);border-radius:0 0 var(--r-md) var(--r-md)}
+/* Visitantes: cartão com alerta de 48h e ações */
+.vcard{cursor:default}
+.vcard:hover{transform:none}
+.vcard-open{display:block;width:100%;padding:0;border:0;background:none;text-align:left;color:inherit;cursor:pointer}
+.vcard-when{font-family:var(--font, inherit);font-size:13px;color:var(--muted)}
+.vcard-alerta{border-color:var(--amber-line)}
+.vcard-alert{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;font-weight:600;color:var(--warn)}
+.vcard-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.vcard-acts .btn{flex:1;justify-content:center}
+.sem-lider{font-weight:600;color:var(--warn)}
+.chat-empty{display:grid;place-items:center}
+.cultos-tb{margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.cultos-nav{display:flex;align-items:center;gap:8px}
+.cultos-nav-l{min-width:130px;text-align:center;font-size:14px;font-weight:600;color:var(--white)}
+.cursos-filtros{margin-bottom:18px;flex-wrap:wrap}
+/* tabela única (S33): cabeçalho 11px caixa-alta, nome 15/600, secundário 14 */
+.tr.head span,.tr.head>div{font-size:11px;letter-spacing:0.1em;text-transform:uppercase}
+.cell-name{font-size:15px;font-weight:600;line-height:1.35}
+.cell-sub{font-size:14px;color:var(--muted)}
+@media (max-width:640px){
+  .kpi-label{letter-spacing:0.06em}
+  .panel-head{flex-wrap:wrap;row-gap:4px}
+  .panel-title{flex-wrap:wrap}
+  .panel-title .help-dot-wrap:has(.help-link){flex-basis:100%;padding-left:22px}
+  .panel-title .help-link{margin-left:0}
+}

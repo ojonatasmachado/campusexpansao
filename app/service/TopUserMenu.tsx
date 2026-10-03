@@ -13,12 +13,19 @@ export default function TopUserMenu({
   photoUrl,
   churchPageUrl,
   onLogout,
+  onOpenApp,
+  theme,
+  onToggleTheme,
 }: {
   name: string;
   roleLabel: string;
   photoUrl?: string | null;
   churchPageUrl?: string | null;
   onLogout: () => void;
+  /* troca para o app do membro (a pessoa também usa o app como qualquer membro) */
+  onOpenApp?: () => void;
+  theme?: "dark" | "light";
+  onToggleTheme?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -60,6 +67,18 @@ export default function TopUserMenu({
               <span className="ic"><Icon name="globo" size={16} /></span>
               Ver a página da igreja
             </a>
+          ) : null}
+          {onOpenApp ? (
+            <button type="button" role="menuitem" onClick={() => { setOpen(false); onOpenApp(); }}>
+              <span className="ic"><Icon name="perfil" size={16} /></span>
+              Abrir o app
+            </button>
+          ) : null}
+          {onToggleTheme ? (
+            <button type="button" role="menuitem" onClick={onToggleTheme}>
+              <span className="ic"><Icon name={theme === "dark" ? "sol" : "lua"} size={16} /></span>
+              {theme === "dark" ? "Tema claro" : "Tema escuro"}
+            </button>
           ) : null}
           <button type="button" role="menuitem" onClick={onLogout}>
             <span className="ic"><Icon name="sair" size={16} /></span>

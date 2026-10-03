@@ -41,6 +41,8 @@ type CursoLocal = {
   cor: string;
   desc: string;
   divulgacao: string;
+  /* false: o curso não aparece no app do membro (rascunho). Coluna da 0049. */
+  publicado: boolean;
   materiais: Material[];
   preReqs: Requirement[];
   modulos: ModuloState[];
@@ -91,7 +93,7 @@ function uid() {
 function blankCurso(): CursoLocal {
   return {
     nome: "", nivel: "", tipo: "trilha", modalidade: "remoto",
-    cor: "clay", desc: "", divulgacao: "", materiais: [], preReqs: [],
+    cor: "clay", desc: "", divulgacao: "", publicado: true, materiais: [], preReqs: [],
     modulos: [{ id: uid(), nome: "Módulo 1", aulas: [] }],
   };
 }
@@ -368,6 +370,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
         cor: (row.color ?? "clay") as string,
         desc: (row.description ?? "") as string,
         divulgacao: (row.divulgacao ?? "") as string,
+        publicado: (row as { published?: boolean }).published !== false,
         materiais: Array.isArray(row.materiais) ? (row.materiais as Material[]) : [],
         preReqs: requirementsFor(access.requirements, "course", courseId),
         modulos: mods.length ? mods : [{ id: uid(), nome: "Módulo 1", aulas: [] }],
@@ -427,6 +430,11 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
     if (!c.nome.trim()) { setError("Dê um nome ao curso."); return; }
     setSaving(true);
     setError("");
+    /* separado do resto: antes da migração 0049 a coluna não existe e o
+       curso continua sendo salvo (sempre publicado) */
+    const gravarPublicado = async (id: string) => {
+      await supabase.schema("service").from("courses").update({ published: c.publicado }).eq("id", id);
+    };
     try {
       let savedCourseId = courseId;
 
@@ -442,6 +450,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
           modalidade: c.modalidade,
         }).eq("id", courseId);
         if (upErr) throw upErr;
+        await gravarPublicado(courseId);
 
         /* apagar módulos e aulas antigos para reinserir */
         await supabase.schema("service").from("course_modules").delete().eq("course_id", courseId);
@@ -461,6 +470,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
         }).select("id").single();
         if (insErr) throw insErr;
         savedCourseId = newCourse.id as string;
+        await gravarPublicado(savedCourseId);
       }
 
       /* pré-requisitos vivem em service.requirements (migração 0043) */
@@ -585,6 +595,16 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
             <div className="field">
               <label className="field-label">Descrição</label>
               <textarea className="textarea" value={c.desc} placeholder="Para quem é e o que vão aprender" onChange={(e) => set("desc", e.target.value)} />
+            </div>
+          </div>
+
+          <div className="dsec">
+            <div className="cfg-row" style={{ borderBottom: "none", padding: 0 }}>
+              <div className="cfg-row-main">
+                <div className="cfg-row-t">Aparece no app do membro</div>
+                <div className="cfg-row-s">{c.publicado ? "Publicado: os membros veem e podem se inscrever" : "Rascunho: só a liderança vê"}</div>
+              </div>
+              <button type="button" role="switch" aria-checked={c.publicado} aria-label="Aparece no app do membro" className={`sw${c.publicado ? " on" : ""}`} onClick={() => set("publicado", !c.publicado)} />
             </div>
           </div>
 

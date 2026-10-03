@@ -227,11 +227,12 @@ export type SetupCounts = { igreja: string; times: number; cultos: number; membr
 type SetupItem = { id: string; ic: string; t: string; s: string; done: (base: SetupCounts, atual: SetupCounts) => boolean; route: string };
 
 const SETUP_ITENS: SetupItem[] = [
-  { id: "igreja", ic: "identidade", t: "Dados da igreja", s: "Nome, cidade e endereço aparecem no login e nas publicações.", done: (b, a) => a.igreja !== b.igreja, route: "config" },
-  { id: "time", ic: "times", t: "Primeiro time", s: "Louvor, Recepção, Kids... cada time tem líder e funções.", done: (b, a) => a.times > b.times, route: "times" },
-  { id: "culto", ic: "cultos", t: "Primeiro culto", s: "O culto vira uma linha na agenda e depois uma escala.", done: (b, a) => a.cultos > b.cultos, route: "cultos" },
-  { id: "membro", ic: "membros", t: "Primeiro membro", s: "A congregação inteira entra aqui, sirva ou não em um time.", done: (b, a) => a.membros > b.membros, route: "membros" },
-  { id: "escala", ic: "escalas", t: "Primeira escala", s: "Coloque alguém pra servir num culto e veja a confirmação chegar.", done: (b, a) => a.escalados > b.escalados, route: "escalas" },
+  /* lê os dados de verdade: o item fica feito quando a igreja já tem aquilo */
+  { id: "igreja", ic: "identidade", t: "Dados da igreja", s: "Nome, cidade e endereço aparecem no login e nas publicações.", done: (_b, a) => a.igreja.split("|").every(Boolean), route: "config" },
+  { id: "time", ic: "times", t: "Primeiro time", s: "Louvor, Recepção, Kids... cada time tem líder e funções.", done: (_b, a) => a.times > 0, route: "times" },
+  { id: "culto", ic: "cultos", t: "Primeiro culto", s: "O culto vira uma linha na agenda e depois uma escala.", done: (_b, a) => a.cultos > 0, route: "cultos" },
+  { id: "membro", ic: "membros", t: "Primeiro membro", s: "A congregação inteira entra aqui, sirva ou não em um time.", done: (_b, a) => a.membros > 1, route: "membros" },
+  { id: "escala", ic: "escalas", t: "Primeira escala", s: "Coloque alguém pra servir num culto e veja a confirmação chegar.", done: (_b, a) => a.escalados > 0, route: "escalas" },
 ];
 
 const BASELINE_KEY = "cex_setup_baseline";
@@ -273,7 +274,13 @@ export function SetupChecklist({ counts, setRoute }: { counts: SetupCounts; setR
 
   const hide = () => { try { localStorage.setItem(HIDE_KEY, "1"); } catch { /* segue escondido só nesta sessão */ } setHidden(true); };
 
+  const proximo = SETUP_ITENS.find((it) => !it.done(baseline, counts));
   return (
+    <>
+    <button type="button" className="setup-line" onClick={() => proximo && setRoute(proximo.route)}>
+      <span>Configuração <b>{done.length} de {SETUP_ITENS.length}</b></span>
+      <span className="setup-line-go">Continuar →</span>
+    </button>
     <div className="setup-card">
       <div className="setup-head">
         <div>
@@ -299,5 +306,6 @@ export function SetupChecklist({ counts, setRoute }: { counts: SetupCounts; setR
         })}
       </div>
     </div>
+    </>
   );
 }
