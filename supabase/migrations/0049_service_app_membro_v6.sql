@@ -71,17 +71,21 @@ grant execute on function service.start_dm(uuid, text) to authenticated;
 
 -- ── 3. "Quando posso servir" ────────────────────────────────────────────────
 -- availability é {chave_do_culto: true/false}; só a da própria pessoa.
-create or replace function service.update_my_availability(p_availability jsonb)
+-- p_org: só a ficha desta igreja (quem participa de mais de uma tem uma por igreja)
+drop function if exists service.update_my_availability(jsonb);
+create or replace function service.update_my_availability(p_availability jsonb, p_org uuid default null)
 returns text
 language plpgsql security definer set search_path = service, public as $$
 begin
   if jsonb_typeof(p_availability) <> 'object' then return 'invalido'; end if;
   update service.people
   set availability = p_availability, updated_at = now()
-  where id in (select unnest(service.my_people()));
+  where id in (select unnest(service.my_people()))
+    and (p_org is null or organization_id = p_org);
+  if not found then return 'nao_encontrada'; end if;
   return 'ok';
 end $$;
-grant execute on function service.update_my_availability(jsonb) to authenticated;
+grant execute on function service.update_my_availability(jsonb, uuid) to authenticated;
 
 -- ── 4. Mural: publicação de evento com "Vou / Não vou" ─────────────────────
 alter table service.announcements add column if not exists kind text not null default 'aviso';
@@ -108,11 +112,20 @@ create policy svc_tenant on service.announcement_responses for all to authentica
 drop policy if exists svc_r_scope on service.announcement_responses;
 create policy svc_r_scope on service.announcement_responses as restrictive for select to authenticated
   using (service.is_lead(organization_id) or person_id in (select unnest(service.my_people())));
--- escrita direta só da liderança; a pessoa responde pela função abaixo
+-- escrita direta só da liderança; a pessoa responde pela função abaixo.
+-- Uma regra por operação: "for all" valeria também pra leitura e esconderia
+-- do membro a própria resposta.
 drop policy if exists svc_w_all on service.announcement_responses;
-create policy svc_w_all on service.announcement_responses as restrictive for all to authenticated
+drop policy if exists svc_w_ins on service.announcement_responses;
+create policy svc_w_ins on service.announcement_responses as restrictive for insert to authenticated
+  with check (service.is_lead(organization_id));
+drop policy if exists svc_w_upd on service.announcement_responses;
+create policy svc_w_upd on service.announcement_responses as restrictive for update to authenticated
   using (service.is_lead(organization_id))
   with check (service.is_lead(organization_id));
+drop policy if exists svc_w_del on service.announcement_responses;
+create policy svc_w_del on service.announcement_responses as restrictive for delete to authenticated
+  using (service.is_lead(organization_id));
 grant select, insert, update, delete on service.announcement_responses to authenticated;
 
 create or replace function service.respond_announcement(p_announcement uuid, p_response text)
@@ -122,7 +135,8 @@ declare
   v_org uuid;
   v_person uuid;
 begin
-  select a.organization_id into v_org from service.announcements a where a.id = p_announcement;
+  -- só publicação de evento tem resposta
+  select a.organization_id into v_org from service.announcements a where a.id = p_announcement and a.kind = 'evento';
   if v_org is null then return 'inexistente'; end if;
   select p.id into v_person from service.people p
   where p.id = any(service.my_people()) and p.organization_id = v_org limit 1;
@@ -169,6 +183,8 @@ begin
   insert into service.serve_requests (organization_id, member_id, ministry_id, note)
   values (v_org, v_member, p_ministry, nullif(trim(coalesce(p_note, '')), ''))
   on conflict (member_id, ministry_id) where status = 'pendente' do nothing;
+  -- pedido repetido (já pendente): não manda a mensagem de novo
+  if not found then return 'ok'; end if;
 
   -- conversa com o líder do time (se ele tiver ficha no app)
   select lm.id into v_leader_member

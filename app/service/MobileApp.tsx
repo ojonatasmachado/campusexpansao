@@ -2475,19 +2475,28 @@ function EscalaCard({ slot, ev, ministry, person, member, members, onConfirmarEs
   const ui = useContext(MemberUiContext);
   const [st, setSt] = useState(slot.status);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  /* resposta esperando o "Desfazer": se o cartão sair da tela antes (trocou
+     de aba), grava na hora em vez de perder */
+  const pendente = useRef<(() => void) | null>(null);
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+    pendente.current?.();
+  }, []);
   const funcao = ministry?.positions?.find((p) => p.id === slot.position_id)?.name;
   const responder = (v: "ok" | "no") => {
     const antes = st;
     setSt(v);
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
+    const gravar = () => {
       timer.current = null;
+      pendente.current = null;
       if (v === "ok") onConfirmarEscala?.(slot.id); else onRecusarEscala?.(slot.id);
-    }, UNDO_MS);
+    };
+    pendente.current = gravar;
+    timer.current = setTimeout(gravar, UNDO_MS);
     ui.toast(v === "ok" ? "Presença confirmada" : `Avisamos o líder${ministry ? ` do ${ministry.name}` : ""}`, {
       label: "Desfazer",
-      fn: () => { if (timer.current) clearTimeout(timer.current); timer.current = null; setSt(antes); },
+      fn: () => { if (timer.current) clearTimeout(timer.current); timer.current = null; pendente.current = null; setSt(antes); },
     });
   };
   const pedirTroca = async () => {

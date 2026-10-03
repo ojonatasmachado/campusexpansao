@@ -1429,22 +1429,22 @@ export default function ServiceExactApp({
      dela o update direto era barrado pelas regras de acesso */
   const responderEscala = async (assignmentId: string, status: "ok" | "no") => {
     const sb = createServiceBrowserClient().schema("service");
-    const { error } = await sb.rpc("respond_my_assignment", { p_assignment: assignmentId, p_status: status });
+    const { data, error } = await sb.rpc("respond_my_assignment", { p_assignment: assignmentId, p_status: status });
     if (error && rpcFaltando(error)) await sb.from("roster_assignments").update({ status }).eq("id", assignmentId);
-    else if (error) avisar("Não conseguimos registrar sua resposta. Tente de novo.", "warn");
+    else if (error || data !== "ok") avisar("Não conseguimos registrar sua resposta. Tente de novo.", "warn");
     router.refresh();
   };
   const confirmarEscalaMobile = (assignmentId: string) => responderEscala(assignmentId, "ok");
   const recusarEscalaMobile = (assignmentId: string) => responderEscala(assignmentId, "no");
   const salvarDisponibilidade = async (availability: Record<string, boolean>) => {
-    const { error } = await createServiceBrowserClient().schema("service").rpc("update_my_availability", { p_availability: availability });
-    if (error) { avisar("Não conseguimos salvar agora. Tente de novo.", "warn"); return false; }
+    const { data, error } = await createServiceBrowserClient().schema("service").rpc("update_my_availability", { p_availability: availability, p_org: firstChurch?.organizationId ?? null });
+    if (error || data !== "ok") { avisar("Não conseguimos salvar agora. Tente de novo.", "warn"); return false; }
     router.refresh();
     return true;
   };
   const responderMural = async (announcementId: string, response: "vou" | "nao" | null) => {
-    const { error } = await createServiceBrowserClient().schema("service").rpc("respond_announcement", { p_announcement: announcementId, p_response: response });
-    if (error) { avisar("Não conseguimos enviar sua resposta agora.", "warn"); return false; }
+    const { data, error } = await createServiceBrowserClient().schema("service").rpc("respond_announcement", { p_announcement: announcementId, p_response: response });
+    if (error || data !== "ok") { avisar("Não conseguimos enviar sua resposta agora.", "warn"); return false; }
     router.refresh();
     return true;
   };
