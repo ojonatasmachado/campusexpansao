@@ -6454,13 +6454,13 @@ function Relatorios({
 }
 
 const CFG_TABS = [
-  { id: "igreja", label: "Igreja" },
-  { id: "operacao", label: "Escala e presença" },
-  { id: "kids", label: "Turmas Kids" },
-  { id: "perm", label: "Permissões" },
-  { id: "acessos", label: "Acessos por pessoa" },
-  { id: "visual", label: "Personalização" },
-  { id: "rede", label: "Congregações" },
+  { id: "igreja", label: "Dados da igreja", group: "Igreja", s: "Nome, endereço e contato" },
+  { id: "visual", label: "Personalização", group: "Igreja", s: "Logo, cor e fundos do app" },
+  { id: "rede", label: "Congregações", group: "Igreja", s: "Matriz e outras unidades" },
+  { id: "operacao", label: "Escala e presença", group: "Ministério", s: "Regras da escala e check-in" },
+  { id: "kids", label: "Turmas Kids", group: "Ministério", s: "Turmas por idade" },
+  { id: "perm", label: "Permissões", group: "Acesso", s: "O que cada papel vê" },
+  { id: "acessos", label: "Acessos por pessoa", group: "Acesso", s: "Telas liberadas a alguém" },
 ];
 
 const TAG_CORES = [
@@ -6481,23 +6481,25 @@ const ACCENTS = [
 ];
 
 /* ── Papéis & permissões · 4 níveis (Master, Pastor, Líder, Voluntário) ── */
+/* nomes e grupos iguais aos do menu (S51); os ids são os códigos gravados
+   na matriz de permissões e não mudam */
 const ACOES_V2 = [
-  { id: "painel", nome: "Painel e relatórios", grupo: "Visão" },
-  { id: "membros", nome: "Membros", grupo: "Pessoas" },
+  { id: "painel", nome: "Início e relatórios", grupo: "Início" },
+  { id: "membros", nome: "Pessoas e grupos", grupo: "Pessoas" },
   { id: "voluntarios", nome: "Voluntários", grupo: "Pessoas" },
-  { id: "times", nome: "Times", grupo: "Pessoas" },
   { id: "visitantes", nome: "Visitantes", grupo: "Pessoas" },
-  { id: "decisoes", nome: "Decisões", grupo: "Caminhada" },
-  { id: "batismos", nome: "Batismos", grupo: "Caminhada" },
-  { id: "cursos", nome: "Cursos e trilhas", grupo: "Caminhada" },
-  { id: "escala", nome: "Escalas", grupo: "Operação" },
-  { id: "cultos", nome: "Cultos e eventos", grupo: "Operação" },
-  { id: "comunica", nome: "Comunicação e push", grupo: "Operação" },
-  { id: "identidade", nome: "Identidade e ciclos", grupo: "Igreja" },
-  { id: "historia", nome: "Nossa história", grupo: "Igreja" },
-  { id: "igreja", nome: "Dados da igreja", grupo: "Gestão" },
-  { id: "permissoes", nome: "Papéis e permissões", grupo: "Gestão" },
-  { id: "rede", nome: "Rede (multi-igreja)", grupo: "Gestão" },
+  { id: "times", nome: "Times", grupo: "Ministério" },
+  { id: "escala", nome: "Escalas", grupo: "Ministério" },
+  { id: "cultos", nome: "Cultos, eventos e espaços", grupo: "Agenda" },
+  { id: "comunica", nome: "Mural e pesquisas", grupo: "Comunicação" },
+  { id: "decisoes", nome: "Decisões", grupo: "Formação" },
+  { id: "batismos", nome: "Batismos", grupo: "Formação" },
+  { id: "cursos", nome: "Cursos e trilhas", grupo: "Formação" },
+  { id: "identidade", nome: "Identidade e propósito", grupo: "Gestão" },
+  { id: "historia", nome: "Nossa história", grupo: "Gestão" },
+  { id: "igreja", nome: "Dados da igreja e página", grupo: "Configurações" },
+  { id: "permissoes", nome: "Configurações e permissões", grupo: "Configurações" },
+  { id: "rede", nome: "Congregações", grupo: "Configurações" },
 ] as const;
 
 const PAPEIS_V2 = [
@@ -7504,6 +7506,8 @@ function Config({
   const cfgTabs = somenteExtras && somenteExtras.length > 0 ? somenteExtras : CFG_TABS;
   const [tabState, setTab] = useState(cfgTabs[0]?.id ?? "igreja");
   const tab = only ?? tabState;
+  /* celular: lista primeiro; ao escolher, abre a página com voltar */
+  const [cfgAberta, setCfgAberta] = useState(false);
   const ONLY_HEAD: Record<string, { t: string; s: string }> = {
     grupos: { t: "Grupos", s: "Os pequenos grupos da igreja: nome, líderes, dia e lugar." },
     pesquisas: { t: "Pesquisas", s: "Perguntas para a igreja responder pelo app, com resultado em tempo real." },
@@ -7537,13 +7541,15 @@ function Config({
     tel: church?.phone ?? "",
   });
   const [igrejaLoading, setIgrejaLoading] = useState(false);
-  const [igrejaMsg, setIgrejaMsg] = useState("");
+  /* o "Salvar" fixo no rodapé só aparece quando algo mudou (S49) */
+  const [igrejaSalva, setIgrejaSalva] = useState(() => JSON.stringify(igrejaForm));
+  const igrejaMudou = JSON.stringify(igrejaForm) !== igrejaSalva;
 
   const saveIgreja = async () => {
     if (!church?.id) return;
     setIgrejaLoading(true);
     const endereco = [igrejaForm.rua.trim(), igrejaForm.numero.trim()].filter(Boolean).join(", ");
-    await createServiceBrowserClient()
+    const { error: igrejaErro } = await createServiceBrowserClient()
       .schema("service")
       .from("churches")
       .update({
@@ -7559,10 +7565,11 @@ function Config({
         phone: igrejaForm.tel.trim() || null,
       })
       .eq("id", church.id);
-    setIgrejaMsg("Salvo!");
     setIgrejaLoading(false);
+    if (igrejaErro) { avisar(friendlyWriteError(igrejaErro.message), "warn"); return; }
+    setIgrejaSalva(JSON.stringify(igrejaForm));
+    avisar("Dados da igreja salvos.");
     router.refresh();
-    setTimeout(() => setIgrejaMsg(""), 2000);
   };
 
   async function removeRow(table: string, id: string) {
@@ -7753,11 +7760,30 @@ function Config({
       </div>
       )}
 
-      {!only && <div className="cfg-tabs">
-        {cfgTabs.map((t) => (
-          <button key={t.id} type="button" className={`cfg-tab${tab === t.id ? " on" : ""}`} onClick={() => setTab(t.id)}>{t.label}</button>
-        ))}
-      </div>}
+      {/* índice agrupado (S49): no computador fica à esquerda; no celular a
+          lista abre cada página, com voltar */}
+      <div className={only ? "" : `cfg-shell${cfgAberta ? " open" : ""}`}>
+      {!only && (
+        <nav className="cfg-index" aria-label="Seções de Configurações">
+          {[...new Set(cfgTabs.map((t) => t.group))].map((g) => (
+            <div key={g} className="cfg-index-group">
+              <div className="cfg-index-gt">{g}</div>
+              {cfgTabs.filter((t) => t.group === g).map((t) => (
+                <button key={t.id} type="button" className={`cfg-index-item${tab === t.id ? " on" : ""}`} aria-current={tab === t.id ? "page" : undefined} onClick={() => { setTab(t.id); setCfgAberta(true); }}>
+                  <span className="cfg-index-t">{t.label}</span>
+                  <span className="cfg-index-s">{t.s}</span>
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
+      )}
+      <div className={only ? "" : "cfg-main"}>
+      {!only && (
+        <button type="button" className="cfg-back" onClick={() => setCfgAberta(false)}>
+          <Icon name="voltar" size={18} /> Configurações
+        </button>
+      )}
 
       {/* ─── IGREJA ─── */}
       {tab === "igreja" && (
@@ -7805,9 +7831,14 @@ function Config({
               <div className="field"><label className="field-label">E-mail</label><input className="input" value={igrejaForm.email} onChange={(e) => setIgrejaForm((p) => ({ ...p, email: e.target.value }))} /></div>
               <div className="field"><label className="field-label">Telefone</label><input className="input" value={igrejaForm.tel} onChange={(e) => setIgrejaForm((p) => ({ ...p, tel: e.target.value }))} /></div>
             </div>
-            <button className="btn btn-pri btn-sm" type="button" disabled={igrejaLoading} onClick={saveIgreja}>
-              {igrejaLoading ? "Salvando…" : igrejaMsg || "Salvar"}
-            </button>
+            {igrejaMudou && (
+              <div className="save-bar">
+                <span>Você tem alterações não salvas.</span>
+                <button className="btn btn-pri" type="button" disabled={igrejaLoading} onClick={saveIgreja}>
+                  {igrejaLoading ? "Salvando..." : "Salvar"}
+                </button>
+              </div>
+            )}
           </div>
           <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
             <div className="cfg-card-t">Horários de culto</div>
@@ -8364,6 +8395,8 @@ function Config({
           <CongregacaoEditModal churchRow={c} ministries={ministries} tags={tags} onClose={() => setGerirCongId(null)} onRefresh={() => router.refresh()} />
         );
       })()}
+      </div>
+      </div>
     </div>
   );
 }
