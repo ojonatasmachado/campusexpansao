@@ -5,7 +5,8 @@
 -- gravam "desligado" para o líder em toda permissão fora de uma lista fixa,
 -- então uma igreja nova nasceria com o líder sem essas cinco telas. Aqui as
 -- duas funções são refeitas iguais às atuais, só com a lista maior.
--- Idempotente.
+-- Sem "select ... into": o SQL Editor do Supabase confunde com criação de
+-- tabela e quebra a função. Idempotente.
 
 CREATE OR REPLACE FUNCTION core.bootstrap_church_org(p_org_name text, p_city text DEFAULT NULL::text, p_trial boolean DEFAULT true)
  RETURNS TABLE(organization_id uuid, church_id uuid)
@@ -80,10 +81,8 @@ begin
   values (v_created_org_id, p_org_name, p_city, true)
   returning id into v_created_church_id;
 
-  select coalesce(u.full_name, split_part(u.email, '@', 1)), u.email
-    into v_user_name, v_user_email
-  from core.users u
-  where u.id = v_user_id;
+  v_user_name := (select coalesce(u.full_name, split_part(u.email, '@', 1)) from core.users u where u.id = v_user_id);
+  v_user_email := (select u.email from core.users u where u.id = v_user_id);
 
   insert into service.people (organization_id, church_id, user_id, name, email, status)
   values (v_created_org_id, v_created_church_id, v_user_id, coalesce(v_user_name, 'Administrador'), v_user_email, 'ativo');
@@ -190,7 +189,7 @@ begin
   v_signup_seq := nextval('billing.church_signup_seq');
   v_trial_days := case when v_signup_seq <= 500 then 90 else 14 end;
 
-  select id into v_plan_id from billing.plans where code = 'service_church';
+  v_plan_id := (select id from billing.plans where code = 'service_church');
 
   if v_plan_id is not null then
     insert into billing.subscriptions (organization_id, plan_id, product_code, status, provider, provider_ref, current_period_end)
