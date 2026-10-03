@@ -768,6 +768,7 @@ const NAV_PERMISSION_CODE: Record<string, string> = {
   membros: "membros", pessoas: "voluntarios", times: "times", visitantes: "visitantes", criancas: "kids",
   decisoes: "decisoes", batismos: "batismos", cursos: "cursos",
   escalas: "escala", cultos: "cultos", comunicacao: "comunica",
+  reunioes: "reunioes", ensaios: "ensaios", quadros: "quadros", conversas: "conversas",
   identidade: "identidade", historia: "historia", config: "permissoes",
   grupos: "membros", espacos: "cultos", pesquisas: "comunica", pagina: "igreja",
 };
@@ -776,24 +777,28 @@ const NAV_PERMISSION_CODE: Record<string, string> = {
    (Configurações → Acessos por pessoa). Só rotas que já têm entrada real
    no menu lateral. */
 const ACESSO_ROTAS: { id: string; label: string }[] = [
-  { id: "painel", label: "Painel e visão geral" },
-  { id: "membros", label: "Membros" },
+  { id: "painel", label: "Início" },
+  { id: "membros", label: "Pessoas" },
   { id: "pessoas", label: "Voluntários" },
   { id: "times", label: "Times" },
   { id: "visitantes", label: "Visitantes" },
   { id: "batismos", label: "Batismos" },
-  { id: "cursos", label: "Cursos e Trilhas" },
+  { id: "cursos", label: "Cursos e trilhas" },
   { id: "relatorios", label: "Relatórios" },
-  { id: "marca", label: "Marca & aparência (cores, logo)" },
-  { id: "pesquisas", label: "Pesquisas (Configurações)" },
+  { id: "marca", label: "Personalização (cor e logo)" },
+  { id: "pesquisas", label: "Pesquisas" },
 ];
 
-function podeVerNav(itemId: string, currentRole: string, matrix: Record<string, Record<string, boolean>>, extraAccess: string[] = []) {
+function podeVerNav(itemId: string, currentRole: string, matrix: Record<string, Record<string, boolean>>, extraAccess: string[] = [], servesInTeam = false) {
   if (currentRole === "master") return true;
   if (extraAccess.includes(itemId)) return true;
   if (itemId === "config" && (extraAccess.includes("marca") || extraAccess.includes("pesquisas"))) return true;
   if (itemId === "membros" && extraAccess.includes("pessoas")) return true;
-  if (currentRole === "membro") return false;
+  /* membro que serve num time usa a coluna "Voluntário" da matriz; sem time, só o app */
+  if (currentRole === "membro") {
+    const code = NAV_PERMISSION_CODE[itemId];
+    return servesInTeam && !!code && matrix.voluntario?.[code] === true;
+  }
   const code = NAV_PERMISSION_CODE[itemId];
   if (!code) return true;
   return matrix[currentRole]?.[code] ?? true;
@@ -1507,6 +1512,8 @@ export default function ServiceExactApp({
      ainda não tenha uma linha salva em core.role_permissions não "vazar" visível
      por engano : sem isso, uma chave ausente cairia no fallback `?? true`. */
   const matrizEfetiva = matrizComFallback(permissionsMatrix);
+  /* serve em algum time: vale a coluna "Voluntário" da matriz */
+  const souVoluntario = !!currentPersonId && ministries.some((m) => m.people.some((p) => p.personId === currentPersonId));
   const currentExtraAccess = personGrants.filter((g) => g.personId === currentPersonId).map((g) => g.code);
   const accessData = {
     organizationId: firstChurch?.organizationId ?? "",
@@ -1543,7 +1550,8 @@ export default function ServiceExactApp({
      manual (Acessos por pessoa) vê o painel só com as telas liberadas.
      Só pode vir depois de todos os hooks acima (regra dos hooks : nada de
      return condicional antes deles). */
-  const temTelaLiberada = currentExtraAccess.some((code) => ACESSO_ROTAS.some((r) => r.id === code));
+  const temTelaLiberada = currentExtraAccess.some((code) => ACESSO_ROTAS.some((r) => r.id === code))
+    || (souVoluntario && Object.values(matrizEfetiva.voluntario ?? {}).some(Boolean));
   /* função de gestão = papel líder/pastor/master ou alguma tela do painel
      liberada. Sem isso, a pessoa só vê o app de membro, sem botão de troca. */
   const podeGerenciar = currentRole !== "membro" || temTelaLiberada;
@@ -1643,7 +1651,7 @@ export default function ServiceExactApp({
         {churches.length > 1 && <CongSwitcher churches={churches} activeId={activeChurchId} setActiveId={setActiveChurchId} />}
         <nav className="sb-nav">
           {NAV_GROUPS.map((group) => {
-            const visibleItems = group.items.filter((item) => podeVerNav(item.id, currentRole, matrizEfetiva, currentExtraAccess));
+            const visibleItems = group.items.filter((item) => podeVerNav(item.id, currentRole, matrizEfetiva, currentExtraAccess, souVoluntario));
             if (visibleItems.length === 0) return null;
             const fechado = gruposFechados.includes(group.group) && !visibleItems.some((i) => i.id === route);
             const solo = group.items.length === 1;
@@ -1669,7 +1677,7 @@ export default function ServiceExactApp({
           })}
         </nav>
         <div className="sb-bottom">
-          {podeVerNav("config", currentRole, matrizEfetiva, currentExtraAccess) && (
+          {podeVerNav("config", currentRole, matrizEfetiva, currentExtraAccess, souVoluntario) && (
             <button className={`sb-link ${route === "config" ? "on" : ""}`} type="button" data-tour="config" onClick={() => { setRoute("config"); if (!showTour) setNavOpen(false); }}>
               <span className="sb-ic"><Icon name="config" size={17} /></span> Configurações
             </button>
@@ -1867,6 +1875,7 @@ export default function ServiceExactApp({
           setModal={setModal}
           setShareEventId={setShareEventId}
           onStartChatWithMember={startChatWithMember}
+          currentRole={currentRole}
         />
       ) : null}
       {modal ? (
@@ -6488,15 +6497,20 @@ const ACOES_V2 = [
   { id: "membros", nome: "Pessoas e grupos", grupo: "Pessoas" },
   { id: "voluntarios", nome: "Voluntários", grupo: "Pessoas" },
   { id: "visitantes", nome: "Visitantes", grupo: "Pessoas" },
+  { id: "kids", nome: "Crianças", grupo: "Pessoas" },
   { id: "times", nome: "Times", grupo: "Ministério" },
   { id: "escala", nome: "Escalas", grupo: "Ministério" },
+  { id: "ensaios", nome: "Ensaios", grupo: "Ministério" },
+  { id: "reunioes", nome: "Reuniões", grupo: "Ministério" },
   { id: "cultos", nome: "Cultos, eventos e espaços", grupo: "Agenda" },
   { id: "comunica", nome: "Mural e pesquisas", grupo: "Comunicação" },
+  { id: "conversas", nome: "Conversas", grupo: "Comunicação" },
   { id: "decisoes", nome: "Decisões", grupo: "Formação" },
   { id: "batismos", nome: "Batismos", grupo: "Formação" },
   { id: "cursos", nome: "Cursos e trilhas", grupo: "Formação" },
   { id: "identidade", nome: "Identidade e propósito", grupo: "Gestão" },
   { id: "historia", nome: "Nossa história", grupo: "Gestão" },
+  { id: "quadros", nome: "Quadros", grupo: "Gestão" },
   { id: "igreja", nome: "Dados da igreja e página", grupo: "Configurações" },
   { id: "permissoes", nome: "Configurações e permissões", grupo: "Configurações" },
   { id: "rede", nome: "Congregações", grupo: "Configurações" },
@@ -6506,6 +6520,7 @@ const PAPEIS_V2 = [
   { id: "master", nome: "Pastor Master", desc: "Controle total da rede", ic: "globo" },
   { id: "pastor", nome: "Pastor", desc: "Sua congregação inteira", ic: "identidade" },
   { id: "lider", nome: "Líder", desc: "Seu time e grupo", ic: "times" },
+  { id: "voluntario", nome: "Voluntário", desc: "Quem serve num time. Usa o app; vê no painel só o que você ligar aqui", ic: "pessoa" },
   { id: "membro", nome: "Membro", desc: "App: caminhada, cursos e o que for liberado", ic: "pessoa" },
 ] as const;
 
@@ -6518,7 +6533,9 @@ function matrizV2Padrao(): MatrizV2 {
   return {
     master: allTrue(),
     pastor: { ...allTrue(), permissoes: true, rede: false },
-    lider: { ...allFalse(), painel: true, voluntarios: true, times: true, decisoes: true, escala: true, cultos: true, comunica: true },
+    lider: { ...allFalse(), painel: true, voluntarios: true, times: true, decisoes: true, escala: true, cultos: true, comunica: true, kids: true, ensaios: true, reunioes: true, quadros: true, conversas: true },
+    /* começa sem nenhuma tela do painel: o voluntário só usa o app */
+    voluntario: allFalse(),
     membro: allFalse(),
   };
 }
@@ -6678,7 +6695,10 @@ function AcessosCard({
   people,
   church,
   currentRole,
+  onlyPersonId,
 }: {
+  /* dentro da ficha da pessoa: só os acessos dela, sem a lista */
+  onlyPersonId?: string;
   people: PersonView[];
   church: ChurchView | undefined;
   currentRole: "master" | "pastor" | "lider" | "membro";
@@ -6686,7 +6706,8 @@ function AcessosCard({
   const router = useRouter();
   const { personGrants, currentPersonId } = useServiceAccess();
   const [q, setQ] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIdState, setSelectedId] = useState<string | null>(null);
+  const selectedId = onlyPersonId ?? selectedIdState;
   const [erro, setErro] = useState("");
   const podeDelegar = currentRole === "master";
   const pessoa = people.find((p) => p.id === selectedId) ?? null;
@@ -6707,7 +6728,8 @@ function AcessosCard({
     router.refresh();
   };
   return (
-    <div className="cfg-grid2">
+    <div className={onlyPersonId ? "" : "cfg-grid2"}>
+      {!onlyPersonId && (
       <div className="cfg-card">
         <div className="cfg-card-t">Quem pode acessar o quê</div>
         <div className="cfg-card-s">Líderes já enxergam toda a Operação. Aqui você abre telas extras para uma pessoa específica, Membros, Visitantes, Times... Escolha a pessoa e marque o que ela pode ver.</div>
@@ -6728,6 +6750,7 @@ function AcessosCard({
           {lista.length === 0 && <div className="empty" style={{ padding: "16px 0" }}>Ninguém encontrado.</div>}
         </div>
       </div>
+      )}
 
       <div className="cfg-card">
         {!pessoa && <div className="empty" style={{ padding: "30px 0" }}>Escolha uma pessoa na lista para liberar telas.</div>}
@@ -9412,7 +9435,9 @@ function EntityDrawer({
   setModal,
   setShareEventId,
   onStartChatWithMember,
+  currentRole = "membro",
 }: {
+  currentRole?: "master" | "pastor" | "lider" | "membro";
   drawer: NonNullable<DrawerState>;
   people: PersonView[];
   members: MemberView[];
@@ -9536,6 +9561,11 @@ function EntityDrawer({
           <DrawerSection title={`Meu calendário · ${plural(personCalEvents.length, "compromisso")}`}>
             <MiniCalendar events={personCalEvents} />
           </DrawerSection>
+          {(currentRole === "master" || currentRole === "pastor") && (
+            <DrawerSection title="Acesso ao painel">
+              <AcessosCard people={people} church={church} currentRole={currentRole} onlyPersonId={person.id} />
+            </DrawerSection>
+          )}
           <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
             <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { setDrawer(null); setRoute("escalas"); }}>Escalar</button>
             {(() => {
@@ -9622,6 +9652,11 @@ function EntityDrawer({
               </div>
             )}
           </DrawerSection>
+          {(currentRole === "master" || currentRole === "pastor") && linkedPerson && (
+            <DrawerSection title="Acesso ao painel">
+              <AcessosCard people={people} church={church} currentRole={currentRole} onlyPersonId={linkedPerson.id} />
+            </DrawerSection>
+          )}
           {familiares.length > 0 && (
             <DrawerSection title={`Família · ${familiares.length}`}>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
