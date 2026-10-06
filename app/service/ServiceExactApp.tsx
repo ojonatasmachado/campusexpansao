@@ -3451,9 +3451,9 @@ function RosterActionModal({
         <div className="modal-head">
           <div className="modal-eyebrow">{isSwap ? "Pedir troca" : "Escalar"} · {action.position.name} · {action.ministry.name}</div>
           <div className="modal-title">{action.event.name}</div>
-          <div className="modal-sub">{joinDot(action.event.weekday, action.event.time)}{joinDot(action.event.weekday, action.event.time) ? ". " : ""}Verde: disponível. Quem já está em outro time aparece travado.</div>
+          <div className="modal-sub">{joinDot(action.event.weekday, action.event.time)}{joinDot(action.event.weekday, action.event.time) ? ". " : ""}Primeiro quem está disponível. Ocupado é quem marcou que não pode neste horário. Quem aparece apagado não pode ser escalado, com o motivo embaixo do nome.</div>
         </div>
-        <div className="modal-body">
+        <div className="modal-body cand-list">
           {candidatos.length === 0 ? <div className="empty">Ninguém disponível neste time.</div> : null}
           {candidatos.map(({ person, fit, motivo }) => (
             <button
@@ -3470,9 +3470,11 @@ function RosterActionModal({
               <Av name={person.name} size="md" photoUrl={person.photoUrl} />
               <div className="cand-main">
                 <div className="cand-name">{person.name}</div>
-                <div className="cand-meta">{person.tags.join(" · ") || person.status} · {person.engagement ?? 0}% engajamento</div>
+                {/* v7 2.10: sem percentual sobre a pessoa (lei 10); o motivo do bloqueio fica embaixo do nome, sem disputar espaço com o selo */}
+                {fit === "block" && motivo ? <div className="cand-meta cand-motivo"><Icon name="recusou" size={13} /> {motivo}</div> : null}
+                {person.tags.length > 0 ? <div className="cand-meta">{person.tags.join(" · ")}</div> : null}
               </div>
-              <span className={`cand-fit ${fit}`}>{fit === "good" ? <><Icon name="ok" size={13} /> disponível</> : fit === "busy" ? <><Icon name="pendente" size={13} /> ocupado</> : <><Icon name="recusou" size={13} /> {motivo}</>}</span>
+              {fit !== "block" && <span className={`cand-fit ${fit}`}>{fit === "good" ? <><Icon name="ok" size={13} /> disponível</> : <><Icon name="pendente" size={13} /> ocupado</>}</span>}
             </button>
           ))}
         </div>
