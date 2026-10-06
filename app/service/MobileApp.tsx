@@ -13,6 +13,7 @@ import CepInput from "./CepInput";
 import ChurchLockup from "./ChurchLockup";
 import { TEXT_SCALES, useTextScale } from "./lib/text-scale";
 import { requirementLabel, type RequirementKind } from "./lib/requirements";
+import { candidatosParaVaga, papelDoDestinatario, useDestinatario, type Destinatario } from "./lib/destinatario";
 import { checkinAberto, horaQueAbre, sessaoDoCulto, statusDaCrianca, useKidsCheckin } from "./lib/kids-checkin";
 import { INSTRUCAO_QR, aulasDoCurso, proximaAula, textoDaAula, type ProximaAula } from "./lib/aulas";
 
@@ -2586,11 +2587,11 @@ function EscalaCard({ slot, ev, ministry, person, member, members, onConfirmarEs
       fn: () => { if (timer.current) clearTimeout(timer.current); timer.current = null; pendente.current = null; setSt(antes); },
     });
   };
-  const pedirTroca = async () => {
-    const lider = ministry ? leadersFor(person, [ministry], members, () => true)[0] : leadersFor(person, [], members)[0];
-    if (!member || !lider || !onStartChat) { ui.toast("Não achamos o líder do time. Fale com a liderança."); return; }
-    const id = await onStartChat(member.id, lider.member.id, `Oi! Preciso trocar minha escala de ${joinDot(ev.name, dataLonga(ev.eventDate), ev.time)}. Pode me ajudar?`);
-    if (id) { ui.toast("Pedido de troca enviado ao líder"); ui.go("mensagens", null, { chatId: id }); }
+  /* troca: destinatário em cadeia, resolvido no banco (v7 2.4). Sem ninguém, sem o botão */
+  const destTroca = useDestinatario("troca", ministry?.id ?? null);
+  const pedirTroca = () => {
+    if (!member || !destTroca || !onStartChat) return;
+    ui.sheet(<SheetTroca slot={slot} ev={ev} funcao={funcao} member={member} dest={destTroca} onStartChat={onStartChat} />);
   };
   return (
     <div className="m6-card">
@@ -2610,7 +2611,7 @@ function EscalaCard({ slot, ev, ministry, person, member, members, onConfirmarEs
       {st === "ok" && (
         <div className="m6-after">
           <M6St k="ok" ic="ok">Presença confirmada</M6St>
-          {onStartChat && <button type="button" className="m6-link" onClick={pedirTroca}>Pedir troca</button>}
+          {onStartChat && member && destTroca && <button type="button" className="m6-link" onClick={pedirTroca}>Pedir troca</button>}
         </div>
       )}
       {st === "no" && (
@@ -2618,6 +2619,55 @@ function EscalaCard({ slot, ev, ministry, person, member, members, onConfirmarEs
           <M6St k="warn" ic="recusou">Você avisou que não pode</M6St>
           <button type="button" className="m6-link" onClick={() => responder("ok")}>Mudei de ideia</button>
         </div>
+      )}
+    </div>
+  );
+}
+
+/* Pedir troca (M3): pede ao destinatário da cadeia ou oferece a vaga a quem
+   faz a mesma função e está livre. As duas saídas abrem a conversa. */
+function SheetTroca({ slot, ev, funcao, member, dest, onStartChat }: {
+  slot: Slot; ev: Ev; funcao?: string; member: M; dest: Destinatario;
+  onStartChat: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
+}) {
+  const ui = useContext(MemberUiContext);
+  const [candidatos, setCandidatos] = useState<{ member_id: string; name: string }[]>([]);
+  const [enviando, setEnviando] = useState<string | null>(null);
+  useEffect(() => { let vivo = true; candidatosParaVaga(slot.id).then((c) => { if (vivo) setCandidatos(c.filter((x) => x.member_id !== member.id && x.member_id !== dest.member_id)); }); return () => { vivo = false; }; }, [slot.id, member.id, dest.member_id]);
+  const quando = joinDot(ev.name, dataLonga(ev.eventDate) || ev.weekday, ev.time);
+  const abrir = async (alvo: string, texto: string, aviso: string) => {
+    setEnviando(alvo);
+    const id = await onStartChat(member.id, alvo, texto);
+    setEnviando(null);
+    if (!id) { ui.toast("Não foi possível enviar agora. Tente de novo."); return; }
+    ui.sheet(null);
+    ui.toast(aviso);
+    ui.go("mensagens", null, { chatId: id });
+  };
+  return (
+    <div>
+      <h2 className="m6-sh">Pedir troca</h2>
+      <div className="m6-meta">{joinDot(quando, funcao)}</div>
+      <p className="m6-txt">O pedido vai para {papelDoDestinatario(dest)}. A conversa fica em Mensagens.</p>
+      <div className="m6-btns">
+        <button className="m6-btn pri" type="button" disabled={!!enviando} onClick={() => abrir(dest.member_id, `Oi! Preciso trocar minha escala de ${joinDot(quando, funcao)}. Pode me ajudar?`, "Pedido de troca enviado")}>
+          {enviando === dest.member_id ? "Enviando..." : `Pedir a ${dest.name.split(" ")[0]}`}
+        </button>
+      </div>
+      {candidatos.length > 0 && (
+        <>
+          <div className="m6-lbl" style={{ marginTop: 20 }}>Ou ofereça a vaga</div>
+          <div className="m6-meta">{funcao ? `Quem também é ${funcao} e está livre nesse horário.` : "Quem faz a mesma função e está livre nesse horário."}</div>
+          {candidatos.map((c) => (
+            <div key={c.member_id} style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12 }}>
+              <Av name={c.name} />
+              <div className="m6-rb"><div className="m6-rt">{c.name}</div></div>
+              <button className="m6-btn small sec" type="button" disabled={!!enviando} onClick={() => abrir(c.member_id, `Oi! Você pode assumir minha vaga${funcao ? ` de ${funcao}` : ""} em ${quando}? Se puder, me avise que eu combino com a liderança.`, "Vaga oferecida")}>
+                {enviando === c.member_id ? "Enviando..." : "Oferecer"}
+              </button>
+            </div>
+          ))}
+        </>
       )}
     </div>
   );
