@@ -7,6 +7,7 @@ import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon, Caret } from "./lib/icons";
 import { formatDateBR, joinDot, paraPublico, parseISODate, porPublicacao, quandoPublicado, saudacao, todayISO, weekdayFromISO } from "./lib/date";
 import { plural } from "./lib/plural";
+import { formatarTelefone } from "./lib/telefone";
 import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import { PhotoPicker } from "./PhotoPicker";
 import CepInput from "./CepInput";
@@ -1759,7 +1760,7 @@ function TabPerfil({
             {!editing ? (
               <>
                 <ul className="m6-facts">
-                  <li><Icon name="telefone" size={20} /><span>{realValue(member.phone)}</span></li>
+                  <li><Icon name="telefone" size={20} /><span>{formatarTelefone(realValue(member.phone))}</span></li>
                   <li><Icon name="link" size={20} /><span>{realValue(member.email)}</span></li>
                   {member.birth && <li><Icon name="presente" size={20} /><span>Aniversário · {formatDateBR(member.birth)}</span></li>}
                   {(member.neighborhood || member.city) && <li><Icon name="mapapin" size={20} /><span>{[member.neighborhood, member.city].filter(Boolean).join(", ")}</span></li>}

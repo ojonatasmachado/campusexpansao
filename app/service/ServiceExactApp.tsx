@@ -1,6 +1,8 @@
 "use client";
 
 import { plural } from "./lib/plural";
+import { formatarTelefone, mesmoTelefone, telefoneParaGravar } from "./lib/telefone";
+import { ehNovo, nomeComparavel, possivelDuplicado } from "./lib/pessoas";
 import { avisar } from "./lib/avisar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -148,6 +150,7 @@ type MemberView = {
   email: string;
   situation: "membro" | "novo";
   firstContact: string;
+  sinceYear?: string;
   neighborhood: string | null;
   journey: number[];
   birth: string | null;
@@ -1243,7 +1246,7 @@ export default function ServiceExactApp({
       supabase.schema("service").from("people").update({
         name: data.name.trim(),
         email: data.email.trim() || null,
-        phone: data.phone.trim() || null,
+        phone: telefoneParaGravar(data.phone),
         meta: { ...targetPerson?.meta, birthday: data.nasc || targetPerson?.meta?.birthday, neighborhood: data.bairro || targetPerson?.meta?.neighborhood },
       }).eq("id", personId),
       memberId
@@ -1251,7 +1254,7 @@ export default function ServiceExactApp({
             p_member: memberId,
             p_name: data.name.trim(),
             p_email: data.email.trim(),
-            p_phone: data.phone.trim(),
+            p_phone: telefoneParaGravar(data.phone) ?? "",
             p_birth: data.nasc,
             p_postal_code: cep,
             p_street: data.rua,
@@ -1744,7 +1747,7 @@ export default function ServiceExactApp({
             visitantesSemContato={navBadge.visitantes ?? 0}
             semanasComPresenca={new Set(eventAttendance.map((a) => { const d = parseISODate(events.find((e) => e.id === a.event_id)?.eventDate); return d ? `${d.getFullYear()}-${Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 1).getTime()) / 604800000)}` : ""; }).filter(Boolean)).size}
             // eslint-disable-next-line react-hooks/purity -- "novos este mês" precisa do relógio real
-            novosNoMes={people.filter((p) => p.createdAt && Date.now() - new Date(p.createdAt).getTime() < 30 * 86400000).length}
+            novosNoMes={people.filter((p) => { const m = members.find((x) => x.volunteerId === p.id); return m ? ehNovo(m) : ehNovo({ createdAt: p.createdAt }); }).length}
             escaladosSemana={roster.length}
             gaps={gaps}
             events={events}
@@ -1898,6 +1901,7 @@ export default function ServiceExactApp({
           modal={modal}
           church={firstChurch}
           people={people}
+          members={members}
           ministries={ministries}
           rooms={rooms}
           currentPersonId={currentPersonId}
@@ -2210,7 +2214,7 @@ function Painel({
       )}
       <SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} />
       <div className="kpi-row">
-        <Kpi icon="pessoa" label="Voluntários" value={activePeople} foot={joinDot(`de ${plural(people.length, "cadastrado")}`, novosNoMes ? `${plural(novosNoMes, "novo", "novos")} este mês` : null)} help="Pessoas que servem em algum time e estão com o status ativo, sem contar quem está em pausa ou de férias." />
+        <Kpi icon="pessoa" label="Voluntários" value={activePeople} foot={joinDot(`de ${plural(people.length, "cadastrado")}`, novosNoMes ? `${plural(novosNoMes, "novo", "novos")} em 30 dias` : null)} help="Pessoas que servem em algum time e estão com o status ativo, sem contar quem está em pausa ou de férias." />
         <Kpi icon="ok" label="Confirmação" value={escaladosSemana ? `${confirmationRate}%` : "·"} foot={escaladosSemana ? `de ${plural(escaladosSemana, "escalado")} nesta semana` : "ninguém escalado nesta semana"} help="De todo mundo escalado nesta semana, quantos já confirmaram presença no app." />
         <Kpi icon="alerta" label="Vagas abertas" value={gaps.length} foot="na escala desta semana" amber help="Posições da escala desta semana que ainda não têm ninguém confirmado. Resolva em Escalas." />
         <Kpi icon="visitante" label="Visitantes" value={visitorsInCare} foot={visitantesSemContato ? `${visitantesSemContato} sem contato há 48h` : "todos com contato em dia"} help="Visitantes que ainda estão na fase de acompanhamento, antes de virarem membros." />
@@ -2480,19 +2484,21 @@ function Membros({ members, people = [], ministries, setDrawer, setModal, soTime
   const minsDe = (personId: string | null | undefined) => (personId ? ministries.filter((min) => min.people.some((p) => p.personId === personId)) : []);
   const lideraAlgum = (personId: string | null | undefined) => !!personId && ministries.some((min) => min.people.some((p) => p.personId === personId && p.isLeader));
   // eslint-disable-next-line react-hooks/purity -- "Novos" são os últimos 30 dias pelo relógio real
-  const trintaDias = Date.now() - 30 * 86400000;
+  const agora = Date.now();
+  /* ficha de membro sem o vínculo com o voluntário, mas com o mesmo nome e telefone: é a mesma pessoa, aparece uma vez */
+  const mesmaPessoa = (m: MemberView, p: PersonView) => nomeComparavel(m.name) === nomeComparavel(p.name) && mesmoTelefone(m.phone, p.phone);
   const linhas: PessoaLinha[] = [
     ...members.map((m) => {
-      const person = people.find((p) => p.id === m.volunteerId);
+      const person = people.find((p) => p.id === m.volunteerId) ?? (!m.volunteerId ? people.find((p) => mesmaPessoa(m, p)) : undefined);
       return {
-        key: `m-${m.id}`, name: m.name, sub: m.phone || m.neighborhood || "", member: m, person,
-        mins: minsDe(m.volunteerId), leader: lideraAlgum(m.volunteerId), photoUrl: person?.photoUrl,
-        novo: m.situation === "novo" || (!!m.createdAt && new Date(m.createdAt).getTime() > trintaDias),
+        key: `m-${m.id}`, name: m.name, sub: formatarTelefone(m.phone) || m.neighborhood || "", member: m, person,
+        mins: minsDe(person?.id), leader: lideraAlgum(person?.id), photoUrl: person?.photoUrl,
+        novo: ehNovo(m, agora),
       };
     }),
-    ...people.filter((p) => !members.some((m) => m.volunteerId === p.id)).map((p) => ({
-      key: `p-${p.id}`, name: p.name, sub: p.phone || "", person: p, mins: minsDe(p.id), leader: lideraAlgum(p.id), photoUrl: p.photoUrl,
-      novo: !!p.createdAt && new Date(p.createdAt).getTime() > trintaDias,
+    ...people.filter((p) => !members.some((m) => m.volunteerId === p.id || (!m.volunteerId && mesmaPessoa(m, p)))).map((p) => ({
+      key: `p-${p.id}`, name: p.name, sub: formatarTelefone(p.phone), person: p, mins: minsDe(p.id), leader: lideraAlgum(p.id), photoUrl: p.photoUrl,
+      novo: ehNovo({ createdAt: p.createdAt }, agora),
     })),
   ].filter((l) => !soTimes || l.mins.some((min) => soTimes.includes(min.id)))
     .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
@@ -2504,7 +2510,7 @@ function Membros({ members, people = [], ministries, setDrawer, setModal, soTime
     novos: linhas.filter((l) => l.novo).length,
   };
   const visible = linhas.filter((l) => {
-    const okQ = !q || l.name.toLowerCase().includes(q.toLowerCase()) || l.sub.includes(q);
+    const okQ = !q || l.name.toLowerCase().includes(q.toLowerCase()) || l.sub.includes(q) || (q.replace(/\D/g, "").length >= 3 && l.sub.replace(/\D/g, "").includes(q.replace(/\D/g, "")));
     const okF = filtro === "todos" || (filtro === "membros" && !!l.member) || (filtro === "voluntarios" && l.mins.length > 0) || (filtro === "lideres" && l.leader) || (filtro === "novos" && l.novo);
     return okQ && okF;
   });
@@ -2567,7 +2573,7 @@ function Pessoas({ people, currentPersonId, setDrawer, setModal }: { people: Per
               <Av name={person.name} photoUrl={person.photoUrl} />
               <div>
                 <strong>{person.name}{person.id === currentPersonId && <span style={{ color: "var(--olive)", fontSize: 11, marginLeft: 7, fontFamily: "var(--mono)" }}>você</span>}</strong>
-                <small>{person.phone}</small>
+                <small>{formatarTelefone(person.phone)}</small>
               </div>
             </div>
             <div>{formatAvailability(person.availability)}</div>
@@ -9595,7 +9601,7 @@ function EntityDrawer({
         </div>
         <div className="drawer-body">
           <DrawerSection title="Contato">
-            <dl className="kv"><dt>Telefone</dt><dd>{person.phone}</dd><dt>E-mail</dt><dd>{person.email}</dd><dt>Engajamento</dt><dd>{person.engagement ?? 0}% nos últimos 90 dias</dd></dl>
+            <dl className="kv"><dt>Telefone</dt><dd>{formatarTelefone(person.phone)}</dd><dt>E-mail</dt><dd>{person.email}</dd><dt>Engajamento</dt><dd>{person.engagement ?? 0}% nos últimos 90 dias</dd></dl>
           </DrawerSection>
           <DrawerSection title="Times e funções">
             <div className="cell-tags" style={{ gap: 8 }}>{linkedMinistries.map((ministry) => <button className="tag" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}>{ministry.name}</button>)}</div>
@@ -9679,7 +9685,7 @@ function EntityDrawer({
           )}
           <DrawerSection title="Dados cadastrais">
             <dl className="kv">
-              <dt>Telefone</dt><dd>{member.phone}</dd>
+              <dt>Telefone</dt><dd>{formatarTelefone(member.phone)}</dd>
               <dt>E-mail</dt><dd>{member.email}</dd>
               <dt>Aniversário</dt><dd>{formatDateBR(member.birth)}</dd>
               <dt>Bairro</dt><dd>{member.neighborhood}</dd>
@@ -10545,11 +10551,13 @@ function ServiceModal({
   rooms = [],
   currentPersonId = null,
   currentRole = "membro",
+  members = [],
   onClose,
 }: {
   modal: NonNullable<ModalState>;
   church?: ChurchView;
   people: PersonView[];
+  members?: MemberView[];
   ministries: MinistryView[];
   rooms?: RoomView[];
   currentPersonId?: string | null;
@@ -10566,6 +10574,8 @@ function ServiceModal({
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  /* aviso de possível duplicado já mostrado para este nome + telefone: o segundo toque cadastra mesmo assim */
+  const [dupVisto, setDupVisto] = useState("");
 
   async function save() {
     setError("");
@@ -10590,6 +10600,14 @@ function ServiceModal({
     if (action.kind === "member") {
       if (value("nome").split(/\s+/).length < 2) { setSaving(false); setError("Coloque nome e sobrenome."); return; }
       if (value("tel").replace(/\D/g, "").length < 10) { setSaving(false); setError("Coloque o telefone com DDD: o convite do app vai por WhatsApp."); return; }
+      const dup = possivelDuplicado([...members, ...people], value("nome"), value("tel"));
+      const chaveDup = `${nomeComparavel(value("nome"))}|${value("tel").replace(/\D/g, "")}`;
+      if (dup && dupVisto !== chaveDup) {
+        setSaving(false);
+        setDupVisto(chaveDup);
+        setError(`Pode ser alguém já cadastrado: ${dup.pessoa.name}${dup.pessoa.phone ? `, ${formatarTelefone(dup.pessoa.phone)}` : ""} tem ${dup.motivo === "telefone" ? "o mesmo telefone" : "o mesmo nome"}. Confira em Pessoas. Se for outra pessoa, toque em "${modal.saveLabel || "Salvar"}" de novo.`);
+        return;
+      }
       /* aba do WhatsApp aberta ainda no clique (antes do primeiro await),
          senão o navegador bloqueia; recebe o convite quando o membro existir */
       const conviteTab = window.open("", "_blank");
@@ -10597,7 +10615,7 @@ function ServiceModal({
         organization_id: church.organizationId,
         church_id: church.id,
         name: value("nome"),
-        phone: value("tel") || null,
+        phone: telefoneParaGravar(value("tel")),
         email: value("email") || null,
         birth: value("nasc") || null,
         neighborhood: value("bairro") || null,
