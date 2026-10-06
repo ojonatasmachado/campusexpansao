@@ -10,7 +10,7 @@ import { notifyPush } from "./lib/notify-push";
 import { uploadServiceImage, imageExtension } from "./lib/upload-image";
 import { ICON_PATHS, ICON_CATEGORIES, DEFAULT_ICON, Icon, IconPicker, Caret } from "./lib/icons";
 import { THEME_COOKIE, type BrandCfg } from "./lib/theme";
-import { aindaVaiAcontecer, formatDateBR, joinDot, parseISODate, saudacao, todayISO, toISODate } from "./lib/date";
+import { aindaVaiAcontecer, dataPublicacao, formatDateBR, joinDot, paraPublico, parseISODate, porPublicacao, quandoPublicado, saudacao, todayISO, toISODate } from "./lib/date";
 import { ageInMonths, suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import type { EnqueteElegivelView } from "./lib/enquetes";
 import type { PesquisaElegivelView, TipoPergunta as TipoPerguntaPesquisa } from "./lib/pesquisas";
@@ -2169,7 +2169,7 @@ function Painel({
   setupCounts: SetupCounts;
 }) {
   const topPeople = [...people].sort((a, b) => (b.engagement ?? 0) - (a.engagement ?? 0)).slice(0, 5);
-  const recentAnnouncements = [...announcements].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 3);
+  const recentAnnouncements = porPublicacao(announcements).slice(0, 3);
   return (
     <div className="content wide">
       <div className="ph">
@@ -2332,7 +2332,7 @@ function Painel({
               <button className="mini-row click" type="button" key={a.id} onClick={() => setRoute("comunicacao")}>
                 <div className="mini-main">
                   <div className="mini-title">{a.title}</div>
-                  <div className="mini-sub">{a.audience || "Todos"} · {a.when_label || "agora"}</div>
+                  <div className="mini-sub">{joinDot(paraPublico(a.audience), quandoPublicado(a.created_at))}</div>
                 </div>
               </button>
             ))}
@@ -4483,7 +4483,7 @@ function Comunicacao({
       />
       <div className="mural-list">
         {announcements.length === 0 && <EmptyState title="Nada no Mural ainda" text="O que você publicar aparece aqui e no app de quem você escolher." action={{ label: "Nova publicação", onClick: () => setCompose(true) }} />}
-        {announcements.map((a) => {
+        {porPublicacao(announcements).map((a) => {
           const pub = publicoDe(a);
           const leitores = new Set(announcementReads.filter((r) => r.announcement_id === a.id).map((r) => r.person_id));
           const leram = pub.memberIds.filter((id) => { const p = personDoMembro.get(id); return p && leitores.has(p); });
@@ -4496,7 +4496,7 @@ function Comunicacao({
               <div className="panel-body">
                 <div className="mural-top">
                   <span className="chip chip-neutral">{KIND_LABEL[a.kind ?? "aviso"] ?? "Aviso"}</span>
-                  <span className="mural-meta">{joinDot(`para ${pub.label.toLowerCase()}`, a.when_label, formatDateBR(a.created_at))}</span>
+                  <span className="mural-meta">{joinDot(paraPublico(pub.label), quandoPublicado(a.created_at), quandoPublicado(a.created_at) !== dataPublicacao(a.created_at) && dataPublicacao(a.created_at))}</span>
                 </div>
                 <h3 className="mural-t">{a.title}</h3>
                 {a.body && <p className="mural-txt">{a.body}</p>}

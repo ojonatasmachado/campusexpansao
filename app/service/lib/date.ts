@@ -83,3 +83,46 @@ export function aindaVaiAcontecer(eventDate?: string | null, time?: string | nul
   const hora = (time ?? "").slice(0, 5);
   return !/^\d{2}:\d{2}$/.test(hora) || hora >= horaAgoraBR();
 }
+
+/** Dias de calendário (Brasília) entre o instante e hoje: 0 = hoje, 1 = ontem. */
+function diaEmBrasilia(instante: string): string {
+  const t = new Date(instante);
+  if (Number.isNaN(t.getTime())) return "";
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(t);
+}
+
+/** Instante ("2026-10-03T01:00:00Z") → dia em Brasília, "02/10/2026". */
+export function dataPublicacao(instante?: string | null): string {
+  return instante ? formatDateBR(diaEmBrasilia(instante)) : "";
+}
+
+function diasAtras(instante: string): number | null {
+  const a = parseISODate(diaEmBrasilia(instante));
+  const b = parseISODate(todayISO());
+  if (!a || !b) return null;
+  return Math.round((b.getTime() - a.getTime()) / 86400000);
+}
+
+/** Quando foi publicado, sempre calculado da data (nunca de um texto salvo),
+ *  em minúsculas: "hoje", "ontem", "há 3 dias"; depois de uma semana, "28/09/2026". */
+export function quandoPublicado(instante?: string | null): string {
+  if (!instante) return "";
+  const n = diasAtras(instante);
+  if (n === null) return "";
+  if (n <= 0) return "hoje";
+  if (n === 1) return "ontem";
+  if (n < 7) return `há ${n} dias`;
+  return dataPublicacao(instante);
+}
+
+/** Mais recente primeiro, pela data de publicação. Não altera a lista original. */
+export function porPublicacao<T extends { created_at?: string | null }>(lista: T[]): T[] {
+  return [...lista].sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
+}
+
+/** Público do aviso, numa forma só: "para todos" (minúsculo) ou "para Louvor" (nome como foi cadastrado). */
+export function paraPublico(audience?: string | null): string {
+  const a = (audience ?? "").trim();
+  if (!a || a.toLowerCase() === "todos") return "para todos";
+  return `para ${a}`;
+}

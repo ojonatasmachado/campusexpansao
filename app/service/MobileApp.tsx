@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon, Caret } from "./lib/icons";
-import { formatDateBR, joinDot, parseISODate, saudacao, todayISO, weekdayFromISO } from "./lib/date";
+import { formatDateBR, joinDot, paraPublico, parseISODate, porPublicacao, quandoPublicado, saudacao, todayISO, weekdayFromISO } from "./lib/date";
 import { plural } from "./lib/plural";
 import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import { PhotoPicker } from "./PhotoPicker";
@@ -150,6 +150,7 @@ type Announcement = {
   when_label: string | null;
   audience: string | null;
   kind?: string | null;
+  created_at?: string | null;
 };
 type Chat = { id: string; kind: string; ministry_id: string | null; name: string | null };
 type ChatMember = { chat_id: string; member_id: string };
@@ -2843,7 +2844,7 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
           <div className="m6-card">
             <div className="m6-kick"><Icon name="bandeira" size={16} />Novo no Mural</div>
             <div className="m6-ct">{novo.title}</div>
-            {novo.when_label && <div className="m6-meta">{novo.when_label}</div>}
+            {novo.created_at && <div className="m6-meta">{quandoPublicado(novo.created_at)}</div>}
             <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => ui.go("mensagens", "mural")}>Ler a publicação</button></div>
           </div>
         )}
@@ -3101,7 +3102,7 @@ function MuralV6({ announcements, unreadIds, person, onReadAnnouncement, respons
           {novas.has(a.id) && <span className="m6-new">Nova</span>}
           <div className="m6-ct">{a.title}</div>
           {a.body && <p className="m6-txt">{a.body}</p>}
-          <div className="m6-meta">{joinDot(a.when_label, a.audience ? `para ${a.audience}` : null)}</div>
+          <div className="m6-meta">{joinDot(quandoPublicado(a.created_at), paraPublico(a.audience))}</div>
           {a.kind === "evento" && onRespond && <RespostaEvento id={a.id} inicial={responses.find((r) => r.announcement_id === a.id)?.response ?? null} onRespond={onRespond} />}
         </article>
       ))}
@@ -3288,7 +3289,7 @@ function MobileMembro({
      aparelho e não diverge entre o HTML do servidor e o do navegador */
   const [onboarded, setOnboarded] = useState<boolean>(() => !member || !!member.contactComplete);
   const { people, ministries, events, roster, cards, boards, enrollments, courseModules = [], courseLessons = [],
-          visitors, baptismClasses, announcements, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment,
+          visitors, baptismClasses, announcements: avisosRecebidos, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment,
           onAdvanceVisitorStage, onRegisterVisitor, onSendMessage, onStartChat,
           organizationId, churchName, churchLogoUrl, theme, setTheme, onChangePassword, onUpdateProfile,
           journeyRequests = [], onRequestJourneyStep, onConfirmarEscala, onRecusarEscala,
@@ -3297,6 +3298,8 @@ function MobileMembro({
           missingRequirements = [], serveRequests = [], baptismCandidates = [], onEnrollCourse, onRequestBaptism, onRequestServe,
           mode, onLogout, onSwitchToPanel, groupTerm, readAnnouncementIds = [], churchPurpose,
           onSaveAvailability, onRespondAnnouncement, announcementResponses = [] } = rest;
+  /* Mural sempre do mais recente para o mais antigo, pela data de publicação */
+  const announcements = useMemo(() => porPublicacao(avisosRecebidos), [avisosRecebidos]);
   /* curso em rascunho não aparece no app */
   const courses = rest.courses.filter((c) => c.published !== false);
   const journey: JourneyActions = {
