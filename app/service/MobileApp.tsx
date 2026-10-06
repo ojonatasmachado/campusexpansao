@@ -13,6 +13,7 @@ import { PhotoPicker } from "./PhotoPicker";
 import CepInput from "./CepInput";
 import ChurchLockup from "./ChurchLockup";
 import { TEXT_SCALES, useTextScale } from "./lib/text-scale";
+import { useTermos } from "./lib/vocabulario-context";
 import { requirementLabel, type RequirementKind } from "./lib/requirements";
 import { candidatosParaVaga, papelDoDestinatario, useDestinatario, type Destinatario } from "./lib/destinatario";
 import { checkinAberto, horaQueAbre, sessaoDoCulto, statusDaCrianca, useKidsCheckin } from "./lib/kids-checkin";
@@ -121,10 +122,11 @@ const JourneyContext = createContext<JourneyActions>({ missing: [], serveRequest
 /* o que falta pra um alvo, já em texto */
 function useFaltas() {
   const j = useContext(JourneyContext);
+  const { comTermos: ct } = useTermos();
   return (kind: MissingRequirement["target_kind"], id: string | null) =>
     j.missing
       .filter((m) => m.target_kind === kind && (m.target_id ?? null) === id)
-      .map((m) => requirementLabel({ kind: m.req_kind, ref: m.req_ref }, j.names));
+      .map((m) => ct(requirementLabel({ kind: m.req_kind, ref: m.req_ref }, j.names)));
 }
 
 const RESULTADO_ACAO: Record<string, string> = {
@@ -254,8 +256,6 @@ export type MobileOverlayProps = {
   onSwitchToPanel?: () => void;
   selfPersonId?: string | null;
   onLogout?: () => void;
-  /* nome que a igreja dá aos pequenos grupos (gruposCfg.termoP) */
-  groupTerm?: string;
   /* publicações do Mural que esta pessoa já leu (service.announcement_reads) */
   readAnnouncementIds?: string[];
   /* cartão "Nossa igreja" na Caminhada (Identidade e propósito) */
@@ -270,11 +270,10 @@ export type MobileOverlayProps = {
 // ── constantes ────────────────────────────────────────────────────────────────
 
 /* etapas da caminhada; a 4ª usa o nome que a igreja deu aos grupos
-   (Configurações → Grupos), nunca a sigla */
-const GroupTermContext = createContext("Grupo");
+   (vocabulário, lei 7), nunca a sigla */
 function useJornada() {
-  const grupo = useContext(GroupTermContext);
-  return ["Decisão", "Batismo", "Fundamentos", grupo, "Servindo"];
+  const { termo } = useTermos();
+  return ["Decisão", "Batismo", "Fundamentos", termo("grupo"), "Servindo"];
 }
 const ETAPAS = [
   { id: "novo", nome: "Novo" },
@@ -1081,6 +1080,7 @@ function TabKids({
   organizationId?: string;
   churchId?: string;
 }) {
+  const { comTermos: ct } = useTermos();
   const [attendance, setAttendance] = useState(kidsAttendance);
   const [sessionId, setSessionId] = useState<string | null>(kidsSessions.find((s) => s.checkin_active)?.id ?? null);
   const [q, setQ] = useState("");
@@ -1179,7 +1179,7 @@ function TabKids({
     return (
       <>
         <div className="m-section-t">Kids</div>
-        <div className="empty" style={{ marginTop: 12 }}>Nenhuma sessão Kids aberta agora. Peça para a liderança abrir o QR do culto de hoje em Cultos & Agenda.</div>
+        <div className="empty" style={{ marginTop: 12 }}>Nenhuma sessão Kids aberta agora. Peça para a liderança abrir o QR do {ct("{culto}")} de hoje em {ct("{Cultos} e eventos")}.</div>
       </>
     );
   }
@@ -1891,17 +1891,18 @@ const APP_TABS_INFO = [
   { ic: "inicio", t: "Início", s: "O que precisa de você agora e o que acontece na igreja." },
   { ic: "agenda", t: "Agenda", s: "Sua escala, suas tarefas e a agenda da igreja." },
   { ic: "conversas", t: "Mensagens", s: "O Mural da igreja e as conversas com a liderança." },
-  { ic: "cursos", t: "Caminhada", s: "Seus passos na igreja, cursos e a Bíblia." },
+  { ic: "cursos", t: "{Caminhada}", s: "Seus passos na igreja, cursos e a Bíblia." },
   { ic: "perfil", t: "Perfil", s: "Seus dados, família, tamanho do texto e tema." },
 ];
 
 function AppTabsInfoGrid() {
+  const { comTermos: ct } = useTermos();
   return (
     <div className="ob-tabs-grid">
       {APP_TABS_INFO.map((x) => (
         <div className="ob-tab-item" key={x.t}>
           <span className="ob-tab-ic"><Icon name={x.ic} size={18} /></span>
-          <div><b>{x.t}</b><small>{x.s}</small></div>
+          <div><b>{ct(x.t)}</b><small>{x.s}</small></div>
         </div>
       ))}
     </div>
@@ -2457,7 +2458,7 @@ const MEMBER_TABS: { id: MemberTab; l: string; ic: string }[] = [
   { id: "inicio", l: "Início", ic: "inicio" },
   { id: "agenda", l: "Agenda", ic: "agenda" },
   { id: "mensagens", l: "Mensagens", ic: "conversas" },
-  { id: "caminhada", l: "Caminhada", ic: "cursos" },
+  { id: "caminhada", l: "{Caminhada}", ic: "cursos" },
   { id: "perfil", l: "Perfil", ic: "perfil" },
 ];
 
@@ -2729,6 +2730,7 @@ function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, kidsCla
   person: P; events: Ev[]; kidsChildren: Child[]; childGuardians: ChildGuardian[]; kidsClasses: KidsClass[];
   kidsSessions: KidsSession[]; kidsAttendance: KidsAttendance[]; organizationId?: string;
 }) {
+  const { comTermos: ct } = useTermos();
   const culto = cultoDeHoje(events);
   const vinculos = childGuardians.filter((g) => g.guardian_person_id === person.id);
   const filhos = vinculos.map((g) => kidsChildren.find((c) => c.id === g.child_id)).filter(Boolean) as Child[];
@@ -2756,7 +2758,7 @@ function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, kidsCla
     <div className="m6-card">
       <div className="m6-kick">Kids hoje</div>
       <div className="m6-ct">{joinDot(culto.name, culto.time)}</div>
-      {!aberto && abre && <div className="m6-meta">O check-in abre às {abre}, 1 hora antes do culto.</div>}
+      {!aberto && abre && <div className="m6-meta">O check-in abre às {abre}, 1 hora antes do {ct("{culto}")}.</div>}
       {filhos.map((c, i) => {
         const att = ck.attendance[c.id];
         const turma = kidsClasses.find((kc) => kc.id === c.class_id);
@@ -2795,6 +2797,7 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
   nextStep: StepView | null;
   onServir: () => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const ui = useContext(MemberUiContext);
   const hoje = todayISO();
   const serve = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
@@ -2852,7 +2855,7 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
             <div className="m6-kick">Seu próximo passo</div>
             <div className="m6-ct">{nextStep.nome}</div>
             {nextStep.info && <div className="m6-meta">{nextStep.info}</div>}
-            <div className="m6-btns"><button className={`m6-btn ${nextStep.st === "andamento" ? "pri" : "sec"}`} type="button" onClick={() => (nextStep.run ? nextStep.run() : ui.go("caminhada"))}>{nextStep.acao ?? "Ver a caminhada"} →</button></div>
+            <div className="m6-btns"><button className={`m6-btn ${nextStep.st === "andamento" ? "pri" : "sec"}`} type="button" onClick={() => (nextStep.run ? nextStep.run() : ui.go("caminhada"))}>{nextStep.acao ?? ct("Ver a {caminhada}")} →</button></div>
           </div>
         )}
         {!serve && timesAbertos.length > 0 && (
@@ -2873,7 +2876,7 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
         {proximos.length > 0 ? (
           <div className="m6-list">{proximos.slice(0, 3).map((ev) => <EventoRow key={ev.id} ev={ev} />)}</div>
         ) : (
-          <div className="m6-card"><div className="m6-meta">Os próximos cultos e eventos aparecem aqui.</div></div>
+          <div className="m6-card"><div className="m6-meta">{ct("Os próximos {cultos} e eventos aparecem aqui.")}</div></div>
         )}
         <div className="m6-more"><button type="button" className="m6-link" onClick={() => ui.go("agenda", null, { agSeg: "igreja" })}>Ver a agenda completa →</button></div>
       </div>
@@ -2906,6 +2909,7 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
   onAddCardComment?: (cardId: string, author: string, body: string) => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const ui = useContext(MemberUiContext);
   const serve = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
   const atual = serve ? seg : "igreja";
@@ -2923,7 +2927,7 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
   const destFalta = useDestinatario("troca", timeFalta?.id ?? null);
   const avisarFalta = async () => {
     if (!member || !destFalta || !onStartChat) return;
-    const id = await onStartChat(member.id, destFalta.member_id, "Oi! Queria avisar que vou faltar num dos próximos cultos. Posso te contar qual?");
+    const id = await onStartChat(member.id, destFalta.member_id, ct("Oi! Queria avisar que vou faltar num dos próximos {cultos}. Posso te contar qual?"));
     if (id) ui.go("mensagens", null, { chatId: id });
   };
   const futuros = events.filter((e) => e.eventDate >= hoje).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
@@ -3010,7 +3014,7 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
             <div className="m6-list">{futuros.filter((e) => semanaDe(e.eventDate) === g).map((ev) => <EventoRow key={ev.id} ev={ev} />)}</div>
           </div>
         )) : (
-          <div className="m6-sec"><div className="m6-card"><div className="m6-ct">Agenda vazia</div><div className="m6-meta">Os cultos e eventos da igreja aparecem aqui assim que forem marcados.</div></div></div>
+          <div className="m6-sec"><div className="m6-card"><div className="m6-ct">Agenda vazia</div><div className="m6-meta">{ct("Os {cultos} e eventos da igreja aparecem aqui assim que forem marcados.")}</div></div></div>
         )
       )}
     </>
@@ -3156,13 +3160,14 @@ function useSteps({ person, member, ministries, courses, enrollments, courseModu
 }
 
 function SheetPedidoEtapa({ step, nome, member, onRequestJourneyStep }: { step: JourneyStep; nome: string; member: M | null; onRequestJourneyStep?: (memberId: string, step: JourneyStep, eventDate: string, note: string) => void }) {
+  const { comTermos: ct } = useTermos();
   const ui = useContext(MemberUiContext);
   const [data, setData] = useState("");
   const [nota, setNota] = useState("");
   return (
     <div>
       <h2 className="m6-sh">{nome}</h2>
-      <div className="m6-meta">Conte quando aconteceu. A liderança confirma e a etapa fica marcada na sua caminhada.</div>
+      <div className="m6-meta">Conte quando aconteceu. {ct("A liderança confirma e a etapa fica marcada na sua {caminhada}.")}</div>
       <div className="field" style={{ marginTop: 14 }}><label className="field-label">Quando foi?</label><input className="input" type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
       <div className="field"><label className="field-label">Quer contar mais? (opcional)</label><input className="input" value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ex.: aconteceu em outra igreja" /></div>
       <div className="m6-btns">
@@ -3281,6 +3286,7 @@ function MobileMembro({
   const [toastO, setToastO] = useState<{ msg: string; action?: { label: string; fn: () => void }; id: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [textScale] = useTextScale();
+  const { termo, comTermos: ct } = useTermos();
   /* pedido de oração só aparece com alguém para receber (v7 2.5) */
   const destOracao = useDestinatario("oracao");
   /* primeiro acesso termina quando a ficha tem os dados obrigatórios
@@ -3295,7 +3301,7 @@ function MobileMembro({
           kidsClasses = [], kidsChildren = [], childGuardians = [], kidsSessions = [], kidsAttendance = [],
           kidsEvents = [], kidsEventEnrollments = [], wallPosts = [], bibleMarks = [], onSaveBibleMark,
           missingRequirements = [], serveRequests = [], baptismCandidates = [], onEnrollCourse, onRequestBaptism, onRequestServe,
-          mode, onLogout, onSwitchToPanel, groupTerm, readAnnouncementIds = [], churchPurpose,
+          mode, onLogout, onSwitchToPanel, readAnnouncementIds = [], churchPurpose,
           onSaveAvailability, onRespondAnnouncement, announcementResponses = [] } = rest;
   /* Mural sempre do mais recente para o mais antigo, pela data de publicação */
   const announcements = useMemo(() => porPublicacao(avisosRecebidos), [avisosRecebidos]);
@@ -3354,7 +3360,7 @@ function MobileMembro({
   const ui: MemberUi = { go, sheet: setSheetEl, toast, respostas, responderEscala: responderEscalaUi };
 
   const pedirEtapa = (step: JourneyStep) => {
-    const nome = { decisao: "Decisão", batismo: "Batismo", curso: "Fundamentos", integracao: groupTerm || "Grupo", time: "Servindo" }[step];
+    const nome = { decisao: "Decisão", batismo: "Batismo", curso: "Fundamentos", integracao: termo("grupo"), time: "Servindo" }[step];
     setSheetEl(<SheetPedidoEtapa step={step} nome={nome} member={member} onRequestJourneyStep={onRequestJourneyStep} />);
   };
   const abrirTimes = () => setSheetEl(<SheetTimes person={person} member={member} ministries={ministries} members={members} people={people} />);
@@ -3370,12 +3376,11 @@ function MobileMembro({
     );
   }
 
-  const tabTitle = MEMBER_TABS.find((t) => t.id === tab)!.l;
+  const tabTitle = ct(MEMBER_TABS.find((t) => t.id === tab)!.l);
   const subTitle = sub === "chat" ? (chatAberto ?? "Conversa") : sub ? moduleTitle(sub) : "";
   const voltar = () => { if (sub === "chat") { setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 })); setChatAberto(null); } setSub(null); };
 
   return (
-    <GroupTermContext.Provider value={groupTerm || "Grupo"}>
     <JourneyContext.Provider value={journey}>
     <MemberUiContext.Provider value={ui}>
     <StepsHost
@@ -3540,7 +3545,7 @@ function MobileMembro({
                   <TabIcon name={t.ic} size={24} />
                   {b > 0 && <span className="m6-badge" aria-label={`${b} novos`}>{b}</span>}
                 </span>
-                <span className="m-tab-l">{t.l}</span>
+                <span className="m-tab-l">{ct(t.l.replace("}", ":curto}"))}</span>
               </button>
             );
           })}
@@ -3559,7 +3564,6 @@ function MobileMembro({
     </StepsHost>
     </MemberUiContext.Provider>
     </JourneyContext.Provider>
-    </GroupTermContext.Provider>
   );
 }
 
@@ -3572,6 +3576,7 @@ function StepsHost({ children, ...p }: Parameters<typeof useSteps>[0] & { childr
 // ── overlay principal (desktop) ───────────────────────────────────────────────
 
 export default function MobileOverlay(props: MobileOverlayProps) {
+  const { comTermos: ct } = useTermos();
   const { people, members, onClose, mode = "preview", selfPersonId, onLogout, onSwitchToPanel } = props;
   const isSelf = mode === "self";
 
@@ -3590,12 +3595,12 @@ export default function MobileOverlay(props: MobileOverlayProps) {
     return (
       <div className="mob-bg" onClick={isSelf ? undefined : onClose}>
         <div className="mob-side" onClick={(e) => e.stopPropagation()}>
-          <div className="mob-side-eyebrow">App do voluntário</div>
-          <h3>{isSelf ? "Cadastro não encontrado" : "Nenhum voluntário ativo"}</h3>
+          <div className="mob-side-eyebrow">{ct("App do {voluntario}")}</div>
+          <h3>{isSelf ? "Cadastro não encontrado" : ct("Nenhum {voluntario} ativo")}</h3>
           <p>
             {isSelf
               ? "Não encontramos seu cadastro de pessoa nesta igreja. Fale com a liderança."
-              : "Cadastre voluntários em Pessoas para pré-visualizar o app deles aqui."}
+              : ct("Cadastre {voluntarios} em Pessoas para pré-visualizar o app deles aqui.")}
           </p>
           <button className="mob-close" onClick={closeAction}>{closeLabel}</button>
           {isSelf && onSwitchToPanel && <button className="mob-close mob-to-panel" onClick={onSwitchToPanel}>Gerenciar →</button>}
@@ -3614,7 +3619,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
               O app do <span className="ol">membro</span>
             </h3>
             <p>
-              O membro acompanha a caminhada, confirma escala, resolve tarefas do quadro,
+              O membro acompanha a {ct("{caminhada}")}, confirma escala, resolve tarefas do quadro,
               conversa com o time e o líder, faz cursos e pede oração, tudo pelo celular.
             </p>
 
@@ -3632,7 +3637,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
                     <div>
                       <b>{p.name}</b>
                       <small>
-                        {m ? "Membro" : "Voluntario"}
+                        {m ? "Membro" : ct("{Voluntario}")}
                         {p.tags.length > 0 ? ` · ${p.tags[0]}` : ""}
                       </small>
                     </div>
@@ -3641,7 +3646,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
                 );
               })}
               <div className="mob-persona-hint">
-                O voluntário da Recepção vê o módulo de visitantes no lugar de Cursos.
+                {ct("O {voluntario}")} da Recepção vê o módulo de visitantes no lugar de Cursos.
               </div>
             </div>
           </>

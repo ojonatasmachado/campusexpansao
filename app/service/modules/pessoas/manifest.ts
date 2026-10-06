@@ -17,4 +17,5 @@ export default defineModule({
       { rota: "pessoas", grupo: "Pessoas", permissao: "voluntarios" },
     ],
   },
+  vocabulario: ["voluntario", "caminhada"],
 });

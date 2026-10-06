@@ -4,7 +4,7 @@
    (CFG_TABS) e as telas do app do membro (MEMBER_MODULES) saem daqui.
    Módulo novo: crie a pasta com manifest.ts e acrescente o import abaixo. */
 
-import { GRUPOS_CONFIG, GRUPOS_PAINEL, type ContextoMembro, type ModuleManifest, type TelaMembro } from "./define";
+import { GRUPOS_CONFIG, GRUPOS_PAINEL, type ContextoMembro, type ModuleManifest, type TelaMembro, type Termo } from "./define";
 import inicio from "./inicio/manifest";
 import pessoas from "./pessoas/manifest";
 import visitantes from "./visitantes/manifest";
@@ -107,6 +107,12 @@ export const CODIGO_PERMISSAO: Record<string, string> = Object.fromEntries(
 /** Módulo dono de uma tela do painel. */
 export function moduloDaRota(rota: string): string | undefined {
   return MODULOS.find((m) => (m.painel?.menu ?? []).some((i) => i.rota === rota) || (m.painel?.rotas ?? []).some((r) => r.rota === rota))?.id;
+}
+
+/** Termos renomeáveis que a tela usa (manifesto `vocabulario`): a busca acha a tela por eles. */
+export function termosDaRota(rota: string): Termo[] {
+  const dono = moduloDaRota(rota);
+  return MODULOS.find((m) => m.id === dono)?.vocabulario ?? [];
 }
 
 /** A tela do painel está num módulo ligado? Telas sem dono (casca) estão sempre. */

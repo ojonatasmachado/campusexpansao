@@ -18,4 +18,5 @@ export default defineModule({
     ],
   },
   rotas: [{ caminho: "/service/aula-checkin", tipo: "qr" }],
+  vocabulario: ["caminhada"],
 });

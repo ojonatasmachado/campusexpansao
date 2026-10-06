@@ -10,4 +10,5 @@ export default defineModule({
       { rota: "historia", grupo: "Gestão", rotulo: "Nossa história", icone: "historia", ordem: 73, permissao: "historia" },
     ],
   },
+  vocabulario: ["caminhada"],
 });

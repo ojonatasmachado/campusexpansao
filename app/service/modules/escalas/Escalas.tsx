@@ -16,6 +16,7 @@ import { HelpDot } from "../../HelpSystem";
 import { Av, Chip, PageHead } from "../../painel/ui";
 import { ESCALA_DEFAULT, type EscalaPreset, type EscalaSettings } from "./regras";
 import type { ChurchView, DrawerState, EventView, MinistryView, ModalState, PersonView, RosterAssignmentView, RouteId } from "../../ServiceExactApp";
+import { useTermos } from "../../lib/vocabulario-context";
 
 /* candidato apto a uma posição, com motivo de bloqueio : equivalente a
    candidatos() em evolucoes/service_app/escalas.jsx:12-30. Diferença de fidelidade
@@ -194,6 +195,7 @@ function DelegarModal({
   onClose: () => void;
   onRefresh: () => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const [ministryId, setMinistryId] = useState(ministries[0]?.id ?? "");
   const [saving, setSaving] = useState(false);
   const ministry = ministries.find((m) => m.id === ministryId);
@@ -232,7 +234,7 @@ function DelegarModal({
               <button type="button" className={`flag-row${on ? " on" : ""}`} key={link.personId} disabled={saving} onClick={() => toggle(link.personId)}>
                 <span className={`flag-check${on ? " on" : ""}`}>{on ? <Icon name="ok" size={13} /> : null}</span>
                 <Av name={link.personName} size="sm" />
-                <div className="flag-main"><div className="flag-nome">{link.personName}</div><div className="flag-meta">{link.functions.join(" · ") || "Voluntário"}</div></div>
+                <div className="flag-main"><div className="flag-nome">{link.personName}</div><div className="flag-meta">{link.functions.join(" · ") || ct("{Voluntario}")}</div></div>
               </button>
             );
           })}
@@ -316,6 +318,7 @@ export function Escalas({
   setCheckinEventId: (id: string | null) => void;
   onNotifyLeaderRecusa: (leaderPersonId: string, volunteerPersonId: string, texto: string) => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const [eventId, setEventId] = useState(events[0]?.id ?? "");
   const router = useRouter();
   const escalaCfg: EscalaSettings = { ...ESCALA_DEFAULT, ...(church?.settings?.escala ?? {}) };
@@ -502,8 +505,8 @@ export function Escalas({
       <PageHead
         title="Escalas por evento"
         eyebrow="Operação"
-        subtitle={`Escolha o culto e veja as vagas de cada time. ${perspectiveText} Toque numa pessoa para confirmar, trocar ou remover; em Escalar para preencher a vaga.`}
-        help="Monte quem serve em cada culto. As pessoas confirmam ou recusam direto no celular, e a vaga em aberto aparece em vermelho."
+        subtitle={ct(`Escolha o {culto} e veja as vagas de cada time. ${perspectiveText} Toque numa pessoa para confirmar, trocar ou remover; em Escalar para preencher a vaga.`)}
+        help={ct("Monte quem serve em cada {culto}. As pessoas confirmam ou recusam direto no celular, e a vaga em aberto aparece em vermelho.")}
         action={
           <>
             <button className="btn btn-sec" type="button" onClick={() => setDelegarOpen(true)}><Icon name="membros" size={15} /> Delegar</button>
@@ -695,6 +698,7 @@ function RosterActionModal({
   onTrocar: (assignmentId: string, personId: string) => void;
   setDrawer: (drawer: DrawerState) => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const [trocando, setTrocando] = useState(false);
   const assignedPerson = action.assignment ? people.find((person) => person.id === action.assignment?.person_id) : null;
   if (action.kind === "slot" && action.assignment && !trocando) {
@@ -707,7 +711,7 @@ function RosterActionModal({
             <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
               <Av name={assignedPerson?.name ?? "Voluntário"} size="lg" photoUrl={assignedPerson?.photoUrl} />
               <div>
-                <div className="modal-title">{assignedPerson?.name ?? "Voluntário"}</div>
+                <div className="modal-title">{assignedPerson?.name ?? ct("{Voluntario}")}</div>
                 <div style={{ marginTop: 7 }}><Chip status={assignment.status} /></div>
               </div>
             </div>
@@ -718,7 +722,7 @@ function RosterActionModal({
               <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => { onPendente(assignment.id); onClose(); }}>Deixar pendente (reenviar convite)</button>
               <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => { onRecusar(assignment); onClose(); }}>Marcar que recusou</button>
               <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setTrocando(true)}>⇄ Pedir troca / substituir</button>
-              {assignedPerson ? <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setDrawer({ kind: "person", id: assignedPerson.id })}>Ver perfil do voluntário</button> : null}
+              {assignedPerson ? <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setDrawer({ kind: "person", id: assignedPerson.id })}>{ct("Ver perfil do {voluntario}")}</button> : null}
               <button className="btn btn-danger" style={{ justifyContent: "center" }} type="button" onClick={() => { onRemover(assignment.id); onClose(); }}>Remover da escala</button>
             </div>
           </div>

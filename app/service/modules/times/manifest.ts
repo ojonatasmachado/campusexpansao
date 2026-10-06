@@ -14,4 +14,5 @@ export default defineModule({
       { rota: "times", grupo: "Ministério", rotulo: "Times", icone: "times", ordem: 30, permissao: "times" },
     ],
   },
+  vocabulario: ["voluntario"],
 });

@@ -40,7 +40,13 @@ criados fora do registro não entram.
 7. **Vocabulário da igreja.** Nenhum texto de interface escreve fixo um termo renomeável;
    usa `termo("caminhada")`. Termos iniciais: Caminhada, Grupo, Culto, Voluntário. Cada
    termo tem nome da tela (até 24 caracteres) e nome curto da barra (até 10). O código
-   usa o nome interno e a busca encontra os dois.
+   usa o nome interno e a busca encontra os dois. Como: `useTermos()` de
+   `app/service/lib/vocabulario-context.tsx` dá `termo("culto")`, `termoCurto("caminhada")`
+   e `comTermos("{Cultos} e eventos")` (marcador com maiúscula = nome como a igreja
+   escreveu; minúscula = meio da frase; `s` = plural; `:curto` = nome da barra). Texto
+   fixo fora de componente (manifesto, lista) leva o marcador e passa por `ct()` ao
+   mostrar. O manifesto declara em `vocabulario` os termos da tela, para a busca.
+   Guardado em `service.churches.vocabulario` (0056), na matriz.
 8. **Tipografia, cor e toque.** Tokens únicos. App: 13, 15, 17, 20, 28. Painel: 12, 13,
    14, 16, 20, 32. Mínimo de 13px no app e 12px no painel, sem meio pixel. Mono só para
    números que alinham e para o sobretítulo do painel; caixa alta só nesse sobretítulo.

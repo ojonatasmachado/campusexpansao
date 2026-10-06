@@ -14,4 +14,5 @@ export default defineModule({
       { rota: "decisoes", grupo: "Pessoas", rotulo: "Decisões", icone: "decisoes", ordem: 24, permissao: "decisoes" },
     ],
   },
+  vocabulario: ["caminhada"],
 });

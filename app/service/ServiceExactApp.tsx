@@ -26,6 +26,8 @@ import ThemePicker from "./ThemePicker";
 import { PublicPageEditor } from "./PublicPageEditor";
 import { LogoField, BackgroundField } from "./IdentidadeFields";
 import { useChurchSettingsField } from "./lib/settings-field";
+import { comTermos, normalizarVocabulario, textoBuscavel, vocabularioParaGravar, LIMITE_CURTO, LIMITE_TELA, TERMOS, TERMOS_IDS, type Vocabulario } from "./lib/vocabulario";
+import { VocabularioProvider, useTermos } from "./lib/vocabulario-context";
 import { IDENTIDADE_CFG_DEFAULT } from "../lib/church-page";
 import type { PaginaCfg, IdentidadeCfg } from "../lib/church-page";
 import EventoShare from "./EventoShare";
@@ -47,7 +49,7 @@ import { JRN_STEPS } from "./painel/caminhada";
 import { Comunicacao } from "./modules/mural/Mural";
 import { ACESSO_MSG_DEFAULT, type AcessoMsgCfg } from "./modules/pessoas/acesso-msg";
 import { friendlyWriteError } from "./painel/erros";
-import { ROTA_GRUPO, cfgTabs as gerarCfgTabs, modulosLigados, navGroups, podeVerRota, rotaLigada } from "./modules/registry";
+import { ROTA_GRUPO, cfgTabs as gerarCfgTabs, modulosLigados, navGroups, podeVerRota, rotaLigada, termosDaRota } from "./modules/registry";
 
 type ChurchSettings = {
   escala?: EscalaSettings;
@@ -119,6 +121,8 @@ export type ChurchView = {
   /* exceções da igreja ao padrão dos módulos (0055) */
   modulosOn?: string[];
   modulosOff?: string[];
+  /* nomes que a igreja dá aos termos (0056, lei 7) */
+  vocabulario?: Record<string, unknown>;
 };
 
 /* módulos ligados na igreja (registro de módulos, lei 3) */
@@ -773,7 +777,7 @@ const CEX_ICON_FOR: Record<string, string> = {
 const ACESSO_ROTAS: { id: string; label: string }[] = [
   { id: "painel", label: "Início" },
   { id: "membros", label: "Pessoas" },
-  { id: "pessoas", label: "Voluntários" },
+  { id: "pessoas", label: "{Voluntarios}" },
   { id: "times", label: "Times" },
   { id: "visitantes", label: "Visitantes" },
   { id: "batismos", label: "Batismos" },
@@ -1082,6 +1086,13 @@ export default function ServiceExactApp({
 
   const firstChurch = churches.find((c) => c.id === activeChurchId) ?? churches[0];
   const router = useRouter();
+  /* vocabulário da igreja (lei 7): da matriz, igual à marca do app */
+  const sedeVocab = churches.find((c) => c.matriz) ?? firstChurch;
+  const vocab = useMemo(
+    () => normalizarVocabulario(sedeVocab?.vocabulario, sedeVocab?.settings?.gruposCfg?.termoP),
+    [sedeVocab?.vocabulario, sedeVocab?.settings?.gruposCfg?.termoP],
+  );
+  const ct = (texto: string) => comTermos(texto, vocab);
 
   /* tour guiado + botão de ajuda : dispara sozinho no 1º login de
      liderança (nunca pro papel "membro", que usa o app pelo celular). */
@@ -1330,13 +1341,13 @@ export default function ServiceExactApp({
       requested_by: currentPersonId,
     });
     const member = members.find((m) => m.id === memberId);
-    const stepLabel = JRN_STEPS.find((s) => s.kind === step)?.label ?? step;
+    const stepLabel = ct(JRN_STEPS.find((s) => s.kind === step)?.label ?? step);
     if (member) {
       const leaderMemberIds = responsibleLeadersFor(member, fellowshipGroups, ministries)
         .map((personId) => members.find((m) => m.volunteerId === personId)?.id)
         .filter((id): id is string => !!id);
       if (leaderMemberIds.length) {
-        notifyPush(firstChurch.organizationId, leaderMemberIds, member.name, `Pediu pra marcar "${stepLabel}" na caminhada. Aprovar?`);
+        notifyPush(firstChurch.organizationId, leaderMemberIds, member.name, ct(`Pediu pra marcar "${stepLabel}" na {caminhada}. Aprovar?`));
       }
     }
     router.refresh();
@@ -1351,8 +1362,8 @@ export default function ServiceExactApp({
       reviewed_by: currentPersonId,
       reviewed_at: new Date().toISOString(),
     }).eq("id", request.id);
-    const stepLabel = JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step;
-    notifyPush(firstChurch.organizationId, [member.id], "Caminhada aprovada", `"${stepLabel}" foi confirmado na sua caminhada.`);
+    const stepLabel = ct(JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step);
+    notifyPush(firstChurch.organizationId, [member.id], ct("{Caminhada} aprovada"), ct(`"${stepLabel}" foi confirmado na sua {caminhada}.`));
     router.refresh();
   };
   /* o membro responde a própria escala pela função do banco (0049); antes
@@ -1386,9 +1397,9 @@ export default function ServiceExactApp({
       reviewed_at: new Date().toISOString(),
     }).eq("id", request.id);
     const member = members.find((m) => m.id === request.memberId);
-    const stepLabel = JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step;
+    const stepLabel = ct(JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step);
     if (member) {
-      notifyPush(firstChurch.organizationId, [member.id], "Caminhada", `Seu pedido de "${stepLabel}" não foi aprovado.${motivo ? ` Motivo: ${motivo}` : ""}`);
+      notifyPush(firstChurch.organizationId, [member.id], ct("{Caminhada}"), `Seu pedido de "${stepLabel}" não foi aprovado.${motivo ? ` Motivo: ${motivo}` : ""}`);
     }
     router.refresh();
   };
@@ -1496,9 +1507,9 @@ export default function ServiceExactApp({
       router.refresh();
     };
     return (
+      <VocabularioProvider value={vocab}>
       <MobileOverlay
         modulos={{ on: firstChurch?.modulosOn, off: firstChurch?.modulosOff }}
-        groupTerm={firstChurch?.settings?.gruposCfg?.termoP}
         readAnnouncementIds={announcementReads.filter((r) => r.person_id === currentPersonId).map((r) => r.announcement_id)}
         churchPurpose={(() => {
           const ciclo = cycles.find((c) => c.is_active);
@@ -1565,6 +1576,7 @@ export default function ServiceExactApp({
         onClose={handleLogoutSelf}
         onSwitchToPanel={podeGerenciar ? () => setView("gestao") : undefined}
       />
+      </VocabularioProvider>
     );
   }
 
@@ -1583,6 +1595,7 @@ export default function ServiceExactApp({
   };
 
   return (
+    <VocabularioProvider value={vocab}>
     <ServiceAccessProvider value={accessData}>
     <div className="app">
       {navOpen ? <div className="sb-backdrop" onClick={() => !showTour && setNavOpen(false)} /> : null}
@@ -1610,7 +1623,7 @@ export default function ServiceExactApp({
                   return (
                     <button key={item.id} className={`sb-link ${route === item.id ? "on" : ""}`} type="button" data-tour={item.id} onClick={() => { setRoute(item.id); if (!showTour) setNavOpen(false); }}>
                       <span className="sb-ic"><Icon name={CEX_ICON_FOR[item.id] ?? item.icon} size={17} /></span>
-                      {item.label}
+                      {ct(item.label)}
                       {badge > 0 ? <span className="sb-badge">{badge}</span> : null}
                     </button>
                   );
@@ -1645,6 +1658,7 @@ export default function ServiceExactApp({
               ministries={ministries}
               setRoute={setRoute}
               setDrawer={setDrawer}
+              telas={NAV_GROUPS.flatMap((g) => g.items.filter((item) => podeVerItem(item.id)).map((item) => ({ id: item.id, label: item.label, icon: CEX_ICON_FOR[item.id] ?? item.icon, grupo: g.group })))}
             />
           </div>
           <HelpFab lugar="barra" onTour={abrirTourAjuda} onSetup={abrirSetupAjuda} />
@@ -1830,6 +1844,7 @@ export default function ServiceExactApp({
       ) : null}
     </div>
     </ServiceAccessProvider>
+    </VocabularioProvider>
   );
 }
 
@@ -1851,17 +1866,37 @@ function GlobalSearch({
   ministries,
   setRoute,
   setDrawer,
+  telas = [],
 }: {
   people: PersonView[];
   members: MemberView[];
   ministries: MinistryView[];
   setRoute: (route: keyof typeof ROUTES) => void;
   setDrawer: (drawer: DrawerState) => void;
+  /* telas do menu que a pessoa vê: a busca acha pelo nome e pelos termos
+     (nome interno e nome que a igreja deu, lei 7) */
+  telas?: { id: string; label: string; icon: string; grupo: string }[];
 }) {
+  const { vocab, comTermos: ct } = useTermos();
   const [query, setQuery] = useState("");
   const term = query.trim().toLowerCase();
+  const termSemAcento = nomeComparavel(query);
   const results = term
     ? [
+        ...telas
+          .filter((tela) => {
+            const nomes = [textoBuscavel(tela.label, vocab), ...termosDaRota(tela.id).flatMap((t) => [TERMOS[t].tela, vocab[t].tela, vocab[t].curto])];
+            return nomes.some((n) => nomeComparavel(n).includes(termSemAcento));
+          })
+          .slice(0, 4)
+          .map((tela) => ({
+            key: `tela-${tela.id}`,
+            type: "Tela",
+            icon: tela.icon,
+            name: ct(tela.label),
+            sub: tela.grupo,
+            action: () => setRoute(tela.id as keyof typeof ROUTES),
+          })),
         ...members
           .filter((member) => member.name.toLowerCase().includes(term))
           .slice(0, 4)
@@ -1881,7 +1916,7 @@ function GlobalSearch({
           .slice(0, 4)
           .map((person) => ({
             key: `person-${person.id}`,
-            type: "Voluntário",
+            type: ct("{Voluntario}"),
             icon: "pessoa",
             name: person.name,
             sub: person.tags.join(" · ") || person.status,
@@ -1898,7 +1933,7 @@ function GlobalSearch({
             type: "Time",
             icon: "times",
             name: ministry.name,
-            sub: `${ministry.people.length} voluntários`,
+            sub: plural(ministry.people.length, ct("{voluntario}")),
             action: () => {
               setRoute("times");
               setDrawer({ kind: "ministry", id: ministry.id });
@@ -1932,7 +1967,7 @@ function GlobalSearch({
   return (
     <>
       <input
-        placeholder="Buscar membro, voluntário, time ou função..."
+        placeholder={ct("Buscar tela, membro, {voluntario}, time ou função...")}
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         onKeyDown={(event) => {
@@ -2078,21 +2113,22 @@ function Painel({
   setCheckinEventId: (id: string | null) => void;
   setupCounts: SetupCounts;
 }) {
+  const { comTermos: ct } = useTermos();
   const topPeople = [...people].sort((a, b) => (b.engagement ?? 0) - (a.engagement ?? 0)).slice(0, 5);
   const recentAnnouncements = porPublicacao(announcements).slice(0, 3);
   const [sobreAberto, setSobreAberto] = useState(false);
   /* v7 3.6: "Sobre estes números" explica, num lugar só, cada número e painel que está na tela */
   const sobre: Array<[string, string]> = [
-    ["Voluntários", "Pessoas que servem em algum time e estão com o status ativo, sem contar quem está em pausa ou de férias. Novos são os que chegaram à igreja nos últimos 30 dias."],
+    [ct("{Voluntarios}"), "Pessoas que servem em algum time e estão com o status ativo, sem contar quem está em pausa ou de férias. Novos são os que chegaram à igreja nos últimos 30 dias."],
     ["Confirmação", "De todo mundo escalado nesta semana, quantos já confirmaram presença no app."],
     ["Visitantes", "Visitantes que ainda estão na fase de acompanhamento, antes de virarem membros."],
     ["Pendências da escala", "Posições da escala desta semana que ainda não têm ninguém confirmado."],
     ...(semanasComPresenca >= 4 ? [["Engajamento", "Presença média de quem foi escalado nos últimos 90 dias."] as [string, string]] : []),
-    ["Próximos cultos", "Os próximos cultos ou eventos da agenda, na ordem em que vão acontecer."],
+    [ct("Próximos {cultos}"), ct("Os próximos {cultos} ou eventos da agenda, na ordem em que vão acontecer.")],
     ...(enqueteElegivel ? [["Avaliação de experiência", "Pesquisa rápida sobre como foi servir. Aparece só quando você está elegível pra responder."] as [string, string]] : []),
     ...(pesquisaElegivel ? [["Pulso da escala", "Pesquisa da própria igreja sobre como foi servir nesta escala. Diferente da avaliação de experiência."] as [string, string]] : []),
-    ...(journeyRequests.length > 0 ? [["Caminhada pendente", "Pedidos de avanço na caminhada (decisão, batismo, curso...) esperando aprovação da liderança."] as [string, string]] : []),
-    ...(semanasComPresenca >= 4 ? [["Voluntários mais engajados", "Quem tem a maior taxa de engajamento nas últimas escalas."] as [string, string]] : []),
+    ...(journeyRequests.length > 0 ? [[ct("{Caminhada} pendente"), ct("Pedidos de avanço na {caminhada} (decisão, batismo, curso...) esperando aprovação da liderança.")] as [string, string]] : []),
+    ...(semanasComPresenca >= 4 ? [[ct("{Voluntarios} mais engajados"), "Quem tem a maior taxa de engajamento nas últimas escalas."] as [string, string]] : []),
     ["Comunicação recente", "Os últimos avisos e posts do mural enviados pra igreja."],
     ...(kidsClasses.length > 0 ? [["Crianças por turma", "Quantas crianças estão em cada turma do Kids."] as [string, string], ["Crianças sumindo", "Crianças que não aparecem faz tempo. Vale um contato com a família."] as [string, string]] : []),
   ];
@@ -2100,7 +2136,7 @@ function Painel({
     <div className="content wide painel-inicio">
       <div className="ph">
         <div>
-          <h1 className="ph-title">{saudacao()}, {userName?.split(" ")[0] ?? "liderança"} <HelpDot text="Seu resumo da semana: próximos cultos, vagas em aberto na escala e o que precisa da sua atenção agora." /></h1>
+          <h1 className="ph-title">{saudacao()}, {userName?.split(" ")[0] ?? "liderança"} <HelpDot text={ct("Seu resumo da semana: próximos {cultos}, vagas em aberto na escala e o que precisa da sua atenção agora.")} /></h1>
           <p className="ph-sub">Visão da semana: quem está escalado, o que falta preencher e quem precisa de acompanhamento.</p>
         </div>
         <div className="ph-actions">
@@ -2127,7 +2163,7 @@ function Painel({
           {journeyRequests.length > 0 && (
             <button type="button" className="agora-row" onClick={() => document.getElementById("caminhada-pendente")?.scrollIntoView({ behavior: "smooth" })}>
               <span className="agora-ic"><Icon name="membros" size={17} /></span>
-              <span className="agora-main"><span className="agora-t">{journeyRequests.length === 1 ? "1 pedido na caminhada" : `${journeyRequests.length} pedidos na caminhada`}</span><span className="agora-s"> · esperando sua aprovação</span></span>
+              <span className="agora-main"><span className="agora-t">{journeyRequests.length === 1 ? ct("1 pedido na {caminhada}") : ct(`${journeyRequests.length} pedidos na {caminhada}`)}</span><span className="agora-s"> · esperando sua aprovação</span></span>
               <span className="agora-go">Revisar →</span>
             </button>
           )}
@@ -2136,7 +2172,7 @@ function Painel({
       <SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} />
       {/* v7 3.6: cada número aparece uma vez. Vagas abertas e visitantes sem contato já estão na lista do topo e em Pendências. */}
       <div className="kpi-row kpi-3">
-        <Kpi icon="pessoa" label="Voluntários" value={activePeople} foot={joinDot(`de ${plural(people.length, "cadastrado")}`, novosNoMes ? `${plural(novosNoMes, "novo", "novos")} em 30 dias` : null)} />
+        <Kpi icon="pessoa" label={ct("{Voluntarios}")} value={activePeople} foot={joinDot(`de ${plural(people.length, "cadastrado")}`, novosNoMes ? `${plural(novosNoMes, "novo", "novos")} em 30 dias` : null)} />
         <Kpi icon="ok" label="Confirmação" value={escaladosSemana ? `${confirmationRate}%` : "·"} foot={escaladosSemana ? `de ${plural(escaladosSemana, "escalado")} nesta semana` : "ninguém escalado nesta semana"} />
         <Kpi icon="visitante" label="Visitantes" value={visitorsInCare} foot={visitantesSemContato ? "em acompanhamento" : "em acompanhamento, todos com contato em dia"} />
       </div>
@@ -2184,7 +2220,7 @@ function Painel({
               {presenceRate === null ? (
                 <>
                   <div style={{ fontSize: "var(--fs-pn-14)", fontWeight: 600, color: "var(--white)" }}>Sem dados ainda</div>
-                  <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", marginTop: 4, lineHeight: 1.5 }}>Os números aparecem depois do primeiro culto com escala confirmada.</div>
+                  <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", marginTop: 4, lineHeight: 1.5 }}>{ct("Os números aparecem depois do primeiro {culto} com escala confirmada.")}</div>
                 </>
               ) : (
                 <>
@@ -2195,12 +2231,12 @@ function Painel({
             </div>
           </div>}
           <div className="panel">
-            <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Próximos cultos</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("cultos")}>Agenda</button></div>
+            <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> {ct("Próximos {cultos}")}</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("cultos")}>Agenda</button></div>
             <div className="panel-body flush">
             {/* v7 2.9: só o que ainda vai começar, no fuso da igreja (Brasília) */}
             {(() => {
               const proximos = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time)).slice(0, 3);
-              if (proximos.length === 0) return <div className="empty" style={{ padding: "14px 16px" }}>Nenhum culto marcado daqui pra frente.</div>;
+              if (proximos.length === 0) return <div className="empty" style={{ padding: "14px 16px" }}>{ct("Nenhum {culto} marcado daqui pra frente.")}</div>;
               return proximos.map((event) => (
                 <MiniEvent
                   key={event.id}
@@ -2236,12 +2272,12 @@ function Painel({
       {journeyRequests.length > 0 && (
         <div className="panel" id="caminhada-pendente" style={{ marginTop: 24 }}>
           <div className="panel-head">
-            <span className="panel-title"><Icon name="membros" size={14} /> Caminhada pendente</span>
+            <span className="panel-title"><Icon name="membros" size={14} /> {ct("{Caminhada} pendente")}</span>
           </div>
           <div className="panel-body flush">
             {journeyRequests.map((request) => {
               const member = members.find((m) => m.id === request.memberId);
-              const stepLabel = JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step;
+              const stepLabel = ct(JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step);
               return (
                 <div className="gap-row" key={request.id}>
                   <div className="gap-ic wait">!</div>
@@ -2261,7 +2297,7 @@ function Painel({
       )}
       <div className="dash-2col">
         {semanasComPresenca >= 4 && <div className="panel">
-          <div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={14} /> Voluntários mais engajados</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("pessoas")}>Todos</button></div>
+          <div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={14} /> {ct("{Voluntarios} mais engajados")}</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("pessoas")}>Todos</button></div>
           <div className="panel-body flush">
             {topPeople.map((person, index) => <PersonMini key={person.id} person={person} index={index} setDrawer={setDrawer} />)}
           </div>
@@ -2443,12 +2479,13 @@ function PedidosParaServir({ serveRequests, members, ministries }: { serveReques
 }
 
 function Times({ ministries, people, members, serveRequests, setDrawer, setModal }: { ministries: MinistryView[]; people: PersonView[]; members: MemberView[]; serveRequests: ServeRequest[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
+  const { comTermos: ct } = useTermos();
   return (
     <div className="content">
-      <PageHead title="Times" eyebrow="Pessoas" subtitle="Times, líderes, funções e voluntários vinculados." help="Louvor, Recepção, Kids... cada time tem um líder e suas funções próprias." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo time", subtitle: "Crie o time e já conte o propósito dele.", saveLabel: "Criar time", formFields: [{ k:"nome", label:"Nome do time", type:"text", req:true, ph:"ex: Louvor e Adoração" }, { k:"icon", label:"Ícone do time", type:"icon", value: DEFAULT_ICON }, { k:"desc", label:"Descrição curta", type:"text", ph:"Uma linha sobre o time" }, { k:"proposito", label:"Propósito", type:"area", ph:"Por que esse time existe?" }, { k:"aberto", label:"Recebendo voluntários?", type:"toggle", onLabel:"Aberto a novos", offLabel:"Equipe completa" }], action: { kind: "ministry" } })}>+ Novo time</button>} />
+      <PageHead title="Times" eyebrow="Pessoas" subtitle={ct("Times, líderes, funções e {voluntarios} vinculados.")} help="Louvor, Recepção, Kids... cada time tem um líder e suas funções próprias." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo time", subtitle: "Crie o time e já conte o propósito dele.", saveLabel: "Criar time", formFields: [{ k:"nome", label:"Nome do time", type:"text", req:true, ph:"ex: Louvor e Adoração" }, { k:"icon", label:"Ícone do time", type:"icon", value: DEFAULT_ICON }, { k:"desc", label:"Descrição curta", type:"text", ph:"Uma linha sobre o time" }, { k:"proposito", label:"Propósito", type:"area", ph:"Por que esse time existe?" }, { k:"aberto", label:ct("Recebendo {voluntarios}?"), type:"toggle", onLabel:"Aberto a novos", offLabel:"Equipe completa" }], action: { kind: "ministry" } })}>+ Novo time</button>} />
       <PedidosParaServir serveRequests={serveRequests} members={members} ministries={ministries} />
       <div className="team-grid">
-        {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => { const linkPerson = people.find((person) => person.id === link.personId); return <Av key={link.personId} name={linkPerson?.name ?? link.personName} photoUrl={linkPerson?.photoUrl} />; })}{ministry.people.length > 4 && <div className="av-more">+{ministry.people.length - 4}</div>}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">{ministry.people.find((link) => link.isLeader)?.personName ? <>Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName}</em></> : <span className="sem-lider">Sem líder · Definir</span>}</div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> voluntários</span><span className="team-stat"><b>{ministry.positions.length}</b> funções</span></div></button>)}
+        {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => { const linkPerson = people.find((person) => person.id === link.personId); return <Av key={link.personId} name={linkPerson?.name ?? link.personName} photoUrl={linkPerson?.photoUrl} />; })}{ministry.people.length > 4 && <div className="av-more">+{ministry.people.length - 4}</div>}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">{ministry.people.find((link) => link.isLeader)?.personName ? <>Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName}</em></> : <span className="sem-lider">Sem líder · Definir</span>}</div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> {ct("{voluntarios}")}</span><span className="team-stat"><b>{ministry.positions.length}</b> funções</span></div></button>)}
       </div>
     </div>
   );
@@ -2457,6 +2494,7 @@ function Times({ ministries, people, members, serveRequests, setDrawer, setModal
 /* Escalas : módulo em modules/escalas/ (4.1) */
 
 function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChildren, rooms, setDrawer, setModal, setCheckinEventId, setShareEventId }: { events: EventView[]; ministries: MinistryView[]; church?: ChurchView; kidsClasses: KidsClassView[]; kidsSessions: KidsSessionView[]; kidsChildren: ChildView[]; rooms: RoomView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; setCheckinEventId: (id: string) => void; setShareEventId: (id: string) => void }) {
+  const { comTermos: ct } = useTermos();
   const [kidsPickerEventId, setKidsPickerEventId] = useState<string | null>(null);
   const [kidsModal, setKidsModal] = useState<{ eventId: string; classId: string } | null>(null);
   /* visão de semana (lista da semana escolhida) ou de mês (calendário) */
@@ -2477,7 +2515,7 @@ function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChi
   ];
   return (
     <div className="content">
-      <PageHead title="Cultos e Agenda" eyebrow="Operação" subtitle="Agenda, roteiro, setlist e times envolvidos em cada culto." help="Seus cultos e eventos ficam aqui. Cada um pode virar uma escala, ganhar roteiro e setlist." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo culto ou evento", subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Culto da Manhã, Conferência de Jovens" }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"data", label:"Data", type:"date", half:true }, { k:"hora", label:"Horário de início", type:"time", half:true }], action: { kind: "event" } })}>+ Novo culto</button>} />
+      <PageHead title={ct("{Cultos} e Agenda")} eyebrow="Operação" subtitle={ct("Agenda, roteiro, setlist e times envolvidos em cada {culto}.")} help={ct("Seus {cultos} e eventos ficam aqui. Cada um pode virar uma escala, ganhar roteiro e setlist.")} action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {culto} ou evento"), subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:ct("ex: {Culto} da Manhã, Conferência de Jovens") }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"data", label:"Data", type:"date", half:true }, { k:"hora", label:"Horário de início", type:"time", half:true }], action: { kind: "event" } })}>{ct("+ Novo {culto}")}</button>} />
       <div className="toolbar cultos-tb">
         <div className="seg">
           <button className={vista === "semana" ? "on" : ""} type="button" onClick={() => setVista("semana")}>Semana</button>
@@ -2496,7 +2534,7 @@ function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChi
           <MiniCalendar events={events.map((e) => ({ date: parseISODate(e.eventDate) ?? new Date(), label: e.name, sub: joinDot(e.time, e.location), onClick: () => setDrawer({ kind: "event", id: e.id }) }))} />
         </div></div>
       ) : daSemana.length === 0 ? (
-        <EmptyState title="Nada nesta semana" text="Os cultos e eventos marcados para esta semana aparecem aqui." />
+        <EmptyState title="Nada nesta semana" text={ct("Os {cultos} e eventos marcados para esta semana aparecem aqui.")} />
       ) : null}
       {vista === "semana" && <div className="grid-2">
         {daSemana.map((event) => (
@@ -2767,6 +2805,7 @@ function ReuniaoForm({
   church: ChurchView | undefined;
   onClose: () => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const router = useRouter();
   const meetingRooms = rooms.filter((room) => room.allows_meetings !== false);
   const [titulo, setTitulo] = useState("");
@@ -2870,7 +2909,7 @@ function ReuniaoForm({
                 </button>
               );
             })}
-            {people.length === 0 ? <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum voluntário cadastrado.</span> : null}
+            {people.length === 0 ? <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{ct("Nenhum {voluntario} cadastrado.")}</span> : null}
           </div>
         </DrawerSection>
 
@@ -3414,11 +3453,12 @@ const RESERVA_TONE: Record<string, "olive" | "amber"> = { reuniao: "olive", ensa
 const RESERVA_TIPOS = [{ v: "reuniao", l: "Reunião" }, { v: "ensaio", l: "Ensaio" }, { v: "evento", l: "Evento" }, { v: "treinamento", l: "Treinamento" }, { v: "outro", l: "Outro" }];
 
 function Espacos({ rooms, reservations, church, setModal, embed }: { rooms: RoomView[]; reservations: ReservationView[]; church?: ChurchView; setModal: (modal: ModalState) => void; embed?: boolean }) {
+  const { comTermos: ct } = useTermos();
   const [filter, setFilter] = useState("todas");
   const [reservar, setReservar] = useState<{ salaInicial?: string; dataInicial?: string } | null>(null);
   const roomById = new Map(rooms.map((room) => [room.id, room]));
   const visibleReservations = reservations.filter((reservation) => filter === "todas" || reservation.room_id === filter);
-  const openNewRoom = () => setModal({ eyebrow: "Criar", title: "Nova sala / espaço", subtitle: "Um espaço físico da igreja disponível para reservas. Todo culto, ensaio, reunião ou evento passa a escolher o local aqui, com capacidade sempre visível.", saveLabel: "Criar sala", formFields: [{ k:"nome", label:"Nome do espaço", type:"text", req:true, ph:"ex: Sala 3, Salão de festas" }, { k:"capacidade", label:"Capacidade (pessoas)", type:"text", half:true, ph:"ex: 30" }, { k:"local", label:"Onde fica", type:"text", half:true, ph:"ex: 1º andar, Anexo" }, { k:"recursos", label:"Recursos disponíveis", type:"text", ph:"Som, Projeção, Piano", hint:"Separe por vírgula." }, { k:"permiteReuniao", label:"Serve pra reunião/culto/ensaio de adultos?", type:"toggle", value:"true", onLabel:"Sim", offLabel:"Não (ex: Berçário)" }], action: { kind: "room" } });
+  const openNewRoom = () => setModal({ eyebrow: "Criar", title: "Nova sala / espaço", subtitle: ct("Um espaço físico da igreja disponível para reservas. Todo {culto}, ensaio, reunião ou evento passa a escolher o local aqui, com capacidade sempre visível."), saveLabel: "Criar sala", formFields: [{ k:"nome", label:"Nome do espaço", type:"text", req:true, ph:"ex: Sala 3, Salão de festas" }, { k:"capacidade", label:"Capacidade (pessoas)", type:"text", half:true, ph:"ex: 30" }, { k:"local", label:"Onde fica", type:"text", half:true, ph:"ex: 1º andar, Anexo" }, { k:"recursos", label:"Recursos disponíveis", type:"text", ph:"Som, Projeção, Piano", hint:"Separe por vírgula." }, { k:"permiteReuniao", label:ct("Serve pra reunião/{culto}/ensaio de adultos?"), type:"toggle", value:"true", onLabel:"Sim", offLabel:"Não (ex: Berçário)" }], action: { kind: "room" } });
   const openNewReservation = () => setReservar({ salaInicial: filter !== "todas" ? filter : undefined });
   const header = embed ? (
     <div className="cfg-card-head-row">
@@ -3436,7 +3476,7 @@ function Espacos({ rooms, reservations, church, setModal, embed }: { rooms: Room
       title="Espaços e reservas"
       eyebrow="Operação"
       subtitle="Salas da igreja e quem usa cada espaço. Reuniões, eventos, cursos e ensaios reservam aqui sem misturar agenda."
-      help="Cadastre as salas e espaços físicos da igreja. Reuniões, ensaios e cultos reservam um espaço daqui pra não haver choque de agenda."
+      help={ct("Cadastre as salas e espaços físicos da igreja. Reuniões, ensaios e {cultos} reservam um espaço daqui pra não haver choque de agenda.")}
       action={<><button className="btn btn-sec" type="button" onClick={openNewRoom}>+ Nova sala</button><button className="btn btn-pri" type="button" onClick={openNewReservation}>+ Reservar espaço</button></>}
     />
   );
@@ -3478,6 +3518,7 @@ function Espacos({ rooms, reservations, church, setModal, embed }: { rooms: Room
 }
 
 function TurmasKids({ kidsClasses, rooms, setModal }: { kidsClasses: KidsClassView[]; rooms: RoomView[]; setModal: (modal: ModalState) => void }) {
+  const { comTermos: ct } = useTermos();
   const roomById = new Map(rooms.map((room) => [room.id, room]));
   const openForm = (existing?: KidsClassView) => setModal({
     eyebrow: existing ? "Editar" : "Criar",
@@ -3499,7 +3540,7 @@ function TurmasKids({ kidsClasses, rooms, setModal }: { kidsClasses: KidsClassVi
       <div className="cfg-card-head-row">
         <div>
           <div className="cfg-card-t">Turmas Kids</div>
-          <div className="cfg-card-s">Berçário, Maternal, Primários... cada turma abre a própria sessão de check-in no dia do culto.</div>
+          <div className="cfg-card-s">{ct("Berçário, Maternal, Primários... cada turma abre a própria sessão de check-in no dia do {culto}.")}</div>
         </div>
         <button className="btn btn-pri btn-sm" type="button" onClick={() => openForm()}>+ Nova turma</button>
       </div>
@@ -3648,6 +3689,7 @@ function ChildFormModal({
   church: ChurchView;
   onClose: () => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const router = useRouter();
   const [name, setName] = useState(child?.name ?? "");
   const [birth, setBirth] = useState(child?.birth ?? "");
@@ -3810,7 +3852,7 @@ function ChildFormModal({
               {people.map((person) => <option key={person.id} value={person.name} />)}
             </datalist>
             <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={addGuardian}>+ Adicionar responsável</button>
-            <div className="cell-sub" style={{ marginTop: 6 }}>O responsável precisa já ter um cadastro de voluntário/membro no Service pra aparecer aqui.</div>
+            <div className="cell-sub" style={{ marginTop: 6 }}>{ct("O responsável precisa já ter um cadastro de {voluntario}/membro no Service pra aparecer aqui.")}</div>
           </div>
 
           <label className="field" style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
@@ -3915,6 +3957,7 @@ function Decisoes({
   setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const [q, setQ] = useState("");
   const [f, setF] = useState<"todas" | "novo" | "acompanhando" | "encaminhado">("todas");
   const personById = new Map(people.map((person) => [person.id, person]));
@@ -3930,13 +3973,13 @@ function Decisoes({
     <div className="content wide">
       <PageHead
         title="Decisões por Jesus"
-        eyebrow="Caminhada"
-        subtitle="Quem aceitou ou se reconciliou. Cada decisão vira uma pessoa no sistema e começa uma caminhada: registre, acompanhe e encaminhe."
-        help="Todo mundo que decidiu por Jesus ou se reconciliou num culto. A decisão inicia a caminhada da pessoa até o batismo."
-        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova decisão", subtitle: "Registre quem decidiu, o culto e quem fará o acompanhamento.", saveLabel: "Registrar decisão", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem decidiu" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"culto", label:"Culto", type:"text", half:true, ph:"ex: Culto da Manhã" }, { k:"responsavel", label:"Responsável pelo acompanhamento", type:"text", ph:"Quem vai acompanhar" }], action: { kind: "decision" } })}>+ Registrar decisão</button>}
+        eyebrow={ct("{Caminhada}")}
+        subtitle={ct("Quem aceitou ou se reconciliou. Cada decisão vira uma pessoa no sistema e começa uma {caminhada}: registre, acompanhe e encaminhe.")}
+        help={ct("Todo mundo que decidiu por Jesus ou se reconciliou num {culto}. A decisão inicia a {caminhada} da pessoa até o batismo.")}
+        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova decisão", subtitle: ct("Registre quem decidiu, o {culto} e quem fará o acompanhamento."), saveLabel: "Registrar decisão", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem decidiu" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"culto", label:ct("{Culto}"), type:"text", half:true, ph:ct("ex: {Culto} da Manhã") }, { k:"responsavel", label:"Responsável pelo acompanhamento", type:"text", ph:"Quem vai acompanhar" }], action: { kind: "decision" } })}>+ Registrar decisão</button>}
       />
       <div className="kpi-row">
-        <Kpi icon="visitante" label="Decisões no mês" value={decisions.length} foot="registradas na caminhada" help="Quantas decisões por Jesus ou reconciliações foram registradas neste mês." />
+        <Kpi icon="visitante" label="Decisões no mês" value={decisions.length} foot={ct("registradas na {caminhada}")} help="Quantas decisões por Jesus ou reconciliações foram registradas neste mês." />
         <Kpi icon="config" label="A contatar" value={newDecisions.length} foot="aguardando primeiro contato" amber help="Decisões novas que ainda não tiveram o primeiro contato da equipe de acompanhamento." />
         <Kpi icon="pessoa" label="Em acompanhamento" value={following.length} foot="discipulado em andamento" help="Quem já foi contatado e está no meio do discipulado inicial." />
         <Kpi icon="relatorios" label="Encaminhados" value={forwarded.length} foot="já viraram membros" help="Decisões que já completaram o caminho e viraram membros da igreja." />
@@ -3956,19 +3999,19 @@ function Decisoes({
         <span className="panel-meta">{visible.length} de {decisions.length} decisões</span>
       </div>
       <div className="tbl">
-        <div className="tr head" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }}><span>Pessoa</span><span>Quando & culto</span><span>Responsável</span><span>Situação</span></div>
+        <div className="tr head" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }}><span>Pessoa</span><span>{ct("Quando & {culto}")}</span><span>Responsável</span><span>Situação</span></div>
         {visible.map((decision) => {
           const responsible = decision.responsible_id ? personById.get(decision.responsible_id) : null;
           return (
             <button className="tr click" key={decision.id} style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }} type="button" onClick={() => setDrawer({ kind: "decision", id: decision.id })}>
               <div className="cell-person"><Av name={decision.name} size="md" /><div><div className="cell-name">{decision.name} <span className="chip chip-ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"}</span></div><div className="cell-sub">{decision.phone}</div></div></div>
-              <div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>{formatDateBR(decision.happened_on)}</div><div className="cell-sub">{decision.service_name || "Culto não informado"}</div></div>
+              <div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>{formatDateBR(decision.happened_on)}</div><div className="cell-sub">{decision.service_name || ct("{Culto} não informado")}</div></div>
               <div className="cell-person">{responsible ? <Av name={responsible.name} size="sm" photoUrl={responsible.photoUrl} /> : null}<div className="cell-sub" style={{ marginTop: 0 }}>{responsible?.name ?? "a definir"}</div></div>
               <div><Chip status={decision.status === "novo" ? "wait" : decision.status === "encaminhado" ? "ok" : "ativo"} /></div>
             </button>
           );
         })}
-        {visible.length === 0 ? <EmptyState title="Nenhuma decisão por aqui" text="Quem decidir por Jesus ou se reconciliar num culto aparece nesta lista." /> : null}
+        {visible.length === 0 ? <EmptyState title="Nenhuma decisão por aqui" text={ct("Quem decidir por Jesus ou se reconciliar num {culto} aparece nesta lista.")} /> : null}
       </div>
     </div>
   );
@@ -3998,12 +4041,13 @@ function Batismos({
   setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const upcoming = baptismClasses.filter((c) => c.status !== "concluida");
   const concluded = baptismClasses.filter((c) => c.status === "concluida");
   const localOptions = [...rooms.map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` })), { v: OUTRO_LOCAL, l: "Outro espaço (rio, praia, sítio...)" }];
   return (
     <div className="content wide">
-      <PageHead title="Batismos" eyebrow="Caminhada" subtitle="Turmas de batismo nas águas. Inscrições, curso pré-batismo, agenda e histórico na linha do tempo da pessoa." help="Turmas de batismo: quem vai ser batizado, quando e onde. Fecha um passo importante na caminhada da pessoa." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova turma de batismo", subtitle: "Crie a turma, defina data, local e quem vai oficiar.", saveLabel: "Criar turma", formFields: [{ k:"label", label:"Nome da turma", type:"text", req:true, ph:"ex: Batismo de Julho 2025" }, { k:"data", label:"Data do batismo", type:"date", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"ex: Rio Tietê, Praia de Santos...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"pastor", label:"Pastor responsável", type:"text", ph:"Quem vai oficiar" }], action: { kind: "baptismClass" } })}>+ Nova turma</button>} />
+      <PageHead title="Batismos" eyebrow={ct("{Caminhada}")} subtitle="Turmas de batismo nas águas. Inscrições, curso pré-batismo, agenda e histórico na linha do tempo da pessoa." help={ct("Turmas de batismo: quem vai ser batizado, quando e onde. Fecha um passo importante na {caminhada} da pessoa.")} action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova turma de batismo", subtitle: "Crie a turma, defina data, local e quem vai oficiar.", saveLabel: "Criar turma", formFields: [{ k:"label", label:"Nome da turma", type:"text", req:true, ph:"ex: Batismo de Julho 2025" }, { k:"data", label:"Data do batismo", type:"date", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"ex: Rio Tietê, Praia de Santos...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"pastor", label:"Pastor responsável", type:"text", ph:"Quem vai oficiar" }], action: { kind: "baptismClass" } })}>+ Nova turma</button>} />
       <div className="kpi-row">
         <Kpi icon="identidade" label="Turmas abertas" value={baptismClasses.filter((c) => c.open_enrollment).length} foot="com inscrições disponíveis" help="Turmas de batismo que ainda estão aceitando novas inscrições." />
         <Kpi icon="pessoa" label="Candidatos" value={baptismCandidates.length} foot="em preparação" help="Quem está inscrito numa turma, fazendo o curso pré-batismo." />
@@ -4090,6 +4134,7 @@ function CursosTrilhas({
   members: MemberView[];
   church?: ChurchView;
 }) {
+  const { comTermos: ct } = useTermos();
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [view, setView] = useState<"galeria" | "org">("galeria");
@@ -4117,9 +4162,9 @@ function CursosTrilhas({
     <div className="content wide">
       <PageHead
         title="Cursos e Trilhas"
-        eyebrow="Caminhada"
+        eyebrow={ct("{Caminhada}")}
         subtitle="Trilhas internas de formação, aulas e participantes. Não mistura com cursos comerciais da plataforma."
-        help="Formações da igreja, da decisão à liderança. Cada aula concluída entra na caminhada da pessoa."
+        help={ct("Formações da igreja, da decisão à liderança. Cada aula concluída entra na {caminhada} da pessoa.")}
         action={
           <button className="btn btn-pri" type="button" onClick={() => setEditingId("new")}>
             + Nova trilha
@@ -4218,6 +4263,7 @@ function CursoBuilderColuna({
   onOpenEditor: (id: string | "new") => void;
   onOpenDrawer: (id: string) => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const access = useServiceAccess();
   return (
     <div
@@ -4245,7 +4291,7 @@ function CursoBuilderColuna({
               <div className="cb-card-name">{c.name}</div>
               {requirementsFor(access.requirements, "course", c.id).length > 0 && (
                 <div className="cb-req">
-                  exige: {requirementsFor(access.requirements, "course", c.id).map((r) => requirementLabel(r, access).replace(/^[^:]+: /, "")).join(", ")}
+                  exige: {requirementsFor(access.requirements, "course", c.id).map((r) => ct(requirementLabel(r, access).replace(/^[^:]+: /, ""))).join(", ")}
                 </div>
               )}
             </div>
@@ -5160,6 +5206,7 @@ function Relatorios({
   setRoute: (route: keyof typeof ROUTES) => void;
   church: ChurchView | undefined;
 }) {
+  const { comTermos: ct } = useTermos();
   const gruposAtivo = church?.settings?.gruposCfg?.ativo ?? true;
   const gruposSigla = church?.settings?.gruposCfg?.sigla ?? "GC";
   /* recorte das comparações: últimos 30 dias ou trimestre (90), sempre contra o período anterior de mesmo tamanho */
@@ -5257,12 +5304,12 @@ function Relatorios({
       ["Indicadores", "Retenção de visitantes (%)", retencaoAtual],
       ["Indicadores", "Cobertura de escala (%)", confirmationRate],
       ["Indicadores", "Cobertura de escala no recorte (%)", coberturaRecente ?? ""],
-      ["Indicadores", "Frequência média por culto", freqRecente ?? freqGeral],
+      ["Indicadores", ct("Frequência média por {culto}"), freqRecente ?? freqGeral],
       ...serieLabels.map((l, i) => ["Crescimento de membros", l, series[i]]),
       ...FUNNEL_STAGES.map((st, i) => ["Funil de visitantes", st.label, funnelCounts[i]]),
       ...[["saudavel", "Saudável"], ["atencao", "Atenção"], ["sobrecarga", "Sobrecarga"], ["afastando", "Afastando"]].map(([k, l]) => ["Bem-estar", l, contar(k)]),
-      ...ministries.map((m) => ["Voluntários por time", m.name, m.people.length]),
-      ...caminhadaEtapas.map((st, i) => ["Membros por caminhada", st, members.filter((m) => m.journey[i]).length]),
+      ...ministries.map((m) => [ct("{Voluntarios} por time"), m.name, m.people.length]),
+      ...caminhadaEtapas.map((st, i) => [ct("Membros por {caminhada}"), st, members.filter((m) => m.journey[i]).length]),
       ...(gruposAtivo ? gcCounts.map(({ group, n }) => [`Membros por ${gruposSigla}`, group.name, n]) : []),
     ];
     baixarCsv(`relatorio-${P === 90 ? "trimestre" : "30-dias"}-${dia}.csv`, linhas);
@@ -5270,17 +5317,17 @@ function Relatorios({
   return (
     <div className="content wide">
       <PageHead title="Relatórios e indicadores" eyebrow="Gestão" subtitle="A saúde da igreja num lugar: crescimento, integração, cobertura de escala e o bem-estar de quem serve." help="A saúde da igreja num lugar: crescimento, cobertura de escala e o bem-estar de quem serve. Use o recorte de trimestre pra comparar." action={<><div className="seg" role="group" aria-label="Recorte das comparações">{([[30, "30 dias"], [90, "Trimestre"]] as const).map(([v, l]) => <button key={v} type="button" className={periodo === v ? "on" : ""} aria-pressed={periodo === v} onClick={() => setPeriodo(v)}>{l}</button>)}</div><button className="btn btn-pri" type="button" onClick={baixarRelatorio}>Baixar relatório →</button></>} />
-      <div className="kpi-row"><Kpi icon="membros" label="Membros na rede" value={members.length} foot={foot(membrosDelta, " novos", "cadastrados")} help="Toda a congregação, somando todas as congregações da rede." /><Kpi icon="visitante" label="Retenção de visitantes" value={`${retencaoAtual}%`} foot={foot(retencaoDelta, "%", "viram membros")} help="De todos os visitantes, quantos completaram o caminho até virar membro." /><Kpi icon="escalas" label="Cobertura de escala" value={`${confirmationRate}%`} foot={foot(coberturaDelta, "pp", "das posições preenchidas")} help="Das vagas de escala em aberto, quantas já têm alguém confirmado." /><Kpi icon="cultos" label="Frequência média" value={freqRecente ?? freqGeral} foot={foot(freqDelta, "", "por culto")} help="Quantas pessoas em média marcam presença por culto." /></div>
+      <div className="kpi-row"><Kpi icon="membros" label="Membros na rede" value={members.length} foot={foot(membrosDelta, " novos", "cadastrados")} help="Toda a congregação, somando todas as congregações da rede." /><Kpi icon="visitante" label="Retenção de visitantes" value={`${retencaoAtual}%`} foot={foot(retencaoDelta, "%", "viram membros")} help="De todos os visitantes, quantos completaram o caminho até virar membro." /><Kpi icon="escalas" label="Cobertura de escala" value={`${confirmationRate}%`} foot={foot(coberturaDelta, "pp", "das posições preenchidas")} help="Das vagas de escala em aberto, quantas já têm alguém confirmado." /><Kpi icon="cultos" label="Frequência média" value={freqRecente ?? freqGeral} foot={foot(freqDelta, "", ct("por {culto}"))} help={ct("Quantas pessoas em média marcam presença por {culto}.")} /></div>
       <div className="dash-3col">
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={13} /> Crescimento de membros <HelpDot label="Como calculamos" text="Quantos membros novos entraram nos últimos meses." /></span><span className="panel-meta">últimos meses</span></div><div className="panel-body"><div style={{ fontSize: "var(--fs-pn-32)", fontWeight: 700 }}>{members.length}<span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>membros no total</span></div><div style={{ marginTop: 14 }}><Bars series={series} labels={serieLabels} /></div></div></div>
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="visitante" size={13} /> Funil de visitantes <HelpDot label="Como calculamos" text="Quantos visitantes estão em cada etapa, da primeira visita até virar membro." /></span><button className="panel-link" type="button" onClick={() => setRoute("visitantes")}>Abrir</button></div><div className="panel-body flush">{FUNNEL_STAGES.map((s, i) => <div className="dist-row" key={s.id}><span className="dist-name" style={{ width: 140 }}>{s.label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${Math.max(4, (funnelCounts[i] / funnelMax) * 100)}%` }} /></div><span className="dist-num">{funnelCounts[i]}</span></div>)}</div></div>
       </div>
       <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">Termômetro de bem-estar</span><span className="line" /></div>
       <div className="well-sum">{[["saudavel", contar("saudavel"), "Saudável"], ["atencao", contar("atencao"), "Atenção"], ["sobrecarga", contar("sobrecarga"), "Sobrecarga"], ["afastando", contar("afastando"), "Afastando"]].map(([level, count, label]) => <div className="well-pill" key={level}><div className="n">{count}</div><div className="l"><span className={`well-dot ${level}`} />{label}</div></div>)}</div>
-      <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={13} /> Quem precisa de atenção <HelpDot label="Como calculamos" text="Voluntários em pausa, de férias ou com engajamento abaixo da média nas últimas escalas." /></span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>Voluntários</button></div><div className="panel-body flush">{(wellRows.length ? wellRows : people.slice(0, 8).map((p) => ({ person: p, cls: "atencao", tag: "Atenção" }))).slice(0, 8).map(({ person, cls, tag }) => <div className="well-row" key={person.id}><Av name={person.name} size="md" photoUrl={person.photoUrl} /><div className="mini-main"><div className="mini-title">{person.name}</div><div className="mini-sub">{person.status !== "ativo" ? "Em pausa ou férias." : "Engajamento abaixo da média."}</div></div><div className="well-meter"><div className="well-track"><div className={`well-fill ${cls}`} style={{ width: `${person.engagement ?? 50}%` }} /></div><div className={`well-tag ${cls}`}>{tag}</div></div></div>)}</div></div>
+      <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={13} /> Quem precisa de atenção <HelpDot label="Como calculamos" text={ct("{Voluntarios} em pausa, de férias ou com engajamento abaixo da média nas últimas escalas.")} /></span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>{ct("{Voluntarios}")}</button></div><div className="panel-body flush">{(wellRows.length ? wellRows : people.slice(0, 8).map((p) => ({ person: p, cls: "atencao", tag: "Atenção" }))).slice(0, 8).map(({ person, cls, tag }) => <div className="well-row" key={person.id}><Av name={person.name} size="md" photoUrl={person.photoUrl} /><div className="mini-main"><div className="mini-title">{person.name}</div><div className="mini-sub">{person.status !== "ativo" ? "Em pausa ou férias." : "Engajamento abaixo da média."}</div></div><div className="well-meter"><div className="well-track"><div className={`well-fill ${cls}`} style={{ width: `${person.engagement ?? 50}%` }} /></div><div className={`well-tag ${cls}`}>{tag}</div></div></div>)}</div></div>
       <div className="dash-2col" style={{ marginTop: 28 }}>
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="times" size={13} /> Voluntários por time <HelpDot label="Como calculamos" text="Quantos voluntários cada time tem hoje." /></span><button className="panel-link" type="button" onClick={() => setRoute("times")}>Times</button></div><div className="panel-body flush">{ministries.map((ministry) => <div className="dist-row" key={ministry.id}><span className="dist-name">{ministry.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(ministry.people.length / maxMinistry) * 100}%` }} /></div><span className="dist-num">{ministry.people.length}</span></div>)}</div></div>
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por caminhada <HelpDot label="Como calculamos" text="Em qual etapa da caminhada (decisão, batismo, curso, GC, servindo) cada membro está." /></span><span className="panel-meta">{members.length} pessoas</span></div><div className="panel-body flush">{caminhadaEtapas.map((step, index) => { const count = members.filter((member) => member.journey[index]).length; return <div className="dist-row" key={step}><span className="dist-name">{step}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${members.length ? (count / members.length) * 100 : 0}%` }} /></div><span className="dist-num">{count}</span></div>; })}</div></div>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="times" size={13} /> {ct("{Voluntarios} por time")} <HelpDot label="Como calculamos" text={ct("Quantos {voluntarios} cada time tem hoje.")} /></span><button className="panel-link" type="button" onClick={() => setRoute("times")}>Times</button></div><div className="panel-body flush">{ministries.map((ministry) => <div className="dist-row" key={ministry.id}><span className="dist-name">{ministry.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(ministry.people.length / maxMinistry) * 100}%` }} /></div><span className="dist-num">{ministry.people.length}</span></div>)}</div></div>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> {ct("Membros por {caminhada}")} <HelpDot label="Como calculamos" text={ct("Em qual etapa da {caminhada} (decisão, batismo, curso, GC, servindo) cada membro está.")} /></span><span className="panel-meta">{members.length} pessoas</span></div><div className="panel-body flush">{caminhadaEtapas.map((step, index) => { const count = members.filter((member) => member.journey[index]).length; return <div className="dist-row" key={step}><span className="dist-name">{step}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${members.length ? (count / members.length) * 100 : 0}%` }} /></div><span className="dist-num">{count}</span></div>; })}</div></div>
       </div>
       <div className="dash-2col" style={{ marginTop: 28 }}>
         {gruposAtivo && <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por {gruposSigla} <HelpDot label="Como calculamos" text="Quantos membros cada grupo tem hoje." /></span><span className="panel-meta">{fellowshipGroups.length} grupos</span></div><div className="panel-body flush">{gcCounts.map(({ group, n }) => <div className="dist-row" key={group.id}><span className="dist-name">{group.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(n / maxGc) * 100}%` }} /></div><span className="dist-num">{n}</span></div>)}{fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "12px 0" }}>Nenhum grupo cadastrado ainda.</div>}</div></div>}
@@ -5314,7 +5361,7 @@ const ACCENTS = [
 const ACOES_V2 = [
   { id: "painel", nome: "Início e relatórios", grupo: "Início" },
   { id: "membros", nome: "Pessoas e grupos", grupo: "Pessoas" },
-  { id: "voluntarios", nome: "Voluntários", grupo: "Pessoas" },
+  { id: "voluntarios", nome: "{Voluntarios}", grupo: "Pessoas" },
   { id: "visitantes", nome: "Visitantes", grupo: "Pessoas" },
   { id: "kids", nome: "Crianças", grupo: "Pessoas" },
   { id: "decisoes", nome: "Decisões", grupo: "Pessoas" },
@@ -5322,7 +5369,7 @@ const ACOES_V2 = [
   { id: "escala", nome: "Escalas", grupo: "Ministério" },
   { id: "ensaios", nome: "Ensaios", grupo: "Ministério" },
   { id: "reunioes", nome: "Reuniões", grupo: "Ministério" },
-  { id: "cultos", nome: "Cultos, eventos e espaços", grupo: "Agenda" },
+  { id: "cultos", nome: "{Cultos}, eventos e espaços", grupo: "Agenda" },
   { id: "comunica", nome: "Mural e pesquisas", grupo: "Comunicação" },
   { id: "conversas", nome: "Conversas", grupo: "Comunicação" },
   { id: "batismos", nome: "Batismos", grupo: "Formação" },
@@ -5339,8 +5386,8 @@ const PAPEIS_V2 = [
   { id: "master", nome: "Pastor Master", desc: "Controle total da rede", ic: "globo" },
   { id: "pastor", nome: "Pastor", desc: "Sua congregação inteira", ic: "identidade" },
   { id: "lider", nome: "Líder", desc: "Seu time e grupo", ic: "times" },
-  { id: "voluntario", nome: "Voluntário", desc: "Quem serve num time. Usa o app; vê no painel só o que você ligar aqui", ic: "pessoa" },
-  { id: "membro", nome: "Membro", desc: "App: caminhada, cursos e o que for liberado", ic: "pessoa" },
+  { id: "voluntario", nome: "{Voluntario}", desc: "Quem serve num time. Usa o app; vê no painel só o que você ligar aqui", ic: "pessoa" },
+  { id: "membro", nome: "Membro", desc: "App: {caminhada}, cursos e o que for liberado", ic: "pessoa" },
 ] as const;
 
 type PapelV2 = (typeof PAPEIS_V2)[number]["id"];
@@ -5382,6 +5429,7 @@ function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
   onClose: () => void;
   onRefresh: () => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const profile = ministry.profile as { comoTrabalhamos?: string; chegada?: string; responsabilidades?: string[] };
   const access = useServiceAccess();
   const [nome, setNome] = useState(ministry.name);
@@ -5441,7 +5489,7 @@ function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
           <div className="field"><label className="field-label">Ícone do time</label><IconPicker value={icon} onChange={setIcon} /></div>
           <div className="field"><label className="field-label">Propósito</label><input className="input" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Por que esse time existe" /></div>
           <div className="field"><label className="field-label">Como trabalhamos</label><textarea className="textarea" value={comoTrabalhamos} onChange={(e) => setComoTrabalhamos(e.target.value)} placeholder="Rotina, ensaios, escala..." /></div>
-          <div className="field"><label className="field-label">Horário de chegada</label><input className="input" value={chegada} onChange={(e) => setChegada(e.target.value)} placeholder="ex: 1h antes do culto" /></div>
+          <div className="field"><label className="field-label">Horário de chegada</label><input className="input" value={chegada} onChange={(e) => setChegada(e.target.value)} placeholder={ct("ex: 1h antes do {culto}")} /></div>
           <div className="field">
             <label className="field-label">O que esperamos (uma por linha)</label>
             <textarea className="textarea" value={responsabilidades} onChange={(e) => setResponsabilidades(e.target.value)} placeholder={"ex: Chegar no horário\nAvisar com antecedência se não puder servir"} />
@@ -5522,6 +5570,7 @@ function AcessosCard({
   church: ChurchView | undefined;
   currentRole: "master" | "pastor" | "lider" | "membro";
 }) {
+  const { comTermos: ct } = useTermos();
   const router = useRouter();
   const { personGrants, currentPersonId } = useServiceAccess();
   const [q, setQ] = useState("");
@@ -5583,7 +5632,7 @@ function AcessosCard({
                 return (
                   <button key={r.id} type="button" className={`acesso-tog${on ? " on" : ""}`} onClick={() => toggleGrant(r.id)}>
                     <span className="acesso-tog-ic"><Icon name={CEX_ICON_FOR[r.id] ?? "config"} size={15} /></span>
-                    <span className="acesso-tog-l">{r.label}</span>
+                    <span className="acesso-tog-l">{ct(r.label)}</span>
                     <span className={`acesso-tog-sw${on ? " on" : ""}`} />
                   </button>
                 );
@@ -5936,6 +5985,7 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
   onSave: (d: PesquisaDraft) => Promise<void>;
   onCancel: () => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const [d, setD] = useState<PesquisaDraft>(initial);
   const isNew = initial.id.startsWith("nova-");
   const times = Array.from(new Set(ministries.map((m) => m.name))).sort((a, b) => a.localeCompare(b, "pt-BR"));
@@ -5970,7 +6020,7 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
         {d.segmentacaoModo === "papel" && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {PAPEIS_V2.map((pp) => (
-              <button key={pp.id} type="button" className={`seg-chip${d.segmentacaoValores.includes(pp.id) ? " on" : ""}`} onClick={() => toggleValor(pp.id)}>{pp.nome}</button>
+              <button key={pp.id} type="button" className={`seg-chip${d.segmentacaoValores.includes(pp.id) ? " on" : ""}`} onClick={() => toggleValor(pp.id)}>{ct(pp.nome)}</button>
             ))}
           </div>
         )}
@@ -6120,6 +6170,7 @@ function TagElencoModal({
   people: PersonView[];
   onClose: () => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const router = useRouter();
   const [q, setQ] = useState("");
   const [localTag, setLocalTag] = useState(tag);
@@ -6168,13 +6219,13 @@ function TagElencoModal({
           <div className="modal-eyebrow">Frente · {tag.name}</div>
           <div className="modal-title">Quem serve nos {tag.name}</div>
           <div className="modal-sub">
-            Marque os voluntários que fazem parte deste time. Toque na estrela para definir quem é líder do time. {plural(dentro, "marcado")}.
+            {ct("Marque os {voluntarios} que fazem parte deste time.")} Toque na estrela para definir quem é líder do time. {plural(dentro, "marcado")}.
           </div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
           <div className="tb-search" style={{ marginBottom: 14 }}>
             <span className="si"><Icon name="buscar" size={13} /></span>
-            <input placeholder="Buscar voluntário..." value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
+            <input placeholder={ct("Buscar {voluntario}...")} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
           </div>
           {lista.map((p) => {
             const on = p.tags.includes(tag.id);
@@ -6339,6 +6390,7 @@ function Config({
   setModal: (modal: ModalState) => void;
   permissionsMatrix: Record<string, Record<string, boolean>>;
 }) {
+  const { comTermos: ct } = useTermos();
   const router = useRouter();
   /* alguém sem acesso geral a Configurações, mas liberado só pra abas específicas
      (Config → Acessos por pessoa: "marca" ou "pesquisas"), só enxerga essas abas. */
@@ -6353,7 +6405,7 @@ function Config({
   /* celular: lista primeiro; ao escolher, abre a página com voltar */
   const [cfgAberta, setCfgAberta] = useState(false);
   const ONLY_HEAD: Record<string, { t: string; s: string }> = {
-    grupos: { t: "Grupos", s: "Os pequenos grupos da igreja: nome, líderes, dia e lugar." },
+    grupos: { t: ct("{Grupos}"), s: "Os pequenos grupos da igreja: nome, líderes, dia e lugar." },
     pesquisas: { t: "Pesquisas", s: "Perguntas para a igreja responder pelo app, com resultado em tempo real." },
     pagina: { t: "Página da igreja", s: "O link da bio: o que aparece, a ordem e as cores da página." },
   };
@@ -6538,6 +6590,11 @@ function Config({
   const [identidade, setIdentidade] = useChurchSettingsField<IdentidadeCfg>("identidadeCfg", IDENTIDADE_CFG_DEFAULT, church, () => router.refresh());
   const patchIdentidade = (patch: Partial<IdentidadeCfg>) => setIdentidade((prev) => ({ ...prev, ...patch }));
 
+  /* vocabulário da igreja (lei 7): mora na matriz, como a marca */
+  const [vocabEdit, setVocabEdit] = useState<Vocabulario>(() => normalizarVocabulario(sede?.vocabulario, sede?.settings?.gruposCfg?.termoP));
+  const patchVocab = (id: keyof Vocabulario, campo: "tela" | "curto", valor: string) =>
+    setVocabEdit((prev) => ({ ...prev, [id]: { ...prev[id], [campo]: valor.slice(0, campo === "tela" ? LIMITE_TELA : LIMITE_CURTO) } }));
+
   const [personalizacaoSaving, setPersonalizacaoSaving] = useState(false);
   const [personalizacaoMsg, setPersonalizacaoMsg] = useState("");
   const salvarPersonalizacao = async () => {
@@ -6546,8 +6603,8 @@ function Config({
     const db = createServiceBrowserClient().schema("service").from("churches");
     const mesmaIgreja = !sede || sede.id === church.id;
     const results = await Promise.all([
-      db.update({ settings: { ...church.settings, identidadeCfg: identidade, ...(mesmaIgreja ? { brandCfg: brand } : {}) } }).eq("id", church.id).select("id"),
-      ...(mesmaIgreja ? [] : [db.update({ settings: { ...sede.settings, brandCfg: brand } }).eq("id", sede.id).select("id")]),
+      db.update({ settings: { ...church.settings, identidadeCfg: identidade, ...(mesmaIgreja ? { brandCfg: brand } : {}) }, ...(mesmaIgreja ? { vocabulario: vocabularioParaGravar(vocabEdit) } : {}) }).eq("id", church.id).select("id"),
+      ...(mesmaIgreja ? [] : [db.update({ settings: { ...sede.settings, brandCfg: brand }, vocabulario: vocabularioParaGravar(vocabEdit) }).eq("id", sede.id).select("id")]),
     ]);
     setPersonalizacaoSaving(false);
     /* sem linha de volta = o banco não gravou (sem permissão ou igreja inexistente) */
@@ -6614,7 +6671,7 @@ function Config({
               <div className="cfg-index-gt">{g}</div>
               {cfgTabs.filter((t) => t.group === g).map((t) => (
                 <button key={t.id} type="button" className={`cfg-index-item${tab === t.id ? " on" : ""}`} aria-current={tab === t.id ? "page" : undefined} onClick={() => { setTab(t.id); setCfgAberta(true); }}>
-                  <span className="cfg-index-t">{t.label}</span>
+                  <span className="cfg-index-t">{ct(t.label)}</span>
                   <span className="cfg-index-s">{t.s}</span>
                 </button>
               ))}
@@ -6685,7 +6742,7 @@ function Config({
             )}
           </div>
           <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
-            <div className="cfg-card-t">Horários de culto</div>
+            <div className="cfg-card-t">{ct("Horários de {culto}")}</div>
             <div className="cfg-card-s">Aparecem na agenda e ajudam a montar as escalas.</div>
             <div className="cell-tags" style={{ gap: 8, marginBottom: 16 }}>
               {horariosCulto.map((h) => (
@@ -6715,7 +6772,7 @@ function Config({
       {tab === "min" && (
         <div className="cfg-card">
           <div className="cfg-card-t">Times e funções</div>
-          <div className="cfg-card-s">Cada time tem um líder e suas funções. As funções alimentam a escala e as habilidades de cada voluntário.</div>
+          <div className="cfg-card-s">{ct("Cada time tem um líder e suas funções. As funções alimentam a escala e as habilidades de cada {voluntario}.")}</div>
           {ministries.map((m) => {
             const leader = m.people.find((p) => p.isLeader);
             return (
@@ -6796,7 +6853,7 @@ function Config({
                       <>
                         <div className="cfg-row-t">{t.name}</div>
                         <div className="cfg-row-s">
-                          {plural(dentro, "voluntário")}{lideres.length > 0 ? <> · líder: <span style={{ color: "var(--olive-soft)" }}>{lideres.join(", ")}</span></> : " · sem líder"}
+                          {plural(dentro, ct("{voluntario}"))}{lideres.length > 0 ? <> · líder: <span style={{ color: "var(--olive-soft)" }}>{lideres.join(", ")}</span></> : " · sem líder"}
                         </div>
                       </>
                     )}
@@ -6813,7 +6870,7 @@ function Config({
             })}
             {tags.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>Nenhuma etiqueta cadastrada.</div>}
           </div>
-          <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova etiqueta", subtitle: "Etiqueta livre para agrupar voluntários (ex: Jovens, Casais).", saveLabel: "Criar etiqueta", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Jovens" }, { k:"cor", label:"Cor", type:"select", options: TAG_CORES }], action: { kind: "tag" } })}>+ Etiqueta</button>
+          <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova etiqueta", subtitle: ct("Etiqueta livre para agrupar {voluntarios} (ex: Jovens, Casais)."), saveLabel: "Criar etiqueta", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Jovens" }, { k:"cor", label:"Cor", type:"select", options: TAG_CORES }], action: { kind: "tag" } })}>+ Etiqueta</button>
         </div>
       )}
 
@@ -6832,15 +6889,14 @@ function Config({
             </div>
             {gruposCfg.ativo && (
               <div className="cfg-grid2" style={{ gap: "0 16px", marginTop: 16 }}>
-                <div className="field"><label className="field-label">Nome (plural)</label><input className="input" value={gruposCfg.termo} onChange={(e) => setGruposCfgState({ ...gruposCfg, termo: e.target.value })} onBlur={() => saveGruposCfg(gruposCfg)} placeholder="ex: Grupos de Comunhão" /></div>
-                <div className="field"><label className="field-label">Nome (singular)</label><input className="input" value={gruposCfg.termoP} onChange={(e) => setGruposCfgState({ ...gruposCfg, termoP: e.target.value })} onBlur={() => saveGruposCfg(gruposCfg)} placeholder="ex: Grupo de Comunhão" /></div>
+                <div className="field"><label className="field-label">Nome</label><div className="cfg-row-s" style={{ marginTop: 4 }}>{ct("{Grupo}")}. O nome se muda em Personalização, em Nomes usados no app.</div></div>
                 <div className="field"><label className="field-label">Sigla</label><input className="input" value={gruposCfg.sigla} onChange={(e) => setGruposCfgState({ ...gruposCfg, sigla: e.target.value })} onBlur={() => saveGruposCfg(gruposCfg)} placeholder="ex: GC" /></div>
               </div>
             )}
           </div>
           {gruposCfg.ativo && (
             <div className="cfg-card" style={{ marginTop: 16 }}>
-              <div className="cfg-card-t">{gruposCfg.termo} · {fellowshipGroups.length}</div>
+              <div className="cfg-card-t">{ct("{Grupos}")} · {fellowshipGroups.length}</div>
               <div className="cfg-card-s">Células, GCs, pequenos grupos... a estrutura de comunhão em casas. Cada grupo tem um líder, um dia e um bairro.</div>
               {fellowshipGroups.map((g) => {
                 const leader = people.find((p) => p.id === g.leader_person_id);
@@ -6856,7 +6912,7 @@ function Config({
                 );
               })}
               {fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhum grupo cadastrado ainda.</div>}
-              <button className="btn btn-pri btn-sm" type="button" style={{ marginTop: 18 }} onClick={() => setModal({ eyebrow: "Criar", title: `Novo ${gruposCfg.termoP}`, subtitle: "Nome, líder, dia, horário e bairro do grupo.", saveLabel: "Criar grupo", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: GC Centro" }, { k:"lider", label:"Líder", type:"select", half:true, ph:"A definir", options: people.map((p) => ({ v: p.name, l: p.name })) }, { k:"dia", label:"Dia", type:"text", half:true, ph:"ex: Quarta-feira" }, { k:"hora", label:"Horário", type:"text", half:true, ph:"ex: 20h" }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"ex: Centro" }], action: { kind: "group" } })}>+ Novo grupo</button>
+              <button className="btn btn-pri btn-sm" type="button" style={{ marginTop: 18 }} onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {grupo}"), subtitle: "Nome, líder, dia, horário e bairro do grupo.", saveLabel: "Criar grupo", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: GC Centro" }, { k:"lider", label:"Líder", type:"select", half:true, ph:"A definir", options: people.map((p) => ({ v: p.name, l: p.name })) }, { k:"dia", label:"Dia", type:"text", half:true, ph:"ex: Quarta-feira" }, { k:"hora", label:"Horário", type:"text", half:true, ph:"ex: 20h" }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"ex: Centro" }], action: { kind: "group" } })}>+ Novo grupo</button>
             </div>
           )}
         </>
@@ -6934,7 +6990,7 @@ function Config({
             </div>
           </div>
           <div className="cfg-card" style={{ marginTop: 16 }}>
-            <div className="cfg-card-t">Quando um voluntário fica inativo</div>
+            <div className="cfg-card-t">{ct("Quando um {voluntario} fica inativo")}</div>
             <div className="cfg-card-s">Cada igreja define os critérios. Assim os líderes enxergam quem está se afastando e podem fazer contato a tempo. Férias avisadas não contam.</div>
             <div className="crit-row">
               <div className="cfg-row-main">
@@ -6984,7 +7040,7 @@ function Config({
           </div>
           <div className="cfg-card" style={{ marginTop: 16 }}>
             <div className="cfg-card-t">Check-in por QR Code</div>
-            <div className="cfg-card-s">Cada culto ou evento tem um QR Code único. O voluntário escaneia com o celular e confirma presença pela conta logada.</div>
+            <div className="cfg-card-s">{ct("Cada {culto} ou evento tem um QR Code único. O {voluntario} escaneia com o celular e confirma presença pela conta logada.")}</div>
             <div className="cfg-row" style={{ borderBottom: "none" }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Presença de quem não está escalado</div>
@@ -6995,7 +7051,7 @@ function Config({
           </div>
           <div className="cfg-card" style={{ marginTop: 16 }}>
             <div className="cfg-card-t">Tipos de evento</div>
-            <div className="cfg-card-s">Os tipos que aparecem ao criar um culto ou evento. Já vêm pré-preenchidos no cadastro; se faltar algum, dá pra criar na hora.</div>
+            <div className="cfg-card-s">{ct("Os tipos que aparecem ao criar um {culto} ou evento. Já vêm pré-preenchidos no cadastro; se faltar algum, dá pra criar na hora.")}</div>
             <div className="cell-tags" style={{ gap: 8, marginBottom: 16 }}>
               {tiposEvento.map((t) => (
                 <span key={t} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
@@ -7021,7 +7077,7 @@ function Config({
             <div className="pmx-mob-roles" role="tablist" aria-label="Papel">
               {PAPEIS_V2.map((pp) => (
                 <button key={pp.id} type="button" role="tab" aria-selected={papelMob === pp.id} className={`pmx-mob-role${papelMob === pp.id ? " on" : ""}`} onClick={() => setPapelMob(pp.id)}>
-                  {pp.nome}
+                  {ct(pp.nome)}
                 </button>
               ))}
             </div>
@@ -7038,9 +7094,9 @@ function Config({
                   const locked = papelMob === "master" || papelMob === "membro";
                   return (
                     <div key={a.id} className="pmx-mob-row">
-                      <span className="pmx-mob-name">{a.nome}</span>
+                      <span className="pmx-mob-name">{ct(a.nome)}</span>
                       <span className="pmx-mob-state">{on ? "Liberado" : "Bloqueado"}</span>
-                      <button type="button" role="switch" aria-checked={!!on} aria-label={a.nome} disabled={locked} className={`m-toggle${on ? " on" : ""}`} onClick={() => toggleMx(papelMob, a.id)} />
+                      <button type="button" role="switch" aria-checked={!!on} aria-label={ct(a.nome)} disabled={locked} className={`m-toggle${on ? " on" : ""}`} onClick={() => toggleMx(papelMob, a.id)} />
                     </div>
                   );
                 })}
@@ -7051,7 +7107,7 @@ function Config({
             <thead>
               <tr>
                 <th className="pmx-fn">Funcionalidade</th>
-                {PAPEIS_V2.map((pp) => <th key={pp.id} className="pmx-role"><span style={{ color: "var(--olive)" }}><Icon name={pp.ic} size={13} /></span> {pp.nome}</th>)}
+                {PAPEIS_V2.map((pp) => <th key={pp.id} className="pmx-role"><span style={{ color: "var(--olive)" }}><Icon name={pp.ic} size={13} /></span> {ct(pp.nome)}</th>)}
               </tr>
             </thead>
             <tbody>
@@ -7060,7 +7116,7 @@ function Config({
                   <tr className="pmx-group"><td colSpan={PAPEIS_V2.length + 1}>{grupo}</td></tr>
                   {ACOES_V2.filter((a) => a.grupo === grupo).map((a) => (
                     <tr key={a.id}>
-                      <td className="pmx-fn">{a.nome}</td>
+                      <td className="pmx-fn">{ct(a.nome)}</td>
                       {PAPEIS_V2.map((pp) => {
                         const locked = pp.id === "master" || pp.id === "membro";
                         const on = matriz[pp.id][a.id];
@@ -7124,6 +7180,27 @@ function Config({
             )}
           </div>
           <ThemePicker brand={brand} onChange={patchBrand} churchName={sede?.nome ?? church?.nome} logoUrl={sede?.logoUrl ?? church?.logoUrl} />
+          <div className="cfg-card" style={{ gridColumn: "1 / -1" }} id="cfg-vocabulario">
+            <div className="cfg-card-t">Nomes usados no app</div>
+            <div className="cfg-card-s">
+              Use as palavras da sua igreja. O nome da tela aparece nos títulos e textos; o nome curto, na barra de abas do app.
+              Vale para toda a igreja, inclusive as congregações.
+            </div>
+            {TERMOS_IDS.map((id) => (
+              <div key={id} className="cfg-grid2" style={{ gap: "0 16px", marginTop: 16 }}>
+                <div className="field">
+                  <label className="field-label" htmlFor={`voc-${id}-tela`}>{TERMOS[id].tela} · nome da tela</label>
+                  <input id={`voc-${id}-tela`} className="input" value={vocabEdit[id].tela} maxLength={LIMITE_TELA} placeholder={TERMOS[id].tela} onChange={(e) => patchVocab(id, "tela", e.target.value)} />
+                  <div className="field-hint">{TERMOS[id].ajuda} · {vocabEdit[id].tela.length} de {LIMITE_TELA}</div>
+                </div>
+                <div className="field">
+                  <label className="field-label" htmlFor={`voc-${id}-curto`}>Nome curto da barra</label>
+                  <input id={`voc-${id}-curto`} className="input" value={vocabEdit[id].curto} maxLength={LIMITE_CURTO} placeholder={TERMOS[id].curto} onChange={(e) => patchVocab(id, "curto", e.target.value)} />
+                  <div className="field-hint">{vocabEdit[id].curto.length} de {LIMITE_CURTO}</div>
+                </div>
+              </div>
+            ))}
+          </div>
           <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
             <div className="cfg-card-t">Fundo da página da igreja</div>
             <div className="cfg-card-s">
@@ -7405,6 +7482,7 @@ function Identidade({ church, identity, cycle, setModal }: { church?: ChurchView
 }
 
 function Historia({ church, historyEntries, setModal }: { church?: ChurchView; historyEntries: HistoryEntryView[]; setModal: (modal: ModalState) => void }) {
+  const { comTermos: ct } = useTermos();
   const router = useRouter();
   const capitulos = [...historyEntries].sort((a, b) => a.sort_order - b.sort_order);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
@@ -7431,7 +7509,7 @@ function Historia({ church, historyEntries, setModal }: { church?: ChurchView; h
         title="Nossa história"
         eyebrow="Nossa igreja"
         subtitle="Cada capítulo de fé que nos trouxe até aqui. Um mural para lembrar de onde viemos e de Quem nos sustentou."
-        help="Os marcos da caminhada da igreja, em linha do tempo. Cada capítulo pode ter ano, foto e um link."
+        help={ct("Os marcos da {caminhada} da igreja, em linha do tempo. Cada capítulo pode ter ano, foto e um link.")}
         action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo capítulo", subtitle: "Registre um momento importante da história da Igreja.", saveLabel: "Adicionar capítulo", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:"ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:"ex: Fundação da Igreja" }, { k:"desc", label:"História", type:"area", ph:"Conte esse momento..." }, { k:"link", label:"Link (opcional)", type:"text", ph:"https://…", hint:"Vídeo, matéria ou álbum de fotos." }], action: { kind: "historyEntry" } })}>+ Adicionar capítulo</button>}
       />
       {capitulos.length === 0 && <div className="empty">Ainda não há capítulos. Adicione o primeiro.</div>}
@@ -7527,6 +7605,7 @@ async function writeJourneyStep(organizationId: string, member: MemberView, step
 }
 
 function PersonTimeline({ member, events, compact }: { member: MemberView; events: TimelineEventView[]; compact?: boolean }) {
+  const { comTermos: ct } = useTermos();
   const sorted = [...events].sort((a, b) => (b.sort_key ?? 0) - (a.sort_key ?? 0));
   const stepsWithoutEvent = JRN_STEPS.filter((step, i) => !!member.journey[i] && !events.some((e) => e.event_type === step.kind));
 
@@ -7548,8 +7627,8 @@ function PersonTimeline({ member, events, compact }: { member: MemberView; event
       {stepsWithoutEvent.map((step) => (
         <div className="tl-item ol tone-olive" key={step.kind}>
           <div className="tl-dot" />
-          <div className="tl-when"><span className="jrn-tl-kind"><Icon name={step.icon} size={11} /> {step.label}</span></div>
-          <div className="tl-text"><b>{step.label}</b> · etapa concluída</div>
+          <div className="tl-when"><span className="jrn-tl-kind"><Icon name={step.icon} size={11} /> {ct(step.label)}</span></div>
+          <div className="tl-text"><b>{ct(step.label)}</b> · etapa concluída</div>
         </div>
       ))}
     </div>
@@ -7563,6 +7642,7 @@ function DecisaoDrawer({
   timelineEvents: TimelineEventView[];
   onClose: () => void; onOpenMember: (id: string) => void;
 }) {
+  const { termo, comTermos: ct } = useTermos();
   const router = useRouter();
   const responsible = decision.responsible_id ? people.find((p) => p.id === decision.responsible_id) : null;
   const linkedMember = decision.member_id ? members.find((m) => m.id === decision.member_id) : null;
@@ -7615,7 +7695,7 @@ function DecisaoDrawer({
         <DrawerSection title="Registro da decisão">
           <dl className="kv">
             <dt>Telefone</dt><dd>{decision.phone || "-"}</dd>
-            <dt>Culto</dt><dd>{decision.service_name || "-"}</dd>
+            <dt>{ct("{Culto}")}</dt><dd>{decision.service_name || "-"}</dd>
             <dt>Responsável</dt><dd>{responsible?.name || "a definir"}</dd>
           </dl>
           {decision.notes && (
@@ -7626,7 +7706,7 @@ function DecisaoDrawer({
           )}
         </DrawerSection>
         {linkedMember && (
-          <DrawerSection title="Caminhada do membro">
+          <DrawerSection title={ct("{Caminhada} do membro")}>
             <PersonTimeline member={linkedMember} events={timelineEvents.filter((e) => e.member_id === linkedMember.id)} compact />
           </DrawerSection>
         )}
@@ -7635,7 +7715,7 @@ function DecisaoDrawer({
             <div className="step-do"><span className="step-ic">→</span> Fazer o primeiro contato (ligar · WhatsApp)</div>
             <div className="step-do"><span className="step-ic">→</span> Iniciar acompanhamento 1-a-1</div>
             <div className="step-do"><span className="step-ic">→</span> Matricular em Novos Convertidos</div>
-            {(church?.settings?.gruposCfg?.ativo ?? true) && <div className="step-do"><span className="step-ic">→</span> Inserir num {church?.settings?.gruposCfg?.termoP ?? "Grupo de Comunhão"}</div>}
+            {(church?.settings?.gruposCfg?.ativo ?? true) && <div className="step-do"><span className="step-ic">→</span> Inserir num {termo("grupo")}</div>}
           </div>
         </DrawerSection>
         <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
@@ -7815,6 +7895,7 @@ function VisitanteDrawer({
   people: PersonView[]; onClose: () => void; onOpenMember: (id: string) => void;
   setModal: (modal: ModalState) => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const router = useRouter();
   const [nota, setNota] = useState("");
   const [resp, setResp] = useState<"" | "respondeu" | "sem_resposta">("");
@@ -7879,7 +7960,7 @@ function VisitanteDrawer({
             <dt>Próximo passo</dt><dd><span className={`vcard-due ${initVisitor.due_status || "ok"}`}>{initVisitor.due || "sem prazo"}</span></dd>
           </dl>
         </DrawerSection>
-        <DrawerSection title="Caminhada de integração">
+        <DrawerSection title={ct("{Caminhada} de integração")}>
           <div style={{ display: "flex", gap: 6 }}>
             {VISITOR_STAGES.map((s, i) => (
               <div key={s.id} style={{ flex: 1, textAlign: "center" }}>
@@ -7960,6 +8041,7 @@ function MemberEditModal({
   onClose: () => void;
   onRefresh: () => void;
 }) {
+  const { termo } = useTermos();
   const [birth, setBirth] = useState(member.birth ?? "");
   const [neighborhood, setNeighborhood] = useState(member.neighborhood ?? "");
   const [groupId, setGroupId] = useState(member.groupId ?? "");
@@ -7978,7 +8060,7 @@ function MemberEditModal({
     if (groupId && groupId !== (member.groupId ?? "") && church?.organizationId) {
       const group = fellowshipGroups.find((g) => g.id === groupId);
       await sb.from("timeline_events").insert(
-        timelineEventPayload(church.organizationId, member.id, "integracao", `Entrou no Grupo "${group?.name ?? "Comunhão"}"`),
+        timelineEventPayload(church.organizationId, member.id, "integracao", `Entrou no ${termo("grupo")}${group?.name ? ` "${group.name}"` : ""}`),
       );
       const journey = [...member.journey];
       journey[3] = 1;
@@ -8001,7 +8083,7 @@ function MemberEditModal({
           <div className="field"><label className="field-label">Bairro</label><input className="input" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Onde mora" /></div>
           {(church?.settings?.gruposCfg?.ativo ?? true) && (
             <div className="field">
-              <label className="field-label">{church?.settings?.gruposCfg?.termoP ?? "Grupo de Comunhão"}</label>
+              <label className="field-label">{termo("grupo")}</label>
               <select className="select" value={groupId} onChange={(e) => setGroupId(e.target.value)}>
                 <option value="">Sem grupo</option>
                 {fellowshipGroups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
@@ -8028,6 +8110,7 @@ function JornadaEditModal({
   onClose: () => void;
   onRefresh: () => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const [rows, setRows] = useState<Record<JourneyStepKind, { done: boolean; date: string }>>(() =>
     Object.fromEntries(JRN_STEPS.map((step) => [step.kind, { done: false, date: "" }])) as Record<JourneyStepKind, { done: boolean; date: string }>,
   );
@@ -8054,7 +8137,7 @@ function JornadaEditModal({
     <div className="modal-bg" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <div className="modal-eyebrow">Caminhada</div>
+          <div className="modal-eyebrow">{ct("{Caminhada}")}</div>
           <div className="modal-title">{member.name}</div>
           <div className="modal-sub">Marque as etapas já concluídas, com a data real de cada uma.</div>
         </div>
@@ -8065,7 +8148,7 @@ function JornadaEditModal({
             return (
               <div className="cfg-row" key={step.kind} style={{ alignItems: "flex-start" }}>
                 <div className="cfg-row-main">
-                  <div className="cfg-row-t">{step.label}</div>
+                  <div className="cfg-row-t">{ct(step.label)}</div>
                   {jaConcluido ? (
                     <div className="cfg-row-s">Concluído{event?.when_label ? ` em ${event.when_label}` : ""}</div>
                   ) : rows[step.kind].done ? (
@@ -8099,6 +8182,7 @@ function AddToMinistryModal({
   church: { id: string; organizationId: string };
   onClose: () => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const router = useRouter();
   const [q, setQ] = useState("");
   const [positionId, setPositionId] = useState("");
@@ -8134,7 +8218,7 @@ function AddToMinistryModal({
         <div className="modal-head">
           <div className="modal-eyebrow">Adicionar ao time</div>
           <div className="modal-title">{ministry.name}</div>
-          <div className="modal-sub">Escolha o voluntário e, se souber, a função dele neste time.</div>
+          <div className="modal-sub">{ct("Escolha o {voluntario} e, se souber, a função dele neste time.")}</div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
           {ministry.positions.length > 0 && (
@@ -8148,7 +8232,7 @@ function AddToMinistryModal({
           )}
           <div className="tb-search" style={{ marginBottom: 12 }}>
             <span className="si"><Icon name="buscar" size={13} /></span>
-            <input placeholder="Buscar voluntário..." value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
+            <input placeholder={ct("Buscar {voluntario}...")} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
           </div>
           {fora.map((p) => (
             <div className="flag-row" key={p.id} style={{ cursor: "pointer" }} onClick={() => add(p.id)}>
@@ -8157,7 +8241,7 @@ function AddToMinistryModal({
               <span className="btn btn-ghost btn-sm" style={{ marginLeft: "auto" }}>Adicionar</span>
             </div>
           ))}
-          {fora.length === 0 && <div className="empty">{q ? "Nenhum resultado." : "Todos os voluntários já estão no time."}</div>}
+          {fora.length === 0 && <div className="empty">{q ? "Nenhum resultado." : ct("Todos os {voluntarios} já estão no time.")}</div>}
         </div>
         <div className="modal-foot">
           <button className="btn btn-sec" type="button" onClick={onClose}>Fechar</button>
@@ -8281,6 +8365,7 @@ function EntityDrawer({
   setShareEventId: (id: string) => void;
   onStartChatWithMember: (memberId: string) => void;
 }) {
+  const { termo, comTermos: ct } = useTermos();
   const router = useRouter();
   const [editingMember, setEditingMember] = useState(false);
   const [editingJourney, setEditingJourney] = useState(false);
@@ -8350,7 +8435,7 @@ function EntityDrawer({
             <Av name={person.name} size="lg" photoUrl={person.photoUrl} />
             <div>
               <div className="profile-name">{person.name}</div>
-              <div className="profile-role">Voluntário · desde o cadastro</div>
+              <div className="profile-role">{ct("{Voluntario} · desde o cadastro")}</div>
               <div style={{ marginTop: 10 }}><Chip status={person.status} /></div>
             </div>
           </div>
@@ -8445,7 +8530,7 @@ function EntityDrawer({
               <dt>E-mail</dt><dd>{member.email}</dd>
               <dt>Aniversário</dt><dd>{formatDateBR(member.birth)}</dd>
               <dt>Bairro</dt><dd>{member.neighborhood}</dd>
-              {(church?.settings?.gruposCfg?.ativo ?? true) && <><dt>{church?.settings?.gruposCfg?.termoP ?? "Grupo de Comunhão"}</dt><dd>{grupo ? <>{grupo.name}{grupoLider && <span style={{ color: "var(--muted)" }}> · líder {grupoLider.name.split(" ")[0]}</span>}</> : <span style={{ color: "var(--muted)" }}>sem grupo</span>}</dd></>}
+              {(church?.settings?.gruposCfg?.ativo ?? true) && <><dt>{termo("grupo")}</dt><dd>{grupo ? <>{grupo.name}{grupoLider && <span style={{ color: "var(--muted)" }}> · líder {grupoLider.name.split(" ")[0]}</span>}</> : <span style={{ color: "var(--muted)" }}>sem grupo</span>}</dd></>}
               <dt>Acesso ao app</dt><dd>{member.volunteerId ? <span style={{ color: "var(--olive-soft)" }}>liberado</span> : temTelefone ? <span style={{ color: "var(--amber)" }}>convite ainda não aceito</span> : <span style={{ color: "var(--amber)" }}>falta o telefone</span>}</dd>
             </dl>
             <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
@@ -8492,7 +8577,7 @@ function EntityDrawer({
                     <button className="ov-serve-row" type="button" key={m.id} onClick={() => setDrawer({ kind: "ministry", id: m.id })}>
                       <span className="ov-serve-ic"><TeamMark ministry={m} size={14} /></span>
                       <span className="ov-serve-name">{m.name}</span>
-                      {link?.isLeader ? <span className="lider-tag">Líder</span> : <span className="ov-serve-fn">{link?.functions.join(" · ") || "Voluntário"}</span>}
+                      {link?.isLeader ? <span className="lider-tag">Líder</span> : <span className="ov-serve-fn">{link?.functions.join(" · ") || ct("{Voluntario}")}</span>}
                     </button>
                   );
                 })}
@@ -8527,12 +8612,12 @@ function EntityDrawer({
               <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum curso matriculado ainda.</div>
             )}
           </DrawerSection>
-          <DrawerSection title="Caminhada de integração"><PersonTimeline member={member} events={timelineEvents.filter((e) => e.member_id === member.id)} compact /></DrawerSection>
+          <DrawerSection title={ct("{Caminhada} de integração")}><PersonTimeline member={member} events={timelineEvents.filter((e) => e.member_id === member.id)} compact /></DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
-            <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setEditingJourney(true)}>Atualizar caminhada</button>
+            <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setEditingJourney(true)}>{ct("Atualizar {caminhada}")}</button>
             <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => onStartChatWithMember(member.id)}>Enviar mensagem</button>
             {linkedPerson && (
-              <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setDrawer({ kind: "person", id: linkedPerson.id })}>Ver como voluntário →</button>
+              <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setDrawer({ kind: "person", id: linkedPerson.id })}>{ct("Ver como {voluntario} →")}</button>
             )}
           </div>
         </div>
@@ -8583,11 +8668,11 @@ function EntityDrawer({
             <div className="team-mark" style={{ width: 56, height: 56 }}><TeamMark ministry={ministry} size={26} /></div>
             <div>
               <div className="profile-name">{ministry.name}</div>
-              <div className="profile-role">{leader?.personName ? <>Líder: <span style={{ color: "var(--olive)" }}>{leader.personName}</span></> : <span className="sem-lider">Sem líder · Definir</span>} · {plural(ministry.people.length, "voluntário")}</div>
+              <div className="profile-role">{leader?.personName ? <>Líder: <span style={{ color: "var(--olive)" }}>{leader.personName}</span></> : <span className="sem-lider">Sem líder · Definir</span>} · {plural(ministry.people.length, ct("{voluntario}"))}</div>
             </div>
           </div>
           <div style={{ marginTop: 14 }}>
-            <span className={`topen ${isOpen ? "yes" : "no"}`}>{isOpen ? "Recebendo voluntários" : "Equipe completa por ora"}</span>
+            <span className={`topen ${isOpen ? "yes" : "no"}`}>{isOpen ? ct("Recebendo {voluntarios}") : "Equipe completa por ora"}</span>
           </div>
         </div>
         <div className="drawer-body">
@@ -8623,7 +8708,7 @@ function EntityDrawer({
                   <div className="tinfo-block">
                     <div className="tinfo-label"><Icon name="cursos" size={13} /> Pré-requisitos</div>
                     {requisitosTime.map((r) => (
-                      <div className="tinfo-li" key={`${r.kind}-${r.ref}`}>{requirementLabel(r, access)}</div>
+                      <div className="tinfo-li" key={`${r.kind}-${r.ref}`}>{ct(requirementLabel(r, access))}</div>
                     ))}
                   </div>
                 )}
@@ -8647,7 +8732,7 @@ function EntityDrawer({
                     <Av name={link.personName} photoUrl={people.find((pp) => pp.id === link.personId)?.photoUrl} />
                     <div className="cand-main">
                       <div className="cand-name">{link.personName}</div>
-                      <div className="cand-meta">{link.isLeader ? "Líder do time" : link.functions.join(" · ") || "Voluntário"}</div>
+                      <div className="cand-meta">{link.isLeader ? "Líder do time" : link.functions.join(" · ") || ct("{Voluntario}")}</div>
                     </div>
                     {link.isLeader && <span className="lider-tag">Líder</span>}
                   </button>
@@ -8664,7 +8749,7 @@ function EntityDrawer({
                     <Av name={link.personName} photoUrl={people.find((pp) => pp.id === link.personId)?.photoUrl} />
                     <div className="cand-main">
                       <div className="cand-name">{link.personName}</div>
-                      <div className="cand-meta">{link.isLeader ? "Líder do time" : "Voluntário"}</div>
+                      <div className="cand-meta">{link.isLeader ? "Líder do time" : ct("{Voluntario}")}</div>
                     </div>
                     {link.isLeader && <span className="lider-tag">Líder</span>}
                   </button>
@@ -8797,6 +8882,7 @@ function EventDrawer({
   setRoute: (route: keyof typeof ROUTES) => void;
   setShareEventId: (id: string) => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const router = useRouter();
   const [tab, setTab] = useState<"crono" | "posicoes">("crono");
   const eventRoster = roster.filter((assignment) => assignment.event_id === event.id);
@@ -8817,7 +8903,7 @@ function EventDrawer({
       <div className="drawer-body">
         {tab === "crono" ? (
           <>
-            <DrawerSection title="Roteiro do culto · etapa por etapa">
+            <DrawerSection title={ct("Roteiro do {culto} · etapa por etapa")}>
               <CronogramaEditor event={event} ministries={eventMinistries} onRefresh={() => router.refresh()} />
             </DrawerSection>
             <DrawerSection title="Setlist">
@@ -8888,6 +8974,7 @@ function fmtDuracaoMin(min: number): string {
 }
 
 function CronogramaEditor({ event, ministries, onRefresh }: { event: EventView; ministries: MinistryView[]; onRefresh: () => void }) {
+  const { comTermos: ct } = useTermos();
   const [steps, setSteps] = useState<CronoStep[]>(event.schedule);
   const [horaInicio, setHoraInicio] = useState(event.time);
   const client = () => createServiceBrowserClient().schema("service");
@@ -8970,12 +9057,12 @@ function CronogramaEditor({ event, ministries, onRefresh }: { event: EventView; 
     <div className="crono">
       <div className="crono-anchor">
         <div className="crono-anchor-f">
-          <label>Início do culto</label>
+          <label>{ct("Início do {culto}")}</label>
           <TimePicker value={horaInicio} onChange={setHora} />
         </div>
         <div className="crono-anchor-note">As etapas seguem em sequência somando as durações. Você só informa quanto dura cada uma. Término previsto: <b>{fimCulto}</b>.</div>
       </div>
-      {steps.length === 0 && <div className="crono-empty">Sem cronograma ainda. Monte o roteiro do culto, etapa por etapa, a duração e o time responsável. O horário é calculado sozinho.</div>}
+      {steps.length === 0 && <div className="crono-empty">{ct("Sem cronograma ainda. Monte o roteiro do {culto}, etapa por etapa, a duração e o time responsável. O horário é calculado sozinho.")}</div>}
       <div className="crono-list">
         {steps.map((s, i) => (
           <div className="crono-step" key={s.id}>
@@ -8986,7 +9073,7 @@ function CronogramaEditor({ event, ministries, onRefresh }: { event: EventView; 
             </div>
             <div className="crono-body">
               <div className="crono-row1">
-                <input className="crono-item-in" placeholder="Etapa do culto (ex: Momento de louvor)" value={s.item} onChange={(e) => patch(s.id, { item: e.target.value })} onBlur={(e) => commitField(s.id, { item: e.target.value })} />
+                <input className="crono-item-in" placeholder={ct("Etapa do {culto} (ex: Momento de louvor)")} value={s.item} onChange={(e) => patch(s.id, { item: e.target.value })} onBlur={(e) => commitField(s.id, { item: e.target.value })} />
                 <div className="crono-actions">
                   <button type="button" className="crono-mini" title="Subir" onClick={() => moveStep(i, -1)} disabled={i === 0}>↑</button>
                   <button type="button" className="crono-mini" title="Descer" onClick={() => moveStep(i, 1)} disabled={i === steps.length - 1}>↓</button>
@@ -9020,7 +9107,7 @@ function CronogramaEditor({ event, ministries, onRefresh }: { event: EventView; 
       <button type="button" className="btn btn-sec btn-sm crono-add" onClick={addStep}>+ Adicionar etapa</button>
       {steps.length > 0 && (
         <div className="crono-totais">
-          <div className="crono-tot-geral"><span>Duração total do culto</span><b>{fmtDuracaoMin(totalGeral)}</b></div>
+          <div className="crono-tot-geral"><span>{ct("Duração total do {culto}")}</span><b>{fmtDuracaoMin(totalGeral)}</b></div>
         </div>
       )}
     </div>
@@ -9312,6 +9399,7 @@ function ServiceModal({
   currentRole?: "master" | "pastor" | "lider" | "membro";
   onClose: () => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const router = useRouter();
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(
@@ -9395,7 +9483,7 @@ function ServiceModal({
         conviteTab?.close();
       }
     } else if (action.kind === "event") {
-      if (!value("nome")) { setSaving(false); setError("Digite o nome do culto."); return; }
+      if (!value("nome")) { setSaving(false); setError(ct("Digite o nome do {culto}.")); return; }
       const eventLocal = resolveLocalField(value("local"), value("endereco"), rooms);
       if (!eventLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços e Salas."); return; }
       const eventDate = value("data") || null;
@@ -9642,7 +9730,7 @@ function ServiceModal({
         open_enrollment: true,
       });
     } else if (action.kind === "avaliacaoResposta") {
-      if (!currentPersonId) { setSaving(false); setError("Não foi possível identificar seu cadastro de voluntário."); return; }
+      if (!currentPersonId) { setSaving(false); setError(ct("Não foi possível identificar seu cadastro de {voluntario}.")); return; }
       const minhasEquipes = ministries.filter((m) => m.people.some((p) => p.personId === currentPersonId)).map((m) => m.name);
       const { data: novaResposta, error: respostaError } = await supabase.schema("service").from("respostas").insert({
         enquete_id: action.enquete.id,
@@ -9670,7 +9758,7 @@ function ServiceModal({
         }
       }
     } else if (action.kind === "pesquisaResposta") {
-      if (!currentPersonId) { setSaving(false); setError("Não foi possível identificar seu cadastro de voluntário."); return; }
+      if (!currentPersonId) { setSaving(false); setError(ct("Não foi possível identificar seu cadastro de {voluntario}.")); return; }
       const pesquisa = action.pesquisa;
       let respostaId = pesquisa.respostaId;
       if (!respostaId) {

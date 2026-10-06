@@ -16,6 +16,7 @@ import { Av, EmptyState, PageHead } from "../../painel/ui";
 import { friendlyWriteError } from "../../painel/erros";
 import { ACESSO_MSG_DEFAULT, AcessoMsgModal, type AcessoMsgCfg } from "../pessoas/acesso-msg";
 import type { AnnouncementReadView, AnnouncementResponseView, AnnouncementView, ChildGuardianView, ChurchView, FellowshipGroupView, MemberView, MinistryView, ModalState, PersonView, WallPostView } from "../../ServiceExactApp";
+import { useTermos, type Termos } from "../../lib/vocabulario-context";
 
 function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchView; publicos: MuralPublico[]; onClose: () => void; onDone: () => void }) {
   const [titulo, setTitulo] = useState("");
@@ -142,7 +143,8 @@ function VerQuemLeuButton({ aviso, reads, people }: { aviso: AnnouncementView; r
    alcance de verdade (quem leu sobre quem devia receber). */
 type MuralPublico = { id: string; label: string; memberIds: string[] };
 const KIND_LABEL: Record<string, string> = { aviso: "Aviso", evento: "Evento", acao: "Pedido de ação" };
-function publicosDoMural({ members, ministries, fellowshipGroups, childGuardians }: {
+function publicosDoMural({ members, ministries, fellowshipGroups, childGuardians, termo }: {
+  termo: Termos["termo"];
   members: MemberView[]; ministries: MinistryView[]; fellowshipGroups: FellowshipGroupView[]; childGuardians: ChildGuardianView[];
 }): MuralPublico[] {
   const membroDe = (personIds: Set<string>) => members.filter((m) => m.volunteerId && personIds.has(m.volunteerId)).map((m) => m.id);
@@ -151,9 +153,9 @@ function publicosDoMural({ members, ministries, fellowshipGroups, childGuardians
   return [
     { id: "todos", label: "Todos", memberIds: members.map((m) => m.id) },
     { id: "membros", label: "Membros", memberIds: members.filter((m) => m.situation === "membro").map((m) => m.id) },
-    { id: "voluntarios", label: "Voluntários", memberIds: membroDe(voluntarios) },
+    { id: "voluntarios", label: termo("voluntario", { plural: true }), memberIds: membroDe(voluntarios) },
     ...ministries.map((min) => ({ id: `time:${min.id}`, label: `Time ${min.name}`, memberIds: membroDe(new Set(min.people.map((p) => p.personId))) })),
-    ...fellowshipGroups.map((g) => ({ id: `grupo:${g.id}`, label: `Grupo ${g.name}`, memberIds: members.filter((m) => m.groupId === g.id).map((m) => m.id) })),
+    ...fellowshipGroups.map((g) => ({ id: `grupo:${g.id}`, label: `${termo("grupo")} ${g.name}`, memberIds: members.filter((m) => m.groupId === g.id).map((m) => m.id) })),
     { id: "pais-kids", label: "Pais do Kids", memberIds: membroDe(pais) },
   ].filter((p, i) => i === 0 || p.memberIds.length > 0 || p.id === "pais-kids");
 }
@@ -182,10 +184,11 @@ export function Comunicacao({
   church?: ChurchView;
   setModal: (modal: ModalState) => void;
 }) {
+  const { termo } = useTermos();
   const router = useRouter();
   const [compose, setCompose] = useState(false);
   const [msgCfgOpen, setMsgCfgOpen] = useState(false);
-  const publicos = publicosDoMural({ members, ministries, fellowshipGroups, childGuardians });
+  const publicos = publicosDoMural({ members, ministries, fellowshipGroups, childGuardians, termo });
   const publicoDe = (a: AnnouncementView) => publicos.find((p) => p.label.toLowerCase() === (a.audience ?? "todos").toLowerCase()) ?? publicos[0];
   const acessoMsgCfg: AcessoMsgCfg = { ...ACESSO_MSG_DEFAULT, ...(church?.settings?.acessoMsgCfg ?? {}) };
   const personDoMembro = new Map(members.map((m) => [m.id, m.volunteerId]));

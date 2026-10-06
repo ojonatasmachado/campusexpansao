@@ -17,4 +17,5 @@ export default defineModule({
       { rota: "batismos", grupo: "Formação", rotulo: "Batismos", icone: "batismos", ordem: 61, permissao: "batismos" },
     ],
   },
+  vocabulario: ["caminhada"],
 });

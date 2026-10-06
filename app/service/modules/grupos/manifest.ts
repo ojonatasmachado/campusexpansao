@@ -11,7 +11,8 @@ export default defineModule({
   },
   painel: {
     menu: [
-      { rota: "grupos", grupo: "Pessoas", rotulo: "Grupos", icone: "casais", ordem: 23, permissao: "membros" },
+      { rota: "grupos", grupo: "Pessoas", rotulo: "{Grupos}", icone: "casais", ordem: 23, permissao: "membros" },
     ],
   },
+  vocabulario: ["grupo"],
 });
