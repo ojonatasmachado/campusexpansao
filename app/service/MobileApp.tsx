@@ -433,15 +433,10 @@ function TabTarefas({ person, cards, boards, onAddCardComment }: { person: P; ca
       <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>
         O que a liderança deixou no quadro para você. Atualize e comente.
       </div>
-      {pending.length === 0 && (
-        <div className="m-card">
-          <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>Nada pendente com você agora.</div>
-        </div>
-      )}
       {pending.map(cardEl)}
       {done.length > 0 && (
         <>
-          <div className="m-section-t" style={{ marginTop: 22 }}>Concluidas · {done.length}</div>
+          <div className="m-section-t" style={{ marginTop: 22 }}>Concluídas · {done.length}</div>
           {done.map(cardEl)}
         </>
       )}
@@ -2838,8 +2833,8 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
   const aConfirmar = meusSlots
     .filter((r) => r.status === "wait")
     .filter((r) => (evById.get(r.event_id)?.eventDate ?? "") >= hoje);
-  const minhasTarefas = cards.filter((c) => c.assignees.includes(person.id) && c.column_id !== "done" && c.due);
-  const tarefa = [...minhasTarefas].sort((a, b) => (a.due ?? "").localeCompare(b.due ?? ""))[0];
+  /* tarefas (v7 4.6): cada tarefa aberta é um cartão enquanto estiver aberta */
+  const minhasTarefas = cards.filter((c) => c.assignees.includes(person.id) && c.column_id !== "done");
   const novo = announcements.find((a) => unreadIds.has(a.id));
   const meusFilhos = childGuardians.filter((g) => g.guardian_person_id === person.id).map((g) => kidsChildren.find((c) => c.id === g.child_id)).filter(Boolean) as Child[];
   const cultoHoje = events.find((e) => e.eventDate === hoje);
@@ -2855,7 +2850,7 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
     const ev = evById.get(slot.event_id);
     if (ev) entradas.push({ id: `escala-${slot.id}`, modulo: "escalas", tipo: "acao", prioridade: 90, prazo: `${ev.eventDate} ${ev.time ?? ""}`, conteudo: { k: "escala", slot, ev } });
   }
-  if (serve && tarefa) entradas.push({ id: `tarefa-${tarefa.id}`, modulo: "quadros", tipo: "acao", prioridade: 70, prazo: tarefa.due, conteudo: { k: "tarefa", card: tarefa } });
+  for (const t of minhasTarefas) entradas.push({ id: `tarefa-${t.id}`, modulo: "quadros", tipo: "acao", prioridade: t.due ? 70 : 45, prazo: t.due, conteudo: { k: "tarefa", card: t } });
   if (novo) entradas.push({ id: `mural-${novo.id}`, modulo: "mural", tipo: "aviso", prioridade: 50, conteudo: { k: "mural", aviso: novo } });
   if (nextStep) entradas.push({ id: `passo-${nextStep.id}`, modulo: "inicio", tipo: "passo", prioridade: 40, conteudo: { k: "passo", step: nextStep } });
   if (incompleto) entradas.push({ id: "cadastro", modulo: "perfil", tipo: "acao", prioridade: 30, conteudo: { k: "cadastro" } });
@@ -2875,10 +2870,10 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
       case "tarefa":
         return (
           <div key={e.id} className="m6-card">
-            <div className="m6-kick">Tarefa com prazo</div>
+            <div className="m6-kick">Tarefa</div>
             <div className="m6-ct">{c.card.title}</div>
-            <div className="m6-meta">Prazo · {formatDateBR(c.card.due)}</div>
-            <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("agenda", null, { agSeg: "minha" })}>Ver minhas tarefas</button></div>
+            <div className="m6-meta">{c.card.due ? `Prazo · ${formatDateBR(c.card.due)}` : "Sem prazo"}</div>
+            <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("agenda", null, { agSeg: "minha" })}>Ver a tarefa</button></div>
           </div>
         );
       case "mural":
@@ -2991,8 +2986,12 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
   const { comTermos: ct } = useTermos();
   const ui = useContext(MemberUiContext);
   const serve = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
-  const atual = serve ? seg : "igreja";
+  /* tarefas abertas (v7 4.6): seção só com tarefa aberta; no dia do prazo, também na lista por data */
+  const tarefasAbertas = cards.filter((c) => c.assignees.includes(person.id) && c.column_id !== "done");
+  const temMinha = serve || tarefasAbertas.length > 0;
+  const atual = temMinha ? seg : "igreja";
   const hoje = todayISO();
+  const comPrazo = tarefasAbertas.filter((c) => (c.due ?? "").slice(0, 10) >= hoje).sort((a, b) => (a.due ?? "").localeCompare(b.due ?? ""));
   const evById = new Map(events.map((e) => [e.id, e]));
   const meus = roster
     .filter((r) => r.person_id === person.id && (evById.get(r.event_id)?.eventDate ?? "") >= hoje)
@@ -3023,7 +3022,7 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
 
   return (
     <>
-      {serve && (
+      {temMinha && (
         <div className="m6-segwrap">
           <div className="ts-seg two m6-seg" role="radiogroup" aria-label="O que ver">
             {([["minha", "Minha escala"], ["igreja", "Igreja"]] as const).map(([v, l]) => (
@@ -3046,11 +3045,26 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
           )}
           <div className="m6-sec">
             <div className="m6-lbl">Próximas</div>
-            {outras.length > 0 ? (
+            {outras.length + comPrazo.length > 0 ? (
               <div className="m6-list">
-                {outras.map((slot) => {
-                  const ev = evById.get(slot.event_id);
-                  if (!ev) return null;
+                {[
+                  ...outras.map((slot) => ({ quando: `${evById.get(slot.event_id)?.eventDate ?? ""} ${evById.get(slot.event_id)?.time ?? ""}`, slot, tarefa: null as Card | null })),
+                  ...comPrazo.map((t) => ({ quando: `${(t.due ?? "").slice(0, 10)} 99`, slot: null as Slot | null, tarefa: t })),
+                ].sort((a, b) => a.quando.localeCompare(b.quando)).map(({ slot, tarefa }) => {
+                  if (tarefa) {
+                    return (
+                      <div className="m6-row" key={`t-${tarefa.id}`}>
+                        <M6Date iso={(tarefa.due ?? "").slice(0, 10)} />
+                        <div className="m6-rb">
+                          <div className="m6-rt">{tarefa.title}</div>
+                          <div className="m6-rs">{joinDot("Tarefa", boards.find((b) => b.id === tarefa.board_id)?.name)}</div>
+                          <div className="m6-mt"><M6St k="neutral">Prazo</M6St></div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  const ev = slot ? evById.get(slot.event_id) : undefined;
+                  if (!slot || !ev) return null;
                   const min = ministryOf(slot);
                   return (
                     <div className="m6-row" key={slot.id}>
@@ -3068,9 +3082,11 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
               <div className="m6-card"><div className="m6-meta">{pend.length ? "As escalas confirmadas aparecem aqui." : "Nenhuma escala marcada para você por enquanto."}</div></div>
             )}
           </div>
-          <div className="m6-sec m6-legacy">
-            <TabTarefas person={person} cards={cards} boards={boards} onAddCardComment={onAddCardComment} />
-          </div>
+          {tarefasAbertas.length > 0 && (
+            <div className="m6-sec m6-legacy">
+              <TabTarefas person={person} cards={cards} boards={boards} onAddCardComment={onAddCardComment} />
+            </div>
+          )}
           {(isRecep || isKids) && (
             <div className="m6-sec">
               <div className="m6-lbl">No seu time</div>
@@ -3080,11 +3096,13 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
               </div>
             </div>
           )}
-          <div className="m6-sec">
-            <div className="m6-lbl">Quando posso servir</div>
-            {onSaveAvailability ? <Disponibilidade person={person} onSave={onSaveAvailability} /> : null}
-            {member && destFalta && onStartChat && <div className="m6-pad"><button className="m6-btn sec full" type="button" onClick={avisarFalta}>Avisar que vou faltar</button></div>}
-          </div>
+          {serve && (
+            <div className="m6-sec">
+              <div className="m6-lbl">Quando posso servir</div>
+              {onSaveAvailability ? <Disponibilidade person={person} onSave={onSaveAvailability} /> : null}
+              {member && destFalta && onStartChat && <div className="m6-pad"><button className="m6-btn sec full" type="button" onClick={avisarFalta}>Avisar que vou faltar</button></div>}
+            </div>
+          )}
         </>
       ) : (
         futuros.length > 0 ? grupos.map((g) => (
