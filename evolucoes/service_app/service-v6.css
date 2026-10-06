@@ -419,3 +419,30 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
   .na-barra .help-fab-menu{top:calc(100% + 8px);bottom:auto;right:0;width:min(250px, calc(100vw - 32px))}
   .top.search-open .help-fab-wrap.na-barra{display:none}
 }
+
+/* v7 3.5 · Alvos de toque (lei 8): 44px no app do membro, 32px no painel, piso 24px.
+   Quem é pequeno no desenho ganha área invisível (::before) sem mudar o layout. */
+.help-dot,.help-link,.m-head-av,.m6-tg,.m-toggle{position:relative}
+.help-dot::before,.help-link::before,.m-head-av::before,.m6-tg::before,.m-toggle::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);min-width:100%;min-height:100%}
+.help-dot::before{width:32px;height:32px}
+.help-link::before{width:100%;height:32px}
+.m-toggle::before{width:44px;height:32px}
+.mob-bg .help-dot::before,.mob-bg .help-link::before{width:44px;height:44px}
+.m-head-av::before,.m6-tg::before,.mob-bg .m-toggle::before{width:52px;height:44px}
+.m-head-av::before{width:44px}
+/* painel: 32px */
+.btn-sm,.seg button,.esc-vaga,.esc-preset-sel,.esc-preset-save{min-height:32px}
+.esc-modo-cfg,.panel-link{min-height:32px;align-items:center}
+.panel-link{display:inline-flex}
+.esc-col-edit,.painel-qr,.mx-cell{width:32px;height:32px}
+/* app do membro: 44px */
+.back-link{display:inline-flex;align-items:center;min-height:44px}
+.bib-book,.bib-verse,.bib-result,.m-btn{min-height:44px}
+.bib-chnav{width:44px;height:44px}
+.bib-swatches{gap:2px}
+.bib-swatch{width:44px;height:44px;padding:6px;background-clip:content-box}
+.bib-swatch-clear{width:44px;height:44px;border:8px solid transparent;background-clip:padding-box}
+
+/* v7 3.4 (resto do painel): texto sobre a faixa da cor da igreja (item escolhido) em tinta */
+.cfg-index-item[aria-current="page"] .cfg-index-s,.esc-event.on .esc-event-day,.esc-event.on .esc-event-time,.seg button.on .seg-n{color:var(--light)}
+.cfg-index-item[aria-current="page"] .cfg-index-t{color:var(--white)}
