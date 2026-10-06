@@ -512,3 +512,12 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
 .pede-opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;min-height:32px;border:1px solid var(--border-2);border-radius:10px;cursor:pointer}
 .pede-opt.on{border-color:var(--olive)}
 .pede-opt input{margin-top:3px}
+
+/* v7 4.14: janela Escalar com busca, filtro e grupos */
+.cand-tools{display:flex;gap:8px;align-items:center;margin-top:12px}
+.cand-tools .input{flex:1;min-width:0}
+.chip-toggle{flex-shrink:0;min-height:32px;padding:6px 14px;border-radius:999px;border:1px solid var(--border-2);background:none;color:var(--light);font:600 var(--fs-pn-13)/1.2 var(--sans);cursor:pointer}
+.chip-toggle.on{border-color:var(--olive);color:var(--white);background:color-mix(in srgb,var(--olive) 16%,transparent)}
+.cand-grp{margin:14px 0 2px;font-size:var(--fs-pn-13);font-weight:600;color:var(--white)}
+.cand-grp:first-child{margin-top:0}
+.cand-grp-sub{margin-bottom:6px;font-size:var(--fs-pn-12);color:var(--muted)}
