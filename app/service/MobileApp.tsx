@@ -2815,13 +2815,15 @@ type ItemInicio =
   | { k: "servir"; times: Ministry[] }
   | { k: "cadastro" };
 
-function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, onServir, ligados }: {
+function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, inscricoes, onServir, ligados }: {
   person: P; member: M | null; ministries: Ministry[]; members: M[]; events: Ev[]; roster: Slot[]; cards: Card[];
   announcements: Announcement[]; unreadIds: Set<string>; kidsChildren: Child[]; childGuardians: ChildGuardian[];
   kidsCheckin?: (destaque: boolean) => React.ReactNode;
   onConfirmarEscala?: (id: string) => void; onRecusarEscala?: (id: string) => void;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
   nextStep: StepView | null;
+  /* etapas ainda não feitas com inscrição aberta (v7 4.7) */
+  inscricoes: StepView[];
   onServir: () => void;
   /* módulos ligados na igreja: entrada de módulo desligado não entra na fila */
   ligados?: Set<string>;
@@ -2856,6 +2858,11 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
   for (const t of minhasTarefas) entradas.push({ id: `tarefa-${t.id}`, modulo: "quadros", tipo: "acao", prioridade: t.due ? 70 : 45, prazo: t.due, conteudo: { k: "tarefa", card: t } });
   if (novo) entradas.push({ id: `mural-${novo.id}`, modulo: "mural", tipo: "aviso", prioridade: 50, conteudo: { k: "mural", aviso: novo } });
   if (nextStep) entradas.push({ id: `passo-${nextStep.id}`, modulo: "inicio", tipo: "passo", prioridade: 40, conteudo: { k: "passo", step: nextStep } });
+  /* inscrição aberta numa etapa que a pessoa ainda não fez (v7 4.7); se já é o próximo passo, o mesmo cartão serve */
+  for (const st of inscricoes) {
+    if (st.id === nextStep?.id) continue;
+    entradas.push({ id: `inscricao-${st.id}`, modulo: st.id === "batismo" ? "batismos" : "cursos", tipo: "passo", prioridade: 38, conteudo: { k: "passo", step: st } });
+  }
   if (incompleto) entradas.push({ id: "cadastro", modulo: "perfil", tipo: "acao", prioridade: 30, conteudo: { k: "cadastro" } });
   if (!serve && timesAbertos.length > 0) entradas.push({ id: "servir", modulo: "times", tipo: "passo", prioridade: 20, conteudo: { k: "servir", times: timesAbertos } });
   const fila = ordenarFila(entradas, ligados);
@@ -2891,9 +2898,9 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
       case "passo":
         return (
           <div key={e.id} className="m6-card">
-            <div className="m6-kick">Seu próximo passo</div>
+            <div className="m6-kick">{c.step.inscricao ? "Inscrições abertas" : "Seu próximo passo"}</div>
             <div className="m6-ct">{c.step.nome}</div>
-            {c.step.info && <div className="m6-meta">{c.step.info}</div>}
+            {(c.step.inscricao ?? c.step.info) && <div className="m6-meta">{c.step.inscricao ?? c.step.info}</div>}
             <div className="m6-btns"><button className={btn} type="button" onClick={() => (c.step.run ? c.step.run() : ui.go("caminhada"))}>{c.step.acao ?? ct("Ver a {caminhada}")} →</button></div>
           </div>
         );
@@ -3334,7 +3341,11 @@ function MuralV6({ announcements, unreadIds, person, onReadAnnouncement, respons
 }
 
 // ── Caminhada (S21, S22, S23, S43) ────────────────────────────────────────────
-type StepView = { id: JourneyStep; nome: string; st: "feito" | "andamento" | "afazer"; info?: string; acao?: string; run?: () => void };
+type StepView = {
+  id: JourneyStep; nome: string; st: "feito" | "andamento" | "afazer"; info?: string; acao?: string; run?: () => void;
+  /* convite com inscrição aberta (v7 4.7): vira cartão próprio no Início, só para quem ainda não fez a etapa */
+  inscricao?: string;
+};
 const STW = { feito: "Concluída", andamento: "Em andamento", afazer: "A fazer" } as const;
 
 function useSteps({ person, member, ministries, courses, enrollments, courseModules = [], courseLessons = [], baptismClasses, journeyRequests, onOpenSub, onRequestStep, onServir }: {
@@ -3359,7 +3370,7 @@ function useSteps({ person, member, ministries, courses, enrollments, courseModu
     if (pedidos.has(id)) return { id, nome, st: "andamento", info: "Pedido enviado · aguardando a liderança" };
     if (id === "batismo") {
       if (turmaInscrita) return { id, nome, st: "andamento", info: joinDot("Inscrição feita", turmaInscrita.label, formatDateBR(turmaInscrita.baptism_date)) };
-      if (turmaAberta) return { id, nome, st: "afazer", info: joinDot("Inscrições abertas", turmaAberta.label), acao: "Quero me batizar", run: () => onOpenSub("batismo") };
+      if (turmaAberta) return { id, nome, st: "afazer", info: joinDot("Inscrições abertas", turmaAberta.label), acao: "Quero me batizar", run: () => onOpenSub("batismo"), inscricao: joinDot(turmaAberta.label, formatDateBR(turmaAberta.baptism_date)) };
       return { id, nome, st: "afazer", acao: "Já fui batizado", run: () => onRequestStep(id) };
     }
     if (id === "curso") {
@@ -3700,6 +3711,7 @@ function MobileMembro({
                 kidsSessions={kidsSessions} kidsAttendance={kidsAttendance} organizationId={organizationId} destaque={destaque} />}
               onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat}
               nextStep={steps.find((s) => s.st === "andamento" && s.acao) ?? steps.find((s) => s.st === "afazer" && s.acao && s.id !== "time") ?? null}
+              inscricoes={steps.filter((s) => s.st === "afazer" && !!s.inscricao)}
               onServir={abrirTimes} ligados={ligadosMembro} />
           )}
 
