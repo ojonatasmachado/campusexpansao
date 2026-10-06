@@ -111,8 +111,11 @@ async function main() {
     { organization_id: org, ministry_id: recep, person_id: pid("Vera"), is_leader: false },
   ]).select(), "seed");
 
+  /* daqui a 3 dias, no calendário de Brasília; o nome segue o dia da semana real (v7 2.9) */
+  const diaCulto = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(Date.now() + 3 * 864e5));
+  const nomeDia = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"][new Date(`${diaCulto}T12:00:00`).getDay()];
   const ev = must<{ id: string }>(await svc.from("events").insert({
-    organization_id: org, church_id: church, name: "Culto de domingo", kind: "Culto", event_date: new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10), time: "19:00",
+    organization_id: org, church_id: church, name: `Culto de ${nomeDia}`, kind: "Culto", event_date: diaCulto, time: "19:00",
   }).select("id").single(), "event");
 
   must(await svc.from("roster_assignments").insert([

@@ -67,3 +67,19 @@ export function saudacao(): string {
   const h = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "America/Sao_Paulo", hour: "2-digit", hour12: false }).format(new Date())) % 24;
   return h >= 5 && h < 12 ? "Bom dia" : h >= 12 && h < 18 ? "Boa tarde" : "Boa noite";
 }
+
+/** Hora de agora em Brasília, "HH:MM" (igual no servidor e no navegador). */
+export function horaAgoraBR(): string {
+  return new Intl.DateTimeFormat("en-GB", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date()).replace(/^24/, "00");
+}
+
+/** O evento ainda vai começar? Dia depois de hoje, ou hoje com a hora de início
+ *  ainda por vir (sem hora, vale o dia inteiro). Tudo no fuso de Brasília. */
+export function aindaVaiAcontecer(eventDate?: string | null, time?: string | null): boolean {
+  const dia = (eventDate ?? "").slice(0, 10);
+  if (!dia) return false;
+  const hoje = todayISO();
+  if (dia !== hoje) return dia > hoje;
+  const hora = (time ?? "").slice(0, 5);
+  return !/^\d{2}:\d{2}$/.test(hora) || hora >= horaAgoraBR();
+}

@@ -10,7 +10,7 @@ import { notifyPush } from "./lib/notify-push";
 import { uploadServiceImage, imageExtension } from "./lib/upload-image";
 import { ICON_PATHS, ICON_CATEGORIES, DEFAULT_ICON, Icon, IconPicker, Caret } from "./lib/icons";
 import { THEME_COOKIE, type BrandCfg } from "./lib/theme";
-import { formatDateBR, joinDot, parseISODate, saudacao, todayISO, toISODate } from "./lib/date";
+import { aindaVaiAcontecer, formatDateBR, joinDot, parseISODate, saudacao, todayISO, toISODate } from "./lib/date";
 import { ageInMonths, suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import type { EnqueteElegivelView } from "./lib/enquetes";
 import type { PesquisaElegivelView, TipoPergunta as TipoPerguntaPesquisa } from "./lib/pesquisas";
@@ -2253,15 +2253,20 @@ function Painel({
           <div className="panel">
             <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Próximos cultos <HelpDot label="Como calculamos" text="Os próximos cultos ou eventos da agenda, na ordem em que vão acontecer." /></span><button className="panel-link" type="button" onClick={() => setRoute("cultos")}>Agenda</button></div>
             <div className="panel-body flush">
-            {events.slice(0, 3).map((event) => (
-              <MiniEvent
-                key={event.id}
-                event={event}
-                setDrawer={setDrawer}
-                attendanceCount={eventAttendance.filter((a) => a.event_id === event.id).length}
-                onCheckin={() => setCheckinEventId(event.id)}
-              />
-            ))}
+            {/* v7 2.9: só o que ainda vai começar, no fuso da igreja (Brasília) */}
+            {(() => {
+              const proximos = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time)).slice(0, 3);
+              if (proximos.length === 0) return <div className="empty" style={{ padding: "14px 16px" }}>Nenhum culto marcado daqui pra frente.</div>;
+              return proximos.map((event) => (
+                <MiniEvent
+                  key={event.id}
+                  event={event}
+                  setDrawer={setDrawer}
+                  attendanceCount={eventAttendance.filter((a) => a.event_id === event.id).length}
+                  onCheckin={() => setCheckinEventId(event.id)}
+                />
+              ));
+            })()}
             </div>
           </div>
           {enqueteElegivel && (
