@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../lib/supabase-server";
 import { supabaseAdmin } from "../../../../lib/supabase";
-import { sendPushToSubscriptions } from "../../../../lib/push";
+import { entregarAvisos, esvaziarFila, type Categoria } from "../../../../lib/service-avisos";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,39 +50,18 @@ export async function POST(request: Request) {
   }
 
   try {
-    const db = supabaseAdmin();
+    const db = supabaseAdmin().schema("service");
     const { data: members, error: membersError } = await db
-      .schema("service")
       .from("members")
       .select("id, volunteer_id")
       .in("id", recipientMemberIds);
     if (membersError) throw membersError;
 
     const peopleIds = (members ?? []).map((m) => m.volunteer_id).filter((id): id is string => !!id);
-    if (!peopleIds.length) return NextResponse.json({ ok: true, sent: 0 });
-
-    const { data: subs, error: subsError } = await db
-      .schema("service")
-      .from("push_subscriptions")
-      .select("id, endpoint, p256dh, auth_key")
-      .in("person_id", peopleIds);
-    if (subsError) throw subsError;
-    if (!subs?.length) return NextResponse.json({ ok: true, sent: 0 });
-
-    /* o toque na notificação abre o app com ?aviso=<categoria>, que mede notification_opened (lei 11) */
-    const { deadEndpoints } = await sendPushToSubscriptions(subs, { title, body, url: categoria ? `/service?aviso=${categoria}` : "/service" });
-
-    if (deadEndpoints.length) {
-      await db.schema("service").from("push_subscriptions").delete().in("endpoint", deadEndpoints);
-    }
-    const enviados = subs.length - deadEndpoints.length;
-    if (enviados > 0) {
-      await db.schema("service").from("app_events").insert(
-        Array.from({ length: enviados }, () => ({ organization_id: organizationId, evento: "notification_sent", modulo: categoria, tipo: "aviso", ref: categoria })),
-      ).then(() => undefined, () => undefined);
-    }
-
-    return NextResponse.json({ ok: true, sent: subs.length - deadEndpoints.length });
+    /* v7 5.3: categoria desligada, silêncio das 22h às 7h e resumo do Mural; aproveita para mandar o que já venceu na fila */
+    const r = await entregarAvisos(db, { organizationId, peopleIds, categoria: categoria as Categoria | null, title, body });
+    await esvaziarFila(db, organizationId);
+    return NextResponse.json({ ok: true, sent: r.enviados, queued: r.naFila });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível enviar a notificação.";
     return NextResponse.json({ error: message }, { status: 500 });

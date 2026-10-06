@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabase";
 import { sendPushToSubscriptions } from "../../../../lib/push";
 import { emSilencio } from "../../../../service/lib/silencio";
+import { esvaziarFila } from "../../../../lib/service-avisos";
 
-/* Lembrete do aviso (v7 4.18). Chamado pelo agendador: manda uma vez, a quem
+/* Lembrete do aviso (v7 4.18) e fila de avisos (5.3). Chamado pelo agendador: manda uma vez, a quem
    do público ainda não abriu o aviso, a notificação marcada na publicação.
    No silêncio das 22h às 7h não manda nada (a próxima chamada depois das 7h
    manda). Protegido por CRON_SECRET (Authorization: Bearer <segredo>); sem o
@@ -40,7 +41,10 @@ export async function GET(request: Request) {
       if (!pessoas.length) continue;
       const { data: lidas } = await db.from("announcement_reads").select("person_id").eq("announcement_id", aviso.id);
       const jaLeram = new Set((lidas ?? []).map((l) => l.person_id));
-      const faltam = pessoas.filter((p) => !jaLeram.has(p));
+      /* quem desligou o Mural não recebe o lembrete (lei 9) */
+      const { data: desligou } = await db.from("people").select("id, notif_off").in("id", pessoas);
+      const semMural = new Set((desligou ?? []).filter((p) => ((p.notif_off ?? []) as string[]).includes("mural")).map((p) => p.id));
+      const faltam = pessoas.filter((p) => !jaLeram.has(p) && !semMural.has(p));
       if (!faltam.length) continue;
       const { data: subs } = await db.from("push_subscriptions").select("id, endpoint, p256dh, auth_key").in("person_id", faltam);
       if (!subs?.length) continue;
@@ -51,7 +55,9 @@ export async function GET(request: Request) {
       /* lei 11: notification_sent, sem dado da pessoa */
       if (n > 0) await db.from("app_events").insert(Array.from({ length: n }, () => ({ organization_id: aviso.organization_id, evento: "notification_sent", modulo: "mural", tipo: "lembrete", ref: aviso.id })));
     }
-    return NextResponse.json({ ok: true, avisos: (avisos ?? []).length, enviados });
+    /* v7 5.3: a mesma chamada esvazia a fila (silêncio e resumo do Mural) */
+    const daFila = await esvaziarFila(db);
+    return NextResponse.json({ ok: true, avisos: (avisos ?? []).length, enviados, daFila });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível enviar os lembretes.";
     return NextResponse.json({ error: message }, { status: 500 });

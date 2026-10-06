@@ -1810,6 +1810,22 @@ function TabPerfil({
 
   const { pushOn, pushBusy, pushMsg, pushSupported, ligarPush, desligarPush } = usePush(organizationId);
   const [tour, setTour] = useState(false);
+  const { comTermos: ct } = useTermos();
+  /* categorias desligadas (0066); lidas do perfil, gravadas na hora */
+  const [notifOff, setNotifOff] = useState<string[]>([]);
+  useEffect(() => {
+    let vivo = true;
+    createServiceBrowserClient().schema("service").rpc("my_notifications").then(({ data }) => { if (vivo && Array.isArray(data)) setNotifOff(data as string[]); });
+    return () => { vivo = false; };
+  }, []);
+  const trocarCategoria = (id: string) => {
+    const antes = notifOff;
+    const novo = notifOff.includes(id) ? notifOff.filter((x) => x !== id) : [...notifOff, id];
+    setNotifOff(novo);
+    createServiceBrowserClient().schema("service").rpc("set_my_notifications", { p_off: novo }).then(({ data, error }) => {
+      if (error || data !== "ok") { setNotifOff(antes); ui.toast("Não foi possível salvar agora. Tente de novo."); }
+    });
+  };
   /* a foto saiu do primeiro acesso (v7 4.10) e mora em Meus dados */
   const [foto, setFoto] = useState<string | null>(person.photoUrl ?? null);
 
@@ -1918,10 +1934,24 @@ function TabPerfil({
             <span className="m6-ic"><Icon name="sino" size={22} /></span>
             <span className="m6-rb">
               <span className="m6-rt">Notificações</span>
-              <span className="m6-rs">{pushMsg || (pushSupported ? (pushOn ? "Escala, Mural e conversas chegam no celular" : "Desligadas") : "Disponível quando o app está instalado")}</span>
+              <span className="m6-rs">{pushMsg || (pushSupported ? (pushOn ? "Nada chega das 22h às 7h. O Mural chega em resumo." : "Desligadas") : "Disponível quando o app está instalado")}</span>
             </span>
             <button type="button" role="switch" aria-checked={pushOn} aria-label="Notificações" className={`m6-tg${pushOn ? " on" : ""}`} disabled={!pushSupported || pushBusy} onClick={() => (pushOn ? desligarPush() : ligarPush())} />
           </div>
+          {/* v7 5.3 (lei 9): categorias que a pessoa desliga */}
+          {pushOn && CATEGORIAS_AVISO.map((c) => {
+            const ligada = !notifOff.includes(c.id);
+            return (
+              <div className="m6-row" key={c.id}>
+                <span className="m6-ic" />
+                <span className="m6-rb">
+                  <span className="m6-rt">{ct(c.t)}</span>
+                  <span className="m6-rs">{ct(c.s)}</span>
+                </span>
+                <button type="button" role="switch" aria-checked={ligada} aria-label={`Avisos de ${ct(c.t)}`} className={`m6-tg${ligada ? " on" : ""}`} onClick={() => trocarCategoria(c.id)} />
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -2521,8 +2551,10 @@ type MemberUi = {
   tamanhoTexto: () => void;
   /* abre o detalhe do evento numa folha (v7 4.5) */
   abrirEvento: (eventId: string) => void;
+  /* lei 9: a permissão de notificação é pedida depois da primeira escala confirmada */
+  escalaConfirmada: () => void;
 };
-const MemberUiContext = createContext<MemberUi>({ go: () => {}, sheet: () => {}, toast: () => {}, respostas: {}, responderEscala: () => {}, tamanhoTexto: () => {}, abrirEvento: () => {} });
+const MemberUiContext = createContext<MemberUi>({ go: () => {}, sheet: () => {}, toast: () => {}, respostas: {}, responderEscala: () => {}, tamanhoTexto: () => {}, abrirEvento: () => {}, escalaConfirmada: () => {} });
 
 function M6Row({ ic, t, s, onClick, right, cls }: { ic?: string; t: React.ReactNode; s?: React.ReactNode; onClick?: () => void; right?: React.ReactNode | null; cls?: string }) {
   return (
@@ -2599,7 +2631,7 @@ function EscalaCard({ slot, ev, ministry, person, member, members, onConfirmarEs
     const gravar = () => {
       timer.current = null;
       pendente.current = null;
-      if (v === "ok") onConfirmarEscala?.(slot.id); else onRecusarEscala?.(slot.id);
+      if (v === "ok") { onConfirmarEscala?.(slot.id); ui.escalaConfirmada(); } else onRecusarEscala?.(slot.id);
     };
     pendente.current = gravar;
     timer.current = setTimeout(gravar, UNDO_MS);
@@ -2843,6 +2875,13 @@ type ItemInicio =
   | { k: "cadastro"; falta: string[] }
   | { k: "atalho" };
 
+/* categorias de aviso que a pessoa desliga (lei 9) */
+const CATEGORIAS_AVISO: { id: CategoriaAviso; t: string; s: string }[] = [
+  { id: "escala", t: "Escala", s: "Quando você for escalado ou houver troca" },
+  { id: "mural", t: "Mural", s: "Publicações da igreja, em resumo" },
+  { id: "mensagens", t: "Mensagens", s: "Quando alguém falar com você" },
+  { id: "caminhada", t: "{Caminhada}", s: "Seus passos e pedidos aprovados" },
+];
 const ADIADOS_KEY = "cex_inicio_adiados";
 const ouvirAdiados = (cb: () => void) => { window.addEventListener(ADIADOS_KEY, cb); return () => window.removeEventListener(ADIADOS_KEY, cb); };
 const lerAdiados = () => { try { return localStorage.getItem(ADIADOS_KEY) ?? "{}"; } catch { return "{}"; } };
@@ -3082,6 +3121,27 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
         </div>
       )}
     </>
+  );
+}
+
+// ── Pedido de notificação (v7 5.3, lei 9) ─────────────────────────────────────
+function SheetPedirAvisos({ organizationId }: { organizationId?: string }) {
+  const ui = useContext(MemberUiContext);
+  const { pushOn, pushBusy, pushMsg, ligarPush } = usePush(organizationId);
+  return (
+    <div>
+      <h2 className="m6-sh">Quer saber quando for escalado?</h2>
+      <p className="m6-txt">Avisamos no celular quando você for escalado, quando a igreja publicar no Mural e quando alguém falar com você. Nada chega das 22h às 7h, e dá para escolher o que receber no Perfil.</p>
+      {pushOn ? (
+        <div className="m6-after"><M6St k="ok" ic="ok">Notificações ligadas</M6St></div>
+      ) : (
+        <div className="m6-btns">
+          <button className="m6-btn pri" type="button" disabled={pushBusy} onClick={ligarPush}><Icon name="sino" size={20} />Ligar notificações</button>
+          <button className="m6-btn sec" type="button" onClick={() => ui.sheet(null)}>Agora não</button>
+        </div>
+      )}
+      {pushMsg && <div className="m6-meta">{pushMsg}</div>}
+    </div>
   );
 }
 
@@ -3816,7 +3876,16 @@ function MobileMembro({
     const rsvp = eventRsvps.find((r) => r.event_id === ev.id)?.kind ?? null;
     setSheetEl(<SheetEvento key={ev.id} ev={ev} slot={slot} ministry={ministry} rsvp={rsvp} onRespond={onRespondEvent} paginaUrl={paginaUrl} churchName={churchName} />);
   };
-  const ui: MemberUi = { go, sheet: setSheetEl, toast, respostas, responderEscala: responderEscalaUi, tamanhoTexto: abrirTamanhoTexto, abrirEvento };
+  /* v7 5.3: depois da primeira escala confirmada, uma vez por aparelho, se o navegador ainda não respondeu */
+  const escalaConfirmada = () => {
+    try {
+      if (localStorage.getItem("cex_avisos_pedidos")) return;
+      if (!("Notification" in window) || Notification.permission !== "default" || !("PushManager" in window)) return;
+      localStorage.setItem("cex_avisos_pedidos", "1");
+    } catch { return; }
+    setSheetEl(<SheetPedirAvisos organizationId={organizationId} />);
+  };
+  const ui: MemberUi = { go, sheet: setSheetEl, toast, respostas, responderEscala: responderEscalaUi, tamanhoTexto: abrirTamanhoTexto, abrirEvento, escalaConfirmada };
 
   const pedirEtapa = (step: JourneyStep) => {
     const nome = { decisao: "Decisão", batismo: "Batismo", curso: "Fundamentos", integracao: termo("grupo"), time: "Servindo" }[step];
