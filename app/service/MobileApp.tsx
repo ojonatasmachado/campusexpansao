@@ -2491,8 +2491,11 @@ type MemberUi = {
   go: (tab: MemberTab, sub?: string | null, extra?: { agSeg?: "minha" | "igreja"; chatId?: string | null; newChat?: boolean }) => void;
   sheet: (el: React.ReactNode | null) => void;
   toast: (msg: string, action?: { label: string; fn: () => void }) => void;
+  /* resposta da escala já dada na tela (antes de o banco gravar, no tempo do "Desfazer"); null desfaz */
+  respostas: Record<string, "ok" | "no">;
+  responderEscala: (id: string, v: "ok" | "no" | null) => void;
 };
-const MemberUiContext = createContext<MemberUi>({ go: () => {}, sheet: () => {}, toast: () => {} });
+const MemberUiContext = createContext<MemberUi>({ go: () => {}, sheet: () => {}, toast: () => {}, respostas: {}, responderEscala: () => {} });
 
 function M6Row({ ic, t, s, onClick, right, cls }: { ic?: string; t: React.ReactNode; s?: React.ReactNode; onClick?: () => void; right?: React.ReactNode | null; cls?: string }) {
   return (
@@ -2548,7 +2551,9 @@ function EscalaCard({ slot, ev, ministry, person, member, members, onConfirmarEs
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
 }) {
   const ui = useContext(MemberUiContext);
-  const [st, setSt] = useState(slot.status);
+  const [st, setStLocal] = useState<Slot["status"]>(ui.respostas[slot.id] ?? slot.status);
+  /* o selo da aba Agenda acompanha a resposta na hora, não só depois de gravar */
+  const setSt = (v: Slot["status"]) => { setStLocal(v); ui.responderEscala(slot.id, v === "ok" || v === "no" ? v : null); };
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   /* resposta esperando o "Desfazer": se o cartão sair da tela antes (trocou
      de aba), grava na hora em vez de perder */
@@ -3323,7 +3328,12 @@ function MobileMembro({
   };
   const hoje = todayISO();
   const evDate = new Map(events.map((e) => [e.id, e.eventDate]));
-  const pendEscala = roster.filter((r) => r.person_id === person.id && r.status === "wait" && (evDate.get(r.event_id) ?? "") >= hoje).length;
+  const [respostas, setRespostas] = useState<Record<string, "ok" | "no">>({});
+  const responderEscalaUi = (id: string, v: "ok" | "no" | null) => setRespostas((r) => {
+    if (v === null) { if (!(id in r)) return r; const n = { ...r }; delete n[id]; return n; }
+    return r[id] === v ? r : { ...r, [id]: v };
+  });
+  const pendEscala = roster.filter((r) => r.person_id === person.id && ((respostas[r.id] as string | undefined) ?? r.status) === "wait" && (evDate.get(r.event_id) ?? "") >= hoje).length;
   const badges: Partial<Record<MemberTab, number>> = { agenda: serves ? pendEscala : 0, mensagens: unreadIds.size };
 
   const toast = (msg: string, action?: { label: string; fn: () => void }) => setToastO({ msg, action, id: Date.now() });
@@ -3344,7 +3354,7 @@ function MobileMembro({
     setTab(t);
     setSub(subAllowed(s) ? s : null);
   };
-  const ui: MemberUi = { go, sheet: setSheetEl, toast };
+  const ui: MemberUi = { go, sheet: setSheetEl, toast, respostas, responderEscala: responderEscalaUi };
 
   const pedirEtapa = (step: JourneyStep) => {
     const nome = { decisao: "Decisão", batismo: "Batismo", curso: "Fundamentos", integracao: groupTerm || "Grupo", time: "Servindo" }[step];
