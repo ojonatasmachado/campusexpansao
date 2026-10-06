@@ -37,7 +37,7 @@ Atualizado pelo Claude Code ao fim de cada item: marque `[x]` e anote o commit c
 
 ## Etapa 4 · Estrutura
 - [x] 4.1 (bc49445) Registro de módulos (Escalas, depois Pessoas e Mural)
-- [ ] 4.2 4 abas e avatar
+- [x] 4.2 (2137074) 4 abas e avatar · falta teste com 5 membros acima de 60 anos
 - [ ] 4.3 Início do membro em duas zonas
 - [ ] 4.4 Destaque da igreja
 - [ ] 4.5 Agenda e detalhe do evento
