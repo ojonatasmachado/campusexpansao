@@ -53,6 +53,8 @@ type M = {
   /* ficha com e-mail, telefone, aniversário e CEP (calculado no servidor):
      sem isso o app abre no primeiro acesso, em qualquer aparelho */
   contactComplete?: boolean;
+  /* primeiro acesso feito: nome e sobrenome e telefone (v7 4.10) */
+  firstAccessDone?: boolean;
   journey: number[];
   volunteerId: string | null;
   groupId?: string | null;
@@ -1801,12 +1803,26 @@ function TabPerfil({
 
   const { pushOn, pushBusy, pushMsg, pushSupported, ligarPush, desligarPush } = usePush(organizationId);
   const [tour, setTour] = useState(false);
+  /* a foto saiu do primeiro acesso (v7 4.10) e mora em Meus dados */
+  const [foto, setFoto] = useState<string | null>(person.photoUrl ?? null);
 
   /* Perfil no modelo de Ajustes do celular (S24): a lista abre telas
      próprias (Meus dados, Trocar senha, Minha família) com "voltar" no topo */
   if (view === "dados") {
     return (
       <div className="m6-sec0">
+        <div className="m6-card ob-foto">
+          <PhotoPicker
+            label="Sua foto"
+            photoUrl={foto}
+            path={`${organizationId}/kids/guardians/${person.id}`}
+            onUploaded={(url) => {
+              setFoto(url);
+              createServiceBrowserClient().schema("service").from("people").update({ photo_url: url }).eq("id", person.id);
+            }}
+          />
+          <div className="m6-meta">Aparece no lugar das iniciais.</div>
+        </div>
         {member ? (
           <div className="m6-card">
             {!editing ? (
@@ -1970,7 +1986,12 @@ function AppTourModal({ onClose }: { onClose: () => void }) {
 }
 
 
-function Onboarding({ person, member, churchName, churchLogoUrl, organizationId, onCompleteOnboarding, onDone }: { person: P; member: M | null; churchName?: string; churchLogoUrl?: string | null; organizationId?: string; onCompleteOnboarding?: (personId: string, memberId: string | null, data: MemberContactInput) => Promise<{ error?: string }>; onDone: () => void }) {
+/* Primeiro acesso em 2 passos (v7 4.10): nome e telefone; tamanho do texto
+   (a própria tela é a prévia: ela já muda de tamanho enquanto a pessoa
+   arrasta). Foto, e-mail, aniversário e CEP viram o cartão "Complete seus
+   dados" no Início; o atalho na tela de início é pedido no segundo acesso. */
+function Onboarding({ person, member, churchName, churchLogoUrl, onCompleteOnboarding, onDone }: { person: P; member: M | null; churchName?: string; churchLogoUrl?: string | null; organizationId?: string; onCompleteOnboarding?: (personId: string, memberId: string | null, data: MemberContactInput) => Promise<{ error?: string }>; onDone: () => void }) {
+  const { comTermos: ct } = useTermos();
   const [step, setStep] = useState(0);
   const [d, setD] = useState<MemberContactInput>({
     name: member?.name ?? person.name,
@@ -1983,123 +2004,71 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
     cidade: member?.city ?? "",
     estado: member?.state ?? "",
   });
-  const [foto, setFoto] = useState<string | null>(null);
   const [tentou, setTentou] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erroSalvar, setErroSalvar] = useState("");
   const set = (k: keyof MemberContactInput, v: string) => setD((p) => ({ ...p, [k]: v }));
-  const erros = contactErrors(d);
-  const dadosOk = !Object.values(erros).some(Boolean);
-
-  const nome = person.name.split(" ")[0];
-  const push = usePush(organizationId);
+  const todos = contactErrors(d);
+  const erros = { name: todos.name, phone: todos.phone };
+  const dadosOk = !erros.name && !erros.phone;
+  const err = (k: "name" | "phone") => (tentou && erros[k] ? <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginTop: 4 }}>{erros[k]}</div> : null);
 
   const steps = [
     {
-      t: `Que bom ter você aqui, ${nome}`,
-      s: "Que bom ter você aqui. Vamos completar seu cadastro, leva um minuto.",
+      t: `Que bom ter você aqui, ${person.name.split(" ")[0]}`,
+      s: "Confirme seu nome e seu telefone. É o que a liderança usa para falar com você.",
       body: (
-        <div className="ob-welcome">
-          <div className="ob-mark"><Icon name="ok" size={28} /></div>
-          <div className="ob-welcome-x">
-            Seu acesso foi liberado. Antes de começar, confirme seus dados. O resto dá para pular.
+        <div className="ob-form">
+          <div className="field">
+            <label className="field-label req">Nome e sobrenome</label>
+            <input className="input" value={d.name} autoComplete="name" onChange={(e) => set("name", e.target.value)} />
+            {err("name")}
+          </div>
+          <div className="field">
+            <label className="field-label req">Telefone (WhatsApp)</label>
+            <input className="input" type="tel" value={d.phone} autoComplete="tel" placeholder="(11) 90000-0000" onChange={(e) => set("phone", e.target.value)} />
+            {err("phone")}
           </div>
         </div>
       ),
-      ok: "Começar →",
-      valid: true,
-    },
-    {
-      t: "Seus dados",
-      s: "Confirme as informações para a igreja manter contato com você e celebrar suas datas.",
-      body: <MemberContactFields d={d} set={set} erros={tentou ? erros : null} />,
       ok: "Continuar →",
-      valid: dadosOk,
-      onInvalid: () => setTentou(true),
-    },
-    {
-      t: "Sua foto",
-      s: "Coloque uma foto sua. Aparece no lugar das iniciais e deixa tudo com mais cara de casa.",
-      body: (
-        <div className="ob-foto">
-          <PhotoPicker
-            photoUrl={foto}
-            path={`${organizationId}/kids/guardians/${person.id}`}
-            onUploaded={(url) => {
-              setFoto(url);
-              createServiceBrowserClient().schema("service").from("people").update({ photo_url: url }).eq("id", person.id);
-            }}
-          />
-        </div>
-      ),
-      ok: foto ? "Continuar →" : "Pular por agora →",
-      valid: true,
     },
     {
       t: "Tamanho do texto",
-      s: "Escolha como fica mais confortável ler. Dá para mudar depois no Perfil.",
+      s: "Arraste até ler com conforto. A tela inteira já muda junto. Dá para trocar depois no Perfil.",
       body: (
         <div className="ob-textsize">
           <TextSizeSlider previa={false} />
+          <div className="m6-card flat ob-previa" aria-hidden="true">
+            <div className="m6-kick">Domingo · 9:30</div>
+            <div className="m6-ct">{ct("{Culto} da manhã")}</div>
+            <div className="m6-meta">Você serve na Recepção · chegar às 9:00</div>
+          </div>
         </div>
-      ),
-      ok: "Continuar →",
-      valid: true,
-    },
-    {
-      t: "Notificações",
-      s: "Avisamos quando você for escalado, quando a igreja publicar no Mural e quando alguém responder suas mensagens. Nada além disso.",
-      body: (
-        <div className="ob-textsize">
-          {push.pushOn ? (
-            <div className="m-confirmed"><Icon name="ok" size={15} /> Notificações ligadas</div>
-          ) : push.pushSupported ? (
-            <button className="m6-btn pri full" type="button" disabled={push.pushBusy} onClick={push.ligarPush}><Icon name="sino" size={20} />Ligar notificações</button>
-          ) : (
-            <p className="ob-sub" style={{ margin: 0 }}>No iPhone, as notificações funcionam depois de colocar o app na tela de início (próximo passo).</p>
-          )}
-          {push.pushMsg && <p className="ob-sub" style={{ margin: "8px 0 0" }}>{push.pushMsg}</p>}
-        </div>
-      ),
-      ok: push.pushOn ? "Continuar →" : "Pular por agora →",
-      valid: true,
-    },
-    {
-      t: "Na tela de início",
-      s: "Coloque o app da igreja junto dos outros apps do celular, para abrir com um toque.",
-      body: (
-        <ul className="m6-facts ob-home">
-          <li><Icon name="compartilhar" size={20} /><span><b>iPhone:</b> no Safari, toque em Compartilhar e depois em &quot;Adicionar à Tela de Início&quot;.</span></li>
-          <li><Icon name="menu" size={20} /><span><b>Android:</b> no Chrome, toque no menu de três pontos e depois em &quot;Instalar app&quot;.</span></li>
-        </ul>
       ),
       ok: "Entrar no app →",
-      valid: true,
     },
   ] as const;
 
   const cur = steps[step];
 
   const next = async () => {
-    if (!cur.valid) {
-      cur.onInvalid?.();
+    if (step === 0) {
+      if (!dadosOk) { setTentou(true); return; }
+      /* grava ao sair do passo 1 e só avança se gravou: fechar o app no passo 2
+         não traz o primeiro acesso de volta. Os outros campos vão como estão
+         (vazio não apaga nada no servidor). */
+      if (onCompleteOnboarding) {
+        setSalvando(true);
+        setErroSalvar("");
+        const { error } = await onCompleteOnboarding(person.id, member?.id ?? null, d);
+        setSalvando(false);
+        if (error) { setErroSalvar(error); return; }
+      }
+      setStep(1);
       return;
     }
-    /* grava os dados já ao sair do passo "Seus dados" e só avança se gravou:
-       se a pessoa fechar o app na foto, a ficha já está completa e o
-       primeiro acesso não volta */
-    if (step === 1 && onCompleteOnboarding) {
-      setSalvando(true);
-      setErroSalvar("");
-      const { error } = await onCompleteOnboarding(person.id, member?.id ?? null, d);
-      setSalvando(false);
-      if (error) {
-        setErroSalvar(error);
-        return;
-      }
-    }
-    if (step < steps.length - 1) setStep(step + 1);
-    else onDone();
+    onDone();
   };
 
   return (
@@ -2864,9 +2833,13 @@ type ItemInicio =
   | { k: "mural"; aviso: Announcement }
   | { k: "passo"; step: StepView }
   | { k: "servir"; times: Ministry[] }
-  | { k: "cadastro" };
+  | { k: "cadastro"; falta: string[] }
+  | { k: "atalho" };
 
-function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, inscricoes, onServir, ligados }: {
+const ADIADOS_KEY = "cex_inicio_adiados";
+function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, inscricoes, onServir, ligados, acessos = 0, instalado = false }: {
+  /* quantas vezes a pessoa abriu o app neste aparelho e se ele já está na tela de início (v7 4.10) */
+  acessos?: number; instalado?: boolean;
   person: P; member: M | null; ministries: Ministry[]; members: M[]; events: Ev[]; roster: Slot[]; cards: Card[];
   announcements: Announcement[]; unreadIds: Set<string>; kidsChildren: Child[]; childGuardians: ChildGuardian[];
   kidsCheckin?: (destaque: boolean) => React.ReactNode;
@@ -2896,7 +2869,29 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
   const cultoHoje = events.find((e) => e.eventDate === hoje);
   const timesAbertos = ministries.filter((m) => !m.people.some((mp) => mp.personId === person.id));
   const ministryOf = (slot: Slot) => ministries.find((m) => m.positions?.some((p) => p.id === slot.position_id)) ?? ministries.find((m) => m.people.some((mp) => mp.personId === person.id));
-  const incompleto = member && !member.contactComplete;
+  /* v7 4.10: o que ficou fora do primeiro acesso vira cartão de prioridade baixa */
+  const faltaDados = member ? [
+    !person.photoUrl && "foto",
+    !realValue(member.email) && "e-mail",
+    !member.birth && "aniversário",
+    (member.postalCode ?? "").replace(/\D/g, "").length !== 8 && "CEP",
+  ].filter(Boolean) as string[] : [];
+  /* lido depois de montar: o HTML do servidor e o do navegador começam iguais */
+  const [adiados, setAdiados] = useState<Record<string, string>>({});
+  useEffect(() => {
+    try { setAdiados(JSON.parse(localStorage.getItem(ADIADOS_KEY) ?? "{}") as Record<string, string>); } catch { /* sem armazenamento */ }
+  }, []);
+  const adiar = (id: string, dias: number) => {
+    const ate = somaDias(hoje, dias);
+    setAdiados((p) => {
+      const n = { ...p, [id]: ate };
+      try { localStorage.setItem(ADIADOS_KEY, JSON.stringify(n)); } catch { /* sem armazenamento: só nesta sessão */ }
+      return n;
+    });
+  };
+  const adiado = (id: string) => !!adiados[id] && adiados[id] > hoje;
+  const incompleto = faltaDados.length > 0 && !adiado("dados");
+  const pedirAtalho = acessos === 2 && !instalado && !adiado("atalho");
   const destOracao = useDestinatario("oracao");
 
   /* entradas dos módulos; a casca ordena */
@@ -2914,7 +2909,8 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
     if (st.id === nextStep?.id) continue;
     entradas.push({ id: `inscricao-${st.id}`, modulo: st.id === "batismo" ? "batismos" : "cursos", tipo: "passo", prioridade: 38, conteudo: { k: "passo", step: st } });
   }
-  if (incompleto) entradas.push({ id: "cadastro", modulo: "perfil", tipo: "acao", prioridade: 30, conteudo: { k: "cadastro" } });
+  if (incompleto) entradas.push({ id: "cadastro", modulo: "perfil", tipo: "acao", prioridade: 15, conteudo: { k: "cadastro", falta: faltaDados } });
+  if (pedirAtalho) entradas.push({ id: "atalho", modulo: "inicio", tipo: "acao", prioridade: 25, conteudo: { k: "atalho" } });
   if (!serve && timesAbertos.length > 0) entradas.push({ id: "servir", modulo: "times", tipo: "passo", prioridade: 20, conteudo: { k: "servir", times: timesAbertos } });
   const fila = ordenarFila(entradas, ligados);
   const visiveis = maisFila ? fila : fila.slice(0, FILA_DOBRA);
@@ -2959,9 +2955,27 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
         return (
           <div key={e.id} className="m6-card">
             <div className="m6-kick">Seu cadastro</div>
-            <div className="m6-ct">Complete seu cadastro</div>
-            <div className="m6-meta">Faltam alguns dados para a igreja manter contato com você.</div>
-            <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("perfil", "dados")}>Completar →</button></div>
+            <div className="m6-ct">Complete seus dados</div>
+            <div className="m6-meta">{`Falta ${c.falta.join(", ").replace(/, ([^,]*)$/, " e $1")}. Ajuda a igreja a cuidar de você.`}</div>
+            <div className="m6-btns">
+              <button className={btn} type="button" onClick={() => ui.go("perfil", "dados")}>Completar →</button>
+              <button className="m6-link" type="button" onClick={() => adiar("dados", 30)}>Agora não</button>
+            </div>
+          </div>
+        );
+      case "atalho":
+        return (
+          <div key={e.id} className="m6-card">
+            <div className="m6-kick">Dica</div>
+            <div className="m6-ct">Coloque o app na tela de início</div>
+            <ul className="m6-facts">
+              <li><Icon name="compartilhar" size={20} /><span><b>iPhone:</b> no Safari, toque em Compartilhar e depois em &quot;Adicionar à Tela de Início&quot;.</span></li>
+              <li><Icon name="menu" size={20} /><span><b>Android:</b> no Chrome, toque no menu de três pontos e depois em &quot;Instalar app&quot;.</span></li>
+            </ul>
+            <div className="m6-btns">
+              <button className={btn} type="button" onClick={() => adiar("atalho", 3650)}>Já coloquei</button>
+              <button className="m6-link" type="button" onClick={() => adiar("atalho", 3650)}>Agora não</button>
+            </div>
           </div>
         );
       case "servir":
@@ -3629,7 +3643,7 @@ function MobileMembro({
   /* primeiro acesso termina quando a ficha tem os dados obrigatórios
      (member.contactComplete, calculado no servidor): vale em qualquer
      aparelho e não diverge entre o HTML do servidor e o do navegador */
-  const [onboarded, setOnboarded] = useState<boolean>(() => !member || !!member.contactComplete);
+  const [onboarded, setOnboarded] = useState<boolean>(() => !member || !!(member.firstAccessDone ?? member.contactComplete));
   const { people, ministries, events, roster, cards, boards, enrollments, courseModules = [], courseLessons = [],
           visitors, baptismClasses, announcements: avisosRecebidos, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment,
           onAdvanceVisitorStage, onRegisterVisitor, onSendMessage, onStartChat,
@@ -3693,6 +3707,18 @@ function MobileMembro({
   }, [toastO]);
   useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }); }, [tab, sub]);
 
+  /* v7 4.10: o atalho na tela de início é pedido no segundo acesso (contador no aparelho) */
+  const [acessos, setAcessos] = useState(0);
+  const [instalado, setInstalado] = useState(false);
+  useEffect(() => {
+    try {
+      const n = Number(localStorage.getItem("cex_acessos") ?? "0") + 1;
+      localStorage.setItem("cex_acessos", String(n));
+      setAcessos(n);
+    } catch { /* sem armazenamento: sem o pedido */ }
+    const nav = navigator as Navigator & { standalone?: boolean };
+    setInstalado(window.matchMedia?.("(display-mode: standalone)").matches || nav.standalone === true);
+  }, []);
   /* aba de onde o Perfil foi aberto: o "voltar" do Perfil leva para ela */
   const [tabAntesPerfil, setTabAntesPerfil] = useState<MemberTab>("inicio");
   /* rótulo "Perfil" sob o avatar só no primeiro acesso: lido uma vez, gravado na hora */
@@ -3732,12 +3758,20 @@ function MobileMembro({
   };
   const abrirTimes = () => setSheetEl(<SheetTimes person={person} member={member} ministries={ministries} members={members} people={people} />);
 
+  /* o primeiro acesso termina na escala pendente (Agenda) ou no próximo culto (detalhe) */
+  const terminarPrimeiroAcesso = () => {
+    setOnboarded(true);
+    if (pendEscala > 0) { go("agenda", null, { agSeg: "minha" }); return; }
+    const prox = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time))[0];
+    if (prox) abrirEvento(prox.id);
+  };
+
   if (!onboarded) {
     return (
       <div className="phone" data-ts={textPos} style={{ "--m-scale": textScale } as React.CSSProperties}>
         <div className="phone-screen">
           <div className="phone-notch" />
-          <Onboarding person={person} member={member} churchName={churchName} churchLogoUrl={churchLogoUrl} organizationId={organizationId} onCompleteOnboarding={onCompleteOnboarding} onDone={() => setOnboarded(true)} />
+          <Onboarding person={person} member={member} churchName={churchName} churchLogoUrl={churchLogoUrl} organizationId={organizationId} onCompleteOnboarding={onCompleteOnboarding} onDone={terminarPrimeiroAcesso} />
         </div>
       </div>
     );
@@ -3819,7 +3853,7 @@ function MobileMembro({
               onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat}
               nextStep={steps.find((s) => s.st === "andamento" && s.acao) ?? steps.find((s) => s.st === "afazer" && s.acao && s.id !== "time") ?? null}
               inscricoes={steps.filter((s) => s.st === "afazer" && !!s.inscricao)}
-              onServir={abrirTimes} ligados={ligadosMembro} />
+              onServir={abrirTimes} ligados={ligadosMembro} acessos={acessos} instalado={instalado} />
           )}
 
           {tab === "agenda" && !sub && (

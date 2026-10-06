@@ -197,6 +197,7 @@ type MemberView = {
   city: string | null;
   state: string | null;
   contactComplete: boolean;
+  firstAccessDone: boolean;
 };
 
 type MinistryRow = {
@@ -897,6 +898,8 @@ function toMemberView(row: MemberRow): MemberView {
     state: row.state,
     /* obrigatórios do membro: sem eles o app abre no primeiro acesso */
     contactComplete: !!(row.email && row.phone && row.birth && (row.postal_code ?? "").replace(/\D/g, "").length === 8),
+    /* primeiro acesso em 2 passos (v7 4.10): feito com nome e sobrenome e telefone */
+    firstAccessDone: !!(row.phone && (row.name ?? "").trim().split(/\s+/).length >= 2),
   };
 }
 

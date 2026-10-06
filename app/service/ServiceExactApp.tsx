@@ -168,6 +168,7 @@ export type MemberView = {
   city?: string | null;
   state?: string | null;
   contactComplete?: boolean;
+  firstAccessDone?: boolean;
 };
 
 export type MinistryView = {
@@ -1190,8 +1191,9 @@ export default function ServiceExactApp({
     const [pessoa, ficha] = await Promise.all([
       supabase.schema("service").from("people").update({
         name: data.name.trim(),
-        email: data.email.trim() || null,
-        phone: telefoneParaGravar(data.phone),
+        /* campo vazio não apaga o que já existe (o primeiro acesso só pede nome e telefone) */
+        ...(data.email.trim() ? { email: data.email.trim() } : {}),
+        ...(telefoneParaGravar(data.phone) ? { phone: telefoneParaGravar(data.phone) } : {}),
         meta: { ...targetPerson?.meta, birthday: data.nasc || targetPerson?.meta?.birthday, neighborhood: data.bairro || targetPerson?.meta?.neighborhood },
       }).eq("id", personId),
       memberId

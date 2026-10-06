@@ -544,3 +544,7 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
 .m-conv.unread .m-conv-name{font-weight:700}
 .m-conv.unread .m-conv-prev{color:var(--white);font-weight:600}
 .m-conv.unread .m-conv-when{color:var(--white)}
+
+/* v7 4.10: primeiro acesso em 2 passos; foto em Meus dados */
+.m6-card.ob-foto{flex-direction:column;align-items:center;gap:8px;margin-bottom:12px}
+.ob-previa{margin-top:16px}
