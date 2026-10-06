@@ -10,6 +10,9 @@ import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
 import { notifyPush } from "../../lib/notify-push";
 import { emSilencio, foraDoSilencio, quandoLembra } from "../../lib/silencio";
+import { videoDoLink } from "../../lib/video";
+import { imageExtension, uploadServiceImage } from "../../lib/upload-image";
+import { ImageUpload } from "../../ImageUpload";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { dataPublicacao, formatDateBR, joinDot, paraPublico, porPublicacao, quandoPublicado } from "../../lib/date";
 import { Icon } from "../../lib/icons";
@@ -28,6 +31,14 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
   /* v7 4.18: lembrar quem não viu */
   const [lembrete, setLembrete] = useState<"nao" | "24" | "48" | "data">("nao");
   const [lembreteData, setLembreteData] = useState("");
+  /* v7 4.4: destaque no Início do app até uma data, com imagem e vídeo */
+  const [destacar, setDestacar] = useState(false);
+  const [destaqueAte, setDestaqueAte] = useState("");
+  const [imagem, setImagem] = useState<string | null>(null);
+  const [imagemAlt, setImagemAlt] = useState("");
+  const [video, setVideo] = useState("");
+  const videoInvalido = !!video.trim() && !videoDoLink(video);
+  const destaqueIncompleto = destacar && (!destaqueAte || (!!imagem && !imagemAlt.trim()) || videoInvalido);
   /* hora em que a opção foi escolhida (24h e 48h contam a partir dela) */
   const [lembreteBase, setLembreteBase] = useState(0);
   const lembreteEm = (): Date | null => {
@@ -49,7 +60,18 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
     const base = { organization_id: church.organizationId, church_id: church.id, title: titulo.trim(), body: msg.trim() || null, audience: alvo.label, author: "Liderança", when_label: "agora" };
     const quando = lembreteEm();
     const comLembrete = quando ? { remind_at: foraDoSilencio(quando).toISOString(), remind_to: alvo.memberIds } : {};
-    let { error } = await sb.from("announcements").insert({ ...base, kind: tipo, ...comLembrete });
+    const comDestaque = destacar && destaqueAte
+      ? { highlight_until: new Date(`${destaqueAte}T23:59:59-03:00`).toISOString(), image_url: imagem, image_alt: imagem ? imagemAlt.trim() : null, video_url: video.trim() || null }
+      : {};
+    /* um destaque por vez: o novo encerra o anterior */
+    if (destacar && destaqueAte) await sb.from("announcements").update({ highlight_until: new Date().toISOString() }).eq("church_id", church.id).gt("highlight_until", new Date().toISOString());
+    let { error } = await sb.from("announcements").insert({ ...base, kind: tipo, ...comLembrete, ...comDestaque });
+    /* antes da migração 0063 as colunas do destaque não existem */
+    if (error && destacar && /highlight|image_|video_/i.test(error.message)) {
+      setSalvando(false);
+      setErro("O destaque ainda não está disponível nesta versão do banco. Publique sem destacar.");
+      return;
+    }
     /* antes da migração 0062 as colunas do lembrete não existem: publica sem ele e avisa */
     if (error && quando && /remind/i.test(error.message)) {
       ({ error } = await sb.from("announcements").insert({ ...base, kind: tipo }));
@@ -104,6 +126,25 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
             </div>
             {canais.includes("whatsapp") && <div className="field-hint">O WhatsApp abre com o texto pronto para você mandar nos grupos da igreja.</div>}
           </div>
+          <div className="field" style={{ marginTop: 16 }}>
+            <label className="field-label">Destaque no Início do app</label>
+            <div className="seg-check">
+              <button type="button" className={`seg-chip ${!destacar ? "on" : ""}`} onClick={() => setDestacar(false)}>Não destacar</button>
+              <button type="button" className={`seg-chip ${destacar ? "on" : ""}`} onClick={() => setDestacar(true)}>Destacar até…</button>
+            </div>
+            {destacar && (
+              <div className="destaque-campos">
+                <div className="field"><label className="field-label req">Até o dia</label><input className="input" type="date" value={destaqueAte} onChange={(e) => setDestaqueAte(e.target.value)} /></div>
+                <ImageUpload label="Imagem (opcional)" hint="Formato 16:9. Aparece no alto do cartão." url={imagem} aspectRatio={16 / 9}
+                  onUpload={async (file) => { setImagem(await uploadServiceImage(createServiceBrowserClient(), file, `${church.organizationId}/mural/${Date.now()}.${imageExtension(file)}`)); }}
+                  onRemove={() => { setImagem(null); setImagemAlt(""); }} />
+                {imagem && <div className="field"><label className="field-label req">O que a imagem mostra</label><input className="input" value={imagemAlt} onChange={(e) => setImagemAlt(e.target.value)} placeholder="Para quem usa leitor de tela. Ex.: Jovens no retiro de 2025" /></div>}
+                <div className="field"><label className="field-label">Vídeo (link do YouTube ou do Instagram)</label><input className="input" value={video} onChange={(e) => setVideo(e.target.value)} placeholder="https://youtube.com/watch?v=..." />
+                  {videoInvalido && <p className="field-error">Cole um link do YouTube ou do Instagram.</p>}</div>
+                <div className="field-hint">Um destaque por vez: este substitui o que estiver no Início agora.</div>
+              </div>
+            )}
+          </div>
           {canais.includes("app") && (
             <div className="field" style={{ marginTop: 16, marginBottom: 0 }}>
               <label className="field-label">Lembrar quem não viu</label>
@@ -120,7 +161,7 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
         </div>
         <div className="modal-foot">
           <button className="btn btn-ghost" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={!titulo.trim() || salvando || canais.length === 0 || (lembrete === "data" && !lembreteData)} onClick={publicar}>{salvando ? "Publicando..." : "Publicar"}</button>
+          <button className="btn btn-pri" type="button" disabled={!titulo.trim() || salvando || canais.length === 0 || (lembrete === "data" && !lembreteData) || destaqueIncompleto} onClick={publicar}>{salvando ? "Publicando..." : "Publicar"}</button>
         </div>
       </div>
     </div>
@@ -223,6 +264,7 @@ export function Comunicacao({
   const acessoMsgCfg: AcessoMsgCfg = { ...ACESSO_MSG_DEFAULT, ...(church?.settings?.acessoMsgCfg ?? {}) };
   const personDoMembro = new Map(members.map((m) => [m.id, m.volunteerId]));
 
+  const [agoraIso] = useState(() => new Date().toISOString());
   const lembrar = (a: AnnouncementView, faltam: string[]) => {
     if (!church?.organizationId || faltam.length === 0) return;
     notifyPush(church.organizationId, faltam, a.title, "Tem uma publicação nova no Mural da igreja.");
@@ -252,6 +294,7 @@ export function Comunicacao({
               <div className="panel-body">
                 <div className="mural-top">
                   <span className="chip chip-neutral">{KIND_LABEL[a.kind ?? "aviso"] ?? "Aviso"}</span>
+                  {a.highlight_until && a.highlight_until > agoraIso && <span className="chip chip-neutral">{`Em destaque até ${dataPublicacao(a.highlight_until)}`}</span>}
                   <span className="mural-meta">{joinDot(paraPublico(pub.label), quandoPublicado(a.created_at), quandoPublicado(a.created_at) !== dataPublicacao(a.created_at) && dataPublicacao(a.created_at))}</span>
                 </div>
                 <h3 className="mural-t">{a.title}</h3>

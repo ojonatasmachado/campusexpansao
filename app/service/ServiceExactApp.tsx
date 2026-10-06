@@ -270,6 +270,11 @@ export type AnnouncementView = {
   /* lembrete para quem não viu (0062, v7 4.18) */
   remind_at?: string | null;
   reminded_at?: string | null;
+  /* destaque no Início do app (0063, v7 4.4) */
+  highlight_until?: string | null;
+  image_url?: string | null;
+  image_alt?: string | null;
+  video_url?: string | null;
 };
 export type AnnouncementResponseView = { announcement_id: string; person_id: string; response: "vou" | "nao" };
 export type EventRsvpView = { event_id: string; person_id: string; kind: "presenca" | "inscricao" };

@@ -26,6 +26,7 @@ import { conflitos, horaDeChegada } from "./lib/agenda";
 import { baixarIcs } from "./lib/ics";
 import { porData, quandoFoi, tipoDoFato, type FatoView } from "./lib/historico";
 import { linhaDoMembro, mesmoDiaDaSemana } from "./lib/contexto-dia";
+import { videoDoLink } from "./lib/video";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -174,6 +175,11 @@ type Announcement = {
   audience: string | null;
   kind?: string | null;
   created_at?: string | null;
+  /* destaque no Início (0063, v7 4.4) */
+  highlight_until?: string | null;
+  image_url?: string | null;
+  image_alt?: string | null;
+  video_url?: string | null;
 };
 type Chat = { id: string; kind: string; ministry_id: string | null; name: string | null };
 type ChatMember = { chat_id: string; member_id: string; last_read_at?: string | null };
@@ -2852,9 +2858,11 @@ const contarAcesso = () => {
 };
 const semAssinatura = () => () => {};
 const estaInstalado = () => window.matchMedia?.("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
-function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, inscricoes, onServir, ligados, acessos = 0, instalado = false }: {
+function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, inscricoes, onServir, ligados, acessos = 0, instalado = false, destaque = null, onAbrirDestaque }: {
   /* quantas vezes a pessoa abriu o app neste aparelho e se ele já está na tela de início (v7 4.10) */
   acessos?: number; instalado?: boolean;
+  /* destaque da igreja (v7 4.4): o mais recente ainda valendo; abrir lê o artigo no app */
+  destaque?: Announcement | null; onAbrirDestaque?: (a: Announcement) => void;
   person: P; member: M | null; ministries: Ministry[]; members: M[]; events: Ev[]; roster: Slot[]; cards: Card[];
   announcements: Announcement[]; unreadIds: Set<string>; kidsChildren: Child[]; childGuardians: ChildGuardian[];
   kidsCheckin?: (destaque: boolean) => React.ReactNode;
@@ -3015,9 +3023,12 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
   const daSemana = proximos.filter((e) => e.eventDate <= fimDaSemana);
   const daIgreja = (daSemana.length ? daSemana : proximos.slice(0, 1)).slice(0, 3);
 
+  /* um destaque, parado; com a fila vazia sobe para o topo */
+  const cartaoDestaque = destaque && onAbrirDestaque ? <DestaqueCard a={destaque} onAbrir={() => onAbrirDestaque(destaque)} /> : null;
   return (
     <>
-      <div className="m6-sec0">
+      {fila.length === 0 && cartaoDestaque && <div className="m6-sec0">{cartaoDestaque}</div>}
+      <div className={fila.length === 0 && cartaoDestaque ? "m6-sec" : "m6-sec0"}>
         <div className="m6-lbl">Para você agora</div>
         {fila.length === 0 ? (
           <div className="m6-card"><div className="m6-ct">Tudo em dia</div><div className="m6-meta">Quando a liderança precisar de você, aparece aqui.</div></div>
@@ -3031,6 +3042,7 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
 
       <div className="m6-sec">
         <div className="m6-lbl">Da igreja</div>
+        {fila.length > 0 && cartaoDestaque}
         {daIgreja.length > 0 ? (
           <div className="m6-list">{daIgreja.map((ev) => <EventoRow key={ev.id} ev={ev} serve={confirmados.has(ev.id) ? confirmados.get(ev.id) : null} />)}</div>
         ) : (
@@ -3053,6 +3065,40 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
         </div>
       )}
     </>
+  );
+}
+
+// ── Destaque da igreja (v7 4.4) ───────────────────────────────────────────────
+/* Cartão `destaque`: imagem 16:9 (com texto alternativo), título e prazo. Um
+   por vez, parado, sem carrossel. Abre o artigo dentro do app. */
+function DestaqueCard({ a, onAbrir }: { a: Announcement; onAbrir: () => void }) {
+  const video = videoDoLink(a.video_url);
+  return (
+    <button type="button" className="m6-card m6-destaque" onClick={onAbrir}>
+      {a.image_url && <img className="m6-destaque-img" src={a.image_url} alt={a.image_alt ?? ""} />}
+      <span className="m6-kick">{video ? "Destaque · vídeo" : "Destaque"}</span>
+      <span className="m6-ct">{a.title}</span>
+      {a.body && <span className="m6-meta m6-2l">{a.body}</span>}
+      <span className="m6-link">{video ? "Assistir" : "Ler"} →</span>
+    </button>
+  );
+}
+
+function SheetArtigo({ a }: { a: Announcement }) {
+  const video = videoDoLink(a.video_url);
+  return (
+    <div className="m6-artigo">
+      <div className="m6-kick">{joinDot("Da igreja", a.created_at ? quandoPublicado(a.created_at) : null)}</div>
+      <h2 className="m6-sh">{a.title}</h2>
+      {video ? (
+        <div className={`m6-video ${video.tipo}`}>
+          <iframe src={video.src} title={`Vídeo: ${a.title}`} loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+        </div>
+      ) : a.image_url ? (
+        <img className="m6-destaque-img" src={a.image_url} alt={a.image_alt ?? ""} />
+      ) : null}
+      {a.body && <p className="m6-txt" style={{ whiteSpace: "pre-wrap" }}>{a.body}</p>}
+    </div>
   );
 }
 
@@ -3692,6 +3738,9 @@ function MobileMembro({
     onReadAnnouncement?.(personId, id);
   };
   const hoje = todayISO();
+  /* destaque valendo: o mais recente com prazo ainda por vir (v7 4.4) */
+  const [abriuEm] = useState(() => new Date().toISOString());
+  const destaqueAtivo = useMemo(() => announcements.find((a) => !!a.highlight_until && a.highlight_until > abriuEm) ?? null, [announcements, abriuEm]);
   const evDate = new Map(events.map((e) => [e.id, e.eventDate]));
   const [respostas, setRespostas] = useState<Record<string, "ok" | "no">>({});
   const responderEscalaUi = (id: string, v: "ok" | "no" | null) => setRespostas((r) => {
@@ -3853,7 +3902,9 @@ function MobileMembro({
               onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat}
               nextStep={steps.find((s) => s.st === "andamento" && s.acao) ?? steps.find((s) => s.st === "afazer" && s.acao && s.id !== "time") ?? null}
               inscricoes={steps.filter((s) => s.st === "afazer" && !!s.inscricao)}
-              onServir={abrirTimes} ligados={ligadosMembro} acessos={acessos} instalado={instalado} />
+              onServir={abrirTimes} ligados={ligadosMembro} acessos={acessos} instalado={instalado}
+              destaque={muralOn ? destaqueAtivo : null}
+              onAbrirDestaque={(a) => { setSheetEl(<SheetArtigo a={a} />); marcarLido(person.id, a.id); }} />
           )}
 
           {tab === "agenda" && !sub && (
