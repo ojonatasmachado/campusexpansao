@@ -1538,6 +1538,13 @@ export default function ServiceExactApp({
     ? ministries.filter((ministry) => ministry.people.some((link) => link.personId === currentPersonId && link.isLeader)).map((ministry) => ministry.id)
     : [];
   const scopeMinistryIds: string[] | null = podePrevisualizar ? null : (currentRole === "lider" ? misteriosQueLidero : null);
+  /* v7 2.8: líder sem "Pessoas e grupos" na matriz, mas com "Voluntários", vê
+     Pessoas só com quem está nos times que lidera. Sem time, sem a entrada. */
+  const pessoasSoDoTime = currentRole === "lider"
+    && !podeVerNav("membros", currentRole, matrizEfetiva, currentExtraAccess, souVoluntario)
+    && matrizEfetiva.lider?.voluntarios === true
+    && misteriosQueLidero.length > 0;
+  const podeVerItem = (id: string) => podeVerNav(id, currentRole, matrizEfetiva, currentExtraAccess, souVoluntario) || (id === "membros" && pessoasSoDoTime);
   const perspectivePersonId = currentPersonId;
 
   /* fila de aprovação da caminhada: Direção vê tudo; líder só vê pedidos de
@@ -1657,7 +1664,7 @@ export default function ServiceExactApp({
         {churches.length > 1 && <CongSwitcher churches={churches} activeId={activeChurchId} setActiveId={setActiveChurchId} />}
         <nav className="sb-nav">
           {NAV_GROUPS.map((group) => {
-            const visibleItems = group.items.filter((item) => podeVerNav(item.id, currentRole, matrizEfetiva, currentExtraAccess, souVoluntario));
+            const visibleItems = group.items.filter((item) => podeVerItem(item.id));
             if (visibleItems.length === 0) return null;
             const fechado = gruposFechados.includes(group.group) && !visibleItems.some((i) => i.id === route);
             const solo = group.items.length === 1;
@@ -1750,7 +1757,7 @@ export default function ServiceExactApp({
             setupCounts={setupCounts}
           />
         ) : null}
-        {route === "membros" ? <Membros members={members} people={people} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "membros" ? <Membros members={members} people={people} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} soTimes={pessoasSoDoTime ? misteriosQueLidero : null} /> : null}
         {route === "pessoas" ? <Pessoas people={people} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Times ministries={ministries} people={people} members={members} serveRequests={serveRequests} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="min" embedded /> : null}
@@ -2460,7 +2467,7 @@ function JrnPips({ journey }: { journey: number[] }) {
    a coluna "Serve em". As tabelas do banco continuam separadas; aqui é só a
    tela. */
 type PessoaLinha = { key: string; name: string; sub: string; member?: MemberView; person?: PersonView; mins: MinistryView[]; leader: boolean; novo: boolean; photoUrl?: string | null };
-function Membros({ members, people = [], ministries, setDrawer, setModal }: { members: MemberView[]; people?: PersonView[]; ministries: MinistryView[]; church?: ChurchView; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
+function Membros({ members, people = [], ministries, setDrawer, setModal, soTimes = null }: { members: MemberView[]; people?: PersonView[]; ministries: MinistryView[]; church?: ChurchView; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; soTimes?: string[] | null }) {
   const [q, setQ] = useState("");
   const [filtro, setFiltro] = useState<"todos" | "membros" | "voluntarios" | "lideres" | "novos">("todos");
   const minsDe = (personId: string | null | undefined) => (personId ? ministries.filter((min) => min.people.some((p) => p.personId === personId)) : []);
@@ -2480,7 +2487,9 @@ function Membros({ members, people = [], ministries, setDrawer, setModal }: { me
       key: `p-${p.id}`, name: p.name, sub: p.phone || "", person: p, mins: minsDe(p.id), leader: lideraAlgum(p.id), photoUrl: p.photoUrl,
       novo: !!p.createdAt && new Date(p.createdAt).getTime() > trintaDias,
     })),
-  ].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  ].filter((l) => !soTimes || l.mins.some((min) => soTimes.includes(min.id)))
+    .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  const nomesTimes = soTimes ? ministries.filter((m) => soTimes.includes(m.id)).map((m) => m.name).join(", ") : "";
   const conta = {
     membros: linhas.filter((l) => l.member).length,
     voluntarios: linhas.filter((l) => l.mins.length > 0).length,
@@ -2495,7 +2504,7 @@ function Membros({ members, people = [], ministries, setDrawer, setModal }: { me
   const abrir = (l: PessoaLinha) => setDrawer(l.member ? { kind: "member", id: l.member.id } : { kind: "person", id: l.person!.id });
   return (
     <div className="content wide">
-      <PageHead title="Pessoas" eyebrow="Pessoas" subtitle="Toda a igreja num lugar só: membros, voluntários e líderes, com onde cada um serve." help="Toda a congregação entra aqui, sirva ou não em um time. É diferente de Voluntários, que lista só quem já serve ativamente." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Nome, sobrenome e telefone bastam: o convite do app vai pelo WhatsApp e a pessoa completa o resto.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome e sobrenome", type:"text", req:true, ph:"Como a pessoa se chama", hint:"A pessoa pode ajustar depois no app." }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Ao salvar, o WhatsApp abre com o convite do app para este número." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"opcional", hint:"Opcional: a pessoa informa no convite." }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"cep", label:"CEP", type:"cep", half:true, ph:"00000-000", hint:"Preenche rua, bairro, cidade e estado sozinho.", autofill:{ street:"rua", neighborhood:"bairro", city:"cidade", state:"estado" } }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }, { k:"rua", label:"Rua", type:"text", half:true, ph:"Nome da rua" }, { k:"cidade", label:"Cidade", type:"text", half:true }, { k:"estado", label:"Estado", type:"text", half:true, ph:"UF" }], action: { kind: "member" } })}>+ Novo membro</button>} />
+      <PageHead title="Pessoas" eyebrow="Pessoas" subtitle={soTimes ? `Quem serve nos times que você lidera: ${nomesTimes}.` : "Toda a igreja num lugar só: membros, voluntários e líderes, com onde cada um serve."} help={soTimes ? "Você vê aqui as pessoas dos seus times. O restante da igreja fica com a gestão, que pode liberar em Configurações › Permissões." : "Toda a congregação entra aqui, sirva ou não em um time. É diferente de Voluntários, que lista só quem já serve ativamente."} action={soTimes ? undefined : <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Nome, sobrenome e telefone bastam: o convite do app vai pelo WhatsApp e a pessoa completa o resto.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome e sobrenome", type:"text", req:true, ph:"Como a pessoa se chama", hint:"A pessoa pode ajustar depois no app." }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Ao salvar, o WhatsApp abre com o convite do app para este número." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"opcional", hint:"Opcional: a pessoa informa no convite." }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"cep", label:"CEP", type:"cep", half:true, ph:"00000-000", hint:"Preenche rua, bairro, cidade e estado sozinho.", autofill:{ street:"rua", neighborhood:"bairro", city:"cidade", state:"estado" } }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }, { k:"rua", label:"Rua", type:"text", half:true, ph:"Nome da rua" }, { k:"cidade", label:"Cidade", type:"text", half:true }, { k:"estado", label:"Estado", type:"text", half:true, ph:"UF" }], action: { kind: "member" } })}>+ Novo membro</button>} />
       <div className="toolbar">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome ou telefone..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <div className="seg seg-wrap">
