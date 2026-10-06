@@ -29,7 +29,7 @@ Atualizado pelo Claude Code ao fim de cada item: marque `[x]` e anote o commit c
 ## Etapa 3 · Leitura
 - [x] 3.1 (42bb53c) Tokens de fonte
 - [x] 3.2 (c7e0319) Mono e caixa alta
-- [ ] 3.3 Cor de destaque
+- [x] 3.3 (883cfac) Cor de destaque
 - [ ] 3.4 Contraste
 - [ ] 3.5 Alvos de toque
 - [ ] 3.6 Início do painel sem repetição
