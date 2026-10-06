@@ -607,3 +607,4 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
 .setup-frase{margin:14px 0 0;font-size:var(--fs-pn-16);font-weight:600;color:var(--white);line-height:1.4}
 .setup-foot{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin-top:18px}
 @media (max-width:860px){.setup-fases{grid-template-columns:1fr}.setup-2col{grid-template-columns:1fr}}
+.metrica-v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--fs-pn-16);font-weight:700;color:var(--white);white-space:nowrap}

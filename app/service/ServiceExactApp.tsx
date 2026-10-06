@@ -58,6 +58,7 @@ import { daMinhaLista, listaDeCuidado, type Ausente, type MarcaCuidado } from ".
 import { ListaDeCuidado, type CriancaAusente } from "./modules/cuidado/Cuidado";
 import { Assistente } from "./modules/configuracao/Assistente";
 import { medir } from "./lib/medicao";
+import { MetricasInternas } from "./modules/relatorios/MetricasInternas";
 import { SETUP_INICIAL, linhaDoSetup, type SetupEstado } from "./modules/configuracao/setup";
 import { ROTA_GRUPO, cfgTabs as gerarCfgTabs, modulosLigados, navGroups, podeVerRota, rotaLigada, termosDaRota } from "./modules/registry";
 
@@ -1836,6 +1837,7 @@ export default function ServiceExactApp({
         {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} announcementResponses={announcementResponses} wallPosts={wallPosts} ministries={ministries} people={people} members={members} fellowshipGroups={fellowshipGroups} childGuardians={childGuardians} church={firstChurch} setModal={setModal} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} currentPersonId={perspectivePersonId} scopeMinistryIds={scopeMinistryIds} pendingChatMemberId={pendingChatMemberId} onConsumePendingChatMember={() => setPendingChatMemberId(null)} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} confirmationRate={confirmationRate} setRoute={setRoute} church={firstChurch} /> : null}
+        {route === "relatorios" && currentRole === "master" && firstChurch?.organizationId ? <div className="content wide" style={{ paddingTop: 0 }}><MetricasInternas organizationId={firstChurch.organizationId} /></div> : null}
         {route === "configurar" && firstChurch ? (
           <Assistente
             estado={setupEstado}
