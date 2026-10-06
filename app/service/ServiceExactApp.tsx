@@ -56,6 +56,8 @@ import { linhaDoPainel, semanaDe } from "./lib/contexto-dia";
 import { SaudeDaIgreja } from "./modules/inicio/Saude";
 import { daMinhaLista, listaDeCuidado, type Ausente, type MarcaCuidado } from "./modules/cuidado/cuidado";
 import { ListaDeCuidado, type CriancaAusente } from "./modules/cuidado/Cuidado";
+import { Assistente } from "./modules/configuracao/Assistente";
+import { SETUP_INICIAL, linhaDoSetup, type SetupEstado } from "./modules/configuracao/setup";
 import { ROTA_GRUPO, cfgTabs as gerarCfgTabs, modulosLigados, navGroups, podeVerRota, rotaLigada, termosDaRota } from "./modules/registry";
 
 type ChurchSettings = {
@@ -71,6 +73,8 @@ type ChurchSettings = {
   acessoMsgCfg?: AcessoMsgCfg;
   gruposCfg?: GruposCfg;
   brandCfg?: BrandCfg;
+  /* configuração guiada em 3 fases (v7 4.12) */
+  setup?: Partial<SetupEstado>;
   paginaCfg?: PaginaCfg;
   identidadeCfg?: IdentidadeCfg;
   [key: string]: unknown;
@@ -843,6 +847,7 @@ const ROUTES = {
   grupos: "SERVICE · GRUPOS",
   pesquisas: "SERVICE · PESQUISAS",
   pagina: "SERVICE · PÁGINA DA IGREJA",
+  configurar: "SERVICE · CONFIGURAR A IGREJA",
 };
 
 /* menu do painel (S30, S31): o título de cada tela é o nome do grupo. Gerado
@@ -1139,6 +1144,8 @@ export default function ServiceExactApp({
        initializer de useState) pra não divergir do HTML renderizado no
        servidor. abre a sidebar (navOpen) junto pro holofote já nascer visível. */
     if (currentRole === "membro") return;
+    /* v7 4.12: igreja ainda na configuração guiada: a gestão vê "Sua igreja: fase N de 3" no Início no lugar do tour */
+    if ((currentRole === "master" || currentRole === "pastor") && !firstChurch?.settings?.setup?.concluido && (ministries.length === 0 || events.length === 0)) return;
     let tourDone = true;
     let savedStep = 0;
     try { tourDone = localStorage.getItem("cex_tour_done") === "1"; } catch { /* segue sem tour automático */ }
@@ -1167,6 +1174,14 @@ export default function ServiceExactApp({
     setTourStart(step);
     setShowTour(true);
     setNavOpen(true);
+  };
+  /* v7 4.12: configuração guiada; as gravações ficam aqui, o assistente só desenha */
+  const setupEstado: SetupEstado = { ...SETUP_INICIAL, ...(firstChurch?.settings?.setup ?? {}) } as SetupEstado;
+  const svc = () => createServiceBrowserClient().schema("service");
+  const salvarSetup = async (e: SetupEstado) => {
+    if (!firstChurch) return;
+    await svc().from("churches").update({ settings: { ...firstChurch.settings, setup: e } }).eq("id", firstChurch.id);
+    router.refresh();
   };
   const setupCounts: SetupCounts = useMemo(() => ({
     igreja: [firstChurch?.nome, firstChurch?.cidade, firstChurch?.address].join("|"),
@@ -1778,6 +1793,7 @@ export default function ServiceExactApp({
             decisions={decisions}
             timelineEvents={timelineEvents}
             enrollments={enrollments}
+            setup={setupEstado}
             cuidado={ligados.has("cuidado") ? { lista: daMinhaLista(listaCuidado, currentPersonId, currentRole === "master" || currentRole === "pastor"), todos: listaCuidado, criancas: criancasAusentes, semanas: semanasCuidado } : null}
           />
         ) : null}
@@ -1809,6 +1825,64 @@ export default function ServiceExactApp({
         {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} announcementResponses={announcementResponses} wallPosts={wallPosts} ministries={ministries} people={people} members={members} fellowshipGroups={fellowshipGroups} childGuardians={childGuardians} church={firstChurch} setModal={setModal} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} currentPersonId={perspectivePersonId} scopeMinistryIds={scopeMinistryIds} pendingChatMemberId={pendingChatMemberId} onConsumePendingChatMember={() => setPendingChatMemberId(null)} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} confirmationRate={confirmationRate} setRoute={setRoute} church={firstChurch} /> : null}
+        {route === "configurar" && firstChurch ? (
+          <Assistente
+            estado={setupEstado}
+            onEstado={salvarSetup}
+            igreja={{ nome: firstChurch.nome ?? "", cep: firstChurch.postalCode ?? "", endereco: firstChurch.address ?? "", bairro: firstChurch.neighborhood ?? "", cidade: firstChurch.cidade ?? "", estado: firstChurch.state ?? "" }}
+            logoUrl={firstChurch.logoUrl}
+            brand={{ ...((churches.find((c) => c.matriz) ?? firstChurch).settings?.brandCfg ?? {}) }}
+            onSalvarDados={async (d) => {
+              const { error } = await svc().from("churches").update({ name: d.nome.trim(), postal_code: d.cep.replace(/\D/g, "") || null, address: d.endereco || null, neighborhood: d.bairro || null, city: d.cidade || null, state: d.estado || null }).eq("id", firstChurch.id);
+              router.refresh();
+              return error ? friendlyWriteError(error.message) : null;
+            }}
+            onLogo={async (file) => {
+              const url = await uploadServiceImage(createServiceBrowserClient(), file, `${firstChurch.organizationId}/logos/${firstChurch.id}.${imageExtension(file)}`);
+              await svc().from("churches").update({ logo_url: url }).eq("id", firstChurch.id);
+              router.refresh();
+            }}
+            onRemoverLogo={async () => { await svc().from("churches").update({ logo_url: null }).eq("id", firstChurch.id); router.refresh(); }}
+            onCor={async (hex) => {
+              const sede = churches.find((c) => c.matriz) ?? firstChurch;
+              const { error } = await svc().from("churches").update({ settings: { ...sede.settings, brandCfg: { ...(sede.settings?.brandCfg ?? {}), accent: hex } } }).eq("id", sede.id);
+              router.refresh();
+              return error ? friendlyWriteError(error.message) : null;
+            }}
+            timesExistentes={ministries.map((m) => m.name)}
+            vagasExistentes={ministries.reduce((s, m) => s + m.positions.reduce((t, p) => t + Math.max(1, p.need_count), 0), 0)}
+            onCriarTimes={async (modelos) => {
+              const ids: string[] = [];
+              for (const m of modelos) {
+                const { data, error } = await svc().from("ministries").insert({ organization_id: firstChurch.organizationId, church_id: firstChurch.id, name: m.nome, icon: m.icone }).select("id").single();
+                if (error || !data) return { ids, error: friendlyWriteError(error?.message ?? "") };
+                ids.push(data.id);
+                const { error: e2 } = await svc().from("ministry_positions").insert(m.funcoes.map((f, i) => ({ organization_id: firstChurch.organizationId, ministry_id: data.id, name: f.nome, need_count: f.vagas, sort_order: i })));
+                if (e2) return { ids, error: friendlyWriteError(e2.message) };
+              }
+              router.refresh();
+              return { ids };
+            }}
+            onCriarCultos={async (lista) => {
+              const { data, error } = await svc().from("events").insert(lista.map((c) => ({
+                organization_id: firstChurch.organizationId, church_id: firstChurch.id, name: c.nome, kind: "Culto",
+                event_date: c.data, weekday: weekdayShortFromDate(c.data), time: c.hora, location: firstChurch.address || firstChurch.nome || null, ministries: [],
+              }))).select("id");
+              router.refresh();
+              return error ? { ids: [], error: friendlyWriteError(error.message) } : { ids: (data ?? []).map((r) => r.id as string) };
+            }}
+            onDesfazer={async (tabela, ids) => { if (ids.length) await svc().from(tabela).delete().in("id", ids); router.refresh(); }}
+            onConvidar={async (nome, telefone) => {
+              const tab = window.open("", "_blank");
+              const { data, error } = await svc().from("members").insert({ organization_id: firstChurch.organizationId, church_id: firstChurch.id, name: nome, phone: telefoneParaGravar(telefone), situation: "membro" }).select("id").single();
+              if (error || !data) { tab?.close(); return friendlyWriteError(error?.message ?? ""); }
+              const r = await openMemberInviteWhatsapp({ memberId: data.id, name: nome, phone: telefone, churchName: firstChurch.nome ?? "sua igreja", template: firstChurch.settings?.acessoMsgCfg?.mensagem, tab });
+              router.refresh();
+              return r.error ?? null;
+            }}
+            onIr={(r) => setRoute(r)}
+          />
+        ) : null}
         {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
         {route === "grupos" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="grupos" /> : null}
         {route === "pesquisas" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="pesquisas" /> : null}
@@ -2175,6 +2249,7 @@ function Painel({
   timelineEvents = [],
   enrollments = [],
   cuidado = null,
+  setup = null,
 }: {
   people: PersonView[];
   members: MemberView[];
@@ -2215,6 +2290,8 @@ function Painel({
   enrollments?: EnrollmentView[];
   /* lista de cuidado (v7 4.17): a de quem olha e a da igreja toda (para a Saúde) */
   cuidado?: { lista: Ausente[]; todos: Ausente[]; criancas: CriancaAusente[] | null; semanas: number } | null;
+  /* configuração guiada (v7 4.12): "Sua igreja: fase 2 de 3" no lugar do checklist */
+  setup?: SetupEstado | null;
 }) {
   const { comTermos: ct } = useTermos();
   /* v7 4.11: gestão e pastores abrem na Saúde da igreja; líder de time, no
@@ -2297,7 +2374,14 @@ function Painel({
           <ListaDeCuidado lista={cuidado.lista} criancas={cuidado.criancas} semanas={cuidado.semanas} onAbrir={(a) => setDrawer(a.memberId ? { kind: "member", id: a.memberId } : { kind: "person", id: a.personId })} />
         </div>
       )}
-      <SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} />
+      {gestao && setup && !setup.concluido ? (
+        <button type="button" className="setup-banner" onClick={() => setRoute("configurar")}>
+          <span className="setup-banner-t">{linhaDoSetup(setup)}</span>
+          <span className="agora-go">{setup.feitas.length || setup.pulou ? "Continuar →" : "Começar →"}</span>
+        </button>
+      ) : (
+        <SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} />
+      )}
       {/* v7 3.6: cada número aparece uma vez. Vagas abertas e visitantes sem contato já estão na lista do topo e em Pendências. */}
       {!liderDeTime && <div className="kpi-row kpi-3">
         <Kpi icon="pessoa" label={ct("{Voluntarios}")} value={activePeople} foot={joinDot(`de ${plural(people.length, "cadastrado")}`, novosNoMes ? `${plural(novosNoMes, "novo", "novos")} em 30 dias` : null)} />
