@@ -20,11 +20,11 @@ Atualizado pelo Claude Code ao fim de cada item: marque `[x]` e anote o commit c
 - [x] 2.9 (e4cd677) Próximos cultos só no futuro
 - [x] 2.10 (8293fa6) Janela Escalar vaga sem sobreposição e sem jargão
 - [x] 2.11 (74557dd) Botão "?" sem cobrir texto
-- [ ] 2.12 Ordem e caixa do Mural
-- [ ] 2.13 Erros de console
-- [ ] 2.14 Controle de tamanho do texto parado
-- [ ] 2.15 Selo da Agenda depois de confirmar
-- [ ] 2.16 Situação, duplicados e telefones em Pessoas
+- [x] 2.12 (7bdd036) Ordem e caixa do Mural
+- [x] 2.13 (59e5d4e) Erros de console
+- [x] 2.14 (391bc2e) Controle de tamanho do texto parado
+- [x] 2.15 (21e0c4e) Selo da Agenda depois de confirmar
+- [x] 2.16 (41a3463) Situação, duplicados e telefones em Pessoas
 
 ## Etapa 3 · Leitura
 - [ ] 3.1 Tokens de fonte
@@ -80,6 +80,11 @@ Atualizado pelo Claude Code ao fim de cada item: marque `[x]` e anote o commit c
 - 2.9: não era fuso: o dia da semana já vem de `weekdayFromISO`. O "Culto de domingo" num sábado era o nome fixo do seed (`scripts/seed-local-service.ts` criava "Culto de domingo" para hoje + 3 dias, em UTC); o seed agora nomeia pelo dia real, no calendário de Brasília. O evento local de 03/10 ficou como está (não apaguei dado). Filtro novo `aindaVaiAcontecer` em `app/service/lib/date.ts` (dia futuro, ou hoje com hora de início por vir); estado vazio "Nenhum culto marcado daqui pra frente.".
 - 2.10: "captura" é a etiqueta que `tools/captura-service/seed-captura.ts` põe nas pessoas do seed: continua aparecendo como etiqueta (dado da igreja), só não sobrepõe mais. Lista em uma coluna (o `.modal-body` era grade de 2 colunas de formulário), motivo do bloqueio embaixo do nome, sem "% engajamento" e sem o status cru. A ordenação por engajamento entre os candidatos ficou (não aparece na tela; revisar na 4.14).
 - 2.11: no celular (até 740px) o "?" vai para a barra do topo, ao lado da busca; no computador continua no canto e o conteúdo reserva 96px embaixo. O mesmo `HelpFab`, com `lugar="barra"`.
+- 2.12: o "quando" do Mural vinha do texto salvo `when_label` ("agora", "Hoje"), que envelhecia errado. Agora é calculado da data de publicação (`created_at`) no fuso de Brasília: "hoje", "ontem", "há N dias", depois de 7 dias a data. Público numa forma só: "para todos" em minúsculas; nome de time ou grupo como foi cadastrado ("para Louvor"). Helpers em `app/service/lib/date.ts`: `quandoPublicado`, `dataPublicacao`, `porPublicacao`, `paraPublico`. O `when_label` continua sendo gravado, mas não aparece mais.
+- 2.13: Reuniões quebrava porque a pauta do seed de captura vem como `[{ t }]` e o app grava texto; o detalhe agora aceita os dois. O erro do envio de logo era o `ImageCropper` criando um blob que o React em desenvolvimento revogava (monta, desmonta, monta) antes de a imagem carregar; o carregamento espera um tique e não cria o blob se o efeito já foi desfeito.
+- 2.14: o app aplica a escala com `zoom` no `.m-scroll`, então a correção da rolagem divide pelo zoom do contêiner. Perto do topo, ao diminuir, a rolagem não tem para onde ir (fica no 0).
+- 2.15: a resposta da escala fica num estado da casca do app (`respostas` no `MemberUiContext`) assim que a pessoa toca, e "Desfazer" tira; o selo usa esse estado antes de o banco gravar.
+- 2.16: regra de "novo" (`ehNovo`, `app/service/lib/pessoas.ts`): situação "novo" na ficha; senão primeiro contato nos últimos 30 dias; sem primeiro contato e sem "membro desde", a data do cadastro. Quem tem histórico não vira novo por ter sido importado agora. No local: Novos 10 de 34 (as contas de teste sem histórico). O KPI do Início passou a "N novos em 30 dias" pela mesma regra. Duplicado: ficha de membro sem vínculo com o voluntário, mas com mesmo nome e telefone, aparece uma vez (Jonatas); ao cadastrar membro, mesmo telefone normalizado ou mesmo nome (sem acento) mostra o aviso, e o segundo toque cadastra. Telefone: helper `app/service/lib/telefone.ts` (`formatarTelefone`, `telefoneParaGravar`, `mesmoTelefone`); migração 0054 guarda "(11) 98000-1000" em `members` e `people` por gatilho e normalizou o que existia (só 10/11 dígitos, tirando +55/0 da frente; outros valores ficam como estão, nenhum dígito perdido). Visitantes e Decisões não entraram (fora do item).
 
 ## Bloqueios
 | item | motivo | o que falta |
