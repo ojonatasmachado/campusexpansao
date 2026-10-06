@@ -1,10 +1,16 @@
 # Progresso · Service v7
 
-> **Resumo para a manhã (parada por limite de uso, não por bloqueio)**
-> - Feito: etapa 1 inteira, etapa 2 inteira (2.1 a 2.16), etapa 3 inteira (3.1 a 3.7), plano da etapa 4 e os itens 4.1, 4.13, 4.9 e 4.2. Cada item tem commit próprio, com tsc e build passando.
-> - Falta: 4.3 a 4.8, 4.10 a 4.12 e 4.14 a 4.19 (ordem recomendada no plano), etapa 5 inteira, a captura final (ajustar `tools/captura-service` para o Perfil pelo avatar, ver "Para a captura final"), a tabela "Captura por etapa" e a seção 8.
-> - Precisa de você: teste do 4.2 com 5 membros acima de 60 anos; aplicar em produção as migrações 0051 a 0057 (só rodaram no banco local) antes de qualquer deploy; validar as decisões em "Decisões da noite" (branch a partir de service-v6, cadeia de destinatário sem coordenação de ministério, check-in Kids abrindo 60 min antes, regra de "novo" em Pessoas).
-> - Para continuar: rode `/service-v7 4`, que retoma do primeiro item aberto.
+> **Resumo (06/10, sessão na nuvem, branch `service-v7-85m5w6`)**
+> - Feito: etapas 1 a 5 inteiras. Nesta sessão: 4.3, 4.6, 4.5, 4.7, 4.8, 4.14, 4.16, 4.19, 4.15, 4.10, 4.11, 4.17, 4.18, 4.4, 4.12 e 5.1 a 5.4, um commit por item, cada um com `tsc`, `npm run build` e lint igual ao do início (o projeto tem erros de lint antigos; conferi que nenhum foi acrescentado). Sem bloqueios.
+> - Como foi verificado: sem Supabase na nuvem, a verificação visual de cada item ficou pendente (Mac). Para o banco, subi um Postgres 16 descartável no contêiner com um stub mínimo do Supabase e apliquei as 67 migrações; as novas (0058 a 0066) foram testadas com dados montados (gatilhos do histórico, regras de leitura da lei 10, lista de cuidado invisível ao membro, métricas, confirmação de evento). Contas puras (fila, rodízio, cobertura, saúde, silêncio, links de vídeo) testadas com `tsx`.
+> - Precisa de você:
+>   1. Aplicar em produção, antes de qualquer deploy, as migrações 0051 a 0066 (0051 a 0057 só rodaram no seu banco local; 0058 a 0066 nunca rodaram num Supabase de verdade: rode primeiro no local com `supabase db reset` ou `supabase migration up` e veja o app).
+>   2. Agendador: criar `CRON_SECRET` nas variáveis da Vercel e um cron de hora em hora chamando `GET /api/service/cron/lembretes` com `Authorization: Bearer <segredo>`. Sem isso, o lembrete do aviso (4.18) não sai e o resumo do Mural (5.3) só sai quando a igreja manda outro aviso. O plano gratuito da Vercel só roda cron diário.
+>   3. Teste do 4.2 com 5 membros acima de 60 anos (continua pendente).
+>   4. Captura final no Mac (`tools/captura-service`), a tabela "Captura por etapa" e a seção 8 do manifesto. Ajustes de seletores em "Para a captura final".
+>   5. GitHub Actions: o workflow novo (`.github/workflows/service.yml`, 5.4) foi aceito no push, mas nenhuma execução apareceu até o fim da sessão; confira se o Actions está ligado no repositório.
+>   6. Validar as decisões em "Decisões da noite", em especial: o líder deixou de ver a história de quem não é do seu time (4.8, lei 10); "métricas internas" lidas como da gestão da igreja (5.2); a ordem do "Gerar escala" automático passou a ser a do rodízio (4.14); primeiro acesso passou a valer com nome e telefone (4.10).
+> - Achados fora do escopo (não mexi, ficaram na base da 5.4): 14 emoji em telas de check-in, curso e pesquisa, 1 travessão no texto da arte do evento (`EventoShare.tsx`) e 6 hex fixos em `ServiceExactApp.tsx`/`layout.tsx`.
 
 
 Atualizado pelo Claude Code ao fim de cada item: marque `[x]` e anote o commit curto.
@@ -67,7 +73,7 @@ Atualizado pelo Claude Code ao fim de cada item: marque `[x]` e anote o commit c
 - [x] 5.1 (d970730) Eventos padrão
 - [x] 5.2 (5c9ae99) Métricas internas
 - [x] 5.3 (4eadbd3) Notificações por categoria e silêncio
-- [x] 5.4 (PENDENTE_HASH) Testes automáticos ligados
+- [x] 5.4 (4353ae3) Testes automáticos ligados
 
 ## Plano da etapa 4
 
@@ -165,6 +171,14 @@ Base lida: `ServiceExactApp.tsx` (painel, 11 mil linhas: `NAV_GROUPS` l.843, `CF
 `tools/captura-service` não foi mexida neste lote; ajustar quando a captura for refeita:
 - 4.2: Perfil saiu da barra de abas. Caminho agora: avatar no topo (`button.m-head-av[aria-label="Perfil"]`), não `nav.m-tab button` "Perfil" (`abaApp(page, "Perfil")` não acha mais). No Perfil o cabeçalho é subtela: `.m6-back` volta para a aba anterior; a barra tem 4 botões. No primeiro acesso o avatar mostra o rótulo "Perfil" (some no segundo; `cex_avatar_visto` no localStorage).
 - 4.9: Perfil › Tamanho do texto deixou de ser o seletor de 3 botões (`.ts-seg` "Padrão/Grande/Muito grande") e virou uma linha (`button.m6-row` "Tamanho do texto") que abre a folha `.ts-sheet` com o trilho (`[role=slider]`, `.ts-a-min`, `.ts-a-max`, "Pronto"). A escala fica em `localStorage.cex_text_size` (0 a 6) e no perfil; `cex_text_scale` antigo é migrado e apagado.
+- 4.3/4.4: Início tem "Para você agora" (cartões, até 3, "Ver mais N itens") e "Da igreja" (destaque `button.m6-destaque` e eventos da semana como `button.m6-row`, que abrem a folha do evento). Com a fila vazia o destaque sobe para o topo.
+- 4.5: Agenda tem "Minha agenda | Igreja" para todos; blocos por dia (`.m6-lbl` "Hoje · ..."), `.m6-ag-h` com a hora, tipo escrito no `.m6-rs`. Evento abre folha com "Vou"/"Fazer inscrição", "Compartilhar", "Adicionar ao calendário" (baixa `.ics`).
+- 4.10: primeiro acesso tem 2 passos (nome e telefone; tamanho do texto). Jornada M1 precisa ser refeita; foto agora em Perfil › Meus dados.
+- 4.11/4.12/4.17: Início do painel da gestão abre na "Saúde da igreja" (`section.saude`); "Para resolver" logo abaixo; "Lista de cuidado" aparece com presença registrada; igreja nova mostra "Sua igreja: fase 1 de 3" (`button.setup-banner`) e não abre o tour sozinho. Nova jornada L7 = tela `configurar`.
+- 4.14: janela Escalar tem busca (`input[type=search]`), botão "Disponíveis" (`.chip-toggle`) e grupos (`.cand-grp`).
+- 4.15: lista de conversas com `Av`, `.m-conv.unread` e `.m6-count`.
+- 4.18: Nova publicação tem "Lembrar quem não viu" e "Destaque no Início do app"; a jornada L10 precisa chamar a rota do cron à mão (com `CRON_SECRET` no `.env.local`).
+- 5.3: Perfil › Notificações mostra uma chave por categoria quando o push está ligado; a folha "Quer saber quando for escalado?" aparece uma vez depois da primeira escala confirmada (pode atrapalhar a jornada M2: `cex_avisos_pedidos=1` no localStorage evita).
 - 4.13: itens com termo renomeável podem mudar de texto se a igreja da captura tiver vocabulário próprio (`service.churches.vocabulario`); no seed local está vazio (nomes padrão). A busca do painel lista também "Tela".
 
 ## Captura por etapa
