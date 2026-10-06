@@ -2536,20 +2536,6 @@ function dataLonga(iso?: string | null) {
   return `${weekdayFromISO(iso)}, ${d.getDate()} de ${MESES[d.getMonth()]}`;
 }
 
-/* quem lidera os times da pessoa (ou qualquer líder, se ela não serve) */
-function leadersFor(person: P, ministries: Ministry[], members: M[], only?: (m: Ministry) => boolean) {
-  const mine = ministries.filter((m) => m.people.some((mp) => mp.personId === person.id));
-  const pool = (only ? ministries.filter(only) : mine.length ? mine : ministries);
-  const out: { member: M; ministry: Ministry }[] = [];
-  for (const min of pool) {
-    for (const lp of min.people.filter((x) => x.isLeader)) {
-      const lm = members.find((m) => m.volunteerId === lp.personId);
-      if (lm && lm.volunteerId !== person.id && !out.some((o) => o.member.id === lm.id)) out.push({ member: lm, ministry: min });
-    }
-  }
-  return out;
-}
-
 // ── cartão de escala (S18) ────────────────────────────────────────────────────
 /* Confirmar e Não posso de 52px. A resposta só vai pro banco depois de alguns
    segundos: dá tempo de tocar em "Desfazer" no aviso. Pedir troca abre uma
@@ -2931,10 +2917,13 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
   const pend = meus.filter((r) => r.status === "wait");
   const outras = meus.filter((r) => r.status !== "wait");
   const ministryOf = (slot: Slot) => ministries.find((m) => m.positions?.some((p) => p.id === slot.position_id)) ?? ministries.find((m) => m.people.some((mp) => mp.personId === person.id));
+  /* avisar falta: mesmo destinatário em cadeia da troca (v7 2.4), pelo time
+     da próxima escala ou, sem escala, pelo primeiro time da pessoa. Sem ninguém, sem o botão */
+  const timeFalta = (meus[0] ? ministryOf(meus[0]) : undefined) ?? ministries.find((m) => m.people.some((mp) => mp.personId === person.id));
+  const destFalta = useDestinatario("troca", timeFalta?.id ?? null);
   const avisarFalta = async () => {
-    const lider = leadersFor(person, ministries, members)[0];
-    if (!member || !lider || !onStartChat) { ui.toast("Não achamos o líder do seu time."); return; }
-    const id = await onStartChat(member.id, lider.member.id, "Oi! Queria avisar que vou faltar num dos próximos cultos. Posso te contar qual?");
+    if (!member || !destFalta || !onStartChat) return;
+    const id = await onStartChat(member.id, destFalta.member_id, "Oi! Queria avisar que vou faltar num dos próximos cultos. Posso te contar qual?");
     if (id) ui.go("mensagens", null, { chatId: id });
   };
   const futuros = events.filter((e) => e.eventDate >= hoje).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
@@ -3011,7 +3000,7 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
           <div className="m6-sec">
             <div className="m6-lbl">Quando posso servir</div>
             {onSaveAvailability ? <Disponibilidade person={person} onSave={onSaveAvailability} /> : null}
-            <div className="m6-pad"><button className="m6-btn sec full" type="button" onClick={avisarFalta}>Avisar que vou faltar</button></div>
+            {member && destFalta && onStartChat && <div className="m6-pad"><button className="m6-btn sec full" type="button" onClick={avisarFalta}>Avisar que vou faltar</button></div>}
           </div>
         </>
       ) : (
