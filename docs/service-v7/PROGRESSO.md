@@ -9,11 +9,11 @@ Atualizado pelo Claude Code ao fim de cada item: marque `[x]` e anote o commit c
 - [x] 1.4 (este commit) CLAUDE.md da raiz com @AGENTS.md (já está; só confirmar)
 
 ## Etapa 2 · Consertos
-- [ ] 2.1 Continuar do curso com destino real
-- [ ] 2.2 Aula na Agenda e no cartão, com a instrução do QR
-- [ ] 2.3 Check-in da criança pelo app
-- [ ] 2.4 Destinatário em cadeia para pedir troca
-- [ ] 2.5 Destinatário em cadeia para pedido de oração
+- [x] 2.1 (c7681f9) Continuar do curso com destino real
+- [x] 2.2 (f46dad0) Aula na Agenda e no cartão, com a instrução do QR
+- [x] 2.3 (a937c7d) Check-in da criança pelo app
+- [x] 2.4 (996fc23) Destinatário em cadeia para pedir troca
+- [x] 2.5 (73c83d6) Destinatário em cadeia para pedido de oração
 - [ ] 2.6 Botões de Relatórios
 - [ ] 2.7 Entrada para Decisões por Jesus
 - [ ] 2.8 Pessoas no menu do líder
@@ -67,6 +67,12 @@ Atualizado pelo Claude Code ao fim de cada item: marque `[x]` e anote o commit c
 - AGENTS.md já tinha uma §11 ("Módulos centrais"). A lei entrou como "§13. Service: módulos", com nota explicando o número, para não renumerar seções existentes.
 - 1.3: além do `_modelo/manifest.ts`, criei `app/service/modules/define.ts` com os tipos do contrato (`defineModule`, `Cartao`, `Lugar`), porque o exemplo precisa compilar.
 - Verificação de cada item: `npx tsc --noEmit` + `npm run build` (o package.json não tem script de typecheck).
+- 2.1: "próxima aula" = a aula seguinte às `done_count` já feitas, na ordem módulo/aula (`app/service/lib/aulas.ts`). Botão só para vídeo com link ("Assistir à aula") ou texto ("Ler a aula", lido no app como texto simples, sem HTML do editor). Aula presencial/ao vivo mostra a instrução do QR, sem botão.
+- 2.2: aula não tinha dia nem sala no banco. Migração 0051 cria `lesson_date`, `lesson_time`, `location` em `course_lessons` (opcionais), o editor de curso pede os três só para aula presencial/ao vivo, e `page.tsx` passou a ler `course_lessons` com `select("*")` para não quebrar antes da migração em produção. Agenda ganhou "Suas aulas" (nas duas abas) com as aulas datadas dos cursos em andamento.
+- 2.3: "hora em que abre" = 60 minutos antes do culto (`KIDS_CHECKIN_ABRE_MIN`). Como só a liderança cria sessão Kids, a migração 0052 cria `service.kids_checkin_session` (security definer: confere responsável, turma, culto hoje em Brasília e horário; cria a sessão se o professor ainda não abriu; sala desligada não reabre). O insert da presença é o mesmo da rota do QR, agora em `app/service/lib/kids-checkin.ts` (`useKidsCheckin`), usado pela rota e pelo app. Presença pelo app grava `dropped_off_via = 'qr'` (o check do banco só aceita qr/manual).
+- 2.4: não existe "coordenação do ministério" no modelo de dados. A cadeia ficou líder do time, depois gestão (master, dono, pastor, nessa ordem); quando houver coordenação, entra no meio em `service.request_recipient` (0053). "Oferecer a vaga" usa `service.swap_candidates`: mesmo time, mesma função (marcada no time ou já escalada nela), sem pausa/férias, sem "não posso" no horário, ainda não escalado no culto. A oferta abre conversa com a pessoa; a troca em si continua com a liderança. O líder destinatário não aparece de novo na lista de oferta.
+- 2.4/2.5: o destinatário é resolvido no banco porque o membro não lê a ficha do líder (regras 0044); por isso "Não achamos o líder do time". "Avisar que vou faltar" (Agenda) ainda usa a busca antiga `leadersFor` e tem o mesmo defeito: fica para um item próprio.
+- Verificação no banco local deixou dados de teste: evento "Culto de teste v7" hoje (06/10) com sessões Kids e check-in de Davi e Alice; datas da aula "Encontro presencial" (10/10 09:30 Sala 2); conversas Maria-Lucas (troca), Maria-Mateus (oferta) e Maria-Marta (oração). Nada foi apagado.
 
 ## Bloqueios
 | item | motivo | o que falta |
