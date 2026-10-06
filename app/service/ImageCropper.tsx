@@ -46,6 +46,11 @@ export function ImageCropper({
     setImgSize({ w: 0, h: 0 });
 
     const load = async () => {
+      /* espera um tique: se o efeito for desfeito logo em seguida (o React em
+         desenvolvimento monta, desmonta e monta de novo), não cria um endereço
+         blob que seria revogado antes da imagem terminar de carregar */
+      await Promise.resolve();
+      if (cancelled) return;
       /* HEIC/HEIF (padrão das fotos do iPhone) : nenhum navegador fora do
          próprio Safari/WebKit sabe decodificar isso em <img>/canvas. Sem
          conversão, a pessoa precisaria saber exportar em JPEG antes de

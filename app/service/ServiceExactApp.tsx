@@ -4028,7 +4028,11 @@ function ReuniaoDrawer({
   const [novaDescricao, setNovaDescricao] = useState("");
   const [novoResponsavel, setNovoResponsavel] = useState("");
   const [chooser, setChooser] = useState<{ scope: "all" | string } | null>(null);
-  const pauta = Array.isArray(meeting.agenda) ? (meeting.agenda as string[]) : [];
+  /* a pauta é gravada como lista de textos; registros antigos (ou importados) podem vir como { t } ou { title } */
+  const pauta = (Array.isArray(meeting.agenda) ? meeting.agenda : [])
+    .map((item) => (typeof item === "string" ? item : item && typeof item === "object" ? String((item as { t?: unknown; title?: unknown; text?: unknown }).t ?? (item as { title?: unknown }).title ?? (item as { text?: unknown }).text ?? "") : ""))
+    .map((s) => s.trim())
+    .filter(Boolean);
 
   const cardFor = (actionId: string) => cards.find((c) => c.source_type === "meeting_action" && c.source_id === actionId);
   const pendentes = actions.filter((a) => !cardFor(a.id));
