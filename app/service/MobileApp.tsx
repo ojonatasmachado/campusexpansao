@@ -548,7 +548,6 @@ function TabConversas({
                         fontSize: "var(--fs-app-13)",
                         color: "var(--muted)",
                         marginBottom: 3,
-                        fontFamily: "var(--mono)",
                       }}
                     >
                       {sender.name.split(" ")[0]}
@@ -1017,7 +1016,6 @@ function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisitor }: {
                       />
                       <div
                         style={{
-                          fontFamily: "var(--mono)",
                           fontSize: "var(--fs-app-13)",
                           color: i <= etIdx ? "var(--light)" : "var(--subtle)",
                           marginTop: 6,
@@ -2526,11 +2524,11 @@ function M6St({ k, ic, children }: { k: "ok" | "warn" | "neutral" | "danger"; ic
   return <span className={`m6-st ${k}`}>{ic && <Icon name={ic} size={16} />}<span>{children}</span></span>;
 }
 
-/* data em bloquinho: "DOM 04" */
+/* data em bloquinho: "Dom 04" */
 function M6Date({ iso }: { iso: string }) {
   const d = parseISODate(iso);
   if (!d) return <span className="m6-date"><span>·</span><b>·</b></span>;
-  const dia = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"][d.getDay()];
+  const dia = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][d.getDay()];
   return <span className="m6-date"><span>{dia}</span><b>{String(d.getDate()).padStart(2, "0")}</b></span>;
 }
 
@@ -2876,7 +2874,7 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
       </div>
 
       <div className="m6-sec">
-        <div className="m6-lbl">Na igreja</div>
+        <div className="m6-lbl">Da igreja</div>
         {proximos.length > 0 ? (
           <div className="m6-list">{proximos.slice(0, 3).map((ev) => <EventoRow key={ev.id} ev={ev} />)}</div>
         ) : (

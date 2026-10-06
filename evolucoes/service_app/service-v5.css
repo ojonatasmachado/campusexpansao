@@ -140,7 +140,7 @@ a.login-choice:hover,button.login-choice:hover{border-color:var(--olive-line)}
 .m-tab button.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;border-radius:0 0 2px 2px;background:var(--accent-fill)}
 /* legibilidade do app do membro */
 .m-app{font-size:var(--fs-app-13)}
-.m-section-t{font-size:var(--fs-app-13);color:var(--muted)}
+.m-section-t{font-size:var(--fs-app-15);color:var(--muted)}
 .m-when{font-size:var(--fs-app-13)}
 .m-quick-b{min-height:50px;font-size:var(--fs-app-13)}
 .m-jp small{font-size:var(--fs-app-13)}

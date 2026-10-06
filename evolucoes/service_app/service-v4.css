@@ -62,7 +62,7 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 .bib-result small { display: block; font-size: var(--fs-app-13); color: var(--muted); line-height: 1.45; }
 
 /* ── folha de ação do versículo ──────────────────────────────── */
-.bib-action-ref { font-family: var(--mono); font-size: var(--fs-app-13); letter-spacing: 0.05em; text-transform: uppercase; color: var(--olive-soft, var(--olive)); margin-bottom: 8px; }
+.bib-action-ref { font-family:var(--sans); font-size: var(--fs-app-13); letter-spacing:0; color: var(--olive-soft, var(--olive)); margin-bottom: 8px; }
 .bib-action-text { font-size: var(--fs-app-15); line-height: 1.6; color: var(--light); margin: 0; }
 .bib-swatches { display: flex; align-items: center; gap: 9px; margin-top: 16px; flex-wrap: wrap; }
 .bib-swatch { width: 28px; height: 28px; border-radius: 50%; background: var(--mark); border: 2px solid transparent; transition: transform .14s, border-color .14s; }
@@ -83,7 +83,7 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 .brand-church-mark { width:40px; height:40px; border-radius:var(--r-md); background:var(--accent-fill); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:var(--fs-pn-14); letter-spacing:-0.02em; flex-shrink:0; }
 .brand-church-text { display:flex; flex-direction:column; gap:3px; min-width:0; }
 .brand-church-name { font-size:var(--fs-pn-14); font-weight:700; letter-spacing:-0.02em; color:var(--white); line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.brand-church-suffix { font-family:var(--mono); font-size:var(--fs-pn-12); letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); }
+.brand-church-suffix { font-family:var(--sans); font-size:var(--fs-pn-12); letter-spacing:0; color:var(--muted); }
 
 /* ════════ APP DO MEMBRO EM TELA CHEIA (mode="self") ════════
    A moldura de celular (.phone 340x710, notch, relógio "9:41") é da PRÉVIA

@@ -27,7 +27,7 @@ Atualizado pelo Claude Code ao fim de cada item: marque `[x]` e anote o commit c
 - [x] 2.16 (41a3463) Situação, duplicados e telefones em Pessoas
 
 ## Etapa 3 · Leitura
-- [ ] 3.1 Tokens de fonte
+- [x] 3.1 (42bb53c) Tokens de fonte
 - [ ] 3.2 Mono e caixa alta
 - [ ] 3.3 Cor de destaque
 - [ ] 3.4 Contraste
@@ -86,6 +86,8 @@ Atualizado pelo Claude Code ao fim de cada item: marque `[x]` e anote o commit c
 - 2.15: a resposta da escala fica num estado da casca do app (`respostas` no `MemberUiContext`) assim que a pessoa toca, e "Desfazer" tira; o selo usa esse estado antes de o banco gravar.
 - 2.16: regra de "novo" (`ehNovo`, `app/service/lib/pessoas.ts`): situação "novo" na ficha; senão primeiro contato nos últimos 30 dias; sem primeiro contato e sem "membro desde", a data do cadastro. Quem tem histórico não vira novo por ter sido importado agora. No local: Novos 10 de 34 (as contas de teste sem histórico). O KPI do Início passou a "N novos em 30 dias" pela mesma regra. Duplicado: ficha de membro sem vínculo com o voluntário, mas com mesmo nome e telefone, aparece uma vez (Jonatas); ao cadastrar membro, mesmo telefone normalizado ou mesmo nome (sem acento) mostra o aviso, e o segundo toque cadastra. Telefone: helper `app/service/lib/telefone.ts` (`formatarTelefone`, `telefoneParaGravar`, `mesmoTelefone`); migração 0054 guarda "(11) 98000-1000" em `members` e `people` por gatilho e normalizou o que existia (só 10/11 dígitos, tirando +55/0 da frente; outros valores ficam como estão, nenhum dígito perdido). Visitantes e Decisões não entraram (fora do item).
 - 3.1: tokens em `service-v5.css` §0: `--fs-app-13/15/17/20/28`, `--fs-pn-12/13/14/16/20/32` e `--fs-ui-*` (componente dos dois lados: vale o painel e, dentro de `.mob-bg`, vira a escala do app). Classe usada só no `MobileApp.tsx` = app; só em outros arquivos = painel; nos dois = ui. Arredondamento: app 11 a 13,5 → 13, 14 a 15,5 → 15, 16 a 18 → 17 (campo segue ≥16 no toque), 19 a 24 → 20, maior → 28; painel 11 a 12 → 12, 12,5 e 13 → 13, 13,5 a 15 → 14, 15,5 a 18 → 16, 19 a 24 → 20, maior → 32 (dentro de `@media (max-width)` acima de 20 arredonda para baixo, para título não estourar no celular). `button` sem tamanho deixou de herdar 13,33px do navegador (agora `--fs-ui-13`). A escala da pessoa continua pelo `zoom: var(--m-scale)` na coluna do app, que já multiplica os tokens; multiplicar o token também daria escala dupla (a troca fica para a 4.9). Ficaram de fora: as folhas de impressão do QR (`<style>` dentro de CheckIn/AulaCheckin, papel branco) e `.login-x` (42vh, marca d'água sem uso).
+
+- 3.2: caixa alta e mono ficaram só no `.ph-eyebrow` (sobretítulo da página do painel). Mono continua em números que alinham (datas e horas de lista, contadores, badges, numeração de passo/capítulo/versículo); o resto virou Inter, sem espaçamento largo, e os rótulos de tabela, grupo do menu e KPI que eram caixa alta ganharam peso 600 para não perder a hierarquia. Vale também para as telas de entrada (login, check-in), que são do Service; as folhas de impressão do QR ficaram como estão. O Início do app ainda não tem as duas zonas (item 4.3): o estilo 15/600 entrou em todos os rótulos de seção do app (`.m6-lbl` e `.m-section-t`), e "Na igreja" do Início virou "Da igreja". Bloco de data do app ("DOM 04") virou "Dom 04". Siglas (CNPJ, CEP) seguem em maiúsculas por serem siglas.
 
 ## Bloqueios
 | item | motivo | o que falta |

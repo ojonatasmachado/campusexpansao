@@ -235,10 +235,7 @@ export default function EventoShare({ event, ministries, churchName = "Service",
             <div style={{ marginBottom: 20 }}>
               <div
                 style={{
-                  fontFamily: "var(--mono)",
                   fontSize: "var(--fs-ui-sm)",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
                   color: "var(--muted)",
                   marginBottom: 8,
                 }}

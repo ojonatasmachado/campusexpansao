@@ -2572,7 +2572,7 @@ function Pessoas({ people, currentPersonId, setDrawer, setModal }: { people: Per
             <div className="who">
               <Av name={person.name} photoUrl={person.photoUrl} />
               <div>
-                <strong>{person.name}{person.id === currentPersonId && <span style={{ color: "var(--olive)", fontSize: "var(--fs-pn-12)", marginLeft: 7, fontFamily: "var(--mono)" }}>você</span>}</strong>
+                <strong>{person.name}{person.id === currentPersonId && <span style={{ color: "var(--olive)", fontSize: "var(--fs-pn-12)", marginLeft: 7 }}>você</span>}</strong>
                 <small>{formatarTelefone(person.phone)}</small>
               </div>
             </div>
@@ -8864,7 +8864,7 @@ function DecisaoDrawer({
           </dl>
           {decision.notes && (
             <div style={{ marginTop: 14, fontSize: "var(--fs-pn-14)", color: "var(--light)", lineHeight: 1.6, padding: "14px 16px", background: "var(--ink)", borderRadius: "var(--r-md)", border: "0.5px solid var(--border-2)" }}>
-              <span style={{ fontFamily: "var(--mono)", fontSize: "var(--fs-pn-12)", color: "var(--subtle)", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Observação</span>
+              <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", display: "block", marginBottom: 6 }}>Observação</span>
               {decision.notes}
             </div>
           )}
@@ -9128,7 +9128,7 @@ function VisitanteDrawer({
             {VISITOR_STAGES.map((s, i) => (
               <div key={s.id} style={{ flex: 1, textAlign: "center" }}>
                 <div style={{ height: 5, borderRadius: 3, background: i <= stageIdx ? s.color : "var(--ink)" }} />
-                <div style={{ fontFamily: "var(--mono)", fontSize: "var(--fs-pn-12)", color: i <= stageIdx ? "var(--light)" : "var(--subtle)", marginTop: 7, letterSpacing: "0.04em" }}>{s.name}</div>
+                <div style={{ fontSize: "var(--fs-pn-12)", color: i <= stageIdx ? "var(--light)" : "var(--subtle)", marginTop: 7 }}>{s.name}</div>
               </div>
             ))}
           </div>
@@ -9885,7 +9885,7 @@ function EntityDrawer({
                   <div className="esc-fn">{position.name}</div>
                   <span className="panel-meta">{position.need_count} {position.need_count === 1 ? "vaga" : "vagas"}</span>
                 </div>
-                {pessoas.length === 0 && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", fontFamily: "var(--mono)" }}>Ninguém habilitado ainda.</div>}
+                {pessoas.length === 0 && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)" }}>Ninguém habilitado ainda.</div>}
                 {pessoas.map((link) => (
                   <button className="cand" type="button" key={`${position.id}-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
                     <Av name={link.personName} photoUrl={people.find((pp) => pp.id === link.personId)?.photoUrl} />
@@ -9915,7 +9915,7 @@ function EntityDrawer({
                 ))}
               </div>
             )}
-            {ministry.people.length === 0 && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", fontFamily: "var(--mono)" }}>Ninguém neste time ainda.</div>}
+            {ministry.people.length === 0 && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)" }}>Ninguém neste time ainda.</div>}
           </DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
             <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { setDrawer(null); setRoute("escalas"); }}>Ver escala do time →</button>
