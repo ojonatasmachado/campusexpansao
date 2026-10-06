@@ -8,7 +8,7 @@
 >   2. Agendador: criar `CRON_SECRET` nas variáveis da Vercel e um cron de hora em hora chamando `GET /api/service/cron/lembretes` com `Authorization: Bearer <segredo>`. Sem isso, o lembrete do aviso (4.18) não sai e o resumo do Mural (5.3) só sai quando a igreja manda outro aviso. O plano gratuito da Vercel só roda cron diário.
 >   3. Teste do 4.2 com 5 membros acima de 60 anos (continua pendente).
 >   4. Captura final no Mac (`tools/captura-service`), a tabela "Captura por etapa" e a seção 8 do manifesto. Ajustes de seletores em "Para a captura final".
->   5. GitHub Actions: o workflow novo (`.github/workflows/service.yml`, 5.4) foi aceito no push, mas nenhuma execução apareceu até o fim da sessão; confira se o Actions está ligado no repositório.
+>   5. GitHub Actions: o workflow novo (`.github/workflows/service.yml`, 5.4) rodou no GitHub e passou em todas as etapas (typecheck, lei 12, contraste, 67 migrações num Postgres limpo, build). Nada a fazer.
 >   6. Validar as decisões em "Decisões da noite", em especial: o líder deixou de ver a história de quem não é do seu time (4.8, lei 10); "métricas internas" lidas como da gestão da igreja (5.2); a ordem do "Gerar escala" automático passou a ser a do rodízio (4.14); primeiro acesso passou a valer com nome e telefone (4.10).
 > - Achados fora do escopo (não mexi, ficaram na base da 5.4): 14 emoji em telas de check-in, curso e pesquisa, 1 travessão no texto da arte do evento (`EventoShare.tsx`) e 6 hex fixos em `ServiceExactApp.tsx`/`layout.tsx`.
 
