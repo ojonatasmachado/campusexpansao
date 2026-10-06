@@ -345,6 +345,58 @@ fluxo visual ou experiência nova**, consulte também o Brand Book completo:
 
 ---
 
+## 13. Service: módulos (lei permanente, v7)
+
+> Manifesto completo: `docs/service-v7/MANIFESTO.md`. Leis e checklist também em
+> `app/service/modules/README.md`; exemplo em `app/service/modules/_modelo/`.
+> (No manifesto esta seção se chama "11. Service: módulos"; ficou com o número 13 para
+> não colidir com a §11 "Módulos centrais" acima.)
+
+Toda função nova do Service nasce como **módulo**. Tela, item de menu, aba de configuração,
+cartão ou notificação criados fora do registro não entram.
+
+1. **Casca estável.** App do membro: 4 abas (Início, Agenda, Mensagens, Caminhada) e avatar no
+   topo, que abre o Perfil. Painel: menu, barra e busca. A casca não muda quando entra função
+   nova; só oferece lugares: `inicio.fila`, `inicio.igreja`, `agenda.minha`, `agenda.igreja`,
+   `mensagens.itens`, `caminhada.secoes`, `perfil.linhas`, `painel.menu`,
+   `painel.inicio.saude`, `painel.inicio.pendencias`, `painel.config`, `busca`.
+2. **Uma pergunta por lugar.** Início: o que pede minha atenção agora? Agenda: quando e onde?
+   Mensagens: quem falou comigo? Caminhada: como estou crescendo? Perfil: quem sou e como
+   prefiro? Função nova entra onde responde à mesma pergunta.
+3. **Registro único.** `app/service/modules/registry.ts` lê os manifestos e filtra por igreja
+   (módulo ligado), papel, permissão e dependências. `NAV_GROUPS`, `CFG_TABS` e
+   `MEMBER_MODULES` são gerados por ele.
+4. **Manifesto por módulo** (`defineModule`): `id`, `liga`, `depende`, `permissoes`, `membro`
+   (`visivel` e lugares), `painel` (`menu`, `inicio`, `config`), `avisos`, `rotas`,
+   `vocabulario`, `historico`.
+5. **Contrato do cartão.** Seis tipos: `acao`, `passo`, `evento`, `aviso`, `pedido`,
+   `destaque`. Campos: `id`, `modulo`, `tipo`, `prioridade` (0 a 100), `prazo`, `contexto`,
+   `titulo`, `linhas`, `principal`, `secundaria` (no máximo duas ações), `resolvido` (título e
+   Desfazer). A casca ordena por prioridade e prazo, mostra até 3 na primeira dobra e dá botão
+   cheio só ao primeiro. Fila vazia mostra "Tudo em dia".
+6. **Nenhum beco sem saída.** Toda entrada declara do que depende (destinatário, conteúdo,
+   turma aberta). Sem a dependência, a entrada não aparece.
+7. **Vocabulário da igreja.** Nenhum texto de interface escreve fixo um termo renomeável; usa
+   `termo("caminhada")`. Termos iniciais: Caminhada, Grupo, Culto, Voluntário (nome da tela até
+   24 caracteres, nome curto da barra até 10).
+8. **Tipografia, cor e toque.** App: 13, 15, 17, 20, 28. Painel: 12, 13, 14, 16, 20, 32. Mínimo
+   13px no app e 12px no painel, sem meio pixel. Mono só para números que alinham e para o
+   sobretítulo do painel; caixa alta só nesse sobretítulo. Alvos de 44px no app e 32px no painel
+   (piso 24px). A cor da igreja vai em uma ação por tela e na aba ativa. Todo tamanho deriva da
+   escala do texto da pessoa.
+9. **Notificação = ação.** Cada aviso corresponde a um cartão. Categorias que a pessoa desliga:
+   Escala, Mural, Mensagens, Caminhada. Silêncio das 22h às 7h. Mural chega em resumo.
+   Permissão de notificação pedida depois da primeira escala confirmada.
+10. **Histórico, sem gamificação.** Módulos gravam fatos na linha do tempo da pessoa. Proibido:
+    ranking, medalha, sequência de dias, pontos ou percentual de engajamento sobre pessoas.
+11. **Medição padrão.** Todo cartão emite `card_shown`, `card_acted`, `card_dismissed`; todo
+    aviso emite `notification_sent` e `notification_opened`.
+12. **Qualidade verificada por máquina.** A captura (`tools/captura-service/`) falha com texto
+    abaixo do mínimo, alvo abaixo de 24px, contraste pior que a versão anterior, rolagem
+    lateral, erro de console ou botão sem ação.
+
+---
+
 ## Estrutura do projeto
 
 ```
