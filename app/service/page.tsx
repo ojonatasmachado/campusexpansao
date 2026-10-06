@@ -501,6 +501,10 @@ type LessonView = {
   min_acertos: number;
   checkin_token: string | null;
   checkin_active: boolean;
+  /* dia, hora e sala da aula presencial/ao vivo (0051) */
+  lesson_date?: string | null;
+  lesson_time?: string | null;
+  location?: string | null;
 };
 
 type LessonAttendanceView = {
@@ -1185,7 +1189,8 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("courses").select("*").order("created_at", { ascending: false }),
     supabase.schema("service").from("enrollments").select("id,course_id,member_id,done_count,status").order("created_at", { ascending: false }),
     supabase.schema("service").from("course_modules").select("id,course_id,name,sort_order").order("sort_order", { ascending: true }),
-    supabase.schema("service").from("course_lessons").select("id,module_id,name,duration,kind,sort_order,link,conteudo,prova,min_acertos,checkin_token,checkin_active").order("sort_order", { ascending: true }),
+    /* "*": dia, hora e sala da aula (0051) entram quando a migração existir */
+    supabase.schema("service").from("course_lessons").select("*").order("sort_order", { ascending: true }),
     supabase.schema("service").from("lesson_attendance").select("id,course_id,lesson_id,member_id,checked_in_at,via"),
     supabase.schema("service").from("boards").select("id,name,scope,ministry_id,description,columns").order("created_at", { ascending: false }),
     supabase.schema("service").from("cards").select("id,board_id,column_id,title,description,assignees,due,priority,source_type,source_id,moved_days_ago").order("created_at", { ascending: false }),

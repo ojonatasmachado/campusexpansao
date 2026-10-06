@@ -12,7 +12,7 @@ import CepInput from "./CepInput";
 import ChurchLockup from "./ChurchLockup";
 import { TEXT_SCALES, useTextScale } from "./lib/text-scale";
 import { requirementLabel, type RequirementKind } from "./lib/requirements";
-import { INSTRUCAO_QR, proximaAula, textoDaAula, type ProximaAula } from "./lib/aulas";
+import { INSTRUCAO_QR, aulasDoCurso, proximaAula, textoDaAula, type ProximaAula } from "./lib/aulas";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -129,7 +129,7 @@ const RESULTADO_ACAO: Record<string, string> = {
 };
 const mensagemAcao = (r: string) => RESULTADO_ACAO[r] ?? "Não foi possível agora. Tente de novo.";
 type CourseModule = { id: string; course_id: string; name: string; sort_order: number };
-type CourseLesson = { id: string; module_id: string; name: string; sort_order?: number | null; kind?: string | null; link?: string | null; conteudo?: string | null };
+type CourseLesson = { id: string; module_id: string; name: string; sort_order?: number | null; kind?: string | null; link?: string | null; conteudo?: string | null; lesson_date?: string | null; lesson_time?: string | null; location?: string | null };
 type Visitor = { id: string; name: string; phone: string | null; stage: string; origin: string | null };
 type BaptismClass = {
   id: string;
@@ -1285,6 +1285,7 @@ function ProximaAulaBloco({ prox }: { prox: ProximaAula<CourseLesson> | null }) 
     <div style={{ marginTop: 12 }}>
       <div className="m6-kick">Próxima aula · {n} de {total}</div>
       <div className="m6-rt">{aula.name}</div>
+      <AulaQuando aula={aula} />
       {porQr ? (
         <div className="m6-meta" style={{ marginTop: 4 }}>{INSTRUCAO_QR}</div>
       ) : !abrir ? (
@@ -1300,6 +1301,49 @@ function ProximaAulaBloco({ prox }: { prox: ProximaAula<CourseLesson> | null }) 
           <Icon name="documento" size={20} />{porQr ? "Ver o material da aula" : "Ler a aula"}
         </button>
       )}
+    </div>
+  );
+}
+
+/* dia, hora e sala da aula (0051), quando o curso informou */
+function AulaQuando({ aula }: { aula: CourseLesson }) {
+  if (!aula.lesson_date && !aula.lesson_time && !aula.location) return null;
+  return (
+    <ul className="m6-facts">
+      {(aula.lesson_date || aula.lesson_time) && <li><Icon name="agenda" size={20} /><span>{joinDot(dataLonga(aula.lesson_date), aula.lesson_time)}</span></li>}
+      {aula.location && <li><Icon name="mapapin" size={20} /><span>{aula.location}</span></li>}
+    </ul>
+  );
+}
+
+/* aulas com data dos cursos em andamento, na Agenda (v7 2.2) */
+function AulasAgenda({ member, courses, enrollments, courseModules, courseLessons }: { member: M | null; courses: Course[]; enrollments: Enrollment[]; courseModules: CourseModule[]; courseLessons: CourseLesson[] }) {
+  if (!member) return null;
+  const hoje = todayISO();
+  const aulas = enrollments
+    .filter((e) => e.member_id === member.id && e.status !== "concluido")
+    .flatMap((e) => {
+      const curso = courses.find((c) => c.id === e.course_id);
+      return curso ? aulasDoCurso(curso.id, courseModules, courseLessons).map((aula) => ({ aula, curso })) : [];
+    })
+    .filter(({ aula }) => (aula.kind === "presencial" || aula.kind === "ao_vivo") && !!aula.lesson_date && aula.lesson_date >= hoje)
+    .sort((a, b) => `${a.aula.lesson_date}${a.aula.lesson_time ?? ""}`.localeCompare(`${b.aula.lesson_date}${b.aula.lesson_time ?? ""}`));
+  if (!aulas.length) return null;
+  return (
+    <div className="m6-sec">
+      <div className="m6-lbl">Suas aulas</div>
+      <div className="m6-list">
+        {aulas.map(({ aula, curso }) => (
+          <div className="m6-row" key={aula.id}>
+            <M6Date iso={aula.lesson_date!} />
+            <div className="m6-rb">
+              <div className="m6-rt">{aula.name}</div>
+              <div className="m6-rs">{joinDot(curso.name, aula.lesson_time, aula.location)}</div>
+              <div className="m6-rs">{INSTRUCAO_QR}</div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -2738,8 +2782,9 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
 }
 
 // ── Agenda (S19) ──────────────────────────────────────────────────────────────
-function AgendaV6({ seg, setSeg, person, member, members, ministries, events, roster, cards, boards, isRecep, isKids, onConfirmarEscala, onRecusarEscala, onStartChat, onAddCardComment, onSaveAvailability }: {
+function AgendaV6({ seg, setSeg, person, member, members, ministries, events, roster, cards, boards, isRecep, isKids, onConfirmarEscala, onRecusarEscala, onStartChat, onAddCardComment, onSaveAvailability, aulas }: {
   onSaveAvailability?: (availability: Record<string, boolean>) => Promise<boolean>;
+  aulas?: React.ReactNode;
   seg: "minha" | "igreja"; setSeg: (s: "minha" | "igreja") => void;
   person: P; member: M | null; members: M[]; ministries: Ministry[]; events: Ev[]; roster: Slot[]; cards: Card[]; boards: Board[];
   isRecep: boolean; isKids: boolean;
@@ -2787,6 +2832,7 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
           </div>
         </div>
       )}
+      {aulas}
       {atual === "minha" ? (
         <>
           {pend.length > 0 && (
@@ -2979,7 +3025,7 @@ function useSteps({ person, member, ministries, courses, enrollments, courseModu
     if (id === "curso") {
       if (cursando) {
         const prox = proximaAula(cursando.course_id, cursando.done_count, courseModules, courseLessons);
-        return { id, nome, st: "andamento", info: joinDot(cursoNome, prox && `Próxima aula: ${prox.aula.name}`), acao: prox ? "Ver a próxima aula" : "Ver o curso", run: () => onOpenSub("cursos") };
+        return { id, nome, st: "andamento", info: joinDot(cursoNome, prox && `Próxima aula: ${prox.aula.name}`, dataLonga(prox?.aula.lesson_date), prox?.aula.lesson_time, prox?.aula.location), acao: prox ? "Ver a próxima aula" : "Ver o curso", run: () => onOpenSub("cursos") };
       }
       return { id, nome, st: "afazer", acao: "Ver os cursos", run: () => onOpenSub("cursos") };
     }
@@ -3254,7 +3300,8 @@ function MobileMembro({
           {tab === "agenda" && !sub && (
             <AgendaV6 seg={agSeg} setSeg={setAgSeg} person={person} member={member} members={members} ministries={ministries} events={events} roster={roster}
               cards={cards} boards={boards} isRecep={isRecep} isKids={isKids} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala}
-              onStartChat={onStartChat} onAddCardComment={onAddCardComment} onSaveAvailability={onSaveAvailability} />
+              onStartChat={onStartChat} onAddCardComment={onAddCardComment} onSaveAvailability={onSaveAvailability}
+              aulas={<AulasAgenda member={member} courses={courses} enrollments={enrollments} courseModules={courseModules} courseLessons={courseLessons} />} />
           )}
           {tab === "agenda" && sub === "visitantes" && <div className="m6-legacy"><TabVisitantes visitors={visitors} onAdvanceVisitorStage={onAdvanceVisitorStage} onRegisterVisitor={onRegisterVisitor} /></div>}
           {tab === "agenda" && sub === "kids-sala" && (

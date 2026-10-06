@@ -336,6 +336,10 @@ type LessonView = {
   min_acertos: number;
   checkin_token: string | null;
   checkin_active: boolean;
+  /* dia, hora e sala da aula presencial/ao vivo (0051) */
+  lesson_date?: string | null;
+  lesson_time?: string | null;
+  location?: string | null;
 };
 
 type LessonAttendanceView = {
