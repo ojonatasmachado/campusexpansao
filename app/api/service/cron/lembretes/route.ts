@@ -28,7 +28,7 @@ export async function GET(request: Request) {
       .update({ reminded_at: agora })
       .lte("remind_at", agora)
       .is("reminded_at", null)
-      .select("id, title, remind_to");
+      .select("id, organization_id, title, remind_to");
     if (error) throw error;
 
     let enviados = 0;
@@ -44,9 +44,12 @@ export async function GET(request: Request) {
       if (!faltam.length) continue;
       const { data: subs } = await db.from("push_subscriptions").select("id, endpoint, p256dh, auth_key").in("person_id", faltam);
       if (!subs?.length) continue;
-      const { deadEndpoints } = await sendPushToSubscriptions(subs, { title: aviso.title, body: "Você ainda não viu esta publicação do Mural." });
+      const { deadEndpoints } = await sendPushToSubscriptions(subs, { title: aviso.title, body: "Você ainda não viu esta publicação do Mural.", url: "/service?aviso=mural" });
       if (deadEndpoints.length) await db.from("push_subscriptions").delete().in("endpoint", deadEndpoints);
-      enviados += subs.length - deadEndpoints.length;
+      const n = subs.length - deadEndpoints.length;
+      enviados += n;
+      /* lei 11: notification_sent, sem dado da pessoa */
+      if (n > 0) await db.from("app_events").insert(Array.from({ length: n }, () => ({ organization_id: aviso.organization_id, evento: "notification_sent", modulo: "mural", tipo: "lembrete", ref: aviso.id })));
     }
     return NextResponse.json({ ok: true, avisos: (avisos ?? []).length, enviados });
   } catch (error) {

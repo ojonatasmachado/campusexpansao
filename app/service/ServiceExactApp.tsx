@@ -57,6 +57,7 @@ import { SaudeDaIgreja } from "./modules/inicio/Saude";
 import { daMinhaLista, listaDeCuidado, type Ausente, type MarcaCuidado } from "./modules/cuidado/cuidado";
 import { ListaDeCuidado, type CriancaAusente } from "./modules/cuidado/Cuidado";
 import { Assistente } from "./modules/configuracao/Assistente";
+import { medir } from "./lib/medicao";
 import { SETUP_INICIAL, linhaDoSetup, type SetupEstado } from "./modules/configuracao/setup";
 import { ROTA_GRUPO, cfgTabs as gerarCfgTabs, modulosLigados, navGroups, podeVerRota, rotaLigada, termosDaRota } from "./modules/registry";
 
@@ -1175,6 +1176,16 @@ export default function ServiceExactApp({
     setShowTour(true);
     setNavOpen(true);
   };
+  /* lei 11: abriu pelo toque numa notificação (?aviso=<categoria>): mede e limpa o endereço */
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const cat = url.searchParams.get("aviso");
+    if (!cat) return;
+    medir(firstChurch?.organizationId, "notification_opened", { modulo: cat, tipo: "aviso", ref: cat });
+    url.searchParams.delete("aviso");
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   /* v7 4.12: configuração guiada; as gravações ficam aqui, o assistente só desenha */
   const setupEstado: SetupEstado = { ...SETUP_INICIAL, ...(firstChurch?.settings?.setup ?? {}) } as SetupEstado;
   const svc = () => createServiceBrowserClient().schema("service");
@@ -1317,7 +1328,7 @@ export default function ServiceExactApp({
     });
     const recipients = chatMembers.filter((cm) => cm.chat_id === chatId && cm.member_id !== senderId).map((cm) => cm.member_id);
     const senderName = members.find((m) => m.id === senderId)?.name ?? "Alguém";
-    notifyPush(firstChurch.organizationId, recipients, senderName, body.trim());
+    notifyPush(firstChurch.organizationId, recipients, senderName, body.trim(), "mensagens");
     router.refresh();
   };
   const startChatMobile = async (selfMemberId: string, targetMemberId: string, firstMessage: string) => {
@@ -1328,7 +1339,7 @@ export default function ServiceExactApp({
        conversa direto (as regras de leitura escondem a conversa recém-criada) */
     const viaRpc = await sb.rpc("start_dm", { p_target_member: targetMemberId, p_body: firstMessage.trim() || null });
     if (!viaRpc.error && viaRpc.data) {
-      if (firstMessage.trim()) notifyPush(firstChurch.organizationId, [targetMemberId], senderName, firstMessage.trim());
+      if (firstMessage.trim()) notifyPush(firstChurch.organizationId, [targetMemberId], senderName, firstMessage.trim(), "mensagens");
       router.refresh();
       return viaRpc.data as string;
     }
@@ -1344,7 +1355,7 @@ export default function ServiceExactApp({
           sender_id: selfMemberId,
           body: firstMessage.trim(),
         });
-        notifyPush(firstChurch.organizationId, [targetMemberId], senderName, firstMessage.trim());
+        notifyPush(firstChurch.organizationId, [targetMemberId], senderName, firstMessage.trim(), "mensagens");
       }
       router.refresh();
       return existing.id;
@@ -1367,7 +1378,7 @@ export default function ServiceExactApp({
         sender_id: selfMemberId,
         body: firstMessage.trim(),
       });
-      notifyPush(firstChurch.organizationId, [targetMemberId], senderName, firstMessage.trim());
+      notifyPush(firstChurch.organizationId, [targetMemberId], senderName, firstMessage.trim(), "mensagens");
     }
     router.refresh();
     return chatRow.id;
@@ -1395,7 +1406,7 @@ export default function ServiceExactApp({
         .map((personId) => members.find((m) => m.volunteerId === personId)?.id)
         .filter((id): id is string => !!id);
       if (leaderMemberIds.length) {
-        notifyPush(firstChurch.organizationId, leaderMemberIds, member.name, ct(`Pediu pra marcar "${stepLabel}" na {caminhada}. Aprovar?`));
+        notifyPush(firstChurch.organizationId, leaderMemberIds, member.name, ct(`Pediu pra marcar "${stepLabel}" na {caminhada}. Aprovar?`), "caminhada");
       }
     }
     router.refresh();
@@ -1411,7 +1422,7 @@ export default function ServiceExactApp({
       reviewed_at: new Date().toISOString(),
     }).eq("id", request.id);
     const stepLabel = ct(JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step);
-    notifyPush(firstChurch.organizationId, [member.id], ct("{Caminhada} aprovada"), ct(`"${stepLabel}" foi confirmado na sua {caminhada}.`));
+    notifyPush(firstChurch.organizationId, [member.id], ct("{Caminhada} aprovada"), ct(`"${stepLabel}" foi confirmado na sua {caminhada}.`), "caminhada");
     router.refresh();
   };
   /* o membro responde a própria escala pela função do banco (0049); antes
@@ -1453,7 +1464,7 @@ export default function ServiceExactApp({
     const member = members.find((m) => m.id === request.memberId);
     const stepLabel = ct(JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step);
     if (member) {
-      notifyPush(firstChurch.organizationId, [member.id], ct("{Caminhada}"), `Seu pedido de "${stepLabel}" não foi aprovado.${motivo ? ` Motivo: ${motivo}` : ""}`);
+      notifyPush(firstChurch.organizationId, [member.id], ct("{Caminhada}"), `Seu pedido de "${stepLabel}" não foi aprovado.${motivo ? ` Motivo: ${motivo}` : ""}`, "caminhada");
     }
     router.refresh();
   };
@@ -5243,7 +5254,7 @@ function NovaConversaModal({
         body: primeiraMsg.trim(),
       });
       const senderName = members.find((m) => m.id === eu)?.name ?? "Alguém";
-      notifyPush(church.organizationId, sel.filter((id) => id !== eu), senderName, primeiraMsg.trim());
+      notifyPush(church.organizationId, sel.filter((id) => id !== eu), senderName, primeiraMsg.trim(), "mensagens");
     }
     router.refresh();
     onCreated(chatRow.id);
@@ -5377,7 +5388,7 @@ function Conversas({
     });
     if (church?.organizationId) {
       const recipients = chatMembers.filter((cm) => cm.chat_id === chat.id && cm.member_id !== currentMember.id).map((cm) => cm.member_id);
-      notifyPush(church.organizationId, recipients, currentMember.name, texto.trim());
+      notifyPush(church.organizationId, recipients, currentMember.name, texto.trim(), "mensagens");
     }
     setTexto("");
     router.refresh();

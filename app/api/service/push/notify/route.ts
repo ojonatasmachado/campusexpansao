@@ -11,7 +11,10 @@ type Payload = {
   recipientMemberIds?: string[];
   title?: string;
   body?: string;
+  /* categoria do aviso (lei 9): escala, mural, mensagens, caminhada */
+  categoria?: string;
 };
+const CATEGORIAS = new Set(["escala", "mural", "mensagens", "caminhada"]);
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -29,6 +32,7 @@ export async function POST(request: Request) {
   }
 
   const { organizationId, recipientMemberIds, title, body } = payload;
+  const categoria = payload.categoria && CATEGORIAS.has(payload.categoria) ? payload.categoria : null;
   if (!organizationId || !recipientMemberIds?.length || !title || !body) {
     return NextResponse.json({ error: "Dados incompletos." }, { status: 400 });
   }
@@ -65,10 +69,17 @@ export async function POST(request: Request) {
     if (subsError) throw subsError;
     if (!subs?.length) return NextResponse.json({ ok: true, sent: 0 });
 
-    const { deadEndpoints } = await sendPushToSubscriptions(subs, { title, body });
+    /* o toque na notificação abre o app com ?aviso=<categoria>, que mede notification_opened (lei 11) */
+    const { deadEndpoints } = await sendPushToSubscriptions(subs, { title, body, url: categoria ? `/service?aviso=${categoria}` : "/service" });
 
     if (deadEndpoints.length) {
       await db.schema("service").from("push_subscriptions").delete().in("endpoint", deadEndpoints);
+    }
+    const enviados = subs.length - deadEndpoints.length;
+    if (enviados > 0) {
+      await db.schema("service").from("app_events").insert(
+        Array.from({ length: enviados }, () => ({ organization_id: organizationId, evento: "notification_sent", modulo: categoria, tipo: "aviso", ref: categoria })),
+      ).then(() => undefined, () => undefined);
     }
 
     return NextResponse.json({ ok: true, sent: subs.length - deadEndpoints.length });

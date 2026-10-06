@@ -27,6 +27,7 @@ import { baixarIcs } from "./lib/ics";
 import { porData, quandoFoi, tipoDoFato, type FatoView } from "./lib/historico";
 import { linhaDoMembro, mesmoDiaDaSemana } from "./lib/contexto-dia";
 import { videoDoLink } from "./lib/video";
+import { medir, medirCartaoVisto } from "./lib/medicao";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -2858,11 +2859,13 @@ const contarAcesso = () => {
 };
 const semAssinatura = () => () => {};
 const estaInstalado = () => window.matchMedia?.("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
-function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, inscricoes, onServir, ligados, acessos = 0, instalado = false, destaque = null, onAbrirDestaque }: {
+function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, inscricoes, onServir, ligados, acessos = 0, instalado = false, destaque = null, onAbrirDestaque, organizationId }: {
   /* quantas vezes a pessoa abriu o app neste aparelho e se ele já está na tela de início (v7 4.10) */
   acessos?: number; instalado?: boolean;
   /* destaque da igreja (v7 4.4): o mais recente ainda valendo; abrir lê o artigo no app */
   destaque?: Announcement | null; onAbrirDestaque?: (a: Announcement) => void;
+  /* medição padrão (lei 11) */
+  organizationId?: string;
   person: P; member: M | null; ministries: Ministry[]; members: M[]; events: Ev[]; roster: Slot[]; cards: Card[];
   announcements: Announcement[]; unreadIds: Set<string>; kidsChildren: Child[]; childGuardians: ChildGuardian[];
   kidsCheckin?: (destaque: boolean) => React.ReactNode;
@@ -2931,6 +2934,11 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
   if (!serve && timesAbertos.length > 0) entradas.push({ id: "servir", modulo: "times", tipo: "passo", prioridade: 20, conteudo: { k: "servir", times: timesAbertos } });
   const fila = ordenarFila(entradas, ligados);
   const visiveis = maisFila ? fila : fila.slice(0, FILA_DOBRA);
+  /* lei 11: card_shown dos cartões na tela (uma vez por sessão) */
+  const vistosIds = visiveis.map((e) => e.id).join("|");
+  useEffect(() => {
+    for (const e of visiveis) medirCartaoVisto(organizationId, { id: e.id, modulo: e.modulo, tipo: e.tipo });
+  }, [vistosIds]); // eslint-disable-line react-hooks/exhaustive-deps
   const resto = fila.length - visiveis.length;
 
   const cartao = (e: EntradaFila<ItemInicio>, destaque: boolean) => {
@@ -2976,7 +2984,7 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
             <div className="m6-meta">{`Falta ${c.falta.join(", ").replace(/, ([^,]*)$/, " e $1")}. Ajuda a igreja a cuidar de você.`}</div>
             <div className="m6-btns">
               <button className={btn} type="button" onClick={() => ui.go("perfil", "dados")}>Completar →</button>
-              <button className="m6-link" type="button" onClick={() => adiar("dados", 30)}>Agora não</button>
+              <button className="m6-link" type="button" data-dispensa="1" onClick={() => adiar("dados", 30)}>Agora não</button>
             </div>
           </div>
         );
@@ -2991,7 +2999,7 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
             </ul>
             <div className="m6-btns">
               <button className={btn} type="button" onClick={() => adiar("atalho", 3650)}>Já coloquei</button>
-              <button className="m6-link" type="button" onClick={() => adiar("atalho", 3650)}>Agora não</button>
+              <button className="m6-link" type="button" data-dispensa="1" onClick={() => adiar("atalho", 3650)}>Agora não</button>
             </div>
           </div>
         );
@@ -3033,7 +3041,16 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
         {fila.length === 0 ? (
           <div className="m6-card"><div className="m6-ct">Tudo em dia</div><div className="m6-meta">Quando a liderança precisar de você, aparece aqui.</div></div>
         ) : (
-          visiveis.map((e, i) => cartao(e, i === 0))
+          visiveis.map((e, i) => (
+            /* lei 11: botão do cartão = card_acted; botão marcado data-dispensa ("Agora não") = card_dismissed */
+            <div key={e.id} data-cartao={e.id} onClickCapture={(ev) => {
+              const b = (ev.target as HTMLElement).closest("button");
+              if (!b) return;
+              medir(organizationId, b.dataset.dispensa ? "card_dismissed" : "card_acted", { modulo: e.modulo, tipo: e.tipo, ref: e.id });
+            }}>
+              {cartao(e, i === 0)}
+            </div>
+          ))
         )}
         {resto > 0 && (
           <div className="m6-more"><button type="button" className="m6-link" onClick={() => setMaisFila(true)}>{`Ver mais ${plural(resto, "item", "itens")}`}</button></div>
@@ -3904,6 +3921,7 @@ function MobileMembro({
               inscricoes={steps.filter((s) => s.st === "afazer" && !!s.inscricao)}
               onServir={abrirTimes} ligados={ligadosMembro} acessos={acessos} instalado={instalado}
               destaque={muralOn ? destaqueAtivo : null}
+              organizationId={organizationId}
               onAbrirDestaque={(a) => { setSheetEl(<SheetArtigo a={a} />); marcarLido(person.id, a.id); }} />
           )}
 

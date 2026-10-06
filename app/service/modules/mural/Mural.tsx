@@ -81,7 +81,7 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
     if (error && /kind/i.test(error.message)) ({ error } = await sb.from("announcements").insert(base));
     setSalvando(false);
     if (error) { setErro(friendlyWriteError(error.message)); return; }
-    if (canais.includes("app")) notifyPush(church.organizationId, alvo.memberIds, titulo.trim(), msg.trim() || "Nova publicação no Mural.");
+    if (canais.includes("app")) notifyPush(church.organizationId, alvo.memberIds, titulo.trim(), msg.trim() || "Nova publicação no Mural.", "mural");
     avisar("Publicado no Mural.");
     onDone();
   };
@@ -267,7 +267,7 @@ export function Comunicacao({
   const [agoraIso] = useState(() => new Date().toISOString());
   const lembrar = (a: AnnouncementView, faltam: string[]) => {
     if (!church?.organizationId || faltam.length === 0) return;
-    notifyPush(church.organizationId, faltam, a.title, "Tem uma publicação nova no Mural da igreja.");
+    notifyPush(church.organizationId, faltam, a.title, "Tem uma publicação nova no Mural da igreja.", "mural");
     avisar(`Lembrete enviado a ${plural(faltam.length, "pessoa")}.`);
   };
 
