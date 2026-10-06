@@ -844,6 +844,7 @@ const NAV_GROUPS: { group: string; items: { id: keyof typeof ROUTES; label: stri
     { id: "visitantes", label: "Visitantes", icon: "visitante" },
     { id: "criancas", label: "Crianças", icon: "kids" },
     { id: "grupos", label: "Grupos", icon: "casais" },
+    { id: "decisoes", label: "Decisões", icon: "decisoes" },
   ] },
   { group: "Ministério", items: [
     { id: "times", label: "Times", icon: "times" },
@@ -875,7 +876,7 @@ const NAV_GROUPS: { group: string; items: { id: keyof typeof ROUTES; label: stri
 /* telas fora do menu (atalhos internos) herdam o grupo mais próximo */
 const ROUTE_GROUP: Record<string, string> = {
   ...Object.fromEntries(NAV_GROUPS.flatMap((g) => g.items.map((i) => [i.id, g.group]))),
-  pessoas: "Pessoas", decisoes: "Formação", config: "Configurações",
+  pessoas: "Pessoas", config: "Configurações",
 };
 const RouteGroupContext = createContext<string | null>(null);
 
@@ -6527,6 +6528,7 @@ const ACOES_V2 = [
   { id: "voluntarios", nome: "Voluntários", grupo: "Pessoas" },
   { id: "visitantes", nome: "Visitantes", grupo: "Pessoas" },
   { id: "kids", nome: "Crianças", grupo: "Pessoas" },
+  { id: "decisoes", nome: "Decisões", grupo: "Pessoas" },
   { id: "times", nome: "Times", grupo: "Ministério" },
   { id: "escala", nome: "Escalas", grupo: "Ministério" },
   { id: "ensaios", nome: "Ensaios", grupo: "Ministério" },
@@ -6534,7 +6536,6 @@ const ACOES_V2 = [
   { id: "cultos", nome: "Cultos, eventos e espaços", grupo: "Agenda" },
   { id: "comunica", nome: "Mural e pesquisas", grupo: "Comunicação" },
   { id: "conversas", nome: "Conversas", grupo: "Comunicação" },
-  { id: "decisoes", nome: "Decisões", grupo: "Formação" },
   { id: "batismos", nome: "Batismos", grupo: "Formação" },
   { id: "cursos", nome: "Cursos e trilhas", grupo: "Formação" },
   { id: "identidade", nome: "Identidade e propósito", grupo: "Gestão" },
