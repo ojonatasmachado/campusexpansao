@@ -1,7 +1,7 @@
 "use client";
 
 import { avisar } from "./lib/avisar";
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon, Caret } from "./lib/icons";
@@ -3655,11 +3655,34 @@ export default function MobileOverlay(props: MobileOverlayProps) {
    vale no app inteiro ao tocar). */
 function TextSizePicker() {
   const [scale, setScale] = useTextScale();
+  /* a escala muda a altura de tudo acima do controle e a tela "pula":
+     guarda onde o controle estava antes de aplicar e rola depois para ele
+     ficar no mesmo lugar, embaixo do dedo */
+  const segRef = useRef<HTMLDivElement>(null);
+  const topoAntes = useRef<number | null>(null);
+  const escolher = (v: number) => {
+    if (v === scale) return;
+    topoAntes.current = segRef.current?.getBoundingClientRect().top ?? null;
+    setScale(v);
+  };
+  useLayoutEffect(() => {
+    const el = segRef.current;
+    const antes = topoAntes.current;
+    topoAntes.current = null;
+    if (!el || antes === null) return;
+    const delta = el.getBoundingClientRect().top - antes;
+    if (Math.abs(delta) < 1) return;
+    let alvo: HTMLElement | null = el.parentElement;
+    while (alvo && !(alvo.scrollHeight > alvo.clientHeight && /(auto|scroll)/.test(getComputedStyle(alvo).overflowY))) alvo = alvo.parentElement;
+    /* o app aplica a escala com zoom no contêiner: a rolagem dele conta em pixels já ampliados */
+    if (alvo) alvo.scrollTop += delta / (parseFloat(getComputedStyle(alvo).zoom) || 1);
+    else window.scrollBy(0, delta);
+  }, [scale]);
   return (
     <div className="ts-pick">
-      <div className="ts-seg" role="radiogroup" aria-label="Tamanho do texto">
+      <div className="ts-seg" role="radiogroup" aria-label="Tamanho do texto" ref={segRef}>
         {TEXT_SCALES.map((o) => (
-          <button key={o.value} type="button" role="radio" aria-checked={scale === o.value} className={scale === o.value ? "on" : ""} onClick={() => setScale(o.value)}>
+          <button key={o.value} type="button" role="radio" aria-checked={scale === o.value} className={scale === o.value ? "on" : ""} onClick={() => escolher(o.value)}>
             {o.label}
           </button>
         ))}
