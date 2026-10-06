@@ -17,6 +17,8 @@ import { requirementLabel, type RequirementKind } from "./lib/requirements";
 import { candidatosParaVaga, papelDoDestinatario, useDestinatario, type Destinatario } from "./lib/destinatario";
 import { checkinAberto, horaQueAbre, sessaoDoCulto, statusDaCrianca, useKidsCheckin } from "./lib/kids-checkin";
 import { INSTRUCAO_QR, aulasDoCurso, proximaAula, textoDaAula, type ProximaAula } from "./lib/aulas";
+import { modulosLigados, telasDoMembro, type EstadoModulos } from "./modules/registry";
+import type { CategoriaAviso, ContextoMembro } from "./modules/define";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -189,6 +191,8 @@ type WallPost = { id: string; author: string | null; audience: string | null; bo
 type BibleMark = { id: string; book: string; chapter: number; verse: number; color: string | null; note: string | null; updated_at: string };
 
 export type MobileOverlayProps = {
+  /* exceções da igreja ao padrão dos módulos (service.churches, 0055) */
+  modulos?: EstadoModulos;
   people: P[];
   members: M[];
   ministries: Ministry[];
@@ -2457,7 +2461,7 @@ const MEMBER_TABS: { id: MemberTab; l: string; ic: string }[] = [
   { id: "perfil", l: "Perfil", ic: "perfil" },
 ];
 
-type ModuleCtx = { serves: boolean; isRecep: boolean; isKids: boolean; isGuardian: boolean };
+type ModuleCtx = ContextoMembro;
 type MemberModule = {
   id: string;
   /* aba onde o módulo mora */
@@ -2466,23 +2470,14 @@ type MemberModule = {
   title?: string;
   /* quem vê */
   visible: (c: ModuleCtx) => boolean;
-  /* tipo de notificação que o módulo dispara (push) */
-  notify?: "escala" | "mural" | "mensagem" | "caminhada";
+  /* categoria do aviso que o módulo dispara (push) */
+  notify?: CategoriaAviso;
 };
-const MEMBER_MODULES: MemberModule[] = [
-  { id: "escala", home: "agenda", visible: (c) => c.serves, notify: "escala" },
-  { id: "tarefas", home: "agenda", visible: (c) => c.serves },
-  { id: "visitantes", home: "agenda", title: "Visitantes", visible: (c) => c.isRecep },
-  { id: "kids-sala", home: "agenda", title: "Sala do Kids", visible: (c) => c.isKids },
-  { id: "mural", home: "mensagens", title: "Mural da igreja", visible: () => true, notify: "mural" },
-  { id: "conversas", home: "mensagens", visible: () => true, notify: "mensagem" },
-  { id: "cursos", home: "caminhada", title: "Cursos", visible: () => true, notify: "caminhada" },
-  { id: "batismo", home: "caminhada", title: "Batismo", visible: () => true },
-  { id: "biblia", home: "caminhada", title: "Bíblia", visible: () => true },
-  { id: "dados", home: "perfil", title: "Meus dados", visible: () => true },
-  { id: "senha", home: "perfil", title: "Trocar senha", visible: () => true },
-  { id: "familia", home: "perfil", title: "Minha família", visible: () => true },
-];
+/* gerado pelo registro de módulos (modules/registry.ts), a partir das telas de
+   cada manifesto; a igreja desliga módulos em service.churches (0055) */
+const membrosDoRegistro = (ligados?: Set<string>): MemberModule[] =>
+  telasDoMembro(ligados).map((t) => ({ id: t.id, home: t.aba, title: t.titulo, visible: t.quem, notify: t.aviso }));
+const MEMBER_MODULES: MemberModule[] = membrosDoRegistro();
 const moduleTitle = (id: string) => MEMBER_MODULES.find((m) => m.id === id)?.title ?? "";
 
 /* casca: folha de baixo, aviso com "Desfazer" e navegação entre abas */
@@ -3316,7 +3311,10 @@ function MobileMembro({
   const serves = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
   const isGuardian = childGuardians.some((g) => g.guardian_person_id === person.id);
   const ctx: ModuleCtx = { serves, isRecep, isKids, isGuardian };
-  const subAllowed = (id: string | null) => !id || (MEMBER_MODULES.find((m) => m.id === id)?.visible(ctx) ?? false);
+  const modulosMembro = useMemo(() => membrosDoRegistro(modulosLigados(rest.modulos)), [rest.modulos]);
+  const subAllowed = (id: string | null) => !id || (modulosMembro.find((m) => m.id === id)?.visible(ctx) ?? false);
+  /* Mural desligado na igreja: sem entrada em Mensagens nem cartão no Início (lei 6) */
+  const muralOn = subAllowed("mural");
 
   const lidos = useMemo(() => new Set(readAnnouncementIds), [readAnnouncementIds]);
   const [lidosAgora, setLidosAgora] = useState<Set<string>>(() => new Set());
@@ -3333,7 +3331,7 @@ function MobileMembro({
     return r[id] === v ? r : { ...r, [id]: v };
   });
   const pendEscala = roster.filter((r) => r.person_id === person.id && ((respostas[r.id] as string | undefined) ?? r.status) === "wait" && (evDate.get(r.event_id) ?? "") >= hoje).length;
-  const badges: Partial<Record<MemberTab, number>> = { agenda: serves ? pendEscala : 0, mensagens: unreadIds.size };
+  const badges: Partial<Record<MemberTab, number>> = { agenda: serves ? pendEscala : 0, mensagens: muralOn ? unreadIds.size : 0 };
 
   const toast = (msg: string, action?: { label: string; fn: () => void }) => setToastO({ msg, action, id: Date.now() });
   useEffect(() => {
@@ -3422,7 +3420,7 @@ function MobileMembro({
         <div className="m-scroll" ref={scrollRef}>
           {tab === "inicio" && (
             <InicioV6 person={person} member={member} ministries={ministries} members={members} events={events} roster={roster} cards={cards}
-              announcements={announcements} unreadIds={unreadIds} kidsChildren={kidsChildren} childGuardians={childGuardians}
+              announcements={muralOn ? announcements : []} unreadIds={unreadIds} kidsChildren={kidsChildren} childGuardians={childGuardians}
               kidsCheckin={<CheckinKidsHoje person={person} events={events} kidsChildren={kidsChildren} childGuardians={childGuardians} kidsClasses={kidsClasses}
                 kidsSessions={kidsSessions} kidsAttendance={kidsAttendance} organizationId={organizationId} />}
               onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat}
@@ -3447,7 +3445,7 @@ function MobileMembro({
           {tab === "mensagens" && sub === "mural" && <MuralV6 announcements={announcements} unreadIds={unreadIds} person={person} onReadAnnouncement={marcarLido} responses={announcementResponses} onRespond={onRespondAnnouncement} />}
           {tab === "mensagens" && (!sub || sub === "chat") && (
             <>
-              {!sub && (
+              {!sub && muralOn && (
                 <div className="m6-sec0">
                   <div className="m6-list">
                     <button type="button" className="m6-row" onClick={() => go("mensagens", "mural")}>

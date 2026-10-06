@@ -61,9 +61,21 @@ criados fora do registro não entram.
     abaixo do mínimo, alvo abaixo de 24px, contraste pior que a versão anterior, rolagem
     lateral, erro de console ou botão sem ação.
 
+## Como o registro funciona (4.1)
+
+- `registry.ts` lê os manifestos e gera o menu do painel (`navGroups`), as abas de
+  Configurações (`cfgTabs`), o grupo e a permissão de cada tela (`ROTA_GRUPO`,
+  `CODIGO_PERMISSAO`, `podeVerRota`) e as telas do app do membro (`telasDoMembro`).
+- Liga/desliga por igreja: `service.churches.modules_on` e `modules_off` (0055) guardam só
+  as exceções ao `liga` do manifesto; `modulosLigados()` resolve isso e as dependências.
+  Módulo `essencial` (casca) não desliga. Ainda não há tela para ligar e desligar.
+- Telas já extraídas: `escalas/Escalas.tsx`, `pessoas/Pessoas.tsx`, `mural/Mural.tsx`.
+  Peças de tela comuns do painel ficam em `app/service/painel/`.
+
 ## Checklist: criar um módulo novo
 
 - [ ] Pasta em `app/service/modules/<id>/` com `manifest.ts` a partir de `_modelo/`.
+- [ ] Import do manifesto em `registry.ts` (lista `MODULOS`). Menu, Configurações e telas do app saem dele.
 - [ ] Respondi em qual lugar ele mora (lei 2) e quais lugares ocupa (lei 1).
 - [ ] Declarei permissões, dependências e o padrão de liga/desliga por igreja.
 - [ ] Cartões usam um dos seis tipos; avisos têm categoria e cartão correspondente.

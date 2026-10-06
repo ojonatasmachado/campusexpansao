@@ -28,6 +28,9 @@ type ChurchRow = {
   slug: string | null;
   settings: Record<string, unknown> | null;
   created_at: string;
+  /* 0055: exceções ao padrão dos módulos; ausentes antes da migração */
+  modules_on?: string[] | null;
+  modules_off?: string[] | null;
 };
 
 type ChurchView = {
@@ -48,6 +51,8 @@ type ChurchView = {
   logoUrl: string | null;
   slug: string | null;
   settings: Record<string, unknown>;
+  modulosOn: string[];
+  modulosOff: string[];
 };
 
 type ChurchIdentityRow = {
@@ -827,6 +832,8 @@ function toChurchView(row: ChurchRow): ChurchView {
     logoUrl: row.logo_url,
     slug: row.slug,
     settings: row.settings ?? {},
+    modulosOn: row.modules_on ?? [],
+    modulosOff: row.modules_off ?? [],
   };
 }
 
@@ -969,7 +976,8 @@ async function getServiceDashboardData(): Promise<{
   const { data: churchesData, error: churchesError } = await supabase
     .schema("service")
     .from("churches")
-    .select("id,organization_id,name,city,is_headquarters,doc,founded_year,address,postal_code,neighborhood,state,email,phone,logo_url,slug,settings,created_at")
+    /* "*": lê modules_on/modules_off (0055) sem quebrar antes de a migração chegar em produção */
+    .select("*")
     .order("is_headquarters", { ascending: false })
     .order("created_at");
 

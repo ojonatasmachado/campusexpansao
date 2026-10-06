@@ -21,13 +21,20 @@ export default defineModule({
   permissoes: ["escalas.ver"],
 
   // App do membro: em que lugar mora (lei 2) e quais lugares ocupa (lei 1).
-  membro: { visivel: true, lugares: ["inicio.fila", "agenda.minha"] },
+  // `telas`: subtelas próprias no app, com a aba onde moram e quem as vê.
+  membro: {
+    visivel: true,
+    lugares: ["inicio.fila", "agenda.minha"],
+    telas: [{ id: "modelo", aba: "agenda", titulo: "Modelo", aviso: "escala", quem: (c) => c.serves }],
+  },
 
   // Painel: item de menu, blocos no Início e abas de Configurações.
   painel: {
-    menu: [{ grupo: "Ministério", rotulo: "Modelo", icone: "escalas", papeis: ["master", "gestao", "lider"] }],
+    // `rota` é a tela que o item abre; `ordem` é a posição no menu (vale entre
+    // todos os módulos); `permissao` é o código da matriz de Permissões.
+    menu: [{ rota: "modelo", grupo: "Ministério", rotulo: "Modelo", icone: "escalas", ordem: 999, permissao: "escala", papeis: ["master", "gestao", "lider"] }],
     inicio: ["painel.inicio.pendencias"],
-    config: [{ id: "modelo", rotulo: "Modelo" }],
+    config: [{ id: "modelo", rotulo: "Modelo", grupo: "Ministério", sub: "Uma frase do que se ajusta aqui", ordem: 999 }],
   },
 
   // Cada aviso tem categoria (que a pessoa desliga) e o cartão que o
