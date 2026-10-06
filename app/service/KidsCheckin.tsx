@@ -167,7 +167,7 @@ export function KidsQRModal({
                 {qrActive && qrToken && checkinLink ? (
                   <QRCode value={checkinLink} size={200} style={{ height: "auto", maxWidth: "100%", width: "100%" }} viewBox="0 0 200 200" />
                 ) : (
-                  <div className="ck-qr-off"><span style={{ fontSize: 28 }}>✕</span><span>QR desativado</span></div>
+                  <div className="ck-qr-off"><span style={{ fontSize: "var(--fs-app-28)" }}>✕</span><span>QR desativado</span></div>
                 )}
               </div>
               <div className="ck-qr-side">

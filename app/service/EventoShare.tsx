@@ -236,7 +236,7 @@ export default function EventoShare({ event, ministries, churchName = "Service",
               <div
                 style={{
                   fontFamily: "var(--mono)",
-                  fontSize: 11,
+                  fontSize: "var(--fs-ui-sm)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   color: "var(--muted)",
@@ -248,7 +248,7 @@ export default function EventoShare({ event, ministries, churchName = "Service",
               {setlist.map((s, i) => (
                 <div
                   key={i}
-                  style={{ fontSize: 13, color: "var(--light)", lineHeight: 1.55 }}
+                  style={{ fontSize: "var(--fs-ui-13)", color: "var(--light)", lineHeight: 1.55 }}
                 >
                   {s.title}
                   {s.song_key && (

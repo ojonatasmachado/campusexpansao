@@ -2245,12 +2245,12 @@ function Painel({
             <div className="panel-body">
               {presenceRate === null ? (
                 <>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>Sem dados ainda</div>
-                  <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, lineHeight: 1.5 }}>Os números aparecem depois do primeiro culto com escala confirmada.</div>
+                  <div style={{ fontSize: "var(--fs-pn-14)", fontWeight: 600, color: "var(--white)" }}>Sem dados ainda</div>
+                  <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", marginTop: 4, lineHeight: 1.5 }}>Os números aparecem depois do primeiro culto com escala confirmada.</div>
                 </>
               ) : (
                 <>
-                  <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: "-0.04em" }}>{presenceRate}%<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>presença média</span></div>
+                  <div style={{ fontSize: "var(--fs-pn-32)", fontWeight: 700, letterSpacing: "-0.04em" }}>{presenceRate}%<span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>presença média</span></div>
                   <div style={{ marginTop: 6 }}><Spark value={presenceRate} /></div>
                 </>
               )}
@@ -2279,8 +2279,8 @@ function Painel({
             <div className="panel" style={{ cursor: "pointer" }} onClick={() => setModal(buildAvaliacaoModal(enqueteElegivel))}>
               <div className="panel-head"><span className="panel-title"><Icon name="estrela" size={14} /> Avaliação de experiência <HelpDot label="Como calculamos" text="Pesquisa rápida sobre como foi servir. Aparece só quando você está elegível pra responder." /></span></div>
               <div className="panel-body">
-                <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{enqueteElegivel.nome}</div>
-                <div style={{ fontSize: 12.5, color: "var(--muted)" }}>Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time.</div>
+                <div style={{ fontSize: "var(--fs-pn-14)", fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{enqueteElegivel.nome}</div>
+                <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time.</div>
               </div>
             </div>
           )}
@@ -2288,8 +2288,8 @@ function Painel({
             <div className="panel" style={{ cursor: "pointer" }} onClick={() => setModal(buildPesquisaModal(pesquisaElegivel))}>
               <div className="panel-head"><span className="panel-title"><Icon name="reacao" size={14} /> {pesquisaElegivel.pendente ? "Pulso da escala" : "Sua última resposta"} <HelpDot label="Como calculamos" text="Pesquisa da própria igreja sobre como foi servir nesta escala. Diferente da avaliação de experiência." /></span></div>
               <div className="panel-body">
-                <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{pesquisaElegivel.nome}</div>
-                <div style={{ fontSize: 12.5, color: "var(--muted)" }}>{pesquisaElegivel.pendente ? "Leva menos de um minuto. Conta como foi pra você." : "Já respondida. Toque pra rever ou atualizar quando quiser."}</div>
+                <div style={{ fontSize: "var(--fs-pn-14)", fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{pesquisaElegivel.nome}</div>
+                <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{pesquisaElegivel.pendente ? "Leva menos de um minuto. Conta como foi pra você." : "Já respondida. Toque pra rever ou atualizar quando quiser."}</div>
               </div>
             </div>
           )}
@@ -2455,7 +2455,7 @@ function MiniEvent({
 function PersonMini({ person, index, setDrawer }: { person: PersonView; index: number; setDrawer: (drawer: DrawerState) => void }) {
   return (
     <button className="mini-row click" type="button" onClick={() => setDrawer({ kind: "person", id: person.id })}>
-      <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--subtle)", width: 18 }}>{String(index + 1).padStart(2, "0")}</span>
+      <span style={{ fontFamily: "var(--mono)", fontSize: "var(--fs-pn-12)", color: "var(--subtle)", width: 18 }}>{String(index + 1).padStart(2, "0")}</span>
       <Av name={person.name} photoUrl={person.photoUrl} />
       <div className="mini-main">
         <div className="mini-title">{person.name}</div>
@@ -2572,7 +2572,7 @@ function Pessoas({ people, currentPersonId, setDrawer, setModal }: { people: Per
             <div className="who">
               <Av name={person.name} photoUrl={person.photoUrl} />
               <div>
-                <strong>{person.name}{person.id === currentPersonId && <span style={{ color: "var(--olive)", fontSize: 11, marginLeft: 7, fontFamily: "var(--mono)" }}>você</span>}</strong>
+                <strong>{person.name}{person.id === currentPersonId && <span style={{ color: "var(--olive)", fontSize: "var(--fs-pn-12)", marginLeft: 7, fontFamily: "var(--mono)" }}>você</span>}</strong>
                 <small>{formatarTelefone(person.phone)}</small>
               </div>
             </div>
@@ -2639,7 +2639,7 @@ function Times({ ministries, people, members, serveRequests, setDrawer, setModal
       <PageHead title="Times" eyebrow="Pessoas" subtitle="Times, líderes, funções e voluntários vinculados." help="Louvor, Recepção, Kids... cada time tem um líder e suas funções próprias." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo time", subtitle: "Crie o time e já conte o propósito dele.", saveLabel: "Criar time", formFields: [{ k:"nome", label:"Nome do time", type:"text", req:true, ph:"ex: Louvor e Adoração" }, { k:"icon", label:"Ícone do time", type:"icon", value: DEFAULT_ICON }, { k:"desc", label:"Descrição curta", type:"text", ph:"Uma linha sobre o time" }, { k:"proposito", label:"Propósito", type:"area", ph:"Por que esse time existe?" }, { k:"aberto", label:"Recebendo voluntários?", type:"toggle", onLabel:"Aberto a novos", offLabel:"Equipe completa" }], action: { kind: "ministry" } })}>+ Novo time</button>} />
       <PedidosParaServir serveRequests={serveRequests} members={members} ministries={ministries} />
       <div className="team-grid">
-        {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => { const linkPerson = people.find((person) => person.id === link.personId); return <Av key={link.personId} name={linkPerson?.name ?? link.personName} photoUrl={linkPerson?.photoUrl} />; })}{ministry.people.length > 4 && <div className="av-more">+{ministry.people.length - 4}</div>}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">{ministry.people.find((link) => link.isLeader)?.personName ? <>Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName}</em></> : <span className="sem-lider">Sem líder · Definir</span>}</div><div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> voluntários</span><span className="team-stat"><b>{ministry.positions.length}</b> funções</span></div></button>)}
+        {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => { const linkPerson = people.find((person) => person.id === link.personId); return <Av key={link.personId} name={linkPerson?.name ?? link.personName} photoUrl={linkPerson?.photoUrl} />; })}{ministry.people.length > 4 && <div className="av-more">+{ministry.people.length - 4}</div>}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">{ministry.people.find((link) => link.isLeader)?.personName ? <>Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName}</em></> : <span className="sem-lider">Sem líder · Definir</span>}</div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> voluntários</span><span className="team-stat"><b>{ministry.positions.length}</b> funções</span></div></button>)}
       </div>
     </div>
   );
@@ -3605,7 +3605,7 @@ function Visitantes({
                         <span><i className="resp-dot nao" /> {naoContatados.length} a contatar</span>
                       </div>
                       <div className="dsec-title" style={{ margin: "18px 0 8px" }}>Não responderam · refazer contato</div>
-                      {semResposta.length === 0 && <div style={{ fontSize: 12.5, color: "var(--subtle)" }}>Ninguém sem resposta.</div>}
+                      {semResposta.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Ninguém sem resposta.</div>}
                       {semResposta.map((visitor) => {
                         const owner = visitor.responsible_id ? personById.get(visitor.responsible_id) : null;
                         return (
@@ -3676,7 +3676,7 @@ function ContatoCfgModal({ church, cfg, onClose, onRefresh }: { church: ChurchVi
           <div className="field">
             <label className="field-label">Mensagem padrão</label>
             <textarea className="textarea" value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
-            <div style={{ fontSize: 11, color: "var(--subtle)", marginTop: 6 }}>Use {"{nome}"}, {"{evento}"} e {"{igreja}"}: preenchemos automaticamente.</div>
+            <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", marginTop: 6 }}>Use {"{nome}"}, {"{evento}"} e {"{igreja}"}: preenchemos automaticamente.</div>
           </div>
           <div className="field"><label className="field-label">Abordagem / postura</label><textarea className="textarea" value={abordagem} onChange={(e) => setAbordagem(e.target.value)} /></div>
         </div>
@@ -3715,7 +3715,7 @@ function AcessoMsgModal({ church, cfg, onClose, onRefresh }: { church: ChurchVie
           <div className="field">
             <label className="field-label">Mensagem</label>
             <textarea className="textarea" rows={8} value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
-            <div style={{ fontSize: 11, color: "var(--subtle)", marginTop: 6 }}>
+            <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", marginTop: 6 }}>
               Use {"{nome}"}, {"{igreja}"} e {"{link}"}: preenchemos automaticamente na hora de enviar. O link é um convite só da pessoa, onde ela informa o e-mail, cria a senha e coloca o CEP. Nenhuma senha vai na mensagem.
             </div>
           </div>
@@ -3848,7 +3848,7 @@ function ReuniaoForm({
                 </button>
               );
             })}
-            {people.length === 0 ? <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhum voluntário cadastrado.</span> : null}
+            {people.length === 0 ? <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum voluntário cadastrado.</span> : null}
           </div>
         </DrawerSection>
 
@@ -3856,7 +3856,7 @@ function ReuniaoForm({
           <textarea className="textarea" style={{ minHeight: 90 }} placeholder={"Balanço do mês\nEscala de julho\nCuidado com a equipe"} value={pauta} onChange={(e) => setPauta(e.target.value)} />
         </DrawerSection>
 
-        {error ? <div style={{ fontSize: 12.5, color: "var(--danger)", marginBottom: 12 }}>{error}</div> : null}
+        {error ? <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--danger)", marginBottom: 12 }}>{error}</div> : null}
         <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
           <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" disabled={saving || !!conflito || !localValido} onClick={criar}>{saving ? "Marcando…" : "Marcar reunião"}</button>
           <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
@@ -3896,7 +3896,7 @@ function Reunioes({ meetings, meetingActions, ministries, people, rooms, reserva
           const pending = actions.filter((action) => action.status !== "feito").length;
           return (
             <button className="tr click" type="button" key={meeting.id} style={{ gridTemplateColumns: "130px 1.6fr 1fr 120px" }} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
-              <div style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--olive)" }}>{formatDateBR(meeting.meeting_date) || "sem data"}</div>
+              <div style={{ fontFamily: "var(--mono)", fontSize: "var(--fs-pn-12)", color: "var(--olive)" }}>{formatDateBR(meeting.meeting_date) || "sem data"}</div>
               <div><div className="cell-name">{meeting.title}</div><div className="cell-sub">{plural(meeting.ministries.length, "time")} · {meeting.attendees.length} presentes</div></div>
               <div className="cell-sub">{plural(actions.length, "responsabilidade")}</div>
               <div>{pending > 0 ? <span className="chip chip-wait">{pending} em aberto</span> : <span className="chip chip-ok">Tudo feito</span>}</div>
@@ -4121,7 +4121,7 @@ function ReuniaoDrawer({
                 </div>
               ) : null;
             })}
-            {meeting.attendees.length === 0 && <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum presente registrado.</div>}
+            {meeting.attendees.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum presente registrado.</div>}
           </div>
         </DrawerSection>
 
@@ -4296,7 +4296,7 @@ function EnsaioDrawer({
 
         {rehearsal.notes && (
           <DrawerSection title="Observação">
-            <p style={{ fontSize: 13.5, color: "var(--muted)", lineHeight: 1.6 }}>{rehearsal.notes}</p>
+            <p style={{ fontSize: "var(--fs-pn-14)", color: "var(--muted)", lineHeight: 1.6 }}>{rehearsal.notes}</p>
           </DrawerSection>
         )}
       </div>
@@ -5017,7 +5017,7 @@ function ChildFormModal({
                 return (
                   <div key={index} className="panel" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      {index === 0 ? <span className="tag" style={{ fontSize: 11 }}>Responsável principal</span> : <span />}
+                      {index === 0 ? <span className="tag" style={{ fontSize: "var(--fs-pn-12)" }}>Responsável principal</span> : <span />}
                       <button className="btn btn-ghost btn-sm" type="button" onClick={() => removeGuardian(index)}>Remover</button>
                     </div>
                     {matched ? (
@@ -5029,7 +5029,7 @@ function ChildFormModal({
                     )}
                     <input className="input" list="service-people-names" placeholder="Nome do responsável" value={g.name} onChange={(e) => updateGuardian(index, { name: e.target.value, photoUrl: findPersonByName(people, e.target.value)?.photoUrl ?? null })} />
                     <input className="input" placeholder="Parentesco (mãe, avó...)" value={g.relationship} onChange={(e) => updateGuardian(index, { relationship: e.target.value })} />
-                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--muted)" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>
                       <input type="checkbox" checked={g.canPickup} onChange={(e) => updateGuardian(index, { canPickup: e.target.checked })} /> pode retirar
                     </label>
                   </div>
@@ -5045,10 +5045,10 @@ function ChildFormModal({
 
           <label className="field" style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
             <input type="checkbox" checked={imageAuthorized} onChange={(e) => setImageAuthorized(e.target.checked)} style={{ marginTop: 3 }} />
-            <span style={{ fontSize: 13, color: "var(--light)", lineHeight: 1.4 }}>{imageAuthorizationCopy(name)}</span>
+            <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--light)", lineHeight: 1.4 }}>{imageAuthorizationCopy(name)}</span>
           </label>
 
-          {error ? <div style={{ gridColumn: "1 / -1", fontSize: 12.5, color: "var(--danger)" }}>{error}</div> : null}
+          {error ? <div style={{ gridColumn: "1 / -1", fontSize: "var(--fs-pn-13)", color: "var(--danger)" }}>{error}</div> : null}
         </div>
         <div className="modal-foot">
           <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
@@ -5121,7 +5121,7 @@ function ReservaModal({ rooms, reservations, church, salaInicial, dataInicial, o
           <div className="field field-half"><label className="field-label">Início</label><TimePicker value={inicio} onChange={setInicio} /></div>
           <div className="field field-half"><label className="field-label">Fim</label><TimePicker value={fim} onChange={setFim} /></div>
           {conflito ? <div className="reserva-warn" style={{ gridColumn: "1 / -1" }}><Icon name="alerta" size={14} /> Já existe &quot;{conflito.title}&quot; aqui em {conflito.start_time} a {conflito.end_time}.</div> : null}
-          {error ? <div style={{ gridColumn: "1 / -1", fontSize: 12.5, color: "var(--danger)" }}>{error}</div> : null}
+          {error ? <div style={{ gridColumn: "1 / -1", fontSize: "var(--fs-pn-13)", color: "var(--danger)" }}>{error}</div> : null}
         </div>
         <div className="modal-foot">
           <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
@@ -5192,7 +5192,7 @@ function Decisoes({
           return (
             <button className="tr click" key={decision.id} style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }} type="button" onClick={() => setDrawer({ kind: "decision", id: decision.id })}>
               <div className="cell-person"><Av name={decision.name} size="md" /><div><div className="cell-name">{decision.name} <span className="chip chip-ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"}</span></div><div className="cell-sub">{decision.phone}</div></div></div>
-              <div><div style={{ fontSize: 13, color: "var(--light)" }}>{formatDateBR(decision.happened_on)}</div><div className="cell-sub">{decision.service_name || "Culto não informado"}</div></div>
+              <div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>{formatDateBR(decision.happened_on)}</div><div className="cell-sub">{decision.service_name || "Culto não informado"}</div></div>
               <div className="cell-person">{responsible ? <Av name={responsible.name} size="sm" photoUrl={responsible.photoUrl} /> : null}<div className="cell-sub" style={{ marginTop: 0 }}>{responsible?.name ?? "a definir"}</div></div>
               <div><Chip status={decision.status === "novo" ? "wait" : decision.status === "encaminhado" ? "ok" : "ativo"} /></div>
             </button>
@@ -5285,7 +5285,7 @@ function Batismos({
               return (
                 <button className="tr click" key={cls.id} type="button" style={{ gridTemplateColumns: "2fr 1fr 1fr 100px" }} onClick={() => setDrawer({ kind: "baptismClass", id: cls.id })}>
                   <div className="cell-name">{cls.label}</div>
-                  <div style={{ fontSize: 13, color: "var(--light)" }}>{formatDateBR(cls.baptism_date) || "-"}</div>
+                  <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>{formatDateBR(cls.baptism_date) || "-"}</div>
                   <div className="cell-sub">{cls.location ?? "-"}</div>
                   <div><span className="chip chip-neutral">{count} pessoas</span></div>
                 </button>
@@ -5391,7 +5391,7 @@ function CursosTrilhas({
                 </div>
                 <div className="team-name">{course.name}</div>
                 <div className="team-lead">Matrículas: <em>{courseEnrollments.length}</em></div>
-                <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.55, marginTop: 12 }}>
+                <p style={{ color: "var(--muted)", fontSize: "var(--fs-pn-13)", lineHeight: 1.55, marginTop: 12 }}>
                   {course.description || "Acompanhamento de progresso e conclusão na linha do tempo do membro."}
                 </p>
                 <div className="bar" style={{ marginTop: 14 }}>
@@ -5715,10 +5715,10 @@ function CardDrawer({
         <div className="drawer-head">
           <button className="drawer-close" type="button" onClick={onClose}>✕</button>
           <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{board.name}</div>
-          <div className="profile-name" style={{ fontSize: 22 }}>{lc.title}</div>
+          <div className="profile-name" style={{ fontSize: "var(--fs-pn-20)" }}>{lc.title}</div>
         </div>
         <div className="drawer-body">
-          {lc.description && <p style={{ fontSize: 14, color: "var(--light)", lineHeight: 1.6, marginBottom: 12 }}>{lc.description}</p>}
+          {lc.description && <p style={{ fontSize: "var(--fs-pn-14)", color: "var(--light)", lineHeight: 1.6, marginBottom: 12 }}>{lc.description}</p>}
 
           <div className="dsec" style={{ marginTop: 8 }}>
             <div className="dsec-title">Situação</div>
@@ -5780,7 +5780,7 @@ function CardDrawer({
                   </div>
                 </div>
               ))}
-              {comments.length === 0 && <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum comentário ainda.</div>}
+              {comments.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum comentário ainda.</div>}
             </div>
             {perm.comentar ? (
               <div className="kb-coment-add">
@@ -6234,14 +6234,14 @@ function NovaConversaModal({
                   </button>
                 );
               })}
-              {candidatos.length === 0 && <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhum membro disponível.</span>}
+              {candidatos.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum membro disponível.</span>}
             </div>
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
             <label className="field-label">Primeira mensagem (opcional)</label>
             <textarea className="textarea" value={primeiraMsg} placeholder="..." onChange={(e) => setPrimeiraMsg(e.target.value)} />
           </div>
-          {error && <div style={{ marginTop: 10, fontSize: 12.5, color: "var(--danger)" }}>{error}</div>}
+          {error && <div style={{ marginTop: 10, fontSize: "var(--fs-pn-13)", color: "var(--danger)" }}>{error}</div>}
         </div>
         <div className="modal-foot">
           <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
@@ -6502,7 +6502,7 @@ function Relatorios({
       <PageHead title="Relatórios e indicadores" eyebrow="Gestão" subtitle="A saúde da igreja num lugar: crescimento, integração, cobertura de escala e o bem-estar de quem serve." help="A saúde da igreja num lugar: crescimento, cobertura de escala e o bem-estar de quem serve. Use o recorte de trimestre pra comparar." action={<><div className="seg" role="group" aria-label="Recorte das comparações">{([[30, "30 dias"], [90, "Trimestre"]] as const).map(([v, l]) => <button key={v} type="button" className={periodo === v ? "on" : ""} aria-pressed={periodo === v} onClick={() => setPeriodo(v)}>{l}</button>)}</div><button className="btn btn-pri" type="button" onClick={baixarRelatorio}>Baixar relatório →</button></>} />
       <div className="kpi-row"><Kpi icon="membros" label="Membros na rede" value={members.length} foot={foot(membrosDelta, " novos", "cadastrados")} help="Toda a congregação, somando todas as congregações da rede." /><Kpi icon="visitante" label="Retenção de visitantes" value={`${retencaoAtual}%`} foot={foot(retencaoDelta, "%", "viram membros")} help="De todos os visitantes, quantos completaram o caminho até virar membro." /><Kpi icon="escalas" label="Cobertura de escala" value={`${confirmationRate}%`} foot={foot(coberturaDelta, "pp", "das posições preenchidas")} help="Das vagas de escala em aberto, quantas já têm alguém confirmado." /><Kpi icon="cultos" label="Frequência média" value={freqRecente ?? freqGeral} foot={foot(freqDelta, "", "por culto")} help="Quantas pessoas em média marcam presença por culto." /></div>
       <div className="dash-3col">
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={13} /> Crescimento de membros <HelpDot label="Como calculamos" text="Quantos membros novos entraram nos últimos meses." /></span><span className="panel-meta">últimos meses</span></div><div className="panel-body"><div style={{ fontSize: 30, fontWeight: 700 }}>{members.length}<span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>membros no total</span></div><div style={{ marginTop: 14 }}><Bars series={series} labels={serieLabels} /></div></div></div>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={13} /> Crescimento de membros <HelpDot label="Como calculamos" text="Quantos membros novos entraram nos últimos meses." /></span><span className="panel-meta">últimos meses</span></div><div className="panel-body"><div style={{ fontSize: "var(--fs-pn-32)", fontWeight: 700 }}>{members.length}<span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>membros no total</span></div><div style={{ marginTop: 14 }}><Bars series={series} labels={serieLabels} /></div></div></div>
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="visitante" size={13} /> Funil de visitantes <HelpDot label="Como calculamos" text="Quantos visitantes estão em cada etapa, da primeira visita até virar membro." /></span><button className="panel-link" type="button" onClick={() => setRoute("visitantes")}>Abrir</button></div><div className="panel-body flush">{FUNNEL_STAGES.map((s, i) => <div className="dist-row" key={s.id}><span className="dist-name" style={{ width: 140 }}>{s.label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${Math.max(4, (funnelCounts[i] / funnelMax) * 100)}%` }} /></div><span className="dist-num">{funnelCounts[i]}</span></div>)}</div></div>
       </div>
       <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">Termômetro de bem-estar</span><span className="line" /></div>
@@ -6696,13 +6696,13 @@ function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
                 <button key={m.id} type="button" className={`seg-chip${appModules.includes(m.id) ? " on" : ""}`} onClick={() => togModule(m.id)}>{m.label}</button>
               ))}
             </div>
-            <div style={{ fontSize: 12, color: "var(--subtle)", marginTop: 6 }}>Quem está neste time passa a ver esses módulos no app.</div>
+            <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", marginTop: 6 }}>Quem está neste time passa a ver esses módulos no app.</div>
           </div>
           <div className="field">
             <label className="field-label">Funções</label>
             <div className="cell-tags">
               {ministry.positions.map((p) => <span key={p.id} className="tag">{p.name}</span>)}
-              {ministry.positions.length === 0 && <span style={{ fontSize: 12, color: "var(--subtle)" }}>Nenhuma função cadastrada.</span>}
+              {ministry.positions.length === 0 && <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)" }}>Nenhuma função cadastrada.</span>}
             </div>
           </div>
         </div>
@@ -6743,7 +6743,7 @@ function RequisitosServirCard() {
       <RequisitosEditor value={reqs} onChange={setReqs} courses={access.courses} events={access.events} groupsLabel={access.groupsLabel} />
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
         <button className="btn btn-pri btn-sm" type="button" disabled={saving} onClick={salvar}>{saving ? "Salvando..." : "Salvar requisitos"}</button>
-        {msg && <span style={{ fontSize: 12, color: "var(--subtle)" }}>{msg}</span>}
+        {msg && <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)" }}>{msg}</span>}
       </div>
     </div>
   );
@@ -6836,7 +6836,7 @@ function AcessosCard({
               <button type="button" className={`sw${ehDelegado ? " on" : ""}`} disabled={!podeDelegar} onClick={() => toggleGrant("acessos.delegar")} />
             </div>
             {erro && <div className="field-error" style={{ marginTop: 8 }}>{erro}</div>}
-            {!podeDelegar && <div style={{ fontSize: 11.5, color: "var(--subtle)", marginTop: 8 }}>Só a Direção (master) define quem pode delegar acessos.</div>}
+            {!podeDelegar && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", marginTop: 8 }}>Só a Direção (master) define quem pode delegar acessos.</div>}
           </>
         )}
       </div>
@@ -7215,7 +7215,7 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
         )}
         {d.segmentacaoModo === "time" && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {times.length === 0 && <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhum time cadastrado ainda.</span>}
+            {times.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum time cadastrado ainda.</span>}
             {times.map((t) => (
               <button key={t} type="button" className={`seg-chip${d.segmentacaoValores.includes(t) ? " on" : ""}`} onClick={() => toggleValor(t)}>{t}</button>
             ))}
@@ -7233,7 +7233,7 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
           ))}
         </div>
         {d.disparoModo === "posescala" && (
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--light)" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>
             <input type="checkbox" checked={d.recorrentePorEscala} onChange={(e) => setD({ ...d, recorrentePorEscala: e.target.checked })} />
             Repete a cada escala nova (senão, responde só uma vez)
           </label>
@@ -7242,13 +7242,13 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
           <div className="field field-half"><label className="field-label">Intervalo (dias)</label><input className="input" type="number" min={1} value={d.intervaloDias ?? 30} onChange={(e) => setD({ ...d, intervaloDias: Number(e.target.value) })} /></div>
         )}
         {d.disparoModo === "livre" && (
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--light)" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>
             <input type="checkbox" checked={d.ativoComoLivre} onChange={(e) => setD({ ...d, ativoComoLivre: e.target.checked })} />
             Ativa como atalho livre (só uma por igreja; ligar essa desliga qualquer outra)
           </label>
         )}
         {d.disparoModo === "campanha" && (
-          <p style={{ fontSize: 12.5, color: "var(--subtle)" }}>{d.emitidaEm ? `Disparada em ${formatDateBR(d.emitidaEm.slice(0, 10))}.` : "Salve e depois clique em “Disparar agora” na lista."}</p>
+          <p style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>{d.emitidaEm ? `Disparada em ${formatDateBR(d.emitidaEm.slice(0, 10))}.` : "Salve e depois clique em “Disparar agora” na lista."}</p>
         )}
       </div>
 
@@ -7258,7 +7258,7 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
           {d.perguntas.map((p, idx) => (
             <div key={p.id} className="cfg-card" style={{ padding: 14 }}>
               <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center", flexWrap: "wrap" }}>
-                <span style={{ fontSize: 11.5, color: "var(--subtle)" }}>#{idx + 1}</span>
+                <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)" }}>#{idx + 1}</span>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", flex: 1 }}>
                   {(["emoji", "nota", "texto", "simnao", "multipla"] as const).map((t) => (
                     <button key={t} type="button" className={`seg-chip${p.tipo === t ? " on" : ""}`} onClick={() => updatePergunta(p.id, { tipo: t })}>
@@ -7269,7 +7269,7 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
                 <button type="button" className="btn btn-sec btn-sm" onClick={() => removePergunta(p.id)}>Remover</button>
               </div>
               <input className="input" placeholder="Texto da pergunta" value={p.texto} onChange={(e) => updatePergunta(p.id, { texto: e.target.value })} style={{ marginBottom: 8 }} />
-              {p.tipo === "emoji" && <div style={{ display: "flex", gap: 6, fontSize: 20 }}>{REACOES_PESQUISA.map((r) => <span key={r}>{r}</span>)}</div>}
+              {p.tipo === "emoji" && <div style={{ display: "flex", gap: 6, fontSize: "var(--fs-pn-20)" }}>{REACOES_PESQUISA.map((r) => <span key={r}>{r}</span>)}</div>}
               {p.tipo === "nota" && (
                 <div style={{ display: "flex", gap: 8 }}>
                   {[5, 10].map((s) => <button key={s} type="button" className={`seg-chip${(p.escala ?? 5) === s ? " on" : ""}`} onClick={() => updatePergunta(p.id, { escala: s as 5 | 10 })}>0 a {s}</button>)}
@@ -7278,7 +7278,7 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
               {p.tipo === "multipla" && (
                 <input className="input" placeholder="Opções separadas por vírgula" value={(p.opcoes ?? []).join(", ")} onChange={(e) => updatePergunta(p.id, { opcoes: e.target.value.split(",").map((o) => o.trim()).filter(Boolean) })} />
               )}
-              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: "var(--subtle)", marginTop: 8 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "var(--fs-pn-13)", color: "var(--subtle)", marginTop: 8 }}>
                 <input type="checkbox" checked={p.obrigatoria} onChange={(e) => updatePergunta(p.id, { obrigatoria: e.target.checked })} />
                 Obrigatória
               </label>
@@ -7422,13 +7422,13 @@ function TagElencoModal({
               <div className={`flag-row${on ? " on" : ""}`} key={p.id} style={{ cursor: "pointer" }} onClick={() => toggleElenco(p.id)}>
                 <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
                 <div className="flag-main">
-                  <div className="flag-nome">{p.name}{lider && <span style={{ marginLeft: 8, fontSize: 11, color: "var(--amber)" }}>★ líder</span>}</div>
+                  <div className="flag-nome">{p.name}{lider && <span style={{ marginLeft: 8, fontSize: "var(--fs-pn-12)", color: "var(--amber)" }}>★ líder</span>}</div>
                 </div>
                 <button
                   type="button"
                   title={lider ? "Remover como líder" : "Tornar líder do time"}
                   onClick={(e) => { e.stopPropagation(); toggleLider(p.id); }}
-                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: lider ? "var(--amber)" : "var(--subtle)" }}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "var(--fs-pn-16)", color: lider ? "var(--amber)" : "var(--subtle)" }}
                 >
                   ★
                 </button>
@@ -7527,7 +7527,7 @@ function CongregacaoEditModal({
           <div className="cfg-card-s">Etiquetas livres cadastradas nesta congregação.</div>
           <div className="cell-tags" style={{ gap: 8 }}>
             {churchTags.map((t) => <span key={t.id} className="papel-tag">{t.name}</span>)}
-            {churchTags.length === 0 && <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhuma etiqueta cadastrada nesta congregação.</span>}
+            {churchTags.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhuma etiqueta cadastrada nesta congregação.</span>}
           </div>
         </div>
         <div className="modal-foot">
@@ -7928,10 +7928,10 @@ function Config({
               {horariosCulto.map((h) => (
                 <span key={h} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                   <Icon name="cultos" size={12} /> {h}
-                  <button type="button" onClick={() => saveHorariosCulto(horariosCulto.filter((x) => x !== h))} style={{ background: "none", border: "none", color: "var(--subtle)", fontSize: 12, padding: 0 }}>✕</button>
+                  <button type="button" onClick={() => saveHorariosCulto(horariosCulto.filter((x) => x !== h))} style={{ background: "none", border: "none", color: "var(--subtle)", fontSize: "var(--fs-pn-12)", padding: 0 }}>✕</button>
                 </span>
               ))}
-              {horariosCulto.length === 0 && <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhum horário cadastrado.</span>}
+              {horariosCulto.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum horário cadastrado.</span>}
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
               {DIAS_SEMANA.map((dia) => (
@@ -7961,11 +7961,11 @@ function Config({
                 <div className="cfg-row-main">
                   <div className="cfg-row-t">
                     {m.name}
-                    {leader && <span style={{ color: "var(--subtle)", fontWeight: 400, fontSize: 12 }}> · líder {leader.personName.split(" ")[0]}</span>}
+                    {leader && <span style={{ color: "var(--subtle)", fontWeight: 400, fontSize: "var(--fs-pn-12)" }}> · líder {leader.personName.split(" ")[0]}</span>}
                   </div>
                   <div className="cell-tags" style={{ marginTop: 7 }}>
                     {m.positions.map((p) => <span key={p.id} className="tag">{p.name}</span>)}
-                    {m.positions.length === 0 && <span style={{ fontSize: 12, color: "var(--subtle)" }}>Sem funções</span>}
+                    {m.positions.length === 0 && <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)" }}>Sem funções</span>}
                   </div>
                 </div>
                 <button className="btn btn-sec btn-sm" type="button" onClick={() => setEditMin(m)}>Editar</button>
@@ -7984,10 +7984,10 @@ function Config({
             {ministerialTitles.map((t) => (
               <span key={t.id} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 {t.name}
-                <button type="button" onClick={() => removeRow("ministerial_titles", t.id)} style={{ background: "none", border: "none", color: "var(--subtle)", fontSize: 12, padding: 0, cursor: "pointer" }}>✕</button>
+                <button type="button" onClick={() => removeRow("ministerial_titles", t.id)} style={{ background: "none", border: "none", color: "var(--subtle)", fontSize: "var(--fs-pn-12)", padding: 0, cursor: "pointer" }}>✕</button>
               </span>
             ))}
-            {ministerialTitles.length === 0 && <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhum papel cadastrado.</span>}
+            {ministerialTitles.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum papel cadastrado.</span>}
           </div>
           <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo papel ministerial", subtitle: "ex: Pastor, Diácono, Presbítero.", saveLabel: "Adicionar papel", formFields: [{ k:"nome", label:"Nome do papel", type:"text", req:true, ph:"ex: Diácono" }], action: { kind: "title" } })}>+ Papel ministerial</button>
         </div>
@@ -8236,10 +8236,10 @@ function Config({
             <div className="cell-tags" style={{ gap: 8, marginBottom: 16 }}>
               {tiposEvento.map((t) => (
                 <span key={t} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  {t}<button type="button" onClick={() => saveTiposEvento(tiposEvento.filter((x) => x !== t))} style={{ background: "none", border: "none", color: "var(--subtle)", fontSize: 12, padding: 0 }}>✕</button>
+                  {t}<button type="button" onClick={() => saveTiposEvento(tiposEvento.filter((x) => x !== t))} style={{ background: "none", border: "none", color: "var(--subtle)", fontSize: "var(--fs-pn-12)", padding: 0 }}>✕</button>
                 </span>
               ))}
-              {tiposEvento.length === 0 && <span style={{ fontSize: 12.5, color: "var(--subtle)" }}>Nenhum tipo cadastrado.</span>}
+              {tiposEvento.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum tipo cadastrado.</span>}
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <input className="input" style={{ flex: 1 }} placeholder="ex: Culto, Conferência, Vigília" value={novoTipoEvento} onChange={(e) => setNovoTipoEvento(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTipoEvento()} />
@@ -8775,7 +8775,7 @@ function PersonTimeline({ member, events, compact }: { member: MemberView; event
   const stepsWithoutEvent = JRN_STEPS.filter((step, i) => !!member.journey[i] && !events.some((e) => e.event_type === step.kind));
 
   if (!sorted.length && !stepsWithoutEvent.length) {
-    return <div style={{ fontSize: 13, color: "var(--subtle)", padding: "12px 0" }}>Nenhuma etapa concluída ainda.</div>;
+    return <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)", padding: "12px 0" }}>Nenhuma etapa concluída ainda.</div>;
   }
   return (
     <div className={`tl jrn-tl${compact ? " compact" : ""}`}>
@@ -8863,8 +8863,8 @@ function DecisaoDrawer({
             <dt>Responsável</dt><dd>{responsible?.name || "a definir"}</dd>
           </dl>
           {decision.notes && (
-            <div style={{ marginTop: 14, fontSize: 13.5, color: "var(--light)", lineHeight: 1.6, padding: "14px 16px", background: "var(--ink)", borderRadius: "var(--r-md)", border: "0.5px solid var(--border-2)" }}>
-              <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--subtle)", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Observação</span>
+            <div style={{ marginTop: 14, fontSize: "var(--fs-pn-14)", color: "var(--light)", lineHeight: 1.6, padding: "14px 16px", background: "var(--ink)", borderRadius: "var(--r-md)", border: "0.5px solid var(--border-2)" }}>
+              <span style={{ fontFamily: "var(--mono)", fontSize: "var(--fs-pn-12)", color: "var(--subtle)", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Observação</span>
               {decision.notes}
             </div>
           )}
@@ -8933,7 +8933,7 @@ function AddCandidatoModal({
               <span className="btn btn-ghost btn-sm">{saving === m.id ? "…" : "Adicionar"}</span>
             </div>
           ))}
-          {available.length === 0 && <div style={{ fontSize: 13, color: "var(--subtle)", padding: "16px 0" }}>Nenhum membro disponível.</div>}
+          {available.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)", padding: "16px 0" }}>Nenhum membro disponível.</div>}
         </div>
         <div className="modal-foot">
           <button className="btn btn-pri" type="button" onClick={onClose}>Concluído</button>
@@ -9023,7 +9023,7 @@ function BatismoDrawer({
               </div>
             );
           })}
-          {classCandidates.length === 0 && <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum candidato ainda.</div>}
+          {classCandidates.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum candidato ainda.</div>}
         </DrawerSection>
         <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
           <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setShowAdd(true)}>+ Adicionar candidato</button>
@@ -9036,7 +9036,7 @@ function BatismoDrawer({
             {concluindo ? "Concluindo…" : "Marcar turma como realizada →"}
           </button>
         )}
-        {actionMsg && <div style={{ marginTop: 12, fontSize: 12.5, color: "var(--olive-soft)", textAlign: "right" }}><Icon name="ok" size={14} /> {actionMsg}</div>}
+        {actionMsg && <div style={{ marginTop: 12, fontSize: "var(--fs-pn-13)", color: "var(--olive-soft)", textAlign: "right" }}><Icon name="ok" size={14} /> {actionMsg}</div>}
       </div>
       {showAdd && church && (
         <AddCandidatoModal
@@ -9128,7 +9128,7 @@ function VisitanteDrawer({
             {VISITOR_STAGES.map((s, i) => (
               <div key={s.id} style={{ flex: 1, textAlign: "center" }}>
                 <div style={{ height: 5, borderRadius: 3, background: i <= stageIdx ? s.color : "var(--ink)" }} />
-                <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: i <= stageIdx ? "var(--light)" : "var(--subtle)", marginTop: 7, letterSpacing: "0.04em" }}>{s.name}</div>
+                <div style={{ fontFamily: "var(--mono)", fontSize: "var(--fs-pn-12)", color: i <= stageIdx ? "var(--light)" : "var(--subtle)", marginTop: 7, letterSpacing: "0.04em" }}>{s.name}</div>
               </div>
             ))}
           </div>
@@ -9188,7 +9188,7 @@ function VisitanteDrawer({
                 ))}
               </div>
             )
-            : <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum contato registrado ainda.</div>}
+            : <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum contato registrado ainda.</div>}
         </DrawerSection>
       </div>
     </DrawerShell>
@@ -9605,7 +9605,7 @@ function EntityDrawer({
           </DrawerSection>
           <DrawerSection title="Times e funções">
             <div className="cell-tags" style={{ gap: 8 }}>{linkedMinistries.map((ministry) => <button className="tag" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}>{ministry.name}</button>)}</div>
-            {person.tags.length > 0 && <div style={{ marginTop: 12, fontSize: 13, color: "var(--muted)" }}>Etiquetas: {person.tags.join(" · ")}</div>}
+            {person.tags.length > 0 && <div style={{ marginTop: 12, fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Etiquetas: {person.tags.join(" · ")}</div>}
           </DrawerSection>
           <DrawerSection title="Disponibilidade">
             <div className="avail">
@@ -9702,7 +9702,7 @@ function EntityDrawer({
               )}
             </div>
             {temTelefone && (
-              <div style={{ fontSize: 12, color: "var(--subtle)", marginTop: 10, lineHeight: 1.5 }}>
+              <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", marginTop: 10, lineHeight: 1.5 }}>
                 Ao clicar, o app gera um convite só de {member.name.split(" ")[0]}, válido por 7 dias,
                 onde a pessoa informa o e-mail, cria a senha e coloca o CEP. Depois, abre o WhatsApp no
                 seu celular já com a mensagem de boas-vindas e o link, prontos pra você conferir e
@@ -9742,7 +9742,7 @@ function EntityDrawer({
                 })}
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: "var(--subtle)" }}>Ainda não serve em nenhum time.</div>
+              <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Ainda não serve em nenhum time.</div>
             )}
           </DrawerSection>
           <DrawerSection title="Cursos matriculados">
@@ -9768,7 +9768,7 @@ function EntityDrawer({
                 })}
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum curso matriculado ainda.</div>
+              <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum curso matriculado ainda.</div>
             )}
           </DrawerSection>
           <DrawerSection title="Caminhada de integração"><PersonTimeline member={member} events={timelineEvents.filter((e) => e.member_id === member.id)} compact /></DrawerSection>
@@ -9885,7 +9885,7 @@ function EntityDrawer({
                   <div className="esc-fn">{position.name}</div>
                   <span className="panel-meta">{position.need_count} {position.need_count === 1 ? "vaga" : "vagas"}</span>
                 </div>
-                {pessoas.length === 0 && <div style={{ fontSize: 12, color: "var(--subtle)", fontFamily: "var(--mono)" }}>Ninguém habilitado ainda.</div>}
+                {pessoas.length === 0 && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", fontFamily: "var(--mono)" }}>Ninguém habilitado ainda.</div>}
                 {pessoas.map((link) => (
                   <button className="cand" type="button" key={`${position.id}-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
                     <Av name={link.personName} photoUrl={people.find((pp) => pp.id === link.personId)?.photoUrl} />
@@ -9915,7 +9915,7 @@ function EntityDrawer({
                 ))}
               </div>
             )}
-            {ministry.people.length === 0 && <div style={{ fontSize: 12, color: "var(--subtle)", fontFamily: "var(--mono)" }}>Ninguém neste time ainda.</div>}
+            {ministry.people.length === 0 && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", fontFamily: "var(--mono)" }}>Ninguém neste time ainda.</div>}
           </DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
             <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { setDrawer(null); setRoute("escalas"); }}>Ver escala do time →</button>
@@ -10079,7 +10079,7 @@ function EventDrawer({
                   return (
                     <div key={position.id} style={{ marginBottom: 12 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 7 }}>
-                        <span className="esc-fn" style={{ fontSize: 13 }}>{position.name}</span>
+                        <span className="esc-fn" style={{ fontSize: "var(--fs-pn-13)" }}>{position.name}</span>
                         <span className="panel-meta">{valid}/{Math.max(1, position.need_count)}</span>
                       </div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
@@ -10523,7 +10523,7 @@ function FField({ field, value, onChange, onPatch }: { field: FieldDef; value: s
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <button type="button" className={`sw${value === "true" ? " on" : ""}`} onClick={() => onChange(value === "true" ? "false" : "true")} />
-        <span style={{ fontSize: 13, color: "var(--muted)" }}>{value === "true" ? (field.onLabel || "Sim") : (field.offLabel || "Não")}</span>
+        <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{value === "true" ? (field.onLabel || "Sim") : (field.offLabel || "Não")}</span>
       </div>
     );
   if (field.type === "checks") {
@@ -11066,7 +11066,7 @@ function ServiceModal({
                   onChange={(v) => setValues((cur) => ({ ...cur, [field.k]: v }))}
                   onPatch={(patch) => setValues((cur) => ({ ...cur, ...patch }))}
                 />
-                {field.hint && <div style={{ fontSize: 11, color: "var(--subtle)", marginTop: 5 }}>{field.hint}</div>}
+                {field.hint && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", marginTop: 5 }}>{field.hint}</div>}
               </div>
             ))}
           </div>

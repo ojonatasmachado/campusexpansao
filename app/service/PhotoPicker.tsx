@@ -54,7 +54,7 @@ export function PhotoPicker({
         )}
         <input ref={inputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onChange} />
       </div>
-      {error ? <div style={{ fontSize: 11, color: "var(--danger)", marginTop: 6 }}>{error}</div> : null}
+      {error ? <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--danger)", marginTop: 6 }}>{error}</div> : null}
     </div>
   );
 }

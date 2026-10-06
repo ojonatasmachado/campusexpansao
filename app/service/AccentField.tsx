@@ -92,8 +92,8 @@ export function AccentField({ label, bgHex, value, defaultHex, onChange, compact
         }}
       >
         <span style={{ width: 22, height: 22, borderRadius: 999, background: hex, border: "1px solid rgba(255,255,255,0.18)", flex: "none" }} />
-        <span style={{ flex: 1, fontSize: 13.5 }}>{label}</span>
-        <span style={{ fontSize: 12, fontFamily: "monospace", color: "var(--muted)" }}>{hex}</span>
+        <span style={{ flex: 1, fontSize: "var(--fs-ui-md)" }}>{label}</span>
+        <span style={{ fontSize: "var(--fs-ui-sm)", fontFamily: "monospace", color: "var(--muted)" }}>{hex}</span>
       </button>
     );
   }

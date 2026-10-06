@@ -174,7 +174,7 @@ export function CheckinLanding({
           <div className="ck-land-result">
             <div
               className="ck-land-ic"
-              style={{ color: cor, borderColor: cor, fontSize: 28, fontWeight: 700 }}
+              style={{ color: cor, borderColor: cor, fontSize: "var(--fs-app-28)", fontWeight: 700 }}
             >
               {icone === "✓" ? <Icon name="ok" size={30} /> : icone}
             </div>
@@ -615,7 +615,7 @@ export function QRCheckinModal({
                     />
                   ) : (
                     <div className="ck-qr-off">
-                      <span style={{ fontSize: 28 }}>✕</span>
+                      <span style={{ fontSize: "var(--fs-app-28)" }}>✕</span>
                       <span>QR desativado</span>
                     </div>
                   )}

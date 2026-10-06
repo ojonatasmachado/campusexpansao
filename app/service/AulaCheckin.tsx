@@ -133,7 +133,7 @@ export function AulaCheckinLanding({
             <div className="ck-land-when">{courseName}</div>
           </div>
           <div className="ck-land-result">
-            <div className="ck-land-ic" style={{ color: cor, borderColor: cor, fontSize: 28, fontWeight: 700 }}>{icone === "✓" ? <Icon name="ok" size={30} /> : icone}</div>
+            <div className="ck-land-ic" style={{ color: cor, borderColor: cor, fontSize: "var(--fs-app-28)", fontWeight: 700 }}>{icone === "✓" ? <Icon name="ok" size={30} /> : icone}</div>
             {person && (
               <div className="ck-land-pessoa">
                 <Av name={person.name} size="md" />
@@ -405,7 +405,7 @@ export function AulaCheckinModal({
                     <QRCode value={checkinLink} size={200} style={{ height: "auto", maxWidth: "100%", width: "100%" }} viewBox="0 0 200 200" />
                   ) : (
                     <div className="ck-qr-off">
-                      <span style={{ fontSize: 28 }}>✕</span>
+                      <span style={{ fontSize: "var(--fs-app-28)" }}>✕</span>
                       <span>QR desativado</span>
                     </div>
                   )}

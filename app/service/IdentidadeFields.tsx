@@ -63,7 +63,7 @@ export function BackgroundField({ identidade, onSave, organizationId, churchId }
                   key={p.angle}
                   type="button"
                   className={`opt${angle === p.angle ? " on" : ""}`}
-                  style={{ width: 44, height: 44, padding: 0, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}
+                  style={{ width: 44, height: 44, padding: 0, fontSize: "var(--fs-ui-lg)", display: "flex", alignItems: "center", justifyContent: "center" }}
                   onClick={() => onSave({ bgAngle: p.angle })}
                 >
                   {p.label}
@@ -101,7 +101,7 @@ export function BackgroundField({ identidade, onSave, organizationId, churchId }
                   onChange={(e) => onSave({ bgOverlay: Number(e.target.value) })}
                   style={{ flex: 1 }}
                 />
-                <span style={{ fontSize: 12, color: "var(--subtle)", width: 34, textAlign: "right" }}>{Math.round(overlay * 100)}%</span>
+                <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--subtle)", width: 34, textAlign: "right" }}>{Math.round(overlay * 100)}%</span>
               </div>
             </div>
           )}
@@ -163,7 +163,7 @@ export function LogoField({
                 key={key}
                 type="button"
                 className={`opt${(identidade.logoFont ?? "inter") === key ? " on" : ""}`}
-                style={{ padding: "10px 14px", fontFamily: font.family, fontWeight: font.weight, fontSize: 15 }}
+                style={{ padding: "10px 14px", fontFamily: font.family, fontWeight: font.weight, fontSize: "var(--fs-ui-md)" }}
                 onClick={() => onSave({ logoFont: key })}
               >
                 {font.label}
@@ -179,7 +179,7 @@ export function LogoField({
                   key={align}
                   type="button"
                   className={`opt${(identidade.logoAlign ?? "center") === align ? " on" : ""}`}
-                  style={{ width: 44, height: 44, padding: 0, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}
+                  style={{ width: 44, height: 44, padding: 0, fontSize: "var(--fs-ui-lg)", display: "flex", alignItems: "center", justifyContent: "center" }}
                   onClick={() => onSave({ logoAlign: align })}
                 >
                   {mark}

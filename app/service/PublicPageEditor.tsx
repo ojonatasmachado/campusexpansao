@@ -326,7 +326,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
 
             <div className="field-label" style={{ marginTop: 14 }}>Endereço da página</div>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-              <span style={{ fontSize: 13, color: "var(--subtle)" }}>{origin.replace(/^https?:\/\//, "")}/</span>
+              <span style={{ fontSize: "var(--fs-ui-13)", color: "var(--subtle)" }}>{origin.replace(/^https?:\/\//, "")}/</span>
               <input
                 className="input"
                 style={{ maxWidth: 220 }}
@@ -351,7 +351,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 14 }}>
                 <div className="cfg-row-main" style={{ flex: "none" }}>
                   <div className="field-label" style={{ marginTop: 0 }}>Acesso da equipe (login com a cara da igreja)</div>
-                  <span style={{ fontSize: 13, color: "var(--subtle)" }}>{loginUrl.replace(/^https?:\/\//, "")}</span>
+                  <span style={{ fontSize: "var(--fs-ui-13)", color: "var(--subtle)" }}>{loginUrl.replace(/^https?:\/\//, "")}</span>
                 </div>
                 <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(loginUrl)}>
                   <Icon name="copiar" size={13} /> Copiar link

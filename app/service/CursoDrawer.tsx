@@ -202,13 +202,13 @@ export default function CursoDrawer({
             <div className="dsec" style={{ marginTop: 0 }}>
               <div className="dsec-title">Sobre o curso</div>
               {course.description && (
-                <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.55, marginBottom: 12 }}>
+                <p style={{ color: "var(--muted)", fontSize: "var(--fs-ui-13)", lineHeight: 1.55, marginBottom: 12 }}>
                   {course.description}
                 </p>
               )}
               {course.divulgacao && (
                 <div
-                  style={{ fontSize: 13.5, color: "var(--light)", lineHeight: 1.6, marginBottom: 12 }}
+                  style={{ fontSize: "var(--fs-ui-md)", color: "var(--light)", lineHeight: 1.6, marginBottom: 12 }}
                   dangerouslySetInnerHTML={{ __html: course.divulgacao }}
                 />
               )}
@@ -250,9 +250,9 @@ export default function CursoDrawer({
                     return (
                       <div className="ce-aula" key={les.id}>
                         <div className="ce-aula-row">
-                          <span style={{ flex: 1, fontSize: 13.5 }}>{les.name}</span>
+                          <span style={{ flex: 1, fontSize: "var(--fs-ui-md)" }}>{les.name}</span>
                           <span className="mat-tipo">{LESSON_KIND_LABEL[les.kind ?? "video"]}</span>
-                          {les.duration && <span style={{ fontSize: 11, color: "var(--muted)" }}>{les.duration}</span>}
+                          {les.duration && <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>{les.duration}</span>}
                         </div>
                         {(les.prova?.length ?? 0) > 0 && (
                           <div className="ce-prova on" style={{ cursor: "default" }}>
@@ -268,7 +268,7 @@ export default function CursoDrawer({
                     );
                   })}
                   {modLessons.length === 0 && (
-                    <div style={{ fontSize: 12, color: "var(--subtle)", padding: "4px 0" }}>Nenhuma aula neste módulo.</div>
+                    <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--subtle)", padding: "4px 0" }}>Nenhuma aula neste módulo.</div>
                   )}
                 </div>
               );

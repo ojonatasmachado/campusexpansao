@@ -71,19 +71,19 @@ export default function KidsCheckinClient({
 
           {errorState ? (
             <div className="ck-land-result">
-              <div className="ck-land-ic" style={{ color: "var(--danger)", borderColor: "var(--danger)", fontSize: 28, fontWeight: 700 }}>!</div>
+              <div className="ck-land-ic" style={{ color: "var(--danger)", borderColor: "var(--danger)", fontSize: "var(--fs-app-28)", fontWeight: 700 }}>!</div>
               <div className="ck-land-title">Não foi possível</div>
               <div className="ck-land-txt">{errorState}</div>
             </div>
           ) : !person ? (
             <div className="ck-land-result">
-              <div className="ck-land-ic" style={{ color: "var(--amber)", borderColor: "var(--amber)", fontSize: 28, fontWeight: 700 }}>!</div>
+              <div className="ck-land-ic" style={{ color: "var(--amber)", borderColor: "var(--amber)", fontSize: "var(--fs-app-28)", fontWeight: 700 }}>!</div>
               <div className="ck-land-title">Cadastro não encontrado</div>
               <div className="ck-land-txt">Você não tem um perfil nesta igreja ainda. Fale com a recepção ou a professora.</div>
             </div>
           ) : guardianChildren.length === 0 ? (
             <div className="ck-land-result">
-              <div className="ck-land-ic" style={{ color: "var(--amber)", borderColor: "var(--amber)", fontSize: 28, fontWeight: 700 }}>!</div>
+              <div className="ck-land-ic" style={{ color: "var(--amber)", borderColor: "var(--amber)", fontSize: "var(--fs-app-28)", fontWeight: 700 }}>!</div>
               <div className="ck-land-title">Nenhuma criança vinculada</div>
               <div className="ck-land-txt">Seu cadastro ainda não tem nenhuma criança vinculada. Fale com a professora pra cadastrar.</div>
             </div>
@@ -108,15 +108,15 @@ export default function KidsCheckinClient({
                       <button className="btn btn-sec btn-sm" type="button" disabled={busy} onClick={() => requestPickup(child.id)}>{busy ? "Aguarde..." : "Solicitar retirada"}</button>
                     )}
                     {att && att.status === "presente" && !child.can_pickup && (
-                      <span style={{ fontSize: 11.5, color: "var(--subtle)" }}>sem autorização pra retirar</span>
+                      <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--subtle)" }}>sem autorização pra retirar</span>
                     )}
                     {att && att.status === "retirada_pendente" && (
-                      <span style={{ fontSize: 11.5, color: "var(--amber)" }}>aguardando confirmação</span>
+                      <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--amber)" }}>aguardando confirmação</span>
                     )}
                   </div>
                 );
               })}
-              {error && <div style={{ fontSize: 12.5, color: "var(--danger)" }}>{error}</div>}
+              {error && <div style={{ fontSize: "var(--fs-ui-13)", color: "var(--danger)" }}>{error}</div>}
             </div>
           )}
 

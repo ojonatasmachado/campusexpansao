@@ -55,7 +55,7 @@ export function ImageUpload({
       <div className="img-up-main">
         <div className="cfg-row-t">{label}</div>
         {hint && <div className="cfg-row-s">{hint}</div>}
-        {error && <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 6 }}>{error}</div>}
+        {error && <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--danger)", marginTop: 6 }}>{error}</div>}
         <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
           <button className="btn btn-sec btn-sm" type="button" disabled={busy} onClick={() => ref.current?.click()}>
             {busy ? "Enviando..." : url ? "Trocar" : "Enviar imagem"}

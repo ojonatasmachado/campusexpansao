@@ -423,12 +423,12 @@ function TabTarefas({ person, cards, boards, onAddCardComment }: { person: P; ca
   return (
     <>
       <div className="m-section-t">Tarefas com você · {pending.length} {pending.length === 1 ? "aberta" : "abertas"}</div>
-      <div style={{ fontSize: 12.5, color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>
+      <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>
         O que a liderança deixou no quadro para você. Atualize e comente.
       </div>
       {pending.length === 0 && (
         <div className="m-card">
-          <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nada pendente com você agora.</div>
+          <div style={{ fontSize: "var(--fs-app-13)", color: "var(--subtle)" }}>Nada pendente com você agora.</div>
         </div>
       )}
       {pending.map(cardEl)}
@@ -535,7 +535,7 @@ function TabConversas({
         <div className="chat-thread">
           <div className="chat-msgs" style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14 }}>
             {chatMsgs.length === 0 && (
-              <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhuma mensagem ainda.</div>
+              <div style={{ fontSize: "var(--fs-app-13)", color: "var(--subtle)" }}>Nenhuma mensagem ainda.</div>
             )}
             {chatMsgs.map((msg) => {
               const sender = members.find((m) => m.id === msg.sender_id);
@@ -545,7 +545,7 @@ function TabConversas({
                   {!isMine && sender && (
                     <div
                       style={{
-                        fontSize: 12,
+                        fontSize: "var(--fs-app-13)",
                         color: "var(--muted)",
                         marginBottom: 3,
                         fontFamily: "var(--mono)",
@@ -603,14 +603,14 @@ function TabConversas({
             </button>
           ))}
           {candidatos.length === 0 && (
-            <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhum líder disponível ainda.</div>
+            <div style={{ fontSize: "var(--fs-app-13)", color: "var(--subtle)" }}>Nenhum líder disponível ainda.</div>
           )}
         </div>
       )}
 
       {myChats.length === 0 && (
         <div className="m-card">
-          <div style={{ fontSize: 15, color: "var(--muted)" }}>Nenhuma conversa ainda. Toque em Nova mensagem para falar com um líder.</div>
+          <div style={{ fontSize: "var(--fs-app-15)", color: "var(--muted)" }}>Nenhuma conversa ainda. Toque em Nova mensagem para falar com um líder.</div>
         </div>
       )}
       {myChats.map((c) => {
@@ -826,7 +826,7 @@ function TabBiblia({
       {view === "capitulos" && book && (
         <>
           <button className="back-link" type="button" onClick={() => setView("livros")}>← Livros</button>
-          <div className="m-h1" style={{ fontSize: 20, marginBottom: 14 }}>{book.name}</div>
+          <div className="m-h1" style={{ fontSize: "var(--fs-app-20)", marginBottom: 14 }}>{book.name}</div>
           <div className="bib-chapters">
             {book.chapters.map((_, i) => (
               <button key={i} className="bib-chapter" onClick={() => irPara(book.abbrev, i + 1)}>{i + 1}</button>
@@ -840,7 +840,7 @@ function TabBiblia({
           <button className="back-link" type="button" onClick={() => setView("capitulos")}>← Capitulos</button>
           <div className="bib-reader-head">
             <button className="bib-chnav" disabled={chapter <= 1} onClick={() => irPara(book.abbrev, chapter - 1)}>‹</button>
-            <div className="m-h1" style={{ fontSize: 18 }}>{book.name} {chapter}</div>
+            <div className="m-h1" style={{ fontSize: "var(--fs-app-17)" }}>{book.name} {chapter}</div>
             <button className="bib-chnav" disabled={chapter >= book.chapters.length} onClick={() => irPara(book.abbrev, chapter + 1)}>›</button>
           </div>
           <div className="bib-verses">
@@ -866,7 +866,7 @@ function TabBiblia({
       {view === "marcacoes" && (
         <>
           <button className="back-link" type="button" onClick={() => setView("livros")}>← Livros</button>
-          <div className="m-h1" style={{ fontSize: 20, marginBottom: 14 }}>Minhas marcações</div>
+          <div className="m-h1" style={{ fontSize: "var(--fs-app-20)", marginBottom: 14 }}>Minhas marcações</div>
           {bibleMarks.length === 0 && <div className="empty"><p className="empty-desc">Toque num versículo na leitura pra marcar ou anotar.</p></div>}
           {bibleMarks
             .slice()
@@ -949,7 +949,7 @@ function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisitor }: {
   return (
     <>
       <div className="m-section-t">Acolhida de visitantes</div>
-      <div style={{ fontSize: 12.5, color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>
+      <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>
         Registre quem chegou e evolua o acompanhamento direto pelo celular.
       </div>
       <button className="m-btn m-btn-ok" style={{ width: "100%", marginBottom: 16 }} onClick={() => setNovo(true)}>
@@ -999,7 +999,7 @@ function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisitor }: {
             <button className="m-vis-head" onClick={() => setAberto(isOpen ? null : v.id)}>
               <Av name={v.name} size="sm" />
               <div className="m-vis-main">
-                <div className="m-culto" style={{ fontSize: 15 }}>{v.name}</div>
+                <div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{v.name}</div>
                 <div className="m-fn">
                   <span className="chip chip-neutral">{et.nome}</span>
                   {v.origin ? ` · ${v.origin}` : ""}
@@ -1018,7 +1018,7 @@ function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisitor }: {
                       <div
                         style={{
                           fontFamily: "var(--mono)",
-                          fontSize: 12,
+                          fontSize: "var(--fs-app-13)",
                           color: i <= etIdx ? "var(--light)" : "var(--subtle)",
                           marginTop: 6,
                         }}
@@ -1185,7 +1185,7 @@ function TabKids({
   return (
     <>
       <div className="m-section-t">Kids · {kidsClass?.name ?? "Turma"}</div>
-      <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 12 }}>{joinDot(event?.name, `${event?.weekday ?? ""} ${formatDateBR(event?.eventDate)}`.trim())}</div>
+      <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginBottom: 12 }}>{joinDot(event?.name, `${event?.weekday ?? ""} ${formatDateBR(event?.eventDate)}`.trim())}</div>
 
       {activeSessions.length > 1 && (
         <select className="select" style={{ marginBottom: 12 }} value={session.id} onChange={(e) => setSessionId(e.target.value)}>
@@ -1218,7 +1218,7 @@ function TabKids({
             <div className="m-vis-head">
               <Av name={child?.name ?? "?"} size="sm" photoUrl={child?.photo_url} />
               <div className="m-vis-main">
-                <div className="m-culto" style={{ fontSize: 14 }}>{child?.name ?? "Crianca"}</div>
+                <div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{child?.name ?? "Crianca"}</div>
                 <div className="m-fn">{child?.allergies ? `⚠ ${child.allergies}` : (att.dropped_off_via === "manual" ? "manual" : "QR")}</div>
               </div>
               <button className="m-btn m-btn-swap" style={{ padding: "6px 10px" }} onClick={() => avisarResponsavel(att.child_id)}>Avisar</button>
@@ -1231,8 +1231,8 @@ function TabKids({
       {notYetIn.slice(0, 5).map((child) => (
         <div className="m-vis-head" key={child.id} style={{ cursor: "pointer" }} onClick={() => checkinManual(child.id)}>
           <Av name={child.name} size="sm" photoUrl={child.photo_url} />
-          <div className="m-vis-main"><div className="m-culto" style={{ fontSize: 14 }}>{child.name}</div></div>
-          <span style={{ color: "var(--olive)", fontSize: 12 }}>+ check-in</span>
+          <div className="m-vis-main"><div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{child.name}</div></div>
+          <span style={{ color: "var(--olive)", fontSize: "var(--fs-app-13)" }}>+ check-in</span>
         </div>
       ))}
 
@@ -1249,7 +1249,7 @@ function TabKids({
             <option value="menino">Menino</option>
             <option value="menina">Menina</option>
           </select>
-          <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 10 }}>Turma: {sugestaoTurma?.name ?? (session ? kidsClasses.find((kc) => kc.id === session.class_id)?.name ?? "nenhuma turma cobre essa idade" : "informe o nascimento")}</div>
+          <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginBottom: 10 }}>Turma: {sugestaoTurma?.name ?? (session ? kidsClasses.find((kc) => kc.id === session.class_id)?.name ?? "nenhuma turma cobre essa idade" : "informe o nascimento")}</div>
 
           <input className="input" list="service-kids-people-names" placeholder="Nome do responsável" value={form.respNome} onChange={(e) => setForm((f) => ({ ...f, respNome: e.target.value }))} style={{ marginBottom: 8 }} />
           <datalist id="service-kids-people-names">
@@ -1265,11 +1265,11 @@ function TabKids({
           <input className="input" placeholder="Contato de emergencia: nome" value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
           <input className="input" placeholder="Contato de emergencia: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
 
-          <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 12, fontSize: 13, lineHeight: 1.4 }}>
+          <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 12, fontSize: "var(--fs-app-13)", lineHeight: 1.4 }}>
             <input type="checkbox" checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))} style={{ marginTop: 3 }} />
             <span>{imageAuthorizationCopy(form.nome)}</span>
           </label>
-          {fichaError && <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8 }}>{fichaError}</div>}
+          {fichaError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{fichaError}</div>}
           <button className="m-btn m-btn-ok" style={{ width: "100%" }} onClick={criarFicha}>Salvar e fazer check-in</button>
         </div>
       )}
@@ -1397,7 +1397,7 @@ function TabCursos({
                 <span className="m-when" style={{ color: "var(--amber)" }}>{pct}%</span>
               )}
             </div>
-            <div className="m-culto" style={{ fontSize: 16 }}>{course.name}</div>
+            <div className="m-culto" style={{ fontSize: "var(--fs-app-17)" }}>{course.name}</div>
             <div className="bar" style={{ marginTop: 10 }}>
               <div className={`bar-fill ${en.status === "concluido" ? "" : "amber"}`} style={{ width: `${pct}%` }} />
             </div>
@@ -1412,9 +1412,9 @@ function TabCursos({
           {toExplore.map((c) => (
             <div className="m-card" key={c.id}>
               <div className="m-when" style={{ marginBottom: 6 }}>{c.level ?? "Curso"}</div>
-              <div className="m-culto" style={{ fontSize: 16 }}>{c.name}</div>
+              <div className="m-culto" style={{ fontSize: "var(--fs-app-17)" }}>{c.name}</div>
               {c.description && (
-                <div style={{ fontSize: 12.5, color: "var(--muted)", lineHeight: 1.5, marginTop: 6 }}>
+                <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", lineHeight: 1.5, marginTop: 6 }}>
                   {c.description}
                 </div>
               )}
@@ -1468,7 +1468,7 @@ function ServirSection({ person, member, ministries, members = [], people = [] }
               {pendente(m.id) ? (
                 <div className="m-confirmed" style={{ marginTop: 10 }}><Icon name="ok" size={15} /> Pedido enviado · o líder vai falar com você.</div>
               ) : faltasTime.length > 0 ? (
-                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 8, lineHeight: 1.5 }}>
+                <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginTop: 8, lineHeight: 1.5 }}>
                   <b style={{ color: "var(--light)" }}>Para entrar:</b> {faltasTime.join(" · ")}
                 </div>
               ) : (
@@ -1486,7 +1486,7 @@ function ServirSection({ person, member, ministries, members = [], people = [] }
                     {resultado === "enviando" ? "Enviando..." : "Quero servir neste time"}
                   </button>
                   {resultado && resultado !== "enviando" && resultado !== "ok" && (
-                    <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 6 }}>{resultado}</div>
+                    <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginTop: 6 }}>{resultado}</div>
                   )}
                 </>
               )}
@@ -1506,7 +1506,7 @@ function CursoInscricao({ courseId }: { courseId: string }) {
   const [estado, setEstado] = useState<"" | "enviando" | "ok" | string>("");
   if (faltas.length > 0) {
     return (
-      <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 12, lineHeight: 1.5 }}>
+      <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginTop: 12, lineHeight: 1.5 }}>
         <b style={{ color: "var(--light)" }}>Para se inscrever:</b> {faltas.join(" · ")}
       </div>
     );
@@ -1527,7 +1527,7 @@ function CursoInscricao({ courseId }: { courseId: string }) {
       >
         {estado === "enviando" ? "Inscrevendo..." : "Inscrever-se"}
       </button>
-      {estado && estado !== "enviando" && estado !== "ok" && <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 6 }}>{estado}</div>}
+      {estado && estado !== "enviando" && estado !== "ok" && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginTop: 6 }}>{estado}</div>}
     </>
   );
 }
@@ -1548,7 +1548,7 @@ function TabBatismo({ baptismClasses, memberId }: { baptismClasses: BaptismClass
       <div className="m-section-t">Próximos batismos</div>
       {openClasses.length === 0 && (
         <div className="m-card">
-          <div style={{ fontSize: 13, color: "var(--subtle)" }}>Nenhuma turma agendada por ora.</div>
+          <div style={{ fontSize: "var(--fs-app-13)", color: "var(--subtle)" }}>Nenhuma turma agendada por ora.</div>
         </div>
       )}
       {openClasses.map((b) => (
@@ -1561,7 +1561,7 @@ function TabBatismo({ baptismClasses, memberId }: { baptismClasses: BaptismClass
               <ChipSt status="wait" label="Em preparação" />
             )}
           </div>
-          <div className="m-culto" style={{ fontSize: 16 }}>{b.label}</div>
+          <div className="m-culto" style={{ fontSize: "var(--fs-app-17)" }}>{b.label}</div>
           {(b.location || b.pastor) && (
             <div className="m-fn">
               {[b.location, b.pastor].filter(Boolean).join(" · ")}
@@ -1588,11 +1588,11 @@ function TabBatismo({ baptismClasses, memberId }: { baptismClasses: BaptismClass
               </button>
             )
           ) : (
-            <div style={{ fontSize: 12, color: "var(--subtle)", marginTop: 12 }}>
+            <div style={{ fontSize: "var(--fs-app-13)", color: "var(--subtle)", marginTop: 12 }}>
               Inscrições ainda não abertas para esta turma.
             </div>
           )}
-          {erro[b.id] && <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 8 }}>{erro[b.id]}</div>}
+          {erro[b.id] && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginTop: 8 }}>{erro[b.id]}</div>}
         </div>
       ))}
     </>
@@ -1910,7 +1910,7 @@ function AppTourModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="m-sheet-bg" onClick={onClose}>
       <div className="ob-card" style={{ maxWidth: 320 }} onClick={(e) => e.stopPropagation()}>
-        <div className="ob-welcome-x" style={{ marginBottom: 14, fontWeight: 700, fontSize: 15 }}>Conheça o app</div>
+        <div className="ob-welcome-x" style={{ marginBottom: 14, fontWeight: 700, fontSize: "var(--fs-app-15)" }}>Conheça o app</div>
         <AppTabsInfoGrid />
         <button className="btn btn-pri" type="button" style={{ width: "100%", marginTop: 16 }} onClick={onClose}>Fechar</button>
       </div>
@@ -2066,7 +2066,7 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
         <h2 className="ob-title">{cur.t}</h2>
         <p className="ob-sub">{cur.s}</p>
         <div className="ob-body">{cur.body}</div>
-        {erroSalvar && <div style={{ fontSize: 12.5, color: "var(--danger)", marginBottom: 10 }}>{erroSalvar}</div>}
+        {erroSalvar && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 10 }}>{erroSalvar}</div>}
         <div className="ob-actions">
           {step > 0 && (
             <button className="btn btn-sec" type="button" onClick={() => setStep(step - 1)}>
@@ -2093,7 +2093,7 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
    rua, bairro, cidade e estado, que ficam na ficha pra análises da igreja. */
 export function MemberContactFields({ d, set, erros }: { d: MemberContactInput; set: (k: keyof MemberContactInput, v: string) => void; erros: ReturnType<typeof contactErrors> | null }) {
   const err = (k: keyof ReturnType<typeof contactErrors>) =>
-    erros?.[k] ? <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 4 }}>{erros[k]}</div> : null;
+    erros?.[k] ? <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginTop: 4 }}>{erros[k]}</div> : null;
   return (
     <div className="ob-form">
       <div className="field">
@@ -2131,7 +2131,7 @@ export function MemberContactFields({ d, set, erros }: { d: MemberContactInput; 
         />
         {err("cep")}
         {(d.cidade || d.rua) && (
-          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 6 }}>
+          <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginTop: 6 }}>
             {[d.rua, d.cidade && d.estado ? `${d.cidade}/${d.estado}` : d.cidade].filter(Boolean).join(" · ")}
           </div>
         )}
@@ -2306,18 +2306,18 @@ function TabKidsArea({
         <option value="menino">Menino</option>
         <option value="menina">Menina</option>
       </select>
-      <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 10 }}>Turma: {sugestaoTurma?.name ?? (form.nascimento ? "nenhuma turma cobre essa idade ainda" : "calculada pelo nascimento")}</div>
+      <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginBottom: 10 }}>Turma: {sugestaoTurma?.name ?? (form.nascimento ? "nenhuma turma cobre essa idade ainda" : "calculada pelo nascimento")}</div>
       <input className="input" placeholder="Alergias" value={form.alergias} onChange={(e) => setForm((f) => ({ ...f, alergias: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Restrições alimentares" value={form.restricoes} onChange={(e) => setForm((f) => ({ ...f, restricoes: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Plano de saúde ou convênio" value={form.saude} onChange={(e) => setForm((f) => ({ ...f, saude: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Medicamento em uso continuo" value={form.medicamento} onChange={(e) => setForm((f) => ({ ...f, medicamento: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Contato de emergencia: nome" value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Contato de emergencia: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
-      <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 12, fontSize: 13, lineHeight: 1.4 }}>
+      <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 12, fontSize: "var(--fs-app-13)", lineHeight: 1.4 }}>
         <input type="checkbox" checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))} style={{ marginTop: 3 }} />
         <span>{imageAuthorizationCopy(form.nome)}</span>
       </label>
-      {ficarError && <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8 }}>{ficarError}</div>}
+      {ficarError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{ficarError}</div>}
       <button className="m-btn m-btn-ok" style={{ width: "100%" }} onClick={salvarFilho}>Salvar</button>
     </div>
   );
@@ -2338,13 +2338,13 @@ function TabKidsArea({
               <div className="m-vis-head">
                 <Av name={child.name} size="sm" photoUrl={child.photo_url} />
                 <div className="m-vis-main">
-                  <div className="m-culto" style={{ fontSize: 14 }}>{child.name}</div>
+                  <div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{child.name}</div>
                   <div className="m-fn">{turma?.name ?? "sem turma"}{child.allergies ? ` · ⚠ ${child.allergies}` : ""}</div>
                 </div>
                 <span className="m-task-caret">✎</span>
               </div>
               {historico.length > 0 && (
-                <div style={{ marginTop: 10, fontSize: 12, color: "var(--subtle)" }}>
+                <div style={{ marginTop: 10, fontSize: "var(--fs-app-13)", color: "var(--subtle)" }}>
                   {historico.map((h) => <div key={h.id}>{formatDateBR(h.dropped_off_at.slice(0, 10))} · {h.status === "retirado" ? "retirado" : "na sala"}</div>)}
                 </div>
               )}
@@ -2360,7 +2360,7 @@ function TabKidsArea({
                       <div className="m-vis-head" key={g.id} style={{ marginBottom: 8 }}>
                         <Av name={p?.name ?? "?"} size="sm" photoUrl={p?.photoUrl} />
                         <div className="m-vis-main">
-                          <div className="m-culto" style={{ fontSize: 13 }}>{p?.name ?? "Responsavel"}{g.is_primary ? " · principal" : ""}</div>
+                          <div className="m-culto" style={{ fontSize: "var(--fs-app-13)" }}>{p?.name ?? "Responsavel"}{g.is_primary ? " · principal" : ""}</div>
                           <div className="m-fn">{g.relationship || "sem parentesco informado"}</div>
                         </div>
                         {isPrimaryFor(child.id) && !g.is_primary && (
@@ -2382,10 +2382,10 @@ function TabKidsArea({
                           <PhotoPicker label="Foto do corresponsável (obrigatória)" photoUrl={coForm.photoUrl} path={`${organizationId}/kids/guardians/${people.find((p) => p.name === coForm.nome)?.id ?? "novo"}`} onUploaded={(url) => setCoForm((f) => ({ ...f, photoUrl: url }))} />
                         </div>
                       )}
-                      <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontSize: 13 }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontSize: "var(--fs-app-13)" }}>
                         <input type="checkbox" checked={coForm.canPickup} onChange={(e) => setCoForm((f) => ({ ...f, canPickup: e.target.checked }))} /> Pode retirar
                       </label>
-                      {coError && <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8 }}>{coError}</div>}
+                      {coError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{coError}</div>}
                       <button className="m-btn m-btn-swap" style={{ width: "100%" }} onClick={() => adicionarCoResponsavel(child.id)}>+ Adicionar corresponsável</button>
                     </>
                   ) : (
@@ -2410,7 +2410,7 @@ function TabKidsArea({
           {kidsWall.map((post) => (
             <div className="m-card" key={post.id}>
               <div className="m-fn">{post.author ?? "Kids"}</div>
-              <div style={{ fontSize: 13.5, marginTop: 4 }}>{post.body}</div>
+              <div style={{ fontSize: "var(--fs-app-13)", marginTop: 4 }}>{post.body}</div>
             </div>
           ))}
         </>
