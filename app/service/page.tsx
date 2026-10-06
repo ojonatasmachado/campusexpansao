@@ -1489,6 +1489,10 @@ export default async function ServiceHomePage() {
   /* a marca é da organização: mora na igreja matriz (ver salvarPersonalizacao) */
   const brandCfg = ((churches.find((c) => c.matriz) ?? churches[0])?.settings as { brandCfg?: BrandCfg } | undefined)?.brandCfg;
 
+  /* tamanho do texto que a pessoa escolheu (0057); sem a migração, nulo */
+  const { data: textSizeData } = await supabase.schema("service").rpc("my_text_size");
+  const textSizePerfil = typeof textSizeData === "number" ? textSizeData : null;
+
   const jar = await cookies();
   const themeMode = resolveMode(jar.get(THEME_COOKIE)?.value, brandCfg);
   /* por onde entra quem tem função de gestão: a escolha salva no aparelho
@@ -1558,6 +1562,7 @@ export default async function ServiceHomePage() {
       currentRole={currentRole}
       permissionsMatrix={permissionsMatrix}
       currentPersonId={currentPersonId}
+      textSizePerfil={textSizePerfil}
       enqueteElegivel={enqueteElegivel}
       pesquisaElegivel={pesquisaElegivel}
       initialTheme={themeMode}

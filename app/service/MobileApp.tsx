@@ -12,7 +12,8 @@ import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import { PhotoPicker } from "./PhotoPicker";
 import CepInput from "./CepInput";
 import ChurchLockup from "./ChurchLockup";
-import { TEXT_SCALES, useTextScale } from "./lib/text-scale";
+import { NOMES_POSICAO, fatorDa, sincronizarComPerfil, useTextSize } from "./lib/text-scale";
+import { TextSizeSheet, TextSizeSlider } from "./TextSizeSlider";
 import { useTermos } from "./lib/vocabulario-context";
 import { requirementLabel, type RequirementKind } from "./lib/requirements";
 import { candidatosParaVaga, papelDoDestinatario, useDestinatario, type Destinatario } from "./lib/destinatario";
@@ -255,6 +256,8 @@ export type MobileOverlayProps = {
   /* só pra quem tem função de gestão: volta pro painel */
   onSwitchToPanel?: () => void;
   selfPersonId?: string | null;
+  /* tamanho do texto guardado no perfil (0 a 6); o aparelho segue o perfil */
+  textSizePerfil?: number | null;
   onLogout?: () => void;
   /* publicações do Mural que esta pessoa já leu (service.announcement_reads) */
   readAnnouncementIds?: string[];
@@ -1695,6 +1698,8 @@ function TabPerfil({
   onChangePassword?: (senha: string) => Promise<{ error?: string }>;
   onUpdateProfile?: (personId: string, memberId: string | null, data: MemberContactInput) => Promise<{ error?: string }>;
 }) {
+  const ui = useContext(MemberUiContext);
+  const [textPos] = useTextSize();
   const [sair, setSair] = useState(false);
 
   const [editing, setEditing] = useState(false);
@@ -1826,22 +1831,19 @@ function TabPerfil({
 
       <div className="m6-sec">
         <div className="m6-lbl">Preferências</div>
-        <div className="m6-card">
-          <div className="m6-rt">Tamanho do texto</div>
-          <div className="m6-meta">Vale para o app inteiro.</div>
-          <TextSizePicker />
-          {theme && setTheme && (
-            <>
-              <div className="m6-hr" />
-              <div className="m6-rt">Tema</div>
-              <div className="ts-seg two" role="radiogroup" aria-label="Tema">
-                {(["light", "dark"] as const).map((m) => (
-                  <button key={m} type="button" role="radio" aria-checked={theme === m} className={theme === m ? "on" : ""} onClick={() => setTheme(m)}>{m === "light" ? "Claro" : "Escuro"}</button>
-                ))}
-              </div>
-            </>
-          )}
+        <div className="m6-list">
+          <M6Row ic="documento" t="Tamanho do texto" s={NOMES_POSICAO[textPos]} onClick={ui.tamanhoTexto} />
         </div>
+        {theme && setTheme && (
+          <div className="m6-card m6-mt">
+            <div className="m6-rt">Tema</div>
+            <div className="ts-seg two" role="radiogroup" aria-label="Tema">
+              {(["light", "dark"] as const).map((m) => (
+                <button key={m} type="button" role="radio" aria-checked={theme === m} className={theme === m ? "on" : ""} onClick={() => setTheme(m)}>{m === "light" ? "Claro" : "Escuro"}</button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="m6-list">
           <div className="m6-row">
             <span className="m6-ic"><Icon name="sino" size={22} /></span>
@@ -1992,7 +1994,7 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
       s: "Escolha como fica mais confortável ler. Dá para mudar depois no Perfil.",
       body: (
         <div className="ob-textsize">
-          <TextSizePicker />
+          <TextSizeSlider previa={false} />
         </div>
       ),
       ok: "Continuar →",
@@ -2489,8 +2491,10 @@ type MemberUi = {
   /* resposta da escala já dada na tela (antes de o banco gravar, no tempo do "Desfazer"); null desfaz */
   respostas: Record<string, "ok" | "no">;
   responderEscala: (id: string, v: "ok" | "no" | null) => void;
+  /* abre a folha do tamanho do texto (Perfil) */
+  tamanhoTexto: () => void;
 };
-const MemberUiContext = createContext<MemberUi>({ go: () => {}, sheet: () => {}, toast: () => {}, respostas: {}, responderEscala: () => {} });
+const MemberUiContext = createContext<MemberUi>({ go: () => {}, sheet: () => {}, toast: () => {}, respostas: {}, responderEscala: () => {}, tamanhoTexto: () => {} });
 
 function M6Row({ ic, t, s, onClick, right, cls }: { ic?: string; t: React.ReactNode; s?: React.ReactNode; onClick?: () => void; right?: React.ReactNode | null; cls?: string }) {
   return (
@@ -3285,7 +3289,29 @@ function MobileMembro({
   const [sheetEl, setSheetEl] = useState<React.ReactNode | null>(null);
   const [toastO, setToastO] = useState<{ msg: string; action?: { label: string; fn: () => void }; id: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [textScale] = useTextScale();
+  const [textPos] = useTextSize();
+  const textScale = fatorDa(textPos);
+  /* Perfil › Tamanho do texto: folha fixa embaixo; ao fechar, a linha que a
+     abriu volta ao mesmo lugar da tela (o conteúdo mudou de altura atrás) */
+  const [tsAberto, setTsAberto] = useState(false);
+  const tsAncora = useRef<{ el: HTMLElement | null; top: number } | null>(null);
+  const abrirTamanhoTexto = () => {
+    const el = (document.activeElement as HTMLElement | null) ?? null;
+    tsAncora.current = { el, top: el?.getBoundingClientRect().top ?? 0 };
+    setTsAberto(true);
+  };
+  const fecharTamanhoTexto = () => {
+    setTsAberto(false);
+    requestAnimationFrame(() => {
+      const a = tsAncora.current;
+      const box = scrollRef.current;
+      tsAncora.current = null;
+      if (!a?.el || !box || !a.el.isConnected) return;
+      const delta = a.el.getBoundingClientRect().top - a.top;
+      /* a rolagem da coluna conta em pixels já ampliados pelo zoom */
+      if (Math.abs(delta) >= 1) box.scrollTop += delta / (parseFloat(getComputedStyle(box).zoom) || 1);
+    });
+  };
   const { termo, comTermos: ct } = useTermos();
   /* pedido de oração só aparece com alguém para receber (v7 2.5) */
   const destOracao = useDestinatario("oracao");
@@ -3357,7 +3383,7 @@ function MobileMembro({
     setTab(t);
     setSub(subAllowed(s) ? s : null);
   };
-  const ui: MemberUi = { go, sheet: setSheetEl, toast, respostas, responderEscala: responderEscalaUi };
+  const ui: MemberUi = { go, sheet: setSheetEl, toast, respostas, responderEscala: responderEscalaUi, tamanhoTexto: abrirTamanhoTexto };
 
   const pedirEtapa = (step: JourneyStep) => {
     const nome = { decisao: "Decisão", batismo: "Batismo", curso: "Fundamentos", integracao: termo("grupo"), time: "Servindo" }[step];
@@ -3367,7 +3393,7 @@ function MobileMembro({
 
   if (!onboarded) {
     return (
-      <div className="phone" style={{ "--m-scale": textScale } as React.CSSProperties}>
+      <div className="phone" data-ts={textPos} style={{ "--m-scale": textScale } as React.CSSProperties}>
         <div className="phone-screen">
           <div className="phone-notch" />
           <Onboarding person={person} member={member} churchName={churchName} churchLogoUrl={churchLogoUrl} organizationId={organizationId} onCompleteOnboarding={onCompleteOnboarding} onDone={() => setOnboarded(true)} />
@@ -3389,7 +3415,7 @@ function MobileMembro({
       journeyRequests={journeyRequests} onOpenSub={(s) => go("caminhada", s)} onRequestStep={pedirEtapa} onServir={abrirTimes}
     >
     {(steps) => (
-    <div className="phone" style={{ "--m-scale": textScale } as React.CSSProperties}>
+    <div className="phone" data-ts={textPos} style={{ "--m-scale": textScale } as React.CSSProperties}>
       <div className="phone-screen">
         <div className="phone-notch" />
         <div className="m-statusbar">
@@ -3558,6 +3584,7 @@ function MobileMembro({
           </div>
         )}
         {sheetEl && <M6Sheet onClose={() => setSheetEl(null)}>{sheetEl}</M6Sheet>}
+        {tsAberto && <TextSizeSheet onClose={fecharTamanhoTexto} />}
       </div>
     </div>
     )}
@@ -3577,8 +3604,10 @@ function StepsHost({ children, ...p }: Parameters<typeof useSteps>[0] & { childr
 
 export default function MobileOverlay(props: MobileOverlayProps) {
   const { comTermos: ct } = useTermos();
-  const { people, members, onClose, mode = "preview", selfPersonId, onLogout, onSwitchToPanel } = props;
+  const { people, members, onClose, mode = "preview", selfPersonId, onLogout, onSwitchToPanel, textSizePerfil } = props;
   const isSelf = mode === "self";
+  /* o aparelho segue o tamanho guardado no perfil (só no app da própria pessoa) */
+  useEffect(() => { if (isSelf) sincronizarComPerfil(textSizePerfil); }, [isSelf, textSizePerfil]);
 
   const personas = isSelf ? [] : people.filter((p) => p.status === "ativo").slice(0, 3);
   const [idx, setIdx] = useState(0);
@@ -3665,41 +3694,3 @@ export default function MobileOverlay(props: MobileOverlayProps) {
 
 /* Padrão · Grande · Muito grande, com a prévia logo abaixo (a escala já
    vale no app inteiro ao tocar). */
-function TextSizePicker() {
-  const [scale, setScale] = useTextScale();
-  /* a escala muda a altura de tudo acima do controle e a tela "pula":
-     guarda onde o controle estava antes de aplicar e rola depois para ele
-     ficar no mesmo lugar, embaixo do dedo */
-  const segRef = useRef<HTMLDivElement>(null);
-  const topoAntes = useRef<number | null>(null);
-  const escolher = (v: number) => {
-    if (v === scale) return;
-    topoAntes.current = segRef.current?.getBoundingClientRect().top ?? null;
-    setScale(v);
-  };
-  useLayoutEffect(() => {
-    const el = segRef.current;
-    const antes = topoAntes.current;
-    topoAntes.current = null;
-    if (!el || antes === null) return;
-    const delta = el.getBoundingClientRect().top - antes;
-    if (Math.abs(delta) < 1) return;
-    let alvo: HTMLElement | null = el.parentElement;
-    while (alvo && !(alvo.scrollHeight > alvo.clientHeight && /(auto|scroll)/.test(getComputedStyle(alvo).overflowY))) alvo = alvo.parentElement;
-    /* o app aplica a escala com zoom no contêiner: a rolagem dele conta em pixels já ampliados */
-    if (alvo) alvo.scrollTop += delta / (parseFloat(getComputedStyle(alvo).zoom) || 1);
-    else window.scrollBy(0, delta);
-  }, [scale]);
-  return (
-    <div className="ts-pick">
-      <div className="ts-seg" role="radiogroup" aria-label="Tamanho do texto" ref={segRef}>
-        {TEXT_SCALES.map((o) => (
-          <button key={o.value} type="button" role="radio" aria-checked={scale === o.value} className={scale === o.value ? "on" : ""} onClick={() => escolher(o.value)}>
-            {o.label}
-          </button>
-        ))}
-      </div>
-      <p className="ts-prev">Assim fica o texto do app.</p>
-    </div>
-  );
-}

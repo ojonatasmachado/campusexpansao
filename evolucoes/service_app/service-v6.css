@@ -134,17 +134,51 @@
 .tp-tab.on .tp-tab-ic{background:var(--olive-dim)}
 @media (max-width:640px){.tp-prev-row{grid-template-columns:1fr}}
 
-/* ── tamanho do texto do app do membro (S6) ─────────────────────
-   zoom na coluna do conteúdo: tudo cresce junto e o texto quebra na
-   largura da tela, então nada rola para o lado. A barra de abas fica
-   de fora e o rótulo dela cresce no máximo 1,15x. */
+/* ── tamanho do texto do app do membro (v7 4.9, manifesto seção 7) ──
+   Sete posições (corpo 14 a 23px); --m-scale = corpo / 17. Zoom na coluna
+   do conteúdo: tudo cresce junto e o texto quebra na largura da tela, então
+   nada rola para o lado. A barra de abas fica de fora e o rótulo dela vai
+   até 16px. Piso de 13px: nas posições menores os tokens pequenos sobem o
+   bastante para, depois do zoom, darem 13px. Os --fs-ui-* são refeitos aqui
+   porque o .mob-bg já os resolveu com os tokens sem piso. */
 .mob-bg.mob-self .m-head,.mob-bg.mob-self .m-scroll,.mob-bg.mob-self .ob{zoom:var(--m-scale,1)}
-.mob-bg.mob-self .m-tab-l{font-size:min(calc(var(--fs-app-13) * var(--m-scale,1)), 16px)}
-.ts-pick{display:grid;gap:8px;width:100%}
+.mob-bg.mob-self .phone,.mob-bg .ts-preview{
+  --fs-app-13:max(13px, calc(13px / var(--m-scale,1)));
+  --fs-app-15:max(15px, calc(13px / var(--m-scale,1)));
+  --fs-ui-sm:var(--fs-app-13);--fs-ui-13:var(--fs-app-13);--fs-ui-md:var(--fs-app-15);
+  --fs-ui-lg:var(--fs-app-17);--fs-ui-xl:var(--fs-app-20);--fs-ui-2xl:var(--fs-app-28);
+}
+.mob-bg.mob-self .m-tab button,.mob-bg.mob-self .m-tab-l,.mob-bg.mob-self .m-tab .m6-badge{font-size:min(calc(var(--fs-app-13) * var(--m-scale,1)), 16px)}
+/* na maior posição (23px): pares de botões empilham, linha com data vira
+   coluna e título quebra linha em vez de cortar com reticências */
+.mob-bg.mob-self .phone[data-ts="6"] .m6-btns{flex-direction:column}
+.mob-bg.mob-self .phone[data-ts="6"] .m6-1l{white-space:normal;overflow:visible;text-overflow:clip}
+.mob-bg.mob-self .phone[data-ts="6"] .m6-row:has(> .m6-date){flex-direction:column;align-items:flex-start;gap:8px}
+.mob-bg.mob-self .phone[data-ts="6"] .m6-date{flex-direction:row;align-items:baseline;gap:6px;width:auto;padding:4px 12px}
+/* folha do tamanho do texto: fora do zoom (o controle fica parado), só a
+   prévia recebe a escala */
+.m6-sheet.ts-sheet{zoom:1;
+  --fs-app-13:13px;--fs-app-15:15px;
+  --fs-ui-sm:var(--fs-app-13);--fs-ui-13:var(--fs-app-13);--fs-ui-md:var(--fs-app-15);
+  --fs-ui-lg:var(--fs-app-17);--fs-ui-xl:var(--fs-app-20);--fs-ui-2xl:var(--fs-app-28)}
+.ts-scrim{background:color-mix(in srgb, var(--ink) 30%, transparent)}
+.ts-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.ts-slider{display:flex;flex-direction:column;gap:14px;width:100%}
+.ts-preview{zoom:var(--m-scale,1);display:flex;flex-direction:column;gap:10px}
+.ts-frase{margin:0;font-size:var(--fs-app-17);line-height:1.45;color:var(--light)}
+.ts-ctl{display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:var(--r-md);background:var(--graphite-2);border:0.5px solid var(--border-2)}
+.ts-a{display:grid;place-items:center;flex:none;width:44px;height:44px;border-radius:var(--r-sm);font-weight:600;line-height:1;color:var(--white);cursor:pointer}
+.ts-a-min{font-size:var(--fs-app-13)}
+.ts-a-max{font-size:var(--fs-app-28)}
+.ts-a:disabled{opacity:.35;cursor:default}
+.ts-track{position:relative;flex:1;height:44px;margin:0 14px;touch-action:none;cursor:pointer}
+.ts-rail{position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;border-radius:1px;background:var(--border-3)}
+.ts-tick{position:absolute;top:50%;width:2px;height:12px;margin:-6px 0 0 -1px;border-radius:1px;background:var(--border-3)}
+.ts-thumb{position:absolute;top:50%;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;background:var(--white);box-shadow:0 1px 4px color-mix(in srgb, var(--ink) 40%, transparent);transition:left .12s ease-out}
+.ts-thumb:focus-visible{outline:2px solid var(--olive);outline-offset:3px}
 .ts-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:var(--r-md);background:var(--ink);border:0.5px solid var(--border-2)}
 .ts-seg button{min-height:44px;border-radius:var(--r-sm);font-size:var(--fs-app-15);font-weight:600;color:var(--muted);text-align:center}
 .ts-seg button.on{background:var(--accent-fill);color:var(--accent-ink)}
-.ts-prev{margin:0;font-size:var(--fs-app-15);color:var(--light)}
 .m-data.m-data-col{flex-direction:column;align-items:stretch;gap:10px}
 .ob-textsize{margin-top:18px;text-align:left}
 

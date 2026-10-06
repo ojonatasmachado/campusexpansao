@@ -687,6 +687,8 @@ type Props = {
   currentRole?: "master" | "pastor" | "lider" | "membro";
   permissionsMatrix?: Record<string, Record<string, boolean>>;
   currentPersonId?: string | null;
+  /* tamanho do texto guardado no perfil (posição 0 a 6, 0057) */
+  textSizePerfil?: number | null;
   enqueteElegivel?: EnqueteElegivelView | null;
   pesquisaElegivel?: PesquisaElegivelView | null;
   initialTheme?: "dark" | "light";
@@ -1028,6 +1030,7 @@ export default function ServiceExactApp({
   currentRole = "master",
   permissionsMatrix = {},
   currentPersonId = null,
+  textSizePerfil = null,
   enqueteElegivel = null,
   pesquisaElegivel = null,
   initialTheme = "dark",
@@ -1510,6 +1513,7 @@ export default function ServiceExactApp({
       <VocabularioProvider value={vocab}>
       <MobileOverlay
         modulos={{ on: firstChurch?.modulosOn, off: firstChurch?.modulosOff }}
+        textSizePerfil={textSizePerfil}
         readAnnouncementIds={announcementReads.filter((r) => r.person_id === currentPersonId).map((r) => r.announcement_id)}
         churchPurpose={(() => {
           const ciclo = cycles.find((c) => c.is_active);
