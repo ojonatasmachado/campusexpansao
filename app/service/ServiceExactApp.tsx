@@ -2497,10 +2497,41 @@ function PersonMini({ person, index, setDrawer }: { person: PersonView; index: n
   );
 }
 
-function JrnPips({ journey }: { journey: number[] }) {
+function JrnPips({ journey, comTexto = false }: { journey: number[]; comTexto?: boolean }) {
+  const feitas = JRN_STEPS.filter((_, i) => !!journey[i]);
+  const resumo = feitas.length ? `${feitas.length} de ${JRN_STEPS.length}: ${feitas.map((s) => s.label).join(", ")}` : "nenhuma etapa ainda";
   return (
-    <div className="jrn-mini">
-      {journey.slice(0, 5).map((v, i) => <span key={i} className={`jrn-pip ${v ? "on" : ""}`} />)}
+    <div className="jrn-cell" title={`Caminhada, ${resumo}`}>
+      <div className="jrn-mini" aria-hidden="true">
+        {journey.slice(0, 5).map((v, i) => <span key={i} className={`jrn-pip ${v ? "on" : ""}`} />)}
+      </div>
+      {comTexto ? <span className="jrn-txt">{feitas.length ? `${feitas.length} de ${JRN_STEPS.length} · ${feitas[feitas.length - 1].label}` : "Nenhuma etapa"}</span> : null}
+    </div>
+  );
+}
+
+/* v7 3.7: Situação que ajuda a agir: novo (com a data de chegada), pausa ou
+   férias, sem telefone para o convite, membro desde quando. */
+function SituacaoPessoa({ l }: { l: PessoaLinha }) {
+  const tel = formatarTelefone(l.member?.phone || l.person?.phone || "");
+  let chip: import("react").ReactNode;
+  let sub = "";
+  if (l.novo) {
+    chip = <span className="chip chip-wait">Novo</span>;
+    const chegou = formatDateBR(l.member?.firstContact || l.member?.createdAt || l.person?.createdAt || "");
+    sub = chegou ? `chegou em ${chegou.slice(0, 5)}` : "";
+  } else if (l.person && l.person.status !== "ativo") {
+    chip = <Chip status={l.person.status} />;
+  } else if (l.member) {
+    chip = <Chip status="membro" />;
+    sub = l.member.sinceYear ? `desde ${l.member.sinceYear}` : "";
+  } else {
+    chip = <span className="chip chip-neutral">Voluntário</span>;
+  }
+  return (
+    <div className="sit-cell">
+      {chip}
+      {!tel ? <span className="sit-sub sit-alerta">sem telefone</span> : sub ? <span className="sit-sub">{sub}</span> : null}
     </div>
   );
 }
@@ -2557,6 +2588,7 @@ function Membros({ members, people = [], ministries, setDrawer, setModal, soTime
           ))}
         </div>
       </div>
+      <p className="jrn-legenda"><b>Caminhada</b>, uma barra por etapa, na ordem: {JRN_STEPS.map((s) => s.label).join(" · ")}.</p>
       <div className="tbl">
         <div className="tr head" style={{ gridTemplateColumns: "1.6fr 1.3fr 1fr 0.9fr" }}><span>Pessoa</span><span>Serve em</span><span>Caminhada</span><span>Situação</span></div>
         {visible.map((l) => (
@@ -2565,8 +2597,8 @@ function Membros({ members, people = [], ministries, setDrawer, setModal, soTime
             <div>
               {l.mins.length > 0 ? <div className="cell-tags">{l.mins.map((min) => <span key={min.id} className="tag">{min.name}</span>)}{l.leader && <span className="lider-tag">Líder</span>}</div> : null}
             </div>
-            <div>{l.member ? <JrnPips journey={l.member.journey} /> : null}</div>
-            <div>{l.novo ? <span className="chip chip-wait">Novo</span> : l.member ? <Chip status={l.member.situation} /> : <span className="chip chip-neutral">Voluntário</span>}</div>
+            <div>{l.member ? <JrnPips journey={l.member.journey} comTexto /> : null}</div>
+            <SituacaoPessoa l={l} />
           </button>
         ))}
         {visible.length === 0 && <EmptyState title="Ninguém por aqui" text="Quem você cadastrar aparece nesta lista. Se usou a busca ou um filtro, tente limpar." />}

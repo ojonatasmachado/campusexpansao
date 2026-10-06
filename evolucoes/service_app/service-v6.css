@@ -456,3 +456,13 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
 .sobre-lista{display:flex;flex-direction:column;gap:14px;margin:0}
 .sobre-lista dt{font-size:var(--fs-pn-14);font-weight:600;color:var(--white)}
 .sobre-lista dd{margin:2px 0 0;font-size:var(--fs-pn-13);color:var(--muted);line-height:1.5}
+
+/* v7 3.7 · Pessoas: legenda da Caminhada e Situação com o dado que ajuda a agir */
+.jrn-legenda{margin:0 0 10px;font-size:var(--fs-pn-13);color:var(--muted);line-height:1.5}
+.jrn-legenda b{color:var(--light);font-weight:600}
+.jrn-cell{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+.jrn-txt{font-size:var(--fs-pn-12);color:var(--muted);line-height:1.3}
+.jrn-pip{background:var(--border-3)}
+.sit-cell{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.sit-sub{font-size:var(--fs-pn-12);color:var(--muted);line-height:1.3}
+.sit-alerta{color:var(--warn)}
