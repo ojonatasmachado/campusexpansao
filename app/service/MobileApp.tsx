@@ -2686,38 +2686,39 @@ function EventoRow({ ev }: { ev: Ev }) {
 }
 
 // ── pedido de oração: vai como conversa para quem cuida da intercessão ──────
-function SheetOracao({ person, member, ministries, members, onStartChat }: {
-  person: P; member: M | null; ministries: Ministry[]; members: M[];
+/* destinatário em cadeia (v7 2.5): intercessão, depois a gestão. Quem abre
+   esta folha já sabe que há alguém para receber (a entrada some sem ninguém) */
+function SheetOracao({ member, dest, onStartChat }: {
+  member: M | null; dest: Destinatario;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
 }) {
   const ui = useContext(MemberUiContext);
   const [txt, setTxt] = useState("");
   const [enviando, setEnviando] = useState(false);
-  const [ok, setOk] = useState(false);
-  const interc = (m: Ministry) => m.icon === "intercessao" || /interce|ora[cç][aã]o/i.test(m.name);
-  const destino = leadersFor(person, ministries, members, interc)[0] ?? leadersFor(person, ministries, members)[0];
-  if (ok) {
+  const [chatId, setChatId] = useState<string | null>(null);
+  const nome = dest.name.split(" ")[0];
+  if (chatId) {
     return (
       <div className="m6-donesh">
         <span className="m6-dot feito big"><Icon name="ok" size={28} /></span>
         <h2 className="m6-sh">Pedido enviado</h2>
-        <p className="m6-txt">{destino ? `${destino.member.name.split(" ")[0]} recebeu e vai orar por você.` : "A liderança recebeu seu pedido."} A conversa fica em Mensagens.</p>
-        <div className="m6-btns"><button className="m6-btn pri" type="button" onClick={() => ui.sheet(null)}>Fechar</button></div>
+        <p className="m6-txt">{nome} recebeu e vai orar por você. A conversa fica em Mensagens.</p>
+        <div className="m6-btns"><button className="m6-btn pri" type="button" onClick={() => { ui.sheet(null); ui.go("mensagens", null, { chatId }); }}>Ver em Mensagens</button></div>
       </div>
     );
   }
   return (
     <div>
       <h2 className="m6-sh">Pedido de oração</h2>
-      <div className="m6-meta">{destino ? `Vai para ${destino.member.name.split(" ")[0]}${interc(destino.ministry) ? ", da intercessão" : ", da liderança"}. Só essa pessoa lê.` : "Ainda não há um líder no app para receber."}</div>
+      <div className="m6-meta">Vai para {papelDoDestinatario(dest)}. Só essa pessoa lê.</div>
       <textarea className="m6-ta" value={txt} onChange={(e) => setTxt(e.target.value)} placeholder="Pelo que podemos orar?" aria-label="Pedido de oração" />
       <div className="m6-btns">
-        <button className="m6-btn pri" type="button" disabled={!txt.trim() || !destino || !member || !onStartChat || enviando} onClick={async () => {
-          if (!destino || !member || !onStartChat) return;
+        <button className="m6-btn pri" type="button" disabled={!txt.trim() || !member || !onStartChat || enviando} onClick={async () => {
+          if (!member || !onStartChat) return;
           setEnviando(true);
-          const id = await onStartChat(member.id, destino.member.id, `Pedido de oração: ${txt.trim()}`);
+          const id = await onStartChat(member.id, dest.member_id, `Pedido de oração: ${txt.trim()}`);
           setEnviando(false);
-          if (id) setOk(true); else ui.toast("Não foi possível enviar agora. Tente de novo.");
+          if (id) setChatId(id); else ui.toast("Não foi possível enviar agora. Tente de novo.");
         }}>{enviando ? "Enviando..." : "Enviar pedido"}</button>
       </div>
     </div>
@@ -2825,6 +2826,7 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
   const timesAbertos = ministries.filter((m) => !m.people.some((mp) => mp.personId === person.id));
   const ministryOf = (slot: Slot) => ministries.find((m) => m.positions?.some((p) => p.id === slot.position_id)) ?? ministries.find((m) => m.people.some((mp) => mp.personId === person.id));
   const incompleto = member && !member.contactComplete;
+  const destOracao = useDestinatario("oracao");
 
   return (
     <>
@@ -2890,17 +2892,19 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
         <div className="m6-more"><button type="button" className="m6-link" onClick={() => ui.go("agenda", null, { agSeg: "igreja" })}>Ver a agenda completa →</button></div>
       </div>
 
-      <div className="m6-sec">
-        <div className="m6-card">
-          <div className="m6-ct">Podemos orar por você?</div>
-          <div className="m6-meta">Seu pedido vai para quem cuida da intercessão, com cuidado.</div>
-          <div className="m6-btns">
-            <button className="m6-btn sec" type="button" onClick={() => ui.sheet(<SheetOracao person={person} member={member} ministries={ministries} members={members} onStartChat={onStartChat} />)}>
-              <Icon name="coracao" size={20} />Enviar pedido de oração
-            </button>
+      {destOracao && member && onStartChat && (
+        <div className="m6-sec">
+          <div className="m6-card">
+            <div className="m6-ct">Podemos orar por você?</div>
+            <div className="m6-meta">Seu pedido vai para {destOracao.via === "intercessao" ? "quem cuida da intercessão" : "a liderança da igreja"}, com cuidado.</div>
+            <div className="m6-btns">
+              <button className="m6-btn sec" type="button" onClick={() => ui.sheet(<SheetOracao member={member} dest={destOracao} onStartChat={onStartChat} />)}>
+                <Icon name="coracao" size={20} />Enviar pedido de oração
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }
@@ -3288,6 +3292,8 @@ function MobileMembro({
   const [toastO, setToastO] = useState<{ msg: string; action?: { label: string; fn: () => void }; id: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [textScale] = useTextScale();
+  /* pedido de oração só aparece com alguém para receber (v7 2.5) */
+  const destOracao = useDestinatario("oracao");
   /* primeiro acesso termina quando a ficha tem os dados obrigatórios
      (member.contactComplete, calculado no servidor): vale em qualquer
      aparelho e não diverge entre o HTML do servidor e o do navegador */
@@ -3466,7 +3472,9 @@ function MobileMembro({
                       <h2 className="m6-sh">Nova mensagem</h2>
                       <div className="m6-list flat">
                         <M6Row ic="conversas" t="Falar com um líder" s="Pastor ou líder do seu time" onClick={() => { setSheetEl(null); go("mensagens", null, { newChat: true }); }} />
-                        <M6Row ic="coracao" t="Pedido de oração" s="Vai para quem cuida da intercessão" onClick={() => setSheetEl(<SheetOracao person={person} member={member} ministries={ministries} members={members} onStartChat={onStartChat} />)} />
+                        {destOracao && member && onStartChat && (
+                          <M6Row ic="coracao" t="Pedido de oração" s={destOracao.via === "intercessao" ? "Vai para quem cuida da intercessão" : "Vai para a liderança da igreja"} onClick={() => setSheetEl(<SheetOracao member={member} dest={destOracao} onStartChat={onStartChat} />)} />
+                        )}
                       </div>
                     </div>,
                   )}><Icon name="add" size={20} />Nova mensagem</button>
