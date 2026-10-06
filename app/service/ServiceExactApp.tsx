@@ -50,6 +50,8 @@ import { Comunicacao } from "./modules/mural/Mural";
 import { ACESSO_MSG_DEFAULT, type AcessoMsgCfg } from "./modules/pessoas/acesso-msg";
 import { friendlyWriteError } from "./painel/erros";
 import { porData, tipoDoFato } from "./lib/historico";
+import { coberturaPorTime, vagasFaltando, type CoberturaTime } from "./modules/escalas/cobertura";
+import { Cobertura } from "./modules/escalas/Cobertura";
 import { ROTA_GRUPO, cfgTabs as gerarCfgTabs, modulosLigados, navGroups, podeVerRota, rotaLigada, termosDaRota } from "./modules/registry";
 
 type ChurchSettings = {
@@ -1046,6 +1048,9 @@ export default function ServiceExactApp({
   error,
 }: Props) {
   const [route, setRoute] = useState<keyof typeof ROUTES>("painel");
+  /* v7 4.16: clicar num time incompleto da cobertura abre Escalas no culto e no time */
+  const [escalaFoco, setEscalaFoco] = useState<{ eventId: string; timeId?: string; n: number } | null>(null);
+  const abrirVagas = (eventId: string, timeId?: string) => { setEscalaFoco((f) => ({ eventId, timeId, n: (f?.n ?? 0) + 1 })); setDrawer(null); setRoute("escalas"); };
   const [drawer, setDrawer] = useState<DrawerState>(null);
   const [modal, setModal] = useState<ModalState>(null);
   /* modo desta pessoa: o servidor já resolveu (cookie cex_theme ou modo
@@ -1724,6 +1729,10 @@ export default function ServiceExactApp({
             setModal={setModal}
             setCheckinEventId={setCheckinEventId}
             setupCounts={setupCounts}
+            roster={roster}
+            ministries={ministries}
+            scopeMinistryIds={scopeMinistryIds}
+            onAbrirVagas={abrirVagas}
           />
         ) : null}
         {route === "membros" ? <Membros members={members} people={people} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} soTimes={pessoasSoDoTime ? misteriosQueLidero : null} /> : null}
@@ -1745,7 +1754,7 @@ export default function ServiceExactApp({
             church={firstChurch}
           />
         ) : null}
-        {route === "escalas" ? <Escalas gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} church={firstChurch} scopeMinistryIds={scopeMinistryIds} setDrawer={setDrawer} setModal={setModal} setRoute={setRoute} setCheckinEventId={setCheckinEventId} onNotifyLeaderRecusa={notificarLiderRecusa} /> : null}
+        {route === "escalas" ? <Escalas key={escalaFoco?.n ?? 0} foco={escalaFoco} gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} church={firstChurch} scopeMinistryIds={scopeMinistryIds} setDrawer={setDrawer} setModal={setModal} setRoute={setRoute} setCheckinEventId={setCheckinEventId} onNotifyLeaderRecusa={notificarLiderRecusa} /> : null}
         {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} rooms={rooms} reservations={reservations} church={firstChurch} setDrawer={setDrawer} /> : null}
         {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} rooms={rooms} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} church={firstChurch} setModal={setModal} /> : null}
@@ -1850,6 +1859,8 @@ export default function ServiceExactApp({
           setModal={setModal}
           setShareEventId={setShareEventId}
           eventRsvps={eventRsvps}
+          onAbrirVagas={abrirVagas}
+          scopeMinistryIds={scopeMinistryIds}
           onStartChatWithMember={startChatWithMember}
           currentRole={currentRole}
         />
@@ -2108,6 +2119,10 @@ function Painel({
   setModal,
   setCheckinEventId,
   setupCounts,
+  roster,
+  ministries,
+  scopeMinistryIds,
+  onAbrirVagas,
 }: {
   people: PersonView[];
   members: MemberView[];
@@ -2137,6 +2152,10 @@ function Painel({
   setModal: (modal: ModalState) => void;
   setCheckinEventId: (id: string | null) => void;
   setupCounts: SetupCounts;
+  roster: RosterAssignmentView[];
+  ministries: MinistryView[];
+  scopeMinistryIds: string[] | null;
+  onAbrirVagas: (eventId: string, timeId?: string) => void;
 }) {
   const { comTermos: ct } = useTermos();
   const topPeople = [...people].sort((a, b) => (b.engagement ?? 0) - (a.engagement ?? 0)).slice(0, 5);
@@ -2225,6 +2244,20 @@ function Painel({
             <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("escalas")}>Resolver</button>
           </div>
           <div className="panel-body flush">
+            {(() => {
+              /* v7 4.16: cobertura do próximo culto com vaga aberta */
+              const prox = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time))
+                .map((e) => ({ e, c: coberturaPorTime(e, roster, ministries, scopeMinistryIds) }))
+                .find((x) => vagasFaltando(x.c) > 0);
+              return prox ? (
+                <div className="mini-row">
+                  <div className="mini-main">
+                    <div className="mini-title">{prox.e.name} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {joinDot(prox.e.weekday, prox.e.time)}</span></div>
+                    <Cobertura itens={prox.c} onAbrir={(timeId) => onAbrirVagas(prox.e.id, timeId)} />
+                  </div>
+                </div>
+              ) : null;
+            })()}
             {gaps.slice(0, 6).map((gap) => (
               <div className="gap-row" key={`${gap.event.id}-${gap.position.id}`}>
                 <div className="gap-ic wait">!</div>
@@ -2266,6 +2299,8 @@ function Painel({
                 <MiniEvent
                   key={event.id}
                   event={event}
+                  cobertura={coberturaPorTime(event, roster, ministries, scopeMinistryIds)}
+                  onAbrirVagas={(timeId) => onAbrirVagas(event.id, timeId)}
                   setDrawer={setDrawer}
                   attendanceCount={eventAttendance.filter((a) => a.event_id === event.id).length}
                   onCheckin={() => setCheckinEventId(event.id)}
@@ -2408,18 +2443,23 @@ function Kpi({ icon, label, value, foot, amber, help }: { icon: string; label: s
 }
 
 function MiniEvent({
-  event, setDrawer, attendanceCount, onCheckin,
+  event, setDrawer, attendanceCount, onCheckin, cobertura, onAbrirVagas,
 }: {
   event: EventView;
   setDrawer: (drawer: DrawerState) => void;
   attendanceCount?: number;
   onCheckin?: () => void;
+  cobertura?: CoberturaTime[];
+  onAbrirVagas?: (timeId: string) => void;
 }) {
+  /* div com papel de botão: a cobertura tem botões dentro (não pode botão dentro de botão) */
+  const abrir = () => setDrawer({ kind: "event", id: event.id });
   return (
-    <button className="mini-row click" type="button" onClick={() => setDrawer({ kind: "event", id: event.id })}>
+    <div className="mini-row click" role="button" tabIndex={0} onClick={abrir} onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) abrir(); }}>
       <div className="mini-main">
         <div className="mini-title">{event.name}</div>
         <div className="mini-sub">{joinDot(event.weekday, formatDateBR(event.eventDate), event.location)}</div>
+        {cobertura && cobertura.length > 0 && <Cobertura itens={cobertura} onAbrir={onAbrirVagas} compacta />}
       </div>
       <div className="mini-right" style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span>{event.time}</span>
@@ -2437,7 +2477,7 @@ function MiniEvent({
           </span>
         )}
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -8359,6 +8399,8 @@ function EntityDrawer({
   setModal,
   setShareEventId,
   eventRsvps = [],
+  onAbrirVagas,
+  scopeMinistryIds = null,
   onStartChatWithMember,
   currentRole = "membro",
 }: {
@@ -8391,6 +8433,8 @@ function EntityDrawer({
   setModal: (modal: ModalState) => void;
   setShareEventId: (id: string) => void;
   eventRsvps?: EventRsvpView[];
+  onAbrirVagas?: (eventId: string, timeId?: string) => void;
+  scopeMinistryIds?: string[] | null;
   onStartChatWithMember: (memberId: string) => void;
 }) {
   const { termo, comTermos: ct } = useTermos();
@@ -8884,6 +8928,8 @@ function EntityDrawer({
       people={people}
       roster={roster}
       rsvps={eventRsvps.filter((r) => r.event_id === event.id)}
+      cobertura={coberturaPorTime(event, roster, ministries, scopeMinistryIds)}
+      onAbrirVagas={onAbrirVagas ? (timeId) => onAbrirVagas(event.id, timeId) : undefined}
       onClose={() => setDrawer(null)}
       setDrawer={setDrawer}
       setRoute={setRoute}
@@ -8898,6 +8944,8 @@ function EventDrawer({
   people,
   roster,
   rsvps = [],
+  cobertura = [],
+  onAbrirVagas,
   onClose,
   setDrawer,
   setRoute,
@@ -8908,6 +8956,8 @@ function EventDrawer({
   people: PersonView[];
   roster: RosterAssignmentView[];
   rsvps?: EventRsvpView[];
+  cobertura?: CoberturaTime[];
+  onAbrirVagas?: (timeId: string) => void;
   onClose: () => void;
   setDrawer: (drawer: DrawerState) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
@@ -8926,6 +8976,7 @@ function EventDrawer({
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{joinDot(event.weekday, formatDateBR(event.eventDate))}</div>
         <div className="profile-name">{event.name}</div>
         <div className="profile-role">{joinDot(event.time, event.location, event.kind)}</div>
+        <Cobertura itens={cobertura} onAbrir={onAbrirVagas} />
         <div className="seg" style={{ marginTop: 14 }}>
           <button className={tab === "crono" ? "on" : ""} type="button" onClick={() => setTab("crono")}>Cronograma</button>
           <button className={tab === "posicoes" ? "on" : ""} type="button" onClick={() => setTab("posicoes")}>Posições</button>

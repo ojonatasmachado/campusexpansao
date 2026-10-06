@@ -18,6 +18,8 @@ import { ESCALA_DEFAULT, type EscalaPreset, type EscalaSettings } from "./regras
 import type { ChurchView, DrawerState, EventView, MinistryView, ModalState, PersonView, RosterAssignmentView, RouteId } from "../../ServiceExactApp";
 import { useTermos } from "../../lib/vocabulario-context";
 import { compararRodizio, fraseRodizio, ultimaVezQueServiu } from "./rodizio";
+import { coberturaPorTime, vagasFaltando } from "./cobertura";
+import { Cobertura } from "./Cobertura";
 
 /* candidato apto a uma posição, com motivo de bloqueio : equivalente a
    candidatos() em evolucoes/service_app/escalas.jsx:12-30. Diferença de fidelidade
@@ -298,6 +300,7 @@ function PresetSaveModal({
 }
 
 export function Escalas({
+  foco,
   gaps,
   roster,
   people,
@@ -323,9 +326,17 @@ export function Escalas({
   setRoute: (route: RouteId) => void;
   setCheckinEventId: (id: string | null) => void;
   onNotifyLeaderRecusa: (leaderPersonId: string, volunteerPersonId: string, texto: string) => void;
+  /* v7 4.16: veio da cobertura (Início, detalhe do culto): abre neste culto e rola até o time */
+  foco?: { eventId: string; timeId?: string } | null;
 }) {
   const { comTermos: ct } = useTermos();
-  const [eventId, setEventId] = useState(events[0]?.id ?? "");
+  const [eventId, setEventId] = useState(foco?.eventId ?? events[0]?.id ?? "");
+  useEffect(() => {
+    if (!foco?.timeId) return;
+    const el = document.getElementById(`esc-col-${foco.timeId}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    el?.focus({ preventScroll: true });
+  }, [foco?.timeId]);
   const router = useRouter();
   const escalaCfg: EscalaSettings = { ...ESCALA_DEFAULT, ...(church?.settings?.escala ?? {}) };
   const [slotAction, setSlotAction] = useState<{
@@ -530,6 +541,11 @@ export function Escalas({
             <span className="esc-event-day">{joinDot(event.weekday, formatDateBR(event.eventDate))}</span>
             <span className="esc-event-name">{event.name}</span>
             <span className="esc-event-time">{joinDot(event.time, event.location)}</span>
+            {(() => {
+              /* v7 4.16: um resumo por culto; a cobertura por time aparece embaixo, no culto escolhido */
+              const falta = vagasFaltando(coberturaPorTime(event, roster, ministries, scopeMinistryIds));
+              return <span className={`esc-event-cob ${falta ? "falta" : "ok"}`}>{falta ? `faltam ${plural(falta, "vaga")}` : "completo"}</span>;
+            })()}
           </button>
         ))}
       </div>
@@ -568,6 +584,17 @@ export function Escalas({
         <span className="panel-meta" style={{ marginRight: 14 }}><span style={{ color: "var(--olive-soft)" }}>{confirmed}</span> confirmados</span>
         {openSlots > 0 ? <span className="panel-meta"><span style={{ color: "var(--amber)" }}>{openSlots}</span> vagas</span> : null}
       </div>
+      {selectedEvent && (
+        <Cobertura
+          itens={coberturaPorTime(selectedEvent, roster, ministries, scopeMinistryIds)}
+          onAbrir={(timeId) => {
+            setTimesFechados((prev) => { const n = new Set(prev); n.delete(timeId); return n; });
+            const el = document.getElementById(`esc-col-${timeId}`);
+            el?.scrollIntoView({ behavior: "smooth", block: "start" });
+            el?.focus({ preventScroll: true });
+          }}
+        />
+      )}
 
       <div className="esc-cols">
         {visibleMinistries.map((ministry) => {
@@ -576,7 +603,7 @@ export function Escalas({
           /* um número por time: vagas preenchidas (confirmado ou aguardando) sobre o total */
           const ministryFilled = ministryPositions.reduce((sum, position) => sum + Math.min(Math.max(1, position.need_count), assignmentsFor(position.id).filter((assignment) => assignment.status !== "no").length), 0);
           return (
-            <div className={`esc-col${timesFechados.has(ministry.id) ? " closed" : ""}`} key={ministry.id}>
+            <div className={`esc-col${timesFechados.has(ministry.id) ? " closed" : ""}`} key={ministry.id} id={`esc-col-${ministry.id}`} tabIndex={-1}>
               <div className="esc-col-head">
                 <span className="esc-col-mark"><Icon name="times" size={17} /></span>
                 <div className="esc-col-info">

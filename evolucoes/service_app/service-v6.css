@@ -521,3 +521,20 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
 .cand-grp{margin:14px 0 2px;font-size:var(--fs-pn-13);font-weight:600;color:var(--white)}
 .cand-grp:first-child{margin-top:0}
 .cand-grp-sub{margin-bottom:6px;font-size:var(--fs-pn-12);color:var(--muted)}
+
+/* v7 4.16: cobertura por time ("Louvor 5/5 · Recepção 3/4") */
+.cob{display:flex;flex-wrap:wrap;gap:4px 0;margin:6px 0 0;padding:0;list-style:none;font-size:var(--fs-pn-13);line-height:1.4}
+.cob li{display:inline-flex;align-items:center}
+.cob li+li::before{content:"·";margin:0 8px;color:var(--muted)}
+.cob-nome{color:var(--light)}
+.cob-num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600}
+.cob-ok .cob-num{color:var(--ok)}
+.cob-falta .cob-num{color:var(--warn)}
+.cob button{display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:0;border:0;background:none;font:inherit;color:inherit;cursor:pointer;text-decoration:underline;text-decoration-color:var(--border-2);text-underline-offset:3px}
+.cob button:hover .cob-nome{color:var(--white)}
+.cob-compacta{font-size:var(--fs-pn-12)}
+.esc-event-cob{display:block;margin-top:4px;font-size:var(--fs-pn-12);font-weight:600}
+.esc-event-cob.falta{color:var(--warn)}
+.esc-event-cob.ok{color:var(--ok)}
+.esc-col:focus{outline:2px solid var(--olive);outline-offset:2px}
+.esc-col:focus:not(:focus-visible){outline:0}
