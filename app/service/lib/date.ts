@@ -126,3 +126,11 @@ export function paraPublico(audience?: string | null): string {
   if (!a || a.toLowerCase() === "todos") return "para todos";
   return `para ${a}`;
 }
+
+/** "2026-10-04" + 3 → "2026-10-07" (dias de calendário). */
+export function somaDias(iso: string, n: number): string {
+  const d = parseISODate(iso);
+  if (!d) return iso;
+  d.setDate(d.getDate() + n);
+  return toISODate(d);
+}

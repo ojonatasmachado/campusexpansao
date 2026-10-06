@@ -1,11 +1,11 @@
 "use client";
 
 import { avisar } from "./lib/avisar";
-import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon, Caret } from "./lib/icons";
-import { formatDateBR, joinDot, paraPublico, parseISODate, porPublicacao, quandoPublicado, saudacao, todayISO, weekdayFromISO } from "./lib/date";
+import { aindaVaiAcontecer, formatDateBR, joinDot, paraPublico, parseISODate, porPublicacao, quandoPublicado, saudacao, somaDias, todayISO, weekdayFromISO } from "./lib/date";
 import { plural } from "./lib/plural";
 import { formatarTelefone } from "./lib/telefone";
 import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
@@ -21,6 +21,7 @@ import { checkinAberto, horaQueAbre, sessaoDoCulto, statusDaCrianca, useKidsChec
 import { INSTRUCAO_QR, aulasDoCurso, proximaAula, textoDaAula, type ProximaAula } from "./lib/aulas";
 import { modulosLigados, telasDoMembro, type EstadoModulos } from "./modules/registry";
 import type { CategoriaAviso, ContextoMembro } from "./modules/define";
+import { FILA_DOBRA, ordenarFila, type EntradaFila } from "./modules/fila";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -2548,8 +2549,10 @@ function dataLonga(iso?: string | null) {
    segundos: dá tempo de tocar em "Desfazer" no aviso. Pedir troca abre uma
    conversa com o líder do time, com a mensagem já escrita. */
 const UNDO_MS = 5000;
-function EscalaCard({ slot, ev, ministry, person, member, members, onConfirmarEscala, onRecusarEscala, onStartChat }: {
+function EscalaCard({ slot, ev, ministry, person, member, members, onConfirmarEscala, onRecusarEscala, onStartChat, destaque = true }: {
   slot: Slot; ev: Ev; ministry?: Ministry; person: P; member: M | null; members: M[];
+  /* botão cheio só no primeiro cartão da fila do Início (lei 5) */
+  destaque?: boolean;
   onConfirmarEscala?: (id: string) => void; onRecusarEscala?: (id: string) => void;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
 }) {
@@ -2599,7 +2602,7 @@ function EscalaCard({ slot, ev, ministry, person, member, members, onConfirmarEs
       </ul>
       {st === "wait" && (
         <div className="m6-btns">
-          <button className="m6-btn pri" type="button" onClick={() => responder("ok")}><Icon name="ok" size={20} />Confirmar</button>
+          <button className={`m6-btn ${destaque ? "pri" : "sec"}`} type="button" onClick={() => responder("ok")}><Icon name="ok" size={20} />Confirmar</button>
           <button className="m6-btn sec" type="button" onClick={() => responder("no")}>Não posso</button>
         </div>
       )}
@@ -2668,13 +2671,15 @@ function SheetTroca({ slot, ev, funcao, member, dest, onStartChat }: {
   );
 }
 
-function EventoRow({ ev }: { ev: Ev }) {
+/* `serve`: a pessoa está na escala confirmada deste culto (aparece uma vez, com o selo) */
+function EventoRow({ ev, serve }: { ev: Ev; serve?: string | null }) {
   return (
     <div className="m6-row">
       <M6Date iso={ev.eventDate} />
       <div className="m6-rb">
         <div className="m6-rt">{ev.name}</div>
         <div className="m6-rs">{joinDot(ev.weekday, ev.time, ev.location)}</div>
+        {serve !== undefined && serve !== null && <span className="m6-serve"><M6St k="ok" ic="ok">{joinDot("Você serve", serve)}</M6St></span>}
       </div>
     </div>
   );
@@ -2734,9 +2739,11 @@ function cultoDeHoje(events: Ev[]): Ev | null {
   return doDia.find((e) => fim(e.time) >= agora) ?? doDia[doDia.length - 1];
 }
 
-function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, kidsClasses, kidsSessions, kidsAttendance, organizationId }: {
+function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, kidsClasses, kidsSessions, kidsAttendance, organizationId, destaque = true }: {
   person: P; events: Ev[]; kidsChildren: Child[]; childGuardians: ChildGuardian[]; kidsClasses: KidsClass[];
   kidsSessions: KidsSession[]; kidsAttendance: KidsAttendance[]; organizationId?: string;
+  /* botão cheio só no primeiro cartão da fila do Início (lei 5) */
+  destaque?: boolean;
 }) {
   const { comTermos: ct } = useTermos();
   const culto = cultoDeHoje(events);
@@ -2782,7 +2789,7 @@ function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, kidsCla
               </div>
             </div>
             {turma && !att && aberto && (
-              <div className="m6-btns"><button className={`m6-btn ${i === 0 ? "pri" : "sec"}`} type="button" disabled={busy} onClick={() => ck.checkin(c.id)}>{busy ? "Aguarde..." : `Fazer check-in de ${c.name.split(" ")[0]}`}</button></div>
+              <div className="m6-btns"><button className={`m6-btn ${destaque && i === 0 ? "pri" : "sec"}`} type="button" disabled={busy} onClick={() => ck.checkin(c.id)}>{busy ? "Aguarde..." : `Fazer check-in de ${c.name.split(" ")[0]}`}</button></div>
             )}
             {att?.status === "presente" && podeRetirar && (
               <div className="m6-btns"><button className="m6-btn sec" type="button" disabled={busy} onClick={() => ck.pedirRetirada(c.id)}>{busy ? "Aguarde..." : "Solicitar retirada"}</button></div>
@@ -2795,94 +2802,158 @@ function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, kidsCla
   );
 }
 
-// ── Início (S17) ──────────────────────────────────────────────────────────────
-function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, onServir }: {
+// ── Início (S17, v7 4.3) ──────────────────────────────────────────────────────
+/* Duas zonas (decisão 2): "Para você agora" é a fila da casca (lei 5: ordem
+   por prioridade e prazo, até 3 na primeira dobra, botão cheio só no
+   primeiro, "Tudo em dia" quando vazia); "Da igreja" mostra os eventos da
+   semana, até 3. O culto em que a pessoa serve aparece uma vez: com escala a
+   confirmar, só o cartão da fila; confirmada, na lista com o selo "Você serve". */
+type ItemInicio =
+  | { k: "escala"; slot: Slot; ev: Ev }
+  | { k: "kids" }
+  | { k: "tarefa"; card: Card }
+  | { k: "mural"; aviso: Announcement }
+  | { k: "passo"; step: StepView }
+  | { k: "servir"; times: Ministry[] }
+  | { k: "cadastro" };
+
+function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, onServir, ligados }: {
   person: P; member: M | null; ministries: Ministry[]; members: M[]; events: Ev[]; roster: Slot[]; cards: Card[];
   announcements: Announcement[]; unreadIds: Set<string>; kidsChildren: Child[]; childGuardians: ChildGuardian[];
-  kidsCheckin?: React.ReactNode;
+  kidsCheckin?: (destaque: boolean) => React.ReactNode;
   onConfirmarEscala?: (id: string) => void; onRecusarEscala?: (id: string) => void;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
   nextStep: StepView | null;
   onServir: () => void;
+  /* módulos ligados na igreja: entrada de módulo desligado não entra na fila */
+  ligados?: Set<string>;
 }) {
   const { comTermos: ct } = useTermos();
   const ui = useContext(MemberUiContext);
+  const [maisFila, setMaisFila] = useState(false);
   const hoje = todayISO();
   const serve = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
   const evById = new Map(events.map((e) => [e.id, e]));
-  const aConfirmar = roster
-    .filter((r) => r.person_id === person.id && r.status === "wait")
-    .filter((r) => (evById.get(r.event_id)?.eventDate ?? "") >= hoje)
-    .sort((a, b) => (evById.get(a.event_id)?.eventDate ?? "").localeCompare(evById.get(b.event_id)?.eventDate ?? ""));
+  const meusSlots = roster.filter((r) => r.person_id === person.id);
+  const aConfirmar = meusSlots
+    .filter((r) => r.status === "wait")
+    .filter((r) => (evById.get(r.event_id)?.eventDate ?? "") >= hoje);
   const minhasTarefas = cards.filter((c) => c.assignees.includes(person.id) && c.column_id !== "done" && c.due);
   const tarefa = [...minhasTarefas].sort((a, b) => (a.due ?? "").localeCompare(b.due ?? ""))[0];
   const novo = announcements.find((a) => unreadIds.has(a.id));
   const meusFilhos = childGuardians.filter((g) => g.guardian_person_id === person.id).map((g) => kidsChildren.find((c) => c.id === g.child_id)).filter(Boolean) as Child[];
   const cultoHoje = events.find((e) => e.eventDate === hoje);
-  const proximos = events.filter((e) => e.eventDate >= hoje).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
   const timesAbertos = ministries.filter((m) => !m.people.some((mp) => mp.personId === person.id));
   const ministryOf = (slot: Slot) => ministries.find((m) => m.positions?.some((p) => p.id === slot.position_id)) ?? ministries.find((m) => m.people.some((mp) => mp.personId === person.id));
   const incompleto = member && !member.contactComplete;
   const destOracao = useDestinatario("oracao");
 
+  /* entradas dos módulos; a casca ordena */
+  const entradas: EntradaFila<ItemInicio>[] = [];
+  if (meusFilhos.length > 0 && cultoHoje && kidsCheckin) entradas.push({ id: "kids-hoje", modulo: "kids", tipo: "acao", prioridade: 95, prazo: hoje, conteudo: { k: "kids" } });
+  for (const slot of aConfirmar) {
+    const ev = evById.get(slot.event_id);
+    if (ev) entradas.push({ id: `escala-${slot.id}`, modulo: "escalas", tipo: "acao", prioridade: 90, prazo: `${ev.eventDate} ${ev.time ?? ""}`, conteudo: { k: "escala", slot, ev } });
+  }
+  if (serve && tarefa) entradas.push({ id: `tarefa-${tarefa.id}`, modulo: "quadros", tipo: "acao", prioridade: 70, prazo: tarefa.due, conteudo: { k: "tarefa", card: tarefa } });
+  if (novo) entradas.push({ id: `mural-${novo.id}`, modulo: "mural", tipo: "aviso", prioridade: 50, conteudo: { k: "mural", aviso: novo } });
+  if (nextStep) entradas.push({ id: `passo-${nextStep.id}`, modulo: "inicio", tipo: "passo", prioridade: 40, conteudo: { k: "passo", step: nextStep } });
+  if (incompleto) entradas.push({ id: "cadastro", modulo: "perfil", tipo: "acao", prioridade: 30, conteudo: { k: "cadastro" } });
+  if (!serve && timesAbertos.length > 0) entradas.push({ id: "servir", modulo: "times", tipo: "passo", prioridade: 20, conteudo: { k: "servir", times: timesAbertos } });
+  const fila = ordenarFila(entradas, ligados);
+  const visiveis = maisFila ? fila : fila.slice(0, FILA_DOBRA);
+  const resto = fila.length - visiveis.length;
+
+  const cartao = (e: EntradaFila<ItemInicio>, destaque: boolean) => {
+    const c = e.conteudo;
+    const btn = `m6-btn ${destaque ? "pri" : "sec"}`;
+    switch (c.k) {
+      case "kids":
+        return <Fragment key={e.id}>{kidsCheckin?.(destaque)}</Fragment>;
+      case "escala":
+        return <EscalaCard key={e.id} slot={c.slot} ev={c.ev} ministry={ministryOf(c.slot)} person={person} member={member} members={members} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat} destaque={destaque} />;
+      case "tarefa":
+        return (
+          <div key={e.id} className="m6-card">
+            <div className="m6-kick">Tarefa com prazo</div>
+            <div className="m6-ct">{c.card.title}</div>
+            <div className="m6-meta">Prazo · {formatDateBR(c.card.due)}</div>
+            <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("agenda", null, { agSeg: "minha" })}>Ver minhas tarefas</button></div>
+          </div>
+        );
+      case "mural":
+        return (
+          <div key={e.id} className="m6-card">
+            <div className="m6-kick"><Icon name="bandeira" size={16} />Novo no Mural</div>
+            <div className="m6-ct">{c.aviso.title}</div>
+            {c.aviso.created_at && <div className="m6-meta">{quandoPublicado(c.aviso.created_at)}</div>}
+            <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("mensagens", "mural")}>Ler a publicação</button></div>
+          </div>
+        );
+      case "passo":
+        return (
+          <div key={e.id} className="m6-card">
+            <div className="m6-kick">Seu próximo passo</div>
+            <div className="m6-ct">{c.step.nome}</div>
+            {c.step.info && <div className="m6-meta">{c.step.info}</div>}
+            <div className="m6-btns"><button className={btn} type="button" onClick={() => (c.step.run ? c.step.run() : ui.go("caminhada"))}>{c.step.acao ?? ct("Ver a {caminhada}")} →</button></div>
+          </div>
+        );
+      case "cadastro":
+        return (
+          <div key={e.id} className="m6-card">
+            <div className="m6-kick">Seu cadastro</div>
+            <div className="m6-ct">Complete seu cadastro</div>
+            <div className="m6-meta">Faltam alguns dados para a igreja manter contato com você.</div>
+            <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("perfil", "dados")}>Completar →</button></div>
+          </div>
+        );
+      case "servir":
+        return (
+          <div key={e.id} className="m6-card">
+            <div className="m6-kick">Servir</div>
+            <div className="m6-ct">{c.times.length === 1 ? "1 time procura pessoas" : `${c.times.length} times procuram pessoas`}</div>
+            <div className="m6-meta">{c.times.slice(0, 3).map((m) => m.name).join(", ")}. Veja o que cada um faz antes de decidir.</div>
+            <div className="m6-btns"><button className={btn} type="button" onClick={onServir}>Conhecer os times</button></div>
+          </div>
+        );
+    }
+  };
+
+  /* Da igreja: eventos dos próximos 7 dias (sem os que já estão na fila), até 3;
+     sem nenhum na semana, o próximo */
+  const naFila = new Set(aConfirmar.map((r) => r.event_id));
+  const confirmados = new Map<string, string>();
+  for (const r of meusSlots) {
+    if (r.status !== "ok" || confirmados.has(r.event_id)) continue;
+    const m = ministryOf(r);
+    confirmados.set(r.event_id, m?.positions?.find((p) => p.id === r.position_id)?.name ?? m?.name ?? "");
+  }
+  const proximos = events
+    .filter((e) => aindaVaiAcontecer(e.eventDate, e.time) && !naFila.has(e.id))
+    .sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
+  const fimDaSemana = somaDias(hoje, 6);
+  const daSemana = proximos.filter((e) => e.eventDate <= fimDaSemana);
+  const daIgreja = (daSemana.length ? daSemana : proximos.slice(0, 1)).slice(0, 3);
+
   return (
     <>
       <div className="m6-sec0">
         <div className="m6-lbl">Para você agora</div>
-        {incompleto && (
-          <div className="m6-card">
-            <div className="m6-kick">Seu cadastro</div>
-            <div className="m6-ct">Complete seu cadastro</div>
-            <div className="m6-meta">Faltam alguns dados para a igreja manter contato com você.</div>
-            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => ui.go("perfil", "dados")}>Completar →</button></div>
-          </div>
-        )}
-        {aConfirmar.slice(0, 2).map((slot) => {
-          const ev = evById.get(slot.event_id);
-          return ev ? <EscalaCard key={slot.id} slot={slot} ev={ev} ministry={ministryOf(slot)} person={person} member={member} members={members} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat} /> : null;
-        })}
-        {meusFilhos.length > 0 && cultoHoje && kidsCheckin}
-        {serve && tarefa && (
-          <div className="m6-card">
-            <div className="m6-kick">Tarefa com prazo</div>
-            <div className="m6-ct">{tarefa.title}</div>
-            <div className="m6-meta">Prazo · {formatDateBR(tarefa.due)}</div>
-            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => ui.go("agenda", null, { agSeg: "minha" })}>Ver minhas tarefas</button></div>
-          </div>
-        )}
-        {novo && (
-          <div className="m6-card">
-            <div className="m6-kick"><Icon name="bandeira" size={16} />Novo no Mural</div>
-            <div className="m6-ct">{novo.title}</div>
-            {novo.created_at && <div className="m6-meta">{quandoPublicado(novo.created_at)}</div>}
-            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => ui.go("mensagens", "mural")}>Ler a publicação</button></div>
-          </div>
-        )}
-        {nextStep && (
-          <div className="m6-card">
-            <div className="m6-kick">Seu próximo passo</div>
-            <div className="m6-ct">{nextStep.nome}</div>
-            {nextStep.info && <div className="m6-meta">{nextStep.info}</div>}
-            <div className="m6-btns"><button className={`m6-btn ${nextStep.st === "andamento" ? "pri" : "sec"}`} type="button" onClick={() => (nextStep.run ? nextStep.run() : ui.go("caminhada"))}>{nextStep.acao ?? ct("Ver a {caminhada}")} →</button></div>
-          </div>
-        )}
-        {!serve && timesAbertos.length > 0 && (
-          <div className="m6-card">
-            <div className="m6-kick">Servir</div>
-            <div className="m6-ct">{timesAbertos.length === 1 ? "1 time procura pessoas" : `${timesAbertos.length} times procuram pessoas`}</div>
-            <div className="m6-meta">{timesAbertos.slice(0, 3).map((m) => m.name).join(", ")}. Veja o que cada um faz antes de decidir.</div>
-            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={onServir}>Conhecer os times</button></div>
-          </div>
-        )}
-        {!incompleto && aConfirmar.length === 0 && !tarefa && !novo && !nextStep && (serve || timesAbertos.length === 0) && (
+        {fila.length === 0 ? (
           <div className="m6-card"><div className="m6-ct">Tudo em dia</div><div className="m6-meta">Quando a liderança precisar de você, aparece aqui.</div></div>
+        ) : (
+          visiveis.map((e, i) => cartao(e, i === 0))
+        )}
+        {resto > 0 && (
+          <div className="m6-more"><button type="button" className="m6-link" onClick={() => setMaisFila(true)}>{`Ver mais ${plural(resto, "item", "itens")}`}</button></div>
         )}
       </div>
 
       <div className="m6-sec">
         <div className="m6-lbl">Da igreja</div>
-        {proximos.length > 0 ? (
-          <div className="m6-list">{proximos.slice(0, 3).map((ev) => <EventoRow key={ev.id} ev={ev} />)}</div>
+        {daIgreja.length > 0 ? (
+          <div className="m6-list">{daIgreja.map((ev) => <EventoRow key={ev.id} ev={ev} serve={confirmados.has(ev.id) ? confirmados.get(ev.id) : null} />)}</div>
         ) : (
           <div className="m6-card"><div className="m6-meta">{ct("Os próximos {cultos} e eventos aparecem aqui.")}</div></div>
         )}
@@ -3347,7 +3418,8 @@ function MobileMembro({
   const serves = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
   const isGuardian = childGuardians.some((g) => g.guardian_person_id === person.id);
   const ctx: ModuleCtx = { serves, isRecep, isKids, isGuardian };
-  const modulosMembro = useMemo(() => membrosDoRegistro(modulosLigados(rest.modulos)), [rest.modulos]);
+  const ligadosMembro = useMemo(() => modulosLigados(rest.modulos), [rest.modulos]);
+  const modulosMembro = useMemo(() => membrosDoRegistro(ligadosMembro), [ligadosMembro]);
   const subAllowed = (id: string | null) => !id || (modulosMembro.find((m) => m.id === id)?.visible(ctx) ?? false);
   /* Mural desligado na igreja: sem entrada em Mensagens nem cartão no Início (lei 6) */
   const muralOn = subAllowed("mural");
@@ -3475,11 +3547,11 @@ function MobileMembro({
           {tab === "inicio" && (
             <InicioV6 person={person} member={member} ministries={ministries} members={members} events={events} roster={roster} cards={cards}
               announcements={muralOn ? announcements : []} unreadIds={unreadIds} kidsChildren={kidsChildren} childGuardians={childGuardians}
-              kidsCheckin={<CheckinKidsHoje person={person} events={events} kidsChildren={kidsChildren} childGuardians={childGuardians} kidsClasses={kidsClasses}
-                kidsSessions={kidsSessions} kidsAttendance={kidsAttendance} organizationId={organizationId} />}
+              kidsCheckin={(destaque) => <CheckinKidsHoje person={person} events={events} kidsChildren={kidsChildren} childGuardians={childGuardians} kidsClasses={kidsClasses}
+                kidsSessions={kidsSessions} kidsAttendance={kidsAttendance} organizationId={organizationId} destaque={destaque} />}
               onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat}
               nextStep={steps.find((s) => s.st === "andamento" && s.acao) ?? steps.find((s) => s.st === "afazer" && s.acao && s.id !== "time") ?? null}
-              onServir={abrirTimes} />
+              onServir={abrirTimes} ligados={ligadosMembro} />
           )}
 
           {tab === "agenda" && !sub && (
