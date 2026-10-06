@@ -1,5 +1,12 @@
 # Progresso · Service v7
 
+> **Resumo para a manhã (parada por limite de uso, não por bloqueio)**
+> - Feito: etapa 1 inteira, etapa 2 inteira (2.1 a 2.16), etapa 3 inteira (3.1 a 3.7), plano da etapa 4 e os itens 4.1, 4.13, 4.9 e 4.2. Cada item tem commit próprio, com tsc e build passando.
+> - Falta: 4.3 a 4.8, 4.10 a 4.12 e 4.14 a 4.19 (ordem recomendada no plano), etapa 5 inteira, a captura final (ajustar `tools/captura-service` para o Perfil pelo avatar, ver "Para a captura final"), a tabela "Captura por etapa" e a seção 8.
+> - Precisa de você: teste do 4.2 com 5 membros acima de 60 anos; aplicar em produção as migrações 0051 a 0057 (só rodaram no banco local) antes de qualquer deploy; validar as decisões em "Decisões da noite" (branch a partir de service-v6, cadeia de destinatário sem coordenação de ministério, check-in Kids abrindo 60 min antes, regra de "novo" em Pessoas).
+> - Para continuar: rode `/service-v7 4`, que retoma do primeiro item aberto.
+
+
 Atualizado pelo Claude Code ao fim de cada item: marque `[x]` e anote o commit curto.
 
 ## Etapa 1 · Lei de módulos
