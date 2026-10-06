@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createServiceBrowserClient } from "../lib/supabase-browser";
+import { statusDaCrianca, useKidsCheckin } from "../lib/kids-checkin";
 import { formatDateBR, joinDot } from "../lib/date";
 import ChurchLockup from "../ChurchLockup";
 
@@ -39,9 +38,13 @@ export default function KidsCheckinClient({
   attendanceByChild: Record<string, AttendanceInfo>;
 }) {
   const router = useRouter();
-  const [attendance, setAttendance] = useState(attendanceByChild);
-  const [loadingChild, setLoadingChild] = useState<string | null>(null);
-  const [error, setError] = useState("");
+  /* mesma lógica do check-in pelo app (lib/kids-checkin.ts); aqui a sessão já vem do QR */
+  const { attendance, loadingChild, error, checkin: dropoff, pedirRetirada: requestPickup } = useKidsCheckin({
+    organizationId: session?.organizationId,
+    personId: person?.id,
+    inicial: attendanceByChild,
+    sessionFor: async () => session?.id ?? null,
+  });
 
   const errorState = !session
     ? "Este QR Code não aponta para uma sessão Kids válida."
@@ -50,42 +53,6 @@ export default function KidsCheckinClient({
     : !session.checkinActive
     ? "Este QR Code está desativado. Procure a liderança."
     : null;
-
-  const dropoff = async (childId: string) => {
-    if (!session || !person) return;
-    setLoadingChild(childId);
-    setError("");
-    const { data, error: insertError } = await createServiceBrowserClient()
-      .schema("service")
-      .from("kids_attendance")
-      .insert({ organization_id: session.organizationId, session_id: session.id, child_id: childId, dropped_off_by: person.id, dropped_off_via: "qr" })
-      .select("id,status")
-      .single();
-    setLoadingChild(null);
-    if (insertError || !data) {
-      setError("Não foi possível registrar o check-in agora.");
-      return;
-    }
-    setAttendance((prev) => ({ ...prev, [childId]: { id: data.id as string, status: data.status as string } }));
-  };
-
-  const requestPickup = async (childId: string) => {
-    const att = attendance[childId];
-    if (!att || !person) return;
-    setLoadingChild(childId);
-    setError("");
-    const { error: updateError } = await createServiceBrowserClient()
-      .schema("service")
-      .from("kids_attendance")
-      .update({ status: "retirada_pendente", pickup_requested_by: person.id, pickup_requested_at: new Date().toISOString() })
-      .eq("id", att.id);
-    setLoadingChild(null);
-    if (updateError) {
-      setError("Não foi possível solicitar a retirada agora.");
-      return;
-    }
-    setAttendance((prev) => ({ ...prev, [childId]: { ...att, status: "retirada_pendente" } }));
-  };
 
   return (
     <div className="modal-bg" style={{ zIndex: 110, borderRadius: 0 }} onClick={() => router.push("/service")}>
@@ -131,7 +98,7 @@ export default function KidsCheckinClient({
                     <div className="ck-row-main">
                       <div className="ck-row-name">{child.name}</div>
                       <div className="ck-row-meta">
-                        {!att ? "Ainda não fez check-in" : att.status === "presente" ? "Na sala" : att.status === "retirada_pendente" ? "Retirada solicitada, aguarde a professora" : "Retirado"}
+                        {statusDaCrianca(att)}
                       </div>
                     </div>
                     {!att && (

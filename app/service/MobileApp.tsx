@@ -2,6 +2,7 @@
 
 import { avisar } from "./lib/avisar";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon, Caret } from "./lib/icons";
 import { formatDateBR, joinDot, parseISODate, saudacao, todayISO, weekdayFromISO } from "./lib/date";
@@ -12,6 +13,7 @@ import CepInput from "./CepInput";
 import ChurchLockup from "./ChurchLockup";
 import { TEXT_SCALES, useTextScale } from "./lib/text-scale";
 import { requirementLabel, type RequirementKind } from "./lib/requirements";
+import { checkinAberto, horaQueAbre, sessaoDoCulto, statusDaCrianca, useKidsCheckin } from "./lib/kids-checkin";
 import { INSTRUCAO_QR, aulasDoCurso, proximaAula, textoDaAula, type ProximaAula } from "./lib/aulas";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
@@ -2142,6 +2144,7 @@ export function MemberContactFields({ d, set, erros }: { d: MemberContactInput; 
 // ── aba: Kids (area do responsavel, drill-down do Perfil) ────────────────────────
 
 function TabKidsArea({
+  checkinHoje,
   person,
   people,
   kidsClasses,
@@ -2166,6 +2169,8 @@ function TabKidsArea({
   organizationId?: string;
   churchId?: string;
   setTab?: (tab: string) => void;
+  /* check-in de hoje (v7 2.3), o mesmo bloco do Início */
+  checkinHoje?: React.ReactNode;
 }) {
   const emptyForm = { nome: "", nascimento: "", genero: "", autorizaImagem: false, alergias: "", restricoes: "", saude: "", medicamento: "", emergenciaNome: "", emergenciaTel: "", notas: "" };
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -2316,6 +2321,7 @@ function TabKidsArea({
 
   return (
     <>
+      {checkinHoje}
       <div className="m-section-t">Sua foto de responsável</div>
       <PhotoPicker label="Foto do responsável" photoUrl={minhaFoto} path={`${organizationId}/kids/guardians/${person.id}`} onUploaded={salvarMinhaFoto} />
 
@@ -2668,10 +2674,85 @@ function SheetOracao({ person, member, ministries, members, onStartChat }: {
   );
 }
 
+// ── check-in Kids pelo app (v7 2.3) ───────────────────────────────────────────
+/* No dia do culto, um bloco por filho com o check-in. Abre 60 minutos antes
+   do culto; a mesma lógica da rota do QR (lib/kids-checkin.ts). Aparece no
+   Início e em Minha família. */
+function cultoDeHoje(events: Ev[]): Ev | null {
+  const hoje = todayISO();
+  const doDia = events.filter((e) => e.eventDate === hoje).sort((a, b) => (a.time ?? "").localeCompare(b.time ?? ""));
+  if (!doDia.length) return null;
+  /* o próximo que ainda não terminou (2h depois do início), senão o último */
+  const agora = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
+  const fim = (t: string) => { const m = (t ?? "").match(/^(\d{1,2}):(\d{2})/); return m ? `${String(Math.min(23, Number(m[1]) + 2)).padStart(2, "0")}:${m[2]}` : "23:59"; };
+  return doDia.find((e) => fim(e.time) >= agora) ?? doDia[doDia.length - 1];
+}
+
+function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, kidsClasses, kidsSessions, kidsAttendance, organizationId }: {
+  person: P; events: Ev[]; kidsChildren: Child[]; childGuardians: ChildGuardian[]; kidsClasses: KidsClass[];
+  kidsSessions: KidsSession[]; kidsAttendance: KidsAttendance[]; organizationId?: string;
+}) {
+  const culto = cultoDeHoje(events);
+  const vinculos = childGuardians.filter((g) => g.guardian_person_id === person.id);
+  const filhos = vinculos.map((g) => kidsChildren.find((c) => c.id === g.child_id)).filter(Boolean) as Child[];
+  const inicial: Record<string, { id: string; status: string }> = {};
+  if (culto) {
+    for (const c of filhos) {
+      const sessao = kidsSessions.find((ks) => ks.event_id === culto.id && ks.class_id === c.class_id);
+      const att = sessao ? kidsAttendance.find((a) => a.session_id === sessao.id && a.child_id === c.id && a.status !== "retirado") : undefined;
+      if (att) inicial[c.id] = { id: att.id, status: att.status };
+    }
+  }
+  const router = useRouter();
+  const ck = useKidsCheckin({
+    organizationId, personId: person.id, inicial,
+    sessionFor: (childId) => (culto ? sessaoDoCulto(culto.id, childId) : Promise.resolve(null)),
+    aoMudar: () => router.refresh(),
+  });
+  /* a hora de abrir passa com a tela aberta */
+  const [, setTick] = useState(0);
+  useEffect(() => { const h = setInterval(() => setTick((t) => t + 1), 60000); return () => clearInterval(h); }, []);
+  if (!culto || !filhos.length) return null;
+  const abre = horaQueAbre(culto.time);
+  const aberto = checkinAberto(culto.time);
+  return (
+    <div className="m6-card">
+      <div className="m6-kick">Kids hoje</div>
+      <div className="m6-ct">{joinDot(culto.name, culto.time)}</div>
+      {!aberto && abre && <div className="m6-meta">O check-in abre às {abre}, 1 hora antes do culto.</div>}
+      {filhos.map((c, i) => {
+        const att = ck.attendance[c.id];
+        const turma = kidsClasses.find((kc) => kc.id === c.class_id);
+        const podeRetirar = vinculos.find((g) => g.child_id === c.id)?.can_pickup;
+        const busy = ck.loadingChild === c.id;
+        return (
+          <div key={c.id} style={{ marginTop: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <Av name={c.name} photoUrl={c.photo_url} />
+              <div className="m6-rb">
+                <div className="m6-rt">{c.name.split(" ")[0]}</div>
+                <div className="m6-rs">{turma ? joinDot(turma.name, statusDaCrianca(att)) : "Sem turma: fale com a recepção do Kids"}</div>
+              </div>
+            </div>
+            {turma && !att && aberto && (
+              <div className="m6-btns"><button className={`m6-btn ${i === 0 ? "pri" : "sec"}`} type="button" disabled={busy} onClick={() => ck.checkin(c.id)}>{busy ? "Aguarde..." : `Fazer check-in de ${c.name.split(" ")[0]}`}</button></div>
+            )}
+            {att?.status === "presente" && podeRetirar && (
+              <div className="m6-btns"><button className="m6-btn sec" type="button" disabled={busy} onClick={() => ck.pedirRetirada(c.id)}>{busy ? "Aguarde..." : "Solicitar retirada"}</button></div>
+            )}
+          </div>
+        );
+      })}
+      {ck.error && <div className="m6-meta" style={{ color: "var(--danger)", marginTop: 8 }}>{ck.error}</div>}
+    </div>
+  );
+}
+
 // ── Início (S17) ──────────────────────────────────────────────────────────────
-function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, onServir }: {
+function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, onServir }: {
   person: P; member: M | null; ministries: Ministry[]; members: M[]; events: Ev[]; roster: Slot[]; cards: Card[];
   announcements: Announcement[]; unreadIds: Set<string>; kidsChildren: Child[]; childGuardians: ChildGuardian[];
+  kidsCheckin?: React.ReactNode;
   onConfirmarEscala?: (id: string) => void; onRecusarEscala?: (id: string) => void;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
   nextStep: StepView | null;
@@ -2711,14 +2792,7 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
           const ev = evById.get(slot.event_id);
           return ev ? <EscalaCard key={slot.id} slot={slot} ev={ev} ministry={ministryOf(slot)} person={person} member={member} members={members} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat} /> : null;
         })}
-        {meusFilhos.length > 0 && cultoHoje && (
-          <div className="m6-card">
-            <div className="m6-kick">Kids hoje</div>
-            <div className="m6-ct">{meusFilhos.map((c) => c.name.split(" ")[0]).join(" e ")}</div>
-            <div className="m6-meta">{joinDot(cultoHoje.name, cultoHoje.time)}. O check-in fica em Minha família.</div>
-            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => ui.go("perfil", "familia")}>Ver o check-in</button></div>
-          </div>
-        )}
+        {meusFilhos.length > 0 && cultoHoje && kidsCheckin}
         {serve && tarefa && (
           <div className="m6-card">
             <div className="m6-kick">Tarefa com prazo</div>
@@ -3292,6 +3366,8 @@ function MobileMembro({
           {tab === "inicio" && (
             <InicioV6 person={person} member={member} ministries={ministries} members={members} events={events} roster={roster} cards={cards}
               announcements={announcements} unreadIds={unreadIds} kidsChildren={kidsChildren} childGuardians={childGuardians}
+              kidsCheckin={<CheckinKidsHoje person={person} events={events} kidsChildren={kidsChildren} childGuardians={childGuardians} kidsClasses={kidsClasses}
+                kidsSessions={kidsSessions} kidsAttendance={kidsAttendance} organizationId={organizationId} />}
               onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat}
               nextStep={steps.find((s) => s.st === "andamento" && s.acao) ?? steps.find((s) => s.st === "afazer" && s.acao && s.id !== "time") ?? null}
               onServir={abrirTimes} />
@@ -3379,6 +3455,8 @@ function MobileMembro({
           {tab === "perfil" && sub === "familia" && (
             <div className="m6-legacy">
             <TabKidsArea
+              checkinHoje={<CheckinKidsHoje person={person} events={events} kidsChildren={kidsChildren} childGuardians={childGuardians} kidsClasses={kidsClasses}
+                kidsSessions={kidsSessions} kidsAttendance={kidsAttendance} organizationId={organizationId} />}
               person={person}
               people={people}
               kidsClasses={kidsClasses}
