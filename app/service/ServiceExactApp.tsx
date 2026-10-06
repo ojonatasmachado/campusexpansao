@@ -54,6 +54,8 @@ import { coberturaPorTime, vagasFaltando, type CoberturaTime } from "./modules/e
 import { Cobertura } from "./modules/escalas/Cobertura";
 import { linhaDoPainel, semanaDe } from "./lib/contexto-dia";
 import { SaudeDaIgreja } from "./modules/inicio/Saude";
+import { daMinhaLista, listaDeCuidado, type Ausente, type MarcaCuidado } from "./modules/cuidado/cuidado";
+import { ListaDeCuidado, type CriancaAusente } from "./modules/cuidado/Cuidado";
 import { ROTA_GRUPO, cfgTabs as gerarCfgTabs, modulosLigados, navGroups, podeVerRota, rotaLigada, termosDaRota } from "./modules/registry";
 
 type ChurchSettings = {
@@ -131,8 +133,8 @@ export type ChurchView = {
 };
 
 /* módulos ligados na igreja (registro de módulos, lei 3) */
-function ligadosDa(church?: ChurchView) {
-  return modulosLigados({ on: church?.modulosOn, off: church?.modulosOff });
+function ligadosDa(church?: ChurchView, condicoes: Record<string, boolean> = {}) {
+  return modulosLigados({ on: church?.modulosOn, off: church?.modulosOff }, condicoes);
 }
 
 export type PersonView = {
@@ -657,6 +659,7 @@ type Props = {
   announcementReads?: AnnouncementReadView[];
   announcementResponses?: AnnouncementResponseView[];
   eventRsvps?: EventRsvpView[];
+  careMarks?: MarcaCuidado[];
   eventAttendance?: EventAttendanceView[];
   wallPosts: WallPostView[];
   decisions: DecisionView[];
@@ -1001,6 +1004,7 @@ export default function ServiceExactApp({
   announcementReads = [],
   announcementResponses = [],
   eventRsvps = [],
+  careMarks = [],
   eventAttendance = [],
   wallPosts,
   decisions,
@@ -1501,7 +1505,28 @@ export default function ServiceExactApp({
     && !podeVerNav("membros", currentRole, matrizEfetiva, currentExtraAccess, souVoluntario)
     && matrizEfetiva.lider?.voluntarios === true
     && misteriosQueLidero.length > 0;
-  const ligados = ligadosDa(firstChurch);
+  /* "presenca": a igreja já registrou algum check-in (culto ou Kids); sem isso, a Lista de cuidado não aparece (lei 6) */
+  const ligados = ligadosDa(firstChurch, { presenca: eventAttendance.length > 0 || kidsAttendance.length > 0 });
+  /* v7 4.17: lista de cuidado, com a presença do check-in do culto (dia do culto) */
+  const semanasCuidado = { ...ESCALA_DEFAULT, ...(firstChurch?.settings?.escala ?? {}) }.cuidadoSemanas ?? 3;
+  const listaCuidado = useMemo(() => {
+    if (!ligados.has("cuidado")) return [];
+    const diaDo = new Map(events.map((e) => [e.id, e.eventDate]));
+    return listaDeCuidado({
+      pessoas: people, membros: members, grupos: fellowshipGroups, times: ministries, marcas: careMarks, semanas: semanasCuidado,
+      presencas: eventAttendance.map((a) => ({ personId: a.person_id, dia: diaDo.get(a.event_id) ?? "" })),
+    });
+  }, [ligados, events, people, members, fellowshipGroups, ministries, careMarks, semanasCuidado, eventAttendance]);
+  const criancasAusentes = useMemo(() => {
+    if (!ligados.has("cuidado") || !kidsClasses.length) return null;
+    const hoje = todayISO();
+    return kidsChildren.flatMap((c) => {
+      const ultima = kidsAttendance.filter((a) => a.child_id === c.id).map((a) => a.dropped_off_at.slice(0, 10)).sort().pop();
+      if (!ultima) return [];
+      const semanas = Math.floor(((parseISODate(hoje)?.getTime() ?? 0) - (parseISODate(ultima)?.getTime() ?? 0)) / (7 * 86400000));
+      return semanas >= semanasCuidado ? [{ id: c.id, nome: c.name, ultima, semanas }] : [];
+    }).sort((a, b) => b.semanas - a.semanas);
+  }, [ligados, kidsClasses, kidsChildren, kidsAttendance, semanasCuidado]);
   const NAV_GROUPS = navGroups(ligados) as NavGroups;
   const podeVerItem = (id: string) => rotaLigada(id, ligados) && (podeVerNav(id, currentRole, matrizEfetiva, currentExtraAccess, souVoluntario) || (id === "membros" && pessoasSoDoTime));
   const perspectivePersonId = currentPersonId;
@@ -1745,6 +1770,7 @@ export default function ServiceExactApp({
             decisions={decisions}
             timelineEvents={timelineEvents}
             enrollments={enrollments}
+            cuidado={ligados.has("cuidado") ? { lista: daMinhaLista(listaCuidado, currentPersonId, currentRole === "master" || currentRole === "pastor"), todos: listaCuidado, criancas: criancasAusentes, semanas: semanasCuidado } : null}
           />
         ) : null}
         {route === "membros" ? <Membros members={members} people={people} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} soTimes={pessoasSoDoTime ? misteriosQueLidero : null} /> : null}
@@ -2140,6 +2166,7 @@ function Painel({
   decisions = [],
   timelineEvents = [],
   enrollments = [],
+  cuidado = null,
 }: {
   people: PersonView[];
   members: MemberView[];
@@ -2178,6 +2205,8 @@ function Painel({
   decisions?: DecisionView[];
   timelineEvents?: TimelineEventView[];
   enrollments?: EnrollmentView[];
+  /* lista de cuidado (v7 4.17): a de quem olha e a da igreja toda (para a Saúde) */
+  cuidado?: { lista: Ausente[]; todos: Ausente[]; criancas: CriancaAusente[] | null; semanas: number } | null;
 }) {
   const { comTermos: ct } = useTermos();
   /* v7 4.11: gestão e pastores abrem na Saúde da igreja; líder de time, no
@@ -2201,7 +2230,8 @@ function Painel({
     ...(journeyRequests.length > 0 ? [[ct("{Caminhada} pendente"), ct("Pedidos de avanço na {caminhada} (decisão, batismo, curso...) esperando aprovação da liderança.")] as [string, string]] : []),
     ...(semanasComPresenca >= 4 ? [[ct("{Voluntarios} mais engajados"), "Quem tem a maior taxa de engajamento nas últimas escalas."] as [string, string]] : []),
     ["Comunicação recente", "Os últimos avisos e posts do mural enviados pra igreja."],
-    ...(kidsClasses.length > 0 ? [["Crianças por turma", "Quantas crianças estão em cada turma do Kids."] as [string, string], ["Crianças sumindo", "Crianças que não aparecem faz tempo. Vale um contato com a família."] as [string, string]] : []),
+    ...(cuidado ? [["Lista de cuidado", `Quem já teve presença registrada e está há ${plural(cuidado.semanas, "semana")} ou mais sem nenhuma. Cada nome vai para quem cuida: líder do grupo, depois líder do time, depois a pastoral. Ausência justificada tira da lista por 30 dias. A pessoa não vê nada disso.`] as [string, string]] : []),
+    ...(kidsClasses.length > 0 ? [["Crianças por turma", "Quantas crianças estão em cada turma do Kids."] as [string, string], ...(cuidado ? [] : [["Crianças sumindo", "Crianças que não aparecem faz tempo. Vale um contato com a família."] as [string, string]])] : []),
   ];
   return (
     <div className="content wide painel-inicio">
@@ -2224,6 +2254,7 @@ function Painel({
         <SaudeDaIgreja
           dados={{ membros: members, pessoas: people, times: ministries, visitantes: visitors, decisoes: decisions, fatos: timelineEvents, matriculas: enrollments }}
           etapas={JRN_STEPS}
+          extras={cuidado ? [{ id: "ausentes", rotulo: `Ausentes há ${plural(cuidado.semanas, "semana")} ou mais`, valor: cuidado.todos.length, itens: cuidado.todos.map((a) => (a.memberId ? { tipo: "member" as const, id: a.memberId, nome: a.nome } : { tipo: "person" as const, id: a.personId, nome: a.nome })) }] : []}
           onAbrir={(it) => setDrawer({ kind: it.tipo, id: it.id })}
         />
       )}
@@ -2251,6 +2282,11 @@ function Painel({
               <span className="agora-go">Revisar →</span>
             </button>
           )}
+        </div>
+      )}
+      {cuidado && (cuidado.lista.length > 0 || (cuidado.criancas?.length ?? 0) > 0) && (
+        <div style={{ marginBottom: 20 }}>
+          <ListaDeCuidado lista={cuidado.lista} criancas={cuidado.criancas} semanas={cuidado.semanas} onAbrir={(a) => setDrawer(a.memberId ? { kind: "member", id: a.memberId } : { kind: "person", id: a.personId })} />
         </div>
       )}
       <SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} />
@@ -2437,7 +2473,7 @@ function Painel({
               })}
             </div>
           </div>
-          <div className="panel">
+          {!cuidado && <div className="panel">
             <div className="panel-head"><span className="panel-title"><Icon name="alerta" size={14} /> Crianças sumindo</span><span className="panel-meta">sem vir há mais tempo</span></div>
             <div className="panel-body flush">
               {kidsChildren
@@ -2461,7 +2497,7 @@ function Painel({
                 ))}
               {kidsChildren.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhuma criança cadastrada ainda.</div>}
             </div>
-          </div>
+          </div>}
         </div>
       )}
     </div>
@@ -7082,6 +7118,17 @@ function Config({
                 <div className="cfg-row-s">{escalaCfg.considerarFerias ? "Quem está de férias fica fora da geração" : "Férias não bloqueiam a escala"}</div>
               </div>
               <button type="button" className={`sw${escalaCfg.considerarFerias ? " on" : ""}`} onClick={() => setEscala("considerarFerias", !escalaCfg.considerarFerias)} />
+            </div>
+            <div className="crit-row">
+              <div className="cfg-row-main">
+                <div className="cfg-row-t">Lista de cuidado</div>
+                <div className="cfg-row-s">semanas sem presença para a pessoa entrar na lista de quem cuida</div>
+              </div>
+              <div className="stepper">
+                <button type="button" aria-label="Menos uma semana" onClick={() => setEscala("cuidadoSemanas", Math.max(1, (escalaCfg.cuidadoSemanas ?? 3) - 1))}>−</button>
+                <span>{plural(escalaCfg.cuidadoSemanas ?? 3, "semana")}</span>
+                <button type="button" aria-label="Mais uma semana" onClick={() => setEscala("cuidadoSemanas", (escalaCfg.cuidadoSemanas ?? 3) + 1)}>+</button>
+              </div>
             </div>
             <div className="cfg-row" style={{ borderBottom: "none" }}>
               <div className="cfg-row-main">

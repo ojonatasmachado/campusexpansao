@@ -422,6 +422,7 @@ type AnnouncementView = {
 };
 type AnnouncementResponseView = { announcement_id: string; person_id: string; response: "vou" | "nao" };
 type EventRsvpView = { event_id: string; person_id: string; kind: "presenca" | "inscricao" };
+type CareMarkView = { person_id: string; kind: "contato" | "justificada"; via: string | null; until: string | null; created_at: string };
 
 type WallPostView = {
   id: string;
@@ -727,6 +728,7 @@ type ExtraServiceData = {
   announcementReads: AnnouncementReadView[];
   announcementResponses: AnnouncementResponseView[];
   eventRsvps: EventRsvpView[];
+  careMarks: CareMarkView[];
   eventAttendance: EventAttendanceView[];
   wallPosts: WallPostView[];
   decisions: DecisionView[];
@@ -775,6 +777,7 @@ const emptyExtraServiceData: ExtraServiceData = {
   announcementReads: [],
   announcementResponses: [],
   eventRsvps: [],
+  careMarks: [],
   eventAttendance: [],
   wallPosts: [],
   decisions: [],
@@ -1263,6 +1266,9 @@ async function getServiceDashboardData(): Promise<{
      propósito: antes da migração a tabela não existe e a tela segue sem elas. */
   const { data: responsesData } = await supabase.schema("service").from("announcement_responses").select("announcement_id,person_id,response");
   const announcementResponses = (responsesData ?? []) as AnnouncementResponseView[];
+  /* lista de cuidado (0061): só a liderança lê; fora do Promise.all */
+  const { data: careData } = await supabase.schema("service").from("care_marks").select("person_id,kind,via,until,created_at");
+  const careMarks = (careData ?? []) as CareMarkView[];
   /* presença e inscrição em evento (0058), também fora do Promise.all */
   const { data: rsvpsData } = await supabase.schema("service").from("event_rsvps").select("event_id,person_id,kind");
   const eventRsvps = (rsvpsData ?? []) as EventRsvpView[];
@@ -1335,6 +1341,7 @@ async function getServiceDashboardData(): Promise<{
       announcementReads: ((announcementReadsResult.data ?? []) as AnnouncementReadView[]),
       announcementResponses,
       eventRsvps,
+      careMarks,
       eventAttendance: ((eventAttendanceResult.data ?? []) as EventAttendanceView[]),
       wallPosts: ((wallPostsResult.data ?? []) as WallPostView[]),
       decisions: ((decisionsResult.data ?? []) as DecisionView[]),
@@ -1543,6 +1550,7 @@ export default async function ServiceHomePage() {
       announcementReads={extra.announcementReads}
       announcementResponses={extra.announcementResponses}
       eventRsvps={extra.eventRsvps}
+      careMarks={extra.careMarks}
       eventAttendance={extra.eventAttendance}
       wallPosts={extra.wallPosts}
       decisions={extra.decisions}

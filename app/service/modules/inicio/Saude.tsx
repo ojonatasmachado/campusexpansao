@@ -16,9 +16,11 @@ const PRESETS: { v: Preset; l: string }[] = [
   { v: "datas", l: "Datas" },
 ];
 
-export function SaudeDaIgreja({ dados, etapas, onAbrir }: {
+export function SaudeDaIgreja({ dados, etapas, onAbrir, extras = [] }: {
   dados: DadosSaude;
   etapas: { label: string }[];
+  /* números de módulos (ex. ausentes da Lista de cuidado), no grupo "Hoje" */
+  extras?: Numero[];
   onAbrir: (item: ItemPessoa) => void;
 }) {
   const { comTermos: ct } = useTermos();
@@ -61,7 +63,7 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir }: {
         </div>
       )}
       <div className="saude-grp">Hoje</div>
-      {grade(numerosDaBase(dados))}
+      {grade([...numerosDaBase(dados), ...extras])}
       <div className="saude-grp">{`De ${formatDateBR(periodo.ini)} a ${formatDateBR(periodo.fim)}`}<span className="saude-grp-s">{` · comparado a ${formatDateBR(ant.ini)} a ${formatDateBR(ant.fim)}`}</span></div>
       {grade(numerosDoPeriodo(dados, periodo))}
       <div className="saude-grp">{ct("Etapas da {caminhada}")}<span className="saude-grp-s"> · membros que já fizeram cada uma</span></div>
