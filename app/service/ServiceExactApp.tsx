@@ -52,6 +52,7 @@ import { friendlyWriteError } from "./painel/erros";
 import { porData, tipoDoFato } from "./lib/historico";
 import { coberturaPorTime, vagasFaltando, type CoberturaTime } from "./modules/escalas/cobertura";
 import { Cobertura } from "./modules/escalas/Cobertura";
+import { linhaDoPainel, semanaDe } from "./lib/contexto-dia";
 import { ROTA_GRUPO, cfgTabs as gerarCfgTabs, modulosLigados, navGroups, podeVerRota, rotaLigada, termosDaRota } from "./modules/registry";
 
 type ChurchSettings = {
@@ -1598,6 +1599,7 @@ export default function ServiceExactApp({
         rehearsals={rehearsals}
         paginaUrl={paginaUrl}
         timelineEvents={timelineEvents}
+        fellowshipGroups={fellowshipGroups}
         onRecusarEscala={recusarEscalaMobile}
         mode="self"
         selfPersonId={currentPersonId}
@@ -2181,7 +2183,12 @@ function Painel({
       <div className="ph">
         <div>
           <h1 className="ph-title">{saudacao()}, {userName?.split(" ")[0] ?? "liderança"} <HelpDot text={ct("Seu resumo da semana: próximos {cultos}, vagas em aberto na escala e o que precisa da sua atenção agora.")} /></h1>
-          <p className="ph-sub">Visão da semana: quem está escalado, o que falta preencher e quem precisa de acompanhamento.</p>
+          <p className="ph-sub">{(() => {
+            /* v7 4.19: a semana e o próximo culto com o que falta na escala */
+            const prox = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time))[0];
+            const linha = prox ? linhaDoPainel({ nome: prox.name, data: prox.eventDate, faltam: vagasFaltando(coberturaPorTime(prox, roster, ministries, scopeMinistryIds)) }) : null;
+            return linha ? `${semanaDe()}. ${linha}.` : `${semanaDe()}.`;
+          })()}</p>
         </div>
         <div className="ph-actions">
           <button className="btn btn-sec" type="button" onClick={() => setRoute("cultos")}>Ver agenda</button>

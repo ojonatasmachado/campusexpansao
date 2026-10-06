@@ -25,6 +25,7 @@ import { FILA_DOBRA, ordenarFila, type EntradaFila } from "./modules/fila";
 import { conflitos, horaDeChegada } from "./lib/agenda";
 import { baixarIcs } from "./lib/ics";
 import { porData, quandoFoi, tipoDoFato, type FatoView } from "./lib/historico";
+import { linhaDoMembro, mesmoDiaDaSemana } from "./lib/contexto-dia";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -54,6 +55,7 @@ type M = {
   contactComplete?: boolean;
   journey: number[];
   volunteerId: string | null;
+  groupId?: string | null;
 };
 
 /* dados de contato que o membro preenche no primeiro acesso e no perfil */
@@ -290,6 +292,8 @@ export type MobileOverlayProps = {
   paginaUrl?: string | null;
   /* fatos da história da própria pessoa (v7 4.8; o banco só entrega os dela) */
   timelineEvents?: FatoView[];
+  /* grupos (dia e hora), para "Hoje: GC Centro às 20h" (v7 4.19) */
+  fellowshipGroups?: { id: string; name: string; weekday: string | null; time: string | null }[];
 };
 
 // ── constantes ────────────────────────────────────────────────────────────────
@@ -3593,7 +3597,7 @@ function MobileMembro({
           missingRequirements = [], serveRequests = [], baptismCandidates = [], onEnrollCourse, onRequestBaptism, onRequestServe,
           mode, onLogout, onSwitchToPanel, readAnnouncementIds = [], churchPurpose,
           onSaveAvailability, onRespondAnnouncement, announcementResponses = [],
-          eventRsvps = [], onRespondEvent, meetings = [], rehearsals = [], paginaUrl, timelineEvents = [] } = rest;
+          eventRsvps = [], onRespondEvent, meetings = [], rehearsals = [], paginaUrl, timelineEvents = [], fellowshipGroups = [] } = rest;
   /* Mural sempre do mais recente para o mais antigo, pela data de publicação */
   const announcements = useMemo(() => porPublicacao(avisosRecebidos), [avisosRecebidos]);
   /* curso em rascunho não aparece no app */
@@ -3732,7 +3736,22 @@ function MobileMembro({
               {tab === "inicio" ? (
                 <>
                   <h1 className="m-h1">{saudacao()}, {person.name.split(" ")[0]}</h1>
-                  <p className="m-hsub">{dataLonga(hoje)}</p>
+                  <p className="m-hsub">{(() => {
+                    /* v7 4.19: o mais relevante de hoje; sem nada, a data */
+                    const doDia = events.filter((e) => e.eventDate === hoje);
+                    const minhaVaga = roster.find((r) => r.person_id === person.id && r.status !== "no" && doDia.some((e) => e.id === r.event_id));
+                    const evServe = minhaVaga ? doDia.find((e) => e.id === minhaVaga.event_id) : undefined;
+                    const timeServe = minhaVaga ? ministries.find((m) => m.positions?.some((p) => p.id === minhaVaga.position_id)) : undefined;
+                    const culto = doDia.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => a.time.localeCompare(b.time))[0];
+                    const grupo = member?.groupId ? fellowshipGroups.find((g) => g.id === member.groupId && mesmoDiaDaSemana(g.weekday, hoje)) : undefined;
+                    const aula = minhasAulas(member, courses, enrollments, courseModules, courseLessons).find(({ aula: a }) => a.lesson_date === hoje);
+                    return linhaDoMembro({
+                      serve: evServe ? { hora: evServe.time, chegar: horaDeChegada(evServe.time, chegadaDoTime(timeServe)) } : null,
+                      culto: culto ? { nome: culto.name, hora: culto.time } : null,
+                      grupo: grupo ? { nome: grupo.name, hora: grupo.time } : null,
+                      aula: aula ? { nome: aula.aula.name, hora: aula.aula.lesson_time } : null,
+                    }, hoje);
+                  })()}</p>
                 </>
               ) : (
                 <h1 className="m-h1">{tabTitle}</h1>
