@@ -538,3 +538,9 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
 .esc-event-cob.ok{color:var(--ok)}
 .esc-col:focus{outline:2px solid var(--olive);outline-offset:2px}
 .esc-col:focus:not(:focus-visible){outline:0}
+
+/* v7 4.15: conversa com pessoa, última fala e não lidas */
+.m-conv-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.m-conv.unread .m-conv-name{font-weight:700}
+.m-conv.unread .m-conv-prev{color:var(--white);font-weight:600}
+.m-conv.unread .m-conv-when{color:var(--white)}

@@ -5,7 +5,7 @@ import { Fragment, createContext, useContext, useEffect, useLayoutEffect, useMem
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon, Caret } from "./lib/icons";
-import { aindaVaiAcontecer, formatDateBR, joinDot, paraPublico, parseISODate, porPublicacao, quandoPublicado, saudacao, somaDias, todayISO, weekdayFromISO } from "./lib/date";
+import { aindaVaiAcontecer, quandoMensagem, formatDateBR, joinDot, paraPublico, parseISODate, porPublicacao, quandoPublicado, saudacao, somaDias, todayISO, weekdayFromISO } from "./lib/date";
 import { plural } from "./lib/plural";
 import { formatarTelefone } from "./lib/telefone";
 import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
@@ -174,7 +174,7 @@ type Announcement = {
   created_at?: string | null;
 };
 type Chat = { id: string; kind: string; ministry_id: string | null; name: string | null };
-type ChatMember = { chat_id: string; member_id: string };
+type ChatMember = { chat_id: string; member_id: string; last_read_at?: string | null };
 type Message = { id: string; chat_id: string; sender_id: string | null; body: string; created_at: string };
 type KidsClass = { id: string; church_id: string; name: string; min_age_months: number | null; max_age_months: number | null };
 type Child = {
@@ -292,6 +292,8 @@ export type MobileOverlayProps = {
   paginaUrl?: string | null;
   /* fatos da história da própria pessoa (v7 4.8; o banco só entrega os dela) */
   timelineEvents?: FatoView[];
+  /* marca a conversa como lida no servidor (0060, v7 4.15) */
+  onMarkChatRead?: (chatId: string) => void;
   /* grupos (dia e hora), para "Hoje: GC Centro às 20h" (v7 4.19) */
   fellowshipGroups?: { id: string; name: string; weekday: string | null; time: string | null }[];
 };
@@ -471,9 +473,27 @@ function TabTarefas({ person, cards, boards, onAddCardComment }: { person: P; ca
 
 // ── aba: Conversas ────────────────────────────────────────────────────────────
 
+/* v7 4.15: mensagens de outros depois da última leitura (0060). Sem a coluna
+   (antes da migração), nada conta como não lido. */
+function naoLidasPorConversa(chatMembers: ChatMember[], messages: Message[], memberId: string | null | undefined, lidasAgora: Record<string, string>): Map<string, number> {
+  const out = new Map<string, number>();
+  if (!memberId) return out;
+  for (const cm of chatMembers) {
+    if (cm.member_id !== memberId || !cm.last_read_at) continue;
+    const desde = lidasAgora[cm.chat_id] && lidasAgora[cm.chat_id] > cm.last_read_at ? lidasAgora[cm.chat_id] : cm.last_read_at;
+    const n = messages.filter((m) => m.chat_id === cm.chat_id && m.sender_id !== memberId && m.created_at > desde).length;
+    if (n) out.set(cm.chat_id, n);
+  }
+  return out;
+}
+
 function TabConversas({
-  member, chats, chatMembers, messages, members, ministries, onSendMessage, onStartChat, openChatId, startNew, onChatOpen,
+  member, chats, chatMembers, messages, members, ministries, people = [], onSendMessage, onStartChat, openChatId, startNew, onChatOpen, naoLidas, onLida,
 }: {
+  people?: P[];
+  /* não lidas por conversa e o aviso de que a pessoa abriu uma (v7 4.15) */
+  naoLidas?: Map<string, number>;
+  onLida?: (chatId: string) => void;
   /* abre direto nesta conversa (ex.: depois de "Pedir troca") */
   openChatId?: string | null;
   /* abre já na escolha de com quem falar ("Nova mensagem → Falar com um líder") */
@@ -501,11 +521,33 @@ function TabConversas({
       )
     : [];
 
+  /* conversa a dois: nome e foto da outra pessoa; canal e grupo: o nome dado */
+  const outro = (c: Chat) => {
+    if (c.kind !== "dm") return null;
+    const outros = chatMembers.filter((cm) => cm.chat_id === c.id && cm.member_id !== member?.id);
+    if (outros.length !== 1) return null;
+    return members.find((m) => m.id === outros[0].member_id) ?? null;
+  };
+  const nomeDa = (c: Chat) => outro(c)?.name ?? c.name ?? "Conversa";
+  const fotoDa = (c: Chat) => {
+    const o = outro(c);
+    return o?.volunteerId ? people.find((p) => p.id === o.volunteerId)?.photoUrl ?? null : null;
+  };
+  const ultimaDe = (id: string) => {
+    let last: Message | undefined;
+    for (const m of messages) if (m.chat_id === id && (!last || m.created_at > last.created_at)) last = m;
+    return last;
+  };
+
   const chat = myChats.find((c) => c.id === selId);
   const setSelId = (id: string | null) => {
     setSelIdRaw(id);
-    onChatOpen?.(id ? (myChats.find((c) => c.id === id)?.name ?? "Conversa") : null);
+    const c = id ? myChats.find((x) => x.id === id) : undefined;
+    onChatOpen?.(c ? nomeDa(c) : id ? "Conversa" : null);
+    if (id) onLida?.(id);
   };
+  /* aberta direto (depois de "Pedir troca" ou de um aviso): já conta como lida */
+  useEffect(() => { if (openChatId) onLida?.(openChatId); }, [openChatId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const souLider = member
     ? ministries.some((min) => min.people.some((p) => p.personId === member.volunteerId && p.isLeader))
@@ -639,23 +681,24 @@ function TabConversas({
           <div style={{ fontSize: "var(--fs-app-15)", color: "var(--muted)" }}>Nenhuma conversa ainda. Toque em Nova mensagem para falar com um líder.</div>
         </div>
       )}
-      {myChats.map((c) => {
-        const msgs = messages.filter((m) => m.chat_id === c.id);
-        const last = msgs[msgs.length - 1];
+      {[...myChats].sort((a, b) => (ultimaDe(b.id)?.created_at ?? "").localeCompare(ultimaDe(a.id)?.created_at ?? "")).map((c) => {
+        const last = ultimaDe(c.id);
+        const n = naoLidas?.get(c.id) ?? 0;
+        const nome = nomeDa(c);
+        const autor = last && !outro(c) ? members.find((m) => m.id === last.sender_id)?.name.split(" ")[0] : undefined;
+        const quem = !last ? "" : last.sender_id === member?.id ? "Você: " : autor ? `${autor}: ` : "";
         return (
-          <button className="m-conv" key={c.id} onClick={() => setSelId(c.id)}>
-            <span className="m-conv-ic">→</span>
+          <button className={`m-conv${n ? " unread" : ""}`} key={c.id} type="button" onClick={() => setSelId(c.id)}
+            aria-label={n ? `${nome}, ${n === 1 ? "1 mensagem não lida" : `${n} mensagens não lidas`}` : undefined}>
+            <Av name={nome} photoUrl={fotoDa(c)} />
             <div className="m-conv-main">
-              <div className="m-conv-name">{c.name ?? "Conversa"}</div>
-              <div className="m-conv-prev">
-                {last ? last.body.slice(0, 48) : "Canal"}
-              </div>
+              <div className="m-conv-name">{nome}</div>
+              <div className="m-conv-prev">{last ? `${quem}${last.body}` : "Nenhuma mensagem ainda"}</div>
             </div>
-            {last && (
-              <span className="m-conv-when">
-                {new Date(last.created_at).toLocaleDateString("pt-BR")}
-              </span>
-            )}
+            <div className="m-conv-side">
+              {last && <span className="m-conv-when">{quandoMensagem(last.created_at)}</span>}
+              {n > 0 && <span className="m6-count" aria-hidden="true">{n}</span>}
+            </div>
           </button>
         );
       })}
@@ -3597,7 +3640,7 @@ function MobileMembro({
           missingRequirements = [], serveRequests = [], baptismCandidates = [], onEnrollCourse, onRequestBaptism, onRequestServe,
           mode, onLogout, onSwitchToPanel, readAnnouncementIds = [], churchPurpose,
           onSaveAvailability, onRespondAnnouncement, announcementResponses = [],
-          eventRsvps = [], onRespondEvent, meetings = [], rehearsals = [], paginaUrl, timelineEvents = [], fellowshipGroups = [] } = rest;
+          eventRsvps = [], onRespondEvent, meetings = [], rehearsals = [], paginaUrl, timelineEvents = [], fellowshipGroups = [], onMarkChatRead } = rest;
   /* Mural sempre do mais recente para o mais antigo, pela data de publicação */
   const announcements = useMemo(() => porPublicacao(avisosRecebidos), [avisosRecebidos]);
   /* curso em rascunho não aparece no app */
@@ -3633,7 +3676,14 @@ function MobileMembro({
     return r[id] === v ? r : { ...r, [id]: v };
   });
   const pendEscala = roster.filter((r) => r.person_id === person.id && ((respostas[r.id] as string | undefined) ?? r.status) === "wait" && (evDate.get(r.event_id) ?? "") >= hoje).length;
-  const badges: Partial<Record<MemberTab, number>> = { agenda: serves ? pendEscala : 0, mensagens: muralOn ? unreadIds.size : 0 };
+  /* conversas não lidas (v7 4.15): lida na hora em que abre, sem esperar o servidor */
+  const [conversasLidas, setConversasLidas] = useState<Record<string, string>>({});
+  const naoLidas = useMemo(() => naoLidasPorConversa(chatMembers, messages, member?.id, conversasLidas), [chatMembers, messages, member?.id, conversasLidas]);
+  const marcarConversaLida = (chatId: string) => {
+    setConversasLidas((p) => ({ ...p, [chatId]: new Date().toISOString() }));
+    onMarkChatRead?.(chatId);
+  };
+  const badges: Partial<Record<MemberTab, number>> = { agenda: serves ? pendEscala : 0, mensagens: (muralOn ? unreadIds.size : 0) + naoLidas.size };
 
   const toast = (msg: string, action?: { label: string; fn: () => void }) => setToastO({ msg, action, id: Date.now() });
   useEffect(() => {
@@ -3805,6 +3855,7 @@ function MobileMembro({
               )}
               <div className={sub ? "" : "m6-sec m6-conv"}>
                 <TabConversas key={chatTarget.n} member={member} chats={chats} chatMembers={chatMembers} messages={messages} members={members} ministries={ministries}
+                  people={people} naoLidas={naoLidas} onLida={marcarConversaLida}
                   onSendMessage={onSendMessage} onStartChat={onStartChat} openChatId={chatTarget.id} startNew={chatTarget.novo}
                   onChatOpen={(name) => { setChatAberto(name); setSub(name ? "chat" : null); }} />
               </div>

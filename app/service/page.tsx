@@ -565,6 +565,7 @@ type ChatView = {
 type ChatMemberView = {
   chat_id: string;
   member_id: string;
+  last_read_at?: string | null;
 };
 
 type MessageView = {
@@ -1221,7 +1222,8 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("boards").select("id,name,scope,ministry_id,description,columns").order("created_at", { ascending: false }),
     supabase.schema("service").from("cards").select("id,board_id,column_id,title,description,assignees,due,priority,source_type,source_id,moved_days_ago").order("created_at", { ascending: false }),
     supabase.schema("service").from("chats").select("id,kind,ministry_id,name").order("created_at", { ascending: false }),
-    supabase.schema("service").from("chat_members").select("chat_id,member_id"),
+    /* "*": lê last_read_at (0060) sem quebrar antes de a migração chegar em produção */
+    supabase.schema("service").from("chat_members").select("*"),
     supabase.schema("service").from("messages").select("id,chat_id,sender_id,body,created_at").order("created_at", { ascending: true }),
     supabase.schema("service").from("visitors").select("id,name,phone,stage,visited_on,responsible_id,due,due_status,reply_status,origin,member_id,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("visitor_notes").select("id,visitor_id,happened_on,body,author,is_milestone,created_at").order("created_at", { ascending: false }),

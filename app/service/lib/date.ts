@@ -134,3 +134,18 @@ export function somaDias(iso: string, n: number): string {
   d.setDate(d.getDate() + n);
   return toISODate(d);
 }
+
+/** Hora da última fala numa lista de conversas: hoje "14:32", "ontem",
+ *  na semana o dia ("seg"), depois "03/10". Fuso de Brasília. */
+export function quandoMensagem(instante?: string | null): string {
+  if (!instante) return "";
+  const t = new Date(instante);
+  if (Number.isNaN(t.getTime())) return "";
+  const dia = diaEmBrasilia(instante);
+  const hoje = todayISO();
+  if (dia === hoje) return new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" }).format(t);
+  if (dia === somaDias(hoje, -1)) return "ontem";
+  if (dia > somaDias(hoje, -7)) return ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"][parseISODate(dia)!.getDay()];
+  const [, m, d] = dia.split("-");
+  return `${d}/${m}`;
+}

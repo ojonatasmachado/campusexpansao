@@ -398,6 +398,7 @@ type ChatView = {
 type ChatMemberView = {
   chat_id: string;
   member_id: string;
+  last_read_at?: string | null;
 };
 
 type MessageView = {
@@ -1600,6 +1601,7 @@ export default function ServiceExactApp({
         paginaUrl={paginaUrl}
         timelineEvents={timelineEvents}
         fellowshipGroups={fellowshipGroups}
+        onMarkChatRead={(chatId) => { void createServiceBrowserClient().schema("service").rpc("marcar_conversa_lida", { p_chat: chatId }); }}
         onRecusarEscala={recusarEscalaMobile}
         mode="self"
         selfPersonId={currentPersonId}
