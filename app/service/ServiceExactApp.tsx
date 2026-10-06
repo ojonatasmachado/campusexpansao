@@ -53,6 +53,7 @@ import { porData, tipoDoFato } from "./lib/historico";
 import { coberturaPorTime, vagasFaltando, type CoberturaTime } from "./modules/escalas/cobertura";
 import { Cobertura } from "./modules/escalas/Cobertura";
 import { linhaDoPainel, semanaDe } from "./lib/contexto-dia";
+import { SaudeDaIgreja } from "./modules/inicio/Saude";
 import { ROTA_GRUPO, cfgTabs as gerarCfgTabs, modulosLigados, navGroups, podeVerRota, rotaLigada, termosDaRota } from "./modules/registry";
 
 type ChurchSettings = {
@@ -1739,6 +1740,11 @@ export default function ServiceExactApp({
             ministries={ministries}
             scopeMinistryIds={scopeMinistryIds}
             onAbrirVagas={abrirVagas}
+            currentRole={currentRole}
+            visitors={visitors}
+            decisions={decisions}
+            timelineEvents={timelineEvents}
+            enrollments={enrollments}
           />
         ) : null}
         {route === "membros" ? <Membros members={members} people={people} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} soTimes={pessoasSoDoTime ? misteriosQueLidero : null} /> : null}
@@ -2129,6 +2135,11 @@ function Painel({
   ministries,
   scopeMinistryIds,
   onAbrirVagas,
+  currentRole = "membro",
+  visitors = [],
+  decisions = [],
+  timelineEvents = [],
+  enrollments = [],
 }: {
   people: PersonView[];
   members: MemberView[];
@@ -2162,8 +2173,18 @@ function Painel({
   ministries: MinistryView[];
   scopeMinistryIds: string[] | null;
   onAbrirVagas: (eventId: string, timeId?: string) => void;
+  currentRole?: "master" | "pastor" | "lider" | "membro";
+  visitors?: VisitorView[];
+  decisions?: DecisionView[];
+  timelineEvents?: TimelineEventView[];
+  enrollments?: EnrollmentView[];
 }) {
   const { comTermos: ct } = useTermos();
+  /* v7 4.11: gestão e pastores abrem na Saúde da igreja; líder de time, no
+     "Para resolver" do seu time (vagas só dos times que lidera, sem os números da igreja toda) */
+  const gestao = currentRole === "master" || currentRole === "pastor";
+  const liderDeTime = !!scopeMinistryIds;
+  if (scopeMinistryIds) gaps = gaps.filter((g) => scopeMinistryIds.includes(g.ministry.id));
   const topPeople = [...people].sort((a, b) => (b.engagement ?? 0) - (a.engagement ?? 0)).slice(0, 5);
   const recentAnnouncements = porPublicacao(announcements).slice(0, 3);
   const [sobreAberto, setSobreAberto] = useState(false);
@@ -2199,7 +2220,15 @@ function Painel({
           <button className="btn btn-pri" type="button" onClick={() => setRoute("escalas")}>Montar escala →</button>
         </div>
       </div>
-      {(gaps.length > 0 || visitantesSemContato > 0 || journeyRequests.length > 0) && (
+      {gestao && (
+        <SaudeDaIgreja
+          dados={{ membros: members, pessoas: people, times: ministries, visitantes: visitors, decisoes: decisions, fatos: timelineEvents, matriculas: enrollments }}
+          etapas={JRN_STEPS}
+          onAbrir={(it) => setDrawer({ kind: it.tipo, id: it.id })}
+        />
+      )}
+      <h2 className="painel-sec-t">{liderDeTime ? "Para resolver no seu time" : "Para resolver"}</h2>
+      {(gaps.length > 0 || (!liderDeTime && visitantesSemContato > 0) || (!liderDeTime && journeyRequests.length > 0)) && (
         <div className="agora-list">
           {gaps.length > 0 && (
             <button type="button" className="agora-row" onClick={() => setRoute("escalas")}>
@@ -2208,14 +2237,14 @@ function Painel({
               <span className="agora-go">Escalar →</span>
             </button>
           )}
-          {visitantesSemContato > 0 && (
+          {!liderDeTime && visitantesSemContato > 0 && (
             <button type="button" className="agora-row" onClick={() => setRoute("visitantes")}>
               <span className="agora-ic"><Icon name="visitante" size={17} /></span>
               <span className="agora-main"><span className="agora-t">{visitantesSemContato === 1 ? "1 visitante sem contato" : `${visitantesSemContato} visitantes sem contato`}</span><span className="agora-s"> · há mais de 48h</span></span>
               <span className="agora-go">Ver →</span>
             </button>
           )}
-          {journeyRequests.length > 0 && (
+          {!liderDeTime && journeyRequests.length > 0 && (
             <button type="button" className="agora-row" onClick={() => document.getElementById("caminhada-pendente")?.scrollIntoView({ behavior: "smooth" })}>
               <span className="agora-ic"><Icon name="membros" size={17} /></span>
               <span className="agora-main"><span className="agora-t">{journeyRequests.length === 1 ? ct("1 pedido na {caminhada}") : ct(`${journeyRequests.length} pedidos na {caminhada}`)}</span><span className="agora-s"> · esperando sua aprovação</span></span>
@@ -2226,11 +2255,11 @@ function Painel({
       )}
       <SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} />
       {/* v7 3.6: cada número aparece uma vez. Vagas abertas e visitantes sem contato já estão na lista do topo e em Pendências. */}
-      <div className="kpi-row kpi-3">
+      {!liderDeTime && <div className="kpi-row kpi-3">
         <Kpi icon="pessoa" label={ct("{Voluntarios}")} value={activePeople} foot={joinDot(`de ${plural(people.length, "cadastrado")}`, novosNoMes ? `${plural(novosNoMes, "novo", "novos")} em 30 dias` : null)} />
         <Kpi icon="ok" label="Confirmação" value={escaladosSemana ? `${confirmationRate}%` : "·"} foot={escaladosSemana ? `de ${plural(escaladosSemana, "escalado")} nesta semana` : "ninguém escalado nesta semana"} />
         <Kpi icon="visitante" label="Visitantes" value={visitorsInCare} foot={visitantesSemContato ? "em acompanhamento" : "em acompanhamento, todos com contato em dia"} />
-      </div>
+      </div>}
       <div className="sobre-numeros"><button type="button" className="help-link" onClick={() => setSobreAberto(true)}>Sobre estes números</button></div>
       {sobreAberto && (
         <div className="modal-bg" onClick={() => setSobreAberto(false)}>

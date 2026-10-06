@@ -548,3 +548,20 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
 /* v7 4.10: primeiro acesso em 2 passos; foto em Meus dados */
 .m6-card.ob-foto{flex-direction:column;align-items:center;gap:8px;margin-bottom:12px}
 .ob-previa{margin-top:16px}
+
+/* v7 4.11: Saúde da igreja (Início do painel de gestão e pastores) */
+.saude{margin:0 0 24px}
+.saude-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.saude-t{margin:0;font-size:var(--fs-pn-20);font-weight:700;color:var(--white)}
+.saude-datas{display:flex;flex-wrap:wrap;gap:12px;margin:4px 0 8px;font-size:var(--fs-pn-13);color:var(--muted)}
+.saude-datas label{display:flex;align-items:center;gap:8px}
+.saude-grp{margin:16px 0 8px;font-size:var(--fs-pn-14);font-weight:600;color:var(--white)}
+.saude-grp-s{font-weight:400;color:var(--muted)}
+.saude-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.saude-n{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:32px;padding:12px 14px;border:1px solid var(--border-2);border-radius:12px;background:var(--graphite);color:var(--white);text-align:left;cursor:pointer;font:inherit}
+.saude-n:hover:not(:disabled){border-color:var(--olive)}
+.saude-n:disabled{cursor:default}
+.saude-v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--fs-pn-32);font-weight:700;line-height:1.1}
+.saude-l{font-size:var(--fs-pn-13);font-weight:600;color:var(--light)}
+.saude-c{font-size:var(--fs-pn-12);color:var(--muted)}
+.painel-sec-t{margin:8px 0 10px;font-size:var(--fs-pn-20);font-weight:700;color:var(--white)}

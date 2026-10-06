@@ -1,7 +1,7 @@
 "use client";
 
 import { avisar } from "./lib/avisar";
-import { Fragment, createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon, Caret } from "./lib/icons";
@@ -2837,6 +2837,21 @@ type ItemInicio =
   | { k: "atalho" };
 
 const ADIADOS_KEY = "cex_inicio_adiados";
+const ouvirAdiados = (cb: () => void) => { window.addEventListener(ADIADOS_KEY, cb); return () => window.removeEventListener(ADIADOS_KEY, cb); };
+const lerAdiados = () => { try { return localStorage.getItem(ADIADOS_KEY) ?? "{}"; } catch { return "{}"; } };
+/* quantas vezes o app abriu neste aparelho: conta uma vez por carregamento (v7 4.10) */
+let acessosDaSessao: number | null = null;
+const contarAcesso = () => {
+  if (acessosDaSessao === null) {
+    try {
+      acessosDaSessao = Number(localStorage.getItem("cex_acessos") ?? "0") + 1;
+      localStorage.setItem("cex_acessos", String(acessosDaSessao));
+    } catch { acessosDaSessao = 0; }
+  }
+  return acessosDaSessao;
+};
+const semAssinatura = () => () => {};
+const estaInstalado = () => window.matchMedia?.("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
 function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, inscricoes, onServir, ligados, acessos = 0, instalado = false }: {
   /* quantas vezes a pessoa abriu o app neste aparelho e se ele já está na tela de início (v7 4.10) */
   acessos?: number; instalado?: boolean;
@@ -2876,18 +2891,12 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
     !member.birth && "aniversário",
     (member.postalCode ?? "").replace(/\D/g, "").length !== 8 && "CEP",
   ].filter(Boolean) as string[] : [];
-  /* lido depois de montar: o HTML do servidor e o do navegador começam iguais */
-  const [adiados, setAdiados] = useState<Record<string, string>>({});
-  useEffect(() => {
-    try { setAdiados(JSON.parse(localStorage.getItem(ADIADOS_KEY) ?? "{}") as Record<string, string>); } catch { /* sem armazenamento */ }
-  }, []);
+  /* cartões adiados neste aparelho; no servidor, nenhum (o HTML começa igual) */
+  const adiadosTxt = useSyncExternalStore(ouvirAdiados, lerAdiados, () => "{}");
+  const adiados = useMemo(() => { try { return JSON.parse(adiadosTxt) as Record<string, string>; } catch { return {}; } }, [adiadosTxt]);
   const adiar = (id: string, dias: number) => {
-    const ate = somaDias(hoje, dias);
-    setAdiados((p) => {
-      const n = { ...p, [id]: ate };
-      try { localStorage.setItem(ADIADOS_KEY, JSON.stringify(n)); } catch { /* sem armazenamento: só nesta sessão */ }
-      return n;
-    });
+    try { localStorage.setItem(ADIADOS_KEY, JSON.stringify({ ...adiados, [id]: somaDias(hoje, dias) })); } catch { /* sem armazenamento */ }
+    window.dispatchEvent(new Event(ADIADOS_KEY));
   };
   const adiado = (id: string) => !!adiados[id] && adiados[id] > hoje;
   const incompleto = faltaDados.length > 0 && !adiado("dados");
@@ -3708,17 +3717,8 @@ function MobileMembro({
   useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }); }, [tab, sub]);
 
   /* v7 4.10: o atalho na tela de início é pedido no segundo acesso (contador no aparelho) */
-  const [acessos, setAcessos] = useState(0);
-  const [instalado, setInstalado] = useState(false);
-  useEffect(() => {
-    try {
-      const n = Number(localStorage.getItem("cex_acessos") ?? "0") + 1;
-      localStorage.setItem("cex_acessos", String(n));
-      setAcessos(n);
-    } catch { /* sem armazenamento: sem o pedido */ }
-    const nav = navigator as Navigator & { standalone?: boolean };
-    setInstalado(window.matchMedia?.("(display-mode: standalone)").matches || nav.standalone === true);
-  }, []);
+  const acessos = useSyncExternalStore(semAssinatura, contarAcesso, () => 0);
+  const instalado = useSyncExternalStore(semAssinatura, estaInstalado, () => false);
   /* aba de onde o Perfil foi aberto: o "voltar" do Perfil leva para ela */
   const [tabAntesPerfil, setTabAntesPerfil] = useState<MemberTab>("inicio");
   /* rótulo "Perfil" sob o avatar só no primeiro acesso: lido uma vez, gravado na hora */
