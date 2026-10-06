@@ -24,6 +24,7 @@ import type { CategoriaAviso, ContextoMembro } from "./modules/define";
 import { FILA_DOBRA, ordenarFila, type EntradaFila } from "./modules/fila";
 import { conflitos, horaDeChegada } from "./lib/agenda";
 import { baixarIcs } from "./lib/ics";
+import { porData, quandoFoi, tipoDoFato, type FatoView } from "./lib/historico";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -287,6 +288,8 @@ export type MobileOverlayProps = {
   rehearsals?: RehearsalLite[];
   /* página pública da igreja ("/slug"), para o link de Compartilhar */
   paginaUrl?: string | null;
+  /* fatos da história da própria pessoa (v7 4.8; o banco só entrega os dela) */
+  timelineEvents?: FatoView[];
 };
 
 // ── constantes ────────────────────────────────────────────────────────────────
@@ -1821,6 +1824,7 @@ function TabPerfil({
         <div className="m6-list">
           <M6Row ic="pessoa" t="Meus dados" s="Telefone, e-mail, endereço e aniversário" onClick={() => openSub?.("dados")} />
           <M6Row ic="kids" t="Minha família" s="Filhos no Kids, check-in e eventos" onClick={() => openSub?.("familia")} />
+          <M6Row ic="historia" t="Minha história" s="O que você já viveu na igreja" onClick={() => openSub?.("minha-historia")} />
         </div>
       </div>
 
@@ -2982,6 +2986,40 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
   );
 }
 
+// ── Minha história (v7 4.8, lei 10) ───────────────────────────────────────────
+/* Só os fatos, com data, do mais recente para o mais antigo. Sem contagem,
+   sem pontos e sem comparação com outras pessoas. */
+function MinhaHistoria({ fatos }: { fatos: FatoView[] }) {
+  const { comTermos: ct } = useTermos();
+  const lista = porData(fatos);
+  if (!lista.length) {
+    return (
+      <div className="m6-sec0">
+        <div className="m6-card"><div className="m6-ct">Sua história começa aqui</div><div className="m6-meta">{ct("Quando você servir, concluir uma aula ou der um passo na {caminhada}, fica registrado aqui. Só você vê.")}</div></div>
+      </div>
+    );
+  }
+  return (
+    <div className="m6-sec0">
+      <div className="m6-meta m6-pad">Só você vê esta página.</div>
+      <div className="m6-list">
+        {lista.map((f) => {
+          const t = tipoDoFato(f.event_type);
+          return (
+            <div className="m6-row" key={f.id}>
+              <span className="m6-ic"><Icon name={t.icone} size={22} /></span>
+              <span className="m6-rb">
+                <span className="m6-rt">{f.title}</span>
+                <span className="m6-rs">{joinDot(quandoFoi(f), f.body)}</span>
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Agenda (S19, v7 4.5) ──────────────────────────────────────────────────────
 /* "Minha agenda" reúne tudo que envolve a pessoa, por dia, com o tipo escrito
    (Serve, Ensaio, Reunião, Aula, Tarefa, Evento, Culto) e o conflito de horário
@@ -3121,7 +3159,7 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
                         <span className="m6-rt">{i.titulo}</span>
                         <span className="m6-rs">{joinDot(i.tipo, i.sub)}</span>
                         {(i.selo || emConflito.has(i.id)) && (
-                          <span className="m6-mt">
+                          <span className="m6-selos">
                             {i.selo}
                             {emConflito.has(i.id) && <M6St k="warn" ic="alerta">Conflito de horário</M6St>}
                           </span>
@@ -3555,7 +3593,7 @@ function MobileMembro({
           missingRequirements = [], serveRequests = [], baptismCandidates = [], onEnrollCourse, onRequestBaptism, onRequestServe,
           mode, onLogout, onSwitchToPanel, readAnnouncementIds = [], churchPurpose,
           onSaveAvailability, onRespondAnnouncement, announcementResponses = [],
-          eventRsvps = [], onRespondEvent, meetings = [], rehearsals = [], paginaUrl } = rest;
+          eventRsvps = [], onRespondEvent, meetings = [], rehearsals = [], paginaUrl, timelineEvents = [] } = rest;
   /* Mural sempre do mais recente para o mais antigo, pela data de publicação */
   const announcements = useMemo(() => porPublicacao(avisosRecebidos), [avisosRecebidos]);
   /* curso em rascunho não aparece no app */
@@ -3796,6 +3834,7 @@ function MobileMembro({
               openSub={(s) => go("perfil", s)}
             />
           )}
+          {tab === "perfil" && sub === "minha-historia" && <MinhaHistoria fatos={member ? timelineEvents.filter((f) => f.member_id === member.id) : []} />}
           {tab === "perfil" && sub === "familia" && (
             <div className="m6-legacy">
             <TabKidsArea

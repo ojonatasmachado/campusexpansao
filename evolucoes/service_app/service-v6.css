@@ -272,7 +272,8 @@ div.m6-row{cursor:default}
 .m6-ev-info{margin-top:16px}
 .m6-1l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .m6-strong{color:var(--white);font-weight:600}
-.m6-mt{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+.m6-mt{margin-top:8px}
+.m6-selos{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .m6-ic{display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:12px;background:var(--graphite-2);color:var(--white)}
 .m6-ic.accent{background:var(--olive-dim);color:var(--olive)}
 .m6-me{display:flex;align-items:center;gap:16px}

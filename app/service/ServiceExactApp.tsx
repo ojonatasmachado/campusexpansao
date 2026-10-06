@@ -49,6 +49,7 @@ import { JRN_STEPS } from "./painel/caminhada";
 import { Comunicacao } from "./modules/mural/Mural";
 import { ACESSO_MSG_DEFAULT, type AcessoMsgCfg } from "./modules/pessoas/acesso-msg";
 import { friendlyWriteError } from "./painel/erros";
+import { porData, tipoDoFato } from "./lib/historico";
 import { ROTA_GRUPO, cfgTabs as gerarCfgTabs, modulosLigados, navGroups, podeVerRota, rotaLigada, termosDaRota } from "./modules/registry";
 
 type ChurchSettings = {
@@ -1591,6 +1592,7 @@ export default function ServiceExactApp({
         meetings={meetings}
         rehearsals={rehearsals}
         paginaUrl={paginaUrl}
+        timelineEvents={timelineEvents}
         onRecusarEscala={recusarEscalaMobile}
         mode="self"
         selfPersonId={currentPersonId}
@@ -7629,20 +7631,21 @@ async function writeJourneyStep(organizationId: string, member: MemberView, step
 
 function PersonTimeline({ member, events, compact }: { member: MemberView; events: TimelineEventView[]; compact?: boolean }) {
   const { comTermos: ct } = useTermos();
-  const sorted = [...events].sort((a, b) => (b.sort_key ?? 0) - (a.sort_key ?? 0));
+  const sorted = porData(events);
   const stepsWithoutEvent = JRN_STEPS.filter((step, i) => !!member.journey[i] && !events.some((e) => e.event_type === step.kind));
 
   if (!sorted.length && !stepsWithoutEvent.length) {
-    return <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", padding: "12px 0" }}>Nenhuma etapa concluída ainda.</div>;
+    return <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", padding: "12px 0" }}>Nada registrado ainda.</div>;
   }
   return (
     <div className={`tl jrn-tl${compact ? " compact" : ""}`}>
       {sorted.map((event) => {
         const step = JRN_STEPS.find((s) => s.kind === event.event_type);
+        const icone = step?.icon ?? tipoDoFato(event.event_type).icone;
         return (
           <div className="tl-item ol tone-olive" key={event.id}>
             <div className="tl-dot" />
-            <div className="tl-when"><span className="jrn-tl-kind">{step && <Icon name={step.icon} size={11} />} {event.when_label ?? new Date(event.created_at).toLocaleDateString("pt-BR")}</span></div>
+            <div className="tl-when"><span className="jrn-tl-kind"><Icon name={icone} size={11} /> {event.when_label ?? new Date(event.created_at).toLocaleDateString("pt-BR")}</span></div>
             <div className="tl-text"><b>{event.title}</b>{event.body ? ` · ${event.body}` : ""}</div>
           </div>
         );
@@ -8637,7 +8640,7 @@ function EntityDrawer({
               <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum curso matriculado ainda.</div>
             )}
           </DrawerSection>
-          <DrawerSection title={ct("{Caminhada} de integração")}><PersonTimeline member={member} events={timelineEvents.filter((e) => e.member_id === member.id)} compact /></DrawerSection>
+          <DrawerSection title="História"><PersonTimeline member={member} events={timelineEvents.filter((e) => e.member_id === member.id)} compact /></DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
             <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setEditingJourney(true)}>{ct("Atualizar {caminhada}")}</button>
             <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => onStartChatWithMember(member.id)}>Enviar mensagem</button>
