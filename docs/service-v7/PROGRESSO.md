@@ -44,7 +44,7 @@ Atualizado pelo Claude Code ao fim de cada item: marque `[x]` e anote o commit c
 - [ ] 4.6 Tarefas
 - [ ] 4.7 Caminhada com vocabulário
 - [ ] 4.8 Histórico
-- [ ] 4.9 Tamanho do texto com o componente do iPhone
+- [x] 4.9 (7f1ab49) Tamanho do texto com o componente do iPhone
 - [ ] 4.10 Primeiro acesso em 2 passos
 - [ ] 4.11 Painel por papel e Saúde da igreja
 - [ ] 4.12 Configuração guiada em 3 fases
@@ -128,10 +128,17 @@ Base lida: `ServiceExactApp.tsx` (painel, 11 mil linhas: `NAV_GROUPS` l.843, `CF
 - 4.9: posição (0 a 6) em `service.members.text_size` (0057), gravada só pela RPC `set_my_text_size` (todas as fichas da pessoa) e lida por `my_text_size` no servidor (`page.tsx` → `textSizePerfil`); cópia no aparelho em `cex_text_size`. Ordem do valor inicial: perfil, cópia do aparelho, escolha antiga (`cex_text_scale` 1,15 → 19px, 1,3 → 23px, que também sobe para o perfil), `-apple-system-body` (só Safari; no Chromium não dá para testar), padrão. `lib/text-scale.ts`: `useTextSize`, `fatorDa`, `sincronizarComPerfil`. Componente compartilhado `app/service/TextSizeSlider.tsx` (`TextSizeSlider` e `TextSizeSheet`); o primeiro acesso usa o mesmo componente sem prévia (a própria tela já está na escala), o passo novo fica na 4.10.
 - 4.9: um mecanismo só: o `zoom: var(--m-scale)` da coluna (sem multiplicar token). Piso de 13px feito nos tokens dentro de `.phone`: `--fs-app-13/15` = max(N, 13px / escala), e os `--fs-ui-*` refeitos ali (o `.mob-bg` já os tinha resolvido). A folha fica fora do zoom e volta os tokens ao normal, só a prévia escala; ao fechar, a linha "Tamanho do texto" volta ao mesmo lugar da tela. Barra de abas (botão, rótulo e selo) = 13px × escala, até 16px. Na 7ª posição: `.m6-btns` em coluna, `.m6-1l` quebra linha, linha com `.m6-date` vira coluna (`data-ts` no `.phone`). Ícone da linha no Perfil: "documento" (não há ícone de texto na biblioteca). O botão do trilho usa `--white` (escuro no tema claro, claro no escuro).
 - 4.9: verificado com Playwright (`scratchpad/v49.mjs`, membro@ e lider@, celular): controle parado (mesma caixa) em 6 toques no A grande e num arraste; A pequeno/A grande como −/+; toque na marca; `aria-valuetext` "Padrão, 4 de 7"; nas 7 posições, Início, Agenda, Mensagens, Caminhada e Perfil com corpo 14/15/16/17/19/21/23px, nada abaixo de 13px, abas até 16px, sem rolagem lateral e sem texto cortado. Exceção anotada: a prévia da conversa em Mensagens (`.m-conv-prev`) é uma linha com reticências por desenho (o texto inteiro abre com um toque). Migração 1,15 → posição 4 conferida no aparelho e no banco. Banco de teste voltou a `text_size` nulo.
+- 4.2: a barra tem 4 abas (`BAR_TABS` = `MEMBER_TABS` sem Perfil); a aba "perfil" continua existindo para `go("perfil", ...)` e os módulos. O avatar do topo (já existia, alvo de 44px pelo `::before`) passou a `aria-label="Perfil"` e abre o Perfil como subtela: cabeçalho com "voltar" para a aba de onde veio e título "Perfil". Rótulo "Perfil" sob o avatar só no primeiro acesso: a marca `cex_avatar_visto` é gravada no aparelho na primeira abertura do app (e o rótulo some ao tocar no avatar). Verificado com Playwright (`scratchpad/v42.mjs`, membro@ e lider@): 4 abas, rótulo no primeiro acesso, sem rótulo no segundo, Agenda → avatar → Perfil → voltar → Agenda; e o teste das 7 posições do 4.9 repetido abrindo o Perfil pelo avatar (35 de 35 sem falha).
 
 ## Bloqueios
 | item | motivo | o que falta |
 |---|---|---|
+
+## Para a captura final
+`tools/captura-service` não foi mexida neste lote; ajustar quando a captura for refeita:
+- 4.2: Perfil saiu da barra de abas. Caminho agora: avatar no topo (`button.m-head-av[aria-label="Perfil"]`), não `nav.m-tab button` "Perfil" (`abaApp(page, "Perfil")` não acha mais). No Perfil o cabeçalho é subtela: `.m6-back` volta para a aba anterior; a barra tem 4 botões. No primeiro acesso o avatar mostra o rótulo "Perfil" (some no segundo; `cex_avatar_visto` no localStorage).
+- 4.9: Perfil › Tamanho do texto deixou de ser o seletor de 3 botões (`.ts-seg` "Padrão/Grande/Muito grande") e virou uma linha (`button.m6-row` "Tamanho do texto") que abre a folha `.ts-sheet` com o trilho (`[role=slider]`, `.ts-a-min`, `.ts-a-max`, "Pronto"). A escala fica em `localStorage.cex_text_size` (0 a 6) e no perfil; `cex_text_scale` antigo é migrado e apagado.
+- 4.13: itens com termo renomeável podem mudar de texto se a igreja da captura tiver vocabulário próprio (`service.churches.vocabulario`); no seed local está vazio (nomes padrão). A busca do painel lista também "Tela".
 
 ## Captura por etapa
 | etapa | pasta | critérios que passaram | que não passaram |

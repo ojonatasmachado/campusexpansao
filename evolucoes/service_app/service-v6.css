@@ -464,6 +464,9 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
 .mob-bg .help-dot::before,.mob-bg .help-link::before{width:44px;height:44px}
 .m-head-av::before,.m6-tg::before,.mob-bg .m-toggle::before{width:52px;height:44px}
 .m-head-av::before{width:44px}
+/* v7 4.2: rótulo "Perfil" sob o avatar no primeiro acesso */
+.m-head-av.has-l{display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1}
+.m-head-av-l{font-size:var(--fs-app-13);font-weight:600;color:var(--muted)}
 /* painel: 32px */
 .btn-sm,.seg button,.esc-vaga,.esc-preset-sel,.esc-preset-save{min-height:32px}
 .esc-modo-cfg,.panel-link{min-height:32px;align-items:center}

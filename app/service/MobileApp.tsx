@@ -1894,7 +1894,7 @@ const APP_TABS_INFO = [
   { ic: "agenda", t: "Agenda", s: "Sua escala, suas tarefas e a agenda da igreja." },
   { ic: "conversas", t: "Mensagens", s: "O Mural da igreja e as conversas com a liderança." },
   { ic: "cursos", t: "{Caminhada}", s: "Seus passos na igreja, cursos e a Bíblia." },
-  { ic: "perfil", t: "Perfil", s: "Seus dados, família, tamanho do texto e tema." },
+  { ic: "perfil", t: "Perfil", s: "Toque na sua foto no alto: seus dados, família, tamanho do texto e tema." },
 ];
 
 function AppTabsInfoGrid() {
@@ -2463,6 +2463,10 @@ const MEMBER_TABS: { id: MemberTab; l: string; ic: string }[] = [
   { id: "caminhada", l: "{Caminhada}", ic: "cursos" },
   { id: "perfil", l: "Perfil", ic: "perfil" },
 ];
+/* barra de abas: 4 abas (lei 1). O Perfil abre pelo avatar no topo, como subtela */
+const BAR_TABS = MEMBER_TABS.filter((t) => t.id !== "perfil");
+/* o avatar mostra o rótulo "Perfil" no primeiro acesso; depois some */
+const AVATAR_VISTO = "cex_avatar_visto";
 
 type ModuleCtx = ContextoMembro;
 type MemberModule = {
@@ -3373,7 +3377,20 @@ function MobileMembro({
   }, [toastO]);
   useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }); }, [tab, sub]);
 
+  /* aba de onde o Perfil foi aberto: o "voltar" do Perfil leva para ela */
+  const [tabAntesPerfil, setTabAntesPerfil] = useState<MemberTab>("inicio");
+  /* rótulo "Perfil" sob o avatar só no primeiro acesso: lido uma vez, gravado na hora */
+  const [rotuloAvatar, setRotuloAvatar] = useState(false);
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(AVATAR_VISTO)) {
+        setRotuloAvatar(true);
+        localStorage.setItem(AVATAR_VISTO, "1");
+      }
+    } catch { /* sem armazenamento: sem rótulo */ }
+  }, []);
   const go: MemberUi["go"] = (t, s = null, extra = {}) => {
+    if (t === "perfil" && tab !== "perfil") setTabAntesPerfil(tab);
     /* tocar na aba ativa volta ao topo */
     if (t === tab && !s && !sub && !extra.chatId && !extra.newChat) scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     if (extra.agSeg) setAgSeg(extra.agSeg);
@@ -3428,12 +3445,18 @@ function MobileMembro({
               <button type="button" className="m6-back" onClick={voltar}><span className="m6-back-ic"><Icon name="voltar" size={22} /></span>{tabTitle}</button>
               <h1 className="m-h1 sub">{subTitle}</h1>
             </>
+          ) : tab === "perfil" ? (
+            <>
+              <button type="button" className="m6-back" onClick={() => go(tabAntesPerfil)}><span className="m6-back-ic"><Icon name="voltar" size={22} /></span>{ct(MEMBER_TABS.find((t) => t.id === tabAntesPerfil)!.l)}</button>
+              <h1 className="m-h1 sub">{tabTitle}</h1>
+            </>
           ) : (
             <>
               <div className="m-head-top">
                 <ChurchLockup size="sm" logoUrl={churchLogoUrl} name={churchName} />
-                <button className="m-head-av" type="button" onClick={() => go("perfil")} aria-label="Abrir meu perfil">
+                <button className={`m-head-av${rotuloAvatar ? " has-l" : ""}`} type="button" onClick={() => { setRotuloAvatar(false); go("perfil"); }} aria-label="Perfil">
                   <Av name={person.name} size="sm" photoUrl={person.photoUrl} />
+                  {rotuloAvatar && <span className="m-head-av-l" aria-hidden="true">Perfil</span>}
                 </button>
               </div>
               {tab === "inicio" ? (
@@ -3562,7 +3585,7 @@ function MobileMembro({
         </div>
 
         <nav className="m-tab" aria-label="Navegação principal">
-          {MEMBER_TABS.map((t) => {
+          {BAR_TABS.map((t) => {
             const on = tab === t.id;
             const b = badges[t.id] ?? 0;
             return (
