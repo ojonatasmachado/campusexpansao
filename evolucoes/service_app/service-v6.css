@@ -446,3 +446,13 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
 /* v7 3.4 (resto do painel): texto sobre a faixa da cor da igreja (item escolhido) em tinta */
 .cfg-index-item[aria-current="page"] .cfg-index-s,.esc-event.on .esc-event-day,.esc-event.on .esc-event-time,.seg button.on .seg-n{color:var(--light)}
 .cfg-index-item[aria-current="page"] .cfg-index-t{color:var(--white)}
+
+/* v7 3.6 · Início do painel: KPIs em colunas iguais, ações em botão Inter 14/600, explicação num link só */
+.kpi-row.kpi-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:600px){.kpi-row.kpi-3{grid-template-columns:minmax(0,1fr)}}
+.painel-inicio .btn{font-family:var(--sans);font-size:var(--fs-pn-14);font-weight:600}
+.sobre-numeros{display:flex;justify-content:flex-end;margin:-12px 0 8px}
+.sobre-numeros .help-link{margin-left:0}
+.sobre-lista{display:flex;flex-direction:column;gap:14px;margin:0}
+.sobre-lista dt{font-size:var(--fs-pn-14);font-weight:600;color:var(--white)}
+.sobre-lista dd{margin:2px 0 0;font-size:var(--fs-pn-13);color:var(--muted);line-height:1.5}

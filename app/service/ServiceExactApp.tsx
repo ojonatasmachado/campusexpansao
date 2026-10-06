@@ -2174,11 +2174,26 @@ function Painel({
 }) {
   const topPeople = [...people].sort((a, b) => (b.engagement ?? 0) - (a.engagement ?? 0)).slice(0, 5);
   const recentAnnouncements = porPublicacao(announcements).slice(0, 3);
+  const [sobreAberto, setSobreAberto] = useState(false);
+  /* v7 3.6: "Sobre estes números" explica, num lugar só, cada número e painel que está na tela */
+  const sobre: Array<[string, string]> = [
+    ["Voluntários", "Pessoas que servem em algum time e estão com o status ativo, sem contar quem está em pausa ou de férias. Novos são os que chegaram à igreja nos últimos 30 dias."],
+    ["Confirmação", "De todo mundo escalado nesta semana, quantos já confirmaram presença no app."],
+    ["Visitantes", "Visitantes que ainda estão na fase de acompanhamento, antes de virarem membros."],
+    ["Pendências da escala", "Posições da escala desta semana que ainda não têm ninguém confirmado."],
+    ...(semanasComPresenca >= 4 ? [["Engajamento", "Presença média de quem foi escalado nos últimos 90 dias."] as [string, string]] : []),
+    ["Próximos cultos", "Os próximos cultos ou eventos da agenda, na ordem em que vão acontecer."],
+    ...(enqueteElegivel ? [["Avaliação de experiência", "Pesquisa rápida sobre como foi servir. Aparece só quando você está elegível pra responder."] as [string, string]] : []),
+    ...(pesquisaElegivel ? [["Pulso da escala", "Pesquisa da própria igreja sobre como foi servir nesta escala. Diferente da avaliação de experiência."] as [string, string]] : []),
+    ...(journeyRequests.length > 0 ? [["Caminhada pendente", "Pedidos de avanço na caminhada (decisão, batismo, curso...) esperando aprovação da liderança."] as [string, string]] : []),
+    ...(semanasComPresenca >= 4 ? [["Voluntários mais engajados", "Quem tem a maior taxa de engajamento nas últimas escalas."] as [string, string]] : []),
+    ["Comunicação recente", "Os últimos avisos e posts do mural enviados pra igreja."],
+    ...(kidsClasses.length > 0 ? [["Crianças por turma", "Quantas crianças estão em cada turma do Kids."] as [string, string], ["Crianças sumindo", "Crianças que não aparecem faz tempo. Vale um contato com a família."] as [string, string]] : []),
+  ];
   return (
-    <div className="content wide">
+    <div className="content wide painel-inicio">
       <div className="ph">
         <div>
-          <div className="ph-eyebrow">Início</div>
           <h1 className="ph-title">{saudacao()}, {userName?.split(" ")[0] ?? "liderança"} <HelpDot text="Seu resumo da semana: próximos cultos, vagas em aberto na escala e o que precisa da sua atenção agora." /></h1>
           <p className="ph-sub">Visão da semana: quem está escalado, o que falta preencher e quem precisa de acompanhamento.</p>
         </div>
@@ -2213,17 +2228,34 @@ function Painel({
         </div>
       )}
       <SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} />
-      <div className="kpi-row">
-        <Kpi icon="pessoa" label="Voluntários" value={activePeople} foot={joinDot(`de ${plural(people.length, "cadastrado")}`, novosNoMes ? `${plural(novosNoMes, "novo", "novos")} em 30 dias` : null)} help="Pessoas que servem em algum time e estão com o status ativo, sem contar quem está em pausa ou de férias." />
-        <Kpi icon="ok" label="Confirmação" value={escaladosSemana ? `${confirmationRate}%` : "·"} foot={escaladosSemana ? `de ${plural(escaladosSemana, "escalado")} nesta semana` : "ninguém escalado nesta semana"} help="De todo mundo escalado nesta semana, quantos já confirmaram presença no app." />
-        <Kpi icon="alerta" label="Vagas abertas" value={gaps.length} foot="na escala desta semana" amber help="Posições da escala desta semana que ainda não têm ninguém confirmado. Resolva em Escalas." />
-        <Kpi icon="visitante" label="Visitantes" value={visitorsInCare} foot={visitantesSemContato ? `${visitantesSemContato} sem contato há 48h` : "todos com contato em dia"} help="Visitantes que ainda estão na fase de acompanhamento, antes de virarem membros." />
+      {/* v7 3.6: cada número aparece uma vez. Vagas abertas e visitantes sem contato já estão na lista do topo e em Pendências. */}
+      <div className="kpi-row kpi-3">
+        <Kpi icon="pessoa" label="Voluntários" value={activePeople} foot={joinDot(`de ${plural(people.length, "cadastrado")}`, novosNoMes ? `${plural(novosNoMes, "novo", "novos")} em 30 dias` : null)} />
+        <Kpi icon="ok" label="Confirmação" value={escaladosSemana ? `${confirmationRate}%` : "·"} foot={escaladosSemana ? `de ${plural(escaladosSemana, "escalado")} nesta semana` : "ninguém escalado nesta semana"} />
+        <Kpi icon="visitante" label="Visitantes" value={visitorsInCare} foot={visitantesSemContato ? "em acompanhamento" : "em acompanhamento, todos com contato em dia"} />
       </div>
-      <div className="dash-3col">
+      <div className="sobre-numeros"><button type="button" className="help-link" onClick={() => setSobreAberto(true)}>Sobre estes números</button></div>
+      {sobreAberto && (
+        <div className="modal-bg" onClick={() => setSobreAberto(false)}>
+          <div className="modal" role="dialog" aria-label="Sobre estes números" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div className="modal-title">Sobre estes números</div>
+              <div className="modal-sub">Como cada número e painel do Início é calculado.</div>
+            </div>
+            <div className="modal-body" style={{ display: "block" }}>
+              <dl className="sobre-lista">
+                {sobre.map(([t, d]) => <div key={t}><dt>{t}</dt><dd>{d}</dd></div>)}
+              </dl>
+            </div>
+            <div className="modal-foot"><button className="btn btn-pri" type="button" onClick={() => setSobreAberto(false)}>Fechar</button></div>
+          </div>
+        </div>
+      )}
+      <div className="dash-2col">
         <div className="panel">
           <div className="panel-head">
-            <span className="panel-title"><Icon name="escalas" size={14} /> Pendências da escala <HelpDot label="Como calculamos" text="Posições da escala desta semana que ainda não têm ninguém confirmado." /></span>
-            <button className="panel-link" type="button" onClick={() => setRoute("escalas")}>Resolver</button>
+            <span className="panel-title"><Icon name="escalas" size={14} /> Pendências da escala</span>
+            <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("escalas")}>Resolver</button>
           </div>
           <div className="panel-body flush">
             {gaps.slice(0, 6).map((gap) => (
@@ -2241,7 +2273,7 @@ function Painel({
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {semanasComPresenca >= 4 && <div className="panel">
-            <div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={14} /> Engajamento <HelpDot label="Como calculamos" text="Presença média de quem foi escalado nos últimos 90 dias." /></span><span className="panel-meta">90 dias</span></div>
+            <div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={14} /> Engajamento</span><span className="panel-meta">90 dias</span></div>
             <div className="panel-body">
               {presenceRate === null ? (
                 <>
@@ -2257,7 +2289,7 @@ function Painel({
             </div>
           </div>}
           <div className="panel">
-            <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Próximos cultos <HelpDot label="Como calculamos" text="Os próximos cultos ou eventos da agenda, na ordem em que vão acontecer." /></span><button className="panel-link" type="button" onClick={() => setRoute("cultos")}>Agenda</button></div>
+            <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Próximos cultos</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("cultos")}>Agenda</button></div>
             <div className="panel-body flush">
             {/* v7 2.9: só o que ainda vai começar, no fuso da igreja (Brasília) */}
             {(() => {
@@ -2277,7 +2309,7 @@ function Painel({
           </div>
           {enqueteElegivel && (
             <div className="panel" style={{ cursor: "pointer" }} onClick={() => setModal(buildAvaliacaoModal(enqueteElegivel))}>
-              <div className="panel-head"><span className="panel-title"><Icon name="estrela" size={14} /> Avaliação de experiência <HelpDot label="Como calculamos" text="Pesquisa rápida sobre como foi servir. Aparece só quando você está elegível pra responder." /></span></div>
+              <div className="panel-head"><span className="panel-title"><Icon name="estrela" size={14} /> Avaliação de experiência</span></div>
               <div className="panel-body">
                 <div style={{ fontSize: "var(--fs-pn-14)", fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{enqueteElegivel.nome}</div>
                 <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time.</div>
@@ -2286,7 +2318,7 @@ function Painel({
           )}
           {pesquisaElegivel && (
             <div className="panel" style={{ cursor: "pointer" }} onClick={() => setModal(buildPesquisaModal(pesquisaElegivel))}>
-              <div className="panel-head"><span className="panel-title"><Icon name="reacao" size={14} /> {pesquisaElegivel.pendente ? "Pulso da escala" : "Sua última resposta"} <HelpDot label="Como calculamos" text="Pesquisa da própria igreja sobre como foi servir nesta escala. Diferente da avaliação de experiência." /></span></div>
+              <div className="panel-head"><span className="panel-title"><Icon name="reacao" size={14} /> {pesquisaElegivel.pendente ? "Pulso da escala" : "Sua última resposta"}</span></div>
               <div className="panel-body">
                 <div style={{ fontSize: "var(--fs-pn-14)", fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{pesquisaElegivel.nome}</div>
                 <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{pesquisaElegivel.pendente ? "Leva menos de um minuto. Conta como foi pra você." : "Já respondida. Toque pra rever ou atualizar quando quiser."}</div>
@@ -2298,8 +2330,7 @@ function Painel({
       {journeyRequests.length > 0 && (
         <div className="panel" id="caminhada-pendente" style={{ marginTop: 24 }}>
           <div className="panel-head">
-            <span className="panel-title"><Icon name="membros" size={14} /> Caminhada pendente <HelpDot label="Como calculamos" text="Pedidos de avanço na caminhada (decisão, batismo, curso...) esperando aprovação da liderança." /></span>
-            <span className="panel-meta">{journeyRequests.length} {journeyRequests.length === 1 ? "pedido" : "pedidos"}</span>
+            <span className="panel-title"><Icon name="membros" size={14} /> Caminhada pendente</span>
           </div>
           <div className="panel-body flush">
             {journeyRequests.map((request) => {
@@ -2324,13 +2355,13 @@ function Painel({
       )}
       <div className="dash-2col">
         {semanasComPresenca >= 4 && <div className="panel">
-          <div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={14} /> Voluntários mais engajados <HelpDot label="Como calculamos" text="Quem tem a maior taxa de engajamento nas últimas escalas." /></span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>Todos</button></div>
+          <div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={14} /> Voluntários mais engajados</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("pessoas")}>Todos</button></div>
           <div className="panel-body flush">
             {topPeople.map((person, index) => <PersonMini key={person.id} person={person} index={index} setDrawer={setDrawer} />)}
           </div>
         </div>}
         <div className="panel">
-          <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Comunicação recente <HelpDot label="Como calculamos" text="Os últimos avisos e posts do mural enviados pra igreja." /></span><button className="panel-link" type="button" onClick={() => setRoute("comunicacao")}>Ver tudo</button></div>
+          <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Comunicação recente</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("comunicacao")}>Ver tudo</button></div>
           <div className="panel-body flush">
             {recentAnnouncements.map((a) => (
               <button className="mini-row click" type="button" key={a.id} onClick={() => setRoute("comunicacao")}>
@@ -2349,7 +2380,7 @@ function Painel({
       {kidsClasses.length > 0 && (
         <div className="dash-2col" style={{ marginTop: 20 }}>
           <div className="panel">
-            <div className="panel-head"><span className="panel-title"><Icon name="kids" size={14} /> Crianças por turma <HelpDot label="Como calculamos" text="Quantas crianças estão em cada turma do Kids." /></span><button className="panel-link" type="button" onClick={() => setRoute("criancas")}>Ver todas</button></div>
+            <div className="panel-head"><span className="panel-title"><Icon name="kids" size={14} /> Crianças por turma</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("criancas")}>Ver todas</button></div>
             <div className="panel-body flush">
               {kidsClasses.map((kc) => {
                 const count = kidsChildren.filter((child) => child.class_id === kc.id).length;
@@ -2365,7 +2396,7 @@ function Painel({
             </div>
           </div>
           <div className="panel">
-            <div className="panel-head"><span className="panel-title"><Icon name="alerta" size={14} /> Crianças sumindo <HelpDot label="Como calculamos" text="Crianças que não aparecem faz tempo. Vale um contato com a família." /></span><span className="panel-meta">sem vir há mais tempo</span></div>
+            <div className="panel-head"><span className="panel-title"><Icon name="alerta" size={14} /> Crianças sumindo</span><span className="panel-meta">sem vir há mais tempo</span></div>
             <div className="panel-body flush">
               {kidsChildren
                 .map((child) => {
