@@ -197,7 +197,9 @@ export function Coachmark({ steps, go, onDone, startAt = 0, onStepChange }: { st
 
 /* ── HELP FAB · botão flutuante de ajuda, sempre por perto ────────── */
 
-export function HelpFab({ onTour, onSetup }: { onTour: () => void; onSetup: () => void }) {
+/* lugar: "flutuante" (computador, canto de baixo) ou "barra" (celular, na barra
+   do topo, para não cobrir o conteúdo; v7 2.11). O CSS mostra um ou outro. */
+export function HelpFab({ onTour, onSetup, lugar = "flutuante" }: { onTour: () => void; onSetup: () => void; lugar?: "flutuante" | "barra" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -208,14 +210,14 @@ export function HelpFab({ onTour, onSetup }: { onTour: () => void; onSetup: () =
   }, []);
 
   return (
-    <div className="help-fab-wrap" ref={ref}>
+    <div className={`help-fab-wrap ${lugar === "barra" ? "na-barra" : "flutuante"}`} ref={ref}>
       {open ? (
         <div className="help-fab-menu">
           <button type="button" onClick={() => { setOpen(false); onTour(); }}><Icon name="pendente" size={14} className="ic" /> Rever o tour guiado</button>
           <button type="button" onClick={() => { setOpen(false); onSetup(); }}><Icon name="identidade" size={14} className="ic" /> Ver o que falta configurar</button>
         </div>
       ) : null}
-      <button className="help-fab" type="button" data-tour="ajuda-fab" title="Ajuda" onClick={() => setOpen((o) => !o)}>?</button>
+      <button className="help-fab" type="button" data-tour={lugar === "barra" ? undefined : "ajuda-fab"} title="Ajuda" aria-label="Ajuda" aria-expanded={open} onClick={() => setOpen((o) => !o)}>?</button>
     </div>
   );
 }

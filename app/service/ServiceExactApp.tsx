@@ -1646,6 +1646,14 @@ export default function ServiceExactApp({
     );
   }
 
+  /* ajuda "?": o mesmo menu no canto (computador) e na barra do topo (celular) */
+  const abrirTourAjuda = () => { setShowTour(true); setNavOpen(true); };
+  const abrirSetupAjuda = () => {
+    try { localStorage.removeItem("cex_setup_hide"); } catch { /* segue mesmo sem conseguir gravar */ }
+    setRoute("painel");
+    window.dispatchEvent(new Event("cex-setup-show"));
+  };
+
   /* número só quando pede ação: visitante sem contato há 48h, vaga aberta na escala */
   const navBadge: Partial<Record<keyof typeof ROUTES, number>> = {
     visitantes: visitors.filter((v) => semContato48h(v, visitorNotes)).length,
@@ -1717,6 +1725,7 @@ export default function ServiceExactApp({
               setDrawer={setDrawer}
             />
           </div>
+          <HelpFab lugar="barra" onTour={abrirTourAjuda} onSetup={abrirSetupAjuda} />
           <div className="top-actions">
 <TopUserMenu name={eu?.name ?? "Você"} roleLabel={ROLE_LABEL[currentRole] ?? "Liderança"} photoUrl={eu?.photoUrl} churchPageUrl={paginaUrl} onLogout={sair} onOpenApp={() => setView("app")} theme={theme} onToggleTheme={() => setTheme((t) => t === "dark" ? "light" : "dark")} />
           </div>
@@ -1794,14 +1803,7 @@ export default function ServiceExactApp({
         </RouteGroupContext.Provider>
       </div>
 
-      <HelpFab
-        onTour={() => { setShowTour(true); setNavOpen(true); }}
-        onSetup={() => {
-          try { localStorage.removeItem("cex_setup_hide"); } catch { /* segue mesmo sem conseguir gravar */ }
-          setRoute("painel");
-          window.dispatchEvent(new Event("cex-setup-show"));
-        }}
-      />
+      <HelpFab onTour={abrirTourAjuda} onSetup={abrirSetupAjuda} />
       {showTour ? (
         <Coachmark
           steps={TOUR_DESKTOP}

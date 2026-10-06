@@ -404,3 +404,15 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
 .cand-list .cand{width:100%;text-align:left}
 .cand-list .cand-fit{flex-shrink:0;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
 .cand-list .cand-motivo{display:flex;align-items:center;gap:5px}
+/* v7 2.11: o "?" não cobre conteúdo. No computador fica no canto e a página
+   reserva espaço embaixo; no celular vai para a barra do topo. */
+.help-fab-wrap.na-barra{display:none}
+@media (min-width:741px){.main .content{padding-bottom:calc(96px + var(--safe-bottom))}}
+@media (max-width:740px){
+  .help-fab-wrap.flutuante{display:none}
+  .help-fab-wrap.na-barra{display:block;position:relative;right:auto;bottom:auto;z-index:auto;flex-shrink:0}
+  .na-barra .help-fab{width:44px;height:44px;background:transparent;border:0;box-shadow:none;font-family:var(--font, inherit);font-size:18px;color:var(--light)}
+  .na-barra .help-fab:hover{transform:none}
+  .na-barra .help-fab-menu{top:calc(100% + 8px);bottom:auto;right:0;width:min(250px, calc(100vw - 32px))}
+  .top.search-open .help-fab-wrap.na-barra{display:none}
+}
