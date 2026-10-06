@@ -3,10 +3,10 @@
 Atualizado pelo Claude Code ao fim de cada item: marque `[x]` e anote o commit curto.
 
 ## Etapa 1 · Lei de módulos
-- [ ] 1.1 Seção 11 "Service: módulos" no AGENTS.md
-- [ ] 1.2 app/service/modules/README.md com as leis e o checklist
-- [ ] 1.3 app/service/modules/_modelo/ com manifesto de exemplo
-- [ ] 1.4 CLAUDE.md da raiz com @AGENTS.md (já está; só confirmar)
+- [x] 1.1 (8ac047d) Seção 11 "Service: módulos" no AGENTS.md
+- [x] 1.2 (4cd2497) app/service/modules/README.md com as leis e o checklist
+- [x] 1.3 (e0bc7f6) app/service/modules/_modelo/ com manifesto de exemplo
+- [x] 1.4 (este commit) CLAUDE.md da raiz com @AGENTS.md (já está; só confirmar)
 
 ## Etapa 2 · Consertos
 - [ ] 2.1 Continuar do curso com destino real
@@ -61,6 +61,12 @@ Atualizado pelo Claude Code ao fim de cada item: marque `[x]` e anote o commit c
 - [ ] 5.2 Métricas internas
 - [ ] 5.3 Notificações por categoria e silêncio
 - [ ] 5.4 Testes automáticos ligados
+
+## Decisões da noite
+- Branch `service-v7` criada a partir de `service-v6` (539a83d), e não de `main` (7ab1190): `main` está 2 commits atrás (etapa 6 de Configurações e Permissões), e o estudo de 05/10 foi feito em 539a83d. Partir de `main` perderia esse trabalho.
+- AGENTS.md já tinha uma §11 ("Módulos centrais"). A lei entrou como "§13. Service: módulos", com nota explicando o número, para não renumerar seções existentes.
+- 1.3: além do `_modelo/manifest.ts`, criei `app/service/modules/define.ts` com os tipos do contrato (`defineModule`, `Cartao`, `Lugar`), porque o exemplo precisa compilar.
+- Verificação de cada item: `npx tsc --noEmit` + `npm run build` (o package.json não tem script de typecheck).
 
 ## Bloqueios
 | item | motivo | o que falta |
