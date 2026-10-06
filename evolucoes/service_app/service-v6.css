@@ -268,9 +268,11 @@ div.m6-row{cursor:default}
 .m6-rt{display:flex;align-items:center;gap:6px;font-size:var(--fs-app-17);font-weight:600;line-height:1.3;color:var(--white)}
 .m6-rs{font-size:var(--fs-app-15);line-height:1.4;color:var(--muted)}
 .m6-serve{display:block;margin-top:6px}
+.m6-ag-h{flex:0 0 auto;min-width:3.2em;font-family:var(--mono);font-size:var(--fs-app-15);font-variant-numeric:tabular-nums;color:var(--muted)}
+.m6-ev-info{margin-top:16px}
 .m6-1l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .m6-strong{color:var(--white);font-weight:600}
-.m6-mt{margin-top:8px}
+.m6-mt{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
 .m6-ic{display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:12px;background:var(--graphite-2);color:var(--white)}
 .m6-ic.accent{background:var(--olive-dim);color:var(--olive)}
 .m6-me{display:flex;align-items:center;gap:16px}
@@ -504,3 +506,8 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
 .sit-cell{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
 .sit-sub{font-size:var(--fs-pn-12);color:var(--muted);line-height:1.3}
 .sit-alerta{color:var(--warn)}
+
+/* v7 4.5: o que o evento pede (painel, detalhe do culto) */
+.pede-opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;min-height:32px;border:1px solid var(--border-2);border-radius:10px;cursor:pointer}
+.pede-opt.on{border-color:var(--olive)}
+.pede-opt input{margin-top:3px}

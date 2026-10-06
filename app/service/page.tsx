@@ -264,6 +264,10 @@ type EventRow = {
   checkin_token: string | null;
   checkin_active: boolean | null;
   created_at: string;
+  /* 0058 (v7 4.5); ausentes antes da migração */
+  pede?: string | null;
+  valor?: string | null;
+  instrucoes?: string | null;
 };
 
 type ScheduleItemRow = {
@@ -310,6 +314,9 @@ type EventView = {
   checkinToken: string | null;
   checkinActive: boolean;
   createdAt: string;
+  pede: "aviso" | "presenca" | "inscricao";
+  valor: string;
+  instrucoes: string;
 };
 
 type RosterAssignmentView = {
@@ -413,6 +420,7 @@ type AnnouncementView = {
   kind?: string | null;
 };
 type AnnouncementResponseView = { announcement_id: string; person_id: string; response: "vou" | "nao" };
+type EventRsvpView = { event_id: string; person_id: string; kind: "presenca" | "inscricao" };
 
 type WallPostView = {
   id: string;
@@ -716,6 +724,7 @@ type ExtraServiceData = {
   announcements: AnnouncementView[];
   announcementReads: AnnouncementReadView[];
   announcementResponses: AnnouncementResponseView[];
+  eventRsvps: EventRsvpView[];
   eventAttendance: EventAttendanceView[];
   wallPosts: WallPostView[];
   decisions: DecisionView[];
@@ -763,6 +772,7 @@ const emptyExtraServiceData: ExtraServiceData = {
   announcements: [],
   announcementReads: [],
   announcementResponses: [],
+  eventRsvps: [],
   eventAttendance: [],
   wallPosts: [],
   decisions: [],
@@ -949,6 +959,9 @@ function toEventViews(
     checkinToken: event.checkin_token,
     checkinActive: event.checkin_active ?? true,
     createdAt: event.created_at,
+    pede: event.pede === "presenca" || event.pede === "inscricao" ? event.pede : "aviso",
+    valor: event.valor ?? "",
+    instrucoes: event.instrucoes ?? "",
   }));
 }
 
@@ -1083,7 +1096,8 @@ async function getServiceDashboardData(): Promise<{
   const { data: eventsData, error: eventsError } = await supabase
     .schema("service")
     .from("events")
-    .select("id,organization_id,church_id,name,kind,weekday,event_date,time,slot,location,room_id,ministries,tags,checkin_token,checkin_active,created_at")
+    /* "*": lê pede/valor/instrucoes (0058) sem quebrar antes de a migração chegar em produção */
+    .select("*")
     .order("event_date", { ascending: true, nullsFirst: false })
     .order("time");
 
@@ -1244,6 +1258,9 @@ async function getServiceDashboardData(): Promise<{
      propósito: antes da migração a tabela não existe e a tela segue sem elas. */
   const { data: responsesData } = await supabase.schema("service").from("announcement_responses").select("announcement_id,person_id,response");
   const announcementResponses = (responsesData ?? []) as AnnouncementResponseView[];
+  /* presença e inscrição em evento (0058), também fora do Promise.all */
+  const { data: rsvpsData } = await supabase.schema("service").from("event_rsvps").select("event_id,person_id,kind");
+  const eventRsvps = (rsvpsData ?? []) as EventRsvpView[];
 
   const extraError = [
     decisionsResult.error,
@@ -1312,6 +1329,7 @@ async function getServiceDashboardData(): Promise<{
       announcements: ((announcementsResult.data ?? []) as AnnouncementView[]),
       announcementReads: ((announcementReadsResult.data ?? []) as AnnouncementReadView[]),
       announcementResponses,
+      eventRsvps,
       eventAttendance: ((eventAttendanceResult.data ?? []) as EventAttendanceView[]),
       wallPosts: ((wallPostsResult.data ?? []) as WallPostView[]),
       decisions: ((decisionsResult.data ?? []) as DecisionView[]),
@@ -1519,6 +1537,7 @@ export default async function ServiceHomePage() {
       announcements={extra.announcements}
       announcementReads={extra.announcementReads}
       announcementResponses={extra.announcementResponses}
+      eventRsvps={extra.eventRsvps}
       eventAttendance={extra.eventAttendance}
       wallPosts={extra.wallPosts}
       decisions={extra.decisions}

@@ -22,6 +22,8 @@ import { INSTRUCAO_QR, aulasDoCurso, proximaAula, textoDaAula, type ProximaAula 
 import { modulosLigados, telasDoMembro, type EstadoModulos } from "./modules/registry";
 import type { CategoriaAviso, ContextoMembro } from "./modules/define";
 import { FILA_DOBRA, ordenarFila, type EntradaFila } from "./modules/fila";
+import { conflitos, horaDeChegada } from "./lib/agenda";
+import { baixarIcs } from "./lib/ics";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -74,6 +76,8 @@ type Ministry = {
   description?: string | null;
   positions?: Array<{ id: string; name: string }>;
   appModules?: string[];
+  /* "Horário de chegada" do time (texto livre: "18:30", "1h antes") */
+  profile?: Record<string, unknown> | null;
   people: Array<{ personId: string; isLeader: boolean; functions: string[] }>;
 };
 type JourneyStep = "decisao" | "batismo" | "curso" | "integracao" | "time";
@@ -85,7 +89,14 @@ type JourneyRequest = {
   note: string | null;
   status: "pendente" | "aprovado" | "rejeitado";
 };
-type Ev = { id: string; name: string; weekday: string; eventDate: string; time: string; location?: string; kind?: string };
+type Ev = {
+  id: string; name: string; weekday: string; eventDate: string; time: string; location?: string; kind?: string;
+  /* o que o evento pede, valor e instruções (0058, v7 4.5) */
+  pede?: "aviso" | "presenca" | "inscricao"; valor?: string; instrucoes?: string;
+};
+type EventRsvp = { event_id: string; person_id: string; kind: "presenca" | "inscricao" };
+type MeetingLite = { id: string; title: string; meeting_date: string | null; time: string | null; location: string | null; status: string; ministries: string[]; attendees: string[] };
+type RehearsalLite = { id: string; ministry_id: string | null; title: string; rehearsal_date: string | null; time: string | null; location: string | null; attendees: string[] };
 type Slot = { id: string; event_id: string; position_id: string; person_id: string; status: "ok" | "wait" | "no" };
 type Card = {
   id: string;
@@ -269,6 +280,13 @@ export type MobileOverlayProps = {
   /* "Vou / Não vou" nas publicações de evento do Mural (0049) */
   onRespondAnnouncement?: (announcementId: string, response: "vou" | "nao" | null) => Promise<boolean>;
   announcementResponses?: { announcement_id: string; response: "vou" | "nao" }[];
+  /* presença e inscrição em evento (0058, v7 4.5) */
+  eventRsvps?: EventRsvp[];
+  onRespondEvent?: (eventId: string, vai: boolean) => Promise<boolean>;
+  meetings?: MeetingLite[];
+  rehearsals?: RehearsalLite[];
+  /* página pública da igreja ("/slug"), para o link de Compartilhar */
+  paginaUrl?: string | null;
 };
 
 // ── constantes ────────────────────────────────────────────────────────────────
@@ -1322,36 +1340,17 @@ function AulaQuando({ aula }: { aula: CourseLesson }) {
   );
 }
 
-/* aulas com data dos cursos em andamento, na Agenda (v7 2.2) */
-function AulasAgenda({ member, courses, enrollments, courseModules, courseLessons }: { member: M | null; courses: Course[]; enrollments: Enrollment[]; courseModules: CourseModule[]; courseLessons: CourseLesson[] }) {
-  if (!member) return null;
+/* aulas com data dos cursos em andamento, na Minha agenda (v7 2.2, 4.5) */
+function minhasAulas(member: M | null, courses: Course[], enrollments: Enrollment[], courseModules: CourseModule[], courseLessons: CourseLesson[]) {
+  if (!member) return [];
   const hoje = todayISO();
-  const aulas = enrollments
+  return enrollments
     .filter((e) => e.member_id === member.id && e.status !== "concluido")
     .flatMap((e) => {
       const curso = courses.find((c) => c.id === e.course_id);
       return curso ? aulasDoCurso(curso.id, courseModules, courseLessons).map((aula) => ({ aula, curso })) : [];
     })
-    .filter(({ aula }) => (aula.kind === "presencial" || aula.kind === "ao_vivo") && !!aula.lesson_date && aula.lesson_date >= hoje)
-    .sort((a, b) => `${a.aula.lesson_date}${a.aula.lesson_time ?? ""}`.localeCompare(`${b.aula.lesson_date}${b.aula.lesson_time ?? ""}`));
-  if (!aulas.length) return null;
-  return (
-    <div className="m6-sec">
-      <div className="m6-lbl">Suas aulas</div>
-      <div className="m6-list">
-        {aulas.map(({ aula, curso }) => (
-          <div className="m6-row" key={aula.id}>
-            <M6Date iso={aula.lesson_date!} />
-            <div className="m6-rb">
-              <div className="m6-rt">{aula.name}</div>
-              <div className="m6-rs">{joinDot(curso.name, aula.lesson_time, aula.location)}</div>
-              <div className="m6-rs">{INSTRUCAO_QR}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+    .filter(({ aula }) => (aula.kind === "presencial" || aula.kind === "ao_vivo") && !!aula.lesson_date && aula.lesson_date >= hoje);
 }
 
 function SheetAula({ aula, n, total, porQr }: { aula: CourseLesson; n: number; total: number; porQr: boolean }) {
@@ -2493,8 +2492,10 @@ type MemberUi = {
   responderEscala: (id: string, v: "ok" | "no" | null) => void;
   /* abre a folha do tamanho do texto (Perfil) */
   tamanhoTexto: () => void;
+  /* abre o detalhe do evento numa folha (v7 4.5) */
+  abrirEvento: (eventId: string) => void;
 };
-const MemberUiContext = createContext<MemberUi>({ go: () => {}, sheet: () => {}, toast: () => {}, respostas: {}, responderEscala: () => {}, tamanhoTexto: () => {} });
+const MemberUiContext = createContext<MemberUi>({ go: () => {}, sheet: () => {}, toast: () => {}, respostas: {}, responderEscala: () => {}, tamanhoTexto: () => {}, abrirEvento: () => {} });
 
 function M6Row({ ic, t, s, onClick, right, cls }: { ic?: string; t: React.ReactNode; s?: React.ReactNode; onClick?: () => void; right?: React.ReactNode | null; cls?: string }) {
   return (
@@ -2668,15 +2669,17 @@ function SheetTroca({ slot, ev, funcao, member, dest, onStartChat }: {
 
 /* `serve`: a pessoa está na escala confirmada deste culto (aparece uma vez, com o selo) */
 function EventoRow({ ev, serve }: { ev: Ev; serve?: string | null }) {
+  const ui = useContext(MemberUiContext);
   return (
-    <div className="m6-row">
+    <button type="button" className="m6-row" onClick={() => ui.abrirEvento(ev.id)}>
       <M6Date iso={ev.eventDate} />
-      <div className="m6-rb">
-        <div className="m6-rt">{ev.name}</div>
-        <div className="m6-rs">{joinDot(ev.weekday, ev.time, ev.location)}</div>
+      <span className="m6-rb">
+        <span className="m6-rt">{ev.name}</span>
+        <span className="m6-rs">{joinDot(ev.weekday, ev.time, ev.location)}</span>
         {serve !== undefined && serve !== null && <span className="m6-serve"><M6St k="ok" ic="ok">{joinDot("Você serve", serve)}</M6St></span>}
-      </div>
-    </div>
+      </span>
+      <span className="m6-chev"><Icon name="avancar" size={18} /></span>
+    </button>
   );
 }
 
@@ -2972,10 +2975,19 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
   );
 }
 
-// ── Agenda (S19) ──────────────────────────────────────────────────────────────
-function AgendaV6({ seg, setSeg, person, member, members, ministries, events, roster, cards, boards, isRecep, isKids, onConfirmarEscala, onRecusarEscala, onStartChat, onAddCardComment, onSaveAvailability, aulas }: {
+// ── Agenda (S19, v7 4.5) ──────────────────────────────────────────────────────
+/* "Minha agenda" reúne tudo que envolve a pessoa, por dia, com o tipo escrito
+   (Serve, Ensaio, Reunião, Aula, Tarefa, Evento, Culto) e o conflito de horário
+   marcado. "Igreja" é a programação pública. Escala a confirmar continua em
+   cartão no alto (com Confirmar e Não posso). */
+const chegadaDoTime = (m?: Ministry) => (typeof m?.profile?.chegada === "string" ? m.profile.chegada : null);
+type TipoAgenda = "Serve" | "Ensaio" | "Reunião" | "Aula" | "Tarefa" | "Evento" | "Culto";
+type ItemAgenda = { id: string; data: string; hora?: string | null; tipo: TipoAgenda; titulo: string; sub?: string; selo?: React.ReactNode; abrir?: () => void };
+
+function AgendaV6({ seg, setSeg, person, member, members, ministries, events, roster, cards, boards, isRecep, isKids, onConfirmarEscala, onRecusarEscala, onStartChat, onAddCardComment, onSaveAvailability, aulas, meetings, rehearsals, rsvps }: {
   onSaveAvailability?: (availability: Record<string, boolean>) => Promise<boolean>;
-  aulas?: React.ReactNode;
+  aulas: { aula: CourseLesson; curso: Course }[];
+  meetings: MeetingLite[]; rehearsals: RehearsalLite[]; rsvps: EventRsvp[];
   seg: "minha" | "igreja"; setSeg: (s: "minha" | "igreja") => void;
   person: P; member: M | null; members: M[]; ministries: Ministry[]; events: Ev[]; roster: Slot[]; cards: Card[]; boards: Board[];
   isRecep: boolean; isKids: boolean;
@@ -2986,12 +2998,11 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
   const { comTermos: ct } = useTermos();
   const ui = useContext(MemberUiContext);
   const serve = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
+  const meusTimes = new Set(ministries.filter((m) => m.people.some((mp) => mp.personId === person.id)).map((m) => m.id));
   /* tarefas abertas (v7 4.6): seção só com tarefa aberta; no dia do prazo, também na lista por data */
   const tarefasAbertas = cards.filter((c) => c.assignees.includes(person.id) && c.column_id !== "done");
-  const temMinha = serve || tarefasAbertas.length > 0;
-  const atual = temMinha ? seg : "igreja";
+  const atual = seg;
   const hoje = todayISO();
-  const comPrazo = tarefasAbertas.filter((c) => (c.due ?? "").slice(0, 10) >= hoje).sort((a, b) => (a.due ?? "").localeCompare(b.due ?? ""));
   const evById = new Map(events.map((e) => [e.id, e]));
   const meus = roster
     .filter((r) => r.person_id === person.id && (evById.get(r.event_id)?.eventDate ?? "") >= hoje)
@@ -3008,7 +3019,58 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
     const id = await onStartChat(member.id, destFalta.member_id, ct("Oi! Queria avisar que vou faltar num dos próximos {cultos}. Posso te contar qual?"));
     if (id) ui.go("mensagens", null, { chatId: id });
   };
-  const futuros = events.filter((e) => e.eventDate >= hoje).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
+
+  /* Minha agenda: tudo que envolve a pessoa */
+  const itens: ItemAgenda[] = [];
+  for (const slot of outras) {
+    const ev = evById.get(slot.event_id);
+    if (!ev) continue;
+    const min = ministryOf(slot);
+    const funcao = min?.positions?.find((p) => p.id === slot.position_id)?.name;
+    const chegar = slot.status === "ok" ? horaDeChegada(ev.time, chegadaDoTime(min)) : null;
+    itens.push({
+      id: `s-${slot.id}`, data: ev.eventDate, hora: ev.time, tipo: "Serve", titulo: ev.name,
+      sub: joinDot(min?.name, funcao, chegar && `chegar ${chegar}`),
+      selo: slot.status === "ok" ? <M6St k="ok" ic="ok">Confirmado</M6St> : <M6St k="warn" ic="recusou">Você não pode</M6St>,
+      abrir: () => ui.abrirEvento(ev.id),
+    });
+  }
+  const servindo = new Set(meus.map((r) => r.event_id));
+  for (const r of rsvps) {
+    const ev = evById.get(r.event_id);
+    if (!ev || servindo.has(ev.id) || !aindaVaiAcontecer(ev.eventDate, ev.time)) continue;
+    itens.push({
+      id: `e-${ev.id}`, data: ev.eventDate, hora: ev.time, tipo: ev.kind === "Culto" ? "Culto" : "Evento", titulo: ev.name, sub: ev.location,
+      selo: <M6St k="ok" ic="ok">{r.kind === "inscricao" ? "Inscrito" : "Você vai"}</M6St>,
+      abrir: () => ui.abrirEvento(ev.id),
+    });
+  }
+  for (const e of rehearsals) {
+    if (!e.rehearsal_date || e.rehearsal_date < hoje) continue;
+    if (!(e.ministry_id && meusTimes.has(e.ministry_id)) && !e.attendees?.includes(person.id)) continue;
+    itens.push({ id: `r-${e.id}`, data: e.rehearsal_date, hora: e.time, tipo: "Ensaio", titulo: e.title, sub: joinDot(ministries.find((m) => m.id === e.ministry_id)?.name, e.location) });
+  }
+  for (const m of meetings) {
+    if (!m.meeting_date || m.meeting_date < hoje || m.status === "realizada") continue;
+    if (!m.ministries?.some((id) => meusTimes.has(id)) && !m.attendees?.includes(person.id)) continue;
+    itens.push({ id: `m-${m.id}`, data: m.meeting_date, hora: m.time, tipo: "Reunião", titulo: m.title, sub: m.location ?? undefined });
+  }
+  for (const { aula, curso } of aulas) {
+    itens.push({ id: `a-${aula.id}`, data: aula.lesson_date!, hora: aula.lesson_time, tipo: "Aula", titulo: aula.name, sub: joinDot(curso.name, aula.location) });
+  }
+  for (const t of tarefasAbertas) {
+    const d = (t.due ?? "").slice(0, 10);
+    if (d < hoje) continue;
+    itens.push({ id: `t-${t.id}`, data: d, tipo: "Tarefa", titulo: t.title, sub: boards.find((b) => b.id === t.board_id)?.name });
+  }
+  itens.sort((a, b) => `${a.data} ${a.hora || "99"}`.localeCompare(`${b.data} ${b.hora || "99"}`));
+  const emConflito = conflitos(itens.filter((i) => i.tipo !== "Tarefa").map((i) => ({ id: i.id, data: i.data, hora: i.hora })));
+  const dias = [...new Set(itens.map((i) => i.data))];
+  const amanha = somaDias(hoje, 1);
+  const nomeDia = (d: string) => (d === hoje ? `Hoje · ${dataLonga(d)}` : d === amanha ? `Amanhã · ${dataLonga(d)}` : dataLonga(d));
+
+  /* Igreja: programação pública, por semana */
+  const futuros = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
   const semanaDe = (iso: string) => {
     const d = parseISODate(iso);
     if (!d) return "Sem data";
@@ -3022,66 +3084,59 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
 
   return (
     <>
-      {temMinha && (
-        <div className="m6-segwrap">
-          <div className="ts-seg two m6-seg" role="radiogroup" aria-label="O que ver">
-            {([["minha", "Minha escala"], ["igreja", "Igreja"]] as const).map(([v, l]) => (
-              <button key={v} type="button" role="radio" aria-checked={atual === v} className={atual === v ? "on" : ""} onClick={() => setSeg(v)}>{l}</button>
-            ))}
-          </div>
+      <div className="m6-segwrap">
+        <div className="ts-seg two m6-seg" role="radiogroup" aria-label="O que ver">
+          {([["minha", "Minha agenda"], ["igreja", "Igreja"]] as const).map(([v, l]) => (
+            <button key={v} type="button" role="radio" aria-checked={atual === v} className={atual === v ? "on" : ""} onClick={() => setSeg(v)}>{l}</button>
+          ))}
         </div>
-      )}
-      {aulas}
+      </div>
       {atual === "minha" ? (
         <>
           {pend.length > 0 && (
             <div className="m6-sec">
-              <div className="m6-lbl">A confirmar · {pend.length}</div>
+              <div className="m6-lbl">Escala a confirmar · {pend.length}</div>
               {pend.map((slot) => {
                 const ev = evById.get(slot.event_id);
                 return ev ? <EscalaCard key={slot.id} slot={slot} ev={ev} ministry={ministryOf(slot)} person={person} member={member} members={members} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat} /> : null;
               })}
             </div>
           )}
-          <div className="m6-sec">
-            <div className="m6-lbl">Próximas</div>
-            {outras.length + comPrazo.length > 0 ? (
+          {dias.map((d) => (
+            <div className="m6-sec" key={d}>
+              <div className="m6-lbl">{nomeDia(d)}</div>
               <div className="m6-list">
-                {[
-                  ...outras.map((slot) => ({ quando: `${evById.get(slot.event_id)?.eventDate ?? ""} ${evById.get(slot.event_id)?.time ?? ""}`, slot, tarefa: null as Card | null })),
-                  ...comPrazo.map((t) => ({ quando: `${(t.due ?? "").slice(0, 10)} 99`, slot: null as Slot | null, tarefa: t })),
-                ].sort((a, b) => a.quando.localeCompare(b.quando)).map(({ slot, tarefa }) => {
-                  if (tarefa) {
-                    return (
-                      <div className="m6-row" key={`t-${tarefa.id}`}>
-                        <M6Date iso={(tarefa.due ?? "").slice(0, 10)} />
-                        <div className="m6-rb">
-                          <div className="m6-rt">{tarefa.title}</div>
-                          <div className="m6-rs">{joinDot("Tarefa", boards.find((b) => b.id === tarefa.board_id)?.name)}</div>
-                          <div className="m6-mt"><M6St k="neutral">Prazo</M6St></div>
-                        </div>
-                      </div>
-                    );
-                  }
-                  const ev = slot ? evById.get(slot.event_id) : undefined;
-                  if (!slot || !ev) return null;
-                  const min = ministryOf(slot);
-                  return (
-                    <div className="m6-row" key={slot.id}>
-                      <M6Date iso={ev.eventDate} />
-                      <div className="m6-rb">
-                        <div className="m6-rt">{ev.name}</div>
-                        <div className="m6-rs">{joinDot(ev.time, min?.name, min?.positions?.find((p) => p.id === slot.position_id)?.name)}</div>
-                        <div className="m6-mt">{slot.status === "ok" ? <M6St k="ok" ic="ok">Confirmado</M6St> : <M6St k="warn" ic="recusou">Você não pode</M6St>}</div>
-                      </div>
-                    </div>
+                {itens.filter((i) => i.data === d).map((i) => {
+                  const corpo = (
+                    <>
+                      <span className="m6-ag-h">{i.hora || ""}</span>
+                      <span className="m6-rb">
+                        <span className="m6-rt">{i.titulo}</span>
+                        <span className="m6-rs">{joinDot(i.tipo, i.sub)}</span>
+                        {(i.selo || emConflito.has(i.id)) && (
+                          <span className="m6-mt">
+                            {i.selo}
+                            {emConflito.has(i.id) && <M6St k="warn" ic="alerta">Conflito de horário</M6St>}
+                          </span>
+                        )}
+                      </span>
+                    </>
+                  );
+                  return i.abrir ? (
+                    <button type="button" className="m6-row" key={i.id} onClick={i.abrir}>{corpo}<span className="m6-chev"><Icon name="avancar" size={18} /></span></button>
+                  ) : (
+                    <div className="m6-row" key={i.id}>{corpo}</div>
                   );
                 })}
               </div>
-            ) : (
-              <div className="m6-card"><div className="m6-meta">{pend.length ? "As escalas confirmadas aparecem aqui." : "Nenhuma escala marcada para você por enquanto."}</div></div>
-            )}
-          </div>
+            </div>
+          ))}
+          {itens.length === 0 && pend.length === 0 && (
+            <div className="m6-sec">
+              <div className="m6-card"><div className="m6-ct">Nada marcado para você</div><div className="m6-meta">{ct("O que você tiver na igreja aparece aqui por dia. A programação de {cultos} e eventos está em Igreja.")}</div></div>
+            </div>
+          )}
+          {serve && meus.length === 0 && <div className="m6-pad m6-meta">{ct("Você não está na escala dos próximos {cultos}.")}</div>}
           {tarefasAbertas.length > 0 && (
             <div className="m6-sec m6-legacy">
               <TabTarefas person={person} cards={cards} boards={boards} onAddCardComment={onAddCardComment} />
@@ -3115,6 +3170,73 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
         )
       )}
     </>
+  );
+}
+
+/* Detalhe do evento numa folha (v7 4.5): uma área de ação só, conforme o que o
+   evento pede (só aviso, confirmar presença, inscrição); valor e instruções da
+   igreja; quem serve vê "Serve · função · chegar HH:MM"; Compartilhar e
+   Adicionar ao calendário. */
+function SheetEvento({ ev, slot, ministry, rsvp, onRespond, paginaUrl, churchName }: {
+  ev: Ev; slot?: Slot; ministry?: Ministry; rsvp: EventRsvp["kind"] | null;
+  onRespond?: (eventId: string, vai: boolean) => Promise<boolean>;
+  paginaUrl?: string | null; churchName?: string;
+}) {
+  const ui = useContext(MemberUiContext);
+  const [resp, setResp] = useState<EventRsvp["kind"] | null>(rsvp);
+  const [enviando, setEnviando] = useState(false);
+  const pede = ev.pede ?? "aviso";
+  const funcao = slot ? ministry?.positions?.find((p) => p.id === slot.position_id)?.name : undefined;
+  const chegar = slot ? horaDeChegada(ev.time, chegadaDoTime(ministry)) : null;
+  const responder = async (vai: boolean) => {
+    if (!onRespond) return;
+    setEnviando(true);
+    const ok = await onRespond(ev.id, vai);
+    setEnviando(false);
+    if (!ok) return;
+    setResp(vai ? (pede === "inscricao" ? "inscricao" : "presenca") : null);
+    ui.toast(vai ? (pede === "inscricao" ? "Inscrição feita" : "Presença confirmada") : (pede === "inscricao" ? "Inscrição cancelada" : "Presença desfeita"));
+  };
+  const link = paginaUrl && typeof window !== "undefined" ? `${window.location.origin}${paginaUrl}` : "";
+  const texto = [ev.name, joinDot(dataLonga(ev.eventDate) || ev.weekday, ev.time), ev.location, churchName, link].filter(Boolean).join("\n");
+  const compartilhar = async () => {
+    const nav = navigator as Navigator & { share?: (d: { title?: string; text?: string }) => Promise<void> };
+    if (nav.share) { try { await nav.share({ title: ev.name, text: texto }); return; } catch { return; } }
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank", "noopener");
+  };
+  const calendario = () => baixarIcs({ id: ev.id, titulo: ev.name, data: ev.eventDate, hora: ev.time, local: ev.location, descricao: churchName ?? null });
+  const servindo = slot && slot.status !== "no";
+  return (
+    <div>
+      <div className="m6-kick">{ev.kind && ev.kind !== "Culto" ? ev.kind : "Na igreja"}</div>
+      <h2 className="m6-sh">{ev.name}</h2>
+      <ul className="m6-facts">
+        <li><Icon name="agenda" size={20} /><span>{joinDot(dataLonga(ev.eventDate) || ev.weekday, ev.time)}</span></li>
+        {ev.location && <li><Icon name="mapapin" size={20} /><span>{ev.location}</span></li>}
+        {servindo && <li><Icon name="times" size={20} /><span>{joinDot("Serve", funcao ?? ministry?.name, chegar && `chegar ${chegar}`)}</span></li>}
+      </ul>
+      {(ev.valor || ev.instrucoes) && (
+        <div className="m6-card m6-ev-info">
+          {ev.valor && <div className="m6-ct">{ev.valor}</div>}
+          {ev.instrucoes && <p className="m6-txt" style={{ whiteSpace: "pre-wrap" }}>{ev.instrucoes}</p>}
+          <div className="m6-meta">O pagamento não passa pelo app.</div>
+        </div>
+      )}
+      {pede !== "aviso" && !servindo && onRespond && (
+        resp ? (
+          <div className="m6-after">
+            <M6St k="ok" ic="ok">{resp === "inscricao" ? "Você está inscrito" : "Presença confirmada"}</M6St>
+            <button type="button" className="m6-link" disabled={enviando} onClick={() => responder(false)}>{pede === "inscricao" ? "Cancelar inscrição" : "Desfazer"}</button>
+          </div>
+        ) : (
+          <div className="m6-btns"><button className="m6-btn pri" type="button" disabled={enviando} onClick={() => responder(true)}>{enviando ? "Enviando..." : pede === "inscricao" ? "Fazer inscrição" : "Vou"}</button></div>
+        )
+      )}
+      <div className="m6-btns">
+        <button className="m6-btn sec" type="button" onClick={compartilhar}><Icon name="compartilhar" size={20} />Compartilhar</button>
+        <button className="m6-btn sec" type="button" onClick={calendario}><Icon name="agenda" size={20} />Adicionar ao calendário</button>
+      </div>
+    </div>
   );
 }
 
@@ -3421,7 +3543,8 @@ function MobileMembro({
           kidsEvents = [], kidsEventEnrollments = [], wallPosts = [], bibleMarks = [], onSaveBibleMark,
           missingRequirements = [], serveRequests = [], baptismCandidates = [], onEnrollCourse, onRequestBaptism, onRequestServe,
           mode, onLogout, onSwitchToPanel, readAnnouncementIds = [], churchPurpose,
-          onSaveAvailability, onRespondAnnouncement, announcementResponses = [] } = rest;
+          onSaveAvailability, onRespondAnnouncement, announcementResponses = [],
+          eventRsvps = [], onRespondEvent, meetings = [], rehearsals = [], paginaUrl } = rest;
   /* Mural sempre do mais recente para o mais antigo, pela data de publicação */
   const announcements = useMemo(() => porPublicacao(avisosRecebidos), [avisosRecebidos]);
   /* curso em rascunho não aparece no app */
@@ -3490,7 +3613,15 @@ function MobileMembro({
     setTab(t);
     setSub(subAllowed(s) ? s : null);
   };
-  const ui: MemberUi = { go, sheet: setSheetEl, toast, respostas, responderEscala: responderEscalaUi, tamanhoTexto: abrirTamanhoTexto };
+  const abrirEvento = (eventId: string) => {
+    const ev = events.find((e) => e.id === eventId);
+    if (!ev) return;
+    const slot = roster.find((r) => r.event_id === ev.id && r.person_id === person.id);
+    const ministry = slot ? ministries.find((m) => m.positions?.some((p) => p.id === slot.position_id)) : undefined;
+    const rsvp = eventRsvps.find((r) => r.event_id === ev.id)?.kind ?? null;
+    setSheetEl(<SheetEvento key={ev.id} ev={ev} slot={slot} ministry={ministry} rsvp={rsvp} onRespond={onRespondEvent} paginaUrl={paginaUrl} churchName={churchName} />);
+  };
+  const ui: MemberUi = { go, sheet: setSheetEl, toast, respostas, responderEscala: responderEscalaUi, tamanhoTexto: abrirTamanhoTexto, abrirEvento };
 
   const pedirEtapa = (step: JourneyStep) => {
     const nome = { decisao: "Decisão", batismo: "Batismo", curso: "Fundamentos", integracao: termo("grupo"), time: "Servindo" }[step];
@@ -3576,7 +3707,7 @@ function MobileMembro({
             <AgendaV6 seg={agSeg} setSeg={setAgSeg} person={person} member={member} members={members} ministries={ministries} events={events} roster={roster}
               cards={cards} boards={boards} isRecep={isRecep} isKids={isKids} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala}
               onStartChat={onStartChat} onAddCardComment={onAddCardComment} onSaveAvailability={onSaveAvailability}
-              aulas={<AulasAgenda member={member} courses={courses} enrollments={enrollments} courseModules={courseModules} courseLessons={courseLessons} />} />
+              aulas={minhasAulas(member, courses, enrollments, courseModules, courseLessons)} meetings={meetings} rehearsals={rehearsals} rsvps={eventRsvps} />
           )}
           {tab === "agenda" && sub === "visitantes" && <div className="m6-legacy"><TabVisitantes visitors={visitors} onAdvanceVisitorStage={onAdvanceVisitorStage} onRegisterVisitor={onRegisterVisitor} /></div>}
           {tab === "agenda" && sub === "kids-sala" && (

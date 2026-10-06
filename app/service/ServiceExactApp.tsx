@@ -195,6 +195,10 @@ export type EventView = {
   setlist: Array<{ id: string; title: string; song_key: string | null }>;
   checkinToken: string | null;
   checkinActive: boolean;
+  /* o que o evento pede ao membro, valor e instruções (0058, v7 4.5) */
+  pede?: "aviso" | "presenca" | "inscricao";
+  valor?: string;
+  instrucoes?: string;
 };
 
 export type RosterAssignmentView = {
@@ -257,6 +261,7 @@ export type AnnouncementView = {
   kind?: string | null;
 };
 export type AnnouncementResponseView = { announcement_id: string; person_id: string; response: "vou" | "nao" };
+export type EventRsvpView = { event_id: string; person_id: string; kind: "presenca" | "inscricao" };
 
 export type WallPostView = {
   id: string;
@@ -644,6 +649,7 @@ type Props = {
   announcements: AnnouncementView[];
   announcementReads?: AnnouncementReadView[];
   announcementResponses?: AnnouncementResponseView[];
+  eventRsvps?: EventRsvpView[];
   eventAttendance?: EventAttendanceView[];
   wallPosts: WallPostView[];
   decisions: DecisionView[];
@@ -987,6 +993,7 @@ export default function ServiceExactApp({
   announcements,
   announcementReads = [],
   announcementResponses = [],
+  eventRsvps = [],
   eventAttendance = [],
   wallPosts,
   decisions,
@@ -1386,6 +1393,12 @@ export default function ServiceExactApp({
     router.refresh();
     return true;
   };
+  const responderEvento = async (eventId: string, vai: boolean) => {
+    const { data, error } = await createServiceBrowserClient().schema("service").rpc("respond_event", { p_event: eventId, p_vai: vai });
+    if (error || data !== "ok") { avisar("Não conseguimos enviar sua resposta agora.", "warn"); return false; }
+    router.refresh();
+    return true;
+  };
   const responderMural = async (announcementId: string, response: "vou" | "nao" | null) => {
     const { data, error } = await createServiceBrowserClient().schema("service").rpc("respond_announcement", { p_announcement: announcementId, p_response: response });
     if (error || data !== "ok") { avisar("Não conseguimos enviar sua resposta agora.", "warn"); return false; }
@@ -1573,6 +1586,11 @@ export default function ServiceExactApp({
         onSaveAvailability={salvarDisponibilidade}
         onRespondAnnouncement={responderMural}
         announcementResponses={announcementResponses.filter((r) => r.person_id === currentPersonId)}
+        eventRsvps={eventRsvps.filter((r) => r.person_id === currentPersonId)}
+        onRespondEvent={responderEvento}
+        meetings={meetings}
+        rehearsals={rehearsals}
+        paginaUrl={paginaUrl}
         onRecusarEscala={recusarEscalaMobile}
         mode="self"
         selfPersonId={currentPersonId}
@@ -1829,6 +1847,7 @@ export default function ServiceExactApp({
           setRoute={setRoute}
           setModal={setModal}
           setShareEventId={setShareEventId}
+          eventRsvps={eventRsvps}
           onStartChatWithMember={startChatWithMember}
           currentRole={currentRole}
         />
@@ -8336,6 +8355,7 @@ function EntityDrawer({
   setRoute,
   setModal,
   setShareEventId,
+  eventRsvps = [],
   onStartChatWithMember,
   currentRole = "membro",
 }: {
@@ -8367,6 +8387,7 @@ function EntityDrawer({
   setRoute: (route: keyof typeof ROUTES) => void;
   setModal: (modal: ModalState) => void;
   setShareEventId: (id: string) => void;
+  eventRsvps?: EventRsvpView[];
   onStartChatWithMember: (memberId: string) => void;
 }) {
   const { termo, comTermos: ct } = useTermos();
@@ -8859,6 +8880,7 @@ function EntityDrawer({
       ministries={ministries}
       people={people}
       roster={roster}
+      rsvps={eventRsvps.filter((r) => r.event_id === event.id)}
       onClose={() => setDrawer(null)}
       setDrawer={setDrawer}
       setRoute={setRoute}
@@ -8872,6 +8894,7 @@ function EventDrawer({
   ministries,
   people,
   roster,
+  rsvps = [],
   onClose,
   setDrawer,
   setRoute,
@@ -8881,6 +8904,7 @@ function EventDrawer({
   ministries: MinistryView[];
   people: PersonView[];
   roster: RosterAssignmentView[];
+  rsvps?: EventRsvpView[];
   onClose: () => void;
   setDrawer: (drawer: DrawerState) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
@@ -8888,7 +8912,7 @@ function EventDrawer({
 }) {
   const { comTermos: ct } = useTermos();
   const router = useRouter();
-  const [tab, setTab] = useState<"crono" | "posicoes">("crono");
+  const [tab, setTab] = useState<"crono" | "posicoes" | "membro">("crono");
   const eventRoster = roster.filter((assignment) => assignment.event_id === event.id);
   const eventMinistries = event.ministries.length ? ministries.filter((ministry) => event.ministries.includes(ministry.id)) : ministries;
 
@@ -8902,10 +8926,13 @@ function EventDrawer({
         <div className="seg" style={{ marginTop: 14 }}>
           <button className={tab === "crono" ? "on" : ""} type="button" onClick={() => setTab("crono")}>Cronograma</button>
           <button className={tab === "posicoes" ? "on" : ""} type="button" onClick={() => setTab("posicoes")}>Posições</button>
+          <button className={tab === "membro" ? "on" : ""} type="button" onClick={() => setTab("membro")}>Para o membro</button>
         </div>
       </div>
       <div className="drawer-body">
-        {tab === "crono" ? (
+        {tab === "membro" ? (
+          <EventoParaMembro event={event} rsvps={rsvps} people={people} onSaved={() => router.refresh()} />
+        ) : tab === "crono" ? (
           <>
             <DrawerSection title={ct("Roteiro do {culto} · etapa por etapa")}>
               <CronogramaEditor event={event} ministries={eventMinistries} onRefresh={() => router.refresh()} />
@@ -8956,6 +8983,59 @@ function EventDrawer({
         </div>
       </div>
     </DrawerShell>
+  );
+}
+
+/* v7 4.5: o que o evento pede a quem vê no app (só aviso, confirmar presença
+   ou inscrição), valor e instruções. O app não recebe pagamento: mostra o
+   valor e as instruções escritas aqui. */
+const PEDE_OPCOES: { v: "aviso" | "presenca" | "inscricao"; t: string; s: string }[] = [
+  { v: "aviso", t: "Só aviso", s: "Aparece na agenda, sem pedir nada" },
+  { v: "presenca", t: "Confirmar presença", s: "A pessoa toca em \"Vou\"" },
+  { v: "inscricao", t: "Inscrição", s: "A pessoa se inscreve pelo app" },
+];
+function EventoParaMembro({ event, rsvps, people, onSaved }: { event: EventView; rsvps: EventRsvpView[]; people: PersonView[]; onSaved: () => void }) {
+  const [pede, setPede] = useState<"aviso" | "presenca" | "inscricao">(event.pede ?? "aviso");
+  const [valor, setValor] = useState(event.valor ?? "");
+  const [instrucoes, setInstrucoes] = useState(event.instrucoes ?? "");
+  const [salvando, setSalvando] = useState(false);
+  const mudou = pede !== (event.pede ?? "aviso") || valor !== (event.valor ?? "") || instrucoes !== (event.instrucoes ?? "");
+  const salvar = async () => {
+    setSalvando(true);
+    const { error } = await createServiceBrowserClient().schema("service").from("events")
+      .update({ pede, valor: valor.trim() || null, instrucoes: instrucoes.trim() || null }).eq("id", event.id);
+    setSalvando(false);
+    if (error) { avisar(friendlyWriteError(error.message), "warn"); return; }
+    avisar("Salvo", "ok");
+    onSaved();
+  };
+  const nomes = rsvps.map((r) => people.find((p) => p.id === r.person_id)?.name).filter(Boolean) as string[];
+  return (
+    <>
+      <DrawerSection title="O que este evento pede">
+        <div style={{ display: "grid", gap: 8 }}>
+          {PEDE_OPCOES.map((o) => (
+            <label key={o.v} className={`pede-opt${pede === o.v ? " on" : ""}`}>
+              <input type="radio" name={`pede-${event.id}`} checked={pede === o.v} onChange={() => setPede(o.v)} style={{ marginTop: 3 }} />
+              <span><b style={{ fontSize: "var(--fs-pn-14)" }}>{o.t}</b><br /><span className="mini-sub">{o.s}</span></span>
+            </label>
+          ))}
+        </div>
+      </DrawerSection>
+      <DrawerSection title="Valor e instruções">
+        <div className="field"><label className="field-label">Valor (opcional)</label><input className="input" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="ex: R$ 50 por pessoa" /></div>
+        <div className="field"><label className="field-label">Instruções para quem vai</label><textarea className="input" rows={4} value={instrucoes} onChange={(e) => setInstrucoes(e.target.value)} placeholder="Chave PIX, prazo, com quem falar..." /></div>
+        <p className="mini-sub">O app mostra o valor e estas instruções. O pagamento não passa pelo app.</p>
+      </DrawerSection>
+      {pede !== "aviso" && (
+        <DrawerSection title={pede === "inscricao" ? "Inscritos" : "Confirmaram presença"}>
+          {nomes.length ? nomes.map((n) => <div className="mini-row" key={n}><div className="mini-main"><div className="mini-title">{n}</div></div></div>) : <p className="mini-sub">Ninguém ainda.</p>}
+        </DrawerSection>
+      )}
+      <div style={{ display: "flex", marginTop: 16 }}>
+        <button className="btn btn-pri" type="button" disabled={!mudou || salvando} onClick={salvar}>{salvando ? "Salvando..." : "Salvar"}</button>
+      </div>
+    </>
   );
 }
 
