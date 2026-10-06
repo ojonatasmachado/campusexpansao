@@ -267,6 +267,9 @@ export type AnnouncementView = {
   created_at: string;
   /* aviso · evento (com Vou/Não vou) · acao. Só existe depois da 0049. */
   kind?: string | null;
+  /* lembrete para quem não viu (0062, v7 4.18) */
+  remind_at?: string | null;
+  reminded_at?: string | null;
 };
 export type AnnouncementResponseView = { announcement_id: string; person_id: string; response: "vou" | "nao" };
 export type EventRsvpView = { event_id: string; person_id: string; kind: "presenca" | "inscricao" };

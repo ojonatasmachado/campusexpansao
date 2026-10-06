@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
 import { notifyPush } from "../../lib/notify-push";
+import { emSilencio, foraDoSilencio, quandoLembra } from "../../lib/silencio";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { dataPublicacao, formatDateBR, joinDot, paraPublico, porPublicacao, quandoPublicado } from "../../lib/date";
 import { Icon } from "../../lib/icons";
@@ -24,6 +25,16 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
   const [publico, setPublico] = useState(publicos[0]?.id ?? "todos");
   const [tipo, setTipo] = useState<"aviso" | "evento" | "acao">("aviso");
   const [canais, setCanais] = useState<string[]>(["app"]);
+  /* v7 4.18: lembrar quem não viu */
+  const [lembrete, setLembrete] = useState<"nao" | "24" | "48" | "data">("nao");
+  const [lembreteData, setLembreteData] = useState("");
+  /* hora em que a opção foi escolhida (24h e 48h contam a partir dela) */
+  const [lembreteBase, setLembreteBase] = useState(0);
+  const lembreteEm = (): Date | null => {
+    if (lembrete === "nao") return null;
+    if (lembrete === "data") return lembreteData ? new Date(`${lembreteData}:00-03:00`) : null;
+    return new Date(lembreteBase + Number(lembrete) * 3600000);
+  };
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const alvo = publicos.find((p) => p.id === publico) ?? publicos[0];
@@ -36,7 +47,14 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
     setErro("");
     const sb = createServiceBrowserClient().schema("service");
     const base = { organization_id: church.organizationId, church_id: church.id, title: titulo.trim(), body: msg.trim() || null, audience: alvo.label, author: "Liderança", when_label: "agora" };
-    let { error } = await sb.from("announcements").insert({ ...base, kind: tipo });
+    const quando = lembreteEm();
+    const comLembrete = quando ? { remind_at: foraDoSilencio(quando).toISOString(), remind_to: alvo.memberIds } : {};
+    let { error } = await sb.from("announcements").insert({ ...base, kind: tipo, ...comLembrete });
+    /* antes da migração 0062 as colunas do lembrete não existem: publica sem ele e avisa */
+    if (error && quando && /remind/i.test(error.message)) {
+      ({ error } = await sb.from("announcements").insert({ ...base, kind: tipo }));
+      if (!error) avisar("Publicado, mas o lembrete ainda não está disponível.", "warn");
+    }
     /* antes da migração 0049 a coluna "kind" não existe: publica sem o tipo */
     if (error && /kind/i.test(error.message)) ({ error } = await sb.from("announcements").insert(base));
     setSalvando(false);
@@ -86,11 +104,23 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
             </div>
             {canais.includes("whatsapp") && <div className="field-hint">O WhatsApp abre com o texto pronto para você mandar nos grupos da igreja.</div>}
           </div>
+          {canais.includes("app") && (
+            <div className="field" style={{ marginTop: 16, marginBottom: 0 }}>
+              <label className="field-label">Lembrar quem não viu</label>
+              <div className="seg-check">
+                {([["nao", "Não lembrar"], ["24", "Em 24h"], ["48", "Em 48h"], ["data", "Numa data"]] as const).map(([k, l]) => (
+                  <button key={k} type="button" className={`seg-chip ${lembrete === k ? "on" : ""}`} onClick={() => { setLembrete(k); setLembreteBase(Date.now()); }}>{l}</button>
+                ))}
+              </div>
+              {lembrete === "data" && <input className="input" type="datetime-local" style={{ marginTop: 8 }} value={lembreteData} onChange={(e) => setLembreteData(e.target.value)} aria-label="Data e hora do lembrete" />}
+              {lembreteEm() && <div className="field-hint">{`Uma notificação ${quandoLembra(foraDoSilencio(lembreteEm()!))} só para quem ainda não abriu.${emSilencio(lembreteEm()!) ? " Entre 22h e 7h ninguém recebe aviso, então vai às 7h." : ""}`}</div>}
+            </div>
+          )}
           {erro && <p className="field-error" style={{ marginTop: 12 }}>{erro}</p>}
         </div>
         <div className="modal-foot">
           <button className="btn btn-ghost" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={!titulo.trim() || salvando || canais.length === 0} onClick={publicar}>{salvando ? "Publicando..." : "Publicar"}</button>
+          <button className="btn btn-pri" type="button" disabled={!titulo.trim() || salvando || canais.length === 0 || (lembrete === "data" && !lembreteData)} onClick={publicar}>{salvando ? "Publicando..." : "Publicar"}</button>
         </div>
       </div>
     </div>
@@ -227,7 +257,7 @@ export function Comunicacao({
                 <h3 className="mural-t">{a.title}</h3>
                 {a.body && <p className="mural-txt">{a.body}</p>}
                 <div className="mural-reach">
-                  <div className="mural-reach-n"><b>{leram.length}</b> de {plural(total, "pessoa")} leram</div>
+                  <div className="mural-reach-n">{`Vista por ${leram.length} de ${plural(total, "pessoa")}`}{a.remind_at && !a.reminded_at && faltam.length > 0 ? ` · lembrete ${quandoLembra(new Date(a.remind_at))} para ${plural(faltam.length, "pessoa")}` : a.reminded_at ? ` · lembrete enviado em ${dataPublicacao(a.reminded_at)}` : ""}</div>
                   <div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${pct}%` }} /></div>
                   {a.kind === "evento" && <div className="mural-reach-n">{plural(resp.filter((r) => r.response === "vou").length, "vai", "vão")} · {resp.filter((r) => r.response === "nao").length} não</div>}
                 </div>
