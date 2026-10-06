@@ -188,7 +188,7 @@ function ManualAulaCheckinModal({
             <div className="flag-row" key={m.id} style={{ cursor: "pointer" }} onClick={() => { onAdd(m.id); onClose(); }}>
               <Av name={m.name} size="sm" />
               <div className="flag-main"><div className="flag-nome">{m.name}</div></div>
-              <span style={{ marginLeft: "auto", color: "var(--subtle)" }}>→</span>
+              <span style={{ marginLeft: "auto", color: "var(--muted)" }}>→</span>
             </div>
           ))}
         </div>

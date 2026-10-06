@@ -283,7 +283,7 @@ function ManualCheckinModal({
                       : "Não escalado · entra como extra"}
                   </div>
                 </div>
-                <span style={{ marginLeft: "auto", color: "var(--subtle)" }}>→</span>
+                <span style={{ marginLeft: "auto", color: "var(--muted)" }}>→</span>
               </div>
             );
           })}

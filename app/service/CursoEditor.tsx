@@ -172,7 +172,7 @@ function MateriaisEditor({
     <div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
         {value.length === 0 && (
-          <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--subtle)" }}>
+          <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>
             Nenhum material ainda. Adicione vídeos, links ou textos para apresentar o curso.
           </div>
         )}

@@ -72,7 +72,7 @@
 .coach-pop-t { font-size: var(--fs-pn-16); font-weight: 700; letter-spacing: -0.015em; color: var(--white); margin-bottom: 6px; }
 .coach-pop-s { font-size: var(--fs-pn-13); line-height: 1.55; color: var(--muted); }
 .coach-pop-actions { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
-.coach-skip { background: transparent; border: none; color: var(--subtle); font-size: var(--fs-pn-13); cursor: pointer; padding: 8px 2px; transition: color .14s; }
+.coach-skip { background: transparent; border: none; color:var(--muted); font-size: var(--fs-pn-13); cursor: pointer; padding: 8px 2px; transition: color .14s; }
 .coach-skip:hover { color: var(--muted); }
 
 /* ── SETUP CHECKLIST · jornada de configuração inicial (painel) ──── */
@@ -80,7 +80,7 @@
 .setup-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .setup-eyebrow { display: flex; align-items: center; font-family:var(--sans); font-size: var(--fs-pn-12); letter-spacing:0; color: var(--olive-soft, var(--olive)); margin-bottom: 6px; }
 .setup-title { font-size: var(--fs-pn-16); font-weight: 700; letter-spacing: -0.02em; color: var(--white); }
-.setup-close { flex-shrink: 0; width: 28px; height: 28px; border-radius: var(--r-md); background: transparent; border: none; color: var(--subtle); font-size: var(--fs-pn-13); cursor: pointer; transition: background .14s, color .14s; }
+.setup-close { flex-shrink: 0; width: 28px; height: 28px; border-radius: var(--r-md); background: transparent; border: none; color:var(--muted); font-size: var(--fs-pn-13); cursor: pointer; transition: background .14s, color .14s; }
 .setup-close:hover { background: var(--ink); color: var(--muted); }
 .setup-bar { height: 6px; border-radius: var(--r-pill); background: var(--ink); overflow: hidden; margin: 16px 0 4px; }
 .setup-bar-fill { height: 100%; border-radius: var(--r-pill); background:var(--accent-fill); transition: width .3s ease; }
@@ -91,7 +91,8 @@
   cursor: pointer; transition: border-color .14s, background .14s;
 }
 .setup-item:hover { border-color: var(--olive-line); }
-.setup-item.ok { cursor: default; opacity: 0.62; }
+.setup-item.ok { cursor: default; background: var(--graphite-2); box-shadow: none; }
+.setup-item.ok .setup-item-main b { color: var(--muted); font-weight: 500; }
 .setup-item.ok:hover { border-color: var(--border-2); }
 .setup-item-check {
   width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;

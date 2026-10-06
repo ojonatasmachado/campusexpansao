@@ -26,7 +26,7 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 .bib-marks-cta { width: 100%; display: flex; align-items: center; gap: 12px; background: var(--olive-dim); border: 0.5px solid var(--olive-line); border-radius: var(--r-lg); padding: 13px 15px; margin-bottom: 18px; cursor: pointer; text-align: left; }
 .bib-marks-cta-ic { width: 30px; height: 30px; border-radius: 50%; background:var(--accent-fill); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .bib-marks-cta b { font-size: var(--fs-app-13); color: var(--white); }
-.bib-marks-cta small { display: block; font-size: var(--fs-app-13); color: var(--muted); margin-top: 1px; }
+.bib-marks-cta small { display: block; font-size: var(--fs-app-13); color: var(--light); margin-top: 1px; }
 
 /* ── grade de livros ───────────────────────────────────────────── */
 .bib-books { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 6px; }
@@ -49,7 +49,7 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 .bib-verse { display: flex; align-items: flex-start; gap: 10px; width: 100%; text-align: left; background: transparent; border: none; border-left: 3px solid transparent; border-radius: 0 var(--r-sm) var(--r-sm) 0; padding: 8px 10px 8px 11px; transition: background .14s; }
 .bib-verse:hover { background: var(--graphite); }
 .bib-verse.marked { border-left-color: var(--mark); background: color-mix(in srgb, var(--mark) 14%, transparent); }
-.bib-verse-n { font-family: var(--mono); font-size: var(--fs-app-13); color: var(--subtle); flex-shrink: 0; margin-top: 3px; min-width: 16px; }
+.bib-verse-n { font-family: var(--mono); font-size: var(--fs-app-13); color:var(--muted); flex-shrink: 0; margin-top: 3px; min-width: 16px; }
 .bib-verse.marked .bib-verse-n { color: var(--mark); font-weight: 700; }
 .bib-verse-t { font-size: var(--fs-app-15); line-height: 1.6; color: var(--light); }
 .bib-verse-note-ic { flex-shrink: 0; color: var(--mark, var(--olive)); margin-top: 3px; }
@@ -68,7 +68,7 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 .bib-swatch { width: 28px; height: 28px; border-radius: 50%; background: var(--mark); border: 2px solid transparent; transition: transform .14s, border-color .14s; }
 .bib-swatch:hover { transform: scale(1.08); }
 .bib-swatch.on { border-color: var(--white); }
-.bib-swatch-clear { width: 28px; height: 28px; border-radius: 50%; background: var(--ink); border: 0.5px solid var(--border-2); color: var(--subtle); font-size: var(--fs-app-13); display: flex; align-items: center; justify-content: center; }
+.bib-swatch-clear { width: 28px; height: 28px; border-radius: 50%; background: var(--ink); border: 0.5px solid var(--border-2); color:var(--muted); font-size: var(--fs-app-13); display: flex; align-items: center; justify-content: center; }
 .bib-copy { display: inline-flex; align-items: center; gap: 6px; }
 
 @media (max-width: 380px) {

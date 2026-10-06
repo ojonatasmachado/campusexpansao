@@ -187,7 +187,7 @@ export function ImageCropper({
             onPointerLeave={onPointerUp}
           >
             {status === "loading" && (
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--fs-ui-13)", color: "var(--subtle)" }}>
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--fs-ui-13)", color: "var(--muted)" }}>
                 Carregando imagem...
               </div>
             )}
@@ -216,7 +216,7 @@ export function ImageCropper({
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, width: FRAME_W }}>
-            <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--subtle)" }}>Zoom</span>
+            <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>Zoom</span>
             <input
               type="range"
               min={1}

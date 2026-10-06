@@ -63,7 +63,7 @@ export default function CepInput({ value, onChange, onResult, placeholder }: { v
           if (digits.length === 8) lookup(digits);
         }}
       />
-      {checking && <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--subtle)", marginTop: 4 }}>Buscando endereço...</div>}
+      {checking && <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)", marginTop: 4 }}>Buscando endereço...</div>}
       {error && <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--amber)", marginTop: 4 }}>{error}</div>}
     </div>
   );

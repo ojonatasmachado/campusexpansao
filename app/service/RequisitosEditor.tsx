@@ -77,7 +77,7 @@ export default function RequisitosEditor({
         </div>
       )}
 
-      {value.length === 0 && <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--subtle)" }}>Sem pré-requisito: qualquer membro pode.</div>}
+      {value.length === 0 && <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>Sem pré-requisito: qualquer membro pode.</div>}
     </div>
   );
 }

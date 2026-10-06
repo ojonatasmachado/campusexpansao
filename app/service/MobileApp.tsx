@@ -428,7 +428,7 @@ function TabTarefas({ person, cards, boards, onAddCardComment }: { person: P; ca
       </div>
       {pending.length === 0 && (
         <div className="m-card">
-          <div style={{ fontSize: "var(--fs-app-13)", color: "var(--subtle)" }}>Nada pendente com você agora.</div>
+          <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>Nada pendente com você agora.</div>
         </div>
       )}
       {pending.map(cardEl)}
@@ -535,7 +535,7 @@ function TabConversas({
         <div className="chat-thread">
           <div className="chat-msgs" style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14 }}>
             {chatMsgs.length === 0 && (
-              <div style={{ fontSize: "var(--fs-app-13)", color: "var(--subtle)" }}>Nenhuma mensagem ainda.</div>
+              <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>Nenhuma mensagem ainda.</div>
             )}
             {chatMsgs.map((msg) => {
               const sender = members.find((m) => m.id === msg.sender_id);
@@ -602,7 +602,7 @@ function TabConversas({
             </button>
           ))}
           {candidatos.length === 0 && (
-            <div style={{ fontSize: "var(--fs-app-13)", color: "var(--subtle)" }}>Nenhum líder disponível ainda.</div>
+            <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>Nenhum líder disponível ainda.</div>
           )}
         </div>
       )}
@@ -1017,7 +1017,7 @@ function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisitor }: {
                       <div
                         style={{
                           fontSize: "var(--fs-app-13)",
-                          color: i <= etIdx ? "var(--light)" : "var(--subtle)",
+                          color: i <= etIdx ? "var(--light)" : "var(--muted)",
                           marginTop: 6,
                         }}
                       >
@@ -1546,7 +1546,7 @@ function TabBatismo({ baptismClasses, memberId }: { baptismClasses: BaptismClass
       <div className="m-section-t">Próximos batismos</div>
       {openClasses.length === 0 && (
         <div className="m-card">
-          <div style={{ fontSize: "var(--fs-app-13)", color: "var(--subtle)" }}>Nenhuma turma agendada por ora.</div>
+          <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>Nenhuma turma agendada por ora.</div>
         </div>
       )}
       {openClasses.map((b) => (
@@ -1586,7 +1586,7 @@ function TabBatismo({ baptismClasses, memberId }: { baptismClasses: BaptismClass
               </button>
             )
           ) : (
-            <div style={{ fontSize: "var(--fs-app-13)", color: "var(--subtle)", marginTop: 12 }}>
+            <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginTop: 12 }}>
               Inscrições ainda não abertas para esta turma.
             </div>
           )}
@@ -2342,7 +2342,7 @@ function TabKidsArea({
                 <span className="m-task-caret">✎</span>
               </div>
               {historico.length > 0 && (
-                <div style={{ marginTop: 10, fontSize: "var(--fs-app-13)", color: "var(--subtle)" }}>
+                <div style={{ marginTop: 10, fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>
                   {historico.map((h) => <div key={h.id}>{formatDateBR(h.dropped_off_at.slice(0, 10))} · {h.status === "retirado" ? "retirado" : "na sala"}</div>)}
                 </div>
               )}

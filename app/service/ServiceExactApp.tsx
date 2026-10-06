@@ -2230,7 +2230,7 @@ function Painel({
               <div className="gap-row" key={`${gap.event.id}-${gap.position.id}`}>
                 <div className="gap-ic wait">!</div>
                 <div className="mini-main">
-                  <div className="mini-title">{gap.position.name} <span style={{ color: "var(--subtle)", fontWeight: 400 }}>· {gap.ministry.name}</span></div>
+                  <div className="mini-title">{gap.position.name} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {gap.ministry.name}</span></div>
                   <div className="mini-sub">{joinDot(gap.event.weekday, gap.event.time)}</div>
                 </div>
                 <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("escalas")}>Escalar</button>
@@ -2309,7 +2309,7 @@ function Painel({
                 <div className="gap-row" key={request.id}>
                   <div className="gap-ic wait">!</div>
                   <div className="mini-main">
-                    <div className="mini-title">{member?.name ?? "Alguém"} <span style={{ color: "var(--subtle)", fontWeight: 400 }}>· {stepLabel}</span></div>
+                    <div className="mini-title">{member?.name ?? "Alguém"} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {stepLabel}</span></div>
                     <div className="mini-sub">{formatDateBR(request.eventDate) || "sem data informada"}{request.note ? ` · ${request.note}` : ""}</div>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
@@ -2455,7 +2455,7 @@ function MiniEvent({
 function PersonMini({ person, index, setDrawer }: { person: PersonView; index: number; setDrawer: (drawer: DrawerState) => void }) {
   return (
     <button className="mini-row click" type="button" onClick={() => setDrawer({ kind: "person", id: person.id })}>
-      <span style={{ fontFamily: "var(--mono)", fontSize: "var(--fs-pn-12)", color: "var(--subtle)", width: 18 }}>{String(index + 1).padStart(2, "0")}</span>
+      <span style={{ fontFamily: "var(--mono)", fontSize: "var(--fs-pn-12)", color: "var(--muted)", width: 18 }}>{String(index + 1).padStart(2, "0")}</span>
       <Av name={person.name} photoUrl={person.photoUrl} />
       <div className="mini-main">
         <div className="mini-title">{person.name}</div>
@@ -3265,7 +3265,7 @@ function Escalas({
         <div className="panel" style={{ marginTop: 18 }}>
           <div className="panel-head"><span className="panel-title"><Icon name="escalas" size={14} /> Pendências da semana <HelpDot label="Como calculamos" text="Vagas da escala desta semana que ainda não têm ninguém confirmado." /></span><span className="panel-meta">{gaps.length} vagas</span></div>
           <div className="panel-body flush">
-            {gaps.slice(0, 5).map((gap) => <div className="gap-row" key={`${gap.event.id}-${gap.position.id}`}><div className="gap-ic wait">!</div><div className="mini-main"><div className="mini-title">{gap.position.name} <span style={{ color: "var(--subtle)", fontWeight: 400 }}>· {gap.ministry.name}</span></div><div className="mini-sub">{joinDot(gap.event.name, gap.event.time)}</div></div></div>)}
+            {gaps.slice(0, 5).map((gap) => <div className="gap-row" key={`${gap.event.id}-${gap.position.id}`}><div className="gap-ic wait">!</div><div className="mini-main"><div className="mini-title">{gap.position.name} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {gap.ministry.name}</span></div><div className="mini-sub">{joinDot(gap.event.name, gap.event.time)}</div></div></div>)}
           </div>
         </div>
       ) : null}
@@ -3605,7 +3605,7 @@ function Visitantes({
                         <span><i className="resp-dot nao" /> {naoContatados.length} a contatar</span>
                       </div>
                       <div className="dsec-title" style={{ margin: "18px 0 8px" }}>Não responderam · refazer contato</div>
-                      {semResposta.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Ninguém sem resposta.</div>}
+                      {semResposta.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Ninguém sem resposta.</div>}
                       {semResposta.map((visitor) => {
                         const owner = visitor.responsible_id ? personById.get(visitor.responsible_id) : null;
                         return (
@@ -3676,7 +3676,7 @@ function ContatoCfgModal({ church, cfg, onClose, onRefresh }: { church: ChurchVi
           <div className="field">
             <label className="field-label">Mensagem padrão</label>
             <textarea className="textarea" value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
-            <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", marginTop: 6 }}>Use {"{nome}"}, {"{evento}"} e {"{igreja}"}: preenchemos automaticamente.</div>
+            <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 6 }}>Use {"{nome}"}, {"{evento}"} e {"{igreja}"}: preenchemos automaticamente.</div>
           </div>
           <div className="field"><label className="field-label">Abordagem / postura</label><textarea className="textarea" value={abordagem} onChange={(e) => setAbordagem(e.target.value)} /></div>
         </div>
@@ -3715,7 +3715,7 @@ function AcessoMsgModal({ church, cfg, onClose, onRefresh }: { church: ChurchVie
           <div className="field">
             <label className="field-label">Mensagem</label>
             <textarea className="textarea" rows={8} value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
-            <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", marginTop: 6 }}>
+            <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 6 }}>
               Use {"{nome}"}, {"{igreja}"} e {"{link}"}: preenchemos automaticamente na hora de enviar. O link é um convite só da pessoa, onde ela informa o e-mail, cria a senha e coloca o CEP. Nenhuma senha vai na mensagem.
             </div>
           </div>
@@ -3848,7 +3848,7 @@ function ReuniaoForm({
                 </button>
               );
             })}
-            {people.length === 0 ? <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum voluntário cadastrado.</span> : null}
+            {people.length === 0 ? <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum voluntário cadastrado.</span> : null}
           </div>
         </DrawerSection>
 
@@ -4121,7 +4121,7 @@ function ReuniaoDrawer({
                 </div>
               ) : null;
             })}
-            {meeting.attendees.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum presente registrado.</div>}
+            {meeting.attendees.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum presente registrado.</div>}
           </div>
         </DrawerSection>
 
@@ -4410,7 +4410,7 @@ function VerQuemLeuButton({ aviso, reads, people }: { aviso: AnnouncementView; r
               ))}
               {naoLeram.length > 0 && <div className="dsec-title" style={{ margin: "14px 0 8px" }}>Ainda não leram · {naoLeram.length}</div>}
               {naoLeram.map((p) => (
-                <div className="flag-row" key={p.id} style={{ cursor: "default", opacity: 0.6 }}>
+                <div className="flag-row is-off" key={p.id} style={{ cursor: "default" }}>
                   <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
                   <div className="flag-main"><div className="flag-nome">{p.name}</div></div>
                   <span className="cand-fit busy" style={{ marginLeft: "auto" }}>pendente</span>
@@ -4998,7 +4998,7 @@ function ChildFormModal({
           </div>
           <div className="field field-half">
             <label className="field-label">Turma</label>
-            <div className="input" style={{ display: "flex", alignItems: "center", color: classLabel ? "var(--white)" : "var(--subtle)" }}>
+            <div className="input" style={{ display: "flex", alignItems: "center", color: classLabel ? "var(--white)" : "var(--muted)" }}>
               {classLabel ?? (birth ? "Nenhuma turma cobre essa idade ainda" : "Calculada pelo nascimento")}
             </div>
           </div>
@@ -5736,7 +5736,7 @@ function CardDrawer({
             </div>
             <dl className="kv" style={{ marginTop: 14 }}>
               <dt>Prazo</dt>
-              <dd>{lc.due ? formatDateBR(lc.due) : <span style={{ color: "var(--subtle)" }}>sem prazo</span>}</dd>
+              <dd>{lc.due ? formatDateBR(lc.due) : <span style={{ color: "var(--muted)" }}>sem prazo</span>}</dd>
               <dt>Prioridade</dt>
               <dd>
                 <div className="seg seg-sm" style={{ display: "inline-flex" }}>
@@ -5780,7 +5780,7 @@ function CardDrawer({
                   </div>
                 </div>
               ))}
-              {comments.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum comentário ainda.</div>}
+              {comments.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum comentário ainda.</div>}
             </div>
             {perm.comentar ? (
               <div className="kb-coment-add">
@@ -6234,7 +6234,7 @@ function NovaConversaModal({
                   </button>
                 );
               })}
-              {candidatos.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum membro disponível.</span>}
+              {candidatos.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum membro disponível.</span>}
             </div>
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
@@ -6696,13 +6696,13 @@ function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
                 <button key={m.id} type="button" className={`seg-chip${appModules.includes(m.id) ? " on" : ""}`} onClick={() => togModule(m.id)}>{m.label}</button>
               ))}
             </div>
-            <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", marginTop: 6 }}>Quem está neste time passa a ver esses módulos no app.</div>
+            <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 6 }}>Quem está neste time passa a ver esses módulos no app.</div>
           </div>
           <div className="field">
             <label className="field-label">Funções</label>
             <div className="cell-tags">
               {ministry.positions.map((p) => <span key={p.id} className="tag">{p.name}</span>)}
-              {ministry.positions.length === 0 && <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)" }}>Nenhuma função cadastrada.</span>}
+              {ministry.positions.length === 0 && <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>Nenhuma função cadastrada.</span>}
             </div>
           </div>
         </div>
@@ -6743,7 +6743,7 @@ function RequisitosServirCard() {
       <RequisitosEditor value={reqs} onChange={setReqs} courses={access.courses} events={access.events} groupsLabel={access.groupsLabel} />
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
         <button className="btn btn-pri btn-sm" type="button" disabled={saving} onClick={salvar}>{saving ? "Salvando..." : "Salvar requisitos"}</button>
-        {msg && <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)" }}>{msg}</span>}
+        {msg && <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>{msg}</span>}
       </div>
     </div>
   );
@@ -6836,7 +6836,7 @@ function AcessosCard({
               <button type="button" className={`sw${ehDelegado ? " on" : ""}`} disabled={!podeDelegar} onClick={() => toggleGrant("acessos.delegar")} />
             </div>
             {erro && <div className="field-error" style={{ marginTop: 8 }}>{erro}</div>}
-            {!podeDelegar && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", marginTop: 8 }}>Só a Direção (master) define quem pode delegar acessos.</div>}
+            {!podeDelegar && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 8 }}>Só a Direção (master) define quem pode delegar acessos.</div>}
           </>
         )}
       </div>
@@ -7215,7 +7215,7 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
         )}
         {d.segmentacaoModo === "time" && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {times.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum time cadastrado ainda.</span>}
+            {times.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum time cadastrado ainda.</span>}
             {times.map((t) => (
               <button key={t} type="button" className={`seg-chip${d.segmentacaoValores.includes(t) ? " on" : ""}`} onClick={() => toggleValor(t)}>{t}</button>
             ))}
@@ -7248,7 +7248,7 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
           </label>
         )}
         {d.disparoModo === "campanha" && (
-          <p style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>{d.emitidaEm ? `Disparada em ${formatDateBR(d.emitidaEm.slice(0, 10))}.` : "Salve e depois clique em “Disparar agora” na lista."}</p>
+          <p style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{d.emitidaEm ? `Disparada em ${formatDateBR(d.emitidaEm.slice(0, 10))}.` : "Salve e depois clique em “Disparar agora” na lista."}</p>
         )}
       </div>
 
@@ -7258,7 +7258,7 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
           {d.perguntas.map((p, idx) => (
             <div key={p.id} className="cfg-card" style={{ padding: 14 }}>
               <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center", flexWrap: "wrap" }}>
-                <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)" }}>#{idx + 1}</span>
+                <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>#{idx + 1}</span>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", flex: 1 }}>
                   {(["emoji", "nota", "texto", "simnao", "multipla"] as const).map((t) => (
                     <button key={t} type="button" className={`seg-chip${p.tipo === t ? " on" : ""}`} onClick={() => updatePergunta(p.id, { tipo: t })}>
@@ -7278,7 +7278,7 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
               {p.tipo === "multipla" && (
                 <input className="input" placeholder="Opções separadas por vírgula" value={(p.opcoes ?? []).join(", ")} onChange={(e) => updatePergunta(p.id, { opcoes: e.target.value.split(",").map((o) => o.trim()).filter(Boolean) })} />
               )}
-              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "var(--fs-pn-13)", color: "var(--subtle)", marginTop: 8 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "var(--fs-pn-13)", color: "var(--muted)", marginTop: 8 }}>
                 <input type="checkbox" checked={p.obrigatoria} onChange={(e) => updatePergunta(p.id, { obrigatoria: e.target.checked })} />
                 Obrigatória
               </label>
@@ -7428,7 +7428,7 @@ function TagElencoModal({
                   type="button"
                   title={lider ? "Remover como líder" : "Tornar líder do time"}
                   onClick={(e) => { e.stopPropagation(); toggleLider(p.id); }}
-                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "var(--fs-pn-16)", color: lider ? "var(--amber)" : "var(--subtle)" }}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "var(--fs-pn-16)", color: lider ? "var(--amber)" : "var(--muted)" }}
                 >
                   ★
                 </button>
@@ -7527,7 +7527,7 @@ function CongregacaoEditModal({
           <div className="cfg-card-s">Etiquetas livres cadastradas nesta congregação.</div>
           <div className="cell-tags" style={{ gap: 8 }}>
             {churchTags.map((t) => <span key={t.id} className="papel-tag">{t.name}</span>)}
-            {churchTags.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhuma etiqueta cadastrada nesta congregação.</span>}
+            {churchTags.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhuma etiqueta cadastrada nesta congregação.</span>}
           </div>
         </div>
         <div className="modal-foot">
@@ -7928,10 +7928,10 @@ function Config({
               {horariosCulto.map((h) => (
                 <span key={h} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                   <Icon name="cultos" size={12} /> {h}
-                  <button type="button" onClick={() => saveHorariosCulto(horariosCulto.filter((x) => x !== h))} style={{ background: "none", border: "none", color: "var(--subtle)", fontSize: "var(--fs-pn-12)", padding: 0 }}>✕</button>
+                  <button type="button" onClick={() => saveHorariosCulto(horariosCulto.filter((x) => x !== h))} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "var(--fs-pn-12)", padding: 0 }}>✕</button>
                 </span>
               ))}
-              {horariosCulto.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum horário cadastrado.</span>}
+              {horariosCulto.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum horário cadastrado.</span>}
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
               {DIAS_SEMANA.map((dia) => (
@@ -7961,11 +7961,11 @@ function Config({
                 <div className="cfg-row-main">
                   <div className="cfg-row-t">
                     {m.name}
-                    {leader && <span style={{ color: "var(--subtle)", fontWeight: 400, fontSize: "var(--fs-pn-12)" }}> · líder {leader.personName.split(" ")[0]}</span>}
+                    {leader && <span style={{ color: "var(--muted)", fontWeight: 400, fontSize: "var(--fs-pn-12)" }}> · líder {leader.personName.split(" ")[0]}</span>}
                   </div>
                   <div className="cell-tags" style={{ marginTop: 7 }}>
                     {m.positions.map((p) => <span key={p.id} className="tag">{p.name}</span>)}
-                    {m.positions.length === 0 && <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)" }}>Sem funções</span>}
+                    {m.positions.length === 0 && <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>Sem funções</span>}
                   </div>
                 </div>
                 <button className="btn btn-sec btn-sm" type="button" onClick={() => setEditMin(m)}>Editar</button>
@@ -7984,10 +7984,10 @@ function Config({
             {ministerialTitles.map((t) => (
               <span key={t.id} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 {t.name}
-                <button type="button" onClick={() => removeRow("ministerial_titles", t.id)} style={{ background: "none", border: "none", color: "var(--subtle)", fontSize: "var(--fs-pn-12)", padding: 0, cursor: "pointer" }}>✕</button>
+                <button type="button" onClick={() => removeRow("ministerial_titles", t.id)} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "var(--fs-pn-12)", padding: 0, cursor: "pointer" }}>✕</button>
               </span>
             ))}
-            {ministerialTitles.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum papel cadastrado.</span>}
+            {ministerialTitles.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum papel cadastrado.</span>}
           </div>
           <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo papel ministerial", subtitle: "ex: Pastor, Diácono, Presbítero.", saveLabel: "Adicionar papel", formFields: [{ k:"nome", label:"Nome do papel", type:"text", req:true, ph:"ex: Diácono" }], action: { kind: "title" } })}>+ Papel ministerial</button>
         </div>
@@ -8236,10 +8236,10 @@ function Config({
             <div className="cell-tags" style={{ gap: 8, marginBottom: 16 }}>
               {tiposEvento.map((t) => (
                 <span key={t} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  {t}<button type="button" onClick={() => saveTiposEvento(tiposEvento.filter((x) => x !== t))} style={{ background: "none", border: "none", color: "var(--subtle)", fontSize: "var(--fs-pn-12)", padding: 0 }}>✕</button>
+                  {t}<button type="button" onClick={() => saveTiposEvento(tiposEvento.filter((x) => x !== t))} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "var(--fs-pn-12)", padding: 0 }}>✕</button>
                 </span>
               ))}
-              {tiposEvento.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum tipo cadastrado.</span>}
+              {tiposEvento.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum tipo cadastrado.</span>}
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <input className="input" style={{ flex: 1 }} placeholder="ex: Culto, Conferência, Vigília" value={novoTipoEvento} onChange={(e) => setNovoTipoEvento(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTipoEvento()} />
@@ -8775,7 +8775,7 @@ function PersonTimeline({ member, events, compact }: { member: MemberView; event
   const stepsWithoutEvent = JRN_STEPS.filter((step, i) => !!member.journey[i] && !events.some((e) => e.event_type === step.kind));
 
   if (!sorted.length && !stepsWithoutEvent.length) {
-    return <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)", padding: "12px 0" }}>Nenhuma etapa concluída ainda.</div>;
+    return <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", padding: "12px 0" }}>Nenhuma etapa concluída ainda.</div>;
   }
   return (
     <div className={`tl jrn-tl${compact ? " compact" : ""}`}>
@@ -8864,7 +8864,7 @@ function DecisaoDrawer({
           </dl>
           {decision.notes && (
             <div style={{ marginTop: 14, fontSize: "var(--fs-pn-14)", color: "var(--light)", lineHeight: 1.6, padding: "14px 16px", background: "var(--ink)", borderRadius: "var(--r-md)", border: "0.5px solid var(--border-2)" }}>
-              <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", display: "block", marginBottom: 6 }}>Observação</span>
+              <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", display: "block", marginBottom: 6 }}>Observação</span>
               {decision.notes}
             </div>
           )}
@@ -8933,7 +8933,7 @@ function AddCandidatoModal({
               <span className="btn btn-ghost btn-sm">{saving === m.id ? "…" : "Adicionar"}</span>
             </div>
           ))}
-          {available.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)", padding: "16px 0" }}>Nenhum membro disponível.</div>}
+          {available.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", padding: "16px 0" }}>Nenhum membro disponível.</div>}
         </div>
         <div className="modal-foot">
           <button className="btn btn-pri" type="button" onClick={onClose}>Concluído</button>
@@ -9023,7 +9023,7 @@ function BatismoDrawer({
               </div>
             );
           })}
-          {classCandidates.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum candidato ainda.</div>}
+          {classCandidates.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum candidato ainda.</div>}
         </DrawerSection>
         <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
           <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setShowAdd(true)}>+ Adicionar candidato</button>
@@ -9128,7 +9128,7 @@ function VisitanteDrawer({
             {VISITOR_STAGES.map((s, i) => (
               <div key={s.id} style={{ flex: 1, textAlign: "center" }}>
                 <div style={{ height: 5, borderRadius: 3, background: i <= stageIdx ? s.color : "var(--ink)" }} />
-                <div style={{ fontSize: "var(--fs-pn-12)", color: i <= stageIdx ? "var(--light)" : "var(--subtle)", marginTop: 7 }}>{s.name}</div>
+                <div style={{ fontSize: "var(--fs-pn-12)", color: i <= stageIdx ? "var(--light)" : "var(--muted)", marginTop: 7 }}>{s.name}</div>
               </div>
             ))}
           </div>
@@ -9188,7 +9188,7 @@ function VisitanteDrawer({
                 ))}
               </div>
             )
-            : <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum contato registrado ainda.</div>}
+            : <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum contato registrado ainda.</div>}
         </DrawerSection>
       </div>
     </DrawerShell>
@@ -9689,7 +9689,7 @@ function EntityDrawer({
               <dt>E-mail</dt><dd>{member.email}</dd>
               <dt>Aniversário</dt><dd>{formatDateBR(member.birth)}</dd>
               <dt>Bairro</dt><dd>{member.neighborhood}</dd>
-              {(church?.settings?.gruposCfg?.ativo ?? true) && <><dt>{church?.settings?.gruposCfg?.termoP ?? "Grupo de Comunhão"}</dt><dd>{grupo ? <>{grupo.name}{grupoLider && <span style={{ color: "var(--subtle)" }}> · líder {grupoLider.name.split(" ")[0]}</span>}</> : <span style={{ color: "var(--subtle)" }}>sem grupo</span>}</dd></>}
+              {(church?.settings?.gruposCfg?.ativo ?? true) && <><dt>{church?.settings?.gruposCfg?.termoP ?? "Grupo de Comunhão"}</dt><dd>{grupo ? <>{grupo.name}{grupoLider && <span style={{ color: "var(--muted)" }}> · líder {grupoLider.name.split(" ")[0]}</span>}</> : <span style={{ color: "var(--muted)" }}>sem grupo</span>}</dd></>}
               <dt>Acesso ao app</dt><dd>{member.volunteerId ? <span style={{ color: "var(--olive-soft)" }}>liberado</span> : temTelefone ? <span style={{ color: "var(--amber)" }}>convite ainda não aceito</span> : <span style={{ color: "var(--amber)" }}>falta o telefone</span>}</dd>
             </dl>
             <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
@@ -9702,7 +9702,7 @@ function EntityDrawer({
               )}
             </div>
             {temTelefone && (
-              <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", marginTop: 10, lineHeight: 1.5 }}>
+              <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 10, lineHeight: 1.5 }}>
                 Ao clicar, o app gera um convite só de {member.name.split(" ")[0]}, válido por 7 dias,
                 onde a pessoa informa o e-mail, cria a senha e coloca o CEP. Depois, abre o WhatsApp no
                 seu celular já com a mensagem de boas-vindas e o link, prontos pra você conferir e
@@ -9742,7 +9742,7 @@ function EntityDrawer({
                 })}
               </div>
             ) : (
-              <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Ainda não serve em nenhum time.</div>
+              <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Ainda não serve em nenhum time.</div>
             )}
           </DrawerSection>
           <DrawerSection title="Cursos matriculados">
@@ -9768,7 +9768,7 @@ function EntityDrawer({
                 })}
               </div>
             ) : (
-              <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--subtle)" }}>Nenhum curso matriculado ainda.</div>
+              <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum curso matriculado ainda.</div>
             )}
           </DrawerSection>
           <DrawerSection title="Caminhada de integração"><PersonTimeline member={member} events={timelineEvents.filter((e) => e.member_id === member.id)} compact /></DrawerSection>
@@ -9885,7 +9885,7 @@ function EntityDrawer({
                   <div className="esc-fn">{position.name}</div>
                   <span className="panel-meta">{position.need_count} {position.need_count === 1 ? "vaga" : "vagas"}</span>
                 </div>
-                {pessoas.length === 0 && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)" }}>Ninguém habilitado ainda.</div>}
+                {pessoas.length === 0 && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>Ninguém habilitado ainda.</div>}
                 {pessoas.map((link) => (
                   <button className="cand" type="button" key={`${position.id}-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
                     <Av name={link.personName} photoUrl={people.find((pp) => pp.id === link.personId)?.photoUrl} />
@@ -9915,7 +9915,7 @@ function EntityDrawer({
                 ))}
               </div>
             )}
-            {ministry.people.length === 0 && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)" }}>Ninguém neste time ainda.</div>}
+            {ministry.people.length === 0 && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>Ninguém neste time ainda.</div>}
           </DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
             <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { setDrawer(null); setRoute("escalas"); }}>Ver escala do time →</button>
@@ -11066,7 +11066,7 @@ function ServiceModal({
                   onChange={(v) => setValues((cur) => ({ ...cur, [field.k]: v }))}
                   onPatch={(patch) => setValues((cur) => ({ ...cur, ...patch }))}
                 />
-                {field.hint && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--subtle)", marginTop: 5 }}>{field.hint}</div>}
+                {field.hint && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 5 }}>{field.hint}</div>}
               </div>
             ))}
           </div>

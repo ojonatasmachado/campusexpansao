@@ -228,7 +228,7 @@ export function KidsQRModal({
                 <div className="flag-row" key={child.id} style={{ cursor: "pointer" }} onClick={() => { checkinManual(child.id); setQ(""); }}>
                   <div className="av av-sm">{ini(child.name)}</div>
                   <div className="flag-main"><div className="flag-nome">{child.name}</div></div>
-                  <span style={{ marginLeft: "auto", color: "var(--subtle)" }}>+ check-in</span>
+                  <span style={{ marginLeft: "auto", color: "var(--muted)" }}>+ check-in</span>
                 </div>
               ))}
             </div>

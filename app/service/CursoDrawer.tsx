@@ -122,7 +122,7 @@ function MatricularModal({
               <div className="flag-main">
                 <div className="flag-nome">{m.name}</div>
               </div>
-              <span style={{ marginLeft: "auto", color: "var(--subtle)" }}>→</span>
+              <span style={{ marginLeft: "auto", color: "var(--muted)" }}>→</span>
             </div>
           ))}
         </div>
@@ -268,7 +268,7 @@ export default function CursoDrawer({
                     );
                   })}
                   {modLessons.length === 0 && (
-                    <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--subtle)", padding: "4px 0" }}>Nenhuma aula neste módulo.</div>
+                    <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)", padding: "4px 0" }}>Nenhuma aula neste módulo.</div>
                   )}
                 </div>
               );

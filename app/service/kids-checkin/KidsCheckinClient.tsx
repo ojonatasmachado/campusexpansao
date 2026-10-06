@@ -108,7 +108,7 @@ export default function KidsCheckinClient({
                       <button className="btn btn-sec btn-sm" type="button" disabled={busy} onClick={() => requestPickup(child.id)}>{busy ? "Aguarde..." : "Solicitar retirada"}</button>
                     )}
                     {att && att.status === "presente" && !child.can_pickup && (
-                      <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--subtle)" }}>sem autorização pra retirar</span>
+                      <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>sem autorização pra retirar</span>
                     )}
                     {att && att.status === "retirada_pendente" && (
                       <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--amber)" }}>aguardando confirmação</span>

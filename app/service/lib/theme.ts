@@ -112,6 +112,16 @@ export function adaptAccent(hex: string, surface: string, mode: ThemeMode, min =
   return c;
 }
 
+/* Texto na cor da igreja: tem de ler em 4,5:1 em todas as superfícies onde
+   aparece (fundo da página, card e card elevado), não só no card. No modo
+   claro o fundo (--ink) é mais escuro que o card, então o ajuste olha os três. */
+export function accentText(hex: string, fam: NeutralTokens, mode: ThemeMode, min = 4.5): string {
+  let c = normalizeHex(hex);
+  const surfaces = [fam.graphite, fam.ink, fam.card];
+  for (let i = 0; i < 4; i++) for (const s of surfaces) c = adaptAccent(c, s, mode, min);
+  return c;
+}
+
 export type BrandCfg = {
   accent?: string;
   /* legado: antes eram duas cores escolhidas à mão, uma por modo */
@@ -127,10 +137,11 @@ export const DEFAULT_ACCENT = "#7A9E3F";
 
 /* Cores de estado: do sistema, nunca derivadas da cor da igreja, pra que
    "confirmado", "aguardando" e "não pode" signifiquem o mesmo em toda igreja.
-   Sempre acompanhadas de palavra e ícone (componente Status). */
+   Sempre acompanhadas de palavra e ícone (componente Status). Texto em 4,5:1
+   sobre a própria faixa (-dim) em qualquer superfície de qualquer família. */
 const STATUS_COLORS: Record<ThemeMode, { ok: string; warn: string; danger: string }> = {
-  dark: { ok: "#5CC995", warn: "#E5AD4A", danger: "#F06A6E" },
-  light: { ok: "#1F7A4D", warn: "#8F5B00", danger: "#C62828" },
+  dark: { ok: "#5CC995", warn: "#E5AD4A", danger: "#F07A7E" },
+  light: { ok: "#17603D", warn: "#774C00", danger: "#A02121" },
 };
 
 /* A cor escolhida pela igreja, como ela digitou (ou o legado). */
@@ -146,7 +157,7 @@ export function accentReport(brand: BrandCfg | undefined): Record<ThemeMode, { f
   for (const mode of ["dark", "light"] as ThemeMode[]) {
     const fam = familyById(mode === "dark" ? brand?.neutralDark : brand?.neutralLight, mode).tokens;
     const fill = rawAccent(brand, mode);
-    const text = adaptAccent(fill, fam.graphite, mode, 4.5);
+    const text = accentText(fill, fam, mode);
     out[mode] = { fill, text, onFill: deriveAccentVars(fill, mode).accentInk, adjusted: text.toUpperCase() !== fill.toUpperCase() };
   }
   return out;
@@ -162,7 +173,7 @@ export function accentReport(brand: BrandCfg | undefined): Record<ThemeMode, { f
 export function themeVars(brand: BrandCfg | undefined, mode: ThemeMode): Record<string, string> {
   const fam = familyById(mode === "dark" ? brand?.neutralDark : brand?.neutralLight, mode).tokens;
   const fill = rawAccent(brand, mode);
-  const text = adaptAccent(fill, fam.graphite, mode, 4.5);
+  const text = accentText(fill, fam, mode);
   const a = deriveAccentVars(fill, mode);
   const st = STATUS_COLORS[mode];
   const dimA = mode === "dark" ? 0.14 : 0.1;
@@ -177,7 +188,7 @@ export function themeVars(brand: BrandCfg | undefined, mode: ThemeMode): Record<
     "--olive-dim": a.oliveDim, "--olive-line": a.oliveLine,
     "--ok": st.ok, "--ok-dim": withAlpha(st.ok, dimA), "--ok-line": withAlpha(st.ok, lineA),
     "--warn": st.warn, "--amber": st.warn, "--amber-dim": withAlpha(st.warn, dimA), "--amber-line": withAlpha(st.warn, lineA),
-    "--danger": st.danger, "--danger-dim": withAlpha(st.danger, dimA), "--danger-line": withAlpha(st.danger, lineA),
+    "--danger": st.danger, "--danger-ink": mode === "dark" ? fam.ink : "#FFFFFF", "--danger-dim": withAlpha(st.danger, dimA), "--danger-line": withAlpha(st.danger, lineA),
   };
 }
 

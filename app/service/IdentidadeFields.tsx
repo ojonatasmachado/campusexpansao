@@ -101,7 +101,7 @@ export function BackgroundField({ identidade, onSave, organizationId, churchId }
                   onChange={(e) => onSave({ bgOverlay: Number(e.target.value) })}
                   style={{ flex: 1 }}
                 />
-                <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--subtle)", width: 34, textAlign: "right" }}>{Math.round(overlay * 100)}%</span>
+                <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)", width: 34, textAlign: "right" }}>{Math.round(overlay * 100)}%</span>
               </div>
             </div>
           )}
