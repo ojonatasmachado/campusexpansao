@@ -58,7 +58,7 @@
 .login-x{display:none}
 .login-card{width:440px;max-width:100%;padding:40px 40px 34px;box-shadow:0 30px 80px -30px rgba(0,0,0,0.45)}
 .login-logo{margin-bottom:30px;font-size:inherit;letter-spacing:normal}
-.login-eyebrow{font-size:var(--fs-pn-12);letter-spacing:0.16em;margin-bottom:10px;color:var(--olive-soft,var(--olive))}
+.login-eyebrow{font-size:var(--fs-pn-12);letter-spacing:0;margin-bottom:10px;color:var(--olive-soft,var(--olive))}
 .login-title{font-size:var(--fs-pn-32);line-height:1.12;margin-bottom:8px;text-wrap:balance}
 .login-sub{font-size:var(--fs-pn-14);line-height:1.55;margin-bottom:24px;text-wrap:pretty}
 .login-form{display:grid;gap:16px}

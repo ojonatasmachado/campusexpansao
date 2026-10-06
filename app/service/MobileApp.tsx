@@ -3409,7 +3409,7 @@ function MobileMembro({
               </div>
               {tab === "inicio" ? (
                 <>
-                  <h1 className="m-h1">{saudacao()}, <em>{person.name.split(" ")[0]}</em></h1>
+                  <h1 className="m-h1">{saudacao()}, {person.name.split(" ")[0]}</h1>
                   <p className="m-hsub">{dataLonga(hoje)}</p>
                 </>
               ) : (

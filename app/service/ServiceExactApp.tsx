@@ -2179,7 +2179,7 @@ function Painel({
       <div className="ph">
         <div>
           <div className="ph-eyebrow">Início</div>
-          <h1 className="ph-title">{saudacao()}, <em>{userName?.split(" ")[0] ?? "liderança"}</em> <HelpDot text="Seu resumo da semana: próximos cultos, vagas em aberto na escala e o que precisa da sua atenção agora." /></h1>
+          <h1 className="ph-title">{saudacao()}, {userName?.split(" ")[0] ?? "liderança"} <HelpDot text="Seu resumo da semana: próximos cultos, vagas em aberto na escala e o que precisa da sua atenção agora." /></h1>
           <p className="ph-sub">Visão da semana: quem está escalado, o que falta preencher e quem precisa de acompanhamento.</p>
         </div>
         <div className="ph-actions">

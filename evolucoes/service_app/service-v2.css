@@ -28,7 +28,7 @@
 .esc-event { flex: 0 0 auto; min-width: 180px; text-align: left; background: var(--graphite); border: 0.5px solid var(--border-2); border-radius: var(--r-lg); padding: 12px 14px; cursor: pointer; transition: border-color .14s, background .14s; display: flex; flex-direction: column; gap: 3px; }
 .esc-event:hover { border-color: var(--olive-line); }
 .esc-event.on { border-color: var(--olive); background: var(--olive-dim); }
-.esc-event-day { font-family:var(--sans); font-size: var(--fs-pn-12); color: var(--olive-soft); letter-spacing:0; }
+.esc-event-day { font-family:var(--sans); font-size: var(--fs-pn-12); color:var(--muted); letter-spacing:0; }
 .esc-event-name { font-size: var(--fs-pn-14); font-weight: 700; letter-spacing: -0.02em; color: var(--white); }
 .esc-event-time { font-size: var(--fs-pn-12); color: var(--muted); }
 .esc-event-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }

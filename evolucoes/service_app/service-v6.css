@@ -197,7 +197,7 @@
 .m6-lbl{margin:0 20px 10px;font-family:var(--sans);font-size:var(--fs-app-15);font-weight:600;letter-spacing:0;color:var(--muted)}
 .m6-card{margin:0 16px 12px;padding:18px;border-radius:20px;background:var(--graphite);border:0.5px solid var(--border-2)}
 .m6-card.flat{margin:14px 0 0}
-.m6-kick{display:flex;align-items:center;gap:6px;font-size:var(--fs-app-15);font-weight:600;color:var(--olive)}
+.m6-kick{display:flex;align-items:center;gap:6px;font-size:var(--fs-app-15);font-weight:600;color:var(--muted)}
 .m6-ct{margin:4px 0 6px;font-size:var(--fs-app-20);font-weight:600;line-height:1.25;letter-spacing:-0.01em;color:var(--white);text-wrap:pretty}
 .m6-meta{font-size:var(--fs-app-15);line-height:1.45;color:var(--muted)}
 .m6-txt{margin:6px 0 10px;font-size:var(--fs-app-17);line-height:1.5;color:var(--light)}
@@ -364,7 +364,7 @@ div.m6-row{cursor:default}
 .cell-name{font-size:var(--fs-pn-14);font-weight:600;line-height:1.35}
 .cell-sub{font-size:var(--fs-ui-md);color:var(--muted)}
 @media (max-width:640px){
-  .kpi-label{letter-spacing:0.06em}
+  .kpi-label{letter-spacing:0}
   .panel-head{flex-wrap:wrap;row-gap:4px}
   .panel-title{flex-wrap:wrap}
   .panel-title .help-dot-wrap:has(.help-link){flex-basis:100%;padding-left:22px}
