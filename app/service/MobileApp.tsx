@@ -12,6 +12,7 @@ import CepInput from "./CepInput";
 import ChurchLockup from "./ChurchLockup";
 import { TEXT_SCALES, useTextScale } from "./lib/text-scale";
 import { requirementLabel, type RequirementKind } from "./lib/requirements";
+import { INSTRUCAO_QR, proximaAula, textoDaAula, type ProximaAula } from "./lib/aulas";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -128,7 +129,7 @@ const RESULTADO_ACAO: Record<string, string> = {
 };
 const mensagemAcao = (r: string) => RESULTADO_ACAO[r] ?? "Não foi possível agora. Tente de novo.";
 type CourseModule = { id: string; course_id: string; name: string; sort_order: number };
-type CourseLesson = { id: string; module_id: string; name: string };
+type CourseLesson = { id: string; module_id: string; name: string; sort_order?: number | null; kind?: string | null; link?: string | null; conteudo?: string | null };
 type Visitor = { id: string; name: string; phone: string | null; stage: string; origin: string | null };
 type BaptismClass = {
   id: string;
@@ -1274,6 +1275,46 @@ function TabKids({
 
 // ── aba: Cursos ───────────────────────────────────────────────────────────────
 
+/* próxima aula do curso (v7 2.1): o que é, como concluir e, só se houver
+   conteúdo para abrir, o botão. Presença de aula presencial/ao vivo é pelo QR. */
+function ProximaAulaBloco({ prox }: { prox: ProximaAula<CourseLesson> | null }) {
+  const ui = useContext(MemberUiContext);
+  if (!prox) return <div className="m6-meta" style={{ marginTop: 10 }}>As aulas deste curso ainda não foram publicadas.</div>;
+  const { aula, n, total, abrir, porQr } = prox;
+  return (
+    <div style={{ marginTop: 12 }}>
+      <div className="m6-kick">Próxima aula · {n} de {total}</div>
+      <div className="m6-rt">{aula.name}</div>
+      {porQr ? (
+        <div className="m6-meta" style={{ marginTop: 4 }}>{INSTRUCAO_QR}</div>
+      ) : !abrir ? (
+        <div className="m6-meta" style={{ marginTop: 4 }}>O conteúdo desta aula ainda não foi publicado.</div>
+      ) : null}
+      {abrir === "link" && (
+        <a className="m6-btn pri full" style={{ marginTop: 12 }} href={aula.link!.trim()} target="_blank" rel="noopener noreferrer">
+          <Icon name="play" size={20} />Assistir à aula
+        </a>
+      )}
+      {abrir === "texto" && (
+        <button className="m6-btn pri full" style={{ marginTop: 12 }} type="button" onClick={() => ui.sheet(<SheetAula aula={aula} n={n} total={total} porQr={porQr} />)}>
+          <Icon name="documento" size={20} />{porQr ? "Ver o material da aula" : "Ler a aula"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function SheetAula({ aula, n, total, porQr }: { aula: CourseLesson; n: number; total: number; porQr: boolean }) {
+  return (
+    <div>
+      <div className="m6-kick">Aula {n} de {total}</div>
+      <h2 className="m6-sh">{aula.name}</h2>
+      <p className="m6-txt" style={{ whiteSpace: "pre-wrap" }}>{textoDaAula(aula.conteudo)}</p>
+      {porQr && <div className="m6-meta">{INSTRUCAO_QR}</div>}
+    </div>
+  );
+}
+
 function TabCursos({
   member, courses, enrollments, courseModules, courseLessons,
 }: {
@@ -1311,11 +1352,7 @@ function TabCursos({
             <div className="bar" style={{ marginTop: 10 }}>
               <div className={`bar-fill ${en.status === "concluido" ? "" : "amber"}`} style={{ width: `${pct}%` }} />
             </div>
-            {en.status !== "concluido" && (
-              <button className="m-btn m-btn-ok" style={{ width: "100%", marginTop: 12 }}>
-                Continuar →
-              </button>
-            )}
+            {en.status !== "concluido" && <ProximaAulaBloco prox={proximaAula(course.id, en.done_count, courseModules, courseLessons)} />}
           </div>
         );
       })}
@@ -2914,8 +2951,9 @@ function MuralV6({ announcements, unreadIds, person, onReadAnnouncement, respons
 type StepView = { id: JourneyStep; nome: string; st: "feito" | "andamento" | "afazer"; info?: string; acao?: string; run?: () => void };
 const STW = { feito: "Concluída", andamento: "Em andamento", afazer: "A fazer" } as const;
 
-function useSteps({ person, member, ministries, courses, enrollments, baptismClasses, journeyRequests, onOpenSub, onRequestStep, onServir }: {
+function useSteps({ person, member, ministries, courses, enrollments, courseModules = [], courseLessons = [], baptismClasses, journeyRequests, onOpenSub, onRequestStep, onServir }: {
   person: P; member: M | null; ministries: Ministry[]; courses: Course[]; enrollments: Enrollment[]; baptismClasses: BaptismClass[];
+  courseModules?: CourseModule[]; courseLessons?: CourseLesson[];
   journeyRequests: JourneyRequest[]; onOpenSub: (sub: string) => void; onRequestStep: (step: JourneyStep) => void; onServir: () => void;
 }): StepView[] {
   const j = useContext(JourneyContext);
@@ -2939,7 +2977,10 @@ function useSteps({ person, member, ministries, courses, enrollments, baptismCla
       return { id, nome, st: "afazer", acao: "Já fui batizado", run: () => onRequestStep(id) };
     }
     if (id === "curso") {
-      if (cursando) return { id, nome, st: "andamento", info: cursoNome, acao: "Continuar", run: () => onOpenSub("cursos") };
+      if (cursando) {
+        const prox = proximaAula(cursando.course_id, cursando.done_count, courseModules, courseLessons);
+        return { id, nome, st: "andamento", info: joinDot(cursoNome, prox && `Próxima aula: ${prox.aula.name}`), acao: prox ? "Ver a próxima aula" : "Ver o curso", run: () => onOpenSub("cursos") };
+      }
       return { id, nome, st: "afazer", acao: "Ver os cursos", run: () => onOpenSub("cursos") };
     }
     if (id === "time") {
@@ -3049,6 +3090,10 @@ function CursosResumo({ member, courses, enrollments, courseModules, courseLesso
           <div className="m6-kick">Em andamento</div>
           <div className="m6-ct">{curso.name}</div>
           {total > 0 && <div className="m6-meta">{andando.done_count} de {plural(total, "aula")}</div>}
+          {(() => {
+            const prox = proximaAula(curso.id, andando.done_count, courseModules, courseLessons);
+            return prox ? <div className="m6-meta">Próxima aula: {prox.aula.name}</div> : null;
+          })()}
           <div className="m6-prog"><i style={{ width: `${pct}%` }} /></div>
         </div>
       )}
@@ -3160,6 +3205,7 @@ function MobileMembro({
     <MemberUiContext.Provider value={ui}>
     <StepsHost
       person={person} member={member} ministries={ministries} courses={courses} enrollments={enrollments} baptismClasses={baptismClasses}
+      courseModules={courseModules} courseLessons={courseLessons}
       journeyRequests={journeyRequests} onOpenSub={(s) => go("caminhada", s)} onRequestStep={pedirEtapa} onServir={abrirTimes}
     >
     {(steps) => (
