@@ -45,13 +45,14 @@ declare
   v_eu uuid;
   v_nome text;
 begin
-  select p.organization_id into v_org from service.people p where p.id = p_person;
+  -- := em vez de "select ... into" (o SQL Editor do Supabase quebra a outra forma)
+  v_org := (select p.organization_id from service.people p where p.id = p_person);
   if v_org is null then return 'inexistente'; end if;
   if not service.is_lead(v_org) then return 'sem_permissao'; end if;
   if p_kind not in ('contato', 'justificada') then return 'invalido'; end if;
   if p_kind = 'contato' and coalesce(p_via, '') not in ('ligacao', 'mensagem', 'visita') then return 'invalido'; end if;
-  select p.id, p.name into v_eu, v_nome from service.people p
-  where p.id = any(service.my_people()) and p.organization_id = v_org limit 1;
+  v_eu := (select p.id from service.people p where p.id = any(service.my_people()) and p.organization_id = v_org order by p.id limit 1);
+  v_nome := (select p.name from service.people p where p.id = v_eu);
   insert into service.care_marks (organization_id, person_id, kind, via, until, by_person)
   values (v_org, p_person, p_kind, case when p_kind = 'contato' then p_via end,
           case when p_kind = 'justificada' then current_date + 30 end, v_eu);

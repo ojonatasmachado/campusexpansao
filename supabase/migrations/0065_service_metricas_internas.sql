@@ -25,6 +25,8 @@ begin
     raise exception 'sem permissão' using errcode = '42501';
   end if;
 
+  -- := em vez de "select ... into" (o SQL Editor do Supabase quebra a outra forma)
+  r := (
   with
   ev as (
     select e.id, e.event_date, e.ministries,
@@ -102,7 +104,7 @@ begin
       'com_app', (select count(*) from app),
       'sem_aviso', (select count(*) from app where not com_push)),
     'cartoes', coalesce((select jsonb_object_agg(evento, n) from cartoes), '{}'::jsonb)
-  ) into r;
+  ));
   return r;
 end $$;
 grant execute on function service.metricas_internas(uuid, int) to authenticated;

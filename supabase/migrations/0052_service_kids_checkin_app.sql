@@ -27,18 +27,16 @@ declare
   v_session uuid;
   v_active boolean;
 begin
-  select ch.organization_id, ch.class_id into v_org, v_class
-  from service.children ch
-  where ch.id = p_child
-    and exists (
-      select 1 from service.child_guardians g
-      where g.child_id = ch.id and g.guardian_person_id in (select unnest(service.my_people()))
-    );
+  -- := em vez de "select ... into" (o SQL Editor do Supabase quebra a outra forma)
+  v_org := (select ch.organization_id from service.children ch
+            where ch.id = p_child
+              and exists (select 1 from service.child_guardians g
+                          where g.child_id = ch.id and g.guardian_person_id in (select unnest(service.my_people()))));
+  v_class := (select ch.class_id from service.children ch where ch.id = p_child and v_org is not null);
   if v_org is null or v_class is null then return null; end if;
 
-  select e.event_date, e.time into v_date, v_time
-  from service.events e
-  where e.id = p_event and e.organization_id = v_org;
+  v_date := (select e.event_date from service.events e where e.id = p_event and e.organization_id = v_org);
+  v_time := (select e.time from service.events e where e.id = p_event and e.organization_id = v_org);
   if v_date is null or v_date <> v_now::date then return null; end if;
 
   -- abre 60 minutos antes do culto (sem hora marcada: o dia todo)
@@ -46,21 +44,15 @@ begin
     return null;
   end if;
 
-  select s.id, s.checkin_active into v_session, v_active
-  from service.kids_sessions s
-  where s.event_id = p_event and s.class_id = v_class;
+  v_session := (select s.id from service.kids_sessions s where s.event_id = p_event and s.class_id = v_class);
 
   if v_session is null then
     insert into service.kids_sessions (organization_id, event_id, class_id, checkin_token, checkin_active)
     values (v_org, p_event, v_class, md5(gen_random_uuid()::text), true)
-    on conflict (event_id, class_id) do nothing
-    returning id, checkin_active into v_session, v_active;
-    if v_session is null then
-      select s.id, s.checkin_active into v_session, v_active
-      from service.kids_sessions s
-      where s.event_id = p_event and s.class_id = v_class;
-    end if;
+    on conflict (event_id, class_id) do nothing;
+    v_session := (select s.id from service.kids_sessions s where s.event_id = p_event and s.class_id = v_class);
   end if;
+  v_active := (select s.checkin_active from service.kids_sessions s where s.id = v_session);
 
   if not coalesce(v_active, false) then return null; end if;
   return v_session;

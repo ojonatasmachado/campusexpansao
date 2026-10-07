@@ -55,11 +55,13 @@ declare
   v_pede text;
   v_person uuid;
 begin
-  select e.organization_id, e.pede into v_org, v_pede from service.events e where e.id = p_event;
+  -- := em vez de "select ... into" (o SQL Editor do Supabase quebra a outra forma)
+  v_org := (select e.organization_id from service.events e where e.id = p_event);
+  v_pede := (select e.pede from service.events e where e.id = p_event);
   if v_org is null then return 'inexistente'; end if;
   if v_pede not in ('presenca', 'inscricao') then return 'nao_pede'; end if;
-  select p.id into v_person from service.people p
-  where p.id = any(service.my_people()) and p.organization_id = v_org limit 1;
+  v_person := (select p.id from service.people p
+               where p.id = any(service.my_people()) and p.organization_id = v_org limit 1);
   if v_person is null then return 'sem_ficha'; end if;
   if not coalesce(p_vai, false) then
     delete from service.event_rsvps where event_id = p_event and person_id = v_person;

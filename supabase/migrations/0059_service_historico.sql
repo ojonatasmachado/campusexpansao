@@ -32,19 +32,22 @@ create or replace function service.trg_fato_serviu()
 returns trigger
 language plpgsql security definer set search_path = service, public as $$
 declare
-  v_ev record;
+  v_nome text;
+  v_dia date;
   v_funcao text;
 begin
-  select e.name, e.event_date into v_ev from service.events e where e.id = new.event_id;
-  select coalesce(mp.name, mi.name) into v_funcao
-  from service.roster_assignments r
-  join service.ministry_positions mp on mp.id = r.position_id
-  left join service.ministries mi on mi.id = mp.ministry_id
-  where r.event_id = new.event_id and r.person_id = new.person_id and r.status <> 'no'
-  limit 1;
+  -- := em vez de "select ... into" (o SQL Editor do Supabase quebra a outra forma)
+  v_nome := (select e.name from service.events e where e.id = new.event_id);
+  v_dia := (select e.event_date from service.events e where e.id = new.event_id);
+  v_funcao := (select coalesce(mp.name, mi.name)
+               from service.roster_assignments r
+               join service.ministry_positions mp on mp.id = r.position_id
+               left join service.ministries mi on mi.id = mp.ministry_id
+               where r.event_id = new.event_id and r.person_id = new.person_id and r.status <> 'no'
+               limit 1);
   if v_funcao is null then return new; end if;  -- presença sem escala não é "serviu"
-  perform service.gravar_fato(new.person_id, 'serviu', 'Serviu · ' || coalesce(v_ev.name, 'evento'), v_funcao,
-                              coalesce(v_ev.event_date, (new.checked_in_at at time zone 'America/Sao_Paulo')::date),
+  perform service.gravar_fato(new.person_id, 'serviu', 'Serviu · ' || coalesce(v_nome, 'evento'), v_funcao,
+                              coalesce(v_dia, (new.checked_in_at at time zone 'America/Sao_Paulo')::date),
                               'evento:' || new.event_id);
   return new;
 end $$;
@@ -57,11 +60,11 @@ create or replace function service.trg_fato_trocou()
 returns trigger
 language plpgsql security definer set search_path = service, public as $$
 declare
-  v_ev record;
+  v_nome text;
 begin
   if new.person_id is not distinct from old.person_id then return new; end if;
-  select e.name, e.event_date into v_ev from service.events e where e.id = new.event_id;
-  perform service.gravar_fato(old.person_id, 'trocou', 'Trocou a escala · ' || coalesce(v_ev.name, 'evento'), null,
+  v_nome := (select e.name from service.events e where e.id = new.event_id);
+  perform service.gravar_fato(old.person_id, 'trocou', 'Trocou a escala · ' || coalesce(v_nome, 'evento'), null,
                               current_date, 'vaga:' || new.id || ':' || new.person_id);
   return new;
 end $$;
@@ -78,7 +81,7 @@ declare
   i int;
 begin
   if coalesce(new.done_count, 0) <= coalesce(old.done_count, 0) then return new; end if;
-  select c.name into v_curso from service.courses c where c.id = new.course_id;
+  v_curso := (select c.name from service.courses c where c.id = new.course_id);
   for i in (coalesce(old.done_count, 0) + 1)..new.done_count loop
     insert into service.timeline_events (organization_id, member_id, event_type, title, body, sort_key, when_label, ref)
     values (new.organization_id, new.member_id, 'aula', 'Concluiu a aula ' || i, v_curso,
@@ -100,7 +103,7 @@ declare
   v_grupo text;
 begin
   if new.group_id is null or new.group_id is not distinct from old.group_id then return new; end if;
-  select g.name into v_grupo from service.fellowship_groups g where g.id = new.group_id;
+  v_grupo := (select g.name from service.fellowship_groups g where g.id = new.group_id);
   insert into service.timeline_events (organization_id, member_id, event_type, title, sort_key, when_label, ref)
   values (new.organization_id, new.id, 'grupo', 'Entrou no grupo ' || coalesce(v_grupo, ''),
           to_char(current_date, 'YYYYMMDD')::bigint, to_char(current_date, 'DD/MM/YYYY'), 'grupo:' || new.group_id)
