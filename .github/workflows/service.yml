@@ -16,6 +16,7 @@ on:
       - "scripts/check-service-lei12.ts"
       - "scripts/lei12-base.json"
       - "scripts/ci/**"
+      - "docs/service-v7/producao.sql"
       - ".github/workflows/service.yml"
   pull_request:
     paths:
@@ -65,5 +66,7 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: postgres
         run: scripts/ci/aplicar-migracoes.sh
+      - name: Pacote de produção em dia com as migrações
+        run: scripts/ci/pacote-producao.sh | diff -q - docs/service-v7/producao.sql || { echo "Rode scripts/ci/pacote-producao.sh > docs/service-v7/producao.sql"; exit 1; }
       - name: Build
         run: npm run build

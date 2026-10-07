@@ -1,0 +1,33 @@
+# Service v7 · agendador (4.18 e 5.3): de hora em hora chama a rota que manda
+# o lembrete do aviso para quem não viu e esvazia a fila de avisos (silêncio
+# das 22h às 7h e resumo do Mural). Feito no GitHub porque o plano gratuito da
+# Vercel só roda cron uma vez por dia.
+#
+# Para ligar (uma vez):
+#   1. Na Vercel, variável CRON_SECRET (um texto longo aleatório) em Production.
+#   2. No GitHub, Settings > Secrets and variables > Actions:
+#      - Secret  CRON_SECRET = o mesmo texto da Vercel
+#      - Variable SERVICE_URL = endereço do site, sem barra no fim (ex. https://campusexpansao.com)
+# Sem os dois, o job termina sem fazer nada. Agendamento só roda no branch padrão (main).
+name: Service · agendador
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+jobs:
+  lembretes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Chamar a rota do agendador
+        env:
+          URL: ${{ vars.SERVICE_URL }}
+          SEGREDO: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$URL" ] || [ -z "$SEGREDO" ]; then
+            echo "SERVICE_URL ou CRON_SECRET não configurados: nada a fazer."
+            exit 0
+          fi
+          curl -fsS --max-time 60 -H "Authorization: Bearer $SEGREDO" "$URL/api/service/cron/lembretes"
