@@ -1582,8 +1582,10 @@ export default function ServiceExactApp({
      manual (Acessos por pessoa) vê o painel só com as telas liberadas.
      Só pode vir depois de todos os hooks acima (regra dos hooks : nada de
      return condicional antes deles). */
-  const temTelaLiberada = currentExtraAccess.some((code) => ACESSO_ROTAS.some((r) => r.id === code))
-    || (souVoluntario && Object.values(matrizEfetiva.voluntario ?? {}).some(Boolean));
+  /* telas do painel que a pessoa pode abrir (menu lateral + Configurações) */
+  const rotasPermitidas = [...NAV_GROUPS.flatMap((g) => g.items.map((i) => i.id)), "config" as const]
+    .filter((id) => podeVerNav(id, currentRole, matrizEfetiva, currentExtraAccess, souVoluntario));
+  const temTelaLiberada = rotasPermitidas.length > 0;
   /* função de gestão = papel líder/pastor/master ou alguma tela do painel
      liberada. Sem isso, a pessoa só vê o app de membro, sem botão de troca. */
   const podeGerenciar = currentRole !== "membro" || temTelaLiberada;
@@ -1674,6 +1676,11 @@ export default function ServiceExactApp({
       />
       </VocabularioProvider>
     );
+  }
+  /* membro com telas liberadas não abre o painel numa tela que não tem
+     (ex.: Início com os números da igreja): vai para a primeira liberada */
+  if (currentRole === "membro" && !rotasPermitidas.includes(route)) {
+    setRoute(rotasPermitidas[0]);
   }
 
   /* ajuda "?": o mesmo menu no canto (computador) e na barra do topo (celular) */

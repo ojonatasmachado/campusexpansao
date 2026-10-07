@@ -137,7 +137,11 @@ export function podeVerRota(
   if (rota === "membros" && extras.includes("pessoas")) return true;
   const code = CODIGO_PERMISSAO[rota];
   /* membro que serve num time usa a coluna "Voluntário" da matriz; sem time, só o app */
-  if (papel === "membro") return serveEmTime && !!code && matriz.voluntario?.[code] === true;
+  if (papel === "membro") {
+    /* o Início do painel não tem código no menu; para o voluntário vale a linha "painel" da matriz (S51, main) */
+    const c = rota === "painel" ? "painel" : code;
+    return serveEmTime && !!c && matriz.voluntario?.[c] === true;
+  }
   if (!code) return true;
   return matriz[papel]?.[code] ?? true;
 }
