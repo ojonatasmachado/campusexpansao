@@ -24,7 +24,7 @@ type AulaState = {
   conteudo: string;
   prova: QuizQ[] | null;
   minAcertos: number;
-  /* aula presencial/ao vivo: dia, hora e sala (0051). Com data, aparece na Agenda do aluno */
+  /* aula presencial/ao vivo: dia, hora e sala (0067). Com data, aparece na Agenda do aluno */
   data: string;
   hora: string;
   sala: string;

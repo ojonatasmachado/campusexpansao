@@ -1388,7 +1388,7 @@ function ProximaAulaBloco({ prox }: { prox: ProximaAula<CourseLesson> | null }) 
   );
 }
 
-/* dia, hora e sala da aula (0051), quando o curso informou */
+/* dia, hora e sala da aula (0067), quando o curso informou */
 function AulaQuando({ aula }: { aula: CourseLesson }) {
   if (!aula.lesson_date && !aula.lesson_time && !aula.location) return null;
   return (
