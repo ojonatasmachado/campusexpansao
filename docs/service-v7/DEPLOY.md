@@ -62,15 +62,10 @@ Perfil pelo avatar no topo. Se eles não acharem, volte com o resultado.
 
 Antes: no painel do Supabase, Database > Backups, confirme que há backup de hoje.
 
-1. Confira se a 0051 do `main` já rodou em produção (SQL Editor):
-   ```sql
-   select pg_get_functiondef('core.bootstrap_church_org(text,text,boolean)'::regprocedure) like '%service.conversas%';
-   ```
-   `true` = já rodou. `false` = rode antes o arquivo `supabase/migrations/0051_service_bootstrap_lider_telas_v6.sql`.
-2. Abra `docs/service-v7/producao.sql` (0052 a 0068 numa transação só), copie tudo, cole no
+1. Abra `docs/service-v7/producao.sql` (0051 a 0068 numa transação só; pode rodar mesmo que a 0051 já exista, e rodar de novo não estraga nada), copie tudo, cole no
    SQL Editor e rode. Se der erro, nada é gravado: copie a mensagem e pare.
    (Se você usa a CLI ligada à produção, `supabase db push` faz o mesmo.)
-3. Confira:
+2. Confira:
    ```sql
    select count(*) from information_schema.columns
    where table_schema = 'service' and (table_name, column_name) in

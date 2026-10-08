@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Junta as migrações do Service v7 (0052 em diante) num arquivo só, numa
+# Junta as migrações do Service v7 (0051 em diante; a 0051 é a do main, idempotente) num arquivo só, numa
 # transação, para colar no SQL Editor do Supabase de produção. Se qualquer
 # parte falhar, nada fica gravado.
 # Uso: scripts/ci/pacote-producao.sh [primeira] > docs/service-v7/producao.sql
 set -euo pipefail
 cd "$(dirname "$0")/../.."
-DESDE="${1:-0052}"
+DESDE="${1:-0051}"
 echo "-- Service v7 · migrações $DESDE em diante, numa transação só."
 echo "-- Gerado por scripts/ci/pacote-producao.sh a partir de supabase/migrations/."
 echo "-- Rode inteiro no SQL Editor do Supabase. Se der erro, nada é gravado:"
