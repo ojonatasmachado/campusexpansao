@@ -24,6 +24,10 @@ type AulaState = {
   conteudo: string;
   prova: QuizQ[] | null;
   minAcertos: number;
+  /* aula presencial/ao vivo: dia, hora e sala (0067). Com data, aparece na Agenda do aluno */
+  data: string;
+  hora: string;
+  sala: string;
 };
 
 type ModuloState = {
@@ -168,7 +172,7 @@ function MateriaisEditor({
     <div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
         {value.length === 0 && (
-          <div style={{ fontSize: 12, color: "var(--subtle)" }}>
+          <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>
             Nenhum material ainda. Adicione vídeos, links ou textos para apresentar o curso.
           </div>
         )}
@@ -359,6 +363,9 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
             conteudo: (l.conteudo ?? "") as string,
             prova: Array.isArray(l.prova) ? (l.prova as QuizQ[]) : null,
             minAcertos: (l.min_acertos ?? 0) as number,
+            data: (l.lesson_date ?? "") as string,
+            hora: (l.lesson_time ?? "") as string,
+            sala: (l.location ?? "") as string,
           })),
       }));
 
@@ -402,7 +409,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
       m[mi] = {
         ...m[mi],
         aulas: [...m[mi].aulas, {
-          id: uid(), nome: "", tipo: "video", dur: "", link: "", conteudo: "", prova: null, minAcertos: 0,
+          id: uid(), nome: "", tipo: "video", dur: "", link: "", conteudo: "", prova: null, minAcertos: 0, data: "", hora: "", sala: "",
         }],
       };
       return { ...p, modulos: m };
@@ -503,6 +510,10 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
             conteudo: aula.conteudo || null,
             prova: aula.prova,
             min_acertos: aula.minAcertos,
+            /* dia e sala só valem para aula com presença por QR */
+            ...(aula.tipo === "presencial" || aula.tipo === "ao_vivo"
+              ? { lesson_date: aula.data || null, lesson_time: aula.hora.trim() || null, location: aula.sala.trim() || null }
+              : {}),
           });
           if (aulaErr) throw aulaErr;
         }
@@ -683,6 +694,13 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
                         onChange={(e) => setAula(mi, ai, "dur", e.target.value)}
                       />
                     </div>
+                    {(aula.tipo === "presencial" || aula.tipo === "ao_vivo") && (
+                      <div className="ce-aula-row">
+                        <input className="input" type="date" aria-label="Dia da aula" value={aula.data} onChange={(e) => setAula(mi, ai, "data", e.target.value)} />
+                        <input className="input ce-aula-dur" type="time" aria-label="Hora da aula" value={aula.hora} onChange={(e) => setAula(mi, ai, "hora", e.target.value)} />
+                        <input className="input" placeholder={aula.tipo === "ao_vivo" ? "Onde (ex: link no grupo)" : "Sala (ex: Sala 2)"} value={aula.sala} onChange={(e) => setAula(mi, ai, "sala", e.target.value)} />
+                      </div>
+                    )}
                     {aula.tipo === "texto" && (
                       <div className="ce-aula-conteudo">
                         <div className="ce-aula-conteudo-lbl">Conteúdo da aula (o aluno lê no app)</div>

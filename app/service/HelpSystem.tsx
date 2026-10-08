@@ -9,6 +9,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./lib/icons";
+import { useTermos } from "./lib/vocabulario-context";
 
 /* ── HELP DOT · "?" ao lado de título, KPI ou botão ───────────────── */
 
@@ -102,29 +103,30 @@ export function HelpDot({ text, label }: { text: string; label?: string }) {
 export type CoachStep = { route?: string; sel: string; t: string; s: string };
 
 export const TOUR_DESKTOP: CoachStep[] = [
-  { route: "painel", sel: '[data-tour="painel"]', t: "Seu painel", s: "O resumo do domingo: próximos cultos, quem falta confirmar e o que precisa de atenção. A configuração inicial também aparece aqui até você terminar." },
+  { route: "painel", sel: '[data-tour="painel"]', t: "Seu painel", s: "O resumo do domingo: próximos {cultos}, quem falta confirmar e o que precisa de atenção. A configuração inicial também aparece aqui até você terminar." },
   { route: "membros", sel: '[data-tour="membros"]', t: "Membros", s: "Toda a sua congregação. Cadastre quem faz parte, mesmo quem ainda não serve em nenhum time." },
-  { route: "pessoas", sel: '[data-tour="pessoas"]', t: "Voluntários", s: "Quem já serve ativamente em algum time: funções, disponibilidade e engajamento." },
+  { route: "pessoas", sel: '[data-tour="pessoas"]', t: "{Voluntarios}", s: "Quem já serve ativamente em algum time: funções, disponibilidade e engajamento." },
   { route: "times", sel: '[data-tour="times"]', t: "Times", s: "Louvor, Recepção, Kids... cada time tem um líder e suas funções." },
   { route: "visitantes", sel: '[data-tour="visitantes"]', t: "Visitantes", s: "Quem visitou pela primeira vez. Acompanhe o contato até virar membro." },
   { route: "criancas", sel: '[data-tour="criancas"]', t: "Crianças", s: "Cadastro, turmas e check-in do Kids, separado do restante da congregação." },
   { route: "batismos", sel: '[data-tour="batismos"]', t: "Batismos", s: "Turmas de batismo: quem vai ser batizado, quando e onde." },
-  { route: "cursos", sel: '[data-tour="cursos"]', t: "Cursos e Trilhas", s: "Formações da igreja, da decisão à liderança. Cada conclusão entra na caminhada da pessoa." },
-  { route: "escalas", sel: '[data-tour="escalas"]', t: "Escalas", s: "Monte quem serve em cada culto. As pessoas confirmam ou recusam direto no celular." },
+  { route: "cursos", sel: '[data-tour="cursos"]', t: "Cursos e Trilhas", s: "Formações da igreja, da decisão à liderança. Cada conclusão entra na {caminhada} da pessoa." },
+  { route: "escalas", sel: '[data-tour="escalas"]', t: "Escalas", s: "Monte quem serve em cada {culto}. As pessoas confirmam ou recusam direto no celular." },
   { route: "reunioes", sel: '[data-tour="reunioes"]', t: "Reuniões", s: "Pauta, presença e decisões dos encontros de liderança." },
   { route: "ensaios", sel: '[data-tour="ensaios"]', t: "Ensaios", s: "Ensaios de louvor, teatro, dança... com participantes e repertório ou materiais." },
   { route: "quadros", sel: '[data-tour="quadros"]', t: "Quadros", s: "Um quadro de tarefas por time: o que fazer, quem é responsável e o prazo." },
-  { route: "cultos", sel: '[data-tour="cultos"]', t: "Cultos e Agenda", s: "Seus cultos e eventos ficam aqui. Cada um pode virar uma escala." },
+  { route: "cultos", sel: '[data-tour="cultos"]', t: "{Cultos} e Agenda", s: "Seus {cultos} e eventos ficam aqui. Cada um pode virar uma escala." },
   { route: "comunicacao", sel: '[data-tour="comunicacao"]', t: "Comunicação", s: "Mande avisos pro time todo ou só pra um time específico." },
   { route: "conversas", sel: '[data-tour="conversas"]', t: "Conversas", s: "Um chat simples com seu time e sua liderança." },
   { route: "relatorios", sel: '[data-tour="relatorios"]', t: "Relatórios", s: "A saúde da igreja num lugar: crescimento, cobertura de escala, bem-estar de quem serve." },
   { route: "config", sel: '[data-tour="config"]', t: "Configurações", s: "Dados da igreja, permissões e convites pra outros líderes ficam aqui." },
   { route: "identidade", sel: '[data-tour="identidade"]', t: "Identidade e propósito", s: "Visão, valores e o chamado da igreja." },
-  { route: "historia", sel: '[data-tour="historia"]', t: "Nossa história", s: "Os marcos da caminhada da igreja, em linha do tempo." },
+  { route: "historia", sel: '[data-tour="historia"]', t: "Nossa história", s: "Os marcos da {caminhada} da igreja, em linha do tempo." },
   { sel: '[data-tour="ajuda-fab"]', t: "Sempre por perto", s: 'Ficou com dúvida depois? Clique aqui a qualquer momento pra rever este tour. E em qualquer tela, o "?" ao lado de títulos, números e botões explica o que aquilo faz.' },
 ];
 
 export function Coachmark({ steps, go, onDone, startAt = 0, onStepChange }: { steps: CoachStep[]; go?: (route: string) => void; onDone: () => void; startAt?: number; onStepChange?: (i: number) => void }) {
+  const { comTermos: ct } = useTermos();
   const [i, setI] = useState(startAt);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const step = steps[i];
@@ -182,8 +184,8 @@ export function Coachmark({ steps, go, onDone, startAt = 0, onStepChange }: { st
       <div className="coach-spot" style={spotStyle} />
       <div className="coach-pop" style={{ top: popTop, left: popLeft }}>
         <div className="coach-pop-eyebrow">Passo {i + 1} de {steps.length}</div>
-        <div className="coach-pop-t">{step.t}</div>
-        <div className="coach-pop-s">{step.s}</div>
+        <div className="coach-pop-t">{ct(step.t)}</div>
+        <div className="coach-pop-s">{ct(step.s)}</div>
         <div className="coach-pop-actions">
           <button className="coach-skip" type="button" onClick={onDone}>Pular tour</button>
           <div style={{ flex: 1 }} />
@@ -197,7 +199,9 @@ export function Coachmark({ steps, go, onDone, startAt = 0, onStepChange }: { st
 
 /* ── HELP FAB · botão flutuante de ajuda, sempre por perto ────────── */
 
-export function HelpFab({ onTour, onSetup }: { onTour: () => void; onSetup: () => void }) {
+/* lugar: "flutuante" (computador, canto de baixo) ou "barra" (celular, na barra
+   do topo, para não cobrir o conteúdo; v7 2.11). O CSS mostra um ou outro. */
+export function HelpFab({ onTour, onSetup, lugar = "flutuante" }: { onTour: () => void; onSetup: () => void; lugar?: "flutuante" | "barra" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -208,14 +212,14 @@ export function HelpFab({ onTour, onSetup }: { onTour: () => void; onSetup: () =
   }, []);
 
   return (
-    <div className="help-fab-wrap" ref={ref}>
+    <div className={`help-fab-wrap ${lugar === "barra" ? "na-barra" : "flutuante"}`} ref={ref}>
       {open ? (
         <div className="help-fab-menu">
           <button type="button" onClick={() => { setOpen(false); onTour(); }}><Icon name="pendente" size={14} className="ic" /> Rever o tour guiado</button>
           <button type="button" onClick={() => { setOpen(false); onSetup(); }}><Icon name="identidade" size={14} className="ic" /> Ver o que falta configurar</button>
         </div>
       ) : null}
-      <button className="help-fab" type="button" data-tour="ajuda-fab" title="Ajuda" onClick={() => setOpen((o) => !o)}>?</button>
+      <button className="help-fab" type="button" data-tour={lugar === "barra" ? undefined : "ajuda-fab"} title="Ajuda" aria-label="Ajuda" aria-expanded={open} onClick={() => setOpen((o) => !o)}>?</button>
     </div>
   );
 }
@@ -230,15 +234,16 @@ const SETUP_ITENS: SetupItem[] = [
   /* lê os dados de verdade: o item fica feito quando a igreja já tem aquilo */
   { id: "igreja", ic: "identidade", t: "Dados da igreja", s: "Nome, cidade e endereço aparecem no login e nas publicações.", done: (_b, a) => a.igreja.split("|").every(Boolean), route: "config" },
   { id: "time", ic: "times", t: "Primeiro time", s: "Louvor, Recepção, Kids... cada time tem líder e funções.", done: (_b, a) => a.times > 0, route: "times" },
-  { id: "culto", ic: "cultos", t: "Primeiro culto", s: "O culto vira uma linha na agenda e depois uma escala.", done: (_b, a) => a.cultos > 0, route: "cultos" },
+  { id: "culto", ic: "cultos", t: "Primeiro {culto}", s: "O {culto} vira uma linha na agenda e depois uma escala.", done: (_b, a) => a.cultos > 0, route: "cultos" },
   { id: "membro", ic: "membros", t: "Primeiro membro", s: "A congregação inteira entra aqui, sirva ou não em um time.", done: (_b, a) => a.membros > 1, route: "membros" },
-  { id: "escala", ic: "escalas", t: "Primeira escala", s: "Coloque alguém pra servir num culto e veja a confirmação chegar.", done: (_b, a) => a.escalados > 0, route: "escalas" },
+  { id: "escala", ic: "escalas", t: "Primeira escala", s: "Coloque alguém pra servir num {culto} e veja a confirmação chegar.", done: (_b, a) => a.escalados > 0, route: "escalas" },
 ];
 
 const BASELINE_KEY = "cex_setup_baseline";
 const HIDE_KEY = "cex_setup_hide";
 
 export function SetupChecklist({ counts, setRoute }: { counts: SetupCounts; setRoute: (route: string) => void }) {
+  const { comTermos: ct } = useTermos();
   /* hidden/baseline nascem com valor neutro (igual no servidor e no cliente,
      antes da hidratação) e só recebem o que está salvo no localStorage
      depois, num useEffect — ler localStorage direto no useState causava
@@ -299,7 +304,7 @@ export function SetupChecklist({ counts, setRoute }: { counts: SetupCounts; setR
           return (
             <button key={it.id} type="button" className={`setup-item${ok ? " ok" : ""}`} onClick={() => !ok && setRoute(it.route)}>
               <span className="setup-item-check">{ok ? <Icon name="ok" size={14} /> : <Icon name={it.ic} size={14} />}</span>
-              <span className="setup-item-main"><b>{it.t}</b><small>{it.s}</small></span>
+              <span className="setup-item-main"><b>{ct(it.t)}</b><small>{ct(it.s)}</small></span>
               {!ok ? <span className="setup-item-go">Fazer →</span> : null}
             </button>
           );

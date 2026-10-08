@@ -28,6 +28,11 @@ type ChurchRow = {
   slug: string | null;
   settings: Record<string, unknown> | null;
   created_at: string;
+  /* 0055: exceções ao padrão dos módulos; ausentes antes da migração */
+  modules_on?: string[] | null;
+  modules_off?: string[] | null;
+  /* 0056: vocabulário da igreja; ausente antes da migração */
+  vocabulario?: Record<string, unknown> | null;
 };
 
 type ChurchView = {
@@ -48,6 +53,9 @@ type ChurchView = {
   logoUrl: string | null;
   slug: string | null;
   settings: Record<string, unknown>;
+  modulosOn: string[];
+  modulosOff: string[];
+  vocabulario: Record<string, unknown>;
 };
 
 type ChurchIdentityRow = {
@@ -189,6 +197,7 @@ type MemberView = {
   city: string | null;
   state: string | null;
   contactComplete: boolean;
+  firstAccessDone: boolean;
 };
 
 type MinistryRow = {
@@ -256,6 +265,10 @@ type EventRow = {
   checkin_token: string | null;
   checkin_active: boolean | null;
   created_at: string;
+  /* 0058 (v7 4.5); ausentes antes da migração */
+  pede?: string | null;
+  valor?: string | null;
+  instrucoes?: string | null;
 };
 
 type ScheduleItemRow = {
@@ -302,6 +315,9 @@ type EventView = {
   checkinToken: string | null;
   checkinActive: boolean;
   createdAt: string;
+  pede: "aviso" | "presenca" | "inscricao";
+  valor: string;
+  instrucoes: string;
 };
 
 type RosterAssignmentView = {
@@ -405,6 +421,8 @@ type AnnouncementView = {
   kind?: string | null;
 };
 type AnnouncementResponseView = { announcement_id: string; person_id: string; response: "vou" | "nao" };
+type EventRsvpView = { event_id: string; person_id: string; kind: "presenca" | "inscricao" };
+type CareMarkView = { person_id: string; kind: "contato" | "justificada"; via: string | null; until: string | null; created_at: string };
 
 type WallPostView = {
   id: string;
@@ -501,6 +519,10 @@ type LessonView = {
   min_acertos: number;
   checkin_token: string | null;
   checkin_active: boolean;
+  /* dia, hora e sala da aula presencial/ao vivo (0067) */
+  lesson_date?: string | null;
+  lesson_time?: string | null;
+  location?: string | null;
 };
 
 type LessonAttendanceView = {
@@ -545,6 +567,7 @@ type ChatView = {
 type ChatMemberView = {
   chat_id: string;
   member_id: string;
+  last_read_at?: string | null;
 };
 
 type MessageView = {
@@ -704,6 +727,8 @@ type ExtraServiceData = {
   announcements: AnnouncementView[];
   announcementReads: AnnouncementReadView[];
   announcementResponses: AnnouncementResponseView[];
+  eventRsvps: EventRsvpView[];
+  careMarks: CareMarkView[];
   eventAttendance: EventAttendanceView[];
   wallPosts: WallPostView[];
   decisions: DecisionView[];
@@ -751,6 +776,8 @@ const emptyExtraServiceData: ExtraServiceData = {
   announcements: [],
   announcementReads: [],
   announcementResponses: [],
+  eventRsvps: [],
+  careMarks: [],
   eventAttendance: [],
   wallPosts: [],
   decisions: [],
@@ -823,6 +850,9 @@ function toChurchView(row: ChurchRow): ChurchView {
     logoUrl: row.logo_url,
     slug: row.slug,
     settings: row.settings ?? {},
+    modulosOn: row.modules_on ?? [],
+    modulosOff: row.modules_off ?? [],
+    vocabulario: row.vocabulario ?? {},
   };
 }
 
@@ -871,6 +901,8 @@ function toMemberView(row: MemberRow): MemberView {
     state: row.state,
     /* obrigatórios do membro: sem eles o app abre no primeiro acesso */
     contactComplete: !!(row.email && row.phone && row.birth && (row.postal_code ?? "").replace(/\D/g, "").length === 8),
+    /* primeiro acesso em 2 passos (v7 4.10): feito com nome e sobrenome e telefone */
+    firstAccessDone: !!(row.phone && (row.name ?? "").trim().split(/\s+/).length >= 2),
   };
 }
 
@@ -934,6 +966,9 @@ function toEventViews(
     checkinToken: event.checkin_token,
     checkinActive: event.checkin_active ?? true,
     createdAt: event.created_at,
+    pede: event.pede === "presenca" || event.pede === "inscricao" ? event.pede : "aviso",
+    valor: event.valor ?? "",
+    instrucoes: event.instrucoes ?? "",
   }));
 }
 
@@ -965,7 +1000,8 @@ async function getServiceDashboardData(): Promise<{
   const { data: churchesData, error: churchesError } = await supabase
     .schema("service")
     .from("churches")
-    .select("id,organization_id,name,city,is_headquarters,doc,founded_year,address,postal_code,neighborhood,state,email,phone,logo_url,slug,settings,created_at")
+    /* "*": lê modules_on/modules_off (0055) e vocabulario (0056) sem quebrar antes de a migração chegar em produção */
+    .select("*")
     .order("is_headquarters", { ascending: false })
     .order("created_at");
 
@@ -1067,7 +1103,8 @@ async function getServiceDashboardData(): Promise<{
   const { data: eventsData, error: eventsError } = await supabase
     .schema("service")
     .from("events")
-    .select("id,organization_id,church_id,name,kind,weekday,event_date,time,slot,location,room_id,ministries,tags,checkin_token,checkin_active,created_at")
+    /* "*": lê pede/valor/instrucoes (0058) sem quebrar antes de a migração chegar em produção */
+    .select("*")
     .order("event_date", { ascending: true, nullsFirst: false })
     .order("time");
 
@@ -1185,12 +1222,14 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("courses").select("*").order("created_at", { ascending: false }),
     supabase.schema("service").from("enrollments").select("id,course_id,member_id,done_count,status").order("created_at", { ascending: false }),
     supabase.schema("service").from("course_modules").select("id,course_id,name,sort_order").order("sort_order", { ascending: true }),
-    supabase.schema("service").from("course_lessons").select("id,module_id,name,duration,kind,sort_order,link,conteudo,prova,min_acertos,checkin_token,checkin_active").order("sort_order", { ascending: true }),
+    /* "*": dia, hora e sala da aula (0067) entram quando a migração existir */
+    supabase.schema("service").from("course_lessons").select("*").order("sort_order", { ascending: true }),
     supabase.schema("service").from("lesson_attendance").select("id,course_id,lesson_id,member_id,checked_in_at,via"),
     supabase.schema("service").from("boards").select("id,name,scope,ministry_id,description,columns").order("created_at", { ascending: false }),
     supabase.schema("service").from("cards").select("id,board_id,column_id,title,description,assignees,due,priority,source_type,source_id,moved_days_ago").order("created_at", { ascending: false }),
     supabase.schema("service").from("chats").select("id,kind,ministry_id,name").order("created_at", { ascending: false }),
-    supabase.schema("service").from("chat_members").select("chat_id,member_id"),
+    /* "*": lê last_read_at (0060) sem quebrar antes de a migração chegar em produção */
+    supabase.schema("service").from("chat_members").select("*"),
     supabase.schema("service").from("messages").select("id,chat_id,sender_id,body,created_at").order("created_at", { ascending: true }),
     supabase.schema("service").from("visitors").select("id,name,phone,stage,visited_on,responsible_id,due,due_status,reply_status,origin,member_id,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("visitor_notes").select("id,visitor_id,happened_on,body,author,is_milestone,created_at").order("created_at", { ascending: false }),
@@ -1227,6 +1266,12 @@ async function getServiceDashboardData(): Promise<{
      propósito: antes da migração a tabela não existe e a tela segue sem elas. */
   const { data: responsesData } = await supabase.schema("service").from("announcement_responses").select("announcement_id,person_id,response");
   const announcementResponses = (responsesData ?? []) as AnnouncementResponseView[];
+  /* lista de cuidado (0061): só a liderança lê; fora do Promise.all */
+  const { data: careData } = await supabase.schema("service").from("care_marks").select("person_id,kind,via,until,created_at");
+  const careMarks = (careData ?? []) as CareMarkView[];
+  /* presença e inscrição em evento (0058), também fora do Promise.all */
+  const { data: rsvpsData } = await supabase.schema("service").from("event_rsvps").select("event_id,person_id,kind");
+  const eventRsvps = (rsvpsData ?? []) as EventRsvpView[];
 
   const extraError = [
     decisionsResult.error,
@@ -1295,6 +1340,8 @@ async function getServiceDashboardData(): Promise<{
       announcements: ((announcementsResult.data ?? []) as AnnouncementView[]),
       announcementReads: ((announcementReadsResult.data ?? []) as AnnouncementReadView[]),
       announcementResponses,
+      eventRsvps,
+      careMarks,
       eventAttendance: ((eventAttendanceResult.data ?? []) as EventAttendanceView[]),
       wallPosts: ((wallPostsResult.data ?? []) as WallPostView[]),
       decisions: ((decisionsResult.data ?? []) as DecisionView[]),
@@ -1472,6 +1519,10 @@ export default async function ServiceHomePage() {
   /* a marca é da organização: mora na igreja matriz (ver salvarPersonalizacao) */
   const brandCfg = ((churches.find((c) => c.matriz) ?? churches[0])?.settings as { brandCfg?: BrandCfg } | undefined)?.brandCfg;
 
+  /* tamanho do texto que a pessoa escolheu (0057); sem a migração, nulo */
+  const { data: textSizeData } = await supabase.schema("service").rpc("my_text_size");
+  const textSizePerfil = typeof textSizeData === "number" ? textSizeData : null;
+
   const jar = await cookies();
   const themeMode = resolveMode(jar.get(THEME_COOKIE)?.value, brandCfg);
   /* por onde entra quem tem função de gestão: a escolha salva no aparelho
@@ -1498,6 +1549,8 @@ export default async function ServiceHomePage() {
       announcements={extra.announcements}
       announcementReads={extra.announcementReads}
       announcementResponses={extra.announcementResponses}
+      eventRsvps={extra.eventRsvps}
+      careMarks={extra.careMarks}
       eventAttendance={extra.eventAttendance}
       wallPosts={extra.wallPosts}
       decisions={extra.decisions}
@@ -1541,6 +1594,7 @@ export default async function ServiceHomePage() {
       currentRole={currentRole}
       permissionsMatrix={permissionsMatrix}
       currentPersonId={currentPersonId}
+      textSizePerfil={textSizePerfil}
       enqueteElegivel={enqueteElegivel}
       pesquisaElegivel={pesquisaElegivel}
       initialTheme={themeMode}

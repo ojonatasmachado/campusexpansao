@@ -1,0 +1,72 @@
+# Service v7 5.4 · a cada versão (push e pull request que tocam o Service):
+# typecheck, build, a parte estática da lei 12, o contraste dos temas e as
+# migrações aplicadas do zero num Postgres limpo. O que precisa do app
+# rodando com dados (alvos, contraste na tela, rolagem lateral, console,
+# botão sem ação) continua na captura (tools/captura-service, no Mac).
+name: Service
+
+on:
+  push:
+    paths:
+      - "app/service/**"
+      - "app/api/service/**"
+      - "app/lib/**"
+      - "evolucoes/service_app/**"
+      - "supabase/migrations/**"
+      - "scripts/check-service-lei12.ts"
+      - "scripts/lei12-base.json"
+      - "scripts/ci/**"
+      - "docs/service-v7/producao.sql"
+      - ".github/workflows/service.yml"
+  pull_request:
+    paths:
+      - "app/service/**"
+      - "app/api/service/**"
+      - "app/lib/**"
+      - "evolucoes/service_app/**"
+      - "supabase/migrations/**"
+      - "scripts/**"
+
+jobs:
+  service:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # valores de mentira, só para compilar: nada aqui fala com um Supabase
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci
+      SUPABASE_URL: http://127.0.0.1:54321
+      SUPABASE_ANON_KEY: ci
+      SUPABASE_SERVICE_ROLE_KEY: ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Typecheck
+        run: npx tsc --noEmit -p .
+      - name: Lei 12 (parte estática)
+        run: npx tsx scripts/check-service-lei12.ts
+      - name: Contraste dos temas
+        run: npx tsx scripts/check-theme-contrast.ts
+      - name: Migrações num Postgres limpo
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: scripts/ci/aplicar-migracoes.sh
+      - name: Pacote de produção em dia com as migrações
+        run: scripts/ci/pacote-producao.sh | diff -q - docs/service-v7/producao.sql || { echo "Rode scripts/ci/pacote-producao.sh > docs/service-v7/producao.sql"; exit 1; }
+      - name: Build
+        run: npm run build

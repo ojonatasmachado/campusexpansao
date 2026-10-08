@@ -7,10 +7,26 @@
    (app/service/lib/theme.ts): nada de hex fixo aqui.
    ════════════════════════════════════════════════════════════════ */
 
-/* ── 0. escala de tipo ────────────────────────────────────────────
-   Texto de leitura nunca abaixo de 12px. Etiqueta mono em caixa-alta
-   nunca abaixo de 10.5px no painel e 11px no app do membro. */
-:root{--fs-cap:11px;--fs-xs:12px;--fs-sm:13px;--fs-base:14px;--fs-md:15px;--fs-lg:17px;--fs-xl:20px;--fs-2xl:26px;--fs-3xl:28px}
+/* ── 0. escala de tipo (lei 8, Service v7) ─────────────────────────
+   Tokens únicos. Nenhum font-size solto no Service: só estes.
+   App do membro: 13, 15, 17, 20, 28 (mínimo 13). Painel: 12, 13, 14, 16,
+   20, 32 (mínimo 12). Sem meio pixel.
+   --fs-ui-*: componentes que aparecem nos dois (botão, campo, chip,
+   vazio): valem o painel e, dentro do app (.mob-bg), viram a escala do app.
+   A escala do texto da pessoa (--m-scale) multiplica os tokens do app pelo
+   zoom da coluna do conteúdo (service-v6.css); multiplicar aqui também
+   daria escala dupla. */
+:root{
+  --fs-app-13:13px;--fs-app-15:15px;--fs-app-17:17px;--fs-app-20:20px;--fs-app-28:28px;
+  --fs-pn-12:12px;--fs-pn-13:13px;--fs-pn-14:14px;--fs-pn-16:16px;--fs-pn-20:20px;--fs-pn-32:32px;
+  --fs-ui-sm:var(--fs-pn-12);--fs-ui-13:var(--fs-pn-13);--fs-ui-md:var(--fs-pn-14);
+  --fs-ui-lg:var(--fs-pn-16);--fs-ui-xl:var(--fs-pn-20);--fs-ui-2xl:var(--fs-pn-32);
+}
+.mob-bg{
+  --fs-ui-sm:var(--fs-app-13);--fs-ui-13:var(--fs-app-13);--fs-ui-md:var(--fs-app-15);
+  --fs-ui-lg:var(--fs-app-17);--fs-ui-xl:var(--fs-app-20);--fs-ui-2xl:var(--fs-app-28);
+  font-size:var(--fs-app-17);
+}
 /* áreas do sistema no celular (seção 6). Valem 0 no computador. */
 :root{--safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px)}
 
@@ -22,18 +38,18 @@
 .brand-row{min-width:0}
 .brand-row .brand-img{display:block;flex-shrink:0}
 .brand-service{white-space:nowrap;flex-shrink:0}
-.brand-name{font-size:var(--fs-lg);font-weight:700;letter-spacing:-0.03em;line-height:1.15;color:var(--white);max-width:150px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:balance}
-.brand-lg .brand-name{font-size:24px;max-width:240px}
+.brand-name{font-size:var(--fs-ui-lg);font-weight:700;letter-spacing:-0.03em;line-height:1.15;color:var(--white);max-width:150px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:balance}
+.brand-lg .brand-name{font-size:var(--fs-ui-xl);max-width:240px}
 .brand-sm{gap:9px}
-.brand-sm .sb-logo{font-size:20px}
+.brand-sm .sb-logo{font-size:var(--fs-ui-xl)}
 .brand-sm .brand-img{max-height:36px;max-width:140px}
 .brand-sm .brand-div{height:18px}
-.brand-sm .brand-service{font-size:var(--fs-lg)}
-.brand-sm .brand-name{font-size:var(--fs-md);max-width:170px}
+.brand-sm .brand-service{font-size:var(--fs-ui-lg)}
+.brand-sm .brand-name{font-size:var(--fs-ui-md);max-width:170px}
 .brand-center{justify-content:center}
 /* barra lateral tem 212px úteis: logo largo não pode empurrar o Service */
 .sb-top .brand-img{max-width:118px;max-height:44px}
-.sb-top .brand-name{max-width:118px;font-size:var(--fs-md)}
+.sb-top .brand-name{max-width:118px;font-size:var(--fs-pn-14)}
 
 /* ── 2. telas de entrada (login, convite, senha nova, primeiro acesso) ──
    Casca única AuthShell.tsx em cima das classes .login-* do protótipo
@@ -42,55 +58,55 @@
 .login-x{display:none}
 .login-card{width:440px;max-width:100%;padding:40px 40px 34px;box-shadow:0 30px 80px -30px rgba(0,0,0,0.45)}
 .login-logo{margin-bottom:30px;font-size:inherit;letter-spacing:normal}
-.login-eyebrow{font-size:var(--fs-cap);letter-spacing:0.16em;margin-bottom:10px;color:var(--olive-soft,var(--olive))}
-.login-title{font-size:var(--fs-3xl);line-height:1.12;margin-bottom:8px;text-wrap:balance}
-.login-sub{font-size:14.5px;line-height:1.55;margin-bottom:24px;text-wrap:pretty}
+.login-eyebrow{font-size:var(--fs-pn-12);letter-spacing:0;margin-bottom:10px;color:var(--olive-soft,var(--olive))}
+.login-title{font-size:var(--fs-pn-32);line-height:1.12;margin-bottom:8px;text-wrap:balance}
+.login-sub{font-size:var(--fs-pn-14);line-height:1.55;margin-bottom:24px;text-wrap:pretty}
 .login-form{display:grid;gap:16px}
 .login-field{display:grid;gap:7px;min-width:0}
-.login-label{font-size:var(--fs-sm);font-weight:600;color:var(--light);letter-spacing:-0.005em}
-.login-help{font-size:12.5px;line-height:1.45;color:var(--muted)}
-.login-form .login-input,.login-field .input{margin:0;font-size:16px;padding:13px 14px;min-height:50px;border-radius:var(--r-sm)}
+.login-label{font-size:var(--fs-pn-13);font-weight:600;color:var(--light);letter-spacing:-0.005em}
+.login-help{font-size:var(--fs-pn-13);line-height:1.45;color:var(--muted)}
+.login-form .login-input,.login-field .input{margin:0;font-size:var(--fs-pn-16);padding:13px 14px;min-height:50px;border-radius:var(--r-sm)}
 .login-input::placeholder,.login-field .input::placeholder{color:var(--subtle)}
 .login-pass{position:relative}
 .login-pass .login-input{padding-right:92px}
-.login-pass-tog{position:absolute;top:50%;right:6px;transform:translateY(-50%);height:38px;padding:0 12px;border-radius:var(--r-sm);font-size:var(--fs-sm);font-weight:600;color:var(--muted);text-align:center}
+.login-pass-tog{position:absolute;top:50%;right:6px;transform:translateY(-50%);height:38px;padding:0 12px;border-radius:var(--r-sm);font-size:var(--fs-pn-13);font-weight:600;color:var(--muted);text-align:center}
 .login-pass-tog:hover{color:var(--white);background:var(--graphite)}
-.login-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;font-size:15.5px;text-align:center}
+.login-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;font-size:var(--fs-pn-16);text-align:center}
 .login-btn:disabled{opacity:.6;cursor:default}
 a.login-btn{text-decoration:none}
-.login-link{display:block;width:100%;padding:10px 8px;border-radius:var(--r-sm);font-size:var(--fs-base);font-weight:500;color:var(--muted);text-align:center;text-decoration:none}
+.login-link{display:block;width:100%;padding:10px 8px;border-radius:var(--r-sm);font-size:var(--fs-pn-14);font-weight:500;color:var(--muted);text-align:center;text-decoration:none}
 .login-link:hover{color:var(--white)}
 .login-link:disabled{opacity:.6;cursor:default}
 .login-link b{font-weight:600;color:var(--olive-soft,var(--olive))}
-.login-alert{padding:12px 14px;border-radius:var(--r-md);border:0.5px solid var(--danger-line);background:var(--danger-dim);font-size:13.5px;line-height:1.5;color:var(--white);text-wrap:pretty}
+.login-alert{padding:12px 14px;border-radius:var(--r-md);border:0.5px solid var(--danger-line);background:var(--danger-dim);font-size:var(--fs-pn-14);line-height:1.5;color:var(--white);text-wrap:pretty}
 .login-alert.ok{border-color:var(--olive-line);background:var(--olive-dim)}
 .login-alert-actions{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px}
-.login-alert-actions button{padding:4px 0;font-size:var(--fs-sm);font-weight:600;color:var(--olive-soft,var(--olive))}
+.login-alert-actions button{padding:4px 0;font-size:var(--fs-pn-13);font-weight:600;color:var(--olive-soft,var(--olive))}
 .login-sep{height:0.5px;background:var(--border-2);margin:26px 0 18px}
-.login-note{font-size:var(--fs-sm);line-height:1.55;color:var(--muted);text-align:center;text-wrap:pretty}
+.login-note{font-size:var(--fs-pn-13);line-height:1.55;color:var(--muted);text-align:center;text-wrap:pretty}
 .login-note a,.login-note button{font-size:inherit;font-weight:600;color:var(--white);text-align:center;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--border-3)}
 .login-choices{display:grid;gap:10px}
 .login-choice{display:flex;align-items:flex-start;gap:13px;width:100%;padding:15px 16px;border-radius:var(--r-md);background:var(--ink);border:0.5px solid var(--border-2);color:inherit;text-align:left;text-decoration:none;transition:border-color .14s}
 a.login-choice:hover,button.login-choice:hover{border-color:var(--olive-line)}
 .login-choice-ic{width:34px;height:34px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--olive-dim);color:var(--olive);border:0.5px solid var(--olive-line)}
-.login-choice b{display:block;font-size:14.5px;font-weight:600;letter-spacing:-0.01em;color:var(--white)}
-.login-choice small{display:block;margin-top:3px;font-size:var(--fs-sm);line-height:1.5;color:var(--muted)}
-.login-choice-go{margin-left:auto;align-self:center;flex-shrink:0;font-size:var(--fs-sm);font-weight:600;color:var(--olive-soft,var(--olive));white-space:nowrap}
+.login-choice b{display:block;font-size:var(--fs-pn-14);font-weight:600;letter-spacing:-0.01em;color:var(--white)}
+.login-choice small{display:block;margin-top:3px;font-size:var(--fs-pn-13);line-height:1.5;color:var(--muted)}
+.login-choice-go{margin-left:auto;align-self:center;flex-shrink:0;font-size:var(--fs-pn-13);font-weight:600;color:var(--olive-soft,var(--olive));white-space:nowrap}
 .login-invite{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 16px;border-radius:var(--r-md);background:var(--ink);border:0.5px solid var(--border-2)}
-.login-invite b{font-size:var(--fs-md);font-weight:600;color:var(--white)}
+.login-invite b{font-size:var(--fs-pn-14);font-weight:600;color:var(--white)}
 .login-invite-actions{display:flex;gap:8px}
 /* formulário antigo dentro da casca nova (ex.: BootstrapChurchForm com
    .field/.input/.btn-lg): mesmo ritmo, sem margem somada ao gap */
 .login-card .field{display:grid;gap:7px;margin:0}
-.login-card .field-label{margin:0;font-size:var(--fs-sm)}
-.login-card .input{font-size:16px;padding:13px 14px;min-height:50px}
+.login-card .field-label{margin:0;font-size:var(--fs-pn-13)}
+.login-card .input{font-size:var(--fs-pn-16);padding:13px 14px;min-height:50px}
 .login-card .btn-lg{width:100%;min-height:52px}
-.login-card .field-error{padding:12px 14px;margin:0;border-radius:var(--r-md);border:0.5px solid var(--danger-line);background:var(--danger-dim);font-size:13.5px;line-height:1.5;color:var(--white)}
+.login-card .field-error{padding:12px 14px;margin:0;border-radius:var(--r-md);border:0.5px solid var(--danger-line);background:var(--danger-dim);font-size:var(--fs-pn-14);line-height:1.5;color:var(--white)}
 @media (max-width:520px){
   .login{padding:0;align-items:stretch;background:var(--graphite)}
   .login-grid{display:none}
   .login-card{width:100%;border:0;border-radius:0;box-shadow:none;background:transparent;padding:calc(34px + var(--safe-top)) calc(22px + var(--safe-right)) calc(28px + var(--safe-bottom)) calc(22px + var(--safe-left))}
-  .login-title{font-size:var(--fs-2xl)}
+  .login-title{font-size:var(--fs-pn-20)}
 }
 
 /* ── 3. app do membro de verdade (MobileOverlay mode="self") ──────
@@ -114,39 +130,39 @@ a.login-choice:hover,button.login-choice:hover{border-color:var(--olive-line)}
 /* cabeçalho: marca da igreja + avatar (abre o Perfil) + saudação */
 .m-head-top{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;margin-bottom:14px}
 .m-head-av{flex-shrink:0;padding:0;border-radius:50%;line-height:0}
-.m-head-av .av{width:36px;height:36px;font-size:12.5px}
-.m-h1{font-size:24px;line-height:1.15}
+.m-head-av .av{width:36px;height:36px;font-size:var(--fs-app-13)}
+.m-h1{font-size:var(--fs-app-20);line-height:1.15}
 /* barra de abas: rótulo legível e alvo de toque de 58px */
 .m-tab{background:var(--graphite)}
-.m-tab button{position:relative;min-height:58px;padding:9px 2px 11px;gap:5px;font-size:var(--fs-cap);font-weight:500;letter-spacing:0;text-align:center}
+.m-tab button{position:relative;min-height:58px;padding:9px 2px 11px;gap:5px;font-size:var(--fs-app-13);font-weight:500;letter-spacing:0;text-align:center}
 .m-tab button .ic{line-height:0}
 .m-tab button.on{font-weight:600}
 .m-tab button.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;border-radius:0 0 2px 2px;background:var(--accent-fill)}
 /* legibilidade do app do membro */
-.m-app{font-size:12px}
-.m-section-t{font-size:var(--fs-cap);color:var(--muted)}
-.m-when{font-size:var(--fs-cap)}
-.m-quick-b{min-height:50px;font-size:13.5px}
-.m-jp small{font-size:12px}
-.ob-eyebrow{font-size:var(--fs-cap)}
+.m-app{font-size:var(--fs-app-13)}
+.m-section-t{font-size:var(--fs-app-15);color:var(--muted)}
+.m-when{font-size:var(--fs-app-13)}
+.m-quick-b{min-height:50px;font-size:var(--fs-app-13)}
+.m-jp small{font-size:var(--fs-app-13)}
+.ob-eyebrow{font-size:var(--fs-app-13)}
 .ob-logo{margin-bottom:22px}
 .ob-form{gap:16px}
 .ob-form .field{margin:0}
 .ob-form .field-label{margin-bottom:7px}
 .ob-actions .btn{min-height:48px}
-.m-perfil-sair{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:50px;margin-top:22px;border-radius:var(--r-md);border:0.5px solid var(--border-2);background:transparent;font-size:14px;font-weight:600;color:var(--danger);text-align:center}
+.m-perfil-sair{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:50px;margin-top:22px;border-radius:var(--r-md);border:0.5px solid var(--border-2);background:transparent;font-size:var(--fs-app-15);font-weight:600;color:var(--danger);text-align:center}
 .m-perfil-sair:hover{border-color:var(--danger-line);background:var(--danger-dim)}
 
 /* ── 4. painel da liderança ──────────────────────────────────────── */
 /* botão esticado (grid, width:100%) centraliza o rótulo */
 .btn{justify-content:center}
 /* etiquetas pequenas demais para ler */
-.sb-group{font-size:11px;color:var(--muted)}
-.tr.head span{font-size:11px}
-.cong-role{font-size:11px}
-.kpi-label,.ph-eyebrow,.top-crumb{font-size:var(--fs-cap)}
-.chip{font-size:11px}
-.view-sw-role,.view-sw-group{font-size:11px}
+.sb-group{font-size:var(--fs-pn-12);color:var(--muted)}
+.tr.head span{font-size:var(--fs-pn-12)}
+.cong-role{font-size:var(--fs-pn-12)}
+.kpi-label,.ph-eyebrow,.top-crumb{font-size:var(--fs-pn-12)}
+.chip{font-size:var(--fs-ui-sm)}
+.view-sw-role,.view-sw-group{font-size:var(--fs-pn-12)}
 /* seletor de congregação com uma igreja só: não finge que abre */
 .cong-btn.static{cursor:default}
 .cong-btn.static .cong-caret{display:none}
@@ -154,13 +170,13 @@ a.login-choice:hover,button.login-choice:hover{border-color:var(--olive-line)}
 .top-user{position:relative}
 .top-user-btn{display:flex;align-items:center;gap:9px;padding:3px 12px 3px 3px;border-radius:var(--r-pill);border:0.5px solid var(--border-2);background:var(--graphite);transition:border-color .14s}
 .top-user-btn:hover{border-color:var(--border-3)}
-.top-user-btn .av{width:32px;height:32px;font-size:12px}
-.top-user-name{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-sm);font-weight:600;color:var(--white)}
+.top-user-btn .av{width:32px;height:32px;font-size:var(--fs-pn-12)}
+.top-user-name{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-pn-13);font-weight:600;color:var(--white)}
 .top-user-pop{position:absolute;right:0;top:calc(100% + 8px);z-index:40;width:250px;padding:6px;border-radius:var(--r-lg);background:var(--graphite-2,var(--graphite));border:0.5px solid var(--border-2);box-shadow:0 24px 60px rgba(0,0,0,0.45);animation:fade .14s}
 .top-user-head{padding:10px 10px 12px;margin-bottom:6px;border-bottom:0.5px solid var(--border)}
-.top-user-head b{display:block;font-size:13.5px;color:var(--white)}
-.top-user-head small{display:block;margin-top:2px;font-size:var(--fs-xs);color:var(--muted)}
-.top-user-pop button,.top-user-pop a{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border-radius:var(--r-md);font-size:13.5px;color:var(--light);text-decoration:none}
+.top-user-head b{display:block;font-size:var(--fs-pn-14);color:var(--white)}
+.top-user-head small{display:block;margin-top:2px;font-size:var(--fs-pn-12);color:var(--muted)}
+.top-user-pop button,.top-user-pop a{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border-radius:var(--r-md);font-size:var(--fs-pn-14);color:var(--light);text-decoration:none}
 .top-user-pop button:hover,.top-user-pop a:hover{background:var(--ink);color:var(--white)}
 .top-user-pop .ic{color:var(--muted)}
 body[data-theme="light"] .top-user-pop{box-shadow:0 18px 44px rgba(80,70,40,0.16)}
@@ -171,7 +187,7 @@ body[data-theme="light"] .top-user-pop{box-shadow:0 18px 44px rgba(80,70,40,0.16
 /* ── 5. acessibilidade básica ─────────────────────────────────────── */
 :where(button,a,[role="button"],summary):focus-visible{outline:2px solid var(--olive);outline-offset:2px}
 /* iPhone dá zoom em campo com fonte menor que 16px */
-@media (pointer:coarse){.input,.textarea,.select,.login-input{font-size:16px}}
+@media (pointer:coarse){.input,.textarea,.select,.login-input{font-size:var(--fs-ui-lg)}}
 
 /* ── 6. áreas seguras do celular ──────────────────────────────────
    Notch e Dynamic Island do iPhone, linha de início embaixo, câmera

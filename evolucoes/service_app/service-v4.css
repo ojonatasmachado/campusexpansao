@@ -25,23 +25,23 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 /* ── CTA "minhas marcações" ───────────────────────────────────── */
 .bib-marks-cta { width: 100%; display: flex; align-items: center; gap: 12px; background: var(--olive-dim); border: 0.5px solid var(--olive-line); border-radius: var(--r-lg); padding: 13px 15px; margin-bottom: 18px; cursor: pointer; text-align: left; }
 .bib-marks-cta-ic { width: 30px; height: 30px; border-radius: 50%; background:var(--accent-fill); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.bib-marks-cta b { font-size: 13.5px; color: var(--white); }
-.bib-marks-cta small { display: block; font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+.bib-marks-cta b { font-size: var(--fs-app-13); color: var(--white); }
+.bib-marks-cta small { display: block; font-size: var(--fs-app-13); color: var(--light); margin-top: 1px; }
 
 /* ── grade de livros ───────────────────────────────────────────── */
 .bib-books { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 6px; }
-.bib-book { min-width: 0; background: var(--graphite); border: 0.5px solid var(--border-2); border-radius: var(--r-md); padding: 11px 6px; font-size: 11.5px; color: var(--light); text-align: center; line-height: 1.3; overflow-wrap: break-word; hyphens: auto; transition: border-color .14s, background .14s; }
+.bib-book { min-width: 0; background: var(--graphite); border: 0.5px solid var(--border-2); border-radius: var(--r-md); padding: 11px 6px; font-size: var(--fs-app-13); color: var(--light); text-align: center; line-height: 1.3; overflow-wrap: break-word; hyphens: auto; transition: border-color .14s, background .14s; }
 .bib-book:hover { border-color: var(--olive-line); }
 
 /* ── grade de capítulos ───────────────────────────────────────── */
 .bib-chapters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
-.bib-chapter { min-width: 0; aspect-ratio: 1; background: var(--graphite); border: 0.5px solid var(--border-2); border-radius: var(--r-md); font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--light); display: flex; align-items: center; justify-content: center; transition: border-color .14s, background .14s; }
+.bib-chapter { min-width: 0; aspect-ratio: 1; background: var(--graphite); border: 0.5px solid var(--border-2); border-radius: var(--r-md); font-family: var(--mono); font-size: var(--fs-app-13); font-weight: 600; color: var(--light); display: flex; align-items: center; justify-content: center; transition: border-color .14s, background .14s; }
 .bib-chapter:hover { border-color: var(--olive-line); background: var(--olive-dim); }
 
 /* ── cabeçalho do leitor ─────────────────────────────────────── */
 .bib-reader-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .bib-reader-head .m-h1 { margin: 0; flex: 1; text-align: center; }
-.bib-chnav { width: 34px; height: 34px; border-radius: 50%; background: var(--graphite); border: 0.5px solid var(--border-2); color: var(--light); font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.bib-chnav { width: 34px; height: 34px; border-radius: 50%; background: var(--graphite); border: 0.5px solid var(--border-2); color: var(--light); font-size: var(--fs-app-17); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .bib-chnav:disabled { opacity: 0.35; }
 
 /* ── versículos ────────────────────────────────────────────────── */
@@ -49,26 +49,26 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 .bib-verse { display: flex; align-items: flex-start; gap: 10px; width: 100%; text-align: left; background: transparent; border: none; border-left: 3px solid transparent; border-radius: 0 var(--r-sm) var(--r-sm) 0; padding: 8px 10px 8px 11px; transition: background .14s; }
 .bib-verse:hover { background: var(--graphite); }
 .bib-verse.marked { border-left-color: var(--mark); background: color-mix(in srgb, var(--mark) 14%, transparent); }
-.bib-verse-n { font-family: var(--mono); font-size: 11px; color: var(--subtle); flex-shrink: 0; margin-top: 3px; min-width: 16px; }
+.bib-verse-n { font-family: var(--mono); font-size: var(--fs-app-13); color:var(--muted); flex-shrink: 0; margin-top: 3px; min-width: 16px; }
 .bib-verse.marked .bib-verse-n { color: var(--mark); font-weight: 700; }
-.bib-verse-t { font-size: 14.5px; line-height: 1.6; color: var(--light); }
+.bib-verse-t { font-size: var(--fs-app-15); line-height: 1.6; color: var(--light); }
 .bib-verse-note-ic { flex-shrink: 0; color: var(--mark, var(--olive)); margin-top: 3px; }
 
 /* ── resultados (busca e minhas marcações) ───────────────────── */
 .bib-result { display: block; width: 100%; text-align: left; background: var(--graphite); border: 0.5px solid var(--border-2); border-left: 3px solid var(--border-2); border-radius: var(--r-md); padding: 10px 13px; margin-bottom: 8px; }
 .bib-result.tone-sand, .bib-result.tone-wheat, .bib-result.tone-amber, .bib-result.tone-clay,
 .bib-result.tone-terra, .bib-result.tone-rust, .bib-result.tone-cocoa, .bib-result.tone-olive { border-left-color: var(--mark); }
-.bib-result b { display: block; font-size: 12.5px; color: var(--white); font-weight: 600; margin-bottom: 3px; }
-.bib-result small { display: block; font-size: 12px; color: var(--muted); line-height: 1.45; }
+.bib-result b { display: block; font-size: var(--fs-app-13); color: var(--white); font-weight: 600; margin-bottom: 3px; }
+.bib-result small { display: block; font-size: var(--fs-app-13); color: var(--muted); line-height: 1.45; }
 
 /* ── folha de ação do versículo ──────────────────────────────── */
-.bib-action-ref { font-family: var(--mono); font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--olive-soft, var(--olive)); margin-bottom: 8px; }
-.bib-action-text { font-size: 14px; line-height: 1.6; color: var(--light); margin: 0; }
+.bib-action-ref { font-family:var(--sans); font-size: var(--fs-app-13); letter-spacing:0; color: var(--olive-soft, var(--olive)); margin-bottom: 8px; }
+.bib-action-text { font-size: var(--fs-app-15); line-height: 1.6; color: var(--light); margin: 0; }
 .bib-swatches { display: flex; align-items: center; gap: 9px; margin-top: 16px; flex-wrap: wrap; }
 .bib-swatch { width: 28px; height: 28px; border-radius: 50%; background: var(--mark); border: 2px solid transparent; transition: transform .14s, border-color .14s; }
 .bib-swatch:hover { transform: scale(1.08); }
 .bib-swatch.on { border-color: var(--white); }
-.bib-swatch-clear { width: 28px; height: 28px; border-radius: 50%; background: var(--ink); border: 0.5px solid var(--border-2); color: var(--subtle); font-size: 12px; display: flex; align-items: center; justify-content: center; }
+.bib-swatch-clear { width: 28px; height: 28px; border-radius: 50%; background: var(--ink); border: 0.5px solid var(--border-2); color:var(--muted); font-size: var(--fs-app-13); display: flex; align-items: center; justify-content: center; }
 .bib-copy { display: inline-flex; align-items: center; gap: 6px; }
 
 @media (max-width: 380px) {
@@ -80,10 +80,10 @@ body[data-theme="light"] { --cocoa: #5A4230; }
    Logo + nome da igreja + sufixo SERVICE fixo (ver IgrejaLogo). */
 .brand-church { display:flex; align-items:center; gap:11px; min-width:0; }
 .brand-church-logo { width:40px; height:40px; object-fit:contain; border-radius:var(--r-md); flex-shrink:0; }
-.brand-church-mark { width:40px; height:40px; border-radius:var(--r-md); background:var(--accent-fill); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; letter-spacing:-0.02em; flex-shrink:0; }
+.brand-church-mark { width:40px; height:40px; border-radius:var(--r-md); background:var(--accent-fill); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:var(--fs-pn-14); letter-spacing:-0.02em; flex-shrink:0; }
 .brand-church-text { display:flex; flex-direction:column; gap:3px; min-width:0; }
-.brand-church-name { font-size:15px; font-weight:700; letter-spacing:-0.02em; color:var(--white); line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.brand-church-suffix { font-family:var(--mono); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); }
+.brand-church-name { font-size:var(--fs-pn-14); font-weight:700; letter-spacing:-0.02em; color:var(--white); line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.brand-church-suffix { font-family:var(--sans); font-size:var(--fs-pn-12); letter-spacing:0; color:var(--muted); }
 
 /* ════════ APP DO MEMBRO EM TELA CHEIA (mode="self") ════════
    A moldura de celular (.phone 340x710, notch, relógio "9:41") é da PRÉVIA
@@ -130,7 +130,7 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 
 @media (max-width:860px), (pointer:coarse) {
   /* iPhone dá zoom ao focar campo com letra menor que 16px */
-  input, select, textarea, .input, .textarea, .select, .top-search input { font-size:16px; }
+  input, select, textarea, .input, .textarea, .select, .top-search input { font-size:var(--fs-ui-lg); }
 }
 
 @media (max-width:640px) {
@@ -150,11 +150,11 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 
   .well-sum { grid-template-columns:repeat(2, minmax(0,1fr)); }
   .dist-name { width:auto; flex:0 1 110px; }
-  .ph-title { font-size:30px; }
+  .ph-title { font-size:var(--fs-pn-20); }
 }
 
 /* caixa de ajuda do "?" fora do cartão (HelpDot): no computador ao lado do
    "?" e dentro da tela; no celular, folha na parte de baixo */
-.help-pop.help-pop-fixed { position:fixed; z-index:400; width:min(280px, calc(100vw - 24px)); font-size:13px; }
-.help-pop.help-pop-sheet { left:12px; right:12px; bottom:12px; top:auto; width:auto; font-size:15px; line-height:1.55; padding:16px 18px; display:flex; flex-direction:column; gap:12px; box-shadow:0 -10px 40px rgba(0,0,0,0.35); }
-.help-pop-close { align-self:flex-end; background:var(--accent-fill); color:var(--accent-ink); border:none; border-radius:var(--r-sm); padding:8px 16px; font-size:14px; font-weight:600; }
+.help-pop.help-pop-fixed { position:fixed; z-index:400; width:min(280px, calc(100vw - 24px)); font-size:var(--fs-pn-13); }
+.help-pop.help-pop-sheet { left:12px; right:12px; bottom:12px; top:auto; width:auto; font-size:var(--fs-pn-14); line-height:1.55; padding:16px 18px; display:flex; flex-direction:column; gap:12px; box-shadow:0 -10px 40px rgba(0,0,0,0.35); }
+.help-pop-close { align-self:flex-end; background:var(--accent-fill); color:var(--accent-ink); border:none; border-radius:var(--r-sm); padding:8px 16px; font-size:var(--fs-pn-14); font-weight:600; }

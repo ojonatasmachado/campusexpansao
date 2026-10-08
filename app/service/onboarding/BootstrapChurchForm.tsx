@@ -153,14 +153,14 @@ export default function BootstrapChurchForm() {
           placeholder="00.000.000/0000-00"
           inputMode="numeric"
         />
-        {checking && <div style={{ fontSize: 12, color: "var(--subtle)", marginTop: 6 }}>Consultando a Receita Federal…</div>}
+        {checking && <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)", marginTop: 6 }}>Consultando a Receita Federal…</div>}
         {lookup && lookup.valid && lookup.active && (
-          <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--olive-soft)", marginTop: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "var(--fs-ui-sm)", color: "var(--olive-soft)", marginTop: 6 }}>
             <Icon name="ok" size={13} /> CNPJ ativo{lookup.razaoSocial ? ` · ${lookup.razaoSocial}` : ""}
           </div>
         )}
         {lookup && !lookup.active && (
-          <div style={{ fontSize: 12, color: "var(--amber)", marginTop: 6 }}>{lookup.error}</div>
+          <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--amber)", marginTop: 6 }}>{lookup.error}</div>
         )}
       </label>
 

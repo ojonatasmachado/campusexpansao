@@ -7,6 +7,7 @@ import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { AulaCheckinModal } from "./AulaCheckin";
 import { useServiceAccess } from "./AccessContext";
 import { requirementsFor, requirementLabel } from "./lib/requirements";
+import { useTermos } from "./lib/vocabulario-context";
 
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
@@ -122,7 +123,7 @@ function MatricularModal({
               <div className="flag-main">
                 <div className="flag-nome">{m.name}</div>
               </div>
-              <span style={{ marginLeft: "auto", color: "var(--subtle)" }}>→</span>
+              <span style={{ marginLeft: "auto", color: "var(--muted)" }}>→</span>
             </div>
           ))}
         </div>
@@ -150,6 +151,7 @@ export default function CursoDrawer({
   onClose: () => void;
   onEdit: () => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const access = useServiceAccess();
   const requisitos = requirementsFor(access.requirements, "course", course.id);
   const router = useRouter();
@@ -202,13 +204,13 @@ export default function CursoDrawer({
             <div className="dsec" style={{ marginTop: 0 }}>
               <div className="dsec-title">Sobre o curso</div>
               {course.description && (
-                <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.55, marginBottom: 12 }}>
+                <p style={{ color: "var(--muted)", fontSize: "var(--fs-ui-13)", lineHeight: 1.55, marginBottom: 12 }}>
                   {course.description}
                 </p>
               )}
               {course.divulgacao && (
                 <div
-                  style={{ fontSize: 13.5, color: "var(--light)", lineHeight: 1.6, marginBottom: 12 }}
+                  style={{ fontSize: "var(--fs-ui-md)", color: "var(--light)", lineHeight: 1.6, marginBottom: 12 }}
                   dangerouslySetInnerHTML={{ __html: course.divulgacao }}
                 />
               )}
@@ -228,7 +230,7 @@ export default function CursoDrawer({
             <div className="dsec">
               <div className="dsec-title">Pré-requisitos</div>
               <div className="seg-check">
-                {requisitos.map((r) => <span key={`${r.kind}-${r.ref}`} className="seg-chip on">{requirementLabel(r, access)}</span>)}
+                {requisitos.map((r) => <span key={`${r.kind}-${r.ref}`} className="seg-chip on">{ct(requirementLabel(r, access))}</span>)}
               </div>
             </div>
           )}
@@ -250,9 +252,9 @@ export default function CursoDrawer({
                     return (
                       <div className="ce-aula" key={les.id}>
                         <div className="ce-aula-row">
-                          <span style={{ flex: 1, fontSize: 13.5 }}>{les.name}</span>
+                          <span style={{ flex: 1, fontSize: "var(--fs-ui-md)" }}>{les.name}</span>
                           <span className="mat-tipo">{LESSON_KIND_LABEL[les.kind ?? "video"]}</span>
-                          {les.duration && <span style={{ fontSize: 11, color: "var(--muted)" }}>{les.duration}</span>}
+                          {les.duration && <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>{les.duration}</span>}
                         </div>
                         {(les.prova?.length ?? 0) > 0 && (
                           <div className="ce-prova on" style={{ cursor: "default" }}>
@@ -268,7 +270,7 @@ export default function CursoDrawer({
                     );
                   })}
                   {modLessons.length === 0 && (
-                    <div style={{ fontSize: 12, color: "var(--subtle)", padding: "4px 0" }}>Nenhuma aula neste módulo.</div>
+                    <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)", padding: "4px 0" }}>Nenhuma aula neste módulo.</div>
                   )}
                 </div>
               );

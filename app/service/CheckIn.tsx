@@ -8,6 +8,7 @@ import QRCode from "react-qr-code";
 import ChurchLockup from "./ChurchLockup";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { formatDateBR, joinDot } from "./lib/date";
+import { useTermos } from "./lib/vocabulario-context";
 
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
@@ -118,6 +119,7 @@ export function CheckinLanding({
   churchName?: string;
   logoUrl?: string | null;
 }) {
+  const { comTermos: ct } = useTermos();
   let cor = "var(--olive)";
   let titulo = "Verificando...";
   let txt = "";
@@ -165,7 +167,7 @@ export function CheckinLanding({
             <ChurchLockup logoUrl={logoUrl} name={churchName} />
           </div>
           <div className="ck-land-event">
-            <div className="ck-land-ey">Check-in de voluntário</div>
+            <div className="ck-land-ey">{ct("Check-in de {voluntario}")}</div>
             <div className="ck-land-name">{event.name}</div>
             <div className="ck-land-when">
               {joinDot(`${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time, event.location)}
@@ -174,7 +176,7 @@ export function CheckinLanding({
           <div className="ck-land-result">
             <div
               className="ck-land-ic"
-              style={{ color: cor, borderColor: cor, fontSize: 28, fontWeight: 700 }}
+              style={{ color: cor, borderColor: cor, fontSize: "var(--fs-app-28)", fontWeight: 700 }}
             >
               {icone === "✓" ? <Icon name="ok" size={30} /> : icone}
             </div>
@@ -221,6 +223,7 @@ function ManualCheckinModal({
   onAdd: (personId: string) => void;
   onClose: () => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const [q, setQ] = useState("");
   const presentIds = new Set(present.map((r) => r.person_id));
   const escaladoIds = new Set(
@@ -248,7 +251,7 @@ function ManualCheckinModal({
           <div className="tb-search" style={{ marginBottom: 12 }}>
             <span className="si">🔍</span>
             <input
-              placeholder="Buscar voluntário..."
+              placeholder={ct("Buscar {voluntario}...")}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               autoFocus
@@ -258,7 +261,7 @@ function ManualCheckinModal({
             <div className="empty">
               {q
                 ? "Nenhum resultado."
-                : "Todos os voluntários elegíveis já estão presentes."}
+                : ct("Todos os {voluntarios} elegíveis já estão presentes.")}
             </div>
           )}
           {lista.map((p) => {
@@ -283,7 +286,7 @@ function ManualCheckinModal({
                       : "Não escalado · entra como extra"}
                   </div>
                 </div>
-                <span style={{ marginLeft: "auto", color: "var(--subtle)" }}>→</span>
+                <span style={{ marginLeft: "auto", color: "var(--muted)" }}>→</span>
               </div>
             );
           })}
@@ -417,6 +420,7 @@ export function QRCheckinModal({
   logoUrl?: string | null;
   onClose: () => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const router = useRouter();
   const [tab, setTab] = useState<"qr" | "presenca">("qr");
   const [qrToken, setQrToken] = useState<string | null>(event.checkinToken);
@@ -569,7 +573,7 @@ export function QRCheckinModal({
     const demo = people.find((p) => p.status === "ativo" && !presentIds.has(p.id)) ?? null;
     const result = demo
       ? await registrar(demo.id, "qr", qrToken ?? undefined)
-      : { ok: false, motivo: "Nenhum voluntário ativo disponível para demonstração." };
+      : { ok: false, motivo: ct("Nenhum {voluntario} ativo disponível para demonstração.") };
     setLanding({ person: demo, result });
   };
 
@@ -583,8 +587,7 @@ export function QRCheckinModal({
             </div>
             <div className="modal-title">{event.name}</div>
             <div className="modal-sub">
-              QR Code único deste evento. Os voluntários escaneiam e confirmam presença pela própria
-              conta. Você acompanha em tempo real.
+              {ct("QR Code único deste evento. Os {voluntarios} escaneiam e confirmam presença pela própria conta. Você acompanha em tempo real.")}
             </div>
             <div className="ck-tabs">
               <button
@@ -615,7 +618,7 @@ export function QRCheckinModal({
                     />
                   ) : (
                     <div className="ck-qr-off">
-                      <span style={{ fontSize: 28 }}>✕</span>
+                      <span style={{ fontSize: "var(--fs-app-28)" }}>✕</span>
                       <span>QR desativado</span>
                     </div>
                   )}
@@ -650,8 +653,7 @@ export function QRCheckinModal({
                   </div>
 
                   <div className="ck-hint">
-                    Imprima e cole na entrada dos voluntários, backstage ou secretaria. Quem
-                    escanear confirma presença pela conta logada.
+                    {ct("Imprima e cole na entrada dos {voluntarios}, backstage ou secretaria. Quem escanear confirma presença pela conta logada.")}
                   </div>
 
                   <button
@@ -659,7 +661,7 @@ export function QRCheckinModal({
                     style={{ marginTop: 4, justifyContent: "center" }}
                     onClick={simularScan}
                   >
-                    Simular leitura (abrir como voluntário) →
+                    {ct("Simular leitura (abrir como {voluntario}) →")}
                   </button>
                 </div>
               </div>

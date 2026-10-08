@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../lib/supabase-server";
 import { supabaseAdmin } from "../../../../lib/supabase";
-import { sendPushToSubscriptions } from "../../../../lib/push";
+import { entregarAvisos, esvaziarFila, type Categoria } from "../../../../lib/service-avisos";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,7 +11,10 @@ type Payload = {
   recipientMemberIds?: string[];
   title?: string;
   body?: string;
+  /* categoria do aviso (lei 9): escala, mural, mensagens, caminhada */
+  categoria?: string;
 };
+const CATEGORIAS = new Set(["escala", "mural", "mensagens", "caminhada"]);
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -29,6 +32,7 @@ export async function POST(request: Request) {
   }
 
   const { organizationId, recipientMemberIds, title, body } = payload;
+  const categoria = payload.categoria && CATEGORIAS.has(payload.categoria) ? payload.categoria : null;
   if (!organizationId || !recipientMemberIds?.length || !title || !body) {
     return NextResponse.json({ error: "Dados incompletos." }, { status: 400 });
   }
@@ -46,32 +50,18 @@ export async function POST(request: Request) {
   }
 
   try {
-    const db = supabaseAdmin();
+    const db = supabaseAdmin().schema("service");
     const { data: members, error: membersError } = await db
-      .schema("service")
       .from("members")
       .select("id, volunteer_id")
       .in("id", recipientMemberIds);
     if (membersError) throw membersError;
 
     const peopleIds = (members ?? []).map((m) => m.volunteer_id).filter((id): id is string => !!id);
-    if (!peopleIds.length) return NextResponse.json({ ok: true, sent: 0 });
-
-    const { data: subs, error: subsError } = await db
-      .schema("service")
-      .from("push_subscriptions")
-      .select("id, endpoint, p256dh, auth_key")
-      .in("person_id", peopleIds);
-    if (subsError) throw subsError;
-    if (!subs?.length) return NextResponse.json({ ok: true, sent: 0 });
-
-    const { deadEndpoints } = await sendPushToSubscriptions(subs, { title, body });
-
-    if (deadEndpoints.length) {
-      await db.schema("service").from("push_subscriptions").delete().in("endpoint", deadEndpoints);
-    }
-
-    return NextResponse.json({ ok: true, sent: subs.length - deadEndpoints.length });
+    /* v7 5.3: categoria desligada, silêncio das 22h às 7h e resumo do Mural; aproveita para mandar o que já venceu na fila */
+    const r = await entregarAvisos(db, { organizationId, peopleIds, categoria: categoria as Categoria | null, title, body });
+    await esvaziarFila(db, organizationId);
+    return NextResponse.json({ ok: true, sent: r.enviados, queued: r.naFila });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível enviar a notificação.";
     return NextResponse.json({ error: message }, { status: 500 });

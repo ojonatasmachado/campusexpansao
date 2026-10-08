@@ -1,6 +1,7 @@
 "use client";
 
 import { JOURNEY_REQ_STEPS, requirementLabel, type Requirement } from "./lib/requirements";
+import { useTermos } from "./lib/vocabulario-context";
 
 /* subtítulo em cinza médio (texto secundário do Brand Book 3.2): o título da
    seção fica com quem usa o editor, estes só agrupam as opções */
@@ -22,6 +23,7 @@ export default function RequisitosEditor({
   events: { id: string; name: string; eventDate?: string }[];
   groupsLabel?: string;
 }) {
+  const { comTermos: ct } = useTermos();
   const has = (kind: Requirement["kind"], ref: string) => value.some((r) => r.kind === kind && r.ref === ref);
   const toggle = (kind: Requirement["kind"], ref: string) =>
     onChange(has(kind, ref) ? value.filter((r) => !(r.kind === kind && r.ref === ref)) : [...value, { kind, ref }]);
@@ -31,11 +33,11 @@ export default function RequisitosEditor({
   return (
     <div style={{ display: "grid", gap: 14 }}>
       <div>
-        <div className="field-label" style={SUBLABEL}>Etapas da caminhada</div>
+        <div className="field-label" style={SUBLABEL}>{ct("Etapas da {caminhada}")}</div>
         <div className="seg-check">
           {JOURNEY_REQ_STEPS.map((s) => (
             <button key={s.ref} type="button" className={`seg-chip${has("journey", s.ref) ? " on" : ""}`} onClick={() => toggle("journey", s.ref)}>
-              {s.ref === "integracao" && groupsLabel ? groupsLabel : s.label}
+              {s.ref === "integracao" && groupsLabel ? groupsLabel : ct(s.label)}
             </button>
           ))}
         </div>
@@ -61,7 +63,7 @@ export default function RequisitosEditor({
             <div className="seg-check" style={{ marginBottom: 8 }}>
               {chosenEvents.map((r) => (
                 <button key={r.ref} type="button" className="seg-chip on" onClick={() => toggle("event", r.ref)} title="Remover">
-                  {requirementLabel(r, { courses, events }).replace(/^Participou: /, "")} ×
+                  {ct(requirementLabel(r, { courses, events }).replace(/^Participou: /, ""))} ×
                 </button>
               ))}
             </div>
@@ -77,7 +79,7 @@ export default function RequisitosEditor({
         </div>
       )}
 
-      {value.length === 0 && <div style={{ fontSize: 12, color: "var(--subtle)" }}>Sem pré-requisito: qualquer membro pode.</div>}
+      {value.length === 0 && <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>Sem pré-requisito: qualquer membro pode.</div>}
     </div>
   );
 }
