@@ -3,19 +3,33 @@ import { supabaseAdmin } from "../../../../lib/supabase";
 import { sendPushToSubscriptions } from "../../../../lib/push";
 import { emSilencio } from "../../../../service/lib/silencio";
 import { esvaziarFila } from "../../../../lib/service-avisos";
+import { tokenDoWorkflowValido } from "../../../../lib/github-oidc";
 
 /* Lembrete do aviso (v7 4.18) e fila de avisos (5.3). Chamado pelo agendador: manda uma vez, a quem
    do público ainda não abriu o aviso, a notificação marcada na publicação.
    No silêncio das 22h às 7h não manda nada (a próxima chamada depois das 7h
-   manda). Protegido por CRON_SECRET (Authorization: Bearer <segredo>); sem o
-   segredo configurado, não roda. */
+   manda). Só roda chamada do agendador do GitHub (token OIDC) ou com o
+   CRON_SECRET, se ele estiver configurado. */
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+/* quem pode chamar: o agendador do GitHub (token OIDC assinado pelo GitHub,
+   só deste repositório, do main e do workflow service-cron.yml) ou quem tiver
+   o CRON_SECRET, se ele estiver configurado na Vercel */
+async function autorizado(request: Request): Promise<boolean> {
+  const auth = request.headers.get("authorization") ?? "";
+  if (!auth.startsWith("Bearer ")) return false;
+  const token = auth.slice(7);
   const segredo = process.env.CRON_SECRET;
-  if (!segredo || request.headers.get("authorization") !== `Bearer ${segredo}`) {
+  if (segredo && token === segredo) return true;
+  return tokenDoWorkflowValido(token, { audiencia: AUDIENCIA_CRON, repositorio: REPOSITORIO, workflow: "service-cron.yml" });
+}
+const AUDIENCIA_CRON = "campusexpansao-service-cron";
+const REPOSITORIO = "ojonatasmachado/campusexpansao";
+
+export async function GET(request: Request) {
+  if (!(await autorizado(request))) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
   if (emSilencio()) return NextResponse.json({ ok: true, enviados: 0, motivo: "silencio" });

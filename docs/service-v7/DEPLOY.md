@@ -74,18 +74,14 @@ Antes: no painel do Supabase, Database > Backups, confirme que há backup de hoj
    ```
    Tem de dar 6.
 
-## 5. Vercel e agendador
+## 5. Agendador (lembrete do aviso e resumo do Mural)
 
-1. Vercel > Settings > Environment Variables (Production): crie `CRON_SECRET` com um texto
-   longo aleatório (ex.: `openssl rand -hex 32`). As outras já existem (Supabase, VAPID).
-2. GitHub > Settings > Secrets and variables > Actions:
-   - Secret `CRON_SECRET` = o mesmo texto.
-   - Variable `SERVICE_URL` = o endereço do site, sem barra no fim.
-3. Depois do passo 6, rode uma vez à mão: GitHub > Actions > "Service · agendador" >
-   Run workflow. Tem de terminar verde com `{"ok":true,...}` no log.
-
-Sem isso: o lembrete do aviso não sai e o resumo do Mural só sai quando a igreja mandar
-outro aviso. O resto funciona.
+Não precisa configurar nada. O workflow `.github/workflows/service-cron.yml` roda de hora
+em hora no GitHub e se identifica para o site com um token assinado pelo próprio GitHub
+(OIDC), conferido em `app/lib/github-oidc.ts`: só passa chamada deste repositório, do
+`main` e desse arquivo. O endereço chamado é `https://campusexpansao.vercel.app` (para usar
+outro, crie a variável `SERVICE_URL` no GitHub). O `CRON_SECRET` continua aceito, se um dia
+for configurado.
 
 ## 6. Pôr no ar
 
