@@ -3,12 +3,10 @@
 # das 22h às 7h e resumo do Mural). Feito no GitHub porque o plano gratuito da
 # Vercel só roda cron uma vez por dia.
 #
-# Para ligar (uma vez):
-#   1. Na Vercel, variável CRON_SECRET (um texto longo aleatório) em Production.
-#   2. No GitHub, Settings > Secrets and variables > Actions:
-#      - Secret  CRON_SECRET = o mesmo texto da Vercel
-#      - Variable SERVICE_URL = endereço do site, sem barra no fim (ex. https://campusexpansao.com)
-# Sem os dois, o job termina sem fazer nada. Agendamento só roda no branch padrão (main).
+# Sem segredo nenhum: o job pede ao GitHub um token OIDC (assinado pelo
+# GitHub, válido por minutos) e a rota confere que veio deste repositório,
+# do main e deste arquivo (app/lib/github-oidc.ts). Agendamento só roda no
+# branch padrão (main).
 name: Service · agendador
 
 on:
@@ -16,18 +14,19 @@ on:
     - cron: "7 * * * *"
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   lembretes:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      URL: ${{ vars.SERVICE_URL || 'https://campusexpansao.vercel.app' }}
     steps:
       - name: Chamar a rota do agendador
-        env:
-          URL: ${{ vars.SERVICE_URL }}
-          SEGREDO: ${{ secrets.CRON_SECRET }}
         run: |
-          if [ -z "$URL" ] || [ -z "$SEGREDO" ]; then
-            echo "SERVICE_URL ou CRON_SECRET não configurados: nada a fazer."
-            exit 0
-          fi
-          curl -fsS --max-time 60 -H "Authorization: Bearer $SEGREDO" "$URL/api/service/cron/lembretes"
+          TOKEN=$(curl -fsS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=campusexpansao-service-cron" | jq -r .value)
+          curl -fsS --max-time 60 -H "Authorization: Bearer $TOKEN" "$URL/api/service/cron/lembretes"
