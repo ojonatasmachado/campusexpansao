@@ -608,3 +608,6 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
 .setup-foot{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin-top:18px}
 @media (max-width:860px){.setup-fases{grid-template-columns:1fr}.setup-2col{grid-template-columns:1fr}}
 .metrica-v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--fs-pn-16);font-weight:700;color:var(--white);white-space:nowrap}
+
+/* o aviso de instalar o app não cobre as folhas do app do membro */
+body:has(.m6-scrim) .pwa-banner,body:has(.ts-sheet) .pwa-banner{display:none}

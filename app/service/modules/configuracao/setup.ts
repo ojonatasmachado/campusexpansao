@@ -1,6 +1,6 @@
 /* Estado e contas da configuração guiada (v7 4.12). Guardado em
    service.churches.settings.setup = { fase, feitas, pulou, concluido }. */
-import { parseISODate, somaDias, toISODate, todayISO } from "../../lib/date";
+import { horaAgoraBR, parseISODate, somaDias, toISODate, todayISO } from "../../lib/date";
 import { plural } from "../../lib/plural";
 
 export type SetupEstado = { fase: 1 | 2 | 3; feitas: number[]; pulou?: boolean; concluido?: boolean };
@@ -46,6 +46,8 @@ export function datasDoHorario(h: Horario, ate: string, hoje = todayISO()): stri
   const d = parseISODate(hoje);
   if (!d || !ate) return out;
   let dia = somaDias(hoje, (h.dia - d.getDay() + 7) % 7);
+  /* hoje só entra se o horário ainda não passou */
+  if (dia === hoje && h.hora <= horaAgoraBR()) dia = somaDias(dia, 7);
   while (dia <= ate && out.length < 60) { out.push(dia); dia = somaDias(dia, 7); }
   return out;
 }

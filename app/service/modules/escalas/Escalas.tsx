@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { plural } from "../../lib/plural";
+import { faltaN, plural } from "../../lib/plural";
 import { baixarCsv } from "../../lib/csv";
 import { formatDateBR, joinDot, toISODate } from "../../lib/date";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
@@ -544,7 +544,7 @@ export function Escalas({
             {(() => {
               /* v7 4.16: um resumo por culto; a cobertura por time aparece embaixo, no culto escolhido */
               const falta = vagasFaltando(coberturaPorTime(event, roster, ministries, scopeMinistryIds));
-              return <span className={`esc-event-cob ${falta ? "falta" : "ok"}`}>{falta ? `faltam ${plural(falta, "vaga")}` : "completo"}</span>;
+              return <span className={`esc-event-cob ${falta ? "falta" : "ok"}`}>{falta ? faltaN(falta, "vaga") : "completo"}</span>;
             })()}
           </button>
         ))}

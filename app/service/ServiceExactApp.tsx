@@ -1813,6 +1813,7 @@ export default function ServiceExactApp({
             timelineEvents={timelineEvents}
             enrollments={enrollments}
             setup={setupEstado}
+            igrejaNova={ministries.length === 0 || events.length === 0}
             cuidado={ligados.has("cuidado") ? { lista: daMinhaLista(listaCuidado, currentPersonId, currentRole === "master" || currentRole === "pastor"), todos: listaCuidado, criancas: criancasAusentes, semanas: semanasCuidado } : null}
           />
         ) : null}
@@ -2270,6 +2271,7 @@ function Painel({
   enrollments = [],
   cuidado = null,
   setup = null,
+  igrejaNova = false,
 }: {
   people: PersonView[];
   members: MemberView[];
@@ -2312,6 +2314,8 @@ function Painel({
   cuidado?: { lista: Ausente[]; todos: Ausente[]; criancas: CriancaAusente[] | null; semanas: number } | null;
   /* configuração guiada (v7 4.12): "Sua igreja: fase 2 de 3" no lugar do checklist */
   setup?: SetupEstado | null;
+  /* sem times ou sem cultos: a configuração guiada aparece no Início */
+  igrejaNova?: boolean;
 }) {
   const { comTermos: ct } = useTermos();
   /* v7 4.11: gestão e pastores abrem na Saúde da igreja; líder de time, no
@@ -2394,7 +2398,7 @@ function Painel({
           <ListaDeCuidado lista={cuidado.lista} criancas={cuidado.criancas} semanas={cuidado.semanas} onAbrir={(a) => setDrawer(a.memberId ? { kind: "member", id: a.memberId } : { kind: "person", id: a.personId })} />
         </div>
       )}
-      {gestao && setup && !setup.concluido ? (
+      {gestao && setup && !setup.concluido && (igrejaNova || setup.feitas.length > 0 || setup.pulou) ? (
         <button type="button" className="setup-banner" onClick={() => setRoute("configurar")}>
           <span className="setup-banner-t">{linhaDoSetup(setup)}</span>
           <span className="agora-go">{setup.feitas.length || setup.pulou ? "Continuar →" : "Começar →"}</span>
@@ -2456,7 +2460,7 @@ function Painel({
                 <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("escalas")}>Escalar</button>
               </div>
             ))}
-            {gaps.length === 0 ? <div className="mini-row"><div className="mini-main"><div className="mini-title">Escala coberta</div><div className="mini-sub">Nenhuma vaga aberta nesta semana.</div></div></div> : null}
+            {gaps.length === 0 && !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time) && vagasFaltando(coberturaPorTime(e, roster, ministries, scopeMinistryIds)) > 0) ? <div className="mini-row"><div className="mini-main"><div className="mini-title">Escala coberta</div><div className="mini-sub">Nenhuma vaga aberta nesta semana.</div></div></div> : null}
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>

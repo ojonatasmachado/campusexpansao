@@ -2,7 +2,7 @@
    Brasília. App: serve hoje, culto hoje, grupo hoje, aula hoje; sem nada, a
    data. Painel: a semana e o próximo culto com o que falta na escala. */
 import { parseISODate, somaDias, todayISO, weekdayFromISO } from "./date";
-import { plural } from "./plural";
+import { faltaN, plural } from "./plural";
 
 const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 const semAcento = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -58,5 +58,5 @@ export function quandoSera(iso: string, hoje = todayISO()): string {
 /** "Culto de quarta em 2 dias · faltam 6 vagas" */
 export function linhaDoPainel(proximo: { nome: string; data: string; faltam: number } | null, hoje = todayISO()): string | null {
   if (!proximo) return null;
-  return `${proximo.nome} ${quandoSera(proximo.data, hoje)} · ${proximo.faltam ? `faltam ${plural(proximo.faltam, "vaga")}` : "escala completa"}`;
+  return `${proximo.nome} ${quandoSera(proximo.data, hoje)} · ${proximo.faltam ? faltaN(proximo.faltam, "vaga") : "escala completa"}`;
 }

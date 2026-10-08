@@ -3609,7 +3609,8 @@ function useSteps({ person, member, ministries, courses, enrollments, courseModu
         const prox = proximaAula(cursando.course_id, cursando.done_count, courseModules, courseLessons);
         return { id, nome, st: "andamento", info: joinDot(cursoNome, prox && `Próxima aula: ${prox.aula.name}`, dataLonga(prox?.aula.lesson_date), prox?.aula.lesson_time, prox?.aula.location), acao: prox ? "Ver a próxima aula" : "Ver o curso", run: () => onOpenSub("cursos") };
       }
-      return { id, nome, st: "afazer", acao: "Ver os cursos", run: () => onOpenSub("cursos") };
+      /* sem curso publicado, o botão levaria a uma lista vazia (lei 6) */
+      return courses.length ? { id, nome, st: "afazer", acao: "Ver os cursos", run: () => onOpenSub("cursos") } : { id, nome, st: "afazer" };
     }
     if (id === "time") {
       if (pedidoServir) return { id, nome, st: "andamento", info: "Pedido enviado · o líder vai falar com você" };
