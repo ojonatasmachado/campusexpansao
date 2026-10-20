@@ -16,7 +16,7 @@ import { aindaVaiAcontecer, formatDateBR, joinDot, paraPublico, parseISODate, po
 import { ageInMonths, suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import type { EnqueteElegivelView } from "./lib/enquetes";
 import type { PesquisaElegivelView, TipoPergunta as TipoPerguntaPesquisa } from "./lib/pesquisas";
-import MobileOverlay, { type MemberContactInput, type MissingRequirement, type ServeRequest } from "./MobileApp";
+import MobileOverlay, { type MemberContactInput, type MobileOverlayProps, type MissingRequirement, type ServeRequest } from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
 import { KidsQRModal } from "./KidsCheckin";
 import { PhotoPicker } from "./PhotoPicker";
@@ -24,6 +24,7 @@ import { ImageUpload } from "./ImageUpload";
 import { AccentField } from "./AccentField";
 import ThemePicker from "./ThemePicker";
 import { PublicPageEditor } from "./PublicPageEditor";
+import { ContribuirConfig } from "./modules/contribuir/ContribuirConfig";
 import { LogoField, BackgroundField } from "./IdentidadeFields";
 import { useChurchSettingsField } from "./lib/settings-field";
 import { comTermos, normalizarVocabulario, textoBuscavel, vocabularioParaGravar, LIMITE_CURTO, LIMITE_TELA, TERMOS, TERMOS_IDS, type Vocabulario } from "./lib/vocabulario";
@@ -1614,6 +1615,7 @@ export default function ServiceExactApp({
         modulos={{ on: firstChurch?.modulosOn, off: firstChurch?.modulosOff }}
         textSizePerfil={textSizePerfil}
         readAnnouncementIds={announcementReads.filter((r) => r.person_id === currentPersonId).map((r) => r.announcement_id)}
+        contribuir={(churches.find((c) => c.matriz) ?? firstChurch)?.settings?.contribuirCfg as MobileOverlayProps["contribuir"]}
         churchPurpose={(() => {
           const ciclo = cycles.find((c) => c.is_active);
           const titulo = churchIdentity?.purpose || churchIdentity?.mission || ciclo?.theme;
@@ -7601,6 +7603,9 @@ function Config({
 
       {/* ─── PÁGINA PÚBLICA ─── */}
       {tab === "pagina" && church && <PublicPageEditor church={church} currentRole={currentRole} />}
+
+      {/* ─── CONTRIBUIR (chave Pix na matriz) ─── */}
+      {tab === "contribuir" && <ContribuirConfig church={sede} />}
 
       {/* ─── CONGREGAÇÕES ─── */}
       {tab === "rede" && (
