@@ -179,6 +179,7 @@ export type MemberView = {
   state?: string | null;
   contactComplete?: boolean;
   firstAccessDone?: boolean;
+  importedAt?: string | null;
 };
 
 export type MinistryView = {

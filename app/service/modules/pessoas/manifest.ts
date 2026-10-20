@@ -18,4 +18,6 @@ export default defineModule({
     ],
   },
   vocabulario: ["voluntario", "caminhada"],
+  /* ficha que entrou pela importação de planilha (0072) */
+  historico: ["importado"],
 });

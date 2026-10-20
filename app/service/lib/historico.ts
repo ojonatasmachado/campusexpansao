@@ -17,6 +17,7 @@ const TIPOS: Record<string, { rotulo: string; icone: string }> = {
   trocou: { rotulo: "Troca de escala", icone: "escalas" },
   faltou: { rotulo: "Faltou", icone: "escalas" },
   contato_cuidado: { rotulo: "Contato", icone: "coracao" },
+  importado: { rotulo: "Cadastro", icone: "membros" },
 };
 
 export function tipoDoFato(tipo: string): { rotulo: string; icone: string } {

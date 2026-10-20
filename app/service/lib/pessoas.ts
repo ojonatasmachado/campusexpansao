@@ -9,8 +9,9 @@ export const DIAS_NOVO = 30;
  *  2. senão, a data do primeiro contato (first_contact), se houver;
  *  3. sem primeiro contato e sem "membro desde", vale a data do cadastro.
  *  Quem tem histórico (primeiro contato antigo ou ano de membro) nunca vira
- *  "novo" só porque a ficha foi importada agora. */
-export function ehNovo(p: { situation?: string | null; firstContact?: string | null; sinceYear?: string | null; createdAt?: string | null }, agora = Date.now()): boolean {
+ *  "novo" só porque a ficha foi importada agora. Ficha que entrou por
+ *  planilha (importedAt, 0072) também não: a data do cadastro é a da importação. */
+export function ehNovo(p: { situation?: string | null; firstContact?: string | null; sinceYear?: string | null; createdAt?: string | null; importedAt?: string | null }, agora = Date.now()): boolean {
   if (p.situation === "novo") return true;
   const limite = agora - DIAS_NOVO * DIA;
   const contato = (p.firstContact ?? "").trim();
@@ -18,7 +19,7 @@ export function ehNovo(p: { situation?: string | null; firstContact?: string | n
     const t = new Date(contato.length === 10 ? `${contato}T12:00:00` : contato).getTime();
     return !Number.isNaN(t) && t > limite;
   }
-  if ((p.sinceYear ?? "").trim()) return false;
+  if ((p.sinceYear ?? "").trim() || p.importedAt) return false;
   if (!p.createdAt) return false;
   const t = new Date(p.createdAt).getTime();
   return !Number.isNaN(t) && t > limite;
