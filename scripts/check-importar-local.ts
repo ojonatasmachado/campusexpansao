@@ -56,10 +56,21 @@ async function main() {
       assert.equal(um.r.importados, um.g.nova.length, `falhas: ${JSON.stringify(um.r.falhas.slice(0, 3))}`);
       assert.equal(um.r.falhas.length, um.g.erro.length);
 
-      const { data: novos } = await sb.from("members").select("id,name,phone,birth,sex,marital_status,imported_at,situation,journey,since_year,postal_code,state").gte("imported_at", new Date(antes - 1000).toISOString());
-      criados.push(...(novos ?? []).map((m) => m.id));
+      /* a API devolve no máximo 1.000 linhas por consulta: busca em páginas para a limpeza não deixar sobra */
+      const buscarCriados = async () => {
+        const out: { id: string; name: string; phone: string | null; birth: string | null; sex: string | null; marital_status: string | null; imported_at: string | null; situation: string; since_year: string | null; postal_code: string | null; state: string | null }[] = [];
+        for (let de = 0; ; de += 1000) {
+          const { data, error } = await sb.from("members").select("id,name,phone,birth,sex,marital_status,imported_at,situation,since_year,postal_code,state").gte("imported_at", new Date(antes).toISOString()).order("id").range(de, de + 999);
+          if (error) throw error;
+          out.push(...(data ?? []));
+          if (!data || data.length < 1000) return out;
+        }
+      };
+      const novos = await buscarCriados();
+      for (const m of novos) if (!criados.includes(m.id)) criados.push(m.id);
+      assert.equal(novos.length, um.r.importados);
       /* a API devolve no máximo 1.000 linhas por consulta: a conferência do total é por contagem */
-      const { count: total } = await sb.from("members").select("id", { count: "exact", head: true }).gte("imported_at", new Date(antes - 1000).toISOString());
+      const { count: total } = await sb.from("members").select("id", { count: "exact", head: true }).gte("imported_at", new Date(antes).toISOString());
       assert.equal(total, um.r.importados);
       const { count: fatos } = await sb.from("timeline_events").select("id", { count: "exact", head: true }).eq("event_type", "importado").in("member_id", (novos ?? []).slice(0, 50).map((m) => m.id));
       assert.equal(fatos, Math.min(50, novos!.length), "fato importado na linha do tempo");
@@ -74,6 +85,7 @@ async function main() {
       /* segunda vez: quem entrou agora é "já cadastrado"; completar só preenche vazio */
       const dois = await rodada(true);
       console.log(`  de novo: ${dois.r.importados} importados, ${dois.r.atualizados} atualizados, ${dois.r.pulados} pulados (já cadastradas: ${dois.g.existe.length})`);
+      for (const m of await buscarCriados()) if (!criados.includes(m.id)) criados.push(m.id);
       assert.equal(dois.g.nova.length, 0, "ninguém deveria entrar duas vezes");
       assert.equal(dois.r.atualizados, dois.completar);
     }

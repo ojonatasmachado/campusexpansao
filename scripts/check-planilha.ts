@@ -88,6 +88,20 @@ async function main() {
     assert.equal(r[3].existente, null);
     assert.equal(r[4].repeteLinha, 5);
   });
+  await t("linha sem chave forte compara pelo nome", () => {
+    const mapa = palpiteColunas(["Nome", "Telefone", "Email", "Nascimento"]);
+    const linhas = [
+      lerLinha(["Eva Rocha", "", "", "sem data"], 2, mapa, { hoje }),
+      lerLinha(["Ivo Mota", "", "", ""], 3, mapa, { hoje }),
+      lerLinha(["IVO MOTA", "", "", ""], 4, mapa, { hoje }),
+      lerLinha(["Eva Rocha", "(11) 91111-2222", "", ""], 5, mapa, { hoje }),
+    ];
+    const r = conferir(linhas, [{ id: "9", name: "Eva  Rocha", phone: null, email: null, birth: null }]);
+    assert.equal(r[0].existente?.motivo, "nome");
+    assert.equal(r[1].existente, null);
+    assert.equal(r[2].repeteLinha, 3);
+    assert.equal(r[3].existente, null, "com telefone, só o telefone decide");
+  });
   await t("xlsx", async () => {
     const zip = new JSZip();
     zip.file("xl/workbook.xml", '<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Membros" sheetId="1" r:id="rId1"/></sheets></workbook>');

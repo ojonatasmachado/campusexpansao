@@ -402,7 +402,7 @@ export type Existente = {
   sex?: string | null; marital_status?: string | null; since_year?: string | null;
 };
 
-export type Motivo = "e-mail" | "telefone" | "nome e nascimento";
+export type Motivo = "e-mail" | "telefone" | "nome e nascimento" | "nome";
 export type Conferida = LinhaLida & {
   /** já cadastrada na igreja */
   existente: { pessoa: Existente; motivo: Motivo } | null;
@@ -421,14 +421,27 @@ function chaves(p: { email?: string | null; phone?: string | null; name: string;
   return out;
 }
 
+/* Linha sem e-mail, telefone completo e nascimento não tem chave forte: compara
+   pelo nome, o mesmo último recurso do "Novo membro" (possivelDuplicado).
+   Sem isso, reimportar a mesma planilha cadastrava essas pessoas de novo. */
+function chavesDaLinha(p: { email?: string | null; phone?: string | null; name: string; birth?: string | null }): [Motivo, string][] {
+  const fortes = chaves(p);
+  const n = nomeComparavel(p.name);
+  return fortes.length || !n ? fortes : [["nome", n]];
+}
+
 /** Marca, linha a linha, quem já está cadastrado e quem se repete na planilha. */
 export function conferir(linhas: LinhaLida[], existentes: Existente[]): Conferida[] {
   const indice = new Map<string, Existente>();
-  for (const p of existentes) for (const [m, k] of chaves(p)) if (!indice.has(`${m}:${k}`)) indice.set(`${m}:${k}`, p);
+  for (const p of existentes) {
+    for (const [m, k] of chaves(p)) if (!indice.has(`${m}:${k}`)) indice.set(`${m}:${k}`, p);
+    const n = nomeComparavel(p.name);
+    if (n && !indice.has(`nome:${n}`)) indice.set(`nome:${n}`, p);
+  }
   const vistas = new Map<string, number>();
   return linhas.map((l) => {
     if (l.erro) return { ...l, existente: null, repeteLinha: null };
-    const ks = chaves({ email: l.valores.email, phone: l.valores.telefone, name: l.valores.nome, birth: l.valores.nascimento });
+    const ks = chavesDaLinha({ email: l.valores.email, phone: l.valores.telefone, name: l.valores.nome, birth: l.valores.nascimento });
     let existente: Conferida["existente"] = null;
     for (const [m, k] of ks) { const p = indice.get(`${m}:${k}`); if (p) { existente = { pessoa: p, motivo: m }; break; } }
     let repeteLinha: number | null = null;

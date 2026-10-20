@@ -35,7 +35,7 @@ function grupoDe(l: Conferida): Grupo {
 function motivoDe(l: Conferida): string {
   if (l.erro) return "Sem nome: não entra. Coloque o nome na planilha e importe de novo.";
   if (l.repeteLinha !== null) return `Repete a linha ${l.repeteLinha} da planilha`;
-  if (l.existente) return `${l.existente.pessoa.name} já tem ${l.existente.motivo === "e-mail" ? "o mesmo e-mail" : l.existente.motivo === "telefone" ? "o mesmo telefone" : "o mesmo nome e nascimento"}`;
+  if (l.existente) return `${l.existente.pessoa.name} já tem ${l.existente.motivo === "e-mail" ? "o mesmo e-mail" : l.existente.motivo === "telefone" ? "o mesmo telefone" : l.existente.motivo === "nome" ? "o mesmo nome. A linha não tem telefone, e-mail nem nascimento para conferir" : "o mesmo nome e nascimento"}`;
   return l.avisos.length ? l.avisos.join(" · ") : "Pronta para entrar";
 }
 
