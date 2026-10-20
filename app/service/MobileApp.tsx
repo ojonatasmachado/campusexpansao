@@ -1836,9 +1836,11 @@ function TabPerfil({
             label="Sua foto"
             photoUrl={foto}
             path={`${organizationId}/kids/guardians/${person.id}`}
-            onUploaded={(url) => {
+            onUploaded={async (url) => {
               setFoto(url);
-              createServiceBrowserClient().schema("service").from("people").update({ photo_url: url }).eq("id", person.id);
+              /* antes o erro era ignorado: a foto aparecia e não ficava salva */
+              const { error } = await createServiceBrowserClient().schema("service").from("people").update({ photo_url: url }).eq("id", person.id);
+              if (error) { setFoto(person.photoUrl ?? null); avisar(`A foto não foi salva: ${error.message}`, "warn"); }
             }}
           />
           <div className="m6-meta">Aparece no lugar das iniciais.</div>
@@ -2245,9 +2247,10 @@ function TabKidsArea({
   const meusFilhos = myChildren.filter((c) => myGuardians.some((g) => g.child_id === c.id && g.guardian_person_id === person.id));
   const kidsWall = wallPosts.filter((w) => (w.audience ?? "").toLowerCase().includes("kids")).slice(0, 5);
 
-  const salvarMinhaFoto = (url: string) => {
+  const salvarMinhaFoto = async (url: string) => {
     setMinhaFoto(url);
-    createServiceBrowserClient().schema("service").from("people").update({ photo_url: url }).eq("id", person.id);
+    const { error } = await createServiceBrowserClient().schema("service").from("people").update({ photo_url: url }).eq("id", person.id);
+    if (error) { setMinhaFoto(person.photoUrl ?? null); avisar(`A foto não foi salva: ${error.message}`, "warn"); }
   };
 
   const abrirNovo = () => {
