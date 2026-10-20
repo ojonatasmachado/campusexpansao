@@ -649,11 +649,13 @@ body:has(.coach-layer) .pwa-banner{display:none}
 .m6-sheet{animation:sheetUp .3s var(--ease-drawer)}
 
 /* menus que nascem de um botão crescem a partir dele, não do centro */
-@keyframes pop-in{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
-.help-pop{animation:pop-in .15s var(--ease-out);transform-origin:top left}
-.help-fab-menu{animation:pop-in .15s var(--ease-out);transform-origin:bottom right}
+/* transição com @starting-style, não keyframe: abre e fecha rápido sem recomeçar do zero */
+.help-pop,.help-fab-menu,.top-user-pop,.view-sw-menu{animation:none;transition:opacity .15s var(--ease-out),transform .15s var(--ease-out)}
+@starting-style{.help-pop,.help-fab-menu,.top-user-pop,.view-sw-menu{opacity:0;transform:scale(.97)}}
+.help-pop{transform-origin:top left}
+.help-fab-menu{transform-origin:bottom right}
 .na-barra .help-fab-menu{transform-origin:top right}
-.top-user-pop,.view-sw-menu{animation:pop-in .15s var(--ease-out);transform-origin:top right}
+.top-user-pop,.view-sw-menu{transform-origin:top right}
 
 /* fundo escuro do menu lateral no celular entra junto com a gaveta */
 @media (max-width:1040px){.sb-backdrop{animation:fade .2s ease}}
@@ -662,7 +664,8 @@ body:has(.coach-layer) .pwa-banner{display:none}
    esmaecimentos ficam, porque ajudam a entender o que apareceu */
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  .drawer,.modal,.m-sheet,.m6-sheet,.help-pop,.help-fab-menu,.top-user-pop,.view-sw-menu{animation-name:fade}
+  .drawer,.modal,.m-sheet,.m6-sheet{animation-name:fade}
+  @starting-style{.help-pop,.help-fab-menu,.top-user-pop,.view-sw-menu{transform:none}}
   .login-card.shake{animation:none}
   .sb{transition:opacity .2s ease}
   .toast,.toast.in{transform:none}
