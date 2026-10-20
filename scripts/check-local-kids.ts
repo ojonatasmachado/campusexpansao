@@ -104,6 +104,18 @@ async function main() {
     const { data: tirou } = await responsavel.from("child_guardians").delete().eq("id", co?.id ?? "").select("id");
     confere((tirou ?? []).length === 1, "o responsável principal remove o co-responsável");
 
+    /* voluntário com o Kids liberado na matriz (coluna Voluntário) e servindo num time: é equipe.
+       Maria serve no Louvor; a criança abaixo não é dela. */
+    const outraCrianca = await cria("children", { organization_id: org, church_id: church, name: "Outra Criança Teste", class_id: turma });
+    const presOutra = await cria("kids_attendance", { organization_id: org, session_id: sessao, child_id: outraCrianca, status: "presente", dropped_off_via: "manual" });
+    const core = createClient(URL, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } }).schema("core");
+    const { data: semMatriz } = await responsavel.from("kids_attendance").update({ status: "presente" }).eq("id", presOutra).select("id");
+    confere((semMatriz ?? []).length === 0, "voluntário sem o Kids na matriz não mexe na presença de criança que não é dele");
+    await core.from("role_permissions").upsert({ organization_id: org, role: "voluntario", permission_code: "service.kids", allowed: true }, { onConflict: "organization_id,role,permission_code" });
+    const { data: comMatriz, error: eMat } = await responsavel.from("kids_attendance").update({ status: "presente" }).eq("id", presOutra).select("id");
+    confere(!eMat && (comMatriz ?? []).length === 1, "voluntário com o Kids na matriz atua como equipe");
+    await core.from("role_permissions").delete().eq("organization_id", org).eq("role", "voluntario").eq("permission_code", "service.kids");
+
     /* outra igreja: vínculo com organization_id diferente do da criança */
     const { data: outra } = await admin.from("churches").select("organization_id").neq("organization_id", org).limit(1).maybeSingle();
     if (outra) {

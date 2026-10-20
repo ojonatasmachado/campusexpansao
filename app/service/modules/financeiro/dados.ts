@@ -53,16 +53,25 @@ const COLS_LANC = "id,kind,status,occurred_on,amount_cents,account_id,to_account
 const porOrdem = <T extends { sort_order: number; name: string }>(a: T, b: T) => a.sort_order - b.sort_order || a.name.localeCompare(b.name, "pt-BR");
 
 /* a API devolve no máximo 1.000 linhas por consulta: o mês inteiro vem em páginas,
-   senão a lista e os totais do mês ficariam pela metade num mês cheio */
+   senão a lista e os totais do mês ficariam pela metade num mês cheio. Cada página
+   continua do último lançamento lido (data, criação, id), não por posição: um
+   lançamento feito durante a leitura não desloca as páginas (nada pula nem repete). */
 const PAGINA = 1000;
 async function lancamentosDoMes(s: ReturnType<typeof db>, org: string, de: string, ate: string) {
-  const todos: unknown[] = [];
-  for (let ini = 0; ; ini += PAGINA) {
-    const { data, error } = await s.from("fin_transactions").select(COLS_LANC).eq("organization_id", org).gte("occurred_on", de).lte("occurred_on", ate)
-      .order("occurred_on", { ascending: false }).order("created_at", { ascending: false }).order("id").range(ini, ini + PAGINA - 1);
+  const todos: Lancamento[] = [];
+  let ultimo: Lancamento | null = null;
+  for (;;) {
+    let q = s.from("fin_transactions").select(COLS_LANC).eq("organization_id", org).gte("occurred_on", de).lte("occurred_on", ate);
+    if (ultimo) {
+      const { occurred_on: d, created_at: c, id } = ultimo;
+      q = q.or(`occurred_on.lt.${d},and(occurred_on.eq.${d},created_at.lt."${c}"),and(occurred_on.eq.${d},created_at.eq."${c}",id.lt.${id})`);
+    }
+    const { data, error } = await q.order("occurred_on", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(PAGINA);
     if (error) return { data: null, error };
-    todos.push(...(data ?? []));
-    if (!data || data.length < PAGINA) return { data: todos, error: null };
+    const pagina = (data ?? []) as unknown as Lancamento[];
+    todos.push(...pagina);
+    if (pagina.length < PAGINA) return { data: todos, error: null };
+    ultimo = pagina[pagina.length - 1];
   }
 }
 
