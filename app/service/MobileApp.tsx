@@ -1320,7 +1320,7 @@ function TabKids({
           <input className="input" placeholder="Nome da criança" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
           <input className="input" type="date" value={form.nascimento} onChange={(e) => setForm((f) => ({ ...f, nascimento: e.target.value }))} style={{ marginBottom: 8 }} />
           <select className="select" value={form.genero} onChange={(e) => setForm((f) => ({ ...f, genero: e.target.value }))} style={{ marginBottom: 8 }}>
-            <option value="">Genero (opcional)</option>
+            <option value="">Gênero (opcional)</option>
             <option value="menino">Menino</option>
             <option value="menina">Menina</option>
           </select>
@@ -1337,8 +1337,8 @@ function TabKids({
           )}
           <input className="input" placeholder="Telefone do responsável" value={form.respTel} onChange={(e) => setForm((f) => ({ ...f, respTel: e.target.value }))} style={{ marginTop: 8, marginBottom: 8 }} />
           <input className="input" placeholder="Parentesco (mãe, avó...)" value={form.respParentesco} onChange={(e) => setForm((f) => ({ ...f, respParentesco: e.target.value }))} style={{ marginBottom: 8 }} />
-          <input className="input" placeholder="Contato de emergencia: nome" value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
-          <input className="input" placeholder="Contato de emergencia: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
+          <input className="input" placeholder="Contato de emergência: nome" aria-label="Contato de emergência: nome" value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
+          <input className="input" placeholder="Contato de emergência: telefone" aria-label="Contato de emergência: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
 
           <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 12, fontSize: "var(--fs-app-13)", lineHeight: 1.4 }}>
             <input type="checkbox" checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))} style={{ marginTop: 3 }} />
@@ -1861,7 +1861,7 @@ function TabPerfil({
               <>
                 <MemberContactFields d={perfil} set={(k, v) => setPerfil((p) => ({ ...p, [k]: v }))} erros={perfilTentou ? perfilErros : null} />
                 {perfilErroSalvar && <div className="m6-err">{perfilErroSalvar}</div>}
-                <div className="m6-btns">
+                <div className="m6-btns m6-fixo">
                   <button className="m6-btn sec" type="button" onClick={() => setEditing(false)}>Cancelar</button>
                   <button className="m6-btn pri" type="button" onClick={salvarPerfil}>Salvar</button>
                 </div>
@@ -2356,7 +2356,7 @@ function TabKidsArea({
       <input className="input" placeholder="Nome da criança" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
       <input className="input" type="date" value={form.nascimento} onChange={(e) => setForm((f) => ({ ...f, nascimento: e.target.value }))} style={{ marginBottom: 8 }} />
       <select className="select" value={form.genero} onChange={(e) => setForm((f) => ({ ...f, genero: e.target.value }))} style={{ marginBottom: 8 }}>
-        <option value="">Genero (opcional)</option>
+        <option value="">Gênero (opcional)</option>
         <option value="menino">Menino</option>
         <option value="menina">Menina</option>
       </select>
@@ -2364,15 +2364,15 @@ function TabKidsArea({
       <input className="input" placeholder="Alergias" value={form.alergias} onChange={(e) => setForm((f) => ({ ...f, alergias: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Restrições alimentares" value={form.restricoes} onChange={(e) => setForm((f) => ({ ...f, restricoes: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Plano de saúde ou convênio" value={form.saude} onChange={(e) => setForm((f) => ({ ...f, saude: e.target.value }))} style={{ marginBottom: 8 }} />
-      <input className="input" placeholder="Medicamento em uso continuo" value={form.medicamento} onChange={(e) => setForm((f) => ({ ...f, medicamento: e.target.value }))} style={{ marginBottom: 8 }} />
-      <input className="input" placeholder="Contato de emergencia: nome" value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
-      <input className="input" placeholder="Contato de emergencia: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
+      <input className="input" placeholder="Medicamento em uso contínuo" aria-label="Medicamento em uso contínuo" value={form.medicamento} onChange={(e) => setForm((f) => ({ ...f, medicamento: e.target.value }))} style={{ marginBottom: 8 }} />
+      <input className="input" placeholder="Contato de emergência: nome" aria-label="Contato de emergência: nome" value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
+      <input className="input" placeholder="Contato de emergência: telefone" aria-label="Contato de emergência: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
       <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 12, fontSize: "var(--fs-app-13)", lineHeight: 1.4 }}>
         <input type="checkbox" checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))} style={{ marginTop: 3 }} />
         <span>{imageAuthorizationCopy(form.nome)}</span>
       </label>
       {ficarError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{ficarError}</div>}
-      <button className="m-btn m-btn-ok" style={{ width: "100%" }} onClick={salvarFilho}>Salvar</button>
+      <div className="m6-fixo m6-fixo-mcard"><button className="m-btn m-btn-ok" style={{ width: "100%" }} onClick={salvarFilho}>Salvar</button></div>
     </div>
   );
 

@@ -259,7 +259,7 @@ function QuizEditor({
           <div className="modal-title">{aulaName || "Aula"}</div>
           <div className="modal-sub">Perguntas respondidas ao terminar a aula. Marque a alternativa correta.</div>
         </div>
-        <div className="modal-body" style={{ display: "block", maxHeight: "54vh" }}>
+        <div className="modal-body" style={{ display: "block" }}>
           <div className="quiz-cfg">
             <div className="quiz-cfg-main">
               <div className="quiz-cfg-t">Mínimo de acertos para aprovar</div>
@@ -333,7 +333,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
   const telaRef = useRef<FormScreenHandle>(null);
   /* retrato do curso como abriu (depois de carregar), para perguntar antes de descartar */
   const [retratoInicial, setRetratoInicial] = useState<string | null>(null);
-  useEffect(() => { if (!loading && retratoInicial === null) setRetratoInicial(JSON.stringify(c)); }, [loading, retratoInicial, c]);
+  if (!loading && retratoInicial === null) setRetratoInicial(JSON.stringify(c));
 
   const isEdit = !!courseId;
 

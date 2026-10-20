@@ -770,3 +770,9 @@ body{transition:background-color .2s ease,color .2s ease}
 /* alça da folha: área de 44px para o dedo, que só arrasta na vertical (o resto da folha rola normal) */
 .m6-grab-zona{display:flex;justify-content:center;align-items:flex-start;margin:-10px -20px -13px;padding:10px 20px 0;min-height:44px;touch-action:none;cursor:grab}
 .m6-grab-zona .m6-grab{margin-bottom:0}
+
+/* v7 · rodapé fixo nas subtelas do app com salvar: o botão acompanha a rolagem e
+   fica logo acima da barra de abas (que já soma a área segura) */
+.m6-fixo{position:sticky;bottom:-28px;z-index:2;margin:16px -18px -18px;padding:12px 18px;background:var(--graphite);border-top:0.5px solid var(--border-2);border-radius:0 0 20px 20px}
+.m6-fixo.m6-btns{margin-top:16px}
+.m6-fixo.m6-fixo-mcard{margin:12px -16px -16px;padding:12px 16px;border-radius:0 0 var(--r-lg) var(--r-lg)}

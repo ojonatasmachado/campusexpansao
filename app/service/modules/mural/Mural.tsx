@@ -39,7 +39,6 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
   const [imagemAlt, setImagemAlt] = useState("");
   const [video, setVideo] = useState("");
   const videoInvalido = !!video.trim() && !videoDoLink(video);
-  const destaqueIncompleto = destacar && (!destaqueAte || (!!imagem && !imagemAlt.trim()) || videoInvalido);
   /* hora em que a opção foi escolhida (24h e 48h contam a partir dela) */
   const [lembreteBase, setLembreteBase] = useState(0);
   const lembreteEm = (): Date | null => {
