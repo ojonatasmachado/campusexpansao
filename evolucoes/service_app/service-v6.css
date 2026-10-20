@@ -757,3 +757,6 @@ body{transition:background-color .2s ease,color .2s ease}
 .m-task-body{transition:opacity .2s var(--ease-out),transform .2s var(--ease-out)}
 @starting-style{.m-task-body{opacity:0;transform:translateY(-4px)}}
 @media (prefers-reduced-motion:reduce){@starting-style{.m-task-body{transform:none}}}
+/* alça da folha: área de 44px para o dedo, que só arrasta na vertical (o resto da folha rola normal) */
+.m6-grab-zona{display:flex;justify-content:center;align-items:flex-start;margin:-10px -20px -13px;padding:10px 20px 0;min-height:44px;touch-action:none;cursor:grab}
+.m6-grab-zona .m6-grab{margin-bottom:0}
