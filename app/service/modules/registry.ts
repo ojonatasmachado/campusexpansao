@@ -146,7 +146,13 @@ export function podeVerRota(
   if (papel === "master") return true;
   /* tela restrita (ex. financeiro): só os papéis dela ou quem recebeu a liberação; matriz e voluntário não valem */
   const restrita = ROTA_RESTRITA[rota];
-  if (restrita) return restrita.papeis.includes(papel) || restrita.acessos.some((a) => extras.includes(a));
+  if (restrita) {
+    if (restrita.acessos.some((a) => extras.includes(a))) return true;
+    if (!restrita.papeis.includes(papel)) return false;
+    /* papel previsto, mas a matriz pode negar de propósito (o banco faz o mesmo, ex. can_secretaria em 0078) */
+    const cod = CODIGO_PERMISSAO[rota];
+    return !cod || matriz[papel]?.[cod] !== false;
+  }
   if (extras.includes(rota)) return true;
   if (rota === "config" && (extras.includes("marca") || extras.includes("pesquisas"))) return true;
   if (rota === "membros" && extras.includes("pessoas")) return true;

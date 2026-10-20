@@ -108,7 +108,13 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
       setExistentes(r.lista);
       setColunasNovas(r.colunasNovas);
     } catch {
-      /* sem conseguir ler o banco (demonstração, rede): confere com a lista já carregada */
+      /* fora da demonstração, conferir com a lista já carregada deixaria passar duplicados
+         (pode estar velha ou incompleta): para e pede para tentar de novo */
+      if (church.organizationId !== "org-demo") {
+        setErro("Não foi possível conferir quem já está cadastrado. Confira a conexão e tente de novo.");
+        setLendo(false);
+        return;
+      }
       setExistentes(members.map((m) => ({ id: m.id, name: m.name, phone: m.phone, email: m.email, birth: m.birth, neighborhood: m.neighborhood, street: m.street, city: m.city, state: m.state, postal_code: m.postalCode, since_year: m.sinceYear })));
       setColunasNovas(true);
     }
@@ -352,6 +358,7 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
             <div className="imp-resumo">
               <p className="imp-resumo-t">{[plural(resumo.importados, "importado"), resumo.atualizados ? plural(resumo.atualizados, "atualizado") : "", plural(resumo.pulados, "pulado")].filter(Boolean).join(", ")}.</p>
               {resumo.importados ? <p className="fs-note">Quem entrou já aparece em Pessoas. O convite do app não sai sozinho: envie pela ficha de cada pessoa quando quiser.</p> : null}
+              {resumo.semHistorico ? <p className="fs-note imp-alerta">{plural(resumo.semHistorico, "pessoa entrou", "pessoas entraram")}, mas sem o registro &quot;importado&quot; na linha do tempo. As fichas estão certas; só falta esse registro.</p> : null}
               {resumo.falhas.length ? (
                 <div className="imp-falhas">
                   <p className="fs-note imp-alerta">{plural(resumo.falhas.length, "linha não entrou", "linhas não entraram")}. Corrija na planilha e importe só elas de novo.</p>

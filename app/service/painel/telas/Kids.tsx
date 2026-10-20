@@ -268,8 +268,6 @@ export function ChildFormModal({
       return;
     }
 
-    const { error: delError } = await supabase.schema("service").from("child_guardians").delete().eq("child_id", childId);
-    if (delError) { setSaving(false); setError(friendlyWriteError(delError.message ?? "Não foi possível salvar os responsáveis.")); return; }
     /* principal = o primeiro responsável preenchido (linha vazia no topo não conta) */
     const primaryPersonId = withPerson[0]?.person?.id;
     const guardianRows = withPerson.map((g) => ({
@@ -280,10 +278,17 @@ export function ChildFormModal({
       can_pickup: g.canPickup,
       is_primary: g.person!.id === primaryPersonId,
     }));
+    /* grava os responsáveis da ficha antes de tirar os que saíram: a criança nunca
+       fica sem responsável no meio (0079 só aceita o primeiro vínculo da própria pessoa) */
     if (guardianRows.length) {
-      const { error: insError } = await supabase.schema("service").from("child_guardians").insert(guardianRows);
+      const { error: insError } = await supabase.schema("service").from("child_guardians").upsert(guardianRows, { onConflict: "child_id,guardian_person_id" });
       if (insError) { setSaving(false); setError(friendlyWriteError(insError.message ?? "Não foi possível salvar os responsáveis.")); return; }
     }
+    const ficam = guardianRows.map((g) => g.guardian_person_id);
+    let saem = supabase.schema("service").from("child_guardians").delete().eq("child_id", childId);
+    if (ficam.length) saem = saem.not("guardian_person_id", "in", `(${ficam.join(",")})`);
+    const { error: delError } = await saem;
+    if (delError) { setSaving(false); setError(friendlyWriteError(delError.message ?? "Não foi possível salvar os responsáveis.")); return; }
 
     /* saving continua ligado até a tela fechar: um segundo toque não salva de novo.
        Fecha antes do refresh (o voltar do histórico restaura a árvore anterior). */

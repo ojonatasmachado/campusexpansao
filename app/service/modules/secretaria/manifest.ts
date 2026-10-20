@@ -11,8 +11,8 @@ export default defineModule({
   permissoes: ["secretaria"],
   painel: {
     menu: [
-      { rota: "secretaria", grupo: "Gestão", rotulo: "Secretaria", icone: "documento", ordem: 74, permissao: "secretaria", papeis: ["master", "pastor"] },
+      { rota: "secretaria", grupo: "Gestão", rotulo: "Secretaria", icone: "documento", ordem: 74, permissao: "secretaria", papeis: ["master", "pastor"], acessos: ["secretaria"] },
     ],
   },
-  rotas: [{ caminho: "/service/carteirinha", tipo: "qr" }],
+  rotas: [{ caminho: "/service/carteirinha/[codigo]", tipo: "qr" }],
 });

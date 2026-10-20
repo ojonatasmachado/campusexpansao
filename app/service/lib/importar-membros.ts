@@ -10,7 +10,7 @@ import { camposVazios, paraBanco, type Conferida, type Existente } from "./plani
 
 type Banco = ReturnType<SupabaseClient["schema"]>;
 
-export type ResumoImportacao = { importados: number; atualizados: number; pulados: number; falhas: { n: number; nome: string; motivo: string }[] };
+export type ResumoImportacao = { importados: number; atualizados: number; pulados: number; falhas: { n: number; nome: string; motivo: string }[]; semHistorico: number };
 
 const LOTE = 200;
 const COLS_BASE = "id,name,phone,email,birth,neighborhood,street,city,state,postal_code,since_year";
@@ -29,6 +29,10 @@ export async function carregarExistentes(sb: Banco, organizationId: string): Pro
   };
   const comNovas = await buscar(`${COLS_BASE},sex,marital_status`);
   if (!comNovas.error) return { lista: comNovas.lista, colunasNovas: true };
+  /* só cai para as colunas antigas se o erro for coluna inexistente (antes da 0072);
+     qualquer outro erro (rede, permissão) sobe, para a tela pedir que tente de novo */
+  const semColuna = comNovas.error.code === "42703" || comNovas.error.code === "PGRST204" || /column .* does not exist/i.test(comNovas.error.message ?? "");
+  if (!semColuna) throw new Error(friendlyWriteError(comNovas.error.message));
   const base = await buscar(COLS_BASE);
   if (base.error) throw new Error(friendlyWriteError(base.error.message));
   return { lista: base.lista, colunasNovas: false };
@@ -58,7 +62,7 @@ export async function gravarImportacao(sb: Banco, p: {
   const sortKey = Number(hoje.replace(/-/g, ""));
   const quando = hoje.split("-").reverse().join("/");
   const total = p.novas.length + p.completar.length;
-  const r: ResumoImportacao = { importados: 0, atualizados: 0, pulados: p.puladas, falhas: p.comErro.map((l) => ({ n: l.n, nome: l.valores.nome, motivo: l.erro ?? "" })) };
+  const r: ResumoImportacao = { semHistorico: 0, importados: 0, atualizados: 0, pulados: p.puladas, falhas: p.comErro.map((l) => ({ n: l.n, nome: l.valores.nome, motivo: l.erro ?? "" })) };
   let feito = 0;
   p.aoAvancar?.(feito, total);
 
@@ -91,7 +95,11 @@ export async function gravarImportacao(sb: Banco, p: {
       }
     }
     r.importados += gravadas.length;
-    if (gravadas.length) await sb.from("timeline_events").insert(gravadas.map(fato));
+    if (gravadas.length) {
+      /* a ficha já entrou; se o fato da linha do tempo falhar, o resumo conta (não some calado) */
+      const { error: eh } = await sb.from("timeline_events").insert(gravadas.map(fato));
+      if (eh) r.semHistorico += gravadas.length;
+    }
     feito += lote.length;
     p.aoAvancar?.(feito, total);
   }

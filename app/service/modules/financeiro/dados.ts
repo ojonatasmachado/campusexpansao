@@ -52,6 +52,20 @@ const COLS_LANC = "id,kind,status,occurred_on,amount_cents,account_id,to_account
 
 const porOrdem = <T extends { sort_order: number; name: string }>(a: T, b: T) => a.sort_order - b.sort_order || a.name.localeCompare(b.name, "pt-BR");
 
+/* a API devolve no máximo 1.000 linhas por consulta: o mês inteiro vem em páginas,
+   senão a lista e os totais do mês ficariam pela metade num mês cheio */
+const PAGINA = 1000;
+async function lancamentosDoMes(s: ReturnType<typeof db>, org: string, de: string, ate: string) {
+  const todos: unknown[] = [];
+  for (let ini = 0; ; ini += PAGINA) {
+    const { data, error } = await s.from("fin_transactions").select(COLS_LANC).eq("organization_id", org).gte("occurred_on", de).lte("occurred_on", ate)
+      .order("occurred_on", { ascending: false }).order("created_at", { ascending: false }).order("id").range(ini, ini + PAGINA - 1);
+    if (error) return { data: null, error };
+    todos.push(...(data ?? []));
+    if (!data || data.length < PAGINA) return { data: todos, error: null };
+  }
+}
+
 export function useFinanceiro(org: string | undefined, mes: string) {
   const [d, setD] = useState<DadosFin>({ carregando: true, erro: "", contas: [], categorias: [], fundos: [], lancamentos: [], saldoConta: {}, saldoFundo: {}, pessoas: [] });
   const [versao, setVersao] = useState(0);
@@ -69,8 +83,7 @@ export function useFinanceiro(org: string | undefined, mes: string) {
         s.from("fin_accounts").select("id,name,kind,institution,opening_balance_cents,opening_date,active,sort_order").eq("organization_id", org),
         s.from("fin_categories").select("id,kind,name,system_code,active,sort_order").eq("organization_id", org),
         s.from("fin_funds").select("id,name,designated,is_default,active,sort_order").eq("organization_id", org),
-        s.from("fin_transactions").select(COLS_LANC).eq("organization_id", org).gte("occurred_on", de).lte("occurred_on", ate)
-          .order("occurred_on", { ascending: false }).order("created_at", { ascending: false }).limit(2000),
+        lancamentosDoMes(s, org, de, ate),
         s.rpc("fin_saldos", { p_org: org }),
         s.rpc("fin_saldos_fundos", { p_org: org }),
         s.rpc("fin_pessoas", { p_org: org }),
