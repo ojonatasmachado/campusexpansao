@@ -2,6 +2,7 @@
 
 import { plural } from "./lib/plural";
 import { Icon } from "./lib/icons";
+import { htmlSeguro } from "./lib/html-seguro";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
@@ -212,7 +213,7 @@ export default function CursoDrawer({
               {course.divulgacao && (
                 <div
                   style={{ fontSize: "var(--fs-ui-md)", color: "var(--light)", lineHeight: 1.6, marginBottom: 12 }}
-                  dangerouslySetInnerHTML={{ __html: course.divulgacao }}
+                  dangerouslySetInnerHTML={{ __html: htmlSeguro(course.divulgacao) }}
                 />
               )}
               {course.materiais.map((m) => (

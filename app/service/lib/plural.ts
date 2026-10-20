@@ -6,6 +6,7 @@ export function faltaN(n: number, singular: string, pluralForm?: string): string
   return `${n === 1 ? "falta" : "faltam"} ${plural(n, singular, pluralForm)}`;
 }
 
+/* número com separador de milhar do Brasil: "1.284 pessoas", não "1284 pessoas" (break-ui) */
 export function plural(n: number, singular: string, pluralForm?: string): string {
-  return `${n} ${n === 1 ? singular : pluralForm ?? `${singular}s`}`;
+  return `${n.toLocaleString("pt-BR")} ${n === 1 ? singular : pluralForm ?? `${singular}s`}`;
 }

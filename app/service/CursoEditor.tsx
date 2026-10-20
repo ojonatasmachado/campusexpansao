@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "./lib/icons";
+import { htmlSeguro } from "./lib/html-seguro";
 import { plural } from "./lib/plural";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -111,8 +112,10 @@ function RichText({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (ref.current && ref.current.innerHTML !== (value || "")) {
-      ref.current.innerHTML = value || "";
+    /* o texto gravado passa pela mesma limpeza da tela do membro antes de virar HTML editável */
+    const limpo = htmlSeguro(value);
+    if (ref.current && ref.current.innerHTML !== limpo) {
+      ref.current.innerHTML = limpo;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

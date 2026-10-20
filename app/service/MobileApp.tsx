@@ -7,6 +7,7 @@ import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon, Caret } from "./lib/icons";
 import { aindaVaiAcontecer, quandoMensagem, formatDateBR, joinDot, paraPublico, parseISODate, porPublicacao, quandoPublicado, saudacao, somaDias, todayISO, weekdayFromISO } from "./lib/date";
 import { plural } from "./lib/plural";
+import { iniciais } from "./lib/iniciais";
 import { formatarTelefone } from "./lib/telefone";
 import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import { PhotoPicker } from "./PhotoPicker";
@@ -324,11 +325,7 @@ const ETAPAS = [
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-function ini(name: string) {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-}
+const ini = (name: string) => iniciais(name);
 
 function Av({ name, size = "sm", photoUrl }: { name: string; size?: "xs" | "sm" | "md" | "lg" | "xl"; photoUrl?: string | null }) {
   return (

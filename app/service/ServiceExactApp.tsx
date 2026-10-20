@@ -2644,7 +2644,7 @@ function Kpi({ icon, label, value, foot, amber, help }: { icon: string; label: s
   return (
     <div className="kpi">
       <div className="kpi-label"><Icon name={icon} size={13} /> {label}</div>
-      <div className="kpi-value" style={amber ? { color: "var(--amber)" } : undefined}>{value}</div>
+      <div className="kpi-value" style={amber ? { color: "var(--amber)" } : undefined}>{typeof value === "number" ? value.toLocaleString("pt-BR") : value}</div>
       <div className="kpi-foot">{foot}</div>
       {help ? <div className="kpi-how"><HelpDot label="Como calculamos" text={help} /></div> : null}
     </div>

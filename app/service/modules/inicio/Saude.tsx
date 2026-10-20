@@ -40,7 +40,7 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, extras = [] }: {
         const mudou = n.anterior !== undefined && n.anterior !== n.valor;
         return (
           <button key={n.id} type="button" className="saude-n" onClick={() => setLista(n)} disabled={!n.itens.length} aria-label={`${ct(n.rotulo)}: ${n.valor}${cmp ? `, ${cmp}` : ""}. Ver a lista`}>
-            <span className="saude-v">{n.valor}</span>
+            <span className="saude-v">{n.valor.toLocaleString("pt-BR")}</span>
             <span className="saude-l">{ct(n.rotulo)}</span>
             {cmp && mudou && <span className="saude-c">{cmp}</span>}
           </button>
