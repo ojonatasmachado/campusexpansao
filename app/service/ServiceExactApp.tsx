@@ -70,6 +70,7 @@ import { EntradaConfig } from "./modules/entrada/EntradaConfig";
 import { NovosCadastros } from "./modules/entrada/NovosCadastros";
 import { medir } from "./lib/medicao";
 import { MetricasInternas } from "./modules/relatorios/MetricasInternas";
+import { Secretaria } from "./modules/secretaria/Secretaria";
 import { SETUP_INICIAL, linhaDoSetup, type SetupEstado } from "./modules/configuracao/setup";
 import { ROTA_GRUPO, cfgTabs as gerarCfgTabs, modulosLigados, navGroups, podeVerRota, rotaLigada, termosDaRota } from "./modules/registry";
 
@@ -825,7 +826,7 @@ const CEX_ICON_FOR: Record<string, string> = {
   decisoes: "decisoes", batismos: "batismos", cursos: "cursos",
   escalas: "escalas", reunioes: "reunioes", ensaios: "ensaios", quadros: "quadros", espacos: "espacos",
   cultos: "cultos", comunicacao: "comunicacao", conversas: "conversas", oracao: "oracao",
-  relatorios: "relatorios", config: "config", identidade: "identidade", historia: "historia", marca: "pincel",
+  relatorios: "relatorios", config: "config", identidade: "identidade", historia: "historia", marca: "pincel", secretaria: "documento",
 };
 
 
@@ -841,6 +842,7 @@ const ACESSO_ROTAS: { id: string; label: string }[] = [
   { id: "batismos", label: "Batismos" },
   { id: "cursos", label: "Cursos e trilhas" },
   { id: "relatorios", label: "Relatórios" },
+  { id: "secretaria", label: "Secretaria" },
   { id: "marca", label: "Personalização (cor e logo)" },
   { id: "pesquisas", label: "Pesquisas" },
   { id: "oracao", label: "Pedidos de oração" },
@@ -871,6 +873,7 @@ const ROUTES = {
   conversas: "SERVICE · CONVERSAS",
   oracao: "SERVICE · ORAÇÃO",
   relatorios: "SERVICE · RELATÓRIOS",
+  secretaria: "SERVICE · SECRETARIA",
   config: "SERVICE · CONFIGURAÇÕES",
   identidade: "SERVICE · IDENTIDADE",
   historia: "SERVICE · NOSSA HISTÓRIA",
@@ -1899,6 +1902,7 @@ export default function ServiceExactApp({
         {route === "oracao" ? <OracaoPainel organizationId={firstChurch?.organizationId} churches={churches} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} currentPersonId={perspectivePersonId} scopeMinistryIds={scopeMinistryIds} pendingChatMemberId={pendingChatMemberId} onConsumePendingChatMember={() => setPendingChatMemberId(null)} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} confirmationRate={confirmationRate} setRoute={setRoute} church={firstChurch} /> : null}
+        {route === "secretaria" && firstChurch ? <Secretaria church={firstChurch} churches={churches} members={members} people={people} kidsChildren={kidsChildren} childGuardians={childGuardians} currentPersonId={currentPersonId} /> : null}
         {route === "relatorios" && currentRole === "master" && firstChurch?.organizationId ? <div className="content wide" style={{ paddingTop: 0 }}><MetricasInternas organizationId={firstChurch.organizationId} /></div> : null}
         {route === "configurar" && firstChurch ? (
           <Assistente
@@ -5735,6 +5739,7 @@ const ACOES_V2 = [
   { id: "identidade", nome: "Identidade e propósito", grupo: "Gestão" },
   { id: "historia", nome: "Nossa história", grupo: "Gestão" },
   { id: "quadros", nome: "Quadros", grupo: "Gestão" },
+  { id: "secretaria", nome: "Secretaria", grupo: "Gestão" },
   { id: "igreja", nome: "Dados da igreja e página", grupo: "Configurações" },
   { id: "permissoes", nome: "Configurações e permissões", grupo: "Configurações" },
   { id: "rede", nome: "Congregações", grupo: "Configurações" },

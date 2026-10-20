@@ -50,8 +50,8 @@ function procurar(lista: string[], re: RegExp, filtro?: (m: RegExpExecArray, src
   return out;
 }
 
-/* folhas de impressão do QR (papel branco, fora do app) ficam de fora da regra de cor */
-const IMPRESSAO = /CheckIn\.tsx|AulaCheckin\.tsx|KidsCheckin\.tsx/;
+/* folhas de impressão do QR (papel branco, fora do app) e a carteirinha (peça da igreja, AGENTS.md §2) ficam de fora da regra de cor */
+const IMPRESSAO = /CheckIn\.tsx|AulaCheckin\.tsx|KidsCheckin\.tsx|secretaria\/Carteirinha\.tsx/;
 /* escolha de cor (a própria cor é o conteúdo) e as contas do tema */
 const COR_PERMITIDA = /lib\/theme\.ts|lib\/color\.ts|ThemePicker\.tsx|AccentField\.tsx|IdentidadeFields\.tsx|PublicPageEditor\.tsx|configuracao\/Assistente\.tsx|EventoShare\.tsx|ImageCropper\.tsx/;
 
