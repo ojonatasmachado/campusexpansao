@@ -672,7 +672,7 @@ export function Escalas({
 
       {gaps.length > 0 ? (
         <div className="panel" style={{ marginTop: 18 }}>
-          <div className="panel-head"><span className="panel-title"><Icon name="escalas" size={14} /> Pendências da semana <HelpDot label="Como calculamos" text="Vagas da escala desta semana que ainda não têm ninguém confirmado." /></span><span className="panel-meta">{gaps.length} vagas</span></div>
+          <div className="panel-head"><span className="panel-title"><Icon name="escalas" size={14} /> Pendências da semana <HelpDot text="Vagas da escala desta semana que ainda não têm ninguém confirmado." /></span><span className="panel-meta">{gaps.length} vagas</span></div>
           <div className="panel-body flush">
             {gaps.slice(0, 5).map((gap) => <div className="gap-row" key={`${gap.event.id}-${gap.position.id}`}><div className="gap-ic wait">!</div><div className="mini-main"><div className="mini-title">{gap.position.name} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {gap.ministry.name}</span></div><div className="mini-sub">{joinDot(gap.event.name, gap.event.time)}</div></div></div>)}
           </div>

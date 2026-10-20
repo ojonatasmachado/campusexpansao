@@ -22,9 +22,9 @@ const HELP_W = 280;
 const HELP_GAP = 8;
 const HELP_MARGIN = 12;
 
-/* "?" ao lado de um título, ou, com `label`, um link de texto ("Como
-   calculamos") embaixo de números e painéis (S12). Mesma caixa nos dois. */
-export function HelpDot({ text, label }: { text: string; label?: string }) {
+/* Definições ficam no "?" junto do título, sem acrescentar uma ação de texto
+   a cada indicador. A explicação continua disponível no teclado e no toque. */
+export function HelpDot({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
   const ref = useRef<HTMLSpanElement>(null);
@@ -86,12 +86,12 @@ export function HelpDot({ text, label }: { text: string; label?: string }) {
     <span className="help-dot-wrap" ref={ref}>
       <button
         type="button"
-        className={label ? "help-link" : "help-dot"}
-        aria-label={label ? undefined : "Ajuda"}
+        className="help-dot"
+        aria-label="Ajuda"
         aria-expanded={open}
         onClick={(e) => { e.stopPropagation(); e.preventDefault(); setPos(null); setOpen((o) => !o); }}
       >
-        {label ?? "?"}
+        ?
       </button>
       {pop ? createPortal(pop, document.body) : null}
     </span>
