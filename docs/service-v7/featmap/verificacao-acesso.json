@@ -1,0 +1,8 @@
+{
+  "method": "Execução isolada da função podeVerRota, extraída de registry.ts, com ROTA_RESTRITA e CODIGO_PERMISSAO derivados dos 34 manifestos atuais. Sem acesso ao banco.",
+  "result": {
+    "delegadoSecretaria": false,
+    "pastorSecretariaNegada": true,
+    "delegadoFinanceiro": true
+  }
+}
