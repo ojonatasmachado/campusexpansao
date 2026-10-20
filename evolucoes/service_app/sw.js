@@ -5,7 +5,7 @@
    ════════════════════════════════════════════════════════════════ */
 const CACHE = 'cex-service-v2';
 const SHELL = [
-  './index.html', './service.css',
+  './index.html', './service-app.css',
   './data.js', './data-jornada.js',
   './shell.jsx', './screens.jsx', './times.jsx', './escalas.jsx',
   './visitantes.jsx', './membros.jsx', './jornada.jsx', './cursos.jsx',

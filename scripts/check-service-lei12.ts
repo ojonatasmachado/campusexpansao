@@ -27,7 +27,7 @@ function arquivos(dir: string, ext: RegExp): string[] {
 }
 
 const TSX = arquivos(join(RAIZ, "app/service"), /\.(tsx|ts)$/);
-const CSS = ["service.css", "service-v2.css", "service-v3.css", "service-v4.css", "service-v5.css", "service-v6.css"].map((f) => join(RAIZ, "evolucoes/service_app", f));
+const CSS = ["service-app.css"].map((f) => join(RAIZ, "evolucoes/service_app", f));
 
 /* texto de código sem comentários (o que vale é o que aparece na tela) */
 function semComentarios(src: string): string {

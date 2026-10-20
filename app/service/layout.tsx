@@ -1,11 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import "../../evolucoes/service_app/service.css";
-import "../../evolucoes/service_app/service-v2.css";
-import "../../evolucoes/service_app/service-v3.css";
-import "../../evolucoes/service_app/service-v4.css";
-import "../../evolucoes/service_app/service-v5.css";
-import "../../evolucoes/service_app/service-v6.css";
-import "../../evolucoes/service_app/service-form.css";
+import "../../evolucoes/service_app/service-app.css";
 import PwaBootstrap from "./PwaBootstrap";
 import DialogosAcessiveis from "./DialogosAcessiveis";
 
