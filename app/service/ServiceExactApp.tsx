@@ -222,6 +222,8 @@ export type RosterAssignmentView = {
   position_id: string;
   person_id: string;
   status: "ok" | "wait" | "no";
+  /* v7 · escala do período (0074): montada e ainda não publicada */
+  rascunho?: boolean;
 };
 
 type DecisionView = {
