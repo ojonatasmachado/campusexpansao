@@ -8,8 +8,11 @@ import { avisar } from "../../lib/avisar";
 import { formatDateBR, todayISO } from "../../lib/date";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { FormScreen, FormSection, type FormScreenHandle } from "../../painel/form/FormScreen";
-import type { ChildGuardianView, ChildView, ChurchView, MemberView, PersonView } from "../../ServiceExactApp";
+import type { ChildGuardianView, ChurchView, MemberView, PersonView } from "../../ServiceExactApp";
 import { FORMAS_ENTRADA, MOTIVOS_SAIDA, REGISTRO_COLS, livroDe, numeroFmt, type Livro, type Registro } from "./livros";
+
+/** o que o livro usa da criança do Kids */
+export type CriancaKids = { id: string; name: string; birth: string | null };
 
 export function RegistroForm({ livro, registro, church, demo, members, people, kidsChildren, childGuardians, currentPersonId, onSalvo, onCarteirinha, onClose }: {
   livro: Livro;
@@ -18,7 +21,7 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
   demo: boolean;
   members: MemberView[];
   people: PersonView[];
-  kidsChildren: ChildView[];
+  kidsChildren: CriancaKids[];
   childGuardians: ChildGuardianView[];
   currentPersonId?: string | null;
   onSalvo: (r: Registro, removido?: boolean) => void;

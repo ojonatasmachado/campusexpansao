@@ -11,11 +11,11 @@ import { Icon } from "../../lib/icons";
 import { plural } from "../../lib/plural";
 import { rawAccent } from "../../lib/theme";
 import { EmptyState, PageHead } from "../../painel/ui";
-import type { ChildGuardianView, ChildView, ChurchView, MemberView, PersonView } from "../../ServiceExactApp";
+import type { ChildGuardianView, ChurchView, MemberView, PersonView } from "../../ServiceExactApp";
 import { Carteirinha, type Marca } from "./Carteirinha";
 import { FolhaDeImpressao, imprimir } from "./imprimir";
 import { LANCA_A_MAO, LIVROS, REGISTRO_COLS, anoDe, anos, colunas, folhaLivro, linhasCsv, livroDe, numeroFmt, registrosDemo, textoBusca, type Livro, type Registro } from "./livros";
-import { RegistroForm } from "./RegistroForm";
+import { RegistroForm, type CriancaKids } from "./RegistroForm";
 
 const PAGINA = 200;
 
@@ -40,7 +40,7 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
   churches: ChurchView[];
   members: MemberView[];
   people: PersonView[];
-  kidsChildren: ChildView[];
+  kidsChildren: CriancaKids[];
   childGuardians: ChildGuardianView[];
   currentPersonId?: string | null;
 }) {
