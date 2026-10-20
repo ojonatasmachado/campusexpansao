@@ -321,7 +321,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                 <div className="cfg-row-t">{pagina.enabled ? "Publicada" : "Despublicada"}</div>
                 <div className="cfg-row-s">{viewCount !== null ? `${viewCount} visualizações até agora` : "Carregando estatísticas..."}</div>
               </div>
-              <button type="button" className={`sw${pagina.enabled ? " on" : ""}`} onClick={() => savePagina({ enabled: !pagina.enabled })} />
+              <button type="button" role="switch" aria-label="Publicar página da igreja" aria-checked={pagina.enabled} className={`sw${pagina.enabled ? " on" : ""}`} onClick={() => savePagina({ enabled: !pagina.enabled })} />
             </div>
 
             <div className="field-label" style={{ marginTop: 14 }}>Endereço da página</div>
@@ -349,7 +349,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
 
             {loginUrl && (
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 14 }}>
-                <div className="cfg-row-main" style={{ flex: "none" }}>
+                <div className="cfg-row-main" style={{ flex: "0 1 auto" }}>
                   <div className="field-label" style={{ marginTop: 0 }}>Acesso da equipe (login com a cara da igreja)</div>
                   <span style={{ fontSize: "var(--fs-ui-13)", color: "var(--muted)" }}>{loginUrl.replace(/^https?:\/\//, "")}</span>
                 </div>
@@ -647,7 +647,7 @@ function LinkModal({
             <div className="cfg-row-main">
               <div className="cfg-row-t">Visível na página</div>
             </div>
-            <button type="button" className={`sw${form.active ? " on" : ""}`} onClick={() => setForm((f) => ({ ...f, active: !f.active }))} />
+            <button type="button" role="switch" aria-label="Link ativo" aria-checked={form.active} className={`sw${form.active ? " on" : ""}`} onClick={() => setForm((f) => ({ ...f, active: !f.active }))} />
           </div>
         </div>
         <div className="modal-foot" style={{ justifyContent: "space-between" }}>
@@ -714,7 +714,7 @@ function PostModal({
             <div className="cfg-row-main">
               <div className="cfg-row-t">Fixar no topo</div>
             </div>
-            <button type="button" className={`sw${form.pinned ? " on" : ""}`} onClick={() => setForm((f) => ({ ...f, pinned: !f.pinned }))} />
+            <button type="button" role="switch" aria-label="Fixar notícia" aria-checked={form.pinned} className={`sw${form.pinned ? " on" : ""}`} onClick={() => setForm((f) => ({ ...f, pinned: !f.pinned }))} />
           </div>
         </div>
         <div className="modal-foot" style={{ justifyContent: "space-between" }}>

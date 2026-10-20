@@ -139,9 +139,9 @@ function FamilyPreview({ family, accent }: { family: NeutralFamily; accent: stri
 function ThemePreview({ brand, mode, churchName, logoUrl }: { brand: BrandCfg; mode: ThemeMode; churchName?: string; logoUrl?: string | null }) {
   const vars = themeVars(brand, mode) as CSSProperties;
   return (
-    <figure className="tp-prev" style={vars} aria-label={`Prévia no modo ${mode === "dark" ? "escuro" : "claro"}`}>
+    <figure className="tp-prev" aria-label={`Prévia no modo ${mode === "dark" ? "escuro" : "claro"}`}>
       <figcaption className="tp-cap">{mode === "dark" ? "Modo escuro" : "Modo claro"}</figcaption>
-      <div className="tp-screen">
+      <div className="tp-screen" style={vars}>
         <div className="tp-head">
           <ChurchLockup size="sm" logoUrl={logoUrl} name={churchName} />
         </div>
