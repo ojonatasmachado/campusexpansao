@@ -3729,3 +3729,23 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 }
 @media (max-width:860px),(pointer:coarse){ .imp-cols .select,.imp-ddd{min-height:44px;font-size:16px} .imp-voltar{min-height:44px} }
 @media (prefers-reduced-motion:reduce){ .imp-prog-fill{transition:none} }
+
+/* v7 · entrada por link: Configurações › Entrada na igreja, fila de novos cadastros e código */
+.entrada-link{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:14px;border:0.5px solid var(--border-2);border-radius:var(--r-ctl);background:var(--ink)}
+.entrada-link-main{flex:1 1 240px;min-width:0;display:flex;flex-direction:column;gap:4px}
+.entrada-url{font-size:var(--fs-pn-14);font-weight:600;color:var(--white);overflow-wrap:anywhere}
+.entrada-acoes{display:flex;flex-wrap:wrap;gap:6px}
+.entrada-qr{display:flex;flex-wrap:wrap;align-items:center;gap:16px 18px;margin-top:16px}
+.entrada-qr-img{background:#fff;padding:10px;border-radius:10px;line-height:0}
+.entrada-regras{flex-wrap:wrap}
+.entrada-regras .opt{flex:1 1 240px}
+.entrada-fila{margin-bottom:20px}
+.entrada-aviso{color:var(--light);font-weight:500}
+.entrada-escolha{flex:1 1 100%;display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:var(--r-ctl);background:var(--graphite);border:0.5px solid var(--border-2)}
+.entrada-fichas{display:flex;flex-direction:column;gap:6px}
+.entrada-ficha{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:44px;padding:8px 12px;border-radius:var(--r-ctl);border:0.5px solid var(--border-2);background:var(--ink);color:inherit;text-align:left;font:inherit;cursor:pointer}
+@media (hover:hover) and (pointer:fine){.entrada-ficha:hover{border-color:var(--olive)}}
+.entrada-ficha:disabled{opacity:.6;cursor:default}
+.entrada-busca{width:100%}
+.login-input.entrada-codigo{font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+@media (max-width:860px),(pointer:coarse){.entrada-busca{font-size:16px;min-height:44px}}

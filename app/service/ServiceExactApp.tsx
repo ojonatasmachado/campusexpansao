@@ -66,6 +66,8 @@ import { comData, escopoDe } from "./modules/aniversarios/aniversarios";
 import { Aniversariantes, AniversariantesDaSemana } from "./modules/aniversarios/Aniversariantes";
 import { OracaoPainel } from "./modules/oracao/OracaoPainel";
 import { Assistente } from "./modules/configuracao/Assistente";
+import { EntradaConfig } from "./modules/entrada/EntradaConfig";
+import { NovosCadastros } from "./modules/entrada/NovosCadastros";
 import { medir } from "./lib/medicao";
 import { MetricasInternas } from "./modules/relatorios/MetricasInternas";
 import { SETUP_INICIAL, linhaDoSetup, type SetupEstado } from "./modules/configuracao/setup";
@@ -2460,6 +2462,7 @@ function Painel({
           )}
         </div>
       )}
+      {gestao && <NovosCadastros />}
       {cuidado && (cuidado.lista.length > 0 || (cuidado.criancas?.length ?? 0) > 0) && (
         <div style={{ marginBottom: 20 }}>
           <ListaDeCuidado lista={cuidado.lista} criancas={cuidado.criancas} semanas={cuidado.semanas} onAbrir={(a) => setDrawer(a.memberId ? { kind: "member", id: a.memberId } : { kind: "person", id: a.personId })} />
@@ -7560,6 +7563,7 @@ function Config({
 
       {/* ─── ACESSOS POR PESSOA ─── */}
       {tab === "acessos" && <AcessosCard people={people} church={church} currentRole={currentRole} />}
+      {tab === "entrada" && <EntradaConfig />}
 
       {tab === "pesquisas" && church?.organizationId && <PesquisasView organizationId={church.organizationId} ministries={ministries} />}
 
