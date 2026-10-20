@@ -287,8 +287,8 @@ const ANNOUNCEMENTS = [
   { id: "an-2", title: "Escalas de julho disponíveis", body: "Acesse o app do voluntário para confirmar sua participação.", audience: "voluntários", author: "Equipe de escalas", when_label: "agora", created_at: new Date().toISOString() },
   /* 0075: urgente, rascunho e agendado */
   { id: "an-3", title: "Culto de domingo mudou para o salão 2", body: "O templo principal está em reforma. Mesmo horário, 19h.", audience: "todos", author: "Liderança", when_label: "agora", created_at: new Date(Date.now() - 3600000).toISOString(), urgent: true },
-  { id: "an-4", title: "Campanha do agasalho", body: "Rascunho: confirmar os pontos de coleta com a diaconia.", audience: "todos", author: "Liderança", when_label: "agora", created_at: new Date().toISOString(), status: "rascunho" },
-  { id: "an-5", title: "Ceia no próximo domingo", body: "Venha preparado. Teremos ceia no culto da noite.", audience: "todos", author: "Liderança", when_label: "agora", created_at: new Date().toISOString(), status: "agendado", publish_at: new Date(Date.now() + 2 * 86400000).toISOString() },
+  { id: "an-4", title: "Campanha do agasalho", body: "Rascunho: confirmar os pontos de coleta com a diaconia.", audience: "todos", author: "Liderança", when_label: "agora", created_at: new Date().toISOString(), status: "rascunho" as const },
+  { id: "an-5", title: "Ceia no próximo domingo", body: "Venha preparado. Teremos ceia no culto da noite.", audience: "todos", author: "Liderança", when_label: "agora", created_at: new Date().toISOString(), status: "agendado" as const, publish_at: new Date(Date.now() + 2 * 86400000).toISOString() },
 ];
 
 const EVENT_ATTENDANCE = [

@@ -25,11 +25,12 @@ function quebrar(ctx: CanvasRenderingContext2D, texto: string, largura: number):
 export async function desenharBoletim(origem: HTMLElement, d: { igreja: string; semana: Semana; agenda: EventView[]; avisos: MuralAviso[] }): Promise<Blob | null> {
   const css = getComputedStyle(origem);
   const cor = (v: string, padrao: string) => css.getPropertyValue(v).trim() || padrao;
-  const fundo = cor("--ink", "#0E110D");
-  const texto = cor("--white", "#FAFAF7");
-  const apoio = cor("--muted", "#8B8C82");
-  const destaque = cor("--olive", "#7A9E3F");
-  const linha = cor("--border-2", "#2E3327");
+  /* o tema da igreja sempre define estas variáveis no Service; o nome de cor é só reserva */
+  const fundo = cor("--ink", "black");
+  const texto = cor("--white", "white");
+  const apoio = cor("--muted", "gray");
+  const destaque = cor("--olive", "olive");
+  const linha = cor("--border-2", "dimgray");
   if (document.fonts?.ready) await document.fonts.ready;
 
   const canvas = document.createElement("canvas");
@@ -108,7 +109,18 @@ export async function desenharBoletim(origem: HTMLElement, d: { igreja: string; 
     ctx.font = fonte(500, 36);
     ctx.fillStyle = apoio;
     ctx.fillText("Tem mais no app da igreja", M, limite + 20);
+    return new Promise((ok) => canvas.toBlob((b) => ok(b), "image/png"));
   }
 
-  return new Promise((ok) => canvas.toBlob((b) => ok(b), "image/png"));
+  /* pouco conteúdo: o bloco desce para o meio, sem deixar metade da imagem vazia */
+  const final = document.createElement("canvas");
+  final.width = L;
+  final.height = A;
+  const fctx = final.getContext("2d");
+  if (!fctx) return null;
+  fctx.fillStyle = fundo;
+  fctx.fillRect(0, 0, L, A);
+  const altura = y + M;
+  fctx.drawImage(canvas, 0, 0, L, altura, 0, Math.max(0, Math.round((A - altura) / 2 - 40)), L, altura);
+  return new Promise((ok) => final.toBlob((b) => ok(b), "image/png"));
 }
