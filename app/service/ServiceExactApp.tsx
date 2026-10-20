@@ -9843,7 +9843,7 @@ function CepField({ field, value, onChange, onPatch }: { field: Extract<FieldDef
    popover no mesmo padrão do IconPicker/DatePicker. Único ponto de render
    de "type: select" no form genérico, então conserta todo campo desse tipo
    no app inteiro de uma vez, não só um formulário específico. */
-function SelectField({ value, onChange, options, placeholder }: { value: string; onChange: (v: string) => void; options: { v: string; l: string }[]; placeholder?: string }) {
+function SelectField({ value, onChange, options, placeholder, label }: { value: string; onChange: (v: string) => void; options: { v: string; l: string }[]; placeholder?: string; label?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -9858,7 +9858,7 @@ function SelectField({ value, onChange, options, placeholder }: { value: string;
 
   return (
     <div className="sel-wrap" ref={ref}>
-      <button type="button" className="sel-trigger" onClick={() => setOpen((o) => !o)}>
+      <button type="button" className="sel-trigger" aria-label={label ? `${label}: ${current?.l || placeholder || "Selecione"}` : undefined} aria-expanded={open} onClick={() => setOpen((o) => !o)}>
         <span className={current ? "" : "sel-ph"}>{current ? current.l : (placeholder || "Selecione")}</span>
         <span className="sel-arrow"><Caret open={open} /></span>
       </button>
@@ -9879,13 +9879,13 @@ function SelectField({ value, onChange, options, placeholder }: { value: string;
 function FField({ field, value, onChange, onPatch }: { field: FieldDef; value: string; onChange: (v: string) => void; onPatch?: (patch: Record<string, string>) => void }) {
   if (field.type === "cep") return <CepField field={field} value={value} onChange={onChange} onPatch={onPatch} />;
   if (field.type === "area")
-    return <textarea className="textarea" value={value} placeholder={field.ph} style={field.big ? { minHeight: 110 } : undefined} onChange={(e) => onChange(e.target.value)} />;
+    return <textarea className="textarea" aria-label={field.label} value={value} placeholder={field.ph} style={field.big ? { minHeight: 110 } : undefined} onChange={(e) => onChange(e.target.value)} />;
   if (field.type === "select")
-    return <SelectField value={value} onChange={onChange} options={field.options} placeholder={field.ph} />;
+    return <SelectField label={field.label} value={value} onChange={onChange} options={field.options} placeholder={field.ph} />;
   if (field.type === "toggle")
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <button type="button" className={`sw${value === "true" ? " on" : ""}`} onClick={() => onChange(value === "true" ? "false" : "true")} />
+        <button type="button" role="switch" aria-label={field.label} aria-checked={value === "true"} className={`sw${value === "true" ? " on" : ""}`} onClick={() => onChange(value === "true" ? "false" : "true")} />
         <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{value === "true" ? (field.onLabel || "Sim") : (field.offLabel || "Não")}</span>
       </div>
     );
@@ -9903,7 +9903,7 @@ function FField({ field, value, onChange, onPatch }: { field: FieldDef; value: s
   }
   if (field.type === "date") return <DatePicker value={value} onChange={onChange} />;
   if (field.type === "time") return <TimePicker value={value} onChange={onChange} />;
-  return <input className="input" value={value} placeholder={field.ph} onChange={(e) => onChange(e.target.value)} />;
+  return <input className="input" aria-label={field.label} value={value} placeholder={field.ph} onChange={(e) => onChange(e.target.value)} />;
 }
 
 function ServiceModal({

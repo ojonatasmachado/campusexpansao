@@ -666,11 +666,11 @@ body[data-theme="light"] .av { box-shadow:none; }
    direita. Preview gruda logo abaixo da topbar (.top é sticky top:0) e
    acompanha o scroll do conteúdo ao lado, até a página estreitar (aí some
    a divisão em colunas e o preview desce pro fim, mobile-first). */
-.pge-layout { display:grid; grid-template-columns:1fr 320px; gap:20px; align-items:start; }
-.pge-main { min-width:0; }
-.pge-preview { position:sticky; top:92px; background:var(--graphite); border:0.5px solid var(--border-2); border-radius:var(--r-lg); padding:24px; }
+.pge-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,320px); gap:20px; align-items:start; }
+.pge-main { min-width:0; overflow-wrap:anywhere; }
+.pge-preview { position:sticky; top:92px; min-width:0; background:var(--graphite); border:0.5px solid var(--border-2); border-radius:var(--r-lg); padding:24px; }
 @media (max-width:980px) {
-  .pge-layout { grid-template-columns:1fr; }
+  .pge-layout { grid-template-columns:minmax(0,1fr); }
   .pge-preview { position:static; }
 }
 
@@ -1118,7 +1118,7 @@ body[data-theme="light"] .av { box-shadow:none; }
 @media (hover:hover) and (pointer:fine) { .opt:hover { border-color:var(--olive-line); } }
 .opt.on { border-color:var(--olive); background:var(--olive-dim); }
 .opt-t { font-size:var(--fs-pn-13); font-weight:600; color:var(--white); letter-spacing:-0.01em; }
-.opt-s { font-size:var(--fs-pn-12); color:var(--muted); margin-top:3px; }
+.opt-s { font-size:var(--fs-pn-12); color:var(--light); margin-top:3px; }
 .swatch-row { display:flex; gap:10px; flex-wrap:wrap; }
 .swatch { width:34px; height:34px; border-radius:50%; border:2px solid transparent; cursor:pointer; transition:transform .14s; }
 @media (hover:hover) and (pointer:fine) { .swatch:hover { transform:scale(1.08); } }
@@ -2803,7 +2803,7 @@ body:has(.mob-bg.mob-self) .pwa-banner{z-index:85;bottom:calc(70px + var(--safe-
 /* alvos de toque */
 @media (pointer:coarse),(max-width:767px){
   .main .btn,.drawer .btn,.modal .btn{min-height:44px}
-  .main .btn-sm,.drawer .btn-sm,.modal .btn-sm{min-height:36px;padding-left:14px;padding-right:14px}
+  .main .btn-sm,.drawer .btn-sm,.modal .btn-sm{min-height:44px;padding-left:14px;padding-right:14px}
 }
 /* onda 0: no celular o rodapé da janela empilha (principal em cima) e o funil vira uma coluna */
 @media (max-width:640px){
@@ -2856,7 +2856,7 @@ body:has(.mob-bg.mob-self) .pwa-banner{z-index:85;bottom:calc(70px + var(--safe-
 .m6-help{margin:10px 20px 0;font-size:var(--fs-app-15);color:var(--muted)}
 .m6-err{margin:8px 0;font-size:var(--fs-app-15);color:var(--danger)}
 .m6-facts{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
-.m6-facts li{display:flex;gap:10px;align-items:flex-start;font-size:var(--fs-app-17);line-height:1.4;color:var(--light)}
+.m6-facts li{display:flex;min-width:0;gap:10px;align-items:flex-start;overflow-wrap:anywhere;font-size:var(--fs-app-17);line-height:1.4;color:var(--light)}
 .m6-facts li>svg,.m6-facts li>.ic,.m6-facts li .cex-ic{flex-shrink:0;margin-top:1px;color:var(--muted)}
 .m6-btns{display:flex;gap:10px;margin-top:16px}
 .m6-btns.col{flex-direction:column}
@@ -3456,6 +3456,10 @@ body{transition:background-color .2s ease,color .2s ease}
 /* seletor de data e de lista com a mesma altura e letra dos campos de texto
    (no toque os campos sobem para 16px; os seletores ficavam com 14 e mais baixos) */
 @media (max-width:860px),(pointer:coarse){
+  /* Base de toque do painel: vale para os módulos e formulários que usam estas peças. */
+  .top-menu,.fs-back{width:44px;height:44px}
+  .top-user-btn{min-width:44px;min-height:44px}
+  .seg button,.seg-chip,.cfg-tab,.btn-sm,.esc-vaga,.esc-preset-sel,.esc-preset-save{min-height:44px}
   .dp-trigger,.sel-trigger{font-size:var(--fs-ui-lg);min-height:44px}
 }
 

@@ -80,6 +80,17 @@ criados fora do registro não entram.
 
 ## Checklist: criar um módulo novo
 
+### Base visual compartilhada
+
+- O Service carrega sua folha própria em `app/service/layout.tsx`: `evolucoes/service_app/service-app.css`. Reutilize as classes existentes em vez de copiar medidas para o módulo.
+- Formulários longos usam `FormScreen` e `FormSection` de `painel/form/FormScreen.tsx`. Campos genéricos passam pelo `FField` da casca, que fornece o nome acessível dos controles.
+- No toque ou até 860px, a base dá 44px aos segmentos, abas, ações compactas e controles de voltar/menu. Não reduza esses alvos num módulo.
+- Para listas de dados do membro, `.m6-facts` já quebra textos contínuos como e-mails. Não acrescente `nowrap` ou esconda a sobra desses dados.
+- Grids que precisam encolher usam `minmax(0,1fr)`; os filhos também precisam poder encolher. Ocultar overflow não corrige conteúdo que não cabe.
+- Prévia de outro tema aplica `themeVars()` no canvas da prévia, preservando o tema do editor nas legendas e controles ao redor.
+
+### Registro e comportamento
+
 - [ ] Pasta em `app/service/modules/<id>/` com `manifest.ts` a partir de `_modelo/`.
 - [ ] Import do manifesto em `registry.ts` (lista `MODULOS`). Menu, Configurações e telas do app saem dele.
 - [ ] Respondi em qual lugar ele mora (lei 2) e quais lugares ocupa (lei 1).
