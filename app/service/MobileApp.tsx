@@ -30,6 +30,8 @@ import { porData, quandoFoi, tipoDoFato, type FatoView } from "./lib/historico";
 import { linhaDoMembro, mesmoDiaDaSemana } from "./lib/contexto-dia";
 import { videoDoLink } from "./lib/video";
 import { medir, medirCartaoVisto } from "./lib/medicao";
+import { Contribuir } from "./modules/contribuir/Contribuir";
+import { contribuirPronto, listaFinalidades, type ContribuirCfg } from "./modules/contribuir/pix";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -287,6 +289,8 @@ export type MobileOverlayProps = {
   onLogout?: () => void;
   /* publicações do Mural que esta pessoa já leu (service.announcement_reads) */
   readAnnouncementIds?: string[];
+  /* chave Pix da igreja (settings.contribuirCfg da matriz); sem chave, Contribuir não aparece */
+  contribuir?: Partial<ContribuirCfg> | null;
   /* cartão "Nossa igreja" na Caminhada (Identidade e propósito) */
   churchPurpose?: { kick?: string | null; title?: string | null; text?: string | null } | null;
   /* "Quando posso servir" (0049) */
@@ -3706,7 +3710,7 @@ function SheetTimes({ person, member, ministries, members, people }: { person: P
   );
 }
 
-function CaminhadaV6({ steps, courses, purpose }: { steps: StepView[]; courses: React.ReactNode; purpose?: { kick?: string | null; title?: string | null; text?: string | null } | null }) {
+function CaminhadaV6({ steps, courses, purpose, contribuir }: { steps: StepView[]; courses: React.ReactNode; purpose?: { kick?: string | null; title?: string | null; text?: string | null } | null; contribuir?: ContribuirCfg | null }) {
   const ui = useContext(MemberUiContext);
   const { comTermos: ct } = useTermos();
   const done = steps.filter((s) => s.st === "feito").length;
@@ -3742,6 +3746,12 @@ function CaminhadaV6({ steps, courses, purpose }: { steps: StepView[]; courses: 
         <div className="m6-lbl">Bíblia</div>
         <div className="m6-list"><M6Row ic="biblia" t="Ler a Bíblia" s="Marque versículos e faça anotações" onClick={() => ui.go("caminhada", "biblia")} /></div>
       </div>
+      {contribuir && (
+        <div className="m6-sec">
+          <div className="m6-lbl">Generosidade</div>
+          <div className="m6-list"><M6Row ic="semente" t="Contribuir" s={`Pix para ${listaFinalidades(contribuir.finalidades)}`} onClick={() => ui.go("caminhada", "contribuir")} /></div>
+        </div>
+      )}
       {purpose && (purpose.title || purpose.text) && (
         <div className="m6-sec">
           <div className="m6-lbl">Nossa igreja</div>
@@ -3838,7 +3848,7 @@ function MobileMembro({
           kidsClasses = [], kidsChildren = [], childGuardians = [], kidsSessions = [], kidsAttendance = [],
           kidsEvents = [], kidsEventEnrollments = [], wallPosts = [], bibleMarks = [], onSaveBibleMark,
           missingRequirements = [], serveRequests = [], baptismCandidates = [], onEnrollCourse, onRequestBaptism, onRequestServe,
-          mode, onLogout, onSwitchToPanel, readAnnouncementIds = [], churchPurpose,
+          mode, onLogout, onSwitchToPanel, readAnnouncementIds = [], churchPurpose, contribuir: contribuirCfg,
           onSaveAvailability, onRespondAnnouncement, announcementResponses = [],
           eventRsvps = [], onRespondEvent, meetings = [], rehearsals = [], paginaUrl, timelineEvents = [], fellowshipGroups = [], onMarkChatRead } = rest;
   /* Mural sempre do mais recente para o mais antigo, pela data de publicação */
@@ -3860,6 +3870,8 @@ function MobileMembro({
   const subAllowed = (id: string | null) => !id || (modulosMembro.find((m) => m.id === id)?.visible(ctx) ?? false);
   /* Mural desligado na igreja: sem entrada em Mensagens nem cartão no Início (lei 6) */
   const muralOn = subAllowed("mural");
+  /* Contribuir só com a chave cadastrada e o módulo ligado (lei 6) */
+  const pix = subAllowed("contribuir") ? contribuirPronto(contribuirCfg) : null;
 
   const lidos = useMemo(() => new Set(readAnnouncementIds), [readAnnouncementIds]);
   const [lidosAgora, setLidosAgora] = useState<Set<string>>(() => new Set());
@@ -4105,7 +4117,7 @@ function MobileMembro({
           )}
 
           {tab === "caminhada" && !sub && (
-            <CaminhadaV6 steps={steps} purpose={churchPurpose}
+            <CaminhadaV6 steps={steps} purpose={churchPurpose} contribuir={pix}
               courses={<CursosResumo member={member} courses={courses} enrollments={enrollments} courseModules={courseModules} courseLessons={courseLessons} />} />
           )}
           {tab === "caminhada" && sub === "cursos" && (
@@ -4114,6 +4126,7 @@ function MobileMembro({
             </div>
           )}
           {tab === "caminhada" && sub === "batismo" && <div className="m6-legacy"><TabBatismo baptismClasses={baptismClasses} memberId={member?.id ?? null} /></div>}
+          {tab === "caminhada" && sub === "contribuir" && pix && <Contribuir cfg={pix} />}
           {tab === "caminhada" && sub === "biblia" && <div className="m6-legacy"><TabBiblia bibleMarks={bibleMarks} onSaveBibleMark={onSaveBibleMark} /></div>}
 
           {tab === "perfil" && (!sub || sub === "dados" || sub === "senha") && (

@@ -21,27 +21,30 @@ export function useChurchSettingsField<T extends object>(
   onSaved?: () => void,
 ) {
   const [value, setValue] = useState<T>(() => ({ ...defaults, ...((church?.settings?.[key] as Partial<T>) ?? {}) }));
-  const queueRef = useRef<Promise<void>>(Promise.resolve());
+  const queueRef = useRef<Promise<unknown>>(Promise.resolve());
 
   useEffect(() => {
     setValue({ ...defaults, ...((church?.settings?.[key] as Partial<T>) ?? {}) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [church?.settings]);
 
-  const save = (patch: Partial<T>): Promise<void> => {
+  /* resolve true quando o banco gravou (sem linha de volta = sem permissão ou igreja inexistente) */
+  const save = (patch: Partial<T>): Promise<boolean> => {
     setValue((prev) => ({ ...prev, ...patch }));
     const run = async () => {
-      if (!church?.id) return;
+      if (!church?.id) return false;
       const client = createServiceBrowserClient().schema("service");
       const { data: currentRow } = await client.from("churches").select("settings").eq("id", church.id).maybeSingle();
       const currentSettings = (currentRow as { settings?: Record<string, unknown> } | null)?.settings ?? church.settings ?? {};
       const currentValue = (currentSettings[key] as Partial<T> | undefined) ?? {};
       const merged = { ...currentSettings, [key]: { ...currentValue, ...patch } };
-      await client.from("churches").update({ settings: merged }).eq("id", church.id);
+      const { data, error } = await client.from("churches").update({ settings: merged }).eq("id", church.id).select("id");
+      if (error || !data?.length) return false;
       onSaved?.();
+      return true;
     };
     const next = queueRef.current.then(run, run);
-    queueRef.current = next;
+    queueRef.current = next.then(() => undefined);
     return next;
   };
 

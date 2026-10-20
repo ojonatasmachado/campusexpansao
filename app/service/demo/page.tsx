@@ -321,6 +321,8 @@ export default async function ServiceDemoPage({ searchParams }: { searchParams: 
     neutralLight: q.claro,
     defaultMode: q.modo === "light" ? "light" : q.modo === "dark" ? "dark" : undefined,
   };
+  /* chave Pix de exemplo (Contribuir); ?pix=nao mostra a igreja sem chave */
+  const PIX_DEMO = q.pix === "nao" ? null : { tipo: "cnpj", chave: "12345678000190", favorecido: "CE.X Central", cidade: "São Paulo", texto: "Obrigado por sustentar a missão da nossa igreja.", finalidades: ["Dízimo", "Oferta", "Missões"] };
   /* break-ui: ?dados=pior troca os dados na origem pelo pior caso realista (só fora de produção) */
   const pior = process.env.NODE_ENV !== "production" && q.dados === "pior";
   const nome = <T extends { id: string; name: string }>(x: T): T => (pior && PIOR.NOMES[x.id] ? { ...x, name: PIOR.NOMES[x.id] } : x);
@@ -338,7 +340,7 @@ export default async function ServiceDemoPage({ searchParams }: { searchParams: 
   /* contagens em exatamente 1 (plural) */
   const visitors = pior ? VISITORS.slice(0, 1) : VISITORS;
   const decisions = pior ? DECISIONS.slice(0, 1) : DECISIONS;
-  const churches = CHURCHES.map((c, i) => (i === 0 ? { ...c, nome: pior ? PIOR.IGREJA_LONGA : c.nome, settings: { brandCfg: brand } } : c));
+  const churches = CHURCHES.map((c, i) => (i === 0 ? { ...c, nome: pior ? PIOR.IGREJA_LONGA : c.nome, settings: { brandCfg: brand, contribuirCfg: pior ? PIOR.PIX : PIX_DEMO } } : c));
   const themeMode = resolveMode((await cookies()).get(THEME_COOKIE)?.value, brand);
 
   return (

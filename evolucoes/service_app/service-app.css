@@ -3510,3 +3510,24 @@ body{transition:background-color .2s ease,color .2s ease}
   .aniv-acao{justify-content:flex-start}
   .aniv-pessoa{min-height:44px}
 }
+
+/* v7 · contribuir (Pix no app do membro) */
+.contrib-fav{overflow-wrap:anywhere}
+.contrib-seg button{padding:4px 8px;line-height:1.25;overflow-wrap:anywhere}
+.contrib-chave{display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:16px;border-top:0.5px solid var(--border-2)}
+/* a chave é conteúdo: dá para tocar e segurar para copiar */
+.contrib-chave-v{font-size:var(--fs-app-17);font-weight:600;line-height:1.35;color:var(--white);overflow-wrap:anywhere;user-select:text;-webkit-user-select:text}
+.contrib-qr-t{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:0;border:0;background:none;color:var(--white);text-align:left;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.contrib-chev{transition:transform .2s var(--ease-out)}
+.contrib-chev.on{transform:rotate(90deg)}
+/* o QR fica sempre preto no branco, nos dois modos, para a câmera do banco ler
+   (hex fixo de propósito: não é cor da igreja nem do tema, é exigência do leitor) */
+.contrib-qr{display:grid;place-items:center;margin-top:16px;padding:16px;border-radius:16px;background:#FFFFFF}
+.contrib-qr svg{width:100%;max-width:208px;height:auto}
+.contrib-nota{margin:4px 20px 24px}
+@media (prefers-reduced-motion:reduce){.contrib-chev{transition:none}}
+.contrib-cfg-v{overflow-wrap:anywhere}
+.contrib-cfg-acoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.contrib-cfg-pergunta{flex-basis:100%}
+.contrib-cfg-outra{display:flex;gap:8px;margin-top:10px}
+.contrib-cfg-outra .input{flex:1;min-width:0}

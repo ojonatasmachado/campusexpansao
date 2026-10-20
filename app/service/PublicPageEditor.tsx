@@ -419,7 +419,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                   const url = await uploadServiceImage(createServiceBrowserClient(), file, path);
                   await savePagina({ coverUrl: url });
                 }}
-                onRemove={() => savePagina({ coverUrl: undefined })}
+                onRemove={async () => { await savePagina({ coverUrl: undefined }); }}
               />
             </div>
 
