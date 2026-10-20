@@ -2,6 +2,7 @@ import ServiceExactApp from "../ServiceExactApp";
 import { resolveMode, THEME_COOKIE, type BrandCfg } from "../lib/theme";
 import { cookies } from "next/headers";
 import ServiceTheme from "../ServiceTheme";
+import * as PIOR from "./pior-caso";
 
 const ORG = "org-demo";
 const CHURCH_1 = "ch-1";
@@ -319,7 +320,20 @@ export default async function ServiceDemoPage({ searchParams }: { searchParams: 
     neutralLight: q.claro,
     defaultMode: q.modo === "light" ? "light" : q.modo === "dark" ? "dark" : undefined,
   };
-  const churches = CHURCHES.map((c, i) => (i === 0 ? { ...c, settings: { brandCfg: brand } } : c));
+  /* break-ui: ?dados=pior troca os dados na origem pelo pior caso realista (só fora de produção) */
+  const pior = process.env.NODE_ENV !== "production" && q.dados === "pior";
+  const nome = <T extends { id: string; name: string }>(x: T): T => (pior && PIOR.NOMES[x.id] ? { ...x, name: PIOR.NOMES[x.id] } : x);
+  const people = PEOPLE.map((p) => (pior && p.id === "p1" ? { ...nome(p), email: PIOR.EMAIL_LONGO } : nome(p)));
+  const members = MEMBERS.map((m) => (pior && m.id === "m1" ? { ...nome(m), email: PIOR.EMAIL_LONGO } : nome(m)));
+  const ministries = pior ? MINISTRIES.map((m) => ({ ...m, name: PIOR.TIMES[m.id] ?? m.name })) : MINISTRIES;
+  const events = pior ? EVENTS.map((e) => ({ ...e, name: PIOR.CULTOS[e.id] ?? e.name })) : EVENTS;
+  const cards = pior ? CARDS.map((c, i) => (i === 0 ? { ...c, title: PIOR.TAREFA_LONGA } : c)) : CARDS;
+  const announcements = pior ? ANNOUNCEMENTS.map((a, i) => (i === 0 ? { ...a, title: PIOR.AVISO_LONGO } : a)) : ANNOUNCEMENTS;
+  const fellowshipGroups = pior ? FELLOWSHIP_GROUPS.map((g, i) => (i === 0 ? { ...g, name: PIOR.GRUPO_LONGO } : g)) : FELLOWSHIP_GROUPS;
+  /* contagens em exatamente 1 (plural) */
+  const visitors = pior ? VISITORS.slice(0, 1) : VISITORS;
+  const decisions = pior ? DECISIONS.slice(0, 1) : DECISIONS;
+  const churches = CHURCHES.map((c, i) => (i === 0 ? { ...c, nome: pior ? PIOR.IGREJA_LONGA : c.nome, settings: { brandCfg: brand } } : c));
   const themeMode = resolveMode((await cookies()).get(THEME_COOKIE)?.value, brand);
 
   return (
@@ -327,20 +341,20 @@ export default async function ServiceDemoPage({ searchParams }: { searchParams: 
     <ServiceTheme brand={brand} mode={themeMode} />
     <ServiceExactApp
       churches={churches}
-      people={PEOPLE}
-      members={MEMBERS}
-      ministries={MINISTRIES}
-      events={EVENTS}
+      people={people}
+      members={members}
+      ministries={ministries}
+      events={events}
       requirements={REQUIREMENTS}
       personGrants={PERSON_GRANTS}
       roster={ROSTER}
-      visitorsInCare={VISITORS.length}
-      visitors={VISITORS}
+      visitorsInCare={visitors.length}
+      visitors={visitors}
       visitorNotes={VISITOR_NOTES}
-      announcements={ANNOUNCEMENTS}
+      announcements={announcements}
       eventAttendance={EVENT_ATTENDANCE}
       wallPosts={WALL_POSTS}
-      decisions={DECISIONS}
+      decisions={decisions}
       baptismClasses={BAPTISM_CLASSES}
       baptismCandidates={BAPTISM_CANDIDATES}
       courses={COURSES}
@@ -349,7 +363,7 @@ export default async function ServiceDemoPage({ searchParams }: { searchParams: 
       courseLessons={COURSE_LESSONS}
       lessonAttendance={LESSON_ATTENDANCE}
       boards={BOARDS}
-      cards={CARDS}
+      cards={cards}
       chats={CHATS}
       chatMembers={CHAT_MEMBERS}
       messages={MESSAGES}
@@ -362,7 +376,7 @@ export default async function ServiceDemoPage({ searchParams }: { searchParams: 
       cycles={CYCLES}
       historyEntries={HISTORY_ENTRIES}
       ministerialTitles={MINISTERIAL_TITLES}
-      fellowshipGroups={FELLOWSHIP_GROUPS}
+      fellowshipGroups={fellowshipGroups}
       tags={TAGS}
       timelineEvents={TIMELINE_EVENTS}
       journeyRequests={JOURNEY_REQUESTS}
@@ -371,6 +385,14 @@ export default async function ServiceDemoPage({ searchParams }: { searchParams: 
       initialTheme={themeMode}
       error=""
     />
+    {process.env.NODE_ENV !== "production" && (
+      /* seletor de desenvolvimento (break-ui): fora do desenho testado, nunca vai para produção */
+      <nav aria-label="Dados do demo" style={{ position: "fixed", left: "50%", top: 4, transform: "translateX(-50%)", zIndex: 300, display: "flex", gap: 2, padding: 2, borderRadius: 999, background: "var(--border-2)", font: "500 12px system-ui, sans-serif" }}>
+        {([["Dados do demo", ""], ["Pior caso", "pior"]] as const).map(([rotulo, v]) => (
+          <a key={rotulo} href={v ? "?dados=pior" : "?"} style={{ padding: "4px 10px", borderRadius: 999, textDecoration: "none", color: (q.dados ?? "") === v ? "var(--ink)" : "var(--muted)", background: (q.dados ?? "") === v ? "var(--white)" : "transparent" }}>{rotulo}</a>
+        ))}
+      </nav>
+    )}
     </>
   );
 }

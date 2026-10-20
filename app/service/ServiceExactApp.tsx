@@ -1124,7 +1124,13 @@ export default function ServiceExactApp({
   };
   useEffect(() => {
     document.body.dataset.theme = theme;
-    return () => { document.body.dataset.theme = ""; };
+    /* barra de status do celular na cor do fundo do app (a do layout é fixa no
+       escuro CE.X): segue o modo claro/escuro e a família de neutros da igreja */
+    const fundo = getComputedStyle(document.body).getPropertyValue("--ink").trim();
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    const antes = meta?.content;
+    if (meta && fundo) meta.content = fundo;
+    return () => { document.body.dataset.theme = ""; if (meta && antes) meta.content = antes; };
   }, [theme]);
 
   const firstChurch = churches.find((c) => c.id === activeChurchId) ?? churches[0];
