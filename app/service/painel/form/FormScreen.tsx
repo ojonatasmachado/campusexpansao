@@ -24,6 +24,8 @@ type Props = {
   error?: string;
   onSave: () => void;
   onClose: () => void;
+  /** segunda ação (ex.: "Salvar rascunho"); no topo ocupa o lugar do Cancelar (o voltar já cancela) */
+  secondary?: { label: string; onClick: () => void; disabled?: boolean };
   children: React.ReactNode;
 };
 
@@ -50,7 +52,7 @@ function voltarEEsperar(): Promise<void> {
   });
 }
 
-export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScreen({ eyebrow, title, subtitle, saveLabel, saving = false, missing = [], dirty = false, error, onSave, onClose, children }, ref) {
+export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScreen({ eyebrow, title, subtitle, saveLabel, saving = false, missing = [], dirty = false, error, onSave, onClose, secondary, children }, ref) {
   const id = useId();
   const titleId = `${id}-t`;
   const rootRef = useRef<HTMLDivElement>(null);
@@ -155,6 +157,10 @@ export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScree
     </button>
   );
 
+  const segunda = secondary ? (
+    <button className="btn btn-sec" type="button" onClick={secondary.onClick} disabled={saving || secondary.disabled}>{secondary.label}</button>
+  ) : null;
+
   return (
     <div className="fs" role="dialog" aria-modal="true" aria-labelledby={titleId} ref={rootRef} tabIndex={-1} onKeyDown={onKeyDown}>
       <header className="fs-top">
@@ -166,7 +172,7 @@ export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScree
           <h2 className="fs-title" id={titleId}>{title}</h2>
         </div>
         <div className="fs-actions">
-          <button className="btn btn-sec" type="button" onClick={pedirFechar} disabled={saving}>Cancelar</button>
+          {segunda ?? <button className="btn btn-sec" type="button" onClick={pedirFechar} disabled={saving}>Cancelar</button>}
           {principal}
         </div>
       </header>
@@ -180,7 +186,8 @@ export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScree
         </div>
       </div>
 
-      <footer className="fs-foot">
+      <footer className={`fs-foot${segunda ? " fs-foot-2" : ""}`}>
+        {segunda}
         {principal}
       </footer>
 

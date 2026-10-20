@@ -3,9 +3,10 @@ import { supabaseAdmin } from "../../../../lib/supabase";
 import { sendPushToSubscriptions } from "../../../../lib/push";
 import { emSilencio } from "../../../../service/lib/silencio";
 import { esvaziarFila } from "../../../../lib/service-avisos";
+import { publicarAgendados } from "../../../../lib/service-mural-agendado";
 import { tokenDoWorkflowValido } from "../../../../lib/github-oidc";
 
-/* Lembrete do aviso (v7 4.18) e fila de avisos (5.3). Chamado pelo agendador: manda uma vez, a quem
+/* Publicação agendada do Mural (0075), lembrete do aviso (v7 4.18) e fila de avisos (5.3). Chamado pelo agendador: manda uma vez, a quem
    do público ainda não abriu o aviso, a notificação marcada na publicação.
    No silêncio das 22h às 7h não manda nada (a próxima chamada depois das 7h
    manda). Só roda chamada do agendador do GitHub (token OIDC) ou com o
@@ -32,7 +33,11 @@ export async function GET(request: Request) {
   if (!(await autorizado(request))) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
-  if (emSilencio()) return NextResponse.json({ ok: true, enviados: 0, motivo: "silencio" });
+  /* publicação agendada do Mural (0075): entra no ar na hora, também no
+     silêncio; a notificação espera na fila até as 7h */
+  let publicados = 0;
+  try { publicados = await publicarAgendados(supabaseAdmin().schema("service")); } catch { /* segue para os lembretes */ }
+  if (emSilencio()) return NextResponse.json({ ok: true, publicados, enviados: 0, motivo: "silencio" });
 
   try {
     const db = supabaseAdmin().schema("service");
@@ -71,7 +76,7 @@ export async function GET(request: Request) {
     }
     /* v7 5.3: a mesma chamada esvazia a fila (silêncio e resumo do Mural) */
     const daFila = await esvaziarFila(db);
-    return NextResponse.json({ ok: true, avisos: (avisos ?? []).length, enviados, daFila });
+    return NextResponse.json({ ok: true, publicados, avisos: (avisos ?? []).length, enviados, daFila });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível enviar os lembretes.";
     return NextResponse.json({ error: message }, { status: 500 });

@@ -2,7 +2,8 @@
 
 /* Módulo Mural (4.1): publicações, quem leu e respostas. Saiu de
    ServiceExactApp.tsx sem mudar comportamento; o manifesto está em
-   ./manifest.ts. Tipos de dados do painel: import só de tipo. */
+   ./manifest.ts. Tipos de dados do painel: import só de tipo.
+   0075: rascunho, agendamento e urgência; Boletim da semana em ./Boletim.tsx. */
 
 import { useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -20,31 +21,50 @@ import { Av, EmptyState, PageHead } from "../../painel/ui";
 import { friendlyWriteError } from "../../painel/erros";
 import { FormScreen, FormSection, type FormScreenHandle } from "../../painel/form/FormScreen";
 import { ACESSO_MSG_DEFAULT, AcessoMsgModal, type AcessoMsgCfg } from "../pessoas/acesso-msg";
-import type { AnnouncementReadView, AnnouncementResponseView, AnnouncementView, ChildGuardianView, ChurchView, FellowshipGroupView, MemberView, MinistryView, ModalState, PersonView, WallPostView } from "../../ServiceExactApp";
+import type { AnnouncementReadView, AnnouncementResponseView, AnnouncementView, ChildGuardianView, ChurchView, EventView, FellowshipGroupView, MemberView, MinistryView, ModalState, PersonView, RosterAssignmentView, WallPostView } from "../../ServiceExactApp";
+import { noAr, type MuralAviso } from "./estado";
+import { BoletimDaSemana } from "./Boletim";
 import { useTermos, type Termos } from "../../lib/vocabulario-context";
 
-function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchView; publicos: MuralPublico[]; onClose: () => void; onDone: () => void }) {
-  const [titulo, setTitulo] = useState("");
-  const [msg, setMsg] = useState("");
-  const [publico, setPublico] = useState(publicos[0]?.id ?? "todos");
-  const [tipo, setTipo] = useState<"aviso" | "evento" | "acao">("aviso");
-  const [canais, setCanais] = useState<string[]>(["app"]);
+/* instante → "AAAA-MM-DDTHH:mm" e "AAAA-MM-DD" no horário de Brasília (UTC-3) */
+const emBrasilia = (iso: string) => new Date(new Date(iso).getTime() - 3 * 3600000).toISOString();
+const HORAS = Array.from({ length: 24 }, (_, h) => h);
+
+function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church: ChurchView; publicos: MuralPublico[]; inicial?: MuralAviso; onClose: () => void; onDone: () => void }) {
+  const publicoInicial = inicial ? (publicos.find((p) => p.label.toLowerCase() === (inicial.audience ?? "todos").toLowerCase()) ?? publicos[0]) : publicos[0];
+  const [titulo, setTitulo] = useState(inicial?.title ?? "");
+  const [msg, setMsg] = useState(inicial?.body ?? "");
+  const [publico, setPublico] = useState(publicoInicial?.id ?? "todos");
+  const [tipo, setTipo] = useState<"aviso" | "evento" | "acao">((inicial?.kind as "aviso" | "evento" | "acao" | undefined) ?? "aviso");
+  const [canais, setCanais] = useState<string[]>(inicial?.publish_push === false ? [] : ["app"]);
+  /* 0075: urgente muda só o destaque e a prioridade do cartão (lei 5) */
+  const [urgente, setUrgente] = useState(!!inicial?.urgent);
+  /* 0075: publicar agora ou agendar */
+  const [quando, setQuando] = useState<"agora" | "agendar">(inicial?.status === "agendado" ? "agendar" : "agora");
+  const [agDia, setAgDia] = useState(inicial?.publish_at ? emBrasilia(inicial.publish_at).slice(0, 10) : "");
+  const [agHora, setAgHora] = useState(inicial?.publish_at ? String(Number(emBrasilia(inicial.publish_at).slice(11, 13))) : "9");
   /* v7 4.18: lembrar quem não viu */
-  const [lembrete, setLembrete] = useState<"nao" | "24" | "48" | "data">("nao");
-  const [lembreteData, setLembreteData] = useState("");
+  const [lembrete, setLembrete] = useState<"nao" | "24" | "48" | "data">(
+    inicial?.remind_hours === 24 || inicial?.remind_hours === 48 ? (String(inicial.remind_hours) as "24" | "48") : inicial?.remind_at ? "data" : "nao",
+  );
+  const [lembreteData, setLembreteData] = useState(inicial?.remind_at ? emBrasilia(inicial.remind_at).slice(0, 16) : "");
   /* v7 4.4: destaque no Início do app até uma data, com imagem e vídeo */
-  const [destacar, setDestacar] = useState(false);
-  const [destaqueAte, setDestaqueAte] = useState("");
-  const [imagem, setImagem] = useState<string | null>(null);
-  const [imagemAlt, setImagemAlt] = useState("");
-  const [video, setVideo] = useState("");
+  const [destacar, setDestacar] = useState(!!inicial?.highlight_until);
+  const [destaqueAte, setDestaqueAte] = useState(inicial?.highlight_until ? emBrasilia(inicial.highlight_until).slice(0, 10) : "");
+  const [imagem, setImagem] = useState<string | null>(inicial?.image_url ?? null);
+  const [imagemAlt, setImagemAlt] = useState(inicial?.image_alt ?? "");
+  const [video, setVideo] = useState(inicial?.video_url ?? "");
   const videoInvalido = !!video.trim() && !videoDoLink(video);
-  /* hora em que a opção foi escolhida (24h e 48h contam a partir dela) */
-  const [lembreteBase, setLembreteBase] = useState(0);
+  const agendaEm = quando === "agendar" && agDia ? new Date(`${agDia}T${agHora.padStart(2, "0")}:00:00-03:00`) : null;
+  const [abriuEm] = useState(() => Date.now());
+  const agendaPassou = !!agendaEm && agendaEm.getTime() <= abriuEm;
+  /* hora em que a opção foi escolhida (24h e 48h contam a partir dela, ou da hora agendada) */
+  const [lembreteBase, setLembreteBase] = useState(() => Date.now());
   const lembreteEm = (): Date | null => {
     if (lembrete === "nao") return null;
     if (lembrete === "data") return lembreteData ? new Date(`${lembreteData}:00-03:00`) : null;
-    return new Date(lembreteBase + Number(lembrete) * 3600000);
+    const base = quando === "agendar" ? agendaEm?.getTime() : lembreteBase;
+    return base ? new Date(base + Number(lembrete) * 3600000) : null;
   };
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
@@ -52,22 +72,54 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
   const fid = useId();
   const alvo = publicos.find((p) => p.id === publico) ?? publicos[0];
   const toggleCanal = (c: string) => setCanais((a) => (a.includes(c) ? a.filter((x) => x !== c) : [...a, c]));
-  const publicar = async () => {
+  const whatsapp = canais.includes("whatsapp") && quando === "agora";
+
+  const salvar = async (como: "publicado" | "rascunho" | "agendado") => {
     if (!titulo.trim()) { setErro("Dê um título para a publicação."); return; }
     /* o WhatsApp abre já com o texto (precisa ser no toque, antes de esperar o banco) */
-    if (canais.includes("whatsapp")) window.open(`https://wa.me/?text=${encodeURIComponent(`${titulo.trim()}\n\n${msg.trim()}`)}`, "_blank", "noopener");
+    if (como === "publicado" && whatsapp) window.open(`https://wa.me/?text=${encodeURIComponent(`${titulo.trim()}\n\n${msg.trim()}`)}`, "_blank", "noopener");
     setSalvando(true);
     setErro("");
     const sb = createServiceBrowserClient().schema("service");
+    const agora = new Date().toISOString();
     const base = { organization_id: church.organizationId, church_id: church.id, title: titulo.trim(), body: msg.trim() || null, audience: alvo.label, author: "Liderança", when_label: "agora" };
-    const quando = lembreteEm();
-    const comLembrete = quando ? { remind_at: foraDoSilencio(quando).toISOString(), remind_to: alvo.memberIds } : {};
+    const quandoLembrar = canais.includes("app") ? lembreteEm() : null;
+    const relativo = canais.includes("app") && (lembrete === "24" || lembrete === "48") && como !== "publicado";
+    const comLembrete = relativo
+      ? { remind_hours: Number(lembrete), remind_at: null, remind_to: alvo.memberIds }
+      : quandoLembrar ? { remind_at: foraDoSilencio(quandoLembrar).toISOString(), remind_to: alvo.memberIds } : inicial ? { remind_at: null, remind_hours: null } : {};
     const comDestaque = destacar && destaqueAte
       ? { highlight_until: new Date(`${destaqueAte}T23:59:59-03:00`).toISOString(), image_url: imagem, image_alt: imagem ? imagemAlt.trim() : null, video_url: video.trim() || null }
-      : {};
-    /* um destaque por vez: o novo encerra o anterior */
-    if (destacar && destaqueAte) await sb.from("announcements").update({ highlight_until: new Date().toISOString() }).eq("church_id", church.id).gt("highlight_until", new Date().toISOString());
-    let { error } = await sb.from("announcements").insert({ ...base, kind: tipo, ...comLembrete, ...comDestaque });
+      : inicial ? { highlight_until: null } : {};
+    /* 0075: estado, agendamento e urgência */
+    const novos = {
+      status: como,
+      publish_at: como === "agendado" ? agendaEm!.toISOString() : null,
+      publish_to: como === "publicado" ? null : alvo.memberIds,
+      publish_push: canais.includes("app"),
+      urgent: urgente,
+      ...(como === "publicado" && inicial ? { created_at: agora } : {}),
+    };
+    const gravar = (row: Record<string, unknown>) => (inicial ? sb.from("announcements").update(row).eq("id", inicial.id) : sb.from("announcements").insert(row));
+    /* um destaque por vez: o novo encerra o anterior (o agendado encerra quando entrar no ar) */
+    if (como === "publicado" && destacar && destaqueAte) {
+      let q = sb.from("announcements").update({ highlight_until: agora }).eq("church_id", church.id).gt("highlight_until", agora);
+      if (inicial) q = q.neq("id", inicial.id);
+      await q;
+    }
+    let { error } = await gravar({ ...base, kind: tipo, ...comLembrete, ...comDestaque, ...novos });
+    /* antes da migração 0075 não há rascunho, agendamento nem urgência */
+    if (error && /status|urgent|publish_|remind_hours/i.test(error.message)) {
+      if (como !== "publicado" || inicial) {
+        setSalvando(false);
+        setErro("Rascunho e agendamento ainda não estão disponíveis nesta versão do banco. Publique agora.");
+        return;
+      }
+      const { remind_hours: _rh, ...semRelativo } = comLembrete as Record<string, unknown>;
+      void _rh;
+      ({ error } = await gravar({ ...base, kind: tipo, ...semRelativo, ...comDestaque }));
+      if (!error && urgente) avisar("Publicado, mas a marca de urgente ainda não está disponível.", "warn");
+    }
     /* antes da migração 0063 as colunas do destaque não existem */
     if (error && destacar && /highlight|image_|video_/i.test(error.message)) {
       setSalvando(false);
@@ -75,40 +127,50 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
       return;
     }
     /* antes da migração 0062 as colunas do lembrete não existem: publica sem ele e avisa */
-    if (error && quando && /remind/i.test(error.message)) {
-      ({ error } = await sb.from("announcements").insert({ ...base, kind: tipo }));
+    if (error && quandoLembrar && /remind/i.test(error.message)) {
+      ({ error } = await gravar({ ...base, kind: tipo }));
       if (!error) avisar("Publicado, mas o lembrete ainda não está disponível.", "warn");
     }
     /* antes da migração 0049 a coluna "kind" não existe: publica sem o tipo */
-    if (error && /kind/i.test(error.message)) ({ error } = await sb.from("announcements").insert(base));
+    if (error && /kind/i.test(error.message)) ({ error } = await gravar(base));
     if (error) { setSalvando(false); setErro(friendlyWriteError(error.message)); return; }
-    if (canais.includes("app")) notifyPush(church.organizationId, alvo.memberIds, titulo.trim(), msg.trim() || "Nova publicação no Mural.", "mural");
-    avisar("Publicado no Mural.");
+    if (como === "publicado") {
+      if (canais.includes("app")) notifyPush(church.organizationId, alvo.memberIds, titulo.trim(), msg.trim() || "Nova publicação no Mural.", "mural");
+      avisar("Publicado no Mural.");
+    } else if (como === "agendado") {
+      avisar(`Agendado: vai ao ar ${quandoLembra(agendaEm!)}.`);
+    } else {
+      avisar("Rascunho salvo. Só a liderança vê.");
+    }
     /* fecha antes do refresh (onDone atualiza a lista) */
     if (telaRef.current) await telaRef.current.fechar();
     onDone();
   };
-  const retrato = JSON.stringify({ titulo, msg, publico, tipo, canais: [...canais].sort(), lembrete, lembreteData, destacar, destaqueAte, imagem, imagemAlt, video });
+  const retrato = JSON.stringify({ titulo, msg, publico, tipo, canais: [...canais].sort(), urgente, quando, agDia, agHora, lembrete, lembreteData, destacar, destaqueAte, imagem, imagemAlt, video });
   const [retratoInicial] = useState(retrato);
   const falta = [
     !titulo.trim() && "título",
     canais.length === 0 && "por onde enviar",
+    quando === "agendar" && !agDia && "dia da publicação",
+    agendaPassou && "um horário que ainda não passou",
     canais.includes("app") && lembrete === "data" && !lembreteData && "data do lembrete",
     destacar && !destaqueAte && "até quando destacar",
     destacar && !!imagem && !imagemAlt.trim() && "o que a imagem mostra",
     destacar && videoInvalido && "link do vídeo válido",
   ].filter(Boolean) as string[];
+  const lembra = lembreteEm();
   return (
     <FormScreen
       ref={telaRef}
       eyebrow="Mural"
-      title="Nova publicação"
-      saveLabel="Publicar"
+      title={inicial?.status === "agendado" ? "Publicação agendada" : inicial ? "Rascunho" : "Nova publicação"}
+      saveLabel={quando === "agendar" ? "Agendar" : "Publicar"}
+      secondary={{ label: "Salvar rascunho", onClick: () => void salvar("rascunho"), disabled: !titulo.trim() }}
       saving={salvando}
       missing={falta}
       dirty={retrato !== retratoInicial}
       error={erro}
-      onSave={publicar}
+      onSave={() => void salvar(quando === "agendar" ? "agendado" : "publicado")}
       onClose={onClose}
     >
       <FormSection title="Publicação">
@@ -129,6 +191,14 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
           <label className="field-label" htmlFor={`${fid}-msg`}>Mensagem</label>
           <textarea id={`${fid}-msg`} className="textarea" value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Ex.: Chegada às 15h45, no templo principal." />
         </div>
+        <div className="field">
+          <div className="field-label" id={`${fid}-urg`}>Urgência</div>
+          <div className="fs-chips" role="group" aria-labelledby={`${fid}-urg`}>
+            <button type="button" className={`seg-chip${!urgente ? " on" : ""}`} aria-pressed={!urgente} onClick={() => setUrgente(false)}>Normal</button>
+            <button type="button" className={`seg-chip${urgente ? " on" : ""}`} aria-pressed={urgente} onClick={() => setUrgente(true)}>Urgente</button>
+          </div>
+          {urgente && <div className="field-hint">Aparece marcada como urgente e vem primeiro no Início do app. A notificação segue o horário de sempre.</div>}
+        </div>
       </FormSection>
 
       <FormSection title="Quem recebe">
@@ -145,7 +215,7 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
               <button key={id} type="button" className={`seg-chip${canais.includes(id) ? " on" : ""}`} aria-pressed={canais.includes(id)} onClick={() => toggleCanal(id)}>{l}</button>
             ))}
           </div>
-          {canais.includes("whatsapp") && <div className="field-hint">O WhatsApp abre com o texto pronto para você mandar nos grupos da igreja.</div>}
+          {canais.includes("whatsapp") && <div className="field-hint">{quando === "agendar" ? "O WhatsApp só abre quando você publica agora. Para a semana toda, use o Boletim da semana." : "O WhatsApp abre com o texto pronto para você mandar nos grupos da igreja."}</div>}
         </div>
         {canais.includes("app") && (
           <div className="field">
@@ -156,8 +226,34 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
               ))}
             </div>
             {lembrete === "data" && <input className="input" type="datetime-local" style={{ marginTop: 8 }} value={lembreteData} onChange={(e) => setLembreteData(e.target.value)} aria-label="Data e hora do lembrete" />}
-            {lembreteEm() && <div className="field-hint">{`Uma notificação ${quandoLembra(foraDoSilencio(lembreteEm()!))} só para quem ainda não abriu.${emSilencio(lembreteEm()!) ? " Entre 22h e 7h ninguém recebe aviso, então vai às 7h." : ""}`}</div>}
+            {lembra && <div className="field-hint">{`Uma notificação ${quandoLembra(foraDoSilencio(lembra))} só para quem ainda não abriu.${emSilencio(lembra) ? " Entre 22h e 7h ninguém recebe aviso, então vai às 7h." : ""}`}</div>}
+            {!lembra && quando === "agendar" && lembrete !== "nao" && lembrete !== "data" && <div className="field-hint">{`Conta a partir da hora em que a publicação entrar no ar.`}</div>}
           </div>
+        )}
+      </FormSection>
+
+      <FormSection title="Quando publicar">
+        <div className="field">
+          <div className="fs-chips" role="group" aria-label="Quando publicar">
+            <button type="button" className={`seg-chip${quando === "agora" ? " on" : ""}`} aria-pressed={quando === "agora"} onClick={() => setQuando("agora")}>Agora</button>
+            <button type="button" className={`seg-chip${quando === "agendar" ? " on" : ""}`} aria-pressed={quando === "agendar"} onClick={() => setQuando("agendar")}>Agendar</button>
+          </div>
+        </div>
+        {quando === "agendar" && (
+          <>
+            <div className="mural-agenda-campos">
+              <div className="field"><label className="field-label req" htmlFor={`${fid}-agd`}>Dia</label><input id={`${fid}-agd`} className="input" type="date" aria-required="true" value={agDia} onChange={(e) => setAgDia(e.target.value)} /></div>
+              <div className="field"><label className="field-label" htmlFor={`${fid}-agh`}>Hora</label>
+                <select id={`${fid}-agh`} className="select" value={agHora} onChange={(e) => setAgHora(e.target.value)}>
+                  {HORAS.map((h) => <option key={h} value={String(h)}>{`${h}h`}</option>)}
+                </select>
+              </div>
+            </div>
+            {agendaEm && !agendaPassou && (
+              <div className="field-hint">{`Vai ao ar ${quandoLembra(agendaEm)}, com alguns minutos de diferença. Até lá, só a liderança vê.${canais.includes("app") && emSilencio(agendaEm) ? " A notificação espera até as 7h, quando acaba o horário de silêncio." : ""}`}</div>
+            )}
+            {agendaPassou && <p className="field-error">Esse horário já passou. Escolha outro ou publique agora.</p>}
+          </>
         )}
       </FormSection>
 
@@ -177,7 +273,7 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
             {imagem && <div className="field"><label className="field-label req" htmlFor={`${fid}-alt`}>O que a imagem mostra</label><input id={`${fid}-alt`} className="input" aria-required="true" value={imagemAlt} onChange={(e) => setImagemAlt(e.target.value)} placeholder="Para quem usa leitor de tela. Ex.: Jovens no retiro de 2025" /></div>}
             <div className="field"><label className="field-label" htmlFor={`${fid}-vid`}>Vídeo (link do YouTube ou do Instagram)</label><input id={`${fid}-vid`} className="input" value={video} onChange={(e) => setVideo(e.target.value)} placeholder="https://youtube.com/watch?v=..." />
               {videoInvalido && <p className="field-error">Cole um link do YouTube ou do Instagram.</p>}</div>
-            <div className="field-hint">Um destaque por vez: este substitui o que estiver no Início agora.</div>
+            <div className="field-hint">{quando === "agendar" ? "Um destaque por vez: quando esta entrar no ar, substitui o que estiver no Início." : "Um destaque por vez: este substitui o que estiver no Início agora."}</div>
           </>
         )}
       </FormSection>
@@ -259,6 +355,8 @@ export function Comunicacao({
   fellowshipGroups = [],
   childGuardians = [],
   church,
+  events = [],
+  roster = [],
 }: {
   announcements: AnnouncementView[];
   announcementReads: AnnouncementReadView[];
@@ -270,11 +368,26 @@ export function Comunicacao({
   fellowshipGroups?: FellowshipGroupView[];
   childGuardians?: ChildGuardianView[];
   church?: ChurchView;
+  events?: EventView[];
+  roster?: RosterAssignmentView[];
   setModal: (modal: ModalState) => void;
 }) {
   const { termo } = useTermos();
   const router = useRouter();
-  const [compose, setCompose] = useState(false);
+  /* true: nova publicação; um aviso: continuar o rascunho ou o agendamento */
+  const [compose, setCompose] = useState<boolean | MuralAviso>(false);
+  const [boletim, setBoletim] = useState(false);
+  const todos = announcements as MuralAviso[];
+  const noArAgora = todos.filter(noAr);
+  const pendentes = todos.filter((a) => !noAr(a)).sort((a, b) => (a.status === b.status ? (a.publish_at ?? a.created_at ?? "").localeCompare(b.publish_at ?? b.created_at ?? "") : a.status === "agendado" ? -1 : 1));
+  const [excluindo, setExcluindo] = useState<string | null>(null);
+  const excluir = async (a: MuralAviso) => {
+    const { error } = await createServiceBrowserClient().schema("service").from("announcements").delete().eq("id", a.id);
+    setExcluindo(null);
+    if (error) { avisar(friendlyWriteError(error.message), "warn"); return; }
+    avisar(a.status === "agendado" ? "Agendamento excluído." : "Rascunho excluído.");
+    router.refresh();
+  };
   const [msgCfgOpen, setMsgCfgOpen] = useState(false);
   const publicos = publicosDoMural({ members, ministries, fellowshipGroups, childGuardians, termo });
   const publicoDe = (a: AnnouncementView) => publicos.find((p) => p.label.toLowerCase() === (a.audience ?? "todos").toLowerCase()) ?? publicos[0];
@@ -294,11 +407,49 @@ export function Comunicacao({
         title="Mural"
         eyebrow="Comunicação"
         help="Publicações para a igreja toda ou para um grupo. Quem recebe vê no app, e você acompanha quem leu."
-        action={<button className="btn btn-pri" type="button" onClick={() => setCompose(true)}>+ Nova publicação</button>}
+        action={<>
+          {church && <button className="btn btn-sec" type="button" onClick={() => setBoletim(true)}><Icon name="whatsapp" size={14} /> Boletim da semana</button>}
+          <button className="btn btn-pri" type="button" onClick={() => setCompose(true)}>+ Nova publicação</button>
+        </>}
       />
+      {pendentes.length > 0 && (
+        <section className="mural-pend" aria-labelledby="mural-pend-t">
+          <h2 className="dsec-title" id="mural-pend-t">{`Ainda não publicadas · ${pendentes.length}`}</h2>
+          <div className="mural-list">
+            {pendentes.map((a) => (
+              <article className="panel mural-item mural-item-pend" key={a.id}>
+                <div className="panel-body">
+                  <div className="mural-top">
+                    <span className={`chip ${a.status === "agendado" ? "chip-solid" : "chip-neutral"}`}>{a.status === "agendado" && a.publish_at ? `Vai ao ar ${quandoLembra(new Date(a.publish_at))}` : "Rascunho"}</span>
+                    {a.urgent && <span className="chip chip-wait">Urgente</span>}
+                    <span className="mural-meta">{joinDot(paraPublico(a.audience), KIND_LABEL[a.kind ?? "aviso"])}</span>
+                  </div>
+                  <h3 className="mural-t">{a.title}</h3>
+                  {a.body && <p className="mural-txt mural-txt-curto">{a.body}</p>}
+                  <div className="mural-acts">
+                    {excluindo === a.id ? (
+                      <>
+                        <span className="mural-conf">{a.status === "agendado" ? "Excluir o agendamento?" : "Excluir o rascunho?"}</span>
+                        <button className="btn btn-sec btn-sm" type="button" onClick={() => setExcluindo(null)}>Manter</button>
+                        <button className="btn btn-danger btn-sm" type="button" onClick={() => void excluir(a)}>Excluir</button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="btn btn-sec btn-sm" type="button" onClick={() => setCompose(a)}>{a.status === "agendado" ? "Editar" : "Continuar"}</button>
+                        <button className="btn btn-ghost btn-sm" type="button" onClick={() => setExcluindo(a.id)}>Excluir</button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+          <h2 className="dsec-title mural-pub-t">Publicadas</h2>
+        </section>
+      )}
       <div className="mural-list">
-        {announcements.length === 0 && <EmptyState title="Nada no Mural ainda" text="O que você publicar aparece aqui e no app de quem você escolher." action={{ label: "Nova publicação", onClick: () => setCompose(true) }} />}
-        {porPublicacao(announcements).map((a) => {
+        {noArAgora.length === 0 && <EmptyState title="Nada no Mural ainda" text="O que você publicar aparece aqui e no app de quem você escolher." action={{ label: "Nova publicação", onClick: () => setCompose(true) }} />}
+        {porPublicacao(noArAgora).map((a) => {
           const pub = publicoDe(a);
           const leitores = new Set(announcementReads.filter((r) => r.announcement_id === a.id).map((r) => r.person_id));
           const leram = pub.memberIds.filter((id) => { const p = personDoMembro.get(id); return p && leitores.has(p); });
@@ -311,6 +462,7 @@ export function Comunicacao({
               <div className="panel-body">
                 <div className="mural-top">
                   <span className="chip chip-neutral">{KIND_LABEL[a.kind ?? "aviso"] ?? "Aviso"}</span>
+                  {a.urgent && <span className="chip chip-wait">Urgente</span>}
                   {a.highlight_until && a.highlight_until > agoraIso && <span className="chip chip-neutral">{`Em destaque até ${dataPublicacao(a.highlight_until)}`}</span>}
                   <span className="mural-meta">{joinDot(paraPublico(pub.label), quandoPublicado(a.created_at), quandoPublicado(a.created_at) !== dataPublicacao(a.created_at) && dataPublicacao(a.created_at))}</span>
                 </div>
@@ -359,7 +511,8 @@ export function Comunicacao({
         </div>
       )}
       {msgCfgOpen && church && <AcessoMsgModal church={church} cfg={acessoMsgCfg} onClose={() => setMsgCfgOpen(false)} onRefresh={() => router.refresh()} />}
-      {compose && church && <ComposerModal church={church} publicos={publicos} onClose={() => setCompose(false)} onDone={() => { setCompose(false); router.refresh(); }} />}
+      {compose && church && <ComposerModal key={compose === true ? "novo" : compose.id} church={church} publicos={publicos} inicial={compose === true ? undefined : compose} onClose={() => setCompose(false)} onDone={() => { setCompose(false); router.refresh(); }} />}
+      {boletim && church && <BoletimDaSemana church={church} avisos={noArAgora} events={events} roster={roster} ministries={ministries} people={people} onClose={() => setBoletim(false)} />}
     </div>
   );
 }
