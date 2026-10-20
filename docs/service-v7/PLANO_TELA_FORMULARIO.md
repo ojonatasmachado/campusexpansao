@@ -232,7 +232,12 @@ Visitante: nada a migrar (cadastro com 3 campos fica em janela; não há ediçã
 visitante). Edição do time (`MinisterioEditModal`) em tela com 5 seções (O time, Sobre o
 time, Quem pode entrar, No app, Funções); abre por cima da gaveta e volta para ela ao
 salvar; salvamento parcial (time sim, pré-requisitos não) avisa e atualiza o que está atrás.
-Próximos: reunião, mural.
+Reunião e mural em tela (2026-10-20), com os campos novos do main (destaque, lembrete)
+em seções próprias. Congregação, valores, pesquisa e curso também (itens 7 e 8). Item 9:
+nada a migrar; as gavetas só têm edições curtas e a janela genérica já vira tela com
+mais de 4 campos. Onda 3: coberta pelo CSS global da onda 0. App do membro: rodapé fixo
+(`.m6-fixo`) em Meus dados e na ficha da criança; pedido de oração fica na folha e a
+inscrição no batismo é um botão só. Decisões da seção 10: sim e sim (2026-10-20).
 
 Um por vez, nesta ordem (os mais usados primeiro):
 

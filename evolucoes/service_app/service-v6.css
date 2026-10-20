@@ -776,3 +776,17 @@ body{transition:background-color .2s ease,color .2s ease}
 .m6-fixo{position:sticky;bottom:-28px;z-index:2;margin:16px -18px -18px;padding:12px 18px;background:var(--graphite);border-top:0.5px solid var(--border-2);border-radius:0 0 20px 20px}
 .m6-fixo.m6-btns{margin-top:16px}
 .m6-fixo.m6-fixo-mcard{margin:12px -16px -16px;padding:12px 16px;border-radius:0 0 var(--r-lg) var(--r-lg)}
+
+/* v7 · saída das janelas, gavetas e folhas (cópia inerte criada em DialogosAcessiveis).
+   Mais curta que a entrada; começa de onde a janela estava (a folha arrastada sai do ponto solto). */
+.svc-saindo{pointer-events:none !important}
+.modal-bg.svc-saindo,.fs.svc-saindo{animation:svcSaiFade .16s var(--ease-out) forwards}
+.drawer-bg.svc-saindo,.m6-scrim.svc-saindo,.m-sheet-bg.svc-saindo{animation:svcSaiFade .22s var(--ease-out) forwards}
+.modal-bg.svc-saindo .modal{animation:svcSaiPop .16s var(--ease-out) forwards}
+.drawer.svc-saindo{animation:svcSaiDireita .22s var(--ease-out) forwards}
+.m6-scrim.svc-saindo .m6-sheet,.m-sheet-bg.svc-saindo .m-sheet{animation:svcSaiBaixo .22s var(--ease-out) forwards}
+@keyframes svcSaiFade{to{opacity:0}}
+@keyframes svcSaiPop{to{opacity:0;transform:scale(.96)}}
+@keyframes svcSaiDireita{to{transform:translateX(100%)}}
+@keyframes svcSaiBaixo{to{transform:translateY(100%)}}
+@media (prefers-reduced-motion:reduce){.svc-saindo{display:none !important}}

@@ -9,9 +9,30 @@ import { useEffect } from "react";
      fecha no clique, de propósito, o Esc também não fecha);
    - Tab e Shift+Tab ficam dentro da janela de cima;
    - ao abrir, o foco vai para dentro da janela; ao fechar, volta para onde estava;
-   - a janela se anuncia como diálogo para o leitor de tela. */
+   - a janela se anuncia como diálogo para o leitor de tela;
+   - ao fechar, uma cópia inerte da janela faz a animação de saída no lugar dela
+     (o React já desmontou a de verdade; a cópia não recebe toque nem foco). */
 
-const FUNDOS = ".modal-bg,.drawer-bg,.m6-scrim,.m-sheet-bg,.mob-bg:not(.mob-self)";
+const FUNDOS = ".modal-bg:not(.svc-saindo),.drawer-bg:not(.svc-saindo),.m6-scrim:not(.svc-saindo),.m-sheet-bg:not(.svc-saindo),.mob-bg:not(.mob-self):not(.svc-saindo)";
+/* o que ganha animação de saída: só quando o próprio elemento sai (não quando a tela inteira troca) */
+const SAEM = ".modal-bg,.drawer-bg,.drawer,.m6-scrim,.m-sheet-bg,.fs";
+
+function animarSaida(no: Node, pai: Node, depois: Node | null) {
+  if (!(no instanceof HTMLElement) || no.isConnected || !no.matches(SAEM) || no.classList.contains("svc-saindo")) return;
+  if (!(pai instanceof HTMLElement) || !pai.isConnected) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const copia = no.cloneNode(true) as HTMLElement;
+  copia.classList.add("svc-saindo");
+  copia.setAttribute("aria-hidden", "true");
+  copia.setAttribute("inert", "");
+  copia.removeAttribute("id");
+  copia.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id"));
+  pai.insertBefore(copia, depois && depois.parentNode === pai ? depois : null);
+  let feito = false;
+  const tirar = () => { if (feito) return; feito = true; copia.remove(); };
+  copia.addEventListener("animationend", (e) => { if (e.target === copia) tirar(); });
+  window.setTimeout(tirar, 400);
+}
 const FOCAVEIS = 'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"]),[contenteditable="true"]';
 
 /* a superfície da janela: dentro do fundo (janela, folha) ou logo depois dele (gaveta) */
@@ -68,7 +89,10 @@ export default function DialogosAcessiveis() {
       }
     };
 
-    const obs = new MutationObserver(conferir);
+    const obs = new MutationObserver((registros) => {
+      for (const r of registros) r.removedNodes.forEach((no) => animarSaida(no, r.target, r.nextSibling));
+      conferir();
+    });
     obs.observe(document.body, { childList: true, subtree: true });
     conferir();
 
