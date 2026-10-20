@@ -287,7 +287,7 @@ export function SetupChecklist({ counts, setRoute }: { counts: SetupCounts; setR
         </div>
         <button className="setup-close" type="button" onClick={hide} title="Esconder por agora" aria-label="Esconder por agora">✕</button>
       </div>
-      <div className="setup-bar"><div className="setup-bar-fill" style={{ width: `${pct}%` }} /></div>
+      <div className="setup-bar"><div className="setup-bar-fill" style={{ transform: `translateX(${pct - 100}%)` }} /></div>
       <div className="setup-list">
         {SETUP_ITENS.map((it) => {
           const ok = it.done(baseline, counts);

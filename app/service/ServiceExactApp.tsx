@@ -5448,7 +5448,7 @@ function Conversas({
 
 function Bars({ series, labels }: { series: number[]; labels: string[] }) {
   const max = Math.max(...series, 1);
-  return <div className="bars">{series.map((value, index) => <div className="bars-col" key={labels[index] ?? index}><div className={`bars-bar ${index === series.length - 1 ? "hi" : ""}`} style={{ height: `${(value / max) * 100}%` }} /><span className="bars-x">{labels[index]}</span></div>)}</div>;
+  return <div className="bars">{series.map((value, index) => <div className="bars-col" key={labels[index] ?? index}><div className="bars-track"><div className={`bars-bar ${index === series.length - 1 ? "hi" : ""}`} style={{ transform: `translateY(${100 - (value / max) * 100}%)` }} /></div><span className="bars-x">{labels[index]}</span></div>)}</div>;
 }
 
 function Relatorios({

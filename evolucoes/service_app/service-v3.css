@@ -83,7 +83,7 @@
 .setup-close { flex-shrink: 0; width: 28px; height: 28px; border-radius: var(--r-md); background: transparent; border: none; color:var(--muted); font-size: var(--fs-pn-13); cursor: pointer; transition: background .14s, color .14s; }
 @media (hover:hover) and (pointer:fine) { .setup-close:hover { background: var(--ink); color: var(--muted); } }
 .setup-bar { height: 6px; border-radius: var(--r-pill); background: var(--ink); overflow: hidden; margin: 16px 0 4px; }
-.setup-bar-fill { height: 100%; border-radius: var(--r-pill); background:var(--accent-fill); transition: width .3s ease; }
+.setup-bar-fill { height: 100%; border-radius: var(--r-pill); background:var(--accent-fill); transition: transform .3s var(--ease-out); }
 .setup-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 14px; }
 .setup-item {
   display: flex; align-items: center; gap: 11px; text-align: left; background: var(--ink);

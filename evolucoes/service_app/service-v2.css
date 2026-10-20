@@ -569,7 +569,7 @@
 /* ════════════════════════════════════════════════════════════════
    EDITOR DE CURSO · PÁGINA CHEIA (não mais drawer)
    ════════════════════════════════════════════════════════════════ */
-.ce-page { position: fixed; inset: 0; z-index: 65; background: var(--ink); display: flex; flex-direction: column; animation: fade .2s; }
+.ce-page { position: fixed; inset: 0; z-index: 65; background: var(--ink); display: flex; flex-direction: column; animation: pop .2s var(--ease-out); }
 .ce-page-bar { display: flex; align-items: center; gap: 16px; padding: 14px 26px; background: var(--graphite); border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
 .ce-page-back { display: inline-flex; align-items: center; gap: 7px; background: var(--ink); border: 0.5px solid var(--border-2); color: var(--muted); font-size: var(--fs-pn-13); font-weight: 500; padding: 8px 14px; border-radius: var(--r-md); cursor: pointer; transition:color .16s ease,background-color .16s ease,border-color .16s ease,box-shadow .16s ease,opacity .16s ease,transform .16s var(--ease-out); }
 @media (hover:hover) and (pointer:fine) { .ce-page-back:hover { color: var(--white); border-color: var(--olive-line); } }
