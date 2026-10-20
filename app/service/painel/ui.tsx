@@ -30,14 +30,16 @@ export function Chip({ status }: { status: string }) {
   return <span className={`chip ${cls}`}>{CHIP_LABEL[status] ?? status}</span>;
 }
 
-export function PageHead({ title, eyebrow, subtitle, action, help }: { title: string; eyebrow: string; subtitle: string; action?: React.ReactNode; help?: string }) {
+/* subtitle: só uma contagem ou um fato curto ("34 pessoas"), no máximo uma linha.
+   O que explica a tela vai em help, no "?" ao lado do título (onda 0). */
+export function PageHead({ title, eyebrow, subtitle, action, help }: { title: string; eyebrow: string; subtitle?: string; action?: React.ReactNode; help?: string }) {
   const grupo = useContext(RouteGroupContext);
   return (
     <div className="ph">
       <div>
         <div className="ph-eyebrow">{grupo ?? eyebrow}</div>
         <h1 className="ph-title">{title} {help ? <HelpDot text={help} /> : null}</h1>
-        <p className="ph-sub">{subtitle}</p>
+        {subtitle ? <p className="ph-sub">{subtitle}</p> : null}
       </div>
       {action ? <div className="ph-actions">{action}</div> : null}
     </div>

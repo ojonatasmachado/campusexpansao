@@ -55,12 +55,12 @@
 .esc-fnblock-need { font-family:var(--sans); font-size: var(--fs-pn-12); color: var(--olive-soft); }
 .esc-fnblock-need.gap { color: var(--amber); }
 .esc-fnblock-slots { display: flex; flex-direction: column; gap: 6px; }
-.esc-person { display: flex; align-items: center; gap: 8px; width: 100%; background: var(--ink); border: 0.5px solid var(--border); border-radius: 8px; padding: 6px 9px; cursor: pointer; transition: border-color .12s; }
+.esc-person { display: flex; align-items: center; gap: 8px; width: 100%; background: var(--ink); border: 0.5px solid var(--border); border-radius: var(--r-ctl); padding: 6px 9px; cursor: pointer; transition: border-color .12s; }
 .esc-person:hover { border-color: var(--olive-line); }
 .esc-person.is-no { border-style: dashed; background: transparent; }
 .esc-person.is-no .esc-person-name { color: var(--muted); }
 .esc-person-name { flex: 1; font-size: var(--fs-pn-13); color: var(--light); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.esc-vaga { width: 100%; border: 1px dashed var(--border-3); background: transparent; border-radius: 8px; padding: 7px; color:var(--muted); font-family:var(--sans); font-size: var(--fs-pn-12); cursor: pointer; transition: border-color .12s, color .12s; }
+.esc-vaga { width: 100%; border: 1px dashed var(--border-3); background: transparent; border-radius: var(--r-ctl); padding: 7px; color:var(--muted); font-family:var(--sans); font-size: var(--fs-pn-12); cursor: pointer; transition: border-color .12s, color .12s; }
 .esc-vaga:hover { border-color: var(--olive); color: var(--olive); }
 
 /* modo de geração + travas + colunas estilo quadro */
@@ -79,11 +79,11 @@
 .cand.is-block .cand-name { color: var(--muted); }
 .cand.is-block:hover { border-color: var(--border); }
 .cand-fit.block { color:var(--muted); }
-.esc-col-edit { background: transparent; border: 0.5px solid var(--border-2); color: var(--muted); border-radius: 7px; width: 26px; height: 26px; display: grid; place-items: center; cursor: pointer; flex-shrink: 0; }
+.esc-col-edit { background: transparent; border: 0.5px solid var(--border-2); color: var(--muted); border-radius: var(--r-ctl); width: 26px; height: 26px; display: grid; place-items: center; cursor: pointer; flex-shrink: 0; }
 .esc-col-edit:hover { border-color: var(--olive); color: var(--olive); }
 .esc-preset { display: inline-flex; align-items: center; gap: 6px; margin-right: 14px; }
-.esc-preset-sel { background: var(--ink); border: 0.5px solid var(--border-2); color: var(--light); border-radius: 7px; padding: 5px 8px; font-size: var(--fs-pn-12); }
-.esc-preset-save { background: var(--olive-dim); border: 0.5px solid var(--olive-line); color: var(--olive-soft); border-radius: 7px; padding: 5px 10px; font-size: var(--fs-pn-12); font-weight: 600; cursor: pointer; }
+.esc-preset-sel { background: var(--ink); border: 0.5px solid var(--border-2); color: var(--light); border-radius: var(--r-ctl); padding: 5px 8px; font-size: var(--fs-pn-12); }
+.esc-preset-save { background: var(--olive-dim); border: 0.5px solid var(--olive-line); color: var(--olive-soft); border-radius: var(--r-ctl); padding: 5px 10px; font-size: var(--fs-pn-12); font-weight: 600; cursor: pointer; }
 .func-edit-row { display: flex; align-items: center; gap: 8px; }
 .func-edit-row .input { flex: 1; }
 .func-edit-x { background: transparent; border: none; color:var(--muted); cursor: pointer; display: grid; place-items: center; padding: 4px; }

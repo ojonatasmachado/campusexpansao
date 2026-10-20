@@ -168,7 +168,7 @@ a.login-choice:hover,button.login-choice:hover{border-color:var(--olive-line)}
 .cong-btn.static .cong-caret{display:none}
 /* avatar da pessoa logada + menu (substitui iniciais da igreja e o sino sem ação) */
 .top-user{position:relative}
-.top-user-btn{display:flex;align-items:center;gap:9px;padding:3px 12px 3px 3px;border-radius:var(--r-pill);border:0.5px solid var(--border-2);background:var(--graphite);transition:border-color .14s}
+.top-user-btn{display:flex;align-items:center;gap:9px;padding:3px 12px 3px 3px;border-radius:var(--r-ctl);border:0.5px solid var(--border-2);background:var(--graphite);transition:border-color .14s}
 .top-user-btn:hover{border-color:var(--border-3)}
 .top-user-btn .av{width:32px;height:32px;font-size:var(--fs-pn-12)}
 .top-user-name{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-pn-13);font-weight:600;color:var(--white)}

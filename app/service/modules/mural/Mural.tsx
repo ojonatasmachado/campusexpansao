@@ -204,7 +204,7 @@ export function Comunicacao({
       <PageHead
         title="Mural"
         eyebrow="Comunicação"
-        subtitle="Publicações para a igreja toda ou para um grupo. Quem recebe vê no app, e você acompanha quem leu."
+        help="Publicações para a igreja toda ou para um grupo. Quem recebe vê no app, e você acompanha quem leu."
         action={<button className="btn btn-pri" type="button" onClick={() => setCompose(true)}>+ Nova publicação</button>}
       />
       <div className="mural-list">
@@ -232,7 +232,7 @@ export function Comunicacao({
                   {a.kind === "evento" && <div className="mural-reach-n">{plural(resp.filter((r) => r.response === "vou").length, "vai", "vão")} · {resp.filter((r) => r.response === "nao").length} não</div>}
                 </div>
                 <div className="mural-acts">
-                  {faltam.length > 0 && <button className="btn btn-sec btn-sm" type="button" onClick={() => lembrar(a, faltam)}>Lembrar quem não leu</button>}
+                  {faltam.length > 0 && <button className="btn btn-sec btn-sm" type="button" onClick={() => lembrar(a, faltam)}>Lembrar {plural(faltam.length, "pessoa")}</button>}
                   <VerQuemLeuButton aviso={a} reads={announcementReads} people={people.filter((p) => pub.memberIds.some((id) => personDoMembro.get(id) === p.id))} />
                 </div>
               </div>
