@@ -101,7 +101,7 @@ export function EscalaExtra({ ministries, church, onClose, onCriado }: {
           <div className="per-lista">
             {comFuncoes.map((m) => (
               <label className="fs-check" key={m.id}>
-                <input type="checkbox" checked={times.has(m.id)} onChange={() => setTimes((s) => { const n = new Set(s); if (n.has(m.id)) n.delete(m.id); else n.add(m.id); return n; })} />
+                <input type="checkbox" checked={times.has(m.id)} onChange={() => setTimes((atual) => { const n = new Set(atual); if (n.has(m.id)) n.delete(m.id); else n.add(m.id); return n; })} />
                 <span className="per-check-txt">
                   <span className="per-check-t">{m.name}</span>
                   <span className="per-check-s">{joinDot(plural(m.positions.reduce((s, p) => s + Math.max(1, p.need_count), 0), "vaga"), m.positions.map((p) => p.name).join(", "))}</span>

@@ -31,7 +31,9 @@ type Duracao = (typeof DURACOES)[number] | "datas";
 
 const nomeDoMes = (mes: string) => {
   const d = parseISODate(`${mes}-01`);
-  return d ? new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(d) : mes;
+  if (!d) return mes;
+  const t = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(d);
+  return t.charAt(0).toUpperCase() + t.slice(1);
 };
 const diaCurto = (iso: string) => DIA_CURTO[parseISODate(iso)?.getDay() ?? 0];
 const novoId = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
@@ -451,7 +453,7 @@ export function GerarPeriodo({
         <EscolherNaVaga
           vaga={vaga}
           culto={base.cultos.find((c) => c.chave === vaga.culto)!}
-          opcoes={opcoesDaVaga(base, proposta, vaga.culto, vaga.timeId, vaga.funcaoId, vaga.atual)}
+          opcoes={opcoesDaVaga(base, proposta, vaga.culto, vaga.timeId, vaga.funcaoId, vaga.atual).filter((c) => c.person.id !== vaga.atual)}
           cfg={cfg}
           nomeAtual={vaga.atual ? nome(vaga.atual) : undefined}
           onEscolher={(id) => trocar(vaga, id)}
@@ -503,7 +505,7 @@ function EscolherNaVaga({ vaga, culto, opcoes, cfg, nomeAtual, onEscolher, onClo
           </div>
         </div>
         <div className="modal-body cand-list">
-          {achados.length === 0 && <div className="empty">{busca.trim() ? "Ninguém com esse nome neste time." : "Ninguém neste time."}</div>}
+          {achados.length === 0 && <div className="empty">{busca.trim() ? "Ninguém com esse nome neste time." : "Todo mundo do time já está nesta função. Adicione pessoas ao time em Times."}</div>}
           {podem.length > 0 && <><div className="cand-grp">Livres, pela ordem do rodízio</div>{podem.map((c) => linha(c))}</>}
           {comAviso.length > 0 && <><div className="cand-grp">Pode escolher, mas fica com aviso</div>{comAviso.map((c) => linha(c, motivo(c)))}</>}
           {naoPodem.length > 0 && <><div className="cand-grp">Não podem nesta vaga</div>{naoPodem.map((c) => linha(c, motivo(c)))}</>}

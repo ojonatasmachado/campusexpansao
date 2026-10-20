@@ -3507,7 +3507,7 @@ body{transition:background-color .2s ease,color .2s ease}
 .per-avisos li svg{flex-shrink:0;margin-top:2px;color:var(--amber)}
 .per-mes{border-top:0.5px solid var(--border-2);margin-top:4px}
 .per-mes-head{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:10px 0;background:transparent;border:0;color:var(--white);text-align:left;cursor:pointer}
-.per-mes-t{font-size:var(--fs-pn-16);font-weight:600;text-transform:capitalize}
+.per-mes-t{font-size:var(--fs-pn-16);font-weight:600}
 .per-mes-s{flex:1;min-width:0;font-size:var(--fs-pn-12);color:var(--muted)}
 .per-mes-head svg{flex-shrink:0;color:var(--muted);transition:transform .16s var(--ease-out)}
 .per-mes-head[aria-expanded="true"] svg{transform:rotate(90deg)}
@@ -3533,6 +3533,9 @@ body{transition:background-color .2s ease,color .2s ease}
   .per-func-row{align-items:flex-start;flex-direction:column;gap:4px;padding:6px 0}
   .per-func > .per-func-row{flex-direction:row;align-items:center}
   .per-func-nome{flex:none}
+  .per-culto-nome{order:3;flex-basis:100%}
+  .per-vagas{align-self:stretch}
+  .per-tag{margin-left:auto}
   .per-vaga{min-height:44px;padding:11px 12px}
   .per-resumo{grid-template-columns:minmax(0,1fr)}
   .per-num{flex-direction:row;align-items:baseline;gap:8px;padding:10px 14px}
