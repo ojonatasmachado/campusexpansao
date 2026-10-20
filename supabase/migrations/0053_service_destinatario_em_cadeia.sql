@@ -26,10 +26,10 @@ declare
   v_org uuid;
   v_person uuid;
 begin
-  select m.id, m.organization_id, m.volunteer_id into v_me, v_org, v_person
-  from service.members m
-  where m.id = any(service.my_members())
-  limit 1;
+  -- := em vez de "select ... into" (o SQL Editor do Supabase quebra a outra forma)
+  v_me := (select m.id from service.members m where m.id = any(service.my_members()) order by m.id limit 1);
+  v_org := (select m.organization_id from service.members m where m.id = v_me);
+  v_person := (select m.volunteer_id from service.members m where m.id = v_me);
   if v_me is null then return; end if;
 
   if p_kind = 'troca' then
@@ -87,13 +87,16 @@ declare
   v_funcao text;
   v_slot text;
 begin
-  select r.organization_id, r.event_id, r.position_id, r.person_id into v_org, v_event, v_position, v_person
-  from service.roster_assignments r
-  where r.id = p_assignment and r.person_id in (select unnest(service.my_people()));
+  v_org := (select r.organization_id from service.roster_assignments r
+            where r.id = p_assignment and r.person_id in (select unnest(service.my_people())));
   if v_org is null then return; end if;
+  v_event := (select r.event_id from service.roster_assignments r where r.id = p_assignment);
+  v_position := (select r.position_id from service.roster_assignments r where r.id = p_assignment);
+  v_person := (select r.person_id from service.roster_assignments r where r.id = p_assignment);
 
-  select pos.ministry_id, pos.name into v_ministry, v_funcao from service.ministry_positions pos where pos.id = v_position;
-  select e.slot into v_slot from service.events e where e.id = v_event;
+  v_ministry := (select pos.ministry_id from service.ministry_positions pos where pos.id = v_position);
+  v_funcao := (select pos.name from service.ministry_positions pos where pos.id = v_position);
+  v_slot := (select e.slot from service.events e where e.id = v_event);
 
   return query
     select mb.id, mb.name

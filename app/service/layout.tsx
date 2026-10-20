@@ -7,6 +7,7 @@ import "../../evolucoes/service_app/service-v5.css";
 import "../../evolucoes/service_app/service-v6.css";
 import "../../evolucoes/service_app/service-form.css";
 import PwaBootstrap from "./PwaBootstrap";
+import DialogosAcessiveis from "./DialogosAcessiveis";
 
 export const metadata: Metadata = {
   title: "CE.X Service · Gestão ministerial",
@@ -30,6 +31,7 @@ export default function ServiceLayout({ children }: { children: React.ReactNode 
     <>
       {children}
       <PwaBootstrap />
+      <DialogosAcessiveis />
     </>
   );
 }

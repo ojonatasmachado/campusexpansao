@@ -88,3 +88,16 @@ criados fora do registro não entram.
 - [ ] Textos usam `termo()` para os termos renomeáveis e os tokens de fonte.
 - [ ] Fatos que vão para o histórico estão declarados.
 - [ ] Captura das telas novas passa nos testes da lei 12.
+
+## Como a medição funciona (5.1, lei 11)
+
+- Tabela `service.app_events` (0064), sem dado da pessoa: igreja, evento, módulo, tipo e
+  referência (id do cartão ou categoria do aviso). Só dono e master leem.
+- Cartão na fila do Início: a casca mede sozinha. `card_shown` uma vez por sessão para
+  cada cartão na tela; clique em botão do cartão é `card_acted`; botão com
+  `data-dispensa="1"` (ex. "Agora não") é `card_dismissed`. Módulo novo não precisa
+  fazer nada além de pôr o cartão na fila e marcar o botão de dispensar.
+- Aviso: `notifyPush(org, membros, título, texto, categoria)`. O servidor grava
+  `notification_sent` e manda o endereço `/service?aviso=<categoria>`; o toque abre o app,
+  que grava `notification_opened` e limpa o endereço. Sempre passe a categoria.
+- No cliente, `medir()` e `medirCartaoVisto()` de `app/service/lib/medicao.ts`.

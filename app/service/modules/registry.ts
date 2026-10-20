@@ -31,11 +31,13 @@ import igreja from "./igreja/manifest";
 import acesso from "./acesso/manifest";
 import biblia from "./biblia/manifest";
 import perfil from "./perfil/manifest";
+import cuidado from "./cuidado/manifest";
+import configuracao from "./configuracao/manifest";
 
 export const MODULOS: readonly ModuleManifest[] = [
   inicio, pessoas, visitantes, kids, grupos, decisoes, times, escalas, ensaios, reunioes,
   cultos, espacos, mural, conversas, pesquisas, pagina, cursos, batismos, relatorios, quadros,
-  identidade, historia, igreja, acesso, biblia, perfil,
+  identidade, historia, igreja, acesso, biblia, perfil, cuidado, configuracao,
 ];
 
 const IDS = new Set(MODULOS.map((m) => m.id));
@@ -135,7 +137,11 @@ export function podeVerRota(
   if (rota === "membros" && extras.includes("pessoas")) return true;
   const code = CODIGO_PERMISSAO[rota];
   /* membro que serve num time usa a coluna "Voluntário" da matriz; sem time, só o app */
-  if (papel === "membro") return serveEmTime && !!code && matriz.voluntario?.[code] === true;
+  if (papel === "membro") {
+    /* o Início do painel não tem código no menu; para o voluntário vale a linha "painel" da matriz (S51, main) */
+    const c = rota === "painel" ? "painel" : code;
+    return serveEmTime && !!c && matriz.voluntario?.[c] === true;
+  }
   if (!code) return true;
   return matriz[papel]?.[code] ?? true;
 }

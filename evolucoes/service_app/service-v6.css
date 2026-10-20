@@ -185,7 +185,7 @@
 /* ── componentes base (S10, S11, S12) ───────────────────────────── */
 /* "Como calculamos": link de texto no lugar do "?" em números e painéis */
 .help-link{display:inline;margin-left:6px;padding:0;border:0;background:none;font-family:var(--font, inherit);font-size:var(--fs-pn-13);font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--border-3);cursor:pointer}
-.help-link:hover{color:var(--white)}
+@media (hover:hover) and (pointer:fine) { .help-link:hover {color:var(--white)} }
 .kpi-how{margin-top:6px}
 .kpi-how .help-link{margin-left:0}
 /* estado vazio: mesmo alinhamento em todo lugar */
@@ -260,7 +260,6 @@
 .m6-btn.small{flex:none;min-height:44px;padding:4px 16px;border-radius:var(--r-ctl);font-size:var(--fs-app-15)}
 .m6-btn.full{width:100%}
 .m6-btn:disabled{opacity:.45;cursor:default}
-.m6-btn:active{transform:scale(.98)}
 .m6-link{min-height:44px;padding:0;border:0;background:none;font-size:var(--fs-app-17);font-weight:600;color:var(--olive);text-align:left;cursor:pointer}
 .m6-after{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;margin-top:14px}
 .m6-st{display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 9px;border-radius:var(--r-ctl);font-size:var(--fs-app-15);font-weight:600;line-height:1.25}
@@ -277,9 +276,13 @@ div.m6-row{cursor:default}
 .m6-rb{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
 .m6-rt{display:flex;align-items:center;gap:6px;font-size:var(--fs-app-17);font-weight:600;line-height:1.3;color:var(--white)}
 .m6-rs{font-size:var(--fs-app-15);line-height:1.4;color:var(--muted)}
+.m6-serve{display:block;margin-top:6px}
+.m6-ag-h{flex:0 0 auto;min-width:3.2em;font-family:var(--mono);font-size:var(--fs-app-15);font-variant-numeric:tabular-nums;color:var(--muted)}
+.m6-ev-info{margin-top:16px}
 .m6-1l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .m6-strong{color:var(--white);font-weight:600}
 .m6-mt{margin-top:8px}
+.m6-selos{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .m6-ic{display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:12px;background:var(--graphite-2);color:var(--white)}
 .m6-ic.accent{background:var(--olive-dim);color:var(--olive)}
 .m6-me{display:flex;align-items:center;gap:16px}
@@ -326,7 +329,7 @@ div.m6-row{cursor:default}
 .m6-badge{position:absolute;top:-4px;left:calc(50% + 6px);display:grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--danger);color:#fff;font-size:var(--fs-app-13);font-weight:700;border:2px solid var(--graphite)}
 /* folha de baixo e aviso: dentro da coluna do app */
 .phone-screen{position:relative}
-.m6-scrim{position:absolute;inset:0;z-index:45;display:flex;align-items:flex-end;background:rgba(0,0,0,.45);animation:fade .15s}
+.m6-scrim{position:absolute;inset:0;z-index:45;display:flex;align-items:flex-end;background:rgba(0,0,0,.45);animation:fade .3s var(--ease-out)}
 .m6-sheet{width:100%;max-height:88%;overflow:auto;padding:10px 20px calc(28px + var(--safe-bottom));border-radius:26px 26px 0 0;background:var(--graphite);color:var(--white);zoom:var(--m-scale,1)}
 .m6-grab{width:40px;height:5px;margin:0 auto 16px;border-radius:3px;background:var(--border-3)}
 .m6-toast{position:absolute;left:16px;right:16px;bottom:calc(84px + var(--safe-bottom));z-index:48;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:10px 10px 10px 18px;border-radius:16px;background:var(--white);color:var(--ink);font-size:var(--fs-app-15);font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25)}
@@ -337,7 +340,7 @@ div.m6-row{cursor:default}
 
 /* ── painel v6: menu, Pessoas, Mural ─────────────────────────────── */
 .sb-group-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding-right:12px;background:none;border:0;text-align:left;cursor:pointer}
-.sb-group-btn:hover{color:var(--white)}
+@media (hover:hover) and (pointer:fine) { .sb-group-btn:hover {color:var(--white)} }
 .sb-sec.closed{margin-bottom:2px}
 .seg-n{margin-left:4px;font-family:var(--mono);font-size:var(--fs-pn-12);color:var(--muted)}
 .seg.seg-wrap{flex-wrap:wrap}
@@ -375,7 +378,7 @@ div.m6-row{cursor:default}
 /* Início do painel: o que pede ação primeiro */
 .agora-list{display:grid;gap:8px;margin-bottom:20px}
 .agora-row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:12px 16px;border-radius:var(--r-md);background:var(--graphite);border:0.5px solid var(--border-2);text-align:left;color:var(--white)}
-.agora-row:hover{border-color:var(--border-3)}
+@media (hover:hover) and (pointer:fine) { .agora-row:hover {border-color:var(--border-3)} }
 .agora-ic{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:50%;background:var(--amber-dim);color:var(--warn)}
 .agora-main{flex:1;min-width:0}
 .agora-t{font-size:var(--fs-pn-14);font-weight:600}
@@ -391,7 +394,7 @@ div.m6-row{cursor:default}
 .esc-gerar .esc-modo{margin:0;border:0;border-top:0.5px solid var(--border);border-radius:0 0 var(--r-md) var(--r-md)}
 /* Visitantes: cartão com alerta de 48h e ações */
 .vcard{cursor:default}
-.vcard:hover{transform:none}
+@media (hover:hover) and (pointer:fine) { .vcard:hover {transform:none} }
 .vcard-open{display:block;width:100%;padding:0;border:0;background:none;text-align:left;color:inherit;cursor:pointer}
 .vcard-when{font-family:var(--font, inherit);font-size:var(--fs-pn-13);color:var(--muted)}
 .vcard-alerta{border-color:var(--amber-line)}
@@ -421,7 +424,7 @@ div.m6-row{cursor:default}
 .cfg-index{position:sticky;top:88px;display:grid;gap:18px}
 .cfg-index-gt{margin:0 0 6px 10px;font-family:var(--sans);font-size:var(--fs-pn-12);font-weight:600;letter-spacing:0;color:var(--muted)}
 .cfg-index-item{display:grid;gap:1px;width:100%;padding:9px 10px;border-radius:var(--r-md);border:0;background:none;text-align:left;cursor:pointer}
-.cfg-index-item:hover{background:var(--graphite)}
+@media (hover:hover) and (pointer:fine) { .cfg-index-item:hover {background:var(--graphite)} }
 .cfg-index-item.on{background:var(--olive-dim)}
 .cfg-index-t{font-size:var(--fs-pn-14);font-weight:600;color:var(--white)}
 .cfg-index-item.on .cfg-index-t{color:var(--olive)}
@@ -439,7 +442,7 @@ div.m6-row{cursor:default}
 /* chave: desligada = trilho claro com bolinha branca; ligada = trilho na cor da igreja */
 .sw{width:46px;height:28px;background:var(--border-3)}
 .sw::after{top:3px;left:3px;width:22px;height:22px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3)}
-.sw.on::after{left:21px;background:#fff}
+.sw.on::after{transform:translateX(18px);background:#fff}
 body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
 /* campos editáveis com fundo de cartão e borda */
 .cfg-card .input,.cfg-card .select,.cfg-card .textarea{background:var(--graphite);border:0.5px solid var(--border-3)}
@@ -459,7 +462,7 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
   .help-fab-wrap.flutuante{display:none}
   .help-fab-wrap.na-barra{display:block;position:relative;right:auto;bottom:auto;z-index:auto;flex-shrink:0}
   .na-barra .help-fab{width:44px;height:44px;background:transparent;border:0;box-shadow:none;font-family:var(--font, inherit);font-size:var(--fs-pn-16);color:var(--light)}
-  .na-barra .help-fab:hover{transform:none}
+  @media (hover:hover) and (pointer:fine) { .na-barra .help-fab:hover {transform:none} }
   .na-barra .help-fab-menu{top:calc(100% + 8px);bottom:auto;right:0;width:min(250px, calc(100vw - 32px))}
   .top.search-open .help-fab-wrap.na-barra{display:none}
 }
@@ -513,3 +516,257 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
 .sit-cell{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
 .sit-sub{font-size:var(--fs-pn-12);color:var(--muted);line-height:1.3}
 .sit-alerta{color:var(--warn)}
+
+/* v7 4.5: o que o evento pede (painel, detalhe do culto) */
+.pede-opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;min-height:32px;border:1px solid var(--border-2);border-radius:10px;cursor:pointer}
+.pede-opt.on{border-color:var(--olive)}
+.pede-opt input{margin-top:3px}
+
+/* v7 4.14: janela Escalar com busca, filtro e grupos */
+.cand-tools{display:flex;gap:8px;align-items:center;margin-top:12px}
+.cand-tools .input{flex:1;min-width:0}
+.chip-toggle{flex-shrink:0;min-height:32px;padding:6px 14px;border-radius:999px;border:1px solid var(--border-2);background:none;color:var(--light);font:600 var(--fs-pn-13)/1.2 var(--sans);cursor:pointer}
+.chip-toggle.on{border-color:var(--olive);color:var(--white);background:color-mix(in srgb,var(--olive) 16%,transparent)}
+.cand-grp{margin:14px 0 2px;font-size:var(--fs-pn-13);font-weight:600;color:var(--white)}
+.cand-grp:first-child{margin-top:0}
+.cand-grp-sub{margin-bottom:6px;font-size:var(--fs-pn-12);color:var(--muted)}
+
+/* v7 4.16: cobertura por time ("Louvor 5/5 · Recepção 3/4") */
+.cob{display:flex;flex-wrap:wrap;gap:4px 0;margin:6px 0 0;padding:0;list-style:none;font-size:var(--fs-pn-13);line-height:1.4}
+.cob li{display:inline-flex;align-items:center}
+.cob li+li::before{content:"·";margin:0 8px;color:var(--muted)}
+.cob-nome{color:var(--light)}
+.cob-num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600}
+.cob-ok .cob-num{color:var(--ok)}
+.cob-falta .cob-num{color:var(--warn)}
+.cob button{display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:0;border:0;background:none;font:inherit;color:inherit;cursor:pointer;text-decoration:underline;text-decoration-color:var(--border-2);text-underline-offset:3px}
+@media (hover:hover) and (pointer:fine) { .cob button:hover .cob-nome {color:var(--white)} }
+.cob-compacta{font-size:var(--fs-pn-12)}
+.esc-event-cob{display:block;margin-top:4px;font-size:var(--fs-pn-12);font-weight:600}
+.esc-event-cob.falta{color:var(--warn)}
+.esc-event-cob.ok{color:var(--ok)}
+.esc-col:focus{outline:2px solid var(--olive);outline-offset:2px}
+.esc-col:focus:not(:focus-visible){outline:0}
+
+/* v7 4.15: conversa com pessoa, última fala e não lidas */
+.m-conv-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.m-conv.unread .m-conv-name{font-weight:700}
+.m-conv.unread .m-conv-prev{color:var(--white);font-weight:600}
+.m-conv.unread .m-conv-when{color:var(--white)}
+
+/* v7 4.10: primeiro acesso em 2 passos; foto em Meus dados */
+.m6-card.ob-foto{flex-direction:column;align-items:center;gap:8px;margin-bottom:12px}
+.ob-previa{margin-top:16px}
+
+/* v7 4.11: Saúde da igreja (Início do painel de gestão e pastores) */
+.saude{margin:0 0 24px}
+.saude-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.saude-t{margin:0;font-size:var(--fs-pn-20);font-weight:700;color:var(--white)}
+.saude-datas{display:flex;flex-wrap:wrap;gap:12px;margin:4px 0 8px;font-size:var(--fs-pn-13);color:var(--muted)}
+.saude-datas label{display:flex;align-items:center;gap:8px}
+.saude-grp{margin:16px 0 8px;font-size:var(--fs-pn-14);font-weight:600;color:var(--white)}
+.saude-grp-s{font-weight:400;color:var(--muted)}
+.saude-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.saude-n{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:32px;padding:12px 14px;border:1px solid var(--border-2);border-radius:12px;background:var(--graphite);color:var(--white);text-align:left;cursor:pointer;font:inherit}
+@media (hover:hover) and (pointer:fine) { .saude-n:hover:not(:disabled) {border-color:var(--olive)} }
+.saude-n:disabled{cursor:default}
+.saude-v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--fs-pn-32);font-weight:700;line-height:1.1}
+.saude-l{font-size:var(--fs-pn-13);font-weight:600;color:var(--light)}
+.saude-c{font-size:var(--fs-pn-12);color:var(--muted)}
+.painel-sec-t{margin:8px 0 10px;font-size:var(--fs-pn-20);font-weight:700;color:var(--white)}
+
+/* v7 4.17: lista de cuidado */
+.cuidado-seg{padding:0 16px 10px}
+.cuidado-item{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 16px;border-top:0.5px solid var(--border-2)}
+.cuidado-nome{flex:1 1 220px;min-width:0;min-height:32px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:0;border:0;background:none;color:inherit;text-align:left;cursor:pointer;font:inherit}
+.cuidado-acoes{display:flex;flex-wrap:wrap;gap:6px}
+
+/* v7 4.4: destaque da igreja (Nova publicação no painel; cartão no app) */
+.destaque-campos{margin-top:10px;padding:12px;border:1px solid var(--border-2);border-radius:10px}
+.m6-destaque{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:calc(100% - 32px);text-align:left;cursor:pointer;font:inherit;color:inherit}
+.m6-destaque-img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;margin-bottom:8px;background:var(--graphite-2)}
+.m6-destaque .m6-link{margin-top:6px}
+.m6-2l{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.m6-video{position:relative;width:100%;aspect-ratio:16/9;margin:8px 0 12px;border-radius:12px;overflow:hidden;background:var(--graphite-2)}
+.m6-video.instagram{aspect-ratio:4/5}
+.m6-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+
+/* v7 4.12: configuração guiada em 3 fases */
+.setup-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:52px;margin-bottom:16px;padding:12px 16px;border-radius:var(--r-md);background:var(--graphite);border:0.5px solid var(--border-2);font:600 var(--fs-pn-14)/1.3 var(--sans);color:var(--white);text-align:left;cursor:pointer}
+.setup-fases{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 16px;padding:0;list-style:none}
+.setup-fases button{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:10px 12px;border:1px solid var(--border-2);border-radius:12px;background:var(--graphite);color:var(--light);text-align:left;cursor:pointer;font:inherit}
+.setup-fases li.on button{border-color:var(--olive);color:var(--white)}
+.setup-n{display:grid;place-items:center;flex-shrink:0;width:28px;height:28px;border-radius:50%;background:var(--graphite-2);font:700 var(--fs-pn-13)/1 var(--mono)}
+.setup-fases li.feita .setup-n{background:var(--ok-dim);color:var(--ok)}
+.setup-ft{display:flex;flex-direction:column;gap:2px;font-size:var(--fs-pn-13)}
+.setup-ft b{font-size:var(--fs-pn-14);color:var(--white)}
+.setup-ft span{color:var(--muted)}
+.setup-body{margin-top:14px}
+.setup-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.setup-cores{display:flex;flex-wrap:wrap;gap:8px}
+.setup-cor{width:32px;height:32px;border-radius:50%;border:2px solid var(--border-2);cursor:pointer}
+.setup-cor.on{outline:2px solid var(--white);outline-offset:2px}
+.setup-previa{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;padding:14px;border-radius:12px;background:var(--ink);border:0.5px solid var(--border-2)}
+.setup-modelos{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.setup-modelo{display:flex;align-items:flex-start;gap:10px;min-height:52px;padding:10px 12px;border:1px solid var(--border-2);border-radius:12px;background:none;color:var(--light);text-align:left;cursor:pointer;font:inherit}
+.setup-modelo>span{display:flex;flex-direction:column;gap:2px;font-size:var(--fs-pn-12);color:var(--muted)}
+.setup-modelo b{font-size:var(--fs-pn-14);color:var(--white)}
+.setup-modelo.on{border-color:var(--olive)}
+.setup-modelo:disabled{cursor:default;border-style:dashed}
+.setup-frase{margin:14px 0 0;font-size:var(--fs-pn-16);font-weight:600;color:var(--white);line-height:1.4}
+.setup-foot{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin-top:18px}
+@media (max-width:860px){.setup-fases{grid-template-columns:1fr}.setup-2col{grid-template-columns:1fr}}
+.metrica-v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--fs-pn-16);font-weight:700;color:var(--white);white-space:nowrap}
+
+/* o aviso de instalar o app não cobre as folhas do app do membro */
+body:has(.m6-scrim) .pwa-banner,body:has(.ts-sheet) .pwa-banner{display:none}
+
+/* ════════ Revisão de design (out/2026): acessibilidade e foco do app ════════ */
+
+/* WCAG 1.4.3: texto de exemplo dos campos era --subtle (2,4:1); --muted passa de 4,5:1 nas 8 famílias */
+.login-input::placeholder,.login-field .input::placeholder,.top-search input::placeholder,.tb-search input::placeholder,.input::placeholder,.textarea::placeholder,.ce-title-input::placeholder{color:var(--muted)}
+
+/* WCAG 1.4.11: a borda do campo é o que mostra onde digitar. --border-2 dava 1,3:1;
+   75% de --muted fica acima de 3:1 em todas as famílias de neutros (claras e escuras).
+   Só a cor: o :focus continua trocando para a cor da igreja. */
+.input,.textarea,.select,.login-input,.top-search input,.tb-search input{border-color:color-mix(in srgb,var(--muted) 75%,var(--border-2))}
+
+/* marco <main> do painel sem mexer no layout flex da coluna */
+.main-area{display:contents}
+
+/* Saúde da igreja: os blocos ocupam a largura toda em vez de deixar sobra à direita */
+.saude-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+
+/* Lei 8 · a cor da igreja vai numa ação por tela e na aba ativa. O seletor de
+   duas ou três opções (Minha agenda/Igreja, tamanho do texto) é escolha de
+   visualização, não ação: fica neutro e destacado pelo relevo. */
+.ts-seg button.on{background:var(--graphite);color:var(--white);box-shadow:inset 0 0 0 1px var(--border-3)}
+
+/* alergia com ícone, alinhado ao texto */
+.ck-extra{display:inline-flex;align-items:center;gap:4px}
+
+/* o convite de instalar não divide a tela com o tour guiado */
+body:has(.coach-layer) .pwa-banner{display:none}
+
+/* ════════ Movimento (skills de Emil Kowalski: improve/review-animations) ════════ */
+
+/* toque: o botão responde na hora em que é apertado (0,97, ease-out forte) */
+.btn:active:not(:disabled),.m-btn:active:not(:disabled){transform:scale(.97)}
+.m6-btn{transition:transform .16s var(--ease-out),background-color .16s ease,border-color .16s ease}
+.m6-btn:active:not(:disabled){transform:scale(.97)}
+
+/* folha de baixo do app do membro: sobe da própria altura (antes aparecia pronta, só o fundo escurecia) */
+.m6-sheet{animation:sheetUp .3s var(--ease-drawer)}
+
+/* menus que nascem de um botão crescem a partir dele, não do centro */
+/* transição com @starting-style, não keyframe: abre e fecha rápido sem recomeçar do zero */
+.help-pop,.help-fab-menu,.top-user-pop,.view-sw-menu{animation:none;transition:opacity .15s var(--ease-out),transform .15s var(--ease-out)}
+@starting-style{.help-pop,.help-fab-menu,.top-user-pop,.view-sw-menu{opacity:0;transform:scale(.97)}}
+.help-pop{transform-origin:top left}
+.help-fab-menu{transform-origin:bottom right}
+.na-barra .help-fab-menu{transform-origin:top right}
+.top-user-pop,.view-sw-menu{transform-origin:top right}
+
+/* fundo escuro do menu lateral no celular entra junto com a gaveta */
+@media (max-width:1040px){.sb-backdrop{animation:fade .2s ease}}
+
+/* WCAG 2.3.3: com "reduzir movimento" ligado, nada desliza, cresce ou treme; os
+   esmaecimentos ficam, porque ajudam a entender o que apareceu */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .drawer,.modal,.m-sheet,.m6-sheet{animation-name:fade}
+  @starting-style{.help-pop,.help-fab-menu,.top-user-pop,.view-sw-menu{transform:none}}
+  .login-card.shake{animation:none}
+  .sb{transition:opacity .2s ease}
+  .toast,.toast.in{transform:none}
+  .btn:active:not(:disabled),.m-btn:active:not(:disabled),.m6-btn:active:not(:disabled),.kb-card:active{transform:none}
+  .coach-spot,.coach-pop{transition:opacity .2s ease}
+  @media (hover:hover) and (pointer:fine) { .mob-launch:hover,.swatch:hover,.bib-swatch:hover,.color-wheel-gray-cell:hover {transform:none} }
+}
+
+/* ════════ Celular com cara de app instalado (skill mobile-native) ════════ */
+
+/* sem o flash cinza/azul do navegador no toque: cada botão já tem o seu :active */
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+
+/* toque responde na hora (sem a espera de 300ms do toque duplo) e segurar o dedo
+   não seleciona o nome do botão; texto de conteúdo continua selecionável */
+button,a,[role="button"],[role="tab"],[role="radio"],summary,.seg-chip{touch-action:manipulation}
+button,[role="button"],[role="tab"],[role="radio"],.seg-chip{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+
+/* iOS dá zoom no campo com letra menor que 16px e não volta: a busca do topo e
+   os campos sem classe .input ficavam fora da regra da v5 */
+@media (pointer:coarse){
+  /* .input/.textarea/.select/.login-input já crescem na v5, .m6-ta tem 17px e o título do editor de curso tem 20px: ficam como estão */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.input):not(.login-input):not(.ce-title-input),textarea:not(.textarea):not(.m6-ta),select:not(.select){font-size:16px}
+}
+
+/* app do membro instalado: puxar no topo não recarrega a página por trás do app;
+   listas e folhas rolam sem arrastar a tela de trás quando chegam ao fim */
+body:has(.mob-bg.mob-self){overscroll-behavior:none}
+.m-scroll,.m6-sheet,.m-sheet,.drawer,.modal-body,.sb-nav,.help-fab-menu,.gsearch-pop{overscroll-behavior:contain}
+
+/* altura visível de verdade no celular (100vh conta a área atrás da barra de endereço) */
+#root,.login{min-height:100dvh}
+.chat-layout{height:calc(100dvh - 230px)}
+
+/* ════════ Pior caso (skill break-ui · /service/demo?dados=pior) ════════ */
+
+/* linha com texto e botões (pedido da Caminhada, pendência da escala, etiquetas e
+   linhas de configuração): em tela estreita os botões espremiam o nome até "T.."
+   ou vazavam para fora. O texto guarda 180px; sem espaço, os botões descem. */
+.gap-row,.cfg-row{flex-wrap:wrap}
+.gap-row>.mini-main,.cfg-row>.cfg-row-main{flex:1 1 180px}
+
+/* nome de pessoa precisa ser lido inteiro para saber quem é: quebra linha em vez
+   de cortar (na Lista de cuidado o nome comprido passava da borda da tela) */
+.gap-row .mini-title,.cuidado-nome .mini-title{white-space:normal;overflow-wrap:anywhere}
+.cuidado-nome>*{max-width:100%}
+
+/* cartão do culto em Escalas: nome comprido esticava o cartão além da tela */
+.esc-event{max-width:min(280px,80vw)}
+.esc-preset{flex-wrap:wrap;max-width:100%}
+.esc-preset-sel{max-width:100%}
+/* fila de cultos rola na horizontal: encaixa cartão a cartão e não puxa a página (mobile-native §9) */
+.esc-events{scroll-snap-type:x mandatory;overscroll-behavior-x:contain}
+.esc-event{scroll-snap-align:start}
+
+/* find-animation-opportunities: o aviso "Presença confirmada · Desfazer" surgia do nada.
+   Sobe da barra de abas (mesma borda de onde o dedo veio), 220ms ease-out; transição
+   em vez de keyframe para não reiniciar se outro aviso entrar no meio. */
+.m6-toast{transition:opacity .22s var(--ease-out),transform .22s var(--ease-out)}
+@starting-style{.m6-toast{opacity:0;transform:translateY(100%)}}
+@media (prefers-reduced-motion:reduce){@starting-style{.m6-toast{transform:none}}}
+
+/* ════════ apple-design §12 e §14: preferências do sistema além do movimento ════════ */
+
+/* "reduzir transparência": barra do topo e fundos de janela sem vidro, sólidos */
+@media (prefers-reduced-transparency:reduce){
+  .top{background:var(--graphite);-webkit-backdrop-filter:none;backdrop-filter:none}
+  .drawer-bg,.modal-bg,.mob-bg,.sb-backdrop,.m-sheet-bg,.hist-photo-tog{-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+
+/* "aumentar contraste": bordas e textos de apoio mais fortes, na família de neutros da igreja.
+   html body[data-theme] vence o <style> do tema da igreja (body[data-theme]) sem !important. */
+@media (prefers-contrast:more){
+  html body,html body[data-theme="dark"],html body[data-theme="light"]{
+    --border:color-mix(in srgb,var(--muted) 60%,var(--graphite));
+    --border-2:color-mix(in srgb,var(--muted) 80%,var(--graphite));
+    --border-3:var(--muted);
+    --muted:var(--light);
+  }
+}
+
+/* troca claro/escuro sem salto seco de brilho (§14), só no fundo e no texto da página */
+body{transition:background-color .2s ease,color .2s ease}
+/* chave do app do membro: a bolinha anda na tela, então ease-in-out (já era transform) */
+.m6-tg::after{transition:transform .2s var(--ease-in-out)}
+
+/* animate · receita de sanfona: a tarefa aberta na Agenda surgia de uma vez. Só opacidade
+   e um deslize de 4px (sem animar altura, que recalcula o layout a cada quadro) */
+.m-task-body{transition:opacity .2s var(--ease-out),transform .2s var(--ease-out)}
+@starting-style{.m-task-body{opacity:0;transform:translateY(-4px)}}
+@media (prefers-reduced-motion:reduce){@starting-style{.m-task-body{transform:none}}}
+/* alça da folha: área de 44px para o dedo, que só arrasta na vertical (o resto da folha rola normal) */
+.m6-grab-zona{display:flex;justify-content:center;align-items:flex-start;margin:-10px -20px -13px;padding:10px 20px 0;min-height:44px;touch-action:none;cursor:grab}
+.m6-grab-zona .m6-grab{margin-bottom:0}

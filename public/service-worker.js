@@ -41,18 +41,23 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
+      data: { url: data.url || "/service" },
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
     }),
   );
 });
 
+/* o toque abre o endereço que veio no aviso (com ?aviso=<categoria>, que o
+   app usa para medir notification_opened); sem endereço, o app */
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || "/service";
   event.waitUntil(
     self.clients.matchAll({ type: "window" }).then((clients) => {
       const existing = clients.find((c) => "focus" in c);
-      return existing ? existing.focus() : self.clients.openWindow("/service");
+      if (existing && "navigate" in existing) return existing.navigate(url).then((c) => (c || existing).focus());
+      return existing ? existing.focus() : self.clients.openWindow(url);
     }),
   );
 });

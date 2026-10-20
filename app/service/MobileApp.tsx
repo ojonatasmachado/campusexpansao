@@ -1,12 +1,13 @@
 "use client";
 
 import { avisar } from "./lib/avisar";
-import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { Icon, Caret } from "./lib/icons";
-import { formatDateBR, joinDot, paraPublico, parseISODate, porPublicacao, quandoPublicado, saudacao, todayISO, weekdayFromISO } from "./lib/date";
+import { aindaVaiAcontecer, quandoMensagem, formatDateBR, joinDot, paraPublico, parseISODate, porPublicacao, quandoPublicado, saudacao, somaDias, todayISO, weekdayFromISO } from "./lib/date";
 import { plural } from "./lib/plural";
+import { iniciais } from "./lib/iniciais";
 import { formatarTelefone } from "./lib/telefone";
 import { suggestKidsClassId, imageAuthorizationCopy } from "./lib/kids";
 import { PhotoPicker } from "./PhotoPicker";
@@ -21,6 +22,13 @@ import { checkinAberto, horaQueAbre, sessaoDoCulto, statusDaCrianca, useKidsChec
 import { INSTRUCAO_QR, aulasDoCurso, proximaAula, textoDaAula, type ProximaAula } from "./lib/aulas";
 import { modulosLigados, telasDoMembro, type EstadoModulos } from "./modules/registry";
 import type { CategoriaAviso, ContextoMembro } from "./modules/define";
+import { FILA_DOBRA, ordenarFila, type EntradaFila } from "./modules/fila";
+import { conflitos, horaDeChegada } from "./lib/agenda";
+import { baixarIcs } from "./lib/ics";
+import { porData, quandoFoi, tipoDoFato, type FatoView } from "./lib/historico";
+import { linhaDoMembro, mesmoDiaDaSemana } from "./lib/contexto-dia";
+import { videoDoLink } from "./lib/video";
+import { medir, medirCartaoVisto } from "./lib/medicao";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -48,8 +56,11 @@ type M = {
   /* ficha com e-mail, telefone, aniversário e CEP (calculado no servidor):
      sem isso o app abre no primeiro acesso, em qualquer aparelho */
   contactComplete?: boolean;
+  /* primeiro acesso feito: nome e sobrenome e telefone (v7 4.10) */
+  firstAccessDone?: boolean;
   journey: number[];
   volunteerId: string | null;
+  groupId?: string | null;
 };
 
 /* dados de contato que o membro preenche no primeiro acesso e no perfil */
@@ -73,6 +84,8 @@ type Ministry = {
   description?: string | null;
   positions?: Array<{ id: string; name: string }>;
   appModules?: string[];
+  /* "Horário de chegada" do time (texto livre: "18:30", "1h antes") */
+  profile?: Record<string, unknown> | null;
   people: Array<{ personId: string; isLeader: boolean; functions: string[] }>;
 };
 type JourneyStep = "decisao" | "batismo" | "curso" | "integracao" | "time";
@@ -84,7 +97,14 @@ type JourneyRequest = {
   note: string | null;
   status: "pendente" | "aprovado" | "rejeitado";
 };
-type Ev = { id: string; name: string; weekday: string; eventDate: string; time: string; location?: string; kind?: string };
+type Ev = {
+  id: string; name: string; weekday: string; eventDate: string; time: string; location?: string; kind?: string;
+  /* o que o evento pede, valor e instruções (0058, v7 4.5) */
+  pede?: "aviso" | "presenca" | "inscricao"; valor?: string; instrucoes?: string;
+};
+type EventRsvp = { event_id: string; person_id: string; kind: "presenca" | "inscricao" };
+type MeetingLite = { id: string; title: string; meeting_date: string | null; time: string | null; location: string | null; status: string; ministries: string[]; attendees: string[] };
+type RehearsalLite = { id: string; ministry_id: string | null; title: string; rehearsal_date: string | null; time: string | null; location: string | null; attendees: string[] };
 type Slot = { id: string; event_id: string; position_id: string; person_id: string; status: "ok" | "wait" | "no" };
 type Card = {
   id: string;
@@ -157,9 +177,14 @@ type Announcement = {
   audience: string | null;
   kind?: string | null;
   created_at?: string | null;
+  /* destaque no Início (0063, v7 4.4) */
+  highlight_until?: string | null;
+  image_url?: string | null;
+  image_alt?: string | null;
+  video_url?: string | null;
 };
 type Chat = { id: string; kind: string; ministry_id: string | null; name: string | null };
-type ChatMember = { chat_id: string; member_id: string };
+type ChatMember = { chat_id: string; member_id: string; last_read_at?: string | null };
 type Message = { id: string; chat_id: string; sender_id: string | null; body: string; created_at: string };
 type KidsClass = { id: string; church_id: string; name: string; min_age_months: number | null; max_age_months: number | null };
 type Child = {
@@ -268,6 +293,19 @@ export type MobileOverlayProps = {
   /* "Vou / Não vou" nas publicações de evento do Mural (0049) */
   onRespondAnnouncement?: (announcementId: string, response: "vou" | "nao" | null) => Promise<boolean>;
   announcementResponses?: { announcement_id: string; response: "vou" | "nao" }[];
+  /* presença e inscrição em evento (0058, v7 4.5) */
+  eventRsvps?: EventRsvp[];
+  onRespondEvent?: (eventId: string, vai: boolean) => Promise<boolean>;
+  meetings?: MeetingLite[];
+  rehearsals?: RehearsalLite[];
+  /* página pública da igreja ("/slug"), para o link de Compartilhar */
+  paginaUrl?: string | null;
+  /* fatos da história da própria pessoa (v7 4.8; o banco só entrega os dela) */
+  timelineEvents?: FatoView[];
+  /* marca a conversa como lida no servidor (0060, v7 4.15) */
+  onMarkChatRead?: (chatId: string) => void;
+  /* grupos (dia e hora), para "Hoje: GC Centro às 20h" (v7 4.19) */
+  fellowshipGroups?: { id: string; name: string; weekday: string | null; time: string | null }[];
 };
 
 // ── constantes ────────────────────────────────────────────────────────────────
@@ -287,11 +325,7 @@ const ETAPAS = [
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-function ini(name: string) {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-}
+const ini = (name: string) => iniciais(name);
 
 function Av({ name, size = "sm", photoUrl }: { name: string; size?: "xs" | "sm" | "md" | "lg" | "xl"; photoUrl?: string | null }) {
   return (
@@ -377,10 +411,10 @@ function TabTarefas({ person, cards, boards, onAddCardComment }: { person: P; ca
     return (
       <div className={`m-task ${isLate ? "late" : ""}`} key={c.id}>
         <button className="m-task-head" onClick={() => toggleOpen(c.id)}>
-          <span className={`prio-dot prio-${c.priority ?? "media"}`} />
+          <span className={`prio-dot prio-${c.priority ?? "media"}`} aria-hidden="true" />
           <div className="m-task-main">
             <div className="m-task-title">{c.title}</div>
-            <div className="m-task-meta">{board?.name ?? "Quadro"}</div>
+            <div className="m-task-meta">{joinDot(board?.name ?? "Quadro", `Prioridade ${PRIORIDADE[c.priority ?? "media"] ?? "média"}`)}</div>
           </div>
           <span className="m-task-caret"><Caret open={isOpen} /></span>
         </button>
@@ -432,15 +466,10 @@ function TabTarefas({ person, cards, boards, onAddCardComment }: { person: P; ca
       <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>
         O que a liderança deixou no quadro para você. Atualize e comente.
       </div>
-      {pending.length === 0 && (
-        <div className="m-card">
-          <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>Nada pendente com você agora.</div>
-        </div>
-      )}
       {pending.map(cardEl)}
       {done.length > 0 && (
         <>
-          <div className="m-section-t" style={{ marginTop: 22 }}>Concluidas · {done.length}</div>
+          <div className="m-section-t" style={{ marginTop: 22 }}>Concluídas · {done.length}</div>
           {done.map(cardEl)}
         </>
       )}
@@ -450,9 +479,27 @@ function TabTarefas({ person, cards, boards, onAddCardComment }: { person: P; ca
 
 // ── aba: Conversas ────────────────────────────────────────────────────────────
 
+/* v7 4.15: mensagens de outros depois da última leitura (0060). Sem a coluna
+   (antes da migração), nada conta como não lido. */
+function naoLidasPorConversa(chatMembers: ChatMember[], messages: Message[], memberId: string | null | undefined, lidasAgora: Record<string, string>): Map<string, number> {
+  const out = new Map<string, number>();
+  if (!memberId) return out;
+  for (const cm of chatMembers) {
+    if (cm.member_id !== memberId || !cm.last_read_at) continue;
+    const desde = lidasAgora[cm.chat_id] && lidasAgora[cm.chat_id] > cm.last_read_at ? lidasAgora[cm.chat_id] : cm.last_read_at;
+    const n = messages.filter((m) => m.chat_id === cm.chat_id && m.sender_id !== memberId && m.created_at > desde).length;
+    if (n) out.set(cm.chat_id, n);
+  }
+  return out;
+}
+
 function TabConversas({
-  member, chats, chatMembers, messages, members, ministries, onSendMessage, onStartChat, openChatId, startNew, onChatOpen,
+  member, chats, chatMembers, messages, members, ministries, people = [], onSendMessage, onStartChat, openChatId, startNew, onChatOpen, naoLidas, onLida,
 }: {
+  people?: P[];
+  /* não lidas por conversa e o aviso de que a pessoa abriu uma (v7 4.15) */
+  naoLidas?: Map<string, number>;
+  onLida?: (chatId: string) => void;
   /* abre direto nesta conversa (ex.: depois de "Pedir troca") */
   openChatId?: string | null;
   /* abre já na escolha de com quem falar ("Nova mensagem → Falar com um líder") */
@@ -480,11 +527,33 @@ function TabConversas({
       )
     : [];
 
+  /* conversa a dois: nome e foto da outra pessoa; canal e grupo: o nome dado */
+  const outro = (c: Chat) => {
+    if (c.kind !== "dm") return null;
+    const outros = chatMembers.filter((cm) => cm.chat_id === c.id && cm.member_id !== member?.id);
+    if (outros.length !== 1) return null;
+    return members.find((m) => m.id === outros[0].member_id) ?? null;
+  };
+  const nomeDa = (c: Chat) => outro(c)?.name ?? c.name ?? "Conversa";
+  const fotoDa = (c: Chat) => {
+    const o = outro(c);
+    return o?.volunteerId ? people.find((p) => p.id === o.volunteerId)?.photoUrl ?? null : null;
+  };
+  const ultimaDe = (id: string) => {
+    let last: Message | undefined;
+    for (const m of messages) if (m.chat_id === id && (!last || m.created_at > last.created_at)) last = m;
+    return last;
+  };
+
   const chat = myChats.find((c) => c.id === selId);
   const setSelId = (id: string | null) => {
     setSelIdRaw(id);
-    onChatOpen?.(id ? (myChats.find((c) => c.id === id)?.name ?? "Conversa") : null);
+    const c = id ? myChats.find((x) => x.id === id) : undefined;
+    onChatOpen?.(c ? nomeDa(c) : id ? "Conversa" : null);
+    if (id) onLida?.(id);
   };
+  /* aberta direto (depois de "Pedir troca" ou de um aviso): já conta como lida */
+  useEffect(() => { if (openChatId) onLida?.(openChatId); }, [openChatId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const souLider = member
     ? ministries.some((min) => min.people.some((p) => p.personId === member.volunteerId && p.isLeader))
@@ -618,23 +687,24 @@ function TabConversas({
           <div style={{ fontSize: "var(--fs-app-15)", color: "var(--muted)" }}>Nenhuma conversa ainda. Toque em Nova mensagem para falar com um líder.</div>
         </div>
       )}
-      {myChats.map((c) => {
-        const msgs = messages.filter((m) => m.chat_id === c.id);
-        const last = msgs[msgs.length - 1];
+      {[...myChats].sort((a, b) => (ultimaDe(b.id)?.created_at ?? "").localeCompare(ultimaDe(a.id)?.created_at ?? "")).map((c) => {
+        const last = ultimaDe(c.id);
+        const n = naoLidas?.get(c.id) ?? 0;
+        const nome = nomeDa(c);
+        const autor = last && !outro(c) ? members.find((m) => m.id === last.sender_id)?.name.split(" ")[0] : undefined;
+        const quem = !last ? "" : last.sender_id === member?.id ? "Você: " : autor ? `${autor}: ` : "";
         return (
-          <button className="m-conv" key={c.id} onClick={() => setSelId(c.id)}>
-            <span className="m-conv-ic">→</span>
+          <button className={`m-conv${n ? " unread" : ""}`} key={c.id} type="button" onClick={() => setSelId(c.id)}
+            aria-label={n ? `${nome}, ${n === 1 ? "1 mensagem não lida" : `${n} mensagens não lidas`}` : undefined}>
+            <Av name={nome} photoUrl={fotoDa(c)} />
             <div className="m-conv-main">
-              <div className="m-conv-name">{c.name ?? "Conversa"}</div>
-              <div className="m-conv-prev">
-                {last ? last.body.slice(0, 48) : "Canal"}
-              </div>
+              <div className="m-conv-name">{nome}</div>
+              <div className="m-conv-prev">{last ? `${quem}${last.body}` : "Nenhuma mensagem ainda"}</div>
             </div>
-            {last && (
-              <span className="m-conv-when">
-                {new Date(last.created_at).toLocaleDateString("pt-BR")}
-              </span>
-            )}
+            <div className="m-conv-side">
+              {last && <span className="m-conv-when">{quandoMensagem(last.created_at)}</span>}
+              {n > 0 && <span className="m6-count" aria-hidden="true">{n}</span>}
+            </div>
           </button>
         );
       })}
@@ -907,7 +977,7 @@ function TabBiblia({
                 />
               ))}
               {marcaAtual?.color && (
-                <button type="button" className="bib-swatch-clear" title="Remover cor" onClick={() => escolherCor(null)}>✕</button>
+                <button type="button" className="bib-swatch-clear" title="Remover cor" aria-label="Remover cor" onClick={() => escolherCor(null)}>✕</button>
               )}
             </div>
             <div className="field" style={{ marginTop: 14 }}>
@@ -1224,7 +1294,7 @@ function TabKids({
               <Av name={child?.name ?? "?"} size="sm" photoUrl={child?.photo_url} />
               <div className="m-vis-main">
                 <div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{child?.name ?? "Crianca"}</div>
-                <div className="m-fn">{child?.allergies ? `⚠ ${child.allergies}` : (att.dropped_off_via === "manual" ? "manual" : "QR")}</div>
+                <div className="m-fn">{child?.allergies ? `Alergia: ${child.allergies}` : (att.dropped_off_via === "manual" ? "manual" : "QR")}</div>
               </div>
               <button className="m-btn m-btn-swap" style={{ padding: "6px 10px" }} onClick={() => avisarResponsavel(att.child_id)}>Avisar</button>
             </div>
@@ -1315,7 +1385,7 @@ function ProximaAulaBloco({ prox }: { prox: ProximaAula<CourseLesson> | null }) 
   );
 }
 
-/* dia, hora e sala da aula (0051), quando o curso informou */
+/* dia, hora e sala da aula (0067), quando o curso informou */
 function AulaQuando({ aula }: { aula: CourseLesson }) {
   if (!aula.lesson_date && !aula.lesson_time && !aula.location) return null;
   return (
@@ -1326,36 +1396,17 @@ function AulaQuando({ aula }: { aula: CourseLesson }) {
   );
 }
 
-/* aulas com data dos cursos em andamento, na Agenda (v7 2.2) */
-function AulasAgenda({ member, courses, enrollments, courseModules, courseLessons }: { member: M | null; courses: Course[]; enrollments: Enrollment[]; courseModules: CourseModule[]; courseLessons: CourseLesson[] }) {
-  if (!member) return null;
+/* aulas com data dos cursos em andamento, na Minha agenda (v7 2.2, 4.5) */
+function minhasAulas(member: M | null, courses: Course[], enrollments: Enrollment[], courseModules: CourseModule[], courseLessons: CourseLesson[]) {
+  if (!member) return [];
   const hoje = todayISO();
-  const aulas = enrollments
+  return enrollments
     .filter((e) => e.member_id === member.id && e.status !== "concluido")
     .flatMap((e) => {
       const curso = courses.find((c) => c.id === e.course_id);
       return curso ? aulasDoCurso(curso.id, courseModules, courseLessons).map((aula) => ({ aula, curso })) : [];
     })
-    .filter(({ aula }) => (aula.kind === "presencial" || aula.kind === "ao_vivo") && !!aula.lesson_date && aula.lesson_date >= hoje)
-    .sort((a, b) => `${a.aula.lesson_date}${a.aula.lesson_time ?? ""}`.localeCompare(`${b.aula.lesson_date}${b.aula.lesson_time ?? ""}`));
-  if (!aulas.length) return null;
-  return (
-    <div className="m6-sec">
-      <div className="m6-lbl">Suas aulas</div>
-      <div className="m6-list">
-        {aulas.map(({ aula, curso }) => (
-          <div className="m6-row" key={aula.id}>
-            <M6Date iso={aula.lesson_date!} />
-            <div className="m6-rb">
-              <div className="m6-rt">{aula.name}</div>
-              <div className="m6-rs">{joinDot(curso.name, aula.lesson_time, aula.location)}</div>
-              <div className="m6-rs">{INSTRUCAO_QR}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+    .filter(({ aula }) => (aula.kind === "presencial" || aula.kind === "ao_vivo") && !!aula.lesson_date && aula.lesson_date >= hoje);
 }
 
 function SheetAula({ aula, n, total, porQr }: { aula: CourseLesson; n: number; total: number; porQr: boolean }) {
@@ -1756,12 +1807,42 @@ function TabPerfil({
 
   const { pushOn, pushBusy, pushMsg, pushSupported, ligarPush, desligarPush } = usePush(organizationId);
   const [tour, setTour] = useState(false);
+  const { comTermos: ct } = useTermos();
+  /* categorias desligadas (0066); lidas do perfil, gravadas na hora */
+  const [notifOff, setNotifOff] = useState<string[]>([]);
+  useEffect(() => {
+    let vivo = true;
+    createServiceBrowserClient().schema("service").rpc("my_notifications").then(({ data }) => { if (vivo && Array.isArray(data)) setNotifOff(data as string[]); });
+    return () => { vivo = false; };
+  }, []);
+  const trocarCategoria = (id: string) => {
+    const antes = notifOff;
+    const novo = notifOff.includes(id) ? notifOff.filter((x) => x !== id) : [...notifOff, id];
+    setNotifOff(novo);
+    createServiceBrowserClient().schema("service").rpc("set_my_notifications", { p_off: novo }).then(({ data, error }) => {
+      if (error || data !== "ok") { setNotifOff(antes); ui.toast("Não foi possível salvar agora. Tente de novo."); }
+    });
+  };
+  /* a foto saiu do primeiro acesso (v7 4.10) e mora em Meus dados */
+  const [foto, setFoto] = useState<string | null>(person.photoUrl ?? null);
 
   /* Perfil no modelo de Ajustes do celular (S24): a lista abre telas
      próprias (Meus dados, Trocar senha, Minha família) com "voltar" no topo */
   if (view === "dados") {
     return (
       <div className="m6-sec0">
+        <div className="m6-card ob-foto">
+          <PhotoPicker
+            label="Sua foto"
+            photoUrl={foto}
+            path={`${organizationId}/kids/guardians/${person.id}`}
+            onUploaded={(url) => {
+              setFoto(url);
+              createServiceBrowserClient().schema("service").from("people").update({ photo_url: url }).eq("id", person.id);
+            }}
+          />
+          <div className="m6-meta">Aparece no lugar das iniciais.</div>
+        </div>
         {member ? (
           <div className="m6-card">
             {!editing ? (
@@ -1826,6 +1907,7 @@ function TabPerfil({
         <div className="m6-list">
           <M6Row ic="pessoa" t="Meus dados" s="Telefone, e-mail, endereço e aniversário" onClick={() => openSub?.("dados")} />
           <M6Row ic="kids" t="Minha família" s="Filhos no Kids, check-in e eventos" onClick={() => openSub?.("familia")} />
+          <M6Row ic="historia" t="Minha história" s="O que você já viveu na igreja" onClick={() => openSub?.("minha-historia")} />
         </div>
       </div>
 
@@ -1849,10 +1931,24 @@ function TabPerfil({
             <span className="m6-ic"><Icon name="sino" size={22} /></span>
             <span className="m6-rb">
               <span className="m6-rt">Notificações</span>
-              <span className="m6-rs">{pushMsg || (pushSupported ? (pushOn ? "Escala, Mural e conversas chegam no celular" : "Desligadas") : "Disponível quando o app está instalado")}</span>
+              <span className="m6-rs">{pushMsg || (pushSupported ? (pushOn ? "Nada chega das 22h às 7h. O Mural chega em resumo." : "Desligadas") : "Disponível quando o app está instalado")}</span>
             </span>
             <button type="button" role="switch" aria-checked={pushOn} aria-label="Notificações" className={`m6-tg${pushOn ? " on" : ""}`} disabled={!pushSupported || pushBusy} onClick={() => (pushOn ? desligarPush() : ligarPush())} />
           </div>
+          {/* v7 5.3 (lei 9): categorias que a pessoa desliga */}
+          {pushOn && CATEGORIAS_AVISO.map((c) => {
+            const ligada = !notifOff.includes(c.id);
+            return (
+              <div className="m6-row" key={c.id}>
+                <span className="m6-ic" />
+                <span className="m6-rb">
+                  <span className="m6-rt">{ct(c.t)}</span>
+                  <span className="m6-rs">{ct(c.s)}</span>
+                </span>
+                <button type="button" role="switch" aria-checked={ligada} aria-label={`Avisos de ${ct(c.t)}`} className={`m6-tg${ligada ? " on" : ""}`} onClick={() => trocarCategoria(c.id)} />
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -1924,7 +2020,12 @@ function AppTourModal({ onClose }: { onClose: () => void }) {
 }
 
 
-function Onboarding({ person, member, churchName, churchLogoUrl, organizationId, onCompleteOnboarding, onDone }: { person: P; member: M | null; churchName?: string; churchLogoUrl?: string | null; organizationId?: string; onCompleteOnboarding?: (personId: string, memberId: string | null, data: MemberContactInput) => Promise<{ error?: string }>; onDone: () => void }) {
+/* Primeiro acesso em 2 passos (v7 4.10): nome e telefone; tamanho do texto
+   (a própria tela é a prévia: ela já muda de tamanho enquanto a pessoa
+   arrasta). Foto, e-mail, aniversário e CEP viram o cartão "Complete seus
+   dados" no Início; o atalho na tela de início é pedido no segundo acesso. */
+function Onboarding({ person, member, churchName, churchLogoUrl, onCompleteOnboarding, onDone }: { person: P; member: M | null; churchName?: string; churchLogoUrl?: string | null; organizationId?: string; onCompleteOnboarding?: (personId: string, memberId: string | null, data: MemberContactInput) => Promise<{ error?: string }>; onDone: () => void }) {
+  const { comTermos: ct } = useTermos();
   const [step, setStep] = useState(0);
   const [d, setD] = useState<MemberContactInput>({
     name: member?.name ?? person.name,
@@ -1937,123 +2038,71 @@ function Onboarding({ person, member, churchName, churchLogoUrl, organizationId,
     cidade: member?.city ?? "",
     estado: member?.state ?? "",
   });
-  const [foto, setFoto] = useState<string | null>(null);
   const [tentou, setTentou] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erroSalvar, setErroSalvar] = useState("");
   const set = (k: keyof MemberContactInput, v: string) => setD((p) => ({ ...p, [k]: v }));
-  const erros = contactErrors(d);
-  const dadosOk = !Object.values(erros).some(Boolean);
-
-  const nome = person.name.split(" ")[0];
-  const push = usePush(organizationId);
+  const todos = contactErrors(d);
+  const erros = { name: todos.name, phone: todos.phone };
+  const dadosOk = !erros.name && !erros.phone;
+  const err = (k: "name" | "phone") => (tentou && erros[k] ? <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginTop: 4 }}>{erros[k]}</div> : null);
 
   const steps = [
     {
-      t: `Que bom ter você aqui, ${nome}`,
-      s: "Que bom ter você aqui. Vamos completar seu cadastro, leva um minuto.",
+      t: `Que bom ter você aqui, ${person.name.split(" ")[0]}`,
+      s: "Confirme seu nome e seu telefone. É o que a liderança usa para falar com você.",
       body: (
-        <div className="ob-welcome">
-          <div className="ob-mark"><Icon name="ok" size={28} /></div>
-          <div className="ob-welcome-x">
-            Seu acesso foi liberado. Antes de começar, confirme seus dados. O resto dá para pular.
+        <div className="ob-form">
+          <div className="field">
+            <label className="field-label req">Nome e sobrenome</label>
+            <input className="input" value={d.name} autoComplete="name" onChange={(e) => set("name", e.target.value)} />
+            {err("name")}
+          </div>
+          <div className="field">
+            <label className="field-label req">Telefone (WhatsApp)</label>
+            <input className="input" type="tel" value={d.phone} autoComplete="tel" placeholder="(11) 90000-0000" onChange={(e) => set("phone", e.target.value)} />
+            {err("phone")}
           </div>
         </div>
       ),
-      ok: "Começar →",
-      valid: true,
-    },
-    {
-      t: "Seus dados",
-      s: "Confirme as informações para a igreja manter contato com você e celebrar suas datas.",
-      body: <MemberContactFields d={d} set={set} erros={tentou ? erros : null} />,
       ok: "Continuar →",
-      valid: dadosOk,
-      onInvalid: () => setTentou(true),
-    },
-    {
-      t: "Sua foto",
-      s: "Coloque uma foto sua. Aparece no lugar das iniciais e deixa tudo com mais cara de casa.",
-      body: (
-        <div className="ob-foto">
-          <PhotoPicker
-            photoUrl={foto}
-            path={`${organizationId}/kids/guardians/${person.id}`}
-            onUploaded={(url) => {
-              setFoto(url);
-              createServiceBrowserClient().schema("service").from("people").update({ photo_url: url }).eq("id", person.id);
-            }}
-          />
-        </div>
-      ),
-      ok: foto ? "Continuar →" : "Pular por agora →",
-      valid: true,
     },
     {
       t: "Tamanho do texto",
-      s: "Escolha como fica mais confortável ler. Dá para mudar depois no Perfil.",
+      s: "Arraste até ler com conforto. A tela inteira já muda junto. Dá para trocar depois no Perfil.",
       body: (
         <div className="ob-textsize">
           <TextSizeSlider previa={false} />
+          <div className="m6-card flat ob-previa" aria-hidden="true">
+            <div className="m6-kick">Domingo · 9:30</div>
+            <div className="m6-ct">{ct("{Culto} da manhã")}</div>
+            <div className="m6-meta">Você serve na Recepção · chegar às 9:00</div>
+          </div>
         </div>
-      ),
-      ok: "Continuar →",
-      valid: true,
-    },
-    {
-      t: "Notificações",
-      s: "Avisamos quando você for escalado, quando a igreja publicar no Mural e quando alguém responder suas mensagens. Nada além disso.",
-      body: (
-        <div className="ob-textsize">
-          {push.pushOn ? (
-            <div className="m-confirmed"><Icon name="ok" size={15} /> Notificações ligadas</div>
-          ) : push.pushSupported ? (
-            <button className="m6-btn pri full" type="button" disabled={push.pushBusy} onClick={push.ligarPush}><Icon name="sino" size={20} />Ligar notificações</button>
-          ) : (
-            <p className="ob-sub" style={{ margin: 0 }}>No iPhone, as notificações funcionam depois de colocar o app na tela de início (próximo passo).</p>
-          )}
-          {push.pushMsg && <p className="ob-sub" style={{ margin: "8px 0 0" }}>{push.pushMsg}</p>}
-        </div>
-      ),
-      ok: push.pushOn ? "Continuar →" : "Pular por agora →",
-      valid: true,
-    },
-    {
-      t: "Na tela de início",
-      s: "Coloque o app da igreja junto dos outros apps do celular, para abrir com um toque.",
-      body: (
-        <ul className="m6-facts ob-home">
-          <li><Icon name="compartilhar" size={20} /><span><b>iPhone:</b> no Safari, toque em Compartilhar e depois em &quot;Adicionar à Tela de Início&quot;.</span></li>
-          <li><Icon name="menu" size={20} /><span><b>Android:</b> no Chrome, toque no menu de três pontos e depois em &quot;Instalar app&quot;.</span></li>
-        </ul>
       ),
       ok: "Entrar no app →",
-      valid: true,
     },
   ] as const;
 
   const cur = steps[step];
 
   const next = async () => {
-    if (!cur.valid) {
-      cur.onInvalid?.();
+    if (step === 0) {
+      if (!dadosOk) { setTentou(true); return; }
+      /* grava ao sair do passo 1 e só avança se gravou: fechar o app no passo 2
+         não traz o primeiro acesso de volta. Os outros campos vão como estão
+         (vazio não apaga nada no servidor). */
+      if (onCompleteOnboarding) {
+        setSalvando(true);
+        setErroSalvar("");
+        const { error } = await onCompleteOnboarding(person.id, member?.id ?? null, d);
+        setSalvando(false);
+        if (error) { setErroSalvar(error); return; }
+      }
+      setStep(1);
       return;
     }
-    /* grava os dados já ao sair do passo "Seus dados" e só avança se gravou:
-       se a pessoa fechar o app na foto, a ficha já está completa e o
-       primeiro acesso não volta */
-    if (step === 1 && onCompleteOnboarding) {
-      setSalvando(true);
-      setErroSalvar("");
-      const { error } = await onCompleteOnboarding(person.id, member?.id ?? null, d);
-      setSalvando(false);
-      if (error) {
-        setErroSalvar(error);
-        return;
-      }
-    }
-    if (step < steps.length - 1) setStep(step + 1);
-    else onDone();
+    onDone();
   };
 
   return (
@@ -2344,9 +2393,9 @@ function TabKidsArea({
                 <Av name={child.name} size="sm" photoUrl={child.photo_url} />
                 <div className="m-vis-main">
                   <div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{child.name}</div>
-                  <div className="m-fn">{turma?.name ?? "sem turma"}{child.allergies ? ` · ⚠ ${child.allergies}` : ""}</div>
+                  <div className="m-fn">{turma?.name ?? "sem turma"}{child.allergies ? ` · alergia: ${child.allergies}` : ""}</div>
                 </div>
-                <span className="m-task-caret">✎</span>
+                <span className="m-task-caret" aria-hidden="true"><Icon name="editar" size={16} /></span>
               </div>
               {historico.length > 0 && (
                 <div style={{ marginTop: 10, fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>
@@ -2497,8 +2546,12 @@ type MemberUi = {
   responderEscala: (id: string, v: "ok" | "no" | null) => void;
   /* abre a folha do tamanho do texto (Perfil) */
   tamanhoTexto: () => void;
+  /* abre o detalhe do evento numa folha (v7 4.5) */
+  abrirEvento: (eventId: string) => void;
+  /* lei 9: a permissão de notificação é pedida depois da primeira escala confirmada */
+  escalaConfirmada: () => void;
 };
-const MemberUiContext = createContext<MemberUi>({ go: () => {}, sheet: () => {}, toast: () => {}, respostas: {}, responderEscala: () => {}, tamanhoTexto: () => {} });
+const MemberUiContext = createContext<MemberUi>({ go: () => {}, sheet: () => {}, toast: () => {}, respostas: {}, responderEscala: () => {}, tamanhoTexto: () => {}, abrirEvento: () => {}, escalaConfirmada: () => {} });
 
 function M6Row({ ic, t, s, onClick, right, cls }: { ic?: string; t: React.ReactNode; s?: React.ReactNode; onClick?: () => void; right?: React.ReactNode | null; cls?: string }) {
   return (
@@ -2513,11 +2566,54 @@ function M6Row({ ic, t, s, onClick, right, cls }: { ic?: string; t: React.ReactN
   );
 }
 
+/* folha de baixo com alça de arrastar (apple-design · familiaridade; receita "drag to
+   dismiss" da skill animate): a alça promete arrastar, então arrasta. Segue o dedo
+   1:1 por transform direto no elemento, fecha num gesto rápido (velocidade > 0,11)
+   ou depois de 30% da altura, resiste ao ser puxada para cima, ignora o segundo dedo
+   e sai pela mesma borda por onde entrou. */
 function M6Sheet({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+  const folha = useRef<HTMLDivElement>(null);
+  const arraste = useRef<{ id: number; y0: number; t0: number; dy: number } | null>(null);
+  const soltarPara = (destino: "fechar" | "voltar") => {
+    const el = folha.current;
+    if (!el) return;
+    el.style.transition = destino === "fechar" ? "transform .2s var(--ease-out)" : "transform .3s var(--ease-drawer)";
+    el.style.transform = destino === "fechar" ? "translateY(100%)" : "";
+    if (destino === "fechar") window.setTimeout(onClose, 200);
+  };
   return (
     <div className="m6-scrim" onClick={onClose}>
-      <div className="m6-sheet" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-        <div className="m6-grab" />
+      <div className="m6-sheet" ref={folha} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="m6-grab-zona"
+          aria-hidden="true"
+          onPointerDown={(e) => {
+            if (arraste.current) return;
+            arraste.current = { id: e.pointerId, y0: e.clientY, t0: Date.now(), dy: 0 };
+            e.currentTarget.setPointerCapture(e.pointerId);
+            if (folha.current) folha.current.style.transition = "none";
+          }}
+          onPointerMove={(e) => {
+            const a = arraste.current;
+            if (!a || a.id !== e.pointerId || !folha.current) return;
+            const dy = e.clientY - a.y0;
+            a.dy = dy;
+            /* para cima: resistência crescente em vez de parede */
+            const y = dy >= 0 ? dy : -(Math.abs(dy) * 40) / (40 + Math.abs(dy));
+            folha.current.style.transform = `translateY(${y}px)`;
+          }}
+          onPointerUp={(e) => {
+            const a = arraste.current;
+            if (!a || a.id !== e.pointerId) return;
+            arraste.current = null;
+            const altura = folha.current?.offsetHeight ?? 1;
+            const velocidade = a.dy / Math.max(1, Date.now() - a.t0);
+            soltarPara(a.dy > 0 && (a.dy > altura * 0.3 || velocidade > 0.11) ? "fechar" : "voltar");
+          }}
+          onPointerCancel={(e) => { if (arraste.current?.id === e.pointerId) { arraste.current = null; soltarPara("voltar"); } }}
+        >
+          <div className="m6-grab" />
+        </div>
         {children}
       </div>
     </div>
@@ -2548,8 +2644,10 @@ function dataLonga(iso?: string | null) {
    segundos: dá tempo de tocar em "Desfazer" no aviso. Pedir troca abre uma
    conversa com o líder do time, com a mensagem já escrita. */
 const UNDO_MS = 5000;
-function EscalaCard({ slot, ev, ministry, person, member, members, onConfirmarEscala, onRecusarEscala, onStartChat }: {
+function EscalaCard({ slot, ev, ministry, person, member, members, onConfirmarEscala, onRecusarEscala, onStartChat, destaque = true }: {
   slot: Slot; ev: Ev; ministry?: Ministry; person: P; member: M | null; members: M[];
+  /* botão cheio só no primeiro cartão da fila do Início (lei 5) */
+  destaque?: boolean;
   onConfirmarEscala?: (id: string) => void; onRecusarEscala?: (id: string) => void;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
 }) {
@@ -2573,7 +2671,7 @@ function EscalaCard({ slot, ev, ministry, person, member, members, onConfirmarEs
     const gravar = () => {
       timer.current = null;
       pendente.current = null;
-      if (v === "ok") onConfirmarEscala?.(slot.id); else onRecusarEscala?.(slot.id);
+      if (v === "ok") { onConfirmarEscala?.(slot.id); ui.escalaConfirmada(); } else onRecusarEscala?.(slot.id);
     };
     pendente.current = gravar;
     timer.current = setTimeout(gravar, UNDO_MS);
@@ -2599,7 +2697,7 @@ function EscalaCard({ slot, ev, ministry, person, member, members, onConfirmarEs
       </ul>
       {st === "wait" && (
         <div className="m6-btns">
-          <button className="m6-btn pri" type="button" onClick={() => responder("ok")}><Icon name="ok" size={20} />Confirmar</button>
+          <button className={`m6-btn ${destaque ? "pri" : "sec"}`} type="button" onClick={() => responder("ok")}><Icon name="ok" size={20} />Confirmar</button>
           <button className="m6-btn sec" type="button" onClick={() => responder("no")}>Não posso</button>
         </div>
       )}
@@ -2668,15 +2766,19 @@ function SheetTroca({ slot, ev, funcao, member, dest, onStartChat }: {
   );
 }
 
-function EventoRow({ ev }: { ev: Ev }) {
+/* `serve`: a pessoa está na escala confirmada deste culto (aparece uma vez, com o selo) */
+function EventoRow({ ev, serve }: { ev: Ev; serve?: string | null }) {
+  const ui = useContext(MemberUiContext);
   return (
-    <div className="m6-row">
+    <button type="button" className="m6-row" onClick={() => ui.abrirEvento(ev.id)}>
       <M6Date iso={ev.eventDate} />
-      <div className="m6-rb">
-        <div className="m6-rt">{ev.name}</div>
-        <div className="m6-rs">{joinDot(ev.weekday, ev.time, ev.location)}</div>
-      </div>
-    </div>
+      <span className="m6-rb">
+        <span className="m6-rt">{ev.name}</span>
+        <span className="m6-rs">{joinDot(ev.weekday, ev.time, ev.location)}</span>
+        {serve !== undefined && serve !== null && <span className="m6-serve"><M6St k="ok" ic="ok">{joinDot("Você serve", serve)}</M6St></span>}
+      </span>
+      <span className="m6-chev"><Icon name="avancar" size={18} /></span>
+    </button>
   );
 }
 
@@ -2734,9 +2836,11 @@ function cultoDeHoje(events: Ev[]): Ev | null {
   return doDia.find((e) => fim(e.time) >= agora) ?? doDia[doDia.length - 1];
 }
 
-function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, kidsClasses, kidsSessions, kidsAttendance, organizationId }: {
+function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, kidsClasses, kidsSessions, kidsAttendance, organizationId, destaque = true }: {
   person: P; events: Ev[]; kidsChildren: Child[]; childGuardians: ChildGuardian[]; kidsClasses: KidsClass[];
   kidsSessions: KidsSession[]; kidsAttendance: KidsAttendance[]; organizationId?: string;
+  /* botão cheio só no primeiro cartão da fila do Início (lei 5) */
+  destaque?: boolean;
 }) {
   const { comTermos: ct } = useTermos();
   const culto = cultoDeHoje(events);
@@ -2782,7 +2886,7 @@ function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, kidsCla
               </div>
             </div>
             {turma && !att && aberto && (
-              <div className="m6-btns"><button className={`m6-btn ${i === 0 ? "pri" : "sec"}`} type="button" disabled={busy} onClick={() => ck.checkin(c.id)}>{busy ? "Aguarde..." : `Fazer check-in de ${c.name.split(" ")[0]}`}</button></div>
+              <div className="m6-btns"><button className={`m6-btn ${destaque && i === 0 ? "pri" : "sec"}`} type="button" disabled={busy} onClick={() => ck.checkin(c.id)}>{busy ? "Aguarde..." : `Fazer check-in de ${c.name.split(" ")[0]}`}</button></div>
             )}
             {att?.status === "presente" && podeRetirar && (
               <div className="m6-btns"><button className="m6-btn sec" type="button" disabled={busy} onClick={() => ck.pedirRetirada(c.id)}>{busy ? "Aguarde..." : "Solicitar retirada"}</button></div>
@@ -2795,94 +2899,248 @@ function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, kidsCla
   );
 }
 
-// ── Início (S17) ──────────────────────────────────────────────────────────────
-function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, onServir }: {
+// ── Início (S17, v7 4.3) ──────────────────────────────────────────────────────
+/* Duas zonas (decisão 2): "Para você agora" é a fila da casca (lei 5: ordem
+   por prioridade e prazo, até 3 na primeira dobra, botão cheio só no
+   primeiro, "Tudo em dia" quando vazia); "Da igreja" mostra os eventos da
+   semana, até 3. O culto em que a pessoa serve aparece uma vez: com escala a
+   confirmar, só o cartão da fila; confirmada, na lista com o selo "Você serve". */
+type ItemInicio =
+  | { k: "escala"; slot: Slot; ev: Ev }
+  | { k: "kids" }
+  | { k: "tarefa"; card: Card }
+  | { k: "mural"; aviso: Announcement }
+  | { k: "passo"; step: StepView }
+  | { k: "servir"; times: Ministry[] }
+  | { k: "cadastro"; falta: string[] }
+  | { k: "atalho" };
+
+/* categorias de aviso que a pessoa desliga (lei 9) */
+const CATEGORIAS_AVISO: { id: CategoriaAviso; t: string; s: string }[] = [
+  { id: "escala", t: "Escala", s: "Quando você for escalado ou houver troca" },
+  { id: "mural", t: "Mural", s: "Publicações da igreja, em resumo" },
+  { id: "mensagens", t: "Mensagens", s: "Quando alguém falar com você" },
+  { id: "caminhada", t: "{Caminhada}", s: "Seus passos e pedidos aprovados" },
+];
+const ADIADOS_KEY = "cex_inicio_adiados";
+const ouvirAdiados = (cb: () => void) => { window.addEventListener(ADIADOS_KEY, cb); return () => window.removeEventListener(ADIADOS_KEY, cb); };
+const lerAdiados = () => { try { return localStorage.getItem(ADIADOS_KEY) ?? "{}"; } catch { return "{}"; } };
+/* quantas vezes o app abriu neste aparelho: conta uma vez por carregamento (v7 4.10) */
+let acessosDaSessao: number | null = null;
+const contarAcesso = () => {
+  if (acessosDaSessao === null) {
+    try {
+      acessosDaSessao = Number(localStorage.getItem("cex_acessos") ?? "0") + 1;
+      localStorage.setItem("cex_acessos", String(acessosDaSessao));
+    } catch { acessosDaSessao = 0; }
+  }
+  return acessosDaSessao;
+};
+const semAssinatura = () => () => {};
+const estaInstalado = () => window.matchMedia?.("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, inscricoes, onServir, ligados, acessos = 0, instalado = false, destaque = null, onAbrirDestaque, organizationId }: {
+  /* quantas vezes a pessoa abriu o app neste aparelho e se ele já está na tela de início (v7 4.10) */
+  acessos?: number; instalado?: boolean;
+  /* destaque da igreja (v7 4.4): o mais recente ainda valendo; abrir lê o artigo no app */
+  destaque?: Announcement | null; onAbrirDestaque?: (a: Announcement) => void;
+  /* medição padrão (lei 11) */
+  organizationId?: string;
   person: P; member: M | null; ministries: Ministry[]; members: M[]; events: Ev[]; roster: Slot[]; cards: Card[];
   announcements: Announcement[]; unreadIds: Set<string>; kidsChildren: Child[]; childGuardians: ChildGuardian[];
-  kidsCheckin?: React.ReactNode;
+  kidsCheckin?: (destaque: boolean) => React.ReactNode;
   onConfirmarEscala?: (id: string) => void; onRecusarEscala?: (id: string) => void;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
   nextStep: StepView | null;
+  /* etapas ainda não feitas com inscrição aberta (v7 4.7) */
+  inscricoes: StepView[];
   onServir: () => void;
+  /* módulos ligados na igreja: entrada de módulo desligado não entra na fila */
+  ligados?: Set<string>;
 }) {
   const { comTermos: ct } = useTermos();
   const ui = useContext(MemberUiContext);
+  const [maisFila, setMaisFila] = useState(false);
   const hoje = todayISO();
   const serve = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
   const evById = new Map(events.map((e) => [e.id, e]));
-  const aConfirmar = roster
-    .filter((r) => r.person_id === person.id && r.status === "wait")
-    .filter((r) => (evById.get(r.event_id)?.eventDate ?? "") >= hoje)
-    .sort((a, b) => (evById.get(a.event_id)?.eventDate ?? "").localeCompare(evById.get(b.event_id)?.eventDate ?? ""));
-  const minhasTarefas = cards.filter((c) => c.assignees.includes(person.id) && c.column_id !== "done" && c.due);
-  const tarefa = [...minhasTarefas].sort((a, b) => (a.due ?? "").localeCompare(b.due ?? ""))[0];
+  const meusSlots = roster.filter((r) => r.person_id === person.id);
+  const aConfirmar = meusSlots
+    .filter((r) => r.status === "wait")
+    .filter((r) => (evById.get(r.event_id)?.eventDate ?? "") >= hoje);
+  /* tarefas (v7 4.6): cada tarefa aberta é um cartão enquanto estiver aberta */
+  const minhasTarefas = cards.filter((c) => c.assignees.includes(person.id) && c.column_id !== "done");
   const novo = announcements.find((a) => unreadIds.has(a.id));
   const meusFilhos = childGuardians.filter((g) => g.guardian_person_id === person.id).map((g) => kidsChildren.find((c) => c.id === g.child_id)).filter(Boolean) as Child[];
   const cultoHoje = events.find((e) => e.eventDate === hoje);
-  const proximos = events.filter((e) => e.eventDate >= hoje).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
   const timesAbertos = ministries.filter((m) => !m.people.some((mp) => mp.personId === person.id));
   const ministryOf = (slot: Slot) => ministries.find((m) => m.positions?.some((p) => p.id === slot.position_id)) ?? ministries.find((m) => m.people.some((mp) => mp.personId === person.id));
-  const incompleto = member && !member.contactComplete;
+  /* v7 4.10: o que ficou fora do primeiro acesso vira cartão de prioridade baixa */
+  const faltaDados = member ? [
+    !person.photoUrl && "foto",
+    !realValue(member.email) && "e-mail",
+    !member.birth && "aniversário",
+    (member.postalCode ?? "").replace(/\D/g, "").length !== 8 && "CEP",
+  ].filter(Boolean) as string[] : [];
+  /* cartões adiados neste aparelho; no servidor, nenhum (o HTML começa igual) */
+  const adiadosTxt = useSyncExternalStore(ouvirAdiados, lerAdiados, () => "{}");
+  const adiados = useMemo(() => { try { return JSON.parse(adiadosTxt) as Record<string, string>; } catch { return {}; } }, [adiadosTxt]);
+  const adiar = (id: string, dias: number) => {
+    try { localStorage.setItem(ADIADOS_KEY, JSON.stringify({ ...adiados, [id]: somaDias(hoje, dias) })); } catch { /* sem armazenamento */ }
+    window.dispatchEvent(new Event(ADIADOS_KEY));
+  };
+  const adiado = (id: string) => !!adiados[id] && adiados[id] > hoje;
+  const incompleto = faltaDados.length > 0 && !adiado("dados");
+  const pedirAtalho = acessos === 2 && !instalado && !adiado("atalho");
   const destOracao = useDestinatario("oracao");
 
+  /* entradas dos módulos; a casca ordena */
+  const entradas: EntradaFila<ItemInicio>[] = [];
+  if (meusFilhos.length > 0 && cultoHoje && kidsCheckin) entradas.push({ id: "kids-hoje", modulo: "kids", tipo: "acao", prioridade: 95, prazo: hoje, conteudo: { k: "kids" } });
+  for (const slot of aConfirmar) {
+    const ev = evById.get(slot.event_id);
+    if (ev) entradas.push({ id: `escala-${slot.id}`, modulo: "escalas", tipo: "acao", prioridade: 90, prazo: `${ev.eventDate} ${ev.time ?? ""}`, conteudo: { k: "escala", slot, ev } });
+  }
+  for (const t of minhasTarefas) entradas.push({ id: `tarefa-${t.id}`, modulo: "quadros", tipo: "acao", prioridade: t.due ? 70 : 45, prazo: t.due, conteudo: { k: "tarefa", card: t } });
+  if (novo) entradas.push({ id: `mural-${novo.id}`, modulo: "mural", tipo: "aviso", prioridade: 50, conteudo: { k: "mural", aviso: novo } });
+  if (nextStep) entradas.push({ id: `passo-${nextStep.id}`, modulo: "inicio", tipo: "passo", prioridade: 40, conteudo: { k: "passo", step: nextStep } });
+  /* inscrição aberta numa etapa que a pessoa ainda não fez (v7 4.7); se já é o próximo passo, o mesmo cartão serve */
+  for (const st of inscricoes) {
+    if (st.id === nextStep?.id) continue;
+    entradas.push({ id: `inscricao-${st.id}`, modulo: st.id === "batismo" ? "batismos" : "cursos", tipo: "passo", prioridade: 38, conteudo: { k: "passo", step: st } });
+  }
+  if (incompleto) entradas.push({ id: "cadastro", modulo: "perfil", tipo: "acao", prioridade: 15, conteudo: { k: "cadastro", falta: faltaDados } });
+  if (pedirAtalho) entradas.push({ id: "atalho", modulo: "inicio", tipo: "acao", prioridade: 25, conteudo: { k: "atalho" } });
+  if (!serve && timesAbertos.length > 0) entradas.push({ id: "servir", modulo: "times", tipo: "passo", prioridade: 20, conteudo: { k: "servir", times: timesAbertos } });
+  const fila = ordenarFila(entradas, ligados);
+  const visiveis = maisFila ? fila : fila.slice(0, FILA_DOBRA);
+  /* lei 11: card_shown dos cartões na tela (uma vez por sessão) */
+  const vistosIds = visiveis.map((e) => e.id).join("|");
+  useEffect(() => {
+    for (const e of visiveis) medirCartaoVisto(organizationId, { id: e.id, modulo: e.modulo, tipo: e.tipo });
+  }, [vistosIds]); // eslint-disable-line react-hooks/exhaustive-deps
+  const resto = fila.length - visiveis.length;
+
+  const cartao = (e: EntradaFila<ItemInicio>, destaque: boolean) => {
+    const c = e.conteudo;
+    const btn = `m6-btn ${destaque ? "pri" : "sec"}`;
+    switch (c.k) {
+      case "kids":
+        return <Fragment key={e.id}>{kidsCheckin?.(destaque)}</Fragment>;
+      case "escala":
+        return <EscalaCard key={e.id} slot={c.slot} ev={c.ev} ministry={ministryOf(c.slot)} person={person} member={member} members={members} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat} destaque={destaque} />;
+      case "tarefa":
+        return (
+          <div key={e.id} className="m6-card">
+            <div className="m6-kick">Tarefa</div>
+            <div className="m6-ct">{c.card.title}</div>
+            <div className="m6-meta">{!c.card.due ? "Sem prazo" : c.card.due.slice(0, 10) < todayISO() ? <M6St k="warn" ic="alerta">{`Atrasada desde ${formatDateBR(c.card.due)}`}</M6St> : `Prazo · ${formatDateBR(c.card.due)}`}</div>
+            <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("agenda", null, { agSeg: "minha" })}>Ver a tarefa</button></div>
+          </div>
+        );
+      case "mural":
+        return (
+          <div key={e.id} className="m6-card">
+            <div className="m6-kick"><Icon name="bandeira" size={16} />Novo no Mural</div>
+            <div className="m6-ct">{c.aviso.title}</div>
+            {c.aviso.created_at && <div className="m6-meta">{quandoPublicado(c.aviso.created_at)}</div>}
+            <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("mensagens", "mural")}>Ler a publicação</button></div>
+          </div>
+        );
+      case "passo":
+        return (
+          <div key={e.id} className="m6-card">
+            <div className="m6-kick">{c.step.inscricao ? "Inscrições abertas" : "Seu próximo passo"}</div>
+            <div className="m6-ct">{c.step.nome}</div>
+            {(c.step.inscricao ?? c.step.info) && <div className="m6-meta">{c.step.inscricao ?? c.step.info}</div>}
+            <div className="m6-btns"><button className={btn} type="button" onClick={() => (c.step.run ? c.step.run() : ui.go("caminhada"))}>{c.step.acao ?? ct("Ver a {caminhada}")} →</button></div>
+          </div>
+        );
+      case "cadastro":
+        return (
+          <div key={e.id} className="m6-card">
+            <div className="m6-kick">Seu cadastro</div>
+            <div className="m6-ct">Complete seus dados</div>
+            <div className="m6-meta">{`Falta ${c.falta.join(", ").replace(/, ([^,]*)$/, " e $1")}. Ajuda a igreja a cuidar de você.`}</div>
+            <div className="m6-btns">
+              <button className={btn} type="button" onClick={() => ui.go("perfil", "dados")}>Completar →</button>
+              <button className="m6-link" type="button" data-dispensa="1" onClick={() => adiar("dados", 30)}>Agora não</button>
+            </div>
+          </div>
+        );
+      case "atalho":
+        return (
+          <div key={e.id} className="m6-card">
+            <div className="m6-kick">Dica</div>
+            <div className="m6-ct">Coloque o app na tela de início</div>
+            <ul className="m6-facts">
+              <li><Icon name="compartilhar" size={20} /><span><b>iPhone:</b> no Safari, toque em Compartilhar e depois em &quot;Adicionar à Tela de Início&quot;.</span></li>
+              <li><Icon name="menu" size={20} /><span><b>Android:</b> no Chrome, toque no menu de três pontos e depois em &quot;Instalar app&quot;.</span></li>
+            </ul>
+            <div className="m6-btns">
+              <button className={btn} type="button" onClick={() => adiar("atalho", 3650)}>Já coloquei</button>
+              <button className="m6-link" type="button" data-dispensa="1" onClick={() => adiar("atalho", 3650)}>Agora não</button>
+            </div>
+          </div>
+        );
+      case "servir":
+        return (
+          <div key={e.id} className="m6-card">
+            <div className="m6-kick">Servir</div>
+            <div className="m6-ct">{c.times.length === 1 ? "1 time procura pessoas" : `${c.times.length} times procuram pessoas`}</div>
+            <div className="m6-meta">{c.times.slice(0, 3).map((m) => m.name).join(", ")}. Veja o que cada um faz antes de decidir.</div>
+            <div className="m6-btns"><button className={btn} type="button" onClick={onServir}>Conhecer os times</button></div>
+          </div>
+        );
+    }
+  };
+
+  /* Da igreja: eventos dos próximos 7 dias (sem os que já estão na fila), até 3;
+     sem nenhum na semana, o próximo */
+  const naFila = new Set(aConfirmar.map((r) => r.event_id));
+  const confirmados = new Map<string, string>();
+  for (const r of meusSlots) {
+    if (r.status !== "ok" || confirmados.has(r.event_id)) continue;
+    const m = ministryOf(r);
+    confirmados.set(r.event_id, m?.positions?.find((p) => p.id === r.position_id)?.name ?? m?.name ?? "");
+  }
+  const proximos = events
+    .filter((e) => aindaVaiAcontecer(e.eventDate, e.time) && !naFila.has(e.id))
+    .sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
+  const fimDaSemana = somaDias(hoje, 6);
+  const daSemana = proximos.filter((e) => e.eventDate <= fimDaSemana);
+  const daIgreja = (daSemana.length ? daSemana : proximos.slice(0, 1)).slice(0, 3);
+
+  /* um destaque, parado; com a fila vazia sobe para o topo */
+  const cartaoDestaque = destaque && onAbrirDestaque ? <DestaqueCard a={destaque} onAbrir={() => onAbrirDestaque(destaque)} /> : null;
   return (
     <>
-      <div className="m6-sec0">
+      {fila.length === 0 && cartaoDestaque && <div className="m6-sec0">{cartaoDestaque}</div>}
+      <div className={fila.length === 0 && cartaoDestaque ? "m6-sec" : "m6-sec0"}>
         <div className="m6-lbl">Para você agora</div>
-        {incompleto && (
-          <div className="m6-card">
-            <div className="m6-kick">Seu cadastro</div>
-            <div className="m6-ct">Complete seu cadastro</div>
-            <div className="m6-meta">Faltam alguns dados para a igreja manter contato com você.</div>
-            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => ui.go("perfil", "dados")}>Completar →</button></div>
-          </div>
-        )}
-        {aConfirmar.slice(0, 2).map((slot) => {
-          const ev = evById.get(slot.event_id);
-          return ev ? <EscalaCard key={slot.id} slot={slot} ev={ev} ministry={ministryOf(slot)} person={person} member={member} members={members} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat} /> : null;
-        })}
-        {meusFilhos.length > 0 && cultoHoje && kidsCheckin}
-        {serve && tarefa && (
-          <div className="m6-card">
-            <div className="m6-kick">Tarefa com prazo</div>
-            <div className="m6-ct">{tarefa.title}</div>
-            <div className="m6-meta">Prazo · {formatDateBR(tarefa.due)}</div>
-            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => ui.go("agenda", null, { agSeg: "minha" })}>Ver minhas tarefas</button></div>
-          </div>
-        )}
-        {novo && (
-          <div className="m6-card">
-            <div className="m6-kick"><Icon name="bandeira" size={16} />Novo no Mural</div>
-            <div className="m6-ct">{novo.title}</div>
-            {novo.created_at && <div className="m6-meta">{quandoPublicado(novo.created_at)}</div>}
-            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => ui.go("mensagens", "mural")}>Ler a publicação</button></div>
-          </div>
-        )}
-        {nextStep && (
-          <div className="m6-card">
-            <div className="m6-kick">Seu próximo passo</div>
-            <div className="m6-ct">{nextStep.nome}</div>
-            {nextStep.info && <div className="m6-meta">{nextStep.info}</div>}
-            <div className="m6-btns"><button className={`m6-btn ${nextStep.st === "andamento" ? "pri" : "sec"}`} type="button" onClick={() => (nextStep.run ? nextStep.run() : ui.go("caminhada"))}>{nextStep.acao ?? ct("Ver a {caminhada}")} →</button></div>
-          </div>
-        )}
-        {!serve && timesAbertos.length > 0 && (
-          <div className="m6-card">
-            <div className="m6-kick">Servir</div>
-            <div className="m6-ct">{timesAbertos.length === 1 ? "1 time procura pessoas" : `${timesAbertos.length} times procuram pessoas`}</div>
-            <div className="m6-meta">{timesAbertos.slice(0, 3).map((m) => m.name).join(", ")}. Veja o que cada um faz antes de decidir.</div>
-            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={onServir}>Conhecer os times</button></div>
-          </div>
-        )}
-        {!incompleto && aConfirmar.length === 0 && !tarefa && !novo && !nextStep && (serve || timesAbertos.length === 0) && (
+        {fila.length === 0 ? (
           <div className="m6-card"><div className="m6-ct">Tudo em dia</div><div className="m6-meta">Quando a liderança precisar de você, aparece aqui.</div></div>
+        ) : (
+          visiveis.map((e, i) => (
+            /* lei 11: botão do cartão = card_acted; botão marcado data-dispensa ("Agora não") = card_dismissed */
+            <div key={e.id} data-cartao={e.id} onClickCapture={(ev) => {
+              const b = (ev.target as HTMLElement).closest("button");
+              if (!b) return;
+              medir(organizationId, b.dataset.dispensa ? "card_dismissed" : "card_acted", { modulo: e.modulo, tipo: e.tipo, ref: e.id });
+            }}>
+              {cartao(e, i === 0)}
+            </div>
+          ))
+        )}
+        {resto > 0 && (
+          <div className="m6-more"><button type="button" className="m6-link" onClick={() => setMaisFila(true)}>{`Ver mais ${plural(resto, "item", "itens")}`}</button></div>
         )}
       </div>
 
       <div className="m6-sec">
         <div className="m6-lbl">Da igreja</div>
-        {proximos.length > 0 ? (
-          <div className="m6-list">{proximos.slice(0, 3).map((ev) => <EventoRow key={ev.id} ev={ev} />)}</div>
+        {fila.length > 0 && cartaoDestaque}
+        {daIgreja.length > 0 ? (
+          <div className="m6-list">{daIgreja.map((ev) => <EventoRow key={ev.id} ev={ev} serve={confirmados.has(ev.id) ? confirmados.get(ev.id) : null} />)}</div>
         ) : (
           <div className="m6-card"><div className="m6-meta">{ct("Os próximos {cultos} e eventos aparecem aqui.")}</div></div>
         )}
@@ -2906,10 +3164,108 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
   );
 }
 
-// ── Agenda (S19) ──────────────────────────────────────────────────────────────
-function AgendaV6({ seg, setSeg, person, member, members, ministries, events, roster, cards, boards, isRecep, isKids, onConfirmarEscala, onRecusarEscala, onStartChat, onAddCardComment, onSaveAvailability, aulas }: {
+// ── Pedido de notificação (v7 5.3, lei 9) ─────────────────────────────────────
+function SheetPedirAvisos({ organizationId }: { organizationId?: string }) {
+  const ui = useContext(MemberUiContext);
+  const { pushOn, pushBusy, pushMsg, ligarPush } = usePush(organizationId);
+  return (
+    <div>
+      <h2 className="m6-sh">Quer saber quando for escalado?</h2>
+      <p className="m6-txt">Avisamos no celular quando você for escalado, quando a igreja publicar no Mural e quando alguém falar com você. Nada chega das 22h às 7h, e dá para escolher o que receber no Perfil.</p>
+      {pushOn ? (
+        <div className="m6-after"><M6St k="ok" ic="ok">Notificações ligadas</M6St></div>
+      ) : (
+        <div className="m6-btns">
+          <button className="m6-btn pri" type="button" disabled={pushBusy} onClick={ligarPush}><Icon name="sino" size={20} />Ligar notificações</button>
+          <button className="m6-btn sec" type="button" onClick={() => ui.sheet(null)}>Agora não</button>
+        </div>
+      )}
+      {pushMsg && <div className="m6-meta">{pushMsg}</div>}
+    </div>
+  );
+}
+
+// ── Destaque da igreja (v7 4.4) ───────────────────────────────────────────────
+/* Cartão `destaque`: imagem 16:9 (com texto alternativo), título e prazo. Um
+   por vez, parado, sem carrossel. Abre o artigo dentro do app. */
+function DestaqueCard({ a, onAbrir }: { a: Announcement; onAbrir: () => void }) {
+  const video = videoDoLink(a.video_url);
+  return (
+    <button type="button" className="m6-card m6-destaque" onClick={onAbrir}>
+      {a.image_url && <img className="m6-destaque-img" src={a.image_url} alt={a.image_alt ?? ""} />}
+      <span className="m6-kick">{video ? "Destaque · vídeo" : "Destaque"}</span>
+      <span className="m6-ct">{a.title}</span>
+      {a.body && <span className="m6-meta m6-2l">{a.body}</span>}
+      <span className="m6-link">{video ? "Assistir" : "Ler"} →</span>
+    </button>
+  );
+}
+
+function SheetArtigo({ a }: { a: Announcement }) {
+  const video = videoDoLink(a.video_url);
+  return (
+    <div className="m6-artigo">
+      <div className="m6-kick">{joinDot("Da igreja", a.created_at ? quandoPublicado(a.created_at) : null)}</div>
+      <h2 className="m6-sh">{a.title}</h2>
+      {video ? (
+        <div className={`m6-video ${video.tipo}`}>
+          <iframe src={video.src} title={`Vídeo: ${a.title}`} loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+        </div>
+      ) : a.image_url ? (
+        <img className="m6-destaque-img" src={a.image_url} alt={a.image_alt ?? ""} />
+      ) : null}
+      {a.body && <p className="m6-txt" style={{ whiteSpace: "pre-wrap" }}>{a.body}</p>}
+    </div>
+  );
+}
+
+// ── Minha história (v7 4.8, lei 10) ───────────────────────────────────────────
+/* Só os fatos, com data, do mais recente para o mais antigo. Sem contagem,
+   sem pontos e sem comparação com outras pessoas. */
+function MinhaHistoria({ fatos }: { fatos: FatoView[] }) {
+  const { comTermos: ct } = useTermos();
+  const lista = porData(fatos);
+  if (!lista.length) {
+    return (
+      <div className="m6-sec0">
+        <div className="m6-card"><div className="m6-ct">Sua história começa aqui</div><div className="m6-meta">{ct("Quando você servir, concluir uma aula ou der um passo na {caminhada}, fica registrado aqui. Só você vê.")}</div></div>
+      </div>
+    );
+  }
+  return (
+    <div className="m6-sec0">
+      <div className="m6-meta m6-pad">Só você vê esta página.</div>
+      <div className="m6-list">
+        {lista.map((f) => {
+          const t = tipoDoFato(f.event_type);
+          return (
+            <div className="m6-row" key={f.id}>
+              <span className="m6-ic"><Icon name={t.icone} size={22} /></span>
+              <span className="m6-rb">
+                <span className="m6-rt">{f.title}</span>
+                <span className="m6-rs">{joinDot(quandoFoi(f), f.body)}</span>
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Agenda (S19, v7 4.5) ──────────────────────────────────────────────────────
+/* "Minha agenda" reúne tudo que envolve a pessoa, por dia, com o tipo escrito
+   (Serve, Ensaio, Reunião, Aula, Tarefa, Evento, Culto) e o conflito de horário
+   marcado. "Igreja" é a programação pública. Escala a confirmar continua em
+   cartão no alto (com Confirmar e Não posso). */
+const chegadaDoTime = (m?: Ministry) => (typeof m?.profile?.chegada === "string" ? m.profile.chegada : null);
+type TipoAgenda = "Serve" | "Ensaio" | "Reunião" | "Aula" | "Tarefa" | "Evento" | "Culto";
+type ItemAgenda = { id: string; data: string; hora?: string | null; tipo: TipoAgenda; titulo: string; sub?: string; selo?: React.ReactNode; abrir?: () => void };
+
+function AgendaV6({ seg, setSeg, person, member, members, ministries, events, roster, cards, boards, isRecep, isKids, onConfirmarEscala, onRecusarEscala, onStartChat, onAddCardComment, onSaveAvailability, aulas, meetings, rehearsals, rsvps }: {
   onSaveAvailability?: (availability: Record<string, boolean>) => Promise<boolean>;
-  aulas?: React.ReactNode;
+  aulas: { aula: CourseLesson; curso: Course }[];
+  meetings: MeetingLite[]; rehearsals: RehearsalLite[]; rsvps: EventRsvp[];
   seg: "minha" | "igreja"; setSeg: (s: "minha" | "igreja") => void;
   person: P; member: M | null; members: M[]; ministries: Ministry[]; events: Ev[]; roster: Slot[]; cards: Card[]; boards: Board[];
   isRecep: boolean; isKids: boolean;
@@ -2920,7 +3276,10 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
   const { comTermos: ct } = useTermos();
   const ui = useContext(MemberUiContext);
   const serve = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
-  const atual = serve ? seg : "igreja";
+  const meusTimes = new Set(ministries.filter((m) => m.people.some((mp) => mp.personId === person.id)).map((m) => m.id));
+  /* tarefas abertas (v7 4.6): seção só com tarefa aberta; no dia do prazo, também na lista por data */
+  const tarefasAbertas = cards.filter((c) => c.assignees.includes(person.id) && c.column_id !== "done");
+  const atual = seg;
   const hoje = todayISO();
   const evById = new Map(events.map((e) => [e.id, e]));
   const meus = roster
@@ -2938,7 +3297,58 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
     const id = await onStartChat(member.id, destFalta.member_id, ct("Oi! Queria avisar que vou faltar num dos próximos {cultos}. Posso te contar qual?"));
     if (id) ui.go("mensagens", null, { chatId: id });
   };
-  const futuros = events.filter((e) => e.eventDate >= hoje).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
+
+  /* Minha agenda: tudo que envolve a pessoa */
+  const itens: ItemAgenda[] = [];
+  for (const slot of outras) {
+    const ev = evById.get(slot.event_id);
+    if (!ev) continue;
+    const min = ministryOf(slot);
+    const funcao = min?.positions?.find((p) => p.id === slot.position_id)?.name;
+    const chegar = slot.status === "ok" ? horaDeChegada(ev.time, chegadaDoTime(min)) : null;
+    itens.push({
+      id: `s-${slot.id}`, data: ev.eventDate, hora: ev.time, tipo: "Serve", titulo: ev.name,
+      sub: joinDot(min?.name, funcao, chegar && `chegar ${chegar}`),
+      selo: slot.status === "ok" ? <M6St k="ok" ic="ok">Confirmado</M6St> : <M6St k="warn" ic="recusou">Você não pode</M6St>,
+      abrir: () => ui.abrirEvento(ev.id),
+    });
+  }
+  const servindo = new Set(meus.map((r) => r.event_id));
+  for (const r of rsvps) {
+    const ev = evById.get(r.event_id);
+    if (!ev || servindo.has(ev.id) || !aindaVaiAcontecer(ev.eventDate, ev.time)) continue;
+    itens.push({
+      id: `e-${ev.id}`, data: ev.eventDate, hora: ev.time, tipo: ev.kind === "Culto" ? "Culto" : "Evento", titulo: ev.name, sub: ev.location,
+      selo: <M6St k="ok" ic="ok">{r.kind === "inscricao" ? "Inscrito" : "Você vai"}</M6St>,
+      abrir: () => ui.abrirEvento(ev.id),
+    });
+  }
+  for (const e of rehearsals) {
+    if (!e.rehearsal_date || e.rehearsal_date < hoje) continue;
+    if (!(e.ministry_id && meusTimes.has(e.ministry_id)) && !e.attendees?.includes(person.id)) continue;
+    itens.push({ id: `r-${e.id}`, data: e.rehearsal_date, hora: e.time, tipo: "Ensaio", titulo: e.title, sub: joinDot(ministries.find((m) => m.id === e.ministry_id)?.name, e.location) });
+  }
+  for (const m of meetings) {
+    if (!m.meeting_date || m.meeting_date < hoje || m.status === "realizada") continue;
+    if (!m.ministries?.some((id) => meusTimes.has(id)) && !m.attendees?.includes(person.id)) continue;
+    itens.push({ id: `m-${m.id}`, data: m.meeting_date, hora: m.time, tipo: "Reunião", titulo: m.title, sub: m.location ?? undefined });
+  }
+  for (const { aula, curso } of aulas) {
+    itens.push({ id: `a-${aula.id}`, data: aula.lesson_date!, hora: aula.lesson_time, tipo: "Aula", titulo: aula.name, sub: joinDot(curso.name, aula.location) });
+  }
+  for (const t of tarefasAbertas) {
+    const d = (t.due ?? "").slice(0, 10);
+    if (d < hoje) continue;
+    itens.push({ id: `t-${t.id}`, data: d, tipo: "Tarefa", titulo: t.title, sub: boards.find((b) => b.id === t.board_id)?.name });
+  }
+  itens.sort((a, b) => `${a.data} ${a.hora || "99"}`.localeCompare(`${b.data} ${b.hora || "99"}`));
+  const emConflito = conflitos(itens.filter((i) => i.tipo !== "Tarefa").map((i) => ({ id: i.id, data: i.data, hora: i.hora })));
+  const dias = [...new Set(itens.map((i) => i.data))];
+  const amanha = somaDias(hoje, 1);
+  const nomeDia = (d: string) => (d === hoje ? `Hoje · ${dataLonga(d)}` : d === amanha ? `Amanhã · ${dataLonga(d)}` : dataLonga(d));
+
+  /* Igreja: programação pública, por semana */
+  const futuros = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
   const semanaDe = (iso: string) => {
     const d = parseISODate(iso);
     if (!d) return "Sem data";
@@ -2952,54 +3362,68 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
 
   return (
     <>
-      {serve && (
-        <div className="m6-segwrap">
-          <div className="ts-seg two m6-seg" role="radiogroup" aria-label="O que ver">
-            {([["minha", "Minha escala"], ["igreja", "Igreja"]] as const).map(([v, l]) => (
-              <button key={v} type="button" role="radio" aria-checked={atual === v} className={atual === v ? "on" : ""} onClick={() => setSeg(v)}>{l}</button>
-            ))}
-          </div>
+      <div className="m6-segwrap">
+        <div className="ts-seg two m6-seg" role="radiogroup" aria-label="O que ver">
+          {([["minha", "Minha agenda"], ["igreja", "Igreja"]] as const).map(([v, l]) => (
+            <button key={v} type="button" role="radio" aria-checked={atual === v} className={atual === v ? "on" : ""} onClick={() => setSeg(v)}>{l}</button>
+          ))}
         </div>
-      )}
-      {aulas}
+      </div>
       {atual === "minha" ? (
         <>
           {pend.length > 0 && (
             <div className="m6-sec">
-              <div className="m6-lbl">A confirmar · {pend.length}</div>
+              <div className="m6-lbl">Escala a confirmar · {pend.length}</div>
               {pend.map((slot) => {
                 const ev = evById.get(slot.event_id);
                 return ev ? <EscalaCard key={slot.id} slot={slot} ev={ev} ministry={ministryOf(slot)} person={person} member={member} members={members} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat} /> : null;
               })}
             </div>
           )}
-          <div className="m6-sec">
-            <div className="m6-lbl">Próximas</div>
-            {outras.length > 0 ? (
+          {dias.map((d) => (
+            <div className="m6-sec" key={d}>
+              <div className="m6-lbl">{nomeDia(d)}</div>
               <div className="m6-list">
-                {outras.map((slot) => {
-                  const ev = evById.get(slot.event_id);
-                  if (!ev) return null;
-                  const min = ministryOf(slot);
-                  return (
-                    <div className="m6-row" key={slot.id}>
-                      <M6Date iso={ev.eventDate} />
-                      <div className="m6-rb">
-                        <div className="m6-rt">{ev.name}</div>
-                        <div className="m6-rs">{joinDot(ev.time, min?.name, min?.positions?.find((p) => p.id === slot.position_id)?.name)}</div>
-                        <div className="m6-mt">{slot.status === "ok" ? <M6St k="ok" ic="ok">Confirmado</M6St> : <M6St k="warn" ic="recusou">Você não pode</M6St>}</div>
-                      </div>
-                    </div>
+                {itens.filter((i) => i.data === d).map((i) => {
+                  const corpo = (
+                    <>
+                      <span className="m6-ag-h">{i.hora || ""}</span>
+                      <span className="m6-rb">
+                        <span className="m6-rt">{i.titulo}</span>
+                        <span className="m6-rs">{joinDot(i.tipo, i.sub)}</span>
+                        {(i.selo || emConflito.has(i.id)) && (
+                          <span className="m6-selos">
+                            {i.selo}
+                            {emConflito.has(i.id) && <M6St k="warn" ic="alerta">Conflito de horário</M6St>}
+                          </span>
+                        )}
+                      </span>
+                    </>
+                  );
+                  return i.abrir ? (
+                    <button type="button" className="m6-row" key={i.id} onClick={i.abrir}>{corpo}<span className="m6-chev"><Icon name="avancar" size={18} /></span></button>
+                  ) : (
+                    <div className="m6-row" key={i.id}>{corpo}</div>
                   );
                 })}
               </div>
-            ) : (
-              <div className="m6-card"><div className="m6-meta">{pend.length ? "As escalas confirmadas aparecem aqui." : "Nenhuma escala marcada para você por enquanto."}</div></div>
-            )}
-          </div>
-          <div className="m6-sec m6-legacy">
-            <TabTarefas person={person} cards={cards} boards={boards} onAddCardComment={onAddCardComment} />
-          </div>
+            </div>
+          ))}
+          {itens.length === 0 && pend.length === 0 && (
+            <div className="m6-sec">
+              <div className="m6-card">
+                <div className="m6-ct">Nada marcado para você</div>
+                <div className="m6-meta">{ct("Quando você for escalado ou se inscrever em algo, aparece aqui por dia.")}</div>
+                <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => setSeg("igreja")}>{ct("Ver os {cultos} e eventos")}</button></div>
+              </div>
+            </div>
+          )}
+          {serve && meus.length === 0 && (itens.length > 0 || pend.length > 0) && <div className="m6-pad m6-meta">{ct("Você não está na escala dos próximos {cultos}.")}</div>}
+          {tarefasAbertas.length > 0 && (
+            <div className="m6-sec m6-legacy">
+              <TabTarefas person={person} cards={cards} boards={boards} onAddCardComment={onAddCardComment} />
+            </div>
+          )}
           {(isRecep || isKids) && (
             <div className="m6-sec">
               <div className="m6-lbl">No seu time</div>
@@ -3009,11 +3433,13 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
               </div>
             </div>
           )}
-          <div className="m6-sec">
-            <div className="m6-lbl">Quando posso servir</div>
-            {onSaveAvailability ? <Disponibilidade person={person} onSave={onSaveAvailability} /> : null}
-            {member && destFalta && onStartChat && <div className="m6-pad"><button className="m6-btn sec full" type="button" onClick={avisarFalta}>Avisar que vou faltar</button></div>}
-          </div>
+          {serve && (
+            <div className="m6-sec">
+              <div className="m6-lbl">Quando posso servir</div>
+              {onSaveAvailability ? <Disponibilidade person={person} onSave={onSaveAvailability} /> : null}
+              {member && destFalta && onStartChat && <div className="m6-pad"><button className="m6-btn sec full" type="button" onClick={avisarFalta}>Avisar que vou faltar</button></div>}
+            </div>
+          )}
         </>
       ) : (
         futuros.length > 0 ? grupos.map((g) => (
@@ -3026,6 +3452,73 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
         )
       )}
     </>
+  );
+}
+
+/* Detalhe do evento numa folha (v7 4.5): uma área de ação só, conforme o que o
+   evento pede (só aviso, confirmar presença, inscrição); valor e instruções da
+   igreja; quem serve vê "Serve · função · chegar HH:MM"; Compartilhar e
+   Adicionar ao calendário. */
+function SheetEvento({ ev, slot, ministry, rsvp, onRespond, paginaUrl, churchName }: {
+  ev: Ev; slot?: Slot; ministry?: Ministry; rsvp: EventRsvp["kind"] | null;
+  onRespond?: (eventId: string, vai: boolean) => Promise<boolean>;
+  paginaUrl?: string | null; churchName?: string;
+}) {
+  const ui = useContext(MemberUiContext);
+  const [resp, setResp] = useState<EventRsvp["kind"] | null>(rsvp);
+  const [enviando, setEnviando] = useState(false);
+  const pede = ev.pede ?? "aviso";
+  const funcao = slot ? ministry?.positions?.find((p) => p.id === slot.position_id)?.name : undefined;
+  const chegar = slot ? horaDeChegada(ev.time, chegadaDoTime(ministry)) : null;
+  const responder = async (vai: boolean) => {
+    if (!onRespond) return;
+    setEnviando(true);
+    const ok = await onRespond(ev.id, vai);
+    setEnviando(false);
+    if (!ok) return;
+    setResp(vai ? (pede === "inscricao" ? "inscricao" : "presenca") : null);
+    ui.toast(vai ? (pede === "inscricao" ? "Inscrição feita" : "Presença confirmada") : (pede === "inscricao" ? "Inscrição cancelada" : "Presença desfeita"));
+  };
+  const link = paginaUrl && typeof window !== "undefined" ? `${window.location.origin}${paginaUrl}` : "";
+  const texto = [ev.name, joinDot(dataLonga(ev.eventDate) || ev.weekday, ev.time), ev.location, churchName, link].filter(Boolean).join("\n");
+  const compartilhar = async () => {
+    const nav = navigator as Navigator & { share?: (d: { title?: string; text?: string }) => Promise<void> };
+    if (nav.share) { try { await nav.share({ title: ev.name, text: texto }); return; } catch { return; } }
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank", "noopener");
+  };
+  const calendario = () => baixarIcs({ id: ev.id, titulo: ev.name, data: ev.eventDate, hora: ev.time, local: ev.location, descricao: churchName ?? null });
+  const servindo = slot && slot.status !== "no";
+  return (
+    <div>
+      <div className="m6-kick">{ev.kind && ev.kind !== "Culto" ? ev.kind : "Na igreja"}</div>
+      <h2 className="m6-sh">{ev.name}</h2>
+      <ul className="m6-facts">
+        <li><Icon name="agenda" size={20} /><span>{joinDot(dataLonga(ev.eventDate) || ev.weekday, ev.time)}</span></li>
+        {ev.location && <li><Icon name="mapapin" size={20} /><span>{ev.location}</span></li>}
+        {servindo && <li><Icon name="times" size={20} /><span>{joinDot("Serve", funcao ?? ministry?.name, chegar && `chegar ${chegar}`)}</span></li>}
+      </ul>
+      {(ev.valor || ev.instrucoes) && (
+        <div className="m6-card m6-ev-info">
+          {ev.valor && <div className="m6-ct">{ev.valor}</div>}
+          {ev.instrucoes && <p className="m6-txt" style={{ whiteSpace: "pre-wrap" }}>{ev.instrucoes}</p>}
+          <div className="m6-meta">O pagamento não passa pelo app.</div>
+        </div>
+      )}
+      {pede !== "aviso" && !servindo && onRespond && (
+        resp ? (
+          <div className="m6-after">
+            <M6St k="ok" ic="ok">{resp === "inscricao" ? "Você está inscrito" : "Presença confirmada"}</M6St>
+            <button type="button" className="m6-link" disabled={enviando} onClick={() => responder(false)}>{pede === "inscricao" ? "Cancelar inscrição" : "Desfazer"}</button>
+          </div>
+        ) : (
+          <div className="m6-btns"><button className="m6-btn pri" type="button" disabled={enviando} onClick={() => responder(true)}>{enviando ? "Enviando..." : pede === "inscricao" ? "Fazer inscrição" : "Vou"}</button></div>
+        )
+      )}
+      <div className="m6-btns">
+        <button className="m6-btn sec" type="button" onClick={compartilhar}><Icon name="compartilhar" size={20} />Compartilhar</button>
+        <button className="m6-btn sec" type="button" onClick={calendario}><Icon name="agenda" size={20} />Adicionar ao calendário</button>
+      </div>
+    </div>
   );
 }
 
@@ -3123,8 +3616,13 @@ function MuralV6({ announcements, unreadIds, person, onReadAnnouncement, respons
 }
 
 // ── Caminhada (S21, S22, S23, S43) ────────────────────────────────────────────
-type StepView = { id: JourneyStep; nome: string; st: "feito" | "andamento" | "afazer"; info?: string; acao?: string; run?: () => void };
+type StepView = {
+  id: JourneyStep; nome: string; st: "feito" | "andamento" | "afazer"; info?: string; acao?: string; run?: () => void;
+  /* convite com inscrição aberta (v7 4.7): vira cartão próprio no Início, só para quem ainda não fez a etapa */
+  inscricao?: string;
+};
 const STW = { feito: "Concluída", andamento: "Em andamento", afazer: "A fazer" } as const;
+const PRIORIDADE: Record<string, string> = { alta: "alta", media: "média", baixa: "baixa" };
 
 function useSteps({ person, member, ministries, courses, enrollments, courseModules = [], courseLessons = [], baptismClasses, journeyRequests, onOpenSub, onRequestStep, onServir }: {
   person: P; member: M | null; ministries: Ministry[]; courses: Course[]; enrollments: Enrollment[]; baptismClasses: BaptismClass[];
@@ -3148,7 +3646,7 @@ function useSteps({ person, member, ministries, courses, enrollments, courseModu
     if (pedidos.has(id)) return { id, nome, st: "andamento", info: "Pedido enviado · aguardando a liderança" };
     if (id === "batismo") {
       if (turmaInscrita) return { id, nome, st: "andamento", info: joinDot("Inscrição feita", turmaInscrita.label, formatDateBR(turmaInscrita.baptism_date)) };
-      if (turmaAberta) return { id, nome, st: "afazer", info: joinDot("Inscrições abertas", turmaAberta.label), acao: "Quero me batizar", run: () => onOpenSub("batismo") };
+      if (turmaAberta) return { id, nome, st: "afazer", info: joinDot("Inscrições abertas", turmaAberta.label), acao: "Quero me batizar", run: () => onOpenSub("batismo"), inscricao: joinDot(turmaAberta.label, formatDateBR(turmaAberta.baptism_date)) };
       return { id, nome, st: "afazer", acao: "Já fui batizado", run: () => onRequestStep(id) };
     }
     if (id === "curso") {
@@ -3156,7 +3654,8 @@ function useSteps({ person, member, ministries, courses, enrollments, courseModu
         const prox = proximaAula(cursando.course_id, cursando.done_count, courseModules, courseLessons);
         return { id, nome, st: "andamento", info: joinDot(cursoNome, prox && `Próxima aula: ${prox.aula.name}`, dataLonga(prox?.aula.lesson_date), prox?.aula.lesson_time, prox?.aula.location), acao: prox ? "Ver a próxima aula" : "Ver o curso", run: () => onOpenSub("cursos") };
       }
-      return { id, nome, st: "afazer", acao: "Ver os cursos", run: () => onOpenSub("cursos") };
+      /* sem curso publicado, o botão levaria a uma lista vazia (lei 6) */
+      return courses.length ? { id, nome, st: "afazer", acao: "Ver os cursos", run: () => onOpenSub("cursos") } : { id, nome, st: "afazer" };
     }
     if (id === "time") {
       if (pedidoServir) return { id, nome, st: "andamento", info: "Pedido enviado · o líder vai falar com você" };
@@ -3202,14 +3701,15 @@ function SheetTimes({ person, member, ministries, members, people }: { person: P
 
 function CaminhadaV6({ steps, courses, purpose }: { steps: StepView[]; courses: React.ReactNode; purpose?: { kick?: string | null; title?: string | null; text?: string | null } | null }) {
   const ui = useContext(MemberUiContext);
+  const { comTermos: ct } = useTermos();
   const done = steps.filter((s) => s.st === "feito").length;
   return (
     <>
       <div className="m6-sec0">
         <div className="m6-card">
-          <div className="m6-ct">{done} de {steps.length} etapas concluídas</div>
+          <div className="m6-ct">{steps.length > 0 && done === steps.length ? "Todas as etapas concluídas" : `${done} de ${steps.length} etapas concluídas`}</div>
           <div className="m6-segbar">{steps.map((s) => <i key={s.id} className={s.st} />)}</div>
-          <div className="m6-meta">Cada etapa acontece no seu tempo, em qualquer ordem.</div>
+          <div className="m6-meta">{steps.length > 0 && done === steps.length ? ct("Daqui pra frente, a {caminhada} segue nos cursos, no seu time e na leitura da Bíblia, logo abaixo.") : "Cada etapa acontece no seu tempo, em qualquer ordem."}</div>
         </div>
       </div>
       <div className="m6-sec">
@@ -3322,7 +3822,7 @@ function MobileMembro({
   /* primeiro acesso termina quando a ficha tem os dados obrigatórios
      (member.contactComplete, calculado no servidor): vale em qualquer
      aparelho e não diverge entre o HTML do servidor e o do navegador */
-  const [onboarded, setOnboarded] = useState<boolean>(() => !member || !!member.contactComplete);
+  const [onboarded, setOnboarded] = useState<boolean>(() => !member || !!(member.firstAccessDone ?? member.contactComplete));
   const { people, ministries, events, roster, cards, boards, enrollments, courseModules = [], courseLessons = [],
           visitors, baptismClasses, announcements: avisosRecebidos, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment,
           onAdvanceVisitorStage, onRegisterVisitor, onSendMessage, onStartChat,
@@ -3332,7 +3832,8 @@ function MobileMembro({
           kidsEvents = [], kidsEventEnrollments = [], wallPosts = [], bibleMarks = [], onSaveBibleMark,
           missingRequirements = [], serveRequests = [], baptismCandidates = [], onEnrollCourse, onRequestBaptism, onRequestServe,
           mode, onLogout, onSwitchToPanel, readAnnouncementIds = [], churchPurpose,
-          onSaveAvailability, onRespondAnnouncement, announcementResponses = [] } = rest;
+          onSaveAvailability, onRespondAnnouncement, announcementResponses = [],
+          eventRsvps = [], onRespondEvent, meetings = [], rehearsals = [], paginaUrl, timelineEvents = [], fellowshipGroups = [], onMarkChatRead } = rest;
   /* Mural sempre do mais recente para o mais antigo, pela data de publicação */
   const announcements = useMemo(() => porPublicacao(avisosRecebidos), [avisosRecebidos]);
   /* curso em rascunho não aparece no app */
@@ -3347,7 +3848,8 @@ function MobileMembro({
   const serves = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
   const isGuardian = childGuardians.some((g) => g.guardian_person_id === person.id);
   const ctx: ModuleCtx = { serves, isRecep, isKids, isGuardian };
-  const modulosMembro = useMemo(() => membrosDoRegistro(modulosLigados(rest.modulos)), [rest.modulos]);
+  const ligadosMembro = useMemo(() => modulosLigados(rest.modulos), [rest.modulos]);
+  const modulosMembro = useMemo(() => membrosDoRegistro(ligadosMembro), [ligadosMembro]);
   const subAllowed = (id: string | null) => !id || (modulosMembro.find((m) => m.id === id)?.visible(ctx) ?? false);
   /* Mural desligado na igreja: sem entrada em Mensagens nem cartão no Início (lei 6) */
   const muralOn = subAllowed("mural");
@@ -3360,6 +3862,9 @@ function MobileMembro({
     onReadAnnouncement?.(personId, id);
   };
   const hoje = todayISO();
+  /* destaque valendo: o mais recente com prazo ainda por vir (v7 4.4) */
+  const [abriuEm] = useState(() => new Date().toISOString());
+  const destaqueAtivo = useMemo(() => announcements.find((a) => !!a.highlight_until && a.highlight_until > abriuEm) ?? null, [announcements, abriuEm]);
   const evDate = new Map(events.map((e) => [e.id, e.eventDate]));
   const [respostas, setRespostas] = useState<Record<string, "ok" | "no">>({});
   const responderEscalaUi = (id: string, v: "ok" | "no" | null) => setRespostas((r) => {
@@ -3367,7 +3872,14 @@ function MobileMembro({
     return r[id] === v ? r : { ...r, [id]: v };
   });
   const pendEscala = roster.filter((r) => r.person_id === person.id && ((respostas[r.id] as string | undefined) ?? r.status) === "wait" && (evDate.get(r.event_id) ?? "") >= hoje).length;
-  const badges: Partial<Record<MemberTab, number>> = { agenda: serves ? pendEscala : 0, mensagens: muralOn ? unreadIds.size : 0 };
+  /* conversas não lidas (v7 4.15): lida na hora em que abre, sem esperar o servidor */
+  const [conversasLidas, setConversasLidas] = useState<Record<string, string>>({});
+  const naoLidas = useMemo(() => naoLidasPorConversa(chatMembers, messages, member?.id, conversasLidas), [chatMembers, messages, member?.id, conversasLidas]);
+  const marcarConversaLida = (chatId: string) => {
+    setConversasLidas((p) => ({ ...p, [chatId]: new Date().toISOString() }));
+    onMarkChatRead?.(chatId);
+  };
+  const badges: Partial<Record<MemberTab, number>> = { agenda: serves ? pendEscala : 0, mensagens: (muralOn ? unreadIds.size : 0) + naoLidas.size };
 
   const toast = (msg: string, action?: { label: string; fn: () => void }) => setToastO({ msg, action, id: Date.now() });
   useEffect(() => {
@@ -3377,6 +3889,9 @@ function MobileMembro({
   }, [toastO]);
   useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }); }, [tab, sub]);
 
+  /* v7 4.10: o atalho na tela de início é pedido no segundo acesso (contador no aparelho) */
+  const acessos = useSyncExternalStore(semAssinatura, contarAcesso, () => 0);
+  const instalado = useSyncExternalStore(semAssinatura, estaInstalado, () => false);
   /* aba de onde o Perfil foi aberto: o "voltar" do Perfil leva para ela */
   const [tabAntesPerfil, setTabAntesPerfil] = useState<MemberTab>("inicio");
   /* rótulo "Perfil" sob o avatar só no primeiro acesso: lido uma vez, gravado na hora */
@@ -3400,7 +3915,24 @@ function MobileMembro({
     setTab(t);
     setSub(subAllowed(s) ? s : null);
   };
-  const ui: MemberUi = { go, sheet: setSheetEl, toast, respostas, responderEscala: responderEscalaUi, tamanhoTexto: abrirTamanhoTexto };
+  const abrirEvento = (eventId: string) => {
+    const ev = events.find((e) => e.id === eventId);
+    if (!ev) return;
+    const slot = roster.find((r) => r.event_id === ev.id && r.person_id === person.id);
+    const ministry = slot ? ministries.find((m) => m.positions?.some((p) => p.id === slot.position_id)) : undefined;
+    const rsvp = eventRsvps.find((r) => r.event_id === ev.id)?.kind ?? null;
+    setSheetEl(<SheetEvento key={ev.id} ev={ev} slot={slot} ministry={ministry} rsvp={rsvp} onRespond={onRespondEvent} paginaUrl={paginaUrl} churchName={churchName} />);
+  };
+  /* v7 5.3: depois da primeira escala confirmada, uma vez por aparelho, se o navegador ainda não respondeu */
+  const escalaConfirmada = () => {
+    try {
+      if (localStorage.getItem("cex_avisos_pedidos")) return;
+      if (!("Notification" in window) || Notification.permission !== "default" || !("PushManager" in window)) return;
+      localStorage.setItem("cex_avisos_pedidos", "1");
+    } catch { return; }
+    setSheetEl(<SheetPedirAvisos organizationId={organizationId} />);
+  };
+  const ui: MemberUi = { go, sheet: setSheetEl, toast, respostas, responderEscala: responderEscalaUi, tamanhoTexto: abrirTamanhoTexto, abrirEvento, escalaConfirmada };
 
   const pedirEtapa = (step: JourneyStep) => {
     const nome = { decisao: "Decisão", batismo: "Batismo", curso: "Fundamentos", integracao: termo("grupo"), time: "Servindo" }[step];
@@ -3408,12 +3940,20 @@ function MobileMembro({
   };
   const abrirTimes = () => setSheetEl(<SheetTimes person={person} member={member} ministries={ministries} members={members} people={people} />);
 
+  /* o primeiro acesso termina na escala pendente (Agenda) ou no próximo culto (detalhe) */
+  const terminarPrimeiroAcesso = () => {
+    setOnboarded(true);
+    if (pendEscala > 0) { go("agenda", null, { agSeg: "minha" }); return; }
+    const prox = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time))[0];
+    if (prox) abrirEvento(prox.id);
+  };
+
   if (!onboarded) {
     return (
       <div className="phone" data-ts={textPos} style={{ "--m-scale": textScale } as React.CSSProperties}>
         <div className="phone-screen">
           <div className="phone-notch" />
-          <Onboarding person={person} member={member} churchName={churchName} churchLogoUrl={churchLogoUrl} organizationId={organizationId} onCompleteOnboarding={onCompleteOnboarding} onDone={() => setOnboarded(true)} />
+          <Onboarding person={person} member={member} churchName={churchName} churchLogoUrl={churchLogoUrl} organizationId={organizationId} onCompleteOnboarding={onCompleteOnboarding} onDone={terminarPrimeiroAcesso} />
         </div>
       </div>
     );
@@ -3462,7 +4002,22 @@ function MobileMembro({
               {tab === "inicio" ? (
                 <>
                   <h1 className="m-h1">{saudacao()}, {person.name.split(" ")[0]}</h1>
-                  <p className="m-hsub">{dataLonga(hoje)}</p>
+                  <p className="m-hsub">{(() => {
+                    /* v7 4.19: o mais relevante de hoje; sem nada, a data */
+                    const doDia = events.filter((e) => e.eventDate === hoje);
+                    const minhaVaga = roster.find((r) => r.person_id === person.id && r.status !== "no" && doDia.some((e) => e.id === r.event_id));
+                    const evServe = minhaVaga ? doDia.find((e) => e.id === minhaVaga.event_id) : undefined;
+                    const timeServe = minhaVaga ? ministries.find((m) => m.positions?.some((p) => p.id === minhaVaga.position_id)) : undefined;
+                    const culto = doDia.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => a.time.localeCompare(b.time))[0];
+                    const grupo = member?.groupId ? fellowshipGroups.find((g) => g.id === member.groupId && mesmoDiaDaSemana(g.weekday, hoje)) : undefined;
+                    const aula = minhasAulas(member, courses, enrollments, courseModules, courseLessons).find(({ aula: a }) => a.lesson_date === hoje);
+                    return linhaDoMembro({
+                      serve: evServe ? { hora: evServe.time, chegar: horaDeChegada(evServe.time, chegadaDoTime(timeServe)) } : null,
+                      culto: culto ? { nome: culto.name, hora: culto.time } : null,
+                      grupo: grupo ? { nome: grupo.name, hora: grupo.time } : null,
+                      aula: aula ? { nome: aula.aula.name, hora: aula.aula.lesson_time } : null,
+                    }, hoje);
+                  })()}</p>
                 </>
               ) : (
                 <h1 className="m-h1">{tabTitle}</h1>
@@ -3471,22 +4026,27 @@ function MobileMembro({
           )}
         </div>
 
-        <div className="m-scroll" ref={scrollRef}>
+        {/* marco principal só no app de verdade; a prévia do líder fica dentro do painel, que já tem o seu */}
+        <div className="m-scroll" ref={scrollRef} role={mode === "self" ? "main" : undefined}>
           {tab === "inicio" && (
             <InicioV6 person={person} member={member} ministries={ministries} members={members} events={events} roster={roster} cards={cards}
               announcements={muralOn ? announcements : []} unreadIds={unreadIds} kidsChildren={kidsChildren} childGuardians={childGuardians}
-              kidsCheckin={<CheckinKidsHoje person={person} events={events} kidsChildren={kidsChildren} childGuardians={childGuardians} kidsClasses={kidsClasses}
-                kidsSessions={kidsSessions} kidsAttendance={kidsAttendance} organizationId={organizationId} />}
+              kidsCheckin={(destaque) => <CheckinKidsHoje person={person} events={events} kidsChildren={kidsChildren} childGuardians={childGuardians} kidsClasses={kidsClasses}
+                kidsSessions={kidsSessions} kidsAttendance={kidsAttendance} organizationId={organizationId} destaque={destaque} />}
               onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat}
               nextStep={steps.find((s) => s.st === "andamento" && s.acao) ?? steps.find((s) => s.st === "afazer" && s.acao && s.id !== "time") ?? null}
-              onServir={abrirTimes} />
+              inscricoes={steps.filter((s) => s.st === "afazer" && !!s.inscricao)}
+              onServir={abrirTimes} ligados={ligadosMembro} acessos={acessos} instalado={instalado}
+              destaque={muralOn ? destaqueAtivo : null}
+              organizationId={organizationId}
+              onAbrirDestaque={(a) => { setSheetEl(<SheetArtigo a={a} />); marcarLido(person.id, a.id); }} />
           )}
 
           {tab === "agenda" && !sub && (
             <AgendaV6 seg={agSeg} setSeg={setAgSeg} person={person} member={member} members={members} ministries={ministries} events={events} roster={roster}
               cards={cards} boards={boards} isRecep={isRecep} isKids={isKids} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala}
               onStartChat={onStartChat} onAddCardComment={onAddCardComment} onSaveAvailability={onSaveAvailability}
-              aulas={<AulasAgenda member={member} courses={courses} enrollments={enrollments} courseModules={courseModules} courseLessons={courseLessons} />} />
+              aulas={minhasAulas(member, courses, enrollments, courseModules, courseLessons)} meetings={meetings} rehearsals={rehearsals} rsvps={eventRsvps} />
           )}
           {tab === "agenda" && sub === "visitantes" && <div className="m6-legacy"><TabVisitantes visitors={visitors} onAdvanceVisitorStage={onAdvanceVisitorStage} onRegisterVisitor={onRegisterVisitor} /></div>}
           {tab === "agenda" && sub === "kids-sala" && (
@@ -3515,6 +4075,7 @@ function MobileMembro({
               )}
               <div className={sub ? "" : "m6-sec m6-conv"}>
                 <TabConversas key={chatTarget.n} member={member} chats={chats} chatMembers={chatMembers} messages={messages} members={members} ministries={ministries}
+                  people={people} naoLidas={naoLidas} onLida={marcarConversaLida}
                   onSendMessage={onSendMessage} onStartChat={onStartChat} openChatId={chatTarget.id} startNew={chatTarget.novo}
                   onChatOpen={(name) => { setChatAberto(name); setSub(name ? "chat" : null); }} />
               </div>
@@ -3563,6 +4124,7 @@ function MobileMembro({
               openSub={(s) => go("perfil", s)}
             />
           )}
+          {tab === "perfil" && sub === "minha-historia" && <MinhaHistoria fatos={member ? timelineEvents.filter((f) => f.member_id === member.id) : []} />}
           {tab === "perfil" && sub === "familia" && (
             <div className="m6-legacy">
             <TabKidsArea

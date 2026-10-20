@@ -23,7 +23,7 @@ export type PushSubscriptionRow = {
 
 export async function sendPushToSubscriptions(
   subscriptions: PushSubscriptionRow[],
-  payload: { title: string; body: string },
+  payload: { title: string; body: string; url?: string },
 ): Promise<{ deadEndpoints: string[] }> {
   ensureConfigured();
   const deadEndpoints: string[] = [];

@@ -18,7 +18,8 @@ export function TextSizeSlider({ previa = true }: { previa?: boolean }) {
   const [pos, setPos] = useTextSize();
   const { comTermos: ct } = useTermos();
   const trilho = useRef<HTMLDivElement>(null);
-  const arrastando = useRef(false);
+  /* dedo que está arrastando: um segundo dedo no trilho não faz a bolinha pular (emil-design-eng, gestos) */
+  const dedo = useRef<number | null>(null);
 
   const posDoPonto = (clientX: number) => {
     const r = trilho.current?.getBoundingClientRect();
@@ -48,13 +49,14 @@ export function TextSizeSlider({ previa = true }: { previa?: boolean }) {
           className="ts-track"
           ref={trilho}
           onPointerDown={(e) => {
-            arrastando.current = true;
+            if (dedo.current !== null) return;
+            dedo.current = e.pointerId;
             e.currentTarget.setPointerCapture(e.pointerId);
             mudar(posDoPonto(e.clientX));
           }}
-          onPointerMove={(e) => { if (arrastando.current) mudar(posDoPonto(e.clientX)); }}
-          onPointerUp={(e) => { arrastando.current = false; e.currentTarget.releasePointerCapture(e.pointerId); }}
-          onPointerCancel={() => { arrastando.current = false; }}
+          onPointerMove={(e) => { if (dedo.current === e.pointerId) mudar(posDoPonto(e.clientX)); }}
+          onPointerUp={(e) => { if (dedo.current !== e.pointerId) return; dedo.current = null; e.currentTarget.releasePointerCapture(e.pointerId); }}
+          onPointerCancel={(e) => { if (dedo.current === e.pointerId) dedo.current = null; }}
         >
           <span className="ts-rail" />
           {CORPOS.map((c, i) => <span key={c} className="ts-tick" style={{ left: `${(i / ULTIMA) * 100}%` }} />)}

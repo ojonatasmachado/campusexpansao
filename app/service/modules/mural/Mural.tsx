@@ -9,6 +9,10 @@ import { useRouter } from "next/navigation";
 import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
 import { notifyPush } from "../../lib/notify-push";
+import { emSilencio, foraDoSilencio, quandoLembra } from "../../lib/silencio";
+import { videoDoLink } from "../../lib/video";
+import { imageExtension, uploadServiceImage } from "../../lib/upload-image";
+import { ImageUpload } from "../../ImageUpload";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { dataPublicacao, formatDateBR, joinDot, paraPublico, porPublicacao, quandoPublicado } from "../../lib/date";
 import { Icon } from "../../lib/icons";
@@ -25,6 +29,24 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
   const [publico, setPublico] = useState(publicos[0]?.id ?? "todos");
   const [tipo, setTipo] = useState<"aviso" | "evento" | "acao">("aviso");
   const [canais, setCanais] = useState<string[]>(["app"]);
+  /* v7 4.18: lembrar quem não viu */
+  const [lembrete, setLembrete] = useState<"nao" | "24" | "48" | "data">("nao");
+  const [lembreteData, setLembreteData] = useState("");
+  /* v7 4.4: destaque no Início do app até uma data, com imagem e vídeo */
+  const [destacar, setDestacar] = useState(false);
+  const [destaqueAte, setDestaqueAte] = useState("");
+  const [imagem, setImagem] = useState<string | null>(null);
+  const [imagemAlt, setImagemAlt] = useState("");
+  const [video, setVideo] = useState("");
+  const videoInvalido = !!video.trim() && !videoDoLink(video);
+  const destaqueIncompleto = destacar && (!destaqueAte || (!!imagem && !imagemAlt.trim()) || videoInvalido);
+  /* hora em que a opção foi escolhida (24h e 48h contam a partir dela) */
+  const [lembreteBase, setLembreteBase] = useState(0);
+  const lembreteEm = (): Date | null => {
+    if (lembrete === "nao") return null;
+    if (lembrete === "data") return lembreteData ? new Date(`${lembreteData}:00-03:00`) : null;
+    return new Date(lembreteBase + Number(lembrete) * 3600000);
+  };
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const telaRef = useRef<FormScreenHandle>(null);
@@ -39,19 +61,44 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
     setErro("");
     const sb = createServiceBrowserClient().schema("service");
     const base = { organization_id: church.organizationId, church_id: church.id, title: titulo.trim(), body: msg.trim() || null, audience: alvo.label, author: "Liderança", when_label: "agora" };
-    let { error } = await sb.from("announcements").insert({ ...base, kind: tipo });
+    const quando = lembreteEm();
+    const comLembrete = quando ? { remind_at: foraDoSilencio(quando).toISOString(), remind_to: alvo.memberIds } : {};
+    const comDestaque = destacar && destaqueAte
+      ? { highlight_until: new Date(`${destaqueAte}T23:59:59-03:00`).toISOString(), image_url: imagem, image_alt: imagem ? imagemAlt.trim() : null, video_url: video.trim() || null }
+      : {};
+    /* um destaque por vez: o novo encerra o anterior */
+    if (destacar && destaqueAte) await sb.from("announcements").update({ highlight_until: new Date().toISOString() }).eq("church_id", church.id).gt("highlight_until", new Date().toISOString());
+    let { error } = await sb.from("announcements").insert({ ...base, kind: tipo, ...comLembrete, ...comDestaque });
+    /* antes da migração 0063 as colunas do destaque não existem */
+    if (error && destacar && /highlight|image_|video_/i.test(error.message)) {
+      setSalvando(false);
+      setErro("O destaque ainda não está disponível nesta versão do banco. Publique sem destacar.");
+      return;
+    }
+    /* antes da migração 0062 as colunas do lembrete não existem: publica sem ele e avisa */
+    if (error && quando && /remind/i.test(error.message)) {
+      ({ error } = await sb.from("announcements").insert({ ...base, kind: tipo }));
+      if (!error) avisar("Publicado, mas o lembrete ainda não está disponível.", "warn");
+    }
     /* antes da migração 0049 a coluna "kind" não existe: publica sem o tipo */
     if (error && /kind/i.test(error.message)) ({ error } = await sb.from("announcements").insert(base));
     if (error) { setSalvando(false); setErro(friendlyWriteError(error.message)); return; }
-    if (canais.includes("app")) notifyPush(church.organizationId, alvo.memberIds, titulo.trim(), msg.trim() || "Nova publicação no Mural.");
+    if (canais.includes("app")) notifyPush(church.organizationId, alvo.memberIds, titulo.trim(), msg.trim() || "Nova publicação no Mural.", "mural");
     avisar("Publicado no Mural.");
     /* fecha antes do refresh (onDone atualiza a lista) */
     if (telaRef.current) await telaRef.current.fechar();
     onDone();
   };
-  const retrato = JSON.stringify({ titulo, msg, publico, tipo, canais: [...canais].sort() });
+  const retrato = JSON.stringify({ titulo, msg, publico, tipo, canais: [...canais].sort(), lembrete, lembreteData, destacar, destaqueAte, imagem, imagemAlt, video });
   const [retratoInicial] = useState(retrato);
-  const falta = [!titulo.trim() && "título", canais.length === 0 && "por onde enviar"].filter(Boolean) as string[];
+  const falta = [
+    !titulo.trim() && "título",
+    canais.length === 0 && "por onde enviar",
+    canais.includes("app") && lembrete === "data" && !lembreteData && "data do lembrete",
+    destacar && !destaqueAte && "até quando destacar",
+    destacar && !!imagem && !imagemAlt.trim() && "o que a imagem mostra",
+    destacar && videoInvalido && "link do vídeo válido",
+  ].filter(Boolean) as string[];
   return (
     <FormScreen
       ref={telaRef}
@@ -101,6 +148,39 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
           </div>
           {canais.includes("whatsapp") && <div className="field-hint">O WhatsApp abre com o texto pronto para você mandar nos grupos da igreja.</div>}
         </div>
+        {canais.includes("app") && (
+          <div className="field">
+            <div className="field-label" id={`${fid}-lemb`}>Lembrar quem não viu</div>
+            <div className="fs-chips" role="group" aria-labelledby={`${fid}-lemb`}>
+              {([["nao", "Não lembrar"], ["24", "Em 24h"], ["48", "Em 48h"], ["data", "Numa data"]] as const).map(([k, l]) => (
+                <button key={k} type="button" className={`seg-chip${lembrete === k ? " on" : ""}`} aria-pressed={lembrete === k} onClick={() => { setLembrete(k); setLembreteBase(Date.now()); }}>{l}</button>
+              ))}
+            </div>
+            {lembrete === "data" && <input className="input" type="datetime-local" style={{ marginTop: 8 }} value={lembreteData} onChange={(e) => setLembreteData(e.target.value)} aria-label="Data e hora do lembrete" />}
+            {lembreteEm() && <div className="field-hint">{`Uma notificação ${quandoLembra(foraDoSilencio(lembreteEm()!))} só para quem ainda não abriu.${emSilencio(lembreteEm()!) ? " Entre 22h e 7h ninguém recebe aviso, então vai às 7h." : ""}`}</div>}
+          </div>
+        )}
+      </FormSection>
+
+      <FormSection title="Destaque no Início do app">
+        <div className="field">
+          <div className="fs-chips" role="group" aria-label="Destaque no Início do app">
+            <button type="button" className={`seg-chip${!destacar ? " on" : ""}`} aria-pressed={!destacar} onClick={() => setDestacar(false)}>Não destacar</button>
+            <button type="button" className={`seg-chip${destacar ? " on" : ""}`} aria-pressed={destacar} onClick={() => setDestacar(true)}>Destacar até…</button>
+          </div>
+        </div>
+        {destacar && (
+          <>
+            <div className="field"><label className="field-label req" htmlFor={`${fid}-ate`}>Até o dia</label><input id={`${fid}-ate`} className="input" type="date" aria-required="true" value={destaqueAte} onChange={(e) => setDestaqueAte(e.target.value)} /></div>
+            <ImageUpload label="Imagem (opcional)" hint="Formato 16:9. Aparece no alto do cartão." url={imagem} aspectRatio={16 / 9}
+              onUpload={async (file) => { setImagem(await uploadServiceImage(createServiceBrowserClient(), file, `${church.organizationId}/mural/${Date.now()}.${imageExtension(file)}`)); }}
+              onRemove={() => { setImagem(null); setImagemAlt(""); }} />
+            {imagem && <div className="field"><label className="field-label req" htmlFor={`${fid}-alt`}>O que a imagem mostra</label><input id={`${fid}-alt`} className="input" aria-required="true" value={imagemAlt} onChange={(e) => setImagemAlt(e.target.value)} placeholder="Para quem usa leitor de tela. Ex.: Jovens no retiro de 2025" /></div>}
+            <div className="field"><label className="field-label" htmlFor={`${fid}-vid`}>Vídeo (link do YouTube ou do Instagram)</label><input id={`${fid}-vid`} className="input" value={video} onChange={(e) => setVideo(e.target.value)} placeholder="https://youtube.com/watch?v=..." />
+              {videoInvalido && <p className="field-error">Cole um link do YouTube ou do Instagram.</p>}</div>
+            <div className="field-hint">Um destaque por vez: este substitui o que estiver no Início agora.</div>
+          </>
+        )}
       </FormSection>
     </FormScreen>
   );
@@ -202,9 +282,10 @@ export function Comunicacao({
   const acessoMsgCfg: AcessoMsgCfg = { ...ACESSO_MSG_DEFAULT, ...(church?.settings?.acessoMsgCfg ?? {}) };
   const personDoMembro = new Map(members.map((m) => [m.id, m.volunteerId]));
 
+  const [agoraIso] = useState(() => new Date().toISOString());
   const lembrar = (a: AnnouncementView, faltam: string[]) => {
     if (!church?.organizationId || faltam.length === 0) return;
-    notifyPush(church.organizationId, faltam, a.title, "Tem uma publicação nova no Mural da igreja.");
+    notifyPush(church.organizationId, faltam, a.title, "Tem uma publicação nova no Mural da igreja.", "mural");
     avisar(`Lembrete enviado a ${plural(faltam.length, "pessoa")}.`);
   };
 
@@ -231,12 +312,13 @@ export function Comunicacao({
               <div className="panel-body">
                 <div className="mural-top">
                   <span className="chip chip-neutral">{KIND_LABEL[a.kind ?? "aviso"] ?? "Aviso"}</span>
+                  {a.highlight_until && a.highlight_until > agoraIso && <span className="chip chip-neutral">{`Em destaque até ${dataPublicacao(a.highlight_until)}`}</span>}
                   <span className="mural-meta">{joinDot(paraPublico(pub.label), quandoPublicado(a.created_at), quandoPublicado(a.created_at) !== dataPublicacao(a.created_at) && dataPublicacao(a.created_at))}</span>
                 </div>
                 <h3 className="mural-t">{a.title}</h3>
                 {a.body && <p className="mural-txt">{a.body}</p>}
                 <div className="mural-reach">
-                  <div className="mural-reach-n"><b>{leram.length}</b> de {plural(total, "pessoa")} leram</div>
+                  <div className="mural-reach-n">{`Vista por ${leram.length} de ${plural(total, "pessoa")}`}{a.remind_at && !a.reminded_at && faltam.length > 0 ? ` · lembrete ${quandoLembra(new Date(a.remind_at))} para ${plural(faltam.length, "pessoa")}` : a.reminded_at ? ` · lembrete enviado em ${dataPublicacao(a.reminded_at)}` : ""}</div>
                   <div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${pct}%` }} /></div>
                   {a.kind === "evento" && <div className="mural-reach-n">{plural(resp.filter((r) => r.response === "vou").length, "vai", "vão")} · {resp.filter((r) => r.response === "nao").length} não</div>}
                 </div>

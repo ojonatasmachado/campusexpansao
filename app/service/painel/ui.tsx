@@ -5,15 +5,12 @@
 
 import { createContext, useContext } from "react";
 import { HelpDot } from "../HelpSystem";
+import { iniciais } from "../lib/iniciais";
 
 /* grupo do menu da tela aberta: o sobretítulo da página mostra o grupo */
 export const RouteGroupContext = createContext<string | null>(null);
 
-export function initials(name: string) {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-}
+export const initials = (name: string) => iniciais(name);
 
 export function Av({ name, size = "sm", photoUrl }: { name: string; size?: "xs" | "sm" | "md" | "lg"; photoUrl?: string | null }) {
   return (

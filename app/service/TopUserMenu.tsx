@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { iniciais } from "./lib/iniciais";
 import { Icon } from "./lib/icons";
 
 /* Avatar da pessoa logada no topo do painel, com menu. Substitui as
@@ -46,7 +47,7 @@ export default function TopUserMenu({
   }, []);
 
   const parts = (name.trim() || "Você").split(/\s+/);
-  const initials = (parts.length > 1 ? `${parts[0][0]}${parts[parts.length - 1][0]}` : parts[0].slice(0, 2)).toUpperCase();
+  const initials = iniciais(name);
 
   return (
     <div className="top-user" ref={ref}>

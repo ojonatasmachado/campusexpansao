@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { plural } from "../../lib/plural";
+import { faltaN, plural } from "../../lib/plural";
 import { baixarCsv } from "../../lib/csv";
 import { formatDateBR, joinDot, toISODate } from "../../lib/date";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
@@ -17,14 +17,21 @@ import { Av, Chip, PageHead } from "../../painel/ui";
 import { ESCALA_DEFAULT, type EscalaPreset, type EscalaSettings } from "./regras";
 import type { ChurchView, DrawerState, EventView, MinistryView, ModalState, PersonView, RosterAssignmentView, RouteId } from "../../ServiceExactApp";
 import { useTermos } from "../../lib/vocabulario-context";
+import { compararRodizio, fraseRodizio, ultimaVezQueServiu } from "./rodizio";
+import { coberturaPorTime, vagasFaltando } from "./cobertura";
+import { Cobertura } from "./Cobertura";
 
 /* candidato apto a uma posição, com motivo de bloqueio : equivalente a
    candidatos() em evolucoes/service_app/escalas.jsx:12-30. Diferença de fidelidade
    consciente: no protótipo "férias" é uma flag solta além do status; no banco real
    ferias É um valor do enum people.status, então "considerarFerias" aqui vira o
    toggle que decide se quem está com status='ferias' entra ou não no pool. */
-type Candidato = { person: PersonView; fit: "good" | "busy" | "block"; motivo: string | null };
+/* motivo do bloqueio em código; o texto legível sai na janela (v7 4.14) */
+type Motivo = "evento" | "ferias" | "teto";
+type Candidato = { person: PersonView; fit: "good" | "busy" | "block"; motivo: Motivo | null; vezes: number; ultima?: string };
 
+/* v7 4.14: dentro de cada grupo, a ordem é a do rodízio (menos vezes no mês,
+   depois quem serviu há mais tempo), não mais o engajamento */
 function candidatosDisponiveis(
   pool: PersonView[],
   event: EventView,
@@ -32,24 +39,25 @@ function candidatosDisponiveis(
   usadosNoEvento: Set<string>,
   cfg: EscalaSettings,
   cargaPorPessoa: Record<string, number>,
+  ultimaVez: Record<string, string> = {},
 ): Candidato[] {
   return pool
     .filter((p) => p.status !== "pausa" && !jaNoSlot.has(p.id))
     .map((p) => {
-      let motivo: string | null = null;
-      if (usadosNoEvento.has(p.id)) motivo = "já escalado neste evento";
-      else if (p.status === "ferias" && cfg.considerarFerias) motivo = "de férias";
-      else if (cfg.maxPorMes && (cargaPorPessoa[p.id] ?? 0) >= cfg.maxPorMes) motivo = "no teto do mês";
+      let motivo: Motivo | null = null;
+      if (usadosNoEvento.has(p.id)) motivo = "evento";
+      else if (p.status === "ferias" && cfg.considerarFerias) motivo = "ferias";
+      else if (cfg.maxPorMes && (cargaPorPessoa[p.id] ?? 0) >= cfg.maxPorMes) motivo = "teto";
       /* disponibilidade ausente (nunca configurada) conta como disponível : só
          vira "busy" quando a pessoa marcou explicitamente que não pode nesse
          horário, senão todo voluntário novo aparecia "ocupado" sem nunca ter
          recusado nada. */
       const fit: Candidato["fit"] = motivo ? "block" : (p.availability[event.slot] === false ? "busy" : "good");
-      return { person: p, fit, motivo };
+      return { person: p, fit, motivo, vezes: cargaPorPessoa[p.id] ?? 0, ultima: ultimaVez[p.id] };
     })
     .sort((a, b) => {
       const rank = (x: Candidato) => (x.fit === "good" ? 0 : x.fit === "busy" ? 1 : 2);
-      return rank(a) === rank(b) ? (b.person.engagement ?? 0) - (a.person.engagement ?? 0) : rank(a) - rank(b);
+      return rank(a) === rank(b) ? compararRodizio(a, b) || a.person.name.localeCompare(b.person.name) : rank(a) - rank(b);
     });
 }
 
@@ -292,6 +300,7 @@ function PresetSaveModal({
 }
 
 export function Escalas({
+  foco,
   gaps,
   roster,
   people,
@@ -317,9 +326,17 @@ export function Escalas({
   setRoute: (route: RouteId) => void;
   setCheckinEventId: (id: string | null) => void;
   onNotifyLeaderRecusa: (leaderPersonId: string, volunteerPersonId: string, texto: string) => void;
+  /* v7 4.16: veio da cobertura (Início, detalhe do culto): abre neste culto e rola até o time */
+  foco?: { eventId: string; timeId?: string } | null;
 }) {
   const { comTermos: ct } = useTermos();
-  const [eventId, setEventId] = useState(events[0]?.id ?? "");
+  const [eventId, setEventId] = useState(foco?.eventId ?? events[0]?.id ?? "");
+  useEffect(() => {
+    if (!foco?.timeId) return;
+    const el = document.getElementById(`esc-col-${foco.timeId}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    el?.focus({ preventScroll: true });
+  }, [foco?.timeId]);
   const router = useRouter();
   const escalaCfg: EscalaSettings = { ...ESCALA_DEFAULT, ...(church?.settings?.escala ?? {}) };
   const [slotAction, setSlotAction] = useState<{
@@ -376,7 +393,7 @@ export function Escalas({
     const jaNoSlot = new Set(assignmentsFor(positionId).map((a) => a.person_id));
     const usados = new Set([...occupiedPeople].filter((id) => id !== excluirPersonId));
     const carga = cargaDoMes(roster, events, selectedEvent);
-    return candidatosDisponiveis(candidatePool(ministry), selectedEvent, jaNoSlot, usados, escalaCfg, carga);
+    return candidatosDisponiveis(candidatePool(ministry), selectedEvent, jaNoSlot, usados, escalaCfg, carga, ultimaVezQueServiu(roster, events));
   }
 
   const setModoEscala = async (modo: EscalaSettings["modo"]) => {
@@ -433,6 +450,7 @@ export function Escalas({
     if (!selectedEvent || gerando) return;
     setGerando(true);
     const carga = cargaDoMes(roster, events, selectedEvent);
+    const ultimas = ultimaVezQueServiu(roster, events);
     const usados = new Set(occupiedPeople);
     const inserts: Array<{ organization_id: string; event_id: string; position_id: string; person_id: string; status: "ok" | "wait" }> = [];
     visibleMinistries.forEach((ministry) => {
@@ -441,7 +459,7 @@ export function Escalas({
         let missing = Math.max(0, Math.max(1, position.need_count) - assignments.filter((a) => a.status !== "no").length);
         if (!missing) return;
         const jaNoSlot = new Set(assignments.map((a) => a.person_id));
-        const candidatos = candidatosDisponiveis(candidatePool(ministry), selectedEvent, jaNoSlot, usados, escalaCfg, carga);
+        const candidatos = candidatosDisponiveis(candidatePool(ministry), selectedEvent, jaNoSlot, usados, escalaCfg, carga, ultimas);
         for (const candidato of candidatos) {
           if (!missing) break;
           if (candidato.fit === "block") continue;
@@ -495,10 +513,10 @@ export function Escalas({
     router.refresh();
   };
 
-  /* texto de perspectiva por papel, equivalente a evolucoes/service_app/escalas.jsx:384 */
+  /* líder de time ouve quais times está vendo; a gestão vê todos e não precisa do aviso */
   const perspectiveText = scopeMinistryIds
     ? (visibleMinistries.length > 1 ? `Você está vendo os ${visibleMinistries.length} times que lidera.` : `Você está vendo só o ${visibleMinistries[0]?.name ?? "seu time"}.`)
-    : "A Direção vê todos os times.";
+    : "";
 
   return (
     <div className="content wide">
@@ -523,6 +541,11 @@ export function Escalas({
             <span className="esc-event-day">{joinDot(event.weekday, formatDateBR(event.eventDate))}</span>
             <span className="esc-event-name">{event.name}</span>
             <span className="esc-event-time">{joinDot(event.time, event.location)}</span>
+            {(() => {
+              /* v7 4.16: um resumo por culto; a cobertura por time aparece embaixo, no culto escolhido */
+              const falta = vagasFaltando(coberturaPorTime(event, roster, ministries, scopeMinistryIds));
+              return <span className={`esc-event-cob ${falta ? "falta" : "ok"}`}>{falta ? faltaN(falta, "vaga") : "completo"}</span>;
+            })()}
           </button>
         ))}
       </div>
@@ -561,6 +584,17 @@ export function Escalas({
         <span className="panel-meta" style={{ marginRight: 14 }}><span style={{ color: "var(--olive-soft)" }}>{confirmed}</span> confirmados</span>
         {openSlots > 0 ? <span className="panel-meta"><span style={{ color: "var(--amber)" }}>{openSlots}</span> vagas</span> : null}
       </div>
+      {selectedEvent && (
+        <Cobertura
+          itens={coberturaPorTime(selectedEvent, roster, ministries, scopeMinistryIds)}
+          onAbrir={(timeId) => {
+            setTimesFechados((prev) => { const n = new Set(prev); n.delete(timeId); return n; });
+            const el = document.getElementById(`esc-col-${timeId}`);
+            el?.scrollIntoView({ behavior: "smooth", block: "start" });
+            el?.focus({ preventScroll: true });
+          }}
+        />
+      )}
 
       <div className="esc-cols">
         {visibleMinistries.map((ministry) => {
@@ -569,7 +603,7 @@ export function Escalas({
           /* um número por time: vagas preenchidas (confirmado ou aguardando) sobre o total */
           const ministryFilled = ministryPositions.reduce((sum, position) => sum + Math.min(Math.max(1, position.need_count), assignmentsFor(position.id).filter((assignment) => assignment.status !== "no").length), 0);
           return (
-            <div className={`esc-col${timesFechados.has(ministry.id) ? " closed" : ""}`} key={ministry.id}>
+            <div className={`esc-col${timesFechados.has(ministry.id) ? " closed" : ""}`} key={ministry.id} id={`esc-col-${ministry.id}`} tabIndex={-1}>
               <div className="esc-col-head">
                 <span className="esc-col-mark"><Icon name="times" size={17} /></span>
                 <div className="esc-col-info">
@@ -649,6 +683,7 @@ export function Escalas({
         <RosterActionModal
           action={slotAction}
           candidatos={candidatosParaVaga(slotAction.ministry, slotAction.position.id, slotAction.assignment?.person_id)}
+          maxPorMes={escalaCfg.maxPorMes}
           people={people}
           onClose={() => setSlotAction(null)}
           onConfirmar={confirmarAssignment}
@@ -670,6 +705,7 @@ export function Escalas({
 function RosterActionModal({
   action,
   candidatos,
+  maxPorMes,
   people,
   onClose,
   onConfirmar,
@@ -688,6 +724,7 @@ function RosterActionModal({
     assignment?: RosterAssignmentView;
   };
   candidatos: Candidato[];
+  maxPorMes?: number | null;
   people: PersonView[];
   onClose: () => void;
   onConfirmar: (assignmentId: string) => void;
@@ -700,6 +737,8 @@ function RosterActionModal({
 }) {
   const { comTermos: ct } = useTermos();
   const [trocando, setTrocando] = useState(false);
+  const [busca, setBusca] = useState("");
+  const [soDisponiveis, setSoDisponiveis] = useState(false);
   const assignedPerson = action.assignment ? people.find((person) => person.id === action.assignment?.person_id) : null;
   if (action.kind === "slot" && action.assignment && !trocando) {
     const assignment = action.assignment;
@@ -732,38 +771,68 @@ function RosterActionModal({
   }
 
   const isSwap = trocando || action.kind === "swap";
+  /* v7 4.14: busca, filtro "Disponíveis", sugeridos pelo rodízio e quem não
+     pode agrupado com o motivo em texto */
+  const sem = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const achados = candidatos.filter((c) => !busca.trim() || sem(c.person.name).includes(sem(busca.trim())));
+  const podem = achados.filter((c) => c.fit !== "block" && (!soDisponiveis || c.fit === "good"));
+  const sugeridos = busca.trim() ? [] : podem.filter((c) => c.fit === "good").slice(0, 3);
+  const demais = podem.filter((c) => !sugeridos.includes(c));
+  const naoPodem = soDisponiveis ? [] : achados.filter((c) => c.fit === "block");
+  const motivoTexto = (m: Candidato["motivo"]) =>
+    m === "evento" ? ct("Já está na escala deste {culto}") : m === "ferias" ? "De férias" : m === "teto" ? (maxPorMes ? `Já serviu ${plural(maxPorMes, "vez", "vezes")} este mês, o limite` : "Chegou ao limite do mês") : "";
+  const escolher = (c: Candidato) => {
+    if (c.fit === "block") return;
+    if (isSwap && action.assignment) onTrocar(action.assignment.id, c.person.id);
+    else onEscalar(c.person.id);
+    onClose();
+  };
+  const linha = (c: Candidato) => (
+    <button className={`cand ${c.fit === "block" ? "is-block" : ""}`} type="button" key={c.person.id} aria-disabled={c.fit === "block" || undefined} onClick={() => escolher(c)}>
+      <Av name={c.person.name} size="md" photoUrl={c.person.photoUrl} />
+      <div className="cand-main">
+        <div className="cand-name">{c.person.name}</div>
+        {c.fit === "block" && c.motivo
+          ? <div className="cand-meta cand-motivo"><Icon name="recusou" size={13} /> {motivoTexto(c.motivo)}</div>
+          : <div className="cand-meta">{fraseRodizio(c.ultima, c.vezes)}</div>}
+        {c.person.tags.length > 0 ? <div className="cand-meta">{c.person.tags.join(" · ")}</div> : null}
+      </div>
+      {c.fit !== "block" && <span className={`cand-fit ${c.fit}`}>{c.fit === "good" ? <><Icon name="ok" size={13} /> disponível</> : <><Icon name="pendente" size={13} /> ocupado</>}</span>}
+    </button>
+  );
   return (
     <div className="modal-bg" onClick={onClose}>
       <div className="modal wide" onClick={(event) => event.stopPropagation()}>
         <div className="modal-head">
           <div className="modal-eyebrow">{isSwap ? "Pedir troca" : "Escalar"} · {action.position.name} · {action.ministry.name}</div>
           <div className="modal-title">{action.event.name}</div>
-          <div className="modal-sub">{joinDot(action.event.weekday, action.event.time)}{joinDot(action.event.weekday, action.event.time) ? ". " : ""}Primeiro quem está disponível. Ocupado é quem marcou que não pode neste horário. Quem aparece apagado não pode ser escalado, com o motivo embaixo do nome.</div>
+          <div className="modal-sub">{joinDot(action.event.weekday, action.event.time)}{joinDot(action.event.weekday, action.event.time) ? ". " : ""}Ocupado é quem marcou que não pode neste horário.</div>
+          <div className="cand-tools">
+            <input className="input" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar pelo nome" aria-label="Buscar pelo nome" />
+            <button type="button" className={`chip-toggle${soDisponiveis ? " on" : ""}`} aria-pressed={soDisponiveis} onClick={() => setSoDisponiveis((v) => !v)}>Disponíveis</button>
+          </div>
         </div>
         <div className="modal-body cand-list">
-          {candidatos.length === 0 ? <div className="empty">Ninguém disponível neste time.</div> : null}
-          {candidatos.map(({ person, fit, motivo }) => (
-            <button
-              className={`cand ${fit === "block" ? "is-block" : ""}`}
-              type="button"
-              key={person.id}
-              onClick={() => {
-                if (fit === "block") return;
-                if (isSwap && action.assignment) onTrocar(action.assignment.id, person.id);
-                else onEscalar(person.id);
-                onClose();
-              }}
-            >
-              <Av name={person.name} size="md" photoUrl={person.photoUrl} />
-              <div className="cand-main">
-                <div className="cand-name">{person.name}</div>
-                {/* v7 2.10: sem percentual sobre a pessoa (lei 10); o motivo do bloqueio fica embaixo do nome, sem disputar espaço com o selo */}
-                {fit === "block" && motivo ? <div className="cand-meta cand-motivo"><Icon name="recusou" size={13} /> {motivo}</div> : null}
-                {person.tags.length > 0 ? <div className="cand-meta">{person.tags.join(" · ")}</div> : null}
-              </div>
-              {fit !== "block" && <span className={`cand-fit ${fit}`}>{fit === "good" ? <><Icon name="ok" size={13} /> disponível</> : <><Icon name="pendente" size={13} /> ocupado</>}</span>}
-            </button>
-          ))}
+          {podem.length === 0 && naoPodem.length === 0 ? <div className="empty">{busca.trim() ? "Ninguém com esse nome neste time." : "Ninguém disponível neste time."}</div> : null}
+          {sugeridos.length > 0 && (
+            <>
+              <div className="cand-grp">Sugeridos pelo rodízio</div>
+              <div className="cand-grp-sub">Quem serviu menos vezes no mês e há mais tempo.</div>
+              {sugeridos.map(linha)}
+            </>
+          )}
+          {demais.length > 0 && (
+            <>
+              {sugeridos.length > 0 && <div className="cand-grp">Outras pessoas do time</div>}
+              {demais.map(linha)}
+            </>
+          )}
+          {naoPodem.length > 0 && (
+            <>
+              <div className="cand-grp">Não podem nesta vaga</div>
+              {naoPodem.map(linha)}
+            </>
+          )}
         </div>
         <div className="modal-foot"><button className="btn btn-ghost" type="button" onClick={onClose}>Cancelar</button></div>
       </div>

@@ -78,7 +78,7 @@ export default function EventoShare({ event, ministries, churchName = "Service",
         envolvidos.forEach((m) => {
           L.push(`${m.name}:`);
           m.people.forEach((p) => {
-            L.push(`  · ${p.personName}${p.functions.length ? " — " + p.functions.join(", ") : ""}${p.isLeader ? " (líder)" : ""}`);
+            L.push(`  · ${p.personName}${p.functions.length ? ": " + p.functions.join(", ") : ""}${p.isLeader ? " (líder)" : ""}`);
           });
         });
       } else {

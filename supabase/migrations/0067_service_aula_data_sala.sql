@@ -1,6 +1,8 @@
--- CE.X Service · 0051 · Aula presencial/ao vivo com dia, hora e sala (v7 2.2)
+-- CE.X Service · 0067 · Aula presencial/ao vivo com dia, hora e sala (v7 2.2)
 -- A aula com data aparece na Agenda do aluno e no cartão do curso, com a
 -- instrução da presença por QR. Aditiva e idempotente.
+-- Era a 0051 no branch service-v7; renumerada porque o main já tem uma 0051
+-- (bootstrap_lider_telas_v6). Independente das outras: pode rodar em qualquer ordem.
 
 alter table service.course_lessons add column if not exists lesson_date date;
 alter table service.course_lessons add column if not exists lesson_time text;
