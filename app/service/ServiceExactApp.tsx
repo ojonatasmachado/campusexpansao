@@ -238,6 +238,7 @@ export default function ServiceExactApp({
   const [buscaAberta, setBuscaAberta] = useState(false);
   /* grupos do menu recolhidos (fica guardado no aparelho) */
   const [gruposFechados, setGruposFechados] = useState<string[]>([]);
+  const [maisAberto, setMaisAberto] = useState(false);
   useEffect(() => {
     /* lido depois da hidratação: o servidor não tem localStorage */
     // eslint-disable-next-line react-hooks/set-state-in-effect -- preferência do aparelho, só existe no navegador
@@ -844,6 +845,17 @@ export default function ServiceExactApp({
     window.dispatchEvent(new Event("cex-setup-show"));
   };
 
+  const linkDoMenu = (item: NavGroups[number]["items"][number]) => {
+    const badge = navBadge[item.id] ?? 0;
+    return (
+      <button key={item.id} className={`sb-link ${route === item.id ? "on" : ""}`} type="button" data-tour={item.id} onClick={() => { setRoute(item.id); if (!showTour) setNavOpen(false); }}>
+        <span className="sb-ic"><Icon name={CEX_ICON_FOR[item.id] ?? item.icon} size={17} /></span>
+        {ct(item.label)}
+        {badge > 0 ? <span className="sb-badge">{badge}</span> : null}
+      </button>
+    );
+  };
+
   /* número só quando pede ação: visitante sem contato há 48h, vaga aberta na escala */
   const navBadge: Partial<Record<keyof typeof ROUTES, number>> = {
     visitantes: visitors.filter((v) => semContato48h(v, visitorNotes)).length,
@@ -863,10 +875,10 @@ export default function ServiceExactApp({
         {churches.length > 1 && <CongSwitcher churches={churches} activeId={activeChurchId} setActiveId={setActiveChurchId} />}
         <nav className="sb-nav">
           {NAV_GROUPS.map((group) => {
-            const visibleItems = group.items.filter((item) => podeVerItem(item.id));
+            const visibleItems = group.items.filter((item) => podeVerItem(item.id) && !item.secundario);
             if (visibleItems.length === 0) return null;
             const fechado = gruposFechados.includes(group.group) && !visibleItems.some((i) => i.id === route);
-            const solo = group.items.length === 1;
+            const solo = group.items.filter((i) => !i.secundario).length === 1;
             return (
               <div key={group.group} className={`sb-sec${fechado ? " closed" : ""}`}>
                 {!solo && (
@@ -874,19 +886,24 @@ export default function ServiceExactApp({
                     {group.group}<Caret open={!fechado} size={13} />
                   </button>
                 )}
-                {!fechado && visibleItems.map((item) => {
-                  const badge = navBadge[item.id] ?? 0;
-                  return (
-                    <button key={item.id} className={`sb-link ${route === item.id ? "on" : ""}`} type="button" data-tour={item.id} onClick={() => { setRoute(item.id); if (!showTour) setNavOpen(false); }}>
-                      <span className="sb-ic"><Icon name={CEX_ICON_FOR[item.id] ?? item.icon} size={17} /></span>
-                      {ct(item.label)}
-                      {badge > 0 ? <span className="sb-badge">{badge}</span> : null}
-                    </button>
-                  );
-                })}
+                {!fechado && visibleItems.map(linkDoMenu)}
               </div>
             );
           })}
+          {/* telas de uso ocasional: fechadas em "Mais"; abre sozinho quando a tela atual está nele */}
+          {(() => {
+            const mais = NAV_GROUPS.flatMap((g) => g.items.filter((item) => item.secundario && podeVerItem(item.id)));
+            if (!mais.length) return null;
+            const aberto = maisAberto || mais.some((i) => i.id === route);
+            return (
+              <div className={`sb-sec sb-mais${aberto ? "" : " closed"}`}>
+                <button type="button" className="sb-group sb-group-btn" aria-expanded={aberto} onClick={() => setMaisAberto((v) => !v)}>
+                  Mais<Caret open={aberto} size={13} />
+                </button>
+                {aberto && mais.map(linkDoMenu)}
+              </div>
+            );
+          })()}
         </nav>
         <div className="sb-bottom">
           {podeVerNav("config", currentRole, matrizEfetiva, currentExtraAccess, souVoluntario) && (

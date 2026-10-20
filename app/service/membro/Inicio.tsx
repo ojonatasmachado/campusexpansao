@@ -1,5 +1,7 @@
 "use client";
 
+import { listaFinalidades, type ContribuirCfg } from "../modules/contribuir/pix";
+import { instalarApp, podeInstalarDireto } from "../lib/instalar";
 import { Fragment, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Icon } from "../lib/icons";
 import { aindaVaiAcontecer, formatDateBR, joinDot, quandoPublicado, somaDias, todayISO } from "../lib/date";
@@ -155,9 +157,11 @@ export function SheetOracao({ member, dest, onStartChat, organizationId, muralOn
 export const ADIADOS_KEY = "cex_inicio_adiados";
 export const ouvirAdiados = (cb: () => void) => { window.addEventListener(ADIADOS_KEY, cb); return () => window.removeEventListener(ADIADOS_KEY, cb); };
 export const lerAdiados = () => { try { return localStorage.getItem(ADIADOS_KEY) ?? "{}"; } catch { return "{}"; } };
-export function InicioV6({ person, member, ministries, members, people = [], events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, inscricoes, onServir, ligados, acessos = 0, instalado = false, destaque = null, onAbrirDestaque, organizationId }: {
+export function InicioV6({ contribuir, onContribuir, person, member, ministries, members, people = [], events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, inscricoes, onServir, ligados, acessos = 0, instalado = false, destaque = null, onAbrirDestaque, organizationId }: {
   /* quantas vezes a pessoa abriu o app neste aparelho e se ele já está na tela de início (v7 4.10) */
   acessos?: number; instalado?: boolean;
+  /* Pix da igreja (módulo contribuir): no dia do culto vira um cartão de prioridade baixa */
+  contribuir?: ContribuirCfg | null; onContribuir?: () => void;
   /* destaque da igreja (v7 4.4): o mais recente ainda valendo; abrir lê o artigo no app */
   destaque?: Announcement | null; onAbrirDestaque?: (a: Announcement) => void;
   /* medição padrão (lei 11) */
@@ -229,6 +233,7 @@ export function InicioV6({ person, member, ministries, members, people = [], eve
   }
   if (incompleto) entradas.push({ id: "cadastro", modulo: "perfil", tipo: "acao", prioridade: 15, conteudo: { k: "cadastro", falta: faltaDados } });
   if (pedirAtalho) entradas.push({ id: "atalho", modulo: "inicio", tipo: "acao", prioridade: 25, conteudo: { k: "atalho" } });
+  if (contribuir && onContribuir && cultoHoje && !adiado(`contribuir-${hoje}`)) entradas.push({ id: `contribuir-${hoje}`, modulo: "contribuir", tipo: "destaque", prioridade: 12, prazo: hoje, conteudo: { k: "contribuir" } });
   /* aniversário de alguém do time que a pessoa lidera (módulo aniversarios): só o nome, prioridade baixa */
   const aniversarios = aniversariosHojeNoMeuTime({ personId: person.id, membros: members, pessoas: people, times: ministries, hoje });
   if (aniversarios.length > 0 && !adiado(`aniversario-${hoje}`)) entradas.push({ id: `aniversario-${hoje}`, modulo: "aniversarios", tipo: "destaque", prioridade: 10, prazo: hoje, conteudo: { k: "aniversario", pessoas: aniversarios } });
@@ -300,8 +305,22 @@ export function InicioV6({ person, member, ministries, members, people = [], eve
               <li><Icon name="menu" size={20} /><span><b>Android:</b> no Chrome, toque no menu de três pontos e depois em &quot;Instalar app&quot;.</span></li>
             </ul>
             <div className="m6-btns">
-              <button className={btn} type="button" onClick={() => adiar("atalho", 3650)}>Já coloquei</button>
+              {podeInstalarDireto()
+                ? <button className={btn} type="button" onClick={async () => { await instalarApp(); adiar("atalho", 3650); }}>Instalar</button>
+                : <button className={btn} type="button" onClick={() => adiar("atalho", 3650)}>Já coloquei</button>}
               <button className="m6-link" type="button" data-dispensa="1" onClick={() => adiar("atalho", 3650)}>Agora não</button>
+            </div>
+          </div>
+        );
+      case "contribuir":
+        return (
+          <div key={e.id} className="m6-card">
+            <div className="m6-kick">Generosidade</div>
+            <div className="m6-ct">Contribuir hoje</div>
+            <div className="m6-meta">{`Pix para ${listaFinalidades(contribuir!.finalidades)}.`}</div>
+            <div className="m6-btns">
+              <button className={btn} type="button" onClick={onContribuir}>Ver a chave Pix</button>
+              <button className="m6-link" type="button" data-dispensa="1" onClick={() => adiar(e.id, 1)}>Agora não</button>
             </div>
           </div>
         );

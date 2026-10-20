@@ -7,7 +7,7 @@ export default defineModule({
   permissoes: ["cultos"],
   painel: {
     menu: [
-      { rota: "espacos", grupo: "Agenda", rotulo: "Espaços e salas", icone: "espacos", ordem: 41, permissao: "cultos" },
+      { rota: "espacos", grupo: "Agenda", rotulo: "Espaços e salas", secundario: true, icone: "espacos", ordem: 41, permissao: "cultos" },
     ],
   },
 });

@@ -14,7 +14,7 @@ export default defineModule({
   },
   painel: {
     menu: [
-      { rota: "quadros", grupo: "Gestão", rotulo: "Quadros", icone: "quadros", ordem: 71, permissao: "quadros" },
+      { rota: "quadros", grupo: "Gestão", rotulo: "Quadros", secundario: true, icone: "quadros", ordem: 71, permissao: "quadros" },
     ],
   },
 });

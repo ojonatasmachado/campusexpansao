@@ -11,7 +11,7 @@ export default defineModule({
   },
   painel: {
     menu: [
-      { rota: "decisoes", grupo: "Pessoas", rotulo: "Decisões", icone: "decisoes", ordem: 24, permissao: "decisoes" },
+      { rota: "decisoes", grupo: "Pessoas", rotulo: "Decisões", secundario: true, icone: "decisoes", ordem: 24, permissao: "decisoes" },
     ],
   },
   vocabulario: ["caminhada"],

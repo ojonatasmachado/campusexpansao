@@ -75,7 +75,7 @@ export function modulosLigados(estado?: EstadoModulos | null, condicoes: Record<
 
 export const PADRAO_LIGADOS = modulosLigados();
 
-export type NavItem = { id: string; label: string; icon: string };
+export type NavItem = { id: string; label: string; icon: string; secundario?: boolean };
 export type NavGroup = { group: string; items: NavItem[] };
 
 /** Menu do painel: grupos na ordem da casca, itens pela `ordem` do manifesto. */
@@ -83,7 +83,7 @@ export function navGroups(ligados: Set<string> = PADRAO_LIGADOS): NavGroup[] {
   const itens = MODULOS.filter((m) => ligados.has(m.id)).flatMap((m) => m.painel?.menu ?? []);
   return GRUPOS_PAINEL.map((g) => ({
     group: g,
-    items: itens.filter((i) => i.grupo === g).sort((a, b) => a.ordem - b.ordem).map((i) => ({ id: i.rota, label: i.rotulo, icon: i.icone })),
+    items: itens.filter((i) => i.grupo === g).sort((a, b) => a.ordem - b.ordem).map((i) => ({ id: i.rota, label: i.rotulo, icon: i.icone, secundario: !!i.secundario })),
   })).filter((g) => g.items.length > 0);
 }
 

@@ -3,7 +3,8 @@
 /* Peças de tela do painel usadas pela casca e pelos módulos (app/service/modules/*).
    Saíram de ServiceExactApp.tsx na 4.1 para os módulos importarem sem ciclo. */
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { Caret, Icon } from "../lib/icons";
 import { HelpDot } from "../HelpSystem";
 import { iniciais } from "../lib/iniciais";
 
@@ -49,6 +50,48 @@ export function EmptyState({ title, text, action }: { title: string; text: strin
       <div className="empty-state-t">{title}</div>
       <p className="empty-state-s">{text}</p>
       {action ? <button className="btn btn-pri btn-sm" type="button" onClick={action.onClick}>{action.label}</button> : null}
+    </div>
+  );
+}
+
+export type AcaoMais = { rotulo: string; icone?: string; onClick: () => void; desligada?: boolean };
+
+/** "Mais": ações de uso ocasional de uma tela, num menu (as principais ficam à vista).
+    Fecha no clique fora e no Esc, que devolve o foco ao botão. */
+export function MenuMais({ acoes, rotulo = "Mais" }: { acoes: AcaoMais[]; rotulo?: string }) {
+  const [aberto, setAberto] = useState(false);
+  const caixa = useRef<HTMLDivElement>(null);
+  const botao = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!aberto) return;
+    const fora = (e: MouseEvent) => { if (caixa.current && !caixa.current.contains(e.target as Node)) setAberto(false); };
+    const tecla = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      setAberto(false);
+      botao.current?.focus();
+    };
+    document.addEventListener("mousedown", fora);
+    document.addEventListener("keydown", tecla);
+    caixa.current?.querySelector<HTMLButtonElement>("[role=menuitem]:not([disabled])")?.focus();
+    return () => { document.removeEventListener("mousedown", fora); document.removeEventListener("keydown", tecla); };
+  }, [aberto]);
+  if (!acoes.length) return null;
+  return (
+    <div className="menu-mais" ref={caixa}>
+      <button ref={botao} className="btn btn-sec" type="button" aria-haspopup="menu" aria-expanded={aberto} onClick={() => setAberto((v) => !v)}>
+        {rotulo} <Caret open={aberto} size={13} />
+      </button>
+      {aberto && (
+        <div className="menu-mais-pop" role="menu">
+          {acoes.map((a) => (
+            <button key={a.rotulo} type="button" role="menuitem" disabled={a.desligada} onClick={() => { setAberto(false); a.onClick(); }}>
+              {a.icone ? <span className="ic"><Icon name={a.icone} size={16} /></span> : null}
+              {a.rotulo}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

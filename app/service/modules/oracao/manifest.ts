@@ -16,6 +16,6 @@ export default defineModule({
     telas: [{ id: "oracao", aba: "mensagens", titulo: "Mural de oração" }],
   },
   painel: {
-    menu: [{ rota: "oracao", grupo: "Comunicação", rotulo: "Oração", icone: "coracao", ordem: 52, permissao: "oracao" }],
+    menu: [{ rota: "oracao", grupo: "Comunicação", rotulo: "Oração", secundario: true, icone: "coracao", ordem: 52, permissao: "oracao" }],
   },
 });

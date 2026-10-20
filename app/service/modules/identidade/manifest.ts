@@ -11,7 +11,7 @@ export default defineModule({
   },
   painel: {
     menu: [
-      { rota: "identidade", grupo: "Gestão", rotulo: "Identidade e propósito", icone: "identidade", ordem: 72, permissao: "identidade" },
+      { rota: "identidade", grupo: "Gestão", rotulo: "Identidade e propósito", secundario: true, icone: "identidade", ordem: 72, permissao: "identidade" },
     ],
   },
 });

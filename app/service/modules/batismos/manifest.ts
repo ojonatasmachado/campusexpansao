@@ -14,7 +14,7 @@ export default defineModule({
   },
   painel: {
     menu: [
-      { rota: "batismos", grupo: "Formação", rotulo: "Batismos", icone: "batismos", ordem: 61, permissao: "batismos" },
+      { rota: "batismos", grupo: "Formação", rotulo: "Batismos", secundario: true, icone: "batismos", ordem: 61, permissao: "batismos" },
     ],
   },
   vocabulario: ["caminhada"],

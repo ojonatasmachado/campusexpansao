@@ -11,7 +11,7 @@ export default defineModule({
   },
   painel: {
     menu: [
-      { rota: "pesquisas", grupo: "Comunicação", rotulo: "Pesquisas", icone: "lista", ordem: 52, permissao: "comunica" },
+      { rota: "pesquisas", grupo: "Comunicação", rotulo: "Pesquisas", secundario: true, icone: "lista", ordem: 52, permissao: "comunica" },
     ],
   },
 });

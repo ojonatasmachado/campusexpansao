@@ -1,5 +1,6 @@
 "use client";
 
+import { listaFinalidades, type ContribuirCfg } from "../modules/contribuir/pix";
 import { useContext, useEffect, useState } from "react";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { Icon } from "../lib/icons";
@@ -94,9 +95,12 @@ export function usePush(organizationId?: string) {
 }
 
 export function TabPerfil({
-  person, member, organizationId, theme, setTheme, onChangePassword, onUpdateProfile, onLogout, onSwitchToPanel, view = "home", openSub,
+  person, member, organizationId, theme, setTheme, onChangePassword, onUpdateProfile, onLogout, onSwitchToPanel, view = "home", openSub, contribuir, onContribuir,
 }: {
   view?: "home" | "dados" | "senha";
+  /* Pix da igreja: atalho no Perfil, além da Caminhada (crítica de design 2026-10-20) */
+  contribuir?: ContribuirCfg | null;
+  onContribuir?: () => void;
   openSub?: (sub: string) => void;
   onLogout?: () => void;
   onSwitchToPanel?: () => void;
@@ -266,6 +270,7 @@ export function TabPerfil({
         <div className="m6-list">
           <M6Row ic="pessoa" t="Meus dados" s="Telefone, e-mail, endereço e aniversário" onClick={() => openSub?.("dados")} />
           <M6Row ic="kids" t="Minha família" s="Filhos no Kids, check-in e eventos" onClick={() => openSub?.("familia")} />
+          {contribuir && <M6Row ic="semente" t="Contribuir" s={`Pix para ${listaFinalidades(contribuir.finalidades)}`} onClick={onContribuir} />}
           <M6Row ic="historia" t="Minha história" s="O que você já viveu na igreja" onClick={() => openSub?.("minha-historia")} />
         </div>
       </div>

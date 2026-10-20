@@ -13,7 +13,7 @@ import { formatDateBR, joinDot, toISODate } from "../../lib/date";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { Caret, Icon } from "../../lib/icons";
 import { HelpDot } from "../../HelpSystem";
-import { Av, Chip, PageHead } from "../../painel/ui";
+import { Av, Chip, MenuMais, PageHead } from "../../painel/ui";
 import { ESCALA_DEFAULT, type EscalaPreset, type EscalaSettings } from "./regras";
 import type { ChurchView, DrawerState, EventView, MinistryView, ModalState, PersonView, RosterAssignmentView, RouteId } from "../../ServiceExactApp";
 import { useTermos } from "../../lib/vocabulario-context";
@@ -481,10 +481,12 @@ export function Escalas({
         action={
           <>
             <button className="btn btn-sec" type="button" onClick={() => setPeriodoOpen(true)}><Icon name="agenda" size={15} /> Montar período</button>
-            <button className="btn btn-sec" type="button" onClick={() => setExtraOpen(true)}><Icon name="add" size={15} /> Escala extra</button>
-            <button className="btn btn-sec" type="button" onClick={() => setDelegarOpen(true)}><Icon name="membros" size={15} /> Delegar</button>
-            <button className="btn btn-sec" type="button" onClick={() => setCheckinEventId(selectedEvent?.id ?? null)} disabled={!selectedEvent}><Icon name="cultos" size={15} /> QR Check-in</button>
-            <button className="btn btn-sec" type="button" onClick={baixarCSV} disabled={!selectedEvent}><Icon name="relatorios" size={15} /> Baixar</button>
+            <MenuMais acoes={[
+              { rotulo: "Escala extra", icone: "add", onClick: () => setExtraOpen(true) },
+              { rotulo: "Delegar a gestão", icone: "membros", onClick: () => setDelegarOpen(true) },
+              { rotulo: "QR do check-in", icone: "cultos", onClick: () => setCheckinEventId(selectedEvent?.id ?? null), desligada: !selectedEvent },
+              { rotulo: "Baixar a escala", icone: "relatorios", onClick: baixarCSV, desligada: !selectedEvent },
+            ]} />
             <button className="btn btn-pri" type="button" onClick={() => setPublicarOpen(true)}>Publicar e avisar{rascunhos.length ? ` (${rascunhos.length})` : ""}</button>
           </>
         }

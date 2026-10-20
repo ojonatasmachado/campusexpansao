@@ -316,6 +316,7 @@ export type ItemInicio =
   | { k: "servir"; times: Ministry[] }
   | { k: "cadastro"; falta: string[] }
   | { k: "atalho" }
+  | { k: "contribuir" }
   | { k: "aniversario"; pessoas: AniversarioNoTime[] };
 export type TipoAgenda = "Serve" | "Ensaio" | "Reunião" | "Aula" | "Tarefa" | "Evento" | "Culto";
 export type ItemAgenda = { id: string; data: string; hora?: string | null; tipo: TipoAgenda; titulo: string; sub?: string; selo?: React.ReactNode; abrir?: () => void };

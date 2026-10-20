@@ -7,7 +7,7 @@ export default defineModule({
   permissoes: ["historia"],
   painel: {
     menu: [
-      { rota: "historia", grupo: "Gestão", rotulo: "Nossa história", icone: "historia", ordem: 73, permissao: "historia" },
+      { rota: "historia", grupo: "Gestão", rotulo: "Nossa história", secundario: true, icone: "historia", ordem: 73, permissao: "historia" },
     ],
   },
   vocabulario: ["caminhada"],

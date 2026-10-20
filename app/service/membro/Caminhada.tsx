@@ -1,6 +1,7 @@
 "use client";
 
 import { useContext, useState } from "react";
+import { plural } from "../lib/plural";
 import { Icon } from "../lib/icons";
 import { joinDot } from "../lib/date";
 import { useTermos } from "../lib/vocabulario-context";
@@ -152,6 +153,9 @@ export function CaminhadaV6({ steps, courses, purpose, contribuir }: { steps: St
   const ui = useContext(MemberUiContext);
   const { comTermos: ct } = useTermos();
   const done = steps.filter((s) => s.st === "feito").length;
+  const tudoFeito = steps.length > 0 && done === steps.length;
+  /* tudo concluído: as etapas viram uma linha, que abre a lista com as datas */
+  const [verEtapas, setVerEtapas] = useState(false);
   return (
     <>
       <div className="m6-sec0">
@@ -163,6 +167,9 @@ export function CaminhadaV6({ steps, courses, purpose, contribuir }: { steps: St
       </div>
       <div className="m6-sec">
         <div className="m6-lbl">Etapas</div>
+        {tudoFeito && !verEtapas ? (
+          <div className="m6-list"><M6Row ic="ok" t={plural(steps.length, "etapa concluída", "etapas concluídas")} s="Ver as datas de cada uma" onClick={() => setVerEtapas(true)} /></div>
+        ) : (
         <div className="m6-steps">
           {steps.map((s) => (
             <div className="m6-step" key={s.id}>
@@ -175,6 +182,7 @@ export function CaminhadaV6({ steps, courses, purpose, contribuir }: { steps: St
             </div>
           ))}
         </div>
+        )}
       </div>
       <div className="m6-sec">
         <div className="m6-lbl">Cursos</div>

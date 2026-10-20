@@ -330,7 +330,7 @@ function MobileMembro({
         {/* marco principal só no app de verdade; a prévia do líder fica dentro do painel, que já tem o seu */}
         <div className="m-scroll" ref={scrollRef} role={mode === "self" ? "main" : undefined}>
           {tab === "inicio" && (
-            <InicioV6 person={person} member={member} ministries={ministries} members={members} people={people} events={events} roster={roster} cards={cards}
+            <InicioV6 contribuir={pix} onContribuir={() => go("caminhada", "contribuir")} person={person} member={member} ministries={ministries} members={members} people={people} events={events} roster={roster} cards={cards}
               announcements={muralOn ? announcements : []} unreadIds={unreadIds} kidsChildren={kidsChildren} childGuardians={childGuardians}
               kidsCheckin={(destaque) => <CheckinKidsHoje person={person} events={events} kidsChildren={kidsChildren} childGuardians={childGuardians} kidsClasses={kidsClasses}
                 kidsSessions={kidsSessions} kidsAttendance={kidsAttendance} organizationId={organizationId} destaque={destaque} />}
@@ -426,6 +426,8 @@ function MobileMembro({
               onSwitchToPanel={mode === "self" ? onSwitchToPanel : undefined}
               view={sub === "dados" ? "dados" : sub === "senha" ? "senha" : "home"}
               openSub={(s) => go("perfil", s)}
+              contribuir={pix}
+              onContribuir={() => go("caminhada", "contribuir")}
             />
           )}
           {tab === "perfil" && sub === "minha-historia" && <MinhaHistoria fatos={member ? timelineEvents.filter((f) => f.member_id === member.id) : []} />}

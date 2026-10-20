@@ -16,7 +16,7 @@ export default defineModule({
   },
   painel: {
     /* sem código de permissão: toda a liderança vê, cada um no seu escopo */
-    menu: [{ rota: "aniversariantes", grupo: "Pessoas", rotulo: "Aniversariantes", icone: "presente", ordem: 25, papeis: ["master", "pastor", "lider"] }],
+    menu: [{ rota: "aniversariantes", grupo: "Pessoas", rotulo: "Aniversariantes", secundario: true, icone: "presente", ordem: 25, papeis: ["master", "pastor", "lider"] }],
     inicio: ["painel.inicio.pendencias"],
   },
   vocabulario: ["grupo"],

@@ -12,7 +12,7 @@ export default defineModule({
   },
   painel: {
     menu: [
-      { rota: "ensaios", grupo: "Ministério", rotulo: "Ensaios", icone: "ensaios", ordem: 32, permissao: "ensaios" },
+      { rota: "ensaios", grupo: "Ministério", rotulo: "Ensaios", secundario: true, icone: "ensaios", ordem: 32, permissao: "ensaios" },
     ],
   },
 });

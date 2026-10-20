@@ -11,7 +11,7 @@ export default defineModule({
   },
   painel: {
     menu: [
-      { rota: "reunioes", grupo: "Ministério", rotulo: "Reuniões", icone: "reunioes", ordem: 33, permissao: "reunioes" },
+      { rota: "reunioes", grupo: "Ministério", rotulo: "Reuniões", secundario: true, icone: "reunioes", ordem: 33, permissao: "reunioes" },
     ],
   },
 });

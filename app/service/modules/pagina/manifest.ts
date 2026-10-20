@@ -7,7 +7,7 @@ export default defineModule({
   permissoes: ["igreja"],
   painel: {
     menu: [
-      { rota: "pagina", grupo: "Comunicação", rotulo: "Página da igreja", icone: "globo", ordem: 53, permissao: "igreja" },
+      { rota: "pagina", grupo: "Comunicação", rotulo: "Página da igreja", secundario: true, icone: "globo", ordem: 53, permissao: "igreja" },
     ],
   },
 });

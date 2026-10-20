@@ -77,6 +77,8 @@ export type ItemMenu = {
   papeis?: Papel[];
   /** liberações pessoa a pessoa (service.person_grants) que também abrem a tela */
   acessos?: string[];
+  /** tela de uso ocasional: fica em "Mais", no fim do menu (a busca do topo continua achando) */
+  secundario?: boolean;
 };
 
 /** Tela do painel fora do menu (atalho interno): herda o grupo para o título da barra. */

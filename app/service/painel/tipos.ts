@@ -733,7 +733,7 @@ export type RouteId = keyof typeof ROUTES;
 
 /* menu do painel (S30, S31): o título de cada tela é o nome do grupo. Gerado
    pelo registro de módulos (modules/registry.ts), na ordem dos manifestos. */
-export type NavGroups = { group: string; items: { id: keyof typeof ROUTES; label: string; icon: string }[] }[];
+export type NavGroups = { group: string; items: { id: keyof typeof ROUTES; label: string; icon: string; secundario?: boolean }[] }[];
 
 export type CalEvent = { date: Date; label: string; sub?: string; tone?: "olive" | "amber"; onClick?: () => void };
 

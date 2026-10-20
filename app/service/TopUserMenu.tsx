@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { iniciais } from "./lib/iniciais";
 import { Icon } from "./lib/icons";
+import { instalarApp, jaInstalado } from "./lib/instalar";
 
 /* Avatar da pessoa logada no topo do painel, com menu. Substitui as
    iniciais da IGREJA (que não abriam nada) e o sino "Avisos" sem ação.
@@ -73,6 +74,12 @@ export default function TopUserMenu({
             <button type="button" role="menuitem" onClick={() => { setOpen(false); onOpenApp(); }}>
               <span className="ic"><Icon name="perfil" size={16} /></span>
               Abrir o app
+            </button>
+          ) : null}
+          {!jaInstalado() ? (
+            <button type="button" role="menuitem" onClick={() => { setOpen(false); void instalarApp(); }}>
+              <span className="ic"><Icon name="baixar" size={16} /></span>
+              Instalar o app
             </button>
           ) : null}
           {onToggleTheme ? (

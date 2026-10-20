@@ -4,7 +4,7 @@
    Início do painel. Período de 30 dias por padrão, 90 dias, 12 meses ou
    datas escolhidas, comparado ao período anterior. Cada número abre a lista
    das pessoas que ele conta. */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatDateBR } from "../../lib/date";
 import { useTermos } from "../../lib/vocabulario-context";
 import { anteriorDe, comparacao, etapasDaCaminhada, numerosDaBase, numerosDoPeriodo, periodoDe, type DadosSaude, type ItemPessoa, type Numero, type Periodo, type Preset } from "./saude";
@@ -27,6 +27,20 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, extras = [] }: {
   const [preset, setPreset] = useState<Preset>("30");
   const [datas, setDatas] = useState<Periodo>(() => periodoDe("30"));
   const [lista, setLista] = useState<Numero | null>(null);
+  /* compacta por padrão: os números de hoje sempre; período, comparação e etapas
+     sob demanda, para "Para resolver" caber na primeira dobra (crítica de design 2026-10-20).
+     A escolha fica neste navegador. */
+  const [panorama, setPanorama] = useState(false);
+  useEffect(() => {
+    let salvo = false;
+    try { salvo = localStorage.getItem("svc-saude-panorama") === "1"; } catch { /* sem armazenamento */ }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- preferência do navegador, lida depois de montar (o servidor não tem)
+    if (salvo) setPanorama(true);
+  }, []);
+  const alternarPanorama = () => setPanorama((v) => {
+    try { localStorage.setItem("svc-saude-panorama", v ? "0" : "1"); } catch { /* sem armazenamento: só nesta visita */ }
+    return !v;
+  });
   const periodo = periodoDe(preset, datas);
   const dias = Math.round((new Date(`${periodo.fim}T12:00:00Z`).getTime() - new Date(`${periodo.ini}T12:00:00Z`).getTime()) / 86400000) + 1;
   const ant = anteriorDe(periodo);
@@ -53,13 +67,15 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, extras = [] }: {
     <section className="saude" aria-label="Saúde da igreja">
       <div className="saude-head">
         <h2 className="saude-t">Saúde da igreja</h2>
-        <div className="seg seg-sm" role="radiogroup" aria-label="Período">
-          {PRESETS.map((p) => (
-            <button key={p.v} type="button" role="radio" aria-checked={preset === p.v} className={preset === p.v ? "on" : ""} onClick={() => setPreset(p.v)}>{p.l}</button>
-          ))}
-        </div>
+        {panorama && (
+          <div className="seg seg-sm" role="radiogroup" aria-label="Período">
+            {PRESETS.map((p) => (
+              <button key={p.v} type="button" role="radio" aria-checked={preset === p.v} className={preset === p.v ? "on" : ""} onClick={() => setPreset(p.v)}>{p.l}</button>
+            ))}
+          </div>
+        )}
       </div>
-      {preset === "datas" && (
+      {panorama && preset === "datas" && (
         <div className="saude-datas">
           <label>De <input className="input" type="date" value={datas.ini} onChange={(e) => setDatas((d) => ({ ...d, ini: e.target.value }))} /></label>
           <label>até <input className="input" type="date" value={datas.fim} onChange={(e) => setDatas((d) => ({ ...d, fim: e.target.value }))} /></label>
@@ -67,10 +83,17 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, extras = [] }: {
       )}
       <div className="saude-grp">Hoje</div>
       {grade([...numerosDaBase(dados), ...extras])}
-      <div className="saude-grp">{`De ${formatDateBR(periodo.ini)} a ${formatDateBR(periodo.fim)}`}<span className="saude-grp-s">{` · comparado a ${formatDateBR(ant.ini)} a ${formatDateBR(ant.fim)}`}</span></div>
-      {grade(numerosDoPeriodo(dados, periodo))}
-      <div className="saude-grp">{ct("Etapas da {caminhada}")}<span className="saude-grp-s"> · membros que já fizeram cada uma</span></div>
-      {grade(etapasDaCaminhada(dados.membros, etapas))}
+      {panorama && (
+        <>
+          <div className="saude-grp">{`De ${formatDateBR(periodo.ini)} a ${formatDateBR(periodo.fim)}`}<span className="saude-grp-s">{` · comparado a ${formatDateBR(ant.ini)} a ${formatDateBR(ant.fim)}`}</span></div>
+          {grade(numerosDoPeriodo(dados, periodo))}
+          <div className="saude-grp">{ct("Etapas da {caminhada}")}<span className="saude-grp-s"> · membros que já fizeram cada uma</span></div>
+          {grade(etapasDaCaminhada(dados.membros, etapas))}
+        </>
+      )}
+      <button type="button" className="panel-link saude-mais" aria-expanded={panorama} onClick={alternarPanorama}>
+        {panorama ? "Mostrar só o de hoje" : ct("Ver o panorama: período, visitantes, decisões e {caminhada}")}
+      </button>
 
       {lista && (
         <div className="modal-bg" onClick={() => setLista(null)}>
