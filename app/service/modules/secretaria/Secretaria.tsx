@@ -13,7 +13,7 @@ import { rawAccent } from "../../lib/theme";
 import { EmptyState, PageHead } from "../../painel/ui";
 import type { ChildGuardianView, ChurchView, MemberView, PersonView } from "../../ServiceExactApp";
 import { Carteirinha, type Marca } from "./Carteirinha";
-import { FolhaDeImpressao, imprimir } from "./imprimir";
+import { FolhaDeImpressao, imprimir } from "../../painel/imprimir";
 import { LANCA_A_MAO, LIVROS, REGISTRO_COLS, anoDe, anos, colunas, folhaLivro, linhasCsv, livroDe, numeroFmt, registrosDemo, textoBusca, type Livro, type Registro } from "./livros";
 import { RegistroForm, type CriancaKids } from "./RegistroForm";
 

@@ -13,11 +13,11 @@ import { Icon } from "../../lib/icons";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { uploadServicePrivateFile } from "../../lib/upload-image";
 import { useServiceAccess } from "../../AccessContext";
-import { abrirComprovante, BUCKET_FIN, db, type Categoria, type Conta, type Fundo, type Lancamento, type PessoaFin } from "./dados";
+import { abrirComprovante, BUCKET_FIN, db, type Campanha, type Categoria, type Conta, type Fundo, type Lancamento, type PessoaFin } from "./dados";
 import { brl, centavosTexto, digitadoParaCentavos, FORMAS, type Forma } from "./dinheiro";
 
-type Base = { org: string; churchId: string | null; onClose: () => void; onDone: () => void };
-type Cadastros = { contas: Conta[]; categorias: Categoria[]; fundos: Fundo[]; pessoas: PessoaFin[]; saldoConta: Record<string, number> };
+export type Base = { org: string; churchId: string | null; onClose: () => void; onDone: () => void };
+export type Cadastros = { contas: Conta[]; categorias: Categoria[]; fundos: Fundo[]; pessoas: PessoaFin[]; saldoConta: Record<string, number>; campanhas?: Campanha[] };
 
 /* ── campos ──────────────────────────────────────────────────────────────── */
 
@@ -102,7 +102,7 @@ function CampoComprovante({ arquivo, existente, onArquivo, onTirarExistente }: {
   );
 }
 
-function Excluir({ rotulo, pergunta, onConfirmar }: { rotulo: string; pergunta: string; onConfirmar: () => Promise<void> }) {
+export function Excluir({ rotulo, pergunta, onConfirmar }: { rotulo: string; pergunta: string; onConfirmar: () => Promise<void> }) {
   const [confirmar, setConfirmar] = useState(false);
   const [indo, setIndo] = useState(false);
   return (
@@ -147,10 +147,14 @@ export function LancamentoForm({ org, churchId, tipo, edit, cad, onClose, onDone
   const [fornecedor, setFornecedor] = useState(edit?.supplier_name ?? "");
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [anexo, setAnexo] = useState<string | null>(edit?.attachment_path ?? null);
+  /* fase 2: campanha (só entrada) e previsto (conta fixa ainda não paga) */
+  const campanhas = (cad.campanhas ?? []).filter((c) => c.active || c.id === edit?.campaign_id);
+  const [campanha, setCampanha] = useState(edit?.campaign_id ?? "");
+  const [realizado, setRealizado] = useState(edit ? edit.status === "realizado" : true);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
 
-  const retrato = JSON.stringify({ valor, data, desc, cat, fundo, forma, conta, pessoa, fornecedor, a: arquivo?.name, anexo });
+  const retrato = JSON.stringify({ valor, data, desc, cat, fundo, forma, conta, pessoa, fornecedor, a: arquivo?.name, anexo, campanha, realizado });
   const [inicial] = useState(retrato);
   const falta = [!valor && "valor", !desc.trim() && "descrição", !data && "data", !cat && "categoria", !fundo && "fundo", !conta && "conta"].filter(Boolean) as string[];
 
@@ -172,6 +176,8 @@ export function LancamentoForm({ org, churchId, tipo, edit, cad, onClose, onDone
       contributor_member_id: tipo === "entrada" ? pessoa : null,
       supplier_name: tipo === "despesa" ? fornecedor.trim() || null : null,
       attachment_path: caminho,
+      campaign_id: tipo === "entrada" ? campanha || null : null,
+      status: realizado ? "realizado" : "previsto",
     };
     const { error } = edit
       ? await db().from("fin_transactions").update(linha).eq("id", edit.id)
@@ -228,6 +234,26 @@ export function LancamentoForm({ org, churchId, tipo, edit, cad, onClose, onDone
               ))}
             </div>
           </div>
+          {entrada && campanhas.length > 0 && (
+            <div className="field">
+              <label className="field-label" htmlFor={`${fid}-camp`}>Campanha</label>
+              <select id={`${fid}-camp`} className="select" value={campanha} onChange={(e) => {
+                setCampanha(e.target.value);
+                const f = campanhas.find((c) => c.id === e.target.value)?.fund_id;
+                if (f) setFundo(f);
+              }}>
+                <option value="">Nenhuma</option>
+                {campanhas.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              <div className="field-hint">Conta para a meta da campanha. Escolher a campanha usa o fundo dela.</div>
+            </div>
+          )}
+          {edit?.status === "previsto" && (
+            <div className="field">
+              <label className="fin-check"><input type="checkbox" checked={realizado} onChange={(e) => setRealizado(e.target.checked)} /> {entrada ? "Já foi recebido" : "Já foi pago"}</label>
+              <div className="field-hint">{realizado ? "Entra no saldo da conta na data acima." : "Continua como previsto: não mexe no saldo."}</div>
+            </div>
+          )}
           <div className="field">
             <label className="field-label req" htmlFor={`${fid}-ct`}>{entrada ? "Entrou na conta" : "Saiu da conta"}</label>
             <select id={`${fid}-ct`} className="select" value={conta} onChange={(e) => { setConta(e.target.value); setContaTocada(true); }}>

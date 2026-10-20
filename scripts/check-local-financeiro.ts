@@ -120,6 +120,50 @@ async function main() {
     `select count(*) from audit.activity_log where table_name = 'fin_transactions' and organization_id = '${org}'`]).toString().trim());
   ok("audit", "alterações no activity_log", nAud >= 3);
 
+  // ── fase 2: contas fixas, campanhas e fechamento (0080), num mês passado de teste ──
+  const energia = cats!.find((c) => c.system_code === "energia")!.id;
+  const { data: fixa, error: eFixa } = await s(membro2).from("fin_recurring").insert({ organization_id: org, kind: "despesa", description: "Conta de luz (teste)", amount_cents: 32000, account_id: caixa, category_id: energia, fund_id: geral, day_of_month: 31, starts_on: "2026-01-01" }).select("id").single();
+  ok("membro2", "com lançar: cadastra conta fixa", !eFixa && !!fixa, eFixa?.message);
+  ok("lider", "não vê contas fixas", (await conta(lider, "fin_recurring", org)) === 0);
+  const { data: g1 } = await s(membro2).rpc("fin_gerar_previstos", { p_org: org, p_mes: "2026-09" });
+  const { data: g2 } = await s(membro2).rpc("fin_gerar_previstos", { p_org: org, p_mes: "2026-09" });
+  ok("membro2", "gera o previsto do mês uma vez só", g1 === 1 && g2 === 0, `${g1}/${g2}`);
+  const { data: prev } = await s(membro2).from("fin_transactions").select("id,status,due_on").eq("recurring_id", fixa!.id).single();
+  ok("membro2", "dia 31 em setembro vence no dia 30", prev?.status === "previsto" && prev?.due_on === "2026-09-30", JSON.stringify(prev));
+  const { error: ePag } = await s(membro2).from("fin_transactions").update({ status: "realizado", occurred_on: "2026-09-29" }).eq("id", prev!.id);
+  ok("membro2", "paga a conta fixa", !ePag, ePag?.message);
+
+  const { data: camp, error: eCamp } = await s(membro2).from("fin_campaigns").insert({ organization_id: org, name: "Reforma (teste)", goal_cents: 100000, fund_id: geral, starts_on: "2026-09-01" }).select("id").single();
+  ok("membro2", "cria campanha", !eCamp && !!camp, eCamp?.message);
+  const { data: doacao } = await s(membro2).from("fin_transactions").insert({ organization_id: org, kind: "entrada", occurred_on: "2026-09-10", amount_cents: 25000, account_id: caixa, category_id: dizimo, fund_id: geral, description: "Oferta reforma (teste)", campaign_id: camp!.id }).select("id").single();
+  const { data: prog } = await s(membro2).rpc("fin_campanhas_progresso", { p_org: org });
+  const p1 = (prog as { campaign_id: string; arrecadado_cents: number }[]).find((r) => r.campaign_id === camp!.id);
+  ok("membro2", "progresso da campanha soma a entrada", Number(p1?.arrecadado_cents) === 25000, JSON.stringify(p1));
+
+  const { data: fechou } = await s(membro2).rpc("fin_fechar_mes", { p_org: org, p_mes: "2026-09", p_notas: "teste" });
+  ok("membro2", "fecha o mês", fechou === "ok", String(fechou));
+  const { data: fech } = await s(membro2).from("fin_closings").select("totals").eq("organization_id", org).eq("month", "2026-09").is("reopened_at", null).single();
+  const tot = fech?.totals as { entradas_cents: number; despesas_cents: number } | undefined;
+  ok("membro2", "retrato com entradas e despesas do mês", tot?.entradas_cents === 25000 && tot?.despesas_cents === 32000, JSON.stringify(tot));
+  ok("membro2", "fechar de novo avisa", (await s(membro2).rpc("fin_fechar_mes", { p_org: org, p_mes: "2026-09" })).data === "ja_fechado");
+  const { error: eFech1 } = await s(membro2).from("fin_transactions").insert({ organization_id: org, kind: "entrada", occurred_on: "2026-09-15", amount_cents: 100, account_id: caixa, category_id: dizimo, fund_id: geral, description: "mês fechado" });
+  ok("membro2", "não lança em mês fechado", !!eFech1);
+  const { error: eFech2 } = await s(master).from("fin_transactions").update({ amount_cents: 1 }).eq("id", doacao!.id);
+  ok("master", "não edita lançamento de mês fechado", !!eFech2);
+  const { error: eFech3 } = await s(membro2).from("fin_closings").update({ notes: "mexi" }).eq("organization_id", org);
+  const { data: notas } = await s(admin).from("fin_closings").select("notes").eq("organization_id", org).eq("month", "2026-09").is("reopened_at", null).single();
+  ok("membro2", "não edita o retrato à mão", !!eFech3 || notas?.notes === "teste");
+  ok("membro2", "tesoureiro não reabre o mês", (await s(membro2).rpc("fin_reabrir_mes", { p_org: org, p_mes: "2026-09" })).data === "nao_pode");
+  ok("master", "master reabre o mês", (await s(master).rpc("fin_reabrir_mes", { p_org: org, p_mes: "2026-09" })).data === "ok");
+  const { error: eReab } = await s(master).from("fin_transactions").update({ description: "Oferta reforma (teste, corrigida)" }).eq("id", doacao!.id);
+  ok("master", "depois de reabrir, edita", !eReab, eReab?.message);
+
+  // limpeza da fase 2
+  await s(admin).from("fin_transactions").delete().in("id", [prev!.id, doacao!.id]);
+  await s(admin).from("fin_closings").delete().eq("organization_id", org).eq("month", "2026-09");
+  await s(admin).from("fin_recurring").delete().eq("id", fixa!.id);
+  await s(admin).from("fin_campaigns").delete().eq("id", camp!.id);
+
   // limpeza
   await s(admin).from("fin_offering_counts").delete().eq("id", cont);
   await s(admin).from("fin_transactions").delete().in("id", [tx?.id, t2?.id].filter(Boolean) as string[]);

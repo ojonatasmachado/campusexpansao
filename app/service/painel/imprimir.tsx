@@ -3,12 +3,12 @@
 /* Impressão limpa: o que vai para o papel é montado num portal fora do app
    (<body> direto). Durante a impressão só ele aparece; o resto do app some
    com display:none, sem páginas em branco. A orientação da folha vem de um
-   @page colocado só enquanto imprime. CSS em service-app.css (v7 · secretaria). */
-import { useNoNavegador } from "../../lib/cliente";
+   @page colocado só enquanto imprime. CSS em service-app.css (v7 · secretaria). Usado pela Secretaria e pelo Financeiro. */
+import { useNoNavegador } from "../lib/cliente";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
-export type Folha = "livro" | "cartao";
+export type Folha = "livro" | "cartao" | "relatorio";
 
 export function imprimir(folha: Folha, orientacao: "portrait" | "landscape") {
   const css = document.createElement("style");

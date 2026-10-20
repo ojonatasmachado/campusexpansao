@@ -15,7 +15,7 @@ import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { adaptAccent } from "../../lib/theme";
 import { FormScreen, FormSection } from "../../painel/form/FormScreen";
 import type { ChurchView, MemberView, PersonView } from "../../ServiceExactApp";
-import { FolhaDeImpressao, imprimir } from "./imprimir";
+import { FolhaDeImpressao, imprimir } from "../../painel/imprimir";
 import { numeroFmt, type Registro } from "./livros";
 
 export type Marca = { nome: string; logoUrl?: string | null; cor: string; cidade?: string | null };

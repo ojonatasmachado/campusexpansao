@@ -3819,7 +3819,13 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
   html[data-sec-imprime] body > :not(.sec-papel){display:none !important}
   html[data-sec-imprime] body{background:#FFFFFF !important}
   html[data-sec-imprime="livro"] .sec-papel[data-folha="livro"],
-  html[data-sec-imprime="cartao"] .sec-papel[data-folha="cartao"]{display:block;color:#000;font-family:var(--sans)}
+  html[data-sec-imprime="cartao"] .sec-papel[data-folha="cartao"],
+  html[data-sec-imprime="relatorio"] .sec-papel[data-folha="relatorio"]{display:block;color:#000;font-family:var(--sans)}
+  .fin-papel-sec{margin-top:14px;break-inside:avoid}
+  .fin-papel-sec h2{font-size:11pt;margin:0 0 6px}
+  .fin-papel-tot{display:flex;gap:12mm;margin-top:10px;font-size:11pt}
+  .fin-papel-tot b{display:block;font-size:13pt}
+  .sec-papel-tbl td.num,.sec-papel-tbl th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
   .sec-papel-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding-bottom:8px;margin-bottom:10px;border-bottom:1.5px solid #000}
   .sec-papel-igreja{font-size:10pt;font-weight:600}
   .sec-papel-t{margin:2px 0 0;font-size:16pt;font-weight:700;letter-spacing:-0.01em}
@@ -3914,3 +3920,27 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 @media (max-width:860px),(pointer:coarse){ .menu-mais-pop button{min-height:44px} .menu-mais-pop{left:0;right:auto;transform-origin:top left} }
 /* funil no celular: etapa vazia vira só o cabeçalho com o 0 (auditoria de UI 2026-10-20) */
 @media (max-width:860px){ .pipe-col.vazia .pipe-body{display:none} .pipe-col.vazia{opacity:.8} }
+
+/* ════════ v7 · financeiro (fase 2): o que vence, contas fixas, campanhas e fechamento ════════ */
+.fin-apagar{margin-top:16px}
+.fin-prev{display:flex;align-items:center;gap:12px}
+.fin-prev-main{display:flex;flex-direction:column;align-items:flex-start;gap:2px;flex:1;min-width:0;min-height:32px;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;overflow-wrap:anywhere}
+.fin-prev-main:disabled{cursor:default}
+.fin-atrasado{color:var(--danger)}
+.fin-check{display:flex;align-items:center;gap:8px;min-height:32px;font-size:var(--fs-pn-14);color:var(--light);cursor:pointer}
+.fin-check input{width:18px;height:18px;accent-color:var(--accent-fill)}
+.fin-camps{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.fin-camp{display:flex;flex-direction:column;gap:8px;padding:16px;border-radius:var(--r-lg);border:0.5px solid var(--border-2);background:var(--graphite);color:inherit;font:inherit;text-align:left}
+.fin-camp.click{cursor:pointer}
+@media (hover:hover) and (pointer:fine){ .fin-camp.click:hover{border-color:var(--olive-line)} }
+.fin-camp-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;overflow-wrap:anywhere}
+.fin-fech-status{display:flex;align-items:center;gap:10px;margin:4px 0 16px;padding:12px 14px;border-radius:var(--r-md);border:0.5px solid var(--border-2);background:var(--graphite);font-size:var(--fs-pn-14);color:var(--light)}
+.fin-fech-status.fechado{border-color:var(--olive-line)}
+.fin-fech-acoes{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.fin-fech-conf{margin-top:16px;padding:16px;border-radius:var(--r-lg);border:0.5px solid var(--border-2);background:var(--graphite);max-width:640px}
+@media (max-width:860px),(pointer:coarse){
+  .fin-prev{flex-wrap:wrap}
+  .fin-prev .btn{min-height:44px}
+  .fin-check{min-height:44px}
+  .fin-fech-acoes .btn{flex:1 1 auto}
+}
