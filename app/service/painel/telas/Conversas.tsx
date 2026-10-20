@@ -173,6 +173,7 @@ export function Conversas({
       && chatMembers.some((cm) => cm.chat_id === c.id && cm.member_id === currentMember.id)
     ));
     if (existingDm) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pedido de conversa vindo de outra tela: abre a existente uma vez e consome o pedido
       setSelected(existingDm.id);
       onConsumePendingChatMember?.();
     } else {

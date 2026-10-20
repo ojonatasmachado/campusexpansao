@@ -58,6 +58,7 @@ export function Carteirinha({ memberId, church, marca, demo, members, people, ro
   const saiu = !!reg?.saida;
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- outra pessoa: limpa a carteirinha anterior antes de buscar a nova
     setAtual(null);
     if (!id || demo) return;
     let vivo = true;

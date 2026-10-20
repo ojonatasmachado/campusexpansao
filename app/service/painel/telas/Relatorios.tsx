@@ -51,7 +51,8 @@ export function Relatorios({
   /* recorte das comparações: últimos 30 dias ou trimestre (90), sempre contra o período anterior de mesmo tamanho */
   const [periodo, setPeriodo] = useState<30 | 90>(30);
   const P = periodo;
-  const hoje = Date.now();
+  /* "agora" fixado quando a tela abre: os recortes não mudam a cada renderização */
+  const [hoje] = useState(() => Date.now());
   const diasAtras = (iso: string) => (hoje - new Date(iso).getTime()) / 86400000;
 
   /* membros na rede: delta = novos no período vs. período anterior (member.createdAt real) */

@@ -63,7 +63,9 @@ export function AccentField({ label, bgHex, value, defaultHex, onChange, compact
   const [draft, setDraft] = useState(value);
   const [savedMsg, setSavedMsg] = useState(false);
   const [expanded, setExpanded] = useState(!compact);
-  useEffect(() => setDraft(value), [value]);
+  /* o valor salvo mudou por fora: o rascunho acompanha (ajuste na renderização, sem efeito) */
+  const [valorAnterior, setValorAnterior] = useState(value);
+  if (valorAnterior !== value) { setValorAnterior(value); setDraft(value); }
 
   const valid = isValidHex(draft);
   const hex = valid ? normalizeHex(draft) : value;

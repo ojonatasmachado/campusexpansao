@@ -232,7 +232,7 @@ function PresetSaveModal({
         <div className="modal-head">
           <div className="modal-eyebrow">Configuração padrão</div>
           <div className="modal-title">Salvar como…</div>
-          <div className="modal-sub">Guarda as funções e quantidades atuais de todos os times. Crie uma para "Culto", outra para "Reunião", e aplique quando quiser.</div>
+          <div className="modal-sub">Guarda as funções e quantidades atuais de todos os times. Crie uma para “Culto”, outra para “Reunião”, e aplique quando quiser.</div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
           <div className="field"><label className="field-label">Nome da configuração</label><input className="input" placeholder="ex: Culto de domingo" value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === "Enter" && salvar()} /></div>
@@ -432,6 +432,7 @@ export function Escalas({
 
   useEffect(() => {
     if (escalaCfg.modo === "automatico" && selectedEvent) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- modo automático: gera a escala ao trocar de culto (consulta e grava no banco)
       gerarAuto();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

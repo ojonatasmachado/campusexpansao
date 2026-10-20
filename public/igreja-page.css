@@ -178,8 +178,9 @@
 .cx-footer {
   text-align: center;
   margin-top: 34px;
-  font-size: 11px;
-  opacity: 0.4;
+  /* crédito da CE.X: 12px e opacidade que mantém o contraste acima de 4,5:1 nos fundos da página (era 11px e 0,4: 3,28:1) */
+  font-size: 12px;
+  opacity: 0.72;
 }
 .cx-footer a { color: inherit; }
 

@@ -244,6 +244,7 @@ export function SetupChecklist({ counts, setRoute }: { counts: SetupCounts; setR
 
   useEffect(() => {
     try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- preferência do navegador lida depois de montar (comentário acima: evita diferença na hidratação)
       setHidden(localStorage.getItem(HIDE_KEY) === "1");
     } catch { /* localStorage indisponível : segue visível */ }
     try {

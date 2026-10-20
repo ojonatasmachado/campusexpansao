@@ -23,10 +23,12 @@ export function useChurchSettingsField<T extends object>(
   const [value, setValue] = useState<T>(() => ({ ...defaults, ...((church?.settings?.[key] as Partial<T>) ?? {}) }));
   const queueRef = useRef<Promise<unknown>>(Promise.resolve());
 
-  useEffect(() => {
+  /* configurações novas do servidor: o valor recomeça delas (ajuste na renderização, sem efeito) */
+  const [settingsAnteriores, setSettingsAnteriores] = useState(church?.settings);
+  if (settingsAnteriores !== church?.settings) {
+    setSettingsAnteriores(church?.settings);
     setValue({ ...defaults, ...((church?.settings?.[key] as Partial<T>) ?? {}) });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [church?.settings]);
+  }
 
   /* resolve true quando o banco gravou (sem linha de volta = sem permissão ou igreja inexistente) */
   const save = (patch: Partial<T>): Promise<boolean> => {

@@ -130,6 +130,7 @@ function MobileMembro({
           onSaveAvailability, onRespondAnnouncement, announcementResponses = [],
           eventRsvps = [], onRespondEvent, meetings = [], rehearsals = [], paginaUrl, timelineEvents = [], fellowshipGroups = [], onMarkChatRead } = rest;
   /* Mural sempre do mais recente para o mais antigo, pela data de publicação */
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- compilador do React não está ligado; filhos dependem da identidade
   const announcements = useMemo(() => porPublicacao(avisosRecebidos), [avisosRecebidos]);
   /* curso em rascunho não aparece no app */
   const courses = rest.courses.filter((c) => c.published !== false);
@@ -143,6 +144,7 @@ function MobileMembro({
   const serves = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
   const isGuardian = childGuardians.some((g) => g.guardian_person_id === person.id);
   const ctx: ModuleCtx = { serves, isRecep, isKids, isGuardian };
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- compilador do React não está ligado; filhos dependem da identidade
   const ligadosMembro = useMemo(() => modulosLigados(rest.modulos), [rest.modulos]);
   const modulosMembro = useMemo(() => membrosDoRegistro(ligadosMembro), [ligadosMembro]);
   const subAllowed = (id: string | null) => !id || (modulosMembro.find((m) => m.id === id)?.visible(ctx) ?? false);
@@ -155,6 +157,7 @@ function MobileMembro({
     ? () => setSheetEl(<SheetOracao member={member} dest={destOracao ?? null} onStartChat={onStartChat} organizationId={organizationId} muralOn={oracaoOn} />)
     : null;
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- compilador do React não está ligado; filhos dependem da identidade
   const lidos = useMemo(() => new Set(readAnnouncementIds), [readAnnouncementIds]);
   const [lidosAgora, setLidosAgora] = useState<Set<string>>(() => new Set());
   const unreadIds = useMemo(() => new Set(announcements.filter((a) => !lidos.has(a.id) && !lidosAgora.has(a.id)).map((a) => a.id)), [announcements, lidos, lidosAgora]);
@@ -200,6 +203,7 @@ function MobileMembro({
   useEffect(() => {
     try {
       if (!localStorage.getItem(AVATAR_VISTO)) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- lido e gravado uma vez no navegador (o servidor não tem o armazenamento)
         setRotuloAvatar(true);
         localStorage.setItem(AVATAR_VISTO, "1");
       }

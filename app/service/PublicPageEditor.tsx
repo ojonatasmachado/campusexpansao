@@ -1,5 +1,6 @@
 "use client";
 
+import { useOrigem } from "./lib/cliente";
 import { avisar } from "./lib/avisar";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -109,7 +110,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [origin, setOrigin] = useState("");
+  const origin = useOrigem();
   const [linkModal, setLinkModal] = useState<{ draft: LinkItem; isNew: boolean } | null>(null);
   const [postModal, setPostModal] = useState<{ draft: PostItem; isNew: boolean } | null>(null);
   const [slugDraft, setSlugDraft] = useState(church.slug ?? "");
@@ -160,15 +161,14 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
   };
 
   useEffect(() => {
-    setOrigin(window.location.origin);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- carrega links e posts da página ao abrir (consulta ao banco)
     Promise.all([loadLinks(), loadPosts()]).finally(() => setLoading(false));
     client().from("church_page_views").select("id", { count: "exact", head: true }).eq("church_id", church.id).eq("kind", "view").then(({ count }) => setViewCount(count ?? 0));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [church.id]);
 
-  useEffect(() => {
-    setSlugDraft(church.slug ?? "");
-  }, [church.slug]);
+  const [slugAnterior, setSlugAnterior] = useState(church.slug);
+  if (slugAnterior !== church.slug) { setSlugAnterior(church.slug); setSlugDraft(church.slug ?? ""); }
 
   const saveSocial = (key: keyof PaginaSocial, value: string) => {
     savePagina({ social: { ...(pagina.social ?? {}), [key]: value || undefined } });
@@ -315,7 +315,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
         {activeTab === "publicar" && (
           <div className="cfg-card">
             <div className="cfg-card-t">Publicar página</div>
-            <div className="cfg-card-s">Enquanto estiver desligada, a página existe mas mostra "ainda não publicada" pra quem acessar.</div>
+            <div className="cfg-card-s">Enquanto estiver desligada, a página existe mas mostra “ainda não publicada” pra quem acessar.</div>
             <div className="cfg-row" style={{ padding: "10px 0" }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">{pagina.enabled ? "Publicada" : "Despublicada"}</div>

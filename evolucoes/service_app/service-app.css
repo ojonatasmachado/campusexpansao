@@ -3912,3 +3912,5 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 @media (hover:hover) and (pointer:fine) { .menu-mais-pop button:not(:disabled):hover {background:var(--ink);color:var(--white)} }
 .menu-mais-pop .ic{color:var(--muted)}
 @media (max-width:860px),(pointer:coarse){ .menu-mais-pop button{min-height:44px} .menu-mais-pop{left:0;right:auto;transform-origin:top left} }
+/* funil no celular: etapa vazia vira só o cabeçalho com o 0 (auditoria de UI 2026-10-20) */
+@media (max-width:860px){ .pipe-col.vazia .pipe-body{display:none} .pipe-col.vazia{opacity:.8} }

@@ -201,7 +201,11 @@ export function PesquisasView({ organizationId, ministries }: { organizationId: 
     setLoading(false);
   };
 
-  useEffect(() => { void carregar(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [organizationId]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- carrega as pesquisas da igreja ao abrir (consulta ao banco)
+    void carregar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [organizationId]);
 
   if (route.screen === "editor") {
     return (

@@ -430,6 +430,7 @@ export function Config({
   setModal: (modal: ModalState) => void;
   permissionsMatrix: Record<string, Record<string, boolean>>;
 }) {
+  const cid = useId();
   const { comTermos: ct } = useTermos();
   const router = useRouter();
   /* alguém sem acesso geral a Configurações, mas liberado só pra abas específicas
@@ -732,12 +733,12 @@ export function Config({
             <div className="cfg-card-t">Dados da igreja</div>
             <div className="cfg-card-s">Como sua igreja aparece no app, nas publicações e como a secretaria pode ser encontrada.</div>
             <div className="field">
-              <label className="field-label">Nome da igreja</label>
-              <input className="input" value={igrejaForm.nome} onChange={(e) => setIgrejaForm((p) => ({ ...p, nome: e.target.value }))} />
+              <label className="field-label" htmlFor={`${cid}-nome`}>Nome da igreja</label>
+              <input id={`${cid}-nome`} name="nome" className="input" value={igrejaForm.nome} onChange={(e) => setIgrejaForm((p) => ({ ...p, nome: e.target.value }))} />
             </div>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
-              <div className="field"><label className="field-label">CNPJ</label><input className="input" value={igrejaForm.doc} onChange={(e) => setIgrejaForm((p) => ({ ...p, doc: e.target.value }))} /></div>
-              <div className="field"><label className="field-label">Fundada em</label><input className="input" value={igrejaForm.fundada} onChange={(e) => setIgrejaForm((p) => ({ ...p, fundada: e.target.value }))} /></div>
+              <div className="field"><label className="field-label" htmlFor={`${cid}-doc`}>CNPJ</label><input id={`${cid}-doc`} name="doc" className="input" inputMode="numeric" value={igrejaForm.doc} onChange={(e) => setIgrejaForm((p) => ({ ...p, doc: e.target.value }))} /></div>
+              <div className="field"><label className="field-label" htmlFor={`${cid}-fundada`}>Fundada em</label><input id={`${cid}-fundada`} name="fundada" className="input" value={igrejaForm.fundada} onChange={(e) => setIgrejaForm((p) => ({ ...p, fundada: e.target.value }))} /></div>
             </div>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
               <div className="field">
@@ -757,19 +758,19 @@ export function Config({
                   }}
                 />
               </div>
-              <div className="field"><label className="field-label">Número</label><input className="input" value={igrejaForm.numero} onChange={(e) => setIgrejaForm((p) => ({ ...p, numero: e.target.value }))} /></div>
+              <div className="field"><label className="field-label" htmlFor={`${cid}-numero`}>Número</label><input id={`${cid}-numero`} name="numero" className="input" inputMode="numeric" value={igrejaForm.numero} onChange={(e) => setIgrejaForm((p) => ({ ...p, numero: e.target.value }))} /></div>
             </div>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
-              <div className="field"><label className="field-label">Rua</label><input className="input" value={igrejaForm.rua} onChange={(e) => setIgrejaForm((p) => ({ ...p, rua: e.target.value }))} /></div>
-              <div className="field"><label className="field-label">Bairro</label><input className="input" value={igrejaForm.bairro} onChange={(e) => setIgrejaForm((p) => ({ ...p, bairro: e.target.value }))} /></div>
+              <div className="field"><label className="field-label" htmlFor={`${cid}-rua`}>Rua</label><input id={`${cid}-rua`} name="rua" className="input" autoComplete="address-line1" value={igrejaForm.rua} onChange={(e) => setIgrejaForm((p) => ({ ...p, rua: e.target.value }))} /></div>
+              <div className="field"><label className="field-label" htmlFor={`${cid}-bairro`}>Bairro</label><input id={`${cid}-bairro`} name="bairro" className="input" value={igrejaForm.bairro} onChange={(e) => setIgrejaForm((p) => ({ ...p, bairro: e.target.value }))} /></div>
             </div>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
-              <div className="field"><label className="field-label">Cidade</label><input className="input" value={igrejaForm.cidade} onChange={(e) => setIgrejaForm((p) => ({ ...p, cidade: e.target.value }))} /></div>
-              <div className="field"><label className="field-label">Estado</label><input className="input" value={igrejaForm.estado} onChange={(e) => setIgrejaForm((p) => ({ ...p, estado: e.target.value }))} /></div>
+              <div className="field"><label className="field-label" htmlFor={`${cid}-cidade`}>Cidade</label><input id={`${cid}-cidade`} name="cidade" className="input" autoComplete="address-level2" value={igrejaForm.cidade} onChange={(e) => setIgrejaForm((p) => ({ ...p, cidade: e.target.value }))} /></div>
+              <div className="field"><label className="field-label" htmlFor={`${cid}-estado`}>Estado</label><input id={`${cid}-estado`} name="estado" className="input" autoComplete="address-level1" value={igrejaForm.estado} onChange={(e) => setIgrejaForm((p) => ({ ...p, estado: e.target.value }))} /></div>
             </div>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
-              <div className="field"><label className="field-label">E-mail</label><input className="input" value={igrejaForm.email} onChange={(e) => setIgrejaForm((p) => ({ ...p, email: e.target.value }))} /></div>
-              <div className="field"><label className="field-label">Telefone</label><input className="input" value={igrejaForm.tel} onChange={(e) => setIgrejaForm((p) => ({ ...p, tel: e.target.value }))} /></div>
+              <div className="field"><label className="field-label" htmlFor={`${cid}-email`}>E-mail</label><input id={`${cid}-email`} name="email" className="input" type="email" autoComplete="email" inputMode="email" value={igrejaForm.email} onChange={(e) => setIgrejaForm((p) => ({ ...p, email: e.target.value }))} /></div>
+              <div className="field"><label className="field-label" htmlFor={`${cid}-tel`}>Telefone</label><input id={`${cid}-tel`} name="tel" className="input" type="tel" autoComplete="tel" inputMode="tel" value={igrejaForm.tel} onChange={(e) => setIgrejaForm((p) => ({ ...p, tel: e.target.value }))} /></div>
             </div>
             {igrejaMudou && (
               <div className="save-bar">
@@ -976,7 +977,7 @@ export function Config({
         <>
           <div className="cfg-card">
             <div className="cfg-card-t">Regras de escala</div>
-            <div className="cfg-card-s">Como a escala é gerada e os limites para não sobrecarregar ninguém. Valem para o botão "Gerar" e para o modo automático.</div>
+            <div className="cfg-card-s">Como a escala é gerada e os limites para não sobrecarregar ninguém. Valem para o botão “Gerar” e para o modo automático.</div>
             <div className="field" style={{ marginTop: 4 }}>
               <label className="field-label">Geração</label>
               <div className="opt-row" style={{ flexWrap: "wrap" }}>

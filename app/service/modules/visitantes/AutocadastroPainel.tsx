@@ -1,5 +1,6 @@
 "use client";
 
+import { useOrigem } from "../../lib/cliente";
 import { useEffect, useRef, useState } from "react";
 import QRCode from "react-qr-code";
 import { toPng } from "html-to-image";
@@ -24,9 +25,8 @@ export default function AutocadastroPainel({
   onRefresh: () => void;
 }) {
   const [cfg, , save] = useChurchSettingsField<AutocadastroCfg>("autocadastro", PADRAO, church, onRefresh);
-  const [origin, setOrigin] = useState("");
+  const origin = useOrigem();
   const qrRef = useRef<HTMLDivElement>(null);
-  useEffect(() => setOrigin(window.location.origin), []);
 
   const link = origin && church.slug ? `${origin}${caminhoAutocadastro(church.slug)}` : "";
   const curto = link.replace(/^https?:\/\//, "");

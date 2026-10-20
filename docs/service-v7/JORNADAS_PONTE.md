@@ -9,6 +9,21 @@ Só funcionalidade. Nada de texto, marca ou visual do Ponte entra no Service.
 
 ---
 
+## 0. Situação (2026-10-20)
+
+As 10 de maior peso (seção 3) estão no ar: Contribuir por Pix, autocadastro do
+visitante por QR, entrada por link único com aprovação, importar membros por
+planilha, Financeiro fase 1, escala do período, boletim da semana com aviso em
+rascunho/agendado/urgente, mural de oração, aniversariantes e Secretaria (livros
+e carteirinha). Migrações 0070 a 0076, 0078 e 0079 (escrita do Kids) aplicadas em
+produção. Testes locais: `scripts/check-local-{rls,financeiro,oracao,kids,entrada}.ts`
+e `scripts/check-importar-local.ts`.
+
+Próximas, na ordem: Financeiro fases 2 a 4, pregações e conteúdo, estudo da
+semana nos grupos, programação que se repete e evento com ciclo de vida, plano de
+aula do Kids e professores, atendimento pastoral, assembleia, patrimônio,
+relatório do mês, auditoria, assinatura.
+
 ## 1. Jornadas ausentes, por quem faz
 
 ### Tesoureiro (o maior buraco)

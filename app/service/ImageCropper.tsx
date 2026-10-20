@@ -42,6 +42,7 @@ export function ImageCropper({
   useEffect(() => {
     let cancelled = false;
     let objectUrl: string | null = null;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- a imagem nova começa a carregar fora do React (arquivo ou URL)
     setStatus("loading");
     setImgSize({ w: 0, h: 0 });
 
@@ -103,6 +104,7 @@ export function ImageCropper({
   });
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- o tamanho exibido vem da imagem carregada; o recorte se reenquadra nele
     setOffset((prev) => clamp(prev, displayW, displayH));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayW, displayH]);

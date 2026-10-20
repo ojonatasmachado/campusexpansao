@@ -125,7 +125,8 @@ export function LogoField({
 }) {
   const mode = identidade.logoMode ?? "imagem";
   const [textDraft, setTextDraft] = useState(identidade.logoText ?? "");
-  useEffect(() => setTextDraft(identidade.logoText ?? ""), [identidade.logoText]);
+  const [textoAnterior, setTextoAnterior] = useState(identidade.logoText);
+  if (textoAnterior !== identidade.logoText) { setTextoAnterior(identidade.logoText); setTextDraft(identidade.logoText ?? ""); }
 
   return (
     <div>

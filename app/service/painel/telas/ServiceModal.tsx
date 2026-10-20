@@ -4,7 +4,7 @@ import { formatarTelefone, telefoneParaGravar } from "../../lib/telefone";
 import { nomeComparavel, possivelDuplicado } from "../../lib/pessoas";
 import { avisar } from "../../lib/avisar";
 import { useRouter } from "next/navigation";
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useId, useRef, useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { DEFAULT_ICON } from "../../lib/icons";
 import { todayISO } from "../../lib/date";
@@ -63,6 +63,10 @@ export function ServiceModal({
 }) {
   const { comTermos: ct } = useTermos();
   const router = useRouter();
+  /* id de cada campo: o rótulo aponta para o controle (clicar no rótulo foca o campo) */
+  const fid = useId();
+  const COM_ID = new Set(["text", "area", "select", "date", "time", "toggle"]);
+  const idDo = (k: string) => `${fid}-${k}`;
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       modal.formFields
@@ -568,9 +572,11 @@ export function ServiceModal({
             <Fragment key={field.k}>
             {field.secao ? <h3 className="fs-sec-t">{field.secao}</h3> : null}
             <div className={`field${field.half ? " half" : ""}`}>
-              <label className={`field-label${field.req ? " req" : ""}`}>{field.label}</label>
+              {field.type === "select" && field.options.length <= 6
+                ? <div className={`field-label${field.req ? " req" : ""}`} id={`${idDo(field.k)}-r`}>{field.label}</div>
+                : <label className={`field-label${field.req ? " req" : ""}`} htmlFor={COM_ID.has(field.type) ? idDo(field.k) : undefined}>{field.label}</label>}
               {field.type === "select" && field.options.length <= 6 ? (
-                <div className="fs-chips" role="group" aria-label={field.label}>
+                <div className="fs-chips" role="group" aria-labelledby={`${idDo(field.k)}-r`}>
                   {field.options.map((o) => (
                     <button
                       type="button"
@@ -586,6 +592,7 @@ export function ServiceModal({
               ) : (
                 <FField
                   field={field}
+                  id={COM_ID.has(field.type) ? idDo(field.k) : undefined}
                   value={values[field.k] ?? ""}
                   onChange={(v) => setValues((cur) => ({ ...cur, [field.k]: v }))}
                   onPatch={(patch) => setValues((cur) => ({ ...cur, ...patch }))}
@@ -616,12 +623,12 @@ export function ServiceModal({
                 key={field.k}
                 style={field.half ? { flex: "1 1 calc(50% - 8px)", minWidth: 160 } : { flex: "1 1 100%" }}
               >
-                <label className="field-label">
+                <label className={`field-label${field.req ? " req" : ""}`} htmlFor={COM_ID.has(field.type) ? idDo(field.k) : undefined}>
                   {field.label}
-                  {field.req && <span style={{ color: "var(--olive)" }}> *</span>}
                 </label>
                 <FField
                   field={field}
+                  id={COM_ID.has(field.type) ? idDo(field.k) : undefined}
                   value={values[field.k] ?? ""}
                   onChange={(v) => setValues((cur) => ({ ...cur, [field.k]: v }))}
                   onPatch={(patch) => setValues((cur) => ({ ...cur, ...patch }))}

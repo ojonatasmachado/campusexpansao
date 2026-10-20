@@ -61,6 +61,7 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
     let vivo = true;
     if (demo) {
       const pior = new URLSearchParams(window.location.search).get("dados") === "pior";
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- demonstração: os registros vêm do endereço da página, lido no navegador
       setRegs(registrosDemo(church.organizationId, church.id, pior));
       return;
     }

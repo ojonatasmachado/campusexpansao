@@ -559,7 +559,9 @@ export function Quadros({
   const [boardId, setBoardId] = useState<string | null>(null);
   const [localCards, setLocalCards] = useState<CardView[]>(cards);
 
-  useEffect(() => { setLocalCards(cards); }, [cards]);
+  /* chegou lista nova do servidor: a local recomeça dela */
+  const [cardsAnteriores, setCardsAnteriores] = useState(cards);
+  if (cardsAnteriores !== cards) { setCardsAnteriores(cards); setLocalCards(cards); }
 
   const ministryById = new Map(ministries.map((m) => [m.id, m]));
   const peopleById = new Map(people.map((p) => [p.id, p]));

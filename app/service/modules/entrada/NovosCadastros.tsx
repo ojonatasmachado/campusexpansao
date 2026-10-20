@@ -49,6 +49,7 @@ export function NovosCadastros() {
 
   /* busca de ficha sem login, com uma pequena espera entre as teclas */
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- busca com espera entre teclas: sem termo, limpa o resultado
     if (!aberto || q.trim().length < 2) { setAchados([]); return; }
     const t = setTimeout(() => {
       db().rpc("entrada_buscar_fichas", { p_org: organizationId, p_q: q.trim() }).then(({ data }) => setAchados((data ?? []) as Ficha[]));

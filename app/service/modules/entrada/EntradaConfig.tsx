@@ -4,6 +4,7 @@
    únicos da igreja, com "Gerar outro" (o antigo para na hora), e a regra:
    a gestão aprova cada pedido (padrão) ou a pessoa entra direto como membro.
    Tudo passa pelas funções entrada_* do banco, que só respondem à gestão. */
+import { useOrigem } from "../../lib/cliente";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import QRCode from "react-qr-code";
@@ -24,12 +25,11 @@ export function EntradaConfig() {
   const [cfg, setCfg] = useState<{ code: string; rule: Regra } | null | undefined>(undefined);
   const [trocando, setTrocando] = useState(false);
   const [salvando, setSalvando] = useState(false);
-  const [origin, setOrigin] = useState("");
+  const origin = useOrigem();
   const qrRef = useRef<HTMLDivElement>(null);
   const db = useCallback(() => createServiceBrowserClient().schema("service"), []);
 
   useEffect(() => {
-    setOrigin(window.location.origin);
     if (!organizationId) return;
     db().rpc("entrada_config", { p_org: organizationId }).then(({ data, error }) => {
       setCfg(error || !data ? null : (data as { code: string; rule: Regra }));

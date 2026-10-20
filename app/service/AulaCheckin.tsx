@@ -226,6 +226,7 @@ export function AulaCheckinModal({
   useEffect(() => {
     if (qrToken) return;
     const token = generateToken();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- token gerado e gravado no banco uma vez, ao abrir
     setQrToken(token);
     createServiceBrowserClient().schema("service").from("course_lessons").update({ checkin_token: token }).eq("id", lesson.id).then(() => router.refresh());
     // eslint-disable-next-line react-hooks/exhaustive-deps

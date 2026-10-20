@@ -17,7 +17,9 @@ export function TabTarefas({ person, cards, boards, onAddCardComment }: { person
   const [savedComments, setSavedComments] = useState<Record<string, { author: string; body: string }[]>>({});
   const [localCards, setLocalCards] = useState<Card[]>(cards);
 
-  useEffect(() => { setLocalCards(cards); }, [cards]);
+  /* chegou lista nova do servidor: a local recomeça dela */
+  const [cardsAnteriores, setCardsAnteriores] = useState(cards);
+  if (cardsAnteriores !== cards) { setCardsAnteriores(cards); setLocalCards(cards); }
 
   const myCards = localCards.filter((c) => c.assignees.includes(person.id));
   const pending = myCards.filter((c) => c.column_id !== "done");
