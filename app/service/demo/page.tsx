@@ -177,6 +177,8 @@ const VISITORS = [
   { id: "v1", name: "Marina Oliveira", phone: "(11) 9 2109-8765", stage: "novo" as const, origin: "Amigo da comunidade", visited_on: "29/06/2026", responsible_id: "p1", due: "1º contato", due_status: "soon" as const, reply_status: null, member_id: null, created_at: new Date().toISOString() },
   { id: "v2", name: "Rafael Souza", phone: "(11) 9 1098-7654", stage: "contato" as const, origin: "Instagram", visited_on: "22/06/2026", responsible_id: "p3", due: "Convidar para GC", due_status: "ok" as const, reply_status: "respondeu" as const, member_id: null, created_at: new Date().toISOString() },
   { id: "v3", name: "Letícia Alves", phone: "(11) 9 0987-6543", stage: "integrando" as const, origin: "Culto aberto", visited_on: "15/06/2026", responsible_id: "p5", due: "Decisão?", due_status: "late" as const, reply_status: "sem_resposta" as const, member_id: null, created_at: new Date().toISOString() },
+  /* autocadastro pelo QR/link (0070): pendência no Início antes das 48h */
+  { id: "v4", name: "Bruno Carvalho", phone: "(11) 9 3344-5566", email: "bruno.carvalho@email.com", stage: "novo" as const, origin: "QR/link", heard_from: "amigo", invited_by: "Rafael Souza", interests: ["grupo", "batismo"], consent_at: new Date().toISOString(), visited_on: new Date().toISOString().slice(0, 10), responsible_id: "p1", due: "1º contato", due_status: "soon" as const, reply_status: null, member_id: null, created_at: new Date().toISOString() },
 ];
 
 const DECISIONS = [
@@ -338,9 +340,11 @@ export default async function ServiceDemoPage({ searchParams }: { searchParams: 
   const announcements = pior ? ANNOUNCEMENTS.map((a, i) => (i === 0 ? { ...a, title: PIOR.AVISO_LONGO } : a)) : ANNOUNCEMENTS;
   const fellowshipGroups = pior ? FELLOWSHIP_GROUPS.map((g, i) => (i === 0 ? { ...g, name: PIOR.GRUPO_LONGO } : g)) : FELLOWSHIP_GROUPS;
   /* contagens em exatamente 1 (plural) */
-  const visitors = pior ? VISITORS.slice(0, 1) : VISITORS;
+  const visitors = pior
+    ? [{ ...VISITORS[3], name: PIOR.IGREJA_LONGA.slice(0, 60), email: PIOR.EMAIL_LONGO, invited_by: PIOR.IGREJA_LONGA, interests: ["conhecer", "grupo", "oracao", "servir", "batismo", "criancas"] }]
+    : VISITORS;
   const decisions = pior ? DECISIONS.slice(0, 1) : DECISIONS;
-  const churches = CHURCHES.map((c, i) => (i === 0 ? { ...c, nome: pior ? PIOR.IGREJA_LONGA : c.nome, settings: { brandCfg: brand, contribuirCfg: pior ? PIOR.PIX : PIX_DEMO } } : c));
+  const churches = CHURCHES.map((c, i) => (i === 0 ? { ...c, nome: pior ? PIOR.IGREJA_LONGA : c.nome, slug: "cex-central", settings: { brandCfg: brand, contribuirCfg: pior ? PIOR.PIX : PIX_DEMO, autocadastro: { ativo: true } } } : c));
   const themeMode = resolveMode((await cookies()).get(THEME_COOKIE)?.value, brand);
 
   return (
