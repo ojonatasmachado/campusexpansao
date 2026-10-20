@@ -51,7 +51,7 @@ criados fora do registro não entram.
    14, 16, 20, 32. Mínimo de 13px no app e 12px no painel, sem meio pixel. Mono só para
    números que alinham e para o sobretítulo do painel; caixa alta só nesse sobretítulo.
    Alvos de 44px no app e 32px no painel (piso de 24px). A cor de destaque da igreja vai
-   em uma ação por tela e na aba ativa. Todo tamanho deriva da escala do texto da pessoa.
+   em uma ação por tela e na aba ativa (exceção: o estado ligado de um interruptor também usa a cor da igreja). Todo tamanho deriva da escala do texto da pessoa.
 9. **Notificação = ação.** Cada aviso corresponde a um cartão. Categorias que a pessoa
    desliga: Escala, Mural, Mensagens, Caminhada. Silêncio das 22h às 7h. Mural chega em
    resumo. Permissão de notificação pedida depois da primeira escala confirmada.
