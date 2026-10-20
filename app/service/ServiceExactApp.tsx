@@ -63,6 +63,7 @@ import { daMinhaLista, listaDeCuidado, type Ausente, type MarcaCuidado } from ".
 import { ListaDeCuidado, type CriancaAusente } from "./modules/cuidado/Cuidado";
 import { comData, escopoDe } from "./modules/aniversarios/aniversarios";
 import { Aniversariantes, AniversariantesDaSemana } from "./modules/aniversarios/Aniversariantes";
+import { OracaoPainel } from "./modules/oracao/OracaoPainel";
 import { Assistente } from "./modules/configuracao/Assistente";
 import { medir } from "./lib/medicao";
 import { MetricasInternas } from "./modules/relatorios/MetricasInternas";
@@ -811,7 +812,7 @@ const CEX_ICON_FOR: Record<string, string> = {
   painel: "painel", membros: "membros", pessoas: "pessoa", times: "times", visitantes: "visitante", criancas: "kids",
   decisoes: "decisoes", batismos: "batismos", cursos: "cursos",
   escalas: "escalas", reunioes: "reunioes", ensaios: "ensaios", quadros: "quadros", espacos: "espacos",
-  cultos: "cultos", comunicacao: "comunicacao", conversas: "conversas",
+  cultos: "cultos", comunicacao: "comunicacao", conversas: "conversas", oracao: "oracao",
   relatorios: "relatorios", config: "config", identidade: "identidade", historia: "historia", marca: "pincel",
 };
 
@@ -830,6 +831,7 @@ const ACESSO_ROTAS: { id: string; label: string }[] = [
   { id: "relatorios", label: "Relatórios" },
   { id: "marca", label: "Personalização (cor e logo)" },
   { id: "pesquisas", label: "Pesquisas" },
+  { id: "oracao", label: "Pedidos de oração" },
 ];
 
 /* papel e permissão de cada tela : regra no registro de módulos (modules/registry.ts) */
@@ -855,6 +857,7 @@ const ROUTES = {
   cultos: "SERVICE · AGENDA",
   comunicacao: "SERVICE · COMUNICAÇÃO",
   conversas: "SERVICE · CONVERSAS",
+  oracao: "SERVICE · ORAÇÃO",
   relatorios: "SERVICE · RELATÓRIOS",
   config: "SERVICE · CONFIGURAÇÕES",
   identidade: "SERVICE · IDENTIDADE",
@@ -1881,6 +1884,7 @@ export default function ServiceExactApp({
         {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} scopeMinistryIds={scopeMinistryIds} setModal={setModal} /> : null}
         {route === "cultos" ? <Cultos events={events} ministries={ministries} church={firstChurch} kidsClasses={kidsClasses} kidsSessions={kidsSessions} kidsChildren={kidsChildren} rooms={rooms} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
         {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} announcementResponses={announcementResponses} wallPosts={wallPosts} ministries={ministries} people={people} members={members} fellowshipGroups={fellowshipGroups} childGuardians={childGuardians} church={firstChurch} setModal={setModal} /> : null}
+        {route === "oracao" ? <OracaoPainel organizationId={firstChurch?.organizationId} churches={churches} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} currentPersonId={perspectivePersonId} scopeMinistryIds={scopeMinistryIds} pendingChatMemberId={pendingChatMemberId} onConsumePendingChatMember={() => setPendingChatMemberId(null)} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} confirmationRate={confirmationRate} setRoute={setRoute} church={firstChurch} /> : null}
         {route === "relatorios" && currentRole === "master" && firstChurch?.organizationId ? <div className="content wide" style={{ paddingTop: 0 }}><MetricasInternas organizationId={firstChurch.organizationId} /></div> : null}
@@ -5711,6 +5715,7 @@ const ACOES_V2 = [
   { id: "reunioes", nome: "Reuniões", grupo: "Ministério" },
   { id: "cultos", nome: "{Cultos}, eventos e espaços", grupo: "Agenda" },
   { id: "comunica", nome: "Mural e pesquisas", grupo: "Comunicação" },
+  { id: "oracao", nome: "Pedidos de oração", grupo: "Comunicação" },
   { id: "conversas", nome: "Conversas", grupo: "Comunicação" },
   { id: "batismos", nome: "Batismos", grupo: "Formação" },
   { id: "cursos", nome: "Cursos e trilhas", grupo: "Formação" },

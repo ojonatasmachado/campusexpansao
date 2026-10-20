@@ -18,6 +18,7 @@ import { TextSizeSheet, TextSizeSlider } from "./TextSizeSlider";
 import { useTermos } from "./lib/vocabulario-context";
 import { requirementLabel, type RequirementKind } from "./lib/requirements";
 import { candidatosParaVaga, papelDoDestinatario, useDestinatario, type Destinatario } from "./lib/destinatario";
+import { MuralOracao, SheetPedidoOracao } from "./modules/oracao/Oracao";
 import { checkinAberto, horaQueAbre, sessaoDoCulto, statusDaCrianca, useKidsCheckin } from "./lib/kids-checkin";
 import { INSTRUCAO_QR, aulasDoCurso, proximaAula, textoDaAula, type ProximaAula } from "./lib/aulas";
 import { modulosLigados, telasDoMembro, type EstadoModulos } from "./modules/registry";
@@ -2787,43 +2788,18 @@ function EventoRow({ ev, serve }: { ev: Ev; serve?: string | null }) {
   );
 }
 
-// ── pedido de oração: vai como conversa para quem cuida da intercessão ──────
-/* destinatário em cadeia (v7 2.5): intercessão, depois a gestão. Quem abre
-   esta folha já sabe que há alguém para receber (a entrada some sem ninguém) */
-function SheetOracao({ member, dest, onStartChat }: {
-  member: M | null; dest: Destinatario;
+// ── pedido de oração (módulo oracao) ─────────────────────────────────────────
+/* só a intercessão (vai como conversa, destinatário em cadeia, v7 2.5) ou o
+   mural de oração da igreja. A folha mora no módulo; aqui só a navegação. */
+function SheetOracao({ member, dest, onStartChat, organizationId, muralOn }: {
+  member: M; dest: Destinatario | null; organizationId?: string; muralOn: boolean;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
 }) {
   const ui = useContext(MemberUiContext);
-  const [txt, setTxt] = useState("");
-  const [enviando, setEnviando] = useState(false);
-  const [chatId, setChatId] = useState<string | null>(null);
-  const nome = dest.name.split(" ")[0];
-  if (chatId) {
-    return (
-      <div className="m6-donesh">
-        <span className="m6-dot feito big"><Icon name="ok" size={28} /></span>
-        <h2 className="m6-sh">Pedido enviado</h2>
-        <p className="m6-txt">{nome} recebeu e vai orar por você. A conversa fica em Mensagens.</p>
-        <div className="m6-btns"><button className="m6-btn pri" type="button" onClick={() => { ui.sheet(null); ui.go("mensagens", null, { chatId }); }}>Ver em Mensagens</button></div>
-      </div>
-    );
-  }
   return (
-    <div>
-      <h2 className="m6-sh">Pedido de oração</h2>
-      <div className="m6-meta">Vai para {papelDoDestinatario(dest)}. Só essa pessoa lê.</div>
-      <textarea className="m6-ta" value={txt} onChange={(e) => setTxt(e.target.value)} placeholder="Pelo que podemos orar?" aria-label="Pedido de oração" />
-      <div className="m6-btns">
-        <button className="m6-btn pri" type="button" disabled={!txt.trim() || !member || !onStartChat || enviando} onClick={async () => {
-          if (!member || !onStartChat) return;
-          setEnviando(true);
-          const id = await onStartChat(member.id, dest.member_id, `Pedido de oração: ${txt.trim()}`);
-          setEnviando(false);
-          if (id) setChatId(id); else ui.toast("Não foi possível enviar agora. Tente de novo.");
-        }}>{enviando ? "Enviando..." : "Enviar pedido"}</button>
-      </div>
-    </div>
+    <SheetPedidoOracao organizationId={organizationId} memberId={member.id} dest={dest} muralOn={muralOn} onStartChat={onStartChat}
+      onVerConversa={(chatId) => { ui.sheet(null); ui.go("mensagens", null, { chatId }); }}
+      onVerMural={() => { ui.sheet(null); ui.go("mensagens", "oracao"); }} />
   );
 }
 
@@ -2998,6 +2974,8 @@ function InicioV6({ person, member, ministries, members, people = [], events, ro
   const incompleto = faltaDados.length > 0 && !adiado("dados");
   const pedirAtalho = acessos === 2 && !instalado && !adiado("atalho");
   const destOracao = useDestinatario("oracao");
+  /* mural de oração ligado na igreja (módulo oracao) */
+  const oracaoOn = ligados?.has("oracao") ?? false;
 
   /* entradas dos módulos; a casca ordena */
   const entradas: EntradaFila<ItemInicio>[] = [];
@@ -3158,13 +3136,13 @@ function InicioV6({ person, member, ministries, members, people = [], events, ro
         <div className="m6-more"><button type="button" className="m6-link" onClick={() => ui.go("agenda", null, { agSeg: "igreja" })}>Ver a agenda completa →</button></div>
       </div>
 
-      {destOracao && member && onStartChat && (
+      {member && ((destOracao && onStartChat) || oracaoOn) && (
         <div className="m6-sec">
           <div className="m6-card">
             <div className="m6-ct">Podemos orar por você?</div>
-            <div className="m6-meta">Seu pedido vai para {destOracao.via === "intercessao" ? "quem cuida da intercessão" : "a liderança da igreja"}, com cuidado.</div>
+            <div className="m6-meta">{oracaoOn ? "Você escolhe quem vê: só a intercessão ou o mural de oração da igreja." : `Seu pedido vai para ${destOracao?.via === "intercessao" ? "quem cuida da intercessão" : "a liderança da igreja"}, com cuidado.`}</div>
             <div className="m6-btns">
-              <button className="m6-btn sec" type="button" onClick={() => ui.sheet(<SheetOracao member={member} dest={destOracao} onStartChat={onStartChat} />)}>
+              <button className="m6-btn sec" type="button" onClick={() => ui.sheet(<SheetOracao member={member} dest={destOracao ?? null} onStartChat={onStartChat} organizationId={organizationId} muralOn={oracaoOn} />)}>
                 <Icon name="coracao" size={20} />Enviar pedido de oração
               </button>
             </div>
@@ -3872,6 +3850,10 @@ function MobileMembro({
   const muralOn = subAllowed("mural");
   /* Contribuir só com a chave cadastrada e o módulo ligado (lei 6) */
   const pix = subAllowed("contribuir") ? contribuirPronto(contribuirCfg) : null;
+  const oracaoOn = subAllowed("oracao") && !!member;
+  const pedirOracao = member && ((destOracao && onStartChat) || oracaoOn)
+    ? () => setSheetEl(<SheetOracao member={member} dest={destOracao ?? null} onStartChat={onStartChat} organizationId={organizationId} muralOn={oracaoOn} />)
+    : null;
 
   const lidos = useMemo(() => new Set(readAnnouncementIds), [readAnnouncementIds]);
   const [lidosAgora, setLidosAgora] = useState<Set<string>>(() => new Set());
@@ -4075,20 +4057,22 @@ function MobileMembro({
             </div>
           )}
 
+          {tab === "mensagens" && sub === "oracao" && oracaoOn && <MuralOracao organizationId={organizationId} onPedir={pedirOracao} sheet={setSheetEl} toast={toast} />}
           {tab === "mensagens" && sub === "mural" && <MuralV6 announcements={announcements} unreadIds={unreadIds} person={person} onReadAnnouncement={marcarLido} responses={announcementResponses} onRespond={onRespondAnnouncement} />}
           {tab === "mensagens" && (!sub || sub === "chat") && (
             <>
-              {!sub && muralOn && (
+              {!sub && (muralOn || oracaoOn) && (
                 <div className="m6-sec0">
                   <div className="m6-list">
-                    <button type="button" className="m6-row" onClick={() => go("mensagens", "mural")}>
+                    {muralOn && <button type="button" className="m6-row" onClick={() => go("mensagens", "mural")}>
                       <span className="m6-ic accent"><Icon name="bandeira" size={22} /></span>
                       <span className="m6-rb">
                         <span className="m6-rt">Mural da igreja</span>
                         <span className={`m6-rs m6-1l${unreadIds.size ? " m6-strong" : ""}`}>{announcements[0]?.title ?? "As publicações da igreja ficam aqui"}</span>
                       </span>
                       {unreadIds.size > 0 && <span className="m6-count">{unreadIds.size}</span>}
-                    </button>
+                    </button>}
+                    {oracaoOn && <M6Row ic="oracao" t="Mural de oração" s="Peça oração e ore pelos pedidos da igreja" onClick={() => go("mensagens", "oracao")} cls="or-row" />}
                   </div>
                 </div>
               )}
@@ -4105,8 +4089,8 @@ function MobileMembro({
                       <h2 className="m6-sh">Nova mensagem</h2>
                       <div className="m6-list flat">
                         <M6Row ic="conversas" t="Falar com um líder" s="Pastor ou líder do seu time" onClick={() => { setSheetEl(null); go("mensagens", null, { newChat: true }); }} />
-                        {destOracao && member && onStartChat && (
-                          <M6Row ic="coracao" t="Pedido de oração" s={destOracao.via === "intercessao" ? "Vai para quem cuida da intercessão" : "Vai para a liderança da igreja"} onClick={() => setSheetEl(<SheetOracao member={member} dest={destOracao} onStartChat={onStartChat} />)} />
+                        {pedirOracao && (
+                          <M6Row ic="coracao" t="Pedido de oração" s={oracaoOn ? "Para a intercessão ou o mural de oração" : destOracao?.via === "intercessao" ? "Vai para quem cuida da intercessão" : "Vai para a liderança da igreja"} onClick={pedirOracao} />
                         )}
                       </div>
                     </div>,
