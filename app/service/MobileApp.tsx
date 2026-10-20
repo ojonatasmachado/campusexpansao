@@ -182,6 +182,8 @@ type Announcement = {
   image_url?: string | null;
   image_alt?: string | null;
   video_url?: string | null;
+  /* urgente (0075): marca no Mural e prioridade maior do cartão */
+  urgent?: boolean | null;
 };
 type Chat = { id: string; kind: string; ministry_id: string | null; name: string | null };
 type ChatMember = { chat_id: string; member_id: string; last_read_at?: string | null };
@@ -2969,7 +2971,7 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
     .filter((r) => (evById.get(r.event_id)?.eventDate ?? "") >= hoje);
   /* tarefas (v7 4.6): cada tarefa aberta é um cartão enquanto estiver aberta */
   const minhasTarefas = cards.filter((c) => c.assignees.includes(person.id) && c.column_id !== "done");
-  const novo = announcements.find((a) => unreadIds.has(a.id));
+  const novo = announcements.find((a) => a.urgent && unreadIds.has(a.id)) ?? announcements.find((a) => unreadIds.has(a.id));
   const meusFilhos = childGuardians.filter((g) => g.guardian_person_id === person.id).map((g) => kidsChildren.find((c) => c.id === g.child_id)).filter(Boolean) as Child[];
   const cultoHoje = events.find((e) => e.eventDate === hoje);
   const timesAbertos = ministries.filter((m) => !m.people.some((mp) => mp.personId === person.id));
@@ -3001,7 +3003,7 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
     if (ev) entradas.push({ id: `escala-${slot.id}`, modulo: "escalas", tipo: "acao", prioridade: 90, prazo: `${ev.eventDate} ${ev.time ?? ""}`, conteudo: { k: "escala", slot, ev } });
   }
   for (const t of minhasTarefas) entradas.push({ id: `tarefa-${t.id}`, modulo: "quadros", tipo: "acao", prioridade: t.due ? 70 : 45, prazo: t.due, conteudo: { k: "tarefa", card: t } });
-  if (novo) entradas.push({ id: `mural-${novo.id}`, modulo: "mural", tipo: "aviso", prioridade: 50, conteudo: { k: "mural", aviso: novo } });
+  if (novo) entradas.push({ id: `mural-${novo.id}`, modulo: "mural", tipo: "aviso", prioridade: novo.urgent ? 85 : 50, conteudo: { k: "mural", aviso: novo } });
   if (nextStep) entradas.push({ id: `passo-${nextStep.id}`, modulo: "inicio", tipo: "passo", prioridade: 40, conteudo: { k: "passo", step: nextStep } });
   /* inscrição aberta numa etapa que a pessoa ainda não fez (v7 4.7); se já é o próximo passo, o mesmo cartão serve */
   for (const st of inscricoes) {
@@ -3041,6 +3043,7 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
         return (
           <div key={e.id} className="m6-card">
             <div className="m6-kick"><Icon name="bandeira" size={16} />Novo no Mural</div>
+            {c.aviso.urgent && <M6St k="warn" ic="alerta">Urgente</M6St>}
             <div className="m6-ct">{c.aviso.title}</div>
             {c.aviso.created_at && <div className="m6-meta">{quandoPublicado(c.aviso.created_at)}</div>}
             <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("mensagens", "mural")}>Ler a publicação</button></div>
@@ -3604,6 +3607,7 @@ function MuralV6({ announcements, unreadIds, person, onReadAnnouncement, respons
       {announcements.map((a) => (
         <article className="m6-card" key={a.id}>
           {novas.has(a.id) && <span className="m6-new">Nova</span>}
+          {a.urgent && <M6St k="warn" ic="alerta">Urgente</M6St>}
           <div className="m6-ct">{a.title}</div>
           {a.body && <p className="m6-txt">{a.body}</p>}
           <div className="m6-meta">{joinDot(quandoPublicado(a.created_at), paraPublico(a.audience))}</div>

@@ -48,6 +48,7 @@ import { ESCALA_DEFAULT, type EscalaPreset, type EscalaSettings } from "./module
 import { Membros, Pessoas } from "./modules/pessoas/Pessoas";
 import { JRN_STEPS } from "./painel/caminhada";
 import { Comunicacao } from "./modules/mural/Mural";
+import { noAr } from "./modules/mural/estado";
 import { ACESSO_MSG_DEFAULT, type AcessoMsgCfg } from "./modules/pessoas/acesso-msg";
 import { friendlyWriteError } from "./painel/erros";
 import { porData, tipoDoFato } from "./lib/historico";
@@ -282,6 +283,12 @@ export type AnnouncementView = {
   image_url?: string | null;
   image_alt?: string | null;
   video_url?: string | null;
+  /* rascunho, agendamento e urgência (0075) */
+  status?: "publicado" | "rascunho" | "agendado" | null;
+  publish_at?: string | null;
+  publish_push?: boolean | null;
+  urgent?: boolean | null;
+  remind_hours?: number | null;
 };
 export type AnnouncementResponseView = { announcement_id: string; person_id: string; response: "vou" | "nao" };
 export type EventRsvpView = { event_id: string; person_id: string; kind: "presenca" | "inscricao" };
@@ -1632,7 +1639,7 @@ export default function ServiceExactApp({
         courseLessons={courseLessons}
         visitors={visitors}
         baptismClasses={baptismClasses}
-        announcements={announcements}
+        announcements={announcements.filter(noAr)}
         chats={chats}
         chatMembers={chatMembers}
         messages={messages}
@@ -1859,7 +1866,7 @@ export default function ServiceExactApp({
         {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} church={firstChurch} setModal={setModal} /> : null}
         {route === "quadros" ? <Quadros boards={boards} cards={cards} ministries={ministries} people={people} church={firstChurch} currentRole={currentRole} currentPersonId={currentPersonId} scopeMinistryIds={scopeMinistryIds} setModal={setModal} /> : null}
         {route === "cultos" ? <Cultos events={events} ministries={ministries} church={firstChurch} kidsClasses={kidsClasses} kidsSessions={kidsSessions} kidsChildren={kidsChildren} rooms={rooms} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
-        {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} announcementResponses={announcementResponses} wallPosts={wallPosts} ministries={ministries} people={people} members={members} fellowshipGroups={fellowshipGroups} childGuardians={childGuardians} church={firstChurch} setModal={setModal} /> : null}
+        {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} announcementResponses={announcementResponses} wallPosts={wallPosts} ministries={ministries} people={people} members={members} fellowshipGroups={fellowshipGroups} childGuardians={childGuardians} church={firstChurch} events={events} roster={roster} setModal={setModal} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} currentPersonId={perspectivePersonId} scopeMinistryIds={scopeMinistryIds} pendingChatMemberId={pendingChatMemberId} onConsumePendingChatMember={() => setPendingChatMemberId(null)} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} confirmationRate={confirmationRate} setRoute={setRoute} church={firstChurch} /> : null}
         {route === "relatorios" && currentRole === "master" && firstChurch?.organizationId ? <div className="content wide" style={{ paddingTop: 0 }}><MetricasInternas organizationId={firstChurch.organizationId} /></div> : null}
@@ -2343,7 +2350,7 @@ function Painel({
   const liderDeTime = !!scopeMinistryIds;
   if (scopeMinistryIds) gaps = gaps.filter((g) => scopeMinistryIds.includes(g.ministry.id));
   const topPeople = [...people].sort((a, b) => (b.engagement ?? 0) - (a.engagement ?? 0)).slice(0, 5);
-  const recentAnnouncements = porPublicacao(announcements).slice(0, 3);
+  const recentAnnouncements = porPublicacao(announcements.filter(noAr)).slice(0, 3);
   const [sobreAberto, setSobreAberto] = useState(false);
   /* v7 3.6: "Sobre estes números" explica, num lugar só, cada número e painel que está na tela */
   const sobre: Array<[string, string]> = [

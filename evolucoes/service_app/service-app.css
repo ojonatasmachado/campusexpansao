@@ -3485,3 +3485,25 @@ body{transition:background-color .2s ease,color .2s ease}
   .fs-calc{min-height:44px}
 }
 @media (max-width:860px),(pointer:coarse){ .fs-check{min-height:44px;align-items:center} .fs-check input{margin-top:0} }
+
+/* v7 · boletim e mural completo (0075): rascunho, agendamento, urgência e Boletim da semana */
+@media (max-width:640px){
+  .fs-foot-2{display:grid;grid-template-columns:auto 1fr;gap:8px}
+  .fs-foot-2 .btn{width:auto}
+}
+.mural-pend{margin-bottom:22px}
+.mural-pend .mural-list{margin-bottom:22px}
+.mural-item-pend{border-style:dashed}
+.mural-txt-curto{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mural-conf{align-self:center;font-size:var(--fs-pn-13);color:var(--light)}
+.mural-pub-t{margin-bottom:0}
+.mural-agenda-campos{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:12px}
+.mural-agenda-campos .field{margin:0}
+.bol-txt{min-height:280px;font-family:var(--sans);font-size:var(--fs-pn-14)}
+@media (max-width:860px),(pointer:coarse){ .bol-txt{font-size:16px} }
+.bol-vazio{margin:0 0 12px;padding:12px 14px;border:0.5px solid var(--border-2);border-radius:8px;font-size:var(--fs-pn-14);line-height:1.5;color:var(--light)}
+.bol-refazer{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px;font-size:var(--fs-pn-13);color:var(--muted)}
+.bol-img-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.bol-img-acts .btn{display:inline-flex;align-items:center;gap:6px}
+.bol-img{display:block;width:100%;max-width:240px;aspect-ratio:9/16;margin-top:12px;border-radius:8px;border:0.5px solid var(--border-2)}
+.m6-card > .m6-st + .m6-ct{margin-top:8px}
