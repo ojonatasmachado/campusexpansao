@@ -62,3 +62,21 @@ export function imageExtension(file: File): string {
   if (fromName && fromName.length <= 5) return fromName.toLowerCase();
   return file.type.split("/").pop() || "png";
 }
+
+/* Comprovante (financeiro): imagem ou PDF num bucket privado. Imagem passa
+   pela mesma compressão das fotos. Devolve o caminho (não há URL pública);
+   para abrir, use createSignedUrl no mesmo bucket. */
+export async function uploadServicePrivateFile(
+  supabase: ReturnType<typeof createServiceBrowserClient>,
+  bucket: string,
+  file: File,
+  path: string,
+): Promise<string> {
+  const ok = file.type.startsWith("image/") || file.type === "application/pdf";
+  if (!ok) throw new Error("Envie uma foto ou um PDF.");
+  if (file.size > MAX_INPUT_BYTES) throw new Error("O arquivo precisa ter até 15MB.");
+  const final = await compressImage(file);
+  const { error } = await supabase.storage.from(bucket).upload(path, final, { upsert: true, contentType: final.type });
+  if (error) throw error;
+  return path;
+}

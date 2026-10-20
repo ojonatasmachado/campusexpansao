@@ -44,6 +44,8 @@ import { baixarCsv } from "./lib/csv";
 import { Av, Chip, EmptyState, PageHead, RouteGroupContext } from "./painel/ui";
 import { FormScreen, FormSection, type FormScreenHandle } from "./painel/form/FormScreen";
 import { Escalas, cargaDaSemana } from "./modules/escalas/Escalas";
+import Financeiro from "./modules/financeiro/Financeiro";
+import { ACESSO_FIN_LANCAR, ACESSO_FIN_VER } from "./modules/financeiro/manifest";
 import { ESCALA_DEFAULT, type EscalaPreset, type EscalaSettings } from "./modules/escalas/regras";
 import { Membros, Pessoas } from "./modules/pessoas/Pessoas";
 import { JRN_STEPS } from "./painel/caminhada";
@@ -851,6 +853,7 @@ const ROUTES = {
   pesquisas: "SERVICE · PESQUISAS",
   pagina: "SERVICE · PÁGINA DA IGREJA",
   configurar: "SERVICE · CONFIGURAR A IGREJA",
+  financeiro: "SERVICE · FINANCEIRO",
 };
 
 /* menu do painel (S30, S31): o título de cada tela é o nome do grupo. Gerado
@@ -1854,6 +1857,7 @@ export default function ServiceExactApp({
           />
         ) : null}
         {route === "escalas" ? <Escalas key={escalaFoco?.n ?? 0} foco={escalaFoco} gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} church={firstChurch} scopeMinistryIds={scopeMinistryIds} setDrawer={setDrawer} setModal={setModal} setRoute={setRoute} setCheckinEventId={setCheckinEventId} onNotifyLeaderRecusa={notificarLiderRecusa} /> : null}
+        {route === "financeiro" ? <Financeiro church={firstChurch} currentRole={currentRole} /> : null}
         {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} rooms={rooms} reservations={reservations} church={firstChurch} setDrawer={setDrawer} /> : null}
         {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} rooms={rooms} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "espacos" ? <Espacos rooms={rooms} reservations={reservations} church={firstChurch} setModal={setModal} /> : null}
@@ -5958,6 +5962,25 @@ function AcessosCard({
                 );
               })}
             </div>
+            {/* financeiro (0073): só dono, master e pastor liberam; o banco confere */}
+            {(currentRole === "master" || currentRole === "pastor") && (
+              <div className="fin-acesso">
+                <div className="cfg-row-t">Financeiro</div>
+                <div className="cfg-row-s">Dízimo de cada pessoa é dado sensível. Libere só para quem cuida do caixa.</div>
+                <div className="acesso-toggles">
+                  {([[ACESSO_FIN_VER, "Ver o financeiro"], [ACESSO_FIN_LANCAR, "Ver e lançar"]] as const).map(([code, label]) => {
+                    const on = pessoaGrants.includes(code);
+                    return (
+                      <button key={code} type="button" className={`acesso-tog${on ? " on" : ""}`} aria-pressed={on} onClick={() => toggleGrant(code)}>
+                        <span className="acesso-tog-ic"><Icon name="carteira" size={15} /></span>
+                        <span className="acesso-tog-l">{label}</span>
+                        <span className={`acesso-tog-sw${on ? " on" : ""}`} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div className="cfg-row" style={{ marginTop: 18 }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Pode liberar acessos a outras pessoas</div>

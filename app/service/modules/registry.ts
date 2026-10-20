@@ -33,11 +33,13 @@ import biblia from "./biblia/manifest";
 import perfil from "./perfil/manifest";
 import cuidado from "./cuidado/manifest";
 import configuracao from "./configuracao/manifest";
+import financeiro from "./financeiro/manifest";
 
 export const MODULOS: readonly ModuleManifest[] = [
   inicio, pessoas, visitantes, kids, grupos, decisoes, times, escalas, ensaios, reunioes,
   cultos, espacos, mural, conversas, pesquisas, pagina, cursos, batismos, relatorios, quadros,
   identidade, historia, igreja, acesso, biblia, perfil, cuidado, configuracao,
+  financeiro,
 ];
 
 const IDS = new Set(MODULOS.map((m) => m.id));
@@ -106,6 +108,11 @@ export const CODIGO_PERMISSAO: Record<string, string> = Object.fromEntries(
   ]),
 );
 
+/** Telas restritas a papéis (ItemMenu.papeis) e as liberações que também as abrem. */
+const ROTA_RESTRITA: Record<string, { papeis: string[]; acessos: string[] }> = Object.fromEntries(
+  MODULOS.flatMap((m) => (m.painel?.menu ?? []).filter((i) => i.papeis).map((i) => [i.rota, { papeis: i.papeis as string[], acessos: i.acessos ?? [] }])),
+);
+
 /** Módulo dono de uma tela do painel. */
 export function moduloDaRota(rota: string): string | undefined {
   return MODULOS.find((m) => (m.painel?.menu ?? []).some((i) => i.rota === rota) || (m.painel?.rotas ?? []).some((r) => r.rota === rota))?.id;
@@ -132,6 +139,9 @@ export function podeVerRota(
   serveEmTime = false,
 ): boolean {
   if (papel === "master") return true;
+  /* tela restrita (ex. financeiro): só os papéis dela ou quem recebeu a liberação; matriz e voluntário não valem */
+  const restrita = ROTA_RESTRITA[rota];
+  if (restrita) return restrita.papeis.includes(papel) || restrita.acessos.some((a) => extras.includes(a));
   if (extras.includes(rota)) return true;
   if (rota === "config" && (extras.includes("marca") || extras.includes("pesquisas"))) return true;
   if (rota === "membros" && extras.includes("pessoas")) return true;
