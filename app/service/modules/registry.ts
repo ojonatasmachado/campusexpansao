@@ -33,11 +33,12 @@ import biblia from "./biblia/manifest";
 import perfil from "./perfil/manifest";
 import cuidado from "./cuidado/manifest";
 import configuracao from "./configuracao/manifest";
+import secretaria from "./secretaria/manifest";
 
 export const MODULOS: readonly ModuleManifest[] = [
   inicio, pessoas, visitantes, kids, grupos, decisoes, times, escalas, ensaios, reunioes,
   cultos, espacos, mural, conversas, pesquisas, pagina, cursos, batismos, relatorios, quadros,
-  identidade, historia, igreja, acesso, biblia, perfil, cuidado, configuracao,
+  identidade, historia, igreja, acesso, biblia, perfil, cuidado, configuracao, secretaria,
 ];
 
 const IDS = new Set(MODULOS.map((m) => m.id));
