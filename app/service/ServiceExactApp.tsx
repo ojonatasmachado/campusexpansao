@@ -37,6 +37,9 @@ import { ServiceAccessProvider, useServiceAccess, type PersonGrant } from "./Acc
 import RequisitosEditor from "./RequisitosEditor";
 import CepInput from "./CepInput";
 import ChurchLockup from "./ChurchLockup";
+import AutocadastroPainel from "./modules/visitantes/AutocadastroPainel";
+import AutocadastroDados from "./modules/visitantes/AutocadastroDados";
+import { ORIGEM_AUTOCADASTRO } from "./modules/visitantes/autocadastro";
 import TopUserMenu from "./TopUserMenu";
 import { requirementsFor, requirementLabel, saveRequirements, type Requirement, type RequirementRow } from "./lib/requirements";
 import { HelpDot, Coachmark, HelpFab, TOUR_DESKTOP, SetupChecklist, type SetupCounts } from "./HelpSystem";
@@ -250,6 +253,12 @@ type VisitorView = {
   due_status: "soon" | "ok" | "late" | null;
   reply_status: "respondeu" | "sem_resposta" | null;
   origin: string | null;
+  /* autocadastro por QR/link (0070) */
+  email?: string | null;
+  heard_from?: string | null;
+  invited_by?: string | null;
+  interests?: string[] | null;
+  consent_at?: string | null;
   member_id: string | null;
   created_at: string;
 };
@@ -1798,6 +1807,7 @@ export default function ServiceExactApp({
             presenceRate={presenceRate}
             userName={eu?.name}
             visitantesSemContato={navBadge.visitantes ?? 0}
+            visitantesPeloLink={visitors.filter((v) => v.origin === ORIGEM_AUTOCADASTRO && v.stage === "novo" && !v.reply_status && !visitorNotes.some((n) => n.visitor_id === v.id) && !semContato48h(v, visitorNotes)).length}
             semanasComPresenca={new Set(eventAttendance.map((a) => { const d = parseISODate(events.find((e) => e.id === a.event_id)?.eventDate); return d ? `${d.getFullYear()}-${Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 1).getTime()) / 604800000)}` : ""; }).filter(Boolean)).size}
             // eslint-disable-next-line react-hooks/purity -- "novos este mês" precisa do relógio real
             novosNoMes={people.filter((p) => { const m = members.find((x) => x.volunteerId === p.id); return m ? ehNovo(m) : ehNovo({ createdAt: p.createdAt }); }).length}
@@ -2258,6 +2268,7 @@ function Painel({
   presenceRate,
   userName,
   visitantesSemContato,
+  visitantesPeloLink,
   semanasComPresenca,
   novosNoMes,
   escaladosSemana,
@@ -2299,6 +2310,8 @@ function Painel({
   presenceRate: number | null;
   userName?: string;
   visitantesSemContato: number;
+  /* chegaram pelo QR/link e ainda ninguém falou com eles (antes das 48h) */
+  visitantesPeloLink: number;
   semanasComPresenca: number;
   novosNoMes: number;
   escaladosSemana: number;
@@ -2387,7 +2400,7 @@ function Painel({
         />
       )}
       <h2 className="painel-sec-t">{liderDeTime ? "Para resolver no seu time" : "Para resolver"}</h2>
-      {(gaps.length > 0 || (!liderDeTime && visitantesSemContato > 0) || (!liderDeTime && journeyRequests.length > 0)) && (
+      {(gaps.length > 0 || (!liderDeTime && (visitantesSemContato > 0 || visitantesPeloLink > 0)) || (!liderDeTime && journeyRequests.length > 0)) && (
         <div className="agora-list">
           {gaps.length > 0 && (
             <button type="button" className="agora-row" onClick={() => setRoute("escalas")}>
@@ -2400,6 +2413,13 @@ function Painel({
             <button type="button" className="agora-row" onClick={() => setRoute("visitantes")}>
               <span className="agora-ic"><Icon name="visitante" size={17} /></span>
               <span className="agora-main"><span className="agora-t">{visitantesSemContato === 1 ? "1 visitante sem contato" : `${visitantesSemContato} visitantes sem contato`}</span><span className="agora-s"> · há mais de 48h</span></span>
+              <span className="agora-go">Ver →</span>
+            </button>
+          )}
+          {!liderDeTime && visitantesPeloLink > 0 && (
+            <button type="button" className="agora-row" onClick={() => setRoute("visitantes")}>
+              <span className="agora-ic"><Icon name="visitante" size={17} /></span>
+              <span className="agora-main"><span className="agora-t">{`${plural(visitantesPeloLink, "visitante")} ${visitantesPeloLink === 1 ? "se cadastrou" : "se cadastraram"} pelo link`}</span><span className="agora-s"> · esperando o 1º contato</span></span>
               <span className="agora-go">Ver →</span>
             </button>
           )}
@@ -2922,6 +2942,7 @@ function Visitantes({
   const router = useRouter();
   const [view, setView] = useState<"pipe" | "list" | "painel" | "regras">("pipe");
   const [cfgOpen, setCfgOpen] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   const cc: ContatoCfg = { ...CONTATO_CFG_DEFAULT, ...(church?.settings?.contatoCfg ?? {}) };
   const personById = new Map(people.map((person) => [person.id, person]));
   const contacted = visitors.filter((visitor) => visitor.reply_status);
@@ -2943,7 +2964,7 @@ function Visitantes({
         eyebrow="Pessoas"
         subtitle={plural(visitors.length, "visitante")}
         help="Quem visitou pela primeira vez. Cada visitante tem um próximo passo e o histórico de contato; acompanhe pelas etapas do funil até virar membro."
-        action={<><div className="seg"><button className={view === "pipe" ? "on" : ""} type="button" onClick={() => setView("pipe")}>Funil</button><button className={view === "list" ? "on" : ""} type="button" onClick={() => setView("list")}>Lista</button><button className={view === "painel" ? "on" : ""} type="button" onClick={() => setView("painel")}>Painel</button><button className={view === "regras" ? "on" : ""} type="button" onClick={() => setView("regras")}>Regras</button></div><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo visitante", subtitle: "Quem chegou pela primeira vez. Entra no acompanhamento automaticamente.", saveLabel: "Registrar visitante", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem visitou" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"origem", label:"Como chegou", type:"select", half:true, options:[{v:"Convite de membro",l:"Convite de membro"},{v:"Instagram",l:"Instagram"},{v:"Indicação",l:"Indicação"},{v:"Evangelismo",l:"Evangelismo"},{v:"Tomou decisão no culto",l:"Tomou decisão no culto"},{v:"Passava na rua",l:"Passava na rua"}] }], action: { kind: "visitor" } })}>+ Visitante</button></>}
+        action={<><div className="seg"><button className={view === "pipe" ? "on" : ""} type="button" onClick={() => setView("pipe")}>Funil</button><button className={view === "list" ? "on" : ""} type="button" onClick={() => setView("list")}>Lista</button><button className={view === "painel" ? "on" : ""} type="button" onClick={() => setView("painel")}>Painel</button><button className={view === "regras" ? "on" : ""} type="button" onClick={() => setView("regras")}>Regras</button></div>{church ? <button className="btn btn-sec" type="button" onClick={() => setQrOpen(true)}>QR e link</button> : null}<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo visitante", subtitle: "Quem chegou pela primeira vez. Entra no acompanhamento automaticamente.", saveLabel: "Registrar visitante", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem visitou" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"origem", label:"Como chegou", type:"select", half:true, options:[{v:"Convite de membro",l:"Convite de membro"},{v:"Instagram",l:"Instagram"},{v:"Indicação",l:"Indicação"},{v:"Evangelismo",l:"Evangelismo"},{v:"Tomou decisão no culto",l:"Tomou decisão no culto"},{v:"Passava na rua",l:"Passava na rua"}] }], action: { kind: "visitor" } })}>+ Visitante</button></>}
       />
       {view === "regras" && (
         <>
@@ -2955,6 +2976,7 @@ function Visitantes({
           <p className="ph-sub" style={{ marginTop: 10 }}>Os visitantes sem nenhum contato registrado depois desse prazo aparecem com alerta no funil, no Início e no menu.</p>
         </>
       )}
+      {qrOpen && church && <AutocadastroPainel church={church} people={people} onClose={() => setQrOpen(false)} onRefresh={() => router.refresh()} />}
       {cfgOpen && church && <ContatoCfgModal church={church} cfg={cc} onClose={() => setCfgOpen(false)} onRefresh={() => router.refresh()} />}
 
       {view === "regras" ? null : view === "painel" ? (
@@ -8323,6 +8345,7 @@ function VisitanteDrawer({
         <DrawerSection title="Contato">
           <dl className="kv">
             <dt>Telefone</dt><dd>{initVisitor.phone || "-"}</dd>
+            <AutocadastroDados visitor={initVisitor} />
             <dt>Como chegou</dt><dd>{initVisitor.origin || "Visitante"}</dd>
             <dt>Responsável</dt><dd>{owner?.name || "sem dono fixo"}</dd>
             <dt>Próximo passo</dt><dd><span className={`vcard-due ${initVisitor.due_status || "ok"}`}>{initVisitor.due || "sem prazo"}</span></dd>

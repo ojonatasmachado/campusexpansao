@@ -17,4 +17,6 @@ export default defineModule({
       { rota: "visitantes", grupo: "Pessoas", rotulo: "Visitantes", icone: "visitante", ordem: 21, permissao: "visitantes" },
     ],
   },
+  /* autocadastro do visitante por QR ou link (0070), sem login */
+  rotas: [{ caminho: "/[slug]/visita", tipo: "publica" }],
 });

@@ -354,6 +354,12 @@ type VisitorView = {
   due_status: "soon" | "ok" | "late" | null;
   reply_status: "respondeu" | "sem_resposta" | null;
   origin: string | null;
+  /* autocadastro por QR/link (0070) */
+  email?: string | null;
+  heard_from?: string | null;
+  invited_by?: string | null;
+  interests?: string[] | null;
+  consent_at?: string | null;
   member_id: string | null;
   created_at: string;
 };
@@ -1231,7 +1237,8 @@ async function getServiceDashboardData(): Promise<{
     /* "*": lê last_read_at (0060) sem quebrar antes de a migração chegar em produção */
     supabase.schema("service").from("chat_members").select("*"),
     supabase.schema("service").from("messages").select("id,chat_id,sender_id,body,created_at").order("created_at", { ascending: true }),
-    supabase.schema("service").from("visitors").select("id,name,phone,stage,visited_on,responsible_id,due,due_status,reply_status,origin,member_id,created_at").order("created_at", { ascending: false }),
+    /* "*": as colunas do autocadastro (0070) chegam sem quebrar um banco ainda sem a migração */
+    supabase.schema("service").from("visitors").select("*").order("created_at", { ascending: false }),
     supabase.schema("service").from("visitor_notes").select("id,visitor_id,happened_on,body,author,is_milestone,created_at").order("created_at", { ascending: false }),
     supabase.schema("service").from("announcements").select("*").order("created_at", { ascending: false }),
     supabase.schema("service").from("announcement_reads").select("id,announcement_id,person_id,read_at"),
