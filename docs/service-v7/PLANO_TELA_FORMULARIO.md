@@ -222,6 +222,14 @@ Limite conhecido: janela ou gaveta aberta de dentro da tela ficaria por baixo de
 
 ### Onda 2: formulários grandes feitos à mão
 
+**Andamento (2026-10-20, não commitado):** `FormSection` no componente; `FieldDef` com
+`secao`; "Novo membro" com seções; `ChildFormModal` em tela com 5 seções. A edição de
+pessoa (`MemberEditModal`) tem 4 campos e fica em janela pela regra. Depois da revisão:
+o botão fica travado até a tela fechar (sem salvar duas vezes); erro ao gravar responsáveis
+aparece e não fecha a tela; o erro rola para a vista; rótulos ligados aos campos; o
+principal é o primeiro responsável preenchido; caixas de marcar com 44px no toque.
+Próximos: visitante, time, reunião, mural.
+
 Um por vez, nesta ordem (os mais usados primeiro):
 
 1. `MemberEditModal` e cadastro de pessoa

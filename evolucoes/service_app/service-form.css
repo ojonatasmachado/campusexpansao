@@ -56,3 +56,30 @@
 @media (max-width:860px),(pointer:coarse){
   .dp-trigger,.sel-trigger{font-size:var(--fs-ui-lg);min-height:44px}
 }
+
+/* seções do formulário */
+.fs-sec{padding:20px 0 4px;border-top:0.5px solid var(--border-2)}
+.fs-sec:first-child,.fs-sub + .fs-sec,.fs-error + .fs-sec{border-top:0;padding-top:0}
+.fs-sec-t{margin:0 0 14px;font-size:var(--fs-pn-16);font-weight:600;letter-spacing:-0.01em;color:var(--white)}
+.fs-grid > .fs-sec-t{grid-column:1 / -1;margin-top:8px;padding-top:18px;border-top:0.5px solid var(--border-2)}
+.fs-grid > .fs-sec-t:first-child{margin-top:0;padding-top:0;border-top:0}
+/* caixa de marcar com alvo de toque decente */
+.fs-check{display:flex;align-items:flex-start;gap:10px;min-height:32px;cursor:pointer;font-size:var(--fs-pn-14);line-height:1.45;color:var(--light)}
+.fs-check input{flex-shrink:0;width:18px;height:18px;margin:2px 0 0;accent-color:var(--accent-fill)}
+/* valor calculado que parece campo, mas não se edita */
+.fs-calc{display:flex;align-items:center;min-height:40px;padding:0 14px;border-radius:var(--r-ctl);border:1px dashed var(--border-2);font-size:var(--fs-pn-14);color:var(--muted)}
+.fs-calc.ok{color:var(--white)}
+/* cartões dos responsáveis */
+.fs-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.fs-card{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:var(--r-lg);border:0.5px solid var(--border-2);background:var(--graphite)}
+.fs-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:32px}
+.fs-card-tag{font-size:var(--fs-pn-12);font-weight:600;color:var(--olive)}
+.fs-note{margin:8px 0 0;font-size:var(--fs-pn-13);color:var(--muted)}
+
+/* data nativa e valor calculado com a mesma altura dos campos de texto */
+.fs input.input[type="date"]{height:40px;padding-top:0;padding-bottom:0}
+@media (max-width:860px),(pointer:coarse){
+  .fs input.input[type="date"]{height:44px}
+  .fs-calc{min-height:44px}
+}
+@media (max-width:860px),(pointer:coarse){ .fs-check{min-height:44px;align-items:center} .fs-check input{margin-top:0} }

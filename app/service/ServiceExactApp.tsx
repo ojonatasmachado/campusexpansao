@@ -6,7 +6,7 @@ import { ehNovo, nomeComparavel, possivelDuplicado } from "./lib/pessoas";
 import { avisar } from "./lib/avisar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { notifyPush } from "./lib/notify-push";
 import { uploadServiceImage, imageExtension } from "./lib/upload-image";
@@ -42,7 +42,7 @@ import { requirementsFor, requirementLabel, saveRequirements, type Requirement, 
 import { HelpDot, Coachmark, HelpFab, TOUR_DESKTOP, SetupChecklist, type SetupCounts } from "./HelpSystem";
 import { baixarCsv } from "./lib/csv";
 import { Av, Chip, EmptyState, PageHead, RouteGroupContext } from "./painel/ui";
-import { FormScreen, type FormScreenHandle } from "./painel/form/FormScreen";
+import { FormScreen, FormSection, type FormScreenHandle } from "./painel/form/FormScreen";
 import { Escalas, cargaDaSemana } from "./modules/escalas/Escalas";
 import { ESCALA_DEFAULT, type EscalaPreset, type EscalaSettings } from "./modules/escalas/regras";
 import { Membros, Pessoas } from "./modules/pessoas/Pessoas";
@@ -712,15 +712,15 @@ export type DrawerState =
 type ShowIf = { field: string; equals: string };
 
 type FieldDef =
-  | { k: string; label: string; type: "text"; req?: boolean; half?: boolean; ph?: string; hint?: string; value?: string; showIf?: ShowIf }
-  | { k: string; label: string; type: "area"; req?: boolean; half?: boolean; ph?: string; hint?: string; big?: boolean; value?: string; showIf?: ShowIf }
-  | { k: string; label: string; type: "select"; req?: boolean; half?: boolean; ph?: string; hint?: string; options: { v: string; l: string }[]; value?: string; showIf?: ShowIf }
-  | { k: string; label: string; type: "date"; req?: boolean; half?: boolean; hint?: string; showIf?: ShowIf }
-  | { k: string; label: string; type: "time"; req?: boolean; half?: boolean; hint?: string; showIf?: ShowIf }
-  | { k: string; label: string; type: "toggle"; req?: boolean; half?: boolean; hint?: string; onLabel?: string; offLabel?: string; value?: string; showIf?: ShowIf }
-  | { k: string; label: string; type: "checks"; req?: boolean; half?: boolean; hint?: string; options: { v: string; l: string }[]; showIf?: ShowIf }
-  | { k: string; label: string; type: "icon"; req?: boolean; half?: boolean; hint?: string; value?: string; showIf?: ShowIf }
-  | { k: string; label: string; type: "cep"; req?: boolean; half?: boolean; ph?: string; hint?: string; showIf?: ShowIf; autofill?: { street?: string; neighborhood?: string; city?: string; state?: string } };
+  | { k: string; label: string; type: "text"; req?: boolean; half?: boolean; ph?: string; hint?: string; value?: string; showIf?: ShowIf; secao?: string }
+  | { k: string; label: string; type: "area"; req?: boolean; half?: boolean; ph?: string; hint?: string; big?: boolean; value?: string; showIf?: ShowIf; secao?: string }
+  | { k: string; label: string; type: "select"; req?: boolean; half?: boolean; ph?: string; hint?: string; options: { v: string; l: string }[]; value?: string; showIf?: ShowIf; secao?: string }
+  | { k: string; label: string; type: "date"; req?: boolean; half?: boolean; hint?: string; showIf?: ShowIf; secao?: string }
+  | { k: string; label: string; type: "time"; req?: boolean; half?: boolean; hint?: string; showIf?: ShowIf; secao?: string }
+  | { k: string; label: string; type: "toggle"; req?: boolean; half?: boolean; hint?: string; onLabel?: string; offLabel?: string; value?: string; showIf?: ShowIf; secao?: string }
+  | { k: string; label: string; type: "checks"; req?: boolean; half?: boolean; hint?: string; options: { v: string; l: string }[]; showIf?: ShowIf; secao?: string }
+  | { k: string; label: string; type: "icon"; req?: boolean; half?: boolean; hint?: string; value?: string; showIf?: ShowIf; secao?: string }
+  | { k: string; label: string; type: "cep"; req?: boolean; half?: boolean; ph?: string; hint?: string; showIf?: ShowIf; secao?: string; autofill?: { street?: string; neighborhood?: string; city?: string; state?: string } };
 
 const OUTRO_LOCAL = "__outro__";
 
@@ -3721,6 +3721,7 @@ function ChildFormModal({
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const telaRef = useRef<FormScreenHandle>(null);
 
   const addGuardian = () => setGuardians((prev) => [...prev, { name: "", relationship: "", canPickup: true, photoUrl: null }]);
   const removeGuardian = (index: number) => setGuardians((prev) => prev.filter((_, i) => i !== index));
@@ -3771,8 +3772,10 @@ function ChildFormModal({
       return;
     }
 
-    await supabase.schema("service").from("child_guardians").delete().eq("child_id", childId);
-    const primaryPersonId = matchedGuardians[0]?.person?.id;
+    const { error: delError } = await supabase.schema("service").from("child_guardians").delete().eq("child_id", childId);
+    if (delError) { setSaving(false); setError(friendlyWriteError(delError.message ?? "Não foi possível salvar os responsáveis.")); return; }
+    /* principal = o primeiro responsável preenchido (linha vazia no topo não conta) */
+    const primaryPersonId = withPerson[0]?.person?.id;
     const guardianRows = withPerson.map((g) => ({
       organization_id: church.organizationId,
       child_id: childId,
@@ -3782,96 +3785,112 @@ function ChildFormModal({
       is_primary: g.person!.id === primaryPersonId,
     }));
     if (guardianRows.length) {
-      await supabase.schema("service").from("child_guardians").insert(guardianRows);
+      const { error: insError } = await supabase.schema("service").from("child_guardians").insert(guardianRows);
+      if (insError) { setSaving(false); setError(friendlyWriteError(insError.message ?? "Não foi possível salvar os responsáveis.")); return; }
     }
 
-    setSaving(false);
+    /* saving continua ligado até a tela fechar: um segundo toque não salva de novo.
+       Fecha antes do refresh (o voltar do histórico restaura a árvore anterior). */
+    if (telaRef.current) await telaRef.current.fechar(); else onClose();
     router.refresh();
-    onClose();
   };
 
+  /* a foto do responsável já é gravada na hora do envio, então não conta como mudança */
+  const retrato = JSON.stringify({ name, birth, allergies, notes, gender, emergencyName, emergencyPhone, imageAuthorized, dietaryRestrictions, healthInsurance, medication, photoUrl, guardians: guardians.map((g) => [g.name, g.relationship, g.canPickup]) });
+  const fid = useId();
+  const [retratoInicial] = useState(retrato);
+  const falta = [!name.trim() && "nome", !photoUrl && "foto"].filter(Boolean) as string[];
+
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">{child ? "Editar" : "Criar"}</div>
-          <div className="modal-title">{child ? `Editar ${child.name}` : "Nova criança"}</div>
-          <div className="modal-sub">Foto, dados de saúde e quem são os responsáveis autorizados a retirar.</div>
-        </div>
-        <div className="modal-body">
-          <div className="field" style={{ gridColumn: "1 / -1" }}>
+    <FormScreen
+      ref={telaRef}
+      eyebrow={child ? "Editar" : "Criar"}
+      title={child ? child.name : "Nova criança"}
+      saveLabel={child ? "Salvar" : "Criar criança"}
+      saving={saving}
+      missing={falta}
+      dirty={retrato !== retratoInicial}
+      error={error}
+      onSave={salvar}
+      onClose={onClose}
+    >
+      <FormSection title="Criança">
+        <div className="fs-grid">
+          <div className="field">
             <PhotoPicker label="Foto da criança (obrigatória)" photoUrl={photoUrl} path={`${church.organizationId}/kids/children/${childId}`} onUploaded={setPhotoUrl} />
           </div>
-          <div className="field"><label className="field-label">Nome da criança</label><input className="input" placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} /></div>
-          <div className="field field-half"><label className="field-label">Nascimento</label><input className="input" type="date" value={birth} onChange={(e) => setBirth(e.target.value)} /></div>
-          <div className="field field-half">
+          <div className="field"><label className="field-label req" htmlFor={`${fid}-nome`}>Nome da criança</label><input id={`${fid}-nome`} className="input" placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} /></div>
+          <div className="field half"><label className="field-label" htmlFor={`${fid}-nasc`}>Nascimento</label><input id={`${fid}-nasc`} className="input" type="date" value={birth} onChange={(e) => setBirth(e.target.value)} /></div>
+          <div className="field half">
+            <div className="field-label" id={`${fid}-turma`}>Turma</div>
+            <div className={`fs-calc${classLabel ? " ok" : ""}`} role="status" aria-labelledby={`${fid}-turma`}>{classLabel ?? (birth ? "Nenhuma turma cobre essa idade ainda" : "Calculada pelo nascimento")}</div>
+          </div>
+          <div className="field">
             <label className="field-label">Gênero</label>
-            <select className="select" value={gender} onChange={(e) => setGender(e.target.value as "menino" | "menina" | "")}>
-              <option value="">Não informado</option>
-              <option value="menino">Menino</option>
-              <option value="menina">Menina</option>
-            </select>
-          </div>
-          <div className="field field-half">
-            <label className="field-label">Turma</label>
-            <div className="input" style={{ display: "flex", alignItems: "center", color: classLabel ? "var(--white)" : "var(--muted)" }}>
-              {classLabel ?? (birth ? "Nenhuma turma cobre essa idade ainda" : "Calculada pelo nascimento")}
+            <div className="fs-chips" role="group" aria-label="Gênero">
+              {([["menina", "Menina"], ["menino", "Menino"]] as const).map(([v, l]) => (
+                <button key={v} type="button" className={`seg-chip${gender === v ? " on" : ""}`} aria-pressed={gender === v} onClick={() => setGender(gender === v ? "" : v)}>{l}</button>
+              ))}
             </div>
           </div>
-          <div className="field"><label className="field-label">Alergias / observações</label><input className="input" placeholder="ex: alergia a amendoim" value={allergies} onChange={(e) => setAllergies(e.target.value)} /></div>
-          <div className="field field-half"><label className="field-label">Restrições alimentares</label><input className="input" placeholder="ex: vegetariano, sem lactose" value={dietaryRestrictions} onChange={(e) => setDietaryRestrictions(e.target.value)} /></div>
-          <div className="field field-half"><label className="field-label">Medicamento em uso contínuo</label><input className="input" placeholder="ex: nenhum" value={medication} onChange={(e) => setMedication(e.target.value)} /></div>
-          <div className="field field-half"><label className="field-label">Plano de saúde / convênio</label><input className="input" placeholder="ex: Amil, SUS" value={healthInsurance} onChange={(e) => setHealthInsurance(e.target.value)} /></div>
-          <div className="field field-half"><label className="field-label">Contato de emergência</label><input className="input" placeholder="Nome" value={emergencyName} onChange={(e) => setEmergencyName(e.target.value)} style={{ marginBottom: 6 }} /><input className="input" placeholder="Telefone" value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} /></div>
-          <div className="field"><label className="field-label">Notas</label><textarea className="textarea" placeholder="Observações gerais" value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+        </div>
+      </FormSection>
 
-          <div className="field" style={{ gridColumn: "1 / -1" }}>
-            <label className="field-label req">Responsáveis autorizados a retirar (com foto)</label>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12, marginTop: 8 }}>
-              {guardians.map((g, index) => {
-                const matched = findPersonByName(people, g.name);
-                return (
-                  <div key={index} className="panel" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      {index === 0 ? <span className="tag" style={{ fontSize: "var(--fs-pn-12)" }}>Responsável principal</span> : <span />}
-                      <button className="btn btn-ghost btn-sm" type="button" onClick={() => removeGuardian(index)}>Remover</button>
-                    </div>
-                    {matched ? (
-                      <PhotoPicker photoUrl={g.photoUrl} path={`${church.organizationId}/kids/guardians/${matched.id}`} onUploaded={(url) => uploadGuardianPhoto(index, url)} placeholder="Foto obrigatória" />
-                    ) : (
-                      <div className="ob-foto-area" style={{ cursor: "default" }}>
-                        <div className="ob-foto-placeholder"><span>?</span><small>Digite um nome já cadastrado</small></div>
-                      </div>
-                    )}
-                    <input className="input" list="service-people-names" placeholder="Nome do responsável" value={g.name} onChange={(e) => updateGuardian(index, { name: e.target.value, photoUrl: findPersonByName(people, e.target.value)?.photoUrl ?? null })} />
-                    <input className="input" placeholder="Parentesco (mãe, avó...)" value={g.relationship} onChange={(e) => updateGuardian(index, { relationship: e.target.value })} />
-                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>
-                      <input type="checkbox" checked={g.canPickup} onChange={(e) => updateGuardian(index, { canPickup: e.target.checked })} /> pode retirar
-                    </label>
+      <FormSection title="Saúde">
+        <div className="fs-grid">
+          <div className="field"><label className="field-label" htmlFor={`${fid}-alerg`}>Alergias</label><input id={`${fid}-alerg`} className="input" placeholder="ex: alergia a amendoim" value={allergies} onChange={(e) => setAllergies(e.target.value)} /></div>
+          <div className="field half"><label className="field-label" htmlFor={`${fid}-restr`}>Restrições alimentares</label><input id={`${fid}-restr`} className="input" placeholder="ex: vegetariano, sem lactose" value={dietaryRestrictions} onChange={(e) => setDietaryRestrictions(e.target.value)} /></div>
+          <div className="field half"><label className="field-label" htmlFor={`${fid}-med`}>Medicamento contínuo</label><input id={`${fid}-med`} className="input" placeholder="ex: nenhum" value={medication} onChange={(e) => setMedication(e.target.value)} /></div>
+          <div className="field half"><label className="field-label" htmlFor={`${fid}-plano`}>Plano de saúde</label><input id={`${fid}-plano`} className="input" placeholder="ex: Amil, SUS" value={healthInsurance} onChange={(e) => setHealthInsurance(e.target.value)} /></div>
+          <div className="field"><label className="field-label" htmlFor={`${fid}-notas`}>Notas</label><textarea id={`${fid}-notas`} className="textarea" placeholder="Observações gerais" value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+        </div>
+      </FormSection>
+
+      <FormSection title="Contato de emergência">
+        <div className="fs-grid">
+          <div className="field half"><label className="field-label" htmlFor={`${fid}-emnome`}>Nome</label><input id={`${fid}-emnome`} className="input" placeholder="Quem chamar" value={emergencyName} onChange={(e) => setEmergencyName(e.target.value)} /></div>
+          <div className="field half"><label className="field-label" htmlFor={`${fid}-emtel`}>Telefone</label><input id={`${fid}-emtel`} className="input" type="tel" placeholder="(11) 9..." value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} /></div>
+        </div>
+      </FormSection>
+
+      <FormSection title="Quem pode retirar">
+        <div className="fs-cards">
+          {guardians.map((g, index) => {
+            const matched = findPersonByName(people, g.name);
+            return (
+              <div key={index} className="fs-card">
+                <div className="fs-card-top">
+                  {index === 0 ? <span className="fs-card-tag">Responsável principal</span> : <span />}
+                  <button className="btn btn-ghost btn-sm" type="button" onClick={() => removeGuardian(index)}>Remover</button>
+                </div>
+                {matched ? (
+                  <PhotoPicker photoUrl={g.photoUrl} path={`${church.organizationId}/kids/guardians/${matched.id}`} onUploaded={(url) => uploadGuardianPhoto(index, url)} placeholder="Foto obrigatória" />
+                ) : (
+                  <div className="ob-foto-area" style={{ cursor: "default" }}>
+                    <div className="ob-foto-placeholder"><span>?</span><small>Digite um nome já cadastrado</small></div>
                   </div>
-                );
-              })}
-            </div>
-            <datalist id="service-people-names">
-              {people.map((person) => <option key={person.id} value={person.name} />)}
-            </datalist>
-            <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={addGuardian}>+ Adicionar responsável</button>
-            <div className="cell-sub" style={{ marginTop: 6 }}>{ct("O responsável precisa já ter um cadastro de {voluntario}/membro no Service pra aparecer aqui.")}</div>
-          </div>
-
-          <label className="field" style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
-            <input type="checkbox" checked={imageAuthorized} onChange={(e) => setImageAuthorized(e.target.checked)} style={{ marginTop: 3 }} />
-            <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--light)", lineHeight: 1.4 }}>{imageAuthorizationCopy(name)}</span>
-          </label>
-
-          {error ? <div style={{ gridColumn: "1 / -1", fontSize: "var(--fs-pn-13)", color: "var(--danger)" }}>{error}</div> : null}
+                )}
+                <input className="input" list="service-people-names" placeholder="Nome do responsável" aria-label="Nome do responsável" value={g.name} onChange={(e) => updateGuardian(index, { name: e.target.value, photoUrl: findPersonByName(people, e.target.value)?.photoUrl ?? null })} />
+                <input className="input" placeholder="Parentesco (mãe, avó...)" aria-label="Parentesco" value={g.relationship} onChange={(e) => updateGuardian(index, { relationship: e.target.value })} />
+                <label className="fs-check"><input type="checkbox" checked={g.canPickup} onChange={(e) => updateGuardian(index, { canPickup: e.target.checked })} /> Pode retirar</label>
+              </div>
+            );
+          })}
         </div>
-        <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>{child ? "Salvar" : "Criar criança"}</button>
-        </div>
-      </div>
-    </div>
+        <datalist id="service-people-names">
+          {people.map((person) => <option key={person.id} value={person.name} />)}
+        </datalist>
+        <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={addGuardian}>+ Responsável</button>
+        <p className="fs-note">{ct("O responsável precisa já ter cadastro de {voluntario} ou membro no Service.")}</p>
+      </FormSection>
+
+      <FormSection title="Uso de imagem">
+        <label className="fs-check">
+          <input type="checkbox" checked={imageAuthorized} onChange={(e) => setImageAuthorized(e.target.checked)} />
+          <span>{imageAuthorizationCopy(name)}</span>
+        </label>
+      </FormSection>
+    </FormScreen>
   );
 }
 
@@ -9902,7 +9921,9 @@ function ServiceModal({
       >
         <div className="fs-grid">
           {visiveis.map((field) => (
-            <div className={`field${field.half ? " half" : ""}`} key={field.k}>
+            <Fragment key={field.k}>
+            {field.secao ? <h3 className="fs-sec-t">{field.secao}</h3> : null}
+            <div className={`field${field.half ? " half" : ""}`}>
               <label className={`field-label${field.req ? " req" : ""}`}>{field.label}</label>
               {field.type === "select" && field.options.length <= 6 ? (
                 <div className="fs-chips" role="group" aria-label={field.label}>
@@ -9928,6 +9949,7 @@ function ServiceModal({
               )}
               {field.hint && <div className="field-hint">{field.hint}</div>}
             </div>
+            </Fragment>
           ))}
         </div>
       </FormScreen>

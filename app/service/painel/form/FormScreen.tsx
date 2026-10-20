@@ -143,6 +143,10 @@ export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScree
     pedirFechar();
   };
 
+  /* o erro aparece no topo da coluna: leva a pessoa até ele (o salvar pode estar lá embaixo) */
+  const erroRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (error) erroRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [error]);
+
   const bloqueado = saving || missing.length > 0;
   const falta = missing.length ? `Falta: ${juntar(missing)}` : "";
   const principal = (
@@ -170,7 +174,7 @@ export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScree
       <div className="fs-body">
         <div className="fs-col">
           {subtitle ? <p className="fs-sub">{subtitle}</p> : null}
-          {error ? <div className="fs-error" role="alert">{error}</div> : null}
+          {error ? <div className="fs-error" role="alert" ref={erroRef}>{error}</div> : null}
           {children}
           {falta ? <p className="fs-falta" id={`${id}-falta`}>{falta}</p> : null}
         </div>
@@ -194,3 +198,13 @@ export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScree
     </div>
   );
 });
+
+/** bloco de campos com título curto ("Saúde", "Endereço") */
+export function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="fs-sec">
+      <h3 className="fs-sec-t">{title}</h3>
+      {children}
+    </section>
+  );
+}
