@@ -54,6 +54,10 @@
 /* seletor de data e de lista com a mesma altura e letra dos campos de texto
    (no toque os campos sobem para 16px; os seletores ficavam com 14 e mais baixos) */
 @media (max-width:860px),(pointer:coarse){
+  /* Base de toque compartilhada pelos módulos e formulários. */
+  .top-menu,.fs-back{width:44px;height:44px}
+  .top-user-btn{min-width:44px;min-height:44px}
+  .seg button,.seg-chip,.cfg-tab,.btn-sm,.esc-vaga,.esc-preset-sel,.esc-preset-save{min-height:44px}
   .dp-trigger,.sel-trigger{font-size:var(--fs-ui-lg);min-height:44px}
 }
 

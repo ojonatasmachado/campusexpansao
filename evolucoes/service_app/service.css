@@ -660,11 +660,11 @@ body[data-theme="light"] .av { box-shadow:none; }
    direita. Preview gruda logo abaixo da topbar (.top é sticky top:0) e
    acompanha o scroll do conteúdo ao lado, até a página estreitar (aí some
    a divisão em colunas e o preview desce pro fim, mobile-first). */
-.pge-layout { display:grid; grid-template-columns:1fr 320px; gap:20px; align-items:start; }
-.pge-main { min-width:0; }
-.pge-preview { position:sticky; top:92px; background:var(--graphite); border:0.5px solid var(--border-2); border-radius:var(--r-lg); padding:24px; }
+.pge-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,320px); gap:20px; align-items:start; }
+.pge-main { min-width:0; overflow-wrap:anywhere; }
+.pge-preview { position:sticky; top:92px; min-width:0; background:var(--graphite); border:0.5px solid var(--border-2); border-radius:var(--r-lg); padding:24px; }
 @media (max-width:980px) {
-  .pge-layout { grid-template-columns:1fr; }
+  .pge-layout { grid-template-columns:minmax(0,1fr); }
   .pge-preview { position:static; }
 }
 
@@ -1112,7 +1112,7 @@ body[data-theme="light"] .av { box-shadow:none; }
 @media (hover:hover) and (pointer:fine) { .opt:hover { border-color:var(--olive-line); } }
 .opt.on { border-color:var(--olive); background:var(--olive-dim); }
 .opt-t { font-size:var(--fs-pn-13); font-weight:600; color:var(--white); letter-spacing:-0.01em; }
-.opt-s { font-size:var(--fs-pn-12); color:var(--muted); margin-top:3px; }
+.opt-s { font-size:var(--fs-pn-12); color:var(--light); margin-top:3px; }
 .swatch-row { display:flex; gap:10px; flex-wrap:wrap; }
 .swatch { width:34px; height:34px; border-radius:50%; border:2px solid transparent; cursor:pointer; transition:transform .14s; }
 @media (hover:hover) and (pointer:fine) { .swatch:hover { transform:scale(1.08); } }

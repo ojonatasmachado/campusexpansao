@@ -196,7 +196,7 @@
 /* alvos de toque */
 @media (pointer:coarse),(max-width:767px){
   .main .btn,.drawer .btn,.modal .btn{min-height:44px}
-  .main .btn-sm,.drawer .btn-sm,.modal .btn-sm{min-height:36px;padding-left:14px;padding-right:14px}
+  .main .btn-sm,.drawer .btn-sm,.modal .btn-sm{min-height:44px;padding-left:14px;padding-right:14px}
 }
 /* onda 0: no celular o rodapé da janela empilha (principal em cima) e o funil vira uma coluna */
 @media (max-width:640px){
@@ -249,7 +249,7 @@
 .m6-help{margin:10px 20px 0;font-size:var(--fs-app-15);color:var(--muted)}
 .m6-err{margin:8px 0;font-size:var(--fs-app-15);color:var(--danger)}
 .m6-facts{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
-.m6-facts li{display:flex;gap:10px;align-items:flex-start;font-size:var(--fs-app-17);line-height:1.4;color:var(--light)}
+.m6-facts li{display:flex;min-width:0;gap:10px;align-items:flex-start;overflow-wrap:anywhere;font-size:var(--fs-app-17);line-height:1.4;color:var(--light)}
 .m6-facts li>svg,.m6-facts li>.ic,.m6-facts li .cex-ic{flex-shrink:0;margin-top:1px;color:var(--muted)}
 .m6-btns{display:flex;gap:10px;margin-top:16px}
 .m6-btns.col{flex-direction:column}
