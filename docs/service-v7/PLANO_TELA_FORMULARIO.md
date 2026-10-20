@@ -203,6 +203,23 @@ Ficou de fora: o app do membro ainda tem setas nos botões (`m6-btn`).
 quadro, card, papel ministerial, etiqueta, grupo, identidade, ciclo anual, capítulo da
 história, cadastros simples.
 
+**Feito em 2026-10-20** (não commitado). `app/service/painel/form/FormScreen.tsx` +
+`evolucoes/service_app/service-form.css`. O `ServiceModal` abre em tela quando tem mais
+de 4 campos (hoje: Nova sala, Novo evento Kids, Novo time, Nova turma de batismo); com
+até 4, continua em janela. Lista de até 6 opções vira botões de opção. Navegação: uma
+entrada no histórico por abertura, preservando o estado do Next; a marca é única e
+sobrevive à montagem dupla do modo de desenvolvimento. Junto: `.input`, `.textarea`,
+`.select` e `.sel-trigger` com canto de 8px, e no toque os seletores de data e lista com
+16px e 44px, iguais aos campos de texto. Comparação em `docs/service-v7/onda1/comparacao.html`.
+Depois da revisão: não fecha enquanto salva; fecha antes do `router.refresh()` (a lista
+chega com o dado novo); foco vai para a tela e o resto do app fica `inert`; Escape fecha
+só a camada de cima; opções com `aria-pressed`; "algo mudou" comparado campo a campo;
+`key` no `ServiceModal` para um formulário não herdar o estado do anterior.
+Ainda não feito desta onda: mover `FieldDef`/`FField` para `painel/form/` (fica para a
+onda 2, junto com os formulários feitos à mão).
+Limite conhecido: janela ou gaveta aberta de dentro da tela ficaria por baixo dela
+(hoje nenhum campo abre uma).
+
 ### Onda 2: formulários grandes feitos à mão
 
 Um por vez, nesta ordem (os mais usados primeiro):

@@ -397,7 +397,7 @@ em { font-style:italic; }
 /* ════════ FIELDS ════════ */
 .field { margin-bottom:18px; }
 .field-label { display:block; font-size:var(--fs-ui-13); font-weight:600; color:var(--light); margin-bottom:7px; letter-spacing:-0.01em; }
-.input, .textarea, .select { width:100%; background:var(--ink); border:1px solid var(--border-2); border-radius:var(--r-sm); padding:11px 14px; font-size:var(--fs-ui-md); color:var(--white); outline:none; transition:border-color .16s, box-shadow .16s; }
+.input, .textarea, .select { width:100%; background:var(--ink); border:1px solid var(--border-2); border-radius:var(--r-ctl); padding:11px 14px; font-size:var(--fs-ui-md); color:var(--white); outline:none; transition:border-color .16s, box-shadow .16s; }
 .input:focus, .textarea:focus, .select:focus { border-color:var(--olive); box-shadow:0 0 0 3px var(--olive-dim); }
 .textarea { min-height:84px; resize:vertical; line-height:1.55; }
 
@@ -760,7 +760,7 @@ body[data-theme="light"] .av { box-shadow:none; }
    um popover escuro, mesmo padrão do iconpick/dp acima. Usado por todo
    campo do tipo "select" do formulário genérico (FField). */
 .sel-wrap { position:relative; width:100%; }
-.sel-trigger { width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--ink); border:1px solid var(--border-2); border-radius:var(--r-sm); padding:11px 14px; font-size:var(--fs-pn-14); color:var(--white); text-align:left; transition:border-color .16s; }
+.sel-trigger { width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--ink); border:1px solid var(--border-2); border-radius:var(--r-ctl); padding:11px 14px; font-size:var(--fs-pn-14); color:var(--white); text-align:left; transition:border-color .16s; }
 .sel-trigger:hover { border-color:var(--olive-line); }
 .sel-ph { color:var(--muted); }
 .sel-arrow { color:var(--muted); font-size:var(--fs-pn-12); flex-shrink:0; }

@@ -42,6 +42,7 @@ import { requirementsFor, requirementLabel, saveRequirements, type Requirement, 
 import { HelpDot, Coachmark, HelpFab, TOUR_DESKTOP, SetupChecklist, type SetupCounts } from "./HelpSystem";
 import { baixarCsv } from "./lib/csv";
 import { Av, Chip, EmptyState, PageHead, RouteGroupContext } from "./painel/ui";
+import { FormScreen, type FormScreenHandle } from "./painel/form/FormScreen";
 import { Escalas, cargaDaSemana } from "./modules/escalas/Escalas";
 import { ESCALA_DEFAULT, type EscalaPreset, type EscalaSettings } from "./modules/escalas/regras";
 import { Membros, Pessoas } from "./modules/pessoas/Pessoas";
@@ -1835,6 +1836,7 @@ export default function ServiceExactApp({
       ) : null}
       {modal ? (
         <ServiceModal
+          key={`${modal.eyebrow}-${modal.title}`}
           modal={modal}
           church={firstChurch}
           people={people}
@@ -9405,6 +9407,10 @@ function ServiceModal({
         .map((f) => [f.k, (f as { value?: string }).value as string]),
     )
   );
+  const [valoresIniciais] = useState(values);
+  /* na tela de formulário, fechar passa pelo FormScreen para tirar a entrada do histórico */
+  const telaRef = useRef<FormScreenHandle>(null);
+  const fecharTudo = async () => { if (telaRef.current) await telaRef.current.fechar(); else onClose(); };
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   /* aviso de possível duplicado já mostrado para este nome + telefone: o segundo toque cadastra mesmo assim */
@@ -9413,7 +9419,7 @@ function ServiceModal({
   async function save() {
     setError("");
     if (!modal.action) {
-      onClose();
+      void fecharTudo();
       return;
     }
     const action = modal.action;
@@ -9867,11 +9873,66 @@ function ServiceModal({
       setError(friendlyWriteError(result.error.message));
       return;
     }
+    /* fecha primeiro: o voltar do histórico restaura a árvore da entrada anterior,
+       então o refresh vem depois, para a lista já chegar com o dado novo */
+    await fecharTudo();
     router.refresh();
-    onClose();
   }
 
   const hasHalf = modal.formFields.some((f) => f.half);
+  const visiveis = modal.formFields.filter((field) => !field.showIf || values[field.showIf.field] === field.showIf.equals);
+  const mudou = Array.from(new Set([...Object.keys(values), ...Object.keys(valoresIniciais)])).some((k) => (values[k] ?? "") !== (valoresIniciais[k] ?? ""));
+
+  /* mais de 4 campos: tela de formulário em vez de janela (onda 1) */
+  if (modal.formFields.length > 4) {
+    const falta = visiveis.filter((field) => field.req && !(values[field.k] ?? "").trim()).map((field) => field.label.toLowerCase());
+    return (
+      <FormScreen
+        ref={telaRef}
+        eyebrow={modal.eyebrow}
+        title={modal.title}
+        subtitle={modal.subtitle}
+        saveLabel={modal.saveLabel || "Salvar"}
+        saving={saving}
+        missing={falta}
+        dirty={mudou}
+        error={error}
+        onSave={save}
+        onClose={onClose}
+      >
+        <div className="fs-grid">
+          {visiveis.map((field) => (
+            <div className={`field${field.half ? " half" : ""}`} key={field.k}>
+              <label className={`field-label${field.req ? " req" : ""}`}>{field.label}</label>
+              {field.type === "select" && field.options.length <= 6 ? (
+                <div className="fs-chips" role="group" aria-label={field.label}>
+                  {field.options.map((o) => (
+                    <button
+                      type="button"
+                      key={o.v}
+                      aria-pressed={values[field.k] === o.v}
+                      className={`seg-chip${values[field.k] === o.v ? " on" : ""}`}
+                      onClick={() => setValues((cur) => ({ ...cur, [field.k]: cur[field.k] === o.v && !field.req ? "" : o.v }))}
+                    >
+                      {o.l}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <FField
+                  field={field}
+                  value={values[field.k] ?? ""}
+                  onChange={(v) => setValues((cur) => ({ ...cur, [field.k]: v }))}
+                  onPatch={(patch) => setValues((cur) => ({ ...cur, ...patch }))}
+                />
+              )}
+              {field.hint && <div className="field-hint">{field.hint}</div>}
+            </div>
+          ))}
+        </div>
+      </FormScreen>
+    );
+  }
 
   return (
     <div className="modal-bg" onClick={onClose}>
