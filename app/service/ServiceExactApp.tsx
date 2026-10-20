@@ -5463,6 +5463,8 @@ function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
   const [appModules, setAppModules] = useState<string[]>(ministry.appModules);
   const [saving, setSaving] = useState(false);
   const [erro, setErro] = useState("");
+  const telaRef = useRef<FormScreenHandle>(null);
+  const fid = useId();
 
   const togModule = (id: string) =>
     setAppModules((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -5490,59 +5492,74 @@ function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
     const reqResult = error ? { error: error.message } : await saveRequirements(ministry.organizationId, "ministry", ministry.id, requisitos);
     if (reqResult.error) {
       setSaving(false);
-      setErro("Não foi possível salvar. Tente de novo.");
+      /* o time pode ter sido gravado e só os pré-requisitos falharam: atualiza o que está atrás */
+      if (!error) onRefresh();
+      setErro(error ? "Não foi possível salvar. Tente de novo." : "O time foi salvo, mas os pré-requisitos não. Tente de novo.");
       return;
     }
+    /* saving fica ligado até a tela fechar; o refresh vem depois do fechar */
+    if (telaRef.current) await telaRef.current.fechar(); else onClose();
     onRefresh();
-    onClose();
   };
 
+  /* listas ordenadas: ligar e desligar o mesmo item não conta como mudança */
+  const retrato = JSON.stringify({ nome, icon, desc, comoTrabalhamos, chegada, responsabilidades, requisitos: requisitos.map((r) => JSON.stringify(r)).sort(), appModules: [...appModules].sort() });
+  const [retratoInicial] = useState(retrato);
+
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Editar time</div>
-          <div className="modal-title">{ministry.name}</div>
-          <div className="modal-sub">Nome, descrição e o &quot;Sobre o time&quot; completo. Para funções, use o painel de Times.</div>
+    <FormScreen
+      ref={telaRef}
+      eyebrow="Editar time"
+      title={ministry.name}
+      saveLabel="Salvar"
+      saving={saving}
+      missing={nome.trim() ? [] : ["nome"]}
+      dirty={retrato !== retratoInicial}
+      error={erro}
+      onSave={salvar}
+      onClose={onClose}
+    >
+      <FormSection title="O time">
+        <div className="field"><label className="field-label req" htmlFor={`${fid}-nome`}>Nome</label><input id={`${fid}-nome`} className="input" aria-required="true" value={nome} onChange={(e) => setNome(e.target.value)} /></div>
+        <div className="field"><div className="field-label" id={`${fid}-icone`}>Ícone do time</div><div role="group" aria-labelledby={`${fid}-icone`}><IconPicker value={icon} onChange={setIcon} /></div></div>
+        <div className="field"><label className="field-label" htmlFor={`${fid}-prop`}>Propósito</label><input id={`${fid}-prop`} className="input" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Por que esse time existe" /></div>
+      </FormSection>
+
+      <FormSection title="Sobre o time">
+        <div className="field"><label className="field-label" htmlFor={`${fid}-como`}>Como trabalhamos</label><textarea id={`${fid}-como`} className="textarea" value={comoTrabalhamos} onChange={(e) => setComoTrabalhamos(e.target.value)} placeholder="Rotina, ensaios, escala..." /></div>
+        <div className="field"><label className="field-label" htmlFor={`${fid}-cheg`}>Horário de chegada</label><input id={`${fid}-cheg`} className="input" value={chegada} onChange={(e) => setChegada(e.target.value)} placeholder={ct("ex: 1h antes do {culto}")} /></div>
+        <div className="field">
+          <label className="field-label" htmlFor={`${fid}-resp`}>O que esperamos</label>
+          <textarea id={`${fid}-resp`} className="textarea" aria-describedby={`${fid}-resp-dica`} value={responsabilidades} onChange={(e) => setResponsabilidades(e.target.value)} placeholder="ex: Chegar no horário" />
+          <div className="field-hint" id={`${fid}-resp-dica`}>Uma por linha. Ex.: chegar no horário; avisar com antecedência se não puder servir.</div>
         </div>
-        <div className="modal-body" style={{ display: "block" }}>
-          <div className="field"><label className="field-label">Nome</label><input className="input" value={nome} onChange={(e) => setNome(e.target.value)} /></div>
-          <div className="field"><label className="field-label">Ícone do time</label><IconPicker value={icon} onChange={setIcon} /></div>
-          <div className="field"><label className="field-label">Propósito</label><input className="input" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Por que esse time existe" /></div>
-          <div className="field"><label className="field-label">Como trabalhamos</label><textarea className="textarea" value={comoTrabalhamos} onChange={(e) => setComoTrabalhamos(e.target.value)} placeholder="Rotina, ensaios, escala..." /></div>
-          <div className="field"><label className="field-label">Horário de chegada</label><input className="input" value={chegada} onChange={(e) => setChegada(e.target.value)} placeholder={ct("ex: 1h antes do {culto}")} /></div>
-          <div className="field">
-            <label className="field-label">O que esperamos (uma por linha)</label>
-            <textarea className="textarea" value={responsabilidades} onChange={(e) => setResponsabilidades(e.target.value)} placeholder={"ex: Chegar no horário\nAvisar com antecedência se não puder servir"} />
-          </div>
-          <div className="field">
-            <label className="field-label">Pré-requisitos para entrar no time</label>
-            <RequisitosEditor value={requisitos} onChange={setRequisitos} courses={courses.map((c) => ({ id: c.id, name: c.name }))} events={access.events} groupsLabel={access.groupsLabel} />
-          </div>
-          <div className="field">
-            <label className="field-label">Módulos extras no app</label>
-            <div className="seg-check">
-              {APP_MODULES_TIME.map((m) => (
-                <button key={m.id} type="button" className={`seg-chip${appModules.includes(m.id) ? " on" : ""}`} onClick={() => togModule(m.id)}>{m.label}</button>
-              ))}
-            </div>
-            <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 6 }}>Quem está neste time passa a ver esses módulos no app.</div>
-          </div>
-          <div className="field">
-            <label className="field-label">Funções</label>
-            <div className="cell-tags">
-              {ministry.positions.map((p) => <span key={p.id} className="tag">{p.name}</span>)}
-              {ministry.positions.length === 0 && <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>Nenhuma função cadastrada.</span>}
-            </div>
-          </div>
+      </FormSection>
+
+      <FormSection title="Quem pode entrar">
+        <div className="field" role="group" aria-label="Pré-requisitos para entrar no time">
+          <RequisitosEditor value={requisitos} onChange={setRequisitos} courses={courses.map((c) => ({ id: c.id, name: c.name }))} events={access.events} groupsLabel={access.groupsLabel} />
         </div>
-        {erro && <div className="field-error" style={{ padding: "0 24px 12px" }}>{erro}</div>}
-        <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>Salvar</button>
+      </FormSection>
+
+      <FormSection title="No app">
+        <div className="field">
+          <div className="fs-chips" role="group" aria-label="Módulos extras no app" aria-describedby={`${fid}-app-dica`}>
+            {APP_MODULES_TIME.map((m) => (
+              <button key={m.id} type="button" className={`seg-chip${appModules.includes(m.id) ? " on" : ""}`} aria-pressed={appModules.includes(m.id)} onClick={() => togModule(m.id)}>{m.label}</button>
+            ))}
+          </div>
+          <div className="field-hint" id={`${fid}-app-dica`}>Quem está neste time passa a ver esses módulos no app.</div>
         </div>
-      </div>
-    </div>
+      </FormSection>
+
+      <FormSection title="Funções">
+        <div className="cell-tags">
+          {ministry.positions.map((p) => <span key={p.id} className="tag">{p.name}</span>)}
+          {ministry.positions.length === 0 && <span className="fs-note">Nenhuma função cadastrada.</span>}
+        </div>
+        <p className="fs-note">Para criar ou mudar funções, use o painel de Times.</p>
+      </FormSection>
+    </FormScreen>
   );
 }
 

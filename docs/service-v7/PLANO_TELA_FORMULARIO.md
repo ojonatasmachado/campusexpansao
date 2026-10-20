@@ -228,7 +228,11 @@ pessoa (`MemberEditModal`) tem 4 campos e fica em janela pela regra. Depois da r
 o botão fica travado até a tela fechar (sem salvar duas vezes); erro ao gravar responsáveis
 aparece e não fecha a tela; o erro rola para a vista; rótulos ligados aos campos; o
 principal é o primeiro responsável preenchido; caixas de marcar com 44px no toque.
-Próximos: visitante, time, reunião, mural.
+Visitante: nada a migrar (cadastro com 3 campos fica em janela; não há edição de
+visitante). Edição do time (`MinisterioEditModal`) em tela com 5 seções (O time, Sobre o
+time, Quem pode entrar, No app, Funções); abre por cima da gaveta e volta para ela ao
+salvar; salvamento parcial (time sim, pré-requisitos não) avisa e atualiza o que está atrás.
+Próximos: reunião, mural.
 
 Um por vez, nesta ordem (os mais usados primeiro):
 
