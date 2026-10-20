@@ -5,6 +5,7 @@
    ./manifest.ts. Tipos de dados do painel: import só de tipo. */
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ehNovo, nomeComparavel } from "../../lib/pessoas";
 import { formatarTelefone, mesmoTelefone } from "../../lib/telefone";
 import { formatDateBR } from "../../lib/date";
@@ -12,6 +13,7 @@ import { Icon } from "../../lib/icons";
 import { Av, Chip, EmptyState, PageHead } from "../../painel/ui";
 import { JRN_STEPS } from "../../painel/caminhada";
 import { useTermos } from "../../lib/vocabulario-context";
+import { ImportarMembros } from "./ImportarMembros";
 import type { ChurchView, DrawerState, MemberView, MinistryView, ModalState, PersonView } from "../../ServiceExactApp";
 
 function formatAvailability(value: Record<string, boolean>) {
@@ -65,10 +67,12 @@ function SituacaoPessoa({ l }: { l: PessoaLinha }) {
    a coluna "Serve em". As tabelas do banco continuam separadas; aqui é só a
    tela. */
 type PessoaLinha = { key: string; name: string; sub: string; member?: MemberView; person?: PersonView; mins: MinistryView[]; leader: boolean; novo: boolean; photoUrl?: string | null };
-export function Membros({ members, people = [], ministries, setDrawer, setModal, soTimes = null }: { members: MemberView[]; people?: PersonView[]; ministries: MinistryView[]; church?: ChurchView; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; soTimes?: string[] | null }) {
+export function Membros({ members, people = [], ministries, church, setDrawer, setModal, soTimes = null }: { members: MemberView[]; people?: PersonView[]; ministries: MinistryView[]; church?: ChurchView; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; soTimes?: string[] | null }) {
   const { comTermos: ct } = useTermos();
   const [q, setQ] = useState("");
   const [filtro, setFiltro] = useState<"todos" | "membros" | "voluntarios" | "lideres" | "novos">("todos");
+  const [importando, setImportando] = useState(false);
+  const router = useRouter();
   const minsDe = (personId: string | null | undefined) => (personId ? ministries.filter((min) => min.people.some((p) => p.personId === personId)) : []);
   const lideraAlgum = (personId: string | null | undefined) => !!personId && ministries.some((min) => min.people.some((p) => p.personId === personId && p.isLeader));
   // eslint-disable-next-line react-hooks/purity -- "Novos" são os últimos 30 dias pelo relógio real
@@ -105,7 +109,7 @@ export function Membros({ members, people = [], ministries, setDrawer, setModal,
   const abrir = (l: PessoaLinha) => setDrawer(l.member ? { kind: "member", id: l.member.id } : { kind: "person", id: l.person!.id });
   return (
     <div className="content wide">
-      <PageHead title="Pessoas" eyebrow="Pessoas" subtitle={soTimes ? `Seus times: ${nomesTimes}.` : undefined} help={soTimes ? "Você vê aqui as pessoas dos seus times. O restante da igreja fica com a gestão, que pode liberar em Configurações › Permissões." : ct("Toda a congregação entra aqui, sirva ou não em um time. É diferente de {Voluntarios}, que lista só quem já serve ativamente.")} action={soTimes ? undefined : <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Nome, sobrenome e telefone bastam: o convite do app vai pelo WhatsApp e a pessoa completa o resto.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome e sobrenome", type:"text", req:true, ph:"Como a pessoa se chama", hint:"A pessoa pode ajustar depois no app.", secao:"Dados da pessoa" }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Ao salvar, o WhatsApp abre com o convite do app para este número." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"opcional", hint:"Opcional: a pessoa informa no convite." }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"cep", label:"CEP", type:"cep", half:true, secao:"Endereço (opcional)", ph:"00000-000", hint:"Preenche rua, bairro, cidade e estado sozinho.", autofill:{ street:"rua", neighborhood:"bairro", city:"cidade", state:"estado" } }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }, { k:"rua", label:"Rua", type:"text", half:true, ph:"Nome da rua" }, { k:"cidade", label:"Cidade", type:"text", half:true }, { k:"estado", label:"Estado", type:"text", half:true, ph:"UF" }], action: { kind: "member" } })}>+ Novo membro</button>} />
+      <PageHead title="Pessoas" eyebrow="Pessoas" subtitle={soTimes ? `Seus times: ${nomesTimes}.` : undefined} help={soTimes ? "Você vê aqui as pessoas dos seus times. O restante da igreja fica com a gestão, que pode liberar em Configurações › Permissões." : ct("Toda a congregação entra aqui, sirva ou não em um time. É diferente de {Voluntarios}, que lista só quem já serve ativamente.")} action={soTimes ? undefined : <>{church ? <button className="btn btn-sec" type="button" onClick={() => setImportando(true)}><Icon name="anexo" size={14} /> Importar planilha</button> : null}<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Nome, sobrenome e telefone bastam: o convite do app vai pelo WhatsApp e a pessoa completa o resto.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome e sobrenome", type:"text", req:true, ph:"Como a pessoa se chama", hint:"A pessoa pode ajustar depois no app.", secao:"Dados da pessoa" }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Ao salvar, o WhatsApp abre com o convite do app para este número." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"opcional", hint:"Opcional: a pessoa informa no convite." }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"cep", label:"CEP", type:"cep", half:true, secao:"Endereço (opcional)", ph:"00000-000", hint:"Preenche rua, bairro, cidade e estado sozinho.", autofill:{ street:"rua", neighborhood:"bairro", city:"cidade", state:"estado" } }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }, { k:"rua", label:"Rua", type:"text", half:true, ph:"Nome da rua" }, { k:"cidade", label:"Cidade", type:"text", half:true }, { k:"estado", label:"Estado", type:"text", half:true, ph:"UF" }], action: { kind: "member" } })}>+ Novo membro</button></>} />
       <div className="toolbar">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome ou telefone..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <div className="seg seg-wrap">
@@ -129,6 +133,7 @@ export function Membros({ members, people = [], ministries, setDrawer, setModal,
         ))}
         {visible.length === 0 && <EmptyState title="Ninguém por aqui" text="Quem você cadastrar aparece nesta lista. Se usou a busca ou um filtro, tente limpar." />}
       </div>
+      {importando && church ? <ImportarMembros church={church} members={members} onClose={() => setImportando(false)} onDone={() => router.refresh()} /> : null}
     </div>
   );
 }

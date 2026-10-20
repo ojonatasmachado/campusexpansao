@@ -172,6 +172,8 @@ type MemberRow = {
   street: string | null;
   city: string | null;
   state: string | null;
+  /* 0072: pode não existir antes da migração (o select é "*") */
+  imported_at?: string | null;
 };
 
 type MemberView = {
@@ -198,6 +200,7 @@ type MemberView = {
   state: string | null;
   contactComplete: boolean;
   firstAccessDone: boolean;
+  importedAt: string | null;
 };
 
 type MinistryRow = {
@@ -909,6 +912,7 @@ function toMemberView(row: MemberRow): MemberView {
     contactComplete: !!(row.email && row.phone && row.birth && (row.postal_code ?? "").replace(/\D/g, "").length === 8),
     /* primeiro acesso em 2 passos (v7 4.10): feito com nome e sobrenome e telefone */
     firstAccessDone: !!(row.phone && (row.name ?? "").trim().split(/\s+/).length >= 2),
+    importedAt: row.imported_at ?? null,
   };
 }
 
@@ -1038,7 +1042,7 @@ async function getServiceDashboardData(): Promise<{
   const { data: membersData, error: membersError } = await supabase
     .schema("service")
     .from("members")
-    .select("id,organization_id,church_id,volunteer_id,group_id,title_id,name,phone,email,birth,since_year,situation,first_contact,neighborhood,family,journey,created_at,postal_code,street,city,state")
+    .select("*")
     .order("name");
 
   if (membersError) {

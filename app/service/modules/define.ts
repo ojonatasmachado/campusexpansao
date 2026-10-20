@@ -28,7 +28,7 @@ export type CategoriaAviso = "escala" | "mural" | "mensagens" | "caminhada";
 export type Termo = "caminhada" | "grupo" | "culto" | "voluntario";
 
 /** Fatos que vão para a linha do tempo da pessoa (lei 10). */
-export type Fato = "serviu" | "faltou" | "trocou" | "concluiu_aula" | "concluiu_curso" | "batizou" | "entrou_grupo" | "contato_cuidado";
+export type Fato = "serviu" | "faltou" | "trocou" | "concluiu_aula" | "concluiu_curso" | "batizou" | "entrou_grupo" | "contato_cuidado" | "importado";
 
 export type Papel = "master" | "gestao" | "pastor" | "lider" | "membro";
 
