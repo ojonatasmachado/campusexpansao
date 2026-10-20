@@ -73,7 +73,10 @@ export type ItemMenu = {
   ordem: number;
   /** código da ação na matriz de Permissões (sem o prefixo "service."); sem código, qualquer papel da liderança vê */
   permissao?: string;
+  /** só estes papéis veem pelo papel (master sempre); com isso a matriz não vale para a tela */
   papeis?: Papel[];
+  /** liberações pessoa a pessoa (service.person_grants) que também abrem a tela */
+  acessos?: string[];
 };
 
 /** Tela do painel fora do menu (atalho interno): herda o grupo para o título da barra. */

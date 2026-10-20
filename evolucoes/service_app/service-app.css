@@ -3835,3 +3835,68 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 }
 .sec-reemitir{margin-top:12px}
 .cart-nome.longo{font-size:calc(var(--u) * 3.2);-webkit-line-clamp:3}
+
+/* ════════ v7 · financeiro (fase 1) ════════
+   Movimento do mês, saldos e cadastros. Valores em mono só para alinhar números (lei 8). */
+.fin-acoes{display:flex;flex-wrap:wrap;gap:8px}
+.fin-abas{justify-content:space-between}
+.fin-mes{display:inline-flex;align-items:center;gap:4px}
+.fin-mes-b{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-ctl);border:0.5px solid var(--border-2);background:var(--graphite);color:var(--light)}
+@media (hover:hover) and (pointer:fine){.fin-mes-b:hover{color:var(--white);border-color:var(--border-3)}}
+.fin-mes-t{min-width:150px;text-align:center;font-size:var(--fs-pn-14);font-weight:600;color:var(--white)}
+.fin-num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.fin .kpi-value.fin-num{font-family:var(--sans);letter-spacing:-0.03em;overflow-wrap:anywhere;white-space:normal}
+.fin .kpi-value.fin-longo{font-size:var(--fs-pn-20)}
+.fin-neg{color:var(--danger)}
+.fin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.fin-grid > .fin-bloco:only-child{grid-column:1 / -1}
+.fin-bloco-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px;border-bottom:0.5px solid var(--border)}
+.fin-bloco-t{margin:0;font-size:var(--fs-pn-14);font-weight:600;color:var(--white)}
+.fin-bloco-s{font-size:var(--fs-pn-12);color:var(--muted)}
+.fin-saldo{grid-template-columns:minmax(0,1fr) auto}
+.fin-saldo-main{min-width:0}
+.fin-saldo-main .cell-name,.fin-saldo-main .cell-sub{overflow-wrap:anywhere}
+.fin-saldo-v{font-size:var(--fs-pn-14);color:var(--white)}
+.fin-saldo-v.fin-neg{color:var(--danger)}
+.fin-add{display:flex;align-items:center;gap:8px;color:var(--light);font-size:var(--fs-pn-13);min-height:44px}
+.fin-filtros .select.fin-sel{width:auto;min-width:160px;max-width:220px;padding-top:8px;padding-bottom:8px;font-size:var(--fs-pn-13)}
+.fin-lin{grid-template-columns:52px minmax(0,1fr) auto;min-height:56px}
+.fin-data{font-family:var(--mono);font-size:var(--fs-pn-12);color:var(--muted)}
+.fin-lin-main{display:flex;flex-direction:column;min-width:0}
+.fin-desc{display:flex;align-items:center;gap:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fin-desc .cex-ic,.fin-desc svg{flex-shrink:0;color:var(--muted)}
+.fin-meta{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fin-valor-l{font-size:var(--fs-pn-14);color:var(--white);text-align:right}
+.fin-valor-l.fin-saida{color:var(--light)}
+.fin-valor-l.fin-transf{color:var(--muted)}
+.fin-rodape{padding:10px 22px}
+.fin-cad{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.fin-inline,.fin-novo{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fin-inline .input,.fin-novo .input{flex:1;min-width:140px;padding-top:8px;padding-bottom:8px}
+.fin-novo{display:flex}
+.fin-item-acts{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.fin-check{min-height:32px;align-items:center}
+.fin-check input{margin-top:0}
+.fin-valor{position:relative}
+.fin-valor-rs{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:var(--fs-pn-14);color:var(--muted);pointer-events:none}
+.fin-valor .input.fin-valor-in{padding-left:44px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.fin-pessoa{min-height:44px}
+.fin-sem{color:var(--muted)}
+.fin-total{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--fs-pn-16)}
+.fin-excluir{margin-top:24px;padding-top:16px;border-top:0.5px solid var(--border-2)}
+.fin-excluir-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.fin-acesso{margin-top:18px}
+.fin-acesso .acesso-toggles{margin-top:10px}
+@media (max-width:860px){
+  .fin-grid,.fin-cad{grid-template-columns:minmax(0,1fr)}
+  .fin-abas{gap:10px}
+  .fin-filtros .tb-search{max-width:none;flex-basis:100%}
+  .fin-filtros .select.fin-sel{flex:1;max-width:none;font-size:var(--fs-ui-lg)}
+  .fin-acoes{width:100%}
+  .fin-acoes .btn{flex:1 1 calc(50% - 8px);min-height:44px}
+  .fin-mes-b{width:44px;height:44px}
+  .fin-lin{grid-template-columns:minmax(0,1fr) auto;padding:12px 16px}
+  .fin-data{grid-column:1 / -1;order:-1;margin-bottom:-10px}
+  .fin-bloco-h,.fin-saldo,.fin-rodape{padding-left:16px;padding-right:16px}
+  .fin-item-acts .btn,.fin-novo .btn,.fin-inline .btn{min-height:44px}
+}
