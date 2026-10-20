@@ -17,68 +17,15 @@ import { Av, Chip, PageHead } from "../../painel/ui";
 import { ESCALA_DEFAULT, type EscalaPreset, type EscalaSettings } from "./regras";
 import type { ChurchView, DrawerState, EventView, MinistryView, ModalState, PersonView, RosterAssignmentView, RouteId } from "../../ServiceExactApp";
 import { useTermos } from "../../lib/vocabulario-context";
-import { compararRodizio, fraseRodizio, ultimaVezQueServiu } from "./rodizio";
+import { fraseRodizio, ultimaVezQueServiu } from "./rodizio";
+import { candidatosDisponiveis, cargaDoMes, type Candidato as CandidatoBase } from "./candidatos";
 import { coberturaPorTime, vagasFaltando } from "./cobertura";
 import { Cobertura } from "./Cobertura";
+import { GerarPeriodo } from "./GerarPeriodo";
+import { EscalaExtra } from "./EscalaExtra";
+import { PublicarEscala } from "./PublicarEscala";
 
-/* candidato apto a uma posição, com motivo de bloqueio : equivalente a
-   candidatos() em evolucoes/service_app/escalas.jsx:12-30. Diferença de fidelidade
-   consciente: no protótipo "férias" é uma flag solta além do status; no banco real
-   ferias É um valor do enum people.status, então "considerarFerias" aqui vira o
-   toggle que decide se quem está com status='ferias' entra ou não no pool. */
-/* motivo do bloqueio em código; o texto legível sai na janela (v7 4.14) */
-type Motivo = "evento" | "ferias" | "teto";
-type Candidato = { person: PersonView; fit: "good" | "busy" | "block"; motivo: Motivo | null; vezes: number; ultima?: string };
-
-/* v7 4.14: dentro de cada grupo, a ordem é a do rodízio (menos vezes no mês,
-   depois quem serviu há mais tempo), não mais o engajamento */
-function candidatosDisponiveis(
-  pool: PersonView[],
-  event: EventView,
-  jaNoSlot: Set<string>,
-  usadosNoEvento: Set<string>,
-  cfg: EscalaSettings,
-  cargaPorPessoa: Record<string, number>,
-  ultimaVez: Record<string, string> = {},
-): Candidato[] {
-  return pool
-    .filter((p) => p.status !== "pausa" && !jaNoSlot.has(p.id))
-    .map((p) => {
-      let motivo: Motivo | null = null;
-      if (usadosNoEvento.has(p.id)) motivo = "evento";
-      else if (p.status === "ferias" && cfg.considerarFerias) motivo = "ferias";
-      else if (cfg.maxPorMes && (cargaPorPessoa[p.id] ?? 0) >= cfg.maxPorMes) motivo = "teto";
-      /* disponibilidade ausente (nunca configurada) conta como disponível : só
-         vira "busy" quando a pessoa marcou explicitamente que não pode nesse
-         horário, senão todo voluntário novo aparecia "ocupado" sem nunca ter
-         recusado nada. */
-      const fit: Candidato["fit"] = motivo ? "block" : (p.availability[event.slot] === false ? "busy" : "good");
-      return { person: p, fit, motivo, vezes: cargaPorPessoa[p.id] ?? 0, ultima: ultimaVez[p.id] };
-    })
-    .sort((a, b) => {
-      const rank = (x: Candidato) => (x.fit === "good" ? 0 : x.fit === "busy" ? 1 : 2);
-      return rank(a) === rank(b) ? compararRodizio(a, b) || a.person.name.localeCompare(b.person.name) : rank(a) - rank(b);
-    });
-}
-
-/* nº de eventos distintos, no mesmo mês do evento-alvo, em que a pessoa já está
-   escalada (status != recusou) : usado pelo teto "máximo de vezes por mês". */
-function cargaDoMes(roster: RosterAssignmentView[], events: EventView[], targetEvent: EventView): Record<string, number> {
-  const eventById = new Map(events.map((e) => [e.id, e]));
-  const targetMonth = targetEvent.eventDate.slice(0, 7);
-  const seen = new Set<string>();
-  const counts: Record<string, number> = {};
-  roster.forEach((assignment) => {
-    if (assignment.status === "no") return;
-    const ev = eventById.get(assignment.event_id);
-    if (!ev || ev.eventDate.slice(0, 7) !== targetMonth) return;
-    const key = `${assignment.person_id}:${assignment.event_id}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    counts[assignment.person_id] = (counts[assignment.person_id] ?? 0) + 1;
-  });
-  return counts;
-}
+type Candidato = CandidatoBase<PersonView>;
 
 /* carga da semana corrente (segunda a domingo contendo hoje) por pessoa:
    nº de posições escaladas (status != "no") e nº de recusas ("no") : equivalente
@@ -309,7 +256,6 @@ export function Escalas({
   church,
   scopeMinistryIds,
   setDrawer,
-  setModal,
   setRoute,
   setCheckinEventId,
   onNotifyLeaderRecusa,
@@ -357,6 +303,13 @@ export function Escalas({
   const [delegarOpen, setDelegarOpen] = useState(false);
   const [presetSaveOpen, setPresetSaveOpen] = useState(false);
   const [gerando, setGerando] = useState(false);
+  /* escala do período, escala extra e publicação do rascunho */
+  const [periodoOpen, setPeriodoOpen] = useState(false);
+  const [extraOpen, setExtraOpen] = useState(false);
+  const [publicarOpen, setPublicarOpen] = useState(false);
+  const timesDoEscopo = scopeMinistryIds ? ministries.filter((m) => scopeMinistryIds.includes(m.id)) : ministries;
+  const funcoesDoEscopo = new Set(timesDoEscopo.flatMap((m) => m.positions.map((p) => p.id)));
+  const rascunhos = roster.filter((r) => r.rascunho && funcoesDoEscopo.has(r.position_id));
 
   const selectedEvent = events.find((event) => event.id === eventId) ?? events[0] ?? null;
   const eventRoster = selectedEvent ? roster.filter((assignment) => assignment.event_id === selectedEvent.id) : [];
@@ -527,10 +480,12 @@ export function Escalas({
         help={ct(`Monte quem serve em cada {culto}. As pessoas confirmam ou recusam direto no celular, e a vaga em aberto aparece em vermelho. Toque numa pessoa para confirmar, trocar ou remover; em Escalar para preencher a vaga. ${perspectiveText}`)}
         action={
           <>
+            <button className="btn btn-sec" type="button" onClick={() => setPeriodoOpen(true)}><Icon name="agenda" size={15} /> Montar período</button>
+            <button className="btn btn-sec" type="button" onClick={() => setExtraOpen(true)}><Icon name="add" size={15} /> Escala extra</button>
             <button className="btn btn-sec" type="button" onClick={() => setDelegarOpen(true)}><Icon name="membros" size={15} /> Delegar</button>
             <button className="btn btn-sec" type="button" onClick={() => setCheckinEventId(selectedEvent?.id ?? null)} disabled={!selectedEvent}><Icon name="cultos" size={15} /> QR Check-in</button>
             <button className="btn btn-sec" type="button" onClick={baixarCSV} disabled={!selectedEvent}><Icon name="relatorios" size={15} /> Baixar</button>
-            <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Publicar", title: "Publicar e avisar", subtitle: "A equipe recebe a escala pelo app e pelas notificações configuradas.", saveLabel: "Publicar e avisar →", formFields: [{ k:"msg", label:"Mensagem (opcional)", type:"area", ph:"Recado que vai junto com a escala..." }] })}>Publicar e avisar</button>
+            <button className="btn btn-pri" type="button" onClick={() => setPublicarOpen(true)}>Publicar e avisar{rascunhos.length ? ` (${rascunhos.length})` : ""}</button>
           </>
         }
       />
@@ -544,7 +499,8 @@ export function Escalas({
             {(() => {
               /* v7 4.16: um resumo por culto; a cobertura por time aparece embaixo, no culto escolhido */
               const falta = vagasFaltando(coberturaPorTime(event, roster, ministries, scopeMinistryIds));
-              return <span className={`esc-event-cob ${falta ? "falta" : "ok"}`}>{falta ? faltaN(falta, "vaga") : "completo"}</span>;
+              const emRascunho = rascunhos.some((r) => r.event_id === event.id);
+              return <span className={`esc-event-cob ${falta ? "falta" : "ok"}`}>{joinDot(falta ? faltaN(falta, "vaga") : "completo", emRascunho && "rascunho")}</span>;
             })()}
           </button>
         ))}
@@ -632,7 +588,8 @@ export function Escalas({
                           return (
                             <button
                               key={assignment.id}
-                              className={`esc-person ${assignment.status === "no" ? "is-no" : ""}`}
+                              className={`esc-person ${assignment.status === "no" ? "is-no" : ""}${assignment.rascunho ? " is-draft" : ""}`}
+                              title={assignment.rascunho ? "Rascunho: a pessoa ainda não foi avisada" : undefined}
                               type="button"
                               onClick={() => selectedEvent && setSlotAction({ kind: "slot", event: selectedEvent, ministry, position, assignment })}
                             >
@@ -668,6 +625,7 @@ export function Escalas({
         <span className="chip chip-wait">Aguardando</span>
         <span className="chip chip-no">Não pode</span>
         <span className="chip chip-open">Vaga aberta</span>
+        {rascunhos.length > 0 && <span className="chip chip-draft">Rascunho, ainda não publicado</span>}
       </div>
 
       {gaps.length > 0 ? (
@@ -697,6 +655,20 @@ export function Escalas({
       ) : null}
       {funcEdit ? <FuncoesEscalaModal ministry={funcEdit} onClose={() => setFuncEdit(null)} onRefresh={() => router.refresh()} /> : null}
       {delegarOpen ? <DelegarModal ministries={visibleMinistries} church={church} onClose={() => setDelegarOpen(false)} onRefresh={() => router.refresh()} /> : null}
+      {periodoOpen ? (
+        <GerarPeriodo
+          ministries={timesDoEscopo}
+          people={people}
+          events={events}
+          roster={roster}
+          church={church}
+          cfg={escalaCfg}
+          onClose={() => setPeriodoOpen(false)}
+          onSalvo={(id) => { setPeriodoOpen(false); if (id) setEventId(id); router.refresh(); }}
+        />
+      ) : null}
+      {extraOpen ? <EscalaExtra ministries={timesDoEscopo} church={church} onClose={() => setExtraOpen(false)} onCriado={(id) => { setExtraOpen(false); setEventId(id); router.refresh(); }} /> : null}
+      {publicarOpen ? <PublicarEscala rascunhos={rascunhos} events={events} organizationId={church?.organizationId ?? ""} onClose={() => setPublicarOpen(false)} onPublicado={() => { setPublicarOpen(false); router.refresh(); }} /> : null}
       {presetSaveOpen ? <PresetSaveModal ministries={visibleMinistries} church={church} onClose={() => setPresetSaveOpen(false)} onRefresh={() => router.refresh()} /> : null}
     </div>
   );
@@ -780,7 +752,7 @@ function RosterActionModal({
   const demais = podem.filter((c) => !sugeridos.includes(c));
   const naoPodem = soDisponiveis ? [] : achados.filter((c) => c.fit === "block");
   const motivoTexto = (m: Candidato["motivo"]) =>
-    m === "evento" ? ct("Já está na escala deste {culto}") : m === "ferias" ? "De férias" : m === "teto" ? (maxPorMes ? `Já serviu ${plural(maxPorMes, "vez", "vezes")} este mês, o limite` : "Chegou ao limite do mês") : "";
+    m === "evento" ? ct("Já está na escala deste {culto}") : m === "ferias" ? "De férias" : m === "teto" ? (maxPorMes ? `Já serviu ${plural(maxPorMes, "vez", "vezes")} este mês, o limite` : "Chegou ao limite do mês") : m === "folga" ? "Em semana de folga" : "";
   const escolher = (c: Candidato) => {
     if (c.fit === "block") return;
     if (isSwap && action.assignment) onTrocar(action.assignment.id, c.person.id);

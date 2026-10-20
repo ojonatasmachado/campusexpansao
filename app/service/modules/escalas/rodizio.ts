@@ -35,5 +35,7 @@ export function fraseRodizio(ultima: string | undefined, vezesNoMes: number, hoj
 /** Ordem do rodízio: menos vezes no mês, depois quem serviu há mais tempo (nunca serviu primeiro). */
 export function compararRodizio(a: { vezes: number; ultima?: string }, b: { vezes: number; ultima?: string }): number {
   if (a.vezes !== b.vezes) return a.vezes - b.vezes;
-  return (a.ultima ?? "").localeCompare(b.ultima ?? "");
+  /* datas ISO: comparação direta (localeCompare é lento e não muda a ordem) */
+  const ua = a.ultima ?? "", ub = b.ultima ?? "";
+  return ua < ub ? -1 : ua > ub ? 1 : 0;
 }

@@ -1412,7 +1412,8 @@ export default async function ServiceHomePage() {
   const { data: rosterData } = await supabase
     .schema("service")
     .from("roster_assignments")
-    .select("id,event_id,position_id,person_id,status");
+    /* "*": lê rascunho (0074) sem quebrar antes de a migração chegar em produção */
+    .select("*");
   const { count: visitorsInCare } = await supabase
     .schema("service")
     .from("visitors")
