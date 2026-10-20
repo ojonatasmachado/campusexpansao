@@ -4,7 +4,7 @@
    ServiceExactApp.tsx sem mudar comportamento; o manifesto está em
    ./manifest.ts. Tipos de dados do painel: import só de tipo. */
 
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
@@ -14,6 +14,7 @@ import { dataPublicacao, formatDateBR, joinDot, paraPublico, porPublicacao, quan
 import { Icon } from "../../lib/icons";
 import { Av, EmptyState, PageHead } from "../../painel/ui";
 import { friendlyWriteError } from "../../painel/erros";
+import { FormScreen, FormSection, type FormScreenHandle } from "../../painel/form/FormScreen";
 import { ACESSO_MSG_DEFAULT, AcessoMsgModal, type AcessoMsgCfg } from "../pessoas/acesso-msg";
 import type { AnnouncementReadView, AnnouncementResponseView, AnnouncementView, ChildGuardianView, ChurchView, FellowshipGroupView, MemberView, MinistryView, ModalState, PersonView, WallPostView } from "../../ServiceExactApp";
 import { useTermos, type Termos } from "../../lib/vocabulario-context";
@@ -26,6 +27,8 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
   const [canais, setCanais] = useState<string[]>(["app"]);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
+  const telaRef = useRef<FormScreenHandle>(null);
+  const fid = useId();
   const alvo = publicos.find((p) => p.id === publico) ?? publicos[0];
   const toggleCanal = (c: string) => setCanais((a) => (a.includes(c) ? a.filter((x) => x !== c) : [...a, c]));
   const publicar = async () => {
@@ -39,61 +42,67 @@ function ComposerModal({ church, publicos, onClose, onDone }: { church: ChurchVi
     let { error } = await sb.from("announcements").insert({ ...base, kind: tipo });
     /* antes da migração 0049 a coluna "kind" não existe: publica sem o tipo */
     if (error && /kind/i.test(error.message)) ({ error } = await sb.from("announcements").insert(base));
-    setSalvando(false);
-    if (error) { setErro(friendlyWriteError(error.message)); return; }
+    if (error) { setSalvando(false); setErro(friendlyWriteError(error.message)); return; }
     if (canais.includes("app")) notifyPush(church.organizationId, alvo.memberIds, titulo.trim(), msg.trim() || "Nova publicação no Mural.");
     avisar("Publicado no Mural.");
+    /* fecha antes do refresh (onDone atualiza a lista) */
+    if (telaRef.current) await telaRef.current.fechar();
     onDone();
   };
+  const retrato = JSON.stringify({ titulo, msg, publico, tipo, canais: [...canais].sort() });
+  const [retratoInicial] = useState(retrato);
+  const falta = [!titulo.trim() && "título", canais.length === 0 && "por onde enviar"].filter(Boolean) as string[];
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Mural</div>
-          <div className="modal-title">Nova publicação</div>
-          <div className="modal-sub">Escreva uma vez e escolha quem recebe. Quem está no app vê no Mural e recebe a notificação.</div>
+    <FormScreen
+      ref={telaRef}
+      eyebrow="Mural"
+      title="Nova publicação"
+      saveLabel="Publicar"
+      saving={salvando}
+      missing={falta}
+      dirty={retrato !== retratoInicial}
+      error={erro}
+      onSave={publicar}
+      onClose={onClose}
+    >
+      <FormSection title="Publicação">
+        <div className="field">
+          <div className="field-label" id={`${fid}-tipo`}>Tipo</div>
+          <div className="fs-chips" role="group" aria-labelledby={`${fid}-tipo`}>
+            {(["aviso", "evento", "acao"] as const).map((k) => (
+              <button key={k} type="button" className={`seg-chip${tipo === k ? " on" : ""}`} aria-pressed={tipo === k} onClick={() => setTipo(k)}>{KIND_LABEL[k]}</button>
+            ))}
+          </div>
+          {tipo === "evento" && <div className="field-hint">No app, a pessoa responde Vou ou Não vou.</div>}
         </div>
-        <div className="modal-body" style={{ display: "block" }}>
-          <div className="field">
-            <label className="field-label">Tipo</label>
-            <div className="seg-check">
-              {(["aviso", "evento", "acao"] as const).map((k) => (
-                <button key={k} type="button" className={`seg-chip ${tipo === k ? "on" : ""}`} onClick={() => setTipo(k)}>{KIND_LABEL[k]}</button>
-              ))}
-            </div>
-            {tipo === "evento" && <div className="field-hint">No app, a pessoa responde Vou ou Não vou.</div>}
-          </div>
-          <div className="field">
-            <label className="field-label req">Título</label>
-            <input className="input" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ex.: Ensaio geral no sábado" />
-          </div>
-          <div className="field">
-            <label className="field-label">Mensagem</label>
-            <textarea className="textarea" value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Ex.: Chegada às 15h45, no templo principal." />
-          </div>
-          <div className="field">
-            <label className="field-label">Para quem</label>
-            <select className="select" value={publico} onChange={(e) => setPublico(e.target.value)}>
-              {publicos.map((p) => <option key={p.id} value={p.id}>{p.label} · {plural(p.memberIds.length, "pessoa")}</option>)}
-            </select>
-          </div>
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label className="field-label">Por onde</label>
-            <div className="seg-check">
-              {([["app", "App e notificação"], ["whatsapp", "WhatsApp"]] as const).map(([id, l]) => (
-                <button key={id} type="button" className={`seg-chip ${canais.includes(id) ? "on" : ""}`} onClick={() => toggleCanal(id)}>{l}</button>
-              ))}
-            </div>
-            {canais.includes("whatsapp") && <div className="field-hint">O WhatsApp abre com o texto pronto para você mandar nos grupos da igreja.</div>}
-          </div>
-          {erro && <p className="field-error" style={{ marginTop: 12 }}>{erro}</p>}
+        <div className="field">
+          <label className="field-label req" htmlFor={`${fid}-tit`}>Título</label>
+          <input id={`${fid}-tit`} className="input" aria-required="true" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ex.: Ensaio geral no sábado" />
         </div>
-        <div className="modal-foot">
-          <button className="btn btn-ghost" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={!titulo.trim() || salvando || canais.length === 0} onClick={publicar}>{salvando ? "Publicando..." : "Publicar"}</button>
+        <div className="field">
+          <label className="field-label" htmlFor={`${fid}-msg`}>Mensagem</label>
+          <textarea id={`${fid}-msg`} className="textarea" value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Ex.: Chegada às 15h45, no templo principal." />
         </div>
-      </div>
-    </div>
+      </FormSection>
+
+      <FormSection title="Quem recebe">
+        <div className="field">
+          <label className="field-label" htmlFor={`${fid}-pub`}>Para quem</label>
+          <select id={`${fid}-pub`} className="select" value={publico} onChange={(e) => setPublico(e.target.value)}>
+            {publicos.map((p) => <option key={p.id} value={p.id}>{p.label} · {plural(p.memberIds.length, "pessoa")}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <div className="field-label" id={`${fid}-canal`}>Por onde</div>
+          <div className="fs-chips" role="group" aria-labelledby={`${fid}-canal`}>
+            {([["app", "App e notificação"], ["whatsapp", "WhatsApp"]] as const).map(([id, l]) => (
+              <button key={id} type="button" className={`seg-chip${canais.includes(id) ? " on" : ""}`} aria-pressed={canais.includes(id)} onClick={() => toggleCanal(id)}>{l}</button>
+            ))}
+          </div>
+          {canais.includes("whatsapp") && <div className="field-hint">O WhatsApp abre com o texto pronto para você mandar nos grupos da igreja.</div>}
+        </div>
+      </FormSection>
+    </FormScreen>
   );
 }
 

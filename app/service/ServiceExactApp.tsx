@@ -2823,6 +2823,8 @@ function ReuniaoForm({
   const [pauta, setPauta] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const telaRef = useRef<FormScreenHandle>(null);
+  const fid = useId();
 
   const isOutro = salaId === OUTRO_LOCAL;
   const isoDate = data ? dpToIsoDate(data) : null;
@@ -2855,11 +2857,12 @@ function ReuniaoForm({
     }).select("id").single();
     if (meetingError || !meetingRow) {
       setSaving(false);
-      setError(meetingError?.message ?? "Não foi possível marcar a reunião.");
+      setError(friendlyWriteError(meetingError?.message ?? "Não foi possível marcar a reunião."));
       return;
     }
+    let salaFalhou = false;
     if (!isOutro && salaId && isoDate) {
-      await supabase.schema("service").from("reservations").insert({
+      const { error: resError } = await supabase.schema("service").from("reservations").insert({
         organization_id: church.organizationId,
         room_id: salaId,
         title: titulo.trim(),
@@ -2870,65 +2873,80 @@ function ReuniaoForm({
         source_type: "reuniao",
         source_id: meetingRow.id,
       });
+      salaFalhou = !!resError;
     }
+    /* a reunião já foi marcada: fecha mesmo se a reserva da sala falhar, avisando */
+    if (salaFalhou) avisar("Reunião marcada, mas a sala não foi reservada. Reserve em Espaços e salas.", "warn");
+    if (telaRef.current) await telaRef.current.fechar(); else onClose();
     router.refresh();
-    onClose();
   };
 
+  const retrato = JSON.stringify({ titulo, data, hora, fim, salaId, endereco, presentes: [...presentes].sort(), pauta });
+  const [retratoInicial] = useState(retrato);
+  const falta = [
+    !titulo.trim() && "título",
+    !localValido && (isOutro ? "endereço do espaço" : "sala"),
+    !!conflito && "outro horário (a sala está ocupada)",
+  ].filter(Boolean) as string[];
+
   return (
-    <DrawerShell onClose={onClose} wide>
-      <div className="drawer-head">
-        <button className="drawer-close" type="button" onClick={onClose}>✕</button>
-        <div className="ph-eyebrow" style={{ marginBottom: 8 }}>Nova reunião</div>
-        <input className="ce-title-input" placeholder="Título da reunião" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
-      </div>
-      <div className="drawer-body">
-        <DrawerSection title="Quando e onde">
-          <div className="ce-grid">
-            <div className="field"><label className="field-label">Data</label><DatePicker value={data} onChange={setData} /></div>
-            <div className="field"><label className="field-label">Início</label><TimePicker value={hora} onChange={setHora} /></div>
-            <div className="field"><label className="field-label">Fim</label><TimePicker value={fim} onChange={setFim} /></div>
-          </div>
-          <div className="ce-grid" style={{ marginTop: 4 }}>
-            <div className="field">
-              <label className="field-label req">Sala (espaço já cadastrado)</label>
-              <select className="select" value={salaId} onChange={(e) => setSalaId(e.target.value)}>
-                <option value="">Selecione uma sala</option>
-                {meetingRooms.map((room) => <option key={room.id} value={room.id}>{room.name}{room.capacity ? ` · ${room.capacity} lug.` : ""}</option>)}
-                <option value={OUTRO_LOCAL}>Outro espaço (fora da igreja)</option>
-              </select>
-              {meetingRooms.length === 0 ? <div className="cell-sub" style={{ marginTop: 6 }}>Nenhuma sala liberada pra reunião ainda. Cadastre em Configurações → Espaços & Salas.</div> : null}
-            </div>
-            {isOutro ? <div className="field"><label className="field-label">Endereço do espaço</label><input className="input" value={endereco} onChange={(e) => setEndereco(e.target.value)} placeholder="Rua, número, bairro..." /></div> : null}
-          </div>
-          {conflito ? <div className="reserva-warn"><Icon name="alerta" size={14} /> A sala já tem &quot;{conflito.title}&quot; em {conflito.start_time} a {conflito.end_time} nesse dia.</div> : null}
-        </DrawerSection>
+    <FormScreen
+      ref={telaRef}
+      eyebrow="Nova reunião"
+      title={titulo.trim() || "Nova reunião"}
+      saveLabel="Marcar reunião"
+      saving={saving}
+      missing={falta}
+      dirty={retrato !== retratoInicial}
+      error={error}
+      onSave={criar}
+      onClose={onClose}
+    >
+      <FormSection title="Reunião">
+        <div className="field"><label className="field-label req" htmlFor={`${fid}-tit`}>Título</label><input id={`${fid}-tit`} className="input" aria-required="true" placeholder="ex: Reunião de liderança" value={titulo} onChange={(e) => setTitulo(e.target.value)} /></div>
+      </FormSection>
 
-        <DrawerSection title="Quem participa">
-          <div className="cand-pick">
-            {people.map((person) => {
-              const on = presentes.includes(person.id);
-              return (
-                <button key={person.id} type="button" className={`cand-chip ${on ? "on" : ""}`} onClick={() => togglePessoa(person.id)}>
-                  <Av name={person.name} size="xs" photoUrl={person.photoUrl} /> {person.name.split(" ")[0]} {on && <Icon name="ok" size={13} />}
-                </button>
-              );
-            })}
-            {people.length === 0 ? <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{ct("Nenhum {voluntario} cadastrado.")}</span> : null}
+      <FormSection title="Quando e onde">
+        <div className="fs-grid">
+          <div className="field"><div className="field-label">Data</div><DatePicker value={data} onChange={setData} /></div>
+          <div className="field half"><div className="field-label">Início</div><TimePicker value={hora} onChange={setHora} /></div>
+          <div className="field half"><div className="field-label">Fim</div><TimePicker value={fim} onChange={setFim} /></div>
+          <div className="field">
+            <label className="field-label req" htmlFor={`${fid}-sala`}>Sala</label>
+            <select id={`${fid}-sala`} className="select" aria-required="true" value={salaId} onChange={(e) => setSalaId(e.target.value)}>
+              <option value="">Selecione uma sala</option>
+              {meetingRooms.map((room) => <option key={room.id} value={room.id}>{room.name}{room.capacity ? ` · ${room.capacity} lug.` : ""}</option>)}
+              <option value={OUTRO_LOCAL}>Outro espaço (fora da igreja)</option>
+            </select>
+            {meetingRooms.length === 0 ? <div className="field-hint">Nenhuma sala liberada pra reunião ainda. Cadastre em Espaços e salas.</div> : null}
           </div>
-        </DrawerSection>
-
-        <DrawerSection title="Pauta · um item por linha">
-          <textarea className="textarea" style={{ minHeight: 90 }} placeholder={"Balanço do mês\nEscala de julho\nCuidado com a equipe"} value={pauta} onChange={(e) => setPauta(e.target.value)} />
-        </DrawerSection>
-
-        {error ? <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--danger)", marginBottom: 12 }}>{error}</div> : null}
-        <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
-          <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" disabled={saving || !!conflito || !localValido} onClick={criar}>{saving ? "Marcando…" : "Marcar reunião"}</button>
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
+          {isOutro ? <div className="field"><label className="field-label req" htmlFor={`${fid}-end`}>Endereço do espaço</label><input id={`${fid}-end`} className="input" value={endereco} onChange={(e) => setEndereco(e.target.value)} placeholder="Rua, número, bairro..." /></div> : null}
         </div>
-      </div>
-    </DrawerShell>
+        {conflito ? <div className="reserva-warn" role="status"><Icon name="alerta" size={14} /> A sala já tem &quot;{conflito.title}&quot; de {conflito.start_time} a {conflito.end_time} nesse dia.</div> : null}
+      </FormSection>
+
+      <FormSection title="Quem participa">
+        <div className="cand-pick" role="group" aria-label="Quem participa">
+          {people.map((person) => {
+            const on = presentes.includes(person.id);
+            return (
+              <button key={person.id} type="button" className={`cand-chip ${on ? "on" : ""}`} aria-pressed={on} onClick={() => togglePessoa(person.id)}>
+                <Av name={person.name} size="xs" photoUrl={person.photoUrl} /> {person.name.split(" ")[0]} {on && <Icon name="ok" size={13} />}
+              </button>
+            );
+          })}
+          {people.length === 0 ? <span className="fs-note">{ct("Nenhum {voluntario} cadastrado.")}</span> : null}
+        </div>
+        {presentes.length ? <p className="fs-note">{plural(presentes.length, "pessoa")} na reunião.</p> : null}
+      </FormSection>
+
+      <FormSection title="Pauta">
+        <div className="field">
+          <textarea className="textarea" aria-label="Pauta" aria-describedby={`${fid}-pauta`} placeholder="ex: Balanço do mês" value={pauta} onChange={(e) => setPauta(e.target.value)} />
+          <div className="field-hint" id={`${fid}-pauta`}>Um item por linha.</div>
+        </div>
+      </FormSection>
+    </FormScreen>
   );
 }
 
