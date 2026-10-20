@@ -102,27 +102,17 @@ export function HelpDot({ text, label }: { text: string; label?: string }) {
 
 export type CoachStep = { route?: string; sel: string; t: string; s: string };
 
+/* Tour curto: só o caminho do domingo (pessoas, escala, agenda, aviso) e onde
+   pedir ajuda. Eram 20 passos, um por item do menu; o resto do menu se explica
+   pelo "?" de cada tela. O painel tira do tour o que o papel não vê. */
 export const TOUR_DESKTOP: CoachStep[] = [
-  { route: "painel", sel: '[data-tour="painel"]', t: "Seu painel", s: "O resumo do domingo: próximos {cultos}, quem falta confirmar e o que precisa de atenção. A configuração inicial também aparece aqui até você terminar." },
-  { route: "membros", sel: '[data-tour="membros"]', t: "Membros", s: "Toda a sua congregação. Cadastre quem faz parte, mesmo quem ainda não serve em nenhum time." },
-  { route: "pessoas", sel: '[data-tour="pessoas"]', t: "{Voluntarios}", s: "Quem já serve ativamente em algum time: funções, disponibilidade e engajamento." },
-  { route: "times", sel: '[data-tour="times"]', t: "Times", s: "Louvor, Recepção, Kids... cada time tem um líder e suas funções." },
-  { route: "visitantes", sel: '[data-tour="visitantes"]', t: "Visitantes", s: "Quem visitou pela primeira vez. Acompanhe o contato até virar membro." },
-  { route: "criancas", sel: '[data-tour="criancas"]', t: "Crianças", s: "Cadastro, turmas e check-in do Kids, separado do restante da congregação." },
-  { route: "batismos", sel: '[data-tour="batismos"]', t: "Batismos", s: "Turmas de batismo: quem vai ser batizado, quando e onde." },
-  { route: "cursos", sel: '[data-tour="cursos"]', t: "Cursos e Trilhas", s: "Formações da igreja, da decisão à liderança. Cada conclusão entra na {caminhada} da pessoa." },
+  { route: "painel", sel: '[data-tour="painel"]', t: "Seu painel", s: "O resumo da semana: próximos {cultos}, quem falta confirmar e o que precisa de atenção." },
+  { route: "membros", sel: '[data-tour="membros"]', t: "Pessoas", s: "Membros, visitantes, crianças e {grupos}. Cada pessoa tem a sua {caminhada} e o seu histórico." },
   { route: "escalas", sel: '[data-tour="escalas"]', t: "Escalas", s: "Monte quem serve em cada {culto}. As pessoas confirmam ou recusam direto no celular." },
-  { route: "reunioes", sel: '[data-tour="reunioes"]', t: "Reuniões", s: "Pauta, presença e decisões dos encontros de liderança." },
-  { route: "ensaios", sel: '[data-tour="ensaios"]', t: "Ensaios", s: "Ensaios de louvor, teatro, dança... com participantes e repertório ou materiais." },
-  { route: "quadros", sel: '[data-tour="quadros"]', t: "Quadros", s: "Um quadro de tarefas por time: o que fazer, quem é responsável e o prazo." },
-  { route: "cultos", sel: '[data-tour="cultos"]', t: "{Cultos} e Agenda", s: "Seus {cultos} e eventos ficam aqui. Cada um pode virar uma escala." },
-  { route: "comunicacao", sel: '[data-tour="comunicacao"]', t: "Comunicação", s: "Mande avisos pro time todo ou só pra um time específico." },
-  { route: "conversas", sel: '[data-tour="conversas"]', t: "Conversas", s: "Um chat simples com seu time e sua liderança." },
-  { route: "relatorios", sel: '[data-tour="relatorios"]', t: "Relatórios", s: "A saúde da igreja num lugar: crescimento, cobertura de escala, bem-estar de quem serve." },
-  { route: "config", sel: '[data-tour="config"]', t: "Configurações", s: "Dados da igreja, permissões e convites pra outros líderes ficam aqui." },
-  { route: "identidade", sel: '[data-tour="identidade"]', t: "Identidade e propósito", s: "Visão, valores e o chamado da igreja." },
-  { route: "historia", sel: '[data-tour="historia"]', t: "Nossa história", s: "Os marcos da {caminhada} da igreja, em linha do tempo." },
-  { sel: '[data-tour="ajuda-fab"]', t: "Sempre por perto", s: 'Ficou com dúvida depois? Clique aqui a qualquer momento pra rever este tour. E em qualquer tela, o "?" ao lado de títulos, números e botões explica o que aquilo faz.' },
+  { route: "cultos", sel: '[data-tour="cultos"]', t: "{Cultos} e eventos", s: "A agenda da igreja. Cada {culto} pode virar uma escala." },
+  { route: "comunicacao", sel: '[data-tour="comunicacao"]', t: "Mural", s: "Avisos para a igreja toda ou só para um time, com lembrete para quem não viu." },
+  { route: "config", sel: '[data-tour="config"]', t: "Configurações", s: "Dados da igreja, cores do app, permissões e convites para outros líderes." },
+  { sel: '[data-tour="ajuda-fab"]', t: "Sempre por perto", s: 'Rever este tour fica aqui. Em qualquer tela, o "?" ao lado de títulos, números e botões explica o que aquilo faz.' },
 ];
 
 export function Coachmark({ steps, go, onDone, startAt = 0, onStepChange }: { steps: CoachStep[]; go?: (route: string) => void; onDone: () => void; startAt?: number; onStepChange?: (i: number) => void }) {
@@ -295,9 +285,9 @@ export function SetupChecklist({ counts, setRoute }: { counts: SetupCounts; setR
           </div>
           <div className="setup-title">Falta pouco pra sua igreja estar pronta</div>
         </div>
-        <button className="setup-close" type="button" onClick={hide} title="Esconder por agora">✕</button>
+        <button className="setup-close" type="button" onClick={hide} title="Esconder por agora" aria-label="Esconder por agora">✕</button>
       </div>
-      <div className="setup-bar"><div className="setup-bar-fill" style={{ width: `${pct}%` }} /></div>
+      <div className="setup-bar"><div className="setup-bar-fill" style={{ transform: `translateX(${pct - 100}%)` }} /></div>
       <div className="setup-list">
         {SETUP_ITENS.map((it) => {
           const ok = it.done(baseline, counts);

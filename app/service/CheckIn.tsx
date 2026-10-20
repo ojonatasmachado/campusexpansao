@@ -249,7 +249,7 @@ function ManualCheckinModal({
         </div>
         <div className="modal-body" style={{ display: "block" }}>
           <div className="tb-search" style={{ marginBottom: 12 }}>
-            <span className="si">🔍</span>
+            <span className="si" aria-hidden="true"><Icon name="buscar" size={14} /></span>
             <input
               placeholder={ct("Buscar {voluntario}...")}
               value={q}

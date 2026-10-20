@@ -513,24 +513,24 @@ export function Escalas({
     router.refresh();
   };
 
-  /* texto de perspectiva por papel, equivalente a evolucoes/service_app/escalas.jsx:384 */
+  /* líder de time ouve quais times está vendo; a gestão vê todos e não precisa do aviso */
   const perspectiveText = scopeMinistryIds
     ? (visibleMinistries.length > 1 ? `Você está vendo os ${visibleMinistries.length} times que lidera.` : `Você está vendo só o ${visibleMinistries[0]?.name ?? "seu time"}.`)
-    : "A Direção vê todos os times.";
+    : "";
 
   return (
     <div className="content wide">
       <PageHead
         title="Escalas por evento"
         eyebrow="Operação"
-        subtitle={ct(`Escolha o {culto} e veja as vagas de cada time. ${perspectiveText} Toque numa pessoa para confirmar, trocar ou remover; em Escalar para preencher a vaga.`)}
+        subtitle={ct(`Escolha o {culto} e preencha as vagas de cada time.${perspectiveText ? ` ${perspectiveText}` : ""}`)}
         help={ct("Monte quem serve em cada {culto}. As pessoas confirmam ou recusam direto no celular, e a vaga em aberto aparece em vermelho.")}
         action={
           <>
             <button className="btn btn-sec" type="button" onClick={() => setDelegarOpen(true)}><Icon name="membros" size={15} /> Delegar</button>
             <button className="btn btn-sec" type="button" onClick={() => setCheckinEventId(selectedEvent?.id ?? null)} disabled={!selectedEvent}><Icon name="cultos" size={15} /> QR Check-in</button>
             <button className="btn btn-sec" type="button" onClick={baixarCSV} disabled={!selectedEvent}><Icon name="relatorios" size={15} /> Baixar</button>
-            <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Publicar", title: "Publicar e avisar", subtitle: "A equipe recebe a escala pelo app e pelas notificações configuradas.", saveLabel: "Publicar e avisar →", formFields: [{ k:"msg", label:"Mensagem (opcional)", type:"area", ph:"Recado que vai junto com a escala..." }] })}>Publicar & avisar →</button>
+            <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Publicar", title: "Publicar e avisar", subtitle: "A equipe recebe a escala pelo app e pelas notificações configuradas.", saveLabel: "Publicar e avisar →", formFields: [{ k:"msg", label:"Mensagem (opcional)", type:"area", ph:"Recado que vai junto com a escala..." }] })}>Publicar e avisar →</button>
           </>
         }
       />

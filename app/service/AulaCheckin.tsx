@@ -178,7 +178,7 @@ function ManualAulaCheckinModal({
         </div>
         <div className="modal-body" style={{ display: "block" }}>
           <div className="tb-search" style={{ marginBottom: 12 }}>
-            <span className="si">🔍</span>
+            <span className="si" aria-hidden="true"><Icon name="buscar" size={14} /></span>
             <input placeholder="Buscar matriculado..." value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
           </div>
           {lista.length === 0 && (
@@ -456,7 +456,7 @@ export function AulaCheckinModal({
                           <div className="ck-row-name">{m.name}</div>
                           <div className="ck-row-meta">{rec.via === "manual" ? "manual" : "QR"} · {timeCurto(rec.checked_in_at)}</div>
                         </div>
-                        <button className="ck-undo" title="Desfazer presença" onClick={() => remover(rec.member_id)}>✕</button>
+                        <button className="ck-undo" title="Desfazer presença" aria-label="Desfazer presença" onClick={() => remover(rec.member_id)}>✕</button>
                       </div>
                     );
                   })}

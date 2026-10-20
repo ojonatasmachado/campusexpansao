@@ -6,7 +6,7 @@ import { ehNovo, nomeComparavel, possivelDuplicado } from "./lib/pessoas";
 import { avisar } from "./lib/avisar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { notifyPush } from "./lib/notify-push";
 import { uploadServiceImage, imageExtension } from "./lib/upload-image";
@@ -1071,6 +1071,10 @@ export default function ServiceExactApp({
   error,
 }: Props) {
   const [route, setRoute] = useState<keyof typeof ROUTES>("painel");
+  /* tela nova abre do topo: sem isso, Escalas abria na altura em que o Início estava
+     rolado. Layout effect roda antes dos efeitos das telas, então a rolagem até o time
+     de Escalas (foco vindo da cobertura) continua valendo. */
+  useLayoutEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, [route]);
   /* v7 4.16: clicar num time incompleto da cobertura abre Escalas no culto e no time */
   const [escalaFoco, setEscalaFoco] = useState<{ eventId: string; timeId?: string; n: number } | null>(null);
   const abrirVagas = (eventId: string, timeId?: string) => { setEscalaFoco((f) => ({ eventId, timeId, n: (f?.n ?? 0) + 1 })); setDrawer(null); setRoute("escalas"); };
@@ -1120,7 +1124,13 @@ export default function ServiceExactApp({
   };
   useEffect(() => {
     document.body.dataset.theme = theme;
-    return () => { document.body.dataset.theme = ""; };
+    /* barra de status do celular na cor do fundo do app (a do layout é fixa no
+       escuro CE.X): segue o modo claro/escuro e a família de neutros da igreja */
+    const fundo = getComputedStyle(document.body).getPropertyValue("--ink").trim();
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    const antes = meta?.content;
+    if (meta && fundo) meta.content = fundo;
+    return () => { document.body.dataset.theme = ""; if (meta && antes) meta.content = antes; };
   }, [theme]);
 
   const firstChurch = churches.find((c) => c.id === activeChurchId) ?? churches[0];
@@ -1152,6 +1162,8 @@ export default function ServiceExactApp({
     let savedStep = 0;
     try { tourDone = localStorage.getItem("cex_tour_done") === "1"; } catch { /* segue sem tour automático */ }
     try { savedStep = Number(localStorage.getItem("cex_tour_step") || "0") || 0; } catch { /* sem passo salvo */ }
+    /* passo salvo do tour antigo (20 passos) que não existe no tour atual: recomeça */
+    if (savedStep >= TOUR_DESKTOP.length) savedStep = 0;
     if (!tourDone) {
       if (savedStep > 0) {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- 1ª visita: precisa ler localStorage no cliente antes de decidir
@@ -1683,6 +1695,8 @@ export default function ServiceExactApp({
     setRoute(rotasPermitidas[0]);
   }
 
+  /* o tour só aponta para o que este papel vê no menu */
+  const tourSteps = TOUR_DESKTOP.filter((st) => !st.route || st.route === "painel" || (st.route === "config" ? podeVerNav("config", currentRole, matrizEfetiva, currentExtraAccess, souVoluntario) : podeVerItem(st.route)));
   /* ajuda "?": o mesmo menu no canto (computador) e na barra do topo (celular) */
   const abrirTourAjuda = () => { setShowTour(true); setNavOpen(true); };
   const abrirSetupAjuda = () => {
@@ -1770,6 +1784,8 @@ export default function ServiceExactApp({
           </div>
         </header>
 
+        {/* marco principal para leitor de tela; display:contents não mexe no layout */}
+        <main className="main-area">
         <RouteGroupContext.Provider value={ROUTE_GROUP[route] ?? null}>
         {error ? <ErrorPanel message={error} /> : null}
         {route === "painel" ? (
@@ -1911,15 +1927,16 @@ export default function ServiceExactApp({
         {route === "identidade" ? <Identidade church={firstChurch} identity={churchIdentity} cycle={cycles.find((c) => c.is_active) ?? cycles[0]} setModal={setModal} /> : null}
         {route === "historia" ? <Historia church={firstChurch} historyEntries={historyEntries} setModal={setModal} /> : null}
         </RouteGroupContext.Provider>
+        </main>
       </div>
 
       <HelpFab onTour={abrirTourAjuda} onSetup={abrirSetupAjuda} />
       {showTour ? (
         <Coachmark
-          steps={TOUR_DESKTOP}
+          steps={tourSteps}
           go={(r) => setRoute(r as keyof typeof ROUTES)}
           onDone={closeTour}
-          startAt={tourStart}
+          startAt={Math.min(tourStart, tourSteps.length - 1)}
           onStepChange={saveTourStep}
         />
       ) : null}
@@ -1928,7 +1945,7 @@ export default function ServiceExactApp({
           <div className="coach-pop" style={{ top: "40%", left: "50%", transform: "translate(-50%, -50%)" }}>
             <div className="coach-pop-eyebrow">Tour guiado</div>
             <div className="coach-pop-t">Retomar de onde parou?</div>
-            <div className="coach-pop-s">Você não terminou o tour da última vez. Parou no passo {tourResumeStep + 1} de {TOUR_DESKTOP.length}.</div>
+            <div className="coach-pop-s">Você não terminou o tour da última vez. Parou no passo {Math.min(tourResumeStep + 1, tourSteps.length)} de {tourSteps.length}.</div>
             <div className="coach-pop-actions">
               <button className="coach-skip" type="button" onClick={closeTour}>Não, obrigado</button>
               <div style={{ flex: 1 }} />
@@ -2330,7 +2347,7 @@ function Painel({
   const sobre: Array<[string, string]> = [
     [ct("{Voluntarios}"), "Pessoas que servem em algum time e estão com o status ativo, sem contar quem está em pausa ou de férias. Novos são os que chegaram à igreja nos últimos 30 dias."],
     ["Confirmação", "De todo mundo escalado nesta semana, quantos já confirmaram presença no app."],
-    ["Visitantes", "Visitantes que ainda estão na fase de acompanhamento, antes de virarem membros."],
+    ["Visitantes em acompanhamento", "Visitantes que ainda estão na fase de acompanhamento, antes de virarem membros. O número de Visitantes na Saúde da igreja conta só quem visitou no período escolhido."],
     ["Pendências da escala", "Posições da escala desta semana que ainda não têm ninguém confirmado."],
     ...(semanasComPresenca >= 4 ? [["Engajamento", "Presença média de quem foi escalado nos últimos 90 dias."] as [string, string]] : []),
     [ct("Próximos {cultos}"), ct("Os próximos {cultos} ou eventos da agenda, na ordem em que vão acontecer.")],
@@ -2356,7 +2373,7 @@ function Painel({
         </div>
         <div className="ph-actions">
           <button className="btn btn-sec" type="button" onClick={() => setRoute("cultos")}>Ver agenda</button>
-          <button className="btn btn-pri" type="button" onClick={() => setRoute("escalas")}>Montar escala →</button>
+          <button className="btn btn-pri" type="button" onClick={() => setRoute("escalas")}>Escalar →</button>
         </div>
       </div>
       {gestao && (
@@ -2410,7 +2427,7 @@ function Painel({
       {!liderDeTime && <div className="kpi-row kpi-3">
         <Kpi icon="pessoa" label={ct("{Voluntarios}")} value={activePeople} foot={joinDot(`de ${plural(people.length, "cadastrado")}`, novosNoMes ? `${plural(novosNoMes, "novo", "novos")} em 30 dias` : null)} />
         <Kpi icon="ok" label="Confirmação" value={escaladosSemana ? `${confirmationRate}%` : "·"} foot={escaladosSemana ? `de ${plural(escaladosSemana, "escalado")} nesta semana` : "ninguém escalado nesta semana"} />
-        <Kpi icon="visitante" label="Visitantes" value={visitorsInCare} foot={visitantesSemContato ? "em acompanhamento" : "em acompanhamento, todos com contato em dia"} />
+        <Kpi icon="visitante" label="Visitantes em acompanhamento" value={visitorsInCare} foot={visitantesSemContato ? `${visitantesSemContato} sem contato há mais de 48h` : "todos com contato em dia"} />
       </div>}
       <div className="sobre-numeros"><button type="button" className="help-link" onClick={() => setSobreAberto(true)}>Sobre estes números</button></div>
       {sobreAberto && (
@@ -2433,7 +2450,7 @@ function Painel({
         <div className="panel">
           <div className="panel-head">
             <span className="panel-title"><Icon name="escalas" size={14} /> Pendências da escala</span>
-            <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("escalas")}>Resolver</button>
+            <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("escalas")}>Escalar</button>
           </div>
           <div className="panel-body flush">
             {(() => {
@@ -2627,7 +2644,7 @@ function Kpi({ icon, label, value, foot, amber, help }: { icon: string; label: s
   return (
     <div className="kpi">
       <div className="kpi-label"><Icon name={icon} size={13} /> {label}</div>
-      <div className="kpi-value" style={amber ? { color: "var(--amber)" } : undefined}>{value}</div>
+      <div className="kpi-value" style={amber ? { color: "var(--amber)" } : undefined}>{typeof value === "number" ? value.toLocaleString("pt-BR") : value}</div>
       <div className="kpi-foot">{foot}</div>
       {help ? <div className="kpi-how"><HelpDot label="Como calculamos" text={help} /></div> : null}
     </div>
@@ -3130,7 +3147,7 @@ function ReuniaoForm({
   return (
     <DrawerShell onClose={onClose} wide>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>Nova reunião</div>
         <input className="ce-title-input" placeholder="Título da reunião" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
       </div>
@@ -3419,7 +3436,7 @@ function ReuniaoDrawer({
     <>
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{meeting.status === "agendada" ? "Reunião agendada" : "Reunião realizada"}</div>
         <div className="profile-name">{meeting.title}</div>
         <div className="profile-role">{formatDateBR(meeting.meeting_date) || "sem data"} · {meeting.time || ""} · {meeting.location || "sem local"}</div>
@@ -3556,7 +3573,7 @@ function EnsaioDrawer({
   return (
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{rehearsal.kind || "Ensaio"} · {rehearsal.recurrence || "eventual"}</div>
         <div className="profile-name">{rehearsal.title}</div>
         <div className="profile-role">{formatDateBR(rehearsal.rehearsal_date) || "sem data"} · {rehearsal.time || ""} · {rehearsal.location || "sem local"}{rehearsal.audience ? " · " + rehearsal.audience : ""}</div>
@@ -3880,7 +3897,7 @@ function Criancas({
           const guardians = childGuardians.filter((g) => g.child_id === child.id);
           return (
             <button className="tr click" type="button" key={child.id} style={{ gridTemplateColumns: "1.6fr 1fr 1fr 1.4fr" }} onClick={() => setForm({ open: true, child })}>
-              <div className="cell-person"><Av name={child.name} size="md" photoUrl={child.photo_url} /><div><div className="cell-name">{child.name}</div>{child.allergies ? <div className="cell-sub">⚠ {child.allergies}</div> : null}</div></div>
+              <div className="cell-person"><Av name={child.name} size="md" photoUrl={child.photo_url} /><div><div className="cell-name">{child.name}</div>{child.allergies ? <div className="cell-sub">Alergia: {child.allergies}</div> : null}</div></div>
               <div className="cell-sub">{childAgeLabel(child.birth)}</div>
               <div>{child.class_id ? <span className="tag">{classById.get(child.class_id)?.name ?? "Turma"}</span> : <span className="cell-sub">sem turma</span>}</div>
               <div className="cell-sub">{guardians.length ? guardians.map((g) => personById.get(g.guardian_person_id)?.name.split(" ")[0]).filter(Boolean).join(", ") : "sem responsável"}</div>
@@ -4786,7 +4803,7 @@ function CardDrawer({
       <div className="drawer-bg" onClick={onClose} />
       <div className="drawer drawer-wide">
         <div className="drawer-head">
-          <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+          <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
           <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{board.name}</div>
           <div className="profile-name" style={{ fontSize: "var(--fs-pn-20)" }}>{lc.title}</div>
         </div>
@@ -5431,7 +5448,7 @@ function Conversas({
 
 function Bars({ series, labels }: { series: number[]; labels: string[] }) {
   const max = Math.max(...series, 1);
-  return <div className="bars">{series.map((value, index) => <div className="bars-col" key={labels[index] ?? index}><div className={`bars-bar ${index === series.length - 1 ? "hi" : ""}`} style={{ height: `${(value / max) * 100}%` }} /><span className="bars-x">{labels[index]}</span></div>)}</div>;
+  return <div className="bars">{series.map((value, index) => <div className="bars-col" key={labels[index] ?? index}><div className="bars-track"><div className={`bars-bar ${index === series.length - 1 ? "hi" : ""}`} style={{ transform: `translateY(${100 - (value / max) * 100}%)` }} /></div><span className="bars-x">{labels[index]}</span></div>)}</div>;
 }
 
 function Relatorios({
@@ -5603,13 +5620,6 @@ const TAG_CORES = [
   { v: "sand", l: "Areia" },
   { v: "amber", l: "Âmbar" },
   { v: "rust", l: "Ferrugem" },
-];
-
-const ACCENTS = [
-  { id: "olive", nome: "Oliva", hex: "#7ea850" },
-  { id: "wheat", nome: "Trigo", hex: "#c9a85c" },
-  { id: "clay", nome: "Argila", hex: "#b87059" },
-  { id: "amber", nome: "Âmbar", hex: "#d4923e" },
 ];
 
 /* ── Papéis & permissões · 4 níveis (Master, Pastor, Líder, Voluntário) ── */
@@ -6491,15 +6501,17 @@ function TagElencoModal({
               <div className={`flag-row${on ? " on" : ""}`} key={p.id} style={{ cursor: "pointer" }} onClick={() => toggleElenco(p.id)}>
                 <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
                 <div className="flag-main">
-                  <div className="flag-nome">{p.name}{lider && <span style={{ marginLeft: 8, fontSize: "var(--fs-pn-12)", color: "var(--amber)" }}>★ líder</span>}</div>
+                  <div className="flag-nome">{p.name}{lider && <span style={{ marginLeft: 8, fontSize: "var(--fs-pn-12)", color: "var(--amber)", display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="estrela" size={12} /> líder</span>}</div>
                 </div>
                 <button
                   type="button"
                   title={lider ? "Remover como líder" : "Tornar líder do time"}
+                  aria-label={lider ? "Remover como líder" : "Tornar líder do time"}
+                  aria-pressed={lider}
                   onClick={(e) => { e.stopPropagation(); toggleLider(p.id); }}
                   style={{ background: "none", border: "none", cursor: "pointer", fontSize: "var(--fs-pn-16)", color: lider ? "var(--amber)" : "var(--muted)" }}
                 >
-                  ★
+                  <Icon name="estrela" size={16} />
                 </button>
               </div>
             );
@@ -7950,7 +7962,7 @@ function DecisaoDrawer({
   return (
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
         <div className="profile-top">
           <Av name={decision.name} size="lg" />
           <div>
@@ -8093,7 +8105,7 @@ function BatismoDrawer({
   return (
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
         <div className="profile-top">
           <div className="bat-mark"><Icon name="batismos" size={22} /></div>
           <div>
@@ -8208,7 +8220,7 @@ function VisitanteDrawer({
   return (
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
         <div className="profile-top">
           <Av name={initVisitor.name} size="lg" />
           <div>
@@ -8705,7 +8717,7 @@ function EntityDrawer({
     return (
       <DrawerShell onClose={() => setDrawer(null)}>
         <div className="drawer-head">
-          <button className="drawer-close" type="button" onClick={() => setDrawer(null)}>✕</button>
+          <button className="drawer-close" type="button" aria-label="Fechar" onClick={() => setDrawer(null)}>✕</button>
           <div className="profile-top">
             <Av name={person.name} size="lg" photoUrl={person.photoUrl} />
             <div>
@@ -8779,7 +8791,7 @@ function EntityDrawer({
       <>
       <DrawerShell onClose={() => setDrawer(null)}>
         <div className="drawer-head">
-          <button className="drawer-close" type="button" onClick={() => setDrawer(null)}>✕</button>
+          <button className="drawer-close" type="button" aria-label="Fechar" onClick={() => setDrawer(null)}>✕</button>
           <div className="profile-top">
             <Av name={member.name} size="lg" photoUrl={linkedPerson?.photoUrl} />
             <div>
@@ -8938,7 +8950,7 @@ function EntityDrawer({
       <>
       <DrawerShell onClose={() => setDrawer(null)}>
         <div className="drawer-head">
-          <button className="drawer-close" type="button" onClick={() => setDrawer(null)}>✕</button>
+          <button className="drawer-close" type="button" aria-label="Fechar" onClick={() => setDrawer(null)}>✕</button>
           <div className="profile-top">
             <div className="team-mark" style={{ width: 56, height: 56 }}><TeamMark ministry={ministry} size={26} /></div>
             <div>
@@ -9175,7 +9187,7 @@ function EventDrawer({
   return (
     <DrawerShell onClose={onClose} wide>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{joinDot(event.weekday, formatDateBR(event.eventDate))}</div>
         <div className="profile-name">{event.name}</div>
         <div className="profile-role">{joinDot(event.time, event.location, event.kind)}</div>
@@ -9418,7 +9430,7 @@ function CronogramaEditor({ event, ministries, onRefresh }: { event: EventView; 
                 <div className="crono-actions">
                   <button type="button" className="crono-mini" title="Subir" onClick={() => moveStep(i, -1)} disabled={i === 0}>↑</button>
                   <button type="button" className="crono-mini" title="Descer" onClick={() => moveStep(i, 1)} disabled={i === steps.length - 1}>↓</button>
-                  <button type="button" className="crono-mini danger" title="Remover" onClick={() => removeStep(s.id)}>✕</button>
+                  <button type="button" className="crono-mini danger" title="Remover" aria-label="Remover" onClick={() => removeStep(s.id)}>✕</button>
                 </div>
               </div>
               <div className="crono-fields">

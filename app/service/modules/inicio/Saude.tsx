@@ -35,11 +35,14 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, extras = [] }: {
     <div className="saude-grid">
       {nums.map((n) => {
         const cmp = comparacao(n.valor, n.anterior, dias);
+        /* "igual aos 30 dias anteriores" em todo bloco parado só fazia barulho:
+           a comparação aparece na tela quando o número mudou (o leitor de tela ouve sempre) */
+        const mudou = n.anterior !== undefined && n.anterior !== n.valor;
         return (
           <button key={n.id} type="button" className="saude-n" onClick={() => setLista(n)} disabled={!n.itens.length} aria-label={`${ct(n.rotulo)}: ${n.valor}${cmp ? `, ${cmp}` : ""}. Ver a lista`}>
-            <span className="saude-v">{n.valor}</span>
+            <span className="saude-v">{n.valor.toLocaleString("pt-BR")}</span>
             <span className="saude-l">{ct(n.rotulo)}</span>
-            {cmp && <span className="saude-c">{cmp}</span>}
+            {cmp && mudou && <span className="saude-c">{cmp}</span>}
           </button>
         );
       })}

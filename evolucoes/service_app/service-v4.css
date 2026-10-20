@@ -31,12 +31,12 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 /* ── grade de livros ───────────────────────────────────────────── */
 .bib-books { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 6px; }
 .bib-book { min-width: 0; background: var(--graphite); border: 0.5px solid var(--border-2); border-radius: var(--r-md); padding: 11px 6px; font-size: var(--fs-app-13); color: var(--light); text-align: center; line-height: 1.3; overflow-wrap: break-word; hyphens: auto; transition: border-color .14s, background .14s; }
-.bib-book:hover { border-color: var(--olive-line); }
+@media (hover:hover) and (pointer:fine) { .bib-book:hover { border-color: var(--olive-line); } }
 
 /* ── grade de capítulos ───────────────────────────────────────── */
 .bib-chapters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
 .bib-chapter { min-width: 0; aspect-ratio: 1; background: var(--graphite); border: 0.5px solid var(--border-2); border-radius: var(--r-md); font-family: var(--mono); font-size: var(--fs-app-13); font-weight: 600; color: var(--light); display: flex; align-items: center; justify-content: center; transition: border-color .14s, background .14s; }
-.bib-chapter:hover { border-color: var(--olive-line); background: var(--olive-dim); }
+@media (hover:hover) and (pointer:fine) { .bib-chapter:hover { border-color: var(--olive-line); background: var(--olive-dim); } }
 
 /* ── cabeçalho do leitor ─────────────────────────────────────── */
 .bib-reader-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
@@ -47,7 +47,7 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 /* ── versículos ────────────────────────────────────────────────── */
 .bib-verses { display: flex; flex-direction: column; gap: 2px; }
 .bib-verse { display: flex; align-items: flex-start; gap: 10px; width: 100%; text-align: left; background: transparent; border: none; border-left: 3px solid transparent; border-radius: 0 var(--r-sm) var(--r-sm) 0; padding: 8px 10px 8px 11px; transition: background .14s; }
-.bib-verse:hover { background: var(--graphite); }
+@media (hover:hover) and (pointer:fine) { .bib-verse:hover { background: var(--graphite); } }
 .bib-verse.marked { border-left-color: var(--mark); background: color-mix(in srgb, var(--mark) 14%, transparent); }
 .bib-verse-n { font-family: var(--mono); font-size: var(--fs-app-13); color:var(--muted); flex-shrink: 0; margin-top: 3px; min-width: 16px; }
 .bib-verse.marked .bib-verse-n { color: var(--mark); font-weight: 700; }
@@ -66,7 +66,7 @@ body[data-theme="light"] { --cocoa: #5A4230; }
 .bib-action-text { font-size: var(--fs-app-15); line-height: 1.6; color: var(--light); margin: 0; }
 .bib-swatches { display: flex; align-items: center; gap: 9px; margin-top: 16px; flex-wrap: wrap; }
 .bib-swatch { width: 28px; height: 28px; border-radius: 50%; background: var(--mark); border: 2px solid transparent; transition: transform .14s, border-color .14s; }
-.bib-swatch:hover { transform: scale(1.08); }
+@media (hover: hover) and (pointer: fine) { .bib-swatch:hover { transform: scale(1.08); } }
 .bib-swatch.on { border-color: var(--white); }
 .bib-swatch-clear { width: 28px; height: 28px; border-radius: 50%; background: var(--ink); border: 0.5px solid var(--border-2); color:var(--muted); font-size: var(--fs-app-13); display: flex; align-items: center; justify-content: center; }
 .bib-copy { display: inline-flex; align-items: center; gap: 6px; }

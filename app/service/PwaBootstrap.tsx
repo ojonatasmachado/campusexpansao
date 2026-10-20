@@ -19,6 +19,9 @@ export default function PwaBootstrap() {
   const [installable, setInstallable] = useState(false);
   const [installed, setInstalled] = useState(false);
   const [dismissed, setDismissed] = useState(true);
+  /* no primeiro contato a pessoa ainda está conhecendo o app (e a liderança
+     está no tour): o convite para instalar só aparece a partir da 2ª visita */
+  const [primeiraVisita, setPrimeiraVisita] = useState(true);
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
@@ -31,6 +34,19 @@ export default function PwaBootstrap() {
       setDismissed(localStorage.getItem("cex_install_dismiss") === "1");
     } catch {
       setDismissed(false);
+    }
+
+    try {
+      let visitas = Number(localStorage.getItem("cex_visitas") || "0") || 0;
+      if (!sessionStorage.getItem("cex_sessao")) {
+        sessionStorage.setItem("cex_sessao", "1");
+        visitas += 1;
+        localStorage.setItem("cex_visitas", String(visitas));
+      }
+      setPrimeiraVisita(visitas < 2);
+    } catch {
+      /* sem armazenamento não dá para contar visitas: mostra o convite */
+      setPrimeiraVisita(false);
     }
 
     if (window.matchMedia?.("(display-mode: standalone)").matches) {
@@ -83,7 +99,7 @@ export default function PwaBootstrap() {
   /* telas de entrada (login, convite, senha nova, primeiro cadastro): o aviso
      cobria o rodapé do formulário no celular, e instalar só faz sentido
      depois de entrar */
-  if (installed || dismissed || TELAS_DE_ENTRADA.test(pathname ?? "")) return null;
+  if (installed || dismissed || primeiraVisita || TELAS_DE_ENTRADA.test(pathname ?? "")) return null;
 
   return (
     <div className="pwa-banner">
