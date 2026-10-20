@@ -414,10 +414,10 @@ function TabTarefas({ person, cards, boards, onAddCardComment }: { person: P; ca
     return (
       <div className={`m-task ${isLate ? "late" : ""}`} key={c.id}>
         <button className="m-task-head" onClick={() => toggleOpen(c.id)}>
-          <span className={`prio-dot prio-${c.priority ?? "media"}`} />
+          <span className={`prio-dot prio-${c.priority ?? "media"}`} aria-hidden="true" />
           <div className="m-task-main">
             <div className="m-task-title">{c.title}</div>
-            <div className="m-task-meta">{board?.name ?? "Quadro"}</div>
+            <div className="m-task-meta">{joinDot(board?.name ?? "Quadro", `Prioridade ${PRIORIDADE[c.priority ?? "media"] ?? "média"}`)}</div>
           </div>
           <span className="m-task-caret"><Caret open={isOpen} /></span>
         </button>
@@ -980,7 +980,7 @@ function TabBiblia({
                 />
               ))}
               {marcaAtual?.color && (
-                <button type="button" className="bib-swatch-clear" title="Remover cor" onClick={() => escolherCor(null)}>✕</button>
+                <button type="button" className="bib-swatch-clear" title="Remover cor" aria-label="Remover cor" onClick={() => escolherCor(null)}>✕</button>
               )}
             </div>
             <div className="field" style={{ marginTop: 14 }}>
@@ -1297,7 +1297,7 @@ function TabKids({
               <Av name={child?.name ?? "?"} size="sm" photoUrl={child?.photo_url} />
               <div className="m-vis-main">
                 <div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{child?.name ?? "Crianca"}</div>
-                <div className="m-fn">{child?.allergies ? `⚠ ${child.allergies}` : (att.dropped_off_via === "manual" ? "manual" : "QR")}</div>
+                <div className="m-fn">{child?.allergies ? `Alergia: ${child.allergies}` : (att.dropped_off_via === "manual" ? "manual" : "QR")}</div>
               </div>
               <button className="m-btn m-btn-swap" style={{ padding: "6px 10px" }} onClick={() => avisarResponsavel(att.child_id)}>Avisar</button>
             </div>
@@ -2396,9 +2396,9 @@ function TabKidsArea({
                 <Av name={child.name} size="sm" photoUrl={child.photo_url} />
                 <div className="m-vis-main">
                   <div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{child.name}</div>
-                  <div className="m-fn">{turma?.name ?? "sem turma"}{child.allergies ? ` · ⚠ ${child.allergies}` : ""}</div>
+                  <div className="m-fn">{turma?.name ?? "sem turma"}{child.allergies ? ` · alergia: ${child.allergies}` : ""}</div>
                 </div>
-                <span className="m-task-caret">✎</span>
+                <span className="m-task-caret" aria-hidden="true"><Icon name="editar" size={16} /></span>
               </div>
               {historico.length > 0 && (
                 <div style={{ marginTop: 10, fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>
@@ -2993,7 +2993,7 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
           <div key={e.id} className="m6-card">
             <div className="m6-kick">Tarefa</div>
             <div className="m6-ct">{c.card.title}</div>
-            <div className="m6-meta">{c.card.due ? `Prazo · ${formatDateBR(c.card.due)}` : "Sem prazo"}</div>
+            <div className="m6-meta">{!c.card.due ? "Sem prazo" : c.card.due.slice(0, 10) < todayISO() ? <M6St k="warn" ic="alerta">{`Atrasada desde ${formatDateBR(c.card.due)}`}</M6St> : `Prazo · ${formatDateBR(c.card.due)}`}</div>
             <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("agenda", null, { agSeg: "minha" })}>Ver a tarefa</button></div>
           </div>
         );
@@ -3371,10 +3371,14 @@ function AgendaV6({ seg, setSeg, person, member, members, ministries, events, ro
           ))}
           {itens.length === 0 && pend.length === 0 && (
             <div className="m6-sec">
-              <div className="m6-card"><div className="m6-ct">Nada marcado para você</div><div className="m6-meta">{ct("O que você tiver na igreja aparece aqui por dia. A programação de {cultos} e eventos está em Igreja.")}</div></div>
+              <div className="m6-card">
+                <div className="m6-ct">Nada marcado para você</div>
+                <div className="m6-meta">{ct("Quando você for escalado ou se inscrever em algo, aparece aqui por dia.")}</div>
+                <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => setSeg("igreja")}>{ct("Ver os {cultos} e eventos")}</button></div>
+              </div>
             </div>
           )}
-          {serve && meus.length === 0 && <div className="m6-pad m6-meta">{ct("Você não está na escala dos próximos {cultos}.")}</div>}
+          {serve && meus.length === 0 && (itens.length > 0 || pend.length > 0) && <div className="m6-pad m6-meta">{ct("Você não está na escala dos próximos {cultos}.")}</div>}
           {tarefasAbertas.length > 0 && (
             <div className="m6-sec m6-legacy">
               <TabTarefas person={person} cards={cards} boards={boards} onAddCardComment={onAddCardComment} />
@@ -3578,6 +3582,7 @@ type StepView = {
   inscricao?: string;
 };
 const STW = { feito: "Concluída", andamento: "Em andamento", afazer: "A fazer" } as const;
+const PRIORIDADE: Record<string, string> = { alta: "alta", media: "média", baixa: "baixa" };
 
 function useSteps({ person, member, ministries, courses, enrollments, courseModules = [], courseLessons = [], baptismClasses, journeyRequests, onOpenSub, onRequestStep, onServir }: {
   person: P; member: M | null; ministries: Ministry[]; courses: Course[]; enrollments: Enrollment[]; baptismClasses: BaptismClass[];
@@ -3656,14 +3661,15 @@ function SheetTimes({ person, member, ministries, members, people }: { person: P
 
 function CaminhadaV6({ steps, courses, purpose }: { steps: StepView[]; courses: React.ReactNode; purpose?: { kick?: string | null; title?: string | null; text?: string | null } | null }) {
   const ui = useContext(MemberUiContext);
+  const { comTermos: ct } = useTermos();
   const done = steps.filter((s) => s.st === "feito").length;
   return (
     <>
       <div className="m6-sec0">
         <div className="m6-card">
-          <div className="m6-ct">{done} de {steps.length} etapas concluídas</div>
+          <div className="m6-ct">{steps.length > 0 && done === steps.length ? "Todas as etapas concluídas" : `${done} de ${steps.length} etapas concluídas`}</div>
           <div className="m6-segbar">{steps.map((s) => <i key={s.id} className={s.st} />)}</div>
-          <div className="m6-meta">Cada etapa acontece no seu tempo, em qualquer ordem.</div>
+          <div className="m6-meta">{steps.length > 0 && done === steps.length ? ct("Daqui pra frente, a {caminhada} segue nos cursos, no seu time e na leitura da Bíblia, logo abaixo.") : "Cada etapa acontece no seu tempo, em qualquer ordem."}</div>
         </div>
       </div>
       <div className="m6-sec">
@@ -3980,7 +3986,8 @@ function MobileMembro({
           )}
         </div>
 
-        <div className="m-scroll" ref={scrollRef}>
+        {/* marco principal só no app de verdade; a prévia do líder fica dentro do painel, que já tem o seu */}
+        <div className="m-scroll" ref={scrollRef} role={mode === "self" ? "main" : undefined}>
           {tab === "inicio" && (
             <InicioV6 person={person} member={member} ministries={ministries} members={members} events={events} roster={roster} cards={cards}
               announcements={muralOn ? announcements : []} unreadIds={unreadIds} kidsChildren={kidsChildren} childGuardians={childGuardians}

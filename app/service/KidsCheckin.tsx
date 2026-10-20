@@ -213,7 +213,7 @@ export function KidsQRModal({
                       <span className="ck-check"><Icon name="ok" size={14} /></span>
                       <div className="av av-sm">{child ? ini(child.name) : "?"}</div>
                       <div className="ck-row-main">
-                        <div className="ck-row-name">{child?.name ?? "Criança"}{child?.allergies ? <span className="ck-extra">⚠ alergia</span> : null}</div>
+                        <div className="ck-row-name">{child?.name ?? "Criança"}{child?.allergies ? <span className="ck-extra"><Icon name="alerta" size={13} /> alergia</span> : null}</div>
                         <div className="ck-row-meta">{att.dropped_off_via === "manual" ? "manual" : "QR"}</div>
                       </div>
                     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { plural } from "./lib/plural";
+import { Icon } from "./lib/icons";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
@@ -101,7 +102,7 @@ function MatricularModal({
         </div>
         <div className="modal-body" style={{ display: "block" }}>
           <div className="tb-search" style={{ marginBottom: 12 }}>
-            <span className="si">🔍</span>
+            <span className="si" aria-hidden="true"><Icon name="buscar" size={14} /></span>
             <input
               placeholder="Buscar pessoa..."
               value={q}
@@ -186,7 +187,7 @@ export default function CursoDrawer({
       <div className="drawer-bg" onClick={onClose} />
       <div className="drawer drawer-wide">
         <div className="drawer-head">
-          <button className="drawer-close" type="button" onClick={onClose}>✕</button>
+          <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
           <div className="ph-eyebrow">
             {COURSE_KIND_LABEL[course.kind ?? "trilha"]}{course.level ? ` · ${course.level}` : ""}
           </div>

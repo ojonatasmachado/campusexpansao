@@ -279,7 +279,7 @@ function QuizEditor({
                   value={q.q}
                   onChange={(e) => setQ(i, "q", e.target.value)}
                 />
-                <button className="ce-x" type="button" onClick={() => del(i)}>✕</button>
+                <button className="ce-x" type="button" onClick={() => del(i)} aria-label="Remover">✕</button>
               </div>
               {q.opts.map((o, oi) => (
                 <div className="quiz-opt" key={oi}>
