@@ -4,6 +4,7 @@ import { Icon } from "./lib/icons";
 import { htmlSeguro } from "./lib/html-seguro";
 import { plural } from "./lib/plural";
 import { useEffect, useRef, useState } from "react";
+import { FormScreen, FormSection, type FormScreenHandle } from "./painel/form/FormScreen";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { useServiceAccess } from "./AccessContext";
@@ -329,6 +330,10 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [quiz, setQuiz] = useState<{ mi: number; ai: number } | null>(null);
+  const telaRef = useRef<FormScreenHandle>(null);
+  /* retrato do curso como abriu (depois de carregar), para perguntar antes de descartar */
+  const [retratoInicial, setRetratoInicial] = useState<string | null>(null);
+  useEffect(() => { if (!loading && retratoInicial === null) setRetratoInicial(JSON.stringify(c)); }, [loading, retratoInicial, c]);
 
   const isEdit = !!courseId;
 
@@ -522,8 +527,8 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
         }
       }
 
+      if (telaRef.current) await telaRef.current.fechar(); else onClose();
       router.refresh();
-      onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao salvar.");
     } finally {
@@ -531,51 +536,29 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
     }
   };
 
-  if (loading) {
-    return (
-      <div className="ce-page">
-        <div className="ce-page-bar">
-          <button className="ce-page-back" type="button" onClick={onClose}>← Cursos</button>
-          <div className="ce-page-bar-title">Carregando…</div>
-        </div>
-        <div style={{ padding: 40, color: "var(--muted)", textAlign: "center" }}>Carregando curso…</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="ce-page">
-      {/* barra fixa */}
-      <div className="ce-page-bar">
-        <button className="ce-page-back" type="button" onClick={onClose}>
-          <span aria-hidden="true">←</span> Cursos
-        </button>
-        <div className="ce-page-bar-title">
-          {isEdit ? "Editar curso" : "Novo curso"}{c.nome ? ` · ${c.nome}` : ""}
-        </div>
-        <div className="ce-page-bar-actions">
-          <button className="btn btn-sec" type="button" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button className="btn btn-pri" type="button" onClick={salvar} disabled={saving}>
-            {saving ? "Salvando…" : isEdit ? "Salvar curso" : "Criar curso"}
-          </button>
-        </div>
-      </div>
-
-      <div className="ce-page-scroll">
-        <div className="ce-page-inner">
-          {error && <div className="field-error" style={{ marginBottom: 16 }}>{error}</div>}
-
-          <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{isEdit ? "Editar curso" : "Novo curso"}</div>
-          <input
-            className="ce-title-input"
-            placeholder="Nome do curso"
-            value={c.nome}
-            onChange={(e) => set("nome", e.target.value)}
-          />
+    <FormScreen
+      ref={telaRef}
+      eyebrow={isEdit ? "Editar curso" : "Novo curso"}
+      title={c.nome.trim() || (isEdit ? "Editar curso" : "Novo curso")}
+      saveLabel={isEdit ? "Salvar curso" : "Criar curso"}
+      saving={saving}
+      missing={loading || c.nome.trim() ? [] : ["nome do curso"]}
+      dirty={retratoInicial !== null && JSON.stringify(c) !== retratoInicial}
+      error={error}
+      onSave={salvar}
+      onClose={onClose}
+    >
+      {loading ? <p className="fs-note">Carregando curso…</p> : (<>
+          <FormSection title="Curso">
+            <div className="field">
+              <label className="field-label req" htmlFor="ce-nome">Nome do curso</label>
+              <input id="ce-nome" className="input" aria-required="true" placeholder="ex: Fundamentos da fé" value={c.nome} onChange={(e) => set("nome", e.target.value)} />
+            </div>
+          </FormSection>
 
           {/* identificação */}
-          <div className="dsec" style={{ marginTop: 0 }}>
-            <div className="dsec-title">Onde fica e como é</div>
+          <FormSection title="Onde fica e como é">
             <div className="ce-grid">
               <div className="field">
                 <label className="field-label">Nível</label>
@@ -610,9 +593,9 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
               <label className="field-label">Descrição</label>
               <textarea className="textarea" value={c.desc} placeholder="Para quem é e o que vão aprender" onChange={(e) => set("desc", e.target.value)} />
             </div>
-          </div>
+          </FormSection>
 
-          <div className="dsec">
+          <FormSection title="No app">
             <div className="cfg-row" style={{ borderBottom: "none", padding: 0 }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Aparece no app do membro</div>
@@ -620,11 +603,10 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
               </div>
               <button type="button" role="switch" aria-checked={c.publicado} aria-label="Aparece no app do membro" className={`sw${c.publicado ? " on" : ""}`} onClick={() => set("publicado", !c.publicado)} />
             </div>
-          </div>
+          </FormSection>
 
           {/* divulgação */}
-          <div className="dsec">
-            <div className="dsec-title">Divulgação · antes de inscrever</div>
+          <FormSection title="Divulgação · antes de inscrever">
             <div className="cfg-card-s" style={{ marginBottom: 12 }}>
               Texto e materiais que aparecem para quem ainda não se inscreveu.
             </div>
@@ -641,17 +623,15 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
               <label className="field-label">Materiais de divulgação</label>
               <MateriaisEditor value={c.materiais} onChange={(v) => set("materiais", v)} />
             </div>
-          </div>
+          </FormSection>
 
           {/* pré-requisitos */}
-          <div className="dsec">
-            <div className="dsec-title">Pré-requisitos para se inscrever</div>
+          <FormSection title="Pré-requisitos para se inscrever">
             <RequisitosEditor value={c.preReqs} onChange={(v) => set("preReqs", v)} courses={outros} events={access.events} groupsLabel={access.groupsLabel} />
-          </div>
+          </FormSection>
 
           {/* conteúdo */}
-          <div className="dsec">
-            <div className="dsec-title">Conteúdo · {plural(c.modulos.length, "módulo")} · {plural(totalAulas, "aula")}</div>
+          <FormSection title={`Conteúdo · ${plural(c.modulos.length, "módulo")} · ${plural(totalAulas, "aula")}`}>
             {c.modulos.map((mod, mi) => (
               <div className="ce-mod" key={mod.id}>
                 <div className="ce-mod-head">
@@ -741,18 +721,10 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
               </div>
             ))}
             <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={addModulo}>
-              + Novo módulo
+              Novo módulo
             </button>
-          </div>
-
-          <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
-            <button className="btn btn-pri" type="button" style={{ flex: 1, justifyContent: "center" }} onClick={salvar} disabled={saving}>
-              {saving ? "Salvando…" : isEdit ? "Salvar curso" : "Criar curso"}
-            </button>
-            <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          </div>
-        </div>
-      </div>
+          </FormSection>
+      </>)}
 
       {quiz && (
         <QuizEditor
@@ -767,6 +739,6 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
           onClose={() => setQuiz(null)}
         />
       )}
-    </div>
+    </FormScreen>
   );
 }

@@ -138,7 +138,7 @@ export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScree
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key !== "Escape" || e.defaultPrevented) return;
     if (confirmarRef.current) { e.preventDefault(); setConfirmar(false); return; }
-    if (rootRef.current?.querySelector(".dp-pop, .sel-pop, .sel-menu, .help-pop")) return;
+    if (rootRef.current?.querySelector(".dp-pop, .sel-pop, .sel-menu, .help-pop, .modal-bg")) return;
     e.preventDefault();
     pedirFechar();
   };

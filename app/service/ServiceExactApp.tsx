@@ -6308,6 +6308,13 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
   const { comTermos: ct } = useTermos();
   const [d, setD] = useState<PesquisaDraft>(initial);
   const isNew = initial.id.startsWith("nova-");
+  const fid = useId();
+  const [retratoInicial] = useState(() => JSON.stringify(initial));
+  const falta = [
+    !d.nome.trim() && "nome",
+    d.perguntas.length === 0 && "uma pergunta",
+    d.perguntas.some((p) => !p.texto.trim()) && "o texto de cada pergunta",
+  ].filter(Boolean) as string[];
   const times = Array.from(new Set(ministries.map((m) => m.name))).sort((a, b) => a.localeCompare(b, "pt-BR"));
 
   const addPergunta = () => {
@@ -6324,13 +6331,24 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
   };
 
   return (
-    <div className="cfg-card">
-      <div className="cfg-card-t">{isNew ? "Nova pesquisa" : "Editar pesquisa"}</div>
-      <div className="field"><label className="field-label">Nome da pesquisa</label><input className="input" placeholder="ex: Pulso pós-escala" value={d.nome} onChange={(e) => setD({ ...d, nome: e.target.value })} /></div>
+    <FormScreen
+      eyebrow="Pesquisas"
+      title={d.nome.trim() || (isNew ? "Nova pesquisa" : "Editar pesquisa")}
+      saveLabel="Salvar pesquisa"
+      saving={saving}
+      missing={falta}
+      dirty={JSON.stringify(d) !== retratoInicial}
+      error={saveError}
+      onSave={() => { void onSave(d); }}
+      onClose={onCancel}
+    >
+      <FormSection title="Pesquisa">
+        <div className="field"><label className="field-label req" htmlFor={`${fid}-nome`}>Nome da pesquisa</label><input id={`${fid}-nome`} className="input" aria-required="true" placeholder="ex: Pulso pós-escala" value={d.nome} onChange={(e) => setD({ ...d, nome: e.target.value })} /></div>
+      </FormSection>
 
+      <FormSection title="Quem vê">
       <div className="field">
-        <label className="field-label">Quem vê essa pesquisa</label>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+        <div className="fs-chips" role="group" aria-label="Quem vê essa pesquisa" style={{ marginBottom: 8 }}>
           {(["todos", "papel", "time"] as const).map((m) => (
             <button key={m} type="button" className={`seg-chip${d.segmentacaoModo === m ? " on" : ""}`} onClick={() => setD({ ...d, segmentacaoModo: m, segmentacaoValores: [] })}>
               {m === "todos" ? "Todo mundo" : m === "papel" ? "Por papel" : "Por time"}
@@ -6354,9 +6372,11 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
         )}
       </div>
 
+      </FormSection>
+
+      <FormSection title="Quando aparece">
       <div className="field">
-        <label className="field-label">Quando aparece</label>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+        <div className="fs-chips" role="group" aria-label="Quando aparece" style={{ marginBottom: 8 }}>
           {(["posescala", "campanha", "periodica", "livre"] as const).map((m) => (
             <button key={m} type="button" className={`seg-chip${d.disparoModo === m ? " on" : ""}`} onClick={() => setD({ ...d, disparoModo: m })}>
               {m === "posescala" ? "Pós-escala" : m === "campanha" ? "Campanha pontual" : m === "periodica" ? "Periódica" : "Atalho livre"}
@@ -6383,8 +6403,10 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
         )}
       </div>
 
+      </FormSection>
+
+      <FormSection title="Perguntas">
       <div className="field">
-        <label className="field-label">Perguntas</label>
         <div style={{ display: "grid", gap: 12 }}>
           {d.perguntas.map((p, idx) => (
             <div key={p.id} className="cfg-card" style={{ padding: 14 }}>
@@ -6416,17 +6438,11 @@ function PesquisaEditor({ draft: initial, ministries, saving, saveError, onSave,
             </div>
           ))}
         </div>
-        <button type="button" className="btn btn-sec btn-sm" style={{ marginTop: 10 }} onClick={addPergunta}>+ Adicionar pergunta</button>
+        <button type="button" className="btn btn-sec btn-sm" style={{ marginTop: 10 }} onClick={addPergunta}>Adicionar pergunta</button>
       </div>
 
-      {saveError ? <p className="field-error">{saveError}</p> : null}
-      <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 18 }}>
-        <button type="button" className="btn btn-sec" onClick={onCancel} disabled={saving}>Cancelar</button>
-        <button type="button" className="btn btn-pri" disabled={saving || !d.nome || d.perguntas.length === 0 || d.perguntas.some((p) => !p.texto)} onClick={() => { void onSave(d); }}>
-          {saving ? "Salvando..." : "Salvar pesquisa"}
-        </button>
-      </div>
-    </div>
+      </FormSection>
+    </FormScreen>
   );
 }
 
@@ -6601,11 +6617,16 @@ function CongregacaoEditModal({
     tel: churchRow.phone ?? "",
   });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const telaRef = useRef<FormScreenHandle>(null);
+  const fid = useId();
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((p) => ({ ...p, [k]: e.target.value }));
 
   const salvar = async () => {
     if (!form.nome.trim()) return;
     setSaving(true);
-    await createServiceBrowserClient()
+    setError("");
+    const { error: erro } = await createServiceBrowserClient()
       .schema("service")
       .from("churches")
       .update({
@@ -6619,57 +6640,67 @@ function CongregacaoEditModal({
         phone: form.tel.trim() || null,
       })
       .eq("id", churchRow.id);
-    setSaving(false);
+    if (erro) { setSaving(false); setError(friendlyWriteError(erro.message)); return; }
+    if (telaRef.current) await telaRef.current.fechar(); else onClose();
     onRefresh();
-    onClose();
   };
 
+  const retrato = JSON.stringify(form);
+  const [retratoInicial] = useState(retrato);
+
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">{churchRow.matriz ? "Matriz · rede" : "Congregação"}</div>
-          <div className="modal-title">{churchRow.nome}</div>
-          <div className="modal-sub">Dados da congregação.</div>
+    <FormScreen
+      ref={telaRef}
+      eyebrow={churchRow.matriz ? "Matriz · rede" : "Congregação"}
+      title={form.nome.trim() || churchRow.nome}
+      saveLabel="Salvar"
+      saving={saving}
+      missing={form.nome.trim() ? [] : ["nome"]}
+      dirty={retrato !== retratoInicial}
+      error={error}
+      onSave={salvar}
+      onClose={onClose}
+    >
+      <FormSection title="Congregação">
+        <div className="fs-grid">
+          <div className="field"><label className="field-label req" htmlFor={`${fid}-nome`}>Nome</label><input id={`${fid}-nome`} className="input" aria-required="true" value={form.nome} onChange={set("nome")} /></div>
+          <div className="field"><label className="field-label" htmlFor={`${fid}-cid`}>Cidade ou bairro</label><input id={`${fid}-cid`} className="input" value={form.cidade} onChange={set("cidade")} /></div>
+          <div className="field half"><label className="field-label" htmlFor={`${fid}-doc`}>CNPJ</label><input id={`${fid}-doc`} className="input" inputMode="numeric" value={form.doc} onChange={set("doc")} /></div>
+          <div className="field half"><label className="field-label" htmlFor={`${fid}-ano`}>Ano de fundação</label><input id={`${fid}-ano`} className="input" inputMode="numeric" value={form.fundada} onChange={set("fundada")} /></div>
         </div>
-        <div className="modal-body" style={{ display: "block" }}>
-          <div className="field"><label className="field-label">Nome</label><input className="input" value={form.nome} onChange={(e) => setForm((p) => ({ ...p, nome: e.target.value }))} /></div>
-          <div className="field"><label className="field-label">Cidade / bairro</label><input className="input" value={form.cidade} onChange={(e) => setForm((p) => ({ ...p, cidade: e.target.value }))} /></div>
-          <div className="field"><label className="field-label">CNPJ</label><input className="input" value={form.doc} onChange={(e) => setForm((p) => ({ ...p, doc: e.target.value }))} /></div>
-          <div className="field"><label className="field-label">Ano de fundação</label><input className="input" value={form.fundada} onChange={(e) => setForm((p) => ({ ...p, fundada: e.target.value }))} /></div>
-          <div className="field"><label className="field-label">Endereço</label><input className="input" value={form.endereco} onChange={(e) => setForm((p) => ({ ...p, endereco: e.target.value }))} /></div>
-          <div className="field"><label className="field-label">CEP</label><input className="input" value={form.cep} onChange={(e) => setForm((p) => ({ ...p, cep: e.target.value }))} /></div>
-          <div className="field"><label className="field-label">E-mail</label><input className="input" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} /></div>
-          <div className="field"><label className="field-label">Telefone</label><input className="input" value={form.tel} onChange={(e) => setForm((p) => ({ ...p, tel: e.target.value }))} /></div>
+      </FormSection>
 
-          <div className="cfg-card-t" style={{ marginTop: 22 }}>Governança própria</div>
-          <div className="cfg-card-s">Times cadastrados nesta congregação.</div>
-          {churchMinistries.map((m) => {
-            const leader = m.people.find((p) => p.isLeader);
-            return (
-              <div className="cfg-row" key={m.id}>
-                <div className="cfg-row-main">
-                  <div className="cfg-row-t">{m.name}</div>
-                  <div className="cfg-row-s">{leader ? `líder ${leader.personName}` : "sem líder definido"}</div>
-                </div>
+      <FormSection title="Endereço e contato">
+        <div className="fs-grid">
+          <div className="field"><label className="field-label" htmlFor={`${fid}-end`}>Endereço</label><input id={`${fid}-end`} className="input" autoComplete="street-address" value={form.endereco} onChange={set("endereco")} /></div>
+          <div className="field half"><label className="field-label" htmlFor={`${fid}-cep`}>CEP</label><input id={`${fid}-cep`} className="input" inputMode="numeric" autoComplete="postal-code" value={form.cep} onChange={set("cep")} /></div>
+          <div className="field half"><label className="field-label" htmlFor={`${fid}-tel`}>Telefone</label><input id={`${fid}-tel`} className="input" type="tel" autoComplete="tel" value={form.tel} onChange={set("tel")} /></div>
+          <div className="field"><label className="field-label" htmlFor={`${fid}-mail`}>E-mail</label><input id={`${fid}-mail`} className="input" type="email" autoComplete="email" value={form.email} onChange={set("email")} /></div>
+        </div>
+      </FormSection>
+
+      <FormSection title="Times desta congregação">
+        {churchMinistries.map((m) => {
+          const leader = m.people.find((p) => p.isLeader);
+          return (
+            <div className="cfg-row" key={m.id}>
+              <div className="cfg-row-main">
+                <div className="cfg-row-t">{m.name}</div>
+                <div className="cfg-row-s">{leader ? `líder ${leader.personName}` : "sem líder definido"}</div>
               </div>
-            );
-          })}
-          {churchMinistries.length === 0 && <div className="empty" style={{ padding: "14px 0" }}>Nenhum time cadastrado nesta congregação.</div>}
+            </div>
+          );
+        })}
+        {churchMinistries.length === 0 && <p className="fs-note">Nenhum time cadastrado nesta congregação.</p>}
+      </FormSection>
 
-          <div className="cfg-card-t" style={{ marginTop: 22 }}>Etiquetas</div>
-          <div className="cfg-card-s">Etiquetas livres cadastradas nesta congregação.</div>
-          <div className="cell-tags" style={{ gap: 8 }}>
-            {churchTags.map((t) => <span key={t.id} className="papel-tag">{t.name}</span>)}
-            {churchTags.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhuma etiqueta cadastrada nesta congregação.</span>}
-          </div>
+      <FormSection title="Etiquetas">
+        <div className="cell-tags" style={{ gap: 8 }}>
+          {churchTags.map((t) => <span key={t.id} className="papel-tag">{t.name}</span>)}
         </div>
-        <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>Salvar</button>
-        </div>
-      </div>
-    </div>
+        {churchTags.length === 0 && <p className="fs-note">Nenhuma etiqueta cadastrada nesta congregação.</p>}
+      </FormSection>
+    </FormScreen>
   );
 }
 
@@ -7664,6 +7695,9 @@ function ValoresEditModal({ church, identity, onClose, onRefresh }: {
     () => (identity?.values ?? []).map((v) => ({ title: v.title, texto: v.texto ?? "" })),
   );
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const telaRef = useRef<FormScreenHandle>(null);
+  const fid = useId();
 
   const setRow = (i: number, patch: Partial<{ title: string; texto: string }>) =>
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
@@ -7671,10 +7705,11 @@ function ValoresEditModal({ church, identity, onClose, onRefresh }: {
   const removeRow = (i: number) => setRows((prev) => prev.filter((_, idx) => idx !== i));
 
   const salvar = async () => {
-    if (!church?.id) return;
+    if (!church?.id) { setError("Nenhuma igreja encontrada para salvar os valores."); return; }
     setSaving(true);
+    setError("");
     const cleaned = rows.map((r) => ({ title: r.title.trim(), texto: r.texto.trim() })).filter((r) => r.title);
-    await createServiceBrowserClient()
+    const { error: erro } = await createServiceBrowserClient()
       .schema("service")
       .from("church_identity")
       .upsert({
@@ -7683,37 +7718,39 @@ function ValoresEditModal({ church, identity, onClose, onRefresh }: {
         values: cleaned,
         updated_at: new Date().toISOString(),
       });
+    if (erro) { setSaving(false); setError(friendlyWriteError(erro.message)); return; }
+    if (telaRef.current) await telaRef.current.fechar(); else onClose();
     onRefresh();
-    onClose();
   };
 
+  const retrato = JSON.stringify(rows);
+  const [retratoInicial] = useState(retrato);
+  const semNome = rows.some((r) => !r.title.trim() && r.texto.trim());
+
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Editar</div>
-          <div className="modal-title">Valores da Igreja</div>
-          <div className="modal-sub">Cada valor tem um nome e uma descrição curta do que ele significa na prática.</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
-          {rows.map((r, i) => (
-            <div key={i} className="cfg-row" style={{ alignItems: "flex-start" }}>
-              <div className="cfg-row-main">
-                <div className="field"><label className="field-label">Valor {i + 1}</label><input className="input" value={r.title} onChange={(e) => setRow(i, { title: e.target.value })} placeholder="ex: Acolhimento" /></div>
-                <div className="field"><label className="field-label">Descrição</label><textarea className="textarea" value={r.texto} onChange={(e) => setRow(i, { texto: e.target.value })} placeholder="O que esse valor significa na prática" /></div>
-              </div>
-              <button className="btn btn-sec btn-sm" type="button" onClick={() => removeRow(i)}>Remover</button>
-            </div>
-          ))}
-          {rows.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhum valor cadastrado ainda.</div>}
-          <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 10 }} onClick={addRow}>+ Adicionar valor</button>
-        </div>
-        <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>{saving ? "Salvando…" : "Salvar"}</button>
-        </div>
-      </div>
-    </div>
+    <FormScreen
+      ref={telaRef}
+      eyebrow="Identidade"
+      title="Valores da igreja"
+      subtitle="Cada valor tem um nome e uma frase do que ele significa na prática."
+      saveLabel="Salvar"
+      saving={saving}
+      missing={semNome ? ["nome de cada valor"] : []}
+      dirty={retrato !== retratoInicial}
+      error={error}
+      onSave={salvar}
+      onClose={onClose}
+    >
+      {rows.map((r, i) => (
+        <FormSection key={i} title={r.title.trim() || `Valor ${i + 1}`}>
+          <div className="field"><label className="field-label req" htmlFor={`${fid}-v${i}`}>Nome</label><input id={`${fid}-v${i}`} className="input" value={r.title} onChange={(e) => setRow(i, { title: e.target.value })} placeholder="ex: Acolhimento" /></div>
+          <div className="field"><label className="field-label" htmlFor={`${fid}-d${i}`}>O que significa</label><textarea id={`${fid}-d${i}`} className="textarea" value={r.texto} onChange={(e) => setRow(i, { texto: e.target.value })} placeholder="O que esse valor significa na prática" /></div>
+          <button className="btn btn-sec btn-sm" type="button" onClick={() => removeRow(i)}>Remover valor</button>
+        </FormSection>
+      ))}
+      {rows.length === 0 && <p className="fs-note">Nenhum valor cadastrado ainda.</p>}
+      <button className="btn btn-sec" type="button" onClick={addRow}>Adicionar valor</button>
+    </FormScreen>
   );
 }
 
