@@ -22,6 +22,11 @@ Não há migração de banco nesta revisão: só código do Service e CSS.
 - Navegador automático no `/service/demo` em 1440, 2560, 720 (zoom 200%), 390 e 320 px,
   tema escuro e claro, sem erro de console
 
+Conferido depois do merge (navegador automático, 390px): as folhas do app do membro (Nova
+mensagem, Tamanho do texto) recebem o foco, prendem o Tab, fecham no Esc e devolvem o foco; no
+quadro de tarefas do painel, tocar no cartão abre a gaveta com as colunas, então mover cartão
+funciona no celular mesmo sem arrastar.
+
 ## O que conferir num celular de verdade
 
 Nada disso aparece em emulação:
@@ -45,7 +50,7 @@ Nada disso aparece em emulação:
 | bf28dbf | Segunda passada: emil-design-eng |
 | 463fdb2 | Catálogo da break-ui: limpeza do HTML da divulgação do curso (XSS), iniciais, separador de milhar |
 | 1f6fe1b | Folha de baixo arrasta para fechar |
-| (último) | Janelas acessíveis: Esc, Tab preso, foco, nome para leitor de tela |
+| cb02587 | Janelas acessíveis: Esc, Tab preso, foco, nome para leitor de tela |
 
 ### Janelas (`app/service/DialogosAcessiveis.tsx`)
 
@@ -78,6 +83,3 @@ pior caso), `mobile-native` (qualquer coisa do app no celular), `animate` (criar
   `MANIFESTO.md`; ficou como estava.
 - **Interruptores de disponibilidade na cor da igreja:** mantidos (mostram ligado e desligado),
   embora a leitura estrita da lei 8 peça neutros.
-- **Quadro de tarefas (kanban) do painel:** arrasta com o arrastar nativo do navegador, que não
-  funciona no toque. No app do membro a tarefa muda de coluna pelos botões; no painel pelo
-  celular, não verificado.
