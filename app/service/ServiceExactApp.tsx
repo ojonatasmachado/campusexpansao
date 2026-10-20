@@ -1264,7 +1264,11 @@ export default function ServiceExactApp({
         : Promise.resolve({ data: true, error: null }),
     ]);
     /* a função devolve false quando a ficha não é da pessoa logada */
-    if (pessoa.error || ficha.error || ficha.data === false) return { error: "Não foi possível salvar seus dados. Tente de novo." };
+    /* o motivo do banco vai junto: sem ele não dá para saber se foi permissão, ficha de outra pessoa ou rede */
+    if (pessoa.error || ficha.error || ficha.data === false) {
+      const motivo = pessoa.error?.message ?? ficha.error?.message ?? "esta ficha não está ligada à sua conta";
+      return { error: `Não foi possível salvar seus dados (${motivo}).` };
+    }
     router.refresh();
     return {};
   };
