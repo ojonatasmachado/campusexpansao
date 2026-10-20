@@ -3,6 +3,7 @@ import { resolveMode, THEME_COOKIE, type BrandCfg } from "../lib/theme";
 import { cookies } from "next/headers";
 import ServiceTheme from "../ServiceTheme";
 import * as PIOR from "./pior-caso";
+import { todayISO } from "../lib/date";
 
 const ORG = "org-demo";
 const CHURCH_1 = "ch-1";
@@ -324,7 +325,11 @@ export default async function ServiceDemoPage({ searchParams }: { searchParams: 
   const pior = process.env.NODE_ENV !== "production" && q.dados === "pior";
   const nome = <T extends { id: string; name: string }>(x: T): T => (pior && PIOR.NOMES[x.id] ? { ...x, name: PIOR.NOMES[x.id] } : x);
   const people = PEOPLE.map((p) => (pior && p.id === "p1" ? { ...nome(p), email: PIOR.EMAIL_LONGO } : nome(p)));
-  const members = MEMBERS.map((m) => (pior && m.id === "m1" ? { ...nome(m), email: PIOR.EMAIL_LONGO } : nome(m)));
+  /* aniversariantes: datas relativas a hoje para o bloco da semana e o cartão do líder; Eduarda nasceu em 29/02 */
+  const [ha, hm, hd] = todayISO().split("-").map(Number);
+  const nasc = (ano: number, emDias: number) => { const d = new Date(ha, hm - 1, hd + emDias); return `${ano}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+  const NASC: Record<string, string> = { m3: nasc(1995, 0), m2: nasc(1987, 2), m4: "2000-02-29" };
+  const members = MEMBERS.map((m) => ({ ...m, birth: NASC[m.id] ?? m.birth })).map((m) => (pior && m.id === "m1" ? { ...nome(m), email: PIOR.EMAIL_LONGO } : nome(m)));
   const ministries = pior ? MINISTRIES.map((m) => ({ ...m, name: PIOR.TIMES[m.id] ?? m.name })) : MINISTRIES;
   const events = pior ? EVENTS.map((e) => ({ ...e, name: PIOR.CULTOS[e.id] ?? e.name })) : EVENTS;
   const cards = pior ? CARDS.map((c, i) => (i === 0 ? { ...c, title: PIOR.TAREFA_LONGA } : c)) : CARDS;

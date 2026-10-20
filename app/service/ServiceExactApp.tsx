@@ -57,6 +57,8 @@ import { linhaDoPainel, semanaDe } from "./lib/contexto-dia";
 import { SaudeDaIgreja } from "./modules/inicio/Saude";
 import { daMinhaLista, listaDeCuidado, type Ausente, type MarcaCuidado } from "./modules/cuidado/cuidado";
 import { ListaDeCuidado, type CriancaAusente } from "./modules/cuidado/Cuidado";
+import { comData, escopoDe } from "./modules/aniversarios/aniversarios";
+import { Aniversariantes, AniversariantesDaSemana } from "./modules/aniversarios/Aniversariantes";
 import { Assistente } from "./modules/configuracao/Assistente";
 import { medir } from "./lib/medicao";
 import { MetricasInternas } from "./modules/relatorios/MetricasInternas";
@@ -851,6 +853,7 @@ const ROUTES = {
   pesquisas: "SERVICE · PESQUISAS",
   pagina: "SERVICE · PÁGINA DA IGREJA",
   configurar: "SERVICE · CONFIGURAR A IGREJA",
+  aniversariantes: "SERVICE · ANIVERSARIANTES",
 };
 
 /* menu do painel (S30, S31): o título de cada tela é o nome do grupo. Gerado
@@ -1576,6 +1579,10 @@ export default function ServiceExactApp({
     }).sort((a, b) => b.semanas - a.semanas);
   }, [ligados, kidsClasses, kidsChildren, kidsAttendance, semanasCuidado]);
   const NAV_GROUPS = navGroups(ligados) as NavGroups;
+  /* aniversariantes: gestão vê a igreja toda com idade; o líder, só os times e grupos que lidera, sem idade */
+  const aniversariantesBase = useMemo(() => comData(members, people, ministries), [members, people, ministries]);
+  const aniversariosEscopo = escopoDe(currentPersonId, podePrevisualizar, ministries, fellowshipGroups);
+  const abrirAniversariante = (p: { tipo: "member" | "person"; id: string }) => setDrawer({ kind: p.tipo, id: p.id });
   const podeVerItem = (id: string) => rotaLigada(id, ligados) && (podeVerNav(id, currentRole, matrizEfetiva, currentExtraAccess, souVoluntario) || (id === "membros" && pessoasSoDoTime));
   const perspectivePersonId = currentPersonId;
 
@@ -1831,10 +1838,12 @@ export default function ServiceExactApp({
             enrollments={enrollments}
             setup={setupEstado}
             igrejaNova={ministries.length === 0 || events.length === 0}
+            aniversarios={ligados.has("aniversarios") ? <AniversariantesDaSemana base={aniversariantesBase} escopo={aniversariosEscopo} comIdade={podePrevisualizar} onAbrir={abrirAniversariante} onVerMes={() => setRoute("aniversariantes")} /> : null}
             cuidado={ligados.has("cuidado") ? { lista: daMinhaLista(listaCuidado, currentPersonId, currentRole === "master" || currentRole === "pastor"), todos: listaCuidado, criancas: criancasAusentes, semanas: semanasCuidado } : null}
           />
         ) : null}
         {route === "membros" ? <Membros members={members} people={people} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} soTimes={pessoasSoDoTime ? misteriosQueLidero : null} /> : null}
+        {route === "aniversariantes" ? <Aniversariantes base={aniversariantesBase} escopo={aniversariosEscopo} comIdade={podePrevisualizar} times={ministries} grupos={fellowshipGroups} onAbrir={abrirAniversariante} /> : null}
         {route === "pessoas" ? <Pessoas people={people} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Times ministries={ministries} people={people} members={members} serveRequests={serveRequests} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="min" embedded /> : null}
@@ -2289,6 +2298,7 @@ function Painel({
   timelineEvents = [],
   enrollments = [],
   cuidado = null,
+  aniversarios = null,
   setup = null,
   igrejaNova = false,
 }: {
@@ -2331,6 +2341,8 @@ function Painel({
   enrollments?: EnrollmentView[];
   /* lista de cuidado (v7 4.17): a de quem olha e a da igreja toda (para a Saúde) */
   cuidado?: { lista: Ausente[]; todos: Ausente[]; criancas: CriancaAusente[] | null; semanas: number } | null;
+  /* aniversariantes da semana (módulo aniversarios), já no escopo de quem olha */
+  aniversarios?: React.ReactNode;
   /* configuração guiada (v7 4.12): "Sua igreja: fase 2 de 3" no lugar do checklist */
   setup?: SetupEstado | null;
   /* sem times ou sem cultos: a configuração guiada aparece no Início */
@@ -2417,6 +2429,7 @@ function Painel({
           <ListaDeCuidado lista={cuidado.lista} criancas={cuidado.criancas} semanas={cuidado.semanas} onAbrir={(a) => setDrawer(a.memberId ? { kind: "member", id: a.memberId } : { kind: "person", id: a.personId })} />
         </div>
       )}
+      {aniversarios}
       {gestao && setup && !setup.concluido && (igrejaNova || setup.feitas.length > 0 || setup.pulou) ? (
         <button type="button" className="setup-banner" onClick={() => setRoute("configurar")}>
           <span className="setup-banner-t">{linhaDoSetup(setup)}</span>
@@ -8902,7 +8915,7 @@ function EntityDrawer({
             <dl className="kv">
               <dt>Telefone</dt><dd>{formatarTelefone(member.phone)}</dd>
               <dt>E-mail</dt><dd>{member.email}</dd>
-              <dt>Aniversário</dt><dd>{formatDateBR(member.birth)}</dd>
+              <dt>Aniversário</dt><dd>{currentRole === "master" || currentRole === "pastor" ? formatDateBR(member.birth) : formatDateBR(member.birth).slice(0, 5)}</dd>
               <dt>Bairro</dt><dd>{member.neighborhood}</dd>
               {(church?.settings?.gruposCfg?.ativo ?? true) && <><dt>{termo("grupo")}</dt><dd>{grupo ? <>{grupo.name}{grupoLider && <span style={{ color: "var(--muted)" }}> · líder {grupoLider.name.split(" ")[0]}</span>}</> : <span style={{ color: "var(--muted)" }}>sem grupo</span>}</dd></>}
               <dt>Acesso ao app</dt><dd>{member.volunteerId ? <span style={{ color: "var(--olive-soft)" }}>liberado</span> : temTelefone ? <span style={{ color: "var(--amber)" }}>convite ainda não aceito</span> : <span style={{ color: "var(--amber)" }}>falta o telefone</span>}</dd>

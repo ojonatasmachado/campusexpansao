@@ -23,6 +23,7 @@ import { INSTRUCAO_QR, aulasDoCurso, proximaAula, textoDaAula, type ProximaAula 
 import { modulosLigados, telasDoMembro, type EstadoModulos } from "./modules/registry";
 import type { CategoriaAviso, ContextoMembro } from "./modules/define";
 import { FILA_DOBRA, ordenarFila, type EntradaFila } from "./modules/fila";
+import { CartaoAniversario, aniversariosHojeNoMeuTime, type AniversarioNoTime } from "./modules/aniversarios/CartaoDoTime";
 import { conflitos, horaDeChegada } from "./lib/agenda";
 import { baixarIcs } from "./lib/ics";
 import { porData, quandoFoi, tipoDoFato, type FatoView } from "./lib/historico";
@@ -2913,7 +2914,8 @@ type ItemInicio =
   | { k: "passo"; step: StepView }
   | { k: "servir"; times: Ministry[] }
   | { k: "cadastro"; falta: string[] }
-  | { k: "atalho" };
+  | { k: "atalho" }
+  | { k: "aniversario"; pessoas: AniversarioNoTime[] };
 
 /* categorias de aviso que a pessoa desliga (lei 9) */
 const CATEGORIAS_AVISO: { id: CategoriaAviso; t: string; s: string }[] = [
@@ -2938,14 +2940,14 @@ const contarAcesso = () => {
 };
 const semAssinatura = () => () => {};
 const estaInstalado = () => window.matchMedia?.("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
-function InicioV6({ person, member, ministries, members, events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, inscricoes, onServir, ligados, acessos = 0, instalado = false, destaque = null, onAbrirDestaque, organizationId }: {
+function InicioV6({ person, member, ministries, members, people = [], events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, inscricoes, onServir, ligados, acessos = 0, instalado = false, destaque = null, onAbrirDestaque, organizationId }: {
   /* quantas vezes a pessoa abriu o app neste aparelho e se ele já está na tela de início (v7 4.10) */
   acessos?: number; instalado?: boolean;
   /* destaque da igreja (v7 4.4): o mais recente ainda valendo; abrir lê o artigo no app */
   destaque?: Announcement | null; onAbrirDestaque?: (a: Announcement) => void;
   /* medição padrão (lei 11) */
   organizationId?: string;
-  person: P; member: M | null; ministries: Ministry[]; members: M[]; events: Ev[]; roster: Slot[]; cards: Card[];
+  person: P; member: M | null; ministries: Ministry[]; members: M[]; people?: P[]; events: Ev[]; roster: Slot[]; cards: Card[];
   announcements: Announcement[]; unreadIds: Set<string>; kidsChildren: Child[]; childGuardians: ChildGuardian[];
   kidsCheckin?: (destaque: boolean) => React.ReactNode;
   onConfirmarEscala?: (id: string) => void; onRecusarEscala?: (id: string) => void;
@@ -3010,6 +3012,9 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
   }
   if (incompleto) entradas.push({ id: "cadastro", modulo: "perfil", tipo: "acao", prioridade: 15, conteudo: { k: "cadastro", falta: faltaDados } });
   if (pedirAtalho) entradas.push({ id: "atalho", modulo: "inicio", tipo: "acao", prioridade: 25, conteudo: { k: "atalho" } });
+  /* aniversário de alguém do time que a pessoa lidera (módulo aniversarios): só o nome, prioridade baixa */
+  const aniversarios = aniversariosHojeNoMeuTime({ personId: person.id, membros: members, pessoas: people, times: ministries, hoje });
+  if (aniversarios.length > 0 && !adiado(`aniversario-${hoje}`)) entradas.push({ id: `aniversario-${hoje}`, modulo: "aniversarios", tipo: "destaque", prioridade: 10, prazo: hoje, conteudo: { k: "aniversario", pessoas: aniversarios } });
   if (!serve && timesAbertos.length > 0) entradas.push({ id: "servir", modulo: "times", tipo: "passo", prioridade: 20, conteudo: { k: "servir", times: timesAbertos } });
   const fila = ordenarFila(entradas, ligados);
   const visiveis = maisFila ? fila : fila.slice(0, FILA_DOBRA);
@@ -3082,6 +3087,8 @@ function InicioV6({ person, member, ministries, members, events, roster, cards, 
             </div>
           </div>
         );
+      case "aniversario":
+        return <CartaoAniversario key={e.id} pessoas={c.pessoas} destaque={destaque} onAgoraNao={() => adiar(e.id, 1)} />;
       case "servir":
         return (
           <div key={e.id} className="m6-card">
@@ -4029,7 +4036,7 @@ function MobileMembro({
         {/* marco principal só no app de verdade; a prévia do líder fica dentro do painel, que já tem o seu */}
         <div className="m-scroll" ref={scrollRef} role={mode === "self" ? "main" : undefined}>
           {tab === "inicio" && (
-            <InicioV6 person={person} member={member} ministries={ministries} members={members} events={events} roster={roster} cards={cards}
+            <InicioV6 person={person} member={member} ministries={ministries} members={members} people={people} events={events} roster={roster} cards={cards}
               announcements={muralOn ? announcements : []} unreadIds={unreadIds} kidsChildren={kidsChildren} childGuardians={childGuardians}
               kidsCheckin={(destaque) => <CheckinKidsHoje person={person} events={events} kidsChildren={kidsChildren} childGuardians={childGuardians} kidsClasses={kidsClasses}
                 kidsSessions={kidsSessions} kidsAttendance={kidsAttendance} organizationId={organizationId} destaque={destaque} />}
