@@ -58,6 +58,8 @@ import { SaudeDaIgreja } from "./modules/inicio/Saude";
 import { daMinhaLista, listaDeCuidado, type Ausente, type MarcaCuidado } from "./modules/cuidado/cuidado";
 import { ListaDeCuidado, type CriancaAusente } from "./modules/cuidado/Cuidado";
 import { Assistente } from "./modules/configuracao/Assistente";
+import { EntradaConfig } from "./modules/entrada/EntradaConfig";
+import { NovosCadastros } from "./modules/entrada/NovosCadastros";
 import { medir } from "./lib/medicao";
 import { MetricasInternas } from "./modules/relatorios/MetricasInternas";
 import { SETUP_INICIAL, linhaDoSetup, type SetupEstado } from "./modules/configuracao/setup";
@@ -2412,6 +2414,7 @@ function Painel({
           )}
         </div>
       )}
+      {gestao && <NovosCadastros />}
       {cuidado && (cuidado.lista.length > 0 || (cuidado.criancas?.length ?? 0) > 0) && (
         <div style={{ marginBottom: 20 }}>
           <ListaDeCuidado lista={cuidado.lista} criancas={cuidado.criancas} semanas={cuidado.semanas} onAbrir={(a) => setDrawer(a.memberId ? { kind: "member", id: a.memberId } : { kind: "person", id: a.personId })} />
@@ -7508,6 +7511,7 @@ function Config({
 
       {/* ─── ACESSOS POR PESSOA ─── */}
       {tab === "acessos" && <AcessosCard people={people} church={church} currentRole={currentRole} />}
+      {tab === "entrada" && <EntradaConfig />}
 
       {tab === "pesquisas" && church?.organizationId && <PesquisasView organizationId={church.organizationId} ministries={ministries} />}
 
