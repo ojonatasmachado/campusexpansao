@@ -114,8 +114,11 @@ async function main() {
   ok("membro2", "com lançar: lança despesa", !eL && !!t2, eL?.message);
 
   // auditoria grava
-  const { count: nAud } = await admin.schema("audit").from("activity_log").select("*", { count: "exact", head: true }).eq("table_name", "fin_transactions").eq("organization_id", org);
-  ok("audit", "alterações no activity_log", (nAud ?? 0) >= 3);
+  /* o schema audit não é exposto pela API: conta direto no Postgres do contêiner local */
+  const { execFileSync } = await import("node:child_process");
+  const nAud = Number(execFileSync("docker", ["exec", "supabase_db_campusexpansao", "psql", "-U", "postgres", "-Atc",
+    `select count(*) from audit.activity_log where table_name = 'fin_transactions' and organization_id = '${org}'`]).toString().trim());
+  ok("audit", "alterações no activity_log", nAud >= 3);
 
   // limpeza
   await s(admin).from("fin_offering_counts").delete().eq("id", cont);

@@ -58,9 +58,11 @@ async function main() {
 
       const { data: novos } = await sb.from("members").select("id,name,phone,birth,sex,marital_status,imported_at,situation,journey,since_year,postal_code,state").gte("imported_at", new Date(antes - 1000).toISOString());
       criados.push(...(novos ?? []).map((m) => m.id));
-      assert.equal(novos?.length, um.r.importados);
-      const { count: fatos } = await sb.from("timeline_events").select("id", { count: "exact", head: true }).eq("event_type", "importado").in("member_id", (novos ?? []).slice(0, 300).map((m) => m.id));
-      assert.equal(fatos, Math.min(300, novos!.length), "fato importado na linha do tempo");
+      /* a API devolve no máximo 1.000 linhas por consulta: a conferência do total é por contagem */
+      const { count: total } = await sb.from("members").select("id", { count: "exact", head: true }).gte("imported_at", new Date(antes - 1000).toISOString());
+      assert.equal(total, um.r.importados);
+      const { count: fatos } = await sb.from("timeline_events").select("id", { count: "exact", head: true }).eq("event_type", "importado").in("member_id", (novos ?? []).slice(0, 50).map((m) => m.id));
+      assert.equal(fatos, Math.min(50, novos!.length), "fato importado na linha do tempo");
       if (arq.nome === "membros-exemplo.csv") {
         const maria = novos!.find((m) => m.name === "Maria da Silva Souza")!;
         assert.deepEqual([maria.phone, maria.birth, maria.sex, maria.marital_status, maria.since_year, maria.postal_code, maria.situation], ["(11) 98765-4321", "1990-03-05", "feminino", "casado", "2015", "01234-000", "membro"]);
