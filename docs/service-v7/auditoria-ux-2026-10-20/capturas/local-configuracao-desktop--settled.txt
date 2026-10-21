@@ -1,0 +1,71 @@
+- document:
+  - alert
+  - complementary:
+    - text: Outra Igreja Local Service
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - text: Início
+    - textbox "Buscar tela, membro, voluntário, time ou função..."
+    - button "OO Otávio"
+  - main:
+    - text: Configuração
+    - heading "Vamos deixar a igreja pronta" [level=1]
+    - paragraph: Três fases curtas. Dá para pular qualquer uma e continuar depois do ponto em que parou.
+    - button "Continuar depois"
+    - list:
+      - listitem:
+        - button "1 Sua igreja cerca de 3 minutos"
+      - listitem:
+        - button "2 Cultos e times cerca de 5 minutos"
+      - listitem:
+        - button "3 Pessoas cerca de 5 minutos"
+    - text: Fase 1 · Sua igreja Dados, logo e cor. Cerca de 3 minutos. Nome da igreja *
+    - textbox: Outra Igreja Local
+    - text: CEP
+    - textbox "00000-000"
+    - text: O CEP preenche o endereço. Endereço
+    - textbox
+    - text: Cidade
+    - textbox: São Paulo
+    - text: Estado
+    - textbox
+    - button "+"
+    - text: Logo Aparece ao lado de Service no app, no login e no convite.
+    - button "Enviar imagem"
+    - text: Cor da igreja
+    - radiogroup "Cor da igreja":
+      - radio "Oliva CE.X"
+      - radio "Azul"
+      - radio "Azul marinho"
+      - radio "Verde-água"
+      - radio "Verde"
+      - radio "Dourado"
+      - radio "Laranja"
+      - radio "Vermelho"
+      - radio "Vinho"
+      - radio "Roxo"
+      - radio "Rosa"
+      - radio "Marrom"
+    - text: A tela já mostra a cor escolhida. Ajuste fino em Configurações › Personalização.
+    - button "Pular esta fase"
+    - button "Salvar e continuar →"
+  - button "Ajuda": "?"

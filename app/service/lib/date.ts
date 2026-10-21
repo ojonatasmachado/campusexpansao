@@ -42,6 +42,13 @@ export function toISODate(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+/** Data civil completa, sem aceitar normalização como 31 de fevereiro. */
+export function isCivilDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = parseISODate(value);
+  return !!parsed && toISODate(parsed) === value;
+}
+
 /** Hoje, "AAAA-MM-DD", no horário de Brasília. Vale igual no navegador e
  *  no servidor (que roda em UTC na Vercel). */
 export function todayISO(): string {

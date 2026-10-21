@@ -1,0 +1,16 @@
+import assert from "node:assert/strict";
+import { coordenadas, enderecoDoCep, enderecoDoCnpj } from "../app/service/lib/geo";
+import { cpfValido, formatarCpf } from "../app/service/lib/cpf";
+assert.deepEqual(coordenadas("0", "0"), { latitude: 0, longitude: 0 });
+for (const pair of [["", ""], [null, null], ["NaN", 0], [91, 0], [0, 181], [0, undefined]]) assert.equal(coordenadas(...pair as [unknown, unknown]), null);
+const cep = enderecoDoCep({ cep: "01001000", street: "Praça da Sé", neighborhood: "Sé", city: "São Paulo", state: "SP", location: { coordinates: { latitude: "-23.55", longitude: "-46.63" } } });
+assert.equal(cep.neighborhood, "Sé");
+assert.equal(cep.latitude, -23.55);
+assert.equal(cep.geoPrecision, "postal_code");
+const cnpj = enderecoDoCnpj({ cep: "01001000", logradouro: "Praça da Sé", numero: "100", complemento: "Sala 2", bairro: "Sé", municipio: "São Paulo", uf: "SP", codigo_municipio_ibge: 3550308 }, cep);
+assert.equal(cnpj.streetNumber, "100");assert.equal(cnpj.complement, "Sala 2");assert.equal(cnpj.municipalityIbge, "3550308");assert.equal(cnpj.geoSource, "brasilapi:cep:v2");assert.equal(cnpj.geoPrecision, "postal_code");
+assert.equal(enderecoDoCep({ city: "Cidade sem coordenadas" }).latitude, null);
+assert.equal(enderecoDoCnpj({ latitude: 20, longitude: -40 }).geoPrecision, "address");
+assert.equal(cpfValido("123.456.789-09"), true);assert.equal(formatarCpf("12345678909"), "123.456.789-09");
+for (const v of ["", "11111111111", "12345678900", "123"]) assert.equal(cpfValido(v), false);
+console.log("Geo: coordenadas nulas/ranges/zero, origem e precisão, bairro/número/complemento/IBGE. CPF: formato e dígitos verificadores.");

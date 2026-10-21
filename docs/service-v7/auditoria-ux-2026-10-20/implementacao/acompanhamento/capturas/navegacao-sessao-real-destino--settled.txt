@@ -1,0 +1,10 @@
+- document:
+  - button "Caminhada"
+  - heading "Cursos" [level=1]
+  - main: Meus cursos · 0
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "Mensagens"
+    - button "Caminhada"
+  - alert

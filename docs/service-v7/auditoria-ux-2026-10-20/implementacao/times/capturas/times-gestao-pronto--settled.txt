@@ -1,0 +1,53 @@
+- document:
+  - alert
+  - complementary:
+    - text: Outra Igreja Local Service
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - text: Início
+    - textbox "Buscar tela, membro, voluntário, time ou função..."
+    - button "OO Otávio"
+  - main:
+    - heading "Boa noite, Otávio Ajuda" [level=1]:
+      - text: Boa noite, Otávio
+      - button "Ajuda": "?"
+    - paragraph: Semana de 19 a 25 de outubro.
+    - button "Ver agenda"
+    - button "Preparar minha igreja"
+    - region "O próximo encontro começa aqui":
+      - text: Primeiros passos
+      - heading "O próximo encontro começa aqui" [level=2]
+      - paragraph: Ainda não há programação futura na agenda. Prepare um encontro com data, horário e local para que as pessoas saibam onde participar.
+      - list:
+        - listitem: Identifique sua igreja Nome, endereço e a identidade que as pessoas vão reconhecer.
+        - listitem: Prepare o encontro Uma data e um lugar antes de organizar toda a equipe.
+        - listitem: Convide quem vai ajudar Depois, acompanhe os acessos e as respostas.
+    - 'button "Sua igreja: fase 1 de 3 · cerca de 9 minutos Começar →"'
+    - button "Sobre estes números"
+    - text: Pendências da escala
+    - button "Escalar"
+    - text: Sem programação futura Prepare o próximo encontro antes de organizar a equipe. Próximos cultos
+    - button "Agenda"
+    - text: Nenhum culto marcado daqui pra frente. Comunicação recente
+    - button "Ver tudo"
+    - text: Nenhum aviso ainda Publique em Comunicação
+  - button "Ajuda": "?"

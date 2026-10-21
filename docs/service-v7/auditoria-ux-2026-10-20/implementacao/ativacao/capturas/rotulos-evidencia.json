@@ -1,0 +1,18 @@
+{
+  "ev_6e344d406bf7751738671c85aa1395ac28f3d8b18761166d5d74b15112d7412b": "ativacao-primeiro-encontro-mobile",
+  "ev_d0052cd1fb232f78928dcc32b86692cdee97eaa6f7696d2d22e2b13ac476d810": "ativacao-previa-horario-livre",
+  "ev_013fdef6db7eeed3b9edb064d16699910201222b495a978385b8c176bc2731a3": "ativacao-encontro-disponivel",
+  "ev_67b9f8322f085f11d9e3b62028fbd502ba35268740c94f0a5ce481fcea58e876": "ativacao-retomada-sem-duplicar",
+  "ev_39f7b4b4b8db5327464e286a4357a9e923b00ad9fab5ff6e59d1dfdda2ffdc6f": "ativacao-membro-encontra-encontro",
+  "ev_bede4128635d863db7f7f3c0b218e42488288a7216f376cd8f596015c3b3df85": "ativacao-conclusao-com-encontro",
+  "ev_104fa82a1c100046d55f72f959f34f1066fa4ca9454fb23dd33ab1e41fc38ae7": "ativacao-sem-encontro-util-nao-conclui",
+  "ev_77f61e31254bb0759cd6da5b70af72ad8facd07bb8d260b1c021bcc158e15954": "ativacao-corrige-sem-recriar",
+  "ev_892472acc95e98152c7b9025edf62f6d11edc586cdce32a9cf3ccc28acc061df": "ativacao-times-depois-do-encontro",
+  "ev_57a6cd2817e24b6f30a9bb82f3665dfaeb73db7c5265d9196708d206ede306ab": "ativacao-salva-rascunho",
+  "ev_6a68dc4ec68f50bd489bf41de2a58102c83e85b23f1246f9b709438c4d1067bc": "ativacao-retoma-rascunho",
+  "ev_7c6da7293397d587921a5d5a1b88fa67f191891efc3da8cbecaa0193d396393c": "ativacao-salva-rascunho-validado",
+  "ev_2ec6644867bc3911c334858b8e0bc70b1c89daf51d04a68361dd84551f354e28": "ativacao-retoma-rascunho-validado",
+  "ev_13685bec03f59da366c48d0a6c00ddff3963f6e46110c13db8dcd073202d93e1": "ativacao-reutiliza-registro-e-explica-acesso",
+  "ev_2b8c42d634c0b75a10008c8b9199c36a377a20b1abe26ef943201db93af5c82d": "ativacao-previa-final-320",
+  "ev_f98f17f4170c5a45ec8729778ba882ca800ab723bcdd54aaf2e84b9f201a588b": "ativacao-primeiro-encontro-desktop"
+}

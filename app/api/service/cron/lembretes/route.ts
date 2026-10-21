@@ -1,3 +1,4 @@
+import { memberNotificationUrl } from "../../../../service/lib/member-navigation";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabase";
 import { sendPushToSubscriptions } from "../../../../lib/push";
@@ -78,7 +79,7 @@ export async function GET(request: Request) {
         if (e4) throw e4;
         if (!subs?.length) continue;
         mandou = true;
-        const { deadEndpoints } = await sendPushToSubscriptions(subs, { title: aviso.title, body: "Você ainda não viu esta publicação do Mural.", url: "/service?aviso=mural" });
+        const { deadEndpoints } = await sendPushToSubscriptions(subs, { title: aviso.title, body: "Você ainda não viu esta publicação do Mural.", url: memberNotificationUrl("mural", aviso.id) });
         if (deadEndpoints.length) await db.from("push_subscriptions").delete().in("endpoint", deadEndpoints);
         const n = subs.length - deadEndpoints.length;
         enviados += n;

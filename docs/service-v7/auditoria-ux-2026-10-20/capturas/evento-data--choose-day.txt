@@ -1,0 +1,113 @@
+- document:
+  - complementary:
+    - text: CE.X Central Service
+    - button "Fechar menu": ✕
+    - button "CE.X Central Matriz · rede"
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 2"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Agenda
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "AL"
+  - main:
+    - text: Agenda
+    - heading "Cultos e Agenda Ajuda" [level=1]:
+      - text: Cultos e Agenda
+      - button "Ajuda": "?"
+    - button "+ Novo culto"
+    - button "Semana"
+    - button "Mês"
+    - button "Semana anterior"
+    - text: Esta semana
+    - button "Próxima semana"
+    - text: Nada nesta semana
+    - paragraph: Os cultos e eventos marcados para esta semana aparecem aqui.
+  - dialog "Novo culto ou evento":
+    - banner:
+      - button "Voltar sem salvar"
+      - text: Criar
+      - heading "Novo culto ou evento" [level=2]
+    - paragraph: "Agenda da igreja: o que é, quando acontece e quem serve."
+    - text: Nome *
+    - textbox "Nome *":
+      - /placeholder: "ex: Culto da Manhã, Conferência de Jovens"
+    - text: Tipo de evento
+    - group "Tipo de evento":
+      - button "Culto"
+      - button "Evento"
+      - button "Treinamento"
+      - button "Retiro"
+    - text: Local *
+    - group "Local *":
+      - button "Auditório principal · 300 lug."
+      - button "Sala de reuniões · 20 lug."
+      - button "Sala Kids · 40 lug."
+      - button "Outro espaço (fora da igreja)"
+    - text: Data
+    - button "Data" [expanded]: Escolher dia e mês
+    - dialog "Escolher dia e mês":
+      - button "Mês anterior": ‹
+      - text: Janeiro
+      - button "Próximo mês": ›
+      - button "1 de Janeiro": "1"
+      - button "2 de Janeiro": "2"
+      - button "3 de Janeiro": "3"
+      - button "4 de Janeiro": "4"
+      - button "5 de Janeiro": "5"
+      - button "6 de Janeiro": "6"
+      - button "7 de Janeiro": "7"
+      - button "8 de Janeiro": "8"
+      - button "9 de Janeiro": "9"
+      - button "10 de Janeiro": "10"
+      - button "11 de Janeiro": "11"
+      - button "12 de Janeiro": "12"
+      - button "13 de Janeiro": "13"
+      - button "14 de Janeiro": "14"
+      - button "15 de Janeiro": "15"
+      - button "16 de Janeiro": "16"
+      - button "17 de Janeiro": "17"
+      - button "18 de Janeiro": "18"
+      - button "19 de Janeiro": "19"
+      - button "20 de Janeiro": "20"
+      - button "21 de Janeiro": "21"
+      - button "22 de Janeiro": "22"
+      - button "23 de Janeiro": "23"
+      - button "24 de Janeiro": "24"
+      - button "25 de Janeiro": "25"
+      - button "26 de Janeiro": "26"
+      - button "27 de Janeiro": "27"
+      - button "28 de Janeiro": "28"
+      - button "29 de Janeiro": "29"
+      - button "30 de Janeiro": "30"
+      - button "31 de Janeiro": "31"
+    - text: Horário de início
+    - button "Horário de início": Escolher horário
+    - paragraph: "Falta: nome e local"
+    - contentinfo:
+      - button "Criar na agenda" [disabled]
+  - navigation "Dados do demo":
+    - link "Dados do demo":
+      - /url: "?"
+    - link "Pior caso":
+      - /url: "?dados=pior"
+  - alert

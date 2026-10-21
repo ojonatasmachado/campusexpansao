@@ -9,22 +9,13 @@ import { createServiceBrowserClient } from "./supabase-browser";
 export type Destinatario = { member_id: string; name: string; via: "lider" | "intercessao" | "gestao"; ministry: string | null };
 export type PedidoKind = "troca" | "oracao";
 
-const cache = new Map<string, Promise<Destinatario | null>>();
-
-export function buscarDestinatario(kind: PedidoKind, ministryId?: string | null): Promise<Destinatario | null> {
-  const chave = `${kind}:${ministryId ?? ""}`;
-  let p = cache.get(chave);
-  if (!p) {
-    p = Promise.resolve(
-      createServiceBrowserClient().schema("service").rpc("request_recipient", { p_kind: kind, p_ministry: ministryId ?? null }),
-    ).then(({ data, error }) => {
-      if (error) { cache.delete(chave); return null; }
-      const row = (Array.isArray(data) ? data[0] : data) as Destinatario | undefined;
-      return row?.member_id ? row : null;
-    });
-    cache.set(chave, p);
-  }
-  return p;
+/* Resolve na sessão atual. Um cache global por tipo/time reaproveitava o
+   destinatário entre contas, sobretudo quando o time era nulo. */
+export async function buscarDestinatario(kind: PedidoKind, ministryId?: string | null): Promise<Destinatario | null> {
+  const { data, error } = await createServiceBrowserClient().schema("service").rpc("request_recipient", { p_kind: kind, p_ministry: ministryId ?? null });
+  if (error) return null;
+  const row = (Array.isArray(data) ? data[0] : data) as Destinatario | undefined;
+  return row?.member_id ? row : null;
 }
 
 /* undefined enquanto carrega; null quando não há ninguém para receber */

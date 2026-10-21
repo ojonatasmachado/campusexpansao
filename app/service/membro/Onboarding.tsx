@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useState } from "react";
+import { useContext, useState, useId } from "react";
 import { Icon } from "../lib/icons";
 import { formatDateBR, joinDot } from "../lib/date";
 import ChurchLockup from "../ChurchLockup";
@@ -61,6 +61,7 @@ export function AppTourModal({ onClose }: { onClose: () => void }) {
    arrasta). Foto, e-mail, aniversário e CEP viram o cartão "Complete seus
    dados" no Início; o atalho na tela de início é pedido no segundo acesso. */
 export function Onboarding({ person, member, churchName, churchLogoUrl, onCompleteOnboarding, onDone }: { person: P; member: M | null; churchName?: string; churchLogoUrl?: string | null; organizationId?: string; onCompleteOnboarding?: (personId: string, memberId: string | null, data: MemberContactInput) => Promise<{ error?: string }>; onDone: () => void }) {
+  const fieldId = useId();
   const { comTermos: ct } = useTermos();
   const [step, setStep] = useState(0);
   const [d, setD] = useState<MemberContactInput>({
@@ -68,6 +69,7 @@ export function Onboarding({ person, member, churchName, churchLogoUrl, onComple
     email: realValue(member?.email),
     phone: realValue(member?.phone),
     nasc: member?.birth ?? "",
+    country: member?.country,
     cep: member?.postalCode ?? "",
     rua: member?.street ?? "",
     bairro: member?.neighborhood ?? "",
@@ -90,13 +92,13 @@ export function Onboarding({ person, member, churchName, churchLogoUrl, onComple
       body: (
         <div className="ob-form">
           <div className="field">
-            <label className="field-label req">Nome e sobrenome</label>
-            <input className="input" value={d.name} autoComplete="name" onChange={(e) => set("name", e.target.value)} />
+            <label className="field-label req" htmlFor={`${fieldId}-name`}>Nome e sobrenome</label>
+            <input id={`${fieldId}-name`} className="input" value={d.name} autoComplete="name" onChange={(e) => set("name", e.target.value)} />
             {err("name")}
           </div>
           <div className="field">
-            <label className="field-label req">Telefone (WhatsApp)</label>
-            <input className="input" type="tel" value={d.phone} autoComplete="tel" placeholder="(11) 90000-0000" onChange={(e) => set("phone", e.target.value)} />
+            <label className="field-label req" htmlFor={`${fieldId}-phone`}>Telefone (WhatsApp)</label>
+            <input id={`${fieldId}-phone`} className="input" type="tel" value={d.phone} autoComplete="tel" placeholder="(11) 90000-0000" onChange={(e) => set("phone", e.target.value)} />
             {err("phone")}
           </div>
         </div>

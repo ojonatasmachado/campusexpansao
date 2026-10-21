@@ -1,5 +1,9 @@
 "use client";
 
+import { cpfValido } from "../lib/cpf";
+import { enderecoNoBrasil } from "../lib/endereco";
+import { isCivilDate, todayISO } from "../lib/date";
+import { telefoneValido } from "../lib/telefone";
 import { createContext, useContext, useRef } from "react";
 import { Icon } from "../lib/icons";
 import { parseISODate, weekdayFromISO } from "../lib/date";
@@ -13,11 +17,12 @@ import type { JourneyActions, MemberContactInput, MemberUi, Ministry, MissingReq
 export const realValue = (v: string | null | undefined) => (v && !/não informado$/.test(v) ? v : "");
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const contactErrors = (c: MemberContactInput) => ({
+  cpf: c.cpf?.trim() && !cpfValido(c.cpf) ? "Confira os números do CPF." : "",
   name: c.name.trim().split(/\s+/).length < 2 ? "Coloque nome e sobrenome." : "",
   email: !EMAIL_RE.test(c.email.trim()) ? "Coloque um e-mail válido." : "",
-  phone: c.phone.replace(/\D/g, "").length < 10 ? "Coloque o telefone com DDD." : "",
-  nasc: !c.nasc ? "Coloque a data do seu aniversário." : "",
-  cep: c.cep.replace(/\D/g, "").length !== 8 ? "Coloque o CEP com 8 números." : "",
+  phone: !telefoneValido(c.phone) ? "Coloque o telefone com DDD. Para outro país, inclua + e o código do país." : "",
+  nasc: c.nasc && (!isCivilDate(c.nasc) || c.nasc > todayISO()) ? "Confira a data do seu aniversário." : "",
+  cep: enderecoNoBrasil(c.country) && !/^\d{5}-?\d{3}$/.test(c.cep.trim()) ? "Coloque o CEP com 8 números." : c.cep.trim().length > 32 ? "Use até 32 caracteres no código postal." : "",
 });
 export const JourneyContext = createContext<JourneyActions>({ missing: [], serveRequests: [], baptismCandidates: [], names: { courses: [], events: [] } });
 
@@ -34,6 +39,8 @@ export function useFaltas() {
 export const RESULTADO_ACAO: Record<string, string> = {
   faltam_requisitos: "Ainda falta cumprir os pré-requisitos.",
   inscricoes_fechadas: "As inscrições desta turma estão fechadas.",
+  time_fechado: "Este time não está recebendo pedidos agora.",
+  sem_lider_no_app: "O time ainda não tem um líder disponível no app.",
   ja_serve: "Você já serve neste time.",
   sem_ficha: "Sua ficha ainda não está ligada ao app. Fale com a liderança.",
 };

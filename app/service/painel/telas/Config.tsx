@@ -352,7 +352,7 @@ export function CongregacaoEditModal({
         <div className="fs-grid">
           <div className="field"><label className="field-label req" htmlFor={`${fid}-nome`}>Nome</label><input id={`${fid}-nome`} className="input" aria-required="true" value={form.nome} onChange={set("nome")} /></div>
           <div className="field"><label className="field-label" htmlFor={`${fid}-cid`}>Cidade ou bairro</label><input id={`${fid}-cid`} className="input" value={form.cidade} onChange={set("cidade")} /></div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-doc`}>CNPJ</label><input id={`${fid}-doc`} className="input" inputMode="numeric" value={form.doc} onChange={set("doc")} /></div>
+          <div className="field half"><label className="field-label" htmlFor={`${fid}-doc`}>CNPJ</label><input id={`${fid}-doc`} className="input" autoCapitalize="characters" value={form.doc} onChange={set("doc")} /></div>
           <div className="field half"><label className="field-label" htmlFor={`${fid}-ano`}>Ano de fundação</label><input id={`${fid}-ano`} className="input" inputMode="numeric" value={form.fundada} onChange={set("fundada")} /></div>
         </div>
       </FormSection>
@@ -737,7 +737,7 @@ export function Config({
               <input id={`${cid}-nome`} name="nome" className="input" value={igrejaForm.nome} onChange={(e) => setIgrejaForm((p) => ({ ...p, nome: e.target.value }))} />
             </div>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
-              <div className="field"><label className="field-label" htmlFor={`${cid}-doc`}>CNPJ</label><input id={`${cid}-doc`} name="doc" className="input" inputMode="numeric" value={igrejaForm.doc} onChange={(e) => setIgrejaForm((p) => ({ ...p, doc: e.target.value }))} /></div>
+              <div className="field"><label className="field-label" htmlFor={`${cid}-doc`}>CNPJ</label><input id={`${cid}-doc`} name="doc" className="input" autoCapitalize="characters" value={igrejaForm.doc} onChange={(e) => setIgrejaForm((p) => ({ ...p, doc: e.target.value }))} /></div>
               <div className="field"><label className="field-label" htmlFor={`${cid}-fundada`}>Fundada em</label><input id={`${cid}-fundada`} name="fundada" className="input" value={igrejaForm.fundada} onChange={(e) => setIgrejaForm((p) => ({ ...p, fundada: e.target.value }))} /></div>
             </div>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
@@ -1021,7 +1021,7 @@ export function Config({
             <div className="crit-row">
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Lista de cuidado</div>
-                <div className="cfg-row-s">semanas sem presença para a pessoa entrar na lista de quem cuida</div>
+                <div className="cfg-row-s">semanas sem registro de presença para a pessoa entrar na lista de quem cuida</div>
               </div>
               <div className="stepper">
                 <button type="button" aria-label="Menos uma semana" onClick={() => setEscala("cuidadoSemanas", Math.max(1, (escalaCfg.cuidadoSemanas ?? 3) - 1))}>−</button>

@@ -1,0 +1,21 @@
+- document:
+  - main:
+    - text: Outra Igreja Local Service
+    - paragraph: Convite
+    - heading "Que bom ter você, Pessoa" [level=1]
+    - paragraph: Crie sua senha para entrar no app da igreja. Só você vai saber essa senha.
+    - text: E-mail
+    - textbox "E-mail":
+      - /placeholder: voce@email.com
+      - text: internacional-ux@teste.local
+    - text: Crie uma senha
+    - textbox "Crie uma senha Mostrar":
+      - /placeholder: Mínimo 6 caracteres
+      - text: [senha de teste omitida]
+    - button "Mostrar"
+    - text: Repita a senha
+    - textbox "Repita a senha Mostrar": [senha de teste omitida]
+    - button "Mostrar"
+    - button "Criar acesso e entrar"
+    - text: O link é só seu e vale por 7 dias.
+  - alert

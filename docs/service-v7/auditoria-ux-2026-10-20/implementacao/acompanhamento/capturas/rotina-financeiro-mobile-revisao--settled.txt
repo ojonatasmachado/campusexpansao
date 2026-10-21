@@ -1,0 +1,73 @@
+- document:
+  - complementary:
+    - text: CE.X Central Service
+    - button "Fechar menu": ✕
+    - button "CE.X Central Matriz · rede"
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 17"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Gestão
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "AL"
+  - main:
+    - text: Gestão
+    - heading "Financeiro Ajuda" [level=1]:
+      - text: Financeiro
+      - button "Ajuda": "?"
+    - paragraph: "Saldo em caixa e bancos: R$ 0,00"
+    - button "Lançar entrada"
+    - button "Lançar despesa"
+    - button "Contar oferta"
+    - button "Transferir"
+    - tablist "Seções do financeiro":
+      - tab "Movimento" [selected]
+      - tab "Contas fixas e campanhas"
+      - tab "Fechamento"
+      - tab "Contas e categorias"
+    - group "Mês":
+      - button "Mês anterior"
+      - text: Outubro de 2026
+      - button "Próximo mês"
+    - alert: Não foi possível abrir o financeiro. Recarregue a página.
+    - text: Entradas em outubro R$ 0,00 Saídas em outubro R$ 0,00 Resultado do mês R$ 0,00
+    - region "Contas":
+      - heading "Contas" [level=2]
+      - text: saldo hoje
+      - button "Cadastrar a conta do banco"
+    - text: Lançamentos de outubro
+    - textbox "Buscar lançamento":
+      - /placeholder: Buscar descrição ou nome
+    - group "Tipo":
+      - button "Todos" [pressed]
+      - button "Entradas"
+      - button "Saídas"
+      - button "Transferências"
+    - combobox "Conta":
+      - option "Todas as contas" [selected]
+    - combobox "Categoria":
+      - option "Todas as categorias" [selected]
+    - button "Exportar CSV" [disabled]
+    - text: Nada lançado em outubro
+    - paragraph: Entradas, despesas e ofertas contadas aparecem aqui, com o saldo de cada conta.
+    - button "Lançar entrada"
+  - alert

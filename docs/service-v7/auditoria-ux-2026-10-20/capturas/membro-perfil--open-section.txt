@@ -1,0 +1,33 @@
+- document:
+  - button "Início"
+  - heading "Perfil" [level=1]
+  - main:
+    - text: AL Ana Lima Liderança Na igreja desde 12/03/2019 Você
+    - button "Meus dados Telefone, e-mail, endereço e aniversário"
+    - button "Minha família Filhos no Kids, check-in e eventos"
+    - button "Contribuir Pix para dízimo, oferta e missões"
+    - button "Minha história O que você já viveu na igreja"
+    - text: Preferências
+    - button "Tamanho do texto Padrão"
+    - text: Tema
+    - radiogroup "Tema":
+      - radio "Claro"
+      - radio "Escuro" [checked]
+    - text: Notificações Desligadas
+    - switch "Notificações"
+    - text: Conta
+    - button "Trocar senha"
+    - button "Conheça o app Um passeio de um minuto"
+    - button "Abrir o painel da igreja Gestão de pessoas, escalas e agenda"
+    - button "Sair do app"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "3 novos Mensagens": 3 Mensagens
+    - button "Caminhada"
+  - navigation "Dados do demo":
+    - link "Dados do demo":
+      - /url: "?"
+    - link "Pior caso":
+      - /url: "?dados=pior"
+  - alert

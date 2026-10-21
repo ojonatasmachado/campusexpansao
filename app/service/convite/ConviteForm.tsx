@@ -6,16 +6,18 @@ import { createServiceBrowserClient } from "../lib/supabase-browser";
 import CepInput, { type CepResult } from "../CepInput";
 import PasswordInput from "../PasswordInput";
 
-/* E-mail, senha e CEP obrigatórios no convite: o CEP entra aqui (e não só
-   no primeiro acesso) porque depois a pessoa pode não preencher.
-   Lógica igual à anterior; markup nas classes .login-* (service-v5.css). */
+/* CEP no aceite brasileiro: a igreja conhece a região da comunidade. */
 export default function ConviteForm({ t }: { t: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [consultandoCep, setConsultandoCep] = useState(false);
+  const [brasil, setBrasil] = useState(true);
+  const [pais, setPais] = useState("");
   const [cep, setCep] = useState("");
-  const [endereco, setEndereco] = useState<CepResult | null>(null);
+  const [endereco, setEndereco] = useState<CepResult>({});
+  const patchEndereco = (k: keyof CepResult, v: string) => setEndereco((p) => ({ ...p, [k]: v }));
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -25,8 +27,11 @@ export default function ConviteForm({ t }: { t: string }) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError("Coloque um e-mail válido.");
     if (password.length < 6) return setError("A senha precisa ter pelo menos 6 caracteres.");
     if (password !== confirm) return setError("As duas senhas não são iguais.");
-    if (cep.replace(/\D/g, "").length !== 8) return setError("Coloque o CEP com 8 números.");
 
+    if (brasil && !/^\d{5}-?\d{3}$/.test(cep.trim())) return setError("Coloque o CEP com 8 números.");
+    if (!brasil && pais.trim().length < 2) return setError("Informe o país onde você mora.");
+    if (consultandoCep) return setError("Aguarde a consulta do CEP terminar.");
+    if (!brasil && !endereco.city?.trim()) return setError("Informe sua cidade.");
     setLoading(true);
     try {
       const res = await fetch("/api/service/members/accept-invite", {
@@ -37,10 +42,12 @@ export default function ConviteForm({ t }: { t: string }) {
           email,
           password,
           cep,
-          street: endereco?.street ?? "",
-          neighborhood: endereco?.neighborhood ?? "",
-          city: endereco?.city ?? "",
-          state: endereco?.state ?? "",
+          country: brasil ? "Brasil" : pais.trim(),
+          street: endereco.street,
+          neighborhood: endereco.neighborhood,
+          city: endereco.city,
+          state: endereco.state,
+
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -53,14 +60,12 @@ export default function ConviteForm({ t }: { t: string }) {
       const { error: signInError } = await createServiceBrowserClient().auth.signInWithPassword({ email: data.email ?? email, password });
       router.push(signInError ? (data.slug ? `/${data.slug}/entrar` : "/service/login") : "/service");
       router.refresh();
+    } catch {
+      setError("Não conseguimos concluir agora. Confira sua conexão e tente novamente. Se o acesso já foi criado, entre com seu e-mail e senha.");
     } finally {
       setLoading(false);
     }
   };
-
-  const enderecoTexto = endereco
-    ? [endereco.street, endereco.neighborhood, endereco.city && endereco.state ? `${endereco.city}/${endereco.state}` : endereco.city].filter(Boolean).join(" · ")
-    : "";
 
   return (
     <form className="login-form" onSubmit={handleSubmit} noValidate>
@@ -87,18 +92,24 @@ export default function ConviteForm({ t }: { t: string }) {
         <span className="login-label">Repita a senha</span>
         <PasswordInput value={confirm} onChange={setConfirm} autoComplete="new-password" />
       </label>
+      {!brasil && <label className="login-field"><span className="login-label">País</span><input className="login-input" autoComplete="country-name" maxLength={80} value={pais} onChange={(e) => setPais(e.target.value)} /></label>}
       <div className="login-field">
-        <span className="login-label">CEP de onde você mora</span>
-        <CepInput value={cep} onChange={setCep} onResult={(r) => setEndereco(r)} />
-        <span className="login-help">{enderecoTexto || "A igreja usa pra saber a sua região."}</span>
+        <label className="login-label" htmlFor="convite-postal">{brasil ? "CEP de onde você mora" : "Código postal (se houver)"}</label>
+        <CepInput key={brasil ? "br" : "outro"} id="convite-postal" international={!brasil} brazilLookup={brasil} value={cep} onBusyChange={setConsultandoCep} onChange={(v) => { setCep(v); if (brasil) setEndereco({}); }} onResult={(r) => { if (r) setEndereco(r); }} />
+        <span className="login-help">{brasil ? "Seu CEP ajuda a igreja a conhecer e cuidar das pessoas da sua região." : "Seu endereço ajuda a igreja a conhecer e cuidar das pessoas da sua região."}</span>
+        {endereco.city && <span className="login-help">{[endereco.street, endereco.neighborhood, endereco.city, endereco.state].filter(Boolean).join(" · ")}</span>}
       </div>
+      <button className="login-country-switch" type="button" onClick={() => { setBrasil((v) => !v); setConsultandoCep(false); setCep(""); setEndereco({}); }}>{brasil ? "Meu endereço é fora do Brasil" : "Moro no Brasil"}</button>
+      {!brasil ? (
+        <label className="login-field"><span className="login-label">Cidade</span><input className="login-input" autoComplete="address-level2" value={endereco.city ?? ""} onChange={(e) => patchEndereco("city", e.target.value)} /></label>
+      ) : null}
       {error && (
         <div className="login-alert" role="alert">
           {error}
         </div>
       )}
-      <button className="login-btn" type="submit" disabled={loading}>
-        {loading ? "Aguarde..." : "Criar acesso e entrar"}
+      <button className="login-btn" type="submit" disabled={loading || consultandoCep}>
+        {loading ? "Aguarde..." : consultandoCep ? "Buscando endereço..." : "Criar acesso e entrar"}
       </button>
     </form>
   );

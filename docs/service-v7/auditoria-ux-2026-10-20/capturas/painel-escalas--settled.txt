@@ -1,0 +1,87 @@
+- document:
+  - complementary:
+    - text: CE.X Central Service
+    - button "Fechar menu": ✕
+    - button "CE.X Central Matriz · rede"
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 2"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Ministério
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "AL"
+  - main:
+    - text: Ministério
+    - heading "Escalas por evento Ajuda" [level=1]:
+      - text: Escalas por evento
+      - button "Ajuda": "?"
+    - button "Montar período"
+    - button "Mais"
+    - button "Publicar e avisar"
+    - button "Dom · 06/07/2026 Culto de domingo manhã 10h00 · Templo principal faltam 9 vagas"
+    - button "Dom · 06/07/2026 Culto de domingo noite 19h00 · Templo principal faltam 8 vagas"
+    - group: Como gerar Assistida
+    - text: Culto de domingo manhã · Dom · 10h00 3 confirmados 9 vagas
+    - list "Cobertura por time":
+      - listitem:
+        - button "Louvor, 2 de 7 vagas preenchidas. Abrir as vagas": Louvor 2/7
+      - listitem:
+        - text: ·
+        - button "Recepção, 1 de 4 vagas preenchidas. Abrir as vagas": Recepção 1/4
+      - listitem:
+        - text: ·
+        - button "Mídia e Comunicação, 1 de 2 vagas preenchidas. Abrir as vagas": Mídia e Comunicação 1/2
+    - text: Louvor 2 de 7 vagas
+    - button "Editar funções deste time"
+    - button "Recolher Louvor" [expanded]
+    - text: Vocal 1/3
+    - button "AL Ana"
+    - button "Escalar"
+    - button "Escalar"
+    - text: Instrumentista 1/4
+    - button "DF Diego"
+    - button "Escalar"
+    - button "Escalar"
+    - button "Escalar"
+    - text: Mídia e Comunicação 1 de 2 vagas
+    - button "Editar funções deste time"
+    - button "Recolher Mídia e Comunicação" [expanded]
+    - text: Operador 1/2
+    - button "BC Bruno"
+    - button "Escalar"
+    - text: Recepção 1 de 4 vagas
+    - button "Editar funções deste time"
+    - button "Recolher Recepção" [expanded]
+    - text: Recepcionista 1/4
+    - button "CS Carla"
+    - button "Escalar"
+    - button "Escalar"
+    - button "Escalar"
+    - text: Confirmado Aguardando Não pode Vaga aberta Pendências da semana
+    - button "Ajuda": "?"
+    - text: 2 vagas ! Instrumentista · Louvor Culto de domingo noite · 19h00 ! Operador · Mídia e Comunicação Culto de domingo noite · 19h00
+  - navigation "Dados do demo":
+    - link "Dados do demo":
+      - /url: "?"
+    - link "Pior caso":
+      - /url: "?dados=pior"
+  - alert

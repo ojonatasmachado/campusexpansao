@@ -1,0 +1,26 @@
+- document:
+  - alert
+  - button "Início"
+  - heading "Perfil" [level=1]
+  - main:
+    - text: PI Pessoa Internacional Membro Você
+    - button "Meus dados Telefone, e-mail, endereço e aniversário"
+    - button "Minha família Filhos no Kids, check-in e eventos"
+    - button "Minha história O que você já viveu na igreja"
+    - text: Preferências
+    - button "Tamanho do texto Padrão"
+    - text: Tema
+    - radiogroup "Tema":
+      - radio "Claro"
+      - radio "Escuro" [checked]
+    - text: Notificações Desligadas
+    - switch "Notificações"
+    - text: Conta
+    - button "Trocar senha"
+    - button "Conheça o app Um passeio de um minuto"
+    - button "Sair do app"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "Mensagens"
+    - button "Caminhada"

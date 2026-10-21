@@ -10,7 +10,7 @@ import ConviteForm from "./ConviteForm";
 
 export const dynamic = "force-dynamic";
 
-/* Link do convite (WhatsApp do líder): a pessoa informa e-mail, senha e CEP
+/* Link do convite (WhatsApp do líder): a pessoa informa e-mail, senha e endereço
    e a conta nasce aqui. Com a cara da igreja (tema da matriz + logo).
    Lógica igual à anterior; só a casca mudou pra AuthShell. */
 export default async function ServiceConvitePage({ searchParams }: { searchParams: Promise<{ t?: string }> }) {

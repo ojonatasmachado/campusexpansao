@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Icon } from "./lib/icons";
+import { readMemberLocation, writeMemberLocation } from "./lib/member-navigation";
 import { aindaVaiAcontecer, porPublicacao, saudacao, todayISO } from "./lib/date";
 import ChurchLockup from "./ChurchLockup";
 import { fatorDa, sincronizarComPerfil, useTextSize } from "./lib/text-scale";
@@ -82,6 +83,8 @@ function MobileMembro({
 }: MobileOverlayProps & { person: P; member: M | null }) {
   const [tab, setTab] = useState<MemberTab>("inicio");
   const [sub, setSub] = useState<string | null>(null);
+  const [announcementTarget, setAnnouncementTarget] = useState<string | null>(null);
+  const [cardTarget, setCardTarget] = useState<string | null>(null);
   const [agSeg, setAgSeg] = useState<"minha" | "igreja">("minha");
   const [chatTarget, setChatTarget] = useState<{ id: string | null; novo: boolean; n: number }>({ id: null, novo: false, n: 0 });
   const [chatAberto, setChatAberto] = useState<string | null>(null);
@@ -122,7 +125,7 @@ function MobileMembro({
           visitors, baptismClasses, announcements: avisosRecebidos, chats, chatMembers, messages, members, onReadAnnouncement, onCompleteOnboarding, onAddCardComment,
           onAdvanceVisitorStage, onRegisterVisitor, onSendMessage, onStartChat,
           organizationId, churchName, churchLogoUrl, theme, setTheme, onChangePassword, onUpdateProfile,
-          journeyRequests = [], onRequestJourneyStep, onConfirmarEscala, onRecusarEscala,
+          journeyRequests = [], onRequestJourneyStep, onResponderEscala,
           kidsClasses = [], kidsChildren = [], childGuardians = [], kidsSessions = [], kidsAttendance = [],
           kidsEvents = [], kidsEventEnrollments = [], wallPosts = [], bibleMarks = [], onSaveBibleMark,
           missingRequirements = [], serveRequests = [], baptismCandidates = [], onEnrollCourse, onRequestBaptism, onRequestServe,
@@ -153,6 +156,7 @@ function MobileMembro({
   /* Contribuir só com a chave cadastrada e o módulo ligado (lei 6) */
   const pix = subAllowed("contribuir") ? contribuirPronto(contribuirCfg) : null;
   const oracaoOn = subAllowed("oracao") && !!member;
+  const pixOn = !!pix;
   const pedirOracao = member && ((destOracao && onStartChat) || oracaoOn)
     ? () => setSheetEl(<SheetOracao member={member} dest={destOracao ?? null} onStartChat={onStartChat} organizationId={organizationId} muralOn={oracaoOn} />)
     : null;
@@ -191,7 +195,7 @@ function MobileMembro({
     const h = setTimeout(() => setToastO(null), toastO.action ? UNDO_MS : 3600);
     return () => clearTimeout(h);
   }, [toastO]);
-  useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }); }, [tab, sub]);
+  useEffect(() => { if (!cardTarget && !announcementTarget) scrollRef.current?.scrollTo({ top: 0 }); }, [tab, sub, cardTarget, announcementTarget]);
 
   /* v7 4.10: o atalho na tela de início é pedido no segundo acesso (contador no aparelho) */
   const acessos = useSyncExternalStore(semAssinatura, contarAcesso, () => 0);
@@ -213,13 +217,43 @@ function MobileMembro({
     if (t === "perfil" && tab !== "perfil") setTabAntesPerfil(tab);
     /* tocar na aba ativa volta ao topo */
     if (t === tab && !s && !sub && !extra.chatId && !extra.newChat) scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    setAnnouncementTarget(extra.announcementId ?? null);
+    setCardTarget(extra.cardId ?? null);
     if (extra.agSeg) setAgSeg(extra.agSeg);
     if (extra.chatId !== undefined || extra.newChat) setChatTarget((c) => ({ id: extra.chatId ?? null, novo: !!extra.newChat, n: c.n + 1 }));
     else if (t === "mensagens" && !s) setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 }));
     setChatAberto(null);
+    const destination = s && modulosMembro.some((m) => m.id === s && m.home === t && m.visible(ctx)) && (s !== "contribuir" || pix) && (s !== "oracao" || oracaoOn) ? s : null;
     setTab(t);
-    setSub(subAllowed(s) ? s : null);
+    setSub(destination);
+    if (mode === "self") {
+      const current = new URL(window.location.href);
+      const next = writeMemberLocation(current, { tab: t, sub: destination, segment: extra.agSeg ?? agSeg, announcement: extra.announcementId ?? null, card: extra.cardId ?? null });
+      if (next.href !== current.href) window.history.pushState({ ...window.history.state, cexMemberFrom: { tab, sub } }, "", next.pathname + next.search + next.hash);
+    }
   };
+  /* Estado de navegação externo: restaura após hidratar e ao voltar/avançar.
+     Pré-visualização do líder não muda o endereço nem a navegação do painel. */
+  useEffect(() => {
+    if (mode !== "self") return;
+    const restore = () => {
+      const next = readMemberLocation(new URL(window.location.href), (t, s) =>
+        modulosMembro.some((m) => m.id === s && m.home === t && m.visible({ serves, isRecep, isKids, isGuardian })) && (s !== "contribuir" || pixOn) && (s !== "oracao" || oracaoOn));
+      const canonical = writeMemberLocation(new URL(window.location.href), next);
+      window.history.replaceState(window.history.state, "", canonical.pathname + canonical.search + canonical.hash);
+      setTab(next.tab);
+      setSub(next.sub);
+      setAgSeg(next.segment);
+      setAnnouncementTarget(next.announcement);
+      setCardTarget(next.card);
+      setSheetEl(null);
+      setChatAberto(null);
+      setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 }));
+    };
+    restore();
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
+  }, [mode, person.id, organizationId, modulosMembro, serves, isRecep, isKids, isGuardian, pixOn, oracaoOn]);
   const abrirEvento = (eventId: string) => {
     const ev = events.find((e) => e.id === eventId);
     if (!ev) return;
@@ -229,14 +263,21 @@ function MobileMembro({
     setSheetEl(<SheetEvento key={ev.id} ev={ev} slot={slot} ministry={ministry} rsvp={rsvp} onRespond={onRespondEvent} paginaUrl={paginaUrl} churchName={churchName} />);
   };
   /* v7 5.3: depois da primeira escala confirmada, uma vez por aparelho, se o navegador ainda não respondeu */
-  const escalaConfirmada = () => {
+  const escalaConfirmada = useCallback(() => {
     try {
       if (localStorage.getItem("cex_avisos_pedidos")) return;
       if (!("Notification" in window) || Notification.permission !== "default" || !("PushManager" in window)) return;
       localStorage.setItem("cex_avisos_pedidos", "1");
     } catch { return; }
     setSheetEl(<SheetPedirAvisos organizationId={organizationId} />);
-  };
+  }, [organizationId, setSheetEl]);
+  /* A sugestão de notificações espera a janela de Desfazer. Ela não cobre
+     o botão de desfazer nem aparece para uma confirmação cancelada. */
+  useEffect(() => {
+    if (!Object.values(respostas).includes("ok")) return;
+    const timer = setTimeout(escalaConfirmada, UNDO_MS);
+    return () => clearTimeout(timer);
+  }, [respostas, escalaConfirmada]);
   const ui: MemberUi = { go, sheet: setSheetEl, toast, respostas, responderEscala: responderEscalaUi, tamanhoTexto: abrirTamanhoTexto, abrirEvento, escalaConfirmada };
 
   const pedirEtapa = (step: JourneyStep) => {
@@ -266,7 +307,12 @@ function MobileMembro({
 
   const tabTitle = ct(MEMBER_TABS.find((t) => t.id === tab)!.l);
   const subTitle = sub === "chat" ? (chatAberto ?? "Conversa") : sub ? moduleTitle(sub) : "";
-  const voltar = () => { if (sub === "chat") { setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 })); setChatAberto(null); } setSub(null); };
+  const voltar = () => {
+    if (sub === "chat") { setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 })); setChatAberto(null); }
+    const from = mode === "self" ? window.history.state?.cexMemberFrom : null;
+    if (from?.tab === tab && from.sub === null) window.history.back();
+    else go(tab);
+  };
 
   return (
     <JourneyContext.Provider value={journey}>
@@ -338,7 +384,7 @@ function MobileMembro({
               announcements={muralOn ? announcements : []} unreadIds={unreadIds} kidsChildren={kidsChildren} childGuardians={childGuardians}
               kidsCheckin={(destaque) => <CheckinKidsHoje person={person} events={events} kidsChildren={kidsChildren} childGuardians={childGuardians} kidsClasses={kidsClasses}
                 kidsSessions={kidsSessions} kidsAttendance={kidsAttendance} organizationId={organizationId} destaque={destaque} />}
-              onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat}
+              onResponderEscala={onResponderEscala} onStartChat={onStartChat}
               nextStep={steps.find((s) => s.st === "andamento" && s.acao) ?? steps.find((s) => s.st === "afazer" && s.acao && s.id !== "time") ?? null}
               inscricoes={steps.filter((s) => s.st === "afazer" && !!s.inscricao)}
               onServir={abrirTimes} ligados={ligadosMembro} acessos={acessos} instalado={instalado}
@@ -348,8 +394,8 @@ function MobileMembro({
           )}
 
           {tab === "agenda" && !sub && (
-            <AgendaV6 seg={agSeg} setSeg={setAgSeg} person={person} member={member} members={members} ministries={ministries} events={events} roster={roster}
-              cards={cards} boards={boards} isRecep={isRecep} isKids={isKids} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala}
+            <AgendaV6 initialCardId={cardTarget} seg={agSeg} setSeg={setAgSeg} person={person} member={member} members={members} ministries={ministries} events={events} roster={roster}
+              cards={cards} boards={boards} isRecep={isRecep} isKids={isKids} onResponderEscala={onResponderEscala}
               onStartChat={onStartChat} onAddCardComment={onAddCardComment} onSaveAvailability={onSaveAvailability}
               aulas={minhasAulas(member, courses, enrollments, courseModules, courseLessons)} meetings={meetings} rehearsals={rehearsals} rsvps={eventRsvps} />
           )}
@@ -362,7 +408,7 @@ function MobileMembro({
           )}
 
           {tab === "mensagens" && sub === "oracao" && oracaoOn && <MuralOracao organizationId={organizationId} onPedir={pedirOracao} sheet={setSheetEl} toast={toast} />}
-          {tab === "mensagens" && sub === "mural" && <MuralV6 announcements={announcements} unreadIds={unreadIds} person={person} onReadAnnouncement={marcarLido} responses={announcementResponses} onRespond={onRespondAnnouncement} />}
+          {tab === "mensagens" && sub === "mural" && <MuralV6 key={announcementTarget ?? "mural"} initialId={announcementTarget} announcements={announcements} unreadIds={unreadIds} person={person} onReadAnnouncement={marcarLido} responses={announcementResponses} onRespond={onRespondAnnouncement} />}
           {tab === "mensagens" && (!sub || sub === "chat") && (
             <>
               {!sub && (muralOn || oracaoOn) && (

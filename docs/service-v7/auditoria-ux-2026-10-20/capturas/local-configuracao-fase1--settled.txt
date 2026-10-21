@@ -1,0 +1,43 @@
+- document:
+  - alert
+  - complementary:
+    - text: Outra Igreja Local Service
+    - button "Fechar menu": ✕
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Início
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "OO"
+  - main:
+    - text: Configuração
+    - heading "Vamos deixar a igreja pronta" [level=1]
+    - paragraph: Três fases curtas. Dá para pular qualquer uma e continuar depois do ponto em que parou.
+    - button "Continuar depois"
+    - list:
+      - listitem:
+        - button "1 Sua igreja cerca de 3 minutos"
+      - listitem:
+        - button "2 Cultos e times cerca de 5 minutos"
+      - listitem:
+        - button "3 Pessoas cerca de 5 minutos"

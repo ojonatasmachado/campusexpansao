@@ -1,0 +1,52 @@
+- document:
+  - alert
+  - complementary:
+    - text: Outra Igreja Local Service
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - text: Início
+    - textbox "Buscar tela, membro, voluntário, time ou função..."
+    - button "OO Otávio"
+  - main:
+    - text: Configuração
+    - heading "Vamos deixar a igreja pronta" [level=1]
+    - paragraph: Três fases curtas. Dá para pular qualquer uma e continuar depois do ponto em que parou.
+    - button "Continuar depois"
+    - list:
+      - listitem:
+        - button "1 Sua igreja cerca de 3 minutos"
+      - listitem:
+        - button "2 Cultos e times cerca de 5 minutos"
+      - listitem:
+        - button "3 Pessoas cerca de 5 minutos"
+    - text: Fase 3 · Pessoas Líderes convidados e a primeira escala. Cerca de 5 minutos.
+    - paragraph: Cadastre cada líder com nome e telefone. O convite abre no WhatsApp com o link de acesso; a pessoa cria o e-mail e a senha no link. Depois, marque quem lidera cada time em Times.
+    - text: Nome e sobrenome
+    - textbox
+    - text: Telefone (WhatsApp)
+    - textbox "(11) 90000-0000"
+    - button "Convidar pelo WhatsApp"
+    - button "Marcar os líderes em Times"
+    - button "Montar a primeira escala →"
+    - button "Fazer depois"
+    - button "Concluir"
+  - button "Ajuda": "?"

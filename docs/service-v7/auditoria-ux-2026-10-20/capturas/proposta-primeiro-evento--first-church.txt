@@ -1,0 +1,64 @@
+- document:
+  - text: CE.X · ESTUDO DE EXPERIÊNCIA · 20 OUT 2026
+  - heading "Mais igreja. Menos sistema para aprender." [level=1]
+  - paragraph: Comparação de duas direções para as mesmas tarefas. Dados fictícios. Protótipos separados, sem implementação no Service e sem envio de dados. Nenhuma atividade apresentada é de uma igreja real.
+  - button "A · Comunidade editorial" [pressed]
+  - button "B · Agenda e ação"
+  - text: Jornada
+  - combobox "Jornada":
+    - option "Membro · Início"
+    - option "Gestão · Início"
+    - option "Pastor · Primeira igreja" [selected]
+    - option "Gestão · Primeiro evento"
+  - text: Atividade
+  - combobox "Atividade":
+    - option "Pouca atividade" [selected]
+    - option "Sem atividade"
+    - option "Muita atividade"
+  - text: Aparência
+  - combobox "Aparência":
+    - option "Escuro" [selected]
+    - option "Claro"
+  - text: Tamanho do texto
+  - combobox "Tamanho do texto":
+    - option "Padrão · 17px" [selected]
+    - option "Maior · 19px"
+    - option "Máximo · 23px"
+  - main "Prévia interativa":
+    - text: Igreja Esperança Service
+    - button "AS"
+    - strong: 1 · Sua igreja
+    - text: 2 · Primeiro encontro 3 · Convide sua equipe
+    - heading "Vamos começar pela sua igreja." [level=1]
+    - paragraph: Você precisa de poucas informações para preparar o primeiro encontro. Pode completar o restante depois.
+    - text: Nome da igreja
+    - textbox "Nome da igreja": Igreja Esperança
+    - text: País
+    - combobox "País":
+      - option "Brasil" [selected]
+      - option "Portugal"
+      - option "Angola"
+      - option "Outro país"
+    - text: Fuso horário
+    - combobox "Fuso horário":
+      - option "São Paulo · America/Sao_Paulo" [selected]
+      - option "Manaus · America/Manaus"
+      - option "Rio Branco · America/Rio_Branco"
+    - paragraph: País e fuso ajustam datas e horários. Este protótipo não contém a lista completa de países e fusos.
+    - group: Dados institucionais opcionais
+    - button "Continuar para o primeiro encontro"
+    - paragraph: Demonstração local. Nenhuma igreja será cadastrada.
+  - complementary:
+    - text: DIREÇÃO A
+    - heading "Comunidade editorial" [level=2]
+    - paragraph: A hierarquia vem do texto, do espaço e das divisórias. Menos recipientes repetidos. Pessoas e contexto precedem a ferramenta.
+    - list:
+      - listitem: Uma ação colorida por tela. Outras ações têm hierarquia secundária.
+      - listitem: Mesmas tarefas, pessoas, datas e quantidades nas duas direções.
+      - listitem: O vazio explica a situação real. Não inventa notícias, convites nem atividade.
+      - listitem: Configuração em etapas e opções avançadas recolhidas.
+    - paragraph:
+      - strong: "Para avaliar:"
+      - text: você entende o que fazer sem explorar todos os botões?
+    - paragraph: Use os controles acima para comparar quatro jornadas, três níveis de atividade e dois temas. O estado de atividade afeta os Inícios; os formulários permanecem iguais para uma comparação controlada.
+    - paragraph: Protótipo de direção, não especificação final. Perfil, agenda e detalhes abrem exemplos locais. Estrutura modular, permissões, internacionalização completa e integrações serão verificadas antes de implementar.

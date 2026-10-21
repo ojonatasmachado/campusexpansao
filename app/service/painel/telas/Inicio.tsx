@@ -1,5 +1,6 @@
 "use client";
 
+import { resumoDaSemana, vagasDaSemana as contarVagasDaSemana } from "../../modules/escalas/semana";
 import { plural } from "../../lib/plural";
 import { nomeComparavel } from "../../lib/pessoas";
 import { useState } from "react";
@@ -10,7 +11,6 @@ import type { PesquisaElegivelView } from "../../lib/pesquisas";
 import { textoBuscavel, TERMOS } from "../../lib/vocabulario";
 import { useTermos } from "../../lib/vocabulario-context";
 import { HelpDot, SetupChecklist, type SetupCounts } from "../../HelpSystem";
-import { Av } from "../ui";
 import { JRN_STEPS } from "../caminhada";
 import { noAr } from "../../modules/mural/estado";
 import { coberturaPorTime, vagasFaltando, type CoberturaTime } from "../../modules/escalas/cobertura";
@@ -24,28 +24,6 @@ import { linhaDoSetup, type SetupEstado } from "../../modules/configuracao/setup
 import { termosDaRota } from "../../modules/registry";
 import { Kpi, REACOES_PESQUISA, ROUTES } from "../comum";
 import type { AnnouncementView, ChildView, DecisionView, DrawerState, EnrollmentView, EventAttendanceView, EventView, FieldDef, JourneyChangeRequestView, KidsAttendanceView, KidsClassView, MemberView, MinistryView, ModalState, PersonView, RosterAssignmentView, TimelineEventView, VisitorView } from "../tipos";
-
-export function Spark({ value }: { value: number }) {
-  const series = [62, 66, 61, 72, 70, 78, 76, 84, 80, 87, 86, 94, Math.max(70, value)];
-  const max = Math.max(...series);
-  const min = Math.min(...series);
-  const x = (index: number) => 4 + (index * 232) / (series.length - 1);
-  const y = (point: number) => 56 - 4 - ((point - min) / (max - min || 1)) * 48;
-  const line = series.map((point, index) => `${index ? "L" : "M"}${x(index).toFixed(1)},${y(point).toFixed(1)}`).join(" ");
-  return (
-    <svg viewBox="0 0 240 56" preserveAspectRatio="none" style={{ width: "100%", height: 56 }}>
-      <defs>
-        <linearGradient id="service-sp" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--olive)" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="var(--olive)" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={`${line} L236,56 L4,56 Z`} fill="url(#service-sp)" />
-      <path d={line} fill="none" stroke="var(--olive)" strokeWidth="2" />
-    </svg>
-  );
-}
-
 
 export function GlobalSearch({
   people,
@@ -241,14 +219,10 @@ export function Painel({
   people,
   members,
   activePeople,
-  confirmationRate,
-  presenceRate,
   userName,
   visitantesSemContato,
   visitantesPeloLink,
-  semanasComPresenca,
   novosNoMes,
-  escaladosSemana,
   gaps,
   events,
   visitorsInCare,
@@ -284,15 +258,11 @@ export function Painel({
   people: PersonView[];
   members: MemberView[];
   activePeople: number;
-  confirmationRate: number;
-  presenceRate: number | null;
   userName?: string;
   visitantesSemContato: number;
   /* chegaram pelo QR/link e ainda ninguém falou com eles (antes das 48h) */
   visitantesPeloLink: number;
-  semanasComPresenca: number;
   novosNoMes: number;
-  escaladosSemana: number;
   gaps: Array<{ event: EventView; ministry: MinistryView; position: { id: string; name: string } }>;
   events: EventView[];
   visitorsInCare: number;
@@ -335,24 +305,30 @@ export function Painel({
   const gestao = currentRole === "master" || currentRole === "pastor";
   const liderDeTime = !!scopeMinistryIds;
   if (scopeMinistryIds) gaps = gaps.filter((g) => scopeMinistryIds.includes(g.ministry.id));
-  const topPeople = [...people].sort((a, b) => (b.engagement ?? 0) - (a.engagement ?? 0)).slice(0, 5);
+  const semProgramacao = !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time));
+  const ativando = gestao && semProgramacao;
+  const primeiraProgramacao = events.length === 0;
+  const emPreparacao = gestao && setup && !setup.concluido && (igrejaNova || semProgramacao || setup.fase > 1 || setup.feitas.length > 0 || setup.pulou || !!setup.primeiroEventoId);
+  const semana = resumoDaSemana(events, roster, ministries.flatMap((m) => m.positions), scopeMinistryIds);
+  const confirmationRate = semana.taxa;
+  const escaladosSemana = semana.total;
+  const vagasDaSemana = contarVagasDaSemana(events, roster, ministries, scopeMinistryIds);
+  const gapsDaSemana = gaps.filter((g) => g.event.eventDate >= semana.inicio && g.event.eventDate <= semana.fim && aindaVaiAcontecer(g.event.eventDate, g.event.time) && (!scopeMinistryIds || scopeMinistryIds.includes(g.ministry.id)));
   const recentAnnouncements = porPublicacao(announcements.filter(noAr)).slice(0, 3);
   const [sobreAberto, setSobreAberto] = useState(false);
   /* v7 3.6: "Sobre estes números" explica, num lugar só, cada número e painel que está na tela */
   const sobre: Array<[string, string]> = [
     [ct("{Voluntarios}"), "Pessoas que servem em algum time e estão com o status ativo, sem contar quem está em pausa ou de férias. Novos são os que chegaram à igreja nos últimos 30 dias."],
-    ["Confirmação", "De todo mundo escalado nesta semana, quantos já confirmaram presença no app."],
+    ["Confirmação", "Das vagas com alguém escalado nesta semana, quantas já foram confirmadas no app."],
     ["Visitantes em acompanhamento", "Visitantes que ainda estão na fase de acompanhamento, antes de virarem membros. O número de Visitantes na Saúde da igreja conta só quem visitou no período escolhido."],
-    ["Pendências da escala", "Posições da escala desta semana que ainda não têm ninguém confirmado."],
-    ...(semanasComPresenca >= 4 ? [["Engajamento", "Presença média de quem foi escalado nos últimos 90 dias."] as [string, string]] : []),
+    ["Pendências da escala", "Funções dos próximos encontros desta semana que ainda não têm todas as vagas preenchidas."],
     [ct("Próximos {cultos}"), ct("Os próximos {cultos} ou eventos da agenda, na ordem em que vão acontecer.")],
     ...(enqueteElegivel ? [["Avaliação de experiência", "Pesquisa rápida sobre como foi servir. Aparece só quando você está elegível pra responder."] as [string, string]] : []),
     ...(pesquisaElegivel ? [["Pulso da escala", "Pesquisa da própria igreja sobre como foi servir nesta escala. Diferente da avaliação de experiência."] as [string, string]] : []),
     ...(journeyRequests.length > 0 ? [[ct("{Caminhada} pendente"), ct("Pedidos de avanço na {caminhada} (decisão, batismo, curso...) esperando aprovação da liderança.")] as [string, string]] : []),
-    ...(semanasComPresenca >= 4 ? [[ct("{Voluntarios} mais engajados"), "Quem tem a maior taxa de engajamento nas últimas escalas."] as [string, string]] : []),
     ["Comunicação recente", "Os últimos avisos e posts do mural enviados pra igreja."],
-    ...(cuidado ? [["Lista de cuidado", `Quem já teve presença registrada e está há ${plural(cuidado.semanas, "semana")} ou mais sem nenhuma. Cada nome vai para quem cuida: líder do grupo, depois líder do time, depois a pastoral. Ausência justificada tira da lista por 30 dias. A pessoa não vê nada disso.`] as [string, string]] : []),
-    ...(kidsClasses.length > 0 ? [["Crianças por turma", "Quantas crianças estão em cada turma do Kids."] as [string, string], ...(cuidado ? [] : [["Crianças sumindo", "Crianças que não aparecem faz tempo. Vale um contato com a família."] as [string, string]])] : []),
+    ...(cuidado ? [["Lista de cuidado", `Quem já teve presença registrada e está há ${plural(cuidado.semanas, "semana")} ou mais sem nenhuma. Cada nome vai para quem cuida: líder do grupo, depois líder do time, depois a pastoral. Uma justificativa registrada tira da lista por 30 dias. A pessoa não vê nada disso.`] as [string, string]] : []),
+    ...(kidsClasses.length > 0 ? [["Crianças por turma", "Quantas crianças estão em cada turma do Kids."] as [string, string], ...(cuidado ? [] : [["Crianças sumindo", "Crianças sem check-in registrado há algum tempo. Vale um contato com a família."] as [string, string]])] : []),
   ];
   return (
     <div className="content wide painel-inicio">
@@ -368,24 +344,32 @@ export function Painel({
         </div>
         <div className="ph-actions">
           <button className="btn btn-sec" type="button" onClick={() => setRoute("cultos")}>Ver agenda</button>
-          <button className="btn btn-pri" type="button" onClick={() => setRoute("escalas")}>Montar escala</button>
+          <button className="btn btn-pri" type="button" onClick={() => setRoute(emPreparacao ? "configurar" : ativando ? "cultos" : "escalas")}>{emPreparacao ? (setup.primeiroEventoId || setup.fase > 1 || setup.feitas.length > 0 || setup.pulou || setup.rascunho ? "Continuar preparação" : "Preparar minha igreja") : ativando ? (primeiraProgramacao ? "Preparar primeiro encontro" : "Preparar próximo encontro") : "Montar escala"}</button>
         </div>
       </div>
-      {gestao && (
+      {ativando && (
+        <section className="service-start-guide" aria-labelledby="service-start-title">
+          <div className="ph-eyebrow">{primeiraProgramacao ? "Primeiros passos" : "Próximo encontro"}</div>
+          <h2 id="service-start-title">O próximo encontro começa aqui</h2>
+          <p>Ainda não há programação futura na agenda. Prepare um encontro com data, horário e local para que as pessoas saibam onde participar.</p>
+          <ol><li><b>{primeiraProgramacao ? "Identifique sua igreja" : "Confira os dados da igreja"}</b><span>Nome, endereço e a identidade que as pessoas vão reconhecer.</span></li><li><b>Prepare o encontro</b><span>Uma data e um lugar antes de organizar toda a equipe.</span></li><li><b>Convide quem vai ajudar</b><span>Depois, acompanhe os acessos e as respostas.</span></li></ol>
+        </section>
+      )}
+      {gestao && !ativando && (
         <SaudeDaIgreja
           dados={{ membros: members, pessoas: people, times: ministries, visitantes: visitors, decisoes: decisions, fatos: timelineEvents, matriculas: enrollments }}
           etapas={JRN_STEPS}
-          extras={cuidado ? [{ id: "ausentes", rotulo: `Ausentes há ${plural(cuidado.semanas, "semana")} ou mais`, valor: cuidado.todos.length, itens: cuidado.todos.map((a) => (a.memberId ? { tipo: "member" as const, id: a.memberId, nome: a.nome } : { tipo: "person" as const, id: a.personId, nome: a.nome })) }] : []}
+          extras={cuidado ? [{ id: "ausentes", rotulo: `Sem registro há ${plural(cuidado.semanas, "semana")} ou mais`, valor: cuidado.todos.length, itens: cuidado.todos.map((a) => (a.memberId ? { tipo: "member" as const, id: a.memberId, nome: a.nome } : { tipo: "person" as const, id: a.personId, nome: a.nome })) }] : []}
           onAbrir={(it) => setDrawer({ kind: it.tipo, id: it.id })}
         />
       )}
-      <h2 className="painel-sec-t">{liderDeTime ? "Para resolver no seu time" : "Para resolver"}</h2>
-      {(gaps.length > 0 || (!liderDeTime && (visitantesSemContato > 0 || visitantesPeloLink > 0)) || (!liderDeTime && journeyRequests.length > 0)) && (
+      {(liderDeTime || vagasDaSemana > 0 || visitantesSemContato > 0 || visitantesPeloLink > 0 || journeyRequests.length > 0) && <h2 className="painel-sec-t">{liderDeTime ? "Para resolver no seu time" : "Para resolver"}</h2>}
+      {(vagasDaSemana > 0 || (!liderDeTime && (visitantesSemContato > 0 || visitantesPeloLink > 0)) || (!liderDeTime && journeyRequests.length > 0)) && (
         <div className="agora-list">
-          {gaps.length > 0 && (
+          {vagasDaSemana > 0 && (
             <button type="button" className="agora-row" onClick={() => setRoute("escalas")}>
               <span className="agora-ic"><Icon name="escalas" size={17} /></span>
-              <span className="agora-main"><span className="agora-t">{gaps.length === 1 ? "1 vaga aberta na escala" : `${gaps.length} vagas abertas na escala`}</span><span className="agora-s"> · nesta semana</span></span>
+              <span className="agora-main"><span className="agora-t">{vagasDaSemana === 1 ? "1 vaga aberta na escala" : `${vagasDaSemana} vagas abertas na escala`}</span><span className="agora-s"> · nesta semana</span></span>
               <span className="agora-go">Escalar →</span>
             </button>
           )}
@@ -419,19 +403,19 @@ export function Painel({
         </div>
       )}
       {aniversarios}
-      {gestao && setup && !setup.concluido && (igrejaNova || setup.feitas.length > 0 || setup.pulou) ? (
+      {emPreparacao ? (
         <button type="button" className="setup-banner" onClick={() => setRoute("configurar")}>
           <span className="setup-banner-t">{linhaDoSetup(setup)}</span>
           <span className="agora-go">{setup.feitas.length || setup.pulou ? "Continuar →" : "Começar →"}</span>
         </button>
       ) : (
-        <SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} />
+        gestao ? <details className="service-preparacao"><summary>Revisar preparação da igreja</summary><SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} /></details> : null
       )}
       {/* v7 3.6: cada número aparece uma vez. Vagas abertas e visitantes sem contato já estão na lista do topo e em Pendências. */}
-      {!liderDeTime && <div className="kpi-row kpi-3">
+      {!liderDeTime && !ativando && <div className="kpi-row kpi-3">
         <Kpi icon="pessoa" label={ct("{Voluntarios}")} value={activePeople} foot={joinDot(`de ${plural(people.length, "cadastrado")}`, novosNoMes ? `${plural(novosNoMes, "novo", "novos")} em 30 dias` : null)} />
-        <Kpi icon="ok" label="Confirmação" value={escaladosSemana ? `${confirmationRate}%` : "·"} foot={escaladosSemana ? `de ${plural(escaladosSemana, "escalado")} nesta semana` : "ninguém escalado nesta semana"} />
-        <Kpi icon="visitante" label="Visitantes em acompanhamento" value={visitorsInCare} foot={visitantesSemContato ? `${visitantesSemContato} sem contato há mais de 48h` : "todos com contato em dia"} />
+        <Kpi icon="ok" label="Confirmação" value={escaladosSemana ? `${confirmationRate}%` : "·"} foot={escaladosSemana ? `de ${plural(escaladosSemana, "vaga escalada", "vagas escaladas")} nesta semana` : "ninguém escalado nesta semana"} />
+        <Kpi icon="visitante" label="Visitantes em acompanhamento" value={visitorsInCare} foot={visitantesSemContato ? `${visitantesSemContato} sem contato há mais de 48h` : visitorsInCare ? "todos com contato em dia" : "nenhum visitante em acompanhamento"} />
       </div>}
       <div className="sobre-numeros"><button type="button" className="help-link" onClick={() => setSobreAberto(true)}>Sobre estes números</button></div>
       {sobreAberto && (
@@ -471,7 +455,7 @@ export function Painel({
                 </div>
               ) : null;
             })()}
-            {gaps.slice(0, 6).map((gap) => (
+            {gapsDaSemana.slice(0, 6).map((gap) => (
               <div className="gap-row" key={`${gap.event.id}-${gap.position.id}`}>
                 <div className="gap-ic wait">!</div>
                 <div className="mini-main">
@@ -481,26 +465,10 @@ export function Painel({
                 <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("escalas")}>Escalar</button>
               </div>
             ))}
-            {gaps.length === 0 && !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time) && vagasFaltando(coberturaPorTime(e, roster, ministries, scopeMinistryIds)) > 0) ? <div className="mini-row"><div className="mini-main"><div className="mini-title">Escala coberta</div><div className="mini-sub">Nenhuma vaga aberta nesta semana.</div></div></div> : null}
+            {gapsDaSemana.length === 0 && !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time) && vagasFaltando(coberturaPorTime(e, roster, ministries, scopeMinistryIds)) > 0) ? <div className="mini-row"><div className="mini-main"><div className="mini-title">{semProgramacao ? "Sem programação futura" : roster.length === 0 ? "Escalas ainda não preparadas" : "Sem vagas abertas nesta semana"}</div><div className="mini-sub">{semProgramacao ? "Prepare o próximo encontro antes de organizar a equipe." : roster.length === 0 ? "Ter encontros na agenda não significa que a equipe já foi escalada." : "Confira os próximos encontros para acompanhar a cobertura de cada time."}</div></div></div> : null}
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {semanasComPresenca >= 4 && <div className="panel">
-            <div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={14} /> Engajamento</span><span className="panel-meta">90 dias</span></div>
-            <div className="panel-body">
-              {presenceRate === null ? (
-                <>
-                  <div style={{ fontSize: "var(--fs-pn-14)", fontWeight: 600, color: "var(--white)" }}>Sem dados ainda</div>
-                  <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", marginTop: 4, lineHeight: 1.5 }}>{ct("Os números aparecem depois do primeiro {culto} com escala confirmada.")}</div>
-                </>
-              ) : (
-                <>
-                  <div style={{ fontSize: "var(--fs-pn-32)", fontWeight: 700, letterSpacing: "-0.04em" }}>{presenceRate}%<span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>presença média</span></div>
-                  <div style={{ marginTop: 6 }}><Spark value={presenceRate} /></div>
-                </>
-              )}
-            </div>
-          </div>}
           <div className="panel">
             <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> {ct("Próximos {cultos}")}</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("cultos")}>Agenda</button></div>
             <div className="panel-body flush">
@@ -569,12 +537,6 @@ export function Painel({
         </div>
       )}
       <div className="dash-2col">
-        {semanasComPresenca >= 4 && <div className="panel">
-          <div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={14} /> {ct("{Voluntarios} mais engajados")}</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("pessoas")}>Todos</button></div>
-          <div className="panel-body flush">
-            {topPeople.map((person, index) => <PersonMini key={person.id} person={person} index={index} setDrawer={setDrawer} />)}
-          </div>
-        </div>}
         <div className="panel">
           <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Comunicação recente</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("comunicacao")}>Ver tudo</button></div>
           <div className="panel-body flush">
@@ -677,19 +639,5 @@ export function MiniEvent({
         )}
       </div>
     </div>
-  );
-}
-
-export function PersonMini({ person, index, setDrawer }: { person: PersonView; index: number; setDrawer: (drawer: DrawerState) => void }) {
-  return (
-    <button className="mini-row click" type="button" onClick={() => setDrawer({ kind: "person", id: person.id })}>
-      <span style={{ fontFamily: "var(--mono)", fontSize: "var(--fs-pn-12)", color: "var(--muted)", width: 18 }}>{String(index + 1).padStart(2, "0")}</span>
-      <Av name={person.name} photoUrl={person.photoUrl} />
-      <div className="mini-main">
-        <div className="mini-title">{person.name}</div>
-        <div className="mini-sub">{person.tags.join(" · ") || person.status}</div>
-      </div>
-      <div style={{ width: 90 }}><div className="bar"><div className="bar-fill" style={{ width: `${person.engagement ?? 0}%` }} /></div></div>
-    </button>
   );
 }

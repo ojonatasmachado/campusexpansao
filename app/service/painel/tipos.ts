@@ -56,6 +56,7 @@ export type ChurchView = {
   doc?: string | null;
   foundedYear?: string | null;
   address?: string | null;
+  country?: string | null;
   postalCode?: string | null;
   neighborhood?: string | null;
   state?: string | null;
@@ -77,7 +78,6 @@ export type PersonView = {
   phone: string;
   email: string;
   status: "ativo" | "pausa" | "ferias";
-  engagement: number | null;
   availability: Record<string, boolean>;
   tags: string[];
   meta?: { recusasSeguidas?: number; diasIndisponivel?: number; birthday?: string; neighborhood?: string };
@@ -100,6 +100,7 @@ export type MemberView = {
   groupId: string | null;
   volunteerId: string | null;
   createdAt: string;
+  country?: string | null;
   postalCode?: string | null;
   street?: string | null;
   city?: string | null;
@@ -110,6 +111,7 @@ export type MemberView = {
 };
 
 export type MinistryView = {
+  recebePedidos?: boolean;
   id: string;
   organizationId: string;
   churchId: string;
@@ -125,6 +127,7 @@ export type MinistryView = {
 export type EventView = {
   id: string;
   organizationId: string;
+  churchId?: string;
   name: string;
   kind: string;
   weekday: string;
@@ -687,7 +690,7 @@ export type FieldDef =
   | { k: string; label: string; type: "text"; req?: boolean; half?: boolean; ph?: string; hint?: string; value?: string; showIf?: ShowIf; secao?: string }
   | { k: string; label: string; type: "area"; req?: boolean; half?: boolean; ph?: string; hint?: string; big?: boolean; value?: string; showIf?: ShowIf; secao?: string }
   | { k: string; label: string; type: "select"; req?: boolean; half?: boolean; ph?: string; hint?: string; options: { v: string; l: string }[]; value?: string; showIf?: ShowIf; secao?: string }
-  | { k: string; label: string; type: "date"; req?: boolean; half?: boolean; hint?: string; showIf?: ShowIf; secao?: string }
+  | { k: string; label: string; type: "date"; fullDate?: boolean; req?: boolean; half?: boolean; hint?: string; showIf?: ShowIf; secao?: string }
   | { k: string; label: string; type: "time"; req?: boolean; half?: boolean; hint?: string; showIf?: ShowIf; secao?: string }
   | { k: string; label: string; type: "toggle"; req?: boolean; half?: boolean; hint?: string; onLabel?: string; offLabel?: string; value?: string; showIf?: ShowIf; secao?: string }
   | { k: string; label: string; type: "checks"; req?: boolean; half?: boolean; hint?: string; options: { v: string; l: string }[]; showIf?: ShowIf; secao?: string }

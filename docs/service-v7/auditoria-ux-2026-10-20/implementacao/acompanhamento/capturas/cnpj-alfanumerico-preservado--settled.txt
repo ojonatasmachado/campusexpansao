@@ -1,0 +1,26 @@
+- document:
+  - alert
+  - main:
+    - text: CE.X Service
+    - paragraph: Nova igreja
+    - heading "Cadastre sua igreja" [level=1]
+    - paragraph: Leva um minuto. Você fica como responsável pelo Service da igreja e depois convida a liderança e os membros.
+    - text: Nome da igreja *
+    - textbox "Nome da igreja *":
+      - /placeholder: Igreja Central
+    - text: E-mail de contato *
+    - textbox "E-mail de contato *":
+      - /placeholder: contato@igreja.com
+    - text: Telefone de contato *
+    - textbox "Telefone de contato *":
+      - /placeholder: (11) 9...
+    - text: Cidade
+    - textbox "Cidade":
+      - /placeholder: São Paulo · SP
+    - group:
+      - text: Dados institucionais (opcional) CNPJ da igreja (opcional)
+      - textbox "CNPJ da igreja (opcional) Não conseguimos consultar a Receita Federal agora. Tente de novo em instantes.":
+        - /placeholder: 00.000.000/0000-00
+        - text: 12.ABC.345/01DE-35
+      - text: Não conseguimos consultar a Receita Federal agora. Tente de novo em instantes.
+    - button "Criar igreja matriz"

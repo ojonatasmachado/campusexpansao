@@ -100,6 +100,18 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
   const base = { org: org ?? "", churchId: church?.id ?? null, onClose: () => setTela(null), onDone: () => { setTela(null); fin.recarregar(); } };
 
   if (!org) return null;
+  if (fin.carregando || fin.erro) return (
+    <div className="content wide fin">
+      <PageHead title="Financeiro" eyebrow="Gestão" help={HELP} />
+      {fin.carregando ? <div className="panel"><div className="panel-body" role="status">Carregando saldos e lançamentos...</div></div> : (
+        <div className="panel"><div className="panel-body">
+          <p className="fs-error" role="alert">{fin.erro}</p>
+          <p className="ph-sub">Os valores estão indisponíveis. Tente carregar novamente para consultar saldos e lançamentos.</p>
+          <button className="btn btn-sec" type="button" style={{ marginTop: 16 }} onClick={fin.recarregar}>Tentar novamente</button>
+        </div></div>
+      )}
+    </div>
+  );
 
   return (
     <div className="content wide fin">
@@ -130,7 +142,6 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
         )}
       </div>
 
-      {fin.erro && <div className="fs-error" role="alert">{fin.erro}</div>}
 
       {aba === "movimento" ? (
         <>

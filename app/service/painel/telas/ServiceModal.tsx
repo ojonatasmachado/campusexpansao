@@ -1,5 +1,6 @@
 "use client";
 
+import { telefoneValido } from "../../lib/telefone";
 import { formatarTelefone, telefoneParaGravar } from "../../lib/telefone";
 import { nomeComparavel, possivelDuplicado } from "../../lib/pessoas";
 import { avisar } from "../../lib/avisar";
@@ -7,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { Fragment, useId, useRef, useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { DEFAULT_ICON } from "../../lib/icons";
-import { todayISO } from "../../lib/date";
+import { isCivilDate, todayISO } from "../../lib/date";
 
 import { useTermos } from "../../lib/vocabulario-context";
 import { FormScreen, type FormScreenHandle } from "../form/FormScreen";
@@ -105,7 +106,7 @@ export function ServiceModal({
     setSaving(true);
     if (action.kind === "member") {
       if (value("nome").split(/\s+/).length < 2) { setSaving(false); setError("Coloque nome e sobrenome."); return; }
-      if (value("tel").replace(/\D/g, "").length < 10) { setSaving(false); setError("Coloque o telefone com DDD: o convite do app vai por WhatsApp."); return; }
+      if (!telefoneValido(value("tel"))) { setSaving(false); setError("Coloque o telefone com DDD: o convite do app vai por WhatsApp."); return; }
       const dup = possivelDuplicado([...members, ...people], value("nome"), value("tel"));
       const chaveDup = `${nomeComparavel(value("nome"))}|${value("tel").replace(/\D/g, "")}`;
       if (dup && dupVisto !== chaveDup) {
@@ -156,7 +157,10 @@ export function ServiceModal({
       if (!value("nome")) { setSaving(false); setError(ct("Digite o nome do {culto}.")); return; }
       const eventLocal = resolveLocalField(value("local"), value("endereco"), rooms);
       if (!eventLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços e Salas."); return; }
-      const eventDate = value("data") || null;
+      const eventDate = value("data");
+      const eventTime = value("hora").replace("h", ":");
+      if (!isCivilDate(eventDate)) { setSaving(false); setError("Informe uma data válida com dia, mês e ano."); return; }
+      if (!/^([01]\d|2[0-3])[h:]([0-5]\d)$/.test(eventTime)) { setSaving(false); setError("Informe o horário de início."); return; }
       const { data: eventRow, error: eventError } = await supabase.schema("service").from("events").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -164,7 +168,7 @@ export function ServiceModal({
         kind: value("tipo") || "Culto",
         event_date: eventDate,
         weekday: weekdayShortFromDate(eventDate),
-        time: value("hora") || null,
+        time: eventTime,
         location: eventLocal.name,
         room_id: eventLocal.roomId,
         ministries: [],
@@ -179,7 +183,7 @@ export function ServiceModal({
             title: value("nome"),
             kind: "culto",
             reserved_date: eventDate,
-            start_time: value("hora") || null,
+            start_time: eventTime,
             source_type: "evento",
             source_id: eventRow.id,
           });
@@ -193,7 +197,8 @@ export function ServiceModal({
         church_id: church.id,
         name: value("nome"),
         icon: value("icon") || DEFAULT_ICON,
-        description: value("desc") || null,
+        description: value("desc") || value("proposito") || null,
+        profile: { recebendoVoluntarios: value("aberto") === "true" },
       });
     } else if (action.kind === "decision") {
       if (!value("nome")) {

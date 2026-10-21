@@ -1,0 +1,8 @@
+{
+  "ev_885070db78c6f7c4e969d6d9a93dcd8a56d1a8c462bd3f857bdebff39697dcc6": "geo-convite-so-cep",
+  "ev_889ae00180873110d10130a4a26a88500c227054a7dc748afd2d9847d5afcff0": "geo-perfil-cpf-opcional",
+  "ev_169f22d25486b6846269c2230c3ff2e0fc0c362aef76cd5aad4b3e106f472e33": "geo-aceite-so-cep-salvo",
+  "ev_4e141ebab98dfb1665d4f9844a990789ddd57479791f9b2eaaf9e5f4e7ec4f73": "geo-cpf-posterior-salvo",
+  "ev_e26e417c26f3fffca8bb2cfffaee2c0983ad2c0b17b56348b770648b90c400a1": "geo-perfil-cpf-visivel",
+  "ev_0c6afaec0ac502f238e9ccd2eb86b0cfc2ecc5a3ec0078445433f61ffdf4ede0": "geo-convite-final-so-cep"
+}

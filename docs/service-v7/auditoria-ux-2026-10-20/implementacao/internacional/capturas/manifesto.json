@@ -1,0 +1,1302 @@
+[
+  {
+    "label": "internacional-convite-aceito",
+    "evidence_id": "ev_266ff58cc8277cccd998792555e445ac84c0aa63c4977ce96ea31fbd369a8b1b",
+    "start_url": "http://localhost:3003/service/convite?t=[token omitido]",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "senha",
+        "action": "fill",
+        "status": "failed",
+        "error": "locator.fill: Error: strict mode violation: locator('input[autocomplete=\"new-password\"]:first-of-type') resolved to 2 elements:\n    1) <input value=\"\" type=\"password\" autocorrect=\"off\" spellcheck=\"false\" class=\"login-input\" autocapitalize=\"none\" autocomplete=\"new-password\" placeholder=\"Mínimo 6 caracteres\"/> aka getByRole('textbox', { name: 'Crie uma senha Mostrar' })\n    2) <input value=\"\" type=\"password\" autocorrect=\"off\" spellcheck=\"false\" class=\"login-input\" autocapitalize=\"none\" autocomplete=\"new-password\"/> aka getByRole('textbox', { name: 'Repita a senha Mostrar' })\n\nCall log:\n  - waiting for locator('input[autocomplete=\"new-password\"]:first-of-type')\n"
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      }
+    ],
+    "screens": [],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "cep-endereco-encontrado",
+    "evidence_id": "ev_28a8416bd9bb53b295f57efbc00726682438e88c9223a1004dcfef5d2c3c18e9",
+    "start_url": "http://localhost:3003/service/convite?t=[token omitido]",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "senha",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "confirmar",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "cep",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "consultar-endereco",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "ver-endereco",
+        "action": "press",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "cep-endereco-encontrado--settled.png",
+        "sha256": "8e8ca10508b1961640df6463c0751a1b67c88d641a79e7dc8293a12ca42fedce",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "cep-convite-brasil",
+    "evidence_id": "ev_558d8cb63b6a6bb35bb03e56adaa246f9f4def7e99f913678a57a9047ac1028b",
+    "start_url": "http://localhost:3003/service/convite?t=[token omitido]",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "cep-convite-brasil--settled.png",
+        "sha256": "82959023bc9988ea77e426bf9d8cfad6516aed29af161bd05a5a7f1c45424f82",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "internacional-perfil",
+    "evidence_id": "ev_5639ddb1d9732c6cb9ffc6e43137b23b95bf85a31de1d0bce54f7c4498356900",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "perfil",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "dados",
+        "action": "click",
+        "status": "failed",
+        "error": "locator.click: Timeout 12000ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: 'Meus dados', exact: true })\n"
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      }
+    ],
+    "screens": [],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "internacional-convite-concluido",
+    "evidence_id": "ev_73e269f21f22a576dc202667cceaf63894644319b7f647bf903114733f62919a",
+    "start_url": "http://localhost:3003/service/convite?t=[token omitido]",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "senha",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "confirmar",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "criar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "aguardar-acesso",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "internacional-convite-concluido--settled.png",
+        "sha256": "e2f10b127cc799a6c15240fdcefb54b509389ee4ab96300ae0c31978d7e3f1a9",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "cep-convite-obrigatorio",
+    "evidence_id": "ev_780ebe9653cfc08ed6c3a0ee86cf198c53f6e7a7c97eec869f8cede1b85f1892",
+    "start_url": "http://localhost:3003/service/convite?t=[token omitido]",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "senha",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "confirmar",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "criar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "cep-convite-obrigatorio--settled.png",
+        "sha256": "6a7636c1a997556dca644d5aedf9a84de6111cb92d912e407d1ea69680705bdd",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "internacional-convite-entrada",
+    "evidence_id": "ev_7a9bd7d3a2048dbb477152216fa661b2eb9fd8195ad004ee420e0e1cacea696c",
+    "start_url": "http://localhost:3003/service/convite?t=[token omitido]",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "internacional-convite-entrada--settled.png",
+        "sha256": "d47ac6b4ba733fdfc8ed213079376e5ca8f3ffc8722405d77381517999f11664",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "internacional-perfil-salvo",
+    "evidence_id": "ev_8a072f968ebfa2cc7c984d4d266b46da6ed6bee2a528a83ca1b21fa4517de4ae",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "perfil",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "dados",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "editar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "codigo-postal",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "salvar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "salvo",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "internacional-perfil-salvo--settled.png",
+        "sha256": "f2e9e7df5112bf23fe3e76bac6a3cba50123b0a3f4b30590ccfef7c9576c2428",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "internacional-perfil-menu",
+    "evidence_id": "ev_8dcae44f694914eb349a1456e2d95984ed4c6f81bdbe22020ef0179b32b2ae1b",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "perfil",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "internacional-perfil-menu--settled.png",
+        "sha256": "1da3d3107bb828f4668b213e173ce44c482c373cb1d727b6aeb54e329df5b9e5",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "internacional-postal-claro",
+    "evidence_id": "ev_91df02b27759be430176b73d97091f004b3ca3b17bdfa6c4eea23fababdd60db",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "light",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "perfil",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "dados",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "editar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "ver-endereco",
+        "action": "press",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "internacional-postal-claro--settled.png",
+        "sha256": "a235adec34eba15c95b42f11cd0a252984c70a8c4cb069cf1717aa3ea0ba9e3a",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "internacional-membro-acesso",
+    "evidence_id": "ev_956d9a2b31d9e0a3dd039d80718b6609dbdb683c8cfb66c215eabc34987fd5fc",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "abrir-app",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "internacional-membro-acesso--settled.png",
+        "sha256": "2ba946557adec52a7e4efd84c476ab9cdc694ab0e9b9e00638fd4904fa9d235f",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "internacional-perfil-postal",
+    "evidence_id": "ev_98b6c63c82c641acee4b026864ad5e6634a1147f1e7043201edc13579cf0bb83",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "perfil",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "dados",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "editar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "codigo-postal",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "internacional-perfil-postal--settled.png",
+        "sha256": "127ee3bd27518cf5dcec23007f4e1552c956d69c75846e77001ab7087ed5707b",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "internacional-perfil-dados",
+    "evidence_id": "ev_a58523e08830e9f501ef2b0d38c115fa26c094ff211a1b6a163c14e8ef770af8",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "perfil",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "dados",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "internacional-perfil-dados--settled.png",
+        "sha256": "7833c21b83c9534ca57557baee440db5abc8429957f2ff6831846d370501afe4",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "internacional-perfil-edicao",
+    "evidence_id": "ev_b084b19f1cf6febc1e5587df5af46cae8070ad909ad11432b89f5d76a3437081",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "perfil",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "dados",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "editar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "internacional-perfil-edicao--settled.png",
+        "sha256": "127ee3bd27518cf5dcec23007f4e1552c956d69c75846e77001ab7087ed5707b",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "cep-convite-outro-pais",
+    "evidence_id": "ev_bf2b170e2f0c2d02235e99611ce65fe647af856f9a08220c4ea924e818a6e800",
+    "start_url": "http://localhost:3003/service/convite?t=[token omitido]",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "pais",
+        "action": "select_option",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "nome-pais",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "postal",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "cidade",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "ver-cidade",
+        "action": "press",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "cep-convite-outro-pais--settled.png",
+        "sha256": "d515bc6e26a5880779f9178cc002ce1c2dade35586ed5dd4748c999e6bb49fa1",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "internacional-endereco-manual",
+    "evidence_id": "ev_c63cb471145b29a1baa7b1a1ff7854fd017a9ed284bfc700ff3fb2522a3d4f27",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "perfil",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "dados",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "editar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "endereco",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "ver-cidade",
+        "action": "press",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "internacional-endereco-manual--settled.png",
+        "sha256": "522b26f8cd6c6ae72899e81ff594e910481b24fc28e3675269b9401ba50f6d75",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  }
+]

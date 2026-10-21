@@ -1,0 +1,22 @@
+- document:
+  - text: CE.X Central Service
+  - button "Perfil": AL
+  - heading "Mensagens" [level=1]
+  - main:
+    - 'button "Mural da igreja Retiro de jovens: inscrições abertas! 3"'
+    - button "Mural de oração Peça oração e ore pelos pedidos da igreja"
+    - text: Conversas
+    - 'button "LO Louvor Bruno: Confirmado! Vou levar o teclado. 18:40"'
+    - 'button "LG Liderança geral Você: Reunião de líderes cancelada esta semana. 17:10"'
+    - button "Nova mensagem"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "3 novos Mensagens": 3 Mensagens
+    - button "Caminhada"
+  - navigation "Dados do demo":
+    - link "Dados do demo":
+      - /url: "?"
+    - link "Pior caso":
+      - /url: "?dados=pior"
+  - alert

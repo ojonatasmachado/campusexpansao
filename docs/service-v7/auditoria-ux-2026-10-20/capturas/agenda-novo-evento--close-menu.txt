@@ -1,0 +1,87 @@
+- document:
+  - complementary:
+    - text: CE.X Central Service
+    - button "Fechar menu": ✕
+    - button "CE.X Central Matriz · rede"
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 2"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Início
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "AL"
+  - main:
+    - heading "Boa noite, Ana Ajuda" [level=1]:
+      - text: Boa noite, Ana
+      - button "Ajuda": "?"
+    - paragraph: Semana de 19 a 25 de outubro.
+    - button "Ver agenda"
+    - button "Montar escala"
+    - region "Saúde da igreja":
+      - heading "Saúde da igreja" [level=2]
+      - text: Hoje
+      - 'button "Membros registrados: 4. Ver a lista"': 4 Membros registrados
+      - 'button "Servindo em times: 4. Ver a lista"': 4 Servindo em times
+      - 'button "Em grupos: 2. Ver a lista"': 2 Em grupos
+      - 'button "Ausentes há 3 semanas ou mais: 2. Ver a lista"': 2 Ausentes há 3 semanas ou mais
+      - 'button "Ver o panorama: período, visitantes, decisões e caminhada →"'
+    - heading "Para resolver" [level=2]
+    - button "2 vagas abertas na escala · nesta semana Escalar →"
+    - button "1 visitante se cadastrou pelo link · esperando o 1º contato Ver →"
+    - button "1 pedido na caminhada · esperando sua aprovação Revisar →"
+    - text: Lista de cuidado sem presença há 3 semanas ou mais
+    - 'button "Ana Lima · sem presença há 15 semanas Última em 06/07/2026 · cuida: pastoral"'
+    - button "Registrar contato"
+    - button "Ausência justificada"
+    - 'button "Bruno Costa · sem presença há 15 semanas Última em 06/07/2026 · cuida: pastoral"'
+    - button "Registrar contato"
+    - button "Ausência justificada"
+    - text: Aniversariantes da semana 1 hoje · 2 pessoas em 7 dias
+    - button "Diego Ferreira Hoje · faz 31 anos"
+    - button "Mandar parabéns"
+    - button "Bruno Costa Quinta, 22/10 · faz 39 anos"
+    - button "Mandar parabéns"
+    - button "Ver os aniversariantes do mês →"
+    - text: Voluntários 4 de 6 cadastrados · 1 novo em 30 dias Confirmação 80% de 5 escalados nesta semana Visitantes em acompanhamento 4 todos com contato em dia
+    - button "Sobre estes números"
+    - text: Pendências da escala
+    - button "Escalar"
+    - text: "! Instrumentista · Louvor Dom · 19h00"
+    - button "Escalar"
+    - text: "! Operador · Mídia e Comunicação Dom · 19h00"
+    - button "Escalar"
+    - text: Próximos cultos
+    - button "Agenda"
+    - text: Nenhum culto marcado daqui pra frente. Caminhada pendente ! Diego Ferreira · Fundamentos 10/11/2024 · Fiz Fundamentos na igreja anterior
+    - button "Rejeitar"
+    - button "Aprovar"
+    - text: Comunicação recente
+    - button "Ver tudo"
+    - 'button "Retiro de jovens: inscrições abertas! para todos · hoje"'
+    - button "Escalas de julho disponíveis para voluntários · hoje"
+    - button "Culto de domingo mudou para o salão 2 para todos · hoje"
+  - navigation "Dados do demo":
+    - link "Dados do demo":
+      - /url: "?"
+    - link "Pior caso":
+      - /url: "?dados=pior"
+  - alert

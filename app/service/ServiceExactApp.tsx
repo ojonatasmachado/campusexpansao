@@ -1,7 +1,9 @@
 "use client";
 
-import { telefoneParaGravar } from "./lib/telefone";
-import { ehNovo } from "./lib/pessoas";
+import { clearMemberLocation } from "./lib/member-navigation";
+
+import { mesmoTelefone, telefoneParaGravar, variacoesTelefone } from "./lib/telefone";
+import { ehNovo, nomeComparavel } from "./lib/pessoas";
 import { avisar } from "./lib/avisar";
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -10,6 +12,7 @@ import { notifyPush } from "./lib/notify-push";
 import { uploadServiceImage, imageExtension } from "./lib/upload-image";
 import { Icon, Caret } from "./lib/icons";
 import { THEME_COOKIE } from "./lib/theme";
+import { vagasDaSemana } from "./modules/escalas/semana";
 import { joinDot, parseISODate, todayISO } from "./lib/date";
 import MobileOverlay, { type MemberContactInput, type MobileOverlayProps } from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
@@ -38,7 +41,8 @@ import { Assistente } from "./modules/configuracao/Assistente";
 import { medir } from "./lib/medicao";
 import { MetricasInternas } from "./modules/relatorios/MetricasInternas";
 import { Secretaria } from "./modules/secretaria/Secretaria";
-import { SETUP_INICIAL, type SetupEstado } from "./modules/configuracao/setup";
+import { ativacaoSubstituiTour, SETUP_INICIAL, type SetupEstado } from "./modules/configuracao/setup";
+import { encontroUtil } from "./modules/configuracao/ativacao";
 import { ROTA_GRUPO, navGroups, podeVerRota, rotaLigada } from "./modules/registry";
 import { CEX_ICON_FOR, ROUTES, VISITOR_STAGES, ligadosDa, matrizComFallback, openMemberInviteWhatsapp, semContato48h, weekdayShortFromDate, writeJourneyStep } from "./painel/comum";
 import { GlobalSearch, Painel } from "./painel/telas/Inicio";
@@ -223,6 +227,10 @@ export default function ServiceExactApp({
   const [view, setViewState] = useState<"app" | "gestao">(initialView);
   const setView = (next: "app" | "gestao") => {
     document.cookie = `cex_view=${next}; path=/; max-age=31536000; samesite=lax`;
+    if (next === "gestao") {
+      const url = clearMemberLocation(new URL(window.location.href));
+      window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    }
     setViewState(next);
   };
   const setTheme = (next: "dark" | "light" | ((t: "dark" | "light") => "dark" | "light")) => {
@@ -292,7 +300,8 @@ export default function ServiceExactApp({
        servidor. abre a sidebar (navOpen) junto pro holofote já nascer visível. */
     if (currentRole === "membro") return;
     /* v7 4.12: igreja ainda na configuração guiada: a gestão vê "Sua igreja: fase N de 3" no Início no lugar do tour */
-    if ((currentRole === "master" || currentRole === "pastor") && !firstChurch?.settings?.setup?.concluido && (ministries.length === 0 || events.length === 0)) return;
+    const preparacao = firstChurch?.settings?.setup;
+    if ((currentRole === "master" || currentRole === "pastor") && ativacaoSubstituiTour(preparacao, ministries.length === 0, events.length === 0)) return;
     let tourDone = true;
     let savedStep = 0;
     try { tourDone = localStorage.getItem("cex_tour_done") === "1"; } catch { /* segue sem tour automático */ }
@@ -338,9 +347,18 @@ export default function ServiceExactApp({
   const setupEstado: SetupEstado = { ...SETUP_INICIAL, ...(firstChurch?.settings?.setup ?? {}) } as SetupEstado;
   const svc = () => createServiceBrowserClient().schema("service");
   const salvarSetup = async (e: SetupEstado) => {
-    if (!firstChurch) return;
-    await svc().from("churches").update({ settings: { ...firstChurch.settings, setup: e } }).eq("id", firstChurch.id);
+    if (!firstChurch) return "Nenhuma igreja foi encontrada.";
+    if (e.concluido && e.primeiroEventoId) {
+      const { data: encontro, error } = await svc().from("events").select("name,event_date,time,location").eq("id", e.primeiroEventoId).eq("church_id", firstChurch.id).maybeSingle();
+      if (error) return friendlyWriteError(error.message);
+      if (!encontro || !encontroUtil({ nome: encontro.name, data: encontro.event_date ?? "", hora: encontro.time ?? "", local: encontro.location ?? "" })) return "O encontro precisa estar na agenda com data, horário e local válidos. Confira a programação antes de concluir.";
+    }
+    const { data, error: readError } = await svc().from("churches").select("settings").eq("id", firstChurch.id).single();
+    if (readError) return friendlyWriteError(readError.message);
+    const { error } = await svc().from("churches").update({ settings: { ...data.settings, setup: e } }).eq("id", firstChurch.id);
+    if (error) return friendlyWriteError(error.message);
     router.refresh();
+    return null;
   };
   const setupCounts: SetupCounts = useMemo(() => ({
     igreja: [firstChurch?.nome, firstChurch?.cidade, firstChurch?.address].join("|"),
@@ -373,8 +391,12 @@ export default function ServiceExactApp({
 
   const saveMemberContact = async (personId: string, memberId: string | null, data: MemberContactInput): Promise<{ error?: string }> => {
     const supabase = createServiceBrowserClient();
+    if (memberId && data.cpf !== undefined) {
+      const doc = await supabase.schema("service").rpc("save_my_member_cpf", { p_member: memberId, p_cpf: data.cpf });
+      if (doc.error || doc.data !== "ok") return { error: doc.data === "cpf_invalido" ? "Confira os números do CPF." : "Não foi possível salvar o CPF. Tente novamente." };
+    }
     const targetPerson = people.find((p) => p.id === personId);
-    const cep = data.cep.replace(/\D/g, "");
+    const cep = data.cep.trim();
     const [pessoa, ficha] = await Promise.all([
       supabase.schema("service").from("people").update({
         name: data.name.trim(),
@@ -575,15 +597,19 @@ export default function ServiceExactApp({
   };
   /* o membro responde a própria escala pela função do banco (0049); antes
      dela o update direto era barrado pelas regras de acesso */
-  const responderEscala = async (assignmentId: string, status: "ok" | "no") => {
-    const sb = createServiceBrowserClient().schema("service");
-    const { data, error } = await sb.rpc("respond_my_assignment", { p_assignment: assignmentId, p_status: status });
-    if (error && rpcFaltando(error)) await sb.from("roster_assignments").update({ status }).eq("id", assignmentId);
-    else if (error || data !== "ok") avisar("Não conseguimos registrar sua resposta. Tente de novo.", "warn");
-    router.refresh();
+  const responderEscala = async (assignmentId: string, status: "ok" | "no" | "wait"): Promise<boolean> => {
+    try {
+      const sb = createServiceBrowserClient().schema("service");
+      const { data, error } = await sb.rpc("respond_my_assignment", { p_assignment: assignmentId, p_status: status });
+      let salvo = !error && data === "ok";
+      if (error && rpcFaltando(error)) {
+        const fallback = await sb.from("roster_assignments").update({ status }).eq("id", assignmentId).select("id");
+        salvo = !fallback.error && (fallback.data?.length ?? 0) > 0;
+      }
+      if (salvo) router.refresh();
+      return salvo;
+    } catch { return false; }
   };
-  const confirmarEscalaMobile = (assignmentId: string) => responderEscala(assignmentId, "ok");
-  const recusarEscalaMobile = (assignmentId: string) => responderEscala(assignmentId, "no");
   const salvarDisponibilidade = async (availability: Record<string, boolean>) => {
     const { data, error } = await createServiceBrowserClient().schema("service").rpc("update_my_availability", { p_availability: availability, p_org: firstChurch?.organizationId ?? null });
     if (error || data !== "ok") { avisar("Não conseguimos salvar agora. Tente de novo.", "warn"); return false; }
@@ -617,24 +643,6 @@ export default function ServiceExactApp({
     router.refresh();
   };
   const activePeople = people.filter((person) => person.status === "ativo").length;
-  const rosterOk = roster.filter((assignment) => assignment.status === "ok").length;
-  const confirmationRate = roster.length ? Math.round((rosterOk / roster.length) * 100) : 0;
-  /* presença de verdade: de quem foi escalado (e não recusou) nos cultos dos
-     últimos 90 dias, quantos fizeram check-in. null = ainda sem presença registrada */
-  const presenceRate = useMemo(() => {
-    if (eventAttendance.length === 0) return null;
-    const hoje = new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-    const fim = iso(hoje);
-    const inicio = iso(new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - 90));
-    const passados = new Set(events.filter((e) => e.eventDate && e.eventDate >= inicio && e.eventDate <= fim).map((e) => e.id));
-    const escalados = roster.filter((r) => passados.has(r.event_id) && r.status !== "no");
-    if (escalados.length === 0) return null;
-    const presentes = new Set(eventAttendance.map((a) => `${a.event_id}:${a.person_id}`));
-    const vieram = escalados.filter((r) => presentes.has(`${r.event_id}:${r.person_id}`)).length;
-    return Math.round((vieram / escalados.length) * 100);
-  }, [eventAttendance, events, roster]);
   const eu = people.find((p) => p.id === currentPersonId);
   const matrizChurch = churches.find((c) => c.matriz) ?? firstChurch;
   const paginaUrl = matrizChurch?.slug && matrizChurch.settings?.paginaCfg?.enabled ? `/${matrizChurch.slug}` : null;
@@ -654,7 +662,7 @@ export default function ServiceExactApp({
     });
   }, [events, ministries]);
   const gaps = positionsByEvent.filter(({ event, position }) =>
-    !roster.some((assignment) => assignment.event_id === event.id && assignment.position_id === position.id && assignment.status !== "no"),
+    roster.filter((assignment) => assignment.event_id === event.id && assignment.position_id === position.id && assignment.status !== "no").length < Math.max(1, position.need_count),
   );
 
   /* mescla com o padrão (allTrue/allFalse por papel) pra qualquer ação que a org
@@ -807,7 +815,7 @@ export default function ServiceExactApp({
         onEnrollCourse={(courseId) => journeyRpc("enroll_me", { p_course: courseId })}
         onRequestBaptism={(classId) => journeyRpc("request_baptism", { p_class: classId })}
         onRequestServe={(ministryId) => journeyRpc("request_to_serve", { p_ministry: ministryId })}
-        onConfirmarEscala={confirmarEscalaMobile}
+        onResponderEscala={responderEscala}
         onSaveAvailability={salvarDisponibilidade}
         onRespondAnnouncement={responderMural}
         announcementResponses={announcementResponses.filter((r) => r.person_id === currentPersonId)}
@@ -819,7 +827,6 @@ export default function ServiceExactApp({
         timelineEvents={timelineEvents}
         fellowshipGroups={fellowshipGroups}
         onMarkChatRead={(chatId) => { void createServiceBrowserClient().schema("service").rpc("marcar_conversa_lida", { p_chat: chatId }); }}
-        onRecusarEscala={recusarEscalaMobile}
         mode="self"
         selfPersonId={currentPersonId}
         onLogout={handleLogoutSelf}
@@ -859,7 +866,7 @@ export default function ServiceExactApp({
   /* número só quando pede ação: visitante sem contato há 48h, vaga aberta na escala */
   const navBadge: Partial<Record<keyof typeof ROUTES, number>> = {
     visitantes: visitors.filter((v) => semContato48h(v, visitorNotes)).length,
-    escalas: gaps.length,
+    escalas: vagasDaSemana(events, roster, ministries, scopeMinistryIds),
   };
 
   return (
@@ -949,15 +956,11 @@ export default function ServiceExactApp({
             people={people}
             members={members}
             activePeople={activePeople}
-            confirmationRate={confirmationRate}
-            presenceRate={presenceRate}
             userName={eu?.name}
             visitantesSemContato={navBadge.visitantes ?? 0}
             visitantesPeloLink={visitors.filter((v) => v.origin === ORIGEM_AUTOCADASTRO && v.stage === "novo" && !v.reply_status && !visitorNotes.some((n) => n.visitor_id === v.id) && !semContato48h(v, visitorNotes)).length}
-            semanasComPresenca={new Set(eventAttendance.map((a) => { const d = parseISODate(events.find((e) => e.id === a.event_id)?.eventDate); return d ? `${d.getFullYear()}-${Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 1).getTime()) / 604800000)}` : ""; }).filter(Boolean)).size}
             // eslint-disable-next-line react-hooks/purity -- "novos este mês" precisa do relógio real
             novosNoMes={people.filter((p) => { const m = members.find((x) => x.volunteerId === p.id); return m ? ehNovo(m) : ehNovo({ createdAt: p.createdAt }); }).length}
-            escaladosSemana={roster.length}
             gaps={gaps}
             events={events}
             visitorsInCare={visitorsInCare}
@@ -995,7 +998,7 @@ export default function ServiceExactApp({
         {route === "aniversariantes" ? <Aniversariantes base={aniversariantesBase} escopo={aniversariosEscopo} comIdade={podePrevisualizar} times={ministries} grupos={fellowshipGroups} onAbrir={abrirAniversariante} /> : null}
         {route === "pessoas" ? <Pessoas people={people} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Times ministries={ministries} people={people} members={members} serveRequests={serveRequests} setDrawer={setDrawer} setModal={setModal} /> : null}
-        {route === "times" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="min" embedded /> : null}
+        {route === "times" ? <details className="teams-config"><summary>Configurações de times e requisitos</summary><Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="min" embedded /></details> : null}
         {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} church={firstChurch} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "criancas" ? <Criancas kidsChildren={kidsChildren} kidsClasses={kidsClasses} childGuardians={childGuardians} people={people} kidsEvents={kidsEvents} rooms={rooms} church={firstChurch} /> : null}
         {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
@@ -1021,7 +1024,7 @@ export default function ServiceExactApp({
         {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} announcementResponses={announcementResponses} wallPosts={wallPosts} ministries={ministries} people={people} members={members} fellowshipGroups={fellowshipGroups} childGuardians={childGuardians} church={firstChurch} events={events} roster={roster} setModal={setModal} /> : null}
         {route === "oracao" ? <OracaoPainel organizationId={firstChurch?.organizationId} churches={churches} /> : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} currentPersonId={perspectivePersonId} scopeMinistryIds={scopeMinistryIds} pendingChatMemberId={pendingChatMemberId} onConsumePendingChatMember={() => setPendingChatMemberId(null)} /> : null}
-        {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} confirmationRate={confirmationRate} setRoute={setRoute} church={firstChurch} /> : null}
+        {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} setRoute={setRoute} church={firstChurch} /> : null}
         {route === "secretaria" && firstChurch ? <Secretaria church={firstChurch} churches={churches} members={members} people={people} kidsChildren={kidsChildren} childGuardians={childGuardians} currentPersonId={currentPersonId} /> : null}
         {route === "relatorios" && currentRole === "master" && firstChurch?.organizationId ? <div className="content wide" style={{ paddingTop: 0 }}><MetricasInternas organizationId={firstChurch.organizationId} /></div> : null}
         {route === "configurar" && firstChurch ? (
@@ -1049,35 +1052,87 @@ export default function ServiceExactApp({
               return error ? friendlyWriteError(error.message) : null;
             }}
             timesExistentes={ministries.map((m) => m.name)}
-            vagasExistentes={ministries.reduce((s, m) => s + m.positions.reduce((t, p) => t + Math.max(1, p.need_count), 0), 0)}
+            encontros={events.filter((e) => e.churchId === firstChurch.id).map((e) => ({ id: e.id, nome: e.name, data: e.eventDate, hora: e.time, local: e.location }))}
+            onVerEncontro={(id) => { setRoute("cultos"); setDrawer({ kind: "event", id }); }}
             onCriarTimes={async (modelos) => {
               const ids: string[] = [];
               for (const m of modelos) {
-                const { data, error } = await svc().from("ministries").insert({ organization_id: firstChurch.organizationId, church_id: firstChurch.id, name: m.nome, icon: m.icone }).select("id").single();
-                if (error || !data) return { ids, error: friendlyWriteError(error?.message ?? "") };
-                ids.push(data.id);
-                const { error: e2 } = await svc().from("ministry_positions").insert(m.funcoes.map((f, i) => ({ organization_id: firstChurch.organizationId, ministry_id: data.id, name: f.nome, need_count: f.vagas, sort_order: i })));
-                if (e2) return { ids, error: friendlyWriteError(e2.message) };
+                const found = await svc().from("ministries").select("id").eq("church_id", firstChurch.id).eq("name", m.nome).maybeSingle();
+                if (found.error) { router.refresh(); return { ids, error: friendlyWriteError(found.error.message) }; }
+                let id: string | undefined = found.data?.id;
+                const novo = !id;
+                if (!id) {
+                  const { data, error } = await svc().from("ministries").insert({ organization_id: firstChurch.organizationId, church_id: firstChurch.id, name: m.nome, icon: m.icone }).select("id").single();
+                  if (error || !data) { router.refresh(); return { ids, error: friendlyWriteError(error?.message ?? "") }; }
+                  id = data.id;
+                }
+                if (!id) return { ids, error: "Não foi possível identificar o time. Confira em Times." };
+                const positions = await svc().from("ministry_positions").select("name").eq("ministry_id", id);
+                if (positions.error) { router.refresh(); return { ids, error: friendlyWriteError(positions.error.message) }; }
+                const faltantes = m.funcoes.map((f, i) => ({ organization_id: firstChurch.organizationId, ministry_id: id, name: f.nome, need_count: f.vagas, sort_order: i })).filter((f) => !positions.data?.some((p) => p.name === f.name));
+                if (faltantes.length) {
+                  const { error } = await svc().from("ministry_positions").insert(faltantes);
+                  if (error) {
+                    const cleanup = novo ? await svc().from("ministries").delete().eq("id", id) : null;
+                    router.refresh();
+                    return { ids, error: cleanup?.error ? "Um time ficou incompleto. Confira suas funções em Times antes de tentar novamente." : friendlyWriteError(error.message) };
+                  }
+                }
+                ids.push(id);
               }
               router.refresh();
               return { ids };
             }}
             onCriarCultos={async (lista) => {
-              const { data, error } = await svc().from("events").insert(lista.map((c) => ({
-                organization_id: firstChurch.organizationId, church_id: firstChurch.id, name: c.nome, kind: "Culto",
-                event_date: c.data, weekday: weekdayShortFromDate(c.data), time: c.hora, location: firstChurch.address || firstChurch.nome || null, ministries: [],
-              }))).select("id");
+              // Reconhece o resultado já gravado em uma tentativa cuja resposta se perdeu.
+              if (!lista.length) return { ids: [], error: "Informe os dados do primeiro encontro." };
+              if (lista.some((e) => !encontroUtil(e))) return { ids: [], error: "Confira a data, o horário e o local antes de disponibilizar o encontro." };
+              const { data: existentes, error: readError } = await svc().from("events").select("id,name,event_date,time,location").eq("church_id", firstChurch.id).in("event_date", lista.map((c) => c.data)).eq("name", lista[0].nome).eq("time", lista[0].hora).eq("location", lista[0].local);
+              if (readError) return { ids: [], error: friendlyWriteError(readError.message) };
+              const registros = lista.map((c) => {
+                const anterior = existentes?.find((e) => e.name === c.nome && e.event_date === c.data && e.time === c.hora && e.location === c.local);
+                return { ...c, id: anterior?.id ?? c.id };
+              });
+              const novos = registros.filter((c) => !existentes?.some((e) => e.id === c.id));
+              if (novos.length) {
+                const { error } = await svc().from("events").upsert(novos.map((c) => ({
+                  id: c.id, organization_id: firstChurch.organizationId, church_id: firstChurch.id, name: c.nome, kind: "Culto",
+                  event_date: c.data, weekday: weekdayShortFromDate(c.data), time: c.hora, location: c.local, ministries: [], pede: "aviso",
+                })), { onConflict: "id", ignoreDuplicates: true });
+                if (error) return { ids: [], error: friendlyWriteError(error.message) };
+              }
               router.refresh();
-              return error ? { ids: [], error: friendlyWriteError(error.message) } : { ids: (data ?? []).map((r) => r.id as string) };
+              return { ids: registros.map((c) => c.id) };
             }}
-            onDesfazer={async (tabela, ids) => { if (ids.length) await svc().from(tabela).delete().in("id", ids); router.refresh(); }}
+            onAtualizarEncontro={async (e) => {
+              if (!encontroUtil(e)) return "Confira nome, data, horário e local do encontro.";
+              const original = await svc().from("events").select("id,room_id").eq("id", e.id).eq("church_id", firstChurch.id).maybeSingle();
+              if (original.error) return friendlyWriteError(original.error.message);
+              if (!original.data) return "O encontro não está mais disponível. Confira a agenda da igreja.";
+              if (original.data.room_id) return "Este encontro tem uma sala vinculada. Confira a reserva em Espaços e salas antes de alterar seus dados.";
+              const { data, error } = await svc().from("events").update({ name: e.nome, event_date: e.data, weekday: weekdayShortFromDate(e.data), time: e.hora, location: e.local }).eq("id", e.id).eq("church_id", firstChurch.id).select("id");
+              if (error) return friendlyWriteError(error.message);
+              if (!data?.length) return "Não foi possível atualizar o encontro. Confira seu acesso e tente novamente.";
+              router.refresh();
+              return null;
+            }}
             onConvidar={async (nome, telefone) => {
               const tab = window.open("", "_blank");
-              const { data, error } = await svc().from("members").insert({ organization_id: firstChurch.organizationId, church_id: firstChurch.id, name: nome, phone: telefoneParaGravar(telefone), situation: "membro" }).select("id").single();
-              if (error || !data) { tab?.close(); return friendlyWriteError(error?.message ?? ""); }
-              const r = await openMemberInviteWhatsapp({ memberId: data.id, name: nome, phone: telefone, churchName: firstChurch.nome ?? "sua igreja", template: firstChurch.settings?.acessoMsgCfg?.mensagem, tab });
+              const variacoes = variacoesTelefone(telefone);
+              const { data: cadastrados, error: readError } = await svc().from("members").select("id,name,phone").eq("church_id", firstChurch.id).in("phone", variacoes);
+              if (readError) { tab?.close(); return { error: friendlyWriteError(readError.message) }; }
+              const iguais = (cadastrados ?? []).filter((m) => mesmoTelefone(m.phone, telefone));
+              if (iguais.length > 1) { tab?.close(); return { error: "Há mais de uma pessoa com este telefone. Confira o cadastro em Pessoas e envie o acesso pela ficha correta." }; }
+              let pessoa = iguais[0];
+              if (pessoa && nomeComparavel(pessoa.name) !== nomeComparavel(nome)) { tab?.close(); return { error: "Este telefone já está em outro cadastro. Confira a pessoa em Pessoas antes de enviar acesso." }; }
+              if (!pessoa) {
+                const { data, error } = await svc().from("members").insert({ organization_id: firstChurch.organizationId, church_id: firstChurch.id, name: nome, phone: telefoneParaGravar(telefone), situation: "membro" }).select("id,name,phone").single();
+                if (error || !data) { tab?.close(); return { error: friendlyWriteError(error?.message ?? "") }; }
+                pessoa = data;
+              }
+              const r = await openMemberInviteWhatsapp({ memberId: pessoa.id, name: pessoa.name, phone: telefone, churchName: firstChurch.nome ?? "sua igreja", template: firstChurch.settings?.acessoMsgCfg?.mensagem, tab });
               router.refresh();
-              return r.error ?? null;
+              return { memberId: pessoa.id, error: r.error, alreadyHasAccess: r.alreadyHasAccess };
             }}
             onIr={(r) => setRoute(r)}
           />

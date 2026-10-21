@@ -3,7 +3,8 @@ import { resolveMode, THEME_COOKIE, type BrandCfg } from "../lib/theme";
 import { cookies } from "next/headers";
 import ServiceTheme from "../ServiceTheme";
 import * as PIOR from "./pior-caso";
-import { todayISO } from "../lib/date";
+import { calendarioDemo } from "./datas";
+import { formatDateBR, somaDias, todayISO } from "../lib/date";
 
 const ORG = "org-demo";
 const CHURCH_1 = "ch-1";
@@ -51,12 +52,12 @@ const TAGS = [
 ];
 
 const PEOPLE = [
-  { id: "p1", name: "Ana Lima", phone: "(11) 9 8765-4321", email: "ana@cex.com", status: "ativo" as const, engagement: 92, availability: { dom_m: true, dom_n: true, qua: false }, tags: ["louvor"] },
-  { id: "p2", name: "Bruno Costa", phone: "(11) 9 7654-3210", email: "bruno@cex.com", status: "ativo" as const, engagement: 78, availability: { dom_m: true, dom_n: false, qua: true }, tags: ["midia"] },
-  { id: "p3", name: "Carla Santos", phone: "(11) 9 6543-2109", email: "carla@cex.com", status: "pausa" as const, engagement: 45, availability: { dom_m: false, dom_n: true, qua: true }, tags: ["recepcao"] },
-  { id: "p4", name: "Diego Ferreira", phone: "(11) 9 5432-1098", email: "diego@cex.com", status: "ativo" as const, engagement: 85, availability: { dom_m: true, dom_n: true, qua: false }, tags: ["louvor", "kids"] },
-  { id: "p5", name: "Eduarda Nunes", phone: "(11) 9 4321-0987", email: "edu@cex.com", status: "ativo" as const, engagement: 67, availability: { dom_m: false, dom_n: true, qua: false }, tags: ["diaconia"] },
-  { id: "p6", name: "Felipe Rocha", phone: "(11) 9 3210-9876", email: "felipe@cex.com", status: "ferias" as const, engagement: 55, availability: { dom_m: true, dom_n: false, qua: false }, tags: ["intercessao"] },
+  { id: "p1", name: "Ana Lima", phone: "(11) 9 8765-4321", email: "ana@cex.com", status: "ativo" as const, availability: { dom_m: true, dom_n: true, qua: false }, tags: ["louvor"] },
+  { id: "p2", name: "Bruno Costa", phone: "(11) 9 7654-3210", email: "bruno@cex.com", status: "ativo" as const, availability: { dom_m: true, dom_n: false, qua: true }, tags: ["midia"] },
+  { id: "p3", name: "Carla Santos", phone: "(11) 9 6543-2109", email: "carla@cex.com", status: "pausa" as const, availability: { dom_m: false, dom_n: true, qua: true }, tags: ["recepcao"] },
+  { id: "p4", name: "Diego Ferreira", phone: "(11) 9 5432-1098", email: "diego@cex.com", status: "ativo" as const, availability: { dom_m: true, dom_n: true, qua: false }, tags: ["louvor", "kids"] },
+  { id: "p5", name: "Eduarda Nunes", phone: "(11) 9 4321-0987", email: "edu@cex.com", status: "ativo" as const, availability: { dom_m: false, dom_n: true, qua: false }, tags: ["diaconia"] },
+  { id: "p6", name: "Felipe Rocha", phone: "(11) 9 3210-9876", email: "felipe@cex.com", status: "ferias" as const, availability: { dom_m: true, dom_n: false, qua: false }, tags: ["intercessao"] },
 ];
 
 const MEMBERS = [
@@ -294,10 +295,6 @@ const ANNOUNCEMENTS = [
   { id: "an-5", title: "Ceia no próximo domingo", body: "Venha preparado. Teremos ceia no culto da noite.", audience: "todos", author: "Liderança", when_label: "agora", created_at: new Date().toISOString(), status: "agendado" as const, publish_at: new Date(Date.now() + 2 * 86400000).toISOString() },
 ];
 
-const EVENT_ATTENDANCE = [
-  { id: "ea-1", event_id: "ev-1", person_id: "p1" },
-  { id: "ea-2", event_id: "ev-1", person_id: "p2" },
-];
 
 const WALL_POSTS = [
   { id: "wp-1", body: "Que culto incrível ontem! Deus esteve no meio de nós de forma especial. Gratidão a toda a equipe que serviu.", author: "Pr. João", audience: "todos", channels: ["app", "mural"], pinned: true, created_at: new Date().toISOString() },
@@ -321,6 +318,22 @@ const PERSON_GRANTS = [{ personId: "p2", code: "visitantes" }];
    /service/demo?cor=%232F6FDB&escuro=noite&claro=gelo&modo=light */
 export default async function ServiceDemoPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const q = await searchParams;
+  const hoje = todayISO();
+  const calendario = calendarioDemo(hoje);
+  // eslint-disable-next-line react-hooks/purity -- Server Component dinâmico: fixa o instante da requisição para as fixtures.
+  const agora = Date.now();
+  const instante = (horas: number) => new Date(agora - horas * 3600000).toISOString();
+  const data = calendario.deslocar;
+  const anteriores = [1, 2, 3, 4].map((n) => ({ ...EVENTS[0], id: `ev-historico-${n}`, eventDate: somaDias(calendario.domingo, -7 * n), checkinActive: false }));
+  const rosterDemo = [...ROSTER, ...anteriores.flatMap((ev, i) => [
+    { id: `rh-${i}-1`, event_id: ev.id, position_id: "pos-1-1", person_id: "p1", status: "ok" as const },
+    { id: `rh-${i}-2`, event_id: ev.id, position_id: "pos-2-1", person_id: "p2", status: "ok" as const },
+  ])];
+  const presencasDemo = anteriores.flatMap((ev, i) => [
+    { id: `ah-${i}-1`, event_id: ev.id, person_id: "p1" },
+    ...(i < 3 ? [{ id: `ah-${i}-2`, event_id: ev.id, person_id: "p2" }] : [{ id: `ah-${i}-3`, event_id: ev.id, person_id: "p4" }]),
+  ]);
+
   const brand: BrandCfg = {
     accent: q.cor,
     neutralDark: q.escuro,
@@ -334,20 +347,20 @@ export default async function ServiceDemoPage({ searchParams }: { searchParams: 
   const nome = <T extends { id: string; name: string }>(x: T): T => (pior && PIOR.NOMES[x.id] ? { ...x, name: PIOR.NOMES[x.id] } : x);
   const people = PEOPLE.map((p) => (pior && p.id === "p1" ? { ...nome(p), email: PIOR.EMAIL_LONGO } : nome(p)));
   /* aniversariantes: datas relativas a hoje para o bloco da semana e o cartão do líder; Eduarda nasceu em 29/02 */
-  const [ha, hm, hd] = todayISO().split("-").map(Number);
+  const [ha, hm, hd] = hoje.split("-").map(Number);
   const nasc = (ano: number, emDias: number) => { const d = new Date(ha, hm - 1, hd + emDias); return `${ano}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
   const NASC: Record<string, string> = { m3: nasc(1995, 0), m2: nasc(1987, 2), m4: "2000-02-29" };
-  const members = MEMBERS.map((m) => ({ ...m, birth: NASC[m.id] ?? m.birth })).map((m) => (pior && m.id === "m1" ? { ...nome(m), email: PIOR.EMAIL_LONGO } : nome(m)));
-  const ministries = pior ? MINISTRIES.map((m) => ({ ...m, name: PIOR.TIMES[m.id] ?? m.name })) : MINISTRIES;
-  const events = pior ? EVENTS.map((e) => ({ ...e, name: PIOR.CULTOS[e.id] ?? e.name })) : EVENTS;
-  const cards = pior ? CARDS.map((c, i) => (i === 0 ? { ...c, title: PIOR.TAREFA_LONGA } : c)) : CARDS;
-  const announcements = pior ? ANNOUNCEMENTS.map((a, i) => (i === 0 ? { ...a, title: PIOR.AVISO_LONGO } : a)) : ANNOUNCEMENTS;
+  const members = MEMBERS.map((m) => ({ ...m, country: "Brasil", postalCode: "01001000", city: "São Paulo", state: "SP", street: "Praça da Sé", birth: NASC[m.id] ?? m.birth, createdAt: data(m.createdAt) })).map((m) => (pior && m.id === "m1" ? { ...nome(m), email: PIOR.EMAIL_LONGO } : nome(m)));
+  const ministries = MINISTRIES.map((m) => ({ ...m, name: pior ? PIOR.TIMES[m.id] ?? m.name : m.name, profile: { ...m.profile, recebendoVoluntarios: m.id === "min-2" }, recebePedidos: m.id === "min-2" }));
+  const events = [...EVENTS.map((e) => ({ ...e, location: e.id === "ev-2" ? "Salão 2" : e.location, eventDate: calendario.domingo, time: e.time.replace("h", ":"), name: pior ? PIOR.CULTOS[e.id] ?? e.name : e.name })), ...anteriores];
+  const cards = CARDS.map((c, i) => ({ ...c, due: c.due ? somaDias(hoje, i === 0 ? 2 : 9) : null, title: pior && i === 0 ? PIOR.TAREFA_LONGA : c.title }));
+  const announcements = ANNOUNCEMENTS.map((a, i) => ({ ...a, created_at: instante(i === 2 ? 1 : i + 24), ...(a.id === "an-5" ? { publish_at: new Date(agora + 2 * 86400000).toISOString() } : {}), title: pior && i === 0 ? PIOR.AVISO_LONGO : i === 1 ? "Escalas da semana disponíveis" : a.title, body: i === 0 ? `Inscrições até ${formatDateBR(somaDias(hoje, 10))}. Confira os detalhes com a liderança.` : a.body, when_label: i === 0 ? `até ${formatDateBR(somaDias(hoje, 10))}` : a.when_label }));
   const fellowshipGroups = pior ? FELLOWSHIP_GROUPS.map((g, i) => (i === 0 ? { ...g, name: PIOR.GRUPO_LONGO } : g)) : FELLOWSHIP_GROUPS;
   /* contagens em exatamente 1 (plural) */
   const visitors = pior
     ? [{ ...VISITORS[3], name: PIOR.IGREJA_LONGA.slice(0, 60), email: PIOR.EMAIL_LONGO, invited_by: PIOR.IGREJA_LONGA, interests: ["conhecer", "grupo", "oracao", "servir", "batismo", "criancas"] }]
-    : VISITORS;
-  const decisions = pior ? DECISIONS.slice(0, 1) : DECISIONS;
+    : VISITORS.map((v) => ({ ...v, visited_on: v.id === "v4" ? hoje : data(v.visited_on), created_at: instante(v.id === "v4" ? 2 : 72) }));
+  const decisions = (pior ? DECISIONS.slice(0, 1) : DECISIONS).map((d) => ({ ...d, happened_on: data(d.happened_on), created_at: instante(48) }));
   const churches = CHURCHES.map((c, i) => (i === 0 ? { ...c, nome: pior ? PIOR.IGREJA_LONGA : c.nome, slug: "cex-central", settings: { brandCfg: brand, contribuirCfg: pior ? PIOR.PIX : PIX_DEMO, autocadastro: { ativo: true } } } : c));
   const themeMode = resolveMode((await cookies()).get(THEME_COOKIE)?.value, brand);
 
@@ -362,49 +375,49 @@ export default async function ServiceDemoPage({ searchParams }: { searchParams: 
       events={events}
       requirements={REQUIREMENTS}
       personGrants={PERSON_GRANTS}
-      roster={ROSTER}
+      roster={rosterDemo}
       visitorsInCare={visitors.length}
       visitors={visitors}
-      visitorNotes={VISITOR_NOTES}
+      visitorNotes={VISITOR_NOTES.map((n) => ({ ...n, created_at: instante(24) }))}
       announcements={announcements}
-      eventAttendance={EVENT_ATTENDANCE}
-      wallPosts={WALL_POSTS}
+      eventAttendance={presencasDemo}
+      wallPosts={WALL_POSTS.map((w, i) => ({ ...w, created_at: instante(i + 2) }))}
       decisions={decisions}
-      baptismClasses={BAPTISM_CLASSES}
+      baptismClasses={BAPTISM_CLASSES.map((b) => ({ ...b, label: "Próxima turma de batismo", baptism_date: data(b.baptism_date) }))}
       baptismCandidates={BAPTISM_CANDIDATES}
       courses={COURSES}
       enrollments={ENROLLMENTS}
       courseModules={COURSE_MODULES}
       courseLessons={COURSE_LESSONS}
-      lessonAttendance={LESSON_ATTENDANCE}
+      lessonAttendance={LESSON_ATTENDANCE.map((a) => ({ ...a, checked_in_at: data(a.checked_in_at) }))}
       boards={BOARDS}
       cards={cards}
       chats={CHATS}
       chatMembers={CHAT_MEMBERS}
-      messages={MESSAGES}
-      meetings={MEETINGS}
+      messages={MESSAGES.map((m, i) => ({ ...m, created_at: instante(i === 0 ? 1 : i === 1 ? 0.5 : 2) }))}
+      meetings={MEETINGS.map((m) => ({ ...m, meeting_date: data(m.meeting_date) }))}
       meetingActions={MEETING_ACTIONS}
-      rehearsals={REHEARSALS}
+      rehearsals={REHEARSALS.map((r) => ({ ...r, rehearsal_date: data(r.rehearsal_date), title: "Ensaio para o próximo domingo" }))}
       rooms={ROOMS}
-      reservations={RESERVATIONS}
+      reservations={RESERVATIONS.map((r) => ({ ...r, reserved_date: data(r.reserved_date) }))}
       churchIdentity={CHURCH_IDENTITY}
-      cycles={CYCLES}
+      cycles={CYCLES.map((c) => ({ ...c, year: `${ha} · ${hm < 7 ? 1 : 2}º semestre` }))}
       historyEntries={HISTORY_ENTRIES}
       ministerialTitles={MINISTERIAL_TITLES}
       fellowshipGroups={fellowshipGroups}
       tags={TAGS}
       timelineEvents={TIMELINE_EVENTS}
-      journeyRequests={JOURNEY_REQUESTS}
+      journeyRequests={JOURNEY_REQUESTS.map((r) => ({ ...r, createdAt: instante(24) }))}
       bibleMarks={[]}
       currentPersonId="p1"
       initialTheme={themeMode}
       error=""
     />
-    {process.env.NODE_ENV !== "production" && (
-      /* seletor de desenvolvimento (break-ui): fora do desenho testado, nunca vai para produção */
+    {process.env.NODE_ENV !== "production" && q.ferramentas === "sim" && (
+      /* Ferramentas optativas: não sobrepor a navegação nas jornadas avaliadas. */
       <nav aria-label="Dados do demo" style={{ position: "fixed", left: "50%", top: 4, transform: "translateX(-50%)", zIndex: 300, display: "flex", gap: 2, padding: 2, borderRadius: 999, background: "var(--border-2)", font: "500 12px system-ui, sans-serif" }}>
         {([["Dados do demo", ""], ["Pior caso", "pior"]] as const).map(([rotulo, v]) => (
-          <a key={rotulo} href={v ? "?dados=pior" : "?"} style={{ padding: "4px 10px", borderRadius: 999, textDecoration: "none", color: (q.dados ?? "") === v ? "var(--ink)" : "var(--muted)", background: (q.dados ?? "") === v ? "var(--white)" : "transparent" }}>{rotulo}</a>
+          <a key={rotulo} href={v ? "?dados=pior&ferramentas=sim" : "?ferramentas=sim"} style={{ padding: "4px 10px", borderRadius: 999, textDecoration: "none", color: (q.dados ?? "") === v ? "var(--ink)" : "var(--muted)", background: (q.dados ?? "") === v ? "var(--white)" : "transparent" }}>{rotulo}</a>
         ))}
       </nav>
     )}

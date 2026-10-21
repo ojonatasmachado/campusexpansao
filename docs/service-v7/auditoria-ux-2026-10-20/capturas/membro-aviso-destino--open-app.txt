@@ -1,0 +1,29 @@
+- document:
+  - text: CE.X Central Service
+  - button "Perfil": AL
+  - heading "Boa noite, Ana" [level=1]
+  - paragraph: Terça, 20 de outubro
+  - main:
+    - text: Para você agora Novo no Mural Urgente Culto de domingo mudou para o salão 2 hoje
+    - button "Ler a publicação"
+    - text: Tarefa Definir tema do 2º semestre Atrasada desde 20/06/2026
+    - button "Ver a tarefa"
+    - text: Seu cadastro Complete seus dados Falta foto e CEP. Ajuda a igreja a cuidar de você.
+    - button "Completar →"
+    - button "Agora não"
+    - button "Ver mais 1 item"
+    - text: Da igreja Os próximos cultos e eventos aparecem aqui.
+    - button "Ver a agenda completa →"
+    - text: "Podemos orar por você? Você escolhe quem vê: só a intercessão ou o mural de oração da igreja."
+    - button "Enviar pedido de oração"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "3 novos Mensagens": 3 Mensagens
+    - button "Caminhada"
+  - navigation "Dados do demo":
+    - link "Dados do demo":
+      - /url: "?"
+    - link "Pior caso":
+      - /url: "?dados=pior"
+  - alert

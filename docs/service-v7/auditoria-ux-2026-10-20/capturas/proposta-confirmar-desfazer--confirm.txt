@@ -1,0 +1,66 @@
+- document:
+  - text: CE.X · ESTUDO DE EXPERIÊNCIA · 20 OUT 2026
+  - heading "Mais igreja. Menos sistema para aprender." [level=1]
+  - paragraph: Comparação de duas direções para as mesmas tarefas. Dados fictícios. Protótipos separados, sem implementação no Service e sem envio de dados. Nenhuma atividade apresentada é de uma igreja real.
+  - button "A · Comunidade editorial" [pressed]
+  - button "B · Agenda e ação"
+  - text: Jornada
+  - combobox "Jornada":
+    - option "Membro · Início" [selected]
+    - option "Gestão · Início"
+    - option "Pastor · Primeira igreja"
+    - option "Gestão · Primeiro evento"
+  - text: Atividade
+  - combobox "Atividade":
+    - option "Pouca atividade"
+    - option "Sem atividade"
+    - option "Muita atividade" [selected]
+  - text: Aparência
+  - combobox "Aparência":
+    - option "Escuro" [selected]
+    - option "Claro"
+  - text: Tamanho do texto
+  - combobox "Tamanho do texto":
+    - option "Padrão · 17px" [selected]
+    - option "Maior · 19px"
+    - option "Máximo · 23px"
+  - main "Prévia interativa":
+    - text: Igreja Esperança Service
+    - button "AS"
+    - heading "Boa tarde, Ana." [level=1]
+    - paragraph: Terça, 20 de outubro · Você faz parte da Esperança.
+    - heading "Para você agora" [level=2]
+    - heading "Escala confirmada" [level=3]
+    - paragraph: Domingo, chegue às 17h30. Marina recebeu sua resposta.
+    - button "Desfazer confirmação"
+    - heading "Da igreja" [level=2]
+    - heading "Culto de domingo" [level=3]
+    - paragraph: 25 de outubro · 18h · Você serve na recepção
+    - button "Ver →"
+    - heading "Uma mesa para todos" [level=3]
+    - paragraph: Encontro da comunidade · 28 de outubro, 19h30
+    - button "Ver →"
+    - heading "Sua aula de boas-vindas" [level=3]
+    - paragraph: Quarta · Sala 2 · Sem pendência de resposta
+    - button "Ver →"
+    - button "Ver a agenda completa →"
+    - navigation "Navegação do membro":
+      - button "Início"
+      - button "Agenda"
+      - button "Mensagens"
+      - button "Caminhada"
+  - complementary:
+    - text: DIREÇÃO A
+    - heading "Comunidade editorial" [level=2]
+    - paragraph: A hierarquia vem do texto, do espaço e das divisórias. Menos recipientes repetidos. Pessoas e contexto precedem a ferramenta.
+    - list:
+      - listitem: Uma ação colorida por tela. Outras ações têm hierarquia secundária.
+      - listitem: Mesmas tarefas, pessoas, datas e quantidades nas duas direções.
+      - listitem: O vazio explica a situação real. Não inventa notícias, convites nem atividade.
+      - listitem: Configuração em etapas e opções avançadas recolhidas.
+    - paragraph:
+      - strong: "Para avaliar:"
+      - text: você entende o que fazer sem explorar todos os botões?
+    - paragraph: Use os controles acima para comparar quatro jornadas, três níveis de atividade e dois temas. O estado de atividade afeta os Inícios; os formulários permanecem iguais para uma comparação controlada.
+    - paragraph: Protótipo de direção, não especificação final. Perfil, agenda e detalhes abrem exemplos locais. Estrutura modular, permissões, internacionalização completa e integrações serão verificadas antes de implementar.
+  - status: Resposta confirmada nesta demonstração. Marina foi informada apenas no cenário fictício.

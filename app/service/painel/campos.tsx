@@ -50,7 +50,13 @@ function usePopover(open: boolean, setOpen: (v: boolean) => void) {
 export const DP_MESES_FULL = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 export const DP_DIAS_MES = [31,29,31,30,31,30,31,31,30,31,30,31];
 
-export function DatePicker({ value, onChange, id }: { value: string; onChange: (v: string) => void; id?: string }) {
+export function DatePicker({ value, onChange, id, fullDate = false, label }: { value: string; onChange: (v: string) => void; id?: string; fullDate?: boolean; label?: string }) {
+  return fullDate
+    ? <input id={id} className="input service-civil-date" type="date" aria-label={label ?? "Data completa"} value={value} onChange={(e) => onChange(e.target.value)} />
+    : <BirthdayPicker id={id} value={value} onChange={onChange} />;
+}
+
+function BirthdayPicker({ value, onChange, id }: { value: string; onChange: (v: string) => void; id?: string }) {
   const parse = () => {
     if (!value) return { d: null as number | null, m: 0 };
     const p = value.split(" ");
@@ -202,7 +208,7 @@ function semanticaDoCampo(k: string): { type: string; inputMode?: "tel" | "email
   if (/(^|_)(tel|fone|telefone|phone|whats|celular)/.test(c)) return { type: "tel", inputMode: "tel", autoComplete: "tel" };
   if (/mail/.test(c)) return { type: "email", inputMode: "email", autoComplete: "email" };
   if (/^(nome|name)$|^nome_?completo$/.test(c)) return { type: "text", autoComplete: "name" };
-  if (/(^|_)(cpf|cnpj|doc|ano|numero)$/.test(c)) return { type: "text", inputMode: "numeric" };
+  if (/(^|_)(cpf|ano|numero)$/.test(c)) return { type: "text", inputMode: "numeric" };
   return { type: "text" };
 }
 
@@ -231,7 +237,7 @@ export function FField({ field, value, onChange, onPatch, id }: { field: FieldDe
   if (field.type === "icon") {
     return <IconPicker value={value} onChange={onChange} />;
   }
-  if (field.type === "date") return <DatePicker id={id} value={value} onChange={onChange} />;
+  if (field.type === "date") return <DatePicker id={id} label={field.label} fullDate={field.fullDate} value={value} onChange={onChange} />;
   if (field.type === "time") return <TimePicker id={id} value={value} onChange={onChange} />;
   const sem = semanticaDoCampo(field.k);
   return <input id={id} name={field.k} className="input" aria-label={id ? undefined : field.label} type={sem.type} inputMode={sem.inputMode} autoComplete={sem.autoComplete} value={value} placeholder={field.ph} onChange={(e) => onChange(e.target.value)} />;

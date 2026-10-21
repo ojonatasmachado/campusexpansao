@@ -1,0 +1,72 @@
+- document:
+  - alert
+  - complementary:
+    - text: Outra Igreja Local Service
+    - button "Fechar menu": ✕
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 2"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Início
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "OO"
+  - main:
+    - heading "Boa noite, Otávio Ajuda" [level=1]:
+      - text: Boa noite, Otávio
+      - button "Ajuda": "?"
+    - paragraph: Semana de 19 a 25 de outubro. [UX ativação] Encontro de sexta em 3 dias · faltam 3 vagas.
+    - button "Ver agenda"
+    - button "Continuar preparação"
+    - region "Saúde da igreja":
+      - heading "Saúde da igreja" [level=2]
+      - text: Hoje
+      - 'button "Membros registrados: 3. Ver a lista"': 3 Membros registrados
+      - 'button "Servindo em times: 0. Ver a lista" [disabled]': 0 Servindo em times
+      - 'button "Em grupos: 0. Ver a lista" [disabled]': 0 Em grupos
+      - 'button "Ver o panorama: período, visitantes, decisões e caminhada →"'
+    - heading "Para resolver" [level=2]
+    - button "2 vagas abertas na escala · nesta semana Escalar →"
+    - 'button "Sua igreja: fase 2 de 3 · cerca de 6 minutos Continuar →"'
+    - text: Voluntários 2 de 2 cadastrados · 2 novos em 30 dias Confirmação · ninguém escalado nesta semana Visitantes em acompanhamento 0 nenhum visitante em acompanhamento
+    - button "Sobre estes números"
+    - text: Pendências da escala
+    - button "Escalar"
+    - text: "[UX ativação] Encontro de sexta · Sexta · 19:27"
+    - list "Cobertura por time":
+      - listitem:
+        - button "Recepção, 0 de 3 vagas preenchidas. Abrir as vagas": Recepção 0/3
+    - text: "! Porta · Recepção Sexta · 19:27"
+    - button "Escalar"
+    - text: "! Boas-vindas · Recepção Sexta · 19:27"
+    - button "Escalar"
+    - text: Próximos cultos
+    - button "Agenda"
+    - button "[UX ativação] Encontro de sexta Sexta · 23/10/2026 · Rua da Comunidade, 200 Cobertura por time 19:27":
+      - text: "[UX ativação] Encontro de sexta Sexta · 23/10/2026 · Rua da Comunidade, 200"
+      - list "Cobertura por time":
+        - listitem:
+          - button "Recepção, 0 de 3 vagas preenchidas. Abrir as vagas": Recepção 0/3
+      - text: 19:27
+      - button "QR check-in / presença"
+    - text: Comunicação recente
+    - button "Ver tudo"
+    - text: Nenhum aviso ainda Publique em Comunicação

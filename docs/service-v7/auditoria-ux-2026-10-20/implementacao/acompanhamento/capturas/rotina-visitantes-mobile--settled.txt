@@ -1,0 +1,63 @@
+- document:
+  - complementary:
+    - text: CE.X Central Service
+    - button "Fechar menu": ✕
+    - button "CE.X Central Matriz · rede"
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 17"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Pessoas
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "AL"
+  - main:
+    - text: Pessoas
+    - heading "Visitantes Ajuda" [level=1]:
+      - text: Visitantes
+      - button "Ajuda": "?"
+    - paragraph: 4 visitantes
+    - button "Mais opções"
+    - button "Registrar visitante"
+    - group "Acompanhamento de visitantes":
+      - button "Funil" [pressed]
+      - button "Lista"
+    - text: Novo 2
+    - button "MO Marina Oliveira Amigo da comunidade"
+    - link "WhatsApp":
+      - /url: https://wa.me/5511921098765
+    - button "Registrar contato com Marina Oliveira": Registrar
+    - button "BC Bruno Carvalho visitou hoje · QR/link"
+    - link "WhatsApp":
+      - /url: https://wa.me/5511933445566
+    - button "Registrar contato com Bruno Carvalho": Registrar
+    - text: Contato 1
+    - button "RS Rafael Souza Instagram respondeu"
+    - link "WhatsApp":
+      - /url: https://wa.me/5511910987654
+    - button "Registrar contato com Rafael Souza": Registrar
+    - text: Integrando 1
+    - button "LA Letícia Alves Culto aberto sem resposta"
+    - link "WhatsApp":
+      - /url: https://wa.me/5511909876543
+    - button "Registrar contato com Letícia Alves": Registrar
+    - text: Membro 0
+  - alert

@@ -141,3 +141,42 @@ export type DbMetricEvent = {
   metadata: Record<string, unknown>
   created_at: string | null
 }
+
+// Dados de endereço retornados pelas consultas do Service. Coordenadas de CEP
+// representam a região postal, não um ponto confirmado pelo usuário.
+export type DbAddressData = {
+  postalCode: string | null;
+  street: string | null;
+  streetNumber: string | null;
+  complement: string | null;
+  neighborhood: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  municipalityIbge: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  geoSource: string | null;
+  geoPrecision: "postal_code" | "address" | null;
+};
+export type DbAddressLookup = {
+  kind: "cep" | "cnpj";
+  lookup_key: string;
+  source: string;
+  data: DbAddressData;
+  raw: Record<string, unknown>;
+  fetched_at: string;
+};
+
+export type DbMemberDocument = { member_id: string; cpf: string | null; updated_at: string };
+export type DbGeocodedLocation = {
+  latitude: number | null;
+  longitude: number | null;
+  street_number: string | null;
+  complement: string | null;
+  municipality_ibge: string | null;
+  geo_source: string | null;
+  geo_precision: "postal_code" | "address" | null;
+  geo_updated_at: string | null;
+  address_data: Record<string, unknown>;
+};

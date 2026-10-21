@@ -1,0 +1,16 @@
+- document:
+  - alert
+  - button "Perfil"
+  - heading "Meus dados" [level=1]
+  - main:
+    - text: Sua foto + Toque para enviar Aparece no lugar das iniciais.
+    - list:
+      - listitem: +1 202 555 0123
+      - listitem: internacional-ux@teste.local
+      - listitem: Sé, São Paulo, Brasil
+    - button "Editar meus dados"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "Mensagens"
+    - button "Caminhada"

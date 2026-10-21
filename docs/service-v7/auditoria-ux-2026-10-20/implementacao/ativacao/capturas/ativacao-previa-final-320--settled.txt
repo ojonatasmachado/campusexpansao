@@ -1,0 +1,63 @@
+- document:
+  - alert
+  - complementary:
+    - text: Outra Igreja Local Service
+    - button "Fechar menu": ✕
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Início
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "OO"
+  - main:
+    - text: Configuração
+    - heading "Vamos começar pela sua igreja" [level=1]
+    - paragraph: Identifique sua igreja, prepare os próximos encontros e convide quem vai ajudar. Você pode continuar depois.
+    - button "Continuar depois"
+    - list:
+      - listitem:
+        - button "1 Sua igreja cerca de 3 minutos"
+      - listitem:
+        - button "2 Primeiro encontro cerca de 3 minutos"
+      - listitem:
+        - button "3 Pessoas cerca de 3 minutos"
+    - text: Fase 2 · Primeiro encontro Nome, data, horário e local. Cerca de 3 minutos. Nome do encontro *
+    - textbox "Nome do encontro *": "[UX ativação] Encontro de sexta"
+    - text: Data *
+    - textbox "Data *": 2026-10-23
+    - text: Horário de início *
+    - textbox "Horário de início *": 19:17
+    - text: Local do encontro *
+    - textbox "Local do encontro *":
+      - /placeholder: Nome do lugar e endereço
+      - text: Rua da Comunidade, 100
+    - paragraph: Informe um lugar que as pessoas consigam encontrar.
+    - group: Repetir este encontro (opcional)
+    - region "Prévia para o membro":
+      - paragraph: Assim aparece na agenda
+      - heading "[UX ativação] Encontro de sexta" [level=2]
+      - paragraph: 23/10/2026 · 19:17
+      - paragraph: Rua da Comunidade, 100
+      - paragraph: 1 encontro será disponibilizado na agenda. A equipe pode ser organizada depois.
+    - button "Pular esta fase"
+    - button "Disponibilizar na agenda"

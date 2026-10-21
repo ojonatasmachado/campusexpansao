@@ -1,5 +1,7 @@
 "use client";
 
+import { regiaoInformada } from "../../lib/endereco";
+import { recebimentoAberto } from "../../modules/times/recebimento";
 import { plural } from "../../lib/plural";
 import { formatarTelefone } from "../../lib/telefone";
 import { avisar } from "../../lib/avisar";
@@ -567,7 +569,7 @@ export function EntityDrawer({
         </div>
         <div className="drawer-body">
           <DrawerSection title="Contato">
-            <dl className="kv"><dt>Telefone</dt><dd>{formatarTelefone(person.phone)}</dd><dt>E-mail</dt><dd>{person.email}</dd><dt>Engajamento</dt><dd>{person.engagement ?? 0}% nos últimos 90 dias</dd></dl>
+            <dl className="kv"><dt>Telefone</dt><dd>{formatarTelefone(person.phone)}</dd><dt>E-mail</dt><dd>{person.email}</dd></dl>
           </DrawerSection>
           <DrawerSection title="Times e funções">
             <div className="cell-tags" style={{ gap: 8 }}>{linkedMinistries.map((ministry) => <button className="tag" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}>{ministry.name}</button>)}</div>
@@ -623,7 +625,7 @@ export function EntityDrawer({
       !member.phone && "telefone",
       !member.email && "e-mail",
       !member.birth && "aniversário",
-      (member.postalCode ?? "").replace(/\D/g, "").length !== 8 && "CEP",
+      !regiaoInformada(member) && "endereço",
     ].filter(Boolean) as string[];
     return (
       <>
@@ -773,8 +775,7 @@ export function EntityDrawer({
     const ministry = ministries.find((item) => item.id === drawer.id);
     if (!ministry) return null;
     const leader = ministry.people.find((link) => link.isLeader);
-    const totalSlots = ministry.positions.reduce((s, p) => s + p.need_count, 0);
-    const isOpen = ministry.people.length < totalSlots || totalSlots === 0;
+    const isOpen = recebimentoAberto(ministry);
     const profile = ministry.profile as { comoTrabalhamos?: string; chegada?: string; responsabilidades?: string[] };
     const requisitosTime = requirementsFor(access.requirements, "ministry", ministry.id);
     const matchesPosition = (link: MinistryView["people"][number], positionName: string) =>
@@ -797,7 +798,7 @@ export function EntityDrawer({
             </div>
           </div>
           <div style={{ marginTop: 14 }}>
-            <span className={`topen ${isOpen ? "yes" : "no"}`}>{isOpen ? ct("Recebendo {voluntarios}") : "Equipe completa por ora"}</span>
+            <span className={`topen ${isOpen ? "yes" : "no"}`}>{isOpen ? ct("Recebendo {voluntarios}") : "Pedidos pelo app fechados"}</span>
           </div>
         </div>
         <div className="drawer-body">

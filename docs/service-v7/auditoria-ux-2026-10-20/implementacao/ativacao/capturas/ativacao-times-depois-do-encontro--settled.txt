@@ -1,0 +1,63 @@
+- document:
+  - alert
+  - complementary:
+    - text: Outra Igreja Local Service
+    - button "Fechar menu": ✕
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 2"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Início
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "OO"
+  - main:
+    - text: Configuração
+    - heading "Vamos começar pela sua igreja" [level=1]
+    - paragraph: Identifique sua igreja, prepare os próximos encontros e convide quem vai ajudar. Você pode continuar depois.
+    - button "Continuar depois"
+    - list:
+      - listitem:
+        - button "Sua igreja feita"
+      - listitem:
+        - button "2 Primeiro encontro cerca de 3 minutos"
+      - listitem:
+        - button "3 Pessoas cerca de 3 minutos"
+    - text: Fase 2 · Primeiro encontro Nome, data, horário e local. Cerca de 3 minutos.
+    - region "Encontro preparado":
+      - paragraph: Encontro disponível na agenda da igreja
+      - heading "[UX ativação] Encontro de sexta" [level=2]
+      - paragraph: 23/10/2026 · 19:27
+      - paragraph: Rua da Comunidade, 200
+      - paragraph: O membro encontra o encontro e seu local na Agenda. Não há pedido de confirmação de presença nesta criação.
+      - button "Conferir encontro"
+      - button "Ajustar dados do encontro"
+    - group:
+      - text: Preparar times agora (opcional)
+      - paragraph: O encontro já pode ser encontrado pelos membros. Escolha somente os times que você quer organizar agora.
+      - button "Louvor Vocal, Violão ou guitarra, Teclado, Baixo, Bateria"
+      - button "Recepção já existe" [disabled]
+      - button "Kids Professor, Auxiliar"
+      - button "Mídia Projeção, Som, Transmissão"
+      - button "Preparar times escolhidos" [disabled]
+      - status: 1 time preparado. Marque os responsáveis em Times.
+    - button "Pular esta fase"
+    - button "Continuar →"

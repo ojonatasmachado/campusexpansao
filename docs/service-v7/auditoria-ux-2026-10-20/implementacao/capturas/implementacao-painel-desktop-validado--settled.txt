@@ -1,0 +1,94 @@
+- document:
+  - alert
+  - complementary:
+    - text: Igreja Teste Local Service
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 2"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - text: Início
+    - textbox "Buscar tela, membro, voluntário, time ou função..."
+    - button "MM Marta"
+  - main:
+    - heading "Boa noite, Marta Ajuda" [level=1]:
+      - text: Boa noite, Marta
+      - button "Ajuda": "?"
+    - paragraph: Semana de 19 a 25 de outubro. Culto de sexta em 3 dias · faltam 2 vagas.
+    - button "Ver agenda"
+    - button "Montar escala"
+    - region "Saúde da igreja":
+      - heading "Saúde da igreja" [level=2]
+      - text: Hoje
+      - 'button "Membros registrados: 7. Ver a lista"': 7 Membros registrados
+      - 'button "Servindo em times: 3. Ver a lista"': 3 Servindo em times
+      - 'button "Em grupos: 0. Ver a lista" [disabled]': 0 Em grupos
+      - 'button "Ver o panorama: período, visitantes, decisões e caminhada →"'
+    - heading "Para resolver" [level=2]
+    - button "2 vagas abertas na escala · nesta semana Escalar →"
+    - text: Configuração inicial
+    - button "Ajuda": "?"
+    - text: Falta pouco pra sua igreja estar pronta
+    - button "Esconder por agora": ✕
+    - button "Dados da igreja Nome, cidade e endereço aparecem no login e nas publicações. Fazer →"
+    - button "Primeiro time Louvor, Recepção, Kids... cada time tem líder e funções."
+    - button "Primeiro culto O culto vira uma linha na agenda e depois uma escala."
+    - button "Primeiro membro A congregação inteira entra aqui, sirva ou não em um time."
+    - button "Primeira escala Coloque alguém pra servir num culto e veja a confirmação chegar."
+    - text: Voluntários 5 de 5 cadastrados · 5 novos em 30 dias Confirmação 50% de 2 escalados nesta semana Visitantes em acompanhamento 1 todos com contato em dia
+    - button "Sobre estes números"
+    - text: Pendências da escala
+    - button "Escalar"
+    - text: Culto de sexta · Sexta · 19:00
+    - list "Cobertura por time":
+      - listitem:
+        - button "Louvor, 1 de 2 vagas preenchidas. Abrir as vagas": Louvor 1/2
+      - listitem:
+        - text: ·
+        - button "Recepção, 1 de 2 vagas preenchidas. Abrir as vagas": Recepção 1/2
+    - text: "! Vocal · Louvor Domingo · 19:30"
+    - button "Escalar"
+    - text: "! Recepcionista · Recepção Domingo · 19:30"
+    - button "Escalar"
+    - text: Próximos cultos
+    - button "Agenda"
+    - button "Culto de sexta Sexta · 23/10/2026 Cobertura por time 19:00":
+      - text: Culto de sexta Sexta · 23/10/2026
+      - list "Cobertura por time":
+        - listitem:
+          - button "Louvor, 1 de 2 vagas preenchidas. Abrir as vagas": Louvor 1/2
+        - listitem:
+          - text: ·
+          - button "Recepção, 1 de 2 vagas preenchidas. Abrir as vagas": Recepção 1/2
+      - text: 19:00
+      - button "QR check-in / presença"
+    - button "[UX teste] Encontro editorial Domingo · 25/10/2026 · Rua de Teste, 100 Cobertura por time 19:30":
+      - text: "[UX teste] Encontro editorial Domingo · 25/10/2026 · Rua de Teste, 100"
+      - list "Cobertura por time":
+        - listitem:
+          - button "Louvor, 0 de 2 vagas preenchidas. Abrir as vagas": Louvor 0/2
+        - listitem:
+          - text: ·
+          - button "Recepção, 0 de 2 vagas preenchidas. Abrir as vagas": Recepção 0/2
+      - text: 19:30
+      - button "QR check-in / presença"
+    - text: Comunicação recente
+    - button "Ver tudo"
+    - text: Nenhum aviso ainda Publique em Comunicação
+  - button "Ajuda": "?"

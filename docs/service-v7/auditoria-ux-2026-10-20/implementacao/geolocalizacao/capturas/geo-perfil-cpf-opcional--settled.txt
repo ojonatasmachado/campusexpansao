@@ -1,0 +1,28 @@
+- document:
+  - alert
+  - button "Perfil"
+  - heading "Meus dados" [level=1]
+  - main:
+    - text: Sua foto + Toque para enviar Aparece no lugar das iniciais. Nome e sobrenome *
+    - textbox "Nome e sobrenome *": Pessoa Internacional
+    - text: E-mail *
+    - textbox "E-mail *":
+      - /placeholder: voce@email.com
+      - text: internacional-ux@teste.local
+    - text: Telefone (WhatsApp) *
+    - textbox "Telefone (WhatsApp) *":
+      - /placeholder: DDD e telefone ou +código do país
+      - text: +1 202 555 0123
+    - text: Aniversário (opcional)
+    - textbox "Aniversário (opcional)"
+    - text: CPF (opcional)
+    - textbox "CPF (opcional)"
+    - text: Preencha apenas se quiser informar.
+    - group: Seu endereço +
+    - button "Cancelar"
+    - button "Salvar"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "Mensagens"
+    - button "Caminhada"

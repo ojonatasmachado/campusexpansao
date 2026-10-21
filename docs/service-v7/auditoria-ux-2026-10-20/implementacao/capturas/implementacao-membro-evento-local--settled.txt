@@ -1,0 +1,34 @@
+- document:
+  - alert
+  - text: Igreja Teste Local Service
+  - button "Perfil": MM
+  - heading "Boa noite, Mateus" [level=1]
+  - paragraph: Terça, 20 de outubro
+  - main:
+    - text: Para você agora Seu próximo passo Batismo
+    - button "Já fui batizado →"
+    - text: Servir 2 times procuram pessoas Louvor, Recepção. Veja o que cada um faz antes de decidir.
+    - button "Conhecer os times"
+    - text: Seu cadastro Complete seus dados Falta foto, aniversário e CEP. Ajuda a igreja a cuidar de você.
+    - button "Completar →"
+    - button "Agora não"
+    - heading "Na vida da igreja" [level=2]
+    - paragraph: Encontros e novidades para acompanhar.
+    - button "Sex 23 Culto de sexta Sexta · 19:00"
+    - button "Dom 25 [UX teste] Encontro editorial Domingo · 19:30 · Rua de Teste, 100"
+    - button "Ver a agenda completa →"
+    - text: "Podemos orar por você? Você escolhe quem vê: só a intercessão ou o mural de oração da igreja."
+    - button "Enviar pedido de oração"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "Mensagens"
+    - button "Caminhada"
+  - dialog "[UX teste] Encontro editorial":
+    - text: Na igreja
+    - heading "[UX teste] Encontro editorial" [level=2]
+    - list:
+      - listitem: Domingo, 25 de outubro · 19:30
+      - listitem: Rua de Teste, 100
+    - button "Compartilhar"
+    - button "Adicionar ao calendário"

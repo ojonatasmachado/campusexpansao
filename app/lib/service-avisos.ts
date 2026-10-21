@@ -1,3 +1,4 @@
+import { memberNotificationUrl } from "../service/lib/member-navigation";
 import { sendPushToSubscriptions } from "./push";
 import type { supabaseAdmin } from "./supabase";
 import { emSilencio, foraDoSilencio } from "../service/lib/silencio";
@@ -32,7 +33,7 @@ async function mandar(db: Db, organizationId: string, peopleIds: string[], aviso
 export async function entregarAvisos(db: Db, a: { organizationId: string; peopleIds: string[]; categoria: Categoria | null; title: string; body: string }): Promise<{ enviados: number; naFila: number }> {
   let pessoas = [...new Set(a.peopleIds)];
   if (!pessoas.length) return { enviados: 0, naFila: 0 };
-  const url = a.categoria ? `/service?aviso=${a.categoria}` : "/service";
+  const url = a.categoria ? memberNotificationUrl(a.categoria) : "/service";
   if (a.categoria) {
     const { data: desligou } = await db.from("people").select("id, notif_off").in("id", pessoas);
     const fora = new Set((desligou ?? []).filter((p) => ((p.notif_off ?? []) as string[]).includes(a.categoria!)).map((p) => p.id));
@@ -71,7 +72,7 @@ export async function esvaziarFila(db: Db, organizationId?: string): Promise<num
     if (cat === "mural" && lista.length > 1) {
       const titulos = lista.map((i) => i.title);
       const corpo = `${lista.length} publicações novas: ${titulos.slice(0, 3).join(", ")}${lista.length > 3 ? " e outras" : ""}.`;
-      n += await mandar(db, primeiro.organization_id, [primeiro.person_id], { title: "Mural da igreja", body: corpo, url: primeiro.url ?? "/service?aviso=mural" }, cat);
+      n += await mandar(db, primeiro.organization_id, [primeiro.person_id], { title: "Mural da igreja", body: corpo, url: memberNotificationUrl("mural") }, cat);
     } else {
       for (const it of lista) n += await mandar(db, it.organization_id, [it.person_id], { title: it.title, body: it.body, url: it.url ?? "/service" }, cat);
     }

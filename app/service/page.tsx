@@ -1,3 +1,5 @@
+import { regiaoInformada } from "./lib/endereco";
+import { telefoneValido } from "./lib/telefone";
 import { redirect } from "next/navigation";
 import { todayISO, weekdayFromISO } from "./lib/date";
 import { createServiceSupabaseClient } from "./lib/supabase";
@@ -124,7 +126,6 @@ type PersonRow = {
   email: string | null;
   since_year: string | null;
   status: "ativo" | "pausa" | "ferias";
-  engagement: number | null;
   availability: Record<string, boolean> | null;
   tags: string[] | null;
   meta: PersonMeta | null;
@@ -142,7 +143,6 @@ type PersonView = {
   email: string;
   sinceYear: string;
   status: "ativo" | "pausa" | "ferias";
-  engagement: number | null;
   availability: Record<string, boolean>;
   tags: string[];
   meta: PersonMeta;
@@ -174,9 +174,11 @@ type MemberRow = {
   state: string | null;
   /* 0072: pode não existir antes da migração (o select é "*") */
   imported_at?: string | null;
+  country?: string | null;
 };
 
 type MemberView = {
+  country?: string | null;
   id: string;
   organizationId: string;
   churchId: string;
@@ -204,6 +206,7 @@ type MemberView = {
 };
 
 type MinistryRow = {
+  recebendo_pedidos?: boolean;
   id: string;
   organization_id: string;
   church_id: string;
@@ -876,7 +879,6 @@ function toPersonView(row: PersonRow): PersonView {
     email: row.email || "",
     sinceYear: row.since_year || "",
     status: row.status,
-    engagement: row.engagement,
     availability: row.availability ?? {},
     tags: row.tags ?? [],
     meta: row.meta ?? {},
@@ -904,12 +906,13 @@ function toMemberView(row: MemberRow): MemberView {
     family: row.family,
     journey: Array.isArray(row.journey) ? row.journey : [],
     createdAt: row.created_at,
+    country: row.country,
     postalCode: row.postal_code,
     street: row.street,
     city: row.city,
     state: row.state,
     /* obrigatórios do membro: sem eles o app abre no primeiro acesso */
-    contactComplete: !!(row.email && row.phone && row.birth && (row.postal_code ?? "").replace(/\D/g, "").length === 8),
+    contactComplete: !!(row.email && telefoneValido(row.phone) && regiaoInformada({ country: row.country, postalCode: row.postal_code, city: row.city })),
     /* primeiro acesso em 2 passos (v7 4.10): feito com nome e sobrenome e telefone */
     firstAccessDone: !!(row.phone && (row.name ?? "").trim().split(/\s+/).length >= 2),
     importedAt: row.imported_at ?? null,
@@ -932,6 +935,7 @@ function toMinistryViews(
     icon: ministry.icon || "",
     description: ministry.description || "",
     profile: ministry.profile ?? {},
+    recebePedidos: ministry.recebendo_pedidos === true,
     appModules: ministry.app_modules ?? [],
     positions: positions
       .filter((position) => position.ministry_id === ministry.id)
@@ -1022,7 +1026,7 @@ async function getServiceDashboardData(): Promise<{
   const { data: peopleData, error: peopleError } = await supabase
     .schema("service")
     .from("people")
-    .select("id,organization_id,church_id,user_id,name,phone,email,since_year,status,engagement,availability,tags,meta,photo_url,created_at")
+    .select("id,organization_id,church_id,user_id,name,phone,email,since_year,status,availability,tags,meta,photo_url,created_at")
     .order("name");
 
   if (peopleError) {
@@ -1074,6 +1078,13 @@ async function getServiceDashboardData(): Promise<{
       error: friendlyReadError(ministriesError.message),
     };
   }
+
+  const { data: ofertas, error: ofertasError } = await supabase.schema("service").rpc("times_recebendo_pedidos");
+  if (ofertasError) {
+    return { churches: ((churchesData ?? []) as ChurchRow[]).map(toChurchView), people, members: ((membersData ?? []) as MemberRow[]).map(toMemberView), ministries: [], events: [], extra: emptyExtraServiceData, error: friendlyReadError(ofertasError.message) };
+  }
+  const recebendoIds = new Set((ofertas ?? []).map((m: { id: string }) => m.id));
+  for (const time of ministriesData ?? []) (time as MinistryRow).recebendo_pedidos = recebendoIds.has(time.id);
 
   const { data: positionsData, error: positionsError } = await supabase
     .schema("service")
@@ -1408,7 +1419,7 @@ async function getServiceDashboardData(): Promise<{
   };
 }
 
-export default async function ServiceHomePage() {
+export default async function ServiceHomePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { churches, people, members, ministries, events, extra, error } = await getServiceDashboardData();
   if (!error && churches.length === 0) redirect("/service/onboarding");
 
@@ -1542,7 +1553,9 @@ export default async function ServiceHomePage() {
      abre o painel. Quem só é membro sempre vê o app. */
   const savedView = jar.get("cex_view")?.value;
   const isPhone = /Mobi|Android|iPhone|iPod/i.test((await headers()).get("user-agent") ?? "");
-  const initialView: "app" | "gestao" = savedView === "app" || savedView === "gestao" ? savedView : isPhone ? "app" : "gestao";
+  const query = await searchParams;
+  const memberDestination = ["inicio", "agenda", "mensagens", "caminhada", "perfil"].includes(String(query.maba ?? "")) || ["escala", "mural", "mensagens", "caminhada"].includes(String(query.aviso ?? ""));
+  const initialView: "app" | "gestao" = memberDestination ? "app" : savedView === "app" || savedView === "gestao" ? savedView : isPhone ? "app" : "gestao";
 
   return (
     <>

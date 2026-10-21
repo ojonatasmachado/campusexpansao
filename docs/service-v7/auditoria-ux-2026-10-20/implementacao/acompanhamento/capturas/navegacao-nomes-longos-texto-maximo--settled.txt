@@ -1,0 +1,22 @@
+- document:
+  - alert
+  - text: Igreja Evangélica Assembleia de Deus Ministério Madureira, Campo Vila Nova Cachoeirinha Service
+  - button "Perfil": MN
+  - heading "Caminhada" [level=1]
+  - main:
+    - text: Todas as etapas concluídas Daqui pra frente, a caminhada segue nos cursos, no seu time e na leitura da Bíblia, logo abaixo. Etapas
+    - button "5 etapas concluídas Ver as datas de cada uma"
+    - text: "Cursos Em andamento Liderança servidora 0 de 2 aulas Próxima aula: O líder que serve"
+    - button "Abrir meu curso →"
+    - button "Concluídos · 1"
+    - text: Bíblia
+    - button "Ler a Bíblia Marque versículos e faça anotações"
+    - text: Generosidade
+    - button "Contribuir Pix para dízimo, oferta, missões e construção do templo"
+    - text: Nossa igreja Ciclo 2026 · 2º semestre · Raízes profundas Existimos para os de fora. Toda a nossa estrutura serve ao alcance da cidade.
+    - paragraph: Uma rede de igrejas saudáveis que impacta cada bairro da cidade.
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "3 novos Mensagens": 3 Mensagens
+    - button "Caminhada"

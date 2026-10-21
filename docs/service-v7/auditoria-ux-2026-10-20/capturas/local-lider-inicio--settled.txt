@@ -1,0 +1,54 @@
+- document:
+  - alert
+  - complementary:
+    - text: Igreja Teste Local Service
+    - button "Fechar menu": ✕
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Crianças"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Mais"
+  - banner:
+    - button "Abrir menu"
+    - text: Início
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "LL"
+  - main:
+    - heading "Boa noite, Lucas Ajuda" [level=1]:
+      - text: Boa noite, Lucas
+      - button "Ajuda": "?"
+    - paragraph: Semana de 19 a 25 de outubro. Culto de sexta em 3 dias · falta 1 vaga.
+    - button "Ver agenda"
+    - button "Montar escala"
+    - heading "Para resolver no seu time" [level=2]
+    - button "Configuração 4 de 5 Continuar →"
+    - button "Sobre estes números"
+    - text: Pendências da escala
+    - button "Escalar"
+    - text: Culto de sexta · Sexta · 19:00
+    - list "Cobertura por time":
+      - listitem:
+        - button "Louvor, 1 de 2 vagas preenchidas. Abrir as vagas": Louvor 1/2
+    - text: Próximos cultos
+    - button "Agenda"
+    - button "Culto de sexta Sexta · 23/10/2026 Cobertura por time 19:00":
+      - text: Culto de sexta Sexta · 23/10/2026
+      - list "Cobertura por time":
+        - listitem:
+          - button "Louvor, 1 de 2 vagas preenchidas. Abrir as vagas": Louvor 1/2
+      - text: 19:00
+      - button "QR check-in / presença"
+    - text: Comunicação recente
+    - button "Ver tudo"
+    - text: Nenhum aviso ainda Publique em Comunicação

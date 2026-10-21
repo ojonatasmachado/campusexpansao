@@ -1,0 +1,81 @@
+- document:
+  - complementary:
+    - text: Igreja Teste Local Service
+    - button "Fechar menu": ✕
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 2"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Início
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "MM"
+  - main:
+    - heading "Boa noite, Marta Ajuda" [level=1]:
+      - text: Boa noite, Marta
+      - button "Ajuda": "?"
+    - paragraph: Semana de 19 a 25 de outubro. Culto de sexta em 2 dias · faltam 2 vagas.
+    - button "Ver agenda"
+    - button "Montar escala"
+    - region "Saúde da igreja":
+      - heading "Saúde da igreja" [level=2]
+      - text: Hoje
+      - 'button "Membros registrados: 7. Ver a lista"': 7 Membros registrados
+      - 'button "Servindo em times: 3. Ver a lista"': 3 Servindo em times
+      - 'button "Em grupos: 0. Ver a lista" [disabled]': 0 Em grupos
+      - 'button "Ver o panorama: período, visitantes, decisões e caminhada →"'
+    - heading "Para resolver" [level=2]
+    - button "2 vagas abertas na escala · nesta semana Escalar →"
+    - group: Revisar preparação da igreja
+    - text: Voluntários 5 de 5 cadastrados · 5 novos em 30 dias Confirmação 50% de 2 vagas escaladas nesta semana Visitantes em acompanhamento 1 todos com contato em dia
+    - button "Sobre estes números"
+    - text: Pendências da escala
+    - button "Escalar"
+    - text: Culto de sexta · Sexta · 19:00
+    - list "Cobertura por time":
+      - listitem:
+        - button "Louvor, 1 de 2 vagas preenchidas. Abrir as vagas": Louvor 1/2
+      - listitem:
+        - text: ·
+        - button "Recepção, 1 de 2 vagas preenchidas. Abrir as vagas": Recepção 1/2
+    - text: "! Vocal · Louvor Sexta · 19:00"
+    - button "Escalar"
+    - text: "! Recepcionista · Recepção Sexta · 19:00"
+    - button "Escalar"
+    - text: Próximos cultos
+    - button "Agenda"
+    - button "Culto de sexta Sexta · 23/10/2026 Cobertura por time 19:00":
+      - text: Culto de sexta Sexta · 23/10/2026
+      - list "Cobertura por time":
+        - listitem:
+          - button "Louvor, 1 de 2 vagas preenchidas. Abrir as vagas": Louvor 1/2
+        - listitem:
+          - text: ·
+          - button "Recepção, 1 de 2 vagas preenchidas. Abrir as vagas": Recepção 1/2
+      - text: 19:00
+      - button "QR check-in / presença"
+    - text: Comunicação recente
+    - button "Ver tudo"
+    - text: Nenhum aviso ainda Publique em Comunicação
+  - text: "Passo 1 de 7 Seu painel O resumo da semana: próximos cultos, quem falta confirmar e o que precisa de atenção."
+  - button "Pular tour"
+  - button "Próximo →"
+  - alert

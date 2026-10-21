@@ -1,0 +1,67 @@
+- document:
+  - text: CE.X · ESTUDO DE EXPERIÊNCIA · 20 OUT 2026
+  - heading "Mais igreja. Menos sistema para aprender." [level=1]
+  - paragraph: Comparação de duas direções para as mesmas tarefas. Dados fictícios. Protótipos separados, sem implementação no Service e sem envio de dados. Nenhuma atividade apresentada é de uma igreja real.
+  - button "A · Comunidade editorial" [pressed]
+  - button "B · Agenda e ação"
+  - text: Jornada
+  - combobox "Jornada":
+    - option "Membro · Início"
+    - option "Gestão · Início"
+    - option "Pastor · Primeira igreja"
+    - option "Gestão · Primeiro evento" [selected]
+  - text: Atividade
+  - combobox "Atividade":
+    - option "Pouca atividade" [selected]
+    - option "Sem atividade"
+    - option "Muita atividade"
+  - text: Aparência
+  - combobox "Aparência":
+    - option "Escuro" [selected]
+    - option "Claro"
+  - text: Tamanho do texto
+  - combobox "Tamanho do texto":
+    - option "Padrão · 17px" [selected]
+    - option "Maior · 19px"
+    - option "Máximo · 23px"
+  - main "Prévia interativa":
+    - text: Igreja Esperança Service
+    - button "AS"
+    - text: 1 · Sua igreja
+    - strong: 2 · Primeiro encontro
+    - text: 3 · Convide sua equipe
+    - heading "Quando vamos nos encontrar?" [level=1]
+    - paragraph: Comece com uma data. Repetição e times podem ser definidos depois.
+    - text: Nome do encontro
+    - textbox "Nome do encontro": Culto de domingo
+    - text: Data
+    - textbox "Data": 2026-10-25
+    - text: Horário
+    - textbox "Horário": 18:00
+    - text: Onde acontece
+    - textbox "Onde acontece": Auditório da igreja
+    - text: O que o participante precisa fazer?
+    - combobox "O que o participante precisa fazer?":
+      - option "Só receber a informação" [selected]
+      - option "Confirmar presença"
+      - option "Fazer uma inscrição"
+    - group: Repetição e equipe de serviço
+    - heading "Antes de publicar, você vai revisar" [level=3]
+    - paragraph: O evento aparecerá na Agenda da igreja e no Início dos membros quando estiver próximo.
+    - button "Revisar evento"
+    - paragraph: Demonstração local. Nada será publicado.
+  - complementary:
+    - text: DIREÇÃO A
+    - heading "Comunidade editorial" [level=2]
+    - paragraph: A hierarquia vem do texto, do espaço e das divisórias. Menos recipientes repetidos. Pessoas e contexto precedem a ferramenta.
+    - list:
+      - listitem: Uma ação colorida por tela. Outras ações têm hierarquia secundária.
+      - listitem: Mesmas tarefas, pessoas, datas e quantidades nas duas direções.
+      - listitem: O vazio explica a situação real. Não inventa notícias, convites nem atividade.
+      - listitem: Configuração em etapas e opções avançadas recolhidas.
+    - paragraph:
+      - strong: "Para avaliar:"
+      - text: você entende o que fazer sem explorar todos os botões?
+    - paragraph: Use os controles acima para comparar quatro jornadas, três níveis de atividade e dois temas. O estado de atividade afeta os Inícios; os formulários permanecem iguais para uma comparação controlada.
+    - paragraph: Protótipo de direção, não especificação final. Perfil, agenda e detalhes abrem exemplos locais. Estrutura modular, permissões, internacionalização completa e integrações serão verificadas antes de implementar.
+  - status: Dados mantidos somente nesta simulação.

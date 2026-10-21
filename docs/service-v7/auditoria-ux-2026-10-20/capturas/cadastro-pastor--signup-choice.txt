@@ -1,0 +1,20 @@
+- document:
+  - main:
+    - text: CE.X Service
+    - paragraph: Nova igreja
+    - heading "Cadastrar minha igreja" [level=1]
+    - paragraph: Comece criando o seu acesso. Depois de confirmar o e-mail, você preenche os dados da igreja em um minuto.
+    - text: Seu nome
+    - textbox "Seu nome":
+      - /placeholder: Nome e sobrenome
+    - text: E-mail
+    - textbox "E-mail":
+      - /placeholder: voce@email.com
+    - text: Crie uma senha
+    - textbox "Crie uma senha Mostrar":
+      - /placeholder: Mínimo 6 caracteres
+    - button "Mostrar"
+    - button "Criar meu acesso"
+    - text: Já tem acesso?
+    - button "Entrar"
+  - alert

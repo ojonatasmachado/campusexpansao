@@ -1,0 +1,302 @@
+- document:
+  - link "Ir para a análise":
+    - /url: "#conteudo"
+  - banner:
+    - text: CE.X | Service
+    - navigation "Seções":
+      - link "Prioridades":
+        - /url: "#prioridades"
+      - link "Jornadas":
+        - /url: "#conexoes"
+      - link "Capturas":
+        - /url: "#evidencias"
+      - link "Documentos":
+        - /url: "#entregas"
+  - main:
+    - text: Auditoria de experiência · 20 de outubro de 2026
+    - heading "O Service precisa conectar o que já sabe fazer." [level=1]
+    - paragraph: "A dificuldade vai além da aparência. Preparação da igreja, contexto do membro e conclusão das ações estão distribuídos entre lugares diferentes. Há também uma ruptura concreta: o assistente de configuração desaparece no celular."
+    - paragraph: Análise do código e inspeção visual de ambientes locais. Sem alterações no aplicativo. As propostas são separadas e usam dados fictícios.
+    - link "Ler diagnóstico completo →":
+      - /url: RELATORIO.md
+    - link "Explorar mapa de jornadas":
+      - /url: mapa-jornadas.html
+    - link "Comparar propostas A e B":
+      - /url: propostas.html
+    - strong: "34"
+    - text: Módulos no inventário de código
+    - strong: "12"
+    - text: Jornadas mapeadas
+    - strong: "48"
+    - text: Momentos e suas conexões
+    - strong: "5"
+    - text: Atores no mapa
+    - paragraph: Essas quantidades descrevem cobertura de análise. Não são notas de qualidade, pesquisa com pessoas nem certificação de execução ponta a ponta.
+    - text: Decidir pela consequência
+    - heading "Corrigir a passagem antes de redesenhar a porta." [level=2]
+    - article:
+      - text: URGENTE Execução visual
+      - heading "O pastor não consegue configurar pelo celular." [level=3]
+      - paragraph:
+        - text: Nas três fases do assistente, os campos somem em viewport mobile. No desktop, os mesmos formulários aparecem. Uma regra responsiva oculta
+        - code: .setup-card
+        - text: ", classe usada pelo conteúdo inteiro do assistente."
+      - paragraph:
+        - strong: "Primeiro passo:"
+        - text: separar o resumo que pode ser recolhido do formulário que precisa continuar disponível. Verificar as três fases em 390px antes de avaliar a nova direção visual.
+      - link "service-app.css:2978":
+        - /url: ../../../evolucoes/service_app/service-app.css
+      - text: ·
+      - link "Assistente.tsx":
+        - /url: ../../../app/service/modules/configuracao/Assistente.tsx
+      - text: · Fixture autenticada isolada, porta 3002.
+    - 'figure "Configuração mobile: fase Sua igreja sem formulário 3002 · Fixture autenticada isolada · 390px"':
+      - 'button "Ampliar: Configuração mobile: fase Sua igreja sem formulário"':
+        - 'img "Configuração mobile: fase Sua igreja sem formulário"'
+      - strong: "Configuração mobile: fase Sua igreja sem formulário"
+      - text: 3002 · Fixture autenticada isolada · 390px
+    - 'figure "Configuração desktop: os campos da igreja aparecem 3002 · Fixture autenticada isolada · 1440px"':
+      - 'button "Ampliar: Configuração desktop: os campos da igreja aparecem"':
+        - 'img "Configuração desktop: os campos da igreja aparecem"'
+      - strong: "Configuração desktop: os campos da igreja aparecem"
+      - text: 3002 · Fixture autenticada isolada · 1440px
+    - article:
+      - text: URGENTE Contrato da data
+      - heading "O primeiro evento pode ser criado sem uma data civil completa." [level=3]
+      - paragraph: O seletor observado apresenta dia e mês sem ano. Nome e local já habilitam a criação sem data e hora. O contrato do campo de evento exige uma data completa; o formulário não foi submetido, portanto esta análise não afirma qual erro o banco devolveria.
+      - paragraph:
+        - strong: "Primeiro passo:"
+        - text: separar data completa de dia/mês de aniversário. Publicação exige data válida e horário ou política explícita de dia inteiro, com revisão antes de publicar.
+      - link "campos.tsx:66 e 234":
+        - /url: ../../../app/service/painel/campos.tsx
+      - text: ·
+      - link "ServiceModal.tsx:159":
+        - /url: ../../../app/service/painel/telas/ServiceModal.tsx
+      - text: ·
+      - link "F02 e critérios de aceitação":
+        - /url: RELATORIO.md
+      - text: · Demo 3001.
+    - article:
+      - text: ALTA Continuidade
+      - heading "Escolher um aviso não leva ao aviso escolhido." [level=3]
+      - paragraph: O CTA de um aviso urgente abre o Mural geral, onde outro aviso aparece primeiro. O selo zera após a navegação observada, sem demonstrar que o conteúdo escolhido foi compreendido. A pessoa precisa procurar de novo o que acabou de selecionar.
+      - paragraph:
+        - strong: "Proposta:"
+        - text: abrir o objeto exato, preservar a origem na volta e tratar leitura como estado específico do aviso. O mesmo princípio vale para tarefa que abre a agenda geral.
+      - link "Inicio.tsx:264 e 274":
+        - /url: ../../../app/service/membro/Inicio.tsx
+      - text: ·
+      - link "Captura do destino":
+        - /url: capturas/membro-aviso-destino--settled.png
+      - text: · Demo 3001. Leitura efetiva precisa teste próprio.
+    - article:
+      - text: ALTA Primeiro valor
+      - heading "Concluir cadastro não significa igreja pronta para receber pessoas." [level=3]
+      - paragraph: Convidar, vincular liderança, criar encontro, definir participação e publicar estão espalhados. O mapa mostra a entrega necessária entre os papéis. O início sem programação demonstra como a falta dessa preparação chega ao membro.
+      - paragraph:
+        - strong: "Proposta:"
+        - text: "orientar por resultado: preparar um encontro real, revisar o que os membros verão e convidar quem precisa assumir a próxima ação. Recursos avançados entram depois."
+      - link "J05, J06 e J07":
+        - /url: JORNADAS-E-CONEXOES.md
+      - text: ·
+      - link "Estado autenticado sem programação":
+        - /url: capturas/local-app-sem-programacao--settled.png
+      - text: .
+    - article:
+      - text: ALTA Clareza
+      - heading "Muitas funções competem pela atenção." [level=3]
+      - paragraph: Painel, configurações e Caminhada misturam contextos e níveis de decisão. A disponibilidade de uma função não justifica mostrá-la sempre. O problema precisa ser tratado por papel, frequência e momento da jornada.
+      - paragraph:
+        - strong: "Proposta:"
+        - text: uma ação principal clara, listas para informações semelhantes e configuração progressiva. Validar rótulos e agrupamentos sem exigir que a pessoa conheça a organização dos módulos.
+      - link "J09, J14 e J15":
+        - /url: JORNADAS-E-CONEXOES.md
+      - text: ·
+      - link "Inventário e relevância dos módulos":
+        - /url: inventario-funcoes.csv
+      - text: .
+    - article:
+      - text: EXPANSÃO Contrato funcional
+      - heading "Internacionalizar exige mais que traduzir a interface." [level=3]
+      - paragraph: CEP de oito dígitos no convite, telefone com pressuposto brasileiro e fuso de São Paulo comprometem a experiência fora do contexto previsto. CNPJ já é opcional e não deve ser apresentado como bloqueio obrigatório.
+      - paragraph:
+        - strong: "Proposta:"
+        - text: país e contexto temporal explícitos; endereço progressivo; telefone internacional; idioma, moeda e capacidades regionais tratados separadamente.
+      - link "Fontes e critérios de aceitação":
+        - /url: QUALIDADE-E-INTERNACIONAL.md
+      - text: · Confirmado no código; nem todos os países foram executados visualmente.
+    - text: Uma pessoa prepara o valor da outra
+    - heading "Uma jornada não termina no clique." [level=2]
+    - paragraph: O pastor prepara a igreja, a gestão publica um encontro, o líder organiza uma equipe e o membro responde. A experiência só fecha quando a resposta volta para a pessoa responsável, com um estado que ambos entendem.
+    - table:
+      - rowgroup:
+        - row "Transição Resultado necessário Ruptura a investigar":
+          - columnheader "Transição"
+          - columnheader "Resultado necessário"
+          - columnheader "Ruptura a investigar"
+      - rowgroup:
+        - row "Pastor → líder Convite aceito e time reconhecido Convite enviado pode parecer equipe pronta.":
+          - cell "Pastor → líder"
+          - cell "Convite aceito e time reconhecido"
+          - cell "Convite enviado pode parecer equipe pronta."
+        - row "Gestão → membro Encontro publicado com participação clara Cadastro completo pode terminar em app vazio.":
+          - cell "Gestão → membro"
+          - cell "Encontro publicado com participação clara"
+          - cell "Cadastro completo pode terminar em app vazio."
+        - row "Líder → voluntário Escala publicada, recebida e respondida Publicado, avisado e lido são estados diferentes.":
+          - cell "Líder → voluntário"
+          - cell "Escala publicada, recebida e respondida"
+          - cell "Publicado, avisado e lido são estados diferentes."
+        - row "Membro → líder Pedido de troca tem responsável e conclusão Conversa iniciada não equivale a vaga transferida.":
+          - cell "Membro → líder"
+          - cell "Pedido de troca tem responsável e conclusão"
+          - cell "Conversa iniciada não equivale a vaga transferida."
+        - row "Comunicação → membro Aviso exato aberto e contexto preservado CTA leva à lista geral e exige nova procura.":
+          - cell "Comunicação → membro"
+          - cell "Aviso exato aberto e contexto preservado"
+          - cell "CTA leva à lista geral e exige nova procura."
+    - link "Abrir mapa interativo":
+      - /url: mapa-jornadas.html
+    - link "Ler as conexões e dependências":
+      - /url: JORNADAS-E-CONEXOES.md
+    - text: Direções para comparar
+    - heading "Menos caixas. Mais significado." [level=2]
+    - paragraph: Os protótipos mantêm as mesmas tarefas e dados. A direção A usa composição editorial, texto e divisórias. A direção B ancora compromissos em data e sequência temporal. Ambas preservam Inter e a personalização da igreja.
+    - 'figure "Proposta A: comunidade editorial no mobile 8765 · Proposta separada · 375px"':
+      - 'button "Ampliar: Proposta A: comunidade editorial no mobile"':
+        - 'img "Proposta A: comunidade editorial no mobile"'
+      - strong: "Proposta A: comunidade editorial no mobile"
+      - text: 8765 · Proposta separada · 375px
+    - 'figure "Proposta B: agenda e ação com muita atividade 8765 · Proposta separada · 375px"':
+      - 'button "Ampliar: Proposta B: agenda e ação com muita atividade"':
+        - 'img "Proposta B: agenda e ação com muita atividade"'
+      - strong: "Proposta B: agenda e ação com muita atividade"
+      - text: 8765 · Proposta separada · 375px
+    - paragraph: "As miniaturas acima mostram estados diferentes apenas como amostras: A com pouca atividade e B com muita atividade. Para comparar direção visual mantendo os dados iguais, use o protótipo interativo. O início vazio distingue “sem resposta pendente” de “sem programação publicada”. Não há feed artificial nem uma nova obrigação de publicar conteúdo para o aplicativo parecer vivo."
+    - link "Experimentar personas, atividade, tema e texto":
+      - /url: propostas.html
+    - link "Ler decisões e limitações da proposta":
+      - /url: PROPOSTA-VISUAL.md
+    - text: Interface atual e proposta separadas
+    - heading "O que foi capturado visualmente." [level=2]
+    - paragraph: Uma captura final por cenário. Clique para ampliar. As portas distinguem ambientes, não versões publicadas. A demo demonstra interfaces; a fixture local autentica contas de teste em banco isolado; o protótipo demonstra propostas.
+    - strong: Procedência das evidências
+    - paragraph: "3001: demonstração do Service. 3002: fixture autenticada isolada. 8765: artefatos e protótipos da auditoria. Capturas de compilação em branco e login parcial foram excluídas da galeria e não são tratadas como defeitos."
+    - text: Persona
+    - combobox "Persona":
+      - option "Todas"
+      - option "Pastor e configuração inicial" [selected]
+      - option "Gestão"
+      - option "Líder"
+      - option "Membro"
+      - option "Propostas"
+    - text: Ambiente
+    - combobox "Ambiente":
+      - option "Todos"
+      - option "3001 · Demo"
+      - option "3002 · Fixture autenticada" [selected]
+      - option "8765 · Proposta"
+    - button "Limpar filtros"
+    - status: 6 capturas finais
+    - 'figure "Configuração desktop: os campos da igreja aparecem 3002 · Fixture autenticada isolada · 1440px"':
+      - 'button "Ampliar: Configuração desktop: os campos da igreja aparecem"':
+        - 'img "Configuração desktop: os campos da igreja aparecem"'
+      - strong: "Configuração desktop: os campos da igreja aparecem"
+      - text: 3002 · Fixture autenticada isolada · 1440px
+    - 'figure "Configuração desktop: convites aparecem 3002 · Fixture autenticada isolada · 1440px"':
+      - 'button "Ampliar: Configuração desktop: convites aparecem"':
+        - 'img "Configuração desktop: convites aparecem"'
+      - strong: "Configuração desktop: convites aparecem"
+      - text: 3002 · Fixture autenticada isolada · 1440px
+    - 'figure "Configuração mobile: fase Sua igreja sem formulário 3002 · Fixture autenticada isolada · 390px"':
+      - 'button "Ampliar: Configuração mobile: fase Sua igreja sem formulário"':
+        - 'img "Configuração mobile: fase Sua igreja sem formulário"'
+      - strong: "Configuração mobile: fase Sua igreja sem formulário"
+      - text: 3002 · Fixture autenticada isolada · 390px
+    - 'figure "Configuração mobile: fase Cultos e times sem formulário 3002 · Fixture autenticada isolada · 390px"':
+      - 'button "Ampliar: Configuração mobile: fase Cultos e times sem formulário"':
+        - 'img "Configuração mobile: fase Cultos e times sem formulário"'
+      - strong: "Configuração mobile: fase Cultos e times sem formulário"
+      - text: 3002 · Fixture autenticada isolada · 390px
+    - 'figure "Configuração mobile: fase Pessoas sem formulário 3002 · Fixture autenticada isolada · 390px"':
+      - 'button "Ampliar: Configuração mobile: fase Pessoas sem formulário"':
+        - 'img "Configuração mobile: fase Pessoas sem formulário"'
+      - strong: "Configuração mobile: fase Pessoas sem formulário"
+      - text: 3002 · Fixture autenticada isolada · 390px
+    - 'figure "Configuração desktop: horários e times aparecem 3002 · Fixture autenticada isolada · 1440px"':
+      - 'button "Ampliar: Configuração desktop: horários e times aparecem"':
+        - 'img "Configuração desktop: horários e times aparecem"'
+      - strong: "Configuração desktop: horários e times aparecem"
+      - text: 3002 · Fixture autenticada isolada · 1440px
+    - paragraph:
+      - text: "Manifesto técnico:"
+      - link "cenários, ações, viewport, imagem e hash":
+        - /url: capturas/manifesto.json
+      - text: . A galeria não exibe credenciais ou conteúdo real de igrejas.
+    - text: Confiança proporcional à evidência
+    - heading "O que sabemos e o que falta validar." [level=2]
+    - heading "Observação e código" [level=3]
+    - list:
+      - listitem: Configuração oculta em mobile com comparação desktop.
+      - listitem: Destino de aviso e tarefa inspecionado na demo.
+      - listitem: Inícios, abas, formulários e painel capturados em ambientes locais.
+      - listitem: 34 módulos e 12 jornadas analisados no código.
+      - listitem: Restrições brasileiras e fuso fixo identificados em fontes.
+    - heading "Validação ainda necessária" [level=3]
+    - list:
+      - listitem: Zoom e teclado em iPhone/Safari real. Não foi reproduzido como defeito confirmado.
+      - listitem: Execução integral dos ciclos entre contas, notificações e responsáveis.
+      - listitem: Testes com pastores e membros de baixa familiaridade digital.
+      - listitem: Países e idiomas selecionados, horário de verão e textos expandidos.
+      - listitem: Leitor de tela, contraste completo e todas as sete posições reais de texto.
+    - paragraph:
+      - link "Roteiro e critérios de validação →":
+        - /url: VALIDACAO.md
+    - text: Material para decidir e implementar depois
+    - heading "Todos os entregáveis." [level=2]
+    - article:
+      - heading "Diagnóstico completo" [level=3]:
+        - link "Diagnóstico completo":
+          - /url: RELATORIO.md
+      - paragraph: 24 achados com evidências, prioridades e sequência de melhorias.
+    - article:
+      - heading "Mapa navegável" [level=3]:
+        - link "Mapa navegável":
+          - /url: mapa-jornadas.html
+      - paragraph: 12 jornadas, 48 momentos, cinco atores e dependências entre papéis.
+    - article:
+      - heading "Jornadas e conexões" [level=3]:
+        - link "Jornadas e conexões":
+          - /url: JORNADAS-E-CONEXOES.md
+      - paragraph: Rupturas, transições e critérios para concluir cada entrega entre pessoas.
+    - article:
+      - heading "Qualidade e internacional" [level=3]:
+        - link "Qualidade e internacional":
+          - /url: QUALIDADE-E-INTERNACIONAL.md
+      - paragraph: Mobile, acessibilidade, zoom, país, telefone, fuso, idioma e moeda.
+    - article:
+      - heading "Protótipos comparáveis" [level=3]:
+        - link "Protótipos comparáveis":
+          - /url: propostas.html
+      - paragraph: Duas direções visuais e quatro jornadas com interações locais.
+    - article:
+      - heading "Decisões visuais" [level=3]:
+        - link "Decisões visuais":
+          - /url: PROPOSTA-VISUAL.md
+      - paragraph: Hipóteses, regras preservadas e alterações que precisam de aprovação.
+    - article:
+      - heading "Inventário de funções" [level=3]:
+        - link "Inventário de funções":
+          - /url: inventario-funcoes.csv
+      - paragraph: 34 módulos com relevância, público, dependências e momento de apresentação.
+    - article:
+      - heading "Plano de validação" [level=3]:
+        - link "Plano de validação":
+          - /url: VALIDACAO.md
+      - paragraph: Tarefas para pessoas reais e critérios técnicos antes de implementar.
+    - article:
+      - heading "Manifesto de capturas" [level=3]:
+        - link "Manifesto de capturas":
+          - /url: capturas/manifesto.json
+      - paragraph: Rastreabilidade técnica das observações visuais.
+  - contentinfo: Análise e propostas de 20/10/2026. O aplicativo, as regras e os dados de produção não foram alterados. Resultados observados em ambiente local não certificam o estado de produção.

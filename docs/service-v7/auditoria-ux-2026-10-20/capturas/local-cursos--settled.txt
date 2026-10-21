@@ -1,0 +1,54 @@
+- document:
+  - alert
+  - complementary:
+    - text: Igreja Teste Local Service
+    - button "Fechar menu": ✕
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Formação
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "MM"
+  - main:
+    - text: Formação
+    - heading "Cursos e Trilhas Ajuda" [level=1]:
+      - text: Cursos e Trilhas
+      - button "Ajuda": "?"
+    - button "+ Nova trilha"
+    - text: Cursos ativos
+    - button "Ajuda": "?"
+    - text: 0 trilhas, conteúdo e presenciais Matrículas
+    - button "Ajuda": "?"
+    - text: 0 pessoas cursando agora Conclusões
+    - button "Ajuda": "?"
+    - text: 0 sem matrículas ainda Em formação de líderes
+    - button "Ajuda": "?"
+    - text: 0 na trilha de liderança
+    - button "Todos"
+    - button "Trilhas"
+    - button "Conteúdo"
+    - button "Presenciais"
+    - button "Organizar"
+    - text: Nenhum curso ainda
+    - paragraph: Os cursos e trilhas da igreja aparecem aqui, com aulas e presença.
+    - button "Criar curso"

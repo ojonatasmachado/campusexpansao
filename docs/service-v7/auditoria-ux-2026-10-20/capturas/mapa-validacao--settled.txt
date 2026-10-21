@@ -1,0 +1,162 @@
+- document:
+  - dialog "How to use Journey Maps":
+    - heading "How to use Journey Maps" [level=2]
+    - button "Close": ✕
+    - heading "What this is" [level=3]
+    - paragraph: An NN/g customer journey map and service blueprint combined into a single grid — one per user journey. The top half is the customer view; the bottom half is the service layer. Both share the same columns (stages and moments).
+    - separator
+    - heading "Navigating journeys" [level=3]
+    - paragraph: Select any journey from the left rail. Journeys are grouped by category.
+    - separator
+    - heading "Reading the grid" [level=3]
+    - paragraph:
+      - text: Columns are
+      - strong: stages
+      - text: ", each containing one or more"
+      - strong: moments
+      - text: ". Within each moment column, rows are stacked top-to-bottom:"
+    - text: Doing Thinking Feeling Pain points Opportunities Evidence
+    - paragraph:
+      - text: A
+      - strong: line of interaction
+      - text: "separates the customer journey from the service blueprint. Below it:"
+    - text: Frontstage Backstage Support processes
+    - separator
+    - heading "What you can edit" [level=3]
+    - list:
+      - listitem:
+        - strong: Scenario & User goal
+        - text: — editable in the journey header. Your changes shadow the built-in defaults.
+      - listitem:
+        - strong: Thinking
+        - text: — free-text per moment. What is the user asking themselves at this point?
+      - listitem:
+        - strong: Feeling
+        - text: — pick one emoji per moment. Drives the emotion curve below the grid.
+      - listitem:
+        - strong: Pain points & Opportunities
+        - text: — your research findings. One item per line works well.
+      - listitem:
+        - strong: Evidence
+        - text: "— link to a source: an insight, a session recording, a ticket ID."
+      - listitem:
+        - strong: Notes
+        - text: — a full-width freeform textarea below the grid for anything that doesn't fit a cell.
+    - paragraph:
+      - text: The
+      - strong: Doing, Frontstage, Backstage, and Support
+      - text: rows are pre-filled and read-only in the UI. Their content lives in the JSON block at the bottom of the file; edit the JSON directly to change them.
+    - separator
+    - heading "Emotion curve" [level=3]
+    - paragraph: As soon as two or more moments in a journey have a feeling set, a curve renders automatically below the grid. It traces sentiment across stages so you can spot where the journey dips.
+    - separator
+    - heading "Saving & sharing" [level=3]
+    - list:
+      - listitem:
+        - strong: Autosave
+        - text: — every edit saves to
+        - emphasis: this browser's
+        - text: localStorage after a 350 ms pause. The rail shows "Saved" when it commits.
+      - listitem:
+        - strong: Export
+        - text: — downloads a timestamped JSON of all annotations. Back it up or send it to a teammate.
+      - listitem:
+        - strong: Import
+        - text: — loads a JSON file. You'll be asked whether to
+        - emphasis: merge
+        - text: a colleague's annotations into yours (field by field; where you both edited the same field, theirs wins) or
+        - emphasis: replace
+        - text: your local state.
+    - separator
+    - heading "Keyboard shortcut" [level=3]
+    - paragraph:
+      - text: Press
+      - strong: "?"
+      - text: anywhere on the page to open or close this guide.
+  - dialog "Import annotations":
+    - heading "Import annotations" [level=2]
+    - button "Close": ✕
+    - paragraph
+    - paragraph:
+      - strong: Merge
+      - text: adds their notes to yours. Where you both edited the same field, theirs wins.
+    - paragraph:
+      - strong: Replace
+      - text: discards the notes in this browser and loads theirs instead.
+    - button "Cancel"
+    - button "Replace mine"
+    - button "Merge"
+  - complementary:
+    - heading "Service · Auditoria de jornadas 2026-10-20" [level=1]
+    - paragraph: NN/g customer journey + service blueprint, per journey. Edits autosave to this browser.
+    - button "Export"
+    - button "Import"
+    - button "?"
+    - text: Entrada e ativação
+    - button "Cadastrar e ativar a primeira igreja Pastor e gestão"
+    - button "Entrar por convite ou código e recuperar bloqueios Membro"
+    - text: Operação e participação
+    - button "Criar evento e chegar ao membro Pastor e gestão"
+    - button "Preparar, publicar e responder escala Líder e equipe"
+    - button "Entender o app e voltar durante a semana Membro"
+    - text: Comunicação e cuidado
+    - button "Acolher visitante e integrar sem perder vínculo Líder e equipe"
+    - button "Publicar, receber e responder comunicação Líder e equipe"
+    - button "Acompanhar grupo e ausência Líder e equipe"
+    - text: Formação e família
+    - button "Preparar família, fazer check-in e retirar criança Família e responsável"
+    - button "Inscrever, estudar e registrar conclusão Membro"
+    - text: Gestão institucional
+    - button "Delegar, registrar e fechar finanças Tesouraria e secretaria"
+    - button "Importar pessoas e manter registros institucionais Tesouraria e secretaria"
+  - main:
+    - heading "Cadastrar e ativar a primeira igreja" [level=2]
+    - text: Primary actor Pastor e gestão Scenario
+    - textbox "Who is this user, what's bringing them here?": "[Assumption] Cenário de serviço reconstruído do código atual, sem pesquisa de usuário ou observação de conta real."
+    - text: User goal
+    - textbox "What does success look like for them?": Sair de uma conta sem vínculo para a primeira igreja utilizável
+    - text: Stage Criar vínculo Obter valor Moment 1 Escolher liderança 2 Cadastrar igreja 3 Criar cultos e times 4 Convidar e concluir Doing Abre cadastro explícito de igreja Preenche nome, contato e opcionalmente CNPJ Escolhe horários e modelos no assistente Convida líder e abre Times ou Escalas Thinking
+    - textbox "What is going through their head?": "[Assumption] Preciso entender o que fazer e o que acontecerá em seguida."
+    - textbox "What is going through their head?": "[Assumption] Preciso entender o que fazer e o que acontecerá em seguida."
+    - textbox "What is going through their head?": "[Assumption] Preciso entender o que fazer e o que acontecerá em seguida."
+    - textbox "What is going through their head?": "[Assumption] Preciso entender o que fazer e o que acontecerá em seguida."
+    - text: Feeling
+    - button "😡"
+    - button "🙁"
+    - button "😐"
+    - button "🙂"
+    - button "😄"
+    - button "😡"
+    - button "🙁"
+    - button "😐"
+    - button "🙂"
+    - button "😄"
+    - button "😡"
+    - button "🙁"
+    - button "😐"
+    - button "🙂"
+    - button "😄"
+    - button "😡"
+    - button "🙁"
+    - button "😐"
+    - button "🙂"
+    - button "😄"
+    - text: Pain points
+    - textbox "What hurts here?": "[Assumption] A passagem entre pessoas ou telas pode exigir conhecimento prévio."
+    - textbox "What hurts here?": "[Assumption] A passagem entre pessoas ou telas pode exigir conhecimento prévio."
+    - textbox "What hurts here?": "[Assumption] A passagem entre pessoas ou telas pode exigir conhecimento prévio."
+    - textbox "What hurts here?": "[Assumption] A passagem entre pessoas ou telas pode exigir conhecimento prévio."
+    - text: Opportunities
+    - textbox "What could we improve?": "[Assumption] Reduzir expectativa de saber qual caminho corresponde à sua intenção"
+    - textbox "What could we improve?": "[Assumption] País deve anteceder campos locais; adiar dados acessórios"
+    - textbox "What could we improve?": "[Assumption] Oferecer primeiro encontro com horário livre antes do lote"
+    - textbox "What could we improve?": "[Assumption] Manter passo pendente até haver resultado real visível no app"
+    - text: Evidence
+    - 'textbox "Link a source: research insight, recording, ticket."'
+    - 'textbox "Link a source: research insight, recording, ticket."'
+    - 'textbox "Link a source: research insight, recording, ticket."'
+    - 'textbox "Link a source: research insight, recording, ticket."'
+    - text: Line of interaction Frontstage AuthShell e escolha Sou da liderança · app/service/onboarding/page.tsx:79 BootstrapChurchForm · app/service/onboarding/BootstrapChurchForm.tsx:89 Assistente fases 1 e 2 · app/service/modules/configuracao/Assistente.tsx:181 Fase Pessoas e atalhos externos · app/service/modules/configuracao/Assistente.tsx:221 Line of visibility Backstage A conta sem igreja requer escolha explícita RPC bootstrap_church_org_v2 Cria times e eventos em chamadas separadas Conclusão grava estado sem exigir primeira escala Line of internal interaction Support processes Código Next.js e Supabase; execução e dados reais não comprovados nesta análise. Código Next.js e Supabase; execução e dados reais não comprovados nesta análise. Código Next.js e Supabase; execução e dados reais não comprovados nesta análise. Código Next.js e Supabase; execução e dados reais não comprovados nesta análise.
+    - heading "Emotion curve" [level=3]
+    - text: Pick a feeling on at least two moments to see the curve. Free-form notes for this journey
+    - textbox "Hypotheses, research links, things to test, anything else."

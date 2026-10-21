@@ -1,0 +1,1734 @@
+[
+  {
+    "label": "ativacao-encontro-disponivel",
+    "evidence_id": "ev_013fdef6db7eeed3b9edb064d16699910201222b495a978385b8c176bc2731a3",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "start-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "phase-two",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "event-title",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "event-date",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "free-time",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "event-place",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "publish-first-meeting",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "persist",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "show-result",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "ativacao-encontro-disponivel--settled.png",
+        "sha256": "7e35b04e46d21f01f86f163697b3c5c3872e5e9f4f65902593182b2e08d6eb51",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "ativacao-sem-encontro-util-nao-conclui",
+    "evidence_id": "ev_104fa82a1c100046d55f72f959f34f1066fa4ca9454fb23dd33ab1e41fc38ae7",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "resume-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "cannot-finish",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "ativacao-sem-encontro-util-nao-conclui--settled.png",
+        "sha256": "4ea17dc4cfa90b0c01b32400583679624817fe3459b83d9a5acd58ea1037418b",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "ativacao-reutiliza-registro-e-explica-acesso",
+    "evidence_id": "ev_13685bec03f59da366c48d0a6c00ddff3963f6e46110c13db8dcd073202d93e1",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "resume-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "same-title",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "same-date",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "same-time",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "same-place",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "retry-same-meeting",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "persist-retry",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "people-phase",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "ativacao-reutiliza-registro-e-explica-acesso--settled.png",
+        "sha256": "527b7720bc61d5d1ad6669cbde6f8530f9b0dee4d0ffb784395f962a8cdcd749",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "ativacao-previa-final-320",
+    "evidence_id": "ev_2b8c42d634c0b75a10008c8b9199c36a377a20b1abe26ef943201db93af5c82d",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 900,
+        "width": 320
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "start-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "phase-two",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "event-title",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "event-date",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "free-time",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "event-place",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "preview-visible",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "ativacao-previa-final-320--settled.png",
+        "sha256": "196b8b203f336690ffb2b267b003fb75ef8172cfaeabb4944b02a75a20d99adc",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "ativacao-retoma-rascunho-validado",
+    "evidence_id": "ev_2ec6644867bc3911c334858b8e0bc70b1c89daf51d04a68361dd84551f354e28",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "resume-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "ativacao-retoma-rascunho-validado--settled.png",
+        "sha256": "feb325d05f99b48abccd788154e40bd8e77df45e201c67b7ff8ebdb13f34cce4",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "ativacao-membro-encontra-encontro",
+    "evidence_id": "ev_39f7b4b4b8db5327464e286a4357a9e923b00ad9fab5ff6e59d1dfdda2ffdc6f",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "find-event",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "ativacao-membro-encontra-encontro--settled.png",
+        "sha256": "01fffd558e82545693318a80aa3b2aea7865a3ad20bdf4966a472f29ec9d536b",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "ativacao-salva-rascunho",
+    "evidence_id": "ev_57a6cd2817e24b6f30a9bb82f3665dfaeb73db7c5265d9196708d206ede306ab",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "resume-setup",
+        "action": "click",
+        "status": "failed",
+        "error": "locator.click: Timeout 12000ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: 'Continuar preparação', exact: true })\n    - locator resolved to <button type=\"button\" class=\"btn btn-pri\">Continuar preparação</button>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div class=\"coach-pop-t\">Seu painel</div> from <div class=\"coach-layer\">…</div> subtree intercepts pointer events\n    - retrying click action\n    - waiting 20ms\n    - waiting for element to be visible, enabled and stable\n    - element is visible, enabled and stable\n    - scrolling into view if needed\n    - done scrolling\n    - <div class=\"coach-pop-t\">Seu painel</div> from <div class=\"coach-layer\">…</div> subtree intercepts pointer events\n  2 × retrying click action\n      - waiting 100ms\n      - waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div class=\"sb-backdrop\"></div> intercepts pointer events\n  5 × retrying click action\n      - waiting 500ms\n      - waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div class=\"coach-pop-t\">Seu painel</div> from <div class=\"coach-layer\">…</div> subtree intercepts pointer events\n    - retrying click action\n      - waiting 500ms\n      - waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div class=\"coach-pop-t\">Seu painel</div> from <div class=\"coach-layer\">…</div> subtree intercepts pointer events\n    - retrying click action\n      - waiting 500ms\n      - waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div class=\"sb-backdrop\"></div> intercepts pointer events\n    - retrying click action\n      - waiting 500ms\n      - waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div class=\"sb-backdrop\"></div> intercepts pointer events\n  2 × retrying click action\n      - waiting 500ms\n      - waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div class=\"coach-pop-t\">Seu painel</div> from <div class=\"coach-layer\">…</div> subtree intercepts pointer events\n  - retrying click action\n    - waiting 500ms\n"
+      },
+      {
+        "id": "draft-name",
+        "action": "fill",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      },
+      {
+        "id": "draft-date",
+        "action": "fill",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      },
+      {
+        "id": "draft-time",
+        "action": "fill",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      },
+      {
+        "id": "draft-place",
+        "action": "fill",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      },
+      {
+        "id": "save-draft",
+        "action": "click",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      },
+      {
+        "id": "persist-draft",
+        "action": "wait_for_timeout",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      }
+    ],
+    "screens": [],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "ativacao-retomada-sem-duplicar",
+    "evidence_id": "ev_67b9f8322f085f11d9e3b62028fbd502ba35268740c94f0a5ce481fcea58e876",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "resume-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "ativacao-retomada-sem-duplicar--settled.png",
+        "sha256": "1facec631d2b050fef0716625c5db798587f3d6c26ffbe8ff8c7f7f7ca8f1f5c",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "ativacao-retoma-rascunho",
+    "evidence_id": "ev_6a68dc4ec68f50bd489bf41de2a58102c83e85b23f1246f9b709438c4d1067bc",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "resume-setup",
+        "action": "click",
+        "status": "failed",
+        "error": "Analysis operation timed out after 12000ms: capture_browser_scenario"
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      }
+    ],
+    "screens": [],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "ativacao-primeiro-encontro-mobile",
+    "evidence_id": "ev_6e344d406bf7751738671c85aa1395ac28f3d8b18761166d5d74b15112d7412b",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "start-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "first-meeting",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "ativacao-primeiro-encontro-mobile--settled.png",
+        "sha256": "808e0d5b90e34364bc5da68b5104a74013f13ff1bbb6857e5eb852f4ff78fb05",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "ativacao-corrige-sem-recriar",
+    "evidence_id": "ev_77f61e31254bb0759cd6da5b70af72ad8facd07bb8d260b1c021bcc158e15954",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "resume-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "phase-two",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "review-existing",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "correct-location",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "adjust-time",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "save-corrections",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "persist-adjustment",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "show-updated",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "ativacao-corrige-sem-recriar--settled.png",
+        "sha256": "809665645ed034cdf9ac723bf0d8081f7b6bd0695a2e17d9d3d6f1072793b6a2",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "ativacao-salva-rascunho-validado",
+    "evidence_id": "ev_7c6da7293397d587921a5d5a1b88fa67f191891efc3da8cbecaa0193d396393c",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "resume-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "draft-name",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "draft-date",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "draft-time",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "draft-place",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "save-draft",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "persist-draft",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "ativacao-salva-rascunho-validado--settled.png",
+        "sha256": "8b38472c72bf442310193153e6b1bc1bbb868cf5fdeaa03a8151dcd74a58ee28",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "ativacao-times-depois-do-encontro",
+    "evidence_id": "ev_892472acc95e98152c7b9025edf62f6d11edc586cdce32a9cf3ccc28acc061df",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "resume-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "phase-two",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "optional-team",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "recepcao",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "create-team",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "persist-team",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "ativacao-times-depois-do-encontro--settled.png",
+        "sha256": "e6e9d6b1f659cde894fb791a2da955ba8a8ccf4514991bb3069ca4958bcda580",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "ativacao-conclusao-com-encontro",
+    "evidence_id": "ev_bede4128635d863db7f7f3c0b218e42488288a7216f376cd8f596015c3b3df85",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "resume-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "next-people",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "finish",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "persist-completion",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "ativacao-conclusao-com-encontro--settled.png",
+        "sha256": "1137aa216f14ce4edc2c30eef8e587489ab7f9f691716f7f86909a47aa60e9b5",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "ativacao-previa-horario-livre",
+    "evidence_id": "ev_d0052cd1fb232f78928dcc32b86692cdee97eaa6f7696d2d22e2b13ac476d810",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "start-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "phase-two",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "event-title",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "event-date",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "free-time",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "event-place",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "ativacao-previa-horario-livre--settled.png",
+        "sha256": "5767a7002d714149e3d6cb7b3738a0dc8cc33bba17cc8c4158233e1179322e5d",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "ativacao-primeiro-encontro-desktop",
+    "evidence_id": "ev_f98f17f4170c5a45ec8729778ba882ca800ab723bcdd54aaf2e84b9f201a588b",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "start-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "event-step",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "ativacao-primeiro-encontro-desktop--settled.png",
+        "sha256": "b035359de5d6d3f2179c2a1a66f2b7533827b0acc9226e07560805017031a660",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  }
+]

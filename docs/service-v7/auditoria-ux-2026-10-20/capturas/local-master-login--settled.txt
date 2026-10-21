@@ -1,0 +1,20 @@
+- document:
+  - main:
+    - text: CE.X Service
+    - paragraph: Acesso
+    - heading "Entrar no Service" [level=1]
+    - paragraph: Use o e-mail e a senha do seu cadastro.
+    - text: E-mail
+    - textbox "E-mail":
+      - /placeholder: voce@email.com
+      - text: master@teste.local
+    - text: Senha
+    - textbox "Senha Mostrar":
+      - /placeholder: Sua senha
+      - text: [senha de teste omitida]
+    - button "Mostrar"
+    - button "Entrar"
+    - button "Esqueci minha senha"
+    - text: Primeiro acesso? Abra o link de convite que a liderança mandou. Sua igreja ainda não usa o Service?
+    - button "Cadastrar minha igreja"
+  - alert

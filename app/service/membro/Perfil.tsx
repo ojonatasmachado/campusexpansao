@@ -1,7 +1,9 @@
 "use client";
 
+import { formatarCpf } from "../lib/cpf";
+import { enderecoNoBrasil } from "../lib/endereco";
 import { listaFinalidades, type ContribuirCfg } from "../modules/contribuir/pix";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useId } from "react";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { Icon } from "../lib/icons";
 import { formatDateBR } from "../lib/date";
@@ -122,12 +124,24 @@ export function TabPerfil({
     email: realValue(member?.email),
     phone: realValue(member?.phone),
     nasc: member?.birth ?? "",
+    country: member?.country,
     cep: member?.postalCode ?? "",
     rua: member?.street ?? "",
     bairro: member?.neighborhood ?? "",
     cidade: member?.city ?? "",
     estado: member?.state ?? "",
   });
+  const [documentoErro, setDocumentoErro] = useState("");
+  useEffect(() => {
+    if (view !== "dados" || !member?.id) return;
+    let ativo = true;
+    createServiceBrowserClient().schema("service").rpc("my_member_cpf", { p_member: member.id }).then(({ data, error }) => {
+      if (!ativo) return;
+      if (error) { setDocumentoErro("Não foi possível carregar o CPF agora. Os outros dados podem ser editados."); return; }
+      setPerfil((p) => ({ ...p, cpf: typeof data === "string" ? data : "" }));
+    });
+    return () => { ativo = false; };
+  }, [view, member?.id]);
   const [perfilTentou, setPerfilTentou] = useState(false);
   const perfilErros = contactErrors(perfil);
 
@@ -214,7 +228,7 @@ export function TabPerfil({
                   <li><Icon name="telefone" size={20} /><span>{formatarTelefone(realValue(member.phone))}</span></li>
                   <li><Icon name="link" size={20} /><span>{realValue(member.email)}</span></li>
                   {member.birth && <li><Icon name="presente" size={20} /><span>Aniversário · {formatDateBR(member.birth)}</span></li>}
-                  {(member.neighborhood || member.city) && <li><Icon name="mapapin" size={20} /><span>{[member.neighborhood, member.city].filter(Boolean).join(", ")}</span></li>}
+                  {(member.neighborhood || member.city) && <li><Icon name="mapapin" size={20} /><span>{[member.neighborhood, member.city, member.country].filter(Boolean).join(", ")}</span></li>}
                 </ul>
                 {onUpdateProfile && (
                   <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => setEditing(true)}>Editar meus dados</button></div>
@@ -222,7 +236,8 @@ export function TabPerfil({
               </>
             ) : (
               <>
-                <MemberContactFields d={perfil} set={(k, v) => setPerfil((p) => ({ ...p, [k]: v }))} erros={perfilTentou ? perfilErros : null} />
+                {documentoErro && <p role="status" className="field-hint">{documentoErro}</p>}
+              <MemberContactFields d={perfil} set={(k, v) => setPerfil((p) => ({ ...p, [k]: v }))} erros={perfilTentou ? perfilErros : null} />
                 {perfilErroSalvar && <div className="m6-err">{perfilErroSalvar}</div>}
                 <div className="m6-btns m6-fixo">
                   <button className="m6-btn sec" type="button" onClick={() => setEditing(false)}>Cancelar</button>
@@ -347,37 +362,45 @@ export function TabPerfil({
   );
 }
 
-/* Campos de contato do membro, obrigatórios: usados no primeiro acesso e na
-   edição do perfil (fonte única). O CEP consulta a API pública e preenche
-   rua, bairro, cidade e estado, que ficam na ficha pra análises da igreja. */
+/* Identificação e contato essenciais. Aniversário e endereço são opcionais;
+   CEP brasileiro só é consultado por ação explícita. */
 export function MemberContactFields({ d, set, erros }: { d: MemberContactInput; set: (k: keyof MemberContactInput, v: string) => void; erros: ReturnType<typeof contactErrors> | null }) {
+  const fieldId = useId();
   const err = (k: keyof ReturnType<typeof contactErrors>) =>
     erros?.[k] ? <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginTop: 4 }}>{erros[k]}</div> : null;
   return (
     <div className="ob-form">
       <div className="field">
-        <label className="field-label req">Nome e sobrenome</label>
-        <input className="input" value={d.name} autoComplete="name" onChange={(e) => set("name", e.target.value)} />
+        <label className="field-label req" htmlFor={`${fieldId}-name`}>Nome e sobrenome</label>
+        <input id={`${fieldId}-name`} className="input" value={d.name} autoComplete="name" onChange={(e) => set("name", e.target.value)} />
         {err("name")}
       </div>
       <div className="field">
-        <label className="field-label req">E-mail</label>
-        <input className="input" type="email" value={d.email} autoComplete="email" placeholder="voce@email.com" onChange={(e) => set("email", e.target.value)} />
+        <label className="field-label req" htmlFor={`${fieldId}-email`}>E-mail</label>
+        <input id={`${fieldId}-email`} className="input" type="email" value={d.email} autoComplete="email" placeholder="voce@email.com" onChange={(e) => set("email", e.target.value)} />
         {err("email")}
       </div>
       <div className="field">
-        <label className="field-label req">Telefone (WhatsApp)</label>
-        <input className="input" type="tel" value={d.phone} autoComplete="tel" placeholder="(11) 90000-0000" onChange={(e) => set("phone", e.target.value)} />
+        <label className="field-label req" htmlFor={`${fieldId}-phone`}>Telefone (WhatsApp)</label>
+        <input id={`${fieldId}-phone`} className="input" type="tel" value={d.phone} autoComplete="tel" placeholder="DDD e telefone ou +código do país" onChange={(e) => set("phone", e.target.value)} />
         {err("phone")}
       </div>
       <div className="field">
-        <label className="field-label req">Aniversário</label>
-        <input className="input" type="date" value={d.nasc} onChange={(e) => set("nasc", e.target.value)} />
+        <label className="field-label" htmlFor={`${fieldId}-nasc`}>Aniversário (opcional)</label>
+        <input id={`${fieldId}-nasc`} className="input" type="date" value={d.nasc} onChange={(e) => set("nasc", e.target.value)} />
         {err("nasc")}
       </div>
+      {d.cpf !== undefined && <div className="field">
+        <label className="field-label" htmlFor={`${fieldId}-cpf`}>CPF (opcional)</label>
+        <input id={`${fieldId}-cpf`} className="input" inputMode="numeric" autoComplete="off" value={formatarCpf(d.cpf)} onChange={(e) => set("cpf", e.target.value.replace(/\D/g, "").slice(0, 11))} />
+        <div className="field-hint">Preencha apenas se quiser informar.</div>
+        {err("cpf")}
+      </div>}
+      <details className="member-address">
+        <summary>Seu endereço</summary>
       <div className="field">
-        <label className="field-label req">CEP</label>
-        <CepInput
+        <label className={`field-label${enderecoNoBrasil(d.country) ? " req" : ""}`} htmlFor={`${fieldId}-cep`}>CEP ou código postal</label>
+        <CepInput international={!enderecoNoBrasil(d.country)} brazilLookup={enderecoNoBrasil(d.country)} id={`${fieldId}-cep`}
           value={d.cep}
           onChange={(v) => set("cep", v)}
           onResult={(r) => {
@@ -389,16 +412,27 @@ export function MemberContactFields({ d, set, erros }: { d: MemberContactInput; 
           }}
         />
         {err("cep")}
-        {(d.cidade || d.rua) && (
-          <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginTop: 6 }}>
-            {[d.rua, d.cidade && d.estado ? `${d.cidade}/${d.estado}` : d.cidade].filter(Boolean).join(" · ")}
-          </div>
-        )}
+
+      </div>
+      {enderecoNoBrasil(d.country) ? <p className="field-hint">{[d.rua, d.bairro, d.cidade, d.estado].filter(Boolean).join(" · ") || "O endereço será preenchido pela consulta do CEP."}</p> : <>
+      <div className="field">
+        <label className="field-label" htmlFor={`${fieldId}-rua`}>Endereço</label>
+        <input id={`${fieldId}-rua`} className="input" value={d.rua} autoComplete="street-address" onChange={(e) => set("rua", e.target.value)} />
       </div>
       <div className="field">
-        <label className="field-label">Bairro</label>
-        <input className="input" value={d.bairro} placeholder="Onde você mora" onChange={(e) => set("bairro", e.target.value)} />
+        <label className="field-label" htmlFor={`${fieldId}-bairro`}>Bairro</label>
+        <input id={`${fieldId}-bairro`} className="input" value={d.bairro} placeholder="Onde você mora" onChange={(e) => set("bairro", e.target.value)} />
       </div>
+      <div className="field">
+        <label className="field-label" htmlFor={`${fieldId}-cidade`}>Cidade</label>
+        <input id={`${fieldId}-cidade`} className="input" value={d.cidade} autoComplete="address-level2" onChange={(e) => set("cidade", e.target.value)} />
+      </div>
+      <div className="field">
+        <label className="field-label" htmlFor={`${fieldId}-estado`}>Estado ou região</label>
+        <input id={`${fieldId}-estado`} className="input" value={d.estado} autoComplete="address-level1" onChange={(e) => set("estado", e.target.value)} />
+      </div>
+      </>}
+      </details>
     </div>
   );
 }

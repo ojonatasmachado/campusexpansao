@@ -56,6 +56,8 @@ const IMPRESSAO = /CheckIn\.tsx|AulaCheckin\.tsx|KidsCheckin\.tsx|secretaria\/Ca
 const COR_PERMITIDA = /lib\/theme\.ts|lib\/color\.ts|ThemePicker\.tsx|AccentField\.tsx|IdentidadeFields\.tsx|PublicPageEditor\.tsx|configuracao\/Assistente\.tsx|EventoShare\.tsx|ImageCropper\.tsx/;
 
 const regras: Record<string, () => Achado[]> = {
+  /* Lei 10: nenhum score ou ranking de engajamento sobre pessoas na UI. */
+  "score-pessoal-na-interface": () => procurar(TSX, /\.engagement\b|mais engajados|Engajamento/),
   /* lei 8 e §8 do AGENTS: sem travessão, sem losango */
   "travessao-ou-losango": () => procurar(TSX, /[—–◆◇]/),
   /* §8: sem emoji (faixas principais) */

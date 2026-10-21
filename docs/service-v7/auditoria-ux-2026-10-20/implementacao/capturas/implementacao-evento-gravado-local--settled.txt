@@ -1,0 +1,47 @@
+- document:
+  - alert
+  - complementary:
+    - text: Igreja Teste Local Service
+    - button "Fechar menu": ✕
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 2"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Agenda
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "MM"
+  - main:
+    - text: Agenda
+    - heading "Cultos e Agenda Ajuda" [level=1]:
+      - text: Cultos e Agenda
+      - button "Ajuda": "?"
+    - button "+ Novo culto"
+    - button "Semana"
+    - button "Mês"
+    - button "Semana anterior"
+    - text: Esta semana
+    - button "Próxima semana"
+    - button "Culto de sexta 19:00 Sexta · 23/10/2026":
+      - text: Culto de sexta 19:00
+      - paragraph: Sexta · 23/10/2026
+    - button "Check-in QR"
+    - button "Arte"

@@ -1,0 +1,125 @@
+- document:
+  - complementary:
+    - text: CE.X Central Service
+    - button "CE.X Central Matriz · rede"
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 17"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - text: Início
+    - textbox "Buscar tela, membro, voluntário, time ou função..."
+    - button "AL Ana"
+  - main:
+    - heading "Boa noite, Ana Ajuda" [level=1]:
+      - text: Boa noite, Ana
+      - button "Ajuda": "?"
+    - paragraph: Semana de 19 a 25 de outubro. Culto de domingo manhã em 4 dias · faltam 9 vagas.
+    - button "Ver agenda"
+    - button "Montar escala"
+    - region "Saúde da igreja":
+      - heading "Saúde da igreja" [level=2]
+      - text: Hoje
+      - 'button "Membros registrados: 4. Ver a lista"': 4 Membros registrados
+      - 'button "Servindo em times: 4. Ver a lista"': 4 Servindo em times
+      - 'button "Em grupos: 2. Ver a lista"': 2 Em grupos
+      - 'button "Sem registro há 3 semanas ou mais: 1. Ver a lista"': 1 Sem registro há 3 semanas ou mais
+      - 'button "Ver o panorama: período, visitantes, decisões e caminhada →"'
+    - heading "Para resolver" [level=2]
+    - button "17 vagas abertas na escala · nesta semana Escalar →"
+    - button "1 visitante se cadastrou pelo link · esperando o 1º contato Ver →"
+    - button "1 pedido na caminhada · esperando sua aprovação Revisar →"
+    - text: Lista de cuidado sem registro há 3 semanas ou mais
+    - paragraph: Esta lista usa presenças registradas no Service. Falta de registro não confirma ausência. Confira com quem acompanha a pessoa antes de concluir.
+    - 'button "Diego Ferreira · sem registro há 3 semanas Último registro em 27/09/2026 · cuida: líder do grupo"'
+    - button "Registrar contato"
+    - button "Justificar por 30 dias"
+    - text: Aniversariantes da semana 1 hoje · 2 pessoas em 7 dias
+    - button "Diego Ferreira Hoje · faz 31 anos"
+    - button "Mandar parabéns"
+    - button "Bruno Costa Sexta, 23/10 · faz 39 anos"
+    - button "Mandar parabéns"
+    - button "Ver os aniversariantes do mês →"
+    - group: Revisar preparação da igreja
+    - text: Voluntários 4 de 6 cadastrados · 1 novo em 30 dias Confirmação 80% de 5 vagas escaladas nesta semana Visitantes em acompanhamento 4 todos com contato em dia
+    - button "Sobre estes números"
+    - text: Pendências da escala
+    - button "Escalar"
+    - text: Culto de domingo manhã · Dom · 10:00
+    - list "Cobertura por time":
+      - listitem:
+        - button "Louvor, 2 de 7 vagas preenchidas. Abrir as vagas": Louvor 2/7
+      - listitem:
+        - text: ·
+        - button "Recepção, 1 de 4 vagas preenchidas. Abrir as vagas": Recepção 1/4
+      - listitem:
+        - text: ·
+        - button "Mídia e Comunicação, 1 de 2 vagas preenchidas. Abrir as vagas": Mídia e Comunicação 1/2
+    - text: "! Vocal · Louvor Dom · 10:00"
+    - button "Escalar"
+    - text: "! Instrumentista · Louvor Dom · 10:00"
+    - button "Escalar"
+    - text: "! Operador · Mídia e Comunicação Dom · 10:00"
+    - button "Escalar"
+    - text: "! Recepcionista · Recepção Dom · 10:00"
+    - button "Escalar"
+    - text: "! Vocal · Louvor Dom · 19:00"
+    - button "Escalar"
+    - text: "! Instrumentista · Louvor Dom · 19:00"
+    - button "Escalar"
+    - text: Próximos cultos
+    - button "Agenda"
+    - button "Culto de domingo manhã Dom · 25/10/2026 · Templo principal Cobertura por time 10:00":
+      - text: Culto de domingo manhã Dom · 25/10/2026 · Templo principal
+      - list "Cobertura por time":
+        - listitem:
+          - button "Louvor, 2 de 7 vagas preenchidas. Abrir as vagas": Louvor 2/7
+        - listitem:
+          - text: ·
+          - button "Recepção, 1 de 4 vagas preenchidas. Abrir as vagas": Recepção 1/4
+        - listitem:
+          - text: ·
+          - button "Mídia e Comunicação, 1 de 2 vagas preenchidas. Abrir as vagas": Mídia e Comunicação 1/2
+      - text: 10:00
+      - button "QR check-in / presença"
+    - button "Culto de domingo noite Dom · 25/10/2026 · Templo principal Cobertura por time 19:00":
+      - text: Culto de domingo noite Dom · 25/10/2026 · Templo principal
+      - list "Cobertura por time":
+        - listitem:
+          - button "Louvor, 1 de 7 vagas preenchidas. Abrir as vagas": Louvor 1/7
+        - listitem:
+          - text: ·
+          - button "Mídia e Comunicação, 0 de 2 vagas preenchidas. Abrir as vagas": Mídia e Comunicação 0/2
+      - text: 19:00
+      - button "QR check-in / presença"
+    - text: Caminhada pendente ! Diego Ferreira · Fundamentos 10/11/2024 · Fiz Fundamentos na igreja anterior
+    - button "Rejeitar"
+    - button "Aprovar"
+    - text: Comunicação recente
+    - button "Ver tudo"
+    - button "Culto de domingo mudou para o salão 2 para todos · hoje"
+    - 'button "Retiro de jovens: inscrições abertas! para todos · ontem"'
+    - button "Escalas da semana disponíveis para voluntários · ontem"
+  - button "Ajuda": "?"
+  - navigation "Dados do demo":
+    - link "Dados do demo":
+      - /url: "?"
+    - link "Pior caso":
+      - /url: "?dados=pior"
+  - alert

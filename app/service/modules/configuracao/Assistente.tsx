@@ -4,24 +4,27 @@
    fase mostra o tempo estimado e termina num resumo em frase. As gravações
    são do painel (ServiceExactApp), que passa as ações prontas: este arquivo
    só desenha e decide a ordem. */
-import { useState } from "react";
+import { telefoneValido } from "../../lib/telefone";
+import { useRef, useState } from "react";
 import CepInput from "../../CepInput";
 import ChurchLockup from "../../ChurchLockup";
 import { ImageUpload } from "../../ImageUpload";
 import { Icon } from "../../lib/icons";
+import { formatDateBR, somaDias, todayISO } from "../../lib/date";
 import { plural } from "../../lib/plural";
 import { ACCENT_PRESETS, themeCss, type BrandCfg } from "../../lib/theme";
 import { useTermos } from "../../lib/vocabulario-context";
-import { FASES, HORARIOS, MODELOS_TIMES, datasDoHorario, fimDoAno, nomeDoCulto, resumoDosCultos, vagasDoModelo, type ModeloTime, type SetupEstado } from "./setup";
+import { encontroUtil, planejarEncontros, type EncontroPreparado, type RascunhoEncontro } from "./ativacao";
+import { FASES, MODELOS_TIMES, type ModeloTime, type SetupEstado } from "./setup";
 
 export type DadosIgreja = { nome: string; cep: string; endereco: string; bairro: string; cidade: string; estado: string };
 
 export function Assistente({
   estado, onEstado, igreja, logoUrl, brand, onSalvarDados, onLogo, onRemoverLogo, onCor,
-  timesExistentes, vagasExistentes, onCriarTimes, onCriarCultos, onDesfazer, onConvidar, onIr,
+  timesExistentes, encontros, onCriarTimes, onCriarCultos, onAtualizarEncontro, onVerEncontro, onConvidar, onIr,
 }: {
   estado: SetupEstado;
-  onEstado: (e: SetupEstado) => Promise<void>;
+  onEstado: (e: SetupEstado) => Promise<string | null>;
   igreja: DadosIgreja;
   logoUrl?: string | null;
   brand: BrandCfg;
@@ -30,12 +33,13 @@ export function Assistente({
   onRemoverLogo: () => Promise<void>;
   onCor: (hex: string) => Promise<string | null>;
   timesExistentes: string[];
-  vagasExistentes: number;
+  encontros: EncontroPreparado[];
+  onVerEncontro: (id: string) => void;
   onCriarTimes: (modelos: ModeloTime[]) => Promise<{ ids: string[]; error?: string }>;
-  onCriarCultos: (cultos: { nome: string; data: string; hora: string }[]) => Promise<{ ids: string[]; error?: string }>;
-  onDesfazer: (tabela: "ministries" | "events", ids: string[]) => Promise<void>;
-  onConvidar: (nome: string, telefone: string) => Promise<string | null>;
-  onIr: (rota: "escalas" | "painel" | "times") => void;
+  onCriarCultos: (cultos: EncontroPreparado[]) => Promise<{ ids: string[]; error?: string }>;
+  onAtualizarEncontro: (encontro: EncontroPreparado) => Promise<string | null>;
+  onConvidar: (nome: string, telefone: string) => Promise<{ memberId?: string; error?: string; alreadyHasAccess?: boolean }>;
+  onIr: (rota: "escalas" | "painel" | "times" | "cultos") => void;
 }) {
   const { termo, comTermos: ct } = useTermos();
   const [fase, setFase] = useState<1 | 2 | 3>(estado.fase);
@@ -48,84 +52,111 @@ export function Assistente({
   const [cor, setCor] = useState<string>(brand.accent ?? "");
   /* fase 2 */
   const existe = (nome: string) => timesExistentes.some((t) => t.trim().toLowerCase() === nome.toLowerCase());
-  const [horarios, setHorarios] = useState<string[]>([]);
-  const [ate, setAte] = useState(fimDoAno());
-  const [modelos, setModelos] = useState<string[]>(() => MODELOS_TIMES.filter((m) => !existe(m.nome)).map((m) => m.id));
-  const [criados, setCriados] = useState<{ times: string[]; cultos: string[] } | null>(null);
+  const uteis = encontros.filter((e) => encontroUtil(e)).sort((a, b) => (a.data + a.hora).localeCompare(b.data + b.hora));
+  const [selecionado, setSelecionado] = useState(estado.primeiroEventoId ?? "");
+  const [rascunho, setRascunho] = useState<RascunhoEncontro>(estado.rascunho ?? { nome: termo("culto"), data: "", hora: "", local: igreja.endereco, repetir: false, ate: somaDias(todayISO(), 30) });
+  const [modelos, setModelos] = useState<string[]>([]);
+  const [timesFeitos, setTimesFeitos] = useState<string[]>([]);
+  const [criados, setCriados] = useState<string[]>([]);
+  const [confirmados, setConfirmados] = useState<EncontroPreparado[]>([]);
+  const [editando, setEditando] = useState<string | null>(null);
+  const idsDaTentativa = useRef<Record<string, string>>({});
+  const operando = useRef(false);
+  const atual = confirmados.find((e) => e.id === selecionado && encontroUtil(e)) ?? uteis.find((e) => e.id === selecionado);
+  const registrado = encontros.find((e) => e.id === selecionado);
+  const plano = planejarEncontros(rascunho);
+  const setEncontro = (patch: Partial<RascunhoEncontro>) => setRascunho((r) => ({ ...r, ...patch }));
+  const ajustarEncontro = (e: EncontroPreparado) => { setRascunho({ ...e, repetir: false, ate: somaDias(e.data || todayISO(), 30) }); setEditando(e.id); setErro(""); };
   /* fase 3 */
   const [convNome, setConvNome] = useState("");
   const [convTel, setConvTel] = useState("");
   const [convidados, setConvidados] = useState<string[]>([]);
 
-  const escolhidos = HORARIOS.filter((h) => horarios.includes(h.id));
-  const modelosEscolhidos = MODELOS_TIMES.filter((m) => modelos.includes(m.id) && !existe(m.nome));
-  const vagas = vagasExistentes + modelosEscolhidos.reduce((s, m) => s + vagasDoModelo(m), 0);
-  const frase = resumoDosCultos(escolhidos, ate, vagas, termo("culto", { plural: true }).toLowerCase());
+  const modelosEscolhidos = MODELOS_TIMES.filter((m) => modelos.includes(m.id) && !existe(m.nome) && !timesFeitos.includes(m.id));
 
   const avancar = async (n: 1 | 2 | 3, texto: string, pulou = false) => {
     const feitas = pulou ? estado.feitas : [...new Set([...estado.feitas, n])];
     const prox = (n < 3 ? n + 1 : 3) as 1 | 2 | 3;
+    const error = await onEstado({ ...estado, fase: prox, feitas, pulou: pulou || estado.pulou, primeiroEventoId: atual?.id ?? estado.primeiroEventoId, rascunho: atual ? undefined : rascunho, concluido: n === 3 ? !!atual : estado.concluido });
+    if (error) { setErro(error); return false; }
     setResumo((r) => ({ ...r, [n]: texto }));
-    await onEstado({ fase: prox, feitas, pulou: pulou || estado.pulou, concluido: n === 3 ? true : estado.concluido });
     setErro("");
     if (n < 3) setFase(prox);
+    return true;
+  };
+  const executar = async (acao: () => Promise<void>) => {
+    if (operando.current) return;
+    operando.current = true;
+    setOcupado(true);
+    setErro("");
+    try { await acao(); } catch { setErro("Não conseguimos concluir agora. Seus dados continuam na tela. Tente novamente."); }
+    finally { operando.current = false; setOcupado(false); }
   };
 
   const salvarFase1 = async () => {
     if (!dados.nome.trim()) { setErro("Digite o nome da igreja."); return; }
-    setOcupado(true);
     const e1 = await onSalvarDados(dados);
     const e2 = !e1 && cor && cor !== brand.accent ? await onCor(cor) : null;
-    setOcupado(false);
     if (e1 || e2) { setErro(e1 ?? e2 ?? ""); return; }
     const corNome = ACCENT_PRESETS.find((p) => p.hex.toLowerCase() === (cor || "").toLowerCase())?.label;
     await avancar(1, `Pronto: ${dados.nome.trim()}${dados.cidade ? `, em ${dados.cidade}${dados.estado ? `/${dados.estado}` : ""}` : ""}${corNome ? `, com a cor ${corNome}` : ""}.`);
   };
 
   const criarFase2 = async () => {
-    setOcupado(true);
-    setErro("");
-    const t = modelosEscolhidos.length ? await onCriarTimes(modelosEscolhidos) : { ids: [] as string[] };
-    if (t.error) { setOcupado(false); setErro(t.error); return; }
-    const lista = escolhidos.flatMap((h) => datasDoHorario(h, ate).map((data) => ({ nome: nomeDoCulto(h, termo("culto")), data, hora: h.hora })));
-    const c = lista.length ? await onCriarCultos(lista) : { ids: [] as string[] };
-    setOcupado(false);
-    if (c.error) { setErro(c.error); if (t.ids.length) await onDesfazer("ministries", t.ids); return; }
-    setCriados({ times: t.ids, cultos: c.ids });
+    if (plano.erro) { setErro(plano.erro); return; }
+    if (editando) {
+      const e = { ...plano.encontros[0], id: editando };
+      const error = await onAtualizarEncontro(e);
+      if (error) { setErro(error); return; }
+      setConfirmados((v) => [...v.filter((item) => item.id !== e.id), e]);
+      setSelecionado(e.id);
+      setEditando(null);
+      return;
+    }
+    const lista = plano.encontros.map((e) => {
+      const key = JSON.stringify(e);
+      return { ...e, id: idsDaTentativa.current[key] ?? (idsDaTentativa.current[key] = crypto.randomUUID()) };
+    });
+    const c = await onCriarCultos(lista);
+    if (c.error || !c.ids.length) { setErro(c.error ?? "Nenhum encontro foi criado. Tente novamente."); return; }
+    const salvos = lista.map((e, i) => ({ ...e, id: c.ids[i] }));
+    setCriados(c.ids);
+    setConfirmados(salvos);
+    setSelecionado(c.ids[0]);
+    const error = await onEstado({ ...estado, fase: 2, rascunho: undefined, primeiroEventoId: c.ids[0] });
+    if (error) setErro(`O encontro foi criado. Não foi possível salvar seu ponto de retomada: ${error}`);
   };
-  const desfazerFase2 = async () => {
-    if (!criados) return;
-    setOcupado(true);
-    await onDesfazer("events", criados.cultos);
-    await onDesfazer("ministries", criados.times);
-    setOcupado(false);
-    setCriados(null);
+  const criarTimes = async () => {
+    const t = await onCriarTimes(modelosEscolhidos);
+    setTimesFeitos((v) => [...v, ...modelosEscolhidos.slice(0, t.ids.length).map((m) => m.id)]);
+    if (t.error) setErro(`O encontro continua na agenda. Alguns times não ficaram prontos: ${t.error} Tente os modelos restantes ou confira em Times.`);
   };
 
   const convidar = async () => {
     if (convNome.trim().split(/\s+/).length < 2) { setErro("Coloque nome e sobrenome."); return; }
-    if (convTel.replace(/\D/g, "").length < 10) { setErro("Coloque o telefone com DDD."); return; }
-    setOcupado(true);
-    const e = await onConvidar(convNome.trim(), convTel);
-    setOcupado(false);
-    if (e) { setErro(e); return; }
-    setErro("");
-    setConvidados((l) => [...l, convNome.trim()]);
+    if (!telefoneValido(convTel)) { setErro("Coloque o telefone com DDD. Para outro país, inclua + e o código do país."); return; }
+    const r = await onConvidar(convNome.trim(), convTel);
+    if (r.error) { setErro(r.error); return; }
+    setConvidados((l) => [...l.filter((item) => !item.startsWith(`${convNome.trim()}:`)), `${convNome.trim()}: ${r.alreadyHasAccess ? "já tem acesso, link de entrada preparado" : "convite preparado, aguarda envio e aceite"}`]);
     setConvNome("");
     setConvTel("");
   };
 
   const faseInfo = FASES[fase - 1];
   return (
-    <div className="content wide">
+    <div className="content wide service-setup-editorial">
       {cor && <style dangerouslySetInnerHTML={{ __html: themeCss({ ...brand, accent: cor }) }} />}
       <div className="ph">
         <div>
           <div className="ph-eyebrow">Configuração</div>
-          <h1 className="ph-title">Vamos deixar a igreja pronta</h1>
-          <p className="ph-sub">Três fases curtas. Dá para pular qualquer uma e continuar depois do ponto em que parou.</p>
+          <h1 className="ph-title">Vamos começar pela sua igreja</h1>
+          <p className="ph-sub">Identifique sua igreja, prepare os próximos encontros e convide quem vai ajudar. Você pode continuar depois.</p>
         </div>
-        <div className="ph-actions"><button className="btn btn-sec" type="button" onClick={() => onIr("painel")}>Continuar depois</button></div>
+        <div className="ph-actions"><button className="btn btn-sec" type="button" disabled={ocupado || !!editando} onClick={() => executar(async () => {
+          const error = await onEstado({ ...estado, fase, primeiroEventoId: atual?.id ?? estado.primeiroEventoId, rascunho: atual ? undefined : rascunho });
+          if (error) { setErro(error); return; }
+          onIr("painel");
+        })}>{ocupado ? "Salvando..." : "Continuar depois"}</button></div>
       </div>
 
       <ol className="setup-fases">
@@ -133,7 +164,7 @@ export function Assistente({
           const feita = estado.feitas.includes(f.n);
           return (
             <li key={f.n} className={`${fase === f.n ? "on" : ""}${feita ? " feita" : ""}`}>
-              <button type="button" onClick={() => { setErro(""); setFase(f.n as 1 | 2 | 3); }} aria-current={fase === f.n ? "step" : undefined}>
+              <button type="button" disabled={ocupado || (!!editando && f.n !== 2)} onClick={() => { setErro(""); setFase(f.n as 1 | 2 | 3); }} aria-current={fase === f.n ? "step" : undefined}>
                 <span className="setup-n">{feita ? <Icon name="ok" size={14} /> : f.n}</span>
                 <span className="setup-ft"><b>{ct(f.t)}</b><span>{feita ? "feita" : `cerca de ${plural(f.min, "minuto")}`}</span></span>
               </button>
@@ -142,24 +173,27 @@ export function Assistente({
         })}
       </ol>
 
-      <div className="cfg-card setup-card">
+      <div className="cfg-card service-setup-body">
         <div className="cfg-card-t">{`Fase ${fase} · ${ct(faseInfo.t)}`}</div>
         <div className="cfg-card-s">{`${ct(faseInfo.s)}. Cerca de ${plural(faseInfo.min, "minuto")}.`}</div>
 
         {fase === 1 && (
           <div className="setup-body">
-            <div className="field"><label className="field-label req">Nome da igreja</label><input className="input" value={dados.nome} onChange={(e) => setDados((d) => ({ ...d, nome: e.target.value }))} /></div>
+            <div className="field"><label className="field-label req" htmlFor="setup-nome">Nome da igreja</label><input id="setup-nome" className="input" value={dados.nome} onChange={(e) => setDados((d) => ({ ...d, nome: e.target.value }))} /></div>
+            <details className="service-setup-options"><summary>Endereço da igreja (opcional)</summary>
             <div className="field">
-              <label className="field-label">CEP</label>
-              <CepInput value={dados.cep} onChange={(v) => setDados((d) => ({ ...d, cep: v }))}
+              <label className="field-label" htmlFor="setup-cep">CEP</label>
+              <CepInput id="setup-cep" value={dados.cep} onChange={(v) => setDados((d) => ({ ...d, cep: v }))}
                 onResult={(r) => { if (r) setDados((d) => ({ ...d, endereco: r.street ?? d.endereco, bairro: r.neighborhood ?? d.bairro, cidade: r.city ?? d.cidade, estado: r.state ?? d.estado })); }} />
               <div className="field-hint">O CEP preenche o endereço.</div>
             </div>
-            <div className="field"><label className="field-label">Endereço</label><input className="input" value={dados.endereco} onChange={(e) => setDados((d) => ({ ...d, endereco: e.target.value }))} /></div>
+            <div className="field"><label className="field-label" htmlFor="setup-endereco">Endereço</label><input id="setup-endereco" className="input" value={dados.endereco} onChange={(e) => setDados((d) => ({ ...d, endereco: e.target.value }))} /></div>
             <div className="setup-2col">
-              <div className="field"><label className="field-label">Cidade</label><input className="input" value={dados.cidade} onChange={(e) => setDados((d) => ({ ...d, cidade: e.target.value }))} /></div>
-              <div className="field"><label className="field-label">Estado</label><input className="input" value={dados.estado} maxLength={2} onChange={(e) => setDados((d) => ({ ...d, estado: e.target.value.toUpperCase() }))} /></div>
+              <div className="field"><label className="field-label" htmlFor="setup-cidade">Cidade</label><input id="setup-cidade" className="input" value={dados.cidade} onChange={(e) => setDados((d) => ({ ...d, cidade: e.target.value }))} /></div>
+              <div className="field"><label className="field-label" htmlFor="setup-estado">Estado</label><input id="setup-estado" className="input" value={dados.estado} maxLength={2} onChange={(e) => setDados((d) => ({ ...d, estado: e.target.value.toUpperCase() }))} /></div>
             </div>
+            </details>
+            <details className="service-setup-options"><summary>Logo e cor da igreja (opcional)</summary>
             <ImageUpload label="Logo" hint="Aparece ao lado de Service no app, no login e no convite." url={logoUrl} onUpload={onLogo} onRemove={onRemoverLogo} />
             <div className="field">
               <label className="field-label">Cor da igreja</label>
@@ -171,6 +205,7 @@ export function Assistente({
               </div>
               <div className="field-hint">A tela já mostra a cor escolhida. Ajuste fino em Configurações › Personalização.</div>
             </div>
+            </details>
             <div className="setup-previa" aria-hidden="true">
               <ChurchLockup size="sm" logoUrl={logoUrl} name={dados.nome || "Sua igreja"} />
               <span className="btn btn-pri btn-sm">{ct("Confirmar presença no {culto}")}</span>
@@ -180,74 +215,75 @@ export function Assistente({
 
         {fase === 2 && (
           <div className="setup-body">
-            {!criados ? (
-              <>
-                <div className="field">
-                  <label className="field-label">{ct("Quando acontecem os {cultos}")}</label>
-                  <div className="seg-check">
-                    {HORARIOS.map((h) => (
-                      <button key={h.id} type="button" className={`seg-chip ${horarios.includes(h.id) ? "on" : ""}`} aria-pressed={horarios.includes(h.id)}
-                        onClick={() => setHorarios((l) => (l.includes(h.id) ? l.filter((x) => x !== h.id) : [...l, h.id]))}>{h.rotulo}</button>
-                    ))}
-                  </div>
-                </div>
-                <div className="field"><label className="field-label">Criar até</label><input className="input" type="date" value={ate} onChange={(e) => setAte(e.target.value)} /></div>
-                <div className="field">
-                  <label className="field-label">Times a partir de modelos</label>
-                  <div className="setup-modelos">
-                    {MODELOS_TIMES.map((m) => {
-                      const ja = existe(m.nome);
-                      const on = modelos.includes(m.id) && !ja;
-                      return (
-                        <button key={m.id} type="button" className={`setup-modelo${on ? " on" : ""}`} aria-pressed={on} disabled={ja}
-                          onClick={() => setModelos((l) => (l.includes(m.id) ? l.filter((x) => x !== m.id) : [...l, m.id]))}>
-                          <Icon name={m.icone} size={18} />
-                          <span><b>{m.nome}</b><span>{ja ? "já existe" : m.funcoes.map((f) => f.nome).join(", ")}</span></span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-                {(frase || modelosEscolhidos.length > 0) && (
-                  <p className="setup-frase">{[frase, modelosEscolhidos.length ? `E os times ${modelosEscolhidos.map((m) => m.nome).join(", ").replace(/, ([^,]*)$/, " e $1")}, com as funções de cada um.` : ""].filter(Boolean).join(" ")}</p>
-                )}
-              </>
+            {atual && !editando ? (
+              <section className="service-setup-result" aria-label="Encontro preparado">
+                <p className="cfg-card-s">Encontro disponível na agenda da igreja</p>
+                <h2>{atual.nome}</h2>
+                <p>{formatDateBR(atual.data)} · {atual.hora}</p><p>{atual.local}</p>
+                <p className="field-hint">O membro encontra o encontro e seu local na Agenda. Não há pedido de confirmação de presença nesta criação.</p>
+                <button className="btn btn-sec" type="button" disabled={ocupado} onClick={() => onVerEncontro(atual.id)}>Conferir encontro</button>
+                {estado.primeiroEventoId === atual.id && <button className="btn btn-sec" type="button" disabled={ocupado} onClick={() => ajustarEncontro(atual)}>Ajustar dados do encontro</button>}
+                {criados.length > 1 && <p className="field-hint">{plural(criados.length, "encontro preparado")}. A repetição termina em {formatDateBR(rascunho.ate)}.</p>}
+              </section>
             ) : (
-              <p className="setup-frase">{`Criamos ${plural(criados.cultos.length, termo("culto").toLowerCase(), termo("culto", { plural: true }).toLowerCase())} e ${plural(criados.times.length, "time")}.`}</p>
+              <>
+                {!editando && registrado && !atual && <div className="service-setup-result"><p>O encontro registrado precisa de revisão antes de concluir a ativação.</p><button className="btn btn-sec" type="button" disabled={ocupado} onClick={() => ajustarEncontro(registrado)}>Revisar encontro cadastrado</button></div>}
+                {!editando && uteis.length > 0 && <div className="field"><label htmlFor="setup-existente" className="field-label">Continuar com um encontro já preparado</label><select id="setup-existente" className="select" value={selecionado} onChange={(e) => setSelecionado(e.target.value)}><option value="">Preparar um novo encontro</option>{uteis.map((e) => <option key={e.id} value={e.id}>{e.nome} · {formatDateBR(e.data)} · {e.hora}</option>)}</select></div>}
+                <div className="field"><label htmlFor="setup-encontro-nome" className="field-label req">Nome do encontro</label><input id="setup-encontro-nome" className="input" value={rascunho.nome} onChange={(e) => setEncontro({ nome: e.target.value })} /></div>
+                <div className="setup-2col">
+                  <div className="field"><label htmlFor="setup-encontro-data" className="field-label req">Data</label><input id="setup-encontro-data" className="input" type="date" min={todayISO()} value={rascunho.data} onChange={(e) => setEncontro({ data: e.target.value })} /></div>
+                  <div className="field"><label htmlFor="setup-encontro-hora" className="field-label req">Horário de início</label><input id="setup-encontro-hora" className="input" type="time" value={rascunho.hora} onChange={(e) => setEncontro({ hora: e.target.value })} /></div>
+                </div>
+                <div className="field"><label htmlFor="setup-encontro-local" className="field-label req">Local do encontro</label><input id="setup-encontro-local" className="input" value={rascunho.local} placeholder="Nome do lugar e endereço" onChange={(e) => setEncontro({ local: e.target.value })} /><p className="field-hint">Informe um lugar que as pessoas consigam encontrar.</p></div>
+                {!editando && <details className="service-setup-options"><summary>Repetir este encontro (opcional)</summary>
+                  <label className="service-setup-check"><input type="checkbox" checked={rascunho.repetir} onChange={(e) => setEncontro({ repetir: e.target.checked })} />Repetir semanalmente neste dia e horário</label>
+                  {rascunho.repetir && <div className="field"><label htmlFor="setup-ate" className="field-label">Repetir até</label><input id="setup-ate" className="input" type="date" min={rascunho.data} value={rascunho.ate} onChange={(e) => setEncontro({ ate: e.target.value })} /></div>}
+                </details>}
+                {!plano.erro && <section className="service-setup-preview" aria-label="Prévia para o membro"><p className="field-label">Assim aparece na agenda</p><h2>{rascunho.nome}</h2><p>{formatDateBR(rascunho.data)} · {rascunho.hora}</p><p>{rascunho.local}</p><p className="field-hint">{editando ? "Os ajustes atualizam este encontro, sem criar outro." : `${plural(plano.encontros.length, "encontro")} ${plano.encontros.length === 1 ? "será disponibilizado" : "serão disponibilizados"} na agenda. A equipe pode ser organizada depois.`}</p></section>}
+                {plano.erro && <p className="field-hint">{plano.erro}</p>}
+              </>
             )}
+            {atual && !editando && <details className="service-setup-options"><summary>Preparar times agora (opcional)</summary>
+              <p className="field-hint">O encontro já pode ser encontrado pelos membros. Escolha somente os times que você quer organizar agora.</p>
+              <div className="setup-modelos">{MODELOS_TIMES.map((m) => {
+                const ja = existe(m.nome) || timesFeitos.includes(m.id);
+                return <button key={m.id} type="button" className={`setup-modelo${modelos.includes(m.id) && !ja ? " on" : ""}`} aria-pressed={modelos.includes(m.id) && !ja} disabled={ocupado || ja} onClick={() => setModelos((l) => l.includes(m.id) ? l.filter((x) => x !== m.id) : [...l, m.id])}><Icon name={m.icone} size={18} /><span><b>{m.nome}</b><span>{ja ? "já existe" : m.funcoes.map((f) => f.nome).join(", ")}</span></span></button>;
+              })}</div>
+              <button className="btn btn-sec" type="button" disabled={ocupado || !modelosEscolhidos.length} onClick={() => executar(criarTimes)}>{ocupado ? "Preparando..." : "Preparar times escolhidos"}</button>
+              {timesFeitos.length > 0 && <p className="field-hint" role="status">{plural(timesFeitos.length, "time preparado")}. Marque os responsáveis em Times.</p>}
+            </details>}
           </div>
         )}
 
         {fase === 3 && (
           <div className="setup-body">
-            <p className="cfg-card-s" style={{ marginTop: 0 }}>Cadastre cada líder com nome e telefone. O convite abre no WhatsApp com o link de acesso; a pessoa cria o e-mail e a senha no link. Depois, marque quem lidera cada time em Times.</p>
+            <p className="cfg-card-s" style={{ marginTop: 0 }}>Convide uma pessoa para entrar no app. O WhatsApp abre com uma mensagem pronta: você ainda precisa enviá-la. O convite não concede papel de liderança nem vincula a um time.</p>
             <div className="setup-2col">
-              <div className="field"><label className="field-label">Nome e sobrenome</label><input className="input" value={convNome} onChange={(e) => setConvNome(e.target.value)} /></div>
-              <div className="field"><label className="field-label">Telefone (WhatsApp)</label><input className="input" type="tel" value={convTel} placeholder="(11) 90000-0000" onChange={(e) => setConvTel(e.target.value)} /></div>
+              <div className="field"><label className="field-label" htmlFor="setup-convite-nome">Nome e sobrenome</label><input id="setup-convite-nome" className="input" value={convNome} onChange={(e) => setConvNome(e.target.value)} /></div>
+              <div className="field"><label className="field-label" htmlFor="setup-convite-tel">Telefone (WhatsApp)</label><input id="setup-convite-tel" className="input" type="tel" value={convTel} placeholder="(11) 90000-0000" onChange={(e) => setConvTel(e.target.value)} /></div>
             </div>
-            <button className="btn btn-sec" type="button" disabled={ocupado} onClick={convidar}><Icon name="whatsapp" size={15} /> Convidar pelo WhatsApp</button>
-            {convidados.length > 0 && <p className="setup-frase">{`Convites enviados: ${convidados.join(", ")}.`}</p>}
-            <div className="setup-2col" style={{ marginTop: 14 }}>
-              <button className="btn btn-sec" type="button" onClick={() => onIr("times")}>Marcar os líderes em Times</button>
-              <button className="btn btn-sec" type="button" onClick={() => onIr("escalas")}>Montar a primeira escala →</button>
-            </div>
+            <button className="btn btn-sec" type="button" disabled={ocupado} onClick={() => executar(convidar)}><Icon name="whatsapp" size={15} /> Convidar pelo WhatsApp</button>
+            {convidados.length > 0 && <p className="setup-frase">{`Convites preparados no WhatsApp: ${convidados.join(", ")}.`}</p>}
+            {timesExistentes.length > 0 && atual && <details className="service-setup-options"><summary>Definir responsáveis e organizar a equipe</summary>
+              <p className="field-hint">O acesso ao app é separado da responsabilidade por um time. Confira quem lidera e depois prepare a escala do encontro.</p>
+              <div className="setup-2col"><button className="btn btn-sec" type="button" disabled={ocupado} onClick={() => onIr("times")}>Definir líderes em Times</button><button className="btn btn-sec" type="button" disabled={ocupado} onClick={() => onIr("escalas")}>Preparar escala</button></div>
+            </details>}
           </div>
         )}
 
         {resumo[fase] && <p className="setup-frase">{resumo[fase]}</p>}
-        {erro && <p className="field-error">{erro}</p>}
+        {erro && <p className="field-error" role="alert">{erro}</p>}
 
         <div className="setup-foot">
-          <button className="btn btn-ghost" type="button" disabled={ocupado} onClick={() => (fase < 3 ? avancar(fase, "", true) : onIr("painel"))}>{fase < 3 ? "Pular esta fase" : "Fazer depois"}</button>
-          {fase === 1 && <button className="btn btn-pri" type="button" disabled={ocupado} onClick={salvarFase1}>{ocupado ? "Salvando..." : "Salvar e continuar →"}</button>}
-          {fase === 2 && !criados && <button className="btn btn-pri" type="button" disabled={ocupado || (!escolhidos.length && !modelosEscolhidos.length)} onClick={criarFase2}>{ocupado ? "Criando..." : "Criar"}</button>}
-          {fase === 2 && criados && (
-            <>
-              <button className="btn btn-sec" type="button" disabled={ocupado} onClick={desfazerFase2}>Desfazer</button>
-              <button className="btn btn-pri" type="button" disabled={ocupado} onClick={() => avancar(2, `Criamos ${plural(criados.cultos.length, termo("culto").toLowerCase(), termo("culto", { plural: true }).toLowerCase())} e ${plural(criados.times.length, "time")}.`)}>Continuar →</button>
-            </>
-          )}
-          {fase === 3 && <button className="btn btn-pri" type="button" disabled={ocupado} onClick={async () => { await avancar(3, `Você convidou ${plural(convidados.length, "líder", "líderes")}.`); onIr("painel"); }}>Concluir</button>}
+          {editando ? <button className="btn btn-ghost" type="button" disabled={ocupado} onClick={() => { setEditando(null); setErro(""); }}>Cancelar ajuste</button> : <button className="btn btn-ghost" type="button" disabled={ocupado} onClick={() => executar(async () => { if (fase < 3) await avancar(fase, "", true); else onIr("painel"); })}>{fase < 3 ? "Pular esta fase" : "Fazer depois"}</button>}
+          {fase === 1 && <button className="btn btn-pri" type="button" disabled={ocupado} onClick={() => executar(salvarFase1)}>{ocupado ? "Salvando..." : "Salvar e continuar →"}</button>}
+          {fase === 2 && (!atual || editando) && <button className="btn btn-pri" type="button" disabled={ocupado || !!plano.erro} onClick={() => executar(criarFase2)}>{ocupado ? "Salvando..." : editando ? "Salvar ajustes" : "Disponibilizar na agenda"}</button>}
+          {fase === 2 && atual && !editando && <button className="btn btn-pri" type="button" disabled={ocupado} onClick={() => executar(async () => { await avancar(2, `Encontro preparado: ${atual.nome}.`); })}>Continuar →</button>}
+          {fase === 3 && <button className="btn btn-pri" type="button" disabled={ocupado} onClick={() => executar(async () => {
+            if (!atual) { setErro("Prepare ou escolha um encontro antes de encerrar a ativação."); setFase(2); return; }
+            if (await avancar(3, "Confira a agenda e acompanhe os acessos em Pessoas.", convidados.length === 0)) onIr("cultos");
+          })}>{ocupado ? "Salvando..." : atual ? "Concluir e ver agenda" : "Preparar primeiro encontro"}</button>}
+
         </div>
       </div>
     </div>

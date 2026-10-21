@@ -1,0 +1,60 @@
+- document:
+  - alert
+  - complementary:
+    - text: Outra Igreja Local Service
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - text: Ministério
+    - textbox "Buscar tela, membro, voluntário, time ou função..."
+    - button "OO Otávio"
+  - main:
+    - text: Ministério
+    - heading "Times Ajuda" [level=1]:
+      - text: Times
+      - button "Ajuda": "?"
+    - paragraph: 2 times
+    - button "+ Novo time"
+    - text: Pedidos para servir · 1 Pedidos feitos pelo app. A pessoa já cumpre os pré-requisitos que a igreja definiu para servir e para o time. PI Pessoa Internacional quer servir em Acolhimento Jornada
+    - button "Recusar"
+    - button "Aprovar"
+    - 'button "LJ Acolhimento Jornada Líder: Líder Jornada Acolher quem chega à igreja. 1 voluntários 0 funções"':
+      - text: "LJ Acolhimento Jornada Líder:"
+      - emphasis: Líder Jornada
+      - text: Acolher quem chega à igreja. 1 voluntários 0 funções
+    - button "Time Convites Jornada Sem líder · Definir Receber pessoas da comunidade. 0 voluntários 0 funções"
+    - text: Times e funções Cada time tem um líder e suas funções. As funções alimentam a escala e as habilidades de cada voluntário. Acolhimento Jornada · líder Líder Sem funções
+    - button "Editar"
+    - text: Time Convites Jornada Sem funções
+    - button "Editar"
+    - text: Papéis ministeriais Os títulos que a sua igreja reconhece (Pastor, Diácono, Presbítero...). Atribuídos aos membros na ficha de cada um. Nenhum papel cadastrado.
+    - button "+ Papel ministerial"
+    - text: Requisitos para servir O que a pessoa precisa ter feito antes de pedir para entrar em qualquer time pelo app. Cada time ainda pode ter os próprios requisitos, em Editar time. Etapas da caminhada
+    - button "Decisão"
+    - button "Batismo"
+    - button "Fundamentos"
+    - button "GC"
+    - button "Servindo"
+    - text: "Sem pré-requisito: qualquer membro pode."
+    - button "Salvar requisitos"
+    - text: "Etiquetas Etiquetas livres como Jovens, Kids ou Casais. Uma pessoa pode ter várias: servem para juntar pessoas de times diferentes num mesmo grupo. Nenhuma etiqueta cadastrada."
+    - button "+ Etiqueta"
+  - button "Ajuda": "?"

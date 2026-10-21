@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { Caret } from "../lib/icons";
 import { quandoMensagem, joinDot } from "../lib/date";
@@ -11,8 +11,8 @@ import type { Board, Card, Chat, ChatMember, M, Message, Ministry, P } from "./t
 
 // ── aba: Tarefas ──────────────────────────────────────────────────────────────
 
-export function TabTarefas({ person, cards, boards, onAddCardComment }: { person: P; cards: Card[]; boards: Board[]; onAddCardComment?: (cardId: string, author: string, body: string) => void }) {
-  const [open, setOpen] = useState<string | null>(null);
+export function TabTarefas({ person, cards, boards, onAddCardComment, initialCardId }: { initialCardId?: string | null; person: P; cards: Card[]; boards: Board[]; onAddCardComment?: (cardId: string, author: string, body: string) => void }) {
+  const [open, setOpen] = useState<string | null>(initialCardId && cards.some((c) => c.id === initialCardId && c.assignees.includes(person.id)) ? initialCardId : null);
   const [commentTexts, setCommentTexts] = useState<Record<string, string>>({});
   const [savedComments, setSavedComments] = useState<Record<string, { author: string; body: string }[]>>({});
   const [localCards, setLocalCards] = useState<Card[]>(cards);
@@ -55,13 +55,23 @@ export function TabTarefas({ person, cards, boards, onAddCardComment }: { person
     onAddCardComment?.(cardId, author, t);
   };
 
+  const targetRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!initialCardId || !targetRef.current) return;
+    let active = true;
+    createServiceBrowserClient().schema("service").from("card_comments").select("author,body").eq("card_id", initialCardId).order("created_at", { ascending: true }).then(({ data }) => { if (active && data) setSavedComments((p) => ({ ...p, [initialCardId]: data as { author: string; body: string }[] })); });
+    targetRef.current?.scrollIntoView({ block: "start" });
+    targetRef.current?.focus({ preventScroll: true });
+    return () => { active = false; };
+  }, [initialCardId]);
+
   const cardEl = (c: Card) => {
     const board = boards.find((b) => b.id === c.board_id);
     const isOpen = open === c.id;
     const isLate = c.moved_days_ago !== null && c.moved_days_ago > 7;
     return (
       <div className={`m-task ${isLate ? "late" : ""}`} key={c.id}>
-        <button className="m-task-head" onClick={() => toggleOpen(c.id)}>
+        <button ref={c.id === initialCardId ? targetRef : undefined} type="button" aria-expanded={isOpen} className="m-task-head" onClick={() => toggleOpen(c.id)}>
           <span className={`prio-dot prio-${c.priority ?? "media"}`} aria-hidden="true" />
           <div className="m-task-main">
             <div className="m-task-title">{c.title}</div>

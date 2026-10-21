@@ -1,0 +1,922 @@
+{
+  "date": "2026-10-20",
+  "commit": "4772268968bf42c7ce5b99fefada6757de91fb79",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "33f838da21a984e03532b35fb311ef9e6e0b95471f71fee2b4c8dddad7d9370b"
+    },
+    {
+      "path": "app/api/service/cep-lookup/route.ts",
+      "sha256": "44c1c7a64326a2fea2869b51dad845b3b4dad118283fb5d3e923d9d8c3adcfde"
+    },
+    {
+      "path": "app/api/service/cnpj-lookup/route.ts",
+      "sha256": "14a7bbb4aa04e1578958adbcc967ecff8e14f91c22ba355d83b0c249bd043058"
+    },
+    {
+      "path": "app/api/service/cron/lembretes/route.ts",
+      "sha256": "95e091ec0a9dacc56fff133b69fb978bf4bd1b843557221f9864babf7bfd7c24"
+    },
+    {
+      "path": "app/api/service/entrada/route.ts",
+      "sha256": "88a5cbb940070792b86230c0ad5ae4f125d2e40b0327c9a581815160ef9c3931"
+    },
+    {
+      "path": "app/api/service/members/accept-invite/route.ts",
+      "sha256": "bf48087db4f4e75040dfaa68e30d01df21e035f267cebadcb25a4fd923386fb0"
+    },
+    {
+      "path": "app/api/service/members/invite/route.ts",
+      "sha256": "fc9a5ae7f08f4b9bc620c17082fa509b302361c66980a0d2f7853fe4c65beea9"
+    },
+    {
+      "path": "app/api/service/push/notify/route.ts",
+      "sha256": "442b44b82bb20383966fec8bbf23b0ed6ed5453d5010bdcbd905f2fb5996465b"
+    },
+    {
+      "path": "app/api/service/push/subscribe/route.ts",
+      "sha256": "216989660073fdeb6ff33e4d981ff09010e896cafed33740c1e6ae77abe290bf"
+    },
+    {
+      "path": "app/api/service/push/unsubscribe/route.ts",
+      "sha256": "6cefc89cb7374b1efb21518954777a25ea654376b8fbff6e58e9117f16e7638b"
+    },
+    {
+      "path": "app/service/AccentField.tsx",
+      "sha256": "dd704854ce208ac3e95fc88292238f549e0c47294c2c4648fdadc98744dfab8f"
+    },
+    {
+      "path": "app/service/AccessContext.tsx",
+      "sha256": "5c53c8ec5118f20e455e0a20cde7be0a7fee7ad06883a74cc1c97b909bc50c87"
+    },
+    {
+      "path": "app/service/AulaCheckin.tsx",
+      "sha256": "c801cd054f91b146b5a807d5f1e9b1f9b81232ffe8d6087adde6702124c44437"
+    },
+    {
+      "path": "app/service/AuthShell.tsx",
+      "sha256": "b6ac2dd0934c0d86b1586dea375b99728f3dc301ceb3e6c1e0d08e43d6cc85eb"
+    },
+    {
+      "path": "app/service/CepInput.tsx",
+      "sha256": "1f0cb1907be7ab3c1ac10a656f6866620c2f51f95c3688825391720d1b17b50d"
+    },
+    {
+      "path": "app/service/CheckIn.tsx",
+      "sha256": "9629a24dedfd6688da696c1bb9f013fd5d600d4e54d423edb2bc4cee7a81eebb"
+    },
+    {
+      "path": "app/service/ChurchLockup.tsx",
+      "sha256": "38883ae7aa216aa1ec6bb6400ce3d8066419c08b42f28dda81f0b277a4b8d245"
+    },
+    {
+      "path": "app/service/CursoDrawer.tsx",
+      "sha256": "216999824f3c7eb554319285d644ca642dd3a5db375479f6d13d2ba7382950d4"
+    },
+    {
+      "path": "app/service/CursoEditor.tsx",
+      "sha256": "ef61c6625e1fe33f1cdbaaa4c9616703cf5cdc9854e5128595c0fb5ae36eab8d"
+    },
+    {
+      "path": "app/service/DialogosAcessiveis.tsx",
+      "sha256": "3e8e69759e212ac077fd089fea75d5c1941845d43e0babedbede4430934a9f15"
+    },
+    {
+      "path": "app/service/EventoShare.tsx",
+      "sha256": "a9762854126db9d0eb66ca2d5545674e330c0876cf6f2f0abcfbdef26f18718f"
+    },
+    {
+      "path": "app/service/HelpSystem.tsx",
+      "sha256": "8cd350378fd996ae87a9117e8e3cb0d8e28e70d15cc60bc7f8c657c210ca5bb3"
+    },
+    {
+      "path": "app/service/IdentidadeFields.tsx",
+      "sha256": "7c0fa558d95452f1ea0c57fb0bbb5168f9899c0991c69267faa0efcf4ef5d4c4"
+    },
+    {
+      "path": "app/service/ImageCropper.tsx",
+      "sha256": "fad91c3ad61ff8ddd85b379b2149d0c4c93c6b5d11fc2c73b6b1521e1af1b014"
+    },
+    {
+      "path": "app/service/ImageUpload.tsx",
+      "sha256": "8212704c920dc952d691ac9c3b01f17b270f3198e81aafb7b171d69d2bbe3386"
+    },
+    {
+      "path": "app/service/KidsCheckin.tsx",
+      "sha256": "b46a1dc048e418b1da4982c4283a805b58477a3f7bef9d5bea5811f30d048849"
+    },
+    {
+      "path": "app/service/MobileApp.tsx",
+      "sha256": "9376c7d278f4f17c5a802cb99cbb0332391b1f952a174424431377f5bf4a61fa"
+    },
+    {
+      "path": "app/service/PasswordInput.tsx",
+      "sha256": "87125f0e08fa64c3d7252b1b864494af38bde682597ac969d2876bec7183e8cf"
+    },
+    {
+      "path": "app/service/PhotoPicker.tsx",
+      "sha256": "dc2adf7671129daeab031bb7712cc1e3cabe0010536e48d723111013c105df33"
+    },
+    {
+      "path": "app/service/PublicPageEditor.tsx",
+      "sha256": "d95e81678d832da10a1277c56d94d81bf9cbdb5f7f930025d8b869b1ca905d2d"
+    },
+    {
+      "path": "app/service/PwaBootstrap.tsx",
+      "sha256": "496c13145e608c0ed1e7646b3868826f758a5821b520f22ac42a6d31fd657533"
+    },
+    {
+      "path": "app/service/RequisitosEditor.tsx",
+      "sha256": "2c1c8a1d2edf472daef819386f3a281e948171b422daf3e1ac778b1156a508ab"
+    },
+    {
+      "path": "app/service/ServiceExactApp.tsx",
+      "sha256": "a43bb2267c7dc15d4fa70a2ed975768890fc94f012e04cad85746d2b5480c48c"
+    },
+    {
+      "path": "app/service/ServiceTheme.tsx",
+      "sha256": "582e8fee23629bfc41f72a457ff9df48741b2152c5e8d33d1c47f5b872fe497d"
+    },
+    {
+      "path": "app/service/TextSizeSlider.tsx",
+      "sha256": "e7d45ab70cfc9ae121e87a9ced06e7eb38b9861c129ee0d10944ef5318d22e11"
+    },
+    {
+      "path": "app/service/ThemePicker.tsx",
+      "sha256": "9d201993ca9636a8e7696d354650016ece4580929b3b3f0be18702ae0bf7356b"
+    },
+    {
+      "path": "app/service/TopUserMenu.tsx",
+      "sha256": "9b7663cc20ac1108cd887772127898b316c86e93671b7bcf5893ed7218a90bad"
+    },
+    {
+      "path": "app/service/aula-checkin/AulaCheckinLandingClient.tsx",
+      "sha256": "6c4c06d6e6aea58b94b9937968a5a83a4aba47984bf984a9c2262da75bedbc06"
+    },
+    {
+      "path": "app/service/aula-checkin/page.tsx",
+      "sha256": "73f868271191711a1255c790ad120f85ecc9a73ef1649b2f1b497304f7417bb7"
+    },
+    {
+      "path": "app/service/carteirinha/[codigo]/page.tsx",
+      "sha256": "7dd37f4863ee0de7327a1f8961df4e1edffa4b7fc11cc9267b6fd7ce8fd9935a"
+    },
+    {
+      "path": "app/service/checkin/CheckinLandingClient.tsx",
+      "sha256": "3f5deaffe1043358b41a575134d272138397a68738719ac7d366ef1ec310c769"
+    },
+    {
+      "path": "app/service/checkin/page.tsx",
+      "sha256": "dc48440bfbcb88f6dd702b163d61976473f854d50548e292d249ee66f1f16efd"
+    },
+    {
+      "path": "app/service/conexao/page.tsx",
+      "sha256": "7c8823d5148cf18f85ae979cf5db0aa5836b8129ea77259efb10b8134e19b888"
+    },
+    {
+      "path": "app/service/convite/ConviteForm.tsx",
+      "sha256": "6bb6346f43dbd0e00191d1f4c4da678e07d157d0800510867f3e51f5b2358dce"
+    },
+    {
+      "path": "app/service/convite/page.tsx",
+      "sha256": "669f68d20a0aca5147416235b04b190d1f47c80d1eedd69fed3f1a639f4c1bee"
+    },
+    {
+      "path": "app/service/demo/page.tsx",
+      "sha256": "637ae5c4ec35c83557289c2ffad53829a2cb6af6ad8e646ba2cbdc3326895df0"
+    },
+    {
+      "path": "app/service/demo/pior-caso.ts",
+      "sha256": "ec2ebc05ee7fe8ad14d2dfe198fee95fd10a0ab6a544706ca62e296675836a66"
+    },
+    {
+      "path": "app/service/kids-checkin/KidsCheckinClient.tsx",
+      "sha256": "ea0d0e91c04dc3b8506e3ae32708347605e435b8aeabed1d6ee2a0d600f49a4d"
+    },
+    {
+      "path": "app/service/kids-checkin/page.tsx",
+      "sha256": "5441ea3e1ffdff106ae8d4d345f1000f48fe862a814543a81e4f511aa3fa4564"
+    },
+    {
+      "path": "app/service/layout.tsx",
+      "sha256": "684698ade5103a803a202dd02d66c48dada2c0f84619ac4085eab4f923394917"
+    },
+    {
+      "path": "app/service/lib/agenda.ts",
+      "sha256": "7178ea7d20b0b8c91cb2fb93deeee8280384efa2683a52e59357013942d496e2"
+    },
+    {
+      "path": "app/service/lib/aulas.ts",
+      "sha256": "5b1ff9f85149e1dcd8763bc66dd743ac8907f0ee2fdbf4469c6cd3367ce17fe4"
+    },
+    {
+      "path": "app/service/lib/auth-church.ts",
+      "sha256": "7825a903dd646486cd5dca203132c71af9f3dfa6e82447c4df6c38abcfe7f0a6"
+    },
+    {
+      "path": "app/service/lib/avisar.ts",
+      "sha256": "c834b3b0112112362bb45834124a4f0487d5d88e012e469d3b2f3aaa11a59406"
+    },
+    {
+      "path": "app/service/lib/cliente.ts",
+      "sha256": "13ab6ebb2585647994197c91dd2ddb7496f5a08ca1ad11c11a2665061d470e63"
+    },
+    {
+      "path": "app/service/lib/color.ts",
+      "sha256": "8facacf3d90f7dd6a5f035cf3f9f85fb411b2079cedc4a32ea5f98020872c57f"
+    },
+    {
+      "path": "app/service/lib/contexto-dia.ts",
+      "sha256": "7ffb92260b30a25e79a7800b461193373f4f6b5a6a8dfad5df912d0bd7071e29"
+    },
+    {
+      "path": "app/service/lib/csv.ts",
+      "sha256": "c5c7435070d46fc350a16109d9941aed8ea00a6fe7f3b279d83843792d5dcd39"
+    },
+    {
+      "path": "app/service/lib/date.ts",
+      "sha256": "a74cba6cc35b37ae13fa254103cf14b9be95fd7344eead18e0aa578c063f412b"
+    },
+    {
+      "path": "app/service/lib/destinatario.ts",
+      "sha256": "10cc6270492a6713280519873705d372d9d04cc0d793d52468cd76faae9cf43e"
+    },
+    {
+      "path": "app/service/lib/enquetes.ts",
+      "sha256": "c761e0ca86c83201ad4fc4f5d73b1a9cb0610019981ca56db9c22331c7d5c0e1"
+    },
+    {
+      "path": "app/service/lib/historico.ts",
+      "sha256": "feaf573be5663a050374b64f1fb18c830e32b0965e11bbdaa71b106d6dbae99d"
+    },
+    {
+      "path": "app/service/lib/html-seguro.ts",
+      "sha256": "cec7e2cc691823747c6d05114197572bb3e603b2bef7c92902831e91ee1f55ff"
+    },
+    {
+      "path": "app/service/lib/icons.tsx",
+      "sha256": "02c2b7a2e30eb56d950e1694bd093ba98776084b5c7b5a30a57455a35f020446"
+    },
+    {
+      "path": "app/service/lib/ics.ts",
+      "sha256": "22dd8e95d968bf9a8757958f3e62ab05cd297c49bdab695840a1e30c64c2ac13"
+    },
+    {
+      "path": "app/service/lib/importar-membros.ts",
+      "sha256": "b7a965232fa5346d6f9fac750df7cebeb8933f4b5d3882d7f3820a8f8f6efe9d"
+    },
+    {
+      "path": "app/service/lib/iniciais.ts",
+      "sha256": "f2c0e3de0ecf85d69cbcb8d2e360d1c83ee3c038561aff5ab494f55931a13980"
+    },
+    {
+      "path": "app/service/lib/instalar.ts",
+      "sha256": "5138ca4c3e51305c86073624c26bb09f7f660c78215aa6eaa14d2d36ee19785e"
+    },
+    {
+      "path": "app/service/lib/kids-checkin.ts",
+      "sha256": "a42a3350a9dac370a616f36a9c16b6fa9a77ab71cfcf176894016f3a83ce54fe"
+    },
+    {
+      "path": "app/service/lib/kids.ts",
+      "sha256": "2858a0b77c5161c6f5736fc0a26a5dc7b8dc66d03abe80f56752334d005d1f24"
+    },
+    {
+      "path": "app/service/lib/medicao.ts",
+      "sha256": "4038e7d7ca58f245cdc5970c411f896f22e9a615105bf7866d5d5788da85006c"
+    },
+    {
+      "path": "app/service/lib/notify-push.ts",
+      "sha256": "c63dc45069da53482109e6484133935161f6597bdf04ad81737d7e4f7cfe6be4"
+    },
+    {
+      "path": "app/service/lib/pesquisas.ts",
+      "sha256": "13693800a359bc051d6a1bcba8c77bbf154ead674a1886b8baafa421c1f2d83e"
+    },
+    {
+      "path": "app/service/lib/pessoas.ts",
+      "sha256": "68a9e6f3a5ca428ee6dabdde95a79eec53922e3908c1b756b777b8e293c6ed24"
+    },
+    {
+      "path": "app/service/lib/planilha.ts",
+      "sha256": "ccfd207102dd0c781ceeb2a8727d0e18db32910341e2c05a245631906eb4dc1e"
+    },
+    {
+      "path": "app/service/lib/plural.ts",
+      "sha256": "14fb43d325dc30b7380c1e2fcbbb92bc146edeb4a6e465a872bbba54d226d681"
+    },
+    {
+      "path": "app/service/lib/requirements.ts",
+      "sha256": "dce0a71dae1f5df99bc3fc37031d9c41f7540a5edce7fe3fd3216d198da0f296"
+    },
+    {
+      "path": "app/service/lib/settings-field.ts",
+      "sha256": "bbfe5d45285865134bc13490944fb52a638a14c1ce435b2147d0b578c5570491"
+    },
+    {
+      "path": "app/service/lib/silencio.ts",
+      "sha256": "98574b5affed759dba0086ee9c90ba1e0a8d65b7cdcda1e8154593b1e4a14846"
+    },
+    {
+      "path": "app/service/lib/supabase-browser.ts",
+      "sha256": "f8702f648e2fe55bcebfa4f4c28ac97307841b6611f92ad06264f2d014d6c45a"
+    },
+    {
+      "path": "app/service/lib/supabase.ts",
+      "sha256": "d16d7e03137fd28bc83dae322737fd4580f2d3b9527045bf25e8686e56428cc8"
+    },
+    {
+      "path": "app/service/lib/telefone.ts",
+      "sha256": "a3f6dd2f46e78f04ca6b4adbdb066b81d64a308836d3b55b68686d12d0686d34"
+    },
+    {
+      "path": "app/service/lib/text-scale.ts",
+      "sha256": "fda8719caa041abe258ad7055801d572c22657d13299ab4eb3c7561114b006e3"
+    },
+    {
+      "path": "app/service/lib/theme.ts",
+      "sha256": "a50d22e7604c74d3e5db67eb0abe16fd9b54f742e4c3c37becd7883e51df2114"
+    },
+    {
+      "path": "app/service/lib/upload-image.ts",
+      "sha256": "f73cb1b3c4d08415333b9dbdea8d3133edbb5ae20a6f416885c2036b5a99bb6d"
+    },
+    {
+      "path": "app/service/lib/video.ts",
+      "sha256": "ebf81bd889c98be509cdd3672034f67951d913d89af4398f2af0de0ca0732184"
+    },
+    {
+      "path": "app/service/lib/vocabulario-context.tsx",
+      "sha256": "941debeda51a5277862ff8b76f224a5fb014f62ea3d228c4b64cb0095745caf2"
+    },
+    {
+      "path": "app/service/lib/vocabulario.ts",
+      "sha256": "14c123b84d258d777d14ec7282c68c8fd8836c366117fd877c966db5fed62cd2"
+    },
+    {
+      "path": "app/service/login/LoginForm.tsx",
+      "sha256": "854d77fc491dbd2ee536fd6e6684a6978844e40be912ecf5173dfea5649349d3"
+    },
+    {
+      "path": "app/service/login/page.tsx",
+      "sha256": "04243b36916d791e96c9d7ff4a82893d110efcd99743fb1777acedca176051ea"
+    },
+    {
+      "path": "app/service/login/useServiceLoginForm.ts",
+      "sha256": "e844054212b7cb79bf5a809192cc64e876aab4ab28f1fb25d1a1d86a588008ff"
+    },
+    {
+      "path": "app/service/membro/Agenda.tsx",
+      "sha256": "8f5c83ca4a026874f5d36c23ffef9215d9d483e91145cc29b83f40e590cd248a"
+    },
+    {
+      "path": "app/service/membro/Biblia.tsx",
+      "sha256": "4d128ac6aced46a7e88cabaf1e09bba2c9399dc7f8e96876211fcf51970ed9f2"
+    },
+    {
+      "path": "app/service/membro/Caminhada.tsx",
+      "sha256": "bd5b67b3b87f2f443bd507e68ce1b2bf20731a4d1f68cda0d61d6368782d0158"
+    },
+    {
+      "path": "app/service/membro/Conversas.tsx",
+      "sha256": "2d8f89f93ed284eeb5afc96d61a0a08568b1688f25b24ff945f5c048b0a7b2b7"
+    },
+    {
+      "path": "app/service/membro/Cursos.tsx",
+      "sha256": "eefde684d9aa9b15d1ad855fb5f1ba16e367da8445f8dd41bb2adc44470cb738"
+    },
+    {
+      "path": "app/service/membro/Inicio.tsx",
+      "sha256": "e9f5d50188ad7329ef65561eb72a926d9977fd6eec2912ad91bceee141e70a21"
+    },
+    {
+      "path": "app/service/membro/Kids.tsx",
+      "sha256": "41cebf07d391eba609555bb996c9a529f91934ceabd9a56d9b245e04faae4c24"
+    },
+    {
+      "path": "app/service/membro/Mural.tsx",
+      "sha256": "4574dbb7cadc595f003794a058251afbe261cf755a7f7610bfc43afbcd6f05a0"
+    },
+    {
+      "path": "app/service/membro/Onboarding.tsx",
+      "sha256": "143dd3f35e44d3467ae37785a5ed60890a29ecd5d264108edf3c41288426ae63"
+    },
+    {
+      "path": "app/service/membro/Perfil.tsx",
+      "sha256": "fccd05de5df764f252f24e2e9248c67100a6d1e333252d16d3cd724bcbe3b9ea"
+    },
+    {
+      "path": "app/service/membro/Visitantes.tsx",
+      "sha256": "47dcb591150df8a4509a415b8a5168fc7e289ac5622ab0c890fe880e6225ef09"
+    },
+    {
+      "path": "app/service/membro/comum.tsx",
+      "sha256": "83c58960beff340a21fc92b135d479e170f418ed43232ea5d926d67be99a5f05"
+    },
+    {
+      "path": "app/service/membro/tipos.ts",
+      "sha256": "91b2030dfe2ef7f9ab9aae74307710ff7bf570fd32ff93f13dad275d5bd317c9"
+    },
+    {
+      "path": "app/service/modules/_modelo/manifest.ts",
+      "sha256": "6e6e67c24800daf5a498252c3a8d4548fc0a83aafdf8181eae45d5ef1e5a3bbc"
+    },
+    {
+      "path": "app/service/modules/acesso/manifest.ts",
+      "sha256": "f768345d971f625d0dd1f473af92f21b055331e88ad2480aad489c848c39da67"
+    },
+    {
+      "path": "app/service/modules/aniversarios/Aniversariantes.tsx",
+      "sha256": "e98ad67c0f15be9fd7e15fae85d06a8919e68645b40f35a28e9a51d7563c66c9"
+    },
+    {
+      "path": "app/service/modules/aniversarios/CartaoDoTime.tsx",
+      "sha256": "9293874f00d556fdd7f677a8b9d9a5002b79ec48d3ec398e87bb7b4f230b26ff"
+    },
+    {
+      "path": "app/service/modules/aniversarios/aniversarios.ts",
+      "sha256": "e234d395ed6c3d8bc6c686a6faa3b31456b12d8e41227c712d397e2636c3ce68"
+    },
+    {
+      "path": "app/service/modules/aniversarios/manifest.ts",
+      "sha256": "b85e89922eb759b5503648aa44e1e0066c3a5cc5024f6589bacfb1242dd28cb0"
+    },
+    {
+      "path": "app/service/modules/batismos/manifest.ts",
+      "sha256": "0334a28682522bf82b15bedb278b7721751aaca76acea978c578c0d458c15438"
+    },
+    {
+      "path": "app/service/modules/biblia/manifest.ts",
+      "sha256": "2a606959b9fc5f56eac6c151396e85c1cb22f5f45991f219baca3d2e07eb6212"
+    },
+    {
+      "path": "app/service/modules/configuracao/Assistente.tsx",
+      "sha256": "6c6ee04e2e35366b8225a1d287c7c5c5c39445e0a2499fe19b924eb0b36b2348"
+    },
+    {
+      "path": "app/service/modules/configuracao/manifest.ts",
+      "sha256": "e5f9f2cafe8d69cdb8b04fbe0c6e8e67583c25f4422f8e1a83d620105e7f8d22"
+    },
+    {
+      "path": "app/service/modules/configuracao/setup.ts",
+      "sha256": "76cdc657f4b44af1c5e2b9b1252e9f20983236cde7d0854f632839c106c71c61"
+    },
+    {
+      "path": "app/service/modules/contribuir/Contribuir.tsx",
+      "sha256": "d42efdc0472e2cb378cc7f60cd9f9b99d3b052964fe3678f5d16ecf9bab4aea3"
+    },
+    {
+      "path": "app/service/modules/contribuir/ContribuirConfig.tsx",
+      "sha256": "3ed05395fb03ef4b4d77d0ec5ad4404d1eb4fc096eac6f47397ab24dff1056b4"
+    },
+    {
+      "path": "app/service/modules/contribuir/manifest.ts",
+      "sha256": "feee0f9b0ae512d8a8c51460c41735a1da87ddb151544f2b216e029f8d26b06b"
+    },
+    {
+      "path": "app/service/modules/contribuir/pix.ts",
+      "sha256": "23daac593417f2e39f778c1b8525ce06a2273d04b85f5394ae1e6eb0191ed60e"
+    },
+    {
+      "path": "app/service/modules/conversas/manifest.ts",
+      "sha256": "56a2241ea8b67bc7cba63622dc11ce215c9360acb4ae24f3bf3b399049840e2f"
+    },
+    {
+      "path": "app/service/modules/cuidado/Cuidado.tsx",
+      "sha256": "a99a5ddec21331b060b2da581ec39afeaf0bd3f0d682de0ffda9fe351dba3245"
+    },
+    {
+      "path": "app/service/modules/cuidado/cuidado.ts",
+      "sha256": "46bf8e3db846e97a1e4e3e46cf2cfded97f593005e452fcd7822298a21d0493a"
+    },
+    {
+      "path": "app/service/modules/cuidado/manifest.ts",
+      "sha256": "65977156be773c050d39146e464bb00e5c980be4926235c4641656e0015c7213"
+    },
+    {
+      "path": "app/service/modules/cultos/manifest.ts",
+      "sha256": "c94f3d3e5badfe69c13546192a7a938000f3d2e095ce3b89033b390e1f78784b"
+    },
+    {
+      "path": "app/service/modules/cursos/manifest.ts",
+      "sha256": "f47ceb433812fdc7bb96fccf0e124e4fcff6932cbc819d1a463ad5c8ee961571"
+    },
+    {
+      "path": "app/service/modules/decisoes/manifest.ts",
+      "sha256": "82f538e29c0e5bb27cf5659f6e28e59eb2da60a18394e11184e3f98cc1816bdd"
+    },
+    {
+      "path": "app/service/modules/define.ts",
+      "sha256": "77179884c47b5ca5a18beee53e81335467345038352e299c6bff2e4d67e3b66f"
+    },
+    {
+      "path": "app/service/modules/ensaios/manifest.ts",
+      "sha256": "b3d36d7a680e82ee32de0c89226c43bd28f2d6606e30797776c5fdc30a837f3f"
+    },
+    {
+      "path": "app/service/modules/entrada/EntradaConfig.tsx",
+      "sha256": "37981ea564d96b0519e38f84f542790b5b8974e460919f841a1f734c515a2dd9"
+    },
+    {
+      "path": "app/service/modules/entrada/NovosCadastros.tsx",
+      "sha256": "933d07ea7a0c4f15a23fe4278251aa5a445c04b8d8183427a370988b13ddd12b"
+    },
+    {
+      "path": "app/service/modules/entrada/manifest.ts",
+      "sha256": "a9de52f4b94ece280a5c413afb38fff52ca763da8cab39dbb2a3c88de97af22f"
+    },
+    {
+      "path": "app/service/modules/escalas/Cobertura.tsx",
+      "sha256": "ac9d960c69c750ab3539ca28d267c0bb085b34a9a82cd94c29d66aa0fbfd45d3"
+    },
+    {
+      "path": "app/service/modules/escalas/EscalaExtra.tsx",
+      "sha256": "dc86bd279c7b01d016f14a51d1e729bed7f5eafb32c025c7fcfc2d65be88b377"
+    },
+    {
+      "path": "app/service/modules/escalas/Escalas.tsx",
+      "sha256": "51419dcf4b3659a0c8ccd9afb2f8cccf80eec54290d28bc63b39931bd6d81151"
+    },
+    {
+      "path": "app/service/modules/escalas/GerarPeriodo.tsx",
+      "sha256": "9ed0cb102b3af3b55a6b1abbab5448006fe85ab6be2d1696659fd9709410d0ed"
+    },
+    {
+      "path": "app/service/modules/escalas/PublicarEscala.tsx",
+      "sha256": "107dc6ad2e77e51f7aee6883b8c4da694b0e3771a284d722ff0dc95ee35544c4"
+    },
+    {
+      "path": "app/service/modules/escalas/candidatos.ts",
+      "sha256": "bd8b9487a135b88bcaa084099df34a5efca387d9e3df6fb3172da989316c4e4c"
+    },
+    {
+      "path": "app/service/modules/escalas/cobertura.ts",
+      "sha256": "ea3a967a71389145abcea87dc8f3a1b4d4946b1b580d889b8a5b7a5669dbeab9"
+    },
+    {
+      "path": "app/service/modules/escalas/manifest.ts",
+      "sha256": "905f006016a934e82b4066687c9d5b945494af90627af970deb9f899c047af0d"
+    },
+    {
+      "path": "app/service/modules/escalas/periodo.ts",
+      "sha256": "fc87e64eca8a1cb1111f51ef00c2e40c40cb60318a30047996c3c195803f06e0"
+    },
+    {
+      "path": "app/service/modules/escalas/regras.ts",
+      "sha256": "f2184c23bd14bf5bb93aa5d07f7f1e6c9a37409e8720e7e42e3c3eedd2360b1f"
+    },
+    {
+      "path": "app/service/modules/escalas/rodizio.ts",
+      "sha256": "6c170dfcef3a941f1be2020d5ae813f77df611a1765ba7dfdf85b2ae3f92972c"
+    },
+    {
+      "path": "app/service/modules/espacos/manifest.ts",
+      "sha256": "727bb0bc81cbc674ec7a7411a382be2aba71ca54a213b6a4979a8c89c54fc5f3"
+    },
+    {
+      "path": "app/service/modules/fila.ts",
+      "sha256": "664031883342408dd271f07213cbf141cc2a621b016d5b16352230ed405d70e7"
+    },
+    {
+      "path": "app/service/modules/financeiro/Fase2.tsx",
+      "sha256": "8cdebc89556093b8b7e35c7dada2151998d27d74906fecae756b2705e6447f77"
+    },
+    {
+      "path": "app/service/modules/financeiro/Financeiro.tsx",
+      "sha256": "a6f58faf5dc2d7a8ad6de43b1f0a03ebe345eaf94da4db1a416ff8dee5528c7d"
+    },
+    {
+      "path": "app/service/modules/financeiro/Formularios.tsx",
+      "sha256": "d49a55fd5163f5ab7aae8f32e0944ebdf92266a464c4e5994f525d85cbbbe733"
+    },
+    {
+      "path": "app/service/modules/financeiro/dados.ts",
+      "sha256": "8028f12bd8466eec8e5bbba36f93b6f8b3476be9e63cbd4e56bc24ecf7cab839"
+    },
+    {
+      "path": "app/service/modules/financeiro/dinheiro.ts",
+      "sha256": "cf6b45760f4a4cb5cdf96049cc9a77709d5136ee53dcdc85660e7dda4915fbac"
+    },
+    {
+      "path": "app/service/modules/financeiro/manifest.ts",
+      "sha256": "7d5de72584a238f69c975f7e633ff3ca48a7649cdc3e56e6315a45a4e9e59f40"
+    },
+    {
+      "path": "app/service/modules/grupos/manifest.ts",
+      "sha256": "139bf6522ab0f0c892841eb41f7599eea9c960b9f4df72047e6e9ae1435457a3"
+    },
+    {
+      "path": "app/service/modules/historia/manifest.ts",
+      "sha256": "dd8b9c82ab5d002ec085d678b73dc2e5353d362a1f999563c2004a21424800e9"
+    },
+    {
+      "path": "app/service/modules/identidade/manifest.ts",
+      "sha256": "a0ede7633a380dbb6f4d014eb56a0a0b6ade4bd65dc4a8f8d7dae82e361781a5"
+    },
+    {
+      "path": "app/service/modules/igreja/manifest.ts",
+      "sha256": "632715bc235ead70cb3c84d5b8c2387243470a11a026ba125f67d9f6d0008c42"
+    },
+    {
+      "path": "app/service/modules/inicio/Saude.tsx",
+      "sha256": "45c83fdcb42ef2ad56066f26d5a72280da1d2e11368cea8e0524e397aaec5802"
+    },
+    {
+      "path": "app/service/modules/inicio/manifest.ts",
+      "sha256": "25d2d28ddf640002d53013a3b94bcba026c3eef324cc4d34ca5f1325db89473a"
+    },
+    {
+      "path": "app/service/modules/inicio/saude.ts",
+      "sha256": "c8aad01c31f2d7b529f7045e97db2bd73e4a8312dc28d5a7b7ce28d79d83697c"
+    },
+    {
+      "path": "app/service/modules/kids/manifest.ts",
+      "sha256": "324644223f745d84f558971feea334fc41f8f5dd9b373b1a05f96931e4cd5352"
+    },
+    {
+      "path": "app/service/modules/mural/Boletim.tsx",
+      "sha256": "553c08289b08ecff377279a5daced81d66f58904f28c0fbd69ff336a4fb700cc"
+    },
+    {
+      "path": "app/service/modules/mural/Mural.tsx",
+      "sha256": "30fe191917a749fb0d98718516b085a924a0b69057a33722003fbab935fd31d2"
+    },
+    {
+      "path": "app/service/modules/mural/boletim-imagem.ts",
+      "sha256": "56c020c6cedce7ef79fac555076558cdf22017e9120ae9177e5f0fb3d4714e86"
+    },
+    {
+      "path": "app/service/modules/mural/boletim.ts",
+      "sha256": "0ce1b6595a418ebdae706cf61dbf3bb7295654f181a2fbb12c1a4cc00fbc2472"
+    },
+    {
+      "path": "app/service/modules/mural/estado.ts",
+      "sha256": "fadca55968806437dca91c6b50af054c4e91fb826baca5095afc7c17745d8e80"
+    },
+    {
+      "path": "app/service/modules/mural/manifest.ts",
+      "sha256": "1e56d7bb60f1eeff2c9f823ee16a802e13e7f76c2a2dde778db3a331de740d3e"
+    },
+    {
+      "path": "app/service/modules/oracao/Oracao.tsx",
+      "sha256": "5da0a14e66563430b9c58863c55312141ee2dd158114a542cc26a8924bcda33c"
+    },
+    {
+      "path": "app/service/modules/oracao/OracaoPainel.tsx",
+      "sha256": "a3d2f31fc0c8d3536574be9c1aec3afd63ced1957391c307f35f9ba949eb71b8"
+    },
+    {
+      "path": "app/service/modules/oracao/manifest.ts",
+      "sha256": "c2b78fd22e788795ea5ec4870c32f690c5618bc5ed0bb01f305ce1e8a26f3d55"
+    },
+    {
+      "path": "app/service/modules/oracao/oracao.ts",
+      "sha256": "a57a28764fbf3a973058c09711d4ba1e5f5017981190a29aa469cf1f9d2703a6"
+    },
+    {
+      "path": "app/service/modules/pagina/manifest.ts",
+      "sha256": "edb9fcc1cb0402ef0dc3f805a5047b201338e9ba6a807ee6681909dca831b06a"
+    },
+    {
+      "path": "app/service/modules/perfil/manifest.ts",
+      "sha256": "1f045b3f7130fa6d44d9001ad6d366fbb53520577d1adb29f810a312cde17f99"
+    },
+    {
+      "path": "app/service/modules/pesquisas/manifest.ts",
+      "sha256": "13f88f03d246565642f20c4377d06dc44d7eeb20f942563ce048e208e4ff16b0"
+    },
+    {
+      "path": "app/service/modules/pessoas/ImportarMembros.tsx",
+      "sha256": "3ee9a41eedb67cc82102f0dbc63ffdce14e6bcf8c71e8cb3d83a1c9c1a8dfc1b"
+    },
+    {
+      "path": "app/service/modules/pessoas/Pessoas.tsx",
+      "sha256": "bb2c94a9ced03a62790687e0c434e7d26188a7f5fc4349bfa7f10af20808e10a"
+    },
+    {
+      "path": "app/service/modules/pessoas/acesso-msg.tsx",
+      "sha256": "ee0be37ab964c933d19969362fc685773065345ed0589cf033e2b973fdc6a509"
+    },
+    {
+      "path": "app/service/modules/pessoas/manifest.ts",
+      "sha256": "b0621353295b81228495a6faea93c3b971a1db65d75b6ee80cb2e86a7b4ddc39"
+    },
+    {
+      "path": "app/service/modules/quadros/manifest.ts",
+      "sha256": "365208229812e5d361b7b894f1836ccb292ef79ce6b61d6af85f8754e93c5a92"
+    },
+    {
+      "path": "app/service/modules/registry.ts",
+      "sha256": "2f62cf608a02aa67b43d9cd875d24fb6d2cb9537aaef3548c7d2f1b8c63e2400"
+    },
+    {
+      "path": "app/service/modules/relatorios/MetricasInternas.tsx",
+      "sha256": "f3d22bad1a5eb70a519faa52e817c5cfdde10ddeeca26db0a04c156cb253e335"
+    },
+    {
+      "path": "app/service/modules/relatorios/manifest.ts",
+      "sha256": "c33a0ce2c437c486491c04ad691cb57190f1b4bb44fb8a2301370ea1a8b9dded"
+    },
+    {
+      "path": "app/service/modules/reunioes/manifest.ts",
+      "sha256": "f725e9669104e7bf117b8b36704224e0fc8b2dd271196914ec5b21b94e1c511a"
+    },
+    {
+      "path": "app/service/modules/secretaria/Carteirinha.tsx",
+      "sha256": "303eb9b1c9c1fbf95a1b5657a14e1d8ae4301655ec215d6af3c6a0190b3fe700"
+    },
+    {
+      "path": "app/service/modules/secretaria/RegistroForm.tsx",
+      "sha256": "150e86645ca4a185e4c64e0993b6d8355fa5ba71e8b80705be5dfd0aabcf04b5"
+    },
+    {
+      "path": "app/service/modules/secretaria/Secretaria.tsx",
+      "sha256": "072b7a21d047c0f0bcd40abaec97f1952df7d83b77772261dfda359dcf7007c0"
+    },
+    {
+      "path": "app/service/modules/secretaria/livros.ts",
+      "sha256": "fef7e3743e2653a3f83627381e248204faa251f94df1efe44e2d3b1b1dd39fc3"
+    },
+    {
+      "path": "app/service/modules/secretaria/manifest.ts",
+      "sha256": "3d1afecd6644105293621b103176c9a52205ee39656f079e945f849d540d2a61"
+    },
+    {
+      "path": "app/service/modules/times/manifest.ts",
+      "sha256": "a4eb24a4f373b646300d70bbc83268b67ab2c24926a69d5a8ff40c34f38b9153"
+    },
+    {
+      "path": "app/service/modules/visitantes/AutocadastroDados.tsx",
+      "sha256": "b0cb8504ce790cb83b0d9d395a1139e2bb80f77bd4c63e6490f9926ca1d4b676"
+    },
+    {
+      "path": "app/service/modules/visitantes/AutocadastroForm.tsx",
+      "sha256": "a88b56bf62550af2d59e351b00fce65468999b48425a7d2258f6c45d6eaf9ca6"
+    },
+    {
+      "path": "app/service/modules/visitantes/AutocadastroPainel.tsx",
+      "sha256": "d1d0f119aabee259ab487d6721184983624dede5703dc8352c716ac40411d8a1"
+    },
+    {
+      "path": "app/service/modules/visitantes/autocadastro.ts",
+      "sha256": "c3ae9ca2507942047ec180ff217d799911d3156fbcad5371bdbe76b6c1c37e1d"
+    },
+    {
+      "path": "app/service/modules/visitantes/manifest.ts",
+      "sha256": "f11980fbea4a204084bdbfba4b72001584c97ed9c288c053f0d0406569f1ae78"
+    },
+    {
+      "path": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "sha256": "93c045c5abb0b7f4e4b5042eb965a483ddeb2af933dc3c6e4364979e33996eeb"
+    },
+    {
+      "path": "app/service/nova-senha/page.tsx",
+      "sha256": "bcde5b2300a2854f810b86eadbc4ea0bb111e38bd7dc90e83b511a25c6a210fe"
+    },
+    {
+      "path": "app/service/onboarding/BootstrapChurchForm.tsx",
+      "sha256": "ea2117166951abbbc4843a6ff64ab812394a214dea9913634e8c29f910875d72"
+    },
+    {
+      "path": "app/service/onboarding/ConvitesPendentes.tsx",
+      "sha256": "2011576271d6bf3b0f3afbc7d9b924e7769e000fa4b25e2f1325cd6ef879d710"
+    },
+    {
+      "path": "app/service/onboarding/PedidoEmEspera.tsx",
+      "sha256": "4cad47b35ca7fb382b8f687fa260309185c8f2924fca9dac83dd92efe4438513"
+    },
+    {
+      "path": "app/service/onboarding/page.tsx",
+      "sha256": "dacd528f4cafaf0fa21d9ba07d474c4fec90959c00f986b9e7b1bc69e1707c8b"
+    },
+    {
+      "path": "app/service/page.tsx",
+      "sha256": "9b4dcb7b14e50bd517251c42adf6098b9547a7c701d507c0e5cf62f72671db91"
+    },
+    {
+      "path": "app/service/painel/caminhada.ts",
+      "sha256": "6c03767a45c6960ebb60af62bde9e5dfefc0575d21010eff71cdbe49126c2cc2"
+    },
+    {
+      "path": "app/service/painel/campos.tsx",
+      "sha256": "1cafac5eaddc430f7691aa7ad3b8e948472a57e01c8b713d71eaba8eecb54dd0"
+    },
+    {
+      "path": "app/service/painel/comum.tsx",
+      "sha256": "6c68b65853ff4cf81ce640bab5bc9f7ea65c72fe93318c63df18831895a297f2"
+    },
+    {
+      "path": "app/service/painel/erros.ts",
+      "sha256": "aa845a3e645ad22f9043ab91c69ff78c12ba341cba73c5ec9d08e760d0b27c9a"
+    },
+    {
+      "path": "app/service/painel/form/FormScreen.tsx",
+      "sha256": "d41002f1cb8fe3b4bb2f1b0350cfee50c5e5176429287b18b4506f417526c421"
+    },
+    {
+      "path": "app/service/painel/imprimir.tsx",
+      "sha256": "4a0d44fdc6529737da88f01320f8f013790730055e9951cf937b23794976598f"
+    },
+    {
+      "path": "app/service/painel/telas/Agenda.tsx",
+      "sha256": "c79ff82bbe80cd9329efeb94ac5e461edd7be5200f2290a93eccefe2a6a0cd7a"
+    },
+    {
+      "path": "app/service/painel/telas/Caminhada.tsx",
+      "sha256": "f41f32b12d18c529db5b85ba2883bf49a0cf4759ebb011dd3ce5e3b9d5ae3554"
+    },
+    {
+      "path": "app/service/painel/telas/Config.tsx",
+      "sha256": "4d89aad6b11397a6a3ff77587e50fac8d8a508f8c4029670cc810c77bc41f0d9"
+    },
+    {
+      "path": "app/service/painel/telas/Conversas.tsx",
+      "sha256": "8f1f0180eafa9e0810f9673f64f62b783fc18e0beeba0dd1a3de1f90f12a13c2"
+    },
+    {
+      "path": "app/service/painel/telas/Evento.tsx",
+      "sha256": "f1deca681936ee06d974027bcc8c9f3b5a2933e696a8a8f23048616e790f0122"
+    },
+    {
+      "path": "app/service/painel/telas/FichaPessoa.tsx",
+      "sha256": "8cf830a601ca25c0dbda44f52177320570da5c80d43a7945b0c9e8d74092907a"
+    },
+    {
+      "path": "app/service/painel/telas/Formacao.tsx",
+      "sha256": "d40b5f50cd9abbbfa451eb7b29c3e307634b6be3c07247630d6a82a554a3c95e"
+    },
+    {
+      "path": "app/service/painel/telas/Identidade.tsx",
+      "sha256": "5a97999480bb2da76345be962056f3740b490c328bcf8d02866f0d45c6ec2f6c"
+    },
+    {
+      "path": "app/service/painel/telas/Inicio.tsx",
+      "sha256": "3da5ee955830b3c1b23a8591df13249e82fa436a7a21d0e8d1d6c4865effa2ba"
+    },
+    {
+      "path": "app/service/painel/telas/Kids.tsx",
+      "sha256": "36c1e621d7b0509b2990dfa9452f87b48748009d153e6d8583c32c926ff3bddf"
+    },
+    {
+      "path": "app/service/painel/telas/Pesquisas.tsx",
+      "sha256": "13ee17c7f50f79acbe8e22f0851a52806321e41c425582e38505e82d0a4f7bf7"
+    },
+    {
+      "path": "app/service/painel/telas/Quadros.tsx",
+      "sha256": "2c112ee5cec502fbca4be34b6586c6ab7d417fdfd09360712e6c28956d5ac23c"
+    },
+    {
+      "path": "app/service/painel/telas/Relatorios.tsx",
+      "sha256": "4b4b9e59e91458b016f304c0899e2d2c9a4b212da8099351de397382a2750747"
+    },
+    {
+      "path": "app/service/painel/telas/Reunioes.tsx",
+      "sha256": "6d1e01800c6de31b1f2decef6e832d5a183bcf6d17a4a8d91b37f199cfe11cfe"
+    },
+    {
+      "path": "app/service/painel/telas/ServiceModal.tsx",
+      "sha256": "50e5ea291765dc4fb1b0f35819c143aadd61482e51f1f728d4ad0e06545349de"
+    },
+    {
+      "path": "app/service/painel/telas/Times.tsx",
+      "sha256": "f9f3b3c50b11c83094842f93aad5f07c7aacdb32350896e0b43ff8f2b049cf68"
+    },
+    {
+      "path": "app/service/painel/telas/Visitantes.tsx",
+      "sha256": "b4a89bed32911905150f506cdb6eb8d65d4fef573fe2ee251906eb0e4bbf19c0"
+    },
+    {
+      "path": "app/service/painel/tipos.ts",
+      "sha256": "af462a73503f0b0a11cf49688540db39b210977974087ec8a03a953bc7d8a0a4"
+    },
+    {
+      "path": "app/service/painel/ui.tsx",
+      "sha256": "41b81c93af47f9bd72e296050a729548721d5e2c161dc00b6976a1703b4600d4"
+    },
+    {
+      "path": "app/service/participar/CodigoForm.tsx",
+      "sha256": "191b47fb4776ba8fee4e062a105748365cc9ac843a61bb23a91488dfe9896c7a"
+    },
+    {
+      "path": "app/service/participar/[codigo]/EntradaForm.tsx",
+      "sha256": "1328027376310c2b4c85ec240d3f9628e4b4337e00ed9f08b9c5fe0c15b23551"
+    },
+    {
+      "path": "app/service/participar/[codigo]/page.tsx",
+      "sha256": "9beb40c84413d46614290f7ef5e994d597a4d435b1e93d75a726569b16f50780"
+    },
+    {
+      "path": "app/service/participar/page.tsx",
+      "sha256": "d066c65d64f13e15d0e385399fdf83136593e84e01bf18a23938893437ec9a59"
+    },
+    {
+      "path": "evolucoes/service_app/service-app.css",
+      "sha256": "8c510a4da78d1841622746e9adc2fa91f5b2702677de52b88b1a0ee261c1dc56"
+    },
+    {
+      "path": "package.json",
+      "sha256": "b3599ad67dad23529db227d7579b48a2410322d355dd77878c11c2a6afefe3e4"
+    }
+  ]
+}

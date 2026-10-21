@@ -1,0 +1,66 @@
+[
+  {
+    "path": "app/lib/types.ts",
+    "sha256": "f06f990ad94cf9667d92281de6a71558a54aa2957dfa95154db459538fddecfe"
+  },
+  {
+    "path": "app/service/lib/geo.ts",
+    "sha256": "3d154a07761dd9fac821a6b25a7e65350ea51980e1a6b8d5e59e5d46a39b8c97"
+  },
+  {
+    "path": "app/service/lib/address-lookup-server.ts",
+    "sha256": "472bf7f6c979ad89e59b87549fffdc1e4c31fbf8e16144c0c58c09da2cc61f2b"
+  },
+  {
+    "path": "app/service/lib/cpf.ts",
+    "sha256": "46007ea0f5f3cbf5fa496ed93cda4ad8f327fd3451908e80c5dd72d81f730994"
+  },
+  {
+    "path": "app/service/CepInput.tsx",
+    "sha256": "a38b67ca825103bd0a3584655227cc7887996efe10bc423365deeaafe54966c6"
+  },
+  {
+    "path": "app/api/service/cep-lookup/route.ts",
+    "sha256": "bb692c3b18c985cfcc3def37534106f5badaf4a31996447afc8a104fab8830bb"
+  },
+  {
+    "path": "app/api/service/cnpj-lookup/route.ts",
+    "sha256": "977f8bad1e16459882a2c776ba1eb56a7f40d01d2f608737f3e6c7df7922925d"
+  },
+  {
+    "path": "app/api/service/members/accept-invite/route.ts",
+    "sha256": "2814cae7e27169fe5ecca07197fac1756a0c1906b547b80ff63574223e4dcb93"
+  },
+  {
+    "path": "app/service/convite/ConviteForm.tsx",
+    "sha256": "edd840fc885f07eb4d5918e50f0a1b1ac0fa3d8153155c1985187f7c7a8dbfcc"
+  },
+  {
+    "path": "app/service/onboarding/BootstrapChurchForm.tsx",
+    "sha256": "a0030b1aa41170bf6d9dcce3deb4a966988f609dcdf591a32312d9aa5b1d96c4"
+  },
+  {
+    "path": "app/service/membro/Perfil.tsx",
+    "sha256": "18a51942bd571fe9c1e3e49f2c790260a6d0cc0b07ec6f9e54cc4e20458c9b85"
+  },
+  {
+    "path": "app/service/membro/comum.tsx",
+    "sha256": "9063d5e02a5091062add642a2b429e6344f895e7aaf726adc7fc120ce1e3a1af"
+  },
+  {
+    "path": "app/service/ServiceExactApp.tsx",
+    "sha256": "0a4cde735d696d919e1c34275e50b2228123aeb803bcf36cc4264f0f1b7a5753"
+  },
+  {
+    "path": "evolucoes/service_app/service-app.css",
+    "sha256": "93edf9fd16a37ab17ed2bd15ca64069d41df5817dd642f5046c6d6321822b86a"
+  },
+  {
+    "path": "supabase/migrations/0083_service_endereco_geolocalizacao.sql",
+    "sha256": "9b6ec709ef55e0d5c9e131091c1bc35dc9631cc9b6445ba13969949bd9a47461"
+  },
+  {
+    "path": "supabase/migrations/0084_service_documento_opcional.sql",
+    "sha256": "bb7bb5e4c0ddbe5e273b6f8ebba9a4371659782e9b5dc594e336e93081dd9ec9"
+  }
+]

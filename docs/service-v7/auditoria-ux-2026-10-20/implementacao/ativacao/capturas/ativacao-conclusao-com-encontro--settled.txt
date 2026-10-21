@@ -1,0 +1,47 @@
+- document:
+  - alert
+  - complementary:
+    - text: Outra Igreja Local Service
+    - button "Fechar menu": ✕
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Agenda
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "OO"
+  - main:
+    - text: Agenda
+    - heading "Cultos e Agenda Ajuda" [level=1]:
+      - text: Cultos e Agenda
+      - button "Ajuda": "?"
+    - button "+ Novo culto"
+    - button "Semana"
+    - button "Mês"
+    - button "Semana anterior"
+    - text: Esta semana
+    - button "Próxima semana"
+    - button "[UX ativação] Encontro de sexta 19:17 Sexta · 23/10/2026 · Rua da Comunidade, 100":
+      - text: "[UX ativação] Encontro de sexta 19:17"
+      - paragraph: Sexta · 23/10/2026 · Rua da Comunidade, 100
+    - button "Check-in QR"
+    - button "Arte"

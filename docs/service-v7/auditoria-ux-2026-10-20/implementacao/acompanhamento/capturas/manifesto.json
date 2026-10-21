@@ -1,0 +1,710 @@
+[
+  {
+    "label": "acompanhamento-app-atual",
+    "evidence_id": "ev_09f39601990b3633dbec57a64a2b5bdef798df75a8bacef96f462abda46ec88f",
+    "url": "http://localhost:3003/service/demo",
+    "screens": [
+      {
+        "image": "acompanhamento-app-atual--settled.png",
+        "sha256": "40a04e945dee6cd283d8f7ba93c1f30c3477f00dc128f1a1e6f97666d3edb2c9"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "acompanhamento-painel-semana",
+    "evidence_id": "ev_0f2c06381925efb4d9e03ca3c0de86895eec9b0568a9272640a2b8dfc928c8ae",
+    "url": "http://localhost:3003/service/demo",
+    "screens": [
+      {
+        "image": "acompanhamento-painel-semana--settled.png",
+        "sha256": "fdee5c319e02e90815def849eb020229b86393f27a3ac3c09d2cc43da8ac2d6a"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "navegacao-sessao-real-painel-recarga",
+    "evidence_id": "ev_0f55aff339c30eea5a3b8bb7b4f21dd8c06f426643e4e004f10a0ca2ea3ce2e8",
+    "url": "http://localhost:3003/service/login",
+    "screens": [
+      {
+        "image": "navegacao-sessao-real-painel-recarga--settled.png",
+        "sha256": "8635f3575073daf4d4fb619c41b688455cce584fe3b5331fe107f10149baa985"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "navegacao-destino-invalido",
+    "evidence_id": "ev_117ed91b9475f4c88820f25f255de3441b476f1cf0f9c901debbda615f9f734a",
+    "url": "http://localhost:3003/service/demo?maba=caminhada&mtela=mural",
+    "screens": [
+      {
+        "image": "navegacao-destino-invalido--settled.png",
+        "sha256": "2def166994488393371a8c400c9f1aa07bd821c28c37f8ad2b82633d6927953b"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "acompanhamento-relatorios-fatos",
+    "evidence_id": "ev_17abe7c920c21639f89fc9f309d93329b27749df7bd3a39c7c0a754d05da602d",
+    "url": "http://localhost:3003/service/demo",
+    "screens": [
+      {
+        "image": "acompanhamento-relatorios-fatos--settled.png",
+        "sha256": "7879ef3df84e0c961eecd66309fbc81a27cae65e6b34f5169b21f7f482f07cad"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "escala-confirmada-servidor",
+    "evidence_id": "ev_180242ef42ad8757bb56353af2d6e55a82b9b7c9d1e65a72d52d66e0c6a3b899",
+    "url": "http://localhost:3003/service/login",
+    "screens": [
+      {
+        "image": "escala-confirmada-servidor--settled.png",
+        "sha256": "cfb8ad17c879f976f36057705415b24a705aefa3825874e718fdf9bd56f9267c"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "escala-confirmada-banco",
+    "evidence_id": "ev_1b9890bbf72aa8cae8180152827eb8604bc6a64e56d0bc7757e9eaf0870c2c43",
+    "url": "http://localhost:3003/service/login",
+    "screens": [
+      {
+        "image": "escala-confirmada-banco--settled.png",
+        "sha256": "b2bd2760934d5a2922bceedfe504ff2879f6b4e57eda31a963187f141d2f8ae7"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "rotina-visitantes-opcoes-320",
+    "evidence_id": "ev_2163892839b398e8545879f90b76338e72ea574c5c12c8078d67aff1163d74cf",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [
+      {
+        "image": "rotina-visitantes-opcoes-320--settled.png",
+        "sha256": "8084d9cc9f2d3b3d058c5c4025938450abdd5f385f7509a806a70990f8d10fea"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "navegacao-curso-url",
+    "evidence_id": "ev_21a44c24ae7a4a597ed62c4f3d1ce673e89ea8456d18f80ce6f7cb39899b8c8a",
+    "url": "http://localhost:3003/service/demo?modo=light&maba=caminhada&mtela=cursos",
+    "screens": [
+      {
+        "image": "navegacao-curso-url--settled.png",
+        "sha256": "5b0597d30fe6a6eaec9bf5e3f6a0b352e37da82f64b50af0461e170d4874aa54"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "rotina-financeiro-mobile-revisao",
+    "evidence_id": "ev_22aebc4961b0844b0c7060f5c85b8b4561e57d814f24b69322920597e6ecbf61",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [
+      {
+        "image": "rotina-financeiro-mobile-revisao--settled.png",
+        "sha256": "ddc091d12bc93873fbda4eb3dba39dc2e6b61c5c24db0052c21e7d49ba8324ed"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "escala-desfazer-persistido",
+    "evidence_id": "ev_2c42c263895e8db0138a9997d7d642bc5d6522270928522eaa481b086f41789b",
+    "url": "http://localhost:3003/service/login",
+    "screens": [
+      {
+        "image": "escala-desfazer-persistido--settled.png",
+        "sha256": "592dd0309d3e42f290e53d85e1d6dcdd9da85f87a2ed9e8f94f351c28b624f59"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "navegacao-nomes-longos-texto-maximo",
+    "evidence_id": "ev_365d44e2a358218c819a0d1992048a9722441bca510690fa3f21ab5983e126e0",
+    "url": "http://localhost:3003/service/demo?dados=pior&maba=caminhada",
+    "screens": [
+      {
+        "image": "navegacao-nomes-longos-texto-maximo--settled.png",
+        "sha256": "3a9531571e90a817150a1d48027e32595afdd3de5f4d6d5bbd00b3c9fa5473ae"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "acompanhamento-relatorios-320",
+    "evidence_id": "ev_388b3e1afb64fa9c8ec3071e82266d4d0927f5350d203b8006654e24940bc7f5",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [
+      {
+        "image": "acompanhamento-relatorios-320--settled.png",
+        "sha256": "3ee3bcf9fdc6c7065e277bf488e4e89b5eb0ce4a18a870e2ed2d113f0c4846ff"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "caminhada-curso-aberto",
+    "evidence_id": "ev_3d38ee1c4d07c362fee9c7b8bbbaeb889164a683112db12a2576fbf0675a1e15",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [
+      {
+        "image": "caminhada-curso-aberto--settled.png",
+        "sha256": "5b0597d30fe6a6eaec9bf5e3f6a0b352e37da82f64b50af0461e170d4874aa54"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "financeiro-leitura-real",
+    "evidence_id": "ev_4721ec9fe1f16e14108a508c8167595366aefd47095e0a3e3bfcc0abe468ce70",
+    "url": "http://localhost:3003/service/login",
+    "screens": [
+      {
+        "image": "financeiro-leitura-real--settled.png",
+        "sha256": "9f641fbdaa36ba4070d7cff70b6d249e79616d6fd041e1a331a294e9df5dc487"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "navegacao-recarga-real",
+    "evidence_id": "ev_594343e12dfcd290489362421edcf82aca39717a44057c85fda9569bbdba1ac9",
+    "url": "http://localhost:3003/service/login",
+    "screens": [
+      {
+        "image": "navegacao-recarga-real--settled.png",
+        "sha256": "064611d7db7e568f39b64cf51696a362613cf92920f599191eee52b2687173d6"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "escala-falha-sem-sucesso-falso",
+    "evidence_id": "ev_60f967f69c37bcd27e122d4356d14fd236d7edeb5b38d21238a24309bb2102df",
+    "url": "http://localhost:3003/service/demo",
+    "screens": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "history",
+        "screenshot",
+        "url"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "rotina-visitantes-mobile",
+    "evidence_id": "ev_618ac3834da096932f43a8e19bbd69238fdbddf31571ea0d1275626a5887d729",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [
+      {
+        "image": "rotina-visitantes-mobile--settled.png",
+        "sha256": "3f1a041150f0d116f43e98d00ee1fec67583480082b61e34c42fe3c3e222c912"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "rotina-criancas-evento-sem-duplicacao",
+    "evidence_id": "ev_636ba5558e58b7075a7af4e015b5c74727c80e8918a1c344d63af89f3c75a29e",
+    "url": "http://localhost:3003/service/demo",
+    "screens": [
+      {
+        "image": "rotina-criancas-evento-sem-duplicacao--settled.png",
+        "sha256": "9468a042d7a69809e0d03bf6e8781e074ea8fb9edad09c030c77c06f2280a7ad"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "cnpj-alfanumerico-preservado",
+    "evidence_id": "ev_666828513e2de787214ce5f74bd10e7adb14898b9f594584604f3f1febbc17e1",
+    "url": "http://localhost:3003/service/login",
+    "screens": [
+      {
+        "image": "cnpj-alfanumerico-preservado--settled.png",
+        "sha256": "78296c13f74f3cad2a93570760ac7c73d993a02d2efeed320b2083a150e7eb6d"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "escala-recusa-persistida",
+    "evidence_id": "ev_97c5ae51ae9cfe469d9d29c9b2c1f01519968e87727f641432703f7c1bef7284",
+    "url": "http://localhost:3003/service/login",
+    "screens": [
+      {
+        "image": "escala-recusa-persistida--settled.png",
+        "sha256": "b272113098f714ac1ebc8f9952e0c9dbf25663e83270edaf9980cc778c0a0500"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "navegacao-voltar-browser-teclado",
+    "evidence_id": "ev_a048d2edb898014948e35708684016e7c1e5228e4fbf0d31bb3505a4b6646c23",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [
+      {
+        "image": "navegacao-voltar-browser-teclado--settled.png",
+        "sha256": "5b0597d30fe6a6eaec9bf5e3f6a0b352e37da82f64b50af0461e170d4874aa54"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "escala-falha-retentativa-visivel",
+    "evidence_id": "ev_a08cc1a35e0299b66c3915c6ce3637fa5603b99c4e3bebe74d23d44a0fe53f5e",
+    "url": "http://localhost:3003/service/demo?maba=agenda",
+    "screens": [
+      {
+        "image": "escala-falha-retentativa-visivel--settled.png",
+        "sha256": "06f92cd14cfc46f15317d46df0d0479c48f186412ef8dd2a48aa0a35c30ce83a"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "acompanhamento-caminhada-320-verificado",
+    "evidence_id": "ev_a657ff440c9b2bb50f88cc3cf0d3873c370ab4c6cb2097dce21211c1d6e2e47a",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "rotina-regras-falha-preserva-formulario",
+    "evidence_id": "ev_afa5378df417d13feed314658407331e31a87d4f17218e49367a19fa4f3a5cd6",
+    "url": "http://localhost:3003/service/demo",
+    "screens": [
+      {
+        "image": "rotina-regras-falha-preserva-formulario--settled.png",
+        "sha256": "672218f3802ff7a10693ea9e1c38f622ba0d03cc3c3336d87c621e726f0b5e4c"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "acompanhamento-caminhada-mobile",
+    "evidence_id": "ev_b4b91c898fd23d97fe6c506834542029cb828bbcff66fcc396000586f73147f3",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "acompanhamento-caminhada-320",
+    "evidence_id": "ev_caa3e0f7d40cde97b27bc5f8ed719630cf37f742b864b676a62acbf53da1f5de",
+    "url": "http://localhost:3003/service/demo?modo=light&dados=pior",
+    "screens": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "navegacao-aviso-especifico",
+    "evidence_id": "ev_cde8950d946c57a21b0b97aeaa19e46c42eac100411ef472370681914d1d82b4",
+    "url": "http://localhost:3003/service/demo?maba=mensagens&mtela=mural&maviso=an-3",
+    "screens": [
+      {
+        "image": "navegacao-aviso-especifico--settled.png",
+        "sha256": "a1f83eba7a7f998f42abddc4317e7bf78d67bd3c1f51b1abd0b83153d6b3586f"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "acompanhamento-app-proximo-evento",
+    "evidence_id": "ev_cf28e10680329cc2949ca1ae5b0ffe9d459bf546086cc3bb3ad5f7921f5b4e1c",
+    "url": "http://localhost:3003/service/demo",
+    "screens": [
+      {
+        "image": "acompanhamento-app-proximo-evento--settled.png",
+        "sha256": "820a57733fbfca154d200f3c2759a52271516fd8a1c7135e7af5d22cc3c6d92e"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "navegacao-sessao-real-destino",
+    "evidence_id": "ev_d77ce445c6fd591943c881d930e90c93172e54897cc8d38de88a4a70e0ebd4eb",
+    "url": "http://localhost:3003/service/login",
+    "screens": [
+      {
+        "image": "navegacao-sessao-real-destino--settled.png",
+        "sha256": "596f5c1a187c06b7136b7fb0a107ddd05c7484ca07877bce2e165625c75b1e38"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "acompanhamento-caminhada-320-final",
+    "evidence_id": "ev_d84308316e7b92eebb7e15bd19f5fe2bf7a6029a8912e69ee1d89a088a830b18",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [
+      {
+        "image": "acompanhamento-caminhada-320-final--settled.png",
+        "sha256": "79960d965a7bd5710bd4a7fa93cf9231fb8d2ac612851d12052400f46941cca5"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "caminhada-curso-acao",
+    "evidence_id": "ev_db8e8e1080aecf137713d41c59ec0d293e6cb71fdeb7737f08872b67562638ad",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [
+      {
+        "image": "caminhada-curso-acao--settled.png",
+        "sha256": "bf5dd652622397fda87b1b594343591b817b2d4d944b309261ce5cd9161b8291"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": [
+      {
+        "kind": "page-error",
+        "message": "Unexpected end of JSON input",
+        "sequence": 1,
+        "stack": "SyntaxError: Unexpected end of JSON input\n    at JSON.parse (<anonymous>)\n    at loadManifest (file:///Users/macbook/campusexpansao/node_modules/next/dist/server/load-manifest.external.js:54:25)\n    at loadManifestFromRelativePath (file:///Users/macbook/campusexpansao/node_modules/next/dist/server/load-manifest.external.js:111:12)\n    at AppPageRouteModule.loadManifests (file:///Users/macbook/campusexpansao/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:71:35591)\n    at AppPageRouteModule.prepare (file:///Users/macbook/campusexpansao/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:71:43536)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async Module.handler (webpack-internal:///(rsc)/../../../Users/macbook/campusexpansao/node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fservice%2Fdemo%2Fpage&page=%2Fservice%2Fdemo%2Fpage&appPaths=%2Fservice%2Fdemo%2Fpage&allNormalizedAppPaths=&pagePath=private-next-app-dir%2Fservice%2Fdemo%2Fpage.tsx&appDir=%2Fprivate%2Ftmp%2Fcex-service-international-20261020%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Fprivate%2Ftmp%2Fcex-service-international-20261020&isDev=true&tsconfigPath=&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:242:27)\n    at async DevServer.renderToResponseWithComponentsImpl (file:///Users/macbook/campusexpansao/node_modules/next/dist/server/base-server.js:1462:9)\n    at async DevServer.renderPageComponent (file:///Users/macbook/campusexpansao/node_modules/next/dist/server/base-server.js:1514:24)\n    at async DevServer.renderToResponseImpl (file:///Users/macbook/campusexpansao/node_modules/next/dist/server/base-server.js:1564:32)\n    at async DevServer.pipeImpl (file:///Users/macbook/campusexpansao/node_modules/next/dist/server/base-server.js:1044:25)\n    at async NextNodeServer.handleCatchallRenderRequest (file:///Users/macbook/campusexpansao/node_modules/next/dist/server/next-server.js:338:17)\n    at async DevServer.handleRequestImpl (file:///Users/macbook/campusexpansao/node_modules/next/dist/server/base-server.js:935:17)\n    at async (file:///Users/macbook/campusexpansao/node_modules/next/dist/server/dev/next-dev-server.js:394:20)\n    at async Span.traceAsyncFn (file:///Users/macbook/campusexpansao/node_modules/next/dist/trace/trace.js:164:20)\n    at async DevServer.handleRequest (file:///Users/macbook/campusexpansao/node_modules/next/dist/server/dev/next-dev-server.js:390:24)\n    at async invokeRender (file:///Users/macbook/campusexpansao/node_modules/next/dist/server/lib/router-server.js:266:21)\n    at async handleRequest (file:///Users/macbook/campusexpansao/node_modules/next/dist/server/lib/router-server.js:465:24)\n    at async requestHandlerImpl (file:///Users/macbook/campusexpansao/node_modules/next/dist/server/lib/router-server.js:514:13)\n    at async Server.requestListener (file:///Users/macbook/campusexpansao/node_modules/next/dist/server/lib/start-server.js:225:13)",
+        "step_index": 1
+      }
+    ]
+  },
+  {
+    "label": "rotina-visitantes-regras-retorno",
+    "evidence_id": "ev_e0c3b9af96a2694b9eff53beba343ecff8618d6499f3473b29011d2fedba9b83",
+    "url": "http://localhost:3003/service/demo",
+    "screens": [
+      {
+        "image": "rotina-visitantes-regras-retorno--settled.png",
+        "sha256": "a1d45a932fb55be2b8d056df0dda5b5a384dc504bdba04a89eed8c9e9c926223"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "acompanhamento-relatorios-320-registros",
+    "evidence_id": "ev_e5e0a1bd779697c0c05667488e70e6a7f5099f99a9efa83eef816346d85e724e",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [
+      {
+        "image": "acompanhamento-relatorios-320-registros--settled.png",
+        "sha256": "3ee3bcf9fdc6c7065e277bf488e4e89b5eb0ce4a18a870e2ed2d113f0c4846ff"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "financeiro-falha-estado-correto",
+    "evidence_id": "ev_ec05840645ad4115fab344089368344b53c96254a84053099b78380646dfd6e1",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [
+      {
+        "image": "financeiro-falha-estado-correto--settled.png",
+        "sha256": "0ba019b84055461819fbac44aa32911837d2b569981b67e9fed9eedaf1b63f13"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "acompanhamento-relatorios-finais-320",
+    "evidence_id": "ev_f00fa3611102b22369c9e1ab66b21a659b0a7ef6073cb3656f1dc1751af919e4",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [
+      {
+        "image": "acompanhamento-relatorios-finais-320--settled.png",
+        "sha256": "72286aa3ab41f6ac355206dba8bdf5dcb4ffda43f35fef162f98de95b0909f7c"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "acompanhamento-caminhada-320-ok",
+    "evidence_id": "ev_f146af1fa76d1cfdf521b45a12467e5f733415fd6d7da7c4ef89760b40850355",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "financeiro-falha-sem-zeros",
+    "evidence_id": "ev_f39598e7c9ddbc6742b8490af03392f268e2995f8900ab769151e6e7f4bd4126",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "history",
+        "screenshot",
+        "url"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    },
+    "errors": []
+  },
+  {
+    "label": "navegacao-retorno-historico",
+    "evidence_id": "ev_f95e0f00fe20759966b5b63438c4395e6c45b61a510c383f3a84a861391aa154",
+    "url": "http://localhost:3003/service/demo?modo=light",
+    "screens": [
+      {
+        "image": "navegacao-retorno-historico--settled.png",
+        "sha256": "bf5dd652622397fda87b1b594343591b817b2d4d944b309261ce5cd9161b8291"
+      }
+    ],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": []
+  }
+]

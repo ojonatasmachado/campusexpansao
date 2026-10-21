@@ -33,7 +33,7 @@ export const CULTOS: Record<string, string> = {
 };
 
 export const TAREFA_LONGA = "Definir tema, versículo-base e cronograma de pregações do segundo semestre com o conselho pastoral";
-export const AVISO_LONGO = "Retiro de jovens e adolescentes 2026: inscrições abertas até 15 de julho, vagas limitadas, transporte saindo da sede";
+export const AVISO_LONGO = "Retiro de jovens e adolescentes: inscrições abertas com vagas limitadas, transporte saindo da sede e programação para toda a comunidade";
 export const GRUPO_LONGO = "GC Família Albuquerque · Jardim São Bento Novo";
 
 /* Contribuir: chave de e-mail comprida, favorecido no limite, texto cheio e 4 finalidades */

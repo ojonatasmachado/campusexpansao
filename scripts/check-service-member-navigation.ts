@@ -1,0 +1,32 @@
+import assert from "node:assert/strict";
+import { clearMemberLocation, memberNotificationUrl, readMemberLocation, writeMemberLocation } from "../app/service/lib/member-navigation";
+const allowed = (tab: string, sub: string) => (tab === "caminhada" && sub === "cursos") || (tab === "mensagens" && sub === "mural") || (tab === "agenda" && sub === "tarefas");
+const original = new URL("http://localhost:3003/service?modo=light#conteudo");
+const aula = { tab: "caminhada" as const, sub: "cursos", segment: "minha" as const, announcement: null, card: null };
+const url = writeMemberLocation(original, aula);
+assert.deepEqual(readMemberLocation(url, allowed), aula);
+assert.equal(original.searchParams.has("maba"), false);
+assert.equal(url.searchParams.get("modo"), "light");
+assert.equal(url.hash, "#conteudo");
+assert.equal(readMemberLocation(url, () => false).sub, null);
+assert.equal(readMemberLocation(new URL("http://localhost/service?maba=perfil&mtela=cursos"), allowed).sub, null);
+assert.equal(readMemberLocation(new URL("http://localhost/service?maba=financeiro&mtela=cursos"), allowed).tab, "inicio");
+const aviso = writeMemberLocation(url, { ...aula, tab: "mensagens", sub: "mural", announcement: "an-3" });
+assert.equal(readMemberLocation(aviso, allowed).announcement, "an-3");
+assert.equal(readMemberLocation(new URL("http://localhost/service?maba=mensagens&mtela=mural&maviso=https://exemplo.com"), allowed).announcement, null);
+const agenda = writeMemberLocation(aviso, { ...aula, tab: "agenda", sub: "tarefas", segment: "igreja", card: "c-1" });
+assert.equal(agenda.searchParams.has("maviso"), false);
+assert.equal(readMemberLocation(agenda, allowed).card, "c-1");
+assert.equal(readMemberLocation(agenda, allowed).segment, "igreja");
+console.log("Navegação: recarga, destinos permitidos, aba correta, IDs de aviso/tarefa e preservação de parâmetros independentes.");
+
+for (const [category, tab] of [["escala", "agenda"], ["mensagens", "mensagens"], ["mural", "mensagens"], ["caminhada", "caminhada"]]) {
+ const old = new URL(`http://localhost/service?aviso=${category}`);
+ assert.equal(readMemberLocation(old, allowed).tab, tab);
+ const current = new URL(memberNotificationUrl(category, "an-3"), "http://localhost");
+ assert.equal(readMemberLocation(current, allowed).tab, tab);
+ if (category === "mural") assert.equal(readMemberLocation(current, allowed).announcement, "an-3");
+}
+assert.equal(memberNotificationUrl("externo"), "/service");
+assert.equal(clearMemberLocation(agenda).search, "?modo=light");
+assert.equal(clearMemberLocation(agenda).hash, "#conteudo");

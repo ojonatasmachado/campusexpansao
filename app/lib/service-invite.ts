@@ -6,7 +6,7 @@ type AdminClient = ReturnType<typeof supabaseAdmin>;
 /* Convite de acesso ao app do Service (service.member_invites, 0045). O
    líder cadastra a pessoa só com nome, sobrenome e telefone; o link vai pelo
    WhatsApp e a conta só nasce quando a pessoa abre o link e informa e-mail,
-   senha e CEP. O token nunca é guardado em claro: só o hash sha256. */
+   senha e endereço. O token nunca é guardado em claro: só o hash sha256. */
 
 export const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 

@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-20",
+  "files": [
+    {
+      "path": "app/service/ServiceExactApp.tsx",
+      "sha256": "eb579d9748b39aeab68ec1a6e8eb8ac61d83f4ff282e37cf26dc0e8f3a05cb84"
+    },
+    {
+      "path": "app/service/modules/configuracao/Assistente.tsx",
+      "sha256": "03457c58969e781a96c30377ec53df4e5007337c25181b711c856f10b4c17b23"
+    },
+    {
+      "path": "app/service/modules/configuracao/ativacao.ts",
+      "sha256": "aeda06c206018aaa72c55ce75af72ee19bebe1092d5700cb3f8f4b01c91934b4"
+    },
+    {
+      "path": "app/service/modules/configuracao/setup.ts",
+      "sha256": "a9d9438a7503858d2e33d104d34c17bcb107bb97b9fafe74694de5259bfeaffc"
+    },
+    {
+      "path": "app/service/painel/comum.tsx",
+      "sha256": "c07679fb76508f98ddd9e0b2af724b83ae09213f4ee26b7ff09b6708b66efff2"
+    },
+    {
+      "path": "app/service/painel/telas/Inicio.tsx",
+      "sha256": "bd0426071732e668a5a1369be21bd35006f537acfe3c06a0f5d26d548e2b59a5"
+    },
+    {
+      "path": "app/service/painel/tipos.ts",
+      "sha256": "14ff1bf3644bfb288a845b3de162f22edc1b4fc55fb7ff03d3ef63927eee2b63"
+    },
+    {
+      "path": "evolucoes/service_app/service-app.css",
+      "sha256": "1d271702102d3390bf4e85294ef5003f6b09897ec3962c8994786bc37249896a"
+    },
+    {
+      "path": "scripts/check-service-ativacao.ts",
+      "sha256": "8d7deddebf85b8a5634be83b1e9ed58369702771362da95cdb08002906f16c29"
+    },
+    {
+      "path": "scripts/check-service-convite-recovery.ts",
+      "sha256": "9df48a3b236985a3757df38403f591bffa1948662ecbb7a94656d6203cc240ea"
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+- document:
+  - complementary:
+    - text: CE.X Central Service
+    - button "Fechar menu": ✕
+    - button "CE.X Central Matriz · rede"
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 2"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Comunicação
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "AL"
+  - main:
+    - text: Comunicação
+    - heading "Mural Ajuda" [level=1]:
+      - text: Mural
+      - button "Ajuda": "?"
+    - button "Boletim da semana"
+    - button "+ Nova publicação"
+    - region "Ainda não publicadas · 2":
+      - heading "Ainda não publicadas · 2" [level=2]
+      - article:
+        - text: Vai ao ar em 22/10 às 19:10 para todos · Aviso
+        - heading "Ceia no próximo domingo" [level=3]
+        - paragraph: Venha preparado. Teremos ceia no culto da noite.
+        - button "Editar"
+        - button "Excluir"
+      - article:
+        - text: Rascunho para todos · Aviso
+        - heading "Campanha do agasalho" [level=3]
+        - paragraph: "Rascunho: confirmar os pontos de coleta com a diaconia."
+        - button "Continuar"
+        - button "Excluir"
+      - heading "Publicadas" [level=2]
+    - article:
+      - text: Aviso para todos · hoje · 20/10/2026
+      - 'heading "Retiro de jovens: inscrições abertas!" [level=3]'
+      - paragraph: Vagas limitadas. Garanta a sua até dia 15.
+      - text: Vista por 0 de 4 pessoas
+      - button "Lembrar 4 pessoas"
+      - button "Ver quem leu"
+    - article:
+      - text: Aviso para Voluntários · hoje · 20/10/2026
+      - heading "Escalas de julho disponíveis" [level=3]
+      - paragraph: Acesse o app do voluntário para confirmar sua participação.
+      - text: Vista por 0 de 4 pessoas
+      - button "Lembrar 4 pessoas"
+      - button "Ver quem leu"
+    - article:
+      - text: Aviso Urgente para todos · hoje · 20/10/2026
+      - heading "Culto de domingo mudou para o salão 2" [level=3]
+      - paragraph: O templo principal está em reforma. Mesmo horário, 19h.
+      - text: Vista por 0 de 4 pessoas
+      - button "Lembrar 4 pessoas"
+      - button "Ver quem leu"
+    - text: Recados para os pais do Kids Que culto incrível ontem! Deus esteve no meio de nós de forma especial. Gratidão a toda a equipe que serviu. Pr. João · 20/10/2026 Novo ponto de oração às quartas, 7h da manhã. Venha interceder pela cidade! Equipe de intercessão · 20/10/2026 Automáticas Boas-vindas pelo WhatsApp O texto que abre pronto quando você envia o acesso a um membro novo.
+    - button "Ajustar"
+    - dialog "Nova publicação":
+      - button "Voltar sem salvar"
+      - text: Mural
+      - heading "Nova publicação" [level=2]
+      - heading "Publicação" [level=3]
+      - text: Tipo
+      - group "Tipo":
+        - button "Aviso" [pressed]
+        - button "Evento"
+        - button "Pedido de ação"
+      - text: Título *
+      - textbox "Título *":
+        - /placeholder: "Ex.: Ensaio geral no sábado"
+      - text: Mensagem
+      - textbox "Mensagem":
+        - /placeholder: "Ex.: Chegada às 15h45, no templo principal."
+      - text: Urgência
+      - group "Urgência":
+        - button "Normal" [pressed]
+        - button "Urgente"
+      - heading "Quem recebe" [level=3]
+      - text: Para quem
+      - combobox "Para quem":
+        - option "Todos · 4 pessoas" [selected]
+        - option "Membros · 3 pessoas"
+        - option "Voluntários · 4 pessoas"
+        - option "Time Louvor · 2 pessoas"
+        - option "Time Mídia e Comunicação · 1 pessoa"
+        - option "Time Recepção · 1 pessoa"
+        - option "Time Kids · 1 pessoa"
+        - option "Grupo GC Centro · 1 pessoa"
+        - option "Grupo GC Vila Madalena · 1 pessoa"
+        - option "Pais do Kids · 0 pessoas"
+      - text: Por onde
+      - group "Por onde":
+        - button "App e notificação" [pressed]
+        - button "WhatsApp"
+      - text: Lembrar quem não viu
+      - group "Lembrar quem não viu":
+        - button "Não lembrar" [pressed]
+        - button "Em 24h"
+        - button "Em 48h"
+        - button "Numa data"
+      - heading "Quando publicar" [level=3]
+      - group "Quando publicar":
+        - button "Agora" [pressed]
+        - button "Agendar"
+      - heading "Destaque no Início do app" [level=3]
+      - group "Destaque no Início do app":
+        - button "Não destacar" [pressed]
+        - button "Destacar até…"
+      - paragraph: "Falta: título"
+      - button "Salvar rascunho" [disabled]
+      - button "Publicar" [disabled]
+  - navigation "Dados do demo":
+    - link "Dados do demo":
+      - /url: "?"
+    - link "Pior caso":
+      - /url: "?dados=pior"
+  - alert

@@ -1,0 +1,23 @@
+- document:
+  - alert
+  - text: Outra Igreja Local Service
+  - button "Perfil": PI
+  - heading "Boa noite, Pessoa" [level=1]
+  - paragraph: Terça, 20 de outubro
+  - main:
+    - text: Para você agora Seu próximo passo Decisão
+    - button "Contar que já decidi →"
+    - text: Servir Seu pedido está em análise Acolhimento Jornada. A liderança vai avaliar e conversar com você.
+    - button "Acompanhar pedido"
+    - heading "Na vida da igreja" [level=2]
+    - paragraph: Encontros e novidades para acompanhar.
+    - text: Nenhum encontro publicado por enquanto
+    - paragraph: Quando a igreja publicar os próximos cultos e eventos, você encontra aqui as datas, os horários e como participar.
+    - button "Ver a agenda completa →"
+    - text: "Podemos orar por você? Você escolhe quem vê: só a intercessão ou o mural de oração da igreja."
+    - button "Enviar pedido de oração"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "Mensagens"
+    - button "Caminhada"

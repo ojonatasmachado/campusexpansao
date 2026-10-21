@@ -1,0 +1,91 @@
+- document:
+  - alert
+  - complementary:
+    - text: Igreja Teste Local Service
+    - button "Fechar menu": ✕
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Configurações
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "MM"
+  - main:
+    - text: Configurações
+    - heading "Configurações Ajuda" [level=1]:
+      - text: Configurações
+      - button "Ajuda": "?"
+    - button "Configurações"
+    - text: Papéis & permissões Cada funcionalidade do app aparece aqui. Toque para liberar ou bloquear por papel. O Master sempre tem acesso total.
+    - tablist "Papel":
+      - tab "Pastor Master"
+      - tab "Pastor" [selected]
+      - tab "Líder"
+      - tab "Voluntário"
+      - tab "Membro"
+    - text: Início Início e relatórios Liberado
+    - switch "Início e relatórios" [checked]
+    - text: Pessoas Pessoas e grupos Liberado
+    - switch "Pessoas e grupos" [checked]
+    - text: Voluntários Liberado
+    - switch "Voluntários" [checked]
+    - text: Visitantes Liberado
+    - switch "Visitantes" [checked]
+    - text: Crianças Liberado
+    - switch "Crianças" [checked]
+    - text: Decisões Liberado
+    - switch "Decisões" [checked]
+    - text: Ministério Times Liberado
+    - switch "Times" [checked]
+    - text: Escalas Liberado
+    - switch "Escalas" [checked]
+    - text: Ensaios Liberado
+    - switch "Ensaios" [checked]
+    - text: Reuniões Liberado
+    - switch "Reuniões" [checked]
+    - text: Agenda Cultos, eventos e espaços Liberado
+    - switch "Cultos, eventos e espaços" [checked]
+    - text: Comunicação Mural e pesquisas Liberado
+    - switch "Mural e pesquisas" [checked]
+    - text: Pedidos de oração Liberado
+    - switch "Pedidos de oração" [checked]
+    - text: Conversas Liberado
+    - switch "Conversas" [checked]
+    - text: Formação Batismos Liberado
+    - switch "Batismos" [checked]
+    - text: Cursos e trilhas Liberado
+    - switch "Cursos e trilhas" [checked]
+    - text: Gestão Identidade e propósito Liberado
+    - switch "Identidade e propósito" [checked]
+    - text: Nossa história Liberado
+    - switch "Nossa história" [checked]
+    - text: Quadros Liberado
+    - switch "Quadros" [checked]
+    - text: Secretaria Liberado
+    - switch "Secretaria" [checked]
+    - text: Configurações Dados da igreja e página Liberado
+    - switch "Dados da igreja e página" [checked]
+    - text: Configurações e permissões Liberado
+    - switch "Configurações e permissões" [checked]
+    - text: Congregações Bloqueado
+    - switch "Congregações"
+    - button "Salvar permissões"

@@ -1,0 +1,29 @@
+- document:
+  - button "Perfil"
+  - heading "Meus dados" [level=1]
+  - main:
+    - text: Sua foto + Toque para enviar Aparece no lugar das iniciais. Nome e sobrenome *
+    - textbox: Ana Lima
+    - text: E-mail *
+    - textbox "voce@email.com": ana@cex.com
+    - text: Telefone (WhatsApp) *
+    - textbox "(11) 90000-0000": (11) 9 8765-4321
+    - text: Aniversário *
+    - textbox: 1990-04-12
+    - text: CEP *
+    - textbox "00000-000"
+    - text: Bairro
+    - textbox "Onde você mora": Pinheiros
+    - button "Cancelar"
+    - button "Salvar"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "3 novos Mensagens": 3 Mensagens
+    - button "Caminhada"
+  - navigation "Dados do demo":
+    - link "Dados do demo":
+      - /url: "?"
+    - link "Pior caso":
+      - /url: "?dados=pior"
+  - alert

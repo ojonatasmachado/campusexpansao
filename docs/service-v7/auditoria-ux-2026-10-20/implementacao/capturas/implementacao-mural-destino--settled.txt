@@ -1,0 +1,28 @@
+- document:
+  - button "Mensagens"
+  - heading "Mural da igreja" [level=1]
+  - main:
+    - 'article "Retiro de jovens: inscrições abertas!"':
+      - text: "Nova Retiro de jovens: inscrições abertas!"
+      - paragraph: Vagas limitadas. Garanta a sua até dia 15.
+      - text: hoje · para todos
+    - article "Escalas de julho disponíveis":
+      - text: Nova Escalas de julho disponíveis
+      - paragraph: Acesse o app do voluntário para confirmar sua participação.
+      - text: hoje · para voluntários
+    - article "Culto de domingo mudou para o salão 2":
+      - text: Nova Urgente Culto de domingo mudou para o salão 2
+      - paragraph: O templo principal está em reforma. Mesmo horário, 19h.
+      - text: hoje · para todos
+    - paragraph: A igreja recebe um registro quando a publicação aparece na sua tela. Isso não confirma presença nem substitui sua resposta.
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "Mensagens"
+    - button "Caminhada"
+  - navigation "Dados do demo":
+    - link "Dados do demo":
+      - /url: "?"
+    - link "Pior caso":
+      - /url: "?dados=pior"
+  - alert

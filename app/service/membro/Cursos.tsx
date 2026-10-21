@@ -97,7 +97,9 @@ export function TabCursos({
   return (
     <>
 
-      <div className="m-section-t">Meus cursos · {myEnrollments.length}</div>
+      {myEnrollments.length === 0 && toExplore.length === 0 ? (
+        <div className="m6-card"><div className="m6-ct">Nenhum curso publicado por enquanto</div><p className="m6-txt">Quando a igreja disponibilizar um curso, você poderá conhecê-lo e acompanhar suas aulas aqui.</p></div>
+      ) : myEnrollments.length > 0 ? <div className="m-section-t">Meus cursos · {myEnrollments.length}</div> : null}
       {myEnrollments.map((en) => {
         const course = courses.find((c) => c.id === en.course_id);
         if (!course) return null;
@@ -266,7 +268,8 @@ export function CursosResumo({ member, courses, enrollments, courseModules, cour
             const prox = proximaAula(curso.id, andando.done_count, courseModules, courseLessons);
             return prox ? <div className="m6-meta">Próxima aula: {prox.aula.name}</div> : null;
           })()}
-          <div className="m6-prog"><i style={{ width: `${pct}%` }} /></div>
+          {total > 0 ? <div className="m6-prog"><i style={{ width: `${pct}%` }} /></div> : <div className="m6-meta">As aulas ainda não foram publicadas.</div>}
+          <button className="m6-btn sec full" style={{ marginTop: 12 }} type="button" onClick={() => ui.go("caminhada", "cursos")}>Abrir meu curso →</button>
         </div>
       )}
       <div className="m6-list">

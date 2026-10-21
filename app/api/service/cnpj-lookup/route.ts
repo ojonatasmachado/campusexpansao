@@ -1,23 +1,11 @@
+import { cnpjValido, normalizarCnpj } from "../../../service/lib/cnpj";
+import { consultarCep, guardarConsultaEndereco } from "../../../service/lib/address-lookup-server";
+import { enderecoDoCnpj } from "../../../service/lib/geo";
 import { NextResponse } from "next/server";
 import { createClient } from "../../../lib/supabase-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function isValidCnpjChecksum(digits: string): boolean {
-  if (digits.length !== 14) return false;
-  if (/^(\d)\1{13}$/.test(digits)) return false;
-
-  const calcDigit = (base: string, weights: number[]) => {
-    const sum = base.split("").reduce((acc, d, i) => acc + Number(d) * weights[i], 0);
-    const rest = sum % 11;
-    return rest < 2 ? 0 : 11 - rest;
-  };
-
-  const d1 = calcDigit(digits.slice(0, 12), [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
-  const d2 = calcDigit(digits.slice(0, 12) + d1, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
-  return digits.slice(12) === `${d1}${d2}`;
-}
 
 type BrasilApiCnpj = {
   razao_social?: string;
@@ -48,8 +36,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Envie dados válidos." }, { status: 400 });
   }
 
-  const digits = (body.cnpj ?? "").replace(/\D/g, "");
-  if (!isValidCnpjChecksum(digits)) {
+  const digits = typeof body?.cnpj === "string" ? normalizarCnpj(body.cnpj) : "";
+  if (!cnpjValido(digits)) {
     return NextResponse.json({ valid: false, error: "Esse CNPJ não é válido. Confira os números." }, { status: 200 });
   }
 
@@ -66,7 +54,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ valid: false, error: "Não conseguimos consultar a Receita Federal agora. Tente de novo em instantes." });
     }
 
-    const data = (await res.json()) as BrasilApiCnpj;
+    const data = (await res.json()) as BrasilApiCnpj & Record<string, unknown>;
+    const cep = String(data.cep ?? "").replace(/\D/g, "");
+    let postal = null;
+    try { postal = (await consultarCep(cep))?.data ?? null; } catch { /* endereço cadastral segue disponível; coordenadas ficam pendentes */ }
+    const endereco = enderecoDoCnpj(data, postal);
+    await guardarConsultaEndereco("cnpj", digits, endereco, data);
     const active = (data.descricao_situacao_cadastral ?? "").toUpperCase() === "ATIVA";
 
     if (!active) {
@@ -82,6 +75,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       valid: true,
       active: true,
+      cnpj: digits,
       razaoSocial: data.razao_social ?? null,
       nomeFantasia: data.nome_fantasia ?? null,
       address: address || null,
@@ -90,6 +84,15 @@ export async function POST(request: Request) {
       state: data.uf ?? null,
       postalCode: data.cep ?? null,
       phone: data.ddd_telefone_1 ?? null,
+      geocoded: endereco.latitude !== null,
+      latitude: endereco.latitude,
+      longitude: endereco.longitude,
+      geoSource: endereco.geoSource,
+      geoPrecision: endereco.geoPrecision,
+      streetNumber: endereco.streetNumber,
+      complement: endereco.complement,
+      municipalityIbge: endereco.municipalityIbge,
+      addressData: endereco,
     });
   } catch {
     return NextResponse.json({ valid: false, error: "Não conseguimos consultar a Receita Federal agora. Tente de novo em instantes." });

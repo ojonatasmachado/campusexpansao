@@ -1,0 +1,50 @@
+[
+  {
+    "path": "app/service/ServiceExactApp.tsx",
+    "sha256": "bcd3364df28e2a4530a69cdbfa0b7aa6b512e8470c11f1b5a5af1252ecd94c87"
+  },
+  {
+    "path": "app/service/MobileApp.tsx",
+    "sha256": "025036d52ac17bcdc50a4545bc3e8c8a3b49e03205966aab5d851907eafc4ac2"
+  },
+  {
+    "path": "app/service/page.tsx",
+    "sha256": "9f767df8c042d453c75ce051c7257fd58be14a6e3187f94c9dc76def9e367dd2"
+  },
+  {
+    "path": "evolucoes/service_app/service-app.css",
+    "sha256": "f2de2c99584cba89fe23ea3075f857a23d7a8d73bf7313ec5af3fbfe2aeaa4ad"
+  },
+  {
+    "path": "app/service/modules/times/recebimento.ts",
+    "sha256": "1fab08ed42f8c525a4457b357932d09bfdd1c08fbd12c213d1cd5c37cdfb1bfe"
+  },
+  {
+    "path": "app/service/membro/Inicio.tsx",
+    "sha256": "197e86fe5efdd38757406e04993e665c9b0caac62a9a21b590341cb4c4b6f172"
+  },
+  {
+    "path": "app/service/membro/Caminhada.tsx",
+    "sha256": "02b2f45c1a11796bcdb2c75f3a4a8b9859f6dbf39b7802f4f5f1f85e8b3571f4"
+  },
+  {
+    "path": "app/service/painel/telas/Times.tsx",
+    "sha256": "2f83f05c5e543aede66d8d8a8ff433ce4baae4fa436cbe5f590c1dcd08945e20"
+  },
+  {
+    "path": "app/service/painel/telas/FichaPessoa.tsx",
+    "sha256": "a4e4f3a3f9cd2cd993bc1bd22fbb335c9c1e688dd563dcd7e7d0085e11b28544"
+  },
+  {
+    "path": "app/service/painel/telas/ServiceModal.tsx",
+    "sha256": "bcbdb3d22bfc78cf169bcef8f7041a7d8a4c99475a85c79ed117b0ae6ef3e29f"
+  },
+  {
+    "path": "app/service/lib/icons.tsx",
+    "sha256": "031cc9b0bc23292aee2a66245bfbef9f4400889ad5ec97129d976431b5a20f4b"
+  },
+  {
+    "path": "supabase/migrations/0082_service_times_recebimento.sql",
+    "sha256": "0def14577afe2d9db80a19e0d49995237aef78c6c6f0e74ca0319719b44513ec"
+  }
+]

@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-20",
+  "base_commit": "4772268968bf42c7ce5b99fefada6757de91fb79",
+  "files": [
+    {
+      "path": "app/service/CepInput.tsx",
+      "sha256": "653902cbe8152dde49e4cdbf2ababf9f6968c3c199db6b848bea98d26b49a724"
+    },
+    {
+      "path": "app/service/MobileApp.tsx",
+      "sha256": "025036d52ac17bcdc50a4545bc3e8c8a3b49e03205966aab5d851907eafc4ac2"
+    },
+    {
+      "path": "app/service/lib/date.ts",
+      "sha256": "5039b78cd75efea1b046ddbdabb501e7119a394a971d0fa93993b57fb795fda0"
+    },
+    {
+      "path": "app/service/membro/Agenda.tsx",
+      "sha256": "66cf025a8c7a0183ce503be9ee4693256fcf38e89b34a846f9d23e0a568e4af7"
+    },
+    {
+      "path": "app/service/membro/Conversas.tsx",
+      "sha256": "3712b6c8abce5d7c718a0a67ebc2aa1d34c7ece3dca8a70d160cfa1c549200c8"
+    },
+    {
+      "path": "app/service/membro/Inicio.tsx",
+      "sha256": "25559b65327ae2fecbe0fec989c2bf236ab7cb226b3637d6b3f8241c83b0ad46"
+    },
+    {
+      "path": "app/service/membro/Mural.tsx",
+      "sha256": "7b9e7148e44db72ddcec4bd1a0e835d698e4b488e47bc9b5e48a7c65b31e15de"
+    },
+    {
+      "path": "app/service/membro/Onboarding.tsx",
+      "sha256": "3fecdc0b94263719612858271063d849b93ad3d0f2fa5ea999aaf0325575b197"
+    },
+    {
+      "path": "app/service/membro/Perfil.tsx",
+      "sha256": "a44bb824b39836086642fb9ca3989c289418d270b220551512f23add8a771ab6"
+    },
+    {
+      "path": "app/service/membro/tipos.ts",
+      "sha256": "7a99ee633a39e3b3b88eccf78b5b99674540f10fa861cbae14cea903841f915e"
+    },
+    {
+      "path": "app/service/modules/configuracao/Assistente.tsx",
+      "sha256": "78b7a3bb5d3b6238da05e7ab38f9bb339f4dfb5604b55d9497c3a10d9756417e"
+    },
+    {
+      "path": "app/service/onboarding/BootstrapChurchForm.tsx",
+      "sha256": "0b8a8bd201f08126422f9f9fc4723791445613865d941918e8a72a05e144ca55"
+    },
+    {
+      "path": "app/service/painel/campos.tsx",
+      "sha256": "213da0653185273f747ba3d7c193d15285d84df141d4bb9f0270803c41485fea"
+    },
+    {
+      "path": "app/service/painel/telas/Agenda.tsx",
+      "sha256": "883d1f249bbc65580d8c9b1757d43eb1ceae6577edcc3c8c15be833962cbd7cb"
+    },
+    {
+      "path": "app/service/painel/telas/Inicio.tsx",
+      "sha256": "8b6e8eef2bd5262488cd546f548be504e2b3de2331f01c5d1c184b043fe67cda"
+    },
+    {
+      "path": "app/service/painel/telas/ServiceModal.tsx",
+      "sha256": "066a968c60ac2cd2e08dfe8ec23027109c0c5b7203760ab83a9cbc96f4762ffd"
+    },
+    {
+      "path": "app/service/painel/tipos.ts",
+      "sha256": "cfe7fe0661f4febdf11242e0915ecda25d14d97a98a07f4f12ef011f9efc2b75"
+    },
+    {
+      "path": "evolucoes/service_app/service-app.css",
+      "sha256": "1a7d8e2cf9916a1a6ebe232bd7899bd25a51ade1ca962e035aaee77adb683a88"
+    },
+    {
+      "path": "scripts/check-service-civil-date.ts",
+      "sha256": "1f92dcf0c3cea827f6b7b3a2a76b3b355f936654b1f7f832b1afa8182dc9a28d"
+    }
+  ]
+}

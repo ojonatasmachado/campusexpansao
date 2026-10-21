@@ -1,0 +1,56 @@
+- document:
+  - alert
+  - complementary:
+    - text: Outra Igreja Local Service
+    - button "Fechar menu": ✕
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Início
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "OO"
+  - main:
+    - heading "Boa noite, Otávio Ajuda" [level=1]:
+      - text: Boa noite, Otávio
+      - button "Ajuda": "?"
+    - paragraph: Semana de 19 a 25 de outubro.
+    - button "Ver agenda"
+    - button "Montar escala"
+    - region "Saúde da igreja":
+      - heading "Saúde da igreja" [level=2]
+      - text: Hoje
+      - 'button "Membros registrados: 2. Ver a lista"': 2 Membros registrados
+      - 'button "Servindo em times: 0. Ver a lista" [disabled]': 0 Servindo em times
+      - 'button "Em grupos: 0. Ver a lista" [disabled]': 0 Em grupos
+      - 'button "Ver o panorama: período, visitantes, decisões e caminhada →"'
+    - heading "Para resolver" [level=2]
+    - 'button "Sua igreja: fase 1 de 3 · cerca de 13 minutos Começar →"'
+    - text: Voluntários 1 de 1 cadastrado · 1 novo em 30 dias Confirmação · ninguém escalado nesta semana Visitantes em acompanhamento 0 todos com contato em dia
+    - button "Sobre estes números"
+    - text: Pendências da escala
+    - button "Escalar"
+    - text: Escala coberta Nenhuma vaga aberta nesta semana. Próximos cultos
+    - button "Agenda"
+    - text: Nenhum culto marcado daqui pra frente. Comunicação recente
+    - button "Ver tudo"
+    - text: Nenhum aviso ainda Publique em Comunicação

@@ -5,11 +5,12 @@
    está em ./manifest.ts. Os tipos de dados do painel ainda moram em
    ServiceExactApp.tsx (import só de tipo, sem ciclo em tempo de execução). */
 
+import { limitesDaSemana } from "./semana";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { faltaN, plural } from "../../lib/plural";
 import { baixarCsv } from "../../lib/csv";
-import { formatDateBR, joinDot, toISODate } from "../../lib/date";
+import { aindaVaiAcontecer, formatDateBR, joinDot } from "../../lib/date";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { Caret, Icon } from "../../lib/icons";
 import { HelpDot } from "../../HelpSystem";
@@ -33,15 +34,7 @@ type Candidato = CandidatoBase<PersonView>;
    termômetro de bem-estar pra classificar sobrecarga sem depender de engajamento. */
 export function cargaDaSemana(roster: RosterAssignmentView[], events: EventView[]): Record<string, { escalas: number; recusas: number }> {
   const eventById = new Map(events.map((e) => [e.id, e]));
-  const hoje = new Date();
-  const offsetSegunda = hoje.getDay() === 0 ? 6 : hoje.getDay() - 1;
-  const segunda = new Date(hoje);
-  segunda.setDate(hoje.getDate() - offsetSegunda);
-  const domingo = new Date(segunda);
-  domingo.setDate(segunda.getDate() + 6);
-  const toIso = toISODate;
-  const inicioSemana = toIso(segunda);
-  const fimSemana = toIso(domingo);
+  const { inicio: inicioSemana, fim: fimSemana } = limitesDaSemana();
   const counts: Record<string, { escalas: number; recusas: number }> = {};
   roster.forEach((assignment) => {
     const ev = eventById.get(assignment.event_id);
@@ -276,6 +269,9 @@ export function Escalas({
   foco?: { eventId: string; timeId?: string } | null;
 }) {
   const { comTermos: ct } = useTermos();
+  const semanaAtual = limitesDaSemana();
+  const gapsDaSemana = gaps.filter((g) => g.event.eventDate >= semanaAtual.inicio && g.event.eventDate <= semanaAtual.fim && aindaVaiAcontecer(g.event.eventDate, g.event.time) && (!scopeMinistryIds || scopeMinistryIds.includes(g.ministry.id)));
+
   const [eventId, setEventId] = useState(foco?.eventId ?? events[0]?.id ?? "");
   useEffect(() => {
     if (!foco?.timeId) return;
@@ -631,11 +627,11 @@ export function Escalas({
         {rascunhos.length > 0 && <span className="chip chip-draft">Rascunho, ainda não publicado</span>}
       </div>
 
-      {gaps.length > 0 ? (
+      {gapsDaSemana.length > 0 ? (
         <div className="panel" style={{ marginTop: 18 }}>
-          <div className="panel-head"><span className="panel-title"><Icon name="escalas" size={14} /> Pendências da semana <HelpDot text="Vagas da escala desta semana que ainda não têm ninguém confirmado." /></span><span className="panel-meta">{gaps.length} vagas</span></div>
+          <div className="panel-head"><span className="panel-title"><Icon name="escalas" size={14} /> Pendências da semana <HelpDot text="Funções da programação futura desta semana que ainda não têm todas as vagas preenchidas." /></span><span className="panel-meta">{plural(gapsDaSemana.length, "função para conferir", "funções para conferir")}</span></div>
           <div className="panel-body flush">
-            {gaps.slice(0, 5).map((gap) => <div className="gap-row" key={`${gap.event.id}-${gap.position.id}`}><div className="gap-ic wait">!</div><div className="mini-main"><div className="mini-title">{gap.position.name} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {gap.ministry.name}</span></div><div className="mini-sub">{joinDot(gap.event.name, gap.event.time)}</div></div></div>)}
+            {gapsDaSemana.slice(0, 5).map((gap) => <div className="gap-row" key={`${gap.event.id}-${gap.position.id}`}><div className="gap-ic wait">!</div><div className="mini-main"><div className="mini-title">{gap.position.name} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {gap.ministry.name}</span></div><div className="mini-sub">{joinDot(gap.event.name, gap.event.time)}</div></div></div>)}
           </div>
         </div>
       ) : null}

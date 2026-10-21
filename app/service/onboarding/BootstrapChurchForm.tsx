@@ -1,7 +1,8 @@
 "use client";
 
+import { normalizarCnpj, formatarCnpj } from "../lib/cnpj";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { Icon } from "../lib/icons";
 
@@ -23,16 +24,8 @@ function friendlyBootstrapError(message: string) {
   return "Não conseguimos criar a igreja agora. Tente de novo em instantes.";
 }
 
-function formatCnpj(digits: string) {
-  const d = digits.slice(0, 14);
-  return d
-    .replace(/^(\d{2})(\d)/, "$1.$2")
-    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
-    .replace(/\.(\d{3})(\d)/, ".$1/$2")
-    .replace(/(\d{4})(\d)/, "$1-$2");
-}
-
 type CnpjLookup = {
+  cnpj?: string;
   valid: boolean;
   active?: boolean;
   error?: string;
@@ -54,6 +47,7 @@ export default function BootstrapChurchForm() {
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
 
+  const consultaId = useRef(0);
   const [checking, setChecking] = useState(false);
   const [lookup, setLookup] = useState<CnpjLookup | null>(null);
 
@@ -61,6 +55,7 @@ export default function BootstrapChurchForm() {
   const [error, setError] = useState("");
 
   async function checkCnpj(rawDigits: string) {
+    const atual = ++consultaId.current;
     if (rawDigits.length !== 14) {
       setLookup(null);
       return;
@@ -74,15 +69,17 @@ export default function BootstrapChurchForm() {
         body: JSON.stringify({ cnpj: rawDigits }),
       });
       const data = (await res.json()) as CnpjLookup;
+      if (atual !== consultaId.current) return;
       setLookup(data);
       if (data.valid && data.active) {
         if (!orgName.trim()) setOrgName(data.nomeFantasia || data.razaoSocial || "");
         if (!city.trim() && data.city) setCity(data.state ? `${data.city} · ${data.state}` : data.city);
       }
     } catch {
+      if (atual !== consultaId.current) return;
       setLookup({ valid: false, error: "Não conseguimos consultar o CNPJ agora. Tente de novo." });
     } finally {
-      setChecking(false);
+      if (atual === consultaId.current) setChecking(false);
     }
   }
 
@@ -90,7 +87,7 @@ export default function BootstrapChurchForm() {
     event.preventDefault();
     setError("");
 
-    const cnpjDigits = cnpj.replace(/\D/g, "");
+    const cnpjDigits = normalizarCnpj(cnpj);
 
     if (!orgName.trim()) {
       setError("Digite o nome da igreja.");
@@ -99,7 +96,7 @@ export default function BootstrapChurchForm() {
     // CNPJ temporariamente opcional (fase de teste controlado, ver commit).
     // Se a pessoa preencheu algo, exige que tenha validado certinho; se deixou
     // em branco, deixa passar sem CNPJ nenhum.
-    if (cnpjDigits.length > 0 && (!lookup?.valid || !lookup?.active)) {
+    if (cnpjDigits.length > 0 && (checking || !lookup?.valid || !lookup?.active || lookup.cnpj !== cnpjDigits)) {
       setError("Confirme um CNPJ válido e ativo, ou deixe o campo em branco.");
       return;
     }
@@ -140,31 +137,6 @@ export default function BootstrapChurchForm() {
   return (
     <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16, marginTop: 24 }}>
       <label className="field">
-        <span className="field-label">CNPJ da igreja (opcional)</span>
-        <input
-          className="input"
-          value={formatCnpj(cnpj)}
-          onChange={(event) => {
-            const digits = event.target.value.replace(/\D/g, "").slice(0, 14);
-            setCnpj(digits);
-            setLookup(null);
-            if (digits.length === 14) checkCnpj(digits);
-          }}
-          placeholder="00.000.000/0000-00"
-          inputMode="numeric"
-        />
-        {checking && <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)", marginTop: 6 }}>Consultando a Receita Federal…</div>}
-        {lookup && lookup.valid && lookup.active && (
-          <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "var(--fs-ui-sm)", color: "var(--olive-soft)", marginTop: 6 }}>
-            <Icon name="ok" size={13} /> CNPJ ativo{lookup.razaoSocial ? ` · ${lookup.razaoSocial}` : ""}
-          </div>
-        )}
-        {lookup && !lookup.active && (
-          <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--amber)", marginTop: 6 }}>{lookup.error}</div>
-        )}
-      </label>
-
-      <label className="field">
         <span className="field-label req">Nome da igreja</span>
         <input
           className="input"
@@ -191,7 +163,7 @@ export default function BootstrapChurchForm() {
           className="input"
           value={phone}
           onChange={(event) => setPhone(event.target.value)}
-          placeholder="(11) 9..."
+          type="tel" autoComplete="tel" placeholder="(11) 9..."
         />
       </label>
 
@@ -204,6 +176,38 @@ export default function BootstrapChurchForm() {
           placeholder="São Paulo · SP"
         />
       </label>
+
+      <details className="service-onboarding-optional"><summary>Dados institucionais (opcional)</summary>
+      <label className="field">
+        <span className="field-label">CNPJ da igreja (opcional)</span>
+        <input
+          className="input"
+          value={formatarCnpj(cnpj)}
+          onChange={(event) => {
+            const digits = normalizarCnpj(event.target.value).slice(0, 14);
+            ++consultaId.current;
+            setChecking(false);
+            setCnpj(digits);
+            setLookup(null);
+            if (digits.length === 14) checkCnpj(digits);
+          }}
+          placeholder="00.000.000/0000-00"
+          autoCapitalize="characters"
+          autoCorrect="off"
+          spellCheck={false}
+        />
+        {checking && <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)", marginTop: 6 }}>Consultando a Receita Federal…</div>}
+        {lookup && lookup.valid && lookup.active && (
+          <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "var(--fs-ui-sm)", color: "var(--olive-soft)", marginTop: 6 }}>
+            <Icon name="ok" size={13} /> CNPJ ativo{lookup.razaoSocial ? ` · ${lookup.razaoSocial}` : ""}
+          </div>
+        )}
+        {lookup && !lookup.active && (
+          <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--amber)", marginTop: 6 }}>{lookup.error}</div>
+        )}
+      </label>
+
+      </details>
 
       {error && <p className="field-error">{error}</p>}
 

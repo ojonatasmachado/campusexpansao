@@ -1,14 +1,15 @@
 "use client";
 
+import { telefoneParaWhatsapp } from "../../lib/telefone";
 import { plural } from "../../lib/plural";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { Icon } from "../../lib/icons";
 import { formatDateBR, joinDot, parseISODate } from "../../lib/date";
 import AutocadastroPainel from "../../modules/visitantes/AutocadastroPainel";
 import { HelpDot } from "../../HelpSystem";
-import { Av, PageHead } from "../ui";
+import { Av, EmptyState, MenuMais, PageHead } from "../ui";
 import { Kpi, VISITOR_STAGES, semContato48h } from "../comum";
 import type { ChurchView, ContatoCfg, DrawerState, ModalState, PersonView, VisitorNoteView, VisitorView } from "../tipos";
 
@@ -32,7 +33,7 @@ export function VisitanteCard({ visitor, notes, onOpen }: { visitor: VisitorView
   // eslint-disable-next-line react-hooks/purity -- dias desde a visita precisam do relógio real
   const dias = visita ? Math.max(0, Math.floor((Date.now() - visita.getTime()) / 86400000)) : null;
   const alerta = semContato48h(visitor, notes);
-  const fone = (visitor.phone ?? "").replace(/\D/g, "");
+  const fone = telefoneParaWhatsapp(visitor.phone);
   return (
     <div className={`vcard${alerta ? " vcard-alerta" : ""}`}>
       <button type="button" className="vcard-open" onClick={onOpen}>
@@ -47,7 +48,7 @@ export function VisitanteCard({ visitor, notes, onOpen }: { visitor: VisitorView
         {!alerta && visitor.reply_status && <div className="vcard-foot">{visitor.reply_status === "respondeu" ? <span className="vcard-resp">respondeu</span> : <span className="vcard-noresp">sem resposta</span>}</div>}
       </button>
       <div className="vcard-acts">
-        {fone.length >= 10 && <a className="btn btn-sec btn-sm" href={`https://wa.me/55${fone.replace(/^55/, "")}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={14} /> WhatsApp</a>}
+        {fone && <a className="btn btn-sec btn-sm" href={`https://wa.me/${fone}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={14} /> WhatsApp</a>}
         <button className="btn btn-sec btn-sm" type="button" onClick={onOpen} aria-label={`Registrar contato com ${visitor.name}`}>Registrar</button>
       </div>
     </div>
@@ -94,8 +95,19 @@ export function Visitantes({
         eyebrow="Pessoas"
         subtitle={plural(visitors.length, "visitante")}
         help="Quem visitou pela primeira vez. Cada visitante tem um próximo passo e o histórico de contato; acompanhe pelas etapas do funil até virar membro."
-        action={<><div className="seg"><button className={view === "pipe" ? "on" : ""} type="button" onClick={() => setView("pipe")}>Funil</button><button className={view === "list" ? "on" : ""} type="button" onClick={() => setView("list")}>Lista</button><button className={view === "painel" ? "on" : ""} type="button" onClick={() => setView("painel")}>Painel</button><button className={view === "regras" ? "on" : ""} type="button" onClick={() => setView("regras")}>Regras</button></div>{church ? <button className="btn btn-sec" type="button" onClick={() => setQrOpen(true)}>QR e link</button> : null}<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo visitante", subtitle: "Quem chegou pela primeira vez. Entra no acompanhamento automaticamente.", saveLabel: "Registrar visitante", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem visitou" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"origem", label:"Como chegou", type:"select", half:true, options:[{v:"Convite de membro",l:"Convite de membro"},{v:"Instagram",l:"Instagram"},{v:"Indicação",l:"Indicação"},{v:"Evangelismo",l:"Evangelismo"},{v:"Tomou decisão no culto",l:"Tomou decisão no culto"},{v:"Passava na rua",l:"Passava na rua"}] }], action: { kind: "visitor" } })}>+ Visitante</button></>}
+        action={<><MenuMais rotulo="Mais opções" acoes={[
+          { rotulo: "Indicadores de visitantes", onClick: () => setView("painel") },
+          { rotulo: "Regras de acolhimento", onClick: () => setView("regras") },
+          ...(church ? [{ rotulo: "QR e link de visita", onClick: () => setQrOpen(true) }] : []),
+        ]} /><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo visitante", subtitle: "Quem chegou pela primeira vez. Entra no acompanhamento automaticamente.", saveLabel: "Registrar visitante", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem visitou" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"origem", label:"Como chegou", type:"select", half:true, options:[{v:"Convite de membro",l:"Convite de membro"},{v:"Instagram",l:"Instagram"},{v:"Indicação",l:"Indicação"},{v:"Evangelismo",l:"Evangelismo"},{v:"Tomou decisão no culto",l:"Tomou decisão no culto"},{v:"Passava na rua",l:"Passava na rua"}] }], action: { kind: "visitor" } })}>Registrar visitante</button></>}
       />
+      <div className="toolbar">
+        <div className="seg" role="group" aria-label="Acompanhamento de visitantes">
+          <button className={view === "pipe" ? "on" : ""} aria-pressed={view === "pipe"} type="button" onClick={() => setView("pipe")}>Funil</button>
+          <button className={view === "list" ? "on" : ""} aria-pressed={view === "list"} type="button" onClick={() => setView("list")}>Lista</button>
+        </div>
+        {(view === "painel" || view === "regras") && <span className="panel-meta">{view === "painel" ? "Indicadores de visitantes" : "Regras de acolhimento"}</span>}
+      </div>
       {view === "regras" && (
         <>
           <div className="contato-banner">
@@ -111,7 +123,7 @@ export function Visitantes({
 
       {view === "regras" ? null : view === "painel" ? (
         <div className="vpanel">
-          <div className="kpi-row"><Kpi icon="visitante" label="Visitantes" value={visitors.length} foot="no acompanhamento" help="Todo mundo que visitou e ainda está sendo acompanhado, antes de virar membro." /><Kpi icon="comunicacao" label="Respondem o contato" value={`${replyRate}%`} foot={`${answered.length} de ${contacted.length} contatados`} help="De quem a equipe já contatou, quantos responderam de volta." /><Kpi icon="ok" label="Integram (viram membro)" value={`${integrationRate}%`} foot={`${members.length} de ${visitors.length} · ${visitors.filter((v) => v.stage === "integrando" || v.stage === "membro").length} em integração`} help="De todos os visitantes, quantos completaram o caminho até virar membro." /><Kpi icon="alerta" label="Sem resposta" value={visitors.filter((visitor) => visitor.reply_status === "sem_resposta").length} foot="precisam de novo contato" amber help="Visitantes contatados que ainda não responderam. Vale tentar de novo." /></div>
+          <div className="kpi-row"><Kpi icon="visitante" label="Visitantes" value={visitors.length} foot="no acompanhamento" help="Todo mundo que visitou e ainda está sendo acompanhado, antes de virar membro." /><Kpi icon="comunicacao" label="Respondem o contato" value={contacted.length ? `${replyRate}%` : "Sem dados"} foot={`${answered.length} de ${contacted.length} contatados`} help="De quem a equipe já contatou, quantos responderam de volta." /><Kpi icon="ok" label="Integram (viram membro)" value={visitors.length ? `${integrationRate}%` : "Sem dados"} foot={`${members.length} de ${visitors.length} · ${visitors.filter((v) => v.stage === "integrando" || v.stage === "membro").length} em integração`} help="De todos os visitantes, quantos completaram o caminho até virar membro." /><Kpi icon="alerta" label="Sem resposta" value={visitors.filter((visitor) => visitor.reply_status === "sem_resposta").length} foot="precisam de novo contato" amber help="Visitantes contatados que ainda não responderam. Vale tentar de novo." /></div>
           <div className="vpanel-grid">
             <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Visitantes por culto <HelpDot text="Em qual culto os visitantes mais chegam." /></span></div><div className="panel-body flush">{Object.entries(byService).map(([name, count]) => <div className="dist-row" key={name}><span className="dist-name">{name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(count / maxService) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}{visitors.length === 0 ? <div className="empty">Nenhum visitante ainda.</div> : null}</div></div>
             <div className="panel">
@@ -123,9 +135,9 @@ export function Visitantes({
                   return (
                     <>
                       <div className="resp-split">
-                        <div className="resp-seg respondeu" style={{ flex: Math.max(answered.length, 0.001) }} title="Responderam" />
-                        <div className="resp-seg sem" style={{ flex: Math.max(semResposta.length, 0.001) }} title="Sem resposta" />
-                        <div className="resp-seg nao" style={{ flex: Math.max(naoContatados.length, 0.001) }} title="Ainda não contatados" />
+                        {answered.length > 0 && <div className="resp-seg respondeu" style={{ flex: answered.length }} title="Responderam" />}
+                        {semResposta.length > 0 && <div className="resp-seg sem" style={{ flex: semResposta.length }} title="Sem resposta" />}
+                        {naoContatados.length > 0 && <div className="resp-seg nao" style={{ flex: naoContatados.length }} title="Ainda não contatados" />}
                       </div>
                       <div className="resp-legend">
                         <span><i className="resp-dot respondeu" /> {answered.length} responderam</span>
@@ -151,6 +163,8 @@ export function Visitantes({
             </div>
           </div>
         </div>
+      ) : visitors.length === 0 ? (
+        <EmptyState title="A primeira visita começa o acompanhamento" text="Use Registrar visitante para cadastrar quem chegou. Em Mais opções, você encontra o QR e o link para a própria pessoa preencher." />
       ) : view === "pipe" ? (
         <div className="pipe">
           {VISITOR_STAGES.map((stage) => {
@@ -169,6 +183,8 @@ export function Visitantes({
 }
 
 export function ContatoCfgModal({ church, cfg, onClose, onRefresh }: { church: ChurchView; cfg: ContatoCfg; onClose: () => void; onRefresh: () => void }) {
+  const fid = useId();
+  const [erro, setErro] = useState("");
   const [prazoHoras, setPrazoHoras] = useState(cfg.prazoHoras);
   const [canal, setCanal] = useState(cfg.canal);
   const [metaIntegracaoDias, setMetaIntegracaoDias] = useState(cfg.metaIntegracaoDias);
@@ -176,41 +192,50 @@ export function ContatoCfgModal({ church, cfg, onClose, onRefresh }: { church: C
   const [abordagem, setAbordagem] = useState(cfg.abordagem);
   const [saving, setSaving] = useState(false);
 
+  const valoresValidos = Number.isInteger(prazoHoras) && prazoHoras > 0 && Number.isInteger(metaIntegracaoDias) && metaIntegracaoDias > 0;
   const salvar = async () => {
+    if (saving || !valoresValidos) return;
+    setErro("");
     setSaving(true);
     const next: ContatoCfg = { prazoHoras, canal, metaIntegracaoDias, mensagem, abordagem };
-    await createServiceBrowserClient().schema("service").from("churches").update({ settings: { ...church.settings, contatoCfg: next } }).eq("id", church.id);
-    onRefresh();
-    onClose();
+    try {
+      const result = await createServiceBrowserClient().schema("service").from("churches").update({ settings: { ...church.settings, contatoCfg: next } }).eq("id", church.id).select("id");
+      if (result.error || !result.data?.length) { setErro("Não conseguimos salvar as regras. Verifique seu acesso e tente novamente."); return; }
+      onRefresh();
+      onClose();
+    } catch { setErro("Não conseguimos salvar agora. Tente novamente."); }
+    finally { setSaving(false); }
   };
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-bg" onClick={saving ? undefined : onClose}>
+      <div className="modal wide" role="dialog" aria-modal="true" aria-labelledby={`${fid}-titulo`} aria-busy={saving} onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <div className="modal-eyebrow">Líder da integração</div>
-          <div className="modal-title">Como acolhemos quem chega</div>
+          <div className="modal-title" id={`${fid}-titulo`}>Como acolhemos quem chega</div>
           <div className="modal-sub">Defina o prazo e a abordagem do primeiro contato. Fica claro para a equipe e deixa visível quanto tempo leva para integrar.</div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
-          <div className="field field-half"><label className="field-label">Prazo do 1º contato (horas)</label><input className="input" type="number" value={prazoHoras} onChange={(e) => setPrazoHoras(+e.target.value)} /></div>
+          <div className="field field-half"><label className="field-label" htmlFor={`${fid}-prazo`}> Prazo do 1º contato (horas)</label><input id={`${fid}-prazo`} className="input" type="number" min={1} step={1} value={prazoHoras} onChange={(e) => setPrazoHoras(+e.target.value)} /></div>
           <div className="field field-half">
-            <label className="field-label">Canal</label>
-            <select className="select" value={canal} onChange={(e) => setCanal(e.target.value)}>
+            <label className="field-label" htmlFor={`${fid}-canal`}> Canal</label>
+            <select id={`${fid}-canal`} className="select" value={canal} onChange={(e) => setCanal(e.target.value)}>
               {["WhatsApp", "Ligação", "Mensagem", "Presencial"].map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </div>
-          <div className="field field-half"><label className="field-label">Meta de integração (dias)</label><input className="input" type="number" value={metaIntegracaoDias} onChange={(e) => setMetaIntegracaoDias(+e.target.value)} /></div>
+          <div className="field field-half"><label className="field-label" htmlFor={`${fid}-meta`}> Meta de integração (dias)</label><input id={`${fid}-meta`} className="input" type="number" min={1} step={1} value={metaIntegracaoDias} onChange={(e) => setMetaIntegracaoDias(+e.target.value)} /></div>
           <div className="field">
-            <label className="field-label">Mensagem padrão</label>
-            <textarea className="textarea" value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
+            <label className="field-label" htmlFor={`${fid}-mensagem`}> Mensagem padrão</label>
+            <textarea id={`${fid}-mensagem`} className="textarea" value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
             <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 6 }}>Use {"{nome}"}, {"{evento}"} e {"{igreja}"}: preenchemos automaticamente.</div>
           </div>
-          <div className="field"><label className="field-label">Abordagem / postura</label><textarea className="textarea" value={abordagem} onChange={(e) => setAbordagem(e.target.value)} /></div>
+          <div className="field"><label className="field-label" htmlFor={`${fid}-abordagem`}> Abordagem / postura</label><textarea id={`${fid}-abordagem`} className="textarea" value={abordagem} onChange={(e) => setAbordagem(e.target.value)} /></div>
         </div>
+        {!valoresValidos && <p className="fs-error" role="alert">Informe horas e dias como números inteiros maiores que zero.</p>}
+        {erro && <p className="fs-error" role="alert">{erro}</p>}
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>Salvar</button>
+          <button className="btn btn-sec" type="button" disabled={saving} onClick={onClose}>Cancelar</button>
+          <button className="btn btn-pri" type="button" disabled={saving || !valoresValidos} onClick={salvar}>{saving ? "Salvando..." : "Salvar"}</button>
         </div>
       </div>
     </div>

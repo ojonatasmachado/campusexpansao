@@ -106,6 +106,8 @@ export function useFinanceiro(org: string | undefined, mes: string, gerarPrevist
   useEffect(() => {
     if (!org) return;
     let vivo = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- a leitura externa mudou de mês/igreja ou foi repetida
+    setD((previous) => ({ ...previous, carregando: true, erro: "" }));
     (async () => {
       const s = db();
       /* conjunto inicial na primeira abertura (a função não faz nada se já existe) */
@@ -126,10 +128,10 @@ export function useFinanceiro(org: string | undefined, mes: string, gerarPrevist
         s.from("fin_closings").select("id,month,totals,notes,closed_at").eq("organization_id", org).is("reopened_at", null).order("month", { ascending: false }),
       ]);
       if (!vivo) return;
-      const erro = [contas, categorias, fundos, lanc].find((r) => r.error)?.error;
+      const erro = [contas, categorias, fundos, lanc, saldos, saldosF, pessoas, fixas, camps, prog, fechs].find((r) => r.error)?.error;
       setD({
         carregando: false,
-        erro: erro ? "Não foi possível abrir o financeiro. Recarregue a página." : "",
+        erro: erro ? "Não foi possível carregar os dados do financeiro." : "",
         contas: ((contas.data ?? []) as Conta[]).sort(porOrdem),
         categorias: ((categorias.data ?? []) as Categoria[]).sort(porOrdem),
         fundos: ((fundos.data ?? []) as Fundo[]).sort(porOrdem),
@@ -142,7 +144,9 @@ export function useFinanceiro(org: string | undefined, mes: string, gerarPrevist
         arrecadado: Object.fromEntries(((prog.data ?? []) as { campaign_id: string; arrecadado_cents: number }[]).map((r) => [r.campaign_id, Number(r.arrecadado_cents)])),
         fechamentos: (fechs.data ?? []) as Fechamento[],
       });
-    })();
+    })().catch(() => {
+      if (vivo) setD((previous) => ({ ...previous, carregando: false, erro: "Não foi possível carregar os dados do financeiro." }));
+    });
     return () => { vivo = false; };
   }, [org, mes, versao, gerarPrevistos]);
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { telefoneParaWhatsapp } from "../lib/telefone";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { ICON_PATHS, DEFAULT_ICON, Icon } from "../lib/icons";
 import { parseISODate } from "../lib/date";
@@ -249,23 +250,26 @@ export async function openMemberInviteWhatsapp(opts: {
   churchName: string;
   template?: string;
   tab: Window | null;
-}): Promise<{ error?: string }> {
-  const digits = (opts.phone ?? "").replace(/\D/g, "");
-  if (digits.length < 10) {
+}): Promise<{ error?: string; alreadyHasAccess?: boolean }> {
+  const waPhone = telefoneParaWhatsapp(opts.phone);
+  if (!waPhone) {
     opts.tab?.close();
-    return { error: "Cadastre o telefone com DDD para mandar o convite." };
+    return { error: "Cadastre o telefone com DDD. Para outro país, inclua + e o código do país." };
   }
-  const res = await fetch("/api/service/members/invite", {
+  let res: Response;
+  try { res = await fetch("/api/service/members/invite", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ memberId: opts.memberId }),
-  });
+  }); } catch {
+    opts.tab?.close();
+    return { error: "Não conseguimos gerar o acesso agora. O cadastro foi preservado. Tente novamente pela ficha da pessoa." };
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.link) {
     opts.tab?.close();
     return { error: data.error ?? "Não foi possível gerar o convite agora. Tente de novo." };
   }
-  const waPhone = digits.length <= 11 ? `55${digits}` : digits;
   const msg = fillAcessoMsgTemplate(opts.template || ACESSO_MSG_DEFAULT.mensagem, {
     nome: opts.name.split(" ")[0],
     igreja: opts.churchName,
@@ -275,9 +279,9 @@ export async function openMemberInviteWhatsapp(opts: {
     senha: data.alreadyHasAccess ? "a mesma que você já usa" : "você cria no link",
   });
   const url = `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
-  if (opts.tab) opts.tab.location.href = url;
-  else window.open(url, "_blank");
-  return {};
+  if (opts.tab && !opts.tab.closed) opts.tab.location.href = url;
+  else if (!window.open(url, "_blank")) return { error: "O acesso foi gerado, mas o navegador bloqueou o WhatsApp. Libere a abertura de janelas e tente novamente pela ficha da pessoa." };
+  return { alreadyHasAccess: !!data.alreadyHasAccess };
 }
 
 export function normalize(value: string) {

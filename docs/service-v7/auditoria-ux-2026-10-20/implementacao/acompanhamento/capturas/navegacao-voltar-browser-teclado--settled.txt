@@ -1,0 +1,13 @@
+- document:
+  - alert
+  - button "Caminhada"
+  - heading "Cursos" [level=1]
+  - main:
+    - text: Meus cursos · 2 Básico Concluído Fundamentos da Fé Avançado 0% Liderança servidora Próxima aula · 1 de 2 O líder que serve
+    - link "Assistir à aula":
+      - /url: https://youtube.com
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "3 novos Mensagens": 3 Mensagens
+    - button "Caminhada"

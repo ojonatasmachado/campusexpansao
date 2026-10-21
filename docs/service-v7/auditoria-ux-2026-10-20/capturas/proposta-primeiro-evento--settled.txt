@@ -1,0 +1,73 @@
+- document:
+  - text: CE.X · ESTUDO DE EXPERIÊNCIA · 20 OUT 2026
+  - heading "Mais igreja. Menos sistema para aprender." [level=1]
+  - paragraph: Comparação de duas direções para as mesmas tarefas. Dados fictícios. Protótipos separados, sem implementação no Service e sem envio de dados. Nenhuma atividade apresentada é de uma igreja real.
+  - button "A · Comunidade editorial" [pressed]
+  - button "B · Agenda e ação"
+  - text: Jornada
+  - combobox "Jornada":
+    - option "Membro · Início"
+    - option "Gestão · Início" [selected]
+    - option "Pastor · Primeira igreja"
+    - option "Gestão · Primeiro evento"
+  - text: Atividade
+  - combobox "Atividade":
+    - option "Pouca atividade" [selected]
+    - option "Sem atividade"
+    - option "Muita atividade"
+  - text: Aparência
+  - combobox "Aparência":
+    - option "Escuro" [selected]
+    - option "Claro"
+  - text: Tamanho do texto
+  - combobox "Tamanho do texto":
+    - option "Padrão · 17px" [selected]
+    - option "Maior · 19px"
+    - option "Máximo · 23px"
+  - main "Prévia interativa":
+    - text: Igreja Esperança Service
+    - button "AS"
+    - status:
+      - heading "Evento criado nesta demonstração" [level=2]
+      - paragraph: Nenhum evento foi publicado no Service. O ciclo de revisão e publicação foi concluído apenas aqui.
+      - button "Ver resultado simulado"
+    - navigation "Gestão":
+      - button "Início"
+      - button "Pessoas"
+      - button "Agenda"
+      - button "Comunicação"
+      - button "Buscar função ou pessoa"
+    - heading "O que precisa de você nesta semana" [level=1]
+    - paragraph: 20 a 26 de outubro · Visão da gestão
+    - heading "Para resolver" [level=2]
+    - text: Domingo · 18h · Igreja Esperança
+    - heading "Recepção precisa de uma pessoa" [level=2]
+    - paragraph: Culto de domingo · 3 de 4 vagas preenchidas. Marina é a líder responsável.
+    - button "Resolver a vaga de recepção"
+    - heading "2 visitantes aguardam retorno" [level=3]
+    - paragraph: Recepção · Há mais de 48 horas
+    - button "Ver →"
+    - heading "Como está a igreja" [level=2]
+    - paragraph: Últimos 30 dias · Números abrem as pessoas correspondentes.
+    - strong: "124"
+    - button "Membros"
+    - strong: "8"
+    - button "Visitantes"
+    - strong: "6"
+    - button "Em integração"
+    - button "Criar evento"
+  - complementary:
+    - text: DIREÇÃO A
+    - heading "Comunidade editorial" [level=2]
+    - paragraph: A hierarquia vem do texto, do espaço e das divisórias. Menos recipientes repetidos. Pessoas e contexto precedem a ferramenta.
+    - list:
+      - listitem: Uma ação colorida por tela. Outras ações têm hierarquia secundária.
+      - listitem: Mesmas tarefas, pessoas, datas e quantidades nas duas direções.
+      - listitem: O vazio explica a situação real. Não inventa notícias, convites nem atividade.
+      - listitem: Configuração em etapas e opções avançadas recolhidas.
+    - paragraph:
+      - strong: "Para avaliar:"
+      - text: você entende o que fazer sem explorar todos os botões?
+    - paragraph: Use os controles acima para comparar quatro jornadas, três níveis de atividade e dois temas. O estado de atividade afeta os Inícios; os formulários permanecem iguais para uma comparação controlada.
+    - paragraph: Protótipo de direção, não especificação final. Perfil, agenda e detalhes abrem exemplos locais. Estrutura modular, permissões, internacionalização completa e integrações serão verificadas antes de implementar.
+  - status: Evento simulado. Nenhum dado foi enviado.

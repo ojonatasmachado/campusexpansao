@@ -1,0 +1,49 @@
+- document:
+  - alert
+  - complementary:
+    - text: Igreja Teste Local Service
+    - button "Fechar menu": ✕
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Pessoas
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "MM"
+  - main:
+    - text: Pessoas
+    - heading "Visitantes Ajuda" [level=1]:
+      - text: Visitantes
+      - button "Ajuda": "?"
+    - paragraph: 1 visitante
+    - button "Funil"
+    - button "Lista"
+    - button "Painel"
+    - button "Regras"
+    - button "QR e link"
+    - button "+ Visitante"
+    - text: Novo 1
+    - button "VV Victor Visitante"
+    - link "WhatsApp":
+      - /url: https://wa.me/5511977777777
+    - button "Registrar contato com Victor Visitante": Registrar
+    - text: Contato 0 Integrando 0 Membro 0

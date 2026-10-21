@@ -1,0 +1,119 @@
+- document:
+  - dialog "Como usar o mapa de jornadas":
+    - heading "Como usar o mapa de jornadas" [level=2]
+    - button "Fechar": ✕
+    - heading "O que este mapa representa" [level=3]
+    - paragraph: Reconstrução das jornadas a partir do código, combinando a visão da pessoa e os processos que sustentam o serviço. Não é pesquisa com usuários nem prova de execução.
+    - heading "Como navegar" [level=3]
+    - paragraph: Escolha uma das 12 jornadas à esquerda. Cada coluna representa um momento, agrupado em etapas. As linhas mostram ações, hipóteses de pensamentos e dificuldades, oportunidades, interface, bastidores e sistemas de apoio.
+    - heading "Hipóteses e evidência" [level=3]
+    - paragraph:
+      - text: "O prefixo [Assumption] identifica uma inferência ainda não validada. A linha Evidência da pesquisa está vazia de propósito: registre nela observações, gravações autorizadas ou referências de pesquisa. Evidências da inspeção visual atual estão no"
+      - link "relatório":
+        - /url: RELATORIO.md
+      - text: e na
+      - link "galeria da auditoria":
+        - /url: index.html
+      - text: .
+    - heading "O que pode editar" [level=3]
+    - paragraph: Cenário, objetivo, pensamentos, dificuldades, oportunidades, evidências e notas podem receber suas anotações. Ações, interface, bastidores e sistemas de apoio são referências estáticas do código.
+    - heading "Escala de experiência" [level=3]
+    - paragraph: "Os números de 1 a 5 representam uma hipótese sobre a experiência naquele momento: 1, muita dificuldade; 2, dificuldade; 3, neutra; 4, positiva; 5, muito positiva. Não avaliam pessoas, participação religiosa ou engajamento. Nenhum número foi atribuído automaticamente. Clique novamente para limpar. Com duas escolhas, a curva aparece."
+    - heading "Salvar e compartilhar" [level=3]
+    - paragraph: Anotações são salvas neste navegador após 350 ms. Exportar baixa um JSON para guardar ou compartilhar. Importar permite mesclar campos ou substituir as anotações locais; ao mesclar o mesmo campo, o valor importado prevalece. Se o armazenamento falhar, exporte para preservar o trabalho.
+    - heading "Atalhos" [level=3]
+    - paragraph: Use ? para abrir esta ajuda e Escape para fechar. As etapas e momentos mantêm ids estáveis para preservar as anotações.
+  - dialog "Importar anotações":
+    - heading "Importar anotações" [level=2]
+    - button "Fechar": ✕
+    - paragraph
+    - paragraph:
+      - strong: Mesclar
+      - text: acrescenta as anotações importadas. Se o mesmo campo foi editado, o valor importado prevalece.
+    - paragraph:
+      - strong: Substituir
+      - text: troca as anotações deste navegador pelas importadas.
+    - button "Cancelar"
+    - button "Substituir locais"
+    - button "Mesclar"
+  - complementary:
+    - heading "Service · Auditoria de jornadas 2026-10-20" [level=1]
+    - paragraph: 12 jornadas · 48 momentos · 5 personas. Reconstrução do código, com hipóteses para validação. Anotações salvas neste navegador.
+    - button "Exportar"
+    - button "Importar"
+    - button "?"
+    - text: Entrada e ativação
+    - button "Cadastrar e ativar a primeira igreja Pastor e gestão"
+    - button "Entrar por convite ou código e recuperar bloqueios Membro"
+    - text: Operação e participação
+    - button "Criar evento e chegar ao membro Pastor e gestão"
+    - button "Preparar, publicar e responder escala Líder e equipe"
+    - button "Entender o app e voltar durante a semana Membro"
+    - text: Comunicação e cuidado
+    - button "Acolher visitante e integrar sem perder vínculo Líder e equipe"
+    - button "Publicar, receber e responder comunicação Líder e equipe"
+    - button "Acompanhar grupo e ausência Líder e equipe"
+    - text: Formação e família
+    - button "Preparar família, fazer check-in e retirar criança Família e responsável"
+    - button "Inscrever, estudar e registrar conclusão Membro"
+    - text: Gestão institucional
+    - button "Delegar, registrar e fechar finanças Tesouraria e secretaria"
+    - button "Importar pessoas e manter registros institucionais Tesouraria e secretaria"
+  - main:
+    - text: "Mapa reconstruído do código. Hipóteses não são pesquisa. Inspeção visual atual:"
+    - link "galeria":
+      - /url: index.html
+    - text: e
+    - link "relatório":
+      - /url: RELATORIO.md
+    - text: . 12 jornadas, 48 momentos, cinco personas. Gerado com build.py da skill journey-mapper e adaptado apenas neste arquivo para português e identidade CE.X.
+    - heading "Criar evento e chegar ao membro" [level=2]
+    - text: Persona principal Pastor e gestão Cenário
+    - textbox "Quem é esta pessoa e o que a traz aqui?": "[Assumption] Cenário de serviço reconstruído do código atual, sem pesquisa de usuário ou observação de conta real."
+    - text: Objetivo da pessoa
+    - textbox "Qual resultado indica sucesso para esta pessoa?": Publicar atividade compreensível e acompanhar participação
+    - text: "Etapa Preparar Convidar e acompanhar Momento 1 Criar na agenda 2 Definir participação 3 Descobrir evento 4 Responder Ações Informa nome, tipo, local, data e hora Abre detalhe e aba Para o membro Membro abre Início ou Agenda Abre evento e responde conforme regra Pensamentos: hipótese"
+    - textbox "Qual pensamento precisa ser validado?": "[Assumption] O que preciso informar para publicar?"
+    - textbox "Qual pensamento precisa ser validado?": "[Assumption] Onde defino se a pessoa precisa se inscrever?"
+    - textbox "Qual pensamento precisa ser validado?": "[Assumption] Esse evento é relevante para mim?"
+    - textbox "Qual pensamento precisa ser validado?": "[Assumption] Minha resposta chegou à igreja?"
+    - text: "Experiência: hipótese"
+    - button "1"
+    - button "2"
+    - button "3"
+    - button "4"
+    - button "5"
+    - button "1"
+    - button "2"
+    - button "3"
+    - button "4"
+    - button "5"
+    - button "1"
+    - button "2"
+    - button "3"
+    - button "4"
+    - button "5"
+    - button "1"
+    - button "2"
+    - button "3"
+    - button "4"
+    - button "5"
+    - text: "Dificuldades: hipótese"
+    - textbox "Qual dificuldade foi observada ou inferida?": "[Assumption] Dados operacionais não esclarecem a ação esperada do participante."
+    - textbox "Qual dificuldade foi observada ou inferida?": "[Assumption] Comportamento público está numa aba separada que não é a inicial."
+    - textbox "Qual dificuldade foi observada ou inferida?": "[Assumption] Publicação precisa fornecer contexto e público, além de existir na agenda."
+    - textbox "Qual dificuldade foi observada ou inferida?": "[Assumption] Conclusão exige retorno legível nos dois lados do serviço."
+    - text: "Oportunidades: hipótese"
+    - textbox "Qual oportunidade pode ser validada?": "[Assumption] Perguntar desde a criação o que a pessoa poderá fazer"
+    - textbox "Qual oportunidade pode ser validada?": "[Assumption] Unir criação e comportamento público no mesmo fluxo"
+    - textbox "Qual oportunidade pode ser validada?": "[Assumption] Mostrar publicação, alcance e necessidade de ação à gestão"
+    - textbox "Qual oportunidade pode ser validada?": "[Assumption] Fechar ciclo com confirmação para membro e gestão"
+    - text: Evidência da pesquisa
+    - textbox "Registre pesquisa, observação, gravação ou chamado."
+    - textbox "Registre pesquisa, observação, gravação ou chamado."
+    - textbox "Registre pesquisa, observação, gravação ou chamado."
+    - textbox "Registre pesquisa, observação, gravação ou chamado."
+    - text: Linha de interação Interface visível FormScreen a partir da Agenda · app/service/painel/telas/Agenda.tsx:41 EventDrawer com três abas · app/service/painel/telas/Evento.tsx:46 Da igreja com até três eventos · app/service/membro/Inicio.tsx:350 EventoRow e folha do evento · app/service/membro/Agenda.tsx:1 Linha de visibilidade Bastidores Cria event com configuração inicial Configura aviso, presença ou inscrição Seleciona eventos futuros sem duplicar escala pendente Event RSVP persiste e aparece no painel Linha de interação interna Sistemas de apoio Código Next.js e Supabase; execução e dados reais não comprovados nesta análise. Código Next.js e Supabase; execução e dados reais não comprovados nesta análise. Código Next.js e Supabase; execução e dados reais não comprovados nesta análise. Código Next.js e Supabase; execução e dados reais não comprovados nesta análise.
+    - heading "Curva de experiência hipotética" [level=3]
+    - text: Escolha uma hipótese de experiência em dois momentos para visualizar a curva. Não é avaliação de pessoas. Anotações desta jornada
+    - textbox "Hipóteses, referências de pesquisa e pontos para testar."

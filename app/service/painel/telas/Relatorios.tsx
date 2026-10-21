@@ -1,5 +1,7 @@
 "use client";
 
+import { aindaVaiAcontecer } from "../../lib/date";
+import { plural } from "../../lib/plural";
 import { useState } from "react";
 import { Icon } from "../../lib/icons";
 
@@ -27,7 +29,6 @@ export function Relatorios({
   roster,
   eventAttendance,
   fellowshipGroups,
-  confirmationRate,
   setRoute,
   church,
 }: {
@@ -41,7 +42,6 @@ export function Relatorios({
   roster: RosterAssignmentView[];
   eventAttendance: EventAttendanceView[];
   fellowshipGroups: FellowshipGroupView[];
-  confirmationRate: number;
   setRoute: (route: keyof typeof ROUTES) => void;
   church: ChurchView | undefined;
 }) {
@@ -56,17 +56,17 @@ export function Relatorios({
   const diasAtras = (iso: string) => (hoje - new Date(iso).getTime()) / 86400000;
 
   /* membros na rede: delta = novos no período vs. período anterior (member.createdAt real) */
-  const membrosDelta = members.filter((m) => diasAtras(m.createdAt) <= P).length - members.filter((m) => diasAtras(m.createdAt) > P && diasAtras(m.createdAt) <= 2 * P).length;
+  const membrosDelta = members.filter((m) => diasAtras(m.createdAt) >= 0 && diasAtras(m.createdAt) < P).length - members.filter((m) => diasAtras(m.createdAt) >= P && diasAtras(m.createdAt) < 2 * P).length;
 
-  /* retenção de visitantes: % que viraram membro, comparando uma safra madura (60-120 dias, já teve tempo real de converter) com a safra anterior (120-220 dias) */
-  const retencaoAtual = visitors.length ? Math.round((visitors.filter((v) => v.stage === "membro").length / visitors.length) * 100) : 0;
+  /* Conversão dos cadastros no recorte escolhido; não mistura o total histórico
+     com a comparação de outra safra. Sem visitantes, não há taxa calculável. */
   const retencaoPeriodo = (min: number, max: number) => {
     const cohort = visitors.filter((v) => diasAtras(v.created_at) >= min && diasAtras(v.created_at) < max);
     return cohort.length ? Math.round((cohort.filter((v) => v.stage === "membro").length / cohort.length) * 100) : null;
   };
-  const retencaoRecente = retencaoPeriodo(60, 120);
-  const retencaoAnterior = retencaoPeriodo(120, 220);
-  const retencaoDelta = retencaoRecente !== null && retencaoAnterior !== null ? retencaoRecente - retencaoAnterior : null;
+  const retencaoAtual = retencaoPeriodo(0, P);
+  const retencaoAnterior = retencaoPeriodo(P, 2 * P);
+  const retencaoDelta = retencaoAtual !== null && retencaoAnterior !== null ? retencaoAtual - retencaoAnterior : null;
 
   /* cobertura de escala: mesma fórmula global de confirmationRate, com delta comparando eventos dos últimos 30 dias x 30 dias anteriores */
   const eventById = new Map(events.map((e) => [e.id, e]));
@@ -81,7 +81,7 @@ export function Relatorios({
   /* frequência média: check-ins reais (event_attendance) por culto nos últimos 30 dias x 30 dias anteriores */
   const cultoIds = new Set(events.filter((e) => e.kind.toLowerCase() === "culto").map((e) => e.id));
   const frequenciaPeriodo = (min: number, max: number) => {
-    const cultosPeriodo = events.filter((e) => cultoIds.has(e.id) && diasAtras(e.eventDate) >= min && diasAtras(e.eventDate) < max);
+    const cultosPeriodo = events.filter((e) => cultoIds.has(e.id) && !aindaVaiAcontecer(e.eventDate, e.time) && diasAtras(e.eventDate) >= min && diasAtras(e.eventDate) < max);
     if (!cultosPeriodo.length) return null;
     const total = cultosPeriodo.reduce((sum, ev) => sum + eventAttendance.filter((a) => a.event_id === ev.id).length, 0);
     return Math.round(total / cultosPeriodo.length);
@@ -89,8 +89,6 @@ export function Relatorios({
   const freqRecente = frequenciaPeriodo(0, P);
   const freqAnterior = frequenciaPeriodo(P, 2 * P);
   const freqDelta = freqRecente !== null && freqAnterior !== null ? freqRecente - freqAnterior : null;
-  const cultosTodos = events.filter((e) => cultoIds.has(e.id));
-  const freqGeral = cultosTodos.length ? Math.round(cultosTodos.reduce((sum, ev) => sum + eventAttendance.filter((a) => a.event_id === ev.id).length, 0) / cultosTodos.length) : 0;
 
   const foot = (delta: number | null, unidade: string, fallback: string) => delta === null ? fallback : `${delta >= 0 ? "+" : "−"}${Math.abs(delta)}${unidade} em relação ${P === 90 ? "ao trimestre anterior" : "aos 30 dias anteriores"}`;
 
@@ -108,8 +106,7 @@ export function Relatorios({
   };
   const niveis = people.map((p) => ({ person: p, nivel: nivelDe(p) }));
   const contar = (n: string) => niveis.filter((v) => v.nivel === n).length;
-  const NIVEL_TAG: Record<string, string> = { atencao: "Atenção", sobrecarga: "Sobrecarga", afastando: "Afastando" };
-  const wellRows = niveis.filter((v) => v.nivel !== "saudavel").map(({ person, nivel }) => ({ person, cls: nivel, tag: NIVEL_TAG[nivel] }));
+  const wellRows = niveis.filter((v) => v.nivel !== "saudavel").map(({ person, nivel }) => ({ person, cls: nivel }));
 
   /* membros cadastrados até o fim de cada um dos últimos 4 meses, terminando no mês atual */
   const MES_CURTO = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
@@ -140,14 +137,13 @@ export function Relatorios({
       ["Relatório", "Gerado em", dia],
       ["Relatório", "Recorte", recorte],
       ["Indicadores", "Membros na rede", members.length],
-      ["Indicadores", "Membros novos no recorte", members.filter((m) => diasAtras(m.createdAt) <= P).length],
-      ["Indicadores", "Retenção de visitantes (%)", retencaoAtual],
-      ["Indicadores", "Cobertura de escala (%)", confirmationRate],
-      ["Indicadores", "Cobertura de escala no recorte (%)", coberturaRecente ?? ""],
-      ["Indicadores", ct("Frequência média por {culto}"), freqRecente ?? freqGeral],
+      ["Indicadores", "Membros novos no recorte", members.filter((m) => diasAtras(m.createdAt) >= 0 && diasAtras(m.createdAt) < P).length],
+      ["Indicadores", "Visitantes convertidos no recorte (%)", retencaoAtual ?? "Sem dados"],
+      ["Indicadores", "Confirmações de escala (%)", coberturaRecente ?? "Sem dados"],
+      ["Indicadores", ct("Média de check-ins por {culto}"), freqRecente ?? "Sem dados"],
       ...serieLabels.map((l, i) => ["Crescimento de membros", l, series[i]]),
       ...FUNNEL_STAGES.map((st, i) => ["Funil de visitantes", st.label, funnelCounts[i]]),
-      ...[["saudavel", "Saudável"], ["atencao", "Atenção"], ["sobrecarga", "Sobrecarga"], ["afastando", "Afastando"]].map(([k, l]) => ["Bem-estar", l, contar(k)]),
+      ...[["saudavel", "Sem pendência registrada"], ["atencao", "Uma recusa"], ["sobrecarga", "Três ou mais escalas"], ["afastando", "Pausa ou duas recusas"]].map(([k, l]) => ["Escala da semana", l, contar(k)]),
       ...ministries.map((m) => [ct("{Voluntarios} por time"), m.name, m.people.length]),
       ...caminhadaEtapas.map((st, i) => [ct("Membros por {caminhada}"), st, members.filter((m) => m.journey[i]).length]),
       ...(gruposAtivo ? gcCounts.map(({ group, n }) => [`Membros por ${gruposSigla}`, group.name, n]) : []),
@@ -156,15 +152,24 @@ export function Relatorios({
   };
   return (
     <div className="content wide">
-      <PageHead title="Relatórios e indicadores" eyebrow="Gestão" help="A saúde da igreja num lugar: crescimento, cobertura de escala e o bem-estar de quem serve. Use o recorte de trimestre pra comparar." action={<><div className="seg" role="group" aria-label="Recorte das comparações">{([[30, "30 dias"], [90, "Trimestre"]] as const).map(([v, l]) => <button key={v} type="button" className={periodo === v ? "on" : ""} aria-pressed={periodo === v} onClick={() => setPeriodo(v)}>{l}</button>)}</div><button className="btn btn-pri" type="button" onClick={baixarRelatorio}>Baixar relatório →</button></>} />
-      <div className="kpi-row"><Kpi icon="membros" label="Membros na rede" value={members.length} foot={foot(membrosDelta, " novos", "cadastrados")} help="Toda a congregação, somando todas as congregações da rede." /><Kpi icon="visitante" label="Retenção de visitantes" value={`${retencaoAtual}%`} foot={foot(retencaoDelta, "%", "viram membros")} help="De todos os visitantes, quantos completaram o caminho até virar membro." /><Kpi icon="escalas" label="Cobertura de escala" value={`${confirmationRate}%`} foot={foot(coberturaDelta, "pp", "das posições preenchidas")} help="Das vagas de escala em aberto, quantas já têm alguém confirmado." /><Kpi icon="cultos" label="Frequência média" value={freqRecente ?? freqGeral} foot={foot(freqDelta, "", ct("por {culto}"))} help={ct("Quantas pessoas em média marcam presença por {culto}.")} /></div>
+      <PageHead title="Relatórios e indicadores" eyebrow="Gestão" help="A saúde da igreja num lugar: crescimento, cobertura de escala e registros de quem serve. Use o recorte de trimestre pra comparar." action={<><div className="seg" role="group" aria-label="Recorte das comparações">{([[30, "30 dias"], [90, "Trimestre"]] as const).map(([v, l]) => <button key={v} type="button" className={periodo === v ? "on" : ""} aria-pressed={periodo === v} onClick={() => setPeriodo(v)}>{l}</button>)}</div><button className="btn btn-pri" type="button" onClick={baixarRelatorio}>Baixar relatório →</button></>} />
+      <div className="kpi-row"><Kpi icon="membros" label="Membros na rede" value={members.length} foot={foot(membrosDelta, " novos", "cadastrados")} help="Toda a congregação, somando todas as congregações da rede." /><Kpi icon="visitante" label="Visitantes que viraram membros" value={retencaoAtual === null ? "Sem dados" : `${retencaoAtual}%`} foot={foot(retencaoDelta, " pp", retencaoAtual === null ? "nenhum visitante no recorte" : "dos cadastrados no recorte")} help="Percentual dos visitantes cadastrados no período escolhido que estão na etapa de membro. Cadastros recentes ainda podem estar no início da jornada." /><Kpi icon="escalas" label="Confirmações de escala" value={coberturaRecente === null ? "Sem dados" : `${coberturaRecente}%`} foot={foot(coberturaDelta, " pp", coberturaRecente === null ? "nenhuma escala no recorte" : "das vagas escaladas no recorte")} help="Das pessoas escaladas nos eventos do período escolhido, quantas confirmaram. Não mede vagas ainda sem uma pessoa escalada." /><Kpi icon="cultos" label="Média de check-ins" value={freqRecente ?? "Sem dados"} foot={foot(freqDelta, "", freqRecente === null ? ct("nenhum {culto} no recorte") : ct("por {culto} no recorte"))} help={ct("Check-ins registrados divididos pelo número de {cultos} no período. Zero check-ins não comprova ausência de pessoas.")} /></div>
       <div className="dash-3col">
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={13} /> Crescimento de membros <HelpDot text="Quantos membros novos entraram nos últimos meses." /></span><span className="panel-meta">últimos meses</span></div><div className="panel-body"><div style={{ fontSize: "var(--fs-pn-32)", fontWeight: 700 }}>{members.length}<span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>membros no total</span></div><div style={{ marginTop: 14 }}><Bars series={series} labels={serieLabels} /></div></div></div>
-        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="visitante" size={13} /> Funil de visitantes <HelpDot text="Quantos visitantes estão em cada etapa, da primeira visita até virar membro." /></span><button className="panel-link" type="button" onClick={() => setRoute("visitantes")}>Abrir</button></div><div className="panel-body flush">{FUNNEL_STAGES.map((s, i) => <div className="dist-row" key={s.id}><span className="dist-name" style={{ width: 140 }}>{s.label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${Math.max(4, (funnelCounts[i] / funnelMax) * 100)}%` }} /></div><span className="dist-num">{funnelCounts[i]}</span></div>)}</div></div>
+        <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="visitante" size={13} /> Funil de visitantes <HelpDot text="Quantos visitantes estão em cada etapa, da primeira visita até virar membro." /></span><button className="panel-link" type="button" onClick={() => setRoute("visitantes")}>Abrir</button></div><div className="panel-body flush">{FUNNEL_STAGES.map((s, i) => <div className="dist-row" key={s.id}><span className="dist-name" style={{ width: 140 }}>{s.label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(funnelCounts[i] / funnelMax) * 100}%` }} /></div><span className="dist-num">{funnelCounts[i]}</span></div>)}</div></div>
       </div>
-      <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">Termômetro de bem-estar</span><span className="line" /></div>
-      <div className="well-sum">{[["saudavel", contar("saudavel"), "Saudável"], ["atencao", contar("atencao"), "Atenção"], ["sobrecarga", contar("sobrecarga"), "Sobrecarga"], ["afastando", contar("afastando"), "Afastando"]].map(([level, count, label]) => <div className="well-pill" key={level}><div className="n">{count}</div><div className="l"><span className={`well-dot ${level}`} />{label}</div></div>)}</div>
-      <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={13} /> Quem precisa de atenção <HelpDot text={ct("{Voluntarios} em pausa, de férias ou com engajamento abaixo da média nas últimas escalas.")} /></span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>{ct("{Voluntarios}")}</button></div><div className="panel-body flush">{(wellRows.length ? wellRows : people.slice(0, 8).map((p) => ({ person: p, cls: "atencao", tag: "Atenção" }))).slice(0, 8).map(({ person, cls, tag }) => <div className="well-row" key={person.id}><Av name={person.name} size="md" photoUrl={person.photoUrl} /><div className="mini-main"><div className="mini-title">{person.name}</div><div className="mini-sub">{person.status !== "ativo" ? "Em pausa ou férias." : "Engajamento abaixo da média."}</div></div><div className="well-meter"><div className="well-track"><div className={`well-fill ${cls}`} style={{ width: `${person.engagement ?? 50}%` }} /></div><div className={`well-tag ${cls}`}>{tag}</div></div></div>)}</div></div>
+      <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">Situação da escala na semana</span><span className="line" /></div>
+      <div className="well-sum">{[["saudavel", contar("saudavel"), "Sem pendência registrada"], ["atencao", contar("atencao"), "Uma recusa"], ["sobrecarga", contar("sobrecarga"), "Três ou mais escalas"], ["afastando", contar("afastando"), "Pausa ou duas recusas"]].map(([level, count, label]) => <div className="well-pill" key={level}><div className="n">{count}</div><div className="l"><span className={`well-dot ${level}`} />{label}</div></div>)}</div>
+      <div className="panel">
+        <div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={13} /> Registros para conferir <HelpDot text="Pausas, recusas e quantidade de escalas registradas nesta semana. Esses fatos não medem bem-estar nem dedicação da pessoa." /></span><button className="panel-link" type="button" onClick={() => setRoute("pessoas")}>{ct("{Voluntarios}")}</button></div>
+        <div className="panel-body flush">
+          {wellRows.length === 0 && <div className="empty">Nenhuma pendência identificada nos registros da semana.</div>}
+          {wellRows.slice(0, 8).map(({ person, cls }) => {
+            const dado = carga[person.id] ?? { escalas: 0, recusas: 0 };
+            return <div className="well-row" key={person.id}><Av name={person.name} size="md" photoUrl={person.photoUrl} /><div className="mini-main"><div className="mini-title">{person.name}</div><div className="mini-sub">{person.status === "pausa" ? "Pausa informada no cadastro." : `${plural(dado.escalas, "escala")} e ${plural(dado.recusas, "recusa")} nesta semana.`}</div></div><span className={`well-tag ${cls}`}>Conferir</span></div>;
+          })}
+        </div>
+      </div>
       <div className="dash-2col" style={{ marginTop: 28 }}>
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="times" size={13} /> {ct("{Voluntarios} por time")} <HelpDot text={ct("Quantos {voluntarios} cada time tem hoje.")} /></span><button className="panel-link" type="button" onClick={() => setRoute("times")}>Times</button></div><div className="panel-body flush">{ministries.map((ministry) => <div className="dist-row" key={ministry.id}><span className="dist-name">{ministry.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(ministry.people.length / maxMinistry) * 100}%` }} /></div><span className="dist-num">{ministry.people.length}</span></div>)}</div></div>
         <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> {ct("Membros por {caminhada}")} <HelpDot text={ct("Em qual etapa da {caminhada} (decisão, batismo, curso, GC, servindo) cada membro está.")} /></span><span className="panel-meta">{members.length} pessoas</span></div><div className="panel-body flush">{caminhadaEtapas.map((step, index) => { const count = members.filter((member) => member.journey[index]).length; return <div className="dist-row" key={step}><span className="dist-name">{step}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${members.length ? (count / members.length) * 100 : 0}%` }} /></div><span className="dist-num">{count}</span></div>; })}</div></div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { regiaoInformada } from "../lib/endereco";
+import { podeReceberPedidos } from "../modules/times/recebimento";
 import { listaFinalidades, type ContribuirCfg } from "../modules/contribuir/pix";
 import { instalarApp, podeInstalarDireto } from "../lib/instalar";
 import { Fragment, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
@@ -13,45 +15,45 @@ import { FILA_DOBRA, ordenarFila, type EntradaFila } from "../modules/fila";
 import { CartaoAniversario, aniversariosHojeNoMeuTime } from "../modules/aniversarios/CartaoDoTime";
 import { videoDoLink } from "../lib/video";
 import { medir, medirCartaoVisto } from "../lib/medicao";
-import { Av, M6St, MemberUiContext, UNDO_MS, dataLonga, realValue } from "./comum";
-import { EventoRow } from "./Agenda";
+import { Av, M6St, JourneyContext, MemberUiContext, dataLonga, realValue } from "./comum";
+import { EventoRow, M6Date } from "./Agenda";
 import { usePush } from "./Perfil";
 import type { Announcement, Card, Child, ChildGuardian, Ev, ItemInicio, M, Ministry, P, Slot, StepView } from "./tipos";
 
-export function EscalaCard({ slot, ev, ministry, person, member, members, onConfirmarEscala, onRecusarEscala, onStartChat, destaque = true }: {
+export function EscalaCard({ slot, ev, ministry, person, member, members, onResponderEscala, onStartChat, destaque = true }: {
   slot: Slot; ev: Ev; ministry?: Ministry; person: P; member: M | null; members: M[];
   /* botão cheio só no primeiro cartão da fila do Início (lei 5) */
   destaque?: boolean;
-  onConfirmarEscala?: (id: string) => void; onRecusarEscala?: (id: string) => void;
+  onResponderEscala?: (id: string, status: Slot["status"]) => Promise<boolean>;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
 }) {
   const ui = useContext(MemberUiContext);
   const [st, setStLocal] = useState<Slot["status"]>(ui.respostas[slot.id] ?? slot.status);
   /* o selo da aba Agenda acompanha a resposta na hora, não só depois de gravar */
   const setSt = (v: Slot["status"]) => { setStLocal(v); ui.responderEscala(slot.id, v === "ok" || v === "no" ? v : null); };
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /* resposta esperando o "Desfazer": se o cartão sair da tela antes (trocou
-     de aba), grava na hora em vez de perder */
-  const pendente = useRef<(() => void) | null>(null);
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-    pendente.current?.();
-  }, []);
+  const [saving, setSaving] = useState(false);
+  const busy = useRef(false);
   const funcao = ministry?.positions?.find((p) => p.id === slot.position_id)?.name;
-  const responder = (v: "ok" | "no") => {
+  const gravar = async (v: Slot["status"]): Promise<boolean> => {
+    if (busy.current || !onResponderEscala) return false;
+    busy.current = true;
+    setSaving(true);
+    try {
+      const ok = await onResponderEscala(slot.id, v);
+      if (!ok) { ui.toast("Não conseguimos salvar sua resposta. Tente de novo."); return false; }
+      setSt(v);
+      return true;
+    } catch {
+      ui.toast("Não conseguimos salvar sua resposta. Tente de novo.");
+      return false;
+    } finally { busy.current = false; setSaving(false); }
+  };
+  const responder = async (v: "ok" | "no") => {
     const antes = st;
-    setSt(v);
-    if (timer.current) clearTimeout(timer.current);
-    const gravar = () => {
-      timer.current = null;
-      pendente.current = null;
-      if (v === "ok") { onConfirmarEscala?.(slot.id); ui.escalaConfirmada(); } else onRecusarEscala?.(slot.id);
-    };
-    pendente.current = gravar;
-    timer.current = setTimeout(gravar, UNDO_MS);
-    ui.toast(v === "ok" ? "Presença confirmada" : `Avisamos o líder${ministry ? ` do ${ministry.name}` : ""}`, {
+    if (!await gravar(v)) return;
+    ui.toast(v === "ok" ? "Presença confirmada" : "Registramos que você não pode", {
       label: "Desfazer",
-      fn: () => { if (timer.current) clearTimeout(timer.current); timer.current = null; pendente.current = null; setSt(antes); },
+      fn: () => { void gravar(antes).then((ok) => { if (ok) ui.toast("Resposta desfeita"); }); },
     });
   };
   /* troca: destinatário em cadeia, resolvido no banco (v7 2.4). Sem ninguém, sem o botão */
@@ -61,18 +63,21 @@ export function EscalaCard({ slot, ev, ministry, person, member, members, onConf
     ui.sheet(<SheetTroca slot={slot} ev={ev} funcao={funcao} member={member} dest={destTroca} onStartChat={onStartChat} />);
   };
   return (
-    <div className="m6-card">
-      <div className="m6-kick">{st === "wait" ? "Escala para confirmar" : "Sua escala"}</div>
-      <div className="m6-ct">{ev.name}</div>
+    <div className="m6-card service-commitment">
+      <div className="service-commitment-heading">
+        <span aria-hidden="true"><M6Date iso={ev.eventDate} /></span>
+        <div><div className="m6-kick">{st === "wait" ? "Escala para confirmar" : "Sua escala"}</div><div className="m6-ct">{ev.name}</div></div>
+      </div>
       <ul className="m6-facts">
         <li><Icon name="agenda" size={20} /><span>{joinDot(dataLonga(ev.eventDate) || ev.weekday, ev.time)}</span></li>
         {(ministry || funcao) && <li><Icon name="times" size={20} /><span>{joinDot(ministry?.name, funcao)}</span></li>}
         {ev.location && <li><Icon name="mapapin" size={20} /><span>{ev.location}</span></li>}
       </ul>
+      {saving && <p className="m6-meta" role="status">Salvando sua resposta...</p>}
       {st === "wait" && (
         <div className="m6-btns">
-          <button className={`m6-btn ${destaque ? "pri" : "sec"}`} type="button" onClick={() => responder("ok")}><Icon name="ok" size={20} />Confirmar</button>
-          <button className="m6-btn sec" type="button" onClick={() => responder("no")}>Não posso</button>
+          <button className={`m6-btn ${destaque ? "pri" : "sec"}`} type="button" disabled={saving || !onResponderEscala} onClick={() => responder("ok")}><Icon name="ok" size={20} />Confirmar</button>
+          <button className="m6-btn sec" type="button" disabled={saving || !onResponderEscala} onClick={() => responder("no")}>Não posso</button>
         </div>
       )}
       {st === "ok" && (
@@ -157,7 +162,7 @@ export function SheetOracao({ member, dest, onStartChat, organizationId, muralOn
 export const ADIADOS_KEY = "cex_inicio_adiados";
 export const ouvirAdiados = (cb: () => void) => { window.addEventListener(ADIADOS_KEY, cb); return () => window.removeEventListener(ADIADOS_KEY, cb); };
 export const lerAdiados = () => { try { return localStorage.getItem(ADIADOS_KEY) ?? "{}"; } catch { return "{}"; } };
-export function InicioV6({ contribuir, onContribuir, person, member, ministries, members, people = [], events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onConfirmarEscala, onRecusarEscala, onStartChat, nextStep, inscricoes, onServir, ligados, acessos = 0, instalado = false, destaque = null, onAbrirDestaque, organizationId }: {
+export function InicioV6({ contribuir, onContribuir, person, member, ministries, members, people = [], events, roster, cards, announcements, unreadIds, kidsChildren, childGuardians, kidsCheckin, onResponderEscala, onStartChat, nextStep, inscricoes, onServir, ligados, acessos = 0, instalado = false, destaque = null, onAbrirDestaque, organizationId }: {
   /* quantas vezes a pessoa abriu o app neste aparelho e se ele já está na tela de início (v7 4.10) */
   acessos?: number; instalado?: boolean;
   /* Pix da igreja (módulo contribuir): no dia do culto vira um cartão de prioridade baixa */
@@ -169,7 +174,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
   person: P; member: M | null; ministries: Ministry[]; members: M[]; people?: P[]; events: Ev[]; roster: Slot[]; cards: Card[];
   announcements: Announcement[]; unreadIds: Set<string>; kidsChildren: Child[]; childGuardians: ChildGuardian[];
   kidsCheckin?: (destaque: boolean) => React.ReactNode;
-  onConfirmarEscala?: (id: string) => void; onRecusarEscala?: (id: string) => void;
+  onResponderEscala?: (id: string, status: Slot["status"]) => Promise<boolean>;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
   nextStep: StepView | null;
   /* etapas ainda não feitas com inscrição aberta (v7 4.7) */
@@ -180,6 +185,8 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
 }) {
   const { comTermos: ct } = useTermos();
   const ui = useContext(MemberUiContext);
+  const jornada = useContext(JourneyContext);
+  const pedidosPendentes = new Set(jornada.serveRequests.filter((r) => r.member_id === member?.id && r.status === "pendente").map((r) => r.ministry_id));
   const [maisFila, setMaisFila] = useState(false);
   const hoje = todayISO();
   const serve = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
@@ -193,14 +200,13 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
   const novo = announcements.find((a) => a.urgent && unreadIds.has(a.id)) ?? announcements.find((a) => unreadIds.has(a.id));
   const meusFilhos = childGuardians.filter((g) => g.guardian_person_id === person.id).map((g) => kidsChildren.find((c) => c.id === g.child_id)).filter(Boolean) as Child[];
   const cultoHoje = events.find((e) => e.eventDate === hoje);
-  const timesAbertos = ministries.filter((m) => !m.people.some((mp) => mp.personId === person.id));
+  const timesAbertos = ministries.filter((m) => (podeReceberPedidos(m) || pedidosPendentes.has(m.id)) && !m.people.some((mp) => mp.personId === person.id));
   const ministryOf = (slot: Slot) => ministries.find((m) => m.positions?.some((p) => p.id === slot.position_id)) ?? ministries.find((m) => m.people.some((mp) => mp.personId === person.id));
   /* v7 4.10: o que ficou fora do primeiro acesso vira cartão de prioridade baixa */
   const faltaDados = member ? [
-    !person.photoUrl && "foto",
     !realValue(member.email) && "e-mail",
-    !member.birth && "aniversário",
-    (member.postalCode ?? "").replace(/\D/g, "").length !== 8 && "CEP",
+    !realValue(member.phone) && "telefone",
+    !regiaoInformada(member) && "região onde mora",
   ].filter(Boolean) as string[] : [];
   /* cartões adiados neste aparelho; no servidor, nenhum (o HTML começa igual) */
   const adiadosTxt = useSyncExternalStore(ouvirAdiados, lerAdiados, () => "{}");
@@ -254,14 +260,14 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
       case "kids":
         return <Fragment key={e.id}>{kidsCheckin?.(destaque)}</Fragment>;
       case "escala":
-        return <EscalaCard key={e.id} slot={c.slot} ev={c.ev} ministry={ministryOf(c.slot)} person={person} member={member} members={members} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat} destaque={destaque} />;
+        return <EscalaCard key={e.id} slot={c.slot} ev={c.ev} ministry={ministryOf(c.slot)} person={person} member={member} members={members} onResponderEscala={onResponderEscala} onStartChat={onStartChat} destaque={destaque} />;
       case "tarefa":
         return (
           <div key={e.id} className="m6-card">
             <div className="m6-kick">Tarefa</div>
             <div className="m6-ct">{c.card.title}</div>
             <div className="m6-meta">{!c.card.due ? "Sem prazo" : c.card.due.slice(0, 10) < todayISO() ? <M6St k="warn" ic="alerta">{`Atrasada desde ${formatDateBR(c.card.due)}`}</M6St> : `Prazo · ${formatDateBR(c.card.due)}`}</div>
-            <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("agenda", null, { agSeg: "minha" })}>Ver a tarefa</button></div>
+            <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("agenda", null, { agSeg: "minha", cardId: c.card.id })}>Ver a tarefa</button></div>
           </div>
         );
       case "mural":
@@ -271,7 +277,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
             {c.aviso.urgent && <M6St k="warn" ic="alerta">Urgente</M6St>}
             <div className="m6-ct">{c.aviso.title}</div>
             {c.aviso.created_at && <div className="m6-meta">{quandoPublicado(c.aviso.created_at)}</div>}
-            <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("mensagens", "mural")}>Ler a publicação</button></div>
+            <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("mensagens", "mural", { announcementId: c.aviso.id })}>Ler a publicação</button></div>
           </div>
         );
       case "passo":
@@ -326,15 +332,17 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
         );
       case "aniversario":
         return <CartaoAniversario key={e.id} pessoas={c.pessoas} destaque={destaque} onAgoraNao={() => adiar(e.id, 1)} />;
-      case "servir":
+      case "servir": {
+        const aguardando = c.times.some((m) => pedidosPendentes.has(m.id));
         return (
           <div key={e.id} className="m6-card">
             <div className="m6-kick">Servir</div>
-            <div className="m6-ct">{c.times.length === 1 ? "1 time procura pessoas" : `${c.times.length} times procuram pessoas`}</div>
-            <div className="m6-meta">{c.times.slice(0, 3).map((m) => m.name).join(", ")}. Veja o que cada um faz antes de decidir.</div>
-            <div className="m6-btns"><button className={btn} type="button" onClick={onServir}>Conhecer os times</button></div>
+            <div className="m6-ct">{aguardando ? "Seu pedido está em análise" : c.times.length === 1 ? "1 time procura pessoas" : `${c.times.length} times procuram pessoas`}</div>
+            <div className="m6-meta">{c.times.filter((m) => !aguardando || pedidosPendentes.has(m.id)).slice(0, 3).map((m) => m.name).join(", ")}. {aguardando ? "A liderança vai avaliar e conversar com você." : "Veja o que cada um faz antes de decidir."}</div>
+            <div className="m6-btns"><button className={btn} type="button" onClick={onServir}>{aguardando ? "Acompanhar pedido" : "Conhecer os times"}</button></div>
           </div>
         );
+      }
     }
   };
 
@@ -357,12 +365,12 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
   /* um destaque, parado; com a fila vazia sobe para o topo */
   const cartaoDestaque = destaque && onAbrirDestaque ? <DestaqueCard a={destaque} onAbrir={() => onAbrirDestaque(destaque)} /> : null;
   return (
-    <>
+    <div className="service-member-home">
       {fila.length === 0 && cartaoDestaque && <div className="m6-sec0">{cartaoDestaque}</div>}
       <div className={fila.length === 0 && cartaoDestaque ? "m6-sec" : "m6-sec0"}>
         <div className="m6-lbl">Para você agora</div>
         {fila.length === 0 ? (
-          <div className="m6-card"><div className="m6-ct">Tudo em dia</div><div className="m6-meta">Quando a liderança precisar de você, aparece aqui.</div></div>
+          <div className="service-home-clear"><div className="m6-ct">Tudo em dia</div><div className="m6-meta">Você não tem nenhuma resposta pendente agora.</div></div>
         ) : (
           visiveis.map((e, i) => (
             /* lei 11: botão do cartão = card_acted; botão marcado data-dispensa ("Agora não") = card_dismissed */
@@ -381,19 +389,19 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
       </div>
 
       <div className="m6-sec">
-        <div className="m6-lbl">Da igreja</div>
+        <div className="service-home-heading"><h2>Na vida da igreja</h2><p>Encontros e novidades para acompanhar.</p></div>
         {fila.length > 0 && cartaoDestaque}
         {daIgreja.length > 0 ? (
-          <div className="m6-list">{daIgreja.map((ev) => <EventoRow key={ev.id} ev={ev} serve={confirmados.has(ev.id) ? confirmados.get(ev.id) : null} />)}</div>
+          <div className="m6-list service-home-events">{daIgreja.map((ev) => <EventoRow key={ev.id} ev={ev} serve={confirmados.has(ev.id) ? confirmados.get(ev.id) : null} />)}</div>
         ) : (
-          <div className="m6-card"><div className="m6-meta">{ct("Os próximos {cultos} e eventos aparecem aqui.")}</div></div>
+          <div className="service-home-empty"><div className="m6-ct">Nenhum encontro publicado por enquanto</div><p className="m6-meta">{ct("Quando a igreja publicar os próximos {cultos} e eventos, você encontra aqui as datas, os horários e como participar.")}</p></div>
         )}
         <div className="m6-more"><button type="button" className="m6-link" onClick={() => ui.go("agenda", null, { agSeg: "igreja" })}>Ver a agenda completa →</button></div>
       </div>
 
       {member && ((destOracao && onStartChat) || oracaoOn) && (
         <div className="m6-sec">
-          <div className="m6-card">
+          <div className="m6-card service-home-care">
             <div className="m6-ct">Podemos orar por você?</div>
             <div className="m6-meta">{oracaoOn ? "Você escolhe quem vê: só a intercessão ou o mural de oração da igreja." : `Seu pedido vai para ${destOracao?.via === "intercessao" ? "quem cuida da intercessão" : "a liderança da igreja"}, com cuidado.`}</div>
             <div className="m6-btns">
@@ -404,7 +412,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 

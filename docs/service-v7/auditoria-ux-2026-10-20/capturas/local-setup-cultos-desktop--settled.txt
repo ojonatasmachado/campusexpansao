@@ -1,0 +1,60 @@
+- document:
+  - alert
+  - complementary:
+    - text: Outra Igreja Local Service
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - text: Início
+    - textbox "Buscar tela, membro, voluntário, time ou função..."
+    - button "OO Otávio"
+  - main:
+    - text: Configuração
+    - heading "Vamos deixar a igreja pronta" [level=1]
+    - paragraph: Três fases curtas. Dá para pular qualquer uma e continuar depois do ponto em que parou.
+    - button "Continuar depois"
+    - list:
+      - listitem:
+        - button "1 Sua igreja cerca de 3 minutos"
+      - listitem:
+        - button "2 Cultos e times cerca de 5 minutos"
+      - listitem:
+        - button "3 Pessoas cerca de 5 minutos"
+    - text: Fase 2 · Cultos e times Horários e times a partir de modelos. Cerca de 5 minutos. Quando acontecem os cultos
+    - button "Domingo 09:00"
+    - button "Domingo 10:00"
+    - button "Domingo 18:00"
+    - button "Domingo 19:00"
+    - button "Quarta 19:30"
+    - button "Quarta 20:00"
+    - button "Quinta 20:00"
+    - button "Sábado 19:30"
+    - text: Criar até
+    - textbox: 2026-12-31
+    - text: Times a partir de modelos
+    - button "Louvor Vocal, Violão ou guitarra, Teclado, Baixo, Bateria" [pressed]
+    - button "Recepção Porta, Boas-vindas" [pressed]
+    - button "Kids Professor, Auxiliar" [pressed]
+    - button "Mídia Projeção, Som, Transmissão" [pressed]
+    - paragraph: E os times Louvor, Recepção, Kids e Mídia, com as funções de cada um.
+    - button "Pular esta fase"
+    - button "Criar"
+  - button "Ajuda": "?"

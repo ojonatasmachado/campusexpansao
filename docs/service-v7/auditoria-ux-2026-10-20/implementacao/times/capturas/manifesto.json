@@ -1,0 +1,1306 @@
+[
+  {
+    "label": "times-pendente-apos-fechamento",
+    "evidence_id": "ev_053326a416a8a2177be2b84b1f1dca39f7952284ea878780bc6f87f002c3563f",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-pronto",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "acompanhar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "times-pendente-apos-fechamento--settled.png",
+        "sha256": "1ac0c2fe1c09f147f73167c74ac8c2f2152053d2d1f26f4f7c772dc3d78299c8",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "times-edicao-gestao",
+    "evidence_id": "ev_09839e43893a432fb5be8bc5d1939505f5de0dcbac6f63103606a94f826ff0c5",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "pronto",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "times",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "abrir-time",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "editar",
+        "action": "click",
+        "status": "failed",
+        "error": "locator.click: Error: strict mode violation: locator('[role=\"dialog\"] button.btn') resolved to 3 elements:\n    1) <button type=\"button\" class=\"btn btn-sec btn-sm\">Editar</button> aka getByLabel('Acolhimento Jornada').getByRole('button', { name: 'Editar' })\n    2) <button type=\"button\" class=\"btn btn-pri\">Ver escala</button> aka getByRole('button', { name: 'Ver escala' })\n    3) <button type=\"button\" class=\"btn btn-sec\">Adicionar pessoa</button> aka getByRole('button', { name: 'Adicionar pessoa' })\n\nCall log:\n  - waiting for locator('[role=\"dialog\"] button.btn')\n"
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      }
+    ],
+    "screens": [],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "times-gestao-pronto",
+    "evidence_id": "ev_45945e85ce380db0e253f4698ac975aabc0a6370508033f2d7688e5678eac46a",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "painel",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "times-gestao-pronto--settled.png",
+        "sha256": "877f4188eb9a1843781b28b1d32616053a4382fbd2160215ef1c7dd189b2b53a",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "times-criado-abertura-salva",
+    "evidence_id": "ev_6ef4703cad1b3b5cf9b37ab710c32d4b110eb0e0b8bf3c43c00b87949b5c4caf",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "pronto",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "times",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "novo",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "nome-time",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "proposito",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "abrir-pedidos",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "criar-time",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "salvo",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "times-criado-abertura-salva--settled.png",
+        "sha256": "1bfbcda26ad998593157cfd8c71e69a6bf8a491d8c7b80b0be2bd3adb9ac3ba6",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "times-controle-recebimento",
+    "evidence_id": "ev_7615c2963dbd19eab9c206c495e8e4524306924d3e0785520a59c4a6a80fc4c2",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "pronto",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "times",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "abrir-time",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "editar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "times-controle-recebimento--settled.png",
+        "sha256": "86c30b8292f8aca8ebdbe3b827a666697719737fa14b092556c0d8fc808664ce",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "times-criacao-painel-desktop",
+    "evidence_id": "ev_8701f752451bf3f9b1e907782afde7d840375ef8b0ad9219bb7c61137ae28b3c",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "pronto",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "times",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "novo",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "times-criacao-painel-desktop--settled.png",
+        "sha256": "1f845520ad498c42d972f72e1fe5a879feb6e5184d8f15796c10e88d62f568ef",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "times-gestao-ficha",
+    "evidence_id": "ev_8858d91757cb052291569fb6495d343f85a185226b3c1a5c308bac38aedc8429",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "pronto",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "times",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "abrir-time",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "times-gestao-ficha--settled.png",
+        "sha256": "80ea9ec714c8bc7847c862c1eac839645d3b1bc9adc00c5229bf997e50c2fe89",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "times-pedido-pendente",
+    "evidence_id": "ev_a9c433f0695a807f6d5bca0cff19f2f93103661fc7b1a5f55db22a39bc7ecf94",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-pronto",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "times",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "times-pedido-pendente--settled.png",
+        "sha256": "89221e5711013d3f89d42753a2a88f4c767c4391c19dde123875e163b581f577",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "times-membro-oportunidade",
+    "evidence_id": "ev_cd93db08527e774f936ac6b04897d65b45d6b88c25e3703f11ec19e04d973cd8",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "times-membro-oportunidade--settled.png",
+        "sha256": "d637ea84384a4a93cd4f0e2f1eec82ff87fd39684944cacc92119fb5a5938149",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "times-gestao-fechamento",
+    "evidence_id": "ev_d971310b5549bca2d2bc7b73886f97859dcbe87b9573c3149252f47a86c45bb9",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "pronto",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "times",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "abrir-time",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "editar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "fechar-pedidos",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "salvar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "salvo",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "times-gestao-fechamento--settled.png",
+        "sha256": "ebb3676b4d55f9b6157f1b9640a3eb0a0a44036e655324c7f119703cb20efe27",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "times-criacao-formulario",
+    "evidence_id": "ev_e38b7932827bf32e1530faaf8b7ca1c2a1b2fc19acb256ee4628f93216f3ef42",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "pronto",
+        "action": "wait_for",
+        "status": "failed",
+        "error": "Analysis operation timed out after 12000ms: capture_browser_scenario"
+      },
+      {
+        "id": "times",
+        "action": "click",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      },
+      {
+        "id": "novo",
+        "action": "click",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      }
+    ],
+    "screens": [],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "times-status-proprio",
+    "evidence_id": "ev_e47979d15800e90768ba84382bb1e29b7221106f92b6ad22eccc8ed458e03537",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-pronto",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "times",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "times-status-proprio--settled.png",
+        "sha256": "df9a8c7e997f0b39fa1856f1ea1a7233aaaa2d8d50489e5f65b471ae0ec45fc3",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "times-oportunidade-real",
+    "evidence_id": "ev_e6130409abf5321d62d98b10bf0b897e0f1f5c5dba5963ab42980179c8f65ed8",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-pronto",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "times-oportunidade-real--settled.png",
+        "sha256": "81f4e301efe42532f59a4dfc42866730e79b995a0dc7ec6125c9220db2ca8ff8",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "times-membro-inicio",
+    "evidence_id": "ev_ea763265c95816aeffa2ea8d12a885f5ce36601b28ac95d19eb2c8b514172f40",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-pronto",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "times-membro-inicio--settled.png",
+        "sha256": "2ba946557adec52a7e4efd84c476ab9cdc694ab0e9b9e00638fd4904fa9d235f",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  }
+]

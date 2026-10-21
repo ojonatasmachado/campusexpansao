@@ -1,0 +1,21 @@
+- document:
+  - button "Mensagens"
+  - heading "Mural da igreja" [level=1]
+  - main:
+    - button "Ver todas as publicações →"
+    - article "Culto de domingo mudou para o salão 2":
+      - text: Nova Urgente Culto de domingo mudou para o salão 2
+      - paragraph: O templo principal está em reforma. Mesmo horário, 19h.
+      - text: hoje · para todos
+    - paragraph: A igreja recebe um registro quando a publicação aparece na sua tela. Isso não confirma presença nem substitui sua resposta.
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "2 novos Mensagens": 2 Mensagens
+    - button "Caminhada"
+  - navigation "Dados do demo":
+    - link "Dados do demo":
+      - /url: "?"
+    - link "Pior caso":
+      - /url: "?dados=pior"
+  - alert

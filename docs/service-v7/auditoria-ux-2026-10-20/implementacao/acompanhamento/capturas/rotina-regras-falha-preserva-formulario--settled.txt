@@ -1,0 +1,70 @@
+- document:
+  - complementary:
+    - text: CE.X Central Service
+    - button "Fechar menu": ✕
+    - button "CE.X Central Matriz · rede"
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 17"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Pessoas
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "AL"
+  - main:
+    - text: Pessoas
+    - heading "Visitantes Ajuda" [level=1]:
+      - text: Visitantes
+      - button "Ajuda": "?"
+    - paragraph: 4 visitantes
+    - button "Mais opções"
+    - button "Registrar visitante"
+    - group "Acompanhamento de visitantes":
+      - button "Funil"
+      - button "Lista"
+    - text: Regras de acolhimento 48h 1º contato Primeiro contato em até
+    - emphasis: 48h
+    - text: por
+    - emphasis: WhatsApp
+    - text: "· meta de integração:"
+    - emphasis: 90 dias
+    - text: Acolher sem pressão. Ouvir a história, oferecer oração e convidar para um Grupo de Comunhão. Sem cobrança, só cuidado genuíno.
+    - button "Ajustar"
+    - paragraph: Os visitantes sem nenhum contato registrado depois desse prazo aparecem com alerta no funil, no Início e no menu.
+    - dialog "Como acolhemos quem chega":
+      - text: Líder da integração Como acolhemos quem chega Defina o prazo e a abordagem do primeiro contato. Fica claro para a equipe e deixa visível quanto tempo leva para integrar. Prazo do 1º contato (horas)
+      - spinbutton "Prazo do 1º contato (horas)": "24"
+      - text: Canal
+      - combobox "Canal":
+        - option "WhatsApp" [selected]
+        - option "Ligação"
+        - option "Mensagem"
+        - option "Presencial"
+      - text: Meta de integração (dias)
+      - spinbutton "Meta de integração (dias)": "90"
+      - text: Mensagem padrão
+      - textbox "Mensagem padrão": "Oi {nome}! Que alegria ter você com a gente no {evento}. Somos a {igreja} e queremos te conhecer melhor. Posso te ajudar com algo essa semana?"
+      - text: "Use {nome}, {evento} e {igreja}: preenchemos automaticamente. Abordagem / postura"
+      - textbox "Abordagem / postura": Acolher sem pressão. Ouvir a história, oferecer oração e convidar para um Grupo de Comunhão. Sem cobrança, só cuidado genuíno.
+      - alert: Não conseguimos salvar as regras. Verifique seu acesso e tente novamente.
+      - button "Cancelar"
+      - button "Salvar"
+  - alert

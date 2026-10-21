@@ -1,0 +1,18 @@
+import assert from "node:assert/strict";
+import { limitesDaSemana, resumoDaSemana } from "../app/service/modules/escalas/semana";
+import { coberturaPorTime, vagasFaltando } from "../app/service/modules/escalas/cobertura";
+assert.deepEqual(limitesDaSemana("2027-01-01"), { inicio: "2026-12-28", fim: "2027-01-03" });
+const eventos = [{ id: "antes", eventDate: "2026-10-18" }, { id: "agora", eventDate: "2026-10-25" }, { id: "depois", eventDate: "2026-11-01" }];
+const vagas = [{ event_id: "antes", position_id: "a", status: "ok" }, { event_id: "agora", position_id: "a", status: "wait" }, { event_id: "agora", position_id: "b", status: "ok" }, { event_id: "depois", position_id: "a", status: "ok" }];
+const funcoes = [{ id: "a", ministry_id: "meu" }, { id: "b", ministry_id: "outro" }];
+assert.equal(resumoDaSemana(eventos, vagas, funcoes, null, "2026-10-21").taxa, 50);
+assert.equal(resumoDaSemana(eventos, vagas, funcoes, ["meu"], "2026-10-21").taxa, 0);
+assert.equal(resumoDaSemana(eventos, vagas, funcoes, [], "2026-10-21").taxa, null);
+const times = [{ id: "meu", name: "Louvor", positions: [{ id: "voz", ministry_id: "meu", need_count: 2 }] }];
+const evento = { id: "agora", ministries: ["meu"] };
+const umaPessoa = [{ event_id: "agora", position_id: "voz", status: "ok" }];
+assert.equal(vagasFaltando(coberturaPorTime(evento, umaPessoa, times)), 1);
+assert.equal(vagasFaltando(coberturaPorTime(evento, [{ ...umaPessoa[0], status: "no" }], times)), 2);
+assert.equal(vagasFaltando(coberturaPorTime(evento, umaPessoa, times, ["outro"])), 0);
+assert.equal(vagasFaltando(coberturaPorTime(evento, [...umaPessoa, ...umaPessoa, ...umaPessoa], times)), 0);
+console.log("Semana: recorte civil, virada de ano, exclusão de histórico/futuro e escopo de liderança.");

@@ -24,11 +24,12 @@ export type M = {
   firstContact: string;
   neighborhood: string | null;
   birth: string | null;
+  country?: string | null;
   postalCode?: string | null;
   street?: string | null;
   city?: string | null;
   state?: string | null;
-  /* ficha com e-mail, telefone, aniversário e CEP (calculado no servidor):
+  /* ficha com e-mail, telefone e região (calculado no servidor):
      sem isso o app abre no primeiro acesso, em qualquer aparelho */
   contactComplete?: boolean;
   /* primeiro acesso feito: nome e sobrenome e telefone (v7 4.10) */
@@ -39,8 +40,9 @@ export type M = {
 };
 
 /* dados de contato que o membro preenche no primeiro acesso e no perfil */
-export type MemberContactInput = { name: string; email: string; phone: string; nasc: string; cep: string; rua: string; bairro: string; cidade: string; estado: string };
+export type MemberContactInput = { cpf?: string; country?: string | null; name: string; email: string; phone: string; nasc: string; cep: string; rua: string; bairro: string; cidade: string; estado: string };
 export type Ministry = {
+  recebePedidos?: boolean;
   id: string;
   name: string;
   icon: string;
@@ -216,8 +218,7 @@ export type MobileOverlayProps = {
   onEnrollCourse?: (courseId: string) => Promise<string>;
   onRequestBaptism?: (classId: string) => Promise<string>;
   onRequestServe?: (ministryId: string) => Promise<string>;
-  onConfirmarEscala?: (assignmentId: string) => void;
-  onRecusarEscala?: (assignmentId: string) => void;
+  onResponderEscala?: (assignmentId: string, status: Slot["status"]) => Promise<boolean>;
   onClose: () => void;
   /* "preview" (padrão) : lideranca espiando o app do voluntario, com
      seletor de pessoa e texto de marketing. "self" : o proprio voluntario
@@ -287,10 +288,10 @@ export type MemberModule = {
 
 /* casca: folha de baixo, aviso com "Desfazer" e navegação entre abas */
 export type MemberUi = {
-  go: (tab: MemberTab, sub?: string | null, extra?: { agSeg?: "minha" | "igreja"; chatId?: string | null; newChat?: boolean }) => void;
+  go: (tab: MemberTab, sub?: string | null, extra?: { agSeg?: "minha" | "igreja"; chatId?: string | null; newChat?: boolean; announcementId?: string; cardId?: string }) => void;
   sheet: (el: React.ReactNode | null) => void;
   toast: (msg: string, action?: { label: string; fn: () => void }) => void;
-  /* resposta da escala já dada na tela (antes de o banco gravar, no tempo do "Desfazer"); null desfaz */
+  /* resposta da escala já confirmada pelo banco; null limpa a cópia local */
   respostas: Record<string, "ok" | "no">;
   responderEscala: (id: string, v: "ok" | "no" | null) => void;
   /* abre a folha do tamanho do texto (Perfil) */

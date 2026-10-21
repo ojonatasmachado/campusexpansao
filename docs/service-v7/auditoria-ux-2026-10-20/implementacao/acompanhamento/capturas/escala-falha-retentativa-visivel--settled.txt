@@ -1,0 +1,32 @@
+- document:
+  - alert
+  - text: CE.X Central Service
+  - button "Perfil": AL
+  - heading "Agenda" [level=1]
+  - main:
+    - radiogroup "O que ver":
+      - radio "Minha agenda" [checked]
+      - radio "Igreja"
+    - text: Escala a confirmar · 1 Escala para confirmar Culto de domingo manhã
+    - list:
+      - listitem: Domingo, 25 de outubro · 10:00
+      - listitem: Louvor · Vocal
+      - listitem: Templo principal
+    - button "Confirmar"
+    - button "Não posso"
+    - text: Sexta, 23 de outubro Definir tema do 2º semestre Tarefa · Planejamento anual Domingo, 25 de outubro
+    - button "19:00 Culto de domingo noite Serve · Louvor · Vocal · chegar 18:00 Confirmado"
+    - text: 19h30 Ensaio para o próximo domingo Ensaio · Louvor · Auditório 19h00 Reunião de liderança Reunião · Sala de reuniões Tarefas com você · 1 aberta O que a liderança deixou no quadro para você. Atualize e comente.
+    - button "Definir tema do 2º semestre Planejamento anual · Prioridade alta"
+    - text: Quando posso servir Domingo de manhã O líder pode escalar você
+    - switch "Domingo de manhã" [checked]
+    - text: Domingo à noite O líder pode escalar você
+    - switch "Domingo à noite" [checked]
+    - text: Quarta à noite O líder não vai escalar você
+    - switch "Quarta à noite"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "1 novos Agenda": 1 Agenda
+    - button "3 novos Mensagens": 3 Mensagens
+    - button "Caminhada"
+  - status: Não conseguimos salvar sua resposta. Tente de novo.

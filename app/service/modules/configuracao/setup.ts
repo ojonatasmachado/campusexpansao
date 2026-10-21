@@ -2,15 +2,21 @@
    service.churches.settings.setup = { fase, feitas, pulou, concluido }. */
 import { horaAgoraBR, parseISODate, somaDias, toISODate, todayISO } from "../../lib/date";
 import { plural } from "../../lib/plural";
+import type { RascunhoEncontro } from "./ativacao";
 
-export type SetupEstado = { fase: 1 | 2 | 3; feitas: number[]; pulou?: boolean; concluido?: boolean };
+export type SetupEstado = { fase: 1 | 2 | 3; feitas: number[]; pulou?: boolean; concluido?: boolean; primeiroEventoId?: string; rascunho?: RascunhoEncontro };
 export const SETUP_INICIAL: SetupEstado = { fase: 1, feitas: [] };
+
+/** A configuração guiada ocupa o lugar do tour, inclusive após criar time e encontro. */
+export function ativacaoSubstituiTour(e: Partial<SetupEstado> | undefined, semTimes: boolean, semEventos: boolean): boolean {
+  return !!(e?.primeiroEventoId || e?.rascunho || (!e?.concluido && (semTimes || semEventos || (e?.fase ?? 1) > 1 || (e?.feitas?.length ?? 0) > 0)));
+}
 
 /* tempo estimado de cada fase (ponto de partida do manifesto; ajustar depois de testar com 5 igrejas) */
 export const FASES = [
   { n: 1, t: "Sua igreja", s: "Dados, logo e cor", min: 3 },
-  { n: 2, t: "{Cultos} e times", s: "Horários e times a partir de modelos", min: 5 },
-  { n: 3, t: "Pessoas", s: "Líderes convidados e a primeira escala", min: 5 },
+  { n: 2, t: "Primeiro encontro", s: "Nome, data, horário e local", min: 3 },
+  { n: 3, t: "Pessoas", s: "Acesso ao app e próximos responsáveis", min: 3 },
 ] as const;
 
 export function minutosQueFaltam(e: SetupEstado): number {

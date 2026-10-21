@@ -1,5 +1,6 @@
 "use client";
 
+import { podeReceberPedidos } from "../modules/times/recebimento";
 import { useContext, useState } from "react";
 import { plural } from "../lib/plural";
 import { Icon } from "../lib/icons";
@@ -19,8 +20,8 @@ export function ServirSection({ person, member, ministries, members = [], people
   const faltas = useFaltas();
   const [enviados, setEnviados] = useState<Record<string, string>>({});
   if (!member || !j.onRequestServe) return null;
-  const fora = ministries.filter((m) => !m.people.some((mp) => mp.personId === person.id));
-  if (fora.length === 0) return null;
+  const fora = ministries.filter((m) => !m.people.some((mp) => mp.personId === person.id) && (podeReceberPedidos(m) || j.serveRequests.some((r) => r.member_id === member.id && r.ministry_id === m.id && r.status === "pendente")));
+  if (fora.length === 0) return <p className="m6-meta">Nenhum time está recebendo pedidos pelo app agora. Quando a igreja abrir uma oportunidade, ela aparece aqui.</p>;
   const faltasServir = faltas("serve", null);
   const pendente = (ministryId: string) =>
     enviados[ministryId] === "ok" || j.serveRequests.some((r) => r.member_id === member.id && r.ministry_id === ministryId && r.status === "pendente");
@@ -142,8 +143,8 @@ export function SheetPedidoEtapa({ step, nome, member, onRequestJourneyStep }: {
 export function SheetTimes({ person, member, ministries, members, people }: { person: P; member: M | null; ministries: Ministry[]; members: M[]; people: P[] }) {
   return (
     <div>
-      <h2 className="m6-sh">Times que procuram pessoas</h2>
-      <div className="m6-meta">Escolha um time. O líder recebe seu pedido e fala com você.</div>
+      <h2 className="m6-sh">Servir em um time</h2>
+      <div className="m6-meta">Conheça as oportunidades abertas. Seu pedido vai para a liderança avaliar; ele não inclui você na equipe automaticamente.</div>
       <ServirSection person={person} member={member} ministries={ministries} members={members} people={people} />
     </div>
   );
@@ -158,6 +159,7 @@ export function CaminhadaV6({ steps, courses, purpose, contribuir }: { steps: St
   const [verEtapas, setVerEtapas] = useState(false);
   return (
     <>
+      {steps.length > 0 && <>
       <div className="m6-sec0">
         <div className="m6-card">
           <div className="m6-ct">{steps.length > 0 && done === steps.length ? "Todas as etapas concluídas" : `${done} de ${steps.length} etapas concluídas`}</div>
@@ -184,6 +186,7 @@ export function CaminhadaV6({ steps, courses, purpose, contribuir }: { steps: St
         </div>
         )}
       </div>
+      </>}
       <div className="m6-sec">
         <div className="m6-lbl">Cursos</div>
         {courses}

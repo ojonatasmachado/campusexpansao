@@ -1,5 +1,6 @@
 "use client";
 
+import { recebimentoAberto } from "../../modules/times/recebimento";
 import { plural } from "../../lib/plural";
 import { useRouter } from "next/navigation";
 import { useId, useRef, useState } from "react";
@@ -68,10 +69,10 @@ export function Times({ ministries, people, members, serveRequests, setDrawer, s
   const { comTermos: ct } = useTermos();
   return (
     <div className="content">
-      <PageHead title="Times" eyebrow="Pessoas" subtitle={plural(ministries.length, "time")} help="Louvor, Recepção, Kids... cada time tem um líder e suas funções próprias." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo time", subtitle: "Crie o time e já conte o propósito dele.", saveLabel: "Criar time", formFields: [{ k:"nome", label:"Nome do time", type:"text", req:true, ph:"ex: Louvor e Adoração" }, { k:"icon", label:"Ícone do time", type:"icon", value: DEFAULT_ICON }, { k:"desc", label:"Descrição curta", type:"text", ph:"Uma linha sobre o time" }, { k:"proposito", label:"Propósito", type:"area", ph:"Por que esse time existe?" }, { k:"aberto", label:ct("Recebendo {voluntarios}?"), type:"toggle", onLabel:"Aberto a novos", offLabel:"Equipe completa" }], action: { kind: "ministry" } })}>+ Novo time</button>} />
+      <PageHead title="Times" eyebrow="Pessoas" subtitle={plural(ministries.length, "time")} help="Louvor, Recepção, Kids... cada time tem um líder e suas funções próprias." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo time", subtitle: "Crie o time e já conte o propósito dele.", saveLabel: "Criar time", formFields: [{ k:"nome", label:"Nome do time", type:"text", req:true, ph:"ex: Louvor e Adoração" }, { k:"icon", label:"Ícone do time", type:"icon", value: DEFAULT_ICON }, { k:"desc", label:"Propósito", type:"area", ph:"Por que esse time existe?" }, { k:"aberto", label:"Receber pedidos pelo app", type:"toggle", onLabel:"Pedidos abertos", offLabel:"Pedidos fechados", hint:"Depois de definir um líder com ficha no app, a oportunidade aparece para os membros. Nenhuma pessoa entra sem aprovação." }], action: { kind: "ministry" } })}>+ Novo time</button>} />
       <PedidosParaServir serveRequests={serveRequests} members={members} ministries={ministries} />
       <div className="team-grid">
-        {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => { const linkPerson = people.find((person) => person.id === link.personId); return <Av key={link.personId} name={linkPerson?.name ?? link.personName} photoUrl={linkPerson?.photoUrl} />; })}{ministry.people.length > 4 && <div className="av-more">+{ministry.people.length - 4}</div>}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">{ministry.people.find((link) => link.isLeader)?.personName ? <>Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName}</em></> : <span className="sem-lider">Sem líder · Definir</span>}</div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> {ct("{voluntarios}")}</span><span className="team-stat"><b>{ministry.positions.length}</b> funções</span></div></button>)}
+        {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => { const linkPerson = people.find((person) => person.id === link.personId); return <Av key={link.personId} name={linkPerson?.name ?? link.personName} photoUrl={linkPerson?.photoUrl} />; })}{ministry.people.length > 4 && <div className="av-more">+{ministry.people.length - 4}</div>}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">{ministry.people.find((link) => link.isLeader)?.personName ? <>Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName}</em></> : <span className="sem-lider">Sem líder · Definir</span>}</div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> {ct(ministry.people.length === 1 ? "{voluntario}" : "{voluntarios}")}</span><span className="team-stat"><b>{ministry.positions.length}</b> {ministry.positions.length === 1 ? "função" : "funções"}</span></div></button>)}
       </div>
     </div>
   );
@@ -100,6 +101,7 @@ export function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
   const [responsabilidades, setResponsabilidades] = useState((profile.responsabilidades ?? []).join("\n"));
   const [requisitos, setRequisitos] = useState<Requirement[]>(() => requirementsFor(access.requirements, "ministry", ministry.id));
   const [appModules, setAppModules] = useState<string[]>(ministry.appModules);
+  const [recebendo, setRecebendo] = useState(recebimentoAberto(ministry));
   const [saving, setSaving] = useState(false);
   const [erro, setErro] = useState("");
   const telaRef = useRef<FormScreenHandle>(null);
@@ -121,6 +123,8 @@ export function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
         description: desc.trim() || null,
         app_modules: appModules,
         profile: {
+          ...ministry.profile,
+          recebendoVoluntarios: recebendo,
           comoTrabalhamos: comoTrabalhamos.trim() || undefined,
           chegada: chegada.trim() || undefined,
           responsabilidades: responsabilidades.split("\n").map((s) => s.trim()).filter(Boolean),
@@ -142,7 +146,7 @@ export function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
   };
 
   /* listas ordenadas: ligar e desligar o mesmo item não conta como mudança */
-  const retrato = JSON.stringify({ nome, icon, desc, comoTrabalhamos, chegada, responsabilidades, requisitos: requisitos.map((r) => JSON.stringify(r)).sort(), appModules: [...appModules].sort() });
+  const retrato = JSON.stringify({ nome, icon, desc, recebendo, comoTrabalhamos, chegada, responsabilidades, requisitos: requisitos.map((r) => JSON.stringify(r)).sort(), appModules: [...appModules].sort() });
   const [retratoInicial] = useState(retrato);
 
   return (
@@ -175,6 +179,11 @@ export function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
       </FormSection>
 
       <FormSection title="Quem pode entrar">
+        <div className="field">
+          <label className="field-label" htmlFor={`${fid}-recebendo`}>Receber pedidos pelo app</label>
+          <button id={`${fid}-recebendo`} type="button" role="switch" aria-label="Receber pedidos pelo app" aria-checked={recebendo} className={`sw${recebendo ? " on" : ""}`} onClick={() => setRecebendo((v) => !v)} />
+          <p className="field-hint">A oportunidade aparece para o membro quando este controle está ligado e há um líder do time com ficha no app. O pedido precisa ser aprovado para incluir a pessoa na equipe.</p>
+        </div>
         <div className="field" role="group" aria-label="Pré-requisitos para entrar no time">
           <RequisitosEditor value={requisitos} onChange={setRequisitos} courses={courses.map((c) => ({ id: c.id, name: c.name }))} events={access.events} groupsLabel={access.groupsLabel} />
         </div>

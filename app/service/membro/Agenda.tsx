@@ -36,14 +36,15 @@ export function EventoRow({ ev, serve }: { ev: Ev; serve?: string | null }) {
   );
 }
 
-export function AgendaV6({ seg, setSeg, person, member, members, ministries, events, roster, cards, boards, isRecep, isKids, onConfirmarEscala, onRecusarEscala, onStartChat, onAddCardComment, onSaveAvailability, aulas, meetings, rehearsals, rsvps }: {
+export function AgendaV6({ initialCardId, seg, setSeg, person, member, members, ministries, events, roster, cards, boards, isRecep, isKids, onResponderEscala, onStartChat, onAddCardComment, onSaveAvailability, aulas, meetings, rehearsals, rsvps }: {
+  initialCardId?: string | null;
   onSaveAvailability?: (availability: Record<string, boolean>) => Promise<boolean>;
   aulas: { aula: CourseLesson; curso: Course }[];
   meetings: MeetingLite[]; rehearsals: RehearsalLite[]; rsvps: EventRsvp[];
   seg: "minha" | "igreja"; setSeg: (s: "minha" | "igreja") => void;
   person: P; member: M | null; members: M[]; ministries: Ministry[]; events: Ev[]; roster: Slot[]; cards: Card[]; boards: Board[];
   isRecep: boolean; isKids: boolean;
-  onConfirmarEscala?: (id: string) => void; onRecusarEscala?: (id: string) => void;
+  onResponderEscala?: (id: string, status: Slot["status"]) => Promise<boolean>;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
   onAddCardComment?: (cardId: string, author: string, body: string) => void;
 }) {
@@ -150,7 +151,7 @@ export function AgendaV6({ seg, setSeg, person, member, members, ministries, eve
               <div className="m6-lbl">Escala a confirmar · {pend.length}</div>
               {pend.map((slot) => {
                 const ev = evById.get(slot.event_id);
-                return ev ? <EscalaCard key={slot.id} slot={slot} ev={ev} ministry={ministryOf(slot)} person={person} member={member} members={members} onConfirmarEscala={onConfirmarEscala} onRecusarEscala={onRecusarEscala} onStartChat={onStartChat} /> : null;
+                return ev ? <EscalaCard key={slot.id} slot={slot} ev={ev} ministry={ministryOf(slot)} person={person} member={member} members={members} onResponderEscala={onResponderEscala} onStartChat={onStartChat} /> : null;
               })}
             </div>
           )}
@@ -195,7 +196,7 @@ export function AgendaV6({ seg, setSeg, person, member, members, ministries, eve
           {serve && meus.length === 0 && (itens.length > 0 || pend.length > 0) && <div className="m6-pad m6-meta">{ct("Você não está na escala dos próximos {cultos}.")}</div>}
           {tarefasAbertas.length > 0 && (
             <div className="m6-sec m6-legacy">
-              <TabTarefas person={person} cards={cards} boards={boards} onAddCardComment={onAddCardComment} />
+              <TabTarefas key={initialCardId ?? "tarefas"} initialCardId={initialCardId} person={person} cards={cards} boards={boards} onAddCardComment={onAddCardComment} />
             </div>
           )}
           {(isRecep || isKids) && (

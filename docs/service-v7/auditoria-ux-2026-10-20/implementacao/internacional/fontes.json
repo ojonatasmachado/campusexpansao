@@ -1,0 +1,50 @@
+[
+  {
+    "path": "app/service/ServiceExactApp.tsx",
+    "sha256": "bcd3364df28e2a4530a69cdbfa0b7aa6b512e8470c11f1b5a5af1252ecd94c87"
+  },
+  {
+    "path": "app/service/MobileApp.tsx",
+    "sha256": "025036d52ac17bcdc50a4545bc3e8c8a3b49e03205966aab5d851907eafc4ac2"
+  },
+  {
+    "path": "app/service/page.tsx",
+    "sha256": "9f767df8c042d453c75ce051c7257fd58be14a6e3187f94c9dc76def9e367dd2"
+  },
+  {
+    "path": "evolucoes/service_app/service-app.css",
+    "sha256": "f2de2c99584cba89fe23ea3075f857a23d7a8d73bf7313ec5af3fbfe2aeaa4ad"
+  },
+  {
+    "path": "app/service/convite/ConviteForm.tsx",
+    "sha256": "dfa9d4387c32cb2f4fa15fdf5cac7ce9f4be37dcdd824da564c825b0065729c3"
+  },
+  {
+    "path": "app/api/service/members/accept-invite/route.ts",
+    "sha256": "da08033275558655818966a9f9c371f522720ed469f9a1904d373d1d41513f93"
+  },
+  {
+    "path": "app/service/CepInput.tsx",
+    "sha256": "8f8af08486c3023e93d74b677c198d415cbcddeb4905c6548ece9b8dda58d3a2"
+  },
+  {
+    "path": "app/service/lib/telefone.ts",
+    "sha256": "a37317fe4abf086536219fc8d99d8e058ae73dcc89f2f2f2940015bd6fa1f1b3"
+  },
+  {
+    "path": "app/service/lib/endereco.ts",
+    "sha256": "f3de65b54488433ac98ccc0aaba23fe69c5ff55945d4cd5b81a0c8649d54253a"
+  },
+  {
+    "path": "app/service/membro/Perfil.tsx",
+    "sha256": "ce79659627ae85c6fecadc3a956f079da6b15b7ad8954b7e833d0521d06f9ea0"
+  },
+  {
+    "path": "app/service/membro/comum.tsx",
+    "sha256": "1c037fda8bd9d5ca281162183ed04764bbcd3d50290cc462c3551d39e2fd30dd"
+  },
+  {
+    "path": "supabase/migrations/0081_service_contato_internacional.sql",
+    "sha256": "903a5e1acd32e31bcdbec048f83bc88dec9e477708db0a34f337d8f464701a7c"
+  }
+]

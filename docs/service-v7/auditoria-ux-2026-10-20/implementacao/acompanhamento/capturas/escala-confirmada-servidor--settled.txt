@@ -1,0 +1,28 @@
+- document:
+  - text: Igreja Teste Local Service
+  - button "Perfil": MM
+  - heading "Agenda" [level=1]
+  - main:
+    - radiogroup "O que ver":
+      - radio "Minha agenda" [checked]
+      - radio "Igreja"
+    - text: Sexta, 23 de outubro
+    - button "19:00 Culto de sexta Serve · Louvor · Vocal Confirmado"
+    - text: Domingo, 25 de outubro
+    - button "18:30 Encontro de verificação da escala Serve · Louvor · Vocal Confirmado"
+    - text: Quando posso servir Domingo de manhã O líder pode escalar você
+    - switch "Domingo de manhã" [checked]
+    - text: Domingo à noite O líder pode escalar você
+    - switch "Domingo à noite" [checked]
+    - text: Quarta à noite O líder pode escalar você
+    - switch "Quarta à noite" [checked]
+    - button "Avisar que vou faltar"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "Mensagens"
+    - button "Caminhada"
+  - status:
+    - text: Presença confirmada
+    - button "Desfazer"
+  - alert

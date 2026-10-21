@@ -147,7 +147,7 @@ export function Criancas({
               </div>
             </div>
           ))}
-          {kidsEvents.length === 0 ? <EmptyState title="Nenhum evento Kids" text="Eventos extras do Kids, com inscrição própria, aparecem aqui." action={{ label: "Criar evento Kids", onClick: () => setEventModal(true) }} /> : null}
+          {kidsEvents.length === 0 ? <EmptyState title="Nenhum evento Kids" text="Encontros extras com inscrição própria aparecem aqui. Use Criar evento quando houver uma programação para publicar." /> : null}
         </div>
       </div>
 

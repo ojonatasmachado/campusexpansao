@@ -1,0 +1,22 @@
+- document:
+  - button "Perfil"
+  - heading "Meus dados" [level=1]
+  - main:
+    - text: Sua foto + Toque para enviar Aparece no lugar das iniciais.
+    - list:
+      - listitem: (11) 98765-4321
+      - listitem: ana@cex.com
+      - listitem: Aniversário · 12/04/1990
+      - listitem: Pinheiros
+    - button "Editar meus dados"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "3 novos Mensagens": 3 Mensagens
+    - button "Caminhada"
+  - navigation "Dados do demo":
+    - link "Dados do demo":
+      - /url: "?"
+    - link "Pior caso":
+      - /url: "?dados=pior"
+  - alert

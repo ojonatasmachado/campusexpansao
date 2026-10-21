@@ -179,7 +179,7 @@ export function IconPicker({ value, onChange }: { value: string; onChange: (name
     <div className="icon-picker">
       <button type="button" className="icon-picker-trigger" onClick={() => setOpen((o) => !o)}>
         <Icon name={value || DEFAULT_ICON} size={20} />
-        <span>{value || "Escolher ícone"}</span>
+        <span>{value && ICON_PATHS[value] ? value : "Escolher ícone"}</span>
         <span className="icon-picker-trigger-x">{open ? "Fechar" : "Trocar"} <Caret open={open} /></span>
       </button>
       {open && (

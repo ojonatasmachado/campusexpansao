@@ -1,0 +1,67 @@
+- document:
+  - complementary:
+    - text: CE.X Central Service
+    - button "Fechar menu": ✕
+    - button "CE.X Central Matriz · rede"
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 17"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Gestão
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "AL"
+  - main:
+    - text: Gestão
+    - heading "Relatórios e indicadores Ajuda" [level=1]:
+      - text: Relatórios e indicadores
+      - button "Ajuda": "?"
+    - group "Recorte das comparações":
+      - button "30 dias" [pressed]
+      - button "Trimestre"
+    - button "Baixar relatório →"
+    - text: Membros na rede
+    - button "Ajuda": "?"
+    - text: 4 +1 novos em relação aos 30 dias anteriores Visitantes que viraram membros
+    - button "Ajuda": "?"
+    - text: 0% dos cadastrados no recorte Confirmações de escala
+    - button "Ajuda": "?"
+    - text: 100% das vagas escaladas no recorte Média de check-ins
+    - button "Ajuda": "?"
+    - text: 2 por culto no recorte Crescimento de membros
+    - button "Ajuda": "?"
+    - text: últimos meses 4membros no total jul ago set out Funil de visitantes
+    - button "Ajuda": "?"
+    - button "Abrir →"
+    - text: Novo 2 Em contato 1 Integrando 1 Virou membro 0 02 Situação da escala na semana 5 Sem pendência registrada 0 Uma recusa 0 Três ou mais escalas 1 Pausa ou duas recusas Registros para conferir
+    - button "Ajuda": "?"
+    - button "Voluntários →"
+    - text: CS Carla Santos Pausa informada no cadastro. Conferir Voluntários por time
+    - button "Ajuda": "?"
+    - button "Times →"
+    - text: Louvor 2 Mídia e Comunicação 1 Recepção 2 Kids 1 Membros por caminhada
+    - button "Ajuda": "?"
+    - text: 4 pessoas Decisão 4 Batismo 3 Fundamentos 2 GC 1 Servindo 2 Membros por GC
+    - button "Ajuda": "?"
+    - text: 2 grupos GC Centro 1 GC Vila Madalena 1 Operação conectada
+    - button "Ajuda": "?"
+    - text: Kanban & chat Quadros 2 Conversas 2 Eventos 6
+  - alert

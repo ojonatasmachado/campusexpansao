@@ -1,0 +1,31 @@
+- document:
+  - alert
+  - text: Outra Igreja Local Service
+  - button "Perfil": PA
+  - heading "Boa noite, Pessoa" [level=1]
+  - paragraph: Terça, 20 de outubro
+  - main:
+    - text: Para você agora Seu próximo passo Decisão
+    - button "Contar que já decidi →"
+    - text: Seu cadastro Complete seus dados Falta foto, aniversário e CEP. Ajuda a igreja a cuidar de você.
+    - button "Completar →"
+    - button "Agora não"
+    - heading "Na vida da igreja" [level=2]
+    - paragraph: Encontros e novidades para acompanhar.
+    - button "Sex 23 [UX ativação] Encontro de sexta Sexta · 19:17 · Rua da Comunidade, 100"
+    - button "Ver a agenda completa →"
+    - text: "Podemos orar por você? Você escolhe quem vê: só a intercessão ou o mural de oração da igreja."
+    - button "Enviar pedido de oração"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "Mensagens"
+    - button "Caminhada"
+  - dialog "[UX ativação] Encontro de sexta":
+    - text: Na igreja
+    - heading "[UX ativação] Encontro de sexta" [level=2]
+    - list:
+      - listitem: Sexta, 23 de outubro · 19:17
+      - listitem: Rua da Comunidade, 100
+    - button "Compartilhar"
+    - button "Adicionar ao calendário"

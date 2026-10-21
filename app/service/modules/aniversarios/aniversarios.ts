@@ -9,7 +9,7 @@
    - A idade só sai daqui quando quem pede é a gestão (`comIdade`); o líder vê o
      dia e o mês, nunca o ano. */
 import { parseISODate, toISODate } from "../../lib/date";
-import { digitosTelefone } from "../../lib/telefone";
+import { telefoneParaWhatsapp } from "../../lib/telefone";
 
 export type Aniversariante = {
   /** id da ficha: membro (congregação) ou voluntário sem ficha de membro */
@@ -141,12 +141,10 @@ export const MENSAGEM_PADRAO = "Feliz aniversário, {nome}! Que Deus abençoe o 
 
 export const mensagemPara = (modelo: string, nome: string) => modelo.replace(/\{nome\}/g, primeiroNome(nome));
 
-/** Link do WhatsApp com o texto; null quando o número não é um celular brasileiro
-    com DDD (11 dígitos, começando com 9 depois do DDD): fixo não tem WhatsApp. */
+/** Link estrutural: não confirma se a pessoa possui conta no WhatsApp. */
 export function linkWhatsapp(telefone: string, texto: string): string | null {
-  const d = digitosTelefone(telefone);
-  if (d.length !== 11 || d[2] !== "9") return null;
-  return `https://wa.me/55${d}?text=${encodeURIComponent(texto)}`;
+  const d = telefoneParaWhatsapp(telefone);
+  return d ? `https://wa.me/${d}?text=${encodeURIComponent(texto)}` : null;
 }
 
 const DIAS = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];

@@ -1,0 +1,2140 @@
+[
+  {
+    "label": "implementacao-inicio-membro",
+    "evidence_id": "ev_2138b6c4ad92d3a04ce470d9b432076096004d6f2672879c7cca226602632f5f",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-inicio-membro--settled.png",
+        "sha256": "6ec628f3033310d7d4f5cb0b69d15b9afae1b722dc9a316b5f9b39bc40a9a697",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-mural-destino",
+    "evidence_id": "ev_2485294c90a0159a77598761141bfd0c27b03b3c38ecb5e0581586d013eb4c90",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "read-exact-publication",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-mural-destino--settled.png",
+        "sha256": "2e6017d1d282662eeb08020684e627dc5c9b1d17a26cfb8052d81a12e0b654e8",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-painel-desktop",
+    "evidence_id": "ev_24d613680edc3085560e9e77be00b9b71e5f7105b18859061ede045882136515",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "failed",
+        "error": "locator.click: Timeout 12000ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: 'Fechar menu', exact: true })\n"
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      }
+    ],
+    "screens": [],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-inicio-editorial",
+    "evidence_id": "ev_26b81a3bfe5a05a7bab90c58d18aa7cb2ba897ab6a5c6a8646ec9321d790dfba",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-inicio-editorial--settled.png",
+        "sha256": "e6bd7a02bfcdff7c68108ba9246e30362c7c5026403484060889c57eeb21904f",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-membro-evento-local",
+    "evidence_id": "ev_2e1d42ce97cd5f0476251f949452148f796a775351a86b2e0d914f6e01782939",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "event-visible",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-created-event",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-membro-evento-local--settled.png",
+        "sha256": "6199a545f392ecb97ce518093650b59fda4c936eda76e054648848f49dfb7ea4",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-painel-final",
+    "evidence_id": "ev_2f031d0bceb99372cc28fcf472149da12b30c95fbb43b40d796418a90abf33b7",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-painel-final--settled.png",
+        "sha256": "08cf1c239e0ceb8394065c2791d0b0dd56f7943568592379a1867c61b35d87d5",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-primeiro-acesso-minimo",
+    "evidence_id": "ev_34c6b7a380f052d0cc7498e1a089884429a8850a98bc4bed6e4f8358c22eb4af",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 375
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-primeiro-acesso-minimo--settled.png",
+        "sha256": "5079177bc4607cb1a2b48f27e1101930de4fa4e1ebe07051ec3d29ad5c5a32ee",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-setup-fase3-390",
+    "evidence_id": "ev_3659e5f2ddbcee11272a9f0fdabd9941a2083b073f6260550464cdcae1d343dd",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "start-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "phase-three",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-setup-fase3-390--settled.png",
+        "sha256": "8436c7ac6cabc009163fc1ae193e827b45cf3579ecccc083e7b78c9eadecfa28",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-app-local-entrada",
+    "evidence_id": "ev_392d8546f592475baceae3a6000d264d5c2ae498275747562cb369251aed6a43",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "account",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "member-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-app-local-entrada--settled.png",
+        "sha256": "064611d7db7e568f39b64cf51696a362613cf92920f599191eee52b2687173d6",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-gestao-primeiros-passos",
+    "evidence_id": "ev_3f7e30396102762646d11c1a7dd8e089e5e5b71dd958c1af056f5a4520e31a2f",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-gestao-primeiros-passos--settled.png",
+        "sha256": "6027192860da7a101b42d7b05b68c34d8b8a4883b0cea2ed1b5c61d6eb4f41b8",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-membro-claro-maximo-validado",
+    "evidence_id": "ev_42ab5e3308429bd1d42ba2cbfa30d08a2f42557afd7fadf3a4c7d18806a4cd63",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 900,
+        "width": 375
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "profile",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "light-theme",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "home",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "show-event",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-membro-claro-maximo-validado--settled.png",
+        "sha256": "475007c2ed0ee827e3776eeccabe662156473e3d22501d3dad5496a35137d184",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-evento-data-completa",
+    "evidence_id": "ev_4fd224d83ea259bd6563b9e0e5f46d367418ab8f17dc3e09df609897fbf86882",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "agenda",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "new-event",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "name",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "place",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "civil-date",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "time",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "hour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "minutes",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-evento-data-completa--settled.png",
+        "sha256": "547c1d144117a9e9b3a12d858206f99fe4b3487f5a83c1c3b3a79c846fd91b7a",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-evento-gravado-local",
+    "evidence_id": "ev_5783f88591bcfb065881c580588c7c9479afa7d62388ef6e68b05ed05069f110",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "agenda",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "new-event",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "name",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "outside",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "address",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "civil-date",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "time",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "hour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "minutes",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "save-event-locally",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "wait-save",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-evento-gravado-local--settled.png",
+        "sha256": "60b73af61f3f47dd1efa9bbd7c4c645c21d55b2449e0cfb51d3ac8b85ecf5376",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-evento-sem-data",
+    "evidence_id": "ev_64eebaa4c1a8f26dcafed0f45bc916792b900db70814095822599bb72fcb6ce7",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "agenda",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "new-event",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "name",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "place",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-evento-sem-data--settled.png",
+        "sha256": "ffe185790fc30db9cb12926d384dd40d994c975e0874f2a8a8d7a5feece0620c",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-mural-item-unico",
+    "evidence_id": "ev_6bd379fe65a6b948783e1f09210fc0d8af5d2324215982ec366065bc0722f868",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "read-exact",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-mural-item-unico--settled.png",
+        "sha256": "be6bfd38f89fdc838f530f9b65cf45d9fb16e328e5f39ef1cc9f9872c42cfc06",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-evento-encontrado-no-app",
+    "evidence_id": "ev_74f7ee1ba5be116c222e7dafa46c38de637645d8c59cb018729934701ba4d088",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "failed",
+        "error": "locator.click: Timeout 12000ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: 'AL', exact: true })\n"
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      },
+      {
+        "id": "scroll-life",
+        "action": "press",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      },
+      {
+        "id": "scroll-events",
+        "action": "press",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      }
+    ],
+    "screens": [],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-setup-fase1-final",
+    "evidence_id": "ev_770eaad77c8620c0692cab4c55083cf708d87d7b595996dc54043d8dbc866877",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "start-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-setup-fase1-final--settled.png",
+        "sha256": "dd11e53c4ee75bef86cd2c5a0d8d31ad3e58b6a6052b350da22947abeb163986",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-membro-claro-maximo",
+    "evidence_id": "ev_8089304808b480e79b7018eef2d74f41f92820a8e20676451a9231269745313a",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 900,
+        "width": 375
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "profile",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "light-theme",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "home",
+        "action": "click",
+        "status": "failed",
+        "error": "locator.click: Error: strict mode violation: getByRole('button', { name: 'Início', exact: true }) resolved to 2 elements:\n    1) <button type=\"button\" class=\"m6-back\">…</button> aka getByRole('button', { name: 'Início' }).first()\n    2) <button class=\"\" type=\"button\">…</button> aka getByLabel('Navegação principal').getByRole('button', { name: 'Início' })\n\nCall log:\n  - waiting for getByRole('button', { name: 'Início', exact: true })\n"
+      },
+      {
+        "id": "show-event",
+        "action": "click",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      }
+    ],
+    "screens": [],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-tarefa-destino",
+    "evidence_id": "ev_912862b151d43d7292c81585b99645c4ca61f6632a4c1f90178d0679bcb6ea7b",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-exact-task",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-tarefa-destino--settled.png",
+        "sha256": "68fb91d7f3dee9972ea9cf6956ef44083e43d585e8e5261dbd8050e1e6f6c6c2",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-setup-fase2-320",
+    "evidence_id": "ev_9273a7b820152a8f3bb3e691ecccd108dd27ed4bc167595042f7c586dd5f6083",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 900,
+        "width": 320
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "start-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "phase-two",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-setup-fase2-320--settled.png",
+        "sha256": "080a97b04b6c18220fa556fd3705ab5a0272598becca2f171f235ae14043bd66",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-setup-mobile",
+    "evidence_id": "ev_955d0f947b559dd3b925b6afff22a070c0d6918fc7ff5308e0464cb048f5bc7e",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "start-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-setup-mobile--settled.png",
+        "sha256": "ef8fb11dad8a6c7e2cf7f60a0f81f3f991b04411880b960622c7466ce80ee42f",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-painel-desktop-validado",
+    "evidence_id": "ev_9b41ef17678cbc8462ab485bb32b81427a055837186354b35958d7f77fbeaa0c",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "implementacao-painel-desktop-validado--settled.png",
+        "sha256": "6d140f2e74dcf68a65dae58541ff2de34ae7562649a8544ab4c8abe6493897a1",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "implementacao-evento-app-validado",
+    "evidence_id": "ev_d2575e8c9d7f7fa6adb5174ba531215e410faae897778e358e02adbbbaf37f90",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "account",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "member-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-created-event",
+        "action": "click",
+        "status": "failed",
+        "error": "locator.click: Timeout 12000ms exceeded.\nCall log:\n  - waiting for locator('.service-home-events .m6-row:last-child')\n"
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      }
+    ],
+    "screens": [],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    }
+  }
+]

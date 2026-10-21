@@ -1,0 +1,16 @@
+{
+  "ev_cd93db08527e774f936ac6b04897d65b45d6b88c25e3703f11ec19e04d973cd8": "times-membro-oportunidade",
+  "ev_ea763265c95816aeffa2ea8d12a885f5ce36601b28ac95d19eb2c8b514172f40": "times-membro-inicio",
+  "ev_e6130409abf5321d62d98b10bf0b897e0f1f5c5dba5963ab42980179c8f65ed8": "times-oportunidade-real",
+  "ev_a9c433f0695a807f6d5bca0cff19f2f93103661fc7b1a5f55db22a39bc7ecf94": "times-pedido-pendente",
+  "ev_45945e85ce380db0e253f4698ac975aabc0a6370508033f2d7688e5678eac46a": "times-gestao-pronto",
+  "ev_8858d91757cb052291569fb6495d343f85a185226b3c1a5c308bac38aedc8429": "times-gestao-ficha",
+  "ev_09839e43893a432fb5be8bc5d1939505f5de0dcbac6f63103606a94f826ff0c5": "times-edicao-gestao",
+  "ev_7615c2963dbd19eab9c206c495e8e4524306924d3e0785520a59c4a6a80fc4c2": "times-controle-recebimento",
+  "ev_e47979d15800e90768ba84382bb1e29b7221106f92b6ad22eccc8ed458e03537": "times-status-proprio",
+  "ev_d971310b5549bca2d2bc7b73886f97859dcbe87b9573c3149252f47a86c45bb9": "times-gestao-fechamento",
+  "ev_053326a416a8a2177be2b84b1f1dca39f7952284ea878780bc6f87f002c3563f": "times-pendente-apos-fechamento",
+  "ev_e38b7932827bf32e1530faaf8b7ca1c2a1b2fc19acb256ee4628f93216f3ef42": "times-criacao-formulario",
+  "ev_8701f752451bf3f9b1e907782afde7d840375ef8b0ad9219bb7c61137ae28b3c": "times-criacao-painel-desktop",
+  "ev_6ef4703cad1b3b5cf9b37ab710c32d4b110eb0e0b8bf3c43c00b87949b5c4caf": "times-criado-abertura-salva"
+}

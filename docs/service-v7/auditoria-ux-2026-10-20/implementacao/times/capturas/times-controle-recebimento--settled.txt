@@ -1,0 +1,114 @@
+- document:
+  - alert
+  - complementary:
+    - text: Outra Igreja Local Service
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - text: Ministério
+    - textbox "Buscar tela, membro, voluntário, time ou função..."
+    - button "OO Otávio"
+  - main:
+    - text: Ministério
+    - heading "Times Ajuda" [level=1]:
+      - text: Times
+      - button "Ajuda": "?"
+    - paragraph: 1 time
+    - button "+ Novo time"
+    - text: Pedidos para servir · 1 Pedidos feitos pelo app. A pessoa já cumpre os pré-requisitos que a igreja definiu para servir e para o time. PI Pessoa Internacional quer servir em Acolhimento Jornada
+    - button "Recusar"
+    - button "Aprovar"
+    - 'button "LJ Acolhimento Jornada Líder: Líder Jornada Acolher quem chega à igreja. 1 voluntários 0 funções"':
+      - text: "LJ Acolhimento Jornada Líder:"
+      - emphasis: Líder Jornada
+      - text: Acolher quem chega à igreja. 1 voluntários 0 funções
+    - text: Times e funções Cada time tem um líder e suas funções. As funções alimentam a escala e as habilidades de cada voluntário. Acolhimento Jornada · líder Líder Sem funções
+    - button "Editar"
+    - text: Papéis ministeriais Os títulos que a sua igreja reconhece (Pastor, Diácono, Presbítero...). Atribuídos aos membros na ficha de cada um. Nenhum papel cadastrado.
+    - button "+ Papel ministerial"
+    - text: Requisitos para servir O que a pessoa precisa ter feito antes de pedir para entrar em qualquer time pelo app. Cada time ainda pode ter os próprios requisitos, em Editar time. Etapas da caminhada
+    - button "Decisão"
+    - button "Batismo"
+    - button "Fundamentos"
+    - button "GC"
+    - button "Servindo"
+    - text: "Sem pré-requisito: qualquer membro pode."
+    - button "Salvar requisitos"
+    - text: "Etiquetas Etiquetas livres como Jovens, Kids ou Casais. Uma pessoa pode ter várias: servem para juntar pessoas de times diferentes num mesmo grupo. Nenhuma etiqueta cadastrada."
+    - button "+ Etiqueta"
+  - button "Ajuda": "?"
+  - dialog "Acolhimento Jornada":
+    - button "Fechar": ✕
+    - text: "Acolhimento Jornada Líder: Líder Jornada · 1 voluntário Recebendo voluntários Sobre o time Propósito Acolher quem chega à igreja. Horário de chegada 30 minutos antes"
+    - button "Editar"
+    - text: Funções e quem cobre Sem função definida
+    - button "LJ Líder Jornada Líder do time Líder"
+    - button "Ver escala"
+    - button "Adicionar pessoa"
+  - dialog "Acolhimento Jornada":
+    - banner:
+      - button "Voltar sem salvar"
+      - text: Editar time
+      - heading "Acolhimento Jornada" [level=2]
+      - button "Cancelar"
+      - button "Salvar"
+    - heading "O time" [level=3]
+    - text: Nome *
+    - textbox "Nome *": Acolhimento Jornada
+    - text: Ícone do time
+    - group "Ícone do time":
+      - button "◆ Trocar"
+    - text: Propósito
+    - textbox "Propósito":
+      - /placeholder: Por que esse time existe
+      - text: Acolher quem chega à igreja.
+    - heading "Sobre o time" [level=3]
+    - text: Como trabalhamos
+    - textbox "Como trabalhamos":
+      - /placeholder: Rotina, ensaios, escala...
+    - text: Horário de chegada
+    - textbox "Horário de chegada":
+      - /placeholder: "ex: 1h antes do culto"
+      - text: 30 minutos antes
+    - text: O que esperamos
+    - textbox "O que esperamos":
+      - /placeholder: "ex: Chegar no horário"
+    - text: "Uma por linha. Ex.: chegar no horário; avisar com antecedência se não puder servir."
+    - heading "Quem pode entrar" [level=3]
+    - text: Receber pedidos pelo app
+    - switch "Receber pedidos pelo app" [checked]
+    - paragraph: A oportunidade aparece para o membro quando este controle está ligado e há um líder do time com ficha no app. O pedido precisa ser aprovado para incluir a pessoa na equipe.
+    - group "Pré-requisitos para entrar no time":
+      - text: Etapas da caminhada
+      - button "Decisão"
+      - button "Batismo"
+      - button "Fundamentos"
+      - button "GC"
+      - button "Servindo"
+      - text: "Sem pré-requisito: qualquer membro pode."
+    - heading "No app" [level=3]
+    - group "Módulos extras no app":
+      - button "Visitantes (recepção)"
+      - button "Kids (check-in)"
+    - text: Quem está neste time passa a ver esses módulos no app.
+    - heading "Funções" [level=3]
+    - text: Nenhuma função cadastrada.
+    - paragraph: Para criar ou mudar funções, use o painel de Times.

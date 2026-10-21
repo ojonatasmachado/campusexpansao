@@ -1,0 +1,500 @@
+[
+  {
+    "label": "geo-convite-final-so-cep",
+    "evidence_id": "ev_0c6afaec0ac502f238e9ccd2eb86b0cfc2ecc5a3ec0078445433f61ffdf4ede0",
+    "start_url": "http://localhost:3003/service/convite?t=[token omitido]",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "geo-convite-final-so-cep--settled.png",
+        "sha256": "0e7dc42e2a14a8465b647e8b54bbe1e79d2f2afec972084c4262dc25e5afd769",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "geo-aceite-so-cep-salvo",
+    "evidence_id": "ev_169f22d25486b6846269c2230c3ff2e0fc0c362aef76cd5aad4b3e106f472e33",
+    "start_url": "http://localhost:3003/service/convite?t=[token omitido]",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "senha",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "confirmar",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "cep",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "consulta",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "aceitar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "geo-aceite-so-cep-salvo--settled.png",
+        "sha256": "e0e175ce8222d70805d0718ff1d35f95767d66e0d67f60d3c110bebdcf9ae7af",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "geo-cpf-posterior-salvo",
+    "evidence_id": "ev_4e141ebab98dfb1665d4f9844a990789ddd57479791f9b2eaaf9e5f4e7ec4f73",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "perfil",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "dados",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "editar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "cpf-pronto",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "cpf-fixture",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "salvar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "gravado",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "geo-cpf-posterior-salvo--settled.png",
+        "sha256": "4541f2b70b9d1754dcfff858712fee589b9856a2da96e01bb4b0a5983d5539bf",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "geo-convite-so-cep",
+    "evidence_id": "ev_885070db78c6f7c4e969d6d9a93dcd8a56d1a8c462bd3f857bdebff39697dcc6",
+    "start_url": "http://localhost:3003/service/convite?t=[token omitido]",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "geo-convite-so-cep--settled.png",
+        "sha256": "a7bd781f2363a2201229267cd2747a83b78a376e43782331c9a5c6952d34496d",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "geo-perfil-cpf-opcional",
+    "evidence_id": "ev_889ae00180873110d10130a4a26a88500c227054a7dc748afd2d9847d5afcff0",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "perfil",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "dados",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "editar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "geo-perfil-cpf-opcional--settled.png",
+        "sha256": "127ee3bd27518cf5dcec23007f4e1552c956d69c75846e77001ab7087ed5707b",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "geo-perfil-cpf-visivel",
+    "evidence_id": "ev_e26e417c26f3fffca8bb2cfffaee2c0983ad2c0b17b56348b770648b90c400a1",
+    "start_url": "http://localhost:3003/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "perfil",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "dados",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "editar",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "cpf-pronto",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "ver-cpf",
+        "action": "press",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "geo-perfil-cpf-visivel--settled.png",
+        "sha256": "020213a58b3a17ccaa7d127c27d1b3b391f1111ae581f1a06da5fa1ccfdacc3f",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  }
+]

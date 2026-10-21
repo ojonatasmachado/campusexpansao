@@ -1,0 +1,34 @@
+- document:
+  - text: CE.X Central Service
+  - button "Perfil": AL
+  - heading "Agenda" [level=1]
+  - main:
+    - radiogroup "O que ver":
+      - radio "Minha agenda" [checked]
+      - radio "Igreja"
+    - text: Nada marcado para você Quando você for escalado ou se inscrever em algo, aparece aqui por dia.
+    - button "Ver os cultos e eventos"
+    - text: Tarefas com você · 1 aberta O que a liderança deixou no quadro para você. Atualize e comente.
+    - button "Definir tema do 2º semestre Planejamento anual · Prioridade alta" [expanded]
+    - button "A fazer"
+    - button "Em andamento"
+    - button "Concluído"
+    - textbox "Comentar..."
+    - button "Enviar"
+    - text: Quando posso servir Domingo de manhã O líder pode escalar você
+    - switch "Domingo de manhã" [checked]
+    - text: Domingo à noite O líder pode escalar você
+    - switch "Domingo à noite" [checked]
+    - text: Quarta à noite O líder não vai escalar você
+    - switch "Quarta à noite"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "3 novos Mensagens": 3 Mensagens
+    - button "Caminhada"
+  - navigation "Dados do demo":
+    - link "Dados do demo":
+      - /url: "?"
+    - link "Pior caso":
+      - /url: "?dados=pior"
+  - alert

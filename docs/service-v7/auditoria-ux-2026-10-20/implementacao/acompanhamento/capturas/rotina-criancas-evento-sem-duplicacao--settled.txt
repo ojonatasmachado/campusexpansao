@@ -1,0 +1,46 @@
+- document:
+  - complementary:
+    - text: CE.X Central Service
+    - button "Fechar menu": ✕
+    - button "CE.X Central Matriz · rede"
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 17"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Pessoas
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "AL"
+  - main:
+    - text: Pessoas
+    - heading "Crianças Ajuda" [level=1]:
+      - text: Crianças
+      - button "Ajuda": "?"
+    - paragraph: 0 crianças
+    - button "+ Nova criança"
+    - textbox "Buscar criança..."
+    - button "Todas"
+    - text: 0 crianças Nenhuma criança encontrada. Eventos Kids
+    - button "Ajuda": "?"
+    - button "+ Criar evento"
+    - text: Nenhum evento Kids
+    - paragraph: Encontros extras com inscrição própria aparecem aqui. Use Criar evento quando houver uma programação para publicar.
+  - alert

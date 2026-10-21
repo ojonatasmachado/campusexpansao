@@ -1,0 +1,10 @@
+- document:
+  - alert
+  - text: Igreja Teste Local Service Primeiro acesso · passo 1 de 2
+  - heading "Que bom ter você aqui, Maria" [level=2]
+  - paragraph: Confirme seu nome e seu telefone. É o que a liderança usa para falar com você.
+  - text: Nome e sobrenome *
+  - textbox: Maria Membro
+  - text: Telefone (WhatsApp) *
+  - textbox "(11) 90000-0000"
+  - button "Continuar →"

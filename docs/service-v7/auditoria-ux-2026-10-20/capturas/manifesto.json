@@ -1,0 +1,4769 @@
+[
+  {
+    "label": "local-app-sem-programacao",
+    "evidence_id": "ev_009f3776448820066546164619189ad0e932bec4a8ddb3937078dc84f142cba8",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-app-sem-programacao--settled.png",
+        "sha256": "9b3b48c7204a7a154913ac92c0d975011c4132b03f76af7cf33d6ce55275c695",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-configuracao-desktop",
+    "evidence_id": "ev_02f5facca9db9438a2006cd92cd84e913291051056c2f560f6427a1bf8f711b5",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "start-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-configuracao-desktop--settled.png",
+        "sha256": "91ce11b75a9689e475645138b5d4e49101cd724a5320018533ebb31804c01690",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "painel-desktop",
+    "evidence_id": "ev_0aa60314b6d1cf0931a1d43d14dcad00f5e8dc1eb94f7741202d21340c3ab1b5",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "skip-tour",
+        "image": "painel-desktop--skip-tour.png",
+        "sha256": "7ff1789d37a7d5602a8050f439c2bf26bfa2557652b252208b81792140133723",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-lider-inicio",
+    "evidence_id": "ev_0ad70ac4f453daa070d7bd815b0ab819c1ada069ae4ab2dc13979c9ddf9c24d4",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-lider-inicio--settled.png",
+        "sha256": "066ba0bfc71ff7622499ec4f43100237ec4a24508cb54d0bb7d6af256fd68677",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "evento-data",
+    "evidence_id": "ev_0b6497b9dd94da00b3aa63a94e4c93f0609ac43f07ec556dad00ed49d027037c",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-agenda",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "new-event",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "choose-day",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "scenario_start",
+        "image": "evento-data--scenario_start.png",
+        "sha256": "f8166ee9bc6b50a5708f2b116de55dd6a50de0eb3090d36273d1fe6969ee0809",
+        "status": "completed"
+      },
+      {
+        "step": "skip-tour",
+        "image": "evento-data--skip-tour.png",
+        "sha256": "3fbe44566d16c6b610add7741ff0be9833de370b916f061b2c483d0636605e68",
+        "status": "completed"
+      },
+      {
+        "step": "close-menu",
+        "image": "evento-data--close-menu.png",
+        "sha256": "fec469b1b5b154fc51446cf79f51d86557ca7080210eb85431da8317b3067c8c",
+        "status": "completed"
+      },
+      {
+        "step": "open-agenda",
+        "image": "evento-data--open-agenda.png",
+        "sha256": "2d1c3bc06814b4384f3d75bdf39d229eee6877ce046f593503a367ad53818c33",
+        "status": "completed"
+      },
+      {
+        "step": "new-event",
+        "image": "evento-data--new-event.png",
+        "sha256": "b469b96a7a9fabc96c466e9fe9a7565769ec923b25505c9aa4d5b481bd88b6c6",
+        "status": "completed"
+      },
+      {
+        "step": "choose-day",
+        "image": "evento-data--choose-day.png",
+        "sha256": "2f047791cf19e72c97aacf1d474eb63226c265555f3ac3e0e0675773d03eab4d",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "artefato-mapa-evento",
+    "evidence_id": "ev_0e6d73d11c2e2ff724bdcf8f19231ad5f9c22f0be8ee96c38c12da8c61e5b626",
+    "start_url": "http://localhost:8765/mapa-jornadas.html",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "event-journey",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "artefato-mapa-evento--settled.png",
+        "sha256": "f43eae81baeae2b229e5c0bb0ff922602c7c062a6399ae77b6c8293ab874c2b2",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-master-apos-login",
+    "evidence_id": "ev_0e7da71aa4a8498e113997196af3c477b3161fb7c016b8b50dc189636fc8547e",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-or-onboarding",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-master-apos-login--settled.png",
+        "sha256": "a1e39aa093f7a430fd5f49f71838e5454d621aa724b4bce67260c21235852303",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "proposta-confirmacao-validada",
+    "evidence_id": "ev_0e8a42167fe4f5282080653e2562b21e489cfab8aa3a1d56995aa668c9c967c3",
+    "start_url": "http://localhost:8765/propostas.html",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "busy",
+        "action": "select_option",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "confirm",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "undo",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "scenario_start",
+        "image": "proposta-confirmacao-validada--scenario_start.png",
+        "sha256": "bbf595f0ffcdc4df481da361149b618a8f5f96f6167d33752d1609e4049fadf8",
+        "status": "completed"
+      },
+      {
+        "step": "busy",
+        "image": "proposta-confirmacao-validada--busy.png",
+        "sha256": "f5a633e4c8b9eb9f8dd2f5089dd225536425736846632d1fd271ab4f1689ea1b",
+        "status": "completed"
+      },
+      {
+        "step": "confirm",
+        "image": "proposta-confirmacao-validada--confirm.png",
+        "sha256": "79112eded7f1f667f9d884a26501fb4a31cf54b295ebe43ac825895cdb58ce0d",
+        "status": "completed"
+      },
+      {
+        "step": "undo",
+        "image": "proposta-confirmacao-validada--undo.png",
+        "sha256": "47f8b31e7a7b3c7fb62a2bb6d14e12297992ad6bcd8c8d9ec31fd0f1344380f4",
+        "status": "completed"
+      },
+      {
+        "step": "settled",
+        "image": "proposta-confirmacao-validada--settled.png",
+        "sha256": "47f8b31e7a7b3c7fb62a2bb6d14e12297992ad6bcd8c8d9ec31fd0f1344380f4",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "proposta-busy-B",
+    "evidence_id": "ev_1b3442486ca9e5bbb8bd57e4bc21501d9dc4afab607dbb221ef8458030a27c0f",
+    "start_url": "http://localhost:8765/propostas.html",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 900,
+        "width": 375
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "direction-b",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "busy",
+        "action": "select_option",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "preview-scroll",
+        "action": "press",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "proposta-busy-B--settled.png",
+        "sha256": "b93be8589be5654bcb56d5e800f234dcc7ba9b69f8da079f79137fdbd2421691",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "membro-aviso-destino",
+    "evidence_id": "ev_1cdb26b7155f7b1b3695f87910eb5706a6e5f04c55f7be6d236a11a527a46088",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "read-urgent",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "scenario_start",
+        "image": "membro-aviso-destino--scenario_start.png",
+        "sha256": "fec469b1b5b154fc51446cf79f51d86557ca7080210eb85431da8317b3067c8c",
+        "status": "completed"
+      },
+      {
+        "step": "skip-tour",
+        "image": "membro-aviso-destino--skip-tour.png",
+        "sha256": "9ee18111aa3a13ba035ad762e9979af79f47e2b35884d5c27ad9de3b9e0ef95a",
+        "status": "completed"
+      },
+      {
+        "step": "close-menu",
+        "image": "membro-aviso-destino--close-menu.png",
+        "sha256": "3bb5e9c577e8a1d929aa0a40b50a2bb2619b0451f8066e9745cab4e10b74e7bc",
+        "status": "completed"
+      },
+      {
+        "step": "user-menu",
+        "image": "membro-aviso-destino--user-menu.png",
+        "sha256": "b158f4575628f4d4797047b581f48552f1f3ad9017f7d661ba08bc907f316fa1",
+        "status": "completed"
+      },
+      {
+        "step": "open-app",
+        "image": "membro-aviso-destino--open-app.png",
+        "sha256": "25d3d6786f6da841d12e179402947ae986ad291b6efea58a96688ef10882cf36",
+        "status": "completed"
+      },
+      {
+        "step": "read-urgent",
+        "image": "membro-aviso-destino--read-urgent.png",
+        "sha256": "380f511d78c437512fb1f68dbf8ef37e966cee273478ae535b7cb2652bf971e6",
+        "status": "completed"
+      },
+      {
+        "step": "settled",
+        "image": "membro-aviso-destino--settled.png",
+        "sha256": "380f511d78c437512fb1f68dbf8ef37e966cee273478ae535b7cb2652bf971e6",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "cadastro-pastor",
+    "evidence_id": "ev_1d939d0a66012aa4ed558aa273e36be0e4d18a2f2ddce71d7ed0130da1dd60b1",
+    "start_url": "http://localhost:3001/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "signup-choice",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "scenario_start",
+        "image": "cadastro-pastor--scenario_start.png",
+        "sha256": "5b74be5fa0e94774f4a364e565eb8d4d2fc59ed31bc1d6af3e87a3576f7af9d2",
+        "status": "completed"
+      },
+      {
+        "step": "signup-choice",
+        "image": "cadastro-pastor--signup-choice.png",
+        "sha256": "26419367184b2cab7eae1a288db5390d4f56374397409f5efbb5789dd1c864a1",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "membro-texto-minimo",
+    "evidence_id": "ev_295e9421ce44e9c077d083133a9300ea8f4e62c5496ce5212d52d6a2a19eabd8",
+    "start_url": "http://localhost:3002/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "membro-texto-minimo--settled.png",
+        "sha256": "55ddb9d7216871ca9e87f95de72f0a75eb7e340a4be5550b173fef351fa118b3",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "proposta-confirmar-desfazer",
+    "evidence_id": "ev_2fb18dc7f86c7711aed53d478b34680ad14269cdbaf9e67298e7a088c449f95f",
+    "start_url": "http://localhost:8765/propostas.html",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "busy",
+        "action": "select_option",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "confirm",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "undo",
+        "action": "click",
+        "status": "failed",
+        "error": "locator.click: Timeout 12000ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: 'Desfazer', exact: true })\n"
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      }
+    ],
+    "screens": [
+      {
+        "step": "scenario_start",
+        "image": "proposta-confirmar-desfazer--scenario_start.png",
+        "sha256": "bbf595f0ffcdc4df481da361149b618a8f5f96f6167d33752d1609e4049fadf8",
+        "status": "completed"
+      },
+      {
+        "step": "busy",
+        "image": "proposta-confirmar-desfazer--busy.png",
+        "sha256": "f5a633e4c8b9eb9f8dd2f5089dd225536425736846632d1fd271ab4f1689ea1b",
+        "status": "completed"
+      },
+      {
+        "step": "confirm",
+        "image": "proposta-confirmar-desfazer--confirm.png",
+        "sha256": "79112eded7f1f667f9d884a26501fb4a31cf54b295ebe43ac825895cdb58ce0d",
+        "status": "completed"
+      },
+      {
+        "step": "undo",
+        "image": "proposta-confirmar-desfazer--undo.png",
+        "sha256": "08d80aae7e460e0b5ab426920c3ecf723a965b290f83c31e2223db914765d258",
+        "status": "failed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "membro-perfil",
+    "evidence_id": "ev_323ea5e312e66d8af25b02e3455723c043abe8af4fdf7d52019d6c6ac2610cba",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-section",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "open-section",
+        "image": "membro-perfil--open-section.png",
+        "sha256": "2bcbc031c69a1894b55a834e769f052597f993e733ee03e832e98ec702766fda",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "membro-caminhada",
+    "evidence_id": "ev_3440f5d819b2f28c71b1015ada15e0733d9fdffd1ba3de4e6dcd17c4f9b4f1ad",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-section",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "open-section",
+        "image": "membro-caminhada--open-section.png",
+        "sha256": "8b68a12cf1dbc539560f9399b2fa262ee61d9d9f0fbcfd8421c51825553b1708",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "agenda-novo-evento",
+    "evidence_id": "ev_3500f383d844fbc97de6f9bfd3ab1201e07d0776e3a6caf2cf63b28a6207fb91",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-agenda",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "new-event",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "scenario_start",
+        "image": "agenda-novo-evento--scenario_start.png",
+        "sha256": "fec469b1b5b154fc51446cf79f51d86557ca7080210eb85431da8317b3067c8c",
+        "status": "completed"
+      },
+      {
+        "step": "skip-tour",
+        "image": "agenda-novo-evento--skip-tour.png",
+        "sha256": "9ee18111aa3a13ba035ad762e9979af79f47e2b35884d5c27ad9de3b9e0ef95a",
+        "status": "completed"
+      },
+      {
+        "step": "close-menu",
+        "image": "agenda-novo-evento--close-menu.png",
+        "sha256": "3bb5e9c577e8a1d929aa0a40b50a2bb2619b0451f8066e9745cab4e10b74e7bc",
+        "status": "completed"
+      },
+      {
+        "step": "open-agenda",
+        "image": "agenda-novo-evento--open-agenda.png",
+        "sha256": "e0e3995199d8d9335c927d04da35bed08728e54bb763eaf170361083e9d8f5d5",
+        "status": "completed"
+      },
+      {
+        "step": "new-event",
+        "image": "agenda-novo-evento--new-event.png",
+        "sha256": "b668df209c55b2ed70989cd1f2938ebf53f89c9a21facc82e5c5e8465d0704fc",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "membro-agenda",
+    "evidence_id": "ev_350580cc1cc49a4949fe1ee28dc8f72cb4a84d83da929edc580a0251e9379ac0",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-section",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "open-section",
+        "image": "membro-agenda--open-section.png",
+        "sha256": "e6135815d9952d7770f6de98bb8568d1733b629a5a3d1b6361bb5a04fbd6651c",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-master-entrada",
+    "evidence_id": "ev_468d4ab1f12087b6ed655e710a6b0043413284269b9353d514d33a798279b85d",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-master-entrada--settled.png",
+        "sha256": "d637ea84384a4a93cd4f0e2f1eec82ff87fd39684944cacc92119fb5a5938149",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "mapa-validacao",
+    "evidence_id": "ev_4b5dd80425b5428b60be80a5aa82da99747e4ebe8ef66fd826f657e1af373e5b",
+    "start_url": "http://localhost:8765/mapa-jornadas.html",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "map-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "mapa-validacao--settled.png",
+        "sha256": "1e21b0156a5a3c438de005967719430c3bc369c34392b1f2979a948800de70fc",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "evento-data-escolhida",
+    "evidence_id": "ev_4fba9eec50050cd075ee1df9b947a042f6065d2d910e2c3ed02216f50b9e5ccc",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "agenda",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "new",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "date",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "choose",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "evento-data-escolhida--settled.png",
+        "sha256": "caa15ddf18de995c263606b3933b8377e1484d57f2d70995c484ff14b48ac28f",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-cursos",
+    "evidence_id": "ev_56ee7063f69de8c3772f297ebb1ef5348bf122f4881259ad7d76d60614638eb4",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "courses",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-cursos--settled.png",
+        "sha256": "51aac08801f2b812051624b455987e12b2f6bae9c3fb29cf121f9c767b9f2c17",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-master-inicio",
+    "evidence_id": "ev_5acf70212a3f6dc8d8a341726ca7cbea56bda5b74e5705188fc5839d860ec75a",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-master-inicio--settled.png",
+        "sha256": "e9ae8c4a824e0806895e2df64eaf0a420002b8432bf02d96be8979442ec3ed9c",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-setup-convidar-desktop",
+    "evidence_id": "ev_5b4fcdbe807984950eb00dbfc2c027e67095f02c8bc205963df73686b84e1421",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "start-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "phase3",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-setup-convidar-desktop--settled.png",
+        "sha256": "dd788dfbd6834939728ceb9de64c56ff25fded72fad37be49bc9e5127378135d",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "painel-config",
+    "evidence_id": "ev_692fd3464108c07c321228df18f1f5c846e31c00a1e769fd517e59d7ded2564a",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "config",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "painel-config--settled.png",
+        "sha256": "90f4b0b42ffa5b13db446889110a536c153aa41443b84caa95cc36673032db16",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "painel-escalas",
+    "evidence_id": "ev_6bbaa33e7c45abcf2f7b09846e9794640a610d860c6c03059f2038edb4f4851f",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "roster",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "painel-escalas--settled.png",
+        "sha256": "7bdbd7a2e256a1628576d3a958c2de7586d7893b5ae344178a18d7af5a491c05",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-configuracao-fase1",
+    "evidence_id": "ev_6efab6c611cd2c5a2eb05d04c165b67668922dc4bc3b3159ded9a54fd1804445",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "start-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-configuracao-fase1--settled.png",
+        "sha256": "52bd13658345ba65c6c7c50f4d50caf8a6f7231956dcc442a035ae129d9f1e9a",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "membro-tarefa-destino",
+    "evidence_id": "ev_77b5c57722c3927d826cde3cd99626ae17a69871147b4d1391078f9bc584e1e2",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "task",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "expand-task",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "membro-tarefa-destino--settled.png",
+        "sha256": "bc68ba3c9af5fea459408bd51fab5649a324fac7be35e62bcae1af18148a4219",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "membro-claro",
+    "evidence_id": "ev_7fff8d45b65a7069235e68436de9e600b9b15f44c03f5737fe4add52d59a7866",
+    "start_url": "http://localhost:3001/service/demo?modo=light",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "membro-claro--settled.png",
+        "sha256": "825d2b9530c19ad18f2dcd44468242479b46c26bf209dff1bb1d3182d3469a92",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-igreja-vazia",
+    "evidence_id": "ev_861b7347f38be76cfb8daa8d8fdda8347f366bcb461f052642ab2b2e5fe3e211",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-igreja-vazia--settled.png",
+        "sha256": "071f1444771754c90ca29b27841e8eac25cacdc2e6c62dab38b22e0bc155f012",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-sem-time-entrada",
+    "evidence_id": "ev_93eb96d1d23d4410a74af8d0f5ea90d2ae6eafb14d94adee015bfa11519ac0f4",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-sem-time-entrada--settled.png",
+        "sha256": "7390ea8c74dc0f875da3caa3f122fb825e667d987e01557b219e0b7917c0b5a8",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "membro-inicio",
+    "evidence_id": "ev_9ab3a2042a440fce2f54aa9ea5a52ac4606f1b8bcb35133d4c470647e139ad9c",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "open-app",
+        "image": "membro-inicio--open-app.png",
+        "sha256": "6ec628f3033310d7d4f5cb0b69d15b9afae1b722dc9a316b5f9b39bc40a9a697",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "proposta-primeiro-evento",
+    "evidence_id": "ev_a898263a2475bc52d709d3fb3cec4a9f64c9b46a72c7acb6eaf099a7856ade1f",
+    "start_url": "http://localhost:8765/propostas.html",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "first-church",
+        "action": "select_option",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "next",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "review",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "publish-simulation",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "scenario_start",
+        "image": "proposta-primeiro-evento--scenario_start.png",
+        "sha256": "bbf595f0ffcdc4df481da361149b618a8f5f96f6167d33752d1609e4049fadf8",
+        "status": "completed"
+      },
+      {
+        "step": "first-church",
+        "image": "proposta-primeiro-evento--first-church.png",
+        "sha256": "5a2737ca26ff74fd1104fed7ac15e408bb2983d7dbe8f809e4758564ddb8ec2b",
+        "status": "completed"
+      },
+      {
+        "step": "next",
+        "image": "proposta-primeiro-evento--next.png",
+        "sha256": "bea4d49a9862692ef72943bf64e6ce13141255358be818308eb9d016285c655f",
+        "status": "completed"
+      },
+      {
+        "step": "review",
+        "image": "proposta-primeiro-evento--review.png",
+        "sha256": "0310c6e9fb09afe41007eb382e62ee8d5e113d2985376bb3b8410fad82898695",
+        "status": "completed"
+      },
+      {
+        "step": "publish-simulation",
+        "image": "proposta-primeiro-evento--publish-simulation.png",
+        "sha256": "d448c74707d1380b75513b901ac8b475a3b1512848a3ac3073d0c75ed8e49f14",
+        "status": "completed"
+      },
+      {
+        "step": "settled",
+        "image": "proposta-primeiro-evento--settled.png",
+        "sha256": "d448c74707d1380b75513b901ac8b475a3b1512848a3ac3073d0c75ed8e49f14",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "membro-mensagens",
+    "evidence_id": "ev_ab1caaa44abaff9512c0944c33b7b6a76df0b30a97d5c6d0c0e3544598ea1f73",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-section",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "open-section",
+        "image": "membro-mensagens--open-section.png",
+        "sha256": "7481c8a8151446e373138008180b05ff83cac86519d876928b05b6df4965bc05",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-secretaria-carregada",
+    "evidence_id": "ev_ad15dbd48b116f9801e2a43394007bcc1fe4606ac5cb03d0bc6dddd37d08003b",
+    "start_url": "http://localhost:3002/service",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "more",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "secretary",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "load-books",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-secretaria-carregada--settled.png",
+        "sha256": "99a8a3689ed7f2a7a24808c28e07716a4034c0396ebad5cc962f0c7294a52225",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "membro-tamanho-texto",
+    "evidence_id": "ev_b5e5bf31c67dfd99228305ac4c64dcbfb2fe91d75bfba3023d3120ee00c2e45d",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "profile",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "text-size",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "membro-tamanho-texto--settled.png",
+        "sha256": "f50e7df66024776586828e02f228fb6e8b3bb036c4ef055ff02cb409aa1bff4f",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-secretaria",
+    "evidence_id": "ev_bec3b4939e336b08046231ef7c58a437f26c2ab50ab586036c109b27cf45447f",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "more",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "secretary",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-secretaria--settled.png",
+        "sha256": "1270a6dd6c6a61d85706f17ea14f82be119d25515693364471d970c8cf3bdf1f",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "proposta-mobile",
+    "evidence_id": "ev_c56480ac1f03bf754ff61517b3f9d36cffd6ce5e2f909b4f2f2c6eeb3948d887",
+    "start_url": "http://localhost:8765/propostas.html",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 900,
+        "width": 375
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "proposta-mobile--settled.png",
+        "sha256": "10baacc915fcb9ca253121420de4fb68cb4abf115bafb730e7dee764b2551209",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "artefato-portal-filtros-validados",
+    "evidence_id": "ev_c5e02485124c181235a8aee777bdfb561b8c1d6c27490e240c6d616963eb2312",
+    "start_url": "http://localhost:8765/index.html",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "persona-filter",
+        "action": "select_option",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "environment-filter",
+        "action": "select_option",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "enlarge",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "artefato-portal-filtros-validados--settled.png",
+        "sha256": "2351e205298bbadcd742955f3c73f16fa06f7ad27242773c1618e1545bc07caf",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-visitantes",
+    "evidence_id": "ev_c7e21540e5b9fa052236eb5f8659a1b8881ebd83f951a28b14e498ed2245404b",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "visitors",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-visitantes--settled.png",
+        "sha256": "bc2e6b00b7bb1e502df0c566c97a517de028efb9335e4d39f0603986c52942b1",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "membro-texto-maximo",
+    "evidence_id": "ev_c8898a82f4f651e95d51463609e2920d0a3b18d6c0027aae1da49ce2a5afbca4",
+    "start_url": "http://localhost:3002/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "membro-texto-maximo--settled.png",
+        "sha256": "7f7bb952c2bc3fa8d03785b816e2b63e6f5743ff339e368f6d2d38cc57d41462",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-financeiro-inicio",
+    "evidence_id": "ev_ca5470d35a922d22cd280cef5b4e701e9c08be3ed7353d65f2b2c41690119fee",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "finance",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-financeiro-inicio--settled.png",
+        "sha256": "66729186ecda3cceb2fa921fef8aabcf6d05611e5fc87db6313227ef84f5255b",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "membro-dados",
+    "evidence_id": "ev_ce8495925036f792da9d724c2d114723afaf45bbc587390c93932ba01031be0a",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "complete-data",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "membro-dados--settled.png",
+        "sha256": "4097032ec4cac29d4b17bd5e88ec9121b23acfda48da53872c0b1ff0957d22cc",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "proposta-evento-maximo",
+    "evidence_id": "ev_cf8e171be8ea9ac4292a41c2eb8e7c247a41d8fd2c1e5931f19dc14d26935658",
+    "start_url": "http://localhost:8765/propostas.html",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 900,
+        "width": 375
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "event",
+        "action": "select_option",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "size",
+        "action": "select_option",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "scroll",
+        "action": "press",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "proposta-evento-maximo--settled.png",
+        "sha256": "bc9328118fe9a5ced65fc966510173285c4078ebcb2ecea0102e59d0375bf422",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "artefato-portal-mobile",
+    "evidence_id": "ev_d08d51d629c58a6df1bf0792c1a8248b1cb750d576d8943738a32d6264d912f8",
+    "start_url": "http://localhost:8765/index.html",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "artefato-portal-mobile--settled.png",
+        "sha256": "0af65319e519dbef301a51b83932620a24a77013798c85495a8bee001c43430e",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "painel-mural-criar",
+    "evidence_id": "ev_d3333fca329b69c9674aea64db98f3830766515c50d2062d69413a278c1c7189",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "mural",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "new-post",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "painel-mural-criar--settled.png",
+        "sha256": "0476c46df3e1eb30d90bd01c35d7dbccc271f291e03f147960ae27d4fb36ba43",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "pastor-login",
+    "evidence_id": "ev_d49f554844f1700ab697ea2dc668dd442af2d49ef525060393ebc7e322dacad9",
+    "start_url": "http://localhost:3001/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "login-ready",
+        "image": "pastor-login--login-ready.png",
+        "sha256": "95d7d70bc3a2a7369aa0194a6394543e6af45d8825b17487079e1bf89207bc8e",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-kids",
+    "evidence_id": "ev_db0784bebfe11d0251aa0e326165a91bb188ddf3c0a360adac346f9d5165f653",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "kids",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-kids--settled.png",
+        "sha256": "5265bcbacd344fdaf4a8db6c2807603bd6833419618cab50b1d38f675fabd61a",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-master-login",
+    "evidence_id": "ev_dd4f320cad100835167f5f15088ee2ef59f5288271f84ea99827b3ec92c264e1",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-master-login--settled.png",
+        "sha256": "23f246ab5cf8849f9a01e21b90d83c1044af662c34330d2542d8bed44dccfc90",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "artefato-portal-desktop",
+    "evidence_id": "ev_dd69c070d93049ed732b98db59cdfaccdb8f45869b1d727e3995908404749bb1",
+    "start_url": "http://localhost:8765/index.html",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "persona-filter",
+        "action": "select_option",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "environment-filter",
+        "action": "select_option",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "enlarge",
+        "action": "click",
+        "status": "failed",
+        "error": "locator.click: Error: strict mode violation: locator('#gallery .imagebutton') resolved to 6 elements:\n    1) <button type=\"button\" class=\"imagebutton\" aria-label=\"Ampliar: Configuração desktop: os campos da igreja aparecem\">…</button> aka locator('#gallery').getByRole('button', { name: 'Ampliar: Configuração desktop: os campos da igreja aparecem' })\n    2) <button type=\"button\" class=\"imagebutton\" aria-label=\"Ampliar: Configuração desktop: convites aparecem\">…</button> aka getByRole('button', { name: 'Ampliar: Configuração desktop: convites aparecem' })\n    3) <button type=\"button\" class=\"imagebutton\" aria-label=\"Ampliar: Configuração mobile: fase Sua igreja sem formulário\">…</button> aka locator('#gallery').getByRole('button', { name: 'Ampliar: Configuração mobile: fase Sua igreja sem formulário' })\n    4) <button type=\"button\" class=\"imagebutton\" aria-label=\"Ampliar: Configuração mobile: fase Cultos e times sem formulário\">…</button> aka getByRole('button', { name: 'Ampliar: Configuração mobile: fase Cultos e times sem formulário' })\n    5) <button type=\"button\" class=\"imagebutton\" aria-label=\"Ampliar: Configuração mobile: fase Pessoas sem formulário\">…</button> aka getByRole('button', { name: 'Ampliar: Configuração mobile: fase Pessoas sem formulário' })\n    6) <button type=\"button\" class=\"imagebutton\" aria-label=\"Ampliar: Configuração desktop: horários e times aparecem\">…</button> aka getByRole('button', { name: 'Ampliar: Configuração desktop: horários e times aparecem' })\n\nCall log:\n  - waiting for locator('#gallery .imagebutton')\n"
+      },
+      {
+        "id": "close",
+        "action": "click",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "cancelled",
+        "error": "not executed after an earlier action failure"
+      }
+    ],
+    "screens": [],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": false,
+      "missing_sections": [
+        "accessibility",
+        "action",
+        "screenshot"
+      ],
+      "status": "incomplete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-configuracao-fase2",
+    "evidence_id": "ev_de2406c839dccdc4a294e997b74f6979f009e023a6edd0d710d9b436f8f01e9d",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "start-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "phase2",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-configuracao-fase2--settled.png",
+        "sha256": "a94077675985e19887e11f7f28358518bd9eeeeafc3766a1da3224c015e41ba1",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "artefato-mapa-verificado",
+    "evidence_id": "ev_e0b9b5680e023c154a89feffec80b484ee00a308e9b3cf54fe8fc12c17688de4",
+    "start_url": "http://localhost:8765/mapa-jornadas.html",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "artefato-mapa-verificado--settled.png",
+        "sha256": "0897d4bb7688a82f2f98751aebec4a52b6a0127eabc1f1d98cb39467791db3cb",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-convite-pessoa",
+    "evidence_id": "ev_e44f2315de2a16ad87acfbfaa815c232731aacd6f93eb4db4166d26fb55b0f30",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "people",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "new-member",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-convite-pessoa--settled.png",
+        "sha256": "eaced0f0384025268b7b8c9c4cbe84f4de97fb6bfe79529a659da37486df75f3",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-configuracao-fase3",
+    "evidence_id": "ev_e95c63b0c9fd18d79aaafdae262f8d35294fdf08e1295e0224af9823677647f0",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "start-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "phase3",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-configuracao-fase3--settled.png",
+        "sha256": "13e0c68ac916c542cfc327db1f7b366db9bb7ba9104f67d7131608cf8ae05c74",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-config-permissoes",
+    "evidence_id": "ev_ea5d357180520a598408255c7ff677c7704e9525eb2f0a6db74babb5a179e686",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "config",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "permissions",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-config-permissoes--settled.png",
+        "sha256": "189f8c9315f1212deaabb689b0cf7b5439cbb506aa0456af737a6f9f3bfdd41c",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-membro-entrada",
+    "evidence_id": "ev_ebb16f4b43d22e71ba8a22857fc61273218d4307cafb093d1920aa107e42ba6c",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-membro-entrada--settled.png",
+        "sha256": "d923528e5951747842154194026b88b106217bf1f3614d4760945b747db3ce59",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-times",
+    "evidence_id": "ev_f2067935c7a7d86295c2a982f873fbb5896131019e75de1c2fab9856d2acf04c",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "app-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "teams",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-times--settled.png",
+        "sha256": "85dc65dcc5c057afff8ffeda8e972e177b3eab2e4d2b5d251ccc63bfd4b8f665",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "local-setup-cultos-desktop",
+    "evidence_id": "ev_f4383d21ef8da73b97488bd427fe3adf9d73590e0a58f01504d1591ef8ab4960",
+    "start_url": "http://localhost:3002/service/login",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 1000,
+        "width": 1440
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "email",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "password",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "login",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "redirect",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "panel-ready",
+        "action": "wait_for",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "start-setup",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "phase2",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "local-setup-cultos-desktop--settled.png",
+        "sha256": "a100d119bf341d25c5046394ade94ff05a5ef777d37f61df53a00220dc11c1e1",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "membro-editar-dados",
+    "evidence_id": "ev_fabcdb91cf00003b3b6639c73bb95b925a2bb4e411fd868092c0e46163604799",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "user-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "open-app",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "complete-data",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "edit",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "membro-editar-dados--settled.png",
+        "sha256": "bdd1fd1c7f5b32a548e87f65ffdcdc57b336de5a40e5c629ca3c0c5ae30f7d05",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  },
+  {
+    "label": "evento-sem-data-habilitado",
+    "evidence_id": "ev_fc68c71dccf61a9c71aad4cb474d67d7a698298499ad01b4785950abf16250db",
+    "start_url": "http://localhost:3001/service/demo",
+    "environment": {
+      "color_scheme": "dark",
+      "locale": "pt-BR",
+      "reduced_motion": "reduce",
+      "service_workers": "block",
+      "timezone": "America/Sao_Paulo",
+      "viewport": {
+        "device_scale_factor": 1,
+        "height": 844,
+        "width": 390
+      }
+    },
+    "actions": [
+      {
+        "id": "scenario_start",
+        "action": "goto_start",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "skip-tour",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "close-menu",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "agenda",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "new",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "name",
+        "action": "fill",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "place",
+        "action": "click",
+        "status": "completed",
+        "error": null
+      },
+      {
+        "id": "settled",
+        "action": "wait_for_timeout",
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "screens": [
+      {
+        "step": "settled",
+        "image": "evento-sem-data-habilitado--settled.png",
+        "sha256": "21048dcb287856cf920c1422196c252934d0ea9c28fa4e70aab2b160b66abe83",
+        "status": "completed"
+      }
+    ],
+    "errors": [],
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    }
+  }
+]
