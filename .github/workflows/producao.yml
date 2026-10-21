@@ -1,0 +1,60 @@
+# Produção: banco antes do código. A cada push no main, aplica no Supabase de
+# produção as migrações de supabase/migrations que ainda não rodaram e, só se
+# deu certo, pede à Vercel o deploy de produção (o deploy automático do main
+# está desligado em vercel.json). Sem migração nova, o db push não faz nada e
+# o deploy sai do mesmo jeito.
+#
+# Segredos (Settings > Secrets and variables > Actions), cadastrados à mão:
+#   SUPABASE_DB_URL         string de conexão do Session pooler (porta 5432), com a senha
+#   VERCEL_DEPLOY_HOOK_URL  Deploy Hook da Vercel para o branch main
+# Passo a passo e plano B: docs/service-v7/MIGRACOES.md
+name: Produção
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: producao
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  banco:
+    name: Migrações no Supabase
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Segredos cadastrados
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          falta=0
+          [ -n "$SUPABASE_DB_URL" ] || { echo "::error::Falta o segredo SUPABASE_DB_URL"; falta=1; }
+          [ -n "$VERCEL_DEPLOY_HOOK_URL" ] || { echo "::error::Falta o segredo VERCEL_DEPLOY_HOOK_URL"; falta=1; }
+          exit $falta
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.109.1
+      - name: Pendentes
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: supabase db push --db-url "$SUPABASE_DB_URL" --dry-run
+      - name: Aplicar
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: supabase db push --db-url "$SUPABASE_DB_URL" --yes
+
+  site:
+    name: Deploy na Vercel
+    needs: banco
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy Hook
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL" > /dev/null && echo "Deploy de produção pedido à Vercel."

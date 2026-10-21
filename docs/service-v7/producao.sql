@@ -5148,4 +5148,10 @@ end $$;
 revoke all on function service.mapa_crescimento_serie(uuid) from public, anon;
 grant execute on function service.mapa_crescimento_serie(uuid) to authenticated;
 
+-- ═══ 0093_ci_migracao_automatica.sql ═══
+-- Marco da migração automática (docs/service-v7/MIGRACOES.md): a primeira
+-- migração aplicada em produção pelo workflow Produção, sem SQL Editor.
+-- Inofensiva: só troca o comentário do schema.
+comment on schema service is 'Produto Service (gestão de igrejas). Não mistura campos do CE.X. Migrações aplicadas pelo workflow Produção.';
+
 commit;

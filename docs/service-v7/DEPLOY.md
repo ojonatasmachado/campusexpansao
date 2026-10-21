@@ -60,6 +60,9 @@ Perfil pelo avatar no topo. Se eles não acharem, volte com o resultado.
 
 ## 4. Banco de produção (Supabase)
 
+> Desde 2026-10-21 as migrações vão sozinhas ao entrar no `main`, antes do deploy da Vercel:
+> veja `MIGRACOES.md`. O passo abaixo virou plano B.
+
 Antes: no painel do Supabase, Database > Backups, confirme que há backup de hoje.
 
 1. Abra `docs/service-v7/producao.sql` (0051 a 0068 numa transação só; pode rodar mesmo que a 0051 já exista, e rodar de novo não estraga nada), copie tudo, cole no
@@ -86,7 +89,8 @@ for configurado.
 ## 6. Pôr no ar
 
 1. Abra (ou revise) o pull request de `service-v7-85m5w6` para `main` e confira o CI verde.
-2. Merge. A Vercel publica sozinha.
+2. Merge. O workflow Produção aplica as migrações e só então pede o deploy à Vercel
+   (`MIGRACOES.md`).
 3. Logo depois, em produção: entre como master, abra Início, Escalas, Mural e o app do
    membro; veja se não há tela em branco. Se houver, a Vercel tem "Instant Rollback" para a
    versão anterior (o banco novo não atrapalha a versão antiga: as migrações só acrescentam).
