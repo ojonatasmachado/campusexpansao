@@ -19,8 +19,11 @@ export function readMemberLocation(url: URL, allowed: (tab: MemberTab, sub: stri
   const raw = url.searchParams.get("maba") ?? fallback;
   const tab = TABS.includes(raw as MemberTab) ? raw as MemberTab : "inicio";
   const requested = id(url.searchParams.get("mtela")) ?? (category === "mural" && !url.searchParams.has("mtela") ? "mural" : null);
-  const sub = requested && allowed(tab, requested) ? requested : null;
-  return { tab, sub, segment: url.searchParams.get("msegmento") === "igreja" ? "igreja" : "minha", announcement: sub === "mural" ? id(url.searchParams.get("maviso")) : null, card: sub === "tarefas" ? id(url.searchParams.get("mtarefa")) : null };
+  const accepted = requested && allowed(tab, requested) ? requested : null;
+  /* Tarefas ficam dentro de Minha agenda, sem uma subtela independente. */
+  const sub = tab === "agenda" && accepted === "tarefas" ? null : accepted;
+  const card = tab === "agenda" && !sub && allowed("agenda", "tarefas") ? id(url.searchParams.get("mtarefa")) : null;
+  return { tab, sub, segment: card || accepted === "tarefas" ? "minha" : url.searchParams.get("msegmento") === "igreja" ? "igreja" : "minha", announcement: sub === "mural" ? id(url.searchParams.get("maviso")) : null, card };
 }
 
 export function memberNotificationUrl(category: string, announcementId?: string): string {
@@ -42,6 +45,10 @@ export function writeMemberLocation(url: URL, location: MemberLocation): URL {
   if (location.sub) next.searchParams.set("mtela", location.sub);
   if (location.tab === "agenda") next.searchParams.set("msegmento", location.segment);
   if (location.sub === "mural" && id(location.announcement)) next.searchParams.set("maviso", location.announcement!);
-  if (location.sub === "tarefas" && id(location.card)) next.searchParams.set("mtarefa", location.card!);
+  if (location.tab === "agenda" && (!location.sub || location.sub === "tarefas") && id(location.card)) {
+    next.searchParams.delete("mtela");
+    next.searchParams.set("msegmento", "minha");
+    next.searchParams.set("mtarefa", location.card!);
+  }
   return next;
 }

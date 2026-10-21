@@ -17,7 +17,17 @@ assert.equal(readMemberLocation(new URL("http://localhost/service?maba=mensagens
 const agenda = writeMemberLocation(aviso, { ...aula, tab: "agenda", sub: "tarefas", segment: "igreja", card: "c-1" });
 assert.equal(agenda.searchParams.has("maviso"), false);
 assert.equal(readMemberLocation(agenda, allowed).card, "c-1");
-assert.equal(readMemberLocation(agenda, allowed).segment, "igreja");
+assert.equal(readMemberLocation(agenda, allowed).segment, "minha");
+assert.equal(readMemberLocation(agenda, allowed).sub, null);
+const embeddedTask = new URL("http://localhost/service?maba=agenda&mtarefa=c-1&msegmento=igreja");
+assert.equal(readMemberLocation(embeddedTask, allowed).card, "c-1");
+assert.equal(readMemberLocation(embeddedTask, allowed).segment, "minha");
+assert.equal(readMemberLocation(embeddedTask, () => false).card, null);
+const legacyTask = new URL("http://localhost/service?maba=agenda&mtela=tarefas&mtarefa=c-1");
+assert.equal(readMemberLocation(legacyTask, allowed).sub, null);
+assert.equal(readMemberLocation(legacyTask, allowed).card, "c-1");
+const churchAgenda = writeMemberLocation(original, { ...aula, tab: "agenda", sub: null, segment: "igreja" });
+assert.equal(readMemberLocation(churchAgenda, allowed).segment, "igreja");
 console.log("Navegação: recarga, destinos permitidos, aba correta, IDs de aviso/tarefa e preservação de parâmetros independentes.");
 
 for (const [category, tab] of [["escala", "agenda"], ["mensagens", "mensagens"], ["mural", "mensagens"], ["caminhada", "caminhada"]]) {

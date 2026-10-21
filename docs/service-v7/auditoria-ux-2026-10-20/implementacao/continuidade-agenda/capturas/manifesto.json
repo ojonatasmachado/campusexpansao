@@ -1,0 +1,70 @@
+[
+  {
+    "label": "retomada-tarefa-apos-recarga",
+    "image": "retomada-tarefa-apos-recarga.png",
+    "sha256": "512fc5b29a796c762edc21a6b977e49c861c5ae49b1799289e3dc8cd983d1226",
+    "evidence_id": "ev_5758e50b9f83bdec8c18276df361025b4105199bb4f74561ffe46a5b87d95439",
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": [],
+    "url": {
+      "origin": "http://localhost:3003",
+      "query_parameter_names": [
+        "maba",
+        "msegmento",
+        "mtarefa"
+      ],
+      "redacted": false,
+      "url": "http://localhost:3003/service/demo?maba=agenda&msegmento=minha&mtarefa=cd-1"
+    }
+  },
+  {
+    "label": "retomada-tarefa-link-persistido",
+    "image": "retomada-tarefa-link-persistido.png",
+    "sha256": "512fc5b29a796c762edc21a6b977e49c861c5ae49b1799289e3dc8cd983d1226",
+    "evidence_id": "ev_727bf387384bd1acf66ae06270156b366cd128e539cb6fd42ebad11f8a9c3b12",
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": [],
+    "url": {
+      "origin": "http://localhost:3003",
+      "query_parameter_names": [
+        "maba",
+        "msegmento",
+        "mtarefa"
+      ],
+      "redacted": false,
+      "url": "http://localhost:3003/service/demo?maba=agenda&msegmento=minha&mtarefa=cd-1"
+    }
+  },
+  {
+    "label": "retomada-agenda-segmento",
+    "image": "retomada-agenda-segmento.png",
+    "sha256": "db58df5f4f68cb0c6a3e6705be8fb817c2e2447b417d1b432067fb9ff4c188f1",
+    "evidence_id": "ev_c2dc10c5f79fe80f643496791023b865282a85c22e58dfcb90fc7178b796eaae",
+    "completeness": {
+      "equality_eligible": true,
+      "missing_sections": [],
+      "status": "complete",
+      "truncated_sections": []
+    },
+    "errors": [],
+    "url": {
+      "origin": "http://localhost:3003",
+      "query_parameter_names": [
+        "maba",
+        "msegmento"
+      ],
+      "redacted": false,
+      "url": "http://localhost:3003/service/demo?maba=agenda&msegmento=igreja"
+    }
+  }
+]

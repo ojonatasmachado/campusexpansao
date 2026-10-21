@@ -9,3 +9,5 @@ O pacote `producao.sql` foi regenerado conforme o verificador do CI. Build de pr
 O projeto Vercel existente publica a branch main em `campusexpansao.com.br`. A entrega inclui código, migrações, testes e documentação da auditoria. Cópias locais de ferramentas e referências externas em `journey-mapper/` e `ponte_rea_full/` permanecem fora da entrega do aplicativo.
 
 Os documentos anteriores registram o estado local na data de cada teste. Este registro substitui a informação de que as migrações 0081 a 0085 ainda não chegaram ao banco remoto. As pendências em STATUS.md continuam abertas; publicação não equivale a certificação de todos os módulos.
+
+Entrega principal confirmada: commit `14be74309a45c31d0fac3f1901826c394a11428c`, deploy Vercel `dpl_GfPDUzQggWBh79UyG3PJCPJKt62s`, estado READY, domínio https://campusexpansao.com.br. CI Service aprovado em https://github.com/ojonatasmachado/campusexpansao/actions/runs/39602361084.

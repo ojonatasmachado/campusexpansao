@@ -1,0 +1,17 @@
+- document:
+  - alert
+  - text: CE.X Central Service
+  - button "Perfil": AL
+  - heading "Agenda" [level=1]
+  - main:
+    - radiogroup "O que ver":
+      - radio "Minha agenda"
+      - radio "Igreja" [checked]
+    - text: Próxima semana
+    - button "Dom 25 Culto de domingo manhã Dom · 10:00 · Templo principal"
+    - button "Dom 25 Culto de domingo noite Dom · 19:00 · Salão 2"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "3 novos Mensagens": 3 Mensagens
+    - button "Caminhada"

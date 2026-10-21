@@ -1,0 +1,30 @@
+- document:
+  - alert
+  - text: CE.X Central Service
+  - button "Perfil": AL
+  - heading "Agenda" [level=1]
+  - main:
+    - radiogroup "O que ver":
+      - radio "Minha agenda" [checked]
+      - radio "Igreja"
+    - text: Sexta, 23 de outubro Definir tema do 2º semestre Tarefa · Planejamento anual Domingo, 25 de outubro
+    - button "10:00 Culto de domingo manhã Serve · Louvor · Vocal · chegar 09:00 Confirmado"
+    - button "19:00 Culto de domingo noite Serve · Louvor · Vocal · chegar 18:00 Confirmado"
+    - text: 19h30 Ensaio para o próximo domingo Ensaio · Louvor · Auditório 19h00 Reunião de liderança Reunião · Sala de reuniões Tarefas com você · 1 aberta O que a liderança deixou no quadro para você. Atualize e comente.
+    - button "Definir tema do 2º semestre Planejamento anual · Prioridade alta" [expanded]
+    - button "A fazer"
+    - button "Em andamento"
+    - button "Concluído"
+    - textbox "Comentar..."
+    - button "Enviar"
+    - text: Quando posso servir Domingo de manhã O líder pode escalar você
+    - switch "Domingo de manhã" [checked]
+    - text: Domingo à noite O líder pode escalar você
+    - switch "Domingo à noite" [checked]
+    - text: Quarta à noite O líder não vai escalar você
+    - switch "Quarta à noite"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "3 novos Mensagens": 3 Mensagens
+    - button "Caminhada"

@@ -35,7 +35,7 @@ CEP é exigido ao aceitar convite no Brasil. Não pedir rua, número ou compleme
 
 ## Publicação
 
-Código e migrações 0081 a 0085 permanecem locais. Não houve push, deploy nem aplicação de migrações remotas. A publicação deve levar banco e código juntos. As fixtures temporárias das etapas de convite, times, geolocalização e CPF foram removidas, com restauração dos dados anteriores usados nos testes.
+A entrega principal foi publicada em 21/10/2026, commit 14be743, após autorização do usuário. Migrações 0081 a 0085 confirmadas no banco remoto; deploy de produção READY e CI aprovado. O registro está em PUBLICACAO.md. As fixtures temporárias das etapas de convite, times, geolocalização e CPF foram removidas, com restauração dos dados anteriores usados nos testes.
 
 ## Ordem de continuação
 

@@ -219,16 +219,18 @@ function MobileMembro({
     if (t === tab && !s && !sub && !extra.chatId && !extra.newChat) scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     setAnnouncementTarget(extra.announcementId ?? null);
     setCardTarget(extra.cardId ?? null);
-    if (extra.agSeg) setAgSeg(extra.agSeg);
+    const segment = extra.agSeg ?? (extra.cardId || s === "tarefas" ? "minha" : agSeg);
+    setAgSeg(segment);
     if (extra.chatId !== undefined || extra.newChat) setChatTarget((c) => ({ id: extra.chatId ?? null, novo: !!extra.newChat, n: c.n + 1 }));
     else if (t === "mensagens" && !s) setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 }));
     setChatAberto(null);
-    const destination = s && modulosMembro.some((m) => m.id === s && m.home === t && m.visible(ctx)) && (s !== "contribuir" || pix) && (s !== "oracao" || oracaoOn) ? s : null;
+    const accepted = s && modulosMembro.some((m) => m.id === s && m.home === t && m.visible(ctx)) && (s !== "contribuir" || pix) && (s !== "oracao" || oracaoOn) ? s : null;
+    const destination = t === "agenda" && accepted === "tarefas" ? null : accepted;
     setTab(t);
     setSub(destination);
     if (mode === "self") {
       const current = new URL(window.location.href);
-      const next = writeMemberLocation(current, { tab: t, sub: destination, segment: extra.agSeg ?? agSeg, announcement: extra.announcementId ?? null, card: extra.cardId ?? null });
+      const next = writeMemberLocation(current, { tab: t, sub: destination, segment, announcement: extra.announcementId ?? null, card: extra.cardId ?? null });
       if (next.href !== current.href) window.history.pushState({ ...window.history.state, cexMemberFrom: { tab, sub } }, "", next.pathname + next.search + next.hash);
     }
   };
@@ -394,7 +396,7 @@ function MobileMembro({
           )}
 
           {tab === "agenda" && !sub && (
-            <AgendaV6 initialCardId={cardTarget} seg={agSeg} setSeg={setAgSeg} person={person} member={member} members={members} ministries={ministries} events={events} roster={roster}
+            <AgendaV6 initialCardId={cardTarget} seg={agSeg} setSeg={(segment) => go("agenda", null, { agSeg: segment })} person={person} member={member} members={members} ministries={ministries} events={events} roster={roster}
               cards={cards} boards={boards} isRecep={isRecep} isKids={isKids} onResponderEscala={onResponderEscala}
               onStartChat={onStartChat} onAddCardComment={onAddCardComment} onSaveAvailability={onSaveAvailability}
               aulas={minhasAulas(member, courses, enrollments, courseModules, courseLessons)} meetings={meetings} rehearsals={rehearsals} rsvps={eventRsvps} />
