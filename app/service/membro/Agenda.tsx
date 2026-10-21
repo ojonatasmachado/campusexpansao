@@ -2,7 +2,8 @@
 
 import { useContext, useState } from "react";
 import { Icon } from "../lib/icons";
-import { aindaVaiAcontecer, joinDot, parseISODate, somaDias, todayISO } from "../lib/date";
+import { useRelogioDaIgreja } from "../lib/relogio-context";
+import { joinDot, parseISODate, somaDias } from "../lib/date";
 import { useTermos } from "../lib/vocabulario-context";
 import { useDestinatario } from "../lib/destinatario";
 import { conflitos, horaDeChegada } from "../lib/agenda";
@@ -48,6 +49,7 @@ export function AgendaV6({ initialCardId, seg, setSeg, person, member, members, 
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
   onAddCardComment?: (cardId: string, author: string, body: string) => void;
 }) {
+  const { todayISO, aindaVaiAcontecer } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const ui = useContext(MemberUiContext);
   const serve = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
@@ -91,7 +93,7 @@ export function AgendaV6({ initialCardId, seg, setSeg, person, member, members, 
   const servindo = new Set(meus.map((r) => r.event_id));
   for (const r of rsvps) {
     const ev = evById.get(r.event_id);
-    if (!ev || servindo.has(ev.id) || !aindaVaiAcontecer(ev.eventDate, ev.time)) continue;
+    if (!ev || servindo.has(ev.id) || !aindaVaiAcontecer(ev.eventDate, ev.time, ev.timeZone)) continue;
     itens.push({
       id: `e-${ev.id}`, data: ev.eventDate, hora: ev.time, tipo: ev.kind === "Culto" ? "Culto" : "Evento", titulo: ev.name, sub: ev.location,
       selo: <M6St k="ok" ic="ok">{r.kind === "inscricao" ? "Inscrito" : "Você vai"}</M6St>,
@@ -123,7 +125,7 @@ export function AgendaV6({ initialCardId, seg, setSeg, person, member, members, 
   const nomeDia = (d: string) => (d === hoje ? `Hoje · ${dataLonga(d)}` : d === amanha ? `Amanhã · ${dataLonga(d)}` : dataLonga(d));
 
   /* Igreja: programação pública, por semana */
-  const futuros = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
+  const futuros = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
   const semanaDe = (iso: string) => {
     const d = parseISODate(iso);
     if (!d) return "Sem data";
@@ -261,7 +263,8 @@ export function SheetEvento({ ev, slot, ministry, rsvp, onRespond, paginaUrl, ch
     if (nav.share) { try { await nav.share({ title: ev.name, text: texto }); return; } catch { return; } }
     window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank", "noopener");
   };
-  const calendario = () => baixarIcs({ id: ev.id, titulo: ev.name, data: ev.eventDate, hora: ev.time, local: ev.location, descricao: churchName ?? null });
+  const { fuso } = useRelogioDaIgreja();
+  const calendario = () => { try { baixarIcs({ fuso: ev.timeZone ?? fuso, id: ev.id, titulo: ev.name, data: ev.eventDate, hora: ev.time, local: ev.location, descricao: churchName ?? null }); } catch (error) { ui.toast(error instanceof Error ? error.message : "Não foi possível adicionar ao calendário."); } };
   const servindo = slot && slot.status !== "no";
   return (
     <div>

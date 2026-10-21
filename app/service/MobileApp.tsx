@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Icon } from "./lib/icons";
 import { readMemberLocation, writeMemberLocation } from "./lib/member-navigation";
-import { aindaVaiAcontecer, porPublicacao, saudacao, todayISO } from "./lib/date";
+import { useRelogioDaIgreja } from "./lib/relogio-context";
+import { porPublicacao } from "./lib/date";
 import ChurchLockup from "./ChurchLockup";
 import { fatorDa, sincronizarComPerfil, useTextSize } from "./lib/text-scale";
 import { TextSizeSheet } from "./TextSizeSlider";
@@ -81,6 +82,7 @@ const estaInstalado = () => window.matchMedia?.("(display-mode: standalone)").ma
 function MobileMembro({
   person, member, ...rest
 }: MobileOverlayProps & { person: P; member: M | null }) {
+  const { todayISO, aindaVaiAcontecer, saudacao } = useRelogioDaIgreja();
   const [tab, setTab] = useState<MemberTab>("inicio");
   const [sub, setSub] = useState<string | null>(null);
   const [announcementTarget, setAnnouncementTarget] = useState<string | null>(null);
@@ -292,7 +294,7 @@ function MobileMembro({
   const terminarPrimeiroAcesso = () => {
     setOnboarded(true);
     if (pendEscala > 0) { go("agenda", null, { agSeg: "minha" }); return; }
-    const prox = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time))[0];
+    const prox = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time))[0];
     if (prox) abrirEvento(prox.id);
   };
 
@@ -361,9 +363,9 @@ function MobileMembro({
                     const minhaVaga = roster.find((r) => r.person_id === person.id && r.status !== "no" && doDia.some((e) => e.id === r.event_id));
                     const evServe = minhaVaga ? doDia.find((e) => e.id === minhaVaga.event_id) : undefined;
                     const timeServe = minhaVaga ? ministries.find((m) => m.positions?.some((p) => p.id === minhaVaga.position_id)) : undefined;
-                    const culto = doDia.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => a.time.localeCompare(b.time))[0];
+                    const culto = doDia.filter((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone)).sort((a, b) => a.time.localeCompare(b.time))[0];
                     const grupo = member?.groupId ? fellowshipGroups.find((g) => g.id === member.groupId && mesmoDiaDaSemana(g.weekday, hoje)) : undefined;
-                    const aula = minhasAulas(member, courses, enrollments, courseModules, courseLessons).find(({ aula: a }) => a.lesson_date === hoje);
+                    const aula = minhasAulas(member, courses, enrollments, courseModules, courseLessons, hoje).find(({ aula: a }) => a.lesson_date === hoje);
                     return linhaDoMembro({
                       serve: evServe ? { hora: evServe.time, chegar: horaDeChegada(evServe.time, chegadaDoTime(timeServe)) } : null,
                       culto: culto ? { nome: culto.name, hora: culto.time } : null,
@@ -399,7 +401,7 @@ function MobileMembro({
             <AgendaV6 initialCardId={cardTarget} seg={agSeg} setSeg={(segment) => go("agenda", null, { agSeg: segment })} person={person} member={member} members={members} ministries={ministries} events={events} roster={roster}
               cards={cards} boards={boards} isRecep={isRecep} isKids={isKids} onResponderEscala={onResponderEscala}
               onStartChat={onStartChat} onAddCardComment={onAddCardComment} onSaveAvailability={onSaveAvailability}
-              aulas={minhasAulas(member, courses, enrollments, courseModules, courseLessons)} meetings={meetings} rehearsals={rehearsals} rsvps={eventRsvps} />
+              aulas={minhasAulas(member, courses, enrollments, courseModules, courseLessons, hoje)} meetings={meetings} rehearsals={rehearsals} rsvps={eventRsvps} />
           )}
           {tab === "agenda" && sub === "visitantes" && <div className="m6-legacy"><TabVisitantes visitors={visitors} onAdvanceVisitorStage={onAdvanceVisitorStage} onRegisterVisitor={onRegisterVisitor} /></div>}
           {tab === "agenda" && sub === "kids-sala" && (

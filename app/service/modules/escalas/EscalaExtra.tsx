@@ -6,7 +6,8 @@
 
 import { useId, useRef, useState } from "react";
 import { FormScreen, FormSection, type FormScreenHandle } from "../../painel/form/FormScreen";
-import { joinDot, todayISO, parseISODate } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { joinDot, parseISODate } from "../../lib/date";
 import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
@@ -23,6 +24,7 @@ export function EscalaExtra({ ministries, church, onClose, onCriado }: {
   onClose: () => void;
   onCriado: (eventId: string) => void;
 }) {
+  const { todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const fid = useId();
   const telaRef = useRef<FormScreenHandle>(null);

@@ -1,0 +1,26 @@
+- document:
+  - alert
+  - text: CE.X Central Service
+  - button "Perfil": AL
+  - heading "Boa tarde, Ana" [level=1]
+  - paragraph: "Hoje: GC Centro às 20h"
+  - main:
+    - text: Para você agora Novo no Mural Urgente Culto de domingo mudou para o salão 2 hoje
+    - button "Ler a publicação"
+    - text: Tarefa Definir tema do 2º semestre Prazo · 23/10/2026
+    - button "Ver a tarefa"
+    - text: Aniversário · Louvor Hoje é aniversário de Diego Uma mensagem sua faz diferença no dia.
+    - button "Mandar parabéns"
+    - button "Agora não"
+    - heading "Na vida da igreja" [level=2]
+    - paragraph: Encontros e novidades para acompanhar.
+    - button "Dom 25 Culto de domingo manhã Dom · 10:00 · Templo principal Você serve · Vocal"
+    - button "Dom 25 Culto de domingo noite Dom · 19:00 · Salão 2 Você serve · Vocal"
+    - button "Ver a agenda completa →"
+    - text: "Podemos orar por você? Você escolhe quem vê: só a intercessão ou o mural de oração da igreja."
+    - button "Enviar pedido de oração"
+  - navigation "Navegação principal":
+    - button "Início"
+    - button "Agenda"
+    - button "3 novos Mensagens": 3 Mensagens
+    - button "Caminhada"

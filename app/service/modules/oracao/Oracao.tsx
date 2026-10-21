@@ -10,7 +10,8 @@
 import { useId, useState } from "react";
 import { Icon } from "../../lib/icons";
 import { plural } from "../../lib/plural";
-import { quandoPublicado } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+
 import { papelDoDestinatario, type Destinatario } from "../../lib/destinatario";
 import {
   CATEGORIAS, LIMITE_PEDIDO, LIMITE_TESTEMUNHO, marcarRespondido, orar, pedirOracao, rotuloCategoria, tirarDoMural, useMuralOracao,
@@ -169,6 +170,7 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
   sheet: (el: React.ReactNode | null) => void;
   toast: Toast;
 }) {
+  const { quandoPublicado } = useRelogioDaIgreja();
   const { dados, erro, recarregar } = useMuralOracao(organizationId);
   const [aba, setAba] = useState<Aba>("igreja");
   /* "orei" já dado na tela, antes de o banco responder */

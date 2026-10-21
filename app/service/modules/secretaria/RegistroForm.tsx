@@ -5,7 +5,8 @@
    Apresentação se lançam e se apagam aqui. */
 import { useId, useRef, useState } from "react";
 import { avisar } from "../../lib/avisar";
-import { formatDateBR, todayISO } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { formatDateBR } from "../../lib/date";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { FormScreen, FormSection, type FormScreenHandle } from "../../painel/form/FormScreen";
 import type { ChildGuardianView, ChurchView, MemberView, PersonView } from "../../ServiceExactApp";
@@ -28,6 +29,7 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
   onCarteirinha: (memberId: string) => void;
   onClose: () => void;
 }) {
+  const { todayISO } = useRelogioDaIgreja();
   const fid = useId();
   const telaRef = useRef<FormScreenHandle>(null);
   const r = registro;

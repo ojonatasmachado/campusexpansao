@@ -1,5 +1,7 @@
 "use client";
 
+import { FusoField } from "../../modules/configuracao/FusoField";
+import { fusoValido, normalizarFuso } from "../../lib/fuso";
 import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
 import { useRouter } from "next/navigation";
@@ -465,6 +467,7 @@ export function Config({
     return idx === -1 ? [full, ""] : [full.slice(0, idx).trim(), full.slice(idx + 1).trim()];
   })();
   const [igrejaForm, setIgrejaForm] = useState({
+    fuso: normalizarFuso(church?.timeZone),
     nome: church?.nome ?? "",
     cidade: church?.cidade ?? "",
     doc: church?.doc ?? "",
@@ -484,12 +487,15 @@ export function Config({
 
   const saveIgreja = async () => {
     if (!church?.id) return;
+    if (!fusoValido(igrejaForm.fuso)) { avisar("Escolha um fuso horário válido.", "warn"); return; }
     setIgrejaLoading(true);
+    try {
     const endereco = [igrejaForm.rua.trim(), igrejaForm.numero.trim()].filter(Boolean).join(", ");
-    const { error: igrejaErro } = await createServiceBrowserClient()
+    const { data: igrejaGravada, error: igrejaErro } = await createServiceBrowserClient()
       .schema("service")
       .from("churches")
       .update({
+        time_zone: igrejaForm.fuso,
         name: igrejaForm.nome.trim() || church.nome,
         city: igrejaForm.cidade.trim() || null,
         doc: igrejaForm.doc.trim() || null,
@@ -501,12 +507,12 @@ export function Config({
         email: igrejaForm.email.trim() || null,
         phone: igrejaForm.tel.trim() || null,
       })
-      .eq("id", church.id);
-    setIgrejaLoading(false);
-    if (igrejaErro) { avisar(friendlyWriteError(igrejaErro.message), "warn"); return; }
+      .eq("id", church.id).select("id").single();
+    if (igrejaErro || !igrejaGravada) { avisar(friendlyWriteError(igrejaErro?.message ?? "Não foi possível salvar."), "warn"); return; }
     setIgrejaSalva(JSON.stringify(igrejaForm));
     avisar("Dados da igreja salvos.");
     router.refresh();
+    } catch { avisar("Não foi possível salvar os dados da igreja. Tente novamente.", "warn"); } finally { setIgrejaLoading(false); }
   };
 
   async function removeRow(table: string, id: string) {
@@ -772,6 +778,7 @@ export function Config({
               <div className="field"><label className="field-label" htmlFor={`${cid}-email`}>E-mail</label><input id={`${cid}-email`} name="email" className="input" type="email" autoComplete="email" inputMode="email" value={igrejaForm.email} onChange={(e) => setIgrejaForm((p) => ({ ...p, email: e.target.value }))} /></div>
               <div className="field"><label className="field-label" htmlFor={`${cid}-tel`}>Telefone</label><input id={`${cid}-tel`} name="tel" className="input" type="tel" autoComplete="tel" inputMode="tel" value={igrejaForm.tel} onChange={(e) => setIgrejaForm((p) => ({ ...p, tel: e.target.value }))} /></div>
             </div>
+            <FusoField value={igrejaForm.fuso} onChange={(fuso) => setIgrejaForm((p) => ({ ...p, fuso }))} />
             {igrejaMudou && (
               <div className="save-bar">
                 <span>Você tem alterações não salvas.</span>

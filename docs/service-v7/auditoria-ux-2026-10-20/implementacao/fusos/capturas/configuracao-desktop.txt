@@ -1,0 +1,84 @@
+- document:
+  - complementary:
+    - text: CE.X Central Service
+    - button "CE.X Central Matriz · rede"
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 17"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - text: Configurações
+    - textbox "Buscar tela, membro, voluntário, time ou função..."
+    - button "AL Ana"
+  - main:
+    - text: Configurações
+    - heading "Configurações Ajuda" [level=1]:
+      - text: Configurações
+      - button "Ajuda": "?"
+    - navigation "Seções de Configurações":
+      - text: Igreja
+      - button "Dados da igreja Nome, endereço e contato"
+      - button "Personalização Logo, cor e fundos do app"
+      - button "Contribuir Chave Pix para dízimo e oferta"
+      - button "Congregações Matriz e outras unidades"
+      - text: Ministério
+      - button "Escala e presença Regras da escala e check-in"
+      - button "Turmas Kids Turmas por idade"
+      - text: Acesso
+      - button "Entrada na igreja Link, código e quem aprova"
+      - button "Permissões O que cada papel vê"
+      - button "Acessos por pessoa Telas liberadas a alguém"
+    - text: Dados da igreja Como sua igreja aparece no app, nas publicações e como a secretaria pode ser encontrada. Nome da igreja
+    - textbox "Nome da igreja": CE.X Central
+    - text: CNPJ
+    - textbox "CNPJ": 12.345.678/0001-90
+    - text: Fundada em
+    - textbox "Fundada em": "2012"
+    - text: CEP
+    - textbox "CEP":
+      - /placeholder: 00000-000
+      - text: 01234-000
+    - text: Número
+    - textbox "Número": "120"
+    - text: Rua
+    - textbox "Rua": Rua das Missões
+    - text: Bairro
+    - textbox "Bairro"
+    - text: Cidade
+    - textbox "Cidade": São Paulo
+    - text: Estado
+    - textbox "Estado"
+    - text: E-mail
+    - textbox "E-mail": contato@cexcentral.org
+    - text: Telefone
+    - textbox "Telefone": (11) 4002-8922
+    - text: Fuso horário da igreja
+    - combobox "Fuso horário da igreja"
+    - text: Define o dia da agenda e os horários dos avisos. Os encontros mantêm as datas e horas cadastradas. Horários de culto Aparecem na agenda e ajudam a montar as escalas. Nenhum horário cadastrado.
+    - button "Dom"
+    - button "Seg"
+    - button "Ter"
+    - button "Qua"
+    - button "Qui"
+    - button "Sex"
+    - button "Sáb"
+    - button "Escolher horário"
+    - button "Adicionar" [disabled]
+  - button "Ajuda": "?"
+  - alert

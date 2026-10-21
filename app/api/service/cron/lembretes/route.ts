@@ -1,9 +1,7 @@
 import { memberNotificationUrl } from "../../../../service/lib/member-navigation";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabase";
-import { sendPushToSubscriptions } from "../../../../lib/push";
-import { emSilencio } from "../../../../service/lib/silencio";
-import { esvaziarFila } from "../../../../lib/service-avisos";
+import { entregarAvisos, esvaziarFila } from "../../../../lib/service-avisos";
 import { publicarAgendados } from "../../../../lib/service-mural-agendado";
 import { tokenDoWorkflowValido } from "../../../../lib/github-oidc";
 
@@ -38,7 +36,6 @@ export async function GET(request: Request) {
      silêncio; a notificação espera na fila até as 7h */
   let publicados = 0;
   try { publicados = await publicarAgendados(supabaseAdmin().schema("service")); } catch { /* segue para os lembretes */ }
-  if (emSilencio()) return NextResponse.json({ ok: true, publicados, enviados: 0, motivo: "silencio" });
 
   try {
     const db = supabaseAdmin().schema("service");
@@ -75,16 +72,9 @@ export async function GET(request: Request) {
         const semMural = new Set((desligou ?? []).filter((p) => ((p.notif_off ?? []) as string[]).includes("mural")).map((p) => p.id));
         const faltam = pessoas.filter((p) => !jaLeram.has(p) && !semMural.has(p));
         if (!faltam.length) continue;
-        const { data: subs, error: e4 } = await db.from("push_subscriptions").select("id, endpoint, p256dh, auth_key").in("person_id", faltam);
-        if (e4) throw e4;
-        if (!subs?.length) continue;
-        mandou = true;
-        const { deadEndpoints } = await sendPushToSubscriptions(subs, { title: aviso.title, body: "Você ainda não viu esta publicação do Mural.", url: memberNotificationUrl("mural", aviso.id) });
-        if (deadEndpoints.length) await db.from("push_subscriptions").delete().in("endpoint", deadEndpoints);
-        const n = subs.length - deadEndpoints.length;
-        enviados += n;
-        /* lei 11: notification_sent, sem dado da pessoa */
-        if (n > 0) await db.from("app_events").insert(Array.from({ length: n }, () => ({ organization_id: aviso.organization_id, evento: "notification_sent", modulo: "mural", tipo: "lembrete", ref: aviso.id })));
+        const resultado = await entregarAvisos(db, { organizationId: aviso.organization_id, peopleIds: faltam, categoria: "mural", title: aviso.title, body: "Você ainda não viu esta publicação do Mural.", url: memberNotificationUrl("mural", aviso.id) });
+        mandou = resultado.enviados > 0 || resultado.naFila > 0;
+        enviados += resultado.enviados;
       } catch {
         falharam += 1;
         /* devolve à fila; se nem isso der, fica para a próxima rodada manual (não derruba os outros) */

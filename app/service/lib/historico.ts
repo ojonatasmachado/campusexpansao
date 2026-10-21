@@ -1,3 +1,5 @@
+import { FUSO_PADRAO } from "./fuso";
+import { dataPublicacao } from "./date";
 /* Histórico da pessoa (lei 10): fatos com data, sem pontos, ranking ou
    percentual. Os fatos moram em service.timeline_events; serviu, trocou,
    aula e grupo são gravados por gatilho no banco (0059), os passos da
@@ -30,6 +32,6 @@ export function porData<T extends { sort_key: number | null; created_at: string 
 }
 
 /** "06/10/2026" a partir do que o fato guardou. */
-export function quandoFoi(f: { when_label: string | null; created_at: string }): string {
-  return f.when_label || new Date(f.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+export function quandoFoi(f: { when_label: string | null; created_at: string }, fuso = FUSO_PADRAO): string {
+  return f.when_label || dataPublicacao(f.created_at, fuso);
 }

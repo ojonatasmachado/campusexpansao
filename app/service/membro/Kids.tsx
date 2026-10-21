@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { Icon } from "../lib/icons";
-import { formatDateBR, joinDot, todayISO } from "../lib/date";
+import { useRelogioDaIgreja } from "../lib/relogio-context";
+import { horaAgoraBR, formatDateBR, joinDot, todayISO } from "../lib/date";
 import { suggestKidsClassId, imageAuthorizationCopy } from "../lib/kids";
 import { PhotoPicker } from "../PhotoPicker";
 import { useTermos } from "../lib/vocabulario-context";
@@ -540,12 +541,10 @@ export function TabKidsArea({
 /* No dia do culto, um bloco por filho com o check-in. Abre 60 minutos antes
    do culto; a mesma lógica da rota do QR (lib/kids-checkin.ts). Aparece no
    Início e em Minha família. */
-export function cultoDeHoje(events: Ev[]): Ev | null {
-  const hoje = todayISO();
+export function cultoDeHoje(events: Ev[], hoje = todayISO(), agora = horaAgoraBR()): Ev | null {
   const doDia = events.filter((e) => e.eventDate === hoje).sort((a, b) => (a.time ?? "").localeCompare(b.time ?? ""));
   if (!doDia.length) return null;
   /* o próximo que ainda não terminou (2h depois do início), senão o último */
-  const agora = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
   const fim = (t: string) => { const m = (t ?? "").match(/^(\d{1,2}):(\d{2})/); return m ? `${String(Math.min(23, Number(m[1]) + 2)).padStart(2, "0")}:${m[2]}` : "23:59"; };
   return doDia.find((e) => fim(e.time) >= agora) ?? doDia[doDia.length - 1];
 }
@@ -557,7 +556,8 @@ export function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, 
   destaque?: boolean;
 }) {
   const { comTermos: ct } = useTermos();
-  const culto = cultoDeHoje(events);
+  const { todayISO, horaAgoraBR, fuso } = useRelogioDaIgreja();
+  const culto = cultoDeHoje(events, todayISO(), horaAgoraBR());
   const vinculos = childGuardians.filter((g) => g.guardian_person_id === person.id);
   const filhos = vinculos.map((g) => kidsChildren.find((c) => c.id === g.child_id)).filter(Boolean) as Child[];
   const inicial: Record<string, { id: string; status: string }> = {};
@@ -579,7 +579,7 @@ export function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, 
   useEffect(() => { const h = setInterval(() => setTick((t) => t + 1), 60000); return () => clearInterval(h); }, []);
   if (!culto || !filhos.length) return null;
   const abre = horaQueAbre(culto.time);
-  const aberto = checkinAberto(culto.time);
+  const aberto = checkinAberto(culto.time, new Date(), fuso);
   return (
     <div className="m6-card">
       <div className="m6-kick">Kids hoje</div>

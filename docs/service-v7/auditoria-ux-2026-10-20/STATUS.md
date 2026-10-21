@@ -17,7 +17,7 @@ Atualizado em 21/10/2026. O relatório original é a fotografia do diagnóstico;
 | F11 Rotina e configuração | Melhorado parcialmente | Times com ajustes avançados recolhidos; Visitantes separa rotina de regras/indicadores/QR; Crianças sem ação duplicada de evento; Financeiro mantém revisão por relevância aberta |
 | F12 Caminhada | Melhorada parcialmente | Curso ganhou saída para aulas; sem 0 de 0; preservada a organização prevista nos manifestos |
 | F13 Times recebendo pedidos | Implementado e verificado localmente | Abertura explícita, líder e vínculo válidos, requisitos, pedido e aprovação separados, `implementacao/times/` |
-| F14 Internacionalização | Parcial | Telefone, endereço exterior e CNPJ alfanumérico; fuso, idioma e moeda ainda não tornam o produto internacionalizado por inteiro |
+| F14 Internacionalização | Parcial | Telefone, endereço exterior, CNPJ alfanumérico e fuso por igreja; idioma, moeda e regras locais continuam pendentes |
 | F15 Zoom ao digitar | Mitigação implementada | Piso de 16 px após escala; zoom do navegador preservado; falta teclado de Safari/PWA em aparelho real |
 | F16 Acessibilidade | Parcial | Campos rotulados, pisos, temas e testes visuais; não há certificação de todos os módulos ou leitores de tela |
 | F17 Superfícies e identidade | Parcial | Direção editorial aplicada ao início e compromissos; temas, Inter e marca preservados |
@@ -44,3 +44,7 @@ A entrega principal foi publicada em 21/10/2026, commit 14be743, após autoriza�
 3. Ampliar a revisão visual dos módulos e dos estados vazios, com fonte mínima/máxima, claro/escuro e teclado.
 4. Tratar fuso e calendário como decisão da igreja, incluindo UI, rotas e banco; não presumir que mudar um formatador resolve o produto inteiro.
 5. Validar com pessoas representativas e aparelho real os problemas de compreensão, zoom e o ponto branco que a automação não comprovou.
+
+## Continuação de 21/10/2026
+
+Navegação da agenda publicada em 6f7cd7c, CI aprovado. Correção ampliada do zoom dos campos publicada em 05050b8, deploy READY e CI aprovado. Fuso por igreja implementado e validado conforme implementacao/fusos/README.md; publicação registrada no histórico Git e no deploy. A próxima revisão percorre a troca de escala até a confirmação da liderança.

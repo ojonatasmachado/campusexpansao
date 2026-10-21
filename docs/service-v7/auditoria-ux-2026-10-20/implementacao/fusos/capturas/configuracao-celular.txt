@@ -1,0 +1,74 @@
+- document:
+  - complementary:
+    - text: CE.X Central Service
+    - button "Fechar menu": ✕
+    - button "CE.X Central Matriz · rede"
+    - navigation:
+      - button "Início"
+      - button "Pessoas" [expanded]
+      - button "Pessoas"
+      - button "Visitantes"
+      - button "Crianças"
+      - button "Grupos"
+      - button "Ministério" [expanded]
+      - button "Times"
+      - button "Escalas 17"
+      - button "Cultos e eventos"
+      - button "Comunicação" [expanded]
+      - button "Mural"
+      - button "Conversas"
+      - button "Cursos e trilhas"
+      - button "Gestão" [expanded]
+      - button "Relatórios"
+      - button "Financeiro"
+      - button "Mais"
+    - button "Configurações"
+  - banner:
+    - button "Abrir menu"
+    - text: Configurações
+    - button "Buscar"
+    - button "Ajuda": "?"
+    - button "AL"
+  - main:
+    - text: Configurações
+    - heading "Configurações Ajuda" [level=1]:
+      - text: Configurações
+      - button "Ajuda": "?"
+    - button "Configurações"
+    - text: Dados da igreja Como sua igreja aparece no app, nas publicações e como a secretaria pode ser encontrada. Nome da igreja
+    - textbox "Nome da igreja": CE.X Central
+    - text: CNPJ
+    - textbox "CNPJ": 12.345.678/0001-90
+    - text: Fundada em
+    - textbox "Fundada em": "2012"
+    - text: CEP
+    - textbox "CEP":
+      - /placeholder: 00000-000
+      - text: 01234-000
+    - text: Número
+    - textbox "Número": "120"
+    - text: Rua
+    - textbox "Rua": Rua das Missões
+    - text: Bairro
+    - textbox "Bairro"
+    - text: Cidade
+    - textbox "Cidade": São Paulo
+    - text: Estado
+    - textbox "Estado"
+    - text: E-mail
+    - textbox "E-mail": contato@cexcentral.org
+    - text: Telefone
+    - textbox "Telefone": (11) 4002-8922
+    - text: Fuso horário da igreja
+    - combobox "Fuso horário da igreja"
+    - text: Define o dia da agenda e os horários dos avisos. Os encontros mantêm as datas e horas cadastradas. Horários de culto Aparecem na agenda e ajudam a montar as escalas. Nenhum horário cadastrado.
+    - button "Dom"
+    - button "Seg"
+    - button "Ter"
+    - button "Qua"
+    - button "Qui"
+    - button "Sex"
+    - button "Sáb"
+    - button "Escolher horário"
+    - button "Adicionar" [disabled]
+  - alert

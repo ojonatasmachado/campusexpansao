@@ -10,12 +10,13 @@ import { useRouter } from "next/navigation";
 import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
 import { notifyPush } from "../../lib/notify-push";
-import { emSilencio, foraDoSilencio, quandoLembra } from "../../lib/silencio";
+import { instantesNoFuso, partesNoFuso } from "../../lib/fuso";
 import { videoDoLink } from "../../lib/video";
 import { imageExtension, uploadServiceImage } from "../../lib/upload-image";
 import { ImageUpload } from "../../ImageUpload";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
-import { dataPublicacao, formatDateBR, joinDot, paraPublico, porPublicacao, quandoPublicado } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { formatDateBR, joinDot, paraPublico, porPublicacao } from "../../lib/date";
 import { Icon } from "../../lib/icons";
 import { Av, EmptyState, PageHead } from "../../painel/ui";
 import { friendlyWriteError } from "../../painel/erros";
@@ -26,11 +27,12 @@ import { noAr, type MuralAviso } from "./estado";
 import { BoletimDaSemana } from "./Boletim";
 import { useTermos, type Termos } from "../../lib/vocabulario-context";
 
-/* instante → "AAAA-MM-DDTHH:mm" e "AAAA-MM-DD" no horário de Brasília (UTC-3) */
-const emBrasilia = (iso: string) => new Date(new Date(iso).getTime() - 3 * 3600000).toISOString();
 const HORAS = Array.from({ length: 24 }, (_, h) => h);
 
 function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church: ChurchView; publicos: MuralPublico[]; inicial?: MuralAviso; onClose: () => void; onDone: () => void }) {
+  const { fuso, emSilencio, foraDoSilencio, quandoLembra } = useRelogioDaIgreja();
+  const emHorarioLocal = (iso: string) => { const p = partesNoFuso(new Date(iso), fuso); return `${p.data}T${p.hora}`; };
+  const instanteUnico = (data: string, hora: string) => { const candidatos = instantesNoFuso(data, hora, fuso); return candidatos.length === 1 ? candidatos[0] : null; };
   const publicoInicial = inicial ? (publicos.find((p) => p.label.toLowerCase() === (inicial.audience ?? "todos").toLowerCase()) ?? publicos[0]) : publicos[0];
   const [titulo, setTitulo] = useState(inicial?.title ?? "");
   const [msg, setMsg] = useState(inicial?.body ?? "");
@@ -41,28 +43,28 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
   const [urgente, setUrgente] = useState(!!inicial?.urgent);
   /* 0075: publicar agora ou agendar */
   const [quando, setQuando] = useState<"agora" | "agendar">(inicial?.status === "agendado" ? "agendar" : "agora");
-  const [agDia, setAgDia] = useState(inicial?.publish_at ? emBrasilia(inicial.publish_at).slice(0, 10) : "");
-  const [agHora, setAgHora] = useState(inicial?.publish_at ? String(Number(emBrasilia(inicial.publish_at).slice(11, 13))) : "9");
+  const [agDia, setAgDia] = useState(inicial?.publish_at ? emHorarioLocal(inicial.publish_at).slice(0, 10) : "");
+  const [agHora, setAgHora] = useState(inicial?.publish_at ? String(Number(emHorarioLocal(inicial.publish_at).slice(11, 13))) : "9");
   /* v7 4.18: lembrar quem não viu */
   const [lembrete, setLembrete] = useState<"nao" | "24" | "48" | "data">(
     inicial?.remind_hours === 24 || inicial?.remind_hours === 48 ? (String(inicial.remind_hours) as "24" | "48") : inicial?.remind_at ? "data" : "nao",
   );
-  const [lembreteData, setLembreteData] = useState(inicial?.remind_at ? emBrasilia(inicial.remind_at).slice(0, 16) : "");
+  const [lembreteData, setLembreteData] = useState(inicial?.remind_at ? emHorarioLocal(inicial.remind_at).slice(0, 16) : "");
   /* v7 4.4: destaque no Início do app até uma data, com imagem e vídeo */
   const [destacar, setDestacar] = useState(!!inicial?.highlight_until);
-  const [destaqueAte, setDestaqueAte] = useState(inicial?.highlight_until ? emBrasilia(inicial.highlight_until).slice(0, 10) : "");
+  const [destaqueAte, setDestaqueAte] = useState(inicial?.highlight_until ? emHorarioLocal(inicial.highlight_until).slice(0, 10) : "");
   const [imagem, setImagem] = useState<string | null>(inicial?.image_url ?? null);
   const [imagemAlt, setImagemAlt] = useState(inicial?.image_alt ?? "");
   const [video, setVideo] = useState(inicial?.video_url ?? "");
   const videoInvalido = !!video.trim() && !videoDoLink(video);
-  const agendaEm = quando === "agendar" && agDia ? new Date(`${agDia}T${agHora.padStart(2, "0")}:00:00-03:00`) : null;
+  const agendaEm = quando === "agendar" && agDia ? instanteUnico(agDia, `${agHora.padStart(2, "0")}:00`) : null;
   const [abriuEm] = useState(() => Date.now());
   const agendaPassou = !!agendaEm && agendaEm.getTime() <= abriuEm;
   /* hora em que a opção foi escolhida (24h e 48h contam a partir dela, ou da hora agendada) */
   const [lembreteBase, setLembreteBase] = useState(() => Date.now());
   const lembreteEm = (): Date | null => {
     if (lembrete === "nao") return null;
-    if (lembrete === "data") return lembreteData ? new Date(`${lembreteData}:00-03:00`) : null;
+    if (lembrete === "data") return lembreteData ? instanteUnico(lembreteData.slice(0, 10), lembreteData.slice(11, 16)) : null;
     const base = quando === "agendar" ? agendaEm?.getTime() : lembreteBase;
     return base ? new Date(base + Number(lembrete) * 3600000) : null;
   };
@@ -76,6 +78,11 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
 
   const salvar = async (como: "publicado" | "rascunho" | "agendado") => {
     if (!titulo.trim()) { setErro("Dê um título para a publicação."); return; }
+    // eslint-disable-next-line react-hooks/purity -- valida a hora atual no clique de salvar, fora do render
+    if (como === "agendado" && (!agendaEm || agendaEm.getTime() <= Date.now())) { setErro("Escolha um horário futuro e válido no fuso da igreja."); return; }
+    if (canais.includes("app") && lembrete === "data" && !lembreteEm()) { setErro("Confira a data e a hora do lembrete. Esse horário pode não existir ou se repetir na mudança de fuso."); return; }
+    const fimDestaque = destacar && destaqueAte ? instanteUnico(destaqueAte, "23:59") : null;
+    if (destacar && destaqueAte && !fimDestaque) { setErro("Confira a data de término do destaque."); return; }
     /* o WhatsApp abre já com o texto (precisa ser no toque, antes de esperar o banco) */
     if (como === "publicado" && whatsapp) window.open(`https://wa.me/?text=${encodeURIComponent(`${titulo.trim()}\n\n${msg.trim()}`)}`, "_blank", "noopener");
     setSalvando(true);
@@ -89,7 +96,7 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
       ? { remind_hours: Number(lembrete), remind_at: null, remind_to: alvo.memberIds }
       : quandoLembrar ? { remind_at: foraDoSilencio(quandoLembrar).toISOString(), remind_to: alvo.memberIds } : inicial ? { remind_at: null, remind_hours: null } : {};
     const comDestaque = destacar && destaqueAte
-      ? { highlight_until: new Date(`${destaqueAte}T23:59:59-03:00`).toISOString(), image_url: imagem, image_alt: imagem ? imagemAlt.trim() : null, video_url: video.trim() || null }
+      ? { highlight_until: new Date(fimDestaque!.getTime() + 59000).toISOString(), image_url: imagem, image_alt: imagem ? imagemAlt.trim() : null, video_url: video.trim() || null }
       : inicial ? { highlight_until: null } : {};
     /* 0075: estado, agendamento e urgência */
     const novos = {
@@ -152,6 +159,7 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
     !titulo.trim() && "título",
     canais.length === 0 && "por onde enviar",
     quando === "agendar" && !agDia && "dia da publicação",
+    quando === "agendar" && agDia && !agendaEm && "um horário válido no fuso da igreja",
     agendaPassou && "um horário que ainda não passou",
     canais.includes("app") && lembrete === "data" && !lembreteData && "data do lembrete",
     destacar && !destaqueAte && "até quando destacar",
@@ -252,6 +260,7 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
             {agendaEm && !agendaPassou && (
               <div className="field-hint">{`Vai ao ar ${quandoLembra(agendaEm)}, com alguns minutos de diferença. Até lá, só a liderança vê.${canais.includes("app") && emSilencio(agendaEm) ? " A notificação espera até as 7h, quando acaba o horário de silêncio." : ""}`}</div>
             )}
+            {quando === "agendar" && agDia && !agendaEm && <p className="field-error">Esse horário não existe ou se repete na mudança de fuso. Escolha outro horário.</p>}
             {agendaPassou && <p className="field-error">Esse horário já passou. Escolha outro ou publique agora.</p>}
           </>
         )}
@@ -372,6 +381,7 @@ export function Comunicacao({
   roster?: RosterAssignmentView[];
   setModal: (modal: ModalState) => void;
 }) {
+  const { dataPublicacao, quandoPublicado, quandoLembra } = useRelogioDaIgreja();
   const { termo } = useTermos();
   const router = useRouter();
   /* true: nova publicação; um aviso: continuar o rascunho ou o agendamento */

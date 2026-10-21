@@ -3,6 +3,7 @@
 /* Secretaria (0078): os quatro livros da igreja e a carteirinha de membro.
    Batismos e Rol nascem dos fatos e das fichas; Casamentos e Apresentações
    são lançados aqui. Filtra por ano, busca, imprime e exporta CSV. */
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { useEffect, useMemo, useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { baixarCsv } from "../../lib/csv";
@@ -44,6 +45,7 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
   childGuardians: ChildGuardianView[];
   currentPersonId?: string | null;
 }) {
+  const { todayISO } = useRelogioDaIgreja();
   const demo = ehDemo(church.organizationId);
   /* a cor da igreja mora na sede (matriz); o logo, na congregação ou na sede */
   const sede = churches.find((c) => c.matriz) ?? church;
@@ -162,7 +164,7 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
             <div className="sec-papel-igreja">{church.nome}</div>
             <h1 className="sec-papel-t">Livro de {titulo}</h1>
           </div>
-          <div className="sec-papel-meta">{plural(ordemDoPapel.length, "registro")} · impresso em {formatDateBR(new Date().toISOString().slice(0, 10))}</div>
+          <div className="sec-papel-meta">{plural(ordemDoPapel.length, "registro")} · impresso em {formatDateBR(todayISO())}</div>
         </header>
         <table className="sec-papel-tbl">
           <thead><tr>{colunas(livro).map((c) => <th key={c.t}>{c.t}</th>)}</tr></thead>

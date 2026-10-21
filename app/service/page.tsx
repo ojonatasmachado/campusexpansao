@@ -1,3 +1,4 @@
+import type { DbChurchClock } from "../lib/types";
 import { regiaoInformada } from "./lib/endereco";
 import { telefoneValido } from "./lib/telefone";
 import { redirect } from "next/navigation";
@@ -12,7 +13,7 @@ import { resolveMode, THEME_COOKIE, type BrandCfg } from "./lib/theme";
 import { cookies, headers } from "next/headers";
 import ServiceTheme from "./ServiceTheme";
 
-type ChurchRow = {
+type ChurchRow = DbChurchClock & {
   id: string;
   organization_id: string;
   name: string;
@@ -38,6 +39,7 @@ type ChurchRow = {
 };
 
 type ChurchView = {
+  timeZone?: string | null;
   id: string;
   organizationId: string;
   nome: string;
@@ -303,6 +305,7 @@ type SetlistSongRow = {
 };
 
 type EventView = {
+  timeZone?: string;
   id: string;
   organizationId: string;
   churchId: string;
@@ -847,6 +850,7 @@ function toChurchView(row: ChurchRow): ChurchView {
   return {
     id: row.id,
     organizationId: row.organization_id,
+    timeZone: row.time_zone,
     nome: row.name,
     cidade: row.city || "",
     matriz: row.is_headquarters,
@@ -956,11 +960,13 @@ function toEventViews(
   events: EventRow[],
   scheduleItems: ScheduleItemRow[],
   setlistSongs: SetlistSongRow[],
+  churches: ChurchRow[],
 ): EventView[] {
   return events.map((event) => ({
     id: event.id,
     organizationId: event.organization_id,
     churchId: event.church_id,
+    timeZone: churches.find((c) => c.id === event.church_id)?.time_zone ?? undefined,
     name: event.name,
     kind: event.kind || "Culto",
     weekday: weekdayFromISO(event.event_date) || event.weekday || "",
@@ -1355,6 +1361,7 @@ async function getServiceDashboardData(): Promise<{
       (eventsData ?? []) as EventRow[],
       (scheduleData ?? []) as ScheduleItemRow[],
       (setlistData ?? []) as SetlistSongRow[],
+      (churchesData ?? []) as ChurchRow[],
     ),
     extra: {
       visitors: ((visitorsResult.data ?? []) as VisitorView[]),
@@ -1503,7 +1510,7 @@ export default async function ServiceHomePage({ searchParams }: { searchParams: 
   let pesquisaElegivel = null as Awaited<ReturnType<typeof resolverPesquisaElegivel>>;
   if (currentPersonId && organizationId) {
     const minhasEquipes = ministries.filter((m) => m.people.some((p) => p.personId === currentPersonId)).map((m) => m.name);
-    const hoje = todayISO();
+    const hoje = todayISO(churches[0]?.timeZone ?? undefined);
     const { data: escalasServidas } = await supabase
       .schema("service")
       .from("roster_assignments")

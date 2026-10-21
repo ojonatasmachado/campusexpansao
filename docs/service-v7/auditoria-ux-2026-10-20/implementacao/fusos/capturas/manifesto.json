@@ -1,0 +1,23 @@
+[
+  {
+    "label": "igreja-lisboa-aparelho-toquio",
+    "image": "igreja-lisboa-aparelho-toquio.png",
+    "sha256": "97452738412f72aafdabef9d5504dad8d113b09331d7fcc1ab0f6b92a0c24a35",
+    "evidence": "ev_092be80d7ff51f1f0b19fd0920e5cb44d871c96bee2a551939a99053f1ee169c",
+    "errors": []
+  },
+  {
+    "label": "configuracao-desktop",
+    "image": "configuracao-desktop.png",
+    "sha256": "10e461a2c93d6ee277962db3d7e3386083dce2c114e596ac3e841857bd7cdd1c",
+    "evidence": "ev_7bbf509d0732f9d6007375cfe5a34c8aa863c264a44cc5f97a8ad61dbfb82f4a",
+    "errors": []
+  },
+  {
+    "label": "configuracao-celular",
+    "image": "configuracao-celular.png",
+    "sha256": "956ddf171388d38548691b87f4d3e1a681bfa0a9e9a5e50f595e6bf2bb2c166c",
+    "evidence": "ev_d28e1d89169a165973eae18f23c32c2611c28067758eef5fc98f8aa26aed88e6",
+    "errors": []
+  }
+]

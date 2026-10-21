@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { Caret } from "../lib/icons";
-import { quandoMensagem, joinDot } from "../lib/date";
+import { useRelogioDaIgreja } from "../lib/relogio-context";
+import { joinDot } from "../lib/date";
 import { Av } from "./comum";
 import type { Board, Card, Chat, ChatMember, M, Message, Ministry, P } from "./tipos";
 
@@ -176,6 +177,7 @@ export function TabConversas({
   onSendMessage?: (chatId: string, senderId: string, body: string) => void;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
 }) {
+  const { quandoMensagem } = useRelogioDaIgreja();
   const [selId, setSelIdRaw] = useState<string | null>(openChatId ?? null);
   const [texto, setTexto] = useState("");
   const [novo, setNovo] = useState(!!startNew);

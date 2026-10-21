@@ -7,7 +7,8 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { avisar } from "../../lib/avisar";
 import { plural } from "../../lib/plural";
-import { todayISO, toISODate, parseISODate } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { toISODate, parseISODate } from "../../lib/date";
 import { Icon } from "../../lib/icons";
 import { FormScreen, FormSection } from "../../painel/form/FormScreen";
 import { agendaDaSemana, avisosDaSemana, escalaDaSemana, montarBoletim, rotuloSemana, semanaDe, type Incluir } from "./boletim";
@@ -21,6 +22,7 @@ export function BoletimDaSemana({ church, avisos, events, roster, ministries, pe
   church: ChurchView; avisos: MuralAviso[]; events: EventView[]; roster: RosterAssignmentView[];
   ministries: MinistryView[]; people: PersonView[]; onClose: () => void;
 }) {
+  const { todayISO } = useRelogioDaIgreja();
   const fid = useId();
   const [hoje] = useState(todayISO);
   const proximaSeg = useMemo(() => { const s = parseISODate(semanaDe(hoje).inicio)!; return toISODate(new Date(s.getFullYear(), s.getMonth(), s.getDate() + 7)); }, [hoje]);

@@ -4,6 +4,7 @@
    Início do painel. Período de 30 dias por padrão, 90 dias, 12 meses ou
    datas escolhidas, comparado ao período anterior. Cada número abre a lista
    das pessoas que ele conta. */
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { useEffect, useState } from "react";
 import { formatDateBR } from "../../lib/date";
 import { useTermos } from "../../lib/vocabulario-context";
@@ -23,9 +24,10 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, extras = [] }: {
   extras?: Numero[];
   onAbrir: (item: ItemPessoa) => void;
 }) {
+  const { todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const [preset, setPreset] = useState<Preset>("30");
-  const [datas, setDatas] = useState<Periodo>(() => periodoDe("30"));
+  const [datas, setDatas] = useState<Periodo>(() => periodoDe("30", undefined, todayISO()));
   const [lista, setLista] = useState<Numero | null>(null);
   /* compacta por padrão: os números de hoje sempre; período, comparação e etapas
      sob demanda, para "Para resolver" caber na primeira dobra (crítica de design 2026-10-20).
@@ -41,7 +43,7 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, extras = [] }: {
     try { localStorage.setItem("svc-saude-panorama", v ? "0" : "1"); } catch { /* sem armazenamento: só nesta visita */ }
     return !v;
   });
-  const periodo = periodoDe(preset, datas);
+  const periodo = periodoDe(preset, datas, todayISO());
   const dias = Math.round((new Date(`${periodo.fim}T12:00:00Z`).getTime() - new Date(`${periodo.ini}T12:00:00Z`).getTime()) / 86400000) + 1;
   const ant = anteriorDe(periodo);
 

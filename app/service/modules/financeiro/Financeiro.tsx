@@ -13,7 +13,8 @@ import { Icon } from "../../lib/icons";
 import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
 import { baixarCsv } from "../../lib/csv";
-import { formatDateBR, todayISO } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { formatDateBR } from "../../lib/date";
 import { useServiceAccess } from "../../AccessContext";
 import type { ChurchView } from "../../ServiceExactApp";
 import { ACESSO_FIN_LANCAR } from "./manifest";
@@ -37,6 +38,7 @@ type FiltroTipo = "todos" | "entrada" | "despesa" | "transferencia";
 const HELP = "Entradas, despesas e transferências da igreja, com saldo de cada conta. Só a direção, o pastor e quem recebeu a liberação em Acessos por pessoa abrem esta tela; o dízimo de cada pessoa não aparece em nenhum outro lugar do Service.";
 
 export default function Financeiro({ church, currentRole }: { church: ChurchView | undefined; currentRole: string }) {
+  const { todayISO } = useRelogioDaIgreja();
   const { personGrants, currentPersonId } = useServiceAccess();
   const podeLancar = currentRole === "master" || currentRole === "pastor" || personGrants.some((g) => g.personId === currentPersonId && g.code === ACESSO_FIN_LANCAR);
   const org = church?.organizationId;

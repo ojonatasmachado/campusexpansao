@@ -5,7 +5,8 @@ import { plural } from "../../lib/plural";
 import { nomeComparavel } from "../../lib/pessoas";
 import { useState } from "react";
 import { Icon } from "../../lib/icons";
-import { aindaVaiAcontecer, formatDateBR, joinDot, paraPublico, porPublicacao, quandoPublicado, saudacao } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { formatDateBR, joinDot, paraPublico, porPublicacao } from "../../lib/date";
 import type { EnqueteElegivelView } from "../../lib/enquetes";
 import type { PesquisaElegivelView } from "../../lib/pesquisas";
 import { textoBuscavel, TERMOS } from "../../lib/vocabulario";
@@ -299,17 +300,18 @@ export function Painel({
   /* sem times ou sem cultos: a configuração guiada aparece no Início */
   igrejaNova?: boolean;
 }) {
+  const { aindaVaiAcontecer, saudacao, quandoPublicado, todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   /* v7 4.11: gestão e pastores abrem na Saúde da igreja; líder de time, no
      "Para resolver" do seu time (vagas só dos times que lidera, sem os números da igreja toda) */
   const gestao = currentRole === "master" || currentRole === "pastor";
   const liderDeTime = !!scopeMinistryIds;
   if (scopeMinistryIds) gaps = gaps.filter((g) => scopeMinistryIds.includes(g.ministry.id));
-  const semProgramacao = !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time));
+  const semProgramacao = !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone));
   const ativando = gestao && semProgramacao;
   const primeiraProgramacao = events.length === 0;
   const emPreparacao = gestao && setup && !setup.concluido && (igrejaNova || semProgramacao || setup.fase > 1 || setup.feitas.length > 0 || setup.pulou || !!setup.primeiroEventoId);
-  const semana = resumoDaSemana(events, roster, ministries.flatMap((m) => m.positions), scopeMinistryIds);
+  const semana = resumoDaSemana(events, roster, ministries.flatMap((m) => m.positions), scopeMinistryIds, todayISO());
   const confirmationRate = semana.taxa;
   const escaladosSemana = semana.total;
   const vagasDaSemana = contarVagasDaSemana(events, roster, ministries, scopeMinistryIds);
@@ -337,9 +339,9 @@ export function Painel({
           <h1 className="ph-title">{saudacao()}, {userName?.split(" ")[0] ?? "liderança"} <HelpDot text={ct("Seu resumo da semana: próximos {cultos}, vagas em aberto na escala e o que precisa da sua atenção agora.")} /></h1>
           <p className="ph-sub">{(() => {
             /* v7 4.19: a semana e o próximo culto com o que falta na escala */
-            const prox = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time))[0];
-            const linha = prox ? linhaDoPainel({ nome: prox.name, data: prox.eventDate, faltam: vagasFaltando(coberturaPorTime(prox, roster, ministries, scopeMinistryIds)) }) : null;
-            return linha ? `${semanaDe()}. ${linha}.` : `${semanaDe()}.`;
+            const prox = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time))[0];
+            const linha = prox ? linhaDoPainel({ nome: prox.name, data: prox.eventDate, faltam: vagasFaltando(coberturaPorTime(prox, roster, ministries, scopeMinistryIds)) }, todayISO()) : null;
+            return linha ? `${semanaDe(todayISO())}. ${linha}.` : `${semanaDe(todayISO())}.`;
           })()}</p>
         </div>
         <div className="ph-actions">
@@ -443,7 +445,7 @@ export function Painel({
           <div className="panel-body flush">
             {(() => {
               /* v7 4.16: cobertura do próximo culto com vaga aberta */
-              const prox = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time))
+              const prox = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time))
                 .map((e) => ({ e, c: coberturaPorTime(e, roster, ministries, scopeMinistryIds) }))
                 .find((x) => vagasFaltando(x.c) > 0);
               return prox ? (
@@ -465,7 +467,7 @@ export function Painel({
                 <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("escalas")}>Escalar</button>
               </div>
             ))}
-            {gapsDaSemana.length === 0 && !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time) && vagasFaltando(coberturaPorTime(e, roster, ministries, scopeMinistryIds)) > 0) ? <div className="mini-row"><div className="mini-main"><div className="mini-title">{semProgramacao ? "Sem programação futura" : roster.length === 0 ? "Escalas ainda não preparadas" : "Sem vagas abertas nesta semana"}</div><div className="mini-sub">{semProgramacao ? "Prepare o próximo encontro antes de organizar a equipe." : roster.length === 0 ? "Ter encontros na agenda não significa que a equipe já foi escalada." : "Confira os próximos encontros para acompanhar a cobertura de cada time."}</div></div></div> : null}
+            {gapsDaSemana.length === 0 && !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone) && vagasFaltando(coberturaPorTime(e, roster, ministries, scopeMinistryIds)) > 0) ? <div className="mini-row"><div className="mini-main"><div className="mini-title">{semProgramacao ? "Sem programação futura" : roster.length === 0 ? "Escalas ainda não preparadas" : "Sem vagas abertas nesta semana"}</div><div className="mini-sub">{semProgramacao ? "Prepare o próximo encontro antes de organizar a equipe." : roster.length === 0 ? "Ter encontros na agenda não significa que a equipe já foi escalada." : "Confira os próximos encontros para acompanhar a cobertura de cada time."}</div></div></div> : null}
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -474,7 +476,7 @@ export function Painel({
             <div className="panel-body flush">
             {/* v7 2.9: só o que ainda vai começar, no fuso da igreja (Brasília) */}
             {(() => {
-              const proximos = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time)).slice(0, 3);
+              const proximos = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time)).slice(0, 3);
               if (proximos.length === 0) return <div className="empty" style={{ padding: "14px 16px" }}>{ct("Nenhum {culto} marcado daqui pra frente.")}</div>;
               return proximos.map((event) => (
                 <MiniEvent

@@ -10,7 +10,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { faltaN, plural } from "../../lib/plural";
 import { baixarCsv } from "../../lib/csv";
-import { aindaVaiAcontecer, formatDateBR, joinDot } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { formatDateBR, joinDot, todayISO } from "../../lib/date";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { Caret, Icon } from "../../lib/icons";
 import { HelpDot } from "../../HelpSystem";
@@ -32,9 +33,9 @@ type Candidato = CandidatoBase<PersonView>;
    nº de posições escaladas (status != "no") e nº de recusas ("no") : equivalente
    a cargaVol() em evolucoes/service_app/relatorios.jsx:6-16, usado pelo
    termômetro de bem-estar pra classificar sobrecarga sem depender de engajamento. */
-export function cargaDaSemana(roster: RosterAssignmentView[], events: EventView[]): Record<string, { escalas: number; recusas: number }> {
+export function cargaDaSemana(roster: RosterAssignmentView[], events: EventView[], hoje = todayISO()): Record<string, { escalas: number; recusas: number }> {
   const eventById = new Map(events.map((e) => [e.id, e]));
-  const { inicio: inicioSemana, fim: fimSemana } = limitesDaSemana();
+  const { inicio: inicioSemana, fim: fimSemana } = limitesDaSemana(hoje);
   const counts: Record<string, { escalas: number; recusas: number }> = {};
   roster.forEach((assignment) => {
     const ev = eventById.get(assignment.event_id);
@@ -268,8 +269,9 @@ export function Escalas({
   /* v7 4.16: veio da cobertura (Início, detalhe do culto): abre neste culto e rola até o time */
   foco?: { eventId: string; timeId?: string } | null;
 }) {
+  const { aindaVaiAcontecer, todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
-  const semanaAtual = limitesDaSemana();
+  const semanaAtual = limitesDaSemana(todayISO());
   const gapsDaSemana = gaps.filter((g) => g.event.eventDate >= semanaAtual.inicio && g.event.eventDate <= semanaAtual.fim && aindaVaiAcontecer(g.event.eventDate, g.event.time) && (!scopeMinistryIds || scopeMinistryIds.includes(g.ministry.id)));
 
   const [eventId, setEventId] = useState(foco?.eventId ?? events[0]?.id ?? "");
@@ -342,7 +344,7 @@ export function Escalas({
     const jaNoSlot = new Set(assignmentsFor(positionId).map((a) => a.person_id));
     const usados = new Set([...occupiedPeople].filter((id) => id !== excluirPersonId));
     const carga = cargaDoMes(roster, events, selectedEvent);
-    return candidatosDisponiveis(candidatePool(ministry), selectedEvent, jaNoSlot, usados, escalaCfg, carga, ultimaVezQueServiu(roster, events));
+    return candidatosDisponiveis(candidatePool(ministry), selectedEvent, jaNoSlot, usados, escalaCfg, carga, ultimaVezQueServiu(roster, events, todayISO()));
   }
 
   const setModoEscala = async (modo: EscalaSettings["modo"]) => {
@@ -399,7 +401,7 @@ export function Escalas({
     if (!selectedEvent || gerando) return;
     setGerando(true);
     const carga = cargaDoMes(roster, events, selectedEvent);
-    const ultimas = ultimaVezQueServiu(roster, events);
+    const ultimas = ultimaVezQueServiu(roster, events, todayISO());
     const usados = new Set(occupiedPeople);
     const inserts: Array<{ organization_id: string; event_id: string; position_id: string; person_id: string; status: "ok" | "wait" }> = [];
     visibleMinistries.forEach((ministry) => {
@@ -710,6 +712,7 @@ function RosterActionModal({
   const [trocando, setTrocando] = useState(false);
   const [busca, setBusca] = useState("");
   const [soDisponiveis, setSoDisponiveis] = useState(false);
+  const { todayISO } = useRelogioDaIgreja();
   const assignedPerson = action.assignment ? people.find((person) => person.id === action.assignment?.person_id) : null;
   if (action.kind === "slot" && action.assignment && !trocando) {
     const assignment = action.assignment;
@@ -765,7 +768,7 @@ function RosterActionModal({
         <div className="cand-name">{c.person.name}</div>
         {c.fit === "block" && c.motivo
           ? <div className="cand-meta cand-motivo"><Icon name="recusou" size={13} /> {motivoTexto(c.motivo)}</div>
-          : <div className="cand-meta">{fraseRodizio(c.ultima, c.vezes)}</div>}
+          : <div className="cand-meta">{fraseRodizio(c.ultima, c.vezes, todayISO())}</div>}
         {c.person.tags.length > 0 ? <div className="cand-meta">{c.person.tags.join(" · ")}</div> : null}
       </div>
       {c.fit !== "block" && <span className={`cand-fit ${c.fit}`}>{c.fit === "good" ? <><Icon name="ok" size={13} /> disponível</> : <><Icon name="pendente" size={13} /> ocupado</>}</span>}

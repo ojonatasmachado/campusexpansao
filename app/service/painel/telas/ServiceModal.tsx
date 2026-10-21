@@ -8,7 +8,8 @@ import { useRouter } from "next/navigation";
 import { Fragment, useId, useRef, useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { DEFAULT_ICON } from "../../lib/icons";
-import { isCivilDate, todayISO } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { isCivilDate } from "../../lib/date";
 
 import { useTermos } from "../../lib/vocabulario-context";
 import { FormScreen, type FormScreenHandle } from "../form/FormScreen";
@@ -62,6 +63,7 @@ export function ServiceModal({
   currentRole?: "master" | "pastor" | "lider" | "membro";
   onClose: () => void;
 }) {
+  const { todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const router = useRouter();
   /* id de cada campo: o rótulo aponta para o controle (clicar no rótulo foca o campo) */

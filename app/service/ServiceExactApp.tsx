@@ -1,5 +1,8 @@
 "use client";
 
+import { partesNoFuso } from "./lib/fuso";
+import { RelogioProvider } from "./lib/relogio-context";
+import { relogioDoFuso } from "./lib/relogio";
 import { clearMemberLocation } from "./lib/member-navigation";
 
 import { mesmoTelefone, telefoneParaGravar, variacoesTelefone } from "./lib/telefone";
@@ -13,7 +16,7 @@ import { uploadServiceImage, imageExtension } from "./lib/upload-image";
 import { Icon, Caret } from "./lib/icons";
 import { THEME_COOKIE } from "./lib/theme";
 import { vagasDaSemana } from "./modules/escalas/semana";
-import { joinDot, parseISODate, todayISO } from "./lib/date";
+import { joinDot, parseISODate } from "./lib/date";
 import MobileOverlay, { type MemberContactInput, type MobileOverlayProps } from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
 import { comTermos, normalizarVocabulario } from "./lib/vocabulario";
@@ -277,6 +280,7 @@ export default function ServiceExactApp({
   }, [theme]);
 
   const firstChurch = churches.find((c) => c.id === activeChurchId) ?? churches[0];
+  const { todayISO, horaAgoraBR, fuso } = useMemo(() => relogioDoFuso(firstChurch?.timeZone), [firstChurch?.timeZone]);
   const router = useRouter();
   /* vocabulário da igreja (lei 7): da matriz, igual à marca do app */
   const sedeVocab = churches.find((c) => c.matriz) ?? firstChurch;
@@ -351,7 +355,7 @@ export default function ServiceExactApp({
     if (e.concluido && e.primeiroEventoId) {
       const { data: encontro, error } = await svc().from("events").select("name,event_date,time,location").eq("id", e.primeiroEventoId).eq("church_id", firstChurch.id).maybeSingle();
       if (error) return friendlyWriteError(error.message);
-      if (!encontro || !encontroUtil({ nome: encontro.name, data: encontro.event_date ?? "", hora: encontro.time ?? "", local: encontro.location ?? "" })) return "O encontro precisa estar na agenda com data, horário e local válidos. Confira a programação antes de concluir.";
+      if (!encontro || !encontroUtil({ nome: encontro.name, data: encontro.event_date ?? "", hora: encontro.time ?? "", local: encontro.location ?? "" }, todayISO(), horaAgoraBR())) return "O encontro precisa estar na agenda com data, horário e local válidos. Confira a programação antes de concluir.";
     }
     const { data, error: readError } = await svc().from("churches").select("settings").eq("id", firstChurch.id).single();
     if (readError) return friendlyWriteError(readError.message);
@@ -703,20 +707,20 @@ export default function ServiceExactApp({
     if (!ligados.has("cuidado")) return [];
     const diaDo = new Map(events.map((e) => [e.id, e.eventDate]));
     return listaDeCuidado({
-      pessoas: people, membros: members, grupos: fellowshipGroups, times: ministries, marcas: careMarks, semanas: semanasCuidado,
+      hoje: todayISO(), pessoas: people, membros: members, grupos: fellowshipGroups, times: ministries, marcas: careMarks, semanas: semanasCuidado,
       presencas: eventAttendance.map((a) => ({ personId: a.person_id, dia: diaDo.get(a.event_id) ?? "" })),
     });
-  }, [ligados, events, people, members, fellowshipGroups, ministries, careMarks, semanasCuidado, eventAttendance]);
+  }, [ligados, events, people, members, fellowshipGroups, ministries, careMarks, semanasCuidado, eventAttendance, todayISO]);
   const criancasAusentes = useMemo(() => {
     if (!ligados.has("cuidado") || !kidsClasses.length) return null;
     const hoje = todayISO();
     return kidsChildren.flatMap((c) => {
-      const ultima = kidsAttendance.filter((a) => a.child_id === c.id).map((a) => a.dropped_off_at.slice(0, 10)).sort().pop();
+      const ultima = kidsAttendance.filter((a) => a.child_id === c.id).map((a) => partesNoFuso(new Date(a.dropped_off_at), fuso).data).sort().pop();
       if (!ultima) return [];
       const semanas = Math.floor(((parseISODate(hoje)?.getTime() ?? 0) - (parseISODate(ultima)?.getTime() ?? 0)) / (7 * 86400000));
       return semanas >= semanasCuidado ? [{ id: c.id, nome: c.name, ultima, semanas }] : [];
     }).sort((a, b) => b.semanas - a.semanas);
-  }, [ligados, kidsClasses, kidsChildren, kidsAttendance, semanasCuidado]);
+  }, [ligados, kidsClasses, kidsChildren, kidsAttendance, semanasCuidado, todayISO, fuso]);
   const NAV_GROUPS = navGroups(ligados) as NavGroups;
   /* aniversariantes: gestão vê a igreja toda com idade; o líder, só os times e grupos que lidera, sem idade */
   const aniversariantesBase = useMemo(() => comData(members, people, ministries), [members, people, ministries]);
@@ -755,7 +759,7 @@ export default function ServiceExactApp({
       router.refresh();
     };
     return (
-      <VocabularioProvider value={vocab}>
+      <RelogioProvider fuso={firstChurch?.timeZone}><VocabularioProvider value={vocab}>
       <MobileOverlay
         modulos={{ on: firstChurch?.modulosOn, off: firstChurch?.modulosOff }}
         textSizePerfil={textSizePerfil}
@@ -833,7 +837,7 @@ export default function ServiceExactApp({
         onClose={handleLogoutSelf}
         onSwitchToPanel={podeGerenciar ? () => setView("gestao") : undefined}
       />
-      </VocabularioProvider>
+      </VocabularioProvider></RelogioProvider>
     );
   }
   /* membro com telas liberadas não abre o painel numa tela que não tem
@@ -866,11 +870,11 @@ export default function ServiceExactApp({
   /* número só quando pede ação: visitante sem contato há 48h, vaga aberta na escala */
   const navBadge: Partial<Record<keyof typeof ROUTES, number>> = {
     visitantes: visitors.filter((v) => semContato48h(v, visitorNotes)).length,
-    escalas: vagasDaSemana(events, roster, ministries, scopeMinistryIds),
+    escalas: vagasDaSemana(events, roster, ministries, scopeMinistryIds, fuso),
   };
 
   return (
-    <VocabularioProvider value={vocab}>
+    <RelogioProvider fuso={firstChurch?.timeZone}><VocabularioProvider value={vocab}>
     <ServiceAccessProvider value={accessData}>
     <div className="app">
       {navOpen ? <div className="sb-backdrop" onClick={() => !showTour && setNavOpen(false)} /> : null}
@@ -998,7 +1002,7 @@ export default function ServiceExactApp({
         {route === "aniversariantes" ? <Aniversariantes base={aniversariantesBase} escopo={aniversariosEscopo} comIdade={podePrevisualizar} times={ministries} grupos={fellowshipGroups} onAbrir={abrirAniversariante} /> : null}
         {route === "pessoas" ? <Pessoas people={people} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Times ministries={ministries} people={people} members={members} serveRequests={serveRequests} setDrawer={setDrawer} setModal={setModal} /> : null}
-        {route === "times" ? <details className="teams-config"><summary>Configurações de times e requisitos</summary><Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="min" embedded /></details> : null}
+        {route === "times" ? <details className="teams-config"><summary>Configurações de times e requisitos</summary><Config key={firstChurch?.id} church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="min" embedded /></details> : null}
         {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} church={firstChurch} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "criancas" ? <Criancas kidsChildren={kidsChildren} kidsClasses={kidsClasses} childGuardians={childGuardians} people={people} kidsEvents={kidsEvents} rooms={rooms} church={firstChurch} /> : null}
         {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
@@ -1028,14 +1032,14 @@ export default function ServiceExactApp({
         {route === "secretaria" && firstChurch ? <Secretaria church={firstChurch} churches={churches} members={members} people={people} kidsChildren={kidsChildren} childGuardians={childGuardians} currentPersonId={currentPersonId} /> : null}
         {route === "relatorios" && currentRole === "master" && firstChurch?.organizationId ? <div className="content wide" style={{ paddingTop: 0 }}><MetricasInternas organizationId={firstChurch.organizationId} /></div> : null}
         {route === "configurar" && firstChurch ? (
-          <Assistente
+          <Assistente key={firstChurch.id}
             estado={setupEstado}
             onEstado={salvarSetup}
-            igreja={{ nome: firstChurch.nome ?? "", cep: firstChurch.postalCode ?? "", endereco: firstChurch.address ?? "", bairro: firstChurch.neighborhood ?? "", cidade: firstChurch.cidade ?? "", estado: firstChurch.state ?? "" }}
+            igreja={{ fuso, nome: firstChurch.nome ?? "", cep: firstChurch.postalCode ?? "", endereco: firstChurch.address ?? "", bairro: firstChurch.neighborhood ?? "", cidade: firstChurch.cidade ?? "", estado: firstChurch.state ?? "" }}
             logoUrl={firstChurch.logoUrl}
             brand={{ ...((churches.find((c) => c.matriz) ?? firstChurch).settings?.brandCfg ?? {}) }}
             onSalvarDados={async (d) => {
-              const { error } = await svc().from("churches").update({ name: d.nome.trim(), postal_code: d.cep.replace(/\D/g, "") || null, address: d.endereco || null, neighborhood: d.bairro || null, city: d.cidade || null, state: d.estado || null }).eq("id", firstChurch.id);
+              const { error } = await svc().from("churches").update({ time_zone: d.fuso, name: d.nome.trim(), postal_code: d.cep.replace(/\D/g, "") || null, address: d.endereco || null, neighborhood: d.bairro || null, city: d.cidade || null, state: d.estado || null }).eq("id", firstChurch.id);
               router.refresh();
               return error ? friendlyWriteError(error.message) : null;
             }}
@@ -1086,7 +1090,7 @@ export default function ServiceExactApp({
             onCriarCultos={async (lista) => {
               // Reconhece o resultado já gravado em uma tentativa cuja resposta se perdeu.
               if (!lista.length) return { ids: [], error: "Informe os dados do primeiro encontro." };
-              if (lista.some((e) => !encontroUtil(e))) return { ids: [], error: "Confira a data, o horário e o local antes de disponibilizar o encontro." };
+              if (lista.some((e) => !encontroUtil(e, todayISO(), horaAgoraBR()))) return { ids: [], error: "Confira a data, o horário e o local antes de disponibilizar o encontro." };
               const { data: existentes, error: readError } = await svc().from("events").select("id,name,event_date,time,location").eq("church_id", firstChurch.id).in("event_date", lista.map((c) => c.data)).eq("name", lista[0].nome).eq("time", lista[0].hora).eq("location", lista[0].local);
               if (readError) return { ids: [], error: friendlyWriteError(readError.message) };
               const registros = lista.map((c) => {
@@ -1105,7 +1109,7 @@ export default function ServiceExactApp({
               return { ids: registros.map((c) => c.id) };
             }}
             onAtualizarEncontro={async (e) => {
-              if (!encontroUtil(e)) return "Confira nome, data, horário e local do encontro.";
+              if (!encontroUtil(e, todayISO(), horaAgoraBR())) return "Confira nome, data, horário e local do encontro.";
               const original = await svc().from("events").select("id,room_id").eq("id", e.id).eq("church_id", firstChurch.id).maybeSingle();
               if (original.error) return friendlyWriteError(original.error.message);
               if (!original.data) return "O encontro não está mais disponível. Confira a agenda da igreja.";
@@ -1137,10 +1141,10 @@ export default function ServiceExactApp({
             onIr={(r) => setRoute(r)}
           />
         ) : null}
-        {route === "config" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
-        {route === "grupos" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="grupos" /> : null}
-        {route === "pesquisas" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="pesquisas" /> : null}
-        {route === "pagina" ? <Config church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="pagina" /> : null}
+        {route === "config" ? <Config key={firstChurch?.id} church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} /> : null}
+        {route === "grupos" ? <Config key={firstChurch?.id} church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="grupos" /> : null}
+        {route === "pesquisas" ? <Config key={firstChurch?.id} church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="pesquisas" /> : null}
+        {route === "pagina" ? <Config key={firstChurch?.id} church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="pagina" /> : null}
         {route === "identidade" ? <Identidade church={firstChurch} identity={churchIdentity} cycle={cycles.find((c) => c.is_active) ?? cycles[0]} setModal={setModal} /> : null}
         {route === "historia" ? <Historia church={firstChurch} historyEntries={historyEntries} setModal={setModal} /> : null}
         </RouteGroupContext.Provider>
@@ -1256,7 +1260,7 @@ export default function ServiceExactApp({
       ) : null}
     </div>
     </ServiceAccessProvider>
-    </VocabularioProvider>
+    </VocabularioProvider></RelogioProvider>
   );
 }
 

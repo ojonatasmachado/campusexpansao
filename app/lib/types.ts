@@ -2,6 +2,8 @@
 // Qualquer componente que leia dados do Supabase importa daqui.
 // Se mudar um campo no banco, muda aqui e o TS grita em todos os lugares certos.
 
+export type DbChurchClock = { time_zone?: string | null };
+
 export type DbEstante = {
   key: string
   label: string

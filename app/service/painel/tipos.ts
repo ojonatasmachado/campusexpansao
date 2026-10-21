@@ -57,6 +57,7 @@ export type ChurchView = {
   foundedYear?: string | null;
   address?: string | null;
   country?: string | null;
+  timeZone?: string | null;
   postalCode?: string | null;
   neighborhood?: string | null;
   state?: string | null;
@@ -125,6 +126,7 @@ export type MinistryView = {
 };
 
 export type EventView = {
+  timeZone?: string;
   id: string;
   organizationId: string;
   churchId?: string;

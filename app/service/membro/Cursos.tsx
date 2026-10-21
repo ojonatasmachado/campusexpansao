@@ -58,9 +58,8 @@ export function AulaQuando({ aula }: { aula: CourseLesson }) {
 }
 
 /* aulas com data dos cursos em andamento, na Minha agenda (v7 2.2, 4.5) */
-export function minhasAulas(member: M | null, courses: Course[], enrollments: Enrollment[], courseModules: CourseModule[], courseLessons: CourseLesson[]) {
+export function minhasAulas(member: M | null, courses: Course[], enrollments: Enrollment[], courseModules: CourseModule[], courseLessons: CourseLesson[], hoje = todayISO()) {
   if (!member) return [];
-  const hoje = todayISO();
   return enrollments
     .filter((e) => e.member_id === member.id && e.status !== "concluido")
     .flatMap((e) => {

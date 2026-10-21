@@ -63,6 +63,7 @@ export type JourneyRequest = {
   status: "pendente" | "aprovado" | "rejeitado";
 };
 export type Ev = {
+  timeZone?: string;
   id: string; name: string; weekday: string; eventDate: string; time: string; location?: string; kind?: string;
   /* o que o evento pede, valor e instruções (0058, v7 4.5) */
   pede?: "aviso" | "presenca" | "inscricao"; valor?: string; instrucoes?: string;

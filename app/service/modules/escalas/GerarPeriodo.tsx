@@ -12,7 +12,8 @@ import { Av } from "../../painel/ui";
 import { Icon } from "../../lib/icons";
 import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
-import { formatDateBR, joinDot, parseISODate, todayISO } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { formatDateBR, joinDot, parseISODate } from "../../lib/date";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { friendlyWriteError } from "../../painel/erros";
 import { useTermos } from "../../lib/vocabulario-context";
@@ -68,6 +69,7 @@ export function GerarPeriodo({
   onClose: () => void;
   onSalvo: (primeiroEventoId: string | null) => void;
 }) {
+  const { todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const fid = useId();
   const telaRef = useRef<FormScreenHandle>(null);
