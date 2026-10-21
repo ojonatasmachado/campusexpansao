@@ -108,20 +108,26 @@ export function SheetTroca({ slot, ev, funcao, member, dest, onStartChat }: {
   const [enviando, setEnviando] = useState<string | null>(null);
   useEffect(() => { let vivo = true; candidatosParaVaga(slot.id).then((c) => { if (vivo) setCandidatos(c.filter((x) => x.member_id !== member.id && x.member_id !== dest.member_id)); }); return () => { vivo = false; }; }, [slot.id, member.id, dest.member_id]);
   const quando = joinDot(ev.name, dataLonga(ev.eventDate) || ev.weekday, ev.time);
+  const operando = useRef(false);
   const abrir = async (alvo: string, texto: string, aviso: string) => {
+    if (operando.current) return;
+    operando.current = true;
     setEnviando(alvo);
-    const id = await onStartChat(member.id, alvo, texto);
-    setEnviando(null);
-    if (!id) { ui.toast("Não foi possível enviar agora. Tente de novo."); return; }
-    ui.sheet(null);
-    ui.toast(aviso);
-    ui.go("mensagens", null, { chatId: id });
+    try {
+      const id = await onStartChat(member.id, alvo, texto);
+      if (!id) { ui.toast("Não foi possível enviar agora. Tente de novo."); return; }
+      ui.sheet(null);
+      ui.toast(aviso);
+      ui.go("mensagens", null, { chatId: id });
+    } catch { ui.toast("Não foi possível enviar agora. Tente de novo."); }
+    finally { operando.current = false; setEnviando(null); }
   };
   return (
     <div>
       <h2 className="m6-sh">Pedir troca</h2>
       <div className="m6-meta">{joinDot(quando, funcao)}</div>
       <p className="m6-txt">O pedido vai para {papelDoDestinatario(dest)}. A conversa fica em Mensagens.</p>
+      <p className="m6-txt">Você continua nesta escala até a liderança confirmar a substituição. Se não puder ir, registre também sua recusa.</p>
       <div className="m6-btns">
         <button className="m6-btn pri" type="button" disabled={!!enviando} onClick={() => abrir(dest.member_id, `Oi! Preciso trocar minha escala de ${joinDot(quando, funcao)}. Pode me ajudar?`, "Pedido de troca enviado")}>
           {enviando === dest.member_id ? "Enviando..." : `Pedir a ${dest.name.split(" ")[0]}`}

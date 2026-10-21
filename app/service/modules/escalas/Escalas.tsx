@@ -6,8 +6,9 @@
    ServiceExactApp.tsx (import só de tipo, sem ciclo em tempo de execução). */
 
 import { limitesDaSemana } from "./semana";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { friendlyWriteError } from "../../painel/erros";
 import { faltaN, plural } from "../../lib/plural";
 import { baixarCsv } from "../../lib/csv";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
@@ -353,37 +354,44 @@ export function Escalas({
     router.refresh();
   };
 
+  const conferirGravacao = async (consulta: PromiseLike<{ data: unknown; error: { message: string } | null }>) => {
+    const { data, error } = await consulta;
+    if (error) throw new Error(friendlyWriteError(error.message));
+    if (!data) throw new Error("A escala mudou ou você não pode alterá-la. Atualize a tela e tente novamente.");
+  };
   const confirmarAssignment = async (assignmentId: string) => {
-    await createServiceBrowserClient().schema("service").from("roster_assignments").update({ status: "ok" }).eq("id", assignmentId);
+    await conferirGravacao(createServiceBrowserClient().schema("service").from("roster_assignments").update({ status: "ok" }).eq("id", assignmentId).select("id").single());
     router.refresh();
   };
   const deixarPendenteAssignment = async (assignmentId: string) => {
-    await createServiceBrowserClient().schema("service").from("roster_assignments").update({ status: "wait" }).eq("id", assignmentId);
+    await conferirGravacao(createServiceBrowserClient().schema("service").from("roster_assignments").update({ status: "wait" }).eq("id", assignmentId).select("id").single());
     router.refresh();
   };
   const removerAssignment = async (assignmentId: string) => {
-    await createServiceBrowserClient().schema("service").from("roster_assignments").delete().eq("id", assignmentId);
+    await conferirGravacao(createServiceBrowserClient().schema("service").from("roster_assignments").delete().eq("id", assignmentId).select("id").single());
     router.refresh();
   };
   const trocarAssignment = async (assignmentId: string, novoPersonId: string) => {
-    await createServiceBrowserClient().schema("service").from("roster_assignments").update({ person_id: novoPersonId, status: "wait" }).eq("id", assignmentId);
+    const atual = roster.find((r) => r.id === assignmentId);
+    if (!atual) throw new Error("Essa vaga mudou. Atualize a tela antes de substituir.");
+    await conferirGravacao(createServiceBrowserClient().schema("service").from("roster_assignments").update({ person_id: novoPersonId, status: "wait" }).eq("id", assignmentId).eq("person_id", atual.person_id).select("id").single());
     router.refresh();
   };
   const escalarPessoa = async (event: EventView, positionId: string, personId: string) => {
-    await createServiceBrowserClient().schema("service").from("roster_assignments").insert({
+    await conferirGravacao(createServiceBrowserClient().schema("service").from("roster_assignments").insert({
       organization_id: event.organizationId, event_id: event.id, position_id: positionId, person_id: personId,
       status: escalaCfg.modo === "automatico" ? "ok" : "wait",
-    });
+    }).select("id").single());
     router.refresh();
   };
   const recusarAssignment = async (assignment: RosterAssignmentView, ministry: MinistryView) => {
-    await createServiceBrowserClient().schema("service").from("roster_assignments").update({ status: "no" }).eq("id", assignment.id);
+    await conferirGravacao(createServiceBrowserClient().schema("service").from("roster_assignments").update({ status: "no" }).eq("id", assignment.id).select("id").single());
     if (escalaCfg.modo === "automatico" && escalaCfg.naRecusa === "proximo" && selectedEvent) {
       const proximo = candidatosParaVaga(ministry, assignment.position_id, assignment.person_id).find((c) => c.fit !== "block");
       if (proximo) {
-        await createServiceBrowserClient().schema("service").from("roster_assignments").insert({
+        await conferirGravacao(createServiceBrowserClient().schema("service").from("roster_assignments").insert({
           organization_id: selectedEvent.organizationId, event_id: selectedEvent.id, position_id: assignment.position_id, person_id: proximo.person.id, status: "ok",
-        });
+        }).select("id").single());
       }
     }
     if (escalaCfg.naRecusa === "avisar") {
@@ -649,7 +657,7 @@ export function Escalas({
           onPendente={deixarPendenteAssignment}
           onRecusar={(assignment) => recusarAssignment(assignment, slotAction.ministry)}
           onRemover={removerAssignment}
-          onEscalar={(personId) => selectedEvent && escalarPessoa(selectedEvent, slotAction.position.id, personId)}
+          onEscalar={async (personId) => { if (!selectedEvent) throw new Error("Selecione o evento novamente."); await escalarPessoa(selectedEvent, slotAction.position.id, personId); }}
           onTrocar={trocarAssignment}
           setDrawer={setDrawer}
         />
@@ -700,15 +708,25 @@ function RosterActionModal({
   maxPorMes?: number | null;
   people: PersonView[];
   onClose: () => void;
-  onConfirmar: (assignmentId: string) => void;
-  onPendente: (assignmentId: string) => void;
-  onRecusar: (assignment: RosterAssignmentView) => void;
-  onRemover: (assignmentId: string) => void;
-  onEscalar: (personId: string) => void;
-  onTrocar: (assignmentId: string, personId: string) => void;
+  onConfirmar: (assignmentId: string) => Promise<void>;
+  onPendente: (assignmentId: string) => Promise<void>;
+  onRecusar: (assignment: RosterAssignmentView) => Promise<void>;
+  onRemover: (assignmentId: string) => Promise<void>;
+  onEscalar: (personId: string) => Promise<void>;
+  onTrocar: (assignmentId: string, personId: string) => Promise<void>;
   setDrawer: (drawer: DrawerState) => void;
 }) {
   const { comTermos: ct } = useTermos();
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
+  const operando = useRef(false);
+  const executar = async (acao: () => Promise<void>) => {
+    if (operando.current) return;
+    operando.current = true; setSalvando(true); setErro("");
+    try { await acao(); onClose(); }
+    catch (error) { setErro(error instanceof Error ? error.message : "Não foi possível salvar. Tente novamente."); }
+    finally { operando.current = false; setSalvando(false); }
+  };
   const [trocando, setTrocando] = useState(false);
   const [busca, setBusca] = useState("");
   const [soDisponiveis, setSoDisponiveis] = useState(false);
@@ -717,8 +735,8 @@ function RosterActionModal({
   if (action.kind === "slot" && action.assignment && !trocando) {
     const assignment = action.assignment;
     return (
-      <div className="modal-bg" onClick={onClose}>
-        <div className="modal" onClick={(event) => event.stopPropagation()}>
+      <div className="modal-bg" onClick={salvando ? undefined : onClose}>
+        <div className="modal" role="dialog" aria-modal="true" aria-label="Alterar escala" aria-busy={salvando} onClick={(event) => event.stopPropagation()}>
           <div className="modal-head">
             <div className="modal-eyebrow">{joinDot(action.position.name, action.ministry.name, action.event.weekday)}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
@@ -731,13 +749,22 @@ function RosterActionModal({
           </div>
           <div className="modal-body">
             <div style={{ display: "grid", gap: 8 }}>
-              <button className="btn btn-pri" style={{ justifyContent: "center" }} type="button" onClick={() => { onConfirmar(assignment.id); onClose(); }}><Icon name="ok" size={15} /> Marcar como confirmado</button>
-              <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => { onPendente(assignment.id); onClose(); }}>Reenviar convite</button>
-              <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => { onRecusar(assignment); onClose(); }}>Marcar que recusou</button>
-              <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setTrocando(true)}>Pedir troca</button>
-              {assignedPerson ? <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setDrawer({ kind: "person", id: assignedPerson.id })}>{ct("Ver perfil do {voluntario}")}</button> : null}
-              <button className="btn btn-danger" style={{ justifyContent: "center" }} type="button" onClick={() => { onRemover(assignment.id); onClose(); }}>Remover da escala</button>
+              <button className="btn btn-pri" type="button" disabled={salvando} onClick={() => executar(() => onConfirmar(assignment.id))}><Icon name="ok" size={15} /> Marcar como confirmado</button>
+              <button className="btn btn-sec" type="button" disabled={salvando} onClick={() => setTrocando(true)}>Substituir pessoa</button>
+              <details className="service-preparacao"><summary>Outras ações</summary>
+                <div style={{ display: "grid", gap: 8 }}>
+                  <button className="btn btn-sec" type="button" disabled={salvando} onClick={() => executar(() => onPendente(assignment.id))}>Voltar para aguardar confirmação</button>
+                  <button className="btn btn-sec" type="button" disabled={salvando} onClick={() => executar(() => onRecusar(assignment))}>Marcar que recusou</button>
+                  {assignedPerson ? <button className="btn btn-sec" type="button" disabled={salvando} onClick={() => setDrawer({ kind: "person", id: assignedPerson.id })}>{ct("Ver perfil do {voluntario}")}</button> : null}
+                  <button className="btn btn-danger" type="button" disabled={salvando} onClick={() => executar(() => onRemover(assignment.id))}>Remover da escala</button>
+                </div>
+              </details>
+              {salvando && <p role="status">Salvando alteração...</p>}
+              {erro && <p className="field-error" role="alert">{erro}</p>}
             </div>
+          </div>
+          <div className="modal-foot">
+            <button className="btn btn-sec" type="button" disabled={salvando} onClick={onClose}>Fechar</button>
           </div>
         </div>
       </div>
@@ -757,12 +784,10 @@ function RosterActionModal({
     m === "evento" ? ct("Já está na escala deste {culto}") : m === "ferias" ? "De férias" : m === "teto" ? (maxPorMes ? `Já serviu ${plural(maxPorMes, "vez", "vezes")} este mês, o limite` : "Chegou ao limite do mês") : m === "folga" ? "Em semana de folga" : "";
   const escolher = (c: Candidato) => {
     if (c.fit === "block") return;
-    if (isSwap && action.assignment) onTrocar(action.assignment.id, c.person.id);
-    else onEscalar(c.person.id);
-    onClose();
+    void executar(() => isSwap && action.assignment ? onTrocar(action.assignment.id, c.person.id) : onEscalar(c.person.id));
   };
   const linha = (c: Candidato) => (
-    <button className={`cand ${c.fit === "block" ? "is-block" : ""}`} type="button" key={c.person.id} aria-disabled={c.fit === "block" || undefined} onClick={() => escolher(c)}>
+    <button className={`cand ${c.fit === "block" ? "is-block" : ""}`} type="button" key={c.person.id} disabled={salvando || c.fit === "block"} aria-disabled={c.fit === "block" || undefined} onClick={() => escolher(c)}>
       <Av name={c.person.name} size="md" photoUrl={c.person.photoUrl} />
       <div className="cand-main">
         <div className="cand-name">{c.person.name}</div>
@@ -775,18 +800,21 @@ function RosterActionModal({
     </button>
   );
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide" onClick={(event) => event.stopPropagation()}>
+    <div className="modal-bg" onClick={salvando ? undefined : onClose}>
+      <div className="modal wide" role="dialog" aria-modal="true" aria-label="Escolher pessoa para a escala" aria-busy={salvando} onClick={(event) => event.stopPropagation()}>
         <div className="modal-head">
-          <div className="modal-eyebrow">{isSwap ? "Pedir troca" : "Escalar"} · {action.position.name} · {action.ministry.name}</div>
+          <div className="modal-eyebrow">{isSwap ? "Escolher substituto" : "Escalar"} · {action.position.name} · {action.ministry.name}</div>
           <div className="modal-title">{action.event.name}</div>
           <div className="modal-sub">{joinDot(action.event.weekday, action.event.time)}{joinDot(action.event.weekday, action.event.time) ? ". " : ""}Ocupado é quem marcou que não pode neste horário.</div>
+          {isSwap && <p className="modal-sub">A pessoa escolhida passa a ocupar a vaga e precisa confirmar no app.</p>}
           <div className="cand-tools">
             <input className="input" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar pelo nome" aria-label="Buscar pelo nome" />
             <button type="button" className={`chip-toggle${soDisponiveis ? " on" : ""}`} aria-pressed={soDisponiveis} onClick={() => setSoDisponiveis((v) => !v)}>Disponíveis</button>
           </div>
         </div>
         <div className="modal-body cand-list">
+          {salvando && <p role="status">Salvando alteração...</p>}
+          {erro && <p className="field-error" role="alert">{erro}</p>}
           {podem.length === 0 && naoPodem.length === 0 ? <div className="empty">{busca.trim() ? "Ninguém com esse nome neste time." : "Ninguém disponível neste time."}</div> : null}
           {sugeridos.length > 0 && (
             <>
@@ -808,7 +836,7 @@ function RosterActionModal({
             </>
           )}
         </div>
-        <div className="modal-foot"><button className="btn btn-ghost" type="button" onClick={onClose}>Cancelar</button></div>
+        <div className="modal-foot"><button className="btn btn-ghost" type="button" disabled={salvando} onClick={onClose}>Cancelar</button></div>
       </div>
     </div>
   );
