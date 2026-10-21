@@ -10,6 +10,8 @@ import { conflitos, horaDeChegada } from "../lib/agenda";
 import { baixarIcs } from "../lib/ics";
 import { M6Row, M6St, MESES, MemberUiContext, chegadaDoTime, dataLonga } from "./comum";
 import { EscalaCard } from "./Inicio";
+import type { AgendaSeg } from "../lib/member-navigation";
+import { TabOnde } from "./Onde";
 import { TabTarefas } from "./Conversas";
 import type { Board, Card, Course, CourseLesson, Ev, EventRsvp, ItemAgenda, M, MeetingLite, Ministry, P, RehearsalLite, Slot } from "./tipos";
 
@@ -37,12 +39,14 @@ export function EventoRow({ ev, serve }: { ev: Ev; serve?: string | null }) {
   );
 }
 
-export function AgendaV6({ initialCardId, seg, setSeg, person, member, members, ministries, events, roster, cards, boards, isRecep, isKids, onResponderEscala, onStartChat, onAddCardComment, onSaveAvailability, aulas, meetings, rehearsals, rsvps }: {
+export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, member, members, ministries, events, roster, cards, boards, isRecep, isKids, onResponderEscala, onStartChat, onAddCardComment, onSaveAvailability, aulas, meetings, rehearsals, rsvps }: {
   initialCardId?: string | null;
+  /* "Onde" (mapa da igreja, etapa 2): igrejas e células públicas */
+  organizationId?: string;
   onSaveAvailability?: (availability: Record<string, boolean>) => Promise<boolean>;
   aulas: { aula: CourseLesson; curso: Course }[];
   meetings: MeetingLite[]; rehearsals: RehearsalLite[]; rsvps: EventRsvp[];
-  seg: "minha" | "igreja"; setSeg: (s: "minha" | "igreja") => void;
+  seg: AgendaSeg; setSeg: (s: AgendaSeg) => void;
   person: P; member: M | null; members: M[]; ministries: Ministry[]; events: Ev[]; roster: Slot[]; cards: Card[]; boards: Board[];
   isRecep: boolean; isKids: boolean;
   onResponderEscala?: (id: string, status: Slot["status"]) => Promise<boolean>;
@@ -56,6 +60,7 @@ export function AgendaV6({ initialCardId, seg, setSeg, person, member, members, 
   const meusTimes = new Set(ministries.filter((m) => m.people.some((mp) => mp.personId === person.id)).map((m) => m.id));
   /* tarefas abertas (v7 4.6): seção só com tarefa aberta; no dia do prazo, também na lista por data */
   const tarefasAbertas = cards.filter((c) => c.assignees.includes(person.id) && c.column_id !== "done");
+  const verOnde = !!organizationId && !!member;
   const atual = seg;
   const hoje = todayISO();
   const evById = new Map(events.map((e) => [e.id, e]));
@@ -140,13 +145,15 @@ export function AgendaV6({ initialCardId, seg, setSeg, person, member, members, 
   return (
     <>
       <div className="m6-segwrap">
-        <div className="ts-seg two m6-seg" role="radiogroup" aria-label="O que ver">
-          {([["minha", "Minha agenda"], ["igreja", "Igreja"]] as const).map(([v, l]) => (
+        <div className={`ts-seg ${verOnde ? "tres" : "two"} m6-seg`} role="radiogroup" aria-label="O que ver">
+          {([["minha", "Minha agenda"], ["igreja", "Igreja"], ...(verOnde ? [["onde", "Onde"]] as const : [])] as const).map(([v, l]) => (
             <button key={v} type="button" role="radio" aria-checked={atual === v} className={atual === v ? "on" : ""} onClick={() => setSeg(v)}>{l}</button>
           ))}
         </div>
       </div>
-      {atual === "minha" ? (
+      {atual === "onde" && verOnde ? (
+        <TabOnde member={member} organizationId={organizationId!} onStartChat={onStartChat} />
+      ) : atual === "minha" ? (
         <>
           {pend.length > 0 && (
             <div className="m6-sec">

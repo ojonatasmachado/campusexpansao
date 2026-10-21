@@ -57,7 +57,7 @@ export default async function ServiceConvitePage({ searchParams }: { searchParam
           subtitle="Crie sua senha para entrar no app da igreja. Só você vai saber essa senha."
           footer={<>O link é só seu e vale por 7 dias.</>}
         >
-          <ConviteForm t={t} />
+          <ConviteForm t={t} churchName={churchName} />
         </AuthShell>
       ) : (
         <AuthShell

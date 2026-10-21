@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabase";
 import { entregarAvisos, esvaziarFila } from "../../../../lib/service-avisos";
 import { publicarAgendados } from "../../../../lib/service-mural-agendado";
+import { geocodificarPendentes } from "../../../../lib/service-geocodificar";
+import { atualizarPontosOsm } from "../../../../lib/service-mapa-osm";
 import { tokenDoWorkflowValido } from "../../../../lib/github-oidc";
 
 /* Publicação agendada do Mural (0075), lembrete do aviso (v7 4.18) e fila de avisos (5.3). Chamado pelo agendador: manda uma vez, a quem
@@ -36,6 +38,10 @@ export async function GET(request: Request) {
      silêncio; a notificação espera na fila até as 7h */
   let publicados = 0;
   try { publicados = await publicarAgendados(supabaseAdmin().schema("service")); } catch { /* segue para os lembretes */ }
+  /* mapa: ponto de quem ficou sem coordenada (poucos CEPs por rodada) */
+  try { await geocodificarPendentes(supabaseAdmin().schema("service")); } catch { /* tenta na próxima rodada */ }
+  /* mapa: pontos do OpenStreetMap, uma categoria por rodada, cada uma vale 30 dias */
+  try { await atualizarPontosOsm(supabaseAdmin().schema("service")); } catch { /* tenta na próxima rodada */ }
 
   try {
     const db = supabaseAdmin().schema("service");

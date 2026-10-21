@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Icon } from "./lib/icons";
-import { readMemberLocation, writeMemberLocation } from "./lib/member-navigation";
+import { readMemberLocation, writeMemberLocation, type AgendaSeg } from "./lib/member-navigation";
 import { useRelogioDaIgreja } from "./lib/relogio-context";
 import { porPublicacao } from "./lib/date";
 import ChurchLockup from "./ChurchLockup";
@@ -28,6 +28,8 @@ import { TabVisitantes } from "./membro/Visitantes";
 import { MuralV6 } from "./membro/Mural";
 import { TabBiblia } from "./membro/Biblia";
 import { TabPerfil } from "./membro/Perfil";
+import { SheetAceiteMapa } from "./membro/AceiteMapa";
+import { TERMO_MAPA_VERSAO } from "./lib/termo-mapa";
 import type { JourneyActions, JourneyStep, M, MemberModule, MemberTab, MemberUi, Ministry, MobileOverlayProps, ModuleCtx, P } from "./membro/tipos";
 export type * from "./membro/tipos";
 
@@ -87,7 +89,7 @@ function MobileMembro({
   const [sub, setSub] = useState<string | null>(null);
   const [announcementTarget, setAnnouncementTarget] = useState<string | null>(null);
   const [cardTarget, setCardTarget] = useState<string | null>(null);
-  const [agSeg, setAgSeg] = useState<"minha" | "igreja">("minha");
+  const [agSeg, setAgSeg] = useState<AgendaSeg>("minha");
   const [chatTarget, setChatTarget] = useState<{ id: string | null; novo: boolean; n: number }>({ id: null, novo: false, n: 0 });
   const [chatAberto, setChatAberto] = useState<string | null>(null);
   const [sheetEl, setSheetEl] = useState<React.ReactNode | null>(null);
@@ -282,6 +284,18 @@ function MobileMembro({
     const timer = setTimeout(escalaConfirmada, UNDO_MS);
     return () => clearTimeout(timer);
   }, [respostas, escalaConfirmada]);
+  /* mapa da igreja (0087): quem já era membro antes do termo responde uma vez,
+     depois do primeiro acesso; a resposta (aceite ou "agora não") fica gravada */
+  const aceiteMapaPedido = useRef(false);
+  useEffect(() => {
+    if (mode !== "self" || !onboarded || !member || aceiteMapaPedido.current) return;
+    if ((member.mapConsentAt || member.mapConsentDeclinedAt) && member.mapConsentTerms === TERMO_MAPA_VERSAO) return;
+    const timer = setTimeout(() => {
+      aceiteMapaPedido.current = true;
+      setSheetEl(<SheetAceiteMapa memberId={member.id} churchName={churchName} onDecidido={() => {}} />);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [mode, onboarded, member, churchName]);
   const ui: MemberUi = { go, sheet: setSheetEl, toast, respostas, responderEscala: responderEscalaUi, tamanhoTexto: abrirTamanhoTexto, abrirEvento, escalaConfirmada };
 
   const pedirEtapa = (step: JourneyStep) => {
@@ -398,7 +412,7 @@ function MobileMembro({
           )}
 
           {tab === "agenda" && !sub && (
-            <AgendaV6 initialCardId={cardTarget} seg={agSeg} setSeg={(segment) => go("agenda", null, { agSeg: segment })} person={person} member={member} members={members} ministries={ministries} events={events} roster={roster}
+            <AgendaV6 organizationId={organizationId} initialCardId={cardTarget} seg={agSeg} setSeg={(segment) => go("agenda", null, { agSeg: segment })} person={person} member={member} members={members} ministries={ministries} events={events} roster={roster}
               cards={cards} boards={boards} isRecep={isRecep} isKids={isKids} onResponderEscala={onResponderEscala}
               onStartChat={onStartChat} onAddCardComment={onAddCardComment} onSaveAvailability={onSaveAvailability}
               aulas={minhasAulas(member, courses, enrollments, courseModules, courseLessons, hoje)} meetings={meetings} rehearsals={rehearsals} rsvps={eventRsvps} />

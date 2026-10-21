@@ -1,3 +1,4 @@
+import type { AgendaSeg } from "../lib/member-navigation";
 import { type RequirementKind } from "../lib/requirements";
 import { type EstadoModulos } from "../modules/registry";
 import type { CategoriaAviso, ContextoMembro } from "../modules/define";
@@ -37,6 +38,13 @@ export type M = {
   journey: number[];
   volunteerId: string | null;
   groupId?: string | null;
+  /* mapa da igreja (0087): aceite do termo ou recusa, para não perguntar de novo */
+  mapConsentAt?: string | null;
+  mapConsentDeclinedAt?: string | null;
+  /* versão do termo que a pessoa respondeu: termo novo pergunta de novo */
+  mapConsentTerms?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 /* dados de contato que o membro preenche no primeiro acesso e no perfil */
@@ -289,7 +297,7 @@ export type MemberModule = {
 
 /* casca: folha de baixo, aviso com "Desfazer" e navegação entre abas */
 export type MemberUi = {
-  go: (tab: MemberTab, sub?: string | null, extra?: { agSeg?: "minha" | "igreja"; chatId?: string | null; newChat?: boolean; announcementId?: string; cardId?: string }) => void;
+  go: (tab: MemberTab, sub?: string | null, extra?: { agSeg?: AgendaSeg; chatId?: string | null; newChat?: boolean; announcementId?: string; cardId?: string }) => void;
   sheet: (el: React.ReactNode | null) => void;
   toast: (msg: string, action?: { label: string; fn: () => void }) => void;
   /* resposta da escala já confirmada pelo banco; null limpa a cópia local */

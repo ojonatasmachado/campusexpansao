@@ -22,7 +22,7 @@ export const OUTRO_LOCAL = "__outro__";
 export const ICONS = ICON_PATHS;
 
 export const CEX_ICON_FOR: Record<string, string> = {
-  painel: "painel", membros: "membros", pessoas: "pessoa", times: "times", visitantes: "visitante", criancas: "kids",
+  painel: "painel", mapa: "mapapin", membros: "membros", pessoas: "pessoa", times: "times", visitantes: "visitante", criancas: "kids",
   decisoes: "decisoes", batismos: "batismos", cursos: "cursos",
   escalas: "escalas", reunioes: "reunioes", ensaios: "ensaios", quadros: "quadros", espacos: "espacos",
   cultos: "cultos", comunicacao: "comunicacao", conversas: "conversas", oracao: "oracao",
@@ -59,6 +59,7 @@ export const ROUTES = {
   configurar: "SERVICE · CONFIGURAR A IGREJA",
   aniversariantes: "SERVICE · ANIVERSARIANTES",
   financeiro: "SERVICE · FINANCEIRO",
+  mapa: "SERVICE · MAPA DA IGREJA",
 };
 
 /* visitante sem nenhum contato registrado 48h depois da visita */
