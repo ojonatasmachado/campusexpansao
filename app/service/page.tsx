@@ -104,6 +104,15 @@ type FellowshipGroupRow = {
   weekday: string | null;
   time: string | null;
   neighborhood: string | null;
+  /* 0088 */
+  postal_code?: string | null;
+  street?: string | null;
+  street_number?: string | null;
+  complement?: string | null;
+  city?: string | null;
+  capacity?: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 type TagRow = {
@@ -177,6 +186,12 @@ type MemberRow = {
   /* 0072: pode não existir antes da migração (o select é "*") */
   imported_at?: string | null;
   country?: string | null;
+  /* 0087 */
+  map_consent_at?: string | null;
+  map_consent_declined_at?: string | null;
+  map_consent_terms?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 type MemberView = {
@@ -205,6 +220,12 @@ type MemberView = {
   contactComplete: boolean;
   firstAccessDone: boolean;
   importedAt: string | null;
+  mapConsentAt: string | null;
+  mapConsentDeclinedAt: string | null;
+  mapConsentTerms: string | null;
+  /* ponto do CEP (0083): o membro vê o que fica perto dele no "Onde" */
+  latitude: number | null;
+  longitude: number | null;
 };
 
 type MinistryRow = {
@@ -920,6 +941,11 @@ function toMemberView(row: MemberRow): MemberView {
     /* primeiro acesso em 2 passos (v7 4.10): feito com nome e sobrenome e telefone */
     firstAccessDone: !!(row.phone && (row.name ?? "").trim().split(/\s+/).length >= 2),
     importedAt: row.imported_at ?? null,
+    mapConsentAt: row.map_consent_at ?? null,
+    mapConsentDeclinedAt: row.map_consent_declined_at ?? null,
+    mapConsentTerms: row.map_consent_terms ?? null,
+    latitude: row.latitude ?? null,
+    longitude: row.longitude ?? null,
   };
 }
 
@@ -1281,7 +1307,8 @@ async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("cycles").select("id,year,theme,verse,body,objectives,is_active").order("created_at", { ascending: false }),
     supabase.schema("service").from("history_entries").select("id,year,title,body,link,photo_url,sort_order").order("sort_order", { ascending: true }),
     supabase.schema("service").from("ministerial_titles").select("id,name,sort_order").order("sort_order", { ascending: true }),
-    supabase.schema("service").from("fellowship_groups").select("id,name,leader_person_id,weekday,time,neighborhood").order("created_at", { ascending: false }),
+    /* "*": colunas de local e lotação (0088) podem não existir antes da migração */
+    supabase.schema("service").from("fellowship_groups").select("*").order("created_at", { ascending: false }),
     supabase.schema("service").from("tags").select("id,church_id,name,color,leaders").order("created_at", { ascending: false }),
     supabase.schema("service").from("timeline_events").select("id,member_id,event_type,title,body,by_whom,sort_key,when_label,created_at").order("sort_key", { ascending: false }),
     supabase.schema("service").from("journey_change_requests").select("id,member_id,step,event_date,note,requested_by,status,reviewed_by,reviewed_at,created_at").order("created_at", { ascending: false }),

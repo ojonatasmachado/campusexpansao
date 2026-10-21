@@ -40,6 +40,7 @@ import { daMinhaLista, listaDeCuidado } from "./modules/cuidado/cuidado";
 import { comData, escopoDe } from "./modules/aniversarios/aniversarios";
 import { Aniversariantes, AniversariantesDaSemana } from "./modules/aniversarios/Aniversariantes";
 import { OracaoPainel } from "./modules/oracao/OracaoPainel";
+import { MapaIgreja } from "./modules/mapa/MapaIgreja";
 import { Assistente } from "./modules/configuracao/Assistente";
 import { medir } from "./lib/medicao";
 import { MetricasInternas } from "./modules/relatorios/MetricasInternas";
@@ -1027,6 +1028,16 @@ export default function ServiceExactApp({
         {route === "cultos" ? <Cultos events={events} ministries={ministries} church={firstChurch} kidsClasses={kidsClasses} kidsSessions={kidsSessions} kidsChildren={kidsChildren} rooms={rooms} setDrawer={setDrawer} setModal={setModal} setCheckinEventId={setCheckinEventId} setShareEventId={setShareEventId} /> : null}
         {route === "comunicacao" ? <Comunicacao announcements={announcements} announcementReads={announcementReads} announcementResponses={announcementResponses} wallPosts={wallPosts} ministries={ministries} people={people} members={members} fellowshipGroups={fellowshipGroups} childGuardians={childGuardians} church={firstChurch} events={events} roster={roster} setModal={setModal} /> : null}
         {route === "oracao" ? <OracaoPainel organizationId={firstChurch?.organizationId} churches={churches} /> : null}
+        {route === "mapa" && firstChurch?.organizationId ? (
+          <MapaIgreja
+            organizationId={firstChurch.organizationId}
+            churchName={(churches.find((c) => c.matriz) ?? firstChurch).nome ?? ""}
+            people={people.map((p) => ({ id: p.id, name: p.name }))}
+            podeLiberar={currentRole === "master" || currentRole === "pastor"}
+            onAbrirMembro={(id) => setDrawer({ kind: "member", id })}
+            onMensagem={startChatWithMember}
+          />
+        ) : null}
         {route === "conversas" ? <Conversas chats={chats} chatMembers={chatMembers} messages={messages} ministries={ministries} members={members} church={firstChurch} currentPersonId={perspectivePersonId} scopeMinistryIds={scopeMinistryIds} pendingChatMemberId={pendingChatMemberId} onConsumePendingChatMember={() => setPendingChatMemberId(null)} /> : null}
         {route === "relatorios" ? <Relatorios people={people} members={members} ministries={ministries} events={events} boards={boards} chats={chats} visitors={visitors} roster={roster} eventAttendance={eventAttendance} fellowshipGroups={fellowshipGroups} setRoute={setRoute} church={firstChurch} /> : null}
         {route === "secretaria" && firstChurch ? <Secretaria church={firstChurch} churches={churches} members={members} people={people} kidsChildren={kidsChildren} childGuardians={childGuardians} currentPersonId={currentPersonId} /> : null}

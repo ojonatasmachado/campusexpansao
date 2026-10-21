@@ -465,6 +465,15 @@ export type FellowshipGroupView = {
   weekday: string | null;
   time: string | null;
   neighborhood: string | null;
+  /* local e lotação (0088): sempre públicos para os membros */
+  postal_code?: string | null;
+  street?: string | null;
+  street_number?: string | null;
+  complement?: string | null;
+  city?: string | null;
+  capacity?: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 export type TagView = {
