@@ -3845,6 +3845,13 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 /* ════════ v7 · financeiro (fase 1) ════════
    Movimento do mês, saldos e cadastros. Valores em mono só para alinhar números (lei 8). */
 .fin-acoes{display:flex;flex-wrap:wrap;gap:8px}
+.fin-mais{position:relative}
+.fin-mais>summary{list-style:none;min-height:44px;display:flex;align-items:center;cursor:pointer;white-space:nowrap}
+.fin-mais>summary::-webkit-details-marker{display:none}
+.fin-mais>summary::after{content:"";width:7px;height:7px;margin-left:9px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px)}
+.fin-mais[open]>summary::after{transform:rotate(225deg) translate(-2px,-1px)}
+.fin-mais-menu{position:absolute;z-index:40;right:0;top:calc(100% + 8px);min-width:230px;padding:8px;display:grid;gap:8px;background:var(--graphite);border:1px solid var(--border-2);box-shadow:0 16px 40px color-mix(in srgb,var(--ink) 62%,transparent)}
+.fin-mais-menu .btn{justify-content:flex-start;min-height:44px;width:100%}
 .fin-abas{justify-content:space-between}
 .fin-mes{display:inline-flex;align-items:center;gap:4px}
 .fin-mes-b{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-ctl);border:0.5px solid var(--border-2);background:var(--graphite);color:var(--light)}
@@ -3899,7 +3906,10 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
   .fin-filtros .tb-search{max-width:none;flex-basis:100%}
   .fin-filtros .select.fin-sel{flex:1;max-width:none;font-size:var(--fs-ui-lg)}
   .fin-acoes{width:100%}
-  .fin-acoes .btn{flex:1 1 calc(50% - 8px);min-height:44px}
+  .fin-acoes>.btn{flex:1 1 calc(48% - 8px)}
+  .fin-acoes>.fin-mais{flex:1 1 calc(52% - 8px)}
+  .fin-acoes>.btn,.fin-mais>summary{width:100%;min-height:44px;justify-content:center}
+  .fin-mais-menu{width:min(280px,calc(100vw - 32px))}
   .fin-mes-b{width:44px;height:44px}
   .fin-lin{grid-template-columns:minmax(0,1fr) auto;padding:12px 16px}
   .fin-data{grid-column:1 / -1;order:-1;margin-bottom:-10px}

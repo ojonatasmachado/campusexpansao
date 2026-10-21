@@ -14,7 +14,7 @@ Atualizado em 21/10/2026. O relatório original é a fotografia do diagnóstico;
 | F08 Destino de avisos | Implementado e percorrido | Publicação exata, link restaurável, lembrete com destino; resumo mantém a lista |
 | F09 Registro de leitura | Implementado e verificado | Só publicações que aparecem na área visível geram visualização; sem equivaler a resposta |
 | F10 Painel misturado | Melhorado parcialmente | Ativação recolhível, resumo semanal, indicadores factuais sem ranking; outras repetições mantêm revisão aberta |
-| F11 Rotina e configuração | Melhorado parcialmente | Times com ajustes avançados recolhidos; Visitantes separa rotina de regras/indicadores/QR; Crianças sem ação duplicada de evento; Financeiro mantém revisão por relevância aberta |
+| F11 Rotina e configuração | Melhorado parcialmente | Times com ajustes avançados recolhidos; Visitantes separa rotina de regras/indicadores/QR; Crianças sem ação duplicada de evento; Financeiro mantém uma ação principal e recolhe operações ocasionais; outros módulos densos continuam em revisão |
 | F12 Caminhada | Melhorada parcialmente | Curso ganhou saída para aulas; sem 0 de 0; preservada a organização prevista nos manifestos |
 | F13 Times recebendo pedidos | Implementado e verificado localmente | Abertura explícita, líder e vínculo válidos, requisitos, pedido e aprovação separados, `implementacao/times/` |
 | F14 Internacionalização | Parcial | Telefone, endereço exterior, CNPJ alfanumérico e fuso por igreja; idioma, moeda e regras locais continuam pendentes |

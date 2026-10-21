@@ -122,9 +122,14 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
         action={podeLancar && aba === "movimento" ? (
           <div className="fin-acoes">
             <button className="btn btn-pri" type="button" onClick={() => setTela({ k: "entrada" })}><Icon name="add" size={14} /> Lançar entrada</button>
-            <button className="btn btn-sec" type="button" onClick={() => setTela({ k: "despesa" })}>Lançar despesa</button>
-            <button className="btn btn-sec" type="button" onClick={() => setTela({ k: "oferta" })}>Contar oferta</button>
-            <button className="btn btn-sec" type="button" onClick={() => setTela({ k: "transferencia" })}>Transferir</button>
+            <details className="fin-mais">
+              <summary className="btn btn-sec">Outras operações</summary>
+              <div className="fin-mais-menu">
+                <button className="btn btn-sec" type="button" onClick={() => setTela({ k: "despesa" })}>Lançar despesa</button>
+                <button className="btn btn-sec" type="button" onClick={() => setTela({ k: "oferta" })}>Contar oferta</button>
+                <button className="btn btn-sec" type="button" onClick={() => setTela({ k: "transferencia" })}>Transferir entre contas</button>
+              </div>
+            </details>
           </div>
         ) : undefined} />
 
