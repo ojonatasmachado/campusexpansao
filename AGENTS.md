@@ -246,6 +246,11 @@ Tabela de estantes (estado inicial — editável no admin):
 
 Este arquivo é a **lei**. O **como executar cada tarefa** está em:
 
+- **Service: `docs/service-v7/PENDENTES.md`** → fonte única do que falta fazer, em histórias com
+  trilho de arquivos. Toda frente (Claude Code, Codex) pega uma história por vez, reservando pelo
+  branch `historia/<ID>-...`; estado vivo em `npx tsx scripts/historias.ts`. Pendência nova vira
+  história ali, não lista solta em outro documento.
+
 - `evolucoes/_claude_code_pacote/2 - HANDOFF - Materiais v3 (site + admin).md` → site Materiais v3 + ajustes do admin + contrato de dados.
 - `evolucoes/_claude_code_pacote/3 - AJUSTES_ClaudeCode_jornada.md` → unificar header/footer, Home narrativa, cross-linking, fim dos travessões.
 - `evolucoes/_claude_code_pacote/4 - AJUSTES_Cursos_e_Mentorias.md` + `5 - BRIEFING_ClaudeCode_Cursos_e_Infantil.md` → cursos, mentorias, faixas Infantil.
