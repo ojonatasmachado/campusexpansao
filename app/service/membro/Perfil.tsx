@@ -24,6 +24,8 @@ import { Interruptor } from "../ui/Interruptor";
 import { Opcao } from "../ui/Opcao";
 import { Cartao } from "../ui/Cartao";
 import { Linha, Lista } from "../ui/Linha";
+import { Campo, Entrada } from "../ui/Campo";
+import { SeletorData } from "../ui/Data";
 // ── aba: Perfil ───────────────────────────────────────────────────────────────
 
 /* notificações do celular (push): usado no Perfil e no primeiro acesso */
@@ -275,8 +277,8 @@ export function TabPerfil({
     return (
       <div className="m6-sec0">
         <Cartao estilo="app">
-          <div className="field"><label className="field-label">Senha nova</label><input className="input" type="password" autoComplete="new-password" placeholder="Pelo menos 6 caracteres" value={senha} onChange={(e) => setSenha(e.target.value)} /></div>
-          <div className="field"><label className="field-label">Repita a senha</label><input className="input" type="password" autoComplete="new-password" value={senha2} onChange={(e) => setSenha2(e.target.value)} /></div>
+          <Campo rotulo="Senha nova"><Entrada type="password" autoComplete="new-password" placeholder="Pelo menos 6 caracteres" value={senha} onChange={(e) => setSenha(e.target.value)} /></Campo>
+          <Campo rotulo="Repita a senha"><Entrada type="password" autoComplete="new-password" value={senha2} onChange={(e) => setSenha2(e.target.value)} /></Campo>
           {senhaMsg && <div className="m6-meta" style={{ marginBottom: 8 }}>{senhaMsg}</div>}
           <div className="m6-btns"><Botao tamanho="toque" variante="principal" desativado={!senhaValida || senhaSaving || !onChangePassword} onClick={trocarSenha}>{senhaSaving ? "Salvando..." : "Salvar senha nova"}</Botao></div>
         </Cartao>
@@ -404,32 +406,21 @@ export function MemberContactFields({ d, set, erros }: { d: MemberContactInput; 
     erros?.[k] ? <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginTop: 4 }}>{erros[k]}</div> : null;
   return (
     <div className="ob-form">
-      <div className="field">
-        <label className="field-label req" htmlFor={`${fieldId}-name`}>Nome e sobrenome</label>
-        <input id={`${fieldId}-name`} className="input" value={d.name} autoComplete="name" onChange={(e) => set("name", e.target.value)} />
-        {err("name")}
-      </div>
-      <div className="field">
-        <label className="field-label req" htmlFor={`${fieldId}-email`}>E-mail</label>
-        <input id={`${fieldId}-email`} className="input" type="email" value={d.email} autoComplete="email" placeholder="voce@email.com" onChange={(e) => set("email", e.target.value)} />
-        {err("email")}
-      </div>
-      <div className="field">
-        <label className="field-label req" htmlFor={`${fieldId}-phone`}>Telefone (WhatsApp)</label>
-        <input id={`${fieldId}-phone`} className="input" type="tel" value={d.phone} autoComplete="tel" placeholder="DDD e telefone ou +código do país" onChange={(e) => set("phone", e.target.value)} />
-        {err("phone")}
-      </div>
-      <div className="field">
-        <label className="field-label" htmlFor={`${fieldId}-nasc`}>Aniversário (opcional)</label>
-        <input id={`${fieldId}-nasc`} className="input" type="date" value={d.nasc} onChange={(e) => set("nasc", e.target.value)} />
-        {err("nasc")}
-      </div>
-      {d.cpf !== undefined && <div className="field">
-        <label className="field-label" htmlFor={`${fieldId}-cpf`}>CPF (opcional)</label>
-        <input id={`${fieldId}-cpf`} className="input" inputMode="numeric" autoComplete="off" value={formatarCpf(d.cpf)} onChange={(e) => set("cpf", e.target.value.replace(/\D/g, "").slice(0, 11))} />
-        <div className="field-hint">Preencha apenas se quiser informar.</div>
-        {err("cpf")}
-      </div>}
+      <Campo rotulo="Nome e sobrenome" obrigatorio erro={erros?.name || undefined}>
+        <Entrada id={`${fieldId}-name`} value={d.name} autoComplete="name" onChange={(e) => set("name", e.target.value)} />
+      </Campo>
+      <Campo rotulo="E-mail" obrigatorio erro={erros?.email || undefined}>
+        <Entrada id={`${fieldId}-email`} type="email" value={d.email} autoComplete="email" placeholder="voce@email.com" onChange={(e) => set("email", e.target.value)} />
+      </Campo>
+      <Campo rotulo="Telefone (WhatsApp)" obrigatorio erro={erros?.phone || undefined}>
+        <Entrada id={`${fieldId}-phone`} type="tel" value={d.phone} autoComplete="tel" placeholder="DDD e telefone ou +código do país" onChange={(e) => set("phone", e.target.value)} />
+      </Campo>
+      <Campo rotulo="Aniversário (opcional)" erro={erros?.nasc || undefined}>
+        <SeletorData id={`${fieldId}-nasc`} valor={d.nasc} aoMudar={(v) => set("nasc", v)} limpavel />
+      </Campo>
+      {d.cpf !== undefined && <Campo rotulo="CPF (opcional)" ajuda="Preencha apenas se quiser informar." erro={erros?.cpf || undefined}>
+        <Entrada id={`${fieldId}-cpf`} inputMode="numeric" autoComplete="off" value={formatarCpf(d.cpf)} onChange={(e) => set("cpf", e.target.value.replace(/\D/g, "").slice(0, 11))} />
+      </Campo>}
       <details className="member-address">
         <summary>Seu endereço</summary>
       <div className="field">
@@ -449,22 +440,18 @@ export function MemberContactFields({ d, set, erros }: { d: MemberContactInput; 
         {err("cep")}
       </div>
       {enderecoNoBrasil(d.country) ? <p className="field-hint">{[d.rua, d.bairro, d.cidade, d.estado].filter(Boolean).join(" · ") || "O endereço será preenchido pela consulta do CEP."}</p> : <>
-      <div className="field">
-        <label className="field-label" htmlFor={`${fieldId}-rua`}>Endereço</label>
-        <input id={`${fieldId}-rua`} className="input" value={d.rua} autoComplete="street-address" onChange={(e) => set("rua", e.target.value)} />
-      </div>
-      <div className="field">
-        <label className="field-label" htmlFor={`${fieldId}-bairro`}>Bairro</label>
-        <input id={`${fieldId}-bairro`} className="input" value={d.bairro} placeholder="Onde você mora" onChange={(e) => set("bairro", e.target.value)} />
-      </div>
-      <div className="field">
-        <label className="field-label" htmlFor={`${fieldId}-cidade`}>Cidade</label>
-        <input id={`${fieldId}-cidade`} className="input" value={d.cidade} autoComplete="address-level2" onChange={(e) => set("cidade", e.target.value)} />
-      </div>
-      <div className="field">
-        <label className="field-label" htmlFor={`${fieldId}-estado`}>Estado ou região</label>
-        <input id={`${fieldId}-estado`} className="input" value={d.estado} autoComplete="address-level1" onChange={(e) => set("estado", e.target.value)} />
-      </div>
+      <Campo rotulo="Endereço">
+        <Entrada id={`${fieldId}-rua`} value={d.rua} autoComplete="street-address" onChange={(e) => set("rua", e.target.value)} />
+      </Campo>
+      <Campo rotulo="Bairro">
+        <Entrada id={`${fieldId}-bairro`} value={d.bairro} placeholder="Onde você mora" onChange={(e) => set("bairro", e.target.value)} />
+      </Campo>
+      <Campo rotulo="Cidade">
+        <Entrada id={`${fieldId}-cidade`} value={d.cidade} autoComplete="address-level2" onChange={(e) => set("cidade", e.target.value)} />
+      </Campo>
+      <Campo rotulo="Estado ou região">
+        <Entrada id={`${fieldId}-estado`} value={d.estado} autoComplete="address-level1" onChange={(e) => set("estado", e.target.value)} />
+      </Campo>
       </>}
       </details>
     </div>

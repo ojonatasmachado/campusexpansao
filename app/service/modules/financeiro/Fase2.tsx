@@ -23,6 +23,9 @@ import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Contagem } from "../../ui/Contagem";
+import { Campo, Entrada, TextoLongo, Marcar } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
+import { SeletorData } from "../../ui/Data";
 type Fin = ReturnType<typeof useFinanceiro>;
 
 /* ── o que vence no mês ──────────────────────────────────────────────────── */
@@ -206,35 +209,12 @@ export function ContaFixaForm({ org, churchId, edit, cad, onClose, onDone }: Bas
               ))}
             </div>
           </div>
-          <div className="field">
-            <label className="field-label req" htmlFor={`${fid}-desc`}>Descrição</label>
-            <input id={`${fid}-desc`} className="input" maxLength={140} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={tipo === "despesa" ? "Ex.: Aluguel do templo" : "Ex.: Repasse da congregação"} />
-          </div>
+          <Campo rotulo="Descrição" obrigatorio><Entrada id={`${fid}-desc`} maxLength={140} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={tipo === "despesa" ? "Ex.: Aluguel do templo" : "Ex.: Repasse da congregação"} /></Campo>
           <CampoValor id={`${fid}-v`} label="Valor por mês" req value={valor} onChange={setValor} />
-          <div className="field half">
-            <label className="field-label req" htmlFor={`${fid}-dia`}>Vence todo dia</label>
-            <input id={`${fid}-dia`} className="input" inputMode="numeric" maxLength={2} value={dia} onChange={(e) => setDia(e.target.value.replace(/\D/g, ""))} />
-            <div className="field-hint">Dia 31 em mês curto vence no último dia.</div>
-          </div>
-          <div className="field half">
-            <label className="field-label req" htmlFor={`${fid}-c`}>Categoria</label>
-            <select id={`${fid}-c`} className="select" value={cat} onChange={(e) => setCat(e.target.value)}>
-              <option value="">Escolha</option>
-              {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
-          <div className="field half">
-            <label className="field-label req" htmlFor={`${fid}-f`}>Fundo</label>
-            <select id={`${fid}-f`} className="select" value={fundo} onChange={(e) => setFundo(e.target.value)}>
-              {fundos.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-            </select>
-          </div>
-          <div className="field">
-            <label className="field-label req" htmlFor={`${fid}-ct`}>{tipo === "despesa" ? "Sai da conta" : "Entra na conta"}</label>
-            <select id={`${fid}-ct`} className="select" value={conta} onChange={(e) => setConta(e.target.value)}>
-              {contas.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
+          <Campo rotulo="Vence todo dia" obrigatorio ajuda="Dia 31 em mês curto vence no último dia." className="half"><Entrada id={`${fid}-dia`} inputMode="numeric" maxLength={2} value={dia} onChange={(e) => setDia(e.target.value.replace(/\D/g, ""))} /></Campo>
+          <Campo rotulo="Categoria" obrigatorio className="half"><Selecao id={`${fid}-c`} valor={cat} aoMudar={setCat} vazio="Escolha" opcoes={cats.map((c) => ({ v: c.id, l: c.name }))} /></Campo>
+          <Campo rotulo="Fundo" obrigatorio className="half"><Selecao id={`${fid}-f`} valor={fundo} aoMudar={setFundo} opcoes={fundos.map((f) => ({ v: f.id, l: f.name }))} /></Campo>
+          <Campo rotulo={tipo === "despesa" ? "Sai da conta" : "Entra na conta"} obrigatorio><Selecao id={`${fid}-ct`} valor={conta} aoMudar={setConta} opcoes={contas.map((c) => ({ v: c.id, l: c.name }))} /></Campo>
           <div className="field">
             <div className="field-label" id={`${fid}-fm`}>Forma</div>
             <div className="fs-chips" role="group" aria-labelledby={`${fid}-fm`}>
@@ -244,20 +224,17 @@ export function ContaFixaForm({ org, churchId, edit, cad, onClose, onDone }: Bas
             </div>
           </div>
           {tipo === "despesa" && (
-            <div className="field">
-              <label className="field-label" htmlFor={`${fid}-forn`}>Fornecedor</label>
-              <input id={`${fid}-forn`} className="input" maxLength={120} value={fornecedor} onChange={(e) => setFornecedor(e.target.value)} placeholder="Ex.: Imobiliária Centro" />
-            </div>
+            <Campo rotulo="Fornecedor"><Entrada id={`${fid}-forn`} maxLength={120} value={fornecedor} onChange={(e) => setFornecedor(e.target.value)} placeholder="Ex.: Imobiliária Centro" /></Campo>
           )}
         </div>
       </FormSection>
       <FormSection title="Vigência">
         <div className="fs-grid">
-          <div className="field half"><label className="field-label req" htmlFor={`${fid}-ini`}>A partir de</label><input id={`${fid}-ini`} className="input" type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} /></div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-fim`}>Até (opcional)</label><input id={`${fid}-fim`} className="input" type="date" value={fim} onChange={(e) => setFim(e.target.value)} /></div>
+          <Campo rotulo="A partir de" obrigatorio className="half"><SeletorData id={`${fid}-ini`} valor={inicio} aoMudar={setInicio} /></Campo>
+          <Campo rotulo="Até (opcional)" className="half"><SeletorData id={`${fid}-fim`} valor={fim} aoMudar={setFim} /></Campo>
           {edit && (
             <div className="field">
-              <label className="fin-check"><input type="checkbox" checked={ativa} onChange={(e) => setAtiva(e.target.checked)} /> Ativa</label>
+              <Marcar className="fin-check" checked={ativa} onChange={(e) => setAtiva(e.target.checked)}>Ativa</Marcar>
               <div className="field-hint">Pausada, ela não gera os próximos meses. O que já foi gerado continua.</div>
             </div>
           )}
@@ -312,19 +289,13 @@ export function CampanhaForm({ org, churchId, edit, cad, onClose, onDone }: Base
       saving={salvando} missing={falta} dirty={retrato !== inicial} error={erro} onSave={salvar} onClose={onClose}>
       <FormSection title="Campanha">
         <div className="fs-grid">
-          <div className="field"><label className="field-label req" htmlFor={`${fid}-n`}>Nome</label><input id={`${fid}-n`} className="input" maxLength={80} value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Reforma do templo" /></div>
+          <Campo rotulo="Nome" obrigatorio><Entrada id={`${fid}-n`} maxLength={80} value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Reforma do templo" /></Campo>
           <CampoValor id={`${fid}-m`} label="Meta" req value={meta} onChange={setMeta} />
-          <div className="field half">
-            <label className="field-label" htmlFor={`${fid}-f`}>Fundo</label>
-            <select id={`${fid}-f`} className="select" value={fundo} onChange={(e) => setFundo(e.target.value)}>
-              <option value="">Escolher em cada entrada</option>
-              {fundos.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-            </select>
-          </div>
-          <div className="field"><label className="field-label" htmlFor={`${fid}-d`}>Para que é</label><textarea id={`${fid}-d`} className="textarea" maxLength={500} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Ex.: Troca do telhado e da pintura do salão principal." /></div>
-          <div className="field half"><label className="field-label req" htmlFor={`${fid}-i`}>Começa em</label><input id={`${fid}-i`} className="input" type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} /></div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-fi`}>Termina em (opcional)</label><input id={`${fid}-fi`} className="input" type="date" value={fim} onChange={(e) => setFim(e.target.value)} /></div>
-          {edit && <div className="field"><label className="fin-check"><input type="checkbox" checked={ativa} onChange={(e) => setAtiva(e.target.checked)} /> Recebendo entradas</label></div>}
+          <Campo rotulo="Fundo" className="half"><Selecao id={`${fid}-f`} valor={fundo} aoMudar={setFundo} vazio="Escolher em cada entrada" opcoes={fundos.map((f) => ({ v: f.id, l: f.name }))} /></Campo>
+          <Campo rotulo="Para que é"><TextoLongo id={`${fid}-d`} maxLength={500} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Ex.: Troca do telhado e da pintura do salão principal." /></Campo>
+          <Campo rotulo="Começa em" obrigatorio className="half"><SeletorData id={`${fid}-i`} valor={inicio} aoMudar={setInicio} /></Campo>
+          <Campo rotulo="Termina em (opcional)" className="half"><SeletorData id={`${fid}-fi`} valor={fim} aoMudar={setFim} /></Campo>
+          {edit && <div className="field"><Marcar className="fin-check" checked={ativa} onChange={(e) => setAtiva(e.target.checked)}>Recebendo entradas</Marcar></div>}
         </div>
       </FormSection>
       {edit && <Excluir rotulo="Excluir campanha" pergunta="As entradas continuam no caixa, só deixam de estar ligadas à campanha." onConfirmar={excluir} />}
@@ -422,7 +393,7 @@ export function FechamentoMes({ fin, mes, org, igreja, podeLancar, podeReabrir }
       {confirmando && (
         <div className="fin-fech-conf">
           <p className="fs-note">Depois de fechar, ninguém lança, edita ou exclui nada em {mesNome(mes)}. Só a direção ou o pastor reabrem.</p>
-          <div className="field"><label className="field-label" htmlFor={`${fid}-n`}>Observação (opcional)</label><textarea id={`${fid}-n`} className="textarea" maxLength={1000} value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Ex.: Conferido com o extrato do banco." /></div>
+          <Campo rotulo="Observação (opcional)"><TextoLongo id={`${fid}-n`} maxLength={1000} value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Ex.: Conferido com o extrato do banco." /></Campo>
           <div className="fin-fech-acoes">
             <Botao onClick={() => setConfirmando(false)}>Cancelar</Botao>
             <Botao variante="principal" desativado={salvando} onClick={fechar}>{salvando ? "Fechando…" : `Fechar ${mesNome(mes)}`}</Botao>

@@ -17,6 +17,7 @@ import { codigoLegivel, entradaPath } from "../../../lib/service-entrada";
 import { Botao, botaoClasse } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
 import { Linha } from "../../ui/Linha";
+import { Carregando } from "../../ui/Estados";
 type Regra = "aprovar" | "direto";
 const REGRAS: { id: Regra; t: string; s: string }[] = [
   { id: "aprovar", t: "A gestão aprova cada pessoa", s: "O pedido aparece no Início do painel. Você confere quem é e libera." },
@@ -39,7 +40,7 @@ export function EntradaConfig() {
     });
   }, [organizationId, db]);
 
-  if (cfg === undefined) return <div className="cfg-card"><div className="cfg-card-s" style={{ margin: 0 }}>Carregando...</div></div>;
+  if (cfg === undefined) return <Carregando forma="linhas" />;
   if (cfg === null) {
     return (
       <div className="cfg-card">

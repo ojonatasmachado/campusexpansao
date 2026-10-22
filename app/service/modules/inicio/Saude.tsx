@@ -16,6 +16,7 @@ import { Opcao } from "../../ui/Opcao";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Segmentado } from "../../ui/Segmentado";
 import { Contagem } from "../../ui/Contagem";
+import { SeletorData } from "../../ui/Data";
 const PRESETS: { v: Preset; l: string }[] = [
   { v: "30", l: "30 dias" },
   { v: "90", l: "90 dias" },
@@ -86,8 +87,8 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, podeAbrirPessoa = () => 
       </div>
       {panorama && preset === "datas" && (
         <div className="saude-datas">
-          <label>De <input className="input" type="date" value={datas.ini} onChange={(e) => setDatas((d) => ({ ...d, ini: e.target.value }))} /></label>
-          <label>até <input className="input" type="date" value={datas.fim} onChange={(e) => setDatas((d) => ({ ...d, fim: e.target.value }))} /></label>
+          <label>De <SeletorData rotulo="De" valor={datas.ini} aoMudar={(v) => setDatas((d) => ({ ...d, ini: v }))} /></label>
+          <label>até <SeletorData rotulo="Até" valor={datas.fim} aoMudar={(v) => setDatas((d) => ({ ...d, fim: v }))} /></label>
         </div>
       )}
       <div className="saude-grp">Hoje</div>

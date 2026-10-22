@@ -32,6 +32,9 @@ import { Opcao } from "../../ui/Opcao";
 import { Cartao } from "../../ui/Cartao";
 import { Selo, tomDaClasse } from "../../ui/Selo";
 import { Linha } from "../../ui/Linha";
+import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
+import { SeletorData, SeletorHora } from "../../ui/Data";
 function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church: ChurchView; publicos: MuralPublico[]; inicial?: MuralAviso; onClose: () => void; onDone: () => void }) {
   const { fuso, emSilencio, foraDoSilencio, quandoLembra } = useRelogioDaIgreja();
   const emHorarioLocal = (iso: string) => { const p = partesNoFuso(new Date(iso), fuso); return `${p.data}T${p.hora}`; };
@@ -214,24 +217,19 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
         </div>
       ) : <>
       <FormSection title="Publicação">
-        <div className="field">
-          <label className="field-label req" htmlFor={`${fid}-tit`}>Título</label>
-          <input id={`${fid}-tit`} className="input" aria-required="true" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ex.: Ensaio geral no sábado" />
-        </div>
-        <div className="field">
-          <label className="field-label" htmlFor={`${fid}-msg`}>Mensagem</label>
-          <textarea id={`${fid}-msg`} className="textarea" value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Ex.: Chegada às 15h45, no templo principal." />
-        </div>
+        <Campo rotulo="Título" obrigatorio id={`${fid}-tit`}>
+          <Entrada aria-required="true" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ex.: Ensaio geral no sábado" />
+        </Campo>
+        <Campo rotulo="Mensagem" id={`${fid}-msg`}>
+          <TextoLongo value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Ex.: Chegada às 15h45, no templo principal." />
+        </Campo>
       </FormSection>
 
       <FormSection title="Quem recebe">
-        <div className="field">
-          <label className="field-label" htmlFor={`${fid}-pub`}>Para quem</label>
-          <select id={`${fid}-pub`} className="select" value={publico} onChange={(e) => setPublico(e.target.value)}>
-            <option value="" disabled>Escolha quem recebe</option>
-            {publicos.map((p) => <option key={p.id} value={p.id}>{p.label} · {plural(p.memberIds.length, "pessoa")}</option>)}
-          </select>
-        </div>
+        <Campo rotulo="Para quem" id={`${fid}-pub`}>
+          <Selecao valor={publico} aoMudar={setPublico} vazio="Escolha quem recebe"
+            opcoes={publicos.map((p) => ({ v: p.id, l: `${p.label} · ${plural(p.memberIds.length, "pessoa")}` }))} />
+        </Campo>
       </FormSection>
 
       <details className="fs-sec mural-opcoes" open={tipo !== "aviso" || urgente}>
@@ -290,10 +288,8 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
         {quando === "agendar" && (
           <>
             <div className="mural-agenda-campos">
-              <div className="field"><label className="field-label req" htmlFor={`${fid}-agd`}>Dia</label><input id={`${fid}-agd`} className="input" type="date" aria-required="true" value={agDia} onChange={(e) => setAgDia(e.target.value)} /></div>
-              <div className="field"><label className="field-label" htmlFor={`${fid}-agh`}>Hora</label>
-                <input id={`${fid}-agh`} className="input" type="time" value={agHora} onChange={(e) => setAgHora(e.target.value)} />
-              </div>
+              <Campo rotulo="Dia" obrigatorio id={`${fid}-agd`}><SeletorData valor={agDia} aoMudar={setAgDia} /></Campo>
+              <Campo rotulo="Hora" id={`${fid}-agh`}><SeletorHora valor={agHora} aoMudar={setAgHora} /></Campo>
             </div>
             {agendaEm && !agendaPassou && (
               <div className="field-hint">{`Vai ao ar ${quandoLembra(agendaEm)}, com alguns minutos de diferença. Até lá, só a liderança vê.${canais.includes("app") && emSilencio(agendaEm) ? " A notificação espera até as 7h, quando acaba o horário de silêncio." : ""}`}</div>
@@ -314,13 +310,14 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
         </div>
         {destacar && (
           <>
-            <div className="field"><label className="field-label req" htmlFor={`${fid}-ate`}>Até o dia</label><input id={`${fid}-ate`} className="input" type="date" aria-required="true" value={destaqueAte} onChange={(e) => setDestaqueAte(e.target.value)} /></div>
+            <Campo rotulo="Até o dia" obrigatorio id={`${fid}-ate`}><SeletorData valor={destaqueAte} aoMudar={setDestaqueAte} /></Campo>
             <ImageUpload label="Imagem (opcional)" hint="Formato 16:9. Aparece no alto do cartão." url={imagem} aspectRatio={16 / 9}
               onUpload={async (file) => { setImagem(await uploadServiceImage(createServiceBrowserClient(), file, `${church.organizationId}/mural/${Date.now()}.${imageExtension(file)}`)); }}
               onRemove={() => { setImagem(null); setImagemAlt(""); }} />
-            {imagem && <div className="field"><label className="field-label req" htmlFor={`${fid}-alt`}>O que a imagem mostra</label><input id={`${fid}-alt`} className="input" aria-required="true" value={imagemAlt} onChange={(e) => setImagemAlt(e.target.value)} placeholder="Para quem usa leitor de tela. Ex.: Jovens no retiro de 2025" /></div>}
-            <div className="field"><label className="field-label" htmlFor={`${fid}-vid`}>Vídeo (link do YouTube ou do Instagram)</label><input id={`${fid}-vid`} className="input" value={video} onChange={(e) => setVideo(e.target.value)} placeholder="https://youtube.com/watch?v=..." />
-              {videoInvalido && <p className="field-error">Cole um link do YouTube ou do Instagram.</p>}</div>
+            {imagem && <Campo rotulo="O que a imagem mostra" obrigatorio id={`${fid}-alt`}><Entrada aria-required="true" value={imagemAlt} onChange={(e) => setImagemAlt(e.target.value)} placeholder="Para quem usa leitor de tela. Ex.: Jovens no retiro de 2025" /></Campo>}
+            <Campo rotulo="Vídeo (link do YouTube ou do Instagram)" id={`${fid}-vid`} erro={videoInvalido ? "Cole um link do YouTube ou do Instagram." : undefined}>
+              <Entrada value={video} onChange={(e) => setVideo(e.target.value)} placeholder="https://youtube.com/watch?v=..." />
+            </Campo>
             <div className="field-hint">{quando === "agendar" ? "Um destaque por vez: quando esta entrar no ar, substitui o que estiver no Início." : "Um destaque por vez: este substitui o que estiver no Início agora."}</div>
           </>
         )}

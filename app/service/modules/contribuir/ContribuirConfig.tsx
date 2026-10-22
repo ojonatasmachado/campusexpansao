@@ -19,6 +19,8 @@ import {
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Linha } from "../../ui/Linha";
+import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
 type IgrejaCfg = { id: string; cidade?: string | null; settings?: Record<string, unknown> };
 
 export function ContribuirConfig({ church }: { church?: IgrejaCfg }) {
@@ -165,39 +167,21 @@ function ContribuirForm({ inicial, onSave, onClose }: { inicial: ContribuirCfg; 
     >
       <FormSection title="Chave">
         <div className="fs-grid">
-          <div className="field">
-            <label className="field-label req" htmlFor={`${fid}-tipo`}>Tipo da chave</label>
-            <select id={`${fid}-tipo`} className="select" value={tipo} onChange={(e) => setTipo(e.target.value as TipoChave)}>
-              {TIPOS_CHAVE.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
-            </select>
-          </div>
-          <div className="field">
-            <label className="field-label req" htmlFor={`${fid}-chave`}>Chave Pix</label>
-            <input
-              id={`${fid}-chave`} className="input" aria-required="true" aria-invalid={!!erroChave}
+          <Campo rotulo="Tipo da chave" obrigatorio><Selecao id={`${fid}-tipo`} valor={tipo} aoMudar={(v) => setTipo(v as TipoChave)} opcoes={TIPOS_CHAVE.map((t) => ({ v: t.v, l: t.l }))} /></Campo>
+          <Campo rotulo="Chave Pix" obrigatorio ajuda={erroChave ? <>Falta {erroChave}.</> : undefined}>
+            <Entrada
+              id={`${fid}-chave`} aria-required="true" aria-invalid={!!erroChave}
               inputMode={tipoInfo.modo} type={tipo === "email" ? "email" : "text"} autoCapitalize="none" autoCorrect="off" spellCheck={false}
               placeholder={tipoInfo.ph} value={chave} onChange={(e) => setChave(e.target.value)}
             />
-            {erroChave ? <div className="field-hint">Falta {erroChave}.</div> : null}
-          </div>
-          <div className="field">
-            <label className="field-label req" htmlFor={`${fid}-fav`}>Favorecido</label>
-            <input id={`${fid}-fav`} className="input" aria-required="true" placeholder="ex: Igreja Batista Central" value={favorecido} onChange={(e) => setFavorecido(e.target.value)} />
-            <div className="field-hint">{favorecido.trim().length > 25 ? "Aparece inteiro no app. No código Pix entram as primeiras 25 letras; o banco confirma pelo titular da chave." : "O nome que o membro vê no app, junto da chave."}</div>
-          </div>
-          <div className="field">
-            <label className="field-label" htmlFor={`${fid}-cid`}>Cidade</label>
-            <input id={`${fid}-cid`} className="input" placeholder="ex: São Paulo" value={cidade} onChange={(e) => setCidade(e.target.value)} />
-          </div>
+          </Campo>
+          <Campo rotulo="Favorecido" obrigatorio ajuda={<>{favorecido.trim().length > 25 ? "Aparece inteiro no app. No código Pix entram as primeiras 25 letras; o banco confirma pelo titular da chave." : "O nome que o membro vê no app, junto da chave."}</>}><Entrada id={`${fid}-fav`} aria-required="true" placeholder="ex: Igreja Batista Central" value={favorecido} onChange={(e) => setFavorecido(e.target.value)} /></Campo>
+          <Campo rotulo="Cidade"><Entrada id={`${fid}-cid`} placeholder="ex: São Paulo" value={cidade} onChange={(e) => setCidade(e.target.value)} /></Campo>
         </div>
       </FormSection>
 
       <FormSection title="No app do membro">
-        <div className="field">
-          <label className="field-label" htmlFor={`${fid}-txt`}>Texto curto (opcional)</label>
-          <textarea id={`${fid}-txt`} className="input" rows={3} maxLength={MAX_TEXTO} placeholder="ex: Obrigado por sustentar a missão da nossa igreja." value={texto} onChange={(e) => setTexto(e.target.value)} />
-          <div className="field-hint">{texto.length} de {MAX_TEXTO} caracteres</div>
-        </div>
+        <Campo rotulo="Texto curto (opcional)" ajuda={<>{texto.length} de {MAX_TEXTO} caracteres</>}><TextoLongo id={`${fid}-txt`} rows={3} maxLength={MAX_TEXTO} placeholder="ex: Obrigado por sustentar a missão da nossa igreja." value={texto} onChange={(e) => setTexto(e.target.value)} /></Campo>
         <div className="field">
           <div className="field-label" id={`${fid}-fin`}>Finalidades (opcional)</div>
           <div className="cand-pick" role="group" aria-labelledby={`${fid}-fin`}>

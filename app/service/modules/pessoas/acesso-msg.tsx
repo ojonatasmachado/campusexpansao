@@ -8,6 +8,7 @@ import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import type { ChurchView } from "../../ServiceExactApp";
 
 import { Botao } from "../../ui/Botao";
+import { Campo, TextoLongo } from "../../ui/Campo";
 /* mensagem que abre pronta no WhatsApp do líder quando ele manda o acesso ao
    app pra um membro novo, guardada em service.churches.settings.acessoMsgCfg
    (mesmo jsonb de sempre). Placeholders trocados na hora do envio, ver
@@ -40,13 +41,9 @@ export function AcessoMsgModal({ church, cfg, onClose, onRefresh }: { church: Ch
           <div className="modal-sub">É o texto que abre pronto no WhatsApp quando você manda o acesso ao app pra um membro novo. Edite à vontade: o padrão é de felicitação, com o passo a passo de como entrar.</div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
-          <div className="field">
-            <label className="field-label">Mensagem</label>
-            <textarea className="textarea" rows={8} value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
-            <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 6 }}>
-              Use {"{nome}"}, {"{igreja}"} e {"{link}"}: preenchemos automaticamente na hora de enviar. O link é um convite só da pessoa, onde ela informa o e-mail, cria a senha e coloca o CEP. Nenhuma senha vai na mensagem.
-            </div>
-          </div>
+          <Campo rotulo="Mensagem" ajuda={<>Use {"{nome}"}, {"{igreja}"} e {"{link}"}: preenchemos automaticamente na hora de enviar. O link é um convite só da pessoa, onde ela informa o e-mail, cria a senha e coloca o CEP. Nenhuma senha vai na mensagem.</>}>
+            <TextoLongo rows={8} value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
+          </Campo>
           <Botao variante="discreto" compacto onClick={restaurar}>Restaurar mensagem padrão</Botao>
         </div>
         <div className="modal-foot">

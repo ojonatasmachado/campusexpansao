@@ -24,6 +24,9 @@ import { Etiqueta } from "../../ui/Selo";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Cartao } from "../../ui/Cartao";
 import { Segmentado } from "../../ui/Segmentado";
+import { Campo, Entrada, Marcar, TextoLongo } from "../../ui/Campo";
+import { SeletorData } from "../../ui/Data";
+import { Vazio } from "../../ui/Estados";
 export function TurmasKids({ kidsClasses, rooms, setModal }: { kidsClasses: KidsClassView[]; rooms: RoomView[]; setModal: (modal: ModalState) => void }) {
   const { comTermos: ct } = useTermos();
   const roomById = new Map(rooms.map((room) => [room.id, room]));
@@ -60,7 +63,7 @@ export function TurmasKids({ kidsClasses, rooms, setModal }: { kidsClasses: Kids
             {kc.room_id ? <div className="sala-rec"><Etiqueta>{roomById.get(kc.room_id)?.name ?? "Sala"}</Etiqueta></div> : null}
           </Acao>
         ))}
-        {kidsClasses.length === 0 ? <div className="empty">Nenhuma turma cadastrada ainda.</div> : null}
+        {kidsClasses.length === 0 ? <Vazio titulo="Nenhuma turma cadastrada ainda." /> : null}
       </div>
     </>
   );
@@ -137,7 +140,7 @@ export function Criancas({
             </Acao>
           );
         })}
-        {visible.length === 0 ? <div className="empty">Nenhuma criança encontrada.</div> : null}
+        {visible.length === 0 ? <Vazio titulo="Nenhuma criança encontrada." /> : null}
       </div>
 
       <Cartao style={{ marginTop: 28 }}>
@@ -327,37 +330,36 @@ export function ChildFormModal({
           <div className="field">
             <PhotoPicker label="Foto da criança (obrigatória)" photoUrl={photoUrl} path={`${church.organizationId}/kids/children/${childId}`} onUploaded={setPhotoUrl} />
           </div>
-          <div className="field"><label className="field-label req" htmlFor={`${fid}-nome`}>Nome da criança</label><input id={`${fid}-nome`} className="input" placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} /></div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-nasc`}>Nascimento</label><input id={`${fid}-nasc`} className="input" type="date" value={birth} onChange={(e) => setBirth(e.target.value)} /></div>
+          <Campo rotulo="Nome da criança" obrigatorio><Entrada id={`${fid}-nome`} placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} /></Campo>
+          <Campo rotulo="Nascimento" className="half"><SeletorData id={`${fid}-nasc`} valor={birth} aoMudar={setBirth} limpavel /></Campo>
           <div className="field half">
             <div className="field-label" id={`${fid}-turma`}>Turma</div>
             <div className={`fs-calc${classLabel ? " ok" : ""}`} role="status" aria-labelledby={`${fid}-turma`}>{classLabel ?? (birth ? "Nenhuma turma cobre essa idade ainda" : "Calculada pelo nascimento")}</div>
           </div>
-          <div className="field">
-            <label className="field-label">Gênero</label>
-            <div className="fs-chips" role="group" aria-label="Gênero">
+          <Campo rotulo="Gênero" grupo>
+            <div className="fs-chips" role="group">
               {([["menina", "Menina"], ["menino", "Menino"]] as const).map(([v, l]) => (
                 <Opcao key={v} marcada={gender === v} estilo="seg-chip" aria-pressed={gender === v} onClick={() => setGender(gender === v ? "" : v)}>{l}</Opcao>
               ))}
             </div>
-          </div>
+          </Campo>
         </div>
       </FormSection>
 
       <FormSection title="Saúde">
         <div className="fs-grid">
-          <div className="field"><label className="field-label" htmlFor={`${fid}-alerg`}>Alergias</label><input id={`${fid}-alerg`} className="input" placeholder="ex: alergia a amendoim" value={allergies} onChange={(e) => setAllergies(e.target.value)} /></div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-restr`}>Restrições alimentares</label><input id={`${fid}-restr`} className="input" placeholder="ex: vegetariano, sem lactose" value={dietaryRestrictions} onChange={(e) => setDietaryRestrictions(e.target.value)} /></div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-med`}>Medicamento contínuo</label><input id={`${fid}-med`} className="input" placeholder="ex: nenhum" value={medication} onChange={(e) => setMedication(e.target.value)} /></div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-plano`}>Plano de saúde</label><input id={`${fid}-plano`} className="input" placeholder="ex: Amil, SUS" value={healthInsurance} onChange={(e) => setHealthInsurance(e.target.value)} /></div>
-          <div className="field"><label className="field-label" htmlFor={`${fid}-notas`}>Notas</label><textarea id={`${fid}-notas`} className="textarea" placeholder="Observações gerais" value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+          <Campo rotulo="Alergias"><Entrada id={`${fid}-alerg`} placeholder="ex: alergia a amendoim" value={allergies} onChange={(e) => setAllergies(e.target.value)} /></Campo>
+          <Campo rotulo="Restrições alimentares" className="half"><Entrada id={`${fid}-restr`} placeholder="ex: vegetariano, sem lactose" value={dietaryRestrictions} onChange={(e) => setDietaryRestrictions(e.target.value)} /></Campo>
+          <Campo rotulo="Medicamento contínuo" className="half"><Entrada id={`${fid}-med`} placeholder="ex: nenhum" value={medication} onChange={(e) => setMedication(e.target.value)} /></Campo>
+          <Campo rotulo="Plano de saúde" className="half"><Entrada id={`${fid}-plano`} placeholder="ex: Amil, SUS" value={healthInsurance} onChange={(e) => setHealthInsurance(e.target.value)} /></Campo>
+          <Campo rotulo="Notas"><TextoLongo id={`${fid}-notas`} placeholder="Observações gerais" value={notes} onChange={(e) => setNotes(e.target.value)} /></Campo>
         </div>
       </FormSection>
 
       <FormSection title="Contato de emergência">
         <div className="fs-grid">
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-emnome`}>Nome</label><input id={`${fid}-emnome`} className="input" placeholder="Quem chamar" value={emergencyName} onChange={(e) => setEmergencyName(e.target.value)} /></div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-emtel`}>Telefone</label><input id={`${fid}-emtel`} className="input" type="tel" placeholder="(11) 9..." value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} /></div>
+          <Campo rotulo="Nome" className="half"><Entrada id={`${fid}-emnome`} placeholder="Quem chamar" value={emergencyName} onChange={(e) => setEmergencyName(e.target.value)} /></Campo>
+          <Campo rotulo="Telefone" className="half"><Entrada id={`${fid}-emtel`} type="tel" placeholder="(11) 9..." value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} /></Campo>
         </div>
       </FormSection>
 
@@ -380,7 +382,7 @@ export function ChildFormModal({
                 )}
                 <input className="input" list="service-people-names" placeholder="Nome do responsável" aria-label="Nome do responsável" value={g.name} onChange={(e) => updateGuardian(index, { name: e.target.value, photoUrl: findPersonByName(people, e.target.value)?.photoUrl ?? null })} />
                 <input className="input" placeholder="Parentesco (mãe, avó...)" aria-label="Parentesco" value={g.relationship} onChange={(e) => updateGuardian(index, { relationship: e.target.value })} />
-                <label className="fs-check"><input type="checkbox" checked={g.canPickup} onChange={(e) => updateGuardian(index, { canPickup: e.target.checked })} /> Pode retirar</label>
+                <Marcar className="fs-check" checked={g.canPickup} onChange={(e) => updateGuardian(index, { canPickup: e.target.checked })}>Pode retirar</Marcar>
               </div>
             );
           })}
@@ -393,10 +395,7 @@ export function ChildFormModal({
       </FormSection>
 
       <FormSection title="Uso de imagem">
-        <label className="fs-check">
-          <input type="checkbox" checked={imageAuthorized} onChange={(e) => setImageAuthorized(e.target.checked)} />
-          <span>{imageAuthorizationCopy(name)}</span>
-        </label>
+        <Marcar className="fs-check" checked={imageAuthorized} onChange={(e) => setImageAuthorized(e.target.checked)}>{imageAuthorizationCopy(name)}</Marcar>
       </FormSection>
     </FormScreen>
   );

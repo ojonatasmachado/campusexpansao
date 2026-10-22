@@ -21,6 +21,8 @@ import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Etiqueta, Selo, tomDaClasse } from "../../ui/Selo";
 import { linhaClasse } from "../../ui/Linha";
+import { Campo, Entrada } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
 export function ReuniaoForm({
   ministries,
   people,
@@ -129,7 +131,7 @@ export function ReuniaoForm({
       onClose={onClose}
     >
       <FormSection title="Reunião">
-        <div className="field"><label className="field-label req" htmlFor={`${fid}-tit`}>Título</label><input id={`${fid}-tit`} className="input" aria-required="true" placeholder="ex: Reunião de liderança" value={titulo} onChange={(e) => setTitulo(e.target.value)} /></div>
+        <Campo rotulo="Título" obrigatorio><Entrada id={`${fid}-tit`} aria-required="true" placeholder="ex: Reunião de liderança" value={titulo} onChange={(e) => setTitulo(e.target.value)} /></Campo>
       </FormSection>
 
       <FormSection title="Quando e onde">
@@ -137,16 +139,10 @@ export function ReuniaoForm({
           <div className="field"><div className="field-label">Data</div><DatePicker value={data} onChange={setData} /></div>
           <div className="field half"><div className="field-label">Início</div><TimePicker value={hora} onChange={setHora} /></div>
           <div className="field half"><div className="field-label">Fim</div><TimePicker value={fim} onChange={setFim} /></div>
-          <div className="field">
-            <label className="field-label req" htmlFor={`${fid}-sala`}>Sala</label>
-            <select id={`${fid}-sala`} className="select" aria-required="true" value={salaId} onChange={(e) => setSalaId(e.target.value)}>
-              <option value="">Selecione uma sala</option>
-              {meetingRooms.map((room) => <option key={room.id} value={room.id}>{room.name}{room.capacity ? ` · ${room.capacity} lug.` : ""}</option>)}
-              <option value={OUTRO_LOCAL}>Outro espaço (fora da igreja)</option>
-            </select>
-            {meetingRooms.length === 0 ? <div className="field-hint">Nenhuma sala liberada pra reunião ainda. Cadastre em Espaços e salas.</div> : null}
-          </div>
-          {isOutro ? <div className="field"><label className="field-label req" htmlFor={`${fid}-end`}>Endereço do espaço</label><input id={`${fid}-end`} className="input" value={endereco} onChange={(e) => setEndereco(e.target.value)} placeholder="Rua, número, bairro..." /></div> : null}
+          <Campo rotulo="Sala" obrigatorio ajuda={meetingRooms.length === 0 ? "Nenhuma sala liberada pra reunião ainda. Cadastre em Espaços e salas." : undefined}>
+            <Selecao id={`${fid}-sala`} valor={salaId} aoMudar={setSalaId} vazio="Selecione uma sala" opcoes={[...meetingRooms.map((room) => ({ v: room.id, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` })), { v: OUTRO_LOCAL, l: "Outro espaço (fora da igreja)" }]} />
+          </Campo>
+          {isOutro ? <Campo rotulo="Endereço do espaço" obrigatorio><Entrada id={`${fid}-end`} value={endereco} onChange={(e) => setEndereco(e.target.value)} placeholder="Rua, número, bairro..." /></Campo> : null}
         </div>
         {conflito ? <div className="reserva-warn" role="status"><Icon name="alerta" size={14} /> A sala já tem &quot;{conflito.title}&quot; de {conflito.start_time} a {conflito.end_time} nesse dia.</div> : null}
       </FormSection>
@@ -427,10 +423,7 @@ export function ReuniaoDrawer({
           )}
           <div className="acao-add">
             <input className="input" placeholder="O que ficou combinado (ex: Revisar escala de julho)" value={novaDescricao} onChange={(e) => setNovaDescricao(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addAcao()} />
-            <select className="select acao-add-quem" value={novoResponsavel} onChange={(e) => setNovoResponsavel(e.target.value)}>
-              <option value="">Responsável…</option>
-              {meeting.attendees.map((pid) => { const p = personById.get(pid); return p ? <option key={pid} value={pid}>{p.name}</option> : null; })}
-            </select>
+            <Selecao className="acao-add-quem" rotulo="Responsável" valor={novoResponsavel} aoMudar={setNovoResponsavel} vazio="Responsável…" opcoes={meeting.attendees.flatMap((pid) => { const p = personById.get(pid); return p ? [{ v: pid, l: p.name }] : []; })} />
             <Botao compacto onClick={addAcao}>+ Anotar</Botao>
           </div>
           {pendentes.length > 0 && (

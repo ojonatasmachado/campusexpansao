@@ -21,6 +21,7 @@ import { Opcao } from "../../ui/Opcao";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Selo, tomDaClasse } from "../../ui/Selo";
 import { Segmentado } from "../../ui/Segmentado";
+import { Vazio } from "../../ui/Estados";
 export function Decisoes({
   decisions,
   members,
@@ -152,7 +153,7 @@ export function Batismos({
           })}
         </div>
       ) : (
-        <div className="empty">Nenhuma turma em andamento.</div>
+        <Vazio titulo="Nenhuma turma em andamento." />
       )}
       {concluded.length > 0 && (
         <>

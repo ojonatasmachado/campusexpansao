@@ -13,6 +13,8 @@ import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Segmentado } from "../../ui/Segmentado";
+import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
+import { Vazio } from "../../ui/Estados";
 export function NovaConversaModal({
   members,
   church,
@@ -86,21 +88,18 @@ export function NovaConversaModal({
           <div className="modal-sub">Fale com alguém em particular ou crie um grupo com parte da equipe.</div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
-          <div className="field">
-            <label className="field-label">Tipo</label>
+          <Campo rotulo="Tipo" grupo>
             <Segmentado>
               <Opcao marcada={tipo === "dm"} onClick={() => setTipo("dm")}>Individual</Opcao>
               <Opcao marcada={tipo === "grupo"} onClick={() => setTipo("grupo")}>Em grupo</Opcao>
             </Segmentado>
-          </div>
+          </Campo>
           {isGrupo && (
-            <div className="field">
-              <label className="field-label">Nome do grupo</label>
-              <input className="input" value={nome} placeholder="ex: Apoio do domingo" onChange={(e) => setNome(e.target.value)} />
-            </div>
+            <Campo rotulo="Nome do grupo">
+              <Entrada value={nome} placeholder="ex: Apoio do domingo" onChange={(e) => setNome(e.target.value)} />
+            </Campo>
           )}
-          <div className="field">
-            <label className="field-label">Quem participa</label>
+          <Campo rotulo="Quem participa" grupo>
             <div className="cand-pick">
               {candidatos.map((m) => {
                 const on = sel.includes(m.id);
@@ -112,11 +111,10 @@ export function NovaConversaModal({
               })}
               {candidatos.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum membro disponível.</span>}
             </div>
-          </div>
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label className="field-label">Primeira mensagem (opcional)</label>
-            <textarea className="textarea" value={primeiraMsg} placeholder="..." onChange={(e) => setPrimeiraMsg(e.target.value)} />
-          </div>
+          </Campo>
+          <Campo rotulo="Primeira mensagem (opcional)" style={{ marginBottom: 0 }}>
+            <TextoLongo value={primeiraMsg} placeholder="..." onChange={(e) => setPrimeiraMsg(e.target.value)} />
+          </Campo>
           {error && <div style={{ marginTop: 10, fontSize: "var(--fs-pn-13)", color: "var(--danger)" }}>{error}</div>}
         </div>
         <div className="modal-foot">
@@ -217,8 +215,8 @@ export function Conversas({
     <div className="content wide">
       <PageHead title="Conversas" eyebrow="Operação" help={`Um chat simples com seu time e sua liderança, dentro do mesmo app. ${perspectiveText}`} action={<Botao variante="principal" onClick={() => setNova(true)}>+ Nova conversa</Botao>} />
       <div className="chat-layout">
-        <div className="chat-list">{visibleChats.map((item) => <Acao className={`chat-row ${chat?.id === item.id ? "on" : ""}`} key={item.id} onClick={() => setSelected(item.id)}><span className="chat-row-ic"><Icon name={item.kind === "time" ? "times" : "membros"} size={16} /></span><span className="chat-row-main"><span className="chat-row-top"><b>{chatName(item)}</b><small>agora</small></span><span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || "Canal de alinhamento"}</span></span><span className="chat-row-count">{chatCount(item.id)}</span></Acao>)}{visibleChats.length === 0 && <div className="empty" style={{ margin: 8 }}>Nenhuma conversa ainda.</div>}</div>
-        {chat ? <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; const isMine = currentMember && message.sender_id === currentMember.id; return <div className={`chat-msg${isMine ? " me" : ""}`} key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: fuso })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <div className="empty">Nenhuma mensagem nesta conversa.</div> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enviar()} disabled={!chat} /><Botao variante="principal" compacto desativado={!chat || sending || !texto.trim()} onClick={enviar}>Enviar</Botao></div></div></div> : <div className="chat-main chat-empty"><EmptyState title="Escolha uma conversa" text="Toque numa conversa da lista para ler e responder, ou comece uma nova." /></div>}
+        <div className="chat-list">{visibleChats.map((item) => <Acao className={`chat-row ${chat?.id === item.id ? "on" : ""}`} key={item.id} onClick={() => setSelected(item.id)}><span className="chat-row-ic"><Icon name={item.kind === "time" ? "times" : "membros"} size={16} /></span><span className="chat-row-main"><span className="chat-row-top"><b>{chatName(item)}</b><small>agora</small></span><span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || "Canal de alinhamento"}</span></span><span className="chat-row-count">{chatCount(item.id)}</span></Acao>)}{visibleChats.length === 0 && <Vazio titulo="Nenhuma conversa ainda." />}</div>
+        {chat ? <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; const isMine = currentMember && message.sender_id === currentMember.id; return <div className={`chat-msg${isMine ? " me" : ""}`} key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: fuso })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <Vazio titulo="Nenhuma mensagem nesta conversa." /> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enviar()} disabled={!chat} /><Botao variante="principal" compacto desativado={!chat || sending || !texto.trim()} onClick={enviar}>Enviar</Botao></div></div></div> : <div className="chat-main chat-empty"><EmptyState title="Escolha uma conversa" text="Toque numa conversa da lista para ler e responder, ou comece uma nova." /></div>}
       </div>
       {nova && (
         <NovaConversaModal

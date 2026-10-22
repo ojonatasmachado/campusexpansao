@@ -22,6 +22,9 @@ import { FASES, MODELOS_TIMES, type ModeloTime, type SetupEstado } from "./setup
 import { Botao, botaoClasse } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Campo, Entrada, Marcar } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
+import { SeletorData, SeletorHora } from "../../ui/Data";
 export type DadosIgreja = { fuso: string; nome: string; cep: string; endereco: string; bairro: string; cidade: string; estado: string };
 
 export function Assistente({
@@ -185,19 +188,17 @@ export function Assistente({
 
         {fase === 1 && (
           <div className="setup-body">
-            <div className="field"><label className="field-label req" htmlFor="setup-nome">Nome da igreja</label><input id="setup-nome" className="input" value={dados.nome} onChange={(e) => setDados((d) => ({ ...d, nome: e.target.value }))} /></div>
+            <Campo rotulo="Nome da igreja" obrigatorio id="setup-nome"><Entrada value={dados.nome} onChange={(e) => setDados((d) => ({ ...d, nome: e.target.value }))} /></Campo>
             <FusoField value={dados.fuso} onChange={(fuso) => setDados((d) => ({ ...d, fuso }))} />
             <details className="service-setup-options"><summary>Endereço da igreja (opcional)</summary>
-            <div className="field">
-              <label className="field-label" htmlFor="setup-cep">CEP</label>
+            <Campo rotulo="CEP" id="setup-cep" ajuda="O CEP preenche o endereço.">
               <CepInput id="setup-cep" value={dados.cep} onChange={(v) => setDados((d) => ({ ...d, cep: v }))}
                 onResult={(r) => { if (r) setDados((d) => ({ ...d, endereco: r.street ?? d.endereco, bairro: r.neighborhood ?? d.bairro, cidade: r.city ?? d.cidade, estado: r.state ?? d.estado })); }} />
-              <div className="field-hint">O CEP preenche o endereço.</div>
-            </div>
-            <div className="field"><label className="field-label" htmlFor="setup-endereco">Endereço</label><input id="setup-endereco" className="input" value={dados.endereco} onChange={(e) => setDados((d) => ({ ...d, endereco: e.target.value }))} /></div>
+            </Campo>
+            <Campo rotulo="Endereço" id="setup-endereco"><Entrada value={dados.endereco} onChange={(e) => setDados((d) => ({ ...d, endereco: e.target.value }))} /></Campo>
             <div className="setup-2col">
-              <div className="field"><label className="field-label" htmlFor="setup-cidade">Cidade</label><input id="setup-cidade" className="input" value={dados.cidade} onChange={(e) => setDados((d) => ({ ...d, cidade: e.target.value }))} /></div>
-              <div className="field"><label className="field-label" htmlFor="setup-estado">Estado</label><input id="setup-estado" className="input" value={dados.estado} maxLength={2} onChange={(e) => setDados((d) => ({ ...d, estado: e.target.value.toUpperCase() }))} /></div>
+              <Campo rotulo="Cidade" id="setup-cidade"><Entrada value={dados.cidade} onChange={(e) => setDados((d) => ({ ...d, cidade: e.target.value }))} /></Campo>
+              <Campo rotulo="Estado" id="setup-estado"><Entrada value={dados.estado} maxLength={2} onChange={(e) => setDados((d) => ({ ...d, estado: e.target.value.toUpperCase() }))} /></Campo>
             </div>
             </details>
             <details className="service-setup-options"><summary>Logo e cor da igreja (opcional)</summary>
@@ -235,16 +236,16 @@ export function Assistente({
             ) : (
               <>
                 {!editando && registrado && !atual && <div className="service-setup-result"><p>O encontro registrado precisa de revisão antes de concluir a ativação.</p><Botao desativado={ocupado} onClick={() => ajustarEncontro(registrado)}>Revisar encontro cadastrado</Botao></div>}
-                {!editando && uteis.length > 0 && <div className="field"><label htmlFor="setup-existente" className="field-label">Continuar com um encontro já preparado</label><select id="setup-existente" className="select" value={selecionado} onChange={(e) => setSelecionado(e.target.value)}><option value="">Preparar um novo encontro</option>{uteis.map((e) => <option key={e.id} value={e.id}>{e.nome} · {formatDateBR(e.data)} · {e.hora}</option>)}</select></div>}
-                <div className="field"><label htmlFor="setup-encontro-nome" className="field-label req">Nome do encontro</label><input id="setup-encontro-nome" className="input" value={rascunho.nome} onChange={(e) => setEncontro({ nome: e.target.value })} /></div>
+                {!editando && uteis.length > 0 && <Campo rotulo="Continuar com um encontro já preparado" id="setup-existente"><Selecao valor={selecionado} aoMudar={setSelecionado} vazio="Preparar um novo encontro" opcoes={uteis.map((e) => ({ v: e.id, l: `${e.nome} · ${formatDateBR(e.data)} · ${e.hora}` }))} /></Campo>}
+                <Campo rotulo="Nome do encontro" obrigatorio id="setup-encontro-nome"><Entrada value={rascunho.nome} onChange={(e) => setEncontro({ nome: e.target.value })} /></Campo>
                 <div className="setup-2col">
-                  <div className="field"><label htmlFor="setup-encontro-data" className="field-label req">Data</label><input id="setup-encontro-data" className="input" type="date" min={todayISO()} value={rascunho.data} onChange={(e) => setEncontro({ data: e.target.value })} /></div>
-                  <div className="field"><label htmlFor="setup-encontro-hora" className="field-label req">Horário de início</label><input id="setup-encontro-hora" className="input" type="time" value={rascunho.hora} onChange={(e) => setEncontro({ hora: e.target.value })} /></div>
+                  <Campo rotulo="Data" obrigatorio id="setup-encontro-data"><SeletorData min={todayISO()} valor={rascunho.data} aoMudar={(v) => setEncontro({ data: v })} /></Campo>
+                  <Campo rotulo="Horário de início" obrigatorio id="setup-encontro-hora"><SeletorHora valor={rascunho.hora} aoMudar={(v) => setEncontro({ hora: v })} /></Campo>
                 </div>
-                <div className="field"><label htmlFor="setup-encontro-local" className="field-label req">Local do encontro</label><input id="setup-encontro-local" className="input" value={rascunho.local} placeholder="Nome do lugar e endereço" onChange={(e) => setEncontro({ local: e.target.value })} /><p className="field-hint">Informe um lugar que as pessoas consigam encontrar.</p></div>
+                <Campo rotulo="Local do encontro" obrigatorio id="setup-encontro-local" ajuda="Informe um lugar que as pessoas consigam encontrar."><Entrada value={rascunho.local} placeholder="Nome do lugar e endereço" onChange={(e) => setEncontro({ local: e.target.value })} /></Campo>
                 {!editando && <details className="service-setup-options"><summary>Repetir este encontro (opcional)</summary>
-                  <label className="service-setup-check"><input type="checkbox" checked={rascunho.repetir} onChange={(e) => setEncontro({ repetir: e.target.checked })} />Repetir semanalmente neste dia e horário</label>
-                  {rascunho.repetir && <div className="field"><label htmlFor="setup-ate" className="field-label">Repetir até</label><input id="setup-ate" className="input" type="date" min={rascunho.data} value={rascunho.ate} onChange={(e) => setEncontro({ ate: e.target.value })} /></div>}
+                  <Marcar className="service-setup-check" checked={rascunho.repetir} onChange={(e) => setEncontro({ repetir: e.target.checked })}>Repetir semanalmente neste dia e horário</Marcar>
+                  {rascunho.repetir && <Campo rotulo="Repetir até" id="setup-ate"><SeletorData min={rascunho.data} valor={rascunho.ate} aoMudar={(v) => setEncontro({ ate: v })} /></Campo>}
                 </details>}
                 {!plano.erro && <section className="service-setup-preview" aria-label="Prévia para o membro"><p className="field-label">Assim aparece na agenda</p><h2>{rascunho.nome}</h2><p>{formatDateBR(rascunho.data)} · {rascunho.hora}</p><p>{rascunho.local}</p><p className="field-hint">{editando ? "Os ajustes atualizam este encontro, sem criar outro." : `${plural(plano.encontros.length, "encontro")} ${plano.encontros.length === 1 ? "será disponibilizado" : "serão disponibilizados"} na agenda. A equipe pode ser organizada depois.`}</p></section>}
                 {plano.erro && <p className="field-hint">{plano.erro}</p>}
@@ -266,8 +267,8 @@ export function Assistente({
           <div className="setup-body">
             <p className="cfg-card-s" style={{ marginTop: 0 }}>Convide uma pessoa para entrar no app. O WhatsApp abre com uma mensagem pronta: você ainda precisa enviá-la. O convite não concede papel de liderança nem vincula a um time.</p>
             <div className="setup-2col">
-              <div className="field"><label className="field-label" htmlFor="setup-convite-nome">Nome e sobrenome</label><input id="setup-convite-nome" className="input" value={convNome} onChange={(e) => setConvNome(e.target.value)} /></div>
-              <div className="field"><label className="field-label" htmlFor="setup-convite-tel">Telefone (WhatsApp)</label><input id="setup-convite-tel" className="input" type="tel" value={convTel} placeholder="(11) 90000-0000" onChange={(e) => setConvTel(e.target.value)} /></div>
+              <Campo rotulo="Nome e sobrenome" id="setup-convite-nome"><Entrada value={convNome} onChange={(e) => setConvNome(e.target.value)} /></Campo>
+              <Campo rotulo="Telefone (WhatsApp)" id="setup-convite-tel"><Entrada type="tel" value={convTel} placeholder="(11) 90000-0000" onChange={(e) => setConvTel(e.target.value)} /></Campo>
             </div>
             <Botao desativado={ocupado} onClick={() => executar(convidar)}><Icon name="whatsapp" size={15} /> Convidar pelo WhatsApp</Botao>
             {convidados.length > 0 && <p className="setup-frase">{`Convites preparados no WhatsApp: ${convidados.join(", ")}.`}</p>}

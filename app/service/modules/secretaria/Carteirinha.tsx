@@ -24,6 +24,7 @@ import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { linhaClasse } from "../../ui/Linha";
 import { Segmentado } from "../../ui/Segmentado";
+import { Campo, Entrada } from "../../ui/Campo";
 export type Marca = { nome: string; logoUrl?: string | null; cor: string; cidade?: string | null };
 
 type Emitida = { id: string; codigo: string; validade: string; emitida_em: string };
@@ -156,10 +157,7 @@ export function Carteirinha({ memberId, church, marca, demo, members, people, ro
     >
       {!m ? (
         <FormSection title="Pessoa">
-          <div className="field">
-            <label className="field-label" htmlFor={`${fid}-busca`}>Nome</label>
-            <input id={`${fid}-busca`} className="input" autoFocus value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Digite pelo menos 2 letras" />
-          </div>
+          <Campo rotulo="Nome"><Entrada id={`${fid}-busca`} autoFocus value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Digite pelo menos 2 letras" /></Campo>
           {candidatos.length ? (
             <div className="sec-busca">
               {candidatos.map((x) => (

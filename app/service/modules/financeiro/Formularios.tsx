@@ -20,6 +20,9 @@ import { brl, centavosTexto, digitadoParaCentavos, FORMAS, type Forma } from "./
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Campo, Entrada, Marcar } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
+import { SeletorData } from "../../ui/Data";
 export type Base = { org: string; churchId: string | null; onClose: () => void; onDone: () => void };
 export type Cadastros = { contas: Conta[]; categorias: Categoria[]; fundos: Fundo[]; pessoas: PessoaFin[]; saldoConta: Record<string, number>; campanhas?: Campanha[] };
 
@@ -212,24 +215,10 @@ export function LancamentoForm({ org, churchId, tipo, edit, cad, onClose, onDone
       <FormSection title={entrada ? "Entrada" : "Despesa"}>
         <div className="fs-grid">
           <CampoValor id={`${fid}-v`} label="Valor" req value={valor} onChange={setValor} />
-          <div className="field half"><label className="field-label req" htmlFor={`${fid}-d`}>Data</label><input id={`${fid}-d`} className="input" type="date" aria-required="true" value={data} onChange={(e) => setData(e.target.value)} /></div>
-          <div className="field">
-            <label className="field-label req" htmlFor={`${fid}-desc`}>Descrição</label>
-            <input id={`${fid}-desc`} className="input" maxLength={140} aria-required="true" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={entrada ? "Ex.: Dízimos do culto de domingo" : "Ex.: Conta de energia de outubro"} />
-          </div>
-          <div className="field half">
-            <label className="field-label req" htmlFor={`${fid}-c`}>Categoria</label>
-            <select id={`${fid}-c`} className="select" value={cat} onChange={(e) => setCat(e.target.value)}>
-              <option value="">Escolha</option>
-              {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
-          <div className="field half">
-            <label className="field-label req" htmlFor={`${fid}-f`}>Fundo</label>
-            <select id={`${fid}-f`} className="select" value={fundo} onChange={(e) => setFundo(e.target.value)}>
-              {fundos.map((f) => <option key={f.id} value={f.id}>{f.name}{f.designated ? " · designado" : ""}</option>)}
-            </select>
-          </div>
+          <Campo rotulo="Data" obrigatorio className="half"><SeletorData id={`${fid}-d`} valor={data} aoMudar={setData} /></Campo>
+          <Campo rotulo="Descrição" obrigatorio><Entrada id={`${fid}-desc`} maxLength={140} aria-required="true" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={entrada ? "Ex.: Dízimos do culto de domingo" : "Ex.: Conta de energia de outubro"} /></Campo>
+          <Campo rotulo="Categoria" obrigatorio className="half"><Selecao id={`${fid}-c`} valor={cat} aoMudar={setCat} vazio="Escolha" opcoes={cats.map((c) => ({ v: c.id, l: c.name }))} /></Campo>
+          <Campo rotulo="Fundo" obrigatorio className="half"><Selecao id={`${fid}-f`} valor={fundo} aoMudar={setFundo} opcoes={fundos.map((f) => ({ v: f.id, l: `${f.name}${f.designated ? " · designado" : ""}` }))} /></Campo>
           <div className="field">
             <div className="field-label" id={`${fid}-fm`}>{entrada ? "Como entrou" : "Como foi pago"}</div>
             <div className="fs-chips" role="group" aria-labelledby={`${fid}-fm`}>
@@ -240,31 +229,19 @@ export function LancamentoForm({ org, churchId, tipo, edit, cad, onClose, onDone
             </div>
           </div>
           {entrada && campanhas.length > 0 && (
-            <div className="field">
-              <label className="field-label" htmlFor={`${fid}-camp`}>Campanha</label>
-              <select id={`${fid}-camp`} className="select" value={campanha} onChange={(e) => {
-                setCampanha(e.target.value);
-                const f = campanhas.find((c) => c.id === e.target.value)?.fund_id;
+            <Campo rotulo="Campanha" ajuda="Conta para a meta da campanha. Escolher a campanha usa o fundo dela."><Selecao id={`${fid}-camp`} valor={campanha} aoMudar={(v) => {
+                setCampanha(v);
+                const f = campanhas.find((c) => c.id === v)?.fund_id;
                 if (f) setFundo(f);
-              }}>
-                <option value="">Nenhuma</option>
-                {campanhas.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              <div className="field-hint">Conta para a meta da campanha. Escolher a campanha usa o fundo dela.</div>
-            </div>
+              }} vazio="Nenhuma" opcoes={campanhas.map((c) => ({ v: c.id, l: c.name }))} /></Campo>
           )}
           {edit?.status === "previsto" && (
             <div className="field">
-              <label className="fin-check"><input type="checkbox" checked={realizado} onChange={(e) => setRealizado(e.target.checked)} /> {entrada ? "Já foi recebido" : "Já foi pago"}</label>
+              <Marcar className="fin-check" checked={realizado} onChange={(e) => setRealizado(e.target.checked)}>{entrada ? "Já foi recebido" : "Já foi pago"}</Marcar>
               <div className="field-hint">{realizado ? "Entra no saldo da conta na data acima." : "Continua como previsto: não mexe no saldo."}</div>
             </div>
           )}
-          <div className="field">
-            <label className="field-label req" htmlFor={`${fid}-ct`}>{entrada ? "Entrou na conta" : "Saiu da conta"}</label>
-            <select id={`${fid}-ct`} className="select" value={conta} onChange={(e) => { setConta(e.target.value); setContaTocada(true); }}>
-              {contas.map((c) => <option key={c.id} value={c.id}>{c.name} · saldo {brl(cad.saldoConta[c.id] ?? 0)}</option>)}
-            </select>
-          </div>
+          <Campo rotulo={entrada ? "Entrou na conta" : "Saiu da conta"} obrigatorio><Selecao id={`${fid}-ct`} valor={conta} aoMudar={(v) => { setConta(v); setContaTocada(true); }} opcoes={contas.map((c) => ({ v: c.id, l: `${c.name} · saldo ${brl(cad.saldoConta[c.id] ?? 0)}` }))} /></Campo>
         </div>
       </FormSection>
       <FormSection title={entrada ? "Contribuinte e comprovante" : "Fornecedor e comprovante"}>
@@ -273,10 +250,7 @@ export function LancamentoForm({ org, churchId, tipo, edit, cad, onClose, onDone
             <CampoPessoa id={`${fid}-p`} label="Contribuinte" pessoas={cad.pessoas} value={pessoa} onChange={setPessoa}
               hint="Opcional. Serve para o dízimo de cada pessoa; só quem cuida do financeiro vê." />
           ) : (
-            <div className="field">
-              <label className="field-label" htmlFor={`${fid}-forn`}>Fornecedor</label>
-              <input id={`${fid}-forn`} className="input" maxLength={120} value={fornecedor} onChange={(e) => setFornecedor(e.target.value)} placeholder="Ex.: Companhia de energia" />
-            </div>
+            <Campo rotulo="Fornecedor"><Entrada id={`${fid}-forn`} maxLength={120} value={fornecedor} onChange={(e) => setFornecedor(e.target.value)} placeholder="Ex.: Companhia de energia" /></Campo>
           )}
           <CampoComprovante arquivo={arquivo} existente={anexo} onArquivo={setArquivo} onTirarExistente={() => setAnexo(null)} />
         </div>
@@ -332,24 +306,14 @@ export function TransferenciaForm({ org, churchId, edit, cad, onClose, onDone }:
       <FormSection title="Transferência">
         <div className="fs-grid">
           <CampoValor id={`${fid}-v`} label="Valor" req value={valor} onChange={setValor} />
-          <div className="field half"><label className="field-label req" htmlFor={`${fid}-d`}>Data</label><input id={`${fid}-d`} className="input" type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
-          <div className="field half">
-            <label className="field-label req" htmlFor={`${fid}-de`}>Sai de</label>
-            <select id={`${fid}-de`} className="select" value={de} onChange={(e) => setDe(e.target.value)}>{contas.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
-            {de && <div className="field-hint">Saldo hoje: {saldo(de)}</div>}
-          </div>
-          <div className="field half">
-            <label className="field-label req" htmlFor={`${fid}-para`}>Entra em</label>
-            <select id={`${fid}-para`} className="select" value={para} onChange={(e) => setPara(e.target.value)}>
-              <option value="">Escolha</option>
-              {contas.filter((c) => c.id !== de).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-            {para && para !== de && <div className="field-hint">Saldo hoje: {saldo(para)}</div>}
-          </div>
-          <div className="field">
-            <label className="field-label" htmlFor={`${fid}-desc`}>Descrição</label>
-            <input id={`${fid}-desc`} className="input" maxLength={140} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Ex.: Depósito da oferta de domingo" />
-          </div>
+          <Campo rotulo="Data" obrigatorio className="half"><SeletorData id={`${fid}-d`} valor={data} aoMudar={setData} /></Campo>
+          <Campo rotulo="Sai de" obrigatorio ajuda={de ? `Saldo hoje: ${saldo(de)}` : undefined} className="half">
+            <Selecao id={`${fid}-de`} valor={de} aoMudar={setDe} opcoes={contas.map((c) => ({ v: c.id, l: c.name }))} />
+          </Campo>
+          <Campo rotulo="Entra em" obrigatorio ajuda={para && para !== de ? `Saldo hoje: ${saldo(para)}` : undefined} className="half">
+            <Selecao id={`${fid}-para`} valor={para} aoMudar={setPara} vazio="Escolha" opcoes={contas.filter((c) => c.id !== de).map((c) => ({ v: c.id, l: c.name }))} />
+          </Campo>
+          <Campo rotulo="Descrição"><Entrada id={`${fid}-desc`} maxLength={140} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Ex.: Depósito da oferta de domingo" /></Campo>
         </div>
         {contas.length < 2 && <p className="fs-note">Para transferir, cadastre mais uma conta em Contas e categorias.</p>}
       </FormSection>
@@ -422,37 +386,19 @@ export function OfertaForm({ org, churchId, cad, onClose, onDone }: Base & { cad
       saveLabel="Lançar oferta" saving={salvando} missing={falta} dirty={retrato !== inicial} error={erro} onSave={salvar} onClose={onClose}>
       <FormSection title="Culto">
         <div className="fs-grid">
-          <div className="field half"><label className="field-label req" htmlFor={`${fid}-d`}>Data</label><input id={`${fid}-d`} className="input" type="date" value={data} onChange={(e) => { setData(e.target.value); setCulto(""); }} /></div>
-          <div className="field half">
-            <label className="field-label" htmlFor={`${fid}-cu`}>Culto</label>
-            <select id={`${fid}-cu`} className="select" value={culto} onChange={(e) => setCulto(e.target.value)}>
-              <option value="">Sem culto específico</option>
-              {cultosDoDia.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
-            </select>
-          </div>
-          <div className="field half">
-            <label className="field-label req" htmlFor={`${fid}-c`}>Categoria</label>
-            <select id={`${fid}-c`} className="select" value={cat} onChange={(e) => setCat(e.target.value)}>{cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
-          </div>
-          <div className="field half">
-            <label className="field-label req" htmlFor={`${fid}-f`}>Fundo</label>
-            <select id={`${fid}-f`} className="select" value={fundo} onChange={(e) => setFundo(e.target.value)}>{fundos.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}</select>
-          </div>
+          <Campo rotulo="Data" obrigatorio className="half"><SeletorData id={`${fid}-d`} valor={data} aoMudar={(v) => { setData(v); setCulto(""); }} /></Campo>
+          <Campo rotulo="Culto" className="half"><Selecao id={`${fid}-cu`} valor={culto} aoMudar={setCulto} vazio="Sem culto específico" opcoes={cultosDoDia.map((e) => ({ v: e.id, l: e.name }))} /></Campo>
+          <Campo rotulo="Categoria" obrigatorio className="half"><Selecao id={`${fid}-c`} valor={cat} aoMudar={setCat} opcoes={cats.map((c) => ({ v: c.id, l: c.name }))} /></Campo>
+          <Campo rotulo="Fundo" obrigatorio className="half"><Selecao id={`${fid}-f`} valor={fundo} aoMudar={setFundo} opcoes={fundos.map((f) => ({ v: f.id, l: f.name }))} /></Campo>
         </div>
       </FormSection>
       <FormSection title="Quanto entrou">
         <div className="fs-grid">
           <CampoValor id={`${fid}-di`} label="Dinheiro" value={dinheiro} onChange={setDinheiro} />
-          <div className="field half">
-            <label className="field-label" htmlFor={`${fid}-cd`}>Dinheiro vai para</label>
-            <select id={`${fid}-cd`} className="select" value={contaDinheiro} onChange={(e) => setContaDinheiro(e.target.value)}>{contas.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
-          </div>
+          <Campo rotulo="Dinheiro vai para" className="half"><Selecao id={`${fid}-cd`} valor={contaDinheiro} aoMudar={setContaDinheiro} opcoes={contas.map((c) => ({ v: c.id, l: c.name }))} /></Campo>
           <CampoValor id={`${fid}-px`} label="Pix" value={pix} onChange={setPix} />
           <CampoValor id={`${fid}-ca`} label="Cartão" value={cartao} onChange={setCartao} />
-          <div className="field">
-            <label className="field-label" htmlFor={`${fid}-cg`}>Pix e cartão vão para</label>
-            <select id={`${fid}-cg`} className="select" value={contaDigital} onChange={(e) => setContaDigital(e.target.value)}>{contas.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
-          </div>
+          <Campo rotulo="Pix e cartão vão para"><Selecao id={`${fid}-cg`} valor={contaDigital} aoMudar={setContaDigital} opcoes={contas.map((c) => ({ v: c.id, l: c.name }))} /></Campo>
           <div className="field">
             <div className="field-label" id={`${fid}-tot`}>Total da oferta</div>
             <div className={`fs-calc fin-total${total ? " ok" : ""}`} role="status" aria-labelledby={`${fid}-tot`}>{brl(total)}</div>
@@ -463,10 +409,7 @@ export function OfertaForm({ org, churchId, cad, onClose, onDone }: Base & { cad
         <div className="fs-grid">
           <CampoPessoa id={`${fid}-co`} label="Contou" req half pessoas={cad.pessoas} value={contou} onChange={setContou} excluir={conferiu} />
           <CampoPessoa id={`${fid}-cf`} label="Conferiu" req half pessoas={cad.pessoas} value={conferiu} onChange={setConferiu} excluir={contou} />
-          <div className="field">
-            <label className="field-label" htmlFor={`${fid}-o`}>Observação</label>
-            <input id={`${fid}-o`} className="input" maxLength={200} value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Ex.: envelope de missões separado" />
-          </div>
+          <Campo rotulo="Observação"><Entrada id={`${fid}-o`} maxLength={200} value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Ex.: envelope de missões separado" /></Campo>
         </div>
         <p className="fs-note">Os nomes ficam guardados na contagem, para conferência depois.</p>
       </FormSection>
@@ -517,23 +460,23 @@ export function ContaForm({ org, churchId, edit, onClose, onDone }: Base & { edi
               ))}
             </div>
           </div>
-          <div className="field half"><label className="field-label req" htmlFor={`${fid}-n`}>Nome</label><input id={`${fid}-n`} className="input" maxLength={60} value={nome} onChange={(e) => setNome(e.target.value)} placeholder={tipo === "banco" ? "Ex.: Conta corrente" : "Ex.: Caixa da secretaria"} /></div>
-          {tipo === "banco" && <div className="field half"><label className="field-label" htmlFor={`${fid}-b`}>Banco</label><input id={`${fid}-b`} className="input" maxLength={60} value={banco} onChange={(e) => setBanco(e.target.value)} placeholder="Ex.: Banco do Brasil" /></div>}
+          <Campo rotulo="Nome" obrigatorio className="half"><Entrada id={`${fid}-n`} maxLength={60} value={nome} onChange={(e) => setNome(e.target.value)} placeholder={tipo === "banco" ? "Ex.: Conta corrente" : "Ex.: Caixa da secretaria"} /></Campo>
+          {tipo === "banco" && <Campo rotulo="Banco" className="half"><Entrada id={`${fid}-b`} maxLength={60} value={banco} onChange={(e) => setBanco(e.target.value)} placeholder="Ex.: Banco do Brasil" /></Campo>}
         </div>
       </FormSection>
       <FormSection title="Saldo de abertura">
         <div className="fs-grid">
           <CampoValor id={`${fid}-ab`} label="Saldo no dia de início" value={abertura} onChange={setAbertura} />
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-da`}>Dia de início</label><input id={`${fid}-da`} className="input" type="date" value={dataAb} onChange={(e) => setDataAb(e.target.value)} /></div>
+          <Campo rotulo="Dia de início" className="half"><SeletorData id={`${fid}-da`} valor={dataAb} aoMudar={setDataAb} /></Campo>
           <div className="field">
-            <label className="fs-check"><input type="checkbox" checked={negativo} onChange={(e) => setNegativo(e.target.checked)} /> A conta começou no negativo</label>
+            <Marcar className="fs-check" checked={negativo} onChange={(e) => setNegativo(e.target.checked)}>A conta começou no negativo</Marcar>
             <div className="field-hint">O que já havia na conta antes de começar a lançar no Service.</div>
           </div>
         </div>
       </FormSection>
       {edit && (
         <FormSection title="Uso">
-          <label className="fs-check"><input type="checkbox" checked={!ativa} onChange={(e) => setAtiva(!e.target.checked)} /> Conta encerrada (sai das opções de lançamento; o histórico fica)</label>
+          <Marcar className="fs-check" checked={!ativa} onChange={(e) => setAtiva(!e.target.checked)}>Conta encerrada (sai das opções de lançamento; o histórico fica)</Marcar>
         </FormSection>
       )}
     </FormScreen>

@@ -10,6 +10,8 @@ import type { PessoaLider } from "./contexto";
 
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
+import { Campo, Marcar } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
 /* Quem vê o mapa (tela 4 do design). O mapa só aparece no menu de quem o
    pastor liberar (person_grants "mapa"), com a área e o nível de detalhe
    gravados em map_access. Sem áreas desenhadas, a pessoa vê a cidade inteira. */
@@ -76,12 +78,11 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
               <span style={{ marginTop: 0 }}><b>{nome(l.person_id)}</b><span>{resumo(l)}</span></span>
             </Acao>
           ))}
-          <div className="field" style={{ marginTop: 8 }}>
-            <label className="field-label" htmlFor="lm-nova">Liberar para alguém</label>
-            <select id="lm-nova" className="input" value={nova} onChange={(e) => { setNova(e.target.value); if (e.target.value) setEdit(NOVA(e.target.value)); }}>
-              <option value="">Escolher pessoa</option>
-              {semAcesso.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+          <div style={{ marginTop: 8 }}>
+            <Campo rotulo="Liberar para alguém" id="lm-nova">
+              <Selecao valor={nova} aoMudar={(v) => { setNova(v); if (v) setEdit(NOVA(v)); }} vazio="Escolher pessoa"
+                opcoes={semAcesso.map((p) => ({ v: p.id, l: p.name }))} />
+            </Campo>
           </div>
           <p className="mp-fraco">A igreja tem {plural(areas.length, "área desenhada", "áreas desenhadas")}. {areas.length ? "" : "Sem áreas, quem recebe o mapa vê a cidade inteira."}</p>
         </section>
@@ -95,23 +96,23 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
             <fieldset className="mesa-fs">
               <legend className="mp-pergunta">O que essa pessoa vê</legend>
               <div className="mesa-opcoes">
-                <label className="mp-visao" style={{ display: "flex", gap: 12 }}><input type="radio" name="lm-escopo" checked={edit.escopo === "cidade"} onChange={() => setEdit({ ...edit, escopo: "cidade", area_id: null })} /><span style={{ marginTop: 0 }}><b>A cidade inteira</b><span>Para pastores e coordenação.</span></span></label>
-                <label className="mp-visao" style={{ display: "flex", gap: 12, opacity: areas.length ? 1 : 0.55 }}><input type="radio" name="lm-escopo" disabled={!areas.length} checked={edit.escopo === "area"} onChange={() => setEdit({ ...edit, escopo: "area", area_id: areas[0]?.id ?? null })} /><span style={{ marginTop: 0, flex: 1 }}><b>Uma área</b><span>{areas.length ? "O resto do mapa fica apagado." : "Desenhe uma área no mapa primeiro."}</span>
-                  {edit.escopo === "area" && <select className="input" style={{ marginTop: 10 }} value={edit.area_id ?? ""} onChange={(e) => setEdit({ ...edit, area_id: e.target.value })} aria-label="Área">{areas.map((a) => <option key={a.id} value={a.id}>{a.nome}</option>)}</select>}</span></label>
+                <Marcar tipo="radio" className="mp-visao" name="lm-escopo" checked={edit.escopo === "cidade"} onChange={() => setEdit({ ...edit, escopo: "cidade", area_id: null })}><b>A cidade inteira</b><span>Para pastores e coordenação.</span></Marcar>
+                <Marcar tipo="radio" className="mp-visao" name="lm-escopo" disabled={!areas.length} checked={edit.escopo === "area"} onChange={() => setEdit({ ...edit, escopo: "area", area_id: areas[0]?.id ?? null })}><b>Uma área</b><span>{areas.length ? "O resto do mapa fica apagado." : "Desenhe uma área no mapa primeiro."}</span>
+                  {edit.escopo === "area" && <div style={{ marginTop: 10 }}><Selecao rotulo="Área" valor={edit.area_id ?? ""} aoMudar={(v) => setEdit({ ...edit, area_id: v })} opcoes={areas.map((a) => ({ v: a.id, l: a.nome }))} /></div>}</Marcar>
               </div>
             </fieldset>
             <fieldset className="mesa-fs">
               <legend className="mp-pergunta">Nível de detalhe</legend>
               <div className="mesa-opcoes">
-                <label className="mp-visao" style={{ display: "flex", gap: 12 }}><input type="radio" name="lm-det" checked={edit.detalhe === "pessoas"} onChange={() => setEdit({ ...edit, detalhe: "pessoas" })} /><span style={{ marginTop: 0 }}><b>Pessoas uma a uma</b><span>Ponto no mapa, nome, situação e célula. Nunca o endereço.</span></span></label>
-                <label className="mp-visao" style={{ display: "flex", gap: 12 }}><input type="radio" name="lm-det" checked={edit.detalhe === "numeros"} onChange={() => setEdit({ ...edit, detalhe: "numeros" })} /><span style={{ marginTop: 0 }}><b>Só números por bairro</b><span>Bairros coloridos e totais, sem nomes.</span></span></label>
+                <Marcar tipo="radio" className="mp-visao" name="lm-det" checked={edit.detalhe === "pessoas"} onChange={() => setEdit({ ...edit, detalhe: "pessoas" })}><b>Pessoas uma a uma</b><span>Ponto no mapa, nome, situação e célula. Nunca o endereço.</span></Marcar>
+                <Marcar tipo="radio" className="mp-visao" name="lm-det" checked={edit.detalhe === "numeros"} onChange={() => setEdit({ ...edit, detalhe: "numeros" })}><b>Só números por bairro</b><span>Bairros coloridos e totais, sem nomes.</span></Marcar>
               </div>
             </fieldset>
             <fieldset className="mesa-fs">
               <legend className="mp-pergunta">Também pode</legend>
-              <label className="mp-linha"><span>Abrir a mesa de trabalho</span><input type="checkbox" checked={edit.pode_mesa} onChange={(e) => setEdit({ ...edit, pode_mesa: e.target.checked })} /></label>
-              <label className="mp-linha"><span>Baixar CSV com pessoas</span><input type="checkbox" checked={edit.pode_csv} onChange={(e) => setEdit({ ...edit, pode_csv: e.target.checked })} /></label>
-              <label className="mp-linha"><span>Criar áreas e adicionar pontos</span><input type="checkbox" checked={edit.pode_editar} onChange={(e) => setEdit({ ...edit, pode_editar: e.target.checked })} /></label>
+              <Marcar className="mp-linha" lado="direita" checked={edit.pode_mesa} onChange={(e) => setEdit({ ...edit, pode_mesa: e.target.checked })}>Abrir a mesa de trabalho</Marcar>
+              <Marcar className="mp-linha" lado="direita" checked={edit.pode_csv} onChange={(e) => setEdit({ ...edit, pode_csv: e.target.checked })}>Baixar CSV com pessoas</Marcar>
+              <Marcar className="mp-linha" lado="direita" checked={edit.pode_editar} onChange={(e) => setEdit({ ...edit, pode_editar: e.target.checked })}>Criar áreas e adicionar pontos</Marcar>
             </fieldset>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
               {lista.some((l) => l.person_id === edit.person_id) && <Botao variante="perigo" onClick={() => tirar(edit.person_id)}>Tirar o mapa do menu</Botao>}

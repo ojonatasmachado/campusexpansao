@@ -24,6 +24,7 @@ import { Opcao } from "../../ui/Opcao";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Selo } from "../../ui/Selo";
 import { Segmentado } from "../../ui/Segmentado";
+import { Selecao } from "../../ui/Selecao";
 const PAGINA = 200;
 
 /** org de demonstração ("org-demo") não é uuid: lê e grava só na memória */
@@ -127,10 +128,8 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
       </div>
       <div className="toolbar sec-filtros">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input aria-label="Buscar no livro" placeholder="Buscar nome, nº ou oficiante" value={q} onChange={(e) => { setQ(e.target.value); setMostrar(PAGINA); }} /></div>
-        <select className="input sec-ano" aria-label="Ano" value={ano} onChange={(e) => { setAno(e.target.value === "todos" ? "todos" : Number(e.target.value)); setMostrar(PAGINA); }}>
-          <option value="todos">Todos os anos</option>
-          {anosDoLivro.map((a) => <option key={a} value={a}>{a}</option>)}
-        </select>
+        <Selecao className="sec-ano" rotulo="Ano" valor={String(ano)} aoMudar={(v) => { setAno(v === "todos" ? "todos" : Number(v)); setMostrar(PAGINA); }}
+          opcoes={[{ v: "todos", l: "Todos os anos" }, ...anosDoLivro.map((a) => ({ v: String(a), l: String(a) }))]} />
         <div className="sec-saidas">
           <Botao compacto desativado={!visiveis.length} onClick={() => imprimir("livro", livro === "casamento" || livro === "rol" ? "landscape" : "portrait")}><Icon name="documento" size={14} /> Imprimir</Botao>
           <Botao compacto desativado={!visiveis.length} onClick={() => baixarCsv(arquivo, linhasCsv(livro, ordemDoPapel))}><Icon name="baixar" size={14} /> Baixar CSV</Botao>

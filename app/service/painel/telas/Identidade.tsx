@@ -15,6 +15,8 @@ import type { ChurchIdentityView, ChurchView, CycleView, HistoryEntryView, Modal
 
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
+import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
+import { Vazio } from "../../ui/Estados";
 export function ValoresEditModal({ church, identity, onClose, onRefresh }: {
   church: ChurchView | undefined;
   identity?: ChurchIdentityView | null;
@@ -73,8 +75,8 @@ export function ValoresEditModal({ church, identity, onClose, onRefresh }: {
     >
       {rows.map((r, i) => (
         <FormSection key={i} title={r.title.trim() || `Valor ${i + 1}`}>
-          <div className="field"><label className="field-label req" htmlFor={`${fid}-v${i}`}>Nome</label><input id={`${fid}-v${i}`} className="input" value={r.title} onChange={(e) => setRow(i, { title: e.target.value })} placeholder="ex: Acolhimento" /></div>
-          <div className="field"><label className="field-label" htmlFor={`${fid}-d${i}`}>O que significa</label><textarea id={`${fid}-d${i}`} className="textarea" value={r.texto} onChange={(e) => setRow(i, { texto: e.target.value })} placeholder="O que esse valor significa na prática" /></div>
+          <Campo rotulo="Nome" obrigatorio><Entrada id={`${fid}-v${i}`} value={r.title} onChange={(e) => setRow(i, { title: e.target.value })} placeholder="ex: Acolhimento" /></Campo>
+          <Campo rotulo="O que significa"><TextoLongo id={`${fid}-d${i}`} value={r.texto} onChange={(e) => setRow(i, { texto: e.target.value })} placeholder="O que esse valor significa na prática" /></Campo>
           <Botao compacto onClick={() => removeRow(i)}>Remover valor</Botao>
         </FormSection>
       ))}
@@ -125,7 +127,7 @@ export function Identidade({ church, identity, cycle, setModal }: { church?: Chu
         </div>
       ) : null}
       {!identity?.mission && !identity?.purpose && !identity?.vision ? (
-        <div className="empty" style={{ padding: "20px 0" }}>Nenhuma missão, propósito ou visão cadastrado ainda.</div>
+        <Vazio titulo="Nenhuma missão, propósito ou visão cadastrado ainda." />
       ) : null}
       <div className="section-divide" style={{ marginTop: 28 }}>
         <span className="num">02</span><span className="label">Valores</span><span className="line" />
@@ -142,7 +144,7 @@ export function Identidade({ church, identity, cycle, setModal }: { church?: Chu
           ))}
         </div>
       ) : (
-        <div className="empty" style={{ padding: "20px 0" }}>Nenhum valor cadastrado ainda.</div>
+        <Vazio titulo="Nenhum valor cadastrado ainda." />
       )}
       {editingValores && <ValoresEditModal church={church} identity={identity} onClose={() => setEditingValores(false)} onRefresh={() => router.refresh()} />}
       <div className="section-divide" style={{ marginTop: 28 }}>
@@ -170,7 +172,7 @@ export function Identidade({ church, identity, cycle, setModal }: { church?: Chu
           </div>
         </div>
       ) : (
-        <div className="empty">Nenhum ciclo cadastrado ainda.</div>
+        <Vazio titulo="Nenhum ciclo cadastrado ainda." />
       )}
       <div style={{ marginTop: 16 }}>
         <Botao compacto onClick={() => setModal({ eyebrow: "Criar", title: "Novo ciclo anual", subtitle: "O tema que guia a Igreja neste período.", saveLabel: "Criar ciclo", formFields: [{ k:"ano", label:"Ano / período", type:"text", half:true, req:true, ph:"ex: 2026 · 1º semestre" }, { k:"tema", label:"Tema", type:"text", half:true, req:true, ph:"ex: Raízes profundas" }, { k:"versiculo", label:"Versículo", type:"text", ph:"ex: Salmos 1:3" }, { k:"desc", label:"Descrição", type:"area", ph:"O que esse tema significa para a Igreja..." }, { k:"objetivos", label:"Objetivos (separados por vírgula)", type:"text", ph:"ex: Leitura bíblica diária, Multiplicar GCs" }], action: { kind: "cycle" } })}>+ Novo ciclo</Botao>
@@ -209,7 +211,7 @@ export function Historia({ church, historyEntries, setModal }: { church?: Church
         help={ct("Os marcos da {caminhada} da igreja, em linha do tempo. Cada capítulo pode ter ano, foto e um link.")}
         action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Novo capítulo", subtitle: "Registre um momento importante da história da Igreja.", saveLabel: "Adicionar capítulo", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:"ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:"ex: Fundação da Igreja" }, { k:"desc", label:"História", type:"area", ph:"Conte esse momento..." }, { k:"link", label:"Link (opcional)", type:"text", ph:"https://…", hint:"Vídeo, matéria ou álbum de fotos." }], action: { kind: "historyEntry" } })}>+ Adicionar capítulo</Botao>}
       />
-      {capitulos.length === 0 && <div className="empty">Ainda não há capítulos. Adicione o primeiro.</div>}
+      {capitulos.length === 0 && <Vazio titulo="Ainda não há capítulos. Adicione o primeiro." />}
       <div className="hist">
         {capitulos.map((capitulo, i) => (
           <div key={capitulo.id} className={`hist-item ${i % 2 === 1 ? "rev" : ""}`}>

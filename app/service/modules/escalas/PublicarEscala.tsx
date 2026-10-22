@@ -14,6 +14,7 @@ import { useTermos } from "../../lib/vocabulario-context";
 import type { EventView, RosterAssignmentView } from "../../ServiceExactApp";
 
 import { Botao } from "../../ui/Botao";
+import { Campo, TextoLongo } from "../../ui/Campo";
 export function PublicarEscala({ rascunhos, events, organizationId, onClose, onPublicado }: {
   rascunhos: RosterAssignmentView[];
   events: EventView[];
@@ -96,10 +97,9 @@ export function PublicarEscala({ rascunhos, events, organizationId, onClose, onP
         </div>
         {rascunhos.length > 0 && (
           <div className="modal-body" style={{ display: "block" }}>
-            <div className="field">
-              <label className="field-label" htmlFor="pub-esc-msg">Recado na notificação (opcional)</label>
-              <textarea id="pub-esc-msg" className="textarea" value={msg} maxLength={160} onChange={(e) => setMsg(e.target.value)} placeholder="Ex.: Confira suas datas até domingo." />
-            </div>
+            <Campo rotulo="Recado na notificação (opcional)" id="pub-esc-msg">
+              <TextoLongo value={msg} maxLength={160} onChange={(e) => setMsg(e.target.value)} placeholder="Ex.: Confira suas datas até domingo." />
+            </Campo>
             {erro && <div className="fs-error" role="alert">{erro}</div>}
           </div>
         )}

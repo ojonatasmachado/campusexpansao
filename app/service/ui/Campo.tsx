@@ -15,7 +15,7 @@
    biblioteca.css (.field, .field-label, .field-hint, .field-error). */
 
 import { cloneElement, isValidElement, useId } from "react";
-import type { InputHTMLAttributes, ReactElement, ReactNode, Ref, TextareaHTMLAttributes } from "react";
+import type { CSSProperties, InputHTMLAttributes, ReactElement, ReactNode, Ref, TextareaHTMLAttributes } from "react";
 
 type Ligacao = { id?: string; "aria-describedby"?: string; "aria-invalid"?: boolean };
 
@@ -31,10 +31,11 @@ export type CampoProps = {
   /* grupo de opções (chips, marcar): o rótulo vira legenda do grupo, sem htmlFor */
   grupo?: boolean;
   className?: string;
+  style?: CSSProperties;
   children: ReactNode;
 };
 
-export function Campo({ rotulo, ajuda, erro, obrigatorio, id, grupo, className, children }: CampoProps) {
+export function Campo({ rotulo, ajuda, erro, obrigatorio, id, grupo, className, style, children }: CampoProps) {
   const auto = useId();
   const ctrlId = id || (isValidElement<Ligacao>(children) ? children.props.id : undefined) || `c${auto}`;
   const apoioId = `${ctrlId}-apoio`;
@@ -50,7 +51,7 @@ export function Campo({ rotulo, ajuda, erro, obrigatorio, id, grupo, className, 
     : children;
   const cls = `field${erro ? " field-com-erro" : ""}${className ? ` ${className}` : ""}`;
   return (
-    <div className={cls}>
+    <div className={cls} style={style}>
       {grupo
         ? <div id={rotuloId} className={`field-label${obrigatorio ? " req" : ""}`}>{rotulo}</div>
         : <label htmlFor={ctrlId} className={`field-label${obrigatorio ? " req" : ""}`}>{rotulo}</label>}
@@ -77,12 +78,14 @@ export function TextoLongo({ className, ...rest }: TextoLongoProps) {
    Visual em biblioteca.css (.marcar). */
 export type MarcarProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "children"> & {
   tipo?: "checkbox" | "radio";
+  /* direita: texto à esquerda e caixa no fim da linha (listas de permissões e camadas) */
+  lado?: "esquerda" | "direita";
   children?: ReactNode;
   ref?: Ref<HTMLInputElement>;
 };
-export function Marcar({ tipo = "checkbox", children, className, ...rest }: MarcarProps) {
+export function Marcar({ tipo = "checkbox", lado = "esquerda", children, className, ...rest }: MarcarProps) {
   return (
-    <label className={`marcar${tipo === "radio" ? " marcar-radio" : ""}${className ? ` ${className}` : ""}`}>
+    <label className={`marcar${tipo === "radio" ? " marcar-radio" : ""}${lado === "direita" ? " marcar-direita" : ""}${className ? ` ${className}` : ""}`}>
       <input {...rest} type={tipo} />
       <span className="marcar-caixa" aria-hidden="true" />
       {children != null ? <span className="marcar-texto">{children}</span> : null}

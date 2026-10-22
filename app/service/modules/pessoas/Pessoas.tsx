@@ -22,6 +22,7 @@ import { Opcao } from "../../ui/Opcao";
 import { Etiqueta, Selo } from "../../ui/Selo";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Segmentado } from "../../ui/Segmentado";
+import { Vazio } from "../../ui/Estados";
 function formatAvailability(value: Record<string, boolean>) {
   const labels: Record<string, string> = { dom_m: "Domingo manhã", dom_n: "Domingo noite", qua: "Quarta" };
   const items = Object.entries(value).filter(([, ok]) => ok).map(([key]) => labels[key] ?? key);
@@ -182,7 +183,7 @@ export function Pessoas({ people, currentPersonId, setDrawer, setModal }: { peop
             <div><Chip status={person.status} /></div>
           </Acao>
         ))}
-        {visible.length === 0 && <div className="empty">Ninguém encontrado.</div>}
+        {visible.length === 0 && <Vazio titulo="Ninguém encontrado." />}
       </div>
     </div>
   );

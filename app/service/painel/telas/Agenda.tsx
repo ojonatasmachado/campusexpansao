@@ -22,6 +22,9 @@ import { Cartao, cartaoClasse } from "../../ui/Cartao";
 import { Linha } from "../../ui/Linha";
 import { Etiqueta } from "../../ui/Selo";
 import { Segmentado } from "../../ui/Segmentado";
+import { Campo, Entrada } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
+import { Vazio } from "../../ui/Estados";
 /* Escalas : módulo em modules/escalas/ (4.1) */
 
 export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChildren, rooms, setDrawer, setModal, setCheckinEventId, setShareEventId }: { events: EventView[]; ministries: MinistryView[]; church?: ChurchView; kidsClasses: KidsClassView[]; kidsSessions: KidsSessionView[]; kidsChildren: ChildView[]; rooms: RoomView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; setCheckinEventId: (id: string) => void; setShareEventId: (id: string) => void }) {
@@ -241,7 +244,7 @@ export function Espacos({ rooms, reservations, church, setModal, embed }: { room
           const count = reservations.filter((reservation) => reservation.room_id === room.id).length;
           return <Acao key={room.id} className={`sala-card ${filter === room.id ? "on" : ""}`} onClick={() => setFilter(filter === room.id ? "todas" : room.id)}><div className="sala-card-top"><span className="sala-mark"><Icon name="config" size={18} /></span><span className="sala-cap">{room.capacity ?? 0} <small>lugares</small></span></div><div className="sala-nome">{room.name}</div>{room.location ? <div className="sala-local">{room.location}</div> : null}{room.resources.length ? <div className="sala-rec">{room.resources.map((resource) => <Etiqueta key={resource}>{resource}</Etiqueta>)}</div> : null}<div className="sala-foot">{plural(count, "reserva")}{room.allows_meetings === false ? " · não serve pra reunião" : ""}</div></Acao>;
         })}
-        {rooms.length === 0 ? <div className="empty">Nenhuma sala cadastrada ainda.</div> : null}
+        {rooms.length === 0 ? <Vazio titulo="Nenhuma sala cadastrada ainda." /> : null}
       </div>
       <div className="esp-cal-wrap" style={{ marginTop: 20 }}>
         <div className="toolbar" style={{ marginBottom: 12 }}>
@@ -304,20 +307,13 @@ export function ReservaModal({ rooms, reservations, church, salaInicial, dataIni
           <div className="modal-sub">Não deixamos duas reservas se cruzarem no mesmo espaço e horário.</div>
         </div>
         <div className="modal-body">
-          <div className="field"><label className="field-label">Título</label><input className="input" placeholder="ex: Reunião de líderes" value={titulo} onChange={(e) => setTitulo(e.target.value)} /></div>
-          <div className="field field-half">
-            <label className="field-label">Sala</label>
-            <select className="select" value={salaId} onChange={(e) => setSalaId(e.target.value)}>
-              <option value="">Selecione uma sala</option>
-              {roomsForTipo.map((room) => <option key={room.id} value={room.id}>{room.name}{room.capacity ? ` · ${room.capacity} lug.` : ""}</option>)}
-            </select>
-          </div>
-          <div className="field field-half">
-            <label className="field-label">Tipo</label>
-            <select className="select" value={tipo} onChange={(e) => { const nextTipo = e.target.value; setTipo(nextTipo); const allowed = nextTipo === "reuniao" ? rooms.filter((room) => room.allows_meetings !== false) : rooms; if (!allowed.some((room) => room.id === salaId)) setSalaId(""); }}>
-              {RESERVA_TIPOS.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
-            </select>
-          </div>
+          <Campo rotulo="Título"><Entrada placeholder="ex: Reunião de líderes" value={titulo} onChange={(e) => setTitulo(e.target.value)} /></Campo>
+          <Campo rotulo="Sala" className="field-half">
+            <Selecao valor={salaId} aoMudar={setSalaId} vazio="Selecione uma sala" opcoes={roomsForTipo.map((room) => ({ v: room.id, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` }))} />
+          </Campo>
+          <Campo rotulo="Tipo" className="field-half">
+            <Selecao valor={tipo} aoMudar={(nextTipo) => { setTipo(nextTipo); const allowed = nextTipo === "reuniao" ? rooms.filter((room) => room.allows_meetings !== false) : rooms; if (!allowed.some((room) => room.id === salaId)) setSalaId(""); }} opcoes={RESERVA_TIPOS.map((t) => ({ v: t.v, l: t.l }))} />
+          </Campo>
           <div className="field field-half"><label className="field-label">Dia</label><DatePicker value={data} onChange={setData} /></div>
           <div className="field field-half"><label className="field-label">Início</label><TimePicker value={inicio} onChange={setInicio} /></div>
           <div className="field field-half"><label className="field-label">Fim</label><TimePicker value={fim} onChange={setFim} /></div>

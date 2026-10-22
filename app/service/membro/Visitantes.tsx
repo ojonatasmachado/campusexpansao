@@ -9,6 +9,7 @@ import { Botao } from "../ui/Botao";
 import { Acao } from "../ui/Acao";
 import { Cartao } from "../ui/Cartao";
 import { Selo } from "../ui/Selo";
+import { Selecao } from "../ui/Selecao";
 export const ETAPAS = [
   { id: "novo", nome: "Novo" },
   { id: "contato", nome: "Contato" },
@@ -65,16 +66,14 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
             onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
             style={{ marginBottom: 8 }}
           />
-          <select
-            className="select"
-            value={form.origin}
-            onChange={(e) => setForm((p) => ({ ...p, origin: e.target.value }))}
-            style={{ marginBottom: 12 }}
-          >
-            {["Primeira visita", "Convite de membro", "Instagram", "Indicacao", "Evangelismo"].map(
-              (o) => <option key={o}>{o}</option>,
-            )}
-          </select>
+          <div style={{ marginBottom: 12 }}>
+            <Selecao
+              rotulo="Como chegou"
+              valor={form.origin}
+              aoMudar={(v) => setForm((p) => ({ ...p, origin: v }))}
+              opcoes={["Primeira visita", "Convite de membro", "Instagram", "Indicacao", "Evangelismo"].map((o) => ({ v: o, l: o }))}
+            />
+          </div>
           <div style={{ display: "flex", gap: 8 }}>
             <Botao tamanho="toque" variante="principal" style={{ flex: 1 }} onClick={salvar}>Salvar</Botao>
             <Botao tamanho="toque" variante="secundario" style={{ flex: 1 }} onClick={() => setNovo(false)}>Cancelar</Botao>

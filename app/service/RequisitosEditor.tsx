@@ -4,6 +4,7 @@ import { JOURNEY_REQ_STEPS, requirementLabel, type Requirement } from "./lib/req
 import { useTermos } from "./lib/vocabulario-context";
 
 import { Opcao } from "./ui/Opcao";
+import { Selecao } from "./ui/Selecao";
 /* subtítulo em cinza médio (texto secundário do Brand Book 3.2): o título da
    seção fica com quem usa o editor, estes só agrupam as opções */
 const SUBLABEL = { color: "var(--muted)", fontWeight: 500 } as const;
@@ -70,12 +71,13 @@ export default function RequisitosEditor({
             </div>
           )}
           {openEvents.length > 0 && (
-            <select className="select" value="" onChange={(e) => e.target.value && toggle("event", e.target.value)}>
-              <option value="">Adicionar evento...</option>
-              {openEvents.map((e) => (
-                <option key={e.id} value={e.id}>{e.eventDate ? `${e.name} · ${e.eventDate}` : e.name}</option>
-              ))}
-            </select>
+            <Selecao
+              rotulo="Adicionar evento"
+              valor=""
+              aoMudar={(v) => v && toggle("event", v)}
+              vazio="Adicionar evento..."
+              opcoes={openEvents.map((e) => ({ v: e.id, l: e.eventDate ? `${e.name} · ${e.eventDate}` : e.name }))}
+            />
           )}
         </div>
       )}

@@ -15,6 +15,8 @@ import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Cartao } from "../../ui/Cartao";
 import { Linha } from "../../ui/Linha";
+import { Campo, Entrada, Marcar } from "../../ui/Campo";
+import { Carregando, Vazio } from "../../ui/Estados";
 export const novaPesquisaDraft = (): PesquisaDraft => ({
   id: `nova-${Date.now()}`,
   nome: "",
@@ -260,8 +262,8 @@ export function PesquisasView({ organizationId, ministries }: { organizationId: 
           );
         })()}
       </div>
-      {loading && <div className="empty">Carregando...</div>}
-      {!loading && pesquisas.length === 0 && <div className="empty">Nenhuma pesquisa ainda. Clique em <em>+ Nova pesquisa</em> pra criar.</div>}
+      {loading && <Carregando forma="lista" />}
+      {!loading && pesquisas.length === 0 && <Vazio titulo="Nenhuma pesquisa ainda. Clique em + Nova pesquisa pra criar." />}
       <div className="acesso-list">
         {pesquisas.map((p) => (
           <div key={p.id} className="flag-row" style={{ cursor: "default" }}>
@@ -353,7 +355,7 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
       onClose={onCancel}
     >
       <FormSection title="Pesquisa">
-        <div className="field"><label className="field-label req" htmlFor={`${fid}-nome`}>Nome da pesquisa</label><input id={`${fid}-nome`} className="input" aria-required="true" placeholder="ex: Pulso pós-escala" value={d.nome} onChange={(e) => setD({ ...d, nome: e.target.value })} /></div>
+        <Campo rotulo="Nome da pesquisa" obrigatorio><Entrada id={`${fid}-nome`} aria-required="true" placeholder="ex: Pulso pós-escala" value={d.nome} onChange={(e) => setD({ ...d, nome: e.target.value })} /></Campo>
       </FormSection>
 
       <FormSection title="Quem vê">
@@ -394,19 +396,13 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
           ))}
         </div>
         {d.disparoModo === "posescala" && (
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>
-            <input type="checkbox" checked={d.recorrentePorEscala} onChange={(e) => setD({ ...d, recorrentePorEscala: e.target.checked })} />
-            Repete a cada escala nova (senão, responde só uma vez)
-          </label>
+          <Marcar checked={d.recorrentePorEscala} onChange={(e) => setD({ ...d, recorrentePorEscala: e.target.checked })}>Repete a cada escala nova (senão, responde só uma vez)</Marcar>
         )}
         {d.disparoModo === "periodica" && (
-          <div className="field field-half"><label className="field-label">Intervalo (dias)</label><input className="input" type="number" min={1} value={d.intervaloDias ?? 30} onChange={(e) => setD({ ...d, intervaloDias: Number(e.target.value) })} /></div>
+          <Campo rotulo="Intervalo (dias)" className="field-half"><Entrada type="number" min={1} value={d.intervaloDias ?? 30} onChange={(e) => setD({ ...d, intervaloDias: Number(e.target.value) })} /></Campo>
         )}
         {d.disparoModo === "livre" && (
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>
-            <input type="checkbox" checked={d.ativoComoLivre} onChange={(e) => setD({ ...d, ativoComoLivre: e.target.checked })} />
-            Ativa como atalho livre (só uma por igreja; ligar essa desliga qualquer outra)
-          </label>
+          <Marcar checked={d.ativoComoLivre} onChange={(e) => setD({ ...d, ativoComoLivre: e.target.checked })}>Ativa como atalho livre (só uma por igreja; ligar essa desliga qualquer outra)</Marcar>
         )}
         {d.disparoModo === "campanha" && (
           <p style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{d.emitidaEm ? `Disparada em ${formatDateBR(d.emitidaEm.slice(0, 10))}.` : "Salve e depois clique em “Disparar agora” na lista."}</p>
@@ -441,10 +437,7 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
               {p.tipo === "multipla" && (
                 <input className="input" placeholder="Opções separadas por vírgula" value={(p.opcoes ?? []).join(", ")} onChange={(e) => updatePergunta(p.id, { opcoes: e.target.value.split(",").map((o) => o.trim()).filter(Boolean) })} />
               )}
-              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "var(--fs-pn-13)", color: "var(--muted)", marginTop: 8 }}>
-                <input type="checkbox" checked={p.obrigatoria} onChange={(e) => updatePergunta(p.id, { obrigatoria: e.target.checked })} />
-                Obrigatória
-              </label>
+              <Marcar checked={p.obrigatoria} onChange={(e) => updatePergunta(p.id, { obrigatoria: e.target.checked })}>Obrigatória</Marcar>
             </div>
           ))}
         </div>
@@ -472,7 +465,7 @@ export function PesquisaResultados({ pesquisa, onVoltar }: { pesquisa: PesquisaA
         <div className="cfg-card-t" style={{ margin: 0 }}>{pesquisa.nome}</div>
       </div>
       <div className="cfg-card-s">{pesquisa.totalRespostas} resposta{pesquisa.totalRespostas === 1 ? "" : "s"} · {disparoLabelPesquisa(pesquisa)}</div>
-      {itens === null && <div className="empty">Carregando respostas...</div>}
+      {itens === null && <Carregando forma="lista" rotulo="Carregando respostas" />}
       {itens !== null && pesquisa.perguntas.map((p) => {
         const valores = itens.filter((i) => i.perguntaId === p.id).map((i) => i.valor);
         if (p.tipo === "texto") {
@@ -480,7 +473,7 @@ export function PesquisaResultados({ pesquisa, onVoltar }: { pesquisa: PesquisaA
             <Cartao key={p.id} style={{ marginTop: 14 }}>
               <div className="panel-head"><span className="panel-title">{p.texto}</span></div>
               <div className="panel-body flush">
-                {valores.length === 0 && <div className="empty">Ninguém respondeu ainda.</div>}
+                {valores.length === 0 && <Vazio titulo="Ninguém respondeu ainda." />}
                 {valores.map((v, i) => <Linha key={i}><div className="mini-main"><div className="mini-sub">{v}</div></div></Linha>)}
               </div>
             </Cartao>
@@ -493,7 +486,7 @@ export function PesquisaResultados({ pesquisa, onVoltar }: { pesquisa: PesquisaA
           <Cartao key={p.id} style={{ marginTop: 14 }}>
             <div className="panel-head"><span className="panel-title">{p.texto}</span></div>
             <div className="panel-body flush">
-              {valores.length === 0 && <div className="empty">Ninguém respondeu ainda.</div>}
+              {valores.length === 0 && <Vazio titulo="Ninguém respondeu ainda." />}
               {Array.from(contagem.entries()).map(([valor, count]) => (
                 <div className="dist-row" key={valor}>
                   <span className="dist-name">{valor}</span>

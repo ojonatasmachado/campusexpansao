@@ -22,6 +22,8 @@ import { Botao, botaoClasse } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Cartao } from "../../ui/Cartao";
 import { Linha } from "../../ui/Linha";
+import { Campo, TextoLongo } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
 type Abrir = (p: Aniversariante) => void;
 type Nomeado = { id: string; name: string };
 
@@ -47,10 +49,9 @@ function Parabens({ p, onFechar }: { p: Proximo; onFechar: () => void }) {
           <div className="modal-sub">O WhatsApp abre com a mensagem pronta. Mude o que quiser antes de enviar.</div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
-          <div className="field">
-            <label className="field-label" htmlFor="aniv-parabens-msg">Mensagem</label>
-            <textarea id="aniv-parabens-msg" className="textarea" rows={4} maxLength={600} value={texto} onChange={(e) => setTexto(e.target.value)} />
-          </div>
+          <Campo rotulo="Mensagem" id="aniv-parabens-msg">
+            <TextoLongo rows={4} maxLength={600} value={texto} onChange={(e) => setTexto(e.target.value)} />
+          </Campo>
         </div>
         <div className="modal-foot">
           <Botao variante="discreto" onClick={onFechar}>Cancelar</Botao>
@@ -158,26 +159,18 @@ export function Aniversariantes({ base, escopo, comIdade, times, grupos, onAbrir
         action={lista.length > 0 ? <Botao onClick={baixar}>Baixar CSV</Botao> : undefined}
       />
       <div className="toolbar aniv-filtros">
-        <label className="aniv-filtro"><span className="field-label">Mês</span>
-          <select className="select" value={mes} onChange={(e) => setMes(Number(e.target.value))}>
-            {MESES.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-          </select>
-        </label>
+        <Campo rotulo="Mês" className="aniv-filtro">
+          <Selecao valor={String(mes)} aoMudar={(v) => setMes(Number(v))} opcoes={MESES.map((m, i) => ({ v: String(i + 1), l: m }))} />
+        </Campo>
         {timesVisiveis.length > 1 && (
-          <label className="aniv-filtro"><span className="field-label">Time</span>
-            <select className="select" value={time} onChange={(e) => setTime(e.target.value)}>
-              <option value="">Todos os times</option>
-              {timesVisiveis.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
-          </label>
+          <Campo rotulo="Time" className="aniv-filtro">
+            <Selecao valor={time} aoMudar={setTime} vazio="Todos os times" opcoes={timesVisiveis.map((t) => ({ v: t.id, l: t.name }))} />
+          </Campo>
         )}
         {gruposVisiveis.length > 1 && (
-          <label className="aniv-filtro"><span className="field-label">{ct("{Grupo}")}</span>
-            <select className="select" value={grupo} onChange={(e) => setGrupo(e.target.value)}>
-              <option value="">{ct("Todos os {grupos}")}</option>
-              {gruposVisiveis.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-            </select>
-          </label>
+          <Campo rotulo={ct("{Grupo}")} className="aniv-filtro">
+            <Selecao valor={grupo} aoMudar={setGrupo} vazio={ct("Todos os {grupos}")} opcoes={gruposVisiveis.map((g) => ({ v: g.id, l: g.name }))} />
+          </Campo>
         )}
       </div>
       <div className="tbl">

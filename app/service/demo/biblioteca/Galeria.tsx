@@ -84,6 +84,14 @@ export default function Galeria() {
             <Marcar key={v} tipo="radio" name="turno" value={v} checked={turno === v} onChange={() => setTurno(v)}>{l}</Marcar>
           ))}
         </div>
+        <div className="galeria-coluna">
+          <Marcar lado="direita" checked={termos} onChange={(e) => setTermos(e.target.checked)}>Caixa no fim da linha (permissões, camadas)</Marcar>
+          {[["manha", "Culto da manhã", "Domingo às 10h, com Kids."], ["noite", "Culto da noite", "Domingo às 19h."]].map(([v, t, s]) => (
+            <Marcar key={v} tipo="radio" className="pede-opt" name="turno2" checked={turno === v} onChange={() => setTurno(v)}>
+              <b>{t}</b><br /><span className="mini-sub">{s}</span>
+            </Marcar>
+          ))}
+        </div>
         <div className="galeria-acoes">
           <Botao variante="secundario">Cancelar</Botao>
           <Botao variante="principal" onClick={() => avisar("Membro salvo.")}>Salvar membro</Botao>

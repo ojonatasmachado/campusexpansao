@@ -7,6 +7,8 @@ import { COMO_CONHECEU, digitosTelefone, mascaraTelefone } from "./autocadastro"
 
 import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
+import { Marcar } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
 type Campo = "nome" | "tel" | "email" | "consent";
 type Erros = Partial<Record<Campo, string>>;
 
@@ -191,21 +193,12 @@ export default function AutocadastroForm({
           {erroDe("email")}
         </label>
 
-        <label className="login-field">
+        <div className="login-field">
           <span className="login-label">
             Como conheceu a igreja? <span className="vis-opt">opcional</span>
           </span>
-          <span className="vis-sel">
-          <select className="login-input" name="como" value={como} onChange={(e) => setComo(e.target.value)}>
-            <option value="">Escolha uma opção</option>
-            {COMO_CONHECEU.map((o) => (
-              <option key={o.v} value={o.v}>
-                {o.l}
-              </option>
-            ))}
-          </select>
-          </span>
-        </label>
+          <Selecao rotulo="Como conheceu a igreja" valor={como} aoMudar={setComo} vazio="Escolha uma opção" opcoes={COMO_CONHECEU} />
+        </div>
 
         <label className="login-field">
           <span className="login-label">
@@ -241,13 +234,10 @@ export default function AutocadastroForm({
         </fieldset>
 
         <div className="login-field">
-          <label className={`vis-consent${erros.consent ? " err" : ""}`}>
-            <input type="checkbox" name="consent" checked={consent} onChange={(e) => setConsent(e.target.checked)} {...aria("consent")} />
-            <span>
-              Autorizo a {churchName} a guardar meu nome e contato para falar comigo sobre a igreja. Meus dados não são
-              compartilhados com ninguém de fora, e posso pedir para apagar quando quiser.
-            </span>
-          </label>
+          <Marcar className={`vis-consent${erros.consent ? " err" : ""}`} name="consent" checked={consent} onChange={(e) => setConsent(e.target.checked)} {...aria("consent")}>
+            Autorizo a {churchName} a guardar meu nome e contato para falar comigo sobre a igreja. Meus dados não são
+            compartilhados com ninguém de fora, e posso pedir para apagar quando quiser.
+          </Marcar>
           {erroDe("consent")}
         </div>
 

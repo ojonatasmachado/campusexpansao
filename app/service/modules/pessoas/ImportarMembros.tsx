@@ -23,6 +23,8 @@ import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Linha } from "../../ui/Linha";
+import { Campo as CampoForm, Entrada } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
 type Etapa = 1 | 2 | 3 | 4;
 const ETAPAS = ["Arquivo", "Colunas", "Conferir", "Importar"] as const;
 type Grupo = "nova" | "existe" | "repete" | "erro";
@@ -269,15 +271,13 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
                     <div className="cell-name">{cab}</div>
                     <div className="cell-sub">{ex.length ? ex.join(" · ") : "coluna vazia"}</div>
                   </div>
-                  <select
-                    className="select"
-                    aria-label={`O que tem na coluna ${cab}`}
-                    value={mapa[col] ?? ""}
-                    onChange={(e) => trocarCampo(col, e.target.value as Campo | "")}
-                  >
-                    <option value="">Não importar</option>
-                    {CAMPOS.map((c) => <option key={c.id} value={c.id}>{c.rotulo}</option>)}
-                  </select>
+                  <Selecao
+                    rotulo={`O que tem na coluna ${cab}`}
+                    valor={mapa[col] ?? ""}
+                    aoMudar={(v) => trocarCampo(col, v as Campo | "")}
+                    vazio="Não importar"
+                    opcoes={CAMPOS.map((c) => ({ v: c.id, l: c.rotulo }))}
+                  />
                 </Linha>
               );
             })}
@@ -301,11 +301,9 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
 
           {semDdd > 0 ? (
             <FormSection title="Telefones sem DDD">
-              <div className="field">
-                <label className="field-label" htmlFor={`${fid}-ddd`}>DDD para completar</label>
-                <input id={`${fid}-ddd`} className="input imp-ddd" inputMode="numeric" maxLength={2} value={ddd} onChange={(e) => setDdd(e.target.value.replace(/\D/g, "").slice(0, 2))} placeholder="11" />
-                <div className="field-hint">{plural(semDdd, "telefone veio", "telefones vieram")} sem DDD. Usamos este na frente. Deixe vazio para manter como está.</div>
-              </div>
+              <CampoForm rotulo="DDD para completar" id={`${fid}-ddd`} ajuda={`${plural(semDdd, "telefone veio", "telefones vieram")} sem DDD. Usamos este na frente. Deixe vazio para manter como está.`}>
+                <Entrada className="imp-ddd" inputMode="numeric" maxLength={2} value={ddd} onChange={(e) => setDdd(e.target.value.replace(/\D/g, "").slice(0, 2))} placeholder="11" />
+              </CampoForm>
             </FormSection>
           ) : null}
 

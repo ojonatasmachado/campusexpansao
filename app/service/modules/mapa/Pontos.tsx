@@ -11,6 +11,8 @@ import { limparCamadas, type ContextoMapa } from "./contexto";
 import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Interruptor } from "../../ui/Interruptor";
 import { Acao } from "../../ui/Acao";
+import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
 /* Pontos de interesse (tela 10 do design). Desligados por padrão; do
    OpenStreetMap (atualizados todo mês) ou adicionados à mão. Cada ponto
    mostra a origem e tem editar, ocultar e excluir (excluir só os manuais). */
@@ -206,13 +208,11 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
           <div className="modal" role="dialog" aria-modal="true" aria-labelledby="mp-ponto-t" style={{ width: 520, maxWidth: "calc(100% - 32px)", padding: 0 }} onClick={(e) => e.stopPropagation()}>
             <div className="mp-cab" style={{ display: "flex", justifyContent: "space-between" }}><h2 id="mp-ponto-t" className="mp-titulo">{form.ponto ? "Editar ponto" : "Adicionar ponto"}</h2><BotaoIcone className="mp-fechar" rotulo="Fechar" onClick={() => setForm(null)}><Icon name="recusou" size={14} /></BotaoIcone></div>
             <div className="mp-corpo">
-              <div className="field"><label className="field-label req" htmlFor="pt-nome">Nome</label><input id="pt-nome" className="input" maxLength={80} value={form.nome} disabled={form.ponto?.origem === "osm"} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
-              <div className="field">
-                <label className="field-label" htmlFor="pt-cat">Categoria</label>
-                <select id="pt-cat" className="input" value={form.categoria} disabled={form.ponto?.origem === "osm"} onChange={(e) => setForm({ ...form, categoria: e.target.value })}>
-                  {CATEGORIAS.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                </select>
-              </div>
+              <Campo rotulo="Nome" obrigatorio id="pt-nome"><Entrada maxLength={80} value={form.nome} disabled={form.ponto?.origem === "osm"} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></Campo>
+              <Campo rotulo="Categoria" id="pt-cat">
+                <Selecao valor={form.categoria} desativado={form.ponto?.origem === "osm"} aoMudar={(v) => setForm({ ...form, categoria: v })}
+                  opcoes={CATEGORIAS.map((c) => ({ v: c.id, l: c.nome }))} />
+              </Campo>
               {form.ponto?.origem !== "osm" && (
                 <div className="field">
                   <span className="field-label req">Onde fica</span>
@@ -223,7 +223,7 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
                   <input className="input" style={{ marginTop: 8 }} placeholder="Endereço (opcional)" value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} aria-label="Endereço" />
                 </div>
               )}
-              <div className="field"><label className="field-label" htmlFor="pt-obs">Observação</label><textarea id="pt-obs" className="input" rows={3} maxLength={500} value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} /></div>
+              <Campo rotulo="Observação" id="pt-obs"><TextoLongo rows={3} maxLength={500} value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} /></Campo>
               <p className="mp-fraco">Origem: {form.ponto?.origem === "osm" ? "OpenStreetMap (nome e local vêm de lá)" : "adicionado à mão"}</p>
             </div>
             <div className="mp-pe" style={{ flexDirection: "row", justifyContent: "flex-end" }}>

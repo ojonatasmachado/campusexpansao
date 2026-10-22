@@ -22,3 +22,11 @@ Componentes compartilhados de interface do Service (lei 17 em `AGENTS.md` §13).
 | `Segmentado.tsx` | `Segmentado` (contêiner `.seg` com pílula que desliza até a `Opcao` marcada) |
 | `Contagem.tsx` | `Contagem` (número sobe do zero ou do valor anterior; leitor de tela ouve o final) |
 | `movimento.ts` | `MOLA`, `movimentoReduzido()`, `entrarComDirecao()` (troca de tela com direção) |
+| `Campo.tsx` | `Campo` (rótulo em cima, ajuda ou erro embaixo, liga id/aria; `grupo` para chips), `Entrada`, `TextoLongo`, `Marcar` (caixa ou bolinha nativa) |
+| `Selecao.tsx` | `Selecao` (caixa suspensa no lugar do `<select>`; `vazio`, opção desativada, teclado) |
+| `Data.tsx` | `SeletorData` (calendário, valor "aaaa-mm-dd", grade de anos, dias com evento), `SeletorHora` (valor "hh:mm"), `dataCurta()` |
+| `Estados.tsx` | `Vazio` (diz o que vai aparecer e o próximo passo), `Carregando` (esqueleto: lista, linhas, cartões, indicadores), `ErroEstado` (com Tentar de novo) |
+| `confirmar.ts` | `confirmar()`: diálogo de risco no lugar de `window.confirm`, só para o que não dá para desfazer |
+| `popover.ts` | `usePopover()`: fecha no clique fora e no Esc, devolve o foco ao gatilho |
+
+Galeria viva com todas as peças e estados: `/service/demo/biblioteca` (aceita `?cor=`, `?modo=light`).

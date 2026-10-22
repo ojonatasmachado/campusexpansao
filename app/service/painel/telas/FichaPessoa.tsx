@@ -33,6 +33,10 @@ import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Selo, etiquetaClasse } from "../../ui/Selo";
 import { Linha } from "../../ui/Linha";
+import { Campo, Entrada } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
+import { SeletorData } from "../../ui/Data";
+import { Vazio } from "../../ui/Estados";
 export function PersonTimeline({ member, events, compact }: { member: MemberView; events: TimelineEventView[]; compact?: boolean }) {
   const { comTermos: ct } = useTermos();
   const sorted = porData(events);
@@ -257,18 +261,14 @@ export function MemberEditModal({
           <div className="modal-sub">Aniversário, bairro, grupo de comunhão e família.</div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
-          <div className="field"><label className="field-label">Aniversário</label><input className="input" type="date" value={birth} onChange={(e) => setBirth(e.target.value)} /></div>
-          <div className="field"><label className="field-label">Bairro</label><input className="input" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Onde mora" /></div>
+          <Campo rotulo="Aniversário"><SeletorData valor={birth} aoMudar={setBirth} limpavel /></Campo>
+          <Campo rotulo="Bairro"><Entrada value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Onde mora" /></Campo>
           {(church?.settings?.gruposCfg?.ativo ?? true) && (
-            <div className="field">
-              <label className="field-label">{termo("grupo")}</label>
-              <select className="select" value={groupId} onChange={(e) => setGroupId(e.target.value)}>
-                <option value="">Sem grupo</option>
-                {fellowshipGroups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-              </select>
-            </div>
+            <Campo rotulo={termo("grupo")}>
+              <Selecao valor={groupId} aoMudar={setGroupId} vazio="Sem grupo" opcoes={fellowshipGroups.map((g) => ({ v: g.id, l: g.name }))} />
+            </Campo>
           )}
-          <div className="field"><label className="field-label">Família</label><input className="input" value={family} onChange={(e) => setFamily(e.target.value)} placeholder="ex: Família Lima (agrupa parentes na ficha)" /></div>
+          <Campo rotulo="Família"><Entrada value={family} onChange={(e) => setFamily(e.target.value)} placeholder="ex: Família Lima (agrupa parentes na ficha)" /></Campo>
         </div>
         <div className="modal-foot">
           <Botao onClick={onClose}>Cancelar</Botao>
@@ -330,10 +330,9 @@ export function JornadaEditModal({
                   {jaConcluido ? (
                     <div className="cfg-row-s">Concluído{event?.when_label ? ` em ${event.when_label}` : ""}</div>
                   ) : rows[step.kind].done ? (
-                    <div className="field" style={{ marginTop: 8 }}>
-                      <label className="field-label">Data</label>
-                      <input className="input" type="date" value={rows[step.kind].date} onChange={(e) => setData(step.kind, e.target.value)} />
-                    </div>
+                    <Campo rotulo="Data" style={{ marginTop: 8 }}>
+                      <SeletorData valor={rows[step.kind].date} aoMudar={(v) => setData(step.kind, v)} />
+                    </Campo>
                   ) : (
                     <Botao compacto style={{ marginTop: 8 }} onClick={() => marcar(step.kind)}>Marcar como concluído</Botao>
                   )}
@@ -400,13 +399,9 @@ export function AddToMinistryModal({
         </div>
         <div className="modal-body" style={{ display: "block" }}>
           {ministry.positions.length > 0 && (
-            <div className="field" style={{ marginBottom: 14 }}>
-              <label className="field-label">Função (opcional)</label>
-              <select className="select" value={positionId} onChange={(e) => setPositionId(e.target.value)}>
-                <option value="">Sem função definida</option>
-                {ministry.positions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-            </div>
+            <Campo rotulo="Função (opcional)" style={{ marginBottom: 14 }}>
+              <Selecao valor={positionId} aoMudar={setPositionId} vazio="Sem função definida" opcoes={ministry.positions.map((p) => ({ v: p.id, l: p.name }))} />
+            </Campo>
           )}
           <div className="tb-search" style={{ marginBottom: 12 }}>
             <span className="si"><Icon name="buscar" size={13} /></span>
@@ -419,7 +414,7 @@ export function AddToMinistryModal({
               <span className={botaoClasse({ variante: "discreto", compacto: true })} style={{ marginLeft: "auto" }}>Adicionar</span>
             </div>
           ))}
-          {fora.length === 0 && <div className="empty">{q ? "Nenhum resultado." : ct("Todos os {voluntarios} já estão no time.")}</div>}
+          {fora.length === 0 && <Vazio titulo={q ? "Nenhum resultado." : ct("Todos os {voluntarios} já estão no time.")} />}
         </div>
         <div className="modal-foot">
           <Botao onClick={onClose}>Fechar</Botao>

@@ -46,6 +46,9 @@ import { Opcao } from "../../ui/Opcao";
 import { Linha } from "../../ui/Linha";
 import { Etiqueta, Selo } from "../../ui/Selo";
 import { Segmentado } from "../../ui/Segmentado";
+import { Campo, Entrada } from "../../ui/Campo";
+import { Vazio } from "../../ui/Estados";
+import { confirmar } from "../../ui/confirmar";
 export const STATUS_CFG_DEFAULT: StatusCriterios = { recusasInativando: 2, recusasInativo: 4, diasIndispInativo: 30, considerarFerias: false };
 export const GRUPOS_CFG_DEFAULT: GruposCfg = { ativo: true, termo: "Grupos de Comunhão", termoP: "Grupo de Comunhão", sigla: "GC" };
 
@@ -138,13 +141,13 @@ export function AcessosCard({
               </Opcao>
             );
           })}
-          {lista.length === 0 && <div className="empty" style={{ padding: "16px 0" }}>Ninguém encontrado.</div>}
+          {lista.length === 0 && <Vazio titulo="Ninguém encontrado." />}
         </div>
       </div>
       )}
 
       <div className="cfg-card">
-        {!pessoa && <div className="empty" style={{ padding: "30px 0" }}>Escolha uma pessoa na lista para liberar telas.</div>}
+        {!pessoa && <Vazio titulo="Escolha uma pessoa na lista para liberar telas." />}
         {pessoa && (
           <>
             <div className="cfg-card-t">Acessos de {pessoa.name.split(" ")[0]}</div>
@@ -281,7 +284,7 @@ export function TagElencoModal({
               </div>
             );
           })}
-          {lista.length === 0 && <div className="empty">Ninguém encontrado.</div>}
+          {lista.length === 0 && <Vazio titulo="Ninguém encontrado." />}
         </div>
         <div className="modal-foot">
           <Botao variante="principal" onClick={onClose}>Concluído</Botao>
@@ -359,19 +362,19 @@ export function CongregacaoEditModal({
     >
       <FormSection title="Congregação">
         <div className="fs-grid">
-          <div className="field"><label className="field-label req" htmlFor={`${fid}-nome`}>Nome</label><input id={`${fid}-nome`} className="input" aria-required="true" value={form.nome} onChange={set("nome")} /></div>
-          <div className="field"><label className="field-label" htmlFor={`${fid}-cid`}>Cidade ou bairro</label><input id={`${fid}-cid`} className="input" value={form.cidade} onChange={set("cidade")} /></div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-doc`}>CNPJ</label><input id={`${fid}-doc`} className="input" autoCapitalize="characters" value={form.doc} onChange={set("doc")} /></div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-ano`}>Ano de fundação</label><input id={`${fid}-ano`} className="input" inputMode="numeric" value={form.fundada} onChange={set("fundada")} /></div>
+          <Campo rotulo="Nome" obrigatorio><Entrada id={`${fid}-nome`} aria-required="true" value={form.nome} onChange={set("nome")} /></Campo>
+          <Campo rotulo="Cidade ou bairro"><Entrada id={`${fid}-cid`} value={form.cidade} onChange={set("cidade")} /></Campo>
+          <Campo rotulo="CNPJ" className="half"><Entrada id={`${fid}-doc`} autoCapitalize="characters" value={form.doc} onChange={set("doc")} /></Campo>
+          <Campo rotulo="Ano de fundação" className="half"><Entrada id={`${fid}-ano`} inputMode="numeric" value={form.fundada} onChange={set("fundada")} /></Campo>
         </div>
       </FormSection>
 
       <FormSection title="Endereço e contato">
         <div className="fs-grid">
-          <div className="field"><label className="field-label" htmlFor={`${fid}-end`}>Endereço</label><input id={`${fid}-end`} className="input" autoComplete="street-address" value={form.endereco} onChange={set("endereco")} /></div>
+          <Campo rotulo="Endereço"><Entrada id={`${fid}-end`} autoComplete="street-address" value={form.endereco} onChange={set("endereco")} /></Campo>
           <div className="field half"><label className="field-label" htmlFor={`${fid}-cep`}>CEP</label>{/* consulta o CEP: põe a congregação no mapa da igreja */}<CepInput id={`${fid}-cep`} value={form.cep} onChange={(v) => setForm((p) => ({ ...p, cep: v }))} onResult={() => {}} /></div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-tel`}>Telefone</label><input id={`${fid}-tel`} className="input" type="tel" autoComplete="tel" value={form.tel} onChange={set("tel")} /></div>
-          <div className="field"><label className="field-label" htmlFor={`${fid}-mail`}>E-mail</label><input id={`${fid}-mail`} className="input" type="email" autoComplete="email" value={form.email} onChange={set("email")} /></div>
+          <Campo rotulo="Telefone" className="half"><Entrada id={`${fid}-tel`} type="tel" autoComplete="tel" value={form.tel} onChange={set("tel")} /></Campo>
+          <Campo rotulo="E-mail"><Entrada id={`${fid}-mail`} type="email" autoComplete="email" value={form.email} onChange={set("email")} /></Campo>
         </div>
       </FormSection>
 
@@ -524,7 +527,7 @@ export function Config({
   };
 
   async function removeRow(table: string, id: string) {
-    if (!window.confirm("Remover este registro?")) return;
+    if (!(await confirmar({ titulo: "Remover este registro?", acao: "Remover" }))) return;
     await createServiceBrowserClient().schema("service").from(table).delete().eq("id", id);
     router.refresh();
   }
@@ -695,13 +698,12 @@ export function Config({
           <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
             <div className="cfg-card-t">Dados da igreja</div>
             <div className="cfg-card-s">Como sua igreja aparece no app, nas publicações e como a secretaria pode ser encontrada.</div>
-            <div className="field">
-              <label className="field-label" htmlFor={`${cid}-nome`}>Nome da igreja</label>
-              <input id={`${cid}-nome`} name="nome" className="input" value={igrejaForm.nome} onChange={(e) => setIgrejaForm((p) => ({ ...p, nome: e.target.value }))} />
-            </div>
+            <Campo rotulo="Nome da igreja">
+              <Entrada id={`${cid}-nome`} name="nome" value={igrejaForm.nome} onChange={(e) => setIgrejaForm((p) => ({ ...p, nome: e.target.value }))} />
+            </Campo>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
-              <div className="field"><label className="field-label" htmlFor={`${cid}-doc`}>CNPJ</label><input id={`${cid}-doc`} name="doc" className="input" autoCapitalize="characters" value={igrejaForm.doc} onChange={(e) => setIgrejaForm((p) => ({ ...p, doc: e.target.value }))} /></div>
-              <div className="field"><label className="field-label" htmlFor={`${cid}-fundada`}>Fundada em</label><input id={`${cid}-fundada`} name="fundada" className="input" value={igrejaForm.fundada} onChange={(e) => setIgrejaForm((p) => ({ ...p, fundada: e.target.value }))} /></div>
+              <Campo rotulo="CNPJ"><Entrada id={`${cid}-doc`} name="doc" autoCapitalize="characters" value={igrejaForm.doc} onChange={(e) => setIgrejaForm((p) => ({ ...p, doc: e.target.value }))} /></Campo>
+              <Campo rotulo="Fundada em"><Entrada id={`${cid}-fundada`} name="fundada" value={igrejaForm.fundada} onChange={(e) => setIgrejaForm((p) => ({ ...p, fundada: e.target.value }))} /></Campo>
             </div>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
               <div className="field">
@@ -721,19 +723,19 @@ export function Config({
                   }}
                 />
               </div>
-              <div className="field"><label className="field-label" htmlFor={`${cid}-numero`}>Número</label><input id={`${cid}-numero`} name="numero" className="input" inputMode="numeric" value={igrejaForm.numero} onChange={(e) => setIgrejaForm((p) => ({ ...p, numero: e.target.value }))} /></div>
+              <Campo rotulo="Número"><Entrada id={`${cid}-numero`} name="numero" inputMode="numeric" value={igrejaForm.numero} onChange={(e) => setIgrejaForm((p) => ({ ...p, numero: e.target.value }))} /></Campo>
             </div>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
-              <div className="field"><label className="field-label" htmlFor={`${cid}-rua`}>Rua</label><input id={`${cid}-rua`} name="rua" className="input" autoComplete="address-line1" value={igrejaForm.rua} onChange={(e) => setIgrejaForm((p) => ({ ...p, rua: e.target.value }))} /></div>
-              <div className="field"><label className="field-label" htmlFor={`${cid}-bairro`}>Bairro</label><input id={`${cid}-bairro`} name="bairro" className="input" value={igrejaForm.bairro} onChange={(e) => setIgrejaForm((p) => ({ ...p, bairro: e.target.value }))} /></div>
+              <Campo rotulo="Rua"><Entrada id={`${cid}-rua`} name="rua" autoComplete="address-line1" value={igrejaForm.rua} onChange={(e) => setIgrejaForm((p) => ({ ...p, rua: e.target.value }))} /></Campo>
+              <Campo rotulo="Bairro"><Entrada id={`${cid}-bairro`} name="bairro" value={igrejaForm.bairro} onChange={(e) => setIgrejaForm((p) => ({ ...p, bairro: e.target.value }))} /></Campo>
             </div>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
-              <div className="field"><label className="field-label" htmlFor={`${cid}-cidade`}>Cidade</label><input id={`${cid}-cidade`} name="cidade" className="input" autoComplete="address-level2" value={igrejaForm.cidade} onChange={(e) => setIgrejaForm((p) => ({ ...p, cidade: e.target.value }))} /></div>
-              <div className="field"><label className="field-label" htmlFor={`${cid}-estado`}>Estado</label><input id={`${cid}-estado`} name="estado" className="input" autoComplete="address-level1" value={igrejaForm.estado} onChange={(e) => setIgrejaForm((p) => ({ ...p, estado: e.target.value }))} /></div>
+              <Campo rotulo="Cidade"><Entrada id={`${cid}-cidade`} name="cidade" autoComplete="address-level2" value={igrejaForm.cidade} onChange={(e) => setIgrejaForm((p) => ({ ...p, cidade: e.target.value }))} /></Campo>
+              <Campo rotulo="Estado"><Entrada id={`${cid}-estado`} name="estado" autoComplete="address-level1" value={igrejaForm.estado} onChange={(e) => setIgrejaForm((p) => ({ ...p, estado: e.target.value }))} /></Campo>
             </div>
             <div className="cfg-grid2" style={{ gap: "0 16px" }}>
-              <div className="field"><label className="field-label" htmlFor={`${cid}-email`}>E-mail</label><input id={`${cid}-email`} name="email" className="input" type="email" autoComplete="email" inputMode="email" value={igrejaForm.email} onChange={(e) => setIgrejaForm((p) => ({ ...p, email: e.target.value }))} /></div>
-              <div className="field"><label className="field-label" htmlFor={`${cid}-tel`}>Telefone</label><input id={`${cid}-tel`} name="tel" className="input" type="tel" autoComplete="tel" inputMode="tel" value={igrejaForm.tel} onChange={(e) => setIgrejaForm((p) => ({ ...p, tel: e.target.value }))} /></div>
+              <Campo rotulo="E-mail"><Entrada id={`${cid}-email`} name="email" type="email" autoComplete="email" inputMode="email" value={igrejaForm.email} onChange={(e) => setIgrejaForm((p) => ({ ...p, email: e.target.value }))} /></Campo>
+              <Campo rotulo="Telefone"><Entrada id={`${cid}-tel`} name="tel" type="tel" autoComplete="tel" inputMode="tel" value={igrejaForm.tel} onChange={(e) => setIgrejaForm((p) => ({ ...p, tel: e.target.value }))} /></Campo>
             </div>
             <FusoField value={igrejaForm.fuso} onChange={(fuso) => setIgrejaForm((p) => ({ ...p, fuso }))} />
             {igrejaMudou && (
@@ -796,7 +798,7 @@ export function Config({
               </Linha>
             );
           })}
-          {ministries.length === 0 && <div className="empty">Nenhum time ainda.</div>}
+          {ministries.length === 0 && <Vazio titulo="Nenhum time ainda." />}
         </div>
       )}
 
@@ -871,7 +873,7 @@ export function Config({
                 </Linha>
               );
             })}
-            {tags.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>Nenhuma etiqueta cadastrada.</div>}
+            {tags.length === 0 && <Vazio titulo="Nenhuma etiqueta cadastrada." />}
           </div>
           <Botao compacto onClick={() => setModal({ eyebrow: "Criar", title: "Nova etiqueta", subtitle: ct("Etiqueta livre para agrupar {voluntarios} (ex: Jovens, Casais)."), saveLabel: "Criar etiqueta", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Jovens" }, { k:"cor", label:"Cor", type:"select", options: TAG_CORES }], action: { kind: "tag" } })}>+ Etiqueta</Botao>
         </div>
@@ -893,7 +895,7 @@ export function Config({
             {gruposCfg.ativo && (
               <div className="cfg-grid2" style={{ gap: "0 16px", marginTop: 16 }}>
                 <div className="field"><label className="field-label">Nome</label><div className="cfg-row-s" style={{ marginTop: 4 }}>{ct("{Grupo}")}. O nome se muda em Personalização, em Nomes usados no app.</div></div>
-                <div className="field"><label className="field-label">Sigla</label><input className="input" value={gruposCfg.sigla} onChange={(e) => setGruposCfgState({ ...gruposCfg, sigla: e.target.value })} onBlur={() => saveGruposCfg(gruposCfg)} placeholder="ex: GC" /></div>
+                <Campo rotulo="Sigla"><Entrada value={gruposCfg.sigla} onChange={(e) => setGruposCfgState({ ...gruposCfg, sigla: e.target.value })} onBlur={() => saveGruposCfg(gruposCfg)} placeholder="ex: GC" /></Campo>
               </div>
             )}
           </div>
@@ -915,7 +917,7 @@ export function Config({
                   </Linha>
                 );
               })}
-              {fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhum grupo cadastrado ainda.</div>}
+              {fellowshipGroups.length === 0 && <Vazio titulo="Nenhum grupo cadastrado ainda." />}
               <Botao variante="principal" compacto style={{ marginTop: 18 }} onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {grupo}"), subtitle: "Nome, líder, dia e horário. O endereço e os lugares ficam em Editar.", saveLabel: "Criar grupo", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: GC Centro" }, { k:"lider", label:"Líder", type:"select", half:true, ph:"A definir", options: people.map((p) => ({ v: p.name, l: p.name })) }, { k:"dia", label:"Dia", type:"text", half:true, ph:"ex: Quarta-feira" }, { k:"hora", label:"Horário", type:"text", half:true, ph:"ex: 20h" }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"ex: Centro" }], action: { kind: "group" } })}>+ Novo grupo</Botao>
             </div>
           )}
@@ -942,8 +944,7 @@ export function Config({
           <div className="cfg-card">
             <div className="cfg-card-t">Regras de escala</div>
             <div className="cfg-card-s">Como a escala é gerada e os limites para não sobrecarregar ninguém. Valem para o botão “Gerar” e para o modo automático.</div>
-            <div className="field" style={{ marginTop: 4 }}>
-              <label className="field-label">Geração</label>
+            <Campo rotulo="Geração" grupo style={{ marginTop: 4 }}>
               <div className="opt-row" style={{ flexWrap: "wrap" }}>
                 {([["manual", "Manual", "O líder monta tudo na mão."], ["assistido", "Assistida", "O sistema sugere; o líder confirma cada nome."], ["automatico", "Automática", "O sistema gera e já confirma, sem ação."]] as [EscalaSettings["modo"], string, string][]).map(([k, t, s]) => (
                   <Opcao key={k} marcada={escalaCfg.modo === k} estilo="opt" onClick={() => setEscala("modo", k)}>
@@ -952,7 +953,7 @@ export function Config({
                   </Opcao>
                 ))}
               </div>
-            </div>
+            </Campo>
             <div className="crit-row">
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Máximo de vezes por mês</div>
@@ -1204,16 +1205,12 @@ export function Config({
             </div>
             {TERMOS_IDS.map((id) => (
               <div key={id} className="cfg-grid2" style={{ gap: "0 16px", marginTop: 16 }}>
-                <div className="field">
-                  <label className="field-label" htmlFor={`voc-${id}-tela`}>{TERMOS[id].tela} · nome da tela</label>
-                  <input id={`voc-${id}-tela`} className="input" value={vocabEdit[id].tela} maxLength={LIMITE_TELA} placeholder={TERMOS[id].tela} onChange={(e) => patchVocab(id, "tela", e.target.value)} />
-                  <div className="field-hint">{TERMOS[id].ajuda} · {vocabEdit[id].tela.length} de {LIMITE_TELA}</div>
-                </div>
-                <div className="field">
-                  <label className="field-label" htmlFor={`voc-${id}-curto`}>Nome curto da barra</label>
-                  <input id={`voc-${id}-curto`} className="input" value={vocabEdit[id].curto} maxLength={LIMITE_CURTO} placeholder={TERMOS[id].curto} onChange={(e) => patchVocab(id, "curto", e.target.value)} />
-                  <div className="field-hint">{vocabEdit[id].curto.length} de {LIMITE_CURTO}</div>
-                </div>
+                <Campo rotulo={`${TERMOS[id].tela} · nome da tela`} ajuda={`${TERMOS[id].ajuda} · ${vocabEdit[id].tela.length} de ${LIMITE_TELA}`}>
+                  <Entrada id={`voc-${id}-tela`} value={vocabEdit[id].tela} maxLength={LIMITE_TELA} placeholder={TERMOS[id].tela} onChange={(e) => patchVocab(id, "tela", e.target.value)} />
+                </Campo>
+                <Campo rotulo="Nome curto da barra" ajuda={`${vocabEdit[id].curto.length} de ${LIMITE_CURTO}`}>
+                  <Entrada id={`voc-${id}-curto`} value={vocabEdit[id].curto} maxLength={LIMITE_CURTO} placeholder={TERMOS[id].curto} onChange={(e) => patchVocab(id, "curto", e.target.value)} />
+                </Campo>
               </div>
             ))}
           </div>
@@ -1292,7 +1289,7 @@ export function Config({
               ))}
             </>
           )}
-          {churches.length === 0 && <div className="empty">Nenhuma congregação encontrada.</div>}
+          {churches.length === 0 && <Vazio titulo="Nenhuma congregação encontrada." />}
           <Botao
             variante="principal" compacto
             style={{ marginTop: 18 }}

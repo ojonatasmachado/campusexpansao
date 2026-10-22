@@ -12,6 +12,7 @@ import type { BaptismClass, Course, CourseLesson, CourseModule, Enrollment, Jour
 
 import { Botao } from "../ui/Botao";
 import { Cartao } from "../ui/Cartao";
+import { Campo, Entrada } from "../ui/Campo";
 // ── constantes ────────────────────────────────────────────────────────────────
 
 /* etapas da caminhada; a 4ª usa o nome que a igreja deu aos grupos
@@ -85,7 +86,6 @@ export function Onboarding({ person, member, churchName, churchLogoUrl, onComple
   const todos = contactErrors(d);
   const erros = { name: todos.name, phone: todos.phone };
   const dadosOk = !erros.name && !erros.phone;
-  const err = (k: "name" | "phone") => (tentou && erros[k] ? <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginTop: 4 }}>{erros[k]}</div> : null);
 
   const steps = [
     {
@@ -93,16 +93,12 @@ export function Onboarding({ person, member, churchName, churchLogoUrl, onComple
       s: "Confirme seu nome e seu telefone. É o que a liderança usa para falar com você.",
       body: (
         <div className="ob-form">
-          <div className="field">
-            <label className="field-label req" htmlFor={`${fieldId}-name`}>Nome e sobrenome</label>
-            <input id={`${fieldId}-name`} className="input" value={d.name} autoComplete="name" onChange={(e) => set("name", e.target.value)} />
-            {err("name")}
-          </div>
-          <div className="field">
-            <label className="field-label req" htmlFor={`${fieldId}-phone`}>Telefone (WhatsApp)</label>
-            <input id={`${fieldId}-phone`} className="input" type="tel" value={d.phone} autoComplete="tel" placeholder="(11) 90000-0000" onChange={(e) => set("phone", e.target.value)} />
-            {err("phone")}
-          </div>
+          <Campo rotulo="Nome e sobrenome" obrigatorio erro={tentou && erros.name ? erros.name : undefined}>
+            <Entrada id={`${fieldId}-name`} value={d.name} autoComplete="name" onChange={(e) => set("name", e.target.value)} />
+          </Campo>
+          <Campo rotulo="Telefone (WhatsApp)" obrigatorio erro={tentou && erros.phone ? erros.phone : undefined}>
+            <Entrada id={`${fieldId}-phone`} type="tel" value={d.phone} autoComplete="tel" placeholder="(11) 90000-0000" onChange={(e) => set("phone", e.target.value)} />
+          </Campo>
         </div>
       ),
       ok: "Continuar →",

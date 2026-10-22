@@ -16,6 +16,8 @@ import { useTermos } from "../../lib/vocabulario-context";
 import type { ChurchView, MinistryView } from "../../ServiceExactApp";
 
 import { Opcao } from "../../ui/Opcao";
+import { Campo, Entrada, Marcar } from "../../ui/Campo";
+import { SeletorData, SeletorHora } from "../../ui/Data";
 const MODELOS = ["Vigília", "Batismo", "Santa Ceia", "Conferência", "Culto especial"];
 const DIA_CURTO = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -82,19 +84,15 @@ export function EscalaExtra({ ministries, church, onClose, onCriado }: {
               {MODELOS.map((m) => <Opcao key={m} marcada={nome === m} estilo="seg-chip" aria-pressed={nome === m} onClick={() => setNome(m)}>{m}</Opcao>)}
             </div>
           </div>
-          <div className="field half">
-            <label className="field-label req" htmlFor={`${fid}-dia`}>Dia</label>
-            <input id={`${fid}-dia`} className="input" type="date" value={data} onChange={(e) => setData(e.target.value)} />
-            {passado && <div className="field-hint">Essa data já passou.</div>}
-          </div>
-          <div className="field half">
-            <label className="field-label" htmlFor={`${fid}-hora`}>Horário</label>
-            <input id={`${fid}-hora`} className="input" type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
-          </div>
-          <div className="field">
-            <label className="field-label" htmlFor={`${fid}-local`}>Local</label>
-            <input id={`${fid}-local`} className="input" value={local} onChange={(e) => setLocal(e.target.value)} placeholder="Ex.: Templo, salão ou endereço" />
-          </div>
+          <Campo rotulo="Dia" obrigatorio id={`${fid}-dia`} className="half" ajuda={passado ? "Essa data já passou." : undefined}>
+            <SeletorData valor={data} aoMudar={setData} />
+          </Campo>
+          <Campo rotulo="Horário" id={`${fid}-hora`} className="half">
+            <SeletorHora valor={hora} aoMudar={setHora} />
+          </Campo>
+          <Campo rotulo="Local" id={`${fid}-local`}>
+            <Entrada value={local} onChange={(e) => setLocal(e.target.value)} placeholder="Ex.: Templo, salão ou endereço" />
+          </Campo>
         </div>
       </FormSection>
       <FormSection title="Times que servem">
@@ -103,13 +101,12 @@ export function EscalaExtra({ ministries, church, onClose, onCriado }: {
         ) : (
           <div className="per-lista">
             {comFuncoes.map((m) => (
-              <label className="fs-check" key={m.id}>
-                <input type="checkbox" checked={times.has(m.id)} onChange={() => setTimes((atual) => { const n = new Set(atual); if (n.has(m.id)) n.delete(m.id); else n.add(m.id); return n; })} />
+              <Marcar className="fs-check" key={m.id} checked={times.has(m.id)} onChange={() => setTimes((atual) => { const n = new Set(atual); if (n.has(m.id)) n.delete(m.id); else n.add(m.id); return n; })}>
                 <span className="per-check-txt">
                   <span className="per-check-t">{m.name}</span>
                   <span className="per-check-s">{joinDot(plural(m.positions.reduce((s, p) => s + Math.max(1, p.need_count), 0), "vaga"), m.positions.map((p) => p.name).join(", "))}</span>
                 </span>
-              </label>
+              </Marcar>
             ))}
           </div>
         )}

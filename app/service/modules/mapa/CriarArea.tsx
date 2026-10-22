@@ -10,6 +10,8 @@ import { milhar, pessoasNaRegiao, umACada } from "./linguagem";
 
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
+import { Campo, Entrada } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
 /* Ferramentas › Criar uma área (tela 9 do design). Padrão: juntar bairros,
    clicando neles. Desenhar à mão fica como segunda opção. Os números
    (pessoas, moradores, células) mudam a cada bairro ou ponto. */
@@ -131,7 +133,7 @@ export function CriarArea({ ctx, bairrosIniciais, nivel }: { ctx: ContextoMapa; 
           <p className="mp-fraco" style={{ marginTop: 8 }}>{nomesBairros.length ? nomesBairros.join(", ") : "Os números mudam a cada bairro ou ponto."}{previa && previa.pessoas >= 3 ? ` ${umACada(previa.moradores / previa.pessoas)}.` : ""}</p>
         </div>
         <div className="mp-corpo">
-          <div className="field"><label className="field-label req" htmlFor="ca-nome">Nome</label><input id="ca-nome" className="input" value={nome} maxLength={60} placeholder="ex: Setor Norte" onChange={(e) => setNome(e.target.value)} /></div>
+          <Campo rotulo="Nome" obrigatorio id="ca-nome"><Entrada value={nome} maxLength={60} placeholder="ex: Setor Norte" onChange={(e) => setNome(e.target.value)} /></Campo>
           <div className="field">
             <span className="field-label">Tipo</span>
             <div className="mp-seg" role="group" aria-label="Tipo" style={{ ["--n" as string]: 3 } as React.CSSProperties}>
@@ -144,13 +146,10 @@ export function CriarArea({ ctx, bairrosIniciais, nivel }: { ctx: ContextoMapa; 
               {CORES_AREA.map((c) => <Acao key={c} aria-label={NOME_COR[c]} aria-pressed={cor === c} onClick={() => setCor(c)} style={{ width: 32, height: 32, borderRadius: 16, border: 0, background: `var(--mapa-${c})`, boxShadow: cor === c ? "0 0 0 2px var(--graphite), 0 0 0 4px var(--white)" : "none", cursor: "pointer" }} />)}
             </div>
           </div>
-          <div className="field">
-            <label className="field-label" htmlFor="ca-resp">Responsável</label>
-            <select id="ca-resp" className="input" value={resp} onChange={(e) => setResp(e.target.value)}>
-              <option value="">Escolher depois</option>
-              {ctx.people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-          </div>
+          <Campo rotulo="Responsável" id="ca-resp">
+            <Selecao valor={resp} aoMudar={setResp} vazio="Escolher depois"
+              opcoes={ctx.people.map((p) => ({ v: p.id, l: p.name }))} />
+          </Campo>
           <p className="mp-fraco">Quem receber o mapa com esta área verá só o que está dentro dela.</p>
           {erro && <p className="mp-texto" role="alert" style={{ color: "var(--danger)" }}>{erro}</p>}
         </div>

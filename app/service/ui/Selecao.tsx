@@ -10,19 +10,20 @@
 
    Visual em biblioteca.css (.sel-*). */
 
-import { useEffect, useId, useState } from "react";
+import { Fragment, useEffect, useId, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { Caret } from "../lib/icons";
 import { Acao } from "./Acao";
 import { Opcao } from "./Opcao";
 import { usePopover } from "./popover";
 
-export type SelecaoOpcao = { v: string; l: string; desativada?: boolean };
+/* grupo: título que aparece antes da primeira opção de cada grupo (como o <optgroup>) */
+export type SelecaoOpcao = { v: string; l: string; desativada?: boolean; grupo?: string };
 
 export type SelecaoProps = {
   valor: string;
   aoMudar: (v: string) => void;
-  opcoes: SelecaoOpcao[];
+  opcoes: readonly SelecaoOpcao[];
   /* texto quando nada foi escolhido; vira também a primeira opção (valor "") */
   vazio?: string;
   /* nome falado quando não há Campo com rótulo em volta */
@@ -38,7 +39,7 @@ export function Selecao({ valor, aoMudar, opcoes, vazio, rotulo, id, desativado,
   const [open, setOpen] = useState(false);
   const { caixa, gatilho } = usePopover(open, setOpen);
   const listaId = useId();
-  const itens = [...(vazio ? [{ v: "", l: vazio }] : []), ...opcoes];
+  const itens: SelecaoOpcao[] = [...(vazio ? [{ v: "", l: vazio }] : []), ...opcoes];
   const atual = opcoes.find((o) => o.v === valor);
 
   /* abre com o escolhido em foco */
@@ -74,9 +75,13 @@ export function Selecao({ valor, aoMudar, opcoes, vazio, rotulo, id, desativado,
       </Acao>
       {open && (
         <div className="sel-pop" id={listaId} role="listbox" aria-label={rotulo} onKeyDown={navegar}>
-          {itens.map((o) => (
-            <Opcao key={o.v || "_vazio"} role="option" aria-selected={valor === o.v} marcada={valor === o.v}
-              estilo="sel-opt" desativado={o.desativada} onClick={() => escolher(o.v)}>{o.l}</Opcao>
+          {itens.map((o, i) => (
+            <Fragment key={o.v || "_vazio"}>
+              {o.grupo && o.grupo !== itens[i - 1]?.grupo
+                ? <div className="sel-grupo" role="presentation">{o.grupo}</div> : null}
+              <Opcao role="option" aria-selected={valor === o.v} marcada={valor === o.v}
+                estilo="sel-opt" desativado={o.desativada} onClick={() => escolher(o.v)}>{o.l}</Opcao>
+            </Fragment>
           ))}
         </div>
       )}

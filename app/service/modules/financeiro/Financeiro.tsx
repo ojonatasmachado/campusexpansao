@@ -31,6 +31,9 @@ import { Cartao } from "../../ui/Cartao";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Segmentado } from "../../ui/Segmentado";
 import { Contagem } from "../../ui/Contagem";
+import { Marcar } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
+import { Carregando } from "../../ui/Estados";
 type Tela =
   | null
   | { k: "entrada" | "despesa"; edit?: Lancamento }
@@ -112,7 +115,7 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
   if (fin.carregando || fin.erro) return (
     <div className="content wide fin">
       <PageHead title="Financeiro" eyebrow="Gestão" help={HELP} />
-      {fin.carregando ? <Cartao><div className="panel-body" role="status">Carregando saldos e lançamentos...</div></Cartao> : (
+      {fin.carregando ? <Cartao><div className="panel-body"><Carregando forma="lista" rotulo="Carregando saldos e lançamentos" /></div></Cartao> : (
         <Cartao><div className="panel-body">
           <p className="fs-error" role="alert">{fin.erro}</p>
           <p className="ph-sub">Os valores estão indisponíveis. Tente carregar novamente para consultar saldos e lançamentos.</p>
@@ -209,15 +212,9 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
                 <Opcao key={v} marcada={tipo === v} aria-pressed={tipo === v} onClick={() => { setTipo(v); setCat(""); }}>{l}</Opcao>
               ))}
             </Segmentado>
-            <select className="select fin-sel" aria-label="Conta" value={conta} onChange={(e) => setConta(e.target.value)}>
-              <option value="">Todas as contas</option>
-              {fin.contas.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <Selecao className="fin-sel" rotulo="Conta" valor={conta} aoMudar={setConta} vazio="Todas as contas" opcoes={fin.contas.map((c) => ({ v: c.id, l: c.name }))} />
             {tipo !== "transferencia" && (
-              <select className="select fin-sel" aria-label="Categoria" value={cat} onChange={(e) => setCat(e.target.value)}>
-                <option value="">Todas as categorias</option>
-                {fin.categorias.filter((c) => tipo === "todos" || c.kind === tipo).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              <Selecao className="fin-sel" rotulo="Categoria" valor={cat} aoMudar={setCat} vazio="Todas as categorias" opcoes={fin.categorias.filter((c) => tipo === "todos" || c.kind === tipo).map((c) => ({ v: c.id, l: c.name }))} />
             )}
             <span className="tb-spacer" />
             <Botao compacto onClick={exportar} desativado={lista.length === 0}><Icon name="baixar" size={14} /> Exportar CSV</Botao>
@@ -384,7 +381,7 @@ function ListaSimples<T extends ItemSimples>({ titulo, tabela, kind, itens, org,
       {podeLancar && (
         <form className={`${linhaClasse({ estilo: "tabela" })} fin-novo`} onSubmit={(e) => { e.preventDefault(); void adicionar(); }}>
           <input className="input" aria-label={`Nome do novo item em ${titulo}`} maxLength={60} placeholder="Novo nome" value={novo} onChange={(e) => setNovo(e.target.value)} />
-          {comDesignado && <label className="fs-check fin-check"><input type="checkbox" checked={designado} onChange={(e) => setDesignado(e.target.checked)} /> Designado</label>}
+          {comDesignado && <Marcar className="fs-check fin-check" checked={designado} onChange={(e) => setDesignado(e.target.checked)}>Designado</Marcar>}
           <Botao type="submit" compacto desativado={!novo.trim()}>Adicionar</Botao>
         </form>
       )}

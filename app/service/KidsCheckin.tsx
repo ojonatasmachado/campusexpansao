@@ -11,6 +11,8 @@ import { Icon } from "./lib/icons";
 import { Botao } from "./ui/Botao";
 import { Acao } from "./ui/Acao";
 import { Cartao } from "./ui/Cartao";
+import { Vazio } from "./ui/Estados";
+import { confirmar } from "./ui/confirmar";
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
 type EventLite = {
@@ -113,7 +115,7 @@ export function KidsQRModal({
   };
 
   const regenerar = async () => {
-    if (!sessionId || !window.confirm("Gerar um novo QR Code? O anterior deixa de funcionar.")) return;
+    if (!sessionId || !(await confirmar({ titulo: "Gerar um novo QR Code?", texto: "O anterior deixa de funcionar.", acao: "Gerar novo código", perigo: false }))) return;
     const token = generateToken();
     setQrToken(token);
     setQrActive(true);
@@ -208,7 +210,7 @@ export function KidsQRModal({
                 </Cartao>
               )}
               <div className="ck-roster">
-                {present.filter((a) => a.status === "presente").length === 0 && <div className="empty">Nenhuma criança na sala ainda.</div>}
+                {present.filter((a) => a.status === "presente").length === 0 && <Vazio titulo="Nenhuma criança na sala ainda." />}
                 {present.filter((a) => a.status === "presente").map((att) => {
                   const child = childById.get(att.child_id);
                   return (

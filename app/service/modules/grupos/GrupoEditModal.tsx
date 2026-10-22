@@ -7,6 +7,8 @@ import { useTermos } from "../../lib/vocabulario-context";
 import { FormScreen, FormSection, type FormScreenHandle } from "../../painel/form/FormScreen";
 import { friendlyWriteError } from "../../painel/erros";
 import type { FellowshipGroupView, PersonView } from "../../painel/tipos";
+import { Campo, Entrada } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
 
 /* Editar um grupo (célula, GC, PG): dia, horário, líder, local e lotação.
    O local é público para os membros da igreja ("Onde", mapa da igreja,
@@ -83,32 +85,27 @@ export function GrupoEditModal({ grupo, people, onClose, onRefresh }: { grupo: F
     >
       <FormSection title="Encontro">
         <div className="fs-grid">
-          <div className="field"><label className="field-label req" htmlFor={`${fid}-nome`}>Nome</label><input id={`${fid}-nome`} className="input" aria-required="true" value={form.nome} onChange={set("nome")} /></div>
-          <div className="field">
-            <label className="field-label" htmlFor={`${fid}-lider`}>Líder</label>
-            <select id={`${fid}-lider`} className="input" value={form.lider} onChange={set("lider")}>
-              <option value="">A definir</option>
-              {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-          </div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-dia`}>Dia</label><input id={`${fid}-dia`} className="input" placeholder="ex: Quinta-feira" value={form.dia} onChange={set("dia")} /></div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-hora`}>Horário</label><input id={`${fid}-hora`} className="input" placeholder="ex: 20h" value={form.hora} onChange={set("hora")} /></div>
-          <div className="field half">
-            <label className="field-label" htmlFor={`${fid}-lot`}>Lugares</label>
-            <input id={`${fid}-lot`} className="input" inputMode="numeric" placeholder="sem limite" value={form.lotacao} aria-invalid={lotacaoInvalida} onChange={set("lotacao")} />
-          </div>
+          <Campo rotulo="Nome" obrigatorio id={`${fid}-nome`}><Entrada aria-required="true" value={form.nome} onChange={set("nome")} /></Campo>
+          <Campo rotulo="Líder" id={`${fid}-lider`}>
+            <Selecao valor={form.lider} aoMudar={(v) => setForm((p) => ({ ...p, lider: v }))} vazio="A definir"
+              opcoes={people.map((p) => ({ v: p.id, l: p.name }))} />
+          </Campo>
+          <Campo rotulo="Dia" id={`${fid}-dia`} className="half"><Entrada placeholder="ex: Quinta-feira" value={form.dia} onChange={set("dia")} /></Campo>
+          <Campo rotulo="Horário" id={`${fid}-hora`} className="half"><Entrada placeholder="ex: 20h" value={form.hora} onChange={set("hora")} /></Campo>
+          <Campo rotulo="Lugares" id={`${fid}-lot`} className="half">
+            <Entrada inputMode="numeric" placeholder="sem limite" value={form.lotacao} aria-invalid={lotacaoInvalida} onChange={set("lotacao")} />
+          </Campo>
         </div>
       </FormSection>
 
       <FormSection title="Onde acontece">
         <p className="fs-note">O endereço aparece para os membros da igreja, para quem quiser participar encontrar a casa.</p>
         <div className="fs-grid">
-          <div className="field half">
-            <label className="field-label" htmlFor={`${fid}-cep`}>CEP</label>
+          <Campo rotulo="CEP" id={`${fid}-cep`} className="half">
             <CepInput id={`${fid}-cep`} value={form.cep} onBusyChange={setConsultando} onChange={(v) => { setForm((p) => ({ ...p, cep: v })); setEndereco({}); }} onResult={(r) => { if (r) setEndereco(r); }} />
-          </div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-num`}>Número</label><input id={`${fid}-num`} className="input" value={form.numero} onChange={set("numero")} /></div>
-          <div className="field"><label className="field-label" htmlFor={`${fid}-comp`}>Complemento</label><input id={`${fid}-comp`} className="input" placeholder="ex: casa 2, apto 31" value={form.complemento} onChange={set("complemento")} /></div>
+          </Campo>
+          <Campo rotulo="Número" id={`${fid}-num`} className="half"><Entrada value={form.numero} onChange={set("numero")} /></Campo>
+          <Campo rotulo="Complemento" id={`${fid}-comp`}><Entrada placeholder="ex: casa 2, apto 31" value={form.complemento} onChange={set("complemento")} /></Campo>
         </div>
         {(endereco.street || endereco.neighborhood) && <p className="fs-note">{[endereco.street, endereco.neighborhood, endereco.city].filter(Boolean).join(" · ")}</p>}
       </FormSection>

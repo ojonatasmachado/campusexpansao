@@ -18,6 +18,8 @@ import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
 import { Cartao } from "../../ui/Cartao";
 import { Selo } from "../../ui/Selo";
+import { Selecao } from "../../ui/Selecao";
+import { Carregando } from "../../ui/Estados";
 type Filtro = "ativos" | "mural" | "intercessao" | "respondidos" | "ocultos" | "arquivados";
 const FILTROS: { id: Filtro; rotulo: string; vale: (p: PedidoPainel) => boolean }[] = [
   { id: "ativos", rotulo: "Ativos", vale: (p) => p.moderation === "ativo" && !p.answered_at },
@@ -63,10 +65,8 @@ export function OracaoPainel({ organizationId, churches = [] }: { organizationId
 
       <div className="toolbar">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar no pedido ou no nome..." value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar pedidos" /></div>
-        <select className="select or-sel" value={categoria} onChange={(e) => setCategoria(e.target.value as Categoria | "")} aria-label="Categoria">
-          <option value="">Todas as categorias</option>
-          {CATEGORIAS.map((c) => <option key={c.id} value={c.id}>{c.rotulo}</option>)}
-        </select>
+        <Selecao className="or-sel" rotulo="Categoria" valor={categoria} aoMudar={(v) => setCategoria(v as Categoria | "")} vazio="Todas as categorias"
+          opcoes={CATEGORIAS.map((c) => ({ v: c.id, l: c.rotulo }))} />
       </div>
       <div className="fs-chips or-filtros" role="group" aria-label="Filtrar pedidos">
         {FILTROS.map((f) => {
@@ -76,7 +76,7 @@ export function OracaoPainel({ organizationId, churches = [] }: { organizationId
       </div>
 
       <div className="mural-list">
-        {dados === null && !erro && <Cartao><div className="panel-body"><span className="mural-meta">Carregando os pedidos...</span></div></Cartao>}
+        {dados === null && !erro && <Carregando forma="lista" />}
         {erro && <EmptyState title="Não deu para carregar os pedidos" text="Confira a conexão e tente de novo." action={{ label: "Tentar de novo", onClick: () => void recarregar() }} />}
         {dados !== null && lista.length === 0 && (
           <EmptyState title="Nenhum pedido de oração ainda" text="Quando alguém pedir oração pelo app, o pedido aparece aqui para a intercessão acompanhar." />
