@@ -288,7 +288,7 @@ export function ReservaModal({ rooms, reservations, church, salaInicial, dataIni
   };
 
   return (
-    <Janela larga sobretitulo="Reservar espaço" titulo="Novo compromisso na sala" texto="Não deixamos duas reservas se cruzarem no mesmo espaço e horário." aoFechar={onClose}
+    <Janela larga sobretitulo="Reservar espaço" titulo="Novo compromisso na sala" texto="Não deixamos duas reservas se cruzarem no mesmo espaço e horário." aoFechar={onClose} ocupada={saving}
       rodape={<>
         <Botao onClick={onClose}>Cancelar</Botao>
         <Botao variante="principal" desativado={saving || !!conflito || !salaId} onClick={salvar}>Reservar</Botao>

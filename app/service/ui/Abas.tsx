@@ -7,6 +7,7 @@
    Teclado de abas (WAI-ARIA): setas trocam de aba, Home/End vão às pontas.
    O conteúdo de cada aba fica em <PainelAba> com o mesmo id. */
 
+import { useId } from "react";
 import type { HTMLAttributes, KeyboardEvent, ReactNode } from "react";
 import { Opcao } from "./Opcao";
 import { useIndicador } from "./indicador";
@@ -19,12 +20,16 @@ export type AbasProps = {
   aoMudar: (id: string) => void;
   /* nome falado do grupo de abas */
   rotulo: string;
-  /* prefixo dos ids (aba e painel), quando a tela tem mais de um grupo */
+  /* prefixo dos ids (aba e painel); sem ele, um único por grupo de abas */
   prefixo?: string;
+  /* a tela usa <PainelAba> com o mesmo prefixo: as abas apontam para os painéis */
+  comPaineis?: boolean;
   className?: string;
 };
 
-export function Abas({ abas, ativa, aoMudar, rotulo, prefixo = "aba", className }: AbasProps) {
+export function Abas({ abas, ativa, aoMudar, rotulo, prefixo: prefixoDado, comPaineis, className }: AbasProps) {
+  const auto = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const prefixo = prefixoDado ?? `aba${auto}`;
   const { caixa, indicador } = useIndicador<HTMLDivElement, HTMLSpanElement>();
   const andar = (e: KeyboardEvent) => {
     const i = abas.findIndex((a) => a.id === ativa);
@@ -32,7 +37,7 @@ export function Abas({ abas, ativa, aoMudar, rotulo, prefixo = "aba", className 
       e.preventDefault();
       const alvo = abas[(j + abas.length) % abas.length];
       aoMudar(alvo.id);
-      caixa.current?.querySelector<HTMLButtonElement>(`#${prefixo}-${alvo.id}`)?.focus();
+      [...(caixa.current?.querySelectorAll<HTMLButtonElement>("[role=tab]") ?? [])].find((b) => b.dataset.aba === alvo.id)?.focus();
     };
     if (e.key === "ArrowRight") ir(i + 1);
     else if (e.key === "ArrowLeft") ir(i - 1);
@@ -44,10 +49,10 @@ export function Abas({ abas, ativa, aoMudar, rotulo, prefixo = "aba", className 
       {abas.map((a) => {
         const on = a.id === ativa;
         return (
-          <Opcao key={a.id} id={`${prefixo}-${a.id}`} estilo="aba" role="tab" marcada={on} aria-selected={on}
-            aria-controls={`${prefixo}-painel-${a.id}`} tabIndex={on ? 0 : -1} onClick={() => aoMudar(a.id)}>
+          <Opcao key={a.id} id={`${prefixo}-${a.id}`} data-aba={a.id} estilo="aba" role="tab" marcada={on} aria-selected={on}
+            aria-controls={comPaineis ? `${prefixo}-painel-${a.id}` : undefined} tabIndex={on ? 0 : -1} onClick={() => aoMudar(a.id)}>
             {a.rotulo}
-            {a.contador != null && a.contador > 0 ? <span className="aba-contador num">{a.contador}</span> : null}
+            {a.contador != null ? <span className="aba-contador num">{a.contador}</span> : null}
           </Opcao>
         );
       })}

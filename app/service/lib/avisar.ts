@@ -17,6 +17,8 @@ export type AvisoOpcoes = {
   acao?: { rotulo: string; fn: () => void };
   /* milissegundos na tela; padrão 3,5 s, 5 s com ação ou alerta */
   duracao?: number;
+  /* avisos com a mesma chave não se acumulam: o novo tira o anterior (e o Desfazer dele) */
+  chave?: string;
 };
 
 export function avisar(mensagem: string, tipo: "ok" | "info" | "warn" = "ok", opcoes: AvisoOpcoes = {}) {
@@ -29,8 +31,10 @@ export function avisar(mensagem: string, tipo: "ok" | "info" | "warn" = "ok", op
     host.setAttribute("aria-live", "polite");
     document.body.appendChild(host);
   }
+  if (opcoes.chave) host.querySelectorAll<HTMLElement>(`.toast[data-chave="${CSS.escape(opcoes.chave)}"]`).forEach((v) => v.dispatchEvent(new Event("tirar")));
   const el = document.createElement("div");
   el.className = tipo === "ok" ? "toast" : `toast toast-${tipo}`;
+  if (opcoes.chave) el.dataset.chave = opcoes.chave;
   const ic = document.createElement("span");
   ic.className = "toast-ic";
   if (tipo === "warn") ic.textContent = "!";
@@ -44,6 +48,7 @@ export function avisar(mensagem: string, tipo: "ok" | "info" | "warn" = "ok", op
   const tirar = () => {
     if (feito) return;
     feito = true;
+    el.removeAttribute("data-chave");
     el.classList.remove("in");
     el.classList.add("out");
     window.setTimeout(() => el.remove(), 320);
@@ -54,9 +59,10 @@ export function avisar(mensagem: string, tipo: "ok" | "info" | "warn" = "ok", op
     b.type = "button";
     b.className = "toast-acao";
     b.textContent = rotulo;
-    b.addEventListener("click", () => { fn(); tirar(); });
+    b.addEventListener("click", () => { if (feito) return; fn(); tirar(); });
     el.append(b);
   }
+  el.addEventListener("tirar", tirar);
   host.appendChild(el);
   requestAnimationFrame(() => el.classList.add("in"));
   window.setTimeout(tirar, opcoes.duracao ?? (opcoes.acao || tipo === "warn" ? 5000 : 3500));

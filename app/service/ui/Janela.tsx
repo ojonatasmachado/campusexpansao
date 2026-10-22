@@ -58,7 +58,7 @@ export function Janela({ titulo, sobretitulo, texto, cabecalho, aoFechar, larga,
           {cabecalho}
           <BotaoIcone className="janela-x" rotulo="Fechar" desativado={ocupada} onClick={aoFechar}>✕</BotaoIcone>
         </div>
-        {children != null ? <div className="modal-body" style={corpoBloco ? { display: "block", ...corpoStyle } : corpoStyle}>{children}</div> : null}
+        {children != null && children !== false ? <div className="modal-body" style={corpoBloco ? { display: "block", ...corpoStyle } : corpoStyle}>{children}</div> : null}
         {rodape ? <div className="modal-foot">{rodape}</div> : null}
       </div>
     </div>

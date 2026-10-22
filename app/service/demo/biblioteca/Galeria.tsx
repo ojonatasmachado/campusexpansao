@@ -135,8 +135,8 @@ export default function Galeria() {
 
       <Cartao className="galeria-bloco">
         <h2>Estrutura e navegação</h2>
-        <Abas rotulo="Partes do check-in" ativa={aba} aoMudar={setAba} abas={[{ id: "qr", rotulo: "QR Code" }, { id: "sala", rotulo: "Quem está na sala", contador: 12 }, { id: "hist", rotulo: "Histórico" }]} />
-        <PainelAba id={aba} className="galeria-nota">Conteúdo da aba {aba}.</PainelAba>
+        <Abas prefixo="checkin" comPaineis rotulo="Partes do check-in" ativa={aba} aoMudar={setAba} abas={[{ id: "qr", rotulo: "QR Code" }, { id: "sala", rotulo: "Quem está na sala", contador: 12 }, { id: "hist", rotulo: "Histórico" }]} />
+        <PainelAba id={aba} prefixo="checkin" className="galeria-nota">Conteúdo da aba {aba}.</PainelAba>
         <div className="galeria-linha">
           <Botao onClick={() => setAberta("janela")}>Abrir janela</Botao>
           <Botao onClick={() => setAberta("gaveta")}>Abrir gaveta</Botao>

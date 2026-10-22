@@ -18,13 +18,25 @@ export function useArrastarParaFechar(direcao: ArrastarDirecao, aoFechar: () => 
   const eixo = direcao === "baixo" ? "Y" : "X";
   const ponto = (e: PointerEvent) => (direcao === "baixo" ? e.clientY : e.clientX);
 
+  const fechando = useRef(false);
   const soltarPara = (destino: "fechar" | "voltar") => {
     const el = alvo.current;
     if (!el) return;
-    if (destino === "fechar" && movimentoReduzido()) { aoFechar(); return; }
+    if (destino === "fechar") {
+      if (fechando.current) return;
+      fechando.current = true;
+      if (movimentoReduzido()) { fechando.current = false; aoFechar(); return; }
+    }
     el.style.transition = destino === "fechar" ? "transform .2s var(--ease-out)" : "transform .3s var(--ease-drawer)";
     el.style.transform = destino === "fechar" ? `translate${eixo}(100%)` : "";
-    if (destino === "fechar") window.setTimeout(aoFechar, 200);
+    if (destino === "fechar") {
+      window.setTimeout(() => {
+        fechando.current = false;
+        aoFechar();
+        /* se a tela não fechou (ex.: segurou para salvar), a superfície volta ao lugar */
+        window.setTimeout(() => { if (el.isConnected) { el.style.transition = "transform .3s var(--ease-drawer)"; el.style.transform = ""; } }, 60);
+      }, 200);
+    }
   };
 
   /* espalhar na zona de pegar (alça, cabeçalho) */

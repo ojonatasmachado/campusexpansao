@@ -208,7 +208,7 @@ function MobileMembro({
 
   /* o aviso do app é o mesmo do painel (avisar), com Desfazer quando há ação */
   const toast = (msg: string, action?: { label: string; fn: () => void }) =>
-    avisar(msg, "ok", action ? { acao: { rotulo: action.label, fn: action.fn }, duracao: UNDO_MS } : { duracao: 3600 });
+    avisar(msg, "ok", action ? { acao: { rotulo: action.label, fn: action.fn }, duracao: UNDO_MS, chave: "membro" } : { duracao: 3600, chave: "membro" });
   useEffect(() => { if (!cardTarget && !announcementTarget) scrollRef.current?.scrollTo({ top: 0 }); }, [tab, sub, cardTarget, announcementTarget]);
 
   /* v7 4.10: o atalho na tela de início é pedido no segundo acesso (contador no aparelho) */

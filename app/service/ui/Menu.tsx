@@ -84,7 +84,7 @@ export function MenuAcoes({ itens, rotulo = "Mais", soIcone, alinhar = "fim", cl
 
   const item = (a: ItemMenu) => (
     <Acao key={a.rotulo} role="menuitem" className={`menu-item${a.perigo ? " perigo" : ""}`} desativado={a.desligado}
-      onClick={() => { fechar(); a.onClick(); }}>
+      onClick={() => { gatilho.current?.focus(); fechar(); a.onClick(); }}>
       {a.icone ? <span className="menu-ic" aria-hidden="true"><Icon name={a.icone} size={16} /></span> : null}
       <span>{a.rotulo}</span>
     </Acao>

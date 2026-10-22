@@ -315,10 +315,11 @@
 @media (hover:hover) and (pointer:fine) { .janela-x:hover { color: var(--white); background: color-mix(in srgb, var(--white) 12%, transparent); } }
 .janela-alca { display: none; }
 @media (max-width: 860px) {
-  .modal-bg { align-items: flex-end; padding: var(--safe-top) 0 0; }
-  .modal { width: 100%; max-height: 92dvh; border-radius: 24px 24px 0 0; animation: sheetUp .45s var(--ease-drawer); }
-  .modal-foot { padding-bottom: calc(16px + var(--safe-bottom)); }
-  .modal-bg.svc-saindo .modal { animation: svcSaiBaixo .22s var(--ease-out) forwards; }
+  /* só a Janela (que tem alça) vira folha; janelas próprias continuam como eram */
+  .modal-bg:has(> .modal > .janela-alca) { align-items: flex-end; padding: var(--safe-top) 0 0; }
+  .modal:has(> .janela-alca) { width: 100%; max-height: 92dvh; border-radius: 24px 24px 0 0; animation: sheetUp .45s var(--ease-drawer); }
+  .modal:has(> .janela-alca) .modal-foot { padding-bottom: calc(16px + var(--safe-bottom)); }
+  .modal-bg.svc-saindo .modal:has(> .janela-alca) { animation: svcSaiBaixo .22s var(--ease-out) forwards; }
   .janela-alca { display: flex; justify-content: center; align-items: flex-start; min-height: 22px; padding-top: 8px; touch-action: none; cursor: grab; flex-shrink: 0; }
   .janela-alca span { width: 40px; height: 5px; border-radius: 3px; background: var(--border-3); }
   .modal-head:has(.janela-x) { padding-top: 6px; }
@@ -328,14 +329,15 @@
 /* ── Gaveta: 440 px (larga 560), entra em 0,45 s com o véu; tela cheia no celular ── */
 @keyframes gaveta-entra { from { transform: translateX(100%); } to { transform: none; } }
 .drawer-bg { animation: veu-entra .45s var(--ease-out); }
-.drawer { width: 440px; border-left: 0; box-shadow: -24px 0 60px -20px rgba(0, 0, 0, .45); animation: gaveta-entra .45s var(--ease-drawer); }
-.drawer.drawer-wide { width: 560px; }
+.drawer { width: 520px; border-left: 0; box-shadow: -24px 0 60px -20px rgba(0, 0, 0, .45); animation: gaveta-entra .45s var(--ease-drawer); }
+.drawer.drawer-wide { width: 680px; }
 .gaveta-borda { display: none; }
 @media (max-width: 860px) {
   .drawer, .drawer.drawer-wide { width: 100vw; max-width: 100vw; box-shadow: none; }
 }
-@media (pointer: coarse) {
-  .gaveta-borda { display: block; position: absolute; left: 0; top: 0; bottom: 0; width: 20px; z-index: 5; touch-action: none; }
+/* faixa de arrastar: só com a gaveta em tela cheia (celular), presa à borda */
+@media (max-width: 860px) and (pointer: coarse) {
+  .gaveta-borda { display: block; position: fixed; left: 0; top: 0; bottom: 0; width: 20px; z-index: 5; touch-action: none; }
 }
 
 /* ── Folha do membro: sobe com a mesma mola ── */

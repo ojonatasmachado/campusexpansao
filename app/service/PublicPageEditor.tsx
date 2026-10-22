@@ -589,7 +589,7 @@ function LinkModal({
   };
 
   return (
-    <Janela sobretitulo={isNew ? "Novo link" : "Editar link"} titulo={form.label || "Link da página"} aoFechar={onCancel} corpoBloco
+    <Janela sobretitulo={isNew ? "Novo link" : "Editar link"} titulo={form.label || "Link da página"} aoFechar={onCancel} ocupada={saving} corpoBloco
       rodape={
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
           {onDelete ? <Botao variante="discreto" onClick={onDelete}>Excluir</Botao> : <span />}
@@ -687,7 +687,7 @@ function PostModal({
   };
 
   return (
-    <Janela sobretitulo={isNew ? "Nova notícia" : "Editar notícia"} titulo={form.title || "Notícia da página"} aoFechar={onCancel} corpoBloco
+    <Janela sobretitulo={isNew ? "Nova notícia" : "Editar notícia"} titulo={form.title || "Notícia da página"} aoFechar={onCancel} ocupada={saving} corpoBloco
       rodape={
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
           {onDelete ? <Botao variante="discreto" onClick={onDelete}>Excluir</Botao> : <span />}

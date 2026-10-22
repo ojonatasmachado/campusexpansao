@@ -617,7 +617,7 @@ export function ServiceModal({
   }
 
   return (
-    <Janela larga={hasHalf} sobretitulo={modal.eyebrow} titulo={modal.title} texto={modal.subtitle || undefined} aoFechar={onClose} corpoBloco
+    <Janela larga={hasHalf} sobretitulo={modal.eyebrow} titulo={modal.title} texto={modal.subtitle || undefined} aoFechar={onClose} ocupada={saving} corpoBloco
       rodape={<>
         <Botao onClick={onClose} desativado={saving}>Cancelar</Botao>
         <Botao variante="principal" onClick={save} desativado={saving}>{saving ? "Salvando..." : (modal.saveLabel || "Salvar")}</Botao>
