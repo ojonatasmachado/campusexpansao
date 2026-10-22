@@ -23,3 +23,7 @@ Fixture temporária em /service/demo renderizou o próprio AuthShell e Bootstrap
 Teste interceptou e recusou a chamada bootstrap_church_org_v2 com dados sintéticos antes de chegar ao banco. Erro acessível exibido, botão reabilitado, nome preservado. Isso comprova recuperação da interface, não bootstrap real. Typecheck, lint, Lei 12 e contraste aprovados; contratos e build registrados no fechamento.
 
 Fechamento local: os 12 contratos das jornadas e npm run build também passaram, com demo restaurada.
+
+## Igreja sem conteúdo: nova inspeção visual
+
+Fixture temporária sem eventos, cursos, times, mensagens, tarefas ou turmas, com jornada ainda não concluída. Inspeção das quatro abas em 320px: Início orienta a ausência de encontros e mostra próximo passo; Agenda explica o que aparecerá quando houver escala/inscrição; Mensagens explica Mural e conversas; Caminhada mantém etapas numeradas e explica que cursos aparecem quando publicados. Sem rolagem horizontal nas quatro abas. Capturas membro-vazio e JSON neste diretório. Esta evidência cobre leitura/navegação com dados sintéticos; pedidos de oração, novas conversas e marcação de etapas não foram enviados. Demo restaurada.

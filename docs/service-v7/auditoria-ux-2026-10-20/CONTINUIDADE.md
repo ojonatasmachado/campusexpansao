@@ -1,29 +1,48 @@
 # Continuidade · 21/10/2026
 
-## Entrega atual
+## Última entrega e publicação
 
-Caminhada: número nas etapas pendentes, estado textual e aria-hidden no marcador. Worktree `/tmp/cex-fuso-release-20261021`, branch `fix/service-fuso-20261021`. Base integrada: `ea8b7a0` (main, mapa e atualização do app instalado).
+Cadastro da primeira igreja: `dfadcb4095b149f49e0b8c20e8328ab61e4c6992`. Código em main e fix/service-fuso-20261021. CI `39706851217` e `39706851463`: success. Prévia `dpl_5vNXbrzDFKMP3CAgac8duYVzpgh8`: READY. Como o push gerou só prévia, foi solicitado redeploy do mesmo commit com target production: `dpl_GREw2iPqz5qJPdUUJ75TtXHmG4uo`. Estado de produção confirmado: READY, com campusexpansao.com.br e www.campusexpansao.com.br associados.
 
-Arquivos: `app/service/membro/Caminhada.tsx`, `evolucoes/service_app/service-app.css`, STATUS, acompanhamento e capturas da auditoria.
+Worktree `/tmp/cex-fuso-release-20261021`, branch `fix/service-fuso-20261021`. Workspace principal preservado. Base integrada antes das entregas: `ea8b7a0` (mapa e atualização do app instalado).
 
-Validação: typecheck, eslint Caminhada, contraste, Lei 12, 12 contratos das jornadas e build aprovados. Matriz Chromium 320/390, claro/escuro, fonte padrão/ampliada, sem overflow ou marcador pendente vazio.
+## Entregas desta retomada
 
-Publicação confirmada: `00e03a3c680fe7a65d9678ab62359341e41a0b73`, enviado a main e fix/service-fuso-20261021. CI `39705162659` e `39705163589`: success. Deploy produção `dpl_5LkNgN8ScXvafGyXdkkXRx1nY9Ti`: READY, aliases campusexpansao.com.br e www. Confirmado em 21/10/2026. Última entrega anterior: Financeiro `5ef10f1`, CI `39659440621` success, deploy `dpl_228U2AugQe2Wh7RZSmLPu8UZFAFZ` READY (registro recebido no handoff).
+| Entrega | Commit | CI success | Produção READY |
+| --- | --- | --- | --- |
+| Marcadores pendentes da Caminhada | `00e03a3` | `39705162659`, `39705163589` | `dpl_5LkNgN8ScXvafGyXdkkXRx1nY9Ti` |
+| Menu Mais por área | `0c703c1` | `39705617034`, `39705617291` | `dpl_A2khtKaab1MVsahmm3iq4qU9kgq9` |
+| Compositor, público explícito, revisão e minutos do agendamento | `9bf601e` | `39706374624`, `39706374664` | `dpl_DuHifx2hV4dA7qc1LnnfDEYSjitL` |
+| Cadastro da primeira igreja em AuthShell/login-* | `dfadcb4` | `39706851217`, `39706851463` | `dpl_GREw2iPqz5qJPdUUJ75TtXHmG4uo` |
 
-## Próximo problema
+## Arquivos e evidências
 
-J15 implementado: Mais preserva os seis grupos de NAV_GROUPS, com expansão nativa exclusiva, rota ativa e filtros existentes. Typecheck, lint sem erros, Lei 12, contraste, 12 contratos e build passaram. Matriz 320/390/1280/1600 claro/escuro e Enter/rota Secretaria verificados. Publicado: `0c703c1e0dc81f958d1b1e21adab7e7a7557c70e`, CI `39705617034` e `39705617291` success; produção `dpl_A2khtKaab1MVsahmm3iq4qU9kgq9` READY. Próximo: compositor do Mural, primeiro acesso do pastor e do membro, arquitetura interna da Caminhada.
+- Caminhada: `app/service/membro/Caminhada.tsx`, `evolucoes/service_app/service-app.css`; documentação/capturas em `implementacao/acompanhamento`.
+- Menu: `app/service/ServiceExactApp.tsx`, CSS do Service; `implementacao/menu-mais` contém decisão, capturas e interações.
+- Mural: `app/service/modules/mural/Mural.tsx`, CSS do Service; `implementacao/mural-compositor` contém revisão de público, agendamento 22:22 e rascunho com público removido.
+- Cadastro: `app/service/onboarding/BootstrapChurchForm.tsx`; `implementacao/primeiro-acesso-revisao` contém matriz e teste de recuperação de falha sem criar igreja real.
+- STATUS atualizado por entrega. Nenhuma migração foi criada nesta retomada.
+
+## Testes executados
+
+Em cada entrega de código: typecheck, lint dos componentes alterados, Lei 12, contraste, os 12 contratos do CI e build. No ajuste posterior dos minutos do Mural, repetidos typecheck, lint, Lei 12, fuso/avisos e build. CI também validou migrações e pacote SQL. Lint de ServiceExactApp teve zero erros e dois avisos preexistentes de eslint-disable.
+
+Chromium/CDP: Caminhada 320/390, claro/escuro, escala 1 e 23/17, sem marcador pendente vazio ou overflow. Três dígitos cabem no marcador em teste sintético de DOM. Menu 320/390/1280/1600, temas, Enter e rota Secretaria. Mural: editar 320/390/1280/1600, revisar 320/390/1280, ambos temas; retorno preserva preenchimento, público removido bloqueia revisão, agendamento mantém 22:22. Cadastro 320/390/1280/1600 nos dois temas: campos 50px, CTA 52px, fontes mobile 17px e desktop 16px. Falha de rede interceptada: botão reabilita e dados ficam.
+
+Igreja sem conteúdo: as quatro abas do membro inspecionadas em 320px, sem overflow e com orientação. Fixture sem eventos/cursos/times/conversas; consentimento do mapa já decidido para isolar a jornada. Nenhuma ação de envio foi executada. Todas as fixtures temporárias da demo foram restauradas antes dos commits.
+
+## Decisões e próximos cenários
+
+Manter sequência de ativação existente (igreja, encontro, pessoas) e casca do membro. Caminhada já separa etapas, cursos, Bíblia e práticas; agrupar novamente em novos níveis permanece hipótese para teste com pessoas. Não há mudança estrutural adicional aprovada por evidência desta retomada.
+
+Próximo trabalho útil: matriz autenticada adicional de papéis/módulos, Safari/PWA em dispositivo com teclado e fonte do sistema, idiomas/moedas/regras locais. A auditoria ampla permanece parcial conforme STATUS. Não repetir como evidência nova as gravações locais anteriores já documentadas em ativacao/geolocalizacao/times.
 
 ## Limitações
 
-Navegador integrado falha ao conectar por `missing field sandboxPolicy`; fallback Chromium/CDP local. Safari/PWA em aparelho real e teclado não verificados. Demo sintética não valida APIs ou permissões no banco. Workspace principal permanece intocado, com alterações concorrentes. Sem decisão arquitetural ampla aplicada nesta entrega.
+Navegador integrado falhou com `missing field sandboxPolicy`; fallback foi Chromium local/CDP. Não houve certificação com leitor de tela ou aparelhos reais. Demos/credenciais fictícias não validam gravação real, upload, notificações ou permissões no banco. Recuperação do cadastro foi testada interceptando a chamada antes do banco. Os contratos e CI cobrem suas verificações descritas, não toda combinação de estado do produto.
 
-Mural em andamento: compositor com público explícito, opções progressivas e revisão antes de publicação/agendamento. Preservar minutos do horário agendado (campo time). Typecheck/lint e contratos iniciais passaram; nova validação após ajuste de minutos em curso. Matriz e build concluídos: público explícito obrigatório; voltar preserva dados; agendamento preserva 22:22; rascunho com público removido fica bloqueado. Sem gravação/envio real nos testes. Publicado: `9bf601ec6ea426e843cedb960e419a212879fec3`, CI `39706374624` e `39706374664` success; produção `dpl_DuHifx2hV4dA7qc1LnnfDEYSjitL` READY.
+## Comandos de retomada
 
-## Revisão de primeiro acesso e Caminhada
+`git status --short`, `git fetch origin`, comparar origin/main antes de editar. `npx tsc --noEmit`; `npx eslint <componente>`; `npx tsx scripts/check-service-lei12.ts`; `npx tsx scripts/check-theme-contrast.ts`. Contratos em .github/workflows/service.yml. Build local usa variáveis fictícias do CI; dependências precisam estar no próprio worktree (Turbopack rejeita symlink externo). Não incluir alterações do workspace principal.
 
-Cadastro da primeira igreja alinhado a AuthShell/login-*, com required/autocomplete e recuperação de falha. Matriz visual 320/390/1280/1600 nos dois temas passou: campos 17px no mobile e 16px no desktop, altura 50px, CTA 52px, sem overflow. Falha de rede interceptada no navegador: botão reabilitado e dados mantidos, nenhuma igreja criada. Os 12 contratos e build também passaram. Commit/publicação desta entrega pendentes de registro.
-
-Membro e arquitetura interna da Caminhada revisados pelo código e pelas evidências anteriores: preservar quatro abas e seções atuais. Agrupamento adicional sem teste com pessoas não tem benefício comprovado. Decisão e limites em implementacao/primeiro-acesso-revisao.
-
-Próximos cenários abertos: Safari/PWA em dispositivo, fonte do sistema/teclado, combinações autenticadas adicionais de papel e módulos, idiomas/moedas/regras locais. A auditoria ampla permanece parcial conforme STATUS; quatro correções objetivas desta retomada não equivalem a certificação integral do Service.
+Fechamento: quatro entregas de código publicadas, todos os CI listados em success e produção final READY. Este registro e a nova evidência de igreja vazia são atualização documental posterior ao último commit de código; não mudam comportamento de produção.
