@@ -2,6 +2,10 @@
 
 ## Última entrega e publicação
 
+Último código publicado: `fa4f3669b5abb6ee8f6c05e6f7287cb5cb446f6b`, em main e fix/service-fuso-20261021. Service CI `39710681893` e `39710681973`: success. Produção `39710681916`: success. Vercel `dpl_81iNKZBiDvT4L38k5mU7QPMgSWvW`: READY, com campusexpansao.com.br e www associados. Nenhuma migração nova. Este handoff é uma atualização documental posterior, sem mudança de código.
+
+Handoff de retomada: `HANDOFF-CLAUDE-CODE.md`.
+
 Acessos do painel: `68d7ef88d27041bc921bcebd373df9f1cdcc8161`, enviado a main e fix/service-fuso-20261021. Service CI `39708967188` e `39708967470`: success. Workflow Produção `39708967230`: success (migrações e pedido de deploy). Deploy de produção `dpl_FwraWtpQ1V6QBsPmHNofa7LB5BQa`: READY, com campusexpansao.com.br e www associados. Base integrada: `9fc6b50`, com banco antes de código pelo workflow. Nenhuma migração nova nesta correção.
 
 Entrega anterior: cadastro da primeira igreja `dfadcb4`, CI success e produção `dpl_GREw2iPqz5qJPdUUJ75TtXHmG4uo` READY.
