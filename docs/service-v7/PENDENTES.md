@@ -59,7 +59,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 
 ### 3. Qualidade que protege o resto
 - **Q1** Captura automática das leis 12 e 13
-- **Q2** Isolar o teste de permissões · **Q3** Matriz autenticada de papéis e isolamento entre igrejas
+- **Q3** Matriz autenticada de papéis e isolamento entre igrejas
 
 ### 4. Código independente (dá para tocar em paralelo, se os trilhos não esbarrarem)
 - **I9** Biblioteca: avatar, etapas e tabela · **I10** Biblioteca: indicadores e gráficos
