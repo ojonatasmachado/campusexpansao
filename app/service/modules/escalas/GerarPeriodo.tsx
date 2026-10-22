@@ -25,6 +25,7 @@ import {
 } from "./periodo";
 import type { ChurchView, EventView, MinistryView, PersonView, RosterAssignmentView } from "../../ServiceExactApp";
 
+import { Botao } from "../../ui/Botao";
 const DIA_CURTO = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const DIA_LONGO = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 const DURACOES = [1, 3, 6, 12] as const;
@@ -448,7 +449,7 @@ export function GerarPeriodo({
         );
       })}
       <p className="fs-note">
-        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPasso("form")} disabled={salvando}><Icon name="voltar" size={14} /> Mudar times, período ou vagas</button>
+        <Botao variante="discreto" compacto onClick={() => setPasso("form")} desativado={salvando}><Icon name="voltar" size={14} /> Mudar times, período ou vagas</Botao>
       </p>
 
       {vaga && base && (
@@ -513,8 +514,8 @@ function EscolherNaVaga({ vaga, culto, opcoes, cfg, nomeAtual, onEscolher, onClo
           {naoPodem.length > 0 && <><div className="cand-grp">Não podem nesta vaga</div>{naoPodem.map((c) => linha(c, motivo(c)))}</>}
         </div>
         <div className="modal-foot">
-          {nomeAtual && <button className="btn btn-sec" type="button" onClick={() => onEscolher(null)}>Deixar a vaga aberta</button>}
-          <button className="btn btn-ghost" type="button" onClick={onClose}>Cancelar</button>
+          {nomeAtual && <Botao onClick={() => onEscolher(null)}>Deixar a vaga aberta</Botao>}
+          <Botao variante="discreto" onClick={onClose}>Cancelar</Botao>
         </div>
       </div>
     </div>

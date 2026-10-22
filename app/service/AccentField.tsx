@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { isValidHex, normalizeHex, deriveAccentVars, contrastRatio, contrastLabel, buildColorWheel, hslToHex } from "./lib/color";
 import { Icon } from "./lib/icons";
 
+import { Botao } from "./ui/Botao";
 /* Seletor de cor livre (hex), com roda de cores + leitura de contraste ao
    vivo. Extraído de ServiceExactApp.tsx (era local, usado só pela cor de
    destaque da marca) pra ser reaproveitado também pelo editor da Página
@@ -146,9 +147,9 @@ export function AccentField({ label, bgHex, value, defaultHex, onChange, compact
         </div>
       )}
 
-      <button type="button" className="btn btn-pri btn-sm brand-accent-apply" disabled={!valid || !dirty} onClick={aplicar}>
+      <Botao variante="principal" compacto className="brand-accent-apply" desativado={!valid || !dirty} onClick={aplicar}>
         {savedMsg ? <><Icon name="ok" size={14} /> Aplicado</> : "Aplicar"}
-      </button>
+      </Botao>
     </div>
   );
 }

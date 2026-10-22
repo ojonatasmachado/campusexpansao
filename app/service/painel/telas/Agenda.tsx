@@ -15,6 +15,7 @@ import { DP_MESES, OUTRO_LOCAL, dpToIsoDate, findRoomConflict, parseFlexDate } f
 import { DatePicker, TimePicker } from "../campos";
 import type { CalEvent, ChildView, ChurchView, DrawerState, EventView, KidsClassView, KidsSessionView, MinistryView, ModalState, ReservationView, RoomView } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
 /* Escalas : módulo em modules/escalas/ (4.1) */
 
 export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChildren, rooms, setDrawer, setModal, setCheckinEventId, setShareEventId }: { events: EventView[]; ministries: MinistryView[]; church?: ChurchView; kidsClasses: KidsClassView[]; kidsSessions: KidsSessionView[]; kidsChildren: ChildView[]; rooms: RoomView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; setCheckinEventId: (id: string) => void; setShareEventId: (id: string) => void }) {
@@ -40,7 +41,7 @@ export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, 
   ];
   return (
     <div className="content">
-      <PageHead title={ct("{Cultos} e Agenda")} eyebrow="Operação" help={ct("Seus {cultos} e eventos ficam aqui. Cada um pode virar uma escala, ganhar roteiro e setlist.")} action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {culto} ou evento"), subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:ct("ex: {Culto} da Manhã, Conferência de Jovens") }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"data", label:"Data", type:"date", fullDate:true, req:true, half:true, hint:"Dia, mês e ano do encontro." }, { k:"hora", label:"Horário de início", type:"time", req:true, half:true }], action: { kind: "event" } })}>{ct("+ Novo {culto}")}</button>} />
+      <PageHead title={ct("{Cultos} e Agenda")} eyebrow="Operação" help={ct("Seus {cultos} e eventos ficam aqui. Cada um pode virar uma escala, ganhar roteiro e setlist.")} action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {culto} ou evento"), subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:ct("ex: {Culto} da Manhã, Conferência de Jovens") }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"data", label:"Data", type:"date", fullDate:true, req:true, half:true, hint:"Dia, mês e ano do encontro." }, { k:"hora", label:"Horário de início", type:"time", req:true, half:true }], action: { kind: "event" } })}>{ct("+ Novo {culto}")}</Botao>} />
       <div className="toolbar cultos-tb">
         <div className="seg">
           <button className={vista === "semana" ? "on" : ""} type="button" onClick={() => setVista("semana")}>Semana</button>
@@ -48,9 +49,9 @@ export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, 
         </div>
         {vista === "semana" && (
           <div className="cultos-nav">
-            <button className="btn btn-sec btn-sm" type="button" aria-label="Semana anterior" onClick={() => setSemanaOffset((o) => o - 1)}><Icon name="voltar" size={14} /></button>
+            <Botao compacto aria-label="Semana anterior" onClick={() => setSemanaOffset((o) => o - 1)}><Icon name="voltar" size={14} /></Botao>
             <span className="cultos-nav-l">{rotuloSemana}</span>
-            <button className="btn btn-sec btn-sm" type="button" aria-label="Próxima semana" onClick={() => setSemanaOffset((o) => o + 1)}><Icon name="avancar" size={14} /></button>
+            <Botao compacto aria-label="Próxima semana" onClick={() => setSemanaOffset((o) => o + 1)}><Icon name="avancar" size={14} /></Botao>
           </div>
         )}
       </div>
@@ -69,17 +70,17 @@ export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, 
               <div className="panel-body"><p className="mini-sub">{joinDot(event.weekday, formatDateBR(event.eventDate), event.location)}</p><div className="divider" style={{ margin: "14px 0" }} />{event.schedule.slice(0, 4).map((item) => <div className="mini-row" key={item.id} style={{ paddingInline: 0 }}><div className="mini-main"><div className="mini-title">{item.item}</div><div className="mini-sub">{item.time ?? "sem horário"} · {item.category ?? "roteiro"}</div></div></div>)}<div className="mini-sub">{event.ministries.map((id) => ministries.find((ministry) => ministry.id === id)?.name).filter(Boolean).join(" · ")}</div></div>
             </button>
             <div style={{ padding: "0 22px 16px", display: "flex", gap: 8 }}>
-              <button className="btn btn-sec btn-sm" type="button" onClick={(e) => { e.stopPropagation(); setCheckinEventId(event.id); }}>
+              <Botao compacto onClick={(e) => { e.stopPropagation(); setCheckinEventId(event.id); }}>
                 <Icon name="cultos" size={13} /> Check-in QR
-              </button>
-              <button className="btn btn-sec btn-sm" type="button" onClick={(e) => { e.stopPropagation(); setShareEventId(event.id); }}>
+              </Botao>
+              <Botao compacto onClick={(e) => { e.stopPropagation(); setShareEventId(event.id); }}>
                 <Icon name="relatorios" size={13} /> Arte
-              </button>
+              </Botao>
               {kidsClasses.length > 0 && (
                 <div style={{ position: "relative" }}>
-                  <button className="btn btn-sec btn-sm" type="button" onClick={(e) => { e.stopPropagation(); setKidsPickerEventId(kidsPickerEventId === event.id ? null : event.id); }}>
+                  <Botao compacto onClick={(e) => { e.stopPropagation(); setKidsPickerEventId(kidsPickerEventId === event.id ? null : event.id); }}>
                     <Icon name="kids" size={13} /> Kids
-                  </button>
+                  </Botao>
                   {kidsPickerEventId === event.id && (
                     <div className="cong-menu" style={{ right: 0, left: "auto" }} onClick={(e) => e.stopPropagation()}>
                       <div className="cong-group">Abrir turma</div>
@@ -204,8 +205,8 @@ export function Espacos({ rooms, reservations, church, setModal, embed }: { room
         <div className="cfg-card-s">Salas da igreja e quem usa cada espaço. Reuniões, eventos, cursos e ensaios reservam aqui sem misturar agenda.</div>
       </div>
       <div className="ph-actions">
-        <button className="btn btn-sec btn-sm" type="button" onClick={openNewRoom}>+ Nova sala</button>
-        <button className="btn btn-pri btn-sm" type="button" onClick={openNewReservation}>+ Reservar</button>
+        <Botao compacto onClick={openNewRoom}>+ Nova sala</Botao>
+        <Botao variante="principal" compacto onClick={openNewReservation}>+ Reservar</Botao>
       </div>
     </div>
   ) : (
@@ -213,7 +214,7 @@ export function Espacos({ rooms, reservations, church, setModal, embed }: { room
       title="Espaços e reservas"
       eyebrow="Operação"
       help={ct("Cadastre as salas e espaços físicos da igreja. Reuniões, ensaios e {cultos} reservam um espaço daqui pra não haver choque de agenda.")}
-      action={<><button className="btn btn-sec" type="button" onClick={openNewRoom}>+ Nova sala</button><button className="btn btn-pri" type="button" onClick={openNewReservation}>+ Reservar espaço</button></>}
+      action={<><Botao onClick={openNewRoom}>+ Nova sala</Botao><Botao variante="principal" onClick={openNewReservation}>+ Reservar espaço</Botao></>}
     />
   );
   const calEvents: CalEvent[] = visibleReservations.map((reservation): CalEvent | null => {
@@ -240,7 +241,7 @@ export function Espacos({ rooms, reservations, church, setModal, embed }: { room
         <div className="toolbar" style={{ marginBottom: 12 }}>
           <span className="panel-meta">Calendário de reservas{filter !== "todas" ? <> · <b style={{ color: "var(--light)" }}>{roomById.get(filter)?.name}</b></> : ""}</span>
           <div className="tb-spacer" />
-          {filter !== "todas" && <button className="btn btn-ghost btn-sm" type="button" onClick={() => setFilter("todas")}>Ver salas</button>}
+          {filter !== "todas" && <Botao variante="discreto" compacto onClick={() => setFilter("todas")}>Ver salas</Botao>}
         </div>
         <MiniCalendar events={calEvents} onAdd={(dataStr) => setReservar({ salaInicial: filter !== "todas" ? filter : undefined, dataInicial: dataStr })} />
         <div className="cal-legend">
@@ -318,8 +319,8 @@ export function ReservaModal({ rooms, reservations, church, salaInicial, dataIni
           {error ? <div style={{ gridColumn: "1 / -1", fontSize: "var(--fs-pn-13)", color: "var(--danger)" }}>{error}</div> : null}
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving || !!conflito || !salaId} onClick={salvar}>Reservar</button>
+          <Botao onClick={onClose}>Cancelar</Botao>
+          <Botao variante="principal" desativado={saving || !!conflito || !salaId} onClick={salvar}>Reservar</Botao>
         </div>
       </div>
     </div>

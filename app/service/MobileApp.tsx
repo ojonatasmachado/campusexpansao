@@ -31,6 +31,7 @@ import { TabPerfil } from "./membro/Perfil";
 import { SheetAceiteMapa } from "./membro/AceiteMapa";
 import { TERMO_MAPA_VERSAO } from "./lib/termo-mapa";
 import type { JourneyActions, JourneyStep, M, MemberModule, MemberTab, MemberUi, Ministry, MobileOverlayProps, ModuleCtx, P } from "./membro/tipos";
+import { Botao } from "./ui/Botao";
 export type * from "./membro/tipos";
 
 function TabIcon({ name, size = 18 }: { name: string; size?: number }) {
@@ -452,7 +453,7 @@ function MobileMembro({
               </div>
               {!sub && (
                 <div className="m6-pad">
-                  <button className="m6-btn pri full" type="button" onClick={() => setSheetEl(
+                  <Botao tamanho="toque" variante="principal" largo onClick={() => setSheetEl(
                     <div>
                       <h2 className="m6-sh">Nova mensagem</h2>
                       <div className="m6-list flat">
@@ -462,7 +463,7 @@ function MobileMembro({
                         )}
                       </div>
                     </div>,
-                  )}><Icon name="add" size={20} />Nova mensagem</button>
+                  )}><Icon name="add" size={20} />Nova mensagem</Botao>
                 </div>
               )}
             </>

@@ -39,6 +39,7 @@ import { TurmasKids } from "./Kids";
 import { PesquisasView } from "./Pesquisas";
 import type { ChurchView, CourseView, FellowshipGroupView, GruposCfg, KidsClassView, MatrizV2, MinisterialTitleView, MinistryView, ModalState, PapelV2, PersonView, ReservationView, RoomView, StatusCriterios, TagView } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
 export const STATUS_CFG_DEFAULT: StatusCriterios = { recusasInativando: 2, recusasInativo: 4, diasIndispInativo: 30, considerarFerias: false };
 export const GRUPOS_CFG_DEFAULT: GruposCfg = { ativo: true, termo: "Grupos de Comunhão", termoP: "Grupo de Comunhão", sigla: "GC" };
 
@@ -278,7 +279,7 @@ export function TagElencoModal({
           {lista.length === 0 && <div className="empty">Ninguém encontrado.</div>}
         </div>
         <div className="modal-foot">
-          <button className="btn btn-pri" type="button" onClick={onClose}>Concluído</button>
+          <Botao variante="principal" onClick={onClose}>Concluído</Botao>
         </div>
       </div>
     </div>
@@ -784,9 +785,9 @@ export function Config({
             {igrejaMudou && (
               <div className="save-bar">
                 <span>Você tem alterações não salvas.</span>
-                <button className="btn btn-pri" type="button" disabled={igrejaLoading} onClick={saveIgreja}>
+                <Botao variante="principal" desativado={igrejaLoading} onClick={saveIgreja}>
                   {igrejaLoading ? "Salvando..." : "Salvar"}
-                </button>
+                </Botao>
               </div>
             )}
           </div>
@@ -811,7 +812,7 @@ export function Config({
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <TimePicker value={novoHorarioHora} onChange={setNovoHorarioHora} />
-              <button className="btn btn-sec" type="button" disabled={!novoHorarioHora} onClick={addHorarioCulto}>Adicionar</button>
+              <Botao desativado={!novoHorarioHora} onClick={addHorarioCulto}>Adicionar</Botao>
             </div>
           </div>
         </div>
@@ -837,7 +838,7 @@ export function Config({
                     {m.positions.length === 0 && <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>Sem funções</span>}
                   </div>
                 </div>
-                <button className="btn btn-sec btn-sm" type="button" onClick={() => setEditMin(m)}>Editar</button>
+                <Botao compacto onClick={() => setEditMin(m)}>Editar</Botao>
               </div>
             );
           })}
@@ -858,7 +859,7 @@ export function Config({
             ))}
             {ministerialTitles.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum papel cadastrado.</span>}
           </div>
-          <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo papel ministerial", subtitle: "ex: Pastor, Diácono, Presbítero.", saveLabel: "Adicionar papel", formFields: [{ k:"nome", label:"Nome do papel", type:"text", req:true, ph:"ex: Diácono" }], action: { kind: "title" } })}>+ Papel ministerial</button>
+          <Botao compacto onClick={() => setModal({ eyebrow: "Criar", title: "Novo papel ministerial", subtitle: "ex: Pastor, Diácono, Presbítero.", saveLabel: "Adicionar papel", formFields: [{ k:"nome", label:"Nome do papel", type:"text", req:true, ph:"ex: Diácono" }], action: { kind: "title" } })}>+ Papel ministerial</Botao>
         </div>
       )}
 
@@ -896,7 +897,7 @@ export function Config({
                             />
                           ))}
                         </span>
-                        <button className="btn btn-sec btn-sm" type="button" onClick={() => { renomearTag(t.id, tagNomeEdit); setEditTagId(null); }}>Pronto</button>
+                        <Botao compacto onClick={() => { renomearTag(t.id, tagNomeEdit); setEditTagId(null); }}>Pronto</Botao>
                       </div>
                     ) : (
                       <>
@@ -909,9 +910,9 @@ export function Config({
                   </div>
                   {editTagId !== t.id && (
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                      <button className="btn btn-sec btn-sm" type="button" onClick={() => setElencoTag(t)}>Elenco</button>
-                      <button className="btn btn-sec btn-sm" type="button" onClick={() => { setEditTagId(t.id); setTagNomeEdit(t.name); }}>Editar</button>
-                      <button className="btn btn-sec btn-sm" type="button" onClick={() => removeRow("tags", t.id)}>Remover</button>
+                      <Botao compacto onClick={() => setElencoTag(t)}>Elenco</Botao>
+                      <Botao compacto onClick={() => { setEditTagId(t.id); setTagNomeEdit(t.name); }}>Editar</Botao>
+                      <Botao compacto onClick={() => removeRow("tags", t.id)}>Remover</Botao>
                     </div>
                   )}
                 </div>
@@ -919,7 +920,7 @@ export function Config({
             })}
             {tags.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>Nenhuma etiqueta cadastrada.</div>}
           </div>
-          <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova etiqueta", subtitle: ct("Etiqueta livre para agrupar {voluntarios} (ex: Jovens, Casais)."), saveLabel: "Criar etiqueta", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Jovens" }, { k:"cor", label:"Cor", type:"select", options: TAG_CORES }], action: { kind: "tag" } })}>+ Etiqueta</button>
+          <Botao compacto onClick={() => setModal({ eyebrow: "Criar", title: "Nova etiqueta", subtitle: ct("Etiqueta livre para agrupar {voluntarios} (ex: Jovens, Casais)."), saveLabel: "Criar etiqueta", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Jovens" }, { k:"cor", label:"Cor", type:"select", options: TAG_CORES }], action: { kind: "tag" } })}>+ Etiqueta</Botao>
         </div>
       )}
 
@@ -956,13 +957,13 @@ export function Config({
                       <div className="cfg-row-t">{g.name}</div>
                       <div className="cfg-row-s">{[g.weekday, g.time, g.neighborhood].filter(Boolean).join(" · ") || "sem dia/local definido"}{leader ? ` · líder ${leader.name.split(" ")[0]}` : ""}{g.capacity ? ` · ${plural(g.capacity, "lugar", "lugares")}` : ""}{g.postal_code ? "" : " · sem endereço"}</div>
                     </div>
-                    <button className="btn btn-sec btn-sm" type="button" onClick={() => setGerirGrupoId(g.id)}>Editar</button>
-                    <button className="btn btn-sec btn-sm" type="button" onClick={() => removeRow("fellowship_groups", g.id)}>Remover</button>
+                    <Botao compacto onClick={() => setGerirGrupoId(g.id)}>Editar</Botao>
+                    <Botao compacto onClick={() => removeRow("fellowship_groups", g.id)}>Remover</Botao>
                   </div>
                 );
               })}
               {fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhum grupo cadastrado ainda.</div>}
-              <button className="btn btn-pri btn-sm" type="button" style={{ marginTop: 18 }} onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {grupo}"), subtitle: "Nome, líder, dia e horário. O endereço e os lugares ficam em Editar.", saveLabel: "Criar grupo", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: GC Centro" }, { k:"lider", label:"Líder", type:"select", half:true, ph:"A definir", options: people.map((p) => ({ v: p.name, l: p.name })) }, { k:"dia", label:"Dia", type:"text", half:true, ph:"ex: Quarta-feira" }, { k:"hora", label:"Horário", type:"text", half:true, ph:"ex: 20h" }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"ex: Centro" }], action: { kind: "group" } })}>+ Novo grupo</button>
+              <Botao variante="principal" compacto style={{ marginTop: 18 }} onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {grupo}"), subtitle: "Nome, líder, dia e horário. O endereço e os lugares ficam em Editar.", saveLabel: "Criar grupo", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: GC Centro" }, { k:"lider", label:"Líder", type:"select", half:true, ph:"A definir", options: people.map((p) => ({ v: p.name, l: p.name })) }, { k:"dia", label:"Dia", type:"text", half:true, ph:"ex: Quarta-feira" }, { k:"hora", label:"Horário", type:"text", half:true, ph:"ex: 20h" }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"ex: Centro" }], action: { kind: "group" } })}>+ Novo grupo</Botao>
             </div>
           )}
         </>
@@ -1123,7 +1124,7 @@ export function Config({
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <input className="input" style={{ flex: 1 }} placeholder="ex: Culto, Conferência, Vigília" value={novoTipoEvento} onChange={(e) => setNovoTipoEvento(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTipoEvento()} />
-              <button className="btn btn-sec" type="button" onClick={addTipoEvento}>Adicionar</button>
+              <Botao onClick={addTipoEvento}>Adicionar</Botao>
             </div>
           </div>
         </>
@@ -1199,7 +1200,7 @@ export function Config({
             </tbody>
           </table>
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
-            <button className="btn btn-pri btn-sm" type="button" disabled={matrizSaving} onClick={salvarMatriz}>{matrizSaving ? "Salvando…" : (matrizMsg || "Salvar permissões")}</button>
+            <Botao variante="principal" compacto desativado={matrizSaving} onClick={salvarMatriz}>{matrizSaving ? "Salvando…" : (matrizMsg || "Salvar permissões")}</Botao>
           </div>
         </div>
       )}
@@ -1291,9 +1292,9 @@ export function Config({
             <div className="cfg-card-s" style={{ margin: 0 }}>
               Você já está vendo a prévia. Salve para valer para todos da igreja.
             </div>
-            <button className="btn btn-pri" type="button" disabled={personalizacaoSaving} onClick={salvarPersonalizacao}>
+            <Botao variante="principal" desativado={personalizacaoSaving} onClick={salvarPersonalizacao}>
               {personalizacaoSaving ? "Salvando…" : personalizacaoMsg || "Salvar personalização"}
-            </button>
+            </Botao>
           </div>
         </div>
       )}
@@ -1318,7 +1319,7 @@ export function Config({
                 <div className="cfg-row-t">{c.nome} <span className="chip chip-ok" style={{ marginLeft: 6 }}>matriz</span></div>
                 <div className="cfg-row-s">{c.cidade || "Sede da rede"}</div>
               </div>
-              <button className="btn btn-sec btn-sm" type="button" onClick={() => setGerirCongId(c.id)}>Gerir</button>
+              <Botao compacto onClick={() => setGerirCongId(c.id)}>Gerir</Botao>
             </div>
           ))}
           {churches.filter((c) => !c.matriz).length > 0 && (
@@ -1333,15 +1334,14 @@ export function Config({
                     <div className="cfg-row-t">{c.nome}</div>
                     {c.cidade ? <div className="cfg-row-s">{c.cidade}</div> : null}
                   </div>
-                  <button className="btn btn-sec btn-sm" type="button" onClick={() => setGerirCongId(c.id)}>Gerir</button>
+                  <Botao compacto onClick={() => setGerirCongId(c.id)}>Gerir</Botao>
                 </div>
               ))}
             </>
           )}
           {churches.length === 0 && <div className="empty">Nenhuma congregação encontrada.</div>}
-          <button
-            className="btn btn-pri btn-sm"
-            type="button"
+          <Botao
+            variante="principal" compacto
             style={{ marginTop: 18 }}
             onClick={() => setModal({
               eyebrow: "Criar",
@@ -1362,7 +1362,7 @@ export function Config({
             })}
           >
             + Adicionar congregação
-          </button>
+          </Botao>
         </div>
       )}
 

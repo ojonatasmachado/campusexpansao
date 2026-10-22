@@ -18,6 +18,7 @@ import {
   type Categoria, type PedidoMural, type Publico,
 } from "./oracao";
 
+import { Botao } from "../../ui/Botao";
 type Toast = (msg: string, action?: { label: string; fn: () => void }) => void;
 
 // ── o pedido ─────────────────────────────────────────────────────────────────
@@ -55,8 +56,8 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
         </p>
         <div className="m6-btns">
           {feito.publico === "mural"
-            ? <button className="m6-btn pri" type="button" onClick={onVerMural}>Ver o mural</button>
-            : feito.chatId && <button className="m6-btn pri" type="button" onClick={() => onVerConversa(feito.chatId as string)}>Ver em Mensagens</button>}
+            ? <Botao tamanho="toque" variante="principal" onClick={onVerMural}>Ver o mural</Botao>
+            : feito.chatId && <Botao tamanho="toque" variante="principal" onClick={() => onVerConversa(feito.chatId as string)}>Ver em Mensagens</Botao>}
         </div>
       </div>
     );
@@ -124,9 +125,9 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
 
       {erro && <div className="m6-err" role="alert">{erro}</div>}
       <div className="m6-btns">
-        <button className="m6-btn pri" type="button" disabled={!txt.trim() || enviando} onClick={enviar}>
+        <Botao tamanho="toque" variante="principal" desativado={!txt.trim() || enviando} onClick={enviar}>
           {enviando ? "Enviando..." : publico === "mural" ? "Publicar no mural" : "Enviar pedido"}
-        </button>
+        </Botao>
       </div>
     </div>
   );
@@ -146,7 +147,7 @@ export function SheetRespondido({ organizationId, pedido, onFechar, toast, onMud
       <textarea className="m6-ta" value={txt} maxLength={LIMITE_TESTEMUNHO} onChange={(e) => setTxt(e.target.value)} placeholder="O que Deus fez (opcional)" aria-label="Testemunho" />
       {txt.length > LIMITE_TESTEMUNHO - 80 && <div className="m6-meta or-conta">{`${LIMITE_TESTEMUNHO - txt.length} caracteres restantes`}</div>}
       <div className="m6-btns col">
-        <button className="m6-btn pri" type="button" disabled={salvando} onClick={async () => {
+        <Botao tamanho="toque" variante="principal" desativado={salvando} onClick={async () => {
           setSalvando(true);
           const ok = await marcarRespondido(organizationId, pedido.id, true, txt);
           setSalvando(false);
@@ -154,7 +155,7 @@ export function SheetRespondido({ organizationId, pedido, onFechar, toast, onMud
           onFechar();
           onMudou();
           if (!jaRespondido) toast("Marcado como respondido.", { label: "Desfazer", fn: async () => { await marcarRespondido(organizationId, pedido.id, false); onMudou(); } });
-        }}>{salvando ? "Salvando..." : jaRespondido ? "Salvar" : "Marcar como respondido"}</button>
+        }}>{salvando ? "Salvando..." : jaRespondido ? "Salvar" : "Marcar como respondido"}</Botao>
       </div>
     </div>
   );
@@ -204,7 +205,7 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
     <div className="or-tela">
       {onPedir && (
         <div className="m6-pad or-pedir">
-          <button className="m6-btn pri full" type="button" onClick={onPedir}><Icon name="add" size={20} />Fazer um pedido</button>
+          <Botao tamanho="toque" variante="principal" largo onClick={onPedir}><Icon name="add" size={20} />Fazer um pedido</Botao>
         </div>
       )}
       <div className="m6-segwrap">
@@ -221,7 +222,7 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
           <div className="m6-card">
             <div className="m6-ct">Não deu para abrir o mural</div>
             <div className="m6-meta">Confira a internet e tente de novo.</div>
-            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => void recarregar()}>Tentar de novo</button></div>
+            <div className="m6-btns"><Botao tamanho="toque" onClick={() => void recarregar()}>Tentar de novo</Botao></div>
           </div>
         )}
         {dados !== null && visiveis.length === 0 && (
@@ -254,17 +255,17 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
                       : "Assim que alguém orar, aparece aqui."}
                   </div>
                   <div className="m6-btns">
-                    <button className="m6-btn sec small" type="button" onClick={() => sheet(<SheetRespondido organizationId={organizationId} pedido={p} onFechar={() => sheet(null)} toast={toast} onMudou={() => void recarregar()} />)}>
+                    <Botao tamanho="toque" compacto onClick={() => sheet(<SheetRespondido organizationId={organizationId} pedido={p} onFechar={() => sheet(null)} toast={toast} onMudou={() => void recarregar()} />)}>
                       {p.answered_at ? "Editar testemunho" : "Deus respondeu"}
-                    </button>
-                    {p.audience === "mural" && !p.hidden && <button className="m6-btn sec small" type="button" onClick={() => void tirar(p)}>Tirar do mural</button>}
+                    </Botao>
+                    {p.audience === "mural" && !p.hidden && <Botao tamanho="toque" compacto onClick={() => void tirar(p)}>Tirar do mural</Botao>}
                   </div>
                 </>
               ) : !p.answered_at && (
                 <div className="m6-btns">
-                  <button className={`m6-btn small or-orei${orei ? " on" : ""}`} type="button" aria-pressed={orei} onClick={() => void marcarOrei(p, !orei)}>
+                  <Botao tamanho="toque" variante="discreto" compacto className={`or-orei${orei ? " on" : ""}`} aria-pressed={orei} onClick={() => void marcarOrei(p, !orei)}>
                     <Icon name={orei ? "ok" : "oracao"} size={18} />{orei ? "Você orou" : "Orei"}
-                  </button>
+                  </Botao>
                 </div>
               )}
             </article>

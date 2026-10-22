@@ -15,6 +15,7 @@ import { Av, Chip, EmptyState, PageHead } from "../ui";
 import { BAT_ST_MAP, Kpi, OUTRO_LOCAL } from "../comum";
 import type { BaptismCandidateView, BaptismClassView, ChurchView, CourseView, DecisionView, DrawerState, EnrollmentView, LessonAttendanceView, LessonView, MemberView, ModalState, ModuleView, PersonView, RoomView } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
 export function Decisoes({
   decisions,
   members,
@@ -46,7 +47,7 @@ export function Decisoes({
         title="Decisões por Jesus"
         eyebrow={ct("{Caminhada}")}
         help={ct("Todo mundo que decidiu por Jesus ou se reconciliou num {culto}. A decisão inicia a {caminhada} da pessoa até o batismo.")}
-        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova decisão", subtitle: ct("Registre quem decidiu, o {culto} e quem fará o acompanhamento."), saveLabel: "Registrar decisão", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem decidiu" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"culto", label:ct("{Culto}"), type:"text", half:true, ph:ct("ex: {Culto} da Manhã") }, { k:"responsavel", label:"Responsável pelo acompanhamento", type:"text", ph:"Quem vai acompanhar" }], action: { kind: "decision" } })}>+ Registrar decisão</button>}
+        action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Nova decisão", subtitle: ct("Registre quem decidiu, o {culto} e quem fará o acompanhamento."), saveLabel: "Registrar decisão", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem decidiu" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"culto", label:ct("{Culto}"), type:"text", half:true, ph:ct("ex: {Culto} da Manhã") }, { k:"responsavel", label:"Responsável pelo acompanhamento", type:"text", ph:"Quem vai acompanhar" }], action: { kind: "decision" } })}>+ Registrar decisão</Botao>}
       />
       <div className="kpi-row">
         <Kpi icon="visitante" label="Decisões no mês" value={decisions.length} foot={ct("registradas na {caminhada}")} help="Quantas decisões por Jesus ou reconciliações foram registradas neste mês." />
@@ -110,7 +111,7 @@ export function Batismos({
   const localOptions = [...rooms.map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` })), { v: OUTRO_LOCAL, l: "Outro espaço (rio, praia, sítio...)" }];
   return (
     <div className="content wide">
-      <PageHead title="Batismos" eyebrow={ct("{Caminhada}")} help={ct("Turmas de batismo: quem vai ser batizado, quando e onde. Fecha um passo importante na {caminhada} da pessoa.")} action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova turma de batismo", subtitle: "Crie a turma, defina data, local e quem vai oficiar.", saveLabel: "Criar turma", formFields: [{ k:"label", label:"Nome da turma", type:"text", req:true, ph:"ex: Batismo de Julho 2025" }, { k:"data", label:"Data do batismo", type:"date", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"ex: Rio Tietê, Praia de Santos...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"pastor", label:"Pastor responsável", type:"text", ph:"Quem vai oficiar" }], action: { kind: "baptismClass" } })}>+ Nova turma</button>} />
+      <PageHead title="Batismos" eyebrow={ct("{Caminhada}")} help={ct("Turmas de batismo: quem vai ser batizado, quando e onde. Fecha um passo importante na {caminhada} da pessoa.")} action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Nova turma de batismo", subtitle: "Crie a turma, defina data, local e quem vai oficiar.", saveLabel: "Criar turma", formFields: [{ k:"label", label:"Nome da turma", type:"text", req:true, ph:"ex: Batismo de Julho 2025" }, { k:"data", label:"Data do batismo", type:"date", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"ex: Rio Tietê, Praia de Santos...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"pastor", label:"Pastor responsável", type:"text", ph:"Quem vai oficiar" }], action: { kind: "baptismClass" } })}>+ Nova turma</Botao>} />
       <div className="kpi-row">
         <Kpi icon="identidade" label="Turmas abertas" value={baptismClasses.filter((c) => c.open_enrollment).length} foot="com inscrições disponíveis" help="Turmas de batismo que ainda estão aceitando novas inscrições." />
         <Kpi icon="pessoa" label="Candidatos" value={baptismCandidates.length} foot="em preparação" help="Quem está inscrito numa turma, fazendo o curso pré-batismo." />
@@ -228,9 +229,9 @@ export function CursosTrilhas({
         eyebrow={ct("{Caminhada}")}
         help={ct("Formações da igreja, da decisão à liderança. Cada aula concluída entra na {caminhada} da pessoa.")}
         action={
-          <button className="btn btn-pri" type="button" onClick={() => setEditingId("new")}>
+          <Botao variante="principal" onClick={() => setEditingId("new")}>
             + Nova trilha
-          </button>
+          </Botao>
         }
       />
 
@@ -442,8 +443,8 @@ export function CursoBuilder({
               autoFocus
             />
             <div style={{ display: "flex", gap: 6 }}>
-              <button className="btn btn-pri btn-sm" type="button" onClick={criarGrupo}>Criar</button>
-              <button className="btn btn-sec btn-sm" type="button" onClick={() => { setNovoGrupo(null); setNomeGrupo(""); }}>Cancelar</button>
+              <Botao variante="principal" compacto onClick={criarGrupo}>Criar</Botao>
+              <Botao compacto onClick={() => { setNovoGrupo(null); setNomeGrupo(""); }}>Cancelar</Botao>
             </div>
           </div>
         ) : (

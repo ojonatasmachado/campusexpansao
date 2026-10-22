@@ -5,6 +5,7 @@ import { statusDaCrianca, useKidsCheckin } from "../lib/kids-checkin";
 import { formatDateBR, joinDot } from "../lib/date";
 import ChurchLockup from "../ChurchLockup";
 
+import { Botao } from "../ui/Botao";
 type SessionInfo = { id: string; organizationId: string; checkinActive: boolean; tokenValid: boolean };
 type EventInfo = { name: string; weekday: string; eventDate: string; time: string; location: string };
 type ClassInfo = { name: string };
@@ -102,10 +103,10 @@ export default function KidsCheckinClient({
                       </div>
                     </div>
                     {!att && (
-                      <button className="btn btn-pri btn-sm" type="button" disabled={busy} onClick={() => dropoff(child.id)}>{busy ? "Aguarde..." : "Fazer check-in"}</button>
+                      <Botao variante="principal" compacto desativado={busy} onClick={() => dropoff(child.id)}>{busy ? "Aguarde..." : "Fazer check-in"}</Botao>
                     )}
                     {att && att.status === "presente" && child.can_pickup && (
-                      <button className="btn btn-sec btn-sm" type="button" disabled={busy} onClick={() => requestPickup(child.id)}>{busy ? "Aguarde..." : "Solicitar retirada"}</button>
+                      <Botao compacto desativado={busy} onClick={() => requestPickup(child.id)}>{busy ? "Aguarde..." : "Solicitar retirada"}</Botao>
                     )}
                     {att && att.status === "presente" && !child.can_pickup && (
                       <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>sem autorização pra retirar</span>
@@ -120,9 +121,9 @@ export default function KidsCheckinClient({
             </div>
           )}
 
-          <button className="btn btn-pri" style={{ width: "100%", justifyContent: "center", marginTop: 16 }} onClick={() => router.push("/service")}>
+          <Botao variante="principal" style={{ width: "100%", justifyContent: "center", marginTop: 16 }} onClick={() => router.push("/service")}>
             Concluir
-          </button>
+          </Botao>
         </div>
       </div>
     </div>

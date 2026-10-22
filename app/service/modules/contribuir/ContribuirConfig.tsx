@@ -16,6 +16,7 @@ import {
   chaveLegivel, contribuirPronto, erroDaChave, normalizarChave, rotuloDoTipo, type ContribuirCfg, type TipoChave,
 } from "./pix";
 
+import { Botao } from "../../ui/Botao";
 type IgrejaCfg = { id: string; cidade?: string | null; settings?: Record<string, unknown> };
 
 export function ContribuirConfig({ church }: { church?: IgrejaCfg }) {
@@ -63,13 +64,13 @@ export function ContribuirConfig({ church }: { church?: IgrejaCfg }) {
               {confirmaTirar ? (
                 <>
                   <span className="cfg-row-s contrib-cfg-pergunta">Tirar Contribuir do app de todos os membros?</span>
-                  <button className="btn btn-pri btn-sm" type="button" onClick={tirar}>Tirar</button>
-                  <button className="btn btn-sec btn-sm" type="button" onClick={() => setConfirmaTirar(false)}>Manter</button>
+                  <Botao variante="principal" compacto onClick={tirar}>Tirar</Botao>
+                  <Botao compacto onClick={() => setConfirmaTirar(false)}>Manter</Botao>
                 </>
               ) : (
                 <>
-                  <button className="btn btn-pri btn-sm" type="button" onClick={() => setEditando(true)}>Editar</button>
-                  <button className="btn btn-sec btn-sm" type="button" onClick={() => setConfirmaTirar(true)}>Tirar do app</button>
+                  <Botao variante="principal" compacto onClick={() => setEditando(true)}>Editar</Botao>
+                  <Botao compacto onClick={() => setConfirmaTirar(true)}>Tirar do app</Botao>
                 </>
               )}
             </div>
@@ -208,7 +209,7 @@ function ContribuirForm({ inicial, onSave, onClose }: { inicial: ContribuirCfg; 
           <div className="contrib-cfg-outra">
             <input className="input" aria-label="Outra finalidade" placeholder="Outra, ex: Construção" maxLength={24} value={outra} disabled={cheio}
               onChange={(e) => setOutra(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); somarOutra(); } }} />
-            <button className="btn btn-sec btn-sm" type="button" disabled={cheio || !outra.trim()} onClick={somarOutra}>Somar</button>
+            <Botao compacto desativado={cheio || !outra.trim()} onClick={somarOutra}>Somar</Botao>
           </div>
           <p className="fs-note">{cheio ? `No máximo ${MAX_FINALIDADES}.` : "Com duas ou mais, o membro escolhe uma e ela vai como descrição do Pix."}</p>
         </div>

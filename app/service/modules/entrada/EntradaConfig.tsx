@@ -14,6 +14,7 @@ import { Icon } from "../../lib/icons";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { codigoLegivel, entradaPath } from "../../../lib/service-entrada";
 
+import { Botao, botaoClasse } from "../../ui/Botao";
 type Regra = "aprovar" | "direto";
 const REGRAS: { id: Regra; t: string; s: string }[] = [
   { id: "aprovar", t: "A gestão aprova cada pessoa", s: "O pedido aparece no Início do painel. Você confere quem é e libera." },
@@ -105,9 +106,9 @@ export function EntradaConfig() {
             <span className="cfg-row-s">{`Para digitar: ${codigoLegivel(cfg.code)}`}</span>
           </div>
           <div className="entrada-acoes">
-            <button type="button" className="btn btn-sec btn-sm" onClick={() => copiar(url, "Link copiado")}><Icon name="copiar" size={13} /> Copiar link</button>
-            <a className="btn btn-ghost btn-sm" href={whats} target="_blank" rel="noopener noreferrer">Mandar no WhatsApp</a>
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => copiar(codigoLegivel(cfg.code), "Código copiado")}>Copiar código</button>
+            <Botao compacto onClick={() => copiar(url, "Link copiado")}><Icon name="copiar" size={13} /> Copiar link</Botao>
+            <a className={botaoClasse({ variante: "discreto", compacto: true })} href={whats} target="_blank" rel="noopener noreferrer">Mandar no WhatsApp</a>
+            <Botao variante="discreto" compacto onClick={() => copiar(codigoLegivel(cfg.code), "Código copiado")}>Copiar código</Botao>
           </div>
         </div>
         <div className="entrada-qr">
@@ -117,8 +118,8 @@ export function EntradaConfig() {
           <div>
             <div className="cfg-row-s">A câmera do celular abre o link direto.</div>
             <div className="entrada-acoes" style={{ marginTop: 8 }}>
-              <button type="button" className="btn btn-sec btn-sm" onClick={baixarQr}>Baixar QR</button>
-              {url && <a className="btn btn-ghost btn-sm" href={url} target="_blank" rel="noopener noreferrer">Ver a tela da pessoa</a>}
+              <Botao compacto onClick={baixarQr}>Baixar QR</Botao>
+              {url && <a className={botaoClasse({ variante: "discreto", compacto: true })} href={url} target="_blank" rel="noopener noreferrer">Ver a tela da pessoa</a>}
             </div>
           </div>
         </div>
@@ -129,11 +130,11 @@ export function EntradaConfig() {
           </div>
           {trocando ? (
             <div className="entrada-acoes">
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setTrocando(false)} disabled={salvando}>Manter o atual</button>
-              <button type="button" className="btn btn-sec btn-sm" onClick={gerarOutro} disabled={salvando}>{salvando ? "Gerando..." : "Gerar outro"}</button>
+              <Botao variante="discreto" compacto onClick={() => setTrocando(false)} desativado={salvando}>Manter o atual</Botao>
+              <Botao compacto onClick={gerarOutro} desativado={salvando}>{salvando ? "Gerando..." : "Gerar outro"}</Botao>
             </div>
           ) : (
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setTrocando(true)}>Gerar outro</button>
+            <Botao variante="discreto" compacto onClick={() => setTrocando(true)}>Gerar outro</Botao>
           )}
         </div>
       </div>

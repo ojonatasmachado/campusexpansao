@@ -13,6 +13,7 @@ import { Av, EmptyState, MenuMais, PageHead } from "../ui";
 import { Kpi, VISITOR_STAGES, semContato48h } from "../comum";
 import type { ChurchView, ContatoCfg, DrawerState, ModalState, PersonView, VisitorNoteView, VisitorView } from "../tipos";
 
+import { Botao, botaoClasse } from "../../ui/Botao";
 /* cor de destaque por tema + quem além do master pode editar, guardado em
    service.churches.settings.brandCfg (mesmo jsonb de sempre). Permite que
    cada igreja pareça uma ferramenta própria dela (logo + nome + cor), não
@@ -48,8 +49,8 @@ export function VisitanteCard({ visitor, notes, onOpen }: { visitor: VisitorView
         {!alerta && visitor.reply_status && <div className="vcard-foot">{visitor.reply_status === "respondeu" ? <span className="vcard-resp">respondeu</span> : <span className="vcard-noresp">sem resposta</span>}</div>}
       </button>
       <div className="vcard-acts">
-        {fone && <a className="btn btn-sec btn-sm" href={`https://wa.me/${fone}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={14} /> WhatsApp</a>}
-        <button className="btn btn-sec btn-sm" type="button" onClick={onOpen} aria-label={`Registrar contato com ${visitor.name}`}>Registrar</button>
+        {fone && <a className={botaoClasse({ compacto: true })} href={`https://wa.me/${fone}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={14} /> WhatsApp</a>}
+        <Botao compacto onClick={onOpen} aria-label={`Registrar contato com ${visitor.name}`}>Registrar</Botao>
       </div>
     </div>
   );
@@ -99,7 +100,7 @@ export function Visitantes({
           { rotulo: "Indicadores de visitantes", onClick: () => setView("painel") },
           { rotulo: "Regras de acolhimento", onClick: () => setView("regras") },
           ...(church ? [{ rotulo: "QR e link de visita", onClick: () => setQrOpen(true) }] : []),
-        ]} /><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo visitante", subtitle: "Quem chegou pela primeira vez. Entra no acompanhamento automaticamente.", saveLabel: "Registrar visitante", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem visitou" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"origem", label:"Como chegou", type:"select", half:true, options:[{v:"Convite de membro",l:"Convite de membro"},{v:"Instagram",l:"Instagram"},{v:"Indicação",l:"Indicação"},{v:"Evangelismo",l:"Evangelismo"},{v:"Tomou decisão no culto",l:"Tomou decisão no culto"},{v:"Passava na rua",l:"Passava na rua"}] }], action: { kind: "visitor" } })}>Registrar visitante</button></>}
+        ]} /><Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Novo visitante", subtitle: "Quem chegou pela primeira vez. Entra no acompanhamento automaticamente.", saveLabel: "Registrar visitante", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem visitou" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"origem", label:"Como chegou", type:"select", half:true, options:[{v:"Convite de membro",l:"Convite de membro"},{v:"Instagram",l:"Instagram"},{v:"Indicação",l:"Indicação"},{v:"Evangelismo",l:"Evangelismo"},{v:"Tomou decisão no culto",l:"Tomou decisão no culto"},{v:"Passava na rua",l:"Passava na rua"}] }], action: { kind: "visitor" } })}>Registrar visitante</Botao></>}
       />
       <div className="toolbar">
         <div className="seg" role="group" aria-label="Acompanhamento de visitantes">
@@ -113,7 +114,7 @@ export function Visitantes({
           <div className="contato-banner">
             <div className="contato-pill"><span className="contato-pill-n">{cc.prazoHoras}h</span><span>1º contato</span></div>
             <div className="contato-main"><div className="contato-t">Primeiro contato em até <em>{cc.prazoHoras}h</em> por <em>{cc.canal}</em> · meta de integração: <em>{cc.metaIntegracaoDias} dias</em></div><div className="contato-s">{cc.abordagem}</div></div>
-            <button className="btn btn-sec btn-sm" type="button" onClick={() => setCfgOpen(true)}>Ajustar</button>
+            <Botao compacto onClick={() => setCfgOpen(true)}>Ajustar</Botao>
           </div>
           <p className="ph-sub" style={{ marginTop: 10 }}>Os visitantes sem nenhum contato registrado depois desse prazo aparecem com alerta no funil, no Início e no menu.</p>
         </>
@@ -234,8 +235,8 @@ export function ContatoCfgModal({ church, cfg, onClose, onRefresh }: { church: C
         {!valoresValidos && <p className="fs-error" role="alert">Informe horas e dias como números inteiros maiores que zero.</p>}
         {erro && <p className="fs-error" role="alert">{erro}</p>}
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" disabled={saving} onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving || !valoresValidos} onClick={salvar}>{saving ? "Salvando..." : "Salvar"}</button>
+          <Botao desativado={saving} onClick={onClose}>Cancelar</Botao>
+          <Botao variante="principal" desativado={saving || !valoresValidos} onClick={salvar}>{saving ? "Salvando..." : "Salvar"}</Botao>
         </div>
       </div>
     </div>

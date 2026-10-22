@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { Icon } from "../lib/icons";
 
+import { Botao } from "../ui/Botao";
 function friendlyBootstrapError(message: string) {
   const lower = message.toLowerCase();
   if (lower.includes("sem usuário autenticado") || lower.includes("jwt")) {
@@ -211,9 +212,9 @@ export default function BootstrapChurchForm() {
 
       {error && <p className="field-error">{error}</p>}
 
-      <button className="btn btn-primary btn-lg" type="submit" disabled={loading}>
+      <Botao variante="principal" className="btn-primary btn-lg" type="submit" desativado={loading}>
         {loading ? "Criando..." : "Criar igreja matriz"}
-      </button>
+      </Botao>
     </form>
   );
 }

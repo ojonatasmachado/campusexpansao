@@ -22,6 +22,7 @@ import { Pontos } from "./Pontos";
 import { Mesa } from "./Mesa";
 import { LiberarMapa } from "./LiberarMapa";
 
+import { Botao } from "../../ui/Botao";
 /* Painel › Pessoas › Mapa da igreja (PLANO.md, telas 1 e 3 do design).
    Visões prontas em vez de 12 interruptores; camadas e filtros ficam em
    "Personalizar". Ferramentas abrem os modos sobre o mesmo mapa. */
@@ -258,7 +259,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   const contexto: ContextoMapa | null = useMemo(() => (mapa && acesso ? { org: organizationId, mapa: mapa.map, cores: mapa.cores, acesso, cidade, regioes, pessoas, locais, areas, people, igreja: churchName, recarregar: carregar, fechar: () => setModo(null) } : null), [mapa, acesso, organizationId, cidade, regioes, pessoas, locais, areas, people, churchName, carregar]);
 
   /* ── estados vazios e de acesso ── */
-  if (erro) return <div className="mapa-tela"><div className="mp-vazio"><div><p className="mp-texto" role="alert">{erro}</p><button className="btn btn-sec btn-sm" type="button" onClick={() => { setErro(""); carregar(); }}>Tentar de novo</button></div></div></div>;
+  if (erro) return <div className="mapa-tela"><div className="mp-vazio"><div><p className="mp-texto" role="alert">{erro}</p><Botao compacto onClick={() => { setErro(""); carregar(); }}>Tentar de novo</Botao></div></div></div>;
   if (acesso && !acesso.pode) return <div className="mapa-tela"><div className="mp-vazio"><div><p className="mp-texto">O mapa da igreja ainda não foi liberado para você. Fale com o pastor.</p></div></div></div>;
   if (tela === "mesa" && acesso) return <Mesa org={organizationId} acesso={acesso} cidade={cidade} nivel={mesaNivel} regioesIniciais={mesaRegioes} igreja={churchName} onVoltar={() => setTela("mapa")} onAbrirMembro={onAbrirMembro} onMensagem={onMensagem} />;
   if (tela === "liberar") return <LiberarMapa org={organizationId} people={people} areas={areas} onVoltar={() => { setTela("mapa"); carregar(); }} />;
@@ -327,7 +328,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
             </div>
             <div className="mp-pe">
               <p className="mp-fraco" style={{ display: "flex", gap: 8 }}><Icon name="cadeado" size={14} />{totais && totais.com_nome < totais.com_ponto ? `${plural(totais.com_ponto - totais.com_nome, "pessoa aparece", "pessoas aparecem")} sem nome, porque não aceitou o termo. ` : ""}Endereço nunca é mostrado.</p>
-              {podeLiberar && <button type="button" className="btn btn-sec btn-sm" onClick={() => setTela("liberar")}>Quem vê o mapa</button>}
+              {podeLiberar && <Botao compacto onClick={() => setTela("liberar")}>Quem vê o mapa</Botao>}
             </div>
           </aside>
 
@@ -388,7 +389,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
             <section className={`mp-comece${temDir ? "" : " sem-dir"}`} aria-label="Comece por aqui">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span className="mp-pergunta">Comece por aqui</span>
-                {cartoes.length > 2 && <button type="button" className="btn btn-ghost btn-sm" onClick={() => setVerTodos((v) => !v)}>{verTodos ? "Ver menos" : `Ver os ${cartoes.length}`}</button>}
+                {cartoes.length > 2 && <Botao variante="discreto" compacto onClick={() => setVerTodos((v) => !v)}>{verTodos ? "Ver menos" : `Ver os ${cartoes.length}`}</Botao>}
               </div>
               <div className="mp-cartoes">
                 {(verTodos ? cartoes : cartoes.slice(0, 2)).map((c) => (
@@ -457,8 +458,8 @@ function PainelSelecao({ sel, cidade, nivel, pessoas, acesso, perto, onFechar, o
         </div>
         {p.id && (
           <div className="mp-pe">
-            <button type="button" className="btn btn-pri" onClick={() => onAbrirMembro(p.id!)}>Ver ficha</button>
-            <button type="button" className="btn btn-sec" onClick={() => onMensagem(p.id!)}>Mensagem</button>
+            <Botao variante="principal" onClick={() => onAbrirMembro(p.id!)}>Ver ficha</Botao>
+            <Botao onClick={() => onMensagem(p.id!)}>Mensagem</Botao>
           </div>
         )}
       </>
@@ -482,7 +483,7 @@ function PainelSelecao({ sel, cidade, nivel, pessoas, acesso, perto, onFechar, o
           </dl>
           <p className="mp-fraco">Local público: os membros veem este endereço no app, em Agenda › Onde.</p>
         </div>
-        {l.lider_member_id && <div className="mp-pe"><button type="button" className="btn btn-sec" onClick={() => onMensagem(l.lider_member_id!)}>Mensagem para quem lidera</button></div>}
+        {l.lider_member_id && <div className="mp-pe"><Botao onClick={() => onMensagem(l.lider_member_id!)}>Mensagem para quem lidera</Botao></div>}
       </>
     );
   }
@@ -498,7 +499,7 @@ function PainelSelecao({ sel, cidade, nivel, pessoas, acesso, perto, onFechar, o
         <div className="mp-corpo">
           <div className="mp-kpis"><div className="mp-kpi"><small>Pessoas no mapa</small><strong>{milhar(dentro.length)}</strong></div><div className="mp-kpi"><small>Responsável</small><strong style={{ fontFamily: "inherit", fontSize: "var(--fs-pn-14)" }}>{a.responsavel ?? "Ninguém ainda"}</strong></div></div>
         </div>
-        {acesso?.pode_mesa && <div className="mp-pe"><button type="button" className="btn btn-pri" onClick={() => onMesa([a.id], "area")}>Abrir na mesa de trabalho →</button></div>}
+        {acesso?.pode_mesa && <div className="mp-pe"><Botao variante="principal" onClick={() => onMesa([a.id], "area")}>Abrir na mesa de trabalho →</Botao></div>}
       </>
     );
   }
@@ -532,8 +533,8 @@ function PainelSelecao({ sel, cidade, nivel, pessoas, acesso, perto, onFechar, o
         <p className="mp-fraco">Fonte: IBGE · Censo Demográfico <span className="mp-num">2022</span></p>
       </div>
       <div className="mp-pe">
-        {acesso?.pode_mesa && <button type="button" className="btn btn-pri" onClick={() => onMesa([r.codigo])}>Abrir na mesa de trabalho →</button>}
-        {acesso?.pode_editar && nivel === "bairro" && <button type="button" className="btn btn-sec" onClick={() => onCriarArea([r.codigo])}>Criar área com este bairro</button>}
+        {acesso?.pode_mesa && <Botao variante="principal" onClick={() => onMesa([r.codigo])}>Abrir na mesa de trabalho →</Botao>}
+        {acesso?.pode_editar && nivel === "bairro" && <Botao onClick={() => onCriarArea([r.codigo])}>Criar área com este bairro</Botao>}
       </div>
     </>
   );

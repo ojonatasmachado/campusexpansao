@@ -13,6 +13,7 @@
 import { formatarTelefone } from "../../lib/telefone";
 import { MENSAGEM_PADRAO, comData, daSemana, linkWhatsapp, mensagemPara, primeiroNome } from "./aniversarios";
 
+import { Botao } from "../../ui/Botao";
 type Membro = { id: string; name: string; phone: string; birth: string | null; groupId?: string | null; volunteerId: string | null };
 type Pessoa = { id: string; name: string; phone?: string; meta?: { birthday?: string } };
 type Time = { id: string; name: string; people: Array<{ personId: string; isLeader: boolean }> };
@@ -45,7 +46,7 @@ const nomes = (l: AniversarioNoTime[]) => {
 };
 
 export function CartaoAniversario({ pessoas, destaque, onAgoraNao }: { pessoas: AniversarioNoTime[]; destaque: boolean; onAgoraNao: () => void }) {
-  const btn = `m6-btn ${destaque ? "pri" : "sec"}`;
+  const variante = destaque ? "principal" : "secundario";
   const um = pessoas.length === 1 ? pessoas[0] : null;
   const link = um ? linkWhatsapp(um.telefone, mensagemPara(MENSAGEM_PADRAO, um.nome)) : null;
   const times = [...new Set(pessoas.map((p) => p.time).filter(Boolean))];
@@ -69,7 +70,7 @@ export function CartaoAniversario({ pessoas, destaque, onAgoraNao }: { pessoas: 
         </ul>
       )}
       <div className="m6-btns">
-        {link && <button className={btn} type="button" onClick={() => abrir(link)}>Mandar parabéns</button>}
+        {link && <Botao tamanho="toque" variante={variante} onClick={() => abrir(link)}>Mandar parabéns</Botao>}
         <button className="m6-link" type="button" data-dispensa="1" onClick={onAgoraNao}>Agora não</button>
       </div>
     </div>

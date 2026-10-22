@@ -27,6 +27,7 @@ import { noAr, type MuralAviso } from "./estado";
 import { BoletimDaSemana } from "./Boletim";
 import { useTermos, type Termos } from "../../lib/vocabulario-context";
 
+import { Botao } from "../../ui/Botao";
 const HORAS = Array.from({ length: 24 }, (_, h) => h);
 
 function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church: ChurchView; publicos: MuralPublico[]; inicial?: MuralAviso; onClose: () => void; onDone: () => void }) {
@@ -297,7 +298,7 @@ function VerQuemLeuButton({ aviso, reads, people }: { aviso: AnnouncementView; r
   const naoLeram = people.filter((p) => !readerIds.has(p.id));
   return (
     <>
-      <button className="btn btn-sec btn-sm" type="button" onClick={() => setOpen(true)}>Ver quem leu</button>
+      <Botao compacto onClick={() => setOpen(true)}>Ver quem leu</Botao>
       {open && (
         <div className="modal-bg" onClick={() => setOpen(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -324,7 +325,7 @@ function VerQuemLeuButton({ aviso, reads, people }: { aviso: AnnouncementView; r
                 </div>
               ))}
             </div>
-            <div className="modal-foot"><button className="btn btn-pri" type="button" onClick={() => setOpen(false)}>Fechar</button></div>
+            <div className="modal-foot"><Botao variante="principal" onClick={() => setOpen(false)}>Fechar</Botao></div>
           </div>
         </div>
       )}
@@ -418,8 +419,8 @@ export function Comunicacao({
         eyebrow="Comunicação"
         help="Publicações para a igreja toda ou para um grupo. Quem recebe vê no app, e você acompanha quem leu."
         action={<>
-          {church && <button className="btn btn-sec" type="button" onClick={() => setBoletim(true)}><Icon name="whatsapp" size={14} /> Boletim da semana</button>}
-          <button className="btn btn-pri" type="button" onClick={() => setCompose(true)}>+ Nova publicação</button>
+          {church && <Botao onClick={() => setBoletim(true)}><Icon name="whatsapp" size={14} /> Boletim da semana</Botao>}
+          <Botao variante="principal" onClick={() => setCompose(true)}>+ Nova publicação</Botao>
         </>}
       />
       {pendentes.length > 0 && (
@@ -440,13 +441,13 @@ export function Comunicacao({
                     {excluindo === a.id ? (
                       <>
                         <span className="mural-conf">{a.status === "agendado" ? "Excluir o agendamento?" : "Excluir o rascunho?"}</span>
-                        <button className="btn btn-sec btn-sm" type="button" onClick={() => setExcluindo(null)}>Manter</button>
-                        <button className="btn btn-danger btn-sm" type="button" onClick={() => void excluir(a)}>Excluir</button>
+                        <Botao compacto onClick={() => setExcluindo(null)}>Manter</Botao>
+                        <Botao variante="perigo" compacto onClick={() => void excluir(a)}>Excluir</Botao>
                       </>
                     ) : (
                       <>
-                        <button className="btn btn-sec btn-sm" type="button" onClick={() => setCompose(a)}>{a.status === "agendado" ? "Editar" : "Continuar"}</button>
-                        <button className="btn btn-ghost btn-sm" type="button" onClick={() => setExcluindo(a.id)}>Excluir</button>
+                        <Botao compacto onClick={() => setCompose(a)}>{a.status === "agendado" ? "Editar" : "Continuar"}</Botao>
+                        <Botao variante="discreto" compacto onClick={() => setExcluindo(a.id)}>Excluir</Botao>
                       </>
                     )}
                   </div>
@@ -484,7 +485,7 @@ export function Comunicacao({
                   {a.kind === "evento" && <div className="mural-reach-n">{plural(resp.filter((r) => r.response === "vou").length, "vai", "vão")} · {resp.filter((r) => r.response === "nao").length} não</div>}
                 </div>
                 <div className="mural-acts">
-                  {faltam.length > 0 && <button className="btn btn-sec btn-sm" type="button" onClick={() => lembrar(a, faltam)}>Lembrar {plural(faltam.length, "pessoa")}</button>}
+                  {faltam.length > 0 && <Botao compacto onClick={() => lembrar(a, faltam)}>Lembrar {plural(faltam.length, "pessoa")}</Botao>}
                   <VerQuemLeuButton aviso={a} reads={announcementReads} people={people.filter((p) => pub.memberIds.some((id) => personDoMembro.get(id) === p.id))} />
                 </div>
               </div>
@@ -515,7 +516,7 @@ export function Comunicacao({
           <div className="panel-body">
             <div className="contato-banner" style={{ margin: 0 }}>
               <div className="contato-main"><div className="contato-t">Boas-vindas pelo WhatsApp</div><div className="contato-s">O texto que abre pronto quando você envia o acesso a um membro novo.</div></div>
-              <button className="btn btn-sec btn-sm" type="button" onClick={() => setMsgCfgOpen(true)}>Ajustar</button>
+              <Botao compacto onClick={() => setMsgCfgOpen(true)}>Ajustar</Botao>
             </div>
           </div>
         </div>

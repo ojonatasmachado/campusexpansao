@@ -9,6 +9,7 @@ import { plural } from "../../lib/plural";
 import { limparCamadas, type ContextoMapa } from "./contexto";
 import { caixaDaGeometria, temPonto } from "./geo";
 
+import { Botao, botaoClasse } from "../../ui/Botao";
 /* Ferramentas › Traçar rota (tela 12 do design). O objetivo vem primeiro e
    muda o que vira parada: na Visita, as pessoas (com nome no mapa); em
    oração, panfletagem e carro de som, lugares e ruas, nunca casas. */
@@ -170,7 +171,7 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
         <div className="mp-corpo">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span className="mp-pergunta">Paradas <span className="mp-num mp-fraco">{paradas.length}</span></span>
-            <button type="button" className="btn btn-sec btn-sm" disabled={paradas.length < 3 || ocupado} onClick={organizar}>Organizar na melhor ordem</button>
+            <Botao compacto desativado={paradas.length < 3 || ocupado} onClick={organizar}>Organizar na melhor ordem</Botao>
           </div>
           {paradas.length === 0 && <p className="mp-fraco">Nenhuma parada ainda.</p>}
           {paradas.map((p, i) => (
@@ -209,10 +210,10 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
           </details>
         </div>
         <div className="mp-pe">
-          <button type="button" className="btn btn-pri" disabled={paradas.length < 2 || ocupado || !equipe.length} onClick={() => salvar(true)}>Enviar para a equipe</button>
+          <Botao variante="principal" desativado={paradas.length < 2 || ocupado || !equipe.length} onClick={() => salvar(true)}>Enviar para a equipe</Botao>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
-            <a className={`btn btn-sec btn-sm${paradas.length < 2 ? " disabled" : ""}`} href={paradas.length >= 2 ? linkMapas(paradas.map((p) => p.lnglat), como) : undefined} target="_blank" rel="noreferrer" aria-disabled={paradas.length < 2}>Abrir no app de mapas</a>
-            <button type="button" className="btn btn-sec btn-sm" disabled={paradas.length < 2 || ocupado} onClick={() => salvar(false)}>Salvar rota</button>
+            <a className={`${botaoClasse({ compacto: true })}${paradas.length < 2 ? " disabled" : ""}`} href={paradas.length >= 2 ? linkMapas(paradas.map((p) => p.lnglat), como) : undefined} target="_blank" rel="noreferrer" aria-disabled={paradas.length < 2}>Abrir no app de mapas</a>
+            <Botao compacto desativado={paradas.length < 2 || ocupado} onClick={() => salvar(false)}>Salvar rota</Botao>
           </div>
         </div>
       </aside>

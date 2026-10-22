@@ -11,6 +11,7 @@ import { HelpDot } from "../../HelpSystem";
 import { Av } from "../ui";
 import type { BoardView, CardView, ChurchView, MinistryView, ModalState, PersonView } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
 /* permissões do Kanban por papel (equivalente ao kanbanPerm()/S.KANBAN_PERMS do
    protótipo): master/pastor administram o quadro; líder cria, comenta e move os
    próprios cards mas não apaga; voluntário não deveria nem abrir esta tela (usa o
@@ -76,10 +77,10 @@ export function BoardChooser({
           <div className="dsec-title" style={{ margin: "20px 0 10px" }}>Ou crie um novo</div>
           <div style={{ display: "flex", gap: 10 }}>
             <input className="input" style={{ flex: 1 }} placeholder="Nome do novo quadro" value={novo} onChange={(e) => setNovo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && criar()} />
-            <button className="btn btn-pri" type="button" disabled={saving} onClick={criar}>Criar e usar</button>
+            <Botao variante="principal" desativado={saving} onClick={criar}>Criar e usar</Botao>
           </div>
         </div>
-        <div className="modal-foot"><button className="btn btn-ghost" type="button" onClick={onClose}>Cancelar</button></div>
+        <div className="modal-foot"><Botao variante="discreto" onClick={onClose}>Cancelar</Botao></div>
       </div>
     </div>
   );
@@ -296,12 +297,12 @@ export function CardDrawer({
                 <input className="input" placeholder="Escreva um comentário..." value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addComment()} />
-                <button className="btn btn-sec btn-sm" type="button" onClick={addComment}>Enviar</button>
+                <Botao compacto onClick={addComment}>Enviar</Botao>
               </div>
             ) : null}
           </div>
 
-          {perm.editarBoard ? <button className="btn btn-ghost btn-sm" type="button" style={{ marginTop: 8 }} onClick={deleteCard}>Excluir card</button> : null}
+          {perm.editarBoard ? <Botao variante="discreto" compacto style={{ marginTop: 8 }} onClick={deleteCard}>Excluir card</Botao> : null}
         </div>
       </div>
     </>
@@ -389,8 +390,8 @@ export function NovoCard({
           </div>
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving} onClick={criar}>Adicionar card</button>
+          <Botao onClick={onClose}>Cancelar</Botao>
+          <Botao variante="principal" desativado={saving} onClick={criar}>Adicionar card</Botao>
         </div>
       </div>
     </div>
@@ -607,7 +608,7 @@ export function Quadros({
           {scopeMinistryIds ? <p className="ph-sub">Os quadros do {ministries.find((m) => m.id === scopeMinistryIds[0])?.name ?? "seu time"}.</p> : null}
         </div>
         <div className="ph-actions">
-          <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo quadro", subtitle: "Um quadro de tarefas para organizar o trabalho de um time ou da liderança.", saveLabel: "Criar quadro", formFields: [{ k:"nome", label:"Nome do quadro", type:"text", req:true, ph:"ex: Louvor · Julho" }, { k:"time", label:"Time dono", type:"text", half:true, ph:"ex: Louvor (ou deixe em branco para geral)" }, { k:"desc", label:"Descrição", type:"text", half:true, ph:"Para que serve" }], action: { kind: "board" } })}>+ Novo quadro</button>
+          <Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Novo quadro", subtitle: "Um quadro de tarefas para organizar o trabalho de um time ou da liderança.", saveLabel: "Criar quadro", formFields: [{ k:"nome", label:"Nome do quadro", type:"text", req:true, ph:"ex: Louvor · Julho" }, { k:"time", label:"Time dono", type:"text", half:true, ph:"ex: Louvor (ou deixe em branco para geral)" }, { k:"desc", label:"Descrição", type:"text", half:true, ph:"Para que serve" }], action: { kind: "board" } })}>+ Novo quadro</Botao>
         </div>
       </div>
       <div className="kb-explain">

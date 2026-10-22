@@ -14,6 +14,7 @@ import { plural } from "../../lib/plural";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { VIAS, type Ausente } from "./cuidado";
 
+import { Botao } from "../../ui/Botao";
 const QUEM = { grupo: "líder do grupo", time: "líder do time", pastoral: "pastoral" } as const;
 const NOME_VIA: Record<string, string> = { ligacao: "ligação", mensagem: "mensagem", visita: "visita" };
 
@@ -65,13 +66,13 @@ export function ListaDeCuidado({ lista, criancas, semanas, onAbrir }: {
                 </button>
                 {escolhendo === a.personId ? (
                   <div className="cuidado-acoes" role="group" aria-label="Como foi o contato">
-                    {VIAS.map((v) => <button key={v.v} type="button" className="btn btn-sec btn-sm" disabled={enviando === a.personId} onClick={() => registrar(a, "contato", v.v)}>{v.l}</button>)}
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEscolhendo(null)}>Cancelar</button>
+                    {VIAS.map((v) => <Botao key={v.v} compacto desativado={enviando === a.personId} onClick={() => registrar(a, "contato", v.v)}>{v.l}</Botao>)}
+                    <Botao variante="discreto" compacto onClick={() => setEscolhendo(null)}>Cancelar</Botao>
                   </div>
                 ) : (
                   <div className="cuidado-acoes">
-                    <button type="button" className="btn btn-sec btn-sm" disabled={enviando === a.personId} onClick={() => setEscolhendo(a.personId)}>Registrar contato</button>
-                    <button type="button" className="btn btn-ghost btn-sm" disabled={enviando === a.personId} onClick={() => registrar(a, "justificada")}>Justificar por 30 dias</button>
+                    <Botao compacto desativado={enviando === a.personId} onClick={() => setEscolhendo(a.personId)}>Registrar contato</Botao>
+                    <Botao variante="discreto" compacto desativado={enviando === a.personId} onClick={() => registrar(a, "justificada")}>Justificar por 30 dias</Botao>
                   </div>
                 )}
               </div>

@@ -19,6 +19,7 @@ import {
 } from "../../lib/planilha";
 import type { ChurchView, MemberView } from "../../ServiceExactApp";
 
+import { Botao } from "../../ui/Botao";
 type Etapa = 1 | 2 | 3 | 4;
 const ETAPAS = ["Arquivo", "Colunas", "Conferir", "Importar"] as const;
 type Grupo = "nova" | "existe" | "repete" | "erro";
@@ -248,7 +249,7 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
           </label>
           <div className="imp-modelo">
             <p className="fs-note">Não tem uma planilha pronta? Baixe o modelo, preencha no Excel ou no Google Planilhas e envie aqui.</p>
-            <button className="btn btn-sec btn-sm" type="button" onClick={baixarModelo}><Icon name="baixar" size={14} /> Baixar modelo</button>
+            <Botao compacto onClick={baixarModelo}><Icon name="baixar" size={14} /> Baixar modelo</Botao>
           </div>
         </FormSection>
       ) : null}
@@ -362,7 +363,7 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
               {resumo.falhas.length ? (
                 <div className="imp-falhas">
                   <p className="fs-note imp-alerta">{plural(resumo.falhas.length, "linha não entrou", "linhas não entraram")}. Corrija na planilha e importe só elas de novo.</p>
-                  <button className="btn btn-sec btn-sm" type="button" onClick={baixarFalhas}><Icon name="baixar" size={14} /> Baixar a lista</button>
+                  <Botao compacto onClick={baixarFalhas}><Icon name="baixar" size={14} /> Baixar a lista</Botao>
                 </div>
               ) : null}
             </div>
@@ -371,9 +372,9 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
       ) : null}
 
       {etapa === 2 || etapa === 3 ? (
-        <button className="btn btn-ghost btn-sm imp-voltar" type="button" onClick={() => setEtapa((etapa - 1) as Etapa)} disabled={lendo}>
+        <Botao variante="discreto" compacto className="imp-voltar" onClick={() => setEtapa((etapa - 1) as Etapa)} desativado={lendo}>
           <Icon name="voltar" size={14} /> Voltar para {ETAPAS[etapa - 2].toLowerCase()}
-        </button>
+        </Botao>
       ) : null}
     </FormScreen>
   );

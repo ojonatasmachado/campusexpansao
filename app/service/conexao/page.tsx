@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createServiceSupabaseClient } from "../lib/supabase";
 
+import { botaoClasse } from "../ui/Botao";
 type ProductRow = {
   code: string;
   name: string;
@@ -106,10 +107,10 @@ export default async function ServiceConnectionPage() {
             </div>
 
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24 }}>
-              <Link className="btn btn-secondary" href="/">
+              <Link className={botaoClasse({})} href="/">
                 Voltar ao site
               </Link>
-              <Link className="btn btn-ghost" href="/login">
+              <Link className={botaoClasse({ variante: "discreto" })} href="/login">
                 Ir para login
               </Link>
             </div>

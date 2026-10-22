@@ -11,6 +11,7 @@ import { avisar } from "../../lib/avisar";
 import { Icon } from "../../lib/icons";
 import { chaveLegivel, codigoPix, normalizarChave, rotuloDoTipo, type ContribuirCfg } from "./pix";
 
+import { Botao } from "../../ui/Botao";
 async function copiar(texto: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(texto);
@@ -81,10 +82,10 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
 
       <div className="m6-sec">
         <div className="m6-card">
-          <button className="m6-btn pri full" type="button" onClick={() => copiarEAvisar("codigo")}>
+          <Botao tamanho="toque" variante="principal" largo onClick={() => copiarEAvisar("codigo")}>
             <Icon name={copiado === "codigo" ? "ok" : "copiar"} size={20} />
             {copiado === "codigo" ? "Código copiado" : "Copiar código Pix"}
-          </button>
+          </Botao>
           <p className="m6-meta m6-mt">No app do seu banco, escolha Pix copia e cola, cole o código e digite o valor.</p>
 
           <div className="contrib-chave">
@@ -92,9 +93,9 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
               <div className="m6-meta">{rotuloDoTipo(cfg.tipo)}</div>
               <div className="contrib-chave-v">{legivel}</div>
             </div>
-            <button className="m6-btn sec small" type="button" onClick={() => copiarEAvisar("chave")} aria-label={`Copiar chave Pix ${legivel}`}>
+            <Botao tamanho="toque" compacto onClick={() => copiarEAvisar("chave")} aria-label={`Copiar chave Pix ${legivel}`}>
               {copiado === "chave" ? "Copiada" : "Copiar"}
-            </button>
+            </Botao>
           </div>
         </div>
       </div>

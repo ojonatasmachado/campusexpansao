@@ -13,6 +13,7 @@ import { friendlyWriteError } from "../../painel/erros";
 import { useTermos } from "../../lib/vocabulario-context";
 import type { EventView, RosterAssignmentView } from "../../ServiceExactApp";
 
+import { Botao } from "../../ui/Botao";
 export function PublicarEscala({ rascunhos, events, organizationId, onClose, onPublicado }: {
   rascunhos: RosterAssignmentView[];
   events: EventView[];
@@ -103,8 +104,8 @@ export function PublicarEscala({ rascunhos, events, organizationId, onClose, onP
           </div>
         )}
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={() => { void fechar(); }} disabled={salvando}>{parcial ? "Fechar" : rascunhos.length ? "Cancelar" : "Fechar"}</button>
-          {rascunhos.length > 0 && <button className="btn btn-pri" type="button" onClick={publicar} disabled={salvando}>{salvando ? "Publicando…" : parcial ? "Tentar de novo" : "Publicar e avisar"}</button>}
+          <Botao onClick={() => { void fechar(); }} desativado={salvando}>{parcial ? "Fechar" : rascunhos.length ? "Cancelar" : "Fechar"}</Botao>
+          {rascunhos.length > 0 && <Botao variante="principal" onClick={publicar} desativado={salvando}>{salvando ? "Publicando…" : parcial ? "Tentar de novo" : "Publicar e avisar"}</Botao>}
         </div>
       </div>
     </div>

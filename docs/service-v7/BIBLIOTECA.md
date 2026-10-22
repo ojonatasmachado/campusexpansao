@@ -18,7 +18,7 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 
 | Peça | Onde hoje | Compartilhado | Problema | Prancha |
 |---|---|---|---|---|
-| Botão | `Botao` em `app/service/ui/Botao.tsx` (sobre `.btn*` e `.m6-btn`; `botaoClasse()` para links) | parcial | painel Início e app do membro já usam; resto do painel ainda inline; `.btn-ghost` unificado | 1 |
+| Botão | `Botao` em `app/service/ui/Botao.tsx` (sobre `.btn*` e `.m6-btn`; `botaoClasse()` para links e rótulos) | sim | todos os botões do Service usam; `.btn-ghost` unificado; `.btn-primary`/`.btn-secondary` ainda no login e na conexão | 1 |
 | Botão de ícone | `BotaoIcone` em `app/service/ui/Botao.tsx` (`rotulo` obrigatório); telas ainda com classes soltas (`.drawer-close`, `.top-icon`...) | parcial | falta trocar os usos | 1 |
 | Selo | `.m6-st` (membro), `Chip` (painel/ui.tsx) | não | duas peças para o mesmo papel | 1, 6 |
 | Chip/etiqueta | `Chip`, `.tag`, `.papel-tag` | parcial | usos misturados | 6 |

@@ -17,6 +17,7 @@ import { PAGINA_CFG_DEFAULT, IDENTIDADE_CFG_DEFAULT, mergeChurchIdentity } from 
 import type { PaginaCfg, PaginaSocial, PaginaTemplate, ChurchPageData, IdentidadeCfg } from "../lib/church-page";
 import ChurchPageView from "../[slug]/ChurchPageView";
 
+import { Botao } from "./ui/Botao";
 /* Editor da Página da igreja (link-in-bio) da igreja, aba "Página da igreja" em
    Configurações. Arquivo próprio (não dentro de ServiceExactApp.tsx, que já
    tem 10k+ linhas) : essa funcionalidade tem peso real (CRUD de links com
@@ -335,11 +336,11 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                 onChange={(e) => { setSlugDraft(e.target.value.toLowerCase()); setSlugStatus("idle"); }}
                 onBlur={checkSlug}
               />
-              <button type="button" className="btn btn-sec btn-sm" disabled={slugStatus !== "ok"} onClick={saveSlug}>Salvar endereço</button>
+              <Botao compacto desativado={slugStatus !== "ok"} onClick={saveSlug}>Salvar endereço</Botao>
               {pageUrl && (
-                <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(pageUrl)}>
+                <Botao variante="discreto" compacto onClick={() => navigator.clipboard.writeText(pageUrl)}>
                   <Icon name="copiar" size={13} /> Copiar link
-                </button>
+                </Botao>
               )}
             </div>
             {slugStatus === "invalid" && <div className="brand-accent-warn">Use só letras minúsculas, números e hífen, de 3 a 40 caracteres.</div>}
@@ -353,9 +354,9 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                   <div className="field-label" style={{ marginTop: 0 }}>Acesso da equipe (login com a cara da igreja)</div>
                   <span style={{ fontSize: "var(--fs-ui-13)", color: "var(--muted)" }}>{loginUrl.replace(/^https?:\/\//, "")}</span>
                 </div>
-                <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(loginUrl)}>
+                <Botao variante="discreto" compacto onClick={() => navigator.clipboard.writeText(loginUrl)}>
                   <Icon name="copiar" size={13} /> Copiar link
-                </button>
+                </Botao>
               </div>
             )}
 
@@ -366,7 +367,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                 </div>
                 <div>
                   <div className="cfg-row-s">QR code pronto pra colocar em boletim, cartaz ou tela de projeção.</div>
-                  <button type="button" className="btn btn-sec btn-sm" style={{ marginTop: 8 }} onClick={baixarQr}>Baixar QR code</button>
+                  <Botao compacto style={{ marginTop: 8 }} onClick={baixarQr}>Baixar QR code</Botao>
                 </div>
               </div>
             )}
@@ -434,13 +435,12 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
           <div className="cfg-card">
             <div className="panel-head" style={{ padding: 0, marginBottom: 10 }}>
               <span className="panel-title">Links</span>
-              <button
-                type="button"
-                className="btn btn-pri btn-sm"
+              <Botao
+                variante="principal" compacto
                 onClick={() => setLinkModal({ isNew: true, draft: { id: crypto.randomUUID(), label: "", url: "", icon: DEFAULT_LINK_ICON, imageUrl: null, groupLabel: "", startsAt: "", endsAt: "", active: true, position: links.length, clickCount: 0 } })}
               >
                 + Link
-              </button>
+              </Botao>
             </div>
             {loading && <div className="empty">Carregando...</div>}
             {!loading && links.length === 0 && <div className="empty">Nenhum link ainda. Adicione o primeiro.</div>}
@@ -457,9 +457,9 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                     <div className="cfg-row-s">{link.groupLabel ? `${link.groupLabel} · ` : ""}{link.url} · {link.clickCount} cliques</div>
                   </div>
                   <div style={{ display: "flex", gap: 4 }}>
-                    <button type="button" className="btn btn-ghost btn-sm" disabled={idx === 0} onClick={() => moveLink(link.id, -1)}>↑</button>
-                    <button type="button" className="btn btn-ghost btn-sm" disabled={idx === links.length - 1} onClick={() => moveLink(link.id, 1)}>↓</button>
-                    <button type="button" className="btn btn-sec btn-sm" onClick={() => setLinkModal({ isNew: false, draft: link })}>Editar</button>
+                    <Botao variante="discreto" compacto desativado={idx === 0} onClick={() => moveLink(link.id, -1)}>↑</Botao>
+                    <Botao variante="discreto" compacto desativado={idx === links.length - 1} onClick={() => moveLink(link.id, 1)}>↓</Botao>
+                    <Botao compacto onClick={() => setLinkModal({ isNew: false, draft: link })}>Editar</Botao>
                   </div>
                 </div>
               ))}
@@ -506,13 +506,12 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
           <div className="cfg-card">
             <div className="panel-head" style={{ padding: 0, marginBottom: 10 }}>
               <span className="panel-title">Publicações</span>
-              <button
-                type="button"
-                className="btn btn-pri btn-sm"
+              <Botao
+                variante="principal" compacto
                 onClick={() => setPostModal({ isNew: true, draft: { id: crypto.randomUUID(), title: "", body: "", coverUrl: null, pinned: false, publishedAt: new Date().toISOString() } })}
               >
                 + Notícia
-              </button>
+              </Botao>
             </div>
             {!loading && posts.length === 0 && <div className="empty">Nenhuma notícia publicada ainda.</div>}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -522,7 +521,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                     <div className="cfg-row-t">{post.title} {post.pinned && <span className="chip chip-ok">fixado</span>}</div>
                     <div className="cfg-row-s">{new Date(post.publishedAt).toLocaleDateString("pt-BR")}</div>
                   </div>
-                  <button type="button" className="btn btn-sec btn-sm" onClick={() => setPostModal({ isNew: false, draft: post })}>Editar</button>
+                  <Botao compacto onClick={() => setPostModal({ isNew: false, draft: post })}>Editar</Botao>
                 </div>
               ))}
             </div>
@@ -651,10 +650,10 @@ function LinkModal({
           </div>
         </div>
         <div className="modal-foot" style={{ justifyContent: "space-between" }}>
-          {onDelete ? <button className="btn btn-ghost" type="button" onClick={onDelete}>Excluir</button> : <span />}
+          {onDelete ? <Botao variante="discreto" onClick={onDelete}>Excluir</Botao> : <span />}
           <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn btn-sec" type="button" onClick={onCancel}>Cancelar</button>
-            <button className="btn btn-pri" type="button" disabled={saving || !form.label.trim() || !form.url.trim()} onClick={salvar}>Salvar</button>
+            <Botao onClick={onCancel}>Cancelar</Botao>
+            <Botao variante="principal" desativado={saving || !form.label.trim() || !form.url.trim()} onClick={salvar}>Salvar</Botao>
           </div>
         </div>
       </div>
@@ -718,10 +717,10 @@ function PostModal({
           </div>
         </div>
         <div className="modal-foot" style={{ justifyContent: "space-between" }}>
-          {onDelete ? <button className="btn btn-ghost" type="button" onClick={onDelete}>Excluir</button> : <span />}
+          {onDelete ? <Botao variante="discreto" onClick={onDelete}>Excluir</Botao> : <span />}
           <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn btn-sec" type="button" onClick={onCancel}>Cancelar</button>
-            <button className="btn btn-pri" type="button" disabled={saving || !form.title.trim()} onClick={salvar}>Salvar</button>
+            <Botao onClick={onCancel}>Cancelar</Botao>
+            <Botao variante="principal" desativado={saving || !form.title.trim()} onClick={salvar}>Salvar</Botao>
           </div>
         </div>
       </div>

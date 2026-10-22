@@ -7,6 +7,7 @@ import { useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import type { ChurchView } from "../../ServiceExactApp";
 
+import { Botao } from "../../ui/Botao";
 /* mensagem que abre pronta no WhatsApp do líder quando ele manda o acesso ao
    app pra um membro novo, guardada em service.churches.settings.acessoMsgCfg
    (mesmo jsonb de sempre). Placeholders trocados na hora do envio, ver
@@ -46,11 +47,11 @@ export function AcessoMsgModal({ church, cfg, onClose, onRefresh }: { church: Ch
               Use {"{nome}"}, {"{igreja}"} e {"{link}"}: preenchemos automaticamente na hora de enviar. O link é um convite só da pessoa, onde ela informa o e-mail, cria a senha e coloca o CEP. Nenhuma senha vai na mensagem.
             </div>
           </div>
-          <button className="btn btn-ghost btn-sm" type="button" onClick={restaurar}>Restaurar mensagem padrão</button>
+          <Botao variante="discreto" compacto onClick={restaurar}>Restaurar mensagem padrão</Botao>
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>Salvar</button>
+          <Botao onClick={onClose}>Cancelar</Botao>
+          <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
         </div>
       </div>
     </div>

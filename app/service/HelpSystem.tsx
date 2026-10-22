@@ -11,6 +11,7 @@ import { createPortal } from "react-dom";
 import { Icon } from "./lib/icons";
 import { useTermos } from "./lib/vocabulario-context";
 
+import { Botao } from "./ui/Botao";
 /* ── HELP DOT · "?" ao lado de título, KPI ou botão ───────────────── */
 
 /* A caixa abre FORA do cartão (portal no body, position:fixed): dentro do
@@ -179,8 +180,8 @@ export function Coachmark({ steps, go, onDone, startAt = 0, onStepChange }: { st
         <div className="coach-pop-actions">
           <button className="coach-skip" type="button" onClick={onDone}>Pular tour</button>
           <div style={{ flex: 1 }} />
-          {i > 0 ? <button className="btn btn-sec btn-sm" type="button" onClick={prev}>Voltar</button> : null}
-          <button className="btn btn-pri btn-sm" type="button" onClick={next}>{i < steps.length - 1 ? "Próximo →" : "Concluir"}</button>
+          {i > 0 ? <Botao compacto onClick={prev}>Voltar</Botao> : null}
+          <Botao variante="principal" compacto onClick={next}>{i < steps.length - 1 ? "Próximo →" : "Concluir"}</Botao>
         </div>
       </div>
     </div>

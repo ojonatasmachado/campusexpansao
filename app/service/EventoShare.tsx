@@ -5,6 +5,7 @@ import { useState, useRef } from "react";
 import { toPng } from "html-to-image";
 import { formatDateBR, joinDot } from "./lib/date";
 
+import { Botao } from "./ui/Botao";
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
 type EventView = {
@@ -258,27 +259,26 @@ export default function EventoShare({ event, ministries, churchName = "Service",
             </div>
           )}
 
-          <button
-            className="btn btn-pri"
+          <Botao
+            variante="principal"
             style={{ width: "100%", justifyContent: "center" }}
             onClick={baixar}
           >
             ↓ Baixar imagem
-          </button>
-          <button
-            className="btn btn-sec"
+          </Botao>
+          <Botao
             style={{ width: "100%", justifyContent: "center", marginTop: 10 }}
             onClick={copiarTexto}
           >
             Copiar texto p/ WhatsApp
-          </button>
-          <button
-            className="btn btn-ghost"
+          </Botao>
+          <Botao
+            variante="discreto"
             style={{ width: "100%", justifyContent: "center", marginTop: 10 }}
             onClick={onClose}
           >
             Fechar
-          </button>
+          </Botao>
 
           <div className="evt2-side-tip">
             {completa

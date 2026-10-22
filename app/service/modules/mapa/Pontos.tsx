@@ -8,6 +8,7 @@ import { Icon } from "../../lib/icons";
 import { plural } from "../../lib/plural";
 import { limparCamadas, type ContextoMapa } from "./contexto";
 
+import { Botao } from "../../ui/Botao";
 /* Pontos de interesse (tela 10 do design). Desligados por padrão; do
    OpenStreetMap (atualizados todo mês) ou adicionados à mão. Cada ponto
    mostra a origem e tem editar, ocultar e excluir (excluir só os manuais). */
@@ -173,7 +174,7 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
             ))}
           </div>
         </div>
-        {podeEditar && <div className="mp-pe"><button type="button" className="btn btn-sec" onClick={() => setForm({ nome: "", categoria: "igreja_acao", local: null, endereco: "", observacao: "" })}>+ Adicionar ponto</button></div>}
+        {podeEditar && <div className="mp-pe"><Botao onClick={() => setForm({ nome: "", categoria: "igreja_acao", local: null, endereco: "", observacao: "" })}>+ Adicionar ponto</Botao></div>}
       </aside>
 
       {aberto && !form && (
@@ -191,8 +192,8 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
           </div>
           {podeEditar && (
             <div className="mp-pe" style={{ flexDirection: "row" }}>
-              <button type="button" className="btn btn-sec btn-sm" onClick={() => setForm({ ponto: aberto, nome: aberto.nome, categoria: aberto.categoria, local: [aberto.longitude, aberto.latitude], endereco: aberto.endereco ?? "", observacao: aberto.observacao ?? "" })}>Editar</button>
-              <button type="button" className="btn btn-sec btn-sm" onClick={() => ocultar(aberto, !aberto.oculto)}>{aberto.oculto ? "Mostrar" : "Ocultar"}</button>
+              <Botao compacto onClick={() => setForm({ ponto: aberto, nome: aberto.nome, categoria: aberto.categoria, local: [aberto.longitude, aberto.latitude], endereco: aberto.endereco ?? "", observacao: aberto.observacao ?? "" })}>Editar</Botao>
+              <Botao compacto onClick={() => ocultar(aberto, !aberto.oculto)}>{aberto.oculto ? "Mostrar" : "Ocultar"}</Botao>
             </div>
           )}
         </aside>
@@ -215,7 +216,7 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
                   <span className="field-label req">Onde fica</span>
                   <div className="mp-dados" style={{ alignItems: "center" }}>
                     <dt>{form.local ? "Marcado no mapa" : "Ainda não marcado"}</dt>
-                    <dd><button type="button" className="btn btn-sec btn-sm" onClick={() => setEscolhendo(true)}>{form.local ? "Mudar" : "Clicar no mapa"}</button></dd>
+                    <dd><Botao compacto onClick={() => setEscolhendo(true)}>{form.local ? "Mudar" : "Clicar no mapa"}</Botao></dd>
                   </div>
                   <input className="input" style={{ marginTop: 8 }} placeholder="Endereço (opcional)" value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} aria-label="Endereço" />
                 </div>
@@ -224,8 +225,8 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
               <p className="mp-fraco">Origem: {form.ponto?.origem === "osm" ? "OpenStreetMap (nome e local vêm de lá)" : "adicionado à mão"}</p>
             </div>
             <div className="mp-pe" style={{ flexDirection: "row", justifyContent: "flex-end" }}>
-              <button type="button" className="btn btn-sec" onClick={() => setForm(null)}>Cancelar</button>
-              <button type="button" className="btn btn-pri" disabled={salvando || !form.nome.trim() || !form.local} onClick={salvar}>{form.ponto ? "Salvar" : "Adicionar"}</button>
+              <Botao onClick={() => setForm(null)}>Cancelar</Botao>
+              <Botao variante="principal" desativado={salvando || !form.nome.trim() || !form.local} onClick={salvar}>{form.ponto ? "Salvar" : "Adicionar"}</Botao>
             </div>
           </div>
         </div>

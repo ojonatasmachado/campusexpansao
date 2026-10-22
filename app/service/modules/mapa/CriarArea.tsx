@@ -8,6 +8,7 @@ import { CORES_AREA, NOME_COR, previaArea, salvarArea, type Area, type CorArea }
 import { limparCamadas, type ContextoMapa } from "./contexto";
 import { milhar, pessoasNaRegiao, umACada } from "./linguagem";
 
+import { Botao } from "../../ui/Botao";
 /* Ferramentas › Criar uma área (tela 9 do design). Padrão: juntar bairros,
    clicando neles. Desenhar à mão fica como segunda opção. Os números
    (pessoas, moradores, células) mudam a cada bairro ou ponto. */
@@ -153,8 +154,8 @@ export function CriarArea({ ctx, bairrosIniciais, nivel }: { ctx: ContextoMapa; 
           {erro && <p className="mp-texto" role="alert" style={{ color: "var(--danger)" }}>{erro}</p>}
         </div>
         <div className="mp-pe" style={{ flexDirection: "row" }}>
-          <button type="button" className="btn btn-sec" style={{ flex: 1 }} onClick={ctx.fechar}>Cancelar</button>
-          <button type="button" className="btn btn-pri" style={{ flex: 2 }} disabled={!pronto || salvando} onClick={salvar}>{salvando ? "Salvando..." : "Salvar área"}</button>
+          <Botao style={{ flex: 1 }} onClick={ctx.fechar}>Cancelar</Botao>
+          <Botao variante="principal" style={{ flex: 2 }} desativado={!pronto || salvando} onClick={salvar}>{salvando ? "Salvando..." : "Salvar área"}</Botao>
         </div>
       </aside>
     </>

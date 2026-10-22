@@ -27,6 +27,7 @@ import { GerarPeriodo } from "./GerarPeriodo";
 import { EscalaExtra } from "./EscalaExtra";
 import { PublicarEscala } from "./PublicarEscala";
 
+import { Botao } from "../../ui/Botao";
 type Candidato = CandidatoBase<PersonView>;
 
 /* carga da semana corrente (segunda a domingo contendo hoje) por pessoa:
@@ -124,10 +125,10 @@ function FuncoesEscalaModal({
           <div className="func-edit-add">
             <input className="input" placeholder="ex: Vocal, Câmera, Recepção" value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
             <div className="stepper"><button type="button" onClick={() => setNeed((n) => Math.max(1, n - 1))}>−</button><span>{need}</span><button type="button" onClick={() => setNeed((n) => n + 1)}>+</button></div>
-            <button className="btn btn-sec btn-sm" type="button" disabled={saving} onClick={add}>+ Função</button>
+            <Botao compacto desativado={saving} onClick={add}>+ Função</Botao>
           </div>
         </div>
-        <div className="modal-foot"><button className="btn btn-pri" type="button" onClick={onClose}>Concluído</button></div>
+        <div className="modal-foot"><Botao variante="principal" onClick={onClose}>Concluído</Botao></div>
       </div>
     </div>
   );
@@ -188,7 +189,7 @@ function DelegarModal({
             );
           })}
         </div>
-        <div className="modal-foot"><button className="btn btn-pri" type="button" onClick={onClose}>Concluído</button></div>
+        <div className="modal-foot"><Botao variante="principal" onClick={onClose}>Concluído</Botao></div>
       </div>
     </div>
   );
@@ -232,8 +233,8 @@ function PresetSaveModal({
           <div className="field"><label className="field-label">Nome da configuração</label><input className="input" placeholder="ex: Culto de domingo" value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === "Enter" && salvar()} /></div>
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>Salvar</button>
+          <Botao onClick={onClose}>Cancelar</Botao>
+          <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
         </div>
       </div>
     </div>
@@ -479,14 +480,14 @@ export function Escalas({
         help={ct(`Monte quem serve em cada {culto}. As pessoas confirmam ou recusam direto no celular, e a vaga em aberto aparece em vermelho. Toque numa pessoa para confirmar, trocar ou remover; em Escalar para preencher a vaga. ${perspectiveText}`)}
         action={
           <>
-            <button className="btn btn-sec" type="button" onClick={() => setPeriodoOpen(true)}><Icon name="agenda" size={15} /> Montar período</button>
+            <Botao onClick={() => setPeriodoOpen(true)}><Icon name="agenda" size={15} /> Montar período</Botao>
             <MenuMais acoes={[
               { rotulo: "Escala extra", icone: "add", onClick: () => setExtraOpen(true) },
               { rotulo: "Delegar a gestão", icone: "membros", onClick: () => setDelegarOpen(true) },
               { rotulo: "QR do check-in", icone: "cultos", onClick: () => setCheckinEventId(selectedEvent?.id ?? null), desligada: !selectedEvent },
               { rotulo: "Baixar a escala", icone: "relatorios", onClick: baixarCSV, desligada: !selectedEvent },
             ]} />
-            <button className="btn btn-pri" type="button" onClick={() => setPublicarOpen(true)}>Publicar e avisar{rascunhos.length ? ` (${rascunhos.length})` : ""}</button>
+            <Botao variante="principal" onClick={() => setPublicarOpen(true)}>Publicar e avisar{rascunhos.length ? ` (${rascunhos.length})` : ""}</Botao>
           </>
         }
       />
@@ -521,7 +522,7 @@ export function Escalas({
           {escalaCfg.modo === "assistido" ? "O sistema sugere os nomes; você confirma cada um." : null}
           {escalaCfg.modo === "automatico" ? "O sistema gera e já confirma. Na recusa, chama o próximo apto." : null}
         </span>
-        {escalaCfg.modo !== "manual" ? <button className="btn btn-sec btn-sm" type="button" disabled={gerando} onClick={gerarAuto}><Icon name="escalas" size={14} /> {gerando ? "Gerando…" : (escalaCfg.modo === "automatico" ? "Gerar a escala" : "Sugerir nomes")}</button> : null}
+        {escalaCfg.modo !== "manual" ? <Botao compacto desativado={gerando} onClick={gerarAuto}><Icon name="escalas" size={14} /> {gerando ? "Gerando…" : (escalaCfg.modo === "automatico" ? "Gerar a escala" : "Sugerir nomes")}</Botao> : null}
         <span className="tb-spacer" />
         <span className="esc-preset">
           <Icon name="escalas" size={13} />
@@ -731,12 +732,12 @@ function RosterActionModal({
           </div>
           <div className="modal-body">
             <div style={{ display: "grid", gap: 8 }}>
-              <button className="btn btn-pri" style={{ justifyContent: "center" }} type="button" onClick={() => { onConfirmar(assignment.id); onClose(); }}><Icon name="ok" size={15} /> Marcar como confirmado</button>
-              <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => { onPendente(assignment.id); onClose(); }}>Reenviar convite</button>
-              <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => { onRecusar(assignment); onClose(); }}>Marcar que recusou</button>
-              <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setTrocando(true)}>Pedir troca</button>
-              {assignedPerson ? <button className="btn btn-sec" style={{ justifyContent: "center" }} type="button" onClick={() => setDrawer({ kind: "person", id: assignedPerson.id })}>{ct("Ver perfil do {voluntario}")}</button> : null}
-              <button className="btn btn-danger" style={{ justifyContent: "center" }} type="button" onClick={() => { onRemover(assignment.id); onClose(); }}>Remover da escala</button>
+              <Botao variante="principal" style={{ justifyContent: "center" }} onClick={() => { onConfirmar(assignment.id); onClose(); }}><Icon name="ok" size={15} /> Marcar como confirmado</Botao>
+              <Botao style={{ justifyContent: "center" }} onClick={() => { onPendente(assignment.id); onClose(); }}>Reenviar convite</Botao>
+              <Botao style={{ justifyContent: "center" }} onClick={() => { onRecusar(assignment); onClose(); }}>Marcar que recusou</Botao>
+              <Botao style={{ justifyContent: "center" }} onClick={() => setTrocando(true)}>Pedir troca</Botao>
+              {assignedPerson ? <Botao style={{ justifyContent: "center" }} onClick={() => setDrawer({ kind: "person", id: assignedPerson.id })}>{ct("Ver perfil do {voluntario}")}</Botao> : null}
+              <Botao variante="perigo" style={{ justifyContent: "center" }} onClick={() => { onRemover(assignment.id); onClose(); }}>Remover da escala</Botao>
             </div>
           </div>
         </div>
@@ -808,7 +809,7 @@ function RosterActionModal({
             </>
           )}
         </div>
-        <div className="modal-foot"><button className="btn btn-ghost" type="button" onClick={onClose}>Cancelar</button></div>
+        <div className="modal-foot"><Botao variante="discreto" onClick={onClose}>Cancelar</Botao></div>
       </div>
     </div>
   );

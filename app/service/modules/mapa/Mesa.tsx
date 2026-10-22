@@ -14,6 +14,7 @@ import { caixaDaGeometria, dentroDe } from "./geo";
 import { CATEGORIAS, carregarPontos, type Ponto } from "./Pontos";
 import { baixarCsv } from "./csv";
 
+import { Botao } from "../../ui/Botao";
 /* Mesa de trabalho (tela 2 do design): uma, várias ou todas as regiões,
    para analisar e baixar CSV. Pessoas só com nome de quem aceitou o termo;
    o CSV nunca leva endereço e cada download fica registrado. */
@@ -89,11 +90,11 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
     <div className="content wide mesa">
       <header className="mesa-cab">
         <div>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onVoltar}><Icon name="voltar" size={14} />Mapa da igreja</button>
+          <Botao variante="discreto" compacto onClick={onVoltar}><Icon name="voltar" size={14} />Mapa da igreja</Botao>
           <div className="mp-sobre" style={{ marginTop: 10 }}>Mesa de trabalho</div>
           <h1 className="mesa-titulo">{titulo}</h1>
         </div>
-        {acesso.pode_csv && <button type="button" className="btn btn-pri" disabled={!sel.length} onClick={baixar}><Icon name="baixar" size={16} />Baixar CSV</button>}
+        {acesso.pode_csv && <Botao variante="principal" desativado={!sel.length} onClick={baixar}><Icon name="baixar" size={16} />Baixar CSV</Botao>}
       </header>
 
       <div className="mesa-caixa mesa-regioes">
@@ -167,9 +168,9 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
                 {marcadas.length > 0 && (
                   <div className="mesa-acoes">
                     <span><span className="mp-num">{marcadas.length}</span> {marcadas.length === 1 ? "selecionada" : "selecionadas"}</span>
-                    {marcadas.length === 1 && <button type="button" className="btn btn-sec btn-sm" onClick={() => onMensagem(marcadas[0])}>Mensagem</button>}
-                    {marcadas.length === 1 && <button type="button" className="btn btn-sec btn-sm" onClick={() => onAbrirMembro(marcadas[0])}>Ver ficha</button>}
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setMarcadas([])}>Limpar</button>
+                    {marcadas.length === 1 && <Botao compacto onClick={() => onMensagem(marcadas[0])}>Mensagem</Botao>}
+                    {marcadas.length === 1 && <Botao compacto onClick={() => onAbrirMembro(marcadas[0])}>Ver ficha</Botao>}
+                    <Botao variante="discreto" compacto onClick={() => setMarcadas([])}>Limpar</Botao>
                   </div>
                 )}
                 <div className="mesa-tabela">

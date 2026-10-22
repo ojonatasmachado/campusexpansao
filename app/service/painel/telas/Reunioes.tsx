@@ -17,6 +17,7 @@ import { DatePicker, DrawerSection, DrawerShell, TimePicker } from "../campos";
 import { BoardChooser } from "./Quadros";
 import type { BoardView, CardView, ChurchView, DrawerState, MeetingActionView, MeetingView, MinistryView, ModalState, PersonView, RehearsalView, ReservationView, RoomView } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
 export function ReuniaoForm({
   ministries,
   people,
@@ -180,7 +181,7 @@ export function Reunioes({ meetings, meetingActions, ministries, people, rooms, 
   const [novaOpen, setNovaOpen] = useState(false);
   return (
     <div className="content wide">
-      <PageHead title="Reuniões" eyebrow="Liderança" help="Pauta, presença e decisões dos encontros de liderança. Cada reunião guarda a ata pra consultar depois." action={<button className="btn btn-pri" type="button" onClick={() => setNovaOpen(true)}>+ Marcar reunião</button>} />
+      <PageHead title="Reuniões" eyebrow="Liderança" help="Pauta, presença e decisões dos encontros de liderança. Cada reunião guarda a ata pra consultar depois." action={<Botao variante="principal" onClick={() => setNovaOpen(true)}>+ Marcar reunião</Botao>} />
       <div className="section-divide"><Icon name="cultos" size={15} /><span className="label">Agendadas</span><span className="line" /></div>
       <div className="reu-grid">
         {scheduled.map((meeting) => {
@@ -220,7 +221,7 @@ export function Ensaios({ rehearsals, ministries, rooms, setDrawer, setModal }: 
   const localOptions = [...rooms.filter((room) => room.allows_meetings !== false).map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` })), { v: OUTRO_LOCAL, l: "Outro espaço (fora da igreja)" }];
   return (
     <div className="content wide">
-      <PageHead title="Ensaios" eyebrow="Liderança" help="Ensaios de louvor, teatro, dança... com participantes e repertório ou materiais anexados." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo ensaio", subtitle: "Louvor, teatro, dança… Escolha quem participa e defina o repertório.", saveLabel: "Criar ensaio", formFields: [{ k:"titulo", label:"Nome do ensaio", type:"text", req:true, ph:"ex: Ensaio do Louvor, Peça de Natal" }, { k:"tipo", label:"Tipo de ensaio", type:"select", half:true, options:[{v:"louvor",l:"Louvor / música"},{v:"teatro",l:"Teatro"},{v:"danca",l:"Dança"},{v:"coreografia",l:"Coreografia"},{v:"geral",l:"Geral"},{v:"outro",l:"Outro"}] }, { k:"time", label:"Ministério", type:"text", half:true, ph:"ex: Louvor" }, { k:"data", label:"Dia", type:"date", half:true }, { k:"hora", label:"Horário", type:"time", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }, { k:"obs", label:"Observação", type:"area", ph:"Detalhes do ensaio" }], action: { kind: "rehearsal" } })}>+ Novo ensaio</button>} />
+      <PageHead title="Ensaios" eyebrow="Liderança" help="Ensaios de louvor, teatro, dança... com participantes e repertório ou materiais anexados." action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Novo ensaio", subtitle: "Louvor, teatro, dança… Escolha quem participa e defina o repertório.", saveLabel: "Criar ensaio", formFields: [{ k:"titulo", label:"Nome do ensaio", type:"text", req:true, ph:"ex: Ensaio do Louvor, Peça de Natal" }, { k:"tipo", label:"Tipo de ensaio", type:"select", half:true, options:[{v:"louvor",l:"Louvor / música"},{v:"teatro",l:"Teatro"},{v:"danca",l:"Dança"},{v:"coreografia",l:"Coreografia"},{v:"geral",l:"Geral"},{v:"outro",l:"Outro"}] }, { k:"time", label:"Ministério", type:"text", half:true, ph:"ex: Louvor" }, { k:"data", label:"Dia", type:"date", half:true }, { k:"hora", label:"Horário", type:"time", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }, { k:"obs", label:"Observação", type:"area", ph:"Detalhes do ensaio" }], action: { kind: "rehearsal" } })}>+ Novo ensaio</Botao>} />
       <div className="reu-grid">
         {rehearsals.map((rehearsal) => {
           const ministry = rehearsal.ministry_id ? ministryById.get(rehearsal.ministry_id) : null;
@@ -407,12 +408,12 @@ export function ReuniaoDrawer({
                       {card && cardStatus ? (
                         <>
                           <span className={`chip ${cardStatus.cls}`}>{cardStatus.label}</span>
-                          <button className="btn btn-ghost btn-sm" type="button" onClick={() => { onClose(); setRoute("quadros"); }}>Ver no quadro</button>
+                          <Botao variante="discreto" compacto onClick={() => { onClose(); setRoute("quadros"); }}>Ver no quadro</Botao>
                         </>
                       ) : (
                         <>
                           <span className="acao-semquadro">fora do quadro</span>
-                          <button className="btn btn-ghost btn-sm" type="button" onClick={() => setChooser({ scope: action.id })}>Para o quadro</button>
+                          <Botao variante="discreto" compacto onClick={() => setChooser({ scope: action.id })}>Para o quadro</Botao>
                         </>
                       )}
                     </div>
@@ -427,22 +428,21 @@ export function ReuniaoDrawer({
               <option value="">Responsável…</option>
               {meeting.attendees.map((pid) => { const p = personById.get(pid); return p ? <option key={pid} value={pid}>{p.name}</option> : null; })}
             </select>
-            <button className="btn btn-sec btn-sm" type="button" onClick={addAcao}>+ Anotar</button>
+            <Botao compacto onClick={addAcao}>+ Anotar</Botao>
           </div>
           {pendentes.length > 0 && (
-            <button className="btn btn-ghost btn-sm" type="button" style={{ marginTop: 10 }} onClick={() => setChooser({ scope: "all" })}>Todas ao quadro</button>
+            <Botao variante="discreto" compacto style={{ marginTop: 10 }} onClick={() => setChooser({ scope: "all" })}>Todas ao quadro</Botao>
           )}
         </DrawerSection>
 
-        <button
-          className="btn btn-pri"
+        <Botao
+          variante="principal"
           style={{ width: "100%", justifyContent: "center", marginTop: 20 }}
-          type="button"
-          disabled={saving}
+          desativado={saving}
           onClick={salvarAta}
         >
           {saving ? "Salvando..." : meeting.status === "agendada" ? "Salvar ata e marcar realizada" : "Salvar ata"}
-        </button>
+        </Botao>
       </div>
     </DrawerShell>
     {chooser ? (

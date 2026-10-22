@@ -10,6 +10,7 @@ import { FormScreen, FormSection } from "../form/FormScreen";
 import { PAPEIS_V2, REACOES_PESQUISA } from "../comum";
 import type { MinistryView, PesquisaAdminRow, PesquisaDraft, PesquisaPerguntaDraft } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
 export const novaPesquisaDraft = (): PesquisaDraft => ({
   id: `nova-${Date.now()}`,
   nome: "",
@@ -239,13 +240,12 @@ export function PesquisasView({ organizationId, ministries }: { organizationId: 
           const temPulso = pesquisas.some((p) => p.disparoModo === "posescala");
           return (
             <div style={{ position: "relative", display: "inline-block" }} ref={novaMenuRef}>
-              <button
-                className="btn btn-pri btn-sm"
-                type="button"
+              <Botao
+                variante="principal" compacto
                 onClick={() => (temPulso ? setRoute({ screen: "editor", draft: novaPesquisaDraft() }) : setNovaMenuOpen((o) => !o))}
               >
                 + Nova pesquisa
-              </button>
+              </Botao>
               {novaMenuOpen && !temPulso && (
                 <div className="sel-pop" style={{ left: 0, right: "auto", width: 260 }}>
                   <button type="button" className="sel-opt" onClick={() => { setNovaMenuOpen(false); setRoute({ screen: "editor", draft: novaPesquisaDraft() }); }}>Em branco</button>
@@ -267,13 +267,13 @@ export function PesquisasView({ organizationId, ministries }: { organizationId: 
             </div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {p.disparoModo === "campanha" && !p.emitidaEm && (
-                <button className="btn btn-sec btn-sm" type="button" onClick={() => { void emitirCampanhaPesquisa(p.id).then(carregar); }}>Disparar agora</button>
+                <Botao compacto onClick={() => { void emitirCampanhaPesquisa(p.id).then(carregar); }}>Disparar agora</Botao>
               )}
-              <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute({ screen: "editor", draft: toPesquisaDraft(p) })}>Editar</button>
-              <button className="btn btn-sec btn-sm" type="button" onClick={() => { void setStatusPesquisa(p.id, p.status === "ativa" ? "pausada" : "ativa").then(carregar); }}>
+              <Botao compacto onClick={() => setRoute({ screen: "editor", draft: toPesquisaDraft(p) })}>Editar</Botao>
+              <Botao compacto onClick={() => { void setStatusPesquisa(p.id, p.status === "ativa" ? "pausada" : "ativa").then(carregar); }}>
                 {p.status === "ativa" ? "Pausar" : "Reativar"}
-              </button>
-              <button className="btn btn-danger btn-sm" type="button" onClick={() => setToDelete(p)}>Excluir</button>
+              </Botao>
+              <Botao variante="perigo" compacto onClick={() => setToDelete(p)}>Excluir</Botao>
             </div>
           </div>
         ))}
@@ -287,14 +287,13 @@ export function PesquisasView({ organizationId, ministries }: { organizationId: 
             </div>
             <div className="modal-body">
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                <button className="btn btn-sec" type="button" onClick={() => setToDelete(null)}>Cancelar</button>
-                <button
-                  className="btn btn-danger"
-                  type="button"
+                <Botao onClick={() => setToDelete(null)}>Cancelar</Botao>
+                <Botao
+                  variante="perigo"
                   onClick={async () => { try { await deletePesquisaRemota(toDelete.id); setToDelete(null); await carregar(); } catch (err) { console.error(err); } }}
                 >
                   Excluir pesquisa
-                </button>
+                </Botao>
               </div>
             </div>
           </div>
@@ -426,7 +425,7 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
                     </button>
                   ))}
                 </div>
-                <button type="button" className="btn btn-sec btn-sm" onClick={() => removePergunta(p.id)}>Remover</button>
+                <Botao compacto onClick={() => removePergunta(p.id)}>Remover</Botao>
               </div>
               <input className="input" placeholder="Texto da pergunta" value={p.texto} onChange={(e) => updatePergunta(p.id, { texto: e.target.value })} style={{ marginBottom: 8 }} />
               {p.tipo === "emoji" && <div style={{ display: "flex", gap: 6, fontSize: "var(--fs-pn-20)" }}>{REACOES_PESQUISA.map((r) => <span key={r}>{r}</span>)}</div>}
@@ -445,7 +444,7 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
             </div>
           ))}
         </div>
-        <button type="button" className="btn btn-sec btn-sm" style={{ marginTop: 10 }} onClick={addPergunta}>Adicionar pergunta</button>
+        <Botao compacto style={{ marginTop: 10 }} onClick={addPergunta}>Adicionar pergunta</Botao>
       </div>
 
       </FormSection>
@@ -465,7 +464,7 @@ export function PesquisaResultados({ pesquisa, onVoltar }: { pesquisa: PesquisaA
   return (
     <div className="cfg-card">
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-        <button type="button" className="btn btn-sec btn-sm" onClick={onVoltar}>← Voltar</button>
+        <Botao compacto onClick={onVoltar}>← Voltar</Botao>
         <div className="cfg-card-t" style={{ margin: 0 }}>{pesquisa.nome}</div>
       </div>
       <div className="cfg-card-s">{pesquisa.totalRespostas} resposta{pesquisa.totalRespostas === 1 ? "" : "s"} · {disparoLabelPesquisa(pesquisa)}</div>

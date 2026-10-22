@@ -10,6 +10,7 @@ import { formatDateBR } from "../../lib/date";
 import { useTermos } from "../../lib/vocabulario-context";
 import { anteriorDe, comparacao, etapasDaCaminhada, numerosDaBase, numerosDoPeriodo, periodoDe, type DadosSaude, type ItemPessoa, type Numero, type Periodo, type Preset } from "./saude";
 
+import { Botao } from "../../ui/Botao";
 const PRESETS: { v: Preset; l: string }[] = [
   { v: "30", l: "30 dias" },
   { v: "90", l: "90 dias" },
@@ -111,7 +112,7 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, extras = [] }: {
                 </button>
               ))}
             </div>
-            <div className="modal-foot"><button className="btn btn-pri" type="button" onClick={() => setLista(null)}>Fechar</button></div>
+            <div className="modal-foot"><Botao variante="principal" onClick={() => setLista(null)}>Fechar</Botao></div>
           </div>
         </div>
       )}

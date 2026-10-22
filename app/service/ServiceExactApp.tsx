@@ -64,6 +64,7 @@ import { Historia, Identidade } from "./painel/telas/Identidade";
 import { EntityDrawer } from "./painel/telas/FichaPessoa";
 import { ServiceModal } from "./painel/telas/ServiceModal";
 import type { ChurchView, DrawerState, FellowshipGroupView, JourneyChangeRequestView, JourneyStepKind, MemberView, MinistryView, ModalState, NavGroups, Props } from "./painel/tipos";
+import { Botao } from "./ui/Botao";
 export type * from "./painel/tipos";
 
 /* papel e permissão de cada tela : regra no registro de módulos (modules/registry.ts) */
@@ -1181,7 +1182,7 @@ export default function ServiceExactApp({
             <div className="coach-pop-actions">
               <button className="coach-skip" type="button" onClick={closeTour}>Não, obrigado</button>
               <div style={{ flex: 1 }} />
-              <button className="btn btn-pri btn-sm" type="button" onClick={() => startTourFrom(tourResumeStep)}>Continuar</button>
+              <Botao variante="principal" compacto onClick={() => startTourFrom(tourResumeStep)}>Continuar</Botao>
             </div>
           </div>
         </div>

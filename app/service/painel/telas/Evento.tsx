@@ -16,6 +16,7 @@ import { ROUTES } from "../comum";
 import { DrawerSection, DrawerShell, TimePicker } from "../campos";
 import type { CronoStep, DrawerState, EventRsvpView, EventView, MinistryView, PersonView, RosterAssignmentView } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
 export function EventDrawer({
   event,
   ministries,
@@ -110,8 +111,8 @@ export function EventDrawer({
           </>
         )}
         <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
-          <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { onClose(); setRoute("escalas"); }}>Editar escala</button>
-          <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setShareEventId(event.id)}><Icon name="comunicacao" size={15} /> Setup da celebração</button>
+          <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={() => { onClose(); setRoute("escalas"); }}>Editar escala</Botao>
+          <Botao style={{ flex: 1, justifyContent: "center" }} onClick={() => setShareEventId(event.id)}><Icon name="comunicacao" size={15} /> Setup da celebração</Botao>
         </div>
       </div>
     </DrawerShell>
@@ -165,7 +166,7 @@ export function EventoParaMembro({ event, rsvps, people, onSaved }: { event: Eve
         </DrawerSection>
       )}
       <div style={{ display: "flex", marginTop: 16 }}>
-        <button className="btn btn-pri" type="button" disabled={!mudou || salvando} onClick={salvar}>{salvando ? "Salvando..." : "Salvar"}</button>
+        <Botao variante="principal" desativado={!mudou || salvando} onClick={salvar}>{salvando ? "Salvando..." : "Salvar"}</Botao>
       </div>
     </>
   );
@@ -315,7 +316,7 @@ export function CronogramaEditor({ event, ministries, onRefresh }: { event: Even
           </div>
         ))}
       </div>
-      <button type="button" className="btn btn-sec btn-sm crono-add" onClick={addStep}>+ Adicionar etapa</button>
+      <Botao compacto className="crono-add" onClick={addStep}>+ Adicionar etapa</Botao>
       {steps.length > 0 && (
         <div className="crono-totais">
           <div className="crono-tot-geral"><span>{ct("Duração total do {culto}")}</span><b>{fmtDuracaoMin(totalGeral)}</b></div>

@@ -10,6 +10,7 @@ import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { formatDateBR, joinDot } from "./lib/date";
 import { useTermos } from "./lib/vocabulario-context";
 
+import { Botao } from "./ui/Botao";
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
 type EventView = {
@@ -189,13 +190,13 @@ export function CheckinLanding({
             <div className="ck-land-title">{titulo}</div>
             {txt && <div className="ck-land-txt">{txt}</div>}
           </div>
-          <button
-            className="btn btn-pri"
+          <Botao
+            variante="principal"
             style={{ width: "100%", justifyContent: "center" }}
             onClick={onDone}
           >
             {result?.ok ? "Concluir" : "Voltar"}
-          </button>
+          </Botao>
         </div>
       </div>
     </div>
@@ -292,9 +293,9 @@ function ManualCheckinModal({
           })}
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" onClick={onClose}>
+          <Botao onClick={onClose}>
             Fechar
-          </button>
+          </Botao>
         </div>
       </div>
     </div>
@@ -386,12 +387,12 @@ function CheckinRoster({
               <div className="ck-row-name">{p.name}</div>
               <div className="ck-row-meta">{fn ?? "Escalado"} · não chegou</div>
             </div>
-            <button
-              className="btn btn-ghost btn-sm"
+            <Botao
+              variante="discreto" compacto
               onClick={() => onManualAdd(pid)}
             >
               Marcar presente
-            </button>
+            </Botao>
           </div>
         );
       })}
@@ -636,34 +637,34 @@ export function QRCheckinModal({
                   </div>
 
                   <div className="ck-actions">
-                    <button className="btn btn-sec btn-sm" onClick={salvar}>
+                    <Botao compacto onClick={salvar}>
                       Salvar
-                    </button>
-                    <button className="btn btn-sec btn-sm" onClick={imprimir}>
+                    </Botao>
+                    <Botao compacto onClick={imprimir}>
                       Imprimir
-                    </button>
-                    <button className="btn btn-sec btn-sm" onClick={copiar}>
+                    </Botao>
+                    <Botao compacto onClick={copiar}>
                       Copiar link
-                    </button>
-                    <button className="btn btn-sec btn-sm" onClick={toggleActive}>
+                    </Botao>
+                    <Botao compacto onClick={toggleActive}>
                       {qrActive ? "Desativar" : "Ativar"}
-                    </button>
-                    <button className="btn btn-sec btn-sm" onClick={regenerar}>
+                    </Botao>
+                    <Botao compacto onClick={regenerar}>
                       Regenerar
-                    </button>
+                    </Botao>
                   </div>
 
                   <div className="ck-hint">
                     {ct("Imprima e cole na entrada dos {voluntarios}, backstage ou secretaria. Quem escanear confirma presença pela conta logada.")}
                   </div>
 
-                  <button
-                    className="btn btn-pri"
+                  <Botao
+                    variante="principal"
                     style={{ marginTop: 4, justifyContent: "center" }}
                     onClick={simularScan}
                   >
                     {ct("Simular leitura (abrir como {voluntario}) →")}
-                  </button>
+                  </Botao>
                 </div>
               </div>
             )}
@@ -704,21 +705,21 @@ export function QRCheckinModal({
                   }}
                 />
 
-                <button
-                  className="btn btn-sec btn-sm"
+                <Botao
+                  compacto
                   style={{ marginTop: 6 }}
                   onClick={() => setShowManual(true)}
                 >
                   + Registrar presença manualmente
-                </button>
+                </Botao>
               </div>
             )}
           </div>
 
           <div className="modal-foot">
-            <button className="btn btn-pri" onClick={onClose}>
+            <Botao variante="principal" onClick={onClose}>
               Concluído
-            </button>
+            </Botao>
           </div>
         </div>
       </div>

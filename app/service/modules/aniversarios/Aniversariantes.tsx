@@ -18,6 +18,7 @@ import {
   type Aniversariante, type Escopo, type Proximo,
 } from "./aniversarios";
 
+import { Botao, botaoClasse } from "../../ui/Botao";
 type Abrir = (p: Aniversariante) => void;
 type Nomeado = { id: string; name: string };
 
@@ -49,11 +50,11 @@ function Parabens({ p, onFechar }: { p: Proximo; onFechar: () => void }) {
           </div>
         </div>
         <div className="modal-foot">
-          <button className="btn btn-ghost" type="button" onClick={onFechar}>Cancelar</button>
+          <Botao variante="discreto" onClick={onFechar}>Cancelar</Botao>
           {link && texto.trim() ? (
-            <a className="btn btn-pri" href={link} target="_blank" rel="noreferrer" onClick={onFechar}><Icon name="whatsapp" size={14} /> Abrir no WhatsApp</a>
+            <a className={botaoClasse({ variante: "principal" })} href={link} target="_blank" rel="noreferrer" onClick={onFechar}><Icon name="whatsapp" size={14} /> Abrir no WhatsApp</a>
           ) : (
-            <button className="btn btn-pri" type="button" disabled>Abrir no WhatsApp</button>
+            <Botao variante="principal" desativado>Abrir no WhatsApp</Botao>
           )}
         </div>
       </div>
@@ -64,7 +65,7 @@ function Parabens({ p, onFechar }: { p: Proximo; onFechar: () => void }) {
 /** Botão de parabéns; sem celular válido no cadastro, diz isso no lugar do botão. */
 function BotaoParabens({ p, onClick }: { p: Proximo; onClick: () => void }) {
   if (!linkWhatsapp(p.telefone, "")) return <span className="aniv-semfone">Sem celular no cadastro</span>;
-  return <button type="button" className="btn btn-sec btn-sm" onClick={onClick}><Icon name="whatsapp" size={14} /> Mandar parabéns</button>;
+  return <Botao compacto onClick={onClick}><Icon name="whatsapp" size={14} /> Mandar parabéns</Botao>;
 }
 
 /** Bloco do Início do painel: hoje e os próximos 7 dias. Sem ninguém, não aparece. */
@@ -149,7 +150,7 @@ export function Aniversariantes({ base, escopo, comIdade, times, grupos, onAbrir
         help={escopo
           ? "Você vê quem está nos times e grupos que lidera. A data aparece sem o ano, e a idade fica só com a gestão."
           : "Todo mundo com a data de aniversário no cadastro. A pessoa preenche no app, ou a gestão na ficha dela."}
-        action={lista.length > 0 ? <button className="btn btn-sec" type="button" onClick={baixar}>Baixar CSV</button> : undefined}
+        action={lista.length > 0 ? <Botao onClick={baixar}>Baixar CSV</Botao> : undefined}
       />
       <div className="toolbar aniv-filtros">
         <label className="aniv-filtro"><span className="field-label">Mês</span>

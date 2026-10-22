@@ -14,6 +14,7 @@ import { Icon } from "../../lib/icons";
 import { plural } from "../../lib/plural";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 
+import { Botao } from "../../ui/Botao";
 type Ficha = { id: string; name: string; phone: string | null; email: string | null };
 type Pedido = { id: string; name: string; email: string; phone: string | null; created_at: string; parecidos: Ficha[] };
 
@@ -111,17 +112,17 @@ export function NovosCadastros() {
             </div>
             {recusando === p.id ? (
               <div className="cuidado-acoes" role="group" aria-label="Confirmar recusa">
-                <button type="button" className="btn btn-ghost btn-sm" disabled={enviando === p.id} onClick={() => setRecusando(null)}>Voltar</button>
-                <button type="button" className="btn btn-sec btn-sm" disabled={enviando === p.id} onClick={() => recusar(p)}>Recusar pedido</button>
+                <Botao variante="discreto" compacto desativado={enviando === p.id} onClick={() => setRecusando(null)}>Voltar</Botao>
+                <Botao compacto desativado={enviando === p.id} onClick={() => recusar(p)}>Recusar pedido</Botao>
               </div>
             ) : aberto === p.id ? (
               <div className="cuidado-acoes">
-                <button type="button" className="btn btn-ghost btn-sm" disabled={enviando === p.id} onClick={() => abrir(null)}>Cancelar</button>
+                <Botao variante="discreto" compacto desativado={enviando === p.id} onClick={() => abrir(null)}>Cancelar</Botao>
               </div>
             ) : (
               <div className="cuidado-acoes">
-                <button type="button" className="btn btn-sec btn-sm" disabled={enviando === p.id} onClick={() => abrir(p.id)}>Aprovar</button>
-                <button type="button" className="btn btn-ghost btn-sm" disabled={enviando === p.id} onClick={() => { abrir(null); setRecusando(p.id); }}>Recusar</button>
+                <Botao compacto desativado={enviando === p.id} onClick={() => abrir(p.id)}>Aprovar</Botao>
+                <Botao variante="discreto" compacto desativado={enviando === p.id} onClick={() => { abrir(null); setRecusando(p.id); }}>Recusar</Botao>
               </div>
             )}
             {aberto === p.id && (
@@ -139,9 +140,9 @@ export function NovosCadastros() {
                 {achados.length > 0 && <div className="entrada-fichas">{achados.filter((f) => !p.parecidos.some((x) => x.id === f.id)).map((f) => opcaoFicha(p, f))}</div>}
                 {q.trim().length >= 2 && achados.length === 0 && <div className="cfg-row-s">Nenhuma ficha sem login com esse nome.</div>}
                 <div className="entrada-acoes">
-                  <button type="button" className="btn btn-sec btn-sm" disabled={enviando === p.id} onClick={() => aprovar(p, null)}>
+                  <Botao compacto desativado={enviando === p.id} onClick={() => aprovar(p, null)}>
                     {enviando === p.id ? "Aprovando..." : "Não tem: criar ficha nova"}
-                  </button>
+                  </Botao>
                 </div>
               </div>
             )}

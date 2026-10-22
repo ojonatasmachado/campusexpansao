@@ -14,6 +14,7 @@ import { joinDot } from "../../lib/date";
 import { EmptyState, PageHead } from "../../painel/ui";
 import { CATEGORIAS, moderar, rotuloCategoria, usePedidosPainel, type Categoria, type Moderacao, type PedidoPainel } from "./oracao";
 
+import { Botao } from "../../ui/Botao";
 type Filtro = "ativos" | "mural" | "intercessao" | "respondidos" | "ocultos" | "arquivados";
 const FILTROS: { id: Filtro; rotulo: string; vale: (p: PedidoPainel) => boolean }[] = [
   { id: "ativos", rotulo: "Ativos", vale: (p) => p.moderation === "ativo" && !p.answered_at },
@@ -100,15 +101,15 @@ export function OracaoPainel({ organizationId, churches = [] }: { organizationId
               <div className="mural-reach-n or-n">{p.audience === "mural" ? (p.prayed_count ? `${plural(p.prayed_count, "pessoa orou", "pessoas oraram")}` : "Ninguém marcou que orou ainda") : "Chegou também como conversa"}</div>
               <div className="mural-acts">
                 {p.moderation === "ativo" && p.audience === "mural" && (
-                  <button className="btn btn-sec btn-sm" type="button" disabled={ocupado === p.id} onClick={() => void mudar(p, "oculto", "Pedido tirado do mural.")}>Ocultar do mural</button>
+                  <Botao compacto desativado={ocupado === p.id} onClick={() => void mudar(p, "oculto", "Pedido tirado do mural.")}>Ocultar do mural</Botao>
                 )}
                 {p.moderation === "oculto" && (
-                  <button className="btn btn-sec btn-sm" type="button" disabled={ocupado === p.id} onClick={() => void mudar(p, "ativo", "Pedido de volta no mural.")}>Mostrar de novo</button>
+                  <Botao compacto desativado={ocupado === p.id} onClick={() => void mudar(p, "ativo", "Pedido de volta no mural.")}>Mostrar de novo</Botao>
                 )}
                 {p.moderation !== "arquivado" ? (
-                  <button className="btn btn-sec btn-sm" type="button" disabled={ocupado === p.id} onClick={() => void mudar(p, "arquivado", "Pedido arquivado.")}>Arquivar</button>
+                  <Botao compacto desativado={ocupado === p.id} onClick={() => void mudar(p, "arquivado", "Pedido arquivado.")}>Arquivar</Botao>
                 ) : (
-                  <button className="btn btn-sec btn-sm" type="button" disabled={ocupado === p.id} onClick={() => void mudar(p, "ativo", "Pedido restaurado.")}>Restaurar</button>
+                  <Botao compacto desativado={ocupado === p.id} onClick={() => void mudar(p, "ativo", "Pedido restaurado.")}>Restaurar</Botao>
                 )}
               </div>
             </div>

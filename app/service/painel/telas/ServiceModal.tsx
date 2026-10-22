@@ -18,6 +18,7 @@ import { OUTRO_LOCAL, findPersonByName, normalize, openMemberInviteWhatsapp, tim
 import { FField } from "../campos";
 import type { ChurchView, MemberView, MinistryView, ModalState, PersonView, RoomView } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
 export function findMinistryByName(ministries: MinistryView[], value: string) {
   const term = normalize(value);
   if (!term) return null;
@@ -647,8 +648,8 @@ export function ServiceModal({
           {error ? <p className="mini-sub" style={{ color: "var(--danger)", marginTop: 12 }}>{error}</p> : null}
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button className="btn btn-pri" type="button" onClick={save} disabled={saving}>{saving ? "Salvando..." : (modal.saveLabel || "Salvar")}</button>
+          <Botao onClick={onClose} desativado={saving}>Cancelar</Botao>
+          <Botao variante="principal" onClick={save} desativado={saving}>{saving ? "Salvando..." : (modal.saveLabel || "Salvar")}</Botao>
         </div>
       </div>
     </div>

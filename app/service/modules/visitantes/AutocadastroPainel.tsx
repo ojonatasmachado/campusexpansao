@@ -9,6 +9,7 @@ import { avisar } from "../../lib/avisar";
 import { useChurchSettingsField } from "../../lib/settings-field";
 import { caminhoAutocadastro, type AutocadastroCfg } from "./autocadastro";
 
+import { Botao, botaoClasse } from "../../ui/Botao";
 const PADRAO: AutocadastroCfg = { ativo: false, responsavelId: null };
 
 /* Visitantes › QR e link: liga o autocadastro, escolhe quem recebe os
@@ -90,8 +91,8 @@ export default function AutocadastroPainel({
                 <div className="vis-link">
                   <span className="vis-link-url">{curto}</span>
                   <div className="vis-link-acts">
-                    <button type="button" className="btn btn-sec btn-sm" onClick={copiar} disabled={!link}><Icon name="copiar" size={13} /> Copiar link</button>
-                    <a className="btn btn-ghost btn-sm" href={whatsapp} target="_blank" rel="noopener noreferrer">Mandar no WhatsApp</a>
+                    <Botao compacto onClick={copiar} desativado={!link}><Icon name="copiar" size={13} /> Copiar link</Botao>
+                    <a className={botaoClasse({ variante: "discreto", compacto: true })} href={whatsapp} target="_blank" rel="noopener noreferrer">Mandar no WhatsApp</a>
                   </div>
                 </div>
               </div>
@@ -103,7 +104,7 @@ export default function AutocadastroPainel({
                 <div className="vis-qr-txt">
                   <div className="cfg-row-t">QR para o telão, boletim ou cartaz</div>
                   <div className="cfg-row-s">Aponte a câmera do celular e o formulário abre na hora. {cfg.ativo ? null : "Ligue o recebimento antes de divulgar."}</div>
-                  <button type="button" className="btn btn-sec btn-sm" style={{ marginTop: 10 }} onClick={baixarQr} disabled={!link}>Baixar QR code</button>
+                  <Botao compacto style={{ marginTop: 10 }} onClick={baixarQr} desativado={!link}>Baixar QR code</Botao>
                 </div>
               </div>
             </>
@@ -112,7 +113,7 @@ export default function AutocadastroPainel({
           )}
         </div>
         <div className="modal-foot">
-          <button className="btn btn-pri" type="button" onClick={onClose}>Pronto</button>
+          <Botao variante="principal" onClick={onClose}>Pronto</Botao>
         </div>
       </div>
     </div>

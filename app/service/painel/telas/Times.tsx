@@ -17,6 +17,7 @@ import { FormScreen, FormSection, type FormScreenHandle } from "../form/FormScre
 import { TeamMark } from "../comum";
 import type { CourseView, DrawerState, MemberView, MinistryView, ModalState, PersonView } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
 /* Pessoas e Voluntários : módulo em modules/pessoas/ (4.1) */
 
 /* Pedidos do app ("Quero servir", 0046): o membro já passou pelos
@@ -54,8 +55,8 @@ export function PedidosParaServir({ serveRequests, members, ministries }: { serv
               <div className="cfg-row-s">quer servir em {time?.name ?? "um time"}</div>
             </div>
             <span style={{ display: "flex", gap: 8 }}>
-              <button className="btn btn-sec btn-sm" type="button" disabled={ocupado === r.id} onClick={() => revisar(r.id, false)}>Recusar</button>
-              <button className="btn btn-pri btn-sm" type="button" disabled={ocupado === r.id} onClick={() => revisar(r.id, true)}>Aprovar</button>
+              <Botao compacto desativado={ocupado === r.id} onClick={() => revisar(r.id, false)}>Recusar</Botao>
+              <Botao variante="principal" compacto desativado={ocupado === r.id} onClick={() => revisar(r.id, true)}>Aprovar</Botao>
             </span>
           </div>
         );
@@ -69,7 +70,7 @@ export function Times({ ministries, people, members, serveRequests, setDrawer, s
   const { comTermos: ct } = useTermos();
   return (
     <div className="content">
-      <PageHead title="Times" eyebrow="Pessoas" subtitle={plural(ministries.length, "time")} help="Louvor, Recepção, Kids... cada time tem um líder e suas funções próprias." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo time", subtitle: "Crie o time e já conte o propósito dele.", saveLabel: "Criar time", formFields: [{ k:"nome", label:"Nome do time", type:"text", req:true, ph:"ex: Louvor e Adoração" }, { k:"icon", label:"Ícone do time", type:"icon", value: DEFAULT_ICON }, { k:"desc", label:"Propósito", type:"area", ph:"Por que esse time existe?" }, { k:"aberto", label:"Receber pedidos pelo app", type:"toggle", onLabel:"Pedidos abertos", offLabel:"Pedidos fechados", hint:"Depois de definir um líder com ficha no app, a oportunidade aparece para os membros. Nenhuma pessoa entra sem aprovação." }], action: { kind: "ministry" } })}>+ Novo time</button>} />
+      <PageHead title="Times" eyebrow="Pessoas" subtitle={plural(ministries.length, "time")} help="Louvor, Recepção, Kids... cada time tem um líder e suas funções próprias." action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Novo time", subtitle: "Crie o time e já conte o propósito dele.", saveLabel: "Criar time", formFields: [{ k:"nome", label:"Nome do time", type:"text", req:true, ph:"ex: Louvor e Adoração" }, { k:"icon", label:"Ícone do time", type:"icon", value: DEFAULT_ICON }, { k:"desc", label:"Propósito", type:"area", ph:"Por que esse time existe?" }, { k:"aberto", label:"Receber pedidos pelo app", type:"toggle", onLabel:"Pedidos abertos", offLabel:"Pedidos fechados", hint:"Depois de definir um líder com ficha no app, a oportunidade aparece para os membros. Nenhuma pessoa entra sem aprovação." }], action: { kind: "ministry" } })}>+ Novo time</Botao>} />
       <PedidosParaServir serveRequests={serveRequests} members={members} ministries={ministries} />
       <div className="team-grid">
         {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => { const linkPerson = people.find((person) => person.id === link.personId); return <Av key={link.personId} name={linkPerson?.name ?? link.personName} photoUrl={linkPerson?.photoUrl} />; })}{ministry.people.length > 4 && <div className="av-more">+{ministry.people.length - 4}</div>}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">{ministry.people.find((link) => link.isLeader)?.personName ? <>Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName}</em></> : <span className="sem-lider">Sem líder · Definir</span>}</div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> {ct(ministry.people.length === 1 ? "{voluntario}" : "{voluntarios}")}</span><span className="team-stat"><b>{ministry.positions.length}</b> {ministry.positions.length === 1 ? "função" : "funções"}</span></div></button>)}
@@ -237,7 +238,7 @@ export function RequisitosServirCard() {
       <div className="cfg-card-s">O que a pessoa precisa ter feito antes de pedir para entrar em qualquer time pelo app. Cada time ainda pode ter os próprios requisitos, em Editar time.</div>
       <RequisitosEditor value={reqs} onChange={setReqs} courses={access.courses} events={access.events} groupsLabel={access.groupsLabel} />
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
-        <button className="btn btn-pri btn-sm" type="button" disabled={saving} onClick={salvar}>{saving ? "Salvando..." : "Salvar requisitos"}</button>
+        <Botao variante="principal" compacto desativado={saving} onClick={salvar}>{saving ? "Salvando..." : "Salvar requisitos"}</Botao>
         {msg && <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>{msg}</span>}
       </div>
     </div>

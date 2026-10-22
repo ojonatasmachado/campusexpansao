@@ -12,6 +12,7 @@ import { FormScreen, FormSection, type FormScreenHandle } from "../../painel/for
 import type { ChildGuardianView, ChurchView, MemberView, PersonView } from "../../ServiceExactApp";
 import { FORMAS_ENTRADA, MOTIVOS_SAIDA, REGISTRO_COLS, livroDe, numeroFmt, type Livro, type Registro } from "./livros";
 
+import { Botao } from "../../ui/Botao";
 /** o que o livro usa da criança do Kids */
 export type CriancaKids = { id: string; name: string; birth: string | null };
 
@@ -220,7 +221,7 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
               <input id={`${fid}-tes-${i}`} className="input" list={listaMembros} value={t} onChange={(e) => setTestemunhas((l) => l.map((x, j) => (j === i ? e.target.value : x)))} placeholder="Nome completo" />
             </div>
           ))}
-          {testemunhas.length < 6 ? <button className="btn btn-sec btn-sm" type="button" onClick={() => setTestemunhas((l) => [...l, ""])}>Adicionar testemunha</button> : null}
+          {testemunhas.length < 6 ? <Botao compacto onClick={() => setTestemunhas((l) => [...l, ""])}>Adicionar testemunha</Botao> : null}
         </FormSection>
       ) : null}
 
@@ -255,7 +256,7 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
 
       {livro === "rol" && r?.member_id && !r.saida ? (
         <FormSection title="Carteirinha">
-          <button className="btn btn-sec" type="button" onClick={() => onCarteirinha(r.member_id!)}>Abrir carteirinha</button>
+          <Botao onClick={() => onCarteirinha(r.member_id!)}>Abrir carteirinha</Botao>
         </FormSection>
       ) : null}
 
@@ -265,11 +266,11 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
             <div className="sec-apagar">
               <p className="field-hint">Apagar o registro nº {numeroFmt(r.numero)}? O número fica vago no livro e não volta.</p>
               <div className="sec-apagar-acts">
-                <button className="btn btn-sec btn-sm" type="button" onClick={() => setApagar(false)}>Manter registro</button>
-                <button className="btn btn-danger btn-sm" type="button" disabled={saving} onClick={remover}>Apagar registro</button>
+                <Botao compacto onClick={() => setApagar(false)}>Manter registro</Botao>
+                <Botao variante="perigo" compacto desativado={saving} onClick={remover}>Apagar registro</Botao>
               </div>
             </div>
-          ) : <button className="btn btn-sec btn-sm" type="button" onClick={() => setApagar(true)}>Apagar este registro</button>}
+          ) : <Botao compacto onClick={() => setApagar(true)}>Apagar este registro</Botao>}
         </FormSection>
       ) : null}
     </FormScreen>

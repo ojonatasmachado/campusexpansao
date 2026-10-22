@@ -17,6 +17,7 @@ import { OUTRO_LOCAL, findPersonByName } from "../comum";
 import { ServiceModal } from "./ServiceModal";
 import type { ChildGuardianView, ChildView, ChurchView, KidsClassView, KidsEventView, ModalState, PersonView, RoomView } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
 export function TurmasKids({ kidsClasses, rooms, setModal }: { kidsClasses: KidsClassView[]; rooms: RoomView[]; setModal: (modal: ModalState) => void }) {
   const { comTermos: ct } = useTermos();
   const roomById = new Map(rooms.map((room) => [room.id, room]));
@@ -42,7 +43,7 @@ export function TurmasKids({ kidsClasses, rooms, setModal }: { kidsClasses: Kids
           <div className="cfg-card-t">Turmas Kids</div>
           <div className="cfg-card-s">{ct("Berçário, Maternal, Primários... cada turma abre a própria sessão de check-in no dia do {culto}.")}</div>
         </div>
-        <button className="btn btn-pri btn-sm" type="button" onClick={() => openForm()}>+ Nova turma</button>
+        <Botao variante="principal" compacto onClick={() => openForm()}>+ Nova turma</Botao>
       </div>
       <div className="sala-grid" style={{ marginTop: 16 }}>
         {kidsClasses.map((kc) => (
@@ -104,7 +105,7 @@ export function Criancas({
         eyebrow="Pessoas"
         subtitle={plural(kidsChildren.length, "criança")}
         help="Ficha de cada criança, turma sugerida pela idade, responsáveis autorizados a retirar e check-in do Kids, separado do restante da congregação."
-        action={<button className="btn btn-pri" type="button" onClick={() => setForm({ open: true })}>+ Nova criança</button>}
+        action={<Botao variante="principal" onClick={() => setForm({ open: true })}>+ Nova criança</Botao>}
       />
       <div className="toolbar">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar criança..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
@@ -136,7 +137,7 @@ export function Criancas({
       <div className="panel" style={{ marginTop: 28 }}>
         <div className="panel-head">
           <span className="panel-title"><Icon name="presente" size={14} /> Eventos Kids <HelpDot text="Eventos extras do Kids, com inscrição própria e aviso pros responsáveis." /></span>
-          <button className="btn btn-sec btn-sm" type="button" onClick={() => setEventModal(true)}>+ Criar evento</button>
+          <Botao compacto onClick={() => setEventModal(true)}>+ Criar evento</Botao>
         </div>
         <div className="panel-body flush">
           {kidsEvents.map((ev) => (
@@ -362,7 +363,7 @@ export function ChildFormModal({
               <div key={index} className="fs-card">
                 <div className="fs-card-top">
                   {index === 0 ? <span className="fs-card-tag">Responsável principal</span> : <span />}
-                  <button className="btn btn-ghost btn-sm" type="button" onClick={() => removeGuardian(index)}>Remover</button>
+                  <Botao variante="discreto" compacto onClick={() => removeGuardian(index)}>Remover</Botao>
                 </div>
                 {matched ? (
                   <PhotoPicker photoUrl={g.photoUrl} path={`${church.organizationId}/kids/guardians/${matched.id}`} onUploaded={(url) => uploadGuardianPhoto(index, url)} placeholder="Foto obrigatória" />
@@ -381,7 +382,7 @@ export function ChildFormModal({
         <datalist id="service-people-names">
           {people.map((person) => <option key={person.id} value={person.name} />)}
         </datalist>
-        <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={addGuardian}>+ Responsável</button>
+        <Botao compacto style={{ marginTop: 12 }} onClick={addGuardian}>+ Responsável</Botao>
         <p className="fs-note">{ct("O responsável precisa já ter cadastro de {voluntario} ou membro no Service.")}</p>
       </FormSection>
 

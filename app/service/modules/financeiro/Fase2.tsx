@@ -18,6 +18,7 @@ import { db, type Campanha, type ContaFixa, type Fechamento, type Lancamento, ty
 import { brl, FORMAS, mesNome, mesTexto, type Forma } from "./dinheiro";
 import { CampoValor, Excluir, type Base, type Cadastros } from "./Formularios";
 
+import { Botao } from "../../ui/Botao";
 type Fin = ReturnType<typeof useFinanceiro>;
 
 /* ── o que vence no mês ──────────────────────────────────────────────────── */
@@ -57,9 +58,9 @@ export function APagar({ previstos, podeLancar, nomeConta, onEditar, onMudou }: 
             </button>
             <span className={`fin-num fin-saldo-v${l.kind === "despesa" ? " fin-saida" : ""}`}>{brl(l.kind === "despesa" ? -l.amount_cents : l.amount_cents, true)}</span>
             {podeLancar && (
-              <button type="button" className="btn btn-sec btn-sm" disabled={pagando === l.id} onClick={() => pagar(l)}>
+              <Botao compacto desativado={pagando === l.id} onClick={() => pagar(l)}>
                 {pagando === l.id ? "Salvando…" : l.kind === "entrada" ? "Recebido" : "Pago"}
-              </button>
+              </Botao>
             )}
           </div>
         );
@@ -82,7 +83,7 @@ export function Planejamento({ fin, podeLancar, onFixa, onCampanha }: {
   return (
     <>
       <div className="section-divide"><Icon name="agenda" size={15} /><span className="label">Contas fixas</span><span className="line" />
-        {podeLancar && <button type="button" className="btn btn-sec btn-sm" onClick={() => onFixa(null)}><Icon name="add" size={14} /> Nova conta fixa</button>}
+        {podeLancar && <Botao compacto onClick={() => onFixa(null)}><Icon name="add" size={14} /> Nova conta fixa</Botao>}
       </div>
       {fin.contasFixas.length === 0 ? (
         <EmptyState title="Nenhuma conta fixa" text="Aluguel, energia, internet, repasses: o que se repete todo mês. Cada uma aparece em A pagar e a receber no mês, com o vencimento." action={podeLancar ? { label: "Nova conta fixa", onClick: () => onFixa(null) } : undefined} />
@@ -108,7 +109,7 @@ export function Planejamento({ fin, podeLancar, onFixa, onCampanha }: {
       )}
 
       <div className="section-divide" style={{ marginTop: 28 }}><Icon name="meta" size={15} /><span className="label">Campanhas</span><span className="line" />
-        {podeLancar && <button type="button" className="btn btn-sec btn-sm" onClick={() => onCampanha(null)}><Icon name="add" size={14} /> Nova campanha</button>}
+        {podeLancar && <Botao compacto onClick={() => onCampanha(null)}><Icon name="add" size={14} /> Nova campanha</Botao>}
       </div>
       {fin.campanhas.length === 0 ? (
         <EmptyState title="Nenhuma campanha" text="Reforma, missões, um projeto com meta: as entradas ligadas à campanha somam no progresso." action={podeLancar ? { label: "Nova campanha", onClick: () => onCampanha(null) } : undefined} />
@@ -410,17 +411,17 @@ export function FechamentoMes({ fin, mes, org, igreja, podeLancar, podeReabrir }
       </div>
 
       <div className="fin-fech-acoes">
-        <button type="button" className="btn btn-sec" onClick={() => imprimir("relatorio", "portrait")}><Icon name="documento" size={14} /> Imprimir relatório</button>
-        {!fechado && podeLancar && !futuro && !confirmando && <button type="button" className="btn btn-pri" onClick={() => setConfirmando(true)}><Icon name="cadeado" size={14} /> Fechar {mesNome(mes)}</button>}
-        {fechado && podeReabrir && <button type="button" className="btn btn-sec" onClick={reabrir}>Reabrir o mês</button>}
+        <Botao onClick={() => imprimir("relatorio", "portrait")}><Icon name="documento" size={14} /> Imprimir relatório</Botao>
+        {!fechado && podeLancar && !futuro && !confirmando && <Botao variante="principal" onClick={() => setConfirmando(true)}><Icon name="cadeado" size={14} /> Fechar {mesNome(mes)}</Botao>}
+        {fechado && podeReabrir && <Botao onClick={reabrir}>Reabrir o mês</Botao>}
       </div>
       {confirmando && (
         <div className="fin-fech-conf">
           <p className="fs-note">Depois de fechar, ninguém lança, edita ou exclui nada em {mesNome(mes)}. Só a direção ou o pastor reabrem.</p>
           <div className="field"><label className="field-label" htmlFor={`${fid}-n`}>Observação (opcional)</label><textarea id={`${fid}-n`} className="textarea" maxLength={1000} value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Ex.: Conferido com o extrato do banco." /></div>
           <div className="fin-fech-acoes">
-            <button type="button" className="btn btn-sec" onClick={() => setConfirmando(false)}>Cancelar</button>
-            <button type="button" className="btn btn-pri" disabled={salvando} onClick={fechar}>{salvando ? "Fechando…" : `Fechar ${mesNome(mes)}`}</button>
+            <Botao onClick={() => setConfirmando(false)}>Cancelar</Botao>
+            <Botao variante="principal" desativado={salvando} onClick={fechar}>{salvando ? "Fechando…" : `Fechar ${mesNome(mes)}`}</Botao>
           </div>
         </div>
       )}

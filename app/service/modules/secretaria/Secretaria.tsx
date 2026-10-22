@@ -18,6 +18,7 @@ import { FolhaDeImpressao, imprimir } from "../../painel/imprimir";
 import { LANCA_A_MAO, LIVROS, REGISTRO_COLS, anoDe, anos, colunas, folhaLivro, linhasCsv, livroDe, numeroFmt, registrosDemo, textoBusca, type Livro, type Registro } from "./livros";
 import { RegistroForm, type CriancaKids } from "./RegistroForm";
 
+import { Botao } from "../../ui/Botao";
 const PAGINA = 200;
 
 /** org de demonstração ("org-demo") não é uuid: lê e grava só na memória */
@@ -96,9 +97,9 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
   const ordemDoPapel = [...visiveis].sort((a, b) => a.numero - b.numero);
 
   const acao = livro === "rol"
-    ? <button className="btn btn-pri" type="button" onClick={() => setCartao({ memberId: null })}>Emitir carteirinha</button>
+    ? <Botao variante="principal" onClick={() => setCartao({ memberId: null })}>Emitir carteirinha</Botao>
     : LANCA_A_MAO.includes(livro)
-      ? <button className="btn btn-pri" type="button" onClick={() => setEditando("novo")}>{livro === "casamento" ? "Registrar casamento" : "Registrar apresentação"}</button>
+      ? <Botao variante="principal" onClick={() => setEditando("novo")}>{livro === "casamento" ? "Registrar casamento" : "Registrar apresentação"}</Botao>
       : undefined;
 
   return (
@@ -126,8 +127,8 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
           {anosDoLivro.map((a) => <option key={a} value={a}>{a}</option>)}
         </select>
         <div className="sec-saidas">
-          <button className="btn btn-sec btn-sm" type="button" disabled={!visiveis.length} onClick={() => imprimir("livro", livro === "casamento" || livro === "rol" ? "landscape" : "portrait")}><Icon name="documento" size={14} /> Imprimir</button>
-          <button className="btn btn-sec btn-sm" type="button" disabled={!visiveis.length} onClick={() => baixarCsv(arquivo, linhasCsv(livro, ordemDoPapel))}><Icon name="baixar" size={14} /> Baixar CSV</button>
+          <Botao compacto desativado={!visiveis.length} onClick={() => imprimir("livro", livro === "casamento" || livro === "rol" ? "landscape" : "portrait")}><Icon name="documento" size={14} /> Imprimir</Botao>
+          <Botao compacto desativado={!visiveis.length} onClick={() => baixarCsv(arquivo, linhasCsv(livro, ordemDoPapel))}><Icon name="baixar" size={14} /> Baixar CSV</Botao>
         </div>
       </div>
 
@@ -150,7 +151,7 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
             {visiveis.length === 0 ? <EmptyState title="Nada encontrado" text="Nenhum registro com essa busca ou nesse ano. Tente limpar a busca ou escolher Todos os anos." /> : null}
             {visiveis.length > mostrar ? (
               <div className="tr sec-mais">
-                <button className="btn btn-sec btn-sm" type="button" onClick={() => setMostrar((n) => n + PAGINA)}>Mostrar mais {Math.min(PAGINA, visiveis.length - mostrar)}</button>
+                <Botao compacto onClick={() => setMostrar((n) => n + PAGINA)}>Mostrar mais {Math.min(PAGINA, visiveis.length - mostrar)}</Botao>
                 <span className="cell-sub">{mostrar} de {plural(visiveis.length, "registro")}</span>
               </div>
             ) : null}

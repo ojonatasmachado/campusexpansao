@@ -11,6 +11,7 @@ import { useServiceAccess } from "./AccessContext";
 import RequisitosEditor from "./RequisitosEditor";
 import { requirementsFor, saveRequirements, type Requirement } from "./lib/requirements";
 
+import { Botao } from "./ui/Botao";
 /* ─── tipos internos do editor ─────────────────────────────── */
 
 type QuizQ = { q: string; opts: string[]; correta: number };
@@ -214,7 +215,7 @@ function MateriaisEditor({
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && add()}
         />
-        <button className="btn btn-sec btn-sm" type="button" onClick={add}>+ Material</button>
+        <Botao compacto onClick={add}>+ Material</Botao>
       </div>
     </div>
   );
@@ -305,13 +306,13 @@ function QuizEditor({
               ))}
             </div>
           ))}
-          <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={add}>
+          <Botao compacto style={{ marginTop: 12 }} onClick={add}>
             + Pergunta
-          </button>
+          </Botao>
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" onClick={save}>Salvar prova</button>
+          <Botao onClick={onClose}>Cancelar</Botao>
+          <Botao variante="principal" onClick={save}>Salvar prova</Botao>
         </div>
       </div>
     </div>
@@ -720,9 +721,9 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
                 <button className="cb-add" type="button" onClick={() => addAula(mi)}>+ aula neste módulo</button>
               </div>
             ))}
-            <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={addModulo}>
+            <Botao compacto style={{ marginTop: 12 }} onClick={addModulo}>
               Novo módulo
-            </button>
+            </Botao>
           </FormSection>
       </>)}
 

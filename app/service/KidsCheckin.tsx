@@ -8,6 +8,7 @@ import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { formatDateBR, joinDot } from "./lib/date";
 import { Icon } from "./lib/icons";
 
+import { Botao } from "./ui/Botao";
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
 type EventLite = {
@@ -174,8 +175,8 @@ export function KidsQRModal({
                 <div className={`ck-status ${qrActive ? "on" : "off"}`}><span className="ck-dot" />{qrActive ? "Ativo, aceitando check-ins" : "Desativado"}</div>
                 <div className="ck-link"><span className="ck-link-txt">{checkinLink}</span></div>
                 <div className="ck-actions">
-                  <button className="btn btn-sec btn-sm" type="button" onClick={toggleActive}>{qrActive ? "Desativar" : "Ativar"}</button>
-                  <button className="btn btn-sec btn-sm" type="button" onClick={regenerar}>Regenerar</button>
+                  <Botao compacto onClick={toggleActive}>{qrActive ? "Desativar" : "Ativar"}</Botao>
+                  <Botao compacto onClick={regenerar}>Regenerar</Botao>
                 </div>
                 <div className="ck-hint">Imprima e cole na porta da sala. Cada responsável escaneia com o celular pra deixar ou retirar o filho.</div>
               </div>
@@ -197,7 +198,7 @@ export function KidsQRModal({
                             <div className="ck-row-name">{child?.name ?? "Criança"}</div>
                             <div className="ck-row-meta">Aguardando confirmação visual do responsável</div>
                           </div>
-                          <button className="btn btn-pri btn-sm" type="button" onClick={() => confirmarRetirada(att)}>Confirmar retirada</button>
+                          <Botao variante="principal" compacto onClick={() => confirmarRetirada(att)}>Confirmar retirada</Botao>
                         </div>
                       );
                     })}
@@ -236,7 +237,7 @@ export function KidsQRModal({
         </div>
 
         <div className="modal-foot">
-          <button className="btn btn-pri" type="button" onClick={onClose}>Concluído</button>
+          <Botao variante="principal" onClick={onClose}>Concluído</Botao>
         </div>
       </div>
     </div>

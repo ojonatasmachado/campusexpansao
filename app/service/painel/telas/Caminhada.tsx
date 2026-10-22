@@ -13,6 +13,7 @@ import { PersonTimeline } from "./FichaPessoa";
 import { BAT_ST_MAP, timelineEventPayload } from "../comum";
 import type { BaptismCandidateView, BaptismClassView, ChurchView, DecisionView, MemberView, PersonView, TimelineEventView } from "../tipos";
 
+import { Botao, botaoClasse } from "../../ui/Botao";
 export function DecisaoDrawer({
   decision, people, members, church, timelineEvents, onClose, onOpenMember,
 }: {
@@ -98,8 +99,8 @@ export function DecisaoDrawer({
         </DrawerSection>
         <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
           {linkedMember
-            ? <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { onClose(); onOpenMember(linkedMember.id); }}>Ver ficha</button>
-            : <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={encaminhar} disabled={loading}>{loading ? "Salvando…" : "Encaminhar"}</button>
+            ? <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={() => { onClose(); onOpenMember(linkedMember.id); }}>Ver ficha</Botao>
+            : <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={encaminhar} desativado={loading}>{loading ? "Salvando…" : "Encaminhar"}</Botao>
           }
         </div>
       </div>
@@ -144,13 +145,13 @@ export function AddCandidatoModal({
                 <div className="flag-nome">{m.name}</div>
                 <div className="flag-meta">{m.neighborhood || "Membro"}</div>
               </div>
-              <span className="btn btn-ghost btn-sm">{saving === m.id ? "…" : "Adicionar"}</span>
+              <span className={botaoClasse({ variante: "discreto", compacto: true })}>{saving === m.id ? "…" : "Adicionar"}</span>
             </div>
           ))}
           {available.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", padding: "16px 0" }}>Nenhum membro disponível.</div>}
         </div>
         <div className="modal-foot">
-          <button className="btn btn-pri" type="button" onClick={onClose}>Concluído</button>
+          <Botao variante="principal" onClick={onClose}>Concluído</Botao>
         </div>
       </div>
     </div>
@@ -240,15 +241,15 @@ export function BatismoDrawer({
           {classCandidates.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum candidato ainda.</div>}
         </DrawerSection>
         <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
-          <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setShowAdd(true)}>+ Adicionar candidato</button>
+          <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={() => setShowAdd(true)}>+ Adicionar candidato</Botao>
           {concluida
-            ? <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => dispararAcao("Certificados gerados para os batizados.")}>Emitir certificados</button>
-            : <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => dispararAcao("Aviso enviado aos candidatos.")}>Avisar candidatos</button>}
+            ? <Botao style={{ flex: 1, justifyContent: "center" }} onClick={() => dispararAcao("Certificados gerados para os batizados.")}>Emitir certificados</Botao>
+            : <Botao style={{ flex: 1, justifyContent: "center" }} onClick={() => dispararAcao("Aviso enviado aos candidatos.")}>Avisar candidatos</Botao>}
         </div>
         {!concluida && (
-          <button className="btn btn-pri" style={{ width: "100%", justifyContent: "center", marginTop: 10 }} type="button" disabled={concluindo} onClick={concluirTurma}>
+          <Botao variante="principal" style={{ width: "100%", justifyContent: "center", marginTop: 10 }} desativado={concluindo} onClick={concluirTurma}>
             {concluindo ? "Concluindo…" : "Marcar turma como realizada →"}
-          </button>
+          </Botao>
         )}
         {actionMsg && <div style={{ marginTop: 12, fontSize: "var(--fs-pn-13)", color: "var(--olive-soft)", textAlign: "right" }}><Icon name="ok" size={14} /> {actionMsg}</div>}
       </div>
