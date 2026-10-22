@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Icon } from "./lib/icons";
 import { readMemberLocation, writeMemberLocation, type AgendaSeg } from "./lib/member-navigation";
 import { useRelogioDaIgreja } from "./lib/relogio-context";
@@ -35,6 +35,7 @@ import { Botao } from "./ui/Botao";
 import { Acao } from "./ui/Acao";
 import { Opcao } from "./ui/Opcao";
 import { Lista, linhaClasse } from "./ui/Linha";
+import { entrarComDirecao } from "./ui/movimento";
 export type * from "./membro/tipos";
 
 function TabIcon({ name, size = 18 }: { name: string; size?: number }) {
@@ -99,6 +100,14 @@ function MobileMembro({
   const [sheetEl, setSheetEl] = useState<React.ReactNode | null>(null);
   const [toastO, setToastO] = useState<{ msg: string; action?: { label: string; fn: () => void }; id: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  /* troca de aba com direção (prancha 1): a tela nova desliza do lado de onde vem */
+  const tabAnterior = useRef(tab);
+  useLayoutEffect(() => {
+    const ordem = MEMBER_TABS.map((t) => t.id);
+    const dir = ordem.indexOf(tab) - ordem.indexOf(tabAnterior.current);
+    tabAnterior.current = tab;
+    entrarComDirecao(scrollRef.current, dir);
+  }, [tab]);
   const [textPos] = useTextSize();
   const textScale = fatorDa(textPos);
   /* Perfil › Tamanho do texto: folha fixa embaixo; ao fechar, a linha que a

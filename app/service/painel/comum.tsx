@@ -10,6 +10,7 @@ import { ACESSO_MSG_DEFAULT } from "../modules/pessoas/acesso-msg";
 import { modulosLigados } from "../modules/registry";
 import type { ChurchView, JourneyStepKind, MatrizV2, MemberView, PapelV2, PersonView, ReservationView } from "./tipos";
 
+import { Contagem } from "../ui/Contagem";
 /* módulos ligados na igreja (registro de módulos, lei 3) */
 export function ligadosDa(church?: ChurchView, condicoes: Record<string, boolean> = {}) {
   return modulosLigados({ on: church?.modulosOn, off: church?.modulosOff }, condicoes);
@@ -107,7 +108,7 @@ export function Kpi({ icon, label, value, foot, amber, help }: { icon: string; l
   return (
     <div className="kpi">
       <div className="kpi-label"><Icon name={icon} size={13} /> <span>{label} {help ? <HelpDot text={help} /> : null}</span></div>
-      <div className="kpi-value" style={amber ? { color: "var(--amber)" } : undefined}>{typeof value === "number" ? value.toLocaleString("pt-BR") : value}</div>
+      <div className="kpi-value" style={amber ? { color: "var(--amber)" } : undefined}><Contagem valor={value} /></div>
       <div className="kpi-foot">{foot}</div>
     </div>
   );

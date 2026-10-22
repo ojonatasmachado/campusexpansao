@@ -20,6 +20,7 @@ import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Linha } from "../../ui/Linha";
+import { Segmentado } from "../../ui/Segmentado";
 export function EventDrawer({
   event,
   ministries,
@@ -59,11 +60,11 @@ export function EventDrawer({
         <div className="profile-name">{event.name}</div>
         <div className="profile-role">{joinDot(event.time, event.location, event.kind)}</div>
         <Cobertura itens={cobertura} onAbrir={onAbrirVagas} />
-        <div className="seg" style={{ marginTop: 14 }}>
+        <Segmentado style={{ marginTop: 14 }}>
           <Opcao marcada={tab === "crono"} onClick={() => setTab("crono")}>Cronograma</Opcao>
           <Opcao marcada={tab === "posicoes"} onClick={() => setTab("posicoes")}>Posições</Opcao>
           <Opcao marcada={tab === "membro"} onClick={() => setTab("membro")}>Para o membro</Opcao>
-        </div>
+        </Segmentado>
       </div>
       <div className="drawer-body">
         {tab === "membro" ? (

@@ -22,6 +22,7 @@ import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Linha, linhaClasse } from "../../ui/Linha";
+import { Contagem } from "../../ui/Contagem";
 type Fin = ReturnType<typeof useFinanceiro>;
 
 /* ── o que vence no mês ──────────────────────────────────────────────────── */
@@ -403,7 +404,7 @@ export function FechamentoMes({ fin, mes, org, igreja, podeLancar, podeReabrir }
 
       <div className="kpi-row kpi-3">
         {([[`Entradas`, brl(t.entradas_cents), false], [`Saídas`, brl(t.despesas_cents), false], ["Resultado", brl(t.entradas_cents - t.despesas_cents, true), t.entradas_cents - t.despesas_cents < 0]] as const).map(([rotulo, valor, neg]) => (
-          <div className="kpi" key={rotulo}><div className="kpi-label">{rotulo}</div><div className={`kpi-value fin-num${valor.length > 15 ? " fin-longo" : ""}${neg ? " fin-neg" : ""}`}>{fin.carregando ? "…" : valor}</div></div>
+          <div className="kpi" key={rotulo}><div className="kpi-label">{rotulo}</div><div className={`kpi-value fin-num${valor.length > 15 ? " fin-longo" : ""}${neg ? " fin-neg" : ""}`}>{fin.carregando ? "…" : <Contagem valor={valor} />}</div></div>
         ))}
       </div>
       {t.previstos_em_aberto > 0 && <p className="fs-note fin-atrasado">{`${plural(t.previstos_em_aberto, "previsto ficou", "previstos ficaram")} sem pagar ou receber neste mês.`}</p>}

@@ -15,6 +15,7 @@ import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Selo } from "../../ui/Selo";
+import { Segmentado } from "../../ui/Segmentado";
 /* permissões do Kanban por papel (equivalente ao kanbanPerm()/S.KANBAN_PERMS do
    protótipo): master/pastor administram o quadro; líder cria, comenta e move os
    próprios cards mas não apaga; voluntário não deveria nem abrir esta tela (usa o
@@ -252,13 +253,13 @@ export function CardDrawer({
               <dd>{lc.due ? formatDateBR(lc.due) : <span style={{ color: "var(--muted)" }}>sem prazo</span>}</dd>
               <dt>Prioridade</dt>
               <dd>
-                <div className="seg seg-sm" style={{ display: "inline-flex" }}>
+                <Segmentado className="seg-sm" style={{ display: "inline-flex" }}>
                   {(["alta", "media", "baixa"] as const).map((p) => (
                     <Opcao key={p} marcada={lc.priority === p} onClick={() => mutate({ priority: p })}>
                       {p === "alta" ? "Alta" : p === "media" ? "Média" : "Baixa"}
                     </Opcao>
                   ))}
-                </div>
+                </Segmentado>
               </dd>
             </dl>
           </div>
@@ -370,13 +371,13 @@ export function NovoCard({
           <div className="field"><label className="field-label">Descrição</label><textarea className="textarea" value={desc} placeholder="Detalhes (opcional)" onChange={(e) => setDesc(e.target.value)} /></div>
           <div className="field field-half"><label className="field-label">Prazo</label><input className="input" type="date" value={due} onChange={(e) => setDue(e.target.value)} /></div>
           <div className="field field-half"><label className="field-label">Prioridade</label>
-            <div className="seg seg-sm">
+            <Segmentado className="seg-sm">
               {(["alta", "media", "baixa"] as const).map((p) => (
                 <Opcao key={p} marcada={prio === p} onClick={() => setPrio(p)}>
                   {p === "alta" ? "Alta" : p === "media" ? "Média" : "Baixa"}
                 </Opcao>
               ))}
-            </div>
+            </Segmentado>
           </div>
           <div className="field"><label className="field-label">Responsáveis</label>
             <div className="cand-pick">
@@ -468,16 +469,16 @@ export function QuadroAberto({
           <span className="si">⌕</span>
           <input placeholder="Buscar card..." value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-        <div className="seg">
+        <Segmentado>
           {([["todos", "Todos"], ["meus", "Meus"], ["atrasados", `Atrasados${atrasados ? ` ${atrasados}` : ""}`], ["parados", `Parados${parados ? ` ${parados}` : ""}`]] as [string, string][]).map(([k, l]) => (
             <Opcao key={k} marcada={fEstado === k} onClick={() => setFEstado(k)}>{l}</Opcao>
           ))}
-        </div>
-        <div className="seg">
+        </Segmentado>
+        <Segmentado>
           {([["todas", "Prioridade"], ["alta", "Alta"], ["media", "Média"], ["baixa", "Baixa"]] as [string, string][]).map(([k, l]) => (
             <Opcao key={k} marcada={fPrio === k} onClick={() => setFPrio(k)}>{l}</Opcao>
           ))}
-        </div>
+        </Segmentado>
       </div>
 
       <div className="kb-board">

@@ -67,6 +67,7 @@ import type { ChurchView, DrawerState, FellowshipGroupView, JourneyChangeRequest
 import { Botao, BotaoIcone } from "./ui/Botao";
 import { Acao } from "./ui/Acao";
 import { Cartao } from "./ui/Cartao";
+import { entrarComDirecao } from "./ui/movimento";
 export type * from "./painel/tipos";
 
 /* papel e permissão de cada tela : regra no registro de módulos (modules/registry.ts) */
@@ -756,6 +757,17 @@ export default function ServiceExactApp({
   /* função de gestão = papel líder/pastor/master ou alguma tela do painel
      liberada. Sem isso, a pessoa só vê o app de membro, sem botão de troca. */
   const podeGerenciar = currentRole !== "membro" || temTelaLiberada;
+  /* troca de tela com direção (prancha 1): a tela nova desliza do lado de onde
+     vem na ordem do menu. Hook antes do return condicional abaixo. */
+  const areaRef = useRef<HTMLElement>(null);
+  const rotaAnterior = useRef(route);
+  useLayoutEffect(() => {
+    const ordem: string[] = rotasPermitidas;
+    const dir = ordem.indexOf(route) - ordem.indexOf(rotaAnterior.current);
+    rotaAnterior.current = route;
+    entrarComDirecao(areaRef.current, dir);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route]);
   if (!podeGerenciar || view === "app") {
     const handleLogoutSelf = async () => {
       await createServiceBrowserClient().auth.signOut();
@@ -956,7 +968,7 @@ export default function ServiceExactApp({
         </header>
 
         {/* marco principal para leitor de tela; display:contents não mexe no layout */}
-        <main className="main-area">
+        <main className="main-area" ref={areaRef}>
         <RouteGroupContext.Provider value={ROUTE_GROUP[route] ?? null}>
         {error ? <ErrorPanel message={error} /> : null}
         {route === "painel" ? (

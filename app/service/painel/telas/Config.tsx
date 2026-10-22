@@ -45,6 +45,7 @@ import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Linha } from "../../ui/Linha";
 import { Etiqueta, Selo } from "../../ui/Selo";
+import { Segmentado } from "../../ui/Segmentado";
 export const STATUS_CFG_DEFAULT: StatusCriterios = { recusasInativando: 2, recusasInativo: 4, diasIndispInativo: 30, considerarFerias: false };
 export const GRUPOS_CFG_DEFAULT: GruposCfg = { ativo: true, termo: "Grupos de Comunhão", termoP: "Grupo de Comunhão", sigla: "GC" };
 
@@ -996,10 +997,10 @@ export function Config({
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Quando alguém recusa</div>
                 <div className="cfg-row-s">{escalaCfg.naRecusa === "proximo" ? "Chama o próximo apto automaticamente (só no modo automático)." : "Avisa o líder do time por mensagem e deixa a vaga aberta."}</div>
-                <div className="seg seg-sm" style={{ marginTop: 10 }}>
+                <Segmentado className="seg-sm" style={{ marginTop: 10 }}>
                   <Opcao marcada={escalaCfg.naRecusa === "proximo"} onClick={() => setEscala("naRecusa", "proximo")}>Chamar o próximo</Opcao>
                   <Opcao marcada={escalaCfg.naRecusa === "avisar"} onClick={() => setEscala("naRecusa", "avisar")}>Avisar o líder</Opcao>
-                </div>
+                </Segmentado>
               </div>
             </Linha>
           </div>

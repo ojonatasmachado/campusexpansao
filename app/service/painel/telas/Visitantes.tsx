@@ -19,6 +19,7 @@ import { Opcao } from "../../ui/Opcao";
 import { Cartao } from "../../ui/Cartao";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Selo } from "../../ui/Selo";
+import { Segmentado } from "../../ui/Segmentado";
 /* cor de destaque por tema + quem além do master pode editar, guardado em
    service.churches.settings.brandCfg (mesmo jsonb de sempre). Permite que
    cada igreja pareça uma ferramenta própria dela (logo + nome + cor), não
@@ -108,10 +109,10 @@ export function Visitantes({
         ]} /><Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Novo visitante", subtitle: "Quem chegou pela primeira vez. Entra no acompanhamento automaticamente.", saveLabel: "Registrar visitante", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem visitou" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"origem", label:"Como chegou", type:"select", half:true, options:[{v:"Convite de membro",l:"Convite de membro"},{v:"Instagram",l:"Instagram"},{v:"Indicação",l:"Indicação"},{v:"Evangelismo",l:"Evangelismo"},{v:"Tomou decisão no culto",l:"Tomou decisão no culto"},{v:"Passava na rua",l:"Passava na rua"}] }], action: { kind: "visitor" } })}>Registrar visitante</Botao></>}
       />
       <div className="toolbar">
-        <div className="seg" role="group" aria-label="Acompanhamento de visitantes">
+        <Segmentado role="group" aria-label="Acompanhamento de visitantes">
           <Opcao marcada={view === "pipe"} aria-pressed={view === "pipe"} onClick={() => setView("pipe")}>Funil</Opcao>
           <Opcao marcada={view === "list"} aria-pressed={view === "list"} onClick={() => setView("list")}>Lista</Opcao>
-        </div>
+        </Segmentado>
         {(view === "painel" || view === "regras") && <span className="panel-meta">{view === "painel" ? "Indicadores de visitantes" : "Regras de acolhimento"}</span>}
       </div>
       {view === "regras" && (

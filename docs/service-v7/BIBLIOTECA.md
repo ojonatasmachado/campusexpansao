@@ -30,6 +30,7 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Peça | Onde hoje | Compartilhado | Problema | Prancha |
 |---|---|---|---|---|
 | Botão | `Botao` em `app/service/ui/Botao.tsx` (famílias toque, lista, entrada, mapa; variantes principal, secundario, discreto, perigo, texto; `botaoClasse()` para links) | sim | login, convite e senha incluídos (cores CE.X do AuthShell); família antiga `.m-btn` apagada | 1 |
+| Movimento | `app/service/ui/movimento.ts` (mola, `entrarComDirecao`), `Contagem` em `app/service/ui/Contagem.tsx`, entrada e check em `biblioteca.css`; tudo desliga com movimento reduzido | sim | troca de tela no painel e nas abas do app; contagem no Kpi, Saúde e Financeiro | 1 |
 | Clicável base | `Acao` em `app/service/ui/Acao.tsx`: todo `<button>` do Service passa por ela (type="button" padrão, desativado, carregando) | sim | linhas, cartões e células ainda usam `Acao` com classe da tela até ganharem peça própria | n/a |
 | Botão de ícone | `BotaoIcone` em `app/service/ui/Botao.tsx` (`rotulo` obrigatório; aparência pela classe da tela, ex. `.drawer-close`) | sim | 32 telas trocadas; botões só de ícone sem `aria-label` ainda soltos | 1 |
 | Selo | `Selo` em `app/service/ui/Selo.tsx` (tons ok, pendente, cuidado, neutro, aberto, rascunho, destaque; lista ou toque); `Chip` do painel usa ele | sim | dados antigos com classe viram tom por `tomDaClasse()` | 1, 6 |
@@ -42,7 +43,7 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Seleção | `SelectField` (1 uso) | não | 57 `<select>` nativos | 3 |
 | Interruptor | `Interruptor` em `app/service/ui/Interruptor.tsx` (`.sw`, `.m6-tg`, `.m-toggle`; sempre `role="switch"` com nome falado) | sim | `.acesso-tog` é linha de permissão, usa `Opcao` | 6 |
 | Caixa de marcar | checkbox nativo + 6 classes | não | cada tela estiliza | 3 |
-| Segmentado | `Opcao` em `app/service/ui/Opcao.tsx` dentro de `.seg` | sim | contêiner `.seg` ainda é só CSS | 1, 6 |
+| Segmentado | `Segmentado` em `app/service/ui/Segmentado.tsx` com `Opcao` dentro; pílula desliza com mola | sim | ok | 1, 6 |
 | Data e hora | `DatePicker`, `TimePicker` (painel/campos.tsx) | parcial | `type="date"` nativo em vários formulários | 4 |
 | Envio de foto/arquivo | `PhotoPicker`, `ImageUpload`, `ImageCropper` | parcial | `type="file"` direto em 3 telas | falta |
 | Busca | `.tb-search` e +4 classes | parcial | sem componente | 6 |

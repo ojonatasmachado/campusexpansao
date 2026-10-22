@@ -19,6 +19,7 @@ import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Cartao } from "../../ui/Cartao";
 import { Linha } from "../../ui/Linha";
+import { Segmentado } from "../../ui/Segmentado";
 const QUEM = { grupo: "líder do grupo", time: "líder do time", pastoral: "pastoral" } as const;
 const NOME_VIA: Record<string, string> = { ligacao: "ligação", mensagem: "mensagem", visita: "visita" };
 
@@ -52,10 +53,10 @@ export function ListaDeCuidado({ lista, criancas, semanas, onAbrir }: {
       <p className="cuidado-contexto">Esta lista usa presenças registradas no Service. Falta de registro não confirma ausência. Confira com quem acompanha a pessoa antes de concluir.</p>
       {criancas && (
         <div className="cuidado-seg">
-          <div className="seg seg-sm" role="radiogroup" aria-label="Quem ver">
+          <Segmentado className="seg-sm" role="radiogroup" aria-label="Quem ver">
             <Opcao role="radio" aria-checked={visao === "adultos"} marcada={visao === "adultos"} onClick={() => setVisao("adultos")}>{`Pessoas · ${lista.length}`}</Opcao>
             <Opcao role="radio" aria-checked={visao === "criancas"} marcada={visao === "criancas"} onClick={() => setVisao("criancas")}>{`Crianças · ${criancas.length}`}</Opcao>
-          </div>
+          </Segmentado>
         </div>
       )}
       <div className="panel-body flush">

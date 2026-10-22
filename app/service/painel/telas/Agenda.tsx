@@ -21,6 +21,7 @@ import { Opcao } from "../../ui/Opcao";
 import { Cartao, cartaoClasse } from "../../ui/Cartao";
 import { Linha } from "../../ui/Linha";
 import { Etiqueta } from "../../ui/Selo";
+import { Segmentado } from "../../ui/Segmentado";
 /* Escalas : módulo em modules/escalas/ (4.1) */
 
 export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChildren, rooms, setDrawer, setModal, setCheckinEventId, setShareEventId }: { events: EventView[]; ministries: MinistryView[]; church?: ChurchView; kidsClasses: KidsClassView[]; kidsSessions: KidsSessionView[]; kidsChildren: ChildView[]; rooms: RoomView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; setCheckinEventId: (id: string) => void; setShareEventId: (id: string) => void }) {
@@ -48,10 +49,10 @@ export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, 
     <div className="content">
       <PageHead title={ct("{Cultos} e Agenda")} eyebrow="Operação" help={ct("Seus {cultos} e eventos ficam aqui. Cada um pode virar uma escala, ganhar roteiro e setlist.")} action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {culto} ou evento"), subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:ct("ex: {Culto} da Manhã, Conferência de Jovens") }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"data", label:"Data", type:"date", fullDate:true, req:true, half:true, hint:"Dia, mês e ano do encontro." }, { k:"hora", label:"Horário de início", type:"time", req:true, half:true }], action: { kind: "event" } })}>{ct("+ Novo {culto}")}</Botao>} />
       <div className="toolbar cultos-tb">
-        <div className="seg">
+        <Segmentado>
           <Opcao marcada={vista === "semana"} onClick={() => setVista("semana")}>Semana</Opcao>
           <Opcao marcada={vista === "mes"} onClick={() => setVista("mes")}>Mês</Opcao>
-        </div>
+        </Segmentado>
         {vista === "semana" && (
           <div className="cultos-nav">
             <Botao compacto aria-label="Semana anterior" onClick={() => setSemanaOffset((o) => o - 1)}><Icon name="voltar" size={14} /></Botao>

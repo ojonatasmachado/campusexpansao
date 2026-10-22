@@ -14,6 +14,8 @@ import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { linhaClasse } from "../../ui/Linha";
+import { Segmentado } from "../../ui/Segmentado";
+import { Contagem } from "../../ui/Contagem";
 const PRESETS: { v: Preset; l: string }[] = [
   { v: "30", l: "30 dias" },
   { v: "90", l: "90 dias" },
@@ -60,7 +62,7 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, extras = [] }: {
         const mudou = n.anterior !== undefined && n.anterior !== n.valor;
         return (
           <Acao key={n.id} className="saude-n" onClick={() => setLista(n)} desativado={!n.itens.length} aria-label={`${ct(n.rotulo)}: ${n.valor}${cmp ? `, ${cmp}` : ""}. Ver a lista`}>
-            <span className="saude-v">{n.valor.toLocaleString("pt-BR")}</span>
+            <Contagem className="saude-v" valor={n.valor} />
             <span className="saude-l">{ct(n.rotulo)}</span>
             {cmp && mudou && <span className="saude-c">{cmp}</span>}
           </Acao>
@@ -74,11 +76,11 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, extras = [] }: {
       <div className="saude-head">
         <h2 className="saude-t">Saúde da igreja</h2>
         {panorama && (
-          <div className="seg seg-sm" role="radiogroup" aria-label="Período">
+          <Segmentado className="seg-sm" role="radiogroup" aria-label="Período">
             {PRESETS.map((p) => (
               <Opcao key={p.v} role="radio" aria-checked={preset === p.v} marcada={preset === p.v} onClick={() => setPreset(p.v)}>{p.l}</Opcao>
             ))}
-          </div>
+          </Segmentado>
         )}
       </div>
       {panorama && preset === "datas" && (

@@ -12,6 +12,7 @@ import type { ChatMemberView, ChatView, ChurchView, MemberView, MessageView, Min
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Segmentado } from "../../ui/Segmentado";
 export function NovaConversaModal({
   members,
   church,
@@ -87,10 +88,10 @@ export function NovaConversaModal({
         <div className="modal-body" style={{ display: "block" }}>
           <div className="field">
             <label className="field-label">Tipo</label>
-            <div className="seg">
+            <Segmentado>
               <Opcao marcada={tipo === "dm"} onClick={() => setTipo("dm")}>Individual</Opcao>
               <Opcao marcada={tipo === "grupo"} onClick={() => setTipo("grupo")}>Em grupo</Opcao>
-            </div>
+            </Segmentado>
           </div>
           {isGrupo && (
             <div className="field">

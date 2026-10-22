@@ -38,11 +38,11 @@ const REGRAS: Regra[] = [
     re: /["'`](?:btn(?:\s|["'`$])|m6-btn(?:\s|["'`$]))/g,
   },
   {
-    peca: "Selo, Etiqueta, Cartão ou Linha",
-    usar: "Selo, Etiqueta, Cartao, Linha ou Lista de app/service/ui/ (ou seloClasse/cartaoClasse/linhaClasse)",
+    peca: "Selo, Etiqueta, Cartão, Linha ou Segmentado",
+    usar: "Selo, Etiqueta, Cartao, Linha, Lista ou Segmentado de app/service/ui/ (ou seloClasse/cartaoClasse/linhaClasse)",
     permitido: "app/service/ui/",
     /* className que começa com a classe de uma dessas peças, escrita à mão */
-    re: /className=\{?["'`](?:chip|m6-st|tag|panel|m6-card|m-card|m6-list|tr|mini-row|cfg-row|m6-row)(?=[\s"'`$])/g,
+    re: /className=\{?["'`](?:chip|m6-st|tag|panel|m6-card|m-card|m6-list|tr|mini-row|cfg-row|m6-row|seg)(?=[\s"'`$])/g,
   },
 ];
 

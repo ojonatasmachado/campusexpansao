@@ -23,6 +23,7 @@ import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { linhaClasse } from "../../ui/Linha";
+import { Segmentado } from "../../ui/Segmentado";
 export type Marca = { nome: string; logoUrl?: string | null; cor: string; cidade?: string | null };
 
 type Emitida = { id: string; codigo: string; validade: string; emitida_em: string };
@@ -196,11 +197,11 @@ export function Carteirinha({ memberId, church, marca, demo, members, people, ro
           ) : null}
 
           <FormSection title={atual ? "Emitir de novo" : "Validade"}>
-            <div className="seg" role="radiogroup" aria-label="Validade">
+            <Segmentado role="radiogroup" aria-label="Validade">
               {[1, 2, 3].map((n) => (
                 <Opcao key={n} role="radio" aria-checked={anos === n} marcada={anos === n} onClick={() => setAnos(n)}>{n === 1 ? "1 ano" : `${n} anos`}</Opcao>
               ))}
-            </div>
+            </Segmentado>
             {vigente ? <Botao className="sec-reemitir" desativado={saving} onClick={emitir}>{saving ? "Emitindo..." : "Emitir nova carteirinha"}</Botao> : null}
             <p className="field-hint">{atual ? `Emitir uma nova cancela a atual e vale até ${formatDateBR(somaAnos(todayISO(), anos))}. Use se ela foi perdida ou os dados mudaram.` : `Válida até ${formatDateBR(somaAnos(todayISO(), anos))}.`}</p>
           </FormSection>

@@ -19,3 +19,6 @@ Componentes compartilhados de interface do Service (lei 17 em `AGENTS.md` §13).
 | `Selo.tsx` | `Selo` (estado), `Etiqueta` (papel ou grupo), `seloClasse()`, `tomDaClasse()` |
 | `Cartao.tsx` | `Cartao` (painel, app, app-solto; plano), `cartaoClasse()` |
 | `Linha.tsx` | `Linha` (tabela, curta, config, app), `Lista`, `linhaClasse()` |
+| `Segmentado.tsx` | `Segmentado` (contêiner `.seg` com pílula que desliza até a `Opcao` marcada) |
+| `Contagem.tsx` | `Contagem` (número sobe do zero ou do valor anterior; leitor de tela ouve o final) |
+| `movimento.ts` | `MOLA`, `movimentoReduzido()`, `entrarComDirecao()` (troca de tela com direção) |

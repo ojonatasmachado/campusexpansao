@@ -20,6 +20,7 @@ import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Selo, tomDaClasse } from "../../ui/Selo";
+import { Segmentado } from "../../ui/Segmentado";
 export function Decisoes({
   decisions,
   members,
@@ -64,12 +65,12 @@ export function Decisoes({
           <span className="si"><Icon name="buscar" size={13} /></span>
           <input placeholder="Buscar por nome..." value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-        <div className="seg">
+        <Segmentado>
           <Opcao marcada={f === "todas"} onClick={() => setF("todas")}>Todas</Opcao>
           <Opcao marcada={f === "novo"} onClick={() => setF("novo")}>A contatar</Opcao>
           <Opcao marcada={f === "acompanhando"} onClick={() => setF("acompanhando")}>Acompanhando</Opcao>
           <Opcao marcada={f === "encaminhado"} onClick={() => setF("encaminhado")}>Encaminhados</Opcao>
-        </div>
+        </Segmentado>
         <div className="tb-spacer" />
         <span className="panel-meta">{visible.length} de {decisions.length} decisões</span>
       </div>

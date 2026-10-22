@@ -23,6 +23,7 @@ import { Opcao } from "../../ui/Opcao";
 import { Etiqueta } from "../../ui/Selo";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Cartao } from "../../ui/Cartao";
+import { Segmentado } from "../../ui/Segmentado";
 export function TurmasKids({ kidsClasses, rooms, setModal }: { kidsClasses: KidsClassView[]; rooms: RoomView[]; setModal: (modal: ModalState) => void }) {
   const { comTermos: ct } = useTermos();
   const roomById = new Map(rooms.map((room) => [room.id, room]));
@@ -114,12 +115,12 @@ export function Criancas({
       />
       <div className="toolbar">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar criança..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
-        <div className="seg">
+        <Segmentado>
           <Opcao marcada={classFilter === "todas"} onClick={() => setClassFilter("todas")}>Todas</Opcao>
           {kidsClasses.map((kc) => (
             <Opcao key={kc.id} marcada={classFilter === kc.id} onClick={() => setClassFilter(kc.id)}>{kc.name}</Opcao>
           ))}
-        </div>
+        </Segmentado>
         <div className="tb-spacer" />
         <span className="panel-meta">{plural(visible.length, "criança")}</span>
       </div>

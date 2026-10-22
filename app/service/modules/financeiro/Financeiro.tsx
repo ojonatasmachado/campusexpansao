@@ -29,6 +29,8 @@ import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Cartao } from "../../ui/Cartao";
 import { Linha, linhaClasse } from "../../ui/Linha";
+import { Segmentado } from "../../ui/Segmentado";
+import { Contagem } from "../../ui/Contagem";
 type Tela =
   | null
   | { k: "entrada" | "despesa"; edit?: Lancamento }
@@ -134,12 +136,12 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
         ) : undefined} />
 
       <div className="toolbar fin-abas">
-        <div className="seg" role="tablist" aria-label="Seções do financeiro">
+        <Segmentado role="tablist" aria-label="Seções do financeiro">
           <Opcao role="tab" aria-selected={aba === "movimento"} marcada={aba === "movimento"} onClick={() => setAba("movimento")}>Movimento</Opcao>
           <Opcao role="tab" aria-selected={aba === "planejamento"} marcada={aba === "planejamento"} onClick={() => setAba("planejamento")}>Contas fixas e campanhas</Opcao>
           <Opcao role="tab" aria-selected={aba === "fechamento"} marcada={aba === "fechamento"} onClick={() => setAba("fechamento")}>Fechamento</Opcao>
           <Opcao role="tab" aria-selected={aba === "cadastros"} marcada={aba === "cadastros"} onClick={() => setAba("cadastros")}>Contas e categorias</Opcao>
-        </div>
+        </Segmentado>
         {(aba === "movimento" || aba === "fechamento") && (
           <div className="fin-mes" role="group" aria-label="Mês">
             <BotaoIcone className="fin-mes-b" rotulo="Mês anterior" onClick={() => setMes(somaMes(mes, -1))}><Icon name="voltar" size={15} /></BotaoIcone>
@@ -157,7 +159,7 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
               <div className="kpi" key={rotulo}>
                 <div className="kpi-label">{rotulo}</div>
                 {/* valor grande demais para a letra de 32 desce para 20, sem cortar */}
-                <div className={`kpi-value fin-num${valor.length > 15 ? " fin-longo" : ""}${neg ? " fin-neg" : ""}`}>{fin.carregando ? "…" : valor}</div>
+                <div className={`kpi-value fin-num${valor.length > 15 ? " fin-longo" : ""}${neg ? " fin-neg" : ""}`}>{fin.carregando ? "…" : <Contagem valor={valor} />}</div>
               </div>
             ))}
           </div>
@@ -197,11 +199,11 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
               <span className="si"><Icon name="buscar" size={13} /></span>
               <input placeholder="Buscar descrição ou nome" aria-label="Buscar lançamento" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
-            <div className="seg" role="group" aria-label="Tipo">
+            <Segmentado role="group" aria-label="Tipo">
               {([["todos", "Todos"], ["entrada", "Entradas"], ["despesa", "Saídas"], ["transferencia", "Transferências"]] as const).map(([v, l]) => (
                 <Opcao key={v} marcada={tipo === v} aria-pressed={tipo === v} onClick={() => { setTipo(v); setCat(""); }}>{l}</Opcao>
               ))}
-            </div>
+            </Segmentado>
             <select className="select fin-sel" aria-label="Conta" value={conta} onChange={(e) => setConta(e.target.value)}>
               <option value="">Todas as contas</option>
               {fin.contas.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}

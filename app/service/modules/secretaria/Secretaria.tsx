@@ -23,6 +23,7 @@ import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Selo } from "../../ui/Selo";
+import { Segmentado } from "../../ui/Segmentado";
 const PAGINA = 200;
 
 /** org de demonstração ("org-demo") não é uuid: lê e grava só na memória */
@@ -116,13 +117,13 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
         action={acao}
       />
       <div className="toolbar">
-        <div className="seg seg-wrap" role="tablist" aria-label="Livro">
+        <Segmentado className="seg-wrap" role="tablist" aria-label="Livro">
           {LIVROS.map((l) => (
             <Opcao key={l.id} role="tab" aria-selected={livro === l.id} marcada={livro === l.id} onClick={() => trocarLivro(l.id)}>
               {l.rotulo} {regs ? <span className="seg-n">{contagem(l.id)}</span> : null}
             </Opcao>
           ))}
-        </div>
+        </Segmentado>
       </div>
       <div className="toolbar sec-filtros">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input aria-label="Buscar no livro" placeholder="Buscar nome, nº ou oficiante" value={q} onChange={(e) => { setQ(e.target.value); setMostrar(PAGINA); }} /></div>

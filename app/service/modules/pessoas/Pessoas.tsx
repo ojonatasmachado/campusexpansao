@@ -21,6 +21,7 @@ import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Etiqueta, Selo } from "../../ui/Selo";
 import { Linha, linhaClasse } from "../../ui/Linha";
+import { Segmentado } from "../../ui/Segmentado";
 function formatAvailability(value: Record<string, boolean>) {
   const labels: Record<string, string> = { dom_m: "Domingo manhã", dom_n: "Domingo noite", qua: "Quarta" };
   const items = Object.entries(value).filter(([, ok]) => ok).map(([key]) => labels[key] ?? key);
@@ -117,11 +118,11 @@ export function Membros({ members, people = [], ministries, church, setDrawer, s
       <PageHead title="Pessoas" eyebrow="Pessoas" subtitle={soTimes ? `Seus times: ${nomesTimes}.` : undefined} help={soTimes ? "Você vê aqui as pessoas dos seus times. O restante da igreja fica com a gestão, que pode liberar em Configurações › Permissões." : ct("Toda a congregação entra aqui, sirva ou não em um time. É diferente de {Voluntarios}, que lista só quem já serve ativamente.")} action={soTimes ? undefined : <>{church ? <Botao onClick={() => setImportando(true)}><Icon name="anexo" size={14} /> Importar planilha</Botao> : null}<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Nome, sobrenome e telefone bastam: o convite do app vai pelo WhatsApp e a pessoa completa o resto.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome e sobrenome", type:"text", req:true, ph:"Como a pessoa se chama", hint:"A pessoa pode ajustar depois no app.", secao:"Dados da pessoa" }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Ao salvar, o WhatsApp abre com o convite do app para este número." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"opcional", hint:"Opcional: a pessoa informa no convite." }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"cep", label:"CEP", type:"cep", half:true, secao:"Endereço (opcional)", ph:"00000-000", hint:"Preenche rua, bairro, cidade e estado sozinho.", autofill:{ street:"rua", neighborhood:"bairro", city:"cidade", state:"estado" } }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }, { k:"rua", label:"Rua", type:"text", half:true, ph:"Nome da rua" }, { k:"cidade", label:"Cidade", type:"text", half:true }, { k:"estado", label:"Estado", type:"text", half:true, ph:"UF" }], action: { kind: "member" } })}>+ Novo membro</Botao></>} />
       <div className="toolbar">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome ou telefone..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
-        <div className="seg seg-wrap">
+        <Segmentado className="seg-wrap">
           {([["todos", "Todos", linhas.length], ["membros", "Membros", conta.membros], ["voluntarios", ct("{Voluntarios}"), conta.voluntarios], ["lideres", "Líderes", conta.lideres], ["novos", "Novos", conta.novos]] as const).map(([id, l, n]) => (
             <Opcao key={id} marcada={filtro === id} onClick={() => setFiltro(id)}>{l} <span className="seg-n">{n}</span></Opcao>
           ))}
-        </div>
+        </Segmentado>
       </div>
       <p className="jrn-legenda"><b>{ct("{Caminhada}")}</b>, uma barra por etapa, na ordem: {JRN_STEPS.map((s) => ct(s.label)).join(" · ")}.</p>
       <div className="tbl">
@@ -157,11 +158,11 @@ export function Pessoas({ people, currentPersonId, setDrawer, setModal }: { peop
       <PageHead title={ct("{Voluntarios}")} eyebrow="Pessoas" help={ct("Todo mundo com acesso de {voluntario} na igreja, mesmo quem ainda não está em nenhum time. Veja funções, disponibilidade e participação nos times.")} action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {voluntario}"), subtitle: "Cadastre e já escolha os times.", saveLabel: ct("Adicionar {voluntario}"), formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"e-mail da pessoa" }], action: { kind: "member" } })}>{ct("+ Novo {voluntario}")}</Botao>} />
       <div className="toolbar">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
-        <div className="seg">
+        <Segmentado>
           <Opcao marcada={status === "todos"} onClick={() => setStatus("todos")}>Todos</Opcao>
           <Opcao marcada={status === "ativo"} onClick={() => setStatus("ativo")}>Ativos</Opcao>
           <Opcao marcada={status === "pausa"} onClick={() => setStatus("pausa")}>Pausa</Opcao>
-        </div>
+        </Segmentado>
         <div className="tb-spacer" />
         <span className="panel-meta">{visible.length} pessoas</span>
       </div>

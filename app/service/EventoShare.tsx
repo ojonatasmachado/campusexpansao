@@ -7,6 +7,7 @@ import { formatDateBR, joinDot } from "./lib/date";
 
 import { Botao } from "./ui/Botao";
 import { Opcao } from "./ui/Opcao";
+import { Segmentado } from "./ui/Segmentado";
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
 type EventView = {
@@ -228,10 +229,10 @@ export default function EventoShare({ event, ministries, churchName = "Service",
             Baixe a imagem ou copie o texto formatado pra colar no grupo da igreja.
           </div>
 
-          <div className="seg" style={{ marginBottom: 18 }}>
+          <Segmentado style={{ marginBottom: 18 }}>
             <Opcao marcada={modo === "simples"} onClick={() => setModo("simples")}>Simplificada</Opcao>
             <Opcao marcada={modo === "completa"} onClick={() => setModo("completa")}>Completa</Opcao>
-          </div>
+          </Segmentado>
 
           {!completa && setlist.length > 0 && (
             <div style={{ marginBottom: 20 }}>

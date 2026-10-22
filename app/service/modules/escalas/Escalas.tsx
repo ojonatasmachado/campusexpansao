@@ -32,6 +32,7 @@ import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Selo } from "../../ui/Selo";
 import { Cartao } from "../../ui/Cartao";
+import { Segmentado } from "../../ui/Segmentado";
 type Candidato = CandidatoBase<PersonView>;
 
 /* carga da semana corrente (segunda a domingo contendo hoje) por pessoa:
@@ -177,9 +178,9 @@ function DelegarModal({
         </div>
         <div className="modal-body" style={{ display: "block" }}>
           {ministries.length > 1 && (
-            <div className="seg" style={{ marginBottom: 14, flexWrap: "wrap" }}>
+            <Segmentado style={{ marginBottom: 14, flexWrap: "wrap" }}>
               {ministries.map((m) => <Opcao key={m.id} marcada={ministryId === m.id} onClick={() => setMinistryId(m.id)}>{m.name.split(" ")[0]}</Opcao>)}
-            </div>
+            </Segmentado>
           )}
           {elenco.length === 0 && <div className="empty">Ninguém mais neste time ainda.</div>}
           {elenco.map((link) => {
@@ -516,11 +517,11 @@ export function Escalas({
         <summary><Icon name="escalas" size={15} /> Como gerar <span className="esc-gerar-modo">{escalaCfg.modo === "manual" ? "Manual" : escalaCfg.modo === "assistido" ? "Assistida" : "Automática"}</span><Caret size={14} /></summary>
         <div className="esc-modo">
         <span className="esc-modo-lbl">Geração da escala</span>
-        <div className="seg seg-sm">
+        <Segmentado className="seg-sm">
           {(["manual", "assistido", "automatico"] as const).map((key) => (
             <Opcao key={key} marcada={escalaCfg.modo === key} onClick={() => setModoEscala(key)}>{key === "manual" ? "Manual" : key === "assistido" ? "Assistida" : "Automática"}</Opcao>
           ))}
-        </div>
+        </Segmentado>
         <span className="esc-modo-hint">
           {escalaCfg.modo === "manual" ? "Você monta tudo na mão." : null}
           {escalaCfg.modo === "assistido" ? "O sistema sugere os nomes; você confirma cada um." : null}
