@@ -2,10 +2,10 @@
 id: I8
 titulo: Biblioteca, bloco B (janela, folha, gaveta, aviso, menus, abas)
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-10-22
+branch: historia/I8-biblioteca-estrutura
 depende: [I4]
 tamanho: G
 ---
