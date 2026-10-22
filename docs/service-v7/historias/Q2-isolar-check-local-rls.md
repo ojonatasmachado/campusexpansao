@@ -2,10 +2,10 @@
 id: Q2
 titulo: Isolar e modernizar check-local-rls
 tipo: infra
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: codex
+desde: 2026-10-22
+branch: historia/Q2-isolar-check-local-rls
 depende: []
 tamanho: M
 ---
