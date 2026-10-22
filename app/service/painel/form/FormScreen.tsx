@@ -3,7 +3,7 @@
 import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useRef, useState } from "react";
 import { Icon } from "../../lib/icons";
 
-import { Botao } from "../../ui/Botao";
+import { Botao, BotaoIcone } from "../../ui/Botao";
 /* Tela de formulário do painel (onda 1 do plano docs/service-v7/PLANO_TELA_FORMULARIO.md).
    Criar ou editar algo com mais de 4 campos abre aqui, não numa janela:
    topo fixo (voltar, título, até duas ações), coluna de 720px, e no celular o
@@ -165,9 +165,9 @@ export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScree
   return (
     <div className="fs" role="dialog" aria-modal="true" aria-labelledby={titleId} ref={rootRef} tabIndex={-1} onKeyDown={onKeyDown}>
       <header className="fs-top">
-        <button className="fs-back" type="button" onClick={pedirFechar} disabled={saving} aria-label="Voltar sem salvar">
+        <BotaoIcone className="fs-back" onClick={pedirFechar} desativado={saving} rotulo="Voltar sem salvar">
           <Icon name="voltar" size={18} />
-        </button>
+        </BotaoIcone>
         <div className="fs-head">
           {eyebrow ? <div className="fs-eyebrow">{eyebrow}</div> : null}
           <h2 className="fs-title" id={titleId}>{title}</h2>

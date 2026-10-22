@@ -9,7 +9,7 @@ import { plural } from "../../lib/plural";
 import { limparCamadas, type ContextoMapa } from "./contexto";
 import { caixaDaGeometria, temPonto } from "./geo";
 
-import { Botao, botaoClasse } from "../../ui/Botao";
+import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
 /* Ferramentas › Traçar rota (tela 12 do design). O objetivo vem primeiro e
    muda o que vira parada: na Visita, as pessoas (com nome no mapa); em
    oração, panfletagem e carro de som, lugares e ruas, nunca casas. */
@@ -178,8 +178,8 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
             <div key={`${i}-${p.nome}`} className="mp-lista-pessoa">
               <span className="mp-av mp-num">{i + 1}</span>
               <span style={{ flex: 1, minWidth: 0 }}>{p.nome}<span className="mp-fraco" style={{ display: "block" }}>{p.tipo}</span></span>
-              {i > 0 && <button type="button" className="mp-fechar" aria-label={`Subir ${p.nome}`} onClick={() => subir(i)}><Icon name="voltar" size={14} /></button>}
-              <button type="button" className="mp-fechar" aria-label={`Tirar ${p.nome}`} onClick={() => tirar(i)}><Icon name="recusou" size={14} /></button>
+              {i > 0 && <BotaoIcone className="mp-fechar" rotulo={`Subir ${p.nome}`} onClick={() => subir(i)}><Icon name="voltar" size={14} /></BotaoIcone>}
+              <BotaoIcone className="mp-fechar" rotulo={`Tirar ${p.nome}`} onClick={() => tirar(i)}><Icon name="recusou" size={14} /></BotaoIcone>
             </div>
           ))}
           {objetivo !== "visita" && ctx.areas.length > 0 && (

@@ -24,7 +24,7 @@ import { ContaForm, LancamentoForm, OfertaForm, TransferenciaForm } from "./Form
 import { APagar, CampanhaForm, ContaFixaForm, FechamentoMes, Planejamento } from "./Fase2";
 import type { Campanha, ContaFixa } from "./dados";
 
-import { Botao } from "../../ui/Botao";
+import { Botao, BotaoIcone } from "../../ui/Botao";
 type Tela =
   | null
   | { k: "entrada" | "despesa"; edit?: Lancamento }
@@ -138,9 +138,9 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
         </div>
         {(aba === "movimento" || aba === "fechamento") && (
           <div className="fin-mes" role="group" aria-label="Mês">
-            <button type="button" className="fin-mes-b" aria-label="Mês anterior" onClick={() => setMes(somaMes(mes, -1))}><Icon name="voltar" size={15} /></button>
+            <BotaoIcone className="fin-mes-b" rotulo="Mês anterior" onClick={() => setMes(somaMes(mes, -1))}><Icon name="voltar" size={15} /></BotaoIcone>
             <span className="fin-mes-t" aria-live="polite">{mesTexto(mes)}{fechadoMes ? " · fechado" : ""}</span>
-            <button type="button" className="fin-mes-b" aria-label="Próximo mês" onClick={() => setMes(somaMes(mes, 1))}><Icon name="avancar" size={15} /></button>
+            <BotaoIcone className="fin-mes-b" rotulo="Próximo mês" onClick={() => setMes(somaMes(mes, 1))}><Icon name="avancar" size={15} /></BotaoIcone>
           </div>
         )}
       </div>

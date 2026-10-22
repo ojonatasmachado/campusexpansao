@@ -11,7 +11,7 @@ import { createPortal } from "react-dom";
 import { Icon } from "./lib/icons";
 import { useTermos } from "./lib/vocabulario-context";
 
-import { Botao } from "./ui/Botao";
+import { Botao, BotaoIcone } from "./ui/Botao";
 /* ── HELP DOT · "?" ao lado de título, KPI ou botão ───────────────── */
 
 /* A caixa abre FORA do cartão (portal no body, position:fixed): dentro do
@@ -287,7 +287,7 @@ export function SetupChecklist({ counts, setRoute }: { counts: SetupCounts; setR
           </div>
           <div className="setup-title">Falta pouco pra sua igreja estar pronta</div>
         </div>
-        <button className="setup-close" type="button" onClick={hide} title="Esconder por agora" aria-label="Esconder por agora">✕</button>
+        <BotaoIcone className="setup-close" onClick={hide} title="Esconder por agora" rotulo="Esconder por agora">✕</BotaoIcone>
       </div>
       <div className="setup-bar"><div className="setup-bar-fill" style={{ transform: `translateX(${pct - 100}%)` }} /></div>
       <div className="setup-list">

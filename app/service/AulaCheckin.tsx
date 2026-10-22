@@ -8,7 +8,7 @@ import QRCode from "react-qr-code";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import ChurchLockup from "./ChurchLockup";
 
-import { Botao } from "./ui/Botao";
+import { Botao, BotaoIcone } from "./ui/Botao";
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
 type LessonView = {
@@ -458,7 +458,7 @@ export function AulaCheckinModal({
                           <div className="ck-row-name">{m.name}</div>
                           <div className="ck-row-meta">{rec.via === "manual" ? "manual" : "QR"} · {timeCurto(rec.checked_in_at)}</div>
                         </div>
-                        <button className="ck-undo" title="Desfazer presença" aria-label="Desfazer presença" onClick={() => remover(rec.member_id)}>✕</button>
+                        <BotaoIcone className="ck-undo" title="Desfazer presença" rotulo="Desfazer presença" onClick={() => remover(rec.member_id)}>✕</BotaoIcone>
                       </div>
                     );
                   })}

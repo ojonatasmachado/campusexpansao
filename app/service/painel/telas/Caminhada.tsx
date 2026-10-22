@@ -13,7 +13,7 @@ import { PersonTimeline } from "./FichaPessoa";
 import { BAT_ST_MAP, timelineEventPayload } from "../comum";
 import type { BaptismCandidateView, BaptismClassView, ChurchView, DecisionView, MemberView, PersonView, TimelineEventView } from "../tipos";
 
-import { Botao, botaoClasse } from "../../ui/Botao";
+import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
 export function DecisaoDrawer({
   decision, people, members, church, timelineEvents, onClose, onOpenMember,
 }: {
@@ -60,7 +60,7 @@ export function DecisaoDrawer({
   return (
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
+        <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
         <div className="profile-top">
           <Av name={decision.name} size="lg" />
           <div>
@@ -203,7 +203,7 @@ export function BatismoDrawer({
   return (
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
+        <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
         <div className="profile-top">
           <div className="bat-mark"><Icon name="batismos" size={22} /></div>
           <div>

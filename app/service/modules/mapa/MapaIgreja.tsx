@@ -22,7 +22,7 @@ import { Pontos } from "./Pontos";
 import { Mesa } from "./Mesa";
 import { LiberarMapa } from "./LiberarMapa";
 
-import { Botao } from "../../ui/Botao";
+import { Botao, BotaoIcone } from "../../ui/Botao";
 /* Painel › Pessoas › Mapa da igreja (PLANO.md, telas 1 e 3 do design).
    Visões prontas em vez de 12 interruptores; camadas e filtros ficam em
    "Personalizar". Ferramentas abrem os modos sobre o mesmo mapa. */
@@ -436,7 +436,7 @@ function PainelSelecao({ sel, cidade, nivel, pessoas, acesso, perto, onFechar, o
   onFechar: () => void; onAbrirMembro: (id: string) => void; onMensagem: (id: string) => void; onMesa: (codigos: string[], nivel?: "area") => void; onCriarArea: (codigos: string[]) => void;
 }) {
   const { comTermos: ct } = useTermos();
-  const fechar = <button type="button" className="mp-fechar" aria-label="Fechar" onClick={onFechar}><Icon name="recusou" size={14} /></button>;
+  const fechar = <BotaoIcone className="mp-fechar" rotulo="Fechar" onClick={onFechar}><Icon name="recusou" size={14} /></BotaoIcone>;
 
   if (sel.tipo === "pessoa") {
     const p = sel.p;

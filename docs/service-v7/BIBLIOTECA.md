@@ -3,6 +3,16 @@
 Referência visual: canvas "Service, direção visual" (claude.ai/artifact/JNpxaXTN3uVPmvdLCgcdMb), página Biblioteca, pranchas 1 a 6.
 Inventário levantado em 2026-10-22 por busca no código; números são aproximados.
 
+## Como usar (lei 17)
+
+Este arquivo é o índice único das peças de interface do Service. Vale para quem constrói tela nova e para quem mexe em tela velha:
+
+1. Antes de escrever markup, procure a peça na tabela abaixo. Existindo, importe do caminho indicado.
+2. Faltou uma variação? Acrescente uma prop ao componente existente, nunca uma cópia na tela.
+3. Não existe? Peça nova nasce em `app/service/ui/`, com a ficha de entrada preenchida e uma linha na tabela.
+4. Trocou uma peça antiga pelo componente? Atualize a linha da tabela (caminho, compartilhado, problema).
+5. Peça já centralizada ganha uma regra em `scripts/check-service-componentes.ts`, que o CI roda: escrever a classe à mão volta a falhar.
+
 ## Como trocar (regra)
 
 Nada de apagar e recolocar. A tela fica, a peça muda:
@@ -19,7 +29,7 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Peça | Onde hoje | Compartilhado | Problema | Prancha |
 |---|---|---|---|---|
 | Botão | `Botao` em `app/service/ui/Botao.tsx` (sobre `.btn*` e `.m6-btn`; `botaoClasse()` para links e rótulos) | sim | todos os botões do Service usam; `.btn-ghost` unificado; `.btn-primary`/`.btn-secondary` ainda no login e na conexão | 1 |
-| Botão de ícone | `BotaoIcone` em `app/service/ui/Botao.tsx` (`rotulo` obrigatório); telas ainda com classes soltas (`.drawer-close`, `.top-icon`...) | parcial | falta trocar os usos | 1 |
+| Botão de ícone | `BotaoIcone` em `app/service/ui/Botao.tsx` (`rotulo` obrigatório; aparência pela classe da tela, ex. `.drawer-close`) | sim | 32 telas trocadas; botões só de ícone sem `aria-label` ainda soltos | 1 |
 | Selo | `.m6-st` (membro), `Chip` (painel/ui.tsx) | não | duas peças para o mesmo papel | 1, 6 |
 | Chip/etiqueta | `Chip`, `.tag`, `.papel-tag` | parcial | usos misturados | 6 |
 | Cartão | `.panel`, `.m6-card`, `.m-card` e +5 variantes | não | paddings e bordas próprios | 1 |

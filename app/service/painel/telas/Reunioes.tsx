@@ -17,7 +17,7 @@ import { DatePicker, DrawerSection, DrawerShell, TimePicker } from "../campos";
 import { BoardChooser } from "./Quadros";
 import type { BoardView, CardView, ChurchView, DrawerState, MeetingActionView, MeetingView, MinistryView, ModalState, PersonView, RehearsalView, ReservationView, RoomView } from "../tipos";
 
-import { Botao } from "../../ui/Botao";
+import { Botao, BotaoIcone } from "../../ui/Botao";
 export function ReuniaoForm({
   ministries,
   people,
@@ -344,7 +344,7 @@ export function ReuniaoDrawer({
     <>
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
+        <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{meeting.status === "agendada" ? "Reunião agendada" : "Reunião realizada"}</div>
         <div className="profile-name">{meeting.title}</div>
         <div className="profile-role">{formatDateBR(meeting.meeting_date) || "sem data"} · {meeting.time || ""} · {meeting.location || "sem local"}</div>
@@ -480,7 +480,7 @@ export function EnsaioDrawer({
   return (
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
+        <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{rehearsal.kind || "Ensaio"} · {rehearsal.recurrence || "eventual"}</div>
         <div className="profile-name">{rehearsal.title}</div>
         <div className="profile-role">{formatDateBR(rehearsal.rehearsal_date) || "sem data"} · {rehearsal.time || ""} · {rehearsal.location || "sem local"}{rehearsal.audience ? " · " + rehearsal.audience : ""}</div>

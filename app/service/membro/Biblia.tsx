@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Icon } from "../lib/icons";
 import type { BibleBook, BibleFlatVerse, BibleMark } from "./tipos";
 
-import { Botao } from "../ui/Botao";
+import { Botao, BotaoIcone } from "../ui/Botao";
 export let bibleCache: BibleBook[] | null = null;
 export let bibleCachePromise: Promise<BibleBook[]> | null = null;
 export function loadBible(): Promise<BibleBook[]> {
@@ -265,7 +265,7 @@ export function TabBiblia({
                 />
               ))}
               {marcaAtual?.color && (
-                <button type="button" className="bib-swatch-clear" title="Remover cor" aria-label="Remover cor" onClick={() => escolherCor(null)}>✕</button>
+                <BotaoIcone className="bib-swatch-clear" title="Remover cor" rotulo="Remover cor" onClick={() => escolherCor(null)}>✕</BotaoIcone>
               )}
             </div>
             <div className="field" style={{ marginTop: 14 }}>

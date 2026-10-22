@@ -11,7 +11,7 @@ import { HelpDot } from "../../HelpSystem";
 import { Av } from "../ui";
 import type { BoardView, CardView, ChurchView, MinistryView, ModalState, PersonView } from "../tipos";
 
-import { Botao } from "../../ui/Botao";
+import { Botao, BotaoIcone } from "../../ui/Botao";
 /* permissões do Kanban por papel (equivalente ao kanbanPerm()/S.KANBAN_PERMS do
    protótipo): master/pastor administram o quadro; líder cria, comenta e move os
    próprios cards mas não apaga; voluntário não deveria nem abrir esta tela (usa o
@@ -223,7 +223,7 @@ export function CardDrawer({
       <div className="drawer-bg" onClick={onClose} />
       <div className="drawer drawer-wide">
         <div className="drawer-head">
-          <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
+          <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
           <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{board.name}</div>
           <div className="profile-name" style={{ fontSize: "var(--fs-pn-20)" }}>{lc.title}</div>
         </div>

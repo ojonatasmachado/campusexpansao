@@ -8,7 +8,7 @@ import { Icon } from "../../lib/icons";
 import { plural } from "../../lib/plural";
 import { limparCamadas, type ContextoMapa } from "./contexto";
 
-import { Botao } from "../../ui/Botao";
+import { Botao, BotaoIcone } from "../../ui/Botao";
 /* Pontos de interesse (tela 10 do design). Desligados por padrão; do
    OpenStreetMap (atualizados todo mês) ou adicionados à mão. Cada ponto
    mostra a origem e tem editar, ocultar e excluir (excluir só os manuais). */
@@ -160,7 +160,7 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
                   <span style={{ display: "block", opacity: pt.oculto ? 0.6 : 1 }}>{pt.nome || "Sem nome"}</span>
                   <span className="mp-fraco">{CATEGORIAS.find((c) => c.id === pt.categoria)?.nome.replace("Pontos da igreja · ", "")} · {pt.origem === "osm" ? "OpenStreetMap" : "manual"}{pt.oculto ? " · oculto" : ""}</span>
                 </button>
-                {podeEditar && <button type="button" className="mp-fechar" aria-label={`Ações de ${pt.nome}`} aria-expanded={menu === pt.id} onClick={() => setMenu((m) => (m === pt.id ? null : pt.id))}><Icon name="menu" size={14} /></button>}
+                {podeEditar && <BotaoIcone className="mp-fechar" rotulo={`Ações de ${pt.nome}`} aria-expanded={menu === pt.id} onClick={() => setMenu((m) => (m === pt.id ? null : pt.id))}><Icon name="menu" size={14} /></BotaoIcone>}
                 {menu === pt.id && (
                   <div className="mp-menu" role="menu" style={{ top: 40, width: 180 }}>
                     <button type="button" role="menuitem" onClick={() => { setMenu(null); setForm({ ponto: pt, nome: pt.nome, categoria: pt.categoria, local: [pt.longitude, pt.latitude], endereco: pt.endereco ?? "", observacao: pt.observacao ?? "" }); }}>Editar</button>
@@ -181,7 +181,7 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
         <aside className="mp-painel mp-dir" aria-label={aberto.nome} style={{ bottom: "auto" }}>
           <div className="mp-cab" style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
             <div><div className="mp-sobre">{CATEGORIAS.find((c) => c.id === aberto.categoria)?.nome.replace("Pontos da igreja · ", "")}</div><h2 className="mp-titulo">{aberto.nome || "Sem nome"}</h2></div>
-            <button type="button" className="mp-fechar" aria-label="Fechar" onClick={() => setAberto(null)}><Icon name="recusou" size={14} /></button>
+            <BotaoIcone className="mp-fechar" rotulo="Fechar" onClick={() => setAberto(null)}><Icon name="recusou" size={14} /></BotaoIcone>
           </div>
           <div className="mp-corpo">
             <dl className="mp-dados">
@@ -202,7 +202,7 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
       {form && !escolhendo && (
         <div className="modal-bg" onClick={() => setForm(null)}>
           <div className="modal" role="dialog" aria-modal="true" aria-labelledby="mp-ponto-t" style={{ width: 520, maxWidth: "calc(100% - 32px)", padding: 0 }} onClick={(e) => e.stopPropagation()}>
-            <div className="mp-cab" style={{ display: "flex", justifyContent: "space-between" }}><h2 id="mp-ponto-t" className="mp-titulo">{form.ponto ? "Editar ponto" : "Adicionar ponto"}</h2><button type="button" className="mp-fechar" aria-label="Fechar" onClick={() => setForm(null)}><Icon name="recusou" size={14} /></button></div>
+            <div className="mp-cab" style={{ display: "flex", justifyContent: "space-between" }}><h2 id="mp-ponto-t" className="mp-titulo">{form.ponto ? "Editar ponto" : "Adicionar ponto"}</h2><BotaoIcone className="mp-fechar" rotulo="Fechar" onClick={() => setForm(null)}><Icon name="recusou" size={14} /></BotaoIcone></div>
             <div className="mp-corpo">
               <div className="field"><label className="field-label req" htmlFor="pt-nome">Nome</label><input id="pt-nome" className="input" maxLength={80} value={form.nome} disabled={form.ponto?.origem === "osm"} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
               <div className="field">

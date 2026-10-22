@@ -14,7 +14,7 @@ import { caixaDaGeometria, dentroDe } from "./geo";
 import { CATEGORIAS, carregarPontos, type Ponto } from "./Pontos";
 import { baixarCsv } from "./csv";
 
-import { Botao } from "../../ui/Botao";
+import { Botao, BotaoIcone } from "../../ui/Botao";
 /* Mesa de trabalho (tela 2 do design): uma, várias ou todas as regiões,
    para analisar e baixar CSV. Pessoas só com nome de quem aceitou o termo;
    o CSV nunca leva endereço e cada download fica registrado. */
@@ -100,7 +100,7 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
       <div className="mesa-caixa mesa-regioes">
         <span className="mp-fraco">Regiões</span>
         {escolhidas.map((r) => (
-          <span key={r.codigo} className="mesa-tag"><span className="mp-sw" style={{ background: `var(--mapa-${r.leitura})`, width: 8, height: 8, borderRadius: 4 }} />{r.nome}<button type="button" aria-label={`Tirar ${r.nome}`} onClick={() => setSel((s) => s.filter((x) => x !== r.codigo))}><Icon name="recusou" size={12} /></button></span>
+          <span key={r.codigo} className="mesa-tag"><span className="mp-sw" style={{ background: `var(--mapa-${r.leitura})`, width: 8, height: 8, borderRadius: 4 }} />{r.nome}<BotaoIcone rotulo={`Tirar ${r.nome}`} onClick={() => setSel((s) => s.filter((x) => x !== r.codigo))}><Icon name="recusou" size={12} /></BotaoIcone></span>
         ))}
         <select className="input mesa-add" value="" aria-label="Adicionar região" onChange={(e) => e.target.value && setSel((s) => [...s, e.target.value])}>
           <option value="">+ Região</option>

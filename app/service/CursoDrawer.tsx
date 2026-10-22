@@ -11,7 +11,7 @@ import { useServiceAccess } from "./AccessContext";
 import { requirementsFor, requirementLabel } from "./lib/requirements";
 import { useTermos } from "./lib/vocabulario-context";
 
-import { Botao } from "./ui/Botao";
+import { Botao, BotaoIcone } from "./ui/Botao";
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
 type CourseView = {
@@ -189,7 +189,7 @@ export default function CursoDrawer({
       <div className="drawer-bg" onClick={onClose} />
       <div className="drawer drawer-wide">
         <div className="drawer-head">
-          <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
+          <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
           <div className="ph-eyebrow">
             {COURSE_KIND_LABEL[course.kind ?? "trilha"]}{course.level ? ` · ${course.level}` : ""}
           </div>

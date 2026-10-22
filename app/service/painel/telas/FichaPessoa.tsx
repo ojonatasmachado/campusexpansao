@@ -29,7 +29,7 @@ import { EnsaioDrawer, ReuniaoDrawer } from "./Reunioes";
 import { EventDrawer } from "./Evento";
 import type { BaptismCandidateView, BaptismClassView, BoardView, CalEvent, CardView, ChurchView, CourseView, DecisionView, DrawerState, EnrollmentView, EventRsvpView, EventView, FellowshipGroupView, JourneyStepKind, LessonView, MeetingActionView, MeetingView, MemberView, MinistryView, ModalState, ModuleView, PersonView, RehearsalView, RosterAssignmentView, TimelineEventView, VisitorNoteView, VisitorView } from "../tipos";
 
-import { Botao, botaoClasse } from "../../ui/Botao";
+import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
 export function PersonTimeline({ member, events, compact }: { member: MemberView; events: TimelineEventView[]; compact?: boolean }) {
   const { comTermos: ct } = useTermos();
   const sorted = porData(events);
@@ -113,7 +113,7 @@ export function VisitanteDrawer({
   return (
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
+        <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
         <div className="profile-top">
           <Av name={initVisitor.name} size="lg" />
           <div>
@@ -558,7 +558,7 @@ export function EntityDrawer({
     return (
       <DrawerShell onClose={() => setDrawer(null)}>
         <div className="drawer-head">
-          <button className="drawer-close" type="button" aria-label="Fechar" onClick={() => setDrawer(null)}>✕</button>
+          <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={() => setDrawer(null)}>✕</BotaoIcone>
           <div className="profile-top">
             <Av name={person.name} size="lg" photoUrl={person.photoUrl} />
             <div>
@@ -632,7 +632,7 @@ export function EntityDrawer({
       <>
       <DrawerShell onClose={() => setDrawer(null)}>
         <div className="drawer-head">
-          <button className="drawer-close" type="button" aria-label="Fechar" onClick={() => setDrawer(null)}>✕</button>
+          <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={() => setDrawer(null)}>✕</BotaoIcone>
           <div className="profile-top">
             <Av name={member.name} size="lg" photoUrl={linkedPerson?.photoUrl} />
             <div>
@@ -790,7 +790,7 @@ export function EntityDrawer({
       <>
       <DrawerShell onClose={() => setDrawer(null)}>
         <div className="drawer-head">
-          <button className="drawer-close" type="button" aria-label="Fechar" onClick={() => setDrawer(null)}>✕</button>
+          <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={() => setDrawer(null)}>✕</BotaoIcone>
           <div className="profile-top">
             <div className="team-mark" style={{ width: 56, height: 56 }}><TeamMark ministry={ministry} size={26} /></div>
             <div>

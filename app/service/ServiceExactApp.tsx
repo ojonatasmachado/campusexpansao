@@ -64,7 +64,7 @@ import { Historia, Identidade } from "./painel/telas/Identidade";
 import { EntityDrawer } from "./painel/telas/FichaPessoa";
 import { ServiceModal } from "./painel/telas/ServiceModal";
 import type { ChurchView, DrawerState, FellowshipGroupView, JourneyChangeRequestView, JourneyStepKind, MemberView, MinistryView, ModalState, NavGroups, Props } from "./painel/tipos";
-import { Botao } from "./ui/Botao";
+import { Botao, BotaoIcone } from "./ui/Botao";
 export type * from "./painel/tipos";
 
 /* papel e permissão de cada tela : regra no registro de módulos (modules/registry.ts) */
@@ -883,7 +883,7 @@ export default function ServiceExactApp({
       <aside className={`sb${navOpen ? " open" : ""}`}>
         <div className="sb-top">
           <IgrejaLogo logoUrl={(churches.find((c) => c.matriz) ?? firstChurch)?.logoUrl} nome={(churches.find((c) => c.matriz) ?? firstChurch)?.nome} />
-          <button className="sb-close" type="button" onClick={() => setNavOpen(false)} aria-label="Fechar menu">✕</button>
+          <BotaoIcone className="sb-close" onClick={() => setNavOpen(false)} rotulo="Fechar menu">✕</BotaoIcone>
         </div>
         {churches.length > 1 && <CongSwitcher churches={churches} activeId={activeChurchId} setActiveId={setActiveChurchId} />}
         <nav className="sb-nav">
@@ -929,13 +929,13 @@ export default function ServiceExactApp({
 
       <div className="main">
         <header className={`top${buscaAberta ? " search-open" : ""}`}>
-          <button className="top-menu" type="button" onClick={() => setNavOpen(true)} aria-label="Abrir menu">
+          <BotaoIcone className="top-menu" onClick={() => setNavOpen(true)} rotulo="Abrir menu">
             <Icon name="menu" size={18} />
-          </button>
+          </BotaoIcone>
           <div className="top-crumb">{ROUTE_GROUP[route] ?? ""}</div>
-          <button className="top-search-btn" type="button" aria-label={buscaAberta ? "Fechar a busca" : "Buscar"} onClick={() => setBuscaAberta((b) => !b)}>
+          <BotaoIcone className="top-search-btn" rotulo={buscaAberta ? "Fechar a busca" : "Buscar"} onClick={() => setBuscaAberta((b) => !b)}>
             <Icon name={buscaAberta ? "recusou" : "buscar"} size={18} />
-          </button>
+          </BotaoIcone>
           <div className="top-search">
             <span className="si"><Icon name="buscar" size={15} /></span>
             <GlobalSearch

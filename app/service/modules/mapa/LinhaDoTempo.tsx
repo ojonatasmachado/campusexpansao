@@ -7,6 +7,7 @@ import { Icon } from "../../lib/icons";
 import { limparCamadas, type ContextoMapa } from "./contexto";
 import { milhar } from "./linguagem";
 
+import { BotaoIcone } from "../../ui/Botao";
 /* Ferramentas › Linha do tempo (tela 13 do design). Quantas pessoas
    chegaram em cada parte da cidade no período. A data de entrada é o ano de
    "membro desde" ou a data do cadastro; o lugar é o endereço de hoje. */
@@ -112,7 +113,7 @@ export function LinhaDoTempo({ ctx, nivel }: { ctx: ContextoMapa; nivel: "bairro
       </aside>
 
       <section className="mp-painel" aria-label="Período" style={{ left: 16, right: 80, bottom: 16, top: "auto", flexDirection: "row", alignItems: "center", gap: 18, padding: "14px 18px" }}>
-        <button type="button" className="mp-botao" style={{ width: 44, padding: 0, justifyContent: "center", borderRadius: 22 }} aria-label={tocando ? "Pausar" : "Animar o crescimento"} onClick={() => { if (!tocando && fim >= serie.length - 1) setFim(ini); setTocando((t) => !t); }}><Icon name={tocando ? "pendente" : "play"} size={16} /></button>
+        <BotaoIcone className="mp-botao" style={{ width: 44, padding: 0, justifyContent: "center", borderRadius: 22 }} rotulo={tocando ? "Pausar" : "Animar o crescimento"} onClick={() => { if (!tocando && fim >= serie.length - 1) setFim(ini); setTocando((t) => !t); }}><Icon name={tocando ? "pendente" : "play"} size={16} /></BotaoIcone>
         <div style={{ flex: 1, minWidth: 0 }}>
           <svg viewBox="0 0 1000 64" preserveAspectRatio="none" style={{ width: "100%", height: 56, display: "block" }} aria-hidden="true">
             <path d={`${caminho} L1000 64 L0 64 Z`} fill="var(--border-2)" />

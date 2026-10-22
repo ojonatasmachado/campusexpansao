@@ -6,6 +6,7 @@ import CepInput from "../CepInput";
 import { DP_MESES } from "./comum";
 import type { FieldDef } from "./tipos";
 
+import { BotaoIcone } from "../ui/Botao";
 export function DrawerShell({ children, onClose, wide }: { children: React.ReactNode; onClose: () => void; wide?: boolean }) {
   return (
     <>
@@ -79,9 +80,9 @@ function BirthdayPicker({ value, onChange, id }: { value: string; onChange: (v: 
       {open && (
         <div className="dp-pop" id={popId} role="dialog" aria-label="Escolher dia e mês">
           <div className="dp-head">
-            <button type="button" aria-label="Mês anterior" onClick={() => setMes((m) => (m + 11) % 12)}>‹</button>
+            <BotaoIcone rotulo="Mês anterior" onClick={() => setMes((m) => (m + 11) % 12)}>‹</BotaoIcone>
             <span aria-live="polite">{DP_MESES_FULL[mes]}</span>
-            <button type="button" aria-label="Próximo mês" onClick={() => setMes((m) => (m + 1) % 12)}>›</button>
+            <BotaoIcone rotulo="Próximo mês" onClick={() => setMes((m) => (m + 1) % 12)}>›</BotaoIcone>
           </div>
           <div className="dp-grid">
             {Array.from({ length: DP_DIAS_MES[mes] }, (_, i) => i + 1).map((d) => (

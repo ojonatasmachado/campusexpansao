@@ -16,7 +16,7 @@ import { ROUTES } from "../comum";
 import { DrawerSection, DrawerShell, TimePicker } from "../campos";
 import type { CronoStep, DrawerState, EventRsvpView, EventView, MinistryView, PersonView, RosterAssignmentView } from "../tipos";
 
-import { Botao } from "../../ui/Botao";
+import { Botao, BotaoIcone } from "../../ui/Botao";
 export function EventDrawer({
   event,
   ministries,
@@ -51,7 +51,7 @@ export function EventDrawer({
   return (
     <DrawerShell onClose={onClose} wide>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
+        <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{joinDot(event.weekday, formatDateBR(event.eventDate))}</div>
         <div className="profile-name">{event.name}</div>
         <div className="profile-role">{joinDot(event.time, event.location, event.kind)}</div>
@@ -289,7 +289,7 @@ export function CronogramaEditor({ event, ministries, onRefresh }: { event: Even
                 <div className="crono-actions">
                   <button type="button" className="crono-mini" title="Subir" onClick={() => moveStep(i, -1)} disabled={i === 0}>↑</button>
                   <button type="button" className="crono-mini" title="Descer" onClick={() => moveStep(i, 1)} disabled={i === steps.length - 1}>↓</button>
-                  <button type="button" className="crono-mini danger" title="Remover" aria-label="Remover" onClick={() => removeStep(s.id)}>✕</button>
+                  <BotaoIcone className="crono-mini danger" title="Remover" rotulo="Remover" onClick={() => removeStep(s.id)}>✕</BotaoIcone>
                 </div>
               </div>
               <div className="crono-fields">

@@ -11,7 +11,7 @@ import { useServiceAccess } from "./AccessContext";
 import RequisitosEditor from "./RequisitosEditor";
 import { requirementsFor, saveRequirements, type Requirement } from "./lib/requirements";
 
-import { Botao } from "./ui/Botao";
+import { Botao, BotaoIcone } from "./ui/Botao";
 /* ─── tipos internos do editor ─────────────────────────────── */
 
 type QuizQ = { q: string; opts: string[]; correta: number };
@@ -284,7 +284,7 @@ function QuizEditor({
                   value={q.q}
                   onChange={(e) => setQ(i, "q", e.target.value)}
                 />
-                <button className="ce-x" type="button" onClick={() => del(i)} aria-label="Remover">✕</button>
+                <BotaoIcone className="ce-x" onClick={() => del(i)} rotulo="Remover">✕</BotaoIcone>
               </div>
               {q.opts.map((o, oi) => (
                 <div className="quiz-opt" key={oi}>
