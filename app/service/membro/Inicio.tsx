@@ -6,7 +6,8 @@ import { listaFinalidades, type ContribuirCfg } from "../modules/contribuir/pix"
 import { instalarApp, podeInstalarDireto } from "../lib/instalar";
 import { Fragment, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Icon } from "../lib/icons";
-import { aindaVaiAcontecer, formatDateBR, joinDot, quandoPublicado, somaDias, todayISO } from "../lib/date";
+import { useRelogioDaIgreja } from "../lib/relogio-context";
+import { formatDateBR, joinDot, somaDias } from "../lib/date";
 import { plural } from "../lib/plural";
 import { useTermos } from "../lib/vocabulario-context";
 import { candidatosParaVaga, papelDoDestinatario, useDestinatario, type Destinatario } from "../lib/destinatario";
@@ -183,6 +184,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
   /* módulos ligados na igreja: entrada de módulo desligado não entra na fila */
   ligados?: Set<string>;
 }) {
+  const { todayISO, quandoPublicado, aindaVaiAcontecer } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const ui = useContext(MemberUiContext);
   const jornada = useContext(JourneyContext);
@@ -356,7 +358,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
     confirmados.set(r.event_id, m?.positions?.find((p) => p.id === r.position_id)?.name ?? m?.name ?? "");
   }
   const proximos = events
-    .filter((e) => aindaVaiAcontecer(e.eventDate, e.time) && !naFila.has(e.id))
+    .filter((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone) && !naFila.has(e.id))
     .sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
   const fimDaSemana = somaDias(hoje, 6);
   const daSemana = proximos.filter((e) => e.eventDate <= fimDaSemana);
@@ -454,6 +456,7 @@ export function DestaqueCard({ a, onAbrir }: { a: Announcement; onAbrir: () => v
 }
 
 export function SheetArtigo({ a }: { a: Announcement }) {
+  const { quandoPublicado } = useRelogioDaIgreja();
   const video = videoDoLink(a.video_url);
   return (
     <div className="m6-artigo">

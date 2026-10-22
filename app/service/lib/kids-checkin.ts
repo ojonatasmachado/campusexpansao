@@ -2,6 +2,7 @@
    usada pela rota do QR (/service/kids-checkin) e pelo app (cartão do Início
    e Minha família, v7 2.3). */
 
+import { FUSO_PADRAO, partesNoFuso } from "./fuso";
 import { useState } from "react";
 import { createServiceBrowserClient } from "./supabase-browser";
 
@@ -20,10 +21,10 @@ export function horaQueAbre(time?: string | null): string | null {
 }
 
 /* já passou da hora de abrir? (horário de Brasília) */
-export function checkinAberto(time?: string | null, agora: Date = new Date()): boolean {
+export function checkinAberto(time?: string | null, agora: Date = new Date(), fuso = FUSO_PADRAO): boolean {
   const abre = horaQueAbre(time);
   if (!abre) return true;
-  const hhmm = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false }).format(agora);
+  const hhmm = partesNoFuso(agora, fuso).hora;
   return hhmm >= abre;
 }
 

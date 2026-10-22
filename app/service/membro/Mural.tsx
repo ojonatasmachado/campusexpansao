@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { joinDot, paraPublico, quandoPublicado } from "../lib/date";
+import { useRelogioDaIgreja } from "../lib/relogio-context";
+import { joinDot, paraPublico } from "../lib/date";
 import { M6St } from "./comum";
 import { RespostaEvento } from "./Agenda";
 import type { Announcement, P } from "./tipos";
@@ -13,6 +14,7 @@ export function MuralV6({ announcements, unreadIds, person, onReadAnnouncement, 
   responses?: { announcement_id: string; response: "vou" | "nao" }[];
   onRespond?: (announcementId: string, response: "vou" | "nao" | null) => Promise<boolean>;
 }) {
+  const { quandoPublicado } = useRelogioDaIgreja();
   /* Abertura da lista não significa que todas as publicações foram vistas. */
   const [novas] = useState(() => new Set(unreadIds));
   const [onlyTarget, setOnlyTarget] = useState(!!initialId);

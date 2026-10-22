@@ -1,5 +1,7 @@
 "use client";
 
+import { FusoField } from "../../modules/configuracao/FusoField";
+import { fusoValido, normalizarFuso } from "../../lib/fuso";
 import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
 import { useRouter } from "next/navigation";
@@ -27,6 +29,7 @@ import { ACESSO_FIN_LANCAR, ACESSO_FIN_VER } from "../../modules/financeiro/mani
 import { ESCALA_DEFAULT, type EscalaSettings } from "../../modules/escalas/regras";
 import { friendlyWriteError } from "../erros";
 import { EntradaConfig } from "../../modules/entrada/EntradaConfig";
+import { GrupoEditModal } from "../../modules/grupos/GrupoEditModal";
 import { cfgTabs as gerarCfgTabs } from "../../modules/registry";
 import { ACOES_V2, CEX_ICON_FOR, PAPEIS_V2, ligadosDa, matrizComFallback } from "../comum";
 import { TimePicker } from "../campos";
@@ -360,7 +363,7 @@ export function CongregacaoEditModal({
       <FormSection title="Endereço e contato">
         <div className="fs-grid">
           <div className="field"><label className="field-label" htmlFor={`${fid}-end`}>Endereço</label><input id={`${fid}-end`} className="input" autoComplete="street-address" value={form.endereco} onChange={set("endereco")} /></div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-cep`}>CEP</label><input id={`${fid}-cep`} className="input" inputMode="numeric" autoComplete="postal-code" value={form.cep} onChange={set("cep")} /></div>
+          <div className="field half"><label className="field-label" htmlFor={`${fid}-cep`}>CEP</label>{/* consulta o CEP: põe a congregação no mapa da igreja */}<CepInput id={`${fid}-cep`} value={form.cep} onChange={(v) => setForm((p) => ({ ...p, cep: v }))} onResult={() => {}} /></div>
           <div className="field half"><label className="field-label" htmlFor={`${fid}-tel`}>Telefone</label><input id={`${fid}-tel`} className="input" type="tel" autoComplete="tel" value={form.tel} onChange={set("tel")} /></div>
           <div className="field"><label className="field-label" htmlFor={`${fid}-mail`}>E-mail</label><input id={`${fid}-mail`} className="input" type="email" autoComplete="email" value={form.email} onChange={set("email")} /></div>
         </div>
@@ -454,6 +457,7 @@ export function Config({
   const [tagNomeEdit, setTagNomeEdit] = useState("");
   const [elencoTag, setElencoTag] = useState<TagView | null>(null);
   const [gerirCongId, setGerirCongId] = useState<string | null>(null);
+  const [gerirGrupoId, setGerirGrupoId] = useState<string | null>(null);
 
   /* church.address guarda rua + número já combinados numa string só (mesmo
      formato que o lookup de CNPJ monta : "logradouro, numero"). Pra poder
@@ -465,6 +469,7 @@ export function Config({
     return idx === -1 ? [full, ""] : [full.slice(0, idx).trim(), full.slice(idx + 1).trim()];
   })();
   const [igrejaForm, setIgrejaForm] = useState({
+    fuso: normalizarFuso(church?.timeZone),
     nome: church?.nome ?? "",
     cidade: church?.cidade ?? "",
     doc: church?.doc ?? "",
@@ -484,12 +489,15 @@ export function Config({
 
   const saveIgreja = async () => {
     if (!church?.id) return;
+    if (!fusoValido(igrejaForm.fuso)) { avisar("Escolha um fuso horário válido.", "warn"); return; }
     setIgrejaLoading(true);
+    try {
     const endereco = [igrejaForm.rua.trim(), igrejaForm.numero.trim()].filter(Boolean).join(", ");
-    const { error: igrejaErro } = await createServiceBrowserClient()
+    const { data: igrejaGravada, error: igrejaErro } = await createServiceBrowserClient()
       .schema("service")
       .from("churches")
       .update({
+        time_zone: igrejaForm.fuso,
         name: igrejaForm.nome.trim() || church.nome,
         city: igrejaForm.cidade.trim() || null,
         doc: igrejaForm.doc.trim() || null,
@@ -501,12 +509,12 @@ export function Config({
         email: igrejaForm.email.trim() || null,
         phone: igrejaForm.tel.trim() || null,
       })
-      .eq("id", church.id);
-    setIgrejaLoading(false);
-    if (igrejaErro) { avisar(friendlyWriteError(igrejaErro.message), "warn"); return; }
+      .eq("id", church.id).select("id").single();
+    if (igrejaErro || !igrejaGravada) { avisar(friendlyWriteError(igrejaErro?.message ?? "Não foi possível salvar."), "warn"); return; }
     setIgrejaSalva(JSON.stringify(igrejaForm));
     avisar("Dados da igreja salvos.");
     router.refresh();
+    } catch { avisar("Não foi possível salvar os dados da igreja. Tente novamente.", "warn"); } finally { setIgrejaLoading(false); }
   };
 
   async function removeRow(table: string, id: string) {
@@ -772,6 +780,7 @@ export function Config({
               <div className="field"><label className="field-label" htmlFor={`${cid}-email`}>E-mail</label><input id={`${cid}-email`} name="email" className="input" type="email" autoComplete="email" inputMode="email" value={igrejaForm.email} onChange={(e) => setIgrejaForm((p) => ({ ...p, email: e.target.value }))} /></div>
               <div className="field"><label className="field-label" htmlFor={`${cid}-tel`}>Telefone</label><input id={`${cid}-tel`} name="tel" className="input" type="tel" autoComplete="tel" inputMode="tel" value={igrejaForm.tel} onChange={(e) => setIgrejaForm((p) => ({ ...p, tel: e.target.value }))} /></div>
             </div>
+            <FusoField value={igrejaForm.fuso} onChange={(fuso) => setIgrejaForm((p) => ({ ...p, fuso }))} />
             {igrejaMudou && (
               <div className="save-bar">
                 <span>Você tem alterações não salvas.</span>
@@ -937,7 +946,7 @@ export function Config({
           {gruposCfg.ativo && (
             <div className="cfg-card" style={{ marginTop: 16 }}>
               <div className="cfg-card-t">{ct("{Grupos}")} · {fellowshipGroups.length}</div>
-              <div className="cfg-card-s">Células, GCs, pequenos grupos... a estrutura de comunhão em casas. Cada grupo tem um líder, um dia e um bairro.</div>
+              <div className="cfg-card-s">Células, GCs, pequenos grupos... a estrutura de comunhão em casas. Cada grupo tem um líder, um dia e um endereço, que os membros veem no app.</div>
               {fellowshipGroups.map((g) => {
                 const leader = people.find((p) => p.id === g.leader_person_id);
                 return (
@@ -945,14 +954,15 @@ export function Config({
                     <div className="cong-mark"><Icon name="identidade" size={16} /></div>
                     <div className="cfg-row-main">
                       <div className="cfg-row-t">{g.name}</div>
-                      <div className="cfg-row-s">{[g.weekday, g.time, g.neighborhood].filter(Boolean).join(" · ") || "sem dia/local definido"}{leader ? ` · líder ${leader.name.split(" ")[0]}` : ""}</div>
+                      <div className="cfg-row-s">{[g.weekday, g.time, g.neighborhood].filter(Boolean).join(" · ") || "sem dia/local definido"}{leader ? ` · líder ${leader.name.split(" ")[0]}` : ""}{g.capacity ? ` · ${plural(g.capacity, "lugar", "lugares")}` : ""}{g.postal_code ? "" : " · sem endereço"}</div>
                     </div>
+                    <button className="btn btn-sec btn-sm" type="button" onClick={() => setGerirGrupoId(g.id)}>Editar</button>
                     <button className="btn btn-sec btn-sm" type="button" onClick={() => removeRow("fellowship_groups", g.id)}>Remover</button>
                   </div>
                 );
               })}
               {fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhum grupo cadastrado ainda.</div>}
-              <button className="btn btn-pri btn-sm" type="button" style={{ marginTop: 18 }} onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {grupo}"), subtitle: "Nome, líder, dia, horário e bairro do grupo.", saveLabel: "Criar grupo", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: GC Centro" }, { k:"lider", label:"Líder", type:"select", half:true, ph:"A definir", options: people.map((p) => ({ v: p.name, l: p.name })) }, { k:"dia", label:"Dia", type:"text", half:true, ph:"ex: Quarta-feira" }, { k:"hora", label:"Horário", type:"text", half:true, ph:"ex: 20h" }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"ex: Centro" }], action: { kind: "group" } })}>+ Novo grupo</button>
+              <button className="btn btn-pri btn-sm" type="button" style={{ marginTop: 18 }} onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {grupo}"), subtitle: "Nome, líder, dia e horário. O endereço e os lugares ficam em Editar.", saveLabel: "Criar grupo", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: GC Centro" }, { k:"lider", label:"Líder", type:"select", half:true, ph:"A definir", options: people.map((p) => ({ v: p.name, l: p.name })) }, { k:"dia", label:"Dia", type:"text", half:true, ph:"ex: Quarta-feira" }, { k:"hora", label:"Horário", type:"text", half:true, ph:"ex: 20h" }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"ex: Centro" }], action: { kind: "group" } })}>+ Novo grupo</button>
             </div>
           )}
         </>
@@ -1364,6 +1374,10 @@ export function Config({
         <TagElencoModal tag={elencoTag} people={people} onClose={() => setElencoTag(null)} />
       )}
 
+      {gerirGrupoId && (() => {
+        const g = fellowshipGroups.find((x) => x.id === gerirGrupoId);
+        return g ? <GrupoEditModal grupo={g} people={people} onClose={() => setGerirGrupoId(null)} onRefresh={() => router.refresh()} /> : null;
+      })()}
       {gerirCongId && (() => {
         const c = churches.find((x) => x.id === gerirCongId);
         if (!c) return null;

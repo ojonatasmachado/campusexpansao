@@ -1,5 +1,6 @@
 import type { supabaseAdmin } from "./supabase";
 import { entregarAvisos } from "./service-avisos";
+import { fusoDaIgreja } from "./service-fusos";
 import { foraDoSilencio } from "../service/lib/silencio";
 
 /* Publicação agendada do Mural (0075), só no servidor. O agendador de hora em
@@ -31,8 +32,9 @@ export async function publicarAgendados(db: Db): Promise<number> {
         .eq("church_id", a.church_id).neq("id", a.id).gt("highlight_until", agoraIso);
     }
     if (a.remind_hours) {
+      const fuso = await fusoDaIgreja(db, a.church_id);
       await db.from("announcements")
-        .update({ remind_at: foraDoSilencio(new Date(agora.getTime() + a.remind_hours * 3600000)).toISOString(), remind_hours: null })
+        .update({ remind_at: foraDoSilencio(new Date(agora.getTime() + a.remind_hours * 3600000), fuso).toISOString(), remind_hours: null })
         .eq("id", a.id);
     }
     const membros = (a.publish_to ?? []) as string[];

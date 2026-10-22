@@ -15,6 +15,8 @@ import { useTermos } from "../lib/vocabulario-context";
 import type { CategoriaAviso } from "../modules/define";
 import { Av, M6Row, M6Sheet, MemberUiContext, contactErrors, realValue } from "./comum";
 import { AppTourModal } from "./Onboarding";
+import { gravarAceiteMapa } from "./AceiteMapa";
+import { AVISO_CEP } from "../lib/termo-mapa";
 import type { M, MemberContactInput, P } from "./tipos";
 
 // ── aba: Perfil ───────────────────────────────────────────────────────────────
@@ -200,6 +202,17 @@ export function TabPerfil({
       if (error || data !== "ok") { setNotifOff(antes); ui.toast("Não foi possível salvar agora. Tente de novo."); }
     });
   };
+  /* mapa da igreja (0087): nome no mapa da liderança; desligado = ponto sem nome */
+  const [nomeNoMapa, setNomeNoMapa] = useState(!!member?.mapConsentAt);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- acompanha o aceite feito na folha "Quase lá" depois que os dados voltam do servidor
+  useEffect(() => { setNomeNoMapa(!!member?.mapConsentAt); }, [member?.mapConsentAt]);
+  const trocarNomeNoMapa = async () => {
+    if (!member) return;
+    const novo = !nomeNoMapa;
+    setNomeNoMapa(novo);
+    const erro = await gravarAceiteMapa(member.id, novo, "perfil");
+    if (erro) { setNomeNoMapa(!novo); ui.toast(erro); }
+  };
   /* a foto saiu do primeiro acesso (v7 4.10) e mora em Meus dados */
   const [foto, setFoto] = useState<string | null>(person.photoUrl ?? null);
 
@@ -331,6 +344,22 @@ export function TabPerfil({
         </div>
       </div>
 
+      {member && (
+      <div className="m6-sec">
+        <div className="m6-lbl">Privacidade</div>
+        <div className="m6-list">
+          <div className="m6-row">
+            <span className="m6-ic"><Icon name="mapapin" size={22} /></span>
+            <span className="m6-rb">
+              <span className="m6-rt">Meu nome no mapa</span>
+              <span className="m6-rs">{nomeNoMapa ? "A liderança vê seu nome e a região do seu CEP. Nunca o endereço." : "Você aparece só como um ponto sem nome."}</span>
+            </span>
+            <button type="button" role="switch" aria-checked={nomeNoMapa} aria-label="Meu nome no mapa da liderança" className={`m6-tg${nomeNoMapa ? " on" : ""}`} onClick={trocarNomeNoMapa} />
+          </div>
+        </div>
+      </div>
+      )}
+
       <div className="m6-sec">
         <div className="m6-lbl">Conta</div>
         <div className="m6-list">
@@ -411,8 +440,8 @@ export function MemberContactFields({ d, set, erros }: { d: MemberContactInput; 
             if (r.state) set("estado", r.state);
           }}
         />
+        {enderecoNoBrasil(d.country) && <div className="field-hint">{AVISO_CEP}</div>}
         {err("cep")}
-
       </div>
       {enderecoNoBrasil(d.country) ? <p className="field-hint">{[d.rua, d.bairro, d.cidade, d.estado].filter(Boolean).join(" · ") || "O endereço será preenchido pela consulta do CEP."}</p> : <>
       <div className="field">

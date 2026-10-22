@@ -1,3 +1,5 @@
+import { FUSO_PADRAO, partesNoFuso } from "./fuso";
+
 /* Formatação de data pro padrão brasileiro (DD/MM/AAAA), usado em toda
    exibição de data no Service. As datas continuam guardadas/editadas em
    ISO (YYYY-MM-DD, formato nativo de <input type="date">) : só a
@@ -49,10 +51,10 @@ export function isCivilDate(value: string): boolean {
   return !!parsed && toISODate(parsed) === value;
 }
 
-/** Hoje, "AAAA-MM-DD", no horário de Brasília. Vale igual no navegador e
+/** Hoje, "AAAA-MM-DD", no fuso informado (Brasília por padrão). Vale igual no navegador e
  *  no servidor (que roda em UTC na Vercel). */
-export function todayISO(): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+export function todayISO(fuso = FUSO_PADRAO, instante = new Date()): string {
+  return partesNoFuso(instante, fuso).data;
 }
 
 const DIAS_SEMANA = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
@@ -68,58 +70,58 @@ export function joinDot(...parts: Array<string | null | undefined | false>): str
   return parts.filter((p): p is string => typeof p === "string" && p.trim() !== "").join(" · ");
 }
 
-/** "Bom dia" / "Boa tarde" / "Boa noite" pela hora de Brasília (igual no
+/** "Bom dia" / "Boa tarde" / "Boa noite" pela hora da igreja (igual no
  *  servidor e no navegador, sem diferença na hidratação). */
-export function saudacao(): string {
-  const h = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "America/Sao_Paulo", hour: "2-digit", hour12: false }).format(new Date())) % 24;
+export function saudacao(fuso = FUSO_PADRAO, instante = new Date()): string {
+  const h = Number(partesNoFuso(instante, fuso).hora.slice(0, 2));
   return h >= 5 && h < 12 ? "Bom dia" : h >= 12 && h < 18 ? "Boa tarde" : "Boa noite";
 }
 
-/** Hora de agora em Brasília, "HH:MM" (igual no servidor e no navegador). */
-export function horaAgoraBR(): string {
-  return new Intl.DateTimeFormat("en-GB", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date()).replace(/^24/, "00");
+/** Hora de agora no fuso informado, "HH:MM" (igual no servidor e no navegador). */
+export function horaAgoraBR(fuso = FUSO_PADRAO, instante = new Date()): string {
+  return partesNoFuso(instante, fuso).hora;
 }
 
 /** O evento ainda vai começar? Dia depois de hoje, ou hoje com a hora de início
- *  ainda por vir (sem hora, vale o dia inteiro). Tudo no fuso de Brasília. */
-export function aindaVaiAcontecer(eventDate?: string | null, time?: string | null): boolean {
+ *  ainda por vir (sem hora, vale o dia inteiro). Tudo no fuso informado. */
+export function aindaVaiAcontecer(eventDate?: string | null, time?: string | null, fuso = FUSO_PADRAO, instante = new Date()): boolean {
   const dia = (eventDate ?? "").slice(0, 10);
   if (!dia) return false;
-  const hoje = todayISO();
+  const hoje = todayISO(fuso, instante);
   if (dia !== hoje) return dia > hoje;
   const hora = (time ?? "").slice(0, 5);
-  return !/^\d{2}:\d{2}$/.test(hora) || hora >= horaAgoraBR();
+  return !/^\d{2}:\d{2}$/.test(hora) || hora >= horaAgoraBR(fuso, instante);
 }
 
-/** Dias de calendário (Brasília) entre o instante e hoje: 0 = hoje, 1 = ontem. */
-function diaEmBrasilia(instante: string): string {
+/** Dias de calendário no fuso informado entre o instante e hoje: 0 = hoje, 1 = ontem. */
+function diaNoFuso(instante: string, fuso = FUSO_PADRAO): string {
   const t = new Date(instante);
   if (Number.isNaN(t.getTime())) return "";
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(t);
+  return partesNoFuso(t, fuso).data;
 }
 
-/** Instante ("2026-10-03T01:00:00Z") → dia em Brasília, "02/10/2026". */
-export function dataPublicacao(instante?: string | null): string {
-  return instante ? formatDateBR(diaEmBrasilia(instante)) : "";
+/** Instante ("2026-10-03T01:00:00Z") → dia no fuso informado, "02/10/2026". */
+export function dataPublicacao(instante?: string | null, fuso = FUSO_PADRAO): string {
+  return instante ? formatDateBR(diaNoFuso(instante, fuso)) : "";
 }
 
-function diasAtras(instante: string): number | null {
-  const a = parseISODate(diaEmBrasilia(instante));
-  const b = parseISODate(todayISO());
+function diasAtras(instante: string, fuso = FUSO_PADRAO): number | null {
+  const a = parseISODate(diaNoFuso(instante, fuso));
+  const b = parseISODate(todayISO(fuso));
   if (!a || !b) return null;
   return Math.round((b.getTime() - a.getTime()) / 86400000);
 }
 
 /** Quando foi publicado, sempre calculado da data (nunca de um texto salvo),
  *  em minúsculas: "hoje", "ontem", "há 3 dias"; depois de uma semana, "28/09/2026". */
-export function quandoPublicado(instante?: string | null): string {
+export function quandoPublicado(instante?: string | null, fuso = FUSO_PADRAO): string {
   if (!instante) return "";
-  const n = diasAtras(instante);
+  const n = diasAtras(instante, fuso);
   if (n === null) return "";
   if (n <= 0) return "hoje";
   if (n === 1) return "ontem";
   if (n < 7) return `há ${n} dias`;
-  return dataPublicacao(instante);
+  return dataPublicacao(instante, fuso);
 }
 
 /** Mais recente primeiro, pela data de publicação. Não altera a lista original. */
@@ -143,14 +145,14 @@ export function somaDias(iso: string, n: number): string {
 }
 
 /** Hora da última fala numa lista de conversas: hoje "14:32", "ontem",
- *  na semana o dia ("seg"), depois "03/10". Fuso de Brasília. */
-export function quandoMensagem(instante?: string | null): string {
+ *  na semana o dia ("seg"), depois "03/10". Fuso da igreja. */
+export function quandoMensagem(instante?: string | null, fuso = FUSO_PADRAO): string {
   if (!instante) return "";
   const t = new Date(instante);
   if (Number.isNaN(t.getTime())) return "";
-  const dia = diaEmBrasilia(instante);
-  const hoje = todayISO();
-  if (dia === hoje) return new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" }).format(t);
+  const dia = diaNoFuso(instante, fuso);
+  const hoje = todayISO(fuso);
+  if (dia === hoje) return partesNoFuso(t, fuso).hora;
   if (dia === somaDias(hoje, -1)) return "ontem";
   if (dia > somaDias(hoje, -7)) return ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"][parseISODate(dia)!.getDay()];
   const [, m, d] = dia.split("-");

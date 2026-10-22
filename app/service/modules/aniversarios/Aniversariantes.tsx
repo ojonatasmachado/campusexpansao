@@ -7,7 +7,8 @@
    pode mudar antes de abrir. */
 import { useState } from "react";
 import { baixarCsv } from "../../lib/csv";
-import { joinDot, todayISO } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { joinDot } from "../../lib/date";
 import { Icon } from "../../lib/icons";
 import { plural } from "../../lib/plural";
 import { useTermos } from "../../lib/vocabulario-context";
@@ -74,6 +75,7 @@ export function AniversariantesDaSemana({ base, escopo, comIdade, onAbrir, onVer
   onAbrir: Abrir;
   onVerMes: () => void;
 }) {
+  const { todayISO } = useRelogioDaIgreja();
   const [parabens, setParabens] = useState<Proximo | null>(null);
   const lista = daSemana(noEscopo(base, escopo), todayISO(), comIdade);
   if (lista.length === 0) return null;
@@ -113,6 +115,7 @@ export function Aniversariantes({ base, escopo, comIdade, times, grupos, onAbrir
   grupos: Nomeado[];
   onAbrir: Abrir;
 }) {
+  const { todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const hoje = todayISO();
   const ano = Number(hoje.slice(0, 4));

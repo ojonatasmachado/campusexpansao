@@ -2,13 +2,16 @@
 
 import { useContext, useState } from "react";
 import { Icon } from "../lib/icons";
-import { aindaVaiAcontecer, joinDot, parseISODate, somaDias, todayISO } from "../lib/date";
+import { useRelogioDaIgreja } from "../lib/relogio-context";
+import { joinDot, parseISODate, somaDias } from "../lib/date";
 import { useTermos } from "../lib/vocabulario-context";
 import { useDestinatario } from "../lib/destinatario";
 import { conflitos, horaDeChegada } from "../lib/agenda";
 import { baixarIcs } from "../lib/ics";
 import { M6Row, M6St, MESES, MemberUiContext, chegadaDoTime, dataLonga } from "./comum";
 import { EscalaCard } from "./Inicio";
+import type { AgendaSeg } from "../lib/member-navigation";
+import { TabOnde } from "./Onde";
 import { TabTarefas } from "./Conversas";
 import type { Board, Card, Course, CourseLesson, Ev, EventRsvp, ItemAgenda, M, MeetingLite, Ministry, P, RehearsalLite, Slot } from "./tipos";
 
@@ -36,24 +39,28 @@ export function EventoRow({ ev, serve }: { ev: Ev; serve?: string | null }) {
   );
 }
 
-export function AgendaV6({ initialCardId, seg, setSeg, person, member, members, ministries, events, roster, cards, boards, isRecep, isKids, onResponderEscala, onStartChat, onAddCardComment, onSaveAvailability, aulas, meetings, rehearsals, rsvps }: {
+export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, member, members, ministries, events, roster, cards, boards, isRecep, isKids, onResponderEscala, onStartChat, onAddCardComment, onSaveAvailability, aulas, meetings, rehearsals, rsvps }: {
   initialCardId?: string | null;
+  /* "Onde" (mapa da igreja, etapa 2): igrejas e células públicas */
+  organizationId?: string;
   onSaveAvailability?: (availability: Record<string, boolean>) => Promise<boolean>;
   aulas: { aula: CourseLesson; curso: Course }[];
   meetings: MeetingLite[]; rehearsals: RehearsalLite[]; rsvps: EventRsvp[];
-  seg: "minha" | "igreja"; setSeg: (s: "minha" | "igreja") => void;
+  seg: AgendaSeg; setSeg: (s: AgendaSeg) => void;
   person: P; member: M | null; members: M[]; ministries: Ministry[]; events: Ev[]; roster: Slot[]; cards: Card[]; boards: Board[];
   isRecep: boolean; isKids: boolean;
   onResponderEscala?: (id: string, status: Slot["status"]) => Promise<boolean>;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
   onAddCardComment?: (cardId: string, author: string, body: string) => void;
 }) {
+  const { todayISO, aindaVaiAcontecer } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const ui = useContext(MemberUiContext);
   const serve = ministries.some((m) => m.people.some((mp) => mp.personId === person.id));
   const meusTimes = new Set(ministries.filter((m) => m.people.some((mp) => mp.personId === person.id)).map((m) => m.id));
   /* tarefas abertas (v7 4.6): seção só com tarefa aberta; no dia do prazo, também na lista por data */
   const tarefasAbertas = cards.filter((c) => c.assignees.includes(person.id) && c.column_id !== "done");
+  const verOnde = !!organizationId && !!member;
   const atual = seg;
   const hoje = todayISO();
   const evById = new Map(events.map((e) => [e.id, e]));
@@ -91,7 +98,7 @@ export function AgendaV6({ initialCardId, seg, setSeg, person, member, members, 
   const servindo = new Set(meus.map((r) => r.event_id));
   for (const r of rsvps) {
     const ev = evById.get(r.event_id);
-    if (!ev || servindo.has(ev.id) || !aindaVaiAcontecer(ev.eventDate, ev.time)) continue;
+    if (!ev || servindo.has(ev.id) || !aindaVaiAcontecer(ev.eventDate, ev.time, ev.timeZone)) continue;
     itens.push({
       id: `e-${ev.id}`, data: ev.eventDate, hora: ev.time, tipo: ev.kind === "Culto" ? "Culto" : "Evento", titulo: ev.name, sub: ev.location,
       selo: <M6St k="ok" ic="ok">{r.kind === "inscricao" ? "Inscrito" : "Você vai"}</M6St>,
@@ -123,7 +130,7 @@ export function AgendaV6({ initialCardId, seg, setSeg, person, member, members, 
   const nomeDia = (d: string) => (d === hoje ? `Hoje · ${dataLonga(d)}` : d === amanha ? `Amanhã · ${dataLonga(d)}` : dataLonga(d));
 
   /* Igreja: programação pública, por semana */
-  const futuros = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
+  const futuros = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time));
   const semanaDe = (iso: string) => {
     const d = parseISODate(iso);
     if (!d) return "Sem data";
@@ -138,13 +145,15 @@ export function AgendaV6({ initialCardId, seg, setSeg, person, member, members, 
   return (
     <>
       <div className="m6-segwrap">
-        <div className="ts-seg two m6-seg" role="radiogroup" aria-label="O que ver">
-          {([["minha", "Minha agenda"], ["igreja", "Igreja"]] as const).map(([v, l]) => (
+        <div className={`ts-seg ${verOnde ? "tres" : "two"} m6-seg`} role="radiogroup" aria-label="O que ver">
+          {([["minha", "Minha agenda"], ["igreja", "Igreja"], ...(verOnde ? [["onde", "Onde"]] as const : [])] as const).map(([v, l]) => (
             <button key={v} type="button" role="radio" aria-checked={atual === v} className={atual === v ? "on" : ""} onClick={() => setSeg(v)}>{l}</button>
           ))}
         </div>
       </div>
-      {atual === "minha" ? (
+      {atual === "onde" && verOnde ? (
+        <TabOnde member={member} organizationId={organizationId!} onStartChat={onStartChat} />
+      ) : atual === "minha" ? (
         <>
           {pend.length > 0 && (
             <div className="m6-sec">
@@ -261,7 +270,8 @@ export function SheetEvento({ ev, slot, ministry, rsvp, onRespond, paginaUrl, ch
     if (nav.share) { try { await nav.share({ title: ev.name, text: texto }); return; } catch { return; } }
     window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank", "noopener");
   };
-  const calendario = () => baixarIcs({ id: ev.id, titulo: ev.name, data: ev.eventDate, hora: ev.time, local: ev.location, descricao: churchName ?? null });
+  const { fuso } = useRelogioDaIgreja();
+  const calendario = () => { try { baixarIcs({ fuso: ev.timeZone ?? fuso, id: ev.id, titulo: ev.name, data: ev.eventDate, hora: ev.time, local: ev.location, descricao: churchName ?? null }); } catch (error) { ui.toast(error instanceof Error ? error.message : "Não foi possível adicionar ao calendário."); } };
   const servindo = slot && slot.status !== "no";
   return (
     <div>

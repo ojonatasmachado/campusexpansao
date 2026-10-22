@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import CepInput, { type CepResult } from "../CepInput";
 import PasswordInput from "../PasswordInput";
+import { AVISO_CEP, TERMO_MAPA_VERSAO, pontosDoTermo, termoCompleto } from "../lib/termo-mapa";
 
 /* CEP no aceite brasileiro: a igreja conhece a região da comunidade. */
-export default function ConviteForm({ t }: { t: string }) {
+export default function ConviteForm({ t, churchName }: { t: string; churchName?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,7 +48,8 @@ export default function ConviteForm({ t }: { t: string }) {
           neighborhood: endereco.neighborhood,
           city: endereco.city,
           state: endereco.state,
-
+          /* "Concordo e criar acesso": aceite do termo com os 3 pontos visíveis */
+          termoMapa: TERMO_MAPA_VERSAO,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -96,7 +98,7 @@ export default function ConviteForm({ t }: { t: string }) {
       <div className="login-field">
         <label className="login-label" htmlFor="convite-postal">{brasil ? "CEP de onde você mora" : "Código postal (se houver)"}</label>
         <CepInput key={brasil ? "br" : "outro"} id="convite-postal" international={!brasil} brazilLookup={brasil} value={cep} onBusyChange={setConsultandoCep} onChange={(v) => { setCep(v); if (brasil) setEndereco({}); }} onResult={(r) => { if (r) setEndereco(r); }} />
-        <span className="login-help">{brasil ? "Seu CEP ajuda a igreja a conhecer e cuidar das pessoas da sua região." : "Seu endereço ajuda a igreja a conhecer e cuidar das pessoas da sua região."}</span>
+        <span className="login-help">{brasil ? AVISO_CEP : "Seu endereço ajuda a igreja a conhecer e cuidar das pessoas da sua região."}</span>
         {endereco.city && <span className="login-help">{[endereco.street, endereco.neighborhood, endereco.city, endereco.state].filter(Boolean).join(" · ")}</span>}
       </div>
       <button className="login-country-switch" type="button" onClick={() => { setBrasil((v) => !v); setConsultandoCep(false); setCep(""); setEndereco({}); }}>{brasil ? "Meu endereço é fora do Brasil" : "Moro no Brasil"}</button>
@@ -108,8 +110,17 @@ export default function ConviteForm({ t }: { t: string }) {
           {error}
         </div>
       )}
+      <div className="login-field">
+        <ul className="login-termo">
+          {pontosDoTermo(churchName).map((p) => <li key={p}>{p}</li>)}
+        </ul>
+        <details className="login-termo-completo">
+          <summary>Ler o termo completo</summary>
+          {termoCompleto(churchName).map((p) => <p key={p}>{p}</p>)}
+        </details>
+      </div>
       <button className="login-btn" type="submit" disabled={loading || consultandoCep}>
-        {loading ? "Aguarde..." : consultandoCep ? "Buscando endereço..." : "Criar acesso e entrar"}
+        {loading ? "Aguarde..." : consultandoCep ? "Buscando endereço..." : "Concordo e criar acesso"}
       </button>
     </form>
   );

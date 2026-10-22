@@ -1,3 +1,4 @@
+import { todayISO } from "./date";
 /* Gravação da importação de membros por planilha. Recebe o cliente do
    Supabase (schema service) de fora: a tela passa o do navegador e
    scripts/check-importar-local.ts passa um de teste contra o banco local.
@@ -38,10 +39,6 @@ export async function carregarExistentes(sb: Banco, organizationId: string): Pro
   return { lista: base.lista, colunasNovas: false };
 }
 
-function hojeSP() {
-  return new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
-}
-
 export async function gravarImportacao(sb: Banco, p: {
   organizationId: string;
   churchId: string;
@@ -58,7 +55,9 @@ export async function gravarImportacao(sb: Banco, p: {
   aoAvancar?: (feito: number, total: number) => void;
 }): Promise<ResumoImportacao> {
   const agora = new Date().toISOString();
-  const hoje = hojeSP();
+  const { data: igreja, error: fusoErro } = await sb.from("churches").select("time_zone").eq("id", p.churchId).eq("organization_id", p.organizationId).single();
+  if (fusoErro || !igreja) throw new Error("Não foi possível carregar o fuso da igreja para importar.");
+  const hoje = todayISO(igreja.time_zone);
   const sortKey = Number(hoje.replace(/-/g, ""));
   const quando = hoje.split("-").reverse().join("/");
   const total = p.novas.length + p.completar.length;

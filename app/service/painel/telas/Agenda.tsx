@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { Icon } from "../../lib/icons";
-import { formatDateBR, joinDot, parseISODate, todayISO, toISODate } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { formatDateBR, joinDot, parseISODate, toISODate } from "../../lib/date";
 import { KidsQRModal } from "../../KidsCheckin";
 
 import { useTermos } from "../../lib/vocabulario-context";
@@ -17,6 +18,7 @@ import type { CalEvent, ChildView, ChurchView, DrawerState, EventView, KidsClass
 /* Escalas : módulo em modules/escalas/ (4.1) */
 
 export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChildren, rooms, setDrawer, setModal, setCheckinEventId, setShareEventId }: { events: EventView[]; ministries: MinistryView[]; church?: ChurchView; kidsClasses: KidsClassView[]; kidsSessions: KidsSessionView[]; kidsChildren: ChildView[]; rooms: RoomView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; setCheckinEventId: (id: string) => void; setShareEventId: (id: string) => void }) {
+  const { todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const [kidsPickerEventId, setKidsPickerEventId] = useState<string | null>(null);
   const [kidsModal, setKidsModal] = useState<{ eventId: string; classId: string } | null>(null);
@@ -119,7 +121,8 @@ export const CAL_SEM = ["D", "S", "T", "Q", "Q", "S", "S"];
 
 /* calendário mensal reaproveitável (perfil da pessoa e Espaços & Salas). */
 export function MiniCalendar({ events, onAdd }: { events: CalEvent[]; onAdd?: (dateStr: string) => void }) {
-  const initial = events[0]?.date ?? new Date();
+  const { todayISO } = useRelogioDaIgreja();
+  const initial = events[0]?.date ?? parseISODate(todayISO())!;
   const [year, setYear] = useState(initial.getFullYear());
   const [month, setMonth] = useState(initial.getMonth());
   const [selDay, setSelDay] = useState<number | null>(null);

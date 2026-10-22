@@ -1,0 +1,44 @@
+import assert from "node:assert/strict";
+import { fusoValido, instantesNoFuso, normalizarFuso, partesNoFuso } from "../app/service/lib/fuso";
+import { aindaVaiAcontecer, horaAgoraBR, saudacao, todayISO } from "../app/service/lib/date";
+
+const instante = new Date("2026-10-21T01:30:00Z");
+assert.equal(todayISO("America/Sao_Paulo", instante), "2026-10-20");
+assert.equal(todayISO("Asia/Tokyo", instante), "2026-10-21");
+assert.equal(horaAgoraBR("America/Sao_Paulo", instante), "22:30");
+assert.equal(horaAgoraBR("Asia/Tokyo", instante), "10:30");
+assert.equal(saudacao("America/Sao_Paulo", instante), "Boa noite");
+assert.equal(saudacao("Asia/Tokyo", instante), "Bom dia");
+assert.equal(aindaVaiAcontecer("2026-10-21", "09:00", "Asia/Tokyo", instante), false);
+assert.equal(aindaVaiAcontecer("2026-10-21", "09:00", "America/Sao_Paulo", instante), true);
+assert.equal(partesNoFuso(new Date("2026-01-01T00:00:00Z"), "UTC").hora, "00:00");
+assert.equal(normalizarFuso("inexistente"), "America/Sao_Paulo");
+assert.equal(fusoValido("+03:00"), false);
+assert.equal(fusoValido("Europe/Lisbon"), true);
+assert.deepEqual(instantesNoFuso("2026-03-08", "02:30", "America/New_York"), []);
+assert.deepEqual(instantesNoFuso("2026-11-01", "01:30", "America/New_York").map((d) => d.toISOString()), ["2026-11-01T05:30:00.000Z", "2026-11-01T06:30:00.000Z"]);
+assert.equal(instantesNoFuso("2026-07-01", "10:00", "Europe/Lisbon")[0].toISOString(), "2026-07-01T09:00:00.000Z");
+assert.equal(instantesNoFuso("2026-01-01", "10:00", "Europe/Lisbon")[0].toISOString(), "2026-01-01T10:00:00.000Z");
+assert.equal(instantesNoFuso("2026-02-31", "10:00", "UTC").length, 0);
+assert.equal(instantesNoFuso("2026-01-01", "24:00", "UTC").length, 0);
+console.log("Fusos: virada do dia, saudação, encontro futuro, meia-noite, verão, horário inexistente/repetido e datas inválidas.");
+
+// Silêncio no relógio de cada igreja, inclusive quando a noite cruza o verão.
+import { emSilencio, foraDoSilencio, quandoLembra } from "../app/service/lib/silencio";
+import { textoIcs } from "../app/service/lib/ics";
+assert.equal(emSilencio(instante, "America/Sao_Paulo"), true);
+assert.equal(emSilencio(instante, "Asia/Tokyo"), false);
+assert.equal(foraDoSilencio(instante, "America/Sao_Paulo").toISOString(), "2026-10-21T10:00:00.000Z");
+assert.equal(foraDoSilencio(instante, "Asia/Tokyo"), instante);
+assert.equal(foraDoSilencio(new Date("2026-03-08T04:00:00Z"), "America/New_York").toISOString(), "2026-03-08T11:00:00.000Z");
+assert.equal(foraDoSilencio(new Date("2026-11-01T03:00:00Z"), "America/New_York").toISOString(), "2026-11-01T12:00:00.000Z");
+assert.equal(quandoLembra(new Date("2026-03-08T11:00:00Z"), new Date("2026-03-08T04:00:00Z"), "America/New_York"), "amanhã às 7:00");
+assert.equal(emSilencio(new Date("2026-10-21T10:00:00Z"), "America/Sao_Paulo"), false);
+assert.equal(emSilencio(new Date("2026-10-22T01:00:00Z"), "America/Sao_Paulo"), true);
+const evento = { id: "teste", titulo: "Encontro", data: "2026-07-01", hora: "10:00", fuso: "Europe/Lisbon" };
+assert.match(textoIcs(evento), /DTSTART:20260701T090000Z/);
+assert.match(textoIcs({ ...evento, fuso: "Asia/Tokyo" }), /DTSTART:20260701T010000Z/);
+assert.match(textoIcs({ ...evento, hora: undefined }), /DTSTART;VALUE=DATE:20260701/);
+assert.throws(() => textoIcs({ ...evento, data: "2026-03-08", hora: "02:30", fuso: "America/New_York" }), /mudança de fuso/);
+assert.throws(() => textoIcs({ ...evento, data: "2026-11-01", hora: "01:30", fuso: "America/New_York" }), /mudança de fuso/);
+console.log("Silêncio e calendário: noites de verão/inverno, limites de 7h/22h, horário da igreja e datas sem hora preservadas.");

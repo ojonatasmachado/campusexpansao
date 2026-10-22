@@ -9,7 +9,8 @@ import { forwardRef, useEffect, useId, useLayoutEffect, useRef, useState } from 
 import QRCode from "react-qr-code";
 import { avisar } from "../../lib/avisar";
 import { bestOnColor, normalizeHex } from "../../lib/color";
-import { formatDateBR, todayISO } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { formatDateBR } from "../../lib/date";
 import { iniciais } from "../../lib/iniciais";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { adaptAccent } from "../../lib/theme";
@@ -40,6 +41,7 @@ export function Carteirinha({ memberId, church, marca, demo, members, people, ro
   currentPersonId?: string | null;
   onClose: () => void;
 }) {
+  const { todayISO } = useRelogioDaIgreja();
   const fid = useId();
   const [id, setId] = useState<string | null>(memberId);
   const [busca, setBusca] = useState("");

@@ -9,7 +9,8 @@ import { useMemo, useState } from "react";
 import { Icon } from "../../lib/icons";
 import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
-import { dataPublicacao, joinDot, quandoPublicado } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { joinDot } from "../../lib/date";
 import { EmptyState, PageHead } from "../../painel/ui";
 import { CATEGORIAS, moderar, rotuloCategoria, usePedidosPainel, type Categoria, type Moderacao, type PedidoPainel } from "./oracao";
 
@@ -24,6 +25,7 @@ const FILTROS: { id: Filtro; rotulo: string; vale: (p: PedidoPainel) => boolean 
 ];
 
 export function OracaoPainel({ organizationId, churches = [] }: { organizationId?: string; churches?: { id: string; nome: string }[] }) {
+  const { dataPublicacao, quandoPublicado } = useRelogioDaIgreja();
   const { dados, erro, recarregar } = usePedidosPainel(organizationId);
   const [filtro, setFiltro] = useState<Filtro>("ativos");
   const [categoria, setCategoria] = useState<Categoria | "">("");

@@ -1,6 +1,9 @@
 "use client";
 
-import { aindaVaiAcontecer } from "../../lib/date";
+import { partesNoFuso } from "../../lib/fuso";
+import { parseISODate, toISODate } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+
 import { plural } from "../../lib/plural";
 import { useState } from "react";
 import { Icon } from "../../lib/icons";
@@ -45,6 +48,7 @@ export function Relatorios({
   setRoute: (route: keyof typeof ROUTES) => void;
   church: ChurchView | undefined;
 }) {
+  const { aindaVaiAcontecer, todayISO, fuso } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const gruposAtivo = church?.settings?.gruposCfg?.ativo ?? true;
   const gruposSigla = church?.settings?.gruposCfg?.sigla ?? "GC";
@@ -81,7 +85,7 @@ export function Relatorios({
   /* frequência média: check-ins reais (event_attendance) por culto nos últimos 30 dias x 30 dias anteriores */
   const cultoIds = new Set(events.filter((e) => e.kind.toLowerCase() === "culto").map((e) => e.id));
   const frequenciaPeriodo = (min: number, max: number) => {
-    const cultosPeriodo = events.filter((e) => cultoIds.has(e.id) && !aindaVaiAcontecer(e.eventDate, e.time) && diasAtras(e.eventDate) >= min && diasAtras(e.eventDate) < max);
+    const cultosPeriodo = events.filter((e) => cultoIds.has(e.id) && !aindaVaiAcontecer(e.eventDate, e.time, e.timeZone) && diasAtras(e.eventDate) >= min && diasAtras(e.eventDate) < max);
     if (!cultosPeriodo.length) return null;
     const total = cultosPeriodo.reduce((sum, ev) => sum + eventAttendance.filter((a) => a.event_id === ev.id).length, 0);
     return Math.round(total / cultosPeriodo.length);
@@ -94,7 +98,7 @@ export function Relatorios({
 
   /* termômetro de bem-estar sem sobreposição: carga real da semana via roster, não engajamento alto ‒
      equivalente a bemEstar() em evolucoes/service_app/relatorios.jsx:19-27, sem o override de sinais (mock-only) */
-  const carga = cargaDaSemana(roster, events);
+  const carga = cargaDaSemana(roster, events, todayISO());
   const nivelDe = (p: PersonView): "saudavel" | "atencao" | "sobrecarga" | "afastando" => {
     const { escalas = 0, recusas = 0 } = carga[p.id] ?? {};
     /* só sinal real: pausa, recusa ou carga alta registrada na escala da semana */
@@ -110,9 +114,9 @@ export function Relatorios({
 
   /* membros cadastrados até o fim de cada um dos últimos 4 meses, terminando no mês atual */
   const MES_CURTO = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-  const agora = new Date();
+  const agora = parseISODate(todayISO())!;
   const mesesSerie = [3, 2, 1, 0].map((k) => new Date(agora.getFullYear(), agora.getMonth() - k + 1, 1));
-  const series = mesesSerie.map((fim) => members.filter((m) => m.createdAt && new Date(m.createdAt) < fim).length);
+  const series = mesesSerie.map((fim) => members.filter((m) => m.createdAt && partesNoFuso(new Date(m.createdAt), fuso).data < toISODate(fim)).length);
   const serieLabels = mesesSerie.map((fim) => MES_CURTO[new Date(fim.getFullYear(), fim.getMonth() - 1, 1).getMonth()]);
   const maxMinistry = Math.max(...ministries.map((m) => m.people.length), 1);
   const gcCounts = fellowshipGroups.map((g) => ({ group: g, n: members.filter((m) => m.groupId === g.id).length }));
@@ -130,7 +134,7 @@ export function Relatorios({
   /* o relatório baixado traz os mesmos números da tela, no recorte escolhido; sem nomes de pessoas */
   const baixarRelatorio = () => {
     const recorte = P === 90 ? "Trimestre" : "Últimos 30 dias";
-    const d = new Date(); const dia = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const dia = todayISO();
     const linhas: (string | number)[][] = [
       ["Seção", "Indicador", "Valor"],
       ["Relatório", "Igreja", church?.nome ?? ""],

@@ -39,12 +39,13 @@ import aniversarios from "./aniversarios/manifest";
 import contribuir from "./contribuir/manifest";
 import secretaria from "./secretaria/manifest";
 import financeiro from "./financeiro/manifest";
+import mapa from "./mapa/manifest";
 
 export const MODULOS: readonly ModuleManifest[] = [
   inicio, pessoas, visitantes, kids, grupos, decisoes, times, escalas, ensaios, reunioes,
   cultos, espacos, mural, conversas, pesquisas, pagina, cursos, batismos, relatorios, quadros,
   identidade, historia, igreja, acesso, biblia, perfil, cuidado, configuracao,
-  aniversarios, contribuir, oracao, entrada, secretaria, financeiro,
+  aniversarios, contribuir, oracao, entrada, secretaria, financeiro, mapa,
 ];
 
 const IDS = new Set(MODULOS.map((m) => m.id));

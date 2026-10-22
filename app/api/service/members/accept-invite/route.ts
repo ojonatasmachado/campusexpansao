@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient, type User } from "@supabase/supabase-js";
 import { supabaseAdmin } from "../../../../lib/supabase";
 import { ensureChurchSlug, findOpenInvite } from "../../../../lib/service-invite";
+import { TERMO_MAPA_VERSAO } from "../../../../service/lib/termo-mapa";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,6 +13,7 @@ type Payload = {
   email?: string;
   password?: string;
   cep?: string;
+  termoMapa?: string;
   country?: string;
   street?: string;
   neighborhood?: string;
@@ -127,10 +129,15 @@ export async function POST(request: Request) {
     personId = person.id;
   }
 
+  /* "Concordo e criar acesso": a tela mostra os 3 pontos do termo do mapa */
+  const aceite = body.termoMapa === TERMO_MAPA_VERSAO
+    ? { map_consent_at: new Date().toISOString(), map_consent_declined_at: null, map_consent_source: "convite", map_consent_terms: TERMO_MAPA_VERSAO }
+    : {};
   const { error: memberError } = await svc.from("members").update({
     volunteer_id: personId,
     email,
     ...endereco,
+    ...aceite,
 
   }).eq("id", invite.member_id);
   if (memberError) return liberar(NextResponse.json({ error: "Não foi possível criar seu acesso agora." }, { status: 500 }));

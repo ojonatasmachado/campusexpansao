@@ -8,7 +8,8 @@ import { useId, useMemo, useRef, useState } from "react";
 import { FormScreen, FormSection, type FormScreenHandle } from "../../painel/form/FormScreen";
 import { friendlyWriteError } from "../../painel/erros";
 import { avisar } from "../../lib/avisar";
-import { todayISO } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+
 import { Icon } from "../../lib/icons";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { uploadServicePrivateFile } from "../../lib/upload-image";
@@ -127,6 +128,7 @@ const ext = (f: File) => (f.type === "application/pdf" ? "pdf" : (f.name.split("
 /* ── entrada ou despesa ──────────────────────────────────────────────────── */
 
 export function LancamentoForm({ org, churchId, tipo, edit, cad, onClose, onDone }: Base & { tipo: "entrada" | "despesa"; edit?: Lancamento | null; cad: Cadastros }) {
+  const { todayISO } = useRelogioDaIgreja();
   const { currentPersonId } = useServiceAccess();
   const fid = useId();
   const telaRef = useRef<FormScreenHandle>(null);
@@ -284,6 +286,7 @@ export function LancamentoForm({ org, churchId, tipo, edit, cad, onClose, onDone
 /* ── transferência entre contas ──────────────────────────────────────────── */
 
 export function TransferenciaForm({ org, churchId, edit, cad, onClose, onDone }: Base & { edit?: Lancamento | null; cad: Cadastros }) {
+  const { todayISO } = useRelogioDaIgreja();
   const { currentPersonId } = useServiceAccess();
   const fid = useId();
   const telaRef = useRef<FormScreenHandle>(null);
@@ -355,6 +358,7 @@ export function TransferenciaForm({ org, churchId, edit, cad, onClose, onDone }:
 /* ── contagem de oferta ──────────────────────────────────────────────────── */
 
 export function OfertaForm({ org, churchId, cad, onClose, onDone }: Base & { cad: Cadastros }) {
+  const { todayISO } = useRelogioDaIgreja();
   const { events } = useServiceAccess();
   const fid = useId();
   const telaRef = useRef<FormScreenHandle>(null);
@@ -470,6 +474,7 @@ export function OfertaForm({ org, churchId, cad, onClose, onDone }: Base & { cad
 /* ── conta (caixa ou banco) ──────────────────────────────────────────────── */
 
 export function ContaForm({ org, churchId, edit, onClose, onDone }: Base & { edit?: Conta | null }) {
+  const { todayISO } = useRelogioDaIgreja();
   const fid = useId();
   const telaRef = useRef<FormScreenHandle>(null);
   const [nome, setNome] = useState(edit?.name ?? "");

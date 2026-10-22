@@ -1,6 +1,7 @@
 import { memberNotificationUrl } from "../service/lib/member-navigation";
 import { sendPushToSubscriptions } from "./push";
 import type { supabaseAdmin } from "./supabase";
+import { pessoasComFuso } from "./service-fusos";
 import { emSilencio, foraDoSilencio } from "../service/lib/silencio";
 
 /* Entrega de avisos do Service (v7 5.3, lei 9), só no servidor:
@@ -30,36 +31,54 @@ async function mandar(db: Db, organizationId: string, peopleIds: string[], aviso
 }
 
 /** Envia agora ou põe na fila, conforme a categoria, o silêncio e o que a pessoa desligou. */
-export async function entregarAvisos(db: Db, a: { organizationId: string; peopleIds: string[]; categoria: Categoria | null; title: string; body: string }): Promise<{ enviados: number; naFila: number }> {
-  let pessoas = [...new Set(a.peopleIds)];
-  if (!pessoas.length) return { enviados: 0, naFila: 0 };
-  const url = a.categoria ? memberNotificationUrl(a.categoria) : "/service";
-  if (a.categoria) {
-    const { data: desligou } = await db.from("people").select("id, notif_off").in("id", pessoas);
-    const fora = new Set((desligou ?? []).filter((p) => ((p.notif_off ?? []) as string[]).includes(a.categoria!)).map((p) => p.id));
-    pessoas = pessoas.filter((id) => !fora.has(id));
-  }
-  if (!pessoas.length) return { enviados: 0, naFila: 0 };
+export async function entregarAvisos(db: Db, a: { organizationId: string; peopleIds: string[]; categoria: Categoria | null; title: string; body: string; url?: string }): Promise<{ enviados: number; naFila: number }> {
+  const ids = [...new Set(a.peopleIds)];
+  if (!ids.length) return { enviados: 0, naFila: 0 };
+  const categoria = a.categoria ?? "mensagens";
+  const url = a.url ?? memberNotificationUrl(categoria);
+  const pessoas = (await pessoasComFuso(db, a.organizationId, ids)).filter((p) => !p.desligadas.includes(categoria));
   const agora = new Date();
-  const esperar = a.categoria === "mural" || emSilencio(agora);
-  if (esperar && a.categoria) {
-    const quando = foraDoSilencio(a.categoria === "mural" ? new Date(agora.getTime() + RESUMO_MURAL_MIN * 60000) : agora);
-    const { error } = await db.from("push_queue").insert(pessoas.map((p) => ({
-      organization_id: a.organizationId, person_id: p, categoria: a.categoria, title: a.title, body: a.body, url, send_after: quando.toISOString(),
-    })));
-    if (!error) return { enviados: 0, naFila: pessoas.length };
-    /* sem a fila (antes da 0066), manda na hora, como antes */
+  const imediatos: string[] = [];
+  const fila = [];
+  for (const p of pessoas) {
+    if (categoria === "mural" || emSilencio(agora, p.fuso)) {
+      const quando = foraDoSilencio(categoria === "mural" ? new Date(agora.getTime() + RESUMO_MURAL_MIN * 60000) : agora, p.fuso);
+      fila.push({ organization_id: a.organizationId, person_id: p.id, categoria, title: a.title, body: a.body, url, send_after: quando.toISOString() });
+    } else imediatos.push(p.id);
   }
-  return { enviados: await mandar(db, a.organizationId, pessoas, { title: a.title, body: a.body, url }, a.categoria ?? "mensagens"), naFila: 0 };
+  if (fila.length) {
+    const { error } = await db.from("push_queue").insert(fila);
+    if (error) throw error; // Falha da fila nunca autoriza envio durante o silêncio.
+  }
+  return { enviados: await mandar(db, a.organizationId, imediatos, { title: a.title, body: a.body, url }, categoria), naFila: fila.length };
 }
 
 /** Manda o que já pode sair da fila (uma vez por item). Mural em resumo, um por pessoa. */
 export async function esvaziarFila(db: Db, organizationId?: string): Promise<number> {
-  if (emSilencio()) return 0;
-  let q = db.from("push_queue").update({ sent_at: new Date().toISOString() }).lte("send_after", new Date().toISOString()).is("sent_at", null);
+  const agora = new Date();
+  let q = db.from("push_queue").select("id, organization_id, person_id, categoria, title, body, url").lte("send_after", agora.toISOString()).is("sent_at", null);
   if (organizationId) q = q.eq("organization_id", organizationId);
-  const { data: itens, error } = await q.select("organization_id, person_id, categoria, title, body, url");
-  if (error || !itens?.length) return 0;
+  const { data: pendentes, error } = await q;
+  if (error) throw error;
+  if (!pendentes?.length) return 0;
+  const itens: typeof pendentes = [];
+  for (const org of new Set(pendentes.map((i) => i.organization_id))) {
+    const daOrg = pendentes.filter((i) => i.organization_id === org);
+    const pessoas = new Map((await pessoasComFuso(db, org, [...new Set(daOrg.map((i) => i.person_id))])).map((p) => [p.id, p]));
+    for (const it of daOrg) {
+      const pessoa = pessoas.get(it.person_id);
+      if (pessoa && !pessoa.desligadas.includes(it.categoria) && emSilencio(agora, pessoa.fuso)) {
+        // A igreja pode ter mudado o fuso depois de o aviso entrar na fila.
+        const { error } = await db.from("push_queue").update({ send_after: foraDoSilencio(agora, pessoa.fuso).toISOString() }).eq("id", it.id).is("sent_at", null);
+        if (error) throw error;
+        continue;
+      }
+      // Reserva condicional evita que dois workers enviem a mesma linha.
+      const { data: claimed, error } = await db.from("push_queue").update({ sent_at: agora.toISOString() }).eq("id", it.id).is("sent_at", null).select("id");
+      if (error) throw error;
+      if (claimed?.length && pessoa && !pessoa.desligadas.includes(it.categoria)) itens.push(it);
+    }
+  }
   let n = 0;
   const grupos = new Map<string, typeof itens>();
   for (const it of itens) {

@@ -1,3 +1,4 @@
+import { normalizarFuso } from "../lib/fuso";
 import ServiceExactApp from "../ServiceExactApp";
 import { resolveMode, THEME_COOKIE, type BrandCfg } from "../lib/theme";
 import { cookies } from "next/headers";
@@ -318,7 +319,8 @@ const PERSON_GRANTS = [{ personId: "p2", code: "visitantes" }];
    /service/demo?cor=%232F6FDB&escuro=noite&claro=gelo&modo=light */
 export default async function ServiceDemoPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const q = await searchParams;
-  const hoje = todayISO();
+  const fuso = normalizarFuso(q.fuso);
+  const hoje = todayISO(fuso);
   const calendario = calendarioDemo(hoje);
   // eslint-disable-next-line react-hooks/purity -- Server Component dinâmico: fixa o instante da requisição para as fixtures.
   const agora = Date.now();
@@ -361,7 +363,7 @@ export default async function ServiceDemoPage({ searchParams }: { searchParams: 
     ? [{ ...VISITORS[3], name: PIOR.IGREJA_LONGA.slice(0, 60), email: PIOR.EMAIL_LONGO, invited_by: PIOR.IGREJA_LONGA, interests: ["conhecer", "grupo", "oracao", "servir", "batismo", "criancas"] }]
     : VISITORS.map((v) => ({ ...v, visited_on: v.id === "v4" ? hoje : data(v.visited_on), created_at: instante(v.id === "v4" ? 2 : 72) }));
   const decisions = (pior ? DECISIONS.slice(0, 1) : DECISIONS).map((d) => ({ ...d, happened_on: data(d.happened_on), created_at: instante(48) }));
-  const churches = CHURCHES.map((c, i) => (i === 0 ? { ...c, nome: pior ? PIOR.IGREJA_LONGA : c.nome, slug: "cex-central", settings: { brandCfg: brand, contribuirCfg: pior ? PIOR.PIX : PIX_DEMO, autocadastro: { ativo: true } } } : c));
+  const churches = CHURCHES.map((original, i) => { const c = { ...original, timeZone: fuso }; return (i === 0 ? { ...c, nome: pior ? PIOR.IGREJA_LONGA : c.nome, slug: "cex-central", settings: { brandCfg: brand, contribuirCfg: pior ? PIOR.PIX : PIX_DEMO, autocadastro: { ativo: true } } } : c); });
   const themeMode = resolveMode((await cookies()).get(THEME_COOKIE)?.value, brand);
 
   return (

@@ -4,20 +4,22 @@
    fase mostra o tempo estimado e termina num resumo em frase. As gravações
    são do painel (ServiceExactApp), que passa as ações prontas: este arquivo
    só desenha e decide a ordem. */
+import { FusoField } from "./FusoField";
 import { telefoneValido } from "../../lib/telefone";
 import { useRef, useState } from "react";
 import CepInput from "../../CepInput";
 import ChurchLockup from "../../ChurchLockup";
 import { ImageUpload } from "../../ImageUpload";
 import { Icon } from "../../lib/icons";
-import { formatDateBR, somaDias, todayISO } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { formatDateBR, somaDias } from "../../lib/date";
 import { plural } from "../../lib/plural";
 import { ACCENT_PRESETS, themeCss, type BrandCfg } from "../../lib/theme";
 import { useTermos } from "../../lib/vocabulario-context";
 import { encontroUtil, planejarEncontros, type EncontroPreparado, type RascunhoEncontro } from "./ativacao";
 import { FASES, MODELOS_TIMES, type ModeloTime, type SetupEstado } from "./setup";
 
-export type DadosIgreja = { nome: string; cep: string; endereco: string; bairro: string; cidade: string; estado: string };
+export type DadosIgreja = { fuso: string; nome: string; cep: string; endereco: string; bairro: string; cidade: string; estado: string };
 
 export function Assistente({
   estado, onEstado, igreja, logoUrl, brand, onSalvarDados, onLogo, onRemoverLogo, onCor,
@@ -41,6 +43,7 @@ export function Assistente({
   onConvidar: (nome: string, telefone: string) => Promise<{ memberId?: string; error?: string; alreadyHasAccess?: boolean }>;
   onIr: (rota: "escalas" | "painel" | "times" | "cultos") => void;
 }) {
+  const { todayISO, horaAgoraBR } = useRelogioDaIgreja();
   const { termo, comTermos: ct } = useTermos();
   const [fase, setFase] = useState<1 | 2 | 3>(estado.fase);
   const [resumo, setResumo] = useState<Record<number, string>>({});
@@ -52,7 +55,7 @@ export function Assistente({
   const [cor, setCor] = useState<string>(brand.accent ?? "");
   /* fase 2 */
   const existe = (nome: string) => timesExistentes.some((t) => t.trim().toLowerCase() === nome.toLowerCase());
-  const uteis = encontros.filter((e) => encontroUtil(e)).sort((a, b) => (a.data + a.hora).localeCompare(b.data + b.hora));
+  const uteis = encontros.filter((e) => encontroUtil(e, todayISO(), horaAgoraBR())).sort((a, b) => (a.data + a.hora).localeCompare(b.data + b.hora));
   const [selecionado, setSelecionado] = useState(estado.primeiroEventoId ?? "");
   const [rascunho, setRascunho] = useState<RascunhoEncontro>(estado.rascunho ?? { nome: termo("culto"), data: "", hora: "", local: igreja.endereco, repetir: false, ate: somaDias(todayISO(), 30) });
   const [modelos, setModelos] = useState<string[]>([]);
@@ -62,9 +65,9 @@ export function Assistente({
   const [editando, setEditando] = useState<string | null>(null);
   const idsDaTentativa = useRef<Record<string, string>>({});
   const operando = useRef(false);
-  const atual = confirmados.find((e) => e.id === selecionado && encontroUtil(e)) ?? uteis.find((e) => e.id === selecionado);
+  const atual = confirmados.find((e) => e.id === selecionado && encontroUtil(e, todayISO(), horaAgoraBR())) ?? uteis.find((e) => e.id === selecionado);
   const registrado = encontros.find((e) => e.id === selecionado);
-  const plano = planejarEncontros(rascunho);
+  const plano = planejarEncontros(rascunho, todayISO(), horaAgoraBR());
   const setEncontro = (patch: Partial<RascunhoEncontro>) => setRascunho((r) => ({ ...r, ...patch }));
   const ajustarEncontro = (e: EncontroPreparado) => { setRascunho({ ...e, repetir: false, ate: somaDias(e.data || todayISO(), 30) }); setEditando(e.id); setErro(""); };
   /* fase 3 */
@@ -180,6 +183,7 @@ export function Assistente({
         {fase === 1 && (
           <div className="setup-body">
             <div className="field"><label className="field-label req" htmlFor="setup-nome">Nome da igreja</label><input id="setup-nome" className="input" value={dados.nome} onChange={(e) => setDados((d) => ({ ...d, nome: e.target.value }))} /></div>
+            <FusoField value={dados.fuso} onChange={(fuso) => setDados((d) => ({ ...d, fuso }))} />
             <details className="service-setup-options"><summary>Endereço da igreja (opcional)</summary>
             <div className="field">
               <label className="field-label" htmlFor="setup-cep">CEP</label>

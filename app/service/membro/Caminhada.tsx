@@ -6,6 +6,7 @@ import { plural } from "../lib/plural";
 import { Icon } from "../lib/icons";
 import { joinDot } from "../lib/date";
 import { useTermos } from "../lib/vocabulario-context";
+import { useRelogioDaIgreja } from "../lib/relogio-context";
 import { porData, quandoFoi, tipoDoFato, type FatoView } from "../lib/historico";
 import { listaFinalidades, type ContribuirCfg } from "../modules/contribuir/pix";
 import { JourneyContext, M6Row, MemberUiContext, mensagemAcao, useFaltas } from "./comum";
@@ -86,6 +87,7 @@ export function ServirSection({ person, member, ministries, members = [], people
 /* Só os fatos, com data, do mais recente para o mais antigo. Sem contagem,
    sem pontos e sem comparação com outras pessoas. */
 export function MinhaHistoria({ fatos }: { fatos: FatoView[] }) {
+  const { fuso } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const lista = porData(fatos);
   if (!lista.length) {
@@ -106,7 +108,7 @@ export function MinhaHistoria({ fatos }: { fatos: FatoView[] }) {
               <span className="m6-ic"><Icon name={t.icone} size={22} /></span>
               <span className="m6-rb">
                 <span className="m6-rt">{f.title}</span>
-                <span className="m6-rs">{joinDot(quandoFoi(f), f.body)}</span>
+                <span className="m6-rs">{joinDot(quandoFoi(f, fuso), f.body)}</span>
               </span>
             </div>
           );

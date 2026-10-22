@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "../../evolucoes/service_app/service-app.css";
+/* mapa da igreja: CSS do módulo, depois do Service */
+import "./modules/mapa/mapa.css";
 import PwaBootstrap from "./PwaBootstrap";
 import DialogosAcessiveis from "./DialogosAcessiveis";
 

@@ -33,7 +33,8 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        # PostGIS: mapa da igreja (0087)
+        image: postgis/postgis:16-3.4
         env:
           POSTGRES_PASSWORD: postgres
         ports: ["5432:5432"]
@@ -62,7 +63,7 @@ jobs:
         run: npx tsx scripts/check-theme-contrast.ts
       - name: Contratos das jornadas
         run: |
-          for check in ativacao civil-date cnpj demo-datas endereco geo-cpf member-navigation semana telefone times-recebimento; do
+          for check in fuso avisos-fuso ativacao civil-date cnpj demo-datas endereco geo-cpf member-navigation semana telefone times-recebimento; do
             npx tsx "scripts/check-service-${check}.ts"
           done
       - name: Migrações num Postgres limpo

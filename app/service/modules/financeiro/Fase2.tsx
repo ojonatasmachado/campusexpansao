@@ -11,7 +11,8 @@ import { friendlyWriteError } from "../../painel/erros";
 import { FolhaDeImpressao, imprimir } from "../../painel/imprimir";
 import { avisar } from "../../lib/avisar";
 import { plural } from "../../lib/plural";
-import { formatDateBR, todayISO } from "../../lib/date";
+import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { formatDateBR } from "../../lib/date";
 import { Icon } from "../../lib/icons";
 import { db, type Campanha, type ContaFixa, type Fechamento, type Lancamento, type Totais, type useFinanceiro } from "./dados";
 import { brl, FORMAS, mesNome, mesTexto, type Forma } from "./dinheiro";
@@ -29,6 +30,7 @@ export function APagar({ previstos, podeLancar, nomeConta, onEditar, onMudou }: 
   onEditar: (l: Lancamento) => void;
   onMudou: () => void;
 }) {
+  const { todayISO } = useRelogioDaIgreja();
   const hoje = todayISO();
   const [pagando, setPagando] = useState<string | null>(null);
   if (!previstos.length) return null;
@@ -136,6 +138,7 @@ export function Planejamento({ fin, podeLancar, onFixa, onCampanha }: {
 }
 
 export function ContaFixaForm({ org, churchId, edit, cad, onClose, onDone }: Base & { edit?: ContaFixa | null; cad: Cadastros }) {
+  const { todayISO } = useRelogioDaIgreja();
   const fid = useId();
   const telaRef = useRef<FormScreenHandle>(null);
   const [tipo, setTipo] = useState<"entrada" | "despesa">(edit?.kind ?? "despesa");
@@ -261,6 +264,7 @@ export function ContaFixaForm({ org, churchId, edit, cad, onClose, onDone }: Bas
 }
 
 export function CampanhaForm({ org, churchId, edit, cad, onClose, onDone }: Base & { edit?: Campanha | null; cad: Cadastros }) {
+  const { todayISO } = useRelogioDaIgreja();
   const fid = useId();
   const telaRef = useRef<FormScreenHandle>(null);
   const fundos = cad.fundos.filter((f) => f.active || f.id === edit?.fund_id);
@@ -349,6 +353,7 @@ function totaisAbertos(fin: Fin): Totais {
 export function FechamentoMes({ fin, mes, org, igreja, podeLancar, podeReabrir }: {
   fin: Fin; mes: string; org: string; igreja: string; podeLancar: boolean; podeReabrir: boolean;
 }) {
+  const { todayISO } = useRelogioDaIgreja();
   const fid = useId();
   const fechado: Fechamento | undefined = fin.fechamentos.find((f) => f.month === mes);
   const t = fechado ? fechado.totals : totaisAbertos(fin);
