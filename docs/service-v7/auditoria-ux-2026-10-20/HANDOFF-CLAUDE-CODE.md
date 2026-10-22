@@ -1,98 +1,63 @@
-# Continuação no Claude Code
+# Service: trabalho ainda pendente
 
-Atualizado em 21/10/2026. Este documento é o ponto de entrada para retomar a auditoria do Service. Leia também `CONTINUIDADE.md`, `STATUS.md` e o `AGENTS.md` integralmente. O relatório original é diagnóstico histórico; não representa sozinho a versão atual.
+Atualizado em 22/10/2026. Este arquivo contém somente o trabalho restante e as instruções para executá-lo. Antes de começar, conferir o código atual e os registros da auditoria para não repetir uma tarefa concluída por outra frente.
 
-## Objetivo e decisão mais recente
+## 1. Revisão profunda de UI
 
-Continuar a revisão das jornadas do Service: clareza, prioridade de ações, conexão entre pastor, liderança, voluntário e membro, acessibilidade, celular e igrejas internacionais. A auditoria ampla continua parcial.
+Fazer uma revisão visual sistemática do painel e do aplicativo do membro, começando pelo Início e pelas telas mais densas: Financeiro, Visitantes, Crianças e Cursos.
 
-Decisão explícita do usuário: **se uma área não está disponível ao usuário, nem sua opção deve aparecer**. Aplicar em menu, atalhos, busca e links internos. Uma mensagem de acesso negado é defesa para links antigos, não substitui ocultar a entrada. Não conceder permissão para fazer um botão funcionar.
+- Dar hierarquia clara a títulos, conteúdo, metadados e ações.
+- Reduzir a sensação de cockpit: excesso de controles, botões simultâneos e informação sem prioridade.
+- Rever espaçamento, alinhamento, tipografia, densidade e consistência entre telas.
+- Melhorar a separação entre fundo, superfícies e conteúdo nos temas claro e escuro.
+- Destacar a ação principal e revelar controles secundários conforme a necessidade.
+- Rever estados vazios, carregamento, erro, confirmação e retorno.
+- Validar celular pequeno, desktop, nomes longos e texto ampliado.
 
-O usuário já autorizou corrigir, testar, documentar, fazer commits, push e publicar, sem confirmações repetidas para o trabalho já definido. Uma entrega por problema. Preservar a casca de quatro abas e o registro único de módulos. Usar `ui-ux-pro-max` para trabalho de interface e consultar Brand Book/Brand Library conforme AGENTS.
+Trabalhar com evidência de cada tela, preservar o tema da igreja e seguir AGENTS. Não tratar esta revisão como concluída apenas porque os testes automáticos passaram.
 
-## Onde continuar sem perder trabalho
+## 2. Ações e permissões ainda não verificadas
 
-- Repositório principal: `/Users/macbook/campusexpansao`. Tem alterações locais de outras frentes. Não limpar, sobrescrever ou usar `git add -A` nele.
-- Worktree usado nas entregas: `/tmp/cex-fuso-release-20261021` (caminho real `/private/tmp/cex-fuso-release-20261021`).
-- Branch: `fix/service-fuso-20261021`. Código também enviado a `main`.
-- Antes de editar: `git status --short`, `git fetch origin`, comparar com `origin/main`. Se houver avanço remoto, integrar preservando alterações existentes.
-- Servidor temporário de desenvolvimento em 3005 e Chrome/CDP em 9334 foram encerrados. Fixtures temporárias de `app/service/demo/page.tsx` foram restauradas.
-- Capturas, decisões e resultados persistentes estão em `implementacao/`. Arquivos auxiliares em `/tmp` são descartáveis.
+- Revisar as ações do Início que não navegam: aprovar caminhada, registrar cuidado e responder pedidos, por papel, módulo e dependências.
+- Procurar entradas internas restantes que apontem para áreas indisponíveis.
+- Aplicar a decisão do usuário: **área indisponível não oferece opção, botão, atalho ou resultado de busca**. Não ampliar permissão para viabilizar um botão.
+- Completar a matriz com contas autenticadas de pastor, administrador, líder, voluntário e membro, incluindo acessos extras e escopo de times.
+- Verificar isolamento entre igrejas, leitura e gravação no banco, uploads e notificações. Demo não substitui validação autenticada.
 
-## Publicação confirmada
+## 3. Convite e primeiro acesso do membro
 
-Último código publicado: `fa4f3669b5abb6ee8f6c05e6f7287cb5cb446f6b`, em main e fix/service-fuso-20261021. Service CI `39710681893` e `39710681973`: success. Produção `39710681916`: success. Vercel `dpl_81iNKZBiDvT4L38k5mU7QPMgSWvW`: READY, com campusexpansao.com.br e www associados. Nenhuma migração nova. Este handoff é uma atualização documental posterior, sem mudança de código.
+Percorrer a jornada completa: convite, aceite, senha, endereço, dados essenciais, entrada no aplicativo, próximo passo e retorno. Testar igreja vazia e igreja com conteúdo. Identificar passos sem orientação, repetidos ou sem saída e corrigir com evidência.
 
-## O que foi entregue nesta retomada
+## 4. Continuidade das jornadas e densidade dos módulos
 
-| Entrega | Commit | Resultado |
-| --- | --- | --- |
-| Etapas pendentes da Caminhada | `00e03a3` | Número da etapa substitui marcador vazio; estados e organização preservados |
-| Menu Mais | `0c703c1` | Agrupado pelos grupos do registro, sem nova navegação paralela |
-| Mural | `9bf601e` | Público explícito, revisão antes de publicar e minutos do agendamento preservados |
-| Primeira igreja | `dfadcb4` | Formulário com padrão de autenticação e recuperação de falha sem perder dados |
-| Acessos do painel | `68d7ef8` | Atalhos e ajuda filtrados, montagem de rotas por acesso, permissão do painel respeitada, contrato panel-access no CI |
-| Entradas indisponíveis | `fa4f366` | Busca filtra entidades e escopo de times; aniversário exige rota; links de fichas negadas viram texto em Saúde, Cuidado e Aniversariantes; rota inicial negada abre uma permitida para qualquer papel |
+Revisar Financeiro, Visitantes, Crianças, Cursos e Formação, além das outras telas marcadas como parciais em STATUS. Verificar se uma ação de pastor/liderança chega à pessoa certa e se a resposta aparece para quem a iniciou. Priorizar ações confusas, duplicadas ou sem continuidade.
 
-As entregas anteriores à última já tiveram CI success e produção READY; IDs completos em `CONTINUIDADE.md`. Os diretórios `implementacao/acessos/` e `implementacao/entradas-permitidas/` explicam as últimas mudanças. Nenhuma migração nova nessas duas correções.
+A eventual reorganização interna da Caminhada é hipótese a investigar. Não implementar novos grupos nem mudar as quatro abas sem evidência e decisão arquitetural registrada.
 
-Arquivos da última correção:
+## 5. Acessibilidade em aparelho real
 
-- `app/service/ServiceExactApp.tsx`: busca, aniversário e rota inicial.
-- `app/service/painel/telas/Inicio.tsx`: disponibilidade de ficha passada aos blocos.
-- `app/service/modules/inicio/Saude.tsx`.
-- `app/service/modules/cuidado/Cuidado.tsx`.
-- `app/service/modules/aniversarios/Aniversariantes.tsx`: bloco semanal e tela mensal.
+Testar Safari/PWA, teclado aberto, zoom ao preencher campos, áreas seguras, fonte do sistema ampliada, foco, leitor de tela e alvos de toque. Verificar contraste, sobreposição e rolagem lateral. Registrar o que foi testado e o que continuar sem validação.
 
-Os dados e ações próprios de uma área autorizada permanecem. Exemplo: aniversário continua visível se autorizado, mas o nome deixa de abrir a ficha quando Pessoas não está disponível. Não confundir essa alteração de interface com certificação das políticas do banco.
+## 6. Internacionalização
 
-## Verificações feitas
+Revisar idiomas, moedas e regras locais conforme os países atendidos. Verificar textos longos e formatos locais sem assumir que todos os usuários estão no Brasil. Consultar os contratos existentes antes de alterar dados compartilhados.
 
-Última correção: typecheck, lint sem erros (dois avisos preexistentes em ServiceExactApp), Lei 12, contraste, 13 contratos de jornada e build aprovados localmente.
+## 7. Isolar e modernizar o teste de permissões
 
-Fixtures de interface verificaram liderança, master, pastor, membro com acesso extra, módulos desligados e liderança com escopo só do time. Busca negada inspecionada em 320, 390 e 1280 px, temas claro/escuro reais e sem rolagem lateral. Saúde manteve quatro nomes sem links de ficha; Cuidado e aniversário mantiveram nomes sem esses botões. Nenhuma mensagem foi enviada. JSON e PNG estão em `implementacao/entradas-permitidas/`.
+Não executar `scripts/check-local-rls.ts` no banco local compartilhado. Antes de reutilizá-lo:
 
-Entregas anteriores incluíram Caminhada com fonte ampliada, menu em mobile/desktop, Mural com retorno preservando preenchimento, falha de rede no cadastro e as quatro abas de igreja sem conteúdo. Ver detalhes e limites em CONTINUIDADE. Não refazer testes aprovados sem mudança que os afete.
+- Atualizar o contrato antigo de Quero servir.
+- Usar banco descartável isolado ou snapshot e restauração garantida.
+- Garantir limpeza mesmo em falha, sem resetar requisitos ou pedidos de outras frentes.
+- Consultar `implementacao/acessos/README.md` para os detalhes da limitação e dos dados locais afetados.
 
-Comandos de referência:
+## Como executar as próximas entregas
 
-```bash
-npx tsc --noEmit -p .
-npx eslint <arquivos-alterados>
-npx tsx scripts/check-service-lei12.ts
-npx tsx scripts/check-theme-contrast.ts
-for check in fuso avisos-fuso ativacao civil-date cnpj demo-datas endereco geo-cpf member-navigation panel-access semana telefone times-recebimento; do
-  npx tsx "scripts/check-service-${check}.ts" || break
-done
-npm run build
-```
+1. Ler integralmente `AGENTS.md`; consultar `STATUS.md`, `JORNADAS-E-CONEXOES.md` e `CONTINUIDADE.md` antes de escolher a próxima tarefa. Usar `ui-ux-pro-max` e consultar Brand Book/Brand Library nas mudanças visuais.
+2. Conferir `git status`, buscar origin e comparar com main. O diretório `/Users/macbook/campusexpansao` contém trabalho local de outras frentes: preservar tudo e não usar limpeza/reset nem staging geral. Preferir worktree isolado; o anterior está em `/tmp/cex-fuso-release-20261021`.
+3. Resolver um problema por entrega, com inspeção visual focada em 320/390 px e desktop, claro/escuro e fonte ampliada. Não refazer verificações antigas sem motivo.
+4. Rodar typecheck, lint dos arquivos alterados, Lei 12, contraste, contratos e build conforme `.github/workflows/service.yml`, além dos testes específicos necessários. Não usar credenciais de produção em testes locais.
+5. Documentar evidência, limites e pendências restantes. Fazer commit apenas dos arquivos da entrega.
+6. Seguir o workflow Produção: banco antes de código, depois monitorar CI e Vercel até READY. Não contornar esse fluxo com deploy manual. Atualizar CONTINUIDADE e este arquivo, retirando tarefas concluídas.
 
-Build local usou as variáveis fictícias do CI, todas apontando a `http://127.0.0.1:54321` e chaves `ci`, sem credencial de produção. Leia `.github/workflows/service.yml` para o contrato exato. Dependências precisam estar no próprio worktree; Turbopack rejeitou symlink externo.
-
-## Pendências em ordem sugerida
-
-1. **Ações do Início sem navegação.** Revisar aprovar caminhada, registrar cuidado e respostas, por papel, módulo e dependências. A última correção cobre entradas e montagem de telas; não certifica toda ação de todo módulo. Conferir também links internos restantes em áreas permitidas que apontam a áreas negadas.
-2. **Matriz autenticada.** Completar cenários reais de papéis, módulos e escopos entre igreja, líder e membro. Fixtures de demo não comprovam RLS, gravação, upload ou notificações reais. Isolar dados antes de testes que escrevem.
-3. **Convite e primeiro acesso do membro.** Percorrer aceite, senha, endereço, dados essenciais, próximo passo e retorno, com igreja vazia e com conteúdo. A verificação visual de igreja vazia não encerra toda essa jornada.
-4. **Densidade dos módulos.** Financeiro, Visitantes, Crianças, Cursos e outras telas ainda têm revisão parcial; priorizar evidência de ação confusa, duplicada ou sem continuidade. Consultar STATUS/JORNADAS-E-CONEXOES antes de repetir investigação.
-5. **Acessibilidade em aparelho.** Safari/PWA real, teclado aberto, área segura, fonte do sistema e leitor de tela. Não há certificação completa.
-6. **Internacionalização.** Idioma, moeda e regras locais ainda pendentes. Telefone, endereço exterior, CNPJ alfanumérico e fuso já têm entregas e contratos.
-7. **Caminhada.** Reorganização interna em novos grupos permanece hipótese, não implementação pendente já decidida. Não mudar a casca sem evidência e decisão registrada.
-
-## Cuidado obrigatório com teste local legado
-
-**Não executar `scripts/check-local-rls.ts` no ambiente local compartilhado atual.** Nesta retomada ele foi executado antes de identificar que reseta requisitos e pedidos das fixtures e altera o bairro de um membro. Leituras iniciais passaram, mas o contrato antigo de Quero servir falhou e interrompeu a limpeza. Removidos por IDs exatos dois cursos e três requisitos criados. Não havia snapshot dos requisitos anteriores: não afirmar restauração integral. Detalhes em `implementacao/acessos/README.md`.
-
-Antes de reutilizar, modernizar o contrato e implementar banco isolado ou snapshot/restauração garantida. O erro não é aprovação de RLS, e repetir o script pode destruir dados locais de outra frente. Nenhuma mutação direta desse teste foi feita no banco de produção.
-
-## Publicação e limites
-
-Fluxo atual integrado de `origin/main` pela PR #9 (`9fc6b50`): `.github/workflows/producao.yml` aplica/verifica Supabase e só então chama o deploy hook. O deploy automático de main na Vercel foi desligado em `vercel.json`. Não pular banco antes de código com redeploy manual.
-
-Enviar arquivos explícitos em commit, push a main e à branch de continuação, monitorar os workflows Service e Produção e a implantação Vercel até READY. Registrar IDs no fechamento. Não inserir tokens em comandos, documentação ou saída.
-
-Navegador integrado falhou com `missing field sandboxPolicy`; foi usado Chromium local/CDP. Inspeção local com chaves fictícias pode gerar erro de endpoint de métricas; não declarar console inteiro limpo. Capturas de demo não comprovam produção autenticada. Preservar a distinção entre evidência visual, teste de contrato, hipótese e validação no banco.
-
-## Prompt para iniciar
-
-> Leia AGENTS.md integralmente e depois este HANDOFF, CONTINUIDADE.md e STATUS.md. Preserve alterações de outras frentes. Confirme Git e estado da publicação antes de editar. Continue pela revisão das ações do Início e entradas internas com acesso negado, em uma jornada por vez. Opção indisponível não aparece. Teste, registre evidência e limites, faça um commit por problema e siga o fluxo banco antes de código até CI success e deploy READY. Não execute check-local-rls.ts sem isolamento/restauração.
+Preservar o registro único de módulos, as quatro abas do membro e as regras de tema/estrutura do AGENTS. Não declarar validação de banco, aparelho real ou leitor de tela com base apenas em captura de demo.
