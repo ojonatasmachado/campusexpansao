@@ -10,6 +10,12 @@ import { formatDateBR } from "../../lib/date";
 import { useTermos } from "../../lib/vocabulario-context";
 import { anteriorDe, comparacao, etapasDaCaminhada, numerosDaBase, numerosDoPeriodo, periodoDe, type DadosSaude, type ItemPessoa, type Numero, type Periodo, type Preset } from "./saude";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
+import { Linha, linhaClasse } from "../../ui/Linha";
+import { Segmentado } from "../../ui/Segmentado";
+import { Contagem } from "../../ui/Contagem";
 const PRESETS: { v: Preset; l: string }[] = [
   { v: "30", l: "30 dias" },
   { v: "90", l: "90 dias" },
@@ -56,11 +62,11 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, podeAbrirPessoa = () => 
            a comparação aparece na tela quando o número mudou (o leitor de tela ouve sempre) */
         const mudou = n.anterior !== undefined && n.anterior !== n.valor;
         return (
-          <button key={n.id} type="button" className="saude-n" onClick={() => setLista(n)} disabled={!n.itens.length} aria-label={`${ct(n.rotulo)}: ${n.valor}${cmp ? `, ${cmp}` : ""}. Ver a lista`}>
-            <span className="saude-v">{n.valor.toLocaleString("pt-BR")}</span>
+          <Acao key={n.id} className="saude-n" onClick={() => setLista(n)} desativado={!n.itens.length} aria-label={`${ct(n.rotulo)}: ${n.valor}${cmp ? `, ${cmp}` : ""}. Ver a lista`}>
+            <Contagem className="saude-v" valor={n.valor} />
             <span className="saude-l">{ct(n.rotulo)}</span>
             {cmp && mudou && <span className="saude-c">{cmp}</span>}
-          </button>
+          </Acao>
         );
       })}
     </div>
@@ -71,11 +77,11 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, podeAbrirPessoa = () => 
       <div className="saude-head">
         <h2 className="saude-t">Saúde da igreja</h2>
         {panorama && (
-          <div className="seg seg-sm" role="radiogroup" aria-label="Período">
+          <Segmentado className="seg-sm" role="radiogroup" aria-label="Período">
             {PRESETS.map((p) => (
-              <button key={p.v} type="button" role="radio" aria-checked={preset === p.v} className={preset === p.v ? "on" : ""} onClick={() => setPreset(p.v)}>{p.l}</button>
+              <Opcao key={p.v} role="radio" aria-checked={preset === p.v} marcada={preset === p.v} onClick={() => setPreset(p.v)}>{p.l}</Opcao>
             ))}
-          </div>
+          </Segmentado>
         )}
       </div>
       {panorama && preset === "datas" && (
@@ -94,9 +100,9 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, podeAbrirPessoa = () => 
           {grade(etapasDaCaminhada(dados.membros, etapas))}
         </>
       )}
-      <button type="button" className="panel-link saude-mais" aria-expanded={panorama} onClick={alternarPanorama}>
+      <Botao variante="texto" className="saude-mais" aria-expanded={panorama} onClick={alternarPanorama}>
         {panorama ? "Mostrar só o de hoje" : ct("Ver o panorama: período, visitantes, decisões e {caminhada}")}
-      </button>
+      </Botao>
 
       {lista && (
         <div className="modal-bg" onClick={() => setLista(null)}>
@@ -107,12 +113,12 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, podeAbrirPessoa = () => 
             </div>
             <div className="modal-body" style={{ display: "block" }}>
               {[...lista.itens].sort((a, b) => a.nome.localeCompare(b.nome)).map((it) => podeAbrirPessoa(it) ? (
-                <button key={`${it.tipo}-${it.id}`} type="button" className="mini-row click" onClick={() => { setLista(null); onAbrir(it); }}>
+                <Acao key={`${it.tipo}-${it.id}`} className={`${linhaClasse({})} click`} onClick={() => { setLista(null); onAbrir(it); }}>
                   <div className="mini-main"><div className="mini-title">{it.nome}</div></div>
-                </button>
-              ) : <div className="mini-row" key={`${it.tipo}-${it.id}`}><div className="mini-main"><div className="mini-title">{it.nome}</div></div></div>)}
+                </Acao>
+              ) : <Linha key={`${it.tipo}-${it.id}`}><div className="mini-main"><div className="mini-title">{it.nome}</div></div></Linha>)}
             </div>
-            <div className="modal-foot"><button className="btn btn-pri" type="button" onClick={() => setLista(null)}>Fechar</button></div>
+            <div className="modal-foot"><Botao variante="principal" onClick={() => setLista(null)}>Fechar</Botao></div>
           </div>
         </div>
       )}

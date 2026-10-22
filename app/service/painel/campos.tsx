@@ -6,6 +6,10 @@ import CepInput from "../CepInput";
 import { DP_MESES } from "./comum";
 import type { FieldDef } from "./tipos";
 
+import { BotaoIcone } from "../ui/Botao";
+import { Interruptor } from "../ui/Interruptor";
+import { Acao } from "../ui/Acao";
+import { Opcao } from "../ui/Opcao";
 export function DrawerShell({ children, onClose, wide }: { children: React.ReactNode; onClose: () => void; wide?: boolean }) {
   return (
     <>
@@ -72,20 +76,20 @@ function BirthdayPicker({ value, onChange, id }: { value: string; onChange: (v: 
   const pick = (d: number) => { onChange(d + " " + DP_MESES[mes].toLowerCase()); setOpen(false); gatilho.current?.focus(); };
   return (
     <div className="dp" ref={caixa}>
-      <button ref={gatilho} id={id} type="button" className="dp-trigger" aria-expanded={open} aria-controls={open ? popId : undefined} aria-haspopup="dialog" onClick={() => setOpen((o) => !o)}>
+      <Acao ref={gatilho} id={id} className="dp-trigger" aria-expanded={open} aria-controls={open ? popId : undefined} aria-haspopup="dialog" onClick={() => setOpen((o) => !o)}>
         <span className={value ? "" : "dp-ph"}>{value ? `${dia} de ${DP_MESES_FULL[mes]}` : "Escolher dia e mês"}</span>
         <span className="dp-ic"><Caret /></span>
-      </button>
+      </Acao>
       {open && (
         <div className="dp-pop" id={popId} role="dialog" aria-label="Escolher dia e mês">
           <div className="dp-head">
-            <button type="button" aria-label="Mês anterior" onClick={() => setMes((m) => (m + 11) % 12)}>‹</button>
+            <BotaoIcone rotulo="Mês anterior" onClick={() => setMes((m) => (m + 11) % 12)}>‹</BotaoIcone>
             <span aria-live="polite">{DP_MESES_FULL[mes]}</span>
-            <button type="button" aria-label="Próximo mês" onClick={() => setMes((m) => (m + 1) % 12)}>›</button>
+            <BotaoIcone rotulo="Próximo mês" onClick={() => setMes((m) => (m + 1) % 12)}>›</BotaoIcone>
           </div>
           <div className="dp-grid">
             {Array.from({ length: DP_DIAS_MES[mes] }, (_, i) => i + 1).map((d) => (
-              <button type="button" key={d} className={`dp-day${dia === d && init.m === mes ? " on" : ""}`} aria-pressed={dia === d && init.m === mes} aria-label={`${d} de ${DP_MESES_FULL[mes]}`} onClick={() => pick(d)}>{d}</button>
+              <Opcao key={d} marcada={dia === d && init.m === mes} estilo="dp-day" aria-pressed={dia === d && init.m === mes} aria-label={`${d} de ${DP_MESES_FULL[mes]}`} onClick={() => pick(d)}>{d}</Opcao>
             ))}
           </div>
         </div>
@@ -104,17 +108,17 @@ export function TimePicker({ value, onChange, id }: { value: string; onChange: (
   const set = (h: number, m: number) => onChange(String(h).padStart(2, "0") + "h" + String(m).padStart(2, "0"));
   return (
     <div className="dp" ref={caixa}>
-      <button ref={gatilho} id={id} type="button" className="dp-trigger" aria-expanded={open} aria-controls={open ? popId : undefined} aria-haspopup="dialog" onClick={() => setOpen((o) => !o)}>
+      <Acao ref={gatilho} id={id} className="dp-trigger" aria-expanded={open} aria-controls={open ? popId : undefined} aria-haspopup="dialog" onClick={() => setOpen((o) => !o)}>
         <span className={value ? "" : "dp-ph"}>{value || "Escolher horário"}</span>
         <span className="dp-ic"><Caret /></span>
-      </button>
+      </Acao>
       {open && (
         <div className="dp-pop tp-pop" id={popId} role="dialog" aria-label="Escolher horário">
           <div className="tp-col">
             <div className="tp-col-h">Hora</div>
             <div className="tp-scroll">
               {Array.from({ length: 24 }, (_, h) => h).map((h) => (
-                <button type="button" key={h} className={`tp-opt${hh === h ? " on" : ""}`} aria-pressed={hh === h} aria-label={`${h} horas`} onClick={() => set(h, mm)}>{String(h).padStart(2, "0")}</button>
+                <Opcao key={h} marcada={hh === h} estilo="tp-opt" aria-pressed={hh === h} aria-label={`${h} horas`} onClick={() => set(h, mm)}>{String(h).padStart(2, "0")}</Opcao>
               ))}
             </div>
           </div>
@@ -122,7 +126,7 @@ export function TimePicker({ value, onChange, id }: { value: string; onChange: (
             <div className="tp-col-h">Min</div>
             <div className="tp-scroll">
               {[0, 15, 30, 45].map((m) => (
-                <button type="button" key={m} className={`tp-opt${mm === m ? " on" : ""}`} aria-pressed={mm === m} aria-label={`${m} minutos`} onClick={() => { set(hh, m); setOpen(false); gatilho.current?.focus(); }}>{String(m).padStart(2, "0")}</button>
+                <Opcao key={m} marcada={mm === m} estilo="tp-opt" aria-pressed={mm === m} aria-label={`${m} minutos`} onClick={() => { set(hh, m); setOpen(false); gatilho.current?.focus(); }}>{String(m).padStart(2, "0")}</Opcao>
               ))}
             </div>
           </div>
@@ -184,17 +188,17 @@ export function SelectField({ value, onChange, options, placeholder, label, id }
 
   return (
     <div className="sel-wrap" ref={caixa}>
-      <button ref={gatilho} id={id} type="button" className="sel-trigger" aria-label={label ? `${label}: ${current?.l || placeholder || "Selecione"}` : undefined}
+      <Acao ref={gatilho} id={id} className="sel-trigger" aria-label={label ? `${label}: ${current?.l || placeholder || "Selecione"}` : undefined}
         aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? listaId : undefined}
         onClick={() => setOpen((o) => !o)}
         onKeyDown={(e) => { if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !open) { e.preventDefault(); setOpen(true); } }}>
         <span className={current ? "" : "sel-ph"}>{current ? current.l : (placeholder || "Selecione")}</span>
         <span className="sel-arrow"><Caret open={open} /></span>
-      </button>
+      </Acao>
       {open && (
         <div className="sel-pop" id={listaId} role="listbox" aria-label={label} onKeyDown={navegar}>
           {itens.map((o) => (
-            <button key={o.v || "_vazio"} type="button" role="option" aria-selected={value === o.v} className={`sel-opt${value === o.v ? " on" : ""}`} onClick={() => escolher(o.v)}>{o.l}</button>
+            <Opcao key={o.v || "_vazio"} role="option" aria-selected={value === o.v} marcada={value === o.v} estilo="sel-opt" onClick={() => escolher(o.v)}>{o.l}</Opcao>
           ))}
         </div>
       )}
@@ -221,7 +225,7 @@ export function FField({ field, value, onChange, onPatch, id }: { field: FieldDe
   if (field.type === "toggle")
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <button id={id} type="button" role="switch" aria-label={field.label} aria-checked={value === "true"} className={`sw${value === "true" ? " on" : ""}`} onClick={() => onChange(value === "true" ? "false" : "true")} />
+        <Interruptor ligado={value === "true"} id={id} rotulo={field.label} onClick={() => onChange(value === "true" ? "false" : "true")} />
         <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{value === "true" ? (field.onLabel || "Sim") : (field.offLabel || "Não")}</span>
       </div>
     );
@@ -230,7 +234,7 @@ export function FField({ field, value, onChange, onPatch, id }: { field: FieldDe
     const tog = (v: string) => onChange(arr.includes(v) ? arr.filter((x) => x !== v).join(",") : [...arr, v].join(","));
     return (
       <div className="seg-check" role="group" aria-label={field.label}>
-        {field.options.map((o) => <button type="button" key={o.v} className={`seg-chip${arr.includes(o.v) ? " on" : ""}`} aria-pressed={arr.includes(o.v)} onClick={() => tog(o.v)}>{o.l}</button>)}
+        {field.options.map((o) => <Opcao key={o.v} marcada={arr.includes(o.v)} estilo="seg-chip" aria-pressed={arr.includes(o.v)} onClick={() => tog(o.v)}>{o.l}</Opcao>)}
       </div>
     );
   }

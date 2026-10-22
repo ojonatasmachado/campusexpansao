@@ -16,6 +16,8 @@ import { desenharBoletim } from "./boletim-imagem";
 import type { MuralAviso } from "./estado";
 import type { ChurchView, EventView, MinistryView, PersonView, RosterAssignmentView } from "../../ServiceExactApp";
 
+import { Botao } from "../../ui/Botao";
+import { Opcao } from "../../ui/Opcao";
 type Qual = "esta" | "proxima" | "outra";
 
 export function BoletimDaSemana({ church, avisos, events, roster, ministries, people, onClose }: {
@@ -84,9 +86,9 @@ export function BoletimDaSemana({ church, avisos, events, roster, ministries, pe
   };
 
   const opcao = (k: keyof Incluir, rotulo: string, n: number) => (
-    <button type="button" className={`seg-chip${incluir[k] ? " on" : ""}`} aria-pressed={incluir[k]} onClick={() => setIncluir((i) => ({ ...i, [k]: !i[k] }))}>
+    <Opcao marcada={incluir[k]} estilo="seg-chip" aria-pressed={incluir[k]} onClick={() => setIncluir((i) => ({ ...i, [k]: !i[k] }))}>
       {`${rotulo} · ${n}`}
-    </button>
+    </Opcao>
   );
 
   return (
@@ -106,7 +108,7 @@ export function BoletimDaSemana({ church, avisos, events, roster, ministries, pe
           <div className="field">
             <div className="fs-chips" role="group" aria-label="Qual semana">
               {([["esta", "Esta semana"], ["proxima", "Próxima semana"], ["outra", "Outra semana"]] as const).map(([k, l]) => (
-                <button key={k} type="button" className={`seg-chip${qual === k ? " on" : ""}`} aria-pressed={qual === k} onClick={() => setQual(k)}>{l}</button>
+                <Opcao key={k} marcada={qual === k} estilo="seg-chip" aria-pressed={qual === k} onClick={() => setQual(k)}>{l}</Opcao>
               ))}
             </div>
             {qual === "outra" && (
@@ -137,7 +139,7 @@ export function BoletimDaSemana({ church, avisos, events, roster, ministries, pe
             {desatualizado && (
               <div className="bol-refazer">
                 <span>Você editou o texto. As escolhas acima não mudam mais o que está escrito.</span>
-                <button type="button" className="btn btn-sec btn-sm" onClick={() => setTextoEditado(null)}>Montar de novo</button>
+                <Botao compacto onClick={() => setTextoEditado(null)}>Montar de novo</Botao>
               </div>
             )}
           </div>
@@ -147,10 +149,10 @@ export function BoletimDaSemana({ church, avisos, events, roster, ministries, pe
           <div className="field">
             <div className="field-hint" style={{ marginTop: 0 }}>Agenda e títulos dos avisos, nas cores da igreja. O texto editado acima não entra na imagem.</div>
             <div className="bol-img-acts">
-              <button type="button" className="btn btn-sec btn-sm" onClick={() => void gerar()} disabled={gerando || vazio}>
+              <Botao compacto onClick={() => void gerar()} desativado={gerando || vazio}>
                 <Icon name="imagem" size={14} /> {gerando ? "Gerando…" : imagem ? "Gerar de novo" : "Gerar imagem"}
-              </button>
-              {imagem && <button type="button" className="btn btn-sec btn-sm" onClick={() => void compartilhar()}><Icon name="baixar" size={14} /> Salvar imagem</button>}
+              </Botao>
+              {imagem && <Botao compacto onClick={() => void compartilhar()}><Icon name="baixar" size={14} /> Salvar imagem</Botao>}
             </div>
             {imagem && (
               // eslint-disable-next-line @next/next/no-img-element -- imagem gerada no navegador (blob:), sem otimização do Next

@@ -19,6 +19,9 @@ import { useTermos } from "../../lib/vocabulario-context";
 import { encontroUtil, planejarEncontros, type EncontroPreparado, type RascunhoEncontro } from "./ativacao";
 import { FASES, MODELOS_TIMES, type ModeloTime, type SetupEstado } from "./setup";
 
+import { Botao, botaoClasse } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 export type DadosIgreja = { fuso: string; nome: string; cep: string; endereco: string; bairro: string; cidade: string; estado: string };
 
 export function Assistente({
@@ -155,11 +158,11 @@ export function Assistente({
           <h1 className="ph-title">Vamos começar pela sua igreja</h1>
           <p className="ph-sub">Identifique sua igreja, prepare os próximos encontros e convide quem vai ajudar. Você pode continuar depois.</p>
         </div>
-        <div className="ph-actions"><button className="btn btn-sec" type="button" disabled={ocupado || !!editando} onClick={() => executar(async () => {
+        <div className="ph-actions"><Botao desativado={ocupado || !!editando} onClick={() => executar(async () => {
           const error = await onEstado({ ...estado, fase, primeiroEventoId: atual?.id ?? estado.primeiroEventoId, rascunho: atual ? undefined : rascunho });
           if (error) { setErro(error); return; }
           onIr("painel");
-        })}>{ocupado ? "Salvando..." : "Continuar depois"}</button></div>
+        })}>{ocupado ? "Salvando..." : "Continuar depois"}</Botao></div>
       </div>
 
       <ol className="setup-fases">
@@ -167,10 +170,10 @@ export function Assistente({
           const feita = estado.feitas.includes(f.n);
           return (
             <li key={f.n} className={`${fase === f.n ? "on" : ""}${feita ? " feita" : ""}`}>
-              <button type="button" disabled={ocupado || (!!editando && f.n !== 2)} onClick={() => { setErro(""); setFase(f.n as 1 | 2 | 3); }} aria-current={fase === f.n ? "step" : undefined}>
+              <Acao desativado={ocupado || (!!editando && f.n !== 2)} onClick={() => { setErro(""); setFase(f.n as 1 | 2 | 3); }} aria-current={fase === f.n ? "step" : undefined}>
                 <span className="setup-n">{feita ? <Icon name="ok" size={14} /> : f.n}</span>
                 <span className="setup-ft"><b>{ct(f.t)}</b><span>{feita ? "feita" : `cerca de ${plural(f.min, "minuto")}`}</span></span>
-              </button>
+              </Acao>
             </li>
           );
         })}
@@ -203,8 +206,8 @@ export function Assistente({
               <label className="field-label">Cor da igreja</label>
               <div className="setup-cores" role="radiogroup" aria-label="Cor da igreja">
                 {ACCENT_PRESETS.map((p) => (
-                  <button key={p.hex} type="button" role="radio" aria-checked={cor.toLowerCase() === p.hex.toLowerCase()} aria-label={p.label}
-                    className={`setup-cor${cor.toLowerCase() === p.hex.toLowerCase() ? " on" : ""}`} style={{ background: p.hex }} onClick={() => setCor(p.hex)} />
+                  <Opcao key={p.hex} role="radio" aria-checked={cor.toLowerCase() === p.hex.toLowerCase()} aria-label={p.label}
+                    marcada={cor.toLowerCase() === p.hex.toLowerCase()} estilo="setup-cor" style={{ background: p.hex }} onClick={() => setCor(p.hex)} />
                 ))}
               </div>
               <div className="field-hint">A tela já mostra a cor escolhida. Ajuste fino em Configurações › Personalização.</div>
@@ -212,7 +215,7 @@ export function Assistente({
             </details>
             <div className="setup-previa" aria-hidden="true">
               <ChurchLockup size="sm" logoUrl={logoUrl} name={dados.nome || "Sua igreja"} />
-              <span className="btn btn-pri btn-sm">{ct("Confirmar presença no {culto}")}</span>
+              <span className={botaoClasse({ variante: "principal", compacto: true })}>{ct("Confirmar presença no {culto}")}</span>
             </div>
           </div>
         )}
@@ -225,13 +228,13 @@ export function Assistente({
                 <h2>{atual.nome}</h2>
                 <p>{formatDateBR(atual.data)} · {atual.hora}</p><p>{atual.local}</p>
                 <p className="field-hint">O membro encontra o encontro e seu local na Agenda. Não há pedido de confirmação de presença nesta criação.</p>
-                <button className="btn btn-sec" type="button" disabled={ocupado} onClick={() => onVerEncontro(atual.id)}>Conferir encontro</button>
-                {estado.primeiroEventoId === atual.id && <button className="btn btn-sec" type="button" disabled={ocupado} onClick={() => ajustarEncontro(atual)}>Ajustar dados do encontro</button>}
+                <Botao desativado={ocupado} onClick={() => onVerEncontro(atual.id)}>Conferir encontro</Botao>
+                {estado.primeiroEventoId === atual.id && <Botao desativado={ocupado} onClick={() => ajustarEncontro(atual)}>Ajustar dados do encontro</Botao>}
                 {criados.length > 1 && <p className="field-hint">{plural(criados.length, "encontro preparado")}. A repetição termina em {formatDateBR(rascunho.ate)}.</p>}
               </section>
             ) : (
               <>
-                {!editando && registrado && !atual && <div className="service-setup-result"><p>O encontro registrado precisa de revisão antes de concluir a ativação.</p><button className="btn btn-sec" type="button" disabled={ocupado} onClick={() => ajustarEncontro(registrado)}>Revisar encontro cadastrado</button></div>}
+                {!editando && registrado && !atual && <div className="service-setup-result"><p>O encontro registrado precisa de revisão antes de concluir a ativação.</p><Botao desativado={ocupado} onClick={() => ajustarEncontro(registrado)}>Revisar encontro cadastrado</Botao></div>}
                 {!editando && uteis.length > 0 && <div className="field"><label htmlFor="setup-existente" className="field-label">Continuar com um encontro já preparado</label><select id="setup-existente" className="select" value={selecionado} onChange={(e) => setSelecionado(e.target.value)}><option value="">Preparar um novo encontro</option>{uteis.map((e) => <option key={e.id} value={e.id}>{e.nome} · {formatDateBR(e.data)} · {e.hora}</option>)}</select></div>}
                 <div className="field"><label htmlFor="setup-encontro-nome" className="field-label req">Nome do encontro</label><input id="setup-encontro-nome" className="input" value={rascunho.nome} onChange={(e) => setEncontro({ nome: e.target.value })} /></div>
                 <div className="setup-2col">
@@ -251,9 +254,9 @@ export function Assistente({
               <p className="field-hint">O encontro já pode ser encontrado pelos membros. Escolha somente os times que você quer organizar agora.</p>
               <div className="setup-modelos">{MODELOS_TIMES.map((m) => {
                 const ja = existe(m.nome) || timesFeitos.includes(m.id);
-                return <button key={m.id} type="button" className={`setup-modelo${modelos.includes(m.id) && !ja ? " on" : ""}`} aria-pressed={modelos.includes(m.id) && !ja} disabled={ocupado || ja} onClick={() => setModelos((l) => l.includes(m.id) ? l.filter((x) => x !== m.id) : [...l, m.id])}><Icon name={m.icone} size={18} /><span><b>{m.nome}</b><span>{ja ? "já existe" : m.funcoes.map((f) => f.nome).join(", ")}</span></span></button>;
+                return <Opcao key={m.id} marcada={modelos.includes(m.id) && !ja} estilo="setup-modelo" aria-pressed={modelos.includes(m.id) && !ja} desativado={ocupado || ja} onClick={() => setModelos((l) => l.includes(m.id) ? l.filter((x) => x !== m.id) : [...l, m.id])}><Icon name={m.icone} size={18} /><span><b>{m.nome}</b><span>{ja ? "já existe" : m.funcoes.map((f) => f.nome).join(", ")}</span></span></Opcao>;
               })}</div>
-              <button className="btn btn-sec" type="button" disabled={ocupado || !modelosEscolhidos.length} onClick={() => executar(criarTimes)}>{ocupado ? "Preparando..." : "Preparar times escolhidos"}</button>
+              <Botao desativado={ocupado || !modelosEscolhidos.length} onClick={() => executar(criarTimes)}>{ocupado ? "Preparando..." : "Preparar times escolhidos"}</Botao>
               {timesFeitos.length > 0 && <p className="field-hint" role="status">{plural(timesFeitos.length, "time preparado")}. Marque os responsáveis em Times.</p>}
             </details>}
           </div>
@@ -266,11 +269,11 @@ export function Assistente({
               <div className="field"><label className="field-label" htmlFor="setup-convite-nome">Nome e sobrenome</label><input id="setup-convite-nome" className="input" value={convNome} onChange={(e) => setConvNome(e.target.value)} /></div>
               <div className="field"><label className="field-label" htmlFor="setup-convite-tel">Telefone (WhatsApp)</label><input id="setup-convite-tel" className="input" type="tel" value={convTel} placeholder="(11) 90000-0000" onChange={(e) => setConvTel(e.target.value)} /></div>
             </div>
-            <button className="btn btn-sec" type="button" disabled={ocupado} onClick={() => executar(convidar)}><Icon name="whatsapp" size={15} /> Convidar pelo WhatsApp</button>
+            <Botao desativado={ocupado} onClick={() => executar(convidar)}><Icon name="whatsapp" size={15} /> Convidar pelo WhatsApp</Botao>
             {convidados.length > 0 && <p className="setup-frase">{`Convites preparados no WhatsApp: ${convidados.join(", ")}.`}</p>}
             {timesExistentes.length > 0 && atual && <details className="service-setup-options"><summary>Definir responsáveis e organizar a equipe</summary>
               <p className="field-hint">O acesso ao app é separado da responsabilidade por um time. Confira quem lidera e depois prepare a escala do encontro.</p>
-              <div className="setup-2col"><button className="btn btn-sec" type="button" disabled={ocupado} onClick={() => onIr("times")}>Definir líderes em Times</button><button className="btn btn-sec" type="button" disabled={ocupado} onClick={() => onIr("escalas")}>Preparar escala</button></div>
+              <div className="setup-2col"><Botao desativado={ocupado} onClick={() => onIr("times")}>Definir líderes em Times</Botao><Botao desativado={ocupado} onClick={() => onIr("escalas")}>Preparar escala</Botao></div>
             </details>}
           </div>
         )}
@@ -279,14 +282,14 @@ export function Assistente({
         {erro && <p className="field-error" role="alert">{erro}</p>}
 
         <div className="setup-foot">
-          {editando ? <button className="btn btn-ghost" type="button" disabled={ocupado} onClick={() => { setEditando(null); setErro(""); }}>Cancelar ajuste</button> : <button className="btn btn-ghost" type="button" disabled={ocupado} onClick={() => executar(async () => { if (fase < 3) await avancar(fase, "", true); else onIr("painel"); })}>{fase < 3 ? "Pular esta fase" : "Fazer depois"}</button>}
-          {fase === 1 && <button className="btn btn-pri" type="button" disabled={ocupado} onClick={() => executar(salvarFase1)}>{ocupado ? "Salvando..." : "Salvar e continuar →"}</button>}
-          {fase === 2 && (!atual || editando) && <button className="btn btn-pri" type="button" disabled={ocupado || !!plano.erro} onClick={() => executar(criarFase2)}>{ocupado ? "Salvando..." : editando ? "Salvar ajustes" : "Disponibilizar na agenda"}</button>}
-          {fase === 2 && atual && !editando && <button className="btn btn-pri" type="button" disabled={ocupado} onClick={() => executar(async () => { await avancar(2, `Encontro preparado: ${atual.nome}.`); })}>Continuar →</button>}
-          {fase === 3 && <button className="btn btn-pri" type="button" disabled={ocupado} onClick={() => executar(async () => {
+          {editando ? <Botao variante="discreto" desativado={ocupado} onClick={() => { setEditando(null); setErro(""); }}>Cancelar ajuste</Botao> : <Botao variante="discreto" desativado={ocupado} onClick={() => executar(async () => { if (fase < 3) await avancar(fase, "", true); else onIr("painel"); })}>{fase < 3 ? "Pular esta fase" : "Fazer depois"}</Botao>}
+          {fase === 1 && <Botao variante="principal" desativado={ocupado} onClick={() => executar(salvarFase1)}>{ocupado ? "Salvando..." : "Salvar e continuar →"}</Botao>}
+          {fase === 2 && (!atual || editando) && <Botao variante="principal" desativado={ocupado || !!plano.erro} onClick={() => executar(criarFase2)}>{ocupado ? "Salvando..." : editando ? "Salvar ajustes" : "Disponibilizar na agenda"}</Botao>}
+          {fase === 2 && atual && !editando && <Botao variante="principal" desativado={ocupado} onClick={() => executar(async () => { await avancar(2, `Encontro preparado: ${atual.nome}.`); })}>Continuar →</Botao>}
+          {fase === 3 && <Botao variante="principal" desativado={ocupado} onClick={() => executar(async () => {
             if (!atual) { setErro("Prepare ou escolha um encontro antes de encerrar a ativação."); setFase(2); return; }
             if (await avancar(3, "Confira a agenda e acompanhe os acessos em Pessoas.", convidados.length === 0)) onIr("cultos");
-          })}>{ocupado ? "Salvando..." : atual ? "Concluir e ver agenda" : "Preparar primeiro encontro"}</button>}
+          })}>{ocupado ? "Salvando..." : atual ? "Concluir e ver agenda" : "Preparar primeiro encontro"}</Botao>}
 
         </div>
       </div>

@@ -15,7 +15,7 @@ import ThemePicker from "../../ThemePicker";
 import { PublicPageEditor } from "../../PublicPageEditor";
 import { ContribuirConfig } from "../../modules/contribuir/ContribuirConfig";
 import { LogoField, BackgroundField } from "../../IdentidadeFields";
-import { useChurchSettingsField } from "../../lib/settings-field";
+import { useChurchSettingsField, useChurchSettingsValor } from "../../lib/settings-field";
 import { normalizarVocabulario, vocabularioParaGravar, LIMITE_CURTO, LIMITE_TELA, TERMOS, TERMOS_IDS, type Vocabulario } from "../../lib/vocabulario";
 import { useTermos } from "../../lib/vocabulario-context";
 import { IDENTIDADE_CFG_DEFAULT } from "../../../lib/church-page";
@@ -39,6 +39,13 @@ import { TurmasKids } from "./Kids";
 import { PesquisasView } from "./Pesquisas";
 import type { ChurchView, CourseView, FellowshipGroupView, GruposCfg, KidsClassView, MatrizV2, MinisterialTitleView, MinistryView, ModalState, PapelV2, PersonView, ReservationView, RoomView, StatusCriterios, TagView } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
+import { Interruptor } from "../../ui/Interruptor";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
+import { Linha } from "../../ui/Linha";
+import { Etiqueta, Selo } from "../../ui/Selo";
+import { Segmentado } from "../../ui/Segmentado";
 export const STATUS_CFG_DEFAULT: StatusCriterios = { recusasInativando: 2, recusasInativo: 4, diasIndispInativo: 30, considerarFerias: false };
 export const GRUPOS_CFG_DEFAULT: GruposCfg = { ativo: true, termo: "Grupos de Comunhão", termoP: "Grupo de Comunhão", sigla: "GC" };
 
@@ -125,10 +132,10 @@ export function AcessosCard({
           {lista.slice(0, 40).map((p) => {
             const n = grantsDe(p.id).filter((c) => c !== "acessos.delegar").length;
             return (
-              <button key={p.id} type="button" className={`flag-row${selectedId === p.id ? " on" : ""}`} onClick={() => setSelectedId(p.id)}>
+              <Opcao key={p.id} marcada={selectedId === p.id} estilo="flag-row" onClick={() => setSelectedId(p.id)}>
                 <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
                 <div className="flag-main"><div className="flag-nome">{p.name}</div><div className="flag-meta">{n ? `${plural(n, "acesso extra", "acessos extras")}` : "sem acesso extra"}</div></div>
-              </button>
+              </Opcao>
             );
           })}
           {lista.length === 0 && <div className="empty" style={{ padding: "16px 0" }}>Ninguém encontrado.</div>}
@@ -146,11 +153,11 @@ export function AcessosCard({
               {ACESSO_ROTAS.map((r) => {
                 const on = pessoaGrants.includes(r.id);
                 return (
-                  <button key={r.id} type="button" className={`acesso-tog${on ? " on" : ""}`} onClick={() => toggleGrant(r.id)}>
+                  <Opcao key={r.id} marcada={on} estilo="acesso-tog" onClick={() => toggleGrant(r.id)}>
                     <span className="acesso-tog-ic"><Icon name={CEX_ICON_FOR[r.id] ?? "config"} size={15} /></span>
                     <span className="acesso-tog-l">{ct(r.label)}</span>
                     <span className={`acesso-tog-sw${on ? " on" : ""}`} />
-                  </button>
+                  </Opcao>
                 );
               })}
             </div>
@@ -163,23 +170,23 @@ export function AcessosCard({
                   {([[ACESSO_FIN_VER, "Ver o financeiro"], [ACESSO_FIN_LANCAR, "Ver e lançar"]] as const).map(([code, label]) => {
                     const on = pessoaGrants.includes(code);
                     return (
-                      <button key={code} type="button" className={`acesso-tog${on ? " on" : ""}`} aria-pressed={on} onClick={() => toggleGrant(code)}>
+                      <Opcao key={code} marcada={on} estilo="acesso-tog" aria-pressed={on} onClick={() => toggleGrant(code)}>
                         <span className="acesso-tog-ic"><Icon name="carteira" size={15} /></span>
                         <span className="acesso-tog-l">{label}</span>
                         <span className={`acesso-tog-sw${on ? " on" : ""}`} />
-                      </button>
+                      </Opcao>
                     );
                   })}
                 </div>
               </div>
             )}
-            <div className="cfg-row" style={{ marginTop: 18 }}>
+            <Linha estilo="config" style={{ marginTop: 18 }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Pode liberar acessos a outras pessoas</div>
                 <div className="cfg-row-s">{ehDelegado ? "É um delegado de acessos" : "Só vê os próprios acessos"}</div>
               </div>
-              <button type="button" className={`sw${ehDelegado ? " on" : ""}`} disabled={!podeDelegar} onClick={() => toggleGrant("acessos.delegar")} />
-            </div>
+              <Interruptor ligado={ehDelegado} rotulo="Pode liberar acessos a outras pessoas" desativado={!podeDelegar} onClick={() => toggleGrant("acessos.delegar")} />
+            </Linha>
             {erro && <div className="field-error" style={{ marginTop: 8 }}>{erro}</div>}
             {!podeDelegar && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 8 }}>Só a Direção (master) define quem pode delegar acessos.</div>}
           </>
@@ -262,8 +269,7 @@ export function TagElencoModal({
                 <div className="flag-main">
                   <div className="flag-nome">{p.name}{lider && <span style={{ marginLeft: 8, fontSize: "var(--fs-pn-12)", color: "var(--amber)", display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="estrela" size={12} /> líder</span>}</div>
                 </div>
-                <button
-                  type="button"
+                <Acao
                   title={lider ? "Remover como líder" : "Tornar líder do time"}
                   aria-label={lider ? "Remover como líder" : "Tornar líder do time"}
                   aria-pressed={lider}
@@ -271,14 +277,14 @@ export function TagElencoModal({
                   style={{ background: "none", border: "none", cursor: "pointer", fontSize: "var(--fs-pn-16)", color: lider ? "var(--amber)" : "var(--muted)" }}
                 >
                   <Icon name="estrela" size={16} />
-                </button>
+                </Acao>
               </div>
             );
           })}
           {lista.length === 0 && <div className="empty">Ninguém encontrado.</div>}
         </div>
         <div className="modal-foot">
-          <button className="btn btn-pri" type="button" onClick={onClose}>Concluído</button>
+          <Botao variante="principal" onClick={onClose}>Concluído</Botao>
         </div>
       </div>
     </div>
@@ -373,12 +379,12 @@ export function CongregacaoEditModal({
         {churchMinistries.map((m) => {
           const leader = m.people.find((p) => p.isLeader);
           return (
-            <div className="cfg-row" key={m.id}>
+            <Linha estilo="config" key={m.id}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">{m.name}</div>
                 <div className="cfg-row-s">{leader ? `líder ${leader.personName}` : "sem líder definido"}</div>
               </div>
-            </div>
+            </Linha>
           );
         })}
         {churchMinistries.length === 0 && <p className="fs-note">Nenhum time cadastrado nesta congregação.</p>}
@@ -536,63 +542,28 @@ export function Config({
 
   const [editMin, setEditMin] = useState<MinistryView | null>(null);
 
-  const [escalaCfg, setEscalaCfg] = useState<EscalaSettings>(() => ({ ...ESCALA_DEFAULT, ...(church?.settings?.escala ?? {}) }));
-  const setEscala = async (k: keyof EscalaSettings, v: unknown) => {
-    const next = { ...escalaCfg, [k]: v } as EscalaSettings;
-    setEscalaCfg(next);
-    if (!church?.id) return;
-    await createServiceBrowserClient()
-      .schema("service")
-      .from("churches")
-      .update({ settings: { ...church.settings, escala: next } })
-      .eq("id", church.id);
-    router.refresh();
-  };
+  /* gravações de settings em fila, lendo o banco antes (lib/settings-field):
+     dois cliques seguidos num interruptor não se atropelam mais */
+  const avisoFalha = (ok: boolean) => { if (!ok) avisar("Não foi possível salvar. Tente novamente.", "warn"); };
+  const [escalaCfg, , salvarEscala] = useChurchSettingsField<EscalaSettings>("escala", ESCALA_DEFAULT, church, () => router.refresh());
+  const setEscala = (k: keyof EscalaSettings, v: unknown) => salvarEscala({ [k]: v } as Partial<EscalaSettings>).then(avisoFalha);
 
-  const [statusCfg, setStatusCfg] = useState<StatusCriterios>(() => ({ ...STATUS_CFG_DEFAULT, ...(church?.settings?.statusCfg ?? {}) }));
-  const setStatus = async (k: keyof StatusCriterios, v: number | boolean) => {
-    const next = { ...statusCfg, [k]: v } as StatusCriterios;
-    setStatusCfg(next);
-    if (!church?.id) return;
-    await createServiceBrowserClient()
-      .schema("service")
-      .from("churches")
-      .update({ settings: { ...church.settings, statusCfg: next } })
-      .eq("id", church.id);
-    router.refresh();
-  };
+  const [statusCfg, , salvarStatus] = useChurchSettingsField<StatusCriterios>("statusCfg", STATUS_CFG_DEFAULT, church, () => router.refresh());
+  const setStatus = (k: keyof StatusCriterios, v: number | boolean) => salvarStatus({ [k]: v } as Partial<StatusCriterios>).then(avisoFalha);
 
-  const [tiposEvento, setTiposEventoState] = useState<string[]>(() => church?.settings?.tiposEvento ?? []);
+  const [tiposEvento, , salvarTiposEvento] = useChurchSettingsValor<string[]>("tiposEvento", [], church, () => router.refresh());
   const [novoTipoEvento, setNovoTipoEvento] = useState("");
-  const saveTiposEvento = async (next: string[]) => {
-    setTiposEventoState(next);
-    if (!church?.id) return;
-    await createServiceBrowserClient()
-      .schema("service")
-      .from("churches")
-      .update({ settings: { ...church.settings, tiposEvento: next } })
-      .eq("id", church.id);
-    router.refresh();
-  };
+  const saveTiposEvento = (next: string[]) => salvarTiposEvento(next).then(avisoFalha);
   const addTipoEvento = () => {
     const v = novoTipoEvento.trim();
     if (v && !tiposEvento.includes(v)) saveTiposEvento([...tiposEvento, v]);
     setNovoTipoEvento("");
   };
 
-  const [horariosCulto, setHorariosCultoState] = useState<string[]>(() => church?.settings?.horariosCulto ?? []);
+  const [horariosCulto, , salvarHorariosCulto] = useChurchSettingsValor<string[]>("horariosCulto", [], church, () => router.refresh());
   const [novoHorarioDia, setNovoHorarioDia] = useState(DIAS_SEMANA[0]);
   const [novoHorarioHora, setNovoHorarioHora] = useState("");
-  const saveHorariosCulto = async (next: string[]) => {
-    setHorariosCultoState(next);
-    if (!church?.id) return;
-    await createServiceBrowserClient()
-      .schema("service")
-      .from("churches")
-      .update({ settings: { ...church.settings, horariosCulto: next } })
-      .eq("id", church.id);
-    router.refresh();
-  };
+  const saveHorariosCulto = (next: string[]) => salvarHorariosCulto(next).then(avisoFalha);
   const addHorarioCulto = () => {
     if (!novoHorarioHora) return;
     const v = `${novoHorarioDia} ${novoHorarioHora}`;
@@ -602,27 +573,11 @@ export function Config({
     }
   };
 
-  const setCheckinPermitirExtra = async (v: boolean) => {
-    if (!church?.id) return;
-    await createServiceBrowserClient()
-      .schema("service")
-      .from("churches")
-      .update({ settings: { ...church.settings, checkinPermitirExtra: v } })
-      .eq("id", church.id);
-    router.refresh();
-  };
+  const [checkinPermitirExtra, , salvarCheckinExtra] = useChurchSettingsValor<boolean>("checkinPermitirExtra", false, church, () => router.refresh());
+  const setCheckinPermitirExtra = (v: boolean) => salvarCheckinExtra(v).then(avisoFalha);
 
-  const [gruposCfg, setGruposCfgState] = useState<GruposCfg>(() => ({ ...GRUPOS_CFG_DEFAULT, ...(church?.settings?.gruposCfg ?? {}) }));
-  const saveGruposCfg = async (next: GruposCfg) => {
-    setGruposCfgState(next);
-    if (!church?.id) return;
-    await createServiceBrowserClient()
-      .schema("service")
-      .from("churches")
-      .update({ settings: { ...church.settings, gruposCfg: next } })
-      .eq("id", church.id);
-    router.refresh();
-  };
+  const [gruposCfg, setGruposCfgState, salvarGruposCfg] = useChurchSettingsField<GruposCfg>("gruposCfg", GRUPOS_CFG_DEFAULT, church, () => router.refresh());
+  const saveGruposCfg = (next: GruposCfg) => salvarGruposCfg(next).then(avisoFalha);
 
   /* Personalização (marca + identidade) : os campos só mexem em estado
      local (patchBrand/patchIdentidade) enquanto a pessoa ajusta cor, logo,
@@ -718,10 +673,10 @@ export function Config({
             <div key={g} className="cfg-index-group">
               <div className="cfg-index-gt">{g}</div>
               {cfgTabs.filter((t) => t.group === g).map((t) => (
-                <button key={t.id} type="button" className={`cfg-index-item${tab === t.id ? " on" : ""}`} aria-current={tab === t.id ? "page" : undefined} onClick={() => { setTab(t.id); setCfgAberta(true); }}>
+                <Opcao key={t.id} marcada={tab === t.id} estilo="cfg-index-item" aria-current={tab === t.id ? "page" : undefined} onClick={() => { setTab(t.id); setCfgAberta(true); }}>
                   <span className="cfg-index-t">{ct(t.label)}</span>
                   <span className="cfg-index-s">{t.s}</span>
-                </button>
+                </Opcao>
               ))}
             </div>
           ))}
@@ -729,9 +684,9 @@ export function Config({
       )}
       <div className={only ? "" : "cfg-main"}>
       {!only && (
-        <button type="button" className="cfg-back" onClick={() => setCfgAberta(false)}>
+        <Acao className="cfg-back" onClick={() => setCfgAberta(false)}>
           <Icon name="voltar" size={18} /> Configurações
-        </button>
+        </Acao>
       )}
 
       {/* ─── IGREJA ─── */}
@@ -784,9 +739,9 @@ export function Config({
             {igrejaMudou && (
               <div className="save-bar">
                 <span>Você tem alterações não salvas.</span>
-                <button className="btn btn-pri" type="button" disabled={igrejaLoading} onClick={saveIgreja}>
+                <Botao variante="principal" desativado={igrejaLoading} onClick={saveIgreja}>
                   {igrejaLoading ? "Salvando..." : "Salvar"}
-                </button>
+                </Botao>
               </div>
             )}
           </div>
@@ -797,21 +752,21 @@ export function Config({
               {horariosCulto.map((h) => (
                 <span key={h} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                   <Icon name="cultos" size={12} /> {h}
-                  <button type="button" onClick={() => saveHorariosCulto(horariosCulto.filter((x) => x !== h))} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "var(--fs-pn-12)", padding: 0 }}>✕</button>
+                  <Acao onClick={() => saveHorariosCulto(horariosCulto.filter((x) => x !== h))} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "var(--fs-pn-12)", padding: 0 }}>✕</Acao>
                 </span>
               ))}
               {horariosCulto.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum horário cadastrado.</span>}
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
               {DIAS_SEMANA.map((dia) => (
-                <button key={dia} type="button" className={`opt${novoHorarioDia === dia ? " on" : ""}`} style={{ padding: "8px 12px" }} onClick={() => setNovoHorarioDia(dia)}>
+                <Opcao key={dia} marcada={novoHorarioDia === dia} estilo="opt" style={{ padding: "8px 12px" }} onClick={() => setNovoHorarioDia(dia)}>
                   {dia.slice(0, 3)}
-                </button>
+                </Opcao>
               ))}
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <TimePicker value={novoHorarioHora} onChange={setNovoHorarioHora} />
-              <button className="btn btn-sec" type="button" disabled={!novoHorarioHora} onClick={addHorarioCulto}>Adicionar</button>
+              <Botao desativado={!novoHorarioHora} onClick={addHorarioCulto}>Adicionar</Botao>
             </div>
           </div>
         </div>
@@ -825,7 +780,7 @@ export function Config({
           {ministries.map((m) => {
             const leader = m.people.find((p) => p.isLeader);
             return (
-              <div className="cfg-row" key={m.id}>
+              <Linha estilo="config" key={m.id}>
                 <div className="bd-mark"><Icon name={m.icon || "times"} size={18} /></div>
                 <div className="cfg-row-main">
                   <div className="cfg-row-t">
@@ -833,12 +788,12 @@ export function Config({
                     {leader && <span style={{ color: "var(--muted)", fontWeight: 400, fontSize: "var(--fs-pn-12)" }}> · líder {leader.personName.split(" ")[0]}</span>}
                   </div>
                   <div className="cell-tags" style={{ marginTop: 7 }}>
-                    {m.positions.map((p) => <span key={p.id} className="tag">{p.name}</span>)}
+                    {m.positions.map((p) => <Etiqueta key={p.id}>{p.name}</Etiqueta>)}
                     {m.positions.length === 0 && <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>Sem funções</span>}
                   </div>
                 </div>
-                <button className="btn btn-sec btn-sm" type="button" onClick={() => setEditMin(m)}>Editar</button>
-              </div>
+                <Botao compacto onClick={() => setEditMin(m)}>Editar</Botao>
+              </Linha>
             );
           })}
           {ministries.length === 0 && <div className="empty">Nenhum time ainda.</div>}
@@ -853,12 +808,12 @@ export function Config({
             {ministerialTitles.map((t) => (
               <span key={t.id} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 {t.name}
-                <button type="button" onClick={() => removeRow("ministerial_titles", t.id)} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "var(--fs-pn-12)", padding: 0, cursor: "pointer" }}>✕</button>
+                <Acao onClick={() => removeRow("ministerial_titles", t.id)} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "var(--fs-pn-12)", padding: 0, cursor: "pointer" }}>✕</Acao>
               </span>
             ))}
             {ministerialTitles.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum papel cadastrado.</span>}
           </div>
-          <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo papel ministerial", subtitle: "ex: Pastor, Diácono, Presbítero.", saveLabel: "Adicionar papel", formFields: [{ k:"nome", label:"Nome do papel", type:"text", req:true, ph:"ex: Diácono" }], action: { kind: "title" } })}>+ Papel ministerial</button>
+          <Botao compacto onClick={() => setModal({ eyebrow: "Criar", title: "Novo papel ministerial", subtitle: "ex: Pastor, Diácono, Presbítero.", saveLabel: "Adicionar papel", formFields: [{ k:"nome", label:"Nome do papel", type:"text", req:true, ph:"ex: Diácono" }], action: { kind: "title" } })}>+ Papel ministerial</Botao>
         </div>
       )}
 
@@ -872,7 +827,7 @@ export function Config({
               const dentro = people.filter((p) => p.tags.includes(t.id)).length;
               const lideres = t.leaders.map((id) => people.find((p) => p.id === id)?.name.split(" ")[0]).filter(Boolean);
               return (
-                <div className="cfg-row" key={t.id}>
+                <Linha estilo="config" key={t.id}>
                   <div className="cong-mark" style={{ background: "var(--ink)" }}><span style={{ width: 9, height: 9, borderRadius: "50%", background: `var(--${t.color})`, display: "inline-block" }} /></div>
                   <div className="cfg-row-main">
                     {editTagId === t.id ? (
@@ -887,16 +842,15 @@ export function Config({
                         />
                         <span style={{ display: "flex", gap: 6 }}>
                           {TAG_CORES.map((c) => (
-                            <button
+                            <Acao
                               key={c.v}
-                              type="button"
                               title={c.l}
                               onClick={() => recolorirTag(t.id, c.v)}
                               style={{ width: 20, height: 20, borderRadius: "50%", background: `var(--${c.v})`, border: t.color === c.v ? "2px solid var(--white)" : "2px solid transparent", cursor: "pointer", padding: 0 }}
                             />
                           ))}
                         </span>
-                        <button className="btn btn-sec btn-sm" type="button" onClick={() => { renomearTag(t.id, tagNomeEdit); setEditTagId(null); }}>Pronto</button>
+                        <Botao compacto onClick={() => { renomearTag(t.id, tagNomeEdit); setEditTagId(null); }}>Pronto</Botao>
                       </div>
                     ) : (
                       <>
@@ -909,17 +863,17 @@ export function Config({
                   </div>
                   {editTagId !== t.id && (
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                      <button className="btn btn-sec btn-sm" type="button" onClick={() => setElencoTag(t)}>Elenco</button>
-                      <button className="btn btn-sec btn-sm" type="button" onClick={() => { setEditTagId(t.id); setTagNomeEdit(t.name); }}>Editar</button>
-                      <button className="btn btn-sec btn-sm" type="button" onClick={() => removeRow("tags", t.id)}>Remover</button>
+                      <Botao compacto onClick={() => setElencoTag(t)}>Elenco</Botao>
+                      <Botao compacto onClick={() => { setEditTagId(t.id); setTagNomeEdit(t.name); }}>Editar</Botao>
+                      <Botao compacto onClick={() => removeRow("tags", t.id)}>Remover</Botao>
                     </div>
                   )}
-                </div>
+                </Linha>
               );
             })}
             {tags.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>Nenhuma etiqueta cadastrada.</div>}
           </div>
-          <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova etiqueta", subtitle: ct("Etiqueta livre para agrupar {voluntarios} (ex: Jovens, Casais)."), saveLabel: "Criar etiqueta", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Jovens" }, { k:"cor", label:"Cor", type:"select", options: TAG_CORES }], action: { kind: "tag" } })}>+ Etiqueta</button>
+          <Botao compacto onClick={() => setModal({ eyebrow: "Criar", title: "Nova etiqueta", subtitle: ct("Etiqueta livre para agrupar {voluntarios} (ex: Jovens, Casais)."), saveLabel: "Criar etiqueta", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: Jovens" }, { k:"cor", label:"Cor", type:"select", options: TAG_CORES }], action: { kind: "tag" } })}>+ Etiqueta</Botao>
         </div>
       )}
 
@@ -929,13 +883,13 @@ export function Config({
           <div className="cfg-card">
             <div className="cfg-card-t">Habilitar grupos</div>
             <div className="cfg-card-s">Desligue se sua igreja não trabalha com células/GCs. O recurso some do resto do app, mas nada é apagado.</div>
-            <div className="cfg-row" style={{ borderBottom: gruposCfg.ativo ? "0.5px solid var(--border-2)" : "none" }}>
+            <Linha estilo="config" style={{ borderBottom: gruposCfg.ativo ? "0.5px solid var(--border-2)" : "none" }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">{gruposCfg.ativo ? "Ativado" : "Desativado"}</div>
                 <div className="cfg-row-s">{gruposCfg.ativo ? "Grupos aparecem no cadastro de membro e nos relatórios." : "Grupos escondidos em todo o app."}</div>
               </div>
-              <button type="button" className={`sw${gruposCfg.ativo ? " on" : ""}`} onClick={() => saveGruposCfg({ ...gruposCfg, ativo: !gruposCfg.ativo })} />
-            </div>
+              <Interruptor ligado={gruposCfg.ativo} rotulo="Usar grupos" onClick={() => saveGruposCfg({ ...gruposCfg, ativo: !gruposCfg.ativo })} />
+            </Linha>
             {gruposCfg.ativo && (
               <div className="cfg-grid2" style={{ gap: "0 16px", marginTop: 16 }}>
                 <div className="field"><label className="field-label">Nome</label><div className="cfg-row-s" style={{ marginTop: 4 }}>{ct("{Grupo}")}. O nome se muda em Personalização, em Nomes usados no app.</div></div>
@@ -950,19 +904,19 @@ export function Config({
               {fellowshipGroups.map((g) => {
                 const leader = people.find((p) => p.id === g.leader_person_id);
                 return (
-                  <div className="cfg-row" key={g.id}>
+                  <Linha estilo="config" key={g.id}>
                     <div className="cong-mark"><Icon name="identidade" size={16} /></div>
                     <div className="cfg-row-main">
                       <div className="cfg-row-t">{g.name}</div>
                       <div className="cfg-row-s">{[g.weekday, g.time, g.neighborhood].filter(Boolean).join(" · ") || "sem dia/local definido"}{leader ? ` · líder ${leader.name.split(" ")[0]}` : ""}{g.capacity ? ` · ${plural(g.capacity, "lugar", "lugares")}` : ""}{g.postal_code ? "" : " · sem endereço"}</div>
                     </div>
-                    <button className="btn btn-sec btn-sm" type="button" onClick={() => setGerirGrupoId(g.id)}>Editar</button>
-                    <button className="btn btn-sec btn-sm" type="button" onClick={() => removeRow("fellowship_groups", g.id)}>Remover</button>
-                  </div>
+                    <Botao compacto onClick={() => setGerirGrupoId(g.id)}>Editar</Botao>
+                    <Botao compacto onClick={() => removeRow("fellowship_groups", g.id)}>Remover</Botao>
+                  </Linha>
                 );
               })}
               {fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhum grupo cadastrado ainda.</div>}
-              <button className="btn btn-pri btn-sm" type="button" style={{ marginTop: 18 }} onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {grupo}"), subtitle: "Nome, líder, dia e horário. O endereço e os lugares ficam em Editar.", saveLabel: "Criar grupo", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: GC Centro" }, { k:"lider", label:"Líder", type:"select", half:true, ph:"A definir", options: people.map((p) => ({ v: p.name, l: p.name })) }, { k:"dia", label:"Dia", type:"text", half:true, ph:"ex: Quarta-feira" }, { k:"hora", label:"Horário", type:"text", half:true, ph:"ex: 20h" }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"ex: Centro" }], action: { kind: "group" } })}>+ Novo grupo</button>
+              <Botao variante="principal" compacto style={{ marginTop: 18 }} onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {grupo}"), subtitle: "Nome, líder, dia e horário. O endereço e os lugares ficam em Editar.", saveLabel: "Criar grupo", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"ex: GC Centro" }, { k:"lider", label:"Líder", type:"select", half:true, ph:"A definir", options: people.map((p) => ({ v: p.name, l: p.name })) }, { k:"dia", label:"Dia", type:"text", half:true, ph:"ex: Quarta-feira" }, { k:"hora", label:"Horário", type:"text", half:true, ph:"ex: 20h" }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"ex: Centro" }], action: { kind: "group" } })}>+ Novo grupo</Botao>
             </div>
           )}
         </>
@@ -992,10 +946,10 @@ export function Config({
               <label className="field-label">Geração</label>
               <div className="opt-row" style={{ flexWrap: "wrap" }}>
                 {([["manual", "Manual", "O líder monta tudo na mão."], ["assistido", "Assistida", "O sistema sugere; o líder confirma cada nome."], ["automatico", "Automática", "O sistema gera e já confirma, sem ação."]] as [EscalaSettings["modo"], string, string][]).map(([k, t, s]) => (
-                  <button key={k} type="button" className={`opt${escalaCfg.modo === k ? " on" : ""}`} onClick={() => setEscala("modo", k)}>
+                  <Opcao key={k} marcada={escalaCfg.modo === k} estilo="opt" onClick={() => setEscala("modo", k)}>
                     <div className="opt-t">{t}</div>
                     <div className="opt-s">{s}</div>
-                  </button>
+                  </Opcao>
                 ))}
               </div>
             </div>
@@ -1005,9 +959,9 @@ export function Config({
                 <div className="cfg-row-s">teto para não sobrecarregar a mesma pessoa</div>
               </div>
               <div className="stepper">
-                <button type="button" onClick={() => setEscala("maxPorMes", Math.max(1, escalaCfg.maxPorMes - 1))}>−</button>
+                <Acao onClick={() => setEscala("maxPorMes", Math.max(1, escalaCfg.maxPorMes - 1))}>−</Acao>
                 <span>{escalaCfg.maxPorMes}×</span>
-                <button type="button" onClick={() => setEscala("maxPorMes", escalaCfg.maxPorMes + 1)}>+</button>
+                <Acao onClick={() => setEscala("maxPorMes", escalaCfg.maxPorMes + 1)}>+</Acao>
               </div>
             </div>
             <div className="crit-row">
@@ -1016,39 +970,39 @@ export function Config({
                 <div className="cfg-row-s">descanso sugerido entre escalas (0 = sem folga)</div>
               </div>
               <div className="stepper">
-                <button type="button" onClick={() => setEscala("folgaSemanas", Math.max(0, escalaCfg.folgaSemanas - 1))}>−</button>
+                <Acao onClick={() => setEscala("folgaSemanas", Math.max(0, escalaCfg.folgaSemanas - 1))}>−</Acao>
                 <span>{escalaCfg.folgaSemanas}</span>
-                <button type="button" onClick={() => setEscala("folgaSemanas", escalaCfg.folgaSemanas + 1)}>+</button>
+                <Acao onClick={() => setEscala("folgaSemanas", escalaCfg.folgaSemanas + 1)}>+</Acao>
               </div>
             </div>
-            <div className="cfg-row">
+            <Linha estilo="config">
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Respeitar período de férias</div>
                 <div className="cfg-row-s">{escalaCfg.considerarFerias ? "Quem está de férias fica fora da geração" : "Férias não bloqueiam a escala"}</div>
               </div>
-              <button type="button" className={`sw${escalaCfg.considerarFerias ? " on" : ""}`} onClick={() => setEscala("considerarFerias", !escalaCfg.considerarFerias)} />
-            </div>
+              <Interruptor ligado={escalaCfg.considerarFerias} rotulo="Respeitar período de férias" onClick={() => setEscala("considerarFerias", !escalaCfg.considerarFerias)} />
+            </Linha>
             <div className="crit-row">
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Lista de cuidado</div>
                 <div className="cfg-row-s">semanas sem registro de presença para a pessoa entrar na lista de quem cuida</div>
               </div>
               <div className="stepper">
-                <button type="button" aria-label="Menos uma semana" onClick={() => setEscala("cuidadoSemanas", Math.max(1, (escalaCfg.cuidadoSemanas ?? 3) - 1))}>−</button>
+                <Acao aria-label="Menos uma semana" onClick={() => setEscala("cuidadoSemanas", Math.max(1, (escalaCfg.cuidadoSemanas ?? 3) - 1))}>−</Acao>
                 <span>{plural(escalaCfg.cuidadoSemanas ?? 3, "semana")}</span>
-                <button type="button" aria-label="Mais uma semana" onClick={() => setEscala("cuidadoSemanas", (escalaCfg.cuidadoSemanas ?? 3) + 1)}>+</button>
+                <Acao aria-label="Mais uma semana" onClick={() => setEscala("cuidadoSemanas", (escalaCfg.cuidadoSemanas ?? 3) + 1)}>+</Acao>
               </div>
             </div>
-            <div className="cfg-row" style={{ borderBottom: "none" }}>
+            <Linha estilo="config" style={{ borderBottom: "none" }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Quando alguém recusa</div>
                 <div className="cfg-row-s">{escalaCfg.naRecusa === "proximo" ? "Chama o próximo apto automaticamente (só no modo automático)." : "Avisa o líder do time por mensagem e deixa a vaga aberta."}</div>
-                <div className="seg seg-sm" style={{ marginTop: 10 }}>
-                  <button type="button" className={escalaCfg.naRecusa === "proximo" ? "on" : ""} onClick={() => setEscala("naRecusa", "proximo")}>Chamar o próximo</button>
-                  <button type="button" className={escalaCfg.naRecusa === "avisar" ? "on" : ""} onClick={() => setEscala("naRecusa", "avisar")}>Avisar o líder</button>
-                </div>
+                <Segmentado className="seg-sm" style={{ marginTop: 10 }}>
+                  <Opcao marcada={escalaCfg.naRecusa === "proximo"} onClick={() => setEscala("naRecusa", "proximo")}>Chamar o próximo</Opcao>
+                  <Opcao marcada={escalaCfg.naRecusa === "avisar"} onClick={() => setEscala("naRecusa", "avisar")}>Avisar o líder</Opcao>
+                </Segmentado>
               </div>
-            </div>
+            </Linha>
           </div>
           <div className="cfg-card" style={{ marginTop: 16 }}>
             <div className="cfg-card-t">{ct("Quando um {voluntario} fica inativo")}</div>
@@ -1059,9 +1013,9 @@ export function Config({
                 <div className="cfg-row-s">após recusar escalas seguidas</div>
               </div>
               <div className="stepper">
-                <button type="button" onClick={() => setStatus("recusasInativando", Math.max(1, statusCfg.recusasInativando - 1))}>−</button>
+                <Acao onClick={() => setStatus("recusasInativando", Math.max(1, statusCfg.recusasInativando - 1))}>−</Acao>
                 <span>{statusCfg.recusasInativando}</span>
-                <button type="button" onClick={() => setStatus("recusasInativando", statusCfg.recusasInativando + 1)}>+</button>
+                <Acao onClick={() => setStatus("recusasInativando", statusCfg.recusasInativando + 1)}>+</Acao>
               </div>
             </div>
             <div className="crit-row">
@@ -1070,9 +1024,9 @@ export function Config({
                 <div className="cfg-row-s">após recusar escalas seguidas</div>
               </div>
               <div className="stepper">
-                <button type="button" onClick={() => setStatus("recusasInativo", Math.max(2, statusCfg.recusasInativo - 1))}>−</button>
+                <Acao onClick={() => setStatus("recusasInativo", Math.max(2, statusCfg.recusasInativo - 1))}>−</Acao>
                 <span>{statusCfg.recusasInativo}</span>
-                <button type="button" onClick={() => setStatus("recusasInativo", statusCfg.recusasInativo + 1)}>+</button>
+                <Acao onClick={() => setStatus("recusasInativo", statusCfg.recusasInativo + 1)}>+</Acao>
               </div>
             </div>
             <div className="crit-row">
@@ -1081,18 +1035,18 @@ export function Config({
                 <div className="cfg-row-s">dias seguidos marcado como indisponível</div>
               </div>
               <div className="stepper">
-                <button type="button" onClick={() => setStatus("diasIndispInativo", Math.max(7, statusCfg.diasIndispInativo - 7))}>−</button>
+                <Acao onClick={() => setStatus("diasIndispInativo", Math.max(7, statusCfg.diasIndispInativo - 7))}>−</Acao>
                 <span>{statusCfg.diasIndispInativo}d</span>
-                <button type="button" onClick={() => setStatus("diasIndispInativo", statusCfg.diasIndispInativo + 7)}>+</button>
+                <Acao onClick={() => setStatus("diasIndispInativo", statusCfg.diasIndispInativo + 7)}>+</Acao>
               </div>
             </div>
-            <div className="cfg-row" style={{ borderBottom: "none" }}>
+            <Linha estilo="config" style={{ borderBottom: "none" }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Contar período de férias avisado</div>
                 <div className="cfg-row-s">{statusCfg.considerarFerias ? "Férias contam como afastamento" : "Férias avisadas não pesam no status"}</div>
               </div>
-              <button type="button" className={`sw${statusCfg.considerarFerias ? " on" : ""}`} onClick={() => setStatus("considerarFerias", !statusCfg.considerarFerias)} />
-            </div>
+              <Interruptor ligado={statusCfg.considerarFerias} rotulo="Contar período de férias avisado" onClick={() => setStatus("considerarFerias", !statusCfg.considerarFerias)} />
+            </Linha>
             <div className="crit-legend">
               <span><i className="dot ok" /> Ativo</span>
               <span><i className="dot warn" /> Inativando: vale um contato</span>
@@ -1102,13 +1056,13 @@ export function Config({
           <div className="cfg-card" style={{ marginTop: 16 }}>
             <div className="cfg-card-t">Check-in por QR Code</div>
             <div className="cfg-card-s">{ct("Cada {culto} ou evento tem um QR Code único. O {voluntario} escaneia com o celular e confirma presença pela conta logada.")}</div>
-            <div className="cfg-row" style={{ borderBottom: "none" }}>
+            <Linha estilo="config" style={{ borderBottom: "none" }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Presença de quem não está escalado</div>
-                <div className="cfg-row-s">{church?.settings?.checkinPermitirExtra ? "Quem não está escalado pode fazer check-in como presença extra." : "Só quem está escalado consegue fazer check-in. Os demais são bloqueados."}</div>
+                <div className="cfg-row-s">{checkinPermitirExtra ? "Quem não está escalado pode fazer check-in como presença extra." : "Só quem está escalado consegue fazer check-in. Os demais são bloqueados."}</div>
               </div>
-              <button type="button" className={`sw${church?.settings?.checkinPermitirExtra ? " on" : ""}`} onClick={() => setCheckinPermitirExtra(!church?.settings?.checkinPermitirExtra)} />
-            </div>
+              <Interruptor ligado={checkinPermitirExtra} rotulo="Presença de quem não está escalado" onClick={() => setCheckinPermitirExtra(!checkinPermitirExtra)} />
+            </Linha>
           </div>
           <div className="cfg-card" style={{ marginTop: 16 }}>
             <div className="cfg-card-t">Tipos de evento</div>
@@ -1116,14 +1070,14 @@ export function Config({
             <div className="cell-tags" style={{ gap: 8, marginBottom: 16 }}>
               {tiposEvento.map((t) => (
                 <span key={t} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  {t}<button type="button" onClick={() => saveTiposEvento(tiposEvento.filter((x) => x !== t))} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "var(--fs-pn-12)", padding: 0 }}>✕</button>
+                  {t}<Acao onClick={() => saveTiposEvento(tiposEvento.filter((x) => x !== t))} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "var(--fs-pn-12)", padding: 0 }}>✕</Acao>
                 </span>
               ))}
               {tiposEvento.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum tipo cadastrado.</span>}
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <input className="input" style={{ flex: 1 }} placeholder="ex: Culto, Conferência, Vigília" value={novoTipoEvento} onChange={(e) => setNovoTipoEvento(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTipoEvento()} />
-              <button className="btn btn-sec" type="button" onClick={addTipoEvento}>Adicionar</button>
+              <Botao onClick={addTipoEvento}>Adicionar</Botao>
             </div>
           </div>
         </>
@@ -1137,9 +1091,9 @@ export function Config({
           <div className="pmx-mob">
             <div className="pmx-mob-roles" role="tablist" aria-label="Papel">
               {PAPEIS_V2.map((pp) => (
-                <button key={pp.id} type="button" role="tab" aria-selected={papelMob === pp.id} className={`pmx-mob-role${papelMob === pp.id ? " on" : ""}`} onClick={() => setPapelMob(pp.id)}>
+                <Opcao key={pp.id} role="tab" aria-selected={papelMob === pp.id} marcada={papelMob === pp.id} estilo="pmx-mob-role" onClick={() => setPapelMob(pp.id)}>
                   {ct(pp.nome)}
-                </button>
+                </Opcao>
               ))}
             </div>
             {(papelMob === "master" || papelMob === "membro") && (
@@ -1157,7 +1111,7 @@ export function Config({
                     <div key={a.id} className="pmx-mob-row">
                       <span className="pmx-mob-name">{ct(a.nome)}</span>
                       <span className="pmx-mob-state">{on ? "Liberado" : "Bloqueado"}</span>
-                      <button type="button" role="switch" aria-checked={!!on} aria-label={ct(a.nome)} disabled={locked} className={`m-toggle${on ? " on" : ""}`} onClick={() => toggleMx(papelMob, a.id)} />
+                      <Interruptor ligado={on} tamanho="compacto" rotulo={ct(a.nome)} desativado={locked} onClick={() => toggleMx(papelMob, a.id)} />
                     </div>
                   );
                 })}
@@ -1188,7 +1142,7 @@ export function Config({
                           : "";
                         return (
                           <td key={pp.id}>
-                            <button type="button" className={`mx-cell${on ? " on" : " off"}${locked ? " lock" : ""}`} onClick={() => toggleMx(pp.id, a.id)} title={lockTitle}>{on ? <Icon name="ok" size={14} /> : "·"}</button>
+                            <Acao className={`mx-cell${on ? " on" : " off"}${locked ? " lock" : ""}`} onClick={() => toggleMx(pp.id, a.id)} title={lockTitle}>{on ? <Icon name="ok" size={14} /> : "·"}</Acao>
                           </td>
                         );
                       })}
@@ -1199,7 +1153,7 @@ export function Config({
             </tbody>
           </table>
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
-            <button className="btn btn-pri btn-sm" type="button" disabled={matrizSaving} onClick={salvarMatriz}>{matrizSaving ? "Salvando…" : (matrizMsg || "Salvar permissões")}</button>
+            <Botao variante="principal" compacto desativado={matrizSaving} onClick={salvarMatriz}>{matrizSaving ? "Salvando…" : (matrizMsg || "Salvar permissões")}</Botao>
           </div>
         </div>
       )}
@@ -1291,9 +1245,9 @@ export function Config({
             <div className="cfg-card-s" style={{ margin: 0 }}>
               Você já está vendo a prévia. Salve para valer para todos da igreja.
             </div>
-            <button className="btn btn-pri" type="button" disabled={personalizacaoSaving} onClick={salvarPersonalizacao}>
+            <Botao variante="principal" desativado={personalizacaoSaving} onClick={salvarPersonalizacao}>
               {personalizacaoSaving ? "Salvando…" : personalizacaoMsg || "Salvar personalização"}
-            </button>
+            </Botao>
           </div>
         </div>
       )}
@@ -1315,17 +1269,17 @@ export function Config({
                 {c.logoUrl ? <img src={c.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /> : <Icon name="identidade" size={20} />}
               </div>
               <div className="cfg-row-main">
-                <div className="cfg-row-t">{c.nome} <span className="chip chip-ok" style={{ marginLeft: 6 }}>matriz</span></div>
+                <div className="cfg-row-t">{c.nome} <Selo tom="ok" style={{ marginLeft: 6 }}>matriz</Selo></div>
                 <div className="cfg-row-s">{c.cidade || "Sede da rede"}</div>
               </div>
-              <button className="btn btn-sec btn-sm" type="button" onClick={() => setGerirCongId(c.id)}>Gerir</button>
+              <Botao compacto onClick={() => setGerirCongId(c.id)}>Gerir</Botao>
             </div>
           ))}
           {churches.filter((c) => !c.matriz).length > 0 && (
             <>
               <div className="cfg-card-t" style={{ marginTop: 26 }}>Outras congregações · {churches.filter((c) => !c.matriz).length}</div>
               {churches.filter((c) => !c.matriz).map((c) => (
-                <div className="cfg-row" key={c.id}>
+                <Linha estilo="config" key={c.id}>
                   <div className="cong-mark">
                     {c.logoUrl ? <img src={c.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /> : <Icon name="globo" size={16} />}
                   </div>
@@ -1333,15 +1287,14 @@ export function Config({
                     <div className="cfg-row-t">{c.nome}</div>
                     {c.cidade ? <div className="cfg-row-s">{c.cidade}</div> : null}
                   </div>
-                  <button className="btn btn-sec btn-sm" type="button" onClick={() => setGerirCongId(c.id)}>Gerir</button>
-                </div>
+                  <Botao compacto onClick={() => setGerirCongId(c.id)}>Gerir</Botao>
+                </Linha>
               ))}
             </>
           )}
           {churches.length === 0 && <div className="empty">Nenhuma congregação encontrada.</div>}
-          <button
-            className="btn btn-pri btn-sm"
-            type="button"
+          <Botao
+            variante="principal" compacto
             style={{ marginTop: 18 }}
             onClick={() => setModal({
               eyebrow: "Criar",
@@ -1362,7 +1315,7 @@ export function Config({
             })}
           >
             + Adicionar congregação
-          </button>
+          </Botao>
         </div>
       )}
 

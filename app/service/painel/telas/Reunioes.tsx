@@ -17,6 +17,10 @@ import { DatePicker, DrawerSection, DrawerShell, TimePicker } from "../campos";
 import { BoardChooser } from "./Quadros";
 import type { BoardView, CardView, ChurchView, DrawerState, MeetingActionView, MeetingView, MinistryView, ModalState, PersonView, RehearsalView, ReservationView, RoomView } from "../tipos";
 
+import { Botao, BotaoIcone } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Etiqueta, Selo, tomDaClasse } from "../../ui/Selo";
+import { linhaClasse } from "../../ui/Linha";
 export function ReuniaoForm({
   ministries,
   people,
@@ -152,9 +156,9 @@ export function ReuniaoForm({
           {people.map((person) => {
             const on = presentes.includes(person.id);
             return (
-              <button key={person.id} type="button" className={`cand-chip ${on ? "on" : ""}`} aria-pressed={on} onClick={() => togglePessoa(person.id)}>
+              <Acao key={person.id} className={`cand-chip ${on ? "on" : ""}`} aria-pressed={on} onClick={() => togglePessoa(person.id)}>
                 <Av name={person.name} size="xs" photoUrl={person.photoUrl} /> {person.name.split(" ")[0]} {on && <Icon name="ok" size={13} />}
-              </button>
+              </Acao>
             );
           })}
           {people.length === 0 ? <span className="fs-note">{ct("Nenhum {voluntario} cadastrado.")}</span> : null}
@@ -180,17 +184,17 @@ export function Reunioes({ meetings, meetingActions, ministries, people, rooms, 
   const [novaOpen, setNovaOpen] = useState(false);
   return (
     <div className="content wide">
-      <PageHead title="Reuniões" eyebrow="Liderança" help="Pauta, presença e decisões dos encontros de liderança. Cada reunião guarda a ata pra consultar depois." action={<button className="btn btn-pri" type="button" onClick={() => setNovaOpen(true)}>+ Marcar reunião</button>} />
+      <PageHead title="Reuniões" eyebrow="Liderança" help="Pauta, presença e decisões dos encontros de liderança. Cada reunião guarda a ata pra consultar depois." action={<Botao variante="principal" onClick={() => setNovaOpen(true)}>+ Marcar reunião</Botao>} />
       <div className="section-divide"><Icon name="cultos" size={15} /><span className="label">Agendadas</span><span className="line" /></div>
       <div className="reu-grid">
         {scheduled.map((meeting) => {
           const author = meeting.author_id ? personById.get(meeting.author_id) : null;
           return (
-            <button className="reu-card" type="button" key={meeting.id} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
-              <div className="reu-card-top"><div><div className="reu-date">{formatDateBR(meeting.meeting_date) || "Sem data"} · {meeting.time || "sem horário"}</div><div className="reu-title">{meeting.title}</div></div><span className="chip chip-ok">Agendada</span></div>
+            <Acao className="reu-card" key={meeting.id} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
+              <div className="reu-card-top"><div><div className="reu-date">{formatDateBR(meeting.meeting_date) || "Sem data"} · {meeting.time || "sem horário"}</div><div className="reu-title">{meeting.title}</div></div><Selo tom="ok">Agendada</Selo></div>
               <div className="reu-meta">{joinDot(meeting.location, `marcada por ${author?.name.split(" ")[0] || "líder"}`)}</div>
-              <div className="reu-foot"><div className="reu-times">{meeting.ministries.map((id) => <span className="tag" key={id}>{ministryById.get(id)?.name || "Time"}</span>)}</div><span className="team-stat"><b>{meeting.attendees.length}</b> presentes</span></div>
-            </button>
+              <div className="reu-foot"><div className="reu-times">{meeting.ministries.map((id) => <Etiqueta key={id}>{ministryById.get(id)?.name || "Time"}</Etiqueta>)}</div><span className="team-stat"><b>{meeting.attendees.length}</b> presentes</span></div>
+            </Acao>
           );
         })}
         {scheduled.length === 0 ? <EmptyState title="Nenhuma reunião agendada" text="As reuniões de liderança e de time aparecem aqui, com pauta e presença." action={{ label: "Agendar reunião", onClick: () => setNovaOpen(true) }} /> : null}
@@ -201,12 +205,12 @@ export function Reunioes({ meetings, meetingActions, ministries, people, rooms, 
           const actions = meetingActions.filter((action) => action.meeting_id === meeting.id);
           const pending = actions.filter((action) => action.status !== "feito").length;
           return (
-            <button className="tr click" type="button" key={meeting.id} style={{ gridTemplateColumns: "130px 1.6fr 1fr 120px" }} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
+            <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={meeting.id} style={{ gridTemplateColumns: "130px 1.6fr 1fr 120px" }} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
               <div style={{ fontFamily: "var(--mono)", fontSize: "var(--fs-pn-12)", color: "var(--olive)" }}>{formatDateBR(meeting.meeting_date) || "sem data"}</div>
               <div><div className="cell-name">{meeting.title}</div><div className="cell-sub">{plural(meeting.ministries.length, "time")} · {meeting.attendees.length} presentes</div></div>
               <div className="cell-sub">{plural(actions.length, "responsabilidade")}</div>
-              <div>{pending > 0 ? <span className="chip chip-wait">{pending} em aberto</span> : <span className="chip chip-ok">Tudo feito</span>}</div>
-            </button>
+              <div>{pending > 0 ? <Selo tom="pendente">{pending} em aberto</Selo> : <Selo tom="ok">Tudo feito</Selo>}</div>
+            </Acao>
           );
         })}
       </div>
@@ -220,19 +224,19 @@ export function Ensaios({ rehearsals, ministries, rooms, setDrawer, setModal }: 
   const localOptions = [...rooms.filter((room) => room.allows_meetings !== false).map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` })), { v: OUTRO_LOCAL, l: "Outro espaço (fora da igreja)" }];
   return (
     <div className="content wide">
-      <PageHead title="Ensaios" eyebrow="Liderança" help="Ensaios de louvor, teatro, dança... com participantes e repertório ou materiais anexados." action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo ensaio", subtitle: "Louvor, teatro, dança… Escolha quem participa e defina o repertório.", saveLabel: "Criar ensaio", formFields: [{ k:"titulo", label:"Nome do ensaio", type:"text", req:true, ph:"ex: Ensaio do Louvor, Peça de Natal" }, { k:"tipo", label:"Tipo de ensaio", type:"select", half:true, options:[{v:"louvor",l:"Louvor / música"},{v:"teatro",l:"Teatro"},{v:"danca",l:"Dança"},{v:"coreografia",l:"Coreografia"},{v:"geral",l:"Geral"},{v:"outro",l:"Outro"}] }, { k:"time", label:"Ministério", type:"text", half:true, ph:"ex: Louvor" }, { k:"data", label:"Dia", type:"date", half:true }, { k:"hora", label:"Horário", type:"time", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }, { k:"obs", label:"Observação", type:"area", ph:"Detalhes do ensaio" }], action: { kind: "rehearsal" } })}>+ Novo ensaio</button>} />
+      <PageHead title="Ensaios" eyebrow="Liderança" help="Ensaios de louvor, teatro, dança... com participantes e repertório ou materiais anexados." action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Novo ensaio", subtitle: "Louvor, teatro, dança… Escolha quem participa e defina o repertório.", saveLabel: "Criar ensaio", formFields: [{ k:"titulo", label:"Nome do ensaio", type:"text", req:true, ph:"ex: Ensaio do Louvor, Peça de Natal" }, { k:"tipo", label:"Tipo de ensaio", type:"select", half:true, options:[{v:"louvor",l:"Louvor / música"},{v:"teatro",l:"Teatro"},{v:"danca",l:"Dança"},{v:"coreografia",l:"Coreografia"},{v:"geral",l:"Geral"},{v:"outro",l:"Outro"}] }, { k:"time", label:"Ministério", type:"text", half:true, ph:"ex: Louvor" }, { k:"data", label:"Dia", type:"date", half:true }, { k:"hora", label:"Horário", type:"time", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"recorrencia", label:"Recorrência", type:"select", half:true, options:[{v:"semanal",l:"Semanal"},{v:"quinzenal",l:"Quinzenal"},{v:"mensal",l:"Mensal"},{v:"eventual",l:"Eventual"}] }, { k:"obs", label:"Observação", type:"area", ph:"Detalhes do ensaio" }], action: { kind: "rehearsal" } })}>+ Novo ensaio</Botao>} />
       <div className="reu-grid">
         {rehearsals.map((rehearsal) => {
           const ministry = rehearsal.ministry_id ? ministryById.get(rehearsal.ministry_id) : null;
           return (
-            <button className="ens-card" type="button" key={rehearsal.id} onClick={() => setDrawer({ kind: "rehearsal", id: rehearsal.id })}>
+            <Acao className="ens-card" key={rehearsal.id} onClick={() => setDrawer({ kind: "rehearsal", id: rehearsal.id })}>
               <div className="ens-top"><span className="ens-rec">{rehearsal.recurrence || "eventual"}</span><span className="ens-pub">{rehearsal.kind || "Ensaio"}</span></div>
               <div className="ens-title">{rehearsal.title}</div>
               <div className="ens-when">{formatDateBR(rehearsal.rehearsal_date) || "sem data"} · {rehearsal.time || "sem horário"} · {rehearsal.location || "sem local"}</div>
               <div className="ens-team"><span className="ens-team-ic"><Icon name="times" size={15} /></span>{ministry?.name || "Vários times"} · {rehearsal.attendees.length} pessoas</div>
               {rehearsal.repertoire.length ? <div className="ens-obs"><Icon name="cultos" size={13} /> {rehearsal.repertoire.length} item(ns) no repertório</div> : null}
               {rehearsal.notes ? <div className="ens-obs">{rehearsal.notes}</div> : null}
-            </button>
+            </Acao>
           );
         })}
         {rehearsals.length === 0 ? <EmptyState title="Nenhum ensaio ainda" text="Os ensaios aparecem aqui com participantes, repertório e materiais." /> : null}
@@ -343,7 +347,7 @@ export function ReuniaoDrawer({
     <>
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
+        <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{meeting.status === "agendada" ? "Reunião agendada" : "Reunião realizada"}</div>
         <div className="profile-name">{meeting.title}</div>
         <div className="profile-role">{formatDateBR(meeting.meeting_date) || "sem data"} · {meeting.time || ""} · {meeting.location || "sem local"}</div>
@@ -351,7 +355,7 @@ export function ReuniaoDrawer({
       <div className="drawer-body">
         <DrawerSection title="Times e presentes">
           <div className="cell-tags" style={{ marginBottom: 12 }}>
-            {meeting.ministries.map((id) => <span key={id} className="tag">{ministryById.get(id)?.name || "Time"}</span>)}
+            {meeting.ministries.map((id) => <Etiqueta key={id}>{ministryById.get(id)?.name || "Time"}</Etiqueta>)}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {meeting.attendees.map((pid) => {
@@ -406,13 +410,13 @@ export function ReuniaoDrawer({
                     <div className="acao-side">
                       {card && cardStatus ? (
                         <>
-                          <span className={`chip ${cardStatus.cls}`}>{cardStatus.label}</span>
-                          <button className="btn btn-ghost btn-sm" type="button" onClick={() => { onClose(); setRoute("quadros"); }}>Ver no quadro</button>
+                          <Selo tom={tomDaClasse(cardStatus.cls)}>{cardStatus.label}</Selo>
+                          <Botao variante="discreto" compacto onClick={() => { onClose(); setRoute("quadros"); }}>Ver no quadro</Botao>
                         </>
                       ) : (
                         <>
                           <span className="acao-semquadro">fora do quadro</span>
-                          <button className="btn btn-ghost btn-sm" type="button" onClick={() => setChooser({ scope: action.id })}>Para o quadro</button>
+                          <Botao variante="discreto" compacto onClick={() => setChooser({ scope: action.id })}>Para o quadro</Botao>
                         </>
                       )}
                     </div>
@@ -427,22 +431,21 @@ export function ReuniaoDrawer({
               <option value="">Responsável…</option>
               {meeting.attendees.map((pid) => { const p = personById.get(pid); return p ? <option key={pid} value={pid}>{p.name}</option> : null; })}
             </select>
-            <button className="btn btn-sec btn-sm" type="button" onClick={addAcao}>+ Anotar</button>
+            <Botao compacto onClick={addAcao}>+ Anotar</Botao>
           </div>
           {pendentes.length > 0 && (
-            <button className="btn btn-ghost btn-sm" type="button" style={{ marginTop: 10 }} onClick={() => setChooser({ scope: "all" })}>Todas ao quadro</button>
+            <Botao variante="discreto" compacto style={{ marginTop: 10 }} onClick={() => setChooser({ scope: "all" })}>Todas ao quadro</Botao>
           )}
         </DrawerSection>
 
-        <button
-          className="btn btn-pri"
+        <Botao
+          variante="principal"
           style={{ width: "100%", justifyContent: "center", marginTop: 20 }}
-          type="button"
-          disabled={saving}
+          desativado={saving}
           onClick={salvarAta}
         >
           {saving ? "Salvando..." : meeting.status === "agendada" ? "Salvar ata e marcar realizada" : "Salvar ata"}
-        </button>
+        </Botao>
       </div>
     </DrawerShell>
     {chooser ? (
@@ -480,7 +483,7 @@ export function EnsaioDrawer({
   return (
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
+        <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{rehearsal.kind || "Ensaio"} · {rehearsal.recurrence || "eventual"}</div>
         <div className="profile-name">{rehearsal.title}</div>
         <div className="profile-role">{formatDateBR(rehearsal.rehearsal_date) || "sem data"} · {rehearsal.time || ""} · {rehearsal.location || "sem local"}{rehearsal.audience ? " · " + rehearsal.audience : ""}</div>
@@ -488,7 +491,7 @@ export function EnsaioDrawer({
       <div className="drawer-body">
         {ministry && (
           <DrawerSection title="Time">
-            <div className="cell-tags"><span className="tag lead">{ministry.name}</span></div>
+            <div className="cell-tags"><Etiqueta destaque>{ministry.name}</Etiqueta></div>
           </DrawerSection>
         )}
 

@@ -22,7 +22,7 @@ Grave esta lei antes de mexer em tela:
 
 Daqui em diante, toda função nova do Service nasce como módulo. Tela, item de menu, aba de configuração, cartão ou notificação criados fora do registro não entram.
 
-### As 16 leis
+### As 17 leis
 
 1. **Casca estável.** App do membro: 4 abas (Início, Agenda, Mensagens, Caminhada) e avatar no topo, que abre o Perfil. Painel: menu, barra e busca. A casca não muda quando entra função nova; só oferece lugares: `inicio.fila`, `inicio.igreja`, `agenda.minha`, `agenda.igreja`, `mensagens.itens`, `caminhada.secoes`, `perfil.linhas`, `painel.menu`, `painel.inicio.saude`, `painel.inicio.pendencias`, `painel.config`, `busca`.
 2. **Uma pergunta por lugar.** Início: o que pede minha atenção agora? Agenda: quando e onde? Mensagens: quem falou comigo? Caminhada: como estou crescendo? Perfil: quem sou e como prefiro? Função nova entra onde responde à mesma pergunta. **(rev. 22/10)** O painel também responde a perguntas. Início do painel: o que eu preciso resolver hoje? Relatórios: como estamos? Tela de um módulo: o que eu faço aqui? Número que não leva a uma ação mora em Relatórios, não no Início.
@@ -40,6 +40,7 @@ Daqui em diante, toda função nova do Service nasce como módulo. Tela, item de
 14. **Uma informação, um lugar. (rev. 22/10)** Cada dado tem uma tela dona. Fora dela, aparece no máximo como uma linha-resumo que leva à dona. Não entram: o mesmo contador em dois blocos da mesma tela, listas que repetem outra lista, legenda que repete o que a cor já diz, ajuda "?" por cartão (é uma por seção).
 15. **Montar e acompanhar são telas diferentes. (rev. 22/10)** Quem executa vê recortado pelo que é seu: o líder entra no seu time. Quem acompanha vê resumo: uma linha por unidade (time, grupo, turma), problemas primeiro, o que está em ordem apagado, e o detalhe só abre ao tocar. No topo de cada tela, no máximo duas ações visíveis (uma principal); as demais ficam em "Mais". Configuração do módulo fica em Configurações, não na tela de trabalho.
 16. **Mercado antes do desenho. (rev. 22/10)** Tela ou fluxo novo começa vendo como 2 ou 3 ferramentas resolvem a mesma tarefa (função, nunca marca, cor ou visual) e termina com crítica de design, teste de pior caso (nome enorme, lista vazia, 300 itens) e medição antes e depois. Material de concorrente fica fora do git.
+17. **Componentes da biblioteca. (22/10)** Toda peça de interface sai de um componente compartilhado, indexado em `docs/service-v7/BIBLIOTECA.md` (novos em `app/service/ui/`). Procurar antes de escrever markup; faltando variação, prop nova no componente; peça nova só com a ficha de entrada. Nenhuma tela escreve `<button>`: `Botao`, `BotaoIcone`, `Interruptor`, `Opcao` ou a base `Acao`; estado é `Selo`, superfície é `Cartao`, item de lista é `Linha`, do login ao painel; o CI falha com `<button>` ou `.btn`/`.m6-btn` à mão.
 
 ### Checklist: criar um módulo novo
 

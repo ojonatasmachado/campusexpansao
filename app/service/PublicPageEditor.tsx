@@ -17,6 +17,11 @@ import { PAGINA_CFG_DEFAULT, IDENTIDADE_CFG_DEFAULT, mergeChurchIdentity } from 
 import type { PaginaCfg, PaginaSocial, PaginaTemplate, ChurchPageData, IdentidadeCfg } from "../lib/church-page";
 import ChurchPageView from "../[slug]/ChurchPageView";
 
+import { Botao } from "./ui/Botao";
+import { Interruptor } from "./ui/Interruptor";
+import { Opcao } from "./ui/Opcao";
+import { Linha } from "./ui/Linha";
+import { Selo } from "./ui/Selo";
 /* Editor da Página da igreja (link-in-bio) da igreja, aba "Página da igreja" em
    Configurações. Arquivo próprio (não dentro de ServiceExactApp.tsx, que já
    tem 10k+ linhas) : essa funcionalidade tem peso real (CRUD de links com
@@ -307,7 +312,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
       <div className="pge-main">
         <div className="cfg-tabs">
           {PAGE_EDITOR_TABS.map((t) => (
-            <button key={t.id} type="button" className={`cfg-tab${activeTab === t.id ? " on" : ""}`} onClick={() => setActiveTab(t.id)}>{t.label}</button>
+            <Opcao key={t.id} marcada={activeTab === t.id} estilo="cfg-tab" onClick={() => setActiveTab(t.id)}>{t.label}</Opcao>
           ))}
         </div>
 
@@ -316,13 +321,13 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
           <div className="cfg-card">
             <div className="cfg-card-t">Publicar página</div>
             <div className="cfg-card-s">Enquanto estiver desligada, a página existe mas mostra “ainda não publicada” pra quem acessar.</div>
-            <div className="cfg-row" style={{ padding: "10px 0" }}>
+            <Linha estilo="config" style={{ padding: "10px 0" }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">{pagina.enabled ? "Publicada" : "Despublicada"}</div>
                 <div className="cfg-row-s">{viewCount !== null ? `${viewCount} visualizações até agora` : "Carregando estatísticas..."}</div>
               </div>
-              <button type="button" role="switch" aria-label="Publicar página da igreja" aria-checked={pagina.enabled} className={`sw${pagina.enabled ? " on" : ""}`} onClick={() => savePagina({ enabled: !pagina.enabled })} />
-            </div>
+              <Interruptor ligado={!!pagina.enabled} rotulo="Publicar página da igreja" onClick={() => savePagina({ enabled: !pagina.enabled })} />
+            </Linha>
 
             <div className="field-label" style={{ marginTop: 14 }}>Endereço da página</div>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -335,11 +340,11 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                 onChange={(e) => { setSlugDraft(e.target.value.toLowerCase()); setSlugStatus("idle"); }}
                 onBlur={checkSlug}
               />
-              <button type="button" className="btn btn-sec btn-sm" disabled={slugStatus !== "ok"} onClick={saveSlug}>Salvar endereço</button>
+              <Botao compacto desativado={slugStatus !== "ok"} onClick={saveSlug}>Salvar endereço</Botao>
               {pageUrl && (
-                <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(pageUrl)}>
+                <Botao variante="discreto" compacto onClick={() => navigator.clipboard.writeText(pageUrl)}>
                   <Icon name="copiar" size={13} /> Copiar link
-                </button>
+                </Botao>
               )}
             </div>
             {slugStatus === "invalid" && <div className="brand-accent-warn">Use só letras minúsculas, números e hífen, de 3 a 40 caracteres.</div>}
@@ -353,9 +358,9 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                   <div className="field-label" style={{ marginTop: 0 }}>Acesso da equipe (login com a cara da igreja)</div>
                   <span style={{ fontSize: "var(--fs-ui-13)", color: "var(--muted)" }}>{loginUrl.replace(/^https?:\/\//, "")}</span>
                 </div>
-                <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(loginUrl)}>
+                <Botao variante="discreto" compacto onClick={() => navigator.clipboard.writeText(loginUrl)}>
                   <Icon name="copiar" size={13} /> Copiar link
-                </button>
+                </Botao>
               </div>
             )}
 
@@ -366,7 +371,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                 </div>
                 <div>
                   <div className="cfg-row-s">QR code pronto pra colocar em boletim, cartaz ou tela de projeção.</div>
-                  <button type="button" className="btn btn-sec btn-sm" style={{ marginTop: 8 }} onClick={baixarQr}>Baixar QR code</button>
+                  <Botao compacto style={{ marginTop: 8 }} onClick={baixarQr}>Baixar QR code</Botao>
                 </div>
               </div>
             )}
@@ -380,10 +385,10 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
             <div className="cfg-card-s">Muda o layout da página. As cores e os links continuam os mesmos.</div>
             <div className="opt-row">
               {TEMPLATES.map((tpl) => (
-                <button key={tpl.id} type="button" className={`opt${pagina.template === tpl.id ? " on" : ""}`} onClick={() => savePagina({ template: tpl.id })}>
+                <Opcao key={tpl.id} marcada={pagina.template === tpl.id} estilo="opt" onClick={() => savePagina({ template: tpl.id })}>
                   <div className="opt-t">{tpl.label}</div>
                   <div className="opt-s">{tpl.desc}</div>
-                </button>
+                </Opcao>
               ))}
             </div>
           </div>
@@ -434,34 +439,33 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
           <div className="cfg-card">
             <div className="panel-head" style={{ padding: 0, marginBottom: 10 }}>
               <span className="panel-title">Links</span>
-              <button
-                type="button"
-                className="btn btn-pri btn-sm"
+              <Botao
+                variante="principal" compacto
                 onClick={() => setLinkModal({ isNew: true, draft: { id: crypto.randomUUID(), label: "", url: "", icon: DEFAULT_LINK_ICON, imageUrl: null, groupLabel: "", startsAt: "", endsAt: "", active: true, position: links.length, clickCount: 0 } })}
               >
                 + Link
-              </button>
+              </Botao>
             </div>
             {loading && <div className="empty">Carregando...</div>}
             {!loading && links.length === 0 && <div className="empty">Nenhum link ainda. Adicione o primeiro.</div>}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {links.map((link, idx) => (
-                <div className="cfg-row" key={link.id}>
+                <Linha estilo="config" key={link.id}>
                   {link.imageUrl ? (
                     <img src={link.imageUrl} alt="" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover", flex: "none" }} />
                   ) : (
                     <span className="cx-link-icon" style={{ background: "var(--accent-fill)", color: "var(--accent-ink)" }}><LinkIconView name={link.icon} size={16} /></span>
                   )}
                   <div className="cfg-row-main">
-                    <div className="cfg-row-t">{link.label || "(sem título)"} {!link.active && <span className="chip">oculto</span>}</div>
+                    <div className="cfg-row-t">{link.label || "(sem título)"} {!link.active && <Selo>oculto</Selo>}</div>
                     <div className="cfg-row-s">{link.groupLabel ? `${link.groupLabel} · ` : ""}{link.url} · {link.clickCount} cliques</div>
                   </div>
                   <div style={{ display: "flex", gap: 4 }}>
-                    <button type="button" className="btn btn-ghost btn-sm" disabled={idx === 0} onClick={() => moveLink(link.id, -1)}>↑</button>
-                    <button type="button" className="btn btn-ghost btn-sm" disabled={idx === links.length - 1} onClick={() => moveLink(link.id, 1)}>↓</button>
-                    <button type="button" className="btn btn-sec btn-sm" onClick={() => setLinkModal({ isNew: false, draft: link })}>Editar</button>
+                    <Botao variante="discreto" compacto desativado={idx === 0} onClick={() => moveLink(link.id, -1)}>↑</Botao>
+                    <Botao variante="discreto" compacto desativado={idx === links.length - 1} onClick={() => moveLink(link.id, 1)}>↓</Botao>
+                    <Botao compacto onClick={() => setLinkModal({ isNew: false, draft: link })}>Editar</Botao>
                   </div>
-                </div>
+                </Linha>
               ))}
             </div>
           </div>
@@ -506,24 +510,23 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
           <div className="cfg-card">
             <div className="panel-head" style={{ padding: 0, marginBottom: 10 }}>
               <span className="panel-title">Publicações</span>
-              <button
-                type="button"
-                className="btn btn-pri btn-sm"
+              <Botao
+                variante="principal" compacto
                 onClick={() => setPostModal({ isNew: true, draft: { id: crypto.randomUUID(), title: "", body: "", coverUrl: null, pinned: false, publishedAt: new Date().toISOString() } })}
               >
                 + Notícia
-              </button>
+              </Botao>
             </div>
             {!loading && posts.length === 0 && <div className="empty">Nenhuma notícia publicada ainda.</div>}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {posts.map((post) => (
-                <div className="cfg-row" key={post.id}>
+                <Linha estilo="config" key={post.id}>
                   <div className="cfg-row-main">
-                    <div className="cfg-row-t">{post.title} {post.pinned && <span className="chip chip-ok">fixado</span>}</div>
+                    <div className="cfg-row-t">{post.title} {post.pinned && <Selo tom="ok">fixado</Selo>}</div>
                     <div className="cfg-row-s">{new Date(post.publishedAt).toLocaleDateString("pt-BR")}</div>
                   </div>
-                  <button type="button" className="btn btn-sec btn-sm" onClick={() => setPostModal({ isNew: false, draft: post })}>Editar</button>
-                </div>
+                  <Botao compacto onClick={() => setPostModal({ isNew: false, draft: post })}>Editar</Botao>
+                </Linha>
               ))}
             </div>
           </div>
@@ -601,16 +604,15 @@ function LinkModal({
           <div className="field-label" style={{ marginTop: 12 }}>Ícone</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {LINK_ICON_NAMES.map((name) => (
-              <button
+              <Opcao
                 key={name}
-                type="button"
-                className={`opt${form.icon === name ? " on" : ""}`}
+                marcada={form.icon === name} estilo="opt"
                 style={{ padding: 8, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center" }}
                 onClick={() => setForm((f) => ({ ...f, icon: name }))}
                 title={name}
               >
                 <LinkIconView name={name} size={16} />
-              </button>
+              </Opcao>
             ))}
           </div>
 
@@ -643,18 +645,18 @@ function LinkModal({
             </div>
           </div>
 
-          <div className="cfg-row" style={{ padding: "10px 0 0" }}>
+          <Linha estilo="config" style={{ padding: "10px 0 0" }}>
             <div className="cfg-row-main">
               <div className="cfg-row-t">Visível na página</div>
             </div>
-            <button type="button" role="switch" aria-label="Link ativo" aria-checked={form.active} className={`sw${form.active ? " on" : ""}`} onClick={() => setForm((f) => ({ ...f, active: !f.active }))} />
-          </div>
+            <Interruptor ligado={form.active} rotulo="Link ativo" onClick={() => setForm((f) => ({ ...f, active: !f.active }))} />
+          </Linha>
         </div>
         <div className="modal-foot" style={{ justifyContent: "space-between" }}>
-          {onDelete ? <button className="btn btn-ghost" type="button" onClick={onDelete}>Excluir</button> : <span />}
+          {onDelete ? <Botao variante="discreto" onClick={onDelete}>Excluir</Botao> : <span />}
           <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn btn-sec" type="button" onClick={onCancel}>Cancelar</button>
-            <button className="btn btn-pri" type="button" disabled={saving || !form.label.trim() || !form.url.trim()} onClick={salvar}>Salvar</button>
+            <Botao onClick={onCancel}>Cancelar</Botao>
+            <Botao variante="principal" desativado={saving || !form.label.trim() || !form.url.trim()} onClick={salvar}>Salvar</Botao>
           </div>
         </div>
       </div>
@@ -710,18 +712,18 @@ function PostModal({
             />
           </div>
 
-          <div className="cfg-row" style={{ padding: "10px 0 0" }}>
+          <Linha estilo="config" style={{ padding: "10px 0 0" }}>
             <div className="cfg-row-main">
               <div className="cfg-row-t">Fixar no topo</div>
             </div>
-            <button type="button" role="switch" aria-label="Fixar notícia" aria-checked={form.pinned} className={`sw${form.pinned ? " on" : ""}`} onClick={() => setForm((f) => ({ ...f, pinned: !f.pinned }))} />
-          </div>
+            <Interruptor ligado={form.pinned} rotulo="Fixar notícia" onClick={() => setForm((f) => ({ ...f, pinned: !f.pinned }))} />
+          </Linha>
         </div>
         <div className="modal-foot" style={{ justifyContent: "space-between" }}>
-          {onDelete ? <button className="btn btn-ghost" type="button" onClick={onDelete}>Excluir</button> : <span />}
+          {onDelete ? <Botao variante="discreto" onClick={onDelete}>Excluir</Botao> : <span />}
           <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn btn-sec" type="button" onClick={onCancel}>Cancelar</button>
-            <button className="btn btn-pri" type="button" disabled={saving || !form.title.trim()} onClick={salvar}>Salvar</button>
+            <Botao onClick={onCancel}>Cancelar</Botao>
+            <Botao variante="principal" desativado={saving || !form.title.trim()} onClick={salvar}>Salvar</Botao>
           </div>
         </div>
       </div>

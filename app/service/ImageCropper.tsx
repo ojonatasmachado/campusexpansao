@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { Botao } from "./ui/Botao";
 /* Corte + zoom antes de enviar qualquer imagem do Service (logo, capa da
    Página da igreja, imagem de notícia...). Arrasta pra reposicionar, controla
    o zoom no slider, e só sai daqui uma imagem já no enquadramento certo —
@@ -232,10 +233,10 @@ export function ImageCropper({
           </div>
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onCancel}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={busy || status !== "ready"} onClick={confirmar}>
+          <Botao onClick={onCancel}>Cancelar</Botao>
+          <Botao variante="principal" desativado={busy || status !== "ready"} onClick={confirmar}>
             {busy ? "Aplicando..." : "Aplicar"}
-          </button>
+          </Botao>
         </div>
       </div>
     </div>

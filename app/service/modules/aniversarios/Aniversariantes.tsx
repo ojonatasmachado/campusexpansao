@@ -18,6 +18,10 @@ import {
   type Aniversariante, type Escopo, type Proximo,
 } from "./aniversarios";
 
+import { Botao, botaoClasse } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Cartao } from "../../ui/Cartao";
+import { Linha } from "../../ui/Linha";
 type Abrir = (p: Aniversariante) => void;
 type Nomeado = { id: string; name: string };
 
@@ -49,11 +53,11 @@ function Parabens({ p, onFechar }: { p: Proximo; onFechar: () => void }) {
           </div>
         </div>
         <div className="modal-foot">
-          <button className="btn btn-ghost" type="button" onClick={onFechar}>Cancelar</button>
+          <Botao variante="discreto" onClick={onFechar}>Cancelar</Botao>
           {link && texto.trim() ? (
-            <a className="btn btn-pri" href={link} target="_blank" rel="noreferrer" onClick={onFechar}><Icon name="whatsapp" size={14} /> Abrir no WhatsApp</a>
+            <a className={botaoClasse({ variante: "principal" })} href={link} target="_blank" rel="noreferrer" onClick={onFechar}><Icon name="whatsapp" size={14} /> Abrir no WhatsApp</a>
           ) : (
-            <button className="btn btn-pri" type="button" disabled>Abrir no WhatsApp</button>
+            <Botao variante="principal" desativado>Abrir no WhatsApp</Botao>
           )}
         </div>
       </div>
@@ -64,7 +68,7 @@ function Parabens({ p, onFechar }: { p: Proximo; onFechar: () => void }) {
 /** Botão de parabéns; sem celular válido no cadastro, diz isso no lugar do botão. */
 function BotaoParabens({ p, onClick }: { p: Proximo; onClick: () => void }) {
   if (!linkWhatsapp(p.telefone, "")) return <span className="aniv-semfone">Sem celular no cadastro</span>;
-  return <button type="button" className="btn btn-sec btn-sm" onClick={onClick}><Icon name="whatsapp" size={14} /> Mandar parabéns</button>;
+  return <Botao compacto onClick={onClick}><Icon name="whatsapp" size={14} /> Mandar parabéns</Botao>;
 }
 
 /** Bloco do Início do painel: hoje e os próximos 7 dias. Sem ninguém, não aparece. */
@@ -82,7 +86,7 @@ export function AniversariantesDaSemana({ base, escopo, comIdade, onAbrir, onVer
   if (lista.length === 0) return null;
   const hoje = lista.filter((p) => p.emDias === 0).length;
   return (
-    <div className="panel aniv">
+    <Cartao className="aniv">
       <div className="panel-head">
         <span className="panel-title"><Icon name="presente" size={14} /> Aniversariantes da semana</span>
         <span className="panel-meta">{hoje ? `${hoje} hoje · ${plural(lista.length, "pessoa")} em 7 dias` : `${plural(lista.length, "pessoa")} em 7 dias`}</span>
@@ -90,20 +94,20 @@ export function AniversariantesDaSemana({ base, escopo, comIdade, onAbrir, onVer
       <div className="panel-body flush">
         {lista.slice(0, 8).map((p) => (
           <div className="cuidado-item" key={`${p.tipo}-${p.id}`}>
-            {podeAbrirPessoa(p) ? <button type="button" className="cuidado-nome" onClick={() => onAbrir(p)}>
+            {podeAbrirPessoa(p) ? <Acao className="cuidado-nome" onClick={() => onAbrir(p)}>
               <span className="mini-title">{p.nome}</span>
               <span className={`mini-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{joinDot(quandoE(p), p.idade ? `faz ${p.idade} anos` : null)}</span>
-            </button> : <div className="cuidado-nome"><div className="mini-title">{p.nome}</div><div className={`mini-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{joinDot(quandoE(p), p.idade ? `faz ${p.idade} anos` : null)}</div></div>}
+            </Acao> : <div className="cuidado-nome"><div className="mini-title">{p.nome}</div><div className={`mini-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{joinDot(quandoE(p), p.idade ? `faz ${p.idade} anos` : null)}</div></div>}
             <div className="cuidado-acoes"><BotaoParabens p={p} onClick={() => setParabens(p)} /></div>
           </div>
         ))}
         <div className="aniv-rodape">
           {lista.length > 8 && <span className="mini-sub">{`E mais ${plural(lista.length - 8, "pessoa")}.`}</span>}
-          <button type="button" className="panel-link" onClick={onVerMes}>Ver os aniversariantes do mês</button>
+          <Botao variante="texto" onClick={onVerMes}>Ver os aniversariantes do mês</Botao>
         </div>
       </div>
       {parabens && <Parabens p={parabens} onFechar={() => setParabens(null)} />}
-    </div>
+    </Cartao>
   );
 }
 
@@ -151,7 +155,7 @@ export function Aniversariantes({ base, escopo, comIdade, times, grupos, onAbrir
         help={escopo
           ? "Você vê quem está nos times e grupos que lidera. A data aparece sem o ano, e a idade fica só com a gestão."
           : "Todo mundo com a data de aniversário no cadastro. A pessoa preenche no app, ou a gestão na ficha dela."}
-        action={lista.length > 0 ? <button className="btn btn-sec" type="button" onClick={baixar}>Baixar CSV</button> : undefined}
+        action={lista.length > 0 ? <Botao onClick={baixar}>Baixar CSV</Botao> : undefined}
       />
       <div className="toolbar aniv-filtros">
         <label className="aniv-filtro"><span className="field-label">Mês</span>
@@ -178,18 +182,18 @@ export function Aniversariantes({ base, escopo, comIdade, times, grupos, onAbrir
       </div>
       <div className="tbl">
         {lista.length > 0 && (
-          <div className="tr head" style={{ gridTemplateColumns: colunas }}><span>Pessoa</span><span>{ct("Times e {grupo}")}</span>{comIdade && <span>Idade</span>}<span /></div>
+          <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: colunas }}><span>Pessoa</span><span>{ct("Times e {grupo}")}</span>{comIdade && <span>Idade</span>}<span /></Linha>
         )}
         {lista.map((p) => (
-          <div className="tr" key={`${p.tipo}-${p.id}`} style={{ gridTemplateColumns: colunas }}>
-            {podeAbrirPessoa(p) ? <button type="button" className="cell-person aniv-pessoa" onClick={() => onAbrir(p)}>
+          <Linha estilo="tabela" key={`${p.tipo}-${p.id}`} style={{ gridTemplateColumns: colunas }}>
+            {podeAbrirPessoa(p) ? <Acao className="cell-person aniv-pessoa" onClick={() => onAbrir(p)}>
               <Av name={p.nome} size="md" />
               <div><div className="cell-name">{p.nome}</div><div className={`cell-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{diaDoMes(p)}</div></div>
-            </button> : <div className="cell-person aniv-pessoa"><Av name={p.nome} size="md" /><div><div className="cell-name">{p.nome}</div><div className={`cell-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{diaDoMes(p)}</div></div></div>}
+            </Acao> : <div className="cell-person aniv-pessoa"><Av name={p.nome} size="md" /><div><div className="cell-name">{p.nome}</div><div className={`cell-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{diaDoMes(p)}</div></div></div>}
             <div className="cell-sub">{ondeServe(p)}</div>
             {comIdade && <div className="cell-sub aniv-idade">{p.idade ? `${p.idade} anos` : ""}</div>}
             <div className="aniv-acao"><BotaoParabens p={p} onClick={() => setParabens(p)} /></div>
-          </div>
+          </Linha>
         ))}
         {lista.length === 0 && (
           semData

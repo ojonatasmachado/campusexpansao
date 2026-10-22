@@ -13,6 +13,8 @@
 import { formatarTelefone } from "../../lib/telefone";
 import { MENSAGEM_PADRAO, comData, daSemana, linkWhatsapp, mensagemPara, primeiroNome } from "./aniversarios";
 
+import { Botao } from "../../ui/Botao";
+import { Cartao } from "../../ui/Cartao";
 type Membro = { id: string; name: string; phone: string; birth: string | null; groupId?: string | null; volunteerId: string | null };
 type Pessoa = { id: string; name: string; phone?: string; meta?: { birthday?: string } };
 type Time = { id: string; name: string; people: Array<{ personId: string; isLeader: boolean }> };
@@ -45,12 +47,12 @@ const nomes = (l: AniversarioNoTime[]) => {
 };
 
 export function CartaoAniversario({ pessoas, destaque, onAgoraNao }: { pessoas: AniversarioNoTime[]; destaque: boolean; onAgoraNao: () => void }) {
-  const btn = `m6-btn ${destaque ? "pri" : "sec"}`;
+  const variante = destaque ? "principal" : "secundario";
   const um = pessoas.length === 1 ? pessoas[0] : null;
   const link = um ? linkWhatsapp(um.telefone, mensagemPara(MENSAGEM_PADRAO, um.nome)) : null;
   const times = [...new Set(pessoas.map((p) => p.time).filter(Boolean))];
   return (
-    <div className="m6-card">
+    <Cartao estilo="app">
       <div className="m6-kick">{times.length === 1 ? `Aniversário · ${times[0]}` : "Aniversário nos seus times"}</div>
       <div className="m6-ct">{um ? `Hoje é aniversário de ${primeiroNome(um.nome)}` : `Hoje fazem aniversário: ${nomes(pessoas)}`}</div>
       {um ? (
@@ -62,16 +64,16 @@ export function CartaoAniversario({ pessoas, destaque, onAgoraNao }: { pessoas: 
             return (
               <li key={p.id}>
                 <span className="m6-aniv-n">{p.nome}</span>
-                {l ? <button className="m6-link" type="button" onClick={() => abrir(l)} aria-label={`Mandar parabéns para ${p.nome}, ${formatarTelefone(p.telefone)}`}>Parabéns</button> : <span className="m6-meta">sem celular</span>}
+                {l ? <Botao tamanho="toque" variante="texto" onClick={() => abrir(l)} aria-label={`Mandar parabéns para ${p.nome}, ${formatarTelefone(p.telefone)}`}>Parabéns</Botao> : <span className="m6-meta">sem celular</span>}
               </li>
             );
           })}
         </ul>
       )}
       <div className="m6-btns">
-        {link && <button className={btn} type="button" onClick={() => abrir(link)}>Mandar parabéns</button>}
-        <button className="m6-link" type="button" data-dispensa="1" onClick={onAgoraNao}>Agora não</button>
+        {link && <Botao tamanho="toque" variante={variante} onClick={() => abrir(link)}>Mandar parabéns</Botao>}
+        <Botao tamanho="toque" variante="texto" data-dispensa="1" onClick={onAgoraNao}>Agora não</Botao>
       </div>
-    </div>
+    </Cartao>
   );
 }

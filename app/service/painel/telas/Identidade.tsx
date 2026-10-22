@@ -13,6 +13,8 @@ import { FormScreen, FormSection, type FormScreenHandle } from "../form/FormScre
 import { friendlyWriteError } from "../erros";
 import type { ChurchIdentityView, ChurchView, CycleView, HistoryEntryView, ModalState } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 export function ValoresEditModal({ church, identity, onClose, onRefresh }: {
   church: ChurchView | undefined;
   identity?: ChurchIdentityView | null;
@@ -73,11 +75,11 @@ export function ValoresEditModal({ church, identity, onClose, onRefresh }: {
         <FormSection key={i} title={r.title.trim() || `Valor ${i + 1}`}>
           <div className="field"><label className="field-label req" htmlFor={`${fid}-v${i}`}>Nome</label><input id={`${fid}-v${i}`} className="input" value={r.title} onChange={(e) => setRow(i, { title: e.target.value })} placeholder="ex: Acolhimento" /></div>
           <div className="field"><label className="field-label" htmlFor={`${fid}-d${i}`}>O que significa</label><textarea id={`${fid}-d${i}`} className="textarea" value={r.texto} onChange={(e) => setRow(i, { texto: e.target.value })} placeholder="O que esse valor significa na prática" /></div>
-          <button className="btn btn-sec btn-sm" type="button" onClick={() => removeRow(i)}>Remover valor</button>
+          <Botao compacto onClick={() => removeRow(i)}>Remover valor</Botao>
         </FormSection>
       ))}
       {rows.length === 0 && <p className="fs-note">Nenhum valor cadastrado ainda.</p>}
-      <button className="btn btn-sec" type="button" onClick={addRow}>Adicionar valor</button>
+      <Botao onClick={addRow}>Adicionar valor</Botao>
     </FormScreen>
   );
 }
@@ -92,7 +94,7 @@ export function Identidade({ church, identity, cycle, setModal }: { church?: Chu
         title="Identidade e propósito"
         eyebrow="Nossa igreja"
         help="Visão, valores e o chamado da igreja. Aparece pro membro no app e na página da igreja da igreja."
-        action={<button className="btn btn-sec" type="button" onClick={() => setModal({ eyebrow: "Editar", title: "Identidade da Igreja", subtitle: "Atualize propósito, missão e visão da Igreja. Para os valores, use \"Editar valores\" abaixo.", saveLabel: "Salvar", formFields: [{ k:"proposito", label:"Propósito", type:"area", ph:identity?.purpose ?? "Por que a Igreja existe..." }, { k:"missao", label:"Missão", type:"area", ph:identity?.mission ?? "A missão da Igreja..." }, { k:"visao", label:"Visão", type:"area", ph:identity?.vision ?? "A visão da Igreja..." }, { k:"versiculo", label:"Versículo", type:"text", ph:identity?.verse ?? "ex: Mateus 28:19" }], action: { kind: "identity" } })}>Editar</button>}
+        action={<Botao onClick={() => setModal({ eyebrow: "Editar", title: "Identidade da Igreja", subtitle: "Atualize propósito, missão e visão da Igreja. Para os valores, use \"Editar valores\" abaixo.", saveLabel: "Salvar", formFields: [{ k:"proposito", label:"Propósito", type:"area", ph:identity?.purpose ?? "Por que a Igreja existe..." }, { k:"missao", label:"Missão", type:"area", ph:identity?.mission ?? "A missão da Igreja..." }, { k:"visao", label:"Visão", type:"area", ph:identity?.vision ?? "A visão da Igreja..." }, { k:"versiculo", label:"Versículo", type:"text", ph:identity?.verse ?? "ex: Mateus 28:19" }], action: { kind: "identity" } })}>Editar</Botao>}
       />
       <div className="section-divide">
         <span className="num">01</span><span className="label">Missão & propósito</span><span className="line" />
@@ -127,7 +129,7 @@ export function Identidade({ church, identity, cycle, setModal }: { church?: Chu
       ) : null}
       <div className="section-divide" style={{ marginTop: 28 }}>
         <span className="num">02</span><span className="label">Valores</span><span className="line" />
-        <button className="panel-link" type="button" onClick={() => setEditingValores(true)}>Editar valores</button>
+        <Botao variante="texto" onClick={() => setEditingValores(true)}>Editar valores</Botao>
       </div>
       {values.length > 0 ? (
         <div className="val-grid">
@@ -145,7 +147,7 @@ export function Identidade({ church, identity, cycle, setModal }: { church?: Chu
       {editingValores && <ValoresEditModal church={church} identity={identity} onClose={() => setEditingValores(false)} onRefresh={() => router.refresh()} />}
       <div className="section-divide" style={{ marginTop: 28 }}>
         <span className="num">03</span><span className="label">Tema do ciclo atual</span><span className="line" />
-        {cycle ? <button className="panel-link" type="button" onClick={() => setModal({ eyebrow: "Editar", title: `Ciclo ${cycle.year}`, subtitle: "A visão do ano que todos enxergam.", saveLabel: "Salvar", formFields: [{ k:"ano", label:"Ano / período", type:"text", half:true, req:true, ph:cycle.year }, { k:"tema", label:"Tema", type:"text", half:true, req:true, ph:cycle.theme }, { k:"versiculo", label:"Versículo", type:"text", ph:cycle.verse ?? "ex: Salmos 1:3" }, { k:"desc", label:"Descrição", type:"area", ph:cycle.body ?? "O que esse tema significa para a Igreja..." }, { k:"objetivos", label:"Objetivos (separados por vírgula)", type:"text", ph:cycle.objectives.map((o) => o.title).join(", ") }], action: { kind: "cycle", id: cycle.id } })}>Editar ciclo</button> : null}
+        {cycle ? <Botao variante="texto" onClick={() => setModal({ eyebrow: "Editar", title: `Ciclo ${cycle.year}`, subtitle: "A visão do ano que todos enxergam.", saveLabel: "Salvar", formFields: [{ k:"ano", label:"Ano / período", type:"text", half:true, req:true, ph:cycle.year }, { k:"tema", label:"Tema", type:"text", half:true, req:true, ph:cycle.theme }, { k:"versiculo", label:"Versículo", type:"text", ph:cycle.verse ?? "ex: Salmos 1:3" }, { k:"desc", label:"Descrição", type:"area", ph:cycle.body ?? "O que esse tema significa para a Igreja..." }, { k:"objetivos", label:"Objetivos (separados por vírgula)", type:"text", ph:cycle.objectives.map((o) => o.title).join(", ") }], action: { kind: "cycle", id: cycle.id } })}>Editar ciclo</Botao> : null}
       </div>
       {cycle ? (
         <div className="ciclo">
@@ -171,7 +173,7 @@ export function Identidade({ church, identity, cycle, setModal }: { church?: Chu
         <div className="empty">Nenhum ciclo cadastrado ainda.</div>
       )}
       <div style={{ marginTop: 16 }}>
-        <button className="btn btn-sec btn-sm" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo ciclo anual", subtitle: "O tema que guia a Igreja neste período.", saveLabel: "Criar ciclo", formFields: [{ k:"ano", label:"Ano / período", type:"text", half:true, req:true, ph:"ex: 2026 · 1º semestre" }, { k:"tema", label:"Tema", type:"text", half:true, req:true, ph:"ex: Raízes profundas" }, { k:"versiculo", label:"Versículo", type:"text", ph:"ex: Salmos 1:3" }, { k:"desc", label:"Descrição", type:"area", ph:"O que esse tema significa para a Igreja..." }, { k:"objetivos", label:"Objetivos (separados por vírgula)", type:"text", ph:"ex: Leitura bíblica diária, Multiplicar GCs" }], action: { kind: "cycle" } })}>+ Novo ciclo</button>
+        <Botao compacto onClick={() => setModal({ eyebrow: "Criar", title: "Novo ciclo anual", subtitle: "O tema que guia a Igreja neste período.", saveLabel: "Criar ciclo", formFields: [{ k:"ano", label:"Ano / período", type:"text", half:true, req:true, ph:"ex: 2026 · 1º semestre" }, { k:"tema", label:"Tema", type:"text", half:true, req:true, ph:"ex: Raízes profundas" }, { k:"versiculo", label:"Versículo", type:"text", ph:"ex: Salmos 1:3" }, { k:"desc", label:"Descrição", type:"area", ph:"O que esse tema significa para a Igreja..." }, { k:"objetivos", label:"Objetivos (separados por vírgula)", type:"text", ph:"ex: Leitura bíblica diária, Multiplicar GCs" }], action: { kind: "cycle" } })}>+ Novo ciclo</Botao>
       </div>
     </div>
   );
@@ -205,7 +207,7 @@ export function Historia({ church, historyEntries, setModal }: { church?: Church
         title="Nossa história"
         eyebrow="Nossa igreja"
         help={ct("Os marcos da {caminhada} da igreja, em linha do tempo. Cada capítulo pode ter ano, foto e um link.")}
-        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo capítulo", subtitle: "Registre um momento importante da história da Igreja.", saveLabel: "Adicionar capítulo", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:"ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:"ex: Fundação da Igreja" }, { k:"desc", label:"História", type:"area", ph:"Conte esse momento..." }, { k:"link", label:"Link (opcional)", type:"text", ph:"https://…", hint:"Vídeo, matéria ou álbum de fotos." }], action: { kind: "historyEntry" } })}>+ Adicionar capítulo</button>}
+        action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Novo capítulo", subtitle: "Registre um momento importante da história da Igreja.", saveLabel: "Adicionar capítulo", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:"ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:"ex: Fundação da Igreja" }, { k:"desc", label:"História", type:"area", ph:"Conte esse momento..." }, { k:"link", label:"Link (opcional)", type:"text", ph:"https://…", hint:"Vídeo, matéria ou álbum de fotos." }], action: { kind: "historyEntry" } })}>+ Adicionar capítulo</Botao>}
       />
       {capitulos.length === 0 && <div className="empty">Ainda não há capítulos. Adicione o primeiro.</div>}
       <div className="hist">
@@ -218,14 +220,13 @@ export function Historia({ church, historyEntries, setModal }: { church?: Church
                 <div style={{ position: "absolute", inset: 0, background: i % 2 === 1 ? "linear-gradient(150deg, var(--olive-deep), #243012)" : "linear-gradient(150deg, #7a6526, #3d3415)" }} />
               )}
               <span className="hist-year">{capitulo.year || "-"}</span>
-              <button
-                type="button"
+              <Acao
                 className="hist-photo-tog"
-                disabled={uploadingId === capitulo.id}
+                desativado={uploadingId === capitulo.id}
                 onClick={() => fileRefs.current[capitulo.id]?.click()}
               >
                 {uploadingId === capitulo.id ? "Enviando..." : capitulo.photo_url ? "Trocar foto" : "+ Foto"}
-              </button>
+              </Acao>
               <input
                 ref={(el) => { fileRefs.current[capitulo.id] = el; }}
                 type="file"
@@ -239,7 +240,7 @@ export function Historia({ church, historyEntries, setModal }: { church?: Church
               <div className="hist-x">{capitulo.body}</div>
               <div className="hist-foot">
                 {capitulo.link ? <a className="hist-link" href={capitulo.link} target="_blank" rel="noreferrer">Ver mais →</a> : null}
-                <button className="hist-edit" type="button" onClick={() => setModal({ eyebrow: "Editar", title: `Capítulo de ${capitulo.year ?? capitulo.title}`, subtitle: "Edite este capítulo da história da Igreja.", saveLabel: "Salvar", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:capitulo.year ?? "ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:capitulo.title }, { k:"desc", label:"História", type:"area", ph:capitulo.body ?? "Conte esse momento..." }, { k:"link", label:"Link (opcional)", type:"text", ph:capitulo.link ?? "https://…", hint:"Vídeo, matéria ou álbum de fotos." }], action: { kind: "historyEntry", id: capitulo.id } })}>Editar</button>
+                <Acao className="hist-edit" onClick={() => setModal({ eyebrow: "Editar", title: `Capítulo de ${capitulo.year ?? capitulo.title}`, subtitle: "Edite este capítulo da história da Igreja.", saveLabel: "Salvar", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:capitulo.year ?? "ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:capitulo.title }, { k:"desc", label:"História", type:"area", ph:capitulo.body ?? "Conte esse momento..." }, { k:"link", label:"Link (opcional)", type:"text", ph:capitulo.link ?? "https://…", hint:"Vídeo, matéria ou álbum de fotos." }], action: { kind: "historyEntry", id: capitulo.id } })}>Editar</Acao>
               </div>
             </div>
           </div>
@@ -252,7 +253,7 @@ export function Historia({ church, historyEntries, setModal }: { church?: Church
 export function SimpleModule({ title, subtitle, empty, setModal }: { title: string; subtitle: string; empty: string; setModal: (modal: ModalState) => void }) {
   return (
     <div className="content">
-      <PageHead title={title} eyebrow="Service" help={subtitle} action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: `Criar ${title.toLowerCase()}`, subtitle, formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Nome" }, { k:"responsavel", label:"Responsável", type:"text", ph:"Responsável" }, { k:"obs", label:"Observações", type:"area", ph:"Observações..." }] })}>+ Criar</button>} />
+      <PageHead title={title} eyebrow="Service" help={subtitle} action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: `Criar ${title.toLowerCase()}`, subtitle, formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Nome" }, { k:"responsavel", label:"Responsável", type:"text", ph:"Responsável" }, { k:"obs", label:"Observações", type:"area", ph:"Observações..." }] })}>+ Criar</Botao>} />
       <div className="empty"><div className="empty-mark">0</div><h3 className="empty-title">{empty}</h3><p className="empty-desc">Este módulo está pronto para receber os registros do banco.</p></div>
     </div>
   );

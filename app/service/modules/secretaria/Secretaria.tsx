@@ -18,6 +18,12 @@ import { FolhaDeImpressao, imprimir } from "../../painel/imprimir";
 import { LANCA_A_MAO, LIVROS, REGISTRO_COLS, anoDe, anos, colunas, folhaLivro, linhasCsv, livroDe, numeroFmt, registrosDemo, textoBusca, type Livro, type Registro } from "./livros";
 import { RegistroForm, type CriancaKids } from "./RegistroForm";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
+import { Linha, linhaClasse } from "../../ui/Linha";
+import { Selo } from "../../ui/Selo";
+import { Segmentado } from "../../ui/Segmentado";
 const PAGINA = 200;
 
 /** org de demonstração ("org-demo") não é uuid: lê e grava só na memória */
@@ -96,9 +102,9 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
   const ordemDoPapel = [...visiveis].sort((a, b) => a.numero - b.numero);
 
   const acao = livro === "rol"
-    ? <button className="btn btn-pri" type="button" onClick={() => setCartao({ memberId: null })}>Emitir carteirinha</button>
+    ? <Botao variante="principal" onClick={() => setCartao({ memberId: null })}>Emitir carteirinha</Botao>
     : LANCA_A_MAO.includes(livro)
-      ? <button className="btn btn-pri" type="button" onClick={() => setEditando("novo")}>{livro === "casamento" ? "Registrar casamento" : "Registrar apresentação"}</button>
+      ? <Botao variante="principal" onClick={() => setEditando("novo")}>{livro === "casamento" ? "Registrar casamento" : "Registrar apresentação"}</Botao>
       : undefined;
 
   return (
@@ -111,13 +117,13 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
         action={acao}
       />
       <div className="toolbar">
-        <div className="seg seg-wrap" role="tablist" aria-label="Livro">
+        <Segmentado className="seg-wrap" role="tablist" aria-label="Livro">
           {LIVROS.map((l) => (
-            <button key={l.id} type="button" role="tab" aria-selected={livro === l.id} className={livro === l.id ? "on" : ""} onClick={() => trocarLivro(l.id)}>
+            <Opcao key={l.id} role="tab" aria-selected={livro === l.id} marcada={livro === l.id} onClick={() => trocarLivro(l.id)}>
               {l.rotulo} {regs ? <span className="seg-n">{contagem(l.id)}</span> : null}
-            </button>
+            </Opcao>
           ))}
-        </div>
+        </Segmentado>
       </div>
       <div className="toolbar sec-filtros">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input aria-label="Buscar no livro" placeholder="Buscar nome, nº ou oficiante" value={q} onChange={(e) => { setQ(e.target.value); setMostrar(PAGINA); }} /></div>
@@ -126,33 +132,33 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
           {anosDoLivro.map((a) => <option key={a} value={a}>{a}</option>)}
         </select>
         <div className="sec-saidas">
-          <button className="btn btn-sec btn-sm" type="button" disabled={!visiveis.length} onClick={() => imprimir("livro", livro === "casamento" || livro === "rol" ? "landscape" : "portrait")}><Icon name="documento" size={14} /> Imprimir</button>
-          <button className="btn btn-sec btn-sm" type="button" disabled={!visiveis.length} onClick={() => baixarCsv(arquivo, linhasCsv(livro, ordemDoPapel))}><Icon name="baixar" size={14} /> Baixar CSV</button>
+          <Botao compacto desativado={!visiveis.length} onClick={() => imprimir("livro", livro === "casamento" || livro === "rol" ? "landscape" : "portrait")}><Icon name="documento" size={14} /> Imprimir</Botao>
+          <Botao compacto desativado={!visiveis.length} onClick={() => baixarCsv(arquivo, linhasCsv(livro, ordemDoPapel))}><Icon name="baixar" size={14} /> Baixar CSV</Botao>
         </div>
       </div>
 
       {erro ? <EmptyState title="Não deu para abrir os livros" text="Confira a conexão e abra a Secretaria de novo. Se continuar, peça a quem cuida das permissões para conferir seu acesso." /> : null}
-      {!regs && !erro ? <div className="tbl" aria-busy="true"><div className="tr"><span className="cell-sub">Abrindo os livros...</span></div></div> : null}
+      {!regs && !erro ? <div className="tbl" aria-busy="true"><Linha estilo="tabela"><span className="cell-sub">Abrindo os livros...</span></Linha></div> : null}
 
       {regs && !erro ? (
         doLivro.length === 0 ? (
           <EmptyState title={`Nenhum registro em ${def.rotulo}`} text={def.vazio} action={LANCA_A_MAO.includes(livro) ? { label: livro === "casamento" ? "Registrar casamento" : "Registrar apresentação", onClick: () => setEditando("novo") } : undefined} />
         ) : (
           <div className="tbl sec-tbl">
-            <div className={`tr head sec-tr sec-tr-${livro}`}>
+            <Linha estilo="tabela" className={`head sec-tr sec-tr-${livro}`}>
               <span>Registro</span>
               {livro === "batismo" ? <><span>Oficiante</span><span>Local</span></> : null}
               {livro === "casamento" ? <><span>Oficiante</span><span>Testemunhas</span></> : null}
               {livro === "apresentacao" ? <><span>Pais</span><span>Oficiante</span></> : null}
               {livro === "rol" ? <><span>Entrada</span><span>Situação</span></> : null}
-            </div>
-            {visiveis.slice(0, mostrar).map((r) => <Linha key={r.id} r={r} onAbrir={() => setEditando(r)} />)}
+            </Linha>
+            {visiveis.slice(0, mostrar).map((r) => <LinhaRegistro key={r.id} r={r} onAbrir={() => setEditando(r)} />)}
             {visiveis.length === 0 ? <EmptyState title="Nada encontrado" text="Nenhum registro com essa busca ou nesse ano. Tente limpar a busca ou escolher Todos os anos." /> : null}
             {visiveis.length > mostrar ? (
-              <div className="tr sec-mais">
-                <button className="btn btn-sec btn-sm" type="button" onClick={() => setMostrar((n) => n + PAGINA)}>Mostrar mais {Math.min(PAGINA, visiveis.length - mostrar)}</button>
+              <Linha estilo="tabela" className="sec-mais">
+                <Botao compacto onClick={() => setMostrar((n) => n + PAGINA)}>Mostrar mais {Math.min(PAGINA, visiveis.length - mostrar)}</Botao>
                 <span className="cell-sub">{mostrar} de {plural(visiveis.length, "registro")}</span>
-              </div>
+              </Linha>
             ) : null}
           </div>
         )
@@ -205,12 +211,12 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
   );
 }
 
-function Linha({ r, onAbrir }: { r: Registro; onAbrir: () => void }) {
+function LinhaRegistro({ r, onAbrir }: { r: Registro; onAbrir: () => void }) {
   const fl = folhaLivro(r);
   const sub = r.livro === "rol" ? fl : joinDot(formatDateBR(r.data), fl);
   const nome = r.livro === "casamento" ? [r.dados.noivo?.nome, r.dados.noiva?.nome].filter(Boolean).join(" e ") || r.nome : r.nome;
   return (
-    <button className={`tr click sec-tr sec-tr-${r.livro}`} type="button" onClick={onAbrir}>
+    <Acao className={`${linhaClasse({ estilo: "tabela" })} click sec-tr sec-tr-${r.livro}`} onClick={onAbrir}>
       <div className="sec-reg">
         <span className="sec-num" aria-label={`Registro ${r.numero}`}>{numeroFmt(r.numero)}</span>
         <div className="sec-reg-main"><div className="cell-name">{nome}</div>{sub ? <div className="cell-sub">{sub}</div> : null}</div>
@@ -221,10 +227,10 @@ function Linha({ r, onAbrir }: { r: Registro; onAbrir: () => void }) {
       {r.livro === "rol" ? (
         <>
           <Celula t="Entrada" v={joinDot(formatDateBR(r.data), r.dados.forma)} />
-          <div>{r.saida ? <span className="chip chip-neutral">Saiu em {formatDateBR(r.saida)}{r.saida_motivo ? ` · ${r.saida_motivo}` : ""}</span> : <span className="chip chip-ok">Ativo</span>}</div>
+          <div>{r.saida ? <Selo>Saiu em {formatDateBR(r.saida)}{r.saida_motivo ? ` · ${r.saida_motivo}` : ""}</Selo> : <Selo tom="ok">Ativo</Selo>}</div>
         </>
       ) : null}
-    </button>
+    </Acao>
   );
 }
 

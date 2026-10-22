@@ -28,6 +28,12 @@ import { GerarPeriodo } from "./GerarPeriodo";
 import { EscalaExtra } from "./EscalaExtra";
 import { PublicarEscala } from "./PublicarEscala";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
+import { Selo } from "../../ui/Selo";
+import { Cartao } from "../../ui/Cartao";
+import { Segmentado } from "../../ui/Segmentado";
 type Candidato = CandidatoBase<PersonView>;
 
 /* carga da semana corrente (segunda a domingo contendo hoje) por pessoa:
@@ -112,11 +118,11 @@ function FuncoesEscalaModal({
               <div className="func-edit-row" key={position.id}>
                 <input className="input" value={position.name} onChange={(e) => rename(position.id, e.target.value)} onBlur={(e) => commitRename(position.id, e.target.value)} />
                 <div className="stepper">
-                  <button type="button" onClick={() => setNeedAt(position.id, -1)}>−</button>
+                  <Acao onClick={() => setNeedAt(position.id, -1)}>−</Acao>
                   <span>{position.need_count}</span>
-                  <button type="button" onClick={() => setNeedAt(position.id, 1)}>+</button>
+                  <Acao onClick={() => setNeedAt(position.id, 1)}>+</Acao>
                 </div>
-                <button className="func-edit-x" type="button" title="Remover função" onClick={() => remove(position.id)}><Icon name="recusou" size={15} /></button>
+                <Acao className="func-edit-x" title="Remover função" onClick={() => remove(position.id)}><Icon name="recusou" size={15} /></Acao>
               </div>
             ))}
             {positions.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>Nenhuma função ainda.</div>}
@@ -124,11 +130,11 @@ function FuncoesEscalaModal({
           <div className="dsec-title" style={{ marginBottom: 8 }}>Nova função</div>
           <div className="func-edit-add">
             <input className="input" placeholder="ex: Vocal, Câmera, Recepção" value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
-            <div className="stepper"><button type="button" onClick={() => setNeed((n) => Math.max(1, n - 1))}>−</button><span>{need}</span><button type="button" onClick={() => setNeed((n) => n + 1)}>+</button></div>
-            <button className="btn btn-sec btn-sm" type="button" disabled={saving} onClick={add}>+ Função</button>
+            <div className="stepper"><Acao onClick={() => setNeed((n) => Math.max(1, n - 1))}>−</Acao><span>{need}</span><Acao onClick={() => setNeed((n) => n + 1)}>+</Acao></div>
+            <Botao compacto desativado={saving} onClick={add}>+ Função</Botao>
           </div>
         </div>
-        <div className="modal-foot"><button className="btn btn-pri" type="button" onClick={onClose}>Concluído</button></div>
+        <div className="modal-foot"><Botao variante="principal" onClick={onClose}>Concluído</Botao></div>
       </div>
     </div>
   );
@@ -173,23 +179,23 @@ function DelegarModal({
         </div>
         <div className="modal-body" style={{ display: "block" }}>
           {ministries.length > 1 && (
-            <div className="seg" style={{ marginBottom: 14, flexWrap: "wrap" }}>
-              {ministries.map((m) => <button key={m.id} type="button" className={ministryId === m.id ? "on" : ""} onClick={() => setMinistryId(m.id)}>{m.name.split(" ")[0]}</button>)}
-            </div>
+            <Segmentado style={{ marginBottom: 14, flexWrap: "wrap" }}>
+              {ministries.map((m) => <Opcao key={m.id} marcada={ministryId === m.id} onClick={() => setMinistryId(m.id)}>{m.name.split(" ")[0]}</Opcao>)}
+            </Segmentado>
           )}
           {elenco.length === 0 && <div className="empty">Ninguém mais neste time ainda.</div>}
           {elenco.map((link) => {
             const on = delegados.includes(link.personId);
             return (
-              <button type="button" className={`flag-row${on ? " on" : ""}`} key={link.personId} disabled={saving} onClick={() => toggle(link.personId)}>
+              <Opcao marcada={on} estilo="flag-row" key={link.personId} desativado={saving} onClick={() => toggle(link.personId)}>
                 <span className={`flag-check${on ? " on" : ""}`}>{on ? <Icon name="ok" size={13} /> : null}</span>
                 <Av name={link.personName} size="sm" />
                 <div className="flag-main"><div className="flag-nome">{link.personName}</div><div className="flag-meta">{link.functions.join(" · ") || ct("{Voluntario}")}</div></div>
-              </button>
+              </Opcao>
             );
           })}
         </div>
-        <div className="modal-foot"><button className="btn btn-pri" type="button" onClick={onClose}>Concluído</button></div>
+        <div className="modal-foot"><Botao variante="principal" onClick={onClose}>Concluído</Botao></div>
       </div>
     </div>
   );
@@ -233,8 +239,8 @@ function PresetSaveModal({
           <div className="field"><label className="field-label">Nome da configuração</label><input className="input" placeholder="ex: Culto de domingo" value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === "Enter" && salvar()} /></div>
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>Salvar</button>
+          <Botao onClick={onClose}>Cancelar</Botao>
+          <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
         </div>
       </div>
     </div>
@@ -487,21 +493,21 @@ export function Escalas({
         help={ct(`Monte quem serve em cada {culto}. As pessoas confirmam ou recusam direto no celular, e a vaga em aberto aparece em vermelho. Toque numa pessoa para confirmar, trocar ou remover; em Escalar para preencher a vaga. ${perspectiveText}`)}
         action={
           <>
-            <button className="btn btn-sec" type="button" onClick={() => setPeriodoOpen(true)}><Icon name="agenda" size={15} /> Montar período</button>
+            <Botao onClick={() => setPeriodoOpen(true)}><Icon name="agenda" size={15} /> Montar período</Botao>
             <MenuMais acoes={[
               { rotulo: "Escala extra", icone: "add", onClick: () => setExtraOpen(true) },
               { rotulo: "Delegar a gestão", icone: "membros", onClick: () => setDelegarOpen(true) },
               { rotulo: "QR do check-in", icone: "cultos", onClick: () => setCheckinEventId(selectedEvent?.id ?? null), desligada: !selectedEvent },
               { rotulo: "Baixar a escala", icone: "relatorios", onClick: baixarCSV, desligada: !selectedEvent },
             ]} />
-            <button className="btn btn-pri" type="button" onClick={() => setPublicarOpen(true)}>Publicar e avisar{rascunhos.length ? ` (${rascunhos.length})` : ""}</button>
+            <Botao variante="principal" onClick={() => setPublicarOpen(true)}>Publicar e avisar{rascunhos.length ? ` (${rascunhos.length})` : ""}</Botao>
           </>
         }
       />
 
       <div className="esc-events">
         {events.map((event) => (
-          <button className={`esc-event ${selectedEvent?.id === event.id ? "on" : ""}`} key={event.id} type="button" onClick={() => setEventId(event.id)}>
+          <Acao className={`esc-event ${selectedEvent?.id === event.id ? "on" : ""}`} key={event.id} onClick={() => setEventId(event.id)}>
             <span className="esc-event-day">{joinDot(event.weekday, formatDateBR(event.eventDate))}</span>
             <span className="esc-event-name">{event.name}</span>
             <span className="esc-event-time">{joinDot(event.time, event.location)}</span>
@@ -511,7 +517,7 @@ export function Escalas({
               const emRascunho = rascunhos.some((r) => r.event_id === event.id);
               return <span className={`esc-event-cob ${falta ? "falta" : "ok"}`}>{joinDot(falta ? faltaN(falta, "vaga") : "completo", emRascunho && "rascunho")}</span>;
             })()}
-          </button>
+          </Acao>
         ))}
       </div>
 
@@ -519,17 +525,17 @@ export function Escalas({
         <summary><Icon name="escalas" size={15} /> Como gerar <span className="esc-gerar-modo">{escalaCfg.modo === "manual" ? "Manual" : escalaCfg.modo === "assistido" ? "Assistida" : "Automática"}</span><Caret size={14} /></summary>
         <div className="esc-modo">
         <span className="esc-modo-lbl">Geração da escala</span>
-        <div className="seg seg-sm">
+        <Segmentado className="seg-sm">
           {(["manual", "assistido", "automatico"] as const).map((key) => (
-            <button key={key} className={escalaCfg.modo === key ? "on" : ""} type="button" onClick={() => setModoEscala(key)}>{key === "manual" ? "Manual" : key === "assistido" ? "Assistida" : "Automática"}</button>
+            <Opcao key={key} marcada={escalaCfg.modo === key} onClick={() => setModoEscala(key)}>{key === "manual" ? "Manual" : key === "assistido" ? "Assistida" : "Automática"}</Opcao>
           ))}
-        </div>
+        </Segmentado>
         <span className="esc-modo-hint">
           {escalaCfg.modo === "manual" ? "Você monta tudo na mão." : null}
           {escalaCfg.modo === "assistido" ? "O sistema sugere os nomes; você confirma cada um." : null}
           {escalaCfg.modo === "automatico" ? "O sistema gera e já confirma. Na recusa, chama o próximo apto." : null}
         </span>
-        {escalaCfg.modo !== "manual" ? <button className="btn btn-sec btn-sm" type="button" disabled={gerando} onClick={gerarAuto}><Icon name="escalas" size={14} /> {gerando ? "Gerando…" : (escalaCfg.modo === "automatico" ? "Gerar a escala" : "Sugerir nomes")}</button> : null}
+        {escalaCfg.modo !== "manual" ? <Botao compacto desativado={gerando} onClick={gerarAuto}><Icon name="escalas" size={14} /> {gerando ? "Gerando…" : (escalaCfg.modo === "automatico" ? "Gerar a escala" : "Sugerir nomes")}</Botao> : null}
         <span className="tb-spacer" />
         <span className="esc-preset">
           <Icon name="escalas" size={13} />
@@ -537,9 +543,9 @@ export function Escalas({
             <option value="">Aplicar configuração…</option>
             {(church?.settings?.escalaPresets ?? []).map((preset) => <option key={preset.id} value={preset.id}>{preset.nome}</option>)}
           </select>
-          <button className="esc-preset-save" type="button" onClick={() => setPresetSaveOpen(true)}>Salvar atual</button>
+          <Acao className="esc-preset-save" onClick={() => setPresetSaveOpen(true)}>Salvar atual</Acao>
         </span>
-        <button className="esc-modo-cfg" type="button" onClick={() => setRoute("config")}><Icon name="config" size={13} /> Regras</button>
+        <Acao className="esc-modo-cfg" onClick={() => setRoute("config")}><Icon name="config" size={13} /> Regras</Acao>
       </div>
 
       </details>
@@ -575,10 +581,10 @@ export function Escalas({
                   <div className="esc-col-tname">{ministry.name}</div>
                   <div className="esc-col-tmeta">{ministryFilled >= ministryNeed ? `Completo · ${plural(ministryNeed, "vaga")}` : `${ministryFilled} de ${plural(ministryNeed, "vaga")}`}</div>
                 </div>
-                <button className="esc-col-edit" title="Editar funções deste time" type="button" onClick={() => setFuncEdit(ministry)}><Icon name="config" size={14} /></button>
-                <button className="esc-col-tog" type="button" aria-expanded={!timesFechados.has(ministry.id)} aria-label={timesFechados.has(ministry.id) ? `Abrir ${ministry.name}` : `Recolher ${ministry.name}`} onClick={() => alternarTime(ministry.id)}>
+                <Acao className="esc-col-edit" title="Editar funções deste time" onClick={() => setFuncEdit(ministry)}><Icon name="config" size={14} /></Acao>
+                <Acao className="esc-col-tog" aria-expanded={!timesFechados.has(ministry.id)} aria-label={timesFechados.has(ministry.id) ? `Abrir ${ministry.name}` : `Recolher ${ministry.name}`} onClick={() => alternarTime(ministry.id)}>
                   <Icon name="avancar" size={15} />
-                </button>
+                </Acao>
               </div>
               <div className="esc-col-body">
                 {ministryPositions.map((position) => {
@@ -595,28 +601,28 @@ export function Escalas({
                         {assignments.map((assignment) => {
                           const person = people.find((candidate) => candidate.id === assignment.person_id);
                           return (
-                            <button
+                            <Acao
                               key={assignment.id}
                               className={`esc-person ${assignment.status === "no" ? "is-no" : ""}${assignment.rascunho ? " is-draft" : ""}`}
                               title={assignment.rascunho ? "Rascunho: a pessoa ainda não foi avisada" : undefined}
-                              type="button"
+                             
                               onClick={() => selectedEvent && setSlotAction({ kind: "slot", event: selectedEvent, ministry, position, assignment })}
                             >
                               <Av name={person?.name ?? "Voluntário"} size="xs" photoUrl={person?.photoUrl} />
                               <span className="esc-person-name">{person?.name.split(" ")[0] ?? "Pessoa"}</span>
                               <span className={`slot-st ${assignment.status}`} />
-                            </button>
+                            </Acao>
                           );
                         })}
                         {Array.from({ length: missing }).map((_, index) => (
-                          <button
+                          <Acao
                             key={`missing-${position.id}-${index}`}
                             className="esc-vaga"
-                            type="button"
+                           
                             onClick={() => selectedEvent && setSlotAction({ kind: "assign", event: selectedEvent, ministry, position })}
                           >
                             Escalar
-                          </button>
+                          </Acao>
                         ))}
                       </div>
                     </div>
@@ -630,20 +636,20 @@ export function Escalas({
       </div>
 
       <div className="st-legend">
-        <span className="chip chip-ok">Confirmado</span>
-        <span className="chip chip-wait">Aguardando</span>
-        <span className="chip chip-no">Não pode</span>
-        <span className="chip chip-open">Vaga aberta</span>
-        {rascunhos.length > 0 && <span className="chip chip-draft">Rascunho, ainda não publicado</span>}
+        <Selo tom="ok">Confirmado</Selo>
+        <Selo tom="pendente">Aguardando</Selo>
+        <Selo tom="cuidado">Não pode</Selo>
+        <Selo tom="aberto">Vaga aberta</Selo>
+        {rascunhos.length > 0 && <Selo tom="rascunho">Rascunho, ainda não publicado</Selo>}
       </div>
 
       {gapsDaSemana.length > 0 ? (
-        <div className="panel" style={{ marginTop: 18 }}>
+        <Cartao style={{ marginTop: 18 }}>
           <div className="panel-head"><span className="panel-title"><Icon name="escalas" size={14} /> Pendências da semana <HelpDot text="Funções da programação futura desta semana que ainda não têm todas as vagas preenchidas." /></span><span className="panel-meta">{plural(gapsDaSemana.length, "função para conferir", "funções para conferir")}</span></div>
           <div className="panel-body flush">
             {gapsDaSemana.slice(0, 5).map((gap) => <div className="gap-row" key={`${gap.event.id}-${gap.position.id}`}><div className="gap-ic wait">!</div><div className="mini-main"><div className="mini-title">{gap.position.name} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {gap.ministry.name}</span></div><div className="mini-sub">{joinDot(gap.event.name, gap.event.time)}</div></div></div>)}
           </div>
-        </div>
+        </Cartao>
       ) : null}
 
       {slotAction ? (
@@ -749,14 +755,14 @@ function RosterActionModal({
           </div>
           <div className="modal-body">
             <div style={{ display: "grid", gap: 8 }}>
-              <button className="btn btn-pri" type="button" disabled={salvando} onClick={() => executar(() => onConfirmar(assignment.id))}><Icon name="ok" size={15} /> Marcar como confirmado</button>
-              <button className="btn btn-sec" type="button" disabled={salvando} onClick={() => setTrocando(true)}>Substituir pessoa</button>
+              <Botao variante="principal" desativado={salvando} onClick={() => executar(() => onConfirmar(assignment.id))}><Icon name="ok" size={15} /> Marcar como confirmado</Botao>
+              <Botao desativado={salvando} onClick={() => setTrocando(true)}>Substituir pessoa</Botao>
               <details className="service-preparacao"><summary>Outras ações</summary>
                 <div style={{ display: "grid", gap: 8 }}>
-                  <button className="btn btn-sec" type="button" disabled={salvando} onClick={() => executar(() => onPendente(assignment.id))}>Voltar para aguardar confirmação</button>
-                  <button className="btn btn-sec" type="button" disabled={salvando} onClick={() => executar(() => onRecusar(assignment))}>Marcar que recusou</button>
-                  {assignedPerson ? <button className="btn btn-sec" type="button" disabled={salvando} onClick={() => setDrawer({ kind: "person", id: assignedPerson.id })}>{ct("Ver perfil do {voluntario}")}</button> : null}
-                  <button className="btn btn-danger" type="button" disabled={salvando} onClick={() => executar(() => onRemover(assignment.id))}>Remover da escala</button>
+                  <Botao desativado={salvando} onClick={() => executar(() => onPendente(assignment.id))}>Voltar para aguardar confirmação</Botao>
+                  <Botao desativado={salvando} onClick={() => executar(() => onRecusar(assignment))}>Marcar que recusou</Botao>
+                  {assignedPerson ? <Botao desativado={salvando} onClick={() => setDrawer({ kind: "person", id: assignedPerson.id })}>{ct("Ver perfil do {voluntario}")}</Botao> : null}
+                  <Botao variante="perigo" desativado={salvando} onClick={() => executar(() => onRemover(assignment.id))}>Remover da escala</Botao>
                 </div>
               </details>
               {salvando && <p role="status">Salvando alteração...</p>}
@@ -764,7 +770,7 @@ function RosterActionModal({
             </div>
           </div>
           <div className="modal-foot">
-            <button className="btn btn-sec" type="button" disabled={salvando} onClick={onClose}>Fechar</button>
+            <Botao desativado={salvando} onClick={onClose}>Fechar</Botao>
           </div>
         </div>
       </div>
@@ -787,7 +793,7 @@ function RosterActionModal({
     void executar(() => isSwap && action.assignment ? onTrocar(action.assignment.id, c.person.id) : onEscalar(c.person.id));
   };
   const linha = (c: Candidato) => (
-    <button className={`cand ${c.fit === "block" ? "is-block" : ""}`} type="button" key={c.person.id} disabled={salvando || c.fit === "block"} aria-disabled={c.fit === "block" || undefined} onClick={() => escolher(c)}>
+    <Acao className={`cand ${c.fit === "block" ? "is-block" : ""}`} key={c.person.id} desativado={salvando || c.fit === "block"} aria-disabled={c.fit === "block" || undefined} onClick={() => escolher(c)}>
       <Av name={c.person.name} size="md" photoUrl={c.person.photoUrl} />
       <div className="cand-main">
         <div className="cand-name">{c.person.name}</div>
@@ -797,7 +803,7 @@ function RosterActionModal({
         {c.person.tags.length > 0 ? <div className="cand-meta">{c.person.tags.join(" · ")}</div> : null}
       </div>
       {c.fit !== "block" && <span className={`cand-fit ${c.fit}`}>{c.fit === "good" ? <><Icon name="ok" size={13} /> disponível</> : <><Icon name="pendente" size={13} /> ocupado</>}</span>}
-    </button>
+    </Acao>
   );
   return (
     <div className="modal-bg" onClick={salvando ? undefined : onClose}>
@@ -809,7 +815,7 @@ function RosterActionModal({
           {isSwap && <p className="modal-sub">A pessoa escolhida passa a ocupar a vaga e precisa confirmar no app.</p>}
           <div className="cand-tools">
             <input className="input" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar pelo nome" aria-label="Buscar pelo nome" />
-            <button type="button" className={`chip-toggle${soDisponiveis ? " on" : ""}`} aria-pressed={soDisponiveis} onClick={() => setSoDisponiveis((v) => !v)}>Disponíveis</button>
+            <Opcao marcada={soDisponiveis} estilo="chip-toggle" aria-pressed={soDisponiveis} onClick={() => setSoDisponiveis((v) => !v)}>Disponíveis</Opcao>
           </div>
         </div>
         <div className="modal-body cand-list">
@@ -836,7 +842,7 @@ function RosterActionModal({
             </>
           )}
         </div>
-        <div className="modal-foot"><button className="btn btn-ghost" type="button" disabled={salvando} onClick={onClose}>Cancelar</button></div>
+        <div className="modal-foot"><Botao variante="discreto" desativado={salvando} onClick={onClose}>Cancelar</Botao></div>
       </div>
     </div>
   );

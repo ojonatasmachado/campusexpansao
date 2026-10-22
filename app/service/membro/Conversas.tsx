@@ -8,6 +8,9 @@ import { joinDot } from "../lib/date";
 import { Av } from "./comum";
 import type { Board, Card, Chat, ChatMember, M, Message, Ministry, P } from "./tipos";
 
+import { Botao } from "../ui/Botao";
+import { Acao } from "../ui/Acao";
+import { Cartao } from "../ui/Cartao";
 // ── aba: Inicio ───────────────────────────────────────────────────────────────
 
 // ── aba: Tarefas ──────────────────────────────────────────────────────────────
@@ -72,23 +75,23 @@ export function TabTarefas({ person, cards, boards, onAddCardComment, initialCar
     const isLate = c.moved_days_ago !== null && c.moved_days_ago > 7;
     return (
       <div className={`m-task ${isLate ? "late" : ""}`} key={c.id}>
-        <button ref={c.id === initialCardId ? targetRef : undefined} type="button" aria-expanded={isOpen} className="m-task-head" onClick={() => toggleOpen(c.id)}>
+        <Acao ref={c.id === initialCardId ? targetRef : undefined} aria-expanded={isOpen} className="m-task-head" onClick={() => toggleOpen(c.id)}>
           <span className={`prio-dot prio-${c.priority ?? "media"}`} aria-hidden="true" />
           <div className="m-task-main">
             <div className="m-task-title">{c.title}</div>
             <div className="m-task-meta">{joinDot(board?.name ?? "Quadro", `Prioridade ${PRIORIDADE[c.priority ?? "media"] ?? "média"}`)}</div>
           </div>
           <span className="m-task-caret"><Caret open={isOpen} /></span>
-        </button>
+        </Acao>
         {isOpen && (
           <div className="m-task-body">
             {c.description && <div className="m-task-desc">{c.description}</div>}
             {board && (
               <div className="m-task-cols">
                 {board.columns.map((col) => (
-                  <button key={col.id} type="button" className={`seg-chip ${c.column_id === col.id ? "on" : ""}`} onClick={() => moveCard(c.id, col.id)}>
+                  <Acao key={col.id} className={`seg-chip ${c.column_id === col.id ? "on" : ""}`} onClick={() => moveCard(c.id, col.id)}>
                     {col.nome ?? col.name ?? col.id}
-                  </button>
+                  </Acao>
                 ))}
               </div>
             )}
@@ -107,13 +110,13 @@ export function TabTarefas({ person, cards, boards, onAddCardComment, initialCar
                   onChange={(e) => setCommentTexts((p) => ({ ...p, [c.id]: e.target.value }))}
                   onKeyDown={(e) => e.key === "Enter" && addComment(c.id)}
                 />
-                <button
-                  className="m-btn m-btn-ok"
+                <Botao
+                  tamanho="toque" variante="principal" compacto
                   style={{ padding: "8px 14px" }}
                   onClick={() => addComment(c.id)}
                 >
                   Enviar
-                </button>
+                </Botao>
               </div>
             </div>
           </div>
@@ -266,9 +269,9 @@ export function TabConversas({
     return (
       <div className="m-chat">
         {!onChatOpen && (
-          <button className="m-chat-back" onClick={() => setSelId(null)}>
+          <Acao className="m-chat-back" onClick={() => setSelId(null)}>
             ← {chat.name ?? "Conversa"}
-          </button>
+          </Acao>
         )}
         <div className="chat-thread">
           <div className="chat-msgs" style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14 }}>
@@ -309,7 +312,7 @@ export function TabConversas({
               onChange={(e) => setTexto(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && enviar()}
             />
-            <button className="btn btn-pri btn-sm" type="button" disabled={!texto.trim()} onClick={enviar}>Enviar</button>
+            <Botao variante="principal" compacto desativado={!texto.trim()} onClick={enviar}>Enviar</Botao>
           </div>
         </div>
       </div>
@@ -321,7 +324,7 @@ export function TabConversas({
       <div className="m-section-t">Conversas</div>
 
       {novo && (
-        <div className="m-card" style={{ marginBottom: 14 }}>
+        <Cartao estilo="app-solto" style={{ marginBottom: 14 }}>
           <div className="m-section-t" style={{ marginTop: 0 }}>{souLider ? "Falar com alguém do time" : "Falar com um líder"}</div>
           <input
             className="input"
@@ -331,24 +334,24 @@ export function TabConversas({
             style={{ marginBottom: 10 }}
           />
           {candidatos.map((m) => (
-            <button className="m-conv" key={m.id} onClick={() => abrir(m.id)} disabled={starting}>
+            <Acao className="m-conv" key={m.id} onClick={() => abrir(m.id)} desativado={starting}>
               <span className="m-conv-ic">→</span>
               <div className="m-conv-main">
                 <div className="m-conv-name">{m.name}</div>
                 <div className="m-conv-prev">{nomeTimeDoLider(m.id)}</div>
               </div>
-            </button>
+            </Acao>
           ))}
           {candidatos.length === 0 && (
             <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>Nenhum líder disponível ainda.</div>
           )}
-        </div>
+        </Cartao>
       )}
 
       {myChats.length === 0 && (
-        <div className="m-card">
+        <Cartao estilo="app-solto">
           <div style={{ fontSize: "var(--fs-app-15)", color: "var(--muted)" }}>Nenhuma conversa ainda. Toque em Nova mensagem para falar com um líder.</div>
-        </div>
+        </Cartao>
       )}
       {[...myChats].sort((a, b) => (ultimaDe(b.id)?.created_at ?? "").localeCompare(ultimaDe(a.id)?.created_at ?? "")).map((c) => {
         const last = ultimaDe(c.id);
@@ -357,7 +360,7 @@ export function TabConversas({
         const autor = last && !outro(c) ? members.find((m) => m.id === last.sender_id)?.name.split(" ")[0] : undefined;
         const quem = !last ? "" : last.sender_id === member?.id ? "Você: " : autor ? `${autor}: ` : "";
         return (
-          <button className={`m-conv${n ? " unread" : ""}`} key={c.id} type="button" onClick={() => setSelId(c.id)}
+          <Acao className={`m-conv${n ? " unread" : ""}`} key={c.id} onClick={() => setSelId(c.id)}
             aria-label={n ? `${nome}, ${n === 1 ? "1 mensagem não lida" : `${n} mensagens não lidas`}` : undefined}>
             <Av name={nome} photoUrl={fotoDa(c)} />
             <div className="m-conv-main">
@@ -368,7 +371,7 @@ export function TabConversas({
               {last && <span className="m-conv-when">{quandoMensagem(last.created_at)}</span>}
               {n > 0 && <span className="m6-count" aria-hidden="true">{n}</span>}
             </div>
-          </button>
+          </Acao>
         );
       })}
     </>

@@ -7,7 +7,7 @@ Toda função nova do Service nasce como módulo, numa pasta `app/service/module
 com um `manifest.ts`. Tela, item de menu, aba de configuração, cartão ou notificação
 criados fora do registro não entram.
 
-## As 16 leis (revisadas em 22/10/2026)
+## As 17 leis (revisadas em 22/10/2026)
 
 1. **Casca estável.** App do membro: 4 abas (Início, Agenda, Mensagens, Caminhada) e
    avatar no topo, que abre o Perfil. Painel: menu, barra e busca. A casca não muda
@@ -83,6 +83,16 @@ criados fora do registro não entram.
 16. **Mercado antes do desenho.** Tela ou fluxo novo começa vendo como 2 ou 3 ferramentas
     resolvem a mesma tarefa (função, nunca marca ou visual) e termina com crítica de design,
     teste de pior caso e medição antes e depois. Material de concorrente fica fora do git.
+17. **Componentes da biblioteca.** Toda peça de interface do Service sai de um
+   componente compartilhado. O índice é `docs/service-v7/BIBLIOTECA.md`: diz onde mora cada
+   peça (as novas em `app/service/ui/`, as antigas onde já estão) e o que falta trocar. Antes de
+   escrever markup, procure ali; existindo, importe e use; faltando variação, acrescente uma
+   prop ao componente. Peça nova só entra com a ficha de entrada da BIBLIOTECA preenchida e uma
+   linha na tabela. Nenhuma tela escreve `<button>`: usa `Botao`, `BotaoIcone`, `Interruptor`,
+   `Opcao` ou, para linha/cartão sem peça própria, a base `Acao` (todos em `app/service/ui/`);
+   link com cara de botão usa `botaoClasse()`. Estado é `Selo`, papel é `Etiqueta`,
+   superfície é `Cartao`, item de lista é `Linha`. Vale do login ao painel. O CI falha com `<button>`
+   ou `.btn`/`.m6-btn` à mão (`scripts/check-service-componentes.ts`).
 
 ## Como o registro funciona (4.1)
 
@@ -117,6 +127,7 @@ criados fora do registro não entram.
 - [ ] Fatos que vão para o histórico estão declarados.
 - [ ] Captura das telas novas passa nos testes da lei 12.
 - [ ] Olhei 2 ou 3 ferramentas resolvendo a mesma tarefa (lei 16).
+- [ ] Telas montadas com os componentes da `BIBLIOTECA.md` (`Botao`, `BotaoIcone`...); peça nova com ficha de entrada (lei 17).
 - [ ] Cada tela cabe na lei 13; anotei a medida antes e depois.
 - [ ] Nenhum dado aparece repetido em outra tela além de uma linha-resumo (lei 14).
 - [ ] Tela de quem executa separada da de quem acompanha; no topo, no máximo duas ações (lei 15).

@@ -24,6 +24,13 @@ import { ContaForm, LancamentoForm, OfertaForm, TransferenciaForm } from "./Form
 import { APagar, CampanhaForm, ContaFixaForm, FechamentoMes, Planejamento } from "./Fase2";
 import type { Campanha, ContaFixa } from "./dados";
 
+import { Botao, BotaoIcone, botaoClasse } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
+import { Cartao } from "../../ui/Cartao";
+import { Linha, linhaClasse } from "../../ui/Linha";
+import { Segmentado } from "../../ui/Segmentado";
+import { Contagem } from "../../ui/Contagem";
 type Tela =
   | null
   | { k: "entrada" | "despesa"; edit?: Lancamento }
@@ -105,12 +112,12 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
   if (fin.carregando || fin.erro) return (
     <div className="content wide fin">
       <PageHead title="Financeiro" eyebrow="Gestão" help={HELP} />
-      {fin.carregando ? <div className="panel"><div className="panel-body" role="status">Carregando saldos e lançamentos...</div></div> : (
-        <div className="panel"><div className="panel-body">
+      {fin.carregando ? <Cartao><div className="panel-body" role="status">Carregando saldos e lançamentos...</div></Cartao> : (
+        <Cartao><div className="panel-body">
           <p className="fs-error" role="alert">{fin.erro}</p>
           <p className="ph-sub">Os valores estão indisponíveis. Tente carregar novamente para consultar saldos e lançamentos.</p>
-          <button className="btn btn-sec" type="button" style={{ marginTop: 16 }} onClick={fin.recarregar}>Tentar novamente</button>
-        </div></div>
+          <Botao style={{ marginTop: 16 }} onClick={fin.recarregar}>Tentar novamente</Botao>
+        </div></Cartao>
       )}
     </div>
   );
@@ -121,30 +128,30 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
         subtitle={fin.carregando ? undefined : `Saldo em caixa e bancos: ${brl(saldoTotal)}`}
         action={podeLancar && aba === "movimento" ? (
           <div className="fin-acoes">
-            <button className="btn btn-pri" type="button" onClick={() => setTela({ k: "entrada" })}><Icon name="add" size={14} /> Lançar entrada</button>
+            <Botao variante="principal" onClick={() => setTela({ k: "entrada" })}><Icon name="add" size={14} /> Lançar entrada</Botao>
             <details className="fin-mais">
-              <summary className="btn btn-sec">Outras operações</summary>
+              <summary className={botaoClasse({})}>Outras operações</summary>
               <div className="fin-mais-menu">
-                <button className="btn btn-sec" type="button" onClick={() => setTela({ k: "despesa" })}>Lançar despesa</button>
-                <button className="btn btn-sec" type="button" onClick={() => setTela({ k: "oferta" })}>Contar oferta</button>
-                <button className="btn btn-sec" type="button" onClick={() => setTela({ k: "transferencia" })}>Transferir entre contas</button>
+                <Botao onClick={() => setTela({ k: "despesa" })}>Lançar despesa</Botao>
+                <Botao onClick={() => setTela({ k: "oferta" })}>Contar oferta</Botao>
+                <Botao onClick={() => setTela({ k: "transferencia" })}>Transferir entre contas</Botao>
               </div>
             </details>
           </div>
         ) : undefined} />
 
       <div className="toolbar fin-abas">
-        <div className="seg" role="tablist" aria-label="Seções do financeiro">
-          <button type="button" role="tab" aria-selected={aba === "movimento"} className={aba === "movimento" ? "on" : ""} onClick={() => setAba("movimento")}>Movimento</button>
-          <button type="button" role="tab" aria-selected={aba === "planejamento"} className={aba === "planejamento" ? "on" : ""} onClick={() => setAba("planejamento")}>Contas fixas e campanhas</button>
-          <button type="button" role="tab" aria-selected={aba === "fechamento"} className={aba === "fechamento" ? "on" : ""} onClick={() => setAba("fechamento")}>Fechamento</button>
-          <button type="button" role="tab" aria-selected={aba === "cadastros"} className={aba === "cadastros" ? "on" : ""} onClick={() => setAba("cadastros")}>Contas e categorias</button>
-        </div>
+        <Segmentado role="tablist" aria-label="Seções do financeiro">
+          <Opcao role="tab" aria-selected={aba === "movimento"} marcada={aba === "movimento"} onClick={() => setAba("movimento")}>Movimento</Opcao>
+          <Opcao role="tab" aria-selected={aba === "planejamento"} marcada={aba === "planejamento"} onClick={() => setAba("planejamento")}>Contas fixas e campanhas</Opcao>
+          <Opcao role="tab" aria-selected={aba === "fechamento"} marcada={aba === "fechamento"} onClick={() => setAba("fechamento")}>Fechamento</Opcao>
+          <Opcao role="tab" aria-selected={aba === "cadastros"} marcada={aba === "cadastros"} onClick={() => setAba("cadastros")}>Contas e categorias</Opcao>
+        </Segmentado>
         {(aba === "movimento" || aba === "fechamento") && (
           <div className="fin-mes" role="group" aria-label="Mês">
-            <button type="button" className="fin-mes-b" aria-label="Mês anterior" onClick={() => setMes(somaMes(mes, -1))}><Icon name="voltar" size={15} /></button>
+            <BotaoIcone className="fin-mes-b" rotulo="Mês anterior" onClick={() => setMes(somaMes(mes, -1))}><Icon name="voltar" size={15} /></BotaoIcone>
             <span className="fin-mes-t" aria-live="polite">{mesTexto(mes)}{fechadoMes ? " · fechado" : ""}</span>
-            <button type="button" className="fin-mes-b" aria-label="Próximo mês" onClick={() => setMes(somaMes(mes, 1))}><Icon name="avancar" size={15} /></button>
+            <BotaoIcone className="fin-mes-b" rotulo="Próximo mês" onClick={() => setMes(somaMes(mes, 1))}><Icon name="avancar" size={15} /></BotaoIcone>
           </div>
         )}
       </div>
@@ -157,7 +164,7 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
               <div className="kpi" key={rotulo}>
                 <div className="kpi-label">{rotulo}</div>
                 {/* valor grande demais para a letra de 32 desce para 20, sem cortar */}
-                <div className={`kpi-value fin-num${valor.length > 15 ? " fin-longo" : ""}${neg ? " fin-neg" : ""}`}>{fin.carregando ? "…" : valor}</div>
+                <div className={`kpi-value fin-num${valor.length > 15 ? " fin-longo" : ""}${neg ? " fin-neg" : ""}`}>{fin.carregando ? "…" : <Contagem valor={valor} />}</div>
               </div>
             ))}
           </div>
@@ -166,23 +173,23 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
             <section className="tbl fin-bloco" aria-labelledby="fin-contas-t">
               <div className="fin-bloco-h"><h2 id="fin-contas-t" className="fin-bloco-t">Contas</h2><span className="fin-bloco-s">saldo hoje</span></div>
               {contasAtivas.map((c) => (
-                <div className="tr fin-saldo" key={c.id}>
+                <Linha estilo="tabela" className="fin-saldo" key={c.id}>
                   <div className="fin-saldo-main"><div className="cell-name">{c.name}</div><div className="cell-sub">{c.kind === "caixa" ? "Caixa" : c.institution || "Banco"}{c.active ? "" : " · encerrada"}</div></div>
                   <div className={`fin-num fin-saldo-v${(fin.saldoConta[c.id] ?? 0) < 0 ? " fin-neg" : ""}`}>{brl(fin.saldoConta[c.id] ?? 0)}</div>
-                </div>
+                </Linha>
               ))}
               {!fin.carregando && !fin.contas.some((c) => c.kind === "banco") && podeLancar && (
-                <button type="button" className="tr click fin-add" onClick={() => setTela({ k: "conta" })}><Icon name="add" size={14} /> Cadastrar a conta do banco</button>
+                <Acao className={`${linhaClasse({ estilo: "tabela" })} click fin-add`} onClick={() => setTela({ k: "conta" })}><Icon name="add" size={14} /> Cadastrar a conta do banco</Acao>
               )}
             </section>
             {designados.length > 0 && (
               <section className="tbl fin-bloco" aria-labelledby="fin-fundos-t">
                 <div className="fin-bloco-h"><h2 id="fin-fundos-t" className="fin-bloco-t">Fundos designados</h2><span className="fin-bloco-s">separado do geral</span></div>
                 {designados.map((f) => (
-                  <div className="tr fin-saldo" key={f.id}>
+                  <Linha estilo="tabela" className="fin-saldo" key={f.id}>
                     <div className="fin-saldo-main"><div className="cell-name">{f.name}</div></div>
                     <div className={`fin-num fin-saldo-v${(fin.saldoFundo[f.id] ?? 0) < 0 ? " fin-neg" : ""}`}>{brl(fin.saldoFundo[f.id] ?? 0)}</div>
-                  </div>
+                  </Linha>
                 ))}
               </section>
             )}
@@ -197,11 +204,11 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
               <span className="si"><Icon name="buscar" size={13} /></span>
               <input placeholder="Buscar descrição ou nome" aria-label="Buscar lançamento" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
-            <div className="seg" role="group" aria-label="Tipo">
+            <Segmentado role="group" aria-label="Tipo">
               {([["todos", "Todos"], ["entrada", "Entradas"], ["despesa", "Saídas"], ["transferencia", "Transferências"]] as const).map(([v, l]) => (
-                <button key={v} type="button" className={tipo === v ? "on" : ""} aria-pressed={tipo === v} onClick={() => { setTipo(v); setCat(""); }}>{l}</button>
+                <Opcao key={v} marcada={tipo === v} aria-pressed={tipo === v} onClick={() => { setTipo(v); setCat(""); }}>{l}</Opcao>
               ))}
-            </div>
+            </Segmentado>
             <select className="select fin-sel" aria-label="Conta" value={conta} onChange={(e) => setConta(e.target.value)}>
               <option value="">Todas as contas</option>
               {fin.contas.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -213,7 +220,7 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
               </select>
             )}
             <span className="tb-spacer" />
-            <button type="button" className="btn btn-sec btn-sm" onClick={exportar} disabled={lista.length === 0}><Icon name="baixar" size={14} /> Exportar CSV</button>
+            <Botao compacto onClick={exportar} desativado={lista.length === 0}><Icon name="baixar" size={14} /> Exportar CSV</Botao>
           </div>
 
           {!fin.carregando && lista.length === 0 ? (
@@ -242,10 +249,10 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
                   </>
                 );
                 return podeLancar
-                  ? <button key={l.id} type="button" className="tr fin-lin click" onClick={() => abrir(l)}>{miolo}</button>
-                  : <div key={l.id} className="tr fin-lin">{miolo}</div>;
+                  ? <Acao key={l.id} className={`${linhaClasse({ estilo: "tabela" })} fin-lin click`} onClick={() => abrir(l)}>{miolo}</Acao>
+                  : <Linha key={l.id} estilo="tabela" className="fin-lin">{miolo}</Linha>;
               })}
-              {lista.length > 0 && <div className="tr fin-rodape"><span className="cell-sub">{plural(lista.length, "lançamento")}</span></div>}
+              {lista.length > 0 && <Linha estilo="tabela" className="fin-rodape"><span className="cell-sub">{plural(lista.length, "lançamento")}</span></Linha>}
             </div>
           )}
         </>
@@ -289,8 +296,8 @@ function OfertaDetalhe({ l, onClose, onExcluida }: { l: Lancamento; onClose: () 
           <p className="fs-note" style={{ marginTop: 0 }}>Este valor veio da contagem de {formatDateBR(l.occurred_on)}. Para corrigir, exclua a contagem inteira (todas as formas de pagamento dela) e conte de novo.</p>
         </div>
         <div className="modal-foot">
-          <button type="button" className="btn btn-sec" onClick={onClose} autoFocus>Fechar</button>
-          <button type="button" className="btn btn-danger" disabled={indo} onClick={excluir}>{indo ? "Excluindo…" : "Excluir contagem"}</button>
+          <Botao onClick={onClose} autoFocus>Fechar</Botao>
+          <Botao variante="perigo" desativado={indo} onClick={excluir}>{indo ? "Excluindo…" : "Excluir contagem"}</Botao>
         </div>
       </div>
     </div>
@@ -306,12 +313,12 @@ function Cadastros({ contas, fundos, categorias, saldoConta, podeLancar, org, on
   return (
     <div className="fin-cad">
       <section className="tbl fin-bloco" aria-labelledby="fin-cad-contas">
-        <div className="fin-bloco-h"><h2 id="fin-cad-contas" className="fin-bloco-t">Contas</h2>{podeLancar && <button type="button" className="btn btn-sec btn-sm" onClick={() => onConta(null)}><Icon name="add" size={13} /> Nova conta</button>}</div>
+        <div className="fin-bloco-h"><h2 id="fin-cad-contas" className="fin-bloco-t">Contas</h2>{podeLancar && <Botao compacto onClick={() => onConta(null)}><Icon name="add" size={13} /> Nova conta</Botao>}</div>
         {contas.map((c) => (
-          <div className="tr fin-saldo" key={c.id}>
+          <Linha estilo="tabela" className="fin-saldo" key={c.id}>
             <div className="fin-saldo-main"><div className="cell-name">{c.name}</div><div className="cell-sub">{c.kind === "caixa" ? "Caixa" : c.institution || "Banco"}{c.active ? "" : " · encerrada"} · saldo {brl(saldoConta[c.id] ?? 0)}</div></div>
-            {podeLancar && <button type="button" className="btn btn-ghost btn-sm" onClick={() => onConta(c)}>Editar</button>}
-          </div>
+            {podeLancar && <Botao variante="discreto" compacto onClick={() => onConta(c)}>Editar</Botao>}
+          </Linha>
         ))}
       </section>
       <ListaSimples titulo="Fundos" tabela="fin_funds" itens={fundos} org={org} podeLancar={podeLancar} onMudou={onMudou}
@@ -353,35 +360,35 @@ function ListaSimples<T extends ItemSimples>({ titulo, tabela, kind, itens, org,
     <section className="tbl fin-bloco" aria-label={titulo}>
       <div className="fin-bloco-h"><h2 className="fin-bloco-t">{titulo}</h2><span className="fin-bloco-s">{plural(itens.length - arquivadas, "ativo", "ativos")}</span></div>
       {visiveis.map((i) => (
-        <div className="tr fin-saldo" key={i.id}>
+        <Linha estilo="tabela" className="fin-saldo" key={i.id}>
           {editando === i.id ? (
             <form className="fin-inline" onSubmit={async (e) => { e.preventDefault(); if (nome.trim() && await gravar(() => db().from(tabela).update({ name: nome.trim().slice(0, 60) }).eq("id", i.id), "Nome atualizado.")) setEditando(null); }}>
               <input className="input" aria-label="Novo nome" maxLength={60} value={nome} onChange={(e) => setNome(e.target.value)} autoFocus />
-              <button type="submit" className="btn btn-sec btn-sm" disabled={!nome.trim()}>Salvar</button>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditando(null)}>Cancelar</button>
+              <Botao type="submit" compacto desativado={!nome.trim()}>Salvar</Botao>
+              <Botao variante="discreto" compacto onClick={() => setEditando(null)}>Cancelar</Botao>
             </form>
           ) : (
             <>
               <div className="fin-saldo-main"><div className="cell-name">{i.name}</div>{(extra?.(i) || !i.active) && <div className="cell-sub">{[extra?.(i), !i.active && "arquivado"].filter(Boolean).join(" · ")}</div>}</div>
               {podeLancar && (
                 <div className="fin-item-acts">
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setEditando(i.id); setNome(i.name); }}>Renomear</button>
-                  {!i.is_default && <button type="button" className="btn btn-ghost btn-sm" onClick={() => gravar(() => db().from(tabela).update({ active: !i.active }).eq("id", i.id), i.active ? `${i.name} arquivado.` : `${i.name} de volta.`)}>{i.active ? "Arquivar" : "Reativar"}</button>}
+                  <Botao variante="discreto" compacto onClick={() => { setEditando(i.id); setNome(i.name); }}>Renomear</Botao>
+                  {!i.is_default && <Botao variante="discreto" compacto onClick={() => gravar(() => db().from(tabela).update({ active: !i.active }).eq("id", i.id), i.active ? `${i.name} arquivado.` : `${i.name} de volta.`)}>{i.active ? "Arquivar" : "Reativar"}</Botao>}
                 </div>
               )}
             </>
           )}
-        </div>
+        </Linha>
       ))}
-      {arquivadas > 0 && <button type="button" className="tr click fin-add" onClick={() => setVerArquivadas((v) => !v)}>{verArquivadas ? "Esconder arquivados" : `Ver ${plural(arquivadas, "arquivado", "arquivados")}`}</button>}
+      {arquivadas > 0 && <Acao className={`${linhaClasse({ estilo: "tabela" })} click fin-add`} onClick={() => setVerArquivadas((v) => !v)}>{verArquivadas ? "Esconder arquivados" : `Ver ${plural(arquivadas, "arquivado", "arquivados")}`}</Acao>}
       {podeLancar && (
-        <form className="tr fin-novo" onSubmit={(e) => { e.preventDefault(); void adicionar(); }}>
+        <form className={`${linhaClasse({ estilo: "tabela" })} fin-novo`} onSubmit={(e) => { e.preventDefault(); void adicionar(); }}>
           <input className="input" aria-label={`Nome do novo item em ${titulo}`} maxLength={60} placeholder="Novo nome" value={novo} onChange={(e) => setNovo(e.target.value)} />
           {comDesignado && <label className="fs-check fin-check"><input type="checkbox" checked={designado} onChange={(e) => setDesignado(e.target.checked)} /> Designado</label>}
-          <button type="submit" className="btn btn-sec btn-sm" disabled={!novo.trim()}>Adicionar</button>
+          <Botao type="submit" compacto desativado={!novo.trim()}>Adicionar</Botao>
         </form>
       )}
-      {ajuda && <div className="tr fin-rodape"><span className="cell-sub">{ajuda}</span></div>}
+      {ajuda && <Linha estilo="tabela" className="fin-rodape"><span className="cell-sub">{ajuda}</span></Linha>}
     </section>
   );
 }

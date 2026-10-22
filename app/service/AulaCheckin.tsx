@@ -8,6 +8,8 @@ import QRCode from "react-qr-code";
 import { createServiceBrowserClient } from "./lib/supabase-browser";
 import ChurchLockup from "./ChurchLockup";
 
+import { Botao, BotaoIcone } from "./ui/Botao";
+import { Acao } from "./ui/Acao";
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
 type LessonView = {
@@ -143,9 +145,9 @@ export function AulaCheckinLanding({
             <div className="ck-land-title">{titulo}</div>
             {txt && <div className="ck-land-txt">{txt}</div>}
           </div>
-          <button className="btn btn-pri" style={{ width: "100%", justifyContent: "center" }} onClick={onDone}>
+          <Botao variante="principal" style={{ width: "100%", justifyContent: "center" }} onClick={onDone}>
             {result?.ok ? "Concluir" : "Voltar"}
-          </button>
+          </Botao>
         </div>
       </div>
     </div>
@@ -193,7 +195,7 @@ function ManualAulaCheckinModal({
           ))}
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" onClick={onClose}>Fechar</button>
+          <Botao onClick={onClose}>Fechar</Botao>
         </div>
       </div>
     </div>
@@ -393,8 +395,8 @@ export function AulaCheckinModal({
               QR Code único desta aula. Só quem está matriculado no curso confirma presença.
             </div>
             <div className="ck-tabs">
-              <button className={`ck-tab ${tab === "qr" ? "on" : ""}`} onClick={() => setTab("qr")}>QR Code</button>
-              <button className={`ck-tab ${tab === "presenca" ? "on" : ""}`} onClick={() => setTab("presenca")}>Presença ao vivo · {presentes}</button>
+              <Acao className={`ck-tab ${tab === "qr" ? "on" : ""}`} onClick={() => setTab("qr")}>QR Code</Acao>
+              <Acao className={`ck-tab ${tab === "presenca" ? "on" : ""}`} onClick={() => setTab("presenca")}>Presença ao vivo · {presentes}</Acao>
             </div>
           </div>
 
@@ -418,18 +420,18 @@ export function AulaCheckinModal({
                   </div>
                   <div className="ck-link"><span className="ck-link-txt">{checkinLink}</span></div>
                   <div className="ck-actions">
-                    <button className="btn btn-sec btn-sm" onClick={salvar}>Salvar</button>
-                    <button className="btn btn-sec btn-sm" onClick={imprimir}>Imprimir</button>
-                    <button className="btn btn-sec btn-sm" onClick={copiar}>Copiar link</button>
-                    <button className="btn btn-sec btn-sm" onClick={toggleActive}>{qrActive ? "Desativar" : "Ativar"}</button>
-                    <button className="btn btn-sec btn-sm" onClick={regenerar}>Regenerar</button>
+                    <Botao compacto onClick={salvar}>Salvar</Botao>
+                    <Botao compacto onClick={imprimir}>Imprimir</Botao>
+                    <Botao compacto onClick={copiar}>Copiar link</Botao>
+                    <Botao compacto onClick={toggleActive}>{qrActive ? "Desativar" : "Ativar"}</Botao>
+                    <Botao compacto onClick={regenerar}>Regenerar</Botao>
                   </div>
                   <div className="ck-hint">
                     Imprima e cole na entrada da sala. Quem escanear confirma presença pela conta logada.
                   </div>
-                  <button className="btn btn-pri" style={{ marginTop: 4, justifyContent: "center" }} onClick={simularScan}>
+                  <Botao variante="principal" style={{ marginTop: 4, justifyContent: "center" }} onClick={simularScan}>
                     Simular leitura (abrir como aluno) →
-                  </button>
+                  </Botao>
                 </div>
               </div>
             )}
@@ -457,7 +459,7 @@ export function AulaCheckinModal({
                           <div className="ck-row-name">{m.name}</div>
                           <div className="ck-row-meta">{rec.via === "manual" ? "manual" : "QR"} · {timeCurto(rec.checked_in_at)}</div>
                         </div>
-                        <button className="ck-undo" title="Desfazer presença" aria-label="Desfazer presença" onClick={() => remover(rec.member_id)}>✕</button>
+                        <BotaoIcone className="ck-undo" title="Desfazer presença" rotulo="Desfazer presença" onClick={() => remover(rec.member_id)}>✕</BotaoIcone>
                       </div>
                     );
                   })}
@@ -469,22 +471,22 @@ export function AulaCheckinModal({
                         <div className="ck-row-name">{m.name}</div>
                         <div className="ck-row-meta">não chegou</div>
                       </div>
-                      <button className="btn btn-ghost btn-sm" onClick={() => registrar(m.id, "manual").then((r) => { if (!r.ok) avisar(r.motivo ?? "Não foi possível registrar agora.", "warn"); })}>
+                      <Botao variante="discreto" compacto onClick={() => registrar(m.id, "manual").then((r) => { if (!r.ok) avisar(r.motivo ?? "Não foi possível registrar agora.", "warn"); })}>
                         Marcar presente
-                      </button>
+                      </Botao>
                     </div>
                   ))}
                 </div>
 
-                <button className="btn btn-sec btn-sm" style={{ marginTop: 6 }} onClick={() => setShowManual(true)}>
+                <Botao compacto style={{ marginTop: 6 }} onClick={() => setShowManual(true)}>
                   + Registrar presença manualmente
-                </button>
+                </Botao>
               </div>
             )}
           </div>
 
           <div className="modal-foot">
-            <button className="btn btn-pri" onClick={onClose}>Concluído</button>
+            <Botao variante="principal" onClick={onClose}>Concluído</Botao>
           </div>
         </div>
       </div>

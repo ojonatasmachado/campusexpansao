@@ -11,6 +11,8 @@ import { useServiceAccess } from "./AccessContext";
 import { requirementsFor, requirementLabel } from "./lib/requirements";
 import { useTermos } from "./lib/vocabulario-context";
 
+import { Botao, BotaoIcone } from "./ui/Botao";
+import { Selo } from "./ui/Selo";
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
 type CourseView = {
@@ -130,7 +132,7 @@ function MatricularModal({
           ))}
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" onClick={onClose}>Fechar</button>
+          <Botao onClick={onClose}>Fechar</Botao>
         </div>
       </div>
     </div>
@@ -188,7 +190,7 @@ export default function CursoDrawer({
       <div className="drawer-bg" onClick={onClose} />
       <div className="drawer drawer-wide">
         <div className="drawer-head">
-          <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
+          <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
           <div className="ph-eyebrow">
             {COURSE_KIND_LABEL[course.kind ?? "trilha"]}{course.level ? ` · ${course.level}` : ""}
           </div>
@@ -264,9 +266,9 @@ export default function CursoDrawer({
                           </div>
                         )}
                         {comQR && (
-                          <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 8 }} onClick={() => setQrLesson(les)}>
+                          <Botao compacto style={{ marginTop: 8 }} onClick={() => setQrLesson(les)}>
                             QR de presença
-                          </button>
+                          </Botao>
                         )}
                       </div>
                     );
@@ -296,7 +298,7 @@ export default function CursoDrawer({
                     </div>
                   </div>
                   {en.status === "concluido" ? (
-                    <span className="chip chip-ok">Concluiu</span>
+                    <Selo tom="ok">Concluiu</Selo>
                   ) : (
                     <span className="cand-fit" style={{ color: "var(--amber)" }}>{pct}%</span>
                   )}
@@ -304,16 +306,16 @@ export default function CursoDrawer({
               );
             })}
             {courseEnrollments.length === 0 && <div className="empty">Nenhuma matrícula ainda.</div>}
-            <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 10 }} onClick={() => setShowMatricular(true)}>
+            <Botao compacto style={{ marginTop: 10 }} onClick={() => setShowMatricular(true)}>
               + Matricular pessoa
-            </button>
+            </Botao>
           </div>
 
           <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
-            <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={onEdit}>
+            <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={onEdit}>
               Editar curso
-            </button>
-            <button className="btn btn-sec" type="button" onClick={onClose}>Fechar</button>
+            </Botao>
+            <Botao onClick={onClose}>Fechar</Botao>
           </div>
         </div>
       </div>

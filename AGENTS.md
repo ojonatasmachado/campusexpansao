@@ -416,6 +416,16 @@ cartão ou notificação criados fora do registro não entram.
 16. **Mercado antes do desenho. (rev. 22/10)** Tela ou fluxo novo começa vendo como 2 ou 3
     ferramentas resolvem a mesma tarefa (função, nunca marca ou visual) e termina com crítica de
     design, teste de pior caso e medição antes e depois. Material de concorrente fica fora do git.
+17. **Componentes da biblioteca. (22/10)** Toda peça de interface do Service sai de um
+    componente compartilhado. O índice é `docs/service-v7/BIBLIOTECA.md`: diz onde mora cada
+    peça (as novas em `app/service/ui/`, as antigas onde já estão) e o que falta trocar. Antes de
+    escrever markup, procure ali; existindo, importe e use; faltando variação, acrescente uma
+    prop ao componente. Peça nova só entra com a ficha de entrada da BIBLIOTECA preenchida e uma
+    linha na tabela. Nenhuma tela escreve `<button>`: usa `Botao`, `BotaoIcone`, `Interruptor`,
+    `Opcao` ou, para linha/cartão sem peça própria, a base `Acao` (todos em `app/service/ui/`);
+    link com cara de botão usa `botaoClasse()`. Estado é `Selo`, papel é `Etiqueta`,
+    superfície é `Cartao`, item de lista é `Linha`. Vale do login ao painel. O CI falha com `<button>`
+    ou `.btn`/`.m6-btn` à mão (`scripts/check-service-componentes.ts`).
 
 ---
 

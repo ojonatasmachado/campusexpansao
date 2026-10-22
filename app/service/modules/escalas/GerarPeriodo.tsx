@@ -25,6 +25,9 @@ import {
 } from "./periodo";
 import type { ChurchView, EventView, MinistryView, PersonView, RosterAssignmentView } from "../../ServiceExactApp";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 const DIA_CURTO = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const DIA_LONGO = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 const DURACOES = [1, 3, 6, 12] as const;
@@ -281,9 +284,9 @@ export function GerarPeriodo({
               <div className="field-label" id={`${fid}-dur`}>Duração</div>
               <div className="fs-chips" role="group" aria-labelledby={`${fid}-dur`}>
                 {DURACOES.map((n) => (
-                  <button key={n} type="button" className={`seg-chip${duracao === n ? " on" : ""}`} aria-pressed={duracao === n} onClick={() => setDuracao(n)}>{plural(n, "mês", "meses")}</button>
+                  <Opcao key={n} marcada={duracao === n} estilo="seg-chip" aria-pressed={duracao === n} onClick={() => setDuracao(n)}>{plural(n, "mês", "meses")}</Opcao>
                 ))}
-                <button type="button" className={`seg-chip${duracao === "datas" ? " on" : ""}`} aria-pressed={duracao === "datas"} onClick={() => { setFimManual(fim); setDuracao("datas"); }}>Escolher o fim</button>
+                <Opcao marcada={duracao === "datas"} estilo="seg-chip" aria-pressed={duracao === "datas"} onClick={() => { setFimManual(fim); setDuracao("datas"); }}>Escolher o fim</Opcao>
               </div>
               <div className="field-hint">{valido ? periodoTexto : "O período vai de 1 dia a 12 meses."}</div>
             </div>
@@ -331,9 +334,9 @@ export function GerarPeriodo({
                   <div className="per-func-row" key={p.id}>
                     <span className="per-func-nome">{p.name}</span>
                     <div className="stepper">
-                      <button type="button" aria-label={`Menos uma vaga em ${p.name}`} onClick={() => setVagas((v) => ({ ...v, [p.id]: Math.max(0, (v[p.id] ?? 1) - 1) }))}>−</button>
+                      <Acao aria-label={`Menos uma vaga em ${p.name}`} onClick={() => setVagas((v) => ({ ...v, [p.id]: Math.max(0, (v[p.id] ?? 1) - 1) }))}>−</Acao>
                       <span aria-live="polite">{vagas[p.id] ?? 1}</span>
-                      <button type="button" aria-label={`Mais uma vaga em ${p.name}`} onClick={() => setVagas((v) => ({ ...v, [p.id]: Math.min(30, (v[p.id] ?? 1) + 1) }))}>+</button>
+                      <Acao aria-label={`Mais uma vaga em ${p.name}`} onClick={() => setVagas((v) => ({ ...v, [p.id]: Math.min(30, (v[p.id] ?? 1) + 1) }))}>+</Acao>
                     </div>
                   </div>
                 ))}
@@ -389,9 +392,9 @@ export function GerarPeriodo({
             {outros > 0 && <li><Icon name="alerta" size={14} /> {plural(outros, "escolha manual", "escolhas manuais")} com quem marcou que não pode ou já serve no mesmo {ct("{culto}")}.</li>}
           </ul>
           <div className="fs-chips">
-            <button type="button" className={`chip-toggle${soAvisos ? " on" : ""}`} aria-pressed={soAvisos} onClick={() => { const v = !soAvisos; setSoAvisos(v); if (v) setMesesAbertos(new Set(meses.map(([m]) => m))); }}>{ct("Só {cultos} com aviso")}</button>
+            <Opcao marcada={soAvisos} estilo="chip-toggle" aria-pressed={soAvisos} onClick={() => { const v = !soAvisos; setSoAvisos(v); if (v) setMesesAbertos(new Set(meses.map(([m]) => m))); }}>{ct("Só {cultos} com aviso")}</Opcao>
             {primeiroComAviso && !soAvisos && (
-              <button type="button" className="seg-chip" onClick={() => { const mes = primeiroComAviso.data.slice(0, 7); setMesesAbertos((s) => new Set([...s, mes])); window.setTimeout(() => document.getElementById(`per-${primeiroComAviso.chave}`)?.scrollIntoView({ block: "start", behavior: "smooth" }), 30); }}>Ir para o primeiro</button>
+              <Acao className="seg-chip" onClick={() => { const mes = primeiroComAviso.data.slice(0, 7); setMesesAbertos((s) => new Set([...s, mes])); window.setTimeout(() => document.getElementById(`per-${primeiroComAviso.chave}`)?.scrollIntoView({ block: "start", behavior: "smooth" }), 30); }}>Ir para o primeiro</Acao>
             )}
           </div>
         </FormSection>
@@ -404,11 +407,11 @@ export function GerarPeriodo({
         const comAviso = cultos.filter((c) => marcas.porCulto.has(c.chave)).length;
         return (
           <section className="per-mes" key={mes}>
-            <button type="button" className="per-mes-head" aria-expanded={aberto} onClick={() => alternarMes(mes)}>
+            <Acao className="per-mes-head" aria-expanded={aberto} onClick={() => alternarMes(mes)}>
               <span className="per-mes-t">{nomeDoMes(mes)}</span>
               <span className="per-mes-s">{joinDot(ct(plural(cultos.length, "{culto}", "{cultos}")), comAviso > 0 && `${comAviso} com aviso`)}</span>
               <Icon name="avancar" size={15} />
-            </button>
+            </Acao>
             {aberto && visiveis.map((c) => (
               <article className={`per-culto${marcas.porCulto.has(c.chave) ? " aviso" : ""}`} key={c.chave} id={`per-${c.chave}`}>
                 <header className="per-culto-head">
@@ -431,10 +434,10 @@ export function GerarPeriodo({
                             {salvos.map((p) => <span className="per-vaga salva" key={`s-${p}`} title={`${nome(p)}: já estava na escala`}>{nome(p)}</span>)}
                             {propostos.map((p) => {
                               const atencao = marcas.pessoaNoCulto.has(`${p}@${c.chave}`) || marcas.cargaMes.has(`${p}@${c.data.slice(0, 7)}`);
-                              return <button type="button" className={`per-vaga${atencao ? " atencao" : ""}`} key={p} title={nome(p)} aria-label={`${f.nome}: ${nome(p)}${atencao ? ", precisa de atenção" : ""}. Trocar`} onClick={() => setVaga(v(p))}>{nome(p)}</button>;
+                              return <Acao className={`per-vaga${atencao ? " atencao" : ""}`} key={p} title={nome(p)} aria-label={`${f.nome}: ${nome(p)}${atencao ? ", precisa de atenção" : ""}. Trocar`} onClick={() => setVaga(v(p))}>{nome(p)}</Acao>;
                             })}
                             {Array.from({ length: abertas }).map((_, i) => (
-                              <button type="button" className="per-vaga aberta" key={`a-${i}`} aria-label={`${f.nome}: vaga aberta. Escolher alguém`} onClick={() => setVaga(v())}>Vaga aberta</button>
+                              <Acao className="per-vaga aberta" key={`a-${i}`} aria-label={`${f.nome}: vaga aberta. Escolher alguém`} onClick={() => setVaga(v())}>Vaga aberta</Acao>
                             ))}
                           </div>
                         </div>
@@ -448,7 +451,7 @@ export function GerarPeriodo({
         );
       })}
       <p className="fs-note">
-        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPasso("form")} disabled={salvando}><Icon name="voltar" size={14} /> Mudar times, período ou vagas</button>
+        <Botao variante="discreto" compacto onClick={() => setPasso("form")} desativado={salvando}><Icon name="voltar" size={14} /> Mudar times, período ou vagas</Botao>
       </p>
 
       {vaga && base && (
@@ -487,13 +490,13 @@ function EscolherNaVaga({ vaga, culto, opcoes, cfg, nomeAtual, onEscolher, onClo
           : c.motivo === "folga" ? `Em folga: serviu há menos de ${plural(cfg.folgaSemanas + 1, "semana")}`
             : ct("Já serve neste {culto}");
   const linha = (c: Candidato, aviso?: string) => (
-    <button className={`cand${c.motivo === "evento" ? " is-block" : ""}`} type="button" key={c.person.id} aria-disabled={c.motivo === "evento" || undefined} onClick={() => c.motivo !== "evento" && onEscolher(c.person.id)}>
+    <Acao className={`cand${c.motivo === "evento" ? " is-block" : ""}`} key={c.person.id} aria-disabled={c.motivo === "evento" || undefined} onClick={() => c.motivo !== "evento" && onEscolher(c.person.id)}>
       <Av name={c.person.name} size="md" />
       <div className="cand-main">
         <div className="cand-name">{c.person.name}</div>
         <div className={`cand-meta${aviso ? " cand-motivo" : ""}`}>{aviso ?? joinDot(`${plural(c.vezes, "vez", "vezes")} no período`, c.ultima ? `antes, em ${formatDateBR(c.ultima)}` : "ainda não serve")}</div>
       </div>
-    </button>
+    </Acao>
   );
   return (
     <div className="modal-bg" onClick={onClose}>
@@ -513,8 +516,8 @@ function EscolherNaVaga({ vaga, culto, opcoes, cfg, nomeAtual, onEscolher, onClo
           {naoPodem.length > 0 && <><div className="cand-grp">Não podem nesta vaga</div>{naoPodem.map((c) => linha(c, motivo(c)))}</>}
         </div>
         <div className="modal-foot">
-          {nomeAtual && <button className="btn btn-sec" type="button" onClick={() => onEscolher(null)}>Deixar a vaga aberta</button>}
-          <button className="btn btn-ghost" type="button" onClick={onClose}>Cancelar</button>
+          {nomeAtual && <Botao onClick={() => onEscolher(null)}>Deixar a vaga aberta</Botao>}
+          <Botao variante="discreto" onClick={onClose}>Cancelar</Botao>
         </div>
       </div>
     </div>

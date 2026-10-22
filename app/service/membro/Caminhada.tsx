@@ -12,6 +12,9 @@ import { listaFinalidades, type ContribuirCfg } from "../modules/contribuir/pix"
 import { JourneyContext, M6Row, MemberUiContext, mensagemAcao, useFaltas } from "./comum";
 import type { JourneyStep, M, Ministry, P, StepView } from "./tipos";
 
+import { Botao } from "../ui/Botao";
+import { Cartao } from "../ui/Cartao";
+import { Linha, Lista } from "../ui/Linha";
 /* "Quero servir" (service.request_to_serve): times em que a pessoa ainda não
    está. A igreja define o que precisa antes (requisitos de "servir" e do
    time); com algo faltando, o app mostra o que falta. O pedido vai pra
@@ -30,17 +33,17 @@ export function ServirSection({ person, member, ministries, members = [], people
   return (
     <>
             {faltasServir.length > 0 ? (
-        <div className="m-card">
+        <Cartao estilo="app-solto">
           <div className="m-fn" style={{ marginBottom: 0 }}>
             <b>Antes de servir num time:</b> {faltasServir.join(" · ")}
           </div>
-        </div>
+        </Cartao>
       ) : (
         fora.map((m) => {
           const faltasTime = faltas("ministry", m.id);
           const resultado = enviados[m.id];
           return (
-            <div className="m-card" key={m.id}>
+            <Cartao estilo="app-solto" key={m.id}>
               <div className="m-culto" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Icon name={m.icon || "times"} size={18} /> {m.name}
               </div>
@@ -58,10 +61,10 @@ export function ServirSection({ person, member, ministries, members = [], people
                 </div>
               ) : (
                 <>
-                  <button
-                    className="m-btn m-btn-ok ghost"
+                  <Botao
+                    tamanho="toque" variante="secundario" largo
                     style={{ width: "100%", marginTop: 10 }}
-                    disabled={resultado === "enviando"}
+                    desativado={resultado === "enviando"}
                     onClick={async () => {
                       setEnviados((p) => ({ ...p, [m.id]: "enviando" }));
                       const r = await j.onRequestServe!(m.id);
@@ -69,13 +72,13 @@ export function ServirSection({ person, member, ministries, members = [], people
                     }}
                   >
                     {resultado === "enviando" ? "Enviando..." : "Quero servir neste time"}
-                  </button>
+                  </Botao>
                   {resultado && resultado !== "enviando" && resultado !== "ok" && (
                     <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginTop: 6 }}>{resultado}</div>
                   )}
                 </>
               )}
-            </div>
+            </Cartao>
           );
         })
       )}
@@ -93,27 +96,27 @@ export function MinhaHistoria({ fatos }: { fatos: FatoView[] }) {
   if (!lista.length) {
     return (
       <div className="m6-sec0">
-        <div className="m6-card"><div className="m6-ct">Sua história começa aqui</div><div className="m6-meta">{ct("Quando você servir, concluir uma aula ou der um passo na {caminhada}, fica registrado aqui. Só você vê.")}</div></div>
+        <Cartao estilo="app"><div className="m6-ct">Sua história começa aqui</div><div className="m6-meta">{ct("Quando você servir, concluir uma aula ou der um passo na {caminhada}, fica registrado aqui. Só você vê.")}</div></Cartao>
       </div>
     );
   }
   return (
     <div className="m6-sec0">
       <div className="m6-meta m6-pad">Só você vê esta página.</div>
-      <div className="m6-list">
+      <Lista>
         {lista.map((f) => {
           const t = tipoDoFato(f.event_type);
           return (
-            <div className="m6-row" key={f.id}>
+            <Linha estilo="app" key={f.id}>
               <span className="m6-ic"><Icon name={t.icone} size={22} /></span>
               <span className="m6-rb">
                 <span className="m6-rt">{f.title}</span>
                 <span className="m6-rs">{joinDot(quandoFoi(f, fuso), f.body)}</span>
               </span>
-            </div>
+            </Linha>
           );
         })}
-      </div>
+      </Lista>
     </div>
   );
 }
@@ -131,12 +134,12 @@ export function SheetPedidoEtapa({ step, nome, member, onRequestJourneyStep }: {
       <div className="field" style={{ marginTop: 14 }}><label className="field-label">Quando foi?</label><input className="input" type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
       <div className="field"><label className="field-label">Quer contar mais? (opcional)</label><input className="input" value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ex.: aconteceu em outra igreja" /></div>
       <div className="m6-btns">
-        <button className="m6-btn pri" type="button" disabled={!data || !member || !onRequestJourneyStep} onClick={() => {
+        <Botao tamanho="toque" variante="principal" desativado={!data || !member || !onRequestJourneyStep} onClick={() => {
           if (!member || !onRequestJourneyStep) return;
           onRequestJourneyStep(member.id, step, data, nota);
           ui.sheet(null);
           ui.toast("Pedido enviado · a liderança vai confirmar");
-        }}>Enviar</button>
+        }}>Enviar</Botao>
       </div>
     </div>
   );
@@ -163,16 +166,16 @@ export function CaminhadaV6({ steps, courses, purpose, contribuir }: { steps: St
     <>
       {steps.length > 0 && <>
       <div className="m6-sec0">
-        <div className="m6-card">
+        <Cartao estilo="app">
           <div className="m6-ct">{steps.length > 0 && done === steps.length ? "Todas as etapas concluídas" : `${done} de ${steps.length} etapas concluídas`}</div>
           <div className="m6-segbar">{steps.map((s) => <i key={s.id} className={s.st} />)}</div>
           <div className="m6-meta">{steps.length > 0 && done === steps.length ? ct("Daqui pra frente, a {caminhada} segue nos cursos, no seu time e na leitura da Bíblia, logo abaixo.") : "Cada etapa acontece no seu tempo, em qualquer ordem."}</div>
-        </div>
+        </Cartao>
       </div>
       <div className="m6-sec">
         <div className="m6-lbl">Etapas</div>
         {tudoFeito && !verEtapas ? (
-          <div className="m6-list"><M6Row ic="ok" t={plural(steps.length, "etapa concluída", "etapas concluídas")} s="Ver as datas de cada uma" onClick={() => setVerEtapas(true)} /></div>
+          <Lista><M6Row ic="ok" t={plural(steps.length, "etapa concluída", "etapas concluídas")} s="Ver as datas de cada uma" onClick={() => setVerEtapas(true)} /></Lista>
         ) : (
         <div className="m6-steps">
           {steps.map((s, index) => (
@@ -181,7 +184,7 @@ export function CaminhadaV6({ steps, courses, purpose, contribuir }: { steps: St
               <div className="m6-rb">
                 <div className="m6-rt">{s.nome}</div>
                 <div className="m6-stw"><b>{STW[s.st]}</b>{s.info ? ` · ${s.info}` : ""}</div>
-                {s.acao && s.run && <div className="m6-mt"><button className={`m6-btn small ${s.st === "andamento" ? "pri" : "sec"}`} type="button" onClick={s.run}>{s.acao} →</button></div>}
+                {s.acao && s.run && <div className="m6-mt"><Botao tamanho="toque" compacto variante={s.st === "andamento" ? "principal" : "secundario"} onClick={s.run}>{s.acao} →</Botao></div>}
               </div>
             </div>
           ))}
@@ -195,22 +198,22 @@ export function CaminhadaV6({ steps, courses, purpose, contribuir }: { steps: St
       </div>
       <div className="m6-sec">
         <div className="m6-lbl">Bíblia</div>
-        <div className="m6-list"><M6Row ic="biblia" t="Ler a Bíblia" s="Marque versículos e faça anotações" onClick={() => ui.go("caminhada", "biblia")} /></div>
+        <Lista><M6Row ic="biblia" t="Ler a Bíblia" s="Marque versículos e faça anotações" onClick={() => ui.go("caminhada", "biblia")} /></Lista>
       </div>
       {contribuir && (
         <div className="m6-sec">
           <div className="m6-lbl">Generosidade</div>
-          <div className="m6-list"><M6Row ic="semente" t="Contribuir" s={`Pix para ${listaFinalidades(contribuir.finalidades)}`} onClick={() => ui.go("caminhada", "contribuir")} /></div>
+          <Lista><M6Row ic="semente" t="Contribuir" s={`Pix para ${listaFinalidades(contribuir.finalidades)}`} onClick={() => ui.go("caminhada", "contribuir")} /></Lista>
         </div>
       )}
       {purpose && (purpose.title || purpose.text) && (
         <div className="m6-sec">
           <div className="m6-lbl">Nossa igreja</div>
-          <div className="m6-card">
+          <Cartao estilo="app">
             {purpose.kick && <div className="m6-kick">{purpose.kick}</div>}
             {purpose.title && <div className="m6-ct">{purpose.title}</div>}
             {purpose.text && <p className="m6-txt">{purpose.text}</p>}
-          </div>
+          </Cartao>
         </div>
       )}
     </>

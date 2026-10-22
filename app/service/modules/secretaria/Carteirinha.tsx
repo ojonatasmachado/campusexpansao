@@ -19,6 +19,11 @@ import type { ChurchView, MemberView, PersonView } from "../../ServiceExactApp";
 import { FolhaDeImpressao, imprimir } from "../../painel/imprimir";
 import { numeroFmt, type Registro } from "./livros";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
+import { linhaClasse } from "../../ui/Linha";
+import { Segmentado } from "../../ui/Segmentado";
 export type Marca = { nome: string; logoUrl?: string | null; cor: string; cidade?: string | null };
 
 type Emitida = { id: string; codigo: string; validade: string; emitida_em: string };
@@ -158,9 +163,9 @@ export function Carteirinha({ memberId, church, marca, demo, members, people, ro
           {candidatos.length ? (
             <div className="sec-busca">
               {candidatos.map((x) => (
-                <button key={x.id} className="mini-row sec-busca-it" type="button" onClick={() => setId(x.id)}>
+                <Acao key={x.id} className={`${linhaClasse({})} sec-busca-it`} onClick={() => setId(x.id)}>
                   <div className="mini-main"><div className="mini-title">{x.name}</div><div className="mini-sub">{x.situation === "novo" ? "Novo membro" : "Membro"}</div></div>
-                </button>
+                </Acao>
               ))}
             </div>
           ) : busca.trim().length >= 2 ? <p className="field-hint">Ninguém com esse nome. Confira a grafia.</p> : null}
@@ -184,24 +189,24 @@ export function Carteirinha({ memberId, church, marca, demo, members, people, ro
           {atual ? (
             <FormSection title="Baixar">
               <div className="sec-saidas">
-                <button className="btn btn-sec" type="button" disabled={!!baixando} onClick={baixarPng}>{baixando === "png" ? "Gerando..." : "Baixar PNG"}</button>
-                <button className="btn btn-sec" type="button" disabled={!!baixando} onClick={baixarPdf}>{baixando === "pdf" ? "Gerando..." : "Baixar PDF"}</button>
+                <Botao desativado={!!baixando} onClick={baixarPng}>{baixando === "png" ? "Gerando..." : "Baixar PNG"}</Botao>
+                <Botao desativado={!!baixando} onClick={baixarPdf}>{baixando === "pdf" ? "Gerando..." : "Baixar PDF"}</Botao>
               </div>
               <p className="field-hint">Tamanho de cartão de crédito (85,6 × 54 mm). Ao imprimir, use 100% de escala, sem ajustar à página.</p>
             </FormSection>
           ) : null}
 
           <FormSection title={atual ? "Emitir de novo" : "Validade"}>
-            <div className="seg" role="radiogroup" aria-label="Validade">
+            <Segmentado role="radiogroup" aria-label="Validade">
               {[1, 2, 3].map((n) => (
-                <button key={n} type="button" role="radio" aria-checked={anos === n} className={anos === n ? "on" : ""} onClick={() => setAnos(n)}>{n === 1 ? "1 ano" : `${n} anos`}</button>
+                <Opcao key={n} role="radio" aria-checked={anos === n} marcada={anos === n} onClick={() => setAnos(n)}>{n === 1 ? "1 ano" : `${n} anos`}</Opcao>
               ))}
-            </div>
-            {vigente ? <button className="btn btn-sec sec-reemitir" type="button" disabled={saving} onClick={emitir}>{saving ? "Emitindo..." : "Emitir nova carteirinha"}</button> : null}
+            </Segmentado>
+            {vigente ? <Botao className="sec-reemitir" desativado={saving} onClick={emitir}>{saving ? "Emitindo..." : "Emitir nova carteirinha"}</Botao> : null}
             <p className="field-hint">{atual ? `Emitir uma nova cancela a atual e vale até ${formatDateBR(somaAnos(todayISO(), anos))}. Use se ela foi perdida ou os dados mudaram.` : `Válida até ${formatDateBR(somaAnos(todayISO(), anos))}.`}</p>
           </FormSection>
 
-          {!memberId ? <button className="btn btn-sec btn-sm" type="button" onClick={() => { setId(null); setBusca(""); }}>Escolher outra pessoa</button> : null}
+          {!memberId ? <Botao compacto onClick={() => { setId(null); setBusca(""); }}>Escolher outra pessoa</Botao> : null}
 
           {atual ? (
             <FolhaDeImpressao folha="cartao">

@@ -16,6 +16,11 @@ import { ROUTES } from "../comum";
 import { DrawerSection, DrawerShell, TimePicker } from "../campos";
 import type { CronoStep, DrawerState, EventRsvpView, EventView, MinistryView, PersonView, RosterAssignmentView } from "../tipos";
 
+import { Botao, BotaoIcone } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
+import { Linha } from "../../ui/Linha";
+import { Segmentado } from "../../ui/Segmentado";
 export function EventDrawer({
   event,
   ministries,
@@ -50,16 +55,16 @@ export function EventDrawer({
   return (
     <DrawerShell onClose={onClose} wide>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
+        <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{joinDot(event.weekday, formatDateBR(event.eventDate))}</div>
         <div className="profile-name">{event.name}</div>
         <div className="profile-role">{joinDot(event.time, event.location, event.kind)}</div>
         <Cobertura itens={cobertura} onAbrir={onAbrirVagas} />
-        <div className="seg" style={{ marginTop: 14 }}>
-          <button className={tab === "crono" ? "on" : ""} type="button" onClick={() => setTab("crono")}>Cronograma</button>
-          <button className={tab === "posicoes" ? "on" : ""} type="button" onClick={() => setTab("posicoes")}>Posições</button>
-          <button className={tab === "membro" ? "on" : ""} type="button" onClick={() => setTab("membro")}>Para o membro</button>
-        </div>
+        <Segmentado style={{ marginTop: 14 }}>
+          <Opcao marcada={tab === "crono"} onClick={() => setTab("crono")}>Cronograma</Opcao>
+          <Opcao marcada={tab === "posicoes"} onClick={() => setTab("posicoes")}>Posições</Opcao>
+          <Opcao marcada={tab === "membro"} onClick={() => setTab("membro")}>Para o membro</Opcao>
+        </Segmentado>
       </div>
       <div className="drawer-body">
         {tab === "membro" ? (
@@ -70,7 +75,7 @@ export function EventDrawer({
               <CronogramaEditor event={event} ministries={eventMinistries} onRefresh={() => router.refresh()} />
             </DrawerSection>
             <DrawerSection title="Setlist">
-              {event.setlist.length ? event.setlist.map((song) => <div className="mini-row" key={song.id}><div className="mini-main"><div className="mini-title">{song.title}</div>{song.song_key ? <div className="mini-sub">Tom: {song.song_key}</div> : null}</div></div>) : <p className="mini-sub">Nenhuma música cadastrada.</p>}
+              {event.setlist.length ? event.setlist.map((song) => <Linha key={song.id}><div className="mini-main"><div className="mini-title">{song.title}</div>{song.song_key ? <div className="mini-sub">Tom: {song.song_key}</div> : null}</div></Linha>) : <p className="mini-sub">Nenhuma música cadastrada.</p>}
             </DrawerSection>
           </>
         ) : (
@@ -91,15 +96,15 @@ export function EventDrawer({
                         {assignments.map((assignment) => {
                           const person = people.find((candidate) => candidate.id === assignment.person_id);
                           return (
-                            <button key={assignment.id} className="slot" style={{ margin: 0, width: "auto" }} type="button" onClick={() => person && setDrawer({ kind: "person", id: person.id })}>
+                            <Acao key={assignment.id} className="slot" style={{ margin: 0, width: "auto" }} onClick={() => person && setDrawer({ kind: "person", id: person.id })}>
                               <Av name={person?.name ?? "Voluntário"} size="xs" photoUrl={person?.photoUrl} />
                               <span className="slot-name" style={{ maxWidth: 120 }}>{person?.name.split(" ")[0] ?? "Pessoa"}</span>
                               <span className={`slot-st ${assignment.status}`} />
-                            </button>
+                            </Acao>
                           );
                         })}
                         {Array.from({ length: missing }).map((_, index) => (
-                          <button key={`${position.id}-missing-${index}`} className="slot-empty" style={{ width: "auto", padding: "7px 14px" }} type="button" onClick={() => { onClose(); setRoute("escalas"); }}>+ vaga</button>
+                          <Acao key={`${position.id}-missing-${index}`} className="slot-empty" style={{ width: "auto", padding: "7px 14px" }} onClick={() => { onClose(); setRoute("escalas"); }}>+ vaga</Acao>
                         ))}
                       </div>
                     </div>
@@ -110,8 +115,8 @@ export function EventDrawer({
           </>
         )}
         <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
-          <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { onClose(); setRoute("escalas"); }}>Editar escala</button>
-          <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setShareEventId(event.id)}><Icon name="comunicacao" size={15} /> Setup da celebração</button>
+          <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={() => { onClose(); setRoute("escalas"); }}>Editar escala</Botao>
+          <Botao style={{ flex: 1, justifyContent: "center" }} onClick={() => setShareEventId(event.id)}><Icon name="comunicacao" size={15} /> Setup da celebração</Botao>
         </div>
       </div>
     </DrawerShell>
@@ -161,11 +166,11 @@ export function EventoParaMembro({ event, rsvps, people, onSaved }: { event: Eve
       </DrawerSection>
       {pede !== "aviso" && (
         <DrawerSection title={pede === "inscricao" ? "Inscritos" : "Confirmaram presença"}>
-          {nomes.length ? nomes.map((n) => <div className="mini-row" key={n}><div className="mini-main"><div className="mini-title">{n}</div></div></div>) : <p className="mini-sub">Ninguém ainda.</p>}
+          {nomes.length ? nomes.map((n) => <Linha key={n}><div className="mini-main"><div className="mini-title">{n}</div></div></Linha>) : <p className="mini-sub">Ninguém ainda.</p>}
         </DrawerSection>
       )}
       <div style={{ display: "flex", marginTop: 16 }}>
-        <button className="btn btn-pri" type="button" disabled={!mudou || salvando} onClick={salvar}>{salvando ? "Salvando..." : "Salvar"}</button>
+        <Botao variante="principal" desativado={!mudou || salvando} onClick={salvar}>{salvando ? "Salvando..." : "Salvar"}</Botao>
       </div>
     </>
   );
@@ -286,9 +291,9 @@ export function CronogramaEditor({ event, ministries, onRefresh }: { event: Even
               <div className="crono-row1">
                 <input className="crono-item-in" placeholder={ct("Etapa do {culto} (ex: Momento de louvor)")} value={s.item} onChange={(e) => patch(s.id, { item: e.target.value })} onBlur={(e) => commitField(s.id, { item: e.target.value })} />
                 <div className="crono-actions">
-                  <button type="button" className="crono-mini" title="Subir" onClick={() => moveStep(i, -1)} disabled={i === 0}>↑</button>
-                  <button type="button" className="crono-mini" title="Descer" onClick={() => moveStep(i, 1)} disabled={i === steps.length - 1}>↓</button>
-                  <button type="button" className="crono-mini danger" title="Remover" aria-label="Remover" onClick={() => removeStep(s.id)}>✕</button>
+                  <Acao className="crono-mini" title="Subir" onClick={() => moveStep(i, -1)} desativado={i === 0}>↑</Acao>
+                  <Acao className="crono-mini" title="Descer" onClick={() => moveStep(i, 1)} desativado={i === steps.length - 1}>↓</Acao>
+                  <BotaoIcone className="crono-mini danger" title="Remover" rotulo="Remover" onClick={() => removeStep(s.id)}>✕</BotaoIcone>
                 </div>
               </div>
               <div className="crono-fields">
@@ -315,7 +320,7 @@ export function CronogramaEditor({ event, ministries, onRefresh }: { event: Even
           </div>
         ))}
       </div>
-      <button type="button" className="btn btn-sec btn-sm crono-add" onClick={addStep}>+ Adicionar etapa</button>
+      <Botao compacto className="crono-add" onClick={addStep}>+ Adicionar etapa</Botao>
       {steps.length > 0 && (
         <div className="crono-totais">
           <div className="crono-tot-geral"><span>{ct("Duração total do {culto}")}</span><b>{fmtDuracaoMin(totalGeral)}</b></div>

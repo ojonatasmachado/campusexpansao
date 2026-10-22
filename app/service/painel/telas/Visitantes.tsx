@@ -13,6 +13,13 @@ import { Av, EmptyState, MenuMais, PageHead } from "../ui";
 import { Kpi, VISITOR_STAGES, semContato48h } from "../comum";
 import type { ChurchView, ContatoCfg, DrawerState, ModalState, PersonView, VisitorNoteView, VisitorView } from "../tipos";
 
+import { Botao, botaoClasse } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
+import { Cartao } from "../../ui/Cartao";
+import { Linha, linhaClasse } from "../../ui/Linha";
+import { Selo } from "../../ui/Selo";
+import { Segmentado } from "../../ui/Segmentado";
 /* cor de destaque por tema + quem além do master pode editar, guardado em
    service.churches.settings.brandCfg (mesmo jsonb de sempre). Permite que
    cada igreja pareça uma ferramenta própria dela (logo + nome + cor), não
@@ -36,7 +43,7 @@ export function VisitanteCard({ visitor, notes, onOpen }: { visitor: VisitorView
   const fone = telefoneParaWhatsapp(visitor.phone);
   return (
     <div className={`vcard${alerta ? " vcard-alerta" : ""}`}>
-      <button type="button" className="vcard-open" onClick={onOpen}>
+      <Acao className="vcard-open" onClick={onOpen}>
         <div className="vcard-top">
           <Av name={visitor.name} size="sm" />
           <div style={{ minWidth: 0 }}>
@@ -46,10 +53,10 @@ export function VisitanteCard({ visitor, notes, onOpen }: { visitor: VisitorView
         </div>
         {alerta && <div className="vcard-alert"><Icon name="alerta" size={14} /> Sem contato há mais de 48h</div>}
         {!alerta && visitor.reply_status && <div className="vcard-foot">{visitor.reply_status === "respondeu" ? <span className="vcard-resp">respondeu</span> : <span className="vcard-noresp">sem resposta</span>}</div>}
-      </button>
+      </Acao>
       <div className="vcard-acts">
-        {fone && <a className="btn btn-sec btn-sm" href={`https://wa.me/${fone}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={14} /> WhatsApp</a>}
-        <button className="btn btn-sec btn-sm" type="button" onClick={onOpen} aria-label={`Registrar contato com ${visitor.name}`}>Registrar</button>
+        {fone && <a className={botaoClasse({ compacto: true })} href={`https://wa.me/${fone}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={14} /> WhatsApp</a>}
+        <Botao compacto onClick={onOpen} aria-label={`Registrar contato com ${visitor.name}`}>Registrar</Botao>
       </div>
     </div>
   );
@@ -99,13 +106,13 @@ export function Visitantes({
           { rotulo: "Indicadores de visitantes", onClick: () => setView("painel") },
           { rotulo: "Regras de acolhimento", onClick: () => setView("regras") },
           ...(church ? [{ rotulo: "QR e link de visita", onClick: () => setQrOpen(true) }] : []),
-        ]} /><button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo visitante", subtitle: "Quem chegou pela primeira vez. Entra no acompanhamento automaticamente.", saveLabel: "Registrar visitante", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem visitou" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"origem", label:"Como chegou", type:"select", half:true, options:[{v:"Convite de membro",l:"Convite de membro"},{v:"Instagram",l:"Instagram"},{v:"Indicação",l:"Indicação"},{v:"Evangelismo",l:"Evangelismo"},{v:"Tomou decisão no culto",l:"Tomou decisão no culto"},{v:"Passava na rua",l:"Passava na rua"}] }], action: { kind: "visitor" } })}>Registrar visitante</button></>}
+        ]} /><Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Novo visitante", subtitle: "Quem chegou pela primeira vez. Entra no acompanhamento automaticamente.", saveLabel: "Registrar visitante", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem visitou" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"origem", label:"Como chegou", type:"select", half:true, options:[{v:"Convite de membro",l:"Convite de membro"},{v:"Instagram",l:"Instagram"},{v:"Indicação",l:"Indicação"},{v:"Evangelismo",l:"Evangelismo"},{v:"Tomou decisão no culto",l:"Tomou decisão no culto"},{v:"Passava na rua",l:"Passava na rua"}] }], action: { kind: "visitor" } })}>Registrar visitante</Botao></>}
       />
       <div className="toolbar">
-        <div className="seg" role="group" aria-label="Acompanhamento de visitantes">
-          <button className={view === "pipe" ? "on" : ""} aria-pressed={view === "pipe"} type="button" onClick={() => setView("pipe")}>Funil</button>
-          <button className={view === "list" ? "on" : ""} aria-pressed={view === "list"} type="button" onClick={() => setView("list")}>Lista</button>
-        </div>
+        <Segmentado role="group" aria-label="Acompanhamento de visitantes">
+          <Opcao marcada={view === "pipe"} aria-pressed={view === "pipe"} onClick={() => setView("pipe")}>Funil</Opcao>
+          <Opcao marcada={view === "list"} aria-pressed={view === "list"} onClick={() => setView("list")}>Lista</Opcao>
+        </Segmentado>
         {(view === "painel" || view === "regras") && <span className="panel-meta">{view === "painel" ? "Indicadores de visitantes" : "Regras de acolhimento"}</span>}
       </div>
       {view === "regras" && (
@@ -113,7 +120,7 @@ export function Visitantes({
           <div className="contato-banner">
             <div className="contato-pill"><span className="contato-pill-n">{cc.prazoHoras}h</span><span>1º contato</span></div>
             <div className="contato-main"><div className="contato-t">Primeiro contato em até <em>{cc.prazoHoras}h</em> por <em>{cc.canal}</em> · meta de integração: <em>{cc.metaIntegracaoDias} dias</em></div><div className="contato-s">{cc.abordagem}</div></div>
-            <button className="btn btn-sec btn-sm" type="button" onClick={() => setCfgOpen(true)}>Ajustar</button>
+            <Botao compacto onClick={() => setCfgOpen(true)}>Ajustar</Botao>
           </div>
           <p className="ph-sub" style={{ marginTop: 10 }}>Os visitantes sem nenhum contato registrado depois desse prazo aparecem com alerta no funil, no Início e no menu.</p>
         </>
@@ -125,8 +132,8 @@ export function Visitantes({
         <div className="vpanel">
           <div className="kpi-row"><Kpi icon="visitante" label="Visitantes" value={visitors.length} foot="no acompanhamento" help="Todo mundo que visitou e ainda está sendo acompanhado, antes de virar membro." /><Kpi icon="comunicacao" label="Respondem o contato" value={contacted.length ? `${replyRate}%` : "Sem dados"} foot={`${answered.length} de ${contacted.length} contatados`} help="De quem a equipe já contatou, quantos responderam de volta." /><Kpi icon="ok" label="Integram (viram membro)" value={visitors.length ? `${integrationRate}%` : "Sem dados"} foot={`${members.length} de ${visitors.length} · ${visitors.filter((v) => v.stage === "integrando" || v.stage === "membro").length} em integração`} help="De todos os visitantes, quantos completaram o caminho até virar membro." /><Kpi icon="alerta" label="Sem resposta" value={visitors.filter((visitor) => visitor.reply_status === "sem_resposta").length} foot="precisam de novo contato" amber help="Visitantes contatados que ainda não responderam. Vale tentar de novo." /></div>
           <div className="vpanel-grid">
-            <div className="panel"><div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Visitantes por culto <HelpDot text="Em qual culto os visitantes mais chegam." /></span></div><div className="panel-body flush">{Object.entries(byService).map(([name, count]) => <div className="dist-row" key={name}><span className="dist-name">{name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(count / maxService) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}{visitors.length === 0 ? <div className="empty">Nenhum visitante ainda.</div> : null}</div></div>
-            <div className="panel">
+            <Cartao><div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Visitantes por culto <HelpDot text="Em qual culto os visitantes mais chegam." /></span></div><div className="panel-body flush">{Object.entries(byService).map(([name, count]) => <div className="dist-row" key={name}><span className="dist-name">{name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(count / maxService) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}{visitors.length === 0 ? <div className="empty">Nenhum visitante ainda.</div> : null}</div></Cartao>
+            <Cartao>
               <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Resposta ao 1º contato <HelpDot text="Quantos visitantes já responderam o primeiro contato da equipe." /></span></div>
               <div className="panel-body">
                 {(() => {
@@ -149,18 +156,18 @@ export function Visitantes({
                       {semResposta.map((visitor) => {
                         const owner = visitor.responsible_id ? personById.get(visitor.responsible_id) : null;
                         return (
-                          <button className="flag-row click" type="button" key={visitor.id} style={{ cursor: "pointer" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}>
+                          <Acao className="flag-row click" key={visitor.id} style={{ cursor: "pointer" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}>
                             <Av name={visitor.name} size="sm" />
                             <div className="flag-main"><div className="flag-nome">{visitor.name}</div><div className="flag-meta">{formatDateBR(visitor.visited_on) || "sem data"} · {owner ? `resp. ${owner.name.split(" ")[0]}` : "sem dono"}</div></div>
                             <span className="vcard-noresp" style={{ marginLeft: "auto" }}>sem resposta</span>
-                          </button>
+                          </Acao>
                         );
                       })}
                     </>
                   );
                 })()}
               </div>
-            </div>
+            </Cartao>
           </div>
         </div>
       ) : visitors.length === 0 ? (
@@ -174,8 +181,8 @@ export function Visitantes({
         </div>
       ) : (
         <div className="tbl">
-          <div className="tr head" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }}><span>Visitante</span><span>Etapa</span><span>Como chegou</span><span>Próximo passo</span><span>Visitou</span></div>
-          {visitors.map((visitor) => { const stage = VISITOR_STAGES.find((s) => s.id === visitor.stage); return <button className="tr click" key={visitor.id} type="button" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone}</div></div></div><div><span className="chip chip-neutral" style={{ color: stage?.color, borderColor: "var(--border-2)" }}>{stage?.name ?? visitor.stage}</span></div><div className="cell-sub">{visitor.origin || "Visitante"}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "sem prazo"}</span></div><div className="mini-right">{formatDateBR(visitor.visited_on) || "sem data"}</div></button>; })}
+          <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }}><span>Visitante</span><span>Etapa</span><span>Como chegou</span><span>Próximo passo</span><span>Visitou</span></Linha>
+          {visitors.map((visitor) => { const stage = VISITOR_STAGES.find((s) => s.id === visitor.stage); return <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={visitor.id} style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone}</div></div></div><div><Selo style={{ color: stage?.color, borderColor: "var(--border-2)" }}>{stage?.name ?? visitor.stage}</Selo></div><div className="cell-sub">{visitor.origin || "Visitante"}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "sem prazo"}</span></div><div className="mini-right">{formatDateBR(visitor.visited_on) || "sem data"}</div></Acao>; })}
         </div>
       )}
     </div>
@@ -234,8 +241,8 @@ export function ContatoCfgModal({ church, cfg, onClose, onRefresh }: { church: C
         {!valoresValidos && <p className="fs-error" role="alert">Informe horas e dias como números inteiros maiores que zero.</p>}
         {erro && <p className="fs-error" role="alert">{erro}</p>}
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" disabled={saving} onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving || !valoresValidos} onClick={salvar}>{saving ? "Salvando..." : "Salvar"}</button>
+          <Botao desativado={saving} onClick={onClose}>Cancelar</Botao>
+          <Botao variante="principal" desativado={saving || !valoresValidos} onClick={salvar}>{saving ? "Salvando..." : "Salvar"}</Botao>
         </div>
       </div>
     </div>

@@ -8,6 +8,8 @@ import { plural } from "../../lib/plural";
 import type { Area } from "./dados";
 import type { PessoaLider } from "./contexto";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 /* Quem vê o mapa (tela 4 do design). O mapa só aparece no menu de quem o
    pastor liberar (person_grants "mapa"), com a área e o nível de detalhe
    gravados em map_access. Sem áreas desenhadas, a pessoa vê a cidade inteira. */
@@ -59,7 +61,7 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
     <div className="content mesa">
       <header className="mesa-cab">
         <div>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onVoltar}><Icon name="voltar" size={14} />Mapa da igreja</button>
+          <Botao variante="discreto" compacto onClick={onVoltar}><Icon name="voltar" size={14} />Mapa da igreja</Botao>
           <div className="mp-sobre" style={{ marginTop: 10 }}>Acesso · Mapa da igreja</div>
           <h1 className="mesa-titulo">Quem vê o mapa</h1>
           <p className="mp-texto" style={{ marginTop: 6 }}>O mapa só aparece no menu de quem você liberar. Pastores e quem administra a igreja já veem tudo.</p>
@@ -69,10 +71,10 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
         <section className="mesa-caixa mesa-lado" style={{ padding: 16, gap: 8 }}>
           {lista.length === 0 && <p className="mp-fraco">Ninguém além da liderança principal ainda.</p>}
           {lista.map((l) => (
-            <button key={l.person_id} type="button" className="mp-visao" aria-pressed={edit?.person_id === l.person_id} style={{ display: "flex", gap: 12, alignItems: "center" }} onClick={() => setEdit(l)}>
+            <Acao key={l.person_id} className="mp-visao" aria-pressed={edit?.person_id === l.person_id} style={{ display: "flex", gap: 12, alignItems: "center" }} onClick={() => setEdit(l)}>
               <span className="mp-av" style={{ width: 36, height: 36, borderRadius: 18 }}>{iniciais(nome(l.person_id))}</span>
               <span style={{ marginTop: 0 }}><b>{nome(l.person_id)}</b><span>{resumo(l)}</span></span>
-            </button>
+            </Acao>
           ))}
           <div className="field" style={{ marginTop: 8 }}>
             <label className="field-label" htmlFor="lm-nova">Liberar para alguém</label>
@@ -112,10 +114,10 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
               <label className="mp-linha"><span>Criar áreas e adicionar pontos</span><input type="checkbox" checked={edit.pode_editar} onChange={(e) => setEdit({ ...edit, pode_editar: e.target.checked })} /></label>
             </fieldset>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
-              {lista.some((l) => l.person_id === edit.person_id) && <button type="button" className="btn btn-danger" onClick={() => tirar(edit.person_id)}>Tirar o mapa do menu</button>}
+              {lista.some((l) => l.person_id === edit.person_id) && <Botao variante="perigo" onClick={() => tirar(edit.person_id)}>Tirar o mapa do menu</Botao>}
               <span style={{ flex: 1 }} />
-              <button type="button" className="btn btn-sec" onClick={() => { setEdit(null); setNova(""); }}>Cancelar</button>
-              <button type="button" className="btn btn-pri" disabled={salvando} onClick={salvar}>Salvar acesso</button>
+              <Botao onClick={() => { setEdit(null); setNova(""); }}>Cancelar</Botao>
+              <Botao variante="principal" desativado={salvando} onClick={salvar}>Salvar acesso</Botao>
             </div>
           </section>
         )}

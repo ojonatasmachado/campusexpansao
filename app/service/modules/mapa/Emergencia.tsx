@@ -9,6 +9,8 @@ import { limparCamadas, type ContextoMapa } from "./contexto";
 import { caixaDaGeometria } from "./geo";
 import { baixarCsv } from "./csv";
 
+import { Botao, botaoClasse } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 /* Ferramentas › Emergência (tela 11 do design). Quem coordena desenha a
    área atingida, vê as famílias, pergunta a todas se estão bem e marca a
    situação de cada uma. O endereço abre só aqui, com registro de quem abriu. */
@@ -130,9 +132,9 @@ export function Emergencia({ ctx }: { ctx: ContextoMapa }) {
       <div className="mp-faixa alerta" role="region" aria-label="Emergência">
         <strong>Modo emergência</strong>
         <span>{fechado ? "Área fechada. Dê um nome e abra." : "Desenhe a área atingida: clique nos cantos e no primeiro ponto para fechar."}</span>
-        {pontos.length > 0 && <button type="button" className="mp-botao" onClick={() => { setFechado(false); setPontos((p) => p.slice(0, -1)); }}>Desfazer ponto</button>}
-        {!fechado && pontos.length >= 3 && <button type="button" className="mp-botao" onClick={() => setFechado(true)}>Fechar área</button>}
-        <button type="button" className="mp-botao" onClick={ctx.fechar}>Sair</button>
+        {pontos.length > 0 && <Botao tamanho="mapa" onClick={() => { setFechado(false); setPontos((p) => p.slice(0, -1)); }}>Desfazer ponto</Botao>}
+        {!fechado && pontos.length >= 3 && <Botao tamanho="mapa" onClick={() => setFechado(true)}>Fechar área</Botao>}
+        <Botao tamanho="mapa" onClick={ctx.fechar}>Sair</Botao>
       </div>
       <aside className="mp-painel mp-dir" aria-label="Nova emergência" style={{ bottom: "auto" }}>
         <div className="mp-cab"><div className="mp-sobre">Emergência</div><h2 className="mp-titulo">O que aconteceu?</h2></div>
@@ -140,7 +142,7 @@ export function Emergencia({ ctx }: { ctx: ContextoMapa }) {
           <div className="field"><label className="field-label req" htmlFor="em-titulo">Nome</label><input id="em-titulo" className="input" maxLength={80} placeholder="ex: Enchente do Rio das Pedras" value={titulo} onChange={(e) => setTitulo(e.target.value)} /></div>
           <p className="mp-fraco">Só quem coordena vê esta tela. O endereço das famílias pode ser aberto aqui, e cada abertura fica registrada com nome e hora.</p>
         </div>
-        <div className="mp-pe"><button type="button" className="btn btn-pri" disabled={!fechado || !titulo.trim() || ocupado} onClick={abrir}>Abrir emergência</button></div>
+        <div className="mp-pe"><Botao variante="principal" desativado={!fechado || !titulo.trim() || ocupado} onClick={abrir}>Abrir emergência</Botao></div>
       </aside>
     </>
   );
@@ -150,7 +152,7 @@ export function Emergencia({ ctx }: { ctx: ContextoMapa }) {
       <div className="mp-faixa alerta" role="status">
         <strong>Modo emergência</strong>
         <span>{atual.titulo}</span>
-        <button type="button" className="mp-botao" onClick={ctx.fechar}>Voltar ao mapa</button>
+        <Botao tamanho="mapa" onClick={ctx.fechar}>Voltar ao mapa</Botao>
       </div>
       <aside className="mp-painel mp-dir" aria-label="Famílias na área" style={{ width: 430 }}>
         <div className="mp-cab">
@@ -165,7 +167,7 @@ export function Emergencia({ ctx }: { ctx: ContextoMapa }) {
         </div>
         <div className="mp-chips" style={{ padding: "12px 18px", borderBottom: "0.5px solid var(--border-2)" }}>
           {(["todas", "sem_resposta", "ajuda", "bem"] as const).map((v) => (
-            <button key={v} type="button" className="mp-chip" aria-pressed={filtro === v} onClick={() => setFiltro(v)}>{v === "todas" ? "Todas" : STATUS[v]} <span className="mp-num">{v === "todas" ? familias.length : familias.filter((f) => f.status === v).length}</span></button>
+            <Acao key={v} className="mp-chip" aria-pressed={filtro === v} onClick={() => setFiltro(v)}>{v === "todas" ? "Todas" : STATUS[v]} <span className="mp-num">{v === "todas" ? familias.length : familias.filter((f) => f.status === v).length}</span></Acao>
           ))}
         </div>
         <div className="mp-corpo" style={{ gap: 0, padding: 0 }}>
@@ -179,26 +181,26 @@ export function Emergencia({ ctx }: { ctx: ContextoMapa }) {
                     <div className="mp-pergunta">{f.nome}</div>
                     <div className="mp-fraco">{plural(f.pessoas, "pessoa")}{f.bairro ? ` · ${f.bairro}` : ""}</div>
                   </div>
-                  {f.telefone && <a className="btn btn-sec btn-sm" href={`tel:${f.telefone.replace(/[^\d+]/g, "")}`} aria-label={`Ligar para ${f.nome}`}>Ligar</a>}
+                  {f.telefone && <a className={botaoClasse({ compacto: true })} href={`tel:${f.telefone.replace(/[^\d+]/g, "")}`} aria-label={`Ligar para ${f.nome}`}>Ligar</a>}
                 </div>
                 <div className="mp-seg" role="group" aria-label={`Situação de ${f.nome}`} style={{ ["--n" as string]: 3 } as React.CSSProperties}>
-                  {(["sem_resposta", "bem", "ajuda"] as const).map((s) => <button key={s} type="button" aria-pressed={f.status === s} onClick={() => marcar(f, s)}>{STATUS[s]}</button>)}
+                  {(["sem_resposta", "bem", "ajuda"] as const).map((s) => <Acao key={s} aria-pressed={f.status === s} onClick={() => marcar(f, s)}>{STATUS[s]}</Acao>)}
                 </div>
                 {end ? (
                   <div className="mp-destaque" style={{ fontSize: "var(--fs-pn-13)" }}>{[[end.rua, end.numero].filter(Boolean).join(", "), end.complemento, end.bairro].filter(Boolean).join(" · ") || "Endereço não cadastrado"}<span className="mp-fraco" style={{ display: "block" }}>Aberto por você às {end.quando} · registrado</span></div>
                 ) : (
-                  <button type="button" className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }} onClick={() => verEndereco(f)}>Ver endereço</button>
+                  <Botao variante="discreto" compacto style={{ alignSelf: "flex-start" }} onClick={() => verEndereco(f)}>Ver endereço</Botao>
                 )}
               </div>
             );
           })}
         </div>
         <div className="mp-pe">
-          <button type="button" className="btn btn-pri" disabled={ocupado || !familias.length} onClick={() => perguntar(familias.filter((f) => f.status === "sem_resposta"))}>Perguntar a quem não respondeu: &quot;Vocês estão bem?&quot;</button>
-          <button type="button" className="btn btn-sec btn-sm" disabled={!familias.length} onClick={async () => { await db().rpc("mapa_emergencia_registrar_csv", { p_id: atual.id }); baixarCsv(`emergencia-${atual.titulo}`, ["Família", "Pessoas", "Bairro", "Situação"], familias.map((f) => [f.nome, String(f.pessoas), f.bairro ?? "", STATUS[f.status]])); }}>Baixar lista (sem endereço)</button>
+          <Botao variante="principal" desativado={ocupado || !familias.length} onClick={() => perguntar(familias.filter((f) => f.status === "sem_resposta"))}>Perguntar a quem não respondeu: &quot;Vocês estão bem?&quot;</Botao>
+          <Botao compacto desativado={!familias.length} onClick={async () => { await db().rpc("mapa_emergencia_registrar_csv", { p_id: atual.id }); baixarCsv(`emergencia-${atual.titulo}`, ["Família", "Pessoas", "Bairro", "Situação"], familias.map((f) => [f.nome, String(f.pessoas), f.bairro ?? "", STATUS[f.status]])); }}>Baixar lista (sem endereço)</Botao>
           {confirmaFim
-            ? <button type="button" className="btn btn-danger btn-sm" onClick={encerrar}>Encerrar de vez{familias.some((f) => f.status !== "bem") ? ` (${plural(familias.filter((f) => f.status !== "bem").length, "família ainda não está bem", "famílias ainda não estão bem")})` : ""}. Os endereços deixam de abrir.</button>
-            : <button type="button" className="btn btn-ghost btn-sm" onClick={() => setConfirmaFim(true)}>Encerrar emergência</button>}
+            ? <Botao variante="perigo" compacto onClick={encerrar}>Encerrar de vez{familias.some((f) => f.status !== "bem") ? ` (${plural(familias.filter((f) => f.status !== "bem").length, "família ainda não está bem", "famílias ainda não estão bem")})` : ""}. Os endereços deixam de abrir.</Botao>
+            : <Botao variante="discreto" compacto onClick={() => setConfirmaFim(true)}>Encerrar emergência</Botao>}
         </div>
       </aside>
     </>

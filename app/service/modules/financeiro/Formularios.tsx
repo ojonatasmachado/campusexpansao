@@ -17,6 +17,9 @@ import { useServiceAccess } from "../../AccessContext";
 import { abrirComprovante, BUCKET_FIN, db, type Campanha, type Categoria, type Conta, type Fundo, type Lancamento, type PessoaFin } from "./dados";
 import { brl, centavosTexto, digitadoParaCentavos, FORMAS, type Forma } from "./dinheiro";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 export type Base = { org: string; churchId: string | null; onClose: () => void; onDone: () => void };
 export type Cadastros = { contas: Conta[]; categorias: Categoria[]; fundos: Fundo[]; pessoas: PessoaFin[]; saldoConta: Record<string, number>; campanhas?: Campanha[] };
 
@@ -50,7 +53,7 @@ function CampoPessoa({ id, label, pessoas, value, onChange, req = false, hint, e
       {atual ? (
         <div className="anx-item fin-pessoa">
           <span className="anx-nome">{atual.name}{atual.eu ? " (você)" : ""}</span>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => { onChange(null); setQ(""); }}>Trocar</button>
+          <Botao variante="discreto" compacto onClick={() => { onChange(null); setQ(""); }}>Trocar</Botao>
         </div>
       ) : (
         <div className="sel-wrap">
@@ -60,7 +63,7 @@ function CampoPessoa({ id, label, pessoas, value, onChange, req = false, hint, e
           {aberto && q.trim() && (
             <div className="sel-pop" id={`${id}-l`} role="listbox">
               {lista.map((p) => (
-                <button key={p.id} type="button" role="option" aria-selected={false} className="sel-opt" onMouseDown={(e) => e.preventDefault()} onClick={() => { onChange(p.id); setAberto(false); setQ(""); }}>{p.name}</button>
+                <Acao key={p.id} role="option" aria-selected={false} className="sel-opt" onMouseDown={(e) => e.preventDefault()} onClick={() => { onChange(p.id); setAberto(false); setQ(""); }}>{p.name}</Acao>
               ))}
               {lista.length === 0 && <div className="sel-opt fin-sem">Ninguém com esse nome no cadastro.</div>}
             </div>
@@ -91,12 +94,12 @@ function CampoComprovante({ arquivo, existente, onArquivo, onTirarExistente }: {
           <span className="anx-tag">{arquivo?.type === "application/pdf" || existente?.endsWith(".pdf") ? "PDF" : "Foto"}</span>
           <span className="anx-nome">{nome}</span>
           {!arquivo && existente && (
-            <button type="button" className="btn btn-ghost btn-sm" onClick={async () => { const u = await abrirComprovante(existente); if (u) window.open(u, "_blank", "noopener"); else avisar("Não foi possível abrir o comprovante.", "warn"); }}>Ver</button>
+            <Botao variante="discreto" compacto onClick={async () => { const u = await abrirComprovante(existente); if (u) window.open(u, "_blank", "noopener"); else avisar("Não foi possível abrir o comprovante.", "warn"); }}>Ver</Botao>
           )}
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => (arquivo ? onArquivo(null) : onTirarExistente())}>Tirar</button>
+          <Botao variante="discreto" compacto onClick={() => (arquivo ? onArquivo(null) : onTirarExistente())}>Tirar</Botao>
         </div>
       ) : (
-        <div><button type="button" className="btn btn-sec btn-sm" onClick={() => ref.current?.click()}><Icon name="anexo" size={14} /> Anexar foto ou PDF</button></div>
+        <div><Botao compacto onClick={() => ref.current?.click()}><Icon name="anexo" size={14} /> Anexar foto ou PDF</Botao></div>
       )}
       {erro ? <p className="field-error">{erro}</p> : <div className="field-hint">Nota fiscal, recibo ou print do Pix. Só quem cuida do financeiro vê.</div>}
     </div>
@@ -112,12 +115,12 @@ export function Excluir({ rotulo, pergunta, onConfirmar }: { rotulo: string; per
         <>
           <p className="fs-note">{pergunta}</p>
           <div className="fin-excluir-acts">
-            <button type="button" className="btn btn-sec btn-sm" onClick={() => setConfirmar(false)} disabled={indo}>Manter</button>
-            <button type="button" className="btn btn-danger btn-sm" disabled={indo} onClick={async () => { setIndo(true); await onConfirmar(); setIndo(false); }}>{indo ? "Excluindo…" : "Excluir"}</button>
+            <Botao compacto onClick={() => setConfirmar(false)} desativado={indo}>Manter</Botao>
+            <Botao variante="perigo" compacto desativado={indo} onClick={async () => { setIndo(true); await onConfirmar(); setIndo(false); }}>{indo ? "Excluindo…" : "Excluir"}</Botao>
           </div>
         </>
       ) : (
-        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setConfirmar(true)}><Icon name="lixeira" size={14} /> {rotulo}</button>
+        <Botao variante="discreto" compacto onClick={() => setConfirmar(true)}><Icon name="lixeira" size={14} /> {rotulo}</Botao>
       )}
     </div>
   );
@@ -231,8 +234,8 @@ export function LancamentoForm({ org, churchId, tipo, edit, cad, onClose, onDone
             <div className="field-label" id={`${fid}-fm`}>{entrada ? "Como entrou" : "Como foi pago"}</div>
             <div className="fs-chips" role="group" aria-labelledby={`${fid}-fm`}>
               {FORMAS.map((f) => (
-                <button key={f.id} type="button" className={`seg-chip${forma === f.id ? " on" : ""}`} aria-pressed={forma === f.id}
-                  onClick={() => { const nova = forma === f.id ? "" : f.id; setForma(nova); if (!contaTocada) setConta(contaPara(nova)); }}>{f.rotulo}</button>
+                <Opcao key={f.id} marcada={forma === f.id} estilo="seg-chip" aria-pressed={forma === f.id}
+                  onClick={() => { const nova = forma === f.id ? "" : f.id; setForma(nova); if (!contaTocada) setConta(contaPara(nova)); }}>{f.rotulo}</Opcao>
               ))}
             </div>
           </div>
@@ -510,7 +513,7 @@ export function ContaForm({ org, churchId, edit, onClose, onDone }: Base & { edi
             <div className="field-label" id={`${fid}-t`}>Tipo</div>
             <div className="fs-chips" role="group" aria-labelledby={`${fid}-t`}>
               {([["banco", "Conta no banco"], ["caixa", "Caixa (dinheiro em espécie)"]] as const).map(([v, l]) => (
-                <button key={v} type="button" className={`seg-chip${tipo === v ? " on" : ""}`} aria-pressed={tipo === v} onClick={() => setTipo(v)}>{l}</button>
+                <Opcao key={v} marcada={tipo === v} estilo="seg-chip" aria-pressed={tipo === v} onClick={() => setTipo(v)}>{l}</Opcao>
               ))}
             </div>
           </div>

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { isValidHex, normalizeHex, deriveAccentVars, contrastRatio, contrastLabel, buildColorWheel, hslToHex } from "./lib/color";
 import { Icon } from "./lib/icons";
 
+import { Botao } from "./ui/Botao";
+import { Acao } from "./ui/Acao";
 /* Seletor de cor livre (hex), com roda de cores + leitura de contraste ao
    vivo. Extraído de ServiceExactApp.tsx (era local, usado só pela cor de
    destaque da marca) pra ser reaproveitado também pelo editor da Página
@@ -30,9 +32,8 @@ function ColorWheelPicker({ onPick }: { onPick: (hex: string) => void }) {
     <div className="color-wheel-wrap">
       <div className="color-wheel" style={{ width: containerR * 2, height: containerR * 2 }}>
         {COLOR_WHEEL.map((cell, i) => (
-          <button
+          <Acao
             key={i}
-            type="button"
             className="color-wheel-cell"
             style={{ width: hexW + 1.5, height: hexH + 1.5, left: `calc(50% + ${cell.x * scale}px)`, top: `calc(50% + ${cell.y * scale}px)`, background: cell.hex }}
             title={cell.hex}
@@ -42,7 +43,7 @@ function ColorWheelPicker({ onPick }: { onPick: (hex: string) => void }) {
       </div>
       <div className="color-wheel-gray">
         {GRAYSCALE_STEPS.map((hex) => (
-          <button key={hex} type="button" className="color-wheel-gray-cell" style={{ background: hex }} title={hex} onClick={() => onPick(hex)} />
+          <Acao key={hex} className="color-wheel-gray-cell" style={{ background: hex }} title={hex} onClick={() => onPick(hex)} />
         ))}
       </div>
     </div>
@@ -84,8 +85,7 @@ export function AccentField({ label, bgHex, value, defaultHex, onChange, compact
 
   if (compact && !expanded) {
     return (
-      <button
-        type="button"
+      <Acao
         onClick={() => setExpanded(true)}
         style={{
           display: "flex", alignItems: "center", gap: 10, width: "100%",
@@ -96,7 +96,7 @@ export function AccentField({ label, bgHex, value, defaultHex, onChange, compact
         <span style={{ width: 22, height: 22, borderRadius: 999, background: hex, border: "1px solid rgba(255,255,255,0.18)", flex: "none" }} />
         <span style={{ flex: 1, fontSize: "var(--fs-ui-md)" }}>{label}</span>
         <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>{hex}</span>
-      </button>
+      </Acao>
     );
   }
 
@@ -106,14 +106,14 @@ export function AccentField({ label, bgHex, value, defaultHex, onChange, compact
         <span>{label}</span>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           {draft.toLowerCase() !== defaultHex.toLowerCase() && (
-            <button type="button" className="brand-accent-reset" onClick={() => setDraft(defaultHex)}>
+            <Acao className="brand-accent-reset" onClick={() => setDraft(defaultHex)}>
               Restaurar padrão
-            </button>
+            </Acao>
           )}
           {compact && (
-            <button type="button" className="brand-accent-reset" onClick={() => setExpanded(false)}>
+            <Acao className="brand-accent-reset" onClick={() => setExpanded(false)}>
               Fechar
-            </button>
+            </Acao>
           )}
         </div>
       </div>
@@ -134,9 +134,9 @@ export function AccentField({ label, bgHex, value, defaultHex, onChange, compact
           onChange={(e) => setDraft(e.target.value)}
           placeholder="#7A9E3F"
         />
-        <button type="button" className="brand-accent-preview" style={{ background: hex, color: vars.accentInk }} disabled>
+        <Acao className="brand-accent-preview" style={{ background: hex, color: vars.accentInk }} desativado>
           Aa
-        </button>
+        </Acao>
       </div>
 
       {!valid && <div className="brand-accent-warn">Use um hex válido, tipo #7A9E3F.</div>}
@@ -146,9 +146,9 @@ export function AccentField({ label, bgHex, value, defaultHex, onChange, compact
         </div>
       )}
 
-      <button type="button" className="btn btn-pri btn-sm brand-accent-apply" disabled={!valid || !dirty} onClick={aplicar}>
+      <Botao variante="principal" compacto className="brand-accent-apply" desativado={!valid || !dirty} onClick={aplicar}>
         {savedMsg ? <><Icon name="ok" size={14} /> Aplicado</> : "Aplicar"}
-      </button>
+      </Botao>
     </div>
   );
 }

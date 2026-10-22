@@ -14,6 +14,9 @@ import { Icon } from "../../lib/icons";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { codigoLegivel, entradaPath } from "../../../lib/service-entrada";
 
+import { Botao, botaoClasse } from "../../ui/Botao";
+import { Opcao } from "../../ui/Opcao";
+import { Linha } from "../../ui/Linha";
 type Regra = "aprovar" | "direto";
 const REGRAS: { id: Regra; t: string; s: string }[] = [
   { id: "aprovar", t: "A gestão aprova cada pessoa", s: "O pedido aparece no Início do painel. Você confere quem é e libera." },
@@ -105,9 +108,9 @@ export function EntradaConfig() {
             <span className="cfg-row-s">{`Para digitar: ${codigoLegivel(cfg.code)}`}</span>
           </div>
           <div className="entrada-acoes">
-            <button type="button" className="btn btn-sec btn-sm" onClick={() => copiar(url, "Link copiado")}><Icon name="copiar" size={13} /> Copiar link</button>
-            <a className="btn btn-ghost btn-sm" href={whats} target="_blank" rel="noopener noreferrer">Mandar no WhatsApp</a>
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => copiar(codigoLegivel(cfg.code), "Código copiado")}>Copiar código</button>
+            <Botao compacto onClick={() => copiar(url, "Link copiado")}><Icon name="copiar" size={13} /> Copiar link</Botao>
+            <a className={botaoClasse({ variante: "discreto", compacto: true })} href={whats} target="_blank" rel="noopener noreferrer">Mandar no WhatsApp</a>
+            <Botao variante="discreto" compacto onClick={() => copiar(codigoLegivel(cfg.code), "Código copiado")}>Copiar código</Botao>
           </div>
         </div>
         <div className="entrada-qr">
@@ -117,35 +120,35 @@ export function EntradaConfig() {
           <div>
             <div className="cfg-row-s">A câmera do celular abre o link direto.</div>
             <div className="entrada-acoes" style={{ marginTop: 8 }}>
-              <button type="button" className="btn btn-sec btn-sm" onClick={baixarQr}>Baixar QR</button>
-              {url && <a className="btn btn-ghost btn-sm" href={url} target="_blank" rel="noopener noreferrer">Ver a tela da pessoa</a>}
+              <Botao compacto onClick={baixarQr}>Baixar QR</Botao>
+              {url && <a className={botaoClasse({ variante: "discreto", compacto: true })} href={url} target="_blank" rel="noopener noreferrer">Ver a tela da pessoa</a>}
             </div>
           </div>
         </div>
-        <div className="cfg-row" style={{ borderBottom: "none", paddingBottom: 0 }}>
+        <Linha estilo="config" style={{ borderBottom: "none", paddingBottom: 0 }}>
           <div className="cfg-row-main">
             <div className="cfg-row-t">Gerar outro link</div>
             <div className="cfg-row-s">{trocando ? "O link, o código e o QR de agora param de funcionar na hora. Pedidos já feitos continuam na fila." : "Use se o link foi parar onde não devia."}</div>
           </div>
           {trocando ? (
             <div className="entrada-acoes">
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setTrocando(false)} disabled={salvando}>Manter o atual</button>
-              <button type="button" className="btn btn-sec btn-sm" onClick={gerarOutro} disabled={salvando}>{salvando ? "Gerando..." : "Gerar outro"}</button>
+              <Botao variante="discreto" compacto onClick={() => setTrocando(false)} desativado={salvando}>Manter o atual</Botao>
+              <Botao compacto onClick={gerarOutro} desativado={salvando}>{salvando ? "Gerando..." : "Gerar outro"}</Botao>
             </div>
           ) : (
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setTrocando(true)}>Gerar outro</button>
+            <Botao variante="discreto" compacto onClick={() => setTrocando(true)}>Gerar outro</Botao>
           )}
-        </div>
+        </Linha>
       </div>
       <div className="cfg-card" style={{ marginTop: 16 }}>
         <div className="cfg-card-t">Quem entra pelo link</div>
         <div className="cfg-card-s">Vale para os próximos pedidos. Convites que a liderança manda pessoa a pessoa continuam entrando direto.</div>
         <div className="opt-row entrada-regras" role="radiogroup" aria-label="Regra de entrada">
           {REGRAS.map((r) => (
-            <button key={r.id} type="button" role="radio" aria-checked={cfg.rule === r.id} className={`opt${cfg.rule === r.id ? " on" : ""}`} onClick={() => mudarRegra(r.id)}>
+            <Opcao key={r.id} role="radio" aria-checked={cfg.rule === r.id} marcada={cfg.rule === r.id} estilo="opt" onClick={() => mudarRegra(r.id)}>
               <div className="opt-t">{r.t}</div>
               <div className="opt-s">{r.s}</div>
-            </button>
+            </Opcao>
           ))}
         </div>
       </div>

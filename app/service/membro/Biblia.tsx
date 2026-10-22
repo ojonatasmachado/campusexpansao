@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Icon } from "../lib/icons";
 import type { BibleBook, BibleFlatVerse, BibleMark } from "./tipos";
 
+import { Botao, BotaoIcone } from "../ui/Botao";
+import { Acao } from "../ui/Acao";
+import { Opcao } from "../ui/Opcao";
 export let bibleCache: BibleBook[] | null = null;
 export let bibleCachePromise: Promise<BibleBook[]> | null = null;
 export function loadBible(): Promise<BibleBook[]> {
@@ -154,30 +157,30 @@ export function TabBiblia({
             <>
               <div className="m-section-t">{searchResults.length} {searchResults.length === 1 ? "resultado" : "resultados"}</div>
               {searchResults.map((r) => (
-                <button key={`${r.abbrev}${r.chapter}:${r.verse}`} className="bib-result" onClick={() => irPara(r.abbrev, r.chapter)}>
+                <Acao key={`${r.abbrev}${r.chapter}:${r.verse}`} className="bib-result" onClick={() => irPara(r.abbrev, r.chapter)}>
                   <b>{r.name} {r.chapter}:{r.verse}</b>
                   <small>{r.text}</small>
-                </button>
+                </Acao>
               ))}
               {searchResults.length === 0 && <div className="empty"><p className="empty-desc">Nada encontrado com esse termo.</p></div>}
             </>
           ) : (
             <>
-              <button className="bib-marks-cta" type="button" onClick={() => setView("marcacoes")}>
+              <Acao className="bib-marks-cta" onClick={() => setView("marcacoes")}>
                 <span className="bib-marks-cta-ic"><Icon name="estrela" size={16} /></span>
                 <div><b>Minhas marcações</b><small>{bibleMarks.length} {bibleMarks.length === 1 ? "versículo marcado ou anotado" : "versículos marcados ou anotados"}</small></div>
                 <span className="m-alert-go">→</span>
-              </button>
+              </Acao>
               <div className="m-section-t">Antigo Testamento</div>
               <div className="bib-books">
                 {bible.slice(0, 39).map((b) => (
-                  <button key={b.abbrev} className="bib-book" onClick={() => { setBookAbbrev(b.abbrev); setView("capitulos"); }}>{b.name}</button>
+                  <Acao key={b.abbrev} className="bib-book" onClick={() => { setBookAbbrev(b.abbrev); setView("capitulos"); }}>{b.name}</Acao>
                 ))}
               </div>
               <div className="m-section-t">Novo Testamento</div>
               <div className="bib-books">
                 {bible.slice(39).map((b) => (
-                  <button key={b.abbrev} className="bib-book" onClick={() => { setBookAbbrev(b.abbrev); setView("capitulos"); }}>{b.name}</button>
+                  <Acao key={b.abbrev} className="bib-book" onClick={() => { setBookAbbrev(b.abbrev); setView("capitulos"); }}>{b.name}</Acao>
                 ))}
               </div>
             </>
@@ -187,11 +190,11 @@ export function TabBiblia({
 
       {view === "capitulos" && book && (
         <>
-          <button className="back-link" type="button" onClick={() => setView("livros")}>← Livros</button>
+          <Botao tamanho="toque" variante="texto" onClick={() => setView("livros")}>← Livros</Botao>
           <div className="m-h1" style={{ fontSize: "var(--fs-app-20)", marginBottom: 14 }}>{book.name}</div>
           <div className="bib-chapters">
             {book.chapters.map((_, i) => (
-              <button key={i} className="bib-chapter" onClick={() => irPara(book.abbrev, i + 1)}>{i + 1}</button>
+              <Acao key={i} className="bib-chapter" onClick={() => irPara(book.abbrev, i + 1)}>{i + 1}</Acao>
             ))}
           </div>
         </>
@@ -199,18 +202,18 @@ export function TabBiblia({
 
       {view === "leitor" && book && chapter && versesAtuais && (
         <>
-          <button className="back-link" type="button" onClick={() => setView("capitulos")}>← Capitulos</button>
+          <Botao tamanho="toque" variante="texto" onClick={() => setView("capitulos")}>← Capitulos</Botao>
           <div className="bib-reader-head">
-            <button className="bib-chnav" disabled={chapter <= 1} onClick={() => irPara(book.abbrev, chapter - 1)}>‹</button>
+            <Acao className="bib-chnav" desativado={chapter <= 1} onClick={() => irPara(book.abbrev, chapter - 1)}>‹</Acao>
             <div className="m-h1" style={{ fontSize: "var(--fs-app-17)" }}>{book.name} {chapter}</div>
-            <button className="bib-chnav" disabled={chapter >= book.chapters.length} onClick={() => irPara(book.abbrev, chapter + 1)}>›</button>
+            <Acao className="bib-chnav" desativado={chapter >= book.chapters.length} onClick={() => irPara(book.abbrev, chapter + 1)}>›</Acao>
           </div>
           <div className="bib-verses">
             {versesAtuais.map((text, i) => {
               const v = i + 1;
               const mark = marksByRef.get(`${book.abbrev}:${chapter}:${v}`);
               return (
-                <button
+                <Acao
                   key={v}
                   className={`bib-verse${mark?.color ? ` tone-${mark.color}` : ""}${mark ? " marked" : ""}`}
                   onClick={() => abrirAcaoVerso(v)}
@@ -218,7 +221,7 @@ export function TabBiblia({
                   <span className="bib-verse-n">{v}</span>
                   <span className="bib-verse-t">{text}</span>
                   {mark?.note ? <span className="bib-verse-note-ic"><Icon name="documento" size={11} /></span> : null}
-                </button>
+                </Acao>
               );
             })}
           </div>
@@ -227,7 +230,7 @@ export function TabBiblia({
 
       {view === "marcacoes" && (
         <>
-          <button className="back-link" type="button" onClick={() => setView("livros")}>← Livros</button>
+          <Botao tamanho="toque" variante="texto" onClick={() => setView("livros")}>← Livros</Botao>
           <div className="m-h1" style={{ fontSize: "var(--fs-app-20)", marginBottom: 14 }}>Minhas marcações</div>
           {bibleMarks.length === 0 && <div className="empty"><p className="empty-desc">Toque num versículo na leitura pra marcar ou anotar.</p></div>}
           {bibleMarks
@@ -236,10 +239,10 @@ export function TabBiblia({
             .map((m) => {
               const nome = bible.find((b) => b.abbrev === m.book)?.name ?? m.book;
               return (
-                <button key={m.id} className={`bib-result${m.color ? ` tone-${m.color}` : ""}`} onClick={() => irPara(m.book, m.chapter)}>
+                <Acao key={m.id} className={`bib-result${m.color ? ` tone-${m.color}` : ""}`} onClick={() => irPara(m.book, m.chapter)}>
                   <b>{nome} {m.chapter}:{m.verse}</b>
                   {m.note ? <small>{m.note}</small> : null}
-                </button>
+                </Acao>
               );
             })}
         </>
@@ -250,21 +253,20 @@ export function TabBiblia({
           <div className="ob-card" onClick={(e) => e.stopPropagation()}>
             <div className="bib-action-ref">{book.name} {chapter}:{actionVerse}</div>
             <p className="bib-action-text">{versesAtuais?.[actionVerse - 1]}</p>
-            <button className="btn btn-sec btn-sm bib-copy" type="button" onClick={copiarVerso} style={{ marginTop: 10 }}>
+            <Botao compacto className="bib-copy" onClick={copiarVerso} style={{ marginTop: 10 }}>
               <Icon name="copiar" size={13} /> {copied ? "Copiado!" : "Copiar versículo"}
-            </button>
+            </Botao>
             <div className="bib-swatches">
               {BIBLE_CORES.map((c) => (
-                <button
+                <Opcao
                   key={c.key}
-                  type="button"
                   title={c.label}
-                  className={`bib-swatch tone-${c.key}${marcaAtual?.color === c.key ? " on" : ""}`}
+                  marcada={marcaAtual?.color === c.key} estilo="bib-swatch" className={`tone-${c.key}`}
                   onClick={() => escolherCor(c.key)}
                 />
               ))}
               {marcaAtual?.color && (
-                <button type="button" className="bib-swatch-clear" title="Remover cor" aria-label="Remover cor" onClick={() => escolherCor(null)}>✕</button>
+                <BotaoIcone className="bib-swatch-clear" title="Remover cor" rotulo="Remover cor" onClick={() => escolherCor(null)}>✕</BotaoIcone>
               )}
             </div>
             <div className="field" style={{ marginTop: 14 }}>
@@ -273,11 +275,11 @@ export function TabBiblia({
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
               {(marcaAtual?.color || marcaAtual?.note) && (
-                <button className="btn btn-sec btn-sm" type="button" onClick={removerMarcacao}>Remover marcação</button>
+                <Botao compacto onClick={removerMarcacao}>Remover marcação</Botao>
               )}
               <div style={{ flex: 1 }} />
-              <button className="btn btn-sec btn-sm" type="button" onClick={() => setActionVerse(null)}>Fechar</button>
-              <button className="btn btn-pri btn-sm" type="button" onClick={salvarNota}>Salvar</button>
+              <Botao compacto onClick={() => setActionVerse(null)}>Fechar</Botao>
+              <Botao variante="principal" compacto onClick={salvarNota}>Salvar</Botao>
             </div>
           </div>
         </div>

@@ -9,6 +9,8 @@ import { plural } from "../../lib/plural";
 import { limparCamadas, type ContextoMapa } from "./contexto";
 import { caixaDaGeometria, temPonto } from "./geo";
 
+import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 /* Ferramentas › Traçar rota (tela 12 do design). O objetivo vem primeiro e
    muda o que vira parada: na Visita, as pessoas (com nome no mapa); em
    oração, panfletagem e carro de som, lugares e ruas, nunca casas. */
@@ -154,7 +156,7 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
       <div className="mp-faixa" role="region" aria-label="Traçar rota">
         <strong>Traçar rota</strong>
         <span className="mp-texto">{objetivo === "visita" ? "Clique nas pessoas do mapa." : "Clique no mapa para marcar as paradas."}</span>
-        <button type="button" className="mp-botao" onClick={ctx.fechar}>Sair</button>
+        <Botao tamanho="mapa" onClick={ctx.fechar}>Sair</Botao>
       </div>
       <aside className="mp-painel mp-dir" aria-label="Rota" style={{ width: 400 }}>
         <div className="mp-cab">
@@ -162,7 +164,7 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
           <div className="field" style={{ marginTop: 10 }}>
             <span className="field-label">Objetivo</span>
             <div className="mp-seg" role="group" aria-label="Objetivo" style={{ ["--n" as string]: 3 } as React.CSSProperties}>
-              {OBJETIVOS.map((o) => <button key={o.id} type="button" aria-pressed={objetivo === o.id} onClick={() => { setObjetivo(o.id); setParadas((ps) => ps.slice(0, sede ? 1 : 0)); setAreaId(""); }}>{o.nome}</button>)}
+              {OBJETIVOS.map((o) => <Acao key={o.id} aria-pressed={objetivo === o.id} onClick={() => { setObjetivo(o.id); setParadas((ps) => ps.slice(0, sede ? 1 : 0)); setAreaId(""); }}>{o.nome}</Acao>)}
             </div>
           </div>
           <p className="mp-fraco" style={{ marginTop: 8 }}>{obj.dica}</p>
@@ -170,15 +172,15 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
         <div className="mp-corpo">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span className="mp-pergunta">Paradas <span className="mp-num mp-fraco">{paradas.length}</span></span>
-            <button type="button" className="btn btn-sec btn-sm" disabled={paradas.length < 3 || ocupado} onClick={organizar}>Organizar na melhor ordem</button>
+            <Botao compacto desativado={paradas.length < 3 || ocupado} onClick={organizar}>Organizar na melhor ordem</Botao>
           </div>
           {paradas.length === 0 && <p className="mp-fraco">Nenhuma parada ainda.</p>}
           {paradas.map((p, i) => (
             <div key={`${i}-${p.nome}`} className="mp-lista-pessoa">
               <span className="mp-av mp-num">{i + 1}</span>
               <span style={{ flex: 1, minWidth: 0 }}>{p.nome}<span className="mp-fraco" style={{ display: "block" }}>{p.tipo}</span></span>
-              {i > 0 && <button type="button" className="mp-fechar" aria-label={`Subir ${p.nome}`} onClick={() => subir(i)}><Icon name="voltar" size={14} /></button>}
-              <button type="button" className="mp-fechar" aria-label={`Tirar ${p.nome}`} onClick={() => tirar(i)}><Icon name="recusou" size={14} /></button>
+              {i > 0 && <BotaoIcone className="mp-fechar" rotulo={`Subir ${p.nome}`} onClick={() => subir(i)}><Icon name="voltar" size={14} /></BotaoIcone>}
+              <BotaoIcone className="mp-fechar" rotulo={`Tirar ${p.nome}`} onClick={() => tirar(i)}><Icon name="recusou" size={14} /></BotaoIcone>
             </div>
           ))}
           {objetivo !== "visita" && ctx.areas.length > 0 && (
@@ -194,8 +196,8 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
           <div className="field">
             <span className="field-label">Como</span>
             <div className="mp-seg" style={{ ["--n" as string]: 2 } as React.CSSProperties}>
-              <button type="button" aria-pressed={como === "pe"} onClick={() => setComo("pe")}>A pé</button>
-              <button type="button" aria-pressed={como === "carro"} onClick={() => setComo("carro")}>Carro</button>
+              <Acao aria-pressed={como === "pe"} onClick={() => setComo("pe")}>A pé</Acao>
+              <Acao aria-pressed={como === "carro"} onClick={() => setComo("carro")}>Carro</Acao>
             </div>
           </div>
           {res && <div className="mp-destaque" style={{ fontSize: "var(--fs-pn-14)" }}><span className="mp-num">{String(res.distancia_km).replace(".", ",")}</span> km · cerca de <span className="mp-num">{res.duracao_min >= 60 ? `${Math.floor(res.duracao_min / 60)}h${String(res.duracao_min % 60).padStart(2, "0")}` : `${res.duracao_min} min`}</span>{res.aproximado && <span className="mp-fraco" style={{ display: "block" }}>Conta aproximada, em linha reta.</span>}</div>}
@@ -209,10 +211,10 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
           </details>
         </div>
         <div className="mp-pe">
-          <button type="button" className="btn btn-pri" disabled={paradas.length < 2 || ocupado || !equipe.length} onClick={() => salvar(true)}>Enviar para a equipe</button>
+          <Botao variante="principal" desativado={paradas.length < 2 || ocupado || !equipe.length} onClick={() => salvar(true)}>Enviar para a equipe</Botao>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
-            <a className={`btn btn-sec btn-sm${paradas.length < 2 ? " disabled" : ""}`} href={paradas.length >= 2 ? linkMapas(paradas.map((p) => p.lnglat), como) : undefined} target="_blank" rel="noreferrer" aria-disabled={paradas.length < 2}>Abrir no app de mapas</a>
-            <button type="button" className="btn btn-sec btn-sm" disabled={paradas.length < 2 || ocupado} onClick={() => salvar(false)}>Salvar rota</button>
+            <a className={`${botaoClasse({ compacto: true })}${paradas.length < 2 ? " disabled" : ""}`} href={paradas.length >= 2 ? linkMapas(paradas.map((p) => p.lnglat), como) : undefined} target="_blank" rel="noreferrer" aria-disabled={paradas.length < 2}>Abrir no app de mapas</a>
+            <Botao compacto desativado={paradas.length < 2 || ocupado} onClick={() => salvar(false)}>Salvar rota</Botao>
           </div>
         </div>
       </aside>

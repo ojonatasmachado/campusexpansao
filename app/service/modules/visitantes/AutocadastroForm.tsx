@@ -5,6 +5,8 @@ import AuthShell from "../../AuthShell";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { COMO_CONHECEU, digitosTelefone, mascaraTelefone } from "./autocadastro";
 
+import { Botao } from "../../ui/Botao";
+import { Opcao } from "../../ui/Opcao";
 type Campo = "nome" | "tel" | "email" | "consent";
 type Erros = Partial<Record<Campo, string>>;
 
@@ -230,9 +232,9 @@ export default function AutocadastroForm({
             {interesses.map((o) => {
               const on = marcados.includes(o.v);
               return (
-                <button key={o.v} type="button" className={`chip-toggle vis-chip${on ? " on" : ""}`} aria-pressed={on} onClick={() => toggle(o.v)}>
+                <Opcao key={o.v} marcada={on} estilo="chip-toggle" className="vis-chip" aria-pressed={on} onClick={() => toggle(o.v)}>
                   {o.l}
-                </button>
+                </Opcao>
               );
             })}
           </div>
@@ -255,9 +257,9 @@ export default function AutocadastroForm({
           </div>
         ) : null}
 
-        <button className="login-btn vis-send" type="submit" disabled={enviando}>
+        <Botao tamanho="entrada" variante="principal" className="vis-send" type="submit" desativado={enviando}>
           {enviando ? "Enviando..." : "Enviar meu contato"}
-        </button>
+        </Botao>
       </form>
     </AuthShell>
   );

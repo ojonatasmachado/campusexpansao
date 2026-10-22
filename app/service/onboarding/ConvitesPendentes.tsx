@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 
+import { Botao } from "../ui/Botao";
 /* Conta que já existia e foi convidada por uma igreja entra como 'invited':
    a pessoa confirma aqui antes de fazer parte (core.accept_membership, 0043).
    Lógica igual à anterior; markup nas classes .login-* (service-v5.css). */
@@ -47,12 +48,12 @@ export default function ConvitesPendentes({ invites }: { invites: { organization
         <div key={inv.organizationId} className="login-invite">
           <b>{inv.churchName}</b>
           <span className="login-invite-actions">
-            <button className="btn btn-sec btn-sm" type="button" disabled={loadingId !== null} onClick={() => recusar(inv.organizationId)}>
+            <Botao compacto desativado={loadingId !== null} onClick={() => recusar(inv.organizationId)}>
               Recusar
-            </button>
-            <button className="btn btn-pri btn-sm" type="button" disabled={loadingId !== null} onClick={() => aceitar(inv.organizationId)}>
+            </Botao>
+            <Botao variante="principal" compacto desativado={loadingId !== null} onClick={() => aceitar(inv.organizationId)}>
               {loadingId === inv.organizationId ? "Aguarde..." : "Aceitar convite"}
-            </button>
+            </Botao>
           </span>
         </div>
       ))}

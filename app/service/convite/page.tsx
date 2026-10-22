@@ -8,6 +8,7 @@ import { getAuthChurchBySlug } from "../lib/auth-church";
 import AuthShell from "../AuthShell";
 import ConviteForm from "./ConviteForm";
 
+import { botaoClasse } from "../ui/Botao";
 export const dynamic = "force-dynamic";
 
 /* Link do convite (WhatsApp do líder): a pessoa informa e-mail, senha e endereço
@@ -67,7 +68,7 @@ export default async function ServiceConvitePage({ searchParams }: { searchParam
           title="Este convite não vale mais"
           subtitle="O link já foi usado ou passou do prazo de 7 dias. Peça um novo ao líder da sua igreja. Se você já criou seu acesso, é só entrar."
         >
-          <Link href={loginHref} className="login-btn">
+          <Link href={loginHref} className={botaoClasse({ tamanho: "entrada", variante: "principal" })}>
             Entrar no app →
           </Link>
         </AuthShell>

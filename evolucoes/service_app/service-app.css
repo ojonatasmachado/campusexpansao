@@ -148,8 +148,6 @@ em { font-style:italic; }
 @media (hover:hover) and (pointer:fine) { .btn-pri:hover { background:color-mix(in srgb, var(--accent-fill) 88%, var(--accent-ink)); } }
 .btn-sec { background:transparent; color:var(--white); border-color:var(--border-2); }
 @media (hover:hover) and (pointer:fine) { .btn-sec:hover { border-color:var(--olive); color:var(--olive); } }
-.btn-ghost { background:transparent; color:var(--muted); }
-@media (hover:hover) and (pointer:fine) { .btn-ghost:hover { color:var(--white); } }
 .btn-danger { background:var(--danger-dim); color:var(--danger); border-color:var(--danger-line); }
 @media (hover:hover) and (pointer:fine) { .btn-danger:hover { background:var(--danger); color:var(--danger-ink, var(--ink)); } }
 .btn-sm { font-size:var(--fs-ui-13); min-height:32px; padding:4px 12px; gap:6px; }
@@ -483,12 +481,6 @@ em { font-style:italic; }
 .m-fn b { color:var(--light); font-weight:600; }
 .m-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .m-actions.three { grid-template-columns:1fr 1fr 1fr; }
-.m-btn { padding:11px; border-radius:var(--r-ctl); font-size:var(--fs-app-13); font-weight:600; border:1px solid transparent; transition:color .14s ease,background-color .14s ease,border-color .14s ease,box-shadow .14s ease,opacity .14s ease,transform .14s var(--ease-out); text-align:center; }
-.m-btn-ok { background:var(--accent-fill); color:var(--accent-ink); }
-.m-btn-ok.ghost { background:var(--olive-dim); color:var(--olive); border-color:var(--olive-line); }
-.m-btn-no { background:transparent; color:var(--danger); border-color:var(--danger-line); }
-.m-btn-swap { background:transparent; color:var(--muted); border-color:var(--border-2); }
-@media (hover:hover) and (pointer:fine) { .m-btn-swap:hover { color:var(--white); } }
 .m-confirmed { display:flex; align-items:center; gap:8px; font-size:var(--fs-app-13); color:var(--olive-soft); font-weight:600; padding:8px 0; }
 .m-tab { display:flex; border-top:0.5px solid var(--border); background:var(--graphite-2); }
 .m-tab button { flex:1; padding:11px 4px 16px; background:transparent; border:none; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:4px; font-size:var(--fs-app-13); letter-spacing:0.04em; }
@@ -748,8 +740,6 @@ body[data-theme="light"] .av { box-shadow:none; }
 .cb-card-meta { font-family:var(--sans); font-size:var(--fs-pn-12); color:var(--muted); margin-top:4px; }
 .cb-req { font-size:var(--fs-pn-12); color:var(--amber); margin-top:7px; line-height:1.4; }
 .cb-card-go { color:var(--muted); font-size:var(--fs-pn-13); padding:12px 12px 0 0; }
-.cb-add { background:transparent; border:1px dashed var(--border-3); color:var(--muted); border-radius:var(--r-md); padding:11px; font-size:var(--fs-pn-12); font-family:var(--sans); letter-spacing:0; transition:color .14s ease,background-color .14s ease,border-color .14s ease,box-shadow .14s ease,opacity .14s ease,transform .14s var(--ease-out); }
-@media (hover:hover) and (pointer:fine) { .cb-add:hover { border-color:var(--olive-line); color:var(--olive); } }
 
 /* seletor visual de ícones */
 .icon-pick { display:grid; grid-template-columns:repeat(8,1fr); gap:6px; }
@@ -937,6 +927,7 @@ body[data-theme="light"] .av { box-shadow:none; }
 @media (hover:hover) and (pointer:fine) { .img-up-slot:hover { border-color:var(--olive-line); } }
 .img-up-plus { font-size:var(--fs-pn-20); color:var(--muted); font-weight:300; }
 .img-up-main { flex:1; min-width:0; }
+/* .btn-ghost: definição única (antes havia outra perto de .btn-pri, sempre vencida por esta) */
 .btn-ghost { background:transparent; border:0.5px solid var(--border-2); color:var(--muted); }
 @media (hover:hover) and (pointer:fine) { .btn-ghost:hover { color:var(--danger); border-color:var(--danger-line); } }
 
@@ -1040,8 +1031,6 @@ body[data-theme="light"] .av { box-shadow:none; }
 .bd-desc { font-size:var(--fs-pn-13); color:var(--muted); line-height:1.5; margin-top:6px; min-height:38px; }
 .bd-foot { display:flex; align-items:center; justify-content:space-between; margin-top:8px; padding-top:14px; border-top:0.5px solid var(--border); }
 
-.back-link { background:none; border:none; font-family:var(--sans); font-size:var(--fs-ui-sm); letter-spacing:0; color:var(--muted); padding:0; }
-@media (hover:hover) and (pointer:fine) { .back-link:hover { color:var(--olive); } }
 
 .kb-board { display:flex; gap:14px; overflow-x:auto; padding-bottom:8px; align-items:flex-start; }
 .kb-col { flex:1; min-width:248px; background:var(--ink); border:0.5px solid var(--border); border-radius:var(--r-lg); padding:12px; transition:border-color .14s; }
@@ -1423,10 +1412,6 @@ image-slot { display:block; width:100%; height:100%; }
 .field-error { font-size:var(--fs-pn-12); color:var(--danger); margin-top:6px; }
 .banner { padding:16px 20px; border-radius:var(--r-md); }
 .banner.banner-soft { background:var(--olive-dim); color:var(--olive); border:0.5px solid var(--olive-line); }
-.btn-primary { background:var(--accent-fill); color:var(--accent-ink); border-color:var(--accent-fill); }
-@media (hover:hover) and (pointer:fine) { .btn-primary:hover { background:color-mix(in srgb, var(--accent-fill) 88%, var(--accent-ink)); } }
-.btn-secondary { background:transparent; color:var(--white); border-color:var(--border-2); }
-@media (hover:hover) and (pointer:fine) { .btn-secondary:hover { border-color:var(--olive); color:var(--olive); } }
 .segmented { display:inline-flex; background:var(--ink); border:0.5px solid var(--border-2); border-radius:var(--r-sm); padding:3px; gap:3px; }
 .segmented button { font-family:var(--sans); font-size:var(--fs-pn-12); letter-spacing:0; color:var(--muted); padding:7px 14px; border-radius:5px; transition:color .15s ease,background-color .15s ease,border-color .15s ease,box-shadow .15s ease,opacity .15s ease,transform .15s var(--ease-out); }
 .segmented button.active { background:var(--accent-fill); color:var(--accent-ink); }
@@ -2133,8 +2118,6 @@ image-slot { display:block; width:100%; height:100%; }
 .coach-pop-t { font-size: var(--fs-pn-16); font-weight: 700; letter-spacing: -0.015em; color: var(--white); margin-bottom: 6px; }
 .coach-pop-s { font-size: var(--fs-pn-13); line-height: 1.55; color: var(--muted); }
 .coach-pop-actions { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
-.coach-skip { background: transparent; border: none; color:var(--muted); font-size: var(--fs-pn-13); cursor: pointer; padding: 8px 2px; transition: color .14s; }
-@media (hover:hover) and (pointer:fine) { .coach-skip:hover { color: var(--muted); } }
 
 /* ── SETUP CHECKLIST · jornada de configuração inicial (painel) ──── */
 .setup-card { background: var(--graphite); border: 0.5px solid var(--olive-line); border-radius: var(--r-lg); padding: 20px 22px; margin-bottom: 24px; }
@@ -3089,8 +3072,7 @@ body[data-theme="light"] .sw:not(.on){background:#CBCBCB}
 .panel-link{display:inline-flex}
 .esc-col-edit,.painel-qr,.mx-cell{width:32px;height:32px}
 /* app do membro: 44px */
-.back-link{display:inline-flex;align-items:center;min-height:44px}
-.bib-book,.bib-verse,.bib-result,.m-btn{min-height:44px}
+.bib-book,.bib-verse,.bib-result{min-height:44px}
 .bib-chnav{width:44px;height:44px}
 .bib-swatches{gap:2px}
 .bib-swatch{width:44px;height:44px;padding:6px;background-clip:content-box}
@@ -3254,7 +3236,7 @@ body:has(.coach-layer) .pwa-banner{display:none}
 /* ════════ Movimento (skills de Emil Kowalski: improve/review-animations) ════════ */
 
 /* toque: o botão responde na hora em que é apertado (0,97, ease-out forte) */
-.btn:active:not(:disabled),.m-btn:active:not(:disabled){transform:scale(.97)}
+.btn:active:not(:disabled){transform:scale(.97)}
 .m6-btn{transition:transform .16s var(--ease-out),background-color .16s ease,border-color .16s ease}
 .m6-btn:active:not(:disabled){transform:scale(.97)}
 
@@ -3282,7 +3264,7 @@ body:has(.coach-layer) .pwa-banner{display:none}
   .login-card.shake{animation:none}
   .sb{transition:opacity .2s ease}
   .toast,.toast.in{transform:none}
-  .btn:active:not(:disabled),.m-btn:active:not(:disabled),.m6-btn:active:not(:disabled),.kb-card:active{transform:none}
+  .btn:active:not(:disabled),.m6-btn:active:not(:disabled),.kb-card:active{transform:none}
   .coach-spot,.coach-pop{transition:opacity .2s ease}
   @media (hover:hover) and (pointer:fine) { .mob-launch:hover,.swatch:hover,.bib-swatch:hover,.color-wheel-gray-cell:hover {transform:none} }
 }

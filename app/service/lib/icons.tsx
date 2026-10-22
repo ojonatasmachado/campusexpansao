@@ -7,6 +7,8 @@
 
 import { useMemo, useState } from "react";
 
+import { Acao } from "../ui/Acao";
+import { Opcao } from "../ui/Opcao";
 export type IconName = string;
 
 export const ICON_PATHS: Record<string, string> = {
@@ -177,11 +179,11 @@ export function IconPicker({ value, onChange }: { value: string; onChange: (name
 
   return (
     <div className="icon-picker">
-      <button type="button" className="icon-picker-trigger" onClick={() => setOpen((o) => !o)}>
+      <Acao className="icon-picker-trigger" onClick={() => setOpen((o) => !o)}>
         <Icon name={value || DEFAULT_ICON} size={20} />
         <span>{value && ICON_PATHS[value] ? value : "Escolher ícone"}</span>
         <span className="icon-picker-trigger-x">{open ? "Fechar" : "Trocar"} <Caret open={open} /></span>
-      </button>
+      </Acao>
       {open && (
         <div className="icon-picker-panel">
           <input
@@ -197,15 +199,14 @@ export function IconPicker({ value, onChange }: { value: string; onChange: (name
                 <div className="icon-picker-group-t">{group.label}</div>
                 <div className="icon-picker-grid">
                   {group.icons.map((name) => (
-                    <button
+                    <Opcao
                       key={name}
-                      type="button"
-                      className={`icon-picker-opt${value === name ? " on" : ""}`}
+                      marcada={value === name} estilo="icon-picker-opt"
                       title={name}
                       onClick={() => { onChange(name); setOpen(false); setQ(""); }}
                     >
                       <Icon name={name} size={19} />
-                    </button>
+                    </Opcao>
                   ))}
                 </div>
               </div>
