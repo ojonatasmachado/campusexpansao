@@ -16,6 +16,9 @@ Fonte: PROGRESSO.md:11; DEPLOY.md:98; REVISAO-DESIGN.md.
 
 ## Arquivos (trilho)
 - `scripts/lei12-base.json`
+- `app/service/painel/comum.tsx`
+- `app/service/layout.tsx`
+- `app/service/painel/telas/Config.tsx`
 
 ## Pronto quando
 - Emoji e hex fixos zerados.
