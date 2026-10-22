@@ -2,8 +2,9 @@
 
 ## Última entrega e publicação
 
-Cadastro da primeira igreja: `dfadcb4095b149f49e0b8c20e8328ab61e4c6992`. Código em main e fix/service-fuso-20261021. CI `39706851217` e `39706851463`: success. Prévia `dpl_5vNXbrzDFKMP3CAgac8duYVzpgh8`: READY. Como o push gerou só prévia, foi solicitado redeploy do mesmo commit com target production: `dpl_GREw2iPqz5qJPdUUJ75TtXHmG4uo`. Estado de produção confirmado: READY, com campusexpansao.com.br e www.campusexpansao.com.br associados.
+Acessos do painel: `68d7ef88d27041bc921bcebd373df9f1cdcc8161`, enviado a main e fix/service-fuso-20261021. Service CI `39708967188` e `39708967470`: success. Workflow Produção `39708967230`: success (migrações e pedido de deploy). Deploy de produção `dpl_FwraWtpQ1V6QBsPmHNofa7LB5BQa`: READY, com campusexpansao.com.br e www associados. Base integrada: `9fc6b50`, com banco antes de código pelo workflow. Nenhuma migração nova nesta correção.
 
+Entrega anterior: cadastro da primeira igreja `dfadcb4`, CI success e produção `dpl_GREw2iPqz5qJPdUUJ75TtXHmG4uo` READY.
 Worktree `/tmp/cex-fuso-release-20261021`, branch `fix/service-fuso-20261021`. Workspace principal preservado. Base integrada antes das entregas: `ea8b7a0` (mapa e atualização do app instalado).
 
 ## Entregas desta retomada
@@ -45,12 +46,16 @@ Navegador integrado falhou com `missing field sandboxPolicy`; fallback foi Chrom
 
 `git status --short`, `git fetch origin`, comparar origin/main antes de editar. `npx tsc --noEmit`; `npx eslint <componente>`; `npx tsx scripts/check-service-lei12.ts`; `npx tsx scripts/check-theme-contrast.ts`. Contratos em .github/workflows/service.yml. Build local usa variáveis fictícias do CI; dependências precisam estar no próprio worktree (Turbopack rejeita symlink externo). Não incluir alterações do workspace principal.
 
-Fechamento: quatro entregas de código publicadas, todos os CI listados em success e produção final READY. Este registro e a nova evidência de igreja vazia são atualização documental posterior ao último commit de código; não mudam comportamento de produção.
+Fechamento da rodada anterior: quatro entregas de código publicadas, todos os CI listados em success e produção final READY. Este registro e a nova evidência de igreja vazia são atualização documental posterior ao último commit de código; não mudam comportamento de produção.
 
 ## Continuação: acessos e módulos
 
-Correção preparada: guard de rota para todos os papéis, atalhos do Início/ajuda filtrados, linha painel da matriz respeitada e gestão somente com uma tela disponível. Novo contrato panel-access no CI. Typecheck, lint sem erros, Lei 12, contraste, 13 contratos e build aprovados. Conta local de liderança e fixtures de restrição inspecionadas; demo e launcher temporários restaurados. Commit, CI e deploy desta entrega ainda pendentes.
+Correção preparada: guard de rota para todos os papéis, atalhos do Início/ajuda filtrados, linha painel da matriz respeitada e gestão somente com uma tela disponível. Novo contrato panel-access no CI. Typecheck, lint sem erros, Lei 12, contraste, 13 contratos e build aprovados. Conta local de liderança e fixtures de restrição inspecionadas; demo e launcher temporários restaurados. Commit, CI e deploy READY registrados no topo.
 
 Atenção ao teste local legado check-local-rls: tem reset destrutivo de requisitos/pedidos das fixtures e contrato de Quero servir desatualizado. Falhou; não usar como aprovação. Cursos/requisitos criados foram removidos por ID, sem snapshot dos requisitos anteriores. Detalhes em implementacao/acessos.
 
 Antes do envio, integrada origin/main `9fc6b50` (PR #9): workflow Produção aplica migrações antes de pedir deploy; main automático na Vercel está desligado. Seguir esse fluxo, sem redeploy manual que pule a etapa de banco.
+
+## Próxima investigação
+
+Revisar as pendências do Início que executam ações sem navegar (aprovar caminhada, cuidado e respostas), por módulo/papel e dependência. A correção atual cobre destinos de navegação e montagem de telas; não amplia permissões do banco nem certifica toda ação de cada módulo. Também continua pendente modernizar o teste local legado com isolamento e restauração antes de voltar a executá-lo.

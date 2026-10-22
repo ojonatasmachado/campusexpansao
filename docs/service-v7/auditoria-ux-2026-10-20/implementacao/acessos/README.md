@@ -17,3 +17,5 @@ Autenticação real local com lider@teste.local: entrou com a conta existente, a
 Cenários adicionais são fixtures da demo: líder com escala negada fica sem Montar escala/Escalar; master com escalas desligado ou times desligado também não recebe entrada/atalho de escala; membro com personGrant de visitantes recebe apenas Visitantes; pastor com Início negado recebe explicação e saída válida. Rota indisponível não monta o componente e retorno reabre uma área liberada. Capturas do estado em 320/390/1280, claro/escuro, sem overflow.
 
 Para exercitar o estado de rota antiga houve um botão temporário de auditoria chamando a rota explicitamente. O botão e as alterações da demo foram removidos antes do commit. As fixtures não comprovam políticas do banco ou atualização em tempo real de permissões. O script legado falho não foi repetido nem contado como aprovação. Safari/PWA físico e leitor de tela continuam pendentes.
+
+Código enviado em `68d7ef8`. CI Service `39708967188` e `39708967470`: success; Produção `39708967230`: success. Base integrada `9fc6b50`; produção `dpl_FwraWtpQ1V6QBsPmHNofa7LB5BQa` confirmada READY pelo fluxo de banco antes do código.
