@@ -37,7 +37,7 @@ const branches = sh("git branch -r --list 'origin/historia/*'").split("\n").map(
 const reservadas = new Map<string, Historia & { branch: string }>();
 for (const b of branches) {
   const id = b.replace("origin/historia/", "").split("-")[0];
-  const arq = locais.find((h) => h.id === id);
+  const arq = locais.find((h) => h.id === id) ?? null;
   let h: Historia | null = arq;
   try {
     const nome = sh(`git ls-tree --name-only ${b} ${PASTA}/`).split("\n").find((f) => f.split("/").pop()!.startsWith(`${id}-`));
