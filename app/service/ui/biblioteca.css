@@ -418,3 +418,6 @@ body:has(.m-tab) .toast-acao { min-height: 44px; }
   .abas-indicador, .barra-salvar, .toast, .toast.in, .toast.out { transition: none; }
 }
 .galeria-folha-t { margin: 0 0 6px; font-size: 20px; font-weight: 800; }
+/* com a barra de salvar à vista, o aviso sobe acima dela */
+body:has(.barra-salvar.on) .toast-host { bottom: calc(96px + var(--safe-bottom)); transition: bottom .5s var(--ease-drawer); }
+body:has(.m-tab):has(.barra-salvar.on) .toast-host { bottom: calc(156px + var(--safe-bottom)); }
