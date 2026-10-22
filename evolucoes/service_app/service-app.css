@@ -4070,3 +4070,10 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 @media (max-width: 860px), (pointer: coarse) {
   .app .sb-mais-grupo > summary { min-height: 44px; }
 }
+
+/* Mural: conteúdo e público primeiro, recursos opcionais por expansão. */
+.mural-opcoes > summary { cursor: pointer; min-height: 44px; padding: 10px 0; margin: 0; }
+.mural-opcoes[open] > summary { margin-bottom: 12px; }
+.mural-revisao-publico { font-size: var(--fs-pn-16); }
+.mural-revisao-titulo { font-size: var(--fs-pn-20); overflow-wrap: anywhere; }
+.mural-revisao-texto { white-space: pre-wrap; overflow-wrap: anywhere; }

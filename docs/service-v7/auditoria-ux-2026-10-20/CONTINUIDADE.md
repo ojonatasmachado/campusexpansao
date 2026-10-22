@@ -12,8 +12,10 @@ Publicação confirmada: `00e03a3c680fe7a65d9678ab62359341e41a0b73`, enviado a m
 
 ## Próximo problema
 
-J15 implementado: Mais preserva os seis grupos de NAV_GROUPS, com expansão nativa exclusiva, rota ativa e filtros existentes. Typecheck, lint sem erros, Lei 12, contraste, 12 contratos e build passaram. Matriz 320/390/1280/1600 claro/escuro e Enter/rota Secretaria verificados. Publicação pendente do commit desta entrega. Próximo: compositor do Mural, primeiro acesso do pastor e do membro, arquitetura interna da Caminhada.
+J15 implementado: Mais preserva os seis grupos de NAV_GROUPS, com expansão nativa exclusiva, rota ativa e filtros existentes. Typecheck, lint sem erros, Lei 12, contraste, 12 contratos e build passaram. Matriz 320/390/1280/1600 claro/escuro e Enter/rota Secretaria verificados. Publicado: `0c703c1e0dc81f958d1b1e21adab7e7a7557c70e`, CI `39705617034` e `39705617291` success; produção `dpl_A2khtKaab1MVsahmm3iq4qU9kgq9` READY. Próximo: compositor do Mural, primeiro acesso do pastor e do membro, arquitetura interna da Caminhada.
 
 ## Limitações
 
 Navegador integrado falha ao conectar por `missing field sandboxPolicy`; fallback Chromium/CDP local. Safari/PWA em aparelho real e teclado não verificados. Demo sintética não valida APIs ou permissões no banco. Workspace principal permanece intocado, com alterações concorrentes. Sem decisão arquitetural ampla aplicada nesta entrega.
+
+Mural em andamento: compositor com público explícito, opções progressivas e revisão antes de publicação/agendamento. Preservar minutos do horário agendado (campo time). Typecheck/lint e contratos iniciais passaram; nova validação após ajuste de minutos em curso. Matriz e build concluídos: público explícito obrigatório; voltar preserva dados; agendamento preserva 22:22; rascunho com público removido fica bloqueado. Sem gravação/envio real nos testes. Publicação desta entrega será registrada após envio.

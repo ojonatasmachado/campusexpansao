@@ -1,0 +1,27 @@
+{
+  "before": {
+    "time": "22:22",
+    "date": "2026-10-23",
+    "fields": [
+      {
+        "type": "text",
+        "size": "17px"
+      },
+      {
+        "type": "date",
+        "size": "17px"
+      },
+      {
+        "type": "time",
+        "size": "17px"
+      }
+    ],
+    "open": [
+      "Publicação agendada"
+    ]
+  },
+  "after": {
+    "summary": "MURAL\nRevisar publicação\nConfira quem recebe\n\nTodos · 4 pessoas\n\nVai ao ar em 23/10 às 22:22.\n\nNotificação pelo app, respeitando preferências e horário de silêncio.\n\nAviso\nCeia no próximo domingo\n\nVenha preparado. Teremos ceia no culto da noite.\n\nVoltar à edição\nAgendar",
+    "overflow": false
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "results": [
+    {
+      "empty": {
+        "audience": "",
+        "disabled": true,
+        "advancedOpen": 0
+      }
+    },
+    {
+      "titleOnlyStillBlocked": true
+    },
+    {
+      "width": 320,
+      "theme": "dark",
+      "stage": "edit",
+      "overflow": false,
+      "smallFields": 0,
+      "selectedAudience": "Time Louvor · 2 pessoas",
+      "advancedOpen": 0
+    },
+    {
+      "width": 320,
+      "theme": "light",
+      "stage": "edit",
+      "overflow": false,
+      "smallFields": 0,
+      "selectedAudience": "Time Louvor · 2 pessoas",
+      "advancedOpen": 0
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "stage": "edit",
+      "overflow": false,
+      "smallFields": 0,
+      "selectedAudience": "Time Louvor · 2 pessoas",
+      "advancedOpen": 0
+    },
+    {
+      "width": 390,
+      "theme": "light",
+      "stage": "edit",
+      "overflow": false,
+      "smallFields": 0,
+      "selectedAudience": "Time Louvor · 2 pessoas",
+      "advancedOpen": 0
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "stage": "edit",
+      "overflow": false,
+      "smallFields": 3,
+      "selectedAudience": "Time Louvor · 2 pessoas",
+      "advancedOpen": 0
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "stage": "edit",
+      "overflow": false,
+      "smallFields": 3,
+      "selectedAudience": "Time Louvor · 2 pessoas",
+      "advancedOpen": 0
+    },
+    {
+      "width": 1600,
+      "theme": "dark",
+      "stage": "edit",
+      "overflow": false,
+      "smallFields": 3,
+      "selectedAudience": "Time Louvor · 2 pessoas",
+      "advancedOpen": 0
+    },
+    {
+      "width": 1600,
+      "theme": "light",
+      "stage": "edit",
+      "overflow": false,
+      "smallFields": 3,
+      "selectedAudience": "Time Louvor · 2 pessoas",
+      "advancedOpen": 0
+    },
+    {
+      "review": "MURAL\nRevisar publicação\nVoltar à edição\nPublicar\nConfira quem recebe\n\nTime Louvor · 2 pessoas\n\nEntra no Mural assim que você publicar.\n\nNotificação pelo app, respeitando preferências e horário de silêncio.\n\nAviso\nEncontro de formação e acolhimento para toda a equipe da comunidade\n\nConfira o local e o horário antes de sair.\nMensagem longa para testar leitura, quebra de linhas e retorno à edição. Mensagem longa para testar leitura, quebra de linhas e retorno à edição. Mensagem longa para testar leitura, quebra de linhas e retorno à edição. Mensagem longa para testar leitura, quebra de linhas e ",
+      "focus": "Resumo da publicação",
+      "draftVisible": false
+    },
+    {
+      "width": 320,
+      "theme": "dark",
+      "stage": "review",
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "theme": "light",
+      "stage": "review",
+      "overflow": false
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "stage": "review",
+      "overflow": false
+    },
+    {
+      "width": 390,
+      "theme": "light",
+      "stage": "review",
+      "overflow": false
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "stage": "review",
+      "overflow": false
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "stage": "review",
+      "overflow": false
+    },
+    {
+      "restoredTitle": "Encontro de formação e acolhimento para toda a equipe da comunidade",
+      "restoredAudience": "Time Louvor · 2 pessoas",
+      "focus": "SELECT"
+    }
+  ],
+  "writes": [],
+  "errors": []
+}
