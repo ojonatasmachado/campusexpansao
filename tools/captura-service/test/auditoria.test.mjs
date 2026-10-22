@@ -1,0 +1,23 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { chromium } from 'playwright';
+import { auditar } from '../lib/auditoria.mjs';
+import { avaliar } from '../lib/leis.mjs';
+test('mede DOM real e rejeita alvo, fonte, contraste, rolagem e densidade', async () => {
+  const browser = await chromium.launch();
+  try {
+    const context = await browser.newContext({ viewport: { width: 1366, height: 860 } });
+    const page = await context.newPage();
+    await page.setContent('<style>:root{--olive:rgb(0,0,0)}body{background:white;color:black;font:14px Arial}button{width:44px;height:44px;background:white;color:black}</style><main><p>Texto legível</p><button>OK</button></main>');
+    const boa = await auditar(page);
+    assert.deepEqual(avaliar(boa), []);
+    await page.setContent('<style>:root{--olive:rgb(0,0,0)}body{font:8px Arial;background:white;color:#ddd}button{width:10px;height:10px;padding:0;background:white;color:#ddd}.longo{width:1800px}</style><main><p class="longo">Texto ilegível e rolagem lateral</p>' + '<button>X</button>'.repeat(26) + '</main>');
+    const ruim = await auditar(page);
+    assert.ok(ruim.alvos_menores_que_24px > 0);
+    assert.ok(ruim.textos_menores_que_12px > 0);
+    assert.equal(ruim.rolagem_lateral, true);
+    assert.ok(ruim.axe.contraste_nos_total > 0);
+    assert.ok(ruim.densidade.acoes > 25);
+    assert.ok(avaliar(ruim).length >= 5);
+  } finally { await browser.close(); }
+});

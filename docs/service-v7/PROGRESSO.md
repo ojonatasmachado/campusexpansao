@@ -181,3 +181,6 @@ Base lida: `ServiceExactApp.tsx` (painel, 11 mil linhas: `NAV_GROUPS` l.843, `CF
 ## Captura por etapa
 | etapa | pasta | critérios que passaram | que não passaram |
 |---|---|---|---|
+
+| Q1 · entrada, 2026-10-22 | `prints/q1-entrada/` | 12 estados com screenshot, texto e auditoria; saída 1 diante de violações | 8 estados falham por alvo menor que 24px e/ou sobreposição; sem correções de tela nesta história |
+| Q1 · tamanho, 2026-10-22 | `prints/q1-m10/` | M10 autenticada, 7 posições verificadas pelo slider; 9 prints | densidade/sobreposição na execução inicial; medidor de janela corrigido depois, exige recaptura |

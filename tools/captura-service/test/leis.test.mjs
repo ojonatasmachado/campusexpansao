@@ -1,0 +1,10 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { avaliar } from '../lib/leis.mjs';
+const boa = () => ({ textos_menores_que_12px: 0, textos_menores_que_13px: 0, alvos_menores_que_24px: 0, rolagem_lateral: false, erros_console: [], requisicoes_com_falha: [], axe: { contraste_nos_total: 0 }, densidade: { acoes: 3, palavrasNaDobra: 20, botoesCheiosCor: 1, molduraMaxAninhada: 2, nSobre: 0 } });
+test('tela válida passa nos dois lugares', () => { assert.deepEqual(avaliar(boa()), []); assert.deepEqual(avaliar(boa(), null, true), []); });
+test('ausência de medição e axe falha', () => assert.ok(avaliar({}).length >= 5));
+for (const [campo, valor] of Object.entries({ textos_menores_que_12px: 1, alvos_menores_que_24px: 1, rolagem_lateral: true, erros_console: ['erro'], requisicoes_com_falha: ['500'] })) test(campo, () => { const a = boa(); a[campo] = valor; assert.ok(avaliar(a).length); });
+for (const [campo, valor] of Object.entries({ acoes: 26, palavrasNaDobra: 101, botoesCheiosCor: 2, molduraMaxAninhada: 3, nSobre: 1 })) test(campo, () => { const a = boa(); a.densidade[campo] = valor; assert.ok(avaliar(a).length); });
+test('app tem limite menor que painel', () => { const a = boa(); a.densidade.acoes = 13; assert.deepEqual(avaliar(a), []); assert.ok(avaliar(a, null, true).length); });
+test('não permite regressão de contraste ou densidade', () => { const antes = boa(), atual = boa(); atual.densidade.acoes++; atual.axe.contraste_nos_total++; assert.equal(avaliar(atual, antes).length, 2); });

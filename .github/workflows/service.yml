@@ -8,6 +8,8 @@ name: Service
 on:
   push:
     paths:
+      - "tools/captura-service/**"
+      - "scripts/medir-densidade.js"
       - "app/service/**"
       - "app/api/service/**"
       - "app/lib/**"
@@ -21,6 +23,8 @@ on:
       - ".github/workflows/service.yml"
   pull_request:
     paths:
+      - "tools/captura-service/**"
+      - "scripts/medir-densidade.js"
       - "app/service/**"
       - "app/api/service/**"
       - "app/lib/**"
@@ -55,6 +59,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - name: Critérios de captura (leis 12 e 13)
+        run: |
+          npm ci --prefix tools/captura-service --no-audit --no-fund
+          cd tools/captura-service
+          npx playwright install --with-deps chromium
+          npm test
       - name: Typecheck
         run: npx tsc --noEmit -p .
       - name: Lei 12 (parte estática)

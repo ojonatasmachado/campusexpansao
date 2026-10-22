@@ -6,13 +6,14 @@
 window.__medir = (minAlvo = 24) => {
   const vw = innerWidth, vh = innerHeight;
   const vis = (el) => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && s.display !== "none" && +s.opacity > 0.05 && r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw ? r : null; };
+  const escopo = [...document.querySelectorAll('[role="dialog"][aria-modal="true"],dialog[open]')].filter((e) => vis(e)).at(-1) ?? document.body;
   const rotulo = (e) => (e.innerText || e.getAttribute("aria-label") || e.tagName).trim();
-  const acts = [...document.querySelectorAll("a[href],button,[role=button],[role=tab],[role=switch],input:not([type=hidden]),select,textarea,summary")].filter((e) => !e.closest("[aria-hidden=true]")).map((e) => [e, vis(e)]).filter(([, r]) => r);
+  const acts = [...escopo.querySelectorAll("a[href],button,[role=button],[role=tab],[role=switch],input:not([type=hidden]),select,textarea,summary")].filter((e) => !e.closest("[aria-hidden=true]")).map((e) => [e, vis(e)]).filter(([, r]) => r);
 
   const tmp = document.createElement("div"); tmp.style.color = getComputedStyle(document.documentElement).getPropertyValue("--olive").trim(); document.body.appendChild(tmp);
   const corIgreja = getComputedStyle(tmp).color; tmp.remove();
   let elementosCor = 0, botoesCheiosCor = 0;
-  document.querySelectorAll("body *").forEach((el) => {
+  escopo.querySelectorAll("*").forEach((el) => {
     const r = vis(el); if (!r || r.width * r.height < 30) return;
     const s = getComputedStyle(el);
     if (s.backgroundColor === corIgreja) { elementosCor++; if (el.matches("button,a,[role=button]")) botoesCheiosCor++; }
@@ -32,14 +33,14 @@ window.__medir = (minAlvo = 24) => {
 
   const caixa = (el) => { const s = getComputedStyle(el); return (parseFloat(s.borderTopWidth) > 0 && s.borderTopStyle !== "none" && parseFloat(s.borderLeftWidth) > 0) || s.boxShadow !== "none" || (s.backgroundColor !== "rgba(0, 0, 0, 0)" && el.parentElement && s.backgroundColor !== getComputedStyle(el.parentElement).backgroundColor && el.getBoundingClientRect().width > 60); };
   let molduraMaxAninhada = 0;
-  document.querySelectorAll("main *, body > div *").forEach((el) => {
+  escopo.querySelectorAll("*").forEach((el) => {
     if (!vis(el) || el.childElementCount === 0 || !caixa(el)) return;
-    let d = 1; for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) if (caixa(p) && p.getBoundingClientRect().width < vw - 4) d++;
+    let d = 1; for (let p = el.parentElement; p && p !== escopo && p !== document.body; p = p.parentElement) if (caixa(p) && p.getBoundingClientRect().width < vw - 4) d++;
     molduraMaxAninhada = Math.max(molduraMaxAninhada, d);
   });
 
-  const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); let palavrasNaDobra = 0, n;
-  while ((n = tw.nextNode())) if (n.textContent.trim() && n.parentElement && vis(n.parentElement)) palavrasNaDobra += n.textContent.trim().split(/\s+/).length;
+  const tw = document.createTreeWalker(escopo, NodeFilter.SHOW_TEXT); let palavrasNaDobra = 0, n;
+  while ((n = tw.nextNode())) if (n.textContent.trim() && n.parentElement && !n.parentElement.closest("script,style,noscript,[aria-hidden=true]") && vis(n.parentElement)) palavrasNaDobra += n.textContent.trim().split(/\s+/).length;
 
   return { acoes: acts.length, botoesCheiosCor, elementosCor, molduraMaxAninhada, palavrasNaDobra, sobreposicoes: [...sobre].slice(0, 8), nSobre: sobre.size, alvosPequenos: pequenos.length, exPequenos: pequenos.slice(0, 6), rolagemLateral: document.documentElement.scrollWidth > vw + 1 };
 };

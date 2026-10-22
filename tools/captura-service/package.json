@@ -1,0 +1,13 @@
+{
+  "name": "captura-service",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "capturar": "node capturar.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "playwright": "^1.50.0"
+  }
+}
