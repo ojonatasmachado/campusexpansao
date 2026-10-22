@@ -3,6 +3,7 @@ import type { Viewport } from "next";
    CSS do Service (+ v5) só nesta rota. O layout de /[slug] continua isolado
    pra Página pública (igreja-page.css), que não muda. */
 import "../../../evolucoes/service_app/service-app.css";
+import "../../service/ui/biblioteca.css";
 
 /* mesmo viewport do /service (áreas seguras do celular, service-v5.css §6) */
 export const viewport: Viewport = {

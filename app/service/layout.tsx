@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "../../evolucoes/service_app/service-app.css";
 /* mapa da igreja: CSS do módulo, depois do Service */
 import "./modules/mapa/mapa.css";
+/* visual das peças da biblioteca (lei 17), por último para vencer as regras antigas */
+import "./ui/biblioteca.css";
 import PwaBootstrap from "./PwaBootstrap";
 import DialogosAcessiveis from "./DialogosAcessiveis";
 

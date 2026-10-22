@@ -11,7 +11,8 @@ Este arquivo é o índice único das peças de interface do Service. Vale para q
 2. Faltou uma variação? Acrescente uma prop ao componente existente, nunca uma cópia na tela.
 3. Não existe? Peça nova nasce em `app/service/ui/`, com a ficha de entrada preenchida e uma linha na tabela.
 4. Trocou uma peça antiga pelo componente? Atualize a linha da tabela (caminho, compartilhado, problema).
-5. Nenhuma tela escreve `<button>`: o ponto de partida é `Acao` (ou a peça específica). Peça já centralizada ganha uma regra em `scripts/check-service-componentes.ts`, que o CI roda: escrever a classe à mão volta a falhar.
+5. O visual das peças fica em `app/service/ui/biblioteca.css` (pranchas 1 e 6 aplicadas em 2026-10-22); mudar a aparência é mexer só ali.
+6. Nenhuma tela escreve `<button>`: o ponto de partida é `Acao` (ou a peça específica). Peça já centralizada ganha uma regra em `scripts/check-service-componentes.ts`, que o CI roda: escrever a classe à mão volta a falhar.
 
 ## Como trocar (regra)
 

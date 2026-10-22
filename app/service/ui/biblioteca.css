@@ -1,0 +1,73 @@
+/* Biblioteca do Service: visual das peças de app/service/ui (lei 17).
+   Direção do canvas "Service, direção visual", pranchas 1 (fundamentos e
+   componentes) e 6 (componentes ricos e estados). Carregada depois de
+   service-app.css e mapa.css: vence as regras antigas das mesmas classes.
+   Cor só por variável do tema da igreja; no login, as mesmas variáveis dão as
+   cores CE.X. Derivações por color-mix() sobre --white (texto) e --olive (igreja),
+   que funcionam no claro e no escuro. */
+
+:root {
+  /* forma: controles 14, pílula para escolhas e discretos */
+  --r-acao: 14px;
+}
+
+/* ── Botão (Botao): uma ação principal por bloco ── */
+.btn, .m6-btn, .login-btn {
+  border-radius: var(--r-acao);
+  font-weight: 700;
+  transition: background-color .2s ease, color .2s ease, opacity .2s ease, transform .22s var(--ease-drawer);
+}
+.btn:active:not(:disabled), .m6-btn:active:not(:disabled), .login-btn:active:not(:disabled) { transform: scale(.96); }
+.btn:disabled, .m6-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.btn-pri, .m6-btn.pri { background: var(--accent-fill); color: var(--accent-ink); border-color: transparent; }
+
+/* secundário: superfície, sem borda */
+.btn-sec, .m6-btn.sec { background: color-mix(in srgb, var(--white) 8%, transparent); color: var(--white); border-color: transparent; }
+@media (hover:hover) and (pointer:fine) {
+  .btn-sec:hover, .m6-btn.sec:hover { background: color-mix(in srgb, var(--white) 13%, transparent); color: var(--white); border-color: transparent; }
+}
+
+/* discreto: pílula com véu da cor da igreja */
+.btn-ghost { background: color-mix(in srgb, var(--olive) 12%, transparent); color: var(--olive); border: 0; border-radius: var(--r-pill); }
+@media (hover:hover) and (pointer:fine) {
+  .btn-ghost:hover { background: color-mix(in srgb, var(--olive) 20%, transparent); color: var(--olive); border-color: transparent; }
+}
+
+.btn-danger, .m6-btn.danger { background: var(--danger-dim); color: var(--danger); border-color: transparent; }
+
+.m6-link, .panel-link { font-weight: 700; color: var(--olive); }
+.mp-botao { border-radius: var(--r-acao); font-weight: 600; }
+
+/* ── Interruptor: trilho em pílula, bolinha clara, mola ── */
+.sw, .m6-tg, .m-toggle {
+  width: 48px; height: 28px; border: 0; border-radius: var(--r-pill);
+  background: var(--border-3);
+  transition: background-color .3s ease;
+}
+.sw::after, .m6-tg::after, .m-toggle::after {
+  top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+  transition: transform .35s var(--ease-drawer);
+}
+.sw.on, .m6-tg.on, .m-toggle.on { background: var(--accent-fill); }
+.sw.on::after, .m6-tg.on::after, .m-toggle.on::after { transform: translateX(20px); background: #fff; }
+.sw:disabled, .m6-tg:disabled, .m-toggle:disabled { opacity: .45; cursor: default; }
+
+/* ── Segmentado (Opcao dentro de .seg): a opção marcada vira pílula elevada ── */
+.seg { border: 0; border-radius: var(--r-pill); background: color-mix(in srgb, var(--white) 7%, transparent); padding: 3px; }
+.seg button { border-radius: var(--r-pill); font-weight: 600; transition: background-color .3s ease, color .3s ease, box-shadow .3s ease; }
+.seg button.on { background: var(--graphite); color: var(--white); box-shadow: 0 2px 8px rgba(0, 0, 0, .14); }
+
+/* ── Chip de escolha (Opcao estilo="seg-chip") ── */
+.seg-chip { border-radius: var(--r-pill); font-weight: 600; }
+.seg-chip.on { background: color-mix(in srgb, var(--olive) 14%, transparent); color: var(--olive); border-color: transparent; }
+
+/* ── Cartão de opção (Opcao estilo="opt") ── */
+.opt { border-radius: var(--r-acao); }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .m6-btn, .login-btn, .sw, .m6-tg, .m-toggle, .seg button,
+  .sw::after, .m6-tg::after, .m-toggle::after { transition: none; }
+  .btn:active:not(:disabled), .m6-btn:active:not(:disabled), .login-btn:active:not(:disabled) { transform: none; }
+}

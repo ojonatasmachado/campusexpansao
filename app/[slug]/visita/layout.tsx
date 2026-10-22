@@ -3,6 +3,7 @@ import type { Viewport } from "next";
    (AuthShell + .login-*), com as cores da igreja. CSS do Service só nesta
    rota, igual ao /[slug]/entrar. */
 import "../../../evolucoes/service_app/service-app.css";
+import "../../service/ui/biblioteca.css";
 
 /* mesmo viewport do /service: área segura do celular (viewport-fit=cover) */
 export const viewport: Viewport = {
