@@ -2,10 +2,10 @@
 id: Q6
 titulo: Zerar resíduos da lei 12 e recolocar limite em 0
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: codex
+desde: 2026-10-22
+branch: historia/Q6-residuos-lei12
 depende: []
 tamanho: P
 ---
