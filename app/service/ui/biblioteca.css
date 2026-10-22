@@ -422,3 +422,5 @@ body:has(.m-tab) .toast-acao { min-height: 44px; }
 body:has(.barra-salvar.on) .toast-host { bottom: calc(96px + var(--safe-bottom)); transition: bottom .5s var(--ease-drawer); }
 body:has(.m-tab):has(.barra-salvar.on) .toast-host { bottom: calc(156px + var(--safe-bottom)); }
 .modal-bg.janela-acima { z-index: 80; }
+/* no painel com barra lateral, a barra de salvar centraliza na área de conteúdo */
+@media (min-width: 1041px) { .app .barra-salvar { left: 256px; width: min(640px, calc(100% - 256px - 32px)); } }
