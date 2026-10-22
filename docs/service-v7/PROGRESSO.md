@@ -184,3 +184,4 @@ Base lida: `ServiceExactApp.tsx` (painel, 11 mil linhas: `NAV_GROUPS` l.843, `CF
 
 | Q1 · entrada, 2026-10-22 | `prints/q1-entrada/` | 12 estados com screenshot, texto e auditoria; saída 1 diante de violações | 8 estados falham por alvo menor que 24px e/ou sobreposição; sem correções de tela nesta história |
 | Q1 · tamanho, 2026-10-22 | `prints/q1-m10/` | M10 autenticada, 7 posições verificadas pelo slider; 9 prints | densidade/sobreposição na execução inicial; medidor de janela corrigido depois, exige recaptura |
+| Q1 · M10 recapturada | `prints/q1-m10-recorte/` | M10 autenticada completa, 9 prints, sete posições; leis 12/13 sem falhas após considerar recorte dos contêineres | Demais jornadas continuam pendentes; execução ampla anterior interrompida por seletores antigos |

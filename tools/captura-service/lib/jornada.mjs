@@ -3,12 +3,12 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { SAIDA } from "./config.mjs";
-import { registrarBloqueio, tirarPrint } from "./print.mjs";
+import { registrarBloqueio, tirarPrint, limparBloqueio } from "./print.mjs";
 
 export const pad2 = (n) => String(n).padStart(2, "0");
 class Aborta extends Error {}
-async function efeito(page) {
-  return page.evaluate(() => JSON.stringify({ url: location.href, texto: document.body.innerText, campos: [...document.querySelectorAll("input,select,textarea")].map((e) => [e.value, e.checked]), estados: [...document.querySelectorAll("[aria-expanded],[aria-selected],[aria-checked]")].map((e) => [e.getAttribute("aria-expanded"),e.getAttribute("aria-selected"),e.getAttribute("aria-checked")]), foco: document.activeElement?.outerHTML, x: scrollX, y: scrollY }));
+export async function efeito(page) {
+  return page.evaluate(() => JSON.stringify({ url: location.href, texto: document.body.innerText, campos: [...document.querySelectorAll("input,select,textarea")].map((e) => [e.value, e.checked]), estados: [...document.querySelectorAll("[aria-expanded],[aria-selected],[aria-checked]")].map((e) => [e.getAttribute("aria-expanded"),e.getAttribute("aria-selected"),e.getAttribute("aria-checked")]), x: scrollX, y: scrollY }));
 }
 
 const ARQ_RES = () => join(SAIDA, ".jornadas.json");
@@ -48,7 +48,7 @@ export async function jornada({ codigo, nome, titulo, ap, conta, papel, abrir, c
       const redeAntes = page.__requisicoes ?? 0;
       let falhou = null;
       if (acao) {
-        for (let t = 0; t < (opts.tentativas ?? 2); t++) {
+        for (let t = 0; t < (opts.tentativas ?? 1); t++) {
           try { falhou = null; await acao(page); break; } catch (e) { falhou = String(e.message ?? e).split("\n")[0].slice(0, 300); await page.waitForTimeout(1200); }
         }
       }
@@ -62,7 +62,7 @@ export async function jornada({ codigo, nome, titulo, ap, conta, papel, abrir, c
       await page.waitForTimeout(opts.pausa ?? 350);
       if (acao && !opts.observacao && efeitoAntes === await efeito(page).catch(() => "") && redeAntes === (page.__requisicoes ?? 0)) {
         registrarBloqueio(chaveB + "/sem-efeito", { tela: titulo, passo: toques.join(" > "), erro: "Ação não produziu mudança observável na interface ou requisição", print: null });
-      }
+      } else limparBloqueio(chaveB + "/sem-efeito");
       const r = await tirarPrint(page, {
         pasta: pastaP, nome: nomeArq, conta: `${conta}@teste.local`, papel, tela: `${codigo} ${titulo}`, estado: opts.estado ?? null,
         jornada: `${codigo} ${titulo}`, passo: `${pad2(n)} ${slug.replace(/-/g, " ")}`, cliques: toques.length ? toques : ["(estado inicial)"],

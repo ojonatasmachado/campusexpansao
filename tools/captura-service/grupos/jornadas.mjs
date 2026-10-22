@@ -49,7 +49,7 @@ membro("M1", "primeiro-acesso", "Primeiro acesso (novo@teste.local)", async (j) 
   await j.passo("login-vazio", "abrir /service/login", async (p) => { await p.goto("/service/login", { waitUntil: "domcontentloaded" }); await p.locator('input[type="email"]').first().waitFor({ timeout: 40000 }); }, { permiteLogin: true });
   await j.passo("email-digitado", "digitar o e-mail novo@teste.local", preencher('input[type="email"]', "novo@teste.local"), { permiteLogin: true });
   await j.passo("senha-digitada", "digitar a senha", preencher('input[type="password"]', SENHA), { permiteLogin: true });
-  await j.passo("passo-1-boas-vindas", 'tocar "Entrar"', async (p) => { await p.locator("button.login-btn").first().click(); await esperarTexto(p, "PASSO 1 DE 6", 60000).catch(() => esperarTexto(p, "Passo 1 de 6", 5000)); }, ob(1));
+  await j.passo("passo-1-boas-vindas", 'tocar "Entrar"', async (p) => { await p.getByRole("button", { name: "Entrar", exact: true }).click(); await esperarTexto(p, "PASSO 1 DE 6", 60000).catch(() => esperarTexto(p, "Passo 1 de 6", 5000)); }, ob(1));
   await j.passo("passo-2-seus-dados", 'tocar "Começar →"', tocar("button", "Começar"), ob(2));
   await j.passo("passo-2-erros-de-validacao", 'tocar "Continuar →" sem preencher', tocar("button", "Continuar"), { espera: ["DDD"] });
   await j.passo("passo-2-telefone", "digitar o telefone", preencher('input[type="tel"]', "11987654321"));
@@ -93,9 +93,9 @@ membro("M4", "mural", "Mural: das não lidas até zerar (Maria)", async (j) => {
   await j.passo("aba-mensagens-com-nao-lidas", 'tocar na aba "Mensagens"', (p) => abaApp(p, "Mensagens"), { espera: ["Mural da igreja"] });
   await j.passo("mural-aberto-publicacoes-novas", 'tocar "Mural da igreja"', tocar(BTN, "Mural da igreja"), { espera: ["Nova"] });
   await j.passo("responder-vou-tocado", 'tocar "Vou" no evento Mutirão de limpeza', async (p) => {
-    const i = await p.evaluate(() => { const arts = [...document.querySelectorAll("article.m6-card")]; return arts.findIndex((a) => a.innerText.includes("Mutirão de limpeza") && /\bVou\b/.test(a.innerText)); });
+    const i = await p.evaluate(() => { const arts = [...document.querySelectorAll(".m6-card")]; return arts.findIndex((a) => a.innerText.includes("Mutirão de limpeza") && /\bVou\b/.test(a.innerText)); });
     if (i < 0) throw new Error("evento com Vou/Não vou não encontrado");
-    await p.locator("article.m6-card").nth(i).locator("button", { hasText: /^Vou$/ }).click(); await p.waitForTimeout(600);
+    await p.locator(".m6-card").nth(i).locator("button", { hasText: /^Vou$/ }).click(); await p.waitForTimeout(600);
   }, { espera: ["Resposta enviada"] });
   await j.passo("voltar-para-mensagens", "tocar em voltar", async (p) => { await p.locator("button.m6-back").first().click(); await p.waitForTimeout(700); });
   await j.passo("inicio-sem-novidade-no-mural", 'tocar na aba "Início"', async (p) => { await abaApp(p, "Inicio"); await p.waitForTimeout(800); });
@@ -116,7 +116,7 @@ membro("M5", "pedir-oracao", "Pedir oração (Maria)", async (j) => {
     return;
   }
   await j.passo("pedido-enviado", 'tocar "Enviar pedido"', tocar("button", "Enviar pedido"), { espera: ["Pedido enviado"] });
-  await j.passo("folha-fechada-mensagens", 'tocar "Fechar"', tocar("button", "Fechar", { exato: true }));
+  await j.passo("folha-fechada-mensagens", 'tocar "Ver em Mensagens"', tocar("button", "Ver em Mensagens", { exato: true }));
   await j.passo("conversa-do-pedido-aberta", "tocar na conversa criada", async (p) => { await p.locator("button.m-conv").first().click(); await p.waitForTimeout(700); }, { opcional: true });
 });
 
@@ -125,12 +125,14 @@ membro("M5", "pedir-oracao", "Pedir oração (Maria)", async (j) => {
 membro("M6", "caminhada", "Caminhada: próximo passo, curso e Quero servir", async (j) => {
   await j.passo("inicio-com-proximo-passo", "abrir /service (Início do app)", (p) => abrirInicioApp(p), { espera: ["Seu próximo passo"] });
   await j.passo("curso-aberto-pelo-proximo-passo", 'tocar "Continuar →" no cartão "Seu próximo passo"', async (p) => { const i = await p.evaluate(() => [...document.querySelectorAll(".m6-card")].findIndex((c) => /Seu próximo passo/.test(c.innerText))); await p.locator(".m6-card").nth(i).locator("button").first().click(); await p.waitForTimeout(700); }, { espera: ["MEUS CURSOS"] });
-  // "Continuar →" dentro de Cursos: segundo o mapa não tem onClick
-  const antes = await j.page.evaluate(() => document.body.innerText);
-  await j.page.locator("button").first().click().catch(() => {}); await j.page.waitForTimeout(1200);
-  const depois = await j.page.evaluate(() => document.body.innerText);
-  if (antes === depois) { registrarNaoExiste("jornadas/M6-continuar-curso", "M6 Caminhada > Cursos", "Tocar 'Continuar →' no curso em andamento (Fundamentos da Fé) não muda nada na tela (sem aula, sem página do curso). Não há print desse toque. Não existe 'concluir aula' no app."); j.obs("'Continuar →' do curso não faz nada na tela (sem print); 'concluir aula' não existe"); }
-  else await j.passo("continuar-do-curso-tocado", 'tocar "Continuar →" no curso', null);
+  const abrirAula = j.page.getByRole("button", { name: /Ler a aula|Ver o material da aula/ }).first();
+  if (await abrirAula.isVisible()) {
+    await j.passo("aula-aberta", "abrir o conteúdo da próxima aula", () => abrirAula.click());
+    await j.passo("aula-fechada", "fechar o conteúdo", async (p) => { await p.keyboard.press("Escape"); });
+  } else {
+    await j.passo("forma-de-concluir", "conferir instrução da aula", null, { espera: [/QR|ainda não foi publicado|ainda não foram publicadas|Assistir à aula/i] });
+    j.obs("Capturada a instrução real da próxima aula. Sem fabricar conteúdo nem conclusão por QR.");
+  }
   await j.passo("voltar-para-caminhada", "tocar em voltar", async (p) => { await p.locator("button.m6-back").first().click(); await p.waitForTimeout(600); await abaApp(p, "Caminhada"); }, { espera: ["Etapas"] });
   await j.passo("pedido-de-etapa-aberto", 'tocar "Já participo →" (etapa Grupo)', tocar("button", "Já participo"), { espera: ["Quando foi"] });
   await j.passo("pedido-de-etapa-fechado", "tocar fora da folha (fechar sem enviar)", async (p) => { await p.locator(".m6-scrim").first().click({ position: { x: 20, y: 40 } }); await p.waitForTimeout(500); }, { opcional: true });

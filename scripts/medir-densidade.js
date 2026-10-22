@@ -5,7 +5,19 @@
 // palavras, ações sobrepostas, alvos abaixo do mínimo e rolagem lateral.
 window.__medir = (minAlvo = 24) => {
   const vw = innerWidth, vh = innerHeight;
-  const vis = (el) => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && s.display !== "none" && +s.opacity > 0.05 && r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw ? r : null; };
+  const vis = (el) => {
+    const original = el.getBoundingClientRect(), estilo = getComputedStyle(el);
+    if (original.width <= 0 || original.height <= 0 || estilo.visibility === "hidden" || estilo.display === "none" || +estilo.opacity <= 0.05) return null;
+    let left = Math.max(0, original.left), right = Math.min(vw, original.right), top = Math.max(0, original.top), bottom = Math.min(vh, original.bottom);
+    // Conteúdo recortado por um contêiner rolável não se sobrepõe à barra externa.
+    for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      const cs = getComputedStyle(p), r = p.getBoundingClientRect();
+      if (cs.display === "none" || cs.visibility === "hidden" || +cs.opacity <= 0.05) return null;
+      if (/(auto|scroll|hidden|clip)/.test(cs.overflowX)) { left = Math.max(left, r.left + p.clientLeft); right = Math.min(right, r.left + p.clientLeft + p.clientWidth); }
+      if (/(auto|scroll|hidden|clip)/.test(cs.overflowY)) { top = Math.max(top, r.top + p.clientTop); bottom = Math.min(bottom, r.top + p.clientTop + p.clientHeight); }
+    }
+    return right > left && bottom > top ? { left, right, top, bottom, width: right - left, height: bottom - top } : null;
+  };
   const escopo = [...document.querySelectorAll('[role="dialog"][aria-modal="true"],dialog[open]')].filter((e) => vis(e)).at(-1) ?? document.body;
   const rotulo = (e) => (e.innerText || e.getAttribute("aria-label") || e.tagName).trim();
   const acts = [...escopo.querySelectorAll("a[href],button,[role=button],[role=tab],[role=switch],input:not([type=hidden]),select,textarea,summary")].filter((e) => !e.closest("[aria-hidden=true]")).map((e) => [e, vis(e)]).filter(([, r]) => r);
@@ -29,7 +41,7 @@ window.__medir = (minAlvo = 24) => {
   }
   /* alvo efetivo: o ::before absoluto (.help-dot, .m-head-av...) amplia a área de toque sem mudar o desenho */
   const alvo = (e, r) => { const p = getComputedStyle(e, "::before"); return p.content !== "none" && p.position === "absolute" ? [Math.max(r.width, parseFloat(p.width) || 0), Math.max(r.height, parseFloat(p.height) || 0)] : [r.width, r.height]; };
-  const pequenos = acts.map(([e, r]) => [e, alvo(e, r)]).filter(([e, [w, h]]) => !e.matches("input[type=checkbox],input[type=radio]") && (w < minAlvo || h < minAlvo)).map(([e, [w, h]]) => `${rotulo(e).slice(0, 20)} ${Math.round(w)}x${Math.round(h)}`);
+  const pequenos = acts.map(([e]) => [e, alvo(e, e.getBoundingClientRect())]).filter(([e, [w, h]]) => !e.matches("input[type=checkbox],input[type=radio]") && (w < minAlvo || h < minAlvo)).map(([e, [w, h]]) => `${rotulo(e).slice(0, 20)} ${Math.round(w)}x${Math.round(h)}`);
 
   const caixa = (el) => { const s = getComputedStyle(el); return (parseFloat(s.borderTopWidth) > 0 && s.borderTopStyle !== "none" && parseFloat(s.borderLeftWidth) > 0) || s.boxShadow !== "none" || (s.backgroundColor !== "rgba(0, 0, 0, 0)" && el.parentElement && s.backgroundColor !== getComputedStyle(el.parentElement).backgroundColor && el.getBoundingClientRect().width > 60); };
   let molduraMaxAninhada = 0;

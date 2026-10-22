@@ -18,7 +18,10 @@ const CSS_SEM_OVERLAY_DEV = "nextjs-portal, [data-nextjs-dev-tools-button], #__n
 
 function instrumentar(page) {
   page.__requisicoes = 0;
-  page.on("request", () => page.__requisicoes++);
+  page.on("request", (r) => {
+    // Telemetria e consultas periódicas não provam que a ação funcionou.
+    if (!["GET", "HEAD", "OPTIONS"].includes(r.method()) && !r.url().includes("/api/metrics") && !/card_shown|card_acted|card_dismissed/.test(r.postData() ?? "")) page.__requisicoes++;
+  });
   page.__col = { console: [], falhas: [], dialogos: [] };
   page.on("console", (m) => {
     if (m.type() === "error") page.__col.console.push({ tipo: "console.error", texto: m.text().slice(0, 400), url: m.location()?.url ?? "" });
@@ -61,6 +64,7 @@ export async function criarContexto(aparelho, { storageState, semPadroes = false
   });
   ctx.on("page", instrumentar);
   ctx.setDefaultNavigationTimeout(90000);
+  ctx.setDefaultTimeout(15000);
   const page = await ctx.newPage();
   page.__aparelho = aparelho;
   page.__maxAltura = maxAltura;
@@ -85,14 +89,14 @@ async function loginPorUI1(aparelho, conta, { slugCookie = false } = {}) {
   try {
     if (slugCookie) await ctx.addCookies([{ name: "cex_church_slug", value: SLUG, url: BASE_URL }]);
     await page.goto("/service/login", { waitUntil: "domcontentloaded", timeout: 90000 });
-    await page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
+    await page.waitForLoadState("networkidle", { timeout: 1500 }).catch(() => {});
     await page.locator('input[type="email"]').first().fill(CONTAS[conta].email);
     await page.locator('input[type="password"]').first().fill(SENHA);
     await Promise.all([
       page.waitForURL((u) => !u.pathname.endsWith("/service/login"), { timeout: 25000 }),
-      page.locator("button.login-btn").first().click(),
+      page.getByRole("button", { name: "Entrar", exact: true }).click(),
     ]);
-    await page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
+    await page.waitForLoadState("networkidle", { timeout: 1500 }).catch(() => {});
     await page.waitForTimeout(800);
     const destino = page.url();
     const arq = arquivoAuth(aparelho, conta);

@@ -21,3 +21,29 @@ test('mede DOM real e rejeita alvo, fonte, contraste, rolagem e densidade', asyn
     assert.ok(avaliar(ruim).length >= 5);
   } finally { await browser.close(); }
 });
+test('conteúdo recortado na área de rolagem não se sobrepõe à barra externa', async () => {
+  const browser = await chromium.launch();
+  try {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+    await page.setContent('<style>:root{--olive:black}body{margin:0;color:black;background:white;font:14px Arial}.rolagem{height:100px;overflow:auto}button{display:block;width:120px;height:44px}nav{position:absolute;top:100px;background:white}</style><div class="rolagem"><div style="height:90px"></div><button>Parte recortada</button></div><nav><button>Barra</button></nav>');
+    const a = await auditar(page);
+    assert.equal(a.densidade.nSobre, 0);
+    assert.equal(a.densidade.alvosPequenos, 0);
+    assert.equal(a.densidade.acoes, 2);
+  } finally { await browser.close(); }
+});
+test('foco sozinho não valida botão sem ação', async () => {
+  const { efeito } = await import('../lib/jornada.mjs');
+  const browser = await chromium.launch();
+  try {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await page.setContent('<button>Inerte</button><button onclick="document.querySelector(\'p\').textContent=\'Salvo\'">Salvar</button><p>Pendente</p>');
+    const antes = await efeito(page);
+    await page.getByRole('button', { name: 'Inerte' }).click();
+    assert.equal(await efeito(page), antes);
+    await page.getByRole('button', { name: 'Salvar' }).click();
+    assert.notEqual(await efeito(page), antes);
+  } finally { await browser.close(); }
+});
