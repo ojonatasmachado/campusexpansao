@@ -17,7 +17,7 @@
 import { cloneElement, isValidElement, useId } from "react";
 import type { CSSProperties, InputHTMLAttributes, ReactElement, ReactNode, Ref, TextareaHTMLAttributes } from "react";
 
-type Ligacao = { id?: string; "aria-describedby"?: string; "aria-invalid"?: boolean };
+type Ligacao = { id?: string; "aria-describedby"?: string; "aria-invalid"?: boolean; "aria-required"?: boolean; role?: string };
 
 export type CampoProps = {
   rotulo: ReactNode;
@@ -46,7 +46,8 @@ export function Campo({ rotulo, ajuda, erro, obrigatorio, id, grupo, className, 
         id: ctrlId,
         "aria-describedby": [children.props["aria-describedby"], temApoio ? apoioId : null].filter(Boolean).join(" ") || undefined,
         "aria-invalid": erro ? true : children.props["aria-invalid"],
-        ...(grupo ? { "aria-labelledby": rotuloId } : {}),
+        ...(obrigatorio && !grupo ? { "aria-required": true } : {}),
+        ...(grupo ? { "aria-labelledby": rotuloId, role: children.props.role ?? "group" } : {}),
       })
     : children;
   const cls = `field${erro ? " field-com-erro" : ""}${className ? ` ${className}` : ""}`;

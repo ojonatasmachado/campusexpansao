@@ -33,6 +33,7 @@ export type SelecaoProps = {
   className?: string;
   "aria-describedby"?: string;
   "aria-invalid"?: boolean;
+  "aria-required"?: boolean;
 };
 
 export function Selecao({ valor, aoMudar, opcoes, vazio, rotulo, id, desativado, className, ...aria }: SelecaoProps) {
@@ -55,6 +56,14 @@ export function Selecao({ valor, aoMudar, opcoes, vazio, rotulo, id, desativado,
     const lista = [...(caixa.current?.querySelectorAll<HTMLButtonElement>("[role=option]:not(:disabled)") ?? [])];
     const i = lista.indexOf(document.activeElement as HTMLButtonElement);
     const ir = (j: number) => { e.preventDefault(); lista[Math.max(0, Math.min(lista.length - 1, j))]?.focus(); };
+    /* digitar a inicial pula para a próxima opção que começa com ela, como no select nativo */
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const k = e.key.toLocaleLowerCase("pt-BR");
+      const ordem = [...lista.slice(i + 1), ...lista.slice(0, i + 1)];
+      const alvo = ordem.find((b) => (b.textContent ?? "").trim().toLocaleLowerCase("pt-BR").startsWith(k));
+      if (alvo) { e.preventDefault(); alvo.focus(); }
+      return;
+    }
     if (e.key === "ArrowDown") ir(i + 1);
     else if (e.key === "ArrowUp") ir(i - 1);
     else if (e.key === "Home") ir(0);
@@ -67,7 +76,7 @@ export function Selecao({ valor, aoMudar, opcoes, vazio, rotulo, id, desativado,
       <Acao ref={gatilho} id={id} className="sel-trigger" desativado={desativado}
         aria-label={rotulo ? `${rotulo}: ${atual?.l || vazio || "Selecione"}` : undefined}
         aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? listaId : undefined}
-        aria-describedby={aria["aria-describedby"]} aria-invalid={aria["aria-invalid"]}
+        aria-describedby={aria["aria-describedby"]} aria-invalid={aria["aria-invalid"]} aria-required={aria["aria-required"]}
         onClick={() => setOpen((o) => !o)}
         onKeyDown={(e) => { if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !open) { e.preventDefault(); setOpen(true); } }}>
         <span className={atual ? "sel-val" : "sel-ph"}>{atual ? atual.l : (vazio || "Selecione")}</span>

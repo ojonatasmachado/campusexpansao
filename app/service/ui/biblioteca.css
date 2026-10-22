@@ -149,7 +149,7 @@
 @media (pointer: coarse) { .input, .textarea, .sel-trigger, .dp-trigger { font-size: 16px; } }
 
 /* ── Caixa de marcar e bolinha (Marcar) ── */
-.marcar { display: inline-flex; align-items: center; gap: 10px; min-height: 32px; cursor: pointer; font-size: var(--fs-pn-14); font-weight: 600; color: var(--white); }
+.marcar { position: relative; display: inline-flex; align-items: center; gap: 10px; min-height: 32px; cursor: pointer; font-size: var(--fs-pn-14); font-weight: 600; color: var(--white); }
 .marcar input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
 .marcar-caixa {
   position: relative; flex-shrink: 0; width: 22px; height: 22px; box-sizing: border-box;

@@ -87,8 +87,8 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, podeAbrirPessoa = () => 
       </div>
       {panorama && preset === "datas" && (
         <div className="saude-datas">
-          <label>De <SeletorData rotulo="De" valor={datas.ini} aoMudar={(v) => setDatas((d) => ({ ...d, ini: v }))} /></label>
-          <label>até <SeletorData rotulo="Até" valor={datas.fim} aoMudar={(v) => setDatas((d) => ({ ...d, fim: v }))} /></label>
+          <div>De <SeletorData rotulo="De" valor={datas.ini} aoMudar={(v) => setDatas((d) => ({ ...d, ini: v }))} /></div>
+          <div>até <SeletorData rotulo="Até" valor={datas.fim} aoMudar={(v) => setDatas((d) => ({ ...d, fim: v }))} /></div>
         </div>
       )}
       <div className="saude-grp">Hoje</div>

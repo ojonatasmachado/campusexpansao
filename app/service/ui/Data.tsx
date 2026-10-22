@@ -54,6 +54,7 @@ export type SeletorDataProps = {
   className?: string;
   "aria-describedby"?: string;
   "aria-invalid"?: boolean;
+  "aria-required"?: boolean;
 };
 
 export function SeletorData({ valor, aoMudar, min, max, marcados, vazio = "dd/mm/aaaa", rotulo, id, desativado, limpavel, className, ...aria }: SeletorDataProps) {
@@ -87,12 +88,16 @@ export function SeletorData({ valor, aoMudar, min, max, marcados, vazio = "dd/mm
   }, [open, modo, foco, vista]);
 
   const fora = (d: string) => Boolean((min && d < min) || (max && d > max));
+  /* trocar o mês (ou o ano) leva o dia ativo junto, para o teclado entrar na grade nova */
+  const irPara = (a: number, m: number) => {
+    setVista({ a, m });
+    const d = ler(foco)?.d ?? 1;
+    setFoco(iso(a, m, Math.min(d, diasNoMes(a, m))));
+  };
   const mudarMes = (delta: number) => {
     setLado(delta < 0 ? "esq" : "dir");
-    setVista((v) => {
-      const t = v.m + delta;
-      return { a: v.a + Math.floor(t / 12), m: ((t % 12) + 12) % 12 };
-    });
+    const t = vista.m + delta;
+    irPara(vista.a + Math.floor(t / 12), ((t % 12) + 12) % 12);
   };
   const escolher = (d: string) => { if (fora(d)) return; aoMudar(d); setOpen(false); gatilho.current?.focus(); };
 
@@ -109,6 +114,7 @@ export function SeletorData({ valor, aoMudar, min, max, marcados, vazio = "dd/mm
     if (!novo) return;
     e.preventDefault();
     const n = iso(novo.getFullYear(), novo.getMonth(), novo.getDate());
+    if (fora(n)) return;
     if (novo.getMonth() !== vista.m || novo.getFullYear() !== vista.a) {
       setLado(n < foco ? "esq" : "dir");
       setVista({ a: novo.getFullYear(), m: novo.getMonth() });
@@ -126,7 +132,7 @@ export function SeletorData({ valor, aoMudar, min, max, marcados, vazio = "dd/mm
       <Acao ref={gatilho} id={id} className="dp-trigger" desativado={desativado}
         aria-label={rotulo ? `${rotulo}: ${dataCurta(valor) || "sem data"}` : undefined}
         aria-expanded={open} aria-controls={open ? popId : undefined} aria-haspopup="dialog"
-        aria-describedby={aria["aria-describedby"]} aria-invalid={aria["aria-invalid"]}
+        aria-describedby={aria["aria-describedby"]} aria-invalid={aria["aria-invalid"]} aria-required={aria["aria-required"]}
         onClick={alternar}>
         <span className={valor ? "dp-val" : "dp-ph"}>{dataCurta(valor) || vazio}</span>
         <span className="dp-ic" aria-hidden="true">
@@ -150,7 +156,7 @@ export function SeletorData({ valor, aoMudar, min, max, marcados, vazio = "dd/mm
             <div className="dp-anos">
               {Array.from({ length: 12 }, (_, i) => anoIni + i).map((a) => (
                 <Opcao key={a} estilo="dp-day" marcada={a === vista.a} className={a === +hoje.slice(0, 4) ? "hoje" : undefined}
-                  onClick={() => { setVista((v) => ({ ...v, a })); setModo("dias"); }}>{a}</Opcao>
+                  onClick={() => { irPara(a, vista.m); setModo("dias"); }}>{a}</Opcao>
               ))}
             </div>
           ) : (
@@ -196,6 +202,7 @@ export type SeletorHoraProps = {
   className?: string;
   "aria-describedby"?: string;
   "aria-invalid"?: boolean;
+  "aria-required"?: boolean;
 };
 
 export function SeletorHora({ valor, aoMudar, passo = 5, vazio = "hh:mm", rotulo, id, desativado, className, ...aria }: SeletorHoraProps) {
@@ -220,7 +227,7 @@ export function SeletorHora({ valor, aoMudar, passo = 5, vazio = "hh:mm", rotulo
       <Acao ref={gatilho} id={id} className="dp-trigger" desativado={desativado}
         aria-label={rotulo ? `${rotulo}: ${valor || "sem horário"}` : undefined}
         aria-expanded={open} aria-controls={open ? popId : undefined} aria-haspopup="dialog"
-        aria-describedby={aria["aria-describedby"]} aria-invalid={aria["aria-invalid"]}
+        aria-describedby={aria["aria-describedby"]} aria-invalid={aria["aria-invalid"]} aria-required={aria["aria-required"]}
         onClick={() => setOpen((o) => !o)}>
         <span className={valor ? "dp-val" : "dp-ph"}>{valor ? `${dois(hh!)}:${dois(mm!)}` : vazio}</span>
         <span className="dp-ic" aria-hidden="true">
