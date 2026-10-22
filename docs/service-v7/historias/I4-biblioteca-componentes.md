@@ -1,11 +1,11 @@
 ---
 id: I4
-titulo: Criar biblioteca de componentes do produto
+titulo: Biblioteca, bloco A (formulários e estados, prancha 3)
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-10-22
+branch: historia/I4-biblioteca-formularios
 depende: []
 tamanho: G
 ---
