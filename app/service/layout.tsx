@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { familyById } from "./lib/theme";
 import "../../evolucoes/service_app/service-app.css";
 /* mapa da igreja: CSS do módulo, depois do Service */
 import "./modules/mapa/mapa.css";
@@ -21,7 +22,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0E110D",
+  themeColor: familyById(undefined, "dark").tokens.ink,
 };
 
 export default function ServiceLayout({ children }: { children: React.ReactNode }) {

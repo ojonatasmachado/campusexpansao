@@ -96,10 +96,8 @@ export function TeamMark({ ministry, size = 16 }: { ministry?: { icon?: string; 
     nome.includes("copa") || nome.includes("cozinha") || nome.includes("hospit") ? "copa" : DEFAULT_ICON);
   return <Icon name={iconName} size={size} />;
 }
-/* Emoji real do WhatsApp, exceção pontual à regra "zero emoji" do AGENTS.md — só
-   nas perguntas tipo 'emoji' das pesquisas da própria igreja (service.pesquisas),
-   pedido explícito do usuário pro pulso pós-escala. Não usar fora daqui. */
-export const REACOES_PESQUISA = ["😡", "😕", "😐", "🙂", "😍"];
+/* Escala textual de cinco reações, em ordem da menos para a mais satisfeita. */
+export const REACOES_PESQUISA = ["Péssimo", "Ruim", "Regular", "Bom", "Ótimo"];
 
 /* estado vazio único: título curto, uma frase do que vai aparecer ali e,
    quando houver, o botão da primeira ação */

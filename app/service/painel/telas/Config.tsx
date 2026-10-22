@@ -9,7 +9,7 @@ import { Fragment, useId, useRef, useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { uploadServiceImage, imageExtension } from "../../lib/upload-image";
 import { Icon } from "../../lib/icons";
-import { type BrandCfg } from "../../lib/theme";
+import { familyById, type BrandCfg } from "../../lib/theme";
 import { AccentField } from "../../AccentField";
 import ThemePicker from "../../ThemePicker";
 import { PublicPageEditor } from "../../PublicPageEditor";
@@ -615,7 +615,7 @@ export function Config({
     router.refresh();
     setTimeout(() => setPersonalizacaoMsg(""), 2000);
   };
-  const identidadeBgHex = identidade.bgMode === "imagem" ? "#0E110D" : identidade.bgMode === "degrade" ? (identidade.bgFrom ?? IDENTIDADE_CFG_DEFAULT.bgFrom) : (identidade.bgColor ?? IDENTIDADE_CFG_DEFAULT.bgColor);
+  const identidadeBgHex = identidade.bgMode === "imagem" ? familyById(undefined, "dark").tokens.ink : identidade.bgMode === "degrade" ? (identidade.bgFrom ?? IDENTIDADE_CFG_DEFAULT.bgFrom) : (identidade.bgColor ?? IDENTIDADE_CFG_DEFAULT.bgColor);
 
   const [matriz, setMatriz] = useState<MatrizV2>(() => matrizComFallback(permissionsMatrix));
   /* no celular a matriz vira: escolhe o papel em cima, liga e desliga embaixo */

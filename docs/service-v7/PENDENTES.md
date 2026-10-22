@@ -58,7 +58,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **E3** Cobertura vira linha no "Para resolver" (depois do E2)
 
 ### 3. Qualidade que protege o resto
-- **Q1** Captura automática das leis 12 e 13 · **Q6** Zerar resíduos da lei 12
+- **Q1** Captura automática das leis 12 e 13
 - **Q2** Isolar o teste de permissões · **Q3** Matriz autenticada de papéis e isolamento entre igrejas
 
 ### 4. Código independente (dá para tocar em paralelo, se os trilhos não esbarrarem)
