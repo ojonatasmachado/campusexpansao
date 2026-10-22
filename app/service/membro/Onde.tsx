@@ -12,6 +12,7 @@ import { caixaDosPontos, distanciaKm, formatarDistancia, linkComoChegar, temPont
 import { MemberUiContext } from "./comum";
 import type { M } from "./tipos";
 
+import { Botao, botaoClasse } from "../ui/Botao";
 /* Agenda › Onde (mapa da igreja, etapa 2). Sede, congregações e grupos são
    públicos para quem é da igreja: endereço, horário, líder e vagas. Nenhuma
    pessoa aparece aqui, só o ponto "você" do próprio CEP. */
@@ -175,9 +176,9 @@ function SheetLocal({ local: l, member, eu, onStartChat }: { local: Local; membe
         {l.lider_nome && <div className="m6-row"><span className="m6-rb"><span className="m6-rs">Quem lidera</span><span className="m6-rt">{l.lider_nome}</span></span></div>}
       </div>
       <div className="m6-btns col">
-        {podeFalar && <button className="m6-btn pri" type="button" disabled={enviando} onClick={() => falar("Oi! Vi no app e queria saber mais.", "Mensagem enviada")}><Icon name="conversas" size={20} />Mandar mensagem para {primeiroNome}</button>}
-        {podeFalar && l.tipo === "grupo" && (vagas === null || vagas > 0) && <button className="m6-btn sec" type="button" disabled={enviando} onClick={() => falar(`Oi! Quero participar: ${l.nome}.`, "Pedido enviado")}>Quero participar</button>}
-        {temPonto(l) && <a className="m6-btn sec" href={linkComoChegar(l)} target="_blank" rel="noreferrer">Como chegar</a>}
+        {podeFalar && <Botao tamanho="toque" variante="principal" desativado={enviando} onClick={() => falar("Oi! Vi no app e queria saber mais.", "Mensagem enviada")}><Icon name="conversas" size={20} />Mandar mensagem para {primeiroNome}</Botao>}
+        {podeFalar && l.tipo === "grupo" && (vagas === null || vagas > 0) && <Botao tamanho="toque" desativado={enviando} onClick={() => falar(`Oi! Quero participar: ${l.nome}.`, "Pedido enviado")}>Quero participar</Botao>}
+        {temPonto(l) && <a className={botaoClasse({ tamanho: "toque" })} href={linkComoChegar(l)} target="_blank" rel="noreferrer">Como chegar</a>}
       </div>
     </div>
   );

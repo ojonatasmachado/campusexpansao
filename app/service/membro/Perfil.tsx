@@ -19,6 +19,7 @@ import { gravarAceiteMapa } from "./AceiteMapa";
 import { AVISO_CEP } from "../lib/termo-mapa";
 import type { M, MemberContactInput, P } from "./tipos";
 
+import { Botao } from "../ui/Botao";
 // ── aba: Perfil ───────────────────────────────────────────────────────────────
 
 /* notificações do celular (push): usado no Perfil e no primeiro acesso */
@@ -244,7 +245,7 @@ export function TabPerfil({
                   {(member.neighborhood || member.city) && <li><Icon name="mapapin" size={20} /><span>{[member.neighborhood, member.city, member.country].filter(Boolean).join(", ")}</span></li>}
                 </ul>
                 {onUpdateProfile && (
-                  <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => setEditing(true)}>Editar meus dados</button></div>
+                  <div className="m6-btns"><Botao tamanho="toque" onClick={() => setEditing(true)}>Editar meus dados</Botao></div>
                 )}
               </>
             ) : (
@@ -253,8 +254,8 @@ export function TabPerfil({
               <MemberContactFields d={perfil} set={(k, v) => setPerfil((p) => ({ ...p, [k]: v }))} erros={perfilTentou ? perfilErros : null} />
                 {perfilErroSalvar && <div className="m6-err">{perfilErroSalvar}</div>}
                 <div className="m6-btns m6-fixo">
-                  <button className="m6-btn sec" type="button" onClick={() => setEditing(false)}>Cancelar</button>
-                  <button className="m6-btn pri" type="button" onClick={salvarPerfil}>Salvar</button>
+                  <Botao tamanho="toque" onClick={() => setEditing(false)}>Cancelar</Botao>
+                  <Botao tamanho="toque" variante="principal" onClick={salvarPerfil}>Salvar</Botao>
                 </div>
               </>
             )}
@@ -273,7 +274,7 @@ export function TabPerfil({
           <div className="field"><label className="field-label">Senha nova</label><input className="input" type="password" autoComplete="new-password" placeholder="Pelo menos 6 caracteres" value={senha} onChange={(e) => setSenha(e.target.value)} /></div>
           <div className="field"><label className="field-label">Repita a senha</label><input className="input" type="password" autoComplete="new-password" value={senha2} onChange={(e) => setSenha2(e.target.value)} /></div>
           {senhaMsg && <div className="m6-meta" style={{ marginBottom: 8 }}>{senhaMsg}</div>}
-          <div className="m6-btns"><button className="m6-btn pri" type="button" disabled={!senhaValida || senhaSaving || !onChangePassword} onClick={trocarSenha}>{senhaSaving ? "Salvando..." : "Salvar senha nova"}</button></div>
+          <div className="m6-btns"><Botao tamanho="toque" variante="principal" desativado={!senhaValida || senhaSaving || !onChangePassword} onClick={trocarSenha}>{senhaSaving ? "Salvando..." : "Salvar senha nova"}</Botao></div>
         </div>
       </div>
     );
@@ -382,8 +383,8 @@ export function TabPerfil({
           <h2 className="m6-sh">Sair do app?</h2>
           <p className="m6-txt">Para entrar de novo, você vai precisar do seu e-mail e da sua senha.</p>
           <div className="m6-btns col">
-            <button className="m6-btn danger" type="button" onClick={onLogout}>Sair</button>
-            <button className="m6-btn sec" type="button" onClick={() => setSair(false)}>Cancelar</button>
+            <Botao tamanho="toque" variante="perigo" onClick={onLogout}>Sair</Botao>
+            <Botao tamanho="toque" onClick={() => setSair(false)}>Cancelar</Botao>
           </div>
         </M6Sheet>
       )}

@@ -10,6 +10,7 @@ import { proximaAula } from "../lib/aulas";
 import { JourneyContext, contactErrors, dataLonga, realValue } from "./comum";
 import type { BaptismClass, Course, CourseLesson, CourseModule, Enrollment, JourneyRequest, JourneyStep, M, MemberContactInput, Ministry, P, StepView } from "./tipos";
 
+import { Botao } from "../ui/Botao";
 // ── constantes ────────────────────────────────────────────────────────────────
 
 /* etapas da caminhada; a 4ª usa o nome que a igreja deu aos grupos
@@ -49,7 +50,7 @@ export function AppTourModal({ onClose }: { onClose: () => void }) {
       <div className="ob-card" style={{ maxWidth: 320 }} onClick={(e) => e.stopPropagation()}>
         <div className="ob-welcome-x" style={{ marginBottom: 14, fontWeight: 700, fontSize: "var(--fs-app-15)" }}>Conheça o app</div>
         <AppTabsInfoGrid />
-        <button className="btn btn-pri" type="button" style={{ width: "100%", marginTop: 16 }} onClick={onClose}>Fechar</button>
+        <Botao variante="principal" style={{ width: "100%", marginTop: 16 }} onClick={onClose}>Fechar</Botao>
       </div>
     </div>
   );
@@ -161,19 +162,18 @@ export function Onboarding({ person, member, churchName, churchLogoUrl, onComple
         {erroSalvar && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 10 }}>{erroSalvar}</div>}
         <div className="ob-actions">
           {step > 0 && (
-            <button className="btn btn-sec" type="button" onClick={() => setStep(step - 1)}>
+            <Botao onClick={() => setStep(step - 1)}>
               Voltar
-            </button>
+            </Botao>
           )}
-          <button
-            className="btn btn-pri"
-            type="button"
+          <Botao
+            variante="principal"
             style={{ flex: 1, justifyContent: "center" }}
-            disabled={salvando}
+            desativado={salvando}
             onClick={next}
           >
             {salvando ? "Salvando..." : cur.ok}
-          </button>
+          </Botao>
         </div>
       </div>
     </div>

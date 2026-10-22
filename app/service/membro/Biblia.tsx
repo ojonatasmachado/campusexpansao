@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Icon } from "../lib/icons";
 import type { BibleBook, BibleFlatVerse, BibleMark } from "./tipos";
 
+import { Botao } from "../ui/Botao";
 export let bibleCache: BibleBook[] | null = null;
 export let bibleCachePromise: Promise<BibleBook[]> | null = null;
 export function loadBible(): Promise<BibleBook[]> {
@@ -250,9 +251,9 @@ export function TabBiblia({
           <div className="ob-card" onClick={(e) => e.stopPropagation()}>
             <div className="bib-action-ref">{book.name} {chapter}:{actionVerse}</div>
             <p className="bib-action-text">{versesAtuais?.[actionVerse - 1]}</p>
-            <button className="btn btn-sec btn-sm bib-copy" type="button" onClick={copiarVerso} style={{ marginTop: 10 }}>
+            <Botao compacto className="bib-copy" onClick={copiarVerso} style={{ marginTop: 10 }}>
               <Icon name="copiar" size={13} /> {copied ? "Copiado!" : "Copiar versículo"}
-            </button>
+            </Botao>
             <div className="bib-swatches">
               {BIBLE_CORES.map((c) => (
                 <button
@@ -273,11 +274,11 @@ export function TabBiblia({
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
               {(marcaAtual?.color || marcaAtual?.note) && (
-                <button className="btn btn-sec btn-sm" type="button" onClick={removerMarcacao}>Remover marcação</button>
+                <Botao compacto onClick={removerMarcacao}>Remover marcação</Botao>
               )}
               <div style={{ flex: 1 }} />
-              <button className="btn btn-sec btn-sm" type="button" onClick={() => setActionVerse(null)}>Fechar</button>
-              <button className="btn btn-pri btn-sm" type="button" onClick={salvarNota}>Salvar</button>
+              <Botao compacto onClick={() => setActionVerse(null)}>Fechar</Botao>
+              <Botao variante="principal" compacto onClick={salvarNota}>Salvar</Botao>
             </div>
           </div>
         </div>

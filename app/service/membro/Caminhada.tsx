@@ -12,6 +12,7 @@ import { listaFinalidades, type ContribuirCfg } from "../modules/contribuir/pix"
 import { JourneyContext, M6Row, MemberUiContext, mensagemAcao, useFaltas } from "./comum";
 import type { JourneyStep, M, Ministry, P, StepView } from "./tipos";
 
+import { Botao } from "../ui/Botao";
 /* "Quero servir" (service.request_to_serve): times em que a pessoa ainda não
    está. A igreja define o que precisa antes (requisitos de "servir" e do
    time); com algo faltando, o app mostra o que falta. O pedido vai pra
@@ -131,12 +132,12 @@ export function SheetPedidoEtapa({ step, nome, member, onRequestJourneyStep }: {
       <div className="field" style={{ marginTop: 14 }}><label className="field-label">Quando foi?</label><input className="input" type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
       <div className="field"><label className="field-label">Quer contar mais? (opcional)</label><input className="input" value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ex.: aconteceu em outra igreja" /></div>
       <div className="m6-btns">
-        <button className="m6-btn pri" type="button" disabled={!data || !member || !onRequestJourneyStep} onClick={() => {
+        <Botao tamanho="toque" variante="principal" desativado={!data || !member || !onRequestJourneyStep} onClick={() => {
           if (!member || !onRequestJourneyStep) return;
           onRequestJourneyStep(member.id, step, data, nota);
           ui.sheet(null);
           ui.toast("Pedido enviado · a liderança vai confirmar");
-        }}>Enviar</button>
+        }}>Enviar</Botao>
       </div>
     </div>
   );
@@ -181,7 +182,7 @@ export function CaminhadaV6({ steps, courses, purpose, contribuir }: { steps: St
               <div className="m6-rb">
                 <div className="m6-rt">{s.nome}</div>
                 <div className="m6-stw"><b>{STW[s.st]}</b>{s.info ? ` · ${s.info}` : ""}</div>
-                {s.acao && s.run && <div className="m6-mt"><button className={`m6-btn small ${s.st === "andamento" ? "pri" : "sec"}`} type="button" onClick={s.run}>{s.acao} →</button></div>}
+                {s.acao && s.run && <div className="m6-mt"><Botao tamanho="toque" compacto variante={s.st === "andamento" ? "principal" : "secundario"} onClick={s.run}>{s.acao} →</Botao></div>}
               </div>
             </div>
           ))}

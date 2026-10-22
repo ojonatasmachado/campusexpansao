@@ -8,6 +8,7 @@ import { INSTRUCAO_QR, aulasDoCurso, proximaAula, textoDaAula, type ProximaAula 
 import { JourneyContext, M6Row, MemberUiContext, dataLonga, mensagemAcao, useFaltas } from "./comum";
 import type { BaptismClass, Course, CourseLesson, CourseModule, Enrollment, M } from "./tipos";
 
+import { Botao, botaoClasse } from "../ui/Botao";
 export function ChipSt({ status, label }: { status: "ok" | "wait" | "no"; label?: string }) {
   const cls = status === "ok" ? "chip-ok" : status === "wait" ? "chip-wait" : "chip-no";
   return <span className={`chip ${cls}`}>{label ?? status}</span>;
@@ -33,14 +34,14 @@ export function ProximaAulaBloco({ prox }: { prox: ProximaAula<CourseLesson> | n
         <div className="m6-meta" style={{ marginTop: 4 }}>O conteúdo desta aula ainda não foi publicado.</div>
       ) : null}
       {abrir === "link" && (
-        <a className="m6-btn pri full" style={{ marginTop: 12 }} href={aula.link!.trim()} target="_blank" rel="noopener noreferrer">
+        <a className={botaoClasse({ tamanho: "toque", variante: "principal", largo: true })} style={{ marginTop: 12 }} href={aula.link!.trim()} target="_blank" rel="noopener noreferrer">
           <Icon name="play" size={20} />Assistir à aula
         </a>
       )}
       {abrir === "texto" && (
-        <button className="m6-btn pri full" style={{ marginTop: 12 }} type="button" onClick={() => ui.sheet(<SheetAula aula={aula} n={n} total={total} porQr={porQr} />)}>
+        <Botao tamanho="toque" variante="principal" largo style={{ marginTop: 12 }} onClick={() => ui.sheet(<SheetAula aula={aula} n={n} total={total} porQr={porQr} />)}>
           <Icon name="documento" size={20} />{porQr ? "Ver o material da aula" : "Ler a aula"}
-        </button>
+        </Botao>
       )}
     </div>
   );
@@ -268,7 +269,7 @@ export function CursosResumo({ member, courses, enrollments, courseModules, cour
             return prox ? <div className="m6-meta">Próxima aula: {prox.aula.name}</div> : null;
           })()}
           {total > 0 ? <div className="m6-prog"><i style={{ width: `${pct}%` }} /></div> : <div className="m6-meta">As aulas ainda não foram publicadas.</div>}
-          <button className="m6-btn sec full" style={{ marginTop: 12 }} type="button" onClick={() => ui.go("caminhada", "cursos")}>Abrir meu curso →</button>
+          <Botao tamanho="toque" largo style={{ marginTop: 12 }} onClick={() => ui.go("caminhada", "cursos")}>Abrir meu curso →</Botao>
         </div>
       )}
       <div className="m6-list">

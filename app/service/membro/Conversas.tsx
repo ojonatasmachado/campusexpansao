@@ -8,6 +8,7 @@ import { joinDot } from "../lib/date";
 import { Av } from "./comum";
 import type { Board, Card, Chat, ChatMember, M, Message, Ministry, P } from "./tipos";
 
+import { Botao } from "../ui/Botao";
 // ── aba: Inicio ───────────────────────────────────────────────────────────────
 
 // ── aba: Tarefas ──────────────────────────────────────────────────────────────
@@ -309,7 +310,7 @@ export function TabConversas({
               onChange={(e) => setTexto(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && enviar()}
             />
-            <button className="btn btn-pri btn-sm" type="button" disabled={!texto.trim()} onClick={enviar}>Enviar</button>
+            <Botao variante="principal" compacto desativado={!texto.trim()} onClick={enviar}>Enviar</Botao>
           </div>
         </div>
       </div>

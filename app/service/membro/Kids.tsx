@@ -14,6 +14,7 @@ import { checkinAberto, horaQueAbre, sessaoDoCulto, statusDaCrianca, useKidsChec
 import { Av } from "./comum";
 import type { Child, ChildGuardian, Ev, KidsAttendance, KidsClass, KidsEvent, KidsEventEnrollment, KidsSession, M, P, WallPost } from "./tipos";
 
+import { Botao } from "../ui/Botao";
 // ── aba: Kids (professor) ───────────────────────────────────────────────────────
 
 export function TabKids({
@@ -600,10 +601,10 @@ export function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, 
               </div>
             </div>
             {turma && !att && aberto && (
-              <div className="m6-btns"><button className={`m6-btn ${destaque && i === 0 ? "pri" : "sec"}`} type="button" disabled={busy} onClick={() => ck.checkin(c.id)}>{busy ? "Aguarde..." : `Fazer check-in de ${c.name.split(" ")[0]}`}</button></div>
+              <div className="m6-btns"><Botao tamanho="toque" variante={destaque && i === 0 ? "principal" : "secundario"} desativado={busy} onClick={() => ck.checkin(c.id)}>{busy ? "Aguarde..." : `Fazer check-in de ${c.name.split(" ")[0]}`}</Botao></div>
             )}
             {att?.status === "presente" && podeRetirar && (
-              <div className="m6-btns"><button className="m6-btn sec" type="button" disabled={busy} onClick={() => ck.pedirRetirada(c.id)}>{busy ? "Aguarde..." : "Solicitar retirada"}</button></div>
+              <div className="m6-btns"><Botao tamanho="toque" desativado={busy} onClick={() => ck.pedirRetirada(c.id)}>{busy ? "Aguarde..." : "Solicitar retirada"}</Botao></div>
             )}
           </div>
         );

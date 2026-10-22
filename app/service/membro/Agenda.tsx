@@ -15,6 +15,7 @@ import { TabOnde } from "./Onde";
 import { TabTarefas } from "./Conversas";
 import type { Board, Card, Course, CourseLesson, Ev, EventRsvp, ItemAgenda, M, MeetingLite, Ministry, P, RehearsalLite, Slot } from "./tipos";
 
+import { Botao } from "../ui/Botao";
 /* data em bloquinho: "Dom 04" */
 export function M6Date({ iso }: { iso: string }) {
   const d = parseISODate(iso);
@@ -198,7 +199,7 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
               <div className="m6-card">
                 <div className="m6-ct">Nada marcado para você</div>
                 <div className="m6-meta">{ct("Quando você for escalado ou se inscrever em algo, aparece aqui por dia.")}</div>
-                <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => setSeg("igreja")}>{ct("Ver os {cultos} e eventos")}</button></div>
+                <div className="m6-btns"><Botao tamanho="toque" onClick={() => setSeg("igreja")}>{ct("Ver os {cultos} e eventos")}</Botao></div>
               </div>
             </div>
           )}
@@ -221,7 +222,7 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
             <div className="m6-sec">
               <div className="m6-lbl">Quando posso servir</div>
               {onSaveAvailability ? <Disponibilidade person={person} onSave={onSaveAvailability} /> : null}
-              {member && destFalta && onStartChat && <div className="m6-pad"><button className="m6-btn sec full" type="button" onClick={avisarFalta}>Avisar que vou faltar</button></div>}
+              {member && destFalta && onStartChat && <div className="m6-pad"><Botao tamanho="toque" largo onClick={avisarFalta}>Avisar que vou faltar</Botao></div>}
             </div>
           )}
         </>
@@ -296,12 +297,12 @@ export function SheetEvento({ ev, slot, ministry, rsvp, onRespond, paginaUrl, ch
             <button type="button" className="m6-link" disabled={enviando} onClick={() => responder(false)}>{pede === "inscricao" ? "Cancelar inscrição" : "Desfazer"}</button>
           </div>
         ) : (
-          <div className="m6-btns"><button className="m6-btn pri" type="button" disabled={enviando} onClick={() => responder(true)}>{enviando ? "Enviando..." : pede === "inscricao" ? "Fazer inscrição" : "Vou"}</button></div>
+          <div className="m6-btns"><Botao tamanho="toque" variante="principal" desativado={enviando} onClick={() => responder(true)}>{enviando ? "Enviando..." : pede === "inscricao" ? "Fazer inscrição" : "Vou"}</Botao></div>
         )
       )}
       <div className="m6-btns">
-        <button className="m6-btn sec" type="button" onClick={compartilhar}><Icon name="compartilhar" size={20} />Compartilhar</button>
-        <button className="m6-btn sec" type="button" onClick={calendario}><Icon name="agenda" size={20} />Adicionar ao calendário</button>
+        <Botao tamanho="toque" onClick={compartilhar}><Icon name="compartilhar" size={20} />Compartilhar</Botao>
+        <Botao tamanho="toque" onClick={calendario}><Icon name="agenda" size={20} />Adicionar ao calendário</Botao>
       </div>
     </div>
   );
@@ -328,8 +329,8 @@ export function RespostaEvento({ id, inicial, onRespond }: { id: string; inicial
   }
   return (
     <div className="m6-btns">
-      <button className="m6-btn pri" type="button" onClick={() => set("vou")}>Vou</button>
-      <button className="m6-btn sec" type="button" onClick={() => set("nao")}>Não vou</button>
+      <Botao tamanho="toque" variante="principal" onClick={() => set("vou")}>Vou</Botao>
+      <Botao tamanho="toque" onClick={() => set("nao")}>Não vou</Botao>
     </div>
   );
 }

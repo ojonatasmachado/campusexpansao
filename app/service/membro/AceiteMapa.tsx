@@ -6,6 +6,7 @@ import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { TERMO_MAPA_VERSAO, pontosDoTermo, termoCompleto } from "../lib/termo-mapa";
 import { MemberUiContext } from "./comum";
 
+import { Botao } from "../ui/Botao";
 /* Mapa da igreja (PLANO.md 2.3): quem já era membro antes do termo vê esta
    folha uma vez, no próximo acesso. Os 3 pontos ficam visíveis; o termo
    completo abre ali mesmo. "Agora não" também fica gravado: não pergunta de
@@ -43,8 +44,8 @@ export function SheetAceiteMapa({ memberId, churchName, onDecidido }: { memberId
         {termoCompleto(churchName).map((p) => <p key={p}>{p}</p>)}
       </details>
       <div className="m6-btns">
-        <button className="m6-btn pri" type="button" disabled={salvando} onClick={() => decidir(true)}>Concordo e continuar</button>
-        <button className="m6-btn sec" type="button" disabled={salvando} onClick={() => decidir(false)}>Agora não</button>
+        <Botao tamanho="toque" variante="principal" desativado={salvando} onClick={() => decidir(true)}>Concordo e continuar</Botao>
+        <Botao tamanho="toque" desativado={salvando} onClick={() => decidir(false)}>Agora não</Botao>
       </div>
       {erro && <div className="m6-meta" role="alert">{erro}</div>}
     </div>

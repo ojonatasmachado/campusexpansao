@@ -26,6 +26,7 @@ import { termosDaRota } from "../../modules/registry";
 import { Kpi, REACOES_PESQUISA, ROUTES } from "../comum";
 import type { AnnouncementView, ChildView, DecisionView, DrawerState, EnrollmentView, EventAttendanceView, EventView, FieldDef, JourneyChangeRequestView, KidsAttendanceView, KidsClassView, MemberView, MinistryView, ModalState, PersonView, RosterAssignmentView, TimelineEventView, VisitorView } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
 export function GlobalSearch({
   people,
   members,
@@ -345,8 +346,8 @@ export function Painel({
           })()}</p>
         </div>
         <div className="ph-actions">
-          <button className="btn btn-sec" type="button" onClick={() => setRoute("cultos")}>Ver agenda</button>
-          <button className="btn btn-pri" type="button" onClick={() => setRoute(emPreparacao ? "configurar" : ativando ? "cultos" : "escalas")}>{emPreparacao ? (setup.primeiroEventoId || setup.fase > 1 || setup.feitas.length > 0 || setup.pulou || setup.rascunho ? "Continuar preparação" : "Preparar minha igreja") : ativando ? (primeiraProgramacao ? "Preparar primeiro encontro" : "Preparar próximo encontro") : "Montar escala"}</button>
+          <Botao onClick={() => setRoute("cultos")}>Ver agenda</Botao>
+          <Botao variante="principal" onClick={() => setRoute(emPreparacao ? "configurar" : ativando ? "cultos" : "escalas")}>{emPreparacao ? (setup.primeiroEventoId || setup.fase > 1 || setup.feitas.length > 0 || setup.pulou || setup.rascunho ? "Continuar preparação" : "Preparar minha igreja") : ativando ? (primeiraProgramacao ? "Preparar primeiro encontro" : "Preparar próximo encontro") : "Montar escala"}</Botao>
         </div>
       </div>
       {ativando && (
@@ -432,7 +433,7 @@ export function Painel({
                 {sobre.map(([t, d]) => <div key={t}><dt>{t}</dt><dd>{d}</dd></div>)}
               </dl>
             </div>
-            <div className="modal-foot"><button className="btn btn-pri" type="button" onClick={() => setSobreAberto(false)}>Fechar</button></div>
+            <div className="modal-foot"><Botao variante="principal" onClick={() => setSobreAberto(false)}>Fechar</Botao></div>
           </div>
         </div>
       )}
@@ -440,7 +441,7 @@ export function Painel({
         <div className="panel">
           <div className="panel-head">
             <span className="panel-title"><Icon name="escalas" size={14} /> Pendências da escala</span>
-            <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("escalas")}>Escalar</button>
+            <Botao compacto onClick={() => setRoute("escalas")}>Escalar</Botao>
           </div>
           <div className="panel-body flush">
             {(() => {
@@ -464,7 +465,7 @@ export function Painel({
                   <div className="mini-title">{gap.position.name} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {gap.ministry.name}</span></div>
                   <div className="mini-sub">{joinDot(gap.event.weekday, gap.event.time)}</div>
                 </div>
-                <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("escalas")}>Escalar</button>
+                <Botao compacto onClick={() => setRoute("escalas")}>Escalar</Botao>
               </div>
             ))}
             {gapsDaSemana.length === 0 && !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone) && vagasFaltando(coberturaPorTime(e, roster, ministries, scopeMinistryIds)) > 0) ? <div className="mini-row"><div className="mini-main"><div className="mini-title">{semProgramacao ? "Sem programação futura" : roster.length === 0 ? "Escalas ainda não preparadas" : "Sem vagas abertas nesta semana"}</div><div className="mini-sub">{semProgramacao ? "Prepare o próximo encontro antes de organizar a equipe." : roster.length === 0 ? "Ter encontros na agenda não significa que a equipe já foi escalada." : "Confira os próximos encontros para acompanhar a cobertura de cada time."}</div></div></div> : null}
@@ -472,7 +473,7 @@ export function Painel({
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div className="panel">
-            <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> {ct("Próximos {cultos}")}</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("cultos")}>Agenda</button></div>
+            <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> {ct("Próximos {cultos}")}</span><Botao compacto onClick={() => setRoute("cultos")}>Agenda</Botao></div>
             <div className="panel-body flush">
             {/* v7 2.9: só o que ainda vai começar, no fuso da igreja (Brasília) */}
             {(() => {
@@ -529,8 +530,8 @@ export function Painel({
                     <div className="mini-sub">{formatDateBR(request.eventDate) || "sem data informada"}{request.note ? ` · ${request.note}` : ""}</div>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button className="btn btn-sec btn-sm" type="button" onClick={() => onRejectJourney(request)}>Rejeitar</button>
-                    <button className="btn btn-pri btn-sm" type="button" onClick={() => onApproveJourney(request)}>Aprovar</button>
+                    <Botao compacto onClick={() => onRejectJourney(request)}>Rejeitar</Botao>
+                    <Botao variante="principal" compacto onClick={() => onApproveJourney(request)}>Aprovar</Botao>
                   </div>
                 </div>
               );
@@ -540,7 +541,7 @@ export function Painel({
       )}
       <div className="dash-2col">
         <div className="panel">
-          <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Comunicação recente</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("comunicacao")}>Ver tudo</button></div>
+          <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Comunicação recente</span><Botao compacto onClick={() => setRoute("comunicacao")}>Ver tudo</Botao></div>
           <div className="panel-body flush">
             {recentAnnouncements.map((a) => (
               <button className="mini-row click" type="button" key={a.id} onClick={() => setRoute("comunicacao")}>
@@ -559,7 +560,7 @@ export function Painel({
       {kidsClasses.length > 0 && (
         <div className="dash-2col" style={{ marginTop: 20 }}>
           <div className="panel">
-            <div className="panel-head"><span className="panel-title"><Icon name="kids" size={14} /> Crianças por turma</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("criancas")}>Ver todas</button></div>
+            <div className="panel-head"><span className="panel-title"><Icon name="kids" size={14} /> Crianças por turma</span><Botao compacto onClick={() => setRoute("criancas")}>Ver todas</Botao></div>
             <div className="panel-body flush">
               {kidsClasses.map((kc) => {
                 const count = kidsChildren.filter((child) => child.class_id === kc.id).length;

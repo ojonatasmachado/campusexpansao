@@ -148,8 +148,6 @@ em { font-style:italic; }
 @media (hover:hover) and (pointer:fine) { .btn-pri:hover { background:color-mix(in srgb, var(--accent-fill) 88%, var(--accent-ink)); } }
 .btn-sec { background:transparent; color:var(--white); border-color:var(--border-2); }
 @media (hover:hover) and (pointer:fine) { .btn-sec:hover { border-color:var(--olive); color:var(--olive); } }
-.btn-ghost { background:transparent; color:var(--muted); }
-@media (hover:hover) and (pointer:fine) { .btn-ghost:hover { color:var(--white); } }
 .btn-danger { background:var(--danger-dim); color:var(--danger); border-color:var(--danger-line); }
 @media (hover:hover) and (pointer:fine) { .btn-danger:hover { background:var(--danger); color:var(--danger-ink, var(--ink)); } }
 .btn-sm { font-size:var(--fs-ui-13); min-height:32px; padding:4px 12px; gap:6px; }
@@ -937,6 +935,7 @@ body[data-theme="light"] .av { box-shadow:none; }
 @media (hover:hover) and (pointer:fine) { .img-up-slot:hover { border-color:var(--olive-line); } }
 .img-up-plus { font-size:var(--fs-pn-20); color:var(--muted); font-weight:300; }
 .img-up-main { flex:1; min-width:0; }
+/* .btn-ghost: definição única (antes havia outra perto de .btn-pri, sempre vencida por esta) */
 .btn-ghost { background:transparent; border:0.5px solid var(--border-2); color:var(--muted); }
 @media (hover:hover) and (pointer:fine) { .btn-ghost:hover { color:var(--danger); border-color:var(--danger-line); } }
 
