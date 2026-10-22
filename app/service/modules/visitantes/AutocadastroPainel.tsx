@@ -12,6 +12,9 @@ import { caminhoAutocadastro, type AutocadastroCfg } from "./autocadastro";
 import { Botao, botaoClasse } from "../../ui/Botao";
 import { Interruptor } from "../../ui/Interruptor";
 import { Linha } from "../../ui/Linha";
+import { Campo } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
+import { Vazio } from "../../ui/Estados";
 const PADRAO: AutocadastroCfg = { ativo: false, responsavelId: null };
 
 /* Visitantes › QR e link: liga o autocadastro, escolhe quem recebe os
@@ -76,14 +79,11 @@ export default function AutocadastroPainel({
             <Interruptor ligado={cfg.ativo} rotulo="Receber cadastros pelo link" onClick={() => save({ ativo: !cfg.ativo })} />
           </Linha>
 
-          <div className="field" style={{ marginTop: 14 }}>
-            <label className="field-label" htmlFor="vis-resp">Quem recebe os novos cadastros</label>
-            <select id="vis-resp" className="select" value={cfg.responsavelId ?? ""} onChange={(e) => save({ responsavelId: e.target.value || null })}>
-              <option value="">Ninguém fixo (a equipe distribui)</option>
-              {pessoas.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+          <div style={{ marginTop: 14 }}>
+            <Campo rotulo="Quem recebe os novos cadastros" id="vis-resp">
+              <Selecao valor={cfg.responsavelId ?? ""} aoMudar={(v) => save({ responsavelId: v || null })} vazio="Ninguém fixo (a equipe distribui)"
+                opcoes={pessoas.map((p) => ({ v: p.id, l: p.name }))} />
+            </Campo>
           </div>
 
           {church.slug ? (
@@ -111,7 +111,7 @@ export default function AutocadastroPainel({
               </div>
             </>
           ) : (
-            <div className="empty">A igreja ainda não tem endereço. Defina em Comunicação › Página da igreja e o link aparece aqui.</div>
+            <Vazio titulo="A igreja ainda não tem endereço. Defina em Comunicação › Página da igreja e o link aparece aqui." />
           )}
         </div>
         <div className="modal-foot">

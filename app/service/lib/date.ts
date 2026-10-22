@@ -2,7 +2,7 @@ import { FUSO_PADRAO, partesNoFuso } from "./fuso";
 
 /* Formatação de data pro padrão brasileiro (DD/MM/AAAA), usado em toda
    exibição de data no Service. As datas continuam guardadas/editadas em
-   ISO (YYYY-MM-DD, formato nativo de <input type="date">) : só a
+   ISO (YYYY-MM-DD, o mesmo formato do campo de data nativo) : só a
    RENDERIZAÇÃO pro usuário passa por aqui. */
 
 /** "2026-07-06" ou "2026-07-06T10:00:00Z" → "06/07/2026". Se não reconhecer

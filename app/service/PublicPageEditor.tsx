@@ -22,6 +22,9 @@ import { Interruptor } from "./ui/Interruptor";
 import { Opcao } from "./ui/Opcao";
 import { Linha } from "./ui/Linha";
 import { Selo } from "./ui/Selo";
+import { Campo, Entrada, TextoLongo } from "./ui/Campo";
+import { Vazio, Carregando } from "./ui/Estados";
+import { confirmar } from "./ui/confirmar";
 /* Editor da Página da igreja (link-in-bio) da igreja, aba "Página da igreja" em
    Configurações. Arquivo próprio (não dentro de ServiceExactApp.tsx, que já
    tem 10k+ linhas) : essa funcionalidade tem peso real (CRUD de links com
@@ -211,7 +214,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
   };
 
   const deleteLink = async (id: string) => {
-    if (!confirm("Remover este link da página?")) return;
+    if (!(await confirmar({ titulo: "Remover este link da página?", acao: "Remover" }))) return;
     await client().from("church_links").delete().eq("id", id);
     setLinkModal(null);
     loadLinks();
@@ -244,7 +247,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
   };
 
   const deletePost = async (id: string) => {
-    if (!confirm("Remover esta notícia da página?")) return;
+    if (!(await confirmar({ titulo: "Remover esta notícia da página?", acao: "Remover" }))) return;
     await client().from("church_page_posts").delete().eq("id", id);
     setPostModal(null);
     loadPosts();
@@ -302,7 +305,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
   };
 
   if (!canEdit) {
-    return <div className="empty">Só master ou pastor pode configurar a página da igreja.</div>;
+    return <Vazio titulo="Só master ou pastor pode configurar a página da igreja." />;
   }
 
   return (
@@ -403,15 +406,18 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
               identidade da igreja, editada em Configurações → Personalização.
             </div>
 
-            <div className="field-label" style={{ marginTop: 10 }}>Bio (aparece embaixo do nome da igreja)</div>
-            <textarea
-              className="input"
-              rows={2}
-              value={pagina.bio ?? ""}
-              onChange={(e) => setPagina((p) => ({ ...p, bio: e.target.value }))}
-              onBlur={(e) => savePagina({ bio: e.target.value })}
-              placeholder="Uma frase curta sobre a igreja"
-            />
+            <div style={{ marginTop: 10 }}>
+              <Campo rotulo="Bio (aparece embaixo do nome da igreja)">
+                <TextoLongo
+                  className="input"
+                  rows={2}
+                  value={pagina.bio ?? ""}
+                  onChange={(e) => setPagina((p) => ({ ...p, bio: e.target.value }))}
+                  onBlur={(e) => savePagina({ bio: e.target.value })}
+                  placeholder="Uma frase curta sobre a igreja"
+                />
+              </Campo>
+            </div>
 
             <div style={{ marginTop: 14 }}>
               <ImageUpload
@@ -446,8 +452,8 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                 + Link
               </Botao>
             </div>
-            {loading && <div className="empty">Carregando...</div>}
-            {!loading && links.length === 0 && <div className="empty">Nenhum link ainda. Adicione o primeiro.</div>}
+            {loading && <Carregando forma="lista" />}
+            {!loading && links.length === 0 && <Vazio titulo="Nenhum link ainda. Adicione o primeiro." />}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {links.map((link, idx) => (
                 <Linha estilo="config" key={link.id}>
@@ -477,30 +483,24 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
             <div className="cfg-card-t">Redes sociais</div>
             <div className="cfg-card-s">Aparecem como ícones no rodapé da página. Deixe em branco o que não usar.</div>
             <div className="cfg-grid2" style={{ marginTop: 10 }}>
-              <div>
-                <div className="field-label">WhatsApp (só números, com DDD)</div>
-                <input className="input" defaultValue={pagina.social?.whatsapp ?? ""} placeholder="5511999999999" onBlur={(e) => saveSocial("whatsapp", e.target.value)} />
-              </div>
-              <div>
-                <div className="field-label">Instagram (link completo)</div>
-                <input className="input" defaultValue={pagina.social?.instagram ?? ""} placeholder="https://instagram.com/suaigreja" onBlur={(e) => saveSocial("instagram", e.target.value)} />
-              </div>
-              <div>
-                <div className="field-label">YouTube (link completo)</div>
-                <input className="input" defaultValue={pagina.social?.youtube ?? ""} placeholder="https://youtube.com/@suaigreja" onBlur={(e) => saveSocial("youtube", e.target.value)} />
-              </div>
-              <div>
-                <div className="field-label">Facebook (link completo)</div>
-                <input className="input" defaultValue={pagina.social?.facebook ?? ""} placeholder="https://facebook.com/suaigreja" onBlur={(e) => saveSocial("facebook", e.target.value)} />
-              </div>
-              <div>
-                <div className="field-label">TikTok (link completo)</div>
-                <input className="input" defaultValue={pagina.social?.tiktok ?? ""} placeholder="https://tiktok.com/@suaigreja" onBlur={(e) => saveSocial("tiktok", e.target.value)} />
-              </div>
-              <div>
-                <div className="field-label">Site (link completo)</div>
-                <input className="input" defaultValue={pagina.social?.site ?? ""} placeholder="https://suaigreja.com" onBlur={(e) => saveSocial("site", e.target.value)} />
-              </div>
+              <Campo rotulo="WhatsApp (só números, com DDD)">
+                <Entrada defaultValue={pagina.social?.whatsapp ?? ""} placeholder="5511999999999" onBlur={(e) => saveSocial("whatsapp", e.target.value)} />
+              </Campo>
+              <Campo rotulo="Instagram (link completo)">
+                <Entrada defaultValue={pagina.social?.instagram ?? ""} placeholder="https://instagram.com/suaigreja" onBlur={(e) => saveSocial("instagram", e.target.value)} />
+              </Campo>
+              <Campo rotulo="YouTube (link completo)">
+                <Entrada defaultValue={pagina.social?.youtube ?? ""} placeholder="https://youtube.com/@suaigreja" onBlur={(e) => saveSocial("youtube", e.target.value)} />
+              </Campo>
+              <Campo rotulo="Facebook (link completo)">
+                <Entrada defaultValue={pagina.social?.facebook ?? ""} placeholder="https://facebook.com/suaigreja" onBlur={(e) => saveSocial("facebook", e.target.value)} />
+              </Campo>
+              <Campo rotulo="TikTok (link completo)">
+                <Entrada defaultValue={pagina.social?.tiktok ?? ""} placeholder="https://tiktok.com/@suaigreja" onBlur={(e) => saveSocial("tiktok", e.target.value)} />
+              </Campo>
+              <Campo rotulo="Site (link completo)">
+                <Entrada defaultValue={pagina.social?.site ?? ""} placeholder="https://suaigreja.com" onBlur={(e) => saveSocial("site", e.target.value)} />
+              </Campo>
             </div>
           </div>
         )}
@@ -517,7 +517,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                 + Notícia
               </Botao>
             </div>
-            {!loading && posts.length === 0 && <div className="empty">Nenhuma notícia publicada ainda.</div>}
+            {!loading && posts.length === 0 && <Vazio titulo="Nenhuma notícia publicada ainda." />}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {posts.map((post) => (
                 <Linha estilo="config" key={post.id}>
@@ -595,11 +595,15 @@ function LinkModal({
           <div className="modal-title">{form.label || "Link da página"}</div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
-          <div className="field-label">Título</div>
-          <input className="input" value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} placeholder="Ex.: Culto ao vivo" />
+          <Campo rotulo="Título">
+            <Entrada value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} placeholder="Ex.: Culto ao vivo" />
+          </Campo>
 
-          <div className="field-label" style={{ marginTop: 12 }}>Link</div>
-          <input className="input" value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} placeholder="https://..." />
+          <div style={{ marginTop: 12 }}>
+            <Campo rotulo="Link">
+              <Entrada value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} placeholder="https://..." />
+            </Campo>
+          </div>
 
           <div className="field-label" style={{ marginTop: 12 }}>Ícone</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -631,8 +635,11 @@ function LinkModal({
             onRemove={() => setForm((f) => ({ ...f, imageUrl: null }))}
           />
 
-          <div className="field-label" style={{ marginTop: 12 }}>Grupo (opcional, ex.: Jovens, Eventos)</div>
-          <input className="input" value={form.groupLabel} onChange={(e) => setForm((f) => ({ ...f, groupLabel: e.target.value }))} placeholder="Deixe em branco pra não agrupar" />
+          <div style={{ marginTop: 12 }}>
+            <Campo rotulo="Grupo (opcional, ex.: Jovens, Eventos)">
+              <Entrada value={form.groupLabel} onChange={(e) => setForm((f) => ({ ...f, groupLabel: e.target.value }))} placeholder="Deixe em branco pra não agrupar" />
+            </Campo>
+          </div>
 
           <div className="cfg-grid2" style={{ marginTop: 12 }}>
             <div>
@@ -692,11 +699,15 @@ function PostModal({
           <div className="modal-title">{form.title || "Notícia da página"}</div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
-          <div className="field-label">Título</div>
-          <input className="input" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="Ex.: Retiro de Jovens abre inscrições" />
+          <Campo rotulo="Título">
+            <Entrada value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="Ex.: Retiro de Jovens abre inscrições" />
+          </Campo>
 
-          <div className="field-label" style={{ marginTop: 12 }}>Texto</div>
-          <textarea className="input" rows={4} value={form.body} onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))} placeholder="Detalhes da notícia ou aviso" />
+          <div style={{ marginTop: 12 }}>
+            <Campo rotulo="Texto">
+              <TextoLongo className="input" rows={4} value={form.body} onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))} placeholder="Detalhes da notícia ou aviso" />
+            </Campo>
+          </div>
 
           <div style={{ marginTop: 12 }}>
             <ImageUpload

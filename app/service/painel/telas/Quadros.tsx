@@ -16,6 +16,9 @@ import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Selo } from "../../ui/Selo";
 import { Segmentado } from "../../ui/Segmentado";
+import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
+import { SeletorData } from "../../ui/Data";
+import { Vazio } from "../../ui/Estados";
 /* permissões do Kanban por papel (equivalente ao kanbanPerm()/S.KANBAN_PERMS do
    protótipo): master/pastor administram o quadro; líder cria, comenta e move os
    próprios cards mas não apaga; voluntário não deveria nem abrir esta tela (usa o
@@ -70,7 +73,7 @@ export function BoardChooser({
         <div className="modal-body" style={{ display: "block" }}>
           <div className="dsec-title" style={{ marginBottom: 10 }}>Quadros existentes</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {boards.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>Nenhum quadro ainda, crie um abaixo.</div>}
+            {boards.length === 0 && <Vazio titulo="Nenhum quadro ainda, crie um abaixo." />}
             {boards.map((board) => (
               <Acao className="cand" key={board.id} onClick={() => onPick(board.id)}>
                 <span className="esc-col-mark" style={{ width: 30, height: 30 }}><Icon name="quadros" size={15} /></span>
@@ -367,10 +370,10 @@ export function NovoCard({
           <div className="modal-title">Novo card</div>
         </div>
         <div className="modal-body">
-          <div className="field"><label className="field-label">Título</label><input className="input" autoFocus value={titulo} placeholder="O que precisa ser feito" onChange={(e) => setTitulo(e.target.value)} /></div>
-          <div className="field"><label className="field-label">Descrição</label><textarea className="textarea" value={desc} placeholder="Detalhes (opcional)" onChange={(e) => setDesc(e.target.value)} /></div>
-          <div className="field field-half"><label className="field-label">Prazo</label><input className="input" type="date" value={due} onChange={(e) => setDue(e.target.value)} /></div>
-          <div className="field field-half"><label className="field-label">Prioridade</label>
+          <Campo rotulo="Título"><Entrada autoFocus value={titulo} placeholder="O que precisa ser feito" onChange={(e) => setTitulo(e.target.value)} /></Campo>
+          <Campo rotulo="Descrição"><TextoLongo value={desc} placeholder="Detalhes (opcional)" onChange={(e) => setDesc(e.target.value)} /></Campo>
+          <Campo rotulo="Prazo" className="field-half"><SeletorData valor={due} aoMudar={setDue} limpavel /></Campo>
+          <Campo rotulo="Prioridade" className="field-half" grupo>
             <Segmentado className="seg-sm">
               {(["alta", "media", "baixa"] as const).map((p) => (
                 <Opcao key={p} marcada={prio === p} onClick={() => setPrio(p)}>
@@ -378,8 +381,8 @@ export function NovoCard({
                 </Opcao>
               ))}
             </Segmentado>
-          </div>
-          <div className="field"><label className="field-label">Responsáveis</label>
+          </Campo>
+          <Campo rotulo="Responsáveis" grupo>
             <div className="cand-pick">
               {candidatos.slice(0, 12).map((p) => {
                 const on = resp.includes(p.id);
@@ -391,7 +394,7 @@ export function NovoCard({
                 );
               })}
             </div>
-          </div>
+          </Campo>
         </div>
         <div className="modal-foot">
           <Botao onClick={onClose}>Cancelar</Botao>
@@ -647,7 +650,7 @@ export function Quadros({
             </Acao>
           );
         })}
-        {visibleBoards.length === 0 && <div className="empty">Nenhum quadro criado ainda.</div>}
+        {visibleBoards.length === 0 && <Vazio titulo="Nenhum quadro criado ainda." />}
       </div>
     </div>
   );

@@ -18,6 +18,10 @@ import { Botao } from "../ui/Botao";
 import { Acao } from "../ui/Acao";
 import { Cartao, cartaoClasse } from "../ui/Cartao";
 import { seloClasse } from "../ui/Selo";
+import { Marcar } from "../ui/Campo";
+import { Vazio } from "../ui/Estados";
+import { Selecao } from "../ui/Selecao";
+import { SeletorData } from "../ui/Data";
 // ── aba: Kids (professor) ───────────────────────────────────────────────────────
 
 export function TabKids({
@@ -144,7 +148,7 @@ export function TabKids({
     return (
       <>
         <div className="m-section-t">Kids</div>
-        <div className="empty" style={{ marginTop: 12 }}>Nenhuma sessão Kids aberta agora. Peça para a liderança abrir o QR do {ct("{culto}")} de hoje em {ct("{Cultos} e eventos")}.</div>
+        <Vazio tamanho="toque" titulo={<>Nenhuma sessão Kids aberta agora. Peça para a liderança abrir o QR do {ct("{culto}")} de hoje em {ct("{Cultos} e eventos")}.</>} />
       </>
     );
   }
@@ -155,9 +159,9 @@ export function TabKids({
       <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginBottom: 12 }}>{joinDot(event?.name, `${event?.weekday ?? ""} ${formatDateBR(event?.eventDate)}`.trim())}</div>
 
       {activeSessions.length > 1 && (
-        <select className="select" style={{ marginBottom: 12 }} value={session.id} onChange={(e) => setSessionId(e.target.value)}>
-          {activeSessions.map((s) => <option key={s.id} value={s.id}>{kidsClasses.find((c) => c.id === s.class_id)?.name ?? "Turma"}</option>)}
-        </select>
+        <div style={{ marginBottom: 12 }}>
+          <Selecao rotulo="Turma" valor={session.id} aoMudar={setSessionId} opcoes={activeSessions.map((s) => ({ v: s.id, l: kidsClasses.find((c) => c.id === s.class_id)?.name ?? "Turma" }))} />
+        </div>
       )}
 
       {pending.length > 0 && (
@@ -177,7 +181,7 @@ export function TabKids({
       )}
 
       <div className="m-when" style={{ marginBottom: 8, marginTop: pending.length ? 14 : 0 }}>Na sala · {present.length}</div>
-      {present.length === 0 && <div className="empty">Nenhuma criança na sala ainda.</div>}
+      {present.length === 0 && <Vazio tamanho="toque" titulo="Nenhuma criança na sala ainda." />}
       {present.map((att) => {
         const child = childById.get(att.child_id);
         return (
@@ -210,12 +214,10 @@ export function TabKids({
         <Cartao estilo="app-solto" style={{ borderColor: "var(--olive-line)", marginTop: 10 }}>
           <PhotoPicker label="Foto da criança (obrigatória)" photoUrl={fotoCrianca} path={`${organizationId}/kids/children/${fichaIds.childId}`} onUploaded={setFotoCrianca} />
           <input className="input" placeholder="Nome da criança" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
-          <input className="input" type="date" value={form.nascimento} onChange={(e) => setForm((f) => ({ ...f, nascimento: e.target.value }))} style={{ marginBottom: 8 }} />
-          <select className="select" value={form.genero} onChange={(e) => setForm((f) => ({ ...f, genero: e.target.value }))} style={{ marginBottom: 8 }}>
-            <option value="">Gênero (opcional)</option>
-            <option value="menino">Menino</option>
-            <option value="menina">Menina</option>
-          </select>
+          <div style={{ marginBottom: 8 }}><SeletorData rotulo="Nascimento" valor={form.nascimento} aoMudar={(v) => setForm((f) => ({ ...f, nascimento: v }))} /></div>
+          <div style={{ marginBottom: 8 }}>
+            <Selecao rotulo="Gênero" valor={form.genero} aoMudar={(v) => setForm((f) => ({ ...f, genero: v }))} vazio="Gênero (opcional)" opcoes={[{ v: "menino", l: "Menino" }, { v: "menina", l: "Menina" }]} />
+          </div>
           <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginBottom: 10 }}>Turma: {sugestaoTurma?.name ?? (session ? kidsClasses.find((kc) => kc.id === session.class_id)?.name ?? "nenhuma turma cobre essa idade" : "informe o nascimento")}</div>
 
           <input className="input" list="service-kids-people-names" placeholder="Nome do responsável" value={form.respNome} onChange={(e) => setForm((f) => ({ ...f, respNome: e.target.value }))} style={{ marginBottom: 8 }} />
@@ -232,10 +234,9 @@ export function TabKids({
           <input className="input" placeholder="Contato de emergência: nome" aria-label="Contato de emergência: nome" value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
           <input className="input" placeholder="Contato de emergência: telefone" aria-label="Contato de emergência: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
 
-          <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 12, fontSize: "var(--fs-app-13)", lineHeight: 1.4 }}>
-            <input type="checkbox" checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))} style={{ marginTop: 3 }} />
-            <span>{imageAuthorizationCopy(form.nome)}</span>
-          </label>
+          <div style={{ marginBottom: 12, fontSize: "var(--fs-app-13)", lineHeight: 1.4 }}>
+            <Marcar checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))}>{imageAuthorizationCopy(form.nome)}</Marcar>
+          </div>
           {fichaError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{fichaError}</div>}
           <Botao tamanho="toque" variante="principal" largo style={{ width: "100%" }} onClick={criarFicha}>Salvar e fazer check-in</Botao>
         </Cartao>
@@ -400,12 +401,10 @@ export function TabKidsArea({
     <Cartao estilo="app-solto" style={{ borderColor: "var(--olive-line)", marginTop: 10 }}>
       <PhotoPicker label="Foto da criança (obrigatória)" photoUrl={fotoFilho} path={`${organizationId}/kids/children/${fotoFilhoTargetId}`} onUploaded={setFotoFilho} />
       <input className="input" placeholder="Nome da criança" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
-      <input className="input" type="date" value={form.nascimento} onChange={(e) => setForm((f) => ({ ...f, nascimento: e.target.value }))} style={{ marginBottom: 8 }} />
-      <select className="select" value={form.genero} onChange={(e) => setForm((f) => ({ ...f, genero: e.target.value }))} style={{ marginBottom: 8 }}>
-        <option value="">Gênero (opcional)</option>
-        <option value="menino">Menino</option>
-        <option value="menina">Menina</option>
-      </select>
+      <div style={{ marginBottom: 8 }}><SeletorData rotulo="Nascimento" valor={form.nascimento} aoMudar={(v) => setForm((f) => ({ ...f, nascimento: v }))} /></div>
+      <div style={{ marginBottom: 8 }}>
+        <Selecao rotulo="Gênero" valor={form.genero} aoMudar={(v) => setForm((f) => ({ ...f, genero: v }))} vazio="Gênero (opcional)" opcoes={[{ v: "menino", l: "Menino" }, { v: "menina", l: "Menina" }]} />
+      </div>
       <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginBottom: 10 }}>Turma: {sugestaoTurma?.name ?? (form.nascimento ? "nenhuma turma cobre essa idade ainda" : "calculada pelo nascimento")}</div>
       <input className="input" placeholder="Alergias" value={form.alergias} onChange={(e) => setForm((f) => ({ ...f, alergias: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Restrições alimentares" value={form.restricoes} onChange={(e) => setForm((f) => ({ ...f, restricoes: e.target.value }))} style={{ marginBottom: 8 }} />
@@ -413,10 +412,9 @@ export function TabKidsArea({
       <input className="input" placeholder="Medicamento em uso contínuo" aria-label="Medicamento em uso contínuo" value={form.medicamento} onChange={(e) => setForm((f) => ({ ...f, medicamento: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Contato de emergência: nome" aria-label="Contato de emergência: nome" value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder="Contato de emergência: telefone" aria-label="Contato de emergência: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
-      <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 12, fontSize: "var(--fs-app-13)", lineHeight: 1.4 }}>
-        <input type="checkbox" checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))} style={{ marginTop: 3 }} />
-        <span>{imageAuthorizationCopy(form.nome)}</span>
-      </label>
+      <div style={{ marginBottom: 12, fontSize: "var(--fs-app-13)", lineHeight: 1.4 }}>
+        <Marcar checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))}>{imageAuthorizationCopy(form.nome)}</Marcar>
+      </div>
       {ficarError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{ficarError}</div>}
       <div className="m6-fixo m6-fixo-mcard"><Botao tamanho="toque" variante="principal" largo style={{ width: "100%" }} onClick={salvarFilho}>Salvar</Botao></div>
     </Cartao>
@@ -482,9 +480,9 @@ export function TabKidsArea({
                           <PhotoPicker label="Foto do corresponsável (obrigatória)" photoUrl={coForm.photoUrl} path={`${organizationId}/kids/guardians/${people.find((p) => p.name === coForm.nome)?.id ?? "novo"}`} onUploaded={(url) => setCoForm((f) => ({ ...f, photoUrl: url }))} />
                         </div>
                       )}
-                      <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontSize: "var(--fs-app-13)" }}>
-                        <input type="checkbox" checked={coForm.canPickup} onChange={(e) => setCoForm((f) => ({ ...f, canPickup: e.target.checked }))} /> Pode retirar
-                      </label>
+                      <div style={{ marginBottom: 8, fontSize: "var(--fs-app-13)" }}>
+                        <Marcar checked={coForm.canPickup} onChange={(e) => setCoForm((f) => ({ ...f, canPickup: e.target.checked }))}>Pode retirar</Marcar>
+                      </div>
                       {coError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{coError}</div>}
                       <Botao tamanho="toque" variante="secundario" largo style={{ width: "100%" }} onClick={() => adicionarCoResponsavel(child.id)}>+ Adicionar corresponsável</Botao>
                     </>

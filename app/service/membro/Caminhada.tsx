@@ -15,6 +15,8 @@ import type { JourneyStep, M, Ministry, P, StepView } from "./tipos";
 import { Botao } from "../ui/Botao";
 import { Cartao } from "../ui/Cartao";
 import { Linha, Lista } from "../ui/Linha";
+import { Campo, Entrada } from "../ui/Campo";
+import { SeletorData } from "../ui/Data";
 /* "Quero servir" (service.request_to_serve): times em que a pessoa ainda não
    está. A igreja define o que precisa antes (requisitos de "servir" e do
    time); com algo faltando, o app mostra o que falta. O pedido vai pra
@@ -131,8 +133,8 @@ export function SheetPedidoEtapa({ step, nome, member, onRequestJourneyStep }: {
     <div>
       <h2 className="m6-sh">{nome}</h2>
       <div className="m6-meta">Conte quando aconteceu. {ct("A liderança confirma e a etapa fica marcada na sua {caminhada}.")}</div>
-      <div className="field" style={{ marginTop: 14 }}><label className="field-label">Quando foi?</label><input className="input" type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
-      <div className="field"><label className="field-label">Quer contar mais? (opcional)</label><input className="input" value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ex.: aconteceu em outra igreja" /></div>
+      <div style={{ marginTop: 14 }}><Campo rotulo="Quando foi?"><SeletorData valor={data} aoMudar={setData} /></Campo></div>
+      <Campo rotulo="Quer contar mais? (opcional)"><Entrada value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ex.: aconteceu em outra igreja" /></Campo>
       <div className="m6-btns">
         <Botao tamanho="toque" variante="principal" desativado={!data || !member || !onRequestJourneyStep} onClick={() => {
           if (!member || !onRequestJourneyStep) return;

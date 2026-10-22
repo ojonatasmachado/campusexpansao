@@ -20,6 +20,7 @@ import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
 import { Cartao } from "../../ui/Cartao";
 import { Segmentado } from "../../ui/Segmentado";
+import { Vazio } from "../../ui/Estados";
 export function Bars({ series, labels }: { series: number[]; labels: string[] }) {
   const max = Math.max(...series, 1);
   return <div className="bars">{series.map((value, index) => <div className="bars-col" key={labels[index] ?? index}><div className="bars-track"><div className={`bars-bar ${index === series.length - 1 ? "hi" : ""}`} style={{ transform: `translateY(${100 - (value / max) * 100}%)` }} /></div><span className="bars-x">{labels[index]}</span></div>)}</div>;
@@ -171,7 +172,7 @@ export function Relatorios({
       <Cartao>
         <div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={13} /> Registros para conferir <HelpDot text="Pausas, recusas e quantidade de escalas registradas nesta semana. Esses fatos não medem bem-estar nem dedicação da pessoa." /></span><Botao variante="texto" onClick={() => setRoute("pessoas")}>{ct("{Voluntarios}")}</Botao></div>
         <div className="panel-body flush">
-          {wellRows.length === 0 && <div className="empty">Nenhuma pendência identificada nos registros da semana.</div>}
+          {wellRows.length === 0 && <Vazio titulo="Nenhuma pendência identificada nos registros da semana." />}
           {wellRows.slice(0, 8).map(({ person, cls }) => {
             const dado = carga[person.id] ?? { escalas: 0, recusas: 0 };
             return <div className="well-row" key={person.id}><Av name={person.name} size="md" photoUrl={person.photoUrl} /><div className="mini-main"><div className="mini-title">{person.name}</div><div className="mini-sub">{person.status === "pausa" ? "Pausa informada no cadastro." : `${plural(dado.escalas, "escala")} e ${plural(dado.recusas, "recusa")} nesta semana.`}</div></div><span className={`well-tag ${cls}`}>Conferir</span></div>;
@@ -183,7 +184,7 @@ export function Relatorios({
         <Cartao><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> {ct("Membros por {caminhada}")} <HelpDot text={ct("Em qual etapa da {caminhada} (decisão, batismo, curso, GC, servindo) cada membro está.")} /></span><span className="panel-meta">{members.length} pessoas</span></div><div className="panel-body flush">{caminhadaEtapas.map((step, index) => { const count = members.filter((member) => member.journey[index]).length; return <div className="dist-row" key={step}><span className="dist-name">{step}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${members.length ? (count / members.length) * 100 : 0}%` }} /></div><span className="dist-num">{count}</span></div>; })}</div></Cartao>
       </div>
       <div className="dash-2col" style={{ marginTop: 28 }}>
-        {gruposAtivo && <Cartao><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por {gruposSigla} <HelpDot text="Quantos membros cada grupo tem hoje." /></span><span className="panel-meta">{fellowshipGroups.length} grupos</span></div><div className="panel-body flush">{gcCounts.map(({ group, n }) => <div className="dist-row" key={group.id}><span className="dist-name">{group.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(n / maxGc) * 100}%` }} /></div><span className="dist-num">{n}</span></div>)}{fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "12px 0" }}>Nenhum grupo cadastrado ainda.</div>}</div></Cartao>}
+        {gruposAtivo && <Cartao><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por {gruposSigla} <HelpDot text="Quantos membros cada grupo tem hoje." /></span><span className="panel-meta">{fellowshipGroups.length} grupos</span></div><div className="panel-body flush">{gcCounts.map(({ group, n }) => <div className="dist-row" key={group.id}><span className="dist-name">{group.name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(n / maxGc) * 100}%` }} /></div><span className="dist-num">{n}</span></div>)}{fellowshipGroups.length === 0 && <Vazio titulo="Nenhum grupo cadastrado ainda." />}</div></Cartao>}
         <Cartao><div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={13} /> Operação conectada <HelpDot text="O quanto o time usa quadros de tarefas, conversas e a agenda de eventos." /></span><span className="panel-meta">Kanban & chat</span></div><div className="panel-body flush">{[["Quadros", boards.length], ["Conversas", chats.length], ["Eventos", events.length]].map(([label, count]) => <div className="dist-row" key={label}><span className="dist-name">{label}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(Number(count) / maxOps) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}</div></Cartao>
       </div>
     </div>

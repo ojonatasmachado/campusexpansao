@@ -34,6 +34,9 @@ import { Opcao } from "../../ui/Opcao";
 import { Selo } from "../../ui/Selo";
 import { Cartao } from "../../ui/Cartao";
 import { Segmentado } from "../../ui/Segmentado";
+import { Campo, Entrada } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
+import { Vazio } from "../../ui/Estados";
 type Candidato = CandidatoBase<PersonView>;
 
 /* carga da semana corrente (segunda a domingo contendo hoje) por pessoa:
@@ -183,7 +186,7 @@ function DelegarModal({
               {ministries.map((m) => <Opcao key={m.id} marcada={ministryId === m.id} onClick={() => setMinistryId(m.id)}>{m.name.split(" ")[0]}</Opcao>)}
             </Segmentado>
           )}
-          {elenco.length === 0 && <div className="empty">Ninguém mais neste time ainda.</div>}
+          {elenco.length === 0 && <Vazio titulo="Ninguém mais neste time ainda." />}
           {elenco.map((link) => {
             const on = delegados.includes(link.personId);
             return (
@@ -236,7 +239,7 @@ function PresetSaveModal({
           <div className="modal-sub">Guarda as funções e quantidades atuais de todos os times. Crie uma para “Culto”, outra para “Reunião”, e aplique quando quiser.</div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
-          <div className="field"><label className="field-label">Nome da configuração</label><input className="input" placeholder="ex: Culto de domingo" value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === "Enter" && salvar()} /></div>
+          <Campo rotulo="Nome da configuração"><Entrada placeholder="ex: Culto de domingo" value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === "Enter" && salvar()} /></Campo>
         </div>
         <div className="modal-foot">
           <Botao onClick={onClose}>Cancelar</Botao>
@@ -539,10 +542,9 @@ export function Escalas({
         <span className="tb-spacer" />
         <span className="esc-preset">
           <Icon name="escalas" size={13} />
-          <select className="esc-preset-sel" value="" onChange={(e) => { const preset = (church?.settings?.escalaPresets ?? []).find((p) => p.id === e.target.value); if (preset) aplicarPreset(preset); }}>
-            <option value="">Aplicar configuração…</option>
-            {(church?.settings?.escalaPresets ?? []).map((preset) => <option key={preset.id} value={preset.id}>{preset.nome}</option>)}
-          </select>
+          <Selecao valor="" vazio="Aplicar configuração…" rotulo="Aplicar configuração"
+            aoMudar={(v) => { const preset = (church?.settings?.escalaPresets ?? []).find((p) => p.id === v); if (preset) aplicarPreset(preset); }}
+            opcoes={(church?.settings?.escalaPresets ?? []).map((preset) => ({ v: preset.id, l: preset.nome }))} />
           <Acao className="esc-preset-save" onClick={() => setPresetSaveOpen(true)}>Salvar atual</Acao>
         </span>
         <Acao className="esc-modo-cfg" onClick={() => setRoute("config")}><Icon name="config" size={13} /> Regras</Acao>
@@ -821,7 +823,7 @@ function RosterActionModal({
         <div className="modal-body cand-list">
           {salvando && <p role="status">Salvando alteração...</p>}
           {erro && <p className="field-error" role="alert">{erro}</p>}
-          {podem.length === 0 && naoPodem.length === 0 ? <div className="empty">{busca.trim() ? "Ninguém com esse nome neste time." : "Ninguém disponível neste time."}</div> : null}
+          {podem.length === 0 && naoPodem.length === 0 ? <Vazio titulo={busca.trim() ? "Ninguém com esse nome neste time." : "Ninguém disponível neste time."} /> : null}
           {sugeridos.length > 0 && (
             <>
               <div className="cand-grp">Sugeridos pelo rodízio</div>

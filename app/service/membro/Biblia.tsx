@@ -7,6 +7,8 @@ import type { BibleBook, BibleFlatVerse, BibleMark } from "./tipos";
 import { Botao, BotaoIcone } from "../ui/Botao";
 import { Acao } from "../ui/Acao";
 import { Opcao } from "../ui/Opcao";
+import { Campo, Entrada, TextoLongo } from "../ui/Campo";
+import { Vazio } from "../ui/Estados";
 export let bibleCache: BibleBook[] | null = null;
 export let bibleCachePromise: Promise<BibleBook[]> | null = null;
 export function loadBible(): Promise<BibleBook[]> {
@@ -137,11 +139,7 @@ export function TabBiblia({
   if (!bible) {
     return (
       <>
-        <div className="empty" style={{ marginTop: 12 }}>
-          <div className="empty-mark"><Icon name="biblia" size={22} /></div>
-          <h3 className="empty-title">Baixando a Bíblia...</h3>
-          <p className="empty-desc">So acontece uma vez. Depois fica salva no seu celular.</p>
-        </div>
+        <Vazio tamanho="toque" icone={<Icon name="biblia" size={22} />} titulo="Baixando a Bíblia..." texto="So acontece uma vez. Depois fica salva no seu celular." />
       </>
     );
   }
@@ -151,7 +149,7 @@ export function TabBiblia({
       {view === "livros" && (
         <>
           <div className="bib-search">
-            <input className="input" placeholder="Buscar palavra ou trecho..." value={query} onChange={(e) => setQuery(e.target.value)} />
+            <Entrada placeholder="Buscar palavra ou trecho..." value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
           {debouncedQuery.length >= 3 ? (
             <>
@@ -162,7 +160,7 @@ export function TabBiblia({
                   <small>{r.text}</small>
                 </Acao>
               ))}
-              {searchResults.length === 0 && <div className="empty"><p className="empty-desc">Nada encontrado com esse termo.</p></div>}
+              {searchResults.length === 0 && <Vazio tamanho="toque" titulo="Nada encontrado com esse termo." />}
             </>
           ) : (
             <>
@@ -232,7 +230,7 @@ export function TabBiblia({
         <>
           <Botao tamanho="toque" variante="texto" onClick={() => setView("livros")}>← Livros</Botao>
           <div className="m-h1" style={{ fontSize: "var(--fs-app-20)", marginBottom: 14 }}>Minhas marcações</div>
-          {bibleMarks.length === 0 && <div className="empty"><p className="empty-desc">Toque num versículo na leitura pra marcar ou anotar.</p></div>}
+          {bibleMarks.length === 0 && <Vazio tamanho="toque" titulo="Toque num versículo na leitura pra marcar ou anotar." />}
           {bibleMarks
             .slice()
             .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
@@ -269,9 +267,10 @@ export function TabBiblia({
                 <BotaoIcone className="bib-swatch-clear" title="Remover cor" rotulo="Remover cor" onClick={() => escolherCor(null)}>✕</BotaoIcone>
               )}
             </div>
-            <div className="field" style={{ marginTop: 14 }}>
-              <label className="field-label">Anotacao</label>
-              <textarea className="input" rows={3} placeholder="O que esse versículo significa pra você?" value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} />
+            <div style={{ marginTop: 14 }}>
+              <Campo rotulo="Anotacao">
+                <TextoLongo className="input" rows={3} placeholder="O que esse versículo significa pra você?" value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} />
+              </Campo>
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
               {(marcaAtual?.color || marcaAtual?.note) && (

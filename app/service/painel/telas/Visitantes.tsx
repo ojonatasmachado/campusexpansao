@@ -20,6 +20,9 @@ import { Cartao } from "../../ui/Cartao";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Selo } from "../../ui/Selo";
 import { Segmentado } from "../../ui/Segmentado";
+import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
+import { Vazio } from "../../ui/Estados";
 /* cor de destaque por tema + quem além do master pode editar, guardado em
    service.churches.settings.brandCfg (mesmo jsonb de sempre). Permite que
    cada igreja pareça uma ferramenta própria dela (logo + nome + cor), não
@@ -132,7 +135,7 @@ export function Visitantes({
         <div className="vpanel">
           <div className="kpi-row"><Kpi icon="visitante" label="Visitantes" value={visitors.length} foot="no acompanhamento" help="Todo mundo que visitou e ainda está sendo acompanhado, antes de virar membro." /><Kpi icon="comunicacao" label="Respondem o contato" value={contacted.length ? `${replyRate}%` : "Sem dados"} foot={`${answered.length} de ${contacted.length} contatados`} help="De quem a equipe já contatou, quantos responderam de volta." /><Kpi icon="ok" label="Integram (viram membro)" value={visitors.length ? `${integrationRate}%` : "Sem dados"} foot={`${members.length} de ${visitors.length} · ${visitors.filter((v) => v.stage === "integrando" || v.stage === "membro").length} em integração`} help="De todos os visitantes, quantos completaram o caminho até virar membro." /><Kpi icon="alerta" label="Sem resposta" value={visitors.filter((visitor) => visitor.reply_status === "sem_resposta").length} foot="precisam de novo contato" amber help="Visitantes contatados que ainda não responderam. Vale tentar de novo." /></div>
           <div className="vpanel-grid">
-            <Cartao><div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Visitantes por culto <HelpDot text="Em qual culto os visitantes mais chegam." /></span></div><div className="panel-body flush">{Object.entries(byService).map(([name, count]) => <div className="dist-row" key={name}><span className="dist-name">{name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(count / maxService) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}{visitors.length === 0 ? <div className="empty">Nenhum visitante ainda.</div> : null}</div></Cartao>
+            <Cartao><div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Visitantes por culto <HelpDot text="Em qual culto os visitantes mais chegam." /></span></div><div className="panel-body flush">{Object.entries(byService).map(([name, count]) => <div className="dist-row" key={name}><span className="dist-name">{name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(count / maxService) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}{visitors.length === 0 ? <Vazio titulo="Nenhum visitante ainda." /> : null}</div></Cartao>
             <Cartao>
               <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Resposta ao 1º contato <HelpDot text="Quantos visitantes já responderam o primeiro contato da equipe." /></span></div>
               <div className="panel-body">
@@ -176,7 +179,7 @@ export function Visitantes({
         <div className="pipe">
           {VISITOR_STAGES.map((stage) => {
             const items = visitors.filter((visitor) => visitor.stage === stage.id);
-            return <div className={`pipe-col${items.length ? "" : " vazia"}`} key={stage.id}><div className="pipe-head"><span className="pipe-dot" style={{ background: stage.color }} /><span className="pipe-name">{stage.name}</span><span className="pipe-num">{items.length}</span></div><div className="pipe-body">{items.map((visitor) => <VisitanteCard key={visitor.id} visitor={visitor} notes={visitorNotes} onOpen={() => setDrawer({ kind: "visitor", id: visitor.id })} />)}{items.length === 0 ? <div className="empty" style={{ padding: 14 }}>vazio</div> : null}</div></div>;
+            return <div className={`pipe-col${items.length ? "" : " vazia"}`} key={stage.id}><div className="pipe-head"><span className="pipe-dot" style={{ background: stage.color }} /><span className="pipe-name">{stage.name}</span><span className="pipe-num">{items.length}</span></div><div className="pipe-body">{items.map((visitor) => <VisitanteCard key={visitor.id} visitor={visitor} notes={visitorNotes} onOpen={() => setDrawer({ kind: "visitor", id: visitor.id })} />)}{items.length === 0 ? <Vazio titulo="vazio" /> : null}</div></div>;
           })}
         </div>
       ) : (
@@ -223,20 +226,15 @@ export function ContatoCfgModal({ church, cfg, onClose, onRefresh }: { church: C
           <div className="modal-sub">Defina o prazo e a abordagem do primeiro contato. Fica claro para a equipe e deixa visível quanto tempo leva para integrar.</div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
-          <div className="field field-half"><label className="field-label" htmlFor={`${fid}-prazo`}> Prazo do 1º contato (horas)</label><input id={`${fid}-prazo`} className="input" type="number" min={1} step={1} value={prazoHoras} onChange={(e) => setPrazoHoras(+e.target.value)} /></div>
-          <div className="field field-half">
-            <label className="field-label" htmlFor={`${fid}-canal`}> Canal</label>
-            <select id={`${fid}-canal`} className="select" value={canal} onChange={(e) => setCanal(e.target.value)}>
-              {["WhatsApp", "Ligação", "Mensagem", "Presencial"].map((o) => <option key={o} value={o}>{o}</option>)}
-            </select>
-          </div>
-          <div className="field field-half"><label className="field-label" htmlFor={`${fid}-meta`}> Meta de integração (dias)</label><input id={`${fid}-meta`} className="input" type="number" min={1} step={1} value={metaIntegracaoDias} onChange={(e) => setMetaIntegracaoDias(+e.target.value)} /></div>
-          <div className="field">
-            <label className="field-label" htmlFor={`${fid}-mensagem`}> Mensagem padrão</label>
-            <textarea id={`${fid}-mensagem`} className="textarea" value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
-            <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 6 }}>Use {"{nome}"}, {"{evento}"} e {"{igreja}"}: preenchemos automaticamente.</div>
-          </div>
-          <div className="field"><label className="field-label" htmlFor={`${fid}-abordagem`}> Abordagem / postura</label><textarea id={`${fid}-abordagem`} className="textarea" value={abordagem} onChange={(e) => setAbordagem(e.target.value)} /></div>
+          <Campo rotulo="Prazo do 1º contato (horas)" className="field-half"><Entrada id={`${fid}-prazo`} type="number" min={1} step={1} value={prazoHoras} onChange={(e) => setPrazoHoras(+e.target.value)} /></Campo>
+          <Campo rotulo="Canal" className="field-half">
+            <Selecao id={`${fid}-canal`} valor={canal} aoMudar={setCanal} opcoes={["WhatsApp", "Ligação", "Mensagem", "Presencial"].map((o) => ({ v: o, l: o }))} />
+          </Campo>
+          <Campo rotulo="Meta de integração (dias)" className="field-half"><Entrada id={`${fid}-meta`} type="number" min={1} step={1} value={metaIntegracaoDias} onChange={(e) => setMetaIntegracaoDias(+e.target.value)} /></Campo>
+          <Campo rotulo="Mensagem padrão" ajuda={<>Use {"{nome}"}, {"{evento}"} e {"{igreja}"}: preenchemos automaticamente.</>}>
+            <TextoLongo id={`${fid}-mensagem`} value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
+          </Campo>
+          <Campo rotulo="Abordagem / postura"><TextoLongo id={`${fid}-abordagem`} value={abordagem} onChange={(e) => setAbordagem(e.target.value)} /></Campo>
         </div>
         {!valoresValidos && <p className="fs-error" role="alert">Informe horas e dias como números inteiros maiores que zero.</p>}
         {erro && <p className="fs-error" role="alert">{erro}</p>}

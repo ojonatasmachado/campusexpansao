@@ -30,6 +30,7 @@ import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Cartao } from "../../ui/Cartao";
 import { Linha, linhaClasse } from "../../ui/Linha";
+import { Vazio } from "../../ui/Estados";
 export function GlobalSearch({
   people,
   members,
@@ -487,7 +488,7 @@ export function Painel({
             {/* v7 2.9: só o que ainda vai começar, no fuso da igreja (Brasília) */}
             {(() => {
               const proximos = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time)).slice(0, 3);
-              if (proximos.length === 0) return <div className="empty" style={{ padding: "14px 16px" }}>{ct("Nenhum {culto} marcado daqui pra frente.")}</div>;
+              if (proximos.length === 0) return <Vazio titulo={ct("Nenhum {culto} marcado daqui pra frente.")} />;
               return proximos.map((event) => (
                 <MiniEvent
                   key={event.id}
@@ -606,7 +607,7 @@ export function Painel({
                     </div>
                   </Linha>
                 ))}
-              {kidsChildren.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhuma criança cadastrada ainda.</div>}
+              {kidsChildren.length === 0 && <Vazio titulo="Nenhuma criança cadastrada ainda." />}
             </div>
           </Cartao>}
         </div>

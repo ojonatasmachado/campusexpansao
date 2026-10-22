@@ -10,6 +10,8 @@ import ChurchLockup from "./ChurchLockup";
 
 import { Botao, BotaoIcone } from "./ui/Botao";
 import { Acao } from "./ui/Acao";
+import { Vazio } from "./ui/Estados";
+import { confirmar } from "./ui/confirmar";
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
 type LessonView = {
@@ -184,7 +186,7 @@ function ManualAulaCheckinModal({
             <input placeholder="Buscar matriculado..." value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
           </div>
           {lista.length === 0 && (
-            <div className="empty">{q ? "Nenhum resultado." : "Todos os matriculados já estão presentes."}</div>
+            <Vazio titulo={q ? "Nenhum resultado." : "Todos os matriculados já estão presentes."} />
           )}
           {lista.map((m) => (
             <div className="flag-row" key={m.id} style={{ cursor: "pointer" }} onClick={() => { onAdd(m.id); onClose(); }}>
@@ -368,7 +370,7 @@ export function AulaCheckinModal({
   };
 
   const regenerar = async () => {
-    if (!window.confirm("Gerar um novo QR Code? O anterior deixa de funcionar.")) return;
+    if (!(await confirmar({ titulo: "Gerar um novo QR Code?", texto: "O anterior deixa de funcionar.", acao: "Gerar novo código", perigo: false }))) return;
     const token = generateToken();
     setQrToken(token);
     setQrActive(true);
@@ -446,7 +448,7 @@ export function AulaCheckinModal({
 
                 <div className="ck-roster">
                   {lessonAttendance.length === 0 && matriculados.length === 0 && (
-                    <div className="empty">Ninguém matriculado neste curso ainda.</div>
+                    <Vazio titulo="Ninguém matriculado neste curso ainda." />
                   )}
                   {[...lessonAttendance].sort((a, b) => a.checked_in_at.localeCompare(b.checked_in_at)).map((rec) => {
                     const m = members.find((x) => x.id === rec.member_id);

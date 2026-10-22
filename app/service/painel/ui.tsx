@@ -8,6 +8,7 @@ import { Caret, Icon } from "../lib/icons";
 import { HelpDot } from "../HelpSystem";
 import { iniciais } from "../lib/iniciais";
 
+import { Vazio } from "../ui/Estados";
 import { Botao } from "../ui/Botao";
 import { Acao } from "../ui/Acao";
 import { Selo, tomDaClasse } from "../ui/Selo";
@@ -47,14 +48,9 @@ export function PageHead({ title, eyebrow, subtitle, action, help }: { title: st
   );
 }
 
+/* Vazio do painel: a peça é Vazio (app/service/ui/Estados.tsx). */
 export function EmptyState({ title, text, action }: { title: string; text: string; action?: { label: string; onClick: () => void } }) {
-  return (
-    <div className="empty-state">
-      <div className="empty-state-t">{title}</div>
-      <p className="empty-state-s">{text}</p>
-      {action ? <Botao variante="principal" compacto onClick={action.onClick}>{action.label}</Botao> : null}
-    </div>
-  );
+  return <Vazio titulo={title} texto={text} acao={action ? { rotulo: action.label, onClick: action.onClick } : undefined} />;
 }
 
 export type AcaoMais = { rotulo: string; icone?: string; onClick: () => void; desligada?: boolean };

@@ -11,6 +11,7 @@ import { baixarCsv } from "./csv";
 
 import { Botao, botaoClasse } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
+import { Campo, Entrada } from "../../ui/Campo";
 /* Ferramentas › Emergência (tela 11 do design). Quem coordena desenha a
    área atingida, vê as famílias, pergunta a todas se estão bem e marca a
    situação de cada uma. O endereço abre só aqui, com registro de quem abriu. */
@@ -139,7 +140,7 @@ export function Emergencia({ ctx }: { ctx: ContextoMapa }) {
       <aside className="mp-painel mp-dir" aria-label="Nova emergência" style={{ bottom: "auto" }}>
         <div className="mp-cab"><div className="mp-sobre">Emergência</div><h2 className="mp-titulo">O que aconteceu?</h2></div>
         <div className="mp-corpo">
-          <div className="field"><label className="field-label req" htmlFor="em-titulo">Nome</label><input id="em-titulo" className="input" maxLength={80} placeholder="ex: Enchente do Rio das Pedras" value={titulo} onChange={(e) => setTitulo(e.target.value)} /></div>
+          <Campo rotulo="Nome" obrigatorio id="em-titulo"><Entrada maxLength={80} placeholder="ex: Enchente do Rio das Pedras" value={titulo} onChange={(e) => setTitulo(e.target.value)} /></Campo>
           <p className="mp-fraco">Só quem coordena vê esta tela. O endereço das famílias pode ser aberto aqui, e cada abertura fica registrada com nome e hora.</p>
         </div>
         <div className="mp-pe"><Botao variante="principal" desativado={!fechado || !titulo.trim() || ocupado} onClick={abrir}>Abrir emergência</Botao></div>

@@ -123,3 +123,179 @@
   .seg-pilula { transition: none; }
   .panel, .m6-card, .m-card, .m6-list, .or-orei.on .cex-ic, .m6-st.ok .cex-ic { animation: none; }
 }
+
+/* ════ Prancha 3: campos, seleção, data, estados e diálogo de risco ════ */
+
+/* ── Campo (Campo, Entrada, TextoLongo): 46 px, canto 14, foco com halo da igreja ── */
+.input, .select, .sel-trigger, .dp-trigger {
+  min-height: 46px; border-radius: var(--r-acao); border-width: 1.5px;
+  transition: border-color .2s ease, box-shadow .25s ease;
+}
+.textarea { border-radius: var(--r-acao); border-width: 1.5px; transition: border-color .2s ease, box-shadow .25s ease; }
+.input:focus, .textarea:focus, .select:focus,
+.sel-trigger:focus-visible, .dp-trigger:focus-visible, .sel-wrap.aberta .sel-trigger, .dp.aberta .dp-trigger {
+  border-color: var(--olive); box-shadow: 0 0 0 4px color-mix(in srgb, var(--olive) 18%, transparent); outline: none;
+}
+.input:disabled, .textarea:disabled, .sel-trigger:disabled, .dp-trigger:disabled {
+  opacity: 1; cursor: not-allowed; color: var(--muted);
+  background: color-mix(in srgb, var(--white) 4%, transparent); border-color: var(--border);
+}
+/* erro: rosa de cuidado na borda e mensagem que diz como corrigir */
+.field-com-erro .input, .field-com-erro .textarea, .field-com-erro .sel-trigger, .field-com-erro .dp-trigger,
+[aria-invalid="true"]:is(.input, .textarea, .sel-trigger, .dp-trigger) { border-color: var(--danger); }
+.field-error { font-weight: 600; }
+.field-label { font-weight: 600; }
+/* tela de toque: 16 px no campo, sem zoom do iPhone */
+@media (pointer: coarse) { .input, .textarea, .sel-trigger, .dp-trigger { font-size: 16px; } }
+
+/* ── Caixa de marcar e bolinha (Marcar) ── */
+.marcar { position: relative; display: inline-flex; align-items: center; gap: 10px; min-height: 32px; cursor: pointer; font-size: var(--fs-pn-14); font-weight: 600; color: var(--white); }
+.marcar input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.marcar-caixa {
+  position: relative; flex-shrink: 0; width: 22px; height: 22px; box-sizing: border-box;
+  border-radius: 7px; border: 1.5px solid var(--border-3); background: transparent;
+  transition: background-color .25s ease, border-color .25s ease;
+}
+.marcar-radio .marcar-caixa { border-radius: 50%; }
+.marcar-caixa::after {
+  content: ""; position: absolute; opacity: 0; transform: scale(.3);
+  transition: transform .35s var(--ease-drawer), opacity .2s ease;
+}
+.marcar:not(.marcar-radio) .marcar-caixa::after {
+  left: 6px; top: 2px; width: 6px; height: 11px; border: solid var(--accent-ink); border-width: 0 2.5px 2.5px 0; transform: rotate(45deg) scale(.3);
+}
+.marcar-radio .marcar-caixa::after { inset: 5px; border-radius: 50%; background: var(--accent-fill); }
+.marcar input:checked + .marcar-caixa { border-color: var(--accent-fill); }
+.marcar:not(.marcar-radio) input:checked + .marcar-caixa { background: var(--accent-fill); }
+.marcar:not(.marcar-radio) input:checked + .marcar-caixa::after { opacity: 1; transform: rotate(45deg) scale(1); }
+.marcar-radio input:checked + .marcar-caixa::after { opacity: 1; transform: scale(1); }
+.marcar input:focus-visible + .marcar-caixa { box-shadow: 0 0 0 4px color-mix(in srgb, var(--olive) 22%, transparent); }
+.marcar:has(input:disabled) { opacity: .45; cursor: not-allowed; }
+.marcar-texto { line-height: 1.35; }
+
+/* ── Seleção (Selecao): raio 18, sombra flutuante, escolhido com a cor da igreja e check ── */
+.sel-trigger { padding: 0 14px; }
+.sel-arrow { transition: transform .35s var(--ease-drawer); }
+.sel-pop {
+  border: 0; border-radius: 18px; padding: 6px;
+  box-shadow: 0 18px 44px -12px rgba(0, 0, 0, .45), 0 0 0 1px var(--border-2);
+  transform-origin: top center; animation: abrir-pop .32s var(--ease-drawer) backwards;
+}
+.sel-opt { position: relative; min-height: 40px; border-radius: 12px; padding: 9px 36px 9px 12px; color: var(--white); }
+@media (hover:hover) and (pointer:fine) { .sel-opt:hover:not(.on) { background: color-mix(in srgb, var(--white) 6%, transparent); } }
+.sel-opt:focus-visible { outline: none; background: color-mix(in srgb, var(--white) 8%, transparent); }
+.sel-opt.on { background: color-mix(in srgb, var(--olive) 12%, transparent); color: var(--olive); font-weight: 700; }
+.sel-opt.on::after {
+  content: ""; position: absolute; right: 16px; top: 50%; width: 5px; height: 10px; margin-top: -7px;
+  border: solid currentColor; border-width: 0 2.2px 2.2px 0; transform: rotate(45deg);
+}
+.sel-opt:disabled { opacity: .45; }
+@keyframes abrir-pop { from { opacity: 0; transform: scale(.96) translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* ── Data e hora (SeletorData, SeletorHora): calendário cresce do campo ── */
+.dp-trigger { padding: 0 14px; }
+.dp-val { font-variant-numeric: tabular-nums; }
+.dp-ic { display: flex; color: var(--muted); }
+.dp-pop {
+  border: 0; border-radius: 18px; box-shadow: 0 18px 44px -12px rgba(0, 0, 0, .45), 0 0 0 1px var(--border-2);
+  transform-origin: top left; animation: abrir-pop .32s var(--ease-drawer) backwards;
+}
+.dp-cal { width: 296px; padding: 14px; }
+.dp-head .dp-titulo {
+  display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border-radius: var(--r-pill);
+  font-size: var(--fs-pn-14); font-weight: 700; color: var(--white); background: transparent; border: 0; white-space: nowrap;
+}
+@media (hover:hover) and (pointer:fine) { .dp-head .dp-titulo:hover { background: color-mix(in srgb, var(--white) 6%, transparent); } }
+.dp-head button:not(.dp-titulo) { width: 32px; height: 32px; border-radius: 50%; border: 0; background: color-mix(in srgb, var(--white) 6%, transparent); }
+.dp-semana { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 4px; }
+.dp-semana span { text-align: center; font-size: var(--fs-pn-12); font-weight: 600; color: var(--muted); padding: 4px 0; }
+.dp-cal .dp-grid { gap: 2px; }
+.dp-cal .dp-day {
+  position: relative; min-height: 36px; border-radius: 50%; border: 0; background: transparent;
+  font-size: var(--fs-pn-13); font-variant-numeric: tabular-nums; color: var(--white);
+  transition: background-color .2s ease, color .2s ease;
+}
+@media (hover:hover) and (pointer:fine) { .dp-cal .dp-day:hover:not(.on):not(:disabled) { background: color-mix(in srgb, var(--white) 7%, transparent); } }
+.dp-cal .dp-day:focus-visible { outline: 2px solid var(--olive); outline-offset: 1px; }
+.dp-cal .dp-day.hoje { box-shadow: inset 0 0 0 1.5px var(--olive); font-weight: 700; }
+.dp-cal .dp-day.on { background: var(--accent-fill); color: var(--accent-ink); box-shadow: none; font-weight: 700; }
+.dp-cal .dp-day.tem-evento::after { content: ""; position: absolute; bottom: 4px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: currentColor; opacity: .7; }
+.dp-cal .dp-day:disabled { opacity: .3; cursor: not-allowed; }
+.dp-anos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.dp-anos .dp-day { aspect-ratio: auto; min-height: 44px; border-radius: var(--r-acao); }
+.dp-pe { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.dp-link { min-height: 32px; padding: 0 8px; border: 0; background: transparent; color: var(--olive); font-weight: 700; font-size: var(--fs-pn-13); border-radius: 10px; }
+/* trocar o mês desliza para o lado da seta */
+@keyframes dp-vem-dir { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+@keyframes dp-vem-esq { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+.dp-vem-dir { animation: dp-vem-dir .32s var(--ease-drawer); }
+.dp-vem-esq { animation: dp-vem-esq .32s var(--ease-drawer); }
+.tp-pop { border-radius: 18px; padding: 12px; }
+.tp-opt { min-height: 36px; border-radius: 10px; border: 0; background: transparent; font-variant-numeric: tabular-nums; }
+@media (hover:hover) and (pointer:fine) { .tp-opt:hover:not(.on) { background: color-mix(in srgb, var(--white) 7%, transparent); } }
+
+/* ── Estados (Vazio, Carregando, ErroEstado) ── */
+.estado { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 28px 16px; }
+.estado-icone {
+  width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--olive) 10%, transparent); color: var(--olive);
+}
+.estado-t { font-size: var(--fs-pn-16); font-weight: 700; color: var(--white); letter-spacing: -0.01em; }
+.estado-s { margin: 0; max-width: 380px; font-size: var(--fs-pn-13); line-height: 1.5; color: var(--muted); }
+.estado .btn, .estado .m6-btn { margin-top: 4px; }
+.estado-toque .estado-t { font-size: 17px; }
+.estado-toque .estado-s { font-size: 15px; }
+.estado-erro .estado-t { color: var(--white); }
+
+@keyframes esq-brilho { from { background-position: -300px 0; } to { background-position: 300px 0; } }
+.esq { display: flex; flex-direction: column; gap: 14px; padding: 8px 0; }
+.esq-b {
+  border-radius: 8px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--white) 6%, transparent) 0%, color-mix(in srgb, var(--white) 11%, transparent) 50%, color-mix(in srgb, var(--white) 6%, transparent) 100%);
+  background-size: 600px 100%; animation: esq-brilho 1.4s linear infinite;
+}
+.esq-item { display: flex; align-items: center; gap: 12px; }
+.esq-av { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; }
+.esq-txt { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.esq-l1 { height: 12px; }
+.esq-l2 { height: 10px; }
+.esq-linhas { gap: 10px; }
+.esq-cartoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.esq-cartao { height: 120px; border-radius: 24px; }
+.esq-indicadores { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+.esq-ind { display: flex; flex-direction: column; gap: 10px; padding: 18px; border-radius: 24px; border: 1px solid var(--border); }
+.esq-num { height: 28px; width: 40%; }
+
+/* ── Diálogo de risco (confirmar) ── */
+.modal.confirmar { width: 400px; padding: 22px; border-radius: 22px; border: 0; box-shadow: 0 24px 60px -18px rgba(0, 0, 0, .55), 0 0 0 1px var(--border-2); }
+.confirmar-t { margin: 0; font-size: var(--fs-pn-16); font-weight: 800; letter-spacing: -0.01em; color: var(--white); }
+.confirmar-s { margin: 6px 0 0; font-size: var(--fs-pn-13); line-height: 1.5; color: var(--muted); }
+.confirmar-acoes { display: flex; gap: 8px; margin-top: 18px; }
+.confirmar-acoes .btn { flex: 1; justify-content: center; min-height: 44px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sel-pop, .dp-pop, .dp-vem-dir, .dp-vem-esq, .esq-b { animation: none; }
+  .input, .textarea, .select, .sel-trigger, .dp-trigger, .sel-arrow, .marcar-caixa, .marcar-caixa::after, .dp-cal .dp-day { transition: none; }
+}
+
+/* ── Galeria viva (/service/demo/biblioteca) ── */
+.galeria { min-height: 100vh; box-sizing: border-box; padding: 40px max(16px, 4vw) 80px; background: var(--ink); color: var(--white); display: flex; flex-direction: column; gap: 20px; max-width: 1280px; margin: 0 auto; }
+.galeria-topo h1 { margin: 0; font-size: 32px; font-weight: 800; letter-spacing: -0.03em; }
+.galeria-topo p, .galeria-nota { margin: 6px 0 0; color: var(--muted); font-size: var(--fs-pn-14); }
+.galeria-bloco { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+.galeria-bloco h2 { margin: 0; font-size: var(--fs-pn-16); font-weight: 800; }
+.galeria-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 4px 18px; }
+.galeria-largo { grid-column: 1 / -1; }
+.galeria-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+.galeria-acoes { display: flex; justify-content: flex-end; gap: 10px; }
+.galeria-quatro { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+.sel-grupo { padding: 10px 12px 4px; font-size: var(--fs-pn-12); font-weight: 700; color: var(--muted); }
+
+/* Marcar com caixa no fim da linha; e opções grandes (bolinha + título e explicação) */
+.marcar-direita { display: flex; justify-content: space-between; }
+.marcar-direita .marcar-texto { order: -1; flex: 1; }
+.marcar.mp-visao, .marcar.pede-opt { display: flex; align-items: flex-start; gap: 12px; width: 100%; box-sizing: border-box; font-weight: 400; }
+.marcar.mp-visao .marcar-caixa, .marcar.pede-opt .marcar-caixa { margin-top: 1px; }
+.marcar.mp-visao:has(input:checked) { background: var(--graphite-2); border-color: var(--olive); box-shadow: inset 0 0 0 0.5px var(--olive); }
+.marcar.mp-visao:has(input:disabled) { opacity: .55; }
+.galeria-coluna { display: flex; flex-direction: column; gap: 8px; max-width: 420px; }

@@ -12,6 +12,8 @@ import { useTermos } from "./lib/vocabulario-context";
 
 import { Botao } from "./ui/Botao";
 import { Acao } from "./ui/Acao";
+import { Vazio } from "./ui/Estados";
+import { confirmar } from "./ui/confirmar";
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
 type EventView = {
@@ -260,11 +262,9 @@ function ManualCheckinModal({
             />
           </div>
           {lista.length === 0 && (
-            <div className="empty">
-              {q
-                ? "Nenhum resultado."
-                : ct("Todos os {voluntarios} elegíveis já estão presentes.")}
-            </div>
+            <Vazio titulo={q
+              ? "Nenhum resultado."
+              : ct("Todos os {voluntarios} elegíveis já estão presentes.")} />
           )}
           {lista.map((p) => {
             const escalado = escaladoIds.has(p.id);
@@ -341,7 +341,7 @@ function CheckinRoster({
   return (
     <div className="ck-roster">
       {sorted.length === 0 && faltam.length === 0 && (
-        <div className="empty">Ninguém escalado neste evento ainda.</div>
+        <Vazio titulo="Ninguém escalado neste evento ainda." />
       )}
 
       {sorted.map((rec) => {
@@ -564,7 +564,7 @@ export function QRCheckinModal({
   };
 
   const regenerar = async () => {
-    if (!window.confirm("Gerar um novo QR Code? O anterior deixa de funcionar.")) return;
+    if (!(await confirmar({ titulo: "Gerar um novo QR Code?", texto: "O anterior deixa de funcionar.", acao: "Gerar novo código", perigo: false }))) return;
     const token = generateToken();
     setQrToken(token);
     setQrActive(true);

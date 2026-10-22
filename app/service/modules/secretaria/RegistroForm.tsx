@@ -13,6 +13,9 @@ import type { ChildGuardianView, ChurchView, MemberView, PersonView } from "../.
 import { FORMAS_ENTRADA, MOTIVOS_SAIDA, REGISTRO_COLS, livroDe, numeroFmt, type Livro, type Registro } from "./livros";
 
 import { Botao } from "../../ui/Botao";
+import { Campo, Entrada, TextoLongo, Marcar } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
+import { SeletorData } from "../../ui/Data";
 /** o que o livro usa da criança do Kids */
 export type CriancaKids = { id: string; name: string; birth: string | null };
 
@@ -163,8 +166,8 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
       {livro === "casamento" ? (
         <FormSection title="Noivos">
           <div className="fs-grid">
-            <div className="field half"><label className="field-label req" htmlFor={`${fid}-noivo`}>Noivo</label><input id={`${fid}-noivo`} className="input" list={listaMembros} value={noivo} onChange={(e) => setNoivo(e.target.value)} placeholder="Nome completo" /></div>
-            <div className="field half"><label className="field-label req" htmlFor={`${fid}-noiva`}>Noiva</label><input id={`${fid}-noiva`} className="input" list={listaMembros} value={noiva} onChange={(e) => setNoiva(e.target.value)} placeholder="Nome completo" /></div>
+            <Campo rotulo="Noivo" obrigatorio className="half"><Entrada id={`${fid}-noivo`} list={listaMembros} value={noivo} onChange={(e) => setNoivo(e.target.value)} placeholder="Nome completo" /></Campo>
+            <Campo rotulo="Noiva" obrigatorio className="half"><Entrada id={`${fid}-noiva`} list={listaMembros} value={noiva} onChange={(e) => setNoiva(e.target.value)} placeholder="Nome completo" /></Campo>
           </div>
           <div className="field-hint">Ao digitar, aparecem as pessoas da igreja. Quem não é membro pode ser escrito à mão.</div>
         </FormSection>
@@ -173,19 +176,12 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
       {livro === "apresentacao" ? (
         <FormSection title="Criança">
           {kidsChildren.length ? (
-            <div className="field">
-              <label className="field-label" htmlFor={`${fid}-kids`}>Criança do Kids</label>
-              <select id={`${fid}-kids`} className="input" value={childId} onChange={(e) => (e.target.value ? escolherCrianca(e.target.value) : setChildId(""))}>
-                <option value="">Não está no Kids</option>
-                {[...kidsChildren].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              <div className="field-hint">Escolhendo a criança, nome, nascimento e responsáveis vêm do cadastro do Kids.</div>
-            </div>
+            <Campo rotulo="Criança do Kids" ajuda="Escolhendo a criança, nome, nascimento e responsáveis vêm do cadastro do Kids."><Selecao id={`${fid}-kids`} valor={childId} aoMudar={(v) => (v ? escolherCrianca(v) : setChildId(""))} vazio="Não está no Kids" opcoes={[...kidsChildren].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")).map((c) => ({ v: c.id, l: c.name }))} /></Campo>
           ) : null}
           <div className="fs-grid">
-            <div className="field"><label className="field-label req" htmlFor={`${fid}-cri`}>Nome da criança</label><input id={`${fid}-cri`} className="input" value={crianca} onChange={(e) => setCrianca(e.target.value)} placeholder="Nome completo" /></div>
-            <div className="field half"><label className="field-label" htmlFor={`${fid}-nasc`}>Nascimento</label><input id={`${fid}-nasc`} className="input" type="date" value={nascimento ?? ""} onChange={(e) => setNascimento(e.target.value)} /></div>
-            <div className="field"><label className="field-label" htmlFor={`${fid}-pais`}>Pais ou responsáveis</label><input id={`${fid}-pais`} className="input" list={listaMembros} value={pais} onChange={(e) => setPais(e.target.value)} placeholder="ex: Ana Souza e Pedro Souza" /></div>
+            <Campo rotulo="Nome da criança" obrigatorio><Entrada id={`${fid}-cri`} value={crianca} onChange={(e) => setCrianca(e.target.value)} placeholder="Nome completo" /></Campo>
+            <Campo rotulo="Nascimento" className="half"><SeletorData id={`${fid}-nasc`} valor={nascimento ?? ""} aoMudar={setNascimento} /></Campo>
+            <Campo rotulo="Pais ou responsáveis"><Entrada id={`${fid}-pais`} list={listaMembros} value={pais} onChange={(e) => setPais(e.target.value)} placeholder="ex: Ana Souza e Pedro Souza" /></Campo>
           </div>
         </FormSection>
       ) : null}
@@ -193,22 +189,16 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
       {livro === "rol" ? (
         <FormSection title="Entrada">
           <div className="fs-grid">
-            <div className="field half"><label className="field-label req" htmlFor={`${fid}-data`}>Data de entrada</label><input id={`${fid}-data`} className="input" type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
-            <div className="field half">
-              <label className="field-label" htmlFor={`${fid}-forma`}>Como entrou</label>
-              <select id={`${fid}-forma`} className="input" value={forma} onChange={(e) => setForma(e.target.value)}>
-                <option value="">Não informado</option>
-                {FORMAS_ENTRADA.map((f) => <option key={f} value={f}>{f}</option>)}
-              </select>
-            </div>
+            <Campo rotulo="Data de entrada" obrigatorio className="half"><SeletorData id={`${fid}-data`} valor={data} aoMudar={setData} /></Campo>
+            <Campo rotulo="Como entrou" className="half"><Selecao id={`${fid}-forma`} valor={forma} aoMudar={setForma} vazio="Não informado" opcoes={FORMAS_ENTRADA.map((f) => ({ v: f, l: f }))} /></Campo>
           </div>
         </FormSection>
       ) : (
         <FormSection title={livro === "batismo" ? "Batismo" : livro === "casamento" ? "Cerimônia" : "Apresentação"}>
           <div className="fs-grid">
-            <div className="field half"><label className="field-label req" htmlFor={`${fid}-data`}>Data</label><input id={`${fid}-data`} className="input" type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
-            <div className="field half"><label className="field-label" htmlFor={`${fid}-ofi`}>Oficiante</label><input id={`${fid}-ofi`} className="input" list={listaPessoas} value={oficiante} onChange={(e) => setOficiante(e.target.value)} placeholder="Quem celebrou" /></div>
-            <div className="field"><label className="field-label" htmlFor={`${fid}-local`}>Local</label><input id={`${fid}-local`} className="input" value={local} onChange={(e) => setLocal(e.target.value)} placeholder="ex: Templo sede" /></div>
+            <Campo rotulo="Data" obrigatorio className="half"><SeletorData id={`${fid}-data`} valor={data} aoMudar={setData} /></Campo>
+            <Campo rotulo="Oficiante" className="half"><Entrada id={`${fid}-ofi`} list={listaPessoas} value={oficiante} onChange={(e) => setOficiante(e.target.value)} placeholder="Quem celebrou" /></Campo>
+            <Campo rotulo="Local"><Entrada id={`${fid}-local`} value={local} onChange={(e) => setLocal(e.target.value)} placeholder="ex: Templo sede" /></Campo>
           </div>
         </FormSection>
       )}
@@ -227,19 +217,11 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
 
       {livro === "rol" ? (
         <FormSection title="Saída">
-          <label className="fs-check">
-            <input type="checkbox" checked={saiu} onChange={(e) => setSaiu(e.target.checked)} /> Saiu do rol
-          </label>
+          <Marcar className="fs-check" checked={saiu} onChange={(e) => setSaiu(e.target.checked)}>Saiu do rol</Marcar>
           {saiu ? (
             <div className="fs-grid">
-              <div className="field half"><label className="field-label req" htmlFor={`${fid}-saida`}>Data de saída</label><input id={`${fid}-saida`} className="input" type="date" value={saida} onChange={(e) => setSaida(e.target.value)} /></div>
-              <div className="field half">
-                <label className="field-label req" htmlFor={`${fid}-motivo`}>Motivo</label>
-                <select id={`${fid}-motivo`} className="input" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
-                  <option value="">Escolha</option>
-                  {[...new Set([...MOTIVOS_SAIDA, ...(motivo ? [motivo] : [])])].map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
+              <Campo rotulo="Data de saída" obrigatorio className="half"><SeletorData id={`${fid}-saida`} valor={saida} aoMudar={setSaida} /></Campo>
+              <Campo rotulo="Motivo" obrigatorio className="half"><Selecao id={`${fid}-motivo`} valor={motivo} aoMudar={setMotivo} vazio="Escolha" opcoes={[...new Set([...MOTIVOS_SAIDA, ...(motivo ? [motivo] : [])])].map((m) => ({ v: m, l: m }))} /></Campo>
             </div>
           ) : <div className="field-hint">A ficha continua no app. Marcar a saída só muda o rol e a carteirinha deixa de valer.</div>}
         </FormSection>
@@ -247,9 +229,9 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
 
       <FormSection title="Livro de papel">
         <div className="fs-grid">
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-liv`}>Livro</label><input id={`${fid}-liv`} className="input" inputMode="numeric" value={livroFisico} onChange={(e) => setLivroFisico(e.target.value)} placeholder="ex: 2" /></div>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-fl`}>Folha</label><input id={`${fid}-fl`} className="input" inputMode="numeric" value={folha} onChange={(e) => setFolha(e.target.value)} placeholder="ex: 14" /></div>
-          <div className="field"><label className="field-label" htmlFor={`${fid}-obs`}>Observação</label><textarea id={`${fid}-obs`} className="input" rows={3} value={obs} onChange={(e) => setObs(e.target.value)} /></div>
+          <Campo rotulo="Livro" className="half"><Entrada id={`${fid}-liv`} inputMode="numeric" value={livroFisico} onChange={(e) => setLivroFisico(e.target.value)} placeholder="ex: 2" /></Campo>
+          <Campo rotulo="Folha" className="half"><Entrada id={`${fid}-fl`} inputMode="numeric" value={folha} onChange={(e) => setFolha(e.target.value)} placeholder="ex: 14" /></Campo>
+          <Campo rotulo="Observação"><TextoLongo id={`${fid}-obs`} rows={3} value={obs} onChange={(e) => setObs(e.target.value)} /></Campo>
         </div>
         <div className="field-hint">Opcional. Use se a igreja também registra no livro físico.</div>
       </FormSection>

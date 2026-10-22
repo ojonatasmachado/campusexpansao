@@ -48,7 +48,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **D6** Priorizar a seção 9 do manifesto e as jornadas "Depois"
 - **G4** Pendências de decisão do mapa (PLANO §7)
 - **M6** Reorganização interna da Caminhada (só com evidência)
-- **D4** Capítulo "Interface do Service" no Brand Book (espera I4)
+- **D4** Capítulo "Interface do Service" no Brand Book (galeria viva pronta em /service/demo/biblioteca)
 
 ### 2. Leveza, depois do D1 (maior ganho para quem usa)
 - **E2** Panorama do culto · **E1** Escalas por time (as duas tocam `cobertura.ts`: uma de cada vez)
@@ -62,11 +62,12 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **Q2** Isolar o teste de permissões · **Q3** Matriz autenticada de papéis e isolamento entre igrejas
 
 ### 4. Código independente (dá para tocar em paralelo, se os trilhos não esbarrarem)
-- **I2** Ações do Início que não navegam · **I4** Biblioteca de componentes · **I5** Ajuda com menos repetição
+- **I8** Biblioteca: janela, folha, menus e abas · **I9** Biblioteca: avatar, etapas e tabela · **I10** Biblioteca: indicadores e gráficos
+- **I2** Ações do Início que não navegam · **I5** Ajuda com menos repetição
 - **M2** Setas nos botões do membro · **M3** Retorno e recarga · **M5** Foco no Mural · **I7** Quadros no toque
 - **Q10** Mover FieldDef e FField · **Q8** Endereço por tela do painel · **Q7** Carga do painel · **O3** Arquivos grandes
 - **N1** Fuso, idioma e moeda · **F1** Financeiro fases 3 e 4 · **F2** Pontos pequenos de jornada · **O1** Culto avulso no estilo do assistente
-- **I3** Revisão de UI das telas densas (depois de I4 e D1) · **G3** Cartões do mapa no Início (depois de I1)
+- **I3** Revisão de UI das telas densas (depois de I8 e D1) · **G3** Cartões do mapa no Início (depois de I1)
 
 ### 5. Verificações em código e banco local
 - **E5** Troca de escala ponta a ponta · **M4** Convite e primeiro acesso · **O4** Continuidade de Visitantes, Crianças e Cursos

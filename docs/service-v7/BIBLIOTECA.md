@@ -39,12 +39,12 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Cartão da fila | contrato em `modules/fila.ts` e `define.ts`; markup em `membro/Inicio.tsx` | parcial | markup por tipo dentro de um switch | 6 |
 | Linha de lista | `Linha` e `Lista` em `app/service/ui/Linha.tsx` (tabela, curta, config, app); `M6Row` usa `linhaClasse()` | sim | ok | 6 |
 | Avatar | `Av` em painel/ui.tsx e membro/comum.tsx + cópias em CheckIn, CursoDrawer, AulaCheckin | parcial | 5 definições | 6 |
-| Campo de texto | `.field`, `FField` (painel/campos.tsx) | parcial | ~273 `field-label` inline | 3 |
-| Seleção | `SelectField` (1 uso) | não | 57 `<select>` nativos | 3 |
+| Campo de texto | `Campo`, `Entrada`, `TextoLongo` em `app/service/ui/Campo.tsx`; `FField` usa por dentro | sim | campos só com placeholder (membro/Kids, Visitantes, CursoEditor) e estruturas próprias (R$, busca de pessoa, CEP) ainda soltos | 3 |
+| Seleção | `Selecao` em `app/service/ui/Selecao.tsx` (vazio, desativada, grupos); `SelectField` usa por dentro | sim | ok; CI barra `<select>` | 3, 4 |
 | Interruptor | `Interruptor` em `app/service/ui/Interruptor.tsx` (`.sw`, `.m6-tg`, `.m-toggle`; sempre `role="switch"` com nome falado) | sim | `.acesso-tog` é linha de permissão, usa `Opcao` | 6 |
-| Caixa de marcar | checkbox nativo + 6 classes | não | cada tela estiliza | 3 |
+| Caixa de marcar | `Marcar` em `app/service/ui/Campo.tsx` (caixa ou bolinha; `lado="direita"`) | sim | ok; CI barra checkbox e radio nativos | 3 |
 | Segmentado | `Segmentado` em `app/service/ui/Segmentado.tsx` com `Opcao` dentro; pílula desliza com mola | sim | ok | 1, 6 |
-| Data e hora | `DatePicker`, `TimePicker` (painel/campos.tsx) | parcial | `type="date"` nativo em vários formulários | 4 |
+| Data e hora | `SeletorData`, `SeletorHora` em `app/service/ui/Data.tsx`; `DatePicker`/`TimePicker` antigos no formulário genérico | sim | `datetime-local` em Mural, Rota e PublicPageEditor; CI barra date e time | 4 |
 | Envio de foto/arquivo | `PhotoPicker`, `ImageUpload`, `ImageCropper` | parcial | `type="file"` direto em 3 telas | falta |
 | Busca | `.tb-search` e +4 classes | parcial | sem componente | 6 |
 | Abas | `.ck-tab`, `.cfg-tab`, `.tp-tab`, `.ob-tab-item` | não | 4 implementações | 5 |
@@ -52,10 +52,11 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Menu lateral | `ServiceExactApp.tsx` (`.sb-*`) | sim | ok | 5 |
 | Janela (modal) | `.modal*`, `ServiceModal`, `DialogosAcessiveis` | parcial | markup repetido em ~30 arquivos | 3 |
 | Folha inferior | `M6Sheet` + `.m-sheet` | parcial | duas famílias de CSS | 1 |
+| Confirmação | `confirmar()` em `app/service/ui/confirmar.ts` (diálogo de risco) | sim | ok; CI barra `confirm()` | 3 |
 | Aviso (toast) | `avisar()` + `.m6-toast` com Desfazer | parcial | dois sistemas; o do membro fora do `avisar()` | 6 |
-| Vazio | `EmptyState` (painel/ui.tsx) | parcial | ~60 `.empty` inline | 6 |
-| Carregando | nenhum | não | texto "Carregando..." em 10+ telas | 6 |
-| Erro | `friendlyWriteError` (só texto) | não | sem componente | 6 |
+| Vazio | `Vazio` em `app/service/ui/Estados.tsx`; `EmptyState` usa por dentro | sim | `.empty` com estilo próprio em Escalas e `mp-vazio` no mapa | 3 |
+| Carregando | `Carregando` em `app/service/ui/Estados.tsx` (esqueleto: lista, linhas, cartões, indicadores) | sim | textos inline curtos ficam | 3 |
+| Erro | `ErroEstado` em `app/service/ui/Estados.tsx`; `friendlyWriteError` dá o texto | parcial | telas ainda mostram erro de carga só como texto | 3 |
 | Ajuda "?" | `HelpDot` (HelpSystem.tsx) | sim | modelo a seguir | n/a |
 | Tabela | `.tbl` | parcial | só painel | 3 |
 | Indicador | `Kpi` (painel/comum.tsx) | parcial | `.kpi` duplicado com o admin | 2, 6 |

@@ -21,6 +21,8 @@ import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Linha } from "../../ui/Linha";
 import { Segmentado } from "../../ui/Segmentado";
+import { Campo, Entrada, TextoLongo, Marcar } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
 export function EventDrawer({
   event,
   ministries,
@@ -152,16 +154,15 @@ export function EventoParaMembro({ event, rsvps, people, onSaved }: { event: Eve
       <DrawerSection title="O que este evento pede">
         <div style={{ display: "grid", gap: 8 }}>
           {PEDE_OPCOES.map((o) => (
-            <label key={o.v} className={`pede-opt${pede === o.v ? " on" : ""}`}>
-              <input type="radio" name={`pede-${event.id}`} checked={pede === o.v} onChange={() => setPede(o.v)} style={{ marginTop: 3 }} />
-              <span><b style={{ fontSize: "var(--fs-pn-14)" }}>{o.t}</b><br /><span className="mini-sub">{o.s}</span></span>
-            </label>
+            <Marcar key={o.v} tipo="radio" className={`pede-opt${pede === o.v ? " on" : ""}`} name={`pede-${event.id}`} checked={pede === o.v} onChange={() => setPede(o.v)}>
+              <b style={{ fontSize: "var(--fs-pn-14)" }}>{o.t}</b><br /><span className="mini-sub">{o.s}</span>
+            </Marcar>
           ))}
         </div>
       </DrawerSection>
       <DrawerSection title="Valor e instruções">
-        <div className="field"><label className="field-label">Valor (opcional)</label><input className="input" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="ex: R$ 50 por pessoa" /></div>
-        <div className="field"><label className="field-label">Instruções para quem vai</label><textarea className="input" rows={4} value={instrucoes} onChange={(e) => setInstrucoes(e.target.value)} placeholder="Chave PIX, prazo, com quem falar..." /></div>
+        <Campo rotulo="Valor (opcional)"><Entrada value={valor} onChange={(e) => setValor(e.target.value)} placeholder="ex: R$ 50 por pessoa" /></Campo>
+        <Campo rotulo="Instruções para quem vai"><TextoLongo rows={4} value={instrucoes} onChange={(e) => setInstrucoes(e.target.value)} placeholder="Chave PIX, prazo, com quem falar..." /></Campo>
         <p className="mini-sub">O app mostra o valor e estas instruções. O pagamento não passa pelo app.</p>
       </DrawerSection>
       {pede !== "aviso" && (
@@ -303,10 +304,7 @@ export function CronogramaEditor({ event, ministries, onRefresh }: { event: Even
                 </div>
                 <div className="crono-f">
                   <label>Time (opcional)</label>
-                  <select className="select" value={s.ministry_id ?? ""} onChange={(e) => setMinistryId(s.id, e.target.value)}>
-                    <option value="">Sem time</option>
-                    {ministries.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                  </select>
+                  <Selecao rotulo="Time (opcional)" valor={s.ministry_id ?? ""} aoMudar={(v) => setMinistryId(s.id, v)} vazio="Sem time" opcoes={ministries.map((m) => ({ v: m.id, l: m.name }))} />
                 </div>
                 {s.ministry_id && (
                   <div className="crono-f crono-f-full">

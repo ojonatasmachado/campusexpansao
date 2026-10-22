@@ -44,6 +44,30 @@ const REGRAS: Regra[] = [
     /* className que começa com a classe de uma dessas peças, escrita à mão */
     re: /className=\{?["'`](?:chip|m6-st|tag|panel|m6-card|m-card|m6-list|tr|mini-row|cfg-row|m6-row|seg)(?=[\s"'`$])/g,
   },
+  {
+    peca: "Seleção",
+    usar: "Selecao de app/service/ui/Selecao.tsx",
+    permitido: "app/service/ui/",
+    re: /<select\b/g,
+  },
+  {
+    peca: "Data ou hora",
+    usar: "SeletorData ou SeletorHora de app/service/ui/Data.tsx",
+    permitido: "app/service/ui/",
+    re: /type=["'](?:date|time)["']/g,
+  },
+  {
+    peca: "Caixa de marcar ou bolinha",
+    usar: "Marcar de app/service/ui/Campo.tsx",
+    permitido: "app/service/ui/",
+    re: /type=["'](?:checkbox|radio)["']/g,
+  },
+  {
+    peca: "Confirmação",
+    usar: "confirmar() de app/service/ui/confirmar.ts",
+    permitido: "app/service/ui/",
+    re: /(?<![.\w])(?:window\.)?confirm\(/g,
+  },
 ];
 
 const PASTAS = ["app/service", "app/[slug]"].map((p) => join(RAIZ, p));

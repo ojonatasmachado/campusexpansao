@@ -28,6 +28,9 @@ import type { ChurchView, EventView, MinistryView, PersonView, RosterAssignmentV
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Campo, Marcar } from "../../ui/Campo";
+import { SeletorData } from "../../ui/Data";
+import { Vazio } from "../../ui/Estados";
 const DIA_CURTO = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const DIA_LONGO = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 const DURACOES = [1, 3, 6, 12] as const;
@@ -256,13 +259,12 @@ export function GerarPeriodo({
           ) : (
             <div className="per-lista">
               {comFuncoes.map((m) => (
-                <label className="fs-check" key={m.id}>
-                  <input type="checkbox" checked={timesSel.has(m.id)} onChange={() => setTimesSel((s) => alternar(s, m.id))} />
+                <Marcar className="fs-check" key={m.id} checked={timesSel.has(m.id)} onChange={() => setTimesSel((s) => alternar(s, m.id))}>
                   <span className="per-check-txt">
                     <span className="per-check-t">{m.name}</span>
                     <span className="per-check-s">{m.people.length ? joinDot(plural(m.people.length, "pessoa"), plural(m.positions.length, "função", "funções")) : "Ninguém no time ainda"}</span>
                   </span>
-                </label>
+                </Marcar>
               ))}
             </div>
           )}
@@ -270,15 +272,13 @@ export function GerarPeriodo({
 
         <FormSection title="Período">
           <div className="fs-grid">
-            <div className="field half">
-              <label className="field-label req" htmlFor={`${fid}-ini`}>Começa em</label>
-              <input id={`${fid}-ini`} className="input" type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} />
-            </div>
+            <Campo rotulo="Começa em" obrigatorio id={`${fid}-ini`} className="half">
+              <SeletorData valor={inicio} aoMudar={setInicio} />
+            </Campo>
             {duracao === "datas" && (
-              <div className="field half">
-                <label className="field-label req" htmlFor={`${fid}-fim`}>Termina em</label>
-                <input id={`${fid}-fim`} className="input" type="date" value={fimManual} min={inicio} max={fimDoPeriodo(inicio || hoje, 12)} onChange={(e) => setFimManual(e.target.value)} />
-              </div>
+              <Campo rotulo="Termina em" obrigatorio id={`${fid}-fim`} className="half">
+                <SeletorData valor={fimManual} min={inicio} max={fimDoPeriodo(inicio || hoje, 12)} aoMudar={setFimManual} />
+              </Campo>
             )}
             <div className="field">
               <div className="field-label" id={`${fid}-dur`}>Duração</div>
@@ -302,23 +302,21 @@ export function GerarPeriodo({
                 const n = valido ? cultosDoPeriodo(events, [s], inicio, fim) : [];
                 const criar = n.filter((c) => !c.eventId).length;
                 return (
-                  <label className="fs-check" key={s.chave}>
-                    <input type="checkbox" checked={seriesSel.has(s.chave)} onChange={() => setSeriesSel((x) => alternar(x, s.chave))} />
+                  <Marcar className="fs-check" key={s.chave} checked={seriesSel.has(s.chave)} onChange={() => setSeriesSel((x) => alternar(x, s.chave))}>
                     <span className="per-check-txt">
                       <span className="per-check-t">{s.nome}</span>
                       <span className="per-check-s">{joinDot(`Toda ${DIA_LONGO[s.diaSemana].toLowerCase()}`, s.hora, valido && plural(n.length, "data", "datas"), criar > 0 && `${criar} ${criar === 1 ? "entra" : "entram"} na agenda`)}</span>
                     </span>
-                  </label>
+                  </Marcar>
                 );
               })}
               {avulsos.map((e) => (
-                <label className="fs-check" key={e.id}>
-                  <input type="checkbox" checked={!avulsosFora.has(e.id)} onChange={() => setAvulsosFora((x) => alternar(x, e.id))} />
+                <Marcar className="fs-check" key={e.id} checked={!avulsosFora.has(e.id)} onChange={() => setAvulsosFora((x) => alternar(x, e.id))}>
                   <span className="per-check-txt">
                     <span className="per-check-t">{e.name}</span>
                     <span className="per-check-s">{joinDot(diaCurto(e.eventDate), formatDateBR(e.eventDate), e.time, "uma vez")}</span>
                   </span>
-                </label>
+                </Marcar>
               ))}
             </div>
           )}
@@ -510,7 +508,7 @@ function EscolherNaVaga({ vaga, culto, opcoes, cfg, nomeAtual, onEscolher, onClo
           </div>
         </div>
         <div className="modal-body cand-list">
-          {achados.length === 0 && <div className="empty">{busca.trim() ? "Ninguém com esse nome neste time." : "Todo mundo do time já está nesta função. Adicione pessoas ao time em Times."}</div>}
+          {achados.length === 0 && <Vazio titulo={busca.trim() ? "Ninguém com esse nome neste time." : "Todo mundo do time já está nesta função. Adicione pessoas ao time em Times."} />}
           {podem.length > 0 && <><div className="cand-grp">Livres, pela ordem do rodízio</div>{podem.map((c) => linha(c))}</>}
           {comAviso.length > 0 && <><div className="cand-grp">Pode escolher, mas fica com aviso</div>{comAviso.map((c) => linha(c, motivo(c)))}</>}
           {naoPodem.length > 0 && <><div className="cand-grp">Não podem nesta vaga</div>{naoPodem.map((c) => linha(c, motivo(c)))}</>}

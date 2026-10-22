@@ -13,6 +13,7 @@ import { useTermos } from "./lib/vocabulario-context";
 
 import { Botao, BotaoIcone } from "./ui/Botao";
 import { Selo } from "./ui/Selo";
+import { Vazio } from "./ui/Estados";
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
 type CourseView = {
@@ -114,7 +115,7 @@ function MatricularModal({
             />
           </div>
           {lista.length === 0 && (
-            <div className="empty">{q ? "Nenhum resultado." : "Todo mundo já está matriculado."}</div>
+            <Vazio titulo={q ? "Nenhum resultado." : "Todo mundo já está matriculado."} />
           )}
           {lista.map((m) => (
             <div
@@ -279,7 +280,7 @@ export default function CursoDrawer({
                 </div>
               );
             })}
-            {courseModules.length === 0 && <div className="empty">Nenhum módulo cadastrado ainda.</div>}
+            {courseModules.length === 0 && <Vazio titulo="Nenhum módulo cadastrado ainda." />}
           </div>
 
           <div className="dsec">
@@ -305,7 +306,7 @@ export default function CursoDrawer({
                 </div>
               );
             })}
-            {courseEnrollments.length === 0 && <div className="empty">Nenhuma matrícula ainda.</div>}
+            {courseEnrollments.length === 0 && <Vazio titulo="Nenhuma matrícula ainda." />}
             <Botao compacto style={{ marginTop: 10 }} onClick={() => setShowMatricular(true)}>
               + Matricular pessoa
             </Botao>

@@ -23,6 +23,7 @@ import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Linha } from "../../ui/Linha";
 import { Etiqueta } from "../../ui/Selo";
+import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
 /* Pessoas e Voluntários : módulo em modules/pessoas/ (4.1) */
 
 /* Pedidos do app ("Quero servir", 0046): o membro já passou pelos
@@ -169,19 +170,17 @@ export function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
       onClose={onClose}
     >
       <FormSection title="O time">
-        <div className="field"><label className="field-label req" htmlFor={`${fid}-nome`}>Nome</label><input id={`${fid}-nome`} className="input" aria-required="true" value={nome} onChange={(e) => setNome(e.target.value)} /></div>
-        <div className="field"><div className="field-label" id={`${fid}-icone`}>Ícone do time</div><div role="group" aria-labelledby={`${fid}-icone`}><IconPicker value={icon} onChange={setIcon} /></div></div>
-        <div className="field"><label className="field-label" htmlFor={`${fid}-prop`}>Propósito</label><input id={`${fid}-prop`} className="input" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Por que esse time existe" /></div>
+        <Campo rotulo="Nome" obrigatorio><Entrada id={`${fid}-nome`} aria-required="true" value={nome} onChange={(e) => setNome(e.target.value)} /></Campo>
+        <Campo rotulo="Ícone do time" grupo><div role="group"><IconPicker value={icon} onChange={setIcon} /></div></Campo>
+        <Campo rotulo="Propósito"><Entrada id={`${fid}-prop`} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Por que esse time existe" /></Campo>
       </FormSection>
 
       <FormSection title="Sobre o time">
-        <div className="field"><label className="field-label" htmlFor={`${fid}-como`}>Como trabalhamos</label><textarea id={`${fid}-como`} className="textarea" value={comoTrabalhamos} onChange={(e) => setComoTrabalhamos(e.target.value)} placeholder="Rotina, ensaios, escala..." /></div>
-        <div className="field"><label className="field-label" htmlFor={`${fid}-cheg`}>Horário de chegada</label><input id={`${fid}-cheg`} className="input" value={chegada} onChange={(e) => setChegada(e.target.value)} placeholder={ct("ex: 1h antes do {culto}")} /></div>
-        <div className="field">
-          <label className="field-label" htmlFor={`${fid}-resp`}>O que esperamos</label>
-          <textarea id={`${fid}-resp`} className="textarea" aria-describedby={`${fid}-resp-dica`} value={responsabilidades} onChange={(e) => setResponsabilidades(e.target.value)} placeholder="ex: Chegar no horário" />
-          <div className="field-hint" id={`${fid}-resp-dica`}>Uma por linha. Ex.: chegar no horário; avisar com antecedência se não puder servir.</div>
-        </div>
+        <Campo rotulo="Como trabalhamos"><TextoLongo id={`${fid}-como`} value={comoTrabalhamos} onChange={(e) => setComoTrabalhamos(e.target.value)} placeholder="Rotina, ensaios, escala..." /></Campo>
+        <Campo rotulo="Horário de chegada"><Entrada id={`${fid}-cheg`} value={chegada} onChange={(e) => setChegada(e.target.value)} placeholder={ct("ex: 1h antes do {culto}")} /></Campo>
+        <Campo rotulo="O que esperamos" ajuda="Uma por linha. Ex.: chegar no horário; avisar com antecedência se não puder servir.">
+          <TextoLongo id={`${fid}-resp`} value={responsabilidades} onChange={(e) => setResponsabilidades(e.target.value)} placeholder="ex: Chegar no horário" />
+        </Campo>
       </FormSection>
 
       <FormSection title="Quem pode entrar">

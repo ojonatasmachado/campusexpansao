@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useState } from "react";
 import { IconPicker, Caret } from "../lib/icons";
 import CepInput from "../CepInput";
 import { DP_MESES } from "./comum";
@@ -10,6 +10,9 @@ import { BotaoIcone } from "../ui/Botao";
 import { Interruptor } from "../ui/Interruptor";
 import { Acao } from "../ui/Acao";
 import { Opcao } from "../ui/Opcao";
+import { usePopover } from "../ui/popover";
+import { Selecao } from "../ui/Selecao";
+import { SeletorData } from "../ui/Data";
 export function DrawerShell({ children, onClose, wide }: { children: React.ReactNode; onClose: () => void; wide?: boolean }) {
   return (
     <>
@@ -28,35 +31,12 @@ export function DrawerSection({ title, children }: { title: string; children: Re
   );
 }
 
-/* Contrato dos popovers de campo (data, hora, lista): fecha no clique fora e no Esc,
-   e o Esc devolve o foco ao gatilho. O Esc é tratado na captura e marcado como
-   tratado, para não fechar junto a janela ou a tela de formulário onde o campo está. */
-function usePopover(open: boolean, setOpen: (v: boolean) => void) {
-  const caixa = useRef<HTMLDivElement>(null);
-  const gatilho = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const fora = (e: MouseEvent) => { if (caixa.current && !caixa.current.contains(e.target as Node)) setOpen(false); };
-    const esc = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      e.preventDefault();
-      e.stopPropagation();
-      setOpen(false);
-      gatilho.current?.focus();
-    };
-    document.addEventListener("mousedown", fora);
-    document.addEventListener("keydown", esc, true);
-    return () => { document.removeEventListener("mousedown", fora); document.removeEventListener("keydown", esc, true); };
-  }, [open, setOpen]);
-  return { caixa, gatilho };
-}
-
 export const DP_MESES_FULL = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 export const DP_DIAS_MES = [31,29,31,30,31,30,31,31,30,31,30,31];
 
 export function DatePicker({ value, onChange, id, fullDate = false, label }: { value: string; onChange: (v: string) => void; id?: string; fullDate?: boolean; label?: string }) {
   return fullDate
-    ? <input id={id} className="input service-civil-date" type="date" aria-label={label ?? "Data completa"} value={value} onChange={(e) => onChange(e.target.value)} />
+    ? <SeletorData id={id} rotulo={label ?? "Data completa"} valor={value} aoMudar={onChange} limpavel />
     : <BirthdayPicker id={id} value={value} onChange={onChange} />;
 }
 
@@ -155,55 +135,9 @@ export function CepField({ field, value, onChange, onPatch }: { field: Extract<F
   );
 }
 
-/* Select customizado, escuro : troca o <select> nativo (que abre o
-   dropdown do sistema operacional, claro e fora do visual do app) por um
-   popover no mesmo padrão do IconPicker/DatePicker. Único ponto de render
-   de "type: select" no form genérico, então conserta todo campo desse tipo
-   no app inteiro de uma vez, não só um formulário específico. */
+/* Seleção do formulário genérico: a peça é Selecao (app/service/ui/Selecao.tsx). */
 export function SelectField({ value, onChange, options, placeholder, label, id }: { value: string; onChange: (v: string) => void; options: { v: string; l: string }[]; placeholder?: string; label?: string; id?: string }) {
-  const [open, setOpen] = useState(false);
-  const { caixa, gatilho } = usePopover(open, setOpen);
-  const listaId = useId();
-  const itens = [...(placeholder ? [{ v: "", l: placeholder }] : []), ...options];
-  const current = options.find((o) => o.v === value);
-
-  /* abre com o escolhido em foco; setas, Home e End andam; Enter ou espaço escolhem (botão); Tab fecha */
-  useEffect(() => {
-    if (!open) return;
-    const lista = caixa.current?.querySelectorAll<HTMLButtonElement>("[role=option]");
-    const atual = [...(lista ?? [])].find((b) => b.getAttribute("aria-selected") === "true") ?? lista?.[0];
-    atual?.focus();
-  }, [open, caixa]);
-  const navegar = (e: React.KeyboardEvent) => {
-    if (e.key === "Tab") { setOpen(false); return; }
-    const lista = [...(caixa.current?.querySelectorAll<HTMLButtonElement>("[role=option]") ?? [])];
-    const i = lista.indexOf(document.activeElement as HTMLButtonElement);
-    const ir = (j: number) => { e.preventDefault(); lista[Math.max(0, Math.min(lista.length - 1, j))]?.focus(); };
-    if (e.key === "ArrowDown") ir(i + 1);
-    else if (e.key === "ArrowUp") ir(i - 1);
-    else if (e.key === "Home") ir(0);
-    else if (e.key === "End") ir(lista.length - 1);
-  };
-  const escolher = (v: string) => { onChange(v); setOpen(false); gatilho.current?.focus(); };
-
-  return (
-    <div className="sel-wrap" ref={caixa}>
-      <Acao ref={gatilho} id={id} className="sel-trigger" aria-label={label ? `${label}: ${current?.l || placeholder || "Selecione"}` : undefined}
-        aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? listaId : undefined}
-        onClick={() => setOpen((o) => !o)}
-        onKeyDown={(e) => { if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !open) { e.preventDefault(); setOpen(true); } }}>
-        <span className={current ? "" : "sel-ph"}>{current ? current.l : (placeholder || "Selecione")}</span>
-        <span className="sel-arrow"><Caret open={open} /></span>
-      </Acao>
-      {open && (
-        <div className="sel-pop" id={listaId} role="listbox" aria-label={label} onKeyDown={navegar}>
-          {itens.map((o) => (
-            <Opcao key={o.v || "_vazio"} role="option" aria-selected={value === o.v} marcada={value === o.v} estilo="sel-opt" onClick={() => escolher(o.v)}>{o.l}</Opcao>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  return <Selecao id={id} rotulo={label} valor={value} aoMudar={onChange} opcoes={options} vazio={placeholder} />;
 }
 
 /* tipo, teclado e preenchimento automático pelo nome do campo (k) */

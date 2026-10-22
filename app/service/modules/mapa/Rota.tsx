@@ -11,6 +11,8 @@ import { caixaDaGeometria, temPonto } from "./geo";
 
 import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
+import { Campo, Entrada, Marcar } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
 /* Ferramentas › Traçar rota (tela 12 do design). O objetivo vem primeiro e
    muda o que vira parada: na Visita, as pessoas (com nome no mapa); em
    oração, panfletagem e carro de som, lugares e ruas, nunca casas. */
@@ -184,14 +186,10 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
             </div>
           ))}
           {objetivo !== "visita" && ctx.areas.length > 0 && (
-            <div className="field">
-              <label className="field-label" htmlFor="rt-area">Percorrer a área</label>
-              <select id="rt-area" className="input" value={areaId} onChange={(e) => percorrerArea(e.target.value)}>
-                <option value="">Não, só as paradas</option>
-                {ctx.areas.map((a) => <option key={a.id} value={a.id}>{a.nome}</option>)}
-              </select>
-              <p className="mp-fraco">Contorna a área com paradas nos trechos. Para cobrir cada rua, divida a área em partes menores.</p>
-            </div>
+            <Campo rotulo="Percorrer a área" id="rt-area" ajuda="Contorna a área com paradas nos trechos. Para cobrir cada rua, divida a área em partes menores.">
+              <Selecao valor={areaId} aoMudar={percorrerArea} vazio="Não, só as paradas"
+                opcoes={ctx.areas.map((a) => ({ v: a.id, l: a.nome }))} />
+            </Campo>
           )}
           <div className="field">
             <span className="field-label">Como</span>
@@ -201,12 +199,12 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
             </div>
           </div>
           {res && <div className="mp-destaque" style={{ fontSize: "var(--fs-pn-14)" }}><span className="mp-num">{String(res.distancia_km).replace(".", ",")}</span> km · cerca de <span className="mp-num">{res.duracao_min >= 60 ? `${Math.floor(res.duracao_min / 60)}h${String(res.duracao_min % 60).padStart(2, "0")}` : `${res.duracao_min} min`}</span>{res.aproximado && <span className="mp-fraco" style={{ display: "block" }}>Conta aproximada, em linha reta.</span>}</div>}
-          <div className="field"><label className="field-label" htmlFor="rt-nome">Nome</label><input id="rt-nome" className="input" maxLength={80} placeholder={`ex: ${obj.nome} em Bela Vista`} value={nome} onChange={(e) => setNome(e.target.value)} /></div>
+          <Campo rotulo="Nome" id="rt-nome"><Entrada maxLength={80} placeholder={`ex: ${obj.nome} em Bela Vista`} value={nome} onChange={(e) => setNome(e.target.value)} /></Campo>
           <div className="field"><label className="field-label" htmlFor="rt-quando">Quando</label><input id="rt-quando" className="input" type="datetime-local" value={quando} onChange={(e) => setQuando(e.target.value)} /></div>
           <details>
             <summary className="mp-pergunta" style={{ cursor: "pointer", minHeight: 32 }}>Equipe · <span className="mp-num">{equipe.length}</span></summary>
             <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 200, overflowY: "auto", marginTop: 6 }}>
-              {ctx.people.map((p) => <label key={p.id} className="mp-linha"><span>{p.name}</span><input type="checkbox" checked={equipe.includes(p.id)} onChange={(e) => setEquipe((q) => (e.target.checked ? [...q, p.id] : q.filter((x) => x !== p.id)))} /></label>)}
+              {ctx.people.map((p) => <Marcar key={p.id} className="mp-linha" lado="direita" checked={equipe.includes(p.id)} onChange={(e) => setEquipe((q) => (e.target.checked ? [...q, p.id] : q.filter((x) => x !== p.id)))}>{p.name}</Marcar>)}
             </div>
           </details>
         </div>

@@ -16,6 +16,9 @@ import { baixarCsv } from "./csv";
 
 import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
+import { Marcar } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
+import { Carregando } from "../../ui/Estados";
 /* Mesa de trabalho (tela 2 do design): uma, várias ou todas as regiões,
    para analisar e baixar CSV. Pessoas só com nome de quem aceitou o termo;
    o CSV nunca leva endereço e cada download fica registrado. */
@@ -103,10 +106,9 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
         {escolhidas.map((r) => (
           <span key={r.codigo} className="mesa-tag"><span className="mp-sw" style={{ background: `var(--mapa-${r.leitura})`, width: 8, height: 8, borderRadius: 4 }} />{r.nome}<BotaoIcone rotulo={`Tirar ${r.nome}`} onClick={() => setSel((s) => s.filter((x) => x !== r.codigo))}><Icon name="recusou" size={12} /></BotaoIcone></span>
         ))}
-        <select className="input mesa-add" value="" aria-label="Adicionar região" onChange={(e) => e.target.value && setSel((s) => [...s, e.target.value])}>
-          <option value="">+ Região</option>
-          {todas.filter((r) => !sel.includes(r.codigo)).map((r) => <option key={r.codigo} value={r.codigo}>{r.nome}</option>)}
-        </select>
+        <Selecao className="mesa-add" valor="" rotulo="Adicionar região" vazio="+ Região"
+          aoMudar={(v) => { if (v) setSel((s) => [...s, v]); }}
+          opcoes={todas.filter((r) => !sel.includes(r.codigo)).map((r) => ({ v: r.codigo, l: r.nome }))} />
         <span style={{ flex: 1 }} />
         <span className="mp-fraco">Atalhos</span>
         <Acao className="mp-chip" onClick={() => setSel(todas.map((r) => r.codigo))}>Todas</Acao>
@@ -117,7 +119,7 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
         </div>
       </div>
 
-      {carregando && <p className="mp-fraco" role="status">Carregando...</p>}
+      {carregando && <Carregando forma="linhas" />}
       {!carregando && !cidade?.tem_ibge && <p className="mp-texto">Sem dados do IBGE desta cidade ainda: os números de moradores aparecem quando forem importados.</p>}
 
       <div className="mesa-kpis">
@@ -180,7 +182,7 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
                     <tbody>
                       {lista.map((p) => (
                         <tr key={p.id}>
-                          <td><input type="checkbox" aria-label={`Selecionar ${p.nome}`} checked={marcadas.includes(p.id)} onChange={(e) => setMarcadas((m) => (e.target.checked ? [...m, p.id] : m.filter((x) => x !== p.id)))} /></td>
+                          <td><Marcar aria-label={`Selecionar ${p.nome}`} checked={marcadas.includes(p.id)} onChange={(e) => setMarcadas((m) => (e.target.checked ? [...m, p.id] : m.filter((x) => x !== p.id)))} /></td>
                           <td><b>{p.nome}</b></td><td>{p.regiao}</td><td>{SITUACAO[p.situacao] ?? p.situacao}</td><td>{p.grupo ?? <span className="mp-fraco">nenhum</span>}</td>
                           <td>{p.ministerios.length ? p.ministerios.join(", ") : <span className="mp-fraco">nenhum</span>}</td>
                           <td className="n mp-num">{p.km_sede != null ? `${String(p.km_sede).replace(".", ",")} km` : "-"}</td>
@@ -218,9 +220,9 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
           {acesso.pode_csv && (
             <section className="mesa-caixa" style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
               <h2 className="mesa-h2">O que vai no CSV</h2>
-              <label className="mp-linha"><span>Números por região (IBGE e igreja)</span><input type="checkbox" checked={partes.regioes} onChange={(e) => setPartes((p) => ({ ...p, regioes: e.target.checked }))} /></label>
-              <label className="mp-linha"><span>Pessoas, sem endereço</span><input type="checkbox" checked={partes.pessoas} onChange={(e) => setPartes((p) => ({ ...p, pessoas: e.target.checked }))} /></label>
-              <label className="mp-linha"><span>Pontos de interesse</span><input type="checkbox" checked={partes.pontos} onChange={(e) => setPartes((p) => ({ ...p, pontos: e.target.checked }))} /></label>
+              <Marcar className="mp-linha" lado="direita" checked={partes.regioes} onChange={(e) => setPartes((p) => ({ ...p, regioes: e.target.checked }))}>Números por região (IBGE e igreja)</Marcar>
+              <Marcar className="mp-linha" lado="direita" checked={partes.pessoas} onChange={(e) => setPartes((p) => ({ ...p, pessoas: e.target.checked }))}>Pessoas, sem endereço</Marcar>
+              <Marcar className="mp-linha" lado="direita" checked={partes.pontos} onChange={(e) => setPartes((p) => ({ ...p, pontos: e.target.checked }))}>Pontos de interesse</Marcar>
               <p className="mp-fraco">Nunca leva endereço nem telefone. Fica registrado quem baixou e quando.</p>
             </section>
           )}

@@ -16,6 +16,7 @@ import { Botao, botaoClasse } from "../ui/Botao";
 import { Acao } from "../ui/Acao";
 import { Opcao } from "../ui/Opcao";
 import { Linha, Lista, linhaClasse } from "../ui/Linha";
+import { Carregando } from "../ui/Estados";
 /* Agenda › Onde (mapa da igreja, etapa 2). Sede, congregações e grupos são
    públicos para quem é da igreja: endereço, horário, líder e vagas. Nenhuma
    pessoa aparece aqui, só o ponto "você" do próprio CEP. */
@@ -127,7 +128,7 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
         <div className="m6-lbl">{eu ? "Perto de você" : "Lugares da igreja"}</div>
         {!eu && <p className="m6-meta">Coloque seu CEP no Perfil para ver o que fica mais perto.</p>}
         {erro && <p className="m6-meta" role="alert">Não foi possível carregar agora. Tente de novo.</p>}
-        {locais === null && !erro && <p className="m6-meta" role="status">Carregando...</p>}
+        {locais === null && !erro && <Carregando forma="lista" />}
         {locais && ordenados.length === 0 && <p className="m6-meta">{filtro === "grupos" ? ct("A igreja ainda não cadastrou {grupos}.") : "Nada cadastrado ainda."}</p>}
         <Lista>
           {ordenados.map(({ l, km }) => (

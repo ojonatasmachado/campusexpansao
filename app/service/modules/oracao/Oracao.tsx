@@ -24,6 +24,7 @@ import { Opcao } from "../../ui/Opcao";
 import { Linha, Lista } from "../../ui/Linha";
 import { Cartao } from "../../ui/Cartao";
 import { Selo } from "../../ui/Selo";
+import { Carregando } from "../../ui/Estados";
 type Toast = (msg: string, action?: { label: string; fn: () => void }) => void;
 
 // ── o pedido ─────────────────────────────────────────────────────────────────
@@ -222,7 +223,7 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
       </div>
 
       <div className="m6-sec0 or-lista">
-        {dados === null && !erro && <Cartao estilo="app"><div className="m6-meta">Carregando os pedidos...</div></Cartao>}
+        {dados === null && !erro && <Carregando forma="lista" />}
         {erro && (
           <Cartao estilo="app">
             <div className="m6-ct">Não deu para abrir o mural</div>

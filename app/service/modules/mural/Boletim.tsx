@@ -18,6 +18,8 @@ import type { ChurchView, EventView, MinistryView, PersonView, RosterAssignmentV
 
 import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
+import { Campo } from "../../ui/Campo";
+import { SeletorData } from "../../ui/Data";
 type Qual = "esta" | "proxima" | "outra";
 
 export function BoletimDaSemana({ church, avisos, events, roster, ministries, people, onClose }: {
@@ -113,8 +115,9 @@ export function BoletimDaSemana({ church, avisos, events, roster, ministries, pe
             </div>
             {qual === "outra" && (
               <div style={{ marginTop: 8 }}>
-                <label className="field-label" htmlFor={`${fid}-dia`}>Um dia da semana</label>
-                <input id={`${fid}-dia`} className="input" type="date" value={outroDia} onChange={(e) => setOutroDia(e.target.value)} />
+                <Campo rotulo="Um dia da semana" id={`${fid}-dia`}>
+                  <SeletorData valor={outroDia} aoMudar={setOutroDia} />
+                </Campo>
               </div>
             )}
             <div className="field-hint">{`De segunda a domingo: ${rotuloSemana(semana)}.`}</div>

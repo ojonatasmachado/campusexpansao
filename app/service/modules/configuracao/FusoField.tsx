@@ -2,6 +2,8 @@
 
 import { useId } from "react";
 import { FUSOS_DISPONIVEIS } from "../../lib/fusos-disponiveis";
+import { Campo } from "../../ui/Campo";
+import { Selecao } from "../../ui/Selecao";
 
 const CONHECIDOS: Record<string, string> = {
   "America/Sao_Paulo": "Brasil: Brasília, São Paulo",
@@ -22,12 +24,10 @@ export function FusoField({ value, onChange }: { value: string; onChange: (fuso:
   const id = useId();
   const comuns = Object.keys(CONHECIDOS);
   const outros = [...new Set([...FUSOS_DISPONIVEIS, value])].filter((f) => !comuns.includes(f));
-  return <div className="field">
-    <label className="field-label" htmlFor={id}>Fuso horário da igreja</label>
-    <select id={id} className="select" value={value} onChange={(e) => onChange(e.target.value)} aria-describedby={`${id}-hint`}>
-      <optgroup label="Mais usados">{comuns.map((f) => <option key={f} value={f}>{CONHECIDOS[f]}</option>)}</optgroup>
-      <optgroup label="Outras regiões">{outros.map((f) => <option key={f} value={f}>{f.replaceAll("_", " ")}</option>)}</optgroup>
-    </select>
-    <div id={`${id}-hint`} className="field-hint">Define o dia da agenda e os horários dos avisos. Os encontros mantêm as datas e horas cadastradas.</div>
-  </div>;
+  return <Campo rotulo="Fuso horário da igreja" id={id} ajuda="Define o dia da agenda e os horários dos avisos. Os encontros mantêm as datas e horas cadastradas.">
+    <Selecao valor={value} aoMudar={onChange} opcoes={[
+      ...comuns.map((f) => ({ v: f, l: CONHECIDOS[f], grupo: "Mais usados" })),
+      ...outros.map((f) => ({ v: f, l: f.replaceAll("_", " "), grupo: "Outras regiões" })),
+    ]} />
+  </Campo>;
 }

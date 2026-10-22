@@ -16,6 +16,10 @@ import { Interruptor } from "./ui/Interruptor";
 import { Acao } from "./ui/Acao";
 import { Opcao } from "./ui/Opcao";
 import { Linha } from "./ui/Linha";
+import { Campo, Entrada, TextoLongo } from "./ui/Campo";
+import { Selecao } from "./ui/Selecao";
+import { SeletorData, SeletorHora } from "./ui/Data";
+import { Vazio, Carregando } from "./ui/Estados";
 /* ─── tipos internos do editor ─────────────────────────────── */
 
 type QuizQ = { q: string; opts: string[]; correta: number };
@@ -197,14 +201,14 @@ function MateriaisEditor({
         ))}
       </div>
       <div className="mat-add">
-        <select
-          className="select"
-          style={{ flex: "0 0 110px" }}
-          value={tipo}
-          onChange={(e) => setTipo(e.target.value as Material["tipo"])}
-        >
-          {MAT_TIPOS.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
-        </select>
+        <div style={{ flex: "0 0 110px" }}>
+          <Selecao
+            rotulo="Tipo do material"
+            valor={tipo}
+            aoMudar={(v) => setTipo(v as Material["tipo"])}
+            opcoes={MAT_TIPOS.map((t) => ({ v: t.v, l: t.l }))}
+          />
+        </div>
         <input
           className="input"
           placeholder="Título"
@@ -277,7 +281,7 @@ function QuizEditor({
             </div>
             <span className="quiz-cfg-tot">de {qs.length}</span>
           </div>
-          {qs.length === 0 && <div className="empty" style={{ padding: "24px 0" }}>Sem perguntas ainda.</div>}
+          {qs.length === 0 && <Vazio titulo="Sem perguntas ainda." />}
           {qs.map((q, i) => (
             <div className="quiz-q" key={i}>
               <div className="quiz-q-head">
@@ -553,50 +557,44 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
       onSave={salvar}
       onClose={onClose}
     >
-      {loading ? <p className="fs-note">Carregando curso…</p> : (<>
+      {loading ? <Carregando forma="linhas" rotulo="Carregando curso" /> : (<>
           <FormSection title="Curso">
-            <div className="field">
-              <label className="field-label req" htmlFor="ce-nome">Nome do curso</label>
-              <input id="ce-nome" className="input" aria-required="true" placeholder="ex: Fundamentos da fé" value={c.nome} onChange={(e) => set("nome", e.target.value)} />
-            </div>
+            <Campo rotulo="Nome do curso" obrigatorio id="ce-nome">
+              <Entrada aria-required="true" placeholder="ex: Fundamentos da fé" value={c.nome} onChange={(e) => set("nome", e.target.value)} />
+            </Campo>
           </FormSection>
 
           {/* identificação */}
           <FormSection title="Onde fica e como é">
             <div className="ce-grid">
-              <div className="field">
-                <label className="field-label">Nível</label>
-                <input className="input" value={c.nivel} placeholder="Entrada, Discipulado…" onChange={(e) => set("nivel", e.target.value)} />
-              </div>
-              <div className="field">
-                <label className="field-label">Cor de destaque</label>
+              <Campo rotulo="Nível">
+                <Entrada value={c.nivel} placeholder="Entrada, Discipulado…" onChange={(e) => set("nivel", e.target.value)} />
+              </Campo>
+              <Campo rotulo="Cor de destaque" grupo>
                 <div className="seg-check">
                   {CORES.map((o) => (
                     <Opcao key={o.v} marcada={c.cor === o.v} estilo="seg-chip" onClick={() => set("cor", o.v)}>{o.l}</Opcao>
                   ))}
                 </div>
-              </div>
+              </Campo>
             </div>
-            <div className="field">
-              <label className="field-label">Formato</label>
+            <Campo rotulo="Formato" grupo>
               <div className="seg-check">
                 {([{ v: "trilha", l: "Trilha (módulos)" }, { v: "conteudo", l: "Conteúdo no app" }, { v: "presencial", l: "Presencial" }] as const).map((o) => (
                   <Opcao key={o.v} marcada={c.tipo === o.v} estilo="seg-chip" onClick={() => set("tipo", o.v)}>{o.l}</Opcao>
                 ))}
               </div>
-            </div>
-            <div className="field">
-              <label className="field-label">Modalidade</label>
+            </Campo>
+            <Campo rotulo="Modalidade" grupo>
               <div className="seg-check">
                 {MODALIDADES.map((o) => (
                   <Opcao key={o.v} marcada={c.modalidade === o.v} estilo="seg-chip" onClick={() => set("modalidade", o.v)}>{o.l}</Opcao>
                 ))}
               </div>
-            </div>
-            <div className="field">
-              <label className="field-label">Descrição</label>
-              <textarea className="textarea" value={c.desc} placeholder="Para quem é e o que vão aprender" onChange={(e) => set("desc", e.target.value)} />
-            </div>
+            </Campo>
+            <Campo rotulo="Descrição">
+              <TextoLongo value={c.desc} placeholder="Para quem é e o que vão aprender" onChange={(e) => set("desc", e.target.value)} />
+            </Campo>
           </FormSection>
 
           <FormSection title="No app">
@@ -656,13 +654,13 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
                         value={aula.nome}
                         onChange={(e) => setAula(mi, ai, "nome", e.target.value)}
                       />
-                      <select
-                        className="select ce-aula-tipo"
-                        value={aula.tipo}
-                        onChange={(e) => setAula(mi, ai, "tipo", e.target.value as AulaState["tipo"])}
-                      >
-                        {AULA_TIPOS.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
-                      </select>
+                      <Selecao
+                        className="ce-aula-tipo"
+                        rotulo="Tipo da aula"
+                        valor={aula.tipo}
+                        aoMudar={(v) => setAula(mi, ai, "tipo", v as AulaState["tipo"])}
+                        opcoes={AULA_TIPOS.map((t) => ({ v: t.v, l: t.l }))}
+                      />
                       <Acao className="ce-x" onClick={() => delAula(mi, ai)}>✕</Acao>
                     </div>
                     <div className="ce-aula-row">
@@ -683,8 +681,8 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
                     </div>
                     {(aula.tipo === "presencial" || aula.tipo === "ao_vivo") && (
                       <div className="ce-aula-row">
-                        <input className="input" type="date" aria-label="Dia da aula" value={aula.data} onChange={(e) => setAula(mi, ai, "data", e.target.value)} />
-                        <input className="input ce-aula-dur" type="time" aria-label="Hora da aula" value={aula.hora} onChange={(e) => setAula(mi, ai, "hora", e.target.value)} />
+                        <SeletorData rotulo="Dia da aula" valor={aula.data} aoMudar={(v) => setAula(mi, ai, "data", v)} />
+                        <SeletorHora className="ce-aula-dur" rotulo="Hora da aula" valor={aula.hora} aoMudar={(v) => setAula(mi, ai, "hora", v)} />
                         <input className="input" placeholder={aula.tipo === "ao_vivo" ? "Onde (ex: link no grupo)" : "Sala (ex: Sala 2)"} value={aula.sala} onChange={(e) => setAula(mi, ai, "sala", e.target.value)} />
                       </div>
                     )}
