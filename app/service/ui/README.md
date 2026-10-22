@@ -16,3 +16,6 @@ Componentes compartilhados de interface do Service (lei 17 em `AGENTS.md` §13).
 | `Botao.tsx` | `Botao` (principal, secundario, discreto, perigo, texto; toque, lista, entrada ou mapa; compacto, largo, carregando, desativado), `BotaoIcone` (`rotulo` obrigatório), `botaoClasse()` para links |
 | `Interruptor.tsx` | `Interruptor` (liga/desliga; toque, lista, compacto; `rotulo` ou `rotuloId` obrigatório) |
 | `Opcao.tsx` | `Opcao` (escolha marcada: segmento, chip e famílias de `OpcaoEstilo`) |
+| `Selo.tsx` | `Selo` (estado), `Etiqueta` (papel ou grupo), `seloClasse()`, `tomDaClasse()` |
+| `Cartao.tsx` | `Cartao` (painel, app, app-solto; plano), `cartaoClasse()` |
+| `Linha.tsx` | `Linha` (tabela, curta, config, app), `Lista`, `linhaClasse()` |

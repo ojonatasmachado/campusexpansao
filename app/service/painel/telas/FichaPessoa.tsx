@@ -31,6 +31,8 @@ import type { BaptismCandidateView, BaptismClassView, BoardView, CalEvent, CardV
 
 import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
+import { Selo, etiquetaClasse } from "../../ui/Selo";
+import { Linha } from "../../ui/Linha";
 export function PersonTimeline({ member, events, compact }: { member: MemberView; events: TimelineEventView[]; compact?: boolean }) {
   const { comTermos: ct } = useTermos();
   const sorted = porData(events);
@@ -121,7 +123,7 @@ export function VisitanteDrawer({
             <div className="profile-name">{initVisitor.name}</div>
             <div className="profile-role">{initVisitor.origin || "Visitante"} · primeira visita {formatDateBR(initVisitor.visited_on) || "sem data"}</div>
             <div style={{ marginTop: 10 }}>
-              <span className="chip chip-neutral" style={{ color: VISITOR_STAGES[stageIdx]?.color }}>{VISITOR_STAGES[stageIdx]?.name ?? currentStage}</span>
+              <Selo style={{ color: VISITOR_STAGES[stageIdx]?.color }}>{VISITOR_STAGES[stageIdx]?.name ?? currentStage}</Selo>
             </div>
           </div>
         </div>
@@ -322,7 +324,7 @@ export function JornadaEditModal({
             const jaConcluido = !!member.journey[JORNADA_KIND_INDEX[step.kind]];
             const event = events.find((e) => e.event_type === step.kind);
             return (
-              <div className="cfg-row" key={step.kind} style={{ alignItems: "flex-start" }}>
+              <Linha estilo="config" key={step.kind} style={{ alignItems: "flex-start" }}>
                 <div className="cfg-row-main">
                   <div className="cfg-row-t">{ct(step.label)}</div>
                   {jaConcluido ? (
@@ -336,7 +338,7 @@ export function JornadaEditModal({
                     <Botao compacto style={{ marginTop: 8 }} onClick={() => marcar(step.kind)}>Marcar como concluído</Botao>
                   )}
                 </div>
-              </div>
+              </Linha>
             );
           })}
         </div>
@@ -574,7 +576,7 @@ export function EntityDrawer({
             <dl className="kv"><dt>Telefone</dt><dd>{formatarTelefone(person.phone)}</dd><dt>E-mail</dt><dd>{person.email}</dd></dl>
           </DrawerSection>
           <DrawerSection title="Times e funções">
-            <div className="cell-tags" style={{ gap: 8 }}>{linkedMinistries.map((ministry) => <Acao className="tag" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}>{ministry.name}</Acao>)}</div>
+            <div className="cell-tags" style={{ gap: 8 }}>{linkedMinistries.map((ministry) => <Acao className={etiquetaClasse()} key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}>{ministry.name}</Acao>)}</div>
             {person.tags.length > 0 && <div style={{ marginTop: 12, fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Etiquetas: {person.tags.join(" · ")}</div>}
           </DrawerSection>
           <DrawerSection title="Disponibilidade">
@@ -641,7 +643,7 @@ export function EntityDrawer({
               {member.firstContact ? <div className="profile-role">Membro desde {formatDateBR(member.firstContact)}</div> : null}
               <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <Chip status={member.situation} />
-                {isServing && <span className="chip chip-ok">Servindo</span>}
+                {isServing && <Selo tom="ok">Servindo</Selo>}
               </div>
             </div>
           </div>
@@ -728,7 +730,7 @@ export function EntityDrawer({
                       <div className="mc-main">
                         <div className="mc-head">
                           <div className="mc-name">{course.name}</div>
-                          {status === "concluido" ? <span className="chip chip-ok">Concluído</span> : <span className="mc-pct">{pct}%</span>}
+                          {status === "concluido" ? <Selo tom="ok">Concluído</Selo> : <span className="mc-pct">{pct}%</span>}
                         </div>
                         <div className="mc-meta">{course.level || course.kind || "curso"} · {done_count} de {plural(totalAulas, "aula")}</div>
                         <div className="bar" style={{ marginTop: 8 }}><div className={`bar-fill ${status === "concluido" ? "" : "amber"}`} style={{ width: `${pct}%` }} /></div>

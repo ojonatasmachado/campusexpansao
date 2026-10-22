@@ -12,6 +12,7 @@ import { requirementsFor, requirementLabel } from "./lib/requirements";
 import { useTermos } from "./lib/vocabulario-context";
 
 import { Botao, BotaoIcone } from "./ui/Botao";
+import { Selo } from "./ui/Selo";
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
 type CourseView = {
@@ -297,7 +298,7 @@ export default function CursoDrawer({
                     </div>
                   </div>
                   {en.status === "concluido" ? (
-                    <span className="chip chip-ok">Concluiu</span>
+                    <Selo tom="ok">Concluiu</Selo>
                   ) : (
                     <span className="cand-fit" style={{ color: "var(--amber)" }}>{pct}%</span>
                   )}

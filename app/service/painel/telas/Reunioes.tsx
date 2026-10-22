@@ -19,6 +19,8 @@ import type { BoardView, CardView, ChurchView, DrawerState, MeetingActionView, M
 
 import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
+import { Etiqueta, Selo, tomDaClasse } from "../../ui/Selo";
+import { linhaClasse } from "../../ui/Linha";
 export function ReuniaoForm({
   ministries,
   people,
@@ -189,9 +191,9 @@ export function Reunioes({ meetings, meetingActions, ministries, people, rooms, 
           const author = meeting.author_id ? personById.get(meeting.author_id) : null;
           return (
             <Acao className="reu-card" key={meeting.id} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
-              <div className="reu-card-top"><div><div className="reu-date">{formatDateBR(meeting.meeting_date) || "Sem data"} · {meeting.time || "sem horário"}</div><div className="reu-title">{meeting.title}</div></div><span className="chip chip-ok">Agendada</span></div>
+              <div className="reu-card-top"><div><div className="reu-date">{formatDateBR(meeting.meeting_date) || "Sem data"} · {meeting.time || "sem horário"}</div><div className="reu-title">{meeting.title}</div></div><Selo tom="ok">Agendada</Selo></div>
               <div className="reu-meta">{joinDot(meeting.location, `marcada por ${author?.name.split(" ")[0] || "líder"}`)}</div>
-              <div className="reu-foot"><div className="reu-times">{meeting.ministries.map((id) => <span className="tag" key={id}>{ministryById.get(id)?.name || "Time"}</span>)}</div><span className="team-stat"><b>{meeting.attendees.length}</b> presentes</span></div>
+              <div className="reu-foot"><div className="reu-times">{meeting.ministries.map((id) => <Etiqueta key={id}>{ministryById.get(id)?.name || "Time"}</Etiqueta>)}</div><span className="team-stat"><b>{meeting.attendees.length}</b> presentes</span></div>
             </Acao>
           );
         })}
@@ -203,11 +205,11 @@ export function Reunioes({ meetings, meetingActions, ministries, people, rooms, 
           const actions = meetingActions.filter((action) => action.meeting_id === meeting.id);
           const pending = actions.filter((action) => action.status !== "feito").length;
           return (
-            <Acao className="tr click" key={meeting.id} style={{ gridTemplateColumns: "130px 1.6fr 1fr 120px" }} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
+            <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={meeting.id} style={{ gridTemplateColumns: "130px 1.6fr 1fr 120px" }} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
               <div style={{ fontFamily: "var(--mono)", fontSize: "var(--fs-pn-12)", color: "var(--olive)" }}>{formatDateBR(meeting.meeting_date) || "sem data"}</div>
               <div><div className="cell-name">{meeting.title}</div><div className="cell-sub">{plural(meeting.ministries.length, "time")} · {meeting.attendees.length} presentes</div></div>
               <div className="cell-sub">{plural(actions.length, "responsabilidade")}</div>
-              <div>{pending > 0 ? <span className="chip chip-wait">{pending} em aberto</span> : <span className="chip chip-ok">Tudo feito</span>}</div>
+              <div>{pending > 0 ? <Selo tom="pendente">{pending} em aberto</Selo> : <Selo tom="ok">Tudo feito</Selo>}</div>
             </Acao>
           );
         })}
@@ -353,7 +355,7 @@ export function ReuniaoDrawer({
       <div className="drawer-body">
         <DrawerSection title="Times e presentes">
           <div className="cell-tags" style={{ marginBottom: 12 }}>
-            {meeting.ministries.map((id) => <span key={id} className="tag">{ministryById.get(id)?.name || "Time"}</span>)}
+            {meeting.ministries.map((id) => <Etiqueta key={id}>{ministryById.get(id)?.name || "Time"}</Etiqueta>)}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {meeting.attendees.map((pid) => {
@@ -408,7 +410,7 @@ export function ReuniaoDrawer({
                     <div className="acao-side">
                       {card && cardStatus ? (
                         <>
-                          <span className={`chip ${cardStatus.cls}`}>{cardStatus.label}</span>
+                          <Selo tom={tomDaClasse(cardStatus.cls)}>{cardStatus.label}</Selo>
                           <Botao variante="discreto" compacto onClick={() => { onClose(); setRoute("quadros"); }}>Ver no quadro</Botao>
                         </>
                       ) : (
@@ -489,7 +491,7 @@ export function EnsaioDrawer({
       <div className="drawer-body">
         {ministry && (
           <DrawerSection title="Time">
-            <div className="cell-tags"><span className="tag lead">{ministry.name}</span></div>
+            <div className="cell-tags"><Etiqueta destaque>{ministry.name}</Etiqueta></div>
           </DrawerSection>
         )}
 

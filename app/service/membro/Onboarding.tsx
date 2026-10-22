@@ -11,6 +11,7 @@ import { JourneyContext, contactErrors, dataLonga, realValue } from "./comum";
 import type { BaptismClass, Course, CourseLesson, CourseModule, Enrollment, JourneyRequest, JourneyStep, M, MemberContactInput, Ministry, P, StepView } from "./tipos";
 
 import { Botao } from "../ui/Botao";
+import { Cartao } from "../ui/Cartao";
 // ── constantes ────────────────────────────────────────────────────────────────
 
 /* etapas da caminhada; a 4ª usa o nome que a igreja deu aos grupos
@@ -112,11 +113,11 @@ export function Onboarding({ person, member, churchName, churchLogoUrl, onComple
       body: (
         <div className="ob-textsize">
           <TextSizeSlider previa={false} />
-          <div className="m6-card flat ob-previa" aria-hidden="true">
+          <Cartao estilo="app" plano className="ob-previa" aria-hidden="true">
             <div className="m6-kick">Domingo · 9:30</div>
             <div className="m6-ct">{ct("{Culto} da manhã")}</div>
             <div className="m6-meta">Você serve na Recepção · chegar às 9:00</div>
-          </div>
+          </Cartao>
         </div>
       ),
       ok: "Entrar no app →",

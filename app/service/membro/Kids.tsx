@@ -16,6 +16,8 @@ import type { Child, ChildGuardian, Ev, KidsAttendance, KidsClass, KidsEvent, Ki
 
 import { Botao } from "../ui/Botao";
 import { Acao } from "../ui/Acao";
+import { Cartao, cartaoClasse } from "../ui/Cartao";
+import { seloClasse } from "../ui/Selo";
 // ── aba: Kids (professor) ───────────────────────────────────────────────────────
 
 export function TabKids({
@@ -164,11 +166,11 @@ export function TabKids({
           {pending.map((att) => {
             const child = childById.get(att.child_id);
             return (
-              <div className="m-card" key={att.id} style={{ borderColor: "var(--amber-line)" }}>
+              <Cartao estilo="app-solto" key={att.id} style={{ borderColor: "var(--amber-line)" }}>
                 <div className="m-culto">{child?.name ?? "Crianca"}</div>
                 <div className="m-fn">Compare o responsável na porta antes de confirmar.</div>
                 <Botao tamanho="toque" variante="principal" largo style={{ width: "100%", marginTop: 8 }} onClick={() => confirmarRetirada(att)}>Confirmar retirada</Botao>
-              </div>
+              </Cartao>
             );
           })}
         </>
@@ -179,7 +181,7 @@ export function TabKids({
       {present.map((att) => {
         const child = childById.get(att.child_id);
         return (
-          <div className="m-card" key={att.id}>
+          <Cartao estilo="app-solto" key={att.id}>
             <div className="m-vis-head">
               <Av name={child?.name ?? "?"} size="sm" photoUrl={child?.photo_url} />
               <div className="m-vis-main">
@@ -188,7 +190,7 @@ export function TabKids({
               </div>
               <Botao tamanho="toque" variante="secundario" compacto style={{ padding: "6px 10px" }} onClick={() => avisarResponsavel(att.child_id)}>Avisar</Botao>
             </div>
-          </div>
+          </Cartao>
         );
       })}
 
@@ -205,7 +207,7 @@ export function TabKids({
         {novaFicha ? "Cancelar" : "+ Criar ficha na hora"}
       </Botao>
       {novaFicha && (
-        <div className="m-card" style={{ borderColor: "var(--olive-line)", marginTop: 10 }}>
+        <Cartao estilo="app-solto" style={{ borderColor: "var(--olive-line)", marginTop: 10 }}>
           <PhotoPicker label="Foto da criança (obrigatória)" photoUrl={fotoCrianca} path={`${organizationId}/kids/children/${fichaIds.childId}`} onUploaded={setFotoCrianca} />
           <input className="input" placeholder="Nome da criança" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
           <input className="input" type="date" value={form.nascimento} onChange={(e) => setForm((f) => ({ ...f, nascimento: e.target.value }))} style={{ marginBottom: 8 }} />
@@ -236,7 +238,7 @@ export function TabKids({
           </label>
           {fichaError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{fichaError}</div>}
           <Botao tamanho="toque" variante="principal" largo style={{ width: "100%" }} onClick={criarFicha}>Salvar e fazer check-in</Botao>
-        </div>
+        </Cartao>
       )}
     </>
   );
@@ -395,7 +397,7 @@ export function TabKidsArea({
   };
 
   const fichaForm = (
-    <div className="m-card" style={{ borderColor: "var(--olive-line)", marginTop: 10 }}>
+    <Cartao estilo="app-solto" style={{ borderColor: "var(--olive-line)", marginTop: 10 }}>
       <PhotoPicker label="Foto da criança (obrigatória)" photoUrl={fotoFilho} path={`${organizationId}/kids/children/${fotoFilhoTargetId}`} onUploaded={setFotoFilho} />
       <input className="input" placeholder="Nome da criança" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
       <input className="input" type="date" value={form.nascimento} onChange={(e) => setForm((f) => ({ ...f, nascimento: e.target.value }))} style={{ marginBottom: 8 }} />
@@ -417,7 +419,7 @@ export function TabKidsArea({
       </label>
       {ficarError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{ficarError}</div>}
       <div className="m6-fixo m6-fixo-mcard"><Botao tamanho="toque" variante="principal" largo style={{ width: "100%" }} onClick={salvarFilho}>Salvar</Botao></div>
-    </div>
+    </Cartao>
   );
 
   return (
@@ -432,7 +434,7 @@ export function TabKidsArea({
         const historico = kidsAttendance.filter((a) => a.child_id === child.id).sort((a, b) => b.dropped_off_at.localeCompare(a.dropped_off_at)).slice(0, 3);
         return (
           <div key={child.id}>
-            <Acao className="m-card" style={{ width: "100%", textAlign: "left", cursor: "pointer" }} onClick={() => abrirEdicao(child)}>
+            <Acao className={cartaoClasse({ estilo: "app-solto" })} style={{ width: "100%", textAlign: "left", cursor: "pointer" }} onClick={() => abrirEdicao(child)}>
               <div className="m-vis-head">
                 <Av name={child.name} size="sm" photoUrl={child.photo_url} />
                 <div className="m-vis-main">
@@ -450,7 +452,7 @@ export function TabKidsArea({
             {editingId === child.id && (
               <>
                 {fichaForm}
-                <div className="m-card" style={{ marginTop: 8 }}>
+                <Cartao estilo="app-solto" style={{ marginTop: 8 }}>
                   <div className="m-when" style={{ marginBottom: 8 }}>Responsaveis autorizados a retirar</div>
                   {guardiansOf(child.id).map((g) => {
                     const p = people.find((pp) => pp.id === g.guardian_person_id);
@@ -489,7 +491,7 @@ export function TabKidsArea({
                   ) : (
                     <div className="cell-sub">Só o responsável principal pode adicionar outros corresponsáveis.</div>
                   )}
-                </div>
+                </Cartao>
               </>
             )}
           </div>
@@ -506,10 +508,10 @@ export function TabKidsArea({
         <>
           <div className="m-section-t" style={{ marginTop: 22 }}>Mural dos professores</div>
           {kidsWall.map((post) => (
-            <div className="m-card" key={post.id}>
+            <Cartao estilo="app-solto" key={post.id}>
               <div className="m-fn">{post.author ?? "Kids"}</div>
               <div style={{ fontSize: "var(--fs-app-13)", marginTop: 4 }}>{post.body}</div>
-            </div>
+            </Cartao>
           ))}
         </>
       )}
@@ -518,20 +520,20 @@ export function TabKidsArea({
         <>
           <div className="m-section-t" style={{ marginTop: 22 }}>Eventos de crianças</div>
           {kidsEvents.map((event) => (
-            <div className="m-card" key={event.id}>
+            <Cartao estilo="app-solto" key={event.id}>
               <div className="m-culto">{event.title}</div>
               <div className="m-fn">{[event.event_date, event.time, event.location].filter(Boolean).join(" · ") || "sem data definida"}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
                 {meusFilhos.map((child) => {
                   const inscrito = enrollments.some((e) => e.kids_event_id === event.id && e.child_id === child.id);
                   return (
-                    <Acao key={child.id} className={`chip ${inscrito ? "chip-ok" : "chip-neutral"}`} desativado={inscrito} onClick={() => inscrever(event.id, child.id)}>
+                    <Acao key={child.id} className={`${seloClasse({ tom: "neutro" })}${inscrito ? "chip-ok" : "chip-neutral"}`} desativado={inscrito} onClick={() => inscrever(event.id, child.id)}>
                       {child.name.split(" ")[0]}{inscrito ? <> <Icon name="ok" size={13} /></> : " + inscrever"}
                     </Acao>
                   );
                 })}
               </div>
-            </div>
+            </Cartao>
           ))}
         </>
       )}
@@ -583,7 +585,7 @@ export function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, 
   const abre = horaQueAbre(culto.time);
   const aberto = checkinAberto(culto.time, new Date(), fuso);
   return (
-    <div className="m6-card">
+    <Cartao estilo="app">
       <div className="m6-kick">Kids hoje</div>
       <div className="m6-ct">{joinDot(culto.name, culto.time)}</div>
       {!aberto && abre && <div className="m6-meta">O check-in abre às {abre}, 1 hora antes do {ct("{culto}")}.</div>}
@@ -611,6 +613,6 @@ export function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, 
         );
       })}
       {ck.error && <div className="m6-meta" style={{ color: "var(--danger)", marginTop: 8 }}>{ck.error}</div>}
-    </div>
+    </Cartao>
   );
 }

@@ -90,7 +90,8 @@ criados fora do registro não entram.
    prop ao componente. Peça nova só entra com a ficha de entrada da BIBLIOTECA preenchida e uma
    linha na tabela. Nenhuma tela escreve `<button>`: usa `Botao`, `BotaoIcone`, `Interruptor`,
    `Opcao` ou, para linha/cartão sem peça própria, a base `Acao` (todos em `app/service/ui/`);
-   link com cara de botão usa `botaoClasse()`. Vale do login ao painel. O CI falha com `<button>`
+   link com cara de botão usa `botaoClasse()`. Estado é `Selo`, papel é `Etiqueta`,
+   superfície é `Cartao`, item de lista é `Linha`. Vale do login ao painel. O CI falha com `<button>`
    ou `.btn`/`.m6-btn` à mão (`scripts/check-service-componentes.ts`).
 
 ## Como o registro funciona (4.1)

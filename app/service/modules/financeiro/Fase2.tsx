@@ -21,6 +21,7 @@ import { CampoValor, Excluir, type Base, type Cadastros } from "./Formularios";
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Linha, linhaClasse } from "../../ui/Linha";
 type Fin = ReturnType<typeof useFinanceiro>;
 
 /* ── o que vence no mês ──────────────────────────────────────────────────── */
@@ -53,7 +54,7 @@ export function APagar({ previstos, podeLancar, nomeConta, onEditar, onMudou }: 
         const venc = l.due_on ?? l.occurred_on;
         const atrasado = venc < hoje;
         return (
-          <div className="tr fin-prev" key={l.id}>
+          <Linha estilo="tabela" className="fin-prev" key={l.id}>
             <Acao className="fin-prev-main" onClick={() => podeLancar && onEditar(l)} desativado={!podeLancar}>
               <span className="cell-name">{l.description}</span>
               <span className={`cell-sub${atrasado ? " fin-atrasado" : ""}`}>{atrasado ? `Venceu em ${formatDateBR(venc)}` : `Vence em ${formatDateBR(venc)}`} · {nomeConta(l.account_id)}</span>
@@ -64,7 +65,7 @@ export function APagar({ previstos, podeLancar, nomeConta, onEditar, onMudou }: 
                 {pagando === l.id ? "Salvando…" : l.kind === "entrada" ? "Recebido" : "Pago"}
               </Botao>
             )}
-          </div>
+          </Linha>
         );
       })}
     </section>
@@ -103,10 +104,10 @@ export function Planejamento({ fin, podeLancar, onFixa, onCampanha }: {
               </>
             );
             return podeLancar
-              ? <Acao key={c.id} className="tr fin-lin click" onClick={() => onFixa(c)}>{miolo}</Acao>
-              : <div key={c.id} className="tr fin-lin">{miolo}</div>;
+              ? <Acao key={c.id} className={`${linhaClasse({ estilo: "tabela" })} fin-lin click`} onClick={() => onFixa(c)}>{miolo}</Acao>
+              : <Linha key={c.id} estilo="tabela" className="fin-lin">{miolo}</Linha>;
           })}
-          <div className="tr fin-rodape"><span className="cell-sub">{`${plural(ativas.length, "conta fixa ativa", "contas fixas ativas")} · ${brl(totalMes, true)} por mês`}</span></div>
+          <Linha estilo="tabela" className="fin-rodape"><span className="cell-sub">{`${plural(ativas.length, "conta fixa ativa", "contas fixas ativas")} · ${brl(totalMes, true)} por mês`}</span></Linha>
         </div>
       )}
 
@@ -387,7 +388,7 @@ export function FechamentoMes({ fin, mes, org, igreja, podeLancar, podeReabrir }
   };
 
   const linhas = (lista: { categoria: string; total_cents: number }[]) => lista.map((c) => (
-    <div className="tr fin-saldo" key={c.categoria}><div className="fin-saldo-main"><div className="cell-name">{c.categoria}</div></div><div className="fin-num fin-saldo-v">{brl(c.total_cents)}</div></div>
+    <Linha estilo="tabela" className="fin-saldo" key={c.categoria}><div className="fin-saldo-main"><div className="cell-name">{c.categoria}</div></div><div className="fin-num fin-saldo-v">{brl(c.total_cents)}</div></Linha>
   ));
 
   return (
@@ -408,8 +409,8 @@ export function FechamentoMes({ fin, mes, org, igreja, podeLancar, podeReabrir }
       {t.previstos_em_aberto > 0 && <p className="fs-note fin-atrasado">{`${plural(t.previstos_em_aberto, "previsto ficou", "previstos ficaram")} sem pagar ou receber neste mês.`}</p>}
 
       <div className="fin-grid">
-        <section className="tbl fin-bloco"><div className="fin-bloco-h"><h2 className="fin-bloco-t">Entradas por categoria</h2></div>{entradas.length ? linhas(entradas) : <div className="tr"><span className="cell-sub">Nenhuma entrada.</span></div>}</section>
-        <section className="tbl fin-bloco"><div className="fin-bloco-h"><h2 className="fin-bloco-t">Saídas por categoria</h2></div>{despesas.length ? linhas(despesas) : <div className="tr"><span className="cell-sub">Nenhuma saída.</span></div>}</section>
+        <section className="tbl fin-bloco"><div className="fin-bloco-h"><h2 className="fin-bloco-t">Entradas por categoria</h2></div>{entradas.length ? linhas(entradas) : <Linha estilo="tabela"><span className="cell-sub">Nenhuma entrada.</span></Linha>}</section>
+        <section className="tbl fin-bloco"><div className="fin-bloco-h"><h2 className="fin-bloco-t">Saídas por categoria</h2></div>{despesas.length ? linhas(despesas) : <Linha estilo="tabela"><span className="cell-sub">Nenhuma saída.</span></Linha>}</section>
       </div>
 
       <div className="fin-fech-acoes">

@@ -23,6 +23,8 @@ import type { Announcement, Card, Child, ChildGuardian, Ev, ItemInicio, M, Minis
 
 import { Botao, botaoClasse } from "../ui/Botao";
 import { Acao } from "../ui/Acao";
+import { Cartao, cartaoClasse } from "../ui/Cartao";
+import { Lista } from "../ui/Linha";
 export function EscalaCard({ slot, ev, ministry, person, member, members, onResponderEscala, onStartChat, destaque = true }: {
   slot: Slot; ev: Ev; ministry?: Ministry; person: P; member: M | null; members: M[];
   /* botão cheio só no primeiro cartão da fila do Início (lei 5) */
@@ -66,7 +68,7 @@ export function EscalaCard({ slot, ev, ministry, person, member, members, onResp
     ui.sheet(<SheetTroca slot={slot} ev={ev} funcao={funcao} member={member} dest={destTroca} onStartChat={onStartChat} />);
   };
   return (
-    <div className="m6-card service-commitment">
+    <Cartao estilo="app" className="service-commitment">
       <div className="service-commitment-heading">
         <span aria-hidden="true"><M6Date iso={ev.eventDate} /></span>
         <div><div className="m6-kick">{st === "wait" ? "Escala para confirmar" : "Sua escala"}</div><div className="m6-ct">{ev.name}</div></div>
@@ -95,7 +97,7 @@ export function EscalaCard({ slot, ev, ministry, person, member, members, onResp
           <Botao tamanho="toque" variante="texto" onClick={() => responder("ok")}>Mudei de ideia</Botao>
         </div>
       )}
-    </div>
+    </Cartao>
   );
 }
 
@@ -267,35 +269,35 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
         return <EscalaCard key={e.id} slot={c.slot} ev={c.ev} ministry={ministryOf(c.slot)} person={person} member={member} members={members} onResponderEscala={onResponderEscala} onStartChat={onStartChat} destaque={destaque} />;
       case "tarefa":
         return (
-          <div key={e.id} className="m6-card">
+          <Cartao key={e.id} estilo="app">
             <div className="m6-kick">Tarefa</div>
             <div className="m6-ct">{c.card.title}</div>
             <div className="m6-meta">{!c.card.due ? "Sem prazo" : c.card.due.slice(0, 10) < todayISO() ? <M6St k="warn" ic="alerta">{`Atrasada desde ${formatDateBR(c.card.due)}`}</M6St> : `Prazo · ${formatDateBR(c.card.due)}`}</div>
             <div className="m6-btns"><Botao tamanho="toque" variante={variante} onClick={() => ui.go("agenda", null, { agSeg: "minha", cardId: c.card.id })}>Ver a tarefa</Botao></div>
-          </div>
+          </Cartao>
         );
       case "mural":
         return (
-          <div key={e.id} className="m6-card">
+          <Cartao key={e.id} estilo="app">
             <div className="m6-kick"><Icon name="bandeira" size={16} />Novo no Mural</div>
             {c.aviso.urgent && <M6St k="warn" ic="alerta">Urgente</M6St>}
             <div className="m6-ct">{c.aviso.title}</div>
             {c.aviso.created_at && <div className="m6-meta">{quandoPublicado(c.aviso.created_at)}</div>}
             <div className="m6-btns"><Botao tamanho="toque" variante={variante} onClick={() => ui.go("mensagens", "mural", { announcementId: c.aviso.id })}>Ler a publicação</Botao></div>
-          </div>
+          </Cartao>
         );
       case "passo":
         return (
-          <div key={e.id} className="m6-card">
+          <Cartao key={e.id} estilo="app">
             <div className="m6-kick">{c.step.inscricao ? "Inscrições abertas" : "Seu próximo passo"}</div>
             <div className="m6-ct">{c.step.nome}</div>
             {(c.step.inscricao ?? c.step.info) && <div className="m6-meta">{c.step.inscricao ?? c.step.info}</div>}
             <div className="m6-btns"><Botao tamanho="toque" variante={variante} onClick={() => (c.step.run ? c.step.run() : ui.go("caminhada"))}>{c.step.acao ?? ct("Ver a {caminhada}")} →</Botao></div>
-          </div>
+          </Cartao>
         );
       case "cadastro":
         return (
-          <div key={e.id} className="m6-card">
+          <Cartao key={e.id} estilo="app">
             <div className="m6-kick">Seu cadastro</div>
             <div className="m6-ct">Complete seus dados</div>
             <div className="m6-meta">{`Falta ${c.falta.join(", ").replace(/, ([^,]*)$/, " e $1")}. Ajuda a igreja a cuidar de você.`}</div>
@@ -303,11 +305,11 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
               <Botao tamanho="toque" variante={variante} onClick={() => ui.go("perfil", "dados")}>Completar →</Botao>
               <Botao tamanho="toque" variante="texto" data-dispensa="1" onClick={() => adiar("dados", 30)}>Agora não</Botao>
             </div>
-          </div>
+          </Cartao>
         );
       case "atalho":
         return (
-          <div key={e.id} className="m6-card">
+          <Cartao key={e.id} estilo="app">
             <div className="m6-kick">Dica</div>
             <div className="m6-ct">Coloque o app na tela de início</div>
             <ul className="m6-facts">
@@ -320,11 +322,11 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
                 : <Botao tamanho="toque" variante={variante} onClick={() => adiar("atalho", 3650)}>Já coloquei</Botao>}
               <Botao tamanho="toque" variante="texto" data-dispensa="1" onClick={() => adiar("atalho", 3650)}>Agora não</Botao>
             </div>
-          </div>
+          </Cartao>
         );
       case "contribuir":
         return (
-          <div key={e.id} className="m6-card">
+          <Cartao key={e.id} estilo="app">
             <div className="m6-kick">Generosidade</div>
             <div className="m6-ct">Contribuir hoje</div>
             <div className="m6-meta">{`Pix para ${listaFinalidades(contribuir!.finalidades)}.`}</div>
@@ -332,19 +334,19 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
               <Botao tamanho="toque" variante={variante} onClick={onContribuir}>Ver a chave Pix</Botao>
               <Botao tamanho="toque" variante="texto" data-dispensa="1" onClick={() => adiar(e.id, 1)}>Agora não</Botao>
             </div>
-          </div>
+          </Cartao>
         );
       case "aniversario":
         return <CartaoAniversario key={e.id} pessoas={c.pessoas} destaque={destaque} onAgoraNao={() => adiar(e.id, 1)} />;
       case "servir": {
         const aguardando = c.times.some((m) => pedidosPendentes.has(m.id));
         return (
-          <div key={e.id} className="m6-card">
+          <Cartao key={e.id} estilo="app">
             <div className="m6-kick">Servir</div>
             <div className="m6-ct">{aguardando ? "Seu pedido está em análise" : c.times.length === 1 ? "1 time procura pessoas" : `${c.times.length} times procuram pessoas`}</div>
             <div className="m6-meta">{c.times.filter((m) => !aguardando || pedidosPendentes.has(m.id)).slice(0, 3).map((m) => m.name).join(", ")}. {aguardando ? "A liderança vai avaliar e conversar com você." : "Veja o que cada um faz antes de decidir."}</div>
             <div className="m6-btns"><Botao tamanho="toque" variante={variante} onClick={onServir}>{aguardando ? "Acompanhar pedido" : "Conhecer os times"}</Botao></div>
-          </div>
+          </Cartao>
         );
       }
     }
@@ -396,7 +398,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
         <div className="service-home-heading"><h2>Na vida da igreja</h2><p>Encontros e novidades para acompanhar.</p></div>
         {fila.length > 0 && cartaoDestaque}
         {daIgreja.length > 0 ? (
-          <div className="m6-list service-home-events">{daIgreja.map((ev) => <EventoRow key={ev.id} ev={ev} serve={confirmados.has(ev.id) ? confirmados.get(ev.id) : null} />)}</div>
+          <Lista className="service-home-events">{daIgreja.map((ev) => <EventoRow key={ev.id} ev={ev} serve={confirmados.has(ev.id) ? confirmados.get(ev.id) : null} />)}</Lista>
         ) : (
           <div className="service-home-empty"><div className="m6-ct">Nenhum encontro publicado por enquanto</div><p className="m6-meta">{ct("Quando a igreja publicar os próximos {cultos} e eventos, você encontra aqui as datas, os horários e como participar.")}</p></div>
         )}
@@ -405,7 +407,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
 
       {member && ((destOracao && onStartChat) || oracaoOn) && (
         <div className="m6-sec">
-          <div className="m6-card service-home-care">
+          <Cartao estilo="app" className="service-home-care">
             <div className="m6-ct">Podemos orar por você?</div>
             <div className="m6-meta">{oracaoOn ? "Você escolhe quem vê: só a intercessão ou o mural de oração da igreja." : `Seu pedido vai para ${destOracao?.via === "intercessao" ? "quem cuida da intercessão" : "a liderança da igreja"}, com cuidado.`}</div>
             <div className="m6-btns">
@@ -413,7 +415,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
                 <Icon name="coracao" size={20} />Enviar pedido de oração
               </Botao>
             </div>
-          </div>
+          </Cartao>
         </div>
       )}
     </div>
@@ -447,7 +449,7 @@ export function SheetPedirAvisos({ organizationId }: { organizationId?: string }
 export function DestaqueCard({ a, onAbrir }: { a: Announcement; onAbrir: () => void }) {
   const video = videoDoLink(a.video_url);
   return (
-    <Acao className="m6-card m6-destaque" onClick={onAbrir}>
+    <Acao className={`${cartaoClasse({ estilo: "app" })} m6-destaque`} onClick={onAbrir}>
       {a.image_url && <img className="m6-destaque-img" src={a.image_url} alt={a.image_alt ?? ""} />}
       <span className="m6-kick">{video ? "Destaque · vídeo" : "Destaque"}</span>
       <span className="m6-ct">{a.title}</span>

@@ -13,6 +13,8 @@ import type { MinistryView, PesquisaAdminRow, PesquisaDraft, PesquisaPerguntaDra
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Cartao } from "../../ui/Cartao";
+import { Linha } from "../../ui/Linha";
 export const novaPesquisaDraft = (): PesquisaDraft => ({
   id: `nova-${Date.now()}`,
   nome: "",
@@ -475,20 +477,20 @@ export function PesquisaResultados({ pesquisa, onVoltar }: { pesquisa: PesquisaA
         const valores = itens.filter((i) => i.perguntaId === p.id).map((i) => i.valor);
         if (p.tipo === "texto") {
           return (
-            <div key={p.id} className="panel" style={{ marginTop: 14 }}>
+            <Cartao key={p.id} style={{ marginTop: 14 }}>
               <div className="panel-head"><span className="panel-title">{p.texto}</span></div>
               <div className="panel-body flush">
                 {valores.length === 0 && <div className="empty">Ninguém respondeu ainda.</div>}
-                {valores.map((v, i) => <div key={i} className="mini-row"><div className="mini-main"><div className="mini-sub">{v}</div></div></div>)}
+                {valores.map((v, i) => <Linha key={i}><div className="mini-main"><div className="mini-sub">{v}</div></div></Linha>)}
               </div>
-            </div>
+            </Cartao>
           );
         }
         const contagem = new Map<string, number>();
         for (const v of valores) contagem.set(v, (contagem.get(v) ?? 0) + 1);
         const max = Math.max(1, ...Array.from(contagem.values()));
         return (
-          <div key={p.id} className="panel" style={{ marginTop: 14 }}>
+          <Cartao key={p.id} style={{ marginTop: 14 }}>
             <div className="panel-head"><span className="panel-title">{p.texto}</span></div>
             <div className="panel-body flush">
               {valores.length === 0 && <div className="empty">Ninguém respondeu ainda.</div>}
@@ -500,7 +502,7 @@ export function PesquisaResultados({ pesquisa, onVoltar }: { pesquisa: PesquisaA
                 </div>
               ))}
             </div>
-          </div>
+          </Cartao>
         );
       })}
     </div>

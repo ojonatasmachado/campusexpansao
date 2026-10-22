@@ -19,6 +19,8 @@ import { Botao } from "../ui/Botao";
 import { Interruptor } from "../ui/Interruptor";
 import { Acao } from "../ui/Acao";
 import { Opcao } from "../ui/Opcao";
+import { Linha, Lista, linhaClasse } from "../ui/Linha";
+import { Cartao } from "../ui/Cartao";
 /* data em bloquinho: "Dom 04" */
 export function M6Date({ iso }: { iso: string }) {
   const d = parseISODate(iso);
@@ -31,7 +33,7 @@ export function M6Date({ iso }: { iso: string }) {
 export function EventoRow({ ev, serve }: { ev: Ev; serve?: string | null }) {
   const ui = useContext(MemberUiContext);
   return (
-    <Acao className="m6-row" onClick={() => ui.abrirEvento(ev.id)}>
+    <Acao className={linhaClasse({ estilo: "app" })} onClick={() => ui.abrirEvento(ev.id)}>
       <M6Date iso={ev.eventDate} />
       <span className="m6-rb">
         <span className="m6-rt">{ev.name}</span>
@@ -171,7 +173,7 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
           {dias.map((d) => (
             <div className="m6-sec" key={d}>
               <div className="m6-lbl">{nomeDia(d)}</div>
-              <div className="m6-list">
+              <Lista>
                 {itens.filter((i) => i.data === d).map((i) => {
                   const corpo = (
                     <>
@@ -189,21 +191,21 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
                     </>
                   );
                   return i.abrir ? (
-                    <Acao className="m6-row" key={i.id} onClick={i.abrir}>{corpo}<span className="m6-chev"><Icon name="avancar" size={18} /></span></Acao>
+                    <Acao className={linhaClasse({ estilo: "app" })} key={i.id} onClick={i.abrir}>{corpo}<span className="m6-chev"><Icon name="avancar" size={18} /></span></Acao>
                   ) : (
-                    <div className="m6-row" key={i.id}>{corpo}</div>
+                    <Linha estilo="app" key={i.id}>{corpo}</Linha>
                   );
                 })}
-              </div>
+              </Lista>
             </div>
           ))}
           {itens.length === 0 && pend.length === 0 && (
             <div className="m6-sec">
-              <div className="m6-card">
+              <Cartao estilo="app">
                 <div className="m6-ct">Nada marcado para você</div>
                 <div className="m6-meta">{ct("Quando você for escalado ou se inscrever em algo, aparece aqui por dia.")}</div>
                 <div className="m6-btns"><Botao tamanho="toque" onClick={() => setSeg("igreja")}>{ct("Ver os {cultos} e eventos")}</Botao></div>
-              </div>
+              </Cartao>
             </div>
           )}
           {serve && meus.length === 0 && (itens.length > 0 || pend.length > 0) && <div className="m6-pad m6-meta">{ct("Você não está na escala dos próximos {cultos}.")}</div>}
@@ -215,10 +217,10 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
           {(isRecep || isKids) && (
             <div className="m6-sec">
               <div className="m6-lbl">No seu time</div>
-              <div className="m6-list">
+              <Lista>
                 {isRecep && <M6Row ic="visitante" t="Visitantes" s="Cadastrar e acompanhar quem chegou" onClick={() => ui.go("agenda", "visitantes")} />}
                 {isKids && <M6Row ic="kids" t="Sala do Kids" s="Check-in, presença e retirada" onClick={() => ui.go("agenda", "kids-sala")} />}
-              </div>
+              </Lista>
             </div>
           )}
           {serve && (
@@ -233,10 +235,10 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
         futuros.length > 0 ? grupos.map((g) => (
           <div className="m6-sec" key={g}>
             <div className="m6-lbl">{g}</div>
-            <div className="m6-list">{futuros.filter((e) => semanaDe(e.eventDate) === g).map((ev) => <EventoRow key={ev.id} ev={ev} />)}</div>
+            <Lista>{futuros.filter((e) => semanaDe(e.eventDate) === g).map((ev) => <EventoRow key={ev.id} ev={ev} />)}</Lista>
           </div>
         )) : (
-          <div className="m6-sec"><div className="m6-card"><div className="m6-ct">Agenda vazia</div><div className="m6-meta">{ct("Os {cultos} e eventos da igreja aparecem aqui assim que forem marcados.")}</div></div></div>
+          <div className="m6-sec"><Cartao estilo="app"><div className="m6-ct">Agenda vazia</div><div className="m6-meta">{ct("Os {cultos} e eventos da igreja aparecem aqui assim que forem marcados.")}</div></Cartao></div>
         )
       )}
     </>
@@ -287,11 +289,11 @@ export function SheetEvento({ ev, slot, ministry, rsvp, onRespond, paginaUrl, ch
         {servindo && <li><Icon name="times" size={20} /><span>{joinDot("Serve", funcao ?? ministry?.name, chegar && `chegar ${chegar}`)}</span></li>}
       </ul>
       {(ev.valor || ev.instrucoes) && (
-        <div className="m6-card m6-ev-info">
+        <Cartao estilo="app" className="m6-ev-info">
           {ev.valor && <div className="m6-ct">{ev.valor}</div>}
           {ev.instrucoes && <p className="m6-txt" style={{ whiteSpace: "pre-wrap" }}>{ev.instrucoes}</p>}
           <div className="m6-meta">O pagamento não passa pelo app.</div>
-        </div>
+        </Cartao>
       )}
       {pede !== "aviso" && !servindo && onRespond && (
         resp ? (
@@ -355,16 +357,16 @@ export function Disponibilidade({ person, onSave }: { person: P; onSave: (a: Rec
     if (!(await onSave(novo))) setDisp(disp);
   };
   return (
-    <div className="m6-list">
+    <Lista>
       {DISPONIBILIDADE.map((d) => (
-        <div className="m6-row" key={d.key}>
+        <Linha estilo="app" key={d.key}>
           <span className="m6-rb">
             <span className="m6-rt">{d.nome}</span>
             <span className="m6-rs">{disp[d.key] ? "O líder pode escalar você" : "O líder não vai escalar você"}</span>
           </span>
           <Interruptor ligado={disp[d.key]} tamanho="toque" rotulo={d.nome} onClick={() => trocar(d.key)} />
-        </div>
+        </Linha>
       ))}
-    </div>
+    </Lista>
   );
 }

@@ -10,6 +10,7 @@ import { iniciais } from "../lib/iniciais";
 
 import { Botao } from "../ui/Botao";
 import { Acao } from "../ui/Acao";
+import { Selo, tomDaClasse } from "../ui/Selo";
 /* grupo do menu da tela aberta: o sobretítulo da página mostra o grupo */
 export const RouteGroupContext = createContext<string | null>(null);
 
@@ -27,7 +28,7 @@ const CHIP_LABEL: Record<string, string> = { ativo: "Ativo", pausa: "Em pausa", 
 
 export function Chip({ status }: { status: string }) {
   const cls = status === "ativo" || status === "membro" || status === "ok" ? "chip-ok" : status === "pausa" || status === "wait" ? "chip-wait" : "chip-neutral";
-  return <span className={`chip ${cls}`}>{CHIP_LABEL[status] ?? status}</span>;
+  return <Selo tom={tomDaClasse(cls)}>{CHIP_LABEL[status] ?? status}</Selo>;
 }
 
 /* subtitle: só uma contagem ou um fato curto ("34 pessoas"), no máximo uma linha.

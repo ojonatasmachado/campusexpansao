@@ -19,6 +19,7 @@ import type { CronoStep, DrawerState, EventRsvpView, EventView, MinistryView, Pe
 import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Linha } from "../../ui/Linha";
 export function EventDrawer({
   event,
   ministries,
@@ -73,7 +74,7 @@ export function EventDrawer({
               <CronogramaEditor event={event} ministries={eventMinistries} onRefresh={() => router.refresh()} />
             </DrawerSection>
             <DrawerSection title="Setlist">
-              {event.setlist.length ? event.setlist.map((song) => <div className="mini-row" key={song.id}><div className="mini-main"><div className="mini-title">{song.title}</div>{song.song_key ? <div className="mini-sub">Tom: {song.song_key}</div> : null}</div></div>) : <p className="mini-sub">Nenhuma música cadastrada.</p>}
+              {event.setlist.length ? event.setlist.map((song) => <Linha key={song.id}><div className="mini-main"><div className="mini-title">{song.title}</div>{song.song_key ? <div className="mini-sub">Tom: {song.song_key}</div> : null}</div></Linha>) : <p className="mini-sub">Nenhuma música cadastrada.</p>}
             </DrawerSection>
           </>
         ) : (
@@ -164,7 +165,7 @@ export function EventoParaMembro({ event, rsvps, people, onSaved }: { event: Eve
       </DrawerSection>
       {pede !== "aviso" && (
         <DrawerSection title={pede === "inscricao" ? "Inscritos" : "Confirmaram presença"}>
-          {nomes.length ? nomes.map((n) => <div className="mini-row" key={n}><div className="mini-main"><div className="mini-title">{n}</div></div></div>) : <p className="mini-sub">Ninguém ainda.</p>}
+          {nomes.length ? nomes.map((n) => <Linha key={n}><div className="mini-main"><div className="mini-title">{n}</div></div></Linha>) : <p className="mini-sub">Ninguém ainda.</p>}
         </DrawerSection>
       )}
       <div style={{ display: "flex", marginTop: 16 }}>

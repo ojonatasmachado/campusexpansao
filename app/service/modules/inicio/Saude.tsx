@@ -13,6 +13,7 @@ import { anteriorDe, comparacao, etapasDaCaminhada, numerosDaBase, numerosDoPeri
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { linhaClasse } from "../../ui/Linha";
 const PRESETS: { v: Preset; l: string }[] = [
   { v: "30", l: "30 dias" },
   { v: "90", l: "90 dias" },
@@ -109,7 +110,7 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, extras = [] }: {
             </div>
             <div className="modal-body" style={{ display: "block" }}>
               {[...lista.itens].sort((a, b) => a.nome.localeCompare(b.nome)).map((it) => (
-                <Acao key={`${it.tipo}-${it.id}`} className="mini-row click" onClick={() => { setLista(null); onAbrir(it); }}>
+                <Acao key={`${it.tipo}-${it.id}`} className={`${linhaClasse({})} click`} onClick={() => { setLista(null); onAbrir(it); }}>
                   <div className="mini-main"><div className="mini-title">{it.nome}</div></div>
                 </Acao>
               ))}

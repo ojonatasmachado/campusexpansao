@@ -14,6 +14,7 @@ import { formatarTelefone } from "../../lib/telefone";
 import { MENSAGEM_PADRAO, comData, daSemana, linkWhatsapp, mensagemPara, primeiroNome } from "./aniversarios";
 
 import { Botao } from "../../ui/Botao";
+import { Cartao } from "../../ui/Cartao";
 type Membro = { id: string; name: string; phone: string; birth: string | null; groupId?: string | null; volunteerId: string | null };
 type Pessoa = { id: string; name: string; phone?: string; meta?: { birthday?: string } };
 type Time = { id: string; name: string; people: Array<{ personId: string; isLeader: boolean }> };
@@ -51,7 +52,7 @@ export function CartaoAniversario({ pessoas, destaque, onAgoraNao }: { pessoas: 
   const link = um ? linkWhatsapp(um.telefone, mensagemPara(MENSAGEM_PADRAO, um.nome)) : null;
   const times = [...new Set(pessoas.map((p) => p.time).filter(Boolean))];
   return (
-    <div className="m6-card">
+    <Cartao estilo="app">
       <div className="m6-kick">{times.length === 1 ? `Aniversário · ${times[0]}` : "Aniversário nos seus times"}</div>
       <div className="m6-ct">{um ? `Hoje é aniversário de ${primeiroNome(um.nome)}` : `Hoje fazem aniversário: ${nomes(pessoas)}`}</div>
       {um ? (
@@ -73,6 +74,6 @@ export function CartaoAniversario({ pessoas, destaque, onAgoraNao }: { pessoas: 
         {link && <Botao tamanho="toque" variante={variante} onClick={() => abrir(link)}>Mandar parabéns</Botao>}
         <Botao tamanho="toque" variante="texto" data-dispensa="1" onClick={onAgoraNao}>Agora não</Botao>
       </div>
-    </div>
+    </Cartao>
   );
 }

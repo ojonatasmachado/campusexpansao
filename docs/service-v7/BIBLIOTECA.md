@@ -32,11 +32,11 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Botão | `Botao` em `app/service/ui/Botao.tsx` (famílias toque, lista, entrada, mapa; variantes principal, secundario, discreto, perigo, texto; `botaoClasse()` para links) | sim | login, convite e senha incluídos (cores CE.X do AuthShell); família antiga `.m-btn` apagada | 1 |
 | Clicável base | `Acao` em `app/service/ui/Acao.tsx`: todo `<button>` do Service passa por ela (type="button" padrão, desativado, carregando) | sim | linhas, cartões e células ainda usam `Acao` com classe da tela até ganharem peça própria | n/a |
 | Botão de ícone | `BotaoIcone` em `app/service/ui/Botao.tsx` (`rotulo` obrigatório; aparência pela classe da tela, ex. `.drawer-close`) | sim | 32 telas trocadas; botões só de ícone sem `aria-label` ainda soltos | 1 |
-| Selo | `.m6-st` (membro), `Chip` (painel/ui.tsx) | não | duas peças para o mesmo papel | 1, 6 |
-| Chip/etiqueta | escolha: `Opcao estilo="seg-chip"` (e outras famílias listadas em `OpcaoEstilo`); etiqueta: `Chip`, `.tag`, `.papel-tag` | parcial | etiquetas só leitura ainda soltas | 6 |
-| Cartão | `.panel`, `.m6-card`, `.m-card` e +5 variantes | não | paddings e bordas próprios | 1 |
+| Selo | `Selo` em `app/service/ui/Selo.tsx` (tons ok, pendente, cuidado, neutro, aberto, rascunho, destaque; lista ou toque); `Chip` do painel usa ele | sim | dados antigos com classe viram tom por `tomDaClasse()` | 1, 6 |
+| Chip/etiqueta | escolha: `Opcao estilo="seg-chip"`; etiqueta: `Etiqueta` em `app/service/ui/Selo.tsx` | sim | `.papel-tag` ainda solto | 6 |
+| Cartão | `Cartao` em `app/service/ui/Cartao.tsx` (painel, app, app-solto; `plano`); clicável usa `cartaoClasse()` | sim | variantes próprias de módulo (+5) ainda por classe extra | 1 |
 | Cartão da fila | contrato em `modules/fila.ts` e `define.ts`; markup em `membro/Inicio.tsx` | parcial | markup por tipo dentro de um switch | 6 |
-| Linha de lista | `M6Row` (membro/comum.tsx), `.tr`, `.mini-row`, `.cfg-row` | parcial | duas famílias | 6 |
+| Linha de lista | `Linha` e `Lista` em `app/service/ui/Linha.tsx` (tabela, curta, config, app); `M6Row` usa `linhaClasse()` | sim | ok | 6 |
 | Avatar | `Av` em painel/ui.tsx e membro/comum.tsx + cópias em CheckIn, CursoDrawer, AulaCheckin | parcial | 5 definições | 6 |
 | Campo de texto | `.field`, `FField` (painel/campos.tsx) | parcial | ~273 `field-label` inline | 3 |
 | Seleção | `SelectField` (1 uso) | não | 57 `<select>` nativos | 3 |

@@ -22,6 +22,7 @@ import { numeroFmt, type Registro } from "./livros";
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { linhaClasse } from "../../ui/Linha";
 export type Marca = { nome: string; logoUrl?: string | null; cor: string; cidade?: string | null };
 
 type Emitida = { id: string; codigo: string; validade: string; emitida_em: string };
@@ -161,7 +162,7 @@ export function Carteirinha({ memberId, church, marca, demo, members, people, ro
           {candidatos.length ? (
             <div className="sec-busca">
               {candidatos.map((x) => (
-                <Acao key={x.id} className="mini-row sec-busca-it" onClick={() => setId(x.id)}>
+                <Acao key={x.id} className={`${linhaClasse({})} sec-busca-it`} onClick={() => setId(x.id)}>
                   <div className="mini-main"><div className="mini-title">{x.name}</div><div className="mini-sub">{x.situation === "novo" ? "Novo membro" : "Membro"}</div></div>
                 </Acao>
               ))}

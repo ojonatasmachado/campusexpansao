@@ -14,6 +14,7 @@ import { BAT_ST_MAP, timelineEventPayload } from "../comum";
 import type { BaptismCandidateView, BaptismClassView, ChurchView, DecisionView, MemberView, PersonView, TimelineEventView } from "../tipos";
 
 import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
+import { Selo, tomDaClasse } from "../../ui/Selo";
 export function DecisaoDrawer({
   decision, people, members, church, timelineEvents, onClose, onOpenMember,
 }: {
@@ -66,7 +67,7 @@ export function DecisaoDrawer({
           <div>
             <div className="profile-name">{decision.name}</div>
             <div className="profile-role">{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"} · {formatDateBR(decision.happened_on) || "sem data"}{decision.age ? ` · ${decision.age} anos` : ""}</div>
-            <div style={{ marginTop: 10 }}><span className={`chip ${chip.cls}`}>{chip.label}</span></div>
+            <div style={{ marginTop: 10 }}><Selo tom={tomDaClasse(chip.cls)}>{chip.label}</Selo></div>
           </div>
         </div>
       </div>
@@ -209,7 +210,7 @@ export function BatismoDrawer({
           <div>
             <div className="profile-name">{classData.label}</div>
             <div className="profile-role">{joinDot(formatDateBR(classData.baptism_date), classData.location)}</div>
-            <div style={{ marginTop: 10 }}><span className={`chip ${st?.cls ?? "chip-wait"}`}>{st?.label ?? classData.status}</span></div>
+            <div style={{ marginTop: 10 }}><Selo tom={tomDaClasse(st?.cls ?? "chip-wait")}>{st?.label ?? classData.status}</Selo></div>
           </div>
         </div>
       </div>

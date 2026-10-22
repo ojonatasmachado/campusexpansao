@@ -21,6 +21,8 @@ import { RegistroForm, type CriancaKids } from "./RegistroForm";
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Linha, linhaClasse } from "../../ui/Linha";
+import { Selo } from "../../ui/Selo";
 const PAGINA = 200;
 
 /** org de demonstração ("org-demo") não é uuid: lê e grava só na memória */
@@ -135,27 +137,27 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
       </div>
 
       {erro ? <EmptyState title="Não deu para abrir os livros" text="Confira a conexão e abra a Secretaria de novo. Se continuar, peça a quem cuida das permissões para conferir seu acesso." /> : null}
-      {!regs && !erro ? <div className="tbl" aria-busy="true"><div className="tr"><span className="cell-sub">Abrindo os livros...</span></div></div> : null}
+      {!regs && !erro ? <div className="tbl" aria-busy="true"><Linha estilo="tabela"><span className="cell-sub">Abrindo os livros...</span></Linha></div> : null}
 
       {regs && !erro ? (
         doLivro.length === 0 ? (
           <EmptyState title={`Nenhum registro em ${def.rotulo}`} text={def.vazio} action={LANCA_A_MAO.includes(livro) ? { label: livro === "casamento" ? "Registrar casamento" : "Registrar apresentação", onClick: () => setEditando("novo") } : undefined} />
         ) : (
           <div className="tbl sec-tbl">
-            <div className={`tr head sec-tr sec-tr-${livro}`}>
+            <Linha estilo="tabela" className={`head sec-tr sec-tr-${livro}`}>
               <span>Registro</span>
               {livro === "batismo" ? <><span>Oficiante</span><span>Local</span></> : null}
               {livro === "casamento" ? <><span>Oficiante</span><span>Testemunhas</span></> : null}
               {livro === "apresentacao" ? <><span>Pais</span><span>Oficiante</span></> : null}
               {livro === "rol" ? <><span>Entrada</span><span>Situação</span></> : null}
-            </div>
-            {visiveis.slice(0, mostrar).map((r) => <Linha key={r.id} r={r} onAbrir={() => setEditando(r)} />)}
+            </Linha>
+            {visiveis.slice(0, mostrar).map((r) => <LinhaRegistro key={r.id} r={r} onAbrir={() => setEditando(r)} />)}
             {visiveis.length === 0 ? <EmptyState title="Nada encontrado" text="Nenhum registro com essa busca ou nesse ano. Tente limpar a busca ou escolher Todos os anos." /> : null}
             {visiveis.length > mostrar ? (
-              <div className="tr sec-mais">
+              <Linha estilo="tabela" className="sec-mais">
                 <Botao compacto onClick={() => setMostrar((n) => n + PAGINA)}>Mostrar mais {Math.min(PAGINA, visiveis.length - mostrar)}</Botao>
                 <span className="cell-sub">{mostrar} de {plural(visiveis.length, "registro")}</span>
-              </div>
+              </Linha>
             ) : null}
           </div>
         )
@@ -208,12 +210,12 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
   );
 }
 
-function Linha({ r, onAbrir }: { r: Registro; onAbrir: () => void }) {
+function LinhaRegistro({ r, onAbrir }: { r: Registro; onAbrir: () => void }) {
   const fl = folhaLivro(r);
   const sub = r.livro === "rol" ? fl : joinDot(formatDateBR(r.data), fl);
   const nome = r.livro === "casamento" ? [r.dados.noivo?.nome, r.dados.noiva?.nome].filter(Boolean).join(" e ") || r.nome : r.nome;
   return (
-    <Acao className={`tr click sec-tr sec-tr-${r.livro}`} onClick={onAbrir}>
+    <Acao className={`${linhaClasse({ estilo: "tabela" })} click sec-tr sec-tr-${r.livro}`} onClick={onAbrir}>
       <div className="sec-reg">
         <span className="sec-num" aria-label={`Registro ${r.numero}`}>{numeroFmt(r.numero)}</span>
         <div className="sec-reg-main"><div className="cell-name">{nome}</div>{sub ? <div className="cell-sub">{sub}</div> : null}</div>
@@ -224,7 +226,7 @@ function Linha({ r, onAbrir }: { r: Registro; onAbrir: () => void }) {
       {r.livro === "rol" ? (
         <>
           <Celula t="Entrada" v={joinDot(formatDateBR(r.data), r.dados.forma)} />
-          <div>{r.saida ? <span className="chip chip-neutral">Saiu em {formatDateBR(r.saida)}{r.saida_motivo ? ` · ${r.saida_motivo}` : ""}</span> : <span className="chip chip-ok">Ativo</span>}</div>
+          <div>{r.saida ? <Selo>Saiu em {formatDateBR(r.saida)}{r.saida_motivo ? ` · ${r.saida_motivo}` : ""}</Selo> : <Selo tom="ok">Ativo</Selo>}</div>
         </>
       ) : null}
     </Acao>

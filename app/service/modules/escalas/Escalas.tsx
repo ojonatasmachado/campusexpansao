@@ -30,6 +30,8 @@ import { PublicarEscala } from "./PublicarEscala";
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Selo } from "../../ui/Selo";
+import { Cartao } from "../../ui/Cartao";
 type Candidato = CandidatoBase<PersonView>;
 
 /* carga da semana corrente (segunda a domingo contendo hoje) por pessoa:
@@ -623,20 +625,20 @@ export function Escalas({
       </div>
 
       <div className="st-legend">
-        <span className="chip chip-ok">Confirmado</span>
-        <span className="chip chip-wait">Aguardando</span>
-        <span className="chip chip-no">Não pode</span>
-        <span className="chip chip-open">Vaga aberta</span>
-        {rascunhos.length > 0 && <span className="chip chip-draft">Rascunho, ainda não publicado</span>}
+        <Selo tom="ok">Confirmado</Selo>
+        <Selo tom="pendente">Aguardando</Selo>
+        <Selo tom="cuidado">Não pode</Selo>
+        <Selo tom="aberto">Vaga aberta</Selo>
+        {rascunhos.length > 0 && <Selo tom="rascunho">Rascunho, ainda não publicado</Selo>}
       </div>
 
       {gapsDaSemana.length > 0 ? (
-        <div className="panel" style={{ marginTop: 18 }}>
+        <Cartao style={{ marginTop: 18 }}>
           <div className="panel-head"><span className="panel-title"><Icon name="escalas" size={14} /> Pendências da semana <HelpDot text="Funções da programação futura desta semana que ainda não têm todas as vagas preenchidas." /></span><span className="panel-meta">{plural(gapsDaSemana.length, "função para conferir", "funções para conferir")}</span></div>
           <div className="panel-body flush">
             {gapsDaSemana.slice(0, 5).map((gap) => <div className="gap-row" key={`${gap.event.id}-${gap.position.id}`}><div className="gap-ic wait">!</div><div className="mini-main"><div className="mini-title">{gap.position.name} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {gap.ministry.name}</span></div><div className="mini-sub">{joinDot(gap.event.name, gap.event.time)}</div></div></div>)}
           </div>
-        </div>
+        </Cartao>
       ) : null}
 
       {slotAction ? (

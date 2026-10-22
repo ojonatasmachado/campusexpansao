@@ -43,6 +43,8 @@ import { Botao } from "../../ui/Botao";
 import { Interruptor } from "../../ui/Interruptor";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Linha } from "../../ui/Linha";
+import { Etiqueta, Selo } from "../../ui/Selo";
 export const STATUS_CFG_DEFAULT: StatusCriterios = { recusasInativando: 2, recusasInativo: 4, diasIndispInativo: 30, considerarFerias: false };
 export const GRUPOS_CFG_DEFAULT: GruposCfg = { ativo: true, termo: "Grupos de Comunhão", termoP: "Grupo de Comunhão", sigla: "GC" };
 
@@ -177,13 +179,13 @@ export function AcessosCard({
                 </div>
               </div>
             )}
-            <div className="cfg-row" style={{ marginTop: 18 }}>
+            <Linha estilo="config" style={{ marginTop: 18 }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Pode liberar acessos a outras pessoas</div>
                 <div className="cfg-row-s">{ehDelegado ? "É um delegado de acessos" : "Só vê os próprios acessos"}</div>
               </div>
               <Interruptor ligado={ehDelegado} rotulo="Pode liberar acessos a outras pessoas" desativado={!podeDelegar} onClick={() => toggleGrant("acessos.delegar")} />
-            </div>
+            </Linha>
             {erro && <div className="field-error" style={{ marginTop: 8 }}>{erro}</div>}
             {!podeDelegar && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 8 }}>Só a Direção (master) define quem pode delegar acessos.</div>}
           </>
@@ -376,12 +378,12 @@ export function CongregacaoEditModal({
         {churchMinistries.map((m) => {
           const leader = m.people.find((p) => p.isLeader);
           return (
-            <div className="cfg-row" key={m.id}>
+            <Linha estilo="config" key={m.id}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">{m.name}</div>
                 <div className="cfg-row-s">{leader ? `líder ${leader.personName}` : "sem líder definido"}</div>
               </div>
-            </div>
+            </Linha>
           );
         })}
         {churchMinistries.length === 0 && <p className="fs-note">Nenhum time cadastrado nesta congregação.</p>}
@@ -777,7 +779,7 @@ export function Config({
           {ministries.map((m) => {
             const leader = m.people.find((p) => p.isLeader);
             return (
-              <div className="cfg-row" key={m.id}>
+              <Linha estilo="config" key={m.id}>
                 <div className="bd-mark"><Icon name={m.icon || "times"} size={18} /></div>
                 <div className="cfg-row-main">
                   <div className="cfg-row-t">
@@ -785,12 +787,12 @@ export function Config({
                     {leader && <span style={{ color: "var(--muted)", fontWeight: 400, fontSize: "var(--fs-pn-12)" }}> · líder {leader.personName.split(" ")[0]}</span>}
                   </div>
                   <div className="cell-tags" style={{ marginTop: 7 }}>
-                    {m.positions.map((p) => <span key={p.id} className="tag">{p.name}</span>)}
+                    {m.positions.map((p) => <Etiqueta key={p.id}>{p.name}</Etiqueta>)}
                     {m.positions.length === 0 && <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>Sem funções</span>}
                   </div>
                 </div>
                 <Botao compacto onClick={() => setEditMin(m)}>Editar</Botao>
-              </div>
+              </Linha>
             );
           })}
           {ministries.length === 0 && <div className="empty">Nenhum time ainda.</div>}
@@ -824,7 +826,7 @@ export function Config({
               const dentro = people.filter((p) => p.tags.includes(t.id)).length;
               const lideres = t.leaders.map((id) => people.find((p) => p.id === id)?.name.split(" ")[0]).filter(Boolean);
               return (
-                <div className="cfg-row" key={t.id}>
+                <Linha estilo="config" key={t.id}>
                   <div className="cong-mark" style={{ background: "var(--ink)" }}><span style={{ width: 9, height: 9, borderRadius: "50%", background: `var(--${t.color})`, display: "inline-block" }} /></div>
                   <div className="cfg-row-main">
                     {editTagId === t.id ? (
@@ -865,7 +867,7 @@ export function Config({
                       <Botao compacto onClick={() => removeRow("tags", t.id)}>Remover</Botao>
                     </div>
                   )}
-                </div>
+                </Linha>
               );
             })}
             {tags.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>Nenhuma etiqueta cadastrada.</div>}
@@ -880,13 +882,13 @@ export function Config({
           <div className="cfg-card">
             <div className="cfg-card-t">Habilitar grupos</div>
             <div className="cfg-card-s">Desligue se sua igreja não trabalha com células/GCs. O recurso some do resto do app, mas nada é apagado.</div>
-            <div className="cfg-row" style={{ borderBottom: gruposCfg.ativo ? "0.5px solid var(--border-2)" : "none" }}>
+            <Linha estilo="config" style={{ borderBottom: gruposCfg.ativo ? "0.5px solid var(--border-2)" : "none" }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">{gruposCfg.ativo ? "Ativado" : "Desativado"}</div>
                 <div className="cfg-row-s">{gruposCfg.ativo ? "Grupos aparecem no cadastro de membro e nos relatórios." : "Grupos escondidos em todo o app."}</div>
               </div>
               <Interruptor ligado={gruposCfg.ativo} rotulo="Usar grupos" onClick={() => saveGruposCfg({ ...gruposCfg, ativo: !gruposCfg.ativo })} />
-            </div>
+            </Linha>
             {gruposCfg.ativo && (
               <div className="cfg-grid2" style={{ gap: "0 16px", marginTop: 16 }}>
                 <div className="field"><label className="field-label">Nome</label><div className="cfg-row-s" style={{ marginTop: 4 }}>{ct("{Grupo}")}. O nome se muda em Personalização, em Nomes usados no app.</div></div>
@@ -901,7 +903,7 @@ export function Config({
               {fellowshipGroups.map((g) => {
                 const leader = people.find((p) => p.id === g.leader_person_id);
                 return (
-                  <div className="cfg-row" key={g.id}>
+                  <Linha estilo="config" key={g.id}>
                     <div className="cong-mark"><Icon name="identidade" size={16} /></div>
                     <div className="cfg-row-main">
                       <div className="cfg-row-t">{g.name}</div>
@@ -909,7 +911,7 @@ export function Config({
                     </div>
                     <Botao compacto onClick={() => setGerirGrupoId(g.id)}>Editar</Botao>
                     <Botao compacto onClick={() => removeRow("fellowship_groups", g.id)}>Remover</Botao>
-                  </div>
+                  </Linha>
                 );
               })}
               {fellowshipGroups.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhum grupo cadastrado ainda.</div>}
@@ -972,13 +974,13 @@ export function Config({
                 <Acao onClick={() => setEscala("folgaSemanas", escalaCfg.folgaSemanas + 1)}>+</Acao>
               </div>
             </div>
-            <div className="cfg-row">
+            <Linha estilo="config">
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Respeitar período de férias</div>
                 <div className="cfg-row-s">{escalaCfg.considerarFerias ? "Quem está de férias fica fora da geração" : "Férias não bloqueiam a escala"}</div>
               </div>
               <Interruptor ligado={escalaCfg.considerarFerias} rotulo="Respeitar período de férias" onClick={() => setEscala("considerarFerias", !escalaCfg.considerarFerias)} />
-            </div>
+            </Linha>
             <div className="crit-row">
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Lista de cuidado</div>
@@ -990,7 +992,7 @@ export function Config({
                 <Acao aria-label="Mais uma semana" onClick={() => setEscala("cuidadoSemanas", (escalaCfg.cuidadoSemanas ?? 3) + 1)}>+</Acao>
               </div>
             </div>
-            <div className="cfg-row" style={{ borderBottom: "none" }}>
+            <Linha estilo="config" style={{ borderBottom: "none" }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Quando alguém recusa</div>
                 <div className="cfg-row-s">{escalaCfg.naRecusa === "proximo" ? "Chama o próximo apto automaticamente (só no modo automático)." : "Avisa o líder do time por mensagem e deixa a vaga aberta."}</div>
@@ -999,7 +1001,7 @@ export function Config({
                   <Opcao marcada={escalaCfg.naRecusa === "avisar"} onClick={() => setEscala("naRecusa", "avisar")}>Avisar o líder</Opcao>
                 </div>
               </div>
-            </div>
+            </Linha>
           </div>
           <div className="cfg-card" style={{ marginTop: 16 }}>
             <div className="cfg-card-t">{ct("Quando um {voluntario} fica inativo")}</div>
@@ -1037,13 +1039,13 @@ export function Config({
                 <Acao onClick={() => setStatus("diasIndispInativo", statusCfg.diasIndispInativo + 7)}>+</Acao>
               </div>
             </div>
-            <div className="cfg-row" style={{ borderBottom: "none" }}>
+            <Linha estilo="config" style={{ borderBottom: "none" }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Contar período de férias avisado</div>
                 <div className="cfg-row-s">{statusCfg.considerarFerias ? "Férias contam como afastamento" : "Férias avisadas não pesam no status"}</div>
               </div>
               <Interruptor ligado={statusCfg.considerarFerias} rotulo="Contar período de férias avisado" onClick={() => setStatus("considerarFerias", !statusCfg.considerarFerias)} />
-            </div>
+            </Linha>
             <div className="crit-legend">
               <span><i className="dot ok" /> Ativo</span>
               <span><i className="dot warn" /> Inativando: vale um contato</span>
@@ -1053,13 +1055,13 @@ export function Config({
           <div className="cfg-card" style={{ marginTop: 16 }}>
             <div className="cfg-card-t">Check-in por QR Code</div>
             <div className="cfg-card-s">{ct("Cada {culto} ou evento tem um QR Code único. O {voluntario} escaneia com o celular e confirma presença pela conta logada.")}</div>
-            <div className="cfg-row" style={{ borderBottom: "none" }}>
+            <Linha estilo="config" style={{ borderBottom: "none" }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Presença de quem não está escalado</div>
                 <div className="cfg-row-s">{checkinPermitirExtra ? "Quem não está escalado pode fazer check-in como presença extra." : "Só quem está escalado consegue fazer check-in. Os demais são bloqueados."}</div>
               </div>
               <Interruptor ligado={checkinPermitirExtra} rotulo="Presença de quem não está escalado" onClick={() => setCheckinPermitirExtra(!checkinPermitirExtra)} />
-            </div>
+            </Linha>
           </div>
           <div className="cfg-card" style={{ marginTop: 16 }}>
             <div className="cfg-card-t">Tipos de evento</div>
@@ -1266,7 +1268,7 @@ export function Config({
                 {c.logoUrl ? <img src={c.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /> : <Icon name="identidade" size={20} />}
               </div>
               <div className="cfg-row-main">
-                <div className="cfg-row-t">{c.nome} <span className="chip chip-ok" style={{ marginLeft: 6 }}>matriz</span></div>
+                <div className="cfg-row-t">{c.nome} <Selo tom="ok" style={{ marginLeft: 6 }}>matriz</Selo></div>
                 <div className="cfg-row-s">{c.cidade || "Sede da rede"}</div>
               </div>
               <Botao compacto onClick={() => setGerirCongId(c.id)}>Gerir</Botao>
@@ -1276,7 +1278,7 @@ export function Config({
             <>
               <div className="cfg-card-t" style={{ marginTop: 26 }}>Outras congregações · {churches.filter((c) => !c.matriz).length}</div>
               {churches.filter((c) => !c.matriz).map((c) => (
-                <div className="cfg-row" key={c.id}>
+                <Linha estilo="config" key={c.id}>
                   <div className="cong-mark">
                     {c.logoUrl ? <img src={c.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /> : <Icon name="globo" size={16} />}
                   </div>
@@ -1285,7 +1287,7 @@ export function Config({
                     {c.cidade ? <div className="cfg-row-s">{c.cidade}</div> : null}
                   </div>
                   <Botao compacto onClick={() => setGerirCongId(c.id)}>Gerir</Botao>
-                </div>
+                </Linha>
               ))}
             </>
           )}

@@ -17,6 +17,8 @@ import { VIAS, type Ausente } from "./cuidado";
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Cartao } from "../../ui/Cartao";
+import { Linha } from "../../ui/Linha";
 const QUEM = { grupo: "líder do grupo", time: "líder do time", pastoral: "pastoral" } as const;
 const NOME_VIA: Record<string, string> = { ligacao: "ligação", mensagem: "mensagem", visita: "visita" };
 
@@ -42,7 +44,7 @@ export function ListaDeCuidado({ lista, criancas, semanas, onAbrir }: {
     router.refresh();
   };
   return (
-    <div className="panel cuidado">
+    <Cartao className="cuidado">
       <div className="panel-head">
         <span className="panel-title"><Icon name="coracao" size={14} /> Lista de cuidado</span>
         <span className="panel-meta">{`sem registro há ${plural(semanas, "semana")} ou mais`}</span>
@@ -59,7 +61,7 @@ export function ListaDeCuidado({ lista, criancas, semanas, onAbrir }: {
       <div className="panel-body flush">
         {visao === "adultos" ? (
           <>
-            {lista.length === 0 && <div className="mini-row"><div className="mini-main"><div className="mini-title">Ninguém na lista</div><div className="mini-sub">Nenhuma pessoa atende aos critérios com os registros disponíveis.</div></div></div>}
+            {lista.length === 0 && <Linha><div className="mini-main"><div className="mini-title">Ninguém na lista</div><div className="mini-sub">Nenhuma pessoa atende aos critérios com os registros disponíveis.</div></div></Linha>}
             {lista.slice(0, 8).map((a) => (
               <div className="cuidado-item" key={a.personId}>
                 <Acao className="cuidado-nome" onClick={() => onAbrir(a)}>
@@ -79,22 +81,22 @@ export function ListaDeCuidado({ lista, criancas, semanas, onAbrir }: {
                 )}
               </div>
             ))}
-            {lista.length > 8 && <div className="mini-row"><div className="mini-main"><div className="mini-sub">{`E mais ${plural(lista.length - 8, "pessoa")}. A lista inteira está na Saúde da igreja.`}</div></div></div>}
+            {lista.length > 8 && <Linha><div className="mini-main"><div className="mini-sub">{`E mais ${plural(lista.length - 8, "pessoa")}. A lista inteira está na Saúde da igreja.`}</div></div></Linha>}
           </>
         ) : (
           <>
-            {criancas?.length === 0 && <div className="mini-row"><div className="mini-main"><div className="mini-title">Nenhuma criança na lista</div><div className="mini-sub">Nenhuma criança atende aos critérios com os registros disponíveis.</div></div></div>}
+            {criancas?.length === 0 && <Linha><div className="mini-main"><div className="mini-title">Nenhuma criança na lista</div><div className="mini-sub">Nenhuma criança atende aos critérios com os registros disponíveis.</div></div></Linha>}
             {criancas?.slice(0, 8).map((c) => (
-              <div className="mini-row" key={c.id}>
+              <Linha key={c.id}>
                 <div className="mini-main">
                   <div className="mini-title">{`${c.nome} · sem check-in há ${plural(c.semanas, "semana")}`}</div>
                   <div className="mini-sub">{`Último check-in em ${formatDateBR(c.ultima)}. Confirme com a família se houve falha no registro.`}</div>
                 </div>
-              </div>
+              </Linha>
             ))}
           </>
         )}
       </div>
-    </div>
+    </Cartao>
   );
 }

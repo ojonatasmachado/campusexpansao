@@ -7,6 +7,8 @@ import type { Visitor } from "./tipos";
 
 import { Botao } from "../ui/Botao";
 import { Acao } from "../ui/Acao";
+import { Cartao } from "../ui/Cartao";
+import { Selo } from "../ui/Selo";
 export const ETAPAS = [
   { id: "novo", nome: "Novo" },
   { id: "contato", nome: "Contato" },
@@ -47,7 +49,7 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
       </Botao>
 
       {novo && (
-        <div className="m-card" style={{ borderColor: "var(--olive-line)" }}>
+        <Cartao estilo="app-solto" style={{ borderColor: "var(--olive-line)" }}>
           <div className="m-when" style={{ marginBottom: 10 }}>Novo visitante</div>
           <input
             className="input"
@@ -77,7 +79,7 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
             <Botao tamanho="toque" variante="principal" style={{ flex: 1 }} onClick={salvar}>Salvar</Botao>
             <Botao tamanho="toque" variante="secundario" style={{ flex: 1 }} onClick={() => setNovo(false)}>Cancelar</Botao>
           </div>
-        </div>
+        </Cartao>
       )}
 
       {allVisitors.map((v) => {
@@ -85,13 +87,13 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
         const et = ETAPAS[Math.max(0, etIdx)];
         const isOpen = aberto === v.id;
         return (
-          <div className="m-card" key={v.id}>
+          <Cartao estilo="app-solto" key={v.id}>
             <Acao className="m-vis-head" onClick={() => setAberto(isOpen ? null : v.id)}>
               <Av name={v.name} size="sm" />
               <div className="m-vis-main">
                 <div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{v.name}</div>
                 <div className="m-fn">
-                  <span className="chip chip-neutral">{et.nome}</span>
+                  <Selo>{et.nome}</Selo>
                   {v.origin ? ` · ${v.origin}` : ""}
                 </div>
               </div>
@@ -134,7 +136,7 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
                 )}
               </div>
             )}
-          </div>
+          </Cartao>
         );
       })}
     </>

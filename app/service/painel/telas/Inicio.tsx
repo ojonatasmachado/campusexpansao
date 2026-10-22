@@ -28,6 +28,8 @@ import type { AnnouncementView, ChildView, DecisionView, DrawerState, Enrollment
 
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
+import { Cartao } from "../../ui/Cartao";
+import { Linha, linhaClasse } from "../../ui/Linha";
 export function GlobalSearch({
   people,
   members,
@@ -438,7 +440,7 @@ export function Painel({
         </div>
       )}
       <div className="dash-2col">
-        <div className="panel">
+        <Cartao>
           <div className="panel-head">
             <span className="panel-title"><Icon name="escalas" size={14} /> Pendências da escala</span>
             <Botao compacto onClick={() => setRoute("escalas")}>Escalar</Botao>
@@ -450,12 +452,12 @@ export function Painel({
                 .map((e) => ({ e, c: coberturaPorTime(e, roster, ministries, scopeMinistryIds) }))
                 .find((x) => vagasFaltando(x.c) > 0);
               return prox ? (
-                <div className="mini-row">
+                <Linha>
                   <div className="mini-main">
                     <div className="mini-title">{prox.e.name} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {joinDot(prox.e.weekday, prox.e.time)}</span></div>
                     <Cobertura itens={prox.c} onAbrir={(timeId) => onAbrirVagas(prox.e.id, timeId)} />
                   </div>
-                </div>
+                </Linha>
               ) : null;
             })()}
             {gapsDaSemana.slice(0, 6).map((gap) => (
@@ -468,11 +470,11 @@ export function Painel({
                 <Botao compacto onClick={() => setRoute("escalas")}>Escalar</Botao>
               </div>
             ))}
-            {gapsDaSemana.length === 0 && !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone) && vagasFaltando(coberturaPorTime(e, roster, ministries, scopeMinistryIds)) > 0) ? <div className="mini-row"><div className="mini-main"><div className="mini-title">{semProgramacao ? "Sem programação futura" : roster.length === 0 ? "Escalas ainda não preparadas" : "Sem vagas abertas nesta semana"}</div><div className="mini-sub">{semProgramacao ? "Prepare o próximo encontro antes de organizar a equipe." : roster.length === 0 ? "Ter encontros na agenda não significa que a equipe já foi escalada." : "Confira os próximos encontros para acompanhar a cobertura de cada time."}</div></div></div> : null}
+            {gapsDaSemana.length === 0 && !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone) && vagasFaltando(coberturaPorTime(e, roster, ministries, scopeMinistryIds)) > 0) ? <Linha><div className="mini-main"><div className="mini-title">{semProgramacao ? "Sem programação futura" : roster.length === 0 ? "Escalas ainda não preparadas" : "Sem vagas abertas nesta semana"}</div><div className="mini-sub">{semProgramacao ? "Prepare o próximo encontro antes de organizar a equipe." : roster.length === 0 ? "Ter encontros na agenda não significa que a equipe já foi escalada." : "Confira os próximos encontros para acompanhar a cobertura de cada time."}</div></div></Linha> : null}
           </div>
-        </div>
+        </Cartao>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div className="panel">
+          <Cartao>
             <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> {ct("Próximos {cultos}")}</span><Botao compacto onClick={() => setRoute("cultos")}>Agenda</Botao></div>
             <div className="panel-body flush">
             {/* v7 2.9: só o que ainda vai começar, no fuso da igreja (Brasília) */}
@@ -492,29 +494,29 @@ export function Painel({
               ));
             })()}
             </div>
-          </div>
+          </Cartao>
           {enqueteElegivel && (
-            <div className="panel" style={{ cursor: "pointer" }} onClick={() => setModal(buildAvaliacaoModal(enqueteElegivel))}>
+            <Cartao style={{ cursor: "pointer" }} onClick={() => setModal(buildAvaliacaoModal(enqueteElegivel))}>
               <div className="panel-head"><span className="panel-title"><Icon name="estrela" size={14} /> Avaliação de experiência</span></div>
               <div className="panel-body">
                 <div style={{ fontSize: "var(--fs-pn-14)", fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{enqueteElegivel.nome}</div>
                 <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time.</div>
               </div>
-            </div>
+            </Cartao>
           )}
           {pesquisaElegivel && (
-            <div className="panel" style={{ cursor: "pointer" }} onClick={() => setModal(buildPesquisaModal(pesquisaElegivel))}>
+            <Cartao style={{ cursor: "pointer" }} onClick={() => setModal(buildPesquisaModal(pesquisaElegivel))}>
               <div className="panel-head"><span className="panel-title"><Icon name="reacao" size={14} /> {pesquisaElegivel.pendente ? "Pulso da escala" : "Sua última resposta"}</span></div>
               <div className="panel-body">
                 <div style={{ fontSize: "var(--fs-pn-14)", fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{pesquisaElegivel.nome}</div>
                 <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{pesquisaElegivel.pendente ? "Leva menos de um minuto. Conta como foi pra você." : "Já respondida. Toque pra rever ou atualizar quando quiser."}</div>
               </div>
-            </div>
+            </Cartao>
           )}
         </div>
       </div>
       {journeyRequests.length > 0 && (
-        <div className="panel" id="caminhada-pendente" style={{ marginTop: 24 }}>
+        <Cartao id="caminhada-pendente" style={{ marginTop: 24 }}>
           <div className="panel-head">
             <span className="panel-title"><Icon name="membros" size={14} /> {ct("{Caminhada} pendente")}</span>
           </div>
@@ -537,14 +539,14 @@ export function Painel({
               );
             })}
           </div>
-        </div>
+        </Cartao>
       )}
       <div className="dash-2col">
-        <div className="panel">
+        <Cartao>
           <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Comunicação recente</span><Botao compacto onClick={() => setRoute("comunicacao")}>Ver tudo</Botao></div>
           <div className="panel-body flush">
             {recentAnnouncements.map((a) => (
-              <Acao className="mini-row click" key={a.id} onClick={() => setRoute("comunicacao")}>
+              <Acao className={`${linhaClasse({})} click`} key={a.id} onClick={() => setRoute("comunicacao")}>
                 <div className="mini-main">
                   <div className="mini-title">{a.title}</div>
                   <div className="mini-sub">{joinDot(paraPublico(a.audience), quandoPublicado(a.created_at))}</div>
@@ -552,14 +554,14 @@ export function Painel({
               </Acao>
             ))}
             {recentAnnouncements.length === 0 && (
-              <div className="mini-row"><div className="mini-main"><div className="mini-title">Nenhum aviso ainda</div><div className="mini-sub">Publique em Comunicação</div></div></div>
+              <Linha><div className="mini-main"><div className="mini-title">Nenhum aviso ainda</div><div className="mini-sub">Publique em Comunicação</div></div></Linha>
             )}
           </div>
-        </div>
+        </Cartao>
       </div>
       {kidsClasses.length > 0 && (
         <div className="dash-2col" style={{ marginTop: 20 }}>
-          <div className="panel">
+          <Cartao>
             <div className="panel-head"><span className="panel-title"><Icon name="kids" size={14} /> Crianças por turma</span><Botao compacto onClick={() => setRoute("criancas")}>Ver todas</Botao></div>
             <div className="panel-body flush">
               {kidsClasses.map((kc) => {
@@ -574,8 +576,8 @@ export function Painel({
                 );
               })}
             </div>
-          </div>
-          {!cuidado && <div className="panel">
+          </Cartao>
+          {!cuidado && <Cartao>
             <div className="panel-head"><span className="panel-title"><Icon name="alerta" size={14} /> Crianças sumindo</span><span className="panel-meta">sem vir há mais tempo</span></div>
             <div className="panel-body flush">
               {kidsChildren
@@ -590,16 +592,16 @@ export function Painel({
                 .sort((a, b) => (a.lastSeen ?? "").localeCompare(b.lastSeen ?? ""))
                 .slice(0, 5)
                 .map(({ child, lastSeen }) => (
-                  <div className="mini-row" key={child.id}>
+                  <Linha key={child.id}>
                     <div className="mini-main">
                       <div className="mini-title">{child.name}</div>
                       <div className="mini-sub">{lastSeen ? `Última vez em ${formatDateBR(lastSeen.slice(0, 10))}` : "Nunca fez check-in"}</div>
                     </div>
-                  </div>
+                  </Linha>
                 ))}
               {kidsChildren.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhuma criança cadastrada ainda.</div>}
             </div>
-          </div>}
+          </Cartao>}
         </div>
       )}
     </div>
@@ -619,7 +621,7 @@ export function MiniEvent({
   /* div com papel de botão: a cobertura tem botões dentro (não pode botão dentro de botão) */
   const abrir = () => setDrawer({ kind: "event", id: event.id });
   return (
-    <div className="mini-row click" role="button" tabIndex={0} onClick={abrir} onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) abrir(); }}>
+    <Linha className="click" role="button" tabIndex={0} onClick={abrir} onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) abrir(); }}>
       <div className="mini-main">
         <div className="mini-title">{event.name}</div>
         <div className="mini-sub">{joinDot(event.weekday, formatDateBR(event.eventDate), event.location)}</div>
@@ -641,6 +643,6 @@ export function MiniEvent({
           </span>
         )}
       </div>
-    </div>
+    </Linha>
   );
 }

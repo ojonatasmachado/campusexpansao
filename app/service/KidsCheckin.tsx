@@ -10,6 +10,7 @@ import { Icon } from "./lib/icons";
 
 import { Botao } from "./ui/Botao";
 import { Acao } from "./ui/Acao";
+import { Cartao } from "./ui/Cartao";
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
 type EventLite = {
@@ -187,7 +188,7 @@ export function KidsQRModal({
           {tab === "sala" && (
             <div className="ck-presenca">
               {pending.length > 0 && (
-                <div className="panel" style={{ marginBottom: 16 }}>
+                <Cartao style={{ marginBottom: 16 }}>
                   <div className="panel-head"><span className="panel-title"><Icon name="alerta" size={14} /> Retiradas pendentes</span></div>
                   <div className="panel-body flush">
                     {pending.map((att) => {
@@ -204,7 +205,7 @@ export function KidsQRModal({
                       );
                     })}
                   </div>
-                </div>
+                </Cartao>
               )}
               <div className="ck-roster">
                 {present.filter((a) => a.status === "presente").length === 0 && <div className="empty">Nenhuma criança na sala ainda.</div>}

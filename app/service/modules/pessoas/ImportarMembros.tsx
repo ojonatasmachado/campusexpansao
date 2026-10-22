@@ -22,6 +22,7 @@ import type { ChurchView, MemberView } from "../../ServiceExactApp";
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Linha } from "../../ui/Linha";
 type Etapa = 1 | 2 | 3 | 4;
 const ETAPAS = ["Arquivo", "Colunas", "Conferir", "Importar"] as const;
 type Grupo = "nova" | "existe" | "repete" | "erro";
@@ -263,7 +264,7 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
             {arquivo.cabecalho.map((cab, col) => {
               const ex = exemplos(col);
               return (
-                <div className="tr imp-col" key={col}>
+                <Linha estilo="tabela" className="imp-col" key={col}>
                   <div className="imp-col-info">
                     <div className="cell-name">{cab}</div>
                     <div className="cell-sub">{ex.length ? ex.join(" · ") : "coluna vazia"}</div>
@@ -277,7 +278,7 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
                     <option value="">Não importar</option>
                     {CAMPOS.map((c) => <option key={c.id} value={c.id}>{c.rotulo}</option>)}
                   </select>
-                </div>
+                </Linha>
               );
             })}
           </div>
@@ -333,13 +334,13 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
             </div>
             <div className="tbl imp-lista">
               {listaFiltro.slice(0, LISTA_MAX).map((l) => (
-                <div className="tr imp-linha" key={l.n}>
+                <Linha estilo="tabela" className="imp-linha" key={l.n}>
                   <span className="imp-linha-n">{l.n}</span>
                   <div className="imp-col-info">
                     <div className="cell-name">{l.valores.nome || "Sem nome"}</div>
                     <div className={`cell-sub${l.erro ? " imp-erro" : ""}`}>{filtroAtivo === "aviso" ? l.avisos.join(" · ") : motivoDe(l)}</div>
                   </div>
-                </div>
+                </Linha>
               ))}
             </div>
             {listaFiltro.length > LISTA_MAX ? <p className="fs-note">Mostrando {LISTA_MAX} de {listaFiltro.length.toLocaleString("pt-BR")}. O número à esquerda é a linha na planilha.</p> : <p className="fs-note">O número à esquerda é a linha na planilha.</p>}

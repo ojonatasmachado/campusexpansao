@@ -18,6 +18,7 @@ import {
 
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
+import { Linha } from "../../ui/Linha";
 type IgrejaCfg = { id: string; cidade?: string | null; settings?: Record<string, unknown> };
 
 export function ContribuirConfig({ church }: { church?: IgrejaCfg }) {
@@ -41,25 +42,25 @@ export function ContribuirConfig({ church }: { church?: IgrejaCfg }) {
         <div className="cfg-card-s">{ct("O membro abre Contribuir na {Caminhada}, copia o código Pix e escolhe o valor no próprio banco. O app não guarda valores nem quem contribuiu.")}</div>
         {pronto ? (
           <>
-            <div className="cfg-row">
+            <Linha estilo="config">
               <div className="cfg-row-main">
                 <div className="cfg-row-t contrib-cfg-v">{chaveLegivel(cfg.tipo, cfg.chave)}</div>
                 <div className="cfg-row-s">{rotuloDoTipo(cfg.tipo)} · {cfg.favorecido}{cfg.cidade ? ` · ${cfg.cidade}` : ""}</div>
               </div>
-            </div>
-            <div className="cfg-row">
+            </Linha>
+            <Linha estilo="config">
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Finalidades</div>
                 <div className="cfg-row-s">{cfg.finalidades.length ? cfg.finalidades.join(" · ") : "Sem escolha: o membro só copia o código"}</div>
               </div>
-            </div>
+            </Linha>
             {cfg.texto.trim() && (
-              <div className="cfg-row">
+              <Linha estilo="config">
                 <div className="cfg-row-main">
                   <div className="cfg-row-t">Texto no app</div>
                   <div className="cfg-row-s contrib-cfg-v">{cfg.texto}</div>
                 </div>
-              </div>
+              </Linha>
             )}
             <div className="contrib-cfg-acoes">
               {confirmaTirar ? (

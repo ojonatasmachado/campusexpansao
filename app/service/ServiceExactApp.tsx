@@ -66,6 +66,7 @@ import { ServiceModal } from "./painel/telas/ServiceModal";
 import type { ChurchView, DrawerState, FellowshipGroupView, JourneyChangeRequestView, JourneyStepKind, MemberView, MinistryView, ModalState, NavGroups, Props } from "./painel/tipos";
 import { Botao, BotaoIcone } from "./ui/Botao";
 import { Acao } from "./ui/Acao";
+import { Cartao } from "./ui/Cartao";
 export type * from "./painel/tipos";
 
 /* papel e permissão de cada tela : regra no registro de módulos (modules/registry.ts) */
@@ -1280,10 +1281,10 @@ export default function ServiceExactApp({
 function ErrorPanel({ message }: { message: string }) {
   return (
     <div className="content">
-      <div className="panel">
+      <Cartao>
         <div className="panel-head"><span className="panel-title"><Icon name="config" size={14} /> Aviso</span></div>
         <div className="panel-body"><p className="mini-sub">{message}</p></div>
-      </div>
+      </Cartao>
     </div>
   );
 }

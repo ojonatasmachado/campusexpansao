@@ -11,6 +11,7 @@ import { caminhoAutocadastro, type AutocadastroCfg } from "./autocadastro";
 
 import { Botao, botaoClasse } from "../../ui/Botao";
 import { Interruptor } from "../../ui/Interruptor";
+import { Linha } from "../../ui/Linha";
 const PADRAO: AutocadastroCfg = { ativo: false, responsavelId: null };
 
 /* Visitantes › QR e link: liga o autocadastro, escolhe quem recebe os
@@ -67,13 +68,13 @@ export default function AutocadastroPainel({
           <div className="modal-sub">Quem visita preenche o próprio contato no celular e entra no funil como Novo, com a origem QR/link.</div>
         </div>
         <div className="modal-body" style={{ display: "block" }}>
-          <div className="cfg-row">
+          <Linha estilo="config">
             <div className="cfg-row-main">
               <div className="cfg-row-t">Receber cadastros pelo link</div>
               <div className="cfg-row-s">{cfg.ativo ? "Ligado. O link e o QR já aceitam cadastros." : "Desligado. Quem abrir o link vê um aviso para procurar a recepção."}</div>
             </div>
             <Interruptor ligado={cfg.ativo} rotulo="Receber cadastros pelo link" onClick={() => save({ ativo: !cfg.ativo })} />
-          </div>
+          </Linha>
 
           <div className="field" style={{ marginTop: 14 }}>
             <label className="field-label" htmlFor="vis-resp">Quem recebe os novos cadastros</label>

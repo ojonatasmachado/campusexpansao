@@ -16,6 +16,7 @@ import { createServiceBrowserClient } from "../../lib/supabase-browser";
 
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
+import { Cartao } from "../../ui/Cartao";
 type Ficha = { id: string; name: string; phone: string | null; email: string | null };
 type Pedido = { id: string; name: string; email: string; phone: string | null; created_at: string; parecidos: Ficha[] };
 
@@ -96,7 +97,7 @@ export function NovosCadastros() {
   );
 
   return (
-    <div className="panel entrada-fila" id="novos-cadastros">
+    <Cartao className="entrada-fila" id="novos-cadastros">
       <div className="panel-head">
         <span className="panel-title"><Icon name="membros" size={14} /> Novos cadastros</span>
         <span className="panel-meta">{`${plural(pedidos.length, "pedido")} pelo link da igreja`}</span>
@@ -150,6 +151,6 @@ export function NovosCadastros() {
           </div>
         ))}
       </div>
-    </div>
+    </Cartao>
   );
 }

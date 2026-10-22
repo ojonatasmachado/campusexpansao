@@ -34,6 +34,7 @@ import type { JourneyActions, JourneyStep, M, MemberModule, MemberTab, MemberUi,
 import { Botao } from "./ui/Botao";
 import { Acao } from "./ui/Acao";
 import { Opcao } from "./ui/Opcao";
+import { Lista, linhaClasse } from "./ui/Linha";
 export type * from "./membro/tipos";
 
 function TabIcon({ name, size = 18 }: { name: string; size?: number }) {
@@ -434,8 +435,8 @@ function MobileMembro({
             <>
               {!sub && (muralOn || oracaoOn) && (
                 <div className="m6-sec0">
-                  <div className="m6-list">
-                    {muralOn && <Acao className="m6-row" onClick={() => go("mensagens", "mural")}>
+                  <Lista>
+                    {muralOn && <Acao className={linhaClasse({ estilo: "app" })} onClick={() => go("mensagens", "mural")}>
                       <span className="m6-ic accent"><Icon name="bandeira" size={22} /></span>
                       <span className="m6-rb">
                         <span className="m6-rt">Mural da igreja</span>
@@ -444,7 +445,7 @@ function MobileMembro({
                       {unreadIds.size > 0 && <span className="m6-count">{unreadIds.size}</span>}
                     </Acao>}
                     {oracaoOn && <M6Row ic="oracao" t="Mural de oração" s="Peça oração e ore pelos pedidos da igreja" onClick={() => go("mensagens", "oracao")} cls="or-row" />}
-                  </div>
+                  </Lista>
                 </div>
               )}
               <div className={sub ? "" : "m6-sec m6-conv"}>
@@ -458,12 +459,12 @@ function MobileMembro({
                   <Botao tamanho="toque" variante="principal" largo onClick={() => setSheetEl(
                     <div>
                       <h2 className="m6-sh">Nova mensagem</h2>
-                      <div className="m6-list flat">
+                      <Lista plano>
                         <M6Row ic="conversas" t="Falar com um líder" s="Pastor ou líder do seu time" onClick={() => { setSheetEl(null); go("mensagens", null, { newChat: true }); }} />
                         {pedirOracao && (
                           <M6Row ic="coracao" t="Pedido de oração" s={oracaoOn ? "Para a intercessão ou o mural de oração" : destOracao?.via === "intercessao" ? "Vai para quem cuida da intercessão" : "Vai para a liderança da igreja"} onClick={pedirOracao} />
                         )}
-                      </div>
+                      </Lista>
                     </div>,
                   )}><Icon name="add" size={20} />Nova mensagem</Botao>
                 </div>

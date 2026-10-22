@@ -27,6 +27,8 @@ import type { Campanha, ContaFixa } from "./dados";
 import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Cartao } from "../../ui/Cartao";
+import { Linha, linhaClasse } from "../../ui/Linha";
 type Tela =
   | null
   | { k: "entrada" | "despesa"; edit?: Lancamento }
@@ -108,12 +110,12 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
   if (fin.carregando || fin.erro) return (
     <div className="content wide fin">
       <PageHead title="Financeiro" eyebrow="Gestão" help={HELP} />
-      {fin.carregando ? <div className="panel"><div className="panel-body" role="status">Carregando saldos e lançamentos...</div></div> : (
-        <div className="panel"><div className="panel-body">
+      {fin.carregando ? <Cartao><div className="panel-body" role="status">Carregando saldos e lançamentos...</div></Cartao> : (
+        <Cartao><div className="panel-body">
           <p className="fs-error" role="alert">{fin.erro}</p>
           <p className="ph-sub">Os valores estão indisponíveis. Tente carregar novamente para consultar saldos e lançamentos.</p>
           <Botao style={{ marginTop: 16 }} onClick={fin.recarregar}>Tentar novamente</Botao>
-        </div></div>
+        </div></Cartao>
       )}
     </div>
   );
@@ -164,23 +166,23 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
             <section className="tbl fin-bloco" aria-labelledby="fin-contas-t">
               <div className="fin-bloco-h"><h2 id="fin-contas-t" className="fin-bloco-t">Contas</h2><span className="fin-bloco-s">saldo hoje</span></div>
               {contasAtivas.map((c) => (
-                <div className="tr fin-saldo" key={c.id}>
+                <Linha estilo="tabela" className="fin-saldo" key={c.id}>
                   <div className="fin-saldo-main"><div className="cell-name">{c.name}</div><div className="cell-sub">{c.kind === "caixa" ? "Caixa" : c.institution || "Banco"}{c.active ? "" : " · encerrada"}</div></div>
                   <div className={`fin-num fin-saldo-v${(fin.saldoConta[c.id] ?? 0) < 0 ? " fin-neg" : ""}`}>{brl(fin.saldoConta[c.id] ?? 0)}</div>
-                </div>
+                </Linha>
               ))}
               {!fin.carregando && !fin.contas.some((c) => c.kind === "banco") && podeLancar && (
-                <Acao className="tr click fin-add" onClick={() => setTela({ k: "conta" })}><Icon name="add" size={14} /> Cadastrar a conta do banco</Acao>
+                <Acao className={`${linhaClasse({ estilo: "tabela" })} click fin-add`} onClick={() => setTela({ k: "conta" })}><Icon name="add" size={14} /> Cadastrar a conta do banco</Acao>
               )}
             </section>
             {designados.length > 0 && (
               <section className="tbl fin-bloco" aria-labelledby="fin-fundos-t">
                 <div className="fin-bloco-h"><h2 id="fin-fundos-t" className="fin-bloco-t">Fundos designados</h2><span className="fin-bloco-s">separado do geral</span></div>
                 {designados.map((f) => (
-                  <div className="tr fin-saldo" key={f.id}>
+                  <Linha estilo="tabela" className="fin-saldo" key={f.id}>
                     <div className="fin-saldo-main"><div className="cell-name">{f.name}</div></div>
                     <div className={`fin-num fin-saldo-v${(fin.saldoFundo[f.id] ?? 0) < 0 ? " fin-neg" : ""}`}>{brl(fin.saldoFundo[f.id] ?? 0)}</div>
-                  </div>
+                  </Linha>
                 ))}
               </section>
             )}
@@ -240,10 +242,10 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
                   </>
                 );
                 return podeLancar
-                  ? <Acao key={l.id} className="tr fin-lin click" onClick={() => abrir(l)}>{miolo}</Acao>
-                  : <div key={l.id} className="tr fin-lin">{miolo}</div>;
+                  ? <Acao key={l.id} className={`${linhaClasse({ estilo: "tabela" })} fin-lin click`} onClick={() => abrir(l)}>{miolo}</Acao>
+                  : <Linha key={l.id} estilo="tabela" className="fin-lin">{miolo}</Linha>;
               })}
-              {lista.length > 0 && <div className="tr fin-rodape"><span className="cell-sub">{plural(lista.length, "lançamento")}</span></div>}
+              {lista.length > 0 && <Linha estilo="tabela" className="fin-rodape"><span className="cell-sub">{plural(lista.length, "lançamento")}</span></Linha>}
             </div>
           )}
         </>
@@ -306,10 +308,10 @@ function Cadastros({ contas, fundos, categorias, saldoConta, podeLancar, org, on
       <section className="tbl fin-bloco" aria-labelledby="fin-cad-contas">
         <div className="fin-bloco-h"><h2 id="fin-cad-contas" className="fin-bloco-t">Contas</h2>{podeLancar && <Botao compacto onClick={() => onConta(null)}><Icon name="add" size={13} /> Nova conta</Botao>}</div>
         {contas.map((c) => (
-          <div className="tr fin-saldo" key={c.id}>
+          <Linha estilo="tabela" className="fin-saldo" key={c.id}>
             <div className="fin-saldo-main"><div className="cell-name">{c.name}</div><div className="cell-sub">{c.kind === "caixa" ? "Caixa" : c.institution || "Banco"}{c.active ? "" : " · encerrada"} · saldo {brl(saldoConta[c.id] ?? 0)}</div></div>
             {podeLancar && <Botao variante="discreto" compacto onClick={() => onConta(c)}>Editar</Botao>}
-          </div>
+          </Linha>
         ))}
       </section>
       <ListaSimples titulo="Fundos" tabela="fin_funds" itens={fundos} org={org} podeLancar={podeLancar} onMudou={onMudou}
@@ -351,7 +353,7 @@ function ListaSimples<T extends ItemSimples>({ titulo, tabela, kind, itens, org,
     <section className="tbl fin-bloco" aria-label={titulo}>
       <div className="fin-bloco-h"><h2 className="fin-bloco-t">{titulo}</h2><span className="fin-bloco-s">{plural(itens.length - arquivadas, "ativo", "ativos")}</span></div>
       {visiveis.map((i) => (
-        <div className="tr fin-saldo" key={i.id}>
+        <Linha estilo="tabela" className="fin-saldo" key={i.id}>
           {editando === i.id ? (
             <form className="fin-inline" onSubmit={async (e) => { e.preventDefault(); if (nome.trim() && await gravar(() => db().from(tabela).update({ name: nome.trim().slice(0, 60) }).eq("id", i.id), "Nome atualizado.")) setEditando(null); }}>
               <input className="input" aria-label="Novo nome" maxLength={60} value={nome} onChange={(e) => setNome(e.target.value)} autoFocus />
@@ -369,17 +371,17 @@ function ListaSimples<T extends ItemSimples>({ titulo, tabela, kind, itens, org,
               )}
             </>
           )}
-        </div>
+        </Linha>
       ))}
-      {arquivadas > 0 && <Acao className="tr click fin-add" onClick={() => setVerArquivadas((v) => !v)}>{verArquivadas ? "Esconder arquivados" : `Ver ${plural(arquivadas, "arquivado", "arquivados")}`}</Acao>}
+      {arquivadas > 0 && <Acao className={`${linhaClasse({ estilo: "tabela" })} click fin-add`} onClick={() => setVerArquivadas((v) => !v)}>{verArquivadas ? "Esconder arquivados" : `Ver ${plural(arquivadas, "arquivado", "arquivados")}`}</Acao>}
       {podeLancar && (
-        <form className="tr fin-novo" onSubmit={(e) => { e.preventDefault(); void adicionar(); }}>
+        <form className={`${linhaClasse({ estilo: "tabela" })} fin-novo`} onSubmit={(e) => { e.preventDefault(); void adicionar(); }}>
           <input className="input" aria-label={`Nome do novo item em ${titulo}`} maxLength={60} placeholder="Novo nome" value={novo} onChange={(e) => setNovo(e.target.value)} />
           {comDesignado && <label className="fs-check fin-check"><input type="checkbox" checked={designado} onChange={(e) => setDesignado(e.target.checked)} /> Designado</label>}
           <Botao type="submit" compacto desativado={!novo.trim()}>Adicionar</Botao>
         </form>
       )}
-      {ajuda && <div className="tr fin-rodape"><span className="cell-sub">{ajuda}</span></div>}
+      {ajuda && <Linha estilo="tabela" className="fin-rodape"><span className="cell-sub">{ajuda}</span></Linha>}
     </section>
   );
 }

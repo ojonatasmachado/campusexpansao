@@ -15,6 +15,7 @@ import { Botao, BotaoIcone } from "./ui/Botao";
 import { Interruptor } from "./ui/Interruptor";
 import { Acao } from "./ui/Acao";
 import { Opcao } from "./ui/Opcao";
+import { Linha } from "./ui/Linha";
 /* ─── tipos internos do editor ─────────────────────────────── */
 
 type QuizQ = { q: string; opts: string[]; correta: number };
@@ -599,13 +600,13 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
           </FormSection>
 
           <FormSection title="No app">
-            <div className="cfg-row" style={{ borderBottom: "none", padding: 0 }}>
+            <Linha estilo="config" style={{ borderBottom: "none", padding: 0 }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Aparece no app do membro</div>
                 <div className="cfg-row-s">{c.publicado ? "Publicado: os membros veem e podem se inscrever" : "Rascunho: só a liderança vê"}</div>
               </div>
               <Interruptor ligado={c.publicado} rotulo="Aparece no app do membro" onClick={() => set("publicado", !c.publicado)} />
-            </div>
+            </Linha>
           </FormSection>
 
           {/* divulgação */}

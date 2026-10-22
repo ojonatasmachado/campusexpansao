@@ -16,6 +16,8 @@ import { CATEGORIAS, moderar, rotuloCategoria, usePedidosPainel, type Categoria,
 
 import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
+import { Cartao } from "../../ui/Cartao";
+import { Selo } from "../../ui/Selo";
 type Filtro = "ativos" | "mural" | "intercessao" | "respondidos" | "ocultos" | "arquivados";
 const FILTROS: { id: Filtro; rotulo: string; vale: (p: PedidoPainel) => boolean }[] = [
   { id: "ativos", rotulo: "Ativos", vale: (p) => p.moderation === "ativo" && !p.answered_at },
@@ -74,7 +76,7 @@ export function OracaoPainel({ organizationId, churches = [] }: { organizationId
       </div>
 
       <div className="mural-list">
-        {dados === null && !erro && <div className="panel"><div className="panel-body"><span className="mural-meta">Carregando os pedidos...</span></div></div>}
+        {dados === null && !erro && <Cartao><div className="panel-body"><span className="mural-meta">Carregando os pedidos...</span></div></Cartao>}
         {erro && <EmptyState title="Não deu para carregar os pedidos" text="Confira a conexão e tente de novo." action={{ label: "Tentar de novo", onClick: () => void recarregar() }} />}
         {dados !== null && lista.length === 0 && (
           <EmptyState title="Nenhum pedido de oração ainda" text="Quando alguém pedir oração pelo app, o pedido aparece aqui para a intercessão acompanhar." />
@@ -83,16 +85,16 @@ export function OracaoPainel({ organizationId, churches = [] }: { organizationId
           <EmptyState title="Nada neste filtro" text="Troque o filtro ou limpe a busca para ver os outros pedidos." />
         )}
         {visiveis.map((p) => (
-          <article className={`panel mural-item or-item${p.moderation !== "ativo" ? " or-apagado" : ""}`} key={p.id}>
+          <Cartao como="article" className={`mural-item or-item${p.moderation !== "ativo" ? " or-apagado" : ""}`} key={p.id}>
             <div className="panel-body">
               <div className="mural-top">
                 <span className="or-chips-p">
-                  <span className="chip chip-neutral">{rotuloCategoria(p.category)}</span>
-                  <span className="chip chip-neutral">{p.audience === "mural" ? "Mural" : "Só a intercessão"}</span>
-                  {p.anonymous && <span className="chip chip-wait">Anônimo no mural</span>}
-                  {p.answered_at && <span className="chip chip-ok">Respondido</span>}
-                  {p.moderation === "oculto" && <span className="chip chip-neutral">Oculto</span>}
-                  {p.moderation === "arquivado" && <span className="chip chip-neutral">Arquivado</span>}
+                  <Selo>{rotuloCategoria(p.category)}</Selo>
+                  <Selo>{p.audience === "mural" ? "Mural" : "Só a intercessão"}</Selo>
+                  {p.anonymous && <Selo tom="pendente">Anônimo no mural</Selo>}
+                  {p.answered_at && <Selo tom="ok">Respondido</Selo>}
+                  {p.moderation === "oculto" && <Selo>Oculto</Selo>}
+                  {p.moderation === "arquivado" && <Selo>Arquivado</Selo>}
                 </span>
                 <span className="mural-meta" title={dataPublicacao(p.created_at)}>{quandoPublicado(p.created_at)}</span>
               </div>
@@ -114,7 +116,7 @@ export function OracaoPainel({ organizationId, churches = [] }: { organizationId
                 )}
               </div>
             </div>
-          </article>
+          </Cartao>
         ))}
       </div>
     </div>

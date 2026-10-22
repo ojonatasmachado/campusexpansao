@@ -10,6 +10,7 @@ import type { Board, Card, Chat, ChatMember, M, Message, Ministry, P } from "./t
 
 import { Botao } from "../ui/Botao";
 import { Acao } from "../ui/Acao";
+import { Cartao } from "../ui/Cartao";
 // ── aba: Inicio ───────────────────────────────────────────────────────────────
 
 // ── aba: Tarefas ──────────────────────────────────────────────────────────────
@@ -323,7 +324,7 @@ export function TabConversas({
       <div className="m-section-t">Conversas</div>
 
       {novo && (
-        <div className="m-card" style={{ marginBottom: 14 }}>
+        <Cartao estilo="app-solto" style={{ marginBottom: 14 }}>
           <div className="m-section-t" style={{ marginTop: 0 }}>{souLider ? "Falar com alguém do time" : "Falar com um líder"}</div>
           <input
             className="input"
@@ -344,13 +345,13 @@ export function TabConversas({
           {candidatos.length === 0 && (
             <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>Nenhum líder disponível ainda.</div>
           )}
-        </div>
+        </Cartao>
       )}
 
       {myChats.length === 0 && (
-        <div className="m-card">
+        <Cartao estilo="app-solto">
           <div style={{ fontSize: "var(--fs-app-15)", color: "var(--muted)" }}>Nenhuma conversa ainda. Toque em Nova mensagem para falar com um líder.</div>
-        </div>
+        </Cartao>
       )}
       {[...myChats].sort((a, b) => (ultimaDe(b.id)?.created_at ?? "").localeCompare(ultimaDe(a.id)?.created_at ?? "")).map((c) => {
         const last = ultimaDe(c.id);

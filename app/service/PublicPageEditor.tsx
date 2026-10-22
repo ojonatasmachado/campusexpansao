@@ -20,6 +20,8 @@ import ChurchPageView from "../[slug]/ChurchPageView";
 import { Botao } from "./ui/Botao";
 import { Interruptor } from "./ui/Interruptor";
 import { Opcao } from "./ui/Opcao";
+import { Linha } from "./ui/Linha";
+import { Selo } from "./ui/Selo";
 /* Editor da Página da igreja (link-in-bio) da igreja, aba "Página da igreja" em
    Configurações. Arquivo próprio (não dentro de ServiceExactApp.tsx, que já
    tem 10k+ linhas) : essa funcionalidade tem peso real (CRUD de links com
@@ -319,13 +321,13 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
           <div className="cfg-card">
             <div className="cfg-card-t">Publicar página</div>
             <div className="cfg-card-s">Enquanto estiver desligada, a página existe mas mostra “ainda não publicada” pra quem acessar.</div>
-            <div className="cfg-row" style={{ padding: "10px 0" }}>
+            <Linha estilo="config" style={{ padding: "10px 0" }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">{pagina.enabled ? "Publicada" : "Despublicada"}</div>
                 <div className="cfg-row-s">{viewCount !== null ? `${viewCount} visualizações até agora` : "Carregando estatísticas..."}</div>
               </div>
               <Interruptor ligado={!!pagina.enabled} rotulo="Publicar página da igreja" onClick={() => savePagina({ enabled: !pagina.enabled })} />
-            </div>
+            </Linha>
 
             <div className="field-label" style={{ marginTop: 14 }}>Endereço da página</div>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -448,14 +450,14 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
             {!loading && links.length === 0 && <div className="empty">Nenhum link ainda. Adicione o primeiro.</div>}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {links.map((link, idx) => (
-                <div className="cfg-row" key={link.id}>
+                <Linha estilo="config" key={link.id}>
                   {link.imageUrl ? (
                     <img src={link.imageUrl} alt="" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover", flex: "none" }} />
                   ) : (
                     <span className="cx-link-icon" style={{ background: "var(--accent-fill)", color: "var(--accent-ink)" }}><LinkIconView name={link.icon} size={16} /></span>
                   )}
                   <div className="cfg-row-main">
-                    <div className="cfg-row-t">{link.label || "(sem título)"} {!link.active && <span className="chip">oculto</span>}</div>
+                    <div className="cfg-row-t">{link.label || "(sem título)"} {!link.active && <Selo>oculto</Selo>}</div>
                     <div className="cfg-row-s">{link.groupLabel ? `${link.groupLabel} · ` : ""}{link.url} · {link.clickCount} cliques</div>
                   </div>
                   <div style={{ display: "flex", gap: 4 }}>
@@ -463,7 +465,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                     <Botao variante="discreto" compacto desativado={idx === links.length - 1} onClick={() => moveLink(link.id, 1)}>↓</Botao>
                     <Botao compacto onClick={() => setLinkModal({ isNew: false, draft: link })}>Editar</Botao>
                   </div>
-                </div>
+                </Linha>
               ))}
             </div>
           </div>
@@ -518,13 +520,13 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
             {!loading && posts.length === 0 && <div className="empty">Nenhuma notícia publicada ainda.</div>}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {posts.map((post) => (
-                <div className="cfg-row" key={post.id}>
+                <Linha estilo="config" key={post.id}>
                   <div className="cfg-row-main">
-                    <div className="cfg-row-t">{post.title} {post.pinned && <span className="chip chip-ok">fixado</span>}</div>
+                    <div className="cfg-row-t">{post.title} {post.pinned && <Selo tom="ok">fixado</Selo>}</div>
                     <div className="cfg-row-s">{new Date(post.publishedAt).toLocaleDateString("pt-BR")}</div>
                   </div>
                   <Botao compacto onClick={() => setPostModal({ isNew: false, draft: post })}>Editar</Botao>
-                </div>
+                </Linha>
               ))}
             </div>
           </div>
@@ -643,12 +645,12 @@ function LinkModal({
             </div>
           </div>
 
-          <div className="cfg-row" style={{ padding: "10px 0 0" }}>
+          <Linha estilo="config" style={{ padding: "10px 0 0" }}>
             <div className="cfg-row-main">
               <div className="cfg-row-t">Visível na página</div>
             </div>
             <Interruptor ligado={form.active} rotulo="Link ativo" onClick={() => setForm((f) => ({ ...f, active: !f.active }))} />
-          </div>
+          </Linha>
         </div>
         <div className="modal-foot" style={{ justifyContent: "space-between" }}>
           {onDelete ? <Botao variante="discreto" onClick={onDelete}>Excluir</Botao> : <span />}
@@ -710,12 +712,12 @@ function PostModal({
             />
           </div>
 
-          <div className="cfg-row" style={{ padding: "10px 0 0" }}>
+          <Linha estilo="config" style={{ padding: "10px 0 0" }}>
             <div className="cfg-row-main">
               <div className="cfg-row-t">Fixar no topo</div>
             </div>
             <Interruptor ligado={form.pinned} rotulo="Fixar notícia" onClick={() => setForm((f) => ({ ...f, pinned: !f.pinned }))} />
-          </div>
+          </Linha>
         </div>
         <div className="modal-foot" style={{ justifyContent: "space-between" }}>
           {onDelete ? <Botao variante="discreto" onClick={onDelete}>Excluir</Botao> : <span />}

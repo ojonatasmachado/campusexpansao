@@ -37,6 +37,13 @@ const REGRAS: Regra[] = [
     /* classe de botão escrita à mão: "btn btn-...", `btn ...`, "m6-btn ..." */
     re: /["'`](?:btn(?:\s|["'`$])|m6-btn(?:\s|["'`$]))/g,
   },
+  {
+    peca: "Selo, Etiqueta, Cartão ou Linha",
+    usar: "Selo, Etiqueta, Cartao, Linha ou Lista de app/service/ui/ (ou seloClasse/cartaoClasse/linhaClasse)",
+    permitido: "app/service/ui/",
+    /* className que começa com a classe de uma dessas peças, escrita à mão */
+    re: /className=\{?["'`](?:chip|m6-st|tag|panel|m6-card|m-card|m6-list|tr|mini-row|cfg-row|m6-row)(?=[\s"'`$])/g,
+  },
 ];
 
 const PASTAS = ["app/service", "app/[slug]"].map((p) => join(RAIZ, p));

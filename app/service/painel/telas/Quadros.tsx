@@ -14,6 +14,7 @@ import type { BoardView, CardView, ChurchView, MinistryView, ModalState, PersonV
 import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Selo } from "../../ui/Selo";
 /* permissões do Kanban por papel (equivalente ao kanbanPerm()/S.KANBAN_PERMS do
    protótipo): master/pastor administram o quadro; líder cria, comenta e move os
    próprios cards mas não apaga; voluntário não deveria nem abrir esta tela (usa o
@@ -632,7 +633,7 @@ export function Quadros({
             <Acao className="bd-card" key={board.id} onClick={() => setBoardId(board.id)}>
               <div className="bd-card-top">
                 <div className="bd-mark"><Icon name="times" size={18} /></div>
-                {atrasados > 0 && <span className="chip chip-no">{plural(atrasados, "atrasado")}</span>}
+                {atrasados > 0 && <Selo tom="cuidado">{plural(atrasados, "atrasado")}</Selo>}
               </div>
               <div className="bd-name">{board.name}</div>
               <div className="bd-desc">{board.description || ministry?.description || "Quadro da operação."}</div>

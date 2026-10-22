@@ -18,6 +18,8 @@ import type { BaptismCandidateView, BaptismClassView, ChurchView, CourseView, De
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Linha, linhaClasse } from "../../ui/Linha";
+import { Selo, tomDaClasse } from "../../ui/Selo";
 export function Decisoes({
   decisions,
   members,
@@ -72,12 +74,12 @@ export function Decisoes({
         <span className="panel-meta">{visible.length} de {decisions.length} decisões</span>
       </div>
       <div className="tbl">
-        <div className="tr head" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }}><span>Pessoa</span><span>{ct("Quando & {culto}")}</span><span>Responsável</span><span>Situação</span></div>
+        <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }}><span>Pessoa</span><span>{ct("Quando & {culto}")}</span><span>Responsável</span><span>Situação</span></Linha>
         {visible.map((decision) => {
           const responsible = decision.responsible_id ? personById.get(decision.responsible_id) : null;
           return (
-            <Acao className="tr click" key={decision.id} style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }} onClick={() => setDrawer({ kind: "decision", id: decision.id })}>
-              <div className="cell-person"><Av name={decision.name} size="md" /><div><div className="cell-name">{decision.name} <span className="chip chip-ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"}</span></div><div className="cell-sub">{decision.phone}</div></div></div>
+            <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={decision.id} style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }} onClick={() => setDrawer({ kind: "decision", id: decision.id })}>
+              <div className="cell-person"><Av name={decision.name} size="md" /><div><div className="cell-name">{decision.name} <Selo tom="ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"}</Selo></div><div className="cell-sub">{decision.phone}</div></div></div>
               <div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>{formatDateBR(decision.happened_on)}</div><div className="cell-sub">{decision.service_name || ct("{Culto} não informado")}</div></div>
               <div className="cell-person">{responsible ? <Av name={responsible.name} size="sm" photoUrl={responsible.photoUrl} /> : null}<div className="cell-sub" style={{ marginTop: 0 }}>{responsible?.name ?? "a definir"}</div></div>
               <div><Chip status={decision.status === "novo" ? "wait" : decision.status === "encaminhado" ? "ok" : "ativo"} /></div>
@@ -141,7 +143,7 @@ export function Batismos({
                 </div>
                 <div className="bat-meta">{joinDot(cls.location, cls.pastor)}</div>
                 <div className="bat-foot">
-                  <span className={`chip ${st?.cls ?? "chip-wait"}`}>{st?.label ?? cls.status}</span>
+                  <Selo tom={tomDaClasse(st?.cls ?? "chip-wait")}>{st?.label ?? cls.status}</Selo>
                   <span className="panel-meta">{count} candidato{count !== 1 ? "s" : ""}</span>
                 </div>
               </Acao>
@@ -159,15 +161,15 @@ export function Batismos({
             <div className="line" />
           </div>
           <div className="tbl">
-            <div className="tr head" style={{ gridTemplateColumns: "2fr 1fr 1fr 100px" }}><span>Turma</span><span>Data</span><span>Local</span><span>Candidatos</span></div>
+            <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: "2fr 1fr 1fr 100px" }}><span>Turma</span><span>Data</span><span>Local</span><span>Candidatos</span></Linha>
             {concluded.map((cls) => {
               const count = baptismCandidates.filter((c) => c.class_id === cls.id).length;
               return (
-                <Acao className="tr click" key={cls.id} style={{ gridTemplateColumns: "2fr 1fr 1fr 100px" }} onClick={() => setDrawer({ kind: "baptismClass", id: cls.id })}>
+                <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={cls.id} style={{ gridTemplateColumns: "2fr 1fr 1fr 100px" }} onClick={() => setDrawer({ kind: "baptismClass", id: cls.id })}>
                   <div className="cell-name">{cls.label}</div>
                   <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>{formatDateBR(cls.baptism_date) || "-"}</div>
                   <div className="cell-sub">{cls.location ?? "-"}</div>
-                  <div><span className="chip chip-neutral">{count} pessoas</span></div>
+                  <div><Selo>{count} pessoas</Selo></div>
                 </Acao>
               );
             })}
@@ -266,7 +268,7 @@ export function CursosTrilhas({
               >
                 <div className="team-card-top">
                   <div className="team-mark"><Icon name="relatorios" size={20} /></div>
-                  <span className="chip chip-ok">{course.level || course.category || "trilha"}</span>
+                  <Selo tom="ok">{course.level || course.category || "trilha"}</Selo>
                 </div>
                 <div className="team-name">{course.name}</div>
                 <div className="team-lead">Matrículas: <em>{courseEnrollments.length}</em></div>

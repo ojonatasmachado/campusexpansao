@@ -16,6 +16,7 @@ import { codigoLegivel, entradaPath } from "../../../lib/service-entrada";
 
 import { Botao, botaoClasse } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
+import { Linha } from "../../ui/Linha";
 type Regra = "aprovar" | "direto";
 const REGRAS: { id: Regra; t: string; s: string }[] = [
   { id: "aprovar", t: "A gestão aprova cada pessoa", s: "O pedido aparece no Início do painel. Você confere quem é e libera." },
@@ -124,7 +125,7 @@ export function EntradaConfig() {
             </div>
           </div>
         </div>
-        <div className="cfg-row" style={{ borderBottom: "none", paddingBottom: 0 }}>
+        <Linha estilo="config" style={{ borderBottom: "none", paddingBottom: 0 }}>
           <div className="cfg-row-main">
             <div className="cfg-row-t">Gerar outro link</div>
             <div className="cfg-row-s">{trocando ? "O link, o código e o QR de agora param de funcionar na hora. Pedidos já feitos continuam na fila." : "Use se o link foi parar onde não devia."}</div>
@@ -137,7 +138,7 @@ export function EntradaConfig() {
           ) : (
             <Botao variante="discreto" compacto onClick={() => setTrocando(true)}>Gerar outro</Botao>
           )}
-        </div>
+        </Linha>
       </div>
       <div className="cfg-card" style={{ marginTop: 16 }}>
         <div className="cfg-card-t">Quem entra pelo link</div>

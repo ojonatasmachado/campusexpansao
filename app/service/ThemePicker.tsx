@@ -8,6 +8,7 @@ import { Icon } from "./lib/icons";
 import ChurchLockup from "./ChurchLockup";
 
 import { Opcao } from "./ui/Opcao";
+import { Selo } from "./ui/Selo";
 /* Tela de marca do app da igreja (Configurações → Personalização): cor da
    igreja, fundos do modo escuro e do claro, e o modo padrão. Tudo aqui é
    decidido pela gestão; o membro só alterna claro/escuro no próprio app.
@@ -157,7 +158,7 @@ function ThemePreview({ brand, mode, churchName, logoUrl }: { brand: BrandCfg; m
         </div>
         <div className="tp-card tp-row">
           <span className="tp-t">Fundamentos da fé</span>
-          <span className="chip chip-ok">Concluída</span>
+          <Selo tom="ok">Concluída</Selo>
         </div>
         <div className="tp-tabs" aria-hidden="true">
           {(["inicio", "agenda", "conversas", "cursos", "perfil"] as const).map((ic, i) => (

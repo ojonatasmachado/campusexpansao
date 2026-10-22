@@ -10,6 +10,8 @@ import { Icon } from "../../lib/icons";
 import { plural } from "../../lib/plural";
 import { useTermos } from "../../lib/vocabulario-context";
 
+import { Cartao } from "../../ui/Cartao";
+import { Linha } from "../../ui/Linha";
 type Metricas = {
   periodo: { ini: string; fim: string; semanas: number };
   participacao: { pessoas: number; media_semanas: number | null };
@@ -48,19 +50,19 @@ export function MetricasInternas({ organizationId }: { organizationId: string })
   ] : [];
 
   return (
-    <div className="panel" style={{ marginTop: 22 }}>
+    <Cartao style={{ marginTop: 22 }}>
       <div className="panel-head">
         <span className="panel-title"><Icon name="relatorios" size={14} /> Como o Service está funcionando</span>
         <span className="panel-meta">{m ? `${formatDateBR(m.periodo.ini)} a ${formatDateBR(m.periodo.fim)}` : "Carregando..."}</span>
       </div>
       <div className="panel-body flush">
         {linhas.map(([t, v, s]) => (
-          <div className="mini-row" key={t}>
+          <Linha key={t}>
             <div className="mini-main"><div className="mini-title">{t}</div><div className="mini-sub">{s}</div></div>
             <div className="mini-right metrica-v">{v}</div>
-          </div>
+          </Linha>
         ))}
       </div>
-    </div>
+    </Cartao>
   );
 }

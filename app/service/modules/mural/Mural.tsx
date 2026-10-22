@@ -29,6 +29,9 @@ import { useTermos, type Termos } from "../../lib/vocabulario-context";
 
 import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
+import { Cartao } from "../../ui/Cartao";
+import { Selo, tomDaClasse } from "../../ui/Selo";
+import { Linha } from "../../ui/Linha";
 const HORAS = Array.from({ length: 24 }, (_, h) => h);
 
 function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church: ChurchView; publicos: MuralPublico[]; inicial?: MuralAviso; onClose: () => void; onDone: () => void }) {
@@ -429,11 +432,11 @@ export function Comunicacao({
           <h2 className="dsec-title" id="mural-pend-t">{`Ainda não publicadas · ${pendentes.length}`}</h2>
           <div className="mural-list">
             {pendentes.map((a) => (
-              <article className="panel mural-item mural-item-pend" key={a.id}>
+              <Cartao como="article" className="mural-item mural-item-pend" key={a.id}>
                 <div className="panel-body">
                   <div className="mural-top">
-                    <span className={`chip ${a.status === "agendado" ? "chip-solid" : "chip-neutral"}`}>{a.status === "agendado" && a.publish_at ? `Vai ao ar ${quandoLembra(new Date(a.publish_at))}` : "Rascunho"}</span>
-                    {a.urgent && <span className="chip chip-wait">Urgente</span>}
+                    <Selo tom={tomDaClasse(a.status === "agendado" ? "chip-solid" : "chip-neutral")}>{a.status === "agendado" && a.publish_at ? `Vai ao ar ${quandoLembra(new Date(a.publish_at))}` : "Rascunho"}</Selo>
+                    {a.urgent && <Selo tom="pendente">Urgente</Selo>}
                     <span className="mural-meta">{joinDot(paraPublico(a.audience), KIND_LABEL[a.kind ?? "aviso"])}</span>
                   </div>
                   <h3 className="mural-t">{a.title}</h3>
@@ -453,7 +456,7 @@ export function Comunicacao({
                     )}
                   </div>
                 </div>
-              </article>
+              </Cartao>
             ))}
           </div>
           <h2 className="dsec-title mural-pub-t">Publicadas</h2>
@@ -470,12 +473,12 @@ export function Comunicacao({
           const pct = total ? Math.round((leram.length / total) * 100) : 0;
           const resp = announcementResponses.filter((r) => r.announcement_id === a.id);
           return (
-            <article className="panel mural-item" key={a.id}>
+            <Cartao como="article" className="mural-item" key={a.id}>
               <div className="panel-body">
                 <div className="mural-top">
-                  <span className="chip chip-neutral">{KIND_LABEL[a.kind ?? "aviso"] ?? "Aviso"}</span>
-                  {a.urgent && <span className="chip chip-wait">Urgente</span>}
-                  {a.highlight_until && a.highlight_until > agoraIso && <span className="chip chip-neutral">{`Em destaque até ${dataPublicacao(a.highlight_until)}`}</span>}
+                  <Selo>{KIND_LABEL[a.kind ?? "aviso"] ?? "Aviso"}</Selo>
+                  {a.urgent && <Selo tom="pendente">Urgente</Selo>}
+                  {a.highlight_until && a.highlight_until > agoraIso && <Selo>{`Em destaque até ${dataPublicacao(a.highlight_until)}`}</Selo>}
                   <span className="mural-meta">{joinDot(paraPublico(pub.label), quandoPublicado(a.created_at), quandoPublicado(a.created_at) !== dataPublicacao(a.created_at) && dataPublicacao(a.created_at))}</span>
                 </div>
                 <h3 className="mural-t">{a.title}</h3>
@@ -490,29 +493,29 @@ export function Comunicacao({
                   <VerQuemLeuButton aviso={a} reads={announcementReads} people={people.filter((p) => pub.memberIds.some((id) => personDoMembro.get(id) === p.id))} />
                 </div>
               </div>
-            </article>
+            </Cartao>
           );
         })}
       </div>
 
       {wallPosts.length > 0 && (
-        <div className="panel" style={{ marginTop: 22 }}>
+        <Cartao style={{ marginTop: 22 }}>
           <div className="panel-head"><span className="panel-title"><Icon name="kids" size={14} /> Recados para os pais do Kids</span></div>
           <div className="panel-body flush">
             {wallPosts.map((post) => (
-              <div className="mini-row" key={post.id}>
+              <Linha key={post.id}>
                 <div className="mini-main">
                   <div className="mini-title">{post.body}</div>
                   <div className="mini-sub">{joinDot(post.author || "Liderança", formatDateBR(post.created_at))}</div>
                 </div>
-              </div>
+              </Linha>
             ))}
           </div>
-        </div>
+        </Cartao>
       )}
 
       {church && (
-        <div className="panel" style={{ marginTop: 22 }}>
+        <Cartao style={{ marginTop: 22 }}>
           <div className="panel-head"><span className="panel-title"><Icon name="whatsapp" size={14} /> Automáticas</span></div>
           <div className="panel-body">
             <div className="contato-banner" style={{ margin: 0 }}>
@@ -520,7 +523,7 @@ export function Comunicacao({
               <Botao compacto onClick={() => setMsgCfgOpen(true)}>Ajustar</Botao>
             </div>
           </div>
-        </div>
+        </Cartao>
       )}
       {msgCfgOpen && church && <AcessoMsgModal church={church} cfg={acessoMsgCfg} onClose={() => setMsgCfgOpen(false)} onRefresh={() => router.refresh()} />}
       {compose && church && <ComposerModal key={compose === true ? "novo" : compose.id} church={church} publicos={publicos} inicial={compose === true ? undefined : compose} onClose={() => setCompose(false)} onDone={() => { setCompose(false); router.refresh(); }} />}

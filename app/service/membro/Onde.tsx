@@ -15,6 +15,7 @@ import type { M } from "./tipos";
 import { Botao, botaoClasse } from "../ui/Botao";
 import { Acao } from "../ui/Acao";
 import { Opcao } from "../ui/Opcao";
+import { Linha, Lista, linhaClasse } from "../ui/Linha";
 /* Agenda › Onde (mapa da igreja, etapa 2). Sede, congregações e grupos são
    públicos para quem é da igreja: endereço, horário, líder e vagas. Nenhuma
    pessoa aparece aqui, só o ponto "você" do próprio CEP. */
@@ -128,9 +129,9 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
         {erro && <p className="m6-meta" role="alert">Não foi possível carregar agora. Tente de novo.</p>}
         {locais === null && !erro && <p className="m6-meta" role="status">Carregando...</p>}
         {locais && ordenados.length === 0 && <p className="m6-meta">{filtro === "grupos" ? ct("A igreja ainda não cadastrou {grupos}.") : "Nada cadastrado ainda."}</p>}
-        <div className="m6-list">
+        <Lista>
           {ordenados.map(({ l, km }) => (
-            <Acao key={l.id} className="m6-row" onClick={() => abrir(l)}>
+            <Acao key={l.id} className={linhaClasse({ estilo: "app" })} onClick={() => abrir(l)}>
               <span className={`onde-marca${ehIgreja(l) ? " igreja" : ""}`} aria-hidden="true">{ehIgreja(l) && <Icon name="cruz" size={18} />}</span>
               <span className="m6-rb">
                 <span className="m6-rt">{l.nome}</span>
@@ -139,7 +140,7 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
               {km !== null && <span className="onde-dist">{formatarDistancia(km)}</span>}
             </Acao>
           ))}
-        </div>
+        </Lista>
         {semPonto > 0 && <p className="m6-meta">{plural(semPonto, "lugar ainda sem endereço", "lugares ainda sem endereço")} no mapa.</p>}
       </div>
     </div>
@@ -171,12 +172,12 @@ function SheetLocal({ local: l, member, eu, onStartChat }: { local: Local; membe
     <div>
       <div className="m6-meta">{l.tipo === "sede" ? "Sede" : l.tipo === "congregacao" ? "Congregação" : joinDot(ct("{Grupo}"), l.bairro)}</div>
       <h2 className="m6-sh">{l.nome}</h2>
-      <div className="m6-list">
-        {(l.dia || l.hora) && <div className="m6-row"><span className="m6-rb"><span className="m6-rs">Quando</span><span className="m6-rt">{joinDot(l.dia, l.hora)}</span></span></div>}
-        {endereco && <div className="m6-row"><span className="m6-rb"><span className="m6-rs">Onde</span><span className="m6-rt">{endereco}</span>{km !== null && <span className="m6-rs">{formatarDistancia(km)} de você</span>}</span></div>}
-        {l.lugares && <div className="m6-row"><span className="m6-rb"><span className="m6-rs">Lugares</span><span className="m6-rt">{`${l.ocupados ?? 0} de ${l.lugares}`} · {vagas ? plural(vagas, "vaga") : "lotado"}</span></span></div>}
-        {l.lider_nome && <div className="m6-row"><span className="m6-rb"><span className="m6-rs">Quem lidera</span><span className="m6-rt">{l.lider_nome}</span></span></div>}
-      </div>
+      <Lista>
+        {(l.dia || l.hora) && <Linha estilo="app"><span className="m6-rb"><span className="m6-rs">Quando</span><span className="m6-rt">{joinDot(l.dia, l.hora)}</span></span></Linha>}
+        {endereco && <Linha estilo="app"><span className="m6-rb"><span className="m6-rs">Onde</span><span className="m6-rt">{endereco}</span>{km !== null && <span className="m6-rs">{formatarDistancia(km)} de você</span>}</span></Linha>}
+        {l.lugares && <Linha estilo="app"><span className="m6-rb"><span className="m6-rs">Lugares</span><span className="m6-rt">{`${l.ocupados ?? 0} de ${l.lugares}`} · {vagas ? plural(vagas, "vaga") : "lotado"}</span></span></Linha>}
+        {l.lider_nome && <Linha estilo="app"><span className="m6-rb"><span className="m6-rs">Quem lidera</span><span className="m6-rt">{l.lider_nome}</span></span></Linha>}
+      </Lista>
       <div className="m6-btns col">
         {podeFalar && <Botao tamanho="toque" variante="principal" desativado={enviando} onClick={() => falar("Oi! Vi no app e queria saber mais.", "Mensagem enviada")}><Icon name="conversas" size={20} />Mandar mensagem para {primeiroNome}</Botao>}
         {podeFalar && l.tipo === "grupo" && (vagas === null || vagas > 0) && <Botao tamanho="toque" desativado={enviando} onClick={() => falar(`Oi! Quero participar: ${l.nome}.`, "Pedido enviado")}>Quero participar</Botao>}

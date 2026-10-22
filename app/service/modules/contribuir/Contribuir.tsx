@@ -14,6 +14,7 @@ import { chaveLegivel, codigoPix, normalizarChave, rotuloDoTipo, type Contribuir
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Cartao } from "../../ui/Cartao";
 async function copiar(texto: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(texto);
@@ -62,11 +63,11 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
   return (
     <>
       <div className="m6-sec0">
-        <div className="m6-card">
+        <Cartao estilo="app">
           <div className="m6-kick">Pix para</div>
           <div className="m6-ct contrib-fav">{cfg.favorecido}</div>
           {cfg.texto.trim() && <p className="m6-txt">{cfg.texto}</p>}
-        </div>
+        </Cartao>
       </div>
 
       {finalidades.length > 1 && (
@@ -83,7 +84,7 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
       )}
 
       <div className="m6-sec">
-        <div className="m6-card">
+        <Cartao estilo="app">
           <Botao tamanho="toque" variante="principal" largo onClick={() => copiarEAvisar("codigo")}>
             <Icon name={copiado === "codigo" ? "ok" : "copiar"} size={20} />
             {copiado === "codigo" ? "Código copiado" : "Copiar código Pix"}
@@ -99,11 +100,11 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
               {copiado === "chave" ? "Copiada" : "Copiar"}
             </Botao>
           </div>
-        </div>
+        </Cartao>
       </div>
 
       <div className="m6-sec">
-        <div className="m6-card">
+        <Cartao estilo="app">
           <Acao className="contrib-qr-t" aria-expanded={qr} onClick={() => setQr((v) => !v)}>
             <span className="m6-rb">
               <span className="m6-rt">QR code</span>
@@ -116,7 +117,7 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
               <QRCode value={codigo} size={208} viewBox="0 0 208 208" level="M" title={`QR code do Pix para ${cfg.favorecido}`} />
             </div>
           )}
-        </div>
+        </Cartao>
       </div>
 
       <p className="m6-meta contrib-nota">O valor você decide no seu banco. O app não guarda quanto nem quem contribuiu.</p>

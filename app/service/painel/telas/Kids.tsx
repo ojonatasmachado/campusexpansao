@@ -20,6 +20,9 @@ import type { ChildGuardianView, ChildView, ChurchView, KidsClassView, KidsEvent
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Etiqueta } from "../../ui/Selo";
+import { Linha, linhaClasse } from "../../ui/Linha";
+import { Cartao } from "../../ui/Cartao";
 export function TurmasKids({ kidsClasses, rooms, setModal }: { kidsClasses: KidsClassView[]; rooms: RoomView[]; setModal: (modal: ModalState) => void }) {
   const { comTermos: ct } = useTermos();
   const roomById = new Map(rooms.map((room) => [room.id, room]));
@@ -53,7 +56,7 @@ export function TurmasKids({ kidsClasses, rooms, setModal }: { kidsClasses: Kids
             <div className="sala-card-top"><span className="sala-mark"><Icon name="kids" size={18} /></span><span className="sala-cap">{kc.capacity ?? 0} <small>vagas</small></span></div>
             <div className="sala-nome">{kc.name}</div>
             <div className="sala-local">{kc.min_age_months != null || kc.max_age_months != null ? `${kc.min_age_months ?? 0} a ${kc.max_age_months ?? "?"} meses` : "Faixa etária não definida"}</div>
-            {kc.room_id ? <div className="sala-rec"><span className="tag">{roomById.get(kc.room_id)?.name ?? "Sala"}</span></div> : null}
+            {kc.room_id ? <div className="sala-rec"><Etiqueta>{roomById.get(kc.room_id)?.name ?? "Sala"}</Etiqueta></div> : null}
           </Acao>
         ))}
         {kidsClasses.length === 0 ? <div className="empty">Nenhuma turma cadastrada ainda.</div> : null}
@@ -121,14 +124,14 @@ export function Criancas({
         <span className="panel-meta">{plural(visible.length, "criança")}</span>
       </div>
       <div className="tbl">
-        <div className="tr head" style={{ gridTemplateColumns: "1.6fr 1fr 1fr 1.4fr" }}><span>Criança</span><span>Idade</span><span>Turma</span><span>Responsáveis</span></div>
+        <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: "1.6fr 1fr 1fr 1.4fr" }}><span>Criança</span><span>Idade</span><span>Turma</span><span>Responsáveis</span></Linha>
         {visible.map((child) => {
           const guardians = childGuardians.filter((g) => g.child_id === child.id);
           return (
-            <Acao className="tr click" key={child.id} style={{ gridTemplateColumns: "1.6fr 1fr 1fr 1.4fr" }} onClick={() => setForm({ open: true, child })}>
+            <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={child.id} style={{ gridTemplateColumns: "1.6fr 1fr 1fr 1.4fr" }} onClick={() => setForm({ open: true, child })}>
               <div className="cell-person"><Av name={child.name} size="md" photoUrl={child.photo_url} /><div><div className="cell-name">{child.name}</div>{child.allergies ? <div className="cell-sub">Alergia: {child.allergies}</div> : null}</div></div>
               <div className="cell-sub">{childAgeLabel(child.birth)}</div>
-              <div>{child.class_id ? <span className="tag">{classById.get(child.class_id)?.name ?? "Turma"}</span> : <span className="cell-sub">sem turma</span>}</div>
+              <div>{child.class_id ? <Etiqueta>{classById.get(child.class_id)?.name ?? "Turma"}</Etiqueta> : <span className="cell-sub">sem turma</span>}</div>
               <div className="cell-sub">{guardians.length ? guardians.map((g) => personById.get(g.guardian_person_id)?.name.split(" ")[0]).filter(Boolean).join(", ") : "sem responsável"}</div>
             </Acao>
           );
@@ -136,23 +139,23 @@ export function Criancas({
         {visible.length === 0 ? <div className="empty">Nenhuma criança encontrada.</div> : null}
       </div>
 
-      <div className="panel" style={{ marginTop: 28 }}>
+      <Cartao style={{ marginTop: 28 }}>
         <div className="panel-head">
           <span className="panel-title"><Icon name="presente" size={14} /> Eventos Kids <HelpDot text="Eventos extras do Kids, com inscrição própria e aviso pros responsáveis." /></span>
           <Botao compacto onClick={() => setEventModal(true)}>+ Criar evento</Botao>
         </div>
         <div className="panel-body flush">
           {kidsEvents.map((ev) => (
-            <div className="mini-row" key={ev.id}>
+            <Linha key={ev.id}>
               <div className="mini-main">
                 <div className="mini-title">{ev.title}</div>
                 <div className="mini-sub">{[ev.event_date, ev.time, ev.location].filter(Boolean).join(" · ") || "sem data definida"}</div>
               </div>
-            </div>
+            </Linha>
           ))}
           {kidsEvents.length === 0 ? <EmptyState title="Nenhum evento Kids" text="Encontros extras com inscrição própria aparecem aqui. Use Criar evento quando houver uma programação para publicar." /> : null}
         </div>
-      </div>
+      </Cartao>
 
       {form.open && church && (
         <ChildFormModal

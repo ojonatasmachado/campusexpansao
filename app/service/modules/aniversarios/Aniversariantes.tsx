@@ -20,6 +20,8 @@ import {
 
 import { Botao, botaoClasse } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
+import { Cartao } from "../../ui/Cartao";
+import { Linha } from "../../ui/Linha";
 type Abrir = (p: Aniversariante) => void;
 type Nomeado = { id: string; name: string };
 
@@ -83,7 +85,7 @@ export function AniversariantesDaSemana({ base, escopo, comIdade, onAbrir, onVer
   if (lista.length === 0) return null;
   const hoje = lista.filter((p) => p.emDias === 0).length;
   return (
-    <div className="panel aniv">
+    <Cartao className="aniv">
       <div className="panel-head">
         <span className="panel-title"><Icon name="presente" size={14} /> Aniversariantes da semana</span>
         <span className="panel-meta">{hoje ? `${hoje} hoje · ${plural(lista.length, "pessoa")} em 7 dias` : `${plural(lista.length, "pessoa")} em 7 dias`}</span>
@@ -104,7 +106,7 @@ export function AniversariantesDaSemana({ base, escopo, comIdade, onAbrir, onVer
         </div>
       </div>
       {parabens && <Parabens p={parabens} onFechar={() => setParabens(null)} />}
-    </div>
+    </Cartao>
   );
 }
 
@@ -178,10 +180,10 @@ export function Aniversariantes({ base, escopo, comIdade, times, grupos, onAbrir
       </div>
       <div className="tbl">
         {lista.length > 0 && (
-          <div className="tr head" style={{ gridTemplateColumns: colunas }}><span>Pessoa</span><span>{ct("Times e {grupo}")}</span>{comIdade && <span>Idade</span>}<span /></div>
+          <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: colunas }}><span>Pessoa</span><span>{ct("Times e {grupo}")}</span>{comIdade && <span>Idade</span>}<span /></Linha>
         )}
         {lista.map((p) => (
-          <div className="tr" key={`${p.tipo}-${p.id}`} style={{ gridTemplateColumns: colunas }}>
+          <Linha estilo="tabela" key={`${p.tipo}-${p.id}`} style={{ gridTemplateColumns: colunas }}>
             <Acao className="cell-person aniv-pessoa" onClick={() => onAbrir(p)}>
               <Av name={p.nome} size="md" />
               <div><div className="cell-name">{p.nome}</div><div className={`cell-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{diaDoMes(p)}</div></div>
@@ -189,7 +191,7 @@ export function Aniversariantes({ base, escopo, comIdade, times, grupos, onAbrir
             <div className="cell-sub">{ondeServe(p)}</div>
             {comIdade && <div className="cell-sub aniv-idade">{p.idade ? `${p.idade} anos` : ""}</div>}
             <div className="aniv-acao"><BotaoParabens p={p} onClick={() => setParabens(p)} /></div>
-          </div>
+          </Linha>
         ))}
         {lista.length === 0 && (
           semData

@@ -21,6 +21,8 @@ import { Botao } from "../../ui/Botao";
 import { Interruptor } from "../../ui/Interruptor";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Linha } from "../../ui/Linha";
+import { Etiqueta } from "../../ui/Selo";
 /* Pessoas e Voluntários : módulo em modules/pessoas/ (4.1) */
 
 /* Pedidos do app ("Quero servir", 0046): o membro já passou pelos
@@ -51,7 +53,7 @@ export function PedidosParaServir({ serveRequests, members, ministries }: { serv
         const membro = members.find((m) => m.id === r.member_id);
         const time = ministries.find((m) => m.id === r.ministry_id);
         return (
-          <div className="cfg-row" key={r.id}>
+          <Linha estilo="config" key={r.id}>
             <Av name={membro?.name ?? "?"} size="sm" />
             <div className="cfg-row-main">
               <div className="cfg-row-t">{membro?.name ?? "Membro"}</div>
@@ -61,7 +63,7 @@ export function PedidosParaServir({ serveRequests, members, ministries }: { serv
               <Botao compacto desativado={ocupado === r.id} onClick={() => revisar(r.id, false)}>Recusar</Botao>
               <Botao variante="principal" compacto desativado={ocupado === r.id} onClick={() => revisar(r.id, true)}>Aprovar</Botao>
             </span>
-          </div>
+          </Linha>
         );
       })}
       {erro && <div className="field-error" style={{ marginTop: 8 }}>{erro}</div>}
@@ -206,7 +208,7 @@ export function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
 
       <FormSection title="Funções">
         <div className="cell-tags">
-          {ministry.positions.map((p) => <span key={p.id} className="tag">{p.name}</span>)}
+          {ministry.positions.map((p) => <Etiqueta key={p.id}>{p.name}</Etiqueta>)}
           {ministry.positions.length === 0 && <span className="fs-note">Nenhuma função cadastrada.</span>}
         </div>
         <p className="fs-note">Para criar ou mudar funções, use o painel de Times.</p>

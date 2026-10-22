@@ -21,6 +21,9 @@ import {
 import { Botao } from "../../ui/Botao";
 import { Interruptor } from "../../ui/Interruptor";
 import { Opcao } from "../../ui/Opcao";
+import { Linha, Lista } from "../../ui/Linha";
+import { Cartao } from "../../ui/Cartao";
+import { Selo } from "../../ui/Selo";
 type Toast = (msg: string, action?: { label: string; fn: () => void }) => void;
 
 // ── o pedido ─────────────────────────────────────────────────────────────────
@@ -100,7 +103,7 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
       {podeIntercessao && muralOn && (
         <>
           <div className="or-campo" id={`${fid}-pub`}>Quem vê</div>
-          <div className="m6-list flat" role="radiogroup" aria-labelledby={`${fid}-pub`}>
+          <Lista plano role="radiogroup" aria-labelledby={`${fid}-pub`}>
             {([
               ["intercessao", "Só a intercessão", `Vai para ${papelDoDestinatario(dest as Destinatario)}, numa conversa.`],
               ["mural", "Mural de oração", "A igreja vê e pode orar com você."],
@@ -110,19 +113,19 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
                 <span className="m6-rb"><span className="m6-rt">{t}</span><span className="m6-rs">{s}</span></span>
               </Opcao>
             ))}
-          </div>
+          </Lista>
         </>
       )}
       {!podeIntercessao && <div className="m6-meta or-nota">Seu pedido vai para o mural de oração da igreja.</div>}
       {podeIntercessao && !muralOn && <div className="m6-meta or-nota">{`Vai para ${papelDoDestinatario(dest as Destinatario)}. Só essa pessoa lê.`}</div>}
 
       {publico === "mural" && (
-        <div className="m6-list flat">
-          <div className="m6-row or-sw">
+        <Lista plano>
+          <Linha estilo="app" className="or-sw">
             <span className="m6-rb"><span className="m6-rt" id={`${fid}-anon`}>Pedir sem meu nome</span><span className="m6-rs">Só quem cuida da intercessão sabe que foi você.</span></span>
             <Interruptor ligado={anonimo} tamanho="toque" rotuloId={`${fid}-anon`} onClick={() => setAnonimo(!anonimo)} />
-          </div>
-        </div>
+          </Linha>
+        </Lista>
       )}
 
       {erro && <div className="m6-err" role="alert">{erro}</div>}
@@ -219,23 +222,23 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
       </div>
 
       <div className="m6-sec0 or-lista">
-        {dados === null && !erro && <div className="m6-card"><div className="m6-meta">Carregando os pedidos...</div></div>}
+        {dados === null && !erro && <Cartao estilo="app"><div className="m6-meta">Carregando os pedidos...</div></Cartao>}
         {erro && (
-          <div className="m6-card">
+          <Cartao estilo="app">
             <div className="m6-ct">Não deu para abrir o mural</div>
             <div className="m6-meta">Confira a internet e tente de novo.</div>
             <div className="m6-btns"><Botao tamanho="toque" onClick={() => void recarregar()}>Tentar de novo</Botao></div>
-          </div>
+          </Cartao>
         )}
         {dados !== null && visiveis.length === 0 && (
-          <div className="m6-card"><div className="m6-ct">{vazio[0]}</div><div className="m6-meta">{vazio[1]}</div></div>
+          <Cartao estilo="app"><div className="m6-ct">{vazio[0]}</div><div className="m6-meta">{vazio[1]}</div></Cartao>
         )}
         {visiveis.map((p) => {
           const orei = oreiAgora[p.id] ?? p.i_prayed;
           /* o número de quem pediu soma o próprio "orei" dado agora */
           const n = (p.prayed_count ?? 0) + (p.is_mine && oreiAgora[p.id] !== undefined ? (oreiAgora[p.id] ? 1 : 0) - (p.i_prayed ? 1 : 0) : 0);
           return (
-            <article className="m6-card or-card" key={p.id}>
+            <Cartao estilo="app" como="article" className="or-card" key={p.id}>
               <div className="or-top">
                 <span className="or-cat">{rotuloCategoria(p.category)}</span>
                 <span className="or-quando">{quandoPublicado(p.created_at)}</span>
@@ -244,7 +247,7 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
               <p className="m6-txt or-txt">{p.body}</p>
               {p.answered_at && (
                 <div className="or-resp">
-                  <span className="m6-st ok"><Icon name="ok" size={16} />Respondido</span>
+                  <Selo tamanho="toque" tom="ok"><Icon name="ok" size={16} />Respondido</Selo>
                   {p.testimony && <p className="or-test">{p.testimony}</p>}
                 </div>
               )}
@@ -270,7 +273,7 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
                   </Botao>
                 </div>
               )}
-            </article>
+            </Cartao>
           );
         })}
       </div>

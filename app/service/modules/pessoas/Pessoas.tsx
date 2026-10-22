@@ -19,6 +19,8 @@ import type { ChurchView, DrawerState, MemberView, MinistryView, ModalState, Per
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Etiqueta, Selo } from "../../ui/Selo";
+import { Linha, linhaClasse } from "../../ui/Linha";
 function formatAvailability(value: Record<string, boolean>) {
   const labels: Record<string, string> = { dom_m: "Domingo manhã", dom_n: "Domingo noite", qua: "Quarta" };
   const items = Object.entries(value).filter(([, ok]) => ok).map(([key]) => labels[key] ?? key);
@@ -47,7 +49,7 @@ function SituacaoPessoa({ l }: { l: PessoaLinha }) {
   let chip: import("react").ReactNode;
   let sub = "";
   if (l.novo) {
-    chip = <span className="chip chip-wait">Novo</span>;
+    chip = <Selo tom="pendente">Novo</Selo>;
     const chegou = formatDateBR(l.member?.firstContact || l.member?.createdAt || l.person?.createdAt || "");
     sub = chegou ? `chegou em ${chegou.slice(0, 5)}` : "";
   } else if (l.person && l.person.status !== "ativo") {
@@ -56,7 +58,7 @@ function SituacaoPessoa({ l }: { l: PessoaLinha }) {
     chip = <Chip status="membro" />;
     sub = l.member.sinceYear ? `desde ${l.member.sinceYear}` : "";
   } else {
-    chip = <span className="chip chip-neutral">{ct("{Voluntario}")}</span>;
+    chip = <Selo>{ct("{Voluntario}")}</Selo>;
   }
   return (
     <div className="sit-cell">
@@ -123,12 +125,12 @@ export function Membros({ members, people = [], ministries, church, setDrawer, s
       </div>
       <p className="jrn-legenda"><b>{ct("{Caminhada}")}</b>, uma barra por etapa, na ordem: {JRN_STEPS.map((s) => ct(s.label)).join(" · ")}.</p>
       <div className="tbl">
-        <div className="tr head" style={{ gridTemplateColumns: "1.6fr 1.3fr 1fr 0.9fr" }}><span>Pessoa</span><span>Serve em</span><span>{ct("{Caminhada}")}</span><span>Situação</span></div>
+        <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: "1.6fr 1.3fr 1fr 0.9fr" }}><span>Pessoa</span><span>Serve em</span><span>{ct("{Caminhada}")}</span><span>Situação</span></Linha>
         {visible.map((l) => (
-          <Acao className="tr click" key={l.key} style={{ gridTemplateColumns: "1.6fr 1.3fr 1fr 0.9fr" }} onClick={() => abrir(l)}>
+          <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={l.key} style={{ gridTemplateColumns: "1.6fr 1.3fr 1fr 0.9fr" }} onClick={() => abrir(l)}>
             <div className="cell-person"><Av name={l.name} size="md" photoUrl={l.photoUrl} /><div><div className="cell-name">{l.name}</div><div className="cell-sub">{l.sub}</div></div></div>
             <div>
-              {l.mins.length > 0 ? <div className="cell-tags">{l.mins.map((min) => <span key={min.id} className="tag">{min.name}</span>)}{l.leader && <span className="lider-tag">Líder</span>}</div> : null}
+              {l.mins.length > 0 ? <div className="cell-tags">{l.mins.map((min) => <Etiqueta key={min.id}>{min.name}</Etiqueta>)}{l.leader && <span className="lider-tag">Líder</span>}</div> : null}
             </div>
             <div>{l.member ? <JrnPips journey={l.member.journey} comTexto /> : null}</div>
             <SituacaoPessoa l={l} />
@@ -164,9 +166,9 @@ export function Pessoas({ people, currentPersonId, setDrawer, setModal }: { peop
         <span className="panel-meta">{visible.length} pessoas</span>
       </div>
       <div className="tbl">
-        <div className="tr head tr-people"><div>{ct("{Voluntario}")}</div><div>Disponibilidade</div><div>Etiquetas</div><div>Status</div></div>
+        <Linha estilo="tabela" className="head tr-people"><div>{ct("{Voluntario}")}</div><div>Disponibilidade</div><div>Etiquetas</div><div>Status</div></Linha>
         {visible.map((person) => (
-          <Acao className="tr click tr-people" key={person.id} onClick={() => setDrawer({ kind: "person", id: person.id })}>
+          <Acao className={`${linhaClasse({ estilo: "tabela" })} click tr-people`} key={person.id} onClick={() => setDrawer({ kind: "person", id: person.id })}>
             <div className="who">
               <Av name={person.name} photoUrl={person.photoUrl} />
               <div>
