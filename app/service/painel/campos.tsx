@@ -9,17 +9,14 @@ import type { FieldDef } from "./tipos";
 import { BotaoIcone } from "../ui/Botao";
 import { Interruptor } from "../ui/Interruptor";
 import { Acao } from "../ui/Acao";
+import { Gaveta } from "../ui/Janela";
 import { Opcao } from "../ui/Opcao";
 import { usePopover } from "../ui/popover";
 import { Selecao } from "../ui/Selecao";
 import { SeletorData } from "../ui/Data";
+/* gaveta do painel: a peça é Gaveta (app/service/ui/Janela.tsx) */
 export function DrawerShell({ children, onClose, wide }: { children: React.ReactNode; onClose: () => void; wide?: boolean }) {
-  return (
-    <>
-      <div className="drawer-bg" onClick={onClose} />
-      <div className={`drawer ${wide ? "drawer-wide" : ""}`}>{children}</div>
-    </>
-  );
+  return <Gaveta aoFechar={onClose} larga={wide}>{children}</Gaveta>;
 }
 
 export function DrawerSection({ title, children }: { title: string; children: React.ReactNode }) {
