@@ -2,10 +2,10 @@
 id: Q1
 titulo: Recriar captura automática das leis 12 e 13
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: codex
+desde: 2026-10-22
+branch: historia/Q1-captura-automatica
 depende: []
 tamanho: G
 ---
