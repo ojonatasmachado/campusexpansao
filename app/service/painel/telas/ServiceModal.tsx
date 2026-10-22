@@ -20,6 +20,7 @@ import type { ChurchView, MemberView, MinistryView, ModalState, PersonView, Room
 
 import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
+import { Janela } from "../../ui/Janela";
 export function findMinistryByName(ministries: MinistryView[], value: string) {
   const term = normalize(value);
   if (!term) return null;
@@ -616,42 +617,33 @@ export function ServiceModal({
   }
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className={`modal${hasHalf ? " wide" : ""}`} onClick={(event) => event.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">{modal.eyebrow}</div>
-          <div className="modal-title">{modal.title}</div>
-          {modal.subtitle && <div className="modal-sub">{modal.subtitle}</div>}
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0 16px" }}>
-            {modal.formFields.filter((field) => !field.showIf || values[field.showIf.field] === field.showIf.equals).map((field) => (
-              <div
-                className="field"
-                key={field.k}
-                style={field.half ? { flex: "1 1 calc(50% - 8px)", minWidth: 160 } : { flex: "1 1 100%" }}
-              >
-                <label className={`field-label${field.req ? " req" : ""}`} htmlFor={COM_ID.has(field.type) ? idDo(field.k) : undefined}>
-                  {field.label}
-                </label>
-                <FField
-                  field={field}
-                  id={COM_ID.has(field.type) ? idDo(field.k) : undefined}
-                  value={values[field.k] ?? ""}
-                  onChange={(v) => setValues((cur) => ({ ...cur, [field.k]: v }))}
-                  onPatch={(patch) => setValues((cur) => ({ ...cur, ...patch }))}
-                />
-                {field.hint && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 5 }}>{field.hint}</div>}
-              </div>
-            ))}
+    <Janela larga={hasHalf} sobretitulo={modal.eyebrow} titulo={modal.title} texto={modal.subtitle || undefined} aoFechar={onClose} corpoBloco
+      rodape={<>
+        <Botao onClick={onClose} desativado={saving}>Cancelar</Botao>
+        <Botao variante="principal" onClick={save} desativado={saving}>{saving ? "Salvando..." : (modal.saveLabel || "Salvar")}</Botao>
+      </>}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0 16px" }}>
+        {modal.formFields.filter((field) => !field.showIf || values[field.showIf.field] === field.showIf.equals).map((field) => (
+          <div
+            className="field"
+            key={field.k}
+            style={field.half ? { flex: "1 1 calc(50% - 8px)", minWidth: 160 } : { flex: "1 1 100%" }}
+          >
+            <label className={`field-label${field.req ? " req" : ""}`} htmlFor={COM_ID.has(field.type) ? idDo(field.k) : undefined}>
+              {field.label}
+            </label>
+            <FField
+              field={field}
+              id={COM_ID.has(field.type) ? idDo(field.k) : undefined}
+              value={values[field.k] ?? ""}
+              onChange={(v) => setValues((cur) => ({ ...cur, [field.k]: v }))}
+              onPatch={(patch) => setValues((cur) => ({ ...cur, ...patch }))}
+            />
+            {field.hint && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 5 }}>{field.hint}</div>}
           </div>
-          {error ? <p className="mini-sub" style={{ color: "var(--danger)", marginTop: 12 }}>{error}</p> : null}
-        </div>
-        <div className="modal-foot">
-          <Botao onClick={onClose} desativado={saving}>Cancelar</Botao>
-          <Botao variante="principal" onClick={save} desativado={saving}>{saving ? "Salvando..." : (modal.saveLabel || "Salvar")}</Botao>
-        </div>
+        ))}
       </div>
-    </div>
+      {error ? <p className="mini-sub" style={{ color: "var(--danger)", marginTop: 12 }}>{error}</p> : null}
+    </Janela>
   );
 }

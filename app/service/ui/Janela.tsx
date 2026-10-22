@@ -35,24 +35,28 @@ export type JanelaProps = {
   /* corpo em bloco, sem a grade de duas colunas dos formulários */
   corpoBloco?: boolean;
   corpoStyle?: CSSProperties;
+  /* janela aberta de dentro de outra janela: fica na camada de cima */
+  acima?: boolean;
+  /* salvando: nada fecha (véu, Esc e ✕) até terminar */
+  ocupada?: boolean;
   className?: string;
   children?: ReactNode;
 };
 
-export function Janela({ titulo, sobretitulo, texto, cabecalho, aoFechar, larga, rodape, fecharNoFundo = true, corpoBloco, corpoStyle, className, children }: JanelaProps) {
+export function Janela({ titulo, sobretitulo, texto, cabecalho, aoFechar, larga, rodape, fecharNoFundo = true, corpoBloco, corpoStyle, acima, ocupada, className, children }: JanelaProps) {
   const tituloId = useId();
   const { alvo, zona } = useArrastarParaFechar("baixo", aoFechar);
   return (
-    <div className="modal-bg" onClick={fecharNoFundo ? aoFechar : undefined}>
+    <div className={`modal-bg${acima ? " janela-acima" : ""}`} onClick={fecharNoFundo && !ocupada ? aoFechar : undefined}>
       <div ref={alvo} className={`modal${larga ? " wide" : ""}${className ? ` ${className}` : ""}`}
-        role="dialog" aria-modal="true" aria-labelledby={tituloId} onClick={parar}>
-        <div className="janela-alca" aria-hidden="true" {...zona}><span /></div>
+        role="dialog" aria-modal="true" aria-labelledby={tituloId} aria-busy={ocupada || undefined} onClick={parar}>
+        <div className="janela-alca" aria-hidden="true" {...(ocupada ? {} : zona)}><span /></div>
         <div className="modal-head">
           {sobretitulo ? <div className="modal-eyebrow">{sobretitulo}</div> : null}
           <h2 className="modal-title" id={tituloId}>{titulo}</h2>
           {texto ? <div className="modal-sub">{texto}</div> : null}
           {cabecalho}
-          <BotaoIcone className="janela-x" rotulo="Fechar" onClick={aoFechar}>✕</BotaoIcone>
+          <BotaoIcone className="janela-x" rotulo="Fechar" desativado={ocupada} onClick={aoFechar}>✕</BotaoIcone>
         </div>
         {children != null ? <div className="modal-body" style={corpoBloco ? { display: "block", ...corpoStyle } : corpoStyle}>{children}</div> : null}
         {rodape ? <div className="modal-foot">{rodape}</div> : null}

@@ -14,6 +14,7 @@ import { useTermos } from "../../lib/vocabulario-context";
 import type { EventView, RosterAssignmentView } from "../../ServiceExactApp";
 
 import { Botao } from "../../ui/Botao";
+import { Janela } from "../../ui/Janela";
 import { Campo, TextoLongo } from "../../ui/Campo";
 export function PublicarEscala({ rascunhos, events, organizationId, onClose, onPublicado }: {
   rascunhos: RosterAssignmentView[];
@@ -84,30 +85,22 @@ export function PublicarEscala({ rascunhos, events, organizationId, onClose, onP
   };
 
   return (
-    <div className="modal-bg" onClick={salvando ? undefined : () => { void fechar(); }}>
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="pub-esc-t" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Publicar</div>
-          <div className="modal-title" id="pub-esc-t">Publicar e avisar</div>
-          <div className="modal-sub">
-            {rascunhos.length
-              ? ct(`${plural(rascunhos.length, "escalação", "escalações")} em rascunho, ${plural(eventosIds.size, "{culto}", "{cultos}")}${datas.length ? ` de ${formatDateBR(datas[0])} a ${formatDateBR(datas[datas.length - 1])}` : ""}. ${plural(pessoas.length, "pessoa recebe", "pessoas recebem")} a escala no app e uma notificação.`)
-              : "Nada em rascunho. A escala que você monta culto a culto já aparece para a equipe."}
-          </div>
-        </div>
-        {rascunhos.length > 0 && (
-          <div className="modal-body" style={{ display: "block" }}>
-            <Campo rotulo="Recado na notificação (opcional)" id="pub-esc-msg">
-              <TextoLongo value={msg} maxLength={160} onChange={(e) => setMsg(e.target.value)} placeholder="Ex.: Confira suas datas até domingo." />
-            </Campo>
-            {erro && <div className="fs-error" role="alert">{erro}</div>}
-          </div>
-        )}
-        <div className="modal-foot">
-          <Botao onClick={() => { void fechar(); }} desativado={salvando}>{parcial ? "Fechar" : rascunhos.length ? "Cancelar" : "Fechar"}</Botao>
-          {rascunhos.length > 0 && <Botao variante="principal" onClick={publicar} desativado={salvando}>{salvando ? "Publicando…" : parcial ? "Tentar de novo" : "Publicar e avisar"}</Botao>}
-        </div>
-      </div>
-    </div>
+    <Janela sobretitulo="Publicar" titulo="Publicar e avisar" aoFechar={() => { void fechar(); }} ocupada={salvando} corpoBloco
+      texto={rascunhos.length
+        ? ct(`${plural(rascunhos.length, "escalação", "escalações")} em rascunho, ${plural(eventosIds.size, "{culto}", "{cultos}")}${datas.length ? ` de ${formatDateBR(datas[0])} a ${formatDateBR(datas[datas.length - 1])}` : ""}. ${plural(pessoas.length, "pessoa recebe", "pessoas recebem")} a escala no app e uma notificação.`)
+        : "Nada em rascunho. A escala que você monta culto a culto já aparece para a equipe."}
+      rodape={<>
+        <Botao onClick={() => { void fechar(); }} desativado={salvando}>{parcial ? "Fechar" : rascunhos.length ? "Cancelar" : "Fechar"}</Botao>
+        {rascunhos.length > 0 && <Botao variante="principal" onClick={publicar} desativado={salvando}>{salvando ? "Publicando…" : parcial ? "Tentar de novo" : "Publicar e avisar"}</Botao>}
+      </>}>
+      {rascunhos.length > 0 ? (
+        <>
+          <Campo rotulo="Recado na notificação (opcional)" id="pub-esc-msg">
+            <TextoLongo value={msg} maxLength={160} onChange={(e) => setMsg(e.target.value)} placeholder="Ex.: Confira suas datas até domingo." />
+          </Campo>
+          {erro && <div className="fs-error" role="alert">{erro}</div>}
+        </>
+      ) : null}
+    </Janela>
   );
 }

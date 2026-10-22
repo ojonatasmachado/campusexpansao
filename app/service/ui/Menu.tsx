@@ -36,11 +36,13 @@ export type MenuAcoesProps = {
   className?: string;
   /* conteúdo próprio do botão, no lugar do rótulo e da seta */
   gatilho?: ReactNode;
+  /* botão menor, para linha de lista e cartão */
+  compacto?: boolean;
 };
 
 const SAIDA_MS = 140;
 
-export function MenuAcoes({ itens, rotulo = "Mais", soIcone, alinhar = "fim", className, gatilho: conteudo }: MenuAcoesProps) {
+export function MenuAcoes({ itens, rotulo = "Mais", soIcone, alinhar = "fim", className, gatilho: conteudo, compacto }: MenuAcoesProps) {
   const [aberto, setAberto] = useState(false);
   const [saindo, setSaindo] = useState(false);
   /* fecha com a saída curta; o usePopover chama no clique fora e no Esc */
@@ -95,7 +97,7 @@ export function MenuAcoes({ itens, rotulo = "Mais", soIcone, alinhar = "fim", cl
         ? <BotaoIcone ref={gatilho} rotulo={rotulo} className="menu-pontos" aria-haspopup="menu" aria-expanded={aberto} onClick={alternar}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
           </BotaoIcone>
-        : <Botao ref={gatilho} aria-haspopup="menu" aria-expanded={aberto} onClick={alternar}>
+        : <Botao ref={gatilho} compacto={compacto} aria-haspopup="menu" aria-expanded={aberto} onClick={alternar}>
             {conteudo ?? <>{rotulo} <span className="menu-seta" aria-hidden="true"><Caret open={aberto && !saindo} size={13} /></span></>}
           </Botao>}
       {aberto && (

@@ -43,12 +43,15 @@ import { Botao } from "../../ui/Botao";
 import { Interruptor } from "../../ui/Interruptor";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Abas } from "../../ui/Abas";
+import { BarraSalvar } from "../../ui/BarraSalvar";
 import { Linha } from "../../ui/Linha";
 import { Etiqueta, Selo } from "../../ui/Selo";
 import { Segmentado } from "../../ui/Segmentado";
 import { Campo, Entrada } from "../../ui/Campo";
 import { Vazio } from "../../ui/Estados";
 import { confirmar } from "../../ui/confirmar";
+import { Janela } from "../../ui/Janela";
 export const STATUS_CFG_DEFAULT: StatusCriterios = { recusasInativando: 2, recusasInativo: 4, diasIndispInativo: 30, considerarFerias: false };
 export const GRUPOS_CFG_DEFAULT: GruposCfg = { ativo: true, termo: "Grupos de Comunhão", termoP: "Grupo de Comunhão", sigla: "GC" };
 
@@ -249,48 +252,40 @@ export function TagElencoModal({
   };
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Frente · {tag.name}</div>
-          <div className="modal-title">Quem serve nos {tag.name}</div>
+    <Janela larga sobretitulo={<>Frente · {tag.name}</>} titulo={<>Quem serve nos {tag.name}</>} aoFechar={onClose} cabecalho={<>
           <div className="modal-sub">
             {ct("Marque os {voluntarios} que fazem parte deste time.")} Toque na estrela para definir quem é líder do time. {plural(dentro, "marcado")}.
           </div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
-          <div className="tb-search" style={{ marginBottom: 14 }}>
-            <span className="si"><Icon name="buscar" size={13} /></span>
-            <input placeholder={ct("Buscar {voluntario}...")} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
-          </div>
-          {lista.map((p) => {
-            const on = p.tags.includes(tag.id);
-            const lider = localTag.leaders.includes(p.id);
-            return (
-              <div className={`flag-row${on ? " on" : ""}`} key={p.id} style={{ cursor: "pointer" }} onClick={() => toggleElenco(p.id)}>
-                <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
-                <div className="flag-main">
-                  <div className="flag-nome">{p.name}{lider && <span style={{ marginLeft: 8, fontSize: "var(--fs-pn-12)", color: "var(--amber)", display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="estrela" size={12} /> líder</span>}</div>
-                </div>
-                <Acao
-                  title={lider ? "Remover como líder" : "Tornar líder do time"}
-                  aria-label={lider ? "Remover como líder" : "Tornar líder do time"}
-                  aria-pressed={lider}
-                  onClick={(e) => { e.stopPropagation(); toggleLider(p.id); }}
-                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "var(--fs-pn-16)", color: lider ? "var(--amber)" : "var(--muted)" }}
-                >
-                  <Icon name="estrela" size={16} />
-                </Acao>
-              </div>
-            );
-          })}
-          {lista.length === 0 && <Vazio titulo="Ninguém encontrado." />}
-        </div>
-        <div className="modal-foot">
+      </>} corpoBloco rodape={<>
           <Botao variante="principal" onClick={onClose}>Concluído</Botao>
-        </div>
+      </>}>
+      <div className="tb-search" style={{ marginBottom: 14 }}>
+        <span className="si"><Icon name="buscar" size={13} /></span>
+        <input placeholder={ct("Buscar {voluntario}...")} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
       </div>
-    </div>
+      {lista.map((p) => {
+        const on = p.tags.includes(tag.id);
+        const lider = localTag.leaders.includes(p.id);
+        return (
+          <div className={`flag-row${on ? " on" : ""}`} key={p.id} style={{ cursor: "pointer" }} onClick={() => toggleElenco(p.id)}>
+            <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
+            <div className="flag-main">
+              <div className="flag-nome">{p.name}{lider && <span style={{ marginLeft: 8, fontSize: "var(--fs-pn-12)", color: "var(--amber)", display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="estrela" size={12} /> líder</span>}</div>
+            </div>
+            <Acao
+              title={lider ? "Remover como líder" : "Tornar líder do time"}
+              aria-label={lider ? "Remover como líder" : "Tornar líder do time"}
+              aria-pressed={lider}
+              onClick={(e) => { e.stopPropagation(); toggleLider(p.id); }}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: "var(--fs-pn-16)", color: lider ? "var(--amber)" : "var(--muted)" }}
+            >
+              <Icon name="estrela" size={16} />
+            </Acao>
+          </div>
+        );
+      })}
+      {lista.length === 0 && <Vazio titulo="Ninguém encontrado." />}
+    </Janela>
   );
 }
 
@@ -738,14 +733,7 @@ export function Config({
               <Campo rotulo="Telefone"><Entrada id={`${cid}-tel`} name="tel" type="tel" autoComplete="tel" inputMode="tel" value={igrejaForm.tel} onChange={(e) => setIgrejaForm((p) => ({ ...p, tel: e.target.value }))} /></Campo>
             </div>
             <FusoField value={igrejaForm.fuso} onChange={(fuso) => setIgrejaForm((p) => ({ ...p, fuso }))} />
-            {igrejaMudou && (
-              <div className="save-bar">
-                <span>Você tem alterações não salvas.</span>
-                <Botao variante="principal" desativado={igrejaLoading} onClick={saveIgreja}>
-                  {igrejaLoading ? "Salvando..." : "Salvar"}
-                </Botao>
-              </div>
-            )}
+            <BarraSalvar visivel={igrejaMudou} salvando={igrejaLoading} aoSalvar={saveIgreja} />
           </div>
           <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
             <div className="cfg-card-t">{ct("Horários de {culto}")}</div>
@@ -1090,13 +1078,8 @@ export function Config({
           <div className="cfg-card-t">Papéis & permissões</div>
           <div className="cfg-card-s">Cada funcionalidade do app aparece aqui. Toque para liberar ou bloquear por papel. O Master sempre tem acesso total.</div>
           <div className="pmx-mob">
-            <div className="pmx-mob-roles" role="tablist" aria-label="Papel">
-              {PAPEIS_V2.map((pp) => (
-                <Opcao key={pp.id} role="tab" aria-selected={papelMob === pp.id} marcada={papelMob === pp.id} estilo="pmx-mob-role" onClick={() => setPapelMob(pp.id)}>
-                  {ct(pp.nome)}
-                </Opcao>
-              ))}
-            </div>
+            <Abas rotulo="Papel" ativa={papelMob} aoMudar={(v) => setPapelMob(v as typeof papelMob)}
+              abas={PAPEIS_V2.map((pp) => ({ id: pp.id, rotulo: ct(pp.nome) }))} />
             {(papelMob === "master" || papelMob === "membro") && (
               <div className="pmx-mob-note">
                 {papelMob === "master" ? "O Master sempre tem acesso total." : "Membro usa o app. Para abrir uma tela do painel pra uma pessoa, use Acessos por pessoa."}

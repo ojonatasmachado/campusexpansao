@@ -18,6 +18,7 @@ import type { PaginaCfg, PaginaSocial, PaginaTemplate, ChurchPageData, Identidad
 import ChurchPageView from "../[slug]/ChurchPageView";
 
 import { Botao } from "./ui/Botao";
+import { Janela } from "./ui/Janela";
 import { Interruptor } from "./ui/Interruptor";
 import { Opcao } from "./ui/Opcao";
 import { Linha } from "./ui/Linha";
@@ -588,13 +589,16 @@ function LinkModal({
   };
 
   return (
-    <div className="modal-bg" onClick={onCancel}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">{isNew ? "Novo link" : "Editar link"}</div>
-          <div className="modal-title">{form.label || "Link da página"}</div>
+    <Janela sobretitulo={isNew ? "Novo link" : "Editar link"} titulo={form.label || "Link da página"} aoFechar={onCancel} corpoBloco
+      rodape={
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+          {onDelete ? <Botao variante="discreto" onClick={onDelete}>Excluir</Botao> : <span />}
+          <div style={{ display: "flex", gap: 8 }}>
+            <Botao onClick={onCancel}>Cancelar</Botao>
+            <Botao variante="principal" desativado={saving || !form.label.trim() || !form.url.trim()} onClick={salvar}>Salvar</Botao>
+          </div>
         </div>
-        <div className="modal-body" style={{ display: "block" }}>
+      }>
           <Campo rotulo="Título">
             <Entrada value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} placeholder="Ex.: Culto ao vivo" />
           </Campo>
@@ -658,16 +662,7 @@ function LinkModal({
             </div>
             <Interruptor ligado={form.active} rotulo="Link ativo" onClick={() => setForm((f) => ({ ...f, active: !f.active }))} />
           </Linha>
-        </div>
-        <div className="modal-foot" style={{ justifyContent: "space-between" }}>
-          {onDelete ? <Botao variante="discreto" onClick={onDelete}>Excluir</Botao> : <span />}
-          <div style={{ display: "flex", gap: 8 }}>
-            <Botao onClick={onCancel}>Cancelar</Botao>
-            <Botao variante="principal" desativado={saving || !form.label.trim() || !form.url.trim()} onClick={salvar}>Salvar</Botao>
-          </div>
-        </div>
-      </div>
-    </div>
+    </Janela>
   );
 }
 
@@ -692,13 +687,16 @@ function PostModal({
   };
 
   return (
-    <div className="modal-bg" onClick={onCancel}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">{isNew ? "Nova notícia" : "Editar notícia"}</div>
-          <div className="modal-title">{form.title || "Notícia da página"}</div>
+    <Janela sobretitulo={isNew ? "Nova notícia" : "Editar notícia"} titulo={form.title || "Notícia da página"} aoFechar={onCancel} corpoBloco
+      rodape={
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+          {onDelete ? <Botao variante="discreto" onClick={onDelete}>Excluir</Botao> : <span />}
+          <div style={{ display: "flex", gap: 8 }}>
+            <Botao onClick={onCancel}>Cancelar</Botao>
+            <Botao variante="principal" desativado={saving || !form.title.trim()} onClick={salvar}>Salvar</Botao>
+          </div>
         </div>
-        <div className="modal-body" style={{ display: "block" }}>
+      }>
           <Campo rotulo="Título">
             <Entrada value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="Ex.: Retiro de Jovens abre inscrições" />
           </Campo>
@@ -729,15 +727,6 @@ function PostModal({
             </div>
             <Interruptor ligado={form.pinned} rotulo="Fixar notícia" onClick={() => setForm((f) => ({ ...f, pinned: !f.pinned }))} />
           </Linha>
-        </div>
-        <div className="modal-foot" style={{ justifyContent: "space-between" }}>
-          {onDelete ? <Botao variante="discreto" onClick={onDelete}>Excluir</Botao> : <span />}
-          <div style={{ display: "flex", gap: 8 }}>
-            <Botao onClick={onCancel}>Cancelar</Botao>
-            <Botao variante="principal" desativado={saving || !form.title.trim()} onClick={salvar}>Salvar</Botao>
-          </div>
-        </div>
-      </div>
-    </div>
+    </Janela>
   );
 }

@@ -347,7 +347,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
             <div style={{ position: "relative" }}>
               <Botao tamanho="mapa" aria-expanded={ferramentas} onClick={() => setFerramentas((v) => !v)}><Icon name="config" size={16} />Ferramentas</Botao>
               {ferramentas && (
-                <div className="mp-menu" role="menu">
+                <div className="mp-menu" /* lei17-ok: ferramentas do mapa com descrição em duas linhas */ role="menu">
                   {acesso?.pode_editar && <Acao role="menuitem" onClick={() => { setAreaInicial([]); setModo("area"); setFerramentas(false); }}><b>Criar uma área</b><span>Junte bairros para formar um setor</span></Acao>}
                   <Acao role="menuitem" onClick={() => { setModo("rota"); setFerramentas(false); }}><b>Traçar rota</b><span>Visita, oração, panfletos ou carro de som</span></Acao>
                   <Acao role="menuitem" onClick={() => { setModo("linha"); setFerramentas(false); }}><b>Linha do tempo</b><span>Veja onde a igreja cresceu</span></Acao>

@@ -26,6 +26,7 @@ import {
 import type { ChurchView, EventView, MinistryView, PersonView, RosterAssignmentView } from "../../ServiceExactApp";
 
 import { Botao } from "../../ui/Botao";
+import { Janela } from "../../ui/Janela";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Campo, Marcar } from "../../ui/Campo";
@@ -497,27 +498,23 @@ function EscolherNaVaga({ vaga, culto, opcoes, cfg, nomeAtual, onEscolher, onClo
     </Acao>
   );
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide" role="dialog" aria-modal="true" aria-label={`Escolher para ${vaga.funcao}`} onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">{joinDot(vaga.funcao, vaga.time)}</div>
-          <div className="modal-title">{culto.nome}</div>
-          <div className="modal-sub">{joinDot(diaCurto(culto.data), formatDateBR(culto.data), culto.hora)}{nomeAtual ? `. Agora: ${nomeAtual}.` : ""}</div>
-          <div className="cand-tools">
-            <input className="input" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar pelo nome" aria-label="Buscar pelo nome" />
-          </div>
+    <Janela larga sobretitulo={joinDot(vaga.funcao, vaga.time)} titulo={culto.nome}
+      texto={`${joinDot(diaCurto(culto.data), formatDateBR(culto.data), culto.hora)}${nomeAtual ? `. Agora: ${nomeAtual}.` : ""}`} aoFechar={onClose} corpoBloco
+      cabecalho={
+        <div className="cand-tools">
+          <input className="input" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar pelo nome" aria-label="Buscar pelo nome" />
         </div>
-        <div className="modal-body cand-list">
+      }
+      rodape={<>
+        {nomeAtual && <Botao onClick={() => onEscolher(null)}>Deixar a vaga aberta</Botao>}
+        <Botao variante="discreto" onClick={onClose}>Cancelar</Botao>
+      </>}>
+      <div className="cand-list">
           {achados.length === 0 && <Vazio titulo={busca.trim() ? "Ninguém com esse nome neste time." : "Todo mundo do time já está nesta função. Adicione pessoas ao time em Times."} />}
           {podem.length > 0 && <><div className="cand-grp">Livres, pela ordem do rodízio</div>{podem.map((c) => linha(c))}</>}
           {comAviso.length > 0 && <><div className="cand-grp">Pode escolher, mas fica com aviso</div>{comAviso.map((c) => linha(c, motivo(c)))}</>}
           {naoPodem.length > 0 && <><div className="cand-grp">Não podem nesta vaga</div>{naoPodem.map((c) => linha(c, motivo(c)))}</>}
-        </div>
-        <div className="modal-foot">
-          {nomeAtual && <Botao onClick={() => onEscolher(null)}>Deixar a vaga aberta</Botao>}
-          <Botao variante="discreto" onClick={onClose}>Cancelar</Botao>
-        </div>
       </div>
-    </div>
+    </Janela>
   );
 }

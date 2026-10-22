@@ -29,6 +29,7 @@ import { useTermos, type Termos } from "../../lib/vocabulario-context";
 
 import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
+import { Janela } from "../../ui/Janela";
 import { Cartao } from "../../ui/Cartao";
 import { Selo, tomDaClasse } from "../../ui/Selo";
 import { Linha } from "../../ui/Linha";
@@ -336,14 +337,8 @@ function VerQuemLeuButton({ aviso, reads, people }: { aviso: AnnouncementView; r
     <>
       <Botao compacto onClick={() => setOpen(true)}>Ver quem leu</Botao>
       {open && (
-        <div className="modal-bg" onClick={() => setOpen(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <div className="modal-eyebrow">Confirmação de leitura</div>
-              <div className="modal-title">{aviso.title}</div>
-              <div className="modal-sub">{leram.length} de {people.length} já leram este aviso.</div>
-            </div>
-            <div className="modal-body">
+        <Janela sobretitulo="Confirmação de leitura" titulo={aviso.title} texto={<>{leram.length} de {people.length} já leram este aviso.</>} aoFechar={() => setOpen(false)}
+          rodape={<Botao variante="principal" onClick={() => setOpen(false)}>Fechar</Botao>}>
               <div className="dsec-title" style={{ marginBottom: 8 }}>Leram · {leram.length}</div>
               {leram.map((p) => (
                 <div className="flag-row" key={p.id} style={{ cursor: "default" }}>
@@ -360,10 +355,7 @@ function VerQuemLeuButton({ aviso, reads, people }: { aviso: AnnouncementView; r
                   <span className="cand-fit busy" style={{ marginLeft: "auto" }}>pendente</span>
                 </div>
               ))}
-            </div>
-            <div className="modal-foot"><Botao variante="principal" onClick={() => setOpen(false)}>Fechar</Botao></div>
-          </div>
-        </div>
+        </Janela>
       )}
     </>
   );

@@ -9,7 +9,8 @@ import { formatDateBR, joinDot } from "./lib/date";
 import { Icon } from "./lib/icons";
 
 import { Botao } from "./ui/Botao";
-import { Acao } from "./ui/Acao";
+import { Abas } from "./ui/Abas";
+import { Janela } from "./ui/Janela";
 import { Cartao } from "./ui/Cartao";
 import { Vazio } from "./ui/Estados";
 import { confirmar } from "./ui/confirmar";
@@ -153,19 +154,16 @@ export function KidsQRModal({
   );
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">{joinDot("Kids", `${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time)}</div>
-          <div className="modal-title">{kidsClass.name}</div>
-          <div className="modal-sub">QR Code próprio desta turma neste culto. O responsável escaneia, escolhe o filho e confirma o check-in ou pede a retirada.</div>
-          <div className="ck-tabs">
-            <Acao className={`ck-tab ${tab === "qr" ? "on" : ""}`} onClick={() => setTab("qr")}>QR Code</Acao>
-            <Acao className={`ck-tab ${tab === "sala" ? "on" : ""}`} onClick={() => setTab("sala")}>Quem está na sala · {present.length}{pending.length > 0 ? ` · ${plural(pending.length, "retirada")}` : ""}</Acao>
-          </div>
-        </div>
-
-        <div className="modal-body" style={{ display: "block" }}>
+    <Janela larga
+      sobretitulo={joinDot("Kids", `${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time)}
+      titulo={kidsClass.name}
+      texto="QR Code próprio desta turma neste culto. O responsável escaneia, escolhe o filho e confirma o check-in ou pede a retirada."
+      aoFechar={onClose} corpoBloco
+      cabecalho={
+        <Abas rotulo="Partes do check-in" ativa={tab} aoMudar={(v) => setTab(v as typeof tab)}
+          abas={[{ id: "qr", rotulo: "QR Code" }, { id: "sala", rotulo: `Quem está na sala${pending.length > 0 ? ` · ${plural(pending.length, "retirada")}` : ""}`, contador: present.length }]} />
+      }
+      rodape={<Botao variante="principal" onClick={onClose}>Concluído</Botao>}>
           {tab === "qr" && (
             <div className="ck-qr-wrap">
               <div className={`ck-qr ${!qrActive ? "off" : ""}`}>
@@ -238,12 +236,6 @@ export function KidsQRModal({
               ))}
             </div>
           )}
-        </div>
-
-        <div className="modal-foot">
-          <Botao variante="principal" onClick={onClose}>Concluído</Botao>
-        </div>
-      </div>
-    </div>
+    </Janela>
   );
 }

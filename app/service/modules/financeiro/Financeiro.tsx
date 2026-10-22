@@ -24,9 +24,12 @@ import { ContaForm, LancamentoForm, OfertaForm, TransferenciaForm } from "./Form
 import { APagar, CampanhaForm, ContaFixaForm, FechamentoMes, Planejamento } from "./Fase2";
 import type { Campanha, ContaFixa } from "./dados";
 
-import { Botao, BotaoIcone, botaoClasse } from "../../ui/Botao";
+import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Abas } from "../../ui/Abas";
+import { Janela } from "../../ui/Janela";
+import { MenuAcoes } from "../../ui/Menu";
 import { Cartao } from "../../ui/Cartao";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Segmentado } from "../../ui/Segmentado";
@@ -132,24 +135,22 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
         action={podeLancar && aba === "movimento" ? (
           <div className="fin-acoes">
             <Botao variante="principal" onClick={() => setTela({ k: "entrada" })}><Icon name="add" size={14} /> Lançar entrada</Botao>
-            <details className="fin-mais">
-              <summary className={botaoClasse({})}>Outras operações</summary>
-              <div className="fin-mais-menu">
-                <Botao onClick={() => setTela({ k: "despesa" })}>Lançar despesa</Botao>
-                <Botao onClick={() => setTela({ k: "oferta" })}>Contar oferta</Botao>
-                <Botao onClick={() => setTela({ k: "transferencia" })}>Transferir entre contas</Botao>
-              </div>
-            </details>
+            <MenuAcoes rotulo="Outras operações" itens={[
+              { rotulo: "Lançar despesa", onClick: () => setTela({ k: "despesa" }) },
+              { rotulo: "Contar oferta", onClick: () => setTela({ k: "oferta" }) },
+              { rotulo: "Transferir entre contas", onClick: () => setTela({ k: "transferencia" }) },
+            ]} />
           </div>
         ) : undefined} />
 
       <div className="toolbar fin-abas">
-        <Segmentado role="tablist" aria-label="Seções do financeiro">
-          <Opcao role="tab" aria-selected={aba === "movimento"} marcada={aba === "movimento"} onClick={() => setAba("movimento")}>Movimento</Opcao>
-          <Opcao role="tab" aria-selected={aba === "planejamento"} marcada={aba === "planejamento"} onClick={() => setAba("planejamento")}>Contas fixas e campanhas</Opcao>
-          <Opcao role="tab" aria-selected={aba === "fechamento"} marcada={aba === "fechamento"} onClick={() => setAba("fechamento")}>Fechamento</Opcao>
-          <Opcao role="tab" aria-selected={aba === "cadastros"} marcada={aba === "cadastros"} onClick={() => setAba("cadastros")}>Contas e categorias</Opcao>
-        </Segmentado>
+        <Abas rotulo="Seções do financeiro" ativa={aba} aoMudar={(v) => setAba(v as typeof aba)}
+          abas={[
+            { id: "movimento", rotulo: "Movimento" },
+            { id: "planejamento", rotulo: "Contas fixas e campanhas" },
+            { id: "fechamento", rotulo: "Fechamento" },
+            { id: "cadastros", rotulo: "Contas e categorias" },
+          ]} />
         {(aba === "movimento" || aba === "fechamento") && (
           <div className="fin-mes" role="group" aria-label="Mês">
             <BotaoIcone className="fin-mes-b" rotulo="Mês anterior" onClick={() => setMes(somaMes(mes, -1))}><Icon name="voltar" size={15} /></BotaoIcone>
@@ -286,18 +287,13 @@ function OfertaDetalhe({ l, onClose, onExcluida }: { l: Lancamento; onClose: () 
     onExcluida();
   };
   return (
-    <div className="modal-bg" onClick={onClose} role="presentation">
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="fin-of-t" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}>
-        <div className="modal-head"><div><div className="modal-eyebrow">Contagem de oferta</div><div className="modal-title" id="fin-of-t">{l.description}</div></div></div>
-        <div className="modal-body">
-          <p className="fs-note" style={{ marginTop: 0 }}>Este valor veio da contagem de {formatDateBR(l.occurred_on)}. Para corrigir, exclua a contagem inteira (todas as formas de pagamento dela) e conte de novo.</p>
-        </div>
-        <div className="modal-foot">
-          <Botao onClick={onClose} autoFocus>Fechar</Botao>
-          <Botao variante="perigo" desativado={indo} onClick={excluir}>{indo ? "Excluindo…" : "Excluir contagem"}</Botao>
-        </div>
-      </div>
-    </div>
+    <Janela sobretitulo="Contagem de oferta" titulo={l.description} aoFechar={onClose}
+      rodape={<>
+        <Botao onClick={onClose} autoFocus>Fechar</Botao>
+        <Botao variante="perigo" desativado={indo} onClick={excluir}>{indo ? "Excluindo…" : "Excluir contagem"}</Botao>
+      </>}>
+      <p className="fs-note" style={{ marginTop: 0 }}>Este valor veio da contagem de {formatDateBR(l.occurred_on)}. Para corrigir, exclua a contagem inteira (todas as formas de pagamento dela) e conte de novo.</p>
+    </Janela>
   );
 }
 

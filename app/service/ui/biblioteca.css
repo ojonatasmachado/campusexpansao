@@ -421,3 +421,4 @@ body:has(.m-tab) .toast-acao { min-height: 44px; }
 /* com a barra de salvar à vista, o aviso sobe acima dela */
 body:has(.barra-salvar.on) .toast-host { bottom: calc(96px + var(--safe-bottom)); transition: bottom .5s var(--ease-drawer); }
 body:has(.m-tab):has(.barra-salvar.on) .toast-host { bottom: calc(156px + var(--safe-bottom)); }
+.modal-bg.janela-acima { z-index: 80; }

@@ -12,6 +12,8 @@ import { useTermos } from "./lib/vocabulario-context";
 
 import { Botao } from "./ui/Botao";
 import { Acao } from "./ui/Acao";
+import { Abas } from "./ui/Abas";
+import { Janela } from "./ui/Janela";
 import { Vazio } from "./ui/Estados";
 import { confirmar } from "./ui/confirmar";
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
@@ -157,7 +159,7 @@ export function CheckinLanding({
 
   return (
     <div
-      className="modal-bg"
+      className="modal-bg" /* lei17-ok: tela cheia de resultado do check-in */
       style={{ zIndex: 110, borderRadius: 0 }}
       onClick={onDone}
     >
@@ -242,16 +244,9 @@ function ManualCheckinModal({
   );
 
   return (
-    <div className="modal-bg" style={{ zIndex: 80 }} onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Registro manual</div>
-          <div className="modal-title">Quem está presente</div>
-          <div className="modal-sub">
-            Para quem chegou sem escanear. Entra na presença com marca de registro manual.
-          </div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
+    <Janela acima sobretitulo="Registro manual" titulo="Quem está presente"
+      texto="Para quem chegou sem escanear. Entra na presença com marca de registro manual."
+      aoFechar={onClose} corpoBloco rodape={<Botao onClick={onClose}>Fechar</Botao>}>
           <div className="tb-search" style={{ marginBottom: 12 }}>
             <span className="si" aria-hidden="true"><Icon name="buscar" size={14} /></span>
             <input
@@ -292,14 +287,7 @@ function ManualCheckinModal({
               </div>
             );
           })}
-        </div>
-        <div className="modal-foot">
-          <Botao onClick={onClose}>
-            Fechar
-          </Botao>
-        </div>
-      </div>
-    </div>
+    </Janela>
   );
 }
 
@@ -582,33 +570,16 @@ export function QRCheckinModal({
 
   return (
     <>
-      <div className="modal-bg" onClick={onClose}>
-        <div className="modal wide" onClick={(e) => e.stopPropagation()}>
-          <div className="modal-head">
-            <div className="modal-eyebrow">
-              {joinDot("Check-in", `${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time)}
-            </div>
-            <div className="modal-title">{event.name}</div>
-            <div className="modal-sub">
-              {ct("QR Code único deste evento. Os {voluntarios} escaneiam e confirmam presença pela própria conta. Você acompanha em tempo real.")}
-            </div>
-            <div className="ck-tabs">
-              <Acao
-                className={`ck-tab ${tab === "qr" ? "on" : ""}`}
-                onClick={() => setTab("qr")}
-              >
-                QR Code
-              </Acao>
-              <Acao
-                className={`ck-tab ${tab === "presenca" ? "on" : ""}`}
-                onClick={() => setTab("presenca")}
-              >
-                Presença ao vivo · {presentes}
-              </Acao>
-            </div>
-          </div>
-
-          <div className="modal-body" style={{ display: "block" }}>
+      <Janela larga
+        sobretitulo={joinDot("Check-in", `${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time)}
+        titulo={event.name}
+        texto={ct("QR Code único deste evento. Os {voluntarios} escaneiam e confirmam presença pela própria conta. Você acompanha em tempo real.")}
+        aoFechar={onClose} corpoBloco
+        cabecalho={
+          <Abas rotulo="Partes do check-in" ativa={tab} aoMudar={(v) => setTab(v as typeof tab)}
+            abas={[{ id: "qr", rotulo: "QR Code" }, { id: "presenca", rotulo: "Presença ao vivo", contador: presentes }]} />
+        }
+        rodape={<Botao variante="principal" onClick={onClose}>Concluído</Botao>}>
             {tab === "qr" && (
               <div className="ck-qr-wrap">
                 <div className={`ck-qr ${!qrActive ? "off" : ""}`}>
@@ -715,15 +686,7 @@ export function QRCheckinModal({
                 </Botao>
               </div>
             )}
-          </div>
-
-          <div className="modal-foot">
-            <Botao variante="principal" onClick={onClose}>
-              Concluído
-            </Botao>
-          </div>
-        </div>
-      </div>
+      </Janela>
 
       {showManual && (
         <ManualCheckinModal

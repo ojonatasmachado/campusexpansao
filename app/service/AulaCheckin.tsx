@@ -9,7 +9,8 @@ import { createServiceBrowserClient } from "./lib/supabase-browser";
 import ChurchLockup from "./ChurchLockup";
 
 import { Botao, BotaoIcone } from "./ui/Botao";
-import { Acao } from "./ui/Acao";
+import { Abas } from "./ui/Abas";
+import { Janela } from "./ui/Janela";
 import { Vazio } from "./ui/Estados";
 import { confirmar } from "./ui/confirmar";
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
@@ -125,7 +126,7 @@ export function AulaCheckinLanding({
   }
 
   return (
-    <div className="modal-bg" style={{ zIndex: 110, borderRadius: 0 }} onClick={onDone}>
+    <div /* lei17-ok: tela cheia de resultado do check-in */ className="modal-bg" style={{ zIndex: 110, borderRadius: 0 }} onClick={onDone}>
       <div className="ck-land" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }} onClick={(e) => e.stopPropagation()}>
         <div className="ck-land-card">
           <div className="ck-land-logo">
@@ -173,14 +174,8 @@ function ManualAulaCheckinModal({
   );
 
   return (
-    <div className="modal-bg" style={{ zIndex: 80 }} onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Registro manual</div>
-          <div className="modal-title">Quem está presente</div>
-          <div className="modal-sub">Para quem chegou sem escanear. Só matriculados no curso.</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
+    <Janela acima sobretitulo="Registro manual" titulo="Quem está presente" texto="Para quem chegou sem escanear. Só matriculados no curso."
+      aoFechar={onClose} corpoBloco rodape={<Botao onClick={onClose}>Fechar</Botao>}>
           <div className="tb-search" style={{ marginBottom: 12 }}>
             <span className="si" aria-hidden="true"><Icon name="buscar" size={14} /></span>
             <input placeholder="Buscar matriculado..." value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
@@ -195,12 +190,7 @@ function ManualAulaCheckinModal({
               <span style={{ marginLeft: "auto", color: "var(--muted)" }}>→</span>
             </div>
           ))}
-        </div>
-        <div className="modal-foot">
-          <Botao onClick={onClose}>Fechar</Botao>
-        </div>
-      </div>
-    </div>
+    </Janela>
   );
 }
 
@@ -388,21 +378,14 @@ export function AulaCheckinModal({
 
   return (
     <>
-      <div className="modal-bg" onClick={onClose}>
-        <div className="modal wide" onClick={(e) => e.stopPropagation()}>
-          <div className="modal-head">
-            <div className="modal-eyebrow">Check-in de aula</div>
-            <div className="modal-title">{lesson.name}</div>
-            <div className="modal-sub">
-              QR Code único desta aula. Só quem está matriculado no curso confirma presença.
-            </div>
-            <div className="ck-tabs">
-              <Acao className={`ck-tab ${tab === "qr" ? "on" : ""}`} onClick={() => setTab("qr")}>QR Code</Acao>
-              <Acao className={`ck-tab ${tab === "presenca" ? "on" : ""}`} onClick={() => setTab("presenca")}>Presença ao vivo · {presentes}</Acao>
-            </div>
-          </div>
-
-          <div className="modal-body" style={{ display: "block" }}>
+      <Janela larga sobretitulo="Check-in de aula" titulo={lesson.name}
+        texto="QR Code único desta aula. Só quem está matriculado no curso confirma presença."
+        aoFechar={onClose} corpoBloco
+        cabecalho={
+          <Abas rotulo="Partes do check-in" ativa={tab} aoMudar={(v) => setTab(v as typeof tab)}
+            abas={[{ id: "qr", rotulo: "QR Code" }, { id: "presenca", rotulo: "Presença ao vivo", contador: presentes }]} />
+        }
+        rodape={<Botao variante="principal" onClick={onClose}>Concluído</Botao>}>
             {tab === "qr" && (
               <div className="ck-qr-wrap">
                 <div className={`ck-qr ${!qrActive ? "off" : ""}`}>
@@ -485,13 +468,7 @@ export function AulaCheckinModal({
                 </Botao>
               </div>
             )}
-          </div>
-
-          <div className="modal-foot">
-            <Botao variante="principal" onClick={onClose}>Concluído</Botao>
-          </div>
-        </div>
-      </div>
+      </Janela>
 
       {showManual && (
         <ManualAulaCheckinModal

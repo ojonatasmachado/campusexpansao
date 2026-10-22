@@ -12,6 +12,7 @@ import { requirementsFor, requirementLabel } from "./lib/requirements";
 import { useTermos } from "./lib/vocabulario-context";
 
 import { Botao, BotaoIcone } from "./ui/Botao";
+import { Janela, Gaveta } from "./ui/Janela";
 import { Selo } from "./ui/Selo";
 import { Vazio } from "./ui/Estados";
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
@@ -98,13 +99,8 @@ function MatricularModal({
   );
 
   return (
-    <div className="modal-bg" style={{ zIndex: 80 }} onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Matrícula</div>
-          <div className="modal-title">Quem vai entrar no curso</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
+    <Janela acima sobretitulo="Matrícula" titulo="Quem vai entrar no curso" aoFechar={onClose} corpoBloco
+      rodape={<Botao onClick={onClose}>Fechar</Botao>}>
           <div className="tb-search" style={{ marginBottom: 12 }}>
             <span className="si" aria-hidden="true"><Icon name="buscar" size={14} /></span>
             <input
@@ -131,12 +127,7 @@ function MatricularModal({
               <span style={{ marginLeft: "auto", color: "var(--muted)" }}>→</span>
             </div>
           ))}
-        </div>
-        <div className="modal-foot">
-          <Botao onClick={onClose}>Fechar</Botao>
-        </div>
-      </div>
-    </div>
+    </Janela>
   );
 }
 
@@ -188,8 +179,7 @@ export default function CursoDrawer({
 
   return (
     <>
-      <div className="drawer-bg" onClick={onClose} />
-      <div className="drawer drawer-wide">
+      <Gaveta aoFechar={onClose} larga rotulo={course.name}>
         <div className="drawer-head">
           <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
           <div className="ph-eyebrow">
@@ -319,7 +309,7 @@ export default function CursoDrawer({
             <Botao onClick={onClose}>Fechar</Botao>
           </div>
         </div>
-      </div>
+      </Gaveta>
 
       {showMatricular && (
         <MatricularModal

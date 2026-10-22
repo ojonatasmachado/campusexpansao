@@ -60,7 +60,7 @@ export default function TopUserMenu({
         <span className="top-user-name">{parts[0]}</span>
       </Acao>
       {open && (
-        <div className="top-user-pop" role="menu">
+        <div className="top-user-pop" /* lei17-ok: menu do usuário com cabeçalho, link e tema */ role="menu">
           <div className="top-user-head">
             <b>{name}</b>
             <small>{roleLabel}</small>

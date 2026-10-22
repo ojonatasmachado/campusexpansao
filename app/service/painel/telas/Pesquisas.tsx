@@ -17,6 +17,7 @@ import { Cartao } from "../../ui/Cartao";
 import { Linha } from "../../ui/Linha";
 import { Campo, Entrada, Marcar } from "../../ui/Campo";
 import { Carregando, Vazio } from "../../ui/Estados";
+import { Janela } from "../../ui/Janela";
 export const novaPesquisaDraft = (): PesquisaDraft => ({
   id: `nova-${Date.now()}`,
   nome: "",
@@ -285,25 +286,17 @@ export function PesquisasView({ organizationId, ministries }: { organizationId: 
         ))}
       </div>
       {toDelete && (
-        <div className="modal-bg" onClick={() => setToDelete(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <div className="modal-title">Excluir &ldquo;{toDelete.nome}&rdquo;?</div>
-              <div className="modal-sub">Remove a pesquisa, as perguntas e todas as respostas já recebidas. Não pode ser desfeito.</div>
-            </div>
-            <div className="modal-body">
-              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                <Botao onClick={() => setToDelete(null)}>Cancelar</Botao>
-                <Botao
-                  variante="perigo"
-                  onClick={async () => { try { await deletePesquisaRemota(toDelete.id); setToDelete(null); await carregar(); } catch (err) { console.error(err); } }}
-                >
-                  Excluir pesquisa
-                </Botao>
-              </div>
-            </div>
+        <Janela titulo={<>Excluir &ldquo;{toDelete.nome}&rdquo;?</>} texto="Remove a pesquisa, as perguntas e todas as respostas já recebidas. Não pode ser desfeito." aoFechar={() => setToDelete(null)}>
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+            <Botao onClick={() => setToDelete(null)}>Cancelar</Botao>
+            <Botao
+              variante="perigo"
+              onClick={async () => { try { await deletePesquisaRemota(toDelete.id); setToDelete(null); await carregar(); } catch (err) { console.error(err); } }}
+            >
+              Excluir pesquisa
+            </Botao>
           </div>
-        </div>
+        </Janela>
       )}
     </div>
   );

@@ -13,6 +13,7 @@ import { anteriorDe, comparacao, etapasDaCaminhada, numerosDaBase, numerosDoPeri
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Janela } from "../../ui/Janela";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Segmentado } from "../../ui/Segmentado";
 import { Contagem } from "../../ui/Contagem";
@@ -106,22 +107,14 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, podeAbrirPessoa = () => 
       </Botao>
 
       {lista && (
-        <div className="modal-bg" onClick={() => setLista(null)}>
-          <div className="modal" role="dialog" aria-label={ct(lista.rotulo)} onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <div className="modal-title">{ct(lista.rotulo)}</div>
-              <div className="modal-sub">{lista.itens.length === 1 ? "1 pessoa" : `${lista.itens.length} pessoas`}</div>
-            </div>
-            <div className="modal-body" style={{ display: "block" }}>
+        <Janela titulo={ct(lista.rotulo)} texto={lista.itens.length === 1 ? "1 pessoa" : `${lista.itens.length} pessoas`} aoFechar={() => setLista(null)} corpoBloco
+          rodape={<Botao variante="principal" onClick={() => setLista(null)}>Fechar</Botao>}>
               {[...lista.itens].sort((a, b) => a.nome.localeCompare(b.nome)).map((it) => podeAbrirPessoa(it) ? (
                 <Acao key={`${it.tipo}-${it.id}`} className={`${linhaClasse({})} click`} onClick={() => { setLista(null); onAbrir(it); }}>
                   <div className="mini-main"><div className="mini-title">{it.nome}</div></div>
                 </Acao>
               ) : <Linha key={`${it.tipo}-${it.id}`}><div className="mini-main"><div className="mini-title">{it.nome}</div></div></Linha>)}
-            </div>
-            <div className="modal-foot"><Botao variante="principal" onClick={() => setLista(null)}>Fechar</Botao></div>
-          </div>
-        </div>
+        </Janela>
       )}
     </section>
   );

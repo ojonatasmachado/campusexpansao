@@ -68,6 +68,18 @@ const REGRAS: Regra[] = [
     permitido: "app/service/ui/",
     re: /(?<![.\w])(?:window\.)?confirm\(/g,
   },
+  {
+    peca: "Janela, gaveta, folha ou barra de salvar",
+    usar: "Janela, Gaveta, Folha ou BarraSalvar de app/service/ui/ (peça própria de verdade: marque a linha com /* lei17-ok: motivo */)",
+    permitido: "app/service/ui/",
+    re: /className=\{?["'`](?:modal-bg|drawer-bg|m6-scrim|save-bar)(?=[\s"'`$])/g,
+  },
+  {
+    peca: "Menu ou abas",
+    usar: "MenuAcoes ou Abas de app/service/ui/ (peça própria de verdade: marque a linha com /* lei17-ok: motivo */)",
+    permitido: "app/service/ui/",
+    re: /role=["'](?:menu|tablist)["']/g,
+  },
 ];
 
 const PASTAS = ["app/service", "app/[slug]"].map((p) => join(RAIZ, p));
@@ -77,8 +89,10 @@ for (const regra of REGRAS) {
     const rel = relative(RAIZ, arq);
     if (rel.startsWith(regra.permitido)) continue;
     const src = readFileSync(arq, "utf8");
+    const linhas = src.split("\n");
     for (const m of src.matchAll(regra.re)) {
       const linha = src.slice(0, m.index).split("\n").length;
+      if (linhas[linha - 1].includes("lei17-ok")) continue;
       console.error(`${rel}:${linha}  ${regra.peca} escrito à mão. Use ${regra.usar}.`);
       falhas++;
     }

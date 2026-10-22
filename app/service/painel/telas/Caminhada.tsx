@@ -15,6 +15,7 @@ import type { BaptismCandidateView, BaptismClassView, ChurchView, DecisionView, 
 
 import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
 import { Selo, tomDaClasse } from "../../ui/Selo";
+import { Janela } from "../../ui/Janela";
 export function DecisaoDrawer({
   decision, people, members, church, timelineEvents, onClose, onOpenMember,
 }: {
@@ -127,35 +128,25 @@ export function AddCandidatoModal({
   };
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Adicionar candidato</div>
-          <div className="modal-title">{classData.label}</div>
-          <div className="modal-sub">Escolha quem será batizado nesta turma.</div>
-        </div>
-        <div className="modal-body" style={{ display: "block", maxHeight: 360, overflowY: "auto" }}>
-          <div className="tb-search" style={{ marginBottom: 12 }}>
-            <span className="si"><Icon name="buscar" size={13} /></span>
-            <input placeholder="Buscar membro…" value={q} onChange={(e) => setQ(e.target.value)} />
-          </div>
-          {available.map((m) => (
-            <div className="flag-row" key={m.id} style={{ cursor: "pointer" }} onClick={() => addCandidate(m.id)}>
-              <Av name={m.name} size="sm" />
-              <div className="flag-main">
-                <div className="flag-nome">{m.name}</div>
-                <div className="flag-meta">{m.neighborhood || "Membro"}</div>
-              </div>
-              <span className={botaoClasse({ variante: "discreto", compacto: true })}>{saving === m.id ? "…" : "Adicionar"}</span>
-            </div>
-          ))}
-          {available.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", padding: "16px 0" }}>Nenhum membro disponível.</div>}
-        </div>
-        <div className="modal-foot">
+    <Janela sobretitulo="Adicionar candidato" titulo={classData.label} texto="Escolha quem será batizado nesta turma." aoFechar={onClose} corpoBloco corpoStyle={{ maxHeight: 360, overflowY: "auto" }} rodape={<>
           <Botao variante="principal" onClick={onClose}>Concluído</Botao>
-        </div>
+      </>}>
+      <div className="tb-search" style={{ marginBottom: 12 }}>
+        <span className="si"><Icon name="buscar" size={13} /></span>
+        <input placeholder="Buscar membro…" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
-    </div>
+      {available.map((m) => (
+        <div className="flag-row" key={m.id} style={{ cursor: "pointer" }} onClick={() => addCandidate(m.id)}>
+          <Av name={m.name} size="sm" />
+          <div className="flag-main">
+            <div className="flag-nome">{m.name}</div>
+            <div className="flag-meta">{m.neighborhood || "Membro"}</div>
+          </div>
+          <span className={botaoClasse({ variante: "discreto", compacto: true })}>{saving === m.id ? "…" : "Adicionar"}</span>
+        </div>
+      ))}
+      {available.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", padding: "16px 0" }}>Nenhum membro disponível.</div>}
+    </Janela>
   );
 }
 

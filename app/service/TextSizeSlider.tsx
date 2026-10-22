@@ -91,7 +91,7 @@ export function TextSizeSlider({ previa = true }: { previa?: boolean }) {
     o controle não se mexe durante a troca, só a prévia e o conteúdo atrás. */
 export function TextSizeSheet({ onClose }: { onClose: () => void }) {
   return (
-    <div className="m6-scrim ts-scrim" onClick={onClose}>
+    <div /* lei17-ok: folha de tamanho do texto com prévia ao vivo */ className="m6-scrim ts-scrim" onClick={onClose}>
       <div className="m6-sheet ts-sheet" role="dialog" aria-modal="true" aria-label="Tamanho do texto" onClick={(e) => e.stopPropagation()}>
         <div className="m6-grab" />
         <div className="ts-head">

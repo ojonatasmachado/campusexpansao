@@ -23,6 +23,7 @@ import { Segmentado } from "../../ui/Segmentado";
 import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
 import { Vazio } from "../../ui/Estados";
+import { Janela } from "../../ui/Janela";
 /* cor de destaque por tema + quem além do master pode editar, guardado em
    service.churches.settings.brandCfg (mesmo jsonb de sempre). Permite que
    cada igreja pareça uma ferramenta própria dela (logo + nome + cor), não
@@ -218,31 +219,22 @@ export function ContatoCfgModal({ church, cfg, onClose, onRefresh }: { church: C
   };
 
   return (
-    <div className="modal-bg" onClick={saving ? undefined : onClose}>
-      <div className="modal wide" role="dialog" aria-modal="true" aria-labelledby={`${fid}-titulo`} aria-busy={saving} onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Líder da integração</div>
-          <div className="modal-title" id={`${fid}-titulo`}>Como acolhemos quem chega</div>
-          <div className="modal-sub">Defina o prazo e a abordagem do primeiro contato. Fica claro para a equipe e deixa visível quanto tempo leva para integrar.</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
-          <Campo rotulo="Prazo do 1º contato (horas)" className="field-half"><Entrada id={`${fid}-prazo`} type="number" min={1} step={1} value={prazoHoras} onChange={(e) => setPrazoHoras(+e.target.value)} /></Campo>
-          <Campo rotulo="Canal" className="field-half">
-            <Selecao id={`${fid}-canal`} valor={canal} aoMudar={setCanal} opcoes={["WhatsApp", "Ligação", "Mensagem", "Presencial"].map((o) => ({ v: o, l: o }))} />
-          </Campo>
-          <Campo rotulo="Meta de integração (dias)" className="field-half"><Entrada id={`${fid}-meta`} type="number" min={1} step={1} value={metaIntegracaoDias} onChange={(e) => setMetaIntegracaoDias(+e.target.value)} /></Campo>
-          <Campo rotulo="Mensagem padrão" ajuda={<>Use {"{nome}"}, {"{evento}"} e {"{igreja}"}: preenchemos automaticamente.</>}>
-            <TextoLongo id={`${fid}-mensagem`} value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
-          </Campo>
-          <Campo rotulo="Abordagem / postura"><TextoLongo id={`${fid}-abordagem`} value={abordagem} onChange={(e) => setAbordagem(e.target.value)} /></Campo>
-        </div>
-        {!valoresValidos && <p className="fs-error" role="alert">Informe horas e dias como números inteiros maiores que zero.</p>}
-        {erro && <p className="fs-error" role="alert">{erro}</p>}
-        <div className="modal-foot">
-          <Botao desativado={saving} onClick={onClose}>Cancelar</Botao>
-          <Botao variante="principal" desativado={saving || !valoresValidos} onClick={salvar}>{saving ? "Salvando..." : "Salvar"}</Botao>
-        </div>
-      </div>
-    </div>
+    <Janela larga sobretitulo="Líder da integração" titulo="Como acolhemos quem chega" texto="Defina o prazo e a abordagem do primeiro contato. Fica claro para a equipe e deixa visível quanto tempo leva para integrar." aoFechar={onClose} ocupada={saving} corpoBloco
+      rodape={<>
+        <Botao desativado={saving} onClick={onClose}>Cancelar</Botao>
+        <Botao variante="principal" desativado={saving || !valoresValidos} onClick={salvar}>{saving ? "Salvando..." : "Salvar"}</Botao>
+      </>}>
+      <Campo rotulo="Prazo do 1º contato (horas)" className="field-half"><Entrada id={`${fid}-prazo`} type="number" min={1} step={1} value={prazoHoras} onChange={(e) => setPrazoHoras(+e.target.value)} /></Campo>
+      <Campo rotulo="Canal" className="field-half">
+        <Selecao id={`${fid}-canal`} valor={canal} aoMudar={setCanal} opcoes={["WhatsApp", "Ligação", "Mensagem", "Presencial"].map((o) => ({ v: o, l: o }))} />
+      </Campo>
+      <Campo rotulo="Meta de integração (dias)" className="field-half"><Entrada id={`${fid}-meta`} type="number" min={1} step={1} value={metaIntegracaoDias} onChange={(e) => setMetaIntegracaoDias(+e.target.value)} /></Campo>
+      <Campo rotulo="Mensagem padrão" ajuda={<>Use {"{nome}"}, {"{evento}"} e {"{igreja}"}: preenchemos automaticamente.</>}>
+        <TextoLongo id={`${fid}-mensagem`} value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
+      </Campo>
+      <Campo rotulo="Abordagem / postura"><TextoLongo id={`${fid}-abordagem`} value={abordagem} onChange={(e) => setAbordagem(e.target.value)} /></Campo>
+      {!valoresValidos && <p className="fs-error" role="alert">Informe horas e dias como números inteiros maiores que zero.</p>}
+      {erro && <p className="fs-error" role="alert">{erro}</p>}
+    </Janela>
   );
 }
