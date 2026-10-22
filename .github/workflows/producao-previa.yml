@@ -1,0 +1,30 @@
+# Prévia do workflow Produção: em PR para o main que traz migração, lista o que
+# o db push aplicaria em produção, sem aplicar nada (--dry-run). Confere também
+# que o segredo SUPABASE_DB_URL conecta. Detalhes: docs/service-v7/MIGRACOES.md
+name: Produção · prévia
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+      - ".github/workflows/producao*.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  pendentes:
+    name: Migrações que vão para produção
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.109.1
+      - name: Dry-run em produção
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          [ -n "$SUPABASE_DB_URL" ] || { echo "::error::Falta o segredo SUPABASE_DB_URL"; exit 1; }
+          supabase db push --db-url "$SUPABASE_DB_URL" --dry-run
