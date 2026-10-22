@@ -367,6 +367,7 @@ export function Painel({
           dados={{ membros: members, pessoas: people, times: ministries, visitantes: visitors, decisoes: decisions, fatos: timelineEvents, matriculas: enrollments }}
           etapas={JRN_STEPS}
           extras={cuidado ? [{ id: "ausentes", rotulo: `Sem registro há ${plural(cuidado.semanas, "semana")} ou mais`, valor: cuidado.todos.length, itens: cuidado.todos.map((a) => (a.memberId ? { tipo: "member" as const, id: a.memberId, nome: a.nome } : { tipo: "person" as const, id: a.personId, nome: a.nome })) }] : []}
+          podeAbrirPessoa={(it) => podeAbrir(it.tipo === "member" ? "membros" : "pessoas")}
           onAbrir={(it) => setDrawer({ kind: it.tipo, id: it.id })}
         />
       )}
@@ -406,7 +407,7 @@ export function Painel({
       {gestao && <NovosCadastros />}
       {cuidado && (cuidado.lista.length > 0 || (cuidado.criancas?.length ?? 0) > 0) && (
         <div style={{ marginBottom: 20 }}>
-          <ListaDeCuidado lista={cuidado.lista} criancas={cuidado.criancas} semanas={cuidado.semanas} onAbrir={(a) => setDrawer(a.memberId ? { kind: "member", id: a.memberId } : { kind: "person", id: a.personId })} />
+          <ListaDeCuidado podeAbrirPessoa={(a) => podeAbrir(a.memberId ? "membros" : "pessoas")} lista={cuidado.lista} criancas={cuidado.criancas} semanas={cuidado.semanas} onAbrir={(a) => setDrawer(a.memberId ? { kind: "member", id: a.memberId } : { kind: "person", id: a.personId })} />
         </div>
       )}
       {aniversarios}

@@ -1,0 +1,199 @@
+[
+  {
+    "case": "lider-negado",
+    "active": "Início",
+    "unavailable": false,
+    "birthdayEntry": true,
+    "menu": [
+      "Início",
+      "Crianças",
+      "Cultos e eventos",
+      "Mural",
+      "Conversas",
+      "Relatórios"
+    ],
+    "searches": [
+      {
+        "query": "Ana",
+        "results": [],
+        "empty": "Nada encontrado para \"Ana\"."
+      },
+      {
+        "query": "Louvor",
+        "results": [],
+        "empty": "Nada encontrado para \"Louvor\"."
+      },
+      {
+        "query": "Vocal",
+        "results": [],
+        "empty": "Nada encontrado para \"Vocal\"."
+      }
+    ]
+  },
+  {
+    "case": "master-permitido",
+    "active": "Início",
+    "unavailable": false,
+    "birthdayEntry": true,
+    "menu": [
+      "Início",
+      "Pessoas",
+      "Visitantes",
+      "Mapa da igreja",
+      "Crianças",
+      "Grupos",
+      "Times",
+      "Escalas17",
+      "Cultos e eventos",
+      "Mural",
+      "Conversas",
+      "Cursos e trilhas",
+      "Relatórios",
+      "Financeiro",
+      "Configurações"
+    ],
+    "searches": [
+      {
+        "query": "Ana",
+        "results": [
+          "Ana LimamembroMembro",
+          "Ana LimalouvorVoluntário"
+        ]
+      },
+      {
+        "query": "Louvor",
+        "results": [
+          "Louvor2 voluntáriosTime"
+        ]
+      }
+    ]
+  },
+  {
+    "case": "lider-escopo",
+    "active": "Início",
+    "unavailable": false,
+    "birthdayEntry": true,
+    "menu": [
+      "Início",
+      "Pessoas",
+      "Crianças",
+      "Cultos e eventos",
+      "Mural",
+      "Conversas",
+      "Relatórios"
+    ],
+    "searches": [
+      {
+        "query": "Ana",
+        "results": [
+          "Ana LimamembroMembro",
+          "Ana LimalouvorVoluntário"
+        ]
+      },
+      {
+        "query": "Eduarda",
+        "results": [],
+        "empty": "Nada encontrado para \"Eduarda\"."
+      }
+    ]
+  },
+  {
+    "case": "modulo-times-off",
+    "active": "Início",
+    "unavailable": false,
+    "birthdayEntry": true,
+    "menu": [
+      "Início",
+      "Pessoas",
+      "Visitantes",
+      "Mapa da igreja",
+      "Crianças",
+      "Grupos",
+      "Cultos e eventos",
+      "Mural",
+      "Conversas",
+      "Cursos e trilhas",
+      "Relatórios",
+      "Financeiro",
+      "Configurações"
+    ],
+    "searches": [
+      {
+        "query": "Louvor",
+        "results": [],
+        "empty": "Nada encontrado para \"Louvor\"."
+      },
+      {
+        "query": "Vocal",
+        "results": [],
+        "empty": "Nada encontrado para \"Vocal\"."
+      }
+    ]
+  },
+  {
+    "case": "modulo-pessoas-off",
+    "active": "Início",
+    "unavailable": false,
+    "birthdayEntry": true,
+    "menu": [
+      "Início",
+      "Visitantes",
+      "Mapa da igreja",
+      "Crianças",
+      "Grupos",
+      "Times",
+      "Escalas17",
+      "Cultos e eventos",
+      "Mural",
+      "Conversas",
+      "Cursos e trilhas",
+      "Relatórios",
+      "Financeiro",
+      "Configurações"
+    ],
+    "searches": [
+      {
+        "query": "Ana",
+        "results": [],
+        "empty": "Nada encontrado para \"Ana\"."
+      }
+    ]
+  },
+  {
+    "case": "membro-painel",
+    "active": "Início",
+    "unavailable": false,
+    "birthdayEntry": false,
+    "menu": [
+      "Início"
+    ],
+    "searches": [
+      {
+        "query": "Ana",
+        "results": [],
+        "empty": "Nada encontrado para \"Ana\"."
+      }
+    ]
+  },
+  {
+    "case": "pastor-inicio-negado",
+    "active": "Visitantes",
+    "unavailable": false,
+    "birthdayEntry": false,
+    "menu": [
+      "Visitantes",
+      "Mapa da igreja",
+      "Crianças",
+      "Times",
+      "Escalas17",
+      "Cultos e eventos",
+      "Mural",
+      "Conversas",
+      "Cursos e trilhas",
+      "Relatórios",
+      "Financeiro",
+      "Configurações"
+    ],
+    "searches": []
+  }
+]

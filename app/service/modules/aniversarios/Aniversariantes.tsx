@@ -68,11 +68,12 @@ function BotaoParabens({ p, onClick }: { p: Proximo; onClick: () => void }) {
 }
 
 /** Bloco do Início do painel: hoje e os próximos 7 dias. Sem ninguém, não aparece. */
-export function AniversariantesDaSemana({ base, escopo, comIdade, onAbrir, onVerMes }: {
+export function AniversariantesDaSemana({ base, escopo, comIdade, onAbrir, onVerMes, podeAbrirPessoa = () => true }: {
   base: Aniversariante[];
   escopo: Escopo;
   comIdade: boolean;
   onAbrir: Abrir;
+  podeAbrirPessoa?: (p: Aniversariante) => boolean;
   onVerMes: () => void;
 }) {
   const { todayISO } = useRelogioDaIgreja();
@@ -89,10 +90,10 @@ export function AniversariantesDaSemana({ base, escopo, comIdade, onAbrir, onVer
       <div className="panel-body flush">
         {lista.slice(0, 8).map((p) => (
           <div className="cuidado-item" key={`${p.tipo}-${p.id}`}>
-            <button type="button" className="cuidado-nome" onClick={() => onAbrir(p)}>
+            {podeAbrirPessoa(p) ? <button type="button" className="cuidado-nome" onClick={() => onAbrir(p)}>
               <span className="mini-title">{p.nome}</span>
               <span className={`mini-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{joinDot(quandoE(p), p.idade ? `faz ${p.idade} anos` : null)}</span>
-            </button>
+            </button> : <div className="cuidado-nome"><div className="mini-title">{p.nome}</div><div className={`mini-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{joinDot(quandoE(p), p.idade ? `faz ${p.idade} anos` : null)}</div></div>}
             <div className="cuidado-acoes"><BotaoParabens p={p} onClick={() => setParabens(p)} /></div>
           </div>
         ))}
@@ -107,13 +108,14 @@ export function AniversariantesDaSemana({ base, escopo, comIdade, onAbrir, onVer
 }
 
 /** Tela do mês: filtro por mês, time e grupo; CSV do que está na tela. */
-export function Aniversariantes({ base, escopo, comIdade, times, grupos, onAbrir }: {
+export function Aniversariantes({ base, escopo, comIdade, times, grupos, onAbrir, podeAbrirPessoa = () => true }: {
   base: Aniversariante[];
   escopo: Escopo;
   comIdade: boolean;
   times: Nomeado[];
   grupos: Nomeado[];
   onAbrir: Abrir;
+  podeAbrirPessoa?: (p: Aniversariante) => boolean;
 }) {
   const { todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
@@ -180,10 +182,10 @@ export function Aniversariantes({ base, escopo, comIdade, times, grupos, onAbrir
         )}
         {lista.map((p) => (
           <div className="tr" key={`${p.tipo}-${p.id}`} style={{ gridTemplateColumns: colunas }}>
-            <button type="button" className="cell-person aniv-pessoa" onClick={() => onAbrir(p)}>
+            {podeAbrirPessoa(p) ? <button type="button" className="cell-person aniv-pessoa" onClick={() => onAbrir(p)}>
               <Av name={p.nome} size="md" />
               <div><div className="cell-name">{p.nome}</div><div className={`cell-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{diaDoMes(p)}</div></div>
-            </button>
+            </button> : <div className="cell-person aniv-pessoa"><Av name={p.nome} size="md" /><div><div className="cell-name">{p.nome}</div><div className={`cell-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{diaDoMes(p)}</div></div></div>}
             <div className="cell-sub">{ondeServe(p)}</div>
             {comIdade && <div className="cell-sub aniv-idade">{p.idade ? `${p.idade} anos` : ""}</div>}
             <div className="aniv-acao"><BotaoParabens p={p} onClick={() => setParabens(p)} /></div>

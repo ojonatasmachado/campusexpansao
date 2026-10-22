@@ -53,3 +53,5 @@ J15: menu Mais agrupado pelas áreas dos manifestos, com expansão progressiva e
 Primeiro cadastro da igreja alinhado a AuthShell/login-*, com recuperação de erro e dados preservados. Revisão do primeiro acesso do membro e organização interna da Caminhada documentadas em implementacao/primeiro-acesso-revisao, distinguindo evidência anterior de inspeção nova.
 
 Acessos: menu, atalhos do Início, ajuda e montagem das telas agora usam o predicado do registro para todos os papéis. Início respeita sua linha de permissão também para liderança. Contrato e cenários em implementacao/acessos. A inspeção autenticada cobriu liderança local; cenários negados adicionais usaram fixtures.
+
+Decisão adicional de acesso: entradas indisponíveis ocultas também na busca e nos links de fichas do Início. Evidência em `implementacao/entradas-permitidas/`; a auditoria de todas as ações continua parcial.

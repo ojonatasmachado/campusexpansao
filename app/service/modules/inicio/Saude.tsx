@@ -17,12 +17,13 @@ const PRESETS: { v: Preset; l: string }[] = [
   { v: "datas", l: "Datas" },
 ];
 
-export function SaudeDaIgreja({ dados, etapas, onAbrir, extras = [] }: {
+export function SaudeDaIgreja({ dados, etapas, onAbrir, podeAbrirPessoa = () => true, extras = [] }: {
   dados: DadosSaude;
   etapas: { label: string }[];
   /* números de módulos (ex. ausentes da Lista de cuidado), no grupo "Hoje" */
   extras?: Numero[];
   onAbrir: (item: ItemPessoa) => void;
+  podeAbrirPessoa?: (item: ItemPessoa) => boolean;
 }) {
   const { todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
@@ -105,11 +106,11 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, extras = [] }: {
               <div className="modal-sub">{lista.itens.length === 1 ? "1 pessoa" : `${lista.itens.length} pessoas`}</div>
             </div>
             <div className="modal-body" style={{ display: "block" }}>
-              {[...lista.itens].sort((a, b) => a.nome.localeCompare(b.nome)).map((it) => (
+              {[...lista.itens].sort((a, b) => a.nome.localeCompare(b.nome)).map((it) => podeAbrirPessoa(it) ? (
                 <button key={`${it.tipo}-${it.id}`} type="button" className="mini-row click" onClick={() => { setLista(null); onAbrir(it); }}>
                   <div className="mini-main"><div className="mini-title">{it.nome}</div></div>
                 </button>
-              ))}
+              ) : <div className="mini-row" key={`${it.tipo}-${it.id}`}><div className="mini-main"><div className="mini-title">{it.nome}</div></div></div>)}
             </div>
             <div className="modal-foot"><button className="btn btn-pri" type="button" onClick={() => setLista(null)}>Fechar</button></div>
           </div>

@@ -19,11 +19,12 @@ const NOME_VIA: Record<string, string> = { ligacao: "ligação", mensagem: "mens
 
 export type CriancaAusente = { id: string; nome: string; ultima: string; semanas: number };
 
-export function ListaDeCuidado({ lista, criancas, semanas, onAbrir }: {
+export function ListaDeCuidado({ lista, criancas, semanas, onAbrir, podeAbrirPessoa = () => true }: {
   lista: Ausente[];
   criancas: CriancaAusente[] | null;
   semanas: number;
   onAbrir: (a: Ausente) => void;
+  podeAbrirPessoa?: (a: Ausente) => boolean;
 }) {
   const router = useRouter();
   const [visao, setVisao] = useState<"adultos" | "criancas">("adultos");
@@ -59,10 +60,11 @@ export function ListaDeCuidado({ lista, criancas, semanas, onAbrir }: {
             {lista.length === 0 && <div className="mini-row"><div className="mini-main"><div className="mini-title">Ninguém na lista</div><div className="mini-sub">Nenhuma pessoa atende aos critérios com os registros disponíveis.</div></div></div>}
             {lista.slice(0, 8).map((a) => (
               <div className="cuidado-item" key={a.personId}>
-                <button type="button" className="cuidado-nome" onClick={() => onAbrir(a)}>
+                {podeAbrirPessoa(a) ? <button type="button" className="cuidado-nome" onClick={() => onAbrir(a)}>
                   <span className="mini-title">{`${a.nome} · sem registro há ${plural(a.semanas, "semana")}`}</span>
                   <span className="mini-sub">{joinDot(`Último registro em ${formatDateBR(a.ultima)}`, `cuida: ${QUEM[a.quemCuida]}`, a.contato && `contato por ${NOME_VIA[a.contato.via] ?? a.contato.via} em ${formatDateBR(a.contato.dia)}`)}</span>
-                </button>
+                </button> : <div><div className="mini-title">{`${a.nome} · sem registro há ${plural(a.semanas, "semana")}`}</div>
+                  <div className="mini-sub">{joinDot(`Último registro em ${formatDateBR(a.ultima)}`, `cuida: ${QUEM[a.quemCuida]}`, a.contato && `contato por ${NOME_VIA[a.contato.via] ?? a.contato.via} em ${formatDateBR(a.contato.dia)}`)}</div></div>}
                 {escolhendo === a.personId ? (
                   <div className="cuidado-acoes" role="group" aria-label="Como foi o contato">
                     {VIAS.map((v) => <button key={v.v} type="button" className="btn btn-sec btn-sm" disabled={enviando === a.personId} onClick={() => registrar(a, "contato", v.v)}>{v.l}</button>)}

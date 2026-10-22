@@ -1,0 +1,48 @@
+[
+  {
+    "width": 320,
+    "requested": "dark",
+    "actual": "dark",
+    "overflow": false
+  },
+  {
+    "width": 320,
+    "requested": "light",
+    "actual": "light",
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "requested": "dark",
+    "actual": "dark",
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "requested": "light",
+    "actual": "light",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "requested": "dark",
+    "actual": "dark",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "requested": "light",
+    "actual": "light",
+    "overflow": false
+  },
+  {
+    "case": "cuidado-sem-ficha",
+    "links": 0,
+    "text": "Diego Ferreira · sem registro há 3 semanas\nÚltimo registro em 27/09/2026 · cuida: líder do grupo\nRegistrar contato\nJustificar por 30 dias"
+  },
+  {
+    "case": "saude-sem-ficha",
+    "links": 0,
+    "rows": 4
+  }
+]

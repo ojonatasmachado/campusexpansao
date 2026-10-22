@@ -59,3 +59,7 @@ Antes do envio, integrada origin/main `9fc6b50` (PR #9): workflow Produção apl
 ## Próxima investigação
 
 Revisar as pendências do Início que executam ações sem navegar (aprovar caminhada, cuidado e respostas), por módulo/papel e dependência. A correção atual cobre destinos de navegação e montagem de telas; não amplia permissões do banco nem certifica toda ação de cada módulo. Também continua pendente modernizar o teste local legado com isolamento e restauração antes de voltar a executá-lo.
+
+## Continuação: entradas disponíveis
+
+Decisão do usuário aplicada: opção de área indisponível não aparece. Busca filtra entidades por acesso e escopo de times; aniversariantes exige sua rota; Saúde, Cuidado e Aniversariantes retiram ação de ficha negada. Rota inicial negada abre uma permitida para qualquer papel. Evidências e limites em implementacao/entradas-permitidas. Sem migração ou mudança de permissão no banco.

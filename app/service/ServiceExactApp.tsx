@@ -728,6 +728,15 @@ export default function ServiceExactApp({
   const aniversariosEscopo = escopoDe(currentPersonId, podePrevisualizar, ministries, fellowshipGroups);
   const abrirAniversariante = (p: { tipo: "member" | "person"; id: string }) => setDrawer({ kind: p.tipo, id: p.id });
   const podeVerItem = (id: string) => rotaLigada(id, ligados) && (podeVerNav(id, currentRole, matrizEfetiva, currentExtraAccess, souVoluntario) || (id === "membros" && pessoasSoDoTime));
+  /* A busca respeita a mesma entrada e o mesmo escopo da lista de Pessoas. */
+  const idsPessoasDosTimes = new Set(ministries.filter((m) => misteriosQueLidero.includes(m.id)).flatMap((m) => m.people.map((p) => p.personId)));
+  const membrosNaBusca = podeVerItem("membros") ? members.filter((m) => {
+    if (!pessoasSoDoTime) return true;
+    const person = people.find((p) => p.id === m.volunteerId) ?? (!m.volunteerId ? people.find((p) => nomeComparavel(m.name) === nomeComparavel(p.name) && mesmoTelefone(m.phone, p.phone)) : undefined);
+    return !!person && idsPessoasDosTimes.has(person.id);
+  }) : [];
+  const pessoasNaBusca = podeVerItem("pessoas") ? people.filter((p) => !pessoasSoDoTime || idsPessoasDosTimes.has(p.id)) : [];
+  const timesNaBusca = podeVerItem("times") ? ministries : [];
   const perspectivePersonId = currentPersonId;
 
   /* fila de aprovação da caminhada: Direção vê tudo; líder só vê pedidos de
@@ -841,9 +850,9 @@ export default function ServiceExactApp({
       </VocabularioProvider></RelogioProvider>
     );
   }
-  /* membro com telas liberadas não abre o painel numa tela que não tem
-     (ex.: Início com os números da igreja): vai para a primeira liberada */
-  if (currentRole === "membro" && !rotasPermitidas.includes(route)) {
+  /* Entrada antiga ou permissão alterada: abre uma área disponível, para
+     qualquer papel, sem oferecer a tela indisponível como opção. */
+  if (!podeVerItem(route)) {
     setRoute(rotasPermitidas[0]);
   }
 
@@ -945,9 +954,9 @@ export default function ServiceExactApp({
           <div className="top-search">
             <span className="si"><Icon name="buscar" size={15} /></span>
             <GlobalSearch
-              people={people}
-              members={members}
-              ministries={ministries}
+              people={pessoasNaBusca}
+              members={membrosNaBusca}
+              ministries={timesNaBusca}
               setRoute={setRoute}
               setDrawer={setDrawer}
               telas={NAV_GROUPS.flatMap((g) => g.items.filter((item) => podeVerItem(item.id)).map((item) => ({ id: item.id, label: item.label, icon: CEX_ICON_FOR[item.id] ?? item.icon, grupo: g.group })))}
@@ -1006,12 +1015,12 @@ export default function ServiceExactApp({
             enrollments={enrollments}
             setup={setupEstado}
             igrejaNova={ministries.length === 0 || events.length === 0}
-            aniversarios={ligados.has("aniversarios") ? <AniversariantesDaSemana base={aniversariantesBase} escopo={aniversariosEscopo} comIdade={podePrevisualizar} onAbrir={abrirAniversariante} onVerMes={() => setRoute("aniversariantes")} /> : null}
+            aniversarios={podeVerItem("aniversariantes") ?  <AniversariantesDaSemana base={aniversariantesBase} escopo={aniversariosEscopo} comIdade={podePrevisualizar} onAbrir={abrirAniversariante} podeAbrirPessoa={(p) => podeVerItem(p.tipo === "member" ? "membros" : "pessoas")} onVerMes={() => setRoute("aniversariantes")} /> : null}
             cuidado={ligados.has("cuidado") ? { lista: daMinhaLista(listaCuidado, currentPersonId, currentRole === "master" || currentRole === "pastor"), todos: listaCuidado, criancas: criancasAusentes, semanas: semanasCuidado } : null}
           />
         ) : null}
         {route === "membros" ? <Membros members={members} people={people} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} soTimes={pessoasSoDoTime ? misteriosQueLidero : null} /> : null}
-        {route === "aniversariantes" ? <Aniversariantes base={aniversariantesBase} escopo={aniversariosEscopo} comIdade={podePrevisualizar} times={ministries} grupos={fellowshipGroups} onAbrir={abrirAniversariante} /> : null}
+        {route === "aniversariantes" ? <Aniversariantes base={aniversariantesBase} escopo={aniversariosEscopo} comIdade={podePrevisualizar} times={ministries} grupos={fellowshipGroups} onAbrir={abrirAniversariante} podeAbrirPessoa={(p) => podeVerItem(p.tipo === "member" ? "membros" : "pessoas")} /> : null}
         {route === "pessoas" ? <Pessoas people={people} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Times ministries={ministries} people={people} members={members} serveRequests={serveRequests} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <details className="teams-config"><summary>Configurações de times e requisitos</summary><Config key={firstChurch?.id} church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="min" embedded /></details> : null}
