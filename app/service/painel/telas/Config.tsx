@@ -15,7 +15,7 @@ import ThemePicker from "../../ThemePicker";
 import { PublicPageEditor } from "../../PublicPageEditor";
 import { ContribuirConfig } from "../../modules/contribuir/ContribuirConfig";
 import { LogoField, BackgroundField } from "../../IdentidadeFields";
-import { useChurchSettingsField } from "../../lib/settings-field";
+import { useChurchSettingsField, useChurchSettingsValor } from "../../lib/settings-field";
 import { normalizarVocabulario, vocabularioParaGravar, LIMITE_CURTO, LIMITE_TELA, TERMOS, TERMOS_IDS, type Vocabulario } from "../../lib/vocabulario";
 import { useTermos } from "../../lib/vocabulario-context";
 import { IDENTIDADE_CFG_DEFAULT } from "../../../lib/church-page";
@@ -539,63 +539,28 @@ export function Config({
 
   const [editMin, setEditMin] = useState<MinistryView | null>(null);
 
-  const [escalaCfg, setEscalaCfg] = useState<EscalaSettings>(() => ({ ...ESCALA_DEFAULT, ...(church?.settings?.escala ?? {}) }));
-  const setEscala = async (k: keyof EscalaSettings, v: unknown) => {
-    const next = { ...escalaCfg, [k]: v } as EscalaSettings;
-    setEscalaCfg(next);
-    if (!church?.id) return;
-    await createServiceBrowserClient()
-      .schema("service")
-      .from("churches")
-      .update({ settings: { ...church.settings, escala: next } })
-      .eq("id", church.id);
-    router.refresh();
-  };
+  /* gravações de settings em fila, lendo o banco antes (lib/settings-field):
+     dois cliques seguidos num interruptor não se atropelam mais */
+  const avisoFalha = (ok: boolean) => { if (!ok) avisar("Não foi possível salvar. Tente novamente.", "warn"); };
+  const [escalaCfg, , salvarEscala] = useChurchSettingsField<EscalaSettings>("escala", ESCALA_DEFAULT, church, () => router.refresh());
+  const setEscala = (k: keyof EscalaSettings, v: unknown) => salvarEscala({ [k]: v } as Partial<EscalaSettings>).then(avisoFalha);
 
-  const [statusCfg, setStatusCfg] = useState<StatusCriterios>(() => ({ ...STATUS_CFG_DEFAULT, ...(church?.settings?.statusCfg ?? {}) }));
-  const setStatus = async (k: keyof StatusCriterios, v: number | boolean) => {
-    const next = { ...statusCfg, [k]: v } as StatusCriterios;
-    setStatusCfg(next);
-    if (!church?.id) return;
-    await createServiceBrowserClient()
-      .schema("service")
-      .from("churches")
-      .update({ settings: { ...church.settings, statusCfg: next } })
-      .eq("id", church.id);
-    router.refresh();
-  };
+  const [statusCfg, , salvarStatus] = useChurchSettingsField<StatusCriterios>("statusCfg", STATUS_CFG_DEFAULT, church, () => router.refresh());
+  const setStatus = (k: keyof StatusCriterios, v: number | boolean) => salvarStatus({ [k]: v } as Partial<StatusCriterios>).then(avisoFalha);
 
-  const [tiposEvento, setTiposEventoState] = useState<string[]>(() => church?.settings?.tiposEvento ?? []);
+  const [tiposEvento, , salvarTiposEvento] = useChurchSettingsValor<string[]>("tiposEvento", [], church, () => router.refresh());
   const [novoTipoEvento, setNovoTipoEvento] = useState("");
-  const saveTiposEvento = async (next: string[]) => {
-    setTiposEventoState(next);
-    if (!church?.id) return;
-    await createServiceBrowserClient()
-      .schema("service")
-      .from("churches")
-      .update({ settings: { ...church.settings, tiposEvento: next } })
-      .eq("id", church.id);
-    router.refresh();
-  };
+  const saveTiposEvento = (next: string[]) => salvarTiposEvento(next).then(avisoFalha);
   const addTipoEvento = () => {
     const v = novoTipoEvento.trim();
     if (v && !tiposEvento.includes(v)) saveTiposEvento([...tiposEvento, v]);
     setNovoTipoEvento("");
   };
 
-  const [horariosCulto, setHorariosCultoState] = useState<string[]>(() => church?.settings?.horariosCulto ?? []);
+  const [horariosCulto, , salvarHorariosCulto] = useChurchSettingsValor<string[]>("horariosCulto", [], church, () => router.refresh());
   const [novoHorarioDia, setNovoHorarioDia] = useState(DIAS_SEMANA[0]);
   const [novoHorarioHora, setNovoHorarioHora] = useState("");
-  const saveHorariosCulto = async (next: string[]) => {
-    setHorariosCultoState(next);
-    if (!church?.id) return;
-    await createServiceBrowserClient()
-      .schema("service")
-      .from("churches")
-      .update({ settings: { ...church.settings, horariosCulto: next } })
-      .eq("id", church.id);
-    router.refresh();
-  };
+  const saveHorariosCulto = (next: string[]) => salvarHorariosCulto(next).then(avisoFalha);
   const addHorarioCulto = () => {
     if (!novoHorarioHora) return;
     const v = `${novoHorarioDia} ${novoHorarioHora}`;
@@ -605,27 +570,11 @@ export function Config({
     }
   };
 
-  const setCheckinPermitirExtra = async (v: boolean) => {
-    if (!church?.id) return;
-    await createServiceBrowserClient()
-      .schema("service")
-      .from("churches")
-      .update({ settings: { ...church.settings, checkinPermitirExtra: v } })
-      .eq("id", church.id);
-    router.refresh();
-  };
+  const [checkinPermitirExtra, , salvarCheckinExtra] = useChurchSettingsValor<boolean>("checkinPermitirExtra", false, church, () => router.refresh());
+  const setCheckinPermitirExtra = (v: boolean) => salvarCheckinExtra(v).then(avisoFalha);
 
-  const [gruposCfg, setGruposCfgState] = useState<GruposCfg>(() => ({ ...GRUPOS_CFG_DEFAULT, ...(church?.settings?.gruposCfg ?? {}) }));
-  const saveGruposCfg = async (next: GruposCfg) => {
-    setGruposCfgState(next);
-    if (!church?.id) return;
-    await createServiceBrowserClient()
-      .schema("service")
-      .from("churches")
-      .update({ settings: { ...church.settings, gruposCfg: next } })
-      .eq("id", church.id);
-    router.refresh();
-  };
+  const [gruposCfg, setGruposCfgState, salvarGruposCfg] = useChurchSettingsField<GruposCfg>("gruposCfg", GRUPOS_CFG_DEFAULT, church, () => router.refresh());
+  const saveGruposCfg = (next: GruposCfg) => salvarGruposCfg(next).then(avisoFalha);
 
   /* Personalização (marca + identidade) : os campos só mexem em estado
      local (patchBrand/patchIdentidade) enquanto a pessoa ajusta cor, logo,
@@ -1107,9 +1056,9 @@ export function Config({
             <div className="cfg-row" style={{ borderBottom: "none" }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Presença de quem não está escalado</div>
-                <div className="cfg-row-s">{church?.settings?.checkinPermitirExtra ? "Quem não está escalado pode fazer check-in como presença extra." : "Só quem está escalado consegue fazer check-in. Os demais são bloqueados."}</div>
+                <div className="cfg-row-s">{checkinPermitirExtra ? "Quem não está escalado pode fazer check-in como presença extra." : "Só quem está escalado consegue fazer check-in. Os demais são bloqueados."}</div>
               </div>
-              <Interruptor ligado={!!church?.settings?.checkinPermitirExtra} rotulo="Presença de quem não está escalado" onClick={() => setCheckinPermitirExtra(!church?.settings?.checkinPermitirExtra)} />
+              <Interruptor ligado={checkinPermitirExtra} rotulo="Presença de quem não está escalado" onClick={() => setCheckinPermitirExtra(!checkinPermitirExtra)} />
             </div>
           </div>
           <div className="cfg-card" style={{ marginTop: 16 }}>
