@@ -9,6 +9,10 @@ import { Icon } from "../../lib/icons";
 import { Av, EmptyState, PageHead } from "../ui";
 import type { ChatMemberView, ChatView, ChurchView, MemberView, MessageView, MinistryView } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
+import { Segmentado } from "../../ui/Segmentado";
 export function NovaConversaModal({
   members,
   church,
@@ -84,10 +88,10 @@ export function NovaConversaModal({
         <div className="modal-body" style={{ display: "block" }}>
           <div className="field">
             <label className="field-label">Tipo</label>
-            <div className="seg">
-              <button type="button" className={tipo === "dm" ? "on" : ""} onClick={() => setTipo("dm")}>Individual</button>
-              <button type="button" className={tipo === "grupo" ? "on" : ""} onClick={() => setTipo("grupo")}>Em grupo</button>
-            </div>
+            <Segmentado>
+              <Opcao marcada={tipo === "dm"} onClick={() => setTipo("dm")}>Individual</Opcao>
+              <Opcao marcada={tipo === "grupo"} onClick={() => setTipo("grupo")}>Em grupo</Opcao>
+            </Segmentado>
           </div>
           {isGrupo && (
             <div className="field">
@@ -101,9 +105,9 @@ export function NovaConversaModal({
               {candidatos.map((m) => {
                 const on = sel.includes(m.id);
                 return (
-                  <button key={m.id} type="button" className={`cand-chip ${on ? "on" : ""}`} onClick={() => tog(m.id)}>
+                  <Acao key={m.id} className={`cand-chip ${on ? "on" : ""}`} onClick={() => tog(m.id)}>
                     <Av name={m.name} size="xs" /> {m.name.split(" ")[0]} {on && <Icon name="ok" size={13} />}
-                  </button>
+                  </Acao>
                 );
               })}
               {candidatos.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum membro disponível.</span>}
@@ -116,8 +120,8 @@ export function NovaConversaModal({
           {error && <div style={{ marginTop: 10, fontSize: "var(--fs-pn-13)", color: "var(--danger)" }}>{error}</div>}
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving} onClick={criar}>{saving ? "Criando…" : "Iniciar conversa"}</button>
+          <Botao onClick={onClose}>Cancelar</Botao>
+          <Botao variante="principal" desativado={saving} onClick={criar}>{saving ? "Criando…" : "Iniciar conversa"}</Botao>
         </div>
       </div>
     </div>
@@ -211,10 +215,10 @@ export function Conversas({
 
   return (
     <div className="content wide">
-      <PageHead title="Conversas" eyebrow="Operação" help={`Um chat simples com seu time e sua liderança, dentro do mesmo app. ${perspectiveText}`} action={<button className="btn btn-pri" type="button" onClick={() => setNova(true)}>+ Nova conversa</button>} />
+      <PageHead title="Conversas" eyebrow="Operação" help={`Um chat simples com seu time e sua liderança, dentro do mesmo app. ${perspectiveText}`} action={<Botao variante="principal" onClick={() => setNova(true)}>+ Nova conversa</Botao>} />
       <div className="chat-layout">
-        <div className="chat-list">{visibleChats.map((item) => <button className={`chat-row ${chat?.id === item.id ? "on" : ""}`} type="button" key={item.id} onClick={() => setSelected(item.id)}><span className="chat-row-ic"><Icon name={item.kind === "time" ? "times" : "membros"} size={16} /></span><span className="chat-row-main"><span className="chat-row-top"><b>{chatName(item)}</b><small>agora</small></span><span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || "Canal de alinhamento"}</span></span><span className="chat-row-count">{chatCount(item.id)}</span></button>)}{visibleChats.length === 0 && <div className="empty" style={{ margin: 8 }}>Nenhuma conversa ainda.</div>}</div>
-        {chat ? <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; const isMine = currentMember && message.sender_id === currentMember.id; return <div className={`chat-msg${isMine ? " me" : ""}`} key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: fuso })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <div className="empty">Nenhuma mensagem nesta conversa.</div> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enviar()} disabled={!chat} /><button className="btn btn-pri btn-sm" type="button" disabled={!chat || sending || !texto.trim()} onClick={enviar}>Enviar</button></div></div></div> : <div className="chat-main chat-empty"><EmptyState title="Escolha uma conversa" text="Toque numa conversa da lista para ler e responder, ou comece uma nova." /></div>}
+        <div className="chat-list">{visibleChats.map((item) => <Acao className={`chat-row ${chat?.id === item.id ? "on" : ""}`} key={item.id} onClick={() => setSelected(item.id)}><span className="chat-row-ic"><Icon name={item.kind === "time" ? "times" : "membros"} size={16} /></span><span className="chat-row-main"><span className="chat-row-top"><b>{chatName(item)}</b><small>agora</small></span><span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || "Canal de alinhamento"}</span></span><span className="chat-row-count">{chatCount(item.id)}</span></Acao>)}{visibleChats.length === 0 && <div className="empty" style={{ margin: 8 }}>Nenhuma conversa ainda.</div>}</div>
+        {chat ? <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; const isMine = currentMember && message.sender_id === currentMember.id; return <div className={`chat-msg${isMine ? " me" : ""}`} key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: fuso })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <div className="empty">Nenhuma mensagem nesta conversa.</div> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enviar()} disabled={!chat} /><Botao variante="principal" compacto desativado={!chat || sending || !texto.trim()} onClick={enviar}>Enviar</Botao></div></div></div> : <div className="chat-main chat-empty"><EmptyState title="Escolha uma conversa" text="Toque numa conversa da lista para ler e responder, ou comece uma nova." /></div>}
       </div>
       {nova && (
         <NovaConversaModal

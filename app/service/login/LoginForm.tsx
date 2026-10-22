@@ -4,6 +4,8 @@ import AuthShell from "../AuthShell";
 import PasswordInput from "../PasswordInput";
 import { useServiceLoginForm } from "./useServiceLoginForm";
 
+import { Botao } from "../ui/Botao";
+import { Acao } from "../ui/Acao";
 /* UI única de login, em cima do useServiceLoginForm (lógica intacta).
    variant "service" = /service/login · variant "igreja" = /[slug]/entrar.
    Os dois endereços mostram a mesma entrada (S28); a diferença é só que o
@@ -39,7 +41,7 @@ export default function ServiceLoginForm({
       {variant === "service" && (
         <>
           <br />
-          Não é da {churchName}? <button type="button" onClick={trocarIgreja}>Entrar por outra igreja</button>
+          Não é da {churchName}? <Acao onClick={trocarIgreja}>Entrar por outra igreja</Acao>
         </>
       )}
     </>
@@ -47,7 +49,7 @@ export default function ServiceLoginForm({
     <>
       Primeiro acesso? Abra o link de convite que a liderança mandou.
       <br />
-      Sua igreja ainda não usa o Service? <button type="button" onClick={f.switchToSignup}>Cadastrar minha igreja</button>
+      Sua igreja ainda não usa o Service? <Acao onClick={f.switchToSignup}>Cadastrar minha igreja</Acao>
     </>
   );
 
@@ -57,7 +59,7 @@ export default function ServiceLoginForm({
     subtitle = "Comece criando o seu acesso. Depois de confirmar o e-mail, você preenche os dados da igreja em um minuto.";
     footer = (
       <>
-        Já tem acesso? <button type="button" onClick={() => f.setMode("login")}>Entrar</button>
+        Já tem acesso? <Acao onClick={() => f.setMode("login")}>Entrar</Acao>
       </>
     );
   }
@@ -110,14 +112,14 @@ export default function ServiceLoginForm({
             {(naoConfirmado || f.invalidCredentials) && (
               <div className="login-alert-actions">
                 {naoConfirmado && (
-                  <button type="button" onClick={f.resendConfirmation} disabled={f.resending}>
+                  <Acao onClick={f.resendConfirmation} desativado={f.resending}>
                     {f.resending ? "Reenviando..." : "Reenviar e-mail de confirmação"}
-                  </button>
+                  </Acao>
                 )}
                 {f.invalidCredentials && (
-                  <button type="button" onClick={f.forgotPassword} disabled={f.resending}>
+                  <Acao onClick={f.forgotPassword} desativado={f.resending}>
                     {f.resending ? "Enviando..." : "Criar uma senha nova"}
-                  </button>
+                  </Acao>
                 )}
               </div>
             )}
@@ -129,13 +131,13 @@ export default function ServiceLoginForm({
           </div>
         ) : null}
 
-        <button className="login-btn" type="submit" disabled={f.loading}>
+        <Botao tamanho="entrada" variante="principal" type="submit" desativado={f.loading}>
           {f.loading ? "Aguarde..." : signup ? "Criar meu acesso" : "Entrar"}
-        </button>
+        </Botao>
         {!signup && (
-          <button className="login-link" type="button" onClick={f.forgotPassword} disabled={f.resending}>
+          <Botao tamanho="entrada" variante="texto" onClick={f.forgotPassword} desativado={f.resending}>
             {f.resending ? "Enviando..." : "Esqueci minha senha"}
-          </button>
+          </Botao>
         )}
       </form>
     </AuthShell>

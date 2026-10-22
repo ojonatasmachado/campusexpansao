@@ -18,6 +18,12 @@ import {
   type Categoria, type PedidoMural, type Publico,
 } from "./oracao";
 
+import { Botao } from "../../ui/Botao";
+import { Interruptor } from "../../ui/Interruptor";
+import { Opcao } from "../../ui/Opcao";
+import { Linha, Lista } from "../../ui/Linha";
+import { Cartao } from "../../ui/Cartao";
+import { Selo } from "../../ui/Selo";
 type Toast = (msg: string, action?: { label: string; fn: () => void }) => void;
 
 // ── o pedido ─────────────────────────────────────────────────────────────────
@@ -55,8 +61,8 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
         </p>
         <div className="m6-btns">
           {feito.publico === "mural"
-            ? <button className="m6-btn pri" type="button" onClick={onVerMural}>Ver o mural</button>
-            : feito.chatId && <button className="m6-btn pri" type="button" onClick={() => onVerConversa(feito.chatId as string)}>Ver em Mensagens</button>}
+            ? <Botao tamanho="toque" variante="principal" onClick={onVerMural}>Ver o mural</Botao>
+            : feito.chatId && <Botao tamanho="toque" variante="principal" onClick={() => onVerConversa(feito.chatId as string)}>Ver em Mensagens</Botao>}
         </div>
       </div>
     );
@@ -90,43 +96,43 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
       <div className="or-campo" id={`${fid}-cat`}>Sobre o quê</div>
       <div className="or-chips" role="group" aria-labelledby={`${fid}-cat`}>
         {CATEGORIAS.map((c) => (
-          <button key={c.id} type="button" className={`or-chip${categoria === c.id ? " on" : ""}`} aria-pressed={categoria === c.id} onClick={() => setCategoria(categoria === c.id ? null : c.id)}>{c.rotulo}</button>
+          <Opcao key={c.id} marcada={categoria === c.id} estilo="or-chip" aria-pressed={categoria === c.id} onClick={() => setCategoria(categoria === c.id ? null : c.id)}>{c.rotulo}</Opcao>
         ))}
       </div>
 
       {podeIntercessao && muralOn && (
         <>
           <div className="or-campo" id={`${fid}-pub`}>Quem vê</div>
-          <div className="m6-list flat" role="radiogroup" aria-labelledby={`${fid}-pub`}>
+          <Lista plano role="radiogroup" aria-labelledby={`${fid}-pub`}>
             {([
               ["intercessao", "Só a intercessão", `Vai para ${papelDoDestinatario(dest as Destinatario)}, numa conversa.`],
               ["mural", "Mural de oração", "A igreja vê e pode orar com você."],
             ] as const).map(([v, t, s]) => (
-              <button key={v} type="button" role="radio" aria-checked={publico === v} className={`m6-row or-opt${publico === v ? " on" : ""}`} onClick={() => setPublico(v)}>
+              <Opcao key={v} role="radio" aria-checked={publico === v} marcada={publico === v} estilo="m6-row" className="or-opt" onClick={() => setPublico(v)}>
                 <span className="or-radio" aria-hidden="true" />
                 <span className="m6-rb"><span className="m6-rt">{t}</span><span className="m6-rs">{s}</span></span>
-              </button>
+              </Opcao>
             ))}
-          </div>
+          </Lista>
         </>
       )}
       {!podeIntercessao && <div className="m6-meta or-nota">Seu pedido vai para o mural de oração da igreja.</div>}
       {podeIntercessao && !muralOn && <div className="m6-meta or-nota">{`Vai para ${papelDoDestinatario(dest as Destinatario)}. Só essa pessoa lê.`}</div>}
 
       {publico === "mural" && (
-        <div className="m6-list flat">
-          <div className="m6-row or-sw">
+        <Lista plano>
+          <Linha estilo="app" className="or-sw">
             <span className="m6-rb"><span className="m6-rt" id={`${fid}-anon`}>Pedir sem meu nome</span><span className="m6-rs">Só quem cuida da intercessão sabe que foi você.</span></span>
-            <button type="button" role="switch" aria-checked={anonimo} aria-labelledby={`${fid}-anon`} className={`m6-tg${anonimo ? " on" : ""}`} onClick={() => setAnonimo(!anonimo)} />
-          </div>
-        </div>
+            <Interruptor ligado={anonimo} tamanho="toque" rotuloId={`${fid}-anon`} onClick={() => setAnonimo(!anonimo)} />
+          </Linha>
+        </Lista>
       )}
 
       {erro && <div className="m6-err" role="alert">{erro}</div>}
       <div className="m6-btns">
-        <button className="m6-btn pri" type="button" disabled={!txt.trim() || enviando} onClick={enviar}>
+        <Botao tamanho="toque" variante="principal" desativado={!txt.trim() || enviando} onClick={enviar}>
           {enviando ? "Enviando..." : publico === "mural" ? "Publicar no mural" : "Enviar pedido"}
-        </button>
+        </Botao>
       </div>
     </div>
   );
@@ -146,7 +152,7 @@ export function SheetRespondido({ organizationId, pedido, onFechar, toast, onMud
       <textarea className="m6-ta" value={txt} maxLength={LIMITE_TESTEMUNHO} onChange={(e) => setTxt(e.target.value)} placeholder="O que Deus fez (opcional)" aria-label="Testemunho" />
       {txt.length > LIMITE_TESTEMUNHO - 80 && <div className="m6-meta or-conta">{`${LIMITE_TESTEMUNHO - txt.length} caracteres restantes`}</div>}
       <div className="m6-btns col">
-        <button className="m6-btn pri" type="button" disabled={salvando} onClick={async () => {
+        <Botao tamanho="toque" variante="principal" desativado={salvando} onClick={async () => {
           setSalvando(true);
           const ok = await marcarRespondido(organizationId, pedido.id, true, txt);
           setSalvando(false);
@@ -154,7 +160,7 @@ export function SheetRespondido({ organizationId, pedido, onFechar, toast, onMud
           onFechar();
           onMudou();
           if (!jaRespondido) toast("Marcado como respondido.", { label: "Desfazer", fn: async () => { await marcarRespondido(organizationId, pedido.id, false); onMudou(); } });
-        }}>{salvando ? "Salvando..." : jaRespondido ? "Salvar" : "Marcar como respondido"}</button>
+        }}>{salvando ? "Salvando..." : jaRespondido ? "Salvar" : "Marcar como respondido"}</Botao>
       </div>
     </div>
   );
@@ -204,35 +210,35 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
     <div className="or-tela">
       {onPedir && (
         <div className="m6-pad or-pedir">
-          <button className="m6-btn pri full" type="button" onClick={onPedir}><Icon name="add" size={20} />Fazer um pedido</button>
+          <Botao tamanho="toque" variante="principal" largo onClick={onPedir}><Icon name="add" size={20} />Fazer um pedido</Botao>
         </div>
       )}
       <div className="m6-segwrap">
         <div className="ts-seg m6-seg" role="radiogroup" aria-label="O que ver">
           {([["igreja", "Da igreja"], ["meus", "Meus"], ["respondidos", "Respostas"]] as const).map(([v, l]) => (
-            <button key={v} type="button" role="radio" aria-checked={aba === v} className={aba === v ? "on" : ""} onClick={() => setAba(v)}>{l}</button>
+            <Opcao key={v} role="radio" aria-checked={aba === v} marcada={aba === v} onClick={() => setAba(v)}>{l}</Opcao>
           ))}
         </div>
       </div>
 
       <div className="m6-sec0 or-lista">
-        {dados === null && !erro && <div className="m6-card"><div className="m6-meta">Carregando os pedidos...</div></div>}
+        {dados === null && !erro && <Cartao estilo="app"><div className="m6-meta">Carregando os pedidos...</div></Cartao>}
         {erro && (
-          <div className="m6-card">
+          <Cartao estilo="app">
             <div className="m6-ct">Não deu para abrir o mural</div>
             <div className="m6-meta">Confira a internet e tente de novo.</div>
-            <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => void recarregar()}>Tentar de novo</button></div>
-          </div>
+            <div className="m6-btns"><Botao tamanho="toque" onClick={() => void recarregar()}>Tentar de novo</Botao></div>
+          </Cartao>
         )}
         {dados !== null && visiveis.length === 0 && (
-          <div className="m6-card"><div className="m6-ct">{vazio[0]}</div><div className="m6-meta">{vazio[1]}</div></div>
+          <Cartao estilo="app"><div className="m6-ct">{vazio[0]}</div><div className="m6-meta">{vazio[1]}</div></Cartao>
         )}
         {visiveis.map((p) => {
           const orei = oreiAgora[p.id] ?? p.i_prayed;
           /* o número de quem pediu soma o próprio "orei" dado agora */
           const n = (p.prayed_count ?? 0) + (p.is_mine && oreiAgora[p.id] !== undefined ? (oreiAgora[p.id] ? 1 : 0) - (p.i_prayed ? 1 : 0) : 0);
           return (
-            <article className="m6-card or-card" key={p.id}>
+            <Cartao estilo="app" como="article" className="or-card" key={p.id}>
               <div className="or-top">
                 <span className="or-cat">{rotuloCategoria(p.category)}</span>
                 <span className="or-quando">{quandoPublicado(p.created_at)}</span>
@@ -241,7 +247,7 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
               <p className="m6-txt or-txt">{p.body}</p>
               {p.answered_at && (
                 <div className="or-resp">
-                  <span className="m6-st ok"><Icon name="ok" size={16} />Respondido</span>
+                  <Selo tamanho="toque" tom="ok"><Icon name="ok" size={16} />Respondido</Selo>
                   {p.testimony && <p className="or-test">{p.testimony}</p>}
                 </div>
               )}
@@ -254,20 +260,20 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
                       : "Assim que alguém orar, aparece aqui."}
                   </div>
                   <div className="m6-btns">
-                    <button className="m6-btn sec small" type="button" onClick={() => sheet(<SheetRespondido organizationId={organizationId} pedido={p} onFechar={() => sheet(null)} toast={toast} onMudou={() => void recarregar()} />)}>
+                    <Botao tamanho="toque" compacto onClick={() => sheet(<SheetRespondido organizationId={organizationId} pedido={p} onFechar={() => sheet(null)} toast={toast} onMudou={() => void recarregar()} />)}>
                       {p.answered_at ? "Editar testemunho" : "Deus respondeu"}
-                    </button>
-                    {p.audience === "mural" && !p.hidden && <button className="m6-btn sec small" type="button" onClick={() => void tirar(p)}>Tirar do mural</button>}
+                    </Botao>
+                    {p.audience === "mural" && !p.hidden && <Botao tamanho="toque" compacto onClick={() => void tirar(p)}>Tirar do mural</Botao>}
                   </div>
                 </>
               ) : !p.answered_at && (
                 <div className="m6-btns">
-                  <button className={`m6-btn small or-orei${orei ? " on" : ""}`} type="button" aria-pressed={orei} onClick={() => void marcarOrei(p, !orei)}>
+                  <Botao tamanho="toque" variante="discreto" compacto className={`or-orei${orei ? " on" : ""}`} aria-pressed={orei} onClick={() => void marcarOrei(p, !orei)}>
                     <Icon name={orei ? "ok" : "oracao"} size={18} />{orei ? "Você orou" : "Orei"}
-                  </button>
+                  </Botao>
                 </div>
               )}
-            </article>
+            </Cartao>
           );
         })}
       </div>

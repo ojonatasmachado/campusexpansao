@@ -6,6 +6,7 @@ import { formatDateBR } from "../../lib/date";
 import { createServiceSupabaseClient } from "../../lib/supabase";
 import { resolveMode, THEME_COOKIE } from "../../lib/theme";
 
+import { Selo, tomDaClasse } from "../../ui/Selo";
 /* Verificação pública da carteirinha (QR do verso). Sem login e sem dado
    sensível: igreja, nome abreviado, situação e validade (0078). */
 
@@ -40,7 +41,7 @@ export default async function VerificarCarteirinha({ params }: { params: Promise
         subtitle={v && s ? s.texto(v) : "O código deste QR não corresponde a nenhuma carteirinha. Confira se a imagem está inteira ou fale com a secretaria da igreja."}
         footer={marca?.name ? `Emitida por ${marca.name}` : undefined}
       >
-        {s ? <p><span className={`chip ${s.cls}`}>{s.titulo}</span></p> : null}
+        {s ? <p><Selo tom={tomDaClasse(s.cls)}>{s.titulo}</Selo></p> : null}
       </AuthShell>
     </>
   );

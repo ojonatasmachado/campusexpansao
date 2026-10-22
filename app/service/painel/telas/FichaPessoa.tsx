@@ -29,6 +29,10 @@ import { EnsaioDrawer, ReuniaoDrawer } from "./Reunioes";
 import { EventDrawer } from "./Evento";
 import type { BaptismCandidateView, BaptismClassView, BoardView, CalEvent, CardView, ChurchView, CourseView, DecisionView, DrawerState, EnrollmentView, EventRsvpView, EventView, FellowshipGroupView, JourneyStepKind, LessonView, MeetingActionView, MeetingView, MemberView, MinistryView, ModalState, ModuleView, PersonView, RehearsalView, RosterAssignmentView, TimelineEventView, VisitorNoteView, VisitorView } from "../tipos";
 
+import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Selo, etiquetaClasse } from "../../ui/Selo";
+import { Linha } from "../../ui/Linha";
 export function PersonTimeline({ member, events, compact }: { member: MemberView; events: TimelineEventView[]; compact?: boolean }) {
   const { comTermos: ct } = useTermos();
   const sorted = porData(events);
@@ -112,14 +116,14 @@ export function VisitanteDrawer({
   return (
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
+        <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
         <div className="profile-top">
           <Av name={initVisitor.name} size="lg" />
           <div>
             <div className="profile-name">{initVisitor.name}</div>
             <div className="profile-role">{initVisitor.origin || "Visitante"} · primeira visita {formatDateBR(initVisitor.visited_on) || "sem data"}</div>
             <div style={{ marginTop: 10 }}>
-              <span className="chip chip-neutral" style={{ color: VISITOR_STAGES[stageIdx]?.color }}>{VISITOR_STAGES[stageIdx]?.name ?? currentStage}</span>
+              <Selo style={{ color: VISITOR_STAGES[stageIdx]?.color }}>{VISITOR_STAGES[stageIdx]?.name ?? currentStage}</Selo>
             </div>
           </div>
         </div>
@@ -144,15 +148,15 @@ export function VisitanteDrawer({
             ))}
           </div>
           {stageIdx < VISITOR_STAGES.length - 1
-            ? <button className="btn btn-pri btn-sm" style={{ marginTop: 16, width: "100%", justifyContent: "center" }} type="button" onClick={avancar} disabled={saving}>Mover para {VISITOR_STAGES[stageIdx + 1]?.name}</button>
+            ? <Botao variante="principal" compacto style={{ marginTop: 16, width: "100%", justifyContent: "center" }} onClick={avancar} desativado={saving}>Mover para {VISITOR_STAGES[stageIdx + 1]?.name}</Botao>
             : (
               <div className="vmember-cta">
                 <div className="vmember-t"><Icon name="ok" size={13} /> Chegou a membro</div>
                 <div className="vmember-s">Complete os dados cadastrais para liberar o acesso ao app.</div>
                 {initVisitor.member_id
-                  ? <button className="btn btn-pri btn-sm" style={{ width: "100%", justifyContent: "center", marginTop: 12 }} type="button" onClick={() => { onClose(); onOpenMember(initVisitor.member_id!); }}>Ver ficha</button>
+                  ? <Botao variante="principal" compacto style={{ width: "100%", justifyContent: "center", marginTop: 12 }} onClick={() => { onClose(); onOpenMember(initVisitor.member_id!); }}>Ver ficha</Botao>
                   : (
-                    <button className="btn btn-pri btn-sm" style={{ width: "100%", justifyContent: "center", marginTop: 12 }} type="button" onClick={() => setModal({
+                    <Botao variante="principal" compacto style={{ width: "100%", justifyContent: "center", marginTop: 12 }} onClick={() => setModal({
                       eyebrow: "Criar",
                       title: "Completar dados de membro",
                       subtitle: "Finalize o cadastro para liberar o acesso ao app.",
@@ -165,7 +169,7 @@ export function VisitanteDrawer({
                         { k: "bairro", label: "Bairro", type: "text", half: true, ph: "Onde mora" },
                       ],
                       action: { kind: "member", visitorId: initVisitor.id },
-                    })}>Completar dados de membro →</button>
+                    })}>Completar dados de membro →</Botao>
                   )}
               </div>
             )
@@ -177,12 +181,12 @@ export function VisitanteDrawer({
           <div className="vresp-pick">
             <span className="vresp-lbl">A pessoa respondeu?</span>
             <div className="seg-check">
-              <button className={`seg-chip ${resp === "respondeu" ? "on" : ""}`} type="button" onClick={() => setResp(resp === "respondeu" ? "" : "respondeu")}>Respondeu</button>
-              <button className={`seg-chip ${resp === "sem_resposta" ? "on" : ""}`} type="button" onClick={() => setResp(resp === "sem_resposta" ? "" : "sem_resposta")}>Não respondeu</button>
+              <Acao className={`seg-chip ${resp === "respondeu" ? "on" : ""}`} onClick={() => setResp(resp === "respondeu" ? "" : "respondeu")}>Respondeu</Acao>
+              <Acao className={`seg-chip ${resp === "sem_resposta" ? "on" : ""}`} onClick={() => setResp(resp === "sem_resposta" ? "" : "sem_resposta")}>Não respondeu</Acao>
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <button className="btn btn-pri btn-sm" type="button" onClick={addNota} disabled={saving}>{saving ? "Salvando…" : "Salvar no histórico"}</button>
+            <Botao variante="principal" compacto onClick={addNota} desativado={saving}>{saving ? "Salvando…" : "Salvar no histórico"}</Botao>
           </div>
         </DrawerSection>
         <DrawerSection title="Histórico de contato">
@@ -267,8 +271,8 @@ export function MemberEditModal({
           <div className="field"><label className="field-label">Família</label><input className="input" value={family} onChange={(e) => setFamily(e.target.value)} placeholder="ex: Família Lima (agrupa parentes na ficha)" /></div>
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>Salvar</button>
+          <Botao onClick={onClose}>Cancelar</Botao>
+          <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
         </div>
       </div>
     </div>
@@ -320,7 +324,7 @@ export function JornadaEditModal({
             const jaConcluido = !!member.journey[JORNADA_KIND_INDEX[step.kind]];
             const event = events.find((e) => e.event_type === step.kind);
             return (
-              <div className="cfg-row" key={step.kind} style={{ alignItems: "flex-start" }}>
+              <Linha estilo="config" key={step.kind} style={{ alignItems: "flex-start" }}>
                 <div className="cfg-row-main">
                   <div className="cfg-row-t">{ct(step.label)}</div>
                   {jaConcluido ? (
@@ -331,16 +335,16 @@ export function JornadaEditModal({
                       <input className="input" type="date" value={rows[step.kind].date} onChange={(e) => setData(step.kind, e.target.value)} />
                     </div>
                   ) : (
-                    <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 8 }} onClick={() => marcar(step.kind)}>Marcar como concluído</button>
+                    <Botao compacto style={{ marginTop: 8 }} onClick={() => marcar(step.kind)}>Marcar como concluído</Botao>
                   )}
                 </div>
-              </div>
+              </Linha>
             );
           })}
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving} onClick={salvar}>Salvar</button>
+          <Botao onClick={onClose}>Cancelar</Botao>
+          <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
         </div>
       </div>
     </div>
@@ -412,13 +416,13 @@ export function AddToMinistryModal({
             <div className="flag-row" key={p.id} style={{ cursor: "pointer" }} onClick={() => add(p.id)}>
               <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
               <div className="flag-main"><div className="flag-nome">{p.name}</div></div>
-              <span className="btn btn-ghost btn-sm" style={{ marginLeft: "auto" }}>Adicionar</span>
+              <span className={botaoClasse({ variante: "discreto", compacto: true })} style={{ marginLeft: "auto" }}>Adicionar</span>
             </div>
           ))}
           {fora.length === 0 && <div className="empty">{q ? "Nenhum resultado." : ct("Todos os {voluntarios} já estão no time.")}</div>}
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Fechar</button>
+          <Botao onClick={onClose}>Fechar</Botao>
         </div>
       </div>
     </div>
@@ -557,7 +561,7 @@ export function EntityDrawer({
     return (
       <DrawerShell onClose={() => setDrawer(null)}>
         <div className="drawer-head">
-          <button className="drawer-close" type="button" aria-label="Fechar" onClick={() => setDrawer(null)}>✕</button>
+          <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={() => setDrawer(null)}>✕</BotaoIcone>
           <div className="profile-top">
             <Av name={person.name} size="lg" photoUrl={person.photoUrl} />
             <div>
@@ -572,7 +576,7 @@ export function EntityDrawer({
             <dl className="kv"><dt>Telefone</dt><dd>{formatarTelefone(person.phone)}</dd><dt>E-mail</dt><dd>{person.email}</dd></dl>
           </DrawerSection>
           <DrawerSection title="Times e funções">
-            <div className="cell-tags" style={{ gap: 8 }}>{linkedMinistries.map((ministry) => <button className="tag" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}>{ministry.name}</button>)}</div>
+            <div className="cell-tags" style={{ gap: 8 }}>{linkedMinistries.map((ministry) => <Acao className={etiquetaClasse()} key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}>{ministry.name}</Acao>)}</div>
             {person.tags.length > 0 && <div style={{ marginTop: 12, fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Etiquetas: {person.tags.join(" · ")}</div>}
           </DrawerSection>
           <DrawerSection title="Disponibilidade">
@@ -593,11 +597,11 @@ export function EntityDrawer({
             </DrawerSection>
           )}
           <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
-            <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { setDrawer(null); setRoute("escalas"); }}>Escalar</button>
+            <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={() => { setDrawer(null); setRoute("escalas"); }}>Escalar</Botao>
             {(() => {
               const linkedMember = members.find((m) => m.volunteerId === person.id);
               return (
-                <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" disabled={!linkedMember} onClick={() => linkedMember && onStartChatWithMember(linkedMember.id)}>Enviar mensagem</button>
+                <Botao style={{ flex: 1, justifyContent: "center" }} desativado={!linkedMember} onClick={() => linkedMember && onStartChatWithMember(linkedMember.id)}>Enviar mensagem</Botao>
               );
             })()}
           </div>
@@ -631,7 +635,7 @@ export function EntityDrawer({
       <>
       <DrawerShell onClose={() => setDrawer(null)}>
         <div className="drawer-head">
-          <button className="drawer-close" type="button" aria-label="Fechar" onClick={() => setDrawer(null)}>✕</button>
+          <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={() => setDrawer(null)}>✕</BotaoIcone>
           <div className="profile-top">
             <Av name={member.name} size="lg" photoUrl={linkedPerson?.photoUrl} />
             <div>
@@ -639,7 +643,7 @@ export function EntityDrawer({
               {member.firstContact ? <div className="profile-role">Membro desde {formatDateBR(member.firstContact)}</div> : null}
               <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <Chip status={member.situation} />
-                {isServing && <span className="chip chip-ok">Servindo</span>}
+                {isServing && <Selo tom="ok">Servindo</Selo>}
               </div>
             </div>
           </div>
@@ -648,7 +652,7 @@ export function EntityDrawer({
           {faltando.length > 0 && (
             <div className="cadastro-incompleto">
               <span><b>Cadastro incompleto</b> · falta {faltando.join(", ")}</span>
-              <button className="btn btn-sec btn-sm" type="button" onClick={() => setEditingMember(true)}>Completar</button>
+              <Botao compacto onClick={() => setEditingMember(true)}>Completar</Botao>
             </div>
           )}
           <DrawerSection title="Dados cadastrais">
@@ -661,12 +665,12 @@ export function EntityDrawer({
               <dt>Acesso ao app</dt><dd>{member.volunteerId ? <span style={{ color: "var(--olive-soft)" }}>liberado</span> : temTelefone ? <span style={{ color: "var(--amber)" }}>convite ainda não aceito</span> : <span style={{ color: "var(--amber)" }}>falta o telefone</span>}</dd>
             </dl>
             <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
-              <button className="btn btn-sec btn-sm" type="button" onClick={() => setEditingMember(true)}>Editar dados</button>
+              <Botao compacto onClick={() => setEditingMember(true)}>Editar dados</Botao>
               {temTelefone && (
-                <button className="btn btn-pri btn-sm" type="button" disabled={sendingAccess} onClick={() => sendMemberAccessWhatsapp(member)}>
+                <Botao variante="principal" compacto desativado={sendingAccess} onClick={() => sendMemberAccessWhatsapp(member)}>
                   <Icon name="whatsapp" size={14} />
                   {sendingAccess ? "Preparando…" : member.volunteerId ? "Reenviar acesso pelo WhatsApp" : "Enviar acesso pelo WhatsApp"}
-                </button>
+                </Botao>
               )}
             </div>
             {temTelefone && (
@@ -687,10 +691,10 @@ export function EntityDrawer({
             <DrawerSection title={`Família · ${familiares.length}`}>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {familiares.map((f) => (
-                  <button className="cand" type="button" style={{ width: "100%", textAlign: "left" }} key={f.id} onClick={() => setDrawer({ kind: "member", id: f.id })}>
+                  <Acao className="cand" style={{ width: "100%", textAlign: "left" }} key={f.id} onClick={() => setDrawer({ kind: "member", id: f.id })}>
                     <Av name={f.name} size="sm" />
                     <div className="cand-main"><div className="cand-name">{f.name}</div></div>
-                  </button>
+                  </Acao>
                 ))}
               </div>
             </DrawerSection>
@@ -701,11 +705,11 @@ export function EntityDrawer({
                 {linkedMinistries.map((m) => {
                   const link = m.people.find((p) => p.personId === member.volunteerId);
                   return (
-                    <button className="ov-serve-row" type="button" key={m.id} onClick={() => setDrawer({ kind: "ministry", id: m.id })}>
+                    <Acao className="ov-serve-row" key={m.id} onClick={() => setDrawer({ kind: "ministry", id: m.id })}>
                       <span className="ov-serve-ic"><TeamMark ministry={m} size={14} /></span>
                       <span className="ov-serve-name">{m.name}</span>
                       {link?.isLeader ? <span className="lider-tag">Líder</span> : <span className="ov-serve-fn">{link?.functions.join(" · ") || ct("{Voluntario}")}</span>}
-                    </button>
+                    </Acao>
                   );
                 })}
               </div>
@@ -726,7 +730,7 @@ export function EntityDrawer({
                       <div className="mc-main">
                         <div className="mc-head">
                           <div className="mc-name">{course.name}</div>
-                          {status === "concluido" ? <span className="chip chip-ok">Concluído</span> : <span className="mc-pct">{pct}%</span>}
+                          {status === "concluido" ? <Selo tom="ok">Concluído</Selo> : <span className="mc-pct">{pct}%</span>}
                         </div>
                         <div className="mc-meta">{course.level || course.kind || "curso"} · {done_count} de {plural(totalAulas, "aula")}</div>
                         <div className="bar" style={{ marginTop: 8 }}><div className={`bar-fill ${status === "concluido" ? "" : "amber"}`} style={{ width: `${pct}%` }} /></div>
@@ -741,10 +745,10 @@ export function EntityDrawer({
           </DrawerSection>
           <DrawerSection title="História"><PersonTimeline member={member} events={timelineEvents.filter((e) => e.member_id === member.id)} compact /></DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
-            <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setEditingJourney(true)}>{ct("Atualizar {caminhada}")}</button>
-            <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => onStartChatWithMember(member.id)}>Enviar mensagem</button>
+            <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={() => setEditingJourney(true)}>{ct("Atualizar {caminhada}")}</Botao>
+            <Botao style={{ flex: 1, justifyContent: "center" }} onClick={() => onStartChatWithMember(member.id)}>Enviar mensagem</Botao>
             {linkedPerson && (
-              <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setDrawer({ kind: "person", id: linkedPerson.id })}>{ct("Ver como {voluntario}")}</button>
+              <Botao style={{ flex: 1, justifyContent: "center" }} onClick={() => setDrawer({ kind: "person", id: linkedPerson.id })}>{ct("Ver como {voluntario}")}</Botao>
             )}
           </div>
         </div>
@@ -789,7 +793,7 @@ export function EntityDrawer({
       <>
       <DrawerShell onClose={() => setDrawer(null)}>
         <div className="drawer-head">
-          <button className="drawer-close" type="button" aria-label="Fechar" onClick={() => setDrawer(null)}>✕</button>
+          <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={() => setDrawer(null)}>✕</BotaoIcone>
           <div className="profile-top">
             <div className="team-mark" style={{ width: 56, height: 56 }}><TeamMark ministry={ministry} size={26} /></div>
             <div>
@@ -839,11 +843,11 @@ export function EntityDrawer({
                   </div>
                 )}
               </div>
-              <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={() => setEditingMinistry(true)}>Editar</button>
+              <Botao compacto style={{ marginTop: 12 }} onClick={() => setEditingMinistry(true)}>Editar</Botao>
             </div>
           )}
           {!ministry.description && !profile.comoTrabalhamos && !profile.chegada && !(profile.responsabilidades?.length) && !requisitosTime.length && (
-            <button className="btn btn-sec btn-sm" type="button" style={{ marginBottom: 22 }} onClick={() => setEditingMinistry(true)}>+ Sobre o time</button>
+            <Botao compacto style={{ marginBottom: 22 }} onClick={() => setEditingMinistry(true)}>+ Sobre o time</Botao>
           )}
           <DrawerSection title="Funções e quem cobre">
             {porFuncao.map(({ position, pessoas }) => (
@@ -854,14 +858,14 @@ export function EntityDrawer({
                 </div>
                 {pessoas.length === 0 && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>Ninguém habilitado ainda.</div>}
                 {pessoas.map((link) => (
-                  <button className="cand" type="button" key={`${position.id}-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
+                  <Acao className="cand" key={`${position.id}-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
                     <Av name={link.personName} photoUrl={people.find((pp) => pp.id === link.personId)?.photoUrl} />
                     <div className="cand-main">
                       <div className="cand-name">{link.personName}</div>
                       <div className="cand-meta">{link.isLeader ? "Líder do time" : link.functions.join(" · ") || ct("{Voluntario}")}</div>
                     </div>
                     {link.isLeader && <span className="lider-tag">Líder</span>}
-                  </button>
+                  </Acao>
                 ))}
               </div>
             ))}
@@ -871,22 +875,22 @@ export function EntityDrawer({
                   <div className="esc-fn">Sem função definida</div>
                 </div>
                 {semFuncao.map((link) => (
-                  <button className="cand" type="button" key={`semfuncao-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
+                  <Acao className="cand" key={`semfuncao-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
                     <Av name={link.personName} photoUrl={people.find((pp) => pp.id === link.personId)?.photoUrl} />
                     <div className="cand-main">
                       <div className="cand-name">{link.personName}</div>
                       <div className="cand-meta">{link.isLeader ? "Líder do time" : ct("{Voluntario}")}</div>
                     </div>
                     {link.isLeader && <span className="lider-tag">Líder</span>}
-                  </button>
+                  </Acao>
                 ))}
               </div>
             )}
             {ministry.people.length === 0 && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>Ninguém neste time ainda.</div>}
           </DrawerSection>
           <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
-            <button className="btn btn-pri" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => { setDrawer(null); setRoute("escalas"); }}>Ver escala</button>
-            <button className="btn btn-sec" style={{ flex: 1, justifyContent: "center" }} type="button" onClick={() => setAddingPerson(true)}>Adicionar pessoa</button>
+            <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={() => { setDrawer(null); setRoute("escalas"); }}>Ver escala</Botao>
+            <Botao style={{ flex: 1, justifyContent: "center" }} onClick={() => setAddingPerson(true)}>Adicionar pessoa</Botao>
           </div>
         </div>
       </DrawerShell>

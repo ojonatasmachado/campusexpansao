@@ -14,6 +14,8 @@ import { caixaDaGeometria, dentroDe } from "./geo";
 import { CATEGORIAS, carregarPontos, type Ponto } from "./Pontos";
 import { baixarCsv } from "./csv";
 
+import { Botao, BotaoIcone } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 /* Mesa de trabalho (tela 2 do design): uma, várias ou todas as regiões,
    para analisar e baixar CSV. Pessoas só com nome de quem aceitou o termo;
    o CSV nunca leva endereço e cada download fica registrado. */
@@ -89,17 +91,17 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
     <div className="content wide mesa">
       <header className="mesa-cab">
         <div>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onVoltar}><Icon name="voltar" size={14} />Mapa da igreja</button>
+          <Botao variante="discreto" compacto onClick={onVoltar}><Icon name="voltar" size={14} />Mapa da igreja</Botao>
           <div className="mp-sobre" style={{ marginTop: 10 }}>Mesa de trabalho</div>
           <h1 className="mesa-titulo">{titulo}</h1>
         </div>
-        {acesso.pode_csv && <button type="button" className="btn btn-pri" disabled={!sel.length} onClick={baixar}><Icon name="baixar" size={16} />Baixar CSV</button>}
+        {acesso.pode_csv && <Botao variante="principal" desativado={!sel.length} onClick={baixar}><Icon name="baixar" size={16} />Baixar CSV</Botao>}
       </header>
 
       <div className="mesa-caixa mesa-regioes">
         <span className="mp-fraco">Regiões</span>
         {escolhidas.map((r) => (
-          <span key={r.codigo} className="mesa-tag"><span className="mp-sw" style={{ background: `var(--mapa-${r.leitura})`, width: 8, height: 8, borderRadius: 4 }} />{r.nome}<button type="button" aria-label={`Tirar ${r.nome}`} onClick={() => setSel((s) => s.filter((x) => x !== r.codigo))}><Icon name="recusou" size={12} /></button></span>
+          <span key={r.codigo} className="mesa-tag"><span className="mp-sw" style={{ background: `var(--mapa-${r.leitura})`, width: 8, height: 8, borderRadius: 4 }} />{r.nome}<BotaoIcone rotulo={`Tirar ${r.nome}`} onClick={() => setSel((s) => s.filter((x) => x !== r.codigo))}><Icon name="recusou" size={12} /></BotaoIcone></span>
         ))}
         <select className="input mesa-add" value="" aria-label="Adicionar região" onChange={(e) => e.target.value && setSel((s) => [...s, e.target.value])}>
           <option value="">+ Região</option>
@@ -107,11 +109,11 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
         </select>
         <span style={{ flex: 1 }} />
         <span className="mp-fraco">Atalhos</span>
-        <button type="button" className="mp-chip" onClick={() => setSel(todas.map((r) => r.codigo))}>Todas</button>
-        <button type="button" className="mp-chip" onClick={() => setSel(todas.filter((r) => r.leitura === "falta").map((r) => r.codigo))}>Só onde falta igreja</button>
-        <button type="button" className="mp-chip" onClick={() => setSel(todas.filter((r) => r.leitura === "forte").map((r) => r.codigo))}>Só onde somos fortes</button>
+        <Acao className="mp-chip" onClick={() => setSel(todas.map((r) => r.codigo))}>Todas</Acao>
+        <Acao className="mp-chip" onClick={() => setSel(todas.filter((r) => r.leitura === "falta").map((r) => r.codigo))}>Só onde falta igreja</Acao>
+        <Acao className="mp-chip" onClick={() => setSel(todas.filter((r) => r.leitura === "forte").map((r) => r.codigo))}>Só onde somos fortes</Acao>
         <div className="mp-seg" style={{ ["--n" as string]: 3, minWidth: 240 } as React.CSSProperties} role="group" aria-label="Agrupar por">
-          {(["bairro", "setor", "area"] as const).map((n) => <button key={n} type="button" aria-pressed={nivel === n} disabled={n === "bairro" && !cidade?.tem_bairros} onClick={() => { setNivel(n); setSel([]); }}>{n === "area" ? "Áreas" : n === "bairro" ? "Bairros" : "Setores"}</button>)}
+          {(["bairro", "setor", "area"] as const).map((n) => <Acao key={n} aria-pressed={nivel === n} desativado={n === "bairro" && !cidade?.tem_bairros} onClick={() => { setNivel(n); setSel([]); }}>{n === "area" ? "Áreas" : n === "bairro" ? "Bairros" : "Setores"}</Acao>)}
         </div>
       </div>
 
@@ -157,9 +159,9 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
             <div className="mesa-sec">
               <h2>Pessoas da igreja nessas regiões <span className="mp-num mp-fraco">{pessoas.length}</span></h2>
               <div className="mp-chips">
-                <button type="button" className="mp-chip" aria-pressed={filtro === "todas"} onClick={() => setFiltro("todas")}>Todas</button>
-                <button type="button" className="mp-chip" aria-pressed={filtro === "servem"} onClick={() => setFiltro("servem")}>Já servem</button>
-                <button type="button" className="mp-chip" aria-pressed={filtro === "sem_grupo"} onClick={() => setFiltro("sem_grupo")}>{ct("Sem {grupo}")}</button>
+                <Acao className="mp-chip" aria-pressed={filtro === "todas"} onClick={() => setFiltro("todas")}>Todas</Acao>
+                <Acao className="mp-chip" aria-pressed={filtro === "servem"} onClick={() => setFiltro("servem")}>Já servem</Acao>
+                <Acao className="mp-chip" aria-pressed={filtro === "sem_grupo"} onClick={() => setFiltro("sem_grupo")}>{ct("Sem {grupo}")}</Acao>
               </div>
             </div>
             {acesso.detalhe === "numeros" ? <p className="mp-texto" style={{ padding: "0 18px 18px" }}>Sua liberação mostra só os números por região.</p> : (
@@ -167,9 +169,9 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
                 {marcadas.length > 0 && (
                   <div className="mesa-acoes">
                     <span><span className="mp-num">{marcadas.length}</span> {marcadas.length === 1 ? "selecionada" : "selecionadas"}</span>
-                    {marcadas.length === 1 && <button type="button" className="btn btn-sec btn-sm" onClick={() => onMensagem(marcadas[0])}>Mensagem</button>}
-                    {marcadas.length === 1 && <button type="button" className="btn btn-sec btn-sm" onClick={() => onAbrirMembro(marcadas[0])}>Ver ficha</button>}
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setMarcadas([])}>Limpar</button>
+                    {marcadas.length === 1 && <Botao compacto onClick={() => onMensagem(marcadas[0])}>Mensagem</Botao>}
+                    {marcadas.length === 1 && <Botao compacto onClick={() => onAbrirMembro(marcadas[0])}>Ver ficha</Botao>}
+                    <Botao variante="discreto" compacto onClick={() => setMarcadas([])}>Limpar</Botao>
                   </div>
                 )}
                 <div className="mesa-tabela">

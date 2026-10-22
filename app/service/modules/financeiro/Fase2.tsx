@@ -18,6 +18,11 @@ import { db, type Campanha, type ContaFixa, type Fechamento, type Lancamento, ty
 import { brl, FORMAS, mesNome, mesTexto, type Forma } from "./dinheiro";
 import { CampoValor, Excluir, type Base, type Cadastros } from "./Formularios";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
+import { Linha, linhaClasse } from "../../ui/Linha";
+import { Contagem } from "../../ui/Contagem";
 type Fin = ReturnType<typeof useFinanceiro>;
 
 /* ── o que vence no mês ──────────────────────────────────────────────────── */
@@ -50,18 +55,18 @@ export function APagar({ previstos, podeLancar, nomeConta, onEditar, onMudou }: 
         const venc = l.due_on ?? l.occurred_on;
         const atrasado = venc < hoje;
         return (
-          <div className="tr fin-prev" key={l.id}>
-            <button type="button" className="fin-prev-main" onClick={() => podeLancar && onEditar(l)} disabled={!podeLancar}>
+          <Linha estilo="tabela" className="fin-prev" key={l.id}>
+            <Acao className="fin-prev-main" onClick={() => podeLancar && onEditar(l)} desativado={!podeLancar}>
               <span className="cell-name">{l.description}</span>
               <span className={`cell-sub${atrasado ? " fin-atrasado" : ""}`}>{atrasado ? `Venceu em ${formatDateBR(venc)}` : `Vence em ${formatDateBR(venc)}`} · {nomeConta(l.account_id)}</span>
-            </button>
+            </Acao>
             <span className={`fin-num fin-saldo-v${l.kind === "despesa" ? " fin-saida" : ""}`}>{brl(l.kind === "despesa" ? -l.amount_cents : l.amount_cents, true)}</span>
             {podeLancar && (
-              <button type="button" className="btn btn-sec btn-sm" disabled={pagando === l.id} onClick={() => pagar(l)}>
+              <Botao compacto desativado={pagando === l.id} onClick={() => pagar(l)}>
                 {pagando === l.id ? "Salvando…" : l.kind === "entrada" ? "Recebido" : "Pago"}
-              </button>
+              </Botao>
             )}
-          </div>
+          </Linha>
         );
       })}
     </section>
@@ -82,7 +87,7 @@ export function Planejamento({ fin, podeLancar, onFixa, onCampanha }: {
   return (
     <>
       <div className="section-divide"><Icon name="agenda" size={15} /><span className="label">Contas fixas</span><span className="line" />
-        {podeLancar && <button type="button" className="btn btn-sec btn-sm" onClick={() => onFixa(null)}><Icon name="add" size={14} /> Nova conta fixa</button>}
+        {podeLancar && <Botao compacto onClick={() => onFixa(null)}><Icon name="add" size={14} /> Nova conta fixa</Botao>}
       </div>
       {fin.contasFixas.length === 0 ? (
         <EmptyState title="Nenhuma conta fixa" text="Aluguel, energia, internet, repasses: o que se repete todo mês. Cada uma aparece em A pagar e a receber no mês, com o vencimento." action={podeLancar ? { label: "Nova conta fixa", onClick: () => onFixa(null) } : undefined} />
@@ -100,15 +105,15 @@ export function Planejamento({ fin, podeLancar, onFixa, onCampanha }: {
               </>
             );
             return podeLancar
-              ? <button key={c.id} type="button" className="tr fin-lin click" onClick={() => onFixa(c)}>{miolo}</button>
-              : <div key={c.id} className="tr fin-lin">{miolo}</div>;
+              ? <Acao key={c.id} className={`${linhaClasse({ estilo: "tabela" })} fin-lin click`} onClick={() => onFixa(c)}>{miolo}</Acao>
+              : <Linha key={c.id} estilo="tabela" className="fin-lin">{miolo}</Linha>;
           })}
-          <div className="tr fin-rodape"><span className="cell-sub">{`${plural(ativas.length, "conta fixa ativa", "contas fixas ativas")} · ${brl(totalMes, true)} por mês`}</span></div>
+          <Linha estilo="tabela" className="fin-rodape"><span className="cell-sub">{`${plural(ativas.length, "conta fixa ativa", "contas fixas ativas")} · ${brl(totalMes, true)} por mês`}</span></Linha>
         </div>
       )}
 
       <div className="section-divide" style={{ marginTop: 28 }}><Icon name="meta" size={15} /><span className="label">Campanhas</span><span className="line" />
-        {podeLancar && <button type="button" className="btn btn-sec btn-sm" onClick={() => onCampanha(null)}><Icon name="add" size={14} /> Nova campanha</button>}
+        {podeLancar && <Botao compacto onClick={() => onCampanha(null)}><Icon name="add" size={14} /> Nova campanha</Botao>}
       </div>
       {fin.campanhas.length === 0 ? (
         <EmptyState title="Nenhuma campanha" text="Reforma, missões, um projeto com meta: as entradas ligadas à campanha somam no progresso." action={podeLancar ? { label: "Nova campanha", onClick: () => onCampanha(null) } : undefined} />
@@ -128,7 +133,7 @@ export function Planejamento({ fin, podeLancar, onFixa, onCampanha }: {
               </>
             );
             return podeLancar
-              ? <button key={c.id} type="button" className="fin-camp click" onClick={() => onCampanha(c)}>{corpo}</button>
+              ? <Acao key={c.id} className="fin-camp click" onClick={() => onCampanha(c)}>{corpo}</Acao>
               : <div key={c.id} className="fin-camp">{corpo}</div>;
           })}
         </div>
@@ -197,7 +202,7 @@ export function ContaFixaForm({ org, churchId, edit, cad, onClose, onDone }: Bas
             <div className="field-label" id={`${fid}-t`}>Tipo</div>
             <div className="fs-chips" role="group" aria-labelledby={`${fid}-t`}>
               {(["despesa", "entrada"] as const).map((k) => (
-                <button key={k} type="button" className={`seg-chip${tipo === k ? " on" : ""}`} aria-pressed={tipo === k} onClick={() => { setTipo(k); setCat(""); }}>{k === "despesa" ? "Despesa (a pagar)" : "Entrada (a receber)"}</button>
+                <Opcao key={k} marcada={tipo === k} estilo="seg-chip" aria-pressed={tipo === k} onClick={() => { setTipo(k); setCat(""); }}>{k === "despesa" ? "Despesa (a pagar)" : "Entrada (a receber)"}</Opcao>
               ))}
             </div>
           </div>
@@ -234,7 +239,7 @@ export function ContaFixaForm({ org, churchId, edit, cad, onClose, onDone }: Bas
             <div className="field-label" id={`${fid}-fm`}>Forma</div>
             <div className="fs-chips" role="group" aria-labelledby={`${fid}-fm`}>
               {FORMAS.map((f) => (
-                <button key={f.id} type="button" className={`seg-chip${forma === f.id ? " on" : ""}`} aria-pressed={forma === f.id} onClick={() => setForma(forma === f.id ? "" : f.id)}>{f.rotulo}</button>
+                <Opcao key={f.id} marcada={forma === f.id} estilo="seg-chip" aria-pressed={forma === f.id} onClick={() => setForma(forma === f.id ? "" : f.id)}>{f.rotulo}</Opcao>
               ))}
             </div>
           </div>
@@ -384,7 +389,7 @@ export function FechamentoMes({ fin, mes, org, igreja, podeLancar, podeReabrir }
   };
 
   const linhas = (lista: { categoria: string; total_cents: number }[]) => lista.map((c) => (
-    <div className="tr fin-saldo" key={c.categoria}><div className="fin-saldo-main"><div className="cell-name">{c.categoria}</div></div><div className="fin-num fin-saldo-v">{brl(c.total_cents)}</div></div>
+    <Linha estilo="tabela" className="fin-saldo" key={c.categoria}><div className="fin-saldo-main"><div className="cell-name">{c.categoria}</div></div><div className="fin-num fin-saldo-v">{brl(c.total_cents)}</div></Linha>
   ));
 
   return (
@@ -399,28 +404,28 @@ export function FechamentoMes({ fin, mes, org, igreja, podeLancar, podeReabrir }
 
       <div className="kpi-row kpi-3">
         {([[`Entradas`, brl(t.entradas_cents), false], [`Saídas`, brl(t.despesas_cents), false], ["Resultado", brl(t.entradas_cents - t.despesas_cents, true), t.entradas_cents - t.despesas_cents < 0]] as const).map(([rotulo, valor, neg]) => (
-          <div className="kpi" key={rotulo}><div className="kpi-label">{rotulo}</div><div className={`kpi-value fin-num${valor.length > 15 ? " fin-longo" : ""}${neg ? " fin-neg" : ""}`}>{fin.carregando ? "…" : valor}</div></div>
+          <div className="kpi" key={rotulo}><div className="kpi-label">{rotulo}</div><div className={`kpi-value fin-num${valor.length > 15 ? " fin-longo" : ""}${neg ? " fin-neg" : ""}`}>{fin.carregando ? "…" : <Contagem valor={valor} />}</div></div>
         ))}
       </div>
       {t.previstos_em_aberto > 0 && <p className="fs-note fin-atrasado">{`${plural(t.previstos_em_aberto, "previsto ficou", "previstos ficaram")} sem pagar ou receber neste mês.`}</p>}
 
       <div className="fin-grid">
-        <section className="tbl fin-bloco"><div className="fin-bloco-h"><h2 className="fin-bloco-t">Entradas por categoria</h2></div>{entradas.length ? linhas(entradas) : <div className="tr"><span className="cell-sub">Nenhuma entrada.</span></div>}</section>
-        <section className="tbl fin-bloco"><div className="fin-bloco-h"><h2 className="fin-bloco-t">Saídas por categoria</h2></div>{despesas.length ? linhas(despesas) : <div className="tr"><span className="cell-sub">Nenhuma saída.</span></div>}</section>
+        <section className="tbl fin-bloco"><div className="fin-bloco-h"><h2 className="fin-bloco-t">Entradas por categoria</h2></div>{entradas.length ? linhas(entradas) : <Linha estilo="tabela"><span className="cell-sub">Nenhuma entrada.</span></Linha>}</section>
+        <section className="tbl fin-bloco"><div className="fin-bloco-h"><h2 className="fin-bloco-t">Saídas por categoria</h2></div>{despesas.length ? linhas(despesas) : <Linha estilo="tabela"><span className="cell-sub">Nenhuma saída.</span></Linha>}</section>
       </div>
 
       <div className="fin-fech-acoes">
-        <button type="button" className="btn btn-sec" onClick={() => imprimir("relatorio", "portrait")}><Icon name="documento" size={14} /> Imprimir relatório</button>
-        {!fechado && podeLancar && !futuro && !confirmando && <button type="button" className="btn btn-pri" onClick={() => setConfirmando(true)}><Icon name="cadeado" size={14} /> Fechar {mesNome(mes)}</button>}
-        {fechado && podeReabrir && <button type="button" className="btn btn-sec" onClick={reabrir}>Reabrir o mês</button>}
+        <Botao onClick={() => imprimir("relatorio", "portrait")}><Icon name="documento" size={14} /> Imprimir relatório</Botao>
+        {!fechado && podeLancar && !futuro && !confirmando && <Botao variante="principal" onClick={() => setConfirmando(true)}><Icon name="cadeado" size={14} /> Fechar {mesNome(mes)}</Botao>}
+        {fechado && podeReabrir && <Botao onClick={reabrir}>Reabrir o mês</Botao>}
       </div>
       {confirmando && (
         <div className="fin-fech-conf">
           <p className="fs-note">Depois de fechar, ninguém lança, edita ou exclui nada em {mesNome(mes)}. Só a direção ou o pastor reabrem.</p>
           <div className="field"><label className="field-label" htmlFor={`${fid}-n`}>Observação (opcional)</label><textarea id={`${fid}-n`} className="textarea" maxLength={1000} value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Ex.: Conferido com o extrato do banco." /></div>
           <div className="fin-fech-acoes">
-            <button type="button" className="btn btn-sec" onClick={() => setConfirmando(false)}>Cancelar</button>
-            <button type="button" className="btn btn-pri" disabled={salvando} onClick={fechar}>{salvando ? "Fechando…" : `Fechar ${mesNome(mes)}`}</button>
+            <Botao onClick={() => setConfirmando(false)}>Cancelar</Botao>
+            <Botao variante="principal" desativado={salvando} onClick={fechar}>{salvando ? "Fechando…" : `Fechar ${mesNome(mes)}`}</Botao>
           </div>
         </div>
       )}

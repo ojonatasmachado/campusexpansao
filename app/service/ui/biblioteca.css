@@ -1,0 +1,125 @@
+/* Biblioteca do Service: visual das peças de app/service/ui (lei 17).
+   Direção do canvas "Service, direção visual", pranchas 1 (fundamentos e
+   componentes) e 6 (componentes ricos e estados). Carregada depois de
+   service-app.css e mapa.css: vence as regras antigas das mesmas classes.
+   Cor só por variável do tema da igreja; no login, as mesmas variáveis dão as
+   cores CE.X. Derivações por color-mix() sobre --white (texto) e --olive (igreja),
+   que funcionam no claro e no escuro. */
+
+:root {
+  /* forma: controles 14, pílula para escolhas e discretos */
+  --r-acao: 14px;
+}
+
+/* ── Botão (Botao): uma ação principal por bloco ── */
+.btn, .m6-btn, .login-btn {
+  border-radius: var(--r-acao);
+  font-weight: 700;
+  transition: background-color .2s ease, color .2s ease, opacity .2s ease, transform .22s var(--ease-drawer);
+}
+.btn:active:not(:disabled), .m6-btn:active:not(:disabled), .login-btn:active:not(:disabled) { transform: scale(.96); }
+.btn:disabled, .m6-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.btn-pri, .m6-btn.pri { background: var(--accent-fill); color: var(--accent-ink); border-color: transparent; }
+
+/* secundário: superfície, sem borda */
+.btn-sec, .m6-btn.sec { background: color-mix(in srgb, var(--white) 8%, transparent); color: var(--white); border-color: transparent; }
+@media (hover:hover) and (pointer:fine) {
+  .btn-sec:hover, .m6-btn.sec:hover { background: color-mix(in srgb, var(--white) 13%, transparent); color: var(--white); border-color: transparent; }
+}
+
+/* discreto: pílula com véu da cor da igreja */
+.btn-ghost { background: color-mix(in srgb, var(--olive) 12%, transparent); color: var(--olive); border: 0; border-radius: var(--r-pill); }
+@media (hover:hover) and (pointer:fine) {
+  .btn-ghost:hover { background: color-mix(in srgb, var(--olive) 20%, transparent); color: var(--olive); border-color: transparent; }
+}
+
+.btn-danger, .m6-btn.danger { background: var(--danger-dim); color: var(--danger); border-color: transparent; }
+
+.m6-link, .panel-link { font-weight: 700; color: var(--olive); }
+.mp-botao { border-radius: var(--r-acao); font-weight: 600; }
+
+/* ── Interruptor: trilho em pílula, bolinha clara, mola ── */
+.sw, .m6-tg, .m-toggle {
+  width: 48px; height: 28px; border: 0; border-radius: var(--r-pill);
+  background: var(--border-3);
+  transition: background-color .3s ease;
+}
+.sw::after, .m6-tg::after, .m-toggle::after {
+  top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+  transition: transform .35s var(--ease-drawer);
+}
+.sw.on, .m6-tg.on, .m-toggle.on { background: var(--accent-fill); }
+.sw.on::after, .m6-tg.on::after, .m-toggle.on::after { transform: translateX(20px); background: #fff; }
+.sw:disabled, .m6-tg:disabled, .m-toggle:disabled { opacity: .45; cursor: default; }
+
+/* ── Segmentado (Opcao dentro de .seg): a opção marcada vira pílula elevada ── */
+.seg { border: 0; border-radius: var(--r-pill); background: color-mix(in srgb, var(--white) 7%, transparent); padding: 3px; }
+.seg button { border-radius: var(--r-pill); font-weight: 600; transition: background-color .3s ease, color .3s ease, box-shadow .3s ease; }
+.seg button.on { background: var(--graphite); color: var(--white); box-shadow: 0 2px 8px rgba(0, 0, 0, .14); }
+
+/* ── Chip de escolha (Opcao estilo="seg-chip") ── */
+.seg-chip { border-radius: var(--r-pill); font-weight: 600; }
+.seg-chip.on { background: color-mix(in srgb, var(--olive) 14%, transparent); color: var(--olive); border-color: transparent; }
+
+/* ── Cartão de opção (Opcao estilo="opt") ── */
+.opt { border-radius: var(--r-acao); }
+
+/* ── Selo (Selo): diz o estado; pílula com o fundo suave da própria cor ── */
+.chip, .m6-st { border-radius: var(--r-pill); font-weight: 700; border-color: transparent; }
+.chip { padding: 5px 10px; }
+.chip-neutral, .m6-st.neutral { background: color-mix(in srgb, var(--white) 7%, transparent); color: var(--muted); border-color: transparent; }
+/* vaga aberta e rascunho mantêm o tracejado: é o que diz "ainda não é" */
+.chip-open, .chip-draft { border-color: var(--border-3); }
+
+/* ── Etiqueta (Etiqueta): papel ou grupo, canto 8 ── */
+.tag { border: 0; border-radius: var(--r-md); font-weight: 600; background: color-mix(in srgb, var(--white) 7%, transparent); color: var(--light); }
+.tag.lead { background: color-mix(in srgb, var(--olive) 12%, transparent); color: var(--olive); }
+
+/* ── Cartão (Cartao): plano, linha fina, canto 24; o destaque não pinta o fundo ── */
+.panel, .m6-card, .m-card { border: 1px solid var(--border); border-radius: 24px; }
+.m6-list { border: 1px solid var(--border); border-radius: 20px; }
+
+/* ── Linha de lista (Linha): sem borda própria, separada por linha fina ── */
+.tr, .mini-row, .cfg-row { border-bottom: 1px solid var(--border); }
+.tr:last-child, .mini-row:last-child { border-bottom: 0; }
+.m6-rt { font-weight: 700; }
+@media (hover:hover) and (pointer:fine) {
+  .tr.click:hover, .mini-row.click:hover, button.tr:hover, button.mini-row:hover, button.m6-row:hover { background: color-mix(in srgb, var(--white) 4%, transparent); }
+}
+
+/* ── Segmentado com pílula que desliza (Segmentado) ── */
+.seg.tem-pilula { position: relative; }
+.seg-pilula {
+  position: absolute; top: 3px; bottom: 3px; left: 0; width: 0; opacity: 0;
+  border-radius: var(--r-pill); background: var(--graphite); box-shadow: 0 2px 8px rgba(0, 0, 0, .14);
+  transition: transform .5s var(--ease-drawer), width .5s var(--ease-drawer), opacity .2s ease;
+  pointer-events: none;
+}
+.seg.tem-pilula button { position: relative; z-index: 1; }
+.seg.tem-pilula button.on { background: transparent; box-shadow: none; }
+
+/* ── Entrada com mola: cartões chegam subindo 8 px, em cascata curta.
+   backwards (não both): depois de entrar, o transform volta a ser da tela ── */
+@keyframes entrar-mola { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.panel, .m6-card, .m-card, .m6-list { animation: entrar-mola .5s var(--ease-drawer) backwards; }
+:is(.panel, .m6-card, .m-card, .m6-list):nth-child(2) { animation-delay: .04s; }
+:is(.panel, .m6-card, .m-card, .m6-list):nth-child(3) { animation-delay: .08s; }
+:is(.panel, .m6-card, .m-card, .m6-list):nth-child(n+4) { animation-delay: .12s; }
+
+/* ── Check com mola: o sinal de feito entra crescendo e assenta ── */
+@keyframes check-mola { 0% { transform: scale(.3); opacity: 0; } 60% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); } }
+.or-orei.on .cex-ic, .m6-st.ok .cex-ic { animation: check-mola .5s var(--ease-drawer) backwards; }
+
+/* ── Contagem: algarismos tabulares; leitor de tela ouve só o valor final ── */
+.num { font-variant-numeric: tabular-nums; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .m6-btn, .login-btn, .sw, .m6-tg, .m-toggle, .seg button,
+  .sw::after, .m6-tg::after, .m-toggle::after { transition: none; }
+  .btn:active:not(:disabled), .m6-btn:active:not(:disabled), .login-btn:active:not(:disabled) { transform: none; }
+  .seg-pilula { transition: none; }
+  .panel, .m6-card, .m-card, .m6-list, .or-orei.on .cex-ic, .m6-st.ok .cex-ic { animation: none; }
+}

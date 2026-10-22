@@ -7,6 +7,8 @@ import CepInput, { type CepResult } from "../CepInput";
 import PasswordInput from "../PasswordInput";
 import { AVISO_CEP, TERMO_MAPA_VERSAO, pontosDoTermo, termoCompleto } from "../lib/termo-mapa";
 
+import { Botao } from "../ui/Botao";
+import { Acao } from "../ui/Acao";
 /* CEP no aceite brasileiro: a igreja conhece a região da comunidade. */
 export default function ConviteForm({ t, churchName }: { t: string; churchName?: string }) {
   const router = useRouter();
@@ -101,7 +103,7 @@ export default function ConviteForm({ t, churchName }: { t: string; churchName?:
         <span className="login-help">{brasil ? AVISO_CEP : "Seu endereço ajuda a igreja a conhecer e cuidar das pessoas da sua região."}</span>
         {endereco.city && <span className="login-help">{[endereco.street, endereco.neighborhood, endereco.city, endereco.state].filter(Boolean).join(" · ")}</span>}
       </div>
-      <button className="login-country-switch" type="button" onClick={() => { setBrasil((v) => !v); setConsultandoCep(false); setCep(""); setEndereco({}); }}>{brasil ? "Meu endereço é fora do Brasil" : "Moro no Brasil"}</button>
+      <Acao className="login-country-switch" onClick={() => { setBrasil((v) => !v); setConsultandoCep(false); setCep(""); setEndereco({}); }}>{brasil ? "Meu endereço é fora do Brasil" : "Moro no Brasil"}</Acao>
       {!brasil ? (
         <label className="login-field"><span className="login-label">Cidade</span><input className="login-input" autoComplete="address-level2" value={endereco.city ?? ""} onChange={(e) => patchEndereco("city", e.target.value)} /></label>
       ) : null}
@@ -119,9 +121,9 @@ export default function ConviteForm({ t, churchName }: { t: string; churchName?:
           {termoCompleto(churchName).map((p) => <p key={p}>{p}</p>)}
         </details>
       </div>
-      <button className="login-btn" type="submit" disabled={loading || consultandoCep}>
+      <Botao tamanho="entrada" variante="principal" type="submit" desativado={loading || consultandoCep}>
         {loading ? "Aguarde..." : consultandoCep ? "Buscando endereço..." : "Concordo e criar acesso"}
-      </button>
+      </Botao>
     </form>
   );
 }

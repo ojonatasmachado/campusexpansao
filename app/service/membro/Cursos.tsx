@@ -8,9 +8,13 @@ import { INSTRUCAO_QR, aulasDoCurso, proximaAula, textoDaAula, type ProximaAula 
 import { JourneyContext, M6Row, MemberUiContext, dataLonga, mensagemAcao, useFaltas } from "./comum";
 import type { BaptismClass, Course, CourseLesson, CourseModule, Enrollment, M } from "./tipos";
 
+import { Botao, botaoClasse } from "../ui/Botao";
+import { Selo, tomDaClasse } from "../ui/Selo";
+import { Cartao } from "../ui/Cartao";
+import { Linha, Lista } from "../ui/Linha";
 export function ChipSt({ status, label }: { status: "ok" | "wait" | "no"; label?: string }) {
   const cls = status === "ok" ? "chip-ok" : status === "wait" ? "chip-wait" : "chip-no";
-  return <span className={`chip ${cls}`}>{label ?? status}</span>;
+  return <Selo tom={tomDaClasse(cls)}>{label ?? status}</Selo>;
 }
 
 
@@ -33,14 +37,14 @@ export function ProximaAulaBloco({ prox }: { prox: ProximaAula<CourseLesson> | n
         <div className="m6-meta" style={{ marginTop: 4 }}>O conteúdo desta aula ainda não foi publicado.</div>
       ) : null}
       {abrir === "link" && (
-        <a className="m6-btn pri full" style={{ marginTop: 12 }} href={aula.link!.trim()} target="_blank" rel="noopener noreferrer">
+        <a className={botaoClasse({ tamanho: "toque", variante: "principal", largo: true })} style={{ marginTop: 12 }} href={aula.link!.trim()} target="_blank" rel="noopener noreferrer">
           <Icon name="play" size={20} />Assistir à aula
         </a>
       )}
       {abrir === "texto" && (
-        <button className="m6-btn pri full" style={{ marginTop: 12 }} type="button" onClick={() => ui.sheet(<SheetAula aula={aula} n={n} total={total} porQr={porQr} />)}>
+        <Botao tamanho="toque" variante="principal" largo style={{ marginTop: 12 }} onClick={() => ui.sheet(<SheetAula aula={aula} n={n} total={total} porQr={porQr} />)}>
           <Icon name="documento" size={20} />{porQr ? "Ver o material da aula" : "Ler a aula"}
-        </button>
+        </Botao>
       )}
     </div>
   );
@@ -97,7 +101,7 @@ export function TabCursos({
     <>
 
       {myEnrollments.length === 0 && toExplore.length === 0 ? (
-        <div className="m6-card"><div className="m6-ct">Nenhum curso publicado por enquanto</div><p className="m6-txt">Quando a igreja disponibilizar um curso, você poderá conhecê-lo e acompanhar suas aulas aqui.</p></div>
+        <Cartao estilo="app"><div className="m6-ct">Nenhum curso publicado por enquanto</div><p className="m6-txt">Quando a igreja disponibilizar um curso, você poderá conhecê-lo e acompanhar suas aulas aqui.</p></Cartao>
       ) : myEnrollments.length > 0 ? <div className="m-section-t">Meus cursos · {myEnrollments.length}</div> : null}
       {myEnrollments.map((en) => {
         const course = courses.find((c) => c.id === en.course_id);
@@ -106,7 +110,7 @@ export function TabCursos({
         const totalAulas = courseLessons.filter((l) => courseModuleIds.has(l.module_id)).length;
         const pct = totalAulas ? Math.min(100, Math.round((en.done_count / totalAulas) * 100)) : 0;
         return (
-          <div className="m-card" key={en.id}>
+          <Cartao estilo="app-solto" key={en.id}>
             <div className="m-card-top">
               <span className="m-when">{course.level ?? "Curso"}</span>
               {en.status === "concluido" ? (
@@ -120,7 +124,7 @@ export function TabCursos({
               <div className={`bar-fill ${en.status === "concluido" ? "" : "amber"}`} style={{ width: `${pct}%` }} />
             </div>
             {en.status !== "concluido" && <ProximaAulaBloco prox={proximaAula(course.id, en.done_count, courseModules, courseLessons)} />}
-          </div>
+          </Cartao>
         );
       })}
 
@@ -128,7 +132,7 @@ export function TabCursos({
         <>
           <div className="m-section-t" style={{ marginTop: 22 }}>Explorar</div>
           {toExplore.map((c) => (
-            <div className="m-card" key={c.id}>
+            <Cartao estilo="app-solto" key={c.id}>
               <div className="m-when" style={{ marginBottom: 6 }}>{c.level ?? "Curso"}</div>
               <div className="m-culto" style={{ fontSize: "var(--fs-app-17)" }}>{c.name}</div>
               {c.description && (
@@ -137,7 +141,7 @@ export function TabCursos({
                 </div>
               )}
               <CursoInscricao courseId={c.id} />
-            </div>
+            </Cartao>
           ))}
         </>
       )}
@@ -161,10 +165,10 @@ export function CursoInscricao({ courseId }: { courseId: string }) {
   if (estado === "ok") return <div className="m-confirmed" style={{ marginTop: 12 }}><Icon name="ok" size={15} /> Inscrição feita. O curso aparece em Meus cursos.</div>;
   return (
     <>
-      <button
-        className="m-btn m-btn-ok ghost"
+      <Botao
+        tamanho="toque" variante="secundario" largo
         style={{ width: "100%", marginTop: 12 }}
-        disabled={estado === "enviando" || !j.onEnrollCourse}
+        desativado={estado === "enviando" || !j.onEnrollCourse}
         onClick={async () => {
           if (!j.onEnrollCourse) return;
           setEstado("enviando");
@@ -173,7 +177,7 @@ export function CursoInscricao({ courseId }: { courseId: string }) {
         }}
       >
         {estado === "enviando" ? "Inscrevendo..." : "Inscrever-se"}
-      </button>
+      </Botao>
       {estado && estado !== "enviando" && estado !== "ok" && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginTop: 6 }}>{estado}</div>}
     </>
   );
@@ -194,12 +198,12 @@ export function TabBatismo({ baptismClasses, memberId }: { baptismClasses: Bapti
     <>
       <div className="m-section-t">Próximos batismos</div>
       {openClasses.length === 0 && (
-        <div className="m-card">
+        <Cartao estilo="app-solto">
           <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>Nenhuma turma agendada por ora.</div>
-        </div>
+        </Cartao>
       )}
       {openClasses.map((b) => (
-        <div className="m-card" key={b.id}>
+        <Cartao estilo="app-solto" key={b.id}>
           <div className="m-card-top">
             <span className="m-when">{formatDateBR(b.baptism_date) || "A definir"}</span>
             {b.open_enrollment ? (
@@ -220,10 +224,10 @@ export function TabBatismo({ baptismClasses, memberId }: { baptismClasses: Bapti
                 <Icon name="ok" size={15} /> Inscrição enviada! O responsável vai te chamar.
               </div>
             ) : (
-              <button
-                className="m-btn m-btn-ok"
+              <Botao
+                tamanho="toque" variante="principal" largo
                 style={{ width: "100%", marginTop: 12 }}
-                disabled={!j.onRequestBaptism}
+                desativado={!j.onRequestBaptism}
                 onClick={async () => {
                   if (!j.onRequestBaptism) return;
                   const r = await j.onRequestBaptism(b.id);
@@ -232,7 +236,7 @@ export function TabBatismo({ baptismClasses, memberId }: { baptismClasses: Bapti
                 }}
               >
                 Quero me inscrever →
-              </button>
+              </Botao>
             )
           ) : (
             <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginTop: 12 }}>
@@ -240,7 +244,7 @@ export function TabBatismo({ baptismClasses, memberId }: { baptismClasses: Bapti
             </div>
           )}
           {erro[b.id] && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginTop: 8 }}>{erro[b.id]}</div>}
-        </div>
+        </Cartao>
       ))}
     </>
   );
@@ -259,7 +263,7 @@ export function CursosResumo({ member, courses, enrollments, courseModules, cour
   return (
     <>
       {curso && andando && (
-        <div className="m6-card">
+        <Cartao estilo="app">
           <div className="m6-kick">Em andamento</div>
           <div className="m6-ct">{curso.name}</div>
           {total > 0 && <div className="m6-meta">{andando.done_count} de {plural(total, "aula")}</div>}
@@ -268,14 +272,14 @@ export function CursosResumo({ member, courses, enrollments, courseModules, cour
             return prox ? <div className="m6-meta">Próxima aula: {prox.aula.name}</div> : null;
           })()}
           {total > 0 ? <div className="m6-prog"><i style={{ width: `${pct}%` }} /></div> : <div className="m6-meta">As aulas ainda não foram publicadas.</div>}
-          <button className="m6-btn sec full" style={{ marginTop: 12 }} type="button" onClick={() => ui.go("caminhada", "cursos")}>Abrir meu curso →</button>
-        </div>
+          <Botao tamanho="toque" largo style={{ marginTop: 12 }} onClick={() => ui.go("caminhada", "cursos")}>Abrir meu curso →</Botao>
+        </Cartao>
       )}
-      <div className="m6-list">
+      <Lista>
         {disponiveis.slice(0, 3).map((c) => <M6Row key={c.id} ic="cursos" t={c.name} s={c.level ?? c.description ?? undefined} onClick={() => ui.go("caminhada", "cursos")} />)}
         {feitos > 0 && <M6Row ic="ok" t={`Concluídos · ${feitos}`} onClick={() => ui.go("caminhada", "cursos")} />}
-        {disponiveis.length === 0 && feitos === 0 && !curso && <div className="m6-row"><span className="m6-rb"><span className="m6-rs">Os cursos da igreja aparecem aqui quando forem publicados.</span></span></div>}
-      </div>
+        {disponiveis.length === 0 && feitos === 0 && !curso && <Linha estilo="app"><span className="m6-rb"><span className="m6-rs">Os cursos da igreja aparecem aqui quando forem publicados.</span></span></Linha>}
+      </Lista>
     </>
   );
 }

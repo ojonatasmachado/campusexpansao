@@ -3,6 +3,7 @@
 import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useRef, useState } from "react";
 import { Icon } from "../../lib/icons";
 
+import { Botao, BotaoIcone } from "../../ui/Botao";
 /* Tela de formulário do painel (onda 1 do plano docs/service-v7/PLANO_TELA_FORMULARIO.md).
    Criar ou editar algo com mais de 4 campos abre aqui, não numa janela:
    topo fixo (voltar, título, até duas ações), coluna de 720px, e no celular o
@@ -152,27 +153,27 @@ export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScree
   const bloqueado = saving || missing.length > 0;
   const falta = missing.length ? `Falta: ${juntar(missing)}` : "";
   const principal = (
-    <button className="btn btn-pri" type="button" onClick={onSave} disabled={bloqueado} aria-describedby={falta ? `${id}-falta` : undefined}>
+    <Botao variante="principal" onClick={onSave} desativado={bloqueado} aria-describedby={falta ? `${id}-falta` : undefined}>
       {saving ? "Salvando…" : saveLabel}
-    </button>
+    </Botao>
   );
 
   const segunda = secondary ? (
-    <button className="btn btn-sec" type="button" onClick={secondary.onClick} disabled={saving || secondary.disabled}>{secondary.label}</button>
+    <Botao onClick={secondary.onClick} desativado={saving || secondary.disabled}>{secondary.label}</Botao>
   ) : null;
 
   return (
     <div className="fs" role="dialog" aria-modal="true" aria-labelledby={titleId} ref={rootRef} tabIndex={-1} onKeyDown={onKeyDown}>
       <header className="fs-top">
-        <button className="fs-back" type="button" onClick={pedirFechar} disabled={saving} aria-label="Voltar sem salvar">
+        <BotaoIcone className="fs-back" onClick={pedirFechar} desativado={saving} rotulo="Voltar sem salvar">
           <Icon name="voltar" size={18} />
-        </button>
+        </BotaoIcone>
         <div className="fs-head">
           {eyebrow ? <div className="fs-eyebrow">{eyebrow}</div> : null}
           <h2 className="fs-title" id={titleId}>{title}</h2>
         </div>
         <div className="fs-actions">
-          {segunda ?? <button className="btn btn-sec" type="button" onClick={pedirFechar} disabled={saving}>Cancelar</button>}
+          {segunda ?? <Botao onClick={pedirFechar} desativado={saving}>Cancelar</Botao>}
           {principal}
         </div>
       </header>
@@ -196,8 +197,8 @@ export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScree
           <div className="fs-confirm-card">
             <p className="fs-confirm-t" id={`${id}-c`}>Descartar o que você preencheu?</p>
             <div className="fs-confirm-acts">
-              <button className="btn btn-sec" type="button" onClick={() => setConfirmar(false)} autoFocus>Continuar editando</button>
-              <button className="btn btn-danger" type="button" onClick={() => { setConfirmar(false); void fechar(); }}>Descartar</button>
+              <Botao onClick={() => setConfirmar(false)} autoFocus>Continuar editando</Botao>
+              <Botao variante="perigo" onClick={() => { setConfirmar(false); void fechar(); }}>Descartar</Botao>
             </div>
           </div>
         </div>

@@ -14,6 +14,10 @@ import { joinDot } from "../../lib/date";
 import { EmptyState, PageHead } from "../../painel/ui";
 import { CATEGORIAS, moderar, rotuloCategoria, usePedidosPainel, type Categoria, type Moderacao, type PedidoPainel } from "./oracao";
 
+import { Botao } from "../../ui/Botao";
+import { Opcao } from "../../ui/Opcao";
+import { Cartao } from "../../ui/Cartao";
+import { Selo } from "../../ui/Selo";
 type Filtro = "ativos" | "mural" | "intercessao" | "respondidos" | "ocultos" | "arquivados";
 const FILTROS: { id: Filtro; rotulo: string; vale: (p: PedidoPainel) => boolean }[] = [
   { id: "ativos", rotulo: "Ativos", vale: (p) => p.moderation === "ativo" && !p.answered_at },
@@ -67,12 +71,12 @@ export function OracaoPainel({ organizationId, churches = [] }: { organizationId
       <div className="fs-chips or-filtros" role="group" aria-label="Filtrar pedidos">
         {FILTROS.map((f) => {
           const n = lista.filter(f.vale).length;
-          return <button key={f.id} type="button" className={`seg-chip${filtro === f.id ? " on" : ""}`} aria-pressed={filtro === f.id} onClick={() => setFiltro(f.id)}>{`${f.rotulo} · ${n}`}</button>;
+          return <Opcao key={f.id} marcada={filtro === f.id} estilo="seg-chip" aria-pressed={filtro === f.id} onClick={() => setFiltro(f.id)}>{`${f.rotulo} · ${n}`}</Opcao>;
         })}
       </div>
 
       <div className="mural-list">
-        {dados === null && !erro && <div className="panel"><div className="panel-body"><span className="mural-meta">Carregando os pedidos...</span></div></div>}
+        {dados === null && !erro && <Cartao><div className="panel-body"><span className="mural-meta">Carregando os pedidos...</span></div></Cartao>}
         {erro && <EmptyState title="Não deu para carregar os pedidos" text="Confira a conexão e tente de novo." action={{ label: "Tentar de novo", onClick: () => void recarregar() }} />}
         {dados !== null && lista.length === 0 && (
           <EmptyState title="Nenhum pedido de oração ainda" text="Quando alguém pedir oração pelo app, o pedido aparece aqui para a intercessão acompanhar." />
@@ -81,16 +85,16 @@ export function OracaoPainel({ organizationId, churches = [] }: { organizationId
           <EmptyState title="Nada neste filtro" text="Troque o filtro ou limpe a busca para ver os outros pedidos." />
         )}
         {visiveis.map((p) => (
-          <article className={`panel mural-item or-item${p.moderation !== "ativo" ? " or-apagado" : ""}`} key={p.id}>
+          <Cartao como="article" className={`mural-item or-item${p.moderation !== "ativo" ? " or-apagado" : ""}`} key={p.id}>
             <div className="panel-body">
               <div className="mural-top">
                 <span className="or-chips-p">
-                  <span className="chip chip-neutral">{rotuloCategoria(p.category)}</span>
-                  <span className="chip chip-neutral">{p.audience === "mural" ? "Mural" : "Só a intercessão"}</span>
-                  {p.anonymous && <span className="chip chip-wait">Anônimo no mural</span>}
-                  {p.answered_at && <span className="chip chip-ok">Respondido</span>}
-                  {p.moderation === "oculto" && <span className="chip chip-neutral">Oculto</span>}
-                  {p.moderation === "arquivado" && <span className="chip chip-neutral">Arquivado</span>}
+                  <Selo>{rotuloCategoria(p.category)}</Selo>
+                  <Selo>{p.audience === "mural" ? "Mural" : "Só a intercessão"}</Selo>
+                  {p.anonymous && <Selo tom="pendente">Anônimo no mural</Selo>}
+                  {p.answered_at && <Selo tom="ok">Respondido</Selo>}
+                  {p.moderation === "oculto" && <Selo>Oculto</Selo>}
+                  {p.moderation === "arquivado" && <Selo>Arquivado</Selo>}
                 </span>
                 <span className="mural-meta" title={dataPublicacao(p.created_at)}>{quandoPublicado(p.created_at)}</span>
               </div>
@@ -100,19 +104,19 @@ export function OracaoPainel({ organizationId, churches = [] }: { organizationId
               <div className="mural-reach-n or-n">{p.audience === "mural" ? (p.prayed_count ? `${plural(p.prayed_count, "pessoa orou", "pessoas oraram")}` : "Ninguém marcou que orou ainda") : "Chegou também como conversa"}</div>
               <div className="mural-acts">
                 {p.moderation === "ativo" && p.audience === "mural" && (
-                  <button className="btn btn-sec btn-sm" type="button" disabled={ocupado === p.id} onClick={() => void mudar(p, "oculto", "Pedido tirado do mural.")}>Ocultar do mural</button>
+                  <Botao compacto desativado={ocupado === p.id} onClick={() => void mudar(p, "oculto", "Pedido tirado do mural.")}>Ocultar do mural</Botao>
                 )}
                 {p.moderation === "oculto" && (
-                  <button className="btn btn-sec btn-sm" type="button" disabled={ocupado === p.id} onClick={() => void mudar(p, "ativo", "Pedido de volta no mural.")}>Mostrar de novo</button>
+                  <Botao compacto desativado={ocupado === p.id} onClick={() => void mudar(p, "ativo", "Pedido de volta no mural.")}>Mostrar de novo</Botao>
                 )}
                 {p.moderation !== "arquivado" ? (
-                  <button className="btn btn-sec btn-sm" type="button" disabled={ocupado === p.id} onClick={() => void mudar(p, "arquivado", "Pedido arquivado.")}>Arquivar</button>
+                  <Botao compacto desativado={ocupado === p.id} onClick={() => void mudar(p, "arquivado", "Pedido arquivado.")}>Arquivar</Botao>
                 ) : (
-                  <button className="btn btn-sec btn-sm" type="button" disabled={ocupado === p.id} onClick={() => void mudar(p, "ativo", "Pedido restaurado.")}>Restaurar</button>
+                  <Botao compacto desativado={ocupado === p.id} onClick={() => void mudar(p, "ativo", "Pedido restaurado.")}>Restaurar</Botao>
                 )}
               </div>
             </div>
-          </article>
+          </Cartao>
         ))}
       </div>
     </div>

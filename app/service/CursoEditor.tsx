@@ -11,6 +11,11 @@ import { useServiceAccess } from "./AccessContext";
 import RequisitosEditor from "./RequisitosEditor";
 import { requirementsFor, saveRequirements, type Requirement } from "./lib/requirements";
 
+import { Botao, BotaoIcone } from "./ui/Botao";
+import { Interruptor } from "./ui/Interruptor";
+import { Acao } from "./ui/Acao";
+import { Opcao } from "./ui/Opcao";
+import { Linha } from "./ui/Linha";
 /* ─── tipos internos do editor ─────────────────────────────── */
 
 type QuizQ = { q: string; opts: string[]; correta: number };
@@ -133,12 +138,12 @@ function RichText({
   return (
     <div className="rt">
       <div className="rt-bar">
-        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("bold")}><b>B</b></button>
-        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("italic")}><i>I</i></button>
-        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("formatBlock", "<h3>")}>Título</button>
-        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("insertUnorderedList")}>· Lista</button>
-        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("insertOrderedList")}>1. Lista</button>
-        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={addLink}>→ Link</button>
+        <Acao onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("bold")}><b>B</b></Acao>
+        <Acao onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("italic")}><i>I</i></Acao>
+        <Acao onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("formatBlock", "<h3>")}>Título</Acao>
+        <Acao onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("insertUnorderedList")}>· Lista</Acao>
+        <Acao onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("insertOrderedList")}>1. Lista</Acao>
+        <Acao onMouseDown={(e) => e.preventDefault()} onClick={addLink}>→ Link</Acao>
       </div>
       <div
         ref={ref}
@@ -187,7 +192,7 @@ function MateriaisEditor({
               <div className="mat-titulo">{m.titulo}</div>
               {m.url && <div className="mat-url">{m.url}</div>}
             </div>
-            <button className="ce-x" type="button" onClick={() => del(m.id)} title="Remover">✕</button>
+            <Acao className="ce-x" onClick={() => del(m.id)} title="Remover">✕</Acao>
           </div>
         ))}
       </div>
@@ -214,7 +219,7 @@ function MateriaisEditor({
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && add()}
         />
-        <button className="btn btn-sec btn-sm" type="button" onClick={add}>+ Material</button>
+        <Botao compacto onClick={add}>+ Material</Botao>
       </div>
     </div>
   );
@@ -266,9 +271,9 @@ function QuizEditor({
               <div className="quiz-cfg-s">Quantas a pessoa precisa acertar para concluir a aula.</div>
             </div>
             <div className="stepper">
-              <button type="button" onClick={() => setMinA((n) => Math.max(0, (Number(n) || 0) - 1))}>-</button>
+              <Acao onClick={() => setMinA((n) => Math.max(0, (Number(n) || 0) - 1))}>-</Acao>
               <span>{displayMin}</span>
-              <button type="button" onClick={() => setMinA((n) => Math.min(qs.length, (Number(n) || 0) + 1))}>+</button>
+              <Acao onClick={() => setMinA((n) => Math.min(qs.length, (Number(n) || 0) + 1))}>+</Acao>
             </div>
             <span className="quiz-cfg-tot">de {qs.length}</span>
           </div>
@@ -283,18 +288,17 @@ function QuizEditor({
                   value={q.q}
                   onChange={(e) => setQ(i, "q", e.target.value)}
                 />
-                <button className="ce-x" type="button" onClick={() => del(i)} aria-label="Remover">✕</button>
+                <BotaoIcone className="ce-x" onClick={() => del(i)} rotulo="Remover">✕</BotaoIcone>
               </div>
               {q.opts.map((o, oi) => (
                 <div className="quiz-opt" key={oi}>
-                  <button
-                    className={`quiz-radio${q.correta === oi ? " on" : ""}`}
-                    type="button"
+                  <Opcao
+                    marcada={q.correta === oi} estilo="quiz-radio"
                     onClick={() => setQ(i, "correta", oi)}
                     title="Correta"
                   >
                     {q.correta === oi ? <Icon name="ok" size={14} /> : <Icon name="circulo" size={14} />}
-                  </button>
+                  </Opcao>
                   <input
                     className="input"
                     placeholder={`Alternativa ${oi + 1}`}
@@ -305,13 +309,13 @@ function QuizEditor({
               ))}
             </div>
           ))}
-          <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={add}>
+          <Botao compacto style={{ marginTop: 12 }} onClick={add}>
             + Pergunta
-          </button>
+          </Botao>
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" onClick={save}>Salvar prova</button>
+          <Botao onClick={onClose}>Cancelar</Botao>
+          <Botao variante="principal" onClick={save}>Salvar prova</Botao>
         </div>
       </div>
     </div>
@@ -568,7 +572,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
                 <label className="field-label">Cor de destaque</label>
                 <div className="seg-check">
                   {CORES.map((o) => (
-                    <button key={o.v} className={`seg-chip${c.cor === o.v ? " on" : ""}`} type="button" onClick={() => set("cor", o.v)}>{o.l}</button>
+                    <Opcao key={o.v} marcada={c.cor === o.v} estilo="seg-chip" onClick={() => set("cor", o.v)}>{o.l}</Opcao>
                   ))}
                 </div>
               </div>
@@ -577,7 +581,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
               <label className="field-label">Formato</label>
               <div className="seg-check">
                 {([{ v: "trilha", l: "Trilha (módulos)" }, { v: "conteudo", l: "Conteúdo no app" }, { v: "presencial", l: "Presencial" }] as const).map((o) => (
-                  <button key={o.v} className={`seg-chip${c.tipo === o.v ? " on" : ""}`} type="button" onClick={() => set("tipo", o.v)}>{o.l}</button>
+                  <Opcao key={o.v} marcada={c.tipo === o.v} estilo="seg-chip" onClick={() => set("tipo", o.v)}>{o.l}</Opcao>
                 ))}
               </div>
             </div>
@@ -585,7 +589,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
               <label className="field-label">Modalidade</label>
               <div className="seg-check">
                 {MODALIDADES.map((o) => (
-                  <button key={o.v} className={`seg-chip${c.modalidade === o.v ? " on" : ""}`} type="button" onClick={() => set("modalidade", o.v)}>{o.l}</button>
+                  <Opcao key={o.v} marcada={c.modalidade === o.v} estilo="seg-chip" onClick={() => set("modalidade", o.v)}>{o.l}</Opcao>
                 ))}
               </div>
             </div>
@@ -596,13 +600,13 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
           </FormSection>
 
           <FormSection title="No app">
-            <div className="cfg-row" style={{ borderBottom: "none", padding: 0 }}>
+            <Linha estilo="config" style={{ borderBottom: "none", padding: 0 }}>
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Aparece no app do membro</div>
                 <div className="cfg-row-s">{c.publicado ? "Publicado: os membros veem e podem se inscrever" : "Rascunho: só a liderança vê"}</div>
               </div>
-              <button type="button" role="switch" aria-checked={c.publicado} aria-label="Aparece no app do membro" className={`sw${c.publicado ? " on" : ""}`} onClick={() => set("publicado", !c.publicado)} />
-            </div>
+              <Interruptor ligado={c.publicado} rotulo="Aparece no app do membro" onClick={() => set("publicado", !c.publicado)} />
+            </Linha>
           </FormSection>
 
           {/* divulgação */}
@@ -641,7 +645,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
                     value={mod.nome}
                     onChange={(e) => setModulo(mi, "nome", e.target.value)}
                   />
-                  <button className="ce-x" type="button" onClick={() => delModulo(mi)} title="Remover módulo">✕</button>
+                  <Acao className="ce-x" onClick={() => delModulo(mi)} title="Remover módulo">✕</Acao>
                 </div>
                 {mod.aulas.map((aula, ai) => (
                   <div className="ce-aula" key={aula.id}>
@@ -659,7 +663,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
                       >
                         {AULA_TIPOS.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
                       </select>
-                      <button className="ce-x" type="button" onClick={() => delAula(mi, ai)}>✕</button>
+                      <Acao className="ce-x" onClick={() => delAula(mi, ai)}>✕</Acao>
                     </div>
                     <div className="ce-aula-row">
                       {(aula.tipo === "video" || aula.tipo === "ao_vivo") && (
@@ -706,23 +710,22 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
                         />
                       </div>
                     )}
-                    <button
-                      className={`ce-prova${aula.prova?.length ? " on" : ""}`}
-                      type="button"
+                    <Opcao
+                      marcada={!!aula.prova?.length} estilo="ce-prova"
                       onClick={() => setQuiz({ mi, ai })}
                     >
                       {aula.prova?.length
                         ? `Prova · ${plural(aula.prova.length, "pergunta")}${aula.minAcertos ? ` · min. ${aula.minAcertos}` : ""}`
                         : "+ Adicionar prova ao fim da aula"}
-                    </button>
+                    </Opcao>
                   </div>
                 ))}
-                <button className="cb-add" type="button" onClick={() => addAula(mi)}>+ aula neste módulo</button>
+                <Botao compacto onClick={() => addAula(mi)}>+ aula neste módulo</Botao>
               </div>
             ))}
-            <button className="btn btn-sec btn-sm" type="button" style={{ marginTop: 12 }} onClick={addModulo}>
+            <Botao compacto style={{ marginTop: 12 }} onClick={addModulo}>
               Novo módulo
-            </button>
+            </Botao>
           </FormSection>
       </>)}
 

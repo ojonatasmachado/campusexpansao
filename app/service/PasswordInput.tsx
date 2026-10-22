@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { Acao } from "./ui/Acao";
 /* Campo de senha com "Mostrar": quem é leigo erra menos quando consegue
    conferir o que digitou (principalmente no celular). Visual de .login-input
    (service-v5.css: .login-pass, .login-pass-tog). */
@@ -30,9 +31,9 @@ export default function PasswordInput({
         spellCheck={false}
         placeholder={placeholder}
       />
-      <button type="button" className="login-pass-tog" onClick={() => setShow((s) => !s)} aria-pressed={show}>
+      <Acao className="login-pass-tog" onClick={() => setShow((s) => !s)} aria-pressed={show}>
         {show ? "Ocultar" : "Mostrar"}
-      </button>
+      </Acao>
     </div>
   );
 }

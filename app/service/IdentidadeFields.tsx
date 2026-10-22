@@ -8,6 +8,7 @@ import { AccentField } from "./AccentField";
 import { IDENTIDADE_CFG_DEFAULT, LOGO_FONTS } from "../lib/church-page";
 import type { IdentidadeCfg, LogoFontKey } from "../lib/church-page";
 
+import { Opcao } from "./ui/Opcao";
 /* Campos da identidade única da igreja (logo, fundo, texto, caixas) :
    editados uma vez em Configurações → Personalização, consumidos pela
    Página da igreja e pelo login temático. Reaproveitados só ali (não dentro
@@ -35,15 +36,15 @@ export function BackgroundField({ identidade, onSave, organizationId, churchId }
     <div>
       <div className="field-label" style={{ marginBottom: 8 }}>Cor de fundo</div>
       <div className="opt-row" style={{ marginBottom: 10 }}>
-        <button type="button" className={`opt${mode === "solida" ? " on" : ""}`} style={{ padding: "8px 14px" }} onClick={() => onSave({ bgMode: "solida" })}>
+        <Opcao marcada={mode === "solida"} estilo="opt" style={{ padding: "8px 14px" }} onClick={() => onSave({ bgMode: "solida" })}>
           <div className="opt-t">Sólida</div>
-        </button>
-        <button type="button" className={`opt${mode === "degrade" ? " on" : ""}`} style={{ padding: "8px 14px" }} onClick={() => onSave({ bgMode: "degrade" })}>
+        </Opcao>
+        <Opcao marcada={mode === "degrade"} estilo="opt" style={{ padding: "8px 14px" }} onClick={() => onSave({ bgMode: "degrade" })}>
           <div className="opt-t">Degradê</div>
-        </button>
-        <button type="button" className={`opt${mode === "imagem" ? " on" : ""}`} style={{ padding: "8px 14px" }} onClick={() => onSave({ bgMode: "imagem" })}>
+        </Opcao>
+        <Opcao marcada={mode === "imagem"} estilo="opt" style={{ padding: "8px 14px" }} onClick={() => onSave({ bgMode: "imagem" })}>
           <div className="opt-t">Imagem</div>
-        </button>
+        </Opcao>
       </div>
 
       {mode === "solida" && (
@@ -59,15 +60,14 @@ export function BackgroundField({ identidade, onSave, organizationId, churchId }
             <div className="field-label" style={{ marginBottom: 6 }}>Direção</div>
             <div style={{ display: "flex", gap: 8 }}>
               {BG_ANGLE_PRESETS.map((p) => (
-                <button
+                <Opcao
                   key={p.angle}
-                  type="button"
-                  className={`opt${angle === p.angle ? " on" : ""}`}
+                  marcada={angle === p.angle} estilo="opt"
                   style={{ width: 44, height: 44, padding: 0, fontSize: "var(--fs-ui-lg)", display: "flex", alignItems: "center", justifyContent: "center" }}
                   onClick={() => onSave({ bgAngle: p.angle })}
                 >
                   {p.label}
-                </button>
+                </Opcao>
               ))}
             </div>
           </div>
@@ -132,12 +132,12 @@ export function LogoField({
     <div>
       <div className="field-label" style={{ marginBottom: 8 }}>Logo</div>
       <div className="opt-row" style={{ marginBottom: 10 }}>
-        <button type="button" className={`opt${mode === "imagem" ? " on" : ""}`} style={{ padding: "8px 14px" }} onClick={() => onSave({ logoMode: "imagem" })}>
+        <Opcao marcada={mode === "imagem"} estilo="opt" style={{ padding: "8px 14px" }} onClick={() => onSave({ logoMode: "imagem" })}>
           <div className="opt-t">Imagem</div>
-        </button>
-        <button type="button" className={`opt${mode === "texto" ? " on" : ""}`} style={{ padding: "8px 14px" }} onClick={() => onSave({ logoMode: "texto" })}>
+        </Opcao>
+        <Opcao marcada={mode === "texto"} estilo="opt" style={{ padding: "8px 14px" }} onClick={() => onSave({ logoMode: "texto" })}>
           <div className="opt-t">Texto</div>
-        </button>
+        </Opcao>
       </div>
 
       {mode === "imagem" ? (
@@ -160,15 +160,14 @@ export function LogoField({
           />
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {(Object.entries(LOGO_FONTS) as [LogoFontKey, typeof LOGO_FONTS[LogoFontKey]][]).map(([key, font]) => (
-              <button
+              <Opcao
                 key={key}
-                type="button"
-                className={`opt${(identidade.logoFont ?? "inter") === key ? " on" : ""}`}
+                marcada={(identidade.logoFont ?? "inter") === key} estilo="opt"
                 style={{ padding: "10px 14px", fontFamily: font.family, fontWeight: font.weight, fontSize: "var(--fs-ui-md)" }}
                 onClick={() => onSave({ logoFont: key })}
               >
                 {font.label}
-              </button>
+              </Opcao>
             ))}
           </div>
 
@@ -176,15 +175,14 @@ export function LogoField({
             <div className="field-label" style={{ marginBottom: 6 }}>Posição do texto</div>
             <div style={{ display: "flex", gap: 8 }}>
               {([["left", "⟵"], ["center", "•"], ["right", "⟶"]] as const).map(([align, mark]) => (
-                <button
+                <Opcao
                   key={align}
-                  type="button"
-                  className={`opt${(identidade.logoAlign ?? "center") === align ? " on" : ""}`}
+                  marcada={(identidade.logoAlign ?? "center") === align} estilo="opt"
                   style={{ width: 44, height: 44, padding: 0, fontSize: "var(--fs-ui-lg)", display: "flex", alignItems: "center", justifyContent: "center" }}
                   onClick={() => onSave({ logoAlign: align })}
                 >
                   {mark}
-                </button>
+                </Opcao>
               ))}
             </div>
           </div>

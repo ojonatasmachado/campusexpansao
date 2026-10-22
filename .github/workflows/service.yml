@@ -59,6 +59,8 @@ jobs:
         run: npx tsc --noEmit -p .
       - name: Lei 12 (parte estática)
         run: npx tsx scripts/check-service-lei12.ts
+      - name: Lei 17 (componentes da biblioteca)
+        run: npx tsx scripts/check-service-componentes.ts
       - name: Contraste dos temas
         run: npx tsx scripts/check-theme-contrast.ts
       - name: Contratos das jornadas

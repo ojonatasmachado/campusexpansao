@@ -8,6 +8,9 @@ import { Icon } from "../../lib/icons";
 import { plural } from "../../lib/plural";
 import { limparCamadas, type ContextoMapa } from "./contexto";
 
+import { Botao, BotaoIcone } from "../../ui/Botao";
+import { Interruptor } from "../../ui/Interruptor";
+import { Acao } from "../../ui/Acao";
 /* Pontos de interesse (tela 10 do design). Desligados por padrão; do
    OpenStreetMap (atualizados todo mês) ou adicionados à mão. Cada ponto
    mostra a origem e tem editar, ocultar e excluir (excluir só os manuais). */
@@ -138,7 +141,7 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
       <div className="mp-faixa" role="region" aria-label="Pontos de interesse">
         <strong>Pontos de interesse</strong>
         {escolhendo && <span className="mp-texto">Clique no mapa onde fica o ponto.</span>}
-        <button type="button" className="mp-botao" onClick={ctx.fechar}>Sair</button>
+        <Botao tamanho="mapa" onClick={ctx.fechar}>Sair</Botao>
       </div>
       <aside className="mp-painel mp-esq aberto" aria-label="Pontos de interesse">
         <div className="mp-cab"><h2 className="mp-titulo">Pontos de interesse</h2><p className="mp-fraco" style={{ marginTop: 4 }}>Ligue só o que ajudar agora.</p></div>
@@ -146,41 +149,41 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
           {GRUPOS.map((g) => (
             <label key={g.id} className="mp-linha"><span>{g.nome}{g.id === "igrejas" ? <span className="mp-fraco"> · só liderança</span> : null}</span>
               <span style={{ display: "flex", gap: 10, alignItems: "center" }}><span className="mp-num mp-fraco">{contagem(g.id)}</span>
-                <button type="button" role="switch" aria-checked={ligados.has(g.id)} aria-label={g.nome} className={`sw${ligados.has(g.id) ? " on" : ""}`} onClick={() => setLigados((atuais) => { const n = new Set(atuais); if (n.has(g.id)) n.delete(g.id); else n.add(g.id); return n; })} />
+                <Interruptor ligado={ligados.has(g.id)} rotulo={g.nome} onClick={() => setLigados((atuais) => { const n = new Set(atuais); if (n.has(g.id)) n.delete(g.id); else n.add(g.id); return n; })} />
               </span>
             </label>
           ))}
-          <label className="mp-linha">Mostrar os ocultos<button type="button" role="switch" aria-checked={verOcultos} aria-label="Mostrar os ocultos" className={`sw${verOcultos ? " on" : ""}`} onClick={() => setVerOcultos((v) => !v)} /></label>
+          <label className="mp-linha">Mostrar os ocultos<Interruptor ligado={verOcultos} rotulo="Mostrar os ocultos" onClick={() => setVerOcultos((v) => !v)} /></label>
           {pontos.length === 0 && <p className="mp-fraco">Ainda sem pontos do OpenStreetMap para esta cidade. Eles chegam na próxima atualização mensal. Pontos da igreja você adiciona abaixo.</p>}
           <div>
             {lista.map((pt) => (
               <div key={pt.id} className="mp-lista-pessoa" style={{ position: "relative" }}>
-                <button type="button" style={{ all: "unset", cursor: "pointer", flex: 1 }} onClick={() => { setAberto(pt); ctx.mapa.easeTo({ center: [pt.longitude, pt.latitude], zoom: 16 }); }}>
+                <Acao style={{ all: "unset", cursor: "pointer", flex: 1 }} onClick={() => { setAberto(pt); ctx.mapa.easeTo({ center: [pt.longitude, pt.latitude], zoom: 16 }); }}>
                   <span style={{ display: "block", opacity: pt.oculto ? 0.6 : 1 }}>{pt.nome || "Sem nome"}</span>
                   <span className="mp-fraco">{CATEGORIAS.find((c) => c.id === pt.categoria)?.nome.replace("Pontos da igreja · ", "")} · {pt.origem === "osm" ? "OpenStreetMap" : "manual"}{pt.oculto ? " · oculto" : ""}</span>
-                </button>
-                {podeEditar && <button type="button" className="mp-fechar" aria-label={`Ações de ${pt.nome}`} aria-expanded={menu === pt.id} onClick={() => setMenu((m) => (m === pt.id ? null : pt.id))}><Icon name="menu" size={14} /></button>}
+                </Acao>
+                {podeEditar && <BotaoIcone className="mp-fechar" rotulo={`Ações de ${pt.nome}`} aria-expanded={menu === pt.id} onClick={() => setMenu((m) => (m === pt.id ? null : pt.id))}><Icon name="menu" size={14} /></BotaoIcone>}
                 {menu === pt.id && (
                   <div className="mp-menu" role="menu" style={{ top: 40, width: 180 }}>
-                    <button type="button" role="menuitem" onClick={() => { setMenu(null); setForm({ ponto: pt, nome: pt.nome, categoria: pt.categoria, local: [pt.longitude, pt.latitude], endereco: pt.endereco ?? "", observacao: pt.observacao ?? "" }); }}>Editar</button>
-                    <button type="button" role="menuitem" onClick={() => ocultar(pt, !pt.oculto)}>{pt.oculto ? "Mostrar no mapa" : "Ocultar do mapa"}</button>
+                    <Acao role="menuitem" onClick={() => { setMenu(null); setForm({ ponto: pt, nome: pt.nome, categoria: pt.categoria, local: [pt.longitude, pt.latitude], endereco: pt.endereco ?? "", observacao: pt.observacao ?? "" }); }}>Editar</Acao>
+                    <Acao role="menuitem" onClick={() => ocultar(pt, !pt.oculto)}>{pt.oculto ? "Mostrar no mapa" : "Ocultar do mapa"}</Acao>
                     {pt.origem === "manual" && (confirmar === pt.id
-                      ? <button type="button" role="menuitem" style={{ color: "var(--danger)" }} onClick={() => excluir(pt)}>Excluir de vez (não dá para desfazer)</button>
-                      : <button type="button" role="menuitem" style={{ color: "var(--danger)" }} onClick={() => setConfirmar(pt.id)}>Excluir</button>)}
+                      ? <Acao role="menuitem" style={{ color: "var(--danger)" }} onClick={() => excluir(pt)}>Excluir de vez (não dá para desfazer)</Acao>
+                      : <Acao role="menuitem" style={{ color: "var(--danger)" }} onClick={() => setConfirmar(pt.id)}>Excluir</Acao>)}
                   </div>
                 )}
               </div>
             ))}
           </div>
         </div>
-        {podeEditar && <div className="mp-pe"><button type="button" className="btn btn-sec" onClick={() => setForm({ nome: "", categoria: "igreja_acao", local: null, endereco: "", observacao: "" })}>+ Adicionar ponto</button></div>}
+        {podeEditar && <div className="mp-pe"><Botao onClick={() => setForm({ nome: "", categoria: "igreja_acao", local: null, endereco: "", observacao: "" })}>+ Adicionar ponto</Botao></div>}
       </aside>
 
       {aberto && !form && (
         <aside className="mp-painel mp-dir" aria-label={aberto.nome} style={{ bottom: "auto" }}>
           <div className="mp-cab" style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
             <div><div className="mp-sobre">{CATEGORIAS.find((c) => c.id === aberto.categoria)?.nome.replace("Pontos da igreja · ", "")}</div><h2 className="mp-titulo">{aberto.nome || "Sem nome"}</h2></div>
-            <button type="button" className="mp-fechar" aria-label="Fechar" onClick={() => setAberto(null)}><Icon name="recusou" size={14} /></button>
+            <BotaoIcone className="mp-fechar" rotulo="Fechar" onClick={() => setAberto(null)}><Icon name="recusou" size={14} /></BotaoIcone>
           </div>
           <div className="mp-corpo">
             <dl className="mp-dados">
@@ -191,8 +194,8 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
           </div>
           {podeEditar && (
             <div className="mp-pe" style={{ flexDirection: "row" }}>
-              <button type="button" className="btn btn-sec btn-sm" onClick={() => setForm({ ponto: aberto, nome: aberto.nome, categoria: aberto.categoria, local: [aberto.longitude, aberto.latitude], endereco: aberto.endereco ?? "", observacao: aberto.observacao ?? "" })}>Editar</button>
-              <button type="button" className="btn btn-sec btn-sm" onClick={() => ocultar(aberto, !aberto.oculto)}>{aberto.oculto ? "Mostrar" : "Ocultar"}</button>
+              <Botao compacto onClick={() => setForm({ ponto: aberto, nome: aberto.nome, categoria: aberto.categoria, local: [aberto.longitude, aberto.latitude], endereco: aberto.endereco ?? "", observacao: aberto.observacao ?? "" })}>Editar</Botao>
+              <Botao compacto onClick={() => ocultar(aberto, !aberto.oculto)}>{aberto.oculto ? "Mostrar" : "Ocultar"}</Botao>
             </div>
           )}
         </aside>
@@ -201,7 +204,7 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
       {form && !escolhendo && (
         <div className="modal-bg" onClick={() => setForm(null)}>
           <div className="modal" role="dialog" aria-modal="true" aria-labelledby="mp-ponto-t" style={{ width: 520, maxWidth: "calc(100% - 32px)", padding: 0 }} onClick={(e) => e.stopPropagation()}>
-            <div className="mp-cab" style={{ display: "flex", justifyContent: "space-between" }}><h2 id="mp-ponto-t" className="mp-titulo">{form.ponto ? "Editar ponto" : "Adicionar ponto"}</h2><button type="button" className="mp-fechar" aria-label="Fechar" onClick={() => setForm(null)}><Icon name="recusou" size={14} /></button></div>
+            <div className="mp-cab" style={{ display: "flex", justifyContent: "space-between" }}><h2 id="mp-ponto-t" className="mp-titulo">{form.ponto ? "Editar ponto" : "Adicionar ponto"}</h2><BotaoIcone className="mp-fechar" rotulo="Fechar" onClick={() => setForm(null)}><Icon name="recusou" size={14} /></BotaoIcone></div>
             <div className="mp-corpo">
               <div className="field"><label className="field-label req" htmlFor="pt-nome">Nome</label><input id="pt-nome" className="input" maxLength={80} value={form.nome} disabled={form.ponto?.origem === "osm"} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
               <div className="field">
@@ -215,7 +218,7 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
                   <span className="field-label req">Onde fica</span>
                   <div className="mp-dados" style={{ alignItems: "center" }}>
                     <dt>{form.local ? "Marcado no mapa" : "Ainda não marcado"}</dt>
-                    <dd><button type="button" className="btn btn-sec btn-sm" onClick={() => setEscolhendo(true)}>{form.local ? "Mudar" : "Clicar no mapa"}</button></dd>
+                    <dd><Botao compacto onClick={() => setEscolhendo(true)}>{form.local ? "Mudar" : "Clicar no mapa"}</Botao></dd>
                   </div>
                   <input className="input" style={{ marginTop: 8 }} placeholder="Endereço (opcional)" value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} aria-label="Endereço" />
                 </div>
@@ -224,8 +227,8 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
               <p className="mp-fraco">Origem: {form.ponto?.origem === "osm" ? "OpenStreetMap (nome e local vêm de lá)" : "adicionado à mão"}</p>
             </div>
             <div className="mp-pe" style={{ flexDirection: "row", justifyContent: "flex-end" }}>
-              <button type="button" className="btn btn-sec" onClick={() => setForm(null)}>Cancelar</button>
-              <button type="button" className="btn btn-pri" disabled={salvando || !form.nome.trim() || !form.local} onClick={salvar}>{form.ponto ? "Salvar" : "Adicionar"}</button>
+              <Botao onClick={() => setForm(null)}>Cancelar</Botao>
+              <Botao variante="principal" desativado={salvando || !form.nome.trim() || !form.local} onClick={salvar}>{form.ponto ? "Salvar" : "Adicionar"}</Botao>
             </div>
           </div>
         </div>

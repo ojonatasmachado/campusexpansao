@@ -11,6 +11,11 @@ import { HelpDot } from "../../HelpSystem";
 import { Av } from "../ui";
 import type { BoardView, CardView, ChurchView, MinistryView, ModalState, PersonView } from "../tipos";
 
+import { Botao, BotaoIcone } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
+import { Selo } from "../../ui/Selo";
+import { Segmentado } from "../../ui/Segmentado";
 /* permissões do Kanban por papel (equivalente ao kanbanPerm()/S.KANBAN_PERMS do
    protótipo): master/pastor administram o quadro; líder cria, comenta e move os
    próprios cards mas não apaga; voluntário não deveria nem abrir esta tela (usa o
@@ -67,19 +72,19 @@ export function BoardChooser({
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {boards.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>Nenhum quadro ainda, crie um abaixo.</div>}
             {boards.map((board) => (
-              <button className="cand" type="button" key={board.id} onClick={() => onPick(board.id)}>
+              <Acao className="cand" key={board.id} onClick={() => onPick(board.id)}>
                 <span className="esc-col-mark" style={{ width: 30, height: 30 }}><Icon name="quadros" size={15} /></span>
                 <div className="cand-main"><div className="cand-name">{board.name}</div><div className="cand-meta">{board.scope === "geral" ? "Liderança" : "Time"}</div></div>
-              </button>
+              </Acao>
             ))}
           </div>
           <div className="dsec-title" style={{ margin: "20px 0 10px" }}>Ou crie um novo</div>
           <div style={{ display: "flex", gap: 10 }}>
             <input className="input" style={{ flex: 1 }} placeholder="Nome do novo quadro" value={novo} onChange={(e) => setNovo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && criar()} />
-            <button className="btn btn-pri" type="button" disabled={saving} onClick={criar}>Criar e usar</button>
+            <Botao variante="principal" desativado={saving} onClick={criar}>Criar e usar</Botao>
           </div>
         </div>
-        <div className="modal-foot"><button className="btn btn-ghost" type="button" onClick={onClose}>Cancelar</button></div>
+        <div className="modal-foot"><Botao variante="discreto" onClick={onClose}>Cancelar</Botao></div>
       </div>
     </div>
   );
@@ -222,7 +227,7 @@ export function CardDrawer({
       <div className="drawer-bg" onClick={onClose} />
       <div className="drawer drawer-wide">
         <div className="drawer-head">
-          <button className="drawer-close" type="button" aria-label="Fechar" onClick={onClose}>✕</button>
+          <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
           <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{board.name}</div>
           <div className="profile-name" style={{ fontSize: "var(--fs-pn-20)" }}>{lc.title}</div>
         </div>
@@ -233,14 +238,14 @@ export function CardDrawer({
             <div className="dsec-title">Situação</div>
             <div className="kb-move">
               {columns.map((col) => (
-                <button key={col.id} type="button" className={`seg-chip${lc.column_id === col.id ? " on" : ""}`}
+                <Opcao key={col.id} marcada={lc.column_id === col.id} estilo="seg-chip"
                   onClick={() => {
                     if (col.id === lc.column_id) return;
                     if (!canMove) { avisar("Você só move cards onde é responsável.", "warn"); return; }
                     mutate({ column_id: col.id }); onMoveParent(lc.id, col.id);
                   }}>
                   {col.name}
-                </button>
+                </Opcao>
               ))}
             </div>
             <dl className="kv" style={{ marginTop: 14 }}>
@@ -248,13 +253,13 @@ export function CardDrawer({
               <dd>{lc.due ? formatDateBR(lc.due) : <span style={{ color: "var(--muted)" }}>sem prazo</span>}</dd>
               <dt>Prioridade</dt>
               <dd>
-                <div className="seg seg-sm" style={{ display: "inline-flex" }}>
+                <Segmentado className="seg-sm" style={{ display: "inline-flex" }}>
                   {(["alta", "media", "baixa"] as const).map((p) => (
-                    <button key={p} type="button" className={lc.priority === p ? "on" : ""} onClick={() => mutate({ priority: p })}>
+                    <Opcao key={p} marcada={lc.priority === p} onClick={() => mutate({ priority: p })}>
                       {p === "alta" ? "Alta" : p === "media" ? "Média" : "Baixa"}
-                    </button>
+                    </Opcao>
                   ))}
-                </div>
+                </Segmentado>
               </dd>
             </dl>
           </div>
@@ -265,10 +270,10 @@ export function CardDrawer({
               {candidatos.slice(0, 12).map((p) => {
                 const on = lc.assignees.includes(p.id);
                 return (
-                  <button key={p.id} type="button" className={`cand-chip${on ? " on" : ""}`}
+                  <Opcao key={p.id} marcada={on} estilo="cand-chip"
                     onClick={() => mutate({ assignees: on ? lc.assignees.filter((x) => x !== p.id) : [...lc.assignees, p.id] })}>
                     <Av name={p.name} size="xs" photoUrl={p.photoUrl} /> {p.name.split(" ")[0]} {on && <Icon name="ok" size={13} />}
-                  </button>
+                  </Opcao>
                 );
               })}
             </div>
@@ -296,12 +301,12 @@ export function CardDrawer({
                 <input className="input" placeholder="Escreva um comentário..." value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addComment()} />
-                <button className="btn btn-sec btn-sm" type="button" onClick={addComment}>Enviar</button>
+                <Botao compacto onClick={addComment}>Enviar</Botao>
               </div>
             ) : null}
           </div>
 
-          {perm.editarBoard ? <button className="btn btn-ghost btn-sm" type="button" style={{ marginTop: 8 }} onClick={deleteCard}>Excluir card</button> : null}
+          {perm.editarBoard ? <Botao variante="discreto" compacto style={{ marginTop: 8 }} onClick={deleteCard}>Excluir card</Botao> : null}
         </div>
       </div>
     </>
@@ -366,31 +371,31 @@ export function NovoCard({
           <div className="field"><label className="field-label">Descrição</label><textarea className="textarea" value={desc} placeholder="Detalhes (opcional)" onChange={(e) => setDesc(e.target.value)} /></div>
           <div className="field field-half"><label className="field-label">Prazo</label><input className="input" type="date" value={due} onChange={(e) => setDue(e.target.value)} /></div>
           <div className="field field-half"><label className="field-label">Prioridade</label>
-            <div className="seg seg-sm">
+            <Segmentado className="seg-sm">
               {(["alta", "media", "baixa"] as const).map((p) => (
-                <button key={p} type="button" className={prio === p ? "on" : ""} onClick={() => setPrio(p)}>
+                <Opcao key={p} marcada={prio === p} onClick={() => setPrio(p)}>
                   {p === "alta" ? "Alta" : p === "media" ? "Média" : "Baixa"}
-                </button>
+                </Opcao>
               ))}
-            </div>
+            </Segmentado>
           </div>
           <div className="field"><label className="field-label">Responsáveis</label>
             <div className="cand-pick">
               {candidatos.slice(0, 12).map((p) => {
                 const on = resp.includes(p.id);
                 return (
-                  <button key={p.id} type="button" className={`cand-chip${on ? " on" : ""}`}
+                  <Opcao key={p.id} marcada={on} estilo="cand-chip"
                     onClick={() => setResp(on ? resp.filter((x) => x !== p.id) : [...resp, p.id])}>
                     <Av name={p.name} size="xs" photoUrl={p.photoUrl} /> {p.name.split(" ")[0]} {on && <Icon name="ok" size={13} />}
-                  </button>
+                  </Opcao>
                 );
               })}
             </div>
           </div>
         </div>
         <div className="modal-foot">
-          <button className="btn btn-sec" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-pri" type="button" disabled={saving} onClick={criar}>Adicionar card</button>
+          <Botao onClick={onClose}>Cancelar</Botao>
+          <Botao variante="principal" desativado={saving} onClick={criar}>Adicionar card</Botao>
         </div>
       </div>
     </div>
@@ -453,7 +458,7 @@ export function QuadroAberto({
     <div className="content wide">
       <div className="ph">
         <div>
-          <button className="back-link" type="button" onClick={onBack}>← Quadros</button>
+          <Botao variante="discreto" compacto onClick={onBack}>← Quadros</Botao>
           <h1 className="ph-title" style={{ marginTop: 8 }}>{board.name} <HelpDot text="Um quadro de tarefas com colunas (A fazer, Em andamento, Concluído). Arraste o cartão pra mudar o status." /></h1>
           <p className="ph-sub">{board.description || "Quadro de tarefas da operação."}</p>
         </div>
@@ -464,16 +469,16 @@ export function QuadroAberto({
           <span className="si">⌕</span>
           <input placeholder="Buscar card..." value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-        <div className="seg">
+        <Segmentado>
           {([["todos", "Todos"], ["meus", "Meus"], ["atrasados", `Atrasados${atrasados ? ` ${atrasados}` : ""}`], ["parados", `Parados${parados ? ` ${parados}` : ""}`]] as [string, string][]).map(([k, l]) => (
-            <button key={k} type="button" className={fEstado === k ? "on" : ""} onClick={() => setFEstado(k)}>{l}</button>
+            <Opcao key={k} marcada={fEstado === k} onClick={() => setFEstado(k)}>{l}</Opcao>
           ))}
-        </div>
-        <div className="seg">
+        </Segmentado>
+        <Segmentado>
           {([["todas", "Prioridade"], ["alta", "Alta"], ["media", "Média"], ["baixa", "Baixa"]] as [string, string][]).map(([k, l]) => (
-            <button key={k} type="button" className={fPrio === k ? "on" : ""} onClick={() => setFPrio(k)}>{l}</button>
+            <Opcao key={k} marcada={fPrio === k} onClick={() => setFPrio(k)}>{l}</Opcao>
           ))}
-        </div>
+        </Segmentado>
       </div>
 
       <div className="kb-board">
@@ -505,7 +510,7 @@ export function QuadroAberto({
                     onDragStart={() => setDrag(c.id)}
                     onDragEnd={() => setDrag(null)} />
                 ))}
-                {perm.criarCard ? <button className="kb-add" type="button" onClick={() => setNovoCol(col.id)}>+ Card</button> : null}
+                {perm.criarCard ? <Acao className="kb-add" onClick={() => setNovoCol(col.id)}>+ Card</Acao> : null}
               </div>
             </div>
           );
@@ -607,7 +612,7 @@ export function Quadros({
           {scopeMinistryIds ? <p className="ph-sub">Os quadros do {ministries.find((m) => m.id === scopeMinistryIds[0])?.name ?? "seu time"}.</p> : null}
         </div>
         <div className="ph-actions">
-          <button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo quadro", subtitle: "Um quadro de tarefas para organizar o trabalho de um time ou da liderança.", saveLabel: "Criar quadro", formFields: [{ k:"nome", label:"Nome do quadro", type:"text", req:true, ph:"ex: Louvor · Julho" }, { k:"time", label:"Time dono", type:"text", half:true, ph:"ex: Louvor (ou deixe em branco para geral)" }, { k:"desc", label:"Descrição", type:"text", half:true, ph:"Para que serve" }], action: { kind: "board" } })}>+ Novo quadro</button>
+          <Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Novo quadro", subtitle: "Um quadro de tarefas para organizar o trabalho de um time ou da liderança.", saveLabel: "Criar quadro", formFields: [{ k:"nome", label:"Nome do quadro", type:"text", req:true, ph:"ex: Louvor · Julho" }, { k:"time", label:"Time dono", type:"text", half:true, ph:"ex: Louvor (ou deixe em branco para geral)" }, { k:"desc", label:"Descrição", type:"text", half:true, ph:"Para que serve" }], action: { kind: "board" } })}>+ Novo quadro</Botao>
         </div>
       </div>
       <div className="kb-explain">
@@ -626,10 +631,10 @@ export function Quadros({
           const pct = boardCards.length ? Math.round((feitos / boardCards.length) * 100) : 0;
           const atrasados = boardCards.filter((c) => isCardAtrasado(c, board.columns)).length;
           return (
-            <button className="bd-card" key={board.id} type="button" onClick={() => setBoardId(board.id)}>
+            <Acao className="bd-card" key={board.id} onClick={() => setBoardId(board.id)}>
               <div className="bd-card-top">
                 <div className="bd-mark"><Icon name="times" size={18} /></div>
-                {atrasados > 0 && <span className="chip chip-no">{plural(atrasados, "atrasado")}</span>}
+                {atrasados > 0 && <Selo tom="cuidado">{plural(atrasados, "atrasado")}</Selo>}
               </div>
               <div className="bd-name">{board.name}</div>
               <div className="bd-desc">{board.description || ministry?.description || "Quadro da operação."}</div>
@@ -639,7 +644,7 @@ export function Quadros({
               <div className="bar" style={{ marginTop: 10 }}>
                 <div className="bar-fill" style={{ width: `${pct}%` }} />
               </div>
-            </button>
+            </Acao>
           );
         })}
         {visibleBoards.length === 0 && <div className="empty">Nenhum quadro criado ainda.</div>}

@@ -3,6 +3,17 @@
 Referência visual: canvas "Service, direção visual" (claude.ai/artifact/JNpxaXTN3uVPmvdLCgcdMb), página Biblioteca, pranchas 1 a 6.
 Inventário levantado em 2026-10-22 por busca no código; números são aproximados.
 
+## Como usar (lei 17)
+
+Este arquivo é o índice único das peças de interface do Service. Vale para quem constrói tela nova e para quem mexe em tela velha:
+
+1. Antes de escrever markup, procure a peça na tabela abaixo. Existindo, importe do caminho indicado.
+2. Faltou uma variação? Acrescente uma prop ao componente existente, nunca uma cópia na tela.
+3. Não existe? Peça nova nasce em `app/service/ui/`, com a ficha de entrada preenchida e uma linha na tabela.
+4. Trocou uma peça antiga pelo componente? Atualize a linha da tabela (caminho, compartilhado, problema).
+5. O visual das peças fica em `app/service/ui/biblioteca.css` (pranchas 1 e 6 aplicadas em 2026-10-22); mudar a aparência é mexer só ali.
+6. Nenhuma tela escreve `<button>`: o ponto de partida é `Acao` (ou a peça específica). Peça já centralizada ganha uma regra em `scripts/check-service-componentes.ts`, que o CI roda: escrever a classe à mão volta a falhar.
+
 ## Como trocar (regra)
 
 Nada de apagar e recolocar. A tela fica, a peça muda:
@@ -18,19 +29,21 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 
 | Peça | Onde hoje | Compartilhado | Problema | Prancha |
 |---|---|---|---|---|
-| Botão | `.btn*` (css 143), `.m6-btn`, `.m-btn-ok` | parcial | sem componente; ~366 usos inline; `.btn-ghost` definido 2x | 1 |
-| Botão de ícone | classes soltas (`.drawer-close`, `.top-icon`...) | não | cada tela o seu | 1 |
-| Selo | `.m6-st` (membro), `Chip` (painel/ui.tsx) | não | duas peças para o mesmo papel | 1, 6 |
-| Chip/etiqueta | `Chip`, `.tag`, `.papel-tag` | parcial | usos misturados | 6 |
-| Cartão | `.panel`, `.m6-card`, `.m-card` e +5 variantes | não | paddings e bordas próprios | 1 |
+| Botão | `Botao` em `app/service/ui/Botao.tsx` (famílias toque, lista, entrada, mapa; variantes principal, secundario, discreto, perigo, texto; `botaoClasse()` para links) | sim | login, convite e senha incluídos (cores CE.X do AuthShell); família antiga `.m-btn` apagada | 1 |
+| Movimento | `app/service/ui/movimento.ts` (mola, `entrarComDirecao`), `Contagem` em `app/service/ui/Contagem.tsx`, entrada e check em `biblioteca.css`; tudo desliga com movimento reduzido | sim | troca de tela no painel e nas abas do app; contagem no Kpi, Saúde e Financeiro | 1 |
+| Clicável base | `Acao` em `app/service/ui/Acao.tsx`: todo `<button>` do Service passa por ela (type="button" padrão, desativado, carregando) | sim | linhas, cartões e células ainda usam `Acao` com classe da tela até ganharem peça própria | n/a |
+| Botão de ícone | `BotaoIcone` em `app/service/ui/Botao.tsx` (`rotulo` obrigatório; aparência pela classe da tela, ex. `.drawer-close`) | sim | 32 telas trocadas; botões só de ícone sem `aria-label` ainda soltos | 1 |
+| Selo | `Selo` em `app/service/ui/Selo.tsx` (tons ok, pendente, cuidado, neutro, aberto, rascunho, destaque; lista ou toque); `Chip` do painel usa ele | sim | dados antigos com classe viram tom por `tomDaClasse()` | 1, 6 |
+| Chip/etiqueta | escolha: `Opcao estilo="seg-chip"`; etiqueta: `Etiqueta` em `app/service/ui/Selo.tsx` | sim | `.papel-tag` ainda solto | 6 |
+| Cartão | `Cartao` em `app/service/ui/Cartao.tsx` (painel, app, app-solto; `plano`); clicável usa `cartaoClasse()` | sim | variantes próprias de módulo (+5) ainda por classe extra | 1 |
 | Cartão da fila | contrato em `modules/fila.ts` e `define.ts`; markup em `membro/Inicio.tsx` | parcial | markup por tipo dentro de um switch | 6 |
-| Linha de lista | `M6Row` (membro/comum.tsx), `.tr`, `.mini-row`, `.cfg-row` | parcial | duas famílias | 6 |
+| Linha de lista | `Linha` e `Lista` em `app/service/ui/Linha.tsx` (tabela, curta, config, app); `M6Row` usa `linhaClasse()` | sim | ok | 6 |
 | Avatar | `Av` em painel/ui.tsx e membro/comum.tsx + cópias em CheckIn, CursoDrawer, AulaCheckin | parcial | 5 definições | 6 |
 | Campo de texto | `.field`, `FField` (painel/campos.tsx) | parcial | ~273 `field-label` inline | 3 |
 | Seleção | `SelectField` (1 uso) | não | 57 `<select>` nativos | 3 |
-| Interruptor | `.sw`, `.m6-tg`, `.m-toggle`, `.acesso-tog-sw` | não | 4 implementações | 6 |
+| Interruptor | `Interruptor` em `app/service/ui/Interruptor.tsx` (`.sw`, `.m6-tg`, `.m-toggle`; sempre `role="switch"` com nome falado) | sim | `.acesso-tog` é linha de permissão, usa `Opcao` | 6 |
 | Caixa de marcar | checkbox nativo + 6 classes | não | cada tela estiliza | 3 |
-| Segmentado | `.seg` (~25 arquivos) | parcial | só CSS | 1, 6 |
+| Segmentado | `Segmentado` em `app/service/ui/Segmentado.tsx` com `Opcao` dentro; pílula desliza com mola | sim | ok | 1, 6 |
 | Data e hora | `DatePicker`, `TimePicker` (painel/campos.tsx) | parcial | `type="date"` nativo em vários formulários | 4 |
 | Envio de foto/arquivo | `PhotoPicker`, `ImageUpload`, `ImageCropper` | parcial | `type="file"` direto em 3 telas | falta |
 | Busca | `.tb-search` e +4 classes | parcial | sem componente | 6 |

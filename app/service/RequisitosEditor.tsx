@@ -3,6 +3,7 @@
 import { JOURNEY_REQ_STEPS, requirementLabel, type Requirement } from "./lib/requirements";
 import { useTermos } from "./lib/vocabulario-context";
 
+import { Opcao } from "./ui/Opcao";
 /* subtítulo em cinza médio (texto secundário do Brand Book 3.2): o título da
    seção fica com quem usa o editor, estes só agrupam as opções */
 const SUBLABEL = { color: "var(--muted)", fontWeight: 500 } as const;
@@ -36,9 +37,9 @@ export default function RequisitosEditor({
         <div className="field-label" style={SUBLABEL}>{ct("Etapas da {caminhada}")}</div>
         <div className="seg-check">
           {JOURNEY_REQ_STEPS.map((s) => (
-            <button key={s.ref} type="button" className={`seg-chip${has("journey", s.ref) ? " on" : ""}`} onClick={() => toggle("journey", s.ref)}>
+            <Opcao key={s.ref} marcada={has("journey", s.ref)} estilo="seg-chip" onClick={() => toggle("journey", s.ref)}>
               {s.ref === "integracao" && groupsLabel ? groupsLabel : ct(s.label)}
-            </button>
+            </Opcao>
           ))}
         </div>
       </div>
@@ -48,9 +49,9 @@ export default function RequisitosEditor({
           <div className="field-label" style={SUBLABEL}>Cursos concluídos</div>
           <div className="seg-check">
             {courses.map((c) => (
-              <button key={c.id} type="button" className={`seg-chip${has("course", c.id) ? " on" : ""}`} onClick={() => toggle("course", c.id)}>
+              <Opcao key={c.id} marcada={has("course", c.id)} estilo="seg-chip" onClick={() => toggle("course", c.id)}>
                 {c.name}
-              </button>
+              </Opcao>
             ))}
           </div>
         </div>
@@ -62,9 +63,9 @@ export default function RequisitosEditor({
           {chosenEvents.length > 0 && (
             <div className="seg-check" style={{ marginBottom: 8 }}>
               {chosenEvents.map((r) => (
-                <button key={r.ref} type="button" className="seg-chip on" onClick={() => toggle("event", r.ref)} title="Remover">
+                <Opcao key={r.ref} marcada estilo="seg-chip" onClick={() => toggle("event", r.ref)} title="Remover">
                   {ct(requirementLabel(r, { courses, events }).replace(/^Participou: /, ""))} ×
-                </button>
+                </Opcao>
               ))}
             </div>
           )}

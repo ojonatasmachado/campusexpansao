@@ -16,6 +16,9 @@ import {
   chaveLegivel, contribuirPronto, erroDaChave, normalizarChave, rotuloDoTipo, type ContribuirCfg, type TipoChave,
 } from "./pix";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Linha } from "../../ui/Linha";
 type IgrejaCfg = { id: string; cidade?: string | null; settings?: Record<string, unknown> };
 
 export function ContribuirConfig({ church }: { church?: IgrejaCfg }) {
@@ -39,37 +42,37 @@ export function ContribuirConfig({ church }: { church?: IgrejaCfg }) {
         <div className="cfg-card-s">{ct("O membro abre Contribuir na {Caminhada}, copia o código Pix e escolhe o valor no próprio banco. O app não guarda valores nem quem contribuiu.")}</div>
         {pronto ? (
           <>
-            <div className="cfg-row">
+            <Linha estilo="config">
               <div className="cfg-row-main">
                 <div className="cfg-row-t contrib-cfg-v">{chaveLegivel(cfg.tipo, cfg.chave)}</div>
                 <div className="cfg-row-s">{rotuloDoTipo(cfg.tipo)} · {cfg.favorecido}{cfg.cidade ? ` · ${cfg.cidade}` : ""}</div>
               </div>
-            </div>
-            <div className="cfg-row">
+            </Linha>
+            <Linha estilo="config">
               <div className="cfg-row-main">
                 <div className="cfg-row-t">Finalidades</div>
                 <div className="cfg-row-s">{cfg.finalidades.length ? cfg.finalidades.join(" · ") : "Sem escolha: o membro só copia o código"}</div>
               </div>
-            </div>
+            </Linha>
             {cfg.texto.trim() && (
-              <div className="cfg-row">
+              <Linha estilo="config">
                 <div className="cfg-row-main">
                   <div className="cfg-row-t">Texto no app</div>
                   <div className="cfg-row-s contrib-cfg-v">{cfg.texto}</div>
                 </div>
-              </div>
+              </Linha>
             )}
             <div className="contrib-cfg-acoes">
               {confirmaTirar ? (
                 <>
                   <span className="cfg-row-s contrib-cfg-pergunta">Tirar Contribuir do app de todos os membros?</span>
-                  <button className="btn btn-pri btn-sm" type="button" onClick={tirar}>Tirar</button>
-                  <button className="btn btn-sec btn-sm" type="button" onClick={() => setConfirmaTirar(false)}>Manter</button>
+                  <Botao variante="principal" compacto onClick={tirar}>Tirar</Botao>
+                  <Botao compacto onClick={() => setConfirmaTirar(false)}>Manter</Botao>
                 </>
               ) : (
                 <>
-                  <button className="btn btn-pri btn-sm" type="button" onClick={() => setEditando(true)}>Editar</button>
-                  <button className="btn btn-sec btn-sm" type="button" onClick={() => setConfirmaTirar(true)}>Tirar do app</button>
+                  <Botao variante="principal" compacto onClick={() => setEditando(true)}>Editar</Botao>
+                  <Botao compacto onClick={() => setConfirmaTirar(true)}>Tirar do app</Botao>
                 </>
               )}
             </div>
@@ -201,14 +204,14 @@ function ContribuirForm({ inicial, onSave, onClose }: { inicial: ContribuirCfg; 
             {opcoes.map((f) => {
               const on = finalidades.includes(f);
               return (
-                <button key={f} type="button" className={`cand-chip ${on ? "on" : ""}`} aria-pressed={on} disabled={!on && cheio} onClick={() => alternar(f)}>{f}</button>
+                <Acao key={f} className={`cand-chip ${on ? "on" : ""}`} aria-pressed={on} desativado={!on && cheio} onClick={() => alternar(f)}>{f}</Acao>
               );
             })}
           </div>
           <div className="contrib-cfg-outra">
             <input className="input" aria-label="Outra finalidade" placeholder="Outra, ex: Construção" maxLength={24} value={outra} disabled={cheio}
               onChange={(e) => setOutra(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); somarOutra(); } }} />
-            <button className="btn btn-sec btn-sm" type="button" disabled={cheio || !outra.trim()} onClick={somarOutra}>Somar</button>
+            <Botao compacto desativado={cheio || !outra.trim()} onClick={somarOutra}>Somar</Botao>
           </div>
           <p className="fs-note">{cheio ? `No máximo ${MAX_FINALIDADES}.` : "Com duas ou mais, o membro escolhe uma e ela vai como descrição do Pix."}</p>
         </div>

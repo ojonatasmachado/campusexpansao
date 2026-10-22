@@ -15,6 +15,12 @@ import { Av, Chip, EmptyState, PageHead } from "../ui";
 import { BAT_ST_MAP, Kpi, OUTRO_LOCAL } from "../comum";
 import type { BaptismCandidateView, BaptismClassView, ChurchView, CourseView, DecisionView, DrawerState, EnrollmentView, LessonAttendanceView, LessonView, MemberView, ModalState, ModuleView, PersonView, RoomView } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
+import { Linha, linhaClasse } from "../../ui/Linha";
+import { Selo, tomDaClasse } from "../../ui/Selo";
+import { Segmentado } from "../../ui/Segmentado";
 export function Decisoes({
   decisions,
   members,
@@ -46,7 +52,7 @@ export function Decisoes({
         title="Decisões por Jesus"
         eyebrow={ct("{Caminhada}")}
         help={ct("Todo mundo que decidiu por Jesus ou se reconciliou num {culto}. A decisão inicia a {caminhada} da pessoa até o batismo.")}
-        action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova decisão", subtitle: ct("Registre quem decidiu, o {culto} e quem fará o acompanhamento."), saveLabel: "Registrar decisão", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem decidiu" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"culto", label:ct("{Culto}"), type:"text", half:true, ph:ct("ex: {Culto} da Manhã") }, { k:"responsavel", label:"Responsável pelo acompanhamento", type:"text", ph:"Quem vai acompanhar" }], action: { kind: "decision" } })}>+ Registrar decisão</button>}
+        action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Nova decisão", subtitle: ct("Registre quem decidiu, o {culto} e quem fará o acompanhamento."), saveLabel: "Registrar decisão", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem decidiu" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"culto", label:ct("{Culto}"), type:"text", half:true, ph:ct("ex: {Culto} da Manhã") }, { k:"responsavel", label:"Responsável pelo acompanhamento", type:"text", ph:"Quem vai acompanhar" }], action: { kind: "decision" } })}>+ Registrar decisão</Botao>}
       />
       <div className="kpi-row">
         <Kpi icon="visitante" label="Decisões no mês" value={decisions.length} foot={ct("registradas na {caminhada}")} help="Quantas decisões por Jesus ou reconciliações foram registradas neste mês." />
@@ -59,26 +65,26 @@ export function Decisoes({
           <span className="si"><Icon name="buscar" size={13} /></span>
           <input placeholder="Buscar por nome..." value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-        <div className="seg">
-          <button className={f === "todas" ? "on" : ""} type="button" onClick={() => setF("todas")}>Todas</button>
-          <button className={f === "novo" ? "on" : ""} type="button" onClick={() => setF("novo")}>A contatar</button>
-          <button className={f === "acompanhando" ? "on" : ""} type="button" onClick={() => setF("acompanhando")}>Acompanhando</button>
-          <button className={f === "encaminhado" ? "on" : ""} type="button" onClick={() => setF("encaminhado")}>Encaminhados</button>
-        </div>
+        <Segmentado>
+          <Opcao marcada={f === "todas"} onClick={() => setF("todas")}>Todas</Opcao>
+          <Opcao marcada={f === "novo"} onClick={() => setF("novo")}>A contatar</Opcao>
+          <Opcao marcada={f === "acompanhando"} onClick={() => setF("acompanhando")}>Acompanhando</Opcao>
+          <Opcao marcada={f === "encaminhado"} onClick={() => setF("encaminhado")}>Encaminhados</Opcao>
+        </Segmentado>
         <div className="tb-spacer" />
         <span className="panel-meta">{visible.length} de {decisions.length} decisões</span>
       </div>
       <div className="tbl">
-        <div className="tr head" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }}><span>Pessoa</span><span>{ct("Quando & {culto}")}</span><span>Responsável</span><span>Situação</span></div>
+        <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }}><span>Pessoa</span><span>{ct("Quando & {culto}")}</span><span>Responsável</span><span>Situação</span></Linha>
         {visible.map((decision) => {
           const responsible = decision.responsible_id ? personById.get(decision.responsible_id) : null;
           return (
-            <button className="tr click" key={decision.id} style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }} type="button" onClick={() => setDrawer({ kind: "decision", id: decision.id })}>
-              <div className="cell-person"><Av name={decision.name} size="md" /><div><div className="cell-name">{decision.name} <span className="chip chip-ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"}</span></div><div className="cell-sub">{decision.phone}</div></div></div>
+            <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={decision.id} style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }} onClick={() => setDrawer({ kind: "decision", id: decision.id })}>
+              <div className="cell-person"><Av name={decision.name} size="md" /><div><div className="cell-name">{decision.name} <Selo tom="ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"}</Selo></div><div className="cell-sub">{decision.phone}</div></div></div>
               <div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>{formatDateBR(decision.happened_on)}</div><div className="cell-sub">{decision.service_name || ct("{Culto} não informado")}</div></div>
               <div className="cell-person">{responsible ? <Av name={responsible.name} size="sm" photoUrl={responsible.photoUrl} /> : null}<div className="cell-sub" style={{ marginTop: 0 }}>{responsible?.name ?? "a definir"}</div></div>
               <div><Chip status={decision.status === "novo" ? "wait" : decision.status === "encaminhado" ? "ok" : "ativo"} /></div>
-            </button>
+            </Acao>
           );
         })}
         {visible.length === 0 ? <EmptyState title="Nenhuma decisão por aqui" text={ct("Quem decidir por Jesus ou se reconciliar num {culto} aparece nesta lista.")} /> : null}
@@ -110,7 +116,7 @@ export function Batismos({
   const localOptions = [...rooms.map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` })), { v: OUTRO_LOCAL, l: "Outro espaço (rio, praia, sítio...)" }];
   return (
     <div className="content wide">
-      <PageHead title="Batismos" eyebrow={ct("{Caminhada}")} help={ct("Turmas de batismo: quem vai ser batizado, quando e onde. Fecha um passo importante na {caminhada} da pessoa.")} action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Nova turma de batismo", subtitle: "Crie a turma, defina data, local e quem vai oficiar.", saveLabel: "Criar turma", formFields: [{ k:"label", label:"Nome da turma", type:"text", req:true, ph:"ex: Batismo de Julho 2025" }, { k:"data", label:"Data do batismo", type:"date", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"ex: Rio Tietê, Praia de Santos...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"pastor", label:"Pastor responsável", type:"text", ph:"Quem vai oficiar" }], action: { kind: "baptismClass" } })}>+ Nova turma</button>} />
+      <PageHead title="Batismos" eyebrow={ct("{Caminhada}")} help={ct("Turmas de batismo: quem vai ser batizado, quando e onde. Fecha um passo importante na {caminhada} da pessoa.")} action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Nova turma de batismo", subtitle: "Crie a turma, defina data, local e quem vai oficiar.", saveLabel: "Criar turma", formFields: [{ k:"label", label:"Nome da turma", type:"text", req:true, ph:"ex: Batismo de Julho 2025" }, { k:"data", label:"Data do batismo", type:"date", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"ex: Rio Tietê, Praia de Santos...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"pastor", label:"Pastor responsável", type:"text", ph:"Quem vai oficiar" }], action: { kind: "baptismClass" } })}>+ Nova turma</Botao>} />
       <div className="kpi-row">
         <Kpi icon="identidade" label="Turmas abertas" value={baptismClasses.filter((c) => c.open_enrollment).length} foot="com inscrições disponíveis" help="Turmas de batismo que ainda estão aceitando novas inscrições." />
         <Kpi icon="pessoa" label="Candidatos" value={baptismCandidates.length} foot="em preparação" help="Quem está inscrito numa turma, fazendo o curso pré-batismo." />
@@ -128,7 +134,7 @@ export function Batismos({
             const count = baptismCandidates.filter((c) => c.class_id === cls.id).length;
             const st = BAT_ST_MAP[cls.status ?? "aberta"];
             return (
-              <button className="bat-card" key={cls.id} type="button" onClick={() => setDrawer({ kind: "baptismClass", id: cls.id })}>
+              <Acao className="bat-card" key={cls.id} onClick={() => setDrawer({ kind: "baptismClass", id: cls.id })}>
                 <div className="bat-card-top">
                   <div>
                     <div className="bat-date">{formatDateBR(cls.baptism_date) || "Sem data"}</div>
@@ -138,10 +144,10 @@ export function Batismos({
                 </div>
                 <div className="bat-meta">{joinDot(cls.location, cls.pastor)}</div>
                 <div className="bat-foot">
-                  <span className={`chip ${st?.cls ?? "chip-wait"}`}>{st?.label ?? cls.status}</span>
+                  <Selo tom={tomDaClasse(st?.cls ?? "chip-wait")}>{st?.label ?? cls.status}</Selo>
                   <span className="panel-meta">{count} candidato{count !== 1 ? "s" : ""}</span>
                 </div>
-              </button>
+              </Acao>
             );
           })}
         </div>
@@ -156,16 +162,16 @@ export function Batismos({
             <div className="line" />
           </div>
           <div className="tbl">
-            <div className="tr head" style={{ gridTemplateColumns: "2fr 1fr 1fr 100px" }}><span>Turma</span><span>Data</span><span>Local</span><span>Candidatos</span></div>
+            <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: "2fr 1fr 1fr 100px" }}><span>Turma</span><span>Data</span><span>Local</span><span>Candidatos</span></Linha>
             {concluded.map((cls) => {
               const count = baptismCandidates.filter((c) => c.class_id === cls.id).length;
               return (
-                <button className="tr click" key={cls.id} type="button" style={{ gridTemplateColumns: "2fr 1fr 1fr 100px" }} onClick={() => setDrawer({ kind: "baptismClass", id: cls.id })}>
+                <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={cls.id} style={{ gridTemplateColumns: "2fr 1fr 1fr 100px" }} onClick={() => setDrawer({ kind: "baptismClass", id: cls.id })}>
                   <div className="cell-name">{cls.label}</div>
                   <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>{formatDateBR(cls.baptism_date) || "-"}</div>
                   <div className="cell-sub">{cls.location ?? "-"}</div>
-                  <div><span className="chip chip-neutral">{count} pessoas</span></div>
-                </button>
+                  <div><Selo>{count} pessoas</Selo></div>
+                </Acao>
               );
             })}
           </div>
@@ -228,9 +234,9 @@ export function CursosTrilhas({
         eyebrow={ct("{Caminhada}")}
         help={ct("Formações da igreja, da decisão à liderança. Cada aula concluída entra na {caminhada} da pessoa.")}
         action={
-          <button className="btn btn-pri" type="button" onClick={() => setEditingId("new")}>
+          <Botao variante="principal" onClick={() => setEditingId("new")}>
             + Nova trilha
-          </button>
+          </Botao>
         }
       />
 
@@ -244,9 +250,9 @@ export function CursosTrilhas({
       {/* uma fileira só: os tipos de curso e, no fim, organizar */}
       <div className="seg-check cursos-filtros">
         {CURSO_FILTROS.map((f) => (
-          <button key={f.v} className={`seg-chip${view === "galeria" && filtro === f.v ? " on" : ""}`} type="button" onClick={() => { setView("galeria"); setFiltro(f.v); }}>{f.l}</button>
+          <Opcao key={f.v} marcada={view === "galeria" && filtro === f.v} estilo="seg-chip" onClick={() => { setView("galeria"); setFiltro(f.v); }}>{f.l}</Opcao>
         ))}
-        <button className={`seg-chip${view === "org" ? " on" : ""}`} type="button" onClick={() => setView("org")}><Icon name="config" size={13} /> Organizar</button>
+        <Opcao marcada={view === "org"} estilo="seg-chip" onClick={() => setView("org")}><Icon name="config" size={13} /> Organizar</Opcao>
       </div>
 
       {view === "galeria" ? (
@@ -256,15 +262,14 @@ export function CursosTrilhas({
             const concluded = courseEnrollments.filter((item) => item.status === "concluido").length;
             const pct = courseEnrollments.length ? Math.round((concluded / courseEnrollments.length) * 100) : 0;
             return (
-              <button
+              <Acao
                 className="team-card"
-                type="button"
                 key={course.id}
                 onClick={() => setViewingId(course.id)}
               >
                 <div className="team-card-top">
                   <div className="team-mark"><Icon name="relatorios" size={20} /></div>
-                  <span className="chip chip-ok">{course.level || course.category || "trilha"}</span>
+                  <Selo tom="ok">{course.level || course.category || "trilha"}</Selo>
                 </div>
                 <div className="team-name">{course.name}</div>
                 <div className="team-lead">Matrículas: <em>{courseEnrollments.length}</em></div>
@@ -274,7 +279,7 @@ export function CursosTrilhas({
                 <div className="bar" style={{ marginTop: 14 }}>
                   <div className="bar-fill" style={{ width: `${pct}%` }} />
                 </div>
-              </button>
+              </Acao>
             );
           })}
           {cursos.length === 0 && <EmptyState title="Nenhum curso ainda" text="Os cursos e trilhas da igreja aparecem aqui, com aulas e presença." action={{ label: "Criar curso", onClick: () => setEditingId("new") }} />}
@@ -339,9 +344,8 @@ export function CursoBuilderColuna({
       </div>
       <div className="cb-col-body">
         {lista.map((c) => (
-          <button
+          <Acao
             className="cb-card"
-            type="button"
             key={c.id}
             draggable
             onDragStart={() => setDrag(c.id)}
@@ -357,9 +361,9 @@ export function CursoBuilderColuna({
                 </div>
               )}
             </div>
-          </button>
+          </Acao>
         ))}
-        {id && <button className="cb-add" type="button" onClick={() => onOpenEditor("new")}>+ curso neste grupo</button>}
+        {id && <Botao compacto onClick={() => onOpenEditor("new")}>+ curso neste grupo</Botao>}
       </div>
     </div>
   );
@@ -442,12 +446,12 @@ export function CursoBuilder({
               autoFocus
             />
             <div style={{ display: "flex", gap: 6 }}>
-              <button className="btn btn-pri btn-sm" type="button" onClick={criarGrupo}>Criar</button>
-              <button className="btn btn-sec btn-sm" type="button" onClick={() => { setNovoGrupo(null); setNomeGrupo(""); }}>Cancelar</button>
+              <Botao variante="principal" compacto onClick={criarGrupo}>Criar</Botao>
+              <Botao compacto onClick={() => { setNovoGrupo(null); setNomeGrupo(""); }}>Cancelar</Botao>
             </div>
           </div>
         ) : (
-          <button className="cb-add" type="button" onClick={() => setNovoGrupo("")}>+ Novo grupo</button>
+          <Botao compacto onClick={() => setNovoGrupo("")}>+ Novo grupo</Botao>
         )}
       </div>
     </div>

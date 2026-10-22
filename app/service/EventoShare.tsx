@@ -5,6 +5,9 @@ import { useState, useRef } from "react";
 import { toPng } from "html-to-image";
 import { formatDateBR, joinDot } from "./lib/date";
 
+import { Botao } from "./ui/Botao";
+import { Opcao } from "./ui/Opcao";
+import { Segmentado } from "./ui/Segmentado";
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
 type EventView = {
@@ -226,10 +229,10 @@ export default function EventoShare({ event, ministries, churchName = "Service",
             Baixe a imagem ou copie o texto formatado pra colar no grupo da igreja.
           </div>
 
-          <div className="seg" style={{ marginBottom: 18 }}>
-            <button type="button" className={modo === "simples" ? "on" : ""} onClick={() => setModo("simples")}>Simplificada</button>
-            <button type="button" className={modo === "completa" ? "on" : ""} onClick={() => setModo("completa")}>Completa</button>
-          </div>
+          <Segmentado style={{ marginBottom: 18 }}>
+            <Opcao marcada={modo === "simples"} onClick={() => setModo("simples")}>Simplificada</Opcao>
+            <Opcao marcada={modo === "completa"} onClick={() => setModo("completa")}>Completa</Opcao>
+          </Segmentado>
 
           {!completa && setlist.length > 0 && (
             <div style={{ marginBottom: 20 }}>
@@ -258,27 +261,26 @@ export default function EventoShare({ event, ministries, churchName = "Service",
             </div>
           )}
 
-          <button
-            className="btn btn-pri"
+          <Botao
+            variante="principal"
             style={{ width: "100%", justifyContent: "center" }}
             onClick={baixar}
           >
             ↓ Baixar imagem
-          </button>
-          <button
-            className="btn btn-sec"
+          </Botao>
+          <Botao
             style={{ width: "100%", justifyContent: "center", marginTop: 10 }}
             onClick={copiarTexto}
           >
             Copiar texto p/ WhatsApp
-          </button>
-          <button
-            className="btn btn-ghost"
+          </Botao>
+          <Botao
+            variante="discreto"
             style={{ width: "100%", justifyContent: "center", marginTop: 10 }}
             onClick={onClose}
           >
             Fechar
-          </button>
+          </Botao>
 
           <div className="evt2-side-tip">
             {completa

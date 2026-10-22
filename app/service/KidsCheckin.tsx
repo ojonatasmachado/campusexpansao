@@ -8,6 +8,9 @@ import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { formatDateBR, joinDot } from "./lib/date";
 import { Icon } from "./lib/icons";
 
+import { Botao } from "./ui/Botao";
+import { Acao } from "./ui/Acao";
+import { Cartao } from "./ui/Cartao";
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
 type EventLite = {
@@ -155,8 +158,8 @@ export function KidsQRModal({
           <div className="modal-title">{kidsClass.name}</div>
           <div className="modal-sub">QR Code próprio desta turma neste culto. O responsável escaneia, escolhe o filho e confirma o check-in ou pede a retirada.</div>
           <div className="ck-tabs">
-            <button className={`ck-tab ${tab === "qr" ? "on" : ""}`} onClick={() => setTab("qr")}>QR Code</button>
-            <button className={`ck-tab ${tab === "sala" ? "on" : ""}`} onClick={() => setTab("sala")}>Quem está na sala · {present.length}{pending.length > 0 ? ` · ${plural(pending.length, "retirada")}` : ""}</button>
+            <Acao className={`ck-tab ${tab === "qr" ? "on" : ""}`} onClick={() => setTab("qr")}>QR Code</Acao>
+            <Acao className={`ck-tab ${tab === "sala" ? "on" : ""}`} onClick={() => setTab("sala")}>Quem está na sala · {present.length}{pending.length > 0 ? ` · ${plural(pending.length, "retirada")}` : ""}</Acao>
           </div>
         </div>
 
@@ -174,8 +177,8 @@ export function KidsQRModal({
                 <div className={`ck-status ${qrActive ? "on" : "off"}`}><span className="ck-dot" />{qrActive ? "Ativo, aceitando check-ins" : "Desativado"}</div>
                 <div className="ck-link"><span className="ck-link-txt">{checkinLink}</span></div>
                 <div className="ck-actions">
-                  <button className="btn btn-sec btn-sm" type="button" onClick={toggleActive}>{qrActive ? "Desativar" : "Ativar"}</button>
-                  <button className="btn btn-sec btn-sm" type="button" onClick={regenerar}>Regenerar</button>
+                  <Botao compacto onClick={toggleActive}>{qrActive ? "Desativar" : "Ativar"}</Botao>
+                  <Botao compacto onClick={regenerar}>Regenerar</Botao>
                 </div>
                 <div className="ck-hint">Imprima e cole na porta da sala. Cada responsável escaneia com o celular pra deixar ou retirar o filho.</div>
               </div>
@@ -185,7 +188,7 @@ export function KidsQRModal({
           {tab === "sala" && (
             <div className="ck-presenca">
               {pending.length > 0 && (
-                <div className="panel" style={{ marginBottom: 16 }}>
+                <Cartao style={{ marginBottom: 16 }}>
                   <div className="panel-head"><span className="panel-title"><Icon name="alerta" size={14} /> Retiradas pendentes</span></div>
                   <div className="panel-body flush">
                     {pending.map((att) => {
@@ -197,12 +200,12 @@ export function KidsQRModal({
                             <div className="ck-row-name">{child?.name ?? "Criança"}</div>
                             <div className="ck-row-meta">Aguardando confirmação visual do responsável</div>
                           </div>
-                          <button className="btn btn-pri btn-sm" type="button" onClick={() => confirmarRetirada(att)}>Confirmar retirada</button>
+                          <Botao variante="principal" compacto onClick={() => confirmarRetirada(att)}>Confirmar retirada</Botao>
                         </div>
                       );
                     })}
                   </div>
-                </div>
+                </Cartao>
               )}
               <div className="ck-roster">
                 {present.filter((a) => a.status === "presente").length === 0 && <div className="empty">Nenhuma criança na sala ainda.</div>}
@@ -236,7 +239,7 @@ export function KidsQRModal({
         </div>
 
         <div className="modal-foot">
-          <button className="btn btn-pri" type="button" onClick={onClose}>Concluído</button>
+          <Botao variante="principal" onClick={onClose}>Concluído</Botao>
         </div>
       </div>
     </div>

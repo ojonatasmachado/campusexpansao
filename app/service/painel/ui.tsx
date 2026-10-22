@@ -8,6 +8,9 @@ import { Caret, Icon } from "../lib/icons";
 import { HelpDot } from "../HelpSystem";
 import { iniciais } from "../lib/iniciais";
 
+import { Botao } from "../ui/Botao";
+import { Acao } from "../ui/Acao";
+import { Selo, tomDaClasse } from "../ui/Selo";
 /* grupo do menu da tela aberta: o sobretítulo da página mostra o grupo */
 export const RouteGroupContext = createContext<string | null>(null);
 
@@ -25,7 +28,7 @@ const CHIP_LABEL: Record<string, string> = { ativo: "Ativo", pausa: "Em pausa", 
 
 export function Chip({ status }: { status: string }) {
   const cls = status === "ativo" || status === "membro" || status === "ok" ? "chip-ok" : status === "pausa" || status === "wait" ? "chip-wait" : "chip-neutral";
-  return <span className={`chip ${cls}`}>{CHIP_LABEL[status] ?? status}</span>;
+  return <Selo tom={tomDaClasse(cls)}>{CHIP_LABEL[status] ?? status}</Selo>;
 }
 
 /* subtitle: só uma contagem ou um fato curto ("34 pessoas"), no máximo uma linha.
@@ -49,7 +52,7 @@ export function EmptyState({ title, text, action }: { title: string; text: strin
     <div className="empty-state">
       <div className="empty-state-t">{title}</div>
       <p className="empty-state-s">{text}</p>
-      {action ? <button className="btn btn-pri btn-sm" type="button" onClick={action.onClick}>{action.label}</button> : null}
+      {action ? <Botao variante="principal" compacto onClick={action.onClick}>{action.label}</Botao> : null}
     </div>
   );
 }
@@ -79,16 +82,16 @@ export function MenuMais({ acoes, rotulo = "Mais" }: { acoes: AcaoMais[]; rotulo
   if (!acoes.length) return null;
   return (
     <div className="menu-mais" ref={caixa}>
-      <button ref={botao} className="btn btn-sec" type="button" aria-haspopup="menu" aria-expanded={aberto} onClick={() => setAberto((v) => !v)}>
+      <Botao ref={botao} aria-haspopup="menu" aria-expanded={aberto} onClick={() => setAberto((v) => !v)}>
         {rotulo} <Caret open={aberto} size={13} />
-      </button>
+      </Botao>
       {aberto && (
         <div className="menu-mais-pop" role="menu">
           {acoes.map((a) => (
-            <button key={a.rotulo} type="button" role="menuitem" disabled={a.desligada} onClick={() => { setAberto(false); a.onClick(); }}>
+            <Acao key={a.rotulo} role="menuitem" desativado={a.desligada} onClick={() => { setAberto(false); a.onClick(); }}>
               {a.icone ? <span className="ic"><Icon name={a.icone} size={16} /></span> : null}
               {a.rotulo}
-            </button>
+            </Acao>
           ))}
         </div>
       )}

@@ -10,6 +10,11 @@ import { FormScreen, FormSection } from "../form/FormScreen";
 import { PAPEIS_V2, REACOES_PESQUISA } from "../comum";
 import type { MinistryView, PesquisaAdminRow, PesquisaDraft, PesquisaPerguntaDraft } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
+import { Cartao } from "../../ui/Cartao";
+import { Linha } from "../../ui/Linha";
 export const novaPesquisaDraft = (): PesquisaDraft => ({
   id: `nova-${Date.now()}`,
   nome: "",
@@ -239,17 +244,16 @@ export function PesquisasView({ organizationId, ministries }: { organizationId: 
           const temPulso = pesquisas.some((p) => p.disparoModo === "posescala");
           return (
             <div style={{ position: "relative", display: "inline-block" }} ref={novaMenuRef}>
-              <button
-                className="btn btn-pri btn-sm"
-                type="button"
+              <Botao
+                variante="principal" compacto
                 onClick={() => (temPulso ? setRoute({ screen: "editor", draft: novaPesquisaDraft() }) : setNovaMenuOpen((o) => !o))}
               >
                 + Nova pesquisa
-              </button>
+              </Botao>
               {novaMenuOpen && !temPulso && (
                 <div className="sel-pop" style={{ left: 0, right: "auto", width: 260 }}>
-                  <button type="button" className="sel-opt" onClick={() => { setNovaMenuOpen(false); setRoute({ screen: "editor", draft: novaPesquisaDraft() }); }}>Em branco</button>
-                  <button type="button" className="sel-opt" onClick={() => { setNovaMenuOpen(false); setRoute({ screen: "editor", draft: modeloPulsoPosEscala() }); }}>Modelo: Pulso pós-escala</button>
+                  <Acao className="sel-opt" onClick={() => { setNovaMenuOpen(false); setRoute({ screen: "editor", draft: novaPesquisaDraft() }); }}>Em branco</Acao>
+                  <Acao className="sel-opt" onClick={() => { setNovaMenuOpen(false); setRoute({ screen: "editor", draft: modeloPulsoPosEscala() }); }}>Modelo: Pulso pós-escala</Acao>
                 </div>
               )}
             </div>
@@ -267,13 +271,13 @@ export function PesquisasView({ organizationId, ministries }: { organizationId: 
             </div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {p.disparoModo === "campanha" && !p.emitidaEm && (
-                <button className="btn btn-sec btn-sm" type="button" onClick={() => { void emitirCampanhaPesquisa(p.id).then(carregar); }}>Disparar agora</button>
+                <Botao compacto onClick={() => { void emitirCampanhaPesquisa(p.id).then(carregar); }}>Disparar agora</Botao>
               )}
-              <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute({ screen: "editor", draft: toPesquisaDraft(p) })}>Editar</button>
-              <button className="btn btn-sec btn-sm" type="button" onClick={() => { void setStatusPesquisa(p.id, p.status === "ativa" ? "pausada" : "ativa").then(carregar); }}>
+              <Botao compacto onClick={() => setRoute({ screen: "editor", draft: toPesquisaDraft(p) })}>Editar</Botao>
+              <Botao compacto onClick={() => { void setStatusPesquisa(p.id, p.status === "ativa" ? "pausada" : "ativa").then(carregar); }}>
                 {p.status === "ativa" ? "Pausar" : "Reativar"}
-              </button>
-              <button className="btn btn-danger btn-sm" type="button" onClick={() => setToDelete(p)}>Excluir</button>
+              </Botao>
+              <Botao variante="perigo" compacto onClick={() => setToDelete(p)}>Excluir</Botao>
             </div>
           </div>
         ))}
@@ -287,14 +291,13 @@ export function PesquisasView({ organizationId, ministries }: { organizationId: 
             </div>
             <div className="modal-body">
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                <button className="btn btn-sec" type="button" onClick={() => setToDelete(null)}>Cancelar</button>
-                <button
-                  className="btn btn-danger"
-                  type="button"
+                <Botao onClick={() => setToDelete(null)}>Cancelar</Botao>
+                <Botao
+                  variante="perigo"
                   onClick={async () => { try { await deletePesquisaRemota(toDelete.id); setToDelete(null); await carregar(); } catch (err) { console.error(err); } }}
                 >
                   Excluir pesquisa
-                </button>
+                </Botao>
               </div>
             </div>
           </div>
@@ -357,15 +360,15 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
       <div className="field">
         <div className="fs-chips" role="group" aria-label="Quem vê essa pesquisa" style={{ marginBottom: 8 }}>
           {(["todos", "papel", "time"] as const).map((m) => (
-            <button key={m} type="button" className={`seg-chip${d.segmentacaoModo === m ? " on" : ""}`} onClick={() => setD({ ...d, segmentacaoModo: m, segmentacaoValores: [] })}>
+            <Opcao key={m} marcada={d.segmentacaoModo === m} estilo="seg-chip" onClick={() => setD({ ...d, segmentacaoModo: m, segmentacaoValores: [] })}>
               {m === "todos" ? "Todo mundo" : m === "papel" ? "Por papel" : "Por time"}
-            </button>
+            </Opcao>
           ))}
         </div>
         {d.segmentacaoModo === "papel" && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {PAPEIS_V2.map((pp) => (
-              <button key={pp.id} type="button" className={`seg-chip${d.segmentacaoValores.includes(pp.id) ? " on" : ""}`} onClick={() => toggleValor(pp.id)}>{ct(pp.nome)}</button>
+              <Opcao key={pp.id} marcada={d.segmentacaoValores.includes(pp.id)} estilo="seg-chip" onClick={() => toggleValor(pp.id)}>{ct(pp.nome)}</Opcao>
             ))}
           </div>
         )}
@@ -373,7 +376,7 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {times.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum time cadastrado ainda.</span>}
             {times.map((t) => (
-              <button key={t} type="button" className={`seg-chip${d.segmentacaoValores.includes(t) ? " on" : ""}`} onClick={() => toggleValor(t)}>{t}</button>
+              <Opcao key={t} marcada={d.segmentacaoValores.includes(t)} estilo="seg-chip" onClick={() => toggleValor(t)}>{t}</Opcao>
             ))}
           </div>
         )}
@@ -385,9 +388,9 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
       <div className="field">
         <div className="fs-chips" role="group" aria-label="Quando aparece" style={{ marginBottom: 8 }}>
           {(["posescala", "campanha", "periodica", "livre"] as const).map((m) => (
-            <button key={m} type="button" className={`seg-chip${d.disparoModo === m ? " on" : ""}`} onClick={() => setD({ ...d, disparoModo: m })}>
+            <Opcao key={m} marcada={d.disparoModo === m} estilo="seg-chip" onClick={() => setD({ ...d, disparoModo: m })}>
               {m === "posescala" ? "Pós-escala" : m === "campanha" ? "Campanha pontual" : m === "periodica" ? "Periódica" : "Atalho livre"}
-            </button>
+            </Opcao>
           ))}
         </div>
         {d.disparoModo === "posescala" && (
@@ -421,18 +424,18 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
                 <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>#{idx + 1}</span>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", flex: 1 }}>
                   {(["emoji", "nota", "texto", "simnao", "multipla"] as const).map((t) => (
-                    <button key={t} type="button" className={`seg-chip${p.tipo === t ? " on" : ""}`} onClick={() => updatePergunta(p.id, { tipo: t })}>
+                    <Opcao key={t} marcada={p.tipo === t} estilo="seg-chip" onClick={() => updatePergunta(p.id, { tipo: t })}>
                       {t === "emoji" ? "Emoji" : t === "nota" ? "Nota" : t === "texto" ? "Texto livre" : t === "simnao" ? "Sim/Não" : "Múltipla escolha"}
-                    </button>
+                    </Opcao>
                   ))}
                 </div>
-                <button type="button" className="btn btn-sec btn-sm" onClick={() => removePergunta(p.id)}>Remover</button>
+                <Botao compacto onClick={() => removePergunta(p.id)}>Remover</Botao>
               </div>
               <input className="input" placeholder="Texto da pergunta" value={p.texto} onChange={(e) => updatePergunta(p.id, { texto: e.target.value })} style={{ marginBottom: 8 }} />
               {p.tipo === "emoji" && <div style={{ display: "flex", gap: 6, fontSize: "var(--fs-pn-20)" }}>{REACOES_PESQUISA.map((r) => <span key={r}>{r}</span>)}</div>}
               {p.tipo === "nota" && (
                 <div style={{ display: "flex", gap: 8 }}>
-                  {[5, 10].map((s) => <button key={s} type="button" className={`seg-chip${(p.escala ?? 5) === s ? " on" : ""}`} onClick={() => updatePergunta(p.id, { escala: s as 5 | 10 })}>0 a {s}</button>)}
+                  {[5, 10].map((s) => <Opcao key={s} marcada={(p.escala ?? 5) === s} estilo="seg-chip" onClick={() => updatePergunta(p.id, { escala: s as 5 | 10 })}>0 a {s}</Opcao>)}
                 </div>
               )}
               {p.tipo === "multipla" && (
@@ -445,7 +448,7 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
             </div>
           ))}
         </div>
-        <button type="button" className="btn btn-sec btn-sm" style={{ marginTop: 10 }} onClick={addPergunta}>Adicionar pergunta</button>
+        <Botao compacto style={{ marginTop: 10 }} onClick={addPergunta}>Adicionar pergunta</Botao>
       </div>
 
       </FormSection>
@@ -465,7 +468,7 @@ export function PesquisaResultados({ pesquisa, onVoltar }: { pesquisa: PesquisaA
   return (
     <div className="cfg-card">
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-        <button type="button" className="btn btn-sec btn-sm" onClick={onVoltar}>← Voltar</button>
+        <Botao compacto onClick={onVoltar}>← Voltar</Botao>
         <div className="cfg-card-t" style={{ margin: 0 }}>{pesquisa.nome}</div>
       </div>
       <div className="cfg-card-s">{pesquisa.totalRespostas} resposta{pesquisa.totalRespostas === 1 ? "" : "s"} · {disparoLabelPesquisa(pesquisa)}</div>
@@ -474,20 +477,20 @@ export function PesquisaResultados({ pesquisa, onVoltar }: { pesquisa: PesquisaA
         const valores = itens.filter((i) => i.perguntaId === p.id).map((i) => i.valor);
         if (p.tipo === "texto") {
           return (
-            <div key={p.id} className="panel" style={{ marginTop: 14 }}>
+            <Cartao key={p.id} style={{ marginTop: 14 }}>
               <div className="panel-head"><span className="panel-title">{p.texto}</span></div>
               <div className="panel-body flush">
                 {valores.length === 0 && <div className="empty">Ninguém respondeu ainda.</div>}
-                {valores.map((v, i) => <div key={i} className="mini-row"><div className="mini-main"><div className="mini-sub">{v}</div></div></div>)}
+                {valores.map((v, i) => <Linha key={i}><div className="mini-main"><div className="mini-sub">{v}</div></div></Linha>)}
               </div>
-            </div>
+            </Cartao>
           );
         }
         const contagem = new Map<string, number>();
         for (const v of valores) contagem.set(v, (contagem.get(v) ?? 0) + 1);
         const max = Math.max(1, ...Array.from(contagem.values()));
         return (
-          <div key={p.id} className="panel" style={{ marginTop: 14 }}>
+          <Cartao key={p.id} style={{ marginTop: 14 }}>
             <div className="panel-head"><span className="panel-title">{p.texto}</span></div>
             <div className="panel-body flush">
               {valores.length === 0 && <div className="empty">Ninguém respondeu ainda.</div>}
@@ -499,7 +502,7 @@ export function PesquisaResultados({ pesquisa, onVoltar }: { pesquisa: PesquisaA
                 </div>
               ))}
             </div>
-          </div>
+          </Cartao>
         );
       })}
     </div>

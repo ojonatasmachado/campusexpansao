@@ -19,6 +19,11 @@ import { gravarAceiteMapa } from "./AceiteMapa";
 import { AVISO_CEP } from "../lib/termo-mapa";
 import type { M, MemberContactInput, P } from "./tipos";
 
+import { Botao } from "../ui/Botao";
+import { Interruptor } from "../ui/Interruptor";
+import { Opcao } from "../ui/Opcao";
+import { Cartao } from "../ui/Cartao";
+import { Linha, Lista } from "../ui/Linha";
 // ── aba: Perfil ───────────────────────────────────────────────────────────────
 
 /* notificações do celular (push): usado no Perfil e no primeiro acesso */
@@ -221,7 +226,7 @@ export function TabPerfil({
   if (view === "dados") {
     return (
       <div className="m6-sec0">
-        <div className="m6-card ob-foto">
+        <Cartao estilo="app" className="ob-foto">
           <PhotoPicker
             label="Sua foto"
             photoUrl={foto}
@@ -232,9 +237,9 @@ export function TabPerfil({
             }}
           />
           <div className="m6-meta">Aparece no lugar das iniciais.</div>
-        </div>
+        </Cartao>
         {member ? (
-          <div className="m6-card">
+          <Cartao estilo="app">
             {!editing ? (
               <>
                 <ul className="m6-facts">
@@ -244,7 +249,7 @@ export function TabPerfil({
                   {(member.neighborhood || member.city) && <li><Icon name="mapapin" size={20} /><span>{[member.neighborhood, member.city, member.country].filter(Boolean).join(", ")}</span></li>}
                 </ul>
                 {onUpdateProfile && (
-                  <div className="m6-btns"><button className="m6-btn sec" type="button" onClick={() => setEditing(true)}>Editar meus dados</button></div>
+                  <div className="m6-btns"><Botao tamanho="toque" onClick={() => setEditing(true)}>Editar meus dados</Botao></div>
                 )}
               </>
             ) : (
@@ -253,14 +258,14 @@ export function TabPerfil({
               <MemberContactFields d={perfil} set={(k, v) => setPerfil((p) => ({ ...p, [k]: v }))} erros={perfilTentou ? perfilErros : null} />
                 {perfilErroSalvar && <div className="m6-err">{perfilErroSalvar}</div>}
                 <div className="m6-btns m6-fixo">
-                  <button className="m6-btn sec" type="button" onClick={() => setEditing(false)}>Cancelar</button>
-                  <button className="m6-btn pri" type="button" onClick={salvarPerfil}>Salvar</button>
+                  <Botao tamanho="toque" onClick={() => setEditing(false)}>Cancelar</Botao>
+                  <Botao tamanho="toque" variante="principal" onClick={salvarPerfil}>Salvar</Botao>
                 </div>
               </>
             )}
-          </div>
+          </Cartao>
         ) : (
-          <div className="m6-card"><div className="m6-meta">Sua ficha ainda não está ligada ao app. Fale com a liderança.</div></div>
+          <Cartao estilo="app"><div className="m6-meta">Sua ficha ainda não está ligada ao app. Fale com a liderança.</div></Cartao>
         )}
       </div>
     );
@@ -269,12 +274,12 @@ export function TabPerfil({
   if (view === "senha") {
     return (
       <div className="m6-sec0">
-        <div className="m6-card">
+        <Cartao estilo="app">
           <div className="field"><label className="field-label">Senha nova</label><input className="input" type="password" autoComplete="new-password" placeholder="Pelo menos 6 caracteres" value={senha} onChange={(e) => setSenha(e.target.value)} /></div>
           <div className="field"><label className="field-label">Repita a senha</label><input className="input" type="password" autoComplete="new-password" value={senha2} onChange={(e) => setSenha2(e.target.value)} /></div>
           {senhaMsg && <div className="m6-meta" style={{ marginBottom: 8 }}>{senhaMsg}</div>}
-          <div className="m6-btns"><button className="m6-btn pri" type="button" disabled={!senhaValida || senhaSaving || !onChangePassword} onClick={trocarSenha}>{senhaSaving ? "Salvando..." : "Salvar senha nova"}</button></div>
-        </div>
+          <div className="m6-btns"><Botao tamanho="toque" variante="principal" desativado={!senhaValida || senhaSaving || !onChangePassword} onClick={trocarSenha}>{senhaSaving ? "Salvando..." : "Salvar senha nova"}</Botao></div>
+        </Cartao>
       </div>
     );
   }
@@ -283,97 +288,97 @@ export function TabPerfil({
   return (
     <>
       <div className="m6-sec0">
-        <div className="m6-card m6-me">
+        <Cartao estilo="app" className="m6-me">
           <Av name={person.name} size="xl" photoUrl={person.photoUrl} />
           <div className="m6-rb">
             <div className="m6-ct">{person.name}</div>
             <div className="m6-meta">{papel}</div>
             {member?.firstContact ? <div className="m6-meta">Na igreja desde {formatDateBR(member.firstContact)}</div> : null}
           </div>
-        </div>
+        </Cartao>
       </div>
 
       <div className="m6-sec">
         <div className="m6-lbl">Você</div>
-        <div className="m6-list">
+        <Lista>
           <M6Row ic="pessoa" t="Meus dados" s="Telefone, e-mail, endereço e aniversário" onClick={() => openSub?.("dados")} />
           <M6Row ic="kids" t="Minha família" s="Filhos no Kids, check-in e eventos" onClick={() => openSub?.("familia")} />
           {contribuir && <M6Row ic="semente" t="Contribuir" s={`Pix para ${listaFinalidades(contribuir.finalidades)}`} onClick={onContribuir} />}
           <M6Row ic="historia" t="Minha história" s="O que você já viveu na igreja" onClick={() => openSub?.("minha-historia")} />
-        </div>
+        </Lista>
       </div>
 
       <div className="m6-sec">
         <div className="m6-lbl">Preferências</div>
-        <div className="m6-list">
+        <Lista>
           <M6Row ic="documento" t="Tamanho do texto" s={NOMES_POSICAO[textPos]} onClick={ui.tamanhoTexto} />
-        </div>
+        </Lista>
         {theme && setTheme && (
-          <div className="m6-card m6-mt">
+          <Cartao estilo="app" className="m6-mt">
             <div className="m6-rt">Tema</div>
             <div className="ts-seg two" role="radiogroup" aria-label="Tema">
               {(["light", "dark"] as const).map((m) => (
-                <button key={m} type="button" role="radio" aria-checked={theme === m} className={theme === m ? "on" : ""} onClick={() => setTheme(m)}>{m === "light" ? "Claro" : "Escuro"}</button>
+                <Opcao key={m} role="radio" aria-checked={theme === m} marcada={theme === m} onClick={() => setTheme(m)}>{m === "light" ? "Claro" : "Escuro"}</Opcao>
               ))}
             </div>
-          </div>
+          </Cartao>
         )}
-        <div className="m6-list">
-          <div className="m6-row">
+        <Lista>
+          <Linha estilo="app">
             <span className="m6-ic"><Icon name="sino" size={22} /></span>
             <span className="m6-rb">
               <span className="m6-rt">Notificações</span>
               <span className="m6-rs">{pushMsg || (pushSupported ? (pushOn ? "Nada chega das 22h às 7h. O Mural chega em resumo." : "Desligadas") : "Disponível quando o app está instalado")}</span>
             </span>
-            <button type="button" role="switch" aria-checked={pushOn} aria-label="Notificações" className={`m6-tg${pushOn ? " on" : ""}`} disabled={!pushSupported || pushBusy} onClick={() => (pushOn ? desligarPush() : ligarPush())} />
-          </div>
+            <Interruptor ligado={pushOn} tamanho="toque" rotulo="Notificações" desativado={!pushSupported || pushBusy} onClick={() => (pushOn ? desligarPush() : ligarPush())} />
+          </Linha>
           {/* v7 5.3 (lei 9): categorias que a pessoa desliga */}
           {pushOn && CATEGORIAS_AVISO.map((c) => {
             const ligada = !notifOff.includes(c.id);
             return (
-              <div className="m6-row" key={c.id}>
+              <Linha estilo="app" key={c.id}>
                 <span className="m6-ic" />
                 <span className="m6-rb">
                   <span className="m6-rt">{ct(c.t)}</span>
                   <span className="m6-rs">{ct(c.s)}</span>
                 </span>
-                <button type="button" role="switch" aria-checked={ligada} aria-label={`Avisos de ${ct(c.t)}`} className={`m6-tg${ligada ? " on" : ""}`} onClick={() => trocarCategoria(c.id)} />
-              </div>
+                <Interruptor ligado={ligada} tamanho="toque" rotulo={`Avisos de ${ct(c.t)}`} onClick={() => trocarCategoria(c.id)} />
+              </Linha>
             );
           })}
-        </div>
+        </Lista>
       </div>
 
       {member && (
       <div className="m6-sec">
         <div className="m6-lbl">Privacidade</div>
-        <div className="m6-list">
-          <div className="m6-row">
+        <Lista>
+          <Linha estilo="app">
             <span className="m6-ic"><Icon name="mapapin" size={22} /></span>
             <span className="m6-rb">
               <span className="m6-rt">Meu nome no mapa</span>
               <span className="m6-rs">{nomeNoMapa ? "A liderança vê seu nome e a região do seu CEP. Nunca o endereço." : "Você aparece só como um ponto sem nome."}</span>
             </span>
-            <button type="button" role="switch" aria-checked={nomeNoMapa} aria-label="Meu nome no mapa da liderança" className={`m6-tg${nomeNoMapa ? " on" : ""}`} onClick={trocarNomeNoMapa} />
-          </div>
-        </div>
+            <Interruptor ligado={nomeNoMapa} tamanho="toque" rotulo="Meu nome no mapa da liderança" onClick={trocarNomeNoMapa} />
+          </Linha>
+        </Lista>
       </div>
       )}
 
       <div className="m6-sec">
         <div className="m6-lbl">Conta</div>
-        <div className="m6-list">
+        <Lista>
           {onChangePassword && <M6Row ic="cadeado" t="Trocar senha" onClick={() => openSub?.("senha")} />}
           <M6Row ic="lampada" t="Conheça o app" s="Um passeio de um minuto" onClick={() => setTour(true)} />
           {onSwitchToPanel && <M6Row ic="painel" t="Abrir o painel da igreja" s="Gestão de pessoas, escalas e agenda" onClick={onSwitchToPanel} />}
-        </div>
+        </Lista>
       </div>
 
       {onLogout && (
         <div className="m6-sec">
-          <div className="m6-list">
+          <Lista>
             <M6Row cls="m6-danger" ic="sair" t="Sair do app" right={null} onClick={() => setSair(true)} />
-          </div>
+          </Lista>
         </div>
       )}
       {tour && <AppTourModal onClose={() => setTour(false)} />}
@@ -382,8 +387,8 @@ export function TabPerfil({
           <h2 className="m6-sh">Sair do app?</h2>
           <p className="m6-txt">Para entrar de novo, você vai precisar do seu e-mail e da sua senha.</p>
           <div className="m6-btns col">
-            <button className="m6-btn danger" type="button" onClick={onLogout}>Sair</button>
-            <button className="m6-btn sec" type="button" onClick={() => setSair(false)}>Cancelar</button>
+            <Botao tamanho="toque" variante="perigo" onClick={onLogout}>Sair</Botao>
+            <Botao tamanho="toque" onClick={() => setSair(false)}>Cancelar</Botao>
           </div>
         </M6Sheet>
       )}

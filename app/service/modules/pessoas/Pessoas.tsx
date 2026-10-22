@@ -16,6 +16,12 @@ import { useTermos } from "../../lib/vocabulario-context";
 import { ImportarMembros } from "./ImportarMembros";
 import type { ChurchView, DrawerState, MemberView, MinistryView, ModalState, PersonView } from "../../ServiceExactApp";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
+import { Etiqueta, Selo } from "../../ui/Selo";
+import { Linha, linhaClasse } from "../../ui/Linha";
+import { Segmentado } from "../../ui/Segmentado";
 function formatAvailability(value: Record<string, boolean>) {
   const labels: Record<string, string> = { dom_m: "Domingo manhã", dom_n: "Domingo noite", qua: "Quarta" };
   const items = Object.entries(value).filter(([, ok]) => ok).map(([key]) => labels[key] ?? key);
@@ -44,7 +50,7 @@ function SituacaoPessoa({ l }: { l: PessoaLinha }) {
   let chip: import("react").ReactNode;
   let sub = "";
   if (l.novo) {
-    chip = <span className="chip chip-wait">Novo</span>;
+    chip = <Selo tom="pendente">Novo</Selo>;
     const chegou = formatDateBR(l.member?.firstContact || l.member?.createdAt || l.person?.createdAt || "");
     sub = chegou ? `chegou em ${chegou.slice(0, 5)}` : "";
   } else if (l.person && l.person.status !== "ativo") {
@@ -53,7 +59,7 @@ function SituacaoPessoa({ l }: { l: PessoaLinha }) {
     chip = <Chip status="membro" />;
     sub = l.member.sinceYear ? `desde ${l.member.sinceYear}` : "";
   } else {
-    chip = <span className="chip chip-neutral">{ct("{Voluntario}")}</span>;
+    chip = <Selo>{ct("{Voluntario}")}</Selo>;
   }
   return (
     <div className="sit-cell">
@@ -109,27 +115,27 @@ export function Membros({ members, people = [], ministries, church, setDrawer, s
   const abrir = (l: PessoaLinha) => setDrawer(l.member ? { kind: "member", id: l.member.id } : { kind: "person", id: l.person!.id });
   return (
     <div className="content wide">
-      <PageHead title="Pessoas" eyebrow="Pessoas" subtitle={soTimes ? `Seus times: ${nomesTimes}.` : undefined} help={soTimes ? "Você vê aqui as pessoas dos seus times. O restante da igreja fica com a gestão, que pode liberar em Configurações › Permissões." : ct("Toda a congregação entra aqui, sirva ou não em um time. É diferente de {Voluntarios}, que lista só quem já serve ativamente.")} action={soTimes ? undefined : <>{church ? <button className="btn btn-sec" type="button" onClick={() => setImportando(true)}><Icon name="anexo" size={14} /> Importar planilha</button> : null}<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Nome, sobrenome e telefone bastam: o convite do app vai pelo WhatsApp e a pessoa completa o resto.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome e sobrenome", type:"text", req:true, ph:"Como a pessoa se chama", hint:"A pessoa pode ajustar depois no app.", secao:"Dados da pessoa" }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Ao salvar, o WhatsApp abre com o convite do app para este número." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"opcional", hint:"Opcional: a pessoa informa no convite." }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"cep", label:"CEP", type:"cep", half:true, secao:"Endereço (opcional)", ph:"00000-000", hint:"Preenche rua, bairro, cidade e estado sozinho.", autofill:{ street:"rua", neighborhood:"bairro", city:"cidade", state:"estado" } }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }, { k:"rua", label:"Rua", type:"text", half:true, ph:"Nome da rua" }, { k:"cidade", label:"Cidade", type:"text", half:true }, { k:"estado", label:"Estado", type:"text", half:true, ph:"UF" }], action: { kind: "member" } })}>+ Novo membro</button></>} />
+      <PageHead title="Pessoas" eyebrow="Pessoas" subtitle={soTimes ? `Seus times: ${nomesTimes}.` : undefined} help={soTimes ? "Você vê aqui as pessoas dos seus times. O restante da igreja fica com a gestão, que pode liberar em Configurações › Permissões." : ct("Toda a congregação entra aqui, sirva ou não em um time. É diferente de {Voluntarios}, que lista só quem já serve ativamente.")} action={soTimes ? undefined : <>{church ? <Botao onClick={() => setImportando(true)}><Icon name="anexo" size={14} /> Importar planilha</Botao> : null}<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Novo membro", subtitle: "Nome, sobrenome e telefone bastam: o convite do app vai pelo WhatsApp e a pessoa completa o resto.", saveLabel: "Adicionar membro", formFields: [{ k:"nome", label:"Nome e sobrenome", type:"text", req:true, ph:"Como a pessoa se chama", hint:"A pessoa pode ajustar depois no app.", secao:"Dados da pessoa" }, { k:"tel", label:"Telefone (WhatsApp)", type:"text", half:true, req:true, ph:"(11) 9...", hint:"Ao salvar, o WhatsApp abre com o convite do app para este número." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"opcional", hint:"Opcional: a pessoa informa no convite." }, { k:"nasc", label:"Aniversário", type:"date", half:true }, { k:"cep", label:"CEP", type:"cep", half:true, secao:"Endereço (opcional)", ph:"00000-000", hint:"Preenche rua, bairro, cidade e estado sozinho.", autofill:{ street:"rua", neighborhood:"bairro", city:"cidade", state:"estado" } }, { k:"bairro", label:"Bairro", type:"text", half:true, ph:"Onde mora" }, { k:"rua", label:"Rua", type:"text", half:true, ph:"Nome da rua" }, { k:"cidade", label:"Cidade", type:"text", half:true }, { k:"estado", label:"Estado", type:"text", half:true, ph:"UF" }], action: { kind: "member" } })}>+ Novo membro</Botao></>} />
       <div className="toolbar">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome ou telefone..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
-        <div className="seg seg-wrap">
+        <Segmentado className="seg-wrap">
           {([["todos", "Todos", linhas.length], ["membros", "Membros", conta.membros], ["voluntarios", ct("{Voluntarios}"), conta.voluntarios], ["lideres", "Líderes", conta.lideres], ["novos", "Novos", conta.novos]] as const).map(([id, l, n]) => (
-            <button key={id} className={filtro === id ? "on" : ""} type="button" onClick={() => setFiltro(id)}>{l} <span className="seg-n">{n}</span></button>
+            <Opcao key={id} marcada={filtro === id} onClick={() => setFiltro(id)}>{l} <span className="seg-n">{n}</span></Opcao>
           ))}
-        </div>
+        </Segmentado>
       </div>
       <p className="jrn-legenda"><b>{ct("{Caminhada}")}</b>, uma barra por etapa, na ordem: {JRN_STEPS.map((s) => ct(s.label)).join(" · ")}.</p>
       <div className="tbl">
-        <div className="tr head" style={{ gridTemplateColumns: "1.6fr 1.3fr 1fr 0.9fr" }}><span>Pessoa</span><span>Serve em</span><span>{ct("{Caminhada}")}</span><span>Situação</span></div>
+        <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: "1.6fr 1.3fr 1fr 0.9fr" }}><span>Pessoa</span><span>Serve em</span><span>{ct("{Caminhada}")}</span><span>Situação</span></Linha>
         {visible.map((l) => (
-          <button className="tr click" type="button" key={l.key} style={{ gridTemplateColumns: "1.6fr 1.3fr 1fr 0.9fr" }} onClick={() => abrir(l)}>
+          <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={l.key} style={{ gridTemplateColumns: "1.6fr 1.3fr 1fr 0.9fr" }} onClick={() => abrir(l)}>
             <div className="cell-person"><Av name={l.name} size="md" photoUrl={l.photoUrl} /><div><div className="cell-name">{l.name}</div><div className="cell-sub">{l.sub}</div></div></div>
             <div>
-              {l.mins.length > 0 ? <div className="cell-tags">{l.mins.map((min) => <span key={min.id} className="tag">{min.name}</span>)}{l.leader && <span className="lider-tag">Líder</span>}</div> : null}
+              {l.mins.length > 0 ? <div className="cell-tags">{l.mins.map((min) => <Etiqueta key={min.id}>{min.name}</Etiqueta>)}{l.leader && <span className="lider-tag">Líder</span>}</div> : null}
             </div>
             <div>{l.member ? <JrnPips journey={l.member.journey} comTexto /> : null}</div>
             <SituacaoPessoa l={l} />
-          </button>
+          </Acao>
         ))}
         {visible.length === 0 && <EmptyState title="Ninguém por aqui" text="Quem você cadastrar aparece nesta lista. Se usou a busca ou um filtro, tente limpar." />}
       </div>
@@ -149,21 +155,21 @@ export function Pessoas({ people, currentPersonId, setDrawer, setModal }: { peop
   });
   return (
     <div className="content">
-      <PageHead title={ct("{Voluntarios}")} eyebrow="Pessoas" help={ct("Todo mundo com acesso de {voluntario} na igreja, mesmo quem ainda não está em nenhum time. Veja funções, disponibilidade e participação nos times.")} action={<button className="btn btn-pri" type="button" onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {voluntario}"), subtitle: "Cadastre e já escolha os times.", saveLabel: ct("Adicionar {voluntario}"), formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"e-mail da pessoa" }], action: { kind: "member" } })}>{ct("+ Novo {voluntario}")}</button>} />
+      <PageHead title={ct("{Voluntarios}")} eyebrow="Pessoas" help={ct("Todo mundo com acesso de {voluntario} na igreja, mesmo quem ainda não está em nenhum time. Veja funções, disponibilidade e participação nos times.")} action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {voluntario}"), subtitle: "Cadastre e já escolha os times.", saveLabel: ct("Adicionar {voluntario}"), formFields: [{ k:"nome", label:"Nome completo", type:"text", req:true, ph:"Como a pessoa se chama" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"email", label:"E-mail", type:"text", half:true, ph:"e-mail da pessoa" }], action: { kind: "member" } })}>{ct("+ Novo {voluntario}")}</Botao>} />
       <div className="toolbar">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
-        <div className="seg">
-          <button className={status === "todos" ? "on" : ""} type="button" onClick={() => setStatus("todos")}>Todos</button>
-          <button className={status === "ativo" ? "on" : ""} type="button" onClick={() => setStatus("ativo")}>Ativos</button>
-          <button className={status === "pausa" ? "on" : ""} type="button" onClick={() => setStatus("pausa")}>Pausa</button>
-        </div>
+        <Segmentado>
+          <Opcao marcada={status === "todos"} onClick={() => setStatus("todos")}>Todos</Opcao>
+          <Opcao marcada={status === "ativo"} onClick={() => setStatus("ativo")}>Ativos</Opcao>
+          <Opcao marcada={status === "pausa"} onClick={() => setStatus("pausa")}>Pausa</Opcao>
+        </Segmentado>
         <div className="tb-spacer" />
         <span className="panel-meta">{visible.length} pessoas</span>
       </div>
       <div className="tbl">
-        <div className="tr head tr-people"><div>{ct("{Voluntario}")}</div><div>Disponibilidade</div><div>Etiquetas</div><div>Status</div></div>
+        <Linha estilo="tabela" className="head tr-people"><div>{ct("{Voluntario}")}</div><div>Disponibilidade</div><div>Etiquetas</div><div>Status</div></Linha>
         {visible.map((person) => (
-          <button className="tr click tr-people" type="button" key={person.id} onClick={() => setDrawer({ kind: "person", id: person.id })}>
+          <Acao className={`${linhaClasse({ estilo: "tabela" })} click tr-people`} key={person.id} onClick={() => setDrawer({ kind: "person", id: person.id })}>
             <div className="who">
               <Av name={person.name} photoUrl={person.photoUrl} />
               <div>
@@ -174,7 +180,7 @@ export function Pessoas({ people, currentPersonId, setDrawer, setModal }: { peop
             <div>{formatAvailability(person.availability)}</div>
             <div>{person.tags.join(" · ")}</div>
             <div><Chip status={person.status} /></div>
-          </button>
+          </Acao>
         ))}
         {visible.length === 0 && <div className="empty">Ninguém encontrado.</div>}
       </div>

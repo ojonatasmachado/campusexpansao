@@ -8,6 +8,8 @@ import { CORES_AREA, NOME_COR, previaArea, salvarArea, type Area, type CorArea }
 import { limparCamadas, type ContextoMapa } from "./contexto";
 import { milhar, pessoasNaRegiao, umACada } from "./linguagem";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 /* Ferramentas › Criar uma área (tela 9 do design). Padrão: juntar bairros,
    clicando neles. Desenhar à mão fica como segunda opção. Os números
    (pessoas, moradores, células) mudam a cada bairro ou ponto. */
@@ -107,13 +109,13 @@ export function CriarArea({ ctx, bairrosIniciais, nivel }: { ctx: ContextoMapa; 
         <span className="mp-texto">{jeito === "bairros" ? "Clique nos bairros para juntar. Clique de novo para tirar." : fechado ? "Área fechada. Dê um nome ao lado." : "Clique para marcar os cantos. Clique no primeiro ponto para fechar."}</span>
         {temBairros && (
           <div className="mp-seg" style={{ ["--n" as string]: 2, minWidth: 260 } as React.CSSProperties}>
-            <button type="button" aria-pressed={jeito === "bairros"} onClick={() => setJeito("bairros")}>Juntar bairros</button>
-            <button type="button" aria-pressed={jeito === "mao"} onClick={() => setJeito("mao")}>Desenhar à mão</button>
+            <Acao aria-pressed={jeito === "bairros"} onClick={() => setJeito("bairros")}>Juntar bairros</Acao>
+            <Acao aria-pressed={jeito === "mao"} onClick={() => setJeito("mao")}>Desenhar à mão</Acao>
           </div>
         )}
-        {jeito === "mao" && pontos.length > 0 && <button type="button" className="mp-botao" onClick={() => { setFechado(false); setPontos((p) => p.slice(0, -1)); }}>Desfazer ponto</button>}
-        {jeito === "mao" && !fechado && pontos.length >= 3 && <button type="button" className="mp-botao" onClick={() => setFechado(true)}>Fechar área</button>}
-        <button type="button" className="mp-botao" onClick={ctx.fechar}>Sair</button>
+        {jeito === "mao" && pontos.length > 0 && <Botao tamanho="mapa" onClick={() => { setFechado(false); setPontos((p) => p.slice(0, -1)); }}>Desfazer ponto</Botao>}
+        {jeito === "mao" && !fechado && pontos.length >= 3 && <Botao tamanho="mapa" onClick={() => setFechado(true)}>Fechar área</Botao>}
+        <Botao tamanho="mapa" onClick={ctx.fechar}>Sair</Botao>
       </div>
 
       <aside className="mp-painel mp-dir" aria-label="Nova área">
@@ -133,13 +135,13 @@ export function CriarArea({ ctx, bairrosIniciais, nivel }: { ctx: ContextoMapa; 
           <div className="field">
             <span className="field-label">Tipo</span>
             <div className="mp-seg" role="group" aria-label="Tipo" style={{ ["--n" as string]: 3 } as React.CSSProperties}>
-              {([["setor", "Setor"], ["regiao", "Região pastoral"], ["alcance", "Alcance"]] as const).map(([v, l]) => <button key={v} type="button" aria-pressed={tipo === v} onClick={() => setTipo(v)}>{l}</button>)}
+              {([["setor", "Setor"], ["regiao", "Região pastoral"], ["alcance", "Alcance"]] as const).map(([v, l]) => <Acao key={v} aria-pressed={tipo === v} onClick={() => setTipo(v)}>{l}</Acao>)}
             </div>
           </div>
           <div className="field">
             <span className="field-label">Cor no mapa</span>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {CORES_AREA.map((c) => <button key={c} type="button" aria-label={NOME_COR[c]} aria-pressed={cor === c} onClick={() => setCor(c)} style={{ width: 32, height: 32, borderRadius: 16, border: 0, background: `var(--mapa-${c})`, boxShadow: cor === c ? "0 0 0 2px var(--graphite), 0 0 0 4px var(--white)" : "none", cursor: "pointer" }} />)}
+              {CORES_AREA.map((c) => <Acao key={c} aria-label={NOME_COR[c]} aria-pressed={cor === c} onClick={() => setCor(c)} style={{ width: 32, height: 32, borderRadius: 16, border: 0, background: `var(--mapa-${c})`, boxShadow: cor === c ? "0 0 0 2px var(--graphite), 0 0 0 4px var(--white)" : "none", cursor: "pointer" }} />)}
             </div>
           </div>
           <div className="field">
@@ -153,8 +155,8 @@ export function CriarArea({ ctx, bairrosIniciais, nivel }: { ctx: ContextoMapa; 
           {erro && <p className="mp-texto" role="alert" style={{ color: "var(--danger)" }}>{erro}</p>}
         </div>
         <div className="mp-pe" style={{ flexDirection: "row" }}>
-          <button type="button" className="btn btn-sec" style={{ flex: 1 }} onClick={ctx.fechar}>Cancelar</button>
-          <button type="button" className="btn btn-pri" style={{ flex: 2 }} disabled={!pronto || salvando} onClick={salvar}>{salvando ? "Salvando..." : "Salvar área"}</button>
+          <Botao style={{ flex: 1 }} onClick={ctx.fechar}>Cancelar</Botao>
+          <Botao variante="principal" style={{ flex: 2 }} desativado={!pronto || salvando} onClick={salvar}>{salvando ? "Salvando..." : "Salvar área"}</Botao>
         </div>
       </aside>
     </>

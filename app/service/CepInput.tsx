@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { Botao } from "./ui/Botao";
 export function formatCep(value: string) {
   /* limpa não-dígitos antes de formatar : o valor pode já vir com traço do
      banco (postal_code salvo por um fluxo antigo, ex.: "01234-000"), não só
@@ -79,7 +80,7 @@ export default function CepInput({ value, onChange, onResult, placeholder, id, i
           if (digits.length === 8) lookup(digits);
         }}
       />
-      {international && brazilLookup && /^\d{5}-?\d{3}$/.test(value.trim()) && <button type="button" className="btn btn-sec btn-sm" disabled={checking} onClick={() => lookup(value.replace(/\D/g, ""))}>Buscar CEP do Brasil</button>}
+      {international && brazilLookup && /^\d{5}-?\d{3}$/.test(value.trim()) && <Botao compacto desativado={checking} onClick={() => lookup(value.replace(/\D/g, ""))}>Buscar CEP do Brasil</Botao>}
       {checking && <div role="status" style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)", marginTop: 4 }}>Buscando endereço...</div>}
       {error && <div role="alert" style={{ fontSize: "var(--fs-ui-sm)", color: "var(--amber)", marginTop: 4 }}>{error}</div>}
     </div>

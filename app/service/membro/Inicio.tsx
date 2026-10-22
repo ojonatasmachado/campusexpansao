@@ -21,6 +21,10 @@ import { EventoRow, M6Date } from "./Agenda";
 import { usePush } from "./Perfil";
 import type { Announcement, Card, Child, ChildGuardian, Ev, ItemInicio, M, Ministry, P, Slot, StepView } from "./tipos";
 
+import { Botao, botaoClasse } from "../ui/Botao";
+import { Acao } from "../ui/Acao";
+import { Cartao, cartaoClasse } from "../ui/Cartao";
+import { Lista } from "../ui/Linha";
 export function EscalaCard({ slot, ev, ministry, person, member, members, onResponderEscala, onStartChat, destaque = true }: {
   slot: Slot; ev: Ev; ministry?: Ministry; person: P; member: M | null; members: M[];
   /* botão cheio só no primeiro cartão da fila do Início (lei 5) */
@@ -64,7 +68,7 @@ export function EscalaCard({ slot, ev, ministry, person, member, members, onResp
     ui.sheet(<SheetTroca slot={slot} ev={ev} funcao={funcao} member={member} dest={destTroca} onStartChat={onStartChat} />);
   };
   return (
-    <div className="m6-card service-commitment">
+    <Cartao estilo="app" className="service-commitment">
       <div className="service-commitment-heading">
         <span aria-hidden="true"><M6Date iso={ev.eventDate} /></span>
         <div><div className="m6-kick">{st === "wait" ? "Escala para confirmar" : "Sua escala"}</div><div className="m6-ct">{ev.name}</div></div>
@@ -77,23 +81,23 @@ export function EscalaCard({ slot, ev, ministry, person, member, members, onResp
       {saving && <p className="m6-meta" role="status">Salvando sua resposta...</p>}
       {st === "wait" && (
         <div className="m6-btns">
-          <button className={`m6-btn ${destaque ? "pri" : "sec"}`} type="button" disabled={saving || !onResponderEscala} onClick={() => responder("ok")}><Icon name="ok" size={20} />Confirmar</button>
-          <button className="m6-btn sec" type="button" disabled={saving || !onResponderEscala} onClick={() => responder("no")}>Não posso</button>
+          <Botao tamanho="toque" variante={destaque ? "principal" : "secundario"} desativado={saving || !onResponderEscala} onClick={() => responder("ok")}><Icon name="ok" size={20} />Confirmar</Botao>
+          <Botao tamanho="toque" desativado={saving || !onResponderEscala} onClick={() => responder("no")}>Não posso</Botao>
         </div>
       )}
       {st === "ok" && (
         <div className="m6-after">
           <M6St k="ok" ic="ok">Presença confirmada</M6St>
-          {onStartChat && member && destTroca && <button type="button" className="m6-link" onClick={pedirTroca}>Pedir troca</button>}
+          {onStartChat && member && destTroca && <Botao tamanho="toque" variante="texto" onClick={pedirTroca}>Pedir troca</Botao>}
         </div>
       )}
       {st === "no" && (
         <div className="m6-after">
           <M6St k="warn" ic="recusou">Você avisou que não pode</M6St>
-          <button type="button" className="m6-link" onClick={() => responder("ok")}>Mudei de ideia</button>
+          <Botao tamanho="toque" variante="texto" onClick={() => responder("ok")}>Mudei de ideia</Botao>
         </div>
       )}
-    </div>
+    </Cartao>
   );
 }
 
@@ -129,9 +133,9 @@ export function SheetTroca({ slot, ev, funcao, member, dest, onStartChat }: {
       <p className="m6-txt">O pedido vai para {papelDoDestinatario(dest)}. A conversa fica em Mensagens.</p>
       <p className="m6-txt">Você continua nesta escala até a liderança confirmar a substituição. Se não puder ir, registre também sua recusa.</p>
       <div className="m6-btns">
-        <button className="m6-btn pri" type="button" disabled={!!enviando} onClick={() => abrir(dest.member_id, `Oi! Preciso trocar minha escala de ${joinDot(quando, funcao)}. Pode me ajudar?`, "Pedido de troca enviado")}>
+        <Botao tamanho="toque" variante="principal" desativado={!!enviando} onClick={() => abrir(dest.member_id, `Oi! Preciso trocar minha escala de ${joinDot(quando, funcao)}. Pode me ajudar?`, "Pedido de troca enviado")}>
           {enviando === dest.member_id ? "Enviando..." : `Pedir a ${dest.name.split(" ")[0]}`}
-        </button>
+        </Botao>
       </div>
       {candidatos.length > 0 && (
         <>
@@ -141,9 +145,9 @@ export function SheetTroca({ slot, ev, funcao, member, dest, onStartChat }: {
             <div key={c.member_id} style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12 }}>
               <Av name={c.name} />
               <div className="m6-rb"><div className="m6-rt">{c.name}</div></div>
-              <button className="m6-btn small sec" type="button" disabled={!!enviando} onClick={() => abrir(c.member_id, `Oi! Você pode assumir minha vaga${funcao ? ` de ${funcao}` : ""} em ${quando}? Se puder, me avise que eu combino com a liderança.`, "Vaga oferecida")}>
+              <Botao tamanho="toque" compacto desativado={!!enviando} onClick={() => abrir(c.member_id, `Oi! Você pode assumir minha vaga${funcao ? ` de ${funcao}` : ""} em ${quando}? Se puder, me avise que eu combino com a liderança.`, "Vaga oferecida")}>
                 {enviando === c.member_id ? "Enviando..." : "Oferecer"}
-              </button>
+              </Botao>
             </div>
           ))}
         </>
@@ -263,7 +267,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
 
   const cartao = (e: EntradaFila<ItemInicio>, destaque: boolean) => {
     const c = e.conteudo;
-    const btn = `m6-btn ${destaque ? "pri" : "sec"}`;
+    const variante = destaque ? "principal" : "secundario";
     switch (c.k) {
       case "kids":
         return <Fragment key={e.id}>{kidsCheckin?.(destaque)}</Fragment>;
@@ -271,47 +275,47 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
         return <EscalaCard key={e.id} slot={c.slot} ev={c.ev} ministry={ministryOf(c.slot)} person={person} member={member} members={members} onResponderEscala={onResponderEscala} onStartChat={onStartChat} destaque={destaque} />;
       case "tarefa":
         return (
-          <div key={e.id} className="m6-card">
+          <Cartao key={e.id} estilo="app">
             <div className="m6-kick">Tarefa</div>
             <div className="m6-ct">{c.card.title}</div>
             <div className="m6-meta">{!c.card.due ? "Sem prazo" : c.card.due.slice(0, 10) < todayISO() ? <M6St k="warn" ic="alerta">{`Atrasada desde ${formatDateBR(c.card.due)}`}</M6St> : `Prazo · ${formatDateBR(c.card.due)}`}</div>
-            <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("agenda", null, { agSeg: "minha", cardId: c.card.id })}>Ver a tarefa</button></div>
-          </div>
+            <div className="m6-btns"><Botao tamanho="toque" variante={variante} onClick={() => ui.go("agenda", null, { agSeg: "minha", cardId: c.card.id })}>Ver a tarefa</Botao></div>
+          </Cartao>
         );
       case "mural":
         return (
-          <div key={e.id} className="m6-card">
+          <Cartao key={e.id} estilo="app">
             <div className="m6-kick"><Icon name="bandeira" size={16} />Novo no Mural</div>
             {c.aviso.urgent && <M6St k="warn" ic="alerta">Urgente</M6St>}
             <div className="m6-ct">{c.aviso.title}</div>
             {c.aviso.created_at && <div className="m6-meta">{quandoPublicado(c.aviso.created_at)}</div>}
-            <div className="m6-btns"><button className={btn} type="button" onClick={() => ui.go("mensagens", "mural", { announcementId: c.aviso.id })}>Ler a publicação</button></div>
-          </div>
+            <div className="m6-btns"><Botao tamanho="toque" variante={variante} onClick={() => ui.go("mensagens", "mural", { announcementId: c.aviso.id })}>Ler a publicação</Botao></div>
+          </Cartao>
         );
       case "passo":
         return (
-          <div key={e.id} className="m6-card">
+          <Cartao key={e.id} estilo="app">
             <div className="m6-kick">{c.step.inscricao ? "Inscrições abertas" : "Seu próximo passo"}</div>
             <div className="m6-ct">{c.step.nome}</div>
             {(c.step.inscricao ?? c.step.info) && <div className="m6-meta">{c.step.inscricao ?? c.step.info}</div>}
-            <div className="m6-btns"><button className={btn} type="button" onClick={() => (c.step.run ? c.step.run() : ui.go("caminhada"))}>{c.step.acao ?? ct("Ver a {caminhada}")} →</button></div>
-          </div>
+            <div className="m6-btns"><Botao tamanho="toque" variante={variante} onClick={() => (c.step.run ? c.step.run() : ui.go("caminhada"))}>{c.step.acao ?? ct("Ver a {caminhada}")} →</Botao></div>
+          </Cartao>
         );
       case "cadastro":
         return (
-          <div key={e.id} className="m6-card">
+          <Cartao key={e.id} estilo="app">
             <div className="m6-kick">Seu cadastro</div>
             <div className="m6-ct">Complete seus dados</div>
             <div className="m6-meta">{`Falta ${c.falta.join(", ").replace(/, ([^,]*)$/, " e $1")}. Ajuda a igreja a cuidar de você.`}</div>
             <div className="m6-btns">
-              <button className={btn} type="button" onClick={() => ui.go("perfil", "dados")}>Completar →</button>
-              <button className="m6-link" type="button" data-dispensa="1" onClick={() => adiar("dados", 30)}>Agora não</button>
+              <Botao tamanho="toque" variante={variante} onClick={() => ui.go("perfil", "dados")}>Completar →</Botao>
+              <Botao tamanho="toque" variante="texto" data-dispensa="1" onClick={() => adiar("dados", 30)}>Agora não</Botao>
             </div>
-          </div>
+          </Cartao>
         );
       case "atalho":
         return (
-          <div key={e.id} className="m6-card">
+          <Cartao key={e.id} estilo="app">
             <div className="m6-kick">Dica</div>
             <div className="m6-ct">Coloque o app na tela de início</div>
             <ul className="m6-facts">
@@ -320,35 +324,35 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
             </ul>
             <div className="m6-btns">
               {podeInstalarDireto()
-                ? <button className={btn} type="button" onClick={async () => { await instalarApp(); adiar("atalho", 3650); }}>Instalar</button>
-                : <button className={btn} type="button" onClick={() => adiar("atalho", 3650)}>Já coloquei</button>}
-              <button className="m6-link" type="button" data-dispensa="1" onClick={() => adiar("atalho", 3650)}>Agora não</button>
+                ? <Botao tamanho="toque" variante={variante} onClick={async () => { await instalarApp(); adiar("atalho", 3650); }}>Instalar</Botao>
+                : <Botao tamanho="toque" variante={variante} onClick={() => adiar("atalho", 3650)}>Já coloquei</Botao>}
+              <Botao tamanho="toque" variante="texto" data-dispensa="1" onClick={() => adiar("atalho", 3650)}>Agora não</Botao>
             </div>
-          </div>
+          </Cartao>
         );
       case "contribuir":
         return (
-          <div key={e.id} className="m6-card">
+          <Cartao key={e.id} estilo="app">
             <div className="m6-kick">Generosidade</div>
             <div className="m6-ct">Contribuir hoje</div>
             <div className="m6-meta">{`Pix para ${listaFinalidades(contribuir!.finalidades)}.`}</div>
             <div className="m6-btns">
-              <button className={btn} type="button" onClick={onContribuir}>Ver a chave Pix</button>
-              <button className="m6-link" type="button" data-dispensa="1" onClick={() => adiar(e.id, 1)}>Agora não</button>
+              <Botao tamanho="toque" variante={variante} onClick={onContribuir}>Ver a chave Pix</Botao>
+              <Botao tamanho="toque" variante="texto" data-dispensa="1" onClick={() => adiar(e.id, 1)}>Agora não</Botao>
             </div>
-          </div>
+          </Cartao>
         );
       case "aniversario":
         return <CartaoAniversario key={e.id} pessoas={c.pessoas} destaque={destaque} onAgoraNao={() => adiar(e.id, 1)} />;
       case "servir": {
         const aguardando = c.times.some((m) => pedidosPendentes.has(m.id));
         return (
-          <div key={e.id} className="m6-card">
+          <Cartao key={e.id} estilo="app">
             <div className="m6-kick">Servir</div>
             <div className="m6-ct">{aguardando ? "Seu pedido está em análise" : c.times.length === 1 ? "1 time procura pessoas" : `${c.times.length} times procuram pessoas`}</div>
             <div className="m6-meta">{c.times.filter((m) => !aguardando || pedidosPendentes.has(m.id)).slice(0, 3).map((m) => m.name).join(", ")}. {aguardando ? "A liderança vai avaliar e conversar com você." : "Veja o que cada um faz antes de decidir."}</div>
-            <div className="m6-btns"><button className={btn} type="button" onClick={onServir}>{aguardando ? "Acompanhar pedido" : "Conhecer os times"}</button></div>
-          </div>
+            <div className="m6-btns"><Botao tamanho="toque" variante={variante} onClick={onServir}>{aguardando ? "Acompanhar pedido" : "Conhecer os times"}</Botao></div>
+          </Cartao>
         );
       }
     }
@@ -392,7 +396,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
           ))
         )}
         {resto > 0 && (
-          <div className="m6-more"><button type="button" className="m6-link" onClick={() => setMaisFila(true)}>{`Ver mais ${plural(resto, "item", "itens")}`}</button></div>
+          <div className="m6-more"><Botao tamanho="toque" variante="texto" onClick={() => setMaisFila(true)}>{`Ver mais ${plural(resto, "item", "itens")}`}</Botao></div>
         )}
       </div>
 
@@ -400,24 +404,24 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
         <div className="service-home-heading"><h2>Na vida da igreja</h2><p>Encontros e novidades para acompanhar.</p></div>
         {fila.length > 0 && cartaoDestaque}
         {daIgreja.length > 0 ? (
-          <div className="m6-list service-home-events">{daIgreja.map((ev) => <EventoRow key={ev.id} ev={ev} serve={confirmados.has(ev.id) ? confirmados.get(ev.id) : null} />)}</div>
+          <Lista className="service-home-events">{daIgreja.map((ev) => <EventoRow key={ev.id} ev={ev} serve={confirmados.has(ev.id) ? confirmados.get(ev.id) : null} />)}</Lista>
         ) : (
           <div className="service-home-empty"><div className="m6-ct">Nenhum encontro publicado por enquanto</div><p className="m6-meta">{ct("Quando a igreja publicar os próximos {cultos} e eventos, você encontra aqui as datas, os horários e como participar.")}</p></div>
         )}
-        <div className="m6-more"><button type="button" className="m6-link" onClick={() => ui.go("agenda", null, { agSeg: "igreja" })}>Ver a agenda completa →</button></div>
+        <div className="m6-more"><Botao tamanho="toque" variante="texto" onClick={() => ui.go("agenda", null, { agSeg: "igreja" })}>Ver a agenda completa →</Botao></div>
       </div>
 
       {member && ((destOracao && onStartChat) || oracaoOn) && (
         <div className="m6-sec">
-          <div className="m6-card service-home-care">
+          <Cartao estilo="app" className="service-home-care">
             <div className="m6-ct">Podemos orar por você?</div>
             <div className="m6-meta">{oracaoOn ? "Você escolhe quem vê: só a intercessão ou o mural de oração da igreja." : `Seu pedido vai para ${destOracao?.via === "intercessao" ? "quem cuida da intercessão" : "a liderança da igreja"}, com cuidado.`}</div>
             <div className="m6-btns">
-              <button className="m6-btn sec" type="button" onClick={() => ui.sheet(<SheetOracao member={member} dest={destOracao ?? null} onStartChat={onStartChat} organizationId={organizationId} muralOn={oracaoOn} />)}>
+              <Botao tamanho="toque" onClick={() => ui.sheet(<SheetOracao member={member} dest={destOracao ?? null} onStartChat={onStartChat} organizationId={organizationId} muralOn={oracaoOn} />)}>
                 <Icon name="coracao" size={20} />Enviar pedido de oração
-              </button>
+              </Botao>
             </div>
-          </div>
+          </Cartao>
         </div>
       )}
     </div>
@@ -436,8 +440,8 @@ export function SheetPedirAvisos({ organizationId }: { organizationId?: string }
         <div className="m6-after"><M6St k="ok" ic="ok">Notificações ligadas</M6St></div>
       ) : (
         <div className="m6-btns">
-          <button className="m6-btn pri" type="button" disabled={pushBusy} onClick={ligarPush}><Icon name="sino" size={20} />Ligar notificações</button>
-          <button className="m6-btn sec" type="button" onClick={() => ui.sheet(null)}>Agora não</button>
+          <Botao tamanho="toque" variante="principal" desativado={pushBusy} onClick={ligarPush}><Icon name="sino" size={20} />Ligar notificações</Botao>
+          <Botao tamanho="toque" onClick={() => ui.sheet(null)}>Agora não</Botao>
         </div>
       )}
       {pushMsg && <div className="m6-meta">{pushMsg}</div>}
@@ -451,13 +455,13 @@ export function SheetPedirAvisos({ organizationId }: { organizationId?: string }
 export function DestaqueCard({ a, onAbrir }: { a: Announcement; onAbrir: () => void }) {
   const video = videoDoLink(a.video_url);
   return (
-    <button type="button" className="m6-card m6-destaque" onClick={onAbrir}>
+    <Acao className={`${cartaoClasse({ estilo: "app" })} m6-destaque`} onClick={onAbrir}>
       {a.image_url && <img className="m6-destaque-img" src={a.image_url} alt={a.image_alt ?? ""} />}
       <span className="m6-kick">{video ? "Destaque · vídeo" : "Destaque"}</span>
       <span className="m6-ct">{a.title}</span>
       {a.body && <span className="m6-meta m6-2l">{a.body}</span>}
-      <span className="m6-link">{video ? "Assistir" : "Ler"} →</span>
-    </button>
+      <span className={botaoClasse({ tamanho: "toque", variante: "texto" })}>{video ? "Assistir" : "Ler"} →</span>
+    </Acao>
   );
 }
 

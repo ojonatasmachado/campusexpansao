@@ -8,6 +8,7 @@ import ServiceTheme from "../../ServiceTheme";
 import AuthShell from "../../AuthShell";
 import EntradaForm from "./EntradaForm";
 
+import { botaoClasse } from "../../ui/Botao";
 export const dynamic = "force-dynamic";
 
 /* Link (e QR) único da igreja: quem abre cria a conta e pede para fazer
@@ -46,7 +47,7 @@ export default async function ParticiparPage({ params }: { params: Promise<{ cod
           title="Este link não vale mais"
           subtitle="A igreja pode ter trocado o link. Peça o novo à liderança ou digite o código que ela passar."
         >
-          <Link href="/service/participar" className="login-btn">
+          <Link href="/service/participar" className={botaoClasse({ tamanho: "entrada", variante: "principal" })}>
             Digitar o código →
           </Link>
         </AuthShell>

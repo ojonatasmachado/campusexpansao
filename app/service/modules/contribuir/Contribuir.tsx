@@ -11,6 +11,10 @@ import { avisar } from "../../lib/avisar";
 import { Icon } from "../../lib/icons";
 import { chaveLegivel, codigoPix, normalizarChave, rotuloDoTipo, type ContribuirCfg } from "./pix";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
+import { Cartao } from "../../ui/Cartao";
 async function copiar(texto: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(texto);
@@ -59,11 +63,11 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
   return (
     <>
       <div className="m6-sec0">
-        <div className="m6-card">
+        <Cartao estilo="app">
           <div className="m6-kick">Pix para</div>
           <div className="m6-ct contrib-fav">{cfg.favorecido}</div>
           {cfg.texto.trim() && <p className="m6-txt">{cfg.texto}</p>}
-        </div>
+        </Cartao>
       </div>
 
       {finalidades.length > 1 && (
@@ -72,7 +76,7 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
           <div className="m6-seg">
             <div className="ts-seg contrib-seg" role="radiogroup" aria-labelledby="contrib-fin" style={{ gridTemplateColumns: `repeat(${finalidades.length === 4 ? 2 : finalidades.length}, minmax(0, 1fr))` }}>
               {finalidades.map((f) => (
-                <button key={f} type="button" role="radio" aria-checked={finalidade === f} className={finalidade === f ? "on" : ""} onClick={() => setFinalidade(f)}>{f}</button>
+                <Opcao key={f} role="radio" aria-checked={finalidade === f} marcada={finalidade === f} onClick={() => setFinalidade(f)}>{f}</Opcao>
               ))}
             </div>
           </div>
@@ -80,11 +84,11 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
       )}
 
       <div className="m6-sec">
-        <div className="m6-card">
-          <button className="m6-btn pri full" type="button" onClick={() => copiarEAvisar("codigo")}>
+        <Cartao estilo="app">
+          <Botao tamanho="toque" variante="principal" largo onClick={() => copiarEAvisar("codigo")}>
             <Icon name={copiado === "codigo" ? "ok" : "copiar"} size={20} />
             {copiado === "codigo" ? "Código copiado" : "Copiar código Pix"}
-          </button>
+          </Botao>
           <p className="m6-meta m6-mt">No app do seu banco, escolha Pix copia e cola, cole o código e digite o valor.</p>
 
           <div className="contrib-chave">
@@ -92,28 +96,28 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
               <div className="m6-meta">{rotuloDoTipo(cfg.tipo)}</div>
               <div className="contrib-chave-v">{legivel}</div>
             </div>
-            <button className="m6-btn sec small" type="button" onClick={() => copiarEAvisar("chave")} aria-label={`Copiar chave Pix ${legivel}`}>
+            <Botao tamanho="toque" compacto onClick={() => copiarEAvisar("chave")} aria-label={`Copiar chave Pix ${legivel}`}>
               {copiado === "chave" ? "Copiada" : "Copiar"}
-            </button>
+            </Botao>
           </div>
-        </div>
+        </Cartao>
       </div>
 
       <div className="m6-sec">
-        <div className="m6-card">
-          <button className="contrib-qr-t" type="button" aria-expanded={qr} onClick={() => setQr((v) => !v)}>
+        <Cartao estilo="app">
+          <Acao className="contrib-qr-t" aria-expanded={qr} onClick={() => setQr((v) => !v)}>
             <span className="m6-rb">
               <span className="m6-rt">QR code</span>
               <span className="m6-rs">Para pagar com o celular de outra pessoa</span>
             </span>
             <span className={`m6-chev contrib-chev${qr ? " on" : ""}`} aria-hidden="true"><Icon name="avancar" size={18} /></span>
-          </button>
+          </Acao>
           {qr && (
             <div className="contrib-qr">
               <QRCode value={codigo} size={208} viewBox="0 0 208 208" level="M" title={`QR code do Pix para ${cfg.favorecido}`} />
             </div>
           )}
-        </div>
+        </Cartao>
       </div>
 
       <p className="m6-meta contrib-nota">O valor você decide no seu banco. O app não guarda quanto nem quem contribuiu.</p>

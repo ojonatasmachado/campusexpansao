@@ -12,6 +12,9 @@ import { useTermos } from "../lib/vocabulario-context";
 import { requirementLabel } from "../lib/requirements";
 import type { JourneyActions, MemberContactInput, MemberUi, Ministry, MissingRequirement } from "./tipos";
 
+import { Acao } from "../ui/Acao";
+import { Selo, tomDaClasse } from "../ui/Selo";
+import { linhaClasse } from "../ui/Linha";
 /* o servidor troca vazio por "Telefone não informado" / "E-mail não
    informado" (page.tsx toMemberView); em campo editável isso vira vazio */
 export const realValue = (v: string | null | undefined) => (v && !/não informado$/.test(v) ? v : "");
@@ -61,14 +64,14 @@ export const MemberUiContext = createContext<MemberUi>({ go: () => {}, sheet: ()
 
 export function M6Row({ ic, t, s, onClick, right, cls }: { ic?: string; t: React.ReactNode; s?: React.ReactNode; onClick?: () => void; right?: React.ReactNode | null; cls?: string }) {
   return (
-    <button type="button" className={`m6-row${cls ? ` ${cls}` : ""}`} onClick={onClick}>
+    <Acao className={`${linhaClasse({ estilo: "app" })}${cls ? ` ${cls}` : ""}`} onClick={onClick}>
       {ic && <span className="m6-ic"><Icon name={ic} size={22} /></span>}
       <span className="m6-rb">
         <span className="m6-rt">{t}</span>
         {s ? <span className="m6-rs">{s}</span> : null}
       </span>
       {right !== undefined ? right : <span className="m6-chev"><Icon name="avancar" size={18} /></span>}
-    </button>
+    </Acao>
   );
 }
 
@@ -127,7 +130,7 @@ export function M6Sheet({ onClose, children }: { onClose: () => void; children: 
 }
 
 export function M6St({ k, ic, children }: { k: "ok" | "warn" | "neutral" | "danger"; ic?: string; children: React.ReactNode }) {
-  return <span className={`m6-st ${k}`}>{ic && <Icon name={ic} size={16} />}<span>{children}</span></span>;
+  return <Selo tamanho="toque" tom={tomDaClasse(k)}>{ic && <Icon name={ic} size={16} />}<span>{children}</span></Selo>;
 }
 
 export const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];

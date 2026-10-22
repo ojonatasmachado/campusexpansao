@@ -26,6 +26,10 @@ import { termosDaRota } from "../../modules/registry";
 import { Kpi, REACOES_PESQUISA, ROUTES } from "../comum";
 import type { AnnouncementView, ChildView, DecisionView, DrawerState, EnrollmentView, EventAttendanceView, EventView, FieldDef, JourneyChangeRequestView, KidsAttendanceView, KidsClassView, MemberView, MinistryView, ModalState, PersonView, RosterAssignmentView, TimelineEventView, VisitorView } from "../tipos";
 
+import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Cartao } from "../../ui/Cartao";
+import { Linha, linhaClasse } from "../../ui/Linha";
 export function GlobalSearch({
   people,
   members,
@@ -148,10 +152,10 @@ export function GlobalSearch({
         <div className="gsearch-pop">
           {results.length === 0 ? <div className="gsearch-empty">Nada encontrado para &quot;{query}&quot;.</div> : null}
           {results.map((result) => (
-            <button
+            <Acao
               className="gsearch-row"
               key={result.key}
-              type="button"
+             
               onMouseDown={(event) => {
                 event.preventDefault();
                 result.action();
@@ -161,7 +165,7 @@ export function GlobalSearch({
               <span className="gsearch-ic"><Icon name={result.icon} size={15} /></span>
               <span className="gsearch-main"><span className="gsearch-nome">{result.name}</span><span className="gsearch-sub">{result.sub}</span></span>
               <span className="gsearch-tag">{result.type}</span>
-            </button>
+            </Acao>
           ))}
         </div>
       ) : null}
@@ -350,8 +354,8 @@ export function Painel({
           })()}</p>
         </div>
         <div className="ph-actions">
-          {podeAbrir("cultos") && <button className="btn btn-sec" type="button" onClick={() => setRoute("cultos")}>Ver agenda</button>}
-          {podeAbrir(emPreparacao ? "configurar" : ativando ? "cultos" : "escalas") && <button className="btn btn-pri" type="button" onClick={() => setRoute(emPreparacao ? "configurar" : ativando ? "cultos" : "escalas")}>{emPreparacao ? (setup.primeiroEventoId || setup.fase > 1 || setup.feitas.length > 0 || setup.pulou || setup.rascunho ? "Continuar preparação" : "Preparar minha igreja") : ativando ? (primeiraProgramacao ? "Preparar primeiro encontro" : "Preparar próximo encontro") : "Montar escala"}</button>}
+          {podeAbrir("cultos") && <Botao onClick={() => setRoute("cultos")}>Ver agenda</Botao>}
+          {podeAbrir(emPreparacao ? "configurar" : ativando ? "cultos" : "escalas") && <Botao variante="principal" onClick={() => setRoute(emPreparacao ? "configurar" : ativando ? "cultos" : "escalas")}>{emPreparacao ? (setup.primeiroEventoId || setup.fase > 1 || setup.feitas.length > 0 || setup.pulou || setup.rascunho ? "Continuar preparação" : "Preparar minha igreja") : ativando ? (primeiraProgramacao ? "Preparar primeiro encontro" : "Preparar próximo encontro") : "Montar escala"}</Botao>}
         </div>
       </div>
       {ativando && (
@@ -375,32 +379,32 @@ export function Painel({
       {haPendenciasVisiveis && (
         <div className="agora-list">
           {podeAbrir("escalas") && vagasDaSemana > 0 && (
-            <button type="button" className="agora-row" onClick={() => setRoute("escalas")}>
+            <Acao className="agora-row" onClick={() => setRoute("escalas")}>
               <span className="agora-ic"><Icon name="escalas" size={17} /></span>
               <span className="agora-main"><span className="agora-t">{vagasDaSemana === 1 ? "1 vaga aberta na escala" : `${vagasDaSemana} vagas abertas na escala`}</span><span className="agora-s"> · nesta semana</span></span>
               <span className="agora-go">Escalar →</span>
-            </button>
+            </Acao>
           )}
           {podeAbrir("visitantes") && !liderDeTime && visitantesSemContato > 0 && (
-            <button type="button" className="agora-row" onClick={() => setRoute("visitantes")}>
+            <Acao className="agora-row" onClick={() => setRoute("visitantes")}>
               <span className="agora-ic"><Icon name="visitante" size={17} /></span>
               <span className="agora-main"><span className="agora-t">{visitantesSemContato === 1 ? "1 visitante sem contato" : `${visitantesSemContato} visitantes sem contato`}</span><span className="agora-s"> · há mais de 48h</span></span>
               <span className="agora-go">Ver →</span>
-            </button>
+            </Acao>
           )}
           {podeAbrir("visitantes") && !liderDeTime && visitantesPeloLink > 0 && (
-            <button type="button" className="agora-row" onClick={() => setRoute("visitantes")}>
+            <Acao className="agora-row" onClick={() => setRoute("visitantes")}>
               <span className="agora-ic"><Icon name="visitante" size={17} /></span>
               <span className="agora-main"><span className="agora-t">{`${plural(visitantesPeloLink, "visitante")} ${visitantesPeloLink === 1 ? "se cadastrou" : "se cadastraram"} pelo link`}</span><span className="agora-s"> · esperando o 1º contato</span></span>
               <span className="agora-go">Ver →</span>
-            </button>
+            </Acao>
           )}
           {!liderDeTime && journeyRequests.length > 0 && (
-            <button type="button" className="agora-row" onClick={() => document.getElementById("caminhada-pendente")?.scrollIntoView({ behavior: "smooth" })}>
+            <Acao className="agora-row" onClick={() => document.getElementById("caminhada-pendente")?.scrollIntoView({ behavior: "smooth" })}>
               <span className="agora-ic"><Icon name="membros" size={17} /></span>
               <span className="agora-main"><span className="agora-t">{journeyRequests.length === 1 ? ct("1 pedido na {caminhada}") : ct(`${journeyRequests.length} pedidos na {caminhada}`)}</span><span className="agora-s"> · esperando sua aprovação</span></span>
               <span className="agora-go">Revisar →</span>
-            </button>
+            </Acao>
           )}
         </div>
       )}
@@ -412,10 +416,10 @@ export function Painel({
       )}
       {aniversarios}
       {podeAbrir("configurar") && (emPreparacao ? (
-        <button type="button" className="setup-banner" onClick={() => setRoute("configurar")}>
+        <Acao className="setup-banner" onClick={() => setRoute("configurar")}>
           <span className="setup-banner-t">{linhaDoSetup(setup)}</span>
           <span className="agora-go">{setup.feitas.length || setup.pulou ? "Continuar →" : "Começar →"}</span>
-        </button>
+        </Acao>
       ) : (
         gestao && ["configurar", "times", "cultos", "membros"].every((r) => podeAbrir(r as keyof typeof ROUTES)) ? <details className="service-preparacao"><summary>Revisar preparação da igreja</summary><SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} /></details> : null
       ))}
@@ -425,7 +429,7 @@ export function Painel({
         <Kpi icon="ok" label="Confirmação" value={escaladosSemana ? `${confirmationRate}%` : "·"} foot={escaladosSemana ? `de ${plural(escaladosSemana, "vaga escalada", "vagas escaladas")} nesta semana` : "ninguém escalado nesta semana"} />
         <Kpi icon="visitante" label="Visitantes em acompanhamento" value={visitorsInCare} foot={visitantesSemContato ? `${visitantesSemContato} sem contato há mais de 48h` : visitorsInCare ? "todos com contato em dia" : "nenhum visitante em acompanhamento"} />
       </div>}
-      <div className="sobre-numeros"><button type="button" className="help-link" onClick={() => setSobreAberto(true)}>Sobre estes números</button></div>
+      <div className="sobre-numeros"><Acao className="help-link" onClick={() => setSobreAberto(true)}>Sobre estes números</Acao></div>
       {sobreAberto && (
         <div className="modal-bg" onClick={() => setSobreAberto(false)}>
           <div className="modal" role="dialog" aria-label="Sobre estes números" onClick={(e) => e.stopPropagation()}>
@@ -438,15 +442,15 @@ export function Painel({
                 {sobre.map(([t, d]) => <div key={t}><dt>{t}</dt><dd>{d}</dd></div>)}
               </dl>
             </div>
-            <div className="modal-foot"><button className="btn btn-pri" type="button" onClick={() => setSobreAberto(false)}>Fechar</button></div>
+            <div className="modal-foot"><Botao variante="principal" onClick={() => setSobreAberto(false)}>Fechar</Botao></div>
           </div>
         </div>
       )}
       <div className="dash-2col">
-        {podeAbrir("escalas") && <div className="panel">
+        {podeAbrir("escalas") && <Cartao>
           <div className="panel-head">
             <span className="panel-title"><Icon name="escalas" size={14} /> Pendências da escala</span>
-            <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("escalas")}>Escalar</button>
+            <Botao compacto onClick={() => setRoute("escalas")}>Escalar</Botao>
           </div>
           <div className="panel-body flush">
             {(() => {
@@ -455,12 +459,12 @@ export function Painel({
                 .map((e) => ({ e, c: coberturaPorTime(e, roster, ministries, scopeMinistryIds) }))
                 .find((x) => vagasFaltando(x.c) > 0);
               return prox ? (
-                <div className="mini-row">
+                <Linha>
                   <div className="mini-main">
                     <div className="mini-title">{prox.e.name} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {joinDot(prox.e.weekday, prox.e.time)}</span></div>
                     <Cobertura itens={prox.c} onAbrir={(timeId) => onAbrirVagas(prox.e.id, timeId)} />
                   </div>
-                </div>
+                </Linha>
               ) : null;
             })()}
             {gapsDaSemana.slice(0, 6).map((gap) => (
@@ -470,15 +474,15 @@ export function Painel({
                   <div className="mini-title">{gap.position.name} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {gap.ministry.name}</span></div>
                   <div className="mini-sub">{joinDot(gap.event.weekday, gap.event.time)}</div>
                 </div>
-                <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("escalas")}>Escalar</button>
+                <Botao compacto onClick={() => setRoute("escalas")}>Escalar</Botao>
               </div>
             ))}
-            {gapsDaSemana.length === 0 && !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone) && vagasFaltando(coberturaPorTime(e, roster, ministries, scopeMinistryIds)) > 0) ? <div className="mini-row"><div className="mini-main"><div className="mini-title">{semProgramacao ? "Sem programação futura" : roster.length === 0 ? "Escalas ainda não preparadas" : "Sem vagas abertas nesta semana"}</div><div className="mini-sub">{semProgramacao ? "Prepare o próximo encontro antes de organizar a equipe." : roster.length === 0 ? "Ter encontros na agenda não significa que a equipe já foi escalada." : "Confira os próximos encontros para acompanhar a cobertura de cada time."}</div></div></div> : null}
+            {gapsDaSemana.length === 0 && !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone) && vagasFaltando(coberturaPorTime(e, roster, ministries, scopeMinistryIds)) > 0) ? <Linha><div className="mini-main"><div className="mini-title">{semProgramacao ? "Sem programação futura" : roster.length === 0 ? "Escalas ainda não preparadas" : "Sem vagas abertas nesta semana"}</div><div className="mini-sub">{semProgramacao ? "Prepare o próximo encontro antes de organizar a equipe." : roster.length === 0 ? "Ter encontros na agenda não significa que a equipe já foi escalada." : "Confira os próximos encontros para acompanhar a cobertura de cada time."}</div></div></Linha> : null}
           </div>
-        </div>}
+        </Cartao>}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {podeAbrir("cultos") && <div className="panel">
-            <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> {ct("Próximos {cultos}")}</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("cultos")}>Agenda</button></div>
+          {podeAbrir("cultos") && <Cartao>
+            <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> {ct("Próximos {cultos}")}</span><Botao compacto onClick={() => setRoute("cultos")}>Agenda</Botao></div>
             <div className="panel-body flush">
             {/* v7 2.9: só o que ainda vai começar, no fuso da igreja (Brasília) */}
             {(() => {
@@ -497,29 +501,29 @@ export function Painel({
               ));
             })()}
             </div>
-          </div>}
+          </Cartao>}
           {enqueteElegivel && (
-            <div className="panel" style={{ cursor: "pointer" }} onClick={() => setModal(buildAvaliacaoModal(enqueteElegivel))}>
+            <Cartao style={{ cursor: "pointer" }} onClick={() => setModal(buildAvaliacaoModal(enqueteElegivel))}>
               <div className="panel-head"><span className="panel-title"><Icon name="estrela" size={14} /> Avaliação de experiência</span></div>
               <div className="panel-body">
                 <div style={{ fontSize: "var(--fs-pn-14)", fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{enqueteElegivel.nome}</div>
                 <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time.</div>
               </div>
-            </div>
+            </Cartao>
           )}
           {pesquisaElegivel && (
-            <div className="panel" style={{ cursor: "pointer" }} onClick={() => setModal(buildPesquisaModal(pesquisaElegivel))}>
+            <Cartao style={{ cursor: "pointer" }} onClick={() => setModal(buildPesquisaModal(pesquisaElegivel))}>
               <div className="panel-head"><span className="panel-title"><Icon name="reacao" size={14} /> {pesquisaElegivel.pendente ? "Pulso da escala" : "Sua última resposta"}</span></div>
               <div className="panel-body">
                 <div style={{ fontSize: "var(--fs-pn-14)", fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{pesquisaElegivel.nome}</div>
                 <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{pesquisaElegivel.pendente ? "Leva menos de um minuto. Conta como foi pra você." : "Já respondida. Toque pra rever ou atualizar quando quiser."}</div>
               </div>
-            </div>
+            </Cartao>
           )}
         </div>
       </div>
       {journeyRequests.length > 0 && (
-        <div className="panel" id="caminhada-pendente" style={{ marginTop: 24 }}>
+        <Cartao id="caminhada-pendente" style={{ marginTop: 24 }}>
           <div className="panel-head">
             <span className="panel-title"><Icon name="membros" size={14} /> {ct("{Caminhada} pendente")}</span>
           </div>
@@ -535,37 +539,37 @@ export function Painel({
                     <div className="mini-sub">{formatDateBR(request.eventDate) || "sem data informada"}{request.note ? ` · ${request.note}` : ""}</div>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button className="btn btn-sec btn-sm" type="button" onClick={() => onRejectJourney(request)}>Rejeitar</button>
-                    <button className="btn btn-pri btn-sm" type="button" onClick={() => onApproveJourney(request)}>Aprovar</button>
+                    <Botao compacto onClick={() => onRejectJourney(request)}>Rejeitar</Botao>
+                    <Botao variante="principal" compacto onClick={() => onApproveJourney(request)}>Aprovar</Botao>
                   </div>
                 </div>
               );
             })}
           </div>
-        </div>
+        </Cartao>
       )}
       {podeAbrir("comunicacao") && <div className="dash-2col">
-        <div className="panel">
-          <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Comunicação recente</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("comunicacao")}>Ver tudo</button></div>
+        <Cartao>
+          <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Comunicação recente</span><Botao compacto onClick={() => setRoute("comunicacao")}>Ver tudo</Botao></div>
           <div className="panel-body flush">
             {recentAnnouncements.map((a) => (
-              <button className="mini-row click" type="button" key={a.id} onClick={() => setRoute("comunicacao")}>
+              <Acao className={`${linhaClasse({})} click`} key={a.id} onClick={() => setRoute("comunicacao")}>
                 <div className="mini-main">
                   <div className="mini-title">{a.title}</div>
                   <div className="mini-sub">{joinDot(paraPublico(a.audience), quandoPublicado(a.created_at))}</div>
                 </div>
-              </button>
+              </Acao>
             ))}
             {recentAnnouncements.length === 0 && (
-              <div className="mini-row"><div className="mini-main"><div className="mini-title">Nenhum aviso ainda</div><div className="mini-sub">Publique em Comunicação</div></div></div>
+              <Linha><div className="mini-main"><div className="mini-title">Nenhum aviso ainda</div><div className="mini-sub">Publique em Comunicação</div></div></Linha>
             )}
           </div>
-        </div>
+        </Cartao>
       </div>}
       {podeAbrir("criancas") && kidsClasses.length > 0 && (
         <div className="dash-2col" style={{ marginTop: 20 }}>
-          <div className="panel">
-            <div className="panel-head"><span className="panel-title"><Icon name="kids" size={14} /> Crianças por turma</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("criancas")}>Ver todas</button></div>
+          <Cartao>
+            <div className="panel-head"><span className="panel-title"><Icon name="kids" size={14} /> Crianças por turma</span><Botao compacto onClick={() => setRoute("criancas")}>Ver todas</Botao></div>
             <div className="panel-body flush">
               {kidsClasses.map((kc) => {
                 const count = kidsChildren.filter((child) => child.class_id === kc.id).length;
@@ -579,8 +583,8 @@ export function Painel({
                 );
               })}
             </div>
-          </div>
-          {!cuidado && <div className="panel">
+          </Cartao>
+          {!cuidado && <Cartao>
             <div className="panel-head"><span className="panel-title"><Icon name="alerta" size={14} /> Crianças sumindo</span><span className="panel-meta">sem vir há mais tempo</span></div>
             <div className="panel-body flush">
               {kidsChildren
@@ -595,16 +599,16 @@ export function Painel({
                 .sort((a, b) => (a.lastSeen ?? "").localeCompare(b.lastSeen ?? ""))
                 .slice(0, 5)
                 .map(({ child, lastSeen }) => (
-                  <div className="mini-row" key={child.id}>
+                  <Linha key={child.id}>
                     <div className="mini-main">
                       <div className="mini-title">{child.name}</div>
                       <div className="mini-sub">{lastSeen ? `Última vez em ${formatDateBR(lastSeen.slice(0, 10))}` : "Nunca fez check-in"}</div>
                     </div>
-                  </div>
+                  </Linha>
                 ))}
               {kidsChildren.length === 0 && <div className="empty" style={{ padding: "20px 0" }}>Nenhuma criança cadastrada ainda.</div>}
             </div>
-          </div>}
+          </Cartao>}
         </div>
       )}
     </div>
@@ -624,7 +628,7 @@ export function MiniEvent({
   /* div com papel de botão: a cobertura tem botões dentro (não pode botão dentro de botão) */
   const abrir = () => setDrawer({ kind: "event", id: event.id });
   return (
-    <div className="mini-row click" role="button" tabIndex={0} onClick={abrir} onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) abrir(); }}>
+    <Linha className="click" role="button" tabIndex={0} onClick={abrir} onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) abrir(); }}>
       <div className="mini-main">
         <div className="mini-title">{event.name}</div>
         <div className="mini-sub">{joinDot(event.weekday, formatDateBR(event.eventDate), event.location)}</div>
@@ -646,6 +650,6 @@ export function MiniEvent({
           </span>
         )}
       </div>
-    </div>
+    </Linha>
   );
 }
