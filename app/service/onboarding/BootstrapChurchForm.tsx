@@ -110,67 +110,77 @@ export default function BootstrapChurchForm() {
     }
 
     setLoading(true);
-    const { error: rpcError } = await supabase
-      .schema("core")
-      .rpc("bootstrap_church_org_v2", {
-        p_org_name: orgName.trim(),
-        p_cnpj: cnpjDigits || null,
-        p_email: email.trim(),
-        p_phone: phone.trim(),
-        p_city: city.trim() || null,
-        p_address: lookup?.address || null,
-        p_postal_code: lookup?.postalCode || null,
-        p_trial: true,
-      });
+    try {
+      const { error: rpcError } = await supabase
+        .schema("core")
+        .rpc("bootstrap_church_org_v2", {
+          p_org_name: orgName.trim(),
+          p_cnpj: cnpjDigits || null,
+          p_email: email.trim(),
+          p_phone: phone.trim(),
+          p_city: city.trim() || null,
+          p_address: lookup?.address || null,
+          p_postal_code: lookup?.postalCode || null,
+          p_trial: true,
+        });
 
-    setLoading(false);
+      if (rpcError) {
+        setError(friendlyBootstrapError(rpcError.message));
+        return;
+      }
 
-    if (rpcError) {
-      setError(friendlyBootstrapError(rpcError.message));
-      return;
+      router.push("/service");
+      router.refresh();
+    } catch {
+      setError("Não conseguimos concluir agora. Confira sua conexão e tente novamente. Seus dados continuam preenchidos.");
+    } finally {
+      setLoading(false);
     }
-
-    router.push("/service");
-    router.refresh();
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16, marginTop: 24 }}>
-      <label className="field">
-        <span className="field-label req">Nome da igreja</span>
+    <form className="login-form" onSubmit={handleSubmit}>
+      <label className="login-field">
+        <span className="login-label">Nome da igreja</span>
         <input
-          className="input"
+          className="login-input"
+          autoComplete="organization"
+          required
           value={orgName}
           onChange={(event) => setOrgName(event.target.value)}
           placeholder="Igreja Central"
         />
       </label>
 
-      <label className="field">
-        <span className="field-label req">E-mail de contato</span>
+      <label className="login-field">
+        <span className="login-label">E-mail de contato</span>
         <input
-          className="input"
+          className="login-input"
           type="email"
+          autoComplete="email"
+          required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="contato@igreja.com"
         />
       </label>
 
-      <label className="field">
-        <span className="field-label req">Telefone de contato</span>
+      <label className="login-field">
+        <span className="login-label">Telefone de contato</span>
         <input
-          className="input"
+          className="login-input"
+          required
           value={phone}
           onChange={(event) => setPhone(event.target.value)}
           type="tel" autoComplete="tel" placeholder="(11) 9..."
         />
       </label>
 
-      <label className="field">
-        <span className="field-label">Cidade</span>
+      <label className="login-field">
+        <span className="login-label">Cidade</span>
         <input
-          className="input"
+          className="login-input"
+          autoComplete="address-level2"
           value={city}
           onChange={(event) => setCity(event.target.value)}
           placeholder="São Paulo · SP"
@@ -178,10 +188,10 @@ export default function BootstrapChurchForm() {
       </label>
 
       <details className="service-onboarding-optional"><summary>Dados institucionais (opcional)</summary>
-      <label className="field">
-        <span className="field-label">CNPJ da igreja (opcional)</span>
+      <label className="login-field">
+        <span className="login-label">CNPJ da igreja (opcional)</span>
         <input
-          className="input"
+          className="login-input"
           value={formatarCnpj(cnpj)}
           onChange={(event) => {
             const digits = normalizarCnpj(event.target.value).slice(0, 14);
@@ -196,22 +206,22 @@ export default function BootstrapChurchForm() {
           autoCorrect="off"
           spellCheck={false}
         />
-        {checking && <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)", marginTop: 6 }}>Consultando a Receita Federal…</div>}
+        {checking && <span className="login-help" role="status">Consultando a Receita Federal…</span>}
         {lookup && lookup.valid && lookup.active && (
-          <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "var(--fs-ui-sm)", color: "var(--olive-soft)", marginTop: 6 }}>
+          <span className="login-help" role="status">
             <Icon name="ok" size={13} /> CNPJ ativo{lookup.razaoSocial ? ` · ${lookup.razaoSocial}` : ""}
-          </div>
+          </span>
         )}
         {lookup && !lookup.active && (
-          <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--amber)", marginTop: 6 }}>{lookup.error}</div>
+          <span className="login-help" role="alert">{lookup.error}</span>
         )}
       </label>
 
       </details>
 
-      {error && <p className="field-error">{error}</p>}
+      {error && <div className="login-alert" role="alert">{error}</div>}
 
-      <button className="btn btn-primary btn-lg" type="submit" disabled={loading}>
+      <button className="login-btn" type="submit" disabled={loading}>
         {loading ? "Criando..." : "Criar igreja matriz"}
       </button>
     </form>

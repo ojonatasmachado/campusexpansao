@@ -49,3 +49,5 @@ A entrega principal foi publicada em 21/10/2026, commit 14be743, após autoriza�
 Navegação da agenda publicada em 6f7cd7c, CI aprovado. Correção ampliada do zoom dos campos publicada em 05050b8, deploy READY e CI aprovado. Fuso por igreja implementado e validado conforme implementacao/fusos/README.md; publicação registrada no histórico Git e no deploy. A jornada de troca foi verificada localmente entre membro, líder e substituta. A interface agora aguarda a gravação, preserva o erro para nova tentativa e reduz as ações expostas no primeiro nível.
 
 J15: menu Mais agrupado pelas áreas dos manifestos, com expansão progressiva e seção ativa aberta. Validado localmente em mobile e desktop, claro e escuro; evidência em implementacao/menu-mais.
+
+Primeiro cadastro da igreja alinhado a AuthShell/login-*, com recuperação de erro e dados preservados. Revisão do primeiro acesso do membro e organização interna da Caminhada documentadas em implementacao/primeiro-acesso-revisao, distinguindo evidência anterior de inspeção nova.
