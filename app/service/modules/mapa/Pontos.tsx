@@ -10,6 +10,8 @@ import { limparCamadas, type ContextoMapa } from "./contexto";
 
 import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Interruptor } from "../../ui/Interruptor";
+import { MenuAcoes } from "../../ui/Menu";
+import { confirmar } from "../../ui/confirmar";
 import { Acao } from "../../ui/Acao";
 import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
@@ -49,8 +51,6 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
   const [ligados, setLigados] = useState<Set<string>>(() => new Set(soCamada ? ["escolas", "saude", "igreja"] : ["igreja"]));
   const [verOcultos, setVerOcultos] = useState(false);
   const [aberto, setAberto] = useState<Ponto | null>(null);
-  const [menu, setMenu] = useState<string | null>(null);
-  const [confirmar, setConfirmar] = useState<string | null>(null);
   const [form, setForm] = useState<null | { ponto?: Ponto; nome: string; categoria: string; local: [number, number] | null; endereco: string; observacao: string }>(null);
   const [escolhendo, setEscolhendo] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -101,7 +101,6 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
   if (soCamada) return null;
 
   const ocultar = async (pt: Ponto, oculto: boolean) => {
-    setMenu(null);
     const r = pt.ponto_id
       ? await db().from("map_points").update({ oculto, updated_at: new Date().toISOString() }).eq("id", pt.ponto_id)
       : await db().from("map_points").insert({ organization_id: ctx.org, nome: pt.nome || "Sem nome", categoria: pt.categoria, origem: "osm", osm_id: pt.id.replace(/^osm:/, ""), latitude: pt.latitude, longitude: pt.longitude, oculto });
@@ -110,9 +109,8 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
     recarregar();
   };
   const excluir = async (pt: Ponto) => {
-    setMenu(null);
     if (!pt.ponto_id || pt.origem !== "manual") return;
-    setConfirmar(null);
+    if (!(await confirmar({ titulo: `Excluir ${pt.nome || "este ponto"}?`, texto: "O ponto sai do mapa para todos. Não dá para desfazer.", acao: "Excluir" }))) return;
     const { error } = await db().from("map_points").delete().eq("id", pt.ponto_id);
     if (error) { avisar("Não foi possível excluir agora.", "warn"); return; }
     setAberto(null);
@@ -164,16 +162,11 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
                   <span style={{ display: "block", opacity: pt.oculto ? 0.6 : 1 }}>{pt.nome || "Sem nome"}</span>
                   <span className="mp-fraco">{CATEGORIAS.find((c) => c.id === pt.categoria)?.nome.replace("Pontos da igreja · ", "")} · {pt.origem === "osm" ? "OpenStreetMap" : "manual"}{pt.oculto ? " · oculto" : ""}</span>
                 </Acao>
-                {podeEditar && <BotaoIcone className="mp-fechar" rotulo={`Ações de ${pt.nome}`} aria-expanded={menu === pt.id} onClick={() => setMenu((m) => (m === pt.id ? null : pt.id))}><Icon name="menu" size={14} /></BotaoIcone>}
-                {menu === pt.id && (
-                  <div className="mp-menu" role="menu" style={{ top: 40, width: 180 }}>
-                    <Acao role="menuitem" onClick={() => { setMenu(null); setForm({ ponto: pt, nome: pt.nome, categoria: pt.categoria, local: [pt.longitude, pt.latitude], endereco: pt.endereco ?? "", observacao: pt.observacao ?? "" }); }}>Editar</Acao>
-                    <Acao role="menuitem" onClick={() => ocultar(pt, !pt.oculto)}>{pt.oculto ? "Mostrar no mapa" : "Ocultar do mapa"}</Acao>
-                    {pt.origem === "manual" && (confirmar === pt.id
-                      ? <Acao role="menuitem" style={{ color: "var(--danger)" }} onClick={() => excluir(pt)}>Excluir de vez (não dá para desfazer)</Acao>
-                      : <Acao role="menuitem" style={{ color: "var(--danger)" }} onClick={() => setConfirmar(pt.id)}>Excluir</Acao>)}
-                  </div>
-                )}
+                {podeEditar && <MenuAcoes soIcone rotulo={`Ações de ${pt.nome}`} itens={[
+                  { rotulo: "Editar", icone: "editar", onClick: () => setForm({ ponto: pt, nome: pt.nome, categoria: pt.categoria, local: [pt.longitude, pt.latitude], endereco: pt.endereco ?? "", observacao: pt.observacao ?? "" }) },
+                  { rotulo: pt.oculto ? "Mostrar no mapa" : "Ocultar do mapa", onClick: () => ocultar(pt, !pt.oculto) },
+                  ...(pt.origem === "manual" ? [{ rotulo: "Excluir", icone: "lixeira", perigo: true, onClick: () => { void excluir(pt); } }] : []),
+                ]} />}
               </div>
             ))}
           </div>
@@ -204,7 +197,7 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
       )}
 
       {form && !escolhendo && (
-        <div className="modal-bg" onClick={() => setForm(null)}>
+        <div /* lei17-ok: formulário de ponto com cabeçalho e rodapé do mapa */ className="modal-bg" onClick={() => setForm(null)}>
           <div className="modal" role="dialog" aria-modal="true" aria-labelledby="mp-ponto-t" style={{ width: 520, maxWidth: "calc(100% - 32px)", padding: 0 }} onClick={(e) => e.stopPropagation()}>
             <div className="mp-cab" style={{ display: "flex", justifyContent: "space-between" }}><h2 id="mp-ponto-t" className="mp-titulo">{form.ponto ? "Editar ponto" : "Adicionar ponto"}</h2><BotaoIcone className="mp-fechar" rotulo="Fechar" onClick={() => setForm(null)}><Icon name="recusou" size={14} /></BotaoIcone></div>
             <div className="mp-corpo">

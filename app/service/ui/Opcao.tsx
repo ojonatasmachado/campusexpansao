@@ -13,7 +13,7 @@ export type OpcaoEstilo =
   | "segmento" | "seg-chip" | "opt" | "chip-toggle" | "cand-chip" | "or-chip" | "onde-chip"
   | "tp-opt" | "sel-opt" | "dp-day" | "flag-row" | "acesso-tog" | "quiz-radio" | "ce-prova"
   | "cfg-tab" | "cfg-index-item" | "icon-picker-opt" | "setup-cor" | "setup-modelo" | "m6-row"
-  | "pmx-mob-role" | "bib-swatch";
+  | "pmx-mob-role" | "bib-swatch" | "aba";
 
 export type OpcaoProps = AcaoProps & { marcada: boolean; estilo?: OpcaoEstilo };
 

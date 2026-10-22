@@ -8,6 +8,7 @@ import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import type { ChurchView } from "../../ServiceExactApp";
 
 import { Botao } from "../../ui/Botao";
+import { Janela } from "../../ui/Janela";
 import { Campo, TextoLongo } from "../../ui/Campo";
 /* mensagem que abre pronta no WhatsApp do líder quando ele manda o acesso ao
    app pra um membro novo, guardada em service.churches.settings.acessoMsgCfg
@@ -33,24 +34,15 @@ export function AcessoMsgModal({ church, cfg, onClose, onRefresh }: { church: Ch
   const restaurar = () => setMensagem(ACESSO_MSG_DEFAULT.mensagem);
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Membros</div>
-          <div className="modal-title">Mensagem de boas-vindas pelo WhatsApp</div>
-          <div className="modal-sub">É o texto que abre pronto no WhatsApp quando você manda o acesso ao app pra um membro novo. Edite à vontade: o padrão é de felicitação, com o passo a passo de como entrar.</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
+    <Janela larga sobretitulo="Membros" titulo="Mensagem de boas-vindas pelo WhatsApp" texto="É o texto que abre pronto no WhatsApp quando você manda o acesso ao app pra um membro novo. Edite à vontade: o padrão é de felicitação, com o passo a passo de como entrar." aoFechar={onClose} corpoBloco
+      rodape={<>
+        <Botao onClick={onClose}>Cancelar</Botao>
+        <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
+      </>}>
           <Campo rotulo="Mensagem" ajuda={<>Use {"{nome}"}, {"{igreja}"} e {"{link}"}: preenchemos automaticamente na hora de enviar. O link é um convite só da pessoa, onde ela informa o e-mail, cria a senha e coloca o CEP. Nenhuma senha vai na mensagem.</>}>
             <TextoLongo rows={8} value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
           </Campo>
           <Botao variante="discreto" compacto onClick={restaurar}>Restaurar mensagem padrão</Botao>
-        </div>
-        <div className="modal-foot">
-          <Botao onClick={onClose}>Cancelar</Botao>
-          <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
-        </div>
-      </div>
-    </div>
+    </Janela>
   );
 }

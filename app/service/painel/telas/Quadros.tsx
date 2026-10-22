@@ -19,6 +19,7 @@ import { Segmentado } from "../../ui/Segmentado";
 import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
 import { SeletorData } from "../../ui/Data";
 import { Vazio } from "../../ui/Estados";
+import { Gaveta, Janela } from "../../ui/Janela";
 /* permissões do Kanban por papel (equivalente ao kanbanPerm()/S.KANBAN_PERMS do
    protótipo): master/pastor administram o quadro; líder cria, comenta e move os
    próprios cards mas não apaga; voluntário não deveria nem abrir esta tela (usa o
@@ -63,33 +64,24 @@ export function BoardChooser({
   };
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Responsabilidades</div>
-          <div className="modal-title">{title}</div>
-          <div className="modal-sub">Mande para um quadro que já existe ou crie um novo. As responsabilidades viram cards com o responsável marcado.</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
-          <div className="dsec-title" style={{ marginBottom: 10 }}>Quadros existentes</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {boards.length === 0 && <Vazio titulo="Nenhum quadro ainda, crie um abaixo." />}
-            {boards.map((board) => (
-              <Acao className="cand" key={board.id} onClick={() => onPick(board.id)}>
-                <span className="esc-col-mark" style={{ width: 30, height: 30 }}><Icon name="quadros" size={15} /></span>
-                <div className="cand-main"><div className="cand-name">{board.name}</div><div className="cand-meta">{board.scope === "geral" ? "Liderança" : "Time"}</div></div>
-              </Acao>
-            ))}
-          </div>
-          <div className="dsec-title" style={{ margin: "20px 0 10px" }}>Ou crie um novo</div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <input className="input" style={{ flex: 1 }} placeholder="Nome do novo quadro" value={novo} onChange={(e) => setNovo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && criar()} />
-            <Botao variante="principal" desativado={saving} onClick={criar}>Criar e usar</Botao>
-          </div>
-        </div>
-        <div className="modal-foot"><Botao variante="discreto" onClick={onClose}>Cancelar</Botao></div>
+    <Janela sobretitulo="Responsabilidades" titulo={title} texto="Mande para um quadro que já existe ou crie um novo. As responsabilidades viram cards com o responsável marcado." aoFechar={onClose} corpoBloco
+      rodape={<Botao variante="discreto" onClick={onClose}>Cancelar</Botao>}>
+      <div className="dsec-title" style={{ marginBottom: 10 }}>Quadros existentes</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {boards.length === 0 && <Vazio titulo="Nenhum quadro ainda, crie um abaixo." />}
+        {boards.map((board) => (
+          <Acao className="cand" key={board.id} onClick={() => onPick(board.id)}>
+            <span className="esc-col-mark" style={{ width: 30, height: 30 }}><Icon name="quadros" size={15} /></span>
+            <div className="cand-main"><div className="cand-name">{board.name}</div><div className="cand-meta">{board.scope === "geral" ? "Liderança" : "Time"}</div></div>
+          </Acao>
+        ))}
       </div>
-    </div>
+      <div className="dsec-title" style={{ margin: "20px 0 10px" }}>Ou crie um novo</div>
+      <div style={{ display: "flex", gap: 10 }}>
+        <input className="input" style={{ flex: 1 }} placeholder="Nome do novo quadro" value={novo} onChange={(e) => setNovo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && criar()} />
+        <Botao variante="principal" desativado={saving} onClick={criar}>Criar e usar</Botao>
+      </div>
+    </Janela>
   );
 }
 
@@ -226,9 +218,7 @@ export function CardDrawer({
   };
 
   return (
-    <>
-      <div className="drawer-bg" onClick={onClose} />
-      <div className="drawer drawer-wide">
+    <Gaveta aoFechar={onClose} larga rotulo={lc.title}>
         <div className="drawer-head">
           <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
           <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{board.name}</div>
@@ -311,8 +301,7 @@ export function CardDrawer({
 
           {perm.editarBoard ? <Botao variante="discreto" compacto style={{ marginTop: 8 }} onClick={deleteCard}>Excluir card</Botao> : null}
         </div>
-      </div>
-    </>
+    </Gaveta>
   );
 }
 
@@ -363,45 +352,36 @@ export function NovoCard({
   };
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">{board.name}</div>
-          <div className="modal-title">Novo card</div>
-        </div>
-        <div className="modal-body">
-          <Campo rotulo="Título"><Entrada autoFocus value={titulo} placeholder="O que precisa ser feito" onChange={(e) => setTitulo(e.target.value)} /></Campo>
-          <Campo rotulo="Descrição"><TextoLongo value={desc} placeholder="Detalhes (opcional)" onChange={(e) => setDesc(e.target.value)} /></Campo>
-          <Campo rotulo="Prazo" className="field-half"><SeletorData valor={due} aoMudar={setDue} limpavel /></Campo>
-          <Campo rotulo="Prioridade" className="field-half" grupo>
-            <Segmentado className="seg-sm">
-              {(["alta", "media", "baixa"] as const).map((p) => (
-                <Opcao key={p} marcada={prio === p} onClick={() => setPrio(p)}>
-                  {p === "alta" ? "Alta" : p === "media" ? "Média" : "Baixa"}
-                </Opcao>
-              ))}
-            </Segmentado>
-          </Campo>
-          <Campo rotulo="Responsáveis" grupo>
-            <div className="cand-pick">
-              {candidatos.slice(0, 12).map((p) => {
-                const on = resp.includes(p.id);
-                return (
-                  <Opcao key={p.id} marcada={on} estilo="cand-chip"
-                    onClick={() => setResp(on ? resp.filter((x) => x !== p.id) : [...resp, p.id])}>
-                    <Av name={p.name} size="xs" photoUrl={p.photoUrl} /> {p.name.split(" ")[0]} {on && <Icon name="ok" size={13} />}
-                  </Opcao>
-                );
-              })}
-            </div>
-          </Campo>
-        </div>
-        <div className="modal-foot">
+    <Janela sobretitulo={board.name} titulo="Novo card" aoFechar={onClose} rodape={<>
           <Botao onClick={onClose}>Cancelar</Botao>
           <Botao variante="principal" desativado={saving} onClick={criar}>Adicionar card</Botao>
+      </>}>
+      <Campo rotulo="Título"><Entrada autoFocus value={titulo} placeholder="O que precisa ser feito" onChange={(e) => setTitulo(e.target.value)} /></Campo>
+      <Campo rotulo="Descrição"><TextoLongo value={desc} placeholder="Detalhes (opcional)" onChange={(e) => setDesc(e.target.value)} /></Campo>
+      <Campo rotulo="Prazo" className="field-half"><SeletorData valor={due} aoMudar={setDue} limpavel /></Campo>
+      <Campo rotulo="Prioridade" className="field-half" grupo>
+        <Segmentado className="seg-sm">
+          {(["alta", "media", "baixa"] as const).map((p) => (
+            <Opcao key={p} marcada={prio === p} onClick={() => setPrio(p)}>
+              {p === "alta" ? "Alta" : p === "media" ? "Média" : "Baixa"}
+            </Opcao>
+          ))}
+        </Segmentado>
+      </Campo>
+      <Campo rotulo="Responsáveis" grupo>
+        <div className="cand-pick">
+          {candidatos.slice(0, 12).map((p) => {
+            const on = resp.includes(p.id);
+            return (
+              <Opcao key={p.id} marcada={on} estilo="cand-chip"
+                onClick={() => setResp(on ? resp.filter((x) => x !== p.id) : [...resp, p.id])}>
+                <Av name={p.name} size="xs" photoUrl={p.photoUrl} /> {p.name.split(" ")[0]} {on && <Icon name="ok" size={13} />}
+              </Opcao>
+            );
+          })}
         </div>
-      </div>
-    </div>
+      </Campo>
+    </Janela>
   );
 }
 

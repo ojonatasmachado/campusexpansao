@@ -31,6 +31,7 @@ import { PublicarEscala } from "./PublicarEscala";
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
+import { Janela } from "../../ui/Janela";
 import { Selo } from "../../ui/Selo";
 import { Cartao } from "../../ui/Cartao";
 import { Segmentado } from "../../ui/Segmentado";
@@ -108,14 +109,10 @@ function FuncoesEscalaModal({
   };
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Funções · {ministry.name}</div>
-          <div className="modal-title">Quem o time precisa</div>
-          <div className="modal-sub">Adicione, renomeie ou remova funções e diga quantas pessoas cada uma precisa. Vale para todos os eventos deste time.</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
+    <Janela sobretitulo={`Funções · ${ministry.name}`} titulo="Quem o time precisa" texto="Adicione, renomeie ou remova funções e diga quantas pessoas cada uma precisa. Vale para todos os eventos deste time." aoFechar={onClose} corpoBloco
+      rodape={<>
+        <Botao variante="principal" onClick={onClose}>Concluído</Botao>
+      </>}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
             {positions.map((position) => (
               <div className="func-edit-row" key={position.id}>
@@ -136,10 +133,7 @@ function FuncoesEscalaModal({
             <div className="stepper"><Acao onClick={() => setNeed((n) => Math.max(1, n - 1))}>−</Acao><span>{need}</span><Acao onClick={() => setNeed((n) => n + 1)}>+</Acao></div>
             <Botao compacto desativado={saving} onClick={add}>+ Função</Botao>
           </div>
-        </div>
-        <div className="modal-foot"><Botao variante="principal" onClick={onClose}>Concluído</Botao></div>
-      </div>
-    </div>
+    </Janela>
   );
 }
 
@@ -173,14 +167,10 @@ function DelegarModal({
   };
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Delegar gestão da escala</div>
-          <div className="modal-title">Quem mais pode montar a escala</div>
-          <div className="modal-sub">As pessoas escolhidas passam a ver e gerir a escala deste time, como você.</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
+    <Janela sobretitulo="Delegar gestão da escala" titulo="Quem mais pode montar a escala" texto="As pessoas escolhidas passam a ver e gerir a escala deste time, como você." aoFechar={onClose} corpoBloco
+      rodape={<>
+        <Botao variante="principal" onClick={onClose}>Concluído</Botao>
+      </>}>
           {ministries.length > 1 && (
             <Segmentado style={{ marginBottom: 14, flexWrap: "wrap" }}>
               {ministries.map((m) => <Opcao key={m.id} marcada={ministryId === m.id} onClick={() => setMinistryId(m.id)}>{m.name.split(" ")[0]}</Opcao>)}
@@ -197,10 +187,7 @@ function DelegarModal({
               </Opcao>
             );
           })}
-        </div>
-        <div className="modal-foot"><Botao variante="principal" onClick={onClose}>Concluído</Botao></div>
-      </div>
-    </div>
+    </Janela>
   );
 }
 
@@ -231,22 +218,13 @@ function PresetSaveModal({
     onClose();
   };
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Configuração padrão</div>
-          <div className="modal-title">Salvar como…</div>
-          <div className="modal-sub">Guarda as funções e quantidades atuais de todos os times. Crie uma para “Culto”, outra para “Reunião”, e aplique quando quiser.</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
-          <Campo rotulo="Nome da configuração"><Entrada placeholder="ex: Culto de domingo" value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === "Enter" && salvar()} /></Campo>
-        </div>
-        <div className="modal-foot">
-          <Botao onClick={onClose}>Cancelar</Botao>
+    <Janela sobretitulo="Configuração padrão" titulo="Salvar como…" texto="Guarda as funções e quantidades atuais de todos os times. Crie uma para “Culto”, outra para “Reunião”, e aplique quando quiser." aoFechar={onClose} corpoBloco
+      rodape={<>
+        <Botao onClick={onClose}>Cancelar</Botao>
           <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
-        </div>
-      </div>
-    </div>
+      </>}>
+          <Campo rotulo="Nome da configuração"><Entrada placeholder="ex: Culto de domingo" value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === "Enter" && salvar()} /></Campo>
+    </Janela>
   );
 }
 
@@ -743,7 +721,7 @@ function RosterActionModal({
   if (action.kind === "slot" && action.assignment && !trocando) {
     const assignment = action.assignment;
     return (
-      <div className="modal-bg" onClick={salvando ? undefined : onClose}>
+      <div /* lei17-ok: Alterar escala: cabeçalho com avatar e selo */ className="modal-bg" onClick={salvando ? undefined : onClose}>
         <div className="modal" role="dialog" aria-modal="true" aria-label="Alterar escala" aria-busy={salvando} onClick={(event) => event.stopPropagation()}>
           <div className="modal-head">
             <div className="modal-eyebrow">{joinDot(action.position.name, action.ministry.name, action.event.weekday)}</div>
@@ -808,19 +786,18 @@ function RosterActionModal({
     </Acao>
   );
   return (
-    <div className="modal-bg" onClick={salvando ? undefined : onClose}>
-      <div className="modal wide" role="dialog" aria-modal="true" aria-label="Escolher pessoa para a escala" aria-busy={salvando} onClick={(event) => event.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">{isSwap ? "Escolher substituto" : "Escalar"} · {action.position.name} · {action.ministry.name}</div>
-          <div className="modal-title">{action.event.name}</div>
-          <div className="modal-sub">{joinDot(action.event.weekday, action.event.time)}{joinDot(action.event.weekday, action.event.time) ? ". " : ""}Ocupado é quem marcou que não pode neste horário.</div>
-          {isSwap && <p className="modal-sub">A pessoa escolhida passa a ocupar a vaga e precisa confirmar no app.</p>}
-          <div className="cand-tools">
-            <input className="input" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar pelo nome" aria-label="Buscar pelo nome" />
-            <Opcao marcada={soDisponiveis} estilo="chip-toggle" aria-pressed={soDisponiveis} onClick={() => setSoDisponiveis((v) => !v)}>Disponíveis</Opcao>
-          </div>
+    <Janela larga sobretitulo={`${isSwap ? "Escolher substituto" : "Escalar"} · ${action.position.name} · ${action.ministry.name}`} titulo={action.event.name}
+      texto={`${joinDot(action.event.weekday, action.event.time)}${joinDot(action.event.weekday, action.event.time) ? ". " : ""}Ocupado é quem marcou que não pode neste horário.`}
+      aoFechar={onClose} ocupada={salvando} corpoBloco
+      cabecalho={<>
+        {isSwap && <p className="modal-sub">A pessoa escolhida passa a ocupar a vaga e precisa confirmar no app.</p>}
+        <div className="cand-tools">
+          <input className="input" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar pelo nome" aria-label="Buscar pelo nome" />
+          <Opcao marcada={soDisponiveis} estilo="chip-toggle" aria-pressed={soDisponiveis} onClick={() => setSoDisponiveis((v) => !v)}>Disponíveis</Opcao>
         </div>
-        <div className="modal-body cand-list">
+      </>}
+      rodape={<Botao variante="discreto" desativado={salvando} onClick={onClose}>Cancelar</Botao>}>
+      <div className="cand-list">
           {salvando && <p role="status">Salvando alteração...</p>}
           {erro && <p className="field-error" role="alert">{erro}</p>}
           {podem.length === 0 && naoPodem.length === 0 ? <Vazio titulo={busca.trim() ? "Ninguém com esse nome neste time." : "Ninguém disponível neste time."} /> : null}
@@ -843,9 +820,7 @@ function RosterActionModal({
               {naoPodem.map(linha)}
             </>
           )}
-        </div>
-        <div className="modal-foot"><Botao variante="discreto" desativado={salvando} onClick={onClose}>Cancelar</Botao></div>
       </div>
-    </div>
+    </Janela>
   );
 }

@@ -37,6 +37,7 @@ import { Campo, Entrada } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
 import { SeletorData } from "../../ui/Data";
 import { Vazio } from "../../ui/Estados";
+import { Janela } from "../../ui/Janela";
 export function PersonTimeline({ member, events, compact }: { member: MemberView; events: TimelineEventView[]; compact?: boolean }) {
   const { comTermos: ct } = useTermos();
   const sorted = porData(events);
@@ -253,29 +254,19 @@ export function MemberEditModal({
   };
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Editar dados</div>
-          <div className="modal-title">{member.name}</div>
-          <div className="modal-sub">Aniversário, bairro, grupo de comunhão e família.</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
-          <Campo rotulo="Aniversário"><SeletorData valor={birth} aoMudar={setBirth} limpavel /></Campo>
-          <Campo rotulo="Bairro"><Entrada value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Onde mora" /></Campo>
-          {(church?.settings?.gruposCfg?.ativo ?? true) && (
-            <Campo rotulo={termo("grupo")}>
-              <Selecao valor={groupId} aoMudar={setGroupId} vazio="Sem grupo" opcoes={fellowshipGroups.map((g) => ({ v: g.id, l: g.name }))} />
-            </Campo>
-          )}
-          <Campo rotulo="Família"><Entrada value={family} onChange={(e) => setFamily(e.target.value)} placeholder="ex: Família Lima (agrupa parentes na ficha)" /></Campo>
-        </div>
-        <div className="modal-foot">
+    <Janela sobretitulo="Editar dados" titulo={member.name} texto="Aniversário, bairro, grupo de comunhão e família." aoFechar={onClose} corpoBloco rodape={<>
           <Botao onClick={onClose}>Cancelar</Botao>
           <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
-        </div>
-      </div>
-    </div>
+      </>}>
+      <Campo rotulo="Aniversário"><SeletorData valor={birth} aoMudar={setBirth} limpavel /></Campo>
+      <Campo rotulo="Bairro"><Entrada value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Onde mora" /></Campo>
+      {(church?.settings?.gruposCfg?.ativo ?? true) && (
+        <Campo rotulo={termo("grupo")}>
+          <Selecao valor={groupId} aoMudar={setGroupId} vazio="Sem grupo" opcoes={fellowshipGroups.map((g) => ({ v: g.id, l: g.name }))} />
+        </Campo>
+      )}
+      <Campo rotulo="Família"><Entrada value={family} onChange={(e) => setFamily(e.target.value)} placeholder="ex: Família Lima (agrupa parentes na ficha)" /></Campo>
+    </Janela>
   );
 }
 
@@ -312,41 +303,31 @@ export function JornadaEditModal({
   };
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">{ct("{Caminhada}")}</div>
-          <div className="modal-title">{member.name}</div>
-          <div className="modal-sub">Marque as etapas já concluídas, com a data real de cada uma.</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
-          {JRN_STEPS.map((step) => {
-            const jaConcluido = !!member.journey[JORNADA_KIND_INDEX[step.kind]];
-            const event = events.find((e) => e.event_type === step.kind);
-            return (
-              <Linha estilo="config" key={step.kind} style={{ alignItems: "flex-start" }}>
-                <div className="cfg-row-main">
-                  <div className="cfg-row-t">{ct(step.label)}</div>
-                  {jaConcluido ? (
-                    <div className="cfg-row-s">Concluído{event?.when_label ? ` em ${event.when_label}` : ""}</div>
-                  ) : rows[step.kind].done ? (
-                    <Campo rotulo="Data" style={{ marginTop: 8 }}>
-                      <SeletorData valor={rows[step.kind].date} aoMudar={(v) => setData(step.kind, v)} />
-                    </Campo>
-                  ) : (
-                    <Botao compacto style={{ marginTop: 8 }} onClick={() => marcar(step.kind)}>Marcar como concluído</Botao>
-                  )}
-                </div>
-              </Linha>
-            );
-          })}
-        </div>
-        <div className="modal-foot">
+    <Janela sobretitulo={<>{ct("{Caminhada}")}</>} titulo={member.name} texto="Marque as etapas já concluídas, com a data real de cada uma." aoFechar={onClose} corpoBloco rodape={<>
           <Botao onClick={onClose}>Cancelar</Botao>
           <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
-        </div>
-      </div>
-    </div>
+      </>}>
+      {JRN_STEPS.map((step) => {
+        const jaConcluido = !!member.journey[JORNADA_KIND_INDEX[step.kind]];
+        const event = events.find((e) => e.event_type === step.kind);
+        return (
+          <Linha estilo="config" key={step.kind} style={{ alignItems: "flex-start" }}>
+            <div className="cfg-row-main">
+              <div className="cfg-row-t">{ct(step.label)}</div>
+              {jaConcluido ? (
+                <div className="cfg-row-s">Concluído{event?.when_label ? ` em ${event.when_label}` : ""}</div>
+              ) : rows[step.kind].done ? (
+                <Campo rotulo="Data" style={{ marginTop: 8 }}>
+                  <SeletorData valor={rows[step.kind].date} aoMudar={(v) => setData(step.kind, v)} />
+                </Campo>
+              ) : (
+                <Botao compacto style={{ marginTop: 8 }} onClick={() => marcar(step.kind)}>Marcar como concluído</Botao>
+              )}
+            </div>
+          </Linha>
+        );
+      })}
+    </Janela>
   );
 }
 
@@ -390,14 +371,8 @@ export function AddToMinistryModal({
   };
 
   return (
-    <div className="modal-bg" style={{ zIndex: 80 }} onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Adicionar ao time</div>
-          <div className="modal-title">{ministry.name}</div>
-          <div className="modal-sub">{ct("Escolha o {voluntario} e, se souber, a função dele neste time.")}</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
+    <Janela acima sobretitulo="Adicionar ao time" titulo={ministry.name} texto={ct("Escolha o {voluntario} e, se souber, a função dele neste time.")}
+      aoFechar={onClose} corpoBloco rodape={<Botao onClick={onClose}>Fechar</Botao>}>
           {ministry.positions.length > 0 && (
             <Campo rotulo="Função (opcional)" style={{ marginBottom: 14 }}>
               <Selecao valor={positionId} aoMudar={setPositionId} vazio="Sem função definida" opcoes={ministry.positions.map((p) => ({ v: p.id, l: p.name }))} />
@@ -415,12 +390,7 @@ export function AddToMinistryModal({
             </div>
           ))}
           {fora.length === 0 && <Vazio titulo={q ? "Nenhum resultado." : ct("Todos os {voluntarios} já estão no time.")} />}
-        </div>
-        <div className="modal-foot">
-          <Botao onClick={onClose}>Fechar</Botao>
-        </div>
-      </div>
-    </div>
+    </Janela>
   );
 }
 

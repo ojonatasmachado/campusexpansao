@@ -56,7 +56,7 @@ export default function KidsCheckinClient({
     : null;
 
   return (
-    <div className="modal-bg" style={{ zIndex: 110, borderRadius: 0 }} onClick={() => router.push("/service")}>
+    <div /* lei17-ok: tela cheia de resultado do check-in */ className="modal-bg" style={{ zIndex: 110, borderRadius: 0 }} onClick={() => router.push("/service")}>
       <div className="ck-land" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }} onClick={(e) => e.stopPropagation()}>
         <div className="ck-land-card">
           <div className="ck-land-logo">

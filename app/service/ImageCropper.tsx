@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Botao } from "./ui/Botao";
+import { Janela } from "./ui/Janela";
 /* Corte + zoom antes de enviar qualquer imagem do Service (logo, capa da
    Página da igreja, imagem de notícia...). Arrasta pra reposicionar, controla
    o zoom no slider, e só sai daqui uma imagem já no enquadramento certo —
@@ -164,14 +165,16 @@ export function ImageCropper({
   };
 
   return (
-    <div className="modal-bg" onClick={onCancel}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Ajustar imagem</div>
-          <div className="modal-title">Corte e zoom</div>
-          <div className="modal-sub">Arraste pra reposicionar e use o zoom pra enquadrar melhor.</div>
-        </div>
-        <div className="modal-body" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+    <Janela sobretitulo="Ajustar imagem" titulo="Corte e zoom" texto="Arraste pra reposicionar e use o zoom pra enquadrar melhor."
+      aoFechar={onCancel} corpoStyle={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}
+      rodape={
+        <>
+          <Botao onClick={onCancel}>Cancelar</Botao>
+          <Botao variante="principal" desativado={busy || status !== "ready"} onClick={confirmar}>
+            {busy ? "Aplicando..." : "Aplicar"}
+          </Botao>
+        </>
+      }>
           <div
             style={{
               width: FRAME_W,
@@ -231,14 +234,6 @@ export function ImageCropper({
               style={{ flex: 1 }}
             />
           </div>
-        </div>
-        <div className="modal-foot">
-          <Botao onClick={onCancel}>Cancelar</Botao>
-          <Botao variante="principal" desativado={busy || status !== "ready"} onClick={confirmar}>
-            {busy ? "Aplicando..." : "Aplicar"}
-          </Botao>
-        </div>
-      </div>
-    </div>
+    </Janela>
   );
 }

@@ -4,8 +4,9 @@ import { cpfValido } from "../lib/cpf";
 import { enderecoNoBrasil } from "../lib/endereco";
 import { isCivilDate, todayISO } from "../lib/date";
 import { telefoneValido } from "../lib/telefone";
-import { createContext, useContext, useRef } from "react";
+import { createContext, useContext } from "react";
 import { Icon } from "../lib/icons";
+import { Folha } from "../ui/Janela";
 import { parseISODate, weekdayFromISO } from "../lib/date";
 import { iniciais } from "../lib/iniciais";
 import { useTermos } from "../lib/vocabulario-context";
@@ -75,58 +76,10 @@ export function M6Row({ ic, t, s, onClick, right, cls }: { ic?: string; t: React
   );
 }
 
-/* folha de baixo com alça de arrastar (apple-design · familiaridade; receita "drag to
-   dismiss" da skill animate): a alça promete arrastar, então arrasta. Segue o dedo
-   1:1 por transform direto no elemento, fecha num gesto rápido (velocidade > 0,11)
-   ou depois de 30% da altura, resiste ao ser puxada para cima, ignora o segundo dedo
-   e sai pela mesma borda por onde entrou. */
+/* folha de baixo do app do membro: a peça é Folha (app/service/ui/Janela.tsx),
+   com a alça de arrastar para fechar. */
 export function M6Sheet({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
-  const folha = useRef<HTMLDivElement>(null);
-  const arraste = useRef<{ id: number; y0: number; t0: number; dy: number } | null>(null);
-  const soltarPara = (destino: "fechar" | "voltar") => {
-    const el = folha.current;
-    if (!el) return;
-    el.style.transition = destino === "fechar" ? "transform .2s var(--ease-out)" : "transform .3s var(--ease-drawer)";
-    el.style.transform = destino === "fechar" ? "translateY(100%)" : "";
-    if (destino === "fechar") window.setTimeout(onClose, 200);
-  };
-  return (
-    <div className="m6-scrim" onClick={onClose}>
-      <div className="m6-sheet" ref={folha} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-        <div
-          className="m6-grab-zona"
-          aria-hidden="true"
-          onPointerDown={(e) => {
-            if (arraste.current) return;
-            arraste.current = { id: e.pointerId, y0: e.clientY, t0: Date.now(), dy: 0 };
-            e.currentTarget.setPointerCapture(e.pointerId);
-            if (folha.current) folha.current.style.transition = "none";
-          }}
-          onPointerMove={(e) => {
-            const a = arraste.current;
-            if (!a || a.id !== e.pointerId || !folha.current) return;
-            const dy = e.clientY - a.y0;
-            a.dy = dy;
-            /* para cima: resistência crescente em vez de parede */
-            const y = dy >= 0 ? dy : -(Math.abs(dy) * 40) / (40 + Math.abs(dy));
-            folha.current.style.transform = `translateY(${y}px)`;
-          }}
-          onPointerUp={(e) => {
-            const a = arraste.current;
-            if (!a || a.id !== e.pointerId) return;
-            arraste.current = null;
-            const altura = folha.current?.offsetHeight ?? 1;
-            const velocidade = a.dy / Math.max(1, Date.now() - a.t0);
-            soltarPara(a.dy > 0 && (a.dy > altura * 0.3 || velocidade > 0.11) ? "fechar" : "voltar");
-          }}
-          onPointerCancel={(e) => { if (arraste.current?.id === e.pointerId) { arraste.current = null; soltarPara("voltar"); } }}
-        >
-          <div className="m6-grab" />
-        </div>
-        {children}
-      </div>
-    </div>
-  );
+  return <Folha aoFechar={onClose}>{children}</Folha>;
 }
 
 export function M6St({ k, ic, children }: { k: "ok" | "warn" | "neutral" | "danger"; ic?: string; children: React.ReactNode }) {

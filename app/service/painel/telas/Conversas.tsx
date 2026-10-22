@@ -15,6 +15,7 @@ import { Opcao } from "../../ui/Opcao";
 import { Segmentado } from "../../ui/Segmentado";
 import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
 import { Vazio } from "../../ui/Estados";
+import { Janela } from "../../ui/Janela";
 export function NovaConversaModal({
   members,
   church,
@@ -80,49 +81,39 @@ export function NovaConversaModal({
   };
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Nova conversa</div>
-          <div className="modal-title">Chamar para conversar</div>
-          <div className="modal-sub">Fale com alguém em particular ou crie um grupo com parte da equipe.</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
-          <Campo rotulo="Tipo" grupo>
-            <Segmentado>
-              <Opcao marcada={tipo === "dm"} onClick={() => setTipo("dm")}>Individual</Opcao>
-              <Opcao marcada={tipo === "grupo"} onClick={() => setTipo("grupo")}>Em grupo</Opcao>
-            </Segmentado>
-          </Campo>
-          {isGrupo && (
-            <Campo rotulo="Nome do grupo">
-              <Entrada value={nome} placeholder="ex: Apoio do domingo" onChange={(e) => setNome(e.target.value)} />
-            </Campo>
-          )}
-          <Campo rotulo="Quem participa" grupo>
-            <div className="cand-pick">
-              {candidatos.map((m) => {
-                const on = sel.includes(m.id);
-                return (
-                  <Acao key={m.id} className={`cand-chip ${on ? "on" : ""}`} onClick={() => tog(m.id)}>
-                    <Av name={m.name} size="xs" /> {m.name.split(" ")[0]} {on && <Icon name="ok" size={13} />}
-                  </Acao>
-                );
-              })}
-              {candidatos.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum membro disponível.</span>}
-            </div>
-          </Campo>
-          <Campo rotulo="Primeira mensagem (opcional)" style={{ marginBottom: 0 }}>
-            <TextoLongo value={primeiraMsg} placeholder="..." onChange={(e) => setPrimeiraMsg(e.target.value)} />
-          </Campo>
-          {error && <div style={{ marginTop: 10, fontSize: "var(--fs-pn-13)", color: "var(--danger)" }}>{error}</div>}
-        </div>
-        <div className="modal-foot">
+    <Janela larga sobretitulo="Nova conversa" titulo="Chamar para conversar" texto="Fale com alguém em particular ou crie um grupo com parte da equipe." aoFechar={onClose} corpoBloco rodape={<>
           <Botao onClick={onClose}>Cancelar</Botao>
           <Botao variante="principal" desativado={saving} onClick={criar}>{saving ? "Criando…" : "Iniciar conversa"}</Botao>
+      </>}>
+      <Campo rotulo="Tipo" grupo>
+        <Segmentado>
+          <Opcao marcada={tipo === "dm"} onClick={() => setTipo("dm")}>Individual</Opcao>
+          <Opcao marcada={tipo === "grupo"} onClick={() => setTipo("grupo")}>Em grupo</Opcao>
+        </Segmentado>
+      </Campo>
+      {isGrupo && (
+        <Campo rotulo="Nome do grupo">
+          <Entrada value={nome} placeholder="ex: Apoio do domingo" onChange={(e) => setNome(e.target.value)} />
+        </Campo>
+      )}
+      <Campo rotulo="Quem participa" grupo>
+        <div className="cand-pick">
+          {candidatos.map((m) => {
+            const on = sel.includes(m.id);
+            return (
+              <Acao key={m.id} className={`cand-chip ${on ? "on" : ""}`} onClick={() => tog(m.id)}>
+                <Av name={m.name} size="xs" /> {m.name.split(" ")[0]} {on && <Icon name="ok" size={13} />}
+              </Acao>
+            );
+          })}
+          {candidatos.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum membro disponível.</span>}
         </div>
-      </div>
-    </div>
+      </Campo>
+      <Campo rotulo="Primeira mensagem (opcional)" style={{ marginBottom: 0 }}>
+        <TextoLongo value={primeiraMsg} placeholder="..." onChange={(e) => setPrimeiraMsg(e.target.value)} />
+      </Campo>
+      {error && <div style={{ marginTop: 10, fontSize: "var(--fs-pn-13)", color: "var(--danger)" }}>{error}</div>}
+    </Janela>
   );
 }
 

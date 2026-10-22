@@ -47,13 +47,15 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Data e hora | `SeletorData`, `SeletorHora` em `app/service/ui/Data.tsx`; `DatePicker`/`TimePicker` antigos no formulário genérico | sim | `datetime-local` em Mural, Rota e PublicPageEditor; CI barra date e time | 4 |
 | Envio de foto/arquivo | `PhotoPicker`, `ImageUpload`, `ImageCropper` | parcial | `type="file"` direto em 3 telas | falta |
 | Busca | `.tb-search` e +4 classes | parcial | sem componente | 6 |
-| Abas | `.ck-tab`, `.cfg-tab`, `.tp-tab`, `.ob-tab-item` | não | 4 implementações | 5 |
+| Abas | `Abas`, `PainelAba` em `app/service/ui/Abas.tsx` (sublinhado que desliza) | sim | barra de abas do membro (`.m-tab`) e prévias de tema ficam | 4, 5 |
 | Barra de abas do app | `.m-tab` | parcial | ok | 1 |
+| Gaveta | `Gaveta` em `app/service/ui/Janela.tsx`; `DrawerShell` usa por dentro | sim | ok | 5 |
+| Barra de salvar | `BarraSalvar` em `app/service/ui/BarraSalvar.tsx` | sim | ok | 5 |
 | Menu lateral | `ServiceExactApp.tsx` (`.sb-*`) | sim | ok | 5 |
-| Janela (modal) | `.modal*`, `ServiceModal`, `DialogosAcessiveis` | parcial | markup repetido em ~30 arquivos | 3 |
-| Folha inferior | `M6Sheet` + `.m-sheet` | parcial | duas famílias de CSS | 1 |
+| Janela (modal) | `Janela` em `app/service/ui/Janela.tsx` (vira folha no celular); `confirmar()` para risco | sim | ver PR do I8 para as que ficaram por estrutura própria | 3, 5 |
+| Folha inferior | `Folha` em `app/service/ui/Janela.tsx`; `M6Sheet` usa por dentro | sim | ok | 1, 5 |
 | Confirmação | `confirmar()` em `app/service/ui/confirmar.ts` (diálogo de risco) | sim | ok; CI barra `confirm()` | 3 |
-| Aviso (toast) | `avisar()` + `.m6-toast` com Desfazer | parcial | dois sistemas; o do membro fora do `avisar()` | 6 |
+| Aviso (toast) | `avisar()` em `app/service/lib/avisar.ts`, com Desfazer (`acao`); o app do membro usa o mesmo | sim | ok | 3, 6 |
 | Vazio | `Vazio` em `app/service/ui/Estados.tsx`; `EmptyState` usa por dentro | sim | `.empty` com estilo próprio em Escalas e `mp-vazio` no mapa | 3 |
 | Carregando | `Carregando` em `app/service/ui/Estados.tsx` (esqueleto: lista, linhas, cartões, indicadores) | sim | textos inline curtos ficam | 3 |
 | Erro | `ErroEstado` em `app/service/ui/Estados.tsx`; `friendlyWriteError` dá o texto | parcial | telas ainda mostram erro de carga só como texto | 3 |
@@ -61,7 +63,7 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Tabela | `.tbl` | parcial | só painel | 3 |
 | Indicador | `Kpi` (painel/comum.tsx) | parcial | `.kpi` duplicado com o admin | 2, 6 |
 | Etapas/linha do tempo | `.tl`, `.jrn-tl`, `.m6-step`, `.pipe`, `LinhaDoTempo` | parcial | 4 estruturas | 1, 6 |
-| Menu de opções | `MenuMais` + 4 menus próprios | parcial | 5 implementações | 4 |
+| Menu de opções | `MenuAcoes` em `app/service/ui/Menu.tsx`; `MenuMais` usa por dentro | sim | menu do usuário (TopUserMenu) é peça própria | 4 |
 
 ## Ordem sugerida de troca
 

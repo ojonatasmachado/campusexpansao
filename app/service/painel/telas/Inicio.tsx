@@ -31,6 +31,7 @@ import { Acao } from "../../ui/Acao";
 import { Cartao } from "../../ui/Cartao";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Vazio } from "../../ui/Estados";
+import { Janela } from "../../ui/Janela";
 export function GlobalSearch({
   people,
   members,
@@ -432,20 +433,12 @@ export function Painel({
       </div>}
       <div className="sobre-numeros"><Acao className="help-link" onClick={() => setSobreAberto(true)}>Sobre estes números</Acao></div>
       {sobreAberto && (
-        <div className="modal-bg" onClick={() => setSobreAberto(false)}>
-          <div className="modal" role="dialog" aria-label="Sobre estes números" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <div className="modal-title">Sobre estes números</div>
-              <div className="modal-sub">Como cada número e painel do Início é calculado.</div>
-            </div>
-            <div className="modal-body" style={{ display: "block" }}>
-              <dl className="sobre-lista">
-                {sobre.map(([t, d]) => <div key={t}><dt>{t}</dt><dd>{d}</dd></div>)}
-              </dl>
-            </div>
-            <div className="modal-foot"><Botao variante="principal" onClick={() => setSobreAberto(false)}>Fechar</Botao></div>
-          </div>
-        </div>
+        <Janela titulo="Sobre estes números" texto="Como cada número e painel do Início é calculado." aoFechar={() => setSobreAberto(false)} corpoBloco
+          rodape={<Botao variante="principal" onClick={() => setSobreAberto(false)}>Fechar</Botao>}>
+      <dl className="sobre-lista">
+        {sobre.map(([t, d]) => <div key={t}><dt>{t}</dt><dd>{d}</dd></div>)}
+      </dl>
+        </Janela>
       )}
       <div className="dash-2col">
         {podeAbrir("escalas") && <Cartao>

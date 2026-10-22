@@ -12,6 +12,7 @@ import RequisitosEditor from "./RequisitosEditor";
 import { requirementsFor, saveRequirements, type Requirement } from "./lib/requirements";
 
 import { Botao, BotaoIcone } from "./ui/Botao";
+import { Janela } from "./ui/Janela";
 import { Interruptor } from "./ui/Interruptor";
 import { Acao } from "./ui/Acao";
 import { Opcao } from "./ui/Opcao";
@@ -261,14 +262,10 @@ function QuizEditor({
   const displayMin = minA === "" ? Math.max(1, Math.ceil(qs.length * 0.7)) : minA;
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Prova de evolução</div>
-          <div className="modal-title">{aulaName || "Aula"}</div>
-          <div className="modal-sub">Perguntas respondidas ao terminar a aula. Marque a alternativa correta.</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
+    <Janela larga sobretitulo="Prova de evolução" titulo={aulaName || "Aula"}
+      texto="Perguntas respondidas ao terminar a aula. Marque a alternativa correta."
+      aoFechar={onClose} corpoBloco
+      rodape={<><Botao onClick={onClose}>Cancelar</Botao><Botao variante="principal" onClick={save}>Salvar prova</Botao></>}>
           <div className="quiz-cfg">
             <div className="quiz-cfg-main">
               <div className="quiz-cfg-t">Mínimo de acertos para aprovar</div>
@@ -316,13 +313,7 @@ function QuizEditor({
           <Botao compacto style={{ marginTop: 12 }} onClick={add}>
             + Pergunta
           </Botao>
-        </div>
-        <div className="modal-foot">
-          <Botao onClick={onClose}>Cancelar</Botao>
-          <Botao variante="principal" onClick={save}>Salvar prova</Botao>
-        </div>
-      </div>
-    </div>
+    </Janela>
   );
 }
 

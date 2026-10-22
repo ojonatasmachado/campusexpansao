@@ -14,6 +14,10 @@ import { Selecao } from "../../ui/Selecao";
 import { Selo } from "../../ui/Selo";
 import { confirmar } from "../../ui/confirmar";
 import { avisar } from "../../lib/avisar";
+import { Abas, PainelAba } from "../../ui/Abas";
+import { BarraSalvar } from "../../ui/BarraSalvar";
+import { Folha, Gaveta, Janela } from "../../ui/Janela";
+import { MenuAcoes } from "../../ui/Menu";
 
 const GRUPOS = [
   { v: "norte", l: "Célula Norte" },
@@ -34,6 +38,11 @@ export default function Galeria() {
   const [avisos, setAvisos] = useState(true);
   const [termos, setTermos] = useState(false);
   const [turno, setTurno] = useState("manha");
+  const [aberta, setAberta] = useState<"" | "janela" | "gaveta" | "folha">("");
+  const [aba, setAba] = useState("qr");
+  const [titulo, setTitulo] = useState("Culto de domingo");
+  const [salvando, setSalvando] = useState(false);
+  const original = "Culto de domingo";
 
   return (
     <main className="galeria">
@@ -123,11 +132,59 @@ export default function Galeria() {
         </Cartao>
       </div>
 
+
+      <Cartao className="galeria-bloco">
+        <h2>Estrutura e navegação</h2>
+        <Abas prefixo="checkin" comPaineis rotulo="Partes do check-in" ativa={aba} aoMudar={setAba} abas={[{ id: "qr", rotulo: "QR Code" }, { id: "sala", rotulo: "Quem está na sala", contador: 12 }, { id: "hist", rotulo: "Histórico" }]} />
+        <PainelAba id={aba} prefixo="checkin" className="galeria-nota">Conteúdo da aba {aba}.</PainelAba>
+        <div className="galeria-linha">
+          <Botao onClick={() => setAberta("janela")}>Abrir janela</Botao>
+          <Botao onClick={() => setAberta("gaveta")}>Abrir gaveta</Botao>
+          <Botao onClick={() => setAberta("folha")}>Abrir folha</Botao>
+          <MenuAcoes itens={[
+            { rotulo: "Duplicar culto", icone: "copiar", onClick: () => avisar("Culto duplicado.") },
+            { rotulo: "Compartilhar", icone: "compartilhar", onClick: () => avisar("Link copiado.", "info") },
+            { rotulo: "Excluir culto", icone: "lixeira", perigo: true, onClick: () => avisar("Excluiria o culto.", "warn") },
+          ]} />
+          <MenuAcoes soIcone rotulo="Ações da pessoa" alinhar="inicio" itens={[
+            { rotulo: "Abrir ficha", onClick: () => avisar("Abriria a ficha.", "info") },
+            { rotulo: "Remover do time", perigo: true, onClick: () => avisar("Removeria do time.", "warn") },
+          ]} />
+          <Botao variante="discreto" onClick={() => avisar("Pedido arquivado.", "ok", { acao: { rotulo: "Desfazer", fn: () => avisar("Pedido de volta.", "info") } })}>Aviso com Desfazer</Botao>
+        </div>
+        <Campo rotulo="Nome do culto" ajuda="Mude o texto para ver a barra de salvar subir.">
+          <Entrada value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+        </Campo>
+        <BarraSalvar visivel={titulo !== original} salvando={salvando} aoDescartar={() => setTitulo(original)}
+          aoSalvar={() => { setSalvando(true); window.setTimeout(() => { setSalvando(false); setTitulo(original); avisar("Culto salvo."); }, 900); }} />
+      </Cartao>
       <Cartao className="galeria-bloco">
         <h2>Carregando, outras formas</h2>
         <Carregando forma="indicadores" quantos={4} />
         <Carregando forma="cartoes" quantos={3} />
       </Cartao>
+
+      {aberta === "janela" && (
+        <Janela sobretitulo="Culto · domingo 10h" titulo="Novo aviso" texto="Uma janela é para algo curto. Mais de quatro campos, use a gaveta." aoFechar={() => setAberta("")}
+          rodape={<><Botao onClick={() => setAberta("")}>Cancelar</Botao><Botao variante="principal" onClick={() => { setAberta(""); avisar("Aviso criado."); }}>Criar aviso</Botao></>}>
+          <Campo rotulo="Título"><Entrada placeholder="Ex.: Ensaio adiado" /></Campo>
+        </Janela>
+      )}
+      {aberta === "gaveta" && (
+        <Gaveta aoFechar={() => setAberta("")} rotulo="Maria Souza">
+          <div className="drawer-head">
+            <div className="profile-name">Maria Souza</div>
+            <div className="profile-role">Louvor · Líder de GC</div>
+          </div>
+          <div className="galeria-bloco"><p className="galeria-nota">Abre da direita sem tirar a pessoa da lista. No toque, arraste pela borda esquerda para fechar.</p></div>
+        </Gaveta>
+      )}
+      {aberta === "folha" && (
+        <Folha aoFechar={() => setAberta("")} rotulo="Tamanho do texto">
+          <h2 className="galeria-folha-t">Folha do app</h2>
+          <p className="galeria-nota">Sobe de baixo; arraste a alça para fechar.</p>
+        </Folha>
+      )}
     </main>
   );
 }

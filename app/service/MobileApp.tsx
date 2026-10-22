@@ -33,6 +33,7 @@ import { TERMO_MAPA_VERSAO } from "./lib/termo-mapa";
 import type { JourneyActions, JourneyStep, M, MemberModule, MemberTab, MemberUi, Ministry, MobileOverlayProps, ModuleCtx, P } from "./membro/tipos";
 import { Botao } from "./ui/Botao";
 import { Acao } from "./ui/Acao";
+import { avisar } from "./lib/avisar";
 import { Opcao } from "./ui/Opcao";
 import { Lista, linhaClasse } from "./ui/Linha";
 import { entrarComDirecao } from "./ui/movimento";
@@ -98,7 +99,6 @@ function MobileMembro({
   const [chatTarget, setChatTarget] = useState<{ id: string | null; novo: boolean; n: number }>({ id: null, novo: false, n: 0 });
   const [chatAberto, setChatAberto] = useState<string | null>(null);
   const [sheetEl, setSheetEl] = useState<React.ReactNode | null>(null);
-  const [toastO, setToastO] = useState<{ msg: string; action?: { label: string; fn: () => void }; id: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   /* troca de aba com direção (prancha 1): a tela nova desliza do lado de onde vem */
   const tabAnterior = useRef(tab);
@@ -206,12 +206,9 @@ function MobileMembro({
   };
   const badges: Partial<Record<MemberTab, number>> = { agenda: serves ? pendEscala : 0, mensagens: (muralOn ? unreadIds.size : 0) + naoLidas.size };
 
-  const toast = (msg: string, action?: { label: string; fn: () => void }) => setToastO({ msg, action, id: Date.now() });
-  useEffect(() => {
-    if (!toastO) return;
-    const h = setTimeout(() => setToastO(null), toastO.action ? UNDO_MS : 3600);
-    return () => clearTimeout(h);
-  }, [toastO]);
+  /* o aviso do app é o mesmo do painel (avisar), com Desfazer quando há ação */
+  const toast = (msg: string, action?: { label: string; fn: () => void }) =>
+    avisar(msg, "ok", action ? { acao: { rotulo: action.label, fn: action.fn }, duracao: UNDO_MS, chave: "membro" } : { duracao: 3600, chave: "membro" });
   useEffect(() => { if (!cardTarget && !announcementTarget) scrollRef.current?.scrollTo({ top: 0 }); }, [tab, sub, cardTarget, announcementTarget]);
 
   /* v7 4.10: o atalho na tela de início é pedido no segundo acesso (contador no aparelho) */
@@ -549,12 +546,6 @@ function MobileMembro({
           })}
         </nav>
 
-        {toastO && (
-          <div className="m6-toast" key={toastO.id} role="status">
-            <span>{toastO.msg}</span>
-            {toastO.action && <Acao onClick={() => { toastO.action!.fn(); setToastO(null); }}>{toastO.action.label}</Acao>}
-          </div>
-        )}
         {sheetEl && <M6Sheet onClose={() => setSheetEl(null)}>{sheetEl}</M6Sheet>}
         {tsAberto && <TextSizeSheet onClose={fecharTamanhoTexto} />}
       </div>

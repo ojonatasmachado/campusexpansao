@@ -25,12 +25,13 @@ import { Segmentado } from "../../ui/Segmentado";
 import { Campo, Entrada } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
 import { Vazio } from "../../ui/Estados";
+import { Janela } from "../../ui/Janela";
+import { MenuAcoes } from "../../ui/Menu";
 /* Escalas : módulo em modules/escalas/ (4.1) */
 
 export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChildren, rooms, setDrawer, setModal, setCheckinEventId, setShareEventId }: { events: EventView[]; ministries: MinistryView[]; church?: ChurchView; kidsClasses: KidsClassView[]; kidsSessions: KidsSessionView[]; kidsChildren: ChildView[]; rooms: RoomView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; setCheckinEventId: (id: string) => void; setShareEventId: (id: string) => void }) {
   const { todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
-  const [kidsPickerEventId, setKidsPickerEventId] = useState<string | null>(null);
   const [kidsModal, setKidsModal] = useState<{ eventId: string; classId: string } | null>(null);
   /* visão de semana (lista da semana escolhida) ou de mês (calendário) */
   const [vista, setVista] = useState<"semana" | "mes">("semana");
@@ -86,21 +87,9 @@ export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, 
                 <Icon name="relatorios" size={13} /> Arte
               </Botao>
               {kidsClasses.length > 0 && (
-                <div style={{ position: "relative" }}>
-                  <Botao compacto onClick={(e) => { e.stopPropagation(); setKidsPickerEventId(kidsPickerEventId === event.id ? null : event.id); }}>
-                    <Icon name="kids" size={13} /> Kids
-                  </Botao>
-                  {kidsPickerEventId === event.id && (
-                    <div className="cong-menu" style={{ right: 0, left: "auto" }} onClick={(e) => e.stopPropagation()}>
-                      <div className="cong-group">Abrir turma</div>
-                      {kidsClasses.map((kc) => (
-                        <Acao key={kc.id} className="cong-opt" onClick={() => { setKidsModal({ eventId: event.id, classId: kc.id }); setKidsPickerEventId(null); }}>
-                          <span className="cong-opt-mark"><Icon name="kids" size={14} /></span>
-                          <span className="cong-opt-info"><span className="cong-opt-name">{kc.name}</span></span>
-                        </Acao>
-                      ))}
-                    </div>
-                  )}
+                <div onClick={(e) => e.stopPropagation()}>
+                  <MenuAcoes compacto rotulo="Abrir turma Kids" gatilho={<><Icon name="kids" size={13} /> Kids</>}
+                    itens={kidsClasses.map((kc) => ({ rotulo: kc.name, icone: "kids", onClick: () => setKidsModal({ eventId: event.id, classId: kc.id }) }))} />
                 </div>
               )}
             </div>
@@ -299,32 +288,23 @@ export function ReservaModal({ rooms, reservations, church, salaInicial, dataIni
   };
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Reservar espaço</div>
-          <div className="modal-title">Novo compromisso na sala</div>
-          <div className="modal-sub">Não deixamos duas reservas se cruzarem no mesmo espaço e horário.</div>
-        </div>
-        <div className="modal-body">
-          <Campo rotulo="Título"><Entrada placeholder="ex: Reunião de líderes" value={titulo} onChange={(e) => setTitulo(e.target.value)} /></Campo>
-          <Campo rotulo="Sala" className="field-half">
-            <Selecao valor={salaId} aoMudar={setSalaId} vazio="Selecione uma sala" opcoes={roomsForTipo.map((room) => ({ v: room.id, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` }))} />
-          </Campo>
-          <Campo rotulo="Tipo" className="field-half">
-            <Selecao valor={tipo} aoMudar={(nextTipo) => { setTipo(nextTipo); const allowed = nextTipo === "reuniao" ? rooms.filter((room) => room.allows_meetings !== false) : rooms; if (!allowed.some((room) => room.id === salaId)) setSalaId(""); }} opcoes={RESERVA_TIPOS.map((t) => ({ v: t.v, l: t.l }))} />
-          </Campo>
-          <div className="field field-half"><label className="field-label">Dia</label><DatePicker value={data} onChange={setData} /></div>
-          <div className="field field-half"><label className="field-label">Início</label><TimePicker value={inicio} onChange={setInicio} /></div>
-          <div className="field field-half"><label className="field-label">Fim</label><TimePicker value={fim} onChange={setFim} /></div>
-          {conflito ? <div className="reserva-warn" style={{ gridColumn: "1 / -1" }}><Icon name="alerta" size={14} /> Já existe &quot;{conflito.title}&quot; aqui em {conflito.start_time} a {conflito.end_time}.</div> : null}
-          {error ? <div style={{ gridColumn: "1 / -1", fontSize: "var(--fs-pn-13)", color: "var(--danger)" }}>{error}</div> : null}
-        </div>
-        <div className="modal-foot">
-          <Botao onClick={onClose}>Cancelar</Botao>
-          <Botao variante="principal" desativado={saving || !!conflito || !salaId} onClick={salvar}>Reservar</Botao>
-        </div>
-      </div>
-    </div>
+    <Janela larga sobretitulo="Reservar espaço" titulo="Novo compromisso na sala" texto="Não deixamos duas reservas se cruzarem no mesmo espaço e horário." aoFechar={onClose} ocupada={saving}
+      rodape={<>
+        <Botao onClick={onClose}>Cancelar</Botao>
+        <Botao variante="principal" desativado={saving || !!conflito || !salaId} onClick={salvar}>Reservar</Botao>
+      </>}>
+      <Campo rotulo="Título"><Entrada placeholder="ex: Reunião de líderes" value={titulo} onChange={(e) => setTitulo(e.target.value)} /></Campo>
+      <Campo rotulo="Sala" className="field-half">
+        <Selecao valor={salaId} aoMudar={setSalaId} vazio="Selecione uma sala" opcoes={roomsForTipo.map((room) => ({ v: room.id, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` }))} />
+      </Campo>
+      <Campo rotulo="Tipo" className="field-half">
+        <Selecao valor={tipo} aoMudar={(nextTipo) => { setTipo(nextTipo); const allowed = nextTipo === "reuniao" ? rooms.filter((room) => room.allows_meetings !== false) : rooms; if (!allowed.some((room) => room.id === salaId)) setSalaId(""); }} opcoes={RESERVA_TIPOS.map((t) => ({ v: t.v, l: t.l }))} />
+      </Campo>
+      <div className="field field-half"><label className="field-label">Dia</label><DatePicker value={data} onChange={setData} /></div>
+      <div className="field field-half"><label className="field-label">Início</label><TimePicker value={inicio} onChange={setInicio} /></div>
+      <div className="field field-half"><label className="field-label">Fim</label><TimePicker value={fim} onChange={setFim} /></div>
+      {conflito ? <div className="reserva-warn" style={{ gridColumn: "1 / -1" }}><Icon name="alerta" size={14} /> Já existe &quot;{conflito.title}&quot; aqui em {conflito.start_time} a {conflito.end_time}.</div> : null}
+      {error ? <div style={{ gridColumn: "1 / -1", fontSize: "var(--fs-pn-13)", color: "var(--danger)" }}>{error}</div> : null}
+    </Janela>
   );
 }

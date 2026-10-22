@@ -20,10 +20,9 @@ import { RegistroForm, type CriancaKids } from "./RegistroForm";
 
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
-import { Opcao } from "../../ui/Opcao";
+import { Abas } from "../../ui/Abas";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Selo } from "../../ui/Selo";
-import { Segmentado } from "../../ui/Segmentado";
 import { Selecao } from "../../ui/Selecao";
 const PAGINA = 200;
 
@@ -118,13 +117,8 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
         action={acao}
       />
       <div className="toolbar">
-        <Segmentado className="seg-wrap" role="tablist" aria-label="Livro">
-          {LIVROS.map((l) => (
-            <Opcao key={l.id} role="tab" aria-selected={livro === l.id} marcada={livro === l.id} onClick={() => trocarLivro(l.id)}>
-              {l.rotulo} {regs ? <span className="seg-n">{contagem(l.id)}</span> : null}
-            </Opcao>
-          ))}
-        </Segmentado>
+        <Abas rotulo="Livro" ativa={livro} aoMudar={(v) => trocarLivro(v as typeof livro)}
+          abas={LIVROS.map((l) => ({ id: l.id, rotulo: l.rotulo, contador: regs ? contagem(l.id) : undefined }))} />
       </div>
       <div className="toolbar sec-filtros">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input aria-label="Buscar no livro" placeholder="Buscar nome, nº ou oficiante" value={q} onChange={(e) => { setQ(e.target.value); setMostrar(PAGINA); }} /></div>

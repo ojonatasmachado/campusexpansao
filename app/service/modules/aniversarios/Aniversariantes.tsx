@@ -19,6 +19,7 @@ import {
 } from "./aniversarios";
 
 import { Botao, botaoClasse } from "../../ui/Botao";
+import { Janela } from "../../ui/Janela";
 import { Acao } from "../../ui/Acao";
 import { Cartao } from "../../ui/Cartao";
 import { Linha } from "../../ui/Linha";
@@ -42,27 +43,19 @@ function Parabens({ p, onFechar }: { p: Proximo; onFechar: () => void }) {
   const [texto, setTexto] = useState(() => mensagemPara(MENSAGEM_PADRAO, p.nome));
   const link = linkWhatsapp(p.telefone, texto.trim());
   return (
-    <div className="modal-bg" onClick={onFechar}>
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="aniv-parabens-t" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-title" id="aniv-parabens-t">{`Parabéns para ${primeiroNome(p.nome)}`}</div>
-          <div className="modal-sub">O WhatsApp abre com a mensagem pronta. Mude o que quiser antes de enviar.</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
+    <Janela titulo={`Parabéns para ${primeiroNome(p.nome)}`} texto="O WhatsApp abre com a mensagem pronta. Mude o que quiser antes de enviar." aoFechar={onFechar} corpoBloco
+      rodape={<>
+        <Botao variante="discreto" onClick={onFechar}>Cancelar</Botao>
+        {link && texto.trim() ? (
+          <a className={botaoClasse({ variante: "principal" })} href={link} target="_blank" rel="noreferrer" onClick={onFechar}><Icon name="whatsapp" size={14} /> Abrir no WhatsApp</a>
+        ) : (
+          <Botao variante="principal" desativado>Abrir no WhatsApp</Botao>
+        )}
+      </>}>
           <Campo rotulo="Mensagem" id="aniv-parabens-msg">
             <TextoLongo rows={4} maxLength={600} value={texto} onChange={(e) => setTexto(e.target.value)} />
           </Campo>
-        </div>
-        <div className="modal-foot">
-          <Botao variante="discreto" onClick={onFechar}>Cancelar</Botao>
-          {link && texto.trim() ? (
-            <a className={botaoClasse({ variante: "principal" })} href={link} target="_blank" rel="noreferrer" onClick={onFechar}><Icon name="whatsapp" size={14} /> Abrir no WhatsApp</a>
-          ) : (
-            <Botao variante="principal" desativado>Abrir no WhatsApp</Botao>
-          )}
-        </div>
-      </div>
-    </div>
+    </Janela>
   );
 }
 

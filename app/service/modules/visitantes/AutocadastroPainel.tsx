@@ -10,6 +10,7 @@ import { useChurchSettingsField } from "../../lib/settings-field";
 import { caminhoAutocadastro, type AutocadastroCfg } from "./autocadastro";
 
 import { Botao, botaoClasse } from "../../ui/Botao";
+import { Janela } from "../../ui/Janela";
 import { Interruptor } from "../../ui/Interruptor";
 import { Linha } from "../../ui/Linha";
 import { Campo } from "../../ui/Campo";
@@ -63,14 +64,8 @@ export default function AutocadastroPainel({
   };
 
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide" role="dialog" aria-modal="true" aria-labelledby="vis-qr-t" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-eyebrow">Visitantes</div>
-          <div className="modal-title" id="vis-qr-t">QR e link do visitante</div>
-          <div className="modal-sub">Quem visita preenche o próprio contato no celular e entra no funil como Novo, com a origem QR/link.</div>
-        </div>
-        <div className="modal-body" style={{ display: "block" }}>
+    <Janela larga sobretitulo="Visitantes" titulo="QR e link do visitante" texto="Quem visita preenche o próprio contato no celular e entra no funil como Novo, com a origem QR/link." aoFechar={onClose} corpoBloco
+      rodape={<Botao variante="principal" onClick={onClose}>Pronto</Botao>}>
           <Linha estilo="config">
             <div className="cfg-row-main">
               <div className="cfg-row-t">Receber cadastros pelo link</div>
@@ -113,11 +108,6 @@ export default function AutocadastroPainel({
           ) : (
             <Vazio titulo="A igreja ainda não tem endereço. Defina em Comunicação › Página da igreja e o link aparece aqui." />
           )}
-        </div>
-        <div className="modal-foot">
-          <Botao variante="principal" onClick={onClose}>Pronto</Botao>
-        </div>
-      </div>
-    </div>
+    </Janela>
   );
 }

@@ -299,3 +299,130 @@
 .marcar.mp-visao:has(input:checked) { background: var(--graphite-2); border-color: var(--olive); box-shadow: inset 0 0 0 0.5px var(--olive); }
 .marcar.mp-visao:has(input:disabled) { opacity: .55; }
 .galeria-coluna { display: flex; flex-direction: column; gap: 8px; max-width: 420px; }
+
+/* ════ Prancha 5: superfícies, menus, abas, barra de salvar e aviso ════
+   Entradas com a mola (curva de gaveta); saídas mais curtas e com ease-out, pela
+   mesma borda (DialogosAcessiveis faz a cópia que sai, classe .svc-saindo). */
+
+/* ── Janela: cresce de 96% a 100% com fade; no celular vira folha inferior ── */
+@keyframes janela-entra { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes veu-entra { from { opacity: 0; } to { opacity: 1; } }
+.modal-bg { animation: veu-entra .3s var(--ease-out); }
+.modal { border: 0; border-radius: 22px; box-shadow: 0 30px 80px -24px rgba(0, 0, 0, .55), 0 0 0 1px var(--border-2); animation: janela-entra .3s var(--ease-drawer); }
+.modal-head { position: relative; }
+.modal-head:has(.janela-x) { padding-right: 64px; }
+.janela-x { position: absolute; top: 18px; right: 18px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: color-mix(in srgb, var(--white) 7%, transparent); color: var(--muted); display: grid; place-items: center; font-size: 14px; }
+@media (hover:hover) and (pointer:fine) { .janela-x:hover { color: var(--white); background: color-mix(in srgb, var(--white) 12%, transparent); } }
+.janela-alca { display: none; }
+@media (max-width: 860px) {
+  /* só a Janela (que tem alça) vira folha; janelas próprias continuam como eram */
+  .modal-bg:has(> .modal > .janela-alca) { align-items: flex-end; padding: var(--safe-top) 0 0; }
+  .modal:has(> .janela-alca) { width: 100%; max-height: 92dvh; border-radius: 24px 24px 0 0; animation: sheetUp .45s var(--ease-drawer); }
+  .modal:has(> .janela-alca) .modal-foot { padding-bottom: calc(16px + var(--safe-bottom)); }
+  .modal-bg.svc-saindo .modal:has(> .janela-alca) { animation: svcSaiBaixo .22s var(--ease-out) forwards; }
+  .janela-alca { display: flex; justify-content: center; align-items: flex-start; min-height: 22px; padding-top: 8px; touch-action: none; cursor: grab; flex-shrink: 0; }
+  .janela-alca span { width: 40px; height: 5px; border-radius: 3px; background: var(--border-3); }
+  .modal-head:has(.janela-x) { padding-top: 6px; }
+  .janela-x { top: 4px; }
+}
+
+/* ── Gaveta: 440 px (larga 560), entra em 0,45 s com o véu; tela cheia no celular ── */
+@keyframes gaveta-entra { from { transform: translateX(100%); } to { transform: none; } }
+.drawer-bg { animation: veu-entra .45s var(--ease-out); }
+.drawer { width: 520px; border-left: 0; box-shadow: -24px 0 60px -20px rgba(0, 0, 0, .45); animation: gaveta-entra .45s var(--ease-drawer); }
+.drawer.drawer-wide { width: 680px; }
+.gaveta-borda { display: none; }
+@media (max-width: 860px) {
+  .drawer, .drawer.drawer-wide { width: 100vw; max-width: 100vw; box-shadow: none; }
+}
+/* faixa de arrastar: só com a gaveta em tela cheia (celular), presa à borda */
+@media (max-width: 860px) and (pointer: coarse) {
+  .gaveta-borda { display: block; position: fixed; left: 0; top: 0; bottom: 0; width: 20px; z-index: 5; touch-action: none; }
+}
+
+/* ── Folha do membro: sobe com a mesma mola ── */
+.m6-sheet { animation: sheetUp .45s var(--ease-drawer); }
+.m6-scrim { animation: veu-entra .45s var(--ease-out); }
+
+/* ── Menu de ações (MenuAcoes): cresce do botão, a que apaga fica no fim, em rosa ── */
+@keyframes menu-entra { from { opacity: 0; transform: scale(.94) translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes menu-sai { to { opacity: 0; transform: scale(.96) translateY(-4px); } }
+.menu-mais-pop {
+  border: 0; border-radius: 18px; padding: 6px; min-width: 220px;
+  background: var(--graphite); box-shadow: 0 18px 44px -12px rgba(0, 0, 0, .45), 0 0 0 1px var(--border-2);
+  animation: menu-entra .32s var(--ease-drawer);
+}
+.menu-mais-pop.menu-fim { right: 0; left: auto; transform-origin: top right; }
+.menu-mais-pop.menu-inicio { left: 0; right: auto; transform-origin: top left; }
+.menu-mais-pop.saindo { animation: menu-sai .14s var(--ease-out) forwards; pointer-events: none; }
+.menu-mais-pop .menu-item { border-radius: 12px; min-height: 40px; color: var(--white); font-weight: 600; gap: 12px; }
+.menu-mais-pop .menu-item:focus-visible { outline: none; background: color-mix(in srgb, var(--white) 8%, transparent); }
+.menu-mais-pop .menu-item.perigo, .menu-mais-pop .menu-item.perigo .menu-ic { color: var(--danger); }
+.menu-ic { display: flex; color: var(--muted); }
+.menu-sep { height: 1px; margin: 6px 8px; background: var(--border); }
+.menu-seta { display: inline-flex; }
+.menu-pontos { width: 36px; height: 36px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); display: grid; place-items: center; }
+@media (hover:hover) and (pointer:fine) { .menu-pontos:hover, .menu-pontos[aria-expanded="true"] { color: var(--white); background: color-mix(in srgb, var(--white) 8%, transparent); } }
+
+/* ── Abas: linha fina embaixo, sublinhado da igreja desliza até a ativa ── */
+.abas { position: relative; display: flex; gap: 4px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+.abas::-webkit-scrollbar { display: none; }
+.aba {
+  position: relative; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
+  min-height: 40px; padding: 0 12px; border: 0; background: transparent; color: var(--muted);
+  font-size: var(--fs-pn-14); font-weight: 600; white-space: nowrap; transition: color .2s ease;
+}
+.aba.on { color: var(--white); }
+@media (hover:hover) and (pointer:fine) { .aba:hover:not(.on) { color: var(--light); } }
+.aba:focus-visible { outline: 2px solid var(--olive); outline-offset: -2px; border-radius: 10px; }
+.aba-contador { min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--r-pill); display: inline-grid; place-items: center; font-size: var(--fs-pn-12); font-weight: 700; background: color-mix(in srgb, var(--white) 8%, transparent); color: var(--light); }
+.aba.on .aba-contador { background: color-mix(in srgb, var(--olive) 14%, transparent); color: var(--olive); }
+.abas-indicador {
+  position: absolute; left: 0; bottom: 0; height: 2.5px; width: 0; opacity: 0; border-radius: 2px 2px 0 0;
+  background: var(--accent-fill); pointer-events: none;
+  transition: transform .5s var(--ease-drawer), width .5s var(--ease-drawer), opacity .2s ease;
+}
+@media (pointer: coarse) { .aba { min-height: 44px; } }
+
+/* ── Barra "salvar só quando muda": sobe de baixo quando há alteração ── */
+.barra-salvar {
+  position: fixed; left: 0; right: 0; margin: 0 auto; bottom: calc(16px + var(--safe-bottom)); z-index: 65;
+  width: min(640px, calc(100% - 32px)); box-sizing: border-box;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 10px 10px 10px 18px; border-radius: 18px; border: 0;
+  background: var(--graphite); color: var(--white); font-size: var(--fs-pn-14); font-weight: 600;
+  box-shadow: 0 18px 44px -12px rgba(0, 0, 0, .5), 0 0 0 1px var(--border-2);
+  opacity: 0; transform: translateY(140%); pointer-events: none;
+  transition: transform .5s var(--ease-drawer), opacity .3s ease;
+}
+.barra-salvar.on { opacity: 1; transform: none; pointer-events: auto; }
+.barra-salvar-acoes { display: flex; gap: 8px; margin-left: auto; }
+
+/* ── Aviso (avisar): superfície invertida, sobe com a mola; no app, acima das abas ── */
+.toast-host { bottom: calc(24px + var(--safe-bottom)); width: min(440px, calc(100% - 32px)); }
+body:has(.m-tab) .toast-host { bottom: calc(84px + var(--safe-bottom)); }
+.toast {
+  width: 100%; box-sizing: border-box; gap: 10px; border: 0; border-radius: 16px; padding: 12px 10px 12px 14px;
+  background: var(--white); color: var(--ink); box-shadow: 0 14px 30px rgba(0, 0, 0, .3);
+  opacity: 0; transform: translateY(24px); pointer-events: auto;
+  transition: transform .5s var(--ease-drawer), opacity .3s ease;
+}
+.toast.in { opacity: 1; transform: none; transition: transform .5s var(--ease-drawer), opacity .3s ease; }
+.toast.out { opacity: 0; transform: translateY(16px); transition: transform .25s var(--ease-out), opacity .2s ease; }
+.toast-msg { flex: 1; color: var(--ink); font-size: var(--fs-pn-14); font-weight: 700; }
+.toast-acao { flex-shrink: 0; min-height: 36px; padding: 0 10px; border: 0; border-radius: 10px; background: transparent; color: var(--ink); font: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.toast-acao:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+body:has(.m-tab) .toast-msg, body:has(.m-tab) .toast-acao { font-size: 15px; }
+body:has(.m-tab) .toast-acao { min-height: 44px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-bg, .modal, .drawer, .drawer-bg, .m6-sheet, .m6-scrim, .menu-mais-pop { animation: none; }
+  .abas-indicador, .barra-salvar, .toast, .toast.in, .toast.out { transition: none; }
+}
+.galeria-folha-t { margin: 0 0 6px; font-size: 20px; font-weight: 800; }
+/* com a barra de salvar à vista, o aviso sobe acima dela */
+body:has(.barra-salvar.on) .toast-host { bottom: calc(96px + var(--safe-bottom)); transition: bottom .5s var(--ease-drawer); }
+body:has(.m-tab):has(.barra-salvar.on) .toast-host { bottom: calc(156px + var(--safe-bottom)); }
+.modal-bg.janela-acima { z-index: 80; }
+/* no painel com barra lateral, a barra de salvar centraliza na área de conteúdo */
+@media (min-width: 1041px) { .app .barra-salvar { left: 256px; width: min(640px, calc(100% - 256px - 32px)); } }

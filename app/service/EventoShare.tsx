@@ -114,7 +114,7 @@ export default function EventoShare({ event, ministries, churchName = "Service",
   };
 
   return (
-    <div className="modal-bg" onClick={onClose}>
+    <div /* lei17-ok: palco de prévia da arte, sem cabeçalho nem rodapé */ className="modal-bg" onClick={onClose}>
       <div className="evt2-wrap" onClick={(e) => e.stopPropagation()}>
 
         {/* ── pré-visualização da arte ── */}
