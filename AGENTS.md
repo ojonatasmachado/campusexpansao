@@ -345,7 +345,7 @@ fluxo visual ou experiência nova**, consulte também o Brand Book completo:
 
 ---
 
-## 13. Service: módulos (lei permanente, v7)
+## 13. Service: módulos (lei permanente, v7, revisada em 22/10/2026)
 
 > Manifesto completo: `docs/service-v7/MANIFESTO.md`. Leis e checklist também em
 > `app/service/modules/README.md`; exemplo em `app/service/modules/_modelo/`.
@@ -362,7 +362,9 @@ cartão ou notificação criados fora do registro não entram.
    `painel.inicio.saude`, `painel.inicio.pendencias`, `painel.config`, `busca`.
 2. **Uma pergunta por lugar.** Início: o que pede minha atenção agora? Agenda: quando e onde?
    Mensagens: quem falou comigo? Caminhada: como estou crescendo? Perfil: quem sou e como
-   prefiro? Função nova entra onde responde à mesma pergunta.
+   prefiro? Função nova entra onde responde à mesma pergunta. **(rev. 22/10)** Painel também:
+   Início do painel, o que eu preciso resolver hoje? Relatórios, como estamos? Tela de módulo, o
+   que eu faço aqui? Número que não leva a uma ação mora em Relatórios.
 3. **Registro único.** `app/service/modules/registry.ts` lê os manifestos e filtra por igreja
    (módulo ligado), papel, permissão e dependências. `NAV_GROUPS`, `CFG_TABS` e
    `MEMBER_MODULES` são gerados por ele.
@@ -393,7 +395,22 @@ cartão ou notificação criados fora do registro não entram.
     aviso emite `notification_sent` e `notification_opened`.
 12. **Qualidade verificada por máquina.** A captura (`tools/captura-service/`) falha com texto
     abaixo do mínimo, alvo abaixo de 24px, contraste pior que a versão anterior, rolagem
-    lateral, erro de console ou botão sem ação.
+    lateral, erro de console ou botão sem ação. **(rev. 22/10)** E com densidade acima da lei 13,
+    pior que a versão anterior ou ação sobreposta (medidor: `scripts/medir-densidade.js`).
+13. **Densidade medida. (rev. 22/10)** Primeira dobra, sem rolar. Painel (1366×860): até 25
+    ações e 100 palavras. App (390×844): até 12 ações e 80 palavras. Nos dois: um botão cheio na
+    cor da igreja, no máximo 2 níveis de moldura (linha de lista sem borda própria), nenhuma
+    ação sobreposta. Passar do limite exige justificativa no manifesto do módulo.
+14. **Uma informação, um lugar. (rev. 22/10)** Cada dado tem uma tela dona; fora dela, no
+    máximo uma linha-resumo que leva à dona. Proibido: contador repetido na mesma tela, lista
+    que repete outra lista, legenda que repete a cor, ajuda "?" por cartão (é uma por seção).
+15. **Montar e acompanhar são telas diferentes. (rev. 22/10)** Quem executa vê o que é seu (o
+    líder entra no seu time). Quem acompanha vê resumo: uma linha por unidade, problemas
+    primeiro, detalhe só ao tocar. No topo, no máximo duas ações visíveis (uma principal); o
+    resto em "Mais". Configuração do módulo fica em Configurações.
+16. **Mercado antes do desenho. (rev. 22/10)** Tela ou fluxo novo começa vendo como 2 ou 3
+    ferramentas resolvem a mesma tarefa (função, nunca marca ou visual) e termina com crítica de
+    design, teste de pior caso e medição antes e depois. Material de concorrente fica fora do git.
 
 ---
 

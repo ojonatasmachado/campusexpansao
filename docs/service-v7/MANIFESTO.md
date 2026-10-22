@@ -2,6 +2,8 @@
 
 Data: 06/10/2026. Base: estudo `prints/service-2026-10-05` (commit 539a83d). Referência visual para pessoas: `Service - Analise e Evolucao v2.html`, no projeto de design CE.X (fora do repositório). Este manifesto basta para executar.
 
+**Revisão de 22/10/2026 (leveza).** Base: `docs/service-v7/LEVEZA-2026-10-21.md` (pesquisa de 11 ferramentas de igreja e medição de densidade com 300 pessoas). As 12 leis cuidavam do app do membro, que ficou leve; o painel não tinha regra de densidade e virou cockpit. Mudou: leis 2 e 12 ampliadas, leis 13 a 16 novas, checklist, decisões 9 e 12, itens 4.11 e 4.16, e a seção 2b. Cada trecho alterado leva a marca **(rev. 22/10)**.
+
 ## 0. Como usar
 
 - Leia `AGENTS.md` antes de tudo. Este manifesto não revoga nada de lá; acrescenta a seção do Service.
@@ -20,10 +22,10 @@ Grave esta lei antes de mexer em tela:
 
 Daqui em diante, toda função nova do Service nasce como módulo. Tela, item de menu, aba de configuração, cartão ou notificação criados fora do registro não entram.
 
-### As 12 leis
+### As 16 leis
 
 1. **Casca estável.** App do membro: 4 abas (Início, Agenda, Mensagens, Caminhada) e avatar no topo, que abre o Perfil. Painel: menu, barra e busca. A casca não muda quando entra função nova; só oferece lugares: `inicio.fila`, `inicio.igreja`, `agenda.minha`, `agenda.igreja`, `mensagens.itens`, `caminhada.secoes`, `perfil.linhas`, `painel.menu`, `painel.inicio.saude`, `painel.inicio.pendencias`, `painel.config`, `busca`.
-2. **Uma pergunta por lugar.** Início: o que pede minha atenção agora? Agenda: quando e onde? Mensagens: quem falou comigo? Caminhada: como estou crescendo? Perfil: quem sou e como prefiro? Função nova entra onde responde à mesma pergunta.
+2. **Uma pergunta por lugar.** Início: o que pede minha atenção agora? Agenda: quando e onde? Mensagens: quem falou comigo? Caminhada: como estou crescendo? Perfil: quem sou e como prefiro? Função nova entra onde responde à mesma pergunta. **(rev. 22/10)** O painel também responde a perguntas. Início do painel: o que eu preciso resolver hoje? Relatórios: como estamos? Tela de um módulo: o que eu faço aqui? Número que não leva a uma ação mora em Relatórios, não no Início.
 3. **Registro único.** `app/service/modules/registry.ts` lê os manifestos e filtra por igreja (módulo ligado), papel, permissão e dependências. `NAV_GROUPS`, `CFG_TABS` e `MEMBER_MODULES` passam a ser gerados por ele.
 4. **Manifesto por módulo** (`defineModule`): `id`, `liga` (padrão por igreja), `depende` (sem a dependência, o módulo some), `permissoes`, `membro` (`visivel` e lugares), `painel` (`menu`, `inicio`, `config`), `avisos` (tipo, público, cartão, quando), `rotas` (QR e link público), `vocabulario` (termos renomeáveis que usa), `historico` (fatos que grava na história da pessoa).
 5. **Contrato do cartão.** Seis tipos: `acao`, `passo`, `evento`, `aviso`, `pedido`, `destaque`. Campos: `id`, `modulo`, `tipo`, `prioridade` (0 a 100), `prazo`, `contexto`, `titulo`, `linhas`, `principal`, `secundaria` (no máximo duas ações), `resolvido` (título e Desfazer). A casca ordena por prioridade e prazo, mostra até 3 na primeira dobra e dá botão cheio só ao primeiro. Resolvido segue o modelo da confirmação de escala: o cartão muda, oferece Desfazer e sai da fila. Fila vazia mostra "Tudo em dia".
@@ -33,7 +35,11 @@ Daqui em diante, toda função nova do Service nasce como módulo. Tela, item de
 9. **Notificação = ação.** Cada aviso corresponde a um cartão. Categorias que a pessoa desliga: Escala, Mural, Mensagens, Caminhada. Silêncio das 22h às 7h. Mural chega em resumo. Permissão de notificação pedida depois da primeira escala confirmada.
 10. **Histórico, sem gamificação.** Módulos gravam fatos numa linha do tempo da pessoa: serviu, faltou, trocou, concluiu aula ou curso, batizou, entrou em grupo. O membro vê o próprio, o líder vê o do seu time, gestão e pastores veem de todos. Proibido: ranking, medalha, sequência de dias, pontos ou percentual de engajamento sobre pessoas.
 11. **Medição padrão.** Todo cartão emite `card_shown`, `card_acted`, `card_dismissed`; todo aviso emite `notification_sent` e `notification_opened`. Métricas: semanas com participação, vagas cobertas 48h antes do culto, minutos para fechar a escala da semana, visitantes contatados em 48h.
-12. **Qualidade verificada por máquina.** A captura roda a cada versão e falha com texto abaixo do mínimo, alvo abaixo de 24px, contraste pior que a versão anterior, rolagem lateral, erro de console ou botão sem ação.
+12. **Qualidade verificada por máquina.** A captura roda a cada versão e falha com texto abaixo do mínimo, alvo abaixo de 24px, contraste pior que a versão anterior, rolagem lateral, erro de console ou botão sem ação. **(rev. 22/10)** Também falha com densidade acima da lei 13, densidade pior que a versão anterior ou ações sobrepostas. Medidor: `scripts/medir-densidade.js` (o alvo efetivo inclui a área ampliada por `::before`).
+13. **Densidade medida. (rev. 22/10)** Na primeira dobra de cada tela, sem rolar. Painel, em 1366×860: até 25 ações clicáveis, até 100 palavras. App, em 390×844: até 12 ações, até 80 palavras. Nos dois: um botão cheio na cor da igreja, no máximo 2 níveis de moldura (página, cartão e linha; linha de lista não leva borda própria) e nenhuma ação sobreposta. Passar do limite exige justificativa escrita no manifesto do módulo.
+14. **Uma informação, um lugar. (rev. 22/10)** Cada dado tem uma tela dona. Fora dela, aparece no máximo como uma linha-resumo que leva à dona. Não entram: o mesmo contador em dois blocos da mesma tela, listas que repetem outra lista, legenda que repete o que a cor já diz, ajuda "?" por cartão (é uma por seção).
+15. **Montar e acompanhar são telas diferentes. (rev. 22/10)** Quem executa vê recortado pelo que é seu: o líder entra no seu time. Quem acompanha vê resumo: uma linha por unidade (time, grupo, turma), problemas primeiro, o que está em ordem apagado, e o detalhe só abre ao tocar. No topo de cada tela, no máximo duas ações visíveis (uma principal); as demais ficam em "Mais". Configuração do módulo fica em Configurações, não na tela de trabalho.
+16. **Mercado antes do desenho. (rev. 22/10)** Tela ou fluxo novo começa vendo como 2 ou 3 ferramentas resolvem a mesma tarefa (função, nunca marca, cor ou visual) e termina com crítica de design, teste de pior caso (nome enorme, lista vazia, 300 itens) e medição antes e depois. Material de concorrente fica fora do git.
 
 ### Checklist: criar um módulo novo
 
@@ -44,6 +50,10 @@ Daqui em diante, toda função nova do Service nasce como módulo. Tela, item de
 - [ ] Textos usam `termo()` para os termos renomeáveis e os tokens de fonte.
 - [ ] Fatos que vão para o histórico estão declarados.
 - [ ] Captura das telas novas passa nos testes da lei 12.
+- [ ] **(rev. 22/10)** Olhei 2 ou 3 ferramentas resolvendo a mesma tarefa (lei 16) e anotei o que se aplica.
+- [ ] **(rev. 22/10)** Cada tela cabe na lei 13; anotei a medida antes e depois.
+- [ ] **(rev. 22/10)** Nenhum dado do módulo aparece repetido em outra tela além de uma linha-resumo (lei 14).
+- [ ] **(rev. 22/10)** Separei a tela de quem executa da tela de quem acompanha, e deixei no topo no máximo duas ações (lei 15).
 
 ## 2. Decisões fechadas em 06/10
 
@@ -55,14 +65,21 @@ Daqui em diante, toda função nova do Service nasce como módulo. Tela, item de
 6. **Vocabulário** conforme a lei 7, começando por Caminhada, Grupo, Culto e Voluntário. "Inscrições abertas" vira cartão só para quem ainda não fez aquela etapa.
 7. **Tarefas.** No Início enquanto abertas e na Agenda no dia do prazo. Sem aba nova.
 8. **Tamanho do texto com o componente do iPhone**, em sete posições, de 14 a 23px no corpo do texto (seção 7).
-9. **Painel por papel.** Gestão e pastores abrem na Saúde da igreja (padrão de 30 dias); líder de time abre no "Para resolver" do seu time.
+9. **Painel por papel.** ~~Gestão e pastores abrem na Saúde da igreja (padrão de 30 dias)~~; líder de time abre no "Para resolver" do seu time. **(rev. 22/10, pendente de aprovação)** Gestão e pastores também abrem no "Para resolver", da igreja inteira. A Saúde vira uma linha com até 3 números logo abaixo e o panorama completo fica em Relatórios (lei 2).
 10. **Configuração guiada em 3 fases**, com tempo estimado, da igreja e da criação de culto (item 4.12).
 11. **Do estudo:** 4 abas e avatar; Início como fila; escala de fonte da lei 8; nenhum beco sem saída; primeiro acesso em 2 passos; registro de módulos começando por Escalas.
-12. **Cobertura por time** em cada culto (item 4.16).
+12. **Cobertura por time** em cada culto (item 4.16). **(rev. 22/10)** Mora no Panorama do culto; nos outros lugares, só uma linha-resumo (lei 14).
 13. **Lista de cuidado** com quem está ausente (item 4.17).
 14. **Lembrete do aviso** só para quem não viu (item 4.18).
 15. **Saudação com o contexto do dia** (item 4.19).
 16. **Financeiro, patrimônio e site da igreja:** planejar para depois (seção 9).
+
+## 2b. Decisões de 22/10 (leveza)
+
+1. **Escalas por time.** A tela de montar abre num time por vez (o líder, direto no seu), com seletor de time no topo. É uma tabela função × culto: no computador, os cultos do mês em colunas com a coluna de funções fixa; no celular, um culto por vez. Cada linha é uma vaga, com o status pela cor; a vaga aberta é o próprio botão de escalar. Topo: "Publicar e avisar" (principal) e "Preencher automaticamente" (que contém modo, modelos e regras, hoje em "Como gerar"). Montar período, extra, delegar, QR e baixar ficam em "Mais". Saem da tela a linha de cobertura, a legenda em chips e "Pendências da semana". Referência de função: Voluts (ver `LEVEZA-2026-10-21.md`, seção B).
+2. **Panorama do culto.** Tela de acompanhar, só leitura, para quem cria o culto e o pastor: cronograma em ordem (`event_schedule_items`) e uma linha por time do culto (`events.ministries`), problemas primeiro. Um toque abre aquele time naquele culto na tela de montar. É a tela dona da cobertura por time (4.16).
+3. **Agenda do membro com uma ação cheia.** Com mais de uma escala pendente, "Confirmar todas (n)" no topo; nos cartões, Confirmar e Não posso em contorno. Cartão compacto para caber 4 escalas na primeira dobra.
+4. **Indisponibilidade por período.** Dia inteiro, manhã, tarde ou noite, e, quando a pessoa quiser, só para um time.
 
 ## 3. Etapa 2 · Consertos
 
@@ -107,7 +124,7 @@ Daqui em diante, toda função nova do Service nasce como módulo. Tela, item de
 - 4.8 **Histórico** (lei 10). "Minha história" no Perfil; linha do tempo na ficha da pessoa no painel; janela Escalar com "serviu há X · N vezes no mês".
 - 4.9 **Tamanho do texto** (seção 7).
 - 4.10 **Primeiro acesso em 2 passos:** confirmar nome e telefone; tamanho do texto com prévia. Termina na escala pendente ou no próximo culto. Foto, CEP e aniversário viram cartão "Complete seus dados". Atalho na tela de início pedido no segundo acesso.
-- 4.11 **Painel por papel** (decisão 9). Saúde da igreja: período 30 dias (padrão), 90 dias, 12 meses ou datas escolhidas, comparado ao período anterior. Base: membros registrados, servindo em times, em grupos. Período: visitantes, integrados, decisões, batismos, em cursos, concluíram. As etapas seguem a Caminhada configurada. Cada número abre a lista de pessoas. "Para resolver" logo abaixo.
+- 4.11 **Painel por papel** (decisão 9). Saúde da igreja: período 30 dias (padrão), 90 dias, 12 meses ou datas escolhidas, comparado ao período anterior. Base: membros registrados, servindo em times, em grupos. Período: visitantes, integrados, decisões, batismos, em cursos, concluíram. As etapas seguem a Caminhada configurada. Cada número abre a lista de pessoas. "Para resolver" logo abaixo. **(rev. 22/10, pendente de aprovação)** Ordem invertida para todos os papéis: "Para resolver" primeiro; da Saúde, só uma linha com até 3 números (base) no Início. O período, a comparação e os demais números passam para Relatórios.
 - 4.12 **Configuração guiada em 3 fases.** Assistente que dá para pular e retomar, com o tempo estimado de cada fase na tela (ponto de partida: 3, 5 e 5 minutos; ajustar depois de testar com 5 igrejas).
   - Fase 1 · Sua igreja: dados (o CEP preenche o endereço), logo e cor com prévia do app.
   - Fase 2 · Cultos e times: horários comuns em botões; times a partir de modelos (Louvor, Recepção, Kids, Mídia, com funções).
@@ -116,7 +133,7 @@ Daqui em diante, toda função nova do Service nasce como módulo. Tela, item de
 - 4.13 **Vocabulário** em Configurações › Personalização (lei 7).
 - 4.14 **Escalar vaga:** busca, filtro "Disponíveis", "Sugeridos pelo rodízio" com histórico, e quem já está escalado agrupado, com o motivo em texto legível.
 - 4.15 **Mensagens:** cada conversa com nome e foto (ou iniciais), última fala, tempo relativo e não lidas em negrito com contagem.
-- 4.16 **Cobertura por time.** Cada culto mostra quantas vagas cada time já preencheu: "Louvor 5/5 · Recepção 3/4 · Projeção 2/2". Aparece em Próximos cultos e em Para resolver no Início do painel, na lista de Escalas e no detalhe do culto. Time incompleto vem primeiro e abre direto as vagas abertas. Líder de time vê só o seu. Leitor de tela: "Recepção, 3 de 4 vagas preenchidas".
+- 4.16 **Cobertura por time.** Cada culto mostra quantas vagas cada time já preencheu: "Louvor 5/5 · Recepção 3/4 · Projeção 2/2". ~~Aparece em Próximos cultos e em Para resolver no Início do painel, na lista de Escalas e no detalhe do culto.~~ **(rev. 22/10)** Mora no Panorama do culto (2b.2). No "Para resolver", vira uma linha por culto com falta ("Culto de domingo: faltam 3 vagas no Louvor"); Próximos cultos e Escalas não repetem a lista de times (lei 14). Time incompleto vem primeiro e abre direto as vagas abertas. Líder de time vê só o seu. Leitor de tela: "Recepção, 3 de 4 vagas preenchidas".
 - 4.17 **Lista de cuidado.** Módulo novo, que depende de presença registrada (check-in do culto, do grupo ou da escala); sem isso, não aparece (lei 6). Quem passa 3 semanas ou mais sem presença (prazo ajustável em Configurações) entra na lista de quem cuida: líder do grupo, depois líder do time, depois pastoral. Cada nome vira cartão "Ana Souza · sem presença há 4 semanas", com "Registrar contato" (ligação, mensagem ou visita) e "Ausência justificada" (sai da lista por 30 dias). O contato vai para o histórico como fato. O membro nunca vê essa marcação. Na Saúde da igreja, o número "Ausentes há 3 semanas ou mais" abre a lista. O bloco atual "Crianças sumindo" passa a ser uma visão desta lista.
 - 4.18 **Lembrete do aviso.** Ao publicar no Mural, opção "Lembrar quem não viu" em 24h, 48h ou numa data. O lembrete vai só para quem não abriu, uma vez por aviso, respeitando o silêncio das 22h às 7h. O painel mostra "vista por 38 de 52 · lembrete amanhã às 9:00 para 14 pessoas". Usa o registro de leitura que já existe.
 - 4.19 **Saudação com o contexto do dia.** No app do membro, abaixo da saudação, uma linha com o mais relevante de hoje, nesta ordem: serve hoje ("Você serve hoje às 20:00 · chegar 19:00"), culto hoje, grupo hoje, aula hoje; sem nada, a data. No painel: "Semana de 5 a 11 de outubro" e o próximo culto com a cobertura ("Culto de quarta em 2 dias · faltam 6 vagas").
