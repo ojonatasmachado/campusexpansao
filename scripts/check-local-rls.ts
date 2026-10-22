@@ -1,24 +1,111 @@
 // Uso: npx tsx scripts/check-local-rls.ts
 //
 // Teste de aceitação das regras de leitura do Service (RLS), no Supabase
-// LOCAL populado por scripts/seed-local-service.ts. Entra com cada conta de
-// teste e confere quantas linhas ela enxerga em cada tabela sensível.
-// Recusa rodar fora de 127.0.0.1.
+// descartável criado automaticamente com as migrações atuais e fixtures canônicas.
+// Nunca usa a instância compartilhada em 54321. O finally remove o projeto e os volumes.
+// --provar-limpeza provoca uma falha depois do seed para verificar o descarte.
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { TEST_PASSWORD } from "./seed-local-service";
+import { spawnSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { randomUUID } from "node:crypto";
 
-/* filtro de consulta do supabase-js: o tipo real depende da tabela, aqui só
-   encadeamos .eq(), então um tipo solto basta */
+const TEST_PASSWORD = "TesteLocal123";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Filter = (q: any) => any;
+export type DisposableSupabase = { url: string; anonKey: string; serviceRoleKey: string; projectId: string; dir: string };
 
-const URL = "http://127.0.0.1:54321";
-const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
-const SERVICE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU";
-if (!URL.startsWith("http://127.0.0.1")) throw new Error("check-local-rls só roda no Supabase local");
+function executar(cmd: string, args: string[], cwd: string, input?: string) {
+  const r = spawnSync(cmd, args, { cwd, input, encoding: "utf8", timeout: 600_000, maxBuffer: 16 * 1024 * 1024 });
+  if (r.status !== 0) {
+    const detalhe = (r.stderr || r.error?.message || "sem detalhe").replace(/eyJ[\w.-]+/g, "[token omitido]").slice(-3000);
+    throw new Error(`${cmd} falhou (${r.status}): ${detalhe}`);
+  }
+  return r.stdout;
+}
 
-const admin = createClient(URL, SERVICE, { auth: { persistSession: false } });
+/** Não aceita URL externa nem a instância compartilhada. Cria e remove seu próprio projeto. */
+export async function withDisposableSupabase<T>(run: (sandbox: DisposableSupabase) => Promise<T>): Promise<T> {
+  const raiz = resolve(__dirname, "..");
+  const dir = mkdtempSync(join(tmpdir(), "cex-rls-"));
+  const projectId = `cex-rls-${randomUUID().replaceAll("-", "").slice(0, 12)}`;
+  const pasta = join(dir, "supabase");
+  mkdirSync(pasta);
+  let tentouIniciar = false;
+  try {
+    let config = readFileSync(join(raiz, "supabase/config.toml"), "utf8");
+    if (!/^project_id\s*=/m.test(config)) throw new Error("Configuração sem project_id; ambiente não iniciado.");
+    config = config.replace(/^project_id\s*=.*$/m, `project_id = "${projectId}"`);
+    let proximaPorta = 58000 + Math.floor(Math.random() * 30) * 100;
+    const portas = new Map<string, number>();
+    config = config.replace(/^(\s*(?:\w*_)?port\s*=\s*)(\d+)/gm, (_, prefix: string, original: string) => {
+      if (!portas.has(original)) portas.set(original, proximaPorta++);
+      return `${prefix}${portas.get(original)}`;
+    });
+    for (const section of ["studio", "inbucket", "realtime", "analytics", "edge_runtime", "storage.vector", "storage.analytics", "storage.s3_protocol"]) {
+      const start = config.indexOf(`[${section}]`);
+      if (start < 0) continue;
+      const next = config.indexOf("\n[", start + 1), end = next < 0 ? config.length : next;
+      config = config.slice(0, start) + config.slice(start, end).replace(/^enabled\s*=\s*true/m, "enabled = false") + config.slice(end);
+    }
+    config = config.replace(/(\[db.seed\][\s\S]*?enabled\s*=\s*)true/, "$1false");
+    writeFileSync(join(pasta, "config.toml"), config);
+    mkdirSync(join(pasta, "migrations"));
+    // A API precisa dos schemas vazios antes de subir. As tabelas vêm depois pelo psql.
+    writeFileSync(join(pasta, "migrations/00000000000000_preparar.sql"), "create schema if not exists core; create schema if not exists service; create schema if not exists cex; create schema if not exists billing; create schema if not exists audit;\n");
+    symlinkSync(join(raiz, "node_modules"), join(dir, "node_modules"), "dir");
+    console.log(`Criando banco descartável: ${projectId}`);
+    tentouIniciar = true;
+    executar("supabase", ["start", "--workdir", dir, "--exclude", "studio,imgproxy,edge-runtime,logflare,vector,realtime,mailpit,postgres-meta", "--ignore-health-check", "--yes"], raiz);
+    // O prazo curto do CLI oscila sob carga; só prossegue depois de todos os serviços necessários ficarem saudáveis.
+    const containers = ["db", "auth", "rest", "kong", "storage"].map((name) => `supabase_${name}_${projectId}`);
+    let saudavel = false;
+    const limite = Date.now() + 120_000;
+    while (Date.now() < limite) {
+      const estados = executar("docker", ["inspect", "--format", "{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}", ...containers], raiz).trim().split("\n");
+      if (estados.length === containers.length && estados.every((status) => status === "healthy" || status === "running")) { saudavel = true; break; }
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    if (!saudavel) throw new Error("Serviços do banco descartável não ficaram saudáveis; nenhum teste executado.");
+    const state = JSON.parse(executar("supabase", ["status", "--workdir", dir, "-o", "json"], raiz));
+    const url = new globalThis.URL(state.API_URL);
+    if (url.hostname !== "127.0.0.1" || url.protocol !== "http:" || url.port === "54321") throw new Error("Instância não isolada; nenhum teste executado.");
+    if (!state.ANON_KEY || !state.SERVICE_ROLE_KEY) throw new Error("Chaves da instância descartável ausentes.");
+    const migrationsDir = join(raiz, "supabase/migrations");
+    const sql = readdirSync(migrationsDir).filter((f) => f.endsWith(".sql")).sort().map((f) => readFileSync(join(migrationsDir, f), "utf8")).join("\n\n") + "\nNOTIFY pgrst, 'reload schema';\n";
+    executar("docker", ["exec", "-i", `supabase_db_${projectId}`, "psql", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1"], raiz, sql);
+    console.log("Migrações aplicadas no banco descartável.");
+    let pronta = false;
+    for (let i = 0; i < 40; i++) {
+      const resposta = await fetch(`${state.API_URL}/rest/v1/churches?select=id&limit=0`, { headers: { apikey: state.SERVICE_ROLE_KEY, Authorization: `Bearer ${state.SERVICE_ROLE_KEY}`, "Accept-Profile": "service" } });
+      if (resposta.ok) { pronta = true; break; }
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    if (!pronta) throw new Error("API não recarregou o schema service; nenhum teste executado.");
+    // Reutiliza as fixtures canônicas, alterando só a conexão na cópia temporária.
+    let seed = readFileSync(join(raiz, "scripts/seed-local-service.ts"), "utf8");
+    for (const [name, value] of [["URL", state.API_URL], ["ANON", state.ANON_KEY], ["SERVICE", state.SERVICE_ROLE_KEY]] as [string, string][]) {
+      let encontradas = 0;
+      seed = seed.replace(new RegExp(`const ${name} = "[^"]+";`, "g"), () => { encontradas++; return `const ${name} = ${JSON.stringify(value)};`; });
+      if (encontradas !== 1) throw new Error(`Fixture mudou o contrato de conexão (${name}); seed não executado.`);
+    }
+    if (seed.includes("http://127.0.0.1:54321")) throw new Error("Fixture ainda aponta para a instância compartilhada; seed não executado.");
+    const seedPath = join(dir, "seed-local-service.ts");
+    writeFileSync(seedPath, seed, { mode: 0o600 });
+    executar(process.execPath, [...process.execArgv, seedPath], raiz);
+    return await run({ url: state.API_URL, anonKey: state.ANON_KEY, serviceRoleKey: state.SERVICE_ROLE_KEY, projectId, dir });
+  } finally {
+    try {
+      if (tentouIniciar) executar("supabase", ["stop", "--project-id", projectId, "--no-backup", "--yes"], raiz);
+      console.log(`Banco descartado: ${projectId}`);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  }
+}
+
+let URL: string, ANON: string;
+let admin: SupabaseClient;
 
 async function as(email: string): Promise<SupabaseClient> {
   const c = createClient(URL, ANON, { auth: { persistSession: false } });
@@ -107,9 +194,7 @@ async function main() {
 
   // Fase 4: ações do membro passam pelos requisitos da igreja (0046)
   const svcA = admin.schema("service");
-  /* começa limpo: testes manuais no navegador podem ter deixado requisitos e pedidos */
-  await svcA.from("serve_requests").delete().eq("organization_id", orgA);
-  await svcA.from("requirements").delete().eq("organization_id", orgA);
+  /* O banco inteiro nasceu para esta execução; não limpar tabelas compartilhadas. */
   const { data: chA } = await svcA.from("churches").select("id").eq("organization_id", orgA).limit(1).single();
   const { data: cursos } = await svcA.from("courses").insert([
     { organization_id: orgA, church_id: chA!.id, name: "Curso Base (teste)", kind: "trilha" },
@@ -124,6 +209,15 @@ async function main() {
     { organization_id: orgA, target_kind: "ministry", target_id: recep!.id, req_kind: "course", req_ref: base },
   ]);
   const rpc = async (c: SupabaseClient, fn: string, args: Record<string, unknown>) => (await c.schema("service").rpc(fn, args)).data as string;
+
+  expect("membro2", "Quero servir: time fechado", (await rpc(membro2, "request_to_serve", { p_ministry: louvor!.id })) === "time_fechado" ? 1 : 0, 1);
+  const abertura = await svcA.from("ministries").update({ profile: { recebendoVoluntarios: true } }).in("id", [louvor!.id, recep!.id]);
+  if (abertura.error) throw abertura.error;
+  expect("membro2", "time aberto sem líder no app", (await rpc(membro2, "request_to_serve", { p_ministry: recep!.id })) === "sem_lider_no_app" ? 1 : 0, 1);
+  const lucas = await svcA.from("people").select("id").eq("email", "lider@teste.local").single();
+  if (lucas.error || !lucas.data) throw new Error("Fixture do líder ausente");
+  const liderRecepcao = await svcA.from("person_ministries").insert({ organization_id: orgA, ministry_id: recep!.id, person_id: lucas.data.id, is_leader: true });
+  if (liderRecepcao.error) throw liderRecepcao.error;
 
   expect("membro2", "inscreve no curso sem requisito", (await rpc(membro2, "enroll_me", { p_course: base })) === "ok" ? 1 : 0, 1);
   expect("membro2", "bloqueado no curso com requisito", (await rpc(membro2, "enroll_me", { p_course: avancado })) === "faltam_requisitos" ? 1 : 0, 1);
@@ -145,8 +239,7 @@ async function main() {
   // limpa o que o teste criou
   const { data: mariaPessoa } = await svcA.from("people").select("id").eq("email", "membro@teste.local").single();
   await svcA.from("person_ministries").delete().eq("ministry_id", recep!.id).eq("person_id", mariaPessoa!.id);
-  await svcA.from("serve_requests").delete().eq("organization_id", orgA);
-  await svcA.from("requirements").delete().eq("organization_id", orgA);
+
   await svcA.from("courses").delete().in("id", [base, avancado]);
 
   // toda tabela sensível precisa responder sem erro pra cada papel (pega
@@ -164,10 +257,14 @@ async function main() {
   }
 
   console.log(failures ? `\n${failures} verificação(ões) falharam.` : "\nTodas as verificações passaram.");
-  process.exit(failures ? 1 : 0);
+  if (failures) throw new Error(`${failures} verificações falharam`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+if (process.argv[1]?.endsWith("check-local-rls.ts")) {
+  withDisposableSupabase(async (sandbox) => {
+    if (process.argv.includes("--provar-limpeza")) throw new Error("Falha intencional para verificar descarte no finally");
+    URL = sandbox.url; ANON = sandbox.anonKey;
+    admin = createClient(URL, sandbox.serviceRoleKey, { auth: { persistSession: false } });
+    await main();
+  }).catch((e) => { console.error(e.message); process.exitCode = 1; });
+}
