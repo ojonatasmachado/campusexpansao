@@ -51,3 +51,5 @@ Navegação da agenda publicada em 6f7cd7c, CI aprovado. Correção ampliada do 
 J15: menu Mais agrupado pelas áreas dos manifestos, com expansão progressiva e seção ativa aberta. Validado localmente em mobile e desktop, claro e escuro; evidência em implementacao/menu-mais.
 
 Primeiro cadastro da igreja alinhado a AuthShell/login-*, com recuperação de erro e dados preservados. Revisão do primeiro acesso do membro e organização interna da Caminhada documentadas em implementacao/primeiro-acesso-revisao, distinguindo evidência anterior de inspeção nova.
+
+Acessos: menu, atalhos do Início, ajuda e montagem das telas agora usam o predicado do registro para todos os papéis. Início respeita sua linha de permissão também para liderança. Contrato e cenários em implementacao/acessos. A inspeção autenticada cobriu liderança local; cenários negados adicionais usaram fixtures.

@@ -1,0 +1,19 @@
+{
+  "url": "http://localhost:3005/service",
+  "menu": [
+    "Início",
+    "Pessoas",
+    "Crianças",
+    "Times",
+    "Escalas1",
+    "Cultos e eventos",
+    "Mural",
+    "Conversas",
+    "Relatórios"
+  ],
+  "actions": [
+    "Ver agenda",
+    "Montar escala"
+  ],
+  "financeiroVisible": false
+}

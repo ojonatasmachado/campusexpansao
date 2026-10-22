@@ -1,0 +1,134 @@
+[
+  {
+    "case": "lider-escala-negada",
+    "menu": [
+      "Início",
+      "Pessoas",
+      "Crianças",
+      "Times",
+      "Cultos e eventos",
+      "Mural",
+      "Conversas",
+      "Relatórios"
+    ],
+    "scaleActions": 0,
+    "main": "Testar rota indisponível\nBoa noite, Ana \n?\n\nSemana de 19 a 25 de outubro. Culto de domingo manhã em 4 dias · faltam 5 vagas.\n\nVer agenda\nAniversariantes da semana\n1 hoje · 1 pessoa em 7 dias\nDiego Ferreira\nHoje\nMandar parabéns\nVer os aniversariantes do mês\nSobre estes números\nPróximos cultos\nAgenda\nCulto de domingo manhã\nDom · 25/10/2026 · Templo principal\nLouvor 2/7\n10:00\nCulto de domingo noite\nDom · 25/10/2026 · Salão 2\nLouvor 1/7\n19:00\nCaminhada pendente\n!\nDiego Ferreira · Fundamentos\n10/11/2024 · Fiz Fundamentos na igreja anterior\nRejeitar\nAprovar\nComunicação recente\nVer tudo\nCulto de domingo mudou para o salão 2\npara todos · hoje\nRetiro ",
+    "overflow": false
+  },
+  {
+    "case": "rota-forcada-negada",
+    "menu": [
+      "Início",
+      "Pessoas",
+      "Crianças",
+      "Times",
+      "Cultos e eventos",
+      "Mural",
+      "Conversas",
+      "Relatórios"
+    ],
+    "scaleActions": 0,
+    "main": "Esta área não está disponível\n\nSeu acesso ou os módulos da igreja não permitem abrir esta tela.\n\nAbrir uma área disponível",
+    "overflow": false,
+    "blocked": true
+  },
+  {
+    "case": "retorno",
+    "menu": [
+      "Início",
+      "Pessoas",
+      "Crianças",
+      "Times",
+      "Cultos e eventos",
+      "Mural",
+      "Conversas",
+      "Relatórios"
+    ],
+    "scaleActions": 0,
+    "main": "Boa noite, Ana \n?\n\nSemana de 19 a 25 de outubro. Culto de domingo manhã em 4 dias · faltam 5 vagas.\n\nVer agenda\nAniversariantes da semana\n1 hoje · 1 pessoa em 7 dias\nDiego Ferreira\nHoje\nMandar parabéns\nVer os aniversariantes do mês\nSobre estes números\nPróximos cultos\nAgenda\nCulto de domingo manhã\nDom · 25/10/2026 · Templo principal\nLouvor 2/7\n10:00\nCulto de domingo noite\nDom · 25/10/2026 · Salão 2\nLouvor 1/7\n19:00\nCaminhada pendente\n!\nDiego Ferreira · Fundamentos\n10/11/2024 · Fiz Fundamentos na igreja anterior\nRejeitar\nAprovar\nComunicação recente\nVer tudo\nCulto de domingo mudou para o salão 2\npara todos · hoje\nRetiro de jovens: inscrições abe",
+    "overflow": false,
+    "recovered": true
+  },
+  {
+    "case": "modulo-desligado",
+    "menu": [
+      "Início",
+      "Pessoas",
+      "Visitantes",
+      "Mapa da igreja",
+      "Crianças",
+      "Grupos",
+      "Times",
+      "Cultos e eventos",
+      "Mural",
+      "Conversas",
+      "Cursos e trilhas",
+      "Relatórios",
+      "Financeiro",
+      "Configurações"
+    ],
+    "scaleActions": 0,
+    "main": "Testar rota indisponível\nBoa noite, Ana \n?\n\nSemana de 19 a 25 de outubro. Culto de domingo manhã em 4 dias · faltam 9 vagas.\n\nVer agenda\nSaúde da igreja\nHoje\n4\nMembros registrados\n4\nServindo em times\n2\nEm grupos\n1\nSem registro há 3 semanas ou mais\nVer o panorama: período, visitantes, decisões e caminhada\nPara resolver\n1 visitante se cadastrou pelo link · esperando o 1º contato\nVer →\n1 pedido na caminhada · esperando sua aprovação\nRevisar →\nLista de cuidado\nsem registro há 3 semanas ou mais\n\nEsta lista usa presenças registradas no Service. Falta de registro não confirma ausência. Confira com quem acompanha a pessoa antes de concluir.\n\nDiego Fe",
+    "overflow": false,
+    "appVisible": false,
+    "guard": false
+  },
+  {
+    "case": "dependencia-desligada",
+    "menu": [
+      "Início",
+      "Pessoas",
+      "Visitantes",
+      "Mapa da igreja",
+      "Crianças",
+      "Grupos",
+      "Cultos e eventos",
+      "Mural",
+      "Conversas",
+      "Cursos e trilhas",
+      "Relatórios",
+      "Financeiro",
+      "Configurações"
+    ],
+    "scaleActions": 0,
+    "main": "Testar rota indisponível\nBoa noite, Ana \n?\n\nSemana de 19 a 25 de outubro. Culto de domingo manhã em 4 dias · faltam 9 vagas.\n\nVer agenda\nSaúde da igreja\nHoje\n4\nMembros registrados\n4\nServindo em times\n2\nEm grupos\n1\nSem registro há 3 semanas ou mais\nVer o panorama: período, visitantes, decisões e caminhada\nPara resolver\n1 visitante se cadastrou pelo link · esperando o 1º contato\nVer →\n1 pedido na caminhada · esperando sua aprovação\nRevisar →\nLista de cuidado\nsem registro há 3 semanas ou mais\n\nEsta lista usa presenças registradas no Service. Falta de registro não confirma ausência. Confira com quem acompanha a pessoa antes de concluir.\n\nDiego Fe",
+    "overflow": false,
+    "appVisible": false,
+    "guard": false
+  },
+  {
+    "case": "membro-extra",
+    "menu": [
+      "Visitantes"
+    ],
+    "scaleActions": 0,
+    "main": "Testar rota indisponível\nPESSOAS\nVisitantes \n?\n\n4 visitantes\n\nMais opções\nRegistrar visitante\nFunil\nLista\nNovo\n2\nMO\nMarina Oliveira\nAmigo da comunidade\nWhatsApp\nRegistrar\nBC\nBruno Carvalho\nvisitou hoje · QR/link\nWhatsApp\nRegistrar\nContato\n1\nRS\nRafael Souza\nInstagram\nrespondeu\nWhatsApp\nRegistrar\nIntegrando\n1\nLA\nLetícia Alves\nCulto aberto\nsem resposta\nWhatsApp\nRegistrar\nMembro\n0\nvazio",
+    "overflow": false,
+    "appVisible": false,
+    "guard": false
+  },
+  {
+    "case": "pastor-inicio-negado",
+    "menu": [
+      "Pessoas",
+      "Visitantes",
+      "Mapa da igreja",
+      "Crianças",
+      "Grupos",
+      "Times",
+      "Escalas17",
+      "Cultos e eventos",
+      "Mural",
+      "Conversas",
+      "Cursos e trilhas",
+      "Relatórios",
+      "Financeiro",
+      "Configurações"
+    ],
+    "scaleActions": 0,
+    "main": "Testar rota indisponível\nEsta área não está disponível\n\nSeu acesso ou os módulos da igreja não permitem abrir esta tela.\n\nAbrir uma área disponível",
+    "overflow": false,
+    "appVisible": false,
+    "guard": true
+  }
+]

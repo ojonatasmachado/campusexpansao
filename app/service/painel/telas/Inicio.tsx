@@ -238,6 +238,7 @@ export function Painel({
   onApproveJourney,
   onRejectJourney,
   setRoute,
+  podeAbrir = () => true,
   setDrawer,
   setModal,
   setCheckinEventId,
@@ -278,6 +279,7 @@ export function Painel({
   onApproveJourney: (request: JourneyChangeRequestView) => void;
   onRejectJourney: (request: JourneyChangeRequestView) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
+  podeAbrir?: (route: keyof typeof ROUTES) => boolean;
   setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
   setCheckinEventId: (id: string | null) => void;
@@ -332,6 +334,9 @@ export function Painel({
     ...(cuidado ? [["Lista de cuidado", `Quem já teve presença registrada e está há ${plural(cuidado.semanas, "semana")} ou mais sem nenhuma. Cada nome vai para quem cuida: líder do grupo, depois líder do time, depois a pastoral. Uma justificativa registrada tira da lista por 30 dias. A pessoa não vê nada disso.`] as [string, string]] : []),
     ...(kidsClasses.length > 0 ? [["Crianças por turma", "Quantas crianças estão em cada turma do Kids."] as [string, string], ...(cuidado ? [] : [["Crianças sumindo", "Crianças sem check-in registrado há algum tempo. Vale um contato com a família."] as [string, string]])] : []),
   ];
+  const haPendenciasVisiveis = (podeAbrir("escalas") && vagasDaSemana > 0)
+    || (!liderDeTime && podeAbrir("visitantes") && (visitantesSemContato > 0 || visitantesPeloLink > 0))
+    || (!liderDeTime && journeyRequests.length > 0);
   return (
     <div className="content wide painel-inicio">
       <div className="ph">
@@ -345,8 +350,8 @@ export function Painel({
           })()}</p>
         </div>
         <div className="ph-actions">
-          <button className="btn btn-sec" type="button" onClick={() => setRoute("cultos")}>Ver agenda</button>
-          <button className="btn btn-pri" type="button" onClick={() => setRoute(emPreparacao ? "configurar" : ativando ? "cultos" : "escalas")}>{emPreparacao ? (setup.primeiroEventoId || setup.fase > 1 || setup.feitas.length > 0 || setup.pulou || setup.rascunho ? "Continuar preparação" : "Preparar minha igreja") : ativando ? (primeiraProgramacao ? "Preparar primeiro encontro" : "Preparar próximo encontro") : "Montar escala"}</button>
+          {podeAbrir("cultos") && <button className="btn btn-sec" type="button" onClick={() => setRoute("cultos")}>Ver agenda</button>}
+          {podeAbrir(emPreparacao ? "configurar" : ativando ? "cultos" : "escalas") && <button className="btn btn-pri" type="button" onClick={() => setRoute(emPreparacao ? "configurar" : ativando ? "cultos" : "escalas")}>{emPreparacao ? (setup.primeiroEventoId || setup.fase > 1 || setup.feitas.length > 0 || setup.pulou || setup.rascunho ? "Continuar preparação" : "Preparar minha igreja") : ativando ? (primeiraProgramacao ? "Preparar primeiro encontro" : "Preparar próximo encontro") : "Montar escala"}</button>}
         </div>
       </div>
       {ativando && (
@@ -365,24 +370,24 @@ export function Painel({
           onAbrir={(it) => setDrawer({ kind: it.tipo, id: it.id })}
         />
       )}
-      {(liderDeTime || vagasDaSemana > 0 || visitantesSemContato > 0 || visitantesPeloLink > 0 || journeyRequests.length > 0) && <h2 className="painel-sec-t">{liderDeTime ? "Para resolver no seu time" : "Para resolver"}</h2>}
-      {(vagasDaSemana > 0 || (!liderDeTime && (visitantesSemContato > 0 || visitantesPeloLink > 0)) || (!liderDeTime && journeyRequests.length > 0)) && (
+      {haPendenciasVisiveis && <h2 className="painel-sec-t">{liderDeTime ? "Para resolver no seu time" : "Para resolver"}</h2>}
+      {haPendenciasVisiveis && (
         <div className="agora-list">
-          {vagasDaSemana > 0 && (
+          {podeAbrir("escalas") && vagasDaSemana > 0 && (
             <button type="button" className="agora-row" onClick={() => setRoute("escalas")}>
               <span className="agora-ic"><Icon name="escalas" size={17} /></span>
               <span className="agora-main"><span className="agora-t">{vagasDaSemana === 1 ? "1 vaga aberta na escala" : `${vagasDaSemana} vagas abertas na escala`}</span><span className="agora-s"> · nesta semana</span></span>
               <span className="agora-go">Escalar →</span>
             </button>
           )}
-          {!liderDeTime && visitantesSemContato > 0 && (
+          {podeAbrir("visitantes") && !liderDeTime && visitantesSemContato > 0 && (
             <button type="button" className="agora-row" onClick={() => setRoute("visitantes")}>
               <span className="agora-ic"><Icon name="visitante" size={17} /></span>
               <span className="agora-main"><span className="agora-t">{visitantesSemContato === 1 ? "1 visitante sem contato" : `${visitantesSemContato} visitantes sem contato`}</span><span className="agora-s"> · há mais de 48h</span></span>
               <span className="agora-go">Ver →</span>
             </button>
           )}
-          {!liderDeTime && visitantesPeloLink > 0 && (
+          {podeAbrir("visitantes") && !liderDeTime && visitantesPeloLink > 0 && (
             <button type="button" className="agora-row" onClick={() => setRoute("visitantes")}>
               <span className="agora-ic"><Icon name="visitante" size={17} /></span>
               <span className="agora-main"><span className="agora-t">{`${plural(visitantesPeloLink, "visitante")} ${visitantesPeloLink === 1 ? "se cadastrou" : "se cadastraram"} pelo link`}</span><span className="agora-s"> · esperando o 1º contato</span></span>
@@ -405,14 +410,14 @@ export function Painel({
         </div>
       )}
       {aniversarios}
-      {emPreparacao ? (
+      {podeAbrir("configurar") && (emPreparacao ? (
         <button type="button" className="setup-banner" onClick={() => setRoute("configurar")}>
           <span className="setup-banner-t">{linhaDoSetup(setup)}</span>
           <span className="agora-go">{setup.feitas.length || setup.pulou ? "Continuar →" : "Começar →"}</span>
         </button>
       ) : (
-        gestao ? <details className="service-preparacao"><summary>Revisar preparação da igreja</summary><SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} /></details> : null
-      )}
+        gestao && ["configurar", "times", "cultos", "membros"].every((r) => podeAbrir(r as keyof typeof ROUTES)) ? <details className="service-preparacao"><summary>Revisar preparação da igreja</summary><SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} /></details> : null
+      ))}
       {/* v7 3.6: cada número aparece uma vez. Vagas abertas e visitantes sem contato já estão na lista do topo e em Pendências. */}
       {!liderDeTime && !ativando && <div className="kpi-row kpi-3">
         <Kpi icon="pessoa" label={ct("{Voluntarios}")} value={activePeople} foot={joinDot(`de ${plural(people.length, "cadastrado")}`, novosNoMes ? `${plural(novosNoMes, "novo", "novos")} em 30 dias` : null)} />
@@ -437,7 +442,7 @@ export function Painel({
         </div>
       )}
       <div className="dash-2col">
-        <div className="panel">
+        {podeAbrir("escalas") && <div className="panel">
           <div className="panel-head">
             <span className="panel-title"><Icon name="escalas" size={14} /> Pendências da escala</span>
             <button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("escalas")}>Escalar</button>
@@ -469,9 +474,9 @@ export function Painel({
             ))}
             {gapsDaSemana.length === 0 && !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone) && vagasFaltando(coberturaPorTime(e, roster, ministries, scopeMinistryIds)) > 0) ? <div className="mini-row"><div className="mini-main"><div className="mini-title">{semProgramacao ? "Sem programação futura" : roster.length === 0 ? "Escalas ainda não preparadas" : "Sem vagas abertas nesta semana"}</div><div className="mini-sub">{semProgramacao ? "Prepare o próximo encontro antes de organizar a equipe." : roster.length === 0 ? "Ter encontros na agenda não significa que a equipe já foi escalada." : "Confira os próximos encontros para acompanhar a cobertura de cada time."}</div></div></div> : null}
           </div>
-        </div>
+        </div>}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div className="panel">
+          {podeAbrir("cultos") && <div className="panel">
             <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> {ct("Próximos {cultos}")}</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("cultos")}>Agenda</button></div>
             <div className="panel-body flush">
             {/* v7 2.9: só o que ainda vai começar, no fuso da igreja (Brasília) */}
@@ -483,7 +488,7 @@ export function Painel({
                   key={event.id}
                   event={event}
                   cobertura={coberturaPorTime(event, roster, ministries, scopeMinistryIds)}
-                  onAbrirVagas={(timeId) => onAbrirVagas(event.id, timeId)}
+                  onAbrirVagas={podeAbrir("escalas") ? (timeId) => onAbrirVagas(event.id, timeId) : undefined}
                   setDrawer={setDrawer}
                   attendanceCount={eventAttendance.filter((a) => a.event_id === event.id).length}
                   onCheckin={() => setCheckinEventId(event.id)}
@@ -491,7 +496,7 @@ export function Painel({
               ));
             })()}
             </div>
-          </div>
+          </div>}
           {enqueteElegivel && (
             <div className="panel" style={{ cursor: "pointer" }} onClick={() => setModal(buildAvaliacaoModal(enqueteElegivel))}>
               <div className="panel-head"><span className="panel-title"><Icon name="estrela" size={14} /> Avaliação de experiência</span></div>
@@ -538,7 +543,7 @@ export function Painel({
           </div>
         </div>
       )}
-      <div className="dash-2col">
+      {podeAbrir("comunicacao") && <div className="dash-2col">
         <div className="panel">
           <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Comunicação recente</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("comunicacao")}>Ver tudo</button></div>
           <div className="panel-body flush">
@@ -555,8 +560,8 @@ export function Painel({
             )}
           </div>
         </div>
-      </div>
-      {kidsClasses.length > 0 && (
+      </div>}
+      {podeAbrir("criancas") && kidsClasses.length > 0 && (
         <div className="dash-2col" style={{ marginTop: 20 }}>
           <div className="panel">
             <div className="panel-head"><span className="panel-title"><Icon name="kids" size={14} /> Crianças por turma</span><button className="btn btn-sec btn-sm" type="button" onClick={() => setRoute("criancas")}>Ver todas</button></div>

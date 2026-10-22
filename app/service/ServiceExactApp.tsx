@@ -27,7 +27,7 @@ import ChurchLockup from "./ChurchLockup";
 import { ORIGEM_AUTOCADASTRO } from "./modules/visitantes/autocadastro";
 import TopUserMenu from "./TopUserMenu";
 import { Coachmark, HelpFab, TOUR_DESKTOP, type SetupCounts } from "./HelpSystem";
-import { RouteGroupContext } from "./painel/ui";
+import { EmptyState, RouteGroupContext } from "./painel/ui";
 import { Escalas } from "./modules/escalas/Escalas";
 import Financeiro from "./modules/financeiro/Financeiro";
 import { ESCALA_DEFAULT } from "./modules/escalas/regras";
@@ -748,11 +748,11 @@ export default function ServiceExactApp({
      return condicional antes deles). */
   /* telas do painel que a pessoa pode abrir (menu lateral + Configurações) */
   const rotasPermitidas = [...NAV_GROUPS.flatMap((g) => g.items.map((i) => i.id)), "config" as const]
-    .filter((id) => podeVerNav(id, currentRole, matrizEfetiva, currentExtraAccess, souVoluntario));
+    .filter(podeVerItem);
   const temTelaLiberada = rotasPermitidas.length > 0;
-  /* função de gestão = papel líder/pastor/master ou alguma tela do painel
-     liberada. Sem isso, a pessoa só vê o app de membro, sem botão de troca. */
-  const podeGerenciar = currentRole !== "membro" || temTelaLiberada;
+  /* Só oferece gestão quando o registro entrega alguma tela disponível.
+     Sem tela liberada, qualquer papel usa o próprio app, sem painel vazio. */
+  const podeGerenciar = temTelaLiberada;
   if (!podeGerenciar || view === "app") {
     const handleLogoutSelf = async () => {
       await createServiceBrowserClient().auth.signOut();
@@ -848,7 +848,7 @@ export default function ServiceExactApp({
   }
 
   /* o tour só aponta para o que este papel vê no menu */
-  const tourSteps = TOUR_DESKTOP.filter((st) => !st.route || st.route === "painel" || (st.route === "config" ? podeVerNav("config", currentRole, matrizEfetiva, currentExtraAccess, souVoluntario) : podeVerItem(st.route)));
+  const tourSteps = TOUR_DESKTOP.filter((st) => !st.route || (st.route === "config" ? podeVerNav("config", currentRole, matrizEfetiva, currentExtraAccess, souVoluntario) : podeVerItem(st.route)));
   /* ajuda "?": o mesmo menu no canto (computador) e na barra do topo (celular) */
   const abrirTourAjuda = () => { setShowTour(true); setNavOpen(true); };
   const abrirSetupAjuda = () => {
@@ -953,7 +953,7 @@ export default function ServiceExactApp({
               telas={NAV_GROUPS.flatMap((g) => g.items.filter((item) => podeVerItem(item.id)).map((item) => ({ id: item.id, label: item.label, icon: CEX_ICON_FOR[item.id] ?? item.icon, grupo: g.group })))}
             />
           </div>
-          <HelpFab lugar="barra" onTour={abrirTourAjuda} onSetup={abrirSetupAjuda} />
+          <HelpFab lugar="barra" onTour={abrirTourAjuda} onSetup={podeVerItem("configurar") ? abrirSetupAjuda : undefined} />
           <div className="top-actions">
 <TopUserMenu name={eu?.name ?? "Você"} roleLabel={ROLE_LABEL[currentRole] ?? "Liderança"} photoUrl={eu?.photoUrl} churchPageUrl={paginaUrl} onLogout={sair} onOpenApp={() => setView("app")} theme={theme} onToggleTheme={() => setTheme((t) => t === "dark" ? "light" : "dark")} />
           </div>
@@ -963,6 +963,9 @@ export default function ServiceExactApp({
         <main className="main-area">
         <RouteGroupContext.Provider value={ROUTE_GROUP[route] ?? null}>
         {error ? <ErrorPanel message={error} /> : null}
+        {!podeVerItem(route) ? (
+          <EmptyState title="Esta área não está disponível" text="Seu acesso ou os módulos da igreja não permitem abrir esta tela." action={{ label: "Abrir uma área disponível", onClick: () => setRoute(rotasPermitidas[0]) }} />
+        ) : <>
         {route === "painel" ? (
           <Painel
             people={people}
@@ -987,6 +990,7 @@ export default function ServiceExactApp({
             onApproveJourney={approveJourneyRequest}
             onRejectJourney={rejectJourneyRequest}
             setRoute={setRoute}
+            podeAbrir={podeVerItem}
             setDrawer={setDrawer}
             setModal={setModal}
             setCheckinEventId={setCheckinEventId}
@@ -1165,11 +1169,12 @@ export default function ServiceExactApp({
         {route === "pagina" ? <Config key={firstChurch?.id} church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="pagina" /> : null}
         {route === "identidade" ? <Identidade church={firstChurch} identity={churchIdentity} cycle={cycles.find((c) => c.is_active) ?? cycles[0]} setModal={setModal} /> : null}
         {route === "historia" ? <Historia church={firstChurch} historyEntries={historyEntries} setModal={setModal} /> : null}
+        </>}
         </RouteGroupContext.Provider>
         </main>
       </div>
 
-      <HelpFab onTour={abrirTourAjuda} onSetup={abrirSetupAjuda} />
+      <HelpFab onTour={abrirTourAjuda} onSetup={podeVerItem("configurar") ? abrirSetupAjuda : undefined} />
       {showTour ? (
         <Coachmark
           steps={tourSteps}
