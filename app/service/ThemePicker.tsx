@@ -7,6 +7,7 @@ import { bestOnColor } from "./lib/color";
 import { Icon } from "./lib/icons";
 import ChurchLockup from "./ChurchLockup";
 
+import { Opcao } from "./ui/Opcao";
 /* Tela de marca do app da igreja (Configurações → Personalização): cor da
    igreja, fundos do modo escuro e do claro, e o modo padrão. Tudo aqui é
    decidido pela gestão; o membro só alterna claro/escuro no próprio app.
@@ -42,15 +43,14 @@ export default function ThemePicker({
         </div>
         <div className="seg-check" style={{ marginBottom: 12 }}>
           {ACCENT_PRESETS.map((p) => (
-            <button
+            <Opcao
               key={p.hex}
-              type="button"
-              className={`seg-chip${accent.toUpperCase() === p.hex.toUpperCase() ? " on" : ""}`}
+              marcada={accent.toUpperCase() === p.hex.toUpperCase()} estilo="seg-chip"
               onClick={() => onChange({ accent: p.hex })}
             >
               <span aria-hidden="true" style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: p.hex, marginRight: 6, verticalAlign: "-1px" }} />
               {p.label}
-            </button>
+            </Opcao>
           ))}
         </div>
         <AccentField compact label="Outra cor (hex)" bgHex={darkFam.tokens.graphite} value={accent} defaultHex={DEFAULT_ACCENT} onChange={(hex) => onChange({ accent: hex })} />
@@ -86,10 +86,10 @@ export default function ThemePicker({
         <div className="cfg-card-s">Como o app abre para todo mundo. Cada pessoa ainda pode alternar entre claro e escuro no próprio perfil.</div>
         <div className="opt-row">
           {(["dark", "light"] as ThemeMode[]).map((m) => (
-            <button key={m} type="button" className={`opt${defaultMode === m ? " on" : ""}`} onClick={() => onChange({ defaultMode: m })}>
+            <Opcao key={m} marcada={defaultMode === m} estilo="opt" onClick={() => onChange({ defaultMode: m })}>
               <div className="opt-t">{m === "dark" ? "Escuro" : "Claro"}</div>
               <div className="opt-s">{m === "dark" ? "Fundo escuro" : "Fundo claro"}</div>
-            </button>
+            </Opcao>
           ))}
         </div>
       </div>
@@ -103,11 +103,11 @@ function FamilyRow({ title, mode, selected, accent, onSelect }: { title: string;
       <div className="field-label">{title}</div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
         {NEUTRAL_FAMILIES.filter((f) => f.mode === mode).map((f) => (
-          <button key={f.id} type="button" className={`opt${selected === f.id ? " on" : ""}`} onClick={() => onSelect(f.id)} style={{ padding: 10 }}>
+          <Opcao key={f.id} marcada={selected === f.id} estilo="opt" onClick={() => onSelect(f.id)} style={{ padding: 10 }}>
             <FamilyPreview family={f} accent={accent} />
             <div className="opt-t" style={{ marginTop: 8 }}>{f.label}</div>
             <div className="opt-s">{f.hint}</div>
-          </button>
+          </Opcao>
         ))}
       </div>
     </div>

@@ -25,6 +25,8 @@ import { APagar, CampanhaForm, ContaFixaForm, FechamentoMes, Planejamento } from
 import type { Campanha, ContaFixa } from "./dados";
 
 import { Botao, BotaoIcone } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 type Tela =
   | null
   | { k: "entrada" | "despesa"; edit?: Lancamento }
@@ -131,10 +133,10 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
 
       <div className="toolbar fin-abas">
         <div className="seg" role="tablist" aria-label="Seções do financeiro">
-          <button type="button" role="tab" aria-selected={aba === "movimento"} className={aba === "movimento" ? "on" : ""} onClick={() => setAba("movimento")}>Movimento</button>
-          <button type="button" role="tab" aria-selected={aba === "planejamento"} className={aba === "planejamento" ? "on" : ""} onClick={() => setAba("planejamento")}>Contas fixas e campanhas</button>
-          <button type="button" role="tab" aria-selected={aba === "fechamento"} className={aba === "fechamento" ? "on" : ""} onClick={() => setAba("fechamento")}>Fechamento</button>
-          <button type="button" role="tab" aria-selected={aba === "cadastros"} className={aba === "cadastros" ? "on" : ""} onClick={() => setAba("cadastros")}>Contas e categorias</button>
+          <Opcao role="tab" aria-selected={aba === "movimento"} marcada={aba === "movimento"} onClick={() => setAba("movimento")}>Movimento</Opcao>
+          <Opcao role="tab" aria-selected={aba === "planejamento"} marcada={aba === "planejamento"} onClick={() => setAba("planejamento")}>Contas fixas e campanhas</Opcao>
+          <Opcao role="tab" aria-selected={aba === "fechamento"} marcada={aba === "fechamento"} onClick={() => setAba("fechamento")}>Fechamento</Opcao>
+          <Opcao role="tab" aria-selected={aba === "cadastros"} marcada={aba === "cadastros"} onClick={() => setAba("cadastros")}>Contas e categorias</Opcao>
         </div>
         {(aba === "movimento" || aba === "fechamento") && (
           <div className="fin-mes" role="group" aria-label="Mês">
@@ -168,7 +170,7 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
                 </div>
               ))}
               {!fin.carregando && !fin.contas.some((c) => c.kind === "banco") && podeLancar && (
-                <button type="button" className="tr click fin-add" onClick={() => setTela({ k: "conta" })}><Icon name="add" size={14} /> Cadastrar a conta do banco</button>
+                <Acao className="tr click fin-add" onClick={() => setTela({ k: "conta" })}><Icon name="add" size={14} /> Cadastrar a conta do banco</Acao>
               )}
             </section>
             {designados.length > 0 && (
@@ -195,7 +197,7 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
             </div>
             <div className="seg" role="group" aria-label="Tipo">
               {([["todos", "Todos"], ["entrada", "Entradas"], ["despesa", "Saídas"], ["transferencia", "Transferências"]] as const).map(([v, l]) => (
-                <button key={v} type="button" className={tipo === v ? "on" : ""} aria-pressed={tipo === v} onClick={() => { setTipo(v); setCat(""); }}>{l}</button>
+                <Opcao key={v} marcada={tipo === v} aria-pressed={tipo === v} onClick={() => { setTipo(v); setCat(""); }}>{l}</Opcao>
               ))}
             </div>
             <select className="select fin-sel" aria-label="Conta" value={conta} onChange={(e) => setConta(e.target.value)}>
@@ -238,7 +240,7 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
                   </>
                 );
                 return podeLancar
-                  ? <button key={l.id} type="button" className="tr fin-lin click" onClick={() => abrir(l)}>{miolo}</button>
+                  ? <Acao key={l.id} className="tr fin-lin click" onClick={() => abrir(l)}>{miolo}</Acao>
                   : <div key={l.id} className="tr fin-lin">{miolo}</div>;
               })}
               {lista.length > 0 && <div className="tr fin-rodape"><span className="cell-sub">{plural(lista.length, "lançamento")}</span></div>}
@@ -369,7 +371,7 @@ function ListaSimples<T extends ItemSimples>({ titulo, tabela, kind, itens, org,
           )}
         </div>
       ))}
-      {arquivadas > 0 && <button type="button" className="tr click fin-add" onClick={() => setVerArquivadas((v) => !v)}>{verArquivadas ? "Esconder arquivados" : `Ver ${plural(arquivadas, "arquivado", "arquivados")}`}</button>}
+      {arquivadas > 0 && <Acao className="tr click fin-add" onClick={() => setVerArquivadas((v) => !v)}>{verArquivadas ? "Esconder arquivados" : `Ver ${plural(arquivadas, "arquivado", "arquivados")}`}</Acao>}
       {podeLancar && (
         <form className="tr fin-novo" onSubmit={(e) => { e.preventDefault(); void adicionar(); }}>
           <input className="input" aria-label={`Nome do novo item em ${titulo}`} maxLength={60} placeholder="Novo nome" value={novo} onChange={(e) => setNovo(e.target.value)} />

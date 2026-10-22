@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CODIGO_RE, codigoLegivel, entradaPath, normalizarCodigo } from "../../lib/service-entrada";
 
+import { Botao } from "../ui/Botao";
 export default function CodigoForm() {
   const router = useRouter();
   const [codigo, setCodigo] = useState("");
@@ -39,9 +40,9 @@ export default function CodigoForm() {
           {error}
         </div>
       )}
-      <button className="login-btn" type="submit">
+      <Botao tamanho="entrada" variante="principal" type="submit">
         Continuar →
-      </button>
+      </Botao>
     </form>
   );
 }

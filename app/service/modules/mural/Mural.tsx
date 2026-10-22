@@ -28,6 +28,7 @@ import { BoletimDaSemana } from "./Boletim";
 import { useTermos, type Termos } from "../../lib/vocabulario-context";
 
 import { Botao } from "../../ui/Botao";
+import { Opcao } from "../../ui/Opcao";
 const HORAS = Array.from({ length: 24 }, (_, h) => h);
 
 function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church: ChurchView; publicos: MuralPublico[]; inicial?: MuralAviso; onClose: () => void; onDone: () => void }) {
@@ -187,7 +188,7 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
           <div className="field-label" id={`${fid}-tipo`}>Tipo</div>
           <div className="fs-chips" role="group" aria-labelledby={`${fid}-tipo`}>
             {(["aviso", "evento", "acao"] as const).map((k) => (
-              <button key={k} type="button" className={`seg-chip${tipo === k ? " on" : ""}`} aria-pressed={tipo === k} onClick={() => setTipo(k)}>{KIND_LABEL[k]}</button>
+              <Opcao key={k} marcada={tipo === k} estilo="seg-chip" aria-pressed={tipo === k} onClick={() => setTipo(k)}>{KIND_LABEL[k]}</Opcao>
             ))}
           </div>
           {tipo === "evento" && <div className="field-hint">No app, a pessoa responde Vou ou Não vou.</div>}
@@ -203,8 +204,8 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
         <div className="field">
           <div className="field-label" id={`${fid}-urg`}>Urgência</div>
           <div className="fs-chips" role="group" aria-labelledby={`${fid}-urg`}>
-            <button type="button" className={`seg-chip${!urgente ? " on" : ""}`} aria-pressed={!urgente} onClick={() => setUrgente(false)}>Normal</button>
-            <button type="button" className={`seg-chip${urgente ? " on" : ""}`} aria-pressed={urgente} onClick={() => setUrgente(true)}>Urgente</button>
+            <Opcao marcada={!urgente} estilo="seg-chip" aria-pressed={!urgente} onClick={() => setUrgente(false)}>Normal</Opcao>
+            <Opcao marcada={urgente} estilo="seg-chip" aria-pressed={urgente} onClick={() => setUrgente(true)}>Urgente</Opcao>
           </div>
           {urgente && <div className="field-hint">Aparece marcada como urgente e vem primeiro no Início do app. A notificação segue o horário de sempre.</div>}
         </div>
@@ -221,7 +222,7 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
           <div className="field-label" id={`${fid}-canal`}>Por onde</div>
           <div className="fs-chips" role="group" aria-labelledby={`${fid}-canal`}>
             {([["app", "App e notificação"], ["whatsapp", "WhatsApp"]] as const).map(([id, l]) => (
-              <button key={id} type="button" className={`seg-chip${canais.includes(id) ? " on" : ""}`} aria-pressed={canais.includes(id)} onClick={() => toggleCanal(id)}>{l}</button>
+              <Opcao key={id} marcada={canais.includes(id)} estilo="seg-chip" aria-pressed={canais.includes(id)} onClick={() => toggleCanal(id)}>{l}</Opcao>
             ))}
           </div>
           {canais.includes("whatsapp") && <div className="field-hint">{quando === "agendar" ? "O WhatsApp só abre quando você publica agora. Para a semana toda, use o Boletim da semana." : "O WhatsApp abre com o texto pronto para você mandar nos grupos da igreja."}</div>}
@@ -231,7 +232,7 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
             <div className="field-label" id={`${fid}-lemb`}>Lembrar quem não viu</div>
             <div className="fs-chips" role="group" aria-labelledby={`${fid}-lemb`}>
               {([["nao", "Não lembrar"], ["24", "Em 24h"], ["48", "Em 48h"], ["data", "Numa data"]] as const).map(([k, l]) => (
-                <button key={k} type="button" className={`seg-chip${lembrete === k ? " on" : ""}`} aria-pressed={lembrete === k} onClick={() => { setLembrete(k); setLembreteBase(Date.now()); }}>{l}</button>
+                <Opcao key={k} marcada={lembrete === k} estilo="seg-chip" aria-pressed={lembrete === k} onClick={() => { setLembrete(k); setLembreteBase(Date.now()); }}>{l}</Opcao>
               ))}
             </div>
             {lembrete === "data" && <input className="input" type="datetime-local" style={{ marginTop: 8 }} value={lembreteData} onChange={(e) => setLembreteData(e.target.value)} aria-label="Data e hora do lembrete" />}
@@ -244,8 +245,8 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
       <FormSection title="Quando publicar">
         <div className="field">
           <div className="fs-chips" role="group" aria-label="Quando publicar">
-            <button type="button" className={`seg-chip${quando === "agora" ? " on" : ""}`} aria-pressed={quando === "agora"} onClick={() => setQuando("agora")}>Agora</button>
-            <button type="button" className={`seg-chip${quando === "agendar" ? " on" : ""}`} aria-pressed={quando === "agendar"} onClick={() => setQuando("agendar")}>Agendar</button>
+            <Opcao marcada={quando === "agora"} estilo="seg-chip" aria-pressed={quando === "agora"} onClick={() => setQuando("agora")}>Agora</Opcao>
+            <Opcao marcada={quando === "agendar"} estilo="seg-chip" aria-pressed={quando === "agendar"} onClick={() => setQuando("agendar")}>Agendar</Opcao>
           </div>
         </div>
         {quando === "agendar" && (
@@ -270,8 +271,8 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
       <FormSection title="Destaque no Início do app">
         <div className="field">
           <div className="fs-chips" role="group" aria-label="Destaque no Início do app">
-            <button type="button" className={`seg-chip${!destacar ? " on" : ""}`} aria-pressed={!destacar} onClick={() => setDestacar(false)}>Não destacar</button>
-            <button type="button" className={`seg-chip${destacar ? " on" : ""}`} aria-pressed={destacar} onClick={() => setDestacar(true)}>Destacar até…</button>
+            <Opcao marcada={!destacar} estilo="seg-chip" aria-pressed={!destacar} onClick={() => setDestacar(false)}>Não destacar</Opcao>
+            <Opcao marcada={destacar} estilo="seg-chip" aria-pressed={destacar} onClick={() => setDestacar(true)}>Destacar até…</Opcao>
           </div>
         </div>
         {destacar && (

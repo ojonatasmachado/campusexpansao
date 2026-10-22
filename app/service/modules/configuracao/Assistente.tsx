@@ -20,6 +20,8 @@ import { encontroUtil, planejarEncontros, type EncontroPreparado, type RascunhoE
 import { FASES, MODELOS_TIMES, type ModeloTime, type SetupEstado } from "./setup";
 
 import { Botao, botaoClasse } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 export type DadosIgreja = { fuso: string; nome: string; cep: string; endereco: string; bairro: string; cidade: string; estado: string };
 
 export function Assistente({
@@ -168,10 +170,10 @@ export function Assistente({
           const feita = estado.feitas.includes(f.n);
           return (
             <li key={f.n} className={`${fase === f.n ? "on" : ""}${feita ? " feita" : ""}`}>
-              <button type="button" disabled={ocupado || (!!editando && f.n !== 2)} onClick={() => { setErro(""); setFase(f.n as 1 | 2 | 3); }} aria-current={fase === f.n ? "step" : undefined}>
+              <Acao desativado={ocupado || (!!editando && f.n !== 2)} onClick={() => { setErro(""); setFase(f.n as 1 | 2 | 3); }} aria-current={fase === f.n ? "step" : undefined}>
                 <span className="setup-n">{feita ? <Icon name="ok" size={14} /> : f.n}</span>
                 <span className="setup-ft"><b>{ct(f.t)}</b><span>{feita ? "feita" : `cerca de ${plural(f.min, "minuto")}`}</span></span>
-              </button>
+              </Acao>
             </li>
           );
         })}
@@ -204,8 +206,8 @@ export function Assistente({
               <label className="field-label">Cor da igreja</label>
               <div className="setup-cores" role="radiogroup" aria-label="Cor da igreja">
                 {ACCENT_PRESETS.map((p) => (
-                  <button key={p.hex} type="button" role="radio" aria-checked={cor.toLowerCase() === p.hex.toLowerCase()} aria-label={p.label}
-                    className={`setup-cor${cor.toLowerCase() === p.hex.toLowerCase() ? " on" : ""}`} style={{ background: p.hex }} onClick={() => setCor(p.hex)} />
+                  <Opcao key={p.hex} role="radio" aria-checked={cor.toLowerCase() === p.hex.toLowerCase()} aria-label={p.label}
+                    marcada={cor.toLowerCase() === p.hex.toLowerCase()} estilo="setup-cor" style={{ background: p.hex }} onClick={() => setCor(p.hex)} />
                 ))}
               </div>
               <div className="field-hint">A tela já mostra a cor escolhida. Ajuste fino em Configurações › Personalização.</div>
@@ -252,7 +254,7 @@ export function Assistente({
               <p className="field-hint">O encontro já pode ser encontrado pelos membros. Escolha somente os times que você quer organizar agora.</p>
               <div className="setup-modelos">{MODELOS_TIMES.map((m) => {
                 const ja = existe(m.nome) || timesFeitos.includes(m.id);
-                return <button key={m.id} type="button" className={`setup-modelo${modelos.includes(m.id) && !ja ? " on" : ""}`} aria-pressed={modelos.includes(m.id) && !ja} disabled={ocupado || ja} onClick={() => setModelos((l) => l.includes(m.id) ? l.filter((x) => x !== m.id) : [...l, m.id])}><Icon name={m.icone} size={18} /><span><b>{m.nome}</b><span>{ja ? "já existe" : m.funcoes.map((f) => f.nome).join(", ")}</span></span></button>;
+                return <Opcao key={m.id} marcada={modelos.includes(m.id) && !ja} estilo="setup-modelo" aria-pressed={modelos.includes(m.id) && !ja} desativado={ocupado || ja} onClick={() => setModelos((l) => l.includes(m.id) ? l.filter((x) => x !== m.id) : [...l, m.id])}><Icon name={m.icone} size={18} /><span><b>{m.nome}</b><span>{ja ? "já existe" : m.funcoes.map((f) => f.nome).join(", ")}</span></span></Opcao>;
               })}</div>
               <Botao desativado={ocupado || !modelosEscolhidos.length} onClick={() => executar(criarTimes)}>{ocupado ? "Preparando..." : "Preparar times escolhidos"}</Botao>
               {timesFeitos.length > 0 && <p className="field-hint" role="status">{plural(timesFeitos.length, "time preparado")}. Marque os responsáveis em Times.</p>}

@@ -20,6 +20,8 @@ import { FolhaDeImpressao, imprimir } from "../../painel/imprimir";
 import { numeroFmt, type Registro } from "./livros";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 export type Marca = { nome: string; logoUrl?: string | null; cor: string; cidade?: string | null };
 
 type Emitida = { id: string; codigo: string; validade: string; emitida_em: string };
@@ -159,9 +161,9 @@ export function Carteirinha({ memberId, church, marca, demo, members, people, ro
           {candidatos.length ? (
             <div className="sec-busca">
               {candidatos.map((x) => (
-                <button key={x.id} className="mini-row sec-busca-it" type="button" onClick={() => setId(x.id)}>
+                <Acao key={x.id} className="mini-row sec-busca-it" onClick={() => setId(x.id)}>
                   <div className="mini-main"><div className="mini-title">{x.name}</div><div className="mini-sub">{x.situation === "novo" ? "Novo membro" : "Membro"}</div></div>
-                </button>
+                </Acao>
               ))}
             </div>
           ) : busca.trim().length >= 2 ? <p className="field-hint">Ninguém com esse nome. Confira a grafia.</p> : null}
@@ -195,7 +197,7 @@ export function Carteirinha({ memberId, church, marca, demo, members, people, ro
           <FormSection title={atual ? "Emitir de novo" : "Validade"}>
             <div className="seg" role="radiogroup" aria-label="Validade">
               {[1, 2, 3].map((n) => (
-                <button key={n} type="button" role="radio" aria-checked={anos === n} className={anos === n ? "on" : ""} onClick={() => setAnos(n)}>{n === 1 ? "1 ano" : `${n} anos`}</button>
+                <Opcao key={n} role="radio" aria-checked={anos === n} marcada={anos === n} onClick={() => setAnos(n)}>{n === 1 ? "1 ano" : `${n} anos`}</Opcao>
               ))}
             </div>
             {vigente ? <Botao className="sec-reemitir" desativado={saving} onClick={emitir}>{saving ? "Emitindo..." : "Emitir nova carteirinha"}</Botao> : null}

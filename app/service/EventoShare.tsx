@@ -6,6 +6,7 @@ import { toPng } from "html-to-image";
 import { formatDateBR, joinDot } from "./lib/date";
 
 import { Botao } from "./ui/Botao";
+import { Opcao } from "./ui/Opcao";
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
 type EventView = {
@@ -228,8 +229,8 @@ export default function EventoShare({ event, ministries, churchName = "Service",
           </div>
 
           <div className="seg" style={{ marginBottom: 18 }}>
-            <button type="button" className={modo === "simples" ? "on" : ""} onClick={() => setModo("simples")}>Simplificada</button>
-            <button type="button" className={modo === "completa" ? "on" : ""} onClick={() => setModo("completa")}>Completa</button>
+            <Opcao marcada={modo === "simples"} onClick={() => setModo("simples")}>Simplificada</Opcao>
+            <Opcao marcada={modo === "completa"} onClick={() => setModo("completa")}>Completa</Opcao>
           </div>
 
           {!completa && setlist.length > 0 && (

@@ -9,6 +9,7 @@ import { createServiceBrowserClient } from "./lib/supabase-browser";
 import ChurchLockup from "./ChurchLockup";
 
 import { Botao, BotaoIcone } from "./ui/Botao";
+import { Acao } from "./ui/Acao";
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
 type LessonView = {
@@ -394,8 +395,8 @@ export function AulaCheckinModal({
               QR Code único desta aula. Só quem está matriculado no curso confirma presença.
             </div>
             <div className="ck-tabs">
-              <button className={`ck-tab ${tab === "qr" ? "on" : ""}`} onClick={() => setTab("qr")}>QR Code</button>
-              <button className={`ck-tab ${tab === "presenca" ? "on" : ""}`} onClick={() => setTab("presenca")}>Presença ao vivo · {presentes}</button>
+              <Acao className={`ck-tab ${tab === "qr" ? "on" : ""}`} onClick={() => setTab("qr")}>QR Code</Acao>
+              <Acao className={`ck-tab ${tab === "presenca" ? "on" : ""}`} onClick={() => setTab("presenca")}>Presença ao vivo · {presentes}</Acao>
             </div>
           </div>
 

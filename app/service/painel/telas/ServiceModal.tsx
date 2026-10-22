@@ -19,6 +19,7 @@ import { FField } from "../campos";
 import type { ChurchView, MemberView, MinistryView, ModalState, PersonView, RoomView } from "../tipos";
 
 import { Botao } from "../../ui/Botao";
+import { Opcao } from "../../ui/Opcao";
 export function findMinistryByName(ministries: MinistryView[], value: string) {
   const term = normalize(value);
   if (!term) return null;
@@ -586,15 +587,14 @@ export function ServiceModal({
               {field.type === "select" && field.options.length <= 6 ? (
                 <div className="fs-chips" role="group" aria-labelledby={`${idDo(field.k)}-r`}>
                   {field.options.map((o) => (
-                    <button
-                      type="button"
+                    <Opcao
                       key={o.v}
                       aria-pressed={values[field.k] === o.v}
-                      className={`seg-chip${values[field.k] === o.v ? " on" : ""}`}
+                      marcada={values[field.k] === o.v} estilo="seg-chip"
                       onClick={() => setValues((cur) => ({ ...cur, [field.k]: cur[field.k] === o.v && !field.req ? "" : o.v }))}
                     >
                       {o.l}
-                    </button>
+                    </Opcao>
                   ))}
                 </div>
               ) : (

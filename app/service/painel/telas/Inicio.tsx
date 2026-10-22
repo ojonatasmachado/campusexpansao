@@ -27,6 +27,7 @@ import { Kpi, REACOES_PESQUISA, ROUTES } from "../comum";
 import type { AnnouncementView, ChildView, DecisionView, DrawerState, EnrollmentView, EventAttendanceView, EventView, FieldDef, JourneyChangeRequestView, KidsAttendanceView, KidsClassView, MemberView, MinistryView, ModalState, PersonView, RosterAssignmentView, TimelineEventView, VisitorView } from "../tipos";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 export function GlobalSearch({
   people,
   members,
@@ -149,10 +150,9 @@ export function GlobalSearch({
         <div className="gsearch-pop">
           {results.length === 0 ? <div className="gsearch-empty">Nada encontrado para &quot;{query}&quot;.</div> : null}
           {results.map((result) => (
-            <button
+            <Acao
               className="gsearch-row"
               key={result.key}
-              type="button"
               onMouseDown={(event) => {
                 event.preventDefault();
                 result.action();
@@ -162,7 +162,7 @@ export function GlobalSearch({
               <span className="gsearch-ic"><Icon name={result.icon} size={15} /></span>
               <span className="gsearch-main"><span className="gsearch-nome">{result.name}</span><span className="gsearch-sub">{result.sub}</span></span>
               <span className="gsearch-tag">{result.type}</span>
-            </button>
+            </Acao>
           ))}
         </div>
       ) : null}
@@ -370,32 +370,32 @@ export function Painel({
       {(vagasDaSemana > 0 || (!liderDeTime && (visitantesSemContato > 0 || visitantesPeloLink > 0)) || (!liderDeTime && journeyRequests.length > 0)) && (
         <div className="agora-list">
           {vagasDaSemana > 0 && (
-            <button type="button" className="agora-row" onClick={() => setRoute("escalas")}>
+            <Acao className="agora-row" onClick={() => setRoute("escalas")}>
               <span className="agora-ic"><Icon name="escalas" size={17} /></span>
               <span className="agora-main"><span className="agora-t">{vagasDaSemana === 1 ? "1 vaga aberta na escala" : `${vagasDaSemana} vagas abertas na escala`}</span><span className="agora-s"> · nesta semana</span></span>
               <span className="agora-go">Escalar →</span>
-            </button>
+            </Acao>
           )}
           {!liderDeTime && visitantesSemContato > 0 && (
-            <button type="button" className="agora-row" onClick={() => setRoute("visitantes")}>
+            <Acao className="agora-row" onClick={() => setRoute("visitantes")}>
               <span className="agora-ic"><Icon name="visitante" size={17} /></span>
               <span className="agora-main"><span className="agora-t">{visitantesSemContato === 1 ? "1 visitante sem contato" : `${visitantesSemContato} visitantes sem contato`}</span><span className="agora-s"> · há mais de 48h</span></span>
               <span className="agora-go">Ver →</span>
-            </button>
+            </Acao>
           )}
           {!liderDeTime && visitantesPeloLink > 0 && (
-            <button type="button" className="agora-row" onClick={() => setRoute("visitantes")}>
+            <Acao className="agora-row" onClick={() => setRoute("visitantes")}>
               <span className="agora-ic"><Icon name="visitante" size={17} /></span>
               <span className="agora-main"><span className="agora-t">{`${plural(visitantesPeloLink, "visitante")} ${visitantesPeloLink === 1 ? "se cadastrou" : "se cadastraram"} pelo link`}</span><span className="agora-s"> · esperando o 1º contato</span></span>
               <span className="agora-go">Ver →</span>
-            </button>
+            </Acao>
           )}
           {!liderDeTime && journeyRequests.length > 0 && (
-            <button type="button" className="agora-row" onClick={() => document.getElementById("caminhada-pendente")?.scrollIntoView({ behavior: "smooth" })}>
+            <Acao className="agora-row" onClick={() => document.getElementById("caminhada-pendente")?.scrollIntoView({ behavior: "smooth" })}>
               <span className="agora-ic"><Icon name="membros" size={17} /></span>
               <span className="agora-main"><span className="agora-t">{journeyRequests.length === 1 ? ct("1 pedido na {caminhada}") : ct(`${journeyRequests.length} pedidos na {caminhada}`)}</span><span className="agora-s"> · esperando sua aprovação</span></span>
               <span className="agora-go">Revisar →</span>
-            </button>
+            </Acao>
           )}
         </div>
       )}
@@ -407,10 +407,10 @@ export function Painel({
       )}
       {aniversarios}
       {emPreparacao ? (
-        <button type="button" className="setup-banner" onClick={() => setRoute("configurar")}>
+        <Acao className="setup-banner" onClick={() => setRoute("configurar")}>
           <span className="setup-banner-t">{linhaDoSetup(setup)}</span>
           <span className="agora-go">{setup.feitas.length || setup.pulou ? "Continuar →" : "Começar →"}</span>
-        </button>
+        </Acao>
       ) : (
         gestao ? <details className="service-preparacao"><summary>Revisar preparação da igreja</summary><SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} /></details> : null
       )}
@@ -420,7 +420,7 @@ export function Painel({
         <Kpi icon="ok" label="Confirmação" value={escaladosSemana ? `${confirmationRate}%` : "·"} foot={escaladosSemana ? `de ${plural(escaladosSemana, "vaga escalada", "vagas escaladas")} nesta semana` : "ninguém escalado nesta semana"} />
         <Kpi icon="visitante" label="Visitantes em acompanhamento" value={visitorsInCare} foot={visitantesSemContato ? `${visitantesSemContato} sem contato há mais de 48h` : visitorsInCare ? "todos com contato em dia" : "nenhum visitante em acompanhamento"} />
       </div>}
-      <div className="sobre-numeros"><button type="button" className="help-link" onClick={() => setSobreAberto(true)}>Sobre estes números</button></div>
+      <div className="sobre-numeros"><Acao className="help-link" onClick={() => setSobreAberto(true)}>Sobre estes números</Acao></div>
       {sobreAberto && (
         <div className="modal-bg" onClick={() => setSobreAberto(false)}>
           <div className="modal" role="dialog" aria-label="Sobre estes números" onClick={(e) => e.stopPropagation()}>
@@ -544,12 +544,12 @@ export function Painel({
           <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Comunicação recente</span><Botao compacto onClick={() => setRoute("comunicacao")}>Ver tudo</Botao></div>
           <div className="panel-body flush">
             {recentAnnouncements.map((a) => (
-              <button className="mini-row click" type="button" key={a.id} onClick={() => setRoute("comunicacao")}>
+              <Acao className="mini-row click" key={a.id} onClick={() => setRoute("comunicacao")}>
                 <div className="mini-main">
                   <div className="mini-title">{a.title}</div>
                   <div className="mini-sub">{joinDot(paraPublico(a.audience), quandoPublicado(a.created_at))}</div>
                 </div>
-              </button>
+              </Acao>
             ))}
             {recentAnnouncements.length === 0 && (
               <div className="mini-row"><div className="mini-main"><div className="mini-title">Nenhum aviso ainda</div><div className="mini-sub">Publique em Comunicação</div></div></div>

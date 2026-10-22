@@ -11,6 +11,8 @@ import { PAPEIS_V2, REACOES_PESQUISA } from "../comum";
 import type { MinistryView, PesquisaAdminRow, PesquisaDraft, PesquisaPerguntaDraft } from "../tipos";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 export const novaPesquisaDraft = (): PesquisaDraft => ({
   id: `nova-${Date.now()}`,
   nome: "",
@@ -248,8 +250,8 @@ export function PesquisasView({ organizationId, ministries }: { organizationId: 
               </Botao>
               {novaMenuOpen && !temPulso && (
                 <div className="sel-pop" style={{ left: 0, right: "auto", width: 260 }}>
-                  <button type="button" className="sel-opt" onClick={() => { setNovaMenuOpen(false); setRoute({ screen: "editor", draft: novaPesquisaDraft() }); }}>Em branco</button>
-                  <button type="button" className="sel-opt" onClick={() => { setNovaMenuOpen(false); setRoute({ screen: "editor", draft: modeloPulsoPosEscala() }); }}>Modelo: Pulso pós-escala</button>
+                  <Acao className="sel-opt" onClick={() => { setNovaMenuOpen(false); setRoute({ screen: "editor", draft: novaPesquisaDraft() }); }}>Em branco</Acao>
+                  <Acao className="sel-opt" onClick={() => { setNovaMenuOpen(false); setRoute({ screen: "editor", draft: modeloPulsoPosEscala() }); }}>Modelo: Pulso pós-escala</Acao>
                 </div>
               )}
             </div>
@@ -356,15 +358,15 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
       <div className="field">
         <div className="fs-chips" role="group" aria-label="Quem vê essa pesquisa" style={{ marginBottom: 8 }}>
           {(["todos", "papel", "time"] as const).map((m) => (
-            <button key={m} type="button" className={`seg-chip${d.segmentacaoModo === m ? " on" : ""}`} onClick={() => setD({ ...d, segmentacaoModo: m, segmentacaoValores: [] })}>
+            <Opcao key={m} marcada={d.segmentacaoModo === m} estilo="seg-chip" onClick={() => setD({ ...d, segmentacaoModo: m, segmentacaoValores: [] })}>
               {m === "todos" ? "Todo mundo" : m === "papel" ? "Por papel" : "Por time"}
-            </button>
+            </Opcao>
           ))}
         </div>
         {d.segmentacaoModo === "papel" && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {PAPEIS_V2.map((pp) => (
-              <button key={pp.id} type="button" className={`seg-chip${d.segmentacaoValores.includes(pp.id) ? " on" : ""}`} onClick={() => toggleValor(pp.id)}>{ct(pp.nome)}</button>
+              <Opcao key={pp.id} marcada={d.segmentacaoValores.includes(pp.id)} estilo="seg-chip" onClick={() => toggleValor(pp.id)}>{ct(pp.nome)}</Opcao>
             ))}
           </div>
         )}
@@ -372,7 +374,7 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {times.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum time cadastrado ainda.</span>}
             {times.map((t) => (
-              <button key={t} type="button" className={`seg-chip${d.segmentacaoValores.includes(t) ? " on" : ""}`} onClick={() => toggleValor(t)}>{t}</button>
+              <Opcao key={t} marcada={d.segmentacaoValores.includes(t)} estilo="seg-chip" onClick={() => toggleValor(t)}>{t}</Opcao>
             ))}
           </div>
         )}
@@ -384,9 +386,9 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
       <div className="field">
         <div className="fs-chips" role="group" aria-label="Quando aparece" style={{ marginBottom: 8 }}>
           {(["posescala", "campanha", "periodica", "livre"] as const).map((m) => (
-            <button key={m} type="button" className={`seg-chip${d.disparoModo === m ? " on" : ""}`} onClick={() => setD({ ...d, disparoModo: m })}>
+            <Opcao key={m} marcada={d.disparoModo === m} estilo="seg-chip" onClick={() => setD({ ...d, disparoModo: m })}>
               {m === "posescala" ? "Pós-escala" : m === "campanha" ? "Campanha pontual" : m === "periodica" ? "Periódica" : "Atalho livre"}
-            </button>
+            </Opcao>
           ))}
         </div>
         {d.disparoModo === "posescala" && (
@@ -420,9 +422,9 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
                 <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>#{idx + 1}</span>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", flex: 1 }}>
                   {(["emoji", "nota", "texto", "simnao", "multipla"] as const).map((t) => (
-                    <button key={t} type="button" className={`seg-chip${p.tipo === t ? " on" : ""}`} onClick={() => updatePergunta(p.id, { tipo: t })}>
+                    <Opcao key={t} marcada={p.tipo === t} estilo="seg-chip" onClick={() => updatePergunta(p.id, { tipo: t })}>
                       {t === "emoji" ? "Emoji" : t === "nota" ? "Nota" : t === "texto" ? "Texto livre" : t === "simnao" ? "Sim/Não" : "Múltipla escolha"}
-                    </button>
+                    </Opcao>
                   ))}
                 </div>
                 <Botao compacto onClick={() => removePergunta(p.id)}>Remover</Botao>
@@ -431,7 +433,7 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
               {p.tipo === "emoji" && <div style={{ display: "flex", gap: 6, fontSize: "var(--fs-pn-20)" }}>{REACOES_PESQUISA.map((r) => <span key={r}>{r}</span>)}</div>}
               {p.tipo === "nota" && (
                 <div style={{ display: "flex", gap: 8 }}>
-                  {[5, 10].map((s) => <button key={s} type="button" className={`seg-chip${(p.escala ?? 5) === s ? " on" : ""}`} onClick={() => updatePergunta(p.id, { escala: s as 5 | 10 })}>0 a {s}</button>)}
+                  {[5, 10].map((s) => <Opcao key={s} marcada={(p.escala ?? 5) === s} estilo="seg-chip" onClick={() => updatePergunta(p.id, { escala: s as 5 | 10 })}>0 a {s}</Opcao>)}
                 </div>
               )}
               {p.tipo === "multipla" && (

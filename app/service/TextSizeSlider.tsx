@@ -12,6 +12,8 @@ import { useRef } from "react";
 import { CORPOS, fatorDa, textoDaPosicao, useTextSize } from "./lib/text-scale";
 import { useTermos } from "./lib/vocabulario-context";
 
+import { Botao } from "./ui/Botao";
+import { Acao } from "./ui/Acao";
 const ULTIMA = CORPOS.length - 1;
 
 export function TextSizeSlider({ previa = true }: { previa?: boolean }) {
@@ -44,7 +46,7 @@ export function TextSizeSlider({ previa = true }: { previa?: boolean }) {
         </div>
       )}
       <div className="ts-ctl">
-        <button type="button" className="ts-a ts-a-min" aria-label="Diminuir o texto" disabled={pos <= 0} onClick={() => mudar(pos - 1)}>A</button>
+        <Acao className="ts-a ts-a-min" aria-label="Diminuir o texto" desativado={pos <= 0} onClick={() => mudar(pos - 1)}>A</Acao>
         <div
           className="ts-track"
           ref={trilho}
@@ -78,7 +80,7 @@ export function TextSizeSlider({ previa = true }: { previa?: boolean }) {
             }}
           />
         </div>
-        <button type="button" className="ts-a ts-a-max" aria-label="Aumentar o texto" disabled={pos >= ULTIMA} onClick={() => mudar(pos + 1)}>A</button>
+        <Acao className="ts-a ts-a-max" aria-label="Aumentar o texto" desativado={pos >= ULTIMA} onClick={() => mudar(pos + 1)}>A</Acao>
       </div>
     </div>
   );
@@ -93,7 +95,7 @@ export function TextSizeSheet({ onClose }: { onClose: () => void }) {
         <div className="m6-grab" />
         <div className="ts-head">
           <span className="m6-rt">Tamanho do texto</span>
-          <button type="button" className="m6-link" onClick={onClose}>Pronto</button>
+          <Botao tamanho="toque" variante="texto" onClick={onClose}>Pronto</Botao>
         </div>
         <TextSizeSlider />
       </div>

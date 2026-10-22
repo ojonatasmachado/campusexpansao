@@ -19,6 +19,8 @@ import {
 } from "./oracao";
 
 import { Botao } from "../../ui/Botao";
+import { Interruptor } from "../../ui/Interruptor";
+import { Opcao } from "../../ui/Opcao";
 type Toast = (msg: string, action?: { label: string; fn: () => void }) => void;
 
 // ── o pedido ─────────────────────────────────────────────────────────────────
@@ -91,7 +93,7 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
       <div className="or-campo" id={`${fid}-cat`}>Sobre o quê</div>
       <div className="or-chips" role="group" aria-labelledby={`${fid}-cat`}>
         {CATEGORIAS.map((c) => (
-          <button key={c.id} type="button" className={`or-chip${categoria === c.id ? " on" : ""}`} aria-pressed={categoria === c.id} onClick={() => setCategoria(categoria === c.id ? null : c.id)}>{c.rotulo}</button>
+          <Opcao key={c.id} marcada={categoria === c.id} estilo="or-chip" aria-pressed={categoria === c.id} onClick={() => setCategoria(categoria === c.id ? null : c.id)}>{c.rotulo}</Opcao>
         ))}
       </div>
 
@@ -103,10 +105,10 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
               ["intercessao", "Só a intercessão", `Vai para ${papelDoDestinatario(dest as Destinatario)}, numa conversa.`],
               ["mural", "Mural de oração", "A igreja vê e pode orar com você."],
             ] as const).map(([v, t, s]) => (
-              <button key={v} type="button" role="radio" aria-checked={publico === v} className={`m6-row or-opt${publico === v ? " on" : ""}`} onClick={() => setPublico(v)}>
+              <Opcao key={v} role="radio" aria-checked={publico === v} marcada={publico === v} estilo="m6-row" className="or-opt" onClick={() => setPublico(v)}>
                 <span className="or-radio" aria-hidden="true" />
                 <span className="m6-rb"><span className="m6-rt">{t}</span><span className="m6-rs">{s}</span></span>
-              </button>
+              </Opcao>
             ))}
           </div>
         </>
@@ -118,7 +120,7 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
         <div className="m6-list flat">
           <div className="m6-row or-sw">
             <span className="m6-rb"><span className="m6-rt" id={`${fid}-anon`}>Pedir sem meu nome</span><span className="m6-rs">Só quem cuida da intercessão sabe que foi você.</span></span>
-            <button type="button" role="switch" aria-checked={anonimo} aria-labelledby={`${fid}-anon`} className={`m6-tg${anonimo ? " on" : ""}`} onClick={() => setAnonimo(!anonimo)} />
+            <Interruptor ligado={anonimo} tamanho="toque" rotuloId={`${fid}-anon`} onClick={() => setAnonimo(!anonimo)} />
           </div>
         </div>
       )}
@@ -211,7 +213,7 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
       <div className="m6-segwrap">
         <div className="ts-seg m6-seg" role="radiogroup" aria-label="O que ver">
           {([["igreja", "Da igreja"], ["meus", "Meus"], ["respondidos", "Respostas"]] as const).map(([v, l]) => (
-            <button key={v} type="button" role="radio" aria-checked={aba === v} className={aba === v ? "on" : ""} onClick={() => setAba(v)}>{l}</button>
+            <Opcao key={v} role="radio" aria-checked={aba === v} marcada={aba === v} onClick={() => setAba(v)}>{l}</Opcao>
           ))}
         </div>
       </div>

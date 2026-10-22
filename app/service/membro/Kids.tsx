@@ -15,6 +15,7 @@ import { Av } from "./comum";
 import type { Child, ChildGuardian, Ev, KidsAttendance, KidsClass, KidsEvent, KidsEventEnrollment, KidsSession, M, P, WallPost } from "./tipos";
 
 import { Botao } from "../ui/Botao";
+import { Acao } from "../ui/Acao";
 // ── aba: Kids (professor) ───────────────────────────────────────────────────────
 
 export function TabKids({
@@ -166,7 +167,7 @@ export function TabKids({
               <div className="m-card" key={att.id} style={{ borderColor: "var(--amber-line)" }}>
                 <div className="m-culto">{child?.name ?? "Crianca"}</div>
                 <div className="m-fn">Compare o responsável na porta antes de confirmar.</div>
-                <button className="m-btn m-btn-ok" style={{ width: "100%", marginTop: 8 }} onClick={() => confirmarRetirada(att)}>Confirmar retirada</button>
+                <Botao tamanho="toque" variante="principal" largo style={{ width: "100%", marginTop: 8 }} onClick={() => confirmarRetirada(att)}>Confirmar retirada</Botao>
               </div>
             );
           })}
@@ -185,7 +186,7 @@ export function TabKids({
                 <div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{child?.name ?? "Crianca"}</div>
                 <div className="m-fn">{child?.allergies ? `Alergia: ${child.allergies}` : (att.dropped_off_via === "manual" ? "manual" : "QR")}</div>
               </div>
-              <button className="m-btn m-btn-swap" style={{ padding: "6px 10px" }} onClick={() => avisarResponsavel(att.child_id)}>Avisar</button>
+              <Botao tamanho="toque" variante="secundario" compacto style={{ padding: "6px 10px" }} onClick={() => avisarResponsavel(att.child_id)}>Avisar</Botao>
             </div>
           </div>
         );
@@ -200,9 +201,9 @@ export function TabKids({
         </div>
       ))}
 
-      <button className="m-btn m-btn-swap" style={{ width: "100%", marginTop: 16 }} onClick={() => setNovaFicha((v) => !v)}>
+      <Botao tamanho="toque" variante="secundario" largo style={{ width: "100%", marginTop: 16 }} onClick={() => setNovaFicha((v) => !v)}>
         {novaFicha ? "Cancelar" : "+ Criar ficha na hora"}
-      </button>
+      </Botao>
       {novaFicha && (
         <div className="m-card" style={{ borderColor: "var(--olive-line)", marginTop: 10 }}>
           <PhotoPicker label="Foto da criança (obrigatória)" photoUrl={fotoCrianca} path={`${organizationId}/kids/children/${fichaIds.childId}`} onUploaded={setFotoCrianca} />
@@ -234,7 +235,7 @@ export function TabKids({
             <span>{imageAuthorizationCopy(form.nome)}</span>
           </label>
           {fichaError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{fichaError}</div>}
-          <button className="m-btn m-btn-ok" style={{ width: "100%" }} onClick={criarFicha}>Salvar e fazer check-in</button>
+          <Botao tamanho="toque" variante="principal" largo style={{ width: "100%" }} onClick={criarFicha}>Salvar e fazer check-in</Botao>
         </div>
       )}
     </>
@@ -415,7 +416,7 @@ export function TabKidsArea({
         <span>{imageAuthorizationCopy(form.nome)}</span>
       </label>
       {ficarError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{ficarError}</div>}
-      <div className="m6-fixo m6-fixo-mcard"><button className="m-btn m-btn-ok" style={{ width: "100%" }} onClick={salvarFilho}>Salvar</button></div>
+      <div className="m6-fixo m6-fixo-mcard"><Botao tamanho="toque" variante="principal" largo style={{ width: "100%" }} onClick={salvarFilho}>Salvar</Botao></div>
     </div>
   );
 
@@ -431,7 +432,7 @@ export function TabKidsArea({
         const historico = kidsAttendance.filter((a) => a.child_id === child.id).sort((a, b) => b.dropped_off_at.localeCompare(a.dropped_off_at)).slice(0, 3);
         return (
           <div key={child.id}>
-            <button className="m-card" style={{ width: "100%", textAlign: "left", cursor: "pointer" }} onClick={() => abrirEdicao(child)}>
+            <Acao className="m-card" style={{ width: "100%", textAlign: "left", cursor: "pointer" }} onClick={() => abrirEdicao(child)}>
               <div className="m-vis-head">
                 <Av name={child.name} size="sm" photoUrl={child.photo_url} />
                 <div className="m-vis-main">
@@ -445,7 +446,7 @@ export function TabKidsArea({
                   {historico.map((h) => <div key={h.id}>{formatDateBR(h.dropped_off_at.slice(0, 10))} · {h.status === "retirado" ? "retirado" : "na sala"}</div>)}
                 </div>
               )}
-            </button>
+            </Acao>
             {editingId === child.id && (
               <>
                 {fichaForm}
@@ -461,7 +462,7 @@ export function TabKidsArea({
                           <div className="m-fn">{g.relationship || "sem parentesco informado"}</div>
                         </div>
                         {isPrimaryFor(child.id) && !g.is_primary && (
-                          <button className="ob-foto-remover" type="button" onClick={() => removerCoResponsavel(g.id)}>Remover</button>
+                          <Acao className="ob-foto-remover" onClick={() => removerCoResponsavel(g.id)}>Remover</Acao>
                         )}
                       </div>
                     );
@@ -483,7 +484,7 @@ export function TabKidsArea({
                         <input type="checkbox" checked={coForm.canPickup} onChange={(e) => setCoForm((f) => ({ ...f, canPickup: e.target.checked }))} /> Pode retirar
                       </label>
                       {coError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{coError}</div>}
-                      <button className="m-btn m-btn-swap" style={{ width: "100%" }} onClick={() => adicionarCoResponsavel(child.id)}>+ Adicionar corresponsável</button>
+                      <Botao tamanho="toque" variante="secundario" largo style={{ width: "100%" }} onClick={() => adicionarCoResponsavel(child.id)}>+ Adicionar corresponsável</Botao>
                     </>
                   ) : (
                     <div className="cell-sub">Só o responsável principal pode adicionar outros corresponsáveis.</div>
@@ -496,9 +497,9 @@ export function TabKidsArea({
       })}
       {meusFilhos.length === 0 && <div className="cell-sub" style={{ marginBottom: 4 }}>Você ainda não tem nenhuma criança vinculada por aqui.</div>}
 
-      <button className="m-btn m-btn-swap" style={{ width: "100%", marginTop: 10 }} onClick={abrirNovo}>
+      <Botao tamanho="toque" variante="secundario" largo style={{ width: "100%", marginTop: 10 }} onClick={abrirNovo}>
         {editingId === "novo" ? "Cancelar" : "+ Adicionar criança"}
-      </button>
+      </Botao>
       {editingId === "novo" && fichaForm}
 
       {kidsWall.length > 0 && (
@@ -524,9 +525,9 @@ export function TabKidsArea({
                 {meusFilhos.map((child) => {
                   const inscrito = enrollments.some((e) => e.kids_event_id === event.id && e.child_id === child.id);
                   return (
-                    <button key={child.id} className={`chip ${inscrito ? "chip-ok" : "chip-neutral"}`} type="button" disabled={inscrito} onClick={() => inscrever(event.id, child.id)}>
+                    <Acao key={child.id} className={`chip ${inscrito ? "chip-ok" : "chip-neutral"}`} desativado={inscrito} onClick={() => inscrever(event.id, child.id)}>
                       {child.name.split(" ")[0]}{inscrito ? <> <Icon name="ok" size={13} /></> : " + inscrever"}
-                    </button>
+                    </Acao>
                   );
                 })}
               </div>

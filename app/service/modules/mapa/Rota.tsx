@@ -10,6 +10,7 @@ import { limparCamadas, type ContextoMapa } from "./contexto";
 import { caixaDaGeometria, temPonto } from "./geo";
 
 import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 /* Ferramentas › Traçar rota (tela 12 do design). O objetivo vem primeiro e
    muda o que vira parada: na Visita, as pessoas (com nome no mapa); em
    oração, panfletagem e carro de som, lugares e ruas, nunca casas. */
@@ -155,7 +156,7 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
       <div className="mp-faixa" role="region" aria-label="Traçar rota">
         <strong>Traçar rota</strong>
         <span className="mp-texto">{objetivo === "visita" ? "Clique nas pessoas do mapa." : "Clique no mapa para marcar as paradas."}</span>
-        <button type="button" className="mp-botao" onClick={ctx.fechar}>Sair</button>
+        <Botao tamanho="mapa" onClick={ctx.fechar}>Sair</Botao>
       </div>
       <aside className="mp-painel mp-dir" aria-label="Rota" style={{ width: 400 }}>
         <div className="mp-cab">
@@ -163,7 +164,7 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
           <div className="field" style={{ marginTop: 10 }}>
             <span className="field-label">Objetivo</span>
             <div className="mp-seg" role="group" aria-label="Objetivo" style={{ ["--n" as string]: 3 } as React.CSSProperties}>
-              {OBJETIVOS.map((o) => <button key={o.id} type="button" aria-pressed={objetivo === o.id} onClick={() => { setObjetivo(o.id); setParadas((ps) => ps.slice(0, sede ? 1 : 0)); setAreaId(""); }}>{o.nome}</button>)}
+              {OBJETIVOS.map((o) => <Acao key={o.id} aria-pressed={objetivo === o.id} onClick={() => { setObjetivo(o.id); setParadas((ps) => ps.slice(0, sede ? 1 : 0)); setAreaId(""); }}>{o.nome}</Acao>)}
             </div>
           </div>
           <p className="mp-fraco" style={{ marginTop: 8 }}>{obj.dica}</p>
@@ -195,8 +196,8 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
           <div className="field">
             <span className="field-label">Como</span>
             <div className="mp-seg" style={{ ["--n" as string]: 2 } as React.CSSProperties}>
-              <button type="button" aria-pressed={como === "pe"} onClick={() => setComo("pe")}>A pé</button>
-              <button type="button" aria-pressed={como === "carro"} onClick={() => setComo("carro")}>Carro</button>
+              <Acao aria-pressed={como === "pe"} onClick={() => setComo("pe")}>A pé</Acao>
+              <Acao aria-pressed={como === "carro"} onClick={() => setComo("carro")}>Carro</Acao>
             </div>
           </div>
           {res && <div className="mp-destaque" style={{ fontSize: "var(--fs-pn-14)" }}><span className="mp-num">{String(res.distancia_km).replace(".", ",")}</span> km · cerca de <span className="mp-num">{res.duracao_min >= 60 ? `${Math.floor(res.duracao_min / 60)}h${String(res.duracao_min % 60).padStart(2, "0")}` : `${res.duracao_min} min`}</span>{res.aproximado && <span className="mp-fraco" style={{ display: "block" }}>Conta aproximada, em linha reta.</span>}</div>}

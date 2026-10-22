@@ -10,6 +10,7 @@ import { useChurchSettingsField } from "../../lib/settings-field";
 import { caminhoAutocadastro, type AutocadastroCfg } from "./autocadastro";
 
 import { Botao, botaoClasse } from "../../ui/Botao";
+import { Interruptor } from "../../ui/Interruptor";
 const PADRAO: AutocadastroCfg = { ativo: false, responsavelId: null };
 
 /* Visitantes › QR e link: liga o autocadastro, escolhe quem recebe os
@@ -71,7 +72,7 @@ export default function AutocadastroPainel({
               <div className="cfg-row-t">Receber cadastros pelo link</div>
               <div className="cfg-row-s">{cfg.ativo ? "Ligado. O link e o QR já aceitam cadastros." : "Desligado. Quem abrir o link vê um aviso para procurar a recepção."}</div>
             </div>
-            <button type="button" role="switch" aria-checked={cfg.ativo} aria-label="Receber cadastros pelo link" className={`sw${cfg.ativo ? " on" : ""}`} onClick={() => save({ ativo: !cfg.ativo })} />
+            <Interruptor ligado={cfg.ativo} rotulo="Receber cadastros pelo link" onClick={() => save({ ativo: !cfg.ativo })} />
           </div>
 
           <div className="field" style={{ marginTop: 14 }}>

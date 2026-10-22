@@ -18,6 +18,9 @@ import { TeamMark } from "../comum";
 import type { CourseView, DrawerState, MemberView, MinistryView, ModalState, PersonView } from "../tipos";
 
 import { Botao } from "../../ui/Botao";
+import { Interruptor } from "../../ui/Interruptor";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 /* Pessoas e Voluntários : módulo em modules/pessoas/ (4.1) */
 
 /* Pedidos do app ("Quero servir", 0046): o membro já passou pelos
@@ -73,7 +76,7 @@ export function Times({ ministries, people, members, serveRequests, setDrawer, s
       <PageHead title="Times" eyebrow="Pessoas" subtitle={plural(ministries.length, "time")} help="Louvor, Recepção, Kids... cada time tem um líder e suas funções próprias." action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Novo time", subtitle: "Crie o time e já conte o propósito dele.", saveLabel: "Criar time", formFields: [{ k:"nome", label:"Nome do time", type:"text", req:true, ph:"ex: Louvor e Adoração" }, { k:"icon", label:"Ícone do time", type:"icon", value: DEFAULT_ICON }, { k:"desc", label:"Propósito", type:"area", ph:"Por que esse time existe?" }, { k:"aberto", label:"Receber pedidos pelo app", type:"toggle", onLabel:"Pedidos abertos", offLabel:"Pedidos fechados", hint:"Depois de definir um líder com ficha no app, a oportunidade aparece para os membros. Nenhuma pessoa entra sem aprovação." }], action: { kind: "ministry" } })}>+ Novo time</Botao>} />
       <PedidosParaServir serveRequests={serveRequests} members={members} ministries={ministries} />
       <div className="team-grid">
-        {ministries.map((ministry) => <button className="team-card" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => { const linkPerson = people.find((person) => person.id === link.personId); return <Av key={link.personId} name={linkPerson?.name ?? link.personName} photoUrl={linkPerson?.photoUrl} />; })}{ministry.people.length > 4 && <div className="av-more">+{ministry.people.length - 4}</div>}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">{ministry.people.find((link) => link.isLeader)?.personName ? <>Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName}</em></> : <span className="sem-lider">Sem líder · Definir</span>}</div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> {ct(ministry.people.length === 1 ? "{voluntario}" : "{voluntarios}")}</span><span className="team-stat"><b>{ministry.positions.length}</b> {ministry.positions.length === 1 ? "função" : "funções"}</span></div></button>)}
+        {ministries.map((ministry) => <Acao className="team-card" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}><div className="team-card-top"><div className="team-mark"><TeamMark ministry={ministry} size={20} /></div><div className="av-stack">{ministry.people.slice(0, 4).map((link) => { const linkPerson = people.find((person) => person.id === link.personId); return <Av key={link.personId} name={linkPerson?.name ?? link.personName} photoUrl={linkPerson?.photoUrl} />; })}{ministry.people.length > 4 && <div className="av-more">+{ministry.people.length - 4}</div>}</div></div><div className="team-name">{ministry.name}</div><div className="team-lead">{ministry.people.find((link) => link.isLeader)?.personName ? <>Líder: <em>{ministry.people.find((link) => link.isLeader)?.personName}</em></> : <span className="sem-lider">Sem líder · Definir</span>}</div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", lineHeight: 1.55, marginTop: 12 }}>{ministry.description}</div><div className="team-foot"><span className="team-stat"><b>{ministry.people.length}</b> {ct(ministry.people.length === 1 ? "{voluntario}" : "{voluntarios}")}</span><span className="team-stat"><b>{ministry.positions.length}</b> {ministry.positions.length === 1 ? "função" : "funções"}</span></div></Acao>)}
       </div>
     </div>
   );
@@ -182,7 +185,7 @@ export function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
       <FormSection title="Quem pode entrar">
         <div className="field">
           <label className="field-label" htmlFor={`${fid}-recebendo`}>Receber pedidos pelo app</label>
-          <button id={`${fid}-recebendo`} type="button" role="switch" aria-label="Receber pedidos pelo app" aria-checked={recebendo} className={`sw${recebendo ? " on" : ""}`} onClick={() => setRecebendo((v) => !v)} />
+          <Interruptor ligado={recebendo} id={`${fid}-recebendo`} rotulo="Receber pedidos pelo app" onClick={() => setRecebendo((v) => !v)} />
           <p className="field-hint">A oportunidade aparece para o membro quando este controle está ligado e há um líder do time com ficha no app. O pedido precisa ser aprovado para incluir a pessoa na equipe.</p>
         </div>
         <div className="field" role="group" aria-label="Pré-requisitos para entrar no time">
@@ -194,7 +197,7 @@ export function MinisterioEditModal({ ministry, courses, onClose, onRefresh }: {
         <div className="field">
           <div className="fs-chips" role="group" aria-label="Módulos extras no app" aria-describedby={`${fid}-app-dica`}>
             {APP_MODULES_TIME.map((m) => (
-              <button key={m.id} type="button" className={`seg-chip${appModules.includes(m.id) ? " on" : ""}`} aria-pressed={appModules.includes(m.id)} onClick={() => togModule(m.id)}>{m.label}</button>
+              <Opcao key={m.id} marcada={appModules.includes(m.id)} estilo="seg-chip" aria-pressed={appModules.includes(m.id)} onClick={() => togModule(m.id)}>{m.label}</Opcao>
             ))}
           </div>
           <div className="field-hint" id={`${fid}-app-dica`}>Quem está neste time passa a ver esses módulos no app.</div>

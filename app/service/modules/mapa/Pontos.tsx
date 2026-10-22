@@ -9,6 +9,8 @@ import { plural } from "../../lib/plural";
 import { limparCamadas, type ContextoMapa } from "./contexto";
 
 import { Botao, BotaoIcone } from "../../ui/Botao";
+import { Interruptor } from "../../ui/Interruptor";
+import { Acao } from "../../ui/Acao";
 /* Pontos de interesse (tela 10 do design). Desligados por padrão; do
    OpenStreetMap (atualizados todo mês) ou adicionados à mão. Cada ponto
    mostra a origem e tem editar, ocultar e excluir (excluir só os manuais). */
@@ -139,7 +141,7 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
       <div className="mp-faixa" role="region" aria-label="Pontos de interesse">
         <strong>Pontos de interesse</strong>
         {escolhendo && <span className="mp-texto">Clique no mapa onde fica o ponto.</span>}
-        <button type="button" className="mp-botao" onClick={ctx.fechar}>Sair</button>
+        <Botao tamanho="mapa" onClick={ctx.fechar}>Sair</Botao>
       </div>
       <aside className="mp-painel mp-esq aberto" aria-label="Pontos de interesse">
         <div className="mp-cab"><h2 className="mp-titulo">Pontos de interesse</h2><p className="mp-fraco" style={{ marginTop: 4 }}>Ligue só o que ajudar agora.</p></div>
@@ -147,27 +149,27 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
           {GRUPOS.map((g) => (
             <label key={g.id} className="mp-linha"><span>{g.nome}{g.id === "igrejas" ? <span className="mp-fraco"> · só liderança</span> : null}</span>
               <span style={{ display: "flex", gap: 10, alignItems: "center" }}><span className="mp-num mp-fraco">{contagem(g.id)}</span>
-                <button type="button" role="switch" aria-checked={ligados.has(g.id)} aria-label={g.nome} className={`sw${ligados.has(g.id) ? " on" : ""}`} onClick={() => setLigados((atuais) => { const n = new Set(atuais); if (n.has(g.id)) n.delete(g.id); else n.add(g.id); return n; })} />
+                <Interruptor ligado={ligados.has(g.id)} rotulo={g.nome} onClick={() => setLigados((atuais) => { const n = new Set(atuais); if (n.has(g.id)) n.delete(g.id); else n.add(g.id); return n; })} />
               </span>
             </label>
           ))}
-          <label className="mp-linha">Mostrar os ocultos<button type="button" role="switch" aria-checked={verOcultos} aria-label="Mostrar os ocultos" className={`sw${verOcultos ? " on" : ""}`} onClick={() => setVerOcultos((v) => !v)} /></label>
+          <label className="mp-linha">Mostrar os ocultos<Interruptor ligado={verOcultos} rotulo="Mostrar os ocultos" onClick={() => setVerOcultos((v) => !v)} /></label>
           {pontos.length === 0 && <p className="mp-fraco">Ainda sem pontos do OpenStreetMap para esta cidade. Eles chegam na próxima atualização mensal. Pontos da igreja você adiciona abaixo.</p>}
           <div>
             {lista.map((pt) => (
               <div key={pt.id} className="mp-lista-pessoa" style={{ position: "relative" }}>
-                <button type="button" style={{ all: "unset", cursor: "pointer", flex: 1 }} onClick={() => { setAberto(pt); ctx.mapa.easeTo({ center: [pt.longitude, pt.latitude], zoom: 16 }); }}>
+                <Acao style={{ all: "unset", cursor: "pointer", flex: 1 }} onClick={() => { setAberto(pt); ctx.mapa.easeTo({ center: [pt.longitude, pt.latitude], zoom: 16 }); }}>
                   <span style={{ display: "block", opacity: pt.oculto ? 0.6 : 1 }}>{pt.nome || "Sem nome"}</span>
                   <span className="mp-fraco">{CATEGORIAS.find((c) => c.id === pt.categoria)?.nome.replace("Pontos da igreja · ", "")} · {pt.origem === "osm" ? "OpenStreetMap" : "manual"}{pt.oculto ? " · oculto" : ""}</span>
-                </button>
+                </Acao>
                 {podeEditar && <BotaoIcone className="mp-fechar" rotulo={`Ações de ${pt.nome}`} aria-expanded={menu === pt.id} onClick={() => setMenu((m) => (m === pt.id ? null : pt.id))}><Icon name="menu" size={14} /></BotaoIcone>}
                 {menu === pt.id && (
                   <div className="mp-menu" role="menu" style={{ top: 40, width: 180 }}>
-                    <button type="button" role="menuitem" onClick={() => { setMenu(null); setForm({ ponto: pt, nome: pt.nome, categoria: pt.categoria, local: [pt.longitude, pt.latitude], endereco: pt.endereco ?? "", observacao: pt.observacao ?? "" }); }}>Editar</button>
-                    <button type="button" role="menuitem" onClick={() => ocultar(pt, !pt.oculto)}>{pt.oculto ? "Mostrar no mapa" : "Ocultar do mapa"}</button>
+                    <Acao role="menuitem" onClick={() => { setMenu(null); setForm({ ponto: pt, nome: pt.nome, categoria: pt.categoria, local: [pt.longitude, pt.latitude], endereco: pt.endereco ?? "", observacao: pt.observacao ?? "" }); }}>Editar</Acao>
+                    <Acao role="menuitem" onClick={() => ocultar(pt, !pt.oculto)}>{pt.oculto ? "Mostrar no mapa" : "Ocultar do mapa"}</Acao>
                     {pt.origem === "manual" && (confirmar === pt.id
-                      ? <button type="button" role="menuitem" style={{ color: "var(--danger)" }} onClick={() => excluir(pt)}>Excluir de vez (não dá para desfazer)</button>
-                      : <button type="button" role="menuitem" style={{ color: "var(--danger)" }} onClick={() => setConfirmar(pt.id)}>Excluir</button>)}
+                      ? <Acao role="menuitem" style={{ color: "var(--danger)" }} onClick={() => excluir(pt)}>Excluir de vez (não dá para desfazer)</Acao>
+                      : <Acao role="menuitem" style={{ color: "var(--danger)" }} onClick={() => setConfirmar(pt.id)}>Excluir</Acao>)}
                   </div>
                 )}
               </div>

@@ -9,6 +9,7 @@ import { HelpDot } from "../HelpSystem";
 import { iniciais } from "../lib/iniciais";
 
 import { Botao } from "../ui/Botao";
+import { Acao } from "../ui/Acao";
 /* grupo do menu da tela aberta: o sobretítulo da página mostra o grupo */
 export const RouteGroupContext = createContext<string | null>(null);
 
@@ -86,10 +87,10 @@ export function MenuMais({ acoes, rotulo = "Mais" }: { acoes: AcaoMais[]; rotulo
       {aberto && (
         <div className="menu-mais-pop" role="menu">
           {acoes.map((a) => (
-            <button key={a.rotulo} type="button" role="menuitem" disabled={a.desligada} onClick={() => { setAberto(false); a.onClick(); }}>
+            <Acao key={a.rotulo} role="menuitem" desativado={a.desligada} onClick={() => { setAberto(false); a.onClick(); }}>
               {a.icone ? <span className="ic"><Icon name={a.icone} size={16} /></span> : null}
               {a.rotulo}
-            </button>
+            </Acao>
           ))}
         </div>
       )}

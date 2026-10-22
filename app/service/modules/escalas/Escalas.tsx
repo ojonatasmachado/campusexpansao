@@ -28,6 +28,8 @@ import { EscalaExtra } from "./EscalaExtra";
 import { PublicarEscala } from "./PublicarEscala";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 type Candidato = CandidatoBase<PersonView>;
 
 /* carga da semana corrente (segunda a domingo contendo hoje) por pessoa:
@@ -112,11 +114,11 @@ function FuncoesEscalaModal({
               <div className="func-edit-row" key={position.id}>
                 <input className="input" value={position.name} onChange={(e) => rename(position.id, e.target.value)} onBlur={(e) => commitRename(position.id, e.target.value)} />
                 <div className="stepper">
-                  <button type="button" onClick={() => setNeedAt(position.id, -1)}>−</button>
+                  <Acao onClick={() => setNeedAt(position.id, -1)}>−</Acao>
                   <span>{position.need_count}</span>
-                  <button type="button" onClick={() => setNeedAt(position.id, 1)}>+</button>
+                  <Acao onClick={() => setNeedAt(position.id, 1)}>+</Acao>
                 </div>
-                <button className="func-edit-x" type="button" title="Remover função" onClick={() => remove(position.id)}><Icon name="recusou" size={15} /></button>
+                <Acao className="func-edit-x" title="Remover função" onClick={() => remove(position.id)}><Icon name="recusou" size={15} /></Acao>
               </div>
             ))}
             {positions.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>Nenhuma função ainda.</div>}
@@ -124,7 +126,7 @@ function FuncoesEscalaModal({
           <div className="dsec-title" style={{ marginBottom: 8 }}>Nova função</div>
           <div className="func-edit-add">
             <input className="input" placeholder="ex: Vocal, Câmera, Recepção" value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
-            <div className="stepper"><button type="button" onClick={() => setNeed((n) => Math.max(1, n - 1))}>−</button><span>{need}</span><button type="button" onClick={() => setNeed((n) => n + 1)}>+</button></div>
+            <div className="stepper"><Acao onClick={() => setNeed((n) => Math.max(1, n - 1))}>−</Acao><span>{need}</span><Acao onClick={() => setNeed((n) => n + 1)}>+</Acao></div>
             <Botao compacto desativado={saving} onClick={add}>+ Função</Botao>
           </div>
         </div>
@@ -174,18 +176,18 @@ function DelegarModal({
         <div className="modal-body" style={{ display: "block" }}>
           {ministries.length > 1 && (
             <div className="seg" style={{ marginBottom: 14, flexWrap: "wrap" }}>
-              {ministries.map((m) => <button key={m.id} type="button" className={ministryId === m.id ? "on" : ""} onClick={() => setMinistryId(m.id)}>{m.name.split(" ")[0]}</button>)}
+              {ministries.map((m) => <Opcao key={m.id} marcada={ministryId === m.id} onClick={() => setMinistryId(m.id)}>{m.name.split(" ")[0]}</Opcao>)}
             </div>
           )}
           {elenco.length === 0 && <div className="empty">Ninguém mais neste time ainda.</div>}
           {elenco.map((link) => {
             const on = delegados.includes(link.personId);
             return (
-              <button type="button" className={`flag-row${on ? " on" : ""}`} key={link.personId} disabled={saving} onClick={() => toggle(link.personId)}>
+              <Opcao marcada={on} estilo="flag-row" key={link.personId} desativado={saving} onClick={() => toggle(link.personId)}>
                 <span className={`flag-check${on ? " on" : ""}`}>{on ? <Icon name="ok" size={13} /> : null}</span>
                 <Av name={link.personName} size="sm" />
                 <div className="flag-main"><div className="flag-nome">{link.personName}</div><div className="flag-meta">{link.functions.join(" · ") || ct("{Voluntario}")}</div></div>
-              </button>
+              </Opcao>
             );
           })}
         </div>
@@ -494,7 +496,7 @@ export function Escalas({
 
       <div className="esc-events">
         {events.map((event) => (
-          <button className={`esc-event ${selectedEvent?.id === event.id ? "on" : ""}`} key={event.id} type="button" onClick={() => setEventId(event.id)}>
+          <Acao className={`esc-event ${selectedEvent?.id === event.id ? "on" : ""}`} key={event.id} onClick={() => setEventId(event.id)}>
             <span className="esc-event-day">{joinDot(event.weekday, formatDateBR(event.eventDate))}</span>
             <span className="esc-event-name">{event.name}</span>
             <span className="esc-event-time">{joinDot(event.time, event.location)}</span>
@@ -504,7 +506,7 @@ export function Escalas({
               const emRascunho = rascunhos.some((r) => r.event_id === event.id);
               return <span className={`esc-event-cob ${falta ? "falta" : "ok"}`}>{joinDot(falta ? faltaN(falta, "vaga") : "completo", emRascunho && "rascunho")}</span>;
             })()}
-          </button>
+          </Acao>
         ))}
       </div>
 
@@ -514,7 +516,7 @@ export function Escalas({
         <span className="esc-modo-lbl">Geração da escala</span>
         <div className="seg seg-sm">
           {(["manual", "assistido", "automatico"] as const).map((key) => (
-            <button key={key} className={escalaCfg.modo === key ? "on" : ""} type="button" onClick={() => setModoEscala(key)}>{key === "manual" ? "Manual" : key === "assistido" ? "Assistida" : "Automática"}</button>
+            <Opcao key={key} marcada={escalaCfg.modo === key} onClick={() => setModoEscala(key)}>{key === "manual" ? "Manual" : key === "assistido" ? "Assistida" : "Automática"}</Opcao>
           ))}
         </div>
         <span className="esc-modo-hint">
@@ -530,9 +532,9 @@ export function Escalas({
             <option value="">Aplicar configuração…</option>
             {(church?.settings?.escalaPresets ?? []).map((preset) => <option key={preset.id} value={preset.id}>{preset.nome}</option>)}
           </select>
-          <button className="esc-preset-save" type="button" onClick={() => setPresetSaveOpen(true)}>Salvar atual</button>
+          <Acao className="esc-preset-save" onClick={() => setPresetSaveOpen(true)}>Salvar atual</Acao>
         </span>
-        <button className="esc-modo-cfg" type="button" onClick={() => setRoute("config")}><Icon name="config" size={13} /> Regras</button>
+        <Acao className="esc-modo-cfg" onClick={() => setRoute("config")}><Icon name="config" size={13} /> Regras</Acao>
       </div>
 
       </details>
@@ -568,10 +570,10 @@ export function Escalas({
                   <div className="esc-col-tname">{ministry.name}</div>
                   <div className="esc-col-tmeta">{ministryFilled >= ministryNeed ? `Completo · ${plural(ministryNeed, "vaga")}` : `${ministryFilled} de ${plural(ministryNeed, "vaga")}`}</div>
                 </div>
-                <button className="esc-col-edit" title="Editar funções deste time" type="button" onClick={() => setFuncEdit(ministry)}><Icon name="config" size={14} /></button>
-                <button className="esc-col-tog" type="button" aria-expanded={!timesFechados.has(ministry.id)} aria-label={timesFechados.has(ministry.id) ? `Abrir ${ministry.name}` : `Recolher ${ministry.name}`} onClick={() => alternarTime(ministry.id)}>
+                <Acao className="esc-col-edit" title="Editar funções deste time" onClick={() => setFuncEdit(ministry)}><Icon name="config" size={14} /></Acao>
+                <Acao className="esc-col-tog" aria-expanded={!timesFechados.has(ministry.id)} aria-label={timesFechados.has(ministry.id) ? `Abrir ${ministry.name}` : `Recolher ${ministry.name}`} onClick={() => alternarTime(ministry.id)}>
                   <Icon name="avancar" size={15} />
-                </button>
+                </Acao>
               </div>
               <div className="esc-col-body">
                 {ministryPositions.map((position) => {
@@ -588,28 +590,26 @@ export function Escalas({
                         {assignments.map((assignment) => {
                           const person = people.find((candidate) => candidate.id === assignment.person_id);
                           return (
-                            <button
+                            <Acao
                               key={assignment.id}
                               className={`esc-person ${assignment.status === "no" ? "is-no" : ""}${assignment.rascunho ? " is-draft" : ""}`}
                               title={assignment.rascunho ? "Rascunho: a pessoa ainda não foi avisada" : undefined}
-                              type="button"
                               onClick={() => selectedEvent && setSlotAction({ kind: "slot", event: selectedEvent, ministry, position, assignment })}
                             >
                               <Av name={person?.name ?? "Voluntário"} size="xs" photoUrl={person?.photoUrl} />
                               <span className="esc-person-name">{person?.name.split(" ")[0] ?? "Pessoa"}</span>
                               <span className={`slot-st ${assignment.status}`} />
-                            </button>
+                            </Acao>
                           );
                         })}
                         {Array.from({ length: missing }).map((_, index) => (
-                          <button
+                          <Acao
                             key={`missing-${position.id}-${index}`}
                             className="esc-vaga"
-                            type="button"
                             onClick={() => selectedEvent && setSlotAction({ kind: "assign", event: selectedEvent, ministry, position })}
                           >
                             Escalar
-                          </button>
+                          </Acao>
                         ))}
                       </div>
                     </div>
@@ -763,7 +763,7 @@ function RosterActionModal({
     onClose();
   };
   const linha = (c: Candidato) => (
-    <button className={`cand ${c.fit === "block" ? "is-block" : ""}`} type="button" key={c.person.id} aria-disabled={c.fit === "block" || undefined} onClick={() => escolher(c)}>
+    <Acao className={`cand ${c.fit === "block" ? "is-block" : ""}`} key={c.person.id} aria-disabled={c.fit === "block" || undefined} onClick={() => escolher(c)}>
       <Av name={c.person.name} size="md" photoUrl={c.person.photoUrl} />
       <div className="cand-main">
         <div className="cand-name">{c.person.name}</div>
@@ -773,7 +773,7 @@ function RosterActionModal({
         {c.person.tags.length > 0 ? <div className="cand-meta">{c.person.tags.join(" · ")}</div> : null}
       </div>
       {c.fit !== "block" && <span className={`cand-fit ${c.fit}`}>{c.fit === "good" ? <><Icon name="ok" size={13} /> disponível</> : <><Icon name="pendente" size={13} /> ocupado</>}</span>}
-    </button>
+    </Acao>
   );
   return (
     <div className="modal-bg" onClick={onClose}>
@@ -784,7 +784,7 @@ function RosterActionModal({
           <div className="modal-sub">{joinDot(action.event.weekday, action.event.time)}{joinDot(action.event.weekday, action.event.time) ? ". " : ""}Ocupado é quem marcou que não pode neste horário.</div>
           <div className="cand-tools">
             <input className="input" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar pelo nome" aria-label="Buscar pelo nome" />
-            <button type="button" className={`chip-toggle${soDisponiveis ? " on" : ""}`} aria-pressed={soDisponiveis} onClick={() => setSoDisponiveis((v) => !v)}>Disponíveis</button>
+            <Opcao marcada={soDisponiveis} estilo="chip-toggle" aria-pressed={soDisponiveis} onClick={() => setSoDisponiveis((v) => !v)}>Disponíveis</Opcao>
           </div>
         </div>
         <div className="modal-body cand-list">

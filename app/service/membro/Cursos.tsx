@@ -162,10 +162,10 @@ export function CursoInscricao({ courseId }: { courseId: string }) {
   if (estado === "ok") return <div className="m-confirmed" style={{ marginTop: 12 }}><Icon name="ok" size={15} /> Inscrição feita. O curso aparece em Meus cursos.</div>;
   return (
     <>
-      <button
-        className="m-btn m-btn-ok ghost"
+      <Botao
+        tamanho="toque" variante="secundario" largo
         style={{ width: "100%", marginTop: 12 }}
-        disabled={estado === "enviando" || !j.onEnrollCourse}
+        desativado={estado === "enviando" || !j.onEnrollCourse}
         onClick={async () => {
           if (!j.onEnrollCourse) return;
           setEstado("enviando");
@@ -174,7 +174,7 @@ export function CursoInscricao({ courseId }: { courseId: string }) {
         }}
       >
         {estado === "enviando" ? "Inscrevendo..." : "Inscrever-se"}
-      </button>
+      </Botao>
       {estado && estado !== "enviando" && estado !== "ok" && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginTop: 6 }}>{estado}</div>}
     </>
   );
@@ -221,10 +221,10 @@ export function TabBatismo({ baptismClasses, memberId }: { baptismClasses: Bapti
                 <Icon name="ok" size={15} /> Inscrição enviada! O responsável vai te chamar.
               </div>
             ) : (
-              <button
-                className="m-btn m-btn-ok"
+              <Botao
+                tamanho="toque" variante="principal" largo
                 style={{ width: "100%", marginTop: 12 }}
-                disabled={!j.onRequestBaptism}
+                desativado={!j.onRequestBaptism}
                 onClick={async () => {
                   if (!j.onRequestBaptism) return;
                   const r = await j.onRequestBaptism(b.id);
@@ -233,7 +233,7 @@ export function TabBatismo({ baptismClasses, memberId }: { baptismClasses: Bapti
                 }}
               >
                 Quero me inscrever →
-              </button>
+              </Botao>
             )
           ) : (
             <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginTop: 12 }}>

@@ -19,6 +19,8 @@ import { brl, FORMAS, mesNome, mesTexto, type Forma } from "./dinheiro";
 import { CampoValor, Excluir, type Base, type Cadastros } from "./Formularios";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 type Fin = ReturnType<typeof useFinanceiro>;
 
 /* ── o que vence no mês ──────────────────────────────────────────────────── */
@@ -52,10 +54,10 @@ export function APagar({ previstos, podeLancar, nomeConta, onEditar, onMudou }: 
         const atrasado = venc < hoje;
         return (
           <div className="tr fin-prev" key={l.id}>
-            <button type="button" className="fin-prev-main" onClick={() => podeLancar && onEditar(l)} disabled={!podeLancar}>
+            <Acao className="fin-prev-main" onClick={() => podeLancar && onEditar(l)} desativado={!podeLancar}>
               <span className="cell-name">{l.description}</span>
               <span className={`cell-sub${atrasado ? " fin-atrasado" : ""}`}>{atrasado ? `Venceu em ${formatDateBR(venc)}` : `Vence em ${formatDateBR(venc)}`} · {nomeConta(l.account_id)}</span>
-            </button>
+            </Acao>
             <span className={`fin-num fin-saldo-v${l.kind === "despesa" ? " fin-saida" : ""}`}>{brl(l.kind === "despesa" ? -l.amount_cents : l.amount_cents, true)}</span>
             {podeLancar && (
               <Botao compacto desativado={pagando === l.id} onClick={() => pagar(l)}>
@@ -101,7 +103,7 @@ export function Planejamento({ fin, podeLancar, onFixa, onCampanha }: {
               </>
             );
             return podeLancar
-              ? <button key={c.id} type="button" className="tr fin-lin click" onClick={() => onFixa(c)}>{miolo}</button>
+              ? <Acao key={c.id} className="tr fin-lin click" onClick={() => onFixa(c)}>{miolo}</Acao>
               : <div key={c.id} className="tr fin-lin">{miolo}</div>;
           })}
           <div className="tr fin-rodape"><span className="cell-sub">{`${plural(ativas.length, "conta fixa ativa", "contas fixas ativas")} · ${brl(totalMes, true)} por mês`}</span></div>
@@ -129,7 +131,7 @@ export function Planejamento({ fin, podeLancar, onFixa, onCampanha }: {
               </>
             );
             return podeLancar
-              ? <button key={c.id} type="button" className="fin-camp click" onClick={() => onCampanha(c)}>{corpo}</button>
+              ? <Acao key={c.id} className="fin-camp click" onClick={() => onCampanha(c)}>{corpo}</Acao>
               : <div key={c.id} className="fin-camp">{corpo}</div>;
           })}
         </div>
@@ -198,7 +200,7 @@ export function ContaFixaForm({ org, churchId, edit, cad, onClose, onDone }: Bas
             <div className="field-label" id={`${fid}-t`}>Tipo</div>
             <div className="fs-chips" role="group" aria-labelledby={`${fid}-t`}>
               {(["despesa", "entrada"] as const).map((k) => (
-                <button key={k} type="button" className={`seg-chip${tipo === k ? " on" : ""}`} aria-pressed={tipo === k} onClick={() => { setTipo(k); setCat(""); }}>{k === "despesa" ? "Despesa (a pagar)" : "Entrada (a receber)"}</button>
+                <Opcao key={k} marcada={tipo === k} estilo="seg-chip" aria-pressed={tipo === k} onClick={() => { setTipo(k); setCat(""); }}>{k === "despesa" ? "Despesa (a pagar)" : "Entrada (a receber)"}</Opcao>
               ))}
             </div>
           </div>
@@ -235,7 +237,7 @@ export function ContaFixaForm({ org, churchId, edit, cad, onClose, onDone }: Bas
             <div className="field-label" id={`${fid}-fm`}>Forma</div>
             <div className="fs-chips" role="group" aria-labelledby={`${fid}-fm`}>
               {FORMAS.map((f) => (
-                <button key={f.id} type="button" className={`seg-chip${forma === f.id ? " on" : ""}`} aria-pressed={forma === f.id} onClick={() => setForma(forma === f.id ? "" : f.id)}>{f.rotulo}</button>
+                <Opcao key={f.id} marcada={forma === f.id} estilo="seg-chip" aria-pressed={forma === f.id} onClick={() => setForma(forma === f.id ? "" : f.id)}>{f.rotulo}</Opcao>
               ))}
             </div>
           </div>

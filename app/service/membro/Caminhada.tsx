@@ -59,10 +59,10 @@ export function ServirSection({ person, member, ministries, members = [], people
                 </div>
               ) : (
                 <>
-                  <button
-                    className="m-btn m-btn-ok ghost"
+                  <Botao
+                    tamanho="toque" variante="secundario" largo
                     style={{ width: "100%", marginTop: 10 }}
-                    disabled={resultado === "enviando"}
+                    desativado={resultado === "enviando"}
                     onClick={async () => {
                       setEnviados((p) => ({ ...p, [m.id]: "enviando" }));
                       const r = await j.onRequestServe!(m.id);
@@ -70,7 +70,7 @@ export function ServirSection({ person, member, ministries, members = [], people
                     }}
                   >
                     {resultado === "enviando" ? "Enviando..." : "Quero servir neste time"}
-                  </button>
+                  </Botao>
                   {resultado && resultado !== "enviando" && resultado !== "ok" && (
                     <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginTop: 6 }}>{resultado}</div>
                   )}

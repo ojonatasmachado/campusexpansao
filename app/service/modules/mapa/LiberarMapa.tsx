@@ -9,6 +9,7 @@ import type { Area } from "./dados";
 import type { PessoaLider } from "./contexto";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 /* Quem vê o mapa (tela 4 do design). O mapa só aparece no menu de quem o
    pastor liberar (person_grants "mapa"), com a área e o nível de detalhe
    gravados em map_access. Sem áreas desenhadas, a pessoa vê a cidade inteira. */
@@ -70,10 +71,10 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
         <section className="mesa-caixa mesa-lado" style={{ padding: 16, gap: 8 }}>
           {lista.length === 0 && <p className="mp-fraco">Ninguém além da liderança principal ainda.</p>}
           {lista.map((l) => (
-            <button key={l.person_id} type="button" className="mp-visao" aria-pressed={edit?.person_id === l.person_id} style={{ display: "flex", gap: 12, alignItems: "center" }} onClick={() => setEdit(l)}>
+            <Acao key={l.person_id} className="mp-visao" aria-pressed={edit?.person_id === l.person_id} style={{ display: "flex", gap: 12, alignItems: "center" }} onClick={() => setEdit(l)}>
               <span className="mp-av" style={{ width: 36, height: 36, borderRadius: 18 }}>{iniciais(nome(l.person_id))}</span>
               <span style={{ marginTop: 0 }}><b>{nome(l.person_id)}</b><span>{resumo(l)}</span></span>
-            </button>
+            </Acao>
           ))}
           <div className="field" style={{ marginTop: 8 }}>
             <label className="field-label" htmlFor="lm-nova">Liberar para alguém</label>

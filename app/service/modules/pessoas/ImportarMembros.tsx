@@ -20,6 +20,8 @@ import {
 import type { ChurchView, MemberView } from "../../ServiceExactApp";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 type Etapa = 1 | 2 | 3 | 4;
 const ETAPAS = ["Arquivo", "Colunas", "Conferir", "Importar"] as const;
 type Grupo = "nova" | "existe" | "repete" | "erro";
@@ -208,7 +210,7 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
           return (
             <li key={rotulo} className={`imp-step${n === etapa ? " on" : ""}${n < etapa ? " feito" : ""}`} aria-current={n === etapa ? "step" : undefined}>
               {podeVoltar ? (
-                <button type="button" className="imp-step-btn" onClick={() => setEtapa(n)}><span className="imp-step-n">{n}</span>{rotulo}</button>
+                <Acao className="imp-step-btn" onClick={() => setEtapa(n)}><span className="imp-step-n">{n}</span>{rotulo}</Acao>
               ) : (
                 <span className="imp-step-btn"><span className="imp-step-n">{n}</span>{rotulo}</span>
               )}
@@ -309,14 +311,14 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
           {grupos.existe.length > 0 ? (
             <FormSection title="Quem já está cadastrado">
               <div className="opt-row imp-opts" role="radiogroup" aria-label="O que fazer com quem já está cadastrado">
-                <button type="button" role="radio" aria-checked={dupAcao === "pular"} className={`opt${dupAcao === "pular" ? " on" : ""}`} onClick={() => setDupAcao("pular")}>
+                <Opcao role="radio" aria-checked={dupAcao === "pular"} marcada={dupAcao === "pular"} estilo="opt" onClick={() => setDupAcao("pular")}>
                   <div className="opt-t">Pular</div>
                   <div className="opt-s">A ficha atual fica como está.</div>
-                </button>
-                <button type="button" role="radio" aria-checked={dupAcao === "completar"} className={`opt${dupAcao === "completar" ? " on" : ""}`} onClick={() => setDupAcao("completar")}>
+                </Opcao>
+                <Opcao role="radio" aria-checked={dupAcao === "completar"} marcada={dupAcao === "completar"} estilo="opt" onClick={() => setDupAcao("completar")}>
                   <div className="opt-t">Completar o que falta</div>
                   <div className="opt-s">{completaveis.length ? `Preenche só campos vazios em ${plural(completaveis.length, "ficha", "fichas")}. Nada é trocado.` : "Nenhuma ficha tem campo vazio que a planilha preencha."}</div>
-                </button>
+                </Opcao>
               </div>
             </FormSection>
           ) : null}
@@ -324,9 +326,9 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
           <FormSection title="Linha a linha">
             <div className="fs-chips imp-filtros" role="group" aria-label="Mostrar">
               {filtros.filter(([, , n]) => n > 0).map(([id, rotulo, n]) => (
-                <button key={id} type="button" className={`seg-chip${filtroAtivo === id ? " on" : ""}`} aria-pressed={filtroAtivo === id} onClick={() => setFiltro(id)}>
+                <Opcao key={id} marcada={filtroAtivo === id} estilo="seg-chip" aria-pressed={filtroAtivo === id} onClick={() => setFiltro(id)}>
                   {rotulo} <span className="seg-n">{n.toLocaleString("pt-BR")}</span>
-                </button>
+                </Opcao>
               ))}
             </div>
             <div className="tbl imp-lista">

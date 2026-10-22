@@ -9,6 +9,7 @@ import { formatDateBR, joinDot } from "./lib/date";
 import { Icon } from "./lib/icons";
 
 import { Botao } from "./ui/Botao";
+import { Acao } from "./ui/Acao";
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
 type EventLite = {
@@ -156,8 +157,8 @@ export function KidsQRModal({
           <div className="modal-title">{kidsClass.name}</div>
           <div className="modal-sub">QR Code próprio desta turma neste culto. O responsável escaneia, escolhe o filho e confirma o check-in ou pede a retirada.</div>
           <div className="ck-tabs">
-            <button className={`ck-tab ${tab === "qr" ? "on" : ""}`} onClick={() => setTab("qr")}>QR Code</button>
-            <button className={`ck-tab ${tab === "sala" ? "on" : ""}`} onClick={() => setTab("sala")}>Quem está na sala · {present.length}{pending.length > 0 ? ` · ${plural(pending.length, "retirada")}` : ""}</button>
+            <Acao className={`ck-tab ${tab === "qr" ? "on" : ""}`} onClick={() => setTab("qr")}>QR Code</Acao>
+            <Acao className={`ck-tab ${tab === "sala" ? "on" : ""}`} onClick={() => setTab("sala")}>Quem está na sala · {present.length}{pending.length > 0 ? ` · ${plural(pending.length, "retirada")}` : ""}</Acao>
           </div>
         </div>
 

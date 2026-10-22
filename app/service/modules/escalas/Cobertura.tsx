@@ -4,6 +4,7 @@
    Com onAbrir, cada time incompleto vira botão que leva às vagas abertas. */
 import type { CoberturaTime } from "./cobertura";
 
+import { Acao } from "../../ui/Acao";
 export function Cobertura({ itens, onAbrir, compacta }: { itens: CoberturaTime[]; onAbrir?: (timeId: string) => void; compacta?: boolean }) {
   if (!itens.length) return null;
   return (
@@ -15,7 +16,7 @@ export function Cobertura({ itens, onAbrir, compacta }: { itens: CoberturaTime[]
         return (
           <li key={t.timeId} className={falta ? "cob-falta" : "cob-ok"}>
             {falta && onAbrir ? (
-              <button type="button" aria-label={`${rotulo}. Abrir as vagas`} onClick={(e) => { e.stopPropagation(); onAbrir(t.timeId); }}>{corpo}</button>
+              <Acao aria-label={`${rotulo}. Abrir as vagas`} onClick={(e) => { e.stopPropagation(); onAbrir(t.timeId); }}>{corpo}</Acao>
             ) : (
               <span aria-label={rotulo}>{corpo}</span>
             )}

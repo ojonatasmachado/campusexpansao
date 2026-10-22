@@ -7,6 +7,7 @@ import { M6St } from "./comum";
 import { RespostaEvento } from "./Agenda";
 import type { Announcement, P } from "./tipos";
 
+import { Botao } from "../ui/Botao";
 export function MuralV6({ announcements, unreadIds, person, onReadAnnouncement, responses = [], onRespond, initialId }: {
   initialId?: string | null;
   announcements: Announcement[]; unreadIds: Set<string>; person: P;
@@ -45,7 +46,7 @@ export function MuralV6({ announcements, unreadIds, person, onReadAnnouncement, 
   }
   return (
     <div className="m6-sec0" ref={root}>
-      {onlyTarget && target && <div className="m6-pad"><button className="m6-link" type="button" onClick={() => setOnlyTarget(false)}>Ver todas as publicações →</button></div>}
+      {onlyTarget && target && <div className="m6-pad"><Botao tamanho="toque" variante="texto" onClick={() => setOnlyTarget(false)}>Ver todas as publicações →</Botao></div>}
       {visible.map((a) => (
         <article className="m6-card" key={a.id} data-announcement={a.id} tabIndex={-1} aria-label={a.title}>
           {novas.has(a.id) && <span className="m6-new">Nova</span>}

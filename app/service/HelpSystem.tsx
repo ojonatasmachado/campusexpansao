@@ -12,6 +12,7 @@ import { Icon } from "./lib/icons";
 import { useTermos } from "./lib/vocabulario-context";
 
 import { Botao, BotaoIcone } from "./ui/Botao";
+import { Acao } from "./ui/Acao";
 /* ── HELP DOT · "?" ao lado de título, KPI ou botão ───────────────── */
 
 /* A caixa abre FORA do cartão (portal no body, position:fixed): dentro do
@@ -78,22 +79,21 @@ export function HelpDot({ text }: { text: string }) {
     >
       {text}
       {isMobile() && (
-        <button type="button" className="help-pop-close" onClick={(e) => { e.stopPropagation(); setOpen(false); }}>Entendi</button>
+        <Acao className="help-pop-close" onClick={(e) => { e.stopPropagation(); setOpen(false); }}>Entendi</Acao>
       )}
     </div>
   ) : null;
 
   return (
     <span className="help-dot-wrap" ref={ref}>
-      <button
-        type="button"
+      <Acao
         className="help-dot"
         aria-label="Ajuda"
         aria-expanded={open}
         onClick={(e) => { e.stopPropagation(); e.preventDefault(); setPos(null); setOpen((o) => !o); }}
       >
         ?
-      </button>
+      </Acao>
       {pop ? createPortal(pop, document.body) : null}
     </span>
   );
@@ -178,7 +178,7 @@ export function Coachmark({ steps, go, onDone, startAt = 0, onStepChange }: { st
         <div className="coach-pop-t">{ct(step.t)}</div>
         <div className="coach-pop-s">{ct(step.s)}</div>
         <div className="coach-pop-actions">
-          <button className="coach-skip" type="button" onClick={onDone}>Pular tour</button>
+          <Botao variante="discreto" compacto onClick={onDone}>Pular tour</Botao>
           <div style={{ flex: 1 }} />
           {i > 0 ? <Botao compacto onClick={prev}>Voltar</Botao> : null}
           <Botao variante="principal" compacto onClick={next}>{i < steps.length - 1 ? "Próximo →" : "Concluir"}</Botao>
@@ -206,11 +206,11 @@ export function HelpFab({ onTour, onSetup, lugar = "flutuante" }: { onTour: () =
     <div className={`help-fab-wrap ${lugar === "barra" ? "na-barra" : "flutuante"}`} ref={ref}>
       {open ? (
         <div className="help-fab-menu">
-          <button type="button" onClick={() => { setOpen(false); onTour(); }}><Icon name="pendente" size={14} className="ic" /> Rever o tour guiado</button>
-          <button type="button" onClick={() => { setOpen(false); onSetup(); }}><Icon name="identidade" size={14} className="ic" /> Ver o que falta configurar</button>
+          <Acao onClick={() => { setOpen(false); onTour(); }}><Icon name="pendente" size={14} className="ic" /> Rever o tour guiado</Acao>
+          <Acao onClick={() => { setOpen(false); onSetup(); }}><Icon name="identidade" size={14} className="ic" /> Ver o que falta configurar</Acao>
         </div>
       ) : null}
-      <button className="help-fab" type="button" data-tour={lugar === "barra" ? undefined : "ajuda-fab"} title="Ajuda" aria-label="Ajuda" aria-expanded={open} onClick={() => setOpen((o) => !o)}>?</button>
+      <Acao className="help-fab" data-tour={lugar === "barra" ? undefined : "ajuda-fab"} title="Ajuda" aria-label="Ajuda" aria-expanded={open} onClick={() => setOpen((o) => !o)}>?</Acao>
     </div>
   );
 }
@@ -274,10 +274,10 @@ export function SetupChecklist({ counts, setRoute }: { counts: SetupCounts; setR
   const proximo = SETUP_ITENS.find((it) => !it.done(baseline, counts));
   return (
     <>
-    <button type="button" className="setup-line" onClick={() => proximo && setRoute(proximo.route)}>
+    <Acao className="setup-line" onClick={() => proximo && setRoute(proximo.route)}>
       <span>Configuração <b>{done.length} de {SETUP_ITENS.length}</b></span>
       <span className="setup-line-go">Continuar →</span>
-    </button>
+    </Acao>
     <div className="setup-card">
       <div className="setup-head">
         <div>
@@ -294,11 +294,11 @@ export function SetupChecklist({ counts, setRoute }: { counts: SetupCounts; setR
         {SETUP_ITENS.map((it) => {
           const ok = it.done(baseline, counts);
           return (
-            <button key={it.id} type="button" className={`setup-item${ok ? " ok" : ""}`} onClick={() => !ok && setRoute(it.route)}>
+            <Acao key={it.id} className={`setup-item${ok ? " ok" : ""}`} onClick={() => !ok && setRoute(it.route)}>
               <span className="setup-item-check">{ok ? <Icon name="ok" size={14} /> : <Icon name={it.ic} size={14} />}</span>
               <span className="setup-item-main"><b>{ct(it.t)}</b><small>{ct(it.s)}</small></span>
               {!ok ? <span className="setup-item-go">Fazer →</span> : null}
-            </button>
+            </Acao>
           );
         })}
       </div>

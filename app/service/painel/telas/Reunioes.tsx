@@ -18,6 +18,7 @@ import { BoardChooser } from "./Quadros";
 import type { BoardView, CardView, ChurchView, DrawerState, MeetingActionView, MeetingView, MinistryView, ModalState, PersonView, RehearsalView, ReservationView, RoomView } from "../tipos";
 
 import { Botao, BotaoIcone } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 export function ReuniaoForm({
   ministries,
   people,
@@ -153,9 +154,9 @@ export function ReuniaoForm({
           {people.map((person) => {
             const on = presentes.includes(person.id);
             return (
-              <button key={person.id} type="button" className={`cand-chip ${on ? "on" : ""}`} aria-pressed={on} onClick={() => togglePessoa(person.id)}>
+              <Acao key={person.id} className={`cand-chip ${on ? "on" : ""}`} aria-pressed={on} onClick={() => togglePessoa(person.id)}>
                 <Av name={person.name} size="xs" photoUrl={person.photoUrl} /> {person.name.split(" ")[0]} {on && <Icon name="ok" size={13} />}
-              </button>
+              </Acao>
             );
           })}
           {people.length === 0 ? <span className="fs-note">{ct("Nenhum {voluntario} cadastrado.")}</span> : null}
@@ -187,11 +188,11 @@ export function Reunioes({ meetings, meetingActions, ministries, people, rooms, 
         {scheduled.map((meeting) => {
           const author = meeting.author_id ? personById.get(meeting.author_id) : null;
           return (
-            <button className="reu-card" type="button" key={meeting.id} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
+            <Acao className="reu-card" key={meeting.id} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
               <div className="reu-card-top"><div><div className="reu-date">{formatDateBR(meeting.meeting_date) || "Sem data"} · {meeting.time || "sem horário"}</div><div className="reu-title">{meeting.title}</div></div><span className="chip chip-ok">Agendada</span></div>
               <div className="reu-meta">{joinDot(meeting.location, `marcada por ${author?.name.split(" ")[0] || "líder"}`)}</div>
               <div className="reu-foot"><div className="reu-times">{meeting.ministries.map((id) => <span className="tag" key={id}>{ministryById.get(id)?.name || "Time"}</span>)}</div><span className="team-stat"><b>{meeting.attendees.length}</b> presentes</span></div>
-            </button>
+            </Acao>
           );
         })}
         {scheduled.length === 0 ? <EmptyState title="Nenhuma reunião agendada" text="As reuniões de liderança e de time aparecem aqui, com pauta e presença." action={{ label: "Agendar reunião", onClick: () => setNovaOpen(true) }} /> : null}
@@ -202,12 +203,12 @@ export function Reunioes({ meetings, meetingActions, ministries, people, rooms, 
           const actions = meetingActions.filter((action) => action.meeting_id === meeting.id);
           const pending = actions.filter((action) => action.status !== "feito").length;
           return (
-            <button className="tr click" type="button" key={meeting.id} style={{ gridTemplateColumns: "130px 1.6fr 1fr 120px" }} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
+            <Acao className="tr click" key={meeting.id} style={{ gridTemplateColumns: "130px 1.6fr 1fr 120px" }} onClick={() => setDrawer({ kind: "meeting", id: meeting.id })}>
               <div style={{ fontFamily: "var(--mono)", fontSize: "var(--fs-pn-12)", color: "var(--olive)" }}>{formatDateBR(meeting.meeting_date) || "sem data"}</div>
               <div><div className="cell-name">{meeting.title}</div><div className="cell-sub">{plural(meeting.ministries.length, "time")} · {meeting.attendees.length} presentes</div></div>
               <div className="cell-sub">{plural(actions.length, "responsabilidade")}</div>
               <div>{pending > 0 ? <span className="chip chip-wait">{pending} em aberto</span> : <span className="chip chip-ok">Tudo feito</span>}</div>
-            </button>
+            </Acao>
           );
         })}
       </div>
@@ -226,14 +227,14 @@ export function Ensaios({ rehearsals, ministries, rooms, setDrawer, setModal }: 
         {rehearsals.map((rehearsal) => {
           const ministry = rehearsal.ministry_id ? ministryById.get(rehearsal.ministry_id) : null;
           return (
-            <button className="ens-card" type="button" key={rehearsal.id} onClick={() => setDrawer({ kind: "rehearsal", id: rehearsal.id })}>
+            <Acao className="ens-card" key={rehearsal.id} onClick={() => setDrawer({ kind: "rehearsal", id: rehearsal.id })}>
               <div className="ens-top"><span className="ens-rec">{rehearsal.recurrence || "eventual"}</span><span className="ens-pub">{rehearsal.kind || "Ensaio"}</span></div>
               <div className="ens-title">{rehearsal.title}</div>
               <div className="ens-when">{formatDateBR(rehearsal.rehearsal_date) || "sem data"} · {rehearsal.time || "sem horário"} · {rehearsal.location || "sem local"}</div>
               <div className="ens-team"><span className="ens-team-ic"><Icon name="times" size={15} /></span>{ministry?.name || "Vários times"} · {rehearsal.attendees.length} pessoas</div>
               {rehearsal.repertoire.length ? <div className="ens-obs"><Icon name="cultos" size={13} /> {rehearsal.repertoire.length} item(ns) no repertório</div> : null}
               {rehearsal.notes ? <div className="ens-obs">{rehearsal.notes}</div> : null}
-            </button>
+            </Acao>
           );
         })}
         {rehearsals.length === 0 ? <EmptyState title="Nenhum ensaio ainda" text="Os ensaios aparecem aqui com participantes, repertório e materiais." /> : null}

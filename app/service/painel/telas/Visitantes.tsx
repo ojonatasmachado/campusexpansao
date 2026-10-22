@@ -14,6 +14,8 @@ import { Kpi, VISITOR_STAGES, semContato48h } from "../comum";
 import type { ChurchView, ContatoCfg, DrawerState, ModalState, PersonView, VisitorNoteView, VisitorView } from "../tipos";
 
 import { Botao, botaoClasse } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 /* cor de destaque por tema + quem além do master pode editar, guardado em
    service.churches.settings.brandCfg (mesmo jsonb de sempre). Permite que
    cada igreja pareça uma ferramenta própria dela (logo + nome + cor), não
@@ -37,7 +39,7 @@ export function VisitanteCard({ visitor, notes, onOpen }: { visitor: VisitorView
   const fone = telefoneParaWhatsapp(visitor.phone);
   return (
     <div className={`vcard${alerta ? " vcard-alerta" : ""}`}>
-      <button type="button" className="vcard-open" onClick={onOpen}>
+      <Acao className="vcard-open" onClick={onOpen}>
         <div className="vcard-top">
           <Av name={visitor.name} size="sm" />
           <div style={{ minWidth: 0 }}>
@@ -47,7 +49,7 @@ export function VisitanteCard({ visitor, notes, onOpen }: { visitor: VisitorView
         </div>
         {alerta && <div className="vcard-alert"><Icon name="alerta" size={14} /> Sem contato há mais de 48h</div>}
         {!alerta && visitor.reply_status && <div className="vcard-foot">{visitor.reply_status === "respondeu" ? <span className="vcard-resp">respondeu</span> : <span className="vcard-noresp">sem resposta</span>}</div>}
-      </button>
+      </Acao>
       <div className="vcard-acts">
         {fone && <a className={botaoClasse({ compacto: true })} href={`https://wa.me/${fone}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={14} /> WhatsApp</a>}
         <Botao compacto onClick={onOpen} aria-label={`Registrar contato com ${visitor.name}`}>Registrar</Botao>
@@ -104,8 +106,8 @@ export function Visitantes({
       />
       <div className="toolbar">
         <div className="seg" role="group" aria-label="Acompanhamento de visitantes">
-          <button className={view === "pipe" ? "on" : ""} aria-pressed={view === "pipe"} type="button" onClick={() => setView("pipe")}>Funil</button>
-          <button className={view === "list" ? "on" : ""} aria-pressed={view === "list"} type="button" onClick={() => setView("list")}>Lista</button>
+          <Opcao marcada={view === "pipe"} aria-pressed={view === "pipe"} onClick={() => setView("pipe")}>Funil</Opcao>
+          <Opcao marcada={view === "list"} aria-pressed={view === "list"} onClick={() => setView("list")}>Lista</Opcao>
         </div>
         {(view === "painel" || view === "regras") && <span className="panel-meta">{view === "painel" ? "Indicadores de visitantes" : "Regras de acolhimento"}</span>}
       </div>
@@ -150,11 +152,11 @@ export function Visitantes({
                       {semResposta.map((visitor) => {
                         const owner = visitor.responsible_id ? personById.get(visitor.responsible_id) : null;
                         return (
-                          <button className="flag-row click" type="button" key={visitor.id} style={{ cursor: "pointer" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}>
+                          <Acao className="flag-row click" key={visitor.id} style={{ cursor: "pointer" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}>
                             <Av name={visitor.name} size="sm" />
                             <div className="flag-main"><div className="flag-nome">{visitor.name}</div><div className="flag-meta">{formatDateBR(visitor.visited_on) || "sem data"} · {owner ? `resp. ${owner.name.split(" ")[0]}` : "sem dono"}</div></div>
                             <span className="vcard-noresp" style={{ marginLeft: "auto" }}>sem resposta</span>
-                          </button>
+                          </Acao>
                         );
                       })}
                     </>
@@ -176,7 +178,7 @@ export function Visitantes({
       ) : (
         <div className="tbl">
           <div className="tr head" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }}><span>Visitante</span><span>Etapa</span><span>Como chegou</span><span>Próximo passo</span><span>Visitou</span></div>
-          {visitors.map((visitor) => { const stage = VISITOR_STAGES.find((s) => s.id === visitor.stage); return <button className="tr click" key={visitor.id} type="button" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone}</div></div></div><div><span className="chip chip-neutral" style={{ color: stage?.color, borderColor: "var(--border-2)" }}>{stage?.name ?? visitor.stage}</span></div><div className="cell-sub">{visitor.origin || "Visitante"}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "sem prazo"}</span></div><div className="mini-right">{formatDateBR(visitor.visited_on) || "sem data"}</div></button>; })}
+          {visitors.map((visitor) => { const stage = VISITOR_STAGES.find((s) => s.id === visitor.stage); return <Acao className="tr click" key={visitor.id} style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone}</div></div></div><div><span className="chip chip-neutral" style={{ color: stage?.color, borderColor: "var(--border-2)" }}>{stage?.name ?? visitor.stage}</span></div><div className="cell-sub">{visitor.origin || "Visitante"}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "sem prazo"}</span></div><div className="mini-right">{formatDateBR(visitor.visited_on) || "sem data"}</div></Acao>; })}
         </div>
       )}
     </div>

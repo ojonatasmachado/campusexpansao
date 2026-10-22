@@ -23,6 +23,8 @@ import { Mesa } from "./Mesa";
 import { LiberarMapa } from "./LiberarMapa";
 
 import { Botao, BotaoIcone } from "../../ui/Botao";
+import { Interruptor } from "../../ui/Interruptor";
+import { Acao } from "../../ui/Acao";
 /* Painel › Pessoas › Mapa da igreja (PLANO.md, telas 1 e 3 do design).
    Visões prontas em vez de 12 interruptores; camadas e filtros ficam em
    "Personalizar". Ferramentas abrem os modos sobre o mesmo mapa. */
@@ -294,12 +296,12 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
             </div>
             <div className="mp-corpo">
               <div className="mp-pergunta">O que você quer ver?</div>
-              <button type="button" className="mp-visao" aria-pressed={visao === "pessoas"} onClick={() => escolherVisao("pessoas")}><b>Onde estão as pessoas</b><span>Membros e quem chegou há pouco</span></button>
-              <button type="button" className="mp-visao" aria-pressed={visao === "falta"} disabled={!cidade?.tem_ibge} onClick={() => escolherVisao("falta")}><b>Onde falta igreja</b><span>{cidade?.tem_ibge ? "Bairros com muita gente e pouca presença" : "Precisa dos dados do IBGE da cidade"}</span></button>
-              <button type="button" className="mp-visao" aria-pressed={visao === "celulas"} onClick={() => escolherVisao("celulas")}><b>{ct("{Grupos} e cobertura")}</b><span>{ct("Quem está longe de um {grupo}")}</span></button>
-              <button type="button" className="mp-visao" aria-pressed={visao === "regiao"} onClick={() => escolherVisao("regiao")}><b>O que tem na região</b><span>Escolas, praças, saúde e ônibus</span></button>
+              <Acao className="mp-visao" aria-pressed={visao === "pessoas"} onClick={() => escolherVisao("pessoas")}><b>Onde estão as pessoas</b><span>Membros e quem chegou há pouco</span></Acao>
+              <Acao className="mp-visao" aria-pressed={visao === "falta"} desativado={!cidade?.tem_ibge} onClick={() => escolherVisao("falta")}><b>Onde falta igreja</b><span>{cidade?.tem_ibge ? "Bairros com muita gente e pouca presença" : "Precisa dos dados do IBGE da cidade"}</span></Acao>
+              <Acao className="mp-visao" aria-pressed={visao === "celulas"} onClick={() => escolherVisao("celulas")}><b>{ct("{Grupos} e cobertura")}</b><span>{ct("Quem está longe de um {grupo}")}</span></Acao>
+              <Acao className="mp-visao" aria-pressed={visao === "regiao"} onClick={() => escolherVisao("regiao")}><b>O que tem na região</b><span>Escolas, praças, saúde e ônibus</span></Acao>
 
-              <button type="button" className="mp-abre" aria-expanded={personalizar} onClick={() => setPersonalizar((v) => !v)}>Personalizar camadas <Icon name={personalizar ? "voltar" : "avancar"} size={14} /></button>
+              <Acao className="mp-abre" aria-expanded={personalizar} onClick={() => setPersonalizar((v) => !v)}>Personalizar camadas <Icon name={personalizar ? "voltar" : "avancar"} size={14} /></Acao>
               {personalizar && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   {([
@@ -307,20 +309,20 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
                     ["igrejas", "Sede e congregações"], ["raios", "Raios de 1, 3 e 5 km da sede"], ["celulas", ct("{Grupos}")], ["areas", "Áreas da igreja"],
                     ["regioes", "Moradores x igreja (IBGE)"], ["pontos", "Pontos de interesse"],
                   ] as [keyof Camadas, string][]).map(([k, l]) => (
-                    <label key={k} className="mp-linha">{l}<button type="button" role="switch" aria-checked={camadas[k]} aria-label={l} className={`sw${camadas[k] ? " on" : ""}`} disabled={k === "regioes" && !cidade?.tem_ibge} onClick={() => setCamadas((c) => ({ ...c, [k]: !c[k] }))} /></label>
+                    <label key={k} className="mp-linha">{l}<Interruptor ligado={camadas[k]} rotulo={l} desativado={k === "regioes" && !cidade?.tem_ibge} onClick={() => setCamadas((c) => ({ ...c, [k]: !c[k] }))} /></label>
                   ))}
                   {camadas.regioes && cidade?.tem_ibge && (
                     <div className="mp-linha">Agrupar por
                       <div className="mp-seg" style={{ ["--n" as string]: 2 } as React.CSSProperties}>
-                        <button type="button" aria-pressed={nivel === "bairro"} disabled={!cidade.tem_bairros} onClick={() => trocarNivel("bairro")}>Bairro</button>
-                        <button type="button" aria-pressed={nivel === "setor"} onClick={() => trocarNivel("setor")}>Setor</button>
+                        <Acao aria-pressed={nivel === "bairro"} desativado={!cidade.tem_bairros} onClick={() => trocarNivel("bairro")}>Bairro</Acao>
+                        <Acao aria-pressed={nivel === "setor"} onClick={() => trocarNivel("setor")}>Setor</Acao>
                       </div>
                     </div>
                   )}
                   <div className="mp-pergunta" style={{ marginTop: 8 }}>Filtros</div>
                   <div className="mp-chips">
-                    {([["todos", "Todos"], ["membro", "Membros"], ["novo", "Novos na igreja"]] as const).map(([v, l]) => <button key={v} type="button" className="mp-chip" aria-pressed={filtroSit === v} onClick={() => setFiltroSit(v)}>{l}</button>)}
-                    <button type="button" className="mp-chip" aria-pressed={soSemGrupo} onClick={() => setSoSemGrupo((v) => !v)}>{ct("Sem {grupo}")}</button>
+                    {([["todos", "Todos"], ["membro", "Membros"], ["novo", "Novos na igreja"]] as const).map(([v, l]) => <Acao key={v} className="mp-chip" aria-pressed={filtroSit === v} onClick={() => setFiltroSit(v)}>{l}</Acao>)}
+                    <Acao className="mp-chip" aria-pressed={soSemGrupo} onClick={() => setSoSemGrupo((v) => !v)}>{ct("Sem {grupo}")}</Acao>
                   </div>
                   <p className="mp-fraco"><span className="mp-num">{milhar(visiveis.length)}</span> no mapa com estes filtros</p>
                 </div>
@@ -338,32 +340,32 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
               <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder={ct("Buscar pessoa, bairro ou {grupo}")} aria-label="Buscar no mapa" />
               {sugestoes.length > 0 && (
                 <div className="mp-sugestoes" role="listbox">
-                  {sugestoes.map((s) => <button key={s.k} type="button" role="option" aria-selected="false" onClick={() => { s.ir(); setBusca(""); }}><span>{s.t}</span><span className="mp-fraco">{s.s}</span></button>)}
+                  {sugestoes.map((s) => <Acao key={s.k} role="option" aria-selected="false" onClick={() => { s.ir(); setBusca(""); }}><span>{s.t}</span><span className="mp-fraco">{s.s}</span></Acao>)}
                 </div>
               )}
             </div>
             <div style={{ position: "relative" }}>
-              <button type="button" className="mp-botao" aria-expanded={ferramentas} onClick={() => setFerramentas((v) => !v)}><Icon name="config" size={16} />Ferramentas</button>
+              <Botao tamanho="mapa" aria-expanded={ferramentas} onClick={() => setFerramentas((v) => !v)}><Icon name="config" size={16} />Ferramentas</Botao>
               {ferramentas && (
                 <div className="mp-menu" role="menu">
-                  {acesso?.pode_editar && <button type="button" role="menuitem" onClick={() => { setAreaInicial([]); setModo("area"); setFerramentas(false); }}><b>Criar uma área</b><span>Junte bairros para formar um setor</span></button>}
-                  <button type="button" role="menuitem" onClick={() => { setModo("rota"); setFerramentas(false); }}><b>Traçar rota</b><span>Visita, oração, panfletos ou carro de som</span></button>
-                  <button type="button" role="menuitem" onClick={() => { setModo("linha"); setFerramentas(false); }}><b>Linha do tempo</b><span>Veja onde a igreja cresceu</span></button>
-                  <button type="button" role="menuitem" onClick={() => { setModo("pontos"); setFerramentas(false); }}><b>Pontos de interesse</b><span>Escolas, praças e lugares da igreja</span></button>
-                  {acesso?.total && acesso.pode_editar && <><hr /><button type="button" role="menuitem" onClick={() => { setModo("emergencia"); setFerramentas(false); }}><b>Emergência</b><span>Enchente ou temporal: ache as famílias atingidas</span></button></>}
+                  {acesso?.pode_editar && <Acao role="menuitem" onClick={() => { setAreaInicial([]); setModo("area"); setFerramentas(false); }}><b>Criar uma área</b><span>Junte bairros para formar um setor</span></Acao>}
+                  <Acao role="menuitem" onClick={() => { setModo("rota"); setFerramentas(false); }}><b>Traçar rota</b><span>Visita, oração, panfletos ou carro de som</span></Acao>
+                  <Acao role="menuitem" onClick={() => { setModo("linha"); setFerramentas(false); }}><b>Linha do tempo</b><span>Veja onde a igreja cresceu</span></Acao>
+                  <Acao role="menuitem" onClick={() => { setModo("pontos"); setFerramentas(false); }}><b>Pontos de interesse</b><span>Escolas, praças e lugares da igreja</span></Acao>
+                  {acesso?.total && acesso.pode_editar && <><hr /><Acao role="menuitem" onClick={() => { setModo("emergencia"); setFerramentas(false); }}><b>Emergência</b><span>Enchente ou temporal: ache as famílias atingidas</span></Acao></>}
                 </div>
               )}
             </div>
-            {acesso?.pode_mesa && <button type="button" className="mp-botao" onClick={() => { setMesaRegioes(sel?.tipo === "regiao" ? [sel.r.codigo] : faltas.map((r) => r.codigo)); setMesaNivel(nivel); setTela("mesa"); }}><Icon name="quadros" size={16} />Mesa de trabalho</button>}
+            {acesso?.pode_mesa && <Botao tamanho="mapa" onClick={() => { setMesaRegioes(sel?.tipo === "regiao" ? [sel.r.codigo] : faltas.map((r) => r.codigo)); setMesaNivel(nivel); setTela("mesa"); }}><Icon name="quadros" size={16} />Mesa de trabalho</Botao>}
           </div>
 
           <div className={`mp-controles${temDir ? "" : " sem-dir"}`}>
-            <button type="button" aria-label="Aproximar" onClick={() => mapa?.map.zoomIn()}>+</button>
-            <button type="button" aria-label="Afastar" onClick={() => mapa?.map.zoomOut()}>−</button>
-            <button type="button" aria-label="Inclinar em 3D" aria-pressed={tres} onClick={() => setTres((v) => !v)}>3D</button>
+            <Acao aria-label="Aproximar" onClick={() => mapa?.map.zoomIn()}>+</Acao>
+            <Acao aria-label="Afastar" onClick={() => mapa?.map.zoomOut()}>−</Acao>
+            <Acao aria-label="Inclinar em 3D" aria-pressed={tres} onClick={() => setTres((v) => !v)}>3D</Acao>
           </div>
           <div className="mp-so-celular">
-            <button type="button" className="mp-botao" onClick={() => setPainelVer((v) => !v)}><Icon name="lista" size={20} />Ver</button>
+            <Botao tamanho="mapa" onClick={() => setPainelVer((v) => !v)}><Icon name="lista" size={20} />Ver</Botao>
           </div>
 
           <div className="mp-legenda" aria-label="Legenda">
@@ -393,7 +395,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
               </div>
               <div className="mp-cartoes">
                 {(verTodos ? cartoes : cartoes.slice(0, 2)).map((c) => (
-                  <button key={c.id} type="button" className="mp-cartao" onClick={c.acao}><b>{c.titulo}</b>{c.texto}<i>Ver no mapa →</i></button>
+                  <Acao key={c.id} className="mp-cartao" onClick={c.acao}><b>{c.titulo}</b>{c.texto}<i>Ver no mapa →</i></Acao>
                 ))}
               </div>
             </section>

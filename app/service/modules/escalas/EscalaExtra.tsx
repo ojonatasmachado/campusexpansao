@@ -15,6 +15,7 @@ import { friendlyWriteError } from "../../painel/erros";
 import { useTermos } from "../../lib/vocabulario-context";
 import type { ChurchView, MinistryView } from "../../ServiceExactApp";
 
+import { Opcao } from "../../ui/Opcao";
 const MODELOS = ["Vigília", "Batismo", "Santa Ceia", "Conferência", "Culto especial"];
 const DIA_CURTO = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -78,7 +79,7 @@ export function EscalaExtra({ ministries, church, onClose, onCriado }: {
             <label className="field-label req" htmlFor={`${fid}-nome`}>Nome</label>
             <input id={`${fid}-nome`} className="input" value={nome} maxLength={80} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Vigília de oração" />
             <div className="fs-chips" role="group" aria-label="Sugestões de nome" style={{ marginTop: 8 }}>
-              {MODELOS.map((m) => <button key={m} type="button" className={`seg-chip${nome === m ? " on" : ""}`} aria-pressed={nome === m} onClick={() => setNome(m)}>{m}</button>)}
+              {MODELOS.map((m) => <Opcao key={m} marcada={nome === m} estilo="seg-chip" aria-pressed={nome === m} onClick={() => setNome(m)}>{m}</Opcao>)}
             </div>
           </div>
           <div className="field half">

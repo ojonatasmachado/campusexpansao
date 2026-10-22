@@ -18,6 +18,8 @@ import type { PaginaCfg, PaginaSocial, PaginaTemplate, ChurchPageData, Identidad
 import ChurchPageView from "../[slug]/ChurchPageView";
 
 import { Botao } from "./ui/Botao";
+import { Interruptor } from "./ui/Interruptor";
+import { Opcao } from "./ui/Opcao";
 /* Editor da Página da igreja (link-in-bio) da igreja, aba "Página da igreja" em
    Configurações. Arquivo próprio (não dentro de ServiceExactApp.tsx, que já
    tem 10k+ linhas) : essa funcionalidade tem peso real (CRUD de links com
@@ -308,7 +310,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
       <div className="pge-main">
         <div className="cfg-tabs">
           {PAGE_EDITOR_TABS.map((t) => (
-            <button key={t.id} type="button" className={`cfg-tab${activeTab === t.id ? " on" : ""}`} onClick={() => setActiveTab(t.id)}>{t.label}</button>
+            <Opcao key={t.id} marcada={activeTab === t.id} estilo="cfg-tab" onClick={() => setActiveTab(t.id)}>{t.label}</Opcao>
           ))}
         </div>
 
@@ -322,7 +324,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                 <div className="cfg-row-t">{pagina.enabled ? "Publicada" : "Despublicada"}</div>
                 <div className="cfg-row-s">{viewCount !== null ? `${viewCount} visualizações até agora` : "Carregando estatísticas..."}</div>
               </div>
-              <button type="button" role="switch" aria-label="Publicar página da igreja" aria-checked={pagina.enabled} className={`sw${pagina.enabled ? " on" : ""}`} onClick={() => savePagina({ enabled: !pagina.enabled })} />
+              <Interruptor ligado={!!pagina.enabled} rotulo="Publicar página da igreja" onClick={() => savePagina({ enabled: !pagina.enabled })} />
             </div>
 
             <div className="field-label" style={{ marginTop: 14 }}>Endereço da página</div>
@@ -381,10 +383,10 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
             <div className="cfg-card-s">Muda o layout da página. As cores e os links continuam os mesmos.</div>
             <div className="opt-row">
               {TEMPLATES.map((tpl) => (
-                <button key={tpl.id} type="button" className={`opt${pagina.template === tpl.id ? " on" : ""}`} onClick={() => savePagina({ template: tpl.id })}>
+                <Opcao key={tpl.id} marcada={pagina.template === tpl.id} estilo="opt" onClick={() => savePagina({ template: tpl.id })}>
                   <div className="opt-t">{tpl.label}</div>
                   <div className="opt-s">{tpl.desc}</div>
-                </button>
+                </Opcao>
               ))}
             </div>
           </div>
@@ -600,16 +602,15 @@ function LinkModal({
           <div className="field-label" style={{ marginTop: 12 }}>Ícone</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {LINK_ICON_NAMES.map((name) => (
-              <button
+              <Opcao
                 key={name}
-                type="button"
-                className={`opt${form.icon === name ? " on" : ""}`}
+                marcada={form.icon === name} estilo="opt"
                 style={{ padding: 8, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center" }}
                 onClick={() => setForm((f) => ({ ...f, icon: name }))}
                 title={name}
               >
                 <LinkIconView name={name} size={16} />
-              </button>
+              </Opcao>
             ))}
           </div>
 
@@ -646,7 +647,7 @@ function LinkModal({
             <div className="cfg-row-main">
               <div className="cfg-row-t">Visível na página</div>
             </div>
-            <button type="button" role="switch" aria-label="Link ativo" aria-checked={form.active} className={`sw${form.active ? " on" : ""}`} onClick={() => setForm((f) => ({ ...f, active: !f.active }))} />
+            <Interruptor ligado={form.active} rotulo="Link ativo" onClick={() => setForm((f) => ({ ...f, active: !f.active }))} />
           </div>
         </div>
         <div className="modal-foot" style={{ justifyContent: "space-between" }}>
@@ -713,7 +714,7 @@ function PostModal({
             <div className="cfg-row-main">
               <div className="cfg-row-t">Fixar no topo</div>
             </div>
-            <button type="button" role="switch" aria-label="Fixar notícia" aria-checked={form.pinned} className={`sw${form.pinned ? " on" : ""}`} onClick={() => setForm((f) => ({ ...f, pinned: !f.pinned }))} />
+            <Interruptor ligado={form.pinned} rotulo="Fixar notícia" onClick={() => setForm((f) => ({ ...f, pinned: !f.pinned }))} />
           </div>
         </div>
         <div className="modal-foot" style={{ justifyContent: "space-between" }}>

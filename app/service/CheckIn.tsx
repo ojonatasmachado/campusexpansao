@@ -11,6 +11,7 @@ import { formatDateBR, joinDot } from "./lib/date";
 import { useTermos } from "./lib/vocabulario-context";
 
 import { Botao } from "./ui/Botao";
+import { Acao } from "./ui/Acao";
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
 type EventView = {
@@ -364,13 +365,13 @@ function CheckinRoster({
                 {timeCurto(rec.checked_in_at)}
               </div>
             </div>
-            <button
+            <Acao
               className="ck-undo"
               title="Desfazer presença"
               onClick={() => onRemove(rec.person_id)}
             >
               ✕
-            </button>
+            </Acao>
           </div>
         );
       })}
@@ -592,18 +593,18 @@ export function QRCheckinModal({
               {ct("QR Code único deste evento. Os {voluntarios} escaneiam e confirmam presença pela própria conta. Você acompanha em tempo real.")}
             </div>
             <div className="ck-tabs">
-              <button
+              <Acao
                 className={`ck-tab ${tab === "qr" ? "on" : ""}`}
                 onClick={() => setTab("qr")}
               >
                 QR Code
-              </button>
-              <button
+              </Acao>
+              <Acao
                 className={`ck-tab ${tab === "presenca" ? "on" : ""}`}
                 onClick={() => setTab("presenca")}
               >
                 Presença ao vivo · {presentes}
-              </button>
+              </Acao>
             </div>
           </div>
 

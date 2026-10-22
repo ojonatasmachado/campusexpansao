@@ -16,6 +16,8 @@ import { DatePicker, TimePicker } from "../campos";
 import type { CalEvent, ChildView, ChurchView, DrawerState, EventView, KidsClassView, KidsSessionView, MinistryView, ModalState, ReservationView, RoomView } from "../tipos";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 /* Escalas : módulo em modules/escalas/ (4.1) */
 
 export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, kidsChildren, rooms, setDrawer, setModal, setCheckinEventId, setShareEventId }: { events: EventView[]; ministries: MinistryView[]; church?: ChurchView; kidsClasses: KidsClassView[]; kidsSessions: KidsSessionView[]; kidsChildren: ChildView[]; rooms: RoomView[]; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; setCheckinEventId: (id: string) => void; setShareEventId: (id: string) => void }) {
@@ -44,8 +46,8 @@ export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, 
       <PageHead title={ct("{Cultos} e Agenda")} eyebrow="Operação" help={ct("Seus {cultos} e eventos ficam aqui. Cada um pode virar uma escala, ganhar roteiro e setlist.")} action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {culto} ou evento"), subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:ct("ex: {Culto} da Manhã, Conferência de Jovens") }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"data", label:"Data", type:"date", fullDate:true, req:true, half:true, hint:"Dia, mês e ano do encontro." }, { k:"hora", label:"Horário de início", type:"time", req:true, half:true }], action: { kind: "event" } })}>{ct("+ Novo {culto}")}</Botao>} />
       <div className="toolbar cultos-tb">
         <div className="seg">
-          <button className={vista === "semana" ? "on" : ""} type="button" onClick={() => setVista("semana")}>Semana</button>
-          <button className={vista === "mes" ? "on" : ""} type="button" onClick={() => setVista("mes")}>Mês</button>
+          <Opcao marcada={vista === "semana"} onClick={() => setVista("semana")}>Semana</Opcao>
+          <Opcao marcada={vista === "mes"} onClick={() => setVista("mes")}>Mês</Opcao>
         </div>
         {vista === "semana" && (
           <div className="cultos-nav">
@@ -65,10 +67,10 @@ export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, 
       {vista === "semana" && <div className="grid-2">
         {daSemana.map((event) => (
           <div className="panel" key={event.id} style={{ position: "relative" }}>
-            <button className="panel click" type="button" style={{ width: "100%", textAlign: "left", background: "none", border: "none", padding: 0 }} onClick={() => setDrawer({ kind: "event", id: event.id })}>
+            <Acao className="panel click" style={{ width: "100%", textAlign: "left", background: "none", border: "none", padding: 0 }} onClick={() => setDrawer({ kind: "event", id: event.id })}>
               <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> {event.name}</span><span className="panel-meta">{event.time}</span></div>
               <div className="panel-body"><p className="mini-sub">{joinDot(event.weekday, formatDateBR(event.eventDate), event.location)}</p><div className="divider" style={{ margin: "14px 0" }} />{event.schedule.slice(0, 4).map((item) => <div className="mini-row" key={item.id} style={{ paddingInline: 0 }}><div className="mini-main"><div className="mini-title">{item.item}</div><div className="mini-sub">{item.time ?? "sem horário"} · {item.category ?? "roteiro"}</div></div></div>)}<div className="mini-sub">{event.ministries.map((id) => ministries.find((ministry) => ministry.id === id)?.name).filter(Boolean).join(" · ")}</div></div>
-            </button>
+            </Acao>
             <div style={{ padding: "0 22px 16px", display: "flex", gap: 8 }}>
               <Botao compacto onClick={(e) => { e.stopPropagation(); setCheckinEventId(event.id); }}>
                 <Icon name="cultos" size={13} /> Check-in QR
@@ -85,10 +87,10 @@ export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, 
                     <div className="cong-menu" style={{ right: 0, left: "auto" }} onClick={(e) => e.stopPropagation()}>
                       <div className="cong-group">Abrir turma</div>
                       {kidsClasses.map((kc) => (
-                        <button key={kc.id} className="cong-opt" type="button" onClick={() => { setKidsModal({ eventId: event.id, classId: kc.id }); setKidsPickerEventId(null); }}>
+                        <Acao key={kc.id} className="cong-opt" onClick={() => { setKidsModal({ eventId: event.id, classId: kc.id }); setKidsPickerEventId(null); }}>
                           <span className="cong-opt-mark"><Icon name="kids" size={14} /></span>
                           <span className="cong-opt-info"><span className="cong-opt-name">{kc.name}</span></span>
-                        </button>
+                        </Acao>
                       ))}
                     </div>
                   )}
@@ -152,9 +154,9 @@ export function MiniCalendar({ events, onAdd }: { events: CalEvent[]; onAdd?: (d
   return (
     <div className="cal">
       <div className="cal-head">
-        <button type="button" className="cal-nav" onClick={() => changeMonth(-1)}>‹</button>
+        <Acao className="cal-nav" onClick={() => changeMonth(-1)}>‹</Acao>
         <span className="cal-title">{CAL_MESES_FULL[month]} {year}</span>
-        <button type="button" className="cal-nav" onClick={() => changeMonth(1)}>›</button>
+        <Acao className="cal-nav" onClick={() => changeMonth(1)}>›</Acao>
       </div>
       <div className="cal-grid">
         {CAL_SEM.map((s, i) => <span key={`h${i}`} className="cal-dow">{s}</span>)}
@@ -162,10 +164,10 @@ export function MiniCalendar({ events, onAdd }: { events: CalEvent[]; onAdd?: (d
           if (!d) return <span key={`e${i}`} className="cal-cell empty" />;
           const has = byDay.get(d);
           return (
-            <button type="button" key={`d${d}`} className={`cal-cell${has ? " has" : ""}${selDay === d ? " sel" : ""}`} onClick={() => setSelDay(d)}>
+            <Acao key={`d${d}`} className={`cal-cell${has ? " has" : ""}${selDay === d ? " sel" : ""}`} onClick={() => setSelDay(d)}>
               <span className="cal-num">{d}</span>
               {has && <span className="cal-dots">{has.slice(0, 3).map((e, k) => <i key={k} className={`cal-dot${e.tone === "amber" ? " amber" : ""}`} />)}</span>}
-            </button>
+            </Acao>
           );
         })}
       </div>
@@ -173,15 +175,15 @@ export function MiniCalendar({ events, onAdd }: { events: CalEvent[]; onAdd?: (d
         {!selDay && <div className="cal-agenda-empty">Toque num dia para ver os compromissos.</div>}
         {selDay && selEvents.length === 0 && <div className="cal-agenda-empty">Nada em {selDay} de {CAL_MESES_FULL[month]}.</div>}
         {selEvents.map((e, i) => (
-          <button type="button" key={i} className="cal-ev" onClick={() => e.onClick?.()}>
+          <Acao key={i} className="cal-ev" onClick={() => e.onClick?.()}>
             <span className={`cal-ev-bar${e.tone === "amber" ? " amber" : ""}`} />
             <div className="cal-ev-main">
               <div className="cal-ev-label">{e.label}</div>
               {e.sub && <div className="cal-ev-sub">{e.sub}</div>}
             </div>
-          </button>
+          </Acao>
         ))}
-        {selDay && onAdd && <button type="button" className="cal-add" onClick={() => onAdd(`${selDay} ${DP_MESES[month].toLowerCase()}`)}>+ Reservar em {selDay} {DP_MESES[month].toLowerCase()}</button>}
+        {selDay && onAdd && <Acao className="cal-add" onClick={() => onAdd(`${selDay} ${DP_MESES[month].toLowerCase()}`)}>+ Reservar em {selDay} {DP_MESES[month].toLowerCase()}</Acao>}
       </div>
     </div>
   );
@@ -233,7 +235,7 @@ export function Espacos({ rooms, reservations, church, setModal, embed }: { room
       <div className="sala-grid">
         {rooms.map((room) => {
           const count = reservations.filter((reservation) => reservation.room_id === room.id).length;
-          return <button key={room.id} className={`sala-card ${filter === room.id ? "on" : ""}`} type="button" onClick={() => setFilter(filter === room.id ? "todas" : room.id)}><div className="sala-card-top"><span className="sala-mark"><Icon name="config" size={18} /></span><span className="sala-cap">{room.capacity ?? 0} <small>lugares</small></span></div><div className="sala-nome">{room.name}</div>{room.location ? <div className="sala-local">{room.location}</div> : null}{room.resources.length ? <div className="sala-rec">{room.resources.map((resource) => <span className="tag" key={resource}>{resource}</span>)}</div> : null}<div className="sala-foot">{plural(count, "reserva")}{room.allows_meetings === false ? " · não serve pra reunião" : ""}</div></button>;
+          return <Acao key={room.id} className={`sala-card ${filter === room.id ? "on" : ""}`} onClick={() => setFilter(filter === room.id ? "todas" : room.id)}><div className="sala-card-top"><span className="sala-mark"><Icon name="config" size={18} /></span><span className="sala-cap">{room.capacity ?? 0} <small>lugares</small></span></div><div className="sala-nome">{room.name}</div>{room.location ? <div className="sala-local">{room.location}</div> : null}{room.resources.length ? <div className="sala-rec">{room.resources.map((resource) => <span className="tag" key={resource}>{resource}</span>)}</div> : null}<div className="sala-foot">{plural(count, "reserva")}{room.allows_meetings === false ? " · não serve pra reunião" : ""}</div></Acao>;
         })}
         {rooms.length === 0 ? <div className="empty">Nenhuma sala cadastrada ainda.</div> : null}
       </div>

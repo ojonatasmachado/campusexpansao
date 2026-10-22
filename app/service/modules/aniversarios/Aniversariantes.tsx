@@ -19,6 +19,7 @@ import {
 } from "./aniversarios";
 
 import { Botao, botaoClasse } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 type Abrir = (p: Aniversariante) => void;
 type Nomeado = { id: string; name: string };
 
@@ -90,16 +91,16 @@ export function AniversariantesDaSemana({ base, escopo, comIdade, onAbrir, onVer
       <div className="panel-body flush">
         {lista.slice(0, 8).map((p) => (
           <div className="cuidado-item" key={`${p.tipo}-${p.id}`}>
-            <button type="button" className="cuidado-nome" onClick={() => onAbrir(p)}>
+            <Acao className="cuidado-nome" onClick={() => onAbrir(p)}>
               <span className="mini-title">{p.nome}</span>
               <span className={`mini-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{joinDot(quandoE(p), p.idade ? `faz ${p.idade} anos` : null)}</span>
-            </button>
+            </Acao>
             <div className="cuidado-acoes"><BotaoParabens p={p} onClick={() => setParabens(p)} /></div>
           </div>
         ))}
         <div className="aniv-rodape">
           {lista.length > 8 && <span className="mini-sub">{`E mais ${plural(lista.length - 8, "pessoa")}.`}</span>}
-          <button type="button" className="panel-link" onClick={onVerMes}>Ver os aniversariantes do mês</button>
+          <Botao variante="texto" onClick={onVerMes}>Ver os aniversariantes do mês</Botao>
         </div>
       </div>
       {parabens && <Parabens p={parabens} onFechar={() => setParabens(null)} />}
@@ -181,10 +182,10 @@ export function Aniversariantes({ base, escopo, comIdade, times, grupos, onAbrir
         )}
         {lista.map((p) => (
           <div className="tr" key={`${p.tipo}-${p.id}`} style={{ gridTemplateColumns: colunas }}>
-            <button type="button" className="cell-person aniv-pessoa" onClick={() => onAbrir(p)}>
+            <Acao className="cell-person aniv-pessoa" onClick={() => onAbrir(p)}>
               <Av name={p.nome} size="md" />
               <div><div className="cell-name">{p.nome}</div><div className={`cell-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{diaDoMes(p)}</div></div>
-            </button>
+            </Acao>
             <div className="cell-sub">{ondeServe(p)}</div>
             {comIdade && <div className="cell-sub aniv-idade">{p.idade ? `${p.idade} anos` : ""}</div>}
             <div className="aniv-acao"><BotaoParabens p={p} onClick={() => setParabens(p)} /></div>

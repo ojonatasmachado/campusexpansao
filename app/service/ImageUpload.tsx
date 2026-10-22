@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { ImageCropper } from "./ImageCropper";
 
 import { Botao } from "./ui/Botao";
+import { Acao } from "./ui/Acao";
 /* Upload de imagem retangular (logo, capa/banner...), com preview de fundo e
    botão trocar/remover. Extraído de ServiceExactApp.tsx (era local/não
    exportado, usado só pro logo da igreja) pra poder ser reaproveitado também
@@ -45,14 +46,13 @@ export function ImageUpload({
 
   return (
     <div className="img-up">
-      <button
-        type="button"
+      <Acao
         className={`img-up-slot${round ? " round" : ""}`}
         onClick={() => ref.current?.click()}
         style={url ? { backgroundImage: `url(${url})` } : undefined}
       >
         {!url && <span className="img-up-plus">+</span>}
-      </button>
+      </Acao>
       <div className="img-up-main">
         <div className="cfg-row-t">{label}</div>
         {hint && <div className="cfg-row-s">{hint}</div>}

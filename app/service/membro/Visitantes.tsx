@@ -5,6 +5,8 @@ import { Icon, Caret } from "../lib/icons";
 import { Av } from "./comum";
 import type { Visitor } from "./tipos";
 
+import { Botao } from "../ui/Botao";
+import { Acao } from "../ui/Acao";
 export const ETAPAS = [
   { id: "novo", nome: "Novo" },
   { id: "contato", nome: "Contato" },
@@ -40,9 +42,9 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
       <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>
         Registre quem chegou e evolua o acompanhamento direto pelo celular.
       </div>
-      <button className="m-btn m-btn-ok" style={{ width: "100%", marginBottom: 16 }} onClick={() => setNovo(true)}>
+      <Botao tamanho="toque" variante="principal" largo style={{ width: "100%", marginBottom: 16 }} onClick={() => setNovo(true)}>
         + Registrar visitante
-      </button>
+      </Botao>
 
       {novo && (
         <div className="m-card" style={{ borderColor: "var(--olive-line)" }}>
@@ -72,8 +74,8 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
             )}
           </select>
           <div style={{ display: "flex", gap: 8 }}>
-            <button className="m-btn m-btn-ok" style={{ flex: 1 }} onClick={salvar}>Salvar</button>
-            <button className="m-btn m-btn-swap" style={{ flex: 1 }} onClick={() => setNovo(false)}>Cancelar</button>
+            <Botao tamanho="toque" variante="principal" style={{ flex: 1 }} onClick={salvar}>Salvar</Botao>
+            <Botao tamanho="toque" variante="secundario" style={{ flex: 1 }} onClick={() => setNovo(false)}>Cancelar</Botao>
           </div>
         </div>
       )}
@@ -84,7 +86,7 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
         const isOpen = aberto === v.id;
         return (
           <div className="m-card" key={v.id}>
-            <button className="m-vis-head" onClick={() => setAberto(isOpen ? null : v.id)}>
+            <Acao className="m-vis-head" onClick={() => setAberto(isOpen ? null : v.id)}>
               <Av name={v.name} size="sm" />
               <div className="m-vis-main">
                 <div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{v.name}</div>
@@ -94,7 +96,7 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
                 </div>
               </div>
               <span className="m-task-caret"><Caret open={isOpen} /></span>
-            </button>
+            </Acao>
             {isOpen && (
               <div style={{ marginTop: 12 }}>
                 <div className="m-vis-track">
@@ -116,8 +118,8 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
                   ))}
                 </div>
                 {etIdx < ETAPAS.length - 1 && (
-                  <button
-                    className="m-btn m-btn-ok"
+                  <Botao
+                    tamanho="toque" variante="principal" largo
                     style={{ width: "100%", marginTop: 8 }}
                     onClick={() => {
                       onAdvanceVisitorStage?.(v.id, ETAPAS[etIdx + 1].id);
@@ -125,7 +127,7 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
                     }}
                   >
                     Avancar para {`"${ETAPAS[etIdx + 1].nome}"`} →
-                  </button>
+                  </Botao>
                 )}
                 {etIdx === ETAPAS.length - 1 && (
                   <div className="m-confirmed" style={{ marginTop: 10 }}><Icon name="ok" size={15} /> Pronto para virar membro</div>

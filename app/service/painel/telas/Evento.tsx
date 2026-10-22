@@ -17,6 +17,8 @@ import { DrawerSection, DrawerShell, TimePicker } from "../campos";
 import type { CronoStep, DrawerState, EventRsvpView, EventView, MinistryView, PersonView, RosterAssignmentView } from "../tipos";
 
 import { Botao, BotaoIcone } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 export function EventDrawer({
   event,
   ministries,
@@ -57,9 +59,9 @@ export function EventDrawer({
         <div className="profile-role">{joinDot(event.time, event.location, event.kind)}</div>
         <Cobertura itens={cobertura} onAbrir={onAbrirVagas} />
         <div className="seg" style={{ marginTop: 14 }}>
-          <button className={tab === "crono" ? "on" : ""} type="button" onClick={() => setTab("crono")}>Cronograma</button>
-          <button className={tab === "posicoes" ? "on" : ""} type="button" onClick={() => setTab("posicoes")}>Posições</button>
-          <button className={tab === "membro" ? "on" : ""} type="button" onClick={() => setTab("membro")}>Para o membro</button>
+          <Opcao marcada={tab === "crono"} onClick={() => setTab("crono")}>Cronograma</Opcao>
+          <Opcao marcada={tab === "posicoes"} onClick={() => setTab("posicoes")}>Posições</Opcao>
+          <Opcao marcada={tab === "membro"} onClick={() => setTab("membro")}>Para o membro</Opcao>
         </div>
       </div>
       <div className="drawer-body">
@@ -92,15 +94,15 @@ export function EventDrawer({
                         {assignments.map((assignment) => {
                           const person = people.find((candidate) => candidate.id === assignment.person_id);
                           return (
-                            <button key={assignment.id} className="slot" style={{ margin: 0, width: "auto" }} type="button" onClick={() => person && setDrawer({ kind: "person", id: person.id })}>
+                            <Acao key={assignment.id} className="slot" style={{ margin: 0, width: "auto" }} onClick={() => person && setDrawer({ kind: "person", id: person.id })}>
                               <Av name={person?.name ?? "Voluntário"} size="xs" photoUrl={person?.photoUrl} />
                               <span className="slot-name" style={{ maxWidth: 120 }}>{person?.name.split(" ")[0] ?? "Pessoa"}</span>
                               <span className={`slot-st ${assignment.status}`} />
-                            </button>
+                            </Acao>
                           );
                         })}
                         {Array.from({ length: missing }).map((_, index) => (
-                          <button key={`${position.id}-missing-${index}`} className="slot-empty" style={{ width: "auto", padding: "7px 14px" }} type="button" onClick={() => { onClose(); setRoute("escalas"); }}>+ vaga</button>
+                          <Acao key={`${position.id}-missing-${index}`} className="slot-empty" style={{ width: "auto", padding: "7px 14px" }} onClick={() => { onClose(); setRoute("escalas"); }}>+ vaga</Acao>
                         ))}
                       </div>
                     </div>
@@ -287,8 +289,8 @@ export function CronogramaEditor({ event, ministries, onRefresh }: { event: Even
               <div className="crono-row1">
                 <input className="crono-item-in" placeholder={ct("Etapa do {culto} (ex: Momento de louvor)")} value={s.item} onChange={(e) => patch(s.id, { item: e.target.value })} onBlur={(e) => commitField(s.id, { item: e.target.value })} />
                 <div className="crono-actions">
-                  <button type="button" className="crono-mini" title="Subir" onClick={() => moveStep(i, -1)} disabled={i === 0}>↑</button>
-                  <button type="button" className="crono-mini" title="Descer" onClick={() => moveStep(i, 1)} disabled={i === steps.length - 1}>↓</button>
+                  <Acao className="crono-mini" title="Subir" onClick={() => moveStep(i, -1)} desativado={i === 0}>↑</Acao>
+                  <Acao className="crono-mini" title="Descer" onClick={() => moveStep(i, 1)} desativado={i === steps.length - 1}>↓</Acao>
                   <BotaoIcone className="crono-mini danger" title="Remover" rotulo="Remover" onClick={() => removeStep(s.id)}>✕</BotaoIcone>
                 </div>
               </div>

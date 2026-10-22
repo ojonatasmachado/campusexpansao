@@ -12,6 +12,8 @@ import { Icon } from "../../lib/icons";
 import { chaveLegivel, codigoPix, normalizarChave, rotuloDoTipo, type ContribuirCfg } from "./pix";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 async function copiar(texto: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(texto);
@@ -73,7 +75,7 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
           <div className="m6-seg">
             <div className="ts-seg contrib-seg" role="radiogroup" aria-labelledby="contrib-fin" style={{ gridTemplateColumns: `repeat(${finalidades.length === 4 ? 2 : finalidades.length}, minmax(0, 1fr))` }}>
               {finalidades.map((f) => (
-                <button key={f} type="button" role="radio" aria-checked={finalidade === f} className={finalidade === f ? "on" : ""} onClick={() => setFinalidade(f)}>{f}</button>
+                <Opcao key={f} role="radio" aria-checked={finalidade === f} marcada={finalidade === f} onClick={() => setFinalidade(f)}>{f}</Opcao>
               ))}
             </div>
           </div>
@@ -102,13 +104,13 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
 
       <div className="m6-sec">
         <div className="m6-card">
-          <button className="contrib-qr-t" type="button" aria-expanded={qr} onClick={() => setQr((v) => !v)}>
+          <Acao className="contrib-qr-t" aria-expanded={qr} onClick={() => setQr((v) => !v)}>
             <span className="m6-rb">
               <span className="m6-rt">QR code</span>
               <span className="m6-rs">Para pagar com o celular de outra pessoa</span>
             </span>
             <span className={`m6-chev contrib-chev${qr ? " on" : ""}`} aria-hidden="true"><Icon name="avancar" size={18} /></span>
-          </button>
+          </Acao>
           {qr && (
             <div className="contrib-qr">
               <QRCode value={codigo} size={208} viewBox="0 0 208 208" level="M" title={`QR code do Pix para ${cfg.favorecido}`} />

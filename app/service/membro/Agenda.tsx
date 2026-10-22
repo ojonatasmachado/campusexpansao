@@ -16,6 +16,9 @@ import { TabTarefas } from "./Conversas";
 import type { Board, Card, Course, CourseLesson, Ev, EventRsvp, ItemAgenda, M, MeetingLite, Ministry, P, RehearsalLite, Slot } from "./tipos";
 
 import { Botao } from "../ui/Botao";
+import { Interruptor } from "../ui/Interruptor";
+import { Acao } from "../ui/Acao";
+import { Opcao } from "../ui/Opcao";
 /* data em bloquinho: "Dom 04" */
 export function M6Date({ iso }: { iso: string }) {
   const d = parseISODate(iso);
@@ -28,7 +31,7 @@ export function M6Date({ iso }: { iso: string }) {
 export function EventoRow({ ev, serve }: { ev: Ev; serve?: string | null }) {
   const ui = useContext(MemberUiContext);
   return (
-    <button type="button" className="m6-row" onClick={() => ui.abrirEvento(ev.id)}>
+    <Acao className="m6-row" onClick={() => ui.abrirEvento(ev.id)}>
       <M6Date iso={ev.eventDate} />
       <span className="m6-rb">
         <span className="m6-rt">{ev.name}</span>
@@ -36,7 +39,7 @@ export function EventoRow({ ev, serve }: { ev: Ev; serve?: string | null }) {
         {serve !== undefined && serve !== null && <span className="m6-serve"><M6St k="ok" ic="ok">{joinDot("Você serve", serve)}</M6St></span>}
       </span>
       <span className="m6-chev"><Icon name="avancar" size={18} /></span>
-    </button>
+    </Acao>
   );
 }
 
@@ -148,7 +151,7 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
       <div className="m6-segwrap">
         <div className={`ts-seg ${verOnde ? "tres" : "two"} m6-seg`} role="radiogroup" aria-label="O que ver">
           {([["minha", "Minha agenda"], ["igreja", "Igreja"], ...(verOnde ? [["onde", "Onde"]] as const : [])] as const).map(([v, l]) => (
-            <button key={v} type="button" role="radio" aria-checked={atual === v} className={atual === v ? "on" : ""} onClick={() => setSeg(v)}>{l}</button>
+            <Opcao key={v} role="radio" aria-checked={atual === v} marcada={atual === v} onClick={() => setSeg(v)}>{l}</Opcao>
           ))}
         </div>
       </div>
@@ -186,7 +189,7 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
                     </>
                   );
                   return i.abrir ? (
-                    <button type="button" className="m6-row" key={i.id} onClick={i.abrir}>{corpo}<span className="m6-chev"><Icon name="avancar" size={18} /></span></button>
+                    <Acao className="m6-row" key={i.id} onClick={i.abrir}>{corpo}<span className="m6-chev"><Icon name="avancar" size={18} /></span></Acao>
                   ) : (
                     <div className="m6-row" key={i.id}>{corpo}</div>
                   );
@@ -294,7 +297,7 @@ export function SheetEvento({ ev, slot, ministry, rsvp, onRespond, paginaUrl, ch
         resp ? (
           <div className="m6-after">
             <M6St k="ok" ic="ok">{resp === "inscricao" ? "Você está inscrito" : "Presença confirmada"}</M6St>
-            <button type="button" className="m6-link" disabled={enviando} onClick={() => responder(false)}>{pede === "inscricao" ? "Cancelar inscrição" : "Desfazer"}</button>
+            <Botao tamanho="toque" variante="texto" desativado={enviando} onClick={() => responder(false)}>{pede === "inscricao" ? "Cancelar inscrição" : "Desfazer"}</Botao>
           </div>
         ) : (
           <div className="m6-btns"><Botao tamanho="toque" variante="principal" desativado={enviando} onClick={() => responder(true)}>{enviando ? "Enviando..." : pede === "inscricao" ? "Fazer inscrição" : "Vou"}</Botao></div>
@@ -323,7 +326,7 @@ export function RespostaEvento({ id, inicial, onRespond }: { id: string; inicial
     return (
       <div className="m6-after">
         <M6St k={r === "vou" ? "ok" : "neutral"} ic={r === "vou" ? "ok" : "recusou"}>{r === "vou" ? "Você vai" : "Você não vai"}</M6St>
-        <button type="button" className="m6-link" onClick={() => set(null)}>Mudar resposta</button>
+        <Botao tamanho="toque" variante="texto" onClick={() => set(null)}>Mudar resposta</Botao>
       </div>
     );
   }
@@ -359,7 +362,7 @@ export function Disponibilidade({ person, onSave }: { person: P; onSave: (a: Rec
             <span className="m6-rt">{d.nome}</span>
             <span className="m6-rs">{disp[d.key] ? "O líder pode escalar você" : "O líder não vai escalar você"}</span>
           </span>
-          <button type="button" role="switch" aria-checked={disp[d.key]} aria-label={d.nome} className={`m6-tg${disp[d.key] ? " on" : ""}`} onClick={() => trocar(d.key)} />
+          <Interruptor ligado={disp[d.key]} tamanho="toque" rotulo={d.nome} onClick={() => trocar(d.key)} />
         </div>
       ))}
     </div>

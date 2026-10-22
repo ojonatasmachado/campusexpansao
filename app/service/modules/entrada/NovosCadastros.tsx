@@ -15,6 +15,7 @@ import { plural } from "../../lib/plural";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 type Ficha = { id: string; name: string; phone: string | null; email: string | null };
 type Pedido = { id: string; name: string; email: string; phone: string | null; created_at: string; parecidos: Ficha[] };
 
@@ -88,10 +89,10 @@ export function NovosCadastros() {
   };
 
   const opcaoFicha = (p: Pedido, f: Ficha) => (
-    <button key={f.id} type="button" className="entrada-ficha" disabled={enviando === p.id} onClick={() => aprovar(p, f)}>
+    <Acao key={f.id} className="entrada-ficha" desativado={enviando === p.id} onClick={() => aprovar(p, f)}>
       <span className="mini-title">{`Ligar a ${f.name}`}</span>
       <span className="mini-sub">{joinDot(fone(f.phone), f.email) || "Ficha sem telefone e e-mail"}</span>
-    </button>
+    </Acao>
   );
 
   return (

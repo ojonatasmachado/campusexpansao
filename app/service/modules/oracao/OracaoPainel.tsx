@@ -15,6 +15,7 @@ import { EmptyState, PageHead } from "../../painel/ui";
 import { CATEGORIAS, moderar, rotuloCategoria, usePedidosPainel, type Categoria, type Moderacao, type PedidoPainel } from "./oracao";
 
 import { Botao } from "../../ui/Botao";
+import { Opcao } from "../../ui/Opcao";
 type Filtro = "ativos" | "mural" | "intercessao" | "respondidos" | "ocultos" | "arquivados";
 const FILTROS: { id: Filtro; rotulo: string; vale: (p: PedidoPainel) => boolean }[] = [
   { id: "ativos", rotulo: "Ativos", vale: (p) => p.moderation === "ativo" && !p.answered_at },
@@ -68,7 +69,7 @@ export function OracaoPainel({ organizationId, churches = [] }: { organizationId
       <div className="fs-chips or-filtros" role="group" aria-label="Filtrar pedidos">
         {FILTROS.map((f) => {
           const n = lista.filter(f.vale).length;
-          return <button key={f.id} type="button" className={`seg-chip${filtro === f.id ? " on" : ""}`} aria-pressed={filtro === f.id} onClick={() => setFiltro(f.id)}>{`${f.rotulo} · ${n}`}</button>;
+          return <Opcao key={f.id} marcada={filtro === f.id} estilo="seg-chip" aria-pressed={filtro === f.id} onClick={() => setFiltro(f.id)}>{`${f.rotulo} · ${n}`}</Opcao>;
         })}
       </div>
 

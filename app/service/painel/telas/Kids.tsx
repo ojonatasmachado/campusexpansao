@@ -18,6 +18,8 @@ import { ServiceModal } from "./ServiceModal";
 import type { ChildGuardianView, ChildView, ChurchView, KidsClassView, KidsEventView, ModalState, PersonView, RoomView } from "../tipos";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 export function TurmasKids({ kidsClasses, rooms, setModal }: { kidsClasses: KidsClassView[]; rooms: RoomView[]; setModal: (modal: ModalState) => void }) {
   const { comTermos: ct } = useTermos();
   const roomById = new Map(rooms.map((room) => [room.id, room]));
@@ -47,12 +49,12 @@ export function TurmasKids({ kidsClasses, rooms, setModal }: { kidsClasses: Kids
       </div>
       <div className="sala-grid" style={{ marginTop: 16 }}>
         {kidsClasses.map((kc) => (
-          <button key={kc.id} className="sala-card" type="button" onClick={() => openForm(kc)}>
+          <Acao key={kc.id} className="sala-card" onClick={() => openForm(kc)}>
             <div className="sala-card-top"><span className="sala-mark"><Icon name="kids" size={18} /></span><span className="sala-cap">{kc.capacity ?? 0} <small>vagas</small></span></div>
             <div className="sala-nome">{kc.name}</div>
             <div className="sala-local">{kc.min_age_months != null || kc.max_age_months != null ? `${kc.min_age_months ?? 0} a ${kc.max_age_months ?? "?"} meses` : "Faixa etária não definida"}</div>
             {kc.room_id ? <div className="sala-rec"><span className="tag">{roomById.get(kc.room_id)?.name ?? "Sala"}</span></div> : null}
-          </button>
+          </Acao>
         ))}
         {kidsClasses.length === 0 ? <div className="empty">Nenhuma turma cadastrada ainda.</div> : null}
       </div>
@@ -110,9 +112,9 @@ export function Criancas({
       <div className="toolbar">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar criança..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <div className="seg">
-          <button className={classFilter === "todas" ? "on" : ""} type="button" onClick={() => setClassFilter("todas")}>Todas</button>
+          <Opcao marcada={classFilter === "todas"} onClick={() => setClassFilter("todas")}>Todas</Opcao>
           {kidsClasses.map((kc) => (
-            <button key={kc.id} className={classFilter === kc.id ? "on" : ""} type="button" onClick={() => setClassFilter(kc.id)}>{kc.name}</button>
+            <Opcao key={kc.id} marcada={classFilter === kc.id} onClick={() => setClassFilter(kc.id)}>{kc.name}</Opcao>
           ))}
         </div>
         <div className="tb-spacer" />
@@ -123,12 +125,12 @@ export function Criancas({
         {visible.map((child) => {
           const guardians = childGuardians.filter((g) => g.child_id === child.id);
           return (
-            <button className="tr click" type="button" key={child.id} style={{ gridTemplateColumns: "1.6fr 1fr 1fr 1.4fr" }} onClick={() => setForm({ open: true, child })}>
+            <Acao className="tr click" key={child.id} style={{ gridTemplateColumns: "1.6fr 1fr 1fr 1.4fr" }} onClick={() => setForm({ open: true, child })}>
               <div className="cell-person"><Av name={child.name} size="md" photoUrl={child.photo_url} /><div><div className="cell-name">{child.name}</div>{child.allergies ? <div className="cell-sub">Alergia: {child.allergies}</div> : null}</div></div>
               <div className="cell-sub">{childAgeLabel(child.birth)}</div>
               <div>{child.class_id ? <span className="tag">{classById.get(child.class_id)?.name ?? "Turma"}</span> : <span className="cell-sub">sem turma</span>}</div>
               <div className="cell-sub">{guardians.length ? guardians.map((g) => personById.get(g.guardian_person_id)?.name.split(" ")[0]).filter(Boolean).join(", ") : "sem responsável"}</div>
-            </button>
+            </Acao>
           );
         })}
         {visible.length === 0 ? <div className="empty">Nenhuma criança encontrada.</div> : null}
@@ -331,7 +333,7 @@ export function ChildFormModal({
             <label className="field-label">Gênero</label>
             <div className="fs-chips" role="group" aria-label="Gênero">
               {([["menina", "Menina"], ["menino", "Menino"]] as const).map(([v, l]) => (
-                <button key={v} type="button" className={`seg-chip${gender === v ? " on" : ""}`} aria-pressed={gender === v} onClick={() => setGender(gender === v ? "" : v)}>{l}</button>
+                <Opcao key={v} marcada={gender === v} estilo="seg-chip" aria-pressed={gender === v} onClick={() => setGender(gender === v ? "" : v)}>{l}</Opcao>
               ))}
             </div>
           </div>

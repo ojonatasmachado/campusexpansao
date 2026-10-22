@@ -20,6 +20,8 @@ import { AVISO_CEP } from "../lib/termo-mapa";
 import type { M, MemberContactInput, P } from "./tipos";
 
 import { Botao } from "../ui/Botao";
+import { Interruptor } from "../ui/Interruptor";
+import { Opcao } from "../ui/Opcao";
 // ── aba: Perfil ───────────────────────────────────────────────────────────────
 
 /* notificações do celular (push): usado no Perfil e no primeiro acesso */
@@ -314,7 +316,7 @@ export function TabPerfil({
             <div className="m6-rt">Tema</div>
             <div className="ts-seg two" role="radiogroup" aria-label="Tema">
               {(["light", "dark"] as const).map((m) => (
-                <button key={m} type="button" role="radio" aria-checked={theme === m} className={theme === m ? "on" : ""} onClick={() => setTheme(m)}>{m === "light" ? "Claro" : "Escuro"}</button>
+                <Opcao key={m} role="radio" aria-checked={theme === m} marcada={theme === m} onClick={() => setTheme(m)}>{m === "light" ? "Claro" : "Escuro"}</Opcao>
               ))}
             </div>
           </div>
@@ -326,7 +328,7 @@ export function TabPerfil({
               <span className="m6-rt">Notificações</span>
               <span className="m6-rs">{pushMsg || (pushSupported ? (pushOn ? "Nada chega das 22h às 7h. O Mural chega em resumo." : "Desligadas") : "Disponível quando o app está instalado")}</span>
             </span>
-            <button type="button" role="switch" aria-checked={pushOn} aria-label="Notificações" className={`m6-tg${pushOn ? " on" : ""}`} disabled={!pushSupported || pushBusy} onClick={() => (pushOn ? desligarPush() : ligarPush())} />
+            <Interruptor ligado={pushOn} tamanho="toque" rotulo="Notificações" desativado={!pushSupported || pushBusy} onClick={() => (pushOn ? desligarPush() : ligarPush())} />
           </div>
           {/* v7 5.3 (lei 9): categorias que a pessoa desliga */}
           {pushOn && CATEGORIAS_AVISO.map((c) => {
@@ -338,7 +340,7 @@ export function TabPerfil({
                   <span className="m6-rt">{ct(c.t)}</span>
                   <span className="m6-rs">{ct(c.s)}</span>
                 </span>
-                <button type="button" role="switch" aria-checked={ligada} aria-label={`Avisos de ${ct(c.t)}`} className={`m6-tg${ligada ? " on" : ""}`} onClick={() => trocarCategoria(c.id)} />
+                <Interruptor ligado={ligada} tamanho="toque" rotulo={`Avisos de ${ct(c.t)}`} onClick={() => trocarCategoria(c.id)} />
               </div>
             );
           })}
@@ -355,7 +357,7 @@ export function TabPerfil({
               <span className="m6-rt">Meu nome no mapa</span>
               <span className="m6-rs">{nomeNoMapa ? "A liderança vê seu nome e a região do seu CEP. Nunca o endereço." : "Você aparece só como um ponto sem nome."}</span>
             </span>
-            <button type="button" role="switch" aria-checked={nomeNoMapa} aria-label="Meu nome no mapa da liderança" className={`m6-tg${nomeNoMapa ? " on" : ""}`} onClick={trocarNomeNoMapa} />
+            <Interruptor ligado={nomeNoMapa} tamanho="toque" rotulo="Meu nome no mapa da liderança" onClick={trocarNomeNoMapa} />
           </div>
         </div>
       </div>

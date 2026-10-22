@@ -17,6 +17,8 @@ import { ImportarMembros } from "./ImportarMembros";
 import type { ChurchView, DrawerState, MemberView, MinistryView, ModalState, PersonView } from "../../ServiceExactApp";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 function formatAvailability(value: Record<string, boolean>) {
   const labels: Record<string, string> = { dom_m: "Domingo manhã", dom_n: "Domingo noite", qua: "Quarta" };
   const items = Object.entries(value).filter(([, ok]) => ok).map(([key]) => labels[key] ?? key);
@@ -115,7 +117,7 @@ export function Membros({ members, people = [], ministries, church, setDrawer, s
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome ou telefone..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <div className="seg seg-wrap">
           {([["todos", "Todos", linhas.length], ["membros", "Membros", conta.membros], ["voluntarios", ct("{Voluntarios}"), conta.voluntarios], ["lideres", "Líderes", conta.lideres], ["novos", "Novos", conta.novos]] as const).map(([id, l, n]) => (
-            <button key={id} className={filtro === id ? "on" : ""} type="button" onClick={() => setFiltro(id)}>{l} <span className="seg-n">{n}</span></button>
+            <Opcao key={id} marcada={filtro === id} onClick={() => setFiltro(id)}>{l} <span className="seg-n">{n}</span></Opcao>
           ))}
         </div>
       </div>
@@ -123,14 +125,14 @@ export function Membros({ members, people = [], ministries, church, setDrawer, s
       <div className="tbl">
         <div className="tr head" style={{ gridTemplateColumns: "1.6fr 1.3fr 1fr 0.9fr" }}><span>Pessoa</span><span>Serve em</span><span>{ct("{Caminhada}")}</span><span>Situação</span></div>
         {visible.map((l) => (
-          <button className="tr click" type="button" key={l.key} style={{ gridTemplateColumns: "1.6fr 1.3fr 1fr 0.9fr" }} onClick={() => abrir(l)}>
+          <Acao className="tr click" key={l.key} style={{ gridTemplateColumns: "1.6fr 1.3fr 1fr 0.9fr" }} onClick={() => abrir(l)}>
             <div className="cell-person"><Av name={l.name} size="md" photoUrl={l.photoUrl} /><div><div className="cell-name">{l.name}</div><div className="cell-sub">{l.sub}</div></div></div>
             <div>
               {l.mins.length > 0 ? <div className="cell-tags">{l.mins.map((min) => <span key={min.id} className="tag">{min.name}</span>)}{l.leader && <span className="lider-tag">Líder</span>}</div> : null}
             </div>
             <div>{l.member ? <JrnPips journey={l.member.journey} comTexto /> : null}</div>
             <SituacaoPessoa l={l} />
-          </button>
+          </Acao>
         ))}
         {visible.length === 0 && <EmptyState title="Ninguém por aqui" text="Quem você cadastrar aparece nesta lista. Se usou a busca ou um filtro, tente limpar." />}
       </div>
@@ -154,9 +156,9 @@ export function Pessoas({ people, currentPersonId, setDrawer, setModal }: { peop
       <div className="toolbar">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input placeholder="Buscar por nome..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <div className="seg">
-          <button className={status === "todos" ? "on" : ""} type="button" onClick={() => setStatus("todos")}>Todos</button>
-          <button className={status === "ativo" ? "on" : ""} type="button" onClick={() => setStatus("ativo")}>Ativos</button>
-          <button className={status === "pausa" ? "on" : ""} type="button" onClick={() => setStatus("pausa")}>Pausa</button>
+          <Opcao marcada={status === "todos"} onClick={() => setStatus("todos")}>Todos</Opcao>
+          <Opcao marcada={status === "ativo"} onClick={() => setStatus("ativo")}>Ativos</Opcao>
+          <Opcao marcada={status === "pausa"} onClick={() => setStatus("pausa")}>Pausa</Opcao>
         </div>
         <div className="tb-spacer" />
         <span className="panel-meta">{visible.length} pessoas</span>
@@ -164,7 +166,7 @@ export function Pessoas({ people, currentPersonId, setDrawer, setModal }: { peop
       <div className="tbl">
         <div className="tr head tr-people"><div>{ct("{Voluntario}")}</div><div>Disponibilidade</div><div>Etiquetas</div><div>Status</div></div>
         {visible.map((person) => (
-          <button className="tr click tr-people" type="button" key={person.id} onClick={() => setDrawer({ kind: "person", id: person.id })}>
+          <Acao className="tr click tr-people" key={person.id} onClick={() => setDrawer({ kind: "person", id: person.id })}>
             <div className="who">
               <Av name={person.name} photoUrl={person.photoUrl} />
               <div>
@@ -175,7 +177,7 @@ export function Pessoas({ people, currentPersonId, setDrawer, setModal }: { peop
             <div>{formatAvailability(person.availability)}</div>
             <div>{person.tags.join(" · ")}</div>
             <div><Chip status={person.status} /></div>
-          </button>
+          </Acao>
         ))}
         {visible.length === 0 && <div className="empty">Ninguém encontrado.</div>}
       </div>

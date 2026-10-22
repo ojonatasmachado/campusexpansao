@@ -65,6 +65,7 @@ import { EntityDrawer } from "./painel/telas/FichaPessoa";
 import { ServiceModal } from "./painel/telas/ServiceModal";
 import type { ChurchView, DrawerState, FellowshipGroupView, JourneyChangeRequestView, JourneyStepKind, MemberView, MinistryView, ModalState, NavGroups, Props } from "./painel/tipos";
 import { Botao, BotaoIcone } from "./ui/Botao";
+import { Acao } from "./ui/Acao";
 export type * from "./painel/tipos";
 
 /* papel e permissão de cada tela : regra no registro de módulos (modules/registry.ts) */
@@ -106,15 +107,15 @@ function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchVie
 
   return (
     <div className="cong" ref={ref}>
-      <button className="cong-btn" type="button" onClick={() => setOpen((o) => !o)}>
+      <Acao className="cong-btn" onClick={() => setOpen((o) => !o)}>
         {marca}{info}
         <span className="cong-caret"><Caret /></span>
-      </button>
+      </Acao>
       {open && churches.length > 1 && (
         <div className="cong-menu">
           <div className="cong-group">Matriz</div>
           {churches.filter((c) => c.matriz).map((c) => (
-            <button key={c.id} className={`cong-opt ${c.id === activeId ? "on" : ""}`} type="button"
+            <Acao key={c.id} className={`cong-opt ${c.id === activeId ? "on" : ""}`}
               onClick={() => { setActiveId(c.id); setOpen(false); }}>
               <span className="cong-opt-mark">
                 <Icon name={c.matriz ? "identidade" : "globo"} size={14} />
@@ -123,13 +124,13 @@ function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchVie
                 <span className="cong-opt-name">{c.nome}</span>
                 <span className="cong-opt-sub">{c.cidade}</span>
               </span>
-            </button>
+            </Acao>
           ))}
           {churches.some((c) => !c.matriz) && (
             <>
               <div className="cong-group">Congregações</div>
               {churches.filter((c) => !c.matriz).map((c) => (
-                <button key={c.id} className={`cong-opt ${c.id === activeId ? "on" : ""}`} type="button"
+                <Acao key={c.id} className={`cong-opt ${c.id === activeId ? "on" : ""}`}
                   onClick={() => { setActiveId(c.id); setOpen(false); }}>
                   <span className="cong-opt-mark">
                 <Icon name={c.matriz ? "identidade" : "globo"} size={14} />
@@ -138,7 +139,7 @@ function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchVie
                     <span className="cong-opt-name">{c.nome}</span>
                     <span className="cong-opt-sub">{c.cidade}</span>
                   </span>
-                </button>
+                </Acao>
               ))}
             </>
           )}
@@ -861,11 +862,11 @@ export default function ServiceExactApp({
   const linkDoMenu = (item: NavGroups[number]["items"][number]) => {
     const badge = navBadge[item.id] ?? 0;
     return (
-      <button key={item.id} className={`sb-link ${route === item.id ? "on" : ""}`} type="button" data-tour={item.id} onClick={() => { setRoute(item.id); if (!showTour) setNavOpen(false); }}>
+      <Acao key={item.id} className={`sb-link ${route === item.id ? "on" : ""}`} data-tour={item.id} onClick={() => { setRoute(item.id); if (!showTour) setNavOpen(false); }}>
         <span className="sb-ic"><Icon name={CEX_ICON_FOR[item.id] ?? item.icon} size={17} /></span>
         {ct(item.label)}
         {badge > 0 ? <span className="sb-badge">{badge}</span> : null}
-      </button>
+      </Acao>
     );
   };
 
@@ -895,9 +896,9 @@ export default function ServiceExactApp({
             return (
               <div key={group.group} className={`sb-sec${fechado ? " closed" : ""}`}>
                 {!solo && (
-                  <button type="button" className="sb-group sb-group-btn" aria-expanded={!fechado} onClick={() => alternarGrupo(group.group)}>
+                  <Acao className="sb-group sb-group-btn" aria-expanded={!fechado} onClick={() => alternarGrupo(group.group)}>
                     {group.group}<Caret open={!fechado} size={13} />
-                  </button>
+                  </Acao>
                 )}
                 {!fechado && visibleItems.map(linkDoMenu)}
               </div>
@@ -910,9 +911,9 @@ export default function ServiceExactApp({
             const aberto = maisAberto || mais.some((i) => i.id === route);
             return (
               <div className={`sb-sec sb-mais${aberto ? "" : " closed"}`}>
-                <button type="button" className="sb-group sb-group-btn" aria-expanded={aberto} onClick={() => setMaisAberto((v) => !v)}>
+                <Acao className="sb-group sb-group-btn" aria-expanded={aberto} onClick={() => setMaisAberto((v) => !v)}>
                   Mais<Caret open={aberto} size={13} />
-                </button>
+                </Acao>
                 {aberto && mais.map(linkDoMenu)}
               </div>
             );
@@ -920,9 +921,9 @@ export default function ServiceExactApp({
         </nav>
         <div className="sb-bottom">
           {podeVerNav("config", currentRole, matrizEfetiva, currentExtraAccess, souVoluntario) && (
-            <button className={`sb-link ${route === "config" ? "on" : ""}`} type="button" data-tour="config" onClick={() => { setRoute("config"); if (!showTour) setNavOpen(false); }}>
+            <Acao className={`sb-link ${route === "config" ? "on" : ""}`} data-tour="config" onClick={() => { setRoute("config"); if (!showTour) setNavOpen(false); }}>
               <span className="sb-ic"><Icon name="config" size={17} /></span> Configurações
-            </button>
+            </Acao>
           )}
         </div>
       </aside>
@@ -1180,7 +1181,7 @@ export default function ServiceExactApp({
             <div className="coach-pop-t">Retomar de onde parou?</div>
             <div className="coach-pop-s">Você não terminou o tour da última vez. Parou no passo {Math.min(tourResumeStep + 1, tourSteps.length)} de {tourSteps.length}.</div>
             <div className="coach-pop-actions">
-              <button className="coach-skip" type="button" onClick={closeTour}>Não, obrigado</button>
+              <Botao variante="discreto" compacto onClick={closeTour}>Não, obrigado</Botao>
               <div style={{ flex: 1 }} />
               <Botao variante="principal" compacto onClick={() => startTourFrom(tourResumeStep)}>Continuar</Botao>
             </div>

@@ -15,6 +15,8 @@ import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { VIAS, type Ausente } from "./cuidado";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 const QUEM = { grupo: "líder do grupo", time: "líder do time", pastoral: "pastoral" } as const;
 const NOME_VIA: Record<string, string> = { ligacao: "ligação", mensagem: "mensagem", visita: "visita" };
 
@@ -49,8 +51,8 @@ export function ListaDeCuidado({ lista, criancas, semanas, onAbrir }: {
       {criancas && (
         <div className="cuidado-seg">
           <div className="seg seg-sm" role="radiogroup" aria-label="Quem ver">
-            <button type="button" role="radio" aria-checked={visao === "adultos"} className={visao === "adultos" ? "on" : ""} onClick={() => setVisao("adultos")}>{`Pessoas · ${lista.length}`}</button>
-            <button type="button" role="radio" aria-checked={visao === "criancas"} className={visao === "criancas" ? "on" : ""} onClick={() => setVisao("criancas")}>{`Crianças · ${criancas.length}`}</button>
+            <Opcao role="radio" aria-checked={visao === "adultos"} marcada={visao === "adultos"} onClick={() => setVisao("adultos")}>{`Pessoas · ${lista.length}`}</Opcao>
+            <Opcao role="radio" aria-checked={visao === "criancas"} marcada={visao === "criancas"} onClick={() => setVisao("criancas")}>{`Crianças · ${criancas.length}`}</Opcao>
           </div>
         </div>
       )}
@@ -60,10 +62,10 @@ export function ListaDeCuidado({ lista, criancas, semanas, onAbrir }: {
             {lista.length === 0 && <div className="mini-row"><div className="mini-main"><div className="mini-title">Ninguém na lista</div><div className="mini-sub">Nenhuma pessoa atende aos critérios com os registros disponíveis.</div></div></div>}
             {lista.slice(0, 8).map((a) => (
               <div className="cuidado-item" key={a.personId}>
-                <button type="button" className="cuidado-nome" onClick={() => onAbrir(a)}>
+                <Acao className="cuidado-nome" onClick={() => onAbrir(a)}>
                   <span className="mini-title">{`${a.nome} · sem registro há ${plural(a.semanas, "semana")}`}</span>
                   <span className="mini-sub">{joinDot(`Último registro em ${formatDateBR(a.ultima)}`, `cuida: ${QUEM[a.quemCuida]}`, a.contato && `contato por ${NOME_VIA[a.contato.via] ?? a.contato.via} em ${formatDateBR(a.contato.dia)}`)}</span>
-                </button>
+                </Acao>
                 {escolhendo === a.personId ? (
                   <div className="cuidado-acoes" role="group" aria-label="Como foi o contato">
                     {VIAS.map((v) => <Botao key={v.v} compacto desativado={enviando === a.personId} onClick={() => registrar(a, "contato", v.v)}>{v.l}</Botao>)}

@@ -16,6 +16,8 @@ import { BAT_ST_MAP, Kpi, OUTRO_LOCAL } from "../comum";
 import type { BaptismCandidateView, BaptismClassView, ChurchView, CourseView, DecisionView, DrawerState, EnrollmentView, LessonAttendanceView, LessonView, MemberView, ModalState, ModuleView, PersonView, RoomView } from "../tipos";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 export function Decisoes({
   decisions,
   members,
@@ -61,10 +63,10 @@ export function Decisoes({
           <input placeholder="Buscar por nome..." value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <div className="seg">
-          <button className={f === "todas" ? "on" : ""} type="button" onClick={() => setF("todas")}>Todas</button>
-          <button className={f === "novo" ? "on" : ""} type="button" onClick={() => setF("novo")}>A contatar</button>
-          <button className={f === "acompanhando" ? "on" : ""} type="button" onClick={() => setF("acompanhando")}>Acompanhando</button>
-          <button className={f === "encaminhado" ? "on" : ""} type="button" onClick={() => setF("encaminhado")}>Encaminhados</button>
+          <Opcao marcada={f === "todas"} onClick={() => setF("todas")}>Todas</Opcao>
+          <Opcao marcada={f === "novo"} onClick={() => setF("novo")}>A contatar</Opcao>
+          <Opcao marcada={f === "acompanhando"} onClick={() => setF("acompanhando")}>Acompanhando</Opcao>
+          <Opcao marcada={f === "encaminhado"} onClick={() => setF("encaminhado")}>Encaminhados</Opcao>
         </div>
         <div className="tb-spacer" />
         <span className="panel-meta">{visible.length} de {decisions.length} decisões</span>
@@ -74,12 +76,12 @@ export function Decisoes({
         {visible.map((decision) => {
           const responsible = decision.responsible_id ? personById.get(decision.responsible_id) : null;
           return (
-            <button className="tr click" key={decision.id} style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }} type="button" onClick={() => setDrawer({ kind: "decision", id: decision.id })}>
+            <Acao className="tr click" key={decision.id} style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }} onClick={() => setDrawer({ kind: "decision", id: decision.id })}>
               <div className="cell-person"><Av name={decision.name} size="md" /><div><div className="cell-name">{decision.name} <span className="chip chip-ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"}</span></div><div className="cell-sub">{decision.phone}</div></div></div>
               <div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>{formatDateBR(decision.happened_on)}</div><div className="cell-sub">{decision.service_name || ct("{Culto} não informado")}</div></div>
               <div className="cell-person">{responsible ? <Av name={responsible.name} size="sm" photoUrl={responsible.photoUrl} /> : null}<div className="cell-sub" style={{ marginTop: 0 }}>{responsible?.name ?? "a definir"}</div></div>
               <div><Chip status={decision.status === "novo" ? "wait" : decision.status === "encaminhado" ? "ok" : "ativo"} /></div>
-            </button>
+            </Acao>
           );
         })}
         {visible.length === 0 ? <EmptyState title="Nenhuma decisão por aqui" text={ct("Quem decidir por Jesus ou se reconciliar num {culto} aparece nesta lista.")} /> : null}
@@ -129,7 +131,7 @@ export function Batismos({
             const count = baptismCandidates.filter((c) => c.class_id === cls.id).length;
             const st = BAT_ST_MAP[cls.status ?? "aberta"];
             return (
-              <button className="bat-card" key={cls.id} type="button" onClick={() => setDrawer({ kind: "baptismClass", id: cls.id })}>
+              <Acao className="bat-card" key={cls.id} onClick={() => setDrawer({ kind: "baptismClass", id: cls.id })}>
                 <div className="bat-card-top">
                   <div>
                     <div className="bat-date">{formatDateBR(cls.baptism_date) || "Sem data"}</div>
@@ -142,7 +144,7 @@ export function Batismos({
                   <span className={`chip ${st?.cls ?? "chip-wait"}`}>{st?.label ?? cls.status}</span>
                   <span className="panel-meta">{count} candidato{count !== 1 ? "s" : ""}</span>
                 </div>
-              </button>
+              </Acao>
             );
           })}
         </div>
@@ -161,12 +163,12 @@ export function Batismos({
             {concluded.map((cls) => {
               const count = baptismCandidates.filter((c) => c.class_id === cls.id).length;
               return (
-                <button className="tr click" key={cls.id} type="button" style={{ gridTemplateColumns: "2fr 1fr 1fr 100px" }} onClick={() => setDrawer({ kind: "baptismClass", id: cls.id })}>
+                <Acao className="tr click" key={cls.id} style={{ gridTemplateColumns: "2fr 1fr 1fr 100px" }} onClick={() => setDrawer({ kind: "baptismClass", id: cls.id })}>
                   <div className="cell-name">{cls.label}</div>
                   <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>{formatDateBR(cls.baptism_date) || "-"}</div>
                   <div className="cell-sub">{cls.location ?? "-"}</div>
                   <div><span className="chip chip-neutral">{count} pessoas</span></div>
-                </button>
+                </Acao>
               );
             })}
           </div>
@@ -245,9 +247,9 @@ export function CursosTrilhas({
       {/* uma fileira só: os tipos de curso e, no fim, organizar */}
       <div className="seg-check cursos-filtros">
         {CURSO_FILTROS.map((f) => (
-          <button key={f.v} className={`seg-chip${view === "galeria" && filtro === f.v ? " on" : ""}`} type="button" onClick={() => { setView("galeria"); setFiltro(f.v); }}>{f.l}</button>
+          <Opcao key={f.v} marcada={view === "galeria" && filtro === f.v} estilo="seg-chip" onClick={() => { setView("galeria"); setFiltro(f.v); }}>{f.l}</Opcao>
         ))}
-        <button className={`seg-chip${view === "org" ? " on" : ""}`} type="button" onClick={() => setView("org")}><Icon name="config" size={13} /> Organizar</button>
+        <Opcao marcada={view === "org"} estilo="seg-chip" onClick={() => setView("org")}><Icon name="config" size={13} /> Organizar</Opcao>
       </div>
 
       {view === "galeria" ? (
@@ -257,9 +259,8 @@ export function CursosTrilhas({
             const concluded = courseEnrollments.filter((item) => item.status === "concluido").length;
             const pct = courseEnrollments.length ? Math.round((concluded / courseEnrollments.length) * 100) : 0;
             return (
-              <button
+              <Acao
                 className="team-card"
-                type="button"
                 key={course.id}
                 onClick={() => setViewingId(course.id)}
               >
@@ -275,7 +276,7 @@ export function CursosTrilhas({
                 <div className="bar" style={{ marginTop: 14 }}>
                   <div className="bar-fill" style={{ width: `${pct}%` }} />
                 </div>
-              </button>
+              </Acao>
             );
           })}
           {cursos.length === 0 && <EmptyState title="Nenhum curso ainda" text="Os cursos e trilhas da igreja aparecem aqui, com aulas e presença." action={{ label: "Criar curso", onClick: () => setEditingId("new") }} />}
@@ -340,9 +341,8 @@ export function CursoBuilderColuna({
       </div>
       <div className="cb-col-body">
         {lista.map((c) => (
-          <button
+          <Acao
             className="cb-card"
-            type="button"
             key={c.id}
             draggable
             onDragStart={() => setDrag(c.id)}
@@ -358,9 +358,9 @@ export function CursoBuilderColuna({
                 </div>
               )}
             </div>
-          </button>
+          </Acao>
         ))}
-        {id && <button className="cb-add" type="button" onClick={() => onOpenEditor("new")}>+ curso neste grupo</button>}
+        {id && <Botao compacto onClick={() => onOpenEditor("new")}>+ curso neste grupo</Botao>}
       </div>
     </div>
   );
@@ -448,7 +448,7 @@ export function CursoBuilder({
             </div>
           </div>
         ) : (
-          <button className="cb-add" type="button" onClick={() => setNovoGrupo("")}>+ Novo grupo</button>
+          <Botao compacto onClick={() => setNovoGrupo("")}>+ Novo grupo</Botao>
         )}
       </div>
     </div>

@@ -19,6 +19,8 @@ import { LANCA_A_MAO, LIVROS, REGISTRO_COLS, anoDe, anos, colunas, folhaLivro, l
 import { RegistroForm, type CriancaKids } from "./RegistroForm";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 const PAGINA = 200;
 
 /** org de demonstração ("org-demo") não é uuid: lê e grava só na memória */
@@ -114,9 +116,9 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
       <div className="toolbar">
         <div className="seg seg-wrap" role="tablist" aria-label="Livro">
           {LIVROS.map((l) => (
-            <button key={l.id} type="button" role="tab" aria-selected={livro === l.id} className={livro === l.id ? "on" : ""} onClick={() => trocarLivro(l.id)}>
+            <Opcao key={l.id} role="tab" aria-selected={livro === l.id} marcada={livro === l.id} onClick={() => trocarLivro(l.id)}>
               {l.rotulo} {regs ? <span className="seg-n">{contagem(l.id)}</span> : null}
-            </button>
+            </Opcao>
           ))}
         </div>
       </div>
@@ -211,7 +213,7 @@ function Linha({ r, onAbrir }: { r: Registro; onAbrir: () => void }) {
   const sub = r.livro === "rol" ? fl : joinDot(formatDateBR(r.data), fl);
   const nome = r.livro === "casamento" ? [r.dados.noivo?.nome, r.dados.noiva?.nome].filter(Boolean).join(" e ") || r.nome : r.nome;
   return (
-    <button className={`tr click sec-tr sec-tr-${r.livro}`} type="button" onClick={onAbrir}>
+    <Acao className={`tr click sec-tr sec-tr-${r.livro}`} onClick={onAbrir}>
       <div className="sec-reg">
         <span className="sec-num" aria-label={`Registro ${r.numero}`}>{numeroFmt(r.numero)}</span>
         <div className="sec-reg-main"><div className="cell-name">{nome}</div>{sub ? <div className="cell-sub">{sub}</div> : null}</div>
@@ -225,7 +227,7 @@ function Linha({ r, onAbrir }: { r: Registro; onAbrir: () => void }) {
           <div>{r.saida ? <span className="chip chip-neutral">Saiu em {formatDateBR(r.saida)}{r.saida_motivo ? ` · ${r.saida_motivo}` : ""}</span> : <span className="chip chip-ok">Ativo</span>}</div>
         </>
       ) : null}
-    </button>
+    </Acao>
   );
 }
 

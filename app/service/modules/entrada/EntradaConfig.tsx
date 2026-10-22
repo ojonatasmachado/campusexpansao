@@ -15,6 +15,7 @@ import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { codigoLegivel, entradaPath } from "../../../lib/service-entrada";
 
 import { Botao, botaoClasse } from "../../ui/Botao";
+import { Opcao } from "../../ui/Opcao";
 type Regra = "aprovar" | "direto";
 const REGRAS: { id: Regra; t: string; s: string }[] = [
   { id: "aprovar", t: "A gestão aprova cada pessoa", s: "O pedido aparece no Início do painel. Você confere quem é e libera." },
@@ -143,10 +144,10 @@ export function EntradaConfig() {
         <div className="cfg-card-s">Vale para os próximos pedidos. Convites que a liderança manda pessoa a pessoa continuam entrando direto.</div>
         <div className="opt-row entrada-regras" role="radiogroup" aria-label="Regra de entrada">
           {REGRAS.map((r) => (
-            <button key={r.id} type="button" role="radio" aria-checked={cfg.rule === r.id} className={`opt${cfg.rule === r.id ? " on" : ""}`} onClick={() => mudarRegra(r.id)}>
+            <Opcao key={r.id} role="radio" aria-checked={cfg.rule === r.id} marcada={cfg.rule === r.id} estilo="opt" onClick={() => mudarRegra(r.id)}>
               <div className="opt-t">{r.t}</div>
               <div className="opt-s">{r.s}</div>
-            </button>
+            </Opcao>
           ))}
         </div>
       </div>

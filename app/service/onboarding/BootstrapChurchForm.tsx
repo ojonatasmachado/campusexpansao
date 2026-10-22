@@ -212,7 +212,7 @@ export default function BootstrapChurchForm() {
 
       {error && <p className="field-error">{error}</p>}
 
-      <Botao variante="principal" className="btn-primary btn-lg" type="submit" desativado={loading}>
+      <Botao variante="principal" className="btn-lg" type="submit" desativado={loading}>
         {loading ? "Criando..." : "Criar igreja matriz"}
       </Botao>
     </form>

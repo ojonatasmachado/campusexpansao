@@ -40,6 +40,9 @@ import { PesquisasView } from "./Pesquisas";
 import type { ChurchView, CourseView, FellowshipGroupView, GruposCfg, KidsClassView, MatrizV2, MinisterialTitleView, MinistryView, ModalState, PapelV2, PersonView, ReservationView, RoomView, StatusCriterios, TagView } from "../tipos";
 
 import { Botao } from "../../ui/Botao";
+import { Interruptor } from "../../ui/Interruptor";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 export const STATUS_CFG_DEFAULT: StatusCriterios = { recusasInativando: 2, recusasInativo: 4, diasIndispInativo: 30, considerarFerias: false };
 export const GRUPOS_CFG_DEFAULT: GruposCfg = { ativo: true, termo: "Grupos de Comunhão", termoP: "Grupo de Comunhão", sigla: "GC" };
 
@@ -126,10 +129,10 @@ export function AcessosCard({
           {lista.slice(0, 40).map((p) => {
             const n = grantsDe(p.id).filter((c) => c !== "acessos.delegar").length;
             return (
-              <button key={p.id} type="button" className={`flag-row${selectedId === p.id ? " on" : ""}`} onClick={() => setSelectedId(p.id)}>
+              <Opcao key={p.id} marcada={selectedId === p.id} estilo="flag-row" onClick={() => setSelectedId(p.id)}>
                 <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
                 <div className="flag-main"><div className="flag-nome">{p.name}</div><div className="flag-meta">{n ? `${plural(n, "acesso extra", "acessos extras")}` : "sem acesso extra"}</div></div>
-              </button>
+              </Opcao>
             );
           })}
           {lista.length === 0 && <div className="empty" style={{ padding: "16px 0" }}>Ninguém encontrado.</div>}
@@ -147,11 +150,11 @@ export function AcessosCard({
               {ACESSO_ROTAS.map((r) => {
                 const on = pessoaGrants.includes(r.id);
                 return (
-                  <button key={r.id} type="button" className={`acesso-tog${on ? " on" : ""}`} onClick={() => toggleGrant(r.id)}>
+                  <Opcao key={r.id} marcada={on} estilo="acesso-tog" onClick={() => toggleGrant(r.id)}>
                     <span className="acesso-tog-ic"><Icon name={CEX_ICON_FOR[r.id] ?? "config"} size={15} /></span>
                     <span className="acesso-tog-l">{ct(r.label)}</span>
                     <span className={`acesso-tog-sw${on ? " on" : ""}`} />
-                  </button>
+                  </Opcao>
                 );
               })}
             </div>
@@ -164,11 +167,11 @@ export function AcessosCard({
                   {([[ACESSO_FIN_VER, "Ver o financeiro"], [ACESSO_FIN_LANCAR, "Ver e lançar"]] as const).map(([code, label]) => {
                     const on = pessoaGrants.includes(code);
                     return (
-                      <button key={code} type="button" className={`acesso-tog${on ? " on" : ""}`} aria-pressed={on} onClick={() => toggleGrant(code)}>
+                      <Opcao key={code} marcada={on} estilo="acesso-tog" aria-pressed={on} onClick={() => toggleGrant(code)}>
                         <span className="acesso-tog-ic"><Icon name="carteira" size={15} /></span>
                         <span className="acesso-tog-l">{label}</span>
                         <span className={`acesso-tog-sw${on ? " on" : ""}`} />
-                      </button>
+                      </Opcao>
                     );
                   })}
                 </div>
@@ -179,7 +182,7 @@ export function AcessosCard({
                 <div className="cfg-row-t">Pode liberar acessos a outras pessoas</div>
                 <div className="cfg-row-s">{ehDelegado ? "É um delegado de acessos" : "Só vê os próprios acessos"}</div>
               </div>
-              <button type="button" className={`sw${ehDelegado ? " on" : ""}`} disabled={!podeDelegar} onClick={() => toggleGrant("acessos.delegar")} />
+              <Interruptor ligado={ehDelegado} rotulo="Pode liberar acessos a outras pessoas" desativado={!podeDelegar} onClick={() => toggleGrant("acessos.delegar")} />
             </div>
             {erro && <div className="field-error" style={{ marginTop: 8 }}>{erro}</div>}
             {!podeDelegar && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 8 }}>Só a Direção (master) define quem pode delegar acessos.</div>}
@@ -263,8 +266,7 @@ export function TagElencoModal({
                 <div className="flag-main">
                   <div className="flag-nome">{p.name}{lider && <span style={{ marginLeft: 8, fontSize: "var(--fs-pn-12)", color: "var(--amber)", display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="estrela" size={12} /> líder</span>}</div>
                 </div>
-                <button
-                  type="button"
+                <Acao
                   title={lider ? "Remover como líder" : "Tornar líder do time"}
                   aria-label={lider ? "Remover como líder" : "Tornar líder do time"}
                   aria-pressed={lider}
@@ -272,7 +274,7 @@ export function TagElencoModal({
                   style={{ background: "none", border: "none", cursor: "pointer", fontSize: "var(--fs-pn-16)", color: lider ? "var(--amber)" : "var(--muted)" }}
                 >
                   <Icon name="estrela" size={16} />
-                </button>
+                </Acao>
               </div>
             );
           })}
@@ -719,10 +721,10 @@ export function Config({
             <div key={g} className="cfg-index-group">
               <div className="cfg-index-gt">{g}</div>
               {cfgTabs.filter((t) => t.group === g).map((t) => (
-                <button key={t.id} type="button" className={`cfg-index-item${tab === t.id ? " on" : ""}`} aria-current={tab === t.id ? "page" : undefined} onClick={() => { setTab(t.id); setCfgAberta(true); }}>
+                <Opcao key={t.id} marcada={tab === t.id} estilo="cfg-index-item" aria-current={tab === t.id ? "page" : undefined} onClick={() => { setTab(t.id); setCfgAberta(true); }}>
                   <span className="cfg-index-t">{ct(t.label)}</span>
                   <span className="cfg-index-s">{t.s}</span>
-                </button>
+                </Opcao>
               ))}
             </div>
           ))}
@@ -730,9 +732,9 @@ export function Config({
       )}
       <div className={only ? "" : "cfg-main"}>
       {!only && (
-        <button type="button" className="cfg-back" onClick={() => setCfgAberta(false)}>
+        <Acao className="cfg-back" onClick={() => setCfgAberta(false)}>
           <Icon name="voltar" size={18} /> Configurações
-        </button>
+        </Acao>
       )}
 
       {/* ─── IGREJA ─── */}
@@ -798,16 +800,16 @@ export function Config({
               {horariosCulto.map((h) => (
                 <span key={h} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                   <Icon name="cultos" size={12} /> {h}
-                  <button type="button" onClick={() => saveHorariosCulto(horariosCulto.filter((x) => x !== h))} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "var(--fs-pn-12)", padding: 0 }}>✕</button>
+                  <Acao onClick={() => saveHorariosCulto(horariosCulto.filter((x) => x !== h))} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "var(--fs-pn-12)", padding: 0 }}>✕</Acao>
                 </span>
               ))}
               {horariosCulto.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum horário cadastrado.</span>}
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
               {DIAS_SEMANA.map((dia) => (
-                <button key={dia} type="button" className={`opt${novoHorarioDia === dia ? " on" : ""}`} style={{ padding: "8px 12px" }} onClick={() => setNovoHorarioDia(dia)}>
+                <Opcao key={dia} marcada={novoHorarioDia === dia} estilo="opt" style={{ padding: "8px 12px" }} onClick={() => setNovoHorarioDia(dia)}>
                   {dia.slice(0, 3)}
-                </button>
+                </Opcao>
               ))}
             </div>
             <div style={{ display: "flex", gap: 10 }}>
@@ -854,7 +856,7 @@ export function Config({
             {ministerialTitles.map((t) => (
               <span key={t.id} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 {t.name}
-                <button type="button" onClick={() => removeRow("ministerial_titles", t.id)} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "var(--fs-pn-12)", padding: 0, cursor: "pointer" }}>✕</button>
+                <Acao onClick={() => removeRow("ministerial_titles", t.id)} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "var(--fs-pn-12)", padding: 0, cursor: "pointer" }}>✕</Acao>
               </span>
             ))}
             {ministerialTitles.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum papel cadastrado.</span>}
@@ -888,9 +890,8 @@ export function Config({
                         />
                         <span style={{ display: "flex", gap: 6 }}>
                           {TAG_CORES.map((c) => (
-                            <button
+                            <Acao
                               key={c.v}
-                              type="button"
                               title={c.l}
                               onClick={() => recolorirTag(t.id, c.v)}
                               style={{ width: 20, height: 20, borderRadius: "50%", background: `var(--${c.v})`, border: t.color === c.v ? "2px solid var(--white)" : "2px solid transparent", cursor: "pointer", padding: 0 }}
@@ -935,7 +936,7 @@ export function Config({
                 <div className="cfg-row-t">{gruposCfg.ativo ? "Ativado" : "Desativado"}</div>
                 <div className="cfg-row-s">{gruposCfg.ativo ? "Grupos aparecem no cadastro de membro e nos relatórios." : "Grupos escondidos em todo o app."}</div>
               </div>
-              <button type="button" className={`sw${gruposCfg.ativo ? " on" : ""}`} onClick={() => saveGruposCfg({ ...gruposCfg, ativo: !gruposCfg.ativo })} />
+              <Interruptor ligado={gruposCfg.ativo} rotulo="Usar grupos" onClick={() => saveGruposCfg({ ...gruposCfg, ativo: !gruposCfg.ativo })} />
             </div>
             {gruposCfg.ativo && (
               <div className="cfg-grid2" style={{ gap: "0 16px", marginTop: 16 }}>
@@ -993,10 +994,10 @@ export function Config({
               <label className="field-label">Geração</label>
               <div className="opt-row" style={{ flexWrap: "wrap" }}>
                 {([["manual", "Manual", "O líder monta tudo na mão."], ["assistido", "Assistida", "O sistema sugere; o líder confirma cada nome."], ["automatico", "Automática", "O sistema gera e já confirma, sem ação."]] as [EscalaSettings["modo"], string, string][]).map(([k, t, s]) => (
-                  <button key={k} type="button" className={`opt${escalaCfg.modo === k ? " on" : ""}`} onClick={() => setEscala("modo", k)}>
+                  <Opcao key={k} marcada={escalaCfg.modo === k} estilo="opt" onClick={() => setEscala("modo", k)}>
                     <div className="opt-t">{t}</div>
                     <div className="opt-s">{s}</div>
-                  </button>
+                  </Opcao>
                 ))}
               </div>
             </div>
@@ -1006,9 +1007,9 @@ export function Config({
                 <div className="cfg-row-s">teto para não sobrecarregar a mesma pessoa</div>
               </div>
               <div className="stepper">
-                <button type="button" onClick={() => setEscala("maxPorMes", Math.max(1, escalaCfg.maxPorMes - 1))}>−</button>
+                <Acao onClick={() => setEscala("maxPorMes", Math.max(1, escalaCfg.maxPorMes - 1))}>−</Acao>
                 <span>{escalaCfg.maxPorMes}×</span>
-                <button type="button" onClick={() => setEscala("maxPorMes", escalaCfg.maxPorMes + 1)}>+</button>
+                <Acao onClick={() => setEscala("maxPorMes", escalaCfg.maxPorMes + 1)}>+</Acao>
               </div>
             </div>
             <div className="crit-row">
@@ -1017,9 +1018,9 @@ export function Config({
                 <div className="cfg-row-s">descanso sugerido entre escalas (0 = sem folga)</div>
               </div>
               <div className="stepper">
-                <button type="button" onClick={() => setEscala("folgaSemanas", Math.max(0, escalaCfg.folgaSemanas - 1))}>−</button>
+                <Acao onClick={() => setEscala("folgaSemanas", Math.max(0, escalaCfg.folgaSemanas - 1))}>−</Acao>
                 <span>{escalaCfg.folgaSemanas}</span>
-                <button type="button" onClick={() => setEscala("folgaSemanas", escalaCfg.folgaSemanas + 1)}>+</button>
+                <Acao onClick={() => setEscala("folgaSemanas", escalaCfg.folgaSemanas + 1)}>+</Acao>
               </div>
             </div>
             <div className="cfg-row">
@@ -1027,7 +1028,7 @@ export function Config({
                 <div className="cfg-row-t">Respeitar período de férias</div>
                 <div className="cfg-row-s">{escalaCfg.considerarFerias ? "Quem está de férias fica fora da geração" : "Férias não bloqueiam a escala"}</div>
               </div>
-              <button type="button" className={`sw${escalaCfg.considerarFerias ? " on" : ""}`} onClick={() => setEscala("considerarFerias", !escalaCfg.considerarFerias)} />
+              <Interruptor ligado={escalaCfg.considerarFerias} rotulo="Respeitar período de férias" onClick={() => setEscala("considerarFerias", !escalaCfg.considerarFerias)} />
             </div>
             <div className="crit-row">
               <div className="cfg-row-main">
@@ -1035,9 +1036,9 @@ export function Config({
                 <div className="cfg-row-s">semanas sem registro de presença para a pessoa entrar na lista de quem cuida</div>
               </div>
               <div className="stepper">
-                <button type="button" aria-label="Menos uma semana" onClick={() => setEscala("cuidadoSemanas", Math.max(1, (escalaCfg.cuidadoSemanas ?? 3) - 1))}>−</button>
+                <Acao aria-label="Menos uma semana" onClick={() => setEscala("cuidadoSemanas", Math.max(1, (escalaCfg.cuidadoSemanas ?? 3) - 1))}>−</Acao>
                 <span>{plural(escalaCfg.cuidadoSemanas ?? 3, "semana")}</span>
-                <button type="button" aria-label="Mais uma semana" onClick={() => setEscala("cuidadoSemanas", (escalaCfg.cuidadoSemanas ?? 3) + 1)}>+</button>
+                <Acao aria-label="Mais uma semana" onClick={() => setEscala("cuidadoSemanas", (escalaCfg.cuidadoSemanas ?? 3) + 1)}>+</Acao>
               </div>
             </div>
             <div className="cfg-row" style={{ borderBottom: "none" }}>
@@ -1045,8 +1046,8 @@ export function Config({
                 <div className="cfg-row-t">Quando alguém recusa</div>
                 <div className="cfg-row-s">{escalaCfg.naRecusa === "proximo" ? "Chama o próximo apto automaticamente (só no modo automático)." : "Avisa o líder do time por mensagem e deixa a vaga aberta."}</div>
                 <div className="seg seg-sm" style={{ marginTop: 10 }}>
-                  <button type="button" className={escalaCfg.naRecusa === "proximo" ? "on" : ""} onClick={() => setEscala("naRecusa", "proximo")}>Chamar o próximo</button>
-                  <button type="button" className={escalaCfg.naRecusa === "avisar" ? "on" : ""} onClick={() => setEscala("naRecusa", "avisar")}>Avisar o líder</button>
+                  <Opcao marcada={escalaCfg.naRecusa === "proximo"} onClick={() => setEscala("naRecusa", "proximo")}>Chamar o próximo</Opcao>
+                  <Opcao marcada={escalaCfg.naRecusa === "avisar"} onClick={() => setEscala("naRecusa", "avisar")}>Avisar o líder</Opcao>
                 </div>
               </div>
             </div>
@@ -1060,9 +1061,9 @@ export function Config({
                 <div className="cfg-row-s">após recusar escalas seguidas</div>
               </div>
               <div className="stepper">
-                <button type="button" onClick={() => setStatus("recusasInativando", Math.max(1, statusCfg.recusasInativando - 1))}>−</button>
+                <Acao onClick={() => setStatus("recusasInativando", Math.max(1, statusCfg.recusasInativando - 1))}>−</Acao>
                 <span>{statusCfg.recusasInativando}</span>
-                <button type="button" onClick={() => setStatus("recusasInativando", statusCfg.recusasInativando + 1)}>+</button>
+                <Acao onClick={() => setStatus("recusasInativando", statusCfg.recusasInativando + 1)}>+</Acao>
               </div>
             </div>
             <div className="crit-row">
@@ -1071,9 +1072,9 @@ export function Config({
                 <div className="cfg-row-s">após recusar escalas seguidas</div>
               </div>
               <div className="stepper">
-                <button type="button" onClick={() => setStatus("recusasInativo", Math.max(2, statusCfg.recusasInativo - 1))}>−</button>
+                <Acao onClick={() => setStatus("recusasInativo", Math.max(2, statusCfg.recusasInativo - 1))}>−</Acao>
                 <span>{statusCfg.recusasInativo}</span>
-                <button type="button" onClick={() => setStatus("recusasInativo", statusCfg.recusasInativo + 1)}>+</button>
+                <Acao onClick={() => setStatus("recusasInativo", statusCfg.recusasInativo + 1)}>+</Acao>
               </div>
             </div>
             <div className="crit-row">
@@ -1082,9 +1083,9 @@ export function Config({
                 <div className="cfg-row-s">dias seguidos marcado como indisponível</div>
               </div>
               <div className="stepper">
-                <button type="button" onClick={() => setStatus("diasIndispInativo", Math.max(7, statusCfg.diasIndispInativo - 7))}>−</button>
+                <Acao onClick={() => setStatus("diasIndispInativo", Math.max(7, statusCfg.diasIndispInativo - 7))}>−</Acao>
                 <span>{statusCfg.diasIndispInativo}d</span>
-                <button type="button" onClick={() => setStatus("diasIndispInativo", statusCfg.diasIndispInativo + 7)}>+</button>
+                <Acao onClick={() => setStatus("diasIndispInativo", statusCfg.diasIndispInativo + 7)}>+</Acao>
               </div>
             </div>
             <div className="cfg-row" style={{ borderBottom: "none" }}>
@@ -1092,7 +1093,7 @@ export function Config({
                 <div className="cfg-row-t">Contar período de férias avisado</div>
                 <div className="cfg-row-s">{statusCfg.considerarFerias ? "Férias contam como afastamento" : "Férias avisadas não pesam no status"}</div>
               </div>
-              <button type="button" className={`sw${statusCfg.considerarFerias ? " on" : ""}`} onClick={() => setStatus("considerarFerias", !statusCfg.considerarFerias)} />
+              <Interruptor ligado={statusCfg.considerarFerias} rotulo="Contar período de férias avisado" onClick={() => setStatus("considerarFerias", !statusCfg.considerarFerias)} />
             </div>
             <div className="crit-legend">
               <span><i className="dot ok" /> Ativo</span>
@@ -1108,7 +1109,7 @@ export function Config({
                 <div className="cfg-row-t">Presença de quem não está escalado</div>
                 <div className="cfg-row-s">{church?.settings?.checkinPermitirExtra ? "Quem não está escalado pode fazer check-in como presença extra." : "Só quem está escalado consegue fazer check-in. Os demais são bloqueados."}</div>
               </div>
-              <button type="button" className={`sw${church?.settings?.checkinPermitirExtra ? " on" : ""}`} onClick={() => setCheckinPermitirExtra(!church?.settings?.checkinPermitirExtra)} />
+              <Interruptor ligado={!!church?.settings?.checkinPermitirExtra} rotulo="Presença de quem não está escalado" onClick={() => setCheckinPermitirExtra(!church?.settings?.checkinPermitirExtra)} />
             </div>
           </div>
           <div className="cfg-card" style={{ marginTop: 16 }}>
@@ -1117,7 +1118,7 @@ export function Config({
             <div className="cell-tags" style={{ gap: 8, marginBottom: 16 }}>
               {tiposEvento.map((t) => (
                 <span key={t} className="papel-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  {t}<button type="button" onClick={() => saveTiposEvento(tiposEvento.filter((x) => x !== t))} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "var(--fs-pn-12)", padding: 0 }}>✕</button>
+                  {t}<Acao onClick={() => saveTiposEvento(tiposEvento.filter((x) => x !== t))} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "var(--fs-pn-12)", padding: 0 }}>✕</Acao>
                 </span>
               ))}
               {tiposEvento.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum tipo cadastrado.</span>}
@@ -1138,9 +1139,9 @@ export function Config({
           <div className="pmx-mob">
             <div className="pmx-mob-roles" role="tablist" aria-label="Papel">
               {PAPEIS_V2.map((pp) => (
-                <button key={pp.id} type="button" role="tab" aria-selected={papelMob === pp.id} className={`pmx-mob-role${papelMob === pp.id ? " on" : ""}`} onClick={() => setPapelMob(pp.id)}>
+                <Opcao key={pp.id} role="tab" aria-selected={papelMob === pp.id} marcada={papelMob === pp.id} estilo="pmx-mob-role" onClick={() => setPapelMob(pp.id)}>
                   {ct(pp.nome)}
-                </button>
+                </Opcao>
               ))}
             </div>
             {(papelMob === "master" || papelMob === "membro") && (
@@ -1158,7 +1159,7 @@ export function Config({
                     <div key={a.id} className="pmx-mob-row">
                       <span className="pmx-mob-name">{ct(a.nome)}</span>
                       <span className="pmx-mob-state">{on ? "Liberado" : "Bloqueado"}</span>
-                      <button type="button" role="switch" aria-checked={!!on} aria-label={ct(a.nome)} disabled={locked} className={`m-toggle${on ? " on" : ""}`} onClick={() => toggleMx(papelMob, a.id)} />
+                      <Interruptor ligado={on} tamanho="compacto" rotulo={ct(a.nome)} desativado={locked} onClick={() => toggleMx(papelMob, a.id)} />
                     </div>
                   );
                 })}
@@ -1189,7 +1190,7 @@ export function Config({
                           : "";
                         return (
                           <td key={pp.id}>
-                            <button type="button" className={`mx-cell${on ? " on" : " off"}${locked ? " lock" : ""}`} onClick={() => toggleMx(pp.id, a.id)} title={lockTitle}>{on ? <Icon name="ok" size={14} /> : "·"}</button>
+                            <Acao className={`mx-cell${on ? " on" : " off"}${locked ? " lock" : ""}`} onClick={() => toggleMx(pp.id, a.id)} title={lockTitle}>{on ? <Icon name="ok" size={14} /> : "·"}</Acao>
                           </td>
                         );
                       })}

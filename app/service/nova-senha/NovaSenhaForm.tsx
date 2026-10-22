@@ -6,6 +6,7 @@ import { createServiceBrowserClient } from "../lib/supabase-browser";
 import AuthShell from "../AuthShell";
 import PasswordInput from "../PasswordInput";
 
+import { Botao, botaoClasse } from "../ui/Botao";
 type Fase = "carregando" | "pronto" | "invalido" | "feito";
 const RECOVERY_FLAG = "cex_recovery";
 
@@ -93,7 +94,7 @@ export default function NovaSenhaForm({
         title="Este link não vale mais"
         subtitle="O link de troca de senha expirou ou já foi usado. Volte para o login e toque de novo em Esqueci minha senha."
       >
-        <Link href={loginHref} className="login-btn">Voltar para o login</Link>
+        <Link href={loginHref} className={botaoClasse({ tamanho: "entrada", variante: "principal" })}>Voltar para o login</Link>
       </AuthShell>
     );
   }
@@ -102,9 +103,9 @@ export default function NovaSenhaForm({
     return (
       <AuthShell {...shell} title="Senha alterada" subtitle="Sua senha nova já está valendo. Use ela na próxima vez que entrar.">
         {/* carga completa da página (não router.push): a sessão acabou de nascer neste aparelho */}
-        <button className="login-btn" type="button" onClick={() => window.location.assign("/service")}>
+        <Botao tamanho="entrada" variante="principal" onClick={() => window.location.assign("/service")}>
           Entrar no app →
-        </button>
+        </Botao>
       </AuthShell>
     );
   }
@@ -125,9 +126,9 @@ export default function NovaSenhaForm({
             {error}
           </div>
         )}
-        <button className="login-btn" type="submit" disabled={loading}>
+        <Botao tamanho="entrada" variante="principal" type="submit" desativado={loading}>
           {loading ? "Salvando..." : "Salvar senha nova"}
-        </button>
+        </Botao>
       </form>
     </AuthShell>
   );

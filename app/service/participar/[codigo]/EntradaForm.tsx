@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import PasswordInput from "../../PasswordInput";
 
+import { Botao } from "../../ui/Botao";
 /* Formulário do link da igreja: nome, telefone, e-mail e senha. A conta
    nasce no servidor (/api/service/entrada); aqui só entra com a senha e
    segue pro /service, que mostra o app (regra "direto") ou a espera do
@@ -136,9 +137,9 @@ export default function EntradaForm({ codigo, igreja, direto }: { codigo: string
           {error}
         </div>
       )}
-      <button className="login-btn" type="submit" disabled={loading}>
+      <Botao tamanho="entrada" variante="principal" type="submit" desativado={loading}>
         {loading ? "Aguarde..." : direto ? "Criar conta e entrar" : "Criar conta e pedir entrada"}
-      </button>
+      </Botao>
       <span className="login-help">{`Seu nome e telefone ficam só com a liderança da ${igreja}.`}</span>
     </form>
   );

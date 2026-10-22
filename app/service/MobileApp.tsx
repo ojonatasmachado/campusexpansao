@@ -32,6 +32,8 @@ import { SheetAceiteMapa } from "./membro/AceiteMapa";
 import { TERMO_MAPA_VERSAO } from "./lib/termo-mapa";
 import type { JourneyActions, JourneyStep, M, MemberModule, MemberTab, MemberUi, Ministry, MobileOverlayProps, ModuleCtx, P } from "./membro/tipos";
 import { Botao } from "./ui/Botao";
+import { Acao } from "./ui/Acao";
+import { Opcao } from "./ui/Opcao";
 export type * from "./membro/tipos";
 
 function TabIcon({ name, size = 18 }: { name: string; size?: number }) {
@@ -352,22 +354,22 @@ function MobileMembro({
         <div className="m-head">
           {sub ? (
             <>
-              <button type="button" className="m6-back" onClick={voltar}><span className="m6-back-ic"><Icon name="voltar" size={22} /></span>{tabTitle}</button>
+              <Acao className="m6-back" onClick={voltar}><span className="m6-back-ic"><Icon name="voltar" size={22} /></span>{tabTitle}</Acao>
               <h1 className="m-h1 sub">{subTitle}</h1>
             </>
           ) : tab === "perfil" ? (
             <>
-              <button type="button" className="m6-back" onClick={() => go(tabAntesPerfil)}><span className="m6-back-ic"><Icon name="voltar" size={22} /></span>{ct(MEMBER_TABS.find((t) => t.id === tabAntesPerfil)!.l)}</button>
+              <Acao className="m6-back" onClick={() => go(tabAntesPerfil)}><span className="m6-back-ic"><Icon name="voltar" size={22} /></span>{ct(MEMBER_TABS.find((t) => t.id === tabAntesPerfil)!.l)}</Acao>
               <h1 className="m-h1 sub">{tabTitle}</h1>
             </>
           ) : (
             <>
               <div className="m-head-top">
                 <ChurchLockup size="sm" logoUrl={churchLogoUrl} name={churchName} />
-                <button className={`m-head-av${rotuloAvatar ? " has-l" : ""}`} type="button" onClick={() => { setRotuloAvatar(false); go("perfil"); }} aria-label="Perfil">
+                <Acao className={`m-head-av${rotuloAvatar ? " has-l" : ""}`} onClick={() => { setRotuloAvatar(false); go("perfil"); }} aria-label="Perfil">
                   <Av name={person.name} size="sm" photoUrl={person.photoUrl} />
                   {rotuloAvatar && <span className="m-head-av-l" aria-hidden="true">Perfil</span>}
-                </button>
+                </Acao>
               </div>
               {tab === "inicio" ? (
                 <>
@@ -433,14 +435,14 @@ function MobileMembro({
               {!sub && (muralOn || oracaoOn) && (
                 <div className="m6-sec0">
                   <div className="m6-list">
-                    {muralOn && <button type="button" className="m6-row" onClick={() => go("mensagens", "mural")}>
+                    {muralOn && <Acao className="m6-row" onClick={() => go("mensagens", "mural")}>
                       <span className="m6-ic accent"><Icon name="bandeira" size={22} /></span>
                       <span className="m6-rb">
                         <span className="m6-rt">Mural da igreja</span>
                         <span className={`m6-rs m6-1l${unreadIds.size ? " m6-strong" : ""}`}>{announcements[0]?.title ?? "As publicações da igreja ficam aqui"}</span>
                       </span>
                       {unreadIds.size > 0 && <span className="m6-count">{unreadIds.size}</span>}
-                    </button>}
+                    </Acao>}
                     {oracaoOn && <M6Row ic="oracao" t="Mural de oração" s="Peça oração e ore pelos pedidos da igreja" onClick={() => go("mensagens", "oracao")} cls="or-row" />}
                   </div>
                 </div>
@@ -526,13 +528,13 @@ function MobileMembro({
             const on = tab === t.id;
             const b = badges[t.id] ?? 0;
             return (
-              <button key={t.id} type="button" className={on ? "on" : ""} aria-current={on ? "page" : undefined} onClick={() => go(t.id)}>
+              <Opcao key={t.id} marcada={on} aria-current={on ? "page" : undefined} onClick={() => go(t.id)}>
                 <span className="ic">
                   <TabIcon name={t.ic} size={24} />
                   {b > 0 && <span className="m6-badge" aria-label={`${b} novos`}>{b}</span>}
                 </span>
                 <span className="m-tab-l">{ct(t.l.replace("}", ":curto}"))}</span>
-              </button>
+              </Opcao>
             );
           })}
         </nav>
@@ -540,7 +542,7 @@ function MobileMembro({
         {toastO && (
           <div className="m6-toast" key={toastO.id} role="status">
             <span>{toastO.msg}</span>
-            {toastO.action && <button type="button" onClick={() => { toastO.action!.fn(); setToastO(null); }}>{toastO.action.label}</button>}
+            {toastO.action && <Acao onClick={() => { toastO.action!.fn(); setToastO(null); }}>{toastO.action.label}</Acao>}
           </div>
         )}
         {sheetEl && <M6Sheet onClose={() => setSheetEl(null)}>{sheetEl}</M6Sheet>}
@@ -585,8 +587,8 @@ export default function MobileOverlay(props: MobileOverlayProps) {
               ? "Não encontramos seu cadastro de pessoa nesta igreja. Fale com a liderança."
               : ct("Cadastre {voluntarios} em Pessoas para pré-visualizar o app deles aqui.")}
           </p>
-          <button className="mob-close" onClick={closeAction}>{closeLabel}</button>
-          {isSelf && onSwitchToPanel && <button className="mob-close mob-to-panel" onClick={onSwitchToPanel}>Gerenciar →</button>}
+          <Botao variante="discreto" compacto className="mob-close" onClick={closeAction}>{closeLabel}</Botao>
+          {isSelf && onSwitchToPanel && <Botao variante="discreto" compacto className="mob-close mob-to-panel" onClick={onSwitchToPanel}>Gerenciar →</Botao>}
         </div>
       </div>
     );
@@ -611,7 +613,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
               {personas.map((p, i) => {
                 const m = members.find((m) => m.volunteerId === p.id);
                 return (
-                  <button
+                  <Acao
                     key={p.id}
                     className={`mob-persona-opt ${i === idx ? "on" : ""}`}
                     onClick={() => setIdx(i)}
@@ -625,7 +627,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
                       </small>
                     </div>
                     {i === idx && <span className="mob-persona-chk"><Icon name="ok" size={14} /></span>}
-                  </button>
+                  </Acao>
                 );
               })}
               <div className="mob-persona-hint">
@@ -635,8 +637,8 @@ export default function MobileOverlay(props: MobileOverlayProps) {
           </>
         )}
 
-        <button className="mob-close" onClick={closeAction}>{closeLabel}</button>
-        {isSelf && onSwitchToPanel && <button className="mob-close mob-to-panel" onClick={onSwitchToPanel}>Gerenciar →</button>}
+        <Botao variante="discreto" compacto className="mob-close" onClick={closeAction}>{closeLabel}</Botao>
+        {isSelf && onSwitchToPanel && <Botao variante="discreto" compacto className="mob-close mob-to-panel" onClick={onSwitchToPanel}>Gerenciar →</Botao>}
       </div>
 
       <div className="mob-phone-wrap" onClick={(e) => e.stopPropagation()}>

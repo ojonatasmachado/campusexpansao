@@ -21,7 +21,8 @@ import { EventoRow, M6Date } from "./Agenda";
 import { usePush } from "./Perfil";
 import type { Announcement, Card, Child, ChildGuardian, Ev, ItemInicio, M, Ministry, P, Slot, StepView } from "./tipos";
 
-import { Botao } from "../ui/Botao";
+import { Botao, botaoClasse } from "../ui/Botao";
+import { Acao } from "../ui/Acao";
 export function EscalaCard({ slot, ev, ministry, person, member, members, onResponderEscala, onStartChat, destaque = true }: {
   slot: Slot; ev: Ev; ministry?: Ministry; person: P; member: M | null; members: M[];
   /* botão cheio só no primeiro cartão da fila do Início (lei 5) */
@@ -85,13 +86,13 @@ export function EscalaCard({ slot, ev, ministry, person, member, members, onResp
       {st === "ok" && (
         <div className="m6-after">
           <M6St k="ok" ic="ok">Presença confirmada</M6St>
-          {onStartChat && member && destTroca && <button type="button" className="m6-link" onClick={pedirTroca}>Pedir troca</button>}
+          {onStartChat && member && destTroca && <Botao tamanho="toque" variante="texto" onClick={pedirTroca}>Pedir troca</Botao>}
         </div>
       )}
       {st === "no" && (
         <div className="m6-after">
           <M6St k="warn" ic="recusou">Você avisou que não pode</M6St>
-          <button type="button" className="m6-link" onClick={() => responder("ok")}>Mudei de ideia</button>
+          <Botao tamanho="toque" variante="texto" onClick={() => responder("ok")}>Mudei de ideia</Botao>
         </div>
       )}
     </div>
@@ -300,7 +301,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
             <div className="m6-meta">{`Falta ${c.falta.join(", ").replace(/, ([^,]*)$/, " e $1")}. Ajuda a igreja a cuidar de você.`}</div>
             <div className="m6-btns">
               <Botao tamanho="toque" variante={variante} onClick={() => ui.go("perfil", "dados")}>Completar →</Botao>
-              <button className="m6-link" type="button" data-dispensa="1" onClick={() => adiar("dados", 30)}>Agora não</button>
+              <Botao tamanho="toque" variante="texto" data-dispensa="1" onClick={() => adiar("dados", 30)}>Agora não</Botao>
             </div>
           </div>
         );
@@ -317,7 +318,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
               {podeInstalarDireto()
                 ? <Botao tamanho="toque" variante={variante} onClick={async () => { await instalarApp(); adiar("atalho", 3650); }}>Instalar</Botao>
                 : <Botao tamanho="toque" variante={variante} onClick={() => adiar("atalho", 3650)}>Já coloquei</Botao>}
-              <button className="m6-link" type="button" data-dispensa="1" onClick={() => adiar("atalho", 3650)}>Agora não</button>
+              <Botao tamanho="toque" variante="texto" data-dispensa="1" onClick={() => adiar("atalho", 3650)}>Agora não</Botao>
             </div>
           </div>
         );
@@ -329,7 +330,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
             <div className="m6-meta">{`Pix para ${listaFinalidades(contribuir!.finalidades)}.`}</div>
             <div className="m6-btns">
               <Botao tamanho="toque" variante={variante} onClick={onContribuir}>Ver a chave Pix</Botao>
-              <button className="m6-link" type="button" data-dispensa="1" onClick={() => adiar(e.id, 1)}>Agora não</button>
+              <Botao tamanho="toque" variante="texto" data-dispensa="1" onClick={() => adiar(e.id, 1)}>Agora não</Botao>
             </div>
           </div>
         );
@@ -387,7 +388,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
           ))
         )}
         {resto > 0 && (
-          <div className="m6-more"><button type="button" className="m6-link" onClick={() => setMaisFila(true)}>{`Ver mais ${plural(resto, "item", "itens")}`}</button></div>
+          <div className="m6-more"><Botao tamanho="toque" variante="texto" onClick={() => setMaisFila(true)}>{`Ver mais ${plural(resto, "item", "itens")}`}</Botao></div>
         )}
       </div>
 
@@ -399,7 +400,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
         ) : (
           <div className="service-home-empty"><div className="m6-ct">Nenhum encontro publicado por enquanto</div><p className="m6-meta">{ct("Quando a igreja publicar os próximos {cultos} e eventos, você encontra aqui as datas, os horários e como participar.")}</p></div>
         )}
-        <div className="m6-more"><button type="button" className="m6-link" onClick={() => ui.go("agenda", null, { agSeg: "igreja" })}>Ver a agenda completa →</button></div>
+        <div className="m6-more"><Botao tamanho="toque" variante="texto" onClick={() => ui.go("agenda", null, { agSeg: "igreja" })}>Ver a agenda completa →</Botao></div>
       </div>
 
       {member && ((destOracao && onStartChat) || oracaoOn) && (
@@ -446,13 +447,13 @@ export function SheetPedirAvisos({ organizationId }: { organizationId?: string }
 export function DestaqueCard({ a, onAbrir }: { a: Announcement; onAbrir: () => void }) {
   const video = videoDoLink(a.video_url);
   return (
-    <button type="button" className="m6-card m6-destaque" onClick={onAbrir}>
+    <Acao className="m6-card m6-destaque" onClick={onAbrir}>
       {a.image_url && <img className="m6-destaque-img" src={a.image_url} alt={a.image_alt ?? ""} />}
       <span className="m6-kick">{video ? "Destaque · vídeo" : "Destaque"}</span>
       <span className="m6-ct">{a.title}</span>
       {a.body && <span className="m6-meta m6-2l">{a.body}</span>}
-      <span className="m6-link">{video ? "Assistir" : "Ler"} →</span>
-    </button>
+      <span className={botaoClasse({ tamanho: "toque", variante: "texto" })}>{video ? "Assistir" : "Ler"} →</span>
+    </Acao>
   );
 }
 

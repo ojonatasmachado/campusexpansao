@@ -5,6 +5,7 @@ import { iniciais } from "./lib/iniciais";
 import { Icon } from "./lib/icons";
 import { instalarApp, jaInstalado } from "./lib/instalar";
 
+import { Acao } from "./ui/Acao";
 /* Avatar da pessoa logada no topo do painel, com menu. Substitui as
    iniciais da IGREJA (que não abriam nada) e o sino "Avisos" sem ação.
    O botão de tema continua na barra, como hoje.
@@ -52,12 +53,12 @@ export default function TopUserMenu({
 
   return (
     <div className="top-user" ref={ref}>
-      <button className="top-user-btn" type="button" onClick={() => setOpen((o) => !o)} aria-haspopup="menu" aria-expanded={open}>
+      <Acao className="top-user-btn" onClick={() => setOpen((o) => !o)} aria-haspopup="menu" aria-expanded={open}>
         <span className={`av av-sm${photoUrl ? " has-foto" : ""}`} style={photoUrl ? { backgroundImage: `url(${photoUrl})` } : undefined}>
           {initials}
         </span>
         <span className="top-user-name">{parts[0]}</span>
-      </button>
+      </Acao>
       {open && (
         <div className="top-user-pop" role="menu">
           <div className="top-user-head">
@@ -71,27 +72,27 @@ export default function TopUserMenu({
             </a>
           ) : null}
           {onOpenApp ? (
-            <button type="button" role="menuitem" onClick={() => { setOpen(false); onOpenApp(); }}>
+            <Acao role="menuitem" onClick={() => { setOpen(false); onOpenApp(); }}>
               <span className="ic"><Icon name="perfil" size={16} /></span>
               Abrir o app
-            </button>
+            </Acao>
           ) : null}
           {!jaInstalado() ? (
-            <button type="button" role="menuitem" onClick={() => { setOpen(false); void instalarApp(); }}>
+            <Acao role="menuitem" onClick={() => { setOpen(false); void instalarApp(); }}>
               <span className="ic"><Icon name="baixar" size={16} /></span>
               Instalar o app
-            </button>
+            </Acao>
           ) : null}
           {onToggleTheme ? (
-            <button type="button" role="menuitem" onClick={onToggleTheme}>
+            <Acao role="menuitem" onClick={onToggleTheme}>
               <span className="ic"><Icon name={theme === "dark" ? "sol" : "lua"} size={16} /></span>
               {theme === "dark" ? "Tema claro" : "Tema escuro"}
-            </button>
+            </Acao>
           ) : null}
-          <button type="button" role="menuitem" onClick={onLogout}>
+          <Acao role="menuitem" onClick={onLogout}>
             <span className="ic"><Icon name="sair" size={16} /></span>
             Sair
-          </button>
+          </Acao>
         </div>
       )}
     </div>

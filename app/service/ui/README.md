@@ -11,4 +11,7 @@ Componentes compartilhados de interface do Service (lei 17 em `AGENTS.md` §13).
 
 | Arquivo | Peças |
 |---|---|
-| `Botao.tsx` | `Botao` (principal, secundario, discreto, perigo; toque ou lista; compacto, largo, carregando, desativado), `BotaoIcone` (`rotulo` obrigatório), `botaoClasse()` para links |
+| `Acao.tsx` | `Acao`: base de todo clicável (todo `<button>` do Service passa por aqui) |
+| `Botao.tsx` | `Botao` (principal, secundario, discreto, perigo, texto; toque, lista, entrada ou mapa; compacto, largo, carregando, desativado), `BotaoIcone` (`rotulo` obrigatório), `botaoClasse()` para links |
+| `Interruptor.tsx` | `Interruptor` (liga/desliga; toque, lista, compacto; `rotulo` ou `rotuloId` obrigatório) |
+| `Opcao.tsx` | `Opcao` (escolha marcada: segmento, chip e famílias de `OpcaoEstilo`) |

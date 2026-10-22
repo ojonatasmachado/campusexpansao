@@ -18,6 +18,8 @@ import { abrirComprovante, BUCKET_FIN, db, type Campanha, type Categoria, type C
 import { brl, centavosTexto, digitadoParaCentavos, FORMAS, type Forma } from "./dinheiro";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
+import { Opcao } from "../../ui/Opcao";
 export type Base = { org: string; churchId: string | null; onClose: () => void; onDone: () => void };
 export type Cadastros = { contas: Conta[]; categorias: Categoria[]; fundos: Fundo[]; pessoas: PessoaFin[]; saldoConta: Record<string, number>; campanhas?: Campanha[] };
 
@@ -61,7 +63,7 @@ function CampoPessoa({ id, label, pessoas, value, onChange, req = false, hint, e
           {aberto && q.trim() && (
             <div className="sel-pop" id={`${id}-l`} role="listbox">
               {lista.map((p) => (
-                <button key={p.id} type="button" role="option" aria-selected={false} className="sel-opt" onMouseDown={(e) => e.preventDefault()} onClick={() => { onChange(p.id); setAberto(false); setQ(""); }}>{p.name}</button>
+                <Acao key={p.id} role="option" aria-selected={false} className="sel-opt" onMouseDown={(e) => e.preventDefault()} onClick={() => { onChange(p.id); setAberto(false); setQ(""); }}>{p.name}</Acao>
               ))}
               {lista.length === 0 && <div className="sel-opt fin-sem">Ninguém com esse nome no cadastro.</div>}
             </div>
@@ -232,8 +234,8 @@ export function LancamentoForm({ org, churchId, tipo, edit, cad, onClose, onDone
             <div className="field-label" id={`${fid}-fm`}>{entrada ? "Como entrou" : "Como foi pago"}</div>
             <div className="fs-chips" role="group" aria-labelledby={`${fid}-fm`}>
               {FORMAS.map((f) => (
-                <button key={f.id} type="button" className={`seg-chip${forma === f.id ? " on" : ""}`} aria-pressed={forma === f.id}
-                  onClick={() => { const nova = forma === f.id ? "" : f.id; setForma(nova); if (!contaTocada) setConta(contaPara(nova)); }}>{f.rotulo}</button>
+                <Opcao key={f.id} marcada={forma === f.id} estilo="seg-chip" aria-pressed={forma === f.id}
+                  onClick={() => { const nova = forma === f.id ? "" : f.id; setForma(nova); if (!contaTocada) setConta(contaPara(nova)); }}>{f.rotulo}</Opcao>
               ))}
             </div>
           </div>
@@ -511,7 +513,7 @@ export function ContaForm({ org, churchId, edit, onClose, onDone }: Base & { edi
             <div className="field-label" id={`${fid}-t`}>Tipo</div>
             <div className="fs-chips" role="group" aria-labelledby={`${fid}-t`}>
               {([["banco", "Conta no banco"], ["caixa", "Caixa (dinheiro em espécie)"]] as const).map(([v, l]) => (
-                <button key={v} type="button" className={`seg-chip${tipo === v ? " on" : ""}`} aria-pressed={tipo === v} onClick={() => setTipo(v)}>{l}</button>
+                <Opcao key={v} marcada={tipo === v} estilo="seg-chip" aria-pressed={tipo === v} onClick={() => setTipo(v)}>{l}</Opcao>
               ))}
             </div>
           </div>

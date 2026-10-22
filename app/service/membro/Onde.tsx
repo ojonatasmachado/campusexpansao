@@ -13,6 +13,8 @@ import { MemberUiContext } from "./comum";
 import type { M } from "./tipos";
 
 import { Botao, botaoClasse } from "../ui/Botao";
+import { Acao } from "../ui/Acao";
+import { Opcao } from "../ui/Opcao";
 /* Agenda › Onde (mapa da igreja, etapa 2). Sede, congregações e grupos são
    públicos para quem é da igreja: endereço, horário, líder e vagas. Nenhuma
    pessoa aparece aqui, só o ponto "você" do próprio CEP. */
@@ -86,7 +88,7 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
     <div className="onde">
       <div className="onde-filtros" role="group" aria-label="Mostrar">
         {([["tudo", "Tudo"], ["igrejas", "Igrejas"], ["grupos", ct("{Grupos}")]] as const).map(([v, l]) => (
-          <button key={v} type="button" aria-pressed={filtro === v} className={`onde-chip${filtro === v ? " on" : ""}`} onClick={() => setFiltro(v)}>{l}</button>
+          <Opcao key={v} aria-pressed={filtro === v} marcada={filtro === v} estilo="onde-chip" onClick={() => setFiltro(v)}>{l}</Opcao>
         ))}
       </div>
       <MapaBase
@@ -128,14 +130,14 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
         {locais && ordenados.length === 0 && <p className="m6-meta">{filtro === "grupos" ? ct("A igreja ainda não cadastrou {grupos}.") : "Nada cadastrado ainda."}</p>}
         <div className="m6-list">
           {ordenados.map(({ l, km }) => (
-            <button key={l.id} type="button" className="m6-row" onClick={() => abrir(l)}>
+            <Acao key={l.id} className="m6-row" onClick={() => abrir(l)}>
               <span className={`onde-marca${ehIgreja(l) ? " igreja" : ""}`} aria-hidden="true">{ehIgreja(l) && <Icon name="cruz" size={18} />}</span>
               <span className="m6-rb">
                 <span className="m6-rt">{l.nome}</span>
                 <span className="m6-rs">{ehIgreja(l) ? (l.tipo === "sede" ? "Sede" : "Congregação") : joinDot(l.dia, l.hora, l.lider_nome)}</span>
               </span>
               {km !== null && <span className="onde-dist">{formatarDistancia(km)}</span>}
-            </button>
+            </Acao>
           ))}
         </div>
         {semPonto > 0 && <p className="m6-meta">{plural(semPonto, "lugar ainda sem endereço", "lugares ainda sem endereço")} no mapa.</p>}

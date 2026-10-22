@@ -14,6 +14,7 @@ import { friendlyWriteError } from "../erros";
 import type { ChurchIdentityView, ChurchView, CycleView, HistoryEntryView, ModalState } from "../tipos";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 export function ValoresEditModal({ church, identity, onClose, onRefresh }: {
   church: ChurchView | undefined;
   identity?: ChurchIdentityView | null;
@@ -128,7 +129,7 @@ export function Identidade({ church, identity, cycle, setModal }: { church?: Chu
       ) : null}
       <div className="section-divide" style={{ marginTop: 28 }}>
         <span className="num">02</span><span className="label">Valores</span><span className="line" />
-        <button className="panel-link" type="button" onClick={() => setEditingValores(true)}>Editar valores</button>
+        <Botao variante="texto" onClick={() => setEditingValores(true)}>Editar valores</Botao>
       </div>
       {values.length > 0 ? (
         <div className="val-grid">
@@ -146,7 +147,7 @@ export function Identidade({ church, identity, cycle, setModal }: { church?: Chu
       {editingValores && <ValoresEditModal church={church} identity={identity} onClose={() => setEditingValores(false)} onRefresh={() => router.refresh()} />}
       <div className="section-divide" style={{ marginTop: 28 }}>
         <span className="num">03</span><span className="label">Tema do ciclo atual</span><span className="line" />
-        {cycle ? <button className="panel-link" type="button" onClick={() => setModal({ eyebrow: "Editar", title: `Ciclo ${cycle.year}`, subtitle: "A visão do ano que todos enxergam.", saveLabel: "Salvar", formFields: [{ k:"ano", label:"Ano / período", type:"text", half:true, req:true, ph:cycle.year }, { k:"tema", label:"Tema", type:"text", half:true, req:true, ph:cycle.theme }, { k:"versiculo", label:"Versículo", type:"text", ph:cycle.verse ?? "ex: Salmos 1:3" }, { k:"desc", label:"Descrição", type:"area", ph:cycle.body ?? "O que esse tema significa para a Igreja..." }, { k:"objetivos", label:"Objetivos (separados por vírgula)", type:"text", ph:cycle.objectives.map((o) => o.title).join(", ") }], action: { kind: "cycle", id: cycle.id } })}>Editar ciclo</button> : null}
+        {cycle ? <Botao variante="texto" onClick={() => setModal({ eyebrow: "Editar", title: `Ciclo ${cycle.year}`, subtitle: "A visão do ano que todos enxergam.", saveLabel: "Salvar", formFields: [{ k:"ano", label:"Ano / período", type:"text", half:true, req:true, ph:cycle.year }, { k:"tema", label:"Tema", type:"text", half:true, req:true, ph:cycle.theme }, { k:"versiculo", label:"Versículo", type:"text", ph:cycle.verse ?? "ex: Salmos 1:3" }, { k:"desc", label:"Descrição", type:"area", ph:cycle.body ?? "O que esse tema significa para a Igreja..." }, { k:"objetivos", label:"Objetivos (separados por vírgula)", type:"text", ph:cycle.objectives.map((o) => o.title).join(", ") }], action: { kind: "cycle", id: cycle.id } })}>Editar ciclo</Botao> : null}
       </div>
       {cycle ? (
         <div className="ciclo">
@@ -219,14 +220,13 @@ export function Historia({ church, historyEntries, setModal }: { church?: Church
                 <div style={{ position: "absolute", inset: 0, background: i % 2 === 1 ? "linear-gradient(150deg, var(--olive-deep), #243012)" : "linear-gradient(150deg, #7a6526, #3d3415)" }} />
               )}
               <span className="hist-year">{capitulo.year || "-"}</span>
-              <button
-                type="button"
+              <Acao
                 className="hist-photo-tog"
-                disabled={uploadingId === capitulo.id}
+                desativado={uploadingId === capitulo.id}
                 onClick={() => fileRefs.current[capitulo.id]?.click()}
               >
                 {uploadingId === capitulo.id ? "Enviando..." : capitulo.photo_url ? "Trocar foto" : "+ Foto"}
-              </button>
+              </Acao>
               <input
                 ref={(el) => { fileRefs.current[capitulo.id] = el; }}
                 type="file"
@@ -240,7 +240,7 @@ export function Historia({ church, historyEntries, setModal }: { church?: Church
               <div className="hist-x">{capitulo.body}</div>
               <div className="hist-foot">
                 {capitulo.link ? <a className="hist-link" href={capitulo.link} target="_blank" rel="noreferrer">Ver mais →</a> : null}
-                <button className="hist-edit" type="button" onClick={() => setModal({ eyebrow: "Editar", title: `Capítulo de ${capitulo.year ?? capitulo.title}`, subtitle: "Edite este capítulo da história da Igreja.", saveLabel: "Salvar", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:capitulo.year ?? "ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:capitulo.title }, { k:"desc", label:"História", type:"area", ph:capitulo.body ?? "Conte esse momento..." }, { k:"link", label:"Link (opcional)", type:"text", ph:capitulo.link ?? "https://…", hint:"Vídeo, matéria ou álbum de fotos." }], action: { kind: "historyEntry", id: capitulo.id } })}>Editar</button>
+                <Acao className="hist-edit" onClick={() => setModal({ eyebrow: "Editar", title: `Capítulo de ${capitulo.year ?? capitulo.title}`, subtitle: "Edite este capítulo da história da Igreja.", saveLabel: "Salvar", formFields: [{ k:"ano", label:"Ano", type:"text", half:true, ph:capitulo.year ?? "ex: 2023" }, { k:"titulo", label:"Título", type:"text", half:true, ph:capitulo.title }, { k:"desc", label:"História", type:"area", ph:capitulo.body ?? "Conte esse momento..." }, { k:"link", label:"Link (opcional)", type:"text", ph:capitulo.link ?? "https://…", hint:"Vídeo, matéria ou álbum de fotos." }], action: { kind: "historyEntry", id: capitulo.id } })}>Editar</Acao>
               </div>
             </div>
           </div>

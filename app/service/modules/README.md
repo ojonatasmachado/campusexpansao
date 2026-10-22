@@ -88,9 +88,10 @@ criados fora do registro não entram.
    peça (as novas em `app/service/ui/`, as antigas onde já estão) e o que falta trocar. Antes de
    escrever markup, procure ali; existindo, importe e use; faltando variação, acrescente uma
    prop ao componente. Peça nova só entra com a ficha de entrada da BIBLIOTECA preenchida e uma
-   linha na tabela. Botão: sempre `Botao` ou `BotaoIcone` (`app/service/ui/Botao.tsx`); link com
-   cara de botão usa `botaoClasse()`. Proibido escrever `.btn`/`.m6-btn` à mão numa tela; o CI
-   falha (`scripts/check-service-componentes.ts`).
+   linha na tabela. Nenhuma tela escreve `<button>`: usa `Botao`, `BotaoIcone`, `Interruptor`,
+   `Opcao` ou, para linha/cartão sem peça própria, a base `Acao` (todos em `app/service/ui/`);
+   link com cara de botão usa `botaoClasse()`. Vale do login ao painel. O CI falha com `<button>`
+   ou `.btn`/`.m6-btn` à mão (`scripts/check-service-componentes.ts`).
 
 ## Como o registro funciona (4.1)
 

@@ -30,6 +30,7 @@ import { EventDrawer } from "./Evento";
 import type { BaptismCandidateView, BaptismClassView, BoardView, CalEvent, CardView, ChurchView, CourseView, DecisionView, DrawerState, EnrollmentView, EventRsvpView, EventView, FellowshipGroupView, JourneyStepKind, LessonView, MeetingActionView, MeetingView, MemberView, MinistryView, ModalState, ModuleView, PersonView, RehearsalView, RosterAssignmentView, TimelineEventView, VisitorNoteView, VisitorView } from "../tipos";
 
 import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 export function PersonTimeline({ member, events, compact }: { member: MemberView; events: TimelineEventView[]; compact?: boolean }) {
   const { comTermos: ct } = useTermos();
   const sorted = porData(events);
@@ -178,8 +179,8 @@ export function VisitanteDrawer({
           <div className="vresp-pick">
             <span className="vresp-lbl">A pessoa respondeu?</span>
             <div className="seg-check">
-              <button className={`seg-chip ${resp === "respondeu" ? "on" : ""}`} type="button" onClick={() => setResp(resp === "respondeu" ? "" : "respondeu")}>Respondeu</button>
-              <button className={`seg-chip ${resp === "sem_resposta" ? "on" : ""}`} type="button" onClick={() => setResp(resp === "sem_resposta" ? "" : "sem_resposta")}>Não respondeu</button>
+              <Acao className={`seg-chip ${resp === "respondeu" ? "on" : ""}`} onClick={() => setResp(resp === "respondeu" ? "" : "respondeu")}>Respondeu</Acao>
+              <Acao className={`seg-chip ${resp === "sem_resposta" ? "on" : ""}`} onClick={() => setResp(resp === "sem_resposta" ? "" : "sem_resposta")}>Não respondeu</Acao>
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
@@ -573,7 +574,7 @@ export function EntityDrawer({
             <dl className="kv"><dt>Telefone</dt><dd>{formatarTelefone(person.phone)}</dd><dt>E-mail</dt><dd>{person.email}</dd></dl>
           </DrawerSection>
           <DrawerSection title="Times e funções">
-            <div className="cell-tags" style={{ gap: 8 }}>{linkedMinistries.map((ministry) => <button className="tag" type="button" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}>{ministry.name}</button>)}</div>
+            <div className="cell-tags" style={{ gap: 8 }}>{linkedMinistries.map((ministry) => <Acao className="tag" key={ministry.id} onClick={() => setDrawer({ kind: "ministry", id: ministry.id })}>{ministry.name}</Acao>)}</div>
             {person.tags.length > 0 && <div style={{ marginTop: 12, fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Etiquetas: {person.tags.join(" · ")}</div>}
           </DrawerSection>
           <DrawerSection title="Disponibilidade">
@@ -688,10 +689,10 @@ export function EntityDrawer({
             <DrawerSection title={`Família · ${familiares.length}`}>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {familiares.map((f) => (
-                  <button className="cand" type="button" style={{ width: "100%", textAlign: "left" }} key={f.id} onClick={() => setDrawer({ kind: "member", id: f.id })}>
+                  <Acao className="cand" style={{ width: "100%", textAlign: "left" }} key={f.id} onClick={() => setDrawer({ kind: "member", id: f.id })}>
                     <Av name={f.name} size="sm" />
                     <div className="cand-main"><div className="cand-name">{f.name}</div></div>
-                  </button>
+                  </Acao>
                 ))}
               </div>
             </DrawerSection>
@@ -702,11 +703,11 @@ export function EntityDrawer({
                 {linkedMinistries.map((m) => {
                   const link = m.people.find((p) => p.personId === member.volunteerId);
                   return (
-                    <button className="ov-serve-row" type="button" key={m.id} onClick={() => setDrawer({ kind: "ministry", id: m.id })}>
+                    <Acao className="ov-serve-row" key={m.id} onClick={() => setDrawer({ kind: "ministry", id: m.id })}>
                       <span className="ov-serve-ic"><TeamMark ministry={m} size={14} /></span>
                       <span className="ov-serve-name">{m.name}</span>
                       {link?.isLeader ? <span className="lider-tag">Líder</span> : <span className="ov-serve-fn">{link?.functions.join(" · ") || ct("{Voluntario}")}</span>}
-                    </button>
+                    </Acao>
                   );
                 })}
               </div>
@@ -855,14 +856,14 @@ export function EntityDrawer({
                 </div>
                 {pessoas.length === 0 && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)" }}>Ninguém habilitado ainda.</div>}
                 {pessoas.map((link) => (
-                  <button className="cand" type="button" key={`${position.id}-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
+                  <Acao className="cand" key={`${position.id}-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
                     <Av name={link.personName} photoUrl={people.find((pp) => pp.id === link.personId)?.photoUrl} />
                     <div className="cand-main">
                       <div className="cand-name">{link.personName}</div>
                       <div className="cand-meta">{link.isLeader ? "Líder do time" : link.functions.join(" · ") || ct("{Voluntario}")}</div>
                     </div>
                     {link.isLeader && <span className="lider-tag">Líder</span>}
-                  </button>
+                  </Acao>
                 ))}
               </div>
             ))}
@@ -872,14 +873,14 @@ export function EntityDrawer({
                   <div className="esc-fn">Sem função definida</div>
                 </div>
                 {semFuncao.map((link) => (
-                  <button className="cand" type="button" key={`semfuncao-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
+                  <Acao className="cand" key={`semfuncao-${link.personId}`} onClick={() => setDrawer({ kind: "person", id: link.personId })}>
                     <Av name={link.personName} photoUrl={people.find((pp) => pp.id === link.personId)?.photoUrl} />
                     <div className="cand-main">
                       <div className="cand-name">{link.personName}</div>
                       <div className="cand-meta">{link.isLeader ? "Líder do time" : ct("{Voluntario}")}</div>
                     </div>
                     {link.isLeader && <span className="lider-tag">Líder</span>}
-                  </button>
+                  </Acao>
                 ))}
               </div>
             )}

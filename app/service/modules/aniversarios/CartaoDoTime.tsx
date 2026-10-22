@@ -63,7 +63,7 @@ export function CartaoAniversario({ pessoas, destaque, onAgoraNao }: { pessoas: 
             return (
               <li key={p.id}>
                 <span className="m6-aniv-n">{p.nome}</span>
-                {l ? <button className="m6-link" type="button" onClick={() => abrir(l)} aria-label={`Mandar parabéns para ${p.nome}, ${formatarTelefone(p.telefone)}`}>Parabéns</button> : <span className="m6-meta">sem celular</span>}
+                {l ? <Botao tamanho="toque" variante="texto" onClick={() => abrir(l)} aria-label={`Mandar parabéns para ${p.nome}, ${formatarTelefone(p.telefone)}`}>Parabéns</Botao> : <span className="m6-meta">sem celular</span>}
               </li>
             );
           })}
@@ -71,7 +71,7 @@ export function CartaoAniversario({ pessoas, destaque, onAgoraNao }: { pessoas: 
       )}
       <div className="m6-btns">
         {link && <Botao tamanho="toque" variante={variante} onClick={() => abrir(link)}>Mandar parabéns</Botao>}
-        <button className="m6-link" type="button" data-dispensa="1" onClick={onAgoraNao}>Agora não</button>
+        <Botao tamanho="toque" variante="texto" data-dispensa="1" onClick={onAgoraNao}>Agora não</Botao>
       </div>
     </div>
   );

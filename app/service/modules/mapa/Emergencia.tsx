@@ -10,6 +10,7 @@ import { caixaDaGeometria } from "./geo";
 import { baixarCsv } from "./csv";
 
 import { Botao, botaoClasse } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 /* Ferramentas › Emergência (tela 11 do design). Quem coordena desenha a
    área atingida, vê as famílias, pergunta a todas se estão bem e marca a
    situação de cada uma. O endereço abre só aqui, com registro de quem abriu. */
@@ -131,9 +132,9 @@ export function Emergencia({ ctx }: { ctx: ContextoMapa }) {
       <div className="mp-faixa alerta" role="region" aria-label="Emergência">
         <strong>Modo emergência</strong>
         <span>{fechado ? "Área fechada. Dê um nome e abra." : "Desenhe a área atingida: clique nos cantos e no primeiro ponto para fechar."}</span>
-        {pontos.length > 0 && <button type="button" className="mp-botao" onClick={() => { setFechado(false); setPontos((p) => p.slice(0, -1)); }}>Desfazer ponto</button>}
-        {!fechado && pontos.length >= 3 && <button type="button" className="mp-botao" onClick={() => setFechado(true)}>Fechar área</button>}
-        <button type="button" className="mp-botao" onClick={ctx.fechar}>Sair</button>
+        {pontos.length > 0 && <Botao tamanho="mapa" onClick={() => { setFechado(false); setPontos((p) => p.slice(0, -1)); }}>Desfazer ponto</Botao>}
+        {!fechado && pontos.length >= 3 && <Botao tamanho="mapa" onClick={() => setFechado(true)}>Fechar área</Botao>}
+        <Botao tamanho="mapa" onClick={ctx.fechar}>Sair</Botao>
       </div>
       <aside className="mp-painel mp-dir" aria-label="Nova emergência" style={{ bottom: "auto" }}>
         <div className="mp-cab"><div className="mp-sobre">Emergência</div><h2 className="mp-titulo">O que aconteceu?</h2></div>
@@ -151,7 +152,7 @@ export function Emergencia({ ctx }: { ctx: ContextoMapa }) {
       <div className="mp-faixa alerta" role="status">
         <strong>Modo emergência</strong>
         <span>{atual.titulo}</span>
-        <button type="button" className="mp-botao" onClick={ctx.fechar}>Voltar ao mapa</button>
+        <Botao tamanho="mapa" onClick={ctx.fechar}>Voltar ao mapa</Botao>
       </div>
       <aside className="mp-painel mp-dir" aria-label="Famílias na área" style={{ width: 430 }}>
         <div className="mp-cab">
@@ -166,7 +167,7 @@ export function Emergencia({ ctx }: { ctx: ContextoMapa }) {
         </div>
         <div className="mp-chips" style={{ padding: "12px 18px", borderBottom: "0.5px solid var(--border-2)" }}>
           {(["todas", "sem_resposta", "ajuda", "bem"] as const).map((v) => (
-            <button key={v} type="button" className="mp-chip" aria-pressed={filtro === v} onClick={() => setFiltro(v)}>{v === "todas" ? "Todas" : STATUS[v]} <span className="mp-num">{v === "todas" ? familias.length : familias.filter((f) => f.status === v).length}</span></button>
+            <Acao key={v} className="mp-chip" aria-pressed={filtro === v} onClick={() => setFiltro(v)}>{v === "todas" ? "Todas" : STATUS[v]} <span className="mp-num">{v === "todas" ? familias.length : familias.filter((f) => f.status === v).length}</span></Acao>
           ))}
         </div>
         <div className="mp-corpo" style={{ gap: 0, padding: 0 }}>
@@ -183,7 +184,7 @@ export function Emergencia({ ctx }: { ctx: ContextoMapa }) {
                   {f.telefone && <a className={botaoClasse({ compacto: true })} href={`tel:${f.telefone.replace(/[^\d+]/g, "")}`} aria-label={`Ligar para ${f.nome}`}>Ligar</a>}
                 </div>
                 <div className="mp-seg" role="group" aria-label={`Situação de ${f.nome}`} style={{ ["--n" as string]: 3 } as React.CSSProperties}>
-                  {(["sem_resposta", "bem", "ajuda"] as const).map((s) => <button key={s} type="button" aria-pressed={f.status === s} onClick={() => marcar(f, s)}>{STATUS[s]}</button>)}
+                  {(["sem_resposta", "bem", "ajuda"] as const).map((s) => <Acao key={s} aria-pressed={f.status === s} onClick={() => marcar(f, s)}>{STATUS[s]}</Acao>)}
                 </div>
                 {end ? (
                   <div className="mp-destaque" style={{ fontSize: "var(--fs-pn-13)" }}>{[[end.rua, end.numero].filter(Boolean).join(", "), end.complemento, end.bairro].filter(Boolean).join(" · ") || "Endereço não cadastrado"}<span className="mp-fraco" style={{ display: "block" }}>Aberto por você às {end.quando} · registrado</span></div>

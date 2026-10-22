@@ -17,6 +17,7 @@ import {
 } from "./pix";
 
 import { Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 type IgrejaCfg = { id: string; cidade?: string | null; settings?: Record<string, unknown> };
 
 export function ContribuirConfig({ church }: { church?: IgrejaCfg }) {
@@ -202,7 +203,7 @@ function ContribuirForm({ inicial, onSave, onClose }: { inicial: ContribuirCfg; 
             {opcoes.map((f) => {
               const on = finalidades.includes(f);
               return (
-                <button key={f} type="button" className={`cand-chip ${on ? "on" : ""}`} aria-pressed={on} disabled={!on && cheio} onClick={() => alternar(f)}>{f}</button>
+                <Acao key={f} className={`cand-chip ${on ? "on" : ""}`} aria-pressed={on} desativado={!on && cheio} onClick={() => alternar(f)}>{f}</Acao>
               );
             })}
           </div>

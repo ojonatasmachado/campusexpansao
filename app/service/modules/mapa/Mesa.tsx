@@ -15,6 +15,7 @@ import { CATEGORIAS, carregarPontos, type Ponto } from "./Pontos";
 import { baixarCsv } from "./csv";
 
 import { Botao, BotaoIcone } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 /* Mesa de trabalho (tela 2 do design): uma, várias ou todas as regiões,
    para analisar e baixar CSV. Pessoas só com nome de quem aceitou o termo;
    o CSV nunca leva endereço e cada download fica registrado. */
@@ -108,11 +109,11 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
         </select>
         <span style={{ flex: 1 }} />
         <span className="mp-fraco">Atalhos</span>
-        <button type="button" className="mp-chip" onClick={() => setSel(todas.map((r) => r.codigo))}>Todas</button>
-        <button type="button" className="mp-chip" onClick={() => setSel(todas.filter((r) => r.leitura === "falta").map((r) => r.codigo))}>Só onde falta igreja</button>
-        <button type="button" className="mp-chip" onClick={() => setSel(todas.filter((r) => r.leitura === "forte").map((r) => r.codigo))}>Só onde somos fortes</button>
+        <Acao className="mp-chip" onClick={() => setSel(todas.map((r) => r.codigo))}>Todas</Acao>
+        <Acao className="mp-chip" onClick={() => setSel(todas.filter((r) => r.leitura === "falta").map((r) => r.codigo))}>Só onde falta igreja</Acao>
+        <Acao className="mp-chip" onClick={() => setSel(todas.filter((r) => r.leitura === "forte").map((r) => r.codigo))}>Só onde somos fortes</Acao>
         <div className="mp-seg" style={{ ["--n" as string]: 3, minWidth: 240 } as React.CSSProperties} role="group" aria-label="Agrupar por">
-          {(["bairro", "setor", "area"] as const).map((n) => <button key={n} type="button" aria-pressed={nivel === n} disabled={n === "bairro" && !cidade?.tem_bairros} onClick={() => { setNivel(n); setSel([]); }}>{n === "area" ? "Áreas" : n === "bairro" ? "Bairros" : "Setores"}</button>)}
+          {(["bairro", "setor", "area"] as const).map((n) => <Acao key={n} aria-pressed={nivel === n} desativado={n === "bairro" && !cidade?.tem_bairros} onClick={() => { setNivel(n); setSel([]); }}>{n === "area" ? "Áreas" : n === "bairro" ? "Bairros" : "Setores"}</Acao>)}
         </div>
       </div>
 
@@ -158,9 +159,9 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
             <div className="mesa-sec">
               <h2>Pessoas da igreja nessas regiões <span className="mp-num mp-fraco">{pessoas.length}</span></h2>
               <div className="mp-chips">
-                <button type="button" className="mp-chip" aria-pressed={filtro === "todas"} onClick={() => setFiltro("todas")}>Todas</button>
-                <button type="button" className="mp-chip" aria-pressed={filtro === "servem"} onClick={() => setFiltro("servem")}>Já servem</button>
-                <button type="button" className="mp-chip" aria-pressed={filtro === "sem_grupo"} onClick={() => setFiltro("sem_grupo")}>{ct("Sem {grupo}")}</button>
+                <Acao className="mp-chip" aria-pressed={filtro === "todas"} onClick={() => setFiltro("todas")}>Todas</Acao>
+                <Acao className="mp-chip" aria-pressed={filtro === "servem"} onClick={() => setFiltro("servem")}>Já servem</Acao>
+                <Acao className="mp-chip" aria-pressed={filtro === "sem_grupo"} onClick={() => setFiltro("sem_grupo")}>{ct("Sem {grupo}")}</Acao>
               </div>
             </div>
             {acesso.detalhe === "numeros" ? <p className="mp-texto" style={{ padding: "0 18px 18px" }}>Sua liberação mostra só os números por região.</p> : (

@@ -17,6 +17,7 @@ import type { MuralAviso } from "./estado";
 import type { ChurchView, EventView, MinistryView, PersonView, RosterAssignmentView } from "../../ServiceExactApp";
 
 import { Botao } from "../../ui/Botao";
+import { Opcao } from "../../ui/Opcao";
 type Qual = "esta" | "proxima" | "outra";
 
 export function BoletimDaSemana({ church, avisos, events, roster, ministries, people, onClose }: {
@@ -85,9 +86,9 @@ export function BoletimDaSemana({ church, avisos, events, roster, ministries, pe
   };
 
   const opcao = (k: keyof Incluir, rotulo: string, n: number) => (
-    <button type="button" className={`seg-chip${incluir[k] ? " on" : ""}`} aria-pressed={incluir[k]} onClick={() => setIncluir((i) => ({ ...i, [k]: !i[k] }))}>
+    <Opcao marcada={incluir[k]} estilo="seg-chip" aria-pressed={incluir[k]} onClick={() => setIncluir((i) => ({ ...i, [k]: !i[k] }))}>
       {`${rotulo} · ${n}`}
-    </button>
+    </Opcao>
   );
 
   return (
@@ -107,7 +108,7 @@ export function BoletimDaSemana({ church, avisos, events, roster, ministries, pe
           <div className="field">
             <div className="fs-chips" role="group" aria-label="Qual semana">
               {([["esta", "Esta semana"], ["proxima", "Próxima semana"], ["outra", "Outra semana"]] as const).map(([k, l]) => (
-                <button key={k} type="button" className={`seg-chip${qual === k ? " on" : ""}`} aria-pressed={qual === k} onClick={() => setQual(k)}>{l}</button>
+                <Opcao key={k} marcada={qual === k} estilo="seg-chip" aria-pressed={qual === k} onClick={() => setQual(k)}>{l}</Opcao>
               ))}
             </div>
             {qual === "outra" && (

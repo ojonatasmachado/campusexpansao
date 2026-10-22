@@ -7,7 +7,8 @@ import { Icon } from "../../lib/icons";
 import { limparCamadas, type ContextoMapa } from "./contexto";
 import { milhar } from "./linguagem";
 
-import { BotaoIcone } from "../../ui/Botao";
+import { BotaoIcone, Botao } from "../../ui/Botao";
+import { Acao } from "../../ui/Acao";
 /* Ferramentas › Linha do tempo (tela 13 do design). Quantas pessoas
    chegaram em cada parte da cidade no período. A data de entrada é o ano de
    "membro desde" ou a data do cadastro; o lugar é o endereço de hoje. */
@@ -96,7 +97,7 @@ export function LinhaDoTempo({ ctx, nivel }: { ctx: ContextoMapa; nivel: "bairro
       <div className="mp-faixa" role="region" aria-label="Linha do tempo">
         <strong>Linha do tempo</strong>
         <span className="mp-texto">Os números verdes são quem chegou no período.</span>
-        <button type="button" className="mp-botao" onClick={ctx.fechar}>Sair</button>
+        <Botao tamanho="mapa" onClick={ctx.fechar}>Sair</Botao>
       </div>
 
       <aside className="mp-painel" aria-label="Crescimento por região" style={{ right: 16, top: 16, width: 300, maxHeight: "calc(100% - 200px)" }}>
@@ -126,8 +127,8 @@ export function LinhaDoTempo({ ctx, nivel }: { ctx: ContextoMapa; nivel: "bairro
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <button type="button" className="mp-chip" onClick={ultimoAno}>Último ano</button>
-          <button type="button" className="mp-chip" onClick={tudo}>Desde o começo</button>
+          <Acao className="mp-chip" onClick={ultimoAno}>Último ano</Acao>
+          <Acao className="mp-chip" onClick={tudo}>Desde o começo</Acao>
         </div>
       </section>
     </>

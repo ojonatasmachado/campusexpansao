@@ -25,6 +25,12 @@ type Regra = { peca: string; usar: string; permitido: string; re: RegExp };
 
 const REGRAS: Regra[] = [
   {
+    peca: "Elemento clicável",
+    usar: "Acao, Botao, BotaoIcone, Interruptor ou Opcao de app/service/ui/",
+    permitido: "app/service/ui/",
+    re: /<button\b/g,
+  },
+  {
     peca: "Botão",
     usar: "Botao / botaoClasse() de app/service/ui/Botao.tsx",
     permitido: "app/service/ui/",
