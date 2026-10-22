@@ -20,6 +20,7 @@ Fonte: MANIFESTO.md lei 12 e seção 8; PROGRESSO.md "Para a captura final" e "C
 - `scripts/medir-densidade.js`
 - `scripts/seed-local-volume.ts`
 - `docs/service-v7/PROGRESSO.md`
+- `.github/workflows/service.yml`
 
 ## Pronto quando
 - Um comando roda as jornadas do CAPTURA.md e falha nas regras da lei 12 e 13: alvo abaixo de 24px, contraste, rolagem lateral, erro de console, botão sem ação e densidade.
