@@ -1,0 +1,13 @@
+[
+  {
+    "keyboardOpen": true,
+    "focused": "Pessoas"
+  },
+  {
+    "active": "Secretaria",
+    "openGroups": [
+      "Gestão"
+    ],
+    "maisExpanded": "true"
+  }
+]

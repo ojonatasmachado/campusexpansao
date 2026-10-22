@@ -4058,3 +4058,15 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
   }
   .ce-title-input { font-size: max(20px, calc(16px / var(--m-scale, 1))) !important; }
 }
+
+/* Service: operações ocasionais conservam o grupo declarado no registro. */
+.app .sb-mais-grupo > summary { list-style: none; justify-content: space-between; cursor: pointer; min-height: 32px; }
+.app .sb-mais-grupo > summary::-webkit-details-marker { display: none; }
+.app .sb-mais-grupo[open] > summary { color: var(--white); }
+.app .sb-mais-grupo > summary svg { transform: rotate(-90deg); }
+.app .sb-mais-grupo[open] > summary svg { transform: rotate(0deg); }
+.app .sb-mais-itens { margin: 0 0 6px 12px; padding-left: 4px; border-left: 1px solid var(--border-2); }
+.app .sb-mais-itens .sb-link { overflow-wrap: anywhere; }
+@media (max-width: 860px), (pointer: coarse) {
+  .app .sb-mais-grupo > summary { min-height: 44px; }
+}

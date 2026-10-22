@@ -904,15 +904,22 @@ export default function ServiceExactApp({
           })}
           {/* telas de uso ocasional: fechadas em "Mais"; abre sozinho quando a tela atual está nele */}
           {(() => {
-            const mais = NAV_GROUPS.flatMap((g) => g.items.filter((item) => item.secundario && podeVerItem(item.id)));
-            if (!mais.length) return null;
-            const aberto = maisAberto || mais.some((i) => i.id === route);
+            const grupos = NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((item) => item.secundario && podeVerItem(item.id)) })).filter((g) => g.items.length > 0);
+            if (!grupos.length) return null;
+            const aberto = maisAberto || grupos.some((g) => g.items.some((i) => i.id === route));
             return (
               <div className={`sb-sec sb-mais${aberto ? "" : " closed"}`}>
                 <button type="button" className="sb-group sb-group-btn" aria-expanded={aberto} onClick={() => setMaisAberto((v) => !v)}>
                   Mais<Caret open={aberto} size={13} />
                 </button>
-                {aberto && mais.map(linkDoMenu)}
+                {aberto && grupos.map((g) => (
+                  <details className="sb-mais-grupo" name="service-mais-grupo" key={g.group} open={g.items.some((i) => i.id === route)}>
+                    <summary className="sb-link" aria-label={`Mais em ${g.group}`}>
+                      {g.group}<Caret open={false} size={13} />
+                    </summary>
+                    <div className="sb-mais-itens">{g.items.map(linkDoMenu)}</div>
+                  </details>
+                ))}
               </div>
             );
           })()}

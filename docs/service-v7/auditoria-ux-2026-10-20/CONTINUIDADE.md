@@ -8,11 +8,11 @@ Arquivos: `app/service/membro/Caminhada.tsx`, `evolucoes/service_app/service-app
 
 Validação: typecheck, eslint Caminhada, contraste, Lei 12, 12 contratos das jornadas e build aprovados. Matriz Chromium 320/390, claro/escuro, fonte padrão/ampliada, sem overflow ou marcador pendente vazio.
 
-Publicação: commit, CI e deploy serão registrados após envio. Última entrega anterior: Financeiro `5ef10f1`, CI `39659440621` success, deploy `dpl_228U2AugQe2Wh7RZSmLPu8UZFAFZ` READY (registro recebido no handoff).
+Publicação confirmada: `00e03a3c680fe7a65d9678ab62359341e41a0b73`, enviado a main e fix/service-fuso-20261021. CI `39705162659` e `39705163589`: success. Deploy produção `dpl_5LkNgN8ScXvafGyXdkkXRx1nY9Ti`: READY, aliases campusexpansao.com.br e www. Confirmado em 21/10/2026. Última entrega anterior: Financeiro `5ef10f1`, CI `39659440621` success, deploy `dpl_228U2AugQe2Wh7RZSmLPu8UZFAFZ` READY (registro recebido no handoff).
 
 ## Próximo problema
 
-J15: Mais mistura itens secundários de seis grupos. A origem semântica continua em NAV_GROUPS, derivado dos manifestos. Preservar casca, permissões e registro, apresentar agrupamentos progressivos dentro de Mais. Depois: compositor do Mural, primeiro acesso do pastor e do membro, arquitetura interna da Caminhada.
+J15 implementado: Mais preserva os seis grupos de NAV_GROUPS, com expansão nativa exclusiva, rota ativa e filtros existentes. Typecheck, lint sem erros, Lei 12, contraste, 12 contratos e build passaram. Matriz 320/390/1280/1600 claro/escuro e Enter/rota Secretaria verificados. Publicação pendente do commit desta entrega. Próximo: compositor do Mural, primeiro acesso do pastor e do membro, arquitetura interna da Caminhada.
 
 ## Limitações
 

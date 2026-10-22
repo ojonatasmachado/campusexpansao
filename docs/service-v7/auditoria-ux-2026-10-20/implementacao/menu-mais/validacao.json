@@ -1,0 +1,186 @@
+[
+  {
+    "width": 320,
+    "theme": "dark",
+    "first": 1,
+    "overflow": false,
+    "openGroups": [
+      "Gestão"
+    ],
+    "summaryHeights": [
+      44,
+      44,
+      44,
+      44,
+      44,
+      44
+    ],
+    "visibleDestinations": [
+      "Quadros",
+      "Identidade e propósito",
+      "Nossa história",
+      "Secretaria"
+    ]
+  },
+  {
+    "width": 320,
+    "theme": "light",
+    "first": 1,
+    "overflow": false,
+    "openGroups": [
+      "Gestão"
+    ],
+    "summaryHeights": [
+      44,
+      44,
+      44,
+      44,
+      44,
+      44
+    ],
+    "visibleDestinations": [
+      "Quadros",
+      "Identidade e propósito",
+      "Nossa história",
+      "Secretaria"
+    ]
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "first": 1,
+    "overflow": false,
+    "openGroups": [
+      "Gestão"
+    ],
+    "summaryHeights": [
+      44,
+      44,
+      44,
+      44,
+      44,
+      44
+    ],
+    "visibleDestinations": [
+      "Quadros",
+      "Identidade e propósito",
+      "Nossa história",
+      "Secretaria"
+    ]
+  },
+  {
+    "width": 390,
+    "theme": "light",
+    "first": 1,
+    "overflow": false,
+    "openGroups": [
+      "Gestão"
+    ],
+    "summaryHeights": [
+      44,
+      44,
+      44,
+      44,
+      44,
+      44
+    ],
+    "visibleDestinations": [
+      "Quadros",
+      "Identidade e propósito",
+      "Nossa história",
+      "Secretaria"
+    ]
+  },
+  {
+    "width": 1280,
+    "theme": "dark",
+    "first": 1,
+    "overflow": false,
+    "openGroups": [
+      "Gestão"
+    ],
+    "summaryHeights": [
+      39,
+      39,
+      39,
+      39,
+      39,
+      39
+    ],
+    "visibleDestinations": [
+      "Quadros",
+      "Identidade e propósito",
+      "Nossa história",
+      "Secretaria"
+    ]
+  },
+  {
+    "width": 1280,
+    "theme": "light",
+    "first": 1,
+    "overflow": false,
+    "openGroups": [
+      "Gestão"
+    ],
+    "summaryHeights": [
+      39,
+      39,
+      39,
+      39,
+      39,
+      39
+    ],
+    "visibleDestinations": [
+      "Quadros",
+      "Identidade e propósito",
+      "Nossa história",
+      "Secretaria"
+    ]
+  },
+  {
+    "width": 1600,
+    "theme": "dark",
+    "first": 1,
+    "overflow": false,
+    "openGroups": [
+      "Gestão"
+    ],
+    "summaryHeights": [
+      39,
+      39,
+      39,
+      39,
+      39,
+      39
+    ],
+    "visibleDestinations": [
+      "Quadros",
+      "Identidade e propósito",
+      "Nossa história",
+      "Secretaria"
+    ]
+  },
+  {
+    "width": 1600,
+    "theme": "light",
+    "first": 1,
+    "overflow": false,
+    "openGroups": [
+      "Gestão"
+    ],
+    "summaryHeights": [
+      39,
+      39,
+      39,
+      39,
+      39,
+      39
+    ],
+    "visibleDestinations": [
+      "Quadros",
+      "Identidade e propósito",
+      "Nossa história",
+      "Secretaria"
+    ]
+  }
+]
