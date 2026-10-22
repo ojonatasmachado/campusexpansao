@@ -7,7 +7,7 @@ Toda função nova do Service nasce como módulo, numa pasta `app/service/module
 com um `manifest.ts`. Tela, item de menu, aba de configuração, cartão ou notificação
 criados fora do registro não entram.
 
-## As 12 leis
+## As 16 leis (revisadas em 22/10/2026)
 
 1. **Casca estável.** App do membro: 4 abas (Início, Agenda, Mensagens, Caminhada) e
    avatar no topo, que abre o Perfil. Painel: menu, barra e busca. A casca não muda
@@ -17,7 +17,9 @@ criados fora do registro não entram.
    `painel.config`, `busca`.
 2. **Uma pergunta por lugar.** Início: o que pede minha atenção agora? Agenda: quando e
    onde? Mensagens: quem falou comigo? Caminhada: como estou crescendo? Perfil: quem sou
-   e como prefiro? Função nova entra onde responde à mesma pergunta.
+   e como prefiro? Função nova entra onde responde à mesma pergunta. **(rev. 22/10)** Painel
+   também: Início do painel, o que eu preciso resolver hoje? Relatórios, como estamos? Tela de
+   módulo, o que eu faço aqui? Número que não leva a uma ação mora em Relatórios.
 3. **Registro único.** `registry.ts` lê os manifestos e filtra por igreja (módulo
    ligado), papel, permissão e dependências. `NAV_GROUPS`, `CFG_TABS` e `MEMBER_MODULES`
    passam a ser gerados por ele.
@@ -65,7 +67,22 @@ criados fora do registro não entram.
     semana, visitantes contatados em 48h.
 12. **Qualidade verificada por máquina.** A captura roda a cada versão e falha com texto
     abaixo do mínimo, alvo abaixo de 24px, contraste pior que a versão anterior, rolagem
-    lateral, erro de console ou botão sem ação.
+    lateral, erro de console ou botão sem ação. **(rev. 22/10)** E com densidade acima da
+    lei 13, pior que a versão anterior ou ação sobreposta (`scripts/medir-densidade.js`).
+13. **Densidade medida.** Primeira dobra, sem rolar. Painel (1366×860): até 25 ações e 100
+    palavras. App (390×844): até 12 ações e 80 palavras. Nos dois: um botão cheio na cor da
+    igreja, no máximo 2 níveis de moldura (linha de lista sem borda própria), nenhuma ação
+    sobreposta. Passar do limite exige justificativa no manifesto do módulo.
+14. **Uma informação, um lugar.** Cada dado tem uma tela dona; fora dela, no máximo uma
+    linha-resumo que leva à dona. Proibido: contador repetido na mesma tela, lista que repete
+    outra lista, legenda que repete a cor, ajuda "?" por cartão (é uma por seção).
+15. **Montar e acompanhar são telas diferentes.** Quem executa vê o que é seu (o líder entra
+    no seu time). Quem acompanha vê resumo: uma linha por unidade, problemas primeiro, detalhe
+    só ao tocar. No topo, no máximo duas ações visíveis (uma principal); o resto em "Mais".
+    Configuração do módulo fica em Configurações.
+16. **Mercado antes do desenho.** Tela ou fluxo novo começa vendo como 2 ou 3 ferramentas
+    resolvem a mesma tarefa (função, nunca marca ou visual) e termina com crítica de design,
+    teste de pior caso e medição antes e depois. Material de concorrente fica fora do git.
 
 ## Como o registro funciona (4.1)
 
@@ -99,6 +116,10 @@ criados fora do registro não entram.
 - [ ] Textos usam `termo()` para os termos renomeáveis e os tokens de fonte.
 - [ ] Fatos que vão para o histórico estão declarados.
 - [ ] Captura das telas novas passa nos testes da lei 12.
+- [ ] Olhei 2 ou 3 ferramentas resolvendo a mesma tarefa (lei 16).
+- [ ] Cada tela cabe na lei 13; anotei a medida antes e depois.
+- [ ] Nenhum dado aparece repetido em outra tela além de uma linha-resumo (lei 14).
+- [ ] Tela de quem executa separada da de quem acompanha; no topo, no máximo duas ações (lei 15).
 
 ## Como a medição funciona (5.1, lei 11)
 
