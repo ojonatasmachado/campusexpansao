@@ -28,7 +28,7 @@ A demonstração usa dados sintéticos e não comprova gravações reais dos mó
 
 ## Próximas verificações
 
-Fusos da igreja, demais jornadas de operação e matriz visual ampliada continuam abertos. A causa do ponto branco relatado não foi reproduzida conclusivamente. A presença de círculos de estado na Caminhada não comprova que sejam a origem do relato.
+Fusos da igreja, demais jornadas de operação e matriz visual ampliada continuam abertos. Uma causa concreta do ponto branco foi localizada na Caminhada: etapas a fazer renderizavam um círculo sem conteúdo. O estado agora mostra o número da etapa, preserva o rótulo textual e deixa de depender só de cor ou forma. Outros pontos brancos, se aparecerem em jornadas diferentes, ainda precisam ser tratados no contexto em que forem observados.
 
 ## Continuidade de navegação
 
@@ -75,3 +75,9 @@ As quatro operações e as seções atuais da tesouraria foram preservadas, assi
 O formulário agora verifica se uma linha foi realmente alterada antes de fechar. Falha mantém o formulário, os valores e a possibilidade de nova tentativa; durante a gravação, o fechamento acidental fica bloqueado. Horas e dias devem ser inteiros positivos. Os campos receberam identificadores e rótulos associados; o modal recebeu nome acessível e estado ocupado.
 
 No demo de teste, a tentativa de salvar com identificador sintético retornou falha. A captura em 390 px mostrou o formulário aberto, prazo de 24 horas preservado, mensagem de erro e botão Salvar novamente disponível. Esse teste não é apresentado como gravação bem-sucedida em igreja real. Nos relatórios, os intervalos de comparação foram alinhados nos limites e encontros que ainda vão começar não entram na média de check-ins.
+
+## Etapas pendentes da Caminhada · 21/10/2026
+
+Número da posição no lugar do círculo vazio, com estado textual preservado e marcador decorativo oculto ao leitor de tela. Typecheck, lint do componente, Lei 12, contraste, os 12 contratos do CI e build passaram. O build usa as variáveis fictícias do CI. Dependências foram instaladas no próprio worktree porque o Turbopack rejeitou o symlink anterior.
+
+Capturas `caminhada-etapas-*`: Chromium local, 320/390 px, claro/escuro, escala padrão e 23/17. Sem rolagem horizontal e sem marcador pendente vazio. Fixture temporária com etapa pendente e consentimento do mapa já decidido; o arquivo demo foi restaurado e não faz parte da entrega. Captura por CDP após falha do navegador integrado (`missing field sandboxPolicy`). Não valida Safari/PWA, teclado físico ou persistência de consentimento no banco. Logs de rede da demo com credenciais fictícias não comprovam funcionamento das APIs.

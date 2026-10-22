@@ -1,0 +1,114 @@
+[
+  {
+    "name": "caminhada-etapas-320-dark-normal",
+    "overflow": false,
+    "emptyPending": false,
+    "dots": [
+      {
+        "number": "4",
+        "font": "13px",
+        "width": 34,
+        "height": 34
+      }
+    ],
+    "background": "#0E110D"
+  },
+  {
+    "name": "caminhada-etapas-320-dark-ampliada",
+    "overflow": false,
+    "emptyPending": false,
+    "dots": [
+      {
+        "number": "4",
+        "font": "13px",
+        "width": 46,
+        "height": 46
+      }
+    ],
+    "background": "#0E110D"
+  },
+  {
+    "name": "caminhada-etapas-320-light-normal",
+    "overflow": false,
+    "emptyPending": false,
+    "dots": [
+      {
+        "number": "4",
+        "font": "13px",
+        "width": 34,
+        "height": 34
+      }
+    ],
+    "background": "#E7DFC8"
+  },
+  {
+    "name": "caminhada-etapas-320-light-ampliada",
+    "overflow": false,
+    "emptyPending": false,
+    "dots": [
+      {
+        "number": "4",
+        "font": "13px",
+        "width": 46,
+        "height": 46
+      }
+    ],
+    "background": "#E7DFC8"
+  },
+  {
+    "name": "caminhada-etapas-390-dark-normal",
+    "overflow": false,
+    "emptyPending": false,
+    "dots": [
+      {
+        "number": "4",
+        "font": "13px",
+        "width": 34,
+        "height": 34
+      }
+    ],
+    "background": "#0E110D"
+  },
+  {
+    "name": "caminhada-etapas-390-dark-ampliada",
+    "overflow": false,
+    "emptyPending": false,
+    "dots": [
+      {
+        "number": "4",
+        "font": "13px",
+        "width": 46,
+        "height": 46
+      }
+    ],
+    "background": "#0E110D"
+  },
+  {
+    "name": "caminhada-etapas-390-light-normal",
+    "overflow": false,
+    "emptyPending": false,
+    "dots": [
+      {
+        "number": "4",
+        "font": "13px",
+        "width": 34,
+        "height": 34
+      }
+    ],
+    "background": "#E7DFC8"
+  },
+  {
+    "name": "caminhada-etapas-390-light-ampliada",
+    "overflow": false,
+    "emptyPending": false,
+    "dots": [
+      {
+        "number": "4",
+        "font": "13px",
+        "width": 46,
+        "height": 46
+      }
+    ],
+    "background": "#E7DFC8"
+  }
+]

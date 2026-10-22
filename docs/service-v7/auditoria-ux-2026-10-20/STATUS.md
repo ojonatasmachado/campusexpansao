@@ -21,7 +21,7 @@ Atualizado em 21/10/2026. O relatório original é a fotografia do diagnóstico;
 | F15 Zoom ao digitar | Mitigação implementada | Piso de 16 px após escala; zoom do navegador preservado; falta teclado de Safari/PWA em aparelho real |
 | F16 Acessibilidade | Parcial | Campos rotulados, pisos, temas e testes visuais; não há certificação de todos os módulos ou leitores de tela |
 | F17 Superfícies e identidade | Parcial | Direção editorial aplicada ao início e compromissos; temas, Inter e marca preservados |
-| F18 Ponto branco | Não reproduzido conclusivamente | Não foi atribuída causa sem evidência; exige reprodução do estado específico |
+| F18 Ponto branco | Uma causa concreta corrigida | Etapa pendente da Caminhada não renderiza mais um círculo vazio: mostra o número da etapa e mantém o estado textual |
 | F19 Conexão entre pessoas | Fluxo principal verificado | Pedido chega ao líder correto, candidata elegível aparece, membro não transfere a própria vaga, liderança substitui, pessoa anterior perde a ação, substituta confirma e histórico registra a troca; o pedido continua sendo uma conversa, sem aceite automático |
 | F20 Inferências sobre presença | Corrigidos os textos e indicadores identificados | Sem registro não é ausência comprovada; pausa e recusas são fatos, sem diagnóstico de pessoas |
 | F21 Demonstração antiga | Corrigida | Datas relativas, histórico separado, local coerente com comunicado; continua sendo demonstração sintética |

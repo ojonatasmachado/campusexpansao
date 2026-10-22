@@ -175,9 +175,9 @@ export function CaminhadaV6({ steps, courses, purpose, contribuir }: { steps: St
           <div className="m6-list"><M6Row ic="ok" t={plural(steps.length, "etapa concluída", "etapas concluídas")} s="Ver as datas de cada uma" onClick={() => setVerEtapas(true)} /></div>
         ) : (
         <div className="m6-steps">
-          {steps.map((s) => (
+          {steps.map((s, index) => (
             <div className="m6-step" key={s.id}>
-              <span className={`m6-dot ${s.st}`}>{s.st === "feito" ? <Icon name="ok" size={18} /> : s.st === "andamento" ? <Icon name="pendente" size={18} /> : null}</span>
+              <span className={`m6-dot ${s.st}`} aria-hidden="true">{s.st === "feito" ? <Icon name="ok" size={18} /> : s.st === "andamento" ? <Icon name="pendente" size={18} /> : index + 1}</span>
               <div className="m6-rb">
                 <div className="m6-rt">{s.nome}</div>
                 <div className="m6-stw"><b>{STW[s.st]}</b>{s.info ? ` · ${s.info}` : ""}</div>

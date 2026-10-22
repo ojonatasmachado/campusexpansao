@@ -2909,7 +2909,7 @@ div.m6-row{cursor:default}
 .m6-dot{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:50%}
 .m6-dot.feito{background:var(--accent-fill);color:var(--accent-ink)}
 .m6-dot.andamento{border:2px solid var(--olive);background:var(--olive-dim);color:var(--olive)}
-.m6-dot.afazer{border:2px solid var(--border-3)}
+.m6-dot.afazer{border:2px solid var(--border-3);color:var(--muted);font-family:var(--mono);font-size:var(--fs-app-13);font-weight:700;font-variant-numeric:tabular-nums}
 .m6-dot.big{width:56px;height:56px}
 .m6-stw{font-size:var(--fs-app-15);color:var(--muted)}
 .m6-stw b{font-weight:600;color:var(--white)}
