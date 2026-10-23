@@ -22,7 +22,8 @@ export async function clicarItemMenu(page, t) {
 /** Painel: do estado atual até uma tela do menu. Celular = 2 toques (menu, item); desktop = 1. */
 export async function menuPara(j, t, slugTela) {
   if (j.ap === "celular") {
-    await j.passo("menu-aberto", "botão de menu (topo)", (p) => abrirMenuLateral(p));
+    const aberto = await j.page.locator("aside.sb").first().evaluate((e) => e.getBoundingClientRect().right > 20).catch(() => false);
+    if (!aberto) await j.passo("menu-aberto", "botão de menu (topo)", (p) => abrirMenuLateral(p));
     await j.passo(slugTela, `menu > ${t.grupo} > ${t.label}`, (p) => clicarItemMenu(p, t), { espera: [t.label.split(" ")[0]] });
   } else {
     await j.passo(slugTela, `menu > ${t.grupo} > ${t.label}`, (p) => clicarItemMenu(p, t));

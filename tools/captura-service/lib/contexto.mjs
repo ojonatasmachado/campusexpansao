@@ -88,15 +88,15 @@ async function loginPorUI1(aparelho, conta, { slugCookie = false } = {}) {
   const { ctx, page } = await criarContexto(aparelho);
   try {
     if (slugCookie) await ctx.addCookies([{ name: "cex_church_slug", value: SLUG, url: BASE_URL }]);
-    await page.goto("/service/login", { waitUntil: "domcontentloaded", timeout: 90000 });
-    await page.waitForLoadState("networkidle", { timeout: 1500 }).catch(() => {});
+    await page.goto("/service/login?redirect=/service", { waitUntil: "domcontentloaded", timeout: 90000 });
+    await page.waitForLoadState("networkidle", { timeout: 30000 }).catch(() => {});
     await page.locator('input[type="email"]').first().fill(CONTAS[conta].email);
     await page.locator('input[type="password"]').first().fill(SENHA);
     await Promise.all([
-      page.waitForURL((u) => !u.pathname.endsWith("/service/login"), { timeout: 25000 }),
+      page.waitForURL((u) => !u.pathname.endsWith("/service/login"), { timeout: 60000 }),
       page.getByRole("button", { name: "Entrar", exact: true }).click(),
     ]);
-    await page.waitForLoadState("networkidle", { timeout: 1500 }).catch(() => {});
+    await page.waitForLoadState("networkidle", { timeout: 30000 }).catch(() => {});
     await page.waitForTimeout(800);
     const destino = page.url();
     const arq = arquivoAuth(aparelho, conta);
