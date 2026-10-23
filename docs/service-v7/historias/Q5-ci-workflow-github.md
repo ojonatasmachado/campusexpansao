@@ -2,10 +2,10 @@
 id: Q5
 titulo: Confirmar execução do workflow de CI no GitHub
 tipo: verificacao
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: codex
+desde: 2026-10-23
+branch: historia/Q5-ci-workflow-github
 depende: []
 tamanho: P
 ---
