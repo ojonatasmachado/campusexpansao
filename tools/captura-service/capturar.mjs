@@ -15,7 +15,9 @@ import { gerarDocs } from "./lib/docs.mjs";
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v] = a.replace(/^--/, "").split("="); return [k, v ?? true]; }));
 const GRUPOS = { entrada: "./grupos/entrada.mjs", painel: "./grupos/painel.mjs", estados: "./grupos/estados.mjs", lider: "./grupos/lider.mjs", membro: "./grupos/membro.mjs", jornadas: "./grupos/jornadas.mjs", temas: "./grupos/temas.mjs" };
-const ETAPA1 = ["entrada", "painel", "estados", "lider", "membro", "jornadas"];
+// As jornadas precisam das publicações ainda não lidas pela Maria. A galeria
+// de telas do membro vem depois, pois abrir o Mural registra a leitura.
+const ETAPA1 = ["entrada", "jornadas", "painel", "estados", "lider", "membro"];
 let erros = 0;
 
 const so = args.so ? String(args.so).split(",") : ETAPA1;

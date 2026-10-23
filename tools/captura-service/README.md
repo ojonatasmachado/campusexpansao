@@ -13,7 +13,7 @@ npx tsx tools/captura-service/isolado.ts
 
 Não mantenha outro servidor Next no mesmo worktree durante a captura. Para uma jornada isolada: `npx tsx tools/captura-service/isolado.ts --so=jornadas --j=M10 --ap=celular`.
 
-O último comando percorre entrada, painel, estados, líder, membro e jornadas. O modo direto abaixo reaproveita app e banco locais já existentes e exige preparar as fixtures antes. Para recapturar uma parte:
+O último comando percorre entrada, jornadas, painel, estados, líder e membro. As jornadas vêm antes da galeria do membro, pois abrir o Mural registra a leitura e consumiria as novidades usadas nos testes. No modo isolado, a fixture de um rascunho de escala é reposta antes de cada aparelho; publicar no celular não esgota o cenário do desktop. O modo direto abaixo reaproveita app e banco locais já existentes e exige preparar as fixtures antes. Para recapturar uma parte:
 
 ```sh
 node capturar.mjs --so=entrada --ap=celular
