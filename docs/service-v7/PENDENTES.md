@@ -58,7 +58,6 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **E3** Cobertura vira linha no "Para resolver" (depois do E2)
 
 ### 3. Qualidade que protege o resto
-- **Q3** Matriz autenticada de papéis e isolamento entre igrejas
 
 ### 4. Código independente (dá para tocar em paralelo, se os trilhos não esbarrarem)
 - **I10** Biblioteca: indicadores e gráficos

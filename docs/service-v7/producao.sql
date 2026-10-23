@@ -5154,4 +5154,30 @@ grant execute on function service.mapa_crescimento_serie(uuid) to authenticated;
 -- Inofensiva: só troca o comentário do schema.
 comment on schema service is 'Produto Service (gestão de igrejas). Não mistura campos do CE.X. Migrações aplicadas pelo workflow Produção.';
 
+-- ═══ 0094_service_push_acesso.sql ═══
+-- Inscrições de push são escritas pelas rotas autenticadas com service_role.
+-- SELECT continua limitado à própria pessoa pela policy de 0044.
+-- Sem esta revogação, svc_tenant permitia forjar inscrição de outra pessoa.
+revoke insert, update, delete on service.push_subscriptions from anon, authenticated;
+grant insert, update, delete on service.push_subscriptions to service_role;
+
+-- ═══ 0095_service_financeiro_acesso.sql ═══
+-- Storage privado usa fin_can sem a policy base de tenant das tabelas.
+-- A liberação individual só vale com vínculo e produto ativos, inclusive ali.
+create or replace function service.fin_can(p_org uuid, p_write boolean default false)
+returns boolean
+language sql stable security definer set search_path = core, service, public as $$
+  select core.can_access(p_org, 'service') and (
+    core.has_role(p_org, 'owner', 'master', 'pastor')
+    or exists (
+      select 1 from service.person_grants g
+      join service.people p on p.id = g.person_id
+      where g.organization_id = p_org
+        and p.user_id = auth.uid()
+        and g.grant_code = any(case when p_write then array['financeiro.lancar'] else array['financeiro.ver', 'financeiro.lancar'] end)
+    )
+  )
+$$;
+grant execute on function service.fin_can(uuid, boolean) to authenticated;
+
 commit;

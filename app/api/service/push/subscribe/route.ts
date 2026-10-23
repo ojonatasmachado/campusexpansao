@@ -33,7 +33,8 @@ export async function POST(request: Request) {
 
   try {
     const db = supabaseAdmin();
-    const { data: person, error: personError } = await db
+    // A sessão resolve a pessoa com RLS: vínculo e produto precisam estar ativos.
+    const { data: person, error: personError } = await supabase
       .schema("service")
       .from("people")
       .select("id")
@@ -46,7 +47,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Nenhum voluntário vinculado a este usuário." }, { status: 404 });
     }
 
-    const { error: upsertError } = await db
+    // Um endpoint existente nunca muda de dono. DO NOTHING também protege
+    // duas inscrições concorrentes: só a sessão que o criou pode atualizá-lo.
+    const { error: insertError } = await db
       .schema("service")
       .from("push_subscriptions")
       .upsert(
@@ -57,9 +60,23 @@ export async function POST(request: Request) {
           p256dh: keys.p256dh,
           auth_key: keys.auth,
         },
-        { onConflict: "endpoint" },
+        { onConflict: "endpoint", ignoreDuplicates: true },
       );
-    if (upsertError) throw upsertError;
+    if (insertError) throw insertError;
+
+    const { data: subscription, error: updateError } = await db
+      .schema("service")
+      .from("push_subscriptions")
+      .update({ p256dh: keys.p256dh, auth_key: keys.auth })
+      .eq("endpoint", endpoint)
+      .eq("person_id", person.id)
+      .eq("organization_id", organizationId)
+      .select("id")
+      .maybeSingle();
+    if (updateError) throw updateError;
+    if (!subscription) {
+      return NextResponse.json({ error: "Esta inscrição já pertence a outra conta." }, { status: 409 });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {
