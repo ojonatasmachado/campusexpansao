@@ -6,6 +6,7 @@ import { formatDateBR, joinDot } from "../lib/date";
 import ChurchLockup from "../ChurchLockup";
 
 import { Botao } from "../ui/Botao";
+import { Avatar } from "../ui/Avatar";
 type SessionInfo = { id: string; organizationId: string; checkinActive: boolean; tokenValid: boolean };
 type EventInfo = { name: string; weekday: string; eventDate: string; time: string; location: string };
 type ClassInfo = { name: string };
@@ -13,11 +14,6 @@ type PersonInfo = { id: string; name: string };
 type ChildInfo = { id: string; name: string; can_pickup: boolean };
 type AttendanceInfo = { id: string; status: string };
 
-function ini(name: string) {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-}
 
 export default function KidsCheckinClient({
   session,
@@ -95,7 +91,7 @@ export default function KidsCheckinClient({
                 const busy = loadingChild === child.id;
                 return (
                   <div key={child.id} className="ck-row" style={{ background: "var(--graphite)", borderRadius: "var(--r-md)", padding: 12 }}>
-                    <div className="av av-md">{ini(child.name)}</div>
+                    <Avatar nome={child.name} tamanho="md" />
                     <div className="ck-row-main">
                       <div className="ck-row-name">{child.name}</div>
                       <div className="ck-row-meta">

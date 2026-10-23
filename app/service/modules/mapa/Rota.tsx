@@ -179,7 +179,7 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
           {paradas.length === 0 && <p className="mp-fraco">Nenhuma parada ainda.</p>}
           {paradas.map((p, i) => (
             <div key={`${i}-${p.nome}`} className="mp-lista-pessoa">
-              <span className="mp-av mp-num">{i + 1}</span>
+              <span className="mp-av mp-num">{i + 1}</span>{/* lei17-ok: número da parada da rota, não é avatar */}
               <span style={{ flex: 1, minWidth: 0 }}>{p.nome}<span className="mp-fraco" style={{ display: "block" }}>{p.tipo}</span></span>
               {i > 0 && <BotaoIcone className="mp-fechar" rotulo={`Subir ${p.nome}`} onClick={() => subir(i)}><Icon name="voltar" size={14} /></BotaoIcone>}
               <BotaoIcone className="mp-fechar" rotulo={`Tirar ${p.nome}`} onClick={() => tirar(i)}><Icon name="recusou" size={14} /></BotaoIcone>

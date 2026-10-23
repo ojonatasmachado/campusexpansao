@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { iniciais } from "./lib/iniciais";
 import { Icon } from "./lib/icons";
 import { instalarApp, jaInstalado } from "./lib/instalar";
 
 import { Acao } from "./ui/Acao";
+import { Avatar } from "./ui/Avatar";
 /* Avatar da pessoa logada no topo do painel, com menu. Substitui as
    iniciais da IGREJA (que não abriam nada) e o sino "Avisos" sem ação.
    O botão de tema continua na barra, como hoje.
@@ -49,14 +49,11 @@ export default function TopUserMenu({
   }, []);
 
   const parts = (name.trim() || "Você").split(/\s+/);
-  const initials = iniciais(name);
 
   return (
     <div className="top-user" ref={ref}>
       <Acao className="top-user-btn" onClick={() => setOpen((o) => !o)} aria-haspopup="menu" aria-expanded={open}>
-        <span className={`av av-sm${photoUrl ? " has-foto" : ""}`} style={photoUrl ? { backgroundImage: `url(${photoUrl})` } : undefined}>
-          {initials}
-        </span>
+        <Avatar nome={name} foto={photoUrl} tamanho="sm" />
         <span className="top-user-name">{parts[0]}</span>
       </Acao>
       {open && (

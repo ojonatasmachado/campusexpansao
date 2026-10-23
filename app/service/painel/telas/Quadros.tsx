@@ -19,6 +19,7 @@ import { Segmentado } from "../../ui/Segmentado";
 import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
 import { SeletorData } from "../../ui/Data";
 import { Vazio } from "../../ui/Estados";
+import { AvatarGrupo } from "../../ui/Avatar";
 import { Gaveta, Janela } from "../../ui/Janela";
 /* permissões do Kanban por papel (equivalente ao kanbanPerm()/S.KANBAN_PERMS do
    protótipo): master/pastor administram o quadro; líder cria, comenta e move os
@@ -137,12 +138,7 @@ export function KbCard({
       <div className="kb-card-title">{card.title}</div>
       <div className="kb-card-foot">
         {card.due && <span className={`kb-prazo${atrasado ? " late" : ""}`}>{formatDateBR(card.due)}</span>}
-        <div className="av-stack">
-          {card.assignees.slice(0, 3).map((id) => {
-            const p = peopleById.get(id);
-            return p ? <Av key={id} name={p.name} size="xs" photoUrl={p.photoUrl} /> : null;
-          })}
-        </div>
+        <AvatarGrupo tamanho="xs" max={3} pessoas={card.assignees.flatMap((id) => { const p = peopleById.get(id); return p ? [{ id, nome: p.name, foto: p.photoUrl }] : []; })} />
       </div>
     </div>
   );

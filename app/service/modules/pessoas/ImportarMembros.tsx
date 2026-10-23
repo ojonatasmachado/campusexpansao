@@ -20,7 +20,7 @@ import {
 import type { ChurchView, MemberView } from "../../ServiceExactApp";
 
 import { Botao } from "../../ui/Botao";
-import { Acao } from "../../ui/Acao";
+import { Etapas } from "../../ui/Etapas";
 import { Opcao } from "../../ui/Opcao";
 import { Linha } from "../../ui/Linha";
 import { Campo as CampoForm, Entrada } from "../../ui/Campo";
@@ -206,21 +206,8 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
       onSave={onSave}
       onClose={fecharTela}
     >
-      <ol className="imp-steps" aria-label="Etapas">
-        {ETAPAS.map((rotulo, i) => {
-          const n = (i + 1) as Etapa;
-          const podeVoltar = n < etapa && etapa < 4;
-          return (
-            <li key={rotulo} className={`imp-step${n === etapa ? " on" : ""}${n < etapa ? " feito" : ""}`} aria-current={n === etapa ? "step" : undefined}>
-              {podeVoltar ? (
-                <Acao className="imp-step-btn" onClick={() => setEtapa(n)}><span className="imp-step-n">{n}</span>{rotulo}</Acao>
-              ) : (
-                <span className="imp-step-btn"><span className="imp-step-n">{n}</span>{rotulo}</span>
-              )}
-            </li>
-          );
-        })}
-      </ol>
+      <Etapas estilo="faixa" rotulo="Etapas" className="imp-etapas" aoEscolher={etapa < 4 ? (id) => setEtapa(Number(id) as Etapa) : undefined}
+        itens={ETAPAS.map((rotulo, i) => ({ id: String(i + 1), titulo: rotulo, estado: i + 1 < etapa ? "feito" : i + 1 === etapa ? "atual" : "futuro" }))} />
 
       {etapa === 1 ? (
         <FormSection title="Planilha">

@@ -23,6 +23,10 @@ import { Etiqueta, Selo } from "../../ui/Selo";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Segmentado } from "../../ui/Segmentado";
 import { Vazio } from "../../ui/Estados";
+import { Tabela } from "../../ui/Tabela";
+import { baixarCsv } from "../../lib/csv";
+import { avisar } from "../../lib/avisar";
+import { plural } from "../../lib/plural";
 function formatAvailability(value: Record<string, boolean>) {
   const labels: Record<string, string> = { dom_m: "Domingo manhã", dom_n: "Domingo noite", qua: "Quarta" };
   const items = Object.entries(value).filter(([, ok]) => ok).map(([key]) => labels[key] ?? key);
@@ -68,6 +72,27 @@ function SituacaoPessoa({ l }: { l: PessoaLinha }) {
       {!tel ? <span className="sit-sub sit-alerta">sem telefone</span> : sub ? <span className="sit-sub">{sub}</span> : null}
     </div>
   );
+}
+
+/* situação em texto, a mesma do selo da tabela, para a planilha */
+const STATUS_TEXTO: Record<string, string> = { pausa: "Em pausa", ferias: "Férias" };
+function situacaoTexto(l: PessoaLinha, voluntario: string) {
+  if (l.novo) return "Novo";
+  if (l.person && l.person.status !== "ativo") return STATUS_TEXTO[l.person.status] ?? l.person.status;
+  return l.member ? "Membro" : voluntario;
+}
+
+/* ação em lote (só a gestão; líder de time não leva a lista embora): telefones das marcadas, um por linha, para colar no WhatsApp ou na agenda */
+async function copiarTelefones(linhas: { member?: MemberView; person?: PersonView }[]) {
+  const tels = linhas.map((l) => formatarTelefone(l.member?.phone || l.person?.phone || "")).filter(Boolean);
+  const sem = linhas.length - tels.length;
+  if (!tels.length) { avisar("Nenhuma das marcadas tem telefone.", "warn"); return; }
+  try {
+    await navigator.clipboard.writeText(tels.join("\n"));
+    avisar(`${plural(tels.length, "telefone copiado", "telefones copiados")}${sem ? `; ${plural(sem, "pessoa", "pessoas")} sem telefone` : ""}.`);
+  } catch {
+    avisar("Não deu para copiar. Tente baixar a planilha.", "warn");
+  }
 }
 
 /* Pessoas (S32): uma lista só com membros e voluntários, filtros por papel e
@@ -126,20 +151,25 @@ export function Membros({ members, people = [], ministries, church, setDrawer, s
         </Segmentado>
       </div>
       <p className="jrn-legenda"><b>{ct("{Caminhada}")}</b>, uma barra por etapa, na ordem: {JRN_STEPS.map((s) => ct(s.label)).join(" · ")}.</p>
-      <div className="tbl">
-        <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: "1.6fr 1.3fr 1fr 0.9fr" }}><span>Pessoa</span><span>Serve em</span><span>{ct("{Caminhada}")}</span><span>Situação</span></Linha>
-        {visible.map((l) => (
-          <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={l.key} style={{ gridTemplateColumns: "1.6fr 1.3fr 1fr 0.9fr" }} onClick={() => abrir(l)}>
-            <div className="cell-person"><Av name={l.name} size="md" photoUrl={l.photoUrl} /><div><div className="cell-name">{l.name}</div><div className="cell-sub">{l.sub}</div></div></div>
-            <div>
-              {l.mins.length > 0 ? <div className="cell-tags">{l.mins.map((min) => <Etiqueta key={min.id}>{min.name}</Etiqueta>)}{l.leader && <span className="lider-tag">Líder</span>}</div> : null}
-            </div>
-            <div>{l.member ? <JrnPips journey={l.member.journey} comTexto /> : null}</div>
-            <SituacaoPessoa l={l} />
-          </Acao>
-        ))}
-        {visible.length === 0 && <EmptyState title="Ninguém por aqui" text="Quem você cadastrar aparece nesta lista. Se usou a busca ou um filtro, tente limpar." />}
-      </div>
+      <Tabela
+        rotulo="Pessoas"
+        linhas={visible}
+        chave={(l) => l.key}
+        nomeLinha={(l) => l.name}
+        aoAbrir={abrir}
+        chaveAnimacao={`${filtro}|${q}`}
+        colunas={[
+          { id: "pessoa", rotulo: "Pessoa", largura: "1.6fr", celula: (l) => <div className="cell-person"><Av name={l.name} size="md" photoUrl={l.photoUrl} /><div><div className="cell-name">{l.name}</div><div className="cell-sub">{l.sub}</div></div></div> },
+          { id: "serve", rotulo: "Serve em", largura: "1.3fr", celula: (l) => (l.mins.length > 0 ? <div className="cell-tags">{l.mins.map((min) => <Etiqueta key={min.id}>{min.name}</Etiqueta>)}{l.leader && <span className="lider-tag">Líder</span>}</div> : null) },
+          { id: "caminhada", rotulo: ct("{Caminhada}"), largura: "1fr", celula: (l) => (l.member ? <JrnPips journey={l.member.journey} comTexto /> : null) },
+          { id: "situacao", rotulo: "Situação", largura: "0.9fr", celula: (l) => <SituacaoPessoa l={l} /> },
+        ]}
+        lote={soTimes ? undefined : (marcadas) => <>
+          <Botao compacto onClick={() => copiarTelefones(marcadas)}>Copiar telefones</Botao>
+          <Botao compacto onClick={() => baixarCsv("pessoas.csv", [["Nome", "Telefone", "Serve em", "Situação"], ...marcadas.map((l) => [l.name, formatarTelefone(l.member?.phone || l.person?.phone || ""), l.mins.map((m) => m.name).join(", "), situacaoTexto(l, ct("{Voluntario}"))])])}>Baixar planilha</Botao>
+        </>}
+        vazio={<EmptyState title="Ninguém por aqui" text="Quem você cadastrar aparece nesta lista. Se usou a busca ou um filtro, tente limpar." />}
+      />
       {importando && church ? <ImportarMembros church={church} members={members} onClose={() => setImportando(false)} onDone={() => router.refresh()} /> : null}
     </div>
   );

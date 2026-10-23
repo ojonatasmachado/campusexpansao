@@ -12,6 +12,7 @@ import { Botao, BotaoIcone } from "./ui/Botao";
 import { Abas } from "./ui/Abas";
 import { Janela } from "./ui/Janela";
 import { Vazio } from "./ui/Estados";
+import { Avatar } from "./ui/Avatar";
 import { confirmar } from "./ui/confirmar";
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
@@ -73,15 +74,7 @@ function timeCurto(iso: string) {
   }
 }
 
-function ini(name: string) {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-}
 
-function Av({ name, size = "sm" }: { name: string; size?: "sm" | "md" }) {
-  return <div className={`av av-${size}`}>{ini(name)}</div>;
-}
 
 /* ─── tela de resultado (usada aqui e na rota pública /service/aula-checkin) ─── */
 
@@ -141,7 +134,7 @@ export function AulaCheckinLanding({
             <div className="ck-land-ic" style={{ color: cor, borderColor: cor, fontSize: "var(--fs-app-28)", fontWeight: 700 }}>{icone === "✓" ? <Icon name="ok" size={30} /> : icone}</div>
             {person && (
               <div className="ck-land-pessoa">
-                <Av name={person.name} size="md" />
+                <Avatar nome={person.name} tamanho="md" />
                 <span>{person.name}</span>
               </div>
             )}
@@ -185,7 +178,7 @@ function ManualAulaCheckinModal({
           )}
           {lista.map((m) => (
             <div className="flag-row" key={m.id} style={{ cursor: "pointer" }} onClick={() => { onAdd(m.id); onClose(); }}>
-              <Av name={m.name} size="sm" />
+              <Avatar nome={m.name} tamanho="sm" />
               <div className="flag-main"><div className="flag-nome">{m.name}</div></div>
               <span style={{ marginLeft: "auto", color: "var(--muted)" }}>→</span>
             </div>
@@ -439,7 +432,7 @@ export function AulaCheckinModal({
                     return (
                       <div className="ck-row" key={rec.member_id}>
                         <span className="ck-check"><Icon name="ok" size={14} /></span>
-                        <Av name={m.name} size="sm" />
+                        <Avatar nome={m.name} tamanho="sm" />
                         <div className="ck-row-main">
                           <div className="ck-row-name">{m.name}</div>
                           <div className="ck-row-meta">{rec.via === "manual" ? "manual" : "QR"} · {timeCurto(rec.checked_in_at)}</div>
@@ -451,7 +444,7 @@ export function AulaCheckinModal({
                   {matriculados.filter((m) => !presentIds.has(m.id)).map((m) => (
                     <div className="ck-row pend" key={m.id}>
                       <span className="ck-check pend">○</span>
-                      <Av name={m.name} size="sm" />
+                      <Avatar nome={m.name} tamanho="sm" />
                       <div className="ck-row-main">
                         <div className="ck-row-name">{m.name}</div>
                         <div className="ck-row-meta">não chegou</div>

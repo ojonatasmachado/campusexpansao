@@ -38,7 +38,7 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Cartão | `Cartao` em `app/service/ui/Cartao.tsx` (painel, app, app-solto; `plano`); clicável usa `cartaoClasse()` | sim | variantes próprias de módulo (+5) ainda por classe extra | 1 |
 | Cartão da fila | contrato em `modules/fila.ts` e `define.ts`; markup em `membro/Inicio.tsx` | parcial | markup por tipo dentro de um switch | 6 |
 | Linha de lista | `Linha` e `Lista` em `app/service/ui/Linha.tsx` (tabela, curta, config, app); `M6Row` usa `linhaClasse()` | sim | ok | 6 |
-| Avatar | `Av` em painel/ui.tsx e membro/comum.tsx + cópias em CheckIn, CursoDrawer, AulaCheckin | parcial | 5 definições | 6 |
+| Avatar | `Avatar` e `AvatarGrupo` em `app/service/ui/Avatar.tsx` (foto ou iniciais sobre tom quente fixo por pessoa; xs 24, sm 32, md 44, lg 64, xl 88; `eu`, `lider`, `presente`; grupo empilhado com +N em cascata); `Av` do painel e do app repassam para ele | sim | ok; CI barra `.av`, `.av-stack`, `.mp-av` e `function Av` à mão | 6 |
 | Campo de texto | `Campo`, `Entrada`, `TextoLongo` em `app/service/ui/Campo.tsx`; `FField` usa por dentro | sim | campos só com placeholder (membro/Kids, Visitantes, CursoEditor) e estruturas próprias (R$, busca de pessoa, CEP) ainda soltos | 3 |
 | Seleção | `Selecao` em `app/service/ui/Selecao.tsx` (vazio, desativada, grupos); `SelectField` usa por dentro | sim | ok; CI barra `<select>` | 3, 4 |
 | Interruptor | `Interruptor` em `app/service/ui/Interruptor.tsx` (`.sw`, `.m6-tg`, `.m-toggle`; sempre `role="switch"` com nome falado) | sim | `.acesso-tog` é linha de permissão, usa `Opcao` | 6 |
@@ -60,9 +60,9 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Carregando | `Carregando` em `app/service/ui/Estados.tsx` (esqueleto: lista, linhas, cartões, indicadores) | sim | textos inline curtos ficam | 3 |
 | Erro | `ErroEstado` em `app/service/ui/Estados.tsx`; `friendlyWriteError` dá o texto | parcial | telas ainda mostram erro de carga só como texto | 3 |
 | Ajuda "?" | `HelpDot` (HelpSystem.tsx) | sim | modelo a seguir | n/a |
-| Tabela | `.tbl` | parcial | só painel | 3 |
+| Tabela | `Tabela` em `app/service/ui/Tabela.tsx` (colunas, linha que abre o detalhe, seleção com barra de ações em lote, linhas em sequência ao filtrar); referência: Pessoas | parcial | as outras `.tbl` (Aniversariantes, Secretaria, Financeiro, Formação, Kids, Visitantes, Reuniões) ainda à mão | 3 |
 | Indicador | `Kpi` (painel/comum.tsx) | parcial | `.kpi` duplicado com o admin | 2, 6 |
-| Etapas/linha do tempo | `.tl`, `.jrn-tl`, `.m6-step`, `.pipe`, `LinhaDoTempo` | parcial | 4 estruturas | 1, 6 |
+| Etapas/linha do tempo | `Etapas` em `app/service/ui/Etapas.tsx` (linha, app, faixa; feito, atual, futuro; data real em cada etapa feita) | sim | ok; CI barra `.tl`, `.jrn-tl`, `.m6-step`, `.imp-steps`. Ficam de fora por não serem etapas: `.pipe` (quadro de visitantes), `LinhaDoTempo` do mapa (série no tempo), `.crono-step` (roteiro editável do culto) | 1, 6 |
 | Menu de opções | `MenuAcoes` em `app/service/ui/Menu.tsx`; `MenuMais` usa por dentro | sim | menu do usuário (TopUserMenu) é peça própria | 4 |
 
 ## Ordem sugerida de troca
