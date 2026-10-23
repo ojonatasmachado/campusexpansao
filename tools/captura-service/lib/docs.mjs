@@ -16,7 +16,7 @@ export function gerarDocs() {
   }
   writeFileSync(join(SAIDA, "MAPA.md"), linhas.join("\n") + "\n");
   if (!existsSync(join(SAIDA, "MUDANCAS.md"))) {
-    writeFileSync(join(SAIDA, "MUDANCAS.md"), "# Mudanças feitas durante a captura\n\nEtapa 1: nenhuma. Só leitura e navegação (logins criam sessão; confirmações nativas são recusadas; formulários abertos nunca são salvos).\n");
+    writeFileSync(join(SAIDA, "MUDANCAS.md"), "# Mudanças feitas durante a captura\n\nO código do produto não é alterado. A galeria abre formulários sem salvar e descarta mudanças locais ao navegar. As jornadas autenticadas gravam suas ações nas fixtures (publicações, respostas, cadastros e preferências); consulte JORNADAS.md para cada passo. Confirmações nativas são recusadas, exceto a saída sem salvar e as confirmações explicitamente solicitadas pela jornada. No modo isolado, banco e sessões são descartados ao terminar.\n");
   }
   const falhas = png.filter((e) => e.truncada).length;
   const rel = ["# RELATORIO", "", "Imagens por pasta:", ...Object.entries(por).map(([k, v]) => `- ${k}: ${v}`), "", `Capturas truncadas por limite de altura: ${falhas}`, "", "Veja BLOQUEIOS.md para falhas e itens inexistentes."];

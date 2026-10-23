@@ -21,8 +21,10 @@ test('ignora botão com caixa geométrica, mas oculto por visibility', async () 
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
-    await page.setContent(`<button style="visibility:hidden">Editar</button><button onclick="document.querySelector('output').textContent='aberto'">Editar</button><output></output>`);
+    await page.setContent(`<button style="visibility:hidden">Editar</button><button onclick="document.querySelector('output').textContent='aberto'">Editar</button><button onclick="document.querySelector('output').textContent='início'">Início</button><output></output>`);
     await clicarTexto(page, 'button', 'Editar', { exato: true });
     assert.equal(await page.locator('output').innerText(), 'aberto');
+    await clicarTexto(page, 'button', /^Início$/i);
+    assert.equal(await page.locator('output').innerText(), 'início');
   } finally { await browser.close(); }
 });

@@ -21,7 +21,7 @@ async function acharIndice(loc, alvo, { exato = false, nth = 0 } = {}) {
       }
       return -1;
     },
-    { alvoN, re: alvo instanceof RegExp ? alvo.source : null, exato, nth },
+    { alvoN, re: alvo instanceof RegExp ? alvo.source.normalize("NFD").replace(/[̀-ͯ]/g, "") : null, exato, nth },
   );
 }
 
