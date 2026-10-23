@@ -2,10 +2,10 @@
 id: I9
 titulo: Biblioteca, bloco C (avatar, etapas, tabela com seleção)
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-10-22
+branch: historia/I9-biblioteca-avatar-etapas
 depende: [I4]
 tamanho: M
 ---
