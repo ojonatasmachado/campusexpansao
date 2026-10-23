@@ -23,6 +23,12 @@ test('mede DOM real e rejeita alvo, fonte, contraste, rolagem e densidade', asyn
     const slider = await auditar(page);
     assert.equal(slider.alvos_menores_que_24px, 1);
     assert.equal(slider.densidade.acoes, 1);
+    await page.setContent('<style>body{font:14px Arial;background:white;color:black}summary{padding:12px}button{height:8px;width:8px;font-size:8px}</style><details><summary>Opções</summary><button>Oculto</button></details>');
+    const recolhido = await auditar(page);
+    assert.equal(recolhido.densidade.acoes, 1);
+    assert.equal(recolhido.densidade.nSobre, 0);
+    assert.equal(recolhido.alvos_menores_que_24px, 0);
+    assert.equal(recolhido.textos_menores_que_12px, 0);
   } finally { await browser.close(); }
 });
 test('conteúdo recortado na área de rolagem não se sobrepõe à barra externa', async () => {
@@ -53,5 +59,9 @@ test('foco sozinho não valida botão sem ação', async () => {
     const tamanho = await efeito(page);
     await page.getByRole('slider').press('ArrowRight');
     assert.notEqual(await efeito(page), tamanho);
+    await page.setContent('<style>aside{position:fixed;left:-200px;width:180px;height:200px}</style><button onclick="document.querySelector(\'aside\').style.left=\'0\'">Menu</button><aside><button>Destino</button></aside>');
+    const fechado = await efeito(page);
+    await page.getByRole('button', { name: 'Menu', exact: true }).click();
+    assert.notEqual(await efeito(page), fechado);
   } finally { await browser.close(); }
 });

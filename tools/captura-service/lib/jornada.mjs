@@ -8,7 +8,7 @@ import { registrarBloqueio, tirarPrint, limparBloqueio, capturarFalha } from "./
 export const pad2 = (n) => String(n).padStart(2, "0");
 class Aborta extends Error {}
 export async function efeito(page) {
-  return page.evaluate(() => JSON.stringify({ url: location.href, texto: document.body.innerText, campos: [...document.querySelectorAll("input,select,textarea")].map((e) => [e.value, e.checked]), estados: [...document.querySelectorAll("[aria-expanded],[aria-selected],[aria-checked],[aria-pressed],[aria-valuenow]")].map((e) => [e.getAttribute("aria-expanded"),e.getAttribute("aria-selected"),e.getAttribute("aria-checked"),e.getAttribute("aria-pressed"),e.getAttribute("aria-valuenow")]), tema: document.documentElement.getAttribute("data-theme"), x: scrollX, y: scrollY }));
+  return page.evaluate(() => JSON.stringify({ url: location.href, texto: document.body.innerText, campos: [...document.querySelectorAll("input,select,textarea")].map((e) => [e.value, e.checked]), estados: [...document.querySelectorAll("[aria-expanded],[aria-selected],[aria-checked],[aria-pressed],[aria-valuenow]")].map((e) => [e.getAttribute("aria-expanded"),e.getAttribute("aria-selected"),e.getAttribute("aria-checked"),e.getAttribute("aria-pressed"),e.getAttribute("aria-valuenow")]), geometria: [...document.querySelectorAll("button,a[href],input,select,textarea,[role=button],[role=dialog],aside,summary")].map((e) => { const r = e.getBoundingClientRect(), c = getComputedStyle(e); return c.visibility === "hidden" || c.display === "none" || r.right <= 0 || r.bottom <= 0 || r.left >= innerWidth || r.top >= innerHeight ? null : [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)]; }), tema: document.documentElement.getAttribute("data-theme"), x: scrollX, y: scrollY }));
 }
 
 const ARQ_RES = () => join(SAIDA, ".jornadas.json");
@@ -26,7 +26,7 @@ function gravarResultado(chave, v) {
  * Executa uma jornada. `abrir` devolve {ctx, page}. `corpo(j)` chama j.passo(...).
  * j.passo(slug, toque, acao, opts): faz o toque (acao), espera a tela assentar, tira o print.
  *   toque: texto (ou lista) descrevendo o que a pessoa tocou. acao: async (page) => void, ou null para o estado inicial.
- *   opts.espera: textos que devem aparecer. opts.tentativas (padrão 2). opts.opcional: não aborta se falhar.
+ *   opts.espera: textos que devem aparecer. opts.tentativas (padrão 1). opts.opcional: não aborta se falhar.
  */
 export async function jornada({ codigo, nome, titulo, ap, conta, papel, abrir, corpo, subpasta = false, inicio = 1, chave = null, aceitarDialogos = false }) {
   const pasta = `jornadas/${codigo}-${nome}${subpasta ? "/" + ap : ""}`;

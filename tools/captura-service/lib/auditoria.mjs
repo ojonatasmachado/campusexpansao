@@ -7,6 +7,7 @@ const MEDIDOR = readFileSync(join(RAIZ, "scripts/medir-densidade.js"), "utf8");
 
 function medirNaPagina() {
   const vis = (el) => {
+    for (let p = el.parentElement; p; p = p.parentElement) if (p.matches("details:not([open])") && !p.querySelector(":scope > summary")?.contains(el)) return false;
     const r = el.getBoundingClientRect();
     if (r.width <= 0 || r.height <= 0) return false;
     const cs = getComputedStyle(el);

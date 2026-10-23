@@ -12,6 +12,7 @@ window.__medir = (minAlvo = 24) => {
     // Conteúdo recortado por um contêiner rolável não se sobrepõe à barra externa.
     for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
       const cs = getComputedStyle(p), r = p.getBoundingClientRect();
+      if (p.matches("details:not([open])") && !p.querySelector(":scope > summary")?.contains(el)) return null;
       if (cs.display === "none" || cs.visibility === "hidden" || +cs.opacity <= 0.05) return null;
       if (/(auto|scroll|hidden|clip)/.test(cs.overflowX)) { left = Math.max(left, r.left + p.clientLeft); right = Math.min(right, r.left + p.clientLeft + p.clientWidth); }
       if (/(auto|scroll|hidden|clip)/.test(cs.overflowY)) { top = Math.max(top, r.top + p.clientTop); bottom = Math.min(bottom, r.top + p.clientTop + p.clientHeight); }

@@ -93,7 +93,7 @@ async function loginPorUI1(aparelho, conta, { slugCookie = false } = {}) {
     await page.locator('input[type="email"]').first().fill(CONTAS[conta].email);
     await page.locator('input[type="password"]').first().fill(SENHA);
     await Promise.all([
-      page.waitForURL((u) => !u.pathname.endsWith("/service/login"), { timeout: 60000 }),
+      page.waitForURL((u) => !u.pathname.endsWith("/service/login"), { timeout: 120000 }),
       page.getByRole("button", { name: "Entrar", exact: true }).click(),
     ]);
     await page.waitForLoadState("networkidle", { timeout: 30000 }).catch(() => {});
