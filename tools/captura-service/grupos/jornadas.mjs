@@ -72,8 +72,8 @@ membro("M3", "recusar-e-pedir-troca", "Recusar escala, mudei de ideia e pedir tr
   await j.passo("inicio-com-escala-pendente", "abrir /service (Início do app)", (p) => abrirInicioApp(p), { espera: ["Escala para confirmar"] });
   const evento = await j.page.locator(".service-commitment").filter({ has: j.page.getByRole("button", { name: "Não posso", exact: true }) }).first().locator(".m6-ct").innerText();
   await j.passo("nao-posso-tocado-com-aviso", 'tocar "Não posso"', tocar("button", "Não posso", { exato: true }), { espera: ["Você avisou que não pode", "Desfazer"] });
+  await j.passo("agenda-depois-da-recusa", "abrir Agenda para rever a escala recusada", (p) => abaApp(p, "Agenda"), { espera: ["Minha agenda"] });
   await j.passo("mudei-de-ideia", 'tocar "Mudei de ideia"', tocar("button", "Mudei de ideia"), { espera: ["Presença confirmada"] });
-  await j.passo("agenda-depois-da-resposta", "abrir Agenda para ver a escala confirmada", (p) => abaApp(p, "Agenda"), { espera: ["Minha agenda"] });
   await j.passo("pedir-troca-tocado-conversa", 'tocar "Pedir troca"', (p) => p.locator(".service-commitment").filter({ hasText: evento }).getByRole("button", { name: "Pedir troca", exact: true }).click(), { espera: ["Pedir troca"] });
   await j.passo("troca-enviada", "pedir ajuda ao líder pela folha", async (p) => { await p.getByRole("button", { name: /^Pedir a / }).click(); }, { espera: ["Pedido de troca enviado"] });
   if (/Não achamos o líder/.test(await j.page.evaluate(() => document.body.innerText))) {
