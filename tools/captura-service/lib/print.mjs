@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { SAIDA, TEXTOS_CARREGANDO, norm } from "./config.mjs";
 import { auditar } from "./auditoria.mjs";
 import { avaliar } from "./leis.mjs";
+import { referenciaAtual } from "./fontes.mjs";
 
 const PASTAS = ["telas", "estados", "jornadas", "temas", "texto-grande", "textos", "auditoria", "falhas"];
 export function prepararSaida() {
@@ -202,7 +203,7 @@ export async function tirarPrint(page, meta) {
   writeFileSync(abs(`auditoria/${relBase}.json`), JSON.stringify(aud, null, 1));
   const entrada = {
     arquivo: rel, dobra, aparelho, conta: meta.conta ?? null, papel: meta.papel ?? null, tela: meta.tela, estado: meta.estado ?? null,
-    jornada: meta.jornada ?? null, passo: meta.passo ?? null, url, cliques: meta.cliques ?? [], componente: meta.componente ?? null,
+    jornada: meta.jornada ?? null, passo: meta.passo ?? null, url, cliques: meta.cliques ?? [], componente: referenciaAtual(meta.componente), componente_original: meta.componente ?? null,
     antes_0210: meta.antes ?? null, erros_console: (aud.erros_console ?? []).map((e) => e.texto), requisicoes_falhas: (aud.requisicoes_com_falha ?? []).length,
     violacoes_axe: aud.axe?.total_violacoes ?? null, rolagem_interna: info.rolagem_interna, truncada: info.truncada, horario: new Date().toISOString(),
   };
@@ -219,7 +220,7 @@ export function registrarDialogo(meta, dialogos) {
   mkdirSync(dirname(arq), { recursive: true });
   writeFileSync(arq, dialogos.map((d) => `[${d.tipo}] ${d.mensagem}`).join("\n") + "\n(recusada pela ferramenta: nunca confirma)\n");
   const m = lerManifest();
-  m[rel] = { arquivo: rel, tipo: "dialogo_nativo", aparelho: meta.aparelho, conta: meta.conta, papel: meta.papel, tela: meta.tela, estado: meta.estado, cliques: meta.cliques, componente: meta.componente, antes_0210: null, mensagem: dialogos.map((d) => d.mensagem), horario: new Date().toISOString() };
+  m[rel] = { arquivo: rel, tipo: "dialogo_nativo", aparelho: meta.aparelho, conta: meta.conta, papel: meta.papel, tela: meta.tela, estado: meta.estado, cliques: meta.cliques, componente: referenciaAtual(meta.componente), componente_original: meta.componente ?? null, antes_0210: null, mensagem: dialogos.map((d) => d.mensagem), horario: new Date().toISOString() };
   gravarManifest(m);
   console.log(`  ok (diálogo nativo) ${rel}`);
 }

@@ -48,7 +48,7 @@ export async function existe(page, seletor, alvo = null, opts = {}) {
 }
 
 export async function h1Atual(page) {
-  return (await page.locator("h1.ph-title").first().innerText({ timeout: 3000 }).catch(() => "")).trim().replace(/\s*\?$/, "").trim(); // tira o "?" do HelpDot
+  return (await page.locator("h1.ph-title:visible, main h1:visible, .main h1:visible").first().innerText({ timeout: 3000 }).catch(() => "")).trim().replace(/\s*\?$/, "").trim(); // tira o "?" do HelpDot
 }
 export async function esperarH1(page, re, timeout = 20000) {
   const fim = Date.now() + timeout;
@@ -85,18 +85,33 @@ export async function abrirMenuLateral(page) {
 /** Vai a uma tela do painel pelo menu (clicando). Devolve a lista de cliques. */
 export async function irPara(page, t) {
   const cliques = [];
+  const aberto = await page.locator("aside.sb").first().evaluate((e) => e.getBoundingClientRect().right > 20).catch(() => false);
   await abrirMenuLateral(page);
-  if (ehCelular(page)) cliques.push("botão de menu (topo)");
-  const sel = `button.sb-link[data-tour="${t.id}"]`;
-  if (!(await page.locator(sel).first().isVisible().catch(() => false))) {
-    // grupos recolhidos não renderizam itens: expande todos
+  if (ehCelular(page) && !aberto) cliques.push("botão de menu (topo)");
+  const alvo = page.locator(`button.sb-link[data-tour="${t.id}"]`).first();
+  if (!await alvo.isVisible()) {
     const grupos = page.locator('button.sb-group-btn[aria-expanded="false"]');
-    for (let i = (await grupos.count()) - 1; i >= 0; i--) await grupos.nth(i).click().catch(() => {});
-    await page.waitForTimeout(250);
+    for (let i = (await grupos.count()) - 1; i >= 0 && !await alvo.isVisible(); i--) {
+      const botao = grupos.nth(i);
+      const nome = (await botao.innerText()).trim();
+      await botao.click();
+      cliques.push(`abrir ${nome}`);
+    }
+    const fechados = alvo.locator('xpath=ancestor::details[not(@open)]');
+    while (await fechados.count()) {
+      const resumo = fechados.first().locator(':scope > summary');
+      const nome = (await resumo.innerText()).trim();
+      await resumo.click();
+      cliques.push(`abrir ${nome}`);
+    }
   }
-  await page.locator(sel).first().click({ timeout: 8000 });
+  await alvo.click({ timeout: 8000 });
   cliques.push(t.id === "config" ? "menu > Configurações" : `menu > ${t.grupo} > ${t.label}`);
-  await esperarH1(page, t.h1);
+  if (t.h1) await esperarH1(page, t.h1);
+  else {
+    await page.waitForFunction((id) => document.querySelector(`button.sb-link[data-tour="${id}"]`)?.classList.contains("on"), t.id);
+    await esperar(page);
+  }
   await page.waitForTimeout(400);
   return cliques;
 }

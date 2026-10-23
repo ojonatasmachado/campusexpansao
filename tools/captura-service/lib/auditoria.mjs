@@ -13,7 +13,7 @@ function medirNaPagina() {
     const cs = getComputedStyle(el);
     return cs.visibility !== "hidden" && cs.display !== "none" && parseFloat(cs.opacity) > 0.01;
   };
-  const escopo = [...document.querySelectorAll('[role="dialog"][aria-modal="true"],dialog[open]')].filter(vis).at(-1) ?? document.body;
+  const escopo = [...document.querySelectorAll('[role="dialog"][aria-modal="true"],[role="alertdialog"][aria-modal="true"],dialog[open]')].filter(vis).at(-1) ?? document.body;
   const cw = document.documentElement.clientWidth;
   const foraDaTelaX = (r) => r.right <= 0 || r.left >= cw;
   const desc = (el) => {

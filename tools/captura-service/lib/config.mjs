@@ -47,7 +47,7 @@ export const CONTEXTO_BASE = {
 export const STORAGE_PADRAO = { cex_tour_done: "1", cex_install_dismiss: "1", cex_setup_hide: "1" };
 
 // Textos de "carregando" que precisam sumir antes do print.
-export const TEXTOS_CARREGANDO = ["Aguarde...", "Carregando...", "Baixando a Bíblia...", "Conferindo o seu link...", "Carregando respostas...", "Salvando...", "Enviando..."];
+export const TEXTOS_CARREGANDO = ["Aguarde...", "Carregando...", "Baixando a Bíblia...", "Conferindo o seu link...", "Carregando respostas...", "Carregando o mapa...", "Salvando...", "Enviando..."];
 
 export const norm = (s) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 export const slugify = (s) => norm(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

@@ -14,7 +14,7 @@ const seg = (txt) => ({ d: `segmento "${txt}"`, f: (p) => clicarTexto(p, '.m6-se
 
 const MEMBRO = [
   ["inicio", "Início", `${MA}:2591`, ANTES_APP.inicio, [], ["Boa noite|Bom dia|Boa tarde"]],
-  ["agenda-minha-escala", "Agenda > Minha escala", `${MA}:2704`, ANTES_APP.agenda, [tab("Agenda")], ["Minha escala"]],
+  ["agenda-minha-escala", "Agenda > Minha agenda", `${MA}:2704`, ANTES_APP.agenda, [tab("Agenda")], ["Minha agenda"]],
   ["agenda-igreja", "Agenda > Igreja", `${MA}:2806`, ANTES_APP.agenda, [tab("Agenda"), seg("Igreja")], []],
   ["mensagens", "Mensagens", `${MA}:441`, ANTES_APP.mensagens, [tab("Mensagens")], ["Nova mensagem"]],
   ["mural", "Mensagens > Mural", `${MA}:2878`, ANTES_APP.mensagens, [tab("Mensagens"), lnk("Mural da igreja")], []],
@@ -23,7 +23,7 @@ const MEMBRO = [
   ["pedido-de-oracao", "Pedido de oração (folha)", `${MA}:2552`, null, [tab("Mensagens"), lnk("Nova mensagem"), lnk("Pedido de oração")], []],
   ["falar-com-lider", "Nova mensagem > Falar com um líder", `${MA}:3249`, null, [tab("Mensagens"), lnk("Nova mensagem"), lnk("Falar com um líder")], []],
   ["caminhada", "Caminhada", `${MA}:2986`, ANTES_APP.caminhada, [tab("Caminhada")], ["Etapas"]],
-  ["cursos", "Caminhada > Cursos", `${MA}:1277`, ANTES_APP.caminhada, [tab("Caminhada"), lnk("Continuar →")], []],
+  ["cursos", "Meus cursos", `${MA}:1277`, ANTES_APP.caminhada, [tab("Início"), lnk("Ver a próxima aula")], []],
   ["biblia-livros", "Bíblia > livros", `${MA}:665`, null, [tab("Caminhada"), lnk("Ler a Bíblia")], ["Gênesis"]],
   ["biblia-capitulos", "Bíblia > capítulos", `${MA}:665`, null, [tab("Caminhada"), lnk("Ler a Bíblia"), sel("button.bib-book")], ["Livros"]],
   ["biblia-leitor", "Bíblia > leitor", `${MA}:665`, null, [tab("Caminhada"), lnk("Ler a Bíblia"), sel("button.bib-book"), sel("button.bib-chapter")], ["No princípio"]],
@@ -40,7 +40,7 @@ const MEMBRO2 = [
   ["inicio", "Início", `${MA}:2591`, ANTES_APP.inicio, [], []],
   ["agenda", "Agenda", `${MA}:2704`, ANTES_APP.agenda, [tab("Agenda")], []],
   ["caminhada", "Caminhada", `${MA}:2986`, ANTES_APP.caminhada, [tab("Caminhada")], []],
-  ["times-que-procuram", "Início > Conhecer os times (folha)", `${MA}:2976`, null, [lnk("Conhecer os times")], []],
+  ["times-que-procuram", "Início > Conhecer os times (folha)", `${MA}:2976`, null, [{ d: "conferir a entrada de times após a jornada", f: async (p) => { const mais = p.getByRole("button", { name: /^Ver mais/ }); if (await mais.isVisible()) await mais.click(); const conhecer = p.getByRole("button", { name: "Conhecer os times", exact: true }); if (await conhecer.isVisible()) await conhecer.click(); } }], []],
 ];
 
 async function lista(ap, conta, papel, itens, grupo, start = 1, { gestao = false, filtro = null } = {}) {
@@ -50,7 +50,7 @@ async function lista(ap, conta, papel, itens, grupo, start = 1, { gestao = false
     for (const [nome0, tela, comp, ant, passos, espera] of itens) {
       const nome = `${ap}-${pad(n++)}-${grupo}-${nome0}`;
       if (filtro && !filtro.split(",").some((f) => nome.includes(f))) continue;
-      await tentar(`telas/${nome}.png`, { tela, passo: passos.map((s) => s.d).join(" > ") || "abrir /service" }, async () => {
+      await tentar(`telas/${nome}.png`, { page, tela, passo: passos.map((s) => s.d).join(" > ") || "abrir /service" }, async () => {
         await page.goto("/service", { waitUntil: "domcontentloaded" });
         await page.locator("nav.m-tab").first().waitFor({ timeout: 20000 });
         await esperar(page);

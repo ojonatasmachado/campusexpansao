@@ -1,5 +1,5 @@
 // Peças comuns das jornadas (painel de gestão e app do membro).
-import { clicarTexto, abrirMenuLateral, esperarH1, abaApp } from "./nav.mjs";
+import { clicarTexto, abrirMenuLateral, esperarH1, abaApp, irPara } from "./nav.mjs";
 import { esperar } from "./print.mjs";
 
 export const MESES_T = (t) => t;
@@ -8,15 +8,7 @@ export const BTN = "button, a, [role=button], .m6-row, .m6-btn";
 
 /** Clica no item do menu do painel (a gaveta já deve estar aberta no celular). */
 export async function clicarItemMenu(page, t) {
-  const sel = `button.sb-link[data-tour="${t.id}"]`;
-  if (!(await page.locator(sel).first().isVisible().catch(() => false))) {
-    const grupos = page.locator('button.sb-group-btn[aria-expanded="false"]');
-    for (let i = (await grupos.count()) - 1; i >= 0; i--) await grupos.nth(i).click().catch(() => {});
-    await page.waitForTimeout(250);
-  }
-  await page.locator(sel).first().click({ timeout: 8000 });
-  await esperarH1(page, t.h1);
-  await page.waitForTimeout(400);
+  return irPara(page, t);
 }
 
 /** Painel: do estado atual até uma tela do menu. Celular = 2 toques (menu, item); desktop = 1. */

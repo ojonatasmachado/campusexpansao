@@ -65,3 +65,15 @@ test('foco sozinho não valida botão sem ação', async () => {
     assert.notEqual(await efeito(page), fechado);
   } finally { await browser.close(); }
 });
+test('mede a confirmação de risco sem contar os controles atrás do alertdialog', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await page.setContent('<style>:root{--olive:black}body{font:14px Arial;background:white;color:black}button{width:90px;height:44px}.fundo button{width:8px;height:8px;font-size:8px}</style><div class="fundo">' + '<button>X</button>'.repeat(27) + '</div><div role="alertdialog" aria-modal="true" aria-label="Remover registro"><p>Remover este registro?</p><button>Cancelar</button><button>Remover</button></div>');
+    const a = await auditar(page);
+    assert.equal(a.densidade.acoes, 2);
+    assert.equal(a.densidade.nSobre, 0);
+    assert.equal(a.alvos_menores_que_24px, 0);
+    assert.equal(a.textos_menores_que_12px, 0);
+  } finally { await browser.close(); }
+});

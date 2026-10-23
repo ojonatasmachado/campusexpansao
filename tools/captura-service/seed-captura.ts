@@ -429,6 +429,20 @@ async function seed(org: string, church: string) {
     await up("baptism_candidates", [14, 15].map((i, n) => ({ id: uid("baptism_candidates", n + 1), class_id: B, ...base, member_id: M[i], decision_id: null })));
   });
 
+  // A outra igreja não tem equipes nem conteúdo. Só a conta gestora recebe
+  // sua ficha de retorno; sem isso, no celular ela pararia no primeiro acesso.
+  const outroCliente = await signIn("outra@teste.local");
+  const { data: outroAuth } = await outroCliente.auth.getUser();
+  const { org: outroOrg } = await churchOf("outra@teste.local");
+  const { data: outroPerson, error: outroErro } = await svc.from("people").select("id").eq("organization_id", outroOrg).eq("user_id", outroAuth.user!.id).single();
+  if (outroErro || !outroPerson) throw new Error("Conta gestora da outra igreja não encontrada.");
+  const { error: pessoaErro } = await svc.from("people").update({ name: "Otávio Outra", email: "outra@teste.local", phone: "(11) 90000-0200" }).eq("id", outroPerson.id);
+  if (pessoaErro) throw new Error("Não foi possível preparar o contato da outra igreja.");
+  const { error: fichaErro } = await outroCliente.schema("service").rpc("ensure_my_member");
+  if (fichaErro) throw new Error("Não foi possível preparar a ficha da outra igreja.");
+  const { data: outroMembro, error: contatoErro } = await svc.from("members").update({ ...ficha, ...aceite, name: "Otávio Outra", email: "outra@teste.local", phone: "(11) 90000-0200" }).eq("organization_id", outroOrg).eq("volunteer_id", outroPerson.id).select("id");
+  if (contatoErro || outroMembro?.length !== 1) throw new Error("Ficha recorrente da outra igreja ausente.");
+
   state.seededAt = `${TODAY} (rodado em ${new Date().toISOString()})`;
   saveState(state);
   console.log(`Seed de captura aplicado na Igreja Teste Local (org ${org}). Contas: master/lider/membro/membro2/novo@teste.local, senha ${TEST_PASSWORD}.`);

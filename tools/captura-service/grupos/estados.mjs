@@ -11,16 +11,16 @@ const B = (txt, o = {}) => ({ d: `clicar "${txt}"`, f: (p) => clicarTexto(p, "bu
 const BX = (txt) => B(txt, { exato: true });
 const S = (sel, nth = 0) => ({ d: `clicar ${sel}${nth ? `[${nth}]` : ""}`, f: async (p) => { await p.locator(sel).nth(nth).scrollIntoViewIfNeeded().catch(() => {}); await p.locator(sel).nth(nth).click({ timeout: 8000 }); await p.waitForTimeout(400); } });
 const IN = (sel, txt, o = {}) => ({ d: `clicar "${txt}" em ${sel}`, f: (p) => clicarTexto(p, sel, txt, o) });
-const DLG = (step) => ({ ...step, dialogo: true });
+const MAIS = (item, rotulo = "Mais") => [IN('button[aria-haspopup="menu"]', rotulo), B(item)];
 
 const T = (id, estados) => ({ t: tela(id), estados });
 const ESTADOS = [
   T("membros", [["seg-membros", [IN("div.seg button", "Membros")]], ["seg-voluntarios", [IN("div.seg button", "Voluntários")]], ["seg-lideres", [IN("div.seg button", "Líderes")]], ["seg-novos", [IN("div.seg button", "Novos")]], ["criar", [B("+ Novo membro")]], ["detalhe", [S("button.tr.click")]]]),
-  T("visitantes", [["seg-lista", [IN("div.seg button", "Lista")]], ["seg-painel", [IN("div.seg button", "Painel")]], ["seg-regras", [IN("div.seg button", "Regras")]], ["regras-ajustar", [IN("div.seg button", "Regras"), BX("Ajustar")]], ["criar", [B("+ Visitante")]], ["detalhe", [S("button.vcard-open")]]]),
+  T("visitantes", [["seg-lista", [IN("div.seg button", "Lista")]], ["seg-painel", MAIS("Indicadores de visitantes", "Mais opções")], ["seg-regras", MAIS("Regras de acolhimento", "Mais opções")], ["regras-ajustar", [...MAIS("Regras de acolhimento", "Mais opções"), BX("Ajustar")]], ["criar", [BX("Registrar visitante")]], ["detalhe", [S("button.vcard-open")]]]),
   T("criancas", [["turma-1", [S("div.seg button", 1)]], ["turma-2", [S("div.seg button", 2)]], ["criar", [B("+ Nova criança")]], ["detalhe", [S("button.tr.click")]], ["evento-criar", [B("+ Criar evento")]]]),
-  T("grupos", [["criar", [B("+ Novo grupo")]], ["remover-confirmacao", [DLG(BX("Remover"))]]]),
+  T("grupos", [["criar", [B("+ Novo grupo")]], ["remover-confirmacao", [BX("Remover")]]]),
   T("times", [["criar", [B("+ Novo time")]], ["detalhe", [S("button.team-card")]], ["editar-funcoes", [BX("Editar")]]]),
-  T("escalas", [["outro-culto", [S("button.esc-event", 1)]], ["escalar-vaga", [S("button.esc-vaga")]], ["pessoa-escalada", [S("button.esc-person")]], ["delegar", [B("Delegar")]], ["qr-checkin", [B("QR Check-in")]], ["publicar-e-avisar", [B("Publicar & avisar")]], ["como-gerar", [S("details.esc-gerar summary")]], ["editar-funcoes", [S("button.esc-col-edit")]]]),
+  T("escalas", [["outro-culto", [S("button.esc-event", 1)]], ["escalar-vaga", [S("button.esc-vaga")]], ["pessoa-escalada", [S("button.esc-person")]], ["delegar", MAIS("Delegar a gestão")], ["qr-checkin", MAIS("QR do check-in")], ["publicar-e-avisar", [B("Publicar e avisar")]], ["como-gerar", [S("details.esc-gerar summary")]], ["editar-funcoes", [S("button.esc-col-edit")]]]),
   T("ensaios", [["criar", [B("+ Novo ensaio")]], ["detalhe", [S("button.ens-card")]]]),
   T("reunioes", [["criar", [B("+ Marcar reunião")]], ["detalhe", [S("button.reu-card")]]]),
   T("cultos", [["seg-mes", [IN("div.seg button", "Mês")]], ["criar", [B("+ Novo culto")]], ["detalhe", [S("button.panel.click")]], ["checkin-qr", [B("Check-in QR")]], ["kids-menu", [BX("Kids")]], ["setup-celebracao", [B("Arte")]]]),
@@ -62,7 +62,7 @@ export async function rodar({ aparelhos, args = {} }) {
         for (const [estado, passos] of estados) {
           const nome = `${ap}-${pad(t.n)}-estados-${t.nome}--${estado}`;
           if (filtro && !filtro.split(",").some((f) => nome.includes(f))) continue;
-          await tentar(`estados/${nome}.png`, { tela: `${t.label} / ${estado}`, passo: passos.map((s) => s.d).join(" > ") }, async () => {
+          await tentar(`estados/${nome}.png`, { page, tela: `${t.label} / ${estado}`, passo: passos.map((s) => s.d).join(" > ") }, async () => {
             await abrirPainel(page, /./);
             const c0 = await irPara(page, t);
             const { cliques, dialogos } = await rodarPassos(page, passos);
@@ -79,7 +79,7 @@ export async function rodar({ aparelhos, args = {} }) {
         if (id === "perm" && ap === "desktop") continue; // matriz só no desktop, abas por papel só no celular
         const nome = `${ap}-${pad(tab.n)}-estados-${tab.nome}--${estado}`;
         if (filtro && !filtro.split(",").some((f) => nome.includes(f))) continue;
-        await tentar(`estados/${nome}.png`, { tela: `${tab.label} / ${estado}`, passo: estado }, async () => {
+        await tentar(`estados/${nome}.png`, { page, tela: `${tab.label} / ${estado}`, passo: estado }, async () => {
           await abrirPainel(page, /./);
           const c0 = await irPara(page, tela("config"));
           const c1 = await abrirConfigAba(page, tab);
@@ -94,8 +94,8 @@ export async function rodar({ aparelhos, args = {} }) {
     const o = await contextoGestao(ap, "outra");
     try {
       await abrirPainel(o.page, /./);
-      for (const t of TELAS) await telaBase(o.page, { ap, conta: "outra@teste.local", papel: "master da Outra Igreja Local (sem dados)", t, pasta: "estados", grupo: "estados", sufixo: "--vazio", estado: "vazio" });
-      await configCompleta(o.page, { ap, conta: "outra@teste.local", papel: "master da Outra Igreja Local (sem dados)", pasta: "estados", sufixo: "--vazio", estado: "vazio" });
+      for (const t of TELAS) await telaBase(o.page, { ap, conta: "outra@teste.local", papel: "master da Outra Igreja Local (só a conta gestora)", t, pasta: "estados", grupo: "estados", sufixo: t.id === "membros" ? "--so-conta-gestora" : "--vazio", estado: t.id === "membros" ? "só a conta gestora" : "vazio" });
+      await configCompleta(o.page, { ap, conta: "outra@teste.local", papel: "master da Outra Igreja Local (só a conta gestora)", pasta: "estados", sufixo: "--vazio", estado: "vazio" });
     } finally { await o.ctx.close(); }
   }
 }
