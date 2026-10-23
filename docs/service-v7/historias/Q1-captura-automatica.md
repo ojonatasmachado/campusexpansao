@@ -33,3 +33,5 @@ EM ANDAMENTO, Codex, 2026-10-22. Ferramenta recuperada seletivamente do stash (s
 
 Tipo original: infra + codigo.
 O main atual já contém scripts/medir-densidade.js e scripts/seed-local-volume.ts. Recuperação feita de stash@{1}^3, preservando o stash original. Reset e restauração destrutiva removidos; navegação por cookie forçado removida.
+
+2026-10-22, continuação: modo isolado implementado com o helper já integrado pela Q2. Usa portas e sessões próprias, migrações e fixtures, guarda falhas com screenshot/texto/auditoria e descarta seu ambiente. Os 19 testes, typecheck, lint, leis estáticas, contraste e 13 contratos passaram; CI da revisão e397d61 verde. Captura autenticada ampla ainda em conferência. Primeira tentativa de repetição interrompida após o login exceder o prazo antigo de 25s; login direto no banco respondeu 200. Prazo e espera de hidratação ajustados, sem alteração de tela. Não marcar esta história feita com base apenas no CI dos critérios.
