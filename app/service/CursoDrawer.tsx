@@ -15,6 +15,7 @@ import { Botao, BotaoIcone } from "./ui/Botao";
 import { Janela, Gaveta } from "./ui/Janela";
 import { Selo } from "./ui/Selo";
 import { Vazio } from "./ui/Estados";
+import { Avatar } from "./ui/Avatar";
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
 type CourseView = {
@@ -73,15 +74,7 @@ const LESSON_KIND_LABEL: Record<string, string> = { video: "Vídeo", texto: "Tex
 const MODALIDADE_LABEL: Record<string, string> = { presencial: "Presencial", remoto: "Remoto (app)", hibrido: "Híbrido", ao_vivo: "Ao vivo online" };
 const MAT_TIPO_LABEL: Record<string, string> = { video: "Vídeo", link: "Link / PDF", texto: "Texto" };
 
-function ini(name: string) {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-}
 
-function Av({ name, size = "sm" }: { name: string; size?: "sm" | "md" }) {
-  return <div className={`av av-${size}`}>{ini(name)}</div>;
-}
 
 /* ─── MatricularModal ─────────────────────────────────────────────────── */
 
@@ -120,7 +113,7 @@ function MatricularModal({
               style={{ cursor: "pointer" }}
               onClick={() => { onAdd(m.id); onClose(); }}
             >
-              <Av name={m.name} size="sm" />
+              <Avatar nome={m.name} tamanho="sm" />
               <div className="flag-main">
                 <div className="flag-nome">{m.name}</div>
               </div>
@@ -281,7 +274,7 @@ export default function CursoDrawer({
               const pct = totalAulas ? Math.round((en.done_count / totalAulas) * 100) : 0;
               return (
                 <div className="cand" key={en.id} style={{ cursor: "default" }}>
-                  <Av name={m.name} size="sm" />
+                  <Avatar nome={m.name} tamanho="sm" />
                   <div className="cand-main">
                     <div className="cand-name">{m.name}</div>
                     <div className="bar" style={{ marginTop: 6 }}>

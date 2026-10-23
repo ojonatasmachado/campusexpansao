@@ -36,3 +36,6 @@ Galeria viva com todas as peças e estados: `/service/demo/biblioteca` (aceita `
 | `Abas.tsx` | `Abas` (sublinhado da igreja desliza; contador; teclado de abas), `PainelAba` |
 | `indicador.ts` | `useIndicador()`: pílula do Segmentado e sublinhado das Abas |
 | `BarraSalvar.tsx` | `BarraSalvar` (sobe quando há alteração, pergunta antes de sair da página) |
+| `Avatar.tsx` | `Avatar` (foto ou iniciais sobre tom quente fixo; xs a xl; `eu`, `lider`, `presente`), `AvatarGrupo` (empilhado com +N, entra em cascata), `tomDoNome()` |
+| `Etapas.tsx` | `Etapas` (linha, app ou faixa; feito, atual com halo, futuro; data real; `aoEscolher` para voltar num assistente) |
+| `Tabela.tsx` | `Tabela` (colunas, `aoAbrir`, seleção com barra em lote via `lote`, linhas em sequência com `chaveAnimacao`, Esc limpa) |

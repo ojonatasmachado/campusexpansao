@@ -25,6 +25,7 @@ import { LiberarMapa } from "./LiberarMapa";
 import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Interruptor } from "../../ui/Interruptor";
 import { Acao } from "../../ui/Acao";
+import { Avatar } from "../../ui/Avatar";
 /* Painel › Pessoas › Mapa da igreja (PLANO.md, telas 1 e 3 do design).
    Visões prontas em vez de 12 interruptores; camadas e filtros ficam em
    "Personalizar". Ferramentas abrem os modos sobre o mesmo mapa. */
@@ -41,7 +42,6 @@ const PRESETS: Record<Visao, Camadas> = {
   regiao: { pessoas: false, igrejas: true, celulas: true, areas: true, raios: false, descobertos: false, calor: false, regioes: false, pontos: true },
 };
 const DESCOBERTO_KM = 2;
-const iniciais = (n: string) => n.split(" ").filter(Boolean).slice(0, 2).map((x) => x[0]).join("").toUpperCase();
 const vazio = (): GeoJSON.FeatureCollection => ({ type: "FeatureCollection", features: [] });
 
 export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel, podeLiberar, onAbrirMembro, onMensagem }: {
@@ -446,7 +446,7 @@ function PainelSelecao({ sel, cidade, nivel, pessoas, acesso, perto, onFechar, o
     return (
       <>
         <div className="mp-cab" style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <span className="mp-av" style={{ width: 48, height: 48, borderRadius: 24, fontSize: "var(--fs-pn-16)" }}>{iniciais(p.nome ?? "")}</span>
+          <Avatar nome={p.nome ?? ""} tamanho="md" />
           <div style={{ flex: 1, minWidth: 0 }}><h2 className="mp-titulo" style={{ fontSize: "var(--fs-pn-16)" }}>{p.nome}</h2><span className="mp-fraco">{SITUACAO[p.situacao] ?? p.situacao}{p.desde ? ` desde ${p.desde}` : ""}</span></div>
           {fechar}
         </div>
@@ -529,7 +529,7 @@ function PainelSelecao({ sel, cidade, nivel, pessoas, acesso, perto, onFechar, o
         {daqui.length > 0 && (
           <div>
             <div className="mp-pergunta" style={{ marginBottom: 6 }}>Pessoas com nome no mapa · <span className="mp-num">{daqui.length}</span></div>
-            {daqui.slice(0, 6).map((p) => <div key={p.id} className="mp-lista-pessoa"><span className="mp-av">{iniciais(p.nome ?? "")}</span>{p.nome}<span className="mp-fraco" style={{ marginLeft: "auto" }}>{SITUACAO[p.situacao]}</span></div>)}
+            {daqui.slice(0, 6).map((p) => <div key={p.id} className="mp-lista-pessoa"><Avatar nome={p.nome ?? ""} tamanho="xs" />{p.nome}<span className="mp-fraco" style={{ marginLeft: "auto" }}>{SITUACAO[p.situacao]}</span></div>)}
           </div>
         )}
         <p className="mp-fraco">Fonte: IBGE · Censo Demográfico <span className="mp-num">2022</span></p>

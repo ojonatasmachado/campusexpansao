@@ -7,6 +7,7 @@ import { createContext, useContext } from "react";
 import { HelpDot } from "../HelpSystem";
 import { iniciais } from "../lib/iniciais";
 
+import { Avatar } from "../ui/Avatar";
 import { Vazio } from "../ui/Estados";
 import { MenuAcoes } from "../ui/Menu";
 import { Selo, tomDaClasse } from "../ui/Selo";
@@ -15,12 +16,9 @@ export const RouteGroupContext = createContext<string | null>(null);
 
 export const initials = (name: string) => iniciais(name);
 
-export function Av({ name, size = "sm", photoUrl }: { name: string; size?: "xs" | "sm" | "md" | "lg"; photoUrl?: string | null }) {
-  return (
-    <div className={`av av-${size}${photoUrl ? " has-foto" : ""}`} style={photoUrl ? { backgroundImage: `url(${photoUrl})` } : undefined}>
-      {initials(name)}
-    </div>
-  );
+/* avatar do painel: a peça é Avatar (app/service/ui/Avatar.tsx) */
+export function Av({ name, size = "sm", photoUrl }: { name: string; size?: "xs" | "sm" | "md" | "lg"; photoUrl?: string | null }) { /* lei17-ok: nome antigo, só repassa para Avatar */
+  return <Avatar nome={name} tamanho={size} foto={photoUrl} />;
 }
 
 const CHIP_LABEL: Record<string, string> = { ativo: "Ativo", pausa: "Em pausa", ferias: "Férias", membro: "Membro", ok: "Confirmado", wait: "Aguardando", no: "Não pode" };

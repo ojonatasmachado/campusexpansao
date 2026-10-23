@@ -62,7 +62,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **Q3** Matriz autenticada de papéis e isolamento entre igrejas
 
 ### 4. Código independente (dá para tocar em paralelo, se os trilhos não esbarrarem)
-- **I9** Biblioteca: avatar, etapas e tabela · **I10** Biblioteca: indicadores e gráficos
+- **I10** Biblioteca: indicadores e gráficos
 - **I2** Ações do Início que não navegam · **I5** Ajuda com menos repetição
 - **M2** Setas nos botões do membro · **M3** Retorno e recarga · **M5** Foco no Mural · **I7** Quadros no toque
 - **Q10** Mover FieldDef e FField · **Q8** Endereço por tela do painel · **Q7** Carga do painel · **O3** Arquivos grandes

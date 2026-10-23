@@ -17,6 +17,7 @@ import { Cartao } from "../ui/Cartao";
 import { Linha, Lista } from "../ui/Linha";
 import { Campo, Entrada } from "../ui/Campo";
 import { SeletorData } from "../ui/Data";
+import { Etapas, type Etapa } from "../ui/Etapas";
 /* "Quero servir" (service.request_to_serve): times em que a pessoa ainda não
    está. A igreja define o que precisa antes (requisitos de "servir" e do
    time); com algo faltando, o app mostra o que falta. O pedido vai pra
@@ -123,6 +124,7 @@ export function MinhaHistoria({ fatos }: { fatos: FatoView[] }) {
   );
 }
 export const STW = { feito: "Concluída", andamento: "Em andamento", afazer: "A fazer" } as const;
+const ESTADO_ETAPA = { feito: "feito", andamento: "atual", afazer: "futuro" } as const;
 
 export function SheetPedidoEtapa({ step, nome, member, onRequestJourneyStep }: { step: JourneyStep; nome: string; member: M | null; onRequestJourneyStep?: (memberId: string, step: JourneyStep, eventDate: string, note: string) => void }) {
   const { comTermos: ct } = useTermos();
@@ -179,18 +181,11 @@ export function CaminhadaV6({ steps, courses, purpose, contribuir }: { steps: St
         {tudoFeito && !verEtapas ? (
           <Lista><M6Row ic="ok" t={plural(steps.length, "etapa concluída", "etapas concluídas")} s="Ver as datas de cada uma" onClick={() => setVerEtapas(true)} /></Lista>
         ) : (
-        <div className="m6-steps">
-          {steps.map((s, index) => (
-            <div className="m6-step" key={s.id}>
-              <span className={`m6-dot ${s.st}`} aria-hidden="true">{s.st === "feito" ? <Icon name="ok" size={18} /> : s.st === "andamento" ? <Icon name="pendente" size={18} /> : index + 1}</span>
-              <div className="m6-rb">
-                <div className="m6-rt">{s.nome}</div>
-                <div className="m6-stw"><b>{STW[s.st]}</b>{s.info ? ` · ${s.info}` : ""}</div>
-                {s.acao && s.run && <div className="m6-mt"><Botao tamanho="toque" compacto variante={s.st === "andamento" ? "principal" : "secundario"} onClick={s.run}>{s.acao} →</Botao></div>}
-              </div>
-            </div>
-          ))}
-        </div>
+        <Etapas estilo="app" rotulo="Etapas" itens={steps.map((s): Etapa => ({
+          id: s.id, titulo: s.nome, estado: ESTADO_ETAPA[s.st],
+          quando: <><b>{STW[s.st]}</b>{s.info ? ` · ${s.info}` : ""}</>,
+          acao: s.acao && s.run ? <Botao tamanho="toque" compacto variante={s.st === "andamento" ? "principal" : "secundario"} onClick={s.run}>{s.acao} →</Botao> : undefined,
+        }))} />
         )}
       </div>
       </>}

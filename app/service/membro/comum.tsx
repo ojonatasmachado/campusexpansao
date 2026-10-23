@@ -14,6 +14,7 @@ import { requirementLabel } from "../lib/requirements";
 import type { JourneyActions, MemberContactInput, MemberUi, Ministry, MissingRequirement } from "./tipos";
 
 import { Acao } from "../ui/Acao";
+import { Avatar } from "../ui/Avatar";
 import { Selo, tomDaClasse } from "../ui/Selo";
 import { linhaClasse } from "../ui/Linha";
 /* o servidor troca vazio por "Telefone não informado" / "E-mail não
@@ -54,12 +55,9 @@ export const mensagemAcao = (r: string) => RESULTADO_ACAO[r] ?? "Não foi possí
 
 export const ini = (name: string) => iniciais(name);
 
-export function Av({ name, size = "sm", photoUrl }: { name: string; size?: "xs" | "sm" | "md" | "lg" | "xl"; photoUrl?: string | null }) {
-  return (
-    <div className={`av av-${size}${photoUrl ? " has-foto" : ""}`} style={photoUrl ? { backgroundImage: `url(${photoUrl})` } : undefined}>
-      {ini(name)}
-    </div>
-  );
+/* avatar do app: a peça é Avatar (app/service/ui/Avatar.tsx) */
+export function Av({ name, size = "sm", photoUrl }: { name: string; size?: "xs" | "sm" | "md" | "lg" | "xl"; photoUrl?: string | null }) { /* lei17-ok: nome antigo, só repassa para Avatar */
+  return <Avatar nome={name} tamanho={size} foto={photoUrl} />;
 }
 export const MemberUiContext = createContext<MemberUi>({ go: () => {}, sheet: () => {}, toast: () => {}, respostas: {}, responderEscala: () => {}, tamanhoTexto: () => {}, abrirEvento: () => {}, escalaConfirmada: () => {} });
 
