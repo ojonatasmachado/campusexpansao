@@ -10,6 +10,7 @@ import type { PessoaLider } from "./contexto";
 
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
+import { Avatar } from "../../ui/Avatar";
 import { Campo, Marcar } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
 /* Quem vê o mapa (tela 4 do design). O mapa só aparece no menu de quem o
@@ -18,7 +19,6 @@ import { Selecao } from "../../ui/Selecao";
 
 type Liberacao = { person_id: string; escopo: "cidade" | "area"; area_id: string | null; detalhe: "pessoas" | "numeros"; pode_mesa: boolean; pode_csv: boolean; pode_editar: boolean };
 const NOVA = (person_id: string): Liberacao => ({ person_id, escopo: "cidade", area_id: null, detalhe: "pessoas", pode_mesa: true, pode_csv: false, pode_editar: false });
-const iniciais = (n: string) => n.split(" ").filter(Boolean).slice(0, 2).map((x) => x[0]).join("").toUpperCase();
 
 export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; people: PessoaLider[]; areas: Area[]; onVoltar: () => void }) {
   const db = () => createServiceBrowserClient().schema("service");
@@ -74,7 +74,7 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
           {lista.length === 0 && <p className="mp-fraco">Ninguém além da liderança principal ainda.</p>}
           {lista.map((l) => (
             <Acao key={l.person_id} className="mp-visao" aria-pressed={edit?.person_id === l.person_id} style={{ display: "flex", gap: 12, alignItems: "center" }} onClick={() => setEdit(l)}>
-              <span className="mp-av" style={{ width: 36, height: 36, borderRadius: 18 }}>{iniciais(nome(l.person_id))}</span>
+              <Avatar nome={nome(l.person_id)} tamanho="sm" />
               <span style={{ marginTop: 0 }}><b>{nome(l.person_id)}</b><span>{resumo(l)}</span></span>
             </Acao>
           ))}
@@ -90,7 +90,7 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
         {edit && (
           <section className="mesa-caixa mesa-principal" style={{ padding: 24, gap: 20 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <span className="mp-av" style={{ width: 48, height: 48, borderRadius: 24, fontSize: "var(--fs-pn-16)" }}>{iniciais(nome(edit.person_id))}</span>
+              <Avatar nome={nome(edit.person_id)} tamanho="md" />
               <h2 className="mp-titulo" style={{ flex: 1 }}>{nome(edit.person_id)}</h2>
             </div>
             <fieldset className="mesa-fs">

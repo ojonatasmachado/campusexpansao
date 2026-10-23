@@ -80,6 +80,24 @@ const REGRAS: Regra[] = [
     permitido: "app/service/ui/",
     re: /role=["'](?:menu|tablist)["']/g,
   },
+  {
+    peca: "Avatar",
+    usar: "Avatar ou AvatarGrupo de app/service/ui/Avatar.tsx (peça própria de verdade: marque a linha com /* lei17-ok: motivo */)",
+    permitido: "app/service/ui/",
+    re: /className=\{?["'`](?:av|av-stack|av-more|mp-av)(?=[\s"'`$])|function (?:Av|Avatar)\(/g,
+  },
+  {
+    peca: "Etapas ou linha do tempo",
+    usar: "Etapas de app/service/ui/Etapas.tsx (estilos linha, app e faixa)",
+    permitido: "app/service/ui/",
+    re: /className=\{?["'`](?:tl|tl-item|tl-dot|jrn-tl|m6-steps?|imp-steps?)(?=[\s"'`$])/g,
+  },
+  {
+    peca: "Tabela com seleção",
+    usar: "Tabela de app/service/ui/Tabela.tsx (prop lote para a barra de ações em lote)",
+    permitido: "app/service/ui/",
+    re: /["'`]tabela-(?:lote|marca|abrir|linha)/g,
+  },
 ];
 
 const PASTAS = ["app/service", "app/[slug]"].map((p) => join(RAIZ, p));

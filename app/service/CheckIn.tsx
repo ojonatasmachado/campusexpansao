@@ -15,6 +15,7 @@ import { Acao } from "./ui/Acao";
 import { Abas } from "./ui/Abas";
 import { Janela } from "./ui/Janela";
 import { Vazio } from "./ui/Estados";
+import { Avatar } from "./ui/Avatar";
 import { confirmar } from "./ui/confirmar";
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
@@ -89,11 +90,6 @@ function timeCurto(iso: string) {
   }
 }
 
-function ini(name: string) {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-}
 
 /* nome legível da posição (ex: "Louvor · Vocal") em vez do position_id bruto. */
 function positionLabel(ministries: MinistryLite[], positionId: string): string | null {
@@ -104,9 +100,6 @@ function positionLabel(ministries: MinistryLite[], positionId: string): string |
   return null;
 }
 
-function Av({ name, size = "sm" }: { name: string; size?: "sm" | "md" }) {
-  return <div className={`av av-${size}`}>{ini(name)}</div>;
-}
 
 // ── CheckinLanding: tela de resultado (usada aqui e na rota pública /service/checkin) ─
 
@@ -188,7 +181,7 @@ export function CheckinLanding({
             </div>
             {person && (
               <div className="ck-land-pessoa">
-                <Av name={person.name} size="md" />
+                <Avatar nome={person.name} tamanho="md" />
                 <span>{person.name}</span>
               </div>
             )}
@@ -274,7 +267,7 @@ function ManualCheckinModal({
                 style={{ cursor: "pointer" }}
                 onClick={() => { onAdd(p.id); onClose(); }}
               >
-                <Av name={p.name} size="sm" />
+                <Avatar nome={p.name} tamanho="sm" />
                 <div className="flag-main">
                   <div className="flag-nome">{p.name}</div>
                   <div className="flag-meta">
@@ -339,7 +332,7 @@ function CheckinRoster({
         return (
           <div className="ck-row" key={rec.person_id}>
             <span className="ck-check"><Icon name="ok" size={14} /></span>
-            <Av name={p.name} size="sm" />
+            <Avatar nome={p.name} tamanho="sm" />
             <div className="ck-row-main">
               <div className="ck-row-name">
                 {p.name}
@@ -371,7 +364,7 @@ function CheckinRoster({
         return (
           <div className="ck-row pend" key={pid}>
             <span className="ck-check pend">○</span>
-            <Av name={p.name} size="sm" />
+            <Avatar nome={p.name} tamanho="sm" />
             <div className="ck-row-main">
               <div className="ck-row-name">{p.name}</div>
               <div className="ck-row-meta">{fn ?? "Escalado"} · não chegou</div>

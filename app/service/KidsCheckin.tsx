@@ -13,6 +13,7 @@ import { Abas } from "./ui/Abas";
 import { Janela } from "./ui/Janela";
 import { Cartao } from "./ui/Cartao";
 import { Vazio } from "./ui/Estados";
+import { Avatar } from "./ui/Avatar";
 import { confirmar } from "./ui/confirmar";
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
@@ -45,11 +46,6 @@ function generateToken() {
   return Math.random().toString(36).slice(2, 8) + Math.random().toString(36).slice(2, 6);
 }
 
-function ini(name: string) {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-}
 
 export function KidsQRModal({
   event,
@@ -214,7 +210,7 @@ export function KidsQRModal({
                   return (
                     <div className="ck-row" key={att.id}>
                       <span className="ck-check"><Icon name="ok" size={14} /></span>
-                      <div className="av av-sm">{child ? ini(child.name) : "?"}</div>
+                      <Avatar nome={child?.name ?? ""} tamanho="sm" />
                       <div className="ck-row-main">
                         <div className="ck-row-name">{child?.name ?? "Criança"}{child?.allergies ? <span className="ck-extra"><Icon name="alerta" size={13} /> alergia</span> : null}</div>
                         <div className="ck-row-meta">{att.dropped_off_via === "manual" ? "manual" : "QR"}</div>
@@ -229,7 +225,7 @@ export function KidsQRModal({
               </div>
               {q && notYetIn.slice(0, 6).map((child) => (
                 <div className="flag-row" key={child.id} style={{ cursor: "pointer" }} onClick={() => { checkinManual(child.id); setQ(""); }}>
-                  <div className="av av-sm">{ini(child.name)}</div>
+                  <Avatar nome={child.name} tamanho="sm" />
                   <div className="flag-main"><div className="flag-nome">{child.name}</div></div>
                   <span style={{ marginLeft: "auto", color: "var(--muted)" }}>+ check-in</span>
                 </div>

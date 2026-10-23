@@ -38,6 +38,7 @@ import { Selecao } from "../../ui/Selecao";
 import { SeletorData } from "../../ui/Data";
 import { Vazio } from "../../ui/Estados";
 import { Janela } from "../../ui/Janela";
+import { Etapas, type Etapa } from "../../ui/Etapas";
 export function PersonTimeline({ member, events, compact }: { member: MemberView; events: TimelineEventView[]; compact?: boolean }) {
   const { comTermos: ct } = useTermos();
   const sorted = porData(events);
@@ -46,27 +47,15 @@ export function PersonTimeline({ member, events, compact }: { member: MemberView
   if (!sorted.length && !stepsWithoutEvent.length) {
     return <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", padding: "12px 0" }}>Nada registrado ainda.</div>;
   }
+  /* evento com data real; etapa marcada sem fato registrado diz que falta a data */
   return (
-    <div className={`tl jrn-tl${compact ? " compact" : ""}`}>
-      {sorted.map((event) => {
+    <Etapas compacto={compact} rotulo={ct("{Caminhada}")} itens={[
+      ...sorted.map((event): Etapa => {
         const step = JRN_STEPS.find((s) => s.kind === event.event_type);
-        const icone = step?.icon ?? tipoDoFato(event.event_type).icone;
-        return (
-          <div className="tl-item ol tone-olive" key={event.id}>
-            <div className="tl-dot" />
-            <div className="tl-when"><span className="jrn-tl-kind"><Icon name={icone} size={11} /> {event.when_label ?? new Date(event.created_at).toLocaleDateString("pt-BR")}</span></div>
-            <div className="tl-text"><b>{event.title}</b>{event.body ? ` · ${event.body}` : ""}</div>
-          </div>
-        );
-      })}
-      {stepsWithoutEvent.map((step) => (
-        <div className="tl-item ol tone-olive" key={step.kind}>
-          <div className="tl-dot" />
-          <div className="tl-when"><span className="jrn-tl-kind"><Icon name={step.icon} size={11} /> {ct(step.label)}</span></div>
-          <div className="tl-text"><b>{ct(step.label)}</b> · etapa concluída</div>
-        </div>
-      ))}
-    </div>
+        return { id: event.id, estado: "feito", titulo: event.title, detalhe: event.body || undefined, icone: step?.icon ?? tipoDoFato(event.event_type).icone, quando: event.when_label ?? new Date(event.created_at).toLocaleDateString("pt-BR") };
+      }),
+      ...stepsWithoutEvent.map((step): Etapa => ({ id: step.kind, estado: "feito", titulo: ct(step.label), icone: step.icon })),
+    ]} />
   );
 }
 
@@ -197,16 +186,7 @@ export function VisitanteDrawer({
         <DrawerSection title="Histórico de contato">
           {visitorNotes.length > 0
             ? (
-              <div className="tl">
-                {visitorNotes.map((n) => (
-                  <div className={`tl-item ${n.is_milestone ? "ol" : ""}`} key={n.id}>
-                    <div className="tl-dot" />
-                    <div className="tl-when">{formatDateBR(n.happened_on || n.created_at) || "-"}</div>
-                    <div className="tl-text">{n.body}</div>
-                    {n.author && <div className="tl-by">por {n.author}</div>}
-                  </div>
-                ))}
-              </div>
+              <Etapas rotulo="Histórico de contato" itens={visitorNotes.map((n): Etapa => ({ id: n.id, estado: "feito", tom: n.is_milestone ? undefined : "neutro", detalhe: n.body, quando: formatDateBR(n.happened_on || n.created_at) || undefined, por: n.author || undefined }))} />
             )
             : <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum contato registrado ainda.</div>}
         </DrawerSection>
