@@ -2,10 +2,10 @@
 id: Q10
 titulo: Mover FieldDef e FField para painel form
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: codex
+desde: 2026-10-23
+branch: historia/Q10-campos-form
 depende: []
 tamanho: P
 ---
