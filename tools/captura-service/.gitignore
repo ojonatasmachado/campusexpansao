@@ -1,0 +1,4 @@
+node_modules/
+.auth/
+seed-captura-estado.json
+seed-captura-pulados.md
