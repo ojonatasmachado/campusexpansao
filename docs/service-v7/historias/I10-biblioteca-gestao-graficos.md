@@ -2,10 +2,10 @@
 id: I10
 titulo: Biblioteca, bloco D (indicadores e gráficos)
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-10-23
+branch: historia/I10-biblioteca-indicadores
 depende: [I4]
 tamanho: M
 ---
