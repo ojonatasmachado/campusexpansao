@@ -9,7 +9,7 @@ import { pad } from "../lib/painelkit.mjs";
 const MA = "app/service/MobileApp.tsx";
 const tab = (n) => ({ d: `aba ${n}`, f: (p) => abaApp(p, n) });
 const lnk = (txt, o = {}) => ({ d: `tocar "${txt}"`, f: (p) => clicarTexto(p, "button, a, .m6-row, [role=button]", txt, o) });
-const sel = (s, nth = 0) => ({ d: `tocar ${s}`, f: async (p) => { await p.locator(s).nth(nth).scrollIntoViewIfNeeded().catch(() => {}); await p.locator(s).nth(nth).click({ timeout: 8000 }); await p.waitForTimeout(500); } });
+const sel = (s, nth = 0) => ({ d: `tocar ${s}`, f: async (p) => { await p.locator(s).nth(nth).scrollIntoViewIfNeeded({ timeout: 8000 }).catch(() => {}); await p.locator(s).nth(nth).click({ timeout: 8000 }); await p.waitForTimeout(500); } });
 const seg = (txt) => ({ d: `segmento "${txt}"`, f: (p) => clicarTexto(p, '.m6-seg button, [role="radio"]', txt) });
 
 const MEMBRO = [
@@ -23,7 +23,7 @@ const MEMBRO = [
   ["pedido-de-oracao", "Pedido de oração (folha)", `${MA}:2552`, null, [tab("Mensagens"), lnk("Nova mensagem"), lnk("Pedido de oração")], []],
   ["falar-com-lider", "Nova mensagem > Falar com um líder", `${MA}:3249`, null, [tab("Mensagens"), lnk("Nova mensagem"), lnk("Falar com um líder")], []],
   ["caminhada", "Caminhada", `${MA}:2986`, ANTES_APP.caminhada, [tab("Caminhada")], ["Etapas"]],
-  ["cursos", "Meus cursos", `${MA}:1277`, ANTES_APP.caminhada, [tab("Início"), lnk("Ver a próxima aula")], []],
+  ["cursos", "Meus cursos", `${MA}:1277`, ANTES_APP.caminhada, [tab("Início"), { d: "abrir demais ações da fila, quando recolhidas", f: async (p) => { const mais = p.getByRole("button", { name: /^Ver mais/ }); if (await mais.isVisible()) await mais.click(); } }, lnk("Ver a próxima aula")], []],
   ["biblia-livros", "Bíblia > livros", `${MA}:665`, null, [tab("Caminhada"), lnk("Ler a Bíblia")], ["Gênesis"]],
   ["biblia-capitulos", "Bíblia > capítulos", `${MA}:665`, null, [tab("Caminhada"), lnk("Ler a Bíblia"), sel("button.bib-book")], ["Livros"]],
   ["biblia-leitor", "Bíblia > leitor", `${MA}:665`, null, [tab("Caminhada"), lnk("Ler a Bíblia"), sel("button.bib-book"), sel("button.bib-chapter")], ["No princípio"]],

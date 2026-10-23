@@ -9,7 +9,7 @@ import { telaBase, configCompleta, pad } from "../lib/painelkit.mjs";
 // passos: B = botão/link por texto; S = seletor css (nth); SEG = botão dentro de seletor
 const B = (txt, o = {}) => ({ d: `clicar "${txt}"`, f: (p) => clicarTexto(p, "button, a, summary", txt, o) });
 const BX = (txt) => B(txt, { exato: true });
-const S = (sel, nth = 0) => ({ d: `clicar ${sel}${nth ? `[${nth}]` : ""}`, f: async (p) => { await p.locator(sel).nth(nth).scrollIntoViewIfNeeded().catch(() => {}); await p.locator(sel).nth(nth).click({ timeout: 8000 }); await p.waitForTimeout(400); } });
+const S = (sel, nth = 0) => ({ d: `clicar ${sel}${nth ? `[${nth}]` : ""}`, f: async (p) => { await p.locator(sel).nth(nth).scrollIntoViewIfNeeded({ timeout: 8000 }).catch(() => {}); await p.locator(sel).nth(nth).click({ timeout: 8000 }); await p.waitForTimeout(400); } });
 const IN = (sel, txt, o = {}) => ({ d: `clicar "${txt}" em ${sel}`, f: (p) => clicarTexto(p, sel, txt, o) });
 const MAIS = (item, rotulo = "Mais") => [IN('button[aria-haspopup="menu"]', rotulo), B(item)];
 
@@ -41,8 +41,8 @@ const ESTADOS_CFG = [
   ["rede", "adicionar-congregacao", () => [B("+ Adicionar congregação")]],
   ["operacao", "tipo-de-evento-adicionar", () => [B("Adicionar")]],
   ["kids", "nova-turma", () => [B("+ Nova turma")]],
-  ["perm", "papel-2", () => [S('button[role="tab"].pmx-mob-role', 1)]],
-  ["perm", "papel-3", () => [S('button[role="tab"].pmx-mob-role', 2)]],
+  ["perm", "papel-2", () => [S('.pmx-mob button[role="tab"]', 1)]],
+  ["perm", "papel-3", () => [S('.pmx-mob button[role="tab"]', 2)]],
   ["acessos", "pessoa-selecionada", () => [S("button.flag-row", 1)]],
 ];
 
