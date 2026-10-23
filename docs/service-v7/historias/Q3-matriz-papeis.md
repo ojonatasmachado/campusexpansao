@@ -2,10 +2,10 @@
 id: Q3
 titulo: Montar matriz autenticada de papéis e isolamento
 tipo: verificacao
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: codex
+desde: 2026-10-23
+branch: historia/Q3-matriz-papeis
 depende: []
 tamanho: G
 ---
