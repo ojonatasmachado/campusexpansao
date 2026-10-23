@@ -8,7 +8,7 @@ import { registrarNaoExiste } from "../lib/print.mjs";
 import { clicarTexto, abrirConfigAba } from "../lib/nav.mjs";
 import { rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { SAIDA, DIR_FERRAMENTA } from "../lib/config.mjs";
+import { SAIDA, DIR_FERRAMENTA, BASE_URL } from "../lib/config.mjs";
 import { tirarPrint } from "../lib/print.mjs";
 import { arquivoAuth } from "../lib/contexto.mjs";
 import { SENHA } from "../lib/config.mjs";
@@ -28,7 +28,7 @@ lider("L2a", L2.nome, L2.titulo, async (j) => {
   await j.passo("nova-publicacao-aberta", 'tocar "+ Nova publicação"', tocar("button", "Nova publicação"), { espera: ["Para quem"] });
   await j.passo("titulo-digitado", "digitar o título", preencher('input[placeholder^="Ex.: Ensaio geral"]', titulo));
   await j.passo("mensagem-digitada", "digitar a mensagem", preencher("textarea.textarea", "Teste da captura: toque em ler para confirmar que recebeu este aviso."));
-  await j.passo("publico", "escolher quem recebe", async (p) => { await p.getByRole("combobox", { name: "Para quem" }).click(); await p.getByRole("option").first().click(); });
+  await j.passo("publico", "escolher quem recebe", async (p) => { await p.getByRole("button", { name: /^Para quem/ }).click(); await p.getByRole("option").filter({ hasNotText: "Escolha quem recebe" }).first().click(); });
   await j.passo("revisar", "revisar a publicação", tocar("button", "Revisar publicação", { exato: true }));
   await j.passo("publicado", 'tocar "Publicar"', async (p) => { await clicarTexto(p, "button", "Publicar", { exato: true }); await esperarTexto(p, titulo, 20000); }, { espera: [titulo] });
 }, { aceitarDialogos: true, parte: "a" });
@@ -45,22 +45,17 @@ lider("L2b", L2.nome, L2.titulo, async (j) => {
 
 // ---------------------------------------------------------------- M1 primeiro acesso
 membro("M1", "primeiro-acesso", "Primeiro acesso (novo@teste.local)", async (j) => {
-  const ob = (n) => ({ espera: [`passo ${n} de 6`] });
-  await j.passo("login-vazio", "abrir /service/login", async (p) => { await p.goto("/service/login", { waitUntil: "domcontentloaded" }); await p.locator('input[type="email"]').first().waitFor({ timeout: 40000 }); }, { permiteLogin: true });
-  await j.passo("email-digitado", "digitar o e-mail novo@teste.local", preencher('input[type="email"]', "novo@teste.local"), { permiteLogin: true });
-  await j.passo("senha-digitada", "digitar a senha", preencher('input[type="password"]', SENHA), { permiteLogin: true });
-  await j.passo("passo-1-boas-vindas", 'tocar "Entrar"', async (p) => { await p.getByRole("button", { name: "Entrar", exact: true }).click(); await esperarTexto(p, "PASSO 1 DE 6", 60000).catch(() => esperarTexto(p, "Passo 1 de 6", 5000)); }, ob(1));
-  await j.passo("passo-2-seus-dados", 'tocar "Começar →"', tocar("button", "Começar"), ob(2));
-  await j.passo("passo-2-erros-de-validacao", 'tocar "Continuar →" sem preencher', tocar("button", "Continuar"), { espera: ["DDD"] });
-  await j.passo("passo-2-telefone", "digitar o telefone", preencher('input[type="tel"]', "11987654321"));
-  await j.passo("passo-2-aniversario", "preencher o aniversário", preencher('input[type="date"]', "1992-04-18"));
-  await j.passo("passo-2-cep", "digitar o CEP", async (p) => { await preencher('input[inputmode="numeric"]', "01310100")(p); await p.waitForTimeout(2500); });
-  await j.passo("passo-3-foto", 'tocar "Continuar →" (grava os dados)', async (p) => { await clicarTexto(p, "button", "Continuar"); await esperarTexto(p, "PASSO 3 DE 6", 30000).catch(() => esperarTexto(p, "Passo 3 de 6", 3000)); }, ob(3));
-  await j.passo("passo-4-tamanho-do-texto", 'tocar "Pular por agora →"', tocar("button", "Pular por agora"), ob(4));
-  await j.passo("passo-5-notificacoes", 'tocar "Continuar →"', tocar("button", "Continuar"), ob(5));
-  await j.passo("passo-6-tela-de-inicio", 'tocar "Pular por agora →"', tocar("button", "Pular por agora"), ob(6));
-  await j.passo("inicio-do-app", 'tocar "Entrar no app →"', async (p) => { await clicarTexto(p, "button", "Entrar no app"); await p.locator("nav.m-tab").first().waitFor({ timeout: 30000 }); }, { espera: ["Para você agora"] });
-  j.obs("o tour guiado automático existe só no painel (ServiceExactApp); o app do membro não tem tour no primeiro acesso");
+  await j.passo("login-vazio", "abrir login", (p) => p.goto("/service/login", { waitUntil: "domcontentloaded" }), { permiteLogin: true });
+  await j.passo("email-digitado", "digitar novo@teste.local", preencher('input[type="email"]', "novo@teste.local"), { permiteLogin: true });
+  await j.passo("senha-digitada", "digitar a senha de teste", preencher('input[type="password"]', SENHA), { permiteLogin: true });
+  await j.passo("primeiro-acesso", "entrar", async (p) => { await p.getByRole("button", { name: "Entrar", exact: true }).click(); await p.getByText(/passo 1 de 2/i).waitFor(); }, { espera: ["Nome e sobrenome"] });
+  await j.passo("validacao", "continuar sem telefone", tocar("button", "Continuar"), { espera: [/telefone|DDD|número/i] });
+  await j.passo("telefone", "preencher o telefone", preencher('input[type="tel"]', "11987654321"));
+  await j.passo("tamanho", "salvar dados e avançar", tocar("button", "Continuar"), { espera: ["Tamanho do texto"] });
+  await j.passo("app", "entrar no app", async (p) => { await clicarTexto(p, "button", "Entrar no app"); await p.locator("nav.m-tab").waitFor(); });
+  const aceite = j.page.getByRole("button", { name: "Concordo e continuar", exact: true });
+  if (await aceite.isVisible()) await j.passo("termo", "aceitar o termo apresentado", () => aceite.click());
+  await j.passo("reabrir", "reabrir para conferir que o primeiro acesso foi salvo", async (p) => { await p.reload(); await p.locator("nav.m-tab").waitFor(); });
 }, { abrir: (ap) => criarContexto(ap, { semPadroes: true, extraStorage: { cex_install_dismiss: "1", cex_setup_hide: "1" } }), conta: "novo" });
 
 
@@ -69,7 +64,7 @@ membro("M2", "confirmar-escala", "Confirmar escala (Maria)", async (j) => {
   await j.passo("inicio-com-escala-pendente", "abrir /service (Início do app)", (p) => abrirInicioApp(p), { espera: ["Escala para confirmar"] });
   await j.passo("confirmar-tocado-com-aviso", 'tocar "Confirmar"', tocar("button", "Confirmar", { exato: true }), { espera: ["Presença confirmada", "Desfazer"] });
   await j.passo("app-reaberto-escala-gravada", "esperar o aviso sumir e reabrir o app", async (p) => { await p.waitForTimeout(7000); await abrirInicioApp(p); });
-  await j.passo("agenda-minha-escala", 'tocar na aba "Agenda"', (p) => abaApp(p, "Agenda"), { espera: ["Minha escala"] });
+  await j.passo("agenda-minha-escala", 'tocar na aba "Agenda"', (p) => abaApp(p, "Agenda"), { espera: ["Minha agenda"] });
 });
 
 // ---------------------------------------------------------------- M3 recusar, mudar de ideia, pedir troca
@@ -77,7 +72,8 @@ membro("M3", "recusar-e-pedir-troca", "Recusar escala, mudei de ideia e pedir tr
   await j.passo("inicio-com-escala-pendente", "abrir /service (Início do app)", (p) => abrirInicioApp(p), { espera: ["Escala para confirmar"] });
   await j.passo("nao-posso-tocado-com-aviso", 'tocar "Não posso"', tocar("button", "Não posso", { exato: true }), { espera: ["Você avisou que não pode", "Desfazer"] });
   await j.passo("mudei-de-ideia", 'tocar "Mudei de ideia"', tocar("button", "Mudei de ideia"), { espera: ["Presença confirmada"] });
-  await j.passo("pedir-troca-tocado-conversa", 'tocar "Pedir troca"', tocar("button", "Pedir troca"), { espera: [/Preciso trocar|Não achamos o líder|Pedido de troca enviado/i] });
+  await j.passo("pedir-troca-tocado-conversa", 'tocar "Pedir troca"', tocar("button", "Pedir troca"), { espera: ["Pedir troca"] });
+  await j.passo("troca-enviada", "pedir ajuda ao líder pela folha", async (p) => { await p.getByRole("button", { name: /^Pedir a / }).click(); }, { espera: ["Pedido de troca enviado"] });
   if (/Não achamos o líder/.test(await j.page.evaluate(() => document.body.innerText))) {
     registrarNaoExiste("jornadas/M3-pedir-troca", "M3 Pedir troca (Maria)", "Pedir troca não funciona com os dados do seed: o app mostra o aviso 'Não achamos o líder do time. Fale com a liderança.' (causa não investigada: só capturado). A conversa de troca não é criada; passos seguintes (conversa aberta) não existem. Print: jornadas/M3-recusar-e-pedir-troca/04-pedir-troca-tocado-conversa.png");
     j.obs("Pedir troca mostrou o aviso 'Não achamos o líder do time' (ver BLOQUEIOS.md); sem conversa criada");
@@ -93,10 +89,9 @@ membro("M4", "mural", "Mural: das não lidas até zerar (Maria)", async (j) => {
   await j.passo("aba-mensagens-com-nao-lidas", 'tocar na aba "Mensagens"', (p) => abaApp(p, "Mensagens"), { espera: ["Mural da igreja"] });
   await j.passo("mural-aberto-publicacoes-novas", 'tocar "Mural da igreja"', tocar(BTN, "Mural da igreja"), { espera: ["Nova"] });
   await j.passo("responder-vou-tocado", 'tocar "Vou" no evento Mutirão de limpeza', async (p) => {
-    const i = await p.evaluate(() => { const arts = [...document.querySelectorAll(".m6-card")]; return arts.findIndex((a) => a.innerText.includes("Mutirão de limpeza") && /\bVou\b/.test(a.innerText)); });
-    if (i < 0) throw new Error("evento com Vou/Não vou não encontrado");
-    await p.locator(".m6-card").nth(i).locator("button", { hasText: /^Vou$/ }).click(); await p.waitForTimeout(600);
-  }, { espera: ["Resposta enviada"] });
+    const card = p.locator(".m6-card").filter({ hasText: "Conferência de Jovens" }).filter({ has: p.getByRole("button", { name: "Vou", exact: true }) }).first();
+    await card.getByRole("button", { name: "Vou", exact: true }).click();
+  }, { espera: [/Resposta enviada|Você vai/] });
   await j.passo("voltar-para-mensagens", "tocar em voltar", async (p) => { await p.locator("button.m6-back").first().click(); await p.waitForTimeout(700); });
   await j.passo("inicio-sem-novidade-no-mural", 'tocar na aba "Início"', async (p) => { await abaApp(p, "Inicio"); await p.waitForTimeout(800); });
   await j.passo("app-reaberto-nada-novo", "reabrir o app (conferir que a leitura ficou gravada)", (p) => abrirInicioApp(p));
@@ -116,8 +111,8 @@ membro("M5", "pedir-oracao", "Pedir oração (Maria)", async (j) => {
     return;
   }
   await j.passo("pedido-enviado", 'tocar "Enviar pedido"', tocar("button", "Enviar pedido"), { espera: ["Pedido enviado"] });
-  await j.passo("folha-fechada-mensagens", 'tocar "Ver em Mensagens"', tocar("button", "Ver em Mensagens", { exato: true }));
-  await j.passo("conversa-do-pedido-aberta", "tocar na conversa criada", async (p) => { await p.locator("button.m-conv").first().click(); await p.waitForTimeout(700); }, { opcional: true });
+  await j.passo("folha-fechada-mensagens", 'tocar "Ver em Mensagens"', tocar("button", "Ver em Mensagens", { exato: true }), { espera: ["Teste da captura: orem"] });
+
 });
 
 
@@ -153,10 +148,10 @@ membro("M8", "kids-familia", "Kids: família até onde o app chega (Maria)", asy
   await j.passo("perfil", 'tocar na aba "Perfil"', async (p) => { await abrirInicioApp(p); await abaApp(p, "Perfil"); }, { espera: ["Minha família"] });
   await j.passo("minha-familia", 'tocar "Minha família"', tocar(BTN, "Minha família"), { espera: ["Minhas crianças"] });
   await j.passo("ficha-do-davi-aberta", "tocar no cartão do Davi", async (p) => { await p.locator("button.m-card", { hasText: "Davi" }).first().click(); await p.waitForTimeout(800); }, { espera: ["Autorizo"] });
-  await j.passo("ficha-do-davi-fechada", "tocar de novo no cartão do Davi (recolher, sem salvar)", async (p) => { await p.locator("button.m-card", { hasText: "Davi" }).first().click(); await p.waitForTimeout(500); }, { opcional: true });
-  await j.passo("adicionar-crianca-aberto", 'tocar "+ Adicionar criança" (sem salvar)', tocar("button.m-btn-swap", "Adicionar criança"), { opcional: true });
+  await j.passo("adicionar-crianca-aberto", "abrir nova ficha sem salvar", tocar("button", "Adicionar criança"), { espera: ["Nome da criança"] });
+  await j.passo("nova-ficha-cancelada", "cancelar a nova ficha", tocar("button", "Cancelar", { exato: true }));
   await j.passo("checkin-kids-pela-rota", "abrir /service/kids-checkin (o check-in da criança só existe nessa rota, vinda de QR)", async (p) => { await p.goto("/service/kids-checkin", { waitUntil: "domcontentloaded" }); await p.waitForTimeout(1500); }, { opcional: true, semAuditoria: false });
-  j.obs("não há botão de check-in da criança no app; capturada a rota /service/kids-checkin sem parâmetros");
+  j.obs("Rota /service/kids-checkin capturada sem QR. Check-in completo de crianças continua na O4/O6.");
 });
 
 // ---------------------------------------------------------------- M9 Sair
@@ -174,19 +169,19 @@ membro("M9", "sair-do-app", "Sair do app até a tela de login (Maria)", async (j
 lider("L1", "montar-escala", "Montar a escala de um culto e acompanhar confirmações", async (j) => {
   await j.passo("painel-inicio", "abrir /service (painel da igreja)", (p) => abrirInicioPainel(p));
   await menuPara(j, tela("escalas"), "escalas-abertas");
-  await j.passo("evento-escolhido", "tocar no primeiro evento disponível", async (p) => { await p.locator("button.esc-event").first().click(); }, { espera: ["Louvor"] });
-  const primeiraVagaLouvor = (p) => p.locator('xpath=//*[normalize-space(text())="Louvor"]/following::button[contains(@class,"esc-vaga")][1]');
+  await j.passo("evento-escolhido", "tocar no primeiro evento disponível", async (p) => { await p.locator("button.esc-event").filter({ hasText: new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(new Date()) }).first().click(); }, { espera: ["Louvor"] });
+  const primeiraVagaLouvor = (p) => p.locator('xpath=//*[normalize-space(text())="Louvor"]/following::button[contains(@class,"esc-vaga")][1]').first();
   await j.passo("escalar-vaga-do-louvor-aberto", 'tocar "Escalar" na primeira vaga vazia do Louvor', async (p) => { await primeiraVagaLouvor(p).scrollIntoViewIfNeeded(); await primeiraVagaLouvor(p).click(); await p.waitForTimeout(700); }, { espera: ["ESCALAR"] });
   await j.passo("pessoa-escolhida-para-a-vaga", "tocar na primeira pessoa disponível da lista", async (p) => { await p.locator("button.cand", { hasText: "disponível" }).first().click(); await p.waitForTimeout(1500); }, { espera: ["Louvor"] });
   await j.passo("maria-aguardando-ficha-aberta", "tocar na Maria (Vocal) para ver o status", async (p) => { await p.locator("button.esc-person", { hasText: "Maria" }).first().scrollIntoViewIfNeeded(); await p.locator("button.esc-person", { hasText: "Maria" }).first().click(); await p.waitForTimeout(700); }, { opcional: true });
   await j.passo("ficha-fechada", "tocar fora da janela para fechar sem alterar", async (p) => { await p.locator(".modal-bg").first().click({ position: { x: 4, y: 4 } }); await p.waitForTimeout(500); }, { opcional: true });
-  await j.passo("publicar-e-avisar-aberto", 'tocar "Publicar & avisar →"', async (p) => { const b = p.locator("button.btn-pri", { hasText: "Publicar & avisar" }).first(); await b.scrollIntoViewIfNeeded(); await b.click(); await p.waitForTimeout(600); }, { espera: ["Publicar e avisar"] });
+  await j.passo("publicar-e-avisar-aberto", 'tocar "Publicar & avisar →"', async (p) => { const b = p.locator("button.btn-pri", { hasText: "Publicar e avisar" }).first(); await b.scrollIntoViewIfNeeded(); await b.click(); await p.waitForTimeout(600); }, { espera: ["Publicar e avisar"] });
   await j.passo("mensagem-digitada", "digitar o recado", async (p) => { const t = p.locator("textarea").last(); await t.click(); await t.fill("Teste da captura: escala do culto de quarta publicada."); });
-  await j.passo("escala-publicada", 'tocar "Publicar e avisar →"', async (p) => { await clicarTexto(p, "button", "Publicar e avisar →"); await p.waitForTimeout(1500); });
+  await j.passo("escala-publicada", 'tocar "Publicar e avisar"', async (p) => { await clicarTexto(p, '[role="dialog"] button', "Publicar e avisar"); await p.waitForTimeout(1500); });
 }, { aceitarDialogos: true });
 
 
-const campo = (rotulo, tipo = "input") => (p) => p.locator(`xpath=(//div[contains(@class,"modal")]//label[contains(normalize-space(.),"${rotulo}")]/following::${tipo}[1])`).first();
+const campo = (rotulo) => (p) => p.getByLabel(rotulo, { exact: false }).first();
 const digitarNoModal = (rotulo, valor, tipo = "input") => async (p) => { const l = campo(rotulo, tipo)(p); await l.click({ timeout: 8000 }); await l.fill(valor); };
 
 // ---------------------------------------------------------------- L3 visitante
@@ -194,11 +189,11 @@ lider("L3", "registrar-visitante", "Registrar visitante e levá-lo à etapa segu
   const nome = `Visitante Captura ${j.ap === "celular" ? "Celular" : "Desktop"}`;
   await j.passo("painel-inicio", "abrir /service (painel da igreja)", (p) => abrirInicioPainel(p));
   await menuPara(j, tela("visitantes"), "visitantes-funil");
-  await j.passo("novo-visitante-aberto", 'tocar "+ Visitante"', tocar("button", "+ Visitante"), { espera: ["Registrar visitante"] });
+  await j.passo("novo-visitante-aberto", 'tocar "+ Visitante"', tocar("button", "Registrar visitante", { exato: true }), { espera: ["Registrar visitante"] });
   await j.passo("nome-digitado", "digitar o nome", digitarNoModal("Nome", nome));
   await j.passo("telefone-digitado", "digitar o telefone", digitarNoModal("Telefone", "(11) 95555-0101"));
-  await j.passo("lista-de-origens-aberta", 'tocar em "Como chegou"', async (p) => { await p.locator(".modal .sel-trigger").first().click(); await p.waitForTimeout(400); }, { espera: ["Instagram"] });
-  await j.passo("origem-escolhida", 'tocar em "Instagram"', async (p) => { await p.locator(".modal button.sel-opt", { hasText: "Instagram" }).first().click(); await p.waitForTimeout(400); });
+  await j.passo("lista-de-origens-aberta", 'tocar em "Como chegou"', async (p) => { await p.locator(".sel-trigger").first().click(); await p.waitForTimeout(400); }, { espera: ["Instagram"] });
+  await j.passo("origem-escolhida", 'tocar em "Instagram"', async (p) => { await p.locator("button.sel-opt", { hasText: "Instagram" }).first().click(); await p.waitForTimeout(400); });
   await j.passo("visitante-registrado", 'tocar "Registrar visitante"', async (p) => { await clicarTexto(p, "button", "Registrar visitante", { exato: true }); await esperarTexto(p, nome, 20000); }, { espera: [nome] });
   await j.passo("ficha-do-visitante-aberta", "tocar no cartão do visitante", async (p) => { await p.getByText(nome, { exact: false }).first().scrollIntoViewIfNeeded(); await p.getByText(nome, { exact: false }).first().click(); await p.waitForTimeout(800); }, { espera: ["Avançar para"] });
   await j.passo("etapa-avancada", 'tocar "Avançar para ... →"', async (p) => { await clicarTexto(p, "button", "Avançar para"); await p.waitForTimeout(1500); });
@@ -232,17 +227,17 @@ lider("L5", "checkin-por-qr", "Check-in do culto por QR: do painel até a presen
   const dados = {};
   await j.passo("painel-inicio", "abrir /service (painel da igreja)", (p) => abrirInicioPainel(p));
   await menuPara(j, tela("cultos"), "cultos-e-agenda");
-  await j.passo("checkin-qr-aberto", 'tocar "Check-in QR" no primeiro evento disponível', async (p) => { await p.getByRole("button", { name: /Check-in QR/ }).first().click(); }, { espera: ["Check-in"] });
+  await j.passo("checkin-qr-aberto", 'tocar "Check-in QR" no primeiro evento disponível', async (p) => { await p.getByRole("button", { name: /Check-in QR/ }).last().click(); }, { espera: ["Check-in"] });
   await j.passo("aba-presenca", 'tocar na aba "Presença"', async (p) => { await clicarTexto(p, ".modal button, .modal [role=tab]", "Presença"); await p.waitForTimeout(600); }, { opcional: true });
   await j.passo("aba-qr-de-novo", 'tocar na aba do QR', async (p) => { await clicarTexto(p, ".modal button, .modal [role=tab]", /qr/i, { nth: 0 }); await p.waitForTimeout(600); }, { opcional: true });
   await j.page.waitForTimeout(1500);
   dados.link = (await j.page.locator("span.ck-link-txt").first().innerText().catch(() => "")).trim(); // lido depois que o token foi gerado
-  await j.passo("simular-leitura-presenca-confirmada", 'tocar "Simular leitura (abrir como voluntário) →"', async (p) => { await clicarTexto(p, "button", "Simular leitura"); await p.waitForTimeout(1500); }, { espera: [/Presença confirmada|confirmad/i] });
+  await j.passo("simular-leitura-presenca-confirmada", 'tocar "Simular leitura (abrir como voluntário) →"', async (p) => { await clicarTexto(p, "button", "Simular leitura"); await p.waitForTimeout(1500); });
   if (dados.link) {
-    const u = new URL(dados.link.startsWith("http") ? dados.link : "http://localhost:3000" + dados.link);
+    const u = new URL(dados.link.startsWith("http") ? dados.link : BASE_URL + dados.link);
     const caminho = u.pathname + u.search;
     await j.trocar(() => contextoApp(j.ap, "membro"));
-    await j.passo("rota-checkin-lida-como-voluntaria", "a Maria (escalada) lê o QR: abrir /service/checkin?event=...", async (p) => { await p.goto(caminho, { waitUntil: "domcontentloaded" }); await esperarTexto(p, "resen", 30000); });
+    await j.passo("rota-checkin-lida-como-voluntaria", "a Maria (escalada) lê o QR: abrir /service/checkin?event=...", async (p) => { await p.goto(caminho, { waitUntil: "domcontentloaded" }); await esperarTexto(p, "Presença confirmada", 30000); });
   } else j.obs("link do QR (span.ck-link-txt) não encontrado: rota /service/checkin não aberta");
 });
 
@@ -254,7 +249,7 @@ lider("L6", "cor-e-logo", "Trocar cor e logo da igreja e ver o app do membro", a
   await j.passo("personalizacao-aberta", 'tocar em "Personalização"', async (p) => { await abrirConfigAba(p, { label: "Personalização" }); }, { espera: ["Cor da igreja"] });
   await j.passo("cor-roxo-escolhida-previa", 'tocar na cor "Roxo"', tocar("button.seg-chip", "Roxo"));
   await j.passo("logo-enviada", 'tocar "Enviar imagem" e escolher logo-teste.png', async (p) => { await p.locator('input[type="file"]').first().setInputFiles(join(DIR_FERRAMENTA, "logo-teste.png")); await p.waitForTimeout(2500); });
-  await j.passo("depois-do-envio-da-logo", "(depois do recorte, se houver) confirmar", async (p) => { const b = p.locator("button", { hasText: /^(Usar|Confirmar|Salvar|Recortar|Aplicar|Cortar)/i }).first(); if (await b.isVisible().catch(() => false)) { await b.click(); await p.waitForTimeout(3000); } }, { opcional: true });
+  await j.passo("depois-do-envio-da-logo", "(depois do recorte, se houver) confirmar", async (p) => { const b = p.getByRole("dialog").getByRole("button", { name: /^(Usar|Confirmar|Salvar|Recortar|Aplicar|Cortar)/i }).first(); if (await b.isVisible().catch(() => false)) { await b.click(); await p.waitForTimeout(3000); } }, { opcional: true });
   await j.passo("personalizacao-salva", 'tocar "Salvar personalização"', async (p) => { await clicarTexto(p, "button", "Salvar personalização"); await esperarTexto(p, "Salvo!", 15000).catch(() => {}); }, { espera: [/Salvo|Salvar/] });
   await j.trocar(() => contextoApp(j.ap, "membro"));
   await j.passo("app-do-membro-com-a-nova-identidade", "abrir o app da Maria (/service)", (p) => abrirInicioApp(p), { espera: ["Para você agora"] });
@@ -272,10 +267,11 @@ membro("M10", "sete-tamanhos", "Trocar o texto nas sete posições", async (j) =
       await slider.press("Home");
       for (let n = 1; n < pos; n++) await slider.press("ArrowRight");
       if (Number(await slider.getAttribute("aria-valuenow")) !== pos) throw new Error("Tamanho não mudou");
-    });
+    }, { observacao: pos === 1 && original === 1 });
   } finally {
     await slider.press("Home");
     for (let n = 1; n < original; n++) await slider.press("ArrowRight");
+    await j.page.waitForTimeout(1200);
   }
 });
 membro("M11", "destaque-video", "Abrir destaque com vídeo", async (j) => {
@@ -297,7 +293,7 @@ lider("L7", "configurar-igreja", "Salvar e reler os dados da igreja", async (j) 
     await j.passo("editar", "acrescentar marca de teste ao nome", () => nome.fill(`${original.slice(0, 60)} (captura)`));
     await j.passo("salvar", "salvar os dados", tocar("button", "Salvar", { exato: true }));
     await j.passo("reler", "reabrir Configurações e reler o nome", async (p) => {
-      await abrirInicioPainel(p); await clicarTexto(p, "button.sb-link", "Configurações");
+      await abrirInicioPainel(p); const { irPara } = await import("../lib/nav.mjs"); await irPara(p, tela("config"));
       await abrirConfigAba(p, { label: "Dados da igreja" });
       if (!(await nome.inputValue()).endsWith(" (captura)")) throw new Error("Nome não persistiu");
     });
@@ -326,15 +322,15 @@ lider("L10", "aviso-lembrete", "Publicar aviso com lembrete em 24h", async (j) =
   await j.passo("conteudo", "preencher título e mensagem", async (p) => {
     await p.getByLabel("Título", { exact: true }).fill(titulo);
     await p.getByLabel("Mensagem", { exact: true }).fill("Aviso de teste local da captura Q1.");
-    const publico = p.getByRole("combobox", { name: "Para quem" });
-    await publico.click(); await p.getByRole("option").first().click();
+    const publico = p.getByRole("button", { name: /^Para quem/ });
+    await publico.click(); await p.getByRole("option").filter({ hasNotText: "Escolha quem recebe" }).first().click();
   });
   await j.passo("canal", "abrir canais e lembrete", tocar("summary", "Canais"));
   await j.passo("lembrete", "escolher Em 24h", tocar("button", "Em 24h", { exato: true }));
   await j.passo("revisar", "revisar publicação", tocar("button", "Revisar publicação", { exato: true }), { espera: ["Lembrete:"] });
   await j.passo("publicar", "publicar aviso", tocar("button", "Publicar", { exato: true }));
   await j.passo("reler", "reabrir Mural e conferir aviso publicado", async (p) => {
-    await abrirInicioPainel(p); await clicarTexto(p, "button.sb-link", "Mural");
+    await abrirInicioPainel(p); const { irPara } = await import("../lib/nav.mjs"); await irPara(p, tela("comunicacao"));
     await esperarTexto(p, titulo, 15000);
   });
   j.obs("Agendamento conferido pela interface. Disparo do cron e destinatários exigem a matriz autenticada da Q3; não testados nesta captura.");

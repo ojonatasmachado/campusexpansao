@@ -3,7 +3,7 @@
 import { existsSync, statSync } from "node:fs";
 import { arquivoAuth, contextoLogado, criarContexto, loginPorUI } from "./contexto.mjs";
 import { clicarTexto, abaApp, esperarH1 } from "./nav.mjs";
-import { esperar } from "./print.mjs";
+import { esperar, capturarFalha } from "./print.mjs";
 
 const fresco = (arq) => existsSync(arq) && Date.now() - statSync(arq).mtimeMs < 40 * 60 * 1000;
 
@@ -18,10 +18,13 @@ export async function contextoGestao(ap, conta) {
       await page.goto("/service", { waitUntil: "domcontentloaded" });
       await esperar(page);
       try {
-        await abaApp(page, "Perfil");
-        await clicarTexto(page, "button, a, .m6-row", "Abrir o painel da igreja");
-      } catch {
-        throw new Error("Perfil não oferece entrada no painel; não forçar cookie ou estado interno.");
+        if (!(await page.locator("h1.ph-title").first().isVisible())) {
+          await abaApp(page, "Perfil");
+          await clicarTexto(page, "button, a, .m6-row", "Abrir o painel da igreja");
+        }
+      } catch (e) {
+        await capturarFalha(page, `falhas/setup-${ap}-${conta}-painel.png`);
+        throw new Error(`Entrada no painel falhou pela interface: ${e.message}`);
       }
       await esperarH1(page, /./);
       await ctx.storageState({ path: arq });

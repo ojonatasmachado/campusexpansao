@@ -19,6 +19,10 @@ test('mede DOM real e rejeita alvo, fonte, contraste, rolagem e densidade', asyn
     assert.ok(ruim.axe.contraste_nos_total > 0);
     assert.ok(ruim.densidade.acoes > 25);
     assert.ok(avaliar(ruim).length >= 5);
+    await page.setContent('<style>body{background:white;color:black;font:14px Arial}[role=slider]{display:block;width:20px;height:20px}</style><div role="slider" tabindex="0" aria-label="Tamanho" aria-valuemin="1" aria-valuemax="7" aria-valuenow="1"></div>');
+    const slider = await auditar(page);
+    assert.equal(slider.alvos_menores_que_24px, 1);
+    assert.equal(slider.densidade.acoes, 1);
   } finally { await browser.close(); }
 });
 test('conteúdo recortado na área de rolagem não se sobrepõe à barra externa', async () => {
@@ -45,5 +49,9 @@ test('foco sozinho não valida botão sem ação', async () => {
     assert.equal(await efeito(page), antes);
     await page.getByRole('button', { name: 'Salvar' }).click();
     assert.notEqual(await efeito(page), antes);
+    await page.setContent('<span role="slider" tabindex="0" aria-valuenow="1" onkeydown="this.setAttribute(\'aria-valuenow\',2)">A</span>');
+    const tamanho = await efeito(page);
+    await page.getByRole('slider').press('ArrowRight');
+    assert.notEqual(await efeito(page), tamanho);
   } finally { await browser.close(); }
 });

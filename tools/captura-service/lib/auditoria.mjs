@@ -49,7 +49,7 @@ function medirNaPagina() {
   }
   const alvos = [];
   let totalPequenos = 0, menor24 = 0;
-  const q = 'a[href],button,input:not([type=hidden]),select,textarea,[role=button],[role=tab],[role=switch],[role=radio],[role=menuitem],[role=checkbox],summary';
+  const q = 'a[href],button,input:not([type=hidden]),select,textarea,[role=button],[role=tab],[role=switch],[role=radio],[role=menuitem],[role=checkbox],[role=slider],[role=option],summary';
   for (const el of escopo.querySelectorAll(q)) {
     const r = el.getBoundingClientRect();
     if (!vis(el) || foraDaTelaX(r) || (r.width <= 1 && r.height <= 1)) continue;

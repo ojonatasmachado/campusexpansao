@@ -4,14 +4,18 @@ import { fileURLToPath } from "node:url";
 
 export const DIR_FERRAMENTA = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const RAIZ = join(DIR_FERRAMENTA, "..", "..");
-export const BASE_URL = "http://localhost:3000";
-export const SUPABASE_LOCAL = "http://127.0.0.1:54321";
+export const BASE_URL = process.env.CAPTURA_BASE_URL || "http://localhost:3000";
+export const SUPABASE_LOCAL = process.env.CAPTURA_SUPABASE_URL || "http://127.0.0.1:54321";
+for (const endereco of [BASE_URL, SUPABASE_LOCAL]) {
+  const u = new URL(endereco);
+  if (u.protocol !== "http:" || !["localhost", "127.0.0.1", "[::1]"].includes(u.hostname)) throw new Error("Captura só aceita endereços locais.");
+}
 export const SLUG = "igreja-teste-local";
 export const SENHA = "TesteLocal123"; // senha de todas as contas de teste (scripts/seed-local-service.ts)
 export const DATA = `service-${new Date().toISOString().slice(0, 10)}`;
 export const SAIDA = process.env.CAPTURA_SAIDA || join(RAIZ, "prints", DATA);
 export const ANTES_DIR = join(RAIZ, "prints", "service-2026-10-02");
-export const AUTH_DIR = join(DIR_FERRAMENTA, ".auth");
+export const AUTH_DIR = process.env.CAPTURA_AUTH_DIR || join(DIR_FERRAMENTA, ".auth");
 
 export const CONTAS = {
   master: { email: "master@teste.local", papel: "master" },

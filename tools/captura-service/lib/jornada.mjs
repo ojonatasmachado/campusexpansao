@@ -3,12 +3,12 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { SAIDA } from "./config.mjs";
-import { registrarBloqueio, tirarPrint, limparBloqueio } from "./print.mjs";
+import { registrarBloqueio, tirarPrint, limparBloqueio, capturarFalha } from "./print.mjs";
 
 export const pad2 = (n) => String(n).padStart(2, "0");
 class Aborta extends Error {}
 export async function efeito(page) {
-  return page.evaluate(() => JSON.stringify({ url: location.href, texto: document.body.innerText, campos: [...document.querySelectorAll("input,select,textarea")].map((e) => [e.value, e.checked]), estados: [...document.querySelectorAll("[aria-expanded],[aria-selected],[aria-checked]")].map((e) => [e.getAttribute("aria-expanded"),e.getAttribute("aria-selected"),e.getAttribute("aria-checked")]), x: scrollX, y: scrollY }));
+  return page.evaluate(() => JSON.stringify({ url: location.href, texto: document.body.innerText, campos: [...document.querySelectorAll("input,select,textarea")].map((e) => [e.value, e.checked]), estados: [...document.querySelectorAll("[aria-expanded],[aria-selected],[aria-checked],[aria-pressed],[aria-valuenow]")].map((e) => [e.getAttribute("aria-expanded"),e.getAttribute("aria-selected"),e.getAttribute("aria-checked"),e.getAttribute("aria-pressed"),e.getAttribute("aria-valuenow")]), tema: document.documentElement.getAttribute("data-theme"), x: scrollX, y: scrollY }));
 }
 
 const ARQ_RES = () => join(SAIDA, ".jornadas.json");
@@ -53,8 +53,8 @@ export async function jornada({ codigo, nome, titulo, ap, conta, papel, abrir, c
         }
       }
       if (falhou) {
-        const f = `falhas/${codigo}-${ap}-${nomeArq}.png`;
-        await page.screenshot({ path: join(SAIDA, f) }).catch(() => {});
+        const f = `falhas/${pastaP}/${nomeArq}.png`;
+        await capturarFalha(page, f);
         registrarBloqueio(chaveB, { tela: `${codigo} ${titulo} (${ap})`, passo: `${toques.join(" > ")} (passo ${pad2(n)})`, erro: falhou, print: f });
         if (opts.opcional) { obs.push(`passo ${pad2(n)} ${slug} não existe/falhou: ${falhou}`); return false; }
         throw new Aborta(falhou);

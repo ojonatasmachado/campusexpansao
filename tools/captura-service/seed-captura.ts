@@ -1,20 +1,24 @@
 // Seed aditivo de captura local. Sem reset ou restauração de dados de outras frentes.
+import { TERMO_MAPA_VERSAO } from "../../app/service/lib/termo-mapa";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const URL = "http://127.0.0.1:54321";
-const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
-const SERVICE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU";
+const URL = process.env.CAPTURA_SUPABASE_URL || "http://127.0.0.1:54321";
+const ANON = process.env.CAPTURA_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
+const SERVICE = process.env.CAPTURA_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU";
 const TEST_PASSWORD = "TesteLocal123";
 const TODAY = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 
-if (!URL.startsWith("http://127.0.0.1")) throw new Error("seed-captura só roda no Supabase local");
+const destino = new globalThis.URL(URL);
+if (destino.protocol !== "http:" || destino.hostname !== "127.0.0.1") throw new Error("seed-captura só roda no Supabase local");
 
 const DIR = dirname(fileURLToPath(import.meta.url));
-const STATE_FILE = join(DIR, "seed-captura-estado.json");
-const SKIP_FILE = join(DIR, "seed-captura-pulados.md");
+const STATE_DIR = process.env.CAPTURA_STATE_DIR || DIR;
+mkdirSync(STATE_DIR, { recursive: true });
+const STATE_FILE = join(STATE_DIR, "seed-captura-estado.json");
+const SKIP_FILE = join(STATE_DIR, "seed-captura-pulados.md");
 
 const admin = createClient(URL, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 type Row = Record<string, unknown>;
@@ -177,20 +181,27 @@ async function seed(org: string, church: string) {
   const { data: pplAll } = await svc.from("people").select("id,name,email,user_id").eq("organization_id", org);
   const ppl = (pplAll ?? []).filter((p) => !p.id.startsWith("ca9e"));
   const find = (frag: string) => (ppl ?? []).find((p) => (p.email ?? "").includes(frag) || p.name.startsWith(frag));
-  const lucas = find("lider@")!, maria = find("membro@")!, mateus = find("membro2@")!, vera = find("Vera")!, marta = find("master@");
-  if (!lucas || !maria || !mateus || !vera) throw new Error("Pessoas do seed original não encontradas");
+  const masterUser = await ensureUser("master@teste.local", "Marta Master");
+  const lucas = find("lider@")!, maria = find("membro@")!, mateus = find("membro2@")!, vera = find("Vera")!, marta = find("master@") || ppl.find((p) => p.user_id === masterUser.id);
+  if (marta) { marta.name = "Marta Master"; marta.email = "master@teste.local"; await svc.from("people").update({ name: marta.name, email: marta.email }).eq("id", marta.id); }
+  if (!lucas || !maria || !mateus || !vera || !marta) throw new Error("Pessoas do seed original não encontradas");
   const { data: mem } = await svc.from("members").select("id,volunteer_id,email").eq("organization_id", org);
   const memberOf = (personId: string) => mem?.find((m) => m.volunteer_id === personId)?.id as string;
   const mariaM = memberOf(maria.id), lucasM = memberOf(lucas.id), mateusM = memberOf(mateus.id);
 
   // fichas completas para quem já existia (senão o app deles abriria no primeiro acesso)
+  const aceite = { map_consent_at: new Date().toISOString(), map_consent_terms: TERMO_MAPA_VERSAO, map_consent_source: "app" };
   const ficha = { postal_code: "01310100", street: "Avenida Paulista", city: "São Paulo", state: "SP", neighborhood: "Bela Vista" };
-  for (const [p, birth, phone] of [[maria, null, "(11) 90000-0002"], [lucas, "1984-02-20", "(11) 90000-0001"], [marta, "1980-06-15", "(11) 90000-0100"]] as const) {
+  for (const [p, birth, phone] of [[maria, null, "(11) 90000-0002"], [mateus, "1996-09-18", "(11) 90000-0003"], [lucas, "1984-02-20", "(11) 90000-0001"], [marta, "1980-06-15", "(11) 90000-0100"]] as const) {
     if (!p) continue;
-    const m = mem?.find((x) => x.volunteer_id === p.id);
-    if (!m) continue;
+    let m = mem?.find((x) => x.volunteer_id === p.id || (p.email && x.email === p.email));
+    if (!m) {
+      const criada = await svc.from("members").insert({ ...baseC, volunteer_id: p.id, name: p.name, email: p.email }).select("id,volunteer_id,email").single();
+      if (criada.error || !criada.data) throw new Error("Não foi possível criar a ficha recorrente da captura");
+      m = criada.data;
+    }
     const { data: cur } = await svc.from("members").select("birth,phone").eq("id", m.id).single();
-    await svc.from("members").update({ ...ficha, birth: cur?.birth || birth, phone: cur?.phone || phone }).eq("id", m.id);
+    await svc.from("members").update({ ...ficha, ...aceite, name: p.name, volunteer_id: p.id, birth: cur?.birth || birth, phone: cur?.phone || phone }).eq("id", m.id);
   }
 
   // 24 pessoas (+ ficha de membro cada)
@@ -203,7 +214,7 @@ async function seed(org: string, church: string) {
     since_year: String(2012 + (i % 13)), status: i === 7 ? "ferias" : i === 14 ? "pausa" : "ativo", engagement: 40 + ((i * 17) % 55), tags: ["captura"],
   })));
   await up("members", NOMES.map(([name, birth], i) => ({
-    id: M[i], ...baseC, volunteer_id: P[i], group_id: null, title_id: null, name,
+    id: M[i], ...baseC, ...aceite, volunteer_id: P[i], group_id: null, title_id: null, name,
     phone: SEM_TEL.has(i) ? null : `(11) 9${8000 + i * 37}-${String(1000 + i * 91).slice(-4)}`,
     email: SEM_EMAIL.has(i) ? null : `${slug(name)}@captura.teste`,
     birth, since_year: String(2012 + (i % 13)), situation: "membro", first_contact: addDays(TODAY, -400 - i * 23),
@@ -232,6 +243,7 @@ async function seed(org: string, church: string) {
     { id: kids, ...baseC, name: "Kids", icon: "kids", description: "Cuidado e ensino das crianças nos cultos", app_modules: [] },
     { id: midia, ...baseC, name: "Mídia", icon: "midia", description: "Projeção, som e transmissão", app_modules: [] },
   ]);
+  await svc.from("ministries").update({ profile: { recebendoVoluntarios: true } }).eq("organization_id", org);
   const MIN: Record<string, string> = { Louvor: louvor, "Recepção": recep, Kids: kids, "Mídia": midia };
   const POS_DEF: [string, string, number][] = [
     ["Louvor", "Violão", 1], ["Louvor", "Bateria", 1], ["Louvor", "Teclado", 1],
@@ -270,6 +282,10 @@ async function seed(org: string, church: string) {
     ["Culto de quarta", "Culto", addDays(TODAY, 9), "20:00", "Templo", "qua"],
     ["Conferência de Jovens", "Evento", addDays(TODAY, 12), "18:00", "Templo", null],
   ];
+  const encontroAgora = new Date(Date.now() + 15 * 60_000);
+  EV[2][2] = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(encontroAgora);
+  EV[2][3] = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(encontroAgora);
+  for (const ev of EV) if (ev[1] === "Culto") ev[0] = `Culto de ${new Intl.DateTimeFormat("pt-BR", { weekday: "long", timeZone: "UTC" }).format(new Date(`${ev[2]}T12:00:00Z`))}`;
   const E = EV.map((_, i) => uid("events", i + 1));
   await up("events", EV.map(([name, kind, date, time, loc, slot], i) => ({
     id: E[i], ...baseC, name, kind, weekday: weekdayOf(date), event_date: date, time, slot, location: loc, room_id: R.templo, ministries: [], tags: [],
@@ -285,15 +301,18 @@ async function seed(org: string, church: string) {
     [0, "Louvor", "Vocal", P[0], "ok"], [0, "Recepção", "Porta", P[5], "ok"],
     [1, "Louvor", "Vocal", lucas.id, "ok"], [1, "Louvor", "Violão", P[1], "ok"], [1, "Mídia", "Som", P[12], "ok"], [1, "Kids", "Professor", P[9], "ok"],
     [2, "Louvor", "Vocal", maria.id, "wait"], [2, "Louvor", "Violão", P[1], "ok"], [2, "Recepção", "Porta", P[6], "wait"], [2, "Mídia", "Projeção", P[13], "no"],
-    [3, "Louvor", "Vocal", maria.id, "ok"], [3, "Louvor", "Vocal", P[0], "wait"], [3, "Louvor", "Bateria", P[2], "ok"], [3, "Louvor", "Teclado", P[3], "no"],
+    [3, "Louvor", "Vocal", maria.id, "wait"], [3, "Louvor", "Vocal", P[0], "wait"], [3, "Louvor", "Bateria", P[2], "ok"], [3, "Louvor", "Teclado", P[3], "no"],
     [3, "Recepção", "Porta", P[RENATA], "ok"], [3, "Recepção", "Café", P[7], "wait"], [3, "Kids", "Professor", P[9], "ok"], [3, "Kids", "Auxiliar", P[10], "wait"],
     [3, "Mídia", "Som", P[12], "ok"],
     [4, "Louvor", "Vocal", lucas.id, "ok"], [4, "Mídia", "Transmissão", P[11], "ok"],
     [5, "Louvor", "Vocal", P[0], "wait"], [5, "Recepção", "Porta", P[5], "ok"],
   ];
   await up("roster_assignments", A_.map(([e, m, n, person, status], i) => ({
-    id: uid("roster_assignments", i + 1), ...base, event_id: E[e], position_id: posId(m, n), person_id: person, status,
+    id: uid("roster_assignments", i + 1), ...base, event_id: E[e], position_id: posId(m, n), person_id: person, status, rascunho: i === 11,
   })));
+
+  await up("events", [{ id: uid("events", 90), ...baseC, name: "Encontro anterior da captura", kind: "Culto", event_date: addDays(TODAY, -35), time: "19:00" }]);
+  await up("event_attendance", [{ id: uid("event_attendance", 90), ...base, event_id: uid("events", 90), person_id: P[17], checked_in_at: stamp(-35, 19) }]);
 
   // visitantes (etapas: novo, contato, integrando)
   await up("visitors", [
@@ -323,7 +342,7 @@ async function seed(org: string, church: string) {
   const AN = [1, 2, 3].map((n) => uid("announcements", n));
   await up("announcements", [
     { id: AN[0], ...baseC, title: "Novo horário do culto de quarta", audience: "Todos", body: "A partir deste mês o culto de quarta começa às 20h. Venha com a família.", author: "Liderança", when_label: "há 4 dias", kind: "aviso", created_at: stamp(-4, 10), updated_at: stamp(-4, 10) },
-    { id: AN[1], ...baseC, title: "Conferência de Jovens", audience: "Todos", body: "Sábado, dia 17, às 18h. Inscrições abertas na recepção.", author: "Liderança", when_label: "ontem", kind: "evento", created_at: stamp(-1, 9), updated_at: stamp(-1, 9) },
+    { id: AN[1], ...baseC, title: "Conferência de Jovens", audience: "Todos", highlight_until: stamp(10, 23), video_url: "https://www.youtube.com/watch?v=jNQXAC9IVRw", body: "Encontro especial da igreja. Inscrições abertas na recepção.", author: "Liderança", when_label: "ontem", kind: "evento", created_at: stamp(-1, 9), updated_at: stamp(-1, 9) },
     { id: AN[2], ...baseC, title: "Campanha de alimentos", audience: "Todos", body: "Traga 1 kg de alimento não perecível até o fim do mês.", author: "Liderança", when_label: "hoje", kind: "acao", created_at: stamp(0, 8), updated_at: stamp(0, 8) },
   ]);
   await up("announcement_reads", [{ id: uid("announcement_reads", 1), ...base, announcement_id: AN[0], person_id: maria.id, read_at: stamp(-3, 20) }]);

@@ -128,6 +128,16 @@ async function fullPage(page, caminho, semExpandir = false) {
   return { truncada, rolagem_interna: interno };
 }
 
+export async function capturarFalha(page, rel) {
+  const base = rel.replace(/\.png$/, "");
+  for (const path of [rel, `textos/${base}.txt`, `auditoria/${base}.json`]) mkdirSync(dirname(join(SAIDA, path)), { recursive: true });
+  await page.screenshot({ path: join(SAIDA, rel), fullPage: false, animations: "disabled" }).catch(() => {});
+  const texto = await page.evaluate(() => document.body?.innerText ?? "").catch(() => "");
+  writeFileSync(join(SAIDA, `textos/${base}.txt`), texto);
+  const aud = await auditar(page).catch((e) => ({ erro_medicao: e.message }));
+  writeFileSync(join(SAIDA, `auditoria/${base}.json`), JSON.stringify(aud, null, 2));
+}
+
 const FALHA_TEXTO = /Application error|Unhandled Runtime Error|Internal Server Error|This page could not be found|Build Error|Runtime Error|Cannot read propert/i;
 
 /**
@@ -157,15 +167,15 @@ export async function tirarPrint(page, meta) {
     }
   }
   if (erro) {
-    const f = `falhas/${meta.nome}.png`;
-    await page.screenshot({ path: abs(f), fullPage: false }).catch(() => {});
+    const f = `falhas/${rel}`;
+    await capturarFalha(page, f);
     registrarBloqueio(rel, { tela: meta.tela, passo: (meta.cliques ?? []).join(" > ") || meta.passo || "-", erro, print: f });
     for (const r of [rel, `textos/${relBase}.txt`, `auditoria/${relBase}.json`]) rmSync(abs(r), { force: true });
     removerDoManifest(rel);
     return { ok: false, erro };
   }
   limparBloqueio(rel);
-  rmSync(abs(`falhas/${meta.nome}.png`), { force: true });
+  for (const f of [`falhas/${rel}`, `textos/falhas/${relBase}.txt`, `auditoria/falhas/${relBase}.json`]) rmSync(abs(f), { force: true });
   // ---- print ----
   let dobra = null;
   if (aparelho === "celular") {

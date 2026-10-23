@@ -1,16 +1,19 @@
 # Captura local do Service
 
-Recuperada do stash de 05/10 e adaptada às leis 12 e 13. Usa Playwright e axe. Não aponta para produção, não aplica stashes nem reseta banco. O app deve rodar em `http://localhost:3000` com Supabase em `http://127.0.0.1:54321`.
+Recuperada do stash de 05/10 e adaptada às leis 12 e 13. Usa Playwright e axe. Não aponta para produção, não aplica stashes nem reseta banco. O modo isolado sobe o app e o Supabase em portas locais próprias, aplica as migrações e as fixtures e descarta banco, servidor e sessões ao terminar. Docker deve estar ativo e o CLI Supabase instalado.
 
 ```sh
 npm ci --prefix tools/captura-service
 cd tools/captura-service
 npx playwright install chromium
 npm test
-npm run capturar
+cd ../..
+npx tsx tools/captura-service/isolado.ts
 ```
 
-O último comando percorre entrada, painel, estados, líder, membro e jornadas. Para recapturar uma parte:
+Não mantenha outro servidor Next no mesmo worktree durante a captura. Para uma jornada isolada: `npx tsx tools/captura-service/isolado.ts --so=jornadas --j=M10 --ap=celular`.
+
+O último comando percorre entrada, painel, estados, líder, membro e jornadas. O modo direto abaixo reaproveita app e banco locais já existentes e exige preparar as fixtures antes. Para recapturar uma parte:
 
 ```sh
 node capturar.mjs --so=entrada --ap=celular

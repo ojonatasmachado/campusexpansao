@@ -20,7 +20,7 @@ window.__medir = (minAlvo = 24) => {
   };
   const escopo = [...document.querySelectorAll('[role="dialog"][aria-modal="true"],dialog[open]')].filter((e) => vis(e)).at(-1) ?? document.body;
   const rotulo = (e) => (e.innerText || e.getAttribute("aria-label") || e.tagName).trim();
-  const acts = [...escopo.querySelectorAll("a[href],button,[role=button],[role=tab],[role=switch],input:not([type=hidden]),select,textarea,summary")].filter((e) => !e.closest("[aria-hidden=true]")).map((e) => [e, vis(e)]).filter(([, r]) => r);
+  const acts = [...escopo.querySelectorAll("a[href],button,[role=button],[role=tab],[role=switch],[role=radio],[role=checkbox],[role=menuitem],[role=slider],[role=option],input:not([type=hidden]),select,textarea,summary")].filter((e) => !e.closest("[aria-hidden=true]")).map((e) => [e, vis(e)]).filter(([, r]) => r);
 
   const tmp = document.createElement("div"); tmp.style.color = getComputedStyle(document.documentElement).getPropertyValue("--olive").trim(); document.body.appendChild(tmp);
   const corIgreja = getComputedStyle(tmp).color; tmp.remove();
