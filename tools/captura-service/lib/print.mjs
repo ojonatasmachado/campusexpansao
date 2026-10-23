@@ -192,7 +192,7 @@ export async function tirarPrint(page, meta) {
   const anterior = existsSync(auditPath) ? JSON.parse(readFileSync(auditPath, "utf8")) : null;
   // Medir antes de ampliar o viewport para o fullPage.
   const aud = meta.semAuditoria ? { erro_medicao: "Auditoria desativada" } : await auditar(page);
-  aud.leis = avaliar(aud, anterior, caminho.replace(/\/$/, "") === "/service" && /membro|app/i.test(meta.papel ?? ""));
+  aud.leis = avaliar(aud, anterior, /membro|app/i.test(meta.papel ?? ""));
   const info = await fullPage(page, abs(rel), !!meta.semExpandir);
   mkdirSync(dirname(abs(`textos/${relBase}.txt`)), { recursive: true });
   mkdirSync(dirname(abs(`auditoria/${relBase}.json`)), { recursive: true });

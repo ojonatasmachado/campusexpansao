@@ -1,5 +1,6 @@
 // ETAPA 2: as 15 jornadas passo a passo. Uso: node capturar.mjs --so=jornadas [--j=M2,L1] [--ap=celular|desktop]
 // Ordem obrigatória (as jornadas alteram dados): L2a, M1..M9, L2b, L1, L3, L4, L5, L6.
+import { prepararRascunhoEscala } from "../lib/fixtures.mjs";
 import { jornada, proximoNumero } from "../lib/jornada.mjs";
 import { contextoGestao, contextoApp } from "../lib/sessoes.mjs";
 import { criarContexto } from "../lib/contexto.mjs";
@@ -20,9 +21,10 @@ const lider = (codigo, nome, titulo, fn, o = {}) => (DEF[codigo] = { tipo: "L", 
 const membro = (codigo, nome, titulo, fn, o = {}) => (DEF[codigo] = { tipo: "M", codigo, nome, titulo, fn, ...o });
 
 // ---------------------------------------------------------------- L2 Mural
+const idMural = process.env.CAPTURA_MURAL_ID || String(Date.now());
 const L2 = { nome: "aviso-no-mural", titulo: "Publicar aviso no Mural e ver quem leu" };
 lider("L2a", L2.nome, L2.titulo, async (j) => {
-  const titulo = `Aviso da captura (${j.ap})`;
+  const titulo = `Aviso da captura (${j.ap}) ${idMural}`;
   await j.passo("painel-inicio", "abrir /service (painel da igreja)", (p) => abrirInicioPainel(p));
   await menuPara(j, tela("comunicacao"), "mural-aberto");
   await j.passo("nova-publicacao-aberta", 'tocar "+ Nova publicação"', tocar("button", "Nova publicação"), { espera: ["Para quem"] });
@@ -33,7 +35,7 @@ lider("L2a", L2.nome, L2.titulo, async (j) => {
   await j.passo("publicado", 'tocar "Publicar"', async (p) => { await clicarTexto(p, "button", "Publicar", { exato: true }); await esperarTexto(p, titulo, 60000); }, { espera: [titulo] });
 }, { aceitarDialogos: true, parte: "a" });
 lider("L2b", L2.nome, L2.titulo, async (j) => {
-  const titulo = `Aviso da captura (${j.ap})`;
+  const titulo = `Aviso da captura (${j.ap}) ${idMural}`;
   await j.passo("mural-de-novo", "abrir /service > Mural", async (p) => { await abrirInicioPainel(p); const { clicarItemMenu } = await import("../lib/jkit.mjs"); const { abrirMenuLateral } = await import("../lib/nav.mjs"); await abrirMenuLateral(p); await clicarItemMenu(p, tela("comunicacao")); }, { espera: [titulo] });
   await j.passo("quem-leu-aberto", `tocar "Ver quem leu" na publicação`, async (p) => {
     const idx = await p.evaluate((t) => { const bs = [...document.querySelectorAll("button")].filter((b) => /ver quem leu/i.test(b.innerText)); for (let i = 0; i < bs.length; i++) { let a = bs[i]; for (let k = 0; k < 6 && a; k++, a = a.parentElement) if (a.innerText.includes(t) && a.innerText.length < 700) return i; } return -1; }, titulo);
@@ -135,7 +137,8 @@ membro("M6", "caminhada", "Caminhada: próximo passo, curso e Quero servir", asy
   await j.passo("pedido-de-etapa-fechado", "tocar fora da folha (fechar sem enviar)", async (p) => { await p.locator(".m6-scrim").first().click({ position: { x: 20, y: 40 } }); await p.waitForTimeout(500); }, { opcional: true });
   // segunda pessoa: caminho "Quero servir"
   await j.trocar(() => contextoApp("celular", "membro2"));
-  await j.passo("membro2-inicio-card-servir", "entrar como membro2 e abrir /service", (p) => abrirInicioApp(p), { espera: ["Conhecer os times"] });
+  await j.passo("membro2-inicio-card-servir", "entrar como membro2 e abrir /service", (p) => abrirInicioApp(p), { espera: ["Para você agora"] });
+  if (!await j.page.getByRole("button", { name: "Conhecer os times", exact: true }).isVisible()) await j.passo("mais-atencoes", "abrir as outras ações da fila", tocar("button", /^Ver mais/), { espera: ["Conhecer os times"] });
   await j.passo("times-que-procuram-aberto", 'tocar "Conhecer os times"', tocar("button", "Conhecer os times"), { espera: ["Quero servir neste time"] });
   await j.passo("quero-servir-tocado", 'tocar "Quero servir neste time" (Mídia)', async (p) => { const i = await p.evaluate(() => { const bs = [...document.querySelectorAll("button")]; return bs.findIndex((b) => { let a = b.parentElement; for (let k = 0; k < 4 && a; k++, a = a.parentElement) if (/Mídia/.test(a.innerText) && !/Louvor/.test(a.innerText)) return true; return false; }); }); await p.locator("button").nth(Math.max(i, 0)).click(); await p.waitForTimeout(1200); });
   await j.passo("caminhada-depois-do-pedido", 'fechar a folha e tocar na aba "Caminhada"', async (p) => { await p.keyboard.press("Escape"); const sc = p.locator(".m6-scrim").first(); if (await sc.isVisible().catch(() => false)) await sc.click({ position: { x: 20, y: 40 } }); await p.waitForTimeout(500); await abaApp(p, "Caminhada"); }, { espera: ["Etapas"], opcional: true });
@@ -150,10 +153,12 @@ membro("M8", "kids-familia", "Kids: família até onde o app chega (Maria)", asy
   await j.passo("perfil", 'tocar na aba "Perfil"', async (p) => { await abrirInicioApp(p); await abaApp(p, "Perfil"); }, { espera: ["Minha família"] });
   await j.passo("minha-familia", 'tocar "Minha família"', tocar(BTN, "Minha família"), { espera: ["Minhas crianças"] });
   await j.passo("ficha-do-davi-aberta", "tocar no cartão do Davi", async (p) => { await p.locator("button.m-card", { hasText: "Davi" }).first().click(); await p.waitForTimeout(800); }, { espera: ["Autorizo"] });
-  await j.passo("adicionar-crianca-aberto", "abrir nova ficha sem salvar", tocar("button", "Adicionar criança"), { espera: ["Nome da criança"] });
+  await j.passo("adicionar-crianca-aberto", "abrir nova ficha sem salvar", tocar("button", "Adicionar criança"), { espera: ["Foto da criança (obrigatória)"] });
   await j.passo("nova-ficha-cancelada", "cancelar a nova ficha", tocar("button", "Cancelar", { exato: true }));
-  await j.passo("checkin-kids-pela-rota", "abrir /service/kids-checkin (o check-in da criança só existe nessa rota, vinda de QR)", async (p) => { await p.goto("/service/kids-checkin", { waitUntil: "domcontentloaded" }); await p.waitForTimeout(1500); }, { opcional: true, semAuditoria: false });
-  j.obs("Rota /service/kids-checkin capturada sem QR. Check-in completo de crianças continua na O4/O6.");
+  await j.passo("checkin-do-davi", "fazer o check-in de Davi pelo cartão Kids hoje", tocar("button", "Fazer check-in de Davi", { exato: true }), { espera: ["Na sala"] });
+  await j.passo("retirada-do-davi", "solicitar a retirada pelo app", tocar("button", "Solicitar retirada", { nth: 0 }), { espera: ["Retirada solicitada"] });
+  await j.passo("checkin-kids-pela-rota", "abrir /service/kids-checkin sem parâmetros para conferir o estado de QR ausente", async (p) => { await p.goto("/service/kids-checkin", { waitUntil: "domcontentloaded" }); await p.waitForTimeout(1500); }, { opcional: true, semAuditoria: false });
+  j.obs("Entrada e pedido de retirada pelo app capturados. A entrega à professora e a retirada física continuam na O4/O6. A rota sem QR é apenas um estado de erro.");
 });
 
 // ---------------------------------------------------------------- M9 Sair
@@ -169,6 +174,8 @@ membro("M9", "sair-do-app", "Sair do app até a tela de login (Maria)", async (j
 
 // ---------------------------------------------------------------- L1 montar a escala
 lider("L1", "montar-escala", "Montar a escala de um culto e acompanhar confirmações", async (j) => {
+  await prepararRascunhoEscala();
+  j.obs("Em ambiente descartável, um rascunho da fixture é reposto antes de cada aparelho. A publicação é feita pela interface autenticada.");
   await j.passo("painel-inicio", "abrir /service (painel da igreja)", (p) => abrirInicioPainel(p));
   await menuPara(j, tela("escalas"), "escalas-abertas");
   await j.passo("evento-escolhido", "tocar no primeiro evento disponível", async (p) => { await p.locator("button.esc-event").filter({ hasText: new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(new Date()) }).first().click(); }, { espera: ["Louvor"] });
@@ -188,7 +195,7 @@ const digitarNoModal = (rotulo, valor, tipo = "input") => async (p) => { const l
 
 // ---------------------------------------------------------------- L3 visitante
 lider("L3", "registrar-visitante", "Registrar visitante e levá-lo à etapa seguinte", async (j) => {
-  const nome = `Visitante Captura ${j.ap === "celular" ? "Celular" : "Desktop"}`;
+  const nome = `Visitante Captura ${j.ap === "celular" ? "Celular" : "Desktop"} ${idMural}`;
   await j.passo("painel-inicio", "abrir /service (painel da igreja)", (p) => abrirInicioPainel(p));
   await menuPara(j, tela("visitantes"), "visitantes-funil");
   await j.passo("novo-visitante-aberto", 'tocar "+ Visitante"', tocar("button", "Registrar visitante", { exato: true }), { espera: ["Registrar visitante"] });
@@ -196,9 +203,9 @@ lider("L3", "registrar-visitante", "Registrar visitante e levá-lo à etapa segu
   await j.passo("telefone-digitado", "digitar o telefone", digitarNoModal("Telefone", "(11) 95555-0101"));
   await j.passo("lista-de-origens-aberta", 'tocar em "Como chegou"', async (p) => { await p.locator(".sel-trigger").first().click(); await p.waitForTimeout(400); }, { espera: ["Instagram"] });
   await j.passo("origem-escolhida", 'tocar em "Instagram"', async (p) => { await p.locator("button.sel-opt", { hasText: "Instagram" }).first().click(); await p.waitForTimeout(400); });
-  await j.passo("visitante-registrado", 'tocar "Registrar visitante"', async (p) => { await clicarTexto(p, "button", "Registrar visitante", { exato: true }); await esperarTexto(p, nome, 20000); }, { espera: [nome] });
-  await j.passo("ficha-do-visitante-aberta", "tocar no cartão do visitante", async (p) => { await p.getByText(nome, { exact: false }).first().scrollIntoViewIfNeeded(); await p.getByText(nome, { exact: false }).first().click(); await p.waitForTimeout(800); }, { espera: ["Avançar para"] });
-  await j.passo("etapa-avancada", 'tocar "Avançar para ... →"', async (p) => { await clicarTexto(p, "button", "Avançar para"); await p.waitForTimeout(1500); });
+  await j.passo("visitante-registrado", 'tocar "Registrar visitante"', async (p) => { await p.getByRole("dialog").getByRole("button", { name: "Registrar visitante", exact: true }).click(); await esperarTexto(p, nome, 60000); }, { espera: [nome] });
+  await j.passo("ficha-do-visitante-aberta", "tocar no cartão do visitante", async (p) => { await p.getByText(nome, { exact: false }).first().scrollIntoViewIfNeeded(); await p.getByText(nome, { exact: false }).first().click(); await p.waitForTimeout(800); }, { espera: ["Mover para"] });
+  await j.passo("etapa-avancada", 'tocar "Mover para Contato"', async (p) => { await clicarTexto(p, "button", "Mover para"); }, { espera: ["Mover para Integrando"] });
 }, { aceitarDialogos: false });
 
 // ---------------------------------------------------------------- L4 convite do app
@@ -239,7 +246,7 @@ lider("L5", "checkin-por-qr", "Check-in do culto por QR: do painel até a presen
     const u = new URL(dados.link.startsWith("http") ? dados.link : BASE_URL + dados.link);
     const caminho = u.pathname + u.search;
     await j.trocar(() => contextoApp(j.ap, "membro"));
-    await j.passo("rota-checkin-lida-como-voluntaria", "a Maria (escalada) lê o QR: abrir /service/checkin?event=...", async (p) => { await p.goto(caminho, { waitUntil: "domcontentloaded" }); await esperarTexto(p, "Presença confirmada", 30000); });
+    await j.passo("rota-checkin-lida-como-voluntaria", "a Maria (escalada) lê o QR: abrir /service/checkin?event=...", async (p) => { await p.goto(caminho, { waitUntil: "domcontentloaded" }); await p.getByText(/Presença confirmada|Você já está presente/, { exact: true }).waitFor(); });
   } else j.obs("link do QR (span.ck-link-txt) não encontrado: rota /service/checkin não aberta");
 });
 
@@ -249,7 +256,8 @@ lider("L6", "cor-e-logo", "Trocar cor e logo da igreja e ver o app do membro", a
   await j.passo("painel-inicio", "abrir /service (painel da igreja)", (p) => abrirInicioPainel(p));
   await menuPara(j, cfg, "configuracoes-abertas");
   await j.passo("personalizacao-aberta", 'tocar em "Personalização"', async (p) => { await abrirConfigAba(p, { label: "Personalização" }); }, { espera: ["Cor da igreja"] });
-  await j.passo("cor-roxo-escolhida-previa", 'tocar na cor "Roxo"', tocar("button.seg-chip", "Roxo"));
+  const cor = await j.page.getByRole("button", { name: "Roxo", exact: true }).getAttribute("aria-pressed") === "true" ? "Laranja" : "Roxo";
+  await j.passo("cor-escolhida-previa", `escolher a cor ${cor}`, tocar("button.seg-chip", cor));
   await j.passo("logo-enviada", 'tocar "Enviar imagem" e escolher logo-teste.png', async (p) => { await p.locator('input[type="file"]').first().setInputFiles(join(DIR_FERRAMENTA, "logo-teste.png")); await p.waitForTimeout(2500); });
   await j.passo("depois-do-envio-da-logo", "(depois do recorte, se houver) confirmar", async (p) => { const b = p.getByRole("dialog").getByRole("button", { name: /^(Usar|Confirmar|Salvar|Recortar|Aplicar|Cortar)/i }).first(); if (await b.isVisible().catch(() => false)) { await b.click(); await p.waitForTimeout(3000); } }, { opcional: true });
   await j.passo("personalizacao-salva", 'tocar "Salvar personalização"', async (p) => { await clicarTexto(p, "button", "Salvar personalização"); await esperarTexto(p, "Salvo!", 15000).catch(() => {}); }, { espera: [/Salvo|Salvar/] });
@@ -327,7 +335,7 @@ lider("L10", "aviso-lembrete", "Publicar aviso com lembrete em 24h", async (j) =
     const publico = p.getByRole("button", { name: /^Para quem/ });
     await publico.click(); await p.getByRole("option").filter({ hasNotText: "Escolha quem recebe" }).first().click();
   });
-  await j.passo("canal", "abrir canais e lembrete", tocar("summary", "Canais"));
+  await j.passo("canal", "abrir canais e lembrete", tocar("summary", "Notificações e compartilhamento"));
   await j.passo("lembrete", "escolher Em 24h", tocar("button", "Em 24h", { exato: true }));
   await j.passo("revisar", "revisar publicação", tocar("button", "Revisar publicação", { exato: true }), { espera: ["Lembrete:"] });
   await j.passo("publicar", "publicar aviso", tocar("button", "Publicar", { exato: true }));

@@ -46,15 +46,16 @@ export async function jornada({ codigo, nome, titulo, ap, conta, papel, abrir, c
       const chaveB = `${pastaP}/${nomeArq}.png`;
       const efeitoAntes = acao ? await efeito(page).catch(() => "") : null;
       const redeAntes = page.__requisicoes ?? 0;
-      let falhou = null;
+      let falhou = null, detalhe = null;
       if (acao) {
         for (let t = 0; t < (opts.tentativas ?? 1); t++) {
-          try { falhou = null; await acao(page); break; } catch (e) { falhou = String(e.message ?? e).split("\n")[0].slice(0, 300); await page.waitForTimeout(1200); }
+          try { falhou = null; await acao(page); break; } catch (e) { detalhe = String(e.message ?? e).replace(/eyJ[\w.-]+/g, "[token omitido]"); falhou = detalhe.split("\n")[0].slice(0, 300); await page.waitForTimeout(1200); }
         }
       }
       if (falhou) {
         const f = `falhas/${pastaP}/${nomeArq}.png`;
         await capturarFalha(page, f);
+        writeFileSync(join(SAIDA, f.replace(/\.png$/, ".erro.txt")), detalhe ?? falhou, { mode: 0o600 });
         registrarBloqueio(chaveB, { tela: `${codigo} ${titulo} (${ap})`, passo: `${toques.join(" > ")} (passo ${pad2(n)})`, erro: falhou, print: f });
         if (opts.opcional) { obs.push(`passo ${pad2(n)} ${slug} não existe/falhou: ${falhou}`); return false; }
         throw new Aborta(falhou);
