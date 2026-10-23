@@ -30,7 +30,7 @@ lider("L2a", L2.nome, L2.titulo, async (j) => {
   await j.passo("mensagem-digitada", "digitar a mensagem", preencher("textarea.textarea", "Teste da captura: toque em ler para confirmar que recebeu este aviso."));
   await j.passo("publico", "escolher quem recebe", async (p) => { await p.getByRole("button", { name: /^Para quem/ }).click(); await p.getByRole("option").filter({ hasNotText: "Escolha quem recebe" }).first().click(); });
   await j.passo("revisar", "revisar a publicação", tocar("button", "Revisar publicação", { exato: true }));
-  await j.passo("publicado", 'tocar "Publicar"', async (p) => { await clicarTexto(p, "button", "Publicar", { exato: true }); await esperarTexto(p, titulo, 20000); }, { espera: [titulo] });
+  await j.passo("publicado", 'tocar "Publicar"', async (p) => { await clicarTexto(p, "button", "Publicar", { exato: true }); await esperarTexto(p, titulo, 60000); }, { espera: [titulo] });
 }, { aceitarDialogos: true, parte: "a" });
 lider("L2b", L2.nome, L2.titulo, async (j) => {
   const titulo = `Aviso da captura (${j.ap})`;

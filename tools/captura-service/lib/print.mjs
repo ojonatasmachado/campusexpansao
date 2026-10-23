@@ -55,7 +55,7 @@ export function limparBloqueio(chave) {
 // ---------- esperas ----------
 export async function esperar(page, { extra = 250 } = {}) {
   await page.waitForLoadState("domcontentloaded").catch(() => {});
-  await page.waitForLoadState("networkidle", { timeout: 1500 }).catch(() => {});
+  await page.waitForLoadState("networkidle", { timeout: 30000 }).catch(() => {});
   await page.evaluate(() => document.fonts.ready).catch(() => {});
   await page.waitForFunction((ts) => !ts.some((t) => document.body && document.body.innerText.includes(t)), TEXTOS_CARREGANDO, { timeout: 12000 }).catch(() => {});
   await page.waitForTimeout(extra);
@@ -153,6 +153,12 @@ export async function tirarPrint(page, meta) {
   const aparelho = page.__aparelho;
   const url = page.url();
   const caminho = new URL(url).pathname;
+  const esperados = [].concat(meta.espera ?? []).map((e) => e instanceof RegExp ? { re: e.source, flags: e.flags } : { texto: norm(e) });
+  if (esperados.length) await page.waitForFunction((itens) => {
+    const texto = document.body?.innerText ?? "";
+    const normal = texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+    return itens.every((e) => e.re ? new RegExp(e.re, e.flags).test(texto) || new RegExp(e.re, e.flags).test(normal) : normal.includes(e.texto));
+  }, esperados, { timeout: 60000 }).catch(() => {});
   const texto = await page.evaluate(() => document.body?.innerText ?? "").catch(() => "");
   // ---- validação ----
   let erro = null;

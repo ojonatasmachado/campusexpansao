@@ -49,4 +49,4 @@ export async function abrirInicioApp(page) {
 }
 export { abaApp };
 export const preencher = (seletor, valor, nth = 0) => async (p) => { const l = p.locator(seletor).nth(nth); await l.scrollIntoViewIfNeeded().catch(() => {}); await l.click({ timeout: 8000 }); await l.fill(valor); };
-export const esperarTexto = (page, re, timeout = 10000) => page.waitForFunction((s) => document.body.innerText.includes(s), String(re), { timeout });
+export const esperarTexto = (page, re, timeout = 10000) => page.waitForFunction((s) => document.body.innerText.includes(s), String(re), { timeout: Math.max(timeout, 60000) });

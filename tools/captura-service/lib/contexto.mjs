@@ -64,7 +64,7 @@ export async function criarContexto(aparelho, { storageState, semPadroes = false
   });
   ctx.on("page", instrumentar);
   ctx.setDefaultNavigationTimeout(90000);
-  ctx.setDefaultTimeout(15000);
+  ctx.setDefaultTimeout(60000);
   const page = await ctx.newPage();
   page.__aparelho = aparelho;
   page.__maxAltura = maxAltura;
