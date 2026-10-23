@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
-import { irPara } from '../lib/nav.mjs';
+import { irPara, clicarTexto } from '../lib/nav.mjs';
 
 test('navega por Mais e grupos nativos aninhados sem exigir a classe antiga do título', async () => {
   const browser = await chromium.launch();
@@ -14,5 +14,15 @@ test('navega por Mais e grupos nativos aninhados sem exigir a classe antiga do t
     assert.equal(await page.locator('details').first().getAttribute('open'), null);
     assert.ok(cliques.includes('abrir Formação'));
     assert.ok(cliques.includes('abrir Cursos'));
+  } finally { await browser.close(); }
+});
+
+test('ignora botão com caixa geométrica, mas oculto por visibility', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await page.setContent(`<button style="visibility:hidden">Editar</button><button onclick="document.querySelector('output').textContent='aberto'">Editar</button><output></output>`);
+    await clicarTexto(page, 'button', 'Editar', { exato: true });
+    assert.equal(await page.locator('output').innerText(), 'aberto');
   } finally { await browser.close(); }
 });

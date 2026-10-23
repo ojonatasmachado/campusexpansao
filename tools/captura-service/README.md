@@ -3,6 +3,7 @@
 Recuperada do stash de 05/10 e adaptada às leis 12 e 13. Usa Playwright e axe. Não aponta para produção, não aplica stashes nem reseta banco. O modo isolado sobe o app e o Supabase em portas locais próprias, aplica as migrações e as fixtures e descarta banco, servidor e sessões ao terminar. Docker deve estar ativo e o CLI Supabase instalado.
 
 ```sh
+npm ci
 npm ci --prefix tools/captura-service
 cd tools/captura-service
 npx playwright install chromium
@@ -12,6 +13,8 @@ npx tsx tools/captura-service/isolado.ts
 ```
 
 Não mantenha outro servidor Next no mesmo worktree durante a captura. Para uma jornada isolada: `npx tsx tools/captura-service/isolado.ts --so=jornadas --j=M10 --ap=celular`.
+
+O limite é uma hora por grupo selecionado, somado para a execução completa. Ao excedê-lo, o processo de captura é encerrado antes do descarte do ambiente. Para verificações curtas, use `--so=membro`, `--so=painel` ou `--ap=celular` e uma pasta `CAPTURA_SAIDA` por lote. Uma execução interrompida deixa evidência parcial, não uma aprovação.
 
 O último comando percorre entrada, jornadas, painel, estados, líder e membro. As jornadas vêm antes da galeria do membro, pois abrir o Mural registra a leitura e consumiria as novidades usadas nos testes. No modo isolado, a fixture de um rascunho de escala é reposta antes de cada aparelho; publicar no celular não esgota o cenário do desktop. O modo direto abaixo reaproveita app e banco locais já existentes e exige preparar as fixtures antes. Para recapturar uma parte:
 

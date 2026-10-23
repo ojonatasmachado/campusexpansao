@@ -37,11 +37,12 @@ function instrumentar(page) {
       page.__col.falhas.push({ metodo: r.request().method(), url: r.url().slice(0, 300), status: r.status() });
     }
   });
-  // Nunca confirmar: confirmações nativas são registradas e recusadas.
+  // Mudanças de formulário são descartadas ao passar para outra captura.
+  // Confirmações que alteram registros continuam recusadas por padrão.
   page.on("dialog", async (d) => {
     page.__col.dialogos.push({ tipo: d.type(), mensagem: d.message() });
     // jornadas que pedem a confirmação (ex. publicar) ligam page.__aceitarDialogo; nunca para exclusões
-    if (page.__aceitarDialogo) await d.accept().catch(() => {}); else await d.dismiss().catch(() => {});
+    if (d.type() === "beforeunload" || page.__aceitarDialogo) await d.accept().catch(() => {}); else await d.dismiss().catch(() => {});
   });
 }
 

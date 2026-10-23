@@ -31,11 +31,23 @@ async function parar(app: ChildProcess) {
 }
 
 async function capturar(env: NodeJS.ProcessEnv, args: string[]) {
+  const filtro = args.find((arg) => arg.startsWith("--so="));
+  const grupos = filtro ? filtro.slice(5).split(",").length : 6;
   return new Promise<number>((ok, falha) => {
     const child = spawn(process.execPath, [join(DIR, "capturar.mjs"), ...args], { cwd: RAIZ, env, stdio: "inherit" });
-    const limite = setTimeout(() => { child.kill("SIGTERM"); falha(new Error("Captura excedeu uma hora")); }, 3_600_000);
+    let expirou = false;
+    const limite = setTimeout(() => {
+      expirou = true;
+      // SIGTERM fecha o Chromium antes do laço de captura e produz falsos bloqueios.
+      // Aguarde o processo encerrar antes de descartar o banco e o servidor.
+      child.kill("SIGKILL");
+    }, 3_600_000 * grupos);
     child.once("error", (e) => { clearTimeout(limite); falha(e); });
-    child.once("close", (code) => { clearTimeout(limite); ok(code ?? 1); });
+    child.once("close", (code) => {
+      clearTimeout(limite);
+      if (expirou) falha(new Error(`Captura excedeu ${grupos} hora(s). Execute lotes menores com --so e --ap; os arquivos parciais não comprovam uma captura completa.`));
+      else ok(code ?? 1);
+    });
   });
 }
 

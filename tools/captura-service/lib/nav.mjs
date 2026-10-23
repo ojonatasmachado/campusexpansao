@@ -12,6 +12,7 @@ async function acharIndice(loc, alvo, { exato = false, nth = 0 } = {}) {
       let c = 0;
       for (let i = 0; i < els.length; i++) {
         const el = els[i];
+        if (!el.checkVisibility({ checkVisibilityCSS: true })) continue;
         const r = el.getBoundingClientRect();
         if (r.width <= 0 || r.height <= 0) continue;
         const t = nr(`${el.innerText || el.textContent || ""} ${el.getAttribute("aria-label") || ""} ${el.title || ""}`);
