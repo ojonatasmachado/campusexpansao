@@ -57,6 +57,9 @@ Fonte: HANDOFF item 6; STATUS F14; VALIDACAO.md :83; QUALIDADE-E-INTERNACIONAL.m
 - `app/api/service/cep-lookup/route.ts`
 - `app/api/service/members/accept-invite/route.ts`
 
+- `app/service/membro/`
+- `app/service/lib/requirements.ts`
+
 ## Pronto quando
 - Locale da pessoa e moeda da igreja explícitos.
 - Textos longos e pseudolocalização testados.
@@ -106,3 +109,5 @@ Trilho ampliado em 24/10 após conferir a reserva I10: entradas de autenticaçã
 Autenticação localizada em 24/10: 381 mensagens completas por idioma, 363 referências. Login e recuperação usam mensagens completas; reenvio de confirmação depende de estado técnico, não de texto traduzido. Provider incluído na entrada temática. Prova Chromium em banco cex-rls-664a442f27c0 passou e descartou o projeto: seis combinações de idioma/largura no Perfil, falha de persistência e três fluxos anônimos com erros simulados, senha visível e link vencido. Nenhum e-mail enviado. Tipos, lint, contratos e leis 12/17 passaram no lote de autenticação; convite servidor acrescentado depois e será revalidado. N1 continua incompleta e sem publicação em produção.
 
 Reservas conferidas após retomada: somente I10/Claude e N1/Codex. Ampliação para mensagens de convite, consentimento e CEP no cliente/servidor; nenhum caminho da I10 incluído.
+
+Reservas reconferidas: ampliação para mensagens e datas dos componentes do membro e rótulos de pré-requisitos. Mudanças de internacionalização, sem assumir as histórias M reservadas ao Claude. O diretório membro não pertence à I10.
