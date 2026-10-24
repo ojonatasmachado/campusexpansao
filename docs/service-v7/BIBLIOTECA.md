@@ -57,7 +57,7 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Confirmação | `confirmar()` em `app/service/ui/confirmar.ts` (diálogo de risco) | sim | ok; CI barra `confirm()` | 3 |
 | Aviso (toast) | `avisar()` em `app/service/lib/avisar.ts`, com Desfazer (`acao`); o app do membro usa o mesmo | sim | ok | 3, 6 |
 | Vazio | `Vazio` em `app/service/ui/Estados.tsx`; `EmptyState` usa por dentro | sim | `.empty` com estilo próprio em Escalas e `mp-vazio` no mapa | 3 |
-| Carregando | `Carregando` em `app/service/ui/Estados.tsx` (esqueleto: lista, linhas, cartões, indicadores) | sim | textos inline curtos ficam | 3 |
+| Carregando | `Carregando` em `app/service/ui/Estados.tsx` (esqueleto: lista, linhas, cartões, indicadores; `telaInteira` com anel na entrada) | sim | entrada em `app/service/loading.tsx`; textos inline curtos ficam | 3 |
 | Erro | `ErroEstado` em `app/service/ui/Estados.tsx`; `friendlyWriteError` dá o texto | parcial | telas ainda mostram erro de carga só como texto | 3 |
 | Ajuda "?" | `HelpDot` (HelpSystem.tsx) | sim | modelo a seguir | n/a |
 | Tabela | `Tabela` em `app/service/ui/Tabela.tsx` (colunas, linha que abre o detalhe, seleção com barra de ações em lote, linhas em sequência ao filtrar); referência: Pessoas | parcial | as outras `.tbl` (Aniversariantes, Secretaria, Financeiro, Formação, Kids, Visitantes, Reuniões) ainda à mão | 3 |
@@ -77,6 +77,19 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 8. Campos: seleção, data, caixa de marcar.
 
 ## Ficha de entrada de um componente novo
+
+### Carregando (2026-10-24)
+
+- Necessidade e lugar: informar que a entrada do painel ou do app do membro está buscando dados. O fallback de `/service` também cobre suas rotas filhas sem fallback próprio.
+- Anatomia: anel decorativo e mensagem falada; propriedades `rotulo` e `telaInteira`. Sem ação ou moldura. Substituído automaticamente pelo conteúdo da rota, sem espera artificial.
+- Estados: carregando; foco, toque, vazio, erro e Desfazer não se aplicam a esta peça de status.
+- Tokens e tema: `--ink`, `--white`, `--sans`, `--fs-ui-15` e áreas seguras. Anel neutro para não antecipar a cor de uma igreja ainda desconhecida; herda o tema já aplicado durante navegação. Não consulta dados nem atrasa o fallback.
+- Pior caso e densidade: mensagem quebra naturalmente em tela estreita; zero ações e quatro palavras na entrada, sem listas ou dependência da quantidade de dados.
+- Acessibilidade e movimento: `role="status"`, região educada, anel oculto para leitor de tela; animação CSS desativada com movimento reduzido. Texto permanece visível.
+- Vocabulário: mensagem operacional, sem termos renomeáveis ou contadores.
+- Mercado: Material UI Progress e Carbon Loading oferecem indicador indeterminado para espera sem duração conhecida; adotado anel com texto, sem percentual inventado.
+- Lugares: componente em `app/service/ui/Estados.tsx`, visual em `biblioteca.css`, inventário acima. Prancha 6: atualização visual pendente.
+- Validação: TypeScript e lint; captura no navegador e matriz de temas pendentes por indisponibilidade do navegador/servidor local no ambiente.
 
 Um componente só entra na biblioteca se a ficha estiver completa:
 
