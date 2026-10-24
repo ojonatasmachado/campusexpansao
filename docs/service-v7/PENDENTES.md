@@ -60,6 +60,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 ### 3. Qualidade que protege o resto
 
 ### 4. Código independente (dá para tocar em paralelo, se os trilhos não esbarrarem)
+- **Q8** Endereço por tela do painel · **Q7** Carga do painel
 - **I10** Biblioteca: indicadores e gráficos
 - **I2** Ações do Início que não navegam · **I5** Ajuda com menos repetição
 - **M2** Setas nos botões do membro · **M3** Retorno e recarga · **M5** Foco no Mural · **I7** Quadros no toque
@@ -69,6 +70,8 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 ### 5. Verificações em código e banco local
 - **E5** Troca de escala ponta a ponta · **M4** Convite e primeiro acesso · **O4** Continuidade de Visitantes, Crianças e Cursos
 - **O5** Zero e ausência de dados · **O6** Kids e Financeiro com volume · **Q4** Push e imagem com serviços reais
+
+- **E6** Escalas em 768px (some com o E1) · **A4** Ponto branco · **Q9** Seletores acessíveis
 
 ### 6. Precisam de aparelho, pessoas ou dados de fora
 - **A1** iPhone e PWA · **A2** Cinco membros acima de 60 anos · **A3** Leitor de tela e teclado · **A5** Pessoas representativas

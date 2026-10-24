@@ -5,7 +5,7 @@ import { fusoValido, normalizarFuso } from "../../lib/fuso";
 import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
 import { useRouter } from "next/navigation";
-import { Fragment, useId, useRef, useState } from "react";
+import { Fragment, useId, useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { uploadServiceImage, imageExtension } from "../../lib/upload-image";
 import { Icon } from "../../lib/icons";
@@ -20,25 +20,21 @@ import { normalizarVocabulario, vocabularioParaGravar, LIMITE_CURTO, LIMITE_TELA
 import { useTermos } from "../../lib/vocabulario-context";
 import { IDENTIDADE_CFG_DEFAULT } from "../../../lib/church-page";
 import type { IdentidadeCfg } from "../../../lib/church-page";
-import { useServiceAccess } from "../../AccessContext";
 import CepInput from "../../CepInput";
 import { HelpDot } from "../../HelpSystem";
-import { Av, PageHead } from "../ui";
-import { FormScreen, FormSection, type FormScreenHandle } from "../form/FormScreen";
-import { ACESSO_FIN_LANCAR, ACESSO_FIN_VER } from "../../modules/financeiro/manifest";
+import { PageHead } from "../ui";
 import { ESCALA_DEFAULT, type EscalaSettings } from "../../modules/escalas/regras";
 import { friendlyWriteError } from "../erros";
 import { EntradaConfig } from "../../modules/entrada/EntradaConfig";
 import { GrupoEditModal } from "../../modules/grupos/GrupoEditModal";
 import { cfgTabs as gerarCfgTabs } from "../../modules/registry";
-import { ACOES_V2, CEX_ICON_FOR, PAPEIS_V2, ligadosDa, matrizComFallback } from "../comum";
+import { ACOES_V2, PAPEIS_V2, ligadosDa, matrizComFallback } from "../comum";
 import { TimePicker } from "../campos";
 import { MinisterioEditModal, RequisitosServirCard } from "./Times";
 import { Espacos } from "./Agenda";
 import { TurmasKids } from "./Kids";
 import { PesquisasView } from "./Pesquisas";
 import type { ChurchView, CourseView, FellowshipGroupView, GruposCfg, KidsClassView, MatrizV2, MinisterialTitleView, MinistryView, ModalState, PapelV2, PersonView, ReservationView, RoomView, StatusCriterios, TagView } from "../tipos";
-
 import { Botao } from "../../ui/Botao";
 import { Interruptor } from "../../ui/Interruptor";
 import { Acao } from "../../ui/Acao";
@@ -51,352 +47,10 @@ import { Segmentado } from "../../ui/Segmentado";
 import { Campo, Entrada } from "../../ui/Campo";
 import { Vazio } from "../../ui/Estados";
 import { confirmar } from "../../ui/confirmar";
-import { Janela } from "../../ui/Janela";
-export const STATUS_CFG_DEFAULT: StatusCriterios = { recusasInativando: 2, recusasInativo: 4, diasIndispInativo: 30, considerarFerias: false };
-export const GRUPOS_CFG_DEFAULT: GruposCfg = { ativo: true, termo: "Grupos de Comunhão", termoP: "Grupo de Comunhão", sigla: "GC" };
-
-export const DIAS_SEMANA = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-
-
-/* telas extras liberáveis pessoa a pessoa, além do que o papel já dá
-   (Configurações → Acessos por pessoa). Só rotas que já têm entrada real
-   no menu lateral. */
-export const ACESSO_ROTAS: { id: string; label: string }[] = [
-  { id: "painel", label: "Início" },
-  { id: "membros", label: "Pessoas" },
-  { id: "pessoas", label: "{Voluntarios}" },
-  { id: "times", label: "Times" },
-  { id: "visitantes", label: "Visitantes" },
-  { id: "batismos", label: "Batismos" },
-  { id: "cursos", label: "Cursos e trilhas" },
-  { id: "relatorios", label: "Relatórios" },
-  { id: "secretaria", label: "Secretaria" },
-  { id: "marca", label: "Personalização (cor e logo)" },
-  { id: "pesquisas", label: "Pesquisas" },
-  { id: "oracao", label: "Pedidos de oração" },
-];
-
-
-export const TAG_CORES = [
-  { v: "olive", l: "Oliva" },
-  { v: "wheat", l: "Trigo" },
-  { v: "clay", l: "Argila" },
-  { v: "terra", l: "Terracota" },
-  { v: "sand", l: "Areia" },
-  { v: "amber", l: "Âmbar" },
-  { v: "rust", l: "Ferrugem" },
-];
-
-export function AcessosCard({
-  people,
-  church,
-  currentRole,
-  onlyPersonId,
-}: {
-  /* dentro da ficha da pessoa: só os acessos dela, sem a lista */
-  onlyPersonId?: string;
-  people: PersonView[];
-  church: ChurchView | undefined;
-  currentRole: "master" | "pastor" | "lider" | "membro";
-}) {
-  const { comTermos: ct } = useTermos();
-  const router = useRouter();
-  const { personGrants, currentPersonId } = useServiceAccess();
-  const [q, setQ] = useState("");
-  const [selectedIdState, setSelectedId] = useState<string | null>(null);
-  const selectedId = onlyPersonId ?? selectedIdState;
-  const [erro, setErro] = useState("");
-  const podeDelegar = currentRole === "master";
-  const pessoa = people.find((p) => p.id === selectedId) ?? null;
-  const lista = people.filter((p) => !q || p.name.toLowerCase().includes(q.toLowerCase()));
-  const grantsDe = (personId: string) => personGrants.filter((g) => g.personId === personId).map((g) => g.code);
-  const pessoaGrants = pessoa ? grantsDe(pessoa.id) : [];
-  const ehDelegado = pessoaGrants.includes("acessos.delegar");
-  /* liberações vivem em service.person_grants (migração 0043); o banco só
-     deixa master/pastor/delegado gravar, e só master mexe em 'acessos.delegar' */
-  const toggleGrant = async (code: string) => {
-    if (!pessoa || !church?.organizationId) return;
-    setErro("");
-    const db = createServiceBrowserClient().schema("service").from("person_grants");
-    const { error } = pessoaGrants.includes(code)
-      ? await db.delete().eq("person_id", pessoa.id).eq("grant_code", code)
-      : await db.insert({ organization_id: church.organizationId, person_id: pessoa.id, grant_code: code, granted_by: currentPersonId });
-    if (error) setErro("Não foi possível salvar. Você pode não ter permissão para liberar esse acesso.");
-    router.refresh();
-  };
-  return (
-    <div className={onlyPersonId ? "" : "cfg-grid2"}>
-      {!onlyPersonId && (
-      <div className="cfg-card">
-        <div className="cfg-card-t">Quem pode acessar o quê</div>
-        <div className="cfg-card-s">Líderes já enxergam toda a Operação. Aqui você abre telas extras para uma pessoa específica, Membros, Visitantes, Times... Escolha a pessoa e marque o que ela pode ver.</div>
-        <div className="tb-search" style={{ marginBottom: 12 }}>
-          <span className="si"><Icon name="buscar" size={13} /></span>
-          <input placeholder="Buscar pessoa pelo nome..." value={q} onChange={(e) => setQ(e.target.value)} />
-        </div>
-        <div className="acesso-list">
-          {lista.slice(0, 40).map((p) => {
-            const n = grantsDe(p.id).filter((c) => c !== "acessos.delegar").length;
-            return (
-              <Opcao key={p.id} marcada={selectedId === p.id} estilo="flag-row" onClick={() => setSelectedId(p.id)}>
-                <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
-                <div className="flag-main"><div className="flag-nome">{p.name}</div><div className="flag-meta">{n ? `${plural(n, "acesso extra", "acessos extras")}` : "sem acesso extra"}</div></div>
-              </Opcao>
-            );
-          })}
-          {lista.length === 0 && <Vazio titulo="Ninguém encontrado." />}
-        </div>
-      </div>
-      )}
-
-      <div className="cfg-card">
-        {!pessoa && <Vazio titulo="Escolha uma pessoa na lista para liberar telas." />}
-        {pessoa && (
-          <>
-            <div className="cfg-card-t">Acessos de {pessoa.name.split(" ")[0]}</div>
-            <div className="cfg-card-s">Marque as telas que {pessoa.name.split(" ")[0]} pode abrir além do padrão do papel.</div>
-            <div className="acesso-toggles">
-              {ACESSO_ROTAS.map((r) => {
-                const on = pessoaGrants.includes(r.id);
-                return (
-                  <Opcao key={r.id} marcada={on} estilo="acesso-tog" onClick={() => toggleGrant(r.id)}>
-                    <span className="acesso-tog-ic"><Icon name={CEX_ICON_FOR[r.id] ?? "config"} size={15} /></span>
-                    <span className="acesso-tog-l">{ct(r.label)}</span>
-                    <span className={`acesso-tog-sw${on ? " on" : ""}`} />
-                  </Opcao>
-                );
-              })}
-            </div>
-            {/* financeiro (0073): só dono, master e pastor liberam; o banco confere */}
-            {(currentRole === "master" || currentRole === "pastor") && (
-              <div className="fin-acesso">
-                <div className="cfg-row-t">Financeiro</div>
-                <div className="cfg-row-s">Dízimo de cada pessoa é dado sensível. Libere só para quem cuida do caixa.</div>
-                <div className="acesso-toggles">
-                  {([[ACESSO_FIN_VER, "Ver o financeiro"], [ACESSO_FIN_LANCAR, "Ver e lançar"]] as const).map(([code, label]) => {
-                    const on = pessoaGrants.includes(code);
-                    return (
-                      <Opcao key={code} marcada={on} estilo="acesso-tog" aria-pressed={on} onClick={() => toggleGrant(code)}>
-                        <span className="acesso-tog-ic"><Icon name="carteira" size={15} /></span>
-                        <span className="acesso-tog-l">{label}</span>
-                        <span className={`acesso-tog-sw${on ? " on" : ""}`} />
-                      </Opcao>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            <Linha estilo="config" style={{ marginTop: 18 }}>
-              <div className="cfg-row-main">
-                <div className="cfg-row-t">Pode liberar acessos a outras pessoas</div>
-                <div className="cfg-row-s">{ehDelegado ? "É um delegado de acessos" : "Só vê os próprios acessos"}</div>
-              </div>
-              <Interruptor ligado={ehDelegado} rotulo="Pode liberar acessos a outras pessoas" desativado={!podeDelegar} onClick={() => toggleGrant("acessos.delegar")} />
-            </Linha>
-            {erro && <div className="field-error" style={{ marginTop: 8 }}>{erro}</div>}
-            {!podeDelegar && <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 8 }}>Só a Direção (master) define quem pode delegar acessos.</div>}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-export function TagElencoModal({
-  tag, people, onClose,
-}: {
-  tag: TagView;
-  people: PersonView[];
-  onClose: () => void;
-}) {
-  const { comTermos: ct } = useTermos();
-  const router = useRouter();
-  const [q, setQ] = useState("");
-  const [localTag, setLocalTag] = useState(tag);
-  const [localPeople, setLocalPeople] = useState(people);
-
-  const lista = localPeople.filter((p) => !q || p.name.toLowerCase().includes(q.toLowerCase()));
-  const dentro = localPeople.filter((p) => p.tags.includes(tag.id)).length;
-
-  const toggleElenco = async (personId: string) => {
-    const pessoa = localPeople.find((p) => p.id === personId);
-    if (!pessoa) return;
-    const dentroAgora = pessoa.tags.includes(tag.id);
-    const nextTags = dentroAgora ? pessoa.tags.filter((x) => x !== tag.id) : [...pessoa.tags, tag.id];
-    const removendoLider = dentroAgora && localTag.leaders.includes(personId);
-    const nextLeaders = removendoLider ? localTag.leaders.filter((x) => x !== personId) : localTag.leaders;
-
-    setLocalPeople((prev) => prev.map((p) => (p.id === personId ? { ...p, tags: nextTags } : p)));
-    if (removendoLider) setLocalTag((prev) => ({ ...prev, leaders: nextLeaders }));
-
-    const supabase = createServiceBrowserClient();
-    await supabase.schema("service").from("people").update({ tags: nextTags }).eq("id", personId);
-    if (removendoLider) await supabase.schema("service").from("tags").update({ leaders: nextLeaders }).eq("id", tag.id);
-    router.refresh();
-  };
-
-  const toggleLider = async (personId: string) => {
-    const ehLider = localTag.leaders.includes(personId);
-    const nextLeaders = ehLider ? localTag.leaders.filter((x) => x !== personId) : [...localTag.leaders, personId];
-    const pessoa = localPeople.find((p) => p.id === personId);
-    const precisaEntrarNoElenco = !ehLider && pessoa && !pessoa.tags.includes(tag.id);
-    const nextTags = precisaEntrarNoElenco ? [...(pessoa?.tags ?? []), tag.id] : pessoa?.tags ?? [];
-
-    setLocalTag((prev) => ({ ...prev, leaders: nextLeaders }));
-    if (precisaEntrarNoElenco) setLocalPeople((prev) => prev.map((p) => (p.id === personId ? { ...p, tags: nextTags } : p)));
-
-    const supabase = createServiceBrowserClient();
-    await supabase.schema("service").from("tags").update({ leaders: nextLeaders }).eq("id", tag.id);
-    if (precisaEntrarNoElenco) await supabase.schema("service").from("people").update({ tags: nextTags }).eq("id", personId);
-    router.refresh();
-  };
-
-  return (
-    <Janela larga sobretitulo={<>Frente · {tag.name}</>} titulo={<>Quem serve nos {tag.name}</>} aoFechar={onClose} cabecalho={<>
-          <div className="modal-sub">
-            {ct("Marque os {voluntarios} que fazem parte deste time.")} Toque na estrela para definir quem é líder do time. {plural(dentro, "marcado")}.
-          </div>
-      </>} corpoBloco rodape={<>
-          <Botao variante="principal" onClick={onClose}>Concluído</Botao>
-      </>}>
-      <div className="tb-search" style={{ marginBottom: 14 }}>
-        <span className="si"><Icon name="buscar" size={13} /></span>
-        <input placeholder={ct("Buscar {voluntario}...")} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
-      </div>
-      {lista.map((p) => {
-        const on = p.tags.includes(tag.id);
-        const lider = localTag.leaders.includes(p.id);
-        return (
-          <div className={`flag-row${on ? " on" : ""}`} key={p.id} style={{ cursor: "pointer" }} onClick={() => toggleElenco(p.id)}>
-            <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
-            <div className="flag-main">
-              <div className="flag-nome">{p.name}{lider && <span style={{ marginLeft: 8, fontSize: "var(--fs-pn-12)", color: "var(--amber)", display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="estrela" size={12} /> líder</span>}</div>
-            </div>
-            <Acao
-              title={lider ? "Remover como líder" : "Tornar líder do time"}
-              aria-label={lider ? "Remover como líder" : "Tornar líder do time"}
-              aria-pressed={lider}
-              onClick={(e) => { e.stopPropagation(); toggleLider(p.id); }}
-              style={{ background: "none", border: "none", cursor: "pointer", fontSize: "var(--fs-pn-16)", color: lider ? "var(--amber)" : "var(--muted)" }}
-            >
-              <Icon name="estrela" size={16} />
-            </Acao>
-          </div>
-        );
-      })}
-      {lista.length === 0 && <Vazio titulo="Ninguém encontrado." />}
-    </Janela>
-  );
-}
-
-export function CongregacaoEditModal({
-  churchRow, ministries, tags, onClose, onRefresh,
-}: {
-  churchRow: ChurchView;
-  ministries: MinistryView[];
-  tags: TagView[];
-  onClose: () => void;
-  onRefresh: () => void;
-}) {
-  const churchMinistries = ministries.filter((m) => m.churchId === churchRow.id);
-  const churchTags = tags.filter((t) => t.churchId === churchRow.id);
-  const [form, setForm] = useState({
-    nome: churchRow.nome,
-    cidade: churchRow.cidade ?? "",
-    doc: churchRow.doc ?? "",
-    fundada: churchRow.foundedYear ?? "",
-    endereco: churchRow.address ?? "",
-    cep: churchRow.postalCode ?? "",
-    email: churchRow.email ?? "",
-    tel: churchRow.phone ?? "",
-  });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const telaRef = useRef<FormScreenHandle>(null);
-  const fid = useId();
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((p) => ({ ...p, [k]: e.target.value }));
-
-  const salvar = async () => {
-    if (!form.nome.trim()) return;
-    setSaving(true);
-    setError("");
-    const { error: erro } = await createServiceBrowserClient()
-      .schema("service")
-      .from("churches")
-      .update({
-        name: form.nome.trim(),
-        city: form.cidade.trim() || null,
-        doc: form.doc.trim() || null,
-        founded_year: form.fundada.trim() || null,
-        address: form.endereco.trim() || null,
-        postal_code: form.cep.trim() || null,
-        email: form.email.trim() || null,
-        phone: form.tel.trim() || null,
-      })
-      .eq("id", churchRow.id);
-    if (erro) { setSaving(false); setError(friendlyWriteError(erro.message)); return; }
-    if (telaRef.current) await telaRef.current.fechar(); else onClose();
-    onRefresh();
-  };
-
-  const retrato = JSON.stringify(form);
-  const [retratoInicial] = useState(retrato);
-
-  return (
-    <FormScreen
-      ref={telaRef}
-      eyebrow={churchRow.matriz ? "Matriz · rede" : "Congregação"}
-      title={form.nome.trim() || churchRow.nome}
-      saveLabel="Salvar"
-      saving={saving}
-      missing={form.nome.trim() ? [] : ["nome"]}
-      dirty={retrato !== retratoInicial}
-      error={error}
-      onSave={salvar}
-      onClose={onClose}
-    >
-      <FormSection title="Congregação">
-        <div className="fs-grid">
-          <Campo rotulo="Nome" obrigatorio><Entrada id={`${fid}-nome`} aria-required="true" value={form.nome} onChange={set("nome")} /></Campo>
-          <Campo rotulo="Cidade ou bairro"><Entrada id={`${fid}-cid`} value={form.cidade} onChange={set("cidade")} /></Campo>
-          <Campo rotulo="CNPJ" className="half"><Entrada id={`${fid}-doc`} autoCapitalize="characters" value={form.doc} onChange={set("doc")} /></Campo>
-          <Campo rotulo="Ano de fundação" className="half"><Entrada id={`${fid}-ano`} inputMode="numeric" value={form.fundada} onChange={set("fundada")} /></Campo>
-        </div>
-      </FormSection>
-
-      <FormSection title="Endereço e contato">
-        <div className="fs-grid">
-          <Campo rotulo="Endereço"><Entrada id={`${fid}-end`} autoComplete="street-address" value={form.endereco} onChange={set("endereco")} /></Campo>
-          <div className="field half"><label className="field-label" htmlFor={`${fid}-cep`}>CEP</label>{/* consulta o CEP: põe a congregação no mapa da igreja */}<CepInput id={`${fid}-cep`} value={form.cep} onChange={(v) => setForm((p) => ({ ...p, cep: v }))} onResult={() => {}} /></div>
-          <Campo rotulo="Telefone" className="half"><Entrada id={`${fid}-tel`} type="tel" autoComplete="tel" value={form.tel} onChange={set("tel")} /></Campo>
-          <Campo rotulo="E-mail"><Entrada id={`${fid}-mail`} type="email" autoComplete="email" value={form.email} onChange={set("email")} /></Campo>
-        </div>
-      </FormSection>
-
-      <FormSection title="Times desta congregação">
-        {churchMinistries.map((m) => {
-          const leader = m.people.find((p) => p.isLeader);
-          return (
-            <Linha estilo="config" key={m.id}>
-              <div className="cfg-row-main">
-                <div className="cfg-row-t">{m.name}</div>
-                <div className="cfg-row-s">{leader ? `líder ${leader.personName}` : "sem líder definido"}</div>
-              </div>
-            </Linha>
-          );
-        })}
-        {churchMinistries.length === 0 && <p className="fs-note">Nenhum time cadastrado nesta congregação.</p>}
-      </FormSection>
-
-      <FormSection title="Etiquetas">
-        <div className="cell-tags" style={{ gap: 8 }}>
-          {churchTags.map((t) => <span key={t.id} className="papel-tag">{t.name}</span>)}
-        </div>
-        {churchTags.length === 0 && <p className="fs-note">Nenhuma etiqueta cadastrada nesta congregação.</p>}
-      </FormSection>
-    </FormScreen>
-  );
-}
+import { STATUS_CFG_DEFAULT, GRUPOS_CFG_DEFAULT, DIAS_SEMANA, TAG_CORES } from "./configuracao/constantes";
+import { AcessosCard } from "./configuracao/AcessosCard";
+import { TagElencoModal } from "./configuracao/TagElencoModal";
+import { CongregacaoEditModal } from "./configuracao/CongregacaoEditModal";
 
 export function Config({
   church,
@@ -1323,3 +977,11 @@ export function Config({
     </div>
   );
 }
+
+export { STATUS_CFG_DEFAULT, GRUPOS_CFG_DEFAULT, DIAS_SEMANA, ACESSO_ROTAS, TAG_CORES } from "./configuracao/constantes";
+
+export { AcessosCard } from "./configuracao/AcessosCard";
+
+export { TagElencoModal } from "./configuracao/TagElencoModal";
+
+export { CongregacaoEditModal } from "./configuracao/CongregacaoEditModal";
