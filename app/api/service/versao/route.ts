@@ -7,6 +7,6 @@ export const dynamic = "force-dynamic";
    celular compara com a versão que abriu e recarrega quando há uma nova
    (PwaBootstrap). Sem segredo: é o mesmo commit que aparece no GitHub. */
 export function GET() {
-  const versao = process.env.VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_DEPLOYMENT_ID || "local";
+  const versao = process.env.NEXT_PUBLIC_SERVICE_VERSION || "local";
   return NextResponse.json({ versao }, { headers: { "Cache-Control": "no-store, max-age=0" } });
 }
