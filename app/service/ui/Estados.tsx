@@ -1,8 +1,8 @@
 "use client";
 
 /* Estados de uma área do Service (BIBLIOTECA.md, prancha 3): vazio, carregando e erro.
-   Vazio diz o que vai aparecer ali e oferece o próximo passo. Carregando é um
-   esqueleto com a forma do conteúdo, nunca um ícone girando sozinho no meio.
+   Vazio diz o que vai aparecer ali e oferece o próximo passo. Carregando usa um
+   esqueleto com a forma do conteúdo; na entrada, anel com mensagem visível.
    Erro diz o que houve em linguagem de gente e oferece tentar de novo.
    Visual em biblioteca.css (.estado, .esq). */
 
@@ -52,12 +52,21 @@ export function ErroEstado({ titulo = "Não consegui carregar agora.", texto, te
    lista = linhas com avatar; linhas = parágrafo; cartoes = blocos; indicadores = números do painel. */
 export type EsqueletoForma = "lista" | "linhas" | "cartoes" | "indicadores";
 
-export function Carregando({ forma = "lista", quantos = 3, rotulo = "Carregando", className }: {
+export function Carregando({ forma = "lista", quantos = 3, rotulo = "Carregando", className, telaInteira = false }: {
+  telaInteira?: boolean;
   forma?: EsqueletoForma;
   quantos?: number;
   rotulo?: string;
   className?: string;
 }) {
+  if (telaInteira) {
+    return (
+      <div className="svc-carregando svc-carregando-tela" role="status" aria-live="polite">
+        <span className="svc-carregando-anel" aria-hidden="true" />
+        <p>{rotulo}</p>
+      </div>
+    );
+  }
   const itens = Array.from({ length: quantos }, (_, i) => i);
   /* larguras variam um pouco para não parecer grade */
   const larg = (i: number, base: number) => `${base - ((i * 13) % 22)}%`;
