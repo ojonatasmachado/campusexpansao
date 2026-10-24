@@ -2,10 +2,10 @@
 id: O3
 titulo: Dividir arquivos grandes restantes
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: codex
+desde: 2026-10-23
+branch: historia/O3-arquivos-grandes
 depende: []
 tamanho: M
 ---
