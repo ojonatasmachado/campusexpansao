@@ -26,6 +26,13 @@ Fonte: HANDOFF item 6; STATUS F14; VALIDACAO.md :83; QUALIDADE-E-INTERNACIONAL.m
 - `scripts/check-service-internacional.ts`
 - `scripts/check-local-internacional.ts`
 - `docs/service-v7/INTERNACIONALIZACAO.md`
+- `package.json`
+- `package-lock.json`
+- `next.config.ts`
+- `app/service/layout.tsx`
+- `app/service/page.tsx`
+- `app/service/painel/tipos.ts`
+- `.github/workflows/service.yml`
 
 ## Pronto quando
 - Locale da pessoa e moeda da igreja explícitos.
@@ -44,3 +51,5 @@ Inventário anterior à escolha: fuso já está em DbChurchClock/app/lib/types.t
 Decisão registrada antes do código. Primeiro trilho técnico sem sobreposição com I10: contrato central, persistência/validação, formatação e catálogo. A I10 ainda reserva app/service/ui/, painel/comum.tsx, módulos inicio/Saude, financeiro/ e relatorios/; nenhum desses arquivos entra enquanto a reserva existir. O inventário inicial identificou 3670 ocorrências e 2600 textos distintos em 182 arquivos, antes de classificar frases dinâmicas e conteúdo da igreja. A tradução completa e a integração nas telas continuam obrigatórias; esta etapa não fecha a N1.
 
 Moeda precisa ser única na organização (rede), porque contas e lançamentos financeiros somam por organization_id e atravessam congregações. Locale pertence à conta da pessoa, separado de país, fuso e vocabulário. Persistir BRL nos dados legados e bloquear reinterpretação depois de qualquer valor financeiro. Testar concorrência entre primeira movimentação e mudança de moeda, além de leitura/escrita sem permissão.
+
+Primeira verificação técnica: 37 casos autenticados passaram em banco descartável (cex-rls-1ff5952ff3e1, removido), incluindo locale individual, valores inválidos, isolamento, trava monetária persistente e disputa entre configuração e primeira gravação. Typecheck, lint e contrato estático de formatação passaram. Não é conclusão da história: tradução e integração ainda faltam. Trilho ampliado para instalar a infraestrutura de mensagens, configurar somente o Service e rodar o contrato novo no CI; nenhum caminho da I10 foi acrescentado.
