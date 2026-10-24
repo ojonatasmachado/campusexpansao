@@ -51,6 +51,12 @@ Fonte: HANDOFF item 6; STATUS F14; VALIDACAO.md :83; QUALIDADE-E-INTERNACIONAL.m
 - `app/service/PasswordInput.tsx`
 - `app/[slug]/entrar/page.tsx`
 
+- `app/service/CepInput.tsx`
+- `app/service/lib/termo-mapa.ts`
+- `app/service/membro/AceiteMapa.tsx`
+- `app/api/service/cep-lookup/route.ts`
+- `app/api/service/members/accept-invite/route.ts`
+
 ## Pronto quando
 - Locale da pessoa e moeda da igreja explícitos.
 - Textos longos e pseudolocalização testados.
@@ -98,3 +104,5 @@ Verificações finais deste lote: tsc --noEmit e build completo com configuraç�
 Trilho ampliado em 24/10 após conferir a reserva I10: entradas de autenticação, campo de senha e provider na entrada temática. Só internacionalização dos fluxos existentes, sem assumir histórias de tela do Claude.
 
 Autenticação localizada em 24/10: 381 mensagens completas por idioma, 363 referências. Login e recuperação usam mensagens completas; reenvio de confirmação depende de estado técnico, não de texto traduzido. Provider incluído na entrada temática. Prova Chromium em banco cex-rls-664a442f27c0 passou e descartou o projeto: seis combinações de idioma/largura no Perfil, falha de persistência e três fluxos anônimos com erros simulados, senha visível e link vencido. Nenhum e-mail enviado. Tipos, lint, contratos e leis 12/17 passaram no lote de autenticação; convite servidor acrescentado depois e será revalidado. N1 continua incompleta e sem publicação em produção.
+
+Reservas conferidas após retomada: somente I10/Claude e N1/Codex. Ampliação para mensagens de convite, consentimento e CEP no cliente/servidor; nenhum caminho da I10 incluído.
