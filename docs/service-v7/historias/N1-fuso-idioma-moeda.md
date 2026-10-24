@@ -2,10 +2,10 @@
 id: N1
 titulo: Tornar fuso, idioma e moeda explícitos
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: codex
+desde: 2026-10-24
+branch: historia/N1-locale-moeda
 depende: []
 tamanho: G
 ---
