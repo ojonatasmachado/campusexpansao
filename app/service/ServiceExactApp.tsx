@@ -4,6 +4,8 @@ import { partesNoFuso } from "./lib/fuso";
 import { RelogioProvider } from "./lib/relogio-context";
 import { relogioDoFuso } from "./lib/relogio";
 import { clearMemberLocation } from "./lib/member-navigation";
+import { clearPanelLocation } from "./lib/panel-navigation";
+import { usePanelNavigation } from "./lib/use-panel-navigation";
 
 import { mesmoTelefone, telefoneParaGravar, variacoesTelefone } from "./lib/telefone";
 import { ehNovo, nomeComparavel } from "./lib/pessoas";
@@ -214,13 +216,9 @@ export default function ServiceExactApp({
   pesquisaElegivel = null,
   initialTheme = "dark",
   initialView = "gestao",
+  initialPanelRoute,
   error,
 }: Props) {
-  const [route, setRoute] = useState<keyof typeof ROUTES>("painel");
-  /* tela nova abre do topo: sem isso, Escalas abria na altura em que o Início estava
-     rolado. Layout effect roda antes dos efeitos das telas, então a rolagem até o time
-     de Escalas (foco vindo da cobertura) continua valendo. */
-  useLayoutEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, [route]);
   /* v7 4.16: clicar num time incompleto da cobertura abre Escalas no culto e no time */
   const [escalaFoco, setEscalaFoco] = useState<{ eventId: string; timeId?: string; n: number } | null>(null);
   const abrirVagas = (eventId: string, timeId?: string) => { setEscalaFoco((f) => ({ eventId, timeId, n: (f?.n ?? 0) + 1 })); setDrawer(null); setRoute("escalas"); };
@@ -237,6 +235,9 @@ export default function ServiceExactApp({
     document.cookie = `cex_view=${next}; path=/; max-age=31536000; samesite=lax`;
     if (next === "gestao") {
       const url = clearMemberLocation(new URL(window.location.href));
+      window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    } else {
+      const url = clearPanelLocation(new URL(window.location.href));
       window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
     }
     setViewState(next);
@@ -322,7 +323,7 @@ export default function ServiceExactApp({
         // eslint-disable-next-line react-hooks/set-state-in-effect -- 1ª visita: precisa ler localStorage no cliente antes de decidir
         setTourResumeStep(savedStep);
       } else {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+
         setShowTour(true);
         setNavOpen(true);
       }
@@ -766,6 +767,11 @@ export default function ServiceExactApp({
   /* Só oferece gestão quando o registro entrega alguma tela disponível.
      Sem tela liberada, qualquer papel usa o próprio app, sem painel vazio. */
   const podeGerenciar = temTelaLiberada;
+  const [route, setRoute] = usePanelNavigation(initialPanelRoute, (Object.keys(ROUTES) as (keyof typeof ROUTES)[]).filter(podeVerItem), rotasPermitidas[0] ?? "painel", podeGerenciar, podeGerenciar && view === "gestao", setViewState);
+  /* tela nova abre do topo: sem isso, Escalas abria na altura em que o Início estava
+     rolado. Layout effect roda antes dos efeitos das telas, então a rolagem até o time
+     de Escalas (foco vindo da cobertura) continua valendo. */
+  useLayoutEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, [route]);
   /* troca de tela com direção (prancha 1): a tela nova desliza do lado de onde
      vem na ordem do menu. Hook antes do return condicional abaixo. */
   const areaRef = useRef<HTMLElement>(null);
@@ -865,12 +871,6 @@ export default function ServiceExactApp({
       </VocabularioProvider></RelogioProvider>
     );
   }
-  /* Entrada antiga ou permissão alterada: abre uma área disponível, para
-     qualquer papel, sem oferecer a tela indisponível como opção. */
-  if (!podeVerItem(route)) {
-    setRoute(rotasPermitidas[0]);
-  }
-
   /* o tour só aponta para o que este papel vê no menu */
   const tourSteps = TOUR_DESKTOP.filter((st) => !st.route || (st.route === "config" ? podeVerNav("config", currentRole, matrizEfetiva, currentExtraAccess, souVoluntario) : podeVerItem(st.route)));
   /* ajuda "?": o mesmo menu no canto (computador) e na barra do topo (celular) */
@@ -998,7 +998,7 @@ export default function ServiceExactApp({
             userName={eu?.name}
             visitantesSemContato={navBadge.visitantes ?? 0}
             visitantesPeloLink={visitors.filter((v) => v.origin === ORIGEM_AUTOCADASTRO && v.stage === "novo" && !v.reply_status && !visitorNotes.some((n) => n.visitor_id === v.id) && !semContato48h(v, visitorNotes)).length}
-            // eslint-disable-next-line react-hooks/purity -- "novos este mês" precisa do relógio real
+
             novosNoMes={people.filter((p) => { const m = members.find((x) => x.volunteerId === p.id); return m ? ehNovo(m) : ehNovo({ createdAt: p.createdAt }); }).length}
             gaps={gaps}
             events={events}
