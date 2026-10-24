@@ -55,7 +55,6 @@ export const emptyExtraServiceData: ExtraServiceData = {
   serveRequests: [],
 };
 
-
 export async function getServiceDashboardData(): Promise<{
   churches: ChurchView[];
   people: PersonView[];
@@ -93,11 +92,62 @@ export async function getServiceDashboardData(): Promise<{
     return { churches: [], people: [], members: [], ministries: [], events: [], extra: emptyExtraServiceData, error: friendlyReadError(churchesError.message) };
   }
 
-  const { data: peopleData, error: peopleError } = await supabase
-    .schema("service")
-    .from("people")
-    .select("id,organization_id,church_id,user_id,name,phone,email,since_year,status,availability,tags,meta,photo_url,created_at")
-    .order("name");
+  /* Leituras independentes após a autorização e a igreja. Mantém os mesmos
+     resultados e a precedência dos erros, sem encadear nove viagens à API. */
+  const [
+    { data: peopleData, error: peopleError },
+    { data: membersData, error: membersError },
+    { data: ministriesData, error: ministriesError },
+    { data: ofertas, error: ofertasError },
+    { data: positionsData, error: positionsError },
+    { data: linksData, error: linksError },
+    { data: eventsData, error: eventsError },
+    { data: scheduleData, error: scheduleError },
+    { data: setlistData, error: setlistError },
+  ] = await Promise.all([
+    supabase
+      .schema("service")
+      .from("people")
+      .select("id,organization_id,church_id,user_id,name,phone,email,since_year,status,availability,tags,meta,photo_url,created_at")
+      .order("name"),
+    supabase
+      .schema("service")
+      .from("members")
+      .select("*")
+      .order("name"),
+    supabase
+      .schema("service")
+      .from("ministries")
+      .select("id,organization_id,church_id,name,icon,description,profile,app_modules,created_at")
+      .order("name"),
+    supabase.schema("service").rpc("times_recebendo_pedidos"),
+    supabase
+      .schema("service")
+      .from("ministry_positions")
+      .select("id,organization_id,ministry_id,name,need_count,sort_order")
+      .order("sort_order"),
+    supabase
+      .schema("service")
+      .from("person_ministries")
+      .select("person_id,ministry_id,organization_id,is_leader,functions"),
+    supabase
+      .schema("service")
+      .from("events")
+      /* "*": lê pede/valor/instrucoes (0058) sem quebrar antes de a migração chegar em produção */
+      .select("*")
+      .order("event_date", { ascending: true, nullsFirst: false })
+      .order("time"),
+    supabase
+      .schema("service")
+      .from("event_schedule_items")
+      .select("id,organization_id,event_id,time,duration_min,item,ministry_id,person_id,category,notes,sort_order")
+      .order("sort_order"),
+    supabase
+      .schema("service")
+      .from("setlist_songs")
+      .select("id,organization_id,event_id,title,song_key,youtube,chart,sort_order")
+      .order("sort_order"),
+  ]);
 
   if (peopleError) {
     return {
@@ -113,12 +163,6 @@ export async function getServiceDashboardData(): Promise<{
 
   const people = ((peopleData ?? []) as PersonRow[]).map(toPersonView);
 
-  const { data: membersData, error: membersError } = await supabase
-    .schema("service")
-    .from("members")
-    .select("*")
-    .order("name");
-
   if (membersError) {
     return {
       churches: ((churchesData ?? []) as ChurchRow[]).map(toChurchView),
@@ -130,12 +174,6 @@ export async function getServiceDashboardData(): Promise<{
       error: friendlyReadError(membersError.message),
     };
   }
-
-  const { data: ministriesData, error: ministriesError } = await supabase
-    .schema("service")
-    .from("ministries")
-    .select("id,organization_id,church_id,name,icon,description,profile,app_modules,created_at")
-    .order("name");
 
   if (ministriesError) {
     return {
@@ -149,18 +187,11 @@ export async function getServiceDashboardData(): Promise<{
     };
   }
 
-  const { data: ofertas, error: ofertasError } = await supabase.schema("service").rpc("times_recebendo_pedidos");
   if (ofertasError) {
     return { churches: ((churchesData ?? []) as ChurchRow[]).map(toChurchView), people, members: ((membersData ?? []) as MemberRow[]).map(toMemberView), ministries: [], events: [], extra: emptyExtraServiceData, error: friendlyReadError(ofertasError.message) };
   }
   const recebendoIds = new Set((ofertas ?? []).map((m: { id: string }) => m.id));
   for (const time of ministriesData ?? []) (time as MinistryRow).recebendo_pedidos = recebendoIds.has(time.id);
-
-  const { data: positionsData, error: positionsError } = await supabase
-    .schema("service")
-    .from("ministry_positions")
-    .select("id,organization_id,ministry_id,name,need_count,sort_order")
-    .order("sort_order");
 
   if (positionsError) {
     return {
@@ -174,11 +205,6 @@ export async function getServiceDashboardData(): Promise<{
     };
   }
 
-  const { data: linksData, error: linksError } = await supabase
-    .schema("service")
-    .from("person_ministries")
-    .select("person_id,ministry_id,organization_id,is_leader,functions");
-
   if (linksError) {
     return {
       churches: ((churchesData ?? []) as ChurchRow[]).map(toChurchView),
@@ -190,14 +216,6 @@ export async function getServiceDashboardData(): Promise<{
       error: friendlyReadError(linksError.message),
     };
   }
-
-  const { data: eventsData, error: eventsError } = await supabase
-    .schema("service")
-    .from("events")
-    /* "*": lê pede/valor/instrucoes (0058) sem quebrar antes de a migração chegar em produção */
-    .select("*")
-    .order("event_date", { ascending: true, nullsFirst: false })
-    .order("time");
 
   if (eventsError) {
     return {
@@ -216,12 +234,6 @@ export async function getServiceDashboardData(): Promise<{
     };
   }
 
-  const { data: scheduleData, error: scheduleError } = await supabase
-    .schema("service")
-    .from("event_schedule_items")
-    .select("id,organization_id,event_id,time,duration_min,item,ministry_id,person_id,category,notes,sort_order")
-    .order("sort_order");
-
   if (scheduleError) {
     return {
       churches: ((churchesData ?? []) as ChurchRow[]).map(toChurchView),
@@ -238,12 +250,6 @@ export async function getServiceDashboardData(): Promise<{
       error: friendlyReadError(scheduleError.message),
     };
   }
-
-  const { data: setlistData, error: setlistError } = await supabase
-    .schema("service")
-    .from("setlist_songs")
-    .select("id,organization_id,event_id,title,song_key,youtube,chart,sort_order")
-    .order("sort_order");
 
   if (setlistError) {
     return {
