@@ -2,10 +2,10 @@
 id: Q8
 titulo: Criar endereço real por tela do painel
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: codex
+desde: 2026-10-24
+branch: historia/Q8-endereco-painel
 depende: []
 tamanho: G
 ---
