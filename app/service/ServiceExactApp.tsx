@@ -6,6 +6,7 @@ import { relogioDoFuso } from "./lib/relogio";
 import { clearMemberLocation } from "./lib/member-navigation";
 import { clearPanelLocation } from "./lib/panel-navigation";
 import { usePanelNavigation } from "./lib/use-panel-navigation";
+import { useServiceLocale } from "./lib/internacional/contexto";
 
 import { mesmoTelefone, telefoneParaGravar, variacoesTelefone } from "./lib/telefone";
 import { ehNovo, nomeComparavel } from "./lib/pessoas";
@@ -219,6 +220,7 @@ export default function ServiceExactApp({
   initialPanelRoute,
   error,
 }: Props) {
+  const locale = useServiceLocale();
   /* v7 4.16: clicar num time incompleto da cobertura abre Escalas no culto e no time */
   const [escalaFoco, setEscalaFoco] = useState<{ eventId: string; timeId?: string; n: number } | null>(null);
   const abrirVagas = (eventId: string, timeId?: string) => { setEscalaFoco((f) => ({ eventId, timeId, n: (f?.n ?? 0) + 1 })); setDrawer(null); setRoute("escalas"); };
@@ -291,8 +293,8 @@ export default function ServiceExactApp({
   /* vocabulário da igreja (lei 7): da matriz, igual à marca do app */
   const sedeVocab = churches.find((c) => c.matriz) ?? firstChurch;
   const vocab = useMemo(
-    () => normalizarVocabulario(sedeVocab?.vocabulario, sedeVocab?.settings?.gruposCfg?.termoP),
-    [sedeVocab?.vocabulario, sedeVocab?.settings?.gruposCfg?.termoP],
+    () => normalizarVocabulario(sedeVocab?.vocabulario, sedeVocab?.settings?.gruposCfg?.termoP, locale),
+    [sedeVocab?.vocabulario, sedeVocab?.settings?.gruposCfg?.termoP, locale],
   );
   const ct = (texto: string) => comTermos(texto, vocab);
 

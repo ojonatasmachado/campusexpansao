@@ -6,7 +6,7 @@ Interface integral em pt-BR, en-US e es-ES. Uma moeda por igreja/rede: BRL, EUR 
 
 ## Estado desta implementação
 
-A N1 continua em andamento. A persistência e o contrato monetário passaram nos testes autenticados. O catálogo inicial de 22 mensagens valida infraestrutura, ICU e pseudolocalização; não representa tradução da interface inteira. O inventário inicial contém 3670 ocorrências, 2600 textos distintos em 182 arquivos, ainda sem todas as frases dinâmicas classificadas. Faltam integração das preferências nas telas e tradução/validação completas. Arquivos da I10 continuam reservados pelo Claude e não foram tocados.
+A N1 continua em andamento. A persistência e o contrato monetário passaram nos testes autenticados. O primeiro lote contém 244 mensagens nos três idiomas, com integração parcial de Perfil e Configurações; não representa tradução da interface inteira. O inventário inicial contém 3670 ocorrências, 2600 textos distintos em 182 arquivos, ainda sem todas as frases dinâmicas classificadas. Faltam integração das preferências nas telas e tradução/validação completas. Arquivos da I10 continuam reservados pelo Claude e não foram tocados.
 
 ## Dados e validação
 
@@ -29,4 +29,8 @@ O núcleo fornece tradução e formatação com configuração por chamada/provi
 
 37 casos autenticados passaram em banco descartável: valores padrão, locale individual, entradas inválidas, escrita direta, anônimo, papéis sem permissão, outra igreja, seleção prévia de moeda, contas zeradas, cliente antigo em moeda estrangeira, método regional, centavos preservados, trava permanente e concorrência da primeira gravação. Resultado local prints/n1-internacional/banco.json; log /tmp/cex-N1-banco.log. Projeto cex-rls-1ff5952ff3e1 descartado.
 
-Contrato estático: nove combinações locale/moeda, negativos e limites, datas civis inválidas/ano bissexto, mesmas chaves nos três catálogos iniciais, ICU válido, plural 0/1/2, rich text e preservação do nome da igreja na pseudolocalização. Os testes não substituem a captura de todas as telas traduzidas, que continua pendente.
+Contrato estático: nove combinações locale/moeda, negativos e limites, datas civis inválidas/ano bissexto, mesmas chaves nos três catálogos, ICU válido, plural 0/1/2, rich text e preservação do nome da igreja na pseudolocalização. Os testes não substituem a captura de todas as telas traduzidas, que continua pendente.
+
+O preparador de JSX trabalha somente com texto literal da interface, mantém IDs, condições e valores de formulário, sinaliza frases mistas para revisão manual e recusa arquivos fora do trilho. Seu teste compara o HTML pt-BR original e preparado, inclusive entidades e interpolação, e verifica em inglês que o nome da pessoa não é traduzido mesmo quando coincide com uma mensagem. O extrator verifica chaves, mensagens ausentes, ICU e argumentos nos três idiomas. Termos personalizados pela igreja são preservados; somente os padrões recebem nomes por locale.
+
+Preferência pessoal de idioma conectada ao Perfil com Campo/Selecao compartilhados e RPC própria. Só atualiza a interface depois de a gravação responder com o locale esperado; falha deixa o idioma atual e mostra tentativa novamente. O refresh do roteador preserva o estado do app. Esta ligação ainda aguarda teste autenticado no navegador e medição de densidade; não é prova de tela concluída.

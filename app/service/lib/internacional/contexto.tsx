@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useContext, useLayoutEffect, useMemo } from "react";
-import { createText, sourceText, type Messages, type Text } from "./mensagens";
+import { bindVocabulary, createText, sourceText, type Messages, type Text } from "./mensagens";
 import { DEFAULT_LOCALE, type Locale } from "./contrato";
+import { useVocabularioDaIgreja } from "../vocabulario-context";
 
 type InternationalContext = { locale: Locale; text: Text };
 const Context = createContext<InternationalContext | null>(null);
@@ -27,7 +28,9 @@ export function ServiceLocaleProvider({ locale, messages, children }: { locale: 
 }
 
 export function useTexto(): Text {
-  return useContext(Context)?.text ?? sourceText;
+  const base = useContext(Context)?.text ?? sourceText;
+  const vocabulary = useVocabularioDaIgreja();
+  return useMemo(() => bindVocabulary(base, vocabulary ?? undefined), [base, vocabulary]);
 }
 
 export function useServiceLocale(): Locale {

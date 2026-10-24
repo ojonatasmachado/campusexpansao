@@ -7,7 +7,7 @@
 import { createContext, useContext, useMemo } from "react";
 import { comTermos, termoDe, VOCABULARIO_PADRAO, type FormaTermo, type Termo, type Vocabulario } from "./vocabulario";
 
-const VocabularioContext = createContext<Vocabulario>(VOCABULARIO_PADRAO);
+const VocabularioContext = createContext<Vocabulario | null>(null);
 
 export function VocabularioProvider({ value, children }: { value: Vocabulario; children: React.ReactNode }) {
   return <VocabularioContext.Provider value={value}>{children}</VocabularioContext.Provider>;
@@ -24,7 +24,7 @@ export type Termos = {
 };
 
 export function useTermos(): Termos {
-  const vocab = useContext(VocabularioContext);
+  const vocab = useContext(VocabularioContext) ?? VOCABULARIO_PADRAO;
   return useMemo(
     () => ({
       vocab,
@@ -34,4 +34,9 @@ export function useTermos(): Termos {
     }),
     [vocab],
   );
+}
+
+/** Diferencia o padrão fora da igreja de um termo explicitamente personalizado. */
+export function useVocabularioDaIgreja(): Vocabulario | null {
+  return useContext(VocabularioContext);
 }

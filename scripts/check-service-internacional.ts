@@ -2,10 +2,14 @@ import assert from "node:assert/strict";
 import { CURRENCIES, LOCALES, currencyOrDefault, isCurrency, isLocale, localeOrDefault, requireCurrency, requireLocale } from "../app/service/lib/internacional/contrato";
 import { amountForCsv, formatAmount, formatCivilDate, formatMoney, formatNumber } from "../app/service/lib/internacional/formatar";
 import { loadMessages } from "../app/service/lib/internacional/catalogos";
-import { createText } from "../app/service/lib/internacional/mensagens";
+import { bindVocabulary, createText } from "../app/service/lib/internacional/mensagens";
 import { messageKey } from "../app/service/lib/internacional/chave";
 import { pseudoMessage, pseudoMessages } from "../app/service/lib/internacional/pseudo";
 import { parse } from "@formatjs/icu-messageformat-parser";
+import { normalizarVocabulario, termoDe, vocabularioParaGravar } from "../app/service/lib/vocabulario";
+import { prepareVocabulary } from "../app/service/lib/internacional/vocabulario";
+import { checkCatalogs } from "./internacional/extrair";
+import { checkJsxPreparation } from "./internacional/preparar-jsx.test";
 
 for (const value of LOCALES) assert.equal(requireLocale(value), value);
 for (const value of CURRENCIES) assert.equal(requireCurrency(value), value);
@@ -42,6 +46,8 @@ for (const value of ["2027-02-29", "2026-04-31", "2026-13-01", "2026-01-01T00:00
 console.log("Internacional: locales e moedas permitidos, escrita inválida rejeitada, nove combinações monetárias, centavos inteiros e datas civis preservadas.");
 
 async function messages() {
+  checkJsxPreparation();
+  checkCatalogs();
   const plural = "{count, plural, =0 {Nenhuma mensagem} one {# mensagem} other {# mensagens}}";
   const keys = Object.keys(await loadMessages("pt-BR")).sort();
   for (const locale of LOCALES) {
@@ -63,6 +69,22 @@ async function messages() {
   const expanded = pseudoMessage(original);
   assert.ok(expanded.length / original.length >= 1.3 && expanded.length / original.length <= 1.5);
   assert.equal(messageKey("Preferência salva."), messageKey("Prefere\u0302ncia salva."));
+  const englishVocabulary = normalizarVocabulario(null, null, "en-US");
+  assert.equal(termoDe(englishVocabulary, "voluntario", { plural: true }), "Volunteers");
+  assert.equal(termoDe(englishVocabulary, "grupo", { plural: true }), "Groups");
+  assert.deepEqual(vocabularioParaGravar(englishVocabulary, "en-US"), {});
+  const existing = { culto: { tela: "Celebração do Caminho", curto: "Celebração" }, caminhada: { tela: "Journey", curto: "Journey" } };
+  const custom = normalizarVocabulario(existing, null, "en-US");
+  assert.equal(custom.culto.tela, "Celebração do Caminho");
+  assert.deepEqual(vocabularioParaGravar(custom, "en-US", existing), existing);
+  const phrase = "Próximo {Culto} em {place}.";
+  const prepared = prepareVocabulary(phrase, custom);
+  assert.equal(prepared.message, "Próximo {churchTerm0} em {place}.");
+  const withTerms = createText("en-US", { [messageKey(phrase)]: "Next {churchTerm0} at {place}." });
+  assert.equal(withTerms(phrase, { place: "Salão Português" }, custom), "Next Celebração do Caminho at Salão Português.");
+  assert.equal(withTerms(phrase, { place: "Room" }), "Next Service at Room.");
+  const nested = bindVocabulary(bindVocabulary(withTerms, englishVocabulary), englishVocabulary);
+  assert.equal(nested(phrase, { place: "Salão Português" }, custom), "Next Celebração do Caminho at Salão Português.");
   console.log("Mensagens: três catálogos com as mesmas chaves, ICU válido, plural 0/1/2, conteúdo da igreja preservado, rich text e pseudo de 40% sem alterar argumentos.");
 }
 messages().catch((error) => { console.error(error); process.exitCode = 1; });
