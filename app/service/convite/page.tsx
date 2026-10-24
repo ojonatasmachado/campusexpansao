@@ -9,12 +9,16 @@ import AuthShell from "../AuthShell";
 import ConviteForm from "./ConviteForm";
 
 import { botaoClasse } from "../ui/Botao";
+import { getTexto } from "../lib/internacional/servidor";
+
 export const dynamic = "force-dynamic";
 
 /* Link do convite (WhatsApp do líder): a pessoa informa e-mail, senha e endereço
    e a conta nasce aqui. Com a cara da igreja (tema da matriz + logo).
    Lógica igual à anterior; só a casca mudou pra AuthShell. */
 export default async function ServiceConvitePage({ searchParams }: { searchParams: Promise<{ t?: string }> }) {
+  const traduzirUi = await getTexto();
+
   const { t } = await searchParams;
   const db = supabaseAdmin();
   const invite = t ? await findOpenInvite(db, t) : null;
@@ -53,10 +57,10 @@ export default async function ServiceConvitePage({ searchParams }: { searchParam
         <AuthShell
           churchName={churchName}
           logoUrl={logoUrl}
-          eyebrow="Convite"
-          title={firstName ? `Que bom ter você, ${firstName}` : "Que bom ter você aqui"}
-          subtitle="Crie sua senha para entrar no app da igreja. Só você vai saber essa senha."
-          footer={<>O link é só seu e vale por 7 dias.</>}
+          eyebrow={traduzirUi("Convite")}
+          title={firstName ? traduzirUi("Que bom ter você, {value0}", { value0: `${firstName}` }) : traduzirUi("Que bom ter você aqui")}
+          subtitle={traduzirUi("Crie sua senha para entrar no app da igreja. Só você vai saber essa senha.")}
+          footer={traduzirUi("O link é só seu e vale por 7 dias.")}
         >
           <ConviteForm t={t} churchName={churchName} />
         </AuthShell>
@@ -64,13 +68,11 @@ export default async function ServiceConvitePage({ searchParams }: { searchParam
         <AuthShell
           churchName={churchName}
           logoUrl={logoUrl}
-          eyebrow="Convite"
-          title="Este convite não vale mais"
-          subtitle="O link já foi usado ou passou do prazo de 7 dias. Peça um novo ao líder da sua igreja. Se você já criou seu acesso, é só entrar."
+          eyebrow={traduzirUi("Convite")}
+          title={traduzirUi("Este convite não vale mais")}
+          subtitle={traduzirUi("O link já foi usado ou passou do prazo de 7 dias. Peça um novo ao líder da sua igreja. Se você já criou seu acesso, é só entrar.")}
         >
-          <Link href={loginHref} className={botaoClasse({ tamanho: "entrada", variante: "principal" })}>
-            Entrar no app →
-          </Link>
+          <Link href={loginHref} className={botaoClasse({ tamanho: "entrada", variante: "principal" })}>{traduzirUi("Entrar no app →")}</Link>
         </AuthShell>
       )}
     </>

@@ -7,6 +7,8 @@ import AuthShell from "../AuthShell";
 import PasswordInput from "../PasswordInput";
 
 import { Botao, botaoClasse } from "../ui/Botao";
+import { useTexto } from "../lib/internacional/contexto";
+
 type Fase = "carregando" | "pronto" | "invalido" | "feito";
 const RECOVERY_FLAG = "cex_recovery";
 
@@ -24,6 +26,8 @@ export default function NovaSenhaForm({
   churchName?: string | null;
   logoUrl?: string | null;
 }) {
+  const t = useTexto();
+
   const [fase, setFase] = useState<Fase>("carregando");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -68,57 +72,55 @@ export default function NovaSenhaForm({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-    if (password.length < 6) return setError("A senha precisa ter pelo menos 6 caracteres.");
-    if (password !== confirm) return setError("As duas senhas não são iguais.");
+    if (password.length < 6) return setError(t("A senha precisa ter pelo menos 6 caracteres."));
+    if (password !== confirm) return setError(t("As duas senhas não são iguais."));
     setLoading(true);
     const { error: updateError } = await createServiceBrowserClient().auth.updateUser({ password });
     setLoading(false);
     if (updateError) {
       const igual = updateError.code === "same_password" || /different from the old/i.test(updateError.message);
-      return setError(igual ? "Escolha uma senha diferente da atual." : "Não foi possível salvar a senha. Tente de novo.");
+      return setError(igual ? t("Escolha uma senha diferente da atual.") : t("Não foi possível salvar a senha. Tente de novo."));
     }
     try { sessionStorage.removeItem(RECOVERY_FLAG); } catch { /* nada a limpar */ }
     setFase("feito");
   };
 
-  const shell = { churchName, logoUrl, eyebrow: "Senha nova" };
+  const shell = { churchName, logoUrl, eyebrow: t("Senha nova") };
 
   if (fase === "carregando") {
-    return <AuthShell {...shell} title="Conferindo o seu link..." />;
+    return <AuthShell {...shell} title={t("Conferindo o seu link...")} />;
   }
 
   if (fase === "invalido") {
     return (
       <AuthShell
         {...shell}
-        title="Este link não vale mais"
-        subtitle="O link de troca de senha expirou ou já foi usado. Volte para o login e toque de novo em Esqueci minha senha."
+        title={t("Este link não vale mais")}
+        subtitle={t("O link de troca de senha expirou ou já foi usado. Volte para o login e toque de novo em Esqueci minha senha.")}
       >
-        <Link href={loginHref} className={botaoClasse({ tamanho: "entrada", variante: "principal" })}>Voltar para o login</Link>
+        <Link href={loginHref} className={botaoClasse({ tamanho: "entrada", variante: "principal" })}>{t("Voltar para o login")}</Link>
       </AuthShell>
     );
   }
 
   if (fase === "feito") {
     return (
-      <AuthShell {...shell} title="Senha alterada" subtitle="Sua senha nova já está valendo. Use ela na próxima vez que entrar.">
+      <AuthShell {...shell} title={t("Senha alterada")} subtitle={t("Sua senha nova já está valendo. Use ela na próxima vez que entrar.")}>
         {/* carga completa da página (não router.push): a sessão acabou de nascer neste aparelho */}
-        <Botao tamanho="entrada" variante="principal" onClick={() => window.location.assign("/service")}>
-          Entrar no app →
-        </Botao>
+        <Botao tamanho="entrada" variante="principal" onClick={() => window.location.assign("/service")}>{t("Entrar no app →")}</Botao>
       </AuthShell>
     );
   }
 
   return (
-    <AuthShell {...shell} title="Crie uma senha nova" subtitle="Use pelo menos 6 caracteres. Depois é só entrar com ela.">
+    <AuthShell {...shell} title={t("Crie uma senha nova")} subtitle={t("Use pelo menos 6 caracteres. Depois é só entrar com ela.")}>
       <form className="login-form" onSubmit={handleSubmit} noValidate>
         <label className="login-field">
-          <span className="login-label">Senha nova</span>
-          <PasswordInput value={password} onChange={setPassword} autoComplete="new-password" placeholder="Mínimo 6 caracteres" />
+          <span className="login-label">{t("Senha nova")}</span>
+          <PasswordInput value={password} onChange={setPassword} autoComplete="new-password" placeholder={t("Mínimo 6 caracteres")} />
         </label>
         <label className="login-field">
-          <span className="login-label">Repita a senha</span>
+          <span className="login-label">{t("Repita a senha")}</span>
           <PasswordInput value={confirm} onChange={setConfirm} autoComplete="new-password" />
         </label>
         {error && (
@@ -127,7 +129,7 @@ export default function NovaSenhaForm({
           </div>
         )}
         <Botao tamanho="entrada" variante="principal" type="submit" desativado={loading}>
-          {loading ? "Salvando..." : "Salvar senha nova"}
+          {loading ? t("Salvando...") : t("Salvar senha nova")}
         </Botao>
       </form>
     </AuthShell>

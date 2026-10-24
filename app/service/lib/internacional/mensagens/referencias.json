@@ -160,7 +160,7 @@
   "mbpdip2": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 593
+      "line": 592
     },
     {
       "file": "app/service/membro/Perfil.tsx",
@@ -170,77 +170,77 @@
   "m1eduoq0": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 593
+      "line": 592
     }
   ],
   "m1xy4b74": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 599
+      "line": 598
     }
   ],
   "m1p802lt": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 600
+      "line": 599
     }
   ],
   "mxoyyw0": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 600
+      "line": 599
     }
   ],
   "m1w3wuaw": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 603
+      "line": 602
     }
   ],
   "m6i8hb": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 604
+      "line": 603
     }
   ],
   "m16k1fpv": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 607
+      "line": 606
     },
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 656
+      "line": 655
     }
   ],
   "m1ucfej2": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 618
+      "line": 617
     }
   ],
   "m1opz80v": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 620
+      "line": 619
     }
   ],
   "m1p5g6ao": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 623
+      "line": 622
     }
   ],
   "m1sa2849": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 627
+      "line": 626
     }
   ],
   "m768icn": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 640
+      "line": 639
     },
     {
       "file": "app/service/membro/Perfil.tsx",
@@ -250,57 +250,69 @@
   "mpumtl2": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 640
+      "line": 639
     }
   ],
   "m1336tn8": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 649
+      "line": 648
+    }
+  ],
+  "m1688b31": [
+    {
+      "file": "app/service/PasswordInput.tsx",
+      "line": 39
+    }
+  ],
+  "m174li5v": [
+    {
+      "file": "app/service/PasswordInput.tsx",
+      "line": 39
     }
   ],
   "m1isrhn6": [
     {
       "file": "app/service/TextSizeSlider.tsx",
-      "line": 45
+      "line": 43
     }
   ],
   "m1hj7wg9": [
     {
       "file": "app/service/TextSizeSlider.tsx",
-      "line": 47
+      "line": 45
     }
   ],
   "m1nh91zo": [
     {
       "file": "app/service/TextSizeSlider.tsx",
-      "line": 48
+      "line": 46
     }
   ],
   "m1y59hl8": [
     {
       "file": "app/service/TextSizeSlider.tsx",
-      "line": 49
+      "line": 47
     }
   ],
   "m6gskpb": [
     {
       "file": "app/service/TextSizeSlider.tsx",
-      "line": 54
+      "line": 52
     }
   ],
   "mnjcjso": [
     {
       "file": "app/service/TextSizeSlider.tsx",
-      "line": 74
+      "line": 72
     },
     {
       "file": "app/service/TextSizeSlider.tsx",
-      "line": 101
+      "line": 99
     },
     {
       "file": "app/service/TextSizeSlider.tsx",
-      "line": 104
+      "line": 102
     },
     {
       "file": "app/service/membro/Perfil.tsx",
@@ -310,17 +322,73 @@
   "m1d0mwjp": [
     {
       "file": "app/service/TextSizeSlider.tsx",
-      "line": 88
+      "line": 86
     }
   ],
   "maa4k1j": [
     {
       "file": "app/service/TextSizeSlider.tsx",
-      "line": 105
+      "line": 103
     },
     {
       "file": "app/service/painel/telas/Config.tsx",
       "line": 504
+    }
+  ],
+  "m1i7m67h": [
+    {
+      "file": "app/service/convite/page.tsx",
+      "line": 60
+    },
+    {
+      "file": "app/service/convite/page.tsx",
+      "line": 71
+    }
+  ],
+  "m1h4u8gu": [
+    {
+      "file": "app/service/convite/page.tsx",
+      "line": 61
+    }
+  ],
+  "m1g9puvd": [
+    {
+      "file": "app/service/convite/page.tsx",
+      "line": 61
+    }
+  ],
+  "mfpx7g5": [
+    {
+      "file": "app/service/convite/page.tsx",
+      "line": 62
+    }
+  ],
+  "m1wk5up2": [
+    {
+      "file": "app/service/convite/page.tsx",
+      "line": 63
+    }
+  ],
+  "m13zyz5c": [
+    {
+      "file": "app/service/convite/page.tsx",
+      "line": 72
+    }
+  ],
+  "mya486y": [
+    {
+      "file": "app/service/convite/page.tsx",
+      "line": 73
+    }
+  ],
+  "m1j77e4j": [
+    {
+      "file": "app/service/convite/page.tsx",
+      "line": 75
+    },
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 110
     }
   ],
   "m16v7ial": [
@@ -405,6 +473,298 @@
     {
       "file": "app/service/lib/vocabulario.ts",
       "line": 53
+    }
+  ],
+  "m1hrc14r": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 39
+    }
+  ],
+  "m5df63v": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 40
+    },
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 139
+    }
+  ],
+  "m1qhpo7t": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 40
+    }
+  ],
+  "mgkj330": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 41
+    }
+  ],
+  "m741ja8": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 44
+    }
+  ],
+  "mwkolqf": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 48
+    }
+  ],
+  "m1yv7swa": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 54
+    }
+  ],
+  "mzkfimc": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 56
+    }
+  ],
+  "m598a2p": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 61
+    }
+  ],
+  "m1isqbof": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 62
+    }
+  ],
+  "mdfwq71": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 63
+    }
+  ],
+  "m1fn06i0": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 66
+    }
+  ],
+  "mvuuad5": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 76
+    }
+  ],
+  "mpp3ilb": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 82
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 445
+    }
+  ],
+  "mdsrlbk": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 88
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 448
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 393
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 942
+    }
+  ],
+  "m81gu09": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 99
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 449
+    }
+  ],
+  "mn79ho6": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 104
+    }
+  ],
+  "m177bnym": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 104
+    }
+  ],
+  "m15moxm9": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 109
+    },
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 120
+    }
+  ],
+  "m1l6q9hh": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 109
+    }
+  ],
+  "m18mwypm": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 120
+    }
+  ],
+  "mq8838f": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 120
+    }
+  ],
+  "m1qy2co1": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 125
+    },
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 143
+    }
+  ],
+  "m1ecjkwm": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 125
+    }
+  ],
+  "m1q3wvya": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 139
+    }
+  ],
+  "mdrkh2t": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 139
+    }
+  ],
+  "m1qyzxf0": [
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 143
+    }
+  ],
+  "mfgbo9p": [
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 14
+    }
+  ],
+  "m1ow3qai": [
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 15
+    }
+  ],
+  "mtyvz32": [
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 16
+    }
+  ],
+  "m6n93vq": [
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 17
+    },
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 72
+    },
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 75
+    }
+  ],
+  "mbsegf1": [
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 18
+    }
+  ],
+  "mpg9w8a": [
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 19
+    }
+  ],
+  "m18x1ff8": [
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 20
+    }
+  ],
+  "m111wxel": [
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 22
+    }
+  ],
+  "mkg7w5t": [
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 67
+    }
+  ],
+  "m5gfwvb": [
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 77
+    }
+  ],
+  "mkzruii": [
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 123
+    }
+  ],
+  "mfwdkni": [
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 131
+    }
+  ],
+  "mztzzgk": [
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 152
+    }
+  ],
+  "mkn174x": [
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 163
+    }
+  ],
+  "m1w25ff8": [
+    {
+      "file": "app/service/login/useServiceLoginForm.ts",
+      "line": 177
     }
   ],
   "mubbkas": [
@@ -511,6 +871,14 @@
     {
       "file": "app/service/membro/Perfil.tsx",
       "line": 307
+    },
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 88
+    },
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 119
     }
   ],
   "mpkmyxs": [
@@ -523,18 +891,30 @@
     {
       "file": "app/service/membro/Perfil.tsx",
       "line": 308
+    },
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 123
     }
   ],
   "m1k1tgfx": [
     {
       "file": "app/service/membro/Perfil.tsx",
       "line": 310
+    },
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 132
     }
   ],
   "m1vyb16l": [
     {
       "file": "app/service/membro/Perfil.tsx",
       "line": 310
+    },
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 132
     }
   ],
   "m1snja1e": [
@@ -767,32 +1147,6 @@
       "line": 424
     }
   ],
-  "mpp3ilb": [
-    {
-      "file": "app/service/membro/Perfil.tsx",
-      "line": 445
-    }
-  ],
-  "mdsrlbk": [
-    {
-      "file": "app/service/membro/Perfil.tsx",
-      "line": 448
-    },
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 393
-    },
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 942
-    }
-  ],
-  "m81gu09": [
-    {
-      "file": "app/service/membro/Perfil.tsx",
-      "line": 449
-    }
-  ],
   "m1bb8jr0": [
     {
       "file": "app/service/membro/Perfil.tsx",
@@ -921,6 +1275,72 @@
     {
       "file": "app/service/membro/Perfil.tsx",
       "line": 503
+    }
+  ],
+  "m1jscgkt": [
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 76
+    }
+  ],
+  "mhz91f6": [
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 82
+    }
+  ],
+  "mcktiza": [
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 82
+    }
+  ],
+  "mm6l2vy": [
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 91
+    }
+  ],
+  "m17d7tf2": [
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 98
+    }
+  ],
+  "md876sa": [
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 99
+    }
+  ],
+  "mg7eynx": [
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 101
+    }
+  ],
+  "m1nv6tw2": [
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 108
+    }
+  ],
+  "m1gqdt6w": [
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 108
+    }
+  ],
+  "m111odxo": [
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 116
+    }
+  ],
+  "m1y6nrn5": [
+    {
+      "file": "app/service/nova-senha/NovaSenhaForm.tsx",
+      "line": 116
     }
   ],
   "mq5gubr": [

@@ -134,6 +134,40 @@ withDisposableSupabase(async (db) => {
       throw error;
     }
     await context.close();
+    // Erros de autenticação são simulados só no navegador descartável. Nenhum e-mail é enviado.
+    for (const entry of [
+      { locale: "pt-BR", enter: "Entrar", resend: "Reenviar e-mail de confirmação", reset: "Criar uma senha nova", invalid: "Este link não vale mais", show: "Mostrar" },
+      { locale: "en-US", enter: "Sign in", resend: "Resend confirmation email", reset: "Create a new password", invalid: "This link is no longer valid", show: "Show" },
+      { locale: "es-ES", enter: "Iniciar sesión", resend: "Reenviar correo de confirmación", reset: "Crear una contraseña nueva", invalid: "Este enlace ya no es válido", show: "Mostrar" },
+    ]) {
+      const anonymous = await browser.newContext({ viewport: { width: 390, height: 844 } });
+      try {
+        await anonymous.addCookies([{ name: "cex_service_locale", value: entry.locale, url: base + "/service" }]);
+        const authPage = await anonymous.newPage();
+        authPage.on("pageerror", (error: Error) => errors.push(error.message));
+        let code = "email_not_confirmed";
+        await authPage.route("**/auth/v1/token?**", (route: { fulfill: (response: object) => Promise<void> }) => route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code, msg: code === "email_not_confirmed" ? "Email not confirmed" : "Invalid login credentials" }) }));
+        await authPage.goto(base + "/service/login");
+        await authPage.locator('input[type="email"]').fill("teste@exemplo.local");
+        await authPage.locator('input[type="password"]').fill("TesteLocal123");
+        await authPage.getByRole("button", { name: entry.show, exact: true }).click();
+        assert.equal(await authPage.locator('input[autocomplete="current-password"]').getAttribute("type"), "text");
+        await authPage.getByRole("button", { name: entry.enter, exact: true }).click();
+        await authPage.getByRole("button", { name: entry.resend, exact: true }).waitFor();
+        code = "invalid_credentials";
+        await authPage.getByRole("button", { name: entry.enter, exact: true }).click();
+        await authPage.getByRole("button", { name: entry.reset, exact: true }).waitFor();
+        assert.equal(await authPage.getByRole("button", { name: entry.resend, exact: true }).count(), 0);
+        await authPage.goto(base + "/service/nova-senha#error=expired");
+        await authPage.getByText(entry.invalid, { exact: true }).waitFor();
+        assert.equal(new URL(authPage.url()).hash, "");
+        assert.equal(await authPage.locator("html").getAttribute("lang"), entry.locale);
+        assert.equal(await authPage.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+        await authPage.screenshot({ path: join(output, `auth-${entry.locale}.png`), fullPage: true });
+        passed(`autenticação ${entry.locale}: ações por estado, senha visível e link vencido localizado`);
+      } finally { await anonymous.close(); }
+    }
+    assert.deepEqual(errors, []);
     writeFileSync(join(output, "resultado.json"), JSON.stringify({ executedAt: new Date().toISOString(), checks, density, success: true }, null, 2) + "\n", { mode: 0o600 });
   } finally {
     await browser?.close();
