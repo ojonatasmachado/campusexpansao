@@ -33,6 +33,13 @@ Fonte: HANDOFF item 6; STATUS F14; VALIDACAO.md :83; QUALIDADE-E-INTERNACIONAL.m
 - `app/service/page.tsx`
 - `app/service/painel/tipos.ts`
 - `.github/workflows/service.yml`
+- `scripts/internacional/`
+- `app/service/lib/vocabulario.ts`
+- `app/service/lib/vocabulario-context.tsx`
+- `app/service/ServiceExactApp.tsx`
+- `app/service/painel/telas/Config.tsx`
+- `app/service/membro/Perfil.tsx`
+- `app/service/modules/perfil/manifest.ts`
 
 ## Pronto quando
 - Locale da pessoa e moeda da igreja explícitos.
@@ -55,3 +62,5 @@ Moeda precisa ser única na organização (rede), porque contas e lançamentos f
 Primeira verificação técnica: 37 casos autenticados passaram em banco descartável (cex-rls-1ff5952ff3e1, removido), incluindo locale individual, valores inválidos, isolamento, trava monetária persistente e disputa entre configuração e primeira gravação. Typecheck, lint e contrato estático de formatação passaram. Não é conclusão da história: tradução e integração ainda faltam. Trilho ampliado para instalar a infraestrutura de mensagens, configurar somente o Service e rodar o contrato novo no CI; nenhum caminho da I10 foi acrescentado.
 
 Base de mensagens implementada com use-intl/core estável, configuração explícita por pedido/provider e somente o catálogo escolhido no cliente. Não usa extração experimental nem locale global mutável. Provider mantém a língua do conteúdo no servidor e do documento no navegador sem tornar o site público dinâmico. O catálogo inicial de 22 mensagens só verifica a base; as demais telas continuam pendentes. Passaram plural ICU 0/1/2, rich text, preservação de conteúdo por argumentos, pseudolocalização por AST, typecheck, lint, leis, contraste, 13 regressões e build de produção. Nenhum caminho reservado da I10 foi tocado.
+
+Trilho de integração inicial: extração/verificação de mensagens, vocabulário padrão por locale, casca para passar o locale já escolhido e preferências existentes de Perfil/Configurações. Estes caminhos foram comparados à reserva I10 e não sobrepõem seus arquivos. Nomes/termos personalizados pela igreja são dados e permanecem no idioma original; traduzir apenas os padrões e as frases da interface. A ampliação ainda não inclui UI/, painel/comum, financeiro ou relatorios.
