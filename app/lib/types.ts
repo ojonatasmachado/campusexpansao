@@ -4,6 +4,15 @@
 
 export type DbChurchClock = { time_zone?: string | null };
 
+export type DbServiceLocale = "pt-BR" | "en-US" | "es-ES";
+export type DbServiceCurrency = "BRL" | "EUR" | "USD";
+export type DbUserLocale = { locale_code?: DbServiceLocale | null };
+export type DbServiceOrganizationPreferences = {
+  organization_id: string;
+  currency_code: DbServiceCurrency;
+  currency_locked: boolean;
+};
+
 export type DbEstante = {
   key: string
   label: string

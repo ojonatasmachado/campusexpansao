@@ -7,12 +7,17 @@ import "./modules/mapa/mapa.css";
 import "./ui/biblioteca.css";
 import PwaBootstrap from "./PwaBootstrap";
 import DialogosAcessiveis from "./DialogosAcessiveis";
+import { ServiceLocaleProvider } from "./lib/internacional/contexto";
+import { getServiceInternational, getTexto } from "./lib/internacional/servidor";
 
-export const metadata: Metadata = {
-  title: "CE.X Service · Gestão ministerial",
-  description: "Plataforma de gestão de pessoas, escala e agenda para igrejas CE.X.",
-  manifest: "/service-manifest.json",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const text = await getTexto();
+  return {
+    title: text("CE.X Service · Gestão ministerial"),
+    description: text("Plataforma de gestão de pessoas, escala e agenda para igrejas CE.X."),
+    manifest: "/service-manifest.json",
+  };
+}
 
 /* viewportFit "cover": o app ocupa a tela inteira do celular e o CSS v5
    afasta o que é fixo do notch, da Dynamic Island e da barra de gestos
@@ -25,12 +30,13 @@ export const viewport: Viewport = {
   themeColor: familyById(undefined, "dark").tokens.ink,
 };
 
-export default function ServiceLayout({ children }: { children: React.ReactNode }) {
+export default async function ServiceLayout({ children }: { children: React.ReactNode }) {
+  const international = await getServiceInternational();
   return (
-    <>
+    <ServiceLocaleProvider {...international}>
       {children}
       <PwaBootstrap />
       <DialogosAcessiveis />
-    </>
+    </ServiceLocaleProvider>
   );
 }

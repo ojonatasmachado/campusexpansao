@@ -1,3 +1,4 @@
+import { currencyOrDefault } from "../internacional/contrato";
 import { regiaoInformada } from "../endereco";
 import { telefoneValido } from "../telefone";
 import { weekdayFromISO } from "../date";
@@ -21,6 +22,8 @@ export function toChurchView(row: ChurchRow): ChurchView {
     id: row.id,
     organizationId: row.organization_id,
     timeZone: row.time_zone,
+    currencyCode: currencyOrDefault(row.currency_code),
+    currencyLocked: row.currency_locked ?? false,
     nome: row.name,
     cidade: row.city || "",
     matriz: row.is_headquarters,

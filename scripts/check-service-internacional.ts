@@ -1,0 +1,68 @@
+import assert from "node:assert/strict";
+import { CURRENCIES, LOCALES, currencyOrDefault, isCurrency, isLocale, localeOrDefault, requireCurrency, requireLocale } from "../app/service/lib/internacional/contrato";
+import { amountForCsv, formatAmount, formatCivilDate, formatMoney, formatNumber } from "../app/service/lib/internacional/formatar";
+import { loadMessages } from "../app/service/lib/internacional/catalogos";
+import { createText } from "../app/service/lib/internacional/mensagens";
+import { messageKey } from "../app/service/lib/internacional/chave";
+import { pseudoMessage, pseudoMessages } from "../app/service/lib/internacional/pseudo";
+import { parse } from "@formatjs/icu-messageformat-parser";
+
+for (const value of LOCALES) assert.equal(requireLocale(value), value);
+for (const value of CURRENCIES) assert.equal(requireCurrency(value), value);
+for (const value of [null, undefined, "", "pt", "en-GB", "constructor", "PT-BR", "../en-US"]) {
+  assert.equal(isLocale(value), false);
+  assert.throws(() => requireLocale(value), /invalid_locale/);
+}
+for (const value of [null, undefined, "", "brl", "GBP", "R$", "__proto__"]) {
+  assert.equal(isCurrency(value), false);
+  assert.throws(() => requireCurrency(value), /invalid_currency/);
+}
+assert.equal(localeOrDefault(null), "pt-BR");
+assert.equal(currencyOrDefault(null), "BRL");
+assert.equal(formatAmount(123456, "pt-BR"), "1.234,56");
+assert.equal(formatAmount(123456, "en-US"), "1,234.56");
+assert.equal(formatAmount(123456, "es-ES"), "1234,56");
+assert.equal(formatNumber(1234567, "en-US"), "1,234,567");
+for (const locale of LOCALES) for (const currency of CURRENCIES) {
+  const expected = new Intl.NumberFormat(locale, { style: "currency", currency }).format(1234.56);
+  assert.equal(formatMoney(123456, currency, locale), expected);
+  assert.ok(formatMoney(0, currency, locale));
+  assert.ok(formatMoney(-100_000_000_000, currency, locale));
+}
+for (const value of [NaN, Infinity, 1.5, Number.MAX_SAFE_INTEGER, 100_000_000_001]) {
+  assert.throws(() => formatMoney(value, "BRL", "pt-BR"), /invalid_cents/);
+}
+assert.equal(amountForCsv(123456), "1234.56");
+assert.equal(amountForCsv(-1), "-0.01");
+assert.equal(formatCivilDate("2028-02-29", "pt-BR"), "29/02/2028");
+assert.equal(formatCivilDate("2028-02-29", "en-US"), "02/29/2028");
+for (const value of ["2027-02-29", "2026-04-31", "2026-13-01", "2026-01-01T00:00:00Z", "0000-01-01"]) {
+  assert.throws(() => formatCivilDate(value, "pt-BR"), /invalid_civil_date/);
+}
+console.log("Internacional: locales e moedas permitidos, escrita inválida rejeitada, nove combinações monetárias, centavos inteiros e datas civis preservadas.");
+
+async function messages() {
+  const plural = "{count, plural, =0 {Nenhuma mensagem} one {# mensagem} other {# mensagens}}";
+  const keys = Object.keys(await loadMessages("pt-BR")).sort();
+  for (const locale of LOCALES) {
+    const catalog = await loadMessages(locale);
+    assert.deepEqual(Object.keys(catalog).sort(), keys);
+    for (const value of Object.values(catalog)) parse(value);
+    const text = createText(locale, catalog);
+    const churchContent = "Igreja Caminho da Paz";
+    assert.ok(text("Olá, {name}.", { name: churchContent }).includes(churchContent));
+    const expected = locale === "en-US" ? ["No messages", "1 message", "2 messages"] : locale === "es-ES" ? ["Ningún mensaje", "1 mensaje", "2 mensajes"] : ["Nenhuma mensagem", "1 mensagem", "2 mensagens"];
+    for (const count of [0, 1, 2]) assert.equal(text(plural, { count }), expected[count]);
+    assert.ok(text.rich("Leia <link>as instruções</link>.", { link: (children) => children }));
+    const pseudo = pseudoMessages(catalog);
+    for (const value of Object.values(pseudo)) parse(value);
+    assert.ok(createText(locale, pseudo)("Olá, {name}.", { name: churchContent }).includes(churchContent));
+    assert.ok(createText(locale, pseudo)(plural, { count: 2 }).includes("2"));
+  }
+  const original = "Uma frase longa para conferir expansão sem cortar o texto.";
+  const expanded = pseudoMessage(original);
+  assert.ok(expanded.length / original.length >= 1.3 && expanded.length / original.length <= 1.5);
+  assert.equal(messageKey("Preferência salva."), messageKey("Prefere\u0302ncia salva."));
+  console.log("Mensagens: três catálogos com as mesmas chaves, ICU válido, plural 0/1/2, conteúdo da igreja preservado, rich text e pseudo de 40% sem alterar argumentos.");
+}
+messages().catch((error) => { console.error(error); process.exitCode = 1; });

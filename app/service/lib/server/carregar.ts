@@ -82,7 +82,7 @@ export async function getServiceDashboardData(): Promise<{
 
   const { data: churchesData, error: churchesError } = await supabase
     .schema("service")
-    .from("churches")
+    .from("churches_with_preferences")
     /* "*": lê modules_on/modules_off (0055) e vocabulario (0056) sem quebrar antes de a migração chegar em produção */
     .select("*")
     .order("is_headquarters", { ascending: false })
