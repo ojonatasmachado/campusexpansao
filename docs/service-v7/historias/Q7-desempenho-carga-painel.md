@@ -2,10 +2,10 @@
 id: Q7
 titulo: Medir e melhorar a carga do painel
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: codex
+desde: 2026-10-24
+branch: historia/Q7-carga-painel
 depende: []
 tamanho: M
 ---
