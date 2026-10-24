@@ -40,6 +40,9 @@ Fonte: HANDOFF item 6; STATUS F14; VALIDACAO.md :83; QUALIDADE-E-INTERNACIONAL.m
 - `app/service/ServiceExactApp.tsx`
 - `app/service/painel/telas/Config.tsx`
 - `app/service/membro/Perfil.tsx`
+- `app/service/MobileApp.tsx`
+- `app/service/lib/text-scale.ts`
+- `app/service/TextSizeSlider.tsx`
 - `app/service/modules/perfil/manifest.ts`
 
 ## Pronto quando
@@ -73,3 +76,11 @@ Preferência pessoal de idioma conectada ao Perfil com Campo/Selecao compartilha
 Trilho ampliado antes do código para prova autenticada da preferência pessoal em Chromium descartável (scripts/check-local-internacional-ui.ts). Reservas conferidas: I10 segue ativa, sem sobreposição com este script.
 
 Prova de navegador ainda pendente: primeira tentativa bloqueada pela API Docker; reinício gracioso do OrbStack feito conforme autorização explícita do usuário. Projeto cex-rls-570b292ece84 removido e ausência de contêineres/volumes conferida. Segunda tentativa aplicou migrações, mas falhou no login da conta canônica antes de executar casos de idioma. Projeto cex-rls-d40073001ede descartado e ausência de contêineres conferida. Script acrescenta diagnóstico de status/código/mensagem de autenticação, sem alterar o produto. Nenhum caso de tela aprovado nessa execução. Leis 12/17 e 13 regressões de jornadas passaram no lote de 244 mensagens.
+
+Retomada de 24/10/2026: reservas remotas conferidas, I10 continua com Claude. Nenhum arquivo do trilho da I10 foi editado. Catálogos ampliados para 272 mensagens por idioma, 255 referências literais no código: erros e confirmação do Perfil, papéis, datas civis localizadas, categorias de avisos e cabeçalhos/retornos de Configurações. A categoria Caminhada mantém o vocabulário personalizado da igreja como argumento. Tradução integral e integração financeira continuam pendentes.
+
+Diagnóstico da prova de UI: login passou; captura revelou primeiro acesso da conta master. Com a conta canônica de membro, o modal de consentimento do mapa interceptou o seletor. Fixture da prova agora conclui os dados mínimos e registra a recusa do mapa exclusivamente no banco descartável, sem alterar fixtures compartilhadas. Script captura a falha, mede densidade nos idiomas e verifica rejeição de gravação. Uma tentativa posterior falhou na recarga do schema antes dos casos; isso não valida a UI.
+
+Prova autenticada finalmente passou em cex-rls-9933c49519fe (descartado): seis combinações de idioma/largura com recarga e Perfil preservado, sem rolagem lateral, mais falha simulada da gravação mantendo pt-BR após recarga. Nenhum pageerror. Capturas ainda mostram a casca parcialmente em português. Medição de densidade inicial teve amostras durante entrada/hidratação; script ajustado para aguardar seletor, fontes e animações e voltar ao topo. Isso ainda não fecha a história nem valida pseudo/aparelho real.
+
+Trilho ampliado antes do código, após reconferir reservas remotas: MobileApp.tsx, lib/text-scale.ts e TextSizeSlider.tsx para localizar a navegação fixa do membro e as preferências de tamanho do texto. Nenhum desses caminhos pertence à I10. A ampliação não assume as histórias M nem muda comportamento, composição ou ordem de navegação.
