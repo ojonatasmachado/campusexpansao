@@ -26,3 +26,7 @@ Fonte: HANDOFF item 6; STATUS F14; VALIDACAO.md :83; QUALIDADE-E-INTERNACIONAL.m
 ## Notas
 ABERTO. Tipo original: codigo + decisao-do-usuario. Parte do item (idioma e moeda) depende de escolha sua: antes de codar, o agente prepara as opções e registra a resposta.
 Trilho a definir na reserva.
+
+2026-10-24, Codex. Reserva publicada após concluir Q8. Nenhum código iniciado: esta história exige escolha do usuário antes de codificar. Enviadas duas perguntas: idiomas/locales (somente pt-BR; pt-BR/pt-PT; pt-BR/en-US/es-ES com tradução completa) e moedas (BRL; BRL/EUR; BRL/EUR/USD). Proposta explícita: uma moeda por igreja, sem câmbio ou mistura de moedas e sem reinterpretação dos lançamentos existentes. Respostas pendentes. Não foram assumidas histórias D.
+
+Inventário anterior à escolha: fuso já está em DbChurchClock/app/lib/types.ts, ChurchRow/ChurchView e toChurchView; preservar essa cadeia. Não há locale/moeda explícitos nos contratos atuais. A preferência pessoal de tamanho de texto usa service.members e RPCs próprias (0057), uma referência de fluxo de preferência, não autorização para reutilizar seu campo. Financeiro ainda formata BRL em dinheiro.ts, campos e CSV; não basta trocar o símbolo para suportar outra moeda. A auditoria de referência é auditoria-ux-2026-10-20/QUALIDADE-E-INTERNACIONAL.md, seção 4: separa idioma da pessoa, moeda da igreja e vocabulário, pede plural/interpolação e pseudolocalização com expansão de 30% a 50%. O trilho de implementação será definido depois da resposta e de conferir reservas.
