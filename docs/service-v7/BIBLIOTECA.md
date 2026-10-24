@@ -54,7 +54,7 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Folha inferior | `M6Sheet` + `.m-sheet` | parcial | duas famílias de CSS | 1 |
 | Aviso (toast) | `avisar()` + `.m6-toast` com Desfazer | parcial | dois sistemas; o do membro fora do `avisar()` | 6 |
 | Vazio | `EmptyState` (painel/ui.tsx) | parcial | ~60 `.empty` inline | 6 |
-| Carregando | nenhum | não | texto "Carregando..." em 10+ telas | 6 |
+| Carregando | `Carregando` em `app/service/ui/Carregando.tsx` (`texto`, `telaInteira`); entrada em `app/service/loading.tsx` | sim | rota do Service coberta; textos antigos em telas internas ainda por migrar | 6 |
 | Erro | `friendlyWriteError` (só texto) | não | sem componente | 6 |
 | Ajuda "?" | `HelpDot` (HelpSystem.tsx) | sim | modelo a seguir | n/a |
 | Tabela | `.tbl` | parcial | só painel | 3 |
@@ -74,6 +74,19 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 8. Campos: seleção, data, caixa de marcar.
 
 ## Ficha de entrada de um componente novo
+
+### Carregando (2026-10-24)
+
+- Necessidade e lugar: informar que a entrada do painel ou do app do membro está buscando dados. O fallback de `/service` também cobre suas rotas filhas sem fallback próprio.
+- Anatomia: anel decorativo e mensagem falada; propriedades `texto` e `telaInteira`. Sem ação ou moldura. Substituído automaticamente pelo conteúdo da rota, sem espera artificial.
+- Estados: carregando; foco, toque, vazio, erro e Desfazer não se aplicam a esta peça de status.
+- Tokens e tema: `--ink`, `--white`, `--sans`, `--fs-ui-15` e áreas seguras. Anel neutro para não antecipar a cor de uma igreja ainda desconhecida; herda o tema já aplicado durante navegação. Não consulta dados nem atrasa o fallback.
+- Pior caso e densidade: mensagem quebra naturalmente em tela estreita; zero ações e quatro palavras na entrada, sem listas ou dependência da quantidade de dados.
+- Acessibilidade e movimento: `role="status"`, região educada, anel oculto para leitor de tela; animação CSS desativada com movimento reduzido. Texto permanece visível.
+- Vocabulário: mensagem operacional, sem termos renomeáveis ou contadores.
+- Mercado: Material UI Progress e Carbon Loading oferecem indicador indeterminado para espera sem duração conhecida; adotado anel com texto, sem percentual inventado.
+- Lugares: componente em `app/service/ui/Carregando.tsx`, visual em `biblioteca.css`, inventário acima. Prancha 6: atualização visual pendente.
+- Validação: TypeScript e lint; captura no navegador e matriz de temas pendentes por indisponibilidade do navegador/servidor local no ambiente.
 
 Um componente só entra na biblioteca se a ficha estiver completa:
 

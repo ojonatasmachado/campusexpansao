@@ -11,6 +11,44 @@
   --r-acao: 14px;
 }
 
+/* Carregamento da rota: aparece enquanto o servidor prepara o Service. */
+.svc-carregando {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px 24px;
+  color: var(--white);
+  font-family: var(--sans);
+  font-size: var(--fs-ui-15, 15px);
+  line-height: 1.5;
+  text-align: center;
+}
+.svc-carregando-tela {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-top: calc(32px + var(--safe-top, 0px));
+  padding-right: calc(24px + var(--safe-right, 0px));
+  padding-bottom: calc(32px + var(--safe-bottom, 0px));
+  padding-left: calc(24px + var(--safe-left, 0px));
+  background: var(--ink);
+}
+.svc-carregando-anel {
+  width: 32px;
+  height: 32px;
+  border: 3px solid color-mix(in srgb, var(--white) 15%, transparent);
+  border-top-color: var(--white);
+  border-radius: 50%;
+  animation: svc-carregando-girar .85s linear infinite;
+}
+@keyframes svc-carregando-girar {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .svc-carregando-anel { animation: none; }
+}
+
 /* ── Botão (Botao): uma ação principal por bloco ── */
 .btn, .m6-btn, .login-btn {
   border-radius: var(--r-acao);
