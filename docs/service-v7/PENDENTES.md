@@ -63,7 +63,6 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **I10** Biblioteca: indicadores e gráficos
 - **I2** Ações do Início que não navegam · **I5** Ajuda com menos repetição
 - **M2** Setas nos botões do membro · **M3** Retorno e recarga · **M5** Foco no Mural · **I7** Quadros no toque
-- **Q10** Mover FieldDef e FField · **Q8** Endereço por tela do painel · **Q7** Carga do painel · **O3** Arquivos grandes
 - **N1** Fuso, idioma e moeda · **F1** Financeiro fases 3 e 4 · **F2** Pontos pequenos de jornada · **O1** Culto avulso no estilo do assistente
 - **I3** Revisão de UI das telas densas (depois de I9 e D1) · **G3** Cartões do mapa no Início (depois de I1)
 
