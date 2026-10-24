@@ -25,6 +25,7 @@ Fonte: HANDOFF item 6; STATUS F14; VALIDACAO.md :83; QUALIDADE-E-INTERNACIONAL.m
 - `docs/service-v7/producao.sql`
 - `scripts/check-service-internacional.ts`
 - `scripts/check-local-internacional.ts`
+- `scripts/check-local-internacional-ui.ts`
 - `docs/service-v7/INTERNACIONALIZACAO.md`
 - `package.json`
 - `package-lock.json`
@@ -68,3 +69,5 @@ Trilho de integração inicial: extração/verificação de mensagens, vocabulá
 Lote parcial de integração: 244 mensagens revistas nos três idiomas (226 referenciadas no código, além das mensagens de prova). Perfil e Configurações ainda têm frases e metadados pendentes. Vocabulário padrão por locale preserva termos personalizados na leitura e na gravação. Contrato de internacionalização e comparação semântica do preparador de JSX passaram; nenhum arquivo reservado da I10 foi alterado. Preferências visuais, tradução integral, captura e integração financeira continuam pendentes.
 
 Preferência pessoal de idioma conectada ao Perfil com Campo/Selecao compartilhados e RPC própria. Só atualiza a interface depois de a gravação responder com o locale esperado; falha deixa o idioma atual e mostra tentativa novamente. O refresh do roteador preserva o estado do app. Esta ligação ainda aguarda teste autenticado no navegador e medição de densidade; não é prova de tela concluída.
+
+Trilho ampliado antes do código para prova autenticada da preferência pessoal em Chromium descartável (scripts/check-local-internacional-ui.ts). Reservas conferidas: I10 segue ativa, sem sobreposição com este script.
