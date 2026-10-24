@@ -45,6 +45,12 @@ Fonte: HANDOFF item 6; STATUS F14; VALIDACAO.md :83; QUALIDADE-E-INTERNACIONAL.m
 - `app/service/TextSizeSlider.tsx`
 - `app/service/modules/perfil/manifest.ts`
 
+- `app/service/login/`
+- `app/service/nova-senha/`
+- `app/service/convite/`
+- `app/service/PasswordInput.tsx`
+- `app/[slug]/entrar/page.tsx`
+
 ## Pronto quando
 - Locale da pessoa e moeda da igreja explícitos.
 - Textos longos e pseudolocalização testados.
@@ -88,3 +94,5 @@ Trilho ampliado antes do código, após reconferir reservas remotas: MobileApp.t
 Lote seguinte: 320 mensagens por idioma e 303 referências literais; navegação do membro e tamanho do texto localizados, incluindo rich text, saudações, plural e aria-valuetext. Prova autenticada passou em cex-rls-278c2a8c54de (descartado): três idiomas/duas larguras, cabeçalho/quatro abas/controle de texto, recarga e falha da RPC preservando o idioma. Densidade estável do membro em 390px: 10 ações, 40 a 58 palavras, 2 molduras, sem alvos pequenos/sobreposições/rolagem. Em 1366px a referência pt-BR e as traduções têm 3 molduras: limite desktop não aprovado; não é captura do painel. Tradução integral e integração financeira ainda pendentes.
 
 Verificações finais deste lote: tsc --noEmit e build completo com configuração fictícia do CI passaram, assim como lint dos arquivos alterados (dois avisos preexistentes de img em Config), extrator, internacionalização/preparador JSX, leis 12/17, contraste e 13 regressões. docker ps confirmou ausência de contêineres cex-rls restantes. N1 segue reservada, sem PR ou merge: ainda falta tradução integral, integração financeira e capturas abrangentes/pseudo. Próxima continuação em INTERNACIONALIZACAO.md, última subseção.
+
+Trilho ampliado em 24/10 após conferir a reserva I10: entradas de autenticação, campo de senha e provider na entrada temática. Só internacionalização dos fluxos existentes, sem assumir histórias de tela do Claude.
