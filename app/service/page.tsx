@@ -9,6 +9,7 @@ import { cookies, headers } from "next/headers";
 import ServiceTheme from "./ServiceTheme";
 import type { RosterAssignmentView, BibleMarkView } from "./lib/server/tipos";
 import { getServiceDashboardData } from "./lib/server/carregar";
+import { PANEL_ROUTE_PARAM } from "./lib/panel-navigation";
 
 export default async function ServiceHomePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { churches, people, members, ministries, events, extra, error } = await getServiceDashboardData();
@@ -146,7 +147,8 @@ export default async function ServiceHomePage({ searchParams }: { searchParams: 
   const isPhone = /Mobi|Android|iPhone|iPod/i.test((await headers()).get("user-agent") ?? "");
   const query = await searchParams;
   const memberDestination = ["inicio", "agenda", "mensagens", "caminhada", "perfil"].includes(String(query.maba ?? "")) || ["escala", "mural", "mensagens", "caminhada"].includes(String(query.aviso ?? ""));
-  const initialView: "app" | "gestao" = memberDestination ? "app" : savedView === "app" || savedView === "gestao" ? savedView : isPhone ? "app" : "gestao";
+  const initialPanelRoute = typeof query[PANEL_ROUTE_PARAM] === "string" ? query[PANEL_ROUTE_PARAM] as string : undefined;
+  const initialView: "app" | "gestao" = memberDestination ? "app" : initialPanelRoute ? "gestao" : savedView === "app" || savedView === "gestao" ? savedView : isPhone ? "app" : "gestao";
 
   return (
     <>
@@ -215,6 +217,7 @@ export default async function ServiceHomePage({ searchParams }: { searchParams: 
       pesquisaElegivel={pesquisaElegivel}
       initialTheme={themeMode}
       initialView={initialView}
+      initialPanelRoute={initialPanelRoute}
       error={error}
     />
     </>

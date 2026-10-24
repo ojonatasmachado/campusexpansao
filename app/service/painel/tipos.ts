@@ -682,6 +682,7 @@ export type Props = {
   pesquisaElegivel?: PesquisaElegivelView | null;
   initialTheme?: "dark" | "light";
   initialView?: "app" | "gestao";
+  initialPanelRoute?: string;
   error: string;
 };
 
