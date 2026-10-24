@@ -6,13 +6,17 @@ import { spawn } from "node:child_process";
 import { createServer, type AddressInfo } from "node:net";
 import { mkdirSync, openSync, closeSync, writeFileSync } from "node:fs";
 import { resolve, join } from "node:path";
+import { createRequire } from "node:module";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { chromium, type BrowserContext } from "../tools/captura-service/node_modules/playwright";
 import { ROUTES } from "../app/service/painel/comum";
 import { withDisposableSupabase } from "./check-local-rls";
 
 const root = resolve(__dirname, "..");
+// Dependência da ferramenta de captura, carregada só ao executar este teste.
+// O build do aplicativo não instala nem precisa do Playwright.
+const requireCapture = createRequire(join(root, "tools/captura-service/package.json"));
+const { chromium } = requireCapture("playwright");
 const output = join(root, "prints/q8-navegacao");
 mkdirSync(output, { recursive: true });
 const pause = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
@@ -37,14 +41,14 @@ withDisposableSupabase(async (db) => {
       await pause(500);
     }
     if (!ready) throw new Error("Next não ficou pronto");
-    async function login(context: BrowserContext, account: string) {
+    async function login(session: typeof context, account: string) {
       const jar = new Map<string, string>();
       const client = createServerClient(db.url, db.anonKey, { auth: { autoRefreshToken: false }, cookies: { getAll: () => [...jar].map(([name, value]) => ({ name, value })), setAll: (values) => { for (const c of values) jar.set(c.name, c.value); } } });
       const result = await client.auth.signInWithPassword({ email: `${account}@teste.local`, password: "TesteLocal123" });
       if (result.error) throw new Error("Login local falhou");
-      await context.addCookies([...jar].map(([name, value]) => ({ name, value, url: base, sameSite: "Lax" as const })));
-      await context.addCookies([{ name: "cex_view", value: "app", url: base }]); // destino direto prevalece sobre a preferência
-      await context.addInitScript(() => { localStorage.setItem("cex_tour_done", "1"); });
+      await session.addCookies([...jar].map(([name, value]) => ({ name, value, url: base, sameSite: "Lax" as const })));
+      await session.addCookies([{ name: "cex_view", value: "app", url: base }]); // destino direto prevalece sobre a preferência
+      await session.addInitScript(() => { localStorage.setItem("cex_tour_done", "1"); });
     }
     const context = await browser.newContext({ viewport: { width: 1366, height: 860 } });
     context.setDefaultTimeout(60_000);
@@ -52,7 +56,7 @@ withDisposableSupabase(async (db) => {
     await login(context, "master");
     const page = await context.newPage();
     const errors: string[] = [];
-    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("pageerror", (error: Error) => errors.push(error.message));
     await page.goto(base + "/service?ptela=membros&origem=q8#teste", { waitUntil: "domcontentloaded" });
     await page.locator("h1.ph-title").filter({ hasText: "Pessoas" }).waitFor();
     assert.equal(new URL(page.url()).searchParams.get("ptela"), "membros");
