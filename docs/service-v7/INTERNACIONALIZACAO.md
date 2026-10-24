@@ -67,7 +67,7 @@ Typecheck e lint do lote 244 passaram antes de acrescentar o script UI. Contrato
 
 ### Próximos passos obrigatórios
 
-1. Retomar scripts/check-local-internacional-ui.ts. As duas tentativas anteriores não executaram casos de idioma: primeira bloqueada pelo Docker, segunda falhou no login da conta canônica. Agora o erro inclui status/código/mensagem para diagnóstico. Não presumir senha incorreta sem esse resultado. Fixture local: master@teste.local, senha TesteLocal123. Rodar verificações pesadas sequencialmente, pois o host ficou muito lento com Next e typecheck simultâneos.
+1. A prova scripts/check-local-internacional-ui.ts foi destravada nesta retomada e passou com a conta canônica de membro, incluindo navegação e controle de texto. Ver a atualização ao fim desta seção para fixture, evidência e limites. Rodar verificações pesadas sequencialmente; não usar a conta master incompleta para esta prova de Perfil.
 2. Concluir a tradução integral do Service. O inventário inicial encontrou 3670 ocorrências e 2600 textos distintos em 182 arquivos; 244 mensagens não representam cobertura completa. Faltam metadados fora de componentes, frases mistas, erros, peças compartilhadas, entradas de autenticação e formatação de datas/números. Traduzir frases completas; nunca aplicar tradução automática ao DOM ou a conteúdo das pessoas/igrejas.
 3. Conectar configuração da moeda e o contrato de formatação/gravação ao financeiro, inclusive formulários e exportações. Ainda não existe essa integração completa. Não reinterpretar centavos legados, nem apenas trocar símbolo de BRL.
 4. Capturar idiomas e pseudo em celular/painel, textos longos, densidade antes/depois, erros de console, alvos, contraste e rolagem lateral. Testar persistência, navegação e falhas autenticadas. Não apresentar testes sintéticos como aparelho/pessoa real.
@@ -82,3 +82,31 @@ O usuário autorizou reinício gracioso do OrbStack quando necessário para dest
 Logs locais: /tmp/cex-N1-idioma-browser.log, /tmp/cex-N1-idioma-browser-repeticao.log, /tmp/cex-N1-tsc-lote244.log, /tmp/cex-N1-lint-lote244.log. Notas adicionais em /tmp/cex-N1-continuidade-lote244.md, que podem desaparecer; esta seção no repositório é a continuidade durável.
 
 Ao terminar a próxima sessão, entregar novamente ao usuário o contexto atualizado e um texto curto para abrir outro chat.
+
+
+### Retomada N1 neste chat, 24/10/2026
+
+As reservas remotas foram conferidas: I10 continua com Claude nos mesmos caminhos. O checkout principal e os arquivos reservados ficaram intactos. Não iniciar F1: N1 permanece aberta.
+
+O novo lote leva os catálogos a 272 mensagens por idioma, com 255 referências literais extraídas do código. Inclui erros/retornos do Perfil, papel da pessoa, datas civis por locale, categorias de avisos com vocabulário preservado e cabeçalhos/retornos de Configurações. Tradução integral, autenticação, peças compartilhadas e integração financeira continuam pendentes.
+
+A prova de navegador foi destravada com diagnóstico por captura: a conta master canônica entrava no primeiro acesso; a conta de membro ainda mostrava o consentimento do mapa. A fixture desta prova agora prepara só a conta membro@teste.local no banco descartável, com telefone e recusa do mapa já registrados. Não altera fixtures compartilhadas nem o produto para contornar esses fluxos.
+
+Passaram sete casos autenticados em Chromium: pt-BR/en-US/es-ES em 390×844 e 1366×860, persistência após recarga, Perfil preservado, ausência de rolagem lateral e falha simulada da RPC mantendo o idioma anterior também após recarga. Nenhum pageerror observado. Projeto cex-rls-9933c49519fe descartado pelo finally. Log: /tmp/cex-N1-idioma-browser-preferencias-2.log. Capturas e resultado local em prints/n1-internacional-ui/. Não é validação de aparelho real nem de toda a interface traduzida.
+
+A captura em inglês confirma resíduos em português na casca (Perfil, Início, Agenda, Mensagens) e no tamanho do texto. A densidade da primeira execução foi colhida antes do fim da entrada/hidratação em alguns casos, portanto não constitui comparação aprovada. O script agora espera o seletor, fontes e animações finitas antes de medir e volta ao topo da rolagem interna. O registro pt-BR-antes é a referência de idioma na mesma versão, não uma captura do código anterior ao lote.
+
+Checks já aprovados nesta retomada: extrator, contrato de internacionalização/preparador JSX, leis 12/17 e os 13 contratos de regressão das jornadas. Lint sem erros, com dois avisos preexistentes de img em Config.tsx. Typecheck passou antes dos últimos ajustes do script; repetir junto da verificação final. Build e provas de pseudo/contraste integral ainda não são conclusão desta retomada.
+
+
+### Evidência mais recente e próxima continuação
+
+O lote seguinte ampliou o trilho, em commit só da história e push antes das edições (a9de4c9), para MobileApp.tsx, lib/text-scale.ts e TextSizeSlider.tsx. A reserva I10 foi conferida novamente e permanece intocada. Os catálogos agora têm 320 mensagens completas por idioma, 303 referências literais no código. Navegação fixa, Perfil, saudações, plural de avisos, prévia e nomes acessíveis do tamanho do texto foram localizados. Nomes de pessoa/igreja e vocabulário personalizado continuam argumentos, sem tradução. Frases com marcação usam rich text; não há tradução por DOM.
+
+A prova final deste lote passou em cex-rls-278c2a8c54de, descartado: seis combinações de idioma/largura com recarga, cabeçalho do Perfil, quatro abas e aria-valuetext do slider, mais falha da RPC preservando pt-BR após recarga. Log /tmp/cex-N1-idioma-browser-navegacao.log; resultado em prints/n1-internacional-ui/resultado.json, executado em 2026-10-24T13:49:26Z. Captura en-US-390.png revisada: Home/Profile/Calendar/Messages/Journey e Default traduzidos, Maria Membro preservada. Não representa cobertura de todas as telas ou painel de gestão.
+
+Densidade estabilizada, mesma versão em pt-BR versus outros idiomas: no membro a 390px, 10 ações, 40 a 58 palavras, até 2 molduras, nenhum alvo pequeno, sobreposição ou rolagem lateral. No app do membro a 1366px, 10 ações, 52 a 58 palavras, nenhum alvo pequeno/sobreposição/rolagem, mas 3 molduras já na referência pt-BR. Não aprovar o limite de molduras do desktop nem confundir esta tela com captura do painel. Pseudo, textos extremos, contraste real de todas as telas e prova de aparelho seguem pendentes na N1.
+
+Próxima tarefa: continuar a tradução integral nos caminhos livres. Faltam subtítulos/metadados vindos dos manifestos, demais telas do membro, painel, erros compartilhados e entradas de autenticação. Antes de ampliar o trilho, consultar reservas e publicar a ampliação em commit só da história. A integração de moeda/formulários/exportações do Financeiro continua aguardando os caminhos da I10. Não iniciar F1 nem marcar N1 como feita.
+
+Verificação final de tipos: tsc --noEmit passou. A primeira execução encontrou arquivos de tipos gerados pelo Next dev truncados; só .next/dev/types deste worktree foi removido e regenerado. O build inicial compilou e concluiu TypeScript, mas falhou por supabaseUrl ausente no ambiente, antes da coleta de /admin/studio/divulgacao. Build completo aprovado na repetição com variáveis fictícias do CI (log /tmp/cex-N1-build-ci-retomada.log); não confundir a tentativa inicial com falha de tipo do produto. Leis 12/17, contrato de internacionalização e contraste dos temas passaram após o lote de navegação.

@@ -114,9 +114,9 @@ export function Config({
   /* celular: lista primeiro; ao escolher, abre a página com voltar */
   const [cfgAberta, setCfgAberta] = useState(false);
   const ONLY_HEAD: Record<string, { t: string; s: string }> = {
-    grupos: { t: ct("{Grupos}"), s: "Os pequenos grupos da igreja: nome, líderes, dia e lugar." },
-    pesquisas: { t: "Pesquisas", s: "Perguntas para a igreja responder pelo app, com resultado em tempo real." },
-    pagina: { t: "Página da igreja", s: "O link da bio: o que aparece, a ordem e as cores da página." },
+    grupos: { t: ct("{Grupos}"), s: traduzirUi("Os pequenos grupos da igreja: nome, líderes, dia e lugar.") },
+    pesquisas: { t: traduzirUi("Pesquisas"), s: traduzirUi("Perguntas para a igreja responder pelo app, com resultado em tempo real.") },
+    pagina: { t: traduzirUi("Página da igreja"), s: traduzirUi("O link da bio: o que aparece, a ordem e as cores da página.") },
   };
   const [editTagId, setEditTagId] = useState<string | null>(null);
   const [tagNomeEdit, setTagNomeEdit] = useState("");
@@ -183,7 +183,7 @@ export function Config({
   };
 
   async function removeRow(table: string, id: string) {
-    if (!(await confirmar({ titulo: traduzirUi("Remover este registro?"), acao: "Remover" }))) return;
+    if (!(await confirmar({ titulo: traduzirUi("Remover este registro?"), acao: traduzirUi("Remover") }))) return;
     await createServiceBrowserClient().schema("service").from(table).delete().eq("id", id);
     router.refresh();
   }
@@ -272,7 +272,7 @@ export function Config({
     setPersonalizacaoSaving(false);
     /* sem linha de volta = o banco não gravou (sem permissão ou igreja inexistente) */
     const falhou = results.some((r) => r.error || !r.data?.length);
-    setPersonalizacaoMsg(falhou ? "Não foi possível salvar" : "Salvo!");
+    setPersonalizacaoMsg(falhou ? traduzirUi("Não foi possível salvar") : traduzirUi("Salvo!"));
     router.refresh();
     setTimeout(() => setPersonalizacaoMsg(""), 2000);
   };
@@ -303,7 +303,7 @@ export function Config({
       .from("role_permissions")
       .upsert(rows, { onConflict: "organization_id,role,permission_code" });
     setMatrizSaving(false);
-    setMatrizMsg("Permissões salvas.");
+    setMatrizMsg(traduzirUi("Permissões salvas."));
     router.refresh();
     setTimeout(() => setMatrizMsg(""), 2000);
   };
@@ -318,7 +318,7 @@ export function Config({
       <div className="ph">
         <div>
           <div className="ph-eyebrow">{traduzirUi("Configurações")}</div>
-          <h1 className="ph-title">Configurações <HelpDot text={traduzirUi("Dados da igreja, regras de escala, permissões, marca do app e convites pra outros líderes ficam aqui.")} /></h1>
+          <h1 className="ph-title">{traduzirUi("Configurações")} <HelpDot text={traduzirUi("Dados da igreja, regras de escala, permissões, marca do app e convites pra outros líderes ficam aqui.")} /></h1>
         </div>
       </div>
       )}
@@ -543,7 +543,7 @@ export function Config({
             </Linha>
             {gruposCfg.ativo && (
               <div className="cfg-grid2" style={{ gap: "0 16px", marginTop: 16 }}>
-                <div className="field"><label className="field-label">{traduzirUi("Nome")}</label><div className="cfg-row-s" style={{ marginTop: 4 }}>{ct(traduzirUi("{Grupo}"))}. O nome se muda em Personalização, em Nomes usados no app.</div></div>
+                <div className="field"><label className="field-label">{traduzirUi("Nome")}</label><div className="cfg-row-s" style={{ marginTop: 4 }}>{traduzirUi("{Grupo}. O nome se muda em Personalização, em Nomes usados no app.")}</div></div>
                 <Campo rotulo={traduzirUi("Sigla")}><Entrada value={gruposCfg.sigla} onChange={(e) => setGruposCfgState({ ...gruposCfg, sigla: e.target.value })} onBlur={() => saveGruposCfg(gruposCfg)} placeholder={traduzirUi("ex: GC")} /></Campo>
               </div>
             )}

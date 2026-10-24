@@ -6,12 +6,11 @@ import { listaFinalidades, type ContribuirCfg } from "../modules/contribuir/pix"
 import { useContext, useEffect, useState, useId, useTransition } from "react";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { Icon } from "../lib/icons";
-import { formatDateBR } from "../lib/date";
+import { formatCivilDate } from "../lib/internacional/formatar";
 import { formatarTelefone } from "../lib/telefone";
 import { PhotoPicker } from "../PhotoPicker";
 import CepInput from "../CepInput";
-import { NOMES_POSICAO, useTextSize } from "../lib/text-scale";
-import { useTermos } from "../lib/vocabulario-context";
+import { nomesPosicao, useTextSize } from "../lib/text-scale";
 import type { CategoriaAviso } from "../modules/define";
 import { Av, M6Row, M6Sheet, MemberUiContext, contactErrors, realValue } from "./comum";
 import { AppTourModal } from "./Onboarding";
@@ -30,11 +29,13 @@ import { useTexto, useServiceLocale } from "../lib/internacional/contexto";
 import { LOCALES, LOCALE_COOKIE, NATIVE_LOCALE_NAMES, isLocale } from "../lib/internacional/contrato";
 import { Selecao } from "../ui/Selecao";
 import { useRouter } from "next/navigation";
+import type { Text } from "../lib/internacional/mensagens";
 
 // ── aba: Perfil ───────────────────────────────────────────────────────────────
 
 /* notificações do celular (push): usado no Perfil e no primeiro acesso */
 export function usePush(organizationId?: string) {
+  const traduzirUi = useTexto();
   const [pushOn, setPushOn] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
   const [pushMsg, setPushMsg] = useState("");
@@ -62,11 +63,11 @@ export function usePush(organizationId?: string) {
     try {
       const perm = await Notification.requestPermission();
       if (perm !== "granted") {
-        setPushMsg(perm === "denied" ? "Bloqueado no navegador. Libere nas configurações do site." : "Permissão não concedida.");
+        setPushMsg(perm === "denied" ? traduzirUi("Bloqueado no navegador. Libere nas configurações do site.") : traduzirUi("Permissão não concedida."));
         return;
       }
       const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!publicKey) { setPushMsg("Push não configurado neste ambiente."); return; }
+      if (!publicKey) { setPushMsg(traduzirUi("Push não configurado neste ambiente.")); return; }
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
@@ -80,7 +81,7 @@ export function usePush(organizationId?: string) {
       });
       setPushOn(true);
     } catch {
-      setPushMsg("Não foi possível ativar agora.");
+      setPushMsg(traduzirUi("Não foi possível ativar agora."));
     } finally {
       setPushBusy(false);
     }
@@ -101,7 +102,7 @@ export function usePush(organizationId?: string) {
       }
       setPushOn(false);
     } catch {
-      setPushMsg("Não foi possível desligar agora.");
+      setPushMsg(traduzirUi("Não foi possível desligar agora."));
     } finally {
       setPushBusy(false);
     }
@@ -173,11 +174,11 @@ export function TabPerfil({
     let ativo = true;
     createServiceBrowserClient().schema("service").rpc("my_member_cpf", { p_member: member.id }).then(({ data, error }) => {
       if (!ativo) return;
-      if (error) { setDocumentoErro("Não foi possível carregar o CPF agora. Os outros dados podem ser editados."); return; }
+      if (error) { setDocumentoErro(traduzirUi("Não foi possível carregar o CPF agora. Os outros dados podem ser editados.")); return; }
       setPerfil((p) => ({ ...p, cpf: typeof data === "string" ? data : "" }));
     });
     return () => { ativo = false; };
-  }, [view, member?.id]);
+  }, [view, member?.id, traduzirUi]);
   const [perfilTentou, setPerfilTentou] = useState(false);
   const perfilErros = contactErrors(perfil);
 
@@ -212,7 +213,7 @@ export function TabPerfil({
     if (error) {
       setSenhaMsg(error);
     } else {
-      setSenhaMsg("Senha atualizada.");
+      setSenhaMsg(traduzirUi("Senha atualizada."));
       setSenha("");
       setSenha2("");
     }
@@ -220,7 +221,6 @@ export function TabPerfil({
 
   const { pushOn, pushBusy, pushMsg, pushSupported, ligarPush, desligarPush } = usePush(organizationId);
   const [tour, setTour] = useState(false);
-  const { comTermos: ct } = useTermos();
   /* categorias desligadas (0066); lidas do perfil, gravadas na hora */
   const [notifOff, setNotifOff] = useState<string[]>([]);
   useEffect(() => {
@@ -233,7 +233,7 @@ export function TabPerfil({
     const novo = notifOff.includes(id) ? notifOff.filter((x) => x !== id) : [...notifOff, id];
     setNotifOff(novo);
     createServiceBrowserClient().schema("service").rpc("set_my_notifications", { p_off: novo }).then(({ data, error }) => {
-      if (error || data !== "ok") { setNotifOff(antes); ui.toast("Não foi possível salvar agora. Tente de novo."); }
+      if (error || data !== "ok") { setNotifOff(antes); ui.toast(traduzirUi("Não foi possível salvar agora. Tente de novo.")); }
     });
   };
   /* mapa da igreja (0087): nome no mapa da liderança; desligado = ponto sem nome */
@@ -274,7 +274,7 @@ export function TabPerfil({
                 <ul className="m6-facts">
                   <li><Icon name="telefone" size={20} /><span>{formatarTelefone(realValue(member.phone))}</span></li>
                   <li><Icon name="link" size={20} /><span>{realValue(member.email)}</span></li>
-                  {member.birth && <li><Icon name="presente" size={20} /><span>Aniversário · {formatDateBR(member.birth)}</span></li>}
+                  {member.birth && <li><Icon name="presente" size={20} /><span>{traduzirUi("Aniversário · {data}", { data: formatCivilDate(member.birth, locale) })}</span></li>}
                   {(member.neighborhood || member.city) && <li><Icon name="mapapin" size={20} /><span>{[member.neighborhood, member.city, member.country].filter(Boolean).join(", ")}</span></li>}
                 </ul>
                 {onUpdateProfile && (
@@ -313,7 +313,7 @@ export function TabPerfil({
     );
   }
 
-  const papel = onSwitchToPanel ? "Liderança" : "Membro";
+  const papel = onSwitchToPanel ? traduzirUi("Liderança") : traduzirUi("Membro");
   return (
     <>
       <div className="m6-sec0">
@@ -322,7 +322,7 @@ export function TabPerfil({
           <div className="m6-rb">
             <div className="m6-ct">{person.name}</div>
             <div className="m6-meta">{papel}</div>
-            {member?.firstContact ? <div className="m6-meta">Na igreja desde {formatDateBR(member.firstContact)}</div> : null}
+            {member?.firstContact ? <div className="m6-meta">{traduzirUi("Na igreja desde {data}", { data: formatCivilDate(member.firstContact, locale) })}</div> : null}
           </div>
         </Cartao>
       </div>
@@ -340,7 +340,7 @@ export function TabPerfil({
       <div className="m6-sec">
         <div className="m6-lbl">{traduzirUi("Preferências")}</div>
         <Lista>
-          <M6Row ic="documento" t={traduzirUi("Tamanho do texto")} s={NOMES_POSICAO[textPos]} onClick={ui.tamanhoTexto} />
+          <M6Row ic="documento" t={traduzirUi("Tamanho do texto")} s={nomesPosicao(traduzirUi)[textPos]} onClick={ui.tamanhoTexto} />
         </Lista>
         <Cartao estilo="app" className="m6-mt">
           <Campo rotulo={traduzirUi("Idioma")} erro={idiomaErro}
@@ -369,16 +369,16 @@ export function TabPerfil({
             <Interruptor ligado={pushOn} tamanho="toque" rotulo={traduzirUi("Notificações")} desativado={!pushSupported || pushBusy} onClick={() => (pushOn ? desligarPush() : ligarPush())} />
           </Linha>
           {/* v7 5.3 (lei 9): categorias que a pessoa desliga */}
-          {pushOn && CATEGORIAS_AVISO.map((c) => {
+          {pushOn && categoriasAviso(traduzirUi).map((c) => {
             const ligada = !notifOff.includes(c.id);
             return (
               <Linha estilo="app" key={c.id}>
                 <span className="m6-ic" />
                 <span className="m6-rb">
-                  <span className="m6-rt">{ct(c.t)}</span>
-                  <span className="m6-rs">{ct(c.s)}</span>
+                  <span className="m6-rt">{c.t}</span>
+                  <span className="m6-rs">{c.s}</span>
                 </span>
-                <Interruptor ligado={ligada} tamanho="toque" rotulo={traduzirUi("Avisos de {value0}", { value0: String(ct(c.t)) })} onClick={() => trocarCategoria(c.id)} />
+                <Interruptor ligado={ligada} tamanho="toque" rotulo={traduzirUi("Avisos de {value0}", { value0: c.t })} onClick={() => trocarCategoria(c.id)} />
               </Linha>
             );
           })}
@@ -495,9 +495,11 @@ export function MemberContactFields({ d, set, erros }: { d: MemberContactInput; 
 }
 
 /* categorias de aviso que a pessoa desliga (lei 9) */
-export const CATEGORIAS_AVISO: { id: CategoriaAviso; t: string; s: string }[] = [
-  { id: "escala", t: "Escala", s: "Quando você for escalado ou houver troca" },
-  { id: "mural", t: "Mural", s: "Publicações da igreja, em resumo" },
-  { id: "mensagens", t: "Mensagens", s: "Quando alguém falar com você" },
-  { id: "caminhada", t: "{Caminhada}", s: "Seus passos e pedidos aprovados" },
-];
+function categoriasAviso(t: Text): { id: CategoriaAviso; t: string; s: string }[] {
+  return [
+    { id: "escala", t: t("Escala"), s: t("Quando você for escalado ou houver troca") },
+    { id: "mural", t: t("Mural"), s: t("Publicações da igreja, em resumo") },
+    { id: "mensagens", t: t("Mensagens"), s: t("Quando alguém falar com você") },
+    { id: "caminhada", t: t("{Caminhada}"), s: t("Seus passos e pedidos aprovados") },
+  ];
+}

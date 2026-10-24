@@ -1,14 +1,16 @@
 // npm ci --prefix tools/captura-service; npx playwright install chromium (nessa pasta)
-// npx tsx scripts/check-local-panel-navigation.ts
+// npx tsx scripts/check-local-internacional-ui.ts
 // Preferência de idioma em Chromium, banco descartável e somente contas canônicas locais.
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createServer, type AddressInfo } from "node:net";
-import { mkdirSync, openSync, closeSync, writeFileSync } from "node:fs";
+import { mkdirSync, openSync, closeSync, writeFileSync, readFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { createRequire } from "node:module";
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { withDisposableSupabase } from "./check-local-rls";
+import { TERMO_MAPA_VERSAO } from "../app/service/lib/termo-mapa";
 
 const root = resolve(__dirname, "..");
 // Dependência da ferramenta de captura, carregada só ao executar este teste.
@@ -19,9 +21,17 @@ const output = join(root, "prints/n1-internacional-ui");
 mkdirSync(output, { recursive: true });
 const pause = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
 const checks: string[] = [];
+const density: { locale: string; width: number; metrics: unknown }[] = [];
 const passed = (name: string) => { checks.push(name); console.log(`ok ${name}`); };
 
 withDisposableSupabase(async (db) => {
+  // A conta master canônica cai no primeiro acesso. Esta prova usa a conta
+  // de membro com cadastro concluído e recusa do mapa já registrada no banco
+  // descartável, sem depender dos fluxos de primeiro acesso e consentimento.
+  const admin = createClient(db.url, db.serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  const fixture = await admin.schema("service").from("members").update({ phone: "(11) 90000-0002", map_consent_declined_at: new Date().toISOString(), map_consent_terms: TERMO_MAPA_VERSAO }).eq("email", "membro@teste.local").select("id");
+  assert.equal(fixture.error, null);
+  assert.equal(fixture.data?.length, 1);
   const socket = createServer();
   await new Promise<void>((ok) => socket.listen(0, "127.0.0.1", ok));
   const port = (socket.address() as AddressInfo).port;
@@ -51,34 +61,80 @@ withDisposableSupabase(async (db) => {
     const context = await browser.newContext({ viewport: { width: 1366, height: 860 } });
     context.setDefaultTimeout(60_000);
     context.setDefaultNavigationTimeout(120_000);
-    await login(context, "master");
+    await login(context, "membro");
     const page = await context.newPage();
     const errors: string[] = [];
     page.on("pageerror", (error: Error) => errors.push(error.message));
-    for (const viewport of [{ width: 390, height: 844 }, { width: 1366, height: 860 }]) {
-      await page.setViewportSize(viewport);
-      await page.goto(base + "/service?maba=perfil", { waitUntil: "domcontentloaded" });
-      await page.locator('[data-service-locale]').waitFor();
-      const names = { "pt-BR": "Português (Brasil)", "en-US": "English (United States)", "es-ES": "Español (España)" };
-      for (const locale of ["en-US", "es-ES", "pt-BR"] as const) {
-        const selector = page.locator(".sel-trigger").filter({ hasText: /Português \(Brasil\)|English \(United States\)|Español \(España\)/ });
-        await selector.click();
-        await page.getByRole("option", { name: names[locale], exact: true }).click();
-        await page.waitForFunction((expected: string) => document.documentElement.lang === expected, locale);
-        assert.equal(new URL(page.url()).searchParams.get("maba"), "perfil");
-        await page.reload({ waitUntil: "domcontentloaded" });
-        await page.waitForFunction((expected: string) => document.documentElement.lang === expected, locale);
-        await selector.waitFor();
-        assert.equal(await selector.innerText(), names[locale]);
-        const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
-        assert.equal(overflow, false, `rolagem lateral ${locale}/${viewport.width}`);
-        await page.screenshot({ path: join(output, `${locale}-${viewport.width}.png`), fullPage: true });
-        passed(`idioma ${locale} persistido após recarga, perfil preservado, sem rolagem lateral em ${viewport.width}px`);
+    try {
+      for (const viewport of [{ width: 390, height: 844 }, { width: 1366, height: 860 }]) {
+        await page.setViewportSize(viewport);
+        await page.goto(base + "/service?maba=perfil", { waitUntil: "domcontentloaded" });
+        await page.locator('[data-service-locale]').waitFor();
+        const measure = async (locale: string) => {
+          await page.locator(".sel-trigger").filter({ hasText: /Português \(Brasil\)|English \(United States\)|Español \(España\)/ }).waitFor({ state: "visible" });
+          await page.evaluate(async () => {
+            await document.fonts.ready;
+            await Promise.all(document.getAnimations().filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity).map((animation) => animation.finished.catch(() => {})));
+          });
+          await page.locator(".m-scroll").evaluate((element: HTMLElement) => { element.scrollTop = 0; });
+          await page.evaluate(() => new Promise<void>((ok) => requestAnimationFrame(() => requestAnimationFrame(() => ok()))));
+          await page.addScriptTag({ content: readFileSync(join(root, "scripts/medir-densidade.js"), "utf8") });
+          const metrics = await page.evaluate("window.__medir(44)");
+          density.push({ locale, width: viewport.width, metrics });
+        };
+        await measure("pt-BR-antes");
+        const translated = {
+          "pt-BR": { profile: "Perfil", nav: ["Início", "Agenda", "Mensagens", "Caminhada"], size: "Tamanho do texto", done: "Pronto", position: "Padrão, 4 de 7" },
+          "en-US": { profile: "Profile", nav: ["Home", "Calendar", "Messages", "Journey"], size: "Text size", done: "Done", position: "Default, 4 of 7" },
+          "es-ES": { profile: "Perfil", nav: ["Inicio", "Agenda", "Mensajes", "Camino"], size: "Tamaño del texto", done: "Listo", position: "Predeterminado, 4 de 7" },
+        };
+        const names = { "pt-BR": "Português (Brasil)", "en-US": "English (United States)", "es-ES": "Español (España)" };
+        for (const locale of ["en-US", "es-ES", "pt-BR"] as const) {
+          const selector = page.locator(".sel-trigger").filter({ hasText: /Português \(Brasil\)|English \(United States\)|Español \(España\)/ });
+          console.log(`Tentando idioma ${locale} em ${viewport.width}px`);
+          await selector.click();
+          await page.getByRole("option", { name: names[locale], exact: true }).click();
+          await page.waitForFunction((expected: string) => document.documentElement.lang === expected, locale);
+          assert.equal(new URL(page.url()).searchParams.get("maba"), "perfil");
+          await page.reload({ waitUntil: "domcontentloaded" });
+          await page.waitForFunction((expected: string) => document.documentElement.lang === expected, locale);
+          await selector.waitFor();
+          assert.equal(await selector.innerText(), names[locale]);
+          const labels = translated[locale];
+          assert.equal(await page.locator(".m-h1").innerText(), labels.profile);
+          assert.deepEqual(await page.locator(".m-tab-l").allTextContents(), labels.nav);
+          await page.getByText(labels.size, { exact: true }).click();
+          const sizeDialog = page.getByRole("dialog", { name: labels.size, exact: true });
+          await sizeDialog.waitFor();
+          assert.equal(await sizeDialog.getByRole("slider").getAttribute("aria-valuetext"), labels.position);
+          await sizeDialog.getByRole("button", { name: labels.done, exact: true }).click();
+          await sizeDialog.waitFor({ state: "hidden" });
+          const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
+          assert.equal(overflow, false, `rolagem lateral ${locale}/${viewport.width}`);
+          await measure(locale);
+          await page.screenshot({ path: join(output, `${locale}-${viewport.width}.png`), fullPage: true });
+          passed(`idioma ${locale} persistido após recarga, perfil preservado, sem rolagem lateral em ${viewport.width}px`);
+        }
       }
+      await page.route("**/rest/v1/rpc/set_my_locale", (route: { fulfill: (response: object) => Promise<void> }) => route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ message: "local_test_unavailable" }) }));
+      const selector = page.locator(".sel-trigger").filter({ hasText: "Português (Brasil)" });
+      await selector.click();
+      await page.getByRole("option", { name: "English (United States)", exact: true }).click();
+      await page.getByText("Não foi possível salvar o idioma. Tente novamente.", { exact: true }).waitFor();
+      assert.equal(await page.locator("html").getAttribute("lang"), "pt-BR");
+      assert.equal(await selector.innerText(), "Português (Brasil)");
+      await page.unroute("**/rest/v1/rpc/set_my_locale");
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await page.waitForFunction(() => document.documentElement.lang === "pt-BR");
+      passed("falha de gravação preserva o idioma atual também após recarga");
+      assert.deepEqual(errors, []);
+    } catch (error) {
+      await page.screenshot({ path: join(output, "falha.png"), fullPage: true }).catch(() => {});
+      writeFileSync(join(output, "falha.json"), JSON.stringify({ url: page.url(), errors, text: await page.locator("body").innerText().catch(() => "") }, null, 2) + "\n", { mode: 0o600 });
+      throw error;
     }
-    assert.deepEqual(errors, []);
     await context.close();
-    writeFileSync(join(output, "resultado.json"), JSON.stringify({ executedAt: new Date().toISOString(), checks, success: true }, null, 2) + "\n", { mode: 0o600 });
+    writeFileSync(join(output, "resultado.json"), JSON.stringify({ executedAt: new Date().toISOString(), checks, density, success: true }, null, 2) + "\n", { mode: 0o600 });
   } finally {
     await browser?.close();
     if (app.pid) {

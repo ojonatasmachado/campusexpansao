@@ -1,4 +1,328 @@
 {
+  "m1toz8dq": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 71
+    }
+  ],
+  "m1xbkjzp": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 71
+    }
+  ],
+  "msm44gs": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 71
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 502
+    }
+  ],
+  "mpercv6": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 72
+    }
+  ],
+  "m1kzfbfl": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 72
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 503
+    }
+  ],
+  "m1vup7yb": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 72
+    },
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 389
+    },
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 391
+    }
+  ],
+  "m1g3au5w": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 350
+    }
+  ],
+  "m2p1evo": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 396
+    }
+  ],
+  "m7uhkgi": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 396
+    }
+  ],
+  "mzyv3xf": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 396
+    }
+  ],
+  "m60ibe7": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 461
+    }
+  ],
+  "m1t5tkq8": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 462
+    }
+  ],
+  "mldkdn8": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 466
+    }
+  ],
+  "mhv998e": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 466
+    }
+  ],
+  "mk2pktu": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 480
+    },
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 488
+    }
+  ],
+  "m1g9nqdy": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 482
+    }
+  ],
+  "maehxh": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 482
+    }
+  ],
+  "m1pda99m": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 484
+    }
+  ],
+  "mh57vk8": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 484
+    }
+  ],
+  "miq1gca": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 484
+    }
+  ],
+  "m8zadlk": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 484
+    }
+  ],
+  "ma5oqqq": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 546
+    }
+  ],
+  "m1tzagq9": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 554
+    }
+  ],
+  "mbpdip2": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 593
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 426
+    }
+  ],
+  "m1eduoq0": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 593
+    }
+  ],
+  "m1xy4b74": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 599
+    }
+  ],
+  "m1p802lt": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 600
+    }
+  ],
+  "mxoyyw0": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 600
+    }
+  ],
+  "m1w3wuaw": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 603
+    }
+  ],
+  "m6i8hb": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 604
+    }
+  ],
+  "m16k1fpv": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 607
+    },
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 656
+    }
+  ],
+  "m1ucfej2": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 618
+    }
+  ],
+  "m1opz80v": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 620
+    }
+  ],
+  "m1p5g6ao": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 623
+    }
+  ],
+  "m1sa2849": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 627
+    }
+  ],
+  "m768icn": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 640
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 316
+    }
+  ],
+  "mpumtl2": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 640
+    }
+  ],
+  "m1336tn8": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 649
+    }
+  ],
+  "m1isrhn6": [
+    {
+      "file": "app/service/TextSizeSlider.tsx",
+      "line": 45
+    }
+  ],
+  "m1hj7wg9": [
+    {
+      "file": "app/service/TextSizeSlider.tsx",
+      "line": 47
+    }
+  ],
+  "m1nh91zo": [
+    {
+      "file": "app/service/TextSizeSlider.tsx",
+      "line": 48
+    }
+  ],
+  "m1y59hl8": [
+    {
+      "file": "app/service/TextSizeSlider.tsx",
+      "line": 49
+    }
+  ],
+  "m6gskpb": [
+    {
+      "file": "app/service/TextSizeSlider.tsx",
+      "line": 54
+    }
+  ],
+  "mnjcjso": [
+    {
+      "file": "app/service/TextSizeSlider.tsx",
+      "line": 74
+    },
+    {
+      "file": "app/service/TextSizeSlider.tsx",
+      "line": 101
+    },
+    {
+      "file": "app/service/TextSizeSlider.tsx",
+      "line": 104
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 343
+    }
+  ],
+  "m1d0mwjp": [
+    {
+      "file": "app/service/TextSizeSlider.tsx",
+      "line": 88
+    }
+  ],
+  "maa4k1j": [
+    {
+      "file": "app/service/TextSizeSlider.tsx",
+      "line": 105
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 504
+    }
+  ],
   "m16v7ial": [
     {
       "file": "app/service/layout.tsx",
@@ -9,6 +333,54 @@
     {
       "file": "app/service/layout.tsx",
       "line": 17
+    }
+  ],
+  "mwmwgw4": [
+    {
+      "file": "app/service/lib/text-scale.ts",
+      "line": 21
+    }
+  ],
+  "mi6f7u4": [
+    {
+      "file": "app/service/lib/text-scale.ts",
+      "line": 21
+    }
+  ],
+  "mpdmqyo": [
+    {
+      "file": "app/service/lib/text-scale.ts",
+      "line": 21
+    }
+  ],
+  "m1qpieai": [
+    {
+      "file": "app/service/lib/text-scale.ts",
+      "line": 21
+    }
+  ],
+  "mckrc39": [
+    {
+      "file": "app/service/lib/text-scale.ts",
+      "line": 21
+    }
+  ],
+  "m15zygfc": [
+    {
+      "file": "app/service/lib/text-scale.ts",
+      "line": 21
+    }
+  ],
+  "m9anan4": [
+    {
+      "file": "app/service/lib/text-scale.ts",
+      "line": 21
+    }
+  ],
+  "mmttz1x": [
+    {
+      "file": "app/service/lib/text-scale.ts",
+      "line": 26
     }
   ],
   "m1sqy7im": [
@@ -35,10 +407,58 @@
       "line": 53
     }
   ],
+  "mubbkas": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 66
+    }
+  ],
+  "mwbojn4": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 66
+    }
+  ],
+  "mf5m3nm": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 70
+    }
+  ],
+  "mghqemf": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 84
+    }
+  ],
+  "mxldgl1": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 105
+    }
+  ],
   "m1pdcs2e": [
     {
       "file": "app/service/membro/Perfil.tsx",
-      "line": 147
+      "line": 148
+    }
+  ],
+  "mczo1mu": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 177
+    }
+  ],
+  "m1rs3wnm": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 216
+    }
+  ],
+  "m1bnfxh4": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 236
     }
   ],
   "mppnv9y": [
@@ -51,6 +471,12 @@
     {
       "file": "app/service/membro/Perfil.tsx",
       "line": 268
+    }
+  ],
+  "m1rv0psz": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 277
     }
   ],
   "maouczr": [
@@ -111,6 +537,18 @@
       "line": 310
     }
   ],
+  "m1snja1e": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 316
+    }
+  ],
+  "mocp2d": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 325
+    }
+  ],
   "mluymq3": [
     {
       "file": "app/service/membro/Perfil.tsx",
@@ -169,12 +607,6 @@
     {
       "file": "app/service/membro/Perfil.tsx",
       "line": 341
-    }
-  ],
-  "mnjcjso": [
-    {
-      "file": "app/service/membro/Perfil.tsx",
-      "line": 343
     }
   ],
   "mbukae": [
@@ -335,12 +767,6 @@
       "line": 424
     }
   ],
-  "mbpdip2": [
-    {
-      "file": "app/service/membro/Perfil.tsx",
-      "line": 426
-    }
-  ],
   "mpp3ilb": [
     {
       "file": "app/service/membro/Perfil.tsx",
@@ -461,6 +887,72 @@
       "line": 488
     }
   ],
+  "m1mo8qt2": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 500
+    }
+  ],
+  "mjkqvt6": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 500
+    }
+  ],
+  "m1foeh5u": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 501
+    }
+  ],
+  "mnpw9kh": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 501
+    }
+  ],
+  "m1abesap": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 502
+    }
+  ],
+  "mj2t6uy": [
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 503
+    }
+  ],
+  "mq5gubr": [
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 117
+    }
+  ],
+  "mv7rly5": [
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 118
+    }
+  ],
+  "mrvlruj": [
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 118
+    }
+  ],
+  "m157ct2y": [
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 119
+    }
+  ],
+  "mfuava4": [
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 119
+    }
+  ],
   "m130u72": [
     {
       "file": "app/service/painel/telas/Config.tsx",
@@ -485,16 +977,52 @@
       "line": 186
     }
   ],
+  "msh6nr1": [
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 186
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 519
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 565
+    }
+  ],
   "m1cuilcs": [
     {
       "file": "app/service/painel/telas/Config.tsx",
       "line": 206
     }
   ],
+  "m1fe0hab": [
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 275
+    }
+  ],
+  "m1616usn": [
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 275
+    }
+  ],
+  "m17l9jq7": [
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 306
+    }
+  ],
   "mojqc5j": [
     {
       "file": "app/service/painel/telas/Config.tsx",
       "line": 320
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 321
     }
   ],
   "moqjx9u": [
@@ -731,12 +1259,6 @@
       "line": 475
     }
   ],
-  "maa4k1j": [
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 504
-    }
-  ],
   "m1mwyobq": [
     {
       "file": "app/service/painel/telas/Config.tsx",
@@ -753,16 +1275,6 @@
     {
       "file": "app/service/painel/telas/Config.tsx",
       "line": 517
-    }
-  ],
-  "msh6nr1": [
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 519
-    },
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 565
     }
   ],
   "m1hlgisz": [
@@ -867,7 +1379,7 @@
       "line": 542
     }
   ],
-  "mu6wv9y": [
+  "m1s75tut": [
     {
       "file": "app/service/painel/telas/Config.tsx",
       "line": 546
