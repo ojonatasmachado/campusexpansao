@@ -34,3 +34,51 @@ Contrato estático: nove combinações locale/moeda, negativos e limites, datas 
 O preparador de JSX trabalha somente com texto literal da interface, mantém IDs, condições e valores de formulário, sinaliza frases mistas para revisão manual e recusa arquivos fora do trilho. Seu teste compara o HTML pt-BR original e preparado, inclusive entidades e interpolação, e verifica em inglês que o nome da pessoa não é traduzido mesmo quando coincide com uma mensagem. O extrator verifica chaves, mensagens ausentes, ICU e argumentos nos três idiomas. Termos personalizados pela igreja são preservados; somente os padrões recebem nomes por locale.
 
 Preferência pessoal de idioma conectada ao Perfil com Campo/Selecao compartilhados e RPC própria. Só atualiza a interface depois de a gravação responder com o locale esperado; falha deixa o idioma atual e mostra tentativa novamente. O refresh do roteador preserva o estado do app. Esta ligação ainda aguarda teste autenticado no navegador e medição de densidade; não é prova de tela concluída.
+
+## Continuidade para outro chat, 24/10/2026
+
+A sessão foi encerrada a pedido do usuário. O trabalho completo não terminou: N1 permanece reservada, sem PR ou merge. Não marcar como feita nem saltar para F1.
+
+### Pedido e ordem
+
+Trabalhar somente nas histórias de bastidor, nesta ordem: Q6, Q1, Q2, Q3, Q5, Avatar/toast da BIBLIOTECA, Q10, O3, Q7, Q8, N1, F1, O4, O5, O6. Não assumir histórias E/I/M/G nem decisões D, que estão com Claude. Reservar cada história por push do branch historia/ID antes de código, em worktree isolado. Ler AGENTS.md e docs/service-v7/PENDENTES.md; ampliar o trilho em commit só da história antes de tocar caminhos novos e conferir as reservas vivas. Não mexer no checkout principal, que tem trabalho de outras frentes.
+
+### Já entregue antes da N1
+
+Q6 (PR14), Q1 (PR15), Q2 (PR16), Q3 (PR18), Q5 (PR19), Q10 (PR20), O3 (PR21), Q7 (PR22) e Q8 (PR23) foram integradas e seus deploys de produção verificados. Avatar/toast já haviam sido atendidos pelo Claude; não refazer. Último main usado como base desta frente: 8362ebae0724be2c1edce47d773de116b23e635e (Q8). Conferir origin/main ao retomar, sem sobrescrever trabalho local.
+
+### Onde continuar
+
+- Worktree: /Users/macbook/campusexpansao/.claude/worktrees/N1.
+- Branch: historia/N1-locale-moeda. Reserva e trilho: docs/service-v7/historias/N1-fuso-idioma-moeda.md.
+- Código parcial publicado no branch: 198ee38 (persistência/infraestrutura), 5cef543 (primeiro lote de mensagens e preferência de idioma), 543280d (trilho para teste UI), 406e3b4 (script e limites da prova). O commit desta nota acrescenta apenas documentação.
+- Escolhas explícitas do usuário: interface INTEIRA em pt-BR, en-US, es-ES; BRL, EUR ou USD por igreja/rede. Sem câmbio, mistura de moedas ou mudança de significado de valores existentes. Não reduzir a entrega a formatos.
+- node_modules deste worktree é independente do principal. use-intl/core estável, sem extração experimental. Playwright vem de tools/captura-service por createRequire em tempo de execução; não adicionar import estático ao build do app.
+
+### Implementado e validado parcialmente
+
+Migração 0096 com locale da conta, moeda da organização, permissões/RLS e bloqueio permanente da moeda depois de qualquer valor financeiro. Primeiro valor e alteração da configuração disputam a mesma linha. Clientes financeiros devem declarar x-service-currency; cabeçalho ausente significa BRL legado. 37 casos autenticados de banco passaram, inclusive concorrência e isolamento, com descarte do ambiente.
+
+Infraestrutura de mensagens por pedido/provider, catálogos separados, ICU, rich text e pseudo por AST com expansão de cerca de 40%. Há 244 mensagens completas por idioma, 226 referenciadas no código e outras usadas como prova. Perfil e Configurações estão parcialmente traduzidos. Vocabulário padrão é localizado; termos personalizados e conteúdo da igreja são dados preservados. Extrator verifica chaves, ausências, ICU e argumentos. Preparador JSX preserva IDs, condições, valores, entidades e semântica de interpolação e separa frases mistas para revisão manual.
+
+Perfil contém seleção pessoal de idioma com Campo/Selecao existentes, RPC set_my_locale, cookie restrito a /service e router.refresh depois do sucesso. Essa interação ainda NÃO passou na prova de navegador.
+
+Typecheck e lint do lote 244 passaram antes de acrescentar o script UI. Contratos de internacionalização, leis 12/17 e 13 regressões das jornadas passaram. O último typecheck incluindo o script UI foi interrompido para liberar recursos; repetir e não tratá-lo como aprovado. Lint do script UI passou. Build da infraestrutura inicial passou, mas repetir build após concluir a integração.
+
+### Próximos passos obrigatórios
+
+1. Retomar scripts/check-local-internacional-ui.ts. As duas tentativas anteriores não executaram casos de idioma: primeira bloqueada pelo Docker, segunda falhou no login da conta canônica. Agora o erro inclui status/código/mensagem para diagnóstico. Não presumir senha incorreta sem esse resultado. Fixture local: master@teste.local, senha TesteLocal123. Rodar verificações pesadas sequencialmente, pois o host ficou muito lento com Next e typecheck simultâneos.
+2. Concluir a tradução integral do Service. O inventário inicial encontrou 3670 ocorrências e 2600 textos distintos em 182 arquivos; 244 mensagens não representam cobertura completa. Faltam metadados fora de componentes, frases mistas, erros, peças compartilhadas, entradas de autenticação e formatação de datas/números. Traduzir frases completas; nunca aplicar tradução automática ao DOM ou a conteúdo das pessoas/igrejas.
+3. Conectar configuração da moeda e o contrato de formatação/gravação ao financeiro, inclusive formulários e exportações. Ainda não existe essa integração completa. Não reinterpretar centavos legados, nem apenas trocar símbolo de BRL.
+4. Capturar idiomas e pseudo em celular/painel, textos longos, densidade antes/depois, erros de console, alvos, contraste e rolagem lateral. Testar persistência, navegação e falhas autenticadas. Não apresentar testes sintéticos como aparelho/pessoa real.
+5. Passar todos os checks exigidos, concluir a história, abrir PR, aguardar CI/preview, integrar somente o SHA verificado e acompanhar produção até READY. Só depois reservar F1, O4, O5 e O6, nessa ordem. O6 exige evidência real para a parte de famílias; não inventar validação humana.
+
+### Convivência e ambientes
+
+Na última consulta, I10 continuava reservada pelo Claude e bloqueava edições em app/service/ui/, app/service/painel/comum.tsx, app/service/modules/inicio/Saude.tsx, app/service/modules/financeiro/ e app/service/modules/relatorios/. Nenhum desses arquivos foi alterado pela N1. Conferir o estado vivo antes de tocar; não inferir liberação pela idade da reserva. Não usar subagentes sem autorização aplicável.
+
+O usuário autorizou reinício gracioso do OrbStack quando necessário para destravar a API, sem reset, sem apagar volumes compartilhados e sem parada forçada. O reinício mais recente terminou com sucesso. Projeto da primeira tentativa: cex-rls-570b292ece84, removido explicitamente após reinício, sem contêineres ou volumes restantes. Segunda tentativa: cex-rls-d40073001ede, descartado pelo finally, sem contêineres restantes. Nenhum caso de UI passou nessas tentativas. Usar withDisposableSupabase e nunca produção ou instância compartilhada 54321. Não interromper processos de outra frente.
+
+Logs locais: /tmp/cex-N1-idioma-browser.log, /tmp/cex-N1-idioma-browser-repeticao.log, /tmp/cex-N1-tsc-lote244.log, /tmp/cex-N1-lint-lote244.log. Notas adicionais em /tmp/cex-N1-continuidade-lote244.md, que podem desaparecer; esta seção no repositório é a continuidade durável.
+
+Ao terminar a próxima sessão, entregar novamente ao usuário o contexto atualizado e um texto curto para abrir outro chat.
