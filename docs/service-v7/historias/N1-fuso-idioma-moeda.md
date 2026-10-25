@@ -66,6 +66,11 @@ Fonte: HANDOFF item 6; STATUS F14; VALIDACAO.md :83; QUALIDADE-E-INTERNACIONAL.m
 - `app/lib/service-mural-agendado.ts`
 - `scripts/check-service-avisos-fuso.ts`
 
+- `app/service/lib/upload-image.ts`
+- `app/service/lib/ics.ts`
+- `app/service/lib/planilha.ts`
+- `app/service/lib/importar-membros.ts`
+
 ## Pronto quando
 - Locale da pessoa e moeda da igreja explícitos.
 - Textos longos e pseudolocalização testados.
@@ -125,3 +130,5 @@ A pedido explícito do usuário, foi deixada a mensagem “Mensagem para o Claud
 Retomada a pedido do usuário: há trabalho livre na própria N1. Retiradas do trilho as reservas amplas membro/ e requirements.ts, que não chegaram a ser editadas, para não bloquear as histórias M do Claude. Permanecem somente Perfil/AceiteMapa já localizados. Reservas remotas conferidas (I10/Claude, N1/Codex); ampliado o trilho para mensagens de erro das APIs e o adaptador técnico painel/erros.ts, sem layout ou comportamento das histórias de tela.
 
 Reservas novamente conferidas. Ampliação de bastidor para localizar mensagens automáticas de avisos pelo idioma do destinatário (não pelo de quem publica), sem traduzir título ou corpo escritos pela igreja. Inclui fila e testes de silêncio/isolamento; nenhum arquivo de tela ou da I10.
+
+25/10: reservas reconferidas para os adaptadores de arquivos e importação. Ampliação de bastidor para mensagens explícitas por operação, preservando parsers, IDs, campos e valores persistidos. Consumidores de tela do Claude continuam fora desta edição.
