@@ -67,7 +67,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **I3** Revisão de UI das telas densas (depois de I9 e D1) · **G3** Cartões do mapa no Início (depois de I1)
 
 ### 5. Verificações em código e banco local
-- **E5** Troca de escala ponta a ponta · **M4** Convite e primeiro acesso · **O4** Continuidade de Visitantes, Crianças e Cursos
+- **E5** Troca de escala ponta a ponta · **M4** Convite e primeiro acesso
 - **O5** Zero e ausência de dados · **O6** Kids e Financeiro com volume · **Q4** Push e imagem com serviços reais
 
 - **E6** Escalas em 768px (some com o E1) · **A4** Ponto branco · **Q9** Seletores acessíveis
