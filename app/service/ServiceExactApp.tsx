@@ -1095,7 +1095,7 @@ export default function ServiceExactApp({
               return error ? friendlyWriteError(error.message, textoDeErro) : null;
             }}
             onLogo={async (file) => {
-              const url = await uploadServiceImage(createServiceBrowserClient(), file, `${firstChurch.organizationId}/logos/${firstChurch.id}.${imageExtension(file)}`);
+              const url = await uploadServiceImage(createServiceBrowserClient(), file, `${firstChurch.organizationId}/logos/${firstChurch.id}.${imageExtension(file)}`, textoDeErro);
               await svc().from("churches").update({ logo_url: url }).eq("id", firstChurch.id);
               router.refresh();
             }}

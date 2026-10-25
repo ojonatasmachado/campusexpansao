@@ -1,4 +1,10 @@
 import { friendlyReadError } from "../app/service/lib/server/adaptadores";
+import { lerArquivo, lerLinha, palpiteColunas } from "../app/service/lib/planilha";
+import { textoIcs } from "../app/service/lib/ics";
+import { carregarExistentes, gravarImportacao } from "../app/service/lib/importar-membros";
+import { uploadServiceImage, uploadServicePrivateFile } from "../app/service/lib/upload-image";
+import type { Text } from "../app/service/lib/internacional/mensagens";
+import type { Locale } from "../app/service/lib/internacional/contrato";
 import { friendlyWriteError } from "../app/service/painel/erros";
 import assert from "node:assert/strict";
 import { CURRENCIES, LOCALES, currencyOrDefault, isCurrency, isLocale, localeOrDefault, requireCurrency, requireLocale } from "../app/service/lib/internacional/contrato";
@@ -47,6 +53,52 @@ for (const value of ["2027-02-29", "2026-04-31", "2026-13-01", "2026-01-01T00:00
 }
 console.log("Internacional: locales e moedas permitidos, escrita inválida rejeitada, nove combinações monetárias, centavos inteiros e datas civis preservadas.");
 
+async function checkFileAdapters(text: Text, locale: Locale) {
+  const expected = {
+    "pt-BR": { empty: "A planilha está vazia.", image: "Envie um arquivo de imagem (PNG, JPG, WebP...).", private: "Envie uma foto ou um PDF.", date: "Confira a data do evento.", warning: 'e-mail "valor{proprio}" fica de fora', limit: "A planilha tem 5.001 linhas. Importe até 5.000 por vez.", importZone: "Não foi possível carregar o fuso da igreja para importar.", duplicate: "Isso já está cadastrado." },
+    "en-US": { empty: "The spreadsheet is empty.", image: "Send an image file (PNG, JPG, WebP...).", private: "Send a photo or a PDF.", date: "Check the event date.", warning: 'email "valor{proprio}" will be left out', limit: "The spreadsheet has 5,001 rows. Import up to 5,000 at a time.", importZone: "Could not load the church time zone for the import.", duplicate: "This is already registered." },
+    "es-ES": { empty: "La hoja de cálculo está vacía.", image: "Envía un archivo de imagen (PNG, JPG, WebP...).", private: "Envía una foto o un PDF.", date: "Comprueba la fecha del evento.", warning: 'correo "valor{proprio}" se omitirá', limit: "La hoja tiene 5001 filas. Importa hasta 5000 cada vez.", importZone: "No se pudo cargar el huso horario de la iglesia para la importación.", duplicate: "Esto ya está registrado." },
+  }[locale];
+  const file = (content: string) => ({ name: "Pessoas da Família.csv", size: content.length, arrayBuffer: async () => new TextEncoder().encode(content).buffer as ArrayBuffer });
+  await assert.rejects(lerArquivo(file(""), text), { message: expected.empty });
+  await assert.rejects(lerArquivo(file("Nome\n" + Array(5001).fill("Pessoa local").join("\n")), text), { message: expected.limit });
+  const input = "Nome;Telefone;E-mail\nMaria da Silva;11999990000;valor{proprio}";
+  const parsed = await lerArquivo(file(input), text);
+  assert.deepEqual(parsed, await lerArquivo(file(input)));
+  const map = palpiteColunas(parsed.cabecalho);
+  const row = lerLinha(parsed.linhas[0], 2, map, {}, text);
+  assert.deepEqual(row.valores, lerLinha(parsed.linhas[0], 2, map).valores);
+  assert.equal(row.valores.situacao, "membro");
+  assert.equal(row.avisos[0], expected.warning);
+  const chain = {
+    select() { return chain; }, eq() { return chain; }, order() { return chain; },
+    range: async () => ({ data: null, error: { code: "23505", message: "duplicate key" } }),
+    single: async () => ({ data: null, error: { code: "42501", message: "permission denied" } }),
+  };
+  const denied = { from: () => chain } as unknown as Parameters<typeof carregarExistentes>[0];
+  await assert.rejects(carregarExistentes(denied, "org", text), { message: expected.duplicate });
+  await assert.rejects(gravarImportacao(denied, { organizationId: "org", churchId: "igreja", novas: [], completar: [], puladas: 0, comErro: [], colunasNovas: true, arquivo: "Dados da igreja.csv" }, text), { message: expected.importZone });
+  assert.throws(() => textoIcs({ id: "local", titulo: "Culto da Família", data: "2026-02-31" }, text), { message: expected.date });
+  const calendar = textoIcs({ id: "local", titulo: "Culto da Família", data: "2026-07-01", hora: "10:00", fuso: "Europe/Lisbon" }, text);
+  assert.match(calendar, /DTSTART:20260701T090000Z/);
+  assert.match(calendar, /SUMMARY:Culto da Família/);
+
+  const uploaded: string[] = [];
+  const storage = { storage: { from: (bucket: string) => ({
+    upload: async (path: string) => { uploaded.push(`${bucket}/${path}`); return { error: null }; },
+    getPublicUrl: (path: string) => ({ data: { publicUrl: `https://storage.invalid/${bucket}/${path}` } }),
+  }) } } as unknown as Parameters<typeof uploadServiceImage>[0];
+  const invalid = { type: "text/plain", size: 1, name: "dados.txt" } as File;
+  await assert.rejects(uploadServiceImage(storage, invalid, "local", text), { message: expected.image });
+  await assert.rejects(uploadServicePrivateFile(storage, "privado", invalid, "local", text), { message: expected.private });
+  assert.deepEqual(uploaded, []);
+  const svg = { type: "image/svg+xml", size: 1, name: "igreja.svg" } as File;
+  assert.equal(await uploadServiceImage(storage, svg, "org/logo.svg", text), "https://storage.invalid/service-media/org/logo.svg");
+  const pdf = { type: "application/pdf", size: 1, name: "comprovante.pdf" } as File;
+  assert.equal(await uploadServicePrivateFile(storage, "privado", pdf, "org/comprovante.pdf", text), "org/comprovante.pdf");
+  assert.deepEqual(uploaded, ["service-media/org/logo.svg", "privado/org/comprovante.pdf"]);
+}
+
 async function messages() {
   checkJsxPreparation();
   checkCatalogs();
@@ -57,6 +109,7 @@ async function messages() {
     assert.deepEqual(Object.keys(catalog).sort(), keys);
     for (const value of Object.values(catalog)) parse(value);
     const text = createText(locale, catalog);
+    await checkFileAdapters(text, locale);
     const writeMessages = {
       "pt-BR": { duplicate: "Isso já está cadastrado.", removed: "Algo que você escolheu foi apagado. Recarregue a página e tente de novo.", permission: "Você não tem permissão para fazer isso nesta igreja. Fale com quem cuida do Service da sua igreja." },
       "en-US": { duplicate: "This is already registered.", removed: "Something you selected has been deleted. Reload the page and try again.", permission: "You do not have permission to do this in this church. Contact the person who manages Service for your church." },
@@ -103,5 +156,6 @@ async function messages() {
   const nested = bindVocabulary(bindVocabulary(withTerms, englishVocabulary), englishVocabulary);
   assert.equal(nested(phrase, { place: "Salão Português" }, custom), "Next Celebração do Caminho at Salão Português.");
   console.log("Mensagens: três catálogos com as mesmas chaves, ICU válido, plural 0/1/2, conteúdo da igreja preservado, rich text e pseudo de 40% sem alterar argumentos.");
+  console.log("Arquivos: erros por idioma, CSV/dados/IDs preservados, calendário no mesmo instante e upload simulado sem rede ou mudança de caminho.");
 }
 messages().catch((error) => { console.error(error); process.exitCode = 1; });

@@ -23,6 +23,10 @@
       "line": 66
     },
     {
+      "file": "app/service/lib/planilha.ts",
+      "line": 382
+    },
+    {
       "file": "app/service/painel/telas/Config.tsx",
       "line": 366
     },
@@ -837,6 +841,132 @@
       "line": 17
     }
   ],
+  "m1xiljcc": [
+    {
+      "file": "app/service/lib/ics.ts",
+      "line": 14
+    }
+  ],
+  "m10m0csy": [
+    {
+      "file": "app/service/lib/ics.ts",
+      "line": 22
+    }
+  ],
+  "m1pswpmk": [
+    {
+      "file": "app/service/lib/importar-membros.ts",
+      "line": 60
+    }
+  ],
+  "mkn3qo5": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 150
+    }
+  ],
+  "m12i2sl3": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 178
+    }
+  ],
+  "mvxpo08": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 179
+    }
+  ],
+  "mzq56cw": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 186
+    }
+  ],
+  "mkuhi93": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 188
+    }
+  ],
+  "m11nl8tq": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 189
+    }
+  ],
+  "m1vgp07h": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 190
+    }
+  ],
+  "m1m5n38b": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 363
+    }
+  ],
+  "m182yzy0": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 375
+    }
+  ],
+  "monbeio": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 375
+    }
+  ],
+  "m166g7ps": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 377
+    }
+  ],
+  "mpm50aj": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 378
+    }
+  ],
+  "mpehdlk": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 379
+    }
+  ],
+  "m145khug": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 380
+    }
+  ],
+  "m16yzt9z": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 381
+    }
+  ],
+  "moufsew": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 383
+    }
+  ],
+  "mfl4w80": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 384
+    }
+  ],
+  "mos5gxt": [
+    {
+      "file": "app/service/lib/planilha.ts",
+      "line": 393
+    }
+  ],
   "msb8daw": [
     {
       "file": "app/service/lib/server/adaptadores.ts",
@@ -985,6 +1115,40 @@
     {
       "file": "app/service/lib/text-scale.ts",
       "line": 26
+    }
+  ],
+  "m1ci2t9z": [
+    {
+      "file": "app/service/lib/upload-image.ts",
+      "line": 44
+    }
+  ],
+  "m1opao5b": [
+    {
+      "file": "app/service/lib/upload-image.ts",
+      "line": 47
+    }
+  ],
+  "m1v6l3ba": [
+    {
+      "file": "app/service/lib/upload-image.ts",
+      "line": 58
+    },
+    {
+      "file": "app/service/lib/upload-image.ts",
+      "line": 88
+    }
+  ],
+  "mqbj9gf": [
+    {
+      "file": "app/service/lib/upload-image.ts",
+      "line": 82
+    }
+  ],
+  "m1f848k6": [
+    {
+      "file": "app/service/lib/upload-image.ts",
+      "line": 83
     }
   ],
   "m1sqy7im": [

@@ -8,6 +8,7 @@
 
 import { digitosTelefone, formatarTelefone } from "./telefone";
 import { nomeComparavel } from "./pessoas";
+import { sourceText, type Text } from "./internacional/mensagens";
 
 export type Campo =
   | "nome" | "telefone" | "email" | "nascimento" | "sexo" | "estadoCivil"
@@ -124,7 +125,7 @@ function textoRico(no: unknown): string {
 }
 
 /** Primeira aba de um .xlsx. Datas vêm como número serial do Excel; quem lê o campo converte. */
-export async function lerXlsx(buf: ArrayBuffer): Promise<Tabela> {
+export async function lerXlsx(buf: ArrayBuffer, t: Text = sourceText): Promise<Tabela> {
   const [{ default: JSZip }, { XMLParser }] = await Promise.all([import("jszip"), import("fast-xml-parser")]);
   const zip = await JSZip.loadAsync(buf);
   const xml = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@", parseTagValue: false, trimValues: false, removeNSPrefix: true });
@@ -146,7 +147,7 @@ export async function lerXlsx(buf: ArrayBuffer): Promise<Tabela> {
   const compartilhadas = await ler("xl/sharedStrings.xml");
   const textos = lista((compartilhadas?.sst as NoXml | undefined)?.si as unknown).map(textoRico);
   const aba = await ler(caminhoAba);
-  if (!aba) throw new Error("Não achamos a primeira aba da planilha.");
+  if (!aba) throw new Error(t("Não achamos a primeira aba da planilha."));
   const dados = (aba.worksheet as NoXml)?.sheetData as NoXml | undefined;
   const linhas: string[][] = [];
   for (const row of lista(dados?.row as NoXml[] | undefined)) {
@@ -172,21 +173,21 @@ export async function lerXlsx(buf: ArrayBuffer): Promise<Tabela> {
 export type ArquivoLido = Tabela & { nome: string };
 
 /** Lê o arquivo escolhido. Lança Error com texto pronto para a tela. */
-export async function lerArquivo(arq: { name: string; size: number; arrayBuffer: () => Promise<ArrayBuffer> }): Promise<ArquivoLido> {
+export async function lerArquivo(arq: { name: string; size: number; arrayBuffer: () => Promise<ArrayBuffer> }, t: Text = sourceText): Promise<ArquivoLido> {
   const ext = (arq.name.split(".").pop() ?? "").toLowerCase();
-  if (arq.size > MAX_BYTES) throw new Error("O arquivo passa de 10 MB. Divida a planilha em partes menores.");
-  if (ext === "xls" || ext === "ods" || ext === "numbers") throw new Error("Esse formato não abre aqui. No Excel ou no Google Planilhas, salve como .xlsx ou .csv e envie de novo.");
+  if (arq.size > MAX_BYTES) throw new Error(t("O arquivo passa de 10 MB. Divida a planilha em partes menores."));
+  if (ext === "xls" || ext === "ods" || ext === "numbers") throw new Error(t("Esse formato não abre aqui. No Excel ou no Google Planilhas, salve como .xlsx ou .csv e envie de novo."));
   const buf = await arq.arrayBuffer();
   const ehZip = new Uint8Array(buf.slice(0, 2)).join(",") === "80,75";
   let tabela: Tabela;
   try {
-    tabela = ext === "xlsx" || ehZip ? await lerXlsx(buf) : lerCsv(decodificarTexto(buf));
+    tabela = ext === "xlsx" || ehZip ? await lerXlsx(buf, t) : lerCsv(decodificarTexto(buf));
   } catch {
-    throw new Error("Não conseguimos ler este arquivo. Confira se é uma planilha .csv ou .xlsx.");
+    throw new Error(t("Não conseguimos ler este arquivo. Confira se é uma planilha .csv ou .xlsx."));
   }
-  if (!tabela.cabecalho.length) throw new Error("A planilha está vazia.");
-  if (!tabela.linhas.length) throw new Error("A planilha só tem o cabeçalho. Coloque uma pessoa por linha, a partir da segunda.");
-  if (tabela.linhas.length > MAX_LINHAS) throw new Error(`A planilha tem ${tabela.linhas.length.toLocaleString("pt-BR")} linhas. Importe até ${MAX_LINHAS.toLocaleString("pt-BR")} por vez.`);
+  if (!tabela.cabecalho.length) throw new Error(t("A planilha está vazia."));
+  if (!tabela.linhas.length) throw new Error(t("A planilha só tem o cabeçalho. Coloque uma pessoa por linha, a partir da segunda."));
+  if (tabela.linhas.length > MAX_LINHAS) throw new Error(t("A planilha tem {linhas, number} linhas. Importe até {limite, number} por vez.", { linhas: tabela.linhas.length, limite: MAX_LINHAS }));
   return { ...tabela, nome: arq.name };
 }
 
@@ -351,7 +352,7 @@ export function telefoneSemDdd(valor: string): boolean {
   return d.length === 8 || d.length === 9;
 }
 
-export function lerLinha(celulas: string[], n: number, mapa: Mapa, opcoes: { ddd?: string; hoje?: Date } = {}): LinhaLida {
+export function lerLinha(celulas: string[], n: number, mapa: Mapa, opcoes: { ddd?: string; hoje?: Date } = {}, t: Text = sourceText): LinhaLida {
   const hoje = opcoes.hoje ?? new Date();
   const bruto = (c: Campo) => { const i = mapa.indexOf(c); return i >= 0 ? (celulas[i] ?? "").trim() : ""; };
   const avisos: string[] = [];
@@ -359,7 +360,7 @@ export function lerLinha(celulas: string[], n: number, mapa: Mapa, opcoes: { ddd
     const s = bruto(c);
     if (!s) return null;
     const v = ler(s);
-    if (v === null) avisos.push(`${aviso} "${s.length > 40 ? `${s.slice(0, 40)}…` : s}" fica de fora`);
+    if (v === null) avisos.push(t('{campo} "{valor}" fica de fora', { campo: aviso, valor: s.length > 40 ? `${s.slice(0, 40)}…` : s }));
     return v;
   };
   const nome = arrumarNome(bruto("nome")).slice(0, 160);
@@ -371,16 +372,16 @@ export function lerLinha(celulas: string[], n: number, mapa: Mapa, opcoes: { ddd
     const comDdd = telefoneSemDdd(telBruto) && ddd.length === 2 ? `${ddd}${telBruto.replace(/\D/g, "")}` : telBruto;
     const d = digitosTelefone(comDdd);
     if (d.length === 10 || d.length === 11) telefone = formatarTelefone(comDdd);
-    else { telefone = telBruto; avisos.push(telefoneSemDdd(telBruto) ? "telefone sem DDD" : "telefone incompleto, entra como está"); }
+    else { telefone = telBruto; avisos.push(telefoneSemDdd(telBruto) ? t("telefone sem DDD") : t("telefone incompleto, entra como está")); }
   }
-  const email = opcional("email", (v) => (EMAIL.test(v) ? v.toLowerCase() : null), "e-mail");
-  const nascimento = opcional("nascimento", (s) => dataBR(s, hoje), "data de nascimento");
-  const sx = opcional("sexo", sexo, "sexo");
-  const ec = opcional("estadoCivil", estadoCivil, "estado civil");
-  const est = opcional("estado", uf, "estado");
-  const cp = opcional("cep", cep, "CEP");
-  const sit = opcional("situacao", situacao, "situação");
-  const desde = opcional("membroDesde", (s) => anoDesde(s, hoje), "membro desde");
+  const email = opcional("email", (v) => (EMAIL.test(v) ? v.toLowerCase() : null), t("e-mail"));
+  const nascimento = opcional("nascimento", (s) => dataBR(s, hoje), t("data de nascimento"));
+  const sx = opcional("sexo", sexo, t("sexo"));
+  const ec = opcional("estadoCivil", estadoCivil, t("estado civil"));
+  const est = opcional("estado", uf, t("estado"));
+  const cp = opcional("cep", cep, t("CEP"));
+  const sit = opcional("situacao", situacao, t("situação"));
+  const desde = opcional("membroDesde", (s) => anoDesde(s, hoje), t("membro desde"));
   const texto = (c: Campo) => bruto(c).replace(/\s+/g, " ").slice(0, 200) || null;
   return {
     n,
@@ -389,7 +390,7 @@ export function lerLinha(celulas: string[], n: number, mapa: Mapa, opcoes: { ddd
       rua: texto("rua"), bairro: texto("bairro"), cidade: texto("cidade"), estado: est, cep: cp,
       situacao: sit ?? "membro", membroDesde: desde,
     },
-    erro: !nome ? "sem nome" : null,
+    erro: !nome ? t("sem nome") : null,
     avisos,
   };
 }

@@ -1,5 +1,6 @@
 import { FUSO_PADRAO, instantesNoFuso } from "./fuso";
 import { isCivilDate } from "./date";
+import { sourceText, type Text } from "./internacional/mensagens";
 
 /* "Adicionar ao calendário": arquivo .ics gerado no navegador (v7 4.5).
    Horário da igreja convertido em UTC para o calendário do aparelho. */
@@ -9,8 +10,8 @@ const esc = (s: string) => s.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replac
 
 export type EventoIcs = { id: string; fuso?: string; titulo: string; data: string; hora?: string | null; duracaoMin?: number; local?: string | null; descricao?: string | null };
 
-export function textoIcs(e: EventoIcs): string {
-  if (!isCivilDate(e.data)) throw new Error("Confira a data do evento.");
+export function textoIcs(e: EventoIcs, t: Text = sourceText): string {
+  if (!isCivilDate(e.data)) throw new Error(t("Confira a data do evento."));
   const [a, m, d] = e.data.slice(0, 10).split("-").map(Number);
   const hm = (e.hora ?? "").match(/^(\d{1,2})[:h](\d{2})/);
   const agora = new Date();
@@ -18,7 +19,7 @@ export function textoIcs(e: EventoIcs): string {
   const linhas = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//CE.X//Service//PT", "CALSCALE:GREGORIAN", "BEGIN:VEVENT", `UID:${e.id}@service`, `DTSTAMP:${stamp}`];
   if (hm) {
     const candidatos = instantesNoFuso(e.data, `${hm[1].padStart(2, "0")}:${hm[2]}`, e.fuso ?? FUSO_PADRAO);
-    if (candidatos.length !== 1) throw new Error("O horário coincide com uma mudança de fuso. Peça à liderança para conferir o horário do evento.");
+    if (candidatos.length !== 1) throw new Error(t("O horário coincide com uma mudança de fuso. Peça à liderança para conferir o horário do evento."));
     const ini = candidatos[0];
     const fim = new Date(ini.getTime() + (e.duracaoMin ?? 120) * 60000);
     const f = (t: Date) => t.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
@@ -34,8 +35,8 @@ export function textoIcs(e: EventoIcs): string {
   return linhas.join("\r\n");
 }
 
-export function baixarIcs(e: EventoIcs) {
-  const blob = new Blob([textoIcs(e)], { type: "text/calendar;charset=utf-8" });
+export function baixarIcs(e: EventoIcs, t: Text = sourceText) {
+  const blob = new Blob([textoIcs(e, t)], { type: "text/calendar;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
