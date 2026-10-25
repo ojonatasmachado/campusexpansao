@@ -1,3 +1,4 @@
+import { getTexto } from "../../../../service/lib/internacional/servidor";
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../lib/supabase-server";
 import { ordemMaisPerto, trajetoReto, type Lnglat } from "../../../../service/modules/mapa/rota-calculo";
@@ -33,17 +34,18 @@ async function podeUsar(org: unknown): Promise<"ok" | "login" | "acesso" | "limi
 }
 
 export async function POST(request: Request) {
+  const traduzirUi = await getTexto(request);
   let body: { org?: unknown; paradas?: unknown; como?: unknown; otimizar?: unknown };
-  try { body = await request.json(); } catch { return NextResponse.json({ error: "Envie dados válidos." }, { status: 400 }); }
+  try { body = await request.json(); } catch { return NextResponse.json({ error: traduzirUi("Envie dados válidos.") }, { status: 400 }); }
   const pode = await podeUsar(body.org);
-  if (pode === "login") return NextResponse.json({ error: "Entre de novo para traçar a rota." }, { status: 401 });
-  if (pode === "acesso") return NextResponse.json({ error: "Sem acesso ao mapa." }, { status: 403 });
-  if (pode === "limite") return NextResponse.json({ error: "Muitas rotas em pouco tempo. Espere um minuto." }, { status: 429 });
+  if (pode === "login") return NextResponse.json({ error: traduzirUi("Entre de novo para traçar a rota.") }, { status: 401 });
+  if (pode === "acesso") return NextResponse.json({ error: traduzirUi("Sem acesso ao mapa.") }, { status: 403 });
+  if (pode === "limite") return NextResponse.json({ error: traduzirUi("Muitas rotas em pouco tempo. Espere um minuto.") }, { status: 429 });
   const como = body.como === "carro" ? "carro" : "pe";
   const paradas = (Array.isArray(body.paradas) ? body.paradas : [])
     .filter((p): p is Lnglat => Array.isArray(p) && p.length === 2 && p.every((n) => typeof n === "number" && Number.isFinite(n)) && Math.abs(p[1]) <= 90 && Math.abs(p[0]) <= 180)
     .slice(0, 50);
-  if (paradas.length < 2) return NextResponse.json({ error: "A rota precisa de pelo menos duas paradas." }, { status: 400 });
+  if (paradas.length < 2) return NextResponse.json({ error: traduzirUi("A rota precisa de pelo menos duas paradas.") }, { status: 400 });
 
   let ordem = body.otimizar ? ordemMaisPerto(paradas) : paradas.map((_, i) => i);
   const chave = process.env.ORS_API_KEY;

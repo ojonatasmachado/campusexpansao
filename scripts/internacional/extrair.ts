@@ -23,7 +23,7 @@ function files(directory: string): string[] {
 
 export function collectMessages(): Map<string, Source> {
   const result = new Map<string, Source>();
-  for (const file of [...files(join(root, "app/service")), ...files(join(root, "app/api/service"))]) {
+  for (const file of [...files(join(root, "app/service")), ...files(join(root, "app/api/service")), ...files(join(root, "app/lib"))]) {
     if (file.includes("/lib/internacional/")) continue;
     const source = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true);
     const translatorNames = new Set<string>();

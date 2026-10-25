@@ -1,3 +1,5 @@
+import { friendlyReadError } from "../app/service/lib/server/adaptadores";
+import { friendlyWriteError } from "../app/service/painel/erros";
 import assert from "node:assert/strict";
 import { CURRENCIES, LOCALES, currencyOrDefault, isCurrency, isLocale, localeOrDefault, requireCurrency, requireLocale } from "../app/service/lib/internacional/contrato";
 import { amountForCsv, formatAmount, formatCivilDate, formatMoney, formatNumber } from "../app/service/lib/internacional/formatar";
@@ -55,6 +57,21 @@ async function messages() {
     assert.deepEqual(Object.keys(catalog).sort(), keys);
     for (const value of Object.values(catalog)) parse(value);
     const text = createText(locale, catalog);
+    const writeMessages = {
+      "pt-BR": { duplicate: "Isso já está cadastrado.", removed: "Algo que você escolheu foi apagado. Recarregue a página e tente de novo.", permission: "Você não tem permissão para fazer isso nesta igreja. Fale com quem cuida do Service da sua igreja." },
+      "en-US": { duplicate: "This is already registered.", removed: "Something you selected has been deleted. Reload the page and try again.", permission: "You do not have permission to do this in this church. Contact the person who manages Service for your church." },
+      "es-ES": { duplicate: "Esto ya está registrado.", removed: "Se ha eliminado algo que seleccionaste. Recarga la página e inténtalo de nuevo.", permission: "No tienes permiso para hacer esto en esta iglesia. Habla con quien gestiona Service en tu iglesia." },
+    }[locale];
+    assert.equal(friendlyWriteError('duplicate key value violates unique constraint "private_table"', text), writeMessages.duplicate);
+    assert.equal(friendlyWriteError('insert violates foreign key constraint "private_table"', text), writeMessages.removed);
+    assert.equal(friendlyWriteError('permission denied for table "private_table"', text), writeMessages.permission);
+    const readMessages = {
+      "pt-BR": { schema: "O app está fora do ar por alguns minutos. Tente de novo daqui a pouco.", permission: "Você não tem acesso a esta igreja. Saia e entre de novo com a conta certa." },
+      "en-US": { schema: "The app is unavailable for a few minutes. Try again shortly.", permission: "You do not have access to this church. Sign out and sign back in with the correct account." },
+      "es-ES": { schema: "La app no está disponible durante unos minutos. Inténtalo de nuevo dentro de poco.", permission: "No tienes acceso a esta iglesia. Cierra sesión y vuelve a entrar con la cuenta correcta." },
+    }[locale];
+    assert.equal(friendlyReadError("invalid schema: private_schema", text), readMessages.schema);
+    assert.equal(friendlyReadError("row-level security: private_table", text), readMessages.permission);
     const churchContent = "Igreja Caminho da Paz";
     assert.ok(text("Olá, {name}.", { name: churchContent }).includes(churchContent));
     const expected = locale === "en-US" ? ["No messages", "1 message", "2 messages"] : locale === "es-ES" ? ["Ningún mensaje", "1 mensaje", "2 mensajes"] : ["Nenhuma mensagem", "1 mensagem", "2 mensagens"];

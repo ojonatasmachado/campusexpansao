@@ -119,6 +119,11 @@ withDisposableSupabase(async (db) => {
             const sizeDialog = page.getByRole("dialog", { name: labels.size, exact: true });
             await sizeDialog.waitFor();
             assert.equal(await sizeDialog.getByRole("slider").getAttribute("aria-valuetext"), labels.position);
+            // Espera a animação real terminar; o clique continua sujeito à estabilidade do Playwright.
+            await sizeDialog.evaluate(async (element: HTMLElement) => {
+              await document.fonts.ready;
+              await Promise.all(element.getAnimations({ subtree: true }).filter((animation) => animation.playState === "running" && animation.effect?.getComputedTiming().iterations !== Infinity).map((animation) => animation.finished.catch(() => {})));
+            });
             await sizeDialog.getByRole("button", { name: labels.done, exact: true }).click();
             await sizeDialog.waitFor({ state: "hidden" });
             const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
@@ -193,6 +198,33 @@ withDisposableSupabase(async (db) => {
         const invalidEmail = await anonymous.request.post(base + "/api/service/members/accept-invite", { headers, data: { email: "invalido" } });
         assert.equal(invalidEmail.status(), 400);
         assert.equal((await invalidEmail.json()).error, entry.emailError);
+        const apiMessages = {
+          "pt-BR": { unauthenticated: "Você precisa estar logado.", route: "Entre de novo para traçar a rota.", name: "Coloque seu nome e sobrenome.", cnpj: "Esse CNPJ não é válido. Confira os números.", incomplete: "Dados incompletos." },
+          "en-US": { unauthenticated: "You need to be signed in.", route: "Sign in again to plan the route.", name: "Enter your first and last name.", cnpj: "This CNPJ is not valid. Check the numbers.", incomplete: "Incomplete details." },
+          "es-ES": { unauthenticated: "Debes iniciar sesión.", route: "Vuelve a iniciar sesión para trazar la ruta.", name: "Introduce tu nombre y apellidos.", cnpj: "Este CNPJ no es válido. Comprueba los números.", incomplete: "Datos incompletos." },
+        }[entry.locale as "pt-BR" | "en-US" | "es-ES"];
+        for (const path of ["cnpj-lookup", "members/invite", "push/subscribe", "push/unsubscribe", "push/notify"]) {
+          const response = await anonymous.request.post(base + "/api/service/" + path, { headers, data: {} });
+          assert.equal(response.status(), 401, `${path} continua exigindo sessão`);
+          assert.equal((await response.json()).error, apiMessages.unauthenticated);
+        }
+        const routeResponse = await anonymous.request.post(base + "/api/service/mapa/rota", { headers, data: {} });
+        assert.equal(routeResponse.status(), 401);
+        assert.equal((await routeResponse.json()).error, apiMessages.route);
+        const entryResponse = await anonymous.request.post(base + "/api/service/entrada", { headers, data: {} });
+        assert.equal(entryResponse.status(), 400);
+        assert.equal((await entryResponse.json()).error, apiMessages.name);
+        const signedIn = await browser.newContext();
+        try {
+          await login(signedIn, "membro");
+          const cnpjResponse = await signedIn.request.post(base + "/api/service/cnpj-lookup", { headers, data: { cnpj: "123" } });
+          assert.equal(cnpjResponse.status(), 200);
+          assert.deepEqual(await cnpjResponse.json(), { valid: false, error: apiMessages.cnpj });
+          const pushResponse = await signedIn.request.post(base + "/api/service/push/notify", { headers, data: {} });
+          assert.equal(pushResponse.status(), 400);
+          assert.equal((await pushResponse.json()).error, apiMessages.incomplete);
+        } finally { await signedIn.close(); }
+        passed(`servidor ${entry.locale}: erros localizados, sessão obrigatória preservada e validação autenticada sem envio externo`);
         passed(`autenticação ${entry.locale}: ações por estado, senha visível, entrada temática, convites e erros do servidor localizados`);
       } finally { await anonymous.close(); }
     }

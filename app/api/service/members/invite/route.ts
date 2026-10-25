@@ -1,3 +1,4 @@
+import { getTexto } from "../../../../service/lib/internacional/servidor";
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../lib/supabase-server";
 import { supabaseAdmin } from "../../../../lib/supabase";
@@ -13,17 +14,18 @@ const LEAD_ROLES = ["owner", "master", "pastor", "lider"];
    link e informa e-mail, senha e CEP (accept-invite). Reenvio invalida o
    link anterior. Se a pessoa já tem acesso, devolve só o login da igreja. */
 export async function POST(request: Request) {
+  const traduzirUi = await getTexto(request);
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Você precisa estar logado." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: traduzirUi("Você precisa estar logado.") }, { status: 401 });
 
   let body: { memberId?: string };
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Envie dados válidos." }, { status: 400 });
+    return NextResponse.json({ error: traduzirUi("Envie dados válidos.") }, { status: 400 });
   }
-  if (!body.memberId) return NextResponse.json({ error: "Dados incompletos." }, { status: 400 });
+  if (!body.memberId) return NextResponse.json({ error: traduzirUi("Dados incompletos.") }, { status: 400 });
 
   const db = supabaseAdmin();
   const { data: member } = await db
@@ -32,7 +34,7 @@ export async function POST(request: Request) {
     .select("id,organization_id,church_id,name,phone,volunteer_id")
     .eq("id", body.memberId)
     .maybeSingle();
-  if (!member) return NextResponse.json({ error: "Membro não encontrado." }, { status: 404 });
+  if (!member) return NextResponse.json({ error: traduzirUi("Membro não encontrado.") }, { status: 404 });
 
   const { data: membership } = await supabase
     .schema("core")
@@ -43,9 +45,9 @@ export async function POST(request: Request) {
     .eq("status", "active")
     .maybeSingle();
   if (!membership || !LEAD_ROLES.includes(membership.role)) {
-    return NextResponse.json({ error: "Sem permissão para convidar." }, { status: 403 });
+    return NextResponse.json({ error: traduzirUi("Sem permissão para convidar.") }, { status: 403 });
   }
-  if (!member.phone) return NextResponse.json({ error: "Cadastre o telefone da pessoa para mandar o convite." }, { status: 400 });
+  if (!member.phone) return NextResponse.json({ error: traduzirUi("Cadastre o telefone da pessoa para mandar o convite.") }, { status: 400 });
 
   const origin = new URL(request.url).origin;
   const slug = await ensureChurchSlug(db, member.church_id);
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
     expires_at: invite.expiresAt,
     created_by: user.id,
   });
-  if (error) return NextResponse.json({ error: "Não foi possível gerar o convite agora." }, { status: 500 });
+  if (error) return NextResponse.json({ error: traduzirUi("Não foi possível gerar o convite agora.") }, { status: 500 });
 
   return NextResponse.json({ ok: true, alreadyHasAccess: false, link: inviteUrl(origin, invite.token), loginUrl });
 }

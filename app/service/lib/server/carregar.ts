@@ -3,8 +3,9 @@ import { createServiceSupabaseClient } from "../supabase";
 import type { RequirementRow } from "../requirements";
 import type { MissingRequirement, ServeRequest } from "../../MobileApp";
 import { cookies } from "next/headers";
+import { getTexto } from "../internacional/servidor";
 import type { ChurchRow, ChurchView, ChurchIdentityRow, CycleRow, HistoryEntryRow, MinisterialTitleRow, FellowshipGroupRow, TagRow, PersonRow, PersonView, MemberRow, MemberView, MinistryRow, MinistryPositionRow, PersonMinistryRow, MinistryView, EventRow, ScheduleItemRow, SetlistSongRow, EventView, DecisionView, VisitorView, VisitorNoteView, TimelineEventView, JourneyChangeRequestRow, JourneyChangeRequestView, AnnouncementView, AnnouncementResponseView, EventRsvpView, CareMarkView, WallPostView, AnnouncementReadView, EventAttendanceView, BaptismClassView, BaptismCandidateView, CourseView, EnrollmentView, ModuleView, LessonView, LessonAttendanceView, BoardView, CardView, ChatView, ChatMemberView, MessageView, MeetingView, MeetingActionView, RehearsalView, RoomView, ReservationView, KidsClassView, ChildView, ChildGuardianView, KidsSessionView, KidsAttendanceView, KidsEventView, KidsEventEnrollmentView, ExtraServiceData } from "./tipos";
-import { friendlyReadError, toChurchView, toPersonView, toMemberView, toMinistryViews, toEventViews } from "./adaptadores";
+import { friendlyReadError as readErrorMessage, toChurchView, toPersonView, toMemberView, toMinistryViews, toEventViews } from "./adaptadores";
 
 export const emptyExtraServiceData: ExtraServiceData = {
   visitors: [],
@@ -78,6 +79,8 @@ export async function getServiceDashboardData(): Promise<{
 
   /* toda pessoa com login tem ficha de membro (liderança também usa o app
      como qualquer pessoa); cria a que faltar antes de carregar os dados */
+  const t = await getTexto();
+  const friendlyReadError = (message: string) => readErrorMessage(message, t);
   await supabase.schema("service").rpc("ensure_my_member");
 
   const { data: churchesData, error: churchesError } = await supabase

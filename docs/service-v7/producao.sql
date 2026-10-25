@@ -5306,6 +5306,28 @@ create or replace view service.churches_with_preferences with (security_invoker 
 revoke all on service.churches_with_preferences from public, anon;
 grant select on service.churches_with_preferences to authenticated, service_role;
 revoke all on function service.ensure_organization_preferences(), service.fin_guard_currency() from public, anon, authenticated;
+-- A fila guarda a identidade explícita do texto automático para resolver o idioma
+-- no momento do envio. Títulos/corpos escritos pela igreja continuam intocados.
+alter table service.push_queue add column if not exists body_template text;
+do $$ begin
+  if not exists (select 1 from pg_constraint where conrelid = 'service.push_queue'::regclass and conname = 'push_queue_body_template_check') then
+    alter table service.push_queue add constraint push_queue_body_template_check
+      check (body_template is null or body_template in ('mural-novo', 'mural-lembrete'));
+  end if;
+end $$;
+
+-- Só a entrega do servidor pode ler idiomas de outras pessoas. O recorte da
+-- organização e da lista é obrigatório mesmo com credencial de serviço.
+create or replace function service.notification_locales(p_org uuid, p_people uuid[])
+returns table(person_id uuid, locale_code text)
+language sql stable security definer set search_path = core, service, public as $$
+  select p.id, coalesce(u.locale_code, 'pt-BR')
+  from service.people p left join core.users u on u.id = p.user_id
+  where p.organization_id = p_org and p.id = any(p_people);
+$$;
+revoke all on function service.notification_locales(uuid, uuid[]) from public, anon, authenticated;
+grant execute on function service.notification_locales(uuid, uuid[]) to service_role;
+
 notify pgrst, 'reload schema';
 
 commit;

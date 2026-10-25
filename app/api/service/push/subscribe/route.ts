@@ -1,3 +1,4 @@
+import { getTexto } from "../../../../service/lib/internacional/servidor";
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../lib/supabase-server";
 import { supabaseAdmin } from "../../../../lib/supabase";
@@ -12,23 +13,24 @@ type Payload = {
 };
 
 export async function POST(request: Request) {
+  const traduzirUi = await getTexto(request);
   const supabase = await createClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return NextResponse.json({ error: "Você precisa estar logado." }, { status: 401 });
+    return NextResponse.json({ error: traduzirUi("Você precisa estar logado.") }, { status: 401 });
   }
 
   let body: Payload;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Envie dados válidos." }, { status: 400 });
+    return NextResponse.json({ error: traduzirUi("Envie dados válidos.") }, { status: 400 });
   }
 
   const { organizationId, endpoint, keys } = body;
   if (!organizationId || !endpoint || !keys?.p256dh || !keys?.auth) {
-    return NextResponse.json({ error: "Dados incompletos." }, { status: 400 });
+    return NextResponse.json({ error: traduzirUi("Dados incompletos.") }, { status: 400 });
   }
 
   try {
@@ -44,7 +46,7 @@ export async function POST(request: Request) {
 
     if (personError) throw personError;
     if (!person) {
-      return NextResponse.json({ error: "Nenhum voluntário vinculado a este usuário." }, { status: 404 });
+      return NextResponse.json({ error: traduzirUi("Nenhum voluntário vinculado a este usuário.") }, { status: 404 });
     }
 
     // Um endpoint existente nunca muda de dono. DO NOTHING também protege
@@ -75,12 +77,13 @@ export async function POST(request: Request) {
       .maybeSingle();
     if (updateError) throw updateError;
     if (!subscription) {
-      return NextResponse.json({ error: "Esta inscrição já pertence a outra conta." }, { status: 409 });
+      return NextResponse.json({ error: traduzirUi("Esta inscrição já pertence a outra conta.") }, { status: 409 });
     }
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Não foi possível salvar a inscrição.";
+    console.error("[service] push/subscribe:", error);
+    const message = traduzirUi("Não foi possível salvar a inscrição.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

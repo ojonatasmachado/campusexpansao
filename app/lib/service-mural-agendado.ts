@@ -41,7 +41,7 @@ export async function publicarAgendados(db: Db): Promise<number> {
     if (!a.publish_push || !membros.length) continue;
     const { data: fichas } = await db.from("members").select("volunteer_id").in("id", membros);
     const pessoas = (fichas ?? []).map((f) => f.volunteer_id).filter((id): id is string => !!id);
-    await entregarAvisos(db, { organizationId: a.organization_id, peopleIds: pessoas, categoria: "mural", title: a.title, body: a.body || "Nova publicação no Mural." });
+    await entregarAvisos(db, { organizationId: a.organization_id, peopleIds: pessoas, categoria: "mural", title: a.title, body: a.body || "Nova publicação no Mural.", bodyTemplate: a.body ? undefined : "mural-novo" });
   }
   return (itens ?? []).length;
 }

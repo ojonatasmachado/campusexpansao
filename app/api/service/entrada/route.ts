@@ -1,3 +1,4 @@
+import { getTexto } from "../../../service/lib/internacional/servidor";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "../../../lib/supabase";
@@ -28,25 +29,26 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
    · o pedido nunca liga a conta a uma ficha já cadastrada: isso é só a
      gestão, ao aprovar. */
 export async function POST(request: Request) {
+  const traduzirUi = await getTexto(request);
   let body: Payload;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Envie dados válidos." }, { status: 400 });
+    return NextResponse.json({ error: traduzirUi("Envie dados válidos.") }, { status: 400 });
   }
 
   const nome = (body.nome ?? "").trim().replace(/\s+/g, " ");
   const telefone = (body.telefone ?? "").replace(/\D/g, "");
   const email = (body.email ?? "").trim().toLowerCase();
   const senha = body.senha ?? "";
-  if (nome.length < 2 || nome.length > 120 || !nome.includes(" ")) return NextResponse.json({ error: "Coloque seu nome e sobrenome." }, { status: 400 });
-  if (telefone.length < 10 || telefone.length > 13) return NextResponse.json({ error: "Coloque o telefone com DDD." }, { status: 400 });
-  if (!EMAIL_RE.test(email) || email.length > 200) return NextResponse.json({ error: "Coloque um e-mail válido." }, { status: 400 });
-  if (senha.length < 6 || senha.length > 72) return NextResponse.json({ error: "A senha precisa ter pelo menos 6 caracteres." }, { status: 400 });
+  if (nome.length < 2 || nome.length > 120 || !nome.includes(" ")) return NextResponse.json({ error: traduzirUi("Coloque seu nome e sobrenome.") }, { status: 400 });
+  if (telefone.length < 10 || telefone.length > 13) return NextResponse.json({ error: traduzirUi("Coloque o telefone com DDD.") }, { status: 400 });
+  if (!EMAIL_RE.test(email) || email.length > 200) return NextResponse.json({ error: traduzirUi("Coloque um e-mail válido.") }, { status: 400 });
+  if (senha.length < 6 || senha.length > 72) return NextResponse.json({ error: traduzirUi("A senha precisa ter pelo menos 6 caracteres.") }, { status: 400 });
 
   const db = supabaseAdmin();
   const link = await findEntryLink(db, body.codigo ?? "");
-  if (!link) return NextResponse.json({ error: "Este link não vale mais. Peça o novo à liderança da igreja." }, { status: 410 });
+  if (!link) return NextResponse.json({ error: traduzirUi("Este link não vale mais. Peça o novo à liderança da igreja.") }, { status: 410 });
 
   const slug = await ensureChurchSlug(db, link.churchId);
   const origin = new URL(request.url).origin;
@@ -70,14 +72,14 @@ export async function POST(request: Request) {
     if (loginError || !login.user) {
       /* confirmação ligada: mesma resposta de uma conta nova (não revela a conta) */
       if (existeOculto) return NextResponse.json({ estado: "confirmar", email, slug });
-      return NextResponse.json({ error: "Este e-mail já tem conta no Service. Use a senha dela ou recupere a senha em Entrar." }, { status: 409 });
+      return NextResponse.json({ error: traduzirUi("Este e-mail já tem conta no Service. Use a senha dela ou recupere a senha em Entrar.") }, { status: 409 });
     }
     userId = login.user.id;
     confirmado = true;
   } else {
     const limite = signUpError && /rate|too many|seconds/i.test(signUpError.message);
     return NextResponse.json(
-      { error: limite ? "Muitas tentativas seguidas. Espere um minuto e tente de novo." : "Não conseguimos criar sua conta agora. Tente de novo." },
+      { error: limite ? traduzirUi("Muitas tentativas seguidas. Espere um minuto e tente de novo.") : traduzirUi("Não conseguimos criar sua conta agora. Tente de novo.") },
       { status: limite ? 429 : 400 },
     );
   }
@@ -85,7 +87,7 @@ export async function POST(request: Request) {
   /* já faz parte (ou está com o acesso pausado): não abre pedido */
   const { data: vinculo } = await db.schema("core").from("memberships").select("status").eq("user_id", userId).eq("organization_id", link.organizationId).maybeSingle();
   if (vinculo?.status === "active") return NextResponse.json({ estado: "membro", email, slug });
-  if (vinculo?.status === "suspended") return NextResponse.json({ error: "Seu acesso nesta igreja está pausado. Fale com a liderança." }, { status: 403 });
+  if (vinculo?.status === "suspended") return NextResponse.json({ error: traduzirUi("Seu acesso nesta igreja está pausado. Fale com a liderança.") }, { status: 403 });
 
   const { error: pedidoError } = await db.schema("service").from("entry_requests").insert({
     organization_id: link.organizationId,
@@ -98,7 +100,7 @@ export async function POST(request: Request) {
   });
   /* pedido em aberto já existe: vale o que está lá */
   if (pedidoError && !/duplicate|unique/i.test(pedidoError.message)) {
-    return NextResponse.json({ error: "Não conseguimos registrar seu pedido agora. Tente de novo." }, { status: 500 });
+    return NextResponse.json({ error: traduzirUi("Não conseguimos registrar seu pedido agora. Tente de novo.") }, { status: 500 });
   }
 
   const estado = !confirmado ? "confirmar" : link.rule === "direto" ? "direto" : "pendente";

@@ -6,7 +6,7 @@ import { relogioDoFuso } from "./lib/relogio";
 import { clearMemberLocation } from "./lib/member-navigation";
 import { clearPanelLocation } from "./lib/panel-navigation";
 import { usePanelNavigation } from "./lib/use-panel-navigation";
-import { useServiceLocale } from "./lib/internacional/contexto";
+import { useServiceLocale, useTexto } from "./lib/internacional/contexto";
 
 import { mesmoTelefone, telefoneParaGravar, variacoesTelefone } from "./lib/telefone";
 import { ehNovo, nomeComparavel } from "./lib/pessoas";
@@ -221,6 +221,7 @@ export default function ServiceExactApp({
   error,
 }: Props) {
   const locale = useServiceLocale();
+  const textoDeErro = useTexto();
   /* v7 4.16: clicar num time incompleto da cobertura abre Escalas no culto e no time */
   const [escalaFoco, setEscalaFoco] = useState<{ eventId: string; timeId?: string; n: number } | null>(null);
   const abrirVagas = (eventId: string, timeId?: string) => { setEscalaFoco((f) => ({ eventId, timeId, n: (f?.n ?? 0) + 1 })); setDrawer(null); setRoute("escalas"); };
@@ -359,16 +360,16 @@ export default function ServiceExactApp({
   const setupEstado: SetupEstado = { ...SETUP_INICIAL, ...(firstChurch?.settings?.setup ?? {}) } as SetupEstado;
   const svc = () => createServiceBrowserClient().schema("service");
   const salvarSetup = async (e: SetupEstado) => {
-    if (!firstChurch) return "Nenhuma igreja foi encontrada.";
+    if (!firstChurch) return textoDeErro("Nenhuma igreja foi encontrada.");
     if (e.concluido && e.primeiroEventoId) {
       const { data: encontro, error } = await svc().from("events").select("name,event_date,time,location").eq("id", e.primeiroEventoId).eq("church_id", firstChurch.id).maybeSingle();
-      if (error) return friendlyWriteError(error.message);
-      if (!encontro || !encontroUtil({ nome: encontro.name, data: encontro.event_date ?? "", hora: encontro.time ?? "", local: encontro.location ?? "" }, todayISO(), horaAgoraBR())) return "O encontro precisa estar na agenda com data, horário e local válidos. Confira a programação antes de concluir.";
+      if (error) return friendlyWriteError(error.message, textoDeErro);
+      if (!encontro || !encontroUtil({ nome: encontro.name, data: encontro.event_date ?? "", hora: encontro.time ?? "", local: encontro.location ?? "" }, todayISO(), horaAgoraBR())) return textoDeErro("O encontro precisa estar na agenda com data, horário e local válidos. Confira a programação antes de concluir.");
     }
     const { data, error: readError } = await svc().from("churches").select("settings").eq("id", firstChurch.id).single();
-    if (readError) return friendlyWriteError(readError.message);
+    if (readError) return friendlyWriteError(readError.message, textoDeErro);
     const { error } = await svc().from("churches").update({ settings: { ...data.settings, setup: e } }).eq("id", firstChurch.id);
-    if (error) return friendlyWriteError(error.message);
+    if (error) return friendlyWriteError(error.message, textoDeErro);
     router.refresh();
     return null;
   };
@@ -405,7 +406,7 @@ export default function ServiceExactApp({
     const supabase = createServiceBrowserClient();
     if (memberId && data.cpf !== undefined) {
       const doc = await supabase.schema("service").rpc("save_my_member_cpf", { p_member: memberId, p_cpf: data.cpf });
-      if (doc.error || doc.data !== "ok") return { error: doc.data === "cpf_invalido" ? "Confira os números do CPF." : "Não foi possível salvar o CPF. Tente novamente." };
+      if (doc.error || doc.data !== "ok") return { error: doc.data === "cpf_invalido" ? textoDeErro("Confira os números do CPF.") : textoDeErro("Não foi possível salvar o CPF. Tente novamente.") };
     }
     const targetPerson = people.find((p) => p.id === personId);
     const cep = data.cep.trim();
@@ -433,13 +434,15 @@ export default function ServiceExactApp({
         : Promise.resolve({ data: true, error: null }),
     ]);
     /* a função devolve false quando a ficha não é da pessoa logada */
-    if (pessoa.error || ficha.error || ficha.data === false) return { error: "Não foi possível salvar seus dados. Tente de novo." };
+    if (pessoa.error || ficha.error || ficha.data === false) return { error: textoDeErro("Não foi possível salvar seus dados. Tente de novo.") };
     router.refresh();
     return {};
   };
   const changePasswordMobile = async (senha: string) => {
     const { error } = await createServiceBrowserClient().auth.updateUser({ password: senha });
-    return { error: error?.message };
+    if (!error) return {};
+    const mesmaSenha = error.code === "same_password" || /different from the old/i.test(error.message);
+    return { error: mesmaSenha ? textoDeErro("Escolha uma senha diferente da atual.") : textoDeErro("Não foi possível salvar a senha. Tente de novo.") };
   };
   const addCardCommentMobile = async (cardId: string, author: string, body: string) => {
     if (!firstChurch?.organizationId) return;
@@ -525,7 +528,7 @@ export default function ServiceExactApp({
       router.refresh();
       return viaRpc.data as string;
     }
-    if (viaRpc.error && !rpcFaltando(viaRpc.error)) { avisar("Não conseguimos abrir a conversa agora.", "warn"); return null; }
+    if (viaRpc.error && !rpcFaltando(viaRpc.error)) { avisar(textoDeErro("Não conseguimos abrir a conversa agora."), "warn"); return null; }
     const existing = chats.find((c) => c.kind === "dm"
       && chatMembers.some((cm) => cm.chat_id === c.id && cm.member_id === selfMemberId)
       && chatMembers.some((cm) => cm.chat_id === c.id && cm.member_id === targetMemberId));
@@ -624,19 +627,19 @@ export default function ServiceExactApp({
   };
   const salvarDisponibilidade = async (availability: Record<string, boolean>) => {
     const { data, error } = await createServiceBrowserClient().schema("service").rpc("update_my_availability", { p_availability: availability, p_org: firstChurch?.organizationId ?? null });
-    if (error || data !== "ok") { avisar("Não conseguimos salvar agora. Tente de novo.", "warn"); return false; }
+    if (error || data !== "ok") { avisar(textoDeErro("Não conseguimos salvar agora. Tente de novo."), "warn"); return false; }
     router.refresh();
     return true;
   };
   const responderEvento = async (eventId: string, vai: boolean) => {
     const { data, error } = await createServiceBrowserClient().schema("service").rpc("respond_event", { p_event: eventId, p_vai: vai });
-    if (error || data !== "ok") { avisar("Não conseguimos enviar sua resposta agora.", "warn"); return false; }
+    if (error || data !== "ok") { avisar(textoDeErro("Não conseguimos enviar sua resposta agora."), "warn"); return false; }
     router.refresh();
     return true;
   };
   const responderMural = async (announcementId: string, response: "vou" | "nao" | null) => {
     const { data, error } = await createServiceBrowserClient().schema("service").rpc("respond_announcement", { p_announcement: announcementId, p_response: response });
-    if (error || data !== "ok") { avisar("Não conseguimos enviar sua resposta agora.", "warn"); return false; }
+    if (error || data !== "ok") { avisar(textoDeErro("Não conseguimos enviar sua resposta agora."), "warn"); return false; }
     router.refresh();
     return true;
   };
@@ -1089,7 +1092,7 @@ export default function ServiceExactApp({
             onSalvarDados={async (d) => {
               const { error } = await svc().from("churches").update({ time_zone: d.fuso, name: d.nome.trim(), postal_code: d.cep.replace(/\D/g, "") || null, address: d.endereco || null, neighborhood: d.bairro || null, city: d.cidade || null, state: d.estado || null }).eq("id", firstChurch.id);
               router.refresh();
-              return error ? friendlyWriteError(error.message) : null;
+              return error ? friendlyWriteError(error.message, textoDeErro) : null;
             }}
             onLogo={async (file) => {
               const url = await uploadServiceImage(createServiceBrowserClient(), file, `${firstChurch.organizationId}/logos/${firstChurch.id}.${imageExtension(file)}`);
@@ -1101,7 +1104,7 @@ export default function ServiceExactApp({
               const sede = churches.find((c) => c.matriz) ?? firstChurch;
               const { error } = await svc().from("churches").update({ settings: { ...sede.settings, brandCfg: { ...(sede.settings?.brandCfg ?? {}), accent: hex } } }).eq("id", sede.id);
               router.refresh();
-              return error ? friendlyWriteError(error.message) : null;
+              return error ? friendlyWriteError(error.message, textoDeErro) : null;
             }}
             timesExistentes={ministries.map((m) => m.name)}
             encontros={events.filter((e) => e.churchId === firstChurch.id).map((e) => ({ id: e.id, nome: e.name, data: e.eventDate, hora: e.time, local: e.location }))}
@@ -1110,24 +1113,24 @@ export default function ServiceExactApp({
               const ids: string[] = [];
               for (const m of modelos) {
                 const found = await svc().from("ministries").select("id").eq("church_id", firstChurch.id).eq("name", m.nome).maybeSingle();
-                if (found.error) { router.refresh(); return { ids, error: friendlyWriteError(found.error.message) }; }
+                if (found.error) { router.refresh(); return { ids, error: friendlyWriteError(found.error.message, textoDeErro) }; }
                 let id: string | undefined = found.data?.id;
                 const novo = !id;
                 if (!id) {
                   const { data, error } = await svc().from("ministries").insert({ organization_id: firstChurch.organizationId, church_id: firstChurch.id, name: m.nome, icon: m.icone }).select("id").single();
-                  if (error || !data) { router.refresh(); return { ids, error: friendlyWriteError(error?.message ?? "") }; }
+                  if (error || !data) { router.refresh(); return { ids, error: friendlyWriteError(error?.message ?? "", textoDeErro) }; }
                   id = data.id;
                 }
-                if (!id) return { ids, error: "Não foi possível identificar o time. Confira em Times." };
+                if (!id) return { ids, error: textoDeErro("Não foi possível identificar o time. Confira em Times.") };
                 const positions = await svc().from("ministry_positions").select("name").eq("ministry_id", id);
-                if (positions.error) { router.refresh(); return { ids, error: friendlyWriteError(positions.error.message) }; }
+                if (positions.error) { router.refresh(); return { ids, error: friendlyWriteError(positions.error.message, textoDeErro) }; }
                 const faltantes = m.funcoes.map((f, i) => ({ organization_id: firstChurch.organizationId, ministry_id: id, name: f.nome, need_count: f.vagas, sort_order: i })).filter((f) => !positions.data?.some((p) => p.name === f.name));
                 if (faltantes.length) {
                   const { error } = await svc().from("ministry_positions").insert(faltantes);
                   if (error) {
                     const cleanup = novo ? await svc().from("ministries").delete().eq("id", id) : null;
                     router.refresh();
-                    return { ids, error: cleanup?.error ? "Um time ficou incompleto. Confira suas funções em Times antes de tentar novamente." : friendlyWriteError(error.message) };
+                    return { ids, error: cleanup?.error ? textoDeErro("Um time ficou incompleto. Confira suas funções em Times antes de tentar novamente.") : friendlyWriteError(error.message, textoDeErro) };
                   }
                 }
                 ids.push(id);
@@ -1137,10 +1140,10 @@ export default function ServiceExactApp({
             }}
             onCriarCultos={async (lista) => {
               // Reconhece o resultado já gravado em uma tentativa cuja resposta se perdeu.
-              if (!lista.length) return { ids: [], error: "Informe os dados do primeiro encontro." };
-              if (lista.some((e) => !encontroUtil(e, todayISO(), horaAgoraBR()))) return { ids: [], error: "Confira a data, o horário e o local antes de disponibilizar o encontro." };
+              if (!lista.length) return { ids: [], error: textoDeErro("Informe os dados do primeiro encontro.") };
+              if (lista.some((e) => !encontroUtil(e, todayISO(), horaAgoraBR()))) return { ids: [], error: textoDeErro("Confira a data, o horário e o local antes de disponibilizar o encontro.") };
               const { data: existentes, error: readError } = await svc().from("events").select("id,name,event_date,time,location").eq("church_id", firstChurch.id).in("event_date", lista.map((c) => c.data)).eq("name", lista[0].nome).eq("time", lista[0].hora).eq("location", lista[0].local);
-              if (readError) return { ids: [], error: friendlyWriteError(readError.message) };
+              if (readError) return { ids: [], error: friendlyWriteError(readError.message, textoDeErro) };
               const registros = lista.map((c) => {
                 const anterior = existentes?.find((e) => e.name === c.nome && e.event_date === c.data && e.time === c.hora && e.location === c.local);
                 return { ...c, id: anterior?.id ?? c.id };
@@ -1151,20 +1154,20 @@ export default function ServiceExactApp({
                   id: c.id, organization_id: firstChurch.organizationId, church_id: firstChurch.id, name: c.nome, kind: "Culto",
                   event_date: c.data, weekday: weekdayShortFromDate(c.data), time: c.hora, location: c.local, ministries: [], pede: "aviso",
                 })), { onConflict: "id", ignoreDuplicates: true });
-                if (error) return { ids: [], error: friendlyWriteError(error.message) };
+                if (error) return { ids: [], error: friendlyWriteError(error.message, textoDeErro) };
               }
               router.refresh();
               return { ids: registros.map((c) => c.id) };
             }}
             onAtualizarEncontro={async (e) => {
-              if (!encontroUtil(e, todayISO(), horaAgoraBR())) return "Confira nome, data, horário e local do encontro.";
+              if (!encontroUtil(e, todayISO(), horaAgoraBR())) return textoDeErro("Confira nome, data, horário e local do encontro.");
               const original = await svc().from("events").select("id,room_id").eq("id", e.id).eq("church_id", firstChurch.id).maybeSingle();
-              if (original.error) return friendlyWriteError(original.error.message);
-              if (!original.data) return "O encontro não está mais disponível. Confira a agenda da igreja.";
-              if (original.data.room_id) return "Este encontro tem uma sala vinculada. Confira a reserva em Espaços e salas antes de alterar seus dados.";
+              if (original.error) return friendlyWriteError(original.error.message, textoDeErro);
+              if (!original.data) return textoDeErro("O encontro não está mais disponível. Confira a agenda da igreja.");
+              if (original.data.room_id) return textoDeErro("Este encontro tem uma sala vinculada. Confira a reserva em Espaços e salas antes de alterar seus dados.");
               const { data, error } = await svc().from("events").update({ name: e.nome, event_date: e.data, weekday: weekdayShortFromDate(e.data), time: e.hora, location: e.local }).eq("id", e.id).eq("church_id", firstChurch.id).select("id");
-              if (error) return friendlyWriteError(error.message);
-              if (!data?.length) return "Não foi possível atualizar o encontro. Confira seu acesso e tente novamente.";
+              if (error) return friendlyWriteError(error.message, textoDeErro);
+              if (!data?.length) return textoDeErro("Não foi possível atualizar o encontro. Confira seu acesso e tente novamente.");
               router.refresh();
               return null;
             }}
@@ -1172,14 +1175,14 @@ export default function ServiceExactApp({
               const tab = window.open("", "_blank");
               const variacoes = variacoesTelefone(telefone);
               const { data: cadastrados, error: readError } = await svc().from("members").select("id,name,phone").eq("church_id", firstChurch.id).in("phone", variacoes);
-              if (readError) { tab?.close(); return { error: friendlyWriteError(readError.message) }; }
+              if (readError) { tab?.close(); return { error: friendlyWriteError(readError.message, textoDeErro) }; }
               const iguais = (cadastrados ?? []).filter((m) => mesmoTelefone(m.phone, telefone));
-              if (iguais.length > 1) { tab?.close(); return { error: "Há mais de uma pessoa com este telefone. Confira o cadastro em Pessoas e envie o acesso pela ficha correta." }; }
+              if (iguais.length > 1) { tab?.close(); return { error: textoDeErro("Há mais de uma pessoa com este telefone. Confira o cadastro em Pessoas e envie o acesso pela ficha correta.") }; }
               let pessoa = iguais[0];
-              if (pessoa && nomeComparavel(pessoa.name) !== nomeComparavel(nome)) { tab?.close(); return { error: "Este telefone já está em outro cadastro. Confira a pessoa em Pessoas antes de enviar acesso." }; }
+              if (pessoa && nomeComparavel(pessoa.name) !== nomeComparavel(nome)) { tab?.close(); return { error: textoDeErro("Este telefone já está em outro cadastro. Confira a pessoa em Pessoas antes de enviar acesso.") }; }
               if (!pessoa) {
                 const { data, error } = await svc().from("members").insert({ organization_id: firstChurch.organizationId, church_id: firstChurch.id, name: nome, phone: telefoneParaGravar(telefone), situation: "membro" }).select("id,name,phone").single();
-                if (error || !data) { tab?.close(); return { error: friendlyWriteError(error?.message ?? "") }; }
+                if (error || !data) { tab?.close(); return { error: friendlyWriteError(error?.message ?? "", textoDeErro) }; }
                 pessoa = data;
               }
               const r = await openMemberInviteWhatsapp({ memberId: pessoa.id, name: pessoa.name, phone: telefone, churchName: firstChurch.nome ?? "sua igreja", template: firstChurch.settings?.acessoMsgCfg?.mensagem, tab });

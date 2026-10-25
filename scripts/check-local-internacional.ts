@@ -40,6 +40,19 @@ withDisposableSupabase(async (db) => {
   ok((await master.schema("service").rpc("my_locale")).data === "en-US", "outra pessoa não altera o locale do master");
   ok(!!(await anonymous.schema("service").rpc("set_my_locale", { p_locale: "en-US" })).error, "anônimo não grava preferência");
 
+  const recipients = await admin.schema("service").from("people").select("id,user_id").eq("organization_id", org);
+  assert.equal(recipients.error, null);
+  const personId = recipients.data!.find((p) => p.user_id === own)!.id;
+  const outside = await admin.schema("service").from("people").select("id").neq("organization_id", org).limit(1).single();
+  assert.equal(outside.error, null);
+  for (const [name, client] of [["anônimo", anonymous], ["membro", member], ["master", master]] as const) {
+    ok(!!(await client.schema("service").rpc("notification_locales", { p_org: org, p_people: [personId] })).error, `${name} não lê idioma alheio pelo adaptador de entrega`);
+  }
+  const languages = await admin.schema("service").rpc("notification_locales", { p_org: org, p_people: [personId, outside.data!.id] });
+  ok(!languages.error && languages.data?.length === 1 && languages.data[0].person_id === personId && languages.data[0].locale_code === "es-ES", "entrega lê o idioma atual da conta e exclui outra organização");
+  const invalidTemplate = await admin.schema("service").from("push_queue").insert({ organization_id: org, person_id: personId, categoria: "mural", title: "Teste local", body: "Teste local", body_template: "texto-arbitrario", send_after: new Date().toISOString() });
+  ok(invalidTemplate.error?.code === "23514", "fila rejeita identificação de texto automático fora do contrato");
+
   for (const [name, client] of [["líder", leader], ["membro", member], ["outra igreja", other]] as const) {
     ok((await client.schema("service").rpc("set_organization_currency", { p_org: org, p_currency: "USD" })).error?.code === "42501", `moeda protegida contra ${name}`);
   }

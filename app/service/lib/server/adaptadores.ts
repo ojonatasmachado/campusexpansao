@@ -1,19 +1,20 @@
 import { currencyOrDefault } from "../internacional/contrato";
+import { sourceText, type Text } from "../internacional/mensagens";
 import { regiaoInformada } from "../endereco";
 import { telefoneValido } from "../telefone";
 import { weekdayFromISO } from "../date";
 import type { ChurchRow, ChurchView, PersonRow, PersonView, MemberRow, MemberView, MinistryRow, MinistryPositionRow, PersonMinistryRow, MinistryView, EventRow, ScheduleItemRow, SetlistSongRow, EventView } from "./tipos";
 
-export function friendlyReadError(message: string) {
+export function friendlyReadError(message: string, t: Text = sourceText) {
   const lower = message.toLowerCase();
   if (lower.includes("invalid schema")) {
-    return "O app está fora do ar por alguns minutos. Tente de novo daqui a pouco.";
+    return t("O app está fora do ar por alguns minutos. Tente de novo daqui a pouco.");
   }
   if (lower.includes("permission") || lower.includes("row-level security") || lower.includes("rls")) {
-    return "Você não tem acesso a esta igreja. Saia e entre de novo com a conta certa.";
+    return t("Você não tem acesso a esta igreja. Saia e entre de novo com a conta certa.");
   }
   console.error("[service] erro ao ler:", message);
-  return "Não conseguimos abrir os dados da igreja agora. Tente de novo em instantes.";
+  return t("Não conseguimos abrir os dados da igreja agora. Tente de novo em instantes.");
 }
 
 
