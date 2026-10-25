@@ -1,4 +1,5 @@
 import type { FieldDef } from "./form/tipos";
+import type { DbServiceCurrency } from "../../lib/types";
 export type { FieldDef, ShowIf } from "./form/tipos";
 import { type BrandCfg } from "../lib/theme";
 import type { EnqueteElegivelView } from "../lib/enquetes";
@@ -60,6 +61,8 @@ export type ChurchView = {
   address?: string | null;
   country?: string | null;
   timeZone?: string | null;
+  currencyCode?: DbServiceCurrency;
+  currencyLocked?: boolean;
   postalCode?: string | null;
   neighborhood?: string | null;
   state?: string | null;

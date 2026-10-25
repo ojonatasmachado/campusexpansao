@@ -18,8 +18,16 @@ function banco() {
     push_queue: [], push_subscriptions: [], app_events: [],
   };
   let falharFila = false;
+  let falharIdioma = false;
+  const idiomas: Record<string, string> = { br: "pt-BR", jp: "en-US", off: "es-ES" };
   const consultasPush: string[][] = [];
   const db = {
+    async rpc(nome: string, args: { p_org: string; p_people: string[] }) {
+      assert.equal(nome, "notification_locales");
+      if (falharIdioma) return { data: null, error: new Error("idioma indisponível") };
+      return { error: null, data: tabelas.people.filter((p) => p.organization_id === args.p_org && args.p_people.includes(String(p.id)))
+        .map((p) => ({ person_id: p.id, locale_code: idiomas[String(p.id)] ?? "pt-BR" })) };
+    },
     from(tabela: string) {
       const filtros: Array<(r: Row) => boolean> = [];
       let alterar: Row | undefined;
@@ -43,7 +51,7 @@ function banco() {
       return q;
     },
   };
-  return { db: db as unknown as Parameters<typeof entregarAvisos>[0], tabelas, consultasPush, falhar: () => { falharFila = true; } };
+  return { db: db as unknown as Parameters<typeof entregarAvisos>[0], tabelas, idiomas, consultasPush, falhar: () => { falharFila = true; }, falharIdioma: () => { falharIdioma = true; } };
 }
 
 async function main() {
@@ -79,7 +87,53 @@ async function main() {
     assert.deepEqual(q.consultasPush, [["jp"]]);
     await esvaziarFila(q.db);
     assert.deepEqual(q.consultasPush, [["jp"]]); // não repete a linha reservada
+
+    const envios: { title: string; body: string; url?: string }[] = [];
+    const enviar: NonNullable<Parameters<typeof entregarAvisos>[2]> = async (_subs, aviso) => {
+      envios.push(aviso);
+      return { deadEndpoints: [] };
+    };
+    const assinatura = { id: "local-jp", person_id: "jp", endpoint: "https://push.invalid/local", p256dh: "local", auth_key: "local" };
+    const n = banco();
+    n.tabelas.push_subscriptions.push(assinatura);
+    await entregarAvisos(n.db, { organizationId: "org", peopleIds: ["br", "jp", "off", "estranho"], categoria: "mural", title: "Celebração da Família", body: "fallback", bodyTemplate: "mural-lembrete" }, enviar);
+    assert.equal(n.tabelas.push_queue.length, 2);
+    assert.equal(n.tabelas.push_queue.find((r) => r.person_id === "jp")?.body, "You have not seen this church board post yet.");
+    assert.equal(n.tabelas.push_queue.find((r) => r.person_id === "br")?.body, "Você ainda não viu esta publicação do Mural.");
+    assert.equal(envios.length, 0);
+    // A preferência muda durante a espera: a entrega usa o novo idioma.
+    n.idiomas.jp = "es-ES";
+    n.tabelas.push_queue.forEach((r) => { r.send_after = "2026-10-20T00:00:00Z"; });
+    assert.equal(await esvaziarFila(n.db, "org", enviar), 1);
+    assert.equal(envios[0].title, "Celebração da Família");
+    assert.equal(envios[0].body, "Aún no has visto esta publicación del tablón de la iglesia.");
+    assert.equal(n.tabelas.push_queue.find((r) => r.person_id === "br")?.sent_at, undefined);
+
+    const resumo = banco();
+    resumo.tabelas.push_subscriptions.push(assinatura);
+    const titulos = ["Retiro Português", "Culto da Manhã", "Encontro de Jovens", "Quarta Família"];
+    resumo.tabelas.push_queue.push(...titulos.map((title, i) => ({ id: `resumo-${i}`, organization_id: "org", person_id: "jp", categoria: "mural", title, body: "Conteúdo da igreja", send_after: "2026-10-20T00:00:00Z", sent_at: null })));
+    envios.length = 0;
+    assert.equal(await esvaziarFila(resumo.db, "org", enviar), 1);
+    assert.equal(envios[0].body, "4 new posts: Retiro Português, Culto da Manhã, Encontro de Jovens and others.");
+    assert.equal(await esvaziarFila(resumo.db, "org", enviar), 0);
+    assert.equal(envios.length, 1);
+
+    const livre = banco();
+    livre.idiomas.jp = "es-ES";
+    livre.tabelas.push_subscriptions.push(assinatura);
+    envios.length = 0;
+    await entregarAvisos(livre.db, { organizationId: "org", peopleIds: ["jp"], categoria: "mensagens", title: "Título da igreja", body: "Nova publicação no Mural." }, enviar);
+    assert.equal(envios[0].body, "Nova publicação no Mural."); // conteúdo idêntico ao texto padrão não vira template
+    assert.equal(envios[0].title, "Título da igreja");
+    const falhaIdioma = banco();
+    falhaIdioma.tabelas.push_queue.push({ id: "aguardando", organization_id: "org", person_id: "jp", categoria: "mural", title: "Teste", body: "Teste", body_template: "mural-novo", send_after: "2026-10-20T00:00:00Z", sent_at: null });
+    falhaIdioma.falharIdioma();
+    await assert.rejects(esvaziarFila(falhaIdioma.db, "org", enviar), /idioma indisponível/);
+    assert.equal(falhaIdioma.tabelas.push_queue[0].sent_at, null);
+    assert.deepEqual(falhaIdioma.consultasPush, []);
     console.log("Avisos: fuso por destinatário, categorias desligadas, isolamento de organização, falha da fila e reserva sem duplicação.");
+    console.log("Idioma dos avisos: preferência atual na entrega, silêncio preservado, resumo único e conteúdo da igreja intocado. Envio simulado sem rede.");
   } finally { globalThis.Date = RealDate; }
 }
 main().catch((e) => { console.error(e); process.exitCode = 1; });

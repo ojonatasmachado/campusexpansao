@@ -1,8 +1,8 @@
-import type { DbChurchClock } from "../../../lib/types";
+import type { DbChurchClock, DbServiceCurrency, DbServiceOrganizationPreferences } from "../../../lib/types";
 import type { RequirementRow } from "../requirements";
 import type { MissingRequirement, ServeRequest } from "../../MobileApp";
 
-export type ChurchRow = DbChurchClock & {
+export type ChurchRow = DbChurchClock & Partial<Pick<DbServiceOrganizationPreferences, "currency_code" | "currency_locked">> & {
   id: string;
   organization_id: string;
   name: string;
@@ -30,6 +30,8 @@ export type ChurchRow = DbChurchClock & {
 
 export type ChurchView = {
   timeZone?: string | null;
+  currencyCode?: DbServiceCurrency;
+  currencyLocked?: boolean;
   id: string;
   organizationId: string;
   nome: string;

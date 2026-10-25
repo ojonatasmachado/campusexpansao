@@ -3,6 +3,8 @@
 import { useState } from "react";
 
 import { Acao } from "./ui/Acao";
+import { useTexto } from "./lib/internacional/contexto";
+
 /* Campo de senha com "Mostrar": quem é leigo erra menos quando consegue
    conferir o que digitou (principalmente no celular). Visual de .login-input
    (service-v5.css: .login-pass, .login-pass-tog). */
@@ -17,6 +19,8 @@ export default function PasswordInput({
   autoComplete: "current-password" | "new-password";
   placeholder?: string;
 }) {
+  const traduzirUi = useTexto();
+
   const [show, setShow] = useState(false);
   return (
     <div className="login-pass">
@@ -32,7 +36,7 @@ export default function PasswordInput({
         placeholder={placeholder}
       />
       <Acao className="login-pass-tog" onClick={() => setShow((s) => !s)} aria-pressed={show}>
-        {show ? "Ocultar" : "Mostrar"}
+        {show ? traduzirUi("Ocultar") : traduzirUi("Mostrar")}
       </Acao>
     </div>
   );
