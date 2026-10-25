@@ -5,12 +5,12 @@ import { bindVocabulary, createText, sourceText, type Messages, type Text } from
 import { DEFAULT_LOCALE, type Locale } from "./contrato";
 import { useVocabularioDaIgreja } from "../vocabulario-context";
 
-type InternationalContext = { locale: Locale; text: Text };
+type InternationalContext = { locale: Locale; text: Text; enabled: boolean };
 const Context = createContext<InternationalContext | null>(null);
 
 /** Provider de dados/idioma, sem nova superfície ou controles de interface. */
-export function ServiceLocaleProvider({ locale, messages, children }: { locale: Locale; messages: Messages; children: React.ReactNode }) {
-  const value = useMemo(() => ({ locale, text: createText(locale, messages) }), [locale, messages]);
+export function ServiceLocaleProvider({ locale, messages, enabled = false, children }: { locale: Locale; messages: Messages; enabled?: boolean; children: React.ReactNode }) {
+  const value = useMemo(() => ({ locale, text: createText(locale, messages), enabled }), [locale, messages, enabled]);
   useLayoutEffect(() => {
     const previous = document.documentElement.lang;
     document.documentElement.lang = locale;
@@ -35,4 +35,8 @@ export function useTexto(): Text {
 
 export function useServiceLocale(): Locale {
   return useContext(Context)?.locale ?? DEFAULT_LOCALE;
+}
+
+export function useInternationalEnabled(): boolean {
+  return useContext(Context)?.enabled ?? false;
 }

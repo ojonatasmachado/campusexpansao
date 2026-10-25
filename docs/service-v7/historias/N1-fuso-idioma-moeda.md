@@ -1,8 +1,8 @@
 ---
 id: N1
-titulo: Tornar fuso, idioma e moeda explícitos
+titulo: Base de fuso, idioma e moeda com ativação protegida
 tipo: codigo
-status: reservada
+status: feita
 quem: codex
 desde: 2026-10-24
 branch: historia/N1-locale-moeda
@@ -74,10 +74,10 @@ Fonte: HANDOFF item 6; STATUS F14; VALIDACAO.md :83; QUALIDADE-E-INTERNACIONAL.m
 - `app/service/lib/importar-membros.ts`
 
 ## Pronto quando
-- Locale da pessoa e moeda da igreja explícitos.
-- Textos longos e pseudolocalização testados.
-- Servidor valida o mesmo contrato do cliente.
-- Telefone, endereço exterior e CNPJ alfanumérico continuam tratados.
+- Base de locale pessoal, moeda única e validação do servidor implementadas e testadas.
+- Contratos ICU/rich, pseudo e adaptadores compatíveis com pt-BR disponíveis para integração.
+- Publicação parcial não permite escolher idioma nem alterar BRL: ativação protegida no banco e na interface.
+- Restante dos critérios originais transferido explicitamente à N2, sem afirmar interface inteira traduzida.
 
 ## Notas
 ABERTO. Tipo original: codigo + decisao-do-usuario. Parte do item (idioma e moeda) depende de escolha sua: antes de codar, o agente prepara as opções e registra a resposta.
@@ -138,3 +138,8 @@ Reservas novamente conferidas. Ampliação de bastidor para localizar mensagens 
 25/10: concluído novo lote de bastidor N1 com 492 mensagens/474 referências, erros de APIs e adaptadores de leitura/gravação localizados, avisos do Mural pelo idioma atual do destinatário e metadado explícito na fila. Banco descartável: 42 casos passaram; Chromium: 13 grupos completos passaram, sem clique forçado, após aguardar animação real. Envio de avisos simulado preservou silêncio/conteúdo e provou que falha de idioma não consome fila. Typecheck, lint, leis 12/17, contratos, pacote SQL e build passaram. Evidência e limites atualizados em INTERNACIONALIZACAO.md. Sem assumir E/I/M/G, sem concluir N1 nem publicar entrega parcial.
 
 25/10, adaptadores: 518 mensagens por idioma/500 referências. Arquivo, CSV/importação e calendário recebem Text explícito, com pt-BR compatível quando omitido. Testes nos três idiomas preservaram dados, status, instantes e caminhos; dez grupos de planilha, fuso, tipos, lint, leis e build passaram. Consumidores de tela ainda devem conectar o tradutor; não foram assumidas histórias de tela. I10 segue reservada na consulta remota mais recente; origin/main 02bbd31, já publicado, foi incorporado pelo merge 6248a21, sem transferir a reserva do Claude. Os oito cenários de PWA e o typecheck passaram após a integração.
+
+
+25/10, entrega parcial solicitada pelo usuário: “coloque em produção o que é possível”. Escopo dividido explicitamente; N1 entrega a base protegida, N2 conserva integração integral, moeda nas telas e capturas/pseudo. O estado feita se refere à base, não à conclusão dos requisitos originais. Rollout de locale/currency inicia false no banco, sem permissão de alteração para contas comuns. Perfil esconde seletor, servidor ignora locale externo e avisos usam pt-BR. O Financeiro existente mantém BRL.
+
+Verificação da configuração publicada: 45 casos de banco passaram em cex-rls-9d6f173d9f6f, descartado, incluindo três provas novas do bloqueio de ativação. Chromium passou em 390px e 1366px com cookie espanhol, pt-BR preservado, seletor ausente, navegação intacta, sem rolagem lateral ou pageerror (cex-rls-0aae09cfcf20, descartado). Tipos, lint, leis 12/17, contraste, internacionalização e os 13 contratos passaram. Logs /tmp/cex-N1-release-db.log e /tmp/cex-N1-release-ui.log. Não é prova da tradução integral nem de aparelho real. CI/build e deploy serão acompanhados no PR antes de declarar publicação concluída.

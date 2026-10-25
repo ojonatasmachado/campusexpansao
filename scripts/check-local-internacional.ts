@@ -26,6 +26,12 @@ withDisposableSupabase(async (db) => {
   for (const [name, client] of [["master", master], ["membro", member]] as const) {
     ok((await client.schema("service").rpc("my_locale")).data === "pt-BR", `locale inicial da conta ${name}`);
   }
+  ok((await master.schema("service").rpc("set_my_locale", { p_locale: "en-US" })).error?.code === "42501", "publicação parcial bloqueia troca de idioma no banco");
+  ok((await master.schema("service").rpc("set_organization_currency", { p_org: org, p_currency: "EUR" })).error?.code === "42501", "publicação parcial bloqueia moeda estrangeira no banco");
+  ok(!!(await master.schema("service").from("international_rollout").update({ enabled: true }).eq("feature", "locale")).error, "conta não libera rollout");
+  const enabled = await admin.schema("service").from("international_rollout").update({ enabled: true }).in("feature", ["locale", "currency"]).select();
+  assert.equal(enabled.error, null);
+  assert.equal(enabled.data?.length, 2);
   ok(!(await master.schema("service").rpc("set_my_locale", { p_locale: "en-US" })).error, "master escolhe en-US");
   ok(!(await member.schema("service").rpc("set_my_locale", { p_locale: "es-ES" })).error, "membro escolhe es-ES");
   ok((await master.schema("service").rpc("my_locale")).data === "en-US", "locale do master preservado");

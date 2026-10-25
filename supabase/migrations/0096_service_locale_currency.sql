@@ -1,6 +1,23 @@
 -- N1: locale da conta e moeda única da rede. Valores legados permanecem BRL.
 -- Sem câmbio: a moeda não muda depois do primeiro valor financeiro.
 
+-- A base pode ser publicada antes das telas. Somente uma migração futura,
+-- com a integração completa verificada, deve liberar cada recurso.
+create table if not exists service.international_rollout (
+  feature text primary key check (feature in ('locale', 'currency')),
+  enabled boolean not null default false
+);
+insert into service.international_rollout(feature) values ('locale'), ('currency') on conflict do nothing;
+alter table service.international_rollout enable row level security;
+revoke all on service.international_rollout from public, anon, authenticated;
+grant all on service.international_rollout to service_role;
+create or replace function service.international_enabled(p_feature text)
+returns boolean language sql stable security definer set search_path = service, public as $$
+  select coalesce((select enabled from service.international_rollout where feature = p_feature), false);
+$$;
+revoke all on function service.international_enabled(text) from public;
+grant execute on function service.international_enabled(text) to anon, authenticated, service_role;
+
 alter table core.users add column if not exists locale_code text not null default 'pt-BR';
 do $$ begin
   if not exists (select 1 from pg_constraint where conrelid = 'core.users'::regclass and conname = 'users_locale_code_check') then
@@ -10,7 +27,7 @@ end $$;
 
 create or replace function service.my_locale()
 returns text language sql stable security definer set search_path = core, public as $$
-  select coalesce((select locale_code from core.users where id = auth.uid()), 'pt-BR');
+  select case when service.international_enabled('locale') then coalesce((select locale_code from core.users where id = auth.uid()), 'pt-BR') else 'pt-BR' end;
 $$;
 create or replace function service.set_my_locale(p_locale text)
 returns text language plpgsql security definer set search_path = core, public as $$
@@ -19,6 +36,7 @@ begin
   if p_locale is null or p_locale not in ('pt-BR', 'en-US', 'es-ES') then
     raise exception 'invalid_locale' using errcode = '22023';
   end if;
+  if not service.international_enabled('locale') then raise exception 'locale_not_available' using errcode = '42501'; end if;
   update core.users set locale_code = p_locale where id = auth.uid();
   if not found then raise exception 'user_not_found' using errcode = '42501'; end if;
   return p_locale;
@@ -73,6 +91,7 @@ begin
   -- O primeiro valor financeiro trava a mesma linha, serializando as duas operações.
   select * into strict pref from service.organization_preferences where organization_id = p_org for update;
   if pref.currency_code = p_currency then return p_currency; end if;
+  if not service.international_enabled('currency') then raise exception 'currency_not_available' using errcode = '42501'; end if;
   if pref.currency_locked then raise exception 'currency_locked' using errcode = '23514'; end if;
   update service.organization_preferences set currency_code = p_currency where organization_id = p_org;
   return p_currency;
@@ -138,7 +157,7 @@ end $$;
 create or replace function service.notification_locales(p_org uuid, p_people uuid[])
 returns table(person_id uuid, locale_code text)
 language sql stable security definer set search_path = core, service, public as $$
-  select p.id, coalesce(u.locale_code, 'pt-BR')
+  select p.id, case when service.international_enabled('locale') then coalesce(u.locale_code, 'pt-BR') else 'pt-BR' end
   from service.people p left join core.users u on u.id = p.user_id
   where p.organization_id = p_org and p.id = any(p_people);
 $$;

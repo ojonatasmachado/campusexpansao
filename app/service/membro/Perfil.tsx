@@ -25,7 +25,7 @@ import { Cartao } from "../ui/Cartao";
 import { Linha, Lista } from "../ui/Linha";
 import { Campo, Entrada } from "../ui/Campo";
 import { SeletorData } from "../ui/Data";
-import { useTexto, useServiceLocale } from "../lib/internacional/contexto";
+import { useTexto, useServiceLocale, useInternationalEnabled } from "../lib/internacional/contexto";
 import { LOCALES, LOCALE_COOKIE, NATIVE_LOCALE_NAMES, isLocale } from "../lib/internacional/contrato";
 import { Selecao } from "../ui/Selecao";
 import { useRouter } from "next/navigation";
@@ -131,12 +131,13 @@ export function TabPerfil({
 }) {
   const traduzirUi = useTexto();
   const locale = useServiceLocale();
+  const internationalEnabled = useInternationalEnabled();
   const router = useRouter();
   const [idiomaGravando, setIdiomaGravando] = useState(false);
   const [idiomaAtualizando, atualizarIdioma] = useTransition();
   const [idiomaErro, setIdiomaErro] = useState("");
   const mudarIdioma = async (value: string) => {
-    if (!isLocale(value) || value === locale || idiomaGravando || idiomaAtualizando) return;
+    if (!internationalEnabled || !isLocale(value) || value === locale || idiomaGravando || idiomaAtualizando) return;
     setIdiomaGravando(true);
     setIdiomaErro("");
     try {
@@ -343,13 +344,13 @@ export function TabPerfil({
         <Lista>
           <M6Row ic="documento" t={traduzirUi("Tamanho do texto")} s={nomesPosicao(traduzirUi)[textPos]} onClick={ui.tamanhoTexto} />
         </Lista>
-        <Cartao estilo="app" className="m6-mt">
+        {internationalEnabled && <Cartao estilo="app" className="m6-mt">
           <Campo rotulo={traduzirUi("Idioma")} erro={idiomaErro}
             ajuda={idiomaGravando || idiomaAtualizando ? traduzirUi("Salvando idioma…") : traduzirUi("Só muda a sua interface. O conteúdo escrito pela igreja continua como foi publicado.")}>
             <Selecao valor={locale} aoMudar={mudarIdioma} desativado={idiomaGravando || idiomaAtualizando}
               opcoes={LOCALES.map((v) => ({ v, l: NATIVE_LOCALE_NAMES[v] }))} />
           </Campo>
-        </Cartao>
+        </Cartao>}
         {theme && setTheme && (
           <Cartao estilo="app" className="m6-mt">
             <div className="m6-rt">{traduzirUi("Tema")}</div>

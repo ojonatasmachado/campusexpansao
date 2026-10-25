@@ -30,6 +30,11 @@ withDisposableSupabase(async (db) => {
   // de membro com cadastro concluído e recusa do mapa já registrada no banco
   // descartável, sem depender dos fluxos de primeiro acesso e consentimento.
   const admin = createClient(db.url, db.serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  const releaseMode = process.argv.includes("--producao-parcial");
+  if (!releaseMode) {
+    const rollout = await admin.schema("service").from("international_rollout").update({ enabled: true }).in("feature", ["locale", "currency"]);
+    assert.equal(rollout.error, null);
+  }
   const fixture = await admin.schema("service").from("members").update({ phone: "(11) 90000-0002", map_consent_declined_at: new Date().toISOString(), map_consent_terms: TERMO_MAPA_VERSAO }).eq("email", "membro@teste.local").select("id,church_id,organization_id");
   assert.equal(fixture.error, null);
   assert.equal(fixture.data?.length, 1);
@@ -69,6 +74,31 @@ withDisposableSupabase(async (db) => {
     context.setDefaultTimeout(60_000);
     context.setDefaultNavigationTimeout(120_000);
     const errors: string[] = [];
+    if (releaseMode) {
+      await context.addCookies([{ name: "cex_service_locale", value: "es-ES", url: base }]);
+      await login(context, "membro");
+      const page = await context.newPage();
+      page.on("pageerror", (error: Error) => errors.push(error.message));
+      for (const width of [390, 1366]) {
+        await page.setViewportSize({ width, height: 844 });
+        await page.goto(base + "/service?maba=perfil", { waitUntil: "domcontentloaded" });
+        await page.locator(".m-h1").waitFor();
+        assert.equal(await page.locator("html").getAttribute("lang"), "pt-BR");
+        assert.equal(await page.locator(".sel-trigger").filter({ hasText: /Português \(Brasil\)|English \(United States\)|Español \(España\)/ }).count(), 0);
+        assert.deepEqual(await page.locator(".m-tab-l").allTextContents(), ["Início", "Agenda", "Mensagens", "Caminhada"]);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+        await page.screenshot({ path: join(output, `producao-parcial-${width}.png`), fullPage: true });
+        passed(`produção parcial ${width}px: pt-BR preservado e seletor indisponível mesmo com cookie espanhol`);
+      }
+      const response = await context.request.post(base + "/api/service/cnpj-lookup", { headers: { "x-service-locale": "en-US" }, data: { cnpj: "123" } });
+      assert.equal(response.status(), 200);
+      assert.equal((await response.json()).error, "Esse CNPJ não é válido. Confira os números.");
+      passed("produção parcial: cabeçalho inglês não ativa tradução incompleta na API");
+      assert.equal(errors.length, 0, errors.join("\n"));
+      writeFileSync(join(output, "producao-parcial.json"), JSON.stringify({ executedAt: new Date().toISOString(), scope: "producao-parcial", checks, success: true }, null, 2) + "\n");
+      await context.close();
+      return;
+    }
     if (!process.argv.includes("--so-entrada")) {
       await login(context, "membro");
       const page = await context.newPage();
