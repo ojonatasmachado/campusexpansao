@@ -142,7 +142,8 @@ export function TabPerfil({
     try {
       const { data, error } = await createServiceBrowserClient().schema("service").rpc("set_my_locale", { p_locale: value });
       if (error || data !== value) throw new Error("locale_not_saved");
-      document.cookie = `${LOCALE_COOKIE}=${value}; Path=/service; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+      document.cookie = `${LOCALE_COOKIE}=; Path=/service; Max-Age=0; SameSite=Lax`;
+      document.cookie = `${LOCALE_COOKIE}=${value}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
       atualizarIdioma(() => router.refresh());
     } catch {
       setIdiomaErro(traduzirUi("Não foi possível salvar o idioma. Tente novamente."));
@@ -244,7 +245,7 @@ export function TabPerfil({
     if (!member) return;
     const novo = !nomeNoMapa;
     setNomeNoMapa(novo);
-    const erro = await gravarAceiteMapa(member.id, novo, "perfil");
+    const erro = await gravarAceiteMapa(member.id, novo, "perfil", traduzirUi);
     if (erro) { setNomeNoMapa(!novo); ui.toast(erro); }
   };
   /* a foto saiu do primeiro acesso (v7 4.10) e mora em Meus dados */
@@ -472,7 +473,7 @@ export function MemberContactFields({ d, set, erros }: { d: MemberContactInput; 
             if (r.state) set("estado", r.state);
           }}
         />
-        {enderecoNoBrasil(d.country) && <div className="field-hint">{AVISO_CEP}</div>}
+        {enderecoNoBrasil(d.country) && <div className="field-hint">{traduzirUi(AVISO_CEP)}</div>}
         {err("cep")}
       </div>
       {enderecoNoBrasil(d.country) ? <p className="field-hint">{[d.rua, d.bairro, d.cidade, d.estado].filter(Boolean).join(" · ") || traduzirUi("O endereço será preenchido pela consulta do CEP.")}</p> : <>

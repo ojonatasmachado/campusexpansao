@@ -1,3 +1,4 @@
+import { getTexto } from "../../../service/lib/internacional/servidor";
 import { consultarCep } from "../../../service/lib/address-lookup-server";
 import { NextResponse } from "next/server";
 
@@ -28,28 +29,29 @@ function passouDoLimite(ip: string): boolean {
 }
 
 export async function POST(request: Request) {
+  const traduzirUi = await getTexto(request);
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
   if (passouDoLimite(ip)) {
-    return NextResponse.json({ valid: false, error: "Muitas consultas de CEP. Espere um minuto e tente de novo." }, { status: 429 });
+    return NextResponse.json({ valid: false, error: traduzirUi("Muitas consultas de CEP. Espere um minuto e tente de novo.") }, { status: 429 });
   }
 
   let body: { cep?: string };
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Envie dados válidos." }, { status: 400 });
+    return NextResponse.json({ error: traduzirUi("Envie dados válidos.") }, { status: 400 });
   }
 
   const digits = typeof body?.cep === "string" ? body.cep.replace(/\D/g, "") : "";
   if (digits.length !== 8) {
-    return NextResponse.json({ valid: false, error: "CEP precisa ter 8 dígitos." });
+    return NextResponse.json({ valid: false, error: traduzirUi("CEP precisa ter 8 dígitos.") });
   }
 
   try {
     const lookup = await consultarCep(digits);
-    if (!lookup) return NextResponse.json({ valid: false, error: "Não encontramos esse CEP." });
+    if (!lookup) return NextResponse.json({ valid: false, error: traduzirUi("Não encontramos esse CEP.") });
     return NextResponse.json({ valid: true, ...lookup.data, geocoded: lookup.data.latitude !== null });
   } catch {
-    return NextResponse.json({ valid: false, error: "Não conseguimos consultar o CEP agora. Tente de novo em instantes." });
+    return NextResponse.json({ valid: false, error: traduzirUi("Não conseguimos consultar o CEP agora. Tente de novo em instantes.") });
   }
 }
