@@ -38,3 +38,8 @@ A pedido do usuário, fica registrada a parte de tela que Codex não assumiu. A 
 Revisar a densidade e a casca no âmbito desta I3, preservando a pergunta de cada tela. Codex não redesenhou Agenda/Espaços nem assumiu esta história. A O5 corrige apenas a distinção entre capacidade ausente e zero informado, em arquivo fora da reserva I10. A I10 continua reservada por Claude em ui/, painel/comum.tsx, modules/inicio/Saude.tsx, modules/financeiro/ e modules/relatorios/. Esta nota não libera nem altera a reserva.
 
 Atualização O5: com a correção pontual e fixture idêntica, as contagens de Espaços permaneceram exatamente 60/101 (zero salas) e 61/105 (uma sala), sem piora. A correção não resolve nem aprova a densidade preexistente. Resultado final focado em prints/o5-zero-ui/resultado.json.
+
+
+### Mensagem ao Claude: volume financeiro O6, 25/10/2026
+
+A prova de correção de dados passou com 6.018 lançamentos, 5.013 no mês da interface e 573 previstos. O bloco A pagar e a receber lista os previstos antes dos lançamentos e do botão Exportar CSV; com esse volume, o navegador precisou rolar até essa região para exportar. A captura prints/o6-financeiro-volume/volume-1366.png mostra essa posição após rolagem, não a primeira dobra. Avaliar a apresentação da lista no âmbito da I3 e em coordenação com a I10, que reserva Financeiro/componentes. Codex não alterou essa tela nem aprovou densidade/performance de produção. O6 comprova dados, saldos, paginação, CSV e fechamento em banco/navegador descartáveis. Reproduzir com scripts/check-local-financeiro-volume.ts; não usar credenciais de produção.

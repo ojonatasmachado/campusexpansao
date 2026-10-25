@@ -63,7 +63,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **I10** Biblioteca: indicadores e gráficos
 - **I2** Ações do Início que não navegam · **I5** Ajuda com menos repetição
 - **M2** Setas nos botões do membro · **M3** Retorno e recarga · **M5** Foco no Mural · **I7** Quadros no toque
-- **N2** Integração final de idiomas e moeda (base N1 entregue com recursos desativados) · **F1** Financeiro fases 3 e 4 · **F2** Pontos pequenos de jornada · **O1** Culto avulso no estilo do assistente
+- **N2** Integração final de idiomas e moeda (base N1 entregue com recursos desativados) · **F1** Financeiro fases 3 e 4 (aguarda I10; mensagem para Claude na história) · **F2** Pontos pequenos de jornada · **O1** Culto avulso no estilo do assistente
 - **I3** Revisão de UI das telas densas (depois de I9 e D1) · **G3** Cartões do mapa no Início (depois de I1)
 
 ### 5. Verificações em código e banco local
@@ -73,6 +73,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **E6** Escalas em 768px (some com o E1) · **A4** Ponto branco · **Q9** Seletores acessíveis
 
 ### 6. Precisam de aparelho, pessoas ou dados de fora
+- **O7** Kids com famílias reais (continuação externa da O6)
 - **A1** iPhone e PWA · **A2** Cinco membros acima de 60 anos · **A3** Leitor de tela e teclado · **A5** Pessoas representativas
 - **O2** Cinco igrejas no assistente · **G1** IBGE e CNEFE por município · **G2** Mapa ao vivo
 
