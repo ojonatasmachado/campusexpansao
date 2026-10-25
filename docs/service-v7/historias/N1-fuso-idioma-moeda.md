@@ -15,6 +15,8 @@ O fuso da igreja já foi aplicado (2dec69c). Idioma da pessoa e moeda da igreja 
 Fonte: HANDOFF item 6; STATUS F14; VALIDACAO.md :83; QUALIDADE-E-INTERNACIONAL.md.
 
 ## Arquivos (trilho)
+- `docs/service-v7/PENDENTES.md`
+- `docs/service-v7/historias/N2-integracao-internacional.md`
 - `docs/service-v7/historias/N1-fuso-idioma-moeda.md`
 - `app/lib/types.ts`
 - `app/service/lib/internacional/`
