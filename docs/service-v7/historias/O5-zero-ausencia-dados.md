@@ -24,6 +24,8 @@ Fonte: STATUS F23 ("outras áreas exigem revisão contínua").
 
 - `app/service/painel/telas/Agenda.tsx`
 
+- `docs/service-v7/historias/I3-revisao-ui-telas-parciais.md`
+
 ## Pronto quando
 - Áreas fora das já revisadas testadas com zero e com dados ausentes.
 - Problemas encontrados corrigidos.
@@ -36,3 +38,5 @@ ABERTO. Trilho a definir na reserva.
 Retomada após interrupção: a prova não chegou aos casos. O Next/Webpack inferiu a raiz do checkout principal e o watcher alcançou um volume OrbStack fora do projeto. Reservado next.config.ts para fixar a raiz ao worktree/projeto, sem editar telas. Banco descartável e servidor órfão são removidos antes da repetição.
 
 Reservas conferidas antes de ampliar: Agenda.tsx do painel não está na I10. Correção pontual de O5 a verificar: capacity NULL não deve ser apresentado como zero lugares; zero explícito continua zero. Sem redesenhar tela nem assumir I3. Caso a correção não seja autorizada na revisão, registrar o achado e a evidência para Claude conforme pedido do usuário.
+
+Reservado somente o registro de evidência na história I3, sem mudar sua atribuição, estado ou implementar a revisão de tela. A primeira captura O5 em Espaços já mede 60 ações/101 palavras com zero salas e 61/105 com uma sala sem capacidade, antes da correção. Limites não aprovados; passagem ao Claude solicitada pelo usuário.
