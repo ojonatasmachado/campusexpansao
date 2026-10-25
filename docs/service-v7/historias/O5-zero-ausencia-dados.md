@@ -22,6 +22,8 @@ Fonte: STATUS F23 ("outras áreas exigem revisão contínua").
 
 - `next.config.ts`
 
+- `app/service/painel/telas/Agenda.tsx`
+
 ## Pronto quando
 - Áreas fora das já revisadas testadas com zero e com dados ausentes.
 - Problemas encontrados corrigidos.
@@ -32,3 +34,5 @@ ABERTO. Trilho a definir na reserva.
 25/10: O4 publicada pelo PR25 (593d33e), banco e Vercel concluídos. Próxima da fila livre: O5. Prova Chromium autenticada em banco descartável: estados vazios e registros com campos opcionais ausentes em áreas operacionais do painel. Somente script/evidências nesta reserva inicial; telas E/I/M/G e caminhos da I10 continuam com Claude.
 
 Retomada após interrupção: a prova não chegou aos casos. O Next/Webpack inferiu a raiz do checkout principal e o watcher alcançou um volume OrbStack fora do projeto. Reservado next.config.ts para fixar a raiz ao worktree/projeto, sem editar telas. Banco descartável e servidor órfão são removidos antes da repetição.
+
+Reservas conferidas antes de ampliar: Agenda.tsx do painel não está na I10. Correção pontual de O5 a verificar: capacity NULL não deve ser apresentado como zero lugares; zero explícito continua zero. Sem redesenhar tela nem assumir I3. Caso a correção não seja autorizada na revisão, registrar o achado e a evidência para Claude conforme pedido do usuário.
