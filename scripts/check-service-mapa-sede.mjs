@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import { sedeComPonto, temPonto } from '../app/service/modules/mapa/geo.ts';
+const sede={tipo:'sede',latitude:-29.926749,longitude:-51.06355};
+const outro={tipo:'grupo',latitude:-29.905283,longitude:-51.082581};
+assert.equal(sedeComPonto([outro,sede]),sede);
+assert.equal(sedeComPonto([sede,outro]),sede);
+assert.equal(sedeComPonto([{...sede,latitude:null},outro]),undefined);
+assert.equal(sedeComPonto([{...sede,latitude:NaN},sede]),sede);
+assert.equal(sedeComPonto([]),undefined);
+for(const p of [{latitude:NaN,longitude:0},{latitude:0,longitude:Infinity},{latitude:91,longitude:0},{latitude:0,longitude:-181},{latitude:null,longitude:0}])assert.equal(temPonto(p),false);
+assert.equal(temPonto({latitude:0,longitude:0}),true);
+assert.equal(temPonto(sede),true);
+console.log('Sede: prioridade sobre grupos, ausência de coordenadas, valores inválidos e coordenada zero verificados.');

@@ -3,7 +3,14 @@
 export type Ponto = { latitude: number; longitude: number };
 
 export function temPonto<T extends { latitude?: number | null; longitude?: number | null }>(x: T): x is T & Ponto {
-  return typeof x.latitude === "number" && typeof x.longitude === "number";
+  return typeof x.latitude === "number" && typeof x.longitude === "number"
+    && Number.isFinite(x.latitude) && Number.isFinite(x.longitude)
+    && Math.abs(x.latitude) <= 90 && Math.abs(x.longitude) <= 180;
+}
+
+/* A sede é a referência inicial dos mapas, independentemente dos filtros. */
+export function sedeComPonto<T extends { tipo: string; latitude?: number | null; longitude?: number | null }>(locais: T[]): (T & Ponto) | undefined {
+  return locais.find((l): l is T & Ponto => l.tipo === "sede" && temPonto(l));
 }
 
 /* distância em km entre dois pontos (haversine) */
