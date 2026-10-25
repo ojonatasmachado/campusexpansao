@@ -57,8 +57,9 @@ Fonte: HANDOFF item 6; STATUS F14; VALIDACAO.md :83; QUALIDADE-E-INTERNACIONAL.m
 - `app/api/service/cep-lookup/route.ts`
 - `app/api/service/members/accept-invite/route.ts`
 
-- `app/service/membro/`
-- `app/service/lib/requirements.ts`
+
+- `app/api/service/`
+- `app/service/painel/erros.ts`
 
 ## Pronto quando
 - Locale da pessoa e moeda da igreja explícitos.
@@ -115,3 +116,5 @@ Reservas reconferidas: ampliação para mensagens e datas dos componentes do mem
 Lote convite/endereço: 433 mensagens completas por idioma, 415 fontes usadas. Cliente e servidor localizam validações de CEP/convite; consentimento usa tradutor explícito com nomes preservados. Cookie de idioma passa a / para alcançar a entrada temática, removendo o caminho antigo. Prova isolada --so-entrada passou nos três idiomas em cex-rls-abc2e9008281 (descartado), incluindo respostas reais das APIs sem aceitar convite nem enviar e-mails. Typecheck/lint, contratos de internacionalização, leis 12/17, contraste e 13 regressões passaram. A prova completa do Perfil NÃO passou na repetição: botão Listo encontrado, mas sem estabilidade para clique; não houve pageerror. Build final e typecheck final passaram com configuração fictícia em loopback 59999, sem credenciais de produção.
 
 A pedido explícito do usuário, foi deixada a mensagem “Mensagem para o Claude, solicitada pelo usuário em 24/10/2026” em docs/service-v7/INTERNACIONALIZACAO.md. Contém o restante das telas, arquivos da I10, integração financeira, falha de estabilidade e verificações faltantes. A revisão automática rejeitou o comando novo em Agenda/Onboarding/comum por sobreposição com histórias M; o comando não executou. O usuário reafirmou a divisão original e pediu deixar a parte não concluída ao Claude. N1 continua reservada e incompleta; F1/O4/O5/O6 não iniciadas, sem PR/merge/deploy desta história.
+
+Retomada a pedido do usuário: há trabalho livre na própria N1. Retiradas do trilho as reservas amplas membro/ e requirements.ts, que não chegaram a ser editadas, para não bloquear as histórias M do Claude. Permanecem somente Perfil/AceiteMapa já localizados. Reservas remotas conferidas (I10/Claude, N1/Codex); ampliado o trilho para mensagens de erro das APIs e o adaptador técnico painel/erros.ts, sem layout ou comportamento das histórias de tela.
