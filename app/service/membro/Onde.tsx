@@ -8,7 +8,7 @@ import { joinDot } from "../lib/date";
 import { plural } from "../lib/plural";
 import { useTermos } from "../lib/vocabulario-context";
 import MapaBase from "../modules/mapa/MapaBase";
-import { caixaDosPontos, distanciaKm, formatarDistancia, linkComoChegar, temPonto } from "../modules/mapa/geo";
+import { caixaDosPontos, distanciaKm, formatarDistancia, linkComoChegar, sedeComPonto, temPonto } from "../modules/mapa/geo";
 import { MemberUiContext } from "./comum";
 import type { M } from "./tipos";
 
@@ -43,6 +43,7 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
   const [erro, setErro] = useState(false);
   const [filtro, setFiltro] = useState<Filtro>("tudo");
   const mapa = useRef<MlMap | null>(null);
+  const enquadrou = useRef(false);
   const [mapaPronto, setMapaPronto] = useState(false);
   const locaisRef = useRef<Local[]>([]);
   useEffect(() => { locaisRef.current = locais ?? []; }, [locais]);
@@ -61,6 +62,7 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
   const euLat = member?.latitude ?? null;
   const euLng = member?.longitude ?? null;
   const eu = useMemo(() => (typeof euLat === "number" && typeof euLng === "number" ? { latitude: euLat, longitude: euLng } : null), [euLat, euLng]);
+  const sede = useMemo(() => sedeComPonto(locais ?? []), [locais]);
   const visiveis = useMemo(() => (locais ?? []).filter((l) => filtro === "tudo" || (filtro === "igrejas") === ehIgreja(l)), [locais, filtro]);
   const ordenados = useMemo(() => {
     const comDist = visiveis.map((l) => ({ l, km: eu && temPonto(l) ? distanciaKm(eu, l) : null }));
@@ -80,9 +82,16 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
       type: "FeatureCollection",
       features: visiveis.filter(temPonto).map((l) => ({ type: "Feature", properties: { id: l.id, igreja: ehIgreja(l) }, geometry: { type: "Point", coordinates: [l.longitude, l.latitude] } })),
     });
-    const caixa = caixaDosPontos([...visiveis.filter(temPonto), ...(eu ? [eu] : [])]);
-    if (caixa) map.fitBounds(caixa, { padding: 48, maxZoom: 15, duration: 0 });
-  }, [visiveis, eu, mapaPronto]);
+    if (!enquadrou.current && locais !== null) {
+      if (sede) {
+        map.jumpTo({ center: [sede.longitude, sede.latitude], zoom: 14 });
+        enquadrou.current = true;
+      } else {
+        const caixa = caixaDosPontos([...visiveis.filter(temPonto), ...(eu ? [eu] : [])]);
+        if (caixa) { map.fitBounds(caixa, { padding: 48, maxZoom: 15, duration: 0 }); enquadrou.current = true; }
+      }
+    }
+  }, [visiveis, eu, mapaPronto, sede, locais]);
 
   const semPonto = (locais ?? []).filter((l) => !temPonto(l)).length;
 
@@ -96,8 +105,8 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
       <MapaBase
         className="onde-mapa"
         rotulo={ct("Mapa com a sede, as congregações e os {grupos}")}
-        centro={eu ? [eu.longitude, eu.latitude] : undefined}
-        zoom={eu ? 13 : 11}
+        centro={sede ? [sede.longitude, sede.latitude] : undefined}
+        zoom={14}
         onPronto={({ map, cores }) => {
           mapa.current = map;
           map.addSource("onde-locais", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
@@ -120,7 +129,7 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
           }
           /* dados chegaram antes do mapa: desenha agora */
           setMapaPronto(true);
-          return () => { mapa.current = null; setMapaPronto(false); };
+          return () => { mapa.current = null; enquadrou.current = false; setMapaPronto(false); };
         }}
       />
 
