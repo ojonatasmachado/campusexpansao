@@ -1,4 +1,5 @@
 import type { createServiceBrowserClient } from "./supabase-browser";
+import { sourceText, type Text } from "./internacional/mensagens";
 
 const BUCKET = "service-media";
 const MAX_INPUT_BYTES = 15 * 1024 * 1024;
@@ -37,12 +38,13 @@ export async function uploadServiceImage(
   supabase: ReturnType<typeof createServiceBrowserClient>,
   file: File,
   path: string,
+  t: Text = sourceText,
 ): Promise<string> {
   if (!file.type.startsWith("image/")) {
-    throw new Error("Envie um arquivo de imagem (PNG, JPG, WebP...).");
+    throw new Error(t("Envie um arquivo de imagem (PNG, JPG, WebP...)."));
   }
   if (file.size > MAX_INPUT_BYTES) {
-    throw new Error("A imagem precisa ter até 15MB.");
+    throw new Error(t("A imagem precisa ter até 15MB."));
   }
 
   const compressed = await compressImage(file);
@@ -51,7 +53,10 @@ export async function uploadServiceImage(
     upsert: true,
     contentType: compressed.type,
   });
-  if (error) throw error;
+  if (error) {
+    console.error("[service] upload:", error);
+    throw new Error(t("Não foi possível enviar o arquivo. Tente novamente."));
+  }
 
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
   return data.publicUrl;
@@ -71,12 +76,16 @@ export async function uploadServicePrivateFile(
   bucket: string,
   file: File,
   path: string,
+  t: Text = sourceText,
 ): Promise<string> {
   const ok = file.type.startsWith("image/") || file.type === "application/pdf";
-  if (!ok) throw new Error("Envie uma foto ou um PDF.");
-  if (file.size > MAX_INPUT_BYTES) throw new Error("O arquivo precisa ter até 15MB.");
+  if (!ok) throw new Error(t("Envie uma foto ou um PDF."));
+  if (file.size > MAX_INPUT_BYTES) throw new Error(t("O arquivo precisa ter até 15MB."));
   const final = await compressImage(file);
   const { error } = await supabase.storage.from(bucket).upload(path, final, { upsert: true, contentType: final.type });
-  if (error) throw error;
+  if (error) {
+    console.error("[service] upload privado:", error);
+    throw new Error(t("Não foi possível enviar o arquivo. Tente novamente."));
+  }
   return path;
 }

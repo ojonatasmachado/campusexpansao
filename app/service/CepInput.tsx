@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { useTexto, useServiceLocale } from "./lib/internacional/contexto";
 import { Botao } from "./ui/Botao";
 export function formatCep(value: string) {
   /* limpa não-dígitos antes de formatar : o valor pode já vir com traço do
@@ -21,6 +22,8 @@ export type CepResult = { street?: string | null; neighborhood?: string | null; 
    formulário da igreja (Configurações → Igreja) e pelo app do membro
    (primeiro acesso e perfil). */
 export default function CepInput({ value, onChange, onResult, placeholder, id, international = false, brazilLookup = true, onBusyChange }: { onBusyChange?: (busy: boolean) => void; brazilLookup?: boolean; international?: boolean; id?: string; value: string; onChange: (v: string) => void; onResult: (data: CepResult | null, error?: string) => void; placeholder?: string }) {
+  const traduzirUi = useTexto();
+  const locale = useServiceLocale();
   const requestId = useRef(0);
   useEffect(() => () => { ++requestId.current; }, []);
   const [checking, setChecking] = useState(false);
@@ -34,7 +37,7 @@ export default function CepInput({ value, onChange, onResult, placeholder, id, i
     try {
       const res = await fetch("/api/service/cep-lookup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-service-locale": locale },
         body: JSON.stringify({ cep: digits }),
       });
       const data = (await res.json()) as { valid: boolean; error?: string } & CepResult;
@@ -42,13 +45,13 @@ export default function CepInput({ value, onChange, onResult, placeholder, id, i
       if (data.valid) {
         onResult({ street: data.street, neighborhood: data.neighborhood, city: data.city, state: data.state });
       } else {
-        const msg = data.error || "CEP não encontrado.";
+        const msg = data.error || traduzirUi("CEP não encontrado.");
         setError(msg);
         onResult(null, msg);
       }
     } catch {
       if (current !== requestId.current) return;
-      const msg = "Não conseguimos consultar o CEP agora.";
+      const msg = traduzirUi("Não conseguimos consultar o CEP agora.");
       setError(msg);
       onResult(null, msg);
     } finally {
@@ -60,12 +63,12 @@ export default function CepInput({ value, onChange, onResult, placeholder, id, i
     <div>
       <input
         id={id}
-        aria-label={id ? undefined : international ? "Código postal" : "CEP"}
+        aria-label={id ? undefined : international ? traduzirUi("Código postal") : traduzirUi("CEP")}
         className="input"
         aria-busy={checking}
         aria-invalid={!!error}
         value={international ? value : formatCep(value)}
-        placeholder={placeholder || (international ? "CEP ou código postal" : "00000-000")}
+        placeholder={placeholder || (international ? traduzirUi("CEP ou código postal") : "00000-000")}
         inputMode={international ? "text" : "numeric"}
         autoComplete="postal-code"
         maxLength={international ? 32 : 9}
@@ -80,8 +83,8 @@ export default function CepInput({ value, onChange, onResult, placeholder, id, i
           if (digits.length === 8) lookup(digits);
         }}
       />
-      {international && brazilLookup && /^\d{5}-?\d{3}$/.test(value.trim()) && <Botao compacto desativado={checking} onClick={() => lookup(value.replace(/\D/g, ""))}>Buscar CEP do Brasil</Botao>}
-      {checking && <div role="status" style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)", marginTop: 4 }}>Buscando endereço...</div>}
+      {international && brazilLookup && /^\d{5}-?\d{3}$/.test(value.trim()) && <Botao compacto desativado={checking} onClick={() => lookup(value.replace(/\D/g, ""))}>{traduzirUi("Buscar CEP do Brasil")}</Botao>}
+      {checking && <div role="status" style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)", marginTop: 4 }}>{traduzirUi("Buscando endereço...")}</div>}
       {error && <div role="alert" style={{ fontSize: "var(--fs-ui-sm)", color: "var(--amber)", marginTop: 4 }}>{error}</div>}
     </div>
   );

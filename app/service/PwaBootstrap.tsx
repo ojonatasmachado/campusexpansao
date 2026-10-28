@@ -6,11 +6,12 @@ import { guardarPedidoInstalacao } from "./lib/instalar";
 /* janela, gaveta, folha ou formulário aberto: recarregar agora perderia o que
    a pessoa está digitando, então a atualização espera a próxima abertura */
 const ABERTO = ".fs, .modal-bg, .drawer-bg, .m6-scrim, .m-sheet-bg";
-const INTERVALO_MIN_MS = 30_000;
+const INTERVALO_MS = 60_000;
+const VERSAO_ABERTA = process.env.NEXT_PUBLIC_SERVICE_VERSION || "local";
 
 async function versaoPublicada(): Promise<string | null> {
   try {
-    const r = await fetch("/api/service/versao", { cache: "no-store" });
+    const r = await fetch(`/api/service/versao?t=${Date.now()}`, { cache: "no-store", signal: AbortSignal.timeout(10_000) });
     if (!r.ok) return null;
     return ((await r.json()) as { versao?: string }).versao ?? null;
   } catch {
@@ -25,8 +26,9 @@ async function versaoPublicada(): Promise<string | null> {
 
    App sempre na versão nova: o iPhone guarda o app instalado na memória e, ao
    voltar para ele, retoma a página antiga sem recarregar. Toda vez que o app
-   volta a ficar visível, pergunta ao servidor a versão publicada; se mudou desde
-   que abriu, recarrega (e o service worker também procura a versão nova). */
+   volta a ficar visível e a cada minuto ativo, compara o identificador gravado
+   no bundle com a versão publicada. Não usa a resposta atual como versão do
+   código antigo que o iPhone pode ter restaurado. */
 export default function PwaBootstrap() {
   useEffect(() => {
     let registro: ServiceWorkerRegistration | null = null;
@@ -38,25 +40,35 @@ export default function PwaBootstrap() {
         });
     }
 
-    let versaoAberta: string | null = null;
-    let ultimaChecagem = 0;
-    versaoPublicada().then((v) => { versaoAberta = v; });
+    let encerrado = false;
+    let conferindo = false;
+    let recarregando = false;
     const conferir = async () => {
-      if (document.visibilityState !== "visible") return;
-      const agora = Date.now();
-      if (agora - ultimaChecagem < INTERVALO_MIN_MS) return;
-      ultimaChecagem = agora;
-      registro?.update().catch(() => {});
-      const v = await versaoPublicada();
-      if (!v || v === "local") return;
-      if (!versaoAberta) { versaoAberta = v; return; }
-      if (v !== versaoAberta && !document.querySelector(ABERTO)) window.location.reload();
+      if (document.visibilityState !== "visible" || conferindo || recarregando || encerrado) return;
+      conferindo = true;
+      try {
+        registro?.update().catch(() => {});
+        const v = await versaoPublicada();
+        if (encerrado || document.visibilityState !== "visible") return;
+        if (!v || v === "local" || VERSAO_ABERTA === "local" || v === VERSAO_ABERTA) return;
+        // Não interromper janelas de edição nem um campo em uso. A próxima
+        // checagem tenta novamente sem assumir que o bundle já foi atualizado.
+        const editando = document.activeElement?.matches("input, textarea, select, [contenteditable='true']");
+        if (!document.querySelector(ABERTO) && !editando) {
+          recarregando = true;
+          window.location.reload();
+        }
+      } finally {
+        conferindo = false;
+      }
     };
-    /* bfcache do Safari: a página volta inteira da memória, sem rodar nada */
-    const aoMostrar = (e: PageTransitionEvent) => { if (e.persisted) { ultimaChecagem = 0; conferir(); } };
-    document.addEventListener("visibilitychange", conferir);
-    window.addEventListener("focus", conferir);
+    const aoMostrar = () => { void conferir(); };
+    document.addEventListener("visibilitychange", aoMostrar);
+    window.addEventListener("focus", aoMostrar);
     window.addEventListener("pageshow", aoMostrar);
+    window.addEventListener("online", aoMostrar);
+    const intervalo = window.setInterval(aoMostrar, INTERVALO_MS);
+    void conferir();
 
     const onBeforeInstall = (event: Event) => {
       event.preventDefault();
@@ -66,8 +78,11 @@ export default function PwaBootstrap() {
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
-      document.removeEventListener("visibilitychange", conferir);
-      window.removeEventListener("focus", conferir);
+      encerrado = true;
+      window.clearInterval(intervalo);
+      document.removeEventListener("visibilitychange", aoMostrar);
+      window.removeEventListener("focus", aoMostrar);
+      window.removeEventListener("online", aoMostrar);
       window.removeEventListener("pageshow", aoMostrar);
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
       window.removeEventListener("appinstalled", onInstalled);

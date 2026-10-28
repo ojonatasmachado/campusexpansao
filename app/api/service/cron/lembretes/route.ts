@@ -78,7 +78,7 @@ export async function GET(request: Request) {
         const semMural = new Set((desligou ?? []).filter((p) => ((p.notif_off ?? []) as string[]).includes("mural")).map((p) => p.id));
         const faltam = pessoas.filter((p) => !jaLeram.has(p) && !semMural.has(p));
         if (!faltam.length) continue;
-        const resultado = await entregarAvisos(db, { organizationId: aviso.organization_id, peopleIds: faltam, categoria: "mural", title: aviso.title, body: "Você ainda não viu esta publicação do Mural.", url: memberNotificationUrl("mural", aviso.id) });
+        const resultado = await entregarAvisos(db, { organizationId: aviso.organization_id, peopleIds: faltam, categoria: "mural", title: aviso.title, body: "Você ainda não viu esta publicação do Mural.", bodyTemplate: "mural-lembrete", url: memberNotificationUrl("mural", aviso.id) });
         mandou = resultado.enviados > 0 || resultado.naFila > 0;
         enviados += resultado.enviados;
       } catch {

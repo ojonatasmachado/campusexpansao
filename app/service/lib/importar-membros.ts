@@ -1,4 +1,5 @@
 import { todayISO } from "./date";
+import { sourceText, type Text } from "./internacional/mensagens";
 /* Gravação da importação de membros por planilha. Recebe o cliente do
    Supabase (schema service) de fora: a tela passa o do navegador e
    scripts/check-importar-local.ts passa um de teste contra o banco local.
@@ -18,7 +19,7 @@ const COLS_BASE = "id,name,phone,email,birth,neighborhood,street,city,state,post
 
 /** Membros da organização, mil por vez, para achar duplicados.
     colunasNovas = a migração 0072 (sexo, estado civil, imported_at) já está no banco. */
-export async function carregarExistentes(sb: Banco, organizationId: string): Promise<{ lista: Existente[]; colunasNovas: boolean }> {
+export async function carregarExistentes(sb: Banco, organizationId: string, t: Text = sourceText): Promise<{ lista: Existente[]; colunasNovas: boolean }> {
   const buscar = async (cols: string) => {
     const lista: Existente[] = [];
     for (let de = 0; ; de += 1000) {
@@ -33,9 +34,9 @@ export async function carregarExistentes(sb: Banco, organizationId: string): Pro
   /* só cai para as colunas antigas se o erro for coluna inexistente (antes da 0072);
      qualquer outro erro (rede, permissão) sobe, para a tela pedir que tente de novo */
   const semColuna = comNovas.error.code === "42703" || comNovas.error.code === "PGRST204" || /column .* does not exist/i.test(comNovas.error.message ?? "");
-  if (!semColuna) throw new Error(friendlyWriteError(comNovas.error.message));
+  if (!semColuna) throw new Error(friendlyWriteError(comNovas.error.message, t));
   const base = await buscar(COLS_BASE);
-  if (base.error) throw new Error(friendlyWriteError(base.error.message));
+  if (base.error) throw new Error(friendlyWriteError(base.error.message, t));
   return { lista: base.lista, colunasNovas: false };
 }
 
@@ -53,10 +54,10 @@ export async function gravarImportacao(sb: Banco, p: {
   colunasNovas: boolean;
   arquivo: string;
   aoAvancar?: (feito: number, total: number) => void;
-}): Promise<ResumoImportacao> {
+}, t: Text = sourceText): Promise<ResumoImportacao> {
   const agora = new Date().toISOString();
   const { data: igreja, error: fusoErro } = await sb.from("churches").select("time_zone").eq("id", p.churchId).eq("organization_id", p.organizationId).single();
-  if (fusoErro || !igreja) throw new Error("Não foi possível carregar o fuso da igreja para importar.");
+  if (fusoErro || !igreja) throw new Error(t("Não foi possível carregar o fuso da igreja para importar."));
   const hoje = todayISO(igreja.time_zone);
   const sortKey = Number(hoje.replace(/-/g, ""));
   const quando = hoje.split("-").reverse().join("/");
@@ -89,7 +90,7 @@ export async function gravarImportacao(sb: Banco, p: {
       gravadas = [];
       for (let j = 0; j < fichas.length; j++) {
         const { error: e1 } = await sb.from("members").insert(fichas[j]);
-        if (e1) r.falhas.push({ n: lote[j].n, nome: lote[j].valores.nome, motivo: friendlyWriteError(e1.message) });
+        if (e1) r.falhas.push({ n: lote[j].n, nome: lote[j].valores.nome, motivo: friendlyWriteError(e1.message, t) });
         else gravadas.push(fichas[j].id);
       }
     }
@@ -108,7 +109,7 @@ export async function gravarImportacao(sb: Banco, p: {
     await Promise.all(parte.map(async (l) => {
       const campos = camposVazios(l.existente!.pessoa, l.valores, p.colunasNovas);
       const { error } = await sb.from("members").update(campos).eq("id", l.existente!.pessoa.id);
-      if (error) r.falhas.push({ n: l.n, nome: l.valores.nome, motivo: friendlyWriteError(error.message) });
+      if (error) r.falhas.push({ n: l.n, nome: l.valores.nome, motivo: friendlyWriteError(error.message, t) });
       else r.atualizados++;
     }));
     feito += parte.length;

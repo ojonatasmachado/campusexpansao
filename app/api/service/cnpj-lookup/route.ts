@@ -1,3 +1,4 @@
+import { getTexto } from "../../../service/lib/internacional/servidor";
 import { cnpjValido, normalizarCnpj } from "../../../service/lib/cnpj";
 import { consultarCep, guardarConsultaEndereco } from "../../../service/lib/address-lookup-server";
 import { enderecoDoCnpj } from "../../../service/lib/geo";
@@ -22,23 +23,24 @@ type BrasilApiCnpj = {
 };
 
 export async function POST(request: Request) {
+  const traduzirUi = await getTexto(request);
   const supabase = await createClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return NextResponse.json({ error: "Você precisa estar logado." }, { status: 401 });
+    return NextResponse.json({ error: traduzirUi("Você precisa estar logado.") }, { status: 401 });
   }
 
   let body: { cnpj?: string };
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Envie dados válidos." }, { status: 400 });
+    return NextResponse.json({ error: traduzirUi("Envie dados válidos.") }, { status: 400 });
   }
 
   const digits = typeof body?.cnpj === "string" ? normalizarCnpj(body.cnpj) : "";
   if (!cnpjValido(digits)) {
-    return NextResponse.json({ valid: false, error: "Esse CNPJ não é válido. Confira os números." }, { status: 200 });
+    return NextResponse.json({ valid: false, error: traduzirUi("Esse CNPJ não é válido. Confira os números.") }, { status: 200 });
   }
 
   try {
@@ -48,10 +50,10 @@ export async function POST(request: Request) {
     clearTimeout(timeout);
 
     if (res.status === 404) {
-      return NextResponse.json({ valid: false, error: "Não encontramos esse CNPJ na Receita Federal." });
+      return NextResponse.json({ valid: false, error: traduzirUi("Não encontramos esse CNPJ na Receita Federal.") });
     }
     if (!res.ok) {
-      return NextResponse.json({ valid: false, error: "Não conseguimos consultar a Receita Federal agora. Tente de novo em instantes." });
+      return NextResponse.json({ valid: false, error: traduzirUi("Não conseguimos consultar a Receita Federal agora. Tente de novo em instantes.") });
     }
 
     const data = (await res.json()) as BrasilApiCnpj & Record<string, unknown>;
@@ -66,7 +68,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         valid: true,
         active: false,
-        error: `Esse CNPJ existe, mas está com situação "${data.descricao_situacao_cadastral ?? "desconhecida"}" na Receita Federal, não ativa.`,
+        error: traduzirUi('Esse CNPJ existe, mas está com situação "{situacao}" na Receita Federal, não ativa.', { situacao: data.descricao_situacao_cadastral ?? traduzirUi("desconhecida") }),
       });
     }
 
@@ -95,6 +97,6 @@ export async function POST(request: Request) {
       addressData: endereco,
     });
   } catch {
-    return NextResponse.json({ valid: false, error: "Não conseguimos consultar a Receita Federal agora. Tente de novo em instantes." });
+    return NextResponse.json({ valid: false, error: traduzirUi("Não conseguimos consultar a Receita Federal agora. Tente de novo em instantes.") });
   }
 }

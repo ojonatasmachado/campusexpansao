@@ -1,3 +1,4 @@
+import { getTexto } from "../../../../service/lib/internacional/servidor";
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../lib/supabase-server";
 import { supabaseAdmin } from "../../../../lib/supabase";
@@ -17,24 +18,25 @@ type Payload = {
 const CATEGORIAS = new Set(["escala", "mural", "mensagens", "caminhada"]);
 
 export async function POST(request: Request) {
+  const traduzirUi = await getTexto(request);
   const supabase = await createClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return NextResponse.json({ error: "Você precisa estar logado." }, { status: 401 });
+    return NextResponse.json({ error: traduzirUi("Você precisa estar logado.") }, { status: 401 });
   }
 
   let payload: Payload;
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ error: "Envie dados válidos." }, { status: 400 });
+    return NextResponse.json({ error: traduzirUi("Envie dados válidos.") }, { status: 400 });
   }
 
   const { organizationId, recipientMemberIds, title, body } = payload;
   const categoria = payload.categoria && CATEGORIAS.has(payload.categoria) ? payload.categoria : null;
   if (!organizationId || !recipientMemberIds?.length || !title || !body) {
-    return NextResponse.json({ error: "Dados incompletos." }, { status: 400 });
+    return NextResponse.json({ error: traduzirUi("Dados incompletos.") }, { status: 400 });
   }
 
   const { data: membership, error: membershipError } = await supabase
@@ -46,7 +48,7 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (membershipError || !membership) {
-    return NextResponse.json({ error: "Sem permissão para notificar." }, { status: 403 });
+    return NextResponse.json({ error: traduzirUi("Sem permissão para notificar.") }, { status: 403 });
   }
 
   try {
@@ -63,7 +65,8 @@ export async function POST(request: Request) {
     await esvaziarFila(db, organizationId);
     return NextResponse.json({ ok: true, sent: r.enviados, queued: r.naFila });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Não foi possível enviar a notificação.";
+    console.error("[service] push/notify:", error);
+    const message = traduzirUi("Não foi possível enviar a notificação.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

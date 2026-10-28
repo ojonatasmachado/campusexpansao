@@ -7,373 +7,30 @@ import { formatarTelefone } from "../../lib/telefone";
 import { avisar } from "../../lib/avisar";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { Icon } from "../../lib/icons";
 import { formatDateBR, joinDot } from "../../lib/date";
-
 import { useTermos } from "../../lib/vocabulario-context";
 import { useServiceAccess } from "../../AccessContext";
-import AutocadastroDados from "../../modules/visitantes/AutocadastroDados";
 import { requirementsFor, requirementLabel } from "../../lib/requirements";
 import { Av, Chip } from "../ui";
-import { JRN_STEPS } from "../caminhada";
-import { porData, tipoDoFato } from "../../lib/historico";
 import { coberturaPorTime } from "../../modules/escalas/cobertura";
-import { JORNADA_KIND_INDEX, ROUTES, TeamMark, VISITOR_STAGES, openMemberInviteWhatsapp, parseFlexDate, timelineEventPayload, writeJourneyStep } from "../comum";
+import { ROUTES, TeamMark, openMemberInviteWhatsapp, parseFlexDate } from "../comum";
 import { DrawerSection, DrawerShell } from "../campos";
 import { MiniCalendar } from "./Agenda";
-import { AcessosCard } from "./Config";
+import { AcessosCard } from "./configuracao/AcessosCard";
 import { MinisterioEditModal } from "./Times";
 import { BatismoDrawer, DecisaoDrawer } from "./Caminhada";
 import { EnsaioDrawer, ReuniaoDrawer } from "./Reunioes";
 import { EventDrawer } from "./Evento";
-import type { BaptismCandidateView, BaptismClassView, BoardView, CalEvent, CardView, ChurchView, CourseView, DecisionView, DrawerState, EnrollmentView, EventRsvpView, EventView, FellowshipGroupView, JourneyStepKind, LessonView, MeetingActionView, MeetingView, MemberView, MinistryView, ModalState, ModuleView, PersonView, RehearsalView, RosterAssignmentView, TimelineEventView, VisitorNoteView, VisitorView } from "../tipos";
-
-import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
+import type { BaptismCandidateView, BaptismClassView, BoardView, CalEvent, CardView, ChurchView, CourseView, DecisionView, DrawerState, EnrollmentView, EventRsvpView, EventView, FellowshipGroupView, LessonView, MeetingActionView, MeetingView, MemberView, MinistryView, ModalState, ModuleView, PersonView, RehearsalView, RosterAssignmentView, TimelineEventView, VisitorNoteView, VisitorView } from "../tipos";
+import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Selo, etiquetaClasse } from "../../ui/Selo";
-import { Linha } from "../../ui/Linha";
-import { Campo, Entrada } from "../../ui/Campo";
-import { Selecao } from "../../ui/Selecao";
-import { SeletorData } from "../../ui/Data";
-import { Vazio } from "../../ui/Estados";
-import { Janela } from "../../ui/Janela";
-import { Progresso } from "../../ui/Graficos";
-import { Etapas, type Etapa } from "../../ui/Etapas";
-export function PersonTimeline({ member, events, compact }: { member: MemberView; events: TimelineEventView[]; compact?: boolean }) {
-  const { comTermos: ct } = useTermos();
-  const sorted = porData(events);
-  const stepsWithoutEvent = JRN_STEPS.filter((step, i) => !!member.journey[i] && !events.some((e) => e.event_type === step.kind));
-
-  if (!sorted.length && !stepsWithoutEvent.length) {
-    return <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", padding: "12px 0" }}>Nada registrado ainda.</div>;
-  }
-  /* evento com data real; etapa marcada sem fato registrado diz que falta a data */
-  return (
-    <Etapas compacto={compact} rotulo={ct("{Caminhada}")} itens={[
-      ...sorted.map((event): Etapa => {
-        const step = JRN_STEPS.find((s) => s.kind === event.event_type);
-        return { id: event.id, estado: "feito", titulo: event.title, detalhe: event.body || undefined, icone: step?.icon ?? tipoDoFato(event.event_type).icone, quando: event.when_label ?? new Date(event.created_at).toLocaleDateString("pt-BR") };
-      }),
-      ...stepsWithoutEvent.map((step): Etapa => ({ id: step.kind, estado: "feito", titulo: ct(step.label), icone: step.icon })),
-    ]} />
-  );
-}
-
-export function VisitanteDrawer({
-  visitor: initVisitor, notes, church, people, onClose, onOpenMember, setModal,
-}: {
-  visitor: VisitorView; notes: VisitorNoteView[]; church: ChurchView | undefined;
-  people: PersonView[]; onClose: () => void; onOpenMember: (id: string) => void;
-  setModal: (modal: ModalState) => void;
-}) {
-  const { comTermos: ct } = useTermos();
-  const router = useRouter();
-  const [nota, setNota] = useState("");
-  const [resp, setResp] = useState<"" | "respondeu" | "sem_resposta">("");
-  const [saving, setSaving] = useState(false);
-  const [currentStage, setCurrentStage] = useState(initVisitor.stage);
-  const [currentReply, setCurrentReply] = useState(initVisitor.reply_status);
-  const stageIdx = VISITOR_STAGES.findIndex((s) => s.id === currentStage);
-  const owner = initVisitor.responsible_id ? people.find((p) => p.id === initVisitor.responsible_id) : null;
-  const visitorNotes = notes.filter((n) => n.visitor_id === initVisitor.id);
-
-  const addNota = async () => {
-    if (!nota.trim() && !resp) return;
-    setSaving(true);
-    const sb = createServiceBrowserClient().schema("service");
-    if (resp) {
-      await sb.from("visitors").update({ reply_status: resp }).eq("id", initVisitor.id);
-      setCurrentReply(resp as "respondeu" | "sem_resposta");
-    }
-    if (nota.trim() || resp) {
-      const body = nota.trim() || (resp === "respondeu" ? "Contato registrado: respondeu." : "Contato registrado: sem resposta.");
-      await sb.from("visitor_notes").insert({ organization_id: church?.organizationId, visitor_id: initVisitor.id, body, author: "Equipe", is_milestone: false });
-    }
-    router.refresh();
-    setNota("");
-    setResp("");
-    setSaving(false);
-  };
-
-  const avancar = async () => {
-    if (stageIdx >= VISITOR_STAGES.length - 1) return;
-    const next = VISITOR_STAGES[stageIdx + 1];
-    setSaving(true);
-    const sb = createServiceBrowserClient().schema("service");
-    await sb.from("visitors").update({ stage: next.id }).eq("id", initVisitor.id);
-    await sb.from("visitor_notes").insert({ organization_id: church?.organizationId, visitor_id: initVisitor.id, body: `Avançou para "${next.name}".`, author: "Equipe", is_milestone: true });
-    setCurrentStage(next.id as VisitorView["stage"]);
-    router.refresh();
-    setSaving(false);
-  };
-
-  return (
-    <DrawerShell onClose={onClose}>
-      <div className="drawer-head">
-        <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
-        <div className="profile-top">
-          <Av name={initVisitor.name} size="lg" />
-          <div>
-            <div className="profile-name">{initVisitor.name}</div>
-            <div className="profile-role">{initVisitor.origin || "Visitante"} · primeira visita {formatDateBR(initVisitor.visited_on) || "sem data"}</div>
-            <div style={{ marginTop: 10 }}>
-              <Selo style={{ color: VISITOR_STAGES[stageIdx]?.color }}>{VISITOR_STAGES[stageIdx]?.name ?? currentStage}</Selo>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="drawer-body">
-        <DrawerSection title="Contato">
-          <dl className="kv">
-            <dt>Telefone</dt><dd>{initVisitor.phone || "-"}</dd>
-            <AutocadastroDados visitor={initVisitor} />
-            <dt>Como chegou</dt><dd>{initVisitor.origin || "Visitante"}</dd>
-            <dt>Responsável</dt><dd>{owner?.name || "sem dono fixo"}</dd>
-            <dt>Próximo passo</dt><dd><span className={`vcard-due ${initVisitor.due_status || "ok"}`}>{initVisitor.due || "sem prazo"}</span></dd>
-          </dl>
-        </DrawerSection>
-        <DrawerSection title={ct("{Caminhada} de integração")}>
-          <div style={{ display: "flex", gap: 6 }}>
-            {VISITOR_STAGES.map((s, i) => (
-              <div key={s.id} style={{ flex: 1, textAlign: "center" }}>
-                <div style={{ height: 5, borderRadius: 3, background: i <= stageIdx ? s.color : "var(--ink)" }} />
-                <div style={{ fontSize: "var(--fs-pn-12)", color: i <= stageIdx ? "var(--light)" : "var(--muted)", marginTop: 7 }}>{s.name}</div>
-              </div>
-            ))}
-          </div>
-          {stageIdx < VISITOR_STAGES.length - 1
-            ? <Botao variante="principal" compacto style={{ marginTop: 16, width: "100%", justifyContent: "center" }} onClick={avancar} desativado={saving}>Mover para {VISITOR_STAGES[stageIdx + 1]?.name}</Botao>
-            : (
-              <div className="vmember-cta">
-                <div className="vmember-t"><Icon name="ok" size={13} /> Chegou a membro</div>
-                <div className="vmember-s">Complete os dados cadastrais para liberar o acesso ao app.</div>
-                {initVisitor.member_id
-                  ? <Botao variante="principal" compacto style={{ width: "100%", justifyContent: "center", marginTop: 12 }} onClick={() => { onClose(); onOpenMember(initVisitor.member_id!); }}>Ver ficha</Botao>
-                  : (
-                    <Botao variante="principal" compacto style={{ width: "100%", justifyContent: "center", marginTop: 12 }} onClick={() => setModal({
-                      eyebrow: "Criar",
-                      title: "Completar dados de membro",
-                      subtitle: "Finalize o cadastro para liberar o acesso ao app.",
-                      saveLabel: "Adicionar membro",
-                      formFields: [
-                        { k: "nome", label: "Nome completo", type: "text", req: true, ph: "Como a pessoa se chama", value: initVisitor.name },
-                        { k: "tel", label: "Telefone (WhatsApp)", type: "text", half: true, ph: "(11) 9...", value: initVisitor.phone ?? "" },
-                        { k: "email", label: "E-mail", type: "text", half: true, req: true, ph: "usado para entrar no app" },
-                        { k: "nasc", label: "Aniversário", type: "date", half: true },
-                        { k: "bairro", label: "Bairro", type: "text", half: true, ph: "Onde mora" },
-                      ],
-                      action: { kind: "member", visitorId: initVisitor.id },
-                    })}>Completar dados de membro →</Botao>
-                  )}
-              </div>
-            )
-          }
-        </DrawerSection>
-        <DrawerSection title="Registrar contato">
-          {currentReply && <div className={`vresp-now ${currentReply}`}>{currentReply === "respondeu" ? "Último contato: respondeu" : "Último contato: sem resposta, refazer"}</div>}
-          <textarea className="textarea" placeholder="O que rolou nesse contato? (ligação, WhatsApp, visita...)" value={nota} onChange={(e) => setNota(e.target.value)} />
-          <div className="vresp-pick">
-            <span className="vresp-lbl">A pessoa respondeu?</span>
-            <div className="seg-check">
-              <Acao className={`seg-chip ${resp === "respondeu" ? "on" : ""}`} onClick={() => setResp(resp === "respondeu" ? "" : "respondeu")}>Respondeu</Acao>
-              <Acao className={`seg-chip ${resp === "sem_resposta" ? "on" : ""}`} onClick={() => setResp(resp === "sem_resposta" ? "" : "sem_resposta")}>Não respondeu</Acao>
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <Botao variante="principal" compacto onClick={addNota} desativado={saving}>{saving ? "Salvando…" : "Salvar no histórico"}</Botao>
-          </div>
-        </DrawerSection>
-        <DrawerSection title="Histórico de contato">
-          {visitorNotes.length > 0
-            ? (
-              <Etapas rotulo="Histórico de contato" itens={visitorNotes.map((n): Etapa => ({ id: n.id, estado: "feito", tom: n.is_milestone ? undefined : "neutro", detalhe: n.body, quando: formatDateBR(n.happened_on || n.created_at) || undefined, por: n.author || undefined }))} />
-            )
-            : <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum contato registrado ainda.</div>}
-        </DrawerSection>
-      </div>
-    </DrawerShell>
-  );
-}
-
-export function MemberEditModal({
-  member, fellowshipGroups, church, onClose, onRefresh,
-}: {
-  member: MemberView;
-  fellowshipGroups: FellowshipGroupView[];
-  church: ChurchView | undefined;
-  onClose: () => void;
-  onRefresh: () => void;
-}) {
-  const { termo } = useTermos();
-  const [birth, setBirth] = useState(member.birth ?? "");
-  const [neighborhood, setNeighborhood] = useState(member.neighborhood ?? "");
-  const [groupId, setGroupId] = useState(member.groupId ?? "");
-  const [family, setFamily] = useState(member.family ?? "");
-  const [saving, setSaving] = useState(false);
-
-  const salvar = async () => {
-    setSaving(true);
-    const sb = createServiceBrowserClient().schema("service");
-    await sb.from("members").update({
-      birth: birth || null,
-      neighborhood: neighborhood.trim() || null,
-      group_id: groupId || null,
-      family: family.trim() || null,
-    }).eq("id", member.id);
-    if (groupId && groupId !== (member.groupId ?? "") && church?.organizationId) {
-      const group = fellowshipGroups.find((g) => g.id === groupId);
-      await sb.from("timeline_events").insert(
-        timelineEventPayload(church.organizationId, member.id, "integracao", `Entrou no ${termo("grupo")}${group?.name ? ` "${group.name}"` : ""}`),
-      );
-      const journey = [...member.journey];
-      journey[3] = 1;
-      await sb.from("members").update({ journey }).eq("id", member.id);
-    }
-    onRefresh();
-    onClose();
-  };
-
-  return (
-    <Janela sobretitulo="Editar dados" titulo={member.name} texto="Aniversário, bairro, grupo de comunhão e família." aoFechar={onClose} corpoBloco rodape={<>
-          <Botao onClick={onClose}>Cancelar</Botao>
-          <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
-      </>}>
-      <Campo rotulo="Aniversário"><SeletorData valor={birth} aoMudar={setBirth} limpavel /></Campo>
-      <Campo rotulo="Bairro"><Entrada value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Onde mora" /></Campo>
-      {(church?.settings?.gruposCfg?.ativo ?? true) && (
-        <Campo rotulo={termo("grupo")}>
-          <Selecao valor={groupId} aoMudar={setGroupId} vazio="Sem grupo" opcoes={fellowshipGroups.map((g) => ({ v: g.id, l: g.name }))} />
-        </Campo>
-      )}
-      <Campo rotulo="Família"><Entrada value={family} onChange={(e) => setFamily(e.target.value)} placeholder="ex: Família Lima (agrupa parentes na ficha)" /></Campo>
-    </Janela>
-  );
-}
-
-export function JornadaEditModal({
-  member, events, church, onClose, onRefresh,
-}: {
-  member: MemberView;
-  events: TimelineEventView[];
-  church: ChurchView | undefined;
-  onClose: () => void;
-  onRefresh: () => void;
-}) {
-  const { comTermos: ct } = useTermos();
-  const [rows, setRows] = useState<Record<JourneyStepKind, { done: boolean; date: string }>>(() =>
-    Object.fromEntries(JRN_STEPS.map((step) => [step.kind, { done: false, date: "" }])) as Record<JourneyStepKind, { done: boolean; date: string }>,
-  );
-  const [saving, setSaving] = useState(false);
-
-  const marcar = (kind: JourneyStepKind) => setRows((prev) => ({ ...prev, [kind]: { ...prev[kind], done: true } }));
-  const setData = (kind: JourneyStepKind, date: string) => setRows((prev) => ({ ...prev, [kind]: { ...prev[kind], date } }));
-
-  const salvar = async () => {
-    if (!church?.organizationId) return;
-    setSaving(true);
-    for (const step of JRN_STEPS) {
-      const jaConcluido = !!member.journey[JORNADA_KIND_INDEX[step.kind]];
-      if (!jaConcluido && rows[step.kind].done) {
-        await writeJourneyStep(church.organizationId, member, step.kind, rows[step.kind].date || null);
-      }
-    }
-    setSaving(false);
-    onRefresh();
-    onClose();
-  };
-
-  return (
-    <Janela sobretitulo={<>{ct("{Caminhada}")}</>} titulo={member.name} texto="Marque as etapas já concluídas, com a data real de cada uma." aoFechar={onClose} corpoBloco rodape={<>
-          <Botao onClick={onClose}>Cancelar</Botao>
-          <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
-      </>}>
-      {JRN_STEPS.map((step) => {
-        const jaConcluido = !!member.journey[JORNADA_KIND_INDEX[step.kind]];
-        const event = events.find((e) => e.event_type === step.kind);
-        return (
-          <Linha estilo="config" key={step.kind} style={{ alignItems: "flex-start" }}>
-            <div className="cfg-row-main">
-              <div className="cfg-row-t">{ct(step.label)}</div>
-              {jaConcluido ? (
-                <div className="cfg-row-s">Concluído{event?.when_label ? ` em ${event.when_label}` : ""}</div>
-              ) : rows[step.kind].done ? (
-                <Campo rotulo="Data" style={{ marginTop: 8 }}>
-                  <SeletorData valor={rows[step.kind].date} aoMudar={(v) => setData(step.kind, v)} />
-                </Campo>
-              ) : (
-                <Botao compacto style={{ marginTop: 8 }} onClick={() => marcar(step.kind)}>Marcar como concluído</Botao>
-              )}
-            </div>
-          </Linha>
-        );
-      })}
-    </Janela>
-  );
-}
-
-export function AddToMinistryModal({
-  ministry, people, members, church, onClose,
-}: {
-  ministry: MinistryView;
-  people: PersonView[];
-  members: MemberView[];
-  church: { id: string; organizationId: string };
-  onClose: () => void;
-}) {
-  const { comTermos: ct } = useTermos();
-  const router = useRouter();
-  const [q, setQ] = useState("");
-  const [positionId, setPositionId] = useState("");
-  const inMinistryIds = new Set(ministry.people.map((link) => link.personId));
-  const fora = people.filter((p) => !inMinistryIds.has(p.id) && (!q || p.name.toLowerCase().includes(q.toLowerCase())));
-
-  const add = async (personId: string) => {
-    const position = ministry.positions.find((p) => p.id === positionId);
-    await createServiceBrowserClient().schema("service").from("person_ministries").insert({
-      organization_id: church.organizationId,
-      ministry_id: ministry.id,
-      person_id: personId,
-      is_leader: false,
-      functions: position ? [position.name] : [],
-    });
-    const member = members.find((m) => m.volunteerId === personId);
-    if (member) {
-      const sb = createServiceBrowserClient().schema("service");
-      await sb.from("timeline_events").insert(
-        timelineEventPayload(church.organizationId, member.id, "time", `Começou a servir em "${ministry.name}"`),
-      );
-      const journey = [...member.journey];
-      journey[4] = 1;
-      await sb.from("members").update({ journey }).eq("id", member.id);
-    }
-    router.refresh();
-    onClose();
-  };
-
-  return (
-    <Janela acima sobretitulo="Adicionar ao time" titulo={ministry.name} texto={ct("Escolha o {voluntario} e, se souber, a função dele neste time.")}
-      aoFechar={onClose} corpoBloco rodape={<Botao onClick={onClose}>Fechar</Botao>}>
-          {ministry.positions.length > 0 && (
-            <Campo rotulo="Função (opcional)" style={{ marginBottom: 14 }}>
-              <Selecao valor={positionId} aoMudar={setPositionId} vazio="Sem função definida" opcoes={ministry.positions.map((p) => ({ v: p.id, l: p.name }))} />
-            </Campo>
-          )}
-          <div className="tb-search" style={{ marginBottom: 12 }}>
-            <span className="si"><Icon name="buscar" size={13} /></span>
-            <input placeholder={ct("Buscar {voluntario}...")} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
-          </div>
-          {fora.map((p) => (
-            <div className="flag-row" key={p.id} style={{ cursor: "pointer" }} onClick={() => add(p.id)}>
-              <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
-              <div className="flag-main"><div className="flag-nome">{p.name}</div></div>
-              <span className={botaoClasse({ variante: "discreto", compacto: true })} style={{ marginLeft: "auto" }}>Adicionar</span>
-            </div>
-          ))}
-          {fora.length === 0 && <Vazio titulo={q ? "Nenhum resultado." : ct("Todos os {voluntarios} já estão no time.")} />}
-    </Janela>
-  );
-}
+import { PersonTimeline } from "./ficha/PersonTimeline";
+import { VisitanteDrawer } from "./ficha/VisitanteDrawer";
+import { MemberEditModal } from "./ficha/MemberEditModal";
+import { JornadaEditModal } from "./ficha/JornadaEditModal";
+import { AddToMinistryModal } from "./ficha/AddToMinistryModal";
 
 export function EntityDrawer({
   drawer,
@@ -941,3 +598,13 @@ export function EntityDrawer({
     />
   );
 }
+
+export { PersonTimeline } from "./ficha/PersonTimeline";
+
+export { VisitanteDrawer } from "./ficha/VisitanteDrawer";
+
+export { MemberEditModal } from "./ficha/MemberEditModal";
+
+export { JornadaEditModal } from "./ficha/JornadaEditModal";
+
+export { AddToMinistryModal } from "./ficha/AddToMinistryModal";

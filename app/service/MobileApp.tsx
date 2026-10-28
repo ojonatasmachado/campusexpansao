@@ -37,6 +37,9 @@ import { avisar } from "./lib/avisar";
 import { Opcao } from "./ui/Opcao";
 import { Lista, linhaClasse } from "./ui/Linha";
 import { entrarComDirecao } from "./ui/movimento";
+import { useTexto } from "./lib/internacional/contexto";
+import type { Text } from "./lib/internacional/mensagens";
+
 export type * from "./membro/tipos";
 
 function TabIcon({ name, size = 18 }: { name: string; size?: number }) {
@@ -56,13 +59,21 @@ function isRecepPerson(person: P, ministries: Ministry[]) {
 function isKidsPerson(person: P, ministries: Ministry[]) {
   return hasTeamModule(person, ministries, "kids");
 }
-const MEMBER_TABS: { id: MemberTab; l: string; ic: string }[] = [
-  { id: "inicio", l: "Início", ic: "inicio" },
-  { id: "agenda", l: "Agenda", ic: "agenda" },
-  { id: "mensagens", l: "Mensagens", ic: "conversas" },
-  { id: "caminhada", l: "{Caminhada}", ic: "cursos" },
-  { id: "perfil", l: "Perfil", ic: "perfil" },
+const MEMBER_TABS: { id: MemberTab; ic: string }[] = [
+  { id: "inicio", ic: "inicio" },
+  { id: "agenda", ic: "agenda" },
+  { id: "mensagens", ic: "conversas" },
+  { id: "caminhada", ic: "cursos" },
+  { id: "perfil", ic: "perfil" },
 ];
+function tabLabel(id: MemberTab, t: Text, curto = false): string {
+  const labels: Record<MemberTab, string> = {
+    inicio: t("Início"), agenda: t("Agenda"), mensagens: t("Mensagens"),
+    caminhada: curto ? t("{Caminhada:curto}") : t("{Caminhada}"), perfil: t("Perfil"),
+  };
+  return labels[id];
+}
+
 /* barra de abas: 4 abas (lei 1). O Perfil abre pelo avatar no topo, como subtela */
 const BAR_TABS = MEMBER_TABS.filter((t) => t.id !== "perfil");
 /* o avatar mostra o rótulo "Perfil" no primeiro acesso; depois some */
@@ -90,6 +101,8 @@ const estaInstalado = () => window.matchMedia?.("(display-mode: standalone)").ma
 function MobileMembro({
   person, member, ...rest
 }: MobileOverlayProps & { person: P; member: M | null }) {
+  const traduzirUi = useTexto();
+
   const { todayISO, aindaVaiAcontecer, saudacao } = useRelogioDaIgreja();
   const [tab, setTab] = useState<MemberTab>("inicio");
   const [sub, setSub] = useState<string | null>(null);
@@ -131,7 +144,7 @@ function MobileMembro({
       if (Math.abs(delta) >= 1) box.scrollTop += delta / (parseFloat(getComputedStyle(box).zoom) || 1);
     });
   };
-  const { termo, comTermos: ct } = useTermos();
+  const { termo } = useTermos();
   /* pedido de oração só aparece com alguém para receber (v7 2.5) */
   const destOracao = useDestinatario("oracao");
   /* primeiro acesso termina quando a ficha tem os dados obrigatórios
@@ -333,8 +346,8 @@ function MobileMembro({
     );
   }
 
-  const tabTitle = ct(MEMBER_TABS.find((t) => t.id === tab)!.l);
-  const subTitle = sub === "chat" ? (chatAberto ?? "Conversa") : sub ? moduleTitle(sub) : "";
+  const tabTitle = tabLabel(tab, traduzirUi);
+  const subTitle = sub === "chat" ? (chatAberto ?? traduzirUi("Conversa")) : sub ? moduleTitle(sub) : "";
   const voltar = () => {
     if (sub === "chat") { setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 })); setChatAberto(null); }
     const from = mode === "self" ? window.history.state?.cexMemberFrom : null;
@@ -366,21 +379,21 @@ function MobileMembro({
             </>
           ) : tab === "perfil" ? (
             <>
-              <Acao className="m6-back" onClick={() => go(tabAntesPerfil)}><span className="m6-back-ic"><Icon name="voltar" size={22} /></span>{ct(MEMBER_TABS.find((t) => t.id === tabAntesPerfil)!.l)}</Acao>
+              <Acao className="m6-back" onClick={() => go(tabAntesPerfil)}><span className="m6-back-ic"><Icon name="voltar" size={22} /></span>{tabLabel(tabAntesPerfil, traduzirUi)}</Acao>
               <h1 className="m-h1 sub">{tabTitle}</h1>
             </>
           ) : (
             <>
               <div className="m-head-top">
                 <ChurchLockup size="sm" logoUrl={churchLogoUrl} name={churchName} />
-                <Acao className={`m-head-av${rotuloAvatar ? " has-l" : ""}`} onClick={() => { setRotuloAvatar(false); go("perfil"); }} aria-label="Perfil">
+                <Acao className={`m-head-av${rotuloAvatar ? " has-l" : ""}`} onClick={() => { setRotuloAvatar(false); go("perfil"); }} aria-label={traduzirUi("Perfil")}>
                   <Av name={person.name} size="sm" photoUrl={person.photoUrl} />
-                  {rotuloAvatar && <span className="m-head-av-l" aria-hidden="true">Perfil</span>}
+                  {rotuloAvatar && <span className="m-head-av-l" aria-hidden="true">{traduzirUi("Perfil")}</span>}
                 </Acao>
               </div>
               {tab === "inicio" ? (
                 <>
-                  <h1 className="m-h1">{saudacao()}, {person.name.split(" ")[0]}</h1>
+                  <h1 className="m-h1">{saudacao() === "Bom dia" ? traduzirUi("Bom dia, {nome}", { nome: person.name.split(" ")[0] }) : saudacao() === "Boa tarde" ? traduzirUi("Boa tarde, {nome}", { nome: person.name.split(" ")[0] }) : traduzirUi("Boa noite, {nome}", { nome: person.name.split(" ")[0] })}</h1>
                   <p className="m-hsub">{(() => {
                     /* v7 4.19: o mais relevante de hoje; sem nada, a data */
                     const doDia = events.filter((e) => e.eventDate === hoje);
@@ -445,12 +458,12 @@ function MobileMembro({
                     {muralOn && <Acao className={linhaClasse({ estilo: "app" })} onClick={() => go("mensagens", "mural")}>
                       <span className="m6-ic accent"><Icon name="bandeira" size={22} /></span>
                       <span className="m6-rb">
-                        <span className="m6-rt">Mural da igreja</span>
-                        <span className={`m6-rs m6-1l${unreadIds.size ? " m6-strong" : ""}`}>{announcements[0]?.title ?? "As publicações da igreja ficam aqui"}</span>
+                        <span className="m6-rt">{traduzirUi("Mural da igreja")}</span>
+                        <span className={`m6-rs m6-1l${unreadIds.size ? " m6-strong" : ""}`}>{announcements[0]?.title ?? traduzirUi("As publicações da igreja ficam aqui")}</span>
                       </span>
                       {unreadIds.size > 0 && <span className="m6-count">{unreadIds.size}</span>}
                     </Acao>}
-                    {oracaoOn && <M6Row ic="oracao" t="Mural de oração" s="Peça oração e ore pelos pedidos da igreja" onClick={() => go("mensagens", "oracao")} cls="or-row" />}
+                    {oracaoOn && <M6Row ic="oracao" t={traduzirUi("Mural de oração")} s={traduzirUi("Peça oração e ore pelos pedidos da igreja")} onClick={() => go("mensagens", "oracao")} cls="or-row" />}
                   </Lista>
                 </div>
               )}
@@ -464,15 +477,15 @@ function MobileMembro({
                 <div className="m6-pad">
                   <Botao tamanho="toque" variante="principal" largo onClick={() => setSheetEl(
                     <div>
-                      <h2 className="m6-sh">Nova mensagem</h2>
+                      <h2 className="m6-sh">{traduzirUi("Nova mensagem")}</h2>
                       <Lista plano>
-                        <M6Row ic="conversas" t="Falar com um líder" s="Pastor ou líder do seu time" onClick={() => { setSheetEl(null); go("mensagens", null, { newChat: true }); }} />
+                        <M6Row ic="conversas" t={traduzirUi("Falar com um líder")} s={traduzirUi("Pastor ou líder do seu time")} onClick={() => { setSheetEl(null); go("mensagens", null, { newChat: true }); }} />
                         {pedirOracao && (
-                          <M6Row ic="coracao" t="Pedido de oração" s={oracaoOn ? "Para a intercessão ou o mural de oração" : destOracao?.via === "intercessao" ? "Vai para quem cuida da intercessão" : "Vai para a liderança da igreja"} onClick={pedirOracao} />
+                          <M6Row ic="coracao" t={traduzirUi("Pedido de oração")} s={oracaoOn ? traduzirUi("Para a intercessão ou o mural de oração") : destOracao?.via === "intercessao" ? traduzirUi("Vai para quem cuida da intercessão") : traduzirUi("Vai para a liderança da igreja")} onClick={pedirOracao} />
                         )}
                       </Lista>
                     </div>,
-                  )}><Icon name="add" size={20} />Nova mensagem</Botao>
+                  )}><Icon name="add" size={20} />{traduzirUi("Nova mensagem")}</Botao>
                 </div>
               )}
             </>
@@ -530,7 +543,7 @@ function MobileMembro({
           )}
         </div>
 
-        <nav className="m-tab" aria-label="Navegação principal">
+        <nav className="m-tab" aria-label={traduzirUi("Navegação principal")}>
           {BAR_TABS.map((t) => {
             const on = tab === t.id;
             const b = badges[t.id] ?? 0;
@@ -538,9 +551,9 @@ function MobileMembro({
               <Opcao key={t.id} marcada={on} aria-current={on ? "page" : undefined} onClick={() => go(t.id)}>
                 <span className="ic">
                   <TabIcon name={t.ic} size={24} />
-                  {b > 0 && <span className="m6-badge" aria-label={`${b} novos`}>{b}</span>}
+                  {b > 0 && <span className="m6-badge" aria-label={traduzirUi("{count, plural, one {# novo} other {# novos}}", { count: b })}>{b}</span>}
                 </span>
-                <span className="m-tab-l">{ct(t.l.replace("}", ":curto}"))}</span>
+                <span className="m-tab-l">{tabLabel(t.id, traduzirUi, true)}</span>
               </Opcao>
             );
           })}
@@ -560,7 +573,8 @@ function MobileMembro({
 // ── overlay principal (desktop) ───────────────────────────────────────────────
 
 export default function MobileOverlay(props: MobileOverlayProps) {
-  const { comTermos: ct } = useTermos();
+  const traduzirUi = useTexto();
+
   const { people, members, onClose, mode = "preview", selfPersonId, onLogout, onSwitchToPanel, textSizePerfil } = props;
   const isSelf = mode === "self";
   /* o aparelho segue o tamanho guardado no perfil (só no app da própria pessoa) */
@@ -575,21 +589,21 @@ export default function MobileOverlay(props: MobileOverlayProps) {
     : null;
 
   const closeAction = isSelf ? onLogout ?? onClose : onClose;
-  const closeLabel = isSelf ? "Sair" : "← Voltar ao painel";
+  const closeLabel = isSelf ? traduzirUi("Sair") : traduzirUi("← Voltar ao painel");
 
   if (!person) {
     return (
       <div className="mob-bg" onClick={isSelf ? undefined : onClose}>
         <div className="mob-side" onClick={(e) => e.stopPropagation()}>
-          <div className="mob-side-eyebrow">{ct("App do {voluntario}")}</div>
-          <h3>{isSelf ? "Cadastro não encontrado" : ct("Nenhum {voluntario} ativo")}</h3>
+          <div className="mob-side-eyebrow">{traduzirUi("App do {voluntario}")}</div>
+          <h3>{isSelf ? traduzirUi("Cadastro não encontrado") : traduzirUi("Nenhum {voluntario} ativo")}</h3>
           <p>
             {isSelf
-              ? "Não encontramos seu cadastro de pessoa nesta igreja. Fale com a liderança."
-              : ct("Cadastre {voluntarios} em Pessoas para pré-visualizar o app deles aqui.")}
+              ? traduzirUi("Não encontramos seu cadastro de pessoa nesta igreja. Fale com a liderança.")
+              : traduzirUi("Cadastre {voluntarios} em Pessoas para pré-visualizar o app deles aqui.")}
           </p>
           <Botao variante="discreto" compacto className="mob-close" onClick={closeAction}>{closeLabel}</Botao>
-          {isSelf && onSwitchToPanel && <Botao variante="discreto" compacto className="mob-close mob-to-panel" onClick={onSwitchToPanel}>Gerenciar →</Botao>}
+          {isSelf && onSwitchToPanel && <Botao variante="discreto" compacto className="mob-close mob-to-panel" onClick={onSwitchToPanel}>{traduzirUi("Gerenciar →")}</Botao>}
         </div>
       </div>
     );
@@ -600,17 +614,16 @@ export default function MobileOverlay(props: MobileOverlayProps) {
       <div className="mob-side" onClick={(e) => e.stopPropagation()}>
         {!isSelf && (
           <>
-            <div className="mob-side-eyebrow">Mesma conta · outra superfície</div>
+            <div className="mob-side-eyebrow">{traduzirUi("Mesma conta · outra superfície")}</div>
             <h3>
-              O app do <span className="ol">membro</span>
+              {traduzirUi.rich("O app do <member>membro</member>", { member: (chunks) => <span className="ol">{chunks}</span> })}
             </h3>
             <p>
-              O membro acompanha a {ct("{caminhada}")}, confirma escala, resolve tarefas do quadro,
-              conversa com o time e o líder, faz cursos e pede oração, tudo pelo celular.
+              {traduzirUi("O membro acompanha a {caminhada}, confirma escala, resolve tarefas do quadro, conversa com o time e o líder, faz cursos e pede oração, tudo pelo celular.")}
             </p>
 
             <div className="mob-persona">
-              <div className="mob-persona-t">Pré-visualizar como</div>
+              <div className="mob-persona-t">{traduzirUi("Pré-visualizar como")}</div>
               {personas.map((p, i) => {
                 const m = members.find((m) => m.volunteerId === p.id);
                 return (
@@ -623,7 +636,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
                     <div>
                       <b>{p.name}</b>
                       <small>
-                        {m ? "Membro" : ct("{Voluntario}")}
+                        {m ? traduzirUi("Membro") : traduzirUi("{Voluntario}")}
                         {p.tags.length > 0 ? ` · ${p.tags[0]}` : ""}
                       </small>
                     </div>
@@ -632,14 +645,14 @@ export default function MobileOverlay(props: MobileOverlayProps) {
                 );
               })}
               <div className="mob-persona-hint">
-                {ct("O {voluntario}")} da Recepção vê o módulo de visitantes no lugar de Cursos.
+                {traduzirUi("O {voluntario} da Recepção vê o módulo de visitantes no lugar de Cursos.")}
               </div>
             </div>
           </>
         )}
 
         <Botao variante="discreto" compacto className="mob-close" onClick={closeAction}>{closeLabel}</Botao>
-        {isSelf && onSwitchToPanel && <Botao variante="discreto" compacto className="mob-close mob-to-panel" onClick={onSwitchToPanel}>Gerenciar →</Botao>}
+        {isSelf && onSwitchToPanel && <Botao variante="discreto" compacto className="mob-close mob-to-panel" onClick={onSwitchToPanel}>{traduzirUi("Gerenciar →")}</Botao>}
       </div>
 
       <div className="mob-phone-wrap" onClick={(e) => e.stopPropagation()}>

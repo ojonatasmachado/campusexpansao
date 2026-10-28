@@ -7,7 +7,7 @@ import { plural } from "../../lib/plural";
 import { useTermos } from "../../lib/vocabulario-context";
 import MapaBase from "./MapaBase";
 import { ligarPredios3D, type CorMapa } from "./estilo";
-import { caixaDaGeometria, caixaDosPontos, circulo, dentroDe, distanciaKm, formatarDistancia, mascaraFora, temPonto, type Ponto } from "./geo";
+import { caixaDaGeometria, caixaDosPontos, circulo, dentroDe, distanciaKm, formatarDistancia, mascaraFora, sedeComPonto, temPonto, type Ponto } from "./geo";
 import {
   carregarAcesso, carregarAreas, carregarCidade, carregarLocais, carregarPessoas, carregarRegioes, carregarTotais,
   type Acesso, type Area, type Cidade, type LocalMapa, type PessoaMapa, type Regiao, type Totais,
@@ -113,7 +113,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   };
 
   const grupos = useMemo(() => locais.filter((l) => l.tipo === "grupo" && temPonto(l)) as (LocalMapa & Ponto)[], [locais]);
-  const sede = useMemo(() => locais.find((l) => l.tipo === "sede" && temPonto(l)) as (LocalMapa & Ponto) | undefined, [locais]);
+  const sede = useMemo(() => sedeComPonto(locais), [locais]);
   const pertoDeGrupo = useCallback((p: Ponto) => {
     let melhor: { g: LocalMapa; km: number } | null = null;
     for (const g of grupos) { const km = distanciaKm(p, g); if (!melhor || km < melhor.km) melhor = { g, km }; }
@@ -216,15 +216,21 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
     map.setFilter("mp-regioes-sel", ["==", ["get", "codigo"], sel?.tipo === "regiao" ? sel.r.codigo : ""]);
   }, [mapa, camadas, modo, sel]);
 
-  /* enquadra a primeira vez que os dados chegam */
+  /* Abre na sede. O recorte da liderança continua aplicado às camadas;
+     sem sede geocodificada, enquadra a área ou os pontos disponíveis. */
   const enquadrou = useRef(false);
   useEffect(() => {
     if (!mapa || enquadrou.current) return;
+    if (sede) {
+      enquadrou.current = true;
+      mapa.map.jumpTo({ center: [sede.longitude, sede.latitude], zoom: 14 });
+      return;
+    }
     const caixa = areaDoLider ? caixaDaGeometria(areaDoLider.geojson) : caixaDosPontos([...pessoas, ...locais.filter(temPonto)] as Ponto[]);
     if (!caixa) return;
     enquadrou.current = true;
     mapa.map.fitBounds(caixa, { padding: { top: 80, bottom: 80, left: 340, right: 80 }, maxZoom: 14, duration: 0 });
-  }, [mapa, pessoas, locais, areaDoLider]);
+  }, [mapa, pessoas, locais, areaDoLider, sede]);
 
   useEffect(() => {
     if (!mapa) return;

@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { createServiceBrowserClient } from "./supabase-browser";
+import { sourceText, type Text } from "./internacional/mensagens";
 
 /* Tamanho do texto do app do membro (v7 4.9, manifesto seção 7). Sete posições,
    como em Ajustes do iPhone: corpo de 14, 15, 16, 17, 19, 21 e 23px, padrão na
@@ -16,10 +17,15 @@ import { createServiceBrowserClient } from "./supabase-browser";
 
 export const CORPOS = [14, 15, 16, 17, 19, 21, 23] as const;
 export const POSICAO_PADRAO = 3;
-export const NOMES_POSICAO = ["Muito pequeno", "Pequeno", "Um pouco menor", "Padrão", "Um pouco maior", "Grande", "Muito grande"] as const;
+export function nomesPosicao(t: Text) {
+  return [t("Muito pequeno"), t("Pequeno"), t("Um pouco menor"), t("Padrão"), t("Um pouco maior"), t("Grande"), t("Muito grande")] as const;
+}
+export const NOMES_POSICAO = nomesPosicao(sourceText);
 
 export const fatorDa = (pos: number) => CORPOS[clamp(pos)] / 17;
-export const textoDaPosicao = (pos: number) => `${NOMES_POSICAO[clamp(pos)]}, ${clamp(pos) + 1} de ${CORPOS.length}`;
+export const textoDaPosicao = (pos: number, t: Text = sourceText) => t("{nome}, {posicao} de {total}", {
+  nome: nomesPosicao(t)[clamp(pos)], posicao: clamp(pos) + 1, total: CORPOS.length,
+});
 
 function clamp(pos: number) {
   return Math.min(CORPOS.length - 1, Math.max(0, Math.round(Number.isFinite(pos) ? pos : POSICAO_PADRAO)));

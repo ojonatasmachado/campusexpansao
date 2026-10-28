@@ -1,3 +1,4 @@
+import { getTexto } from "../../../../service/lib/internacional/servidor";
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../lib/supabase-server";
 import { supabaseAdmin } from "../../../../lib/supabase";
@@ -6,22 +7,23 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  const traduzirUi = await getTexto(request);
   const supabase = await createClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return NextResponse.json({ error: "Você precisa estar logado." }, { status: 401 });
+    return NextResponse.json({ error: traduzirUi("Você precisa estar logado.") }, { status: 401 });
   }
 
   let body: { endpoint?: string };
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Envie dados válidos." }, { status: 400 });
+    return NextResponse.json({ error: traduzirUi("Envie dados válidos.") }, { status: 400 });
   }
 
   if (!body.endpoint) {
-    return NextResponse.json({ error: "Endpoint ausente." }, { status: 400 });
+    return NextResponse.json({ error: traduzirUi("Endpoint ausente.") }, { status: 400 });
   }
 
   try {
@@ -47,7 +49,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Não foi possível remover a inscrição.";
+    console.error("[service] push/unsubscribe:", error);
+    const message = traduzirUi("Não foi possível remover a inscrição.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
