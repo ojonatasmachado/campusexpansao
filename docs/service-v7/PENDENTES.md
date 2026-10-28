@@ -60,10 +60,9 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 ### 3. Qualidade que protege o resto
 
 ### 4. Código independente (dá para tocar em paralelo, se os trilhos não esbarrarem)
-- **I10** Biblioteca: indicadores e gráficos
 - **I2** Ações do Início que não navegam · **I5** Ajuda com menos repetição
 - **M2** Setas nos botões do membro · **M3** Retorno e recarga · **M5** Foco no Mural · **I7** Quadros no toque
-- **N2** Integração final de idiomas e moeda (base N1 entregue com recursos desativados) · **F1** Financeiro fases 3 e 4 (aguarda I10; mensagem para Claude na história) · **F2** Pontos pequenos de jornada · **O1** Culto avulso no estilo do assistente
+- **N2** Integração final de idiomas e moeda (base N1 entregue com recursos desativados) · **F1** Financeiro fases 3 e 4 · **F2** Pontos pequenos de jornada · **O1** Culto avulso no estilo do assistente
 - **I3** Revisão de UI das telas densas (depois de I9 e D1) · **G3** Cartões do mapa no Início (depois de I1)
 
 ### 5. Verificações em código e banco local

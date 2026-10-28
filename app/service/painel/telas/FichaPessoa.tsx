@@ -26,6 +26,7 @@ import type { BaptismCandidateView, BaptismClassView, BoardView, CalEvent, CardV
 import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Selo, etiquetaClasse } from "../../ui/Selo";
+import { Progresso } from "../../ui/Graficos";
 import { PersonTimeline } from "./ficha/PersonTimeline";
 import { VisitanteDrawer } from "./ficha/VisitanteDrawer";
 import { MemberEditModal } from "./ficha/MemberEditModal";

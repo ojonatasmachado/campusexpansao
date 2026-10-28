@@ -13,6 +13,7 @@ import { Botao, botaoClasse } from "../ui/Botao";
 import { Selo, tomDaClasse } from "../ui/Selo";
 import { Cartao } from "../ui/Cartao";
 import { Linha, Lista } from "../ui/Linha";
+import { Progresso } from "../ui/Graficos";
 export function ChipSt({ status, label }: { status: "ok" | "wait" | "no"; label?: string }) {
   const cls = status === "ok" ? "chip-ok" : status === "wait" ? "chip-wait" : "chip-no";
   return <Selo tom={tomDaClasse(cls)}>{label ?? status}</Selo>;

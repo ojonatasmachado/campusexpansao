@@ -23,7 +23,8 @@ import { ListaDeCuidado, type CriancaAusente } from "../../modules/cuidado/Cuida
 import { NovosCadastros } from "../../modules/entrada/NovosCadastros";
 import { linhaDoSetup, type SetupEstado } from "../../modules/configuracao/setup";
 import { termosDaRota } from "../../modules/registry";
-import { Kpi, REACOES_PESQUISA, ROUTES } from "../comum";
+import { REACOES_PESQUISA, ROUTES } from "../comum";
+import { Indicador } from "../../ui/Indicador";
 import type { AnnouncementView, ChildView, DecisionView, DrawerState, EnrollmentView, EventAttendanceView, EventView, FieldDef, JourneyChangeRequestView, KidsAttendanceView, KidsClassView, MemberView, MinistryView, ModalState, PersonView, RosterAssignmentView, TimelineEventView, VisitorView } from "../tipos";
 
 import { Botao } from "../../ui/Botao";
@@ -427,9 +428,9 @@ export function Painel({
       ))}
       {/* v7 3.6: cada número aparece uma vez. Vagas abertas e visitantes sem contato já estão na lista do topo e em Pendências. */}
       {!liderDeTime && !ativando && <div className="kpi-row kpi-3">
-        <Kpi icon="pessoa" label={ct("{Voluntarios}")} value={activePeople} foot={joinDot(`de ${plural(people.length, "cadastrado")}`, novosNoMes ? `${plural(novosNoMes, "novo", "novos")} em 30 dias` : null)} />
-        <Kpi icon="ok" label="Confirmação" value={escaladosSemana ? `${confirmationRate}%` : "·"} foot={escaladosSemana ? `de ${plural(escaladosSemana, "vaga escalada", "vagas escaladas")} nesta semana` : "ninguém escalado nesta semana"} />
-        <Kpi icon="visitante" label="Visitantes em acompanhamento" value={visitorsInCare} foot={visitantesSemContato ? `${visitantesSemContato} sem contato há mais de 48h` : visitorsInCare ? "todos com contato em dia" : "nenhum visitante em acompanhamento"} />
+        <Indicador icone="pessoa" rotulo={ct("{Voluntarios}")} valor={activePeople} rodape={joinDot(`de ${plural(people.length, "cadastrado")}`, novosNoMes ? `${plural(novosNoMes, "novo", "novos")} em 30 dias` : null)} />
+        <Indicador icone="ok" rotulo="Confirmação" valor={escaladosSemana ? `${confirmationRate}%` : "·"} rodape={escaladosSemana ? `de ${plural(escaladosSemana, "vaga escalada", "vagas escaladas")} nesta semana` : "ninguém escalado nesta semana"} />
+        <Indicador icone="visitante" rotulo="Visitantes em acompanhamento" valor={visitorsInCare} rodape={visitantesSemContato ? `${visitantesSemContato} sem contato há mais de 48h` : visitorsInCare ? "todos com contato em dia" : "nenhum visitante em acompanhamento"} />
       </div>}
       <div className="sobre-numeros"><Acao className="help-link" onClick={() => setSobreAberto(true)}>Sobre estes números</Acao></div>
       {sobreAberto && (
