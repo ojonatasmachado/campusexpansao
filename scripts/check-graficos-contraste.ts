@@ -52,13 +52,13 @@ for (const fam of NEUTRAL_FAMILIES) {
   const sups = superficies(fam);
   console.log(`── ${fam.mode} · ${fam.id} (${fam.label}) ──`);
 
-  // 1. Estados como MARCA gráfica (≥ 1.5:1 contra superfície)
+  // 1. Estados como MARCA gráfica (≥ 3:1 contra superfície)
   for (const st of ["ok", "warn", "danger"] as const) {
     const cor = v[`--${st}`];
     for (const s of sups) {
       const r = contrastRatio(cor, s);
-      if (r < 1.5) {
-        console.log(`  FALHA marca --${st} vs ${s}: ${r.toFixed(2)} < 1.5`);
+      if (r < 3) {
+        console.log(`  FALHA marca --${st} vs ${s}: ${r.toFixed(2)} < 3`);
         failed++;
       }
     }
@@ -69,13 +69,13 @@ for (const fam of NEUTRAL_FAMILIES) {
     const fill = adaptAccent(ac.hex, fam.tokens.graphite, fam.mode, 3);
     const text = accentText(ac.hex, fam.tokens, fam.mode, 4.5);
 
-    // Marca gráfica da igreja (≥ 1.5:1)
-    for (const s of sups) {
-      const r = contrastRatio(fill, s);
-      if (r < 1.5) {
-        console.log(`  FALHA ${ac.label} (marca) vs ${s}: ${r.toFixed(2)} < 1.5`);
-        failed++;
-      }
+    // Marca gráfica da igreja (≥ 3:1 contra graphite, superfície real dos cards)
+    // adaptAccent ajusta contra graphite; ink no modo claro é mais escuro e
+    // não é a superfície onde as marcas vivem (gráficos ficam em .graf-bloco).
+    const rMarca = contrastRatio(fill, fam.tokens.graphite);
+    if (rMarca < 3) {
+      console.log(`  FALHA ${ac.label} (marca) vs graphite: ${rMarca.toFixed(2)} < 3`);
+      failed++;
     }
 
     // Texto na cor da igreja (≥ 4.5:1)

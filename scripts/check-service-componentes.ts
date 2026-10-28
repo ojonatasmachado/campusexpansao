@@ -102,8 +102,8 @@ const REGRAS: Regra[] = [
     peca: "Indicador ou gráfico",
     usar: "Indicador ou componentes de app/service/ui/Graficos.tsx (Barras, Tendencia, Meta, Cobertura, etc.)",
     permitido: "app/service/ui/",
-    /* classes internas do KPI escritas à mão; kpi-row é layout e fica de fora */
-    re: /className=\{?["'`](?:kpi-value|kpi-label|kpi-foot)(?=[\s"'`$])/g,
+    /* classes de indicador/número escritas à mão; kpi-row é layout e fica de fora */
+    re: /className=\{?["'`](?:kpi(?:\s|["'`$])|kpi-value|kpi-label|kpi-foot|saude-n)(?=[\s"'`$])/g,
   },
 ];
 

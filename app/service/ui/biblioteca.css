@@ -612,8 +612,10 @@ body[data-theme="light"] .av.lead { box-shadow: 0 0 0 2px var(--graphite), 0 0 0
 /* ════ Bloco D: indicadores e gráficos (prancha 2, "Componentes de gestão") ════
    Todo número conta do zero (Contagem), toda barra sobe da base e toda linha se
    desenha da esquerda, uma depois da outra; quando o dado muda, desliza até o novo
-   valor. Cor da igreja só no que importa; o resto em neutro. */
-:root { --graf-neutro: color-mix(in srgb, var(--muted) 38%, transparent); --graf-trilho: color-mix(in srgb, var(--white) 7%, transparent); }
+   valor. Cor da igreja só no que importa; o resto em neutro.
+   Variáveis definidas em body (não :root) para reagir à troca de tema via
+   body[data-theme="..."] do themeCss. */
+body { --graf-neutro: color-mix(in srgb, var(--muted) 38%, transparent); --graf-trilho: color-mix(in srgb, var(--white) 7%, transparent); }
 @keyframes graf-sobe { from { transform: scaleY(0); } }
 @keyframes graf-cresce { from { transform: scaleX(0); } }
 @keyframes graf-desenha { from { stroke-dashoffset: 1; } }
@@ -628,7 +630,8 @@ body[data-theme="light"] .av.lead { box-shadow: 0 0 0 2px var(--graphite), 0 0 0
 .indicador.ind-cuidado .kpi-value, .indicador.ind-cuidado .saude-v { color: var(--danger); }
 .minilinha { flex: none; margin-left: auto; }
 .minilinha .graf-traco { stroke-width: 2.2; }
-.graf-traco { fill: none; stroke: var(--olive); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; animation: graf-desenha 1.2s var(--ease-drawer) .2s backwards; }
+/* marcas gráficas usam --accent-fill (cor da igreja como marca); --olive é só texto */
+.graf-traco { fill: none; stroke: var(--accent-fill); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; animation: graf-desenha 1.2s var(--ease-drawer) .2s backwards; }
 
 /* ── Comparação (Barras) e entradas e saídas (EntradasSaidas) ── */
 .graf-barras, .graf-pares { display: flex; align-items: stretch; gap: 10px; height: 170px; }
@@ -640,13 +643,13 @@ body[data-theme="light"] .av.lead { box-shadow: 0 0 0 2px var(--graphite), 0 0 0
 .graf-barra { display: block; width: 100%; max-width: 40px; min-height: 2px; border-radius: 10px 10px 4px 4px; background: var(--graf-neutro); transform-origin: bottom;
   animation: graf-sobe .7s var(--ease-drawer) backwards; animation-delay: calc(min(var(--i, 0), 11) * 60ms + .1s);
   transition: height .6s var(--ease-drawer); }
-.graf-col.atual .graf-barra, .graf-barra.entrada { background: var(--olive); }
+.graf-col.atual .graf-barra, .graf-barra.entrada { background: var(--accent-fill); }
 .graf-pares .graf-barra { width: 40%; border-radius: 8px 8px 3px 3px; }
 .graf-pares .graf-barra.saida { animation-delay: calc(min(var(--i, 0), 11) * 60ms + .16s); }
 .graf-eixo { font-size: var(--fs-pn-12); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .graf-legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--fs-pn-12); color: var(--muted); }
 .graf-legenda i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; background: var(--graf-neutro); }
-.graf-legenda i.entrada { background: var(--olive); }
+.graf-legenda i.entrada { background: var(--accent-fill); }
 
 /* ── Distribuição e funil (Distribuicao): .dist-row com barra que cresce da esquerda ── */
 .graf-dist .dist-bar-fill { transform-origin: left; animation: graf-cresce .7s var(--ease-drawer) backwards; animation-delay: calc(min(var(--i, 0), 11) * 60ms + .1s); transition: width .6s var(--ease-drawer); }
@@ -663,7 +666,7 @@ body[data-theme="light"] .av.lead { box-shadow: 0 0 0 2px var(--graphite), 0 0 0
 .graf-cob-linha { display: flex; align-items: center; gap: 12px; }
 .graf-cob-nome { flex: 0 1 110px; min-width: 0; font-size: var(--fs-pn-13); font-weight: 600; color: var(--white); overflow-wrap: anywhere; }
 .graf-cob-trilho { flex: 1; height: 8px; border-radius: 8px; background: var(--graf-trilho); overflow: hidden; }
-.graf-cob-barra { display: block; height: 100%; border-radius: 8px; background: var(--olive); transform-origin: left; animation: graf-cresce .7s var(--ease-drawer) backwards; animation-delay: calc(min(var(--i, 0), 11) * 60ms + .1s); transition: width .6s var(--ease-drawer); }
+.graf-cob-barra { display: block; height: 100%; border-radius: 8px; background: var(--accent-fill); transform-origin: left; animation: graf-cresce .7s var(--ease-drawer) backwards; animation-delay: calc(min(var(--i, 0), 11) * 60ms + .1s); transition: width .6s var(--ease-drawer); }
 .graf-cob-pct { width: 44px; text-align: right; font-size: var(--fs-pn-13); font-weight: 800; color: var(--white); }
 .graf-cob-linha.pendente .graf-cob-barra { background: var(--amber); }
 .graf-cob-linha.pendente .graf-cob-pct { color: var(--amber); }
@@ -676,9 +679,9 @@ body[data-theme="light"] .av.lead { box-shadow: 0 0 0 2px var(--graphite), 0 0 0
 .graf-anel svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .graf-anel circle { fill: none; stroke-width: 16; }
 .graf-anel-fundo { stroke: var(--graf-trilho); }
-.graf-anel-arco { stroke: var(--olive); stroke-linecap: round; stroke-dasharray: 1; animation: graf-desenha 1.4s var(--ease-drawer) .2s backwards; transition: stroke-dashoffset .6s var(--ease-drawer); }
+.graf-anel-arco { stroke: var(--accent-fill); stroke-linecap: round; stroke-dasharray: 1; animation: graf-desenha 1.4s var(--ease-drawer) .2s backwards; transition: stroke-dashoffset .6s var(--ease-drawer); }
 .graf-anel-centro { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.graf-anel-n { font-size: 46px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; color: var(--white); }
+.graf-anel-n { font-size: clamp(28px, 3.6vw, 46px); font-weight: 800; letter-spacing: -0.04em; line-height: 1; color: var(--white); }
 .graf-anel-s { margin-top: 4px; font-size: var(--fs-pn-14); color: var(--muted); }
 .graf-meta-t { font-size: var(--fs-pn-14); font-weight: 600; color: var(--white); text-align: center; }
 
@@ -686,10 +689,10 @@ body[data-theme="light"] .av.lead { box-shadow: 0 0 0 2px var(--graphite), 0 0 0
 .graf-tend-area { position: relative; height: 200px; }
 .graf-tend-area svg { width: 100%; height: 100%; overflow: visible; animation: graf-revela 1.6s var(--ease-drawer) .15s backwards; }
 .graf-tend .graf-traco { stroke-dasharray: none; animation: none; vector-effect: non-scaling-stroke; }
-.graf-eco { fill: var(--olive); fill-opacity: .1; animation: graf-aparece 1s ease .6s backwards; }
+.graf-eco { fill: var(--accent-fill); fill-opacity: .1; animation: graf-aparece 1s ease .6s backwards; }
 .graf-guia, .graf-base { stroke: var(--border); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .graf-base { stroke: var(--border-2); }
-.graf-ponto { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; box-sizing: border-box; border-radius: 50%; border: 3px solid var(--olive); background: var(--graphite); animation: graf-aparece .4s ease 1.5s backwards; }
+.graf-ponto { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; box-sizing: border-box; border-radius: 50%; border: 3px solid var(--accent-fill); background: var(--graphite); animation: graf-aparece .4s ease 1.5s backwards; }
 .graf-tend-eixo { display: flex; justify-content: space-between; margin-top: 8px; font-size: var(--fs-pn-12); color: var(--muted); }
 
 /* ── Mapa de frequência (Frequencia): escala de uma cor, células em onda ── */
@@ -697,7 +700,7 @@ body[data-theme="light"] .av.lead { box-shadow: 0 0 0 2px var(--graphite), 0 0 0
 .graf-freq-linha { display: flex; align-items: center; gap: 8px; }
 .graf-freq-nome { flex: 0 0 76px; font-size: var(--fs-pn-12); font-weight: 600; color: var(--light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .graf-freq-celulas { flex: 1; display: grid; grid-template-columns: repeat(var(--colunas, 12), minmax(0, 1fr)); gap: 4px; }
-.graf-freq-cel { aspect-ratio: 1; border-radius: 5px; background: color-mix(in srgb, var(--olive) calc(var(--forca, 1) * 100%), var(--graf-trilho)); animation: graf-cel .45s var(--ease-drawer) backwards; animation-delay: calc(var(--i, 0) * 50ms); }
+.graf-freq-cel { aspect-ratio: 1; border-radius: 5px; background: color-mix(in srgb, var(--accent-fill) calc(var(--forca, 1) * 100%), var(--graf-trilho)); animation: graf-cel .45s var(--ease-drawer) backwards; animation-delay: calc(var(--i, 0) * 50ms); }
 
 @media (prefers-reduced-motion: reduce) {
   .graf-traco, .graf-barra, .graf-dist .dist-bar-fill, .graf-prog .bar-fill, .graf-cob-barra, .graf-anel-arco,
