@@ -22,6 +22,7 @@ import { Linha, linhaClasse } from "../../ui/Linha";
 import { Selo, tomDaClasse } from "../../ui/Selo";
 import { Segmentado } from "../../ui/Segmentado";
 import { Vazio } from "../../ui/Estados";
+import { Progresso } from "../../ui/Graficos";
 export function Decisoes({
   decisions,
   members,
@@ -277,9 +278,7 @@ export function CursosTrilhas({
                 <p style={{ color: "var(--muted)", fontSize: "var(--fs-pn-13)", lineHeight: 1.55, marginTop: 12 }}>
                   {course.description || "Acompanhamento de progresso e conclusão na linha do tempo do membro."}
                 </p>
-                <div className="bar" style={{ marginTop: 14 }}>
-                  <div className="bar-fill" style={{ width: `${pct}%` }} />
-                </div>
+                <Progresso pct={pct} rotulo={`Conclusão de ${course.name}`} style={{ marginTop: 14 }} />
               </Acao>
             );
           })}

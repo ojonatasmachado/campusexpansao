@@ -19,6 +19,7 @@ import { BarraSalvar } from "../../ui/BarraSalvar";
 import { Folha, Gaveta, Janela } from "../../ui/Janela";
 import { MenuAcoes } from "../../ui/Menu";
 import { BlocoC } from "./BlocoC";
+import { BlocoD } from "./BlocoD";
 
 const GRUPOS = [
   { v: "norte", l: "Célula Norte" },
@@ -160,6 +161,7 @@ export default function Galeria() {
           aoSalvar={() => { setSalvando(true); window.setTimeout(() => { setSalvando(false); setTitulo(original); avisar("Culto salvo."); }, 900); }} />
       </Cartao>
       <BlocoC />
+      <BlocoD />
       <Cartao className="galeria-bloco">
         <h2>Carregando, outras formas</h2>
         <Carregando forma="indicadores" quantos={4} />

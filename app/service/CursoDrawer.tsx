@@ -16,6 +16,7 @@ import { Janela, Gaveta } from "./ui/Janela";
 import { Selo } from "./ui/Selo";
 import { Vazio } from "./ui/Estados";
 import { Avatar } from "./ui/Avatar";
+import { Progresso } from "./ui/Graficos";
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
 type CourseView = {
@@ -277,9 +278,7 @@ export default function CursoDrawer({
                   <Avatar nome={m.name} tamanho="sm" />
                   <div className="cand-main">
                     <div className="cand-name">{m.name}</div>
-                    <div className="bar" style={{ marginTop: 6 }}>
-                      <div className={`bar-fill ${en.status === "concluido" ? "" : "amber"}`} style={{ width: `${pct}%` }} />
-                    </div>
+                    <Progresso pct={pct} rotulo={`Progresso de ${m.name}`} tom={en.status === "concluido" ? undefined : "pendente"} style={{ marginTop: 6 }} />
                   </div>
                   {en.status === "concluido" ? (
                     <Selo tom="ok">Concluiu</Selo>

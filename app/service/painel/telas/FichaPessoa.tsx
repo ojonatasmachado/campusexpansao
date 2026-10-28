@@ -38,6 +38,7 @@ import { Selecao } from "../../ui/Selecao";
 import { SeletorData } from "../../ui/Data";
 import { Vazio } from "../../ui/Estados";
 import { Janela } from "../../ui/Janela";
+import { Progresso } from "../../ui/Graficos";
 import { Etapas, type Etapa } from "../../ui/Etapas";
 export function PersonTimeline({ member, events, compact }: { member: MemberView; events: TimelineEventView[]; compact?: boolean }) {
   const { comTermos: ct } = useTermos();
@@ -678,7 +679,7 @@ export function EntityDrawer({
                           {status === "concluido" ? <Selo tom="ok">Concluído</Selo> : <span className="mc-pct">{pct}%</span>}
                         </div>
                         <div className="mc-meta">{course.level || course.kind || "curso"} · {done_count} de {plural(totalAulas, "aula")}</div>
-                        <div className="bar" style={{ marginTop: 8 }}><div className={`bar-fill ${status === "concluido" ? "" : "amber"}`} style={{ width: `${pct}%` }} /></div>
+                        <Progresso pct={pct} rotulo={`Progresso em ${course.name}`} tom={status === "concluido" ? undefined : "pendente"} style={{ marginTop: 8 }} />
                       </div>
                     </div>
                   );

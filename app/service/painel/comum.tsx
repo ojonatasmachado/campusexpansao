@@ -4,13 +4,12 @@ import { telefoneParaWhatsapp } from "../lib/telefone";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { ICON_PATHS, DEFAULT_ICON, Icon } from "../lib/icons";
 import { parseISODate } from "../lib/date";
-import { HelpDot } from "../HelpSystem";
 import { JRN_STEPS } from "./caminhada";
 import { ACESSO_MSG_DEFAULT } from "../modules/pessoas/acesso-msg";
 import { modulosLigados } from "../modules/registry";
 import type { ChurchView, JourneyStepKind, MatrizV2, MemberView, PapelV2, PersonView, ReservationView } from "./tipos";
 
-import { Contagem } from "../ui/Contagem";
+import { Indicador } from "../ui/Indicador";
 /* módulos ligados na igreja (registro de módulos, lei 3) */
 export function ligadosDa(church?: ChurchView, condicoes: Record<string, boolean> = {}) {
   return modulosLigados({ on: church?.modulosOn, off: church?.modulosOff }, condicoes);
@@ -102,14 +101,9 @@ export const REACOES_PESQUISA = ["Péssimo", "Ruim", "Regular", "Bom", "Ótimo"]
 /* estado vazio único: título curto, uma frase do que vai aparecer ali e,
    quando houver, o botão da primeira ação */
 
-export function Kpi({ icon, label, value, foot, amber, help }: { icon: string; label: string; value: string | number; foot: string; amber?: boolean; help?: string }) {
-  return (
-    <div className="kpi">
-      <div className="kpi-label"><Icon name={icon} size={13} /> <span>{label} {help ? <HelpDot text={help} /> : null}</span></div>
-      <div className="kpi-value" style={amber ? { color: "var(--amber)" } : undefined}><Contagem valor={value} /></div>
-      <div className="kpi-foot">{foot}</div>
-    </div>
-  );
+/* indicador do painel: a peça é Indicador (app/service/ui/Indicador.tsx) */
+export function Kpi({ icon, label, value, foot, amber, help, serie }: { icon: string; label: string; value: string | number; foot: string; amber?: boolean; help?: string; serie?: number[] }) {
+  return <Indicador icone={icon} rotulo={label} valor={value} rodape={foot} tom={amber ? "pendente" : undefined} ajuda={help} serie={serie} />;
 }
 
 
