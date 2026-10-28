@@ -41,7 +41,6 @@ O estado vivo não fica escrito aqui. A trava é o branch `historia/<ID>-<slug>`
 A ordem vai do que destrava mais para o que destrava menos. Decisões do usuário vêm primeiro porque travam várias histórias de código.
 
 ### 1. Decisões do usuário (o agente prepara as opções e registra a resposta)
-- **D1** Aprovar a revisão de leveza de 22/10 (destrava E1, E2, E4, I1, M1 e, por tabela, E3, G3, I3)
 - **D2** Painel no celular: filtrado por papel ou "modo líder" no app
 - **D3** Aprovar os adendos propostos ao AGENTS.md
 - **D5** "Faltou" entra como fato no histórico?
@@ -50,7 +49,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **M6** Reorganização interna da Caminhada (só com evidência)
 - **D4** Capítulo "Interface do Service" no Brand Book (galeria viva pronta em /service/demo/biblioteca)
 
-### 2. Leveza, depois do D1 (maior ganho para quem usa)
+### 2. Leveza, liberada pelo D1 em 28/10 (maior ganho para quem usa)
 - **E2** Panorama do culto · **E1** Escalas por time (as duas tocam `cobertura.ts`: uma de cada vez)
 - **I1** Início do painel como fila "Precisa de você"
 - **M1** Agenda do membro com "Confirmar todas"
@@ -63,7 +62,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **I2** Ações do Início que não navegam · **I5** Ajuda com menos repetição
 - **M2** Setas nos botões do membro · **M3** Retorno e recarga · **M5** Foco no Mural · **I7** Quadros no toque
 - **N2** Integração final de idiomas e moeda (base N1 entregue com recursos desativados) · **F1** Financeiro fases 3 e 4 · **F2** Pontos pequenos de jornada · **O1** Culto avulso no estilo do assistente
-- **I3** Revisão de UI das telas densas (depois de I9 e D1) · **G3** Cartões do mapa no Início (depois de I1)
+- **I3** Revisão de UI das telas densas (I9 e D1 feitos) · **G3** Cartões do mapa no Início (depois de I1)
 
 ### 5. Verificações em código e banco local
 - **E5** Troca de escala ponta a ponta · **M4** Convite e primeiro acesso
