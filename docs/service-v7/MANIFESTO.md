@@ -2,7 +2,7 @@
 
 Data: 06/10/2026. Base: estudo `prints/service-2026-10-05` (commit 539a83d). Referência visual para pessoas: `Service - Analise e Evolucao v2.html`, no projeto de design CE.X (fora do repositório). Este manifesto basta para executar.
 
-**Revisão de 22/10/2026 (leveza).** Base: `docs/service-v7/LEVEZA-2026-10-21.md` (pesquisa de 11 ferramentas de igreja e medição de densidade com 300 pessoas). As 12 leis cuidavam do app do membro, que ficou leve; o painel não tinha regra de densidade e virou cockpit. Mudou: leis 2 e 12 ampliadas, leis 13 a 16 novas, checklist, decisões 9 e 12, itens 4.11 e 4.16, e a seção 2b. Cada trecho alterado leva a marca **(rev. 22/10)**.
+**Revisão de 22/10/2026 (leveza).** Base: `docs/service-v7/LEVEZA-2026-10-21.md` (pesquisa de 11 ferramentas de igreja e medição de densidade com 300 pessoas). As 12 leis cuidavam do app do membro, que ficou leve; o painel não tinha regra de densidade e virou cockpit. Mudou: leis 2 e 12 ampliadas, leis 13 a 16 novas, checklist, decisões 9 e 12, itens 4.11 e 4.16, e a seção 2b. Cada trecho alterado leva a marca **(rev. 22/10)**. **Aprovada pelo usuário em 28/10/2026 (história D1):** decisão 9, itens 4.11 e 4.16 e as quatro decisões da seção 2b, sem ressalvas.
 
 ## 0. Como usar
 
@@ -66,7 +66,7 @@ Daqui em diante, toda função nova do Service nasce como módulo. Tela, item de
 6. **Vocabulário** conforme a lei 7, começando por Caminhada, Grupo, Culto e Voluntário. "Inscrições abertas" vira cartão só para quem ainda não fez aquela etapa.
 7. **Tarefas.** No Início enquanto abertas e na Agenda no dia do prazo. Sem aba nova.
 8. **Tamanho do texto com o componente do iPhone**, em sete posições, de 14 a 23px no corpo do texto (seção 7).
-9. **Painel por papel.** ~~Gestão e pastores abrem na Saúde da igreja (padrão de 30 dias)~~; líder de time abre no "Para resolver" do seu time. **(rev. 22/10, pendente de aprovação)** Gestão e pastores também abrem no "Para resolver", da igreja inteira. A Saúde vira uma linha com até 3 números logo abaixo e o panorama completo fica em Relatórios (lei 2).
+9. **Painel por papel.** ~~Gestão e pastores abrem na Saúde da igreja (padrão de 30 dias)~~; líder de time abre no "Para resolver" do seu time. **(rev. 22/10, aprovada em 28/10)** Gestão e pastores também abrem no "Para resolver", da igreja inteira. A Saúde vira uma linha com até 3 números logo abaixo e o panorama completo fica em Relatórios (lei 2).
 10. **Configuração guiada em 3 fases**, com tempo estimado, da igreja e da criação de culto (item 4.12).
 11. **Do estudo:** 4 abas e avatar; Início como fila; escala de fonte da lei 8; nenhum beco sem saída; primeiro acesso em 2 passos; registro de módulos começando por Escalas.
 12. **Cobertura por time** em cada culto (item 4.16). **(rev. 22/10)** Mora no Panorama do culto; nos outros lugares, só uma linha-resumo (lei 14).
@@ -125,7 +125,7 @@ Daqui em diante, toda função nova do Service nasce como módulo. Tela, item de
 - 4.8 **Histórico** (lei 10). "Minha história" no Perfil; linha do tempo na ficha da pessoa no painel; janela Escalar com "serviu há X · N vezes no mês".
 - 4.9 **Tamanho do texto** (seção 7).
 - 4.10 **Primeiro acesso em 2 passos:** confirmar nome e telefone; tamanho do texto com prévia. Termina na escala pendente ou no próximo culto. Foto, CEP e aniversário viram cartão "Complete seus dados". Atalho na tela de início pedido no segundo acesso.
-- 4.11 **Painel por papel** (decisão 9). Saúde da igreja: período 30 dias (padrão), 90 dias, 12 meses ou datas escolhidas, comparado ao período anterior. Base: membros registrados, servindo em times, em grupos. Período: visitantes, integrados, decisões, batismos, em cursos, concluíram. As etapas seguem a Caminhada configurada. Cada número abre a lista de pessoas. "Para resolver" logo abaixo. **(rev. 22/10, pendente de aprovação)** Ordem invertida para todos os papéis: "Para resolver" primeiro; da Saúde, só uma linha com até 3 números (base) no Início. O período, a comparação e os demais números passam para Relatórios.
+- 4.11 **Painel por papel** (decisão 9). Saúde da igreja: período 30 dias (padrão), 90 dias, 12 meses ou datas escolhidas, comparado ao período anterior. Base: membros registrados, servindo em times, em grupos. Período: visitantes, integrados, decisões, batismos, em cursos, concluíram. As etapas seguem a Caminhada configurada. Cada número abre a lista de pessoas. "Para resolver" logo abaixo. **(rev. 22/10, aprovada em 28/10)** Ordem invertida para todos os papéis: "Para resolver" primeiro; da Saúde, só uma linha com até 3 números (base) no Início. O período, a comparação e os demais números passam para Relatórios.
 - 4.12 **Configuração guiada em 3 fases.** Assistente que dá para pular e retomar, com o tempo estimado de cada fase na tela (ponto de partida: 3, 5 e 5 minutos; ajustar depois de testar com 5 igrejas).
   - Fase 1 · Sua igreja: dados (o CEP preenche o endereço), logo e cor com prévia do app.
   - Fase 2 · Cultos e times: horários comuns em botões; times a partir de modelos (Louvor, Recepção, Kids, Mídia, com funções).
