@@ -33,7 +33,7 @@ import { MenuAcoes } from "../../ui/Menu";
 import { Cartao } from "../../ui/Cartao";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Segmentado } from "../../ui/Segmentado";
-import { Contagem } from "../../ui/Contagem";
+import { Indicador } from "../../ui/Indicador";
 import { Marcar } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
 import { Carregando } from "../../ui/Estados";
@@ -165,11 +165,8 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
         <>
           <div className="kpi-row kpi-3">
             {([[`Entradas em ${mesNome(mes)}`, brl(entradas), false], [`Saídas em ${mesNome(mes)}`, brl(saidas), false], ["Resultado do mês", brl(entradas - saidas, true), entradas - saidas < 0]] as const).map(([rotulo, valor, neg]) => (
-              <div className="kpi" key={rotulo}>
-                <div className="kpi-label">{rotulo}</div>
-                {/* valor grande demais para a letra de 32 desce para 20, sem cortar */}
-                <div className={`kpi-value fin-num${valor.length > 15 ? " fin-longo" : ""}${neg ? " fin-neg" : ""}`}>{fin.carregando ? "…" : <Contagem valor={valor} />}</div>
-              </div>
+              /* valor grande demais para a letra de 32 desce para 20, sem cortar */
+              <Indicador key={rotulo} rotulo={rotulo} valor={valor} carregando={fin.carregando} classeValor={`fin-num${valor.length > 15 ? " fin-longo" : ""}${neg ? " fin-neg" : ""}`} />
             ))}
           </div>
 

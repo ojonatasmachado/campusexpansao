@@ -19,6 +19,7 @@ import { Segmentado } from "../../ui/Segmentado";
 import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
 import { SeletorData } from "../../ui/Data";
 import { Vazio } from "../../ui/Estados";
+import { Progresso } from "../../ui/Graficos";
 import { AvatarGrupo } from "../../ui/Avatar";
 import { Gaveta, Janela } from "../../ui/Janela";
 /* permissões do Kanban por papel (equivalente ao kanbanPerm()/S.KANBAN_PERMS do
@@ -620,9 +621,7 @@ export function Quadros({
               <div className="bd-foot">
                 <span className="team-stat"><b>{boardCards.length}</b> cards · <b>{feitos}</b> feitos</span>
               </div>
-              <div className="bar" style={{ marginTop: 10 }}>
-                <div className="bar-fill" style={{ width: `${pct}%` }} />
-              </div>
+              <Progresso pct={pct} rotulo={`Cards feitos em ${board.name}`} style={{ marginTop: 10 }} />
             </Acao>
           );
         })}

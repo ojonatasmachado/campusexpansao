@@ -39,3 +39,5 @@ Galeria viva com todas as peças e estados: `/service/demo/biblioteca` (aceita `
 | `Avatar.tsx` | `Avatar` (foto ou iniciais sobre tom quente fixo; xs a xl; `eu`, `lider`, `presente`), `AvatarGrupo` (empilhado com +N, entra em cascata), `tomDoNome()` |
 | `Etapas.tsx` | `Etapas` (linha, app ou faixa; feito, atual com halo, futuro; data real; `aoEscolher` para voltar num assistente) |
 | `Tabela.tsx` | `Tabela` (colunas, `aoAbrir`, seleção com barra em lote via `lote`, linhas em sequência com `chaveAnimacao`, Esc limpa) |
+| `Indicador.tsx` | `Indicador` (rótulo, número que conta via Contagem, variação com Selo, minilinha SVG; estilos cartao e numero), `Minilinha` (tendência sem eixo que se desenha da esquerda) |
+| `Graficos.tsx` | `Barras` (comparação, última na cor da igreja), `Tendencia` (linha + área suave, último ponto em destaque), `Meta` (anel para um alvo), `Cobertura` (barra horizontal; abaixo do limite fica âmbar), `Distribuicao` (funil ou lista horizontal), `EntradasSaidas` (barras pareadas), `Frequencia` (mapa de calor por culto/semana), `Progresso` (barra fina de parte do todo) |

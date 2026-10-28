@@ -73,6 +73,8 @@ jobs:
         run: npx tsx scripts/check-service-componentes.ts
       - name: Contraste dos temas
         run: npx tsx scripts/check-theme-contrast.ts
+      - name: Contraste dos gráficos (I10)
+        run: npx tsx scripts/check-graficos-contraste.ts
       - name: Contratos das jornadas
         run: |
           for check in internacional fuso avisos-fuso ativacao civil-date cnpj demo-datas endereco geo-cpf member-navigation panel-access semana telefone times-recebimento; do

@@ -12,7 +12,8 @@ import CursoDrawer from "../../CursoDrawer";
 import { useServiceAccess } from "../../AccessContext";
 import { requirementsFor, requirementLabel } from "../../lib/requirements";
 import { Av, Chip, EmptyState, PageHead } from "../ui";
-import { BAT_ST_MAP, Kpi, OUTRO_LOCAL } from "../comum";
+import { BAT_ST_MAP, OUTRO_LOCAL } from "../comum";
+import { Indicador } from "../../ui/Indicador";
 import type { BaptismCandidateView, BaptismClassView, ChurchView, CourseView, DecisionView, DrawerState, EnrollmentView, LessonAttendanceView, LessonView, MemberView, ModalState, ModuleView, PersonView, RoomView } from "../tipos";
 
 import { Botao } from "../../ui/Botao";
@@ -22,6 +23,7 @@ import { Linha, linhaClasse } from "../../ui/Linha";
 import { Selo, tomDaClasse } from "../../ui/Selo";
 import { Segmentado } from "../../ui/Segmentado";
 import { Vazio } from "../../ui/Estados";
+import { Progresso } from "../../ui/Graficos";
 export function Decisoes({
   decisions,
   members,
@@ -56,10 +58,10 @@ export function Decisoes({
         action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Nova decisão", subtitle: ct("Registre quem decidiu, o {culto} e quem fará o acompanhamento."), saveLabel: "Registrar decisão", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem decidiu" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"culto", label:ct("{Culto}"), type:"text", half:true, ph:ct("ex: {Culto} da Manhã") }, { k:"responsavel", label:"Responsável pelo acompanhamento", type:"text", ph:"Quem vai acompanhar" }], action: { kind: "decision" } })}>+ Registrar decisão</Botao>}
       />
       <div className="kpi-row">
-        <Kpi icon="visitante" label="Decisões no mês" value={decisions.length} foot={ct("registradas na {caminhada}")} help="Quantas decisões por Jesus ou reconciliações foram registradas neste mês." />
-        <Kpi icon="config" label="A contatar" value={newDecisions.length} foot="aguardando primeiro contato" amber help="Decisões novas que ainda não tiveram o primeiro contato da equipe de acompanhamento." />
-        <Kpi icon="pessoa" label="Em acompanhamento" value={following.length} foot="discipulado em andamento" help="Quem já foi contatado e está no meio do discipulado inicial." />
-        <Kpi icon="relatorios" label="Encaminhados" value={forwarded.length} foot="já viraram membros" help="Decisões que já completaram o caminho e viraram membros da igreja." />
+        <Indicador icone="visitante" rotulo="Decisões no mês" valor={decisions.length} rodape={ct("registradas na {caminhada}")} ajuda="Quantas decisões por Jesus ou reconciliações foram registradas neste mês." />
+        <Indicador icone="config" rotulo="A contatar" valor={newDecisions.length} rodape="aguardando primeiro contato" tom="pendente" ajuda="Decisões novas que ainda não tiveram o primeiro contato da equipe de acompanhamento." />
+        <Indicador icone="pessoa" rotulo="Em acompanhamento" valor={following.length} rodape="discipulado em andamento" ajuda="Quem já foi contatado e está no meio do discipulado inicial." />
+        <Indicador icone="relatorios" rotulo="Encaminhados" valor={forwarded.length} rodape="já viraram membros" ajuda="Decisões que já completaram o caminho e viraram membros da igreja." />
       </div>
       <div className="toolbar">
         <div className="tb-search">
@@ -119,10 +121,10 @@ export function Batismos({
     <div className="content wide">
       <PageHead title="Batismos" eyebrow={ct("{Caminhada}")} help={ct("Turmas de batismo: quem vai ser batizado, quando e onde. Fecha um passo importante na {caminhada} da pessoa.")} action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Nova turma de batismo", subtitle: "Crie a turma, defina data, local e quem vai oficiar.", saveLabel: "Criar turma", formFields: [{ k:"label", label:"Nome da turma", type:"text", req:true, ph:"ex: Batismo de Julho 2025" }, { k:"data", label:"Data do batismo", type:"date", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"ex: Rio Tietê, Praia de Santos...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"pastor", label:"Pastor responsável", type:"text", ph:"Quem vai oficiar" }], action: { kind: "baptismClass" } })}>+ Nova turma</Botao>} />
       <div className="kpi-row">
-        <Kpi icon="identidade" label="Turmas abertas" value={baptismClasses.filter((c) => c.open_enrollment).length} foot="com inscrições disponíveis" help="Turmas de batismo que ainda estão aceitando novas inscrições." />
-        <Kpi icon="pessoa" label="Candidatos" value={baptismCandidates.length} foot="em preparação" help="Quem está inscrito numa turma, fazendo o curso pré-batismo." />
-        <Kpi icon="cultos" label="Próximas turmas" value={upcoming.length} foot={formatDateBR(upcoming[0]?.baptism_date) || "sem data agendada"} help="Turmas com data de batismo marcada pra frente." />
-        <Kpi icon="relatorios" label="Concluídos" value={concluded.length} foot="histórico da igreja" help="Turmas de batismo já realizadas, guardadas no histórico." />
+        <Indicador icone="identidade" rotulo="Turmas abertas" valor={baptismClasses.filter((c) => c.open_enrollment).length} rodape="com inscrições disponíveis" ajuda="Turmas de batismo que ainda estão aceitando novas inscrições." />
+        <Indicador icone="pessoa" rotulo="Candidatos" valor={baptismCandidates.length} rodape="em preparação" ajuda="Quem está inscrito numa turma, fazendo o curso pré-batismo." />
+        <Indicador icone="cultos" rotulo="Próximas turmas" valor={upcoming.length} rodape={formatDateBR(upcoming[0]?.baptism_date) || "sem data agendada"} ajuda="Turmas com data de batismo marcada pra frente." />
+        <Indicador icone="relatorios" rotulo="Concluídos" valor={concluded.length} rodape="histórico da igreja" ajuda="Turmas de batismo já realizadas, guardadas no histórico." />
       </div>
       <div className="section-divide">
         <span className="num">{upcoming.length}</span>
@@ -242,10 +244,10 @@ export function CursosTrilhas({
       />
 
       <div className="kpi-row">
-        <Kpi icon="cursos" label="Cursos ativos" value={courses.length} foot="trilhas, conteúdo e presenciais" help="Trilhas de formação disponíveis hoje, da decisão à liderança." />
-        <Kpi icon="membros" label="Matrículas" value={totMatric} foot="pessoas cursando agora" help="Quantas pessoas estão matriculadas em algum curso neste momento." />
-        <Kpi icon="ok" label="Conclusões" value={totConcl} foot={totMatric ? `${Math.round((totConcl / totMatric) * 100)}% de conclusão` : "sem matrículas ainda"} help="Matrículas que já terminaram todas as aulas do curso." />
-        <Kpi icon="times" label="Em formação de líderes" value={emFormacao} foot="na trilha de liderança" help="Quem está cursando especificamente a trilha de formação de líderes." />
+        <Indicador icone="cursos" rotulo="Cursos ativos" valor={courses.length} rodape="trilhas, conteúdo e presenciais" ajuda="Trilhas de formação disponíveis hoje, da decisão à liderança." />
+        <Indicador icone="membros" rotulo="Matrículas" valor={totMatric} rodape="pessoas cursando agora" ajuda="Quantas pessoas estão matriculadas em algum curso neste momento." />
+        <Indicador icone="ok" rotulo="Conclusões" valor={totConcl} rodape={totMatric ? `${Math.round((totConcl / totMatric) * 100)}% de conclusão` : "sem matrículas ainda"} ajuda="Matrículas que já terminaram todas as aulas do curso." />
+        <Indicador icone="times" rotulo="Em formação de líderes" valor={emFormacao} rodape="na trilha de liderança" ajuda="Quem está cursando especificamente a trilha de formação de líderes." />
       </div>
 
       {/* uma fileira só: os tipos de curso e, no fim, organizar */}
@@ -277,9 +279,7 @@ export function CursosTrilhas({
                 <p style={{ color: "var(--muted)", fontSize: "var(--fs-pn-13)", lineHeight: 1.55, marginTop: 12 }}>
                   {course.description || "Acompanhamento de progresso e conclusão na linha do tempo do membro."}
                 </p>
-                <div className="bar" style={{ marginTop: 14 }}>
-                  <div className="bar-fill" style={{ width: `${pct}%` }} />
-                </div>
+                <Progresso pct={pct} rotulo={`Conclusão de ${course.name}`} style={{ marginTop: 14 }} />
               </Acao>
             );
           })}

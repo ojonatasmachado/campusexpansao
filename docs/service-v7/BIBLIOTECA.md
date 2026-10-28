@@ -61,7 +61,8 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Erro | `ErroEstado` em `app/service/ui/Estados.tsx`; `friendlyWriteError` dá o texto | parcial | telas ainda mostram erro de carga só como texto | 3 |
 | Ajuda "?" | `HelpDot` (HelpSystem.tsx) | sim | modelo a seguir | n/a |
 | Tabela | `Tabela` em `app/service/ui/Tabela.tsx` (colunas, linha que abre o detalhe, seleção com barra de ações em lote, linhas em sequência ao filtrar); referência: Pessoas | parcial | as outras `.tbl` (Aniversariantes, Secretaria, Financeiro, Formação, Kids, Visitantes, Reuniões) ainda à mão | 3 |
-| Indicador | `Kpi` (painel/comum.tsx) | parcial | `.kpi` duplicado com o admin | 2, 6 |
+| Indicador | `Indicador` em `app/service/ui/Indicador.tsx` (rótulo, número que conta via Contagem, variação com Selo, minilinha SVG; estilos cartao e numero), `Minilinha` (tendência sem eixo); `Kpi` em painel/comum.tsx é wrapper fino | sim | ok; CI barra .kpi-value/.kpi-label/.kpi-foot fora de app/service/ui/ | 2, 6 |
+| Gráficos | `Barras`, `Tendencia`, `Meta`, `Cobertura`, `Distribuicao` (funil), `EntradasSaidas`, `Frequencia`, `Progresso` em `app/service/ui/Graficos.tsx`; visual em biblioteca.css (.graf-*) | sim | SVG próprio, sem lib externa; cada gráfico tem role=img + aria-label; movimento reduzido desliga animações | 2 |
 | Etapas/linha do tempo | `Etapas` em `app/service/ui/Etapas.tsx` (linha, app, faixa; feito, atual, futuro; data real em cada etapa feita) | sim | ok; CI barra `.tl`, `.jrn-tl`, `.m6-step`, `.imp-steps`. Ficam de fora por não serem etapas: `.pipe` (quadro de visitantes), `LinhaDoTempo` do mapa (série no tempo), `.crono-step` (roteiro editável do culto) | 1, 6 |
 | Menu de opções | `MenuAcoes` em `app/service/ui/Menu.tsx`; `MenuMais` usa por dentro | sim | menu do usuário (TopUserMenu) é peça própria | 4 |
 

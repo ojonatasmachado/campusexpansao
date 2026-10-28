@@ -16,7 +16,7 @@ import { Opcao } from "../../ui/Opcao";
 import { Janela } from "../../ui/Janela";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Segmentado } from "../../ui/Segmentado";
-import { Contagem } from "../../ui/Contagem";
+import { Indicador } from "../../ui/Indicador";
 import { SeletorData } from "../../ui/Data";
 const PRESETS: { v: Preset; l: string }[] = [
   { v: "30", l: "30 dias" },
@@ -64,11 +64,8 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, podeAbrirPessoa = () => 
            a comparação aparece na tela quando o número mudou (o leitor de tela ouve sempre) */
         const mudou = n.anterior !== undefined && n.anterior !== n.valor;
         return (
-          <Acao key={n.id} className="saude-n" onClick={() => setLista(n)} desativado={!n.itens.length} aria-label={`${ct(n.rotulo)}: ${n.valor}${cmp ? `, ${cmp}` : ""}. Ver a lista`}>
-            <Contagem className="saude-v" valor={n.valor} />
-            <span className="saude-l">{ct(n.rotulo)}</span>
-            {cmp && mudou && <span className="saude-c">{cmp}</span>}
-          </Acao>
+          <Indicador key={n.id} estilo="numero" valor={n.valor} rotulo={ct(n.rotulo)} rodape={cmp && mudou ? cmp : undefined}
+            aoAbrir={n.itens.length ? () => setLista(n) : undefined} rotuloAcao={`${ct(n.rotulo)}: ${n.valor}${cmp ? `, ${cmp}` : ""}. Ver a lista`} />
         );
       })}
     </div>

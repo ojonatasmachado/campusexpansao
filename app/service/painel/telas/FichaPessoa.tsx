@@ -26,6 +26,7 @@ import type { BaptismCandidateView, BaptismClassView, BoardView, CalEvent, CardV
 import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Selo, etiquetaClasse } from "../../ui/Selo";
+import { Progresso } from "../../ui/Graficos";
 import { PersonTimeline } from "./ficha/PersonTimeline";
 import { VisitanteDrawer } from "./ficha/VisitanteDrawer";
 import { MemberEditModal } from "./ficha/MemberEditModal";
@@ -336,7 +337,7 @@ export function EntityDrawer({
                           {status === "concluido" ? <Selo tom="ok">Concluído</Selo> : <span className="mc-pct">{pct}%</span>}
                         </div>
                         <div className="mc-meta">{course.level || course.kind || "curso"} · {done_count} de {plural(totalAulas, "aula")}</div>
-                        <div className="bar" style={{ marginTop: 8 }}><div className={`bar-fill ${status === "concluido" ? "" : "amber"}`} style={{ width: `${pct}%` }} /></div>
+                        <Progresso pct={pct} rotulo={`Progresso em ${course.name}`} tom={status === "concluido" ? undefined : "pendente"} style={{ marginTop: 8 }} />
                       </div>
                     </div>
                   );

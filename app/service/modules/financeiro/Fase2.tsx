@@ -22,7 +22,8 @@ import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Linha, linhaClasse } from "../../ui/Linha";
-import { Contagem } from "../../ui/Contagem";
+import { Indicador } from "../../ui/Indicador";
+import { EntradasSaidas } from "../../ui/Graficos";
 import { Campo, Entrada, TextoLongo, Marcar } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
 import { SeletorData } from "../../ui/Data";
@@ -339,6 +340,8 @@ export function FechamentoMes({ fin, mes, org, igreja, podeLancar, podeReabrir }
   const futuro = mes > todayISO().slice(0, 7);
   const entradas = t.por_categoria.filter((c) => c.tipo === "entrada");
   const despesas = t.por_categoria.filter((c) => c.tipo === "despesa");
+  /* últimos seis meses fechados até este, do mais antigo ao atual */
+  const historico = fin.fechamentos.filter((f) => f.month <= mes).sort((a, b) => a.month.localeCompare(b.month)).slice(-6);
 
   const fechar = async () => {
     setSalvando(true);
@@ -375,9 +378,18 @@ export function FechamentoMes({ fin, mes, org, igreja, podeLancar, podeReabrir }
 
       <div className="kpi-row kpi-3">
         {([[`Entradas`, brl(t.entradas_cents), false], [`Saídas`, brl(t.despesas_cents), false], ["Resultado", brl(t.entradas_cents - t.despesas_cents, true), t.entradas_cents - t.despesas_cents < 0]] as const).map(([rotulo, valor, neg]) => (
-          <div className="kpi" key={rotulo}><div className="kpi-label">{rotulo}</div><div className={`kpi-value fin-num${valor.length > 15 ? " fin-longo" : ""}${neg ? " fin-neg" : ""}`}>{fin.carregando ? "…" : <Contagem valor={valor} />}</div></div>
+          <Indicador key={rotulo} rotulo={rotulo} valor={valor} carregando={fin.carregando} classeValor={`fin-num${valor.length > 15 ? " fin-longo" : ""}${neg ? " fin-neg" : ""}`} />
         ))}
       </div>
+      {historico.length >= 2 && (
+        <section className="tbl fin-bloco" aria-labelledby={`${fid}-hist`}>
+          <div className="fin-bloco-h"><h2 id={`${fid}-hist`} className="fin-bloco-t">Entradas e saídas</h2><span className="fin-bloco-s">{plural(historico.length, "mês fechado", "meses fechados")}</span></div>
+          <div className="graf-bloco">
+            <EntradasSaidas formatar={(c) => brl(c)} meses={historico.map((f) => ({ rotulo: mesNome(f.month).slice(0, 3), entrada: f.totals.entradas_cents, saida: f.totals.despesas_cents }))} />
+            <div className="graf-legenda"><span><i className="entrada" />Entradas</span><span><i />Saídas</span></div>
+          </div>
+        </section>
+      )}
       {t.previstos_em_aberto > 0 && <p className="fs-note fin-atrasado">{`${plural(t.previstos_em_aberto, "previsto ficou", "previstos ficaram")} sem pagar ou receber neste mês.`}</p>}
 
       <div className="fin-grid">

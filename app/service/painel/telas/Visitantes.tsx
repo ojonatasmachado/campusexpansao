@@ -10,7 +10,8 @@ import { formatDateBR, joinDot, parseISODate } from "../../lib/date";
 import AutocadastroPainel from "../../modules/visitantes/AutocadastroPainel";
 import { HelpDot } from "../../HelpSystem";
 import { Av, EmptyState, MenuMais, PageHead } from "../ui";
-import { Kpi, VISITOR_STAGES, semContato48h } from "../comum";
+import { VISITOR_STAGES, semContato48h } from "../comum";
+import { Indicador } from "../../ui/Indicador";
 import type { ChurchView, ContatoCfg, DrawerState, ModalState, PersonView, VisitorNoteView, VisitorView } from "../tipos";
 
 import { Botao, botaoClasse } from "../../ui/Botao";
@@ -134,7 +135,7 @@ export function Visitantes({
 
       {view === "regras" ? null : view === "painel" ? (
         <div className="vpanel">
-          <div className="kpi-row"><Kpi icon="visitante" label="Visitantes" value={visitors.length} foot="no acompanhamento" help="Todo mundo que visitou e ainda está sendo acompanhado, antes de virar membro." /><Kpi icon="comunicacao" label="Respondem o contato" value={contacted.length ? `${replyRate}%` : "Sem dados"} foot={`${answered.length} de ${contacted.length} contatados`} help="De quem a equipe já contatou, quantos responderam de volta." /><Kpi icon="ok" label="Integram (viram membro)" value={visitors.length ? `${integrationRate}%` : "Sem dados"} foot={`${members.length} de ${visitors.length} · ${visitors.filter((v) => v.stage === "integrando" || v.stage === "membro").length} em integração`} help="De todos os visitantes, quantos completaram o caminho até virar membro." /><Kpi icon="alerta" label="Sem resposta" value={visitors.filter((visitor) => visitor.reply_status === "sem_resposta").length} foot="precisam de novo contato" amber help="Visitantes contatados que ainda não responderam. Vale tentar de novo." /></div>
+          <div className="kpi-row"><Indicador icone="visitante" rotulo="Visitantes" valor={visitors.length} rodape="no acompanhamento" ajuda="Todo mundo que visitou e ainda está sendo acompanhado, antes de virar membro." /><Indicador icone="comunicacao" rotulo="Respondem o contato" valor={contacted.length ? `${replyRate}%` : "Sem dados"} rodape={`${answered.length} de ${contacted.length} contatados`} ajuda="De quem a equipe já contatou, quantos responderam de volta." /><Indicador icone="ok" rotulo="Integram (viram membro)" valor={visitors.length ? `${integrationRate}%` : "Sem dados"} rodape={`${members.length} de ${visitors.length} · ${visitors.filter((v) => v.stage === "integrando" || v.stage === "membro").length} em integração`} ajuda="De todos os visitantes, quantos completaram o caminho até virar membro." /><Indicador icone="alerta" rotulo="Sem resposta" valor={visitors.filter((visitor) => visitor.reply_status === "sem_resposta").length} rodape="precisam de novo contato" tom="pendente" ajuda="Visitantes contatados que ainda não responderam. Vale tentar de novo." /></div>
           <div className="vpanel-grid">
             <Cartao><div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Visitantes por culto <HelpDot text="Em qual culto os visitantes mais chegam." /></span></div><div className="panel-body flush">{Object.entries(byService).map(([name, count]) => <div className="dist-row" key={name}><span className="dist-name">{name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(count / maxService) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}{visitors.length === 0 ? <Vazio titulo="Nenhum visitante ainda." /> : null}</div></Cartao>
             <Cartao>

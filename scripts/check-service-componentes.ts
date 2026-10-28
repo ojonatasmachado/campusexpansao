@@ -98,6 +98,13 @@ const REGRAS: Regra[] = [
     permitido: "app/service/ui/",
     re: /["'`]tabela-(?:lote|marca|abrir|linha)/g,
   },
+  {
+    peca: "Indicador ou gráfico",
+    usar: "Indicador ou componentes de app/service/ui/Graficos.tsx (Barras, Tendencia, Meta, Cobertura, etc.)",
+    permitido: "app/service/ui/",
+    /* classes de indicador/número escritas à mão; kpi-row é layout e fica de fora */
+    re: /className=\{?["'`](?:kpi(?:\s|["'`$])|kpi-value|kpi-label|kpi-foot|saude-n)(?=[\s"'`$])/g,
+  },
 ];
 
 const PASTAS = ["app/service", "app/[slug]"].map((p) => join(RAIZ, p));

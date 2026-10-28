@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useContext, useState } from "react";
@@ -12,6 +13,7 @@ import { Botao, botaoClasse } from "../ui/Botao";
 import { Selo, tomDaClasse } from "../ui/Selo";
 import { Cartao } from "../ui/Cartao";
 import { Linha, Lista } from "../ui/Linha";
+import { Progresso } from "../ui/Graficos";
 export function ChipSt({ status, label }: { status: "ok" | "wait" | "no"; label?: string }) {
   const cls = status === "ok" ? "chip-ok" : status === "wait" ? "chip-wait" : "chip-no";
   return <Selo tom={tomDaClasse(cls)}>{label ?? status}</Selo>;
@@ -120,9 +122,7 @@ export function TabCursos({
               )}
             </div>
             <div className="m-culto" style={{ fontSize: "var(--fs-app-17)" }}>{course.name}</div>
-            <div className="bar" style={{ marginTop: 10 }}>
-              <div className={`bar-fill ${en.status === "concluido" ? "" : "amber"}`} style={{ width: `${pct}%` }} />
-            </div>
+            <Progresso pct={pct} rotulo={`Seu progresso em ${course.name}`} tom={en.status === "concluido" ? undefined : "pendente"} style={{ marginTop: 10 }} />
             {en.status !== "concluido" && <ProximaAulaBloco prox={proximaAula(course.id, en.done_count, courseModules, courseLessons)} />}
           </Cartao>
         );
