@@ -3,7 +3,7 @@
 import { resumoDaSemana, vagasDaSemana as contarVagasDaSemana } from "../../modules/escalas/semana";
 import { plural } from "../../lib/plural";
 import { nomeComparavel } from "../../lib/pessoas";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Icon } from "../../lib/icons";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { formatDateBR, joinDot, paraPublico, porPublicacao } from "../../lib/date";
@@ -19,6 +19,8 @@ import { Cobertura } from "../../modules/escalas/Cobertura";
 import { linhaDoPainel, semanaDe } from "../../lib/contexto-dia";
 import { type Ausente } from "../../modules/cuidado/cuidado";
 import type { CriancaAusente } from "../../modules/cuidado/Cuidado";
+import { NovosCadastros } from "../../modules/entrada/NovosCadastros";
+import { numerosDaBase, type DadosSaude } from "../../modules/inicio/saude";
 import { linhaDoSetup, type SetupEstado } from "../../modules/configuracao/setup";
 import { termosDaRota } from "../../modules/registry";
 import { REACOES_PESQUISA, ROUTES } from "../comum";
@@ -309,6 +311,9 @@ export function Painel({
 }) {
   const { aindaVaiAcontecer, saudacao, quandoPublicado, todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
+  /* v7 I1: contagem de pedidos pendentes de entrada (NovosCadastros) para a fila */
+  const [pedidosPendentes, setPedidosPendentes] = useState(0);
+  const onPedidosChange = useCallback((count: number) => setPedidosPendentes(count), []);
   /* v7 4.11: gestão e pastores abrem na Saúde da igreja; líder de time, no
      "Para resolver" do seu time (vagas só dos times que lidera, sem os números da igreja toda) */
   const gestao = currentRole === "master" || currentRole === "pastor";
@@ -371,8 +376,8 @@ export function Painel({
         if (!liderDeTime && journeyRequests.length > 0) {
           filas.push({ key: "jornada", ic: "membros", t: journeyRequests.length === 1 ? ct("1 pedido na {caminhada}") : ct(`${journeyRequests.length} pedidos na {caminhada}`), s: " · esperando aprovação", go: "Revisar →", action: () => { const el = document.getElementById("caminhada-pendente"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); else setRoute("membros"); } });
         }
-        if (!liderDeTime && podeAbrir("membros") && novosNoMes > 0) {
-          filas.push({ key: "novos-cadastros", ic: "pessoa", t: novosNoMes === 1 ? "1 novo cadastro esperando" : `${novosNoMes} novos cadastros esperando`, s: " · neste mês", go: "Ver →", action: () => setRoute("membros") });
+        if (!liderDeTime && pedidosPendentes > 0) {
+          filas.push({ key: "novos-cadastros", ic: "pessoa", t: pedidosPendentes === 1 ? "1 pedido de conta pendente" : `${pedidosPendentes} pedidos de conta pendentes`, s: " · aguardando aprovação", go: "Revisar →", action: () => { const el = document.getElementById("novos-cadastros"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); } });
         }
         if (!liderDeTime && cuidado && cuidado.lista.length > 0) {
           filas.push({ key: "cuidado", ic: "alerta", t: `${plural(cuidado.lista.length, "pessoa")} sem registro`, s: ` · há ${plural(cuidado.semanas, "semana")} ou mais`, go: "Ver →", action: () => setRoute("membros") });
@@ -386,11 +391,19 @@ export function Painel({
               <h2 className="painel-sec-t">{liderDeTime ? "Para resolver no seu time" : "Precisa de você"}</h2>
               <div className="agora-list">
                 {filas.slice(0, 7).map((f, i) => (
-                  <div className={`agora-row${i === 0 && f.principal ? " agora-principal" : ""}`} key={f.key} role={f.botaoPrincipal ? undefined : "button"} tabIndex={f.botaoPrincipal ? undefined : 0} onClick={f.botaoPrincipal ? undefined : f.action} onKeyDown={f.botaoPrincipal ? undefined : (e) => { if (e.key === "Enter" || e.key === " ") f.action(); }}>
-                    <span className="agora-ic"><Icon name={f.ic} size={17} /></span>
-                    <span className="agora-main"><span className="agora-t">{f.t}</span><span className="agora-s">{f.s}</span></span>
-                    {f.botaoPrincipal ? <Botao variante="principal" compacto onClick={f.action}>{f.go}</Botao> : <span className="agora-go">{f.go}</span>}
-                  </div>
+                  f.botaoPrincipal ? (
+                    <div className="agora-row agora-principal" key={f.key}>
+                      <span className="agora-ic"><Icon name={f.ic} size={17} /></span>
+                      <span className="agora-main"><span className="agora-t">{f.t}</span><span className="agora-s">{f.s}</span></span>
+                      <Botao variante="principal" compacto onClick={f.action}>{f.go}</Botao>
+                    </div>
+                  ) : (
+                    <Acao className="agora-row" key={f.key} onClick={f.action}>
+                      <span className="agora-ic"><Icon name={f.ic} size={17} /></span>
+                      <span className="agora-main"><span className="agora-t">{f.t}</span><span className="agora-s">{f.s}</span></span>
+                      <span className="agora-go">{f.go}</span>
+                    </Acao>
+                  )
                 ))}
               </div>
             </>
@@ -403,14 +416,20 @@ export function Painel({
           </>
         );
       })()}
-      {/* v7 I1: Saúde-resumo — 3 números de base em Indicador cartao (lei 14, prancha 2). Panorama vai para Relatórios. */}
-      {gestao && !ativando && (
-        <div className="kpi-row">
-          <Indicador estilo="cartao" icone="membros" valor={members.length} rotulo={ct("Membros registrados")} aoAbrir={() => setRoute("membros")} rotuloAcao={`${ct("Membros registrados")}: ${members.length}. Ver a lista`} />
-          <Indicador estilo="cartao" icone="escalas" valor={people.filter((p) => new Set(ministries.flatMap((t) => t.people.map((pp) => pp.personId))).has(p.id) && p.status === "ativo").length} rotulo="Servindo em times" aoAbrir={() => setRoute("pessoas")} rotuloAcao="Servindo em times. Ver a lista" />
-          <Indicador estilo="cartao" icone="grupos" valor={members.filter((m) => !!m.groupId).length} rotulo={ct("Em {grupos}")} aoAbrir={() => setRoute("membros")} rotuloAcao={`${ct("Em {grupos}")}. Ver a lista`} />
-        </div>
-      )}
+      {/* v7 I1: NovosCadastros — pedidos pendentes de entrada_pedidos (migração 0071). Só gestão; sem pedidos, não aparece (lei 6). */}
+      {gestao && !ativando && <NovosCadastros onPedidosChange={onPedidosChange} />}
+      {/* v7 I1: Saúde-resumo — 3 números de base via numerosDaBase() (mesma fonte de Relatórios). Indicador cartao, prancha 2. */}
+      {gestao && !ativando && (() => {
+        const dadosSaude: DadosSaude = { membros: members, pessoas: people, times: ministries, visitantes: [], decisoes: [], fatos: [], matriculas: [] };
+        const base = numerosDaBase(dadosSaude);
+        return (
+          <div className="kpi-row">
+            {base.map((n) => (
+              <Indicador key={n.id} estilo="cartao" icone={n.id === "membros" ? "membros" : n.id === "servindo" ? "escalas" : "grupos"} valor={n.valor} rotulo={ct(n.rotulo)} aoAbrir={() => { if (n.id === "servindo") setRoute("times"); else setRoute("membros"); }} rotuloAcao={`${ct(n.rotulo)}: ${n.valor}. Ver a lista`} />
+            ))}
+          </div>
+        );
+      })()}
       {podeAbrir("configurar") && (emPreparacao ? (
         <Acao className="setup-banner" onClick={() => setRoute("configurar")}>
           <span className="setup-banner-t">{linhaDoSetup(setup)}</span>
