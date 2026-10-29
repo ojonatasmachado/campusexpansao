@@ -190,10 +190,8 @@ export function Relatorios({
       ["Indicadores", "Visitantes convertidos no recorte (%)", retencaoAtual ?? "Sem dados"],
       ["Indicadores", "Confirmações de escala (%)", coberturaRecente ?? "Sem dados"],
       ["Indicadores", ct("Média de check-ins por {culto}"), freqRecente ?? "Sem dados"],
-      /* v7 I1: números de base migrados do Início (lei 14) */
-      ["Números de base", "Membros registrados", members.length],
-      ["Números de base", "Servindo em times", dadosSaude.pessoas.filter((p) => new Set(dadosSaude.times.flatMap((t) => t.people.map((pp) => pp.personId))).has(p.id) && p.status === "ativo").length],
-      ["Números de base", `Em ${ct("{grupos}")}`, members.filter((m) => !!m.groupId).length],
+      /* v7 I1: números de base via numerosDaBase() — mesma fonte da tela (lei 14) */
+      ...baseNums.map((n) => ["Números de base" as const, ct(n.rotulo), n.valor]),
       ...serieLabels.map((l, i) => ["Crescimento de membros", l, series[i]]),
       ...FUNNEL_STAGES.map((st, i) => ["Funil de visitantes", st.label, funnelCounts[i]]),
       ...[["saudavel", "Sem pendência registrada"], ["atencao", "Uma recusa"], ["sobrecarga", "Três ou mais escalas"], ["afastando", "Pausa ou duas recusas"]].map(([k, l]) => ["Escala da semana", l, contar(k)]),
