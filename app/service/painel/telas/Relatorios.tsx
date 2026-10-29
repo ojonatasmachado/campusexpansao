@@ -1,7 +1,7 @@
 "use client";
 
 import { partesNoFuso } from "../../lib/fuso";
-import { parseISODate, toISODate } from "../../lib/date";
+import { formatDateBR, parseISODate, toISODate } from "../../lib/date";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
 
 import { plural } from "../../lib/plural";
@@ -15,7 +15,10 @@ import { Av, PageHead } from "../ui";
 import { cargaDaSemana } from "../../modules/escalas/Escalas";
 import { ROUTES } from "../comum";
 import { Indicador } from "../../ui/Indicador";
-import type { BoardView, ChatView, ChurchView, EventAttendanceView, EventView, FellowshipGroupView, MemberView, MinistryView, PersonView, RosterAssignmentView, VisitorView } from "../tipos";
+import type { BoardView, ChatView, ChurchView, DecisionView, DrawerState, EnrollmentView, EventAttendanceView, EventView, FellowshipGroupView, MemberView, MinistryView, PersonView, RosterAssignmentView, TimelineEventView, VisitorView } from "../tipos";
+import { numerosDaBase, numerosDoPeriodo, etapasDaCaminhada, periodoDe, anteriorDe, comparacao, type DadosSaude, type ItemPessoa, type Periodo, type Preset } from "../../modules/inicio/saude";
+import { SeletorData } from "../../ui/Data";
+import { JRN_STEPS } from "../caminhada";
 
 import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
@@ -35,7 +38,11 @@ export function Relatorios({
   eventAttendance,
   fellowshipGroups,
   setRoute,
+  setDrawer,
   church,
+  decisions = [],
+  timelineEvents = [],
+  enrollments = [],
 }: {
   people: PersonView[];
   members: MemberView[];
@@ -48,7 +55,11 @@ export function Relatorios({
   eventAttendance: EventAttendanceView[];
   fellowshipGroups: FellowshipGroupView[];
   setRoute: (route: keyof typeof ROUTES) => void;
+  setDrawer?: (drawer: DrawerState) => void;
   church: ChurchView | undefined;
+  decisions?: DecisionView[];
+  timelineEvents?: TimelineEventView[];
+  enrollments?: EnrollmentView[];
 }) {
   const { aindaVaiAcontecer, todayISO, fuso } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
@@ -123,6 +134,38 @@ export function Relatorios({
   const maxMinistry = Math.max(...ministries.map((m) => m.people.length), 1);
   const gcCounts = fellowshipGroups.map((g) => ({ group: g, n: members.filter((m) => m.groupId === g.id).length }));
   const maxGc = Math.max(...gcCounts.map((x) => x.n), 1);
+
+  /* v7 I1: Números de base e panorama completo migrados do Início (lei 14).
+     Os 3 números de base ficam visíveis sempre; período/comparação/etapas sob demanda. */
+  const dadosSaude: DadosSaude = {
+    membros: members,
+    pessoas: people,
+    times: ministries,
+    visitantes: visitors,
+    decisoes: decisions ?? [],
+    fatos: timelineEvents ?? [],
+    matriculas: enrollments ?? [],
+  };
+  const SAUDE_PRESETS: { v: Preset; l: string }[] = [
+    { v: "30", l: "30 dias" },
+    { v: "90", l: "90 dias" },
+    { v: "365", l: "12 meses" },
+    { v: "datas", l: "Datas" },
+  ];
+  const [saudePreset, setSaudePreset] = useState<Preset>("30");
+  const [saudeDatas, setSaudeDatas] = useState<Periodo>(() => periodoDe("30", undefined, todayISO()));
+  const [saudePanorama, setSaudePanorama] = useState(false);
+  const saudePeriodo = periodoDe(saudePreset, saudeDatas, todayISO());
+  const saudeAnt = anteriorDe(saudePeriodo);
+  const saudeDias = Math.round((new Date(`${saudePeriodo.fim}T12:00:00Z`).getTime() - new Date(`${saudePeriodo.ini}T12:00:00Z`).getTime()) / 86400000) + 1;
+  const baseNums = numerosDaBase(dadosSaude);
+  const abrirListaBase = (item: ItemPessoa) => {
+    if (item.tipo === "member") { setRoute("membros"); setDrawer?.({ kind: "member", id: item.id }); }
+    else if (item.tipo === "person") { setRoute("pessoas"); setDrawer?.({ kind: "person", id: item.id }); }
+    else if (item.tipo === "visitor") { setRoute("visitantes"); setDrawer?.({ kind: "visitor", id: item.id }); }
+    else if (item.tipo === "decision") { setRoute("decisoes"); setDrawer?.({ kind: "decision", id: item.id }); }
+    else { setRoute("membros"); }
+  };
   const maxOps = Math.max(boards.length, chats.length, events.length, 1);
   const FUNNEL_STAGES: { id: VisitorView["stage"]; label: string }[] = [
     { id: "novo", label: "Novo" },
@@ -147,6 +190,8 @@ export function Relatorios({
       ["Indicadores", "Visitantes convertidos no recorte (%)", retencaoAtual ?? "Sem dados"],
       ["Indicadores", "Confirmações de escala (%)", coberturaRecente ?? "Sem dados"],
       ["Indicadores", ct("Média de check-ins por {culto}"), freqRecente ?? "Sem dados"],
+      /* v7 I1: números de base via numerosDaBase() — mesma fonte da tela (lei 14) */
+      ...baseNums.map((n) => ["Números de base" as const, ct(n.rotulo), n.valor]),
       ...serieLabels.map((l, i) => ["Crescimento de membros", l, series[i]]),
       ...FUNNEL_STAGES.map((st, i) => ["Funil de visitantes", st.label, funnelCounts[i]]),
       ...[["saudavel", "Sem pendência registrada"], ["atencao", "Uma recusa"], ["sobrecarga", "Três ou mais escalas"], ["afastando", "Pausa ou duas recusas"]].map(([k, l]) => ["Escala da semana", l, contar(k)]),
@@ -159,7 +204,59 @@ export function Relatorios({
   return (
     <div className="content wide">
       <PageHead title="Relatórios e indicadores" eyebrow="Gestão" help="A saúde da igreja num lugar: crescimento, cobertura de escala e registros de quem serve. Use o recorte de trimestre pra comparar." action={<><Segmentado role="group" aria-label="Recorte das comparações">{([[30, "30 dias"], [90, "Trimestre"]] as const).map(([v, l]) => <Opcao key={v} marcada={periodo === v} aria-pressed={periodo === v} onClick={() => setPeriodo(v)}>{l}</Opcao>)}</Segmentado><Botao variante="principal" onClick={baixarRelatorio}>Baixar relatório →</Botao></>} />
-      <div className="kpi-row"><Indicador icone="membros" rotulo="Membros na rede" valor={members.length} rodape={foot(membrosDelta, " novos", "cadastrados")} ajuda="Toda a congregação, somando todas as congregações da rede." /><Indicador icone="visitante" rotulo="Visitantes que viraram membros" valor={retencaoAtual === null ? "Sem dados" : `${retencaoAtual}%`} rodape={foot(retencaoDelta, " pp", retencaoAtual === null ? "nenhum visitante no recorte" : "dos cadastrados no recorte")} ajuda="Percentual dos visitantes cadastrados no período escolhido que estão na etapa de membro. Cadastros recentes ainda podem estar no início da jornada." /><Indicador icone="escalas" rotulo="Confirmações de escala" valor={coberturaRecente === null ? "Sem dados" : `${coberturaRecente}%`} rodape={foot(coberturaDelta, " pp", coberturaRecente === null ? "nenhuma escala no recorte" : "das vagas escaladas no recorte")} ajuda="Das pessoas escaladas nos eventos do período escolhido, quantas confirmaram. Não mede vagas ainda sem uma pessoa escalada." /><Indicador icone="cultos" rotulo="Média de check-ins" valor={freqRecente ?? "Sem dados"} rodape={foot(freqDelta, "", freqRecente === null ? ct("nenhum {culto} no recorte") : ct("por {culto} no recorte"))} ajuda={ct("Check-ins registrados divididos pelo número de {cultos} no período. Zero check-ins não comprova ausência de pessoas.")} /></div>
+      <div className="kpi-row"><Indicador icone="visitante" rotulo="Visitantes que viraram membros" valor={retencaoAtual === null ? "Sem dados" : `${retencaoAtual}%`} rodape={foot(retencaoDelta, " pp", retencaoAtual === null ? "nenhum visitante no recorte" : "dos cadastrados no recorte")} ajuda="Percentual dos visitantes cadastrados no período escolhido que estão na etapa de membro. Cadastros recentes ainda podem estar no início da jornada." /><Indicador icone="escalas" rotulo="Confirmações de escala" valor={coberturaRecente === null ? "Sem dados" : `${coberturaRecente}%`} rodape={foot(coberturaDelta, " pp", coberturaRecente === null ? "nenhuma escala no recorte" : "das vagas escaladas no recorte")} ajuda="Das pessoas escaladas nos eventos do período escolhido, quantas confirmaram. Não mede vagas ainda sem uma pessoa escalada." /><Indicador icone="cultos" rotulo="Média de check-ins" valor={freqRecente ?? "Sem dados"} rodape={foot(freqDelta, "", freqRecente === null ? ct("nenhum {culto} no recorte") : ct("por {culto} no recorte"))} ajuda={ct("Check-ins registrados divididos pelo número de {cultos} no período. Zero check-ins não comprova ausência de pessoas.")} /></div>
+      {/* v7 I1: Números de base migrados do Início (lei 14). Indicador cartao, cada número abre a lista. Sem duplicar "Membros na rede". */}
+      <div className="section-divide"><span className="num">01</span><span className="label">Números de base</span><span className="line" /></div>
+      <div className="kpi-row">
+        {baseNums.map((n) => (
+          <Indicador key={n.id} estilo="cartao" icone={n.id === "membros" ? "membros" : n.id === "servindo" ? "escalas" : "grupos"} valor={n.valor} rotulo={ct(n.rotulo)}
+            aoAbrir={n.itens.length ? () => abrirListaBase(n.itens[0]) : undefined}
+            rotuloAcao={`${ct(n.rotulo)}: ${n.valor}. Ver a lista`} />
+        ))}
+      </div>
+      <div className="saude-head">
+        <Botao variante="texto" onClick={() => setSaudePanorama((v) => !v)}>
+          {saudePanorama ? "Recolher panorama" : "Ver panorama completo"} →
+        </Botao>
+      </div>
+      {saudePanorama && (
+        <>
+          <div className="saude-datas">
+            <Segmentado className="seg-sm" role="radiogroup" aria-label="Período">
+              {SAUDE_PRESETS.map((p) => (
+                <Opcao key={p.v} role="radio" aria-checked={saudePreset === p.v} marcada={saudePreset === p.v} onClick={() => setSaudePreset(p.v)}>{p.l}</Opcao>
+              ))}
+            </Segmentado>
+            {saudePreset === "datas" && (
+              <div className="saude-datas-range">
+                <div>De <SeletorData rotulo="De" valor={saudeDatas.ini} aoMudar={(v) => setSaudeDatas((d) => ({ ...d, ini: v }))} /></div>
+                <div>até <SeletorData rotulo="Até" valor={saudeDatas.fim} aoMudar={(v) => setSaudeDatas((d) => ({ ...d, fim: v }))} /></div>
+              </div>
+            )}
+          </div>
+          <div className="saude-grp">{`De ${formatDateBR(saudePeriodo.ini)} a ${formatDateBR(saudePeriodo.fim)}`}<span className="saude-grp-s">{` · comparado a ${formatDateBR(saudeAnt.ini)} a ${formatDateBR(saudeAnt.fim)}`}</span></div>
+          <div className="kpi-row">
+            {numerosDoPeriodo(dadosSaude, saudePeriodo).map((n) => {
+              const cmp = comparacao(n.valor, n.anterior, saudeDias);
+              const mudou = n.anterior !== undefined && n.anterior !== n.valor;
+              return (
+                <Indicador key={n.id} estilo="numero" valor={n.valor} rotulo={ct(n.rotulo)}
+                  rodape={cmp && mudou ? cmp : undefined}
+                  aoAbrir={n.itens.length ? () => abrirListaBase(n.itens[0]) : undefined}
+                  rotuloAcao={`${ct(n.rotulo)}: ${n.valor}${cmp ? `, ${cmp}` : ""}. Ver a lista`} />
+              );
+            })}
+          </div>
+          <div className="saude-grp">{ct("Etapas da {caminhada}")}<span className="saude-grp-s"> · membros que já fizeram cada uma</span></div>
+          <div className="kpi-row">
+            {etapasDaCaminhada(members, JRN_STEPS.map((s) => ({ label: ct(s.label) }))).map((n) => (
+              <Indicador key={n.id} estilo="numero" valor={n.valor} rotulo={n.rotulo}
+                aoAbrir={n.itens.length ? () => abrirListaBase(n.itens[0]) : undefined}
+                rotuloAcao={`${n.rotulo}: ${n.valor}. Ver a lista`} />
+            ))}
+          </div>
+        </>
+      )}
       <div className="dash-3col">
         <Cartao><div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={13} /> Crescimento de membros <HelpDot text="Quantos membros novos entraram nos últimos meses." /></span><span className="panel-meta">últimos meses</span></div><div className="panel-body"><div style={{ fontSize: "var(--fs-pn-32)", fontWeight: 700 }}>{members.length}<span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>membros no total</span></div><div style={{ marginTop: 14 }}><Barras rotulo="Membros novos por mês" serie={series} rotulos={serieLabels} /></div></div></Cartao>
         <Cartao><div className="panel-head"><span className="panel-title"><Icon name="visitante" size={13} /> Funil de visitantes <HelpDot text="Quantos visitantes estão em cada etapa, da primeira visita até virar membro." /></span><Botao variante="texto" onClick={() => setRoute("visitantes")}>Abrir</Botao></div><div className="panel-body flush"><Distribuicao funil max={funnelMax} itens={FUNNEL_STAGES.map((s, i) => ({ id: s.id, rotulo: s.label, valor: funnelCounts[i] }))} /></div></Cartao>

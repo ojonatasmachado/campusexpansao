@@ -52,8 +52,8 @@ export function Indicador({ rotulo, valor, estilo = "cartao", icone, ajuda, roda
       </Acao>
     );
   }
-  return (
-    <div className={`kpi indicador${tomCls}${className ? ` ${className}` : ""}`}>
+  const conteudo = (
+    <>
       <div className="kpi-label">{icone ? <Icon name={icone} size={13} /> : null} <span>{rotulo} {ajuda ? <HelpDot text={ajuda} /> : null}</span></div>
       <div className={`kpi-value${classeValor ? ` ${classeValor}` : ""}`}>{numero}</div>
       {variacao || rodape || (serie && serie.length > 1) ? (
@@ -63,6 +63,18 @@ export function Indicador({ rotulo, valor, estilo = "cartao", icone, ajuda, roda
           {serie && serie.length > 1 ? <Minilinha serie={serie} /> : null}
         </div>
       ) : null}
+    </>
+  );
+  if (aoAbrir) {
+    return (
+      <Acao className={`kpi indicador${tomCls}${className ? ` ${className}` : ""}`} onClick={aoAbrir} aria-label={rotuloAcao}>
+        {conteudo}
+      </Acao>
+    );
+  }
+  return (
+    <div className={`kpi indicador${tomCls}${className ? ` ${className}` : ""}`}>
+      {conteudo}
     </div>
   );
 }
