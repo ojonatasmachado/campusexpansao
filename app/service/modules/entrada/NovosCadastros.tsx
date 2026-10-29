@@ -33,7 +33,7 @@ const ERRO: Record<string, string> = {
   nao_pode: "Só a gestão e os pastores aprovam pedidos.",
 };
 
-export function NovosCadastros() {
+export function NovosCadastros({ onPedidosChange }: { onPedidosChange?: (count: number) => void } = {}) {
   const router = useRouter();
   const { organizationId } = useServiceAccess();
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
@@ -46,8 +46,12 @@ export function NovosCadastros() {
 
   const carregar = useCallback(() => {
     if (!organizationId) return;
-    db().rpc("entrada_pedidos", { p_org: organizationId }).then(({ data }) => setPedidos((data ?? []) as Pedido[]));
-  }, [organizationId, db]);
+    db().rpc("entrada_pedidos", { p_org: organizationId }).then(({ data }) => {
+      const lista = (data ?? []) as Pedido[];
+      setPedidos(lista);
+      onPedidosChange?.(lista.length);
+    });
+  }, [organizationId, db, onPedidosChange]);
   useEffect(carregar, [carregar]);
 
   /* busca de ficha sem login, com uma pequena espera entre as teclas */
