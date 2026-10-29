@@ -55,8 +55,9 @@ export function quandoSera(iso: string, hoje = todayISO()): string {
   return n <= 0 ? "hoje" : n === 1 ? "amanhã" : `em ${plural(n, "dia")}`;
 }
 
-/** "Culto de quarta em 2 dias · faltam 6 vagas" */
-export function linhaDoPainel(proximo: { nome: string; data: string; faltam: number } | null, hoje = todayISO()): string | null {
+/** "Culto de quarta em 2 dias" (sem vagas — lei 14: vagas vivem só na fila) */
+export function linhaDoPainel(proximo: { nome: string; data: string; faltam?: number } | null, hoje = todayISO()): string | null {
   if (!proximo) return null;
-  return `${proximo.nome} ${quandoSera(proximo.data, hoje)} · ${proximo.faltam ? faltaN(proximo.faltam, "vaga") : "escala completa"}`;
+  const base = `${proximo.nome} ${quandoSera(proximo.data, hoje)}`;
+  return proximo.faltam != null && proximo.faltam > 0 ? `${base} · ${faltaN(proximo.faltam, "vaga")}` : base;
 }

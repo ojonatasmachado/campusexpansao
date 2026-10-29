@@ -17,7 +17,6 @@ import { noAr } from "../../modules/mural/estado";
 import { coberturaPorTime, vagasFaltando, type CoberturaTime } from "../../modules/escalas/cobertura";
 import { Cobertura } from "../../modules/escalas/Cobertura";
 import { linhaDoPainel, semanaDe } from "../../lib/contexto-dia";
-import { SaudeDaIgreja } from "../../modules/inicio/Saude";
 import { type Ausente } from "../../modules/cuidado/cuidado";
 import { ListaDeCuidado, type CriancaAusente } from "../../modules/cuidado/Cuidado";
 import { NovosCadastros } from "../../modules/entrada/NovosCadastros";
@@ -321,26 +320,10 @@ export function Painel({
   const primeiraProgramacao = events.length === 0;
   const emPreparacao = gestao && setup && !setup.concluido && (igrejaNova || semProgramacao || setup.fase > 1 || setup.feitas.length > 0 || setup.pulou || !!setup.primeiroEventoId);
   const semana = resumoDaSemana(events, roster, ministries.flatMap((m) => m.positions), scopeMinistryIds, todayISO());
-  const confirmationRate = semana.taxa;
-  const escaladosSemana = semana.total;
   const vagasDaSemana = contarVagasDaSemana(events, roster, ministries, scopeMinistryIds);
   const gapsDaSemana = gaps.filter((g) => g.event.eventDate >= semana.inicio && g.event.eventDate <= semana.fim && aindaVaiAcontecer(g.event.eventDate, g.event.time) && (!scopeMinistryIds || scopeMinistryIds.includes(g.ministry.id)));
   const recentAnnouncements = porPublicacao(announcements.filter(noAr)).slice(0, 3);
-  const [sobreAberto, setSobreAberto] = useState(false);
-  /* v7 3.6: "Sobre estes números" explica, num lugar só, cada número e painel que está na tela */
-  const sobre: Array<[string, string]> = [
-    [ct("{Voluntarios}"), "Pessoas que servem em algum time e estão com o status ativo, sem contar quem está em pausa ou de férias. Novos são os que chegaram à igreja nos últimos 30 dias."],
-    ["Confirmação", "Das vagas com alguém escalado nesta semana, quantas já foram confirmadas no app."],
-    ["Visitantes em acompanhamento", "Visitantes que ainda estão na fase de acompanhamento, antes de virarem membros. O número de Visitantes na Saúde da igreja conta só quem visitou no período escolhido."],
-    ["Pendências da escala", "Funções dos próximos encontros desta semana que ainda não têm todas as vagas preenchidas."],
-    [ct("Próximos {cultos}"), ct("Os próximos {cultos} ou eventos da agenda, na ordem em que vão acontecer.")],
-    ...(enqueteElegivel ? [["Avaliação de experiência", "Pesquisa rápida sobre como foi servir. Aparece só quando você está elegível pra responder."] as [string, string]] : []),
-    ...(pesquisaElegivel ? [["Pulso da escala", "Pesquisa da própria igreja sobre como foi servir nesta escala. Diferente da avaliação de experiência."] as [string, string]] : []),
-    ...(journeyRequests.length > 0 ? [[ct("{Caminhada} pendente"), ct("Pedidos de avanço na {caminhada} (decisão, batismo, curso...) esperando aprovação da liderança.")] as [string, string]] : []),
-    ["Comunicação recente", "Os últimos avisos e posts do mural enviados pra igreja."],
-    ...(cuidado ? [["Lista de cuidado", `Quem já teve presença registrada e está há ${plural(cuidado.semanas, "semana")} ou mais sem nenhuma. Cada nome vai para quem cuida: líder do grupo, depois líder do time, depois a pastoral. Uma justificativa registrada tira da lista por 30 dias. A pessoa não vê nada disso.`] as [string, string]] : []),
-    ...(kidsClasses.length > 0 ? [["Crianças por turma", "Quantas crianças estão em cada turma do Kids."] as [string, string], ...(cuidado ? [] : [["Crianças sumindo", "Crianças sem check-in registrado há algum tempo. Vale um contato com a família."] as [string, string]])] : []),
-  ];
+  /* v7 I1: "Sobre estes números" removido (lei 14). Os números que restam no Início são autoexplicativos; detalhes vivem em Relatórios. */
   const haPendenciasVisiveis = (podeAbrir("escalas") && vagasDaSemana > 0)
     || (!liderDeTime && podeAbrir("visitantes") && (visitantesSemContato > 0 || visitantesPeloLink > 0))
     || (!liderDeTime && journeyRequests.length > 0);
@@ -350,16 +333,13 @@ export function Painel({
         <div>
           <h1 className="ph-title">{saudacao()}, {userName?.split(" ")[0] ?? "liderança"} <HelpDot text={ct("Seu resumo da semana: próximos {cultos}, vagas em aberto na escala e o que precisa da sua atenção agora.")} /></h1>
           <p className="ph-sub">{(() => {
-            /* v7 4.19: a semana e o próximo culto com o que falta na escala */
+            /* v7 I1: semana e próximo culto sem vagas (lei 14 — vagas vivem só na fila) */
             const prox = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time))[0];
-            const linha = prox ? linhaDoPainel({ nome: prox.name, data: prox.eventDate, faltam: vagasFaltando(coberturaPorTime(prox, roster, ministries, scopeMinistryIds)) }, todayISO()) : null;
+            const linha = prox ? linhaDoPainel({ nome: prox.name, data: prox.eventDate }, todayISO()) : null;
             return linha ? `${semanaDe(todayISO())}. ${linha}.` : `${semanaDe(todayISO())}.`;
           })()}</p>
         </div>
-        <div className="ph-actions">
-          {podeAbrir("cultos") && <Botao onClick={() => setRoute("cultos")}>Ver agenda</Botao>}
-          {podeAbrir(emPreparacao ? "configurar" : ativando ? "cultos" : "escalas") && <Botao variante="principal" onClick={() => setRoute(emPreparacao ? "configurar" : ativando ? "cultos" : "escalas")}>{emPreparacao ? (setup.primeiroEventoId || setup.fase > 1 || setup.feitas.length > 0 || setup.pulou || setup.rascunho ? "Continuar preparação" : "Preparar minha igreja") : ativando ? (primeiraProgramacao ? "Preparar primeiro encontro" : "Preparar próximo encontro") : "Montar escala"}</Botao>}
-        </div>
+        {/* v7 I1: ações do topo removidas (Lei 15). A fila já contém a ação principal. */}
       </div>
       {ativando && (
         <section className="service-start-guide" aria-labelledby="service-start-title">
@@ -369,55 +349,66 @@ export function Painel({
           <ol><li><b>{primeiraProgramacao ? "Identifique sua igreja" : "Confira os dados da igreja"}</b><span>Nome, endereço e a identidade que as pessoas vão reconhecer.</span></li><li><b>Prepare o encontro</b><span>Uma data e um lugar antes de organizar toda a equipe.</span></li><li><b>Convide quem vai ajudar</b><span>Depois, acompanhe os acessos e as respostas.</span></li></ol>
         </section>
       )}
+      {/* v7 I1: Fila "Precisa de você" — primeira coisa visível (decisão 9, LEVEZA §3A).
+         Até 7 linhas-frase com seta; cada uma abre a tela que resolve.
+         Ordem: prioridade descendente, depois prazo (lei 5). Botão cheio só no primeiro (lei 13). */}
+      {!ativando && (() => {
+        const filas: Array<{ key: string; ic: string; t: string; s: string; go: string; action: () => void; principal?: boolean; botaoPrincipal?: boolean }> = [];
+        if (podeAbrir("escalas") && vagasDaSemana > 0) {
+          filas.push({ key: "vagas", ic: "escalas", t: vagasDaSemana === 1 ? "1 vaga aberta na escala" : `${vagasDaSemana} vagas abertas na escala`, s: " · nesta semana", go: "Escalar", action: () => setRoute("escalas"), principal: true, botaoPrincipal: true });
+        }
+        if (!liderDeTime && podeAbrir("visitantes") && visitantesSemContato > 0) {
+          filas.push({ key: "visitantes-contato", ic: "visitante", t: visitantesSemContato === 1 ? "1 visitante sem contato" : `${visitantesSemContato} visitantes sem contato`, s: " · há mais de 48h", go: "Ver →", action: () => setRoute("visitantes") });
+        }
+        if (!liderDeTime && podeAbrir("visitantes") && visitantesPeloLink > 0) {
+          filas.push({ key: "visitantes-link", ic: "visitante", t: `${plural(visitantesPeloLink, "visitante")} ${visitantesPeloLink === 1 ? "se cadastrou" : "se cadastraram"} pelo link`, s: " · esperando o 1º contato", go: "Ver →", action: () => setRoute("visitantes") });
+        }
+        if (!liderDeTime && journeyRequests.length > 0) {
+          filas.push({ key: "jornada", ic: "membros", t: journeyRequests.length === 1 ? ct("1 pedido na {caminhada}") : ct(`${journeyRequests.length} pedidos na {caminhada}`), s: " · esperando aprovação", go: "Revisar →", action: () => setRoute("membros") });
+        }
+        if (!liderDeTime && cuidado && cuidado.lista.length > 0) {
+          filas.push({ key: "cuidado", ic: "alerta", t: `${plural(cuidado.lista.length, "pessoa")} sem registro`, s: ` · há ${plural(cuidado.semanas, "semana")} ou mais`, go: "Ver →", action: () => setRoute("membros") });
+        }
+        if (!liderDeTime && cuidado && (cuidado.criancas?.length ?? 0) > 0) {
+          filas.push({ key: "kids-sumindo", ic: "kids", t: `${plural(cuidado.criancas!.length, "criança")} sem check-in`, s: " · vale um contato", go: "Ver →", action: () => setRoute("criancas") });
+        }
+        if (filas.length > 0) {
+          return (
+            <>
+              <h2 className="painel-sec-t">{liderDeTime ? "Para resolver no seu time" : "Precisa de você"}</h2>
+              <div className="agora-list">
+                {filas.slice(0, 7).map((f, i) => (
+                  <Acao className={`agora-row${i === 0 && f.principal ? " agora-principal" : ""}`} key={f.key} onClick={f.action}>
+                    <span className="agora-ic"><Icon name={f.ic} size={17} /></span>
+                    <span className="agora-main"><span className="agora-t">{f.t}</span><span className="agora-s">{f.s}</span></span>
+                    {f.botaoPrincipal ? <Botao variante="principal" compacto onClick={(e) => { e.stopPropagation(); f.action(); }}>{f.go}</Botao> : <span className="agora-go">{f.go}</span>}
+                  </Acao>
+                ))}
+                {filas.length > 7 && (
+                  <Acao className="agora-row" onClick={() => setRoute("escalas")}>
+                    <span className="agora-main"><span className="agora-t">Ver todas as pendências</span><span className="agora-s">{` · ${filas.length - 7} mais`}</span></span>
+                    <span className="agora-go">→</span>
+                  </Acao>
+                )}
+              </div>
+            </>
+          );
+        }
+        return (
+          <>
+            <h2 className="painel-sec-t">Precisa de você</h2>
+            <div className="agora-list"><Linha><div className="mini-main"><div className="mini-title">Tudo em dia</div><div className="mini-sub">Nenhuma pendência agora.</div></div></Linha></div>
+          </>
+        );
+      })()}
+      {/* v7 I1: Saúde-resumo — 3 números de base (lei 14, decisão 9). Panorama vai para Relatórios. */}
       {gestao && !ativando && (
-        <SaudeDaIgreja
-          dados={{ membros: members, pessoas: people, times: ministries, visitantes: visitors, decisoes: decisions, fatos: timelineEvents, matriculas: enrollments }}
-          etapas={JRN_STEPS}
-          extras={cuidado ? [{ id: "ausentes", rotulo: `Sem registro há ${plural(cuidado.semanas, "semana")} ou mais`, valor: cuidado.todos.length, itens: cuidado.todos.map((a) => (a.memberId ? { tipo: "member" as const, id: a.memberId, nome: a.nome } : { tipo: "person" as const, id: a.personId, nome: a.nome })) }] : []}
-          podeAbrirPessoa={(it) => podeAbrir(it.tipo === "member" ? "membros" : "pessoas")}
-          onAbrir={(it) => setDrawer({ kind: it.tipo, id: it.id })}
-        />
-      )}
-      {haPendenciasVisiveis && <h2 className="painel-sec-t">{liderDeTime ? "Para resolver no seu time" : "Para resolver"}</h2>}
-      {haPendenciasVisiveis && (
-        <div className="agora-list">
-          {podeAbrir("escalas") && vagasDaSemana > 0 && (
-            <Acao className="agora-row" onClick={() => setRoute("escalas")}>
-              <span className="agora-ic"><Icon name="escalas" size={17} /></span>
-              <span className="agora-main"><span className="agora-t">{vagasDaSemana === 1 ? "1 vaga aberta na escala" : `${vagasDaSemana} vagas abertas na escala`}</span><span className="agora-s"> · nesta semana</span></span>
-              <span className="agora-go">Escalar →</span>
-            </Acao>
-          )}
-          {podeAbrir("visitantes") && !liderDeTime && visitantesSemContato > 0 && (
-            <Acao className="agora-row" onClick={() => setRoute("visitantes")}>
-              <span className="agora-ic"><Icon name="visitante" size={17} /></span>
-              <span className="agora-main"><span className="agora-t">{visitantesSemContato === 1 ? "1 visitante sem contato" : `${visitantesSemContato} visitantes sem contato`}</span><span className="agora-s"> · há mais de 48h</span></span>
-              <span className="agora-go">Ver →</span>
-            </Acao>
-          )}
-          {podeAbrir("visitantes") && !liderDeTime && visitantesPeloLink > 0 && (
-            <Acao className="agora-row" onClick={() => setRoute("visitantes")}>
-              <span className="agora-ic"><Icon name="visitante" size={17} /></span>
-              <span className="agora-main"><span className="agora-t">{`${plural(visitantesPeloLink, "visitante")} ${visitantesPeloLink === 1 ? "se cadastrou" : "se cadastraram"} pelo link`}</span><span className="agora-s"> · esperando o 1º contato</span></span>
-              <span className="agora-go">Ver →</span>
-            </Acao>
-          )}
-          {!liderDeTime && journeyRequests.length > 0 && (
-            <Acao className="agora-row" onClick={() => document.getElementById("caminhada-pendente")?.scrollIntoView({ behavior: "smooth" })}>
-              <span className="agora-ic"><Icon name="membros" size={17} /></span>
-              <span className="agora-main"><span className="agora-t">{journeyRequests.length === 1 ? ct("1 pedido na {caminhada}") : ct(`${journeyRequests.length} pedidos na {caminhada}`)}</span><span className="agora-s"> · esperando sua aprovação</span></span>
-              <span className="agora-go">Revisar →</span>
-            </Acao>
-          )}
+        <div className="kpi-row kpi-3 saude-resumo">
+          <Indicador estilo="numero" valor={members.length} rotulo={ct("Membros registrados")} aoAbrir={() => setRoute("membros")} rotuloAcao={`${ct("Membros registrados")}: ${members.length}. Ver a lista`} />
+          <Indicador estilo="numero" valor={people.filter((p) => new Set(ministries.flatMap((t) => t.people.map((pp) => pp.personId))).has(p.id) && p.status === "ativo").length} rotulo="Servindo em times" aoAbrir={() => setRoute("pessoas")} rotuloAcao={`Servindo em times. Ver a lista`} />
+          <Indicador estilo="numero" valor={members.filter((m) => !!m.groupId).length} rotulo={ct("Em {grupos}")} aoAbrir={() => setRoute("membros")} rotuloAcao={`${ct("Em {grupos}")}. Ver a lista`} />
         </div>
       )}
-      {gestao && <NovosCadastros />}
-      {cuidado && (cuidado.lista.length > 0 || (cuidado.criancas?.length ?? 0) > 0) && (
-        <div style={{ marginBottom: 20 }}>
-          <ListaDeCuidado podeAbrirPessoa={(a) => podeAbrir(a.memberId ? "membros" : "pessoas")} lista={cuidado.lista} criancas={cuidado.criancas} semanas={cuidado.semanas} onAbrir={(a) => setDrawer(a.memberId ? { kind: "member", id: a.memberId } : { kind: "person", id: a.personId })} />
-        </div>
-      )}
-      {aniversarios}
       {podeAbrir("configurar") && (emPreparacao ? (
         <Acao className="setup-banner" onClick={() => setRoute("configurar")}>
           <span className="setup-banner-t">{linhaDoSetup(setup)}</span>
@@ -426,99 +417,32 @@ export function Painel({
       ) : (
         gestao && ["configurar", "times", "cultos", "membros"].every((r) => podeAbrir(r as keyof typeof ROUTES)) ? <details className="service-preparacao"><summary>Revisar preparação da igreja</summary><SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} /></details> : null
       ))}
-      {/* v7 3.6: cada número aparece uma vez. Vagas abertas e visitantes sem contato já estão na lista do topo e em Pendências. */}
-      {!liderDeTime && !ativando && <div className="kpi-row kpi-3">
-        <Indicador icone="pessoa" rotulo={ct("{Voluntarios}")} valor={activePeople} rodape={joinDot(`de ${plural(people.length, "cadastrado")}`, novosNoMes ? `${plural(novosNoMes, "novo", "novos")} em 30 dias` : null)} />
-        <Indicador icone="ok" rotulo="Confirmação" valor={escaladosSemana ? `${confirmationRate}%` : "·"} rodape={escaladosSemana ? `de ${plural(escaladosSemana, "vaga escalada", "vagas escaladas")} nesta semana` : "ninguém escalado nesta semana"} />
-        <Indicador icone="visitante" rotulo="Visitantes em acompanhamento" valor={visitorsInCare} rodape={visitantesSemContato ? `${visitantesSemContato} sem contato há mais de 48h` : visitorsInCare ? "todos com contato em dia" : "nenhum visitante em acompanhamento"} />
-      </div>}
-      <div className="sobre-numeros"><Acao className="help-link" onClick={() => setSobreAberto(true)}>Sobre estes números</Acao></div>
-      {sobreAberto && (
-        <Janela titulo="Sobre estes números" texto="Como cada número e painel do Início é calculado." aoFechar={() => setSobreAberto(false)} corpoBloco
-          rodape={<Botao variante="principal" onClick={() => setSobreAberto(false)}>Fechar</Botao>}>
-      <dl className="sobre-lista">
-        {sobre.map(([t, d]) => <div key={t}><dt>{t}</dt><dd>{d}</dd></div>)}
-      </dl>
-        </Janela>
-      )}
-      <div className="dash-2col">
-        {podeAbrir("escalas") && <Cartao>
-          <div className="panel-head">
-            <span className="panel-title"><Icon name="escalas" size={14} /> Pendências da escala</span>
-            <Botao compacto onClick={() => setRoute("escalas")}>Escalar</Botao>
-          </div>
-          <div className="panel-body flush">
-            {(() => {
-              /* v7 4.16: cobertura do próximo culto com vaga aberta */
-              const prox = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time))
-                .map((e) => ({ e, c: coberturaPorTime(e, roster, ministries, scopeMinistryIds) }))
-                .find((x) => vagasFaltando(x.c) > 0);
-              return prox ? (
-                <Linha>
-                  <div className="mini-main">
-                    <div className="mini-title">{prox.e.name} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {joinDot(prox.e.weekday, prox.e.time)}</span></div>
-                    <Cobertura itens={prox.c} onAbrir={(timeId) => onAbrirVagas(prox.e.id, timeId)} />
-                  </div>
-                </Linha>
-              ) : null;
-            })()}
-            {gapsDaSemana.slice(0, 6).map((gap) => (
-              <div className="gap-row" key={`${gap.event.id}-${gap.position.id}`}>
-                <div className="gap-ic wait">!</div>
-                <div className="mini-main">
-                  <div className="mini-title">{gap.position.name} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {gap.ministry.name}</span></div>
-                  <div className="mini-sub">{joinDot(gap.event.weekday, gap.event.time)}</div>
-                </div>
-                <Botao compacto onClick={() => setRoute("escalas")}>Escalar</Botao>
-              </div>
-            ))}
-            {gapsDaSemana.length === 0 && !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone) && vagasFaltando(coberturaPorTime(e, roster, ministries, scopeMinistryIds)) > 0) ? <Linha><div className="mini-main"><div className="mini-title">{semProgramacao ? "Sem programação futura" : roster.length === 0 ? "Escalas ainda não preparadas" : "Sem vagas abertas nesta semana"}</div><div className="mini-sub">{semProgramacao ? "Prepare o próximo encontro antes de organizar a equipe." : roster.length === 0 ? "Ter encontros na agenda não significa que a equipe já foi escalada." : "Confira os próximos encontros para acompanhar a cobertura de cada time."}</div></div></Linha> : null}
-          </div>
-        </Cartao>}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {podeAbrir("cultos") && <Cartao>
-            <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> {ct("Próximos {cultos}")}</span><Botao compacto onClick={() => setRoute("cultos")}>Agenda</Botao></div>
-            <div className="panel-body flush">
-            {/* v7 2.9: só o que ainda vai começar, no fuso da igreja (Brasília) */}
-            {(() => {
-              const proximos = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time)).slice(0, 3);
-              if (proximos.length === 0) return <Vazio titulo={ct("Nenhum {culto} marcado daqui pra frente.")} />;
-              return proximos.map((event) => (
-                <MiniEvent
-                  key={event.id}
-                  event={event}
-                  cobertura={coberturaPorTime(event, roster, ministries, scopeMinistryIds)}
-                  onAbrirVagas={podeAbrir("escalas") ? (timeId) => onAbrirVagas(event.id, timeId) : undefined}
-                  setDrawer={setDrawer}
-                  attendanceCount={eventAttendance.filter((a) => a.event_id === event.id).length}
-                  onCheckin={() => setCheckinEventId(event.id)}
-                />
-              ));
-            })()}
-            </div>
-          </Cartao>}
+      {/* v7 I1: KPI row removido (lei 14). Voluntários/confirmação/visitantes repetiam a fila e o saúde-resumo; agora vivem só em Relatórios. */}
+      {/* v7 I1: blocos "Pendências da escala" e "Próximos cultos" removidos.
+          Vagas e cobertura vivem agora apenas na fila "Precisa de você" (Lei 14).
+          Próximos cultos sem pendência não aparecem no Início; a tela dona é Cultos. */}
+      <div className="flex-col gap-md">
           {enqueteElegivel && (
-            <Cartao style={{ cursor: "pointer" }} onClick={() => setModal(buildAvaliacaoModal(enqueteElegivel))}>
+            <Cartao className="cursor-pointer" onClick={() => setModal(buildAvaliacaoModal(enqueteElegivel))}>
               <div className="panel-head"><span className="panel-title"><Icon name="estrela" size={14} /> Avaliação de experiência</span></div>
               <div className="panel-body">
-                <div style={{ fontSize: "var(--fs-pn-14)", fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{enqueteElegivel.nome}</div>
-                <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time.</div>
+                <div className="text-pn-14 text-semibold text-white mb-xs">{enqueteElegivel.nome}</div>
+                <div className="text-pn-13 text-muted">Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time.</div>
               </div>
             </Cartao>
           )}
           {pesquisaElegivel && (
-            <Cartao style={{ cursor: "pointer" }} onClick={() => setModal(buildPesquisaModal(pesquisaElegivel))}>
+            <Cartao className="cursor-pointer" onClick={() => setModal(buildPesquisaModal(pesquisaElegivel))}>
               <div className="panel-head"><span className="panel-title"><Icon name="reacao" size={14} /> {pesquisaElegivel.pendente ? "Pulso da escala" : "Sua última resposta"}</span></div>
               <div className="panel-body">
-                <div style={{ fontSize: "var(--fs-pn-14)", fontWeight: 600, color: "var(--white)", marginBottom: 4 }}>{pesquisaElegivel.nome}</div>
-                <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{pesquisaElegivel.pendente ? "Leva menos de um minuto. Conta como foi pra você." : "Já respondida. Toque pra rever ou atualizar quando quiser."}</div>
+                <div className="text-pn-14 text-semibold text-white mb-xs">{pesquisaElegivel.nome}</div>
+                <div className="text-pn-13 text-muted">{pesquisaElegivel.pendente ? "Leva menos de um minuto. Conta como foi pra você." : "Já respondida. Toque pra rever ou atualizar quando quiser."}</div>
               </div>
             </Cartao>
           )}
-        </div>
       </div>
       {journeyRequests.length > 0 && (
-        <Cartao id="caminhada-pendente" style={{ marginTop: 24 }}>
+        <Cartao id="caminhada-pendente" className="mt-md">
           <div className="panel-head">
             <span className="panel-title"><Icon name="membros" size={14} /> {ct("{Caminhada} pendente")}</span>
           </div>
@@ -530,12 +454,12 @@ export function Painel({
                 <div className="gap-row" key={request.id}>
                   <div className="gap-ic wait">!</div>
                   <div className="mini-main">
-                    <div className="mini-title">{member?.name ?? "Alguém"} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {stepLabel}</span></div>
+                    <div className="mini-title">{member?.name ?? "Alguém"} <span className="text-muted">· {stepLabel}</span></div>
                     <div className="mini-sub">{formatDateBR(request.eventDate) || "sem data informada"}{request.note ? ` · ${request.note}` : ""}</div>
                   </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <Botao compacto onClick={() => onRejectJourney(request)}>Rejeitar</Botao>
-                    <Botao variante="principal" compacto onClick={() => onApproveJourney(request)}>Aprovar</Botao>
+                  <div className="flex-row gap-sm">
+                    <Botao variante="texto" compacto onClick={() => onRejectJourney(request)}>Rejeitar</Botao>
+                    <Botao variante="secundario" compacto onClick={() => onApproveJourney(request)}>Aprovar</Botao>
                   </div>
                 </div>
               );
@@ -543,69 +467,8 @@ export function Painel({
           </div>
         </Cartao>
       )}
-      {podeAbrir("comunicacao") && <div className="dash-2col">
-        <Cartao>
-          <div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={14} /> Comunicação recente</span><Botao compacto onClick={() => setRoute("comunicacao")}>Ver tudo</Botao></div>
-          <div className="panel-body flush">
-            {recentAnnouncements.map((a) => (
-              <Acao className={`${linhaClasse({})} click`} key={a.id} onClick={() => setRoute("comunicacao")}>
-                <div className="mini-main">
-                  <div className="mini-title">{a.title}</div>
-                  <div className="mini-sub">{joinDot(paraPublico(a.audience), quandoPublicado(a.created_at))}</div>
-                </div>
-              </Acao>
-            ))}
-            {recentAnnouncements.length === 0 && (
-              <Linha><div className="mini-main"><div className="mini-title">Nenhum aviso ainda</div><div className="mini-sub">Publique em Comunicação</div></div></Linha>
-            )}
-          </div>
-        </Cartao>
-      </div>}
-      {podeAbrir("criancas") && kidsClasses.length > 0 && (
-        <div className="dash-2col" style={{ marginTop: 20 }}>
-          <Cartao>
-            <div className="panel-head"><span className="panel-title"><Icon name="kids" size={14} /> Crianças por turma</span><Botao compacto onClick={() => setRoute("criancas")}>Ver todas</Botao></div>
-            <div className="panel-body flush">
-              {kidsClasses.map((kc) => {
-                const count = kidsChildren.filter((child) => child.class_id === kc.id).length;
-                const max = Math.max(...kidsClasses.map((k) => kidsChildren.filter((c) => c.class_id === k.id).length), 1);
-                return (
-                  <div className="dist-row" key={kc.id}>
-                    <span className="dist-name">{kc.name}</span>
-                    <div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(count / max) * 100}%` }} /></div>
-                    <span className="dist-num">{count}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </Cartao>
-          {!cuidado && <Cartao>
-            <div className="panel-head"><span className="panel-title"><Icon name="alerta" size={14} /> Crianças sumindo</span><span className="panel-meta">sem vir há mais tempo</span></div>
-            <div className="panel-body flush">
-              {kidsChildren
-                .map((child) => {
-                  const lastSeen = kidsAttendance
-                    .filter((a) => a.child_id === child.id)
-                    .map((a) => a.dropped_off_at)
-                    .sort()
-                    .pop();
-                  return { child, lastSeen };
-                })
-                .sort((a, b) => (a.lastSeen ?? "").localeCompare(b.lastSeen ?? ""))
-                .slice(0, 5)
-                .map(({ child, lastSeen }) => (
-                  <Linha key={child.id}>
-                    <div className="mini-main">
-                      <div className="mini-title">{child.name}</div>
-                      <div className="mini-sub">{lastSeen ? `Última vez em ${formatDateBR(lastSeen.slice(0, 10))}` : "Nunca fez check-in"}</div>
-                    </div>
-                  </Linha>
-                ))}
-              {kidsChildren.length === 0 && <Vazio titulo="Nenhuma criança cadastrada ainda." />}
-            </div>
-          </Cartao>}
-        </div>
-      )}
+      {/* v7 I1: blocos "Comunicação recente" e "Crianças por turma" removidos.
+          Telas donas existem (Mural e Crianças). Pendências reais já estão na fila. */}
     </div>
   );
 }
@@ -629,7 +492,7 @@ export function MiniEvent({
         <div className="mini-sub">{joinDot(event.weekday, formatDateBR(event.eventDate), event.location)}</div>
         {cobertura && cobertura.length > 0 && <Cobertura itens={cobertura} onAbrir={onAbrirVagas} compacta />}
       </div>
-      <div className="mini-right" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div className="mini-right flex-row items-center gap-sm">
         <span>{event.time}</span>
         {onCheckin && (
           <span
