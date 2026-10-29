@@ -682,13 +682,12 @@ body { --graf-neutro: color-mix(in srgb, var(--muted) 38%, transparent); --graf-
 .graf-anel-arco { stroke: var(--accent-fill); stroke-linecap: round; stroke-dasharray: 1; animation: graf-desenha 1.4s var(--ease-drawer) .2s backwards; transition: stroke-dashoffset .6s var(--ease-drawer); }
 .graf-anel-centro { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .graf-anel-n { font-size: clamp(28px, 3.6vw, 46px); font-weight: 800; letter-spacing: -0.04em; line-height: 1; color: var(--white); }
+.graf-anel-s { margin-top: 4px; font-size: var(--fs-pn-14); color: var(--muted); }
 
 /* ── Fila "Precisa de você" (I1): linha neutra, destaque só no ícone da principal ── */
 /* Lei 13: um botão cheio por tela. A linha inteira NÃO recebe accent-fill.
    O destaque visual vai apenas para o ícone da primeira linha (ação prioritária). */
-.agora-row.agora-principal { /* mantém fundo neutro padrão da fila */ }
 .agora-row.agora-principal .agora-ic { background: var(--accent-fill); color: var(--accent-ink); }
-.graf-anel-s { margin-top: 4px; font-size: var(--fs-pn-14); color: var(--muted); }
 .graf-meta-t { font-size: var(--fs-pn-14); font-weight: 600; color: var(--white); text-align: center; }
 
 /* ── Tendência (Tendencia): a linha se revela da esquerda, a área entra depois ── */
