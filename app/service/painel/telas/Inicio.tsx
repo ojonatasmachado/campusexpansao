@@ -18,8 +18,7 @@ import { coberturaPorTime, vagasFaltando, type CoberturaTime } from "../../modul
 import { Cobertura } from "../../modules/escalas/Cobertura";
 import { linhaDoPainel, semanaDe } from "../../lib/contexto-dia";
 import { type Ausente } from "../../modules/cuidado/cuidado";
-import { ListaDeCuidado, type CriancaAusente } from "../../modules/cuidado/Cuidado";
-import { NovosCadastros } from "../../modules/entrada/NovosCadastros";
+import type { CriancaAusente } from "../../modules/cuidado/Cuidado";
 import { linhaDoSetup, type SetupEstado } from "../../modules/configuracao/setup";
 import { termosDaRota } from "../../modules/registry";
 import { REACOES_PESQUISA, ROUTES } from "../comum";
@@ -343,10 +342,16 @@ export function Painel({
       </div>
       {ativando && (
         <section className="service-start-guide" aria-labelledby="service-start-title">
-          <div className="ph-eyebrow">{primeiraProgramacao ? "Primeiros passos" : "Próximo encontro"}</div>
-          <h2 id="service-start-title">O próximo encontro começa aqui</h2>
-          <p>Ainda não há programação futura na agenda. Prepare um encontro com data, horário e local para que as pessoas saibam onde participar.</p>
-          <ol><li><b>{primeiraProgramacao ? "Identifique sua igreja" : "Confira os dados da igreja"}</b><span>Nome, endereço e a identidade que as pessoas vão reconhecer.</span></li><li><b>Prepare o encontro</b><span>Uma data e um lugar antes de organizar toda a equipe.</span></li><li><b>Convide quem vai ajudar</b><span>Depois, acompanhe os acessos e as respostas.</span></li></ol>
+          <div className="ph-eyebrow">{primeiraProgramacao ? "Primeiros passos" : "Fila de ações"}</div>
+          <h2 id="service-start-title">{primeiraProgramacao ? "Comece por aqui" : "Precisa de você"}</h2>
+          <p>{primeiraProgramacao ? "Sua igreja ainda não tem programação. Siga os passos abaixo para começar." : "Tudo o que pede atenção agora aparece nesta fila. Resolva na ordem; cada linha leva direto à tela que resolve."}</p>
+          {primeiraProgramacao && (
+            <ol>
+              <li><b>Identifique sua igreja</b><span>Nome, endereço e a identidade que as pessoas vão reconhecer.</span></li>
+              <li><b>Prepare o encontro</b><span>Uma data e um lugar antes de organizar toda a equipe.</span></li>
+              <li><b>Convide quem vai ajudar</b><span>Depois, acompanhe os acessos e as respostas.</span></li>
+            </ol>
+          )}
         </section>
       )}
       {/* v7 I1: Fila "Precisa de você" — primeira coisa visível (decisão 9, LEVEZA §3A).
@@ -364,7 +369,10 @@ export function Painel({
           filas.push({ key: "visitantes-link", ic: "visitante", t: `${plural(visitantesPeloLink, "visitante")} ${visitantesPeloLink === 1 ? "se cadastrou" : "se cadastraram"} pelo link`, s: " · esperando o 1º contato", go: "Ver →", action: () => setRoute("visitantes") });
         }
         if (!liderDeTime && journeyRequests.length > 0) {
-          filas.push({ key: "jornada", ic: "membros", t: journeyRequests.length === 1 ? ct("1 pedido na {caminhada}") : ct(`${journeyRequests.length} pedidos na {caminhada}`), s: " · esperando aprovação", go: "Revisar →", action: () => setRoute("membros") });
+          filas.push({ key: "jornada", ic: "membros", t: journeyRequests.length === 1 ? ct("1 pedido na {caminhada}") : ct(`${journeyRequests.length} pedidos na {caminhada}`), s: " · esperando aprovação", go: "Revisar →", action: () => { const el = document.getElementById("caminhada-pendente"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); else setRoute("membros"); } });
+        }
+        if (!liderDeTime && podeAbrir("membros") && novosNoMes > 0) {
+          filas.push({ key: "novos-cadastros", ic: "pessoa", t: novosNoMes === 1 ? "1 novo cadastro esperando" : `${novosNoMes} novos cadastros esperando`, s: " · neste mês", go: "Ver →", action: () => setRoute("membros") });
         }
         if (!liderDeTime && cuidado && cuidado.lista.length > 0) {
           filas.push({ key: "cuidado", ic: "alerta", t: `${plural(cuidado.lista.length, "pessoa")} sem registro`, s: ` · há ${plural(cuidado.semanas, "semana")} ou mais`, go: "Ver →", action: () => setRoute("membros") });
@@ -378,18 +386,12 @@ export function Painel({
               <h2 className="painel-sec-t">{liderDeTime ? "Para resolver no seu time" : "Precisa de você"}</h2>
               <div className="agora-list">
                 {filas.slice(0, 7).map((f, i) => (
-                  <Acao className={`agora-row${i === 0 && f.principal ? " agora-principal" : ""}`} key={f.key} onClick={f.action}>
+                  <div className={`agora-row${i === 0 && f.principal ? " agora-principal" : ""}`} key={f.key} role={f.botaoPrincipal ? undefined : "button"} tabIndex={f.botaoPrincipal ? undefined : 0} onClick={f.botaoPrincipal ? undefined : f.action} onKeyDown={f.botaoPrincipal ? undefined : (e) => { if (e.key === "Enter" || e.key === " ") f.action(); }}>
                     <span className="agora-ic"><Icon name={f.ic} size={17} /></span>
                     <span className="agora-main"><span className="agora-t">{f.t}</span><span className="agora-s">{f.s}</span></span>
-                    {f.botaoPrincipal ? <Botao variante="principal" compacto onClick={(e) => { e.stopPropagation(); f.action(); }}>{f.go}</Botao> : <span className="agora-go">{f.go}</span>}
-                  </Acao>
+                    {f.botaoPrincipal ? <Botao variante="principal" compacto onClick={f.action}>{f.go}</Botao> : <span className="agora-go">{f.go}</span>}
+                  </div>
                 ))}
-                {filas.length > 7 && (
-                  <Acao className="agora-row" onClick={() => setRoute("escalas")}>
-                    <span className="agora-main"><span className="agora-t">Ver todas as pendências</span><span className="agora-s">{` · ${filas.length - 7} mais`}</span></span>
-                    <span className="agora-go">→</span>
-                  </Acao>
-                )}
               </div>
             </>
           );
@@ -401,12 +403,12 @@ export function Painel({
           </>
         );
       })()}
-      {/* v7 I1: Saúde-resumo — 3 números de base (lei 14, decisão 9). Panorama vai para Relatórios. */}
+      {/* v7 I1: Saúde-resumo — 3 números de base em Indicador cartao (lei 14, prancha 2). Panorama vai para Relatórios. */}
       {gestao && !ativando && (
-        <div className="kpi-row kpi-3 saude-resumo">
-          <Indicador estilo="numero" valor={members.length} rotulo={ct("Membros registrados")} aoAbrir={() => setRoute("membros")} rotuloAcao={`${ct("Membros registrados")}: ${members.length}. Ver a lista`} />
-          <Indicador estilo="numero" valor={people.filter((p) => new Set(ministries.flatMap((t) => t.people.map((pp) => pp.personId))).has(p.id) && p.status === "ativo").length} rotulo="Servindo em times" aoAbrir={() => setRoute("pessoas")} rotuloAcao={`Servindo em times. Ver a lista`} />
-          <Indicador estilo="numero" valor={members.filter((m) => !!m.groupId).length} rotulo={ct("Em {grupos}")} aoAbrir={() => setRoute("membros")} rotuloAcao={`${ct("Em {grupos}")}. Ver a lista`} />
+        <div className="kpi-row">
+          <Indicador estilo="cartao" icone="membros" valor={members.length} rotulo={ct("Membros registrados")} aoAbrir={() => setRoute("membros")} rotuloAcao={`${ct("Membros registrados")}: ${members.length}. Ver a lista`} />
+          <Indicador estilo="cartao" icone="escalas" valor={people.filter((p) => new Set(ministries.flatMap((t) => t.people.map((pp) => pp.personId))).has(p.id) && p.status === "ativo").length} rotulo="Servindo em times" aoAbrir={() => setRoute("pessoas")} rotuloAcao="Servindo em times. Ver a lista" />
+          <Indicador estilo="cartao" icone="grupos" valor={members.filter((m) => !!m.groupId).length} rotulo={ct("Em {grupos}")} aoAbrir={() => setRoute("membros")} rotuloAcao={`${ct("Em {grupos}")}. Ver a lista`} />
         </div>
       )}
       {podeAbrir("configurar") && (emPreparacao ? (
