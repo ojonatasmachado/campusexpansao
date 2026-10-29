@@ -673,21 +673,6 @@ body { --graf-neutro: color-mix(in srgb, var(--muted) 38%, transparent); --graf-
 .graf-cob-linha.ok .graf-cob-barra { background: var(--ok); }
 .graf-cob-linha.ok .graf-cob-pct { color: var(--ok); }
 
-/* ── Utilitários de layout e texto (I1): eliminam inline styles estáticos ── */
-.text-muted { color: var(--muted); font-weight: 400; }
-.flex-col { display: flex; flex-direction: column; }
-.flex-row { display: flex; flex-direction: row; }
-.items-center { align-items: center; }
-.gap-sm { gap: 8px; }
-.gap-md { gap: 16px; }
-.mt-md { margin-top: 24px; }
-.mb-xs { margin-bottom: 4px; }
-.cursor-pointer { cursor: pointer; }
-.text-pn-14 { font-size: var(--fs-pn-14); }
-.text-pn-13 { font-size: var(--fs-pn-13); }
-.text-semibold { font-weight: 600; }
-.text-white { color: var(--white); }
-
 /* ── Meta (Meta): o arco gira até a fração, o número conta junto ── */
 .graf-meta { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .graf-anel { position: relative; width: 200px; max-width: 100%; aspect-ratio: 1; }
@@ -703,11 +688,6 @@ body { --graf-neutro: color-mix(in srgb, var(--muted) 38%, transparent); --graf-
    O destaque visual vai apenas para o ícone da primeira linha (ação prioritária). */
 .agora-row.agora-principal { /* mantém fundo neutro padrão da fila */ }
 .agora-row.agora-principal .agora-ic { background: var(--accent-fill); color: var(--accent-ink); }
-.agora-row.agora-principal .agora-s { /* cor padrão */ }
-/* I1: a seta/go na linha principal NÃO pode ser botão cheio (Lei 13: max 1 filled).
-   Mantém como texto/link sobre o fundo accent, sem borda nem preenchimento próprio. */
-.agora-row.agora-principal .agora-go { color: var(--accent-ink); font-weight: 600; background: transparent; border: 0; }
-.saude-resumo { margin-top: 8px; margin-bottom: 20px; }
 .graf-anel-s { margin-top: 4px; font-size: var(--fs-pn-14); color: var(--muted); }
 .graf-meta-t { font-size: var(--fs-pn-14); font-weight: 600; color: var(--white); text-align: center; }
 
