@@ -206,20 +206,15 @@ export function Relatorios({
   return (
     <div className="content wide">
       <PageHead title="Relatórios e indicadores" eyebrow="Gestão" help="A saúde da igreja num lugar: crescimento, cobertura de escala e registros de quem serve. Use o recorte de trimestre pra comparar." action={<><Segmentado role="group" aria-label="Recorte das comparações">{([[30, "30 dias"], [90, "Trimestre"]] as const).map(([v, l]) => <Opcao key={v} marcada={periodo === v} aria-pressed={periodo === v} onClick={() => setPeriodo(v)}>{l}</Opcao>)}</Segmentado><Botao variante="principal" onClick={baixarRelatorio}>Baixar relatório →</Botao></>} />
-      <div className="kpi-row"><Indicador icone="membros" rotulo="Membros na rede" valor={members.length} rodape={foot(membrosDelta, " novos", "cadastrados")} ajuda="Toda a congregação, somando todas as congregações da rede." /><Indicador icone="visitante" rotulo="Visitantes que viraram membros" valor={retencaoAtual === null ? "Sem dados" : `${retencaoAtual}%`} rodape={foot(retencaoDelta, " pp", retencaoAtual === null ? "nenhum visitante no recorte" : "dos cadastrados no recorte")} ajuda="Percentual dos visitantes cadastrados no período escolhido que estão na etapa de membro. Cadastros recentes ainda podem estar no início da jornada." /><Indicador icone="escalas" rotulo="Confirmações de escala" valor={coberturaRecente === null ? "Sem dados" : `${coberturaRecente}%`} rodape={foot(coberturaDelta, " pp", coberturaRecente === null ? "nenhuma escala no recorte" : "das vagas escaladas no recorte")} ajuda="Das pessoas escaladas nos eventos do período escolhido, quantas confirmaram. Não mede vagas ainda sem uma pessoa escalada." /><Indicador icone="cultos" rotulo="Média de check-ins" valor={freqRecente ?? "Sem dados"} rodape={foot(freqDelta, "", freqRecente === null ? ct("nenhum {culto} no recorte") : ct("por {culto} no recorte"))} ajuda={ct("Check-ins registrados divididos pelo número de {cultos} no período. Zero check-ins não comprova ausência de pessoas.")} /></div>
-      {/* v7 I1: Números de base migrados do Início (lei 14). Cada número abre a lista de pessoas. */}
+      <div className="kpi-row"><Indicador icone="visitante" rotulo="Visitantes que viraram membros" valor={retencaoAtual === null ? "Sem dados" : `${retencaoAtual}%`} rodape={foot(retencaoDelta, " pp", retencaoAtual === null ? "nenhum visitante no recorte" : "dos cadastrados no recorte")} ajuda="Percentual dos visitantes cadastrados no período escolhido que estão na etapa de membro. Cadastros recentes ainda podem estar no início da jornada." /><Indicador icone="escalas" rotulo="Confirmações de escala" valor={coberturaRecente === null ? "Sem dados" : `${coberturaRecente}%`} rodape={foot(coberturaDelta, " pp", coberturaRecente === null ? "nenhuma escala no recorte" : "das vagas escaladas no recorte")} ajuda="Das pessoas escaladas nos eventos do período escolhido, quantas confirmaram. Não mede vagas ainda sem uma pessoa escalada." /><Indicador icone="cultos" rotulo="Média de check-ins" valor={freqRecente ?? "Sem dados"} rodape={foot(freqDelta, "", freqRecente === null ? ct("nenhum {culto} no recorte") : ct("por {culto} no recorte"))} ajuda={ct("Check-ins registrados divididos pelo número de {cultos} no período. Zero check-ins não comprova ausência de pessoas.")} /></div>
+      {/* v7 I1: Números de base migrados do Início (lei 14). Indicador cartao, cada número abre a lista. Sem duplicar "Membros na rede". */}
       <div className="section-divide"><span className="num">01</span><span className="label">Números de base</span><span className="line" /></div>
       <div className="kpi-row">
-        {baseNums.map((n) => {
-          const cmp = comparacao(n.valor, n.anterior, saudeDias);
-          const mudou = n.anterior !== undefined && n.anterior !== n.valor;
-          return (
-            <Indicador key={n.id} estilo="numero" valor={n.valor} rotulo={ct(n.rotulo)}
-              rodape={saudePanorama && cmp && mudou ? cmp : undefined}
-              aoAbrir={n.itens.length ? () => abrirListaBase(n.itens[0]) : undefined}
-              rotuloAcao={`${ct(n.rotulo)}: ${n.valor}. Ver a lista`} />
-          );
-        })}
+        {baseNums.map((n) => (
+          <Indicador key={n.id} estilo="cartao" icone={n.id === "membros" ? "membros" : n.id === "servindo" ? "escalas" : "grupos"} valor={n.valor} rotulo={ct(n.rotulo)}
+            aoAbrir={n.itens.length ? () => abrirListaBase(n.itens[0]) : undefined}
+            rotuloAcao={`${ct(n.rotulo)}: ${n.valor}. Ver a lista`} />
+        ))}
       </div>
       <div className="saude-head">
         <Botao variante="texto" onClick={() => setSaudePanorama((v) => !v)}>
