@@ -76,7 +76,7 @@ O Início do painel hoje responde "como estamos?" (Saúde) em vez de "o que eu p
 - Nada é removido do Início até paridade funcional em Relatórios.
 
 ## Justificativa Lei 13 (densidade)
-A medição da dobra no desktop (1366×860) após os ajustes I1 mostra que o conteúdo próprio do Início (fila "Precisa de você" + saúde-resumo) contribui com aproximadamente 7 ações e 45 palavras na primeira dobra. O excesso sobre os limites absolutos (25 ações / 100 palavras) vem integralmente da **casca compartilhada** (menu lateral com ~18 itens, barra de busca, navegação global), que é comum a todas as telas do painel e não pode ser reduzida nesta história sem quebrar a navegação global. No celular (390×844), o Início tem 6 ações e 52 palavras — dentro dos limites. A casca responde por ~70% das ações e ~60% das palavras na dobra desktop; o conteúdo I1 está bem abaixo dos limites quando medido isoladamente.
+A medição da dobra no desktop (1366×860) após os ajustes I1 mostra que o conteúdo próprio do Início (fila "Precisa de você" + 3 Indicadores cartao) contribui com aproximadamente 8 ações e 42 palavras na primeira dobra. O excesso sobre os limites absolutos (25 ações / 100 palavras) vem integralmente da **casca compartilhada** (menu lateral com ~18 itens, barra de busca, navegação global), que é comum a todas as telas do painel e não pode ser reduzida nesta história sem quebrar a navegação global. No celular (390×844), o Início tem 6 ações e 48 palavras — dentro dos limites. A casca responde por ~70% das ações e ~60% das palavras na dobra desktop; o conteúdo I1 está bem abaixo dos limites quando medido isoladamente.
 
 ### Tabela antes/depois (tela logada)
 | Métrica | Desktop Antes | Desktop Depois | Celular Antes | Celular Depois |
