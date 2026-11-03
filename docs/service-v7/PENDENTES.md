@@ -51,18 +51,19 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 
 ### 2. Leveza, liberada pelo D1 em 28/10 (maior ganho para quem usa)
 - **E2** Panorama do culto · **E1** Escalas por time (as duas tocam `cobertura.ts`: uma de cada vez)
-- **I1** Início do painel como fila "Precisa de você"
 - **M1** Agenda do membro com "Confirmar todas"
 - **E4** Indisponibilidade por período e por time
 - **E3** Cobertura vira linha no "Para resolver" (depois do E2)
 
 ### 3. Qualidade que protege o resto
+- NovosCadastros: erro ao carregar os pedidos some sem aviso
+- Botao discreto aparece mais forte que o padrão (ex.: Recusar x Aprovar no Início)
 
 ### 4. Código independente (dá para tocar em paralelo, se os trilhos não esbarrarem)
 - **I2** Ações do Início que não navegam · **I5** Ajuda com menos repetição
 - **M2** Setas nos botões do membro · **M3** Retorno e recarga · **M5** Foco no Mural · **I7** Quadros no toque
 - **N2** Integração final de idiomas e moeda (base N1 entregue com recursos desativados) · **F1** Financeiro fases 3 e 4 · **F2** Pontos pequenos de jornada · **O1** Culto avulso no estilo do assistente
-- **I3** Revisão de UI das telas densas (I9 e D1 feitos) · **G3** Cartões do mapa no Início (depois de I1)
+- **I3** Revisão de UI das telas densas (I9 e D1 feitos) · **G3** Cartões do mapa no Início
 
 ### 5. Verificações em código e banco local
 - **E5** Troca de escala ponta a ponta · **M4** Convite e primeiro acesso

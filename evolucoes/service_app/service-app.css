@@ -3972,8 +3972,10 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 .service-start-guide li b { color: var(--white); margin-bottom: 6px; font-weight: 600; }
 .painel-inicio .ph-title { letter-spacing: -.03em; }
 .painel-inicio .agora-list { border-radius: 8px; }
-.painel-inicio .kpi-row { gap: 0; border-block: 1px solid var(--border-2); }
-.painel-inicio .kpi-row > * { border: 0; border-radius: 0; background: transparent; }
+/* I1: kpi-row usa grid de 3 colunas para os Indicadores cartao (prancha 2).
+   Sem override de borda/fundo: os cartões mantêm moldura da biblioteca. */
+.painel-inicio .kpi-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 860px) { .painel-inicio .kpi-row { grid-template-columns: 1fr; } }
 @media (max-width: 860px) {
   .service-setup-editorial .setup-2col { grid-template-columns: minmax(0,1fr); }
   .service-setup-editorial :is(input, select, .seg-chip, .btn) { min-height: 44px; }

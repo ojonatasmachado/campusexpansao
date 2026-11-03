@@ -108,7 +108,7 @@ export type CoachStep = { route?: string; sel: string; t: string; s: string };
    pedir ajuda. Eram 20 passos, um por item do menu; o resto do menu se explica
    pelo "?" de cada tela. O painel tira do tour o que o papel não vê. */
 export const TOUR_DESKTOP: CoachStep[] = [
-  { route: "painel", sel: '[data-tour="painel"]', t: "Seu painel", s: "O resumo da semana: próximos {cultos}, quem falta confirmar e o que precisa de atenção." },
+  { route: "painel", sel: '[data-tour="painel"]', t: "Seu painel", s: "O que precisa de você agora, em ordem. Cada linha leva à tela que resolve." },
   { route: "membros", sel: '[data-tour="membros"]', t: "Pessoas", s: "Membros, visitantes, crianças e {grupos}. Cada pessoa tem a sua {caminhada} e o seu histórico." },
   { route: "escalas", sel: '[data-tour="escalas"]', t: "Escalas", s: "Monte quem serve em cada {culto}. As pessoas confirmam ou recusam direto no celular." },
   { route: "cultos", sel: '[data-tour="cultos"]', t: "{Cultos} e eventos", s: "A agenda da igreja. Cada {culto} pode virar uma escala." },
