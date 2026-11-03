@@ -2,10 +2,10 @@
 id: E2
 titulo: Criar Panorama do culto somente leitura
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-03
+branch: historia/E2-panorama-do-culto
 depende: [D1]
 tamanho: G
 ---
