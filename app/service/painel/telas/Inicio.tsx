@@ -417,7 +417,7 @@ export function Painel({
         );
       })()}
       {/* v7 I1: NovosCadastros — pedidos pendentes de entrada_pedidos (migração 0071). Só gestão; sem pedidos, não aparece (lei 6). */}
-      {gestao && !ativando && <NovosCadastros onPedidosChange={onPedidosChange} />}
+      {gestao && <NovosCadastros onPedidosChange={onPedidosChange} />}
       {/* v7 I1: Saúde-resumo — 3 números de base via numerosDaBase() (mesma fonte de Relatórios). Indicador cartao, prancha 2. */}
       {gestao && !ativando && (() => {
         const dadosSaude: DadosSaude = { membros: members, pessoas: people, times: ministries, visitantes: [], decisoes: [], fatos: [], matriculas: [] };
