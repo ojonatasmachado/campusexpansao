@@ -76,16 +76,26 @@ O Início do painel hoje responde "como estamos?" (Saúde) em vez de "o que eu p
 - Nada é removido do Início até paridade funcional em Relatórios.
 
 ## Justificativa Lei 13 (densidade)
-A auditoria automatizada (`scripts/medir-densidade.js`) mediu na dobra desktop (1366×860): **30 ações**, **116 palavras**, **1 botão cheio**, **moldura máxima aninhada 3**. Os limites absolutos são 25 ações / 100 palavras / moldura ≤ 2. O excesso vem integralmente da **casca compartilhada** (menu lateral com ~18 itens, barra de busca, navegação global, header com saudação e relógio), que é comum a todas as telas do painel e não pode ser reduzida nesta história sem quebrar a navegação global. O conteúdo próprio da I1 (fila "Precisa de você" + 3 Indicadores cartao) contribui com ~8 ações e ~40 palavras quando medido isoladamente. No celular (390×844), o Início tem 6 ações e 48 palavras — dentro dos limites. A casca responde por ~73% das ações e ~65% das palavras na dobra desktop.
+A auditoria automatizada (`scripts/medir-densidade.js`) mediu na dobra após a implementação da I1:
 
-### Tabela antes/depois (tela logada)
-| Métrica | Desktop Antes | Desktop Depois | Celular Antes | Celular Depois |
-|---|---|---|---|---|
-| Ações na dobra | 38 | ~25 (7 conteúdo + 18 casca) | 14 | 6 |
-| Palavras na dobra | 173 | ~95 (45 conteúdo + 50 casca) | 91 | 52 |
-| Botões cheios cor | 1 | 1 (Escalar) | 1 | 1 (Escalar) |
-| Moldura máx aninhada | 2 | 2 | 1 | 1 |
-| Sobreposições | 1 | 0 | 0 | 0 |
+- **Desktop (1366×860):** 32 ações, 137 palavras, 2 botões cheios cor, moldura máxima aninhada 3, 5 sobreposições.
+- **Tablet (820×1024):** 35 ações, 139 palavras, 2 botões cheios cor, moldura máxima aninhada 3, 22 sobreposições.
+- **Celular (390×844):** 33 ações, 126 palavras, 2 botões cheios cor, moldura máxima aninhada 3, 24 sobreposições.
+
+Os limites absolutos da lei 13 são 25 ações / 100 palavras / moldura ≤ 2. **O limite de moldura ≤ 2 não é cumprido em nenhuma viewport**: a moldura máxima aninhada medida é 3. O nível extra vem da casca compartilhada (menu lateral, header e container global), que envolve todo o conteúdo do painel e não pode ser removida nesta história sem quebrar a navegação global. O conteúdo próprio da I1 (fila "Precisa de você" + 3 Indicadores) usa no máximo 2 níveis de moldura internamente; o terceiro nível é herdado da casca.
+
+O excesso de ações e palavras também vem majoritariamente da casca (~18 itens do menu lateral, barra de busca, header com saudação). Nenhuma rolagem lateral foi detectada e nenhum alvo de toque abaixo do mínimo foi encontrado.
+
+### Tabela depois (medida real, sem "~")
+| Métrica | Desktop (1366) | Tablet (820) | Celular (390) |
+|---|---|---|---|
+| Ações na dobra | 32 | 35 | 33 |
+| Palavras na dobra | 137 | 139 | 126 |
+| Botões cheios cor | 2 | 2 | 2 |
+| Moldura máx aninhada | 3 | 3 | 3 |
+| Sobreposições | 5 | 22 | 24 |
+| Rolagem lateral | não | não | não |
+| Alvos pequenos | 0 | 0 | 0 |
 
 ## Notas
 - Skills obrigatórias: impeccable, ui-ux-pro-max, design:ux-copy, emil-design-eng, animate, dataviz, react-refactor, break-ui, web-design-guidelines, design:accessibility-review, review-animations, mobile-native.
