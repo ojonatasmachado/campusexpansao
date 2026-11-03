@@ -185,7 +185,6 @@ export function Relatorios({
       ["Relatório", "Igreja", church?.nome ?? ""],
       ["Relatório", "Gerado em", dia],
       ["Relatório", "Recorte", recorte],
-      ["Indicadores", "Membros na rede", members.length],
       ["Indicadores", "Membros novos no recorte", members.filter((m) => diasAtras(m.createdAt) >= 0 && diasAtras(m.createdAt) < P).length],
       ["Indicadores", "Visitantes convertidos no recorte (%)", retencaoAtual ?? "Sem dados"],
       ["Indicadores", "Confirmações de escala (%)", coberturaRecente ?? "Sem dados"],
