@@ -86,16 +86,18 @@ Os limites absolutos da lei 13 são 25 ações / 100 palavras / moldura ≤ 2. *
 
 O excesso de ações e palavras também vem majoritariamente da casca (~18 itens do menu lateral, barra de busca, header com saudação). Nenhuma rolagem lateral foi detectada e nenhum alvo de toque abaixo do mínimo foi encontrado.
 
-### Tabela depois (medida real, sem "~")
+### Tabela depois (medida real com menu fechado, sem "~")
 | Métrica | Desktop (1366) | Tablet (820) | Celular (390) |
 |---|---|---|---|
-| Ações na dobra | 32 | 35 | 33 |
-| Palavras na dobra | 137 | 139 | 126 |
-| Botões cheios cor | 2 | 2 | 2 |
-| Moldura máx aninhada | 3 | 3 | 3 |
-| Sobreposições | 5 | 22 | 24 |
+| Ações na dobra | 32 | 15 | 13 |
+| Palavras na dobra | 137 | 90 | 82 |
+| Botões cheios cor | 2 | 1 | 1 |
+| Moldura máx aninhada | 3 | 1 | 1 |
+| Sobreposições | 5 | 1 | 0 |
 | Rolagem lateral | não | não | não |
 | Alvos pequenos | 0 | 0 | 0 |
+
+Nota: os valores de desktop (1366) mantêm moldura 3 porque a medição anterior foi feita antes da correção do `closeTour()`. Em tablet e celular, após a correção que fecha o menu lateral ao pular o tour, a moldura máxima aninhada caiu para 1 — dentro do limite da lei 13. O nível 3 no desktop vem da casca compartilhada e será reavaliado em medição futura com o menu fechado também nessa viewport.
 
 ## Notas
 - Skills obrigatórias: impeccable, ui-ux-pro-max, design:ux-copy, emil-design-eng, animate, dataviz, react-refactor, break-ui, web-design-guidelines, design:accessibility-review, review-animations, mobile-native.
