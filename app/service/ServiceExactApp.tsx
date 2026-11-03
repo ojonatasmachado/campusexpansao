@@ -335,6 +335,7 @@ export default function ServiceExactApp({
   }, []);
   const closeTour = () => {
     setShowTour(false);
+    setNavOpen(false);
     try { localStorage.setItem("cex_tour_done", "1"); localStorage.removeItem("cex_tour_step"); } catch { /* fecha mesmo sem conseguir gravar */ }
   };
   const saveTourStep = (i: number) => {
