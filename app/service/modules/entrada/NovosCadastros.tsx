@@ -79,7 +79,9 @@ export function NovosCadastros({ onPedidosChange }: { onPedidosChange?: (count: 
     }
     avisar(ficha ? `${p.name} ligado à ficha de ${ficha.name}` : `${p.name} já pode entrar no app`, "ok");
     abrir(null);
-    setPedidos((l) => l.filter((x) => x.id !== p.id));
+    const proxima = pedidos.filter((x) => x.id !== p.id);
+    setPedidos(proxima);
+    onPedidosChange?.(proxima.length);
     router.refresh();
   };
 
@@ -90,7 +92,9 @@ export function NovosCadastros({ onPedidosChange }: { onPedidosChange?: (count: 
     if (error || (data !== "ok" && data !== "ja_decidido")) return avisar("Não conseguimos recusar agora. Tente de novo.", "warn");
     avisar("Pedido recusado", "ok");
     setRecusando(null);
-    setPedidos((l) => l.filter((x) => x.id !== p.id));
+    const proxima = pedidos.filter((x) => x.id !== p.id);
+    setPedidos(proxima);
+    onPedidosChange?.(proxima.length);
   };
 
   const opcaoFicha = (p: Pedido, f: Ficha) => (
