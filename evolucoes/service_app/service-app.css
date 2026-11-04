@@ -4061,3 +4061,7 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 .mural-revisao-publico { font-size: var(--fs-pn-16); }
 .mural-revisao-titulo { font-size: var(--fs-pn-20); overflow-wrap: anywhere; }
 .mural-revisao-texto { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* E2 Panorama: linha-resumo de cobertura (substitui lista <Cobertura> em Escalas e Início) */
+.esc-cob-resumo{display:flex;align-items:center;gap:12px;padding:6px 0;font-size:var(--fs-pn-13);line-height:1.4}
+.esc-cob-resumo .panel-meta{flex:1;min-width:0}
