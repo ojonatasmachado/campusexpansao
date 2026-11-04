@@ -88,6 +88,12 @@ Daqui em diante, toda função nova do Service nasce como módulo. Tela, item de
 2. **Contratos de construção (D3).** Os quatro adendos de `QUALIDADE-E-INTERNACIONAL.md` foram aprovados e estão no `AGENTS.md` §14: jornada e feedback, celular, cor e descoberta, internacional.
 3. **Faltou (D5).** Gravado automaticamente quando havia check-in aberto para a escala e a pessoa escalada não fez. O líder pode desfazer (serviu, mas esqueceu o check-in), e o fato some. Sem check-in aberto, nada é gravado (sem registro não é ausência comprovada). Só líder do time e gestão veem o "faltou"; ele não aparece na Caminhada nem em "Minha história" do voluntário (exceção à lei 10, para não soar como punição).
 4. **Mapa (G4).** Sem histórico de mudança de endereço: a linha do tempo usa onde a pessoa mora hoje. Como o ponto vem do CEP, as pessoas do mesmo CEP se espalham ao longo da rua, cada uma sempre no mesmo lugar, em vez de empilhar no mesmo ponto. Só se juntam num grupo com o mapa bem afastado. O endereço continua fora da camada de pessoas.
+5. **Ordem das funções novas (D6).** Critério: primeiro a chegada de gente nova e o uso semanal do membro leigo, depois o que poupa trabalho do pastor, por último o institucional e raro; dentro de cada onda, o menor antes. Cada item vira módulo pelo registro (lei 3) quando chegar a vez.
+   - **Onda 1, porta de entrada:** Quero fazer parte (O8); convidar um amigo, com o link que já informa quem convidou (O9); programação que se repete (O10); juntar cadastros duplicados (O11).
+   - **Onda 2, conteúdo da semana:** pregações e devocional com salvar, sem dias seguidos (lei 10); estudo da semana para os grupos; evento com ciclo de vida (rascunho, vários dias, capa).
+   - **Onda 3, cuidado e ministérios:** atendimento pastoral com horários; plano de aula do Kids e professores; discipulado 1 a 1; campos personalizados na ficha; ficha completa como lista do que falta, sem percentual (lei 10).
+   - **Onda 4, institucional, quando houver pedido:** assembleia; mandato com prazo; patrimônio; trilha de auditoria; site da igreja; envio de vídeo próprio para o Destaque; pagamento integrado de inscrição (por último, mexe com dinheiro).
+   - **Fora das ondas:** a tela de assinatura do Service entra quando a primeira igreja pagante estiver perto.
 
 ## 3. Etapa 2 · Consertos
 
