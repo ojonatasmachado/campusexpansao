@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { Icon } from "../lib/icons";
 import { useRelogioDaIgreja } from "../lib/relogio-context";
 import { joinDot, parseISODate, somaDias } from "../lib/date";
@@ -8,8 +8,9 @@ import { useTermos } from "../lib/vocabulario-context";
 import { useDestinatario } from "../lib/destinatario";
 import { conflitos, horaDeChegada } from "../lib/agenda";
 import { baixarIcs } from "../lib/ics";
+import { plural } from "../lib/plural";
 import { M6Row, M6St, MESES, MemberUiContext, chegadaDoTime, dataLonga } from "./comum";
-import { EscalaCard } from "./Inicio";
+import { EscalaCard, SheetTroca } from "./Inicio";
 import type { AgendaSeg } from "../lib/member-navigation";
 import { TabOnde } from "./Onde";
 import { TabTarefas } from "./Conversas";
@@ -45,8 +46,80 @@ export function EventoRow({ ev, serve }: { ev: Ev; serve?: string | null }) {
   );
 }
 
+/* Cartão compacto exclusivo da Agenda (M1): data, nome do culto, uma linha
+   com time · função · local, e os dois botões numa linha. 4 cabem na dobra
+   em 390x844. Prop `compacto` nova, não altera a classe global. */
+function EscalaCardCompacto({ slot, ev, ministry, person, member, members, onResponderEscala, onStartChat }: {
+  slot: Slot; ev: Ev; ministry?: Ministry; person: P; member: M | null; members: M[];
+  onResponderEscala?: (id: string, status: Slot["status"]) => Promise<boolean>;
+  onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
+}) {
+  const ui = useContext(MemberUiContext);
+  const [st, setStLocal] = useState<Slot["status"]>(ui.respostas[slot.id] ?? slot.status);
+  const setSt = (v: Slot["status"]) => { setStLocal(v); ui.responderEscala(slot.id, v === "ok" || v === "no" ? v : null); };
+  const [saving, setSaving] = useState(false);
+  const busy = useRef(false);
+  const funcao = ministry?.positions?.find((p) => p.id === slot.position_id)?.name;
+  const gravar = async (v: Slot["status"]): Promise<boolean> => {
+    if (busy.current || !onResponderEscala) return false;
+    busy.current = true;
+    setSaving(true);
+    try {
+      const ok = await onResponderEscala(slot.id, v);
+      if (!ok) { ui.toast("Não conseguimos salvar sua resposta. Tente de novo."); return false; }
+      setSt(v);
+      return true;
+    } catch {
+      ui.toast("Não conseguimos salvar sua resposta. Tente de novo.");
+      return false;
+    } finally { busy.current = false; setSaving(false); }
+  };
+  const responder = async (v: "ok" | "no") => {
+    const antes = st;
+    if (!await gravar(v)) return;
+    ui.toast(v === "ok" ? "Presença confirmada" : "Registramos que você não pode", {
+      label: "Desfazer",
+      fn: () => { void gravar(antes).then((ok) => { if (ok) ui.toast("Resposta desfeita"); }); },
+    });
+  };
+  const destTroca = useDestinatario("troca", ministry?.id ?? null);
+  const pedirTroca = () => {
+    if (!member || !destTroca || !onStartChat) return;
+    ui.sheet(<SheetTroca slot={slot} ev={ev} funcao={funcao} member={member} dest={destTroca} onStartChat={onStartChat} />);
+  };
+  const detalhes = joinDot(ministry?.name, funcao, ev.location);
+  return (
+    <Cartao estilo="app" className="service-commitment service-commitment-compact">
+      <div className="service-commitment-heading">
+        <span aria-hidden="true"><M6Date iso={ev.eventDate} /></span>
+        <div><div className="m6-ct">{ev.name}</div></div>
+      </div>
+      {detalhes && <div className="m6-meta">{detalhes}</div>}
+      {saving && <p className="m6-meta" role="status">Salvando...</p>}
+      {st === "wait" && (
+        <div className="m6-btns m6-btns-inline">
+          <Botao tamanho="toque" variante="secundario" desativado={saving || !onResponderEscala} onClick={() => responder("ok")}><Icon name="ok" size={18} />Confirmar</Botao>
+        </div>
+      )}
+      {st === "ok" && (
+        <div className="m6-after">
+          <M6St k="ok" ic="ok">Confirmado</M6St>
+          {onStartChat && member && destTroca && <Botao tamanho="toque" variante="texto" onClick={pedirTroca}>Troca</Botao>}
+        </div>
+      )}
+      {st === "no" && (
+        <div className="m6-after">
+          <M6St k="warn" ic="recusou">Não pode</M6St>
+          <Botao tamanho="toque" variante="texto" onClick={() => responder("ok")}>Voltar</Botao>
+        </div>
+      )}
+    </Cartao>
+  );
+}
+
 /* Confirmar todas as escalas pendentes de uma vez (M1, lei 16: Planning Center).
-   A recusa continua individual: cada recusa tem motivo e avisa o líder. */
+   A recusa continua individual: cada recusa tem motivo e avisa o líder.
+   Lei 14: número só no botão, sem repetir no rótulo da seção. */
 function ConfirmarTodas({ pend, evById, onResponderEscala }: {
   pend: Slot[]; evById: Map<string, Ev>;
   onResponderEscala?: (id: string, status: Slot["status"]) => Promise<boolean>;
@@ -66,28 +139,28 @@ function ConfirmarTodas({ pend, evById, onResponderEscala }: {
     }
     setSalvando(false);
     if (falhas.length === 0) {
-      ui.toast(`Presença confirmada em ${pend.length} ${pend.length === 1 ? "escala" : "escalas"}`, {
+      ui.toast(`Presença confirmada em ${plural(pend.length, "escala")}`, {
         label: ct("Desfazer"),
         fn: async () => {
           let desfeitas = 0;
           for (const slot of pend) {
             if (await onResponderEscala(slot.id, "wait")) desfeitas++;
           }
-          ui.toast(`${desfeitas} ${desfeitas === 1 ? "resposta desfeita" : "respostas desfeitas"}`);
+          ui.toast(plural(desfeitas, "resposta desfeita"));
         },
       });
     } else if (falhas.length < pend.length) {
       const okCount = pend.length - falhas.length;
-      ui.toast(`Confirmamos ${okCount} de ${pend.length}. Não conseguimos salvar: ${falhas.join(", ")}`);
+      ui.toast(`Confirmamos ${plural(okCount, "escala")} de ${pend.length}. Não conseguimos salvar: ${falhas.join(", ")}`);
     } else {
       ui.toast("Não conseguimos salvar suas respostas. Tente de novo.");
     }
   };
   return (
-    <div className="m6-btns" style={{ marginBottom: 8 }}>
+    <div className="m6-confirmar-todas">
       <Botao tamanho="toque" variante="principal" desativado={salvando} onClick={confirmarTodas}>
         <Icon name="ok" size={20} />
-        {salvando ? "Confirmando..." : `Confirmar todas (${pend.length})`}
+        {salvando ? "Confirmando..." : `Confirmar todas (${plural(pend.length, "escala")})`}
       </Botao>
     </div>
   );
@@ -211,11 +284,11 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
         <>
           {pend.length > 0 && (
             <div className="m6-sec">
-              <div className="m6-lbl">Escala a confirmar · {pend.length}</div>
+              <div className="m6-lbl">Escala a confirmar</div>
               <ConfirmarTodas pend={pend} evById={evById} onResponderEscala={onResponderEscala} />
               {pend.map((slot) => {
                 const ev = evById.get(slot.event_id);
-                return ev ? <EscalaCard key={slot.id} slot={slot} ev={ev} ministry={ministryOf(slot)} person={person} member={member} members={members} onResponderEscala={onResponderEscala} onStartChat={onStartChat} destaque={false} /> : null;
+                return ev ? <EscalaCardCompacto key={slot.id} slot={slot} ev={ev} ministry={ministryOf(slot)} person={person} member={member} members={members} onResponderEscala={onResponderEscala} onStartChat={onStartChat} /> : null;
               })}
             </div>
           )}

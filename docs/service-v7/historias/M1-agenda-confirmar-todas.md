@@ -18,7 +18,7 @@ Fonte: LEVEZA C; MANIFESTO 2b.3.
 - `app/service/membro/Agenda.tsx`
 - `evolucoes/service_app/service-app.css`
 
-## Lei 16 — mercado
+## Lei 16 mercado
 Como apps de escala resolvem "confirmar várias de uma vez" no celular:
 
 - **Planning Center Services**: botão "Accept All" no topo da seção Pending (web e app em Me > Schedule > Actions); aceita todos os pedidos visíveis de uma vez. Quando a pessoa tem várias funções no mesmo culto, confirma ou recusa função por função e depois envia. Fonte: https://help.planningcenter.com/en/my-schedule.html e https://help.planningcenter.com/en/manage-your-schedule.html
@@ -59,9 +59,32 @@ Como apps de escala resolvem "confirmar várias de uma vez" no celular:
 |---|---|---|---|
 | Ações na dobra | 12 | 11 | 12 |
 | Palavras na dobra | 70 | 70 | 80 |
-| Botões cheios cor | 2 | 1 | — |
+| Botões cheios cor | 2 | 1 | 1 |
 
 O botão "Confirmar todas (3)" substituiu um dos botões cheios anteriores, reduzindo a densidade de ações sem adicionar palavras. Todos os limites são respeitados.
+
+## Pior caso (6 escalas, nomes longos)
+- Ações na dobra: **13** (limite app: 12) ⚠️ excede por 1 ação (botão "Confirmar todas" + 6 botões Confirmar individuais visíveis na dobra)
+- Palavras na dobra: **84** (limite app: 80) ⚠️ excede por 4 palavras (nomes longos dos cultos)
+- Botões cheios cor: 1 ("Confirmar todas")
+- Elementos cor: 2
+- Moldura máx aninhada: 2
+- Sobreposições: 0
+- Alvos pequenos: 0
+- Rolagem lateral: false
+- Screenshot: `docs/service-v7/historias/screenshots/M1-pior-caso-agenda-390.png`
+- Descrição: 6 cartões compactos com nomes longos (ex: "Culto de Ensino e Oração da Quarta Feira de Novembro"), botão "Confirmar todas (6 escalas)" no topo. Excede limites de ações e palavras na dobra, mas mantém legibilidade e alinhamento.
+
+## Sem pendentes
+- Estado: "Tudo em dia · Suas escalas estão confirmadas."
+- Botão "Confirmar todas": não aparece
+- Screenshot: `docs/service-v7/historias/screenshots/M1-sem-pendentes-agenda-390.png`
+- Descrição: seção de pendentes removida, mensagem de estado vazio com ícone ✓ centralizada.
+
+## Desfazer (toast)
+- Toast: "Presença confirmada em 3 escalas" com botão "Desfazer"
+- Screenshot: `docs/service-v7/historias/screenshots/M1-desfazer-toast-390.png`
+- Descrição: após clicar em "Confirmar todas", toast aparece na parte inferior com texto e botão de desfazer. Se uma escala falhar, o toast mostra qual falhou e mantém as outras confirmadas.
 
 ## Notas
 Implementado em `app/service/membro/Agenda.tsx`: componente `ConfirmarTodas` com Desfazer via toast e aviso parcial quando alguma confirmação falha.
