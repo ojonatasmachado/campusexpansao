@@ -65,6 +65,9 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Gráficos | `Barras`, `Tendencia`, `Meta`, `Cobertura`, `Distribuicao` (funil), `EntradasSaidas`, `Frequencia`, `Progresso` em `app/service/ui/Graficos.tsx`; visual em biblioteca.css (.graf-*) | sim | SVG próprio, sem lib externa; cada gráfico tem role=img + aria-label; movimento reduzido desliga animações | 2 |
 | Etapas/linha do tempo | `Etapas` em `app/service/ui/Etapas.tsx` (linha, app, faixa; feito, atual, futuro; data real em cada etapa feita) | sim | ok; CI barra `.tl`, `.jrn-tl`, `.m6-step`, `.imp-steps`. Ficam de fora por não serem etapas: `.pipe` (quadro de visitantes), `LinhaDoTempo` do mapa (série no tempo), `.crono-step` (roteiro editável do culto) | 1, 6 |
 | Menu de opções | `MenuAcoes` em `app/service/ui/Menu.tsx`; `MenuMais` usa por dentro | sim | menu do usuário (TopUserMenu) é peça própria | 4 |
+| Painel do mapa | `PainelMapa`, `GrupoCamadas`, `LinhaCamada`, `TransparenciaCamada`, `EscalaTons` em `app/service/ui/PainelMapa.tsx` (aberto, recolhido em trilho de ícones, painel de ferramenta com "Voltar ao mapa"; linha inteira é o interruptor) | sim | mapa ainda usa `.mp-painel` até a G7 | mapa P1 |
+| Barra de ferramentas | `BarraFerramentas` em `app/service/ui/BarraFerramentas.tsx` (itens com ícone e nome, `alerta` separado no fim, `fileira` rolável no celular, item com `href` vira link) | sim | mapa ainda usa o menu Ferramentas até a G7 | mapa P1, P2 |
+| Balão | `Balao` e `LinhaBalao` em `app/service/ui/Balao.tsx` (preso a um ponto, vira para o outro lado perto da borda, Esc e foco) | sim | mapa ainda usa o painel lateral `.mp-dir` até a G7 | mapa P1 |
 
 ## Ordem sugerida de troca
 
@@ -91,6 +94,19 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 - Mercado: Material UI Progress e Carbon Loading oferecem indicador indeterminado para espera sem duração conhecida; adotado anel com texto, sem percentual inventado.
 - Lugares: componente em `app/service/ui/Estados.tsx`, visual em `biblioteca.css`, inventário acima. Prancha 6: atualização visual pendente.
 - Validação: TypeScript e lint; captura no navegador e matriz de temas pendentes por indisponibilidade do navegador/servidor local no ambiente.
+
+### Painel do mapa, Barra de ferramentas e Balão (2026-11-04, G6)
+
+- Necessidade e lugar: tela principal do mapa, ferramentas do mapa (criar área, rota, linha do tempo, emergência) e o mapa do celular do painel (G7, G10, G11, G14, G16). Painel responde "o que estou vendo no mapa?"; barra, "o que posso fazer aqui?"; balão, "o que é este ponto?" (lei 2).
+- Anatomia: Painel com cabeçalho (sobretítulo, título, recolher ou "Voltar ao mapa"), busca opcional, corpo e rodapé; recolhido vira trilho de ícones. GrupoCamadas (fixo ou recolhível com contagem). LinhaCamada (ícone que é o próprio marcador, nome, detalhe, interruptor na linha inteira; legenda e transparência só com a camada ligada). Barra com itens de ícone e nome e um item `alerta` separado. Balão com sobretítulo, título, linhas com ícone em tom e até duas ações.
+- Estados: ligado, desligado, desativado, recolhido, aberto, item ativo; balão perto da borda abre para o outro lado e nunca sai na vertical. Vazio e erro ficam com quem usa (Vazio e ErroEstado).
+- Tokens e tema: `--graphite`, `--white`, `--muted`, `--border`, `--olive`, `--accent-fill`, `--danger`/`--danger-dim`; derivações por `color-mix`. Escala de tons da presença é paleta fixa do mapa (mesma para toda igreja). Testado na galeria com claro e escuro.
+- Pior caso e densidade: nome de camada longo quebra; 390 px vira folha (painel) e fileira rolável (barra). A densidade é medida nas telas que usam (G7 em diante).
+- Acessibilidade e movimento: linha de camada com `role="switch"` e `aria-checked`; grupos com `aria-expanded`; botões só de ícone com nome falado; balão `role="dialog"` com foco no ✕, Esc fecha e devolve o foco. Entrada com mola, seta que gira, escala que cresce, toque 0,96; tudo desliga com movimento reduzido.
+- Vocabulário: nomes das camadas vêm de quem usa (`termo()` para grupos).
+- Mercado: Google Maps e Google Earth (painel de camadas somáveis, balão no ponto, controles no canto) e Waze (barra de ações à vista). Adotado o padrão de camadas que se somam e balão no ponto, sem copiar visual.
+- Lugares: `app/service/ui/PainelMapa.tsx`, `BarraFerramentas.tsx`, `Balao.tsx`; visual em `biblioteca.css` (.pm-*, .bf-*, .balao); galeria viva em /service/demo/biblioteca (bloco E); canvas "Mapa da igreja · evolução", P1, P2 e P6; linhas na tabela acima. Marcadores do mapa em `modules/mapa/marcadores.ts`.
+- Validação: ver Notas da G6.
 
 Um componente só entra na biblioteca se a ficha estiver completa:
 
