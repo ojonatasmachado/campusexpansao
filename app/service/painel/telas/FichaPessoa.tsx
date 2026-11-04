@@ -592,7 +592,6 @@ export function EntityDrawer({
       roster={roster}
       rsvps={eventRsvps.filter((r) => r.event_id === event.id)}
       cobertura={coberturaPorTime(event, roster, ministries, scopeMinistryIds)}
-      onAbrirVagas={onAbrirVagas ? (timeId) => onAbrirVagas(event.id, timeId) : undefined}
       onClose={() => setDrawer(null)}
       setDrawer={setDrawer}
       setRoute={setRoute}

@@ -46,13 +46,15 @@ export function Panorama({
               const falta = t.total - t.preenchidas;
               const rotulo = `${t.time}: ${t.preenchidas} de ${t.total} vagas preenchidas. Abrir as ${falta} vagas em aberto.`;
               return (
-                <li key={t.timeId} className="panorama-cob-item panorama-cob-falta">
+                <li key={t.timeId}>
                   <Acao
-                    className="panorama-cob-btn"
+                    className="panorama-cob-linha mini-row"
                     aria-label={rotulo}
                     onClick={() => onAbrirTime(t.timeId)}
                   >
-                    <span className="panorama-cob-nome">{t.time}</span>
+                    <div className="mini-main">
+                      <div className="mini-title">{t.time}</div>
+                    </div>
                     <Selo tom="cuidado" tamanho="lista">
                       {t.preenchidas}/{t.total}
                     </Selo>
@@ -61,10 +63,14 @@ export function Panorama({
               );
             })}
             {completosCount > 0 && (
-              <li className="panorama-cob-item panorama-cob-ok">
-                <span className="panorama-cob-resumo">
-                  {completosCount} {completosCount === 1 ? "time completo" : "times completos"}
-                </span>
+              <li>
+                <Linha>
+                  <div className="mini-main">
+                    <div className="mini-sub panorama-cob-ok">
+                      {completosCount} {completosCount === 1 ? "time completo" : "times completos"}
+                    </div>
+                  </div>
+                </Linha>
               </li>
             )}
           </ul>
@@ -79,7 +85,7 @@ export function Panorama({
             {schedule.map((step) => {
               const timeNome = ministryName(step.ministry_id ?? null);
               return (
-                <li key={step.id} className="panorama-crono-step">
+                <li key={step.id}>
                   <Linha>
                     <div className="mini-main">
                       <div className="mini-title">
