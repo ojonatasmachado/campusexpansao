@@ -43,6 +43,26 @@ Como apps de escala resolvem "confirmar várias de uma vez" no celular:
 - Rolagem lateral: false
 - Screenshot: `docs/service-v7/historias/screenshots/M1-antes-agenda-390.png`
 
+## Depois (medição __medir(44))
+- Ações na dobra: **11** (limite app: 12) ✅
+- Palavras na dobra: **70** (limite app: 80) ✅
+- Botões cheios cor: 1 ("Confirmar todas")
+- Elementos cor: 2
+- Moldura máx aninhada: 2
+- Sobreposições: 0
+- Alvos pequenos: 0
+- Rolagem lateral: false
+- Screenshot: `docs/service-v7/historias/screenshots/M1-depois-agenda-390.png`
+
+## Comparação antes × depois
+| Métrica | Antes | Depois | Limite app |
+|---|---|---|---|
+| Ações na dobra | 12 | 11 | 12 |
+| Palavras na dobra | 70 | 70 | 80 |
+| Botões cheios cor | 2 | 1 | — |
+
+O botão "Confirmar todas (3)" substituiu um dos botões cheios anteriores, reduzindo a densidade de ações sem adicionar palavras. Todos os limites são respeitados.
+
 ## Notas
-ABERTO: não existe "Confirmar todas" em app/.
+Implementado em `app/service/membro/Agenda.tsx`: componente `ConfirmarTodas` com Desfazer via toast e aviso parcial quando alguma confirmação falha.
 Depende de D1.

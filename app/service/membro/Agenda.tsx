@@ -45,6 +45,54 @@ export function EventoRow({ ev, serve }: { ev: Ev; serve?: string | null }) {
   );
 }
 
+/* Confirmar todas as escalas pendentes de uma vez (M1, lei 16: Planning Center).
+   A recusa continua individual: cada recusa tem motivo e avisa o líder. */
+function ConfirmarTodas({ pend, evById, onResponderEscala }: {
+  pend: Slot[]; evById: Map<string, Ev>;
+  onResponderEscala?: (id: string, status: Slot["status"]) => Promise<boolean>;
+}) {
+  const ui = useContext(MemberUiContext);
+  const { comTermos: ct } = useTermos();
+  const [salvando, setSalvando] = useState(false);
+  if (!onResponderEscala || pend.length === 0) return null;
+  const confirmarTodas = async () => {
+    if (salvando) return;
+    setSalvando(true);
+    const falhas: string[] = [];
+    for (const slot of pend) {
+      const ev = evById.get(slot.event_id);
+      const ok = await onResponderEscala(slot.id, "ok");
+      if (!ok) falhas.push(ev?.name ?? slot.id);
+    }
+    setSalvando(false);
+    if (falhas.length === 0) {
+      ui.toast(`Presença confirmada em ${pend.length} ${pend.length === 1 ? "escala" : "escalas"}`, {
+        label: ct("Desfazer"),
+        fn: async () => {
+          let desfeitas = 0;
+          for (const slot of pend) {
+            if (await onResponderEscala(slot.id, "wait")) desfeitas++;
+          }
+          ui.toast(`${desfeitas} ${desfeitas === 1 ? "resposta desfeita" : "respostas desfeitas"}`);
+        },
+      });
+    } else if (falhas.length < pend.length) {
+      const okCount = pend.length - falhas.length;
+      ui.toast(`Confirmamos ${okCount} de ${pend.length}. Não conseguimos salvar: ${falhas.join(", ")}`);
+    } else {
+      ui.toast("Não conseguimos salvar suas respostas. Tente de novo.");
+    }
+  };
+  return (
+    <div className="m6-btns" style={{ marginBottom: 8 }}>
+      <Botao tamanho="toque" variante="principal" desativado={salvando} onClick={confirmarTodas}>
+        <Icon name="ok" size={20} />
+        {salvando ? "Confirmando..." : `Confirmar todas (${pend.length})`}
+      </Botao>
+    </div>
+  );
+}
+
 export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, member, members, ministries, events, roster, cards, boards, isRecep, isKids, onResponderEscala, onStartChat, onAddCardComment, onSaveAvailability, aulas, meetings, rehearsals, rsvps }: {
   initialCardId?: string | null;
   /* "Onde" (mapa da igreja, etapa 2): igrejas e células públicas */
@@ -164,9 +212,10 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
           {pend.length > 0 && (
             <div className="m6-sec">
               <div className="m6-lbl">Escala a confirmar · {pend.length}</div>
+              <ConfirmarTodas pend={pend} evById={evById} onResponderEscala={onResponderEscala} />
               {pend.map((slot) => {
                 const ev = evById.get(slot.event_id);
-                return ev ? <EscalaCard key={slot.id} slot={slot} ev={ev} ministry={ministryOf(slot)} person={person} member={member} members={members} onResponderEscala={onResponderEscala} onStartChat={onStartChat} /> : null;
+                return ev ? <EscalaCard key={slot.id} slot={slot} ev={ev} ministry={ministryOf(slot)} person={person} member={member} members={members} onResponderEscala={onResponderEscala} onStartChat={onStartChat} destaque={false} /> : null;
               })}
             </div>
           )}
