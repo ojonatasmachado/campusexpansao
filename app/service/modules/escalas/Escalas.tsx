@@ -23,7 +23,7 @@ import { useTermos } from "../../lib/vocabulario-context";
 import { fraseRodizio, ultimaVezQueServiu } from "./rodizio";
 import { candidatosDisponiveis, cargaDoMes, type Candidato as CandidatoBase } from "./candidatos";
 import { coberturaPorTime, vagasFaltando } from "./cobertura";
-import { Cobertura } from "./Cobertura";
+import { CoberturaResumo } from "./CoberturaResumo";
 import { GerarPeriodo } from "./GerarPeriodo";
 import { EscalaExtra } from "./EscalaExtra";
 import { PublicarEscala } from "./PublicarEscala";
@@ -536,14 +536,9 @@ export function Escalas({
         {openSlots > 0 ? <span className="panel-meta"><span style={{ color: "var(--amber)" }}>{openSlots}</span> vagas</span> : null}
       </div>
       {selectedEvent && (
-        <Cobertura
-          itens={coberturaPorTime(selectedEvent, roster, ministries, scopeMinistryIds)}
-          onAbrir={(timeId) => {
-            setTimesFechados((prev) => { const n = new Set(prev); n.delete(timeId); return n; });
-            const el = document.getElementById(`esc-col-${timeId}`);
-            el?.scrollIntoView({ behavior: "smooth", block: "start" });
-            el?.focus({ preventScroll: true });
-          }}
+        <CoberturaResumo
+          cobertura={coberturaPorTime(selectedEvent, roster, ministries, scopeMinistryIds)}
+          onVerPanorama={() => setDrawer({ kind: "event", id: selectedEvent.id, tab: "panorama" })}
         />
       )}
 

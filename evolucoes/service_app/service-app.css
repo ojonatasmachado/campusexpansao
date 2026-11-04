@@ -243,6 +243,12 @@ em { font-style:italic; }
 /* segmento nunca sai da tela: se não couber, rola para o lado dentro dele */
 .seg { display:inline-flex; max-width:100%; overflow-x:auto; scrollbar-width:none; background:var(--graphite); border:0.5px solid var(--border-2); border-radius:calc(var(--r-ctl) + 3px); padding:3px; gap:2px; }
 .seg::-webkit-scrollbar { display:none; }
+/* Fade na ponta direita só quando rolavel (drawer do culto) */
+.seg-rolavel { position:relative; -webkit-mask-image:linear-gradient(to right, black calc(100% - 24px), transparent); mask-image:linear-gradient(to right, black calc(100% - 24px), transparent); transition:-webkit-mask-image .2s ease, mask-image .2s ease; }
+.seg-rolavel.seg-no-fade { -webkit-mask-image:none; mask-image:none; }
+/* Drawer do culto: afasta o HelpDot dos números da cobertura (E2) */
+.drawer-body-event .help-dot-wrap { margin-left: 12px; }
+.drawer-body-event .panorama-cob-linha { padding-right: 8px; }
 .seg button:focus-visible { outline-offset:-2px; }
 .seg button { background:transparent; border:none; color:var(--muted); font-size:var(--fs-ui-13); font-weight:500; min-height:32px; padding:0 12px; border-radius:var(--r-ctl); flex-shrink:0; white-space:nowrap; transition:color .14s ease,background-color .14s ease,border-color .14s ease,box-shadow .14s ease,opacity .14s ease,transform .14s var(--ease-out); letter-spacing:-0.01em; }
 @media (hover:hover) and (pointer:fine) { .seg button:hover { color:var(--white); } }
@@ -360,6 +366,8 @@ em { font-style:italic; }
 .drawer-close { position:absolute; top:20px; right:24px; width:32px; height:32px; border-radius:var(--r-md); background:var(--ink); border:0.5px solid var(--border-2); color:var(--muted); font-size:var(--fs-pn-14); display:flex; align-items:center; justify-content:center; }
 @media (hover:hover) and (pointer:fine) { .drawer-close:hover { color:var(--white); border-color:var(--olive-line); } }
 .drawer-body { padding:24px 28px 40px; }
+.drawer-body-event { padding-bottom:80px; }
+/* Espaço extra no rodapé do drawer para não sobrepor com o HelpDot FAB (z-index 90, bottom 26px) */
 .profile-top { display:flex; align-items:center; gap:16px; margin-bottom:6px; }
 .profile-name { font-size:var(--fs-pn-20); font-weight:700; letter-spacing:-0.03em; }
 .profile-role { font-size:var(--fs-pn-13); color:var(--muted); margin-top:3px; }
@@ -4061,3 +4069,8 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 .mural-revisao-publico { font-size: var(--fs-pn-16); }
 .mural-revisao-titulo { font-size: var(--fs-pn-20); overflow-wrap: anywhere; }
 .mural-revisao-texto { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* E2 Panorama: linha-resumo de cobertura (substitui lista <Cobertura> em Escalas e Início) */
+.esc-cob-resumo{display:flex;align-items:center;gap:12px;padding:6px 0;font-size:var(--fs-pn-13);line-height:1.4}
+.esc-cob-resumo .panel-meta{flex:1;min-width:0}
+.esc-cob-num{color:var(--amber)}

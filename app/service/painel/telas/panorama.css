@@ -1,0 +1,50 @@
+/* Panorama do culto (E2): superfície só de leitura.
+   Tokens do Service (§13) e tema da igreja (§2). Cor só por variável. */
+
+.panorama-cob {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Linha clicável de time incompleto: usa .mini-row da biblioteca, sem borda nem fundo próprio */
+.panorama-cob-linha {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  color: var(--light);
+  font-size: var(--fs-pn-14);
+}
+
+.panorama-cob-ok {
+  padding: 6px 0;
+  font-size: var(--fs-pn-13);
+  color: var(--muted);
+}
+
+.panorama-crono {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.panorama-crono-hora {
+  font-family: var(--mono);
+  font-size: var(--fs-pn-13);
+  color: var(--muted);
+  min-width: 52px;
+}
+
+.panorama-crono-item {
+  font-size: var(--fs-pn-14);
+  color: var(--light);
+}
+
+/* Linha de times completos sem borda nem padding extra */
+.panorama-cob-ok-li {
+  list-style: none;
+  padding: 6px 0;
+}

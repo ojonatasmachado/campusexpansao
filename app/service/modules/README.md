@@ -27,7 +27,8 @@ criados fora do registro não entram.
    (sem a dependência, o módulo some), `permissoes`, `membro` (`visivel` e lugares),
    `painel` (`menu`, `inicio`, `config`), `avisos` (tipo, público, cartão, quando),
    `rotas` (QR e link público), `vocabulario` (termos renomeáveis que usa), `historico`
-   (fatos que grava na história da pessoa).
+   (fatos que grava na história da pessoa), `densidade` (justificativa quando a tela passa
+   do limite da lei 13: `tela`, `tamanho`, `medido`, `limite`, `motivo`).
 5. **Contrato do cartão.** Seis tipos: `acao`, `passo`, `evento`, `aviso`, `pedido`,
    `destaque`. Campos: `id`, `modulo`, `tipo`, `prioridade` (0 a 100), `prazo`,
    `contexto`, `titulo`, `linhas`, `principal`, `secundaria` (no máximo duas ações),

@@ -15,7 +15,7 @@ import { HelpDot, SetupChecklist, type SetupCounts } from "../../HelpSystem";
 import { JRN_STEPS } from "../caminhada";
 import { noAr } from "../../modules/mural/estado";
 import { coberturaPorTime, vagasFaltando, type CoberturaTime } from "../../modules/escalas/cobertura";
-import { Cobertura } from "../../modules/escalas/Cobertura";
+import { CoberturaResumo } from "../../modules/escalas/CoberturaResumo";
 import { linhaDoPainel, semanaDe } from "../../lib/contexto-dia";
 import { type Ausente } from "../../modules/cuidado/cuidado";
 import type { CriancaAusente } from "../../modules/cuidado/Cuidado";
@@ -511,7 +511,12 @@ export function MiniEvent({
       <div className="mini-main">
         <div className="mini-title">{event.name}</div>
         <div className="mini-sub">{joinDot(event.weekday, formatDateBR(event.eventDate), event.location)}</div>
-        {cobertura && cobertura.length > 0 && <Cobertura itens={cobertura} onAbrir={onAbrirVagas} compacta />}
+        {cobertura && cobertura.length > 0 && (
+          <CoberturaResumo
+            cobertura={cobertura}
+            onVerPanorama={() => setDrawer({ kind: "event", id: event.id, tab: "panorama" })}
+          />
+        )}
       </div>
       <div className="mini-right flex-row items-center gap-sm">
         <span>{event.time}</span>

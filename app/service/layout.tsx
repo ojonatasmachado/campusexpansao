@@ -5,6 +5,8 @@ import "../../evolucoes/service_app/service-app.css";
 import "./modules/mapa/mapa.css";
 /* visual das peças da biblioteca (lei 17), por último para vencer as regras antigas */
 import "./ui/biblioteca.css";
+/* Panorama do culto (E2): superfície só de leitura */
+import "./painel/telas/panorama.css";
 import PwaBootstrap from "./PwaBootstrap";
 import DialogosAcessiveis from "./DialogosAcessiveis";
 import { ServiceLocaleProvider } from "./lib/internacional/contexto";

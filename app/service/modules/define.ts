@@ -120,6 +120,15 @@ export type ModuleManifest = {
   rotas?: { caminho: string; tipo: "qr" | "publica" }[];
   vocabulario?: Termo[];
   historico?: Fato[];
+  /** Justificativa de densidade quando a tela passa do limite da lei 13.
+      Cada entrada documenta uma tela/tamanho medido acima do teto. */
+  densidade?: {
+    tela: string;
+    tamanho: string;
+    medido: { palavras: number; acoes: number; sobreposicoes: number };
+    limite: { palavras: number; acoes: number; sobreposicoes: number };
+    motivo: string;
+  }[];
 };
 
 export function defineModule<M extends ModuleManifest>(m: M): M {

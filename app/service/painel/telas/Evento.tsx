@@ -2,7 +2,7 @@
 
 import { avisar } from "../../lib/avisar";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { Icon } from "../../lib/icons";
 import { formatDateBR, joinDot } from "../../lib/date";
@@ -11,7 +11,7 @@ import { useTermos } from "../../lib/vocabulario-context";
 import { Av } from "../ui";
 import { friendlyWriteError } from "../erros";
 import { type CoberturaTime } from "../../modules/escalas/cobertura";
-import { Cobertura } from "../../modules/escalas/Cobertura";
+import { Panorama } from "./Panorama";
 import { ROUTES } from "../comum";
 import { DrawerSection, DrawerShell, TimePicker } from "../campos";
 import type { CronoStep, DrawerState, EventRsvpView, EventView, MinistryView, PersonView, RosterAssignmentView } from "../tipos";
@@ -30,11 +30,11 @@ export function EventDrawer({
   roster,
   rsvps = [],
   cobertura = [],
-  onAbrirVagas,
   onClose,
   setDrawer,
   setRoute,
   setShareEventId,
+  initialTab,
 }: {
   event: EventView;
   ministries: MinistryView[];
@@ -42,17 +42,35 @@ export function EventDrawer({
   roster: RosterAssignmentView[];
   rsvps?: EventRsvpView[];
   cobertura?: CoberturaTime[];
-  onAbrirVagas?: (timeId: string) => void;
   onClose: () => void;
   setDrawer: (drawer: DrawerState) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
   setShareEventId: (id: string) => void;
+  initialTab?: "panorama" | "crono" | "posicoes" | "membro";
 }) {
   const { comTermos: ct } = useTermos();
   const router = useRouter();
-  const [tab, setTab] = useState<"crono" | "posicoes" | "membro">("crono");
+  const [tab, setTab] = useState<"panorama" | "crono" | "posicoes" | "membro">(initialTab ?? "panorama");
+  const [scrollToTimeId, setScrollToTimeId] = useState<string | null>(null);
   const eventRoster = roster.filter((assignment) => assignment.event_id === event.id);
   const eventMinistries = event.ministries.length ? ministries.filter((ministry) => event.ministries.includes(ministry.id)) : ministries;
+
+  /* Scroll-to-focus reage à montagem do painel Posições, sem setTimeout arbitrário. */
+  useEffect(() => {
+    if (tab !== "posicoes" || !scrollToTimeId) return;
+    const el = document.getElementById(`esc-col-${scrollToTimeId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.focus({ preventScroll: true });
+    }
+    setScrollToTimeId(null);
+  }, [tab, scrollToTimeId]);
+
+  /* Toque num time incompleto no Panorama abre a aba Posições rolada até ele. */
+  const abrirTimeNoPanorama = (timeId: string) => {
+    setScrollToTimeId(timeId);
+    setTab("posicoes");
+  };
 
   return (
     <DrawerShell onClose={onClose} wide>
@@ -61,15 +79,23 @@ export function EventDrawer({
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{joinDot(event.weekday, formatDateBR(event.eventDate))}</div>
         <div className="profile-name">{event.name}</div>
         <div className="profile-role">{joinDot(event.time, event.location, event.kind)}</div>
-        <Cobertura itens={cobertura} onAbrir={onAbrirVagas} />
-        <Segmentado style={{ marginTop: 14 }}>
+        <Segmentado rolavel esconderEsfumadoNoFim style={{ marginTop: 14 }}>
+          <Opcao marcada={tab === "panorama"} onClick={() => setTab("panorama")}>Panorama</Opcao>
           <Opcao marcada={tab === "crono"} onClick={() => setTab("crono")}>Cronograma</Opcao>
           <Opcao marcada={tab === "posicoes"} onClick={() => setTab("posicoes")}>Posições</Opcao>
           <Opcao marcada={tab === "membro"} onClick={() => setTab("membro")}>Para o membro</Opcao>
         </Segmentado>
       </div>
-      <div className="drawer-body">
-        {tab === "membro" ? (
+      <div className="drawer-body drawer-body-event">
+        {tab === "panorama" ? (
+          <Panorama
+            event={event}
+            ministries={eventMinistries}
+            cobertura={cobertura}
+            schedule={event.schedule ?? []}
+            onAbrirTime={abrirTimeNoPanorama}
+          />
+        ) : tab === "membro" ? (
           <EventoParaMembro event={event} rsvps={rsvps} people={people} onSaved={() => router.refresh()} />
         ) : tab === "crono" ? (
           <>
