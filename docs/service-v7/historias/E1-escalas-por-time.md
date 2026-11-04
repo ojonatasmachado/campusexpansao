@@ -15,12 +15,13 @@ A tela de Escalas ainda é por evento, com colunas por time, e o líder não cai
 Fonte: LEVEZA B (seção 3), MANIFESTO 2b.1, AUDITORIA-UI-2026-10-20.md seção 2 ("Escalas").
 
 ## Arquivos (trilho)
-- `app/service/modules/escalas/Escalas.tsx`
-- `app/service/modules/escalas/GerarPeriodo.tsx`
-- `app/service/modules/escalas/Cobertura.tsx`
-- `app/service/modules/escalas/cobertura.ts`
-- `app/service/modules/escalas/candidatos.ts`
-- `evolucoes/service_app/service-app.css`
+- `app/service/modules/escalas/Escalas.tsx` (refatorado: tabela função × culto por time)
+- `app/service/modules/escalas/GerarPeriodo.tsx` (mantido, chamado via "Preencher automaticamente")
+- `app/service/modules/escalas/CoberturaResumo.tsx` (E2: linha-resumo com link para Panorama; substituiu Cobertura.tsx)
+- `app/service/modules/escalas/cobertura.ts` (cálculo de cobertura por time, mantido)
+- `app/service/modules/escalas/candidatos.ts` (pool de candidatos, mantido)
+- `app/service/ui/Tabela.tsx` (componente compartilhado, lei 17)
+- `evolucoes/service_app/service-app.css` (CSS existente; novos estilos só em classes da tela ou biblioteca.css)
 
 ## Pronto quando
 - Seletor de time no topo; líder abre direto no seu time.
