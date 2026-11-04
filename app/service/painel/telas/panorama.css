@@ -42,3 +42,9 @@
   font-size: var(--fs-pn-14);
   color: var(--light);
 }
+
+/* Linha de times completos sem borda nem padding extra */
+.panorama-cob-ok-li {
+  list-style: none;
+  padding: 6px 0;
+}

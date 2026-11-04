@@ -244,9 +244,8 @@ em { font-style:italic; }
 .seg { display:inline-flex; max-width:100%; overflow-x:auto; scrollbar-width:none; background:var(--graphite); border:0.5px solid var(--border-2); border-radius:calc(var(--r-ctl) + 3px); padding:3px; gap:2px; }
 .seg::-webkit-scrollbar { display:none; }
 /* Fade na ponta direita só quando rolavel (drawer do culto) */
-.seg-rolavel { position:relative; }
-.seg-rolavel::after { content:""; position:absolute; top:0; bottom:0; right:0; width:24px; background:linear-gradient(to left, var(--graphite), transparent); pointer-events:none; z-index:1; opacity:var(--seg-fade-opacity, 1); transition:opacity .2s ease; }
-.seg-rolavel.seg-no-fade::after { opacity:0; }
+.seg-rolavel { position:relative; -webkit-mask-image:linear-gradient(to right, black calc(100% - 24px), transparent); mask-image:linear-gradient(to right, black calc(100% - 24px), transparent); transition:-webkit-mask-image .2s ease, mask-image .2s ease; }
+.seg-rolavel.seg-no-fade { -webkit-mask-image:none; mask-image:none; }
 /* Drawer do culto: afasta o HelpDot dos números da cobertura (E2) */
 .drawer-body-event .help-dot-wrap { margin-left: 12px; }
 .drawer-body-event .panorama-cob-linha { padding-right: 8px; }

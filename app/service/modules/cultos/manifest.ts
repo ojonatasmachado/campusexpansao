@@ -28,7 +28,7 @@ export default defineModule({
       tamanho: "390×844",
       medido: { palavras: 90, acoes: 12, sobreposicoes: 0 },
       limite: { palavras: 80, acoes: 12, sobreposicoes: 0 },
-      motivo: "A aba 'Para o membro' mostra o roteiro completo do culto em texto corrido; cortar palavras removeria instruções de liturgia que o líder consulta no celular durante o serviço.",
+      motivo: "O Panorama lista os 12 times com cobertura parcial em linhas individuais; reduzir ocultaria vagas abertas que precisam de ação imediata antes do culto no celular.",
     },
   ],
 });
