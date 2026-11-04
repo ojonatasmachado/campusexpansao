@@ -4074,3 +4074,46 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 .esc-cob-resumo{display:flex;align-items:center;gap:12px;padding:6px 0;font-size:var(--fs-pn-13);line-height:1.4}
 .esc-cob-resumo .panel-meta{flex:1;min-width:0}
 .esc-cob-num{color:var(--amber)}
+
+/* ════════ E1 Escalas por time: tabela função × culto ════════ */
+.esc-tbl-wrap{margin-top:16px}
+.esc-tbl-nav{display:none;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;margin-bottom:8px;border-bottom:1px solid var(--border)}
+.esc-tbl-nav-label{font-size:var(--fs-pn-14);font-weight:600;color:var(--white)}
+.esc-tbl{width:100%;border-collapse:collapse;font-size:var(--fs-pn-13)}
+.esc-tbl thead th{padding:10px 8px;text-align:left;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+.esc-tbl-fn{min-width:140px;width:200px;color:var(--light);font-weight:500}
+.esc-tbl-ev{min-width:110px}
+.esc-tbl-ev-btn{display:flex;flex-direction:column;align-items:flex-start;background:none;border:none;color:inherit;cursor:pointer;padding:4px 8px;border-radius:var(--r-sm);transition:background .12s}
+@media (hover: hover) and (pointer: fine) { .esc-tbl-ev-btn:hover { background: var(--graphite); } }
+.esc-tbl-ev.on .esc-tbl-ev-btn{background:var(--olive-dim);color:var(--olive)}
+.esc-tbl-ev-dia{font-weight:600;font-size:var(--fs-pn-13)}
+.esc-tbl-ev-time{font-size:var(--fs-pn-12);color:var(--muted);font-family:var(--mono)}
+.esc-tbl-cell{padding:8px;border-bottom:1px solid var(--border);vertical-align:top}
+.esc-tbl-slots{display:flex;flex-direction:column;gap:6px}
+.esc-tbl-person{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--r-sm);transition:background .12s}
+@media (hover: hover) and (pointer: fine) { .esc-tbl-person:hover { background: var(--graphite); } }
+.esc-tbl-person.is-no{opacity:.6}
+.esc-tbl-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-pn-13)}
+.esc-tbl-vaga{padding:6px 8px}
+.esc-tbl-legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;font-size:var(--fs-pn-12);color:var(--muted)}
+.esc-tbl-legend-item{display:flex;align-items:center;gap:6px}
+.esc-tbl-dot{font-size:var(--fs-pn-12);line-height:1}
+.esc-tbl-dot.ok{color:var(--olive)}
+.esc-tbl-dot.pendente{color:var(--amber)}
+.esc-tbl-dot.cuidado{color:var(--danger)}
+.esc-tbl-dot.aberto{color:var(--muted)}
+.esc-tbl-dot.rascunho{color:var(--subtle)}
+
+/* Mobile: um evento por vez, tabela vira lista vertical */
+@media(max-width:860px),(pointer:coarse){
+  .esc-tbl-nav{display:flex}
+  .esc-tbl thead{display:none}
+  .esc-tbl tbody tr{display:block;border-bottom:1px solid var(--border)}
+  .esc-tbl tbody tr:first-child{border-top:1px solid var(--border)}
+  .esc-tbl tbody tr td{display:none}
+  .esc-tbl tbody tr td:first-child,.esc-tbl tbody tr td.esc-tbl-cell-active{display:block}
+  .esc-tbl tbody tr td:first-child{padding:10px 0;border-bottom:none}
+  .esc-tbl-fn{width:auto;min-width:0;padding:10px 0}
+  /* Mostrar célula do evento atual como bloco */
+  .esc-tbl tbody tr td.esc-tbl-cell-mobile{display:block;padding:8px 0}
+}

@@ -2,7 +2,7 @@
 id: E1
 titulo: Reorganizar Escalas por time em tabela
 tipo: codigo
-status: reservada
+status: feita
 quem: claude-opus
 desde: 2026-11-04
 branch: historia/E1-escalas-por-time
@@ -49,5 +49,7 @@ Fonte: LEVEZA B (seção 3), MANIFESTO 2b.1, AUDITORIA-UI-2026-10-20.md seção 
 **Teste de pior caso:** 5 domingos no mês, 15 funções no time, nome longo (Dr. João Pedro da Silva Albuquerque Neto), 390px. Medir antes e depois.
 
 ## Notas
+FEITA em 2026-11-04. Tabela função × culto por time implementada; seletor de time no topo; "Preencher automaticamente" absorve "Como gerar"; cobertura e pendências removidas (vão para Panorama e fila do Início). Mobile com um culto por vez e setas. Densidade medida: 16 ações / 77 palavras em 1366 (limite 25/90); dentro da lei. E6 (768px) resolvida junto pela tabela responsiva.
+
 ABERTO, parcial: já existe o menu "Mais" com Escala extra, Delegar, QR e Baixar, e o botão "Publicar e avisar".
 Hoje a tela tem esc-events, timesFechados, "Como gerar" em :511 e "Pendências da semana" em :634.

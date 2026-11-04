@@ -1060,7 +1060,7 @@ export default function ServiceExactApp({
             church={firstChurch}
           />
         ) : null}
-        {route === "escalas" ? <Escalas key={escalaFoco?.n ?? 0} foco={escalaFoco} gaps={gaps} roster={roster} people={people} ministries={ministries} events={events} church={firstChurch} scopeMinistryIds={scopeMinistryIds} setDrawer={setDrawer} setModal={setModal} setRoute={setRoute} setCheckinEventId={setCheckinEventId} onNotifyLeaderRecusa={notificarLiderRecusa} /> : null}
+        {route === "escalas" ? <Escalas key={escalaFoco?.n ?? 0} foco={escalaFoco} roster={roster} people={people} ministries={ministries} events={events} church={firstChurch} scopeMinistryIds={scopeMinistryIds} setDrawer={setDrawer} setModal={setModal} setRoute={setRoute} setCheckinEventId={setCheckinEventId} onNotifyLeaderRecusa={notificarLiderRecusa} /> : null}
         {route === "financeiro" ? <Financeiro church={firstChurch} currentRole={currentRole} /> : null}
         {route === "reunioes" ? <Reunioes meetings={meetings} meetingActions={meetingActions} ministries={ministries} people={people} rooms={rooms} reservations={reservations} church={firstChurch} setDrawer={setDrawer} /> : null}
         {route === "ensaios" ? <Ensaios rehearsals={rehearsals} ministries={ministries} rooms={rooms} setDrawer={setDrawer} setModal={setModal} /> : null}
