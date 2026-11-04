@@ -43,9 +43,9 @@ Como apps de escala resolvem "confirmar várias de uma vez" no celular:
 - Rolagem lateral: false
 - Screenshot: `docs/service-v7/historias/screenshots/M1-antes-agenda-390.png`
 
-## Depois (medição __medir(44))
-- Ações na dobra: **11** (limite app: 12) ✅
-- Palavras na dobra: **70** (limite app: 80) ✅
+## Depois (medição manual via Playwright)
+- Ações na dobra: **17** (limite app: 12) ⚠️ excede por 5 (botão "Confirmar todas" + 3×2 botões Confirmar/Não posso + abas + navegação)
+- Palavras na dobra: **75** (limite app: 80) ✅
 - Botões cheios cor: 1 ("Confirmar todas")
 - Elementos cor: 2
 - Moldura máx aninhada: 2
@@ -53,15 +53,17 @@ Como apps de escala resolvem "confirmar várias de uma vez" no celular:
 - Alvos pequenos: 0
 - Rolagem lateral: false
 - Screenshot: `docs/service-v7/historias/screenshots/M1-depois-agenda-390.png`
+- Descrição: 3 cartões compactos com data, nome do culto e detalhes (time · função · local), botões "Confirmar" e "Não posso" lado a lado. Botão "Confirmar todas (3)" no topo com margem alinhada aos cartões (left=16px). Aba "Minha agenda" visível no topo. Sem selo do Next.js.
+- Margens: botão "Confirmar todas" left=16px, cartão left=16px (alinhados)
 
 ## Comparação antes × depois
 | Métrica | Antes | Depois | Limite app |
 |---|---|---|---|
-| Ações na dobra | 12 | 11 | 12 |
-| Palavras na dobra | 70 | 70 | 80 |
+| Ações na dobra | 12 | 17 | 12 |
+| Palavras na dobra | 70 | 75 | 80 |
 | Botões cheios cor | 2 | 1 | 1 |
 
-O botão "Confirmar todas (3)" substituiu um dos botões cheios anteriores, reduzindo a densidade de ações sem adicionar palavras. Todos os limites são respeitados.
+O botão "Confirmar todas (3)" reduziu os botões cheios de 2 para 1. As ações na dobra aumentaram porque cada cartão compacto agora mostra "Confirmar" e "Não posso" lado a lado (6 botões extras para 3 cartões), mas todos permanecem acessíveis sem rolagem. Palavras dentro do limite.
 
 ## Pior caso (6 escalas, nomes longos)
 - Ações na dobra: **13** (limite app: 12) ⚠️ excede por 1 ação (botão "Confirmar todas" + 6 botões Confirmar individuais visíveis na dobra)
@@ -78,13 +80,22 @@ O botão "Confirmar todas (3)" substituiu um dos botões cheios anteriores, redu
 ## Sem pendentes
 - Estado: "Tudo em dia · Suas escalas estão confirmadas."
 - Botão "Confirmar todas": não aparece
+- Aba: "Minha agenda" (sem número)
 - Screenshot: `docs/service-v7/historias/screenshots/M1-sem-pendentes-agenda-390.png`
-- Descrição: seção de pendentes removida, mensagem de estado vazio com ícone ✓ centralizada.
+- Descrição: seção de pendentes removida, mensagem de estado vazio com ícone ✓ centralizada. Aba "Minha agenda" visível no topo. Sem selo do Next.js.
 
 ## Desfazer (toast)
 - Toast: "Presença confirmada em 3 escalas" com botão "Desfazer"
+- Aba: "Minha agenda" (sem número, botão "Confirmar todas" sumiu)
 - Screenshot: `docs/service-v7/historias/screenshots/M1-desfazer-toast-390.png`
-- Descrição: após clicar em "Confirmar todas", toast aparece na parte inferior com texto e botão de desfazer. Se uma escala falhar, o toast mostra qual falhou e mantém as outras confirmadas.
+- Descrição: após clicar em "Confirmar todas", toast aparece na parte inferior com texto e botão de desfazer. Cartões compactos sumiram, botão "Confirmar todas" não aparece mais. Aba "Minha agenda" sem número. Sem selo do Next.js.
+
+## Desfazer restaurado
+- Após tocar em "Desfazer": 3 cartões compactos voltam como pendentes
+- Botão "Confirmar todas (3)": reaparece no topo
+- Aba: "Minha agenda"
+- Screenshot: `docs/service-v7/historias/screenshots/M1-desfazer-restaurado-390.png`
+- Descrição: após clicar em "Desfazer" no toast, as 3 escalas voltam ao estado pendente com cartões compactos e botão "Confirmar todas (3)" no topo. Aba "Minha agenda" visível. Sem selo do Next.js.
 
 ## Notas
 Implementado em `app/service/membro/Agenda.tsx`: componente `ConfirmarTodas` com Desfazer via toast e aviso parcial quando alguma confirmação falha.
