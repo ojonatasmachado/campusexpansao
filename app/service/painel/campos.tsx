@@ -10,9 +10,10 @@ export function DrawerShell({ children, onClose, wide }: { children: React.React
   return <Gaveta aoFechar={onClose} larga={wide}>{children}</Gaveta>;
 }
 
-export function DrawerSection({ title, children }: { title: string; children: React.ReactNode }) {
+/* id: opcional, para outra tela rolar até esta seção e pôr o foco nela. */
+export function DrawerSection({ title, id, children }: { title: string; id?: string; children: React.ReactNode }) {
   return (
-    <div className="dsec">
+    <div className="dsec" id={id} tabIndex={id ? -1 : undefined}>
       <div className="dsec-title">{title}</div>
       {children}
     </div>

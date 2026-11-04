@@ -6,43 +6,35 @@
    .seg que já existe. */
 
 import type { HTMLAttributes } from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useIndicador } from "./indicador";
-
-const MARCADA = 'button.on, [aria-checked="true"], [aria-selected="true"]';
 
 export function Segmentado({ className, children, rolavel, esconderEsfumadoNoFim, ...rest }: HTMLAttributes<HTMLDivElement> & { rolavel?: boolean; esconderEsfumadoNoFim?: boolean }) {
   const { caixa, indicador } = useIndicador<HTMLDivElement, HTMLSpanElement>();
+  const [noFim, setNoFim] = useState(false);
+
+  /* rolavel: as opções rolam para o lado e a ponta direita ganha um esfumado.
+     A pílula fica dentro da área que rola, então acompanha a rolagem sozinha.
+     esconderEsfumadoNoFim: o esfumado some quando não há mais nada para rolar,
+     para não cobrir o texto da última opção. */
+  useEffect(() => {
+    const el = caixa.current;
+    if (!rolavel || !esconderEsfumadoNoFim || !el) return;
+    /* A folga interna da direita conta como fim: a última opção já está inteira. */
+    const medir = () => setNoFim(el.scrollLeft + el.clientWidth >= el.scrollWidth - parseFloat(getComputedStyle(el).paddingRight) - 1);
+    el.addEventListener("scroll", medir, { passive: true });
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(medir) : null;
+    ro?.observe(el);
+    return () => { el.removeEventListener("scroll", medir); ro?.disconnect(); };
+  }, [rolavel, esconderEsfumadoNoFim, caixa]);
+
   const cls = [
     "seg",
     "tem-pilula",
     rolavel ? "seg-rolavel" : "",
+    rolavel && esconderEsfumadoNoFim && noFim ? "seg-no-fade" : "",
     className ?? "",
   ].filter(Boolean).join(" ");
-
-  /* Em containers roláveis, offsetLeft não muda com o scroll, mas a posição
-     visual sim. Este listener ajusta a pílula durante a rolagem, sem alterar
-     o hook global que é usado por Abas e Segmentados não-roláveis.
-     Quando esconderEsfumadoNoFim está ligado, o fade da direita some ao chegar
-     no fim da rolagem, para não cobrir o texto da última aba. */
-  useEffect(() => {
-    if (!rolavel) return;
-    const el = caixa.current;
-    const p = indicador.current;
-    if (!el || !p) return;
-    const atualizar = () => {
-      const alvo = el.querySelector<HTMLElement>(MARCADA);
-      if (!alvo) return;
-      p.style.transform = `translateX(${alvo.offsetLeft - el.scrollLeft}px)`;
-      if (esconderEsfumadoNoFim) {
-        const noFim = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1;
-        el.classList.toggle("seg-no-fade", noFim);
-      }
-    };
-    atualizar();
-    el.addEventListener("scroll", atualizar, { passive: true });
-    return () => el.removeEventListener("scroll", atualizar);
-  }, [rolavel, esconderEsfumadoNoFim, caixa, indicador]);
 
   return (
     <div {...rest} ref={caixa} className={cls}>
