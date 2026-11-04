@@ -2,10 +2,10 @@
 id: G6
 titulo: Criar as peças do mapa na biblioteca
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-04
+branch: historia/G6-pecas-do-mapa
 depende: []
 tamanho: M
 ---
