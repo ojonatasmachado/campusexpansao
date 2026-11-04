@@ -512,11 +512,11 @@ export function MiniEvent({
         <div className="mini-title">{event.name}</div>
         <div className="mini-sub">{joinDot(event.weekday, formatDateBR(event.eventDate), event.location)}</div>
         {cobertura && cobertura.length > 0 && (
- <CoberturaResumo
- cobertura={cobertura}
- onVerPanorama={() => setDrawer({ kind: "event", id: event.id, tab: "panorama" })}
- />
- )}
+          <CoberturaResumo
+            cobertura={cobertura}
+            onVerPanorama={() => setDrawer({ kind: "event", id: event.id, tab: "panorama" })}
+          />
+        )}
       </div>
       <div className="mini-right flex-row items-center gap-sm">
         <span>{event.time}</span>
