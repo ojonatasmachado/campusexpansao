@@ -8,10 +8,16 @@
 import type { HTMLAttributes } from "react";
 import { useIndicador } from "./indicador";
 
-export function Segmentado({ className, children, ...rest }: HTMLAttributes<HTMLDivElement>) {
+export function Segmentado({ className, children, rolavel, ...rest }: HTMLAttributes<HTMLDivElement> & { rolavel?: boolean }) {
   const { caixa, indicador } = useIndicador<HTMLDivElement, HTMLSpanElement>();
+  const cls = [
+    "seg",
+    "tem-pilula",
+    rolavel ? "seg-rolavel" : "",
+    className ?? "",
+  ].filter(Boolean).join(" ");
   return (
-    <div {...rest} ref={caixa} className={className ? `seg tem-pilula ${className}` : "seg tem-pilula"}>
+    <div {...rest} ref={caixa} className={cls}>
       <span ref={indicador} className="seg-pilula" aria-hidden="true" />
       {children}
     </div>
