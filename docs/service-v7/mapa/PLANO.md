@@ -226,8 +226,8 @@ Etapas 2 e 3 podem andar juntas depois da 1. A 7 também pode andar em paralelo 
 
 1. **Consentimento dos membros que já existem.** Proposta: ninguém aparece como ponto até consentir; o app pergunta uma vez. Números agregados por região contam todo mundo (com mínimo de 3). Alternativa mais branda (aviso + opção de sair) só com aval jurídico, por ser dado sensível.
 2. **Quem é "pastor / gestão"** na matriz de papéis atual: qual papel recebe `service.mapa` por padrão.
-3. **Linha do tempo usa o endereço atual.** O Service não guarda histórico de mudança de endereço; quem mudou de bairro aparece onde mora hoje. Guardar o histórico a partir de agora é possível (uma tabela a mais na etapa 1).
-4. **Precisão do ponto em ~100 m.** Suficiente para ver distribuição sem expor a casa.
+3. **Linha do tempo usa o endereço atual.** O Service não guarda histórico de mudança de endereço; quem mudou de bairro aparece onde mora hoje. Guardar o histórico a partir de agora é possível (uma tabela a mais na etapa 1). **Decidido em 04/11 (G4): não guardar histórico.** A linha do tempo usa o endereço atual.
+4. **Precisão do ponto em ~100 m.** Suficiente para ver distribuição sem expor a casa. **Decidido em 04/11 (G4):** como o ponto vem do CEP, as pessoas do mesmo CEP se espalham ao longo da rua (posição fixa por pessoa) em vez de empilhar; o agrupamento só acontece com o mapa bem afastado. Código na história G5.
 
 ---
 

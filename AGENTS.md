@@ -361,7 +361,8 @@ Toda função nova do Service nasce como **módulo**. Tela, item de menu, aba de
 cartão ou notificação criados fora do registro não entram.
 
 1. **Casca estável.** App do membro: 4 abas (Início, Agenda, Mensagens, Caminhada) e avatar no
-   topo, que abre o Perfil. Painel: menu, barra e busca. A casca não muda quando entra função
+   topo, que abre o Perfil. **(rev. 04/11)** Única exceção: quem lidera ao menos um time ganha a
+   5ª aba, Meus times (MANIFESTO 2c.1). Painel: menu, barra e busca. A casca não muda quando entra função
    nova; só oferece lugares: `inicio.fila`, `inicio.igreja`, `agenda.minha`, `agenda.igreja`,
    `mensagens.itens`, `caminhada.secoes`, `perfil.linhas`, `painel.menu`,
    `painel.inicio.saude`, `painel.inicio.pendencias`, `painel.config`, `busca`.
@@ -426,6 +427,23 @@ cartão ou notificação criados fora do registro não entram.
     link com cara de botão usa `botaoClasse()`. Estado é `Selo`, papel é `Etiqueta`,
     superfície é `Cartao`, item de lista é `Linha`. Vale do login ao painel. O CI falha com `<button>`
     ou `.btn`/`.m6-btn` à mão (`scripts/check-service-componentes.ts`).
+
+---
+
+## 14. Service: contratos de construção (aprovados em 04/11/2026, D3)
+
+1. **Jornada.** Toda tarefa declara onde começa, qual resultado entrega, de quem depende
+   (outra pessoa ou outro papel) e o que a tela mostra sem conteúdo, sem permissão e sem rede.
+2. **Feedback.** Erro sempre diz como resolver, fica junto do campo quando é de um campo e é
+   anunciado ao leitor de tela. Ação sem resultado visível tem confirmação e caminho de volta.
+3. **Celular.** Tamanho de campo e de alvo é medido depois da escala do texto. O teclado nunca
+   cobre o campo em foco nem o botão principal. Proibido bloquear o zoom da pessoa como correção.
+4. **Cor.** Texto ativo com contraste mínimo de 4,5:1 (texto grande, 3:1). Contorno essencial e
+   foco são medidos à parte. Paleta aprovada não dispensa medir a tela pronta.
+5. **Descoberta.** O membro não vê entrada que não pode usar (lei 6). O gestor autorizado vê o
+   que falta para ligar aquela experiência e quem pode fazer isso.
+6. **Internacional.** Idioma da pessoa e país, fuso e moeda da igreja são explícitos. Telefone e
+   código postal não assumem Brasil. Recurso regional declara onde está disponível.
 
 ---
 

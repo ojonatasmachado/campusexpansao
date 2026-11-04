@@ -2,10 +2,10 @@
 id: F2
 titulo: Implementar pontos pequenos de jornada sem módulo
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: feita
+quem: claude
+desde: 2026-11-04
+branch: historia/D2-decisoes-produto
 depende: []
 tamanho: P
 ---
@@ -23,3 +23,4 @@ Fonte: JORNADAS_PONTE.md seção 1.
 ## Notas
 ABERTO. Tamanho P cada. Entram na priorização D6 antes de codar.
 Trilho a definir na reserva.
+04/11/2026: priorizada na D6 (MANIFESTO 2c.5). Quero fazer parte virou O8; convidar amigo e informar quem convidou viraram O9; juntar duplicados virou O11; campos personalizados e ficha completa (lista do que falta, sem percentual) ficaram na Onda 3.

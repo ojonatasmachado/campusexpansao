@@ -2,10 +2,10 @@
 id: D5
 titulo: Decidir se faltou entra como fato no histórico
 tipo: decisao
-status: livre
-quem:
-desde:
-branch:
+status: feita
+quem: claude
+desde: 2026-11-04
+branch: historia/D2-decisoes-produto
 depende: []
 tamanho: P
 ---
@@ -24,3 +24,4 @@ Fonte: DEPLOY.md:97 ("Fato 'faltou' na história (4.8)"), PROGRESSO.md 4.8.
 INCERTO: conferir no código antes de começar; se já estiver feito, marcar status: feita com a evidência.
 Decisão do usuário: o agente só prepara as opções e registra a resposta.
 O tipo existe em app/service/lib/historico.ts:20 e em modules/define.ts:31. Pausas e recusas são fatos, não diagnóstico (STATUS F20: sem registro não é ausência comprovada), o que pode explicar por que não se grava.
+04/11/2026: decidido pelo usuário. Faltou automático com check-in aberto, líder pode desfazer, visível só para líder e gestão (MANIFESTO 2c.3). Código na E7.
