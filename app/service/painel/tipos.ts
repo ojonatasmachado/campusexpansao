@@ -693,7 +693,7 @@ export type DrawerState =
   | { kind: "person"; id: string }
   | { kind: "member"; id: string }
   | { kind: "ministry"; id: string }
-  | { kind: "event"; id: string }
+  | { kind: "event"; id: string; tab?: "panorama" | "crono" | "posicoes" | "membro" }
   | { kind: "decision"; id: string }
   | { kind: "baptismClass"; id: string }
   | { kind: "visitor"; id: string }
