@@ -2,7 +2,7 @@
 
 import { avisar } from "../../lib/avisar";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { Icon } from "../../lib/icons";
 import { formatDateBR, joinDot } from "../../lib/date";
@@ -11,7 +11,6 @@ import { useTermos } from "../../lib/vocabulario-context";
 import { Av } from "../ui";
 import { friendlyWriteError } from "../erros";
 import { type CoberturaTime } from "../../modules/escalas/cobertura";
-import { Cobertura } from "../../modules/escalas/Cobertura";
 import { Panorama } from "./Panorama";
 import { ROUTES } from "../comum";
 import { DrawerSection, DrawerShell, TimePicker } from "../campos";
@@ -31,7 +30,6 @@ export function EventDrawer({
   roster,
   rsvps = [],
   cobertura = [],
-  onAbrirVagas,
   onClose,
   setDrawer,
   setRoute,
@@ -44,7 +42,6 @@ export function EventDrawer({
   roster: RosterAssignmentView[];
   rsvps?: EventRsvpView[];
   cobertura?: CoberturaTime[];
-  onAbrirVagas?: (timeId: string) => void;
   onClose: () => void;
   setDrawer: (drawer: DrawerState) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
@@ -54,17 +51,25 @@ export function EventDrawer({
   const { comTermos: ct } = useTermos();
   const router = useRouter();
   const [tab, setTab] = useState<"panorama" | "crono" | "posicoes" | "membro">(initialTab ?? "panorama");
+  const [scrollToTimeId, setScrollToTimeId] = useState<string | null>(null);
   const eventRoster = roster.filter((assignment) => assignment.event_id === event.id);
   const eventMinistries = event.ministries.length ? ministries.filter((ministry) => event.ministries.includes(ministry.id)) : ministries;
 
+  /* Scroll-to-focus reage à montagem do painel Posições, sem setTimeout arbitrário. */
+  useEffect(() => {
+    if (tab !== "posicoes" || !scrollToTimeId) return;
+    const el = document.getElementById(`esc-col-${scrollToTimeId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.focus({ preventScroll: true });
+    }
+    setScrollToTimeId(null);
+  }, [tab, scrollToTimeId]);
+
   /* Toque num time incompleto no Panorama abre a aba Posições rolada até ele. */
   const abrirTimeNoPanorama = (timeId: string) => {
+    setScrollToTimeId(timeId);
     setTab("posicoes");
-    setTimeout(() => {
-      const el = document.getElementById(`esc-col-${timeId}`);
-      el?.scrollIntoView({ behavior: "smooth", block: "start" });
-      el?.focus({ preventScroll: true });
-    }, 50);
   };
 
   return (
