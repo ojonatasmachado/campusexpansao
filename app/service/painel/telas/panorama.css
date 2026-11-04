@@ -5,86 +5,40 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
 }
 
-.panorama-cob-item {
-  display: flex;
-  align-items: center;
-}
-
-.panorama-cob-btn {
+/* Linha clicável de time incompleto: usa .mini-row da biblioteca, sem borda nem fundo próprio */
+.panorama-cob-linha {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 12px;
-  border-radius: var(--radius-sm, 6px);
-  background: var(--surface-2, rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--border, #25291f);
-  color: var(--light, #e6e5dd);
-  font-size: var(--fs-pn-14, 14px);
   text-align: left;
+  color: var(--light);
+  font-size: var(--fs-pn-14);
 }
 
-.panorama-cob-btn:hover,
-.panorama-cob-btn:focus-visible {
-  background: var(--surface-3, rgba(255, 255, 255, 0.08));
-  outline: none;
-}
-
-.panorama-cob-nome {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.panorama-cob-resumo {
-  padding: 6px 12px;
-  font-size: var(--fs-pn-13, 13px);
-  color: var(--muted, #8b8c82);
+.panorama-cob-ok {
+  padding: 6px 0;
+  font-size: var(--fs-pn-13);
+  color: var(--muted);
 }
 
 .panorama-crono {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.panorama-crono-step .mini-main {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.panorama-crono-step .mini-title {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
 }
 
 .panorama-crono-hora {
-  font-family: var(--mono, "JetBrains Mono", ui-monospace, monospace);
-  font-size: var(--fs-pn-13, 13px);
-  color: var(--muted, #8b8c82);
+  font-family: var(--mono);
+  font-size: var(--fs-pn-13);
+  color: var(--muted);
   min-width: 52px;
 }
 
 .panorama-crono-item {
-  font-size: var(--fs-pn-14, 14px);
-  color: var(--light, #e6e5dd);
-}
-
-.panorama-crono-step .mini-sub {
-  font-size: var(--fs-pn-13, 13px);
-  color: var(--muted, #8b8c82);
-  padding-left: 62px; /* alinha com o texto após a hora */
+  font-size: var(--fs-pn-14);
+  color: var(--light);
 }
