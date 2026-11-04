@@ -65,7 +65,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **E5** Troca de escala ponta a ponta · **M4** Convite e primeiro acesso
 - **O6** Kids e Financeiro com volume · **Q4** Push e imagem com serviços reais
 
-- **E6** Escalas em 768px (some com o E1) · **A4** Ponto branco · **Q9** Seletores acessíveis
+- **A4** Ponto branco · **Q9** Seletores acessíveis
 
 ### 6. Precisam de aparelho, pessoas ou dados de fora
 - **O7** Kids com famílias reais (continuação externa da O6)

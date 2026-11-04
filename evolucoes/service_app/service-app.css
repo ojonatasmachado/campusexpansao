@@ -4103,7 +4103,6 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
   .esc-tbl-nav{display:flex}
   .esc-tbl thead{display:none}
   .esc-tbl tbody tr{display:block;border-bottom:1px solid var(--border)}
-  .esc-tbl tbody tr:first-child{border-top:1px solid var(--border)}
   .esc-tbl tbody tr td{display:none}
   .esc-tbl tbody tr td:first-child,.esc-tbl tbody tr td.esc-tbl-cell-active{display:block}
   .esc-tbl tbody tr td:first-child{padding:10px 0;border-bottom:none}
