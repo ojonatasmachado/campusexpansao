@@ -22,6 +22,7 @@ Fonte: LEVEZA B2; MANIFESTO 2b.2, 4.16.
 - `evolucoes/service_app/service-app.css`
 - `app/service/modules/escalas/CoberturaResumo.tsx`
 - `app/service/painel/telas/Panorama.tsx` / `panorama.css`
+- `app/service/painel/telas/Evento.tsx`, `app/service/painel/campos.tsx` (prop `id` no DrawerSection), `app/service/ui/Segmentado.tsx`, `app/service/modules/define.ts`, `app/service/modules/cultos/manifest.ts`
 
 ## Pronto quando
 - Cronograma em ordem (event_schedule_items), uma linha por time (events.ministries), problemas primeiro.
@@ -32,3 +33,4 @@ Fonte: LEVEZA B2; MANIFESTO 2b.2, 4.16.
 
 ## Notas
 Feita em 2026-11-04. Panorama read-only com cobertura resumida e cronograma; CoberturaResumo extraído como componente compartilhado.
+Conferência de 04/11 (claude): travessão do roteiro trocado por "Sem nome" (lei 12); pílula e esfumado do Segmentado rolável sem mutar valor do hook; toque num time do Panorama agora rola até ele em Posições (o id procurado só existia na tela de Escalas).

@@ -14,11 +14,8 @@ import { Linha } from "../../ui/Linha";
 import { Selo } from "../../ui/Selo";
 import { DrawerSection } from "../campos";
 import { useTermos } from "../../lib/vocabulario-context";
-import { joinDot } from "../../lib/date";
 
 export function Panorama({
-  event,
-  ministries,
   cobertura,
   schedule,
   onAbrirTime,
@@ -32,8 +29,6 @@ export function Panorama({
   const { comTermos: ct } = useTermos();
   const incompletos = cobertura.filter((t) => t.preenchidas < t.total);
   const completosCount = cobertura.length - incompletos.length;
-  const ministryName = (id: string | null) =>
-    id ? ministries.find((m) => m.id === id)?.name ?? null : null;
 
   return (
     <>
@@ -79,7 +74,7 @@ export function Panorama({
                 <Linha>
                   <span className="panorama-crono-hora">{step.time ?? "--:--"}</span>
                   <div className="mini-main">
-                    <div className="panorama-crono-item">{step.item || "—"}</div>
+                    <div className="panorama-crono-item">{step.item || "Sem nome"}</div>
                   </div>
                 </Linha>
               </li>
