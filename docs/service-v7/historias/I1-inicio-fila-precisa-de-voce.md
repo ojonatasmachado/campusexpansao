@@ -2,7 +2,7 @@
 id: I1
 titulo: Início do painel vira a fila "Precisa de você"
 tipo: codigo
-status: reservada
+status: feita
 quem: claude
 desde: 2026-10-28
 branch: historia/I1-inicio-fila-precisa-de-voce
@@ -103,3 +103,4 @@ Nota: os valores de desktop (1366) mantêm moldura 3 porque a medição anterior
 - Skills obrigatórias: impeccable, ui-ux-pro-max, design:ux-copy, emil-design-eng, animate, dataviz, react-refactor, break-ui, web-design-guidelines, design:accessibility-review, review-animations, mobile-native.
 - Cor só por variável do tema; Service é white-label.
 - Merge só com OK do usuário.
+04/11/2026: marcada como feita na arrumação do quadro. O código entrou no main pelo PR #30 (merge em 03/11); o arquivo tinha ficado como reservada e o branch não foi apagado no merge.
