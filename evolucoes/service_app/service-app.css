@@ -359,7 +359,8 @@ em { font-style:italic; }
 .drawer-head { position:sticky; top:0; background:var(--graphite); border-bottom:0.5px solid var(--border); padding:22px 28px 20px; z-index:2; }
 .drawer-close { position:absolute; top:20px; right:24px; width:32px; height:32px; border-radius:var(--r-md); background:var(--ink); border:0.5px solid var(--border-2); color:var(--muted); font-size:var(--fs-pn-14); display:flex; align-items:center; justify-content:center; }
 @media (hover:hover) and (pointer:fine) { .drawer-close:hover { color:var(--white); border-color:var(--olive-line); } }
-.drawer-body { padding:24px 28px 40px; }
+.drawer-body { padding:24px 28px 80px; }
+/* Espaço extra no rodapé do drawer para não sobrepor com o HelpDot FAB (z-index 90, bottom 26px) */
 .profile-top { display:flex; align-items:center; gap:16px; margin-bottom:6px; }
 .profile-name { font-size:var(--fs-pn-20); font-weight:700; letter-spacing:-0.03em; }
 .profile-role { font-size:var(--fs-pn-13); color:var(--muted); margin-top:3px; }
@@ -4065,3 +4066,4 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 /* E2 Panorama: linha-resumo de cobertura (substitui lista <Cobertura> em Escalas e Início) */
 .esc-cob-resumo{display:flex;align-items:center;gap:12px;padding:6px 0;font-size:var(--fs-pn-13);line-height:1.4}
 .esc-cob-resumo .panel-meta{flex:1;min-width:0}
+.esc-cob-num{color:var(--amber)}
