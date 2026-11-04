@@ -241,12 +241,11 @@ em { font-style:italic; }
 .tb-search input:focus { border-color:var(--olive-line); }
 .tb-search .si { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:var(--fs-pn-12); }
 /* segmento nunca sai da tela: se não couber, rola para o lado dentro dele */
-.seg { display:inline-flex; max-width:100%; overflow-x:auto; scrollbar-width:none; background:var(--graphite); border:0.5px solid var(--border-2); border-radius:calc(var(--r-ctl) + 3px); padding:3px; gap:2px; position:relative; }
+.seg { display:inline-flex; max-width:100%; overflow-x:auto; scrollbar-width:none; background:var(--graphite); border:0.5px solid var(--border-2); border-radius:calc(var(--r-ctl) + 3px); padding:3px; gap:2px; }
 .seg::-webkit-scrollbar { display:none; }
-/* Indicação visual de scroll lateral: fade nas bordas quando há conteúdo fora da viewport */
-.seg::before, .seg::after { content:""; position:sticky; top:0; bottom:0; width:24px; flex-shrink:0; pointer-events:none; z-index:1; }
-.seg::before { left:0; background:linear-gradient(to right, var(--graphite), transparent); }
-.seg::after { right:0; background:linear-gradient(to left, var(--graphite), transparent); }
+/* Fade na ponta direita só quando rolavel (drawer do culto) */
+.seg-rolavel { position:relative; }
+.seg-rolavel::after { content:""; position:absolute; top:0; bottom:0; right:0; width:24px; background:linear-gradient(to left, var(--graphite), transparent); pointer-events:none; z-index:1; }
 .seg button:focus-visible { outline-offset:-2px; }
 .seg button { background:transparent; border:none; color:var(--muted); font-size:var(--fs-ui-13); font-weight:500; min-height:32px; padding:0 12px; border-radius:var(--r-ctl); flex-shrink:0; white-space:nowrap; transition:color .14s ease,background-color .14s ease,border-color .14s ease,box-shadow .14s ease,opacity .14s ease,transform .14s var(--ease-out); letter-spacing:-0.01em; }
 @media (hover:hover) and (pointer:fine) { .seg button:hover { color:var(--white); } }
