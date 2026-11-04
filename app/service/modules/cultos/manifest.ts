@@ -15,4 +15,20 @@ export default defineModule({
     ],
   },
   vocabulario: ["culto"],
+  densidade: [
+    {
+      tela: "Panorama do culto",
+      tamanho: "1366×860",
+      medido: { palavras: 104, acoes: 18, sobreposicoes: 0 },
+      limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
+      motivo: "Os 12 times com cobertura parcial exigem uma linha por função; reduzir ocultaria vagas abertas que precisam de ação imediata antes do culto.",
+    },
+    {
+      tela: "Panorama do culto",
+      tamanho: "390×844",
+      medido: { palavras: 90, acoes: 12, sobreposicoes: 0 },
+      limite: { palavras: 80, acoes: 12, sobreposicoes: 0 },
+      motivo: "A aba 'Para o membro' mostra o roteiro completo do culto em texto corrido; cortar palavras removeria instruções de liturgia que o líder consulta no celular durante o serviço.",
+    },
+  ],
 });

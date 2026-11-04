@@ -245,7 +245,11 @@ em { font-style:italic; }
 .seg::-webkit-scrollbar { display:none; }
 /* Fade na ponta direita só quando rolavel (drawer do culto) */
 .seg-rolavel { position:relative; }
-.seg-rolavel::after { content:""; position:absolute; top:0; bottom:0; right:0; width:24px; background:linear-gradient(to left, var(--graphite), transparent); pointer-events:none; z-index:1; }
+.seg-rolavel::after { content:""; position:absolute; top:0; bottom:0; right:0; width:24px; background:linear-gradient(to left, var(--graphite), transparent); pointer-events:none; z-index:1; opacity:var(--seg-fade-opacity, 1); transition:opacity .2s ease; }
+.seg-rolavel.seg-no-fade::after { opacity:0; }
+/* Drawer do culto: afasta o HelpDot dos números da cobertura (E2) */
+.drawer-body-event .help-dot-wrap { margin-left: 12px; }
+.drawer-body-event .panorama-cob-linha { padding-right: 8px; }
 .seg button:focus-visible { outline-offset:-2px; }
 .seg button { background:transparent; border:none; color:var(--muted); font-size:var(--fs-ui-13); font-weight:500; min-height:32px; padding:0 12px; border-radius:var(--r-ctl); flex-shrink:0; white-space:nowrap; transition:color .14s ease,background-color .14s ease,border-color .14s ease,box-shadow .14s ease,opacity .14s ease,transform .14s var(--ease-out); letter-spacing:-0.01em; }
 @media (hover:hover) and (pointer:fine) { .seg button:hover { color:var(--white); } }
@@ -362,7 +366,8 @@ em { font-style:italic; }
 .drawer-head { position:sticky; top:0; background:var(--graphite); border-bottom:0.5px solid var(--border); padding:22px 28px 20px; z-index:2; }
 .drawer-close { position:absolute; top:20px; right:24px; width:32px; height:32px; border-radius:var(--r-md); background:var(--ink); border:0.5px solid var(--border-2); color:var(--muted); font-size:var(--fs-pn-14); display:flex; align-items:center; justify-content:center; }
 @media (hover:hover) and (pointer:fine) { .drawer-close:hover { color:var(--white); border-color:var(--olive-line); } }
-.drawer-body { padding:24px 28px 80px; }
+.drawer-body { padding:24px 28px 40px; }
+.drawer-body-event { padding-bottom:80px; }
 /* Espaço extra no rodapé do drawer para não sobrepor com o HelpDot FAB (z-index 90, bottom 26px) */
 .profile-top { display:flex; align-items:center; gap:16px; margin-bottom:6px; }
 .profile-name { font-size:var(--fs-pn-20); font-weight:700; letter-spacing:-0.03em; }
