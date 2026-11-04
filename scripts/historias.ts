@@ -49,7 +49,7 @@ for (const b of branches) {
 const feita = (id: string) => locais.find((h) => h.id === id)?.status === "feita";
 const sobrepoe = (a: string[], b: string[]) => a.filter((x) => b.some((y) => x === y || x.startsWith(`${y}/`) || y.startsWith(`${x}/`)));
 
-const linhas = locais.filter((h) => h.status !== "feita").map((h) => {
+const linhas = locais.filter((h) => h.status !== "feita" && h.status !== "cancelada").map((h) => {
   const r = reservadas.get(h.id);
   if (r) return { h, estado: `RESERVADA · ${r.quem || "?"} · ${r.desde || "?"} · ${r.branch}` };
   if (h.status === "bloqueada") return { h, estado: "BLOQUEADA (ver Notas)" };

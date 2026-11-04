@@ -2,7 +2,7 @@
 id: G3
 titulo: Criar cartões do mapa no Início do painel
 tipo: codigo
-status: livre
+status: cancelada
 quem:
 desde:
 branch:
@@ -22,5 +22,6 @@ Fonte: mapa/PLANO.md §9.
 - Cada informação fica em um lugar só (lei 14).
 
 ## Notas
-ABERTO. Depende de I1 (lei 14: uma informação, um lugar). Ver §13 do plano do mapa.
+04/11/2026: CANCELADA pelo usuário. O mapa não gera avisos nem sugestões de expansão (mapa/PLANO.md §10, princípio). Nada do mapa vai para o Início.
+Antes: depende de I1 (lei 14: uma informação, um lugar). Ver §13 do plano do mapa.
 Trilho a definir na reserva.

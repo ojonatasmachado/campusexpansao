@@ -227,7 +227,7 @@ Etapas 2 e 3 podem andar juntas depois da 1. A 7 também pode andar em paralelo 
 1. **Consentimento dos membros que já existem.** Proposta: ninguém aparece como ponto até consentir; o app pergunta uma vez. Números agregados por região contam todo mundo (com mínimo de 3). Alternativa mais branda (aviso + opção de sair) só com aval jurídico, por ser dado sensível.
 2. **Quem é "pastor / gestão"** na matriz de papéis atual: qual papel recebe `service.mapa` por padrão.
 3. **Linha do tempo usa o endereço atual.** O Service não guarda histórico de mudança de endereço; quem mudou de bairro aparece onde mora hoje. Guardar o histórico a partir de agora é possível (uma tabela a mais na etapa 1). **Decidido em 04/11 (G4): não guardar histórico.** A linha do tempo usa o endereço atual.
-4. **Precisão do ponto em ~100 m.** Suficiente para ver distribuição sem expor a casa. **Decidido em 04/11 (G4):** como o ponto vem do CEP, as pessoas do mesmo CEP se espalham ao longo da rua (posição fixa por pessoa) em vez de empilhar; o agrupamento só acontece com o mapa bem afastado. Código na história G5.
+4. **Precisão do ponto em ~100 m.** Suficiente para ver distribuição sem expor a casa. **Decidido em 04/11 (G4), revisto no mesmo dia (§10):** como o ponto vem do CEP, cada pessoa fica num ponto sorteado perto do trecho da rua do seu CEP (posição fixa por pessoa, dos dois lados da rua, nunca em cima dela e nunca pelo bairro todo). Afastando o mapa, os pontos encolhem e nunca viram grupo com número. CEP de prédio único fica como está. Código na história G5.
 
 ---
 
@@ -303,3 +303,46 @@ Pacote só do mapa para o SQL Editor: `docs/service-v7/mapa/producao-mapa.sql` (
 - CSV protegido contra fórmula no Excel; fila de geocodificação não trava em CEP inválido.
 - O termo agora diz que a liderança também vê célula e ministérios (o que a mesa de trabalho mostra).
 - `scripts/check-local-mapa.ts`: 32 regras, todas passando.
+
+---
+
+## 10. Evolução da jornada (decisões de 2026-11-04)
+
+Referência visual: canvas "Mapa da igreja · evolução" (claude.ai/artifact/QohxddXmM2vnQqsYDNaAEy), fileira "Proposta", pranchas P1 a P16, interativas. É privado do usuário: quem não tiver acesso pede ou trabalha por este capítulo. Histórias G5 a G17 em `docs/service-v7/historias/`.
+
+**Princípio.** O mapa mostra o que existe; quem decide o que fazer é a igreja. Nada de presumir que a igreja quer abrir igrejas ou trabalha com células: sem "Onde falta igreja", sem "Comece por aqui", sem "Sugestão: abrir {grupo}", sem anel de alerta "sem {grupo} a mais de 2 km", sem cartões do mapa no Início (G3 cancelada). A igreja pode criar áreas e rotas, mas o sistema não gera conselho.
+
+**Visual.** Segue a direção visual do Service (canvas "Service, direção visual", pranchas da Biblioteca) e as peças de `app/service/ui/`: base clara com o escuro como modo, cartões flutuantes com sombra, títulos 800, cantos 14/24/28, tons de estado, movimento (`movimento.ts`). O chrome usa o tema da igreja; o mapa usa a paleta fixa (abaixo).
+
+**Tela principal (P1).**
+- Painel de camadas à esquerda, recolhível num trilho de ícones, com a busca no topo. As camadas se somam livremente, cada uma com transparência. Quatro grupos: Igreja (Pessoas da igreja, Concentração da igreja, Sede e congregações, grupos só se a igreja usa), Cidade · IBGE 2022 (Concentração de moradores, Presença da igreja, Idade dos moradores, Comparar idades), Áreas da igreja (uma linha por área), Lugares da região (lugares da igreja, escolas e praças, assistência e saúde, ônibus, igrejas na região, raios da sede).
+- O ícone de cada camada é o próprio marcador (dispensa legenda separada).
+- Barra de ferramentas visível embaixo: Criar área, Traçar rota, Linha do tempo, Marcar lugar, Analisar (abre a Mesa de trabalho); Emergência à parte, em tom de alerta, só para quem coordena.
+- Clicar num ponto abre um balão preso ao marcador com tudo (sem painel lateral); perto da borda abre para o outro lado.
+- Controles no canto inferior direito: 3D (inclina como o Google Earth), aproximar, afastar. Base: mapa claro atual com prédios 3D (satélite descartado: sem fonte grátis nítida com licença comercial).
+- Rodapé discreto: "Nenhum endereço aparece no mapa." · "N pessoas sem CEP" (leva à lista) · "Quem vê o mapa".
+
+**Nomes (revisão de texto).** Pessoas da igreja, Concentração da igreja, Cidade · IBGE 2022, Concentração de moradores, Presença da igreja (pessoas da igreja por morador), Transparência, Idade dos moradores, Comparar idades (igreja e moradores do bairro), Marcar lugar, Analisar, "Falar com {nome}", "N pessoas da igreja moram a até 1 km".
+
+**Marcadores (P6), paleta fixa.** Sede e congregação: balão âmbar `#D6A23E` com silhueta escura de igreja (sede com etiqueta "Sede", congregação menor). Célula ou ponto de pregação: quadrado claro com casinha. Selecionado: fica escuro com halo. Lugar da igreja: círculo escuro com bandeirinha. Lugar da região: círculo claro com borda cinza. Membro `#4F6B26`, novo `#F6F1E0`. Cores de área: os 7 acentos quentes sem o âmbar (reservado à igreja).
+
+**Pessoas (G5).** Ponto sorteado perto do trecho da rua do CEP, fixo por pessoa, nunca em cima da rua; afastando, encolhem e nunca agrupam. Menos de 3 anônimos perto continuam só no número.
+
+**IBGE (G1, G8).** Mancha de calor de moradores; presença igreja x moradores numa cor só em tons (5 classes de `#E5E0D6` a `#B4A596`, "1 a cada X"), sem vermelho e verde; idade dos moradores e comparação com a igreja nas faixas 0 a 9, 10 a 19, 20 a 29, 30 a 59, 60+ (batem com os grupos de 5 anos do Censo; conferir no arquivo). A comparação mostra quantas pessoas da igreja têm data de nascimento.
+
+**Ferramentas.** O painel da ferramenta ocupa o lugar das camadas, com "Voltar ao mapa".
+- Criar área (P5): nasce como quadrado, círculo, juntar bairros ou livre; cantos redimensionam (Shift proporcional), arrastar move, pontos do meio viram cantos novos, ímã nas ruas (Alt desliga), desfazer sempre, números ao vivo. Tipos: Setor, Região pastoral, Atuação. No celular, um dedo edita e dois movem o mapa. Biblioteca prevista: `terra-draw`.
+- Responsável da área ganha acesso automático ao mapa só daquela área (pessoas uma a uma), aparece em Quem vê como "Líder de área" e o pastor pode mudar ou tirar. Só pastor e administração escolhem o responsável.
+- Traçar rota (P9): objetivos em pílulas, paradas reordenáveis, melhor ordem, a pé ou carro, percorrer a área, equipe.
+- Linha do tempo (P10): só números (sem frases de leitura); de perto os pontos de quem chegou acendem, com a cidade toda aparecem bolhas "+N" por bairro.
+- Marcar lugar (P11): só marca lugar da igreja, num balão (nome, tipo, endereço opcional, observação); editar, ocultar e excluir no balão do lugar.
+
+**Analisar (P7).** Atalhos por área da igreja ("Cidade inteira" e cada área), título é o escolhido; coluna Presença com "1 a cada X" e o tom da escala, cidade como linha de referência, sem "vezes menos"; bloco "Idade: igreja e moradores" em barras lado a lado.
+
+**Quem vê o mapa (P8).** Só com liberação do pastor, mais os líderes de área (automático, acima).
+
+**Emergência (P12, P13).** Área com as mesmas ferramentas do Criar área. Cada família vira ponto por situação (cinza sem resposta, verde está bem, ferrugem com anel precisa de ajuda) com balão. Endereço abre com um toque e fica registrado. Mensagem "Vocês estão bem?" pronta e editável numa prévia. A família responde com um toque ("Estamos bem" / "Precisamos de ajuda") e a situação muda sozinha (função nova, G15).
+
+**Celular do painel (P2 a P4).** Folhas que sobem para camadas e para o balão; barra de ferramentas vira fileira rolável.
+
+**App do membro (P14 a P16).** Onde com mapa cheio e folha "Perto de você" (puxa para a lista, toca abre o detalhe); detalhe com "Mandar mensagem para {nome}", "Quero participar" (com vaga) e "Como chegar". Aceite com os 3 pontos em ícone e texto pelo vocabulário da igreja ("seu {grupo}", some se a igreja não usa grupos).

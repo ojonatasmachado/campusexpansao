@@ -26,3 +26,4 @@ INCERTO: conferir no código antes de começar; se já estiver feito, marcar sta
 Decisão do usuário: o agente só prepara as opções e registra a resposta.
 Consentimento e papéis foram decididos (memória e §9 "Decisões tomadas sem consulta"). Tamanho não informado no levantamento; P estimado.
 04/11/2026: decidido pelo usuário. Sem histórico de endereço; pessoas do mesmo CEP espalhadas ao longo da rua, agrupadas só com o mapa afastado (PLANO §7 itens 3 e 4, MANIFESTO 2c.4). Código na G5.
+04/11/2026, revisto na sessão da evolução do mapa: ponto sorteado perto do trecho da rua do CEP (nunca em cima), e afastando os pontos encolhem e nunca agrupam (PLANO §7 item 4 e §10).
