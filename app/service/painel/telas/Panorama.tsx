@@ -4,7 +4,7 @@
    - Cobertura: times incompletos um por um (problemas primeiro), completos em linha única.
    - Cronograma: etapas em ordem, sem edição.
    - Toque num time incompleto abre a aba Posições rolada até esse time.
-   Lei 15: montar ≠ acompanhar. Lei 17: peças da BIBLIOTECA, zero <button> à mão. */
+   Lei 15: montar ≠ acompanhar. Lei 17: peças da BIBLIOTECA, zero elemento nativo à mão. */
 
 import type { CoberturaTime } from "../../modules/escalas/cobertura";
 import type { CronoStep, EventView, MinistryView } from "../tipos";
