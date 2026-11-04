@@ -57,9 +57,15 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **I2** Ações do Início que não navegam · **I5** Ajuda com menos repetição
 - **M2** Setas nos botões do membro · **M3** Retorno e recarga · **M5** Foco no Mural · **I7** Quadros no toque
 - **N2** Integração final de idiomas e moeda (base N1 entregue com recursos desativados) · **F1** Financeiro fases 3 e 4 · **O1** Culto avulso no estilo do assistente
-- **I3** Revisão de UI das telas densas (I9 e D1 feitos) · **G3** Cartões do mapa no Início
-- **M7** Aba Meus times para quem lidera (decisão D2) · **E7** Faltou pelo check-in (decisão D5) · **G5** Pontos do mesmo CEP ao longo da rua (decisão G4)
+- **I3** Revisão de UI das telas densas (I9 e D1 feitos)
+- **M7** Aba Meus times para quem lidera (decisão D2) · **E7** Faltou pelo check-in (decisão D5) · **G5** Pontos perto da rua do CEP (decisão G4, revista em PLANO §10; espera G7)
 - **Onda 1 da D6:** **O8** Quero fazer parte · **O9** Convidar amigo · **O10** Programação que se repete · **O11** Juntar duplicados
+
+### 4b. Evolução da jornada do mapa (decisões de 04/11, `mapa/PLANO.md` §10)
+Ordem por dependência; G3 cancelada (sem avisos automáticos de expansão).
+- **G6** Peças do mapa na biblioteca → **G7** Tela principal nova → **G5** Pontos perto da rua · **G16** Mapa no celular do painel · **G11** Rota, Linha do tempo e Marcar lugar no painel
+- **G10** Criar área com formas e acesso do responsável → **G13** Líderes de área em Quem vê · **G14** Emergência nova → **G15** Resposta da família
+- **G12** Analisar (espera G1 para a idade) · **G8** Camadas do IBGE (espera G1) · **G17** Onde e aceite no app do membro
 
 ### 5. Verificações em código e banco local
 - **E5** Troca de escala ponta a ponta · **M4** Convite e primeiro acesso
