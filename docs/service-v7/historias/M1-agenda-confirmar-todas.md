@@ -32,6 +32,17 @@ Como apps de escala resolvem "confirmar várias de uma vez" no celular:
 - "Confirmar" e "Não posso" em contorno.
 - Cartão compacto, com 4 cabendo na dobra.
 
+## Antes (medição __medir(44))
+- Ações na dobra: **12** (limite app: 12) ✅
+- Palavras na dobra: **70** (limite app: 80) ✅
+- Botões cheios cor: 2
+- Elementos cor: 3
+- Moldura máx aninhada: 2
+- Sobreposições: 0
+- Alvos pequenos: 0
+- Rolagem lateral: false
+- Screenshot: `docs/service-v7/historias/screenshots/M1-antes-agenda-390.png`
+
 ## Notas
 ABERTO: não existe "Confirmar todas" em app/.
 Depende de D1.
