@@ -2,7 +2,7 @@
 
 import { avisar } from "../../lib/avisar";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { Icon } from "../../lib/icons";
 import { formatDateBR, joinDot } from "../../lib/date";
@@ -51,24 +51,28 @@ export function EventDrawer({
   const { comTermos: ct } = useTermos();
   const router = useRouter();
   const [tab, setTab] = useState<"panorama" | "crono" | "posicoes" | "membro">(initialTab ?? "panorama");
-  const [scrollToTimeId, setScrollToTimeId] = useState<string | null>(null);
+  const rolarParaTime = useRef<string | null>(null);
   const eventRoster = roster.filter((assignment) => assignment.event_id === event.id);
   const eventMinistries = event.ministries.length ? ministries.filter((ministry) => event.ministries.includes(ministry.id)) : ministries;
 
   /* Scroll-to-focus reage à montagem do painel Posições, sem setTimeout arbitrário. */
   useEffect(() => {
-    if (tab !== "posicoes" || !scrollToTimeId) return;
-    const el = document.getElementById(`esc-col-${scrollToTimeId}`);
+    const timeId = rolarParaTime.current;
+    if (tab !== "posicoes" || !timeId) return;
+    rolarParaTime.current = null;
+    const el = document.getElementById(`evento-time-${timeId}`);
     if (el) {
+      /* O cabeçalho do drawer é fixo: a seção para logo abaixo dele, sem ficar escondida. */
+      const cabecalho = el.closest(".drawer")?.querySelector<HTMLElement>(".drawer-head");
+      el.style.scrollMarginTop = `${(cabecalho?.offsetHeight ?? 0) + 8}px`;
       el.scrollIntoView({ behavior: "smooth", block: "start" });
       el.focus({ preventScroll: true });
     }
-    setScrollToTimeId(null);
-  }, [tab, scrollToTimeId]);
+  }, [tab]);
 
   /* Toque num time incompleto no Panorama abre a aba Posições rolada até ele. */
   const abrirTimeNoPanorama = (timeId: string) => {
-    setScrollToTimeId(timeId);
+    rolarParaTime.current = timeId;
     setTab("posicoes");
   };
 
@@ -109,7 +113,7 @@ export function EventDrawer({
         ) : (
           <>
             {eventMinistries.map((ministry) => (
-              <DrawerSection title={ministry.name} key={ministry.id}>
+              <DrawerSection title={ministry.name} key={ministry.id} id={`evento-time-${ministry.id}`}>
                 {(ministry.positions.length ? ministry.positions : [{ id: `${ministry.id}-geral`, ministry_id: ministry.id, name: "Equipe", need_count: 1, sort_order: 0 }]).map((position) => {
                   const assignments = eventRoster.filter((assignment) => assignment.position_id === position.id);
                   const valid = assignments.filter((assignment) => assignment.status !== "no").length;
