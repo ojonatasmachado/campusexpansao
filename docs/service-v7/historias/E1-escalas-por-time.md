@@ -2,7 +2,7 @@
 id: E1
 titulo: Reorganizar Escalas por time em tabela
 tipo: codigo
-status: reservada
+status: feita
 quem: claude-opus
 desde: 2026-11-04
 branch: historia/E1-escalas-por-time
@@ -20,7 +20,7 @@ Fonte: LEVEZA B (seção 3), MANIFESTO 2b.1, AUDITORIA-UI-2026-10-20.md seção 
 - `app/service/modules/escalas/CoberturaResumo.tsx` (E2: linha-resumo com link para Panorama; substituiu Cobertura.tsx)
 - `app/service/modules/escalas/cobertura.ts` (cálculo de cobertura por time, mantido)
 - `app/service/modules/escalas/candidatos.ts` (pool de candidatos, mantido)
-- `app/service/ui/Tabela.tsx` (componente compartilhado, lei 17)
+- `app/service/modules/escalas/manifest.ts` (justificativa de densidade, lei 13)
 - `evolucoes/service_app/service-app.css` (CSS existente; novos estilos só em classes da tela ou biblioteca.css)
 
 ## Pronto quando
@@ -49,7 +49,7 @@ Fonte: LEVEZA B (seção 3), MANIFESTO 2b.1, AUDITORIA-UI-2026-10-20.md seção 
 **Teste de pior caso:** 5 domingos no mês, 15 funções no time, nome longo (Dr. João Pedro da Silva Albuquerque Neto), 390px. Medir antes e depois.
 
 ## Notas
-2026-11-04, conferência (claude): tabela função × culto por time, seletor de time, "Preencher automaticamente" no lugar de "Como gerar", celular com um culto por vez. Corrigido na conferência: fotos (as primeiras eram a tela de erro do Next), Selo com texto em cada vaga, botão dentro de botão em "Escalar", legenda que repetia a cor (lei 14), tabela cortada na borda (agora rola, com a coluna da função fixa), setas de 18px no celular, scripts e dependências de trabalho fora do commit. Densidade com scripts/medir-densidade.js, time Louvor: 1366×860 tem 54 ações (limite 25) e 106 palavras (limite 90), FORA DA LEI; antes, no main, 47 ações, 208 palavras e 3 molduras. A casca (menu, busca, avatar) soma 23 das 54. 390×844: 15 ações (limite 12), 31 palavras, FORA DA LEI nas ações. Sem alvo pequeno, sobreposição, rolagem lateral nem erro de console. Falta decidir: justificar no manifesto ou reduzir a tela. E6 (768px) não foi fotografada.
+2026-11-04, conferência (claude): tabela função × culto por time, seletor de time, "Preencher automaticamente" no lugar de "Como gerar", celular com um culto por vez. Corrigido na conferência: fotos (as primeiras eram a tela de erro do Next), Selo com texto em cada vaga, botão dentro de botão em "Escalar", legenda que repetia a cor (lei 14), tabela cortada na borda (agora rola, com a coluna da função fixa), setas de 18px no celular, scripts e dependências de trabalho fora do commit. Densidade com scripts/medir-densidade.js, time Louvor: 1366×860 tem 54 ações (limite 25) e 106 palavras (limite 90), FORA DA LEI; antes, no main, 47 ações, 208 palavras e 3 molduras. A casca (menu, busca, avatar) soma 23 das 54. 390×844: 15 ações (limite 12), 31 palavras, FORA DA LEI nas ações. Sem alvo pequeno, sobreposição, rolagem lateral nem erro de console. Decisão do usuário em 04/11: aceitar com justificativa no manifesto (escalas/manifest.ts, campo densidade). E6 (768px) não foi fotografada e segue no PENDENTES.
 
 ABERTO, parcial: já existe o menu "Mais" com Escala extra, Delegar, QR e Baixar, e o botão "Publicar e avisar".
 Hoje a tela tem esc-events, timesFechados, "Como gerar" em :511 e "Pendências da semana" em :634.
