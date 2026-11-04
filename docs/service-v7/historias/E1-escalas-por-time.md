@@ -2,10 +2,10 @@
 id: E1
 titulo: Reorganizar Escalas por time em tabela
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude-opus
+desde: 2026-11-04
+branch: historia/E1-escalas-por-time
 depende: [D1]
 tamanho: G
 ---
