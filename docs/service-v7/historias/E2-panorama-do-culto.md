@@ -2,7 +2,7 @@
 id: E2
 titulo: Criar Panorama do culto somente leitura
 tipo: codigo
-status: reservada
+status: feita
 quem: claude
 desde: 2026-11-03
 branch: historia/E2-panorama-do-culto
@@ -15,10 +15,13 @@ Não existe tela de acompanhamento do culto. O pastor precisa ver o cronograma e
 Fonte: LEVEZA B2; MANIFESTO 2b.2, 4.16.
 
 ## Arquivos (trilho)
-- `app/service/modules/escalas/`
-- `app/service/painel/telas/Evento.tsx`
-- `app/service/modules/escalas/cobertura.ts`
-- `app/service/modules/registry.ts`
+- `app/service/painel/telas/Inicio.tsx`
+- `app/service/painel/telas/FichaPessoa.tsx`
+- `app/service/painel/tipos.ts`
+- `app/service/layout.tsx`
+- `evolucoes/service_app/service-app.css`
+- `app/service/modules/escalas/CoberturaResumo.tsx`
+- `app/service/painel/telas/Panorama.tsx` / `panorama.css`
 
 ## Pronto quando
 - Cronograma em ordem (event_schedule_items), uma linha por time (events.ministries), problemas primeiro.
@@ -28,5 +31,4 @@ Fonte: LEVEZA B2; MANIFESTO 2b.2, 4.16.
 - Passa a ser a tela dona da cobertura por time (4.16).
 
 ## Notas
-ABERTO: nenhuma ocorrência de "Panorama do culto" no código.
-Arquivos prováveis: novo módulo em app/service/modules/escalas/ (ou painel/telas/Evento.tsx como entrada).
+Feita em 2026-11-04. Panorama read-only com cobertura resumida e cronograma; CoberturaResumo extraído como componente compartilhado.
