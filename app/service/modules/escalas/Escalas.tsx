@@ -535,17 +535,26 @@ export function Escalas({
         <span className="panel-meta" style={{ marginRight: 14 }}><span style={{ color: "var(--olive-soft)" }}>{confirmed}</span> confirmados</span>
         {openSlots > 0 ? <span className="panel-meta"><span style={{ color: "var(--amber)" }}>{openSlots}</span> vagas</span> : null}
       </div>
-      {selectedEvent && (
-        <Cobertura
-          itens={coberturaPorTime(selectedEvent, roster, ministries, scopeMinistryIds)}
-          onAbrir={(timeId) => {
-            setTimesFechados((prev) => { const n = new Set(prev); n.delete(timeId); return n; });
-            const el = document.getElementById(`esc-col-${timeId}`);
-            el?.scrollIntoView({ behavior: "smooth", block: "start" });
-            el?.focus({ preventScroll: true });
-          }}
-        />
-      )}
+      {selectedEvent && (() => {
+        const cob = coberturaPorTime(selectedEvent, roster, ministries, scopeMinistryIds);
+        const incompletos = cob.filter((t) => t.preenchidas < t.total);
+        const vagasAbertas = incompletos.reduce((s, t) => s + (t.total - t.preenchidas), 0);
+        if (incompletos.length === 0) return null;
+        return (
+          <div className="esc-cob-resumo">
+            <span className="panel-meta">
+              <span style={{ color: "var(--amber)" }}>{vagasAbertas}</span> {vagasAbertas === 1 ? "vaga aberta" : "vagas abertas"} em {incompletos.length} {incompletos.length === 1 ? "time" : "times"}
+            </span>
+            <Botao
+              variante="texto"
+              compacto
+              onClick={() => setDrawer({ kind: "event", id: selectedEvent.id, tab: "panorama" })}
+            >
+              Ver panorama →
+            </Botao>
+          </div>
+        );
+      })()}
 
       <div className="esc-cols">
         {visibleMinistries.map((ministry) => {

@@ -15,7 +15,6 @@ import { HelpDot, SetupChecklist, type SetupCounts } from "../../HelpSystem";
 import { JRN_STEPS } from "../caminhada";
 import { noAr } from "../../modules/mural/estado";
 import { coberturaPorTime, vagasFaltando, type CoberturaTime } from "../../modules/escalas/cobertura";
-import { Cobertura } from "../../modules/escalas/Cobertura";
 import { linhaDoPainel, semanaDe } from "../../lib/contexto-dia";
 import { type Ausente } from "../../modules/cuidado/cuidado";
 import type { CriancaAusente } from "../../modules/cuidado/Cuidado";
@@ -511,7 +510,21 @@ export function MiniEvent({
       <div className="mini-main">
         <div className="mini-title">{event.name}</div>
         <div className="mini-sub">{joinDot(event.weekday, formatDateBR(event.eventDate), event.location)}</div>
-        {cobertura && cobertura.length > 0 && <Cobertura itens={cobertura} onAbrir={onAbrirVagas} compacta />}
+        {cobertura && cobertura.length > 0 && (() => {
+ const incompletos = cobertura.filter((t) => t.preenchidas < t.total);
+ const vagasAbertas = incompletos.reduce((s, t) => s + (t.total - t.preenchidas), 0);
+ if (incompletos.length === 0) return null;
+ return (
+ <div className="esc-cob-resumo" style={{ marginTop: 4 }}>
+ <span className="panel-meta">
+ <span style={{ color: "var(--amber)" }}>{vagasAbertas}</span> {vagasAbertas === 1 ? "vaga aberta" : "vagas abertas"} em {incompletos.length} {incompletos.length === 1 ? "time" : "times"}
+ </span>
+ <Botao variante="texto" compacto onClick={(e) => { e.stopPropagation(); setDrawer({ kind: "event", id: event.id, tab: "panorama" }); }}>
+ Ver panorama →
+ </Botao>
+ </div>
+ );
+ })()}
       </div>
       <div className="mini-right flex-row items-center gap-sm">
         <span>{event.time}</span>
