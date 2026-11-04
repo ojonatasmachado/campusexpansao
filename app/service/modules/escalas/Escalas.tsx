@@ -6,34 +6,30 @@
    ServiceExactApp.tsx (import só de tipo, sem ciclo em tempo de execução). */
 
 import { limitesDaSemana } from "./semana";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { friendlyWriteError } from "../../painel/erros";
-import { faltaN, plural } from "../../lib/plural";
+import { plural } from "../../lib/plural";
 import { baixarCsv } from "../../lib/csv";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { formatDateBR, joinDot, todayISO } from "../../lib/date";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
-import { Caret, Icon } from "../../lib/icons";
-import { HelpDot } from "../../HelpSystem";
+import { Icon } from "../../lib/icons";
 import { Av, Chip, MenuMais, PageHead } from "../../painel/ui";
 import { ESCALA_DEFAULT, type EscalaPreset, type EscalaSettings } from "./regras";
 import type { ChurchView, DrawerState, EventView, MinistryView, ModalState, PersonView, RosterAssignmentView, RouteId } from "../../ServiceExactApp";
 import { useTermos } from "../../lib/vocabulario-context";
 import { fraseRodizio, ultimaVezQueServiu } from "./rodizio";
 import { candidatosDisponiveis, cargaDoMes, type Candidato as CandidatoBase } from "./candidatos";
-import { coberturaPorTime, vagasFaltando } from "./cobertura";
-import { CoberturaResumo } from "./CoberturaResumo";
 import { GerarPeriodo } from "./GerarPeriodo";
 import { EscalaExtra } from "./EscalaExtra";
 import { PublicarEscala } from "./PublicarEscala";
 
-import { Botao } from "../../ui/Botao";
+import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Janela } from "../../ui/Janela";
 import { Selo } from "../../ui/Selo";
-import { Cartao } from "../../ui/Cartao";
 import { Segmentado } from "../../ui/Segmentado";
 import { Campo, Entrada } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
@@ -218,7 +214,7 @@ function PresetSaveModal({
     onClose();
   };
   return (
-    <Janela sobretitulo="Configuração padrão" titulo="Salvar como…" texto="Guarda as funções e quantidades atuais de todos os times. Crie uma para “Culto”, outra para “Reunião”, e aplique quando quiser." aoFechar={onClose} corpoBloco
+    <Janela sobretitulo="Configuração padrão" titulo="Salvar como…" texto={'Guarda as funções e quantidades atuais de todos os times. Crie uma para "Culto", outra para "Reunião", e aplique quando quiser.'} aoFechar={onClose} corpoBloco
       rodape={<>
         <Botao onClick={onClose}>Cancelar</Botao>
           <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
@@ -230,7 +226,7 @@ function PresetSaveModal({
 
 export function Escalas({
   foco,
-  gaps,
+  // gaps removido: cobertura vai para Panorama (lei 14), não é usada na tabela por time
   roster,
   people,
   ministries,
@@ -242,7 +238,7 @@ export function Escalas({
   setCheckinEventId,
   onNotifyLeaderRecusa,
 }: {
-  gaps: Array<{ event: EventView; ministry: MinistryView; position: { id: string; name: string } }>;
+  // gaps removido: cobertura vai para Panorama (lei 14)
   roster: RosterAssignmentView[];
   people: PersonView[];
   ministries: MinistryView[];
@@ -257,18 +253,10 @@ export function Escalas({
   /* v7 4.16: veio da cobertura (Início, detalhe do culto): abre neste culto e rola até o time */
   foco?: { eventId: string; timeId?: string } | null;
 }) {
-  const { aindaVaiAcontecer, todayISO } = useRelogioDaIgreja();
+  const { aindaVaiAcontecer } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
-  const semanaAtual = limitesDaSemana(todayISO());
-  const gapsDaSemana = gaps.filter((g) => g.event.eventDate >= semanaAtual.inicio && g.event.eventDate <= semanaAtual.fim && aindaVaiAcontecer(g.event.eventDate, g.event.time) && (!scopeMinistryIds || scopeMinistryIds.includes(g.ministry.id)));
+  // gaps/semanaAtual removidos: cobertura vai para Panorama (lei 14), não é usada na tabela por time
 
-  const [eventId, setEventId] = useState(foco?.eventId ?? events[0]?.id ?? "");
-  useEffect(() => {
-    if (!foco?.timeId) return;
-    const el = document.getElementById(`esc-col-${foco.timeId}`);
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
-    el?.focus({ preventScroll: true });
-  }, [foco?.timeId]);
   const router = useRouter();
   const escalaCfg: EscalaSettings = { ...ESCALA_DEFAULT, ...(church?.settings?.escala ?? {}) };
   const [slotAction, setSlotAction] = useState<{
@@ -279,13 +267,6 @@ export function Escalas({
     assignment?: RosterAssignmentView;
   } | null>(null);
   const [funcEdit, setFuncEdit] = useState<MinistryView | null>(null);
-  /* no celular os times ficam empilhados e cada um recolhe (service-v6.css) */
-  const [timesFechados, setTimesFechados] = useState<Set<string>>(() => new Set());
-  const alternarTime = (id: string) => setTimesFechados((prev) => {
-    const next = new Set(prev);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    return next;
-  });
   const [delegarOpen, setDelegarOpen] = useState(false);
   const [presetSaveOpen, setPresetSaveOpen] = useState(false);
   const [gerando, setGerando] = useState(false);
@@ -293,27 +274,34 @@ export function Escalas({
   const [periodoOpen, setPeriodoOpen] = useState(false);
   const [extraOpen, setExtraOpen] = useState(false);
   const [publicarOpen, setPublicarOpen] = useState(false);
+  /* janela de preenchimento automático */
+  const [autoOpen, setAutoOpen] = useState(false);
   const timesDoEscopo = scopeMinistryIds ? ministries.filter((m) => scopeMinistryIds.includes(m.id)) : ministries;
   const funcoesDoEscopo = new Set(timesDoEscopo.flatMap((m) => m.positions.map((p) => p.id)));
   const rascunhos = roster.filter((r) => r.rascunho && funcoesDoEscopo.has(r.position_id));
 
-  const selectedEvent = events.find((event) => event.id === eventId) ?? events[0] ?? null;
-  const eventRoster = selectedEvent ? roster.filter((assignment) => assignment.event_id === selectedEvent.id) : [];
-  const occupiedPeople = new Set(eventRoster.filter((assignment) => assignment.status !== "no").map((assignment) => assignment.person_id));
-  const misteriosDoEvento = selectedEvent?.ministries.length
-    ? ministries.filter((ministry) => selectedEvent.ministries.includes(ministry.id))
-    : ministries;
-  /* líder real (ou master/pastor pré-visualizando como líder) só vê os times do escopo;
-     equivalente a view.papel/timesVis em evolucoes/service_app/escalas.jsx:384. */
-  const visibleMinistries = scopeMinistryIds
-    ? misteriosDoEvento.filter((ministry) => scopeMinistryIds.includes(ministry.id))
-    : misteriosDoEvento;
-  const confirmed = eventRoster.filter((assignment) => assignment.status === "ok").length;
-  const totalSlots = visibleMinistries.reduce((sum, ministry) => sum + ministry.positions.reduce((total, position) => total + Math.max(1, position.need_count), 0), 0);
-  const openSlots = Math.max(0, totalSlots - eventRoster.filter((assignment) => assignment.status !== "no").length);
+  /* Seletor de time no topo. O foco via prop é resolvido aqui sem useEffect
+     para evitar setState dentro de efeito (lint react-hooks/exhaustive-deps). */
+  const [selectedMinistryId, setSelectedMinistryId] = useState<string>(() => {
+    return timesDoEscopo[0]?.id ?? "";
+  });
 
-  function assignmentsFor(positionId: string) {
-    return eventRoster.filter((assignment) => assignment.position_id === positionId);
+  /* Eventos futuros ordenados por data */
+  const eventosFuturos = events
+    .filter((e) => aindaVaiAcontecer(e.eventDate, e.time))
+    .sort((a, b) => a.eventDate.localeCompare(b.eventDate) || (a.time ?? "").localeCompare(b.time ?? ""));
+
+  /* Estado para navegação mobile (um evento por vez) */
+  const [eventoIdx, setEventoIdx] = useState(0);
+  const eventoIdxPorFoco = foco?.eventId ? eventosFuturos.findIndex((e) => e.id === foco.eventId) : -1;
+  const eventoIdxEfetivo = eventoIdxPorFoco >= 0 ? eventoIdxPorFoco : eventoIdx;
+  const eventoAtual = eventosFuturos[eventoIdxEfetivo] ?? null;
+  const selectedMinistryIdEfetivo = foco?.timeId || selectedMinistryId;
+  const selectedMinistry = timesDoEscopo.find((m) => m.id === selectedMinistryIdEfetivo) ?? timesDoEscopo[0] ?? null;
+
+  function assignmentsFor(positionId: string, eventId?: string) {
+    if (!eventId) return [];
+    return roster.filter((a) => a.event_id === eventId && a.position_id === positionId);
   }
 
   function positionsOf(ministry: MinistryView) {
@@ -327,17 +315,19 @@ export function Escalas({
     return linked.length ? linked : people;
   }
 
-  function candidatosParaVaga(ministry: MinistryView, positionId: string, excluirPersonId?: string): Candidato[] {
+  function candidatosParaVaga(ministry: MinistryView, positionId: string, eventId: string): Candidato[] {
+    const eventAssignments = assignmentsFor(positionId, eventId);
+    const jaNoSlot = new Set(eventAssignments.map((a) => a.person_id));
+    const usados = new Set(eventAssignments.filter((a) => a.status !== "no").map((a) => a.person_id));
+    const selectedEvent = events.find((e) => e.id === eventId);
     if (!selectedEvent) return [];
-    const jaNoSlot = new Set(assignmentsFor(positionId).map((a) => a.person_id));
-    const usados = new Set([...occupiedPeople].filter((id) => id !== excluirPersonId));
     const carga = cargaDoMes(roster, events, selectedEvent);
     return candidatosDisponiveis(candidatePool(ministry), selectedEvent, jaNoSlot, usados, escalaCfg, carga, ultimaVezQueServiu(roster, events, todayISO()));
   }
 
   const setModoEscala = async (modo: EscalaSettings["modo"]) => {
     if (!church?.id) return;
-    await createServiceBrowserClient().schema("service").from("churches").update({ settings: { ...church.settings, escala: { ...escalaCfg, modo } } }).eq("id", church.id);
+    await createServiceBrowserClient().schema("service").from("churches").update({ settings: { ...escalaCfg, modo } }).eq("id", church.id);
     router.refresh();
   };
 
@@ -373,8 +363,9 @@ export function Escalas({
   };
   const recusarAssignment = async (assignment: RosterAssignmentView, ministry: MinistryView) => {
     await conferirGravacao(createServiceBrowserClient().schema("service").from("roster_assignments").update({ status: "no" }).eq("id", assignment.id).select("id").single());
+    const selectedEvent = events.find((e) => e.id === assignment.event_id);
     if (escalaCfg.modo === "automatico" && escalaCfg.naRecusa === "proximo" && selectedEvent) {
-      const proximo = candidatosParaVaga(ministry, assignment.position_id, assignment.person_id).find((c) => c.fit !== "block");
+      const proximo = candidatosParaVaga(ministry, assignment.position_id, assignment.event_id).find((c) => c.fit !== "block");
       if (proximo) {
         await conferirGravacao(createServiceBrowserClient().schema("service").from("roster_assignments").insert({
           organization_id: selectedEvent.organizationId, event_id: selectedEvent.id, position_id: assignment.position_id, person_id: proximo.person.id, status: "ok",
@@ -385,7 +376,7 @@ export function Escalas({
       const lider = ministry.people.find((p) => p.isLeader);
       const voluntario = people.find((p) => p.id === assignment.person_id);
       const posicao = positionsOf(ministry).find((pos) => pos.id === assignment.position_id);
-      if (lider && voluntario) {
+      if (lider && voluntario && selectedEvent) {
         onNotifyLeaderRecusa(lider.personId, assignment.person_id, `${voluntario.name} recusou a escala de ${posicao?.name ?? ministry.name} em ${selectedEvent?.name ?? "um evento"}${selectedEvent?.eventDate ? ` · ${formatDateBR(selectedEvent.eventDate)}` : ""} · vaga em aberto.`);
       }
     }
@@ -393,29 +384,27 @@ export function Escalas({
   };
 
   const gerarAuto = async () => {
-    if (!selectedEvent || gerando) return;
+    if (!eventoAtual || gerando) return;
     setGerando(true);
-    const carga = cargaDoMes(roster, events, selectedEvent);
+    const carga = cargaDoMes(roster, events, eventoAtual);
     const ultimas = ultimaVezQueServiu(roster, events, todayISO());
-    const usados = new Set(occupiedPeople);
     const inserts: Array<{ organization_id: string; event_id: string; position_id: string; person_id: string; status: "ok" | "wait" }> = [];
-    visibleMinistries.forEach((ministry) => {
-      positionsOf(ministry).forEach((position) => {
-        const assignments = assignmentsFor(position.id);
+    if (selectedMinistry) {
+      positionsOf(selectedMinistry).forEach((position) => {
+        const assignments = assignmentsFor(position.id, eventoAtual.id);
         let missing = Math.max(0, Math.max(1, position.need_count) - assignments.filter((a) => a.status !== "no").length);
         if (!missing) return;
         const jaNoSlot = new Set(assignments.map((a) => a.person_id));
-        const candidatos = candidatosDisponiveis(candidatePool(ministry), selectedEvent, jaNoSlot, usados, escalaCfg, carga, ultimas);
+        const usados = new Set(assignments.filter((a) => a.status !== "no").map((a) => a.person_id));
+        const candidatos = candidatosDisponiveis(candidatePool(selectedMinistry), eventoAtual, jaNoSlot, usados, escalaCfg, carga, ultimas);
         for (const candidato of candidatos) {
           if (!missing) break;
           if (candidato.fit === "block") continue;
-          inserts.push({ organization_id: selectedEvent.organizationId, event_id: selectedEvent.id, position_id: position.id, person_id: candidato.person.id, status: escalaCfg.modo === "automatico" ? "ok" : "wait" });
-          usados.add(candidato.person.id);
-          carga[candidato.person.id] = (carga[candidato.person.id] ?? 0) + 1;
+          inserts.push({ organization_id: eventoAtual.organizationId, event_id: eventoAtual.id, position_id: position.id, person_id: candidato.person.id, status: escalaCfg.modo === "automatico" ? "ok" : "wait" });
           missing--;
         }
       });
-    });
+    }
     if (inserts.length) {
       await createServiceBrowserClient().schema("service").from("roster_assignments").insert(inserts);
       router.refresh();
@@ -423,24 +412,16 @@ export function Escalas({
     setGerando(false);
   };
 
-  useEffect(() => {
-    if (escalaCfg.modo === "automatico" && selectedEvent) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- modo automático: gera a escala ao trocar de culto (consulta e grava no banco)
-      gerarAuto();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedEvent?.id, escalaCfg.modo]);
-
   const baixarCSV = () => {
-    if (!selectedEvent) return;
-    const rows: string[][] = [["Time", "Função", "Pessoas"]];
-    visibleMinistries.forEach((ministry) => {
-      positionsOf(ministry).forEach((position) => {
-        const nomes = assignmentsFor(position.id).map((a) => `${people.find((p) => p.id === a.person_id)?.name ?? "?"} (${a.status})`).join(" / ");
-        rows.push([ministry.name, position.name, nomes]);
+    if (!selectedMinistry) return;
+    const rows: string[][] = [["Evento", "Função", "Pessoas"]];
+    eventosFuturos.forEach((event) => {
+      positionsOf(selectedMinistry).forEach((position) => {
+        const noms = assignmentsFor(position.id, event.id).map((a) => `${people.find((p) => p.id === a.person_id)?.name ?? "?"} (${a.status})`).join(" / ");
+        rows.push([joinDot(event.weekday, formatDateBR(event.eventDate)), position.name, noms]);
       });
     });
-    baixarCsv(`escala-${selectedEvent.id}.csv`, rows);
+    baixarCsv(`escala-${selectedMinistry.id}.csv`, rows);
   };
 
   const aplicarPreset = async (preset: EscalaPreset) => {
@@ -462,175 +443,183 @@ export function Escalas({
 
   /* líder de time ouve quais times está vendo; a gestão vê todos e não precisa do aviso */
   const perspectiveText = scopeMinistryIds
-    ? (visibleMinistries.length > 1 ? `Você está vendo os ${visibleMinistries.length} times que lidera.` : `Você está vendo só o ${visibleMinistries[0]?.name ?? "seu time"}.`)
+    ? (timesDoEscopo.length > 1 ? `Você está vendo os ${timesDoEscopo.length} times que lidera.` : `Você está vendo só o ${timesDoEscopo[0]?.name ?? "seu time"}.`)
     : "";
 
+  /* Legenda inline com bolinhas coloridas */
   return (
     <div className="content wide">
       <PageHead
-        title="Escalas por evento"
+        title="Escalas por time"
         eyebrow="Operação"
         subtitle={scopeMinistryIds ? perspectiveText : undefined}
-        help={ct(`Monte quem serve em cada {culto}. As pessoas confirmam ou recusam direto no celular, e a vaga em aberto aparece em vermelho. Toque numa pessoa para confirmar, trocar ou remover; em Escalar para preencher a vaga. ${perspectiveText}`)}
+        help={ct(`Monte quem serve em cada {culto} por time. As pessoas confirmam ou recusam direto no celular, e a vaga em aberto aparece na tabela. Toque numa pessoa para confirmar, trocar ou remover; em Escalar para preencher a vaga. ${perspectiveText}`)}
         action={
           <>
-            <Botao onClick={() => setPeriodoOpen(true)}><Icon name="agenda" size={15} /> Montar período</Botao>
+            <Botao variante="discreto" onClick={() => setAutoOpen(true)}><Icon name="escalas" size={15} /> Preencher automaticamente</Botao>
             <MenuMais acoes={[
+              { rotulo: "Montar período", icone: "agenda", onClick: () => setPeriodoOpen(true) },
               { rotulo: "Escala extra", icone: "add", onClick: () => setExtraOpen(true) },
               { rotulo: "Delegar a gestão", icone: "membros", onClick: () => setDelegarOpen(true) },
-              { rotulo: "QR do check-in", icone: "cultos", onClick: () => setCheckinEventId(selectedEvent?.id ?? null), desligada: !selectedEvent },
-              { rotulo: "Baixar a escala", icone: "relatorios", onClick: baixarCSV, desligada: !selectedEvent },
+              { rotulo: "QR do check-in", icone: "cultos", onClick: () => setCheckinEventId(eventoAtual?.id ?? null), desligada: !eventoAtual },
+              { rotulo: "Baixar a escala", icone: "relatorios", onClick: baixarCSV, desligada: !selectedMinistry },
             ]} />
             <Botao variante="principal" onClick={() => setPublicarOpen(true)}>Publicar e avisar{rascunhos.length ? ` (${rascunhos.length})` : ""}</Botao>
           </>
         }
       />
 
-      <div className="esc-events">
-        {events.map((event) => (
-          <Acao className={`esc-event ${selectedEvent?.id === event.id ? "on" : ""}`} key={event.id} onClick={() => setEventId(event.id)}>
-            <span className="esc-event-day">{joinDot(event.weekday, formatDateBR(event.eventDate))}</span>
-            <span className="esc-event-name">{event.name}</span>
-            <span className="esc-event-time">{joinDot(event.time, event.location)}</span>
-            {(() => {
-              /* v7 4.16: um resumo por culto; a cobertura por time aparece embaixo, no culto escolhido */
-              const falta = vagasFaltando(coberturaPorTime(event, roster, ministries, scopeMinistryIds));
-              const emRascunho = rascunhos.some((r) => r.event_id === event.id);
-              return <span className={`esc-event-cob ${falta ? "falta" : "ok"}`}>{joinDot(falta ? faltaN(falta, "vaga") : "completo", emRascunho && "rascunho")}</span>;
-            })()}
-          </Acao>
-        ))}
-      </div>
-
-      <details className="esc-gerar">
-        <summary><Icon name="escalas" size={15} /> Como gerar <span className="esc-gerar-modo">{escalaCfg.modo === "manual" ? "Manual" : escalaCfg.modo === "assistido" ? "Assistida" : "Automática"}</span><Caret size={14} /></summary>
-        <div className="esc-modo">
-        <span className="esc-modo-lbl">Geração da escala</span>
-        <Segmentado className="seg-sm">
-          {(["manual", "assistido", "automatico"] as const).map((key) => (
-            <Opcao key={key} marcada={escalaCfg.modo === key} onClick={() => setModoEscala(key)}>{key === "manual" ? "Manual" : key === "assistido" ? "Assistida" : "Automática"}</Opcao>
+      {/* Seletor de time */}
+      {timesDoEscopo.length > 1 && (
+        <Segmentado rolavel esconderEsfumadoNoFim style={{ marginBottom: 16 }}>
+          {timesDoEscopo.map((m) => (
+            <Opcao key={m.id} marcada={selectedMinistryIdEfetivo === m.id} onClick={() => setSelectedMinistryId(m.id)}>{m.name}</Opcao>
           ))}
         </Segmentado>
-        <span className="esc-modo-hint">
-          {escalaCfg.modo === "manual" ? "Você monta tudo na mão." : null}
-          {escalaCfg.modo === "assistido" ? "O sistema sugere os nomes; você confirma cada um." : null}
-          {escalaCfg.modo === "automatico" ? "O sistema gera e já confirma. Na recusa, chama o próximo apto." : null}
-        </span>
-        {escalaCfg.modo !== "manual" ? <Botao compacto desativado={gerando} onClick={gerarAuto}><Icon name="escalas" size={14} /> {gerando ? "Gerando…" : (escalaCfg.modo === "automatico" ? "Gerar a escala" : "Sugerir nomes")}</Botao> : null}
-        <span className="tb-spacer" />
-        <span className="esc-preset">
-          <Icon name="escalas" size={13} />
-          <Selecao valor="" vazio="Aplicar configuração…" rotulo="Aplicar configuração"
-            aoMudar={(v) => { const preset = (church?.settings?.escalaPresets ?? []).find((p) => p.id === v); if (preset) aplicarPreset(preset); }}
-            opcoes={(church?.settings?.escalaPresets ?? []).map((preset) => ({ v: preset.id, l: preset.nome }))} />
-          <Acao className="esc-preset-save" onClick={() => setPresetSaveOpen(true)}>Salvar atual</Acao>
-        </span>
-        <Acao className="esc-modo-cfg" onClick={() => setRoute("config")}><Icon name="config" size={13} /> Regras</Acao>
-      </div>
-
-      </details>
-      <div className="toolbar" style={{ marginTop: 4 }}>
-        <span className="panel-meta">{selectedEvent ? <><b style={{ color: "var(--light)" }}>{selectedEvent.name}</b>{joinDot(selectedEvent.weekday, selectedEvent.time) ? ` · ${joinDot(selectedEvent.weekday, selectedEvent.time)}` : ""}</> : "Selecione um evento"}</span>
-        <div className="tb-spacer" />
-        <span className="panel-meta" style={{ marginRight: 14 }}><span style={{ color: "var(--olive-soft)" }}>{confirmed}</span> confirmados</span>
-        {openSlots > 0 ? <span className="panel-meta"><span style={{ color: "var(--amber)" }}>{openSlots}</span> vagas</span> : null}
-      </div>
-      {selectedEvent && (
-        <CoberturaResumo
-          cobertura={coberturaPorTime(selectedEvent, roster, ministries, scopeMinistryIds)}
-          onVerPanorama={() => setDrawer({ kind: "event", id: selectedEvent.id, tab: "panorama" })}
-        />
       )}
 
-      <div className="esc-cols">
-        {visibleMinistries.map((ministry) => {
-          const ministryPositions = positionsOf(ministry);
-          const ministryNeed = ministryPositions.reduce((sum, position) => sum + Math.max(1, position.need_count), 0);
-          /* um número por time: vagas preenchidas (confirmado ou aguardando) sobre o total */
-          const ministryFilled = ministryPositions.reduce((sum, position) => sum + Math.min(Math.max(1, position.need_count), assignmentsFor(position.id).filter((assignment) => assignment.status !== "no").length), 0);
-          return (
-            <div className={`esc-col${timesFechados.has(ministry.id) ? " closed" : ""}`} key={ministry.id} id={`esc-col-${ministry.id}`} tabIndex={-1}>
-              <div className="esc-col-head">
-                <span className="esc-col-mark"><Icon name="times" size={17} /></span>
-                <div className="esc-col-info">
-                  <div className="esc-col-tname">{ministry.name}</div>
-                  <div className="esc-col-tmeta">{ministryFilled >= ministryNeed ? `Completo · ${plural(ministryNeed, "vaga")}` : `${ministryFilled} de ${plural(ministryNeed, "vaga")}`}</div>
-                </div>
-                <Acao className="esc-col-edit" title="Editar funções deste time" onClick={() => setFuncEdit(ministry)}><Icon name="config" size={14} /></Acao>
-                <Acao className="esc-col-tog" aria-expanded={!timesFechados.has(ministry.id)} aria-label={timesFechados.has(ministry.id) ? `Abrir ${ministry.name}` : `Recolher ${ministry.name}`} onClick={() => alternarTime(ministry.id)}>
-                  <Icon name="avancar" size={15} />
-                </Acao>
-              </div>
-              <div className="esc-col-body">
-                {ministryPositions.map((position) => {
-                  const assignments = assignmentsFor(position.id);
-                  const validAssignments = assignments.filter((assignment) => assignment.status !== "no");
-                  const missing = Math.max(0, Math.max(1, position.need_count) - validAssignments.length);
-                  return (
-                    <div className="esc-fnblock" key={position.id}>
-                      <div className="esc-fnblock-head">
-                        <span className="esc-fnblock-name">{position.name}</span>
-                        <span className={`esc-fnblock-need ${missing > 0 ? "gap" : ""}`}>{validAssignments.length}/{Math.max(1, position.need_count)}</span>
-                      </div>
-                      <div className="esc-fnblock-slots">
-                        {assignments.map((assignment) => {
-                          const person = people.find((candidate) => candidate.id === assignment.person_id);
-                          return (
-                            <Acao
-                              key={assignment.id}
-                              className={`esc-person ${assignment.status === "no" ? "is-no" : ""}${assignment.rascunho ? " is-draft" : ""}`}
-                              title={assignment.rascunho ? "Rascunho: a pessoa ainda não foi avisada" : undefined}
-                             
-                              onClick={() => selectedEvent && setSlotAction({ kind: "slot", event: selectedEvent, ministry, position, assignment })}
-                            >
-                              <Av name={person?.name ?? "Voluntário"} size="xs" photoUrl={person?.photoUrl} />
-                              <span className="esc-person-name">{person?.name.split(" ")[0] ?? "Pessoa"}</span>
-                              <span className={`slot-st ${assignment.status}`} />
-                            </Acao>
-                          );
-                        })}
-                        {Array.from({ length: missing }).map((_, index) => (
-                          <Acao
-                            key={`missing-${position.id}-${index}`}
-                            className="esc-vaga"
-                           
-                            onClick={() => selectedEvent && setSlotAction({ kind: "assign", event: selectedEvent, ministry, position })}
-                          >
-                            Escalar
-                          </Acao>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-        {visibleMinistries.length === 0 ? <div className="empty" style={{ flex: 1 }}>Nenhum time neste evento.</div> : null}
-      </div>
-
-      <div className="st-legend">
-        <Selo tom="ok">Confirmado</Selo>
-        <Selo tom="pendente">Aguardando</Selo>
-        <Selo tom="cuidado">Não pode</Selo>
-        <Selo tom="aberto">Vaga aberta</Selo>
-        {rascunhos.length > 0 && <Selo tom="rascunho">Rascunho, ainda não publicado</Selo>}
-      </div>
-
-      {gapsDaSemana.length > 0 ? (
-        <Cartao style={{ marginTop: 18 }}>
-          <div className="panel-head"><span className="panel-title"><Icon name="escalas" size={14} /> Pendências da semana <HelpDot text="Funções da programação futura desta semana que ainda não têm todas as vagas preenchidas." /></span><span className="panel-meta">{plural(gapsDaSemana.length, "função para conferir", "funções para conferir")}</span></div>
-          <div className="panel-body flush">
-            {gapsDaSemana.slice(0, 5).map((gap) => <div className="gap-row" key={`${gap.event.id}-${gap.position.id}`}><div className="gap-ic wait">!</div><div className="mini-main"><div className="mini-title">{gap.position.name} <span style={{ color: "var(--muted)", fontWeight: 400 }}>· {gap.ministry.name}</span></div><div className="mini-sub">{joinDot(gap.event.name, gap.event.time)}</div></div></div>)}
+      {/* Tabela função × culto (desktop) / Lista vertical (mobile) */}
+      {selectedMinistry && (
+        <div className="esc-tbl-wrap">
+          {/* Navegação mobile */}
+          <div className="esc-tbl-nav">
+            <BotaoIcone className="fin-mes-b" rotulo="Evento anterior" desativado={eventoIdx === 0} onClick={() => setEventoIdx((i) => i - 1)}>
+              <Icon name="voltar" size={15} />
+            </BotaoIcone>
+            <span className="esc-tbl-nav-label">
+              {eventoAtual ? joinDot(eventoAtual.weekday, formatDateBR(eventoAtual.eventDate), eventoAtual.time) : "Nenhum evento"}
+            </span>
+            <BotaoIcone className="fin-mes-b" rotulo="Próximo evento" desativado={eventoIdx >= eventosFuturos.length - 1} onClick={() => setEventoIdx((i) => i + 1)}>
+              <Icon name="avancar" size={15} />
+            </BotaoIcone>
           </div>
-        </Cartao>
-      ) : null}
+
+          {/* Tabela desktop */}
+          <table className="esc-tbl">
+            <thead>
+              <tr>
+                <th className="esc-tbl-fn">Função</th>
+                {eventosFuturos.map((ev) => (
+                  <th key={ev.id} className={`esc-tbl-ev${ev.id === eventoAtual?.id ? " on" : ""}`}>
+                    <Acao className="esc-tbl-ev-btn" onClick={() => setEventoIdx(eventosFuturos.indexOf(ev))} aria-label={`Ver ${joinDot(ev.weekday, formatDateBR(ev.eventDate))} às ${ev.time}`}>
+                      <span className="esc-tbl-ev-dia">{joinDot(ev.weekday, formatDateBR(ev.eventDate))}</span>
+                      <span className="esc-tbl-ev-time">{ev.time}</span>
+                    </Acao>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {positionsOf(selectedMinistry).map((position) => {
+                const need = Math.max(1, position.need_count);
+                return (
+                  <tr key={position.id}>
+                    <td className="esc-tbl-fn">{position.name}</td>
+                    {eventosFuturos.map((ev) => {
+                      const assignments = assignmentsFor(position.id, ev.id);
+                      const confirmados = assignments.filter((a) => a.status === "ok");
+                      const pendentes = assignments.filter((a) => a.status === "wait");
+                      const recusados = assignments.filter((a) => a.status === "no");
+                      const missing = Math.max(0, need - confirmados.length - pendentes.length);
+                      return (
+                        <td key={`${position.id}-${ev.id}`} className={`esc-tbl-cell${ev.id === eventoAtual?.id ? " esc-tbl-cell-active" : ""}`}>
+                          <div className="esc-tbl-slots">
+                            {[...confirmados, ...pendentes].slice(0, need).map((a) => {
+                              const person = people.find((p) => p.id === a.person_id);
+                              return (
+                                <Acao
+                                  key={a.id}
+                                  className="esc-tbl-person"
+                                  onClick={() => setSlotAction({ kind: "slot", event: ev, ministry: selectedMinistry, position: { ...position, need_count: need }, assignment: a })}
+                                >
+                                  <Av name={person?.name ?? "Voluntário"} size="xs" photoUrl={person?.photoUrl} />
+                                  <span className="esc-tbl-name">{person?.name.split(" ")[0] ?? "Pessoa"}</span>
+                                  <Selo tom={a.status === "ok" ? "ok" : "pendente"} tamanho="lista">{a.status === "ok" ? "Confirmado" : "Aguardando"}</Selo>
+                                </Acao>
+                              );
+                            })}
+                            {recusados.map((a) => {
+                              const person = people.find((p) => p.id === a.person_id);
+                              return (
+                                <Acao
+                                  key={a.id}
+                                  className="esc-tbl-person is-no"
+                                  onClick={() => setSlotAction({ kind: "slot", event: ev, ministry: selectedMinistry, position: { ...position, need_count: need }, assignment: a })}
+                                >
+                                  <Av name={person?.name ?? "Voluntário"} size="xs" photoUrl={person?.photoUrl} />
+                                  <span className="esc-tbl-name">{person?.name.split(" ")[0] ?? "Pessoa"}</span>
+                                  <Selo tom="cuidado" tamanho="lista">Não pode</Selo>
+                                </Acao>
+                              );
+                            })}
+                            {Array.from({ length: missing }).map((_, i) => (
+                              <Botao
+                                key={`vaga-${i}`}
+                                variante="discreto"
+                                compacto
+                                className="esc-tbl-vaga"
+                                onClick={() => setSlotAction({ kind: "assign", event: ev, ministry: selectedMinistry, position: { ...position, need_count: need } })}
+                              >
+                                Escalar
+                              </Botao>
+                            ))}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {/* Cada vaga já diz o estado no Selo; legenda que repete a cor é proibida (lei 14) */}
+          {rascunhos.length > 0 && (
+            <div className="esc-tbl-legend">
+              <Selo tom="rascunho" tamanho="lista">Rascunho</Selo>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!selectedMinistry && <Vazio titulo="Nenhum time disponível" texto="Você ainda não lidera nenhum time ou não há times neste escopo." />}
+
+      {/* Janela de preenchimento automático */}
+      {autoOpen && (
+        <Janela sobretitulo="Preencher automaticamente" titulo="Como gerar a escala" texto="Escolha o modo de geração e aplique configurações salvas." aoFechar={() => setAutoOpen(false)} corpoBloco
+          rodape={<>
+            <Botao onClick={() => setAutoOpen(false)}>Fechar</Botao>
+            <Botao variante="principal" desativado={gerando} onClick={gerarAuto}><Icon name="escalas" size={14} /> {gerando ? "Gerando…" : (escalaCfg.modo === "automatico" ? "Gerar a escala" : "Sugerir nomes")}</Botao>
+          </>}>
+            <div className="esc-modo">
+              <span className="esc-modo-lbl">Geração da escala</span>
+              <Segmentado className="seg-sm">
+                {(["manual", "assistido", "automatico"] as const).map((key) => (
+                  <Opcao key={key} marcada={escalaCfg.modo === key} onClick={() => setModoEscala(key)}>{key === "manual" ? "Manual" : key === "assistido" ? "Assistida" : "Automática"}</Opcao>
+                ))}
+              </Segmentado>
+              <span className="esc-modo-hint">
+                {escalaCfg.modo === "manual" ? "Você monta tudo na mão." : null}
+                {escalaCfg.modo === "assistido" ? "O sistema sugere os nomes; você confirma cada um." : null}
+                {escalaCfg.modo === "automatico" ? "O sistema gera e já confirma. Na recusa, chama o próximo apto." : null}
+              </span>
+              <span className="tb-spacer" />
+              <span className="esc-preset">
+                <Icon name="escalas" size={13} />
+                <Selecao valor="" vazio="Aplicar configuração…" rotulo="Aplicar configuração"
+                  aoMudar={(v) => { const preset = (church?.settings?.escalaPresets ?? []).find((p) => p.id === v); if (preset) aplicarPreset(preset); }}
+                  opcoes={(church?.settings?.escalaPresets ?? []).map((preset) => ({ v: preset.id, l: preset.nome }))} />
+                <Acao className="esc-preset-save" onClick={() => setPresetSaveOpen(true)}>Salvar atual</Acao>
+              </span>
+              <Acao className="esc-modo-cfg" onClick={() => setRoute("config")}><Icon name="config" size={13} /> Regras</Acao>
+            </div>
+        </Janela>
+      )}
 
       {slotAction ? (
         <RosterActionModal
           action={slotAction}
-          candidatos={candidatosParaVaga(slotAction.ministry, slotAction.position.id, slotAction.assignment?.person_id)}
+          candidatos={candidatosParaVaga(slotAction.ministry, slotAction.position.id, slotAction.event.id)}
           maxPorMes={escalaCfg.maxPorMes}
           people={people}
           onClose={() => setSlotAction(null)}
@@ -638,13 +627,13 @@ export function Escalas({
           onPendente={deixarPendenteAssignment}
           onRecusar={(assignment) => recusarAssignment(assignment, slotAction.ministry)}
           onRemover={removerAssignment}
-          onEscalar={async (personId) => { if (!selectedEvent) throw new Error("Selecione o evento novamente."); await escalarPessoa(selectedEvent, slotAction.position.id, personId); }}
+          onEscalar={async (personId) => { await escalarPessoa(slotAction.event, slotAction.position.id, personId); }}
           onTrocar={trocarAssignment}
           setDrawer={setDrawer}
         />
       ) : null}
       {funcEdit ? <FuncoesEscalaModal ministry={funcEdit} onClose={() => setFuncEdit(null)} onRefresh={() => router.refresh()} /> : null}
-      {delegarOpen ? <DelegarModal ministries={visibleMinistries} church={church} onClose={() => setDelegarOpen(false)} onRefresh={() => router.refresh()} /> : null}
+      {delegarOpen ? <DelegarModal ministries={timesDoEscopo} church={church} onClose={() => setDelegarOpen(false)} onRefresh={() => router.refresh()} /> : null}
       {periodoOpen ? (
         <GerarPeriodo
           ministries={timesDoEscopo}
@@ -654,12 +643,12 @@ export function Escalas({
           church={church}
           cfg={escalaCfg}
           onClose={() => setPeriodoOpen(false)}
-          onSalvo={(id) => { setPeriodoOpen(false); if (id) setEventId(id); router.refresh(); }}
+          onSalvo={(id) => { setPeriodoOpen(false); if (id) setEventoIdx(events.findIndex((e) => e.id === id)); router.refresh(); }}
         />
       ) : null}
-      {extraOpen ? <EscalaExtra ministries={timesDoEscopo} church={church} onClose={() => setExtraOpen(false)} onCriado={(id) => { setExtraOpen(false); setEventId(id); router.refresh(); }} /> : null}
+      {extraOpen ? <EscalaExtra ministries={timesDoEscopo} church={church} onClose={() => setExtraOpen(false)} onCriado={(id) => { setExtraOpen(false); setEventoIdx(events.findIndex((e) => e.id === id)); router.refresh(); }} /> : null}
       {publicarOpen ? <PublicarEscala rascunhos={rascunhos} events={events} organizationId={church?.organizationId ?? ""} onClose={() => setPublicarOpen(false)} onPublicado={() => { setPublicarOpen(false); router.refresh(); }} /> : null}
-      {presetSaveOpen ? <PresetSaveModal ministries={visibleMinistries} church={church} onClose={() => setPresetSaveOpen(false)} onRefresh={() => router.refresh()} /> : null}
+      {presetSaveOpen ? <PresetSaveModal ministries={timesDoEscopo} church={church} onClose={() => setPresetSaveOpen(false)} onRefresh={() => router.refresh()} /> : null}
     </div>
   );
 }
@@ -755,7 +744,7 @@ function RosterActionModal({
   const isSwap = trocando || action.kind === "swap";
   /* v7 4.14: busca, filtro "Disponíveis", sugeridos pelo rodízio e quem não
      pode agrupado com o motivo em texto */
-  const sem = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const sem = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   const achados = candidatos.filter((c) => !busca.trim() || sem(c.person.name).includes(sem(busca.trim())));
   const podem = achados.filter((c) => c.fit !== "block" && (!soDisponiveis || c.fit === "good"));
   const sugeridos = busca.trim() ? [] : podem.filter((c) => c.fit === "good").slice(0, 3);

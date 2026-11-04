@@ -24,4 +24,20 @@ export default defineModule({
   rotas: [{ caminho: "/service/checkin", tipo: "qr" }],
   vocabulario: ["culto", "voluntario"],
   historico: ["serviu", "faltou", "trocou"],
+  densidade: [
+    {
+      tela: "Escalas por time",
+      tamanho: "1366×860",
+      medido: { palavras: 106, acoes: 54, sobreposicoes: 0 },
+      limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
+      motivo: "A escala é uma grade de vagas: cada vaga vazia de cada culto do mês é o botão de escalar, e escondê-la custaria mais toques ao líder. A casca do painel (menu, busca e avatar) soma 23 das 54 ações. Antes da E1 a tela tinha 47 ações, 208 palavras e 3 molduras.",
+    },
+    {
+      tela: "Escalas por time",
+      tamanho: "390×844",
+      medido: { palavras: 31, acoes: 15, sobreposicoes: 0 },
+      limite: { palavras: 80, acoes: 12, sobreposicoes: 0 },
+      motivo: "Um culto por vez; as 3 ações acima do teto são as duas setas entre cultos e a segunda vaga da função, que é o próprio botão de escalar.",
+    },
+  ],
 });
