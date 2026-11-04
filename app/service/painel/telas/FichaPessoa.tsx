@@ -583,6 +583,7 @@ export function EntityDrawer({
 
   const event = events.find((item) => item.id === drawer.id);
   if (!event) return null;
+  const initialTab = drawer.kind === "event" && "tab" in drawer ? (drawer as { tab?: "panorama" | "crono" | "posicoes" | "membro" }).tab : undefined;
   return (
     <EventDrawer
       event={event}
@@ -596,6 +597,7 @@ export function EntityDrawer({
       setDrawer={setDrawer}
       setRoute={setRoute}
       setShareEventId={setShareEventId}
+      initialTab={initialTab}
     />
   );
 }

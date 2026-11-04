@@ -12,6 +12,7 @@ import { Av } from "../ui";
 import { friendlyWriteError } from "../erros";
 import { type CoberturaTime } from "../../modules/escalas/cobertura";
 import { Cobertura } from "../../modules/escalas/Cobertura";
+import { Panorama } from "./Panorama";
 import { ROUTES } from "../comum";
 import { DrawerSection, DrawerShell, TimePicker } from "../campos";
 import type { CronoStep, DrawerState, EventRsvpView, EventView, MinistryView, PersonView, RosterAssignmentView } from "../tipos";
@@ -35,6 +36,7 @@ export function EventDrawer({
   setDrawer,
   setRoute,
   setShareEventId,
+  initialTab,
 }: {
   event: EventView;
   ministries: MinistryView[];
@@ -47,12 +49,23 @@ export function EventDrawer({
   setDrawer: (drawer: DrawerState) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
   setShareEventId: (id: string) => void;
+  initialTab?: "panorama" | "crono" | "posicoes" | "membro";
 }) {
   const { comTermos: ct } = useTermos();
   const router = useRouter();
-  const [tab, setTab] = useState<"crono" | "posicoes" | "membro">("crono");
+  const [tab, setTab] = useState<"panorama" | "crono" | "posicoes" | "membro">(initialTab ?? "panorama");
   const eventRoster = roster.filter((assignment) => assignment.event_id === event.id);
   const eventMinistries = event.ministries.length ? ministries.filter((ministry) => event.ministries.includes(ministry.id)) : ministries;
+
+  /* Toque num time incompleto no Panorama abre a aba Posições rolada até ele. */
+  const abrirTimeNoPanorama = (timeId: string) => {
+    setTab("posicoes");
+    setTimeout(() => {
+      const el = document.getElementById(`esc-col-${timeId}`);
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+      el?.focus({ preventScroll: true });
+    }, 50);
+  };
 
   return (
     <DrawerShell onClose={onClose} wide>
@@ -61,15 +74,23 @@ export function EventDrawer({
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{joinDot(event.weekday, formatDateBR(event.eventDate))}</div>
         <div className="profile-name">{event.name}</div>
         <div className="profile-role">{joinDot(event.time, event.location, event.kind)}</div>
-        <Cobertura itens={cobertura} onAbrir={onAbrirVagas} />
         <Segmentado style={{ marginTop: 14 }}>
+          <Opcao marcada={tab === "panorama"} onClick={() => setTab("panorama")}>Panorama</Opcao>
           <Opcao marcada={tab === "crono"} onClick={() => setTab("crono")}>Cronograma</Opcao>
           <Opcao marcada={tab === "posicoes"} onClick={() => setTab("posicoes")}>Posições</Opcao>
           <Opcao marcada={tab === "membro"} onClick={() => setTab("membro")}>Para o membro</Opcao>
         </Segmentado>
       </div>
       <div className="drawer-body">
-        {tab === "membro" ? (
+        {tab === "panorama" ? (
+          <Panorama
+            event={event}
+            ministries={eventMinistries}
+            cobertura={cobertura}
+            schedule={event.schedule ?? []}
+            onAbrirTime={abrirTimeNoPanorama}
+          />
+        ) : tab === "membro" ? (
           <EventoParaMembro event={event} rsvps={rsvps} people={people} onSaved={() => router.refresh()} />
         ) : tab === "crono" ? (
           <>
