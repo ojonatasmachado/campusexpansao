@@ -24,7 +24,6 @@ import { fraseRodizio, ultimaVezQueServiu } from "./rodizio";
 import { candidatosDisponiveis, cargaDoMes, type Candidato as CandidatoBase } from "./candidatos";
 import { coberturaPorTime, vagasFaltando } from "./cobertura";
 import { CoberturaResumo } from "./CoberturaResumo";
-import { Cobertura } from "./Cobertura";
 import { GerarPeriodo } from "./GerarPeriodo";
 import { EscalaExtra } from "./EscalaExtra";
 import { PublicarEscala } from "./PublicarEscala";
