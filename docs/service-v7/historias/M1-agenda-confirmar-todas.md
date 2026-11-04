@@ -2,7 +2,7 @@
 id: M1
 titulo: Agenda com uma ação cheia para confirmar todas
 tipo: codigo
-status: reservada
+status: feita
 quem: claude
 desde: 2026-11-05
 branch: historia/M1-agenda-confirmar-todas
