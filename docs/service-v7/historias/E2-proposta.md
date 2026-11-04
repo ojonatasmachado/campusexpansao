@@ -1,7 +1,9 @@
 # Proposta de desenho · E2 Panorama do culto
 
 Data: 2026-11-03
-Status: aguardando OK para implementação (PARTE 2)
+Status: feita (2026-11-04)
+
+Trilho: Inicio.tsx, FichaPessoa.tsx, tipos.ts, layout.tsx, service-app.css
 
 ---
 
