@@ -45,6 +45,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **D4** Capítulo "Interface do Service" no Brand Book (galeria viva pronta em /service/demo/biblioteca)
 
 ### 2. Leveza, liberada pelo D1 em 28/10 (maior ganho para quem usa)
+- **E1** Escalas por time
 - **M1** Agenda do membro com "Confirmar todas"
 - **E4** Indisponibilidade por período e por time
 - **E3** Cobertura vira linha no "Para resolver"
@@ -65,7 +66,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **E5** Troca de escala ponta a ponta · **M4** Convite e primeiro acesso
 - **O6** Kids e Financeiro com volume · **Q4** Push e imagem com serviços reais
 
-- **A4** Ponto branco · **Q9** Seletores acessíveis
+- **E6** Escalas em 768px (some com o E1) · **A4** Ponto branco · **Q9** Seletores acessíveis
 
 ### 6. Precisam de aparelho, pessoas ou dados de fora
 - **O7** Kids com famílias reais (continuação externa da O6)

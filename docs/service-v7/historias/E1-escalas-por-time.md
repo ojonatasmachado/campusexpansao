@@ -2,7 +2,7 @@
 id: E1
 titulo: Reorganizar Escalas por time em tabela
 tipo: codigo
-status: feita
+status: reservada
 quem: claude-opus
 desde: 2026-11-04
 branch: historia/E1-escalas-por-time
@@ -32,7 +32,7 @@ Fonte: LEVEZA B (seção 3), MANIFESTO 2b.1, AUDITORIA-UI-2026-10-20.md seção 
 
 ## Lei 16 · Mercado antes do desenho
 
-**Voluts** (4,95★ em 6.680 avaliações, App Store 2026): organiza por **time**, não por culto. O líder escolhe o time no topo e vê as funções nas linhas e os cultos nas colunas. Cada célula é uma vaga; "Sem pessoa" já é o botão de escalar. Status só pela cor da célula (verde=confirmado, amarelo=pendente, vermelho=recusou, cinza=aberto). Duas ações no topo: publicar e preencher automaticamente. Legenda de uma linha com bolinhas, sem chips. Meta alcançada: ~22 itens clicáveis e ~60 palavras na dobra.
+**Voluts** (App Store, Gileade Sistemas, 48 avaliações em 11/2026): o líder monta a escala pelo celular evitando conflito de disponibilidade; o voluntário vê a agenda, pede troca e faz check-in. A descrição da loja não mostra a grade da tela, então a organização por time em tabela vem do Planning Center.
 
 **Planning Center Services**: mesma estrutura (time por cima, cultos em colunas). Usa drag-and-drop para mover pessoas entre vagas e culto. O líder vê só seu time por padrão; gestão troca no topo. Ações em lote (confirmar todos, copiar escala do mês anterior) ficam na barra superior.
 
@@ -49,7 +49,7 @@ Fonte: LEVEZA B (seção 3), MANIFESTO 2b.1, AUDITORIA-UI-2026-10-20.md seção 
 **Teste de pior caso:** 5 domingos no mês, 15 funções no time, nome longo (Dr. João Pedro da Silva Albuquerque Neto), 390px. Medir antes e depois.
 
 ## Notas
-FEITA em 2026-11-04. Tabela função × culto por time implementada; seletor de time no topo; "Preencher automaticamente" absorve "Como gerar"; cobertura e pendências removidas (vão para Panorama e fila do Início). Mobile com um culto por vez e setas. Densidade medida: 16 ações / 77 palavras em 1366 (limite 25/90); dentro da lei. E6 (768px) resolvida junto pela tabela responsiva.
+2026-11-04, conferência (claude): tabela função × culto por time, seletor de time, "Preencher automaticamente" no lugar de "Como gerar", celular com um culto por vez. Corrigido na conferência: fotos (as primeiras eram a tela de erro do Next), Selo com texto em cada vaga, botão dentro de botão em "Escalar", legenda que repetia a cor (lei 14), tabela cortada na borda (agora rola, com a coluna da função fixa), setas de 18px no celular, scripts e dependências de trabalho fora do commit. Densidade com scripts/medir-densidade.js, time Louvor: 1366×860 tem 54 ações (limite 25) e 106 palavras (limite 90), FORA DA LEI; antes, no main, 47 ações, 208 palavras e 3 molduras. A casca (menu, busca, avatar) soma 23 das 54. 390×844: 15 ações (limite 12), 31 palavras, FORA DA LEI nas ações. Sem alvo pequeno, sobreposição, rolagem lateral nem erro de console. Falta decidir: justificar no manifesto ou reduzir a tela. E6 (768px) não foi fotografada.
 
 ABERTO, parcial: já existe o menu "Mais" com Escala extra, Delegar, QR e Baixar, e o botão "Publicar e avisar".
 Hoje a tela tem esc-events, timesFechados, "Como gerar" em :511 e "Pendências da semana" em :634.

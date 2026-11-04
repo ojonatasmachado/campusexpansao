@@ -25,7 +25,7 @@ import { GerarPeriodo } from "./GerarPeriodo";
 import { EscalaExtra } from "./EscalaExtra";
 import { PublicarEscala } from "./PublicarEscala";
 
-import { Botao } from "../../ui/Botao";
+import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Janela } from "../../ui/Janela";
@@ -483,15 +483,15 @@ export function Escalas({
         <div className="esc-tbl-wrap">
           {/* Navegação mobile */}
           <div className="esc-tbl-nav">
-            <Acao desativado={eventoIdx === 0} onClick={() => setEventoIdx((i) => i - 1)} aria-label="Evento anterior">
-              <Icon name="voltar" size={18} />
-            </Acao>
+            <BotaoIcone className="fin-mes-b" rotulo="Evento anterior" desativado={eventoIdx === 0} onClick={() => setEventoIdx((i) => i - 1)}>
+              <Icon name="voltar" size={15} />
+            </BotaoIcone>
             <span className="esc-tbl-nav-label">
               {eventoAtual ? joinDot(eventoAtual.weekday, formatDateBR(eventoAtual.eventDate), eventoAtual.time) : "Nenhum evento"}
             </span>
-            <Acao desativado={eventoIdx >= eventosFuturos.length - 1} onClick={() => setEventoIdx((i) => i + 1)} aria-label="Próximo evento">
-              <Icon name="avancar" size={18} />
-            </Acao>
+            <BotaoIcone className="fin-mes-b" rotulo="Próximo evento" desativado={eventoIdx >= eventosFuturos.length - 1} onClick={() => setEventoIdx((i) => i + 1)}>
+              <Icon name="avancar" size={15} />
+            </BotaoIcone>
           </div>
 
           {/* Tabela desktop */}

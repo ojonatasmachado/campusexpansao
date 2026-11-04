@@ -4076,7 +4076,8 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 .esc-cob-num{color:var(--amber)}
 
 /* ════════ E1 Escalas por time: tabela função × culto ════════ */
-.esc-tbl-wrap{margin-top:16px}
+.esc-tbl-wrap{margin-top:16px;overflow-x:auto}
+.esc-tbl thead th.esc-tbl-fn,.esc-tbl td.esc-tbl-fn{position:sticky;left:0;z-index:1;background:var(--ink)}
 .esc-tbl-nav{display:none;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;margin-bottom:8px;border-bottom:1px solid var(--border)}
 .esc-tbl-nav-label{font-size:var(--fs-pn-14);font-weight:600;color:var(--white)}
 .esc-tbl{width:100%;border-collapse:collapse;font-size:var(--fs-pn-13)}
