@@ -2,10 +2,10 @@
 id: E6
 titulo: Verificar Escalas em 768px sem coluna cortada
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude-opus
+desde: 2026-11-04
+branch: historia/E6-escalas-tablet
 depende: []
 tamanho: P
 ---
