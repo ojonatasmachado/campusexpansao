@@ -79,7 +79,7 @@ export function EventDrawer({
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{joinDot(event.weekday, formatDateBR(event.eventDate))}</div>
         <div className="profile-name">{event.name}</div>
         <div className="profile-role">{joinDot(event.time, event.location, event.kind)}</div>
-        <Segmentado style={{ marginTop: 14 }}>
+        <Segmentado rolavel style={{ marginTop: 14 }}>
           <Opcao marcada={tab === "panorama"} onClick={() => setTab("panorama")}>Panorama</Opcao>
           <Opcao marcada={tab === "crono"} onClick={() => setTab("crono")}>Cronograma</Opcao>
           <Opcao marcada={tab === "posicoes"} onClick={() => setTab("posicoes")}>Posições</Opcao>
