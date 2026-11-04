@@ -4094,15 +4094,8 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 @media (hover: hover) and (pointer: fine) { .esc-tbl-person:hover { background: var(--graphite); } }
 .esc-tbl-person.is-no{opacity:.6}
 .esc-tbl-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-pn-13)}
-.esc-tbl-vaga{padding:6px 8px}
-.esc-tbl-legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;font-size:var(--fs-pn-12);color:var(--muted)}
-.esc-tbl-legend-item{display:flex;align-items:center;gap:6px}
-.esc-tbl-dot{font-size:var(--fs-pn-12);line-height:1}
-.esc-tbl-dot.ok{color:var(--olive)}
-.esc-tbl-dot.pendente{color:var(--amber)}
-.esc-tbl-dot.cuidado{color:var(--danger)}
-.esc-tbl-dot.aberto{color:var(--muted)}
-.esc-tbl-dot.rascunho{color:var(--subtle)}
+.esc-tbl-vaga{align-self:flex-start}
+.esc-tbl-legend{display:flex;margin-top:12px}
 
 /* Mobile: um evento por vez, tabela vira lista vertical */
 @media(max-width:860px),(pointer:coarse){

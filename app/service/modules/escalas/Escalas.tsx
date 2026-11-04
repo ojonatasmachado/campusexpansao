@@ -447,13 +447,6 @@ export function Escalas({
     : "";
 
   /* Legenda inline com bolinhas coloridas */
-  const legendaItems = [
-    { tom: "ok" as const, label: "Confirmado" },
-    { tom: "pendente" as const, label: "Aguardando" },
-    { tom: "cuidado" as const, label: "Não pode" },
-    { tom: "aberto" as const, label: "Aberto" },
-  ];
-
   return (
     <div className="content wide">
       <PageHead
@@ -541,7 +534,7 @@ export function Escalas({
                                 >
                                   <Av name={person?.name ?? "Voluntário"} size="xs" photoUrl={person?.photoUrl} />
                                   <span className="esc-tbl-name">{person?.name.split(" ")[0] ?? "Pessoa"}</span>
-                                  <Selo tom={a.status === "ok" ? "ok" : "pendente"} tamanho="lista" />
+                                  <Selo tom={a.status === "ok" ? "ok" : "pendente"} tamanho="lista">{a.status === "ok" ? "Confirmado" : "Aguardando"}</Selo>
                                 </Acao>
                               );
                             })}
@@ -555,18 +548,20 @@ export function Escalas({
                                 >
                                   <Av name={person?.name ?? "Voluntário"} size="xs" photoUrl={person?.photoUrl} />
                                   <span className="esc-tbl-name">{person?.name.split(" ")[0] ?? "Pessoa"}</span>
-                                  <Selo tom="cuidado" tamanho="lista" />
+                                  <Selo tom="cuidado" tamanho="lista">Não pode</Selo>
                                 </Acao>
                               );
                             })}
                             {Array.from({ length: missing }).map((_, i) => (
-                              <Acao
+                              <Botao
                                 key={`vaga-${i}`}
+                                variante="discreto"
+                                compacto
                                 className="esc-tbl-vaga"
                                 onClick={() => setSlotAction({ kind: "assign", event: ev, ministry: selectedMinistry, position: { ...position, need_count: need } })}
                               >
-                                <Botao variante="discreto" compacto>Escalar</Botao>
-                              </Acao>
+                                Escalar
+                              </Botao>
                             ))}
                           </div>
                         </td>
@@ -578,15 +573,12 @@ export function Escalas({
             </tbody>
           </table>
 
-          {/* Legenda com Selo (contrato de cor §14: status nunca é só cor) */}
-          <div className="esc-tbl-legend">
-            {legendaItems.map(({ tom, label }) => (
-              <Selo key={tom} tom={tom === "ok" ? "ok" : tom === "pendente" ? "pendente" : tom === "cuidado" ? "cuidado" : "neutro"} tamanho="lista">{label}</Selo>
-            ))}
-            {rascunhos.length > 0 && (
+          {/* Cada vaga já diz o estado no Selo; legenda que repete a cor é proibida (lei 14) */}
+          {rascunhos.length > 0 && (
+            <div className="esc-tbl-legend">
               <Selo tom="rascunho" tamanho="lista">Rascunho</Selo>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
