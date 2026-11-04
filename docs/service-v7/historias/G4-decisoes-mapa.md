@@ -2,10 +2,10 @@
 id: G4
 titulo: Decidir pendências do mapa no PLANO
 tipo: decisao
-status: livre
-quem:
-desde:
-branch:
+status: feita
+quem: claude
+desde: 2026-11-04
+branch: historia/D2-decisoes-produto
 depende: []
 tamanho: P
 ---
@@ -25,3 +25,4 @@ Fonte: mapa/PLANO.md:225-232.
 INCERTO: conferir no código antes de começar; se já estiver feito, marcar status: feita com a evidência.
 Decisão do usuário: o agente só prepara as opções e registra a resposta.
 Consentimento e papéis foram decididos (memória e §9 "Decisões tomadas sem consulta"). Tamanho não informado no levantamento; P estimado.
+04/11/2026: decidido pelo usuário. Sem histórico de endereço; pessoas do mesmo CEP espalhadas ao longo da rua, agrupadas só com o mapa afastado (PLANO §7 itens 3 e 4, MANIFESTO 2c.4). Código na G5.

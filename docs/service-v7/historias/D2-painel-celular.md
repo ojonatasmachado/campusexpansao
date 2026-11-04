@@ -2,10 +2,10 @@
 id: D2
 titulo: Decidir o painel no celular por papel ou modo líder
 tipo: decisao
-status: livre
-quem:
-desde:
-branch:
+status: feita
+quem: claude
+desde: 2026-11-04
+branch: historia/D2-decisoes-produto
 depende: []
 tamanho: P
 ---
@@ -23,3 +23,4 @@ Fonte: LEVEZA-2026-10-21.md seção 3 E. Também ligada à decisão do HANDOFF i
 ## Notas
 Decisão do usuário: o agente só prepara as opções e registra a resposta.
 Tamanho P para decidir; vira G se for modo líder.
+04/11/2026: decidido pelo usuário. Líder ganha a 5ª aba Meus times no app do membro (MANIFESTO 2c.1, lei 1 revisada no MANIFESTO e no AGENTS.md). Código na M7.

@@ -41,11 +41,7 @@ O estado vivo não fica escrito aqui. A trava é o branch `historia/<ID>-<slug>`
 A ordem vai do que destrava mais para o que destrava menos. Decisões do usuário vêm primeiro porque travam várias histórias de código.
 
 ### 1. Decisões do usuário (o agente prepara as opções e registra a resposta)
-- **D2** Painel no celular: filtrado por papel ou "modo líder" no app
-- **D3** Aprovar os adendos propostos ao AGENTS.md
-- **D5** "Faltou" entra como fato no histórico?
 - **D6** Priorizar a seção 9 do manifesto e as jornadas "Depois"
-- **G4** Pendências de decisão do mapa (PLANO §7)
 - **M6** Reorganização interna da Caminhada (só com evidência)
 - **D4** Capítulo "Interface do Service" no Brand Book (galeria viva pronta em /service/demo/biblioteca)
 
@@ -64,6 +60,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **M2** Setas nos botões do membro · **M3** Retorno e recarga · **M5** Foco no Mural · **I7** Quadros no toque
 - **N2** Integração final de idiomas e moeda (base N1 entregue com recursos desativados) · **F1** Financeiro fases 3 e 4 · **F2** Pontos pequenos de jornada · **O1** Culto avulso no estilo do assistente
 - **I3** Revisão de UI das telas densas (I9 e D1 feitos) · **G3** Cartões do mapa no Início
+- **M7** Aba Meus times para quem lidera (decisão D2) · **E7** Faltou pelo check-in (decisão D5) · **G5** Pontos do mesmo CEP ao longo da rua (decisão G4)
 
 ### 5. Verificações em código e banco local
 - **E5** Troca de escala ponta a ponta · **M4** Convite e primeiro acesso
