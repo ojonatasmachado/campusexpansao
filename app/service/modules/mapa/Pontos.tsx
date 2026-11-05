@@ -46,9 +46,9 @@ export async function carregarPontos(org: string): Promise<Ponto[]> {
   return ((data ?? []) as Ponto[]).filter((p) => typeof p.latitude === "number");
 }
 
-export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?: boolean }) {
+export function Pontos({ ctx }: { ctx: ContextoMapa }) {
   const [pontos, setPontos] = useState<Ponto[]>([]);
-  const [ligados, setLigados] = useState<Set<string>>(() => new Set(soCamada ? ["escolas", "saude", "igreja"] : ["igreja"]));
+  const [ligados, setLigados] = useState<Set<string>>(() => new Set(["igreja"]));
   const [verOcultos, setVerOcultos] = useState(false);
   const [aberto, setAberto] = useState<Ponto | null>(null);
   const [form, setForm] = useState<null | { ponto?: Ponto; nome: string; categoria: string; local: [number, number] | null; endereco: string; observacao: string }>(null);
@@ -62,7 +62,7 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
 
   useEffect(() => {
     const { mapa, cores } = ctx;
-    const p = soCamada ? "pc-" : "pm-";
+    const p = "pm-";
     mapa.addSource(`${p}pontos`, { type: "geojson", data: { type: "FeatureCollection", features: [] } });
     mapa.addLayer({ id: `${p}pontos`, type: "circle", source: `${p}pontos`, paint: {
       "circle-radius": ["case", ["==", ["get", "grupo"], "igreja"], 8, 6],
@@ -77,16 +77,16 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
     };
     mapa.on("click", `${p}pontos`, clique);
     return () => { mapa.off("click", `${p}pontos`, clique); limparCamadas(mapa, p); };
-  }, [ctx, soCamada]);
+  }, [ctx]);
 
   useEffect(() => {
-    const p = soCamada ? "pc-" : "pm-";
+    const p = "pm-";
     const vis = pontos.filter((x) => ligados.has(grupoDe(x.categoria)) && (verOcultos || !x.oculto));
     (ctx.mapa.getSource(`${p}pontos`) as GeoJSONSource | undefined)?.setData({
       type: "FeatureCollection",
       features: vis.map((x) => ({ type: "Feature", properties: { id: x.id, grupo: grupoDe(x.categoria), oculto: x.oculto }, geometry: { type: "Point", coordinates: [x.longitude, x.latitude] } })),
     });
-  }, [ctx, pontos, ligados, verOcultos, soCamada]);
+  }, [ctx, pontos, ligados, verOcultos]);
 
   /* "clicar no mapa" do formulário */
   useEffect(() => {
@@ -97,8 +97,6 @@ export function Pontos({ ctx, soCamada = false }: { ctx: ContextoMapa; soCamada?
     mapa.once("click", pegar);
     return () => { mapa.off("click", pegar); mapa.getCanvas().style.cursor = ""; };
   }, [ctx, escolhendo]);
-
-  if (soCamada) return null;
 
   const ocultar = async (pt: Ponto, oculto: boolean) => {
     const r = pt.ponto_id

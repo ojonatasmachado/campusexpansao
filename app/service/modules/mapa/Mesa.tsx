@@ -5,11 +5,10 @@ import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { avisar } from "../../lib/avisar";
 import { Icon } from "../../lib/icons";
-import { plural } from "../../lib/plural";
 import { useTermos } from "../../lib/vocabulario-context";
 import MapaBase from "./MapaBase";
 import { carregarRegioes, type Acesso, type Cidade, type Regiao } from "./dados";
-import { LEITURA, SITUACAO, frenteCidade, milhar, pessoasNaRegiao } from "./linguagem";
+import { SITUACAO, frenteCidade, milhar, pessoasNaRegiao, tomPresenca } from "./linguagem";
 import { caixaDaGeometria, dentroDe } from "./geo";
 import { CATEGORIAS, carregarPontos, type Ponto } from "./Pontos";
 import { baixarCsv } from "./csv";
@@ -70,11 +69,11 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
   const lista = pessoas.filter((p) => filtro === "todas" || (filtro === "servem" ? p.serve : !p.grupo));
   const pontosDentro = pontos.filter((p) => !p.oculto && escolhidas.some((r) => dentroDe(p, r.geojson)));
   const contaPontos = (grupo: string) => pontosDentro.filter((p) => CATEGORIAS.find((c) => c.id === p.categoria)?.grupo === grupo).length;
-  const titulo = sel.length === 0 ? "Escolha as regiões" : sel.length === todas.length ? "A cidade inteira" : escolhidas.length && escolhidas.every((r) => r.leitura === "falta") ? `${plural(escolhidas.length, "lugar", "lugares")} onde falta igreja` : escolhidas.length === 1 ? escolhidas[0].nome : `${escolhidas.length} regiões`;
+  const titulo = sel.length === 0 ? "Escolha as regiões" : sel.length === todas.length ? "A cidade inteira" : escolhidas.length === 1 ? escolhidas[0].nome : `${escolhidas.length} regiões`;
 
   useEffect(() => {
     if (!mapa) return;
-    (mapa.getSource("ms-reg") as GeoJSONSource | undefined)?.setData({ type: "FeatureCollection", features: escolhidas.map((r) => ({ type: "Feature", properties: { leitura: r.leitura }, geometry: r.geojson })) });
+    (mapa.getSource("ms-reg") as GeoJSONSource | undefined)?.setData({ type: "FeatureCollection", features: escolhidas.map((r) => ({ type: "Feature", properties: { tom: tomPresenca(r.um_a_cada) }, geometry: r.geojson })) });
     const pts = escolhidas.flatMap((r) => { const c = caixaDaGeometria(r.geojson); return c ? [c[0], c[1]] : []; });
     if (pts.length) mapa.fitBounds([[Math.min(...pts.map((p) => p[0])), Math.min(...pts.map((p) => p[1]))], [Math.max(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[1]))]], { padding: 24, duration: 0 });
   }, [mapa, escolhidas]);
@@ -82,7 +81,7 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
   const baixar = async () => {
     const linhasCsv: string[][] = [];
     const cab: string[] = ["Parte", "Região", "Nome", "Moradores", "Pessoas da igreja", "1 da igreja a cada", "Situação", ct("{Grupo}"), "Ministérios", "Até a sede (km)"];
-    if (partes.regioes) escolhidas.forEach((r) => linhasCsv.push(["Região", r.nome, "", String(r.moradores), pessoasNaRegiao(r.pessoas), r.um_a_cada ? String(r.um_a_cada) : "", LEITURA[r.leitura], String(r.grupos), "", ""]));
+    if (partes.regioes) escolhidas.forEach((r) => linhasCsv.push(["Região", r.nome, "", String(r.moradores), pessoasNaRegiao(r.pessoas), r.um_a_cada ? String(r.um_a_cada) : "", "", String(r.grupos), "", ""]));
     if (partes.pessoas) lista.forEach((p) => linhasCsv.push(["Pessoa", p.regiao, p.nome, "", "", "", SITUACAO[p.situacao] ?? p.situacao, p.grupo ?? "", p.ministerios.join(", "), p.km_sede != null ? String(p.km_sede).replace(".", ",") : ""]));
     if (partes.pontos) pontosDentro.forEach((p) => linhasCsv.push(["Ponto", "", p.nome, "", "", "", CATEGORIAS.find((c) => c.id === p.categoria)?.nome ?? p.categoria, "", "", ""]));
     const { error } = await createServiceBrowserClient().schema("service").rpc("mapa_registrar_csv", { p_org: org, p_partes: Object.entries(partes).filter(([, v]) => v).map(([k]) => k), p_regioes: sel, p_linhas: linhasCsv.length });
@@ -104,7 +103,7 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
       <div className="mesa-caixa mesa-regioes">
         <span className="mp-fraco">Regiões</span>
         {escolhidas.map((r) => (
-          <span key={r.codigo} className="mesa-tag"><span className="mp-sw" style={{ background: `var(--mapa-${r.leitura})`, width: 8, height: 8, borderRadius: 4 }} />{r.nome}<BotaoIcone rotulo={`Tirar ${r.nome}`} onClick={() => setSel((s) => s.filter((x) => x !== r.codigo))}><Icon name="recusou" size={12} /></BotaoIcone></span>
+          <span key={r.codigo} className="mesa-tag"><span className={`mp-sw pm-tom-${tomPresenca(r.um_a_cada)}`} style={{ width: 8, height: 8, borderRadius: 4 }} />{r.nome}<BotaoIcone rotulo={`Tirar ${r.nome}`} onClick={() => setSel((s) => s.filter((x) => x !== r.codigo))}><Icon name="recusou" size={12} /></BotaoIcone></span>
         ))}
         <Selecao className="mesa-add" valor="" rotulo="Adicionar região" vazio="+ Região"
           aoMudar={(v) => { if (v) setSel((s) => [...s, v]); }}
@@ -112,8 +111,6 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
         <span style={{ flex: 1 }} />
         <span className="mp-fraco">Atalhos</span>
         <Acao className="mp-chip" onClick={() => setSel(todas.map((r) => r.codigo))}>Todas</Acao>
-        <Acao className="mp-chip" onClick={() => setSel(todas.filter((r) => r.leitura === "falta").map((r) => r.codigo))}>Só onde falta igreja</Acao>
-        <Acao className="mp-chip" onClick={() => setSel(todas.filter((r) => r.leitura === "forte").map((r) => r.codigo))}>Só onde somos fortes</Acao>
         <div className="mp-seg" style={{ ["--n" as string]: 3, minWidth: 240 } as React.CSSProperties} role="group" aria-label="Agrupar por">
           {(["bairro", "setor", "area"] as const).map((n) => <Acao key={n} aria-pressed={nivel === n} desativado={n === "bairro" && !cidade?.tem_bairros} onClick={() => { setNivel(n); setSel([]); }}>{n === "area" ? "Áreas" : n === "bairro" ? "Bairros" : "Setores"}</Acao>)}
         </div>
@@ -141,12 +138,12 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
                 <tbody>
                   {escolhidas.map((r) => (
                     <tr key={r.codigo}>
-                      <td><b>{r.nome}</b><span className="mp-fraco" style={{ display: "block" }}>{LEITURA[r.leitura]}</span></td>
+                      <td><b>{r.nome}</b></td>
                       <td className="n mp-num">{milhar(r.moradores)}</td>
                       <td className="n mp-num">{String(r.area_km2).replace(".", ",")}</td>
                       <td className="n mp-num">{milhar(r.moradores / Number(r.area_km2))}</td>
                       <td className="n mp-num">{pessoasNaRegiao(r.pessoas)}</td>
-                      <td className="n mp-num" style={{ color: r.leitura === "falta" ? "var(--mapa-falta)" : undefined }}>{r.um_a_cada ? milhar(r.um_a_cada) : "-"}</td>
+                      <td className="n mp-num">{r.um_a_cada ? milhar(r.um_a_cada) : "-"}</td>
                       <td>{frenteCidade(r.vezes) || "-"}</td>
                       <td className="n mp-num">{r.grupos}</td>
                     </tr>
@@ -201,7 +198,7 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
           <section className="mesa-caixa" style={{ overflow: "hidden", padding: 0 }}>
             <MapaBase rotulo="Recorte do mapa com as regiões escolhidas" style={{ height: 260 }} onPronto={({ map, cores }) => {
               map.addSource("ms-reg", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-              map.addLayer({ id: "ms-reg", type: "fill", source: "ms-reg", paint: { "fill-color": ["match", ["get", "leitura"], "falta", cores.falta, "forte", cores.forte, cores.media], "fill-opacity": 0.7 } });
+              map.addLayer({ id: "ms-reg", type: "fill", source: "ms-reg", paint: { "fill-color": ["match", ["get", "tom"], 1, cores["tom-1"], 2, cores["tom-2"], 3, cores["tom-3"], 4, cores["tom-4"], cores["tom-5"]], "fill-opacity": 0.85 } });
               map.addLayer({ id: "ms-reg-l", type: "line", source: "ms-reg", paint: { "line-color": cores.papel, "line-width": 2 } });
               setMapa(map);
               return () => setMapa(null);

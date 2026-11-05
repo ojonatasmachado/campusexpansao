@@ -22,8 +22,8 @@ Componentes compartilhados de interface do Service (lei 17 em `AGENTS.md` §13).
 | `Segmentado.tsx` | `Segmentado` (contêiner `.seg` com pílula que desliza até a `Opcao` marcada) |
 | `Contagem.tsx` | `Contagem` (número sobe do zero ou do valor anterior; leitor de tela ouve o final) |
 | `PainelMapa.tsx` | `PainelMapa` (aberto, recolhido em trilho, painel de ferramenta), `GrupoCamadas`, `LinhaCamada` (linha inteira é o interruptor), `TransparenciaCamada`, `EscalaTons` |
-| `BarraFerramentas.tsx` | `BarraFerramentas` (ferramentas à vista; `alerta` separado; `fileira` no celular) |
-| `Balao.tsx` | `Balao` (preso a um ponto, vira perto da borda, Esc e foco), `LinhaBalao` |
+| `BarraFerramentas.tsx` | `BarraFerramentas` (ferramentas à vista; `alerta` separado; `fileira` no celular; `desloc`, `reservaDir` e `compacta` para caber entre painel e ajuda) |
+| `Balao.tsx` | `Balao` (preso a um ponto, vira perto da borda, Esc e foco; `oculto` fora da tela), `LinhaBalao` |
 | `movimento.ts` | `MOLA`, `movimentoReduzido()`, `entrarComDirecao()` (troca de tela com direção) |
 | `Campo.tsx` | `Campo` (rótulo em cima, ajuda ou erro embaixo, liga id/aria; `grupo` para chips), `Entrada`, `TextoLongo`, `Marcar` (caixa ou bolinha nativa) |
 | `Selecao.tsx` | `Selecao` (caixa suspensa no lugar do `<select>`; `vazio`, opção desativada, teclado) |

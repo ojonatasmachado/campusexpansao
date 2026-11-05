@@ -831,9 +831,9 @@ body { --graf-neutro: color-mix(in srgb, var(--muted) 38%, transparent); --graf-
 
 /* Barra de ferramentas */
 .bf-barra {
-  position: absolute; z-index: 3; bottom: 18px; left: calc(50% + var(--bf-desloc, 0px) / 2); transform: translateX(-50%);
-  transition: left .6s var(--ease-drawer);
-  padding: 6px; border-radius: 24px; max-width: calc(100% - 32px); box-sizing: border-box;
+  position: absolute; z-index: 3; bottom: 18px; left: calc(50% + (var(--bf-desloc, 0px) - var(--bf-dir, 0px)) / 2); transform: translateX(-50%);
+  transition: left .6s var(--ease-drawer), max-width .6s var(--ease-drawer);
+  padding: 6px; border-radius: 24px; max-width: calc(100% - 32px - var(--bf-desloc, 0px) - var(--bf-dir, 0px)); box-sizing: border-box;
   overflow-x: auto; scrollbar-width: none;
   animation: bf-entrar .6s var(--ease-drawer) .2s backwards;
 }
@@ -851,6 +851,8 @@ body { --graf-neutro: color-mix(in srgb, var(--muted) 38%, transparent); --graf-
 .bf-item.alerta { width: 100px; background: var(--danger-dim); color: var(--danger); font-weight: 700; }
 .bf-item:disabled { opacity: .45; cursor: default; }
 .bf-ic { display: inline-flex; }
+.bf-barra.compacta .bf-item { width: 78px; }
+.bf-barra.compacta .bf-item.alerta { width: 92px; }
 .bf-sep { width: 1px; height: 36px; margin: 0 6px; flex-shrink: 0; background: var(--border); }
 /* celular: fileira que rola para o lado, cada ferramenta num cartão */
 .bf-barra.fileira {
@@ -902,7 +904,7 @@ body { --graf-neutro: color-mix(in srgb, var(--muted) 38%, transparent); --graf-
 @media (max-width: 860px) {
   .pm-painel { left: 0; right: 0; top: auto; bottom: 0; width: auto; max-height: 75dvh; border-radius: 28px 28px 0 0; padding-bottom: var(--safe-bottom, 0px); }
   /* no celular o painel vira folha: a barra ignora o deslocamento do painel */
-  .bf-barra { left: 50%; }
+  .bf-barra { left: 50%; max-width: calc(100% - 32px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .pm-painel, .pm-trilho, .bf-barra, .balao, .pm-grupo-corpo, .pm-camada-extra, .pm-escala-faixas { animation: none; }

@@ -2,7 +2,7 @@
 id: G7
 titulo: Refazer a tela principal do mapa
 tipo: codigo
-status: reservada
+status: feita
 quem: claude
 desde: 2026-11-05
 branch: historia/G7-tela-principal-mapa
@@ -21,6 +21,9 @@ Referência: mapa/PLANO.md §10 e canvas "Mapa da igreja · evolução" (claude.
 - `app/service/modules/mapa/linguagem.ts`
 - `app/service/modules/mapa/mapa.css`
 - `docs/service-v7/historias/G7-tela-principal-mapa.md`
+- `app/service/modules/mapa/Mesa.tsx`, `Pontos.tsx`, `estilo.ts`, `dados.ts`, `manifest.ts` (tirar "falta igreja" do Analisar, camada de lugares, tons, lista sem CEP, densidade)
+- `app/service/ui/BarraFerramentas.tsx`, `app/service/ui/biblioteca.css`, `app/service/lib/icons.tsx`, `docs/service-v7/BIBLIOTECA.md`, `app/service/ui/README.md` (props `reservaDir` e `compacta`, ícone `menos`)
+- `supabase/migrations/0098_service_mapa_sem_ponto.sql`, `docs/service-v7/producao.sql`
 
 ## Pronto quando
 - Saem: as 4 visões, o "Comece por aqui", o anel de alerta de 2 km, o painel da direita e todo texto que conclui "falta igreja".
@@ -35,3 +38,4 @@ Referência: mapa/PLANO.md §10 e canvas "Mapa da igreja · evolução" (claude.
 
 ## Notas
 Criada em 04/11/2026 a partir da evolução da jornada do mapa (decisões do usuário em PLANO §10). Nada de aviso ou sugestão automática de expansão.
+2026-11-05, feita (claude): painel de camadas com os 4 grupos (Igreja; Cidade · IBGE 2022 com Presença da igreja em 5 tons, as outras leituras do IBGE ficam para a G8; Áreas da igreja; Lugares da região só com o que tem ponto, mais Raios da sede), transparência na concentração e na presença, marcadores da G6 no mapa, balão com tudo de pessoa, sede, grupo, bairro, área e lugar, barra com Emergência à parte, 3D e zoom no canto, rodapé com "N pessoas sem CEP" (lista nova, função 0098), "Quem vê o mapa" e "Entenda o mapa" (legenda numa janela, decisão de 05/11); saíram as visões, o "Comece por aqui", o anel de 2 km, o painel da direita, a legenda fixa e o "falta igreja"/"somos fortes" (também no Analisar). Densidade com scripts/medir-densidade.js: 1366×860 com 45 ações (limite 25) e 105 palavras (limite 100), FORA DA LEI, casca 24 ações e 40 palavras, 0 sobreposições, justificativa em mapa/manifest.ts; antes 42 ações, 183 palavras e 1 sobreposição (foto G7-0). 390×844: 18 ações, 11 palavras, 0 sobreposições (o celular é a G16). Fotos G7-0 a G7-6. Frases de leitura da Linha do tempo ficam na G11; filtros por situação saíram (a legenda está no "Entenda o mapa"). Revisão (subagente revisor) corrigida antes do PR: lista sem CEP só para pastor e administração, mira das ferramentas preservada, balão escondido (sem roubar foco) com o ponto fora da tela e redesenhando sozinho no movimento, balão fechado ao recarregar dados, corte da legenda dos tons.

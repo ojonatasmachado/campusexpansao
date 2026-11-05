@@ -51,6 +51,10 @@ export default function MapaBase({
         /* depuração local: o último mapa aberto fica em window.__mapa */
         if (process.env.NODE_ENV !== "production") (window as unknown as { __mapa?: MlMap }).__mapa = map;
         aquecerEstilo(map, cores);
+        /* créditos do mapa recolhidos no "i": abertos, passam por baixo da barra de ferramentas */
+        const creditos = alvo.current?.querySelector(".maplibregl-ctrl-attrib");
+        creditos?.classList.remove("maplibregl-compact-show");
+        creditos?.removeAttribute("open");
         limpar = pronto.current?.({ map, ml, cores });
       });
     })().catch(() => setFalhou(true));
