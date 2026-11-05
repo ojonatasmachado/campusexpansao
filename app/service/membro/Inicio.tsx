@@ -7,7 +7,7 @@ import { instalarApp, podeInstalarDireto } from "../lib/instalar";
 import { Fragment, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Icon } from "../lib/icons";
 import { useRelogioDaIgreja } from "../lib/relogio-context";
-import { formatDateBR, joinDot, somaDias } from "../lib/date";
+import { formatDateBR, joinDot, parseISODate, somaDias } from "../lib/date";
 import { plural } from "../lib/plural";
 import { useTermos } from "../lib/vocabulario-context";
 import { candidatosParaVaga, papelDoDestinatario, useDestinatario, type Destinatario } from "../lib/destinatario";
@@ -70,18 +70,26 @@ export function EscalaCard({ slot, ev, ministry, person, member, members, onResp
     ui.sheet(<SheetTroca slot={slot} ev={ev} funcao={funcao} member={member} dest={destTroca} onStartChat={onStartChat} />);
   };
   const detalhes = joinDot(ministry?.name, funcao, ev.location);
+  /* data curta em texto para o modo compacto: "Sáb 07 · Culto de sábado" */
+  const dataCurta = (() => {
+    const d = parseISODate(ev.eventDate);
+    if (!d) return "";
+    const dia = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][d.getDay()];
+    return `${dia} ${String(d.getDate()).padStart(2, "0")}`;
+  })();
   if (compacto) {
     return (
       <Cartao estilo="app" className="service-commitment service-commitment-compact">
         <div className="service-commitment-heading">
-          <span aria-hidden="true"><M6Date iso={ev.eventDate} /></span>
-          <div><div className="m6-ct">{ev.name}</div></div>
+          <span className="m6-compact-date">{dataCurta}</span>
+          <span className="m6-compact-sep">·</span>
+          <span className="m6-ct">{ev.name}</span>
         </div>
         {detalhes && <div className="m6-meta">{detalhes}</div>}
         {saving && <p className="m6-meta" role="status">Salvando...</p>}
         {st === "wait" && (
           <div className="m6-btns m6-btns-inline">
-            <Botao tamanho="toque" variante="secundario" desativado={saving || !onResponderEscala} onClick={() => responder("ok")}><Icon name="ok" size={18} />Confirmar</Botao>
+            <Botao tamanho="toque" variante="secundario" desativado={saving || !onResponderEscala} onClick={() => responder("ok")}>Confirmar</Botao>
             <Botao tamanho="toque" variante="secundario" desativado={saving || !onResponderEscala} onClick={() => responder("no")}>Não posso</Botao>
           </div>
         )}
