@@ -7,7 +7,7 @@ import { instalarApp, podeInstalarDireto } from "../lib/instalar";
 import { Fragment, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Icon } from "../lib/icons";
 import { useRelogioDaIgreja } from "../lib/relogio-context";
-import { formatDateBR, joinDot, somaDias } from "../lib/date";
+import { formatDateBR, joinDot, parseISODate, somaDias } from "../lib/date";
 import { plural } from "../lib/plural";
 import { useTermos } from "../lib/vocabulario-context";
 import { candidatosParaVaga, papelDoDestinatario, useDestinatario, type Destinatario } from "../lib/destinatario";
@@ -25,10 +25,12 @@ import { Botao, botaoClasse } from "../ui/Botao";
 import { Acao } from "../ui/Acao";
 import { Cartao, cartaoClasse } from "../ui/Cartao";
 import { Lista } from "../ui/Linha";
-export function EscalaCard({ slot, ev, ministry, person, member, members, onResponderEscala, onStartChat, destaque = true }: {
+export function EscalaCard({ slot, ev, ministry, person, member, members, onResponderEscala, onStartChat, destaque = true, compacto = false }: {
   slot: Slot; ev: Ev; ministry?: Ministry; person: P; member: M | null; members: M[];
   /* botão cheio só no primeiro cartão da fila do Início (lei 5) */
   destaque?: boolean;
+  /* modo compacto para a Agenda (M1): data+nome numa linha, time·função·local na seguinte, botões lado a lado */
+  compacto?: boolean;
   onResponderEscala?: (id: string, status: Slot["status"]) => Promise<boolean>;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
 }) {
@@ -67,6 +69,45 @@ export function EscalaCard({ slot, ev, ministry, person, member, members, onResp
     if (!member || !destTroca || !onStartChat) return;
     ui.sheet(<SheetTroca slot={slot} ev={ev} funcao={funcao} member={member} dest={destTroca} onStartChat={onStartChat} />);
   };
+  const detalhes = joinDot(ministry?.name, funcao, ev.location);
+  /* data curta em texto para o modo compacto: "Sáb 07 · Culto de sábado" */
+  const dataCurta = (() => {
+    const d = parseISODate(ev.eventDate);
+    if (!d) return "";
+    const dia = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][d.getDay()];
+    return `${dia} ${String(d.getDate()).padStart(2, "0")}`;
+  })();
+  if (compacto) {
+    return (
+      <Cartao estilo="app" className="service-commitment service-commitment-compact">
+        <div className="service-commitment-heading">
+          <span className="m6-compact-date">{dataCurta}</span>
+          <span className="m6-compact-sep">·</span>
+          <span className="m6-ct">{ev.name}</span>
+        </div>
+        {detalhes && <div className="m6-meta">{detalhes}</div>}
+        {saving && <p className="m6-meta" role="status">Salvando...</p>}
+        {st === "wait" && (
+          <div className="m6-btns m6-btns-inline">
+            <Botao tamanho="toque" variante="secundario" desativado={saving || !onResponderEscala} onClick={() => responder("ok")}>Confirmar</Botao>
+            <Botao tamanho="toque" variante="secundario" desativado={saving || !onResponderEscala} onClick={() => responder("no")}>Não posso</Botao>
+          </div>
+        )}
+        {st === "ok" && (
+          <div className="m6-after">
+            <M6St k="ok" ic="ok">Confirmado</M6St>
+            {onStartChat && member && destTroca && <Botao tamanho="toque" variante="texto" onClick={pedirTroca}>Troca</Botao>}
+          </div>
+        )}
+        {st === "no" && (
+          <div className="m6-after">
+            <M6St k="warn" ic="recusou">Não pode</M6St>
+            <Botao tamanho="toque" variante="texto" onClick={() => responder("ok")}>Voltar</Botao>
+          </div>
+        )}
+      </Cartao>
+    );
+  }
   return (
     <Cartao estilo="app" className="service-commitment">
       <div className="service-commitment-heading">

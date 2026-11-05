@@ -4013,6 +4013,22 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 .service-commitment-heading .m6-date { background: transparent; border-radius: 0; border-right: 1px solid var(--border-2); padding-right: 12px; }
 .mob-bg .phone[data-ts="6"] .service-commitment-heading { flex-direction: column; }
 
+/* M1: cartão compacto exclusivo da Agenda. Data + nome numa linha, detalhes
+   (time · função · local) na seguinte, botões lado a lado. 4 cabem na dobra
+   em 390x844. Não altera o EscalaCard global (Inicio.tsx). */
+.service-commitment-compact { padding: 10px 16px; gap: 4px; }
+.service-commitment-compact .service-commitment-heading { display: flex; align-items: baseline; gap: 6px; flex-wrap: nowrap; overflow: hidden; }
+.service-commitment-compact .m6-compact-date { font-size: var(--fs-app-13); color: var(--muted); flex-shrink: 0; white-space: nowrap; }
+.service-commitment-compact .m6-compact-sep { font-size: var(--fs-app-13); color: var(--muted); flex-shrink: 0; }
+.service-commitment-compact .service-commitment-heading .m6-ct { font-size: var(--fs-app-15); font-weight: 600; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.service-commitment-compact .m6-meta { font-size: var(--fs-app-13); color: var(--muted); margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
+.service-commitment-compact .m6-btns-inline { display: flex; gap: 8px; margin-top: 6px; align-items: center; }
+.service-commitment-compact .m6-btns-inline .btn { height: 44px; min-height: 44px; padding-block: 0; font-size: var(--fs-app-13); }
+.m6-confirmar-todas { padding-inline: 16px; margin-bottom: 8px; }
+.service-commitment-compact .m6-after { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+
+/* M1: botão Confirmar todas alinhado com os cartões (mesma margem lateral). */
+
 /* Ativação: primeiro resultado visível, opções de série e equipe depois. */
 .service-setup-result, .service-setup-preview { border-block: 1px solid var(--border-2); padding-block: 20px; margin-block: 16px; overflow-wrap: anywhere; }
 .service-setup-result h2, .service-setup-preview h2 { font-size: var(--fs-pn-20); line-height: 1.3; margin: 8px 0; color: var(--white); }

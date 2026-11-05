@@ -39,5 +39,12 @@ export default defineModule({
       limite: { palavras: 80, acoes: 12, sobreposicoes: 0 },
       motivo: "Um culto por vez; as 3 ações acima do teto são as duas setas entre cultos e a segunda vaga da função, que é o próprio botão de escalar.",
     },
+    {
+      tela: "Agenda do membro (Minha agenda)",
+      tamanho: "390×844",
+      medido: { palavras: 68, acoes: 15, sobreposicoes: 0 },
+      limite: { palavras: 80, acoes: 12, sobreposicoes: 0 },
+      motivo: "Com 3 escalas a confirmar, as 3 ações acima do teto são o Não posso de cada cartão. A recusa fica no cartão porque é uma por uma (tem motivo e avisa o líder); só a confirmação vai em lote.",
+    },
   ],
 });

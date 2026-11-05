@@ -8,6 +8,7 @@ import { useTermos } from "../lib/vocabulario-context";
 import { useDestinatario } from "../lib/destinatario";
 import { conflitos, horaDeChegada } from "../lib/agenda";
 import { baixarIcs } from "../lib/ics";
+import { plural } from "../lib/plural";
 import { M6Row, M6St, MESES, MemberUiContext, chegadaDoTime, dataLonga } from "./comum";
 import { EscalaCard } from "./Inicio";
 import type { AgendaSeg } from "../lib/member-navigation";
@@ -45,6 +46,59 @@ export function EventoRow({ ev, serve }: { ev: Ev; serve?: string | null }) {
   );
 }
 
+/* Confirmar todas as escalas pendentes de uma vez (M1, lei 16: Planning Center).
+   A recusa continua individual: cada recusa tem motivo e avisa o líder.
+   Lei 14: número só no botão, sem repetir no rótulo da seção. */
+function ConfirmarTodas({ pend, evById, onResponderEscala }: {
+  pend: Slot[]; evById: Map<string, Ev>;
+  onResponderEscala?: (id: string, status: Slot["status"]) => Promise<boolean>;
+}) {
+  const ui = useContext(MemberUiContext);
+  const { comTermos: ct } = useTermos();
+  const [salvando, setSalvando] = useState(false);
+  if (!onResponderEscala || pend.length === 0) return null;
+  /* A lista e a aba mudam no toque (cópia local) e o banco grava em paralelo:
+     a janela do Desfazer (UNDO_MS) começa com a tela já atualizada. */
+  const confirmarTodas = async () => {
+    if (salvando) return;
+    setSalvando(true);
+    const alvo = pend;
+    alvo.forEach((slot) => ui.responderEscala(slot.id, "ok"));
+    const salvos = await Promise.all(alvo.map((slot) => onResponderEscala(slot.id, "ok")));
+    setSalvando(false);
+    const ok = alvo.filter((_, i) => salvos[i]);
+    const falhas = alvo.filter((_, i) => !salvos[i]);
+    falhas.forEach((slot) => ui.responderEscala(slot.id, null));
+    if (ok.length === 0) {
+      ui.toast("Não conseguimos salvar suas respostas. Tente de novo.");
+      return;
+    }
+    const msg = falhas.length === 0
+      ? `Presença confirmada em ${plural(ok.length, "escala")}`
+      : `Confirmamos ${plural(ok.length, "escala")} de ${alvo.length}. Não conseguimos salvar: ${falhas.map((slot) => evById.get(slot.event_id)?.name ?? slot.id).join(", ")}`;
+    ui.toast(msg, {
+      label: ct("Desfazer"),
+      fn: async () => {
+        ok.forEach((slot) => ui.responderEscala(slot.id, "wait"));
+        const desfeitos = await Promise.all(ok.map((slot) => onResponderEscala(slot.id, "wait")));
+        ok.forEach((slot, i) => { if (!desfeitos[i]) ui.responderEscala(slot.id, "ok"); });
+        const n = desfeitos.filter(Boolean).length;
+        ui.toast(n === ok.length
+          ? plural(n, "resposta desfeita", "respostas desfeitas")
+          : `Não conseguimos desfazer ${plural(ok.length - n, "escala")}. Tente de novo.`);
+      },
+    });
+  };
+  return (
+    <div className="m6-confirmar-todas">
+      <Botao tamanho="toque" variante="principal" desativado={salvando} onClick={confirmarTodas}>
+        <Icon name="ok" size={20} />
+        {salvando ? "Confirmando..." : `Confirmar todas (${plural(pend.length, "escala")})`}
+      </Botao>
+    </div>
+  );
+}
+
 export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, member, members, ministries, events, roster, cards, boards, isRecep, isKids, onResponderEscala, onStartChat, onAddCardComment, onSaveAvailability, aulas, meetings, rehearsals, rsvps }: {
   initialCardId?: string | null;
   /* "Onde" (mapa da igreja, etapa 2): igrejas e células públicas */
@@ -72,6 +126,8 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
   const evById = new Map(events.map((e) => [e.id, e]));
   const meus = roster
     .filter((r) => r.person_id === person.id && (evById.get(r.event_id)?.eventDate ?? "") >= hoje)
+    /* a resposta dada na tela vale antes do banco devolver a lista nova */
+    .map((r) => ({ ...r, status: ui.respostas[r.id] ?? r.status }))
     .sort((a, b) => (evById.get(a.event_id)?.eventDate ?? "").localeCompare(evById.get(b.event_id)?.eventDate ?? ""));
   const pend = meus.filter((r) => r.status === "wait");
   const outras = meus.filter((r) => r.status !== "wait");
@@ -163,10 +219,11 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
         <>
           {pend.length > 0 && (
             <div className="m6-sec">
-              <div className="m6-lbl">Escala a confirmar · {pend.length}</div>
+              <div className="m6-lbl">Escala a confirmar</div>
+              <ConfirmarTodas pend={pend} evById={evById} onResponderEscala={onResponderEscala} />
               {pend.map((slot) => {
                 const ev = evById.get(slot.event_id);
-                return ev ? <EscalaCard key={slot.id} slot={slot} ev={ev} ministry={ministryOf(slot)} person={person} member={member} members={members} onResponderEscala={onResponderEscala} onStartChat={onStartChat} /> : null;
+                return ev ? <EscalaCard key={slot.id} slot={slot} ev={ev} ministry={ministryOf(slot)} person={person} member={member} members={members} onResponderEscala={onResponderEscala} onStartChat={onStartChat} compacto /> : null;
               })}
             </div>
           )}

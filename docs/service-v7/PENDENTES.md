@@ -45,7 +45,6 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **D4** Capítulo "Interface do Service" no Brand Book (galeria viva pronta em /service/demo/biblioteca)
 
 ### 2. Leveza, liberada pelo D1 em 28/10 (maior ganho para quem usa)
-- **M1** Agenda do membro com "Confirmar todas"
 - **E4** Indisponibilidade por período e por time
 - **E3** Cobertura vira linha no "Para resolver"
 
