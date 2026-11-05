@@ -2,10 +2,10 @@
 id: G7
 titulo: Refazer a tela principal do mapa
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-05
+branch: historia/G7-tela-principal-mapa
 depende: [G6]
 tamanho: G
 ---
