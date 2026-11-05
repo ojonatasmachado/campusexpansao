@@ -49,7 +49,6 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **E3** Cobertura vira linha no "Para resolver"
 
 ### 3. Qualidade que protege o resto
-- **M8** App do membro volta sozinho para o Início depois de responder
 - NovosCadastros: erro ao carregar os pedidos some sem aviso
 - Botao discreto aparece mais forte que o padrão (ex.: Recusar x Aprovar no Início)
 

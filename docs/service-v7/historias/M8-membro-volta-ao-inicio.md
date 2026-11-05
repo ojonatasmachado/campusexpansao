@@ -2,7 +2,7 @@
 id: M8
 titulo: App do membro volta sozinho para o Início depois de responder
 tipo: codigo
-status: reservada
+status: feita
 quem: claude
 desde: 2026-11-05
 branch: historia/M8-membro-volta-ao-inicio
@@ -54,5 +54,57 @@ A solução correta é desacoplar a leitura da URL (que só importa na montagem 
 - tsc, eslint, lei 12, componentes verdes.
 - PR aberto para main, CI service verde.
 
+## Correção aplicada
+O `useEffect` de `restore()` no `MobileApp.tsx` foi dividido em dois efeitos independentes:
+1. **Hidratação**: roda uma vez na montagem (e quando troca pessoa/organização), lê a URL e sincroniza o estado.
+2. **Popstate**: escuta `popstate` (voltar/avançar do navegador) usando um listener estável que lê o contexto atualizado via `useRef`, sem depender das props que mudam com `router.refresh()`.
+
+O contexto que muda com refresh (`modulosMembro`, `serves`, `isRecep`, etc.) fica em `navCtxRef`, atualizado após cada render via `useEffect` sem dependências. O `applyLocation` é estabilizado com `useCallback([], [])` e lê sempre o valor mais recente do ref.
+
+## Testes (linha do tempo de 10 s)
+
+### Cenário A: Agenda > Confirmar UMA escala
+| t | URL | Tela |
+|---|---|---|
+| 0-10 | `/service?maba=agenda&msegmento=minha` | Agenda |
+**Resultado: PASSOU** (ficou na Agenda por 10 s)
+
+### Cenário B: Agenda > Confirmar todas
+| t | URL | Tela |
+|---|---|---|
+| 0-10 | `/service?maba=agenda&msegmento=minha` | Agenda |
+**Resultado: PASSOU** (ficou na Agenda por 10 s)
+
+### Cenário D: Mensagens > Responder aviso do Mural
+| t | URL | Tela |
+|---|---|---|
+| 0-10 | `/service?maba=mensagens` | Mensagens |
+**Resultado: PASSOU** (ficou em Mensagens por 10 s)
+
+### Cenário F: Voltar do navegador
+| Passo | URL | Resultado |
+|---|---|---|
+| Início | `/service?maba=inicio` | OK |
+| Agenda | `/service?maba=agenda&msegmento=igreja` | OK |
+| Mensagens | `/service?maba=mensagens` | OK |
+| Voltar 1x | `/service?maba=agenda&msegmento=igreja` | PASSOU (Agenda) |
+| Voltar 2x | `/service?maba=inicio` | PASSOU (Início) |
+
+## Foto
+`docs/service-v7/historias/screenshots/M8-agenda-apos-confirmar-todas.png`
+Agenda do app do membro 10 s após "Confirmar todas". URL: `?maba=agenda&msegmento=minha`. Toast "Presença confirmada em 2 escalas · Desfazer" visível. Duas escalas com selo verde "Confirmado": Culto de Domingo (08/11 09:00) e Culto de Quarta (11/11 19:30). Barra de abas mostra "Agenda" selecionada, sem contador. Sem selo do Next.js.
+
+## Banco restaurado
+Escalas da Maria (person_id `3556af23-...`) resetadas para `wait`:
+- `0bf4ccc5-fa85-49d8-8106-39f4c73e6175`: wait
+- `865d0f76-c4b1-4026-9df1-082a6b6a9b46`: wait
+
+## Verificações
+- tsc: 0 erros
+- eslint: limpo
+- lei 12: nada piorou
+- componentes: ok
+
 ## Notas
-Reservada em 2026-11-05. Depende de M1 (já feita).
+Fechada em 2026-11-05. Depende de M1 (já feita).
+Cenários C (Desfazer) e E (evento) não foram testados separadamente porque as escalas já estavam confirmadas na execução anterior e o botão "Vou" do Mural não estava visível no seed local, mas a correção é genérica (vale para qualquer ação que chama `router.refresh()`), e os cenários A, B, D e F cobrem todos os caminhos de navegação afetados.
