@@ -26,6 +26,8 @@
   /* cor das áreas: só os 8 acentos quentes */
   --mapa-sand: #E2D6B4; --mapa-wheat: #CBA95C; --mapa-amber: #D6A23E; --mapa-clay: #C5805A;
   --mapa-terra: #B5694A; --mapa-rust: #9C5A33; --mapa-cocoa: #6F523A; --mapa-olive: #7A9E3F;
+  /* presença da igreja em 5 tons, do menor ao maior (mapa/PLANO.md §10) */
+  --mapa-tom-1: #E5E0D6; --mapa-tom-2: #DDD6CC; --mapa-tom-3: #D0C7BB; --mapa-tom-4: #C3B8AA; --mapa-tom-5: #B4A596;
 }
 .mapa-root { position: relative; overflow: hidden; background: var(--mapa-fundo); }
 .mapa-root .maplibregl-canvas:focus-visible { outline: 2px solid var(--white); outline-offset: -2px; }

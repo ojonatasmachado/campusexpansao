@@ -20,6 +20,7 @@ import { Folha, Gaveta, Janela } from "../../ui/Janela";
 import { MenuAcoes } from "../../ui/Menu";
 import { BlocoC } from "./BlocoC";
 import { BlocoD } from "./BlocoD";
+import { BlocoE } from "./BlocoE";
 
 const GRUPOS = [
   { v: "norte", l: "Célula Norte" },
@@ -162,6 +163,7 @@ export default function Galeria() {
       </Cartao>
       <BlocoC />
       <BlocoD />
+      <BlocoE />
       <Cartao className="galeria-bloco">
         <h2>Carregando, outras formas</h2>
         <Carregando forma="indicadores" quantos={4} />
