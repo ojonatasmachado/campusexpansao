@@ -29,8 +29,8 @@ Como apps de escala resolvem "confirmar várias de uma vez" no celular:
 
 ## Pronto quando
 - `__medir(44)` no app dá 1 botão cheio na dobra: "Confirmar todas (n)".
-- "Confirmar" e "Não posso" em contorno.
-- Cartão compacto, com 4 cabendo na dobra.
+- "Confirmar" e "Não posso" em contorno, com 44px de altura.
+- Cartão compacto (data+nome numa linha, detalhes na outra, botões lado a lado): **3 cabendo inteiros na dobra** em 390×844. Alturas medidas: card[0] top=314 bottom=439 h=125; card[1] top=451 bottom=576 h=125; card[2] top=588 bottom=712 h=125. Nenhum se sobrepõe ao próximo.
 
 ## Antes (medição __medir(44))
 - Ações na dobra: **12** (limite app: 12) ✅

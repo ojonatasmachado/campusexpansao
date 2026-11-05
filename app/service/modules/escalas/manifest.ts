@@ -39,5 +39,12 @@ export default defineModule({
       limite: { palavras: 80, acoes: 12, sobreposicoes: 0 },
       motivo: "Um culto por vez; as 3 ações acima do teto são as duas setas entre cultos e a segunda vaga da função, que é o próprio botão de escalar.",
     },
+    {
+      tela: "Agenda do membro (Minha agenda)",
+      tamanho: "390×844",
+      medido: { palavras: 98, acoes: 17, sobreposicoes: 0 },
+      limite: { palavras: 80, acoes: 12, sobreposicoes: 0 },
+      motivo: "Fora da lei em ambos. As 5 ações extras vêm dos 3 cartões compactos (Confirmar + Não posso cada) somados ao Confirmar todas. As 18 palavras extras vêm do cabeçalho Minha agenda + subtítulo + rodapé da barra de abas. Reduzir exige mover o Confirmar todas para fora da dobra ou condensar o cabeçalho.",
+    },
   ],
 });

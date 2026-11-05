@@ -75,7 +75,7 @@ function ConfirmarTodas({ pend, evById, onResponderEscala }: {
           for (const slot of pend) {
             if (await onResponderEscala(slot.id, "wait")) desfeitas++;
           }
-          ui.toast(plural(desfeitas, "resposta desfeita"));
+          ui.toast(plural(desfeitas, "resposta desfeita", "respostas desfeitas"));
         },
       });
     } else if (falhas.length < pend.length) {

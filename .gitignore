@@ -46,4 +46,3 @@ supabase/.temp/
 *.tsbuildinfo
 next-env.d.ts
 scripts/e2-fotos.mjs
-scripts/captura-m1-final.mjs
