@@ -57,33 +57,37 @@ function ConfirmarTodas({ pend, evById, onResponderEscala }: {
   const { comTermos: ct } = useTermos();
   const [salvando, setSalvando] = useState(false);
   if (!onResponderEscala || pend.length === 0) return null;
+  /* A lista e a aba mudam no toque (cópia local) e o banco grava em paralelo:
+     a janela do Desfazer (UNDO_MS) começa com a tela já atualizada. */
   const confirmarTodas = async () => {
     if (salvando) return;
     setSalvando(true);
-    const falhas: string[] = [];
-    for (const slot of pend) {
-      const ev = evById.get(slot.event_id);
-      const ok = await onResponderEscala(slot.id, "ok");
-      if (!ok) falhas.push(ev?.name ?? slot.id);
-    }
+    const alvo = pend;
+    alvo.forEach((slot) => ui.responderEscala(slot.id, "ok"));
+    const salvos = await Promise.all(alvo.map((slot) => onResponderEscala(slot.id, "ok")));
     setSalvando(false);
-    if (falhas.length === 0) {
-      ui.toast(`Presença confirmada em ${plural(pend.length, "escala")}`, {
-        label: ct("Desfazer"),
-        fn: async () => {
-          let desfeitas = 0;
-          for (const slot of pend) {
-            if (await onResponderEscala(slot.id, "wait")) desfeitas++;
-          }
-          ui.toast(plural(desfeitas, "resposta desfeita", "respostas desfeitas"));
-        },
-      });
-    } else if (falhas.length < pend.length) {
-      const okCount = pend.length - falhas.length;
-      ui.toast(`Confirmamos ${plural(okCount, "escala")} de ${pend.length}. Não conseguimos salvar: ${falhas.join(", ")}`);
-    } else {
+    const ok = alvo.filter((_, i) => salvos[i]);
+    const falhas = alvo.filter((_, i) => !salvos[i]);
+    falhas.forEach((slot) => ui.responderEscala(slot.id, null));
+    if (ok.length === 0) {
       ui.toast("Não conseguimos salvar suas respostas. Tente de novo.");
+      return;
     }
+    const msg = falhas.length === 0
+      ? `Presença confirmada em ${plural(ok.length, "escala")}`
+      : `Confirmamos ${plural(ok.length, "escala")} de ${alvo.length}. Não conseguimos salvar: ${falhas.map((slot) => evById.get(slot.event_id)?.name ?? slot.id).join(", ")}`;
+    ui.toast(msg, {
+      label: ct("Desfazer"),
+      fn: async () => {
+        ok.forEach((slot) => ui.responderEscala(slot.id, "wait"));
+        const desfeitos = await Promise.all(ok.map((slot) => onResponderEscala(slot.id, "wait")));
+        ok.forEach((slot, i) => { if (!desfeitos[i]) ui.responderEscala(slot.id, "ok"); });
+        const n = desfeitos.filter(Boolean).length;
+        ui.toast(n === ok.length
+          ? plural(n, "resposta desfeita", "respostas desfeitas")
+          : `Não conseguimos desfazer ${plural(ok.length - n, "escala")}. Tente de novo.`);
+      },
+    });
   };
   return (
     <div className="m6-confirmar-todas">
@@ -122,6 +126,8 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
   const evById = new Map(events.map((e) => [e.id, e]));
   const meus = roster
     .filter((r) => r.person_id === person.id && (evById.get(r.event_id)?.eventDate ?? "") >= hoje)
+    /* a resposta dada na tela vale antes do banco devolver a lista nova */
+    .map((r) => ({ ...r, status: ui.respostas[r.id] ?? r.status }))
     .sort((a, b) => (evById.get(a.event_id)?.eventDate ?? "").localeCompare(evById.get(b.event_id)?.eventDate ?? ""));
   const pend = meus.filter((r) => r.status === "wait");
   const outras = meus.filter((r) => r.status !== "wait");

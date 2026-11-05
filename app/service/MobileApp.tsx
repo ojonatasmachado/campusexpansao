@@ -204,8 +204,8 @@ function MobileMembro({
   const [abriuEm] = useState(() => new Date().toISOString());
   const destaqueAtivo = useMemo(() => announcements.find((a) => !!a.highlight_until && a.highlight_until > abriuEm) ?? null, [announcements, abriuEm]);
   const evDate = new Map(events.map((e) => [e.id, e.eventDate]));
-  const [respostas, setRespostas] = useState<Record<string, "ok" | "no">>({});
-  const responderEscalaUi = (id: string, v: "ok" | "no" | null) => setRespostas((r) => {
+  const [respostas, setRespostas] = useState<Record<string, "ok" | "no" | "wait">>({});
+  const responderEscalaUi = (id: string, v: "ok" | "no" | "wait" | null) => setRespostas((r) => {
     if (v === null) { if (!(id in r)) return r; const n = { ...r }; delete n[id]; return n; }
     return r[id] === v ? r : { ...r, [id]: v };
   });

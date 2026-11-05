@@ -42,9 +42,9 @@ export default defineModule({
     {
       tela: "Agenda do membro (Minha agenda)",
       tamanho: "390×844",
-      medido: { palavras: 98, acoes: 17, sobreposicoes: 0 },
+      medido: { palavras: 68, acoes: 15, sobreposicoes: 0 },
       limite: { palavras: 80, acoes: 12, sobreposicoes: 0 },
-      motivo: "Fora da lei em ambos. As 5 ações extras vêm dos 3 cartões compactos (Confirmar + Não posso cada) somados ao Confirmar todas. As 18 palavras extras vêm do cabeçalho Minha agenda + subtítulo + rodapé da barra de abas. Reduzir exige mover o Confirmar todas para fora da dobra ou condensar o cabeçalho.",
+      motivo: "Com 3 escalas a confirmar, as 3 ações acima do teto são o Não posso de cada cartão. A recusa fica no cartão porque é uma por uma (tem motivo e avisa o líder); só a confirmação vai em lote.",
     },
   ],
 });

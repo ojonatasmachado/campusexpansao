@@ -300,9 +300,9 @@ export type MemberUi = {
   go: (tab: MemberTab, sub?: string | null, extra?: { agSeg?: AgendaSeg; chatId?: string | null; newChat?: boolean; announcementId?: string; cardId?: string }) => void;
   sheet: (el: React.ReactNode | null) => void;
   toast: (msg: string, action?: { label: string; fn: () => void }) => void;
-  /* resposta da escala já confirmada pelo banco; null limpa a cópia local */
-  respostas: Record<string, "ok" | "no">;
-  responderEscala: (id: string, v: "ok" | "no" | null) => void;
+  /* resposta da escala na tela antes do banco responder; null limpa a cópia local */
+  respostas: Record<string, "ok" | "no" | "wait">;
+  responderEscala: (id: string, v: "ok" | "no" | "wait" | null) => void;
   /* abre a folha do tamanho do texto (Perfil) */
   tamanhoTexto: () => void;
   /* abre o detalhe do evento numa folha (v7 4.5) */
