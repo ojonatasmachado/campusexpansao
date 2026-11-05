@@ -262,27 +262,45 @@ function MobileMembro({
     }
   };
   /* Estado de navegação externo: restaura após hidratar e ao voltar/avançar.
-     Pré-visualização do líder não muda o endereço nem a navegação do painel. */
+     Pré-visualização do líder não muda o endereço nem a navegação do painel.
+     M8: o restore() só roda na montagem e no popstate. Um router.refresh()
+     (que perde ?maba da URL) NÃO deve disparar o restore de novo, senão o
+     app volta sozinho para o Início. Os valores que mudam com o refresh ficam
+     em refs para o listener de popstate ler sem depender deles no useEffect. */
+  const navCtxRef = useRef({ modulosMembro, serves, isRecep, isKids, isGuardian, pixOn, oracaoOn });
+  useEffect(() => {
+    navCtxRef.current = { modulosMembro, serves, isRecep, isKids, isGuardian, pixOn, oracaoOn };
+  });
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- compilador do React não está ligado; estável por design (lê refs)
+  const applyLocation = useCallback((url: URL) => {
+    const ctx = navCtxRef.current;
+    const next = readMemberLocation(url, (t, s) =>
+      ctx.modulosMembro.some((m) => m.id === s && m.home === t && m.visible({ serves: ctx.serves, isRecep: ctx.isRecep, isKids: ctx.isKids, isGuardian: ctx.isGuardian })) && (s !== "contribuir" || ctx.pixOn) && (s !== "oracao" || ctx.oracaoOn));
+    const canonical = writeMemberLocation(url, next);
+    window.history.replaceState(window.history.state, "", canonical.pathname + canonical.search + canonical.hash);
+    setTab(next.tab);
+    setSub(next.sub);
+    setAgSeg(next.segment);
+    setAnnouncementTarget(next.announcement);
+    setCardTarget(next.card);
+    setSheetEl(null);
+    setChatAberto(null);
+    setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 }));
+  }, []);
+  /* Hidratação: lê a URL uma vez na montagem. As dependências são só as que
+     exigem re-leitura real da URL (troca de pessoa ou organização). */
   useEffect(() => {
     if (mode !== "self") return;
-    const restore = () => {
-      const next = readMemberLocation(new URL(window.location.href), (t, s) =>
-        modulosMembro.some((m) => m.id === s && m.home === t && m.visible({ serves, isRecep, isKids, isGuardian })) && (s !== "contribuir" || pixOn) && (s !== "oracao" || oracaoOn));
-      const canonical = writeMemberLocation(new URL(window.location.href), next);
-      window.history.replaceState(window.history.state, "", canonical.pathname + canonical.search + canonical.hash);
-      setTab(next.tab);
-      setSub(next.sub);
-      setAgSeg(next.segment);
-      setAnnouncementTarget(next.announcement);
-      setCardTarget(next.card);
-      setSheetEl(null);
-      setChatAberto(null);
-      setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 }));
-    };
-    restore();
-    window.addEventListener("popstate", restore);
-    return () => window.removeEventListener("popstate", restore);
-  }, [mode, person.id, organizationId, modulosMembro, serves, isRecep, isKids, isGuardian, pixOn, oracaoOn]);
+    applyLocation(new URL(window.location.href));
+  }, [mode, person.id, organizationId, applyLocation]);
+  /* Popstate: voltar/avançar do navegador. O listener é estável (sem deps que
+     mudam com refresh) e lê o contexto atualizado via ref. */
+  useEffect(() => {
+    if (mode !== "self") return;
+    const onPop = () => applyLocation(new URL(window.location.href));
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [mode, applyLocation]);
   const abrirEvento = (eventId: string) => {
     const ev = events.find((e) => e.id === eventId);
     if (!ev) return;
