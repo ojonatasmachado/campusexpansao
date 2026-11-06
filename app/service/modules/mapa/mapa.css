@@ -399,3 +399,42 @@ a.m6-btn { text-decoration: none; }
 .lm-perms { max-width: 560px; }
 .lm-pe { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .lm-espaco { flex: 1; }
+
+/* ── Emergência (G14, P12 e P13) ── */
+.ca-rotulo { flex-shrink: 0; padding: 0 6px 0 10px; font-size: var(--fs-pn-13); font-weight: 700; color: var(--mapa-alerta); white-space: nowrap; }
+.em-legenda {
+  position: absolute; z-index: 3; top: 18px; left: 392px; display: flex; gap: 14px; padding: 9px 16px; border-radius: 999px;
+  background: var(--graphite); color: var(--white); font-size: var(--fs-pn-13);
+  box-shadow: 0 14px 30px -14px rgba(0, 0, 0, .3), 0 0 0 1px color-mix(in srgb, var(--white) 5%, transparent);
+  animation: entrar-mola .45s var(--ease-drawer) backwards;
+}
+.em-legenda > span { display: inline-flex; align-items: center; gap: 7px; }
+.em-bola { width: 12px; height: 12px; flex-shrink: 0; border-radius: 50%; border: 2px solid var(--mapa-papel); box-sizing: border-box; }
+.em-bola.st-sem_resposta { background: var(--mapa-afastado); }
+.em-bola.st-bem { background: var(--mapa-membro); }
+.em-bola.st-ajuda { background: var(--mapa-alerta); box-shadow: 0 0 0 3px color-mix(in srgb, var(--mapa-alerta) 30%, transparent); }
+.em-topo { display: flex; flex-direction: column; gap: 10px; }
+.em-numeros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.em-lista { display: flex; flex-direction: column; gap: 2px; }
+.em-familia {
+  display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 10px; border: 0; border-radius: 14px;
+  background: transparent; color: var(--white); font: inherit; text-align: left; cursor: pointer; transition: background-color .2s ease;
+}
+.em-familia:hover, .em-familia[aria-pressed="true"] { background: color-mix(in srgb, var(--white) 7%, transparent); }
+.em-familia-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.em-familia-txt b { font-size: var(--fs-pn-14); font-weight: 600; }
+.em-familia-txt span { font-size: var(--fs-pn-12); color: var(--muted); }
+.em-compor { display: flex; flex-direction: column; gap: 10px; }
+.em-compor-cab { display: flex; justify-content: space-between; gap: 8px; font-size: var(--fs-pn-13); }
+.em-compor-cab span { color: var(--muted); }
+.em-compor-nota { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: var(--fs-pn-12); color: var(--muted); }
+@media (max-width: 860px) {
+  .em-legenda { left: 12px; right: 12px; top: 12px; justify-content: space-between; gap: 8px; font-size: var(--fs-pn-12); }
+  .em-familia { min-height: 56px; }
+}
+@media (prefers-reduced-motion: reduce) { .em-legenda { animation: none; } .em-familia { transition: none; } }
+/* alvos de 44 px na emergência pelo celular (só nesta ferramenta) */
+@media (max-width: 860px) {
+  .mapa-tela:has(.em-legenda) .ca-pe .btn, .mapa-tela:has(.em-legenda) .em-topo .seg > *,
+  .balao-folha:has(.em-situacao) .btn, .balao-folha:has(.em-situacao) .seg > * { min-height: 44px; }
+}

@@ -2,10 +2,10 @@
 id: G14
 titulo: Refazer a emergência com formas e situação no mapa
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: feita
+quem: claude
+desde: 2026-11-06
+branch: historia/G14-emergencia-nova
 depende: [G10]
 tamanho: M
 ---
@@ -16,6 +16,15 @@ Referência: mapa/PLANO.md §10 e canvas "Mapa da igreja · evolução" (claude.
 
 ## Arquivos (trilho)
 - `app/service/modules/mapa/Emergencia.tsx`
+- `app/service/modules/mapa/AreaDesenhada.tsx`
+- `app/service/modules/mapa/posicao.ts`
+- `app/service/modules/mapa/CriarArea.tsx`
+- `app/service/modules/mapa/MapaIgreja.tsx`
+- `app/service/modules/mapa/contexto.ts`
+- `app/service/modules/mapa/mapa.css`
+- `app/service/modules/mapa/manifest.ts`
+- `supabase/migrations/0102_service_mapa_emergencia_pontos.sql`
+- `docs/service-v7/producao.sql`
 - `docs/service-v7/historias/G14-emergencia-nova.md`
 
 ## Pronto quando
@@ -29,3 +38,4 @@ Referência: mapa/PLANO.md §10 e canvas "Mapa da igreja · evolução" (claude.
 
 ## Notas
 Criada em 04/11/2026 a partir da evolução da jornada do mapa (decisões do usuário em PLANO §10). Nada de aviso ou sugestão automática de expansão.
+06/11/2026 (claude): a área atingida usa a mesma barra e o mesmo desenho do Criar área (extraídos para AreaDesenhada.tsx; o balão preso ao ponto virou usePosicaoNoMapa em posicao.ts). Migração 0102: ponto de cada família (média, ~10 m) e quem marcou; mapa_emergencia_previa conta famílias e pessoas ao vivo. Balão da família com situação trocável, endereço com registro, Ligar e Mensagem; prévia editável antes de perguntar. Densidade P12 32/98 (antes 27/85) e P13 com a família aberta 42/163, justificadas no manifesto. Fotos G14-0 a G14-3. Revisão: contexto estável (onMensagem vai por prop, sem remontar as ferramentas), enquadra só ao abrir, ponto da família com 3 casas (~110 m) e lista fechada quando a emergência encerra, prévia simplifica a área antes de contar e mostra "-" ao contar, erro ao carregar com Tentar de novo, alvos de 44 px no celular, Juntar bairros só no nível bairro.

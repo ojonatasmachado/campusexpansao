@@ -18,6 +18,7 @@ import { IDS, OPACIDADE, TOCAVEIS, marcarGrupo, montarCamadas, mostrar, opacidad
 import { registrarMarcadores, svgMarcador, type Marcador } from "./marcadores";
 import type { ContextoMapa, PessoaLider } from "./contexto";
 import { CriarArea } from "./CriarArea";
+import { usePosicaoNoMapa } from "./posicao";
 import { Rota } from "./Rota";
 import { Emergencia } from "./Emergencia";
 import { LinhaDoTempo } from "./LinhaDoTempo";
@@ -521,7 +522,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
 
       {contexto && modo === "area" && <CriarArea ctx={contexto} bairrosIniciais={areaInicial} nivel={nivel} />}
       {contexto && modo === "rota" && <Rota ctx={contexto} />}
-      {contexto && modo === "emergencia" && <Emergencia ctx={contexto} />}
+      {contexto && modo === "emergencia" && <Emergencia ctx={contexto} nivel={nivel} onMensagem={onMensagem} />}
       {contexto && modo === "linha" && <LinhaDoTempo ctx={contexto} nivel={nivel} />}
       {contexto && modo === "pontos" && <Pontos key={lugarEditar?.id ?? "novo"} ctx={contexto} editar={lugarEditar} />}
       {!contexto && modo && <div className="mp-vazio"><div><p className="mp-texto" role="status">Carregando o mapa...</p></div></div>}
@@ -539,17 +540,7 @@ function BalaoDoPonto({ org, sel, map, folha, pessoas, grupos, usaGrupos, cidade
   const { comTermos: ct } = useTermos();
   /* o balão acompanha o ponto quando o mapa se move; só ele redesenha. Com o
      ponto fora da tela fica escondido, mas montado (não puxa o foco de volta) */
-  const projetar = useCallback(() => {
-    const p = map.project(sel.onde);
-    const c = map.getContainer();
-    return { x: p.x, y: p.y, fora: p.x < 0 || p.y < 0 || p.x > c.clientWidth || p.y > c.clientHeight };
-  }, [map, sel.onde]);
-  const [pos, setPos] = useState(projetar);
-  useEffect(() => {
-    const mexeu = () => setPos(projetar());
-    map.on("move", mexeu);
-    return () => { map.off("move", mexeu); };
-  }, [map, projetar]);
+  const pos = usePosicaoNoMapa(map, sel.onde as [number, number]);
   const comum = { x: pos.x, y: pos.y, oculto: pos.fora && !folha, aoFechar, folha };
 
   if (sel.tipo === "pessoa") {

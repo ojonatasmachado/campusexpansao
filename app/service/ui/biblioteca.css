@@ -935,3 +935,9 @@ body { --graf-neutro: color-mix(in srgb, var(--muted) 38%, transparent); --graf-
 .aceite-pontos { list-style: none; margin: 14px 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .aceite-pontos li { display: flex; gap: 12px; align-items: flex-start; font-size: var(--fs-app-15); line-height: 1.45; }
 .aceite-ic { width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--white) 8%, transparent); color: var(--white); }
+
+/* pergunta da emergência na conversa do membro (G15): resposta com um toque */
+.m-pergunta { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.m-pergunta-botoes { display: flex; flex-wrap: wrap; gap: 6px; }
+.m-pergunta-botoes > * { min-height: 44px; }
+.m-pergunta-resp { font-size: var(--fs-app-13); color: var(--muted); }
