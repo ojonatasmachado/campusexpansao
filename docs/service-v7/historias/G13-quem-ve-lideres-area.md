@@ -2,10 +2,10 @@
 id: G13
 titulo: Mostrar os líderes de área em Quem vê o mapa
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-06
+branch: historia/G13-quem-ve-lideres-area
 depende: [G10]
 tamanho: P
 ---
