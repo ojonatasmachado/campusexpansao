@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { Map as MlMap, GeoJSONSource } from "maplibre-gl";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { Icon } from "../lib/icons";
@@ -17,7 +17,10 @@ import { Acao } from "../ui/Acao";
 import { Opcao } from "../ui/Opcao";
 import { Linha, Lista, linhaClasse } from "../ui/Linha";
 import { Carregando } from "../ui/Estados";
-/* Agenda › Onde (mapa da igreja, etapa 2). Sede, congregações e grupos são
+import { Selo } from "../ui/Selo";
+/* Agenda › Onde (mapa da igreja, etapa 2; G17, prancha P14): mapa cheio até
+   as abas, filtros por cima e a folha "Perto de você", que sobe para a lista
+   toda (toque ou arraste na alça) e abre o detalhe ao tocar. Sede, congregações e grupos são
    públicos para quem é da igreja: endereço, horário, líder e vagas. Nenhuma
    pessoa aparece aqui, só o ponto "você" do próprio CEP. */
 
@@ -45,6 +48,24 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
   const mapa = useRef<MlMap | null>(null);
   const enquadrou = useRef(false);
   const [mapaPronto, setMapaPronto] = useState(false);
+  const [folhaAberta, setFolhaAberta] = useState(false);
+  /* o mapa vai do topo do Onde até as abas: a altura sai da posição na tela */
+  const caixa = useRef<HTMLDivElement | null>(null);
+  const [altura, setAltura] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const medir = () => {
+      const el = caixa.current;
+      if (!el) return;
+      const abas = document.querySelector<HTMLElement>(".m6-tabs, .m6-nav, nav[aria-label='Abas']");
+      const fim = abas ? abas.getBoundingClientRect().top : window.innerHeight;
+      setAltura(Math.max(380, Math.round(fim - el.getBoundingClientRect().top)));
+    };
+    medir();
+    window.addEventListener("resize", medir);
+    return () => window.removeEventListener("resize", medir);
+  }, []);
+  const arraste = useRef<number | null>(null);
+  const arrastou = useRef(false);
   const locaisRef = useRef<Local[]>([]);
   useEffect(() => { locaisRef.current = locais ?? []; }, [locais]);
 
@@ -95,13 +116,9 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
 
   const semPonto = (locais ?? []).filter((l) => !temPonto(l)).length;
 
+  const vagasDe = (l: Local) => (l.lugares ? Math.max(0, l.lugares - (l.ocupados ?? 0)) : null);
   return (
-    <div className="onde">
-      <div className="onde-filtros" role="group" aria-label="Mostrar">
-        {([["tudo", "Tudo"], ["igrejas", "Igrejas"], ["grupos", ct("{Grupos}")]] as const).map(([v, l]) => (
-          <Opcao key={v} aria-pressed={filtro === v} marcada={filtro === v} estilo="onde-chip" onClick={() => setFiltro(v)}>{l}</Opcao>
-        ))}
-      </div>
+    <div className="onde" ref={caixa} style={altura ? { height: altura } : undefined}>
       <MapaBase
         className="onde-mapa"
         rotulo={ct("Mapa com a sede, as congregações e os {grupos}")}
@@ -132,27 +149,49 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
           return () => { mapa.current = null; enquadrou.current = false; setMapaPronto(false); };
         }}
       />
-
-      <div className="m6-sec">
-        <div className="m6-lbl">{eu ? "Perto de você" : "Lugares da igreja"}</div>
-        {!eu && <p className="m6-meta">Coloque seu CEP no Perfil para ver o que fica mais perto.</p>}
-        {erro && <p className="m6-meta" role="alert">Não foi possível carregar agora. Tente de novo.</p>}
-        {locais === null && !erro && <Carregando forma="lista" />}
-        {locais && ordenados.length === 0 && <p className="m6-meta">{filtro === "grupos" ? ct("A igreja ainda não cadastrou {grupos}.") : "Nada cadastrado ainda."}</p>}
-        <Lista>
-          {ordenados.map(({ l, km }) => (
-            <Acao key={l.id} className={linhaClasse({ estilo: "app" })} onClick={() => abrir(l)}>
-              <span className={`onde-marca${ehIgreja(l) ? " igreja" : ""}`} aria-hidden="true">{ehIgreja(l) && <Icon name="cruz" size={18} />}</span>
-              <span className="m6-rb">
-                <span className="m6-rt">{l.nome}</span>
-                <span className="m6-rs">{ehIgreja(l) ? (l.tipo === "sede" ? "Sede" : "Congregação") : joinDot(l.dia, l.hora, l.lider_nome)}</span>
-              </span>
-              {km !== null && <span className="onde-dist">{formatarDistancia(km)}</span>}
-            </Acao>
-          ))}
-        </Lista>
-        {semPonto > 0 && <p className="m6-meta">{plural(semPonto, "lugar ainda sem endereço", "lugares ainda sem endereço")} no mapa.</p>}
+      <div className="onde-filtros" role="group" aria-label="Mostrar">
+        {([["tudo", "Tudo"], ["igrejas", "Igrejas"], ["grupos", ct("{Grupos}")]] as const).map(([v, l]) => (
+          <Opcao key={v} aria-pressed={filtro === v} marcada={filtro === v} estilo="onde-chip" onClick={() => setFiltro(v)}>{l}</Opcao>
+        ))}
       </div>
+
+      <section className={`onde-folha${folhaAberta ? " aberta" : ""}`} aria-label={eu ? "Perto de você" : "Lugares da igreja"}>
+        <Acao className="onde-puxar" aria-expanded={folhaAberta} aria-label={folhaAberta ? "Mostrar o mapa" : "Ver a lista toda"}
+          onPointerDown={(e) => { arraste.current = e.clientY; arrastou.current = false; }}
+          onPointerUp={(e) => { const y0 = arraste.current; arraste.current = null; if (y0 !== null && Math.abs(e.clientY - y0) > 24) { arrastou.current = true; setFolhaAberta(e.clientY < y0); } }}
+          onClick={() => { if (arrastou.current) { arrastou.current = false; return; } setFolhaAberta((v) => !v); }}>
+          <span className="onde-alca" aria-hidden="true" />
+        </Acao>
+        <div className="onde-folha-cab">
+          <h2 className="m6-lbl">{eu ? "Perto de você" : "Lugares da igreja"}</h2>
+          {locais && <span className="m6-meta">{plural(ordenados.length, "lugar", "lugares")}</span>}
+        </div>
+        <div className="onde-folha-lista">
+          {!eu && <p className="m6-meta">Coloque seu CEP no Perfil para ver o que fica mais perto.</p>}
+          {erro && <p className="m6-meta" role="alert">Não foi possível carregar agora. Tente de novo.</p>}
+          {locais === null && !erro && <Carregando forma="lista" />}
+          {locais && ordenados.length === 0 && <p className="m6-meta">{filtro === "grupos" ? ct("A igreja ainda não cadastrou {grupos}.") : "Nada cadastrado ainda."}</p>}
+          <Lista>
+            {ordenados.map(({ l, km }) => {
+              const vagas = vagasDe(l);
+              return (
+                <Acao key={l.id} className={linhaClasse({ estilo: "app" })} onClick={() => abrir(l)}>
+                  <span className={`onde-marca${ehIgreja(l) ? " igreja" : ""}`} aria-hidden="true">{ehIgreja(l) && <Icon name="cruz" size={18} />}</span>
+                  <span className="m6-rb">
+                    <span className="m6-rt">{l.nome}</span>
+                    <span className="m6-rs">{ehIgreja(l) ? (l.tipo === "sede" ? "Sede" : "Congregação") : joinDot(l.dia, l.hora, l.lider_nome)}</span>
+                  </span>
+                  <span className="onde-lado">
+                    {km !== null && <span className="onde-dist">{formatarDistancia(km)}</span>}
+                    {vagas !== null && <Selo tamanho="toque" tom={vagas > 0 ? "ok" : "neutro"}>{vagas > 0 ? plural(vagas, "vaga") : "Lotado"}</Selo>}
+                  </span>
+                </Acao>
+              );
+            })}
+          </Lista>
+          {semPonto > 0 && <p className="m6-meta">{plural(semPonto, "lugar ainda sem endereço", "lugares ainda sem endereço")} no mapa.</p>}
+        </div>
+      </section>
     </div>
   );
 }

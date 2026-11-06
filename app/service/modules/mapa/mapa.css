@@ -45,10 +45,26 @@
 /* ── Agenda › Onde (app do membro) ── */
 .ts-seg.tres { margin-top: 10px; }
 a.m6-btn { text-decoration: none; }
-.onde-filtros { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+/* Onde (G17, P14): mapa cheio, filtros por cima e a folha "Perto de você" */
+.onde { position: relative; height: calc(100dvh - 260px); min-height: 380px; overflow: hidden; }
+.onde-filtros { position: absolute; z-index: 2; top: 12px; left: 12px; right: 12px; display: flex; gap: 8px; flex-wrap: wrap; pointer-events: none; }
+.onde-filtros > * { pointer-events: auto; box-shadow: 0 6px 16px rgba(0, 0, 0, .18); }
+.onde-folha {
+  position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; max-height: 42%; display: flex; flex-direction: column;
+  border-radius: 24px 24px 0 0; background: var(--graphite); box-shadow: 0 -12px 30px -12px rgba(0, 0, 0, .35);
+  transition: max-height .45s var(--ease-drawer);
+}
+.onde-folha.aberta { max-height: calc(100% - 12px); }
+.onde-puxar { align-self: center; width: 100%; min-height: 44px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; cursor: grab; touch-action: none; }
+.onde-alca { width: 40px; height: 5px; border-radius: 3px; background: var(--border-2); }
+.onde-folha-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 0 16px 6px; }
+.onde-folha-cab h2 { margin: 0; }
+.onde-folha-lista { flex: 1; min-height: 0; overflow-y: auto; padding: 0 16px calc(12px + var(--safe-bottom, 0px)); overscroll-behavior: contain; }
+.onde-lado { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+@media (prefers-reduced-motion: reduce) { .onde-folha { transition: none; } }
 .onde-chip { min-height: 44px; padding: 0 16px; border-radius: 22px; border: 0.5px solid var(--border-2); background: var(--graphite-2); color: var(--white); font: inherit; font-size: var(--fs-app-15); }
 .onde-chip.on { background: var(--white); color: var(--ink); border-color: var(--white); font-weight: 600; }
-.onde-mapa { height: min(46vh, 380px); border-radius: var(--r-md); border: 0.5px solid var(--border-2); }
+.onde-mapa { position: absolute; inset: 0; }
 .onde-marca { width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px; background: var(--white); border: 2px solid var(--ink); display: flex; align-items: center; justify-content: center; color: var(--ink); }
 .onde-marca.igreja { background: var(--ink); border-color: var(--white); color: var(--white); }
 .onde-dist { font-family: var(--mono); font-size: var(--fs-app-13); color: var(--muted); flex-shrink: 0; }
