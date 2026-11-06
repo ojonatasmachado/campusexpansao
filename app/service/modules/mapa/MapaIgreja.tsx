@@ -10,7 +10,7 @@ import MapaBase from "./MapaBase";
 import { ligarPredios3D, type CorMapa } from "./estilo";
 import { caixaDaGeometria, caixaDosPontos, circulo, dentroDe, distanciaKm, formatarDistancia, mascaraFora, sedeComPonto, temPonto, type Ponto } from "./geo";
 import {
-  carregarAcesso, carregarAreas, carregarCidade, carregarLocais, carregarPessoas, carregarRegioes, carregarSemPonto, carregarTotais,
+  carregarAcesso, carregarAreas, carregarMinhasAreas, carregarCidade, carregarLocais, carregarPessoas, carregarRegioes, carregarSemPonto, carregarTotais,
   type Acesso, type Area, type Cidade, type LocalMapa, type PessoaMapa, type Regiao, type Totais,
 } from "./dados";
 import { SITUACAO, milhar, pessoasNaRegiao, tomPresenca, umACada } from "./linguagem";
@@ -84,6 +84,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const people = useMemo(() => pessoasDoPainel, [chavePessoas]);
   const [acesso, setAcesso] = useState<Acesso | null>(null);
+  const [minhasAreas, setMinhasAreas] = useState<string[]>([]);
   const [erro, setErro] = useState("");
   const [pessoas, setPessoas] = useState<PessoaMapa[]>([]);
   const [locais, setLocais] = useState<LocalMapa[]>([]);
@@ -133,11 +134,12 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
       const a = await carregarAcesso(organizationId);
       setAcesso(a);
       if (!a?.pode) return;
-      const [p, l, t, c, ar] = await Promise.all([
+      const [p, l, t, c, ar, minhas] = await Promise.all([
         a.detalhe === "pessoas" ? carregarPessoas(organizationId) : Promise.resolve([] as PessoaMapa[]),
         carregarLocais(organizationId), carregarTotais(organizationId), carregarCidade(organizationId), carregarAreas(organizationId),
+        a.area_id ? carregarMinhasAreas(organizationId) : Promise.resolve([] as string[]),
       ]);
-      setPessoas(p); setLocais(l); setTotais(t); setCidade(c); setAreas(ar);
+      setPessoas(p); setLocais(l); setTotais(t); setCidade(c); setAreas(ar); setMinhasAreas(minhas);
       /* dados novos: um balão aberto apontaria para a lista antiga */
       setAberto(null);
       if (c?.tem_ibge) {
@@ -162,7 +164,13 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   const grupos = useMemo(() => locais.filter((l) => l.tipo === "grupo" && temPonto(l)) as (LocalMapa & Ponto)[], [locais]);
   const usaGrupos = grupos.length > 0 || pessoas.some((p) => p.grupo_id);
   const sede = useMemo(() => sedeComPonto(locais), [locais]);
-  const areaDoLider = acesso?.area_id ? areas.find((a) => a.id === acesso.area_id) ?? null : null;
+  /* recorte de quem vê só uma parte: a área liberada ou todas as que a pessoa cuida (G10) */
+  const areaDoLider = useMemo(() => {
+    const minhas = areas.filter((a) => minhasAreas.includes(a.id));
+    if (!acesso?.area_id || !minhas.length) return null;
+    const poligonos = minhas.flatMap((a) => (a.geojson.type === "Polygon" ? [a.geojson.coordinates] : a.geojson.type === "MultiPolygon" ? a.geojson.coordinates : []));
+    return { nome: minhas.map((a) => a.nome).join(", "), geojson: { type: "MultiPolygon", coordinates: poligonos } as GeoJSON.MultiPolygon };
+  }, [acesso, areas, minhasAreas]);
   const temOcultos = lugares.some((x) => x.oculto);
   /* sem nenhum oculto, a chave some e volta desligada */
   const mostrarOcultos = verOcultos && temOcultos;

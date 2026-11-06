@@ -5770,4 +5770,27 @@ end $$;
 revoke all on function service.mapa_area_previa(uuid, text[], jsonb) from public, anon;
 grant execute on function service.mapa_area_previa(uuid, text[], jsonb) to authenticated;
 
+-- ── as áreas que a pessoa logada vê (para a máscara e o "Você vê só...") ──
+-- Liberação do pastor: a área dela. Responsável sem liberação: todas as que
+-- cuida (o mesmo que o recorte junta). Cidade inteira: nenhuma linha.
+create or replace function service.mapa_minhas_areas(p_org uuid)
+returns setof uuid
+language plpgsql stable security definer set search_path = service, public as $$
+declare v_area uuid;
+begin
+  select x.area_id into v_area from service.mapa_acesso(p_org) x;
+  if v_area is null then return; end if;
+  if exists (select 1 from service.map_access ma join service.people p on p.id = ma.person_id
+              where ma.organization_id = p_org and p.user_id = auth.uid()) then
+    return next v_area;
+    return;
+  end if;
+  return query select ar.id from service.map_areas ar
+    join service.people p on p.id = ar.responsavel_id
+   where ar.organization_id = p_org and p.user_id = auth.uid()
+   order by ar.created_at, ar.id;
+end $$;
+revoke all on function service.mapa_minhas_areas(uuid) from public, anon;
+grant execute on function service.mapa_minhas_areas(uuid) to authenticated;
+
 commit;
