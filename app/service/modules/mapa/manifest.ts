@@ -64,6 +64,13 @@ export default defineModule({
       motivo: "G13, prancha P8: lista em dois grupos e o detalhe da pessoa (o que vê, nível de detalhe, três permissões e as saídas) lado a lado, para mudar ou tirar o acesso sem trocar de tela. A casca do painel soma 24 ações. Antes, com a mesma pessoa aberta, eram 30 ações, 163 palavras e 1 sobreposição; o líder de área nem aparecia.",
     },
     {
+      tela: "Agenda · Onde (app do membro)",
+      tamanho: "390×844",
+      medido: { palavras: 39, acoes: 14, sobreposicoes: 0 },
+      limite: { palavras: 80, acoes: 12, sobreposicoes: 0 },
+      motivo: "G17, prancha P14: a casca do app (avatar e 4 abas) e o seletor da Agenda somam 8 ações; o Onde tem os 3 filtros, a alça da folha e os lugares mais perto. Antes eram as mesmas 14 ações e 29 palavras, com o mapa pequeno e a lista embaixo.",
+    },
+    {
       tela: "Mapa da igreja · Emergência (marcar a área)",
       tamanho: "1366×860",
       medido: { palavras: 98, acoes: 32, sobreposicoes: 0 },

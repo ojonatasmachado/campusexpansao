@@ -62,7 +62,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 
 ### 4b. Evolução da jornada do mapa (decisões de 04/11, `mapa/PLANO.md` §10)
 Ordem por dependência; G3 cancelada (sem avisos automáticos de expansão).
-- **G12** Analisar (espera G1 para a idade) · **G8** Camadas do IBGE (espera G1) · **G17** Onde e aceite no app do membro
+- **G12** Analisar (espera G1 para a idade) · **G8** Camadas do IBGE (espera G1)
 
 ### 5. Verificações em código e banco local
 - **E5** Troca de escala ponta a ponta · **M4** Convite e primeiro acesso
