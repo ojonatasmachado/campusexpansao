@@ -6,7 +6,9 @@
 // 2022, arquivos por município) e descompacte antes: o arquivo é lido linha
 // a linha, então cidades grandes não estouram a memória.
 //
-// Para cada CEP: média das coordenadas dos endereços. Grava em
+// Para cada CEP: média das coordenadas dos endereços e o trecho da rua (direção
+// principal dos endereços e metade do comprimento, até 250 m), que espalha as
+// pessoas do mesmo CEP perto da rua (G5, migração 0099). Grava em
 // service.cep_centros e recalcula o ponto de membros, igrejas e células com
 // esses CEPs (service.mapa_reprocessar_ceps). Plano: docs/service-v7/mapa/PLANO.md.
 //
@@ -33,7 +35,25 @@ if (!url || !chave) {
 }
 const db = createClient(url, chave, { auth: { persistSession: false } }).schema("service");
 
-type Soma = { municipio: string; lat: number; lng: number; n: number };
+/* somas relativas ao primeiro endereço do CEP (evita perder precisão com
+   coordenadas grandes): médias, variâncias e covariância em graus */
+type Soma = { municipio: string; lat0: number; lng0: number; lat: number; lng: number; lat2: number; lng2: number; latlng: number; n: number };
+
+const METROS_POR_GRAU = 111320;
+const MEIA_MAX_M = 250;
+
+/* trecho da rua: eixo principal dos endereços (maior variância) e metade do
+   comprimento ~ 1,6 desvio ao longo dele. Um endereço só vira prédio único (0). */
+function trecho(s: Soma): { angulo: number | null; meia: number } {
+  if (s.n < 2) return { angulo: null, meia: 0 };
+  const mlat = s.lat / s.n, mlng = s.lng / s.n;
+  const kx = METROS_POR_GRAU * Math.cos(((s.lat0 + mlat) * Math.PI) / 180), ky = METROS_POR_GRAU;
+  const vx = Math.max(0, s.lng2 / s.n - mlng * mlng) * kx * kx;
+  const vy = Math.max(0, s.lat2 / s.n - mlat * mlat) * ky * ky;
+  const cxy = (s.latlng / s.n - mlat * mlng) * kx * ky;
+  const l1 = (vx + vy) / 2 + Math.sqrt(((vx - vy) / 2) ** 2 + cxy ** 2);
+  return { angulo: 0.5 * Math.atan2(2 * cxy, vx - vy), meia: Math.min(MEIA_MAX_M, 1.6 * Math.sqrt(l1)) };
+}
 
 /* o CNEFE usa ";" e vírgula decimal em algumas publicações: aceita os dois */
 function numero(v: string | undefined): number {
@@ -66,8 +86,9 @@ async function lerCsv(caminho: string): Promise<Map<string, Soma>> {
     const lng = numero(c[col.LONGITUDE]);
     /* fora do Brasil ou vazio: descarta (o IBGE avisa que há coordenadas imprecisas) */
     if (!/^\d{8}$/.test(cep) || !Number.isFinite(lat) || !Number.isFinite(lng) || lat < -34 || lat > 6 || lng < -75 || lng > -28) { descartadas++; continue; }
-    const s = somas.get(cep) ?? { municipio: (c[col.COD_MUNICIPIO] ?? "").replace(/\D/g, ""), lat: 0, lng: 0, n: 0 };
-    s.lat += lat; s.lng += lng; s.n++;
+    const s = somas.get(cep) ?? { municipio: (c[col.COD_MUNICIPIO] ?? "").replace(/\D/g, ""), lat0: lat, lng0: lng, lat: 0, lng: 0, lat2: 0, lng2: 0, latlng: 0, n: 0 };
+    const dlat = lat - s.lat0, dlng = lng - s.lng0;
+    s.lat += dlat; s.lng += dlng; s.lat2 += dlat * dlat; s.lng2 += dlng * dlng; s.latlng += dlat * dlng; s.n++;
     somas.set(cep, s);
   }
   console.log(`${lidas} endereços lidos, ${descartadas} descartados, ${somas.size} CEPs.`);
@@ -78,15 +99,20 @@ async function main() {
   const somas = await lerCsv(arquivo);
   if (somas.size === 0) throw new Error("Nenhum CEP válido no arquivo.");
   const agora = new Date().toISOString();
-  const linhas = [...somas].map(([cep, s]) => ({
-    cep,
-    municipio_ibge: s.municipio,
-    latitude: Number((s.lat / s.n).toFixed(6)),
-    longitude: Number((s.lng / s.n).toFixed(6)),
-    enderecos: s.n,
-    fonte: "ibge:cnefe:2022",
-    atualizado_em: agora,
-  }));
+  const linhas = [...somas].map(([cep, s]) => {
+    const t = trecho(s);
+    return {
+      cep,
+      municipio_ibge: s.municipio,
+      latitude: Number((s.lat0 + s.lat / s.n).toFixed(6)),
+      longitude: Number((s.lng0 + s.lng / s.n).toFixed(6)),
+      eixo_angulo: t.angulo === null ? null : Number(t.angulo.toFixed(4)),
+      eixo_meia_m: Number(t.meia.toFixed(1)),
+      enderecos: s.n,
+      fonte: "ibge:cnefe:2022",
+      atualizado_em: agora,
+    };
+  });
   for (let i = 0; i < linhas.length; i += 1000) {
     const { error } = await db.from("cep_centros").upsert(linhas.slice(i, i + 1000), { onConflict: "cep" });
     if (error) throw new Error(`Falha gravando centros de CEP: ${error.message}`);

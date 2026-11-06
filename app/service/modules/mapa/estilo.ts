@@ -7,7 +7,7 @@ export const ESTILO_URL = process.env.NEXT_PUBLIC_MAPA_ESTILO || "https://tiles.
 
 export type CorMapa =
   | "fundo" | "agua" | "verde" | "tinta" | "papel"
-  | "membro" | "visitante" | "novo" | "afastado" | "cluster"
+  | "membro" | "visitante" | "novo" | "afastado"
   | "falta" | "forte" | "media" | "alerta" | "rota" | "poi"
   | "sand" | "wheat" | "amber" | "clay" | "terra" | "rust" | "cocoa" | "olive"
   | "tom-1" | "tom-2" | "tom-3" | "tom-4" | "tom-5";
@@ -15,7 +15,7 @@ export type CorMapa =
 /* as cores dos dados moram no CSS (.mapa-root, service-app.css): aqui só lemos */
 export function coresDoMapa(el: Element): Record<CorMapa, string> {
   const cs = getComputedStyle(el);
-  const nomes: CorMapa[] = ["fundo", "agua", "verde", "tinta", "papel", "membro", "visitante", "novo", "afastado", "cluster", "falta", "forte", "media", "alerta", "rota", "poi", "sand", "wheat", "amber", "clay", "terra", "rust", "cocoa", "olive", "tom-1", "tom-2", "tom-3", "tom-4", "tom-5"];
+  const nomes: CorMapa[] = ["fundo", "agua", "verde", "tinta", "papel", "membro", "visitante", "novo", "afastado", "falta", "forte", "media", "alerta", "rota", "poi", "sand", "wheat", "amber", "clay", "terra", "rust", "cocoa", "olive", "tom-1", "tom-2", "tom-3", "tom-4", "tom-5"];
   return Object.fromEntries(nomes.map((n) => [n, cs.getPropertyValue(`--mapa-${n}`).trim() || "gray"])) as Record<CorMapa, string>;
 }
 

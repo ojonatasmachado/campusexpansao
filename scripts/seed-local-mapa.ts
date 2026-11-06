@@ -55,7 +55,11 @@ async function main() {
       ceps.push({ cep: `${r.prefixo}${String(100 + i * 7).padStart(3, "0")}`, bairro: r.bairro, latitude: r.lat + (rnd() - 0.5) * 0.012, longitude: r.lng + (rnd() - 0.5) * 0.012 });
     }
   }
-  const { error: e1 } = await db.from("cep_centros").upsert(ceps.map((c) => ({ cep: c.cep, municipio_ibge: "3550308", latitude: c.latitude, longitude: c.longitude, enderecos: 40, fonte: MARCA })));
+  /* trecho da rua de cada CEP (G5), derivado do número do CEP para não mudar o
+     sorteio do resto do seed: direção entre 0 e 180 graus e metade do trecho
+     entre 50 e 140 m. O último CEP de cada região é prédio único (trecho 0). */
+  const trecho = (cep: string, i: number) => (i % 6 === 5 ? { eixo_angulo: null, eixo_meia_m: 0 } : { eixo_angulo: ((Number(cep) % 180) * Math.PI) / 180, eixo_meia_m: 50 + (Number(cep) % 91) });
+  const { error: e1 } = await db.from("cep_centros").upsert(ceps.map((c, i) => ({ cep: c.cep, municipio_ibge: "3550308", latitude: c.latitude, longitude: c.longitude, enderecos: 40, fonte: MARCA, ...trecho(c.cep, i) })));
   if (e1) throw e1;
   const cepsDe = (bairro: string) => ceps.filter((c) => c.bairro === bairro);
 

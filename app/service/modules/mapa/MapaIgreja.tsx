@@ -191,12 +191,6 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
       const onde: [number, number] = [e.lngLat.lng, e.lngLat.lat];
       const props = f?.properties ?? {};
       if (!f) { setAberto(null); return; }
-      if (f.layer.id === "mp-clusters") {
-        (map.getSource("mp-pessoas") as GeoJSONSource).getClusterExpansionZoom(props.cluster_id).then((z) => {
-          map.easeTo({ center: (f.geometry as GeoJSON.Point).coordinates as [number, number], zoom: z });
-        }).catch(() => { /* os dados mudaram no meio: o próximo toque resolve */ });
-        return;
-      }
       const ponto = f.geometry.type === "Point" ? (f.geometry.coordinates as [number, number]) : onde;
       if (f.layer.id === "mp-pessoa") {
         const p = pessoas[props.i];
