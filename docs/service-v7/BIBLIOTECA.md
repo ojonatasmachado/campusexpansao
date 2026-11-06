@@ -66,8 +66,8 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Etapas/linha do tempo | `Etapas` em `app/service/ui/Etapas.tsx` (linha, app, faixa; feito, atual, futuro; data real em cada etapa feita) | sim | ok; CI barra `.tl`, `.jrn-tl`, `.m6-step`, `.imp-steps`. Ficam de fora por não serem etapas: `.pipe` (quadro de visitantes), `LinhaDoTempo` do mapa (série no tempo), `.crono-step` (roteiro editável do culto) | 1, 6 |
 | Menu de opções | `MenuAcoes` em `app/service/ui/Menu.tsx`; `MenuMais` usa por dentro | sim | menu do usuário (TopUserMenu) é peça própria | 4 |
 | Painel do mapa | `PainelMapa`, `GrupoCamadas`, `LinhaCamada`, `TransparenciaCamada`, `EscalaTons` em `app/service/ui/PainelMapa.tsx` (aberto, recolhido em trilho de ícones, painel de ferramenta com "Voltar ao mapa"; linha inteira é o interruptor) | sim | mapa ainda usa `.mp-painel` até a G7 | mapa P1 |
-| Barra de ferramentas | `BarraFerramentas` em `app/service/ui/BarraFerramentas.tsx` (itens com ícone e nome, `alerta` separado no fim, `fileira` rolável no celular, item com `href` vira link) | sim | mapa ainda usa o menu Ferramentas até a G7 | mapa P1, P2 |
-| Balão | `Balao` e `LinhaBalao` em `app/service/ui/Balao.tsx` (preso a um ponto, vira para o outro lado perto da borda, Esc e foco) | sim | mapa ainda usa o painel lateral `.mp-dir` até a G7 | mapa P1 |
+| Barra de ferramentas | `BarraFerramentas` em `app/service/ui/BarraFerramentas.tsx` (itens com ícone e nome, `alerta` separado no fim, `fileira` rolável no celular, item com `href` vira link; `desloc` e `reservaDir` para centrar entre painel e ajuda, `compacta` para espaço curto) | sim | ok (mapa desde a G7) | mapa P1, P2 |
+| Balão | `Balao` e `LinhaBalao` em `app/service/ui/Balao.tsx` (preso a um ponto, vira para o outro lado perto da borda, Esc e foco; `oculto` quando o ponto sai da tela) | sim | ok (mapa desde a G7) | mapa P1 |
 
 ## Ordem sugerida de troca
 

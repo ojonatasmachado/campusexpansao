@@ -32,6 +32,8 @@ export const carregarTotais = async (org: string) => (await rpc<Totais[]>("mapa_
 export const carregarCidade = async (org: string) => (await rpc<Cidade[]>("mapa_cidade", { p_org: org }))[0];
 export const carregarRegioes = (org: string, nivel: "bairro" | "setor" | "area") => rpc<Regiao[]>("mapa_regioes", { p_org: org, p_nivel: nivel });
 export const carregarAreas = (org: string) => rpc<Area[]>("mapa_areas", { p_org: org });
+/* quem ainda não está no mapa (sem CEP ou CEP não achado): só para acesso total (0098) */
+export const carregarSemPonto = (org: string) => rpc<{ id: string; nome: string; tem_cep: boolean }[]>("mapa_sem_ponto", { p_org: org });
 export const previaArea = async (org: string, bairros: string[], geojson: GeoJSON.Geometry | null) =>
   (await rpc<{ pessoas: number; moradores: number; grupos: number }[]>("mapa_area_previa", { p_org: org, p_bairros: bairros, p_geojson: geojson }))[0];
 export const salvarArea = (org: string, a: { id?: string | null; nome: string; tipo: Area["tipo"]; cor: CorArea; responsavel_id: string | null; bairros: string[]; geojson: GeoJSON.Geometry | null }) =>

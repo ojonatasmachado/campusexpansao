@@ -1,10 +1,6 @@
-import type { Leitura } from "./dados";
-
 /* Linguagem simples do mapa (crítica de usabilidade, 2026-10-21): nada de
-   "penetração" ou "por mil". Uma fonte só para todas as telas. */
-
-export const LEITURA: Record<Leitura, string> = { falta: "Falta igreja", forte: "Somos fortes", media: "Na média da cidade" };
-export const LEITURA_BAIRRO: Record<Leitura, string> = { falta: "Bairro onde falta igreja", forte: "Bairro onde somos fortes", media: "Bairro na média da cidade" };
+   "penetração" ou "por mil". Uma fonte só para todas as telas. O mapa descreve,
+   nunca conclui (mapa/PLANO.md §10): nada de "falta igreja" ou "somos fortes". */
 
 export function milhar(n: number): string {
   return Math.round(n).toLocaleString("pt-BR");
@@ -28,6 +24,16 @@ export function frenteCidade(vezes: number | null | undefined): string {
 export function pessoasNaRegiao(n: number): string {
   if (n < 0) return "menos de 3";
   return milhar(n);
+}
+
+/* Presença da igreja em 5 tons (mapa/PLANO.md §10): "1 a cada X moradores".
+   Cortes de X do tom mais claro ao mais escuro: tom 1 é mais de 2.000, tom 5 é
+   200 ou menos (as pontas da legenda). Sem ninguém da igreja, o mais claro. */
+export const CORTES_PRESENCA = [2000, 1000, 500, 200] as const;
+export function tomPresenca(x: number | null | undefined): 1 | 2 | 3 | 4 | 5 {
+  if (!x) return 1;
+  const i = CORTES_PRESENCA.findIndex((c) => x > c);
+  return (i === -1 ? 5 : i + 1) as 1 | 2 | 3 | 4 | 5;
 }
 
 export const SITUACAO: Record<string, string> = { membro: "Membro", novo: "Novo na igreja" };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Map as MlMap, GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
+import type { Map as MlMap, GeoJSONSource, MapMouseEvent } from "maplibre-gl";
 import { Icon } from "../../lib/icons";
 import { plural } from "../../lib/plural";
 import { useTermos } from "../../lib/vocabulario-context";
@@ -9,39 +9,61 @@ import MapaBase from "./MapaBase";
 import { ligarPredios3D, type CorMapa } from "./estilo";
 import { caixaDaGeometria, caixaDosPontos, circulo, dentroDe, distanciaKm, formatarDistancia, mascaraFora, sedeComPonto, temPonto, type Ponto } from "./geo";
 import {
-  carregarAcesso, carregarAreas, carregarCidade, carregarLocais, carregarPessoas, carregarRegioes, carregarTotais,
+  carregarAcesso, carregarAreas, carregarCidade, carregarLocais, carregarPessoas, carregarRegioes, carregarSemPonto, carregarTotais,
   type Acesso, type Area, type Cidade, type LocalMapa, type PessoaMapa, type Regiao, type Totais,
 } from "./dados";
-import { LEITURA, LEITURA_BAIRRO, SITUACAO, frenteCidade, milhar, pessoasNaRegiao, umACada } from "./linguagem";
+import { SITUACAO, milhar, pessoasNaRegiao, tomPresenca, umACada } from "./linguagem";
+import { IDS, OPACIDADE, TOCAVEIS, marcarGrupo, montarCamadas, mostrar, opacidade, type ChaveCamada } from "./camadas";
+import { registrarMarcadores, svgMarcador, type Marcador } from "./marcadores";
 import type { ContextoMapa, PessoaLider } from "./contexto";
 import { CriarArea } from "./CriarArea";
 import { Rota } from "./Rota";
 import { Emergencia } from "./Emergencia";
 import { LinhaDoTempo } from "./LinhaDoTempo";
-import { Pontos } from "./Pontos";
+import { CATEGORIAS, Pontos, carregarPontos, type Ponto as Lugar } from "./Pontos";
 import { Mesa } from "./Mesa";
 import { LiberarMapa } from "./LiberarMapa";
 
-import { Botao, BotaoIcone } from "../../ui/Botao";
-import { Interruptor } from "../../ui/Interruptor";
 import { Acao } from "../../ui/Acao";
-import { Avatar } from "../../ui/Avatar";
-/* Painel › Pessoas › Mapa da igreja (PLANO.md, telas 1 e 3 do design).
-   Visões prontas em vez de 12 interruptores; camadas e filtros ficam em
-   "Personalizar". Ferramentas abrem os modos sobre o mesmo mapa. */
+import { Botao, BotaoIcone } from "../../ui/Botao";
+import { Entrada } from "../../ui/Campo";
+import { Janela } from "../../ui/Janela";
+import { linhaClasse } from "../../ui/Linha";
+import { Balao, LinhaBalao } from "../../ui/Balao";
+import { BarraFerramentas, type ItemFerramenta } from "../../ui/BarraFerramentas";
+import { EscalaTons, GrupoCamadas, LinhaCamada, MarcaCamada, PainelMapa, TransparenciaCamada } from "../../ui/PainelMapa";
 
-type Visao = "pessoas" | "falta" | "celulas" | "regiao";
-type Camadas = { pessoas: boolean; igrejas: boolean; celulas: boolean; areas: boolean; raios: boolean; descobertos: boolean; calor: boolean; regioes: boolean; pontos: boolean };
-type Selecao = { tipo: "pessoa"; p: PessoaMapa } | { tipo: "regiao"; r: Regiao } | { tipo: "local"; l: LocalMapa } | { tipo: "area"; a: Area } | null;
+/* Painel › Pessoas › Mapa da igreja (G7, mapa/PLANO.md §10, prancha P1).
+   O mapa mostra o que existe; quem decide é a igreja: nenhuma visão pronta,
+   nenhum aviso de "falta igreja". Camadas que se somam num painel à esquerda,
+   ferramentas numa barra embaixo, um balão preso ao ponto tocado com tudo dele,
+   e 3D, aproximar e afastar no canto. As ferramentas (criar área, rota, linha
+   do tempo, marcar lugar, emergência) abrem os modos sobre o mesmo mapa. */
+
+type Selecao =
+  | { tipo: "pessoa"; i: number; p: PessoaMapa }
+  | { tipo: "local"; l: LocalMapa & Ponto }
+  | { tipo: "regiao"; r: Regiao }
+  | { tipo: "area"; a: Area }
+  | { tipo: "lugar"; pt: Lugar };
+type Aberto = Selecao & { onde: [number, number] };
 type Modo = null | "area" | "rota" | "emergencia" | "linha" | "pontos";
+type GrupoLugar = "igreja" | "escolas" | "saude" | "onibus" | "igrejas";
 
-const PRESETS: Record<Visao, Camadas> = {
-  pessoas: { pessoas: true, igrejas: true, celulas: true, areas: true, raios: false, descobertos: false, calor: false, regioes: false, pontos: false },
-  falta: { pessoas: true, igrejas: true, celulas: false, areas: false, raios: false, descobertos: false, calor: false, regioes: true, pontos: false },
-  celulas: { pessoas: true, igrejas: true, celulas: true, areas: false, raios: false, descobertos: true, calor: false, regioes: false, pontos: false },
-  regiao: { pessoas: false, igrejas: true, celulas: true, areas: true, raios: false, descobertos: false, calor: false, regioes: false, pontos: true },
-};
-const DESCOBERTO_KM = 2;
+const LUGARES: { id: GrupoLugar; nome: string; icone: string }[] = [
+  { id: "igreja", nome: "Lugares da igreja", icone: "bandeira" },
+  { id: "escolas", nome: "Escolas e praças", icone: "cursos" },
+  { id: "saude", nome: "Assistência e saúde", icone: "coracao" },
+  { id: "onibus", nome: "Ônibus", icone: "transporte" },
+  { id: "igrejas", nome: "Igrejas na região", icone: "cruz" },
+];
+const grupoDoLugar = (categoria: string) => (CATEGORIAS.find((c) => c.id === categoria)?.grupo ?? "igreja") as GrupoLugar;
+const TIPO_AREA: Record<Area["tipo"], string> = { setor: "Setor", regiao: "Região pastoral", alcance: "Atuação" };
+const LARGURA_PAINEL = 360; /* 16 de margem + 344 do painel (biblioteca.css, .pm-painel) */
+const LARGURA_TRILHO = 80;
+const RESERVA_AJUDA = 156; /* o botão de ajuda "?" fica embaixo, à direita, a 96 px da borda */
+const primeiroNome = (nome: string | null | undefined) => (nome ?? "").trim().split(/\s+/)[0] ?? "";
+const ic = (n: string) => <Icon name={n} size={20} stroke={1.9} />;
 const vazio = (): GeoJSON.FeatureCollection => ({ type: "FeatureCollection", features: [] });
 
 export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel, podeLiberar, onAbrirMembro, onMensagem }: {
@@ -61,29 +83,40 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   const [erro, setErro] = useState("");
   const [pessoas, setPessoas] = useState<PessoaMapa[]>([]);
   const [locais, setLocais] = useState<LocalMapa[]>([]);
+  const [lugares, setLugares] = useState<Lugar[]>([]);
   const [totais, setTotais] = useState<Totais | null>(null);
   const [cidade, setCidade] = useState<Cidade | null>(null);
   const [regioes, setRegioes] = useState<Regiao[]>([]);
-  const [areas, setAreas] = useState<Area[]>([]);
   const [nivel, setNivel] = useState<"bairro" | "setor">("bairro");
-  const [visao, setVisao] = useState<Visao>("pessoas");
-  const [camadas, setCamadas] = useState<Camadas>(PRESETS.pessoas);
-  const [personalizar, setPersonalizar] = useState(false);
-  const [filtroSit, setFiltroSit] = useState<"todos" | "membro" | "novo">("todos");
-  const [soSemGrupo, setSoSemGrupo] = useState(false);
-  const [sel, setSel] = useState<Selecao>(null);
+  const [areas, setAreas] = useState<Area[]>([]);
+
+  const [camadas, setCamadas] = useState<Record<ChaveCamada, boolean>>({ pessoas: true, calor: false, igrejas: true, grupos: true, presenca: false, raios: false });
+  const [transp, setTransp] = useState({ calor: 0, presenca: 20 });
+  const [areasOcultas, setAreasOcultas] = useState<string[]>([]);
+  const [lugaresLigados, setLugaresLigados] = useState<GrupoLugar[]>([]);
+  const [grupoAberto, setGrupoAberto] = useState({ areas: false, lugares: false });
+  const [recolhido, setRecolhido] = useState(false);
+  const [celular, setCelular] = useState(false);
+  const [aberto, setAberto] = useState<Aberto | null>(null);
   const [modo, setModo] = useState<Modo>(null);
   const [tela, setTela] = useState<"mapa" | "mesa" | "liberar">("mapa");
   const [mesaRegioes, setMesaRegioes] = useState<string[]>([]);
   const [mesaNivel, setMesaNivel] = useState<"bairro" | "setor" | "area">("bairro");
-  const [ferramentas, setFerramentas] = useState(false);
+  const [areaInicial, setAreaInicial] = useState<string[]>([]);
+  const [janela, setJanela] = useState<null | "entenda" | "semcep">(null);
+  const [semPonto, setSemPonto] = useState<{ id: string; nome: string; tem_cep: boolean }[] | null>(null);
   const [busca, setBusca] = useState("");
-  const [tip, setTip] = useState<{ x: number; y: number; r: Regiao } | null>(null);
-  const [verTodos, setVerTodos] = useState(false);
-  const [painelVer, setPainelVer] = useState(false);
   const [tres, setTres] = useState(false);
   const [mapa, setMapa] = useState<{ map: MlMap; cores: Record<CorMapa, string> } | null>(null);
-  const [areaInicial, setAreaInicial] = useState<string[]>([]);
+
+  /* celular: o painel começa recolhido e a barra vira fileira (G16 refina as folhas) */
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 860px)");
+    const aplicar = () => { setCelular(mq.matches); if (mq.matches) setRecolhido(true); };
+    aplicar();
+    mq.addEventListener("change", aplicar);
+    return () => mq.removeEventListener("change", aplicar);
+  }, []);
 
   /* ── dados ── */
   const carregar = useCallback(async () => {
@@ -96,6 +129,8 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
         carregarLocais(organizationId), carregarTotais(organizationId), carregarCidade(organizationId), carregarAreas(organizationId),
       ]);
       setPessoas(p); setLocais(l); setTotais(t); setCidade(c); setAreas(ar);
+      /* dados novos: um balão aberto apontaria para a lista antiga */
+      setAberto(null);
       if (c?.tem_ibge) {
         const n = c.tem_bairros ? "bairro" : "setor";
         setNivel(n);
@@ -107,117 +142,119 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   }, [organizationId]);
   // eslint-disable-next-line react-hooks/set-state-in-effect -- carga do servidor ao abrir
   useEffect(() => { carregar(); }, [carregar]);
-  const trocarNivel = async (n: "bairro" | "setor") => {
-    setNivel(n);
-    try { setRegioes(await carregarRegioes(organizationId, n)); } catch { setErro("Não foi possível carregar as regiões. Tente de novo."); }
-  };
+  /* lugares: ao abrir e ao voltar de Marcar lugar */
+  useEffect(() => {
+    if (modo || !acesso?.pode) return;
+    let vivo = true;
+    carregarPontos(organizationId).then((x) => { if (vivo) setLugares(x); }).catch(() => { if (vivo) setLugares([]); });
+    return () => { vivo = false; };
+  }, [organizationId, acesso, modo]);
 
   const grupos = useMemo(() => locais.filter((l) => l.tipo === "grupo" && temPonto(l)) as (LocalMapa & Ponto)[], [locais]);
+  const usaGrupos = grupos.length > 0 || pessoas.some((p) => p.grupo_id);
   const sede = useMemo(() => sedeComPonto(locais), [locais]);
-  const pertoDeGrupo = useCallback((p: Ponto) => {
-    let melhor: { g: LocalMapa; km: number } | null = null;
-    for (const g of grupos) { const km = distanciaKm(p, g); if (!melhor || km < melhor.km) melhor = { g, km }; }
-    return melhor;
-  }, [grupos]);
-  const visiveis = useMemo(() => pessoas.filter((p) => (filtroSit === "todos" || p.situacao === filtroSit) && (!soSemGrupo || !p.grupo_id)), [pessoas, filtroSit, soSemGrupo]);
-  const descobertos = useMemo(() => visiveis.filter((p) => !p.grupo_id && (pertoDeGrupo(p)?.km ?? Infinity) > DESCOBERTO_KM), [visiveis, pertoDeGrupo]);
   const areaDoLider = acesso?.area_id ? areas.find((a) => a.id === acesso.area_id) ?? null : null;
+  const lugaresVisiveis = useMemo(() => lugares.filter((x) => !x.oculto), [lugares]);
+  const contaLugares = (g: GrupoLugar) => lugaresVisiveis.filter((x) => grupoDoLugar(x.categoria) === g).length;
+  const comIbge = !!cidade?.tem_ibge && regioes.length > 0;
+  /* a lista traz nomes de qualquer membro: só pastor e administração (0098) */
+  const semCep = podeLiberar && totais ? totais.pessoas - totais.com_ponto : 0;
 
-  /* ── camadas do mapa ── */
+  /* ── mapa: camadas e toques ── */
+  const toqueRef = useRef<(e: MapMouseEvent) => void>(() => {});
+  /* com uma ferramenta aberta o cursor é dela (mira): o mapa principal não mexe */
+  const modoRef = useRef<Modo>(null);
+  useEffect(() => { modoRef.current = modo; });
   const pronto = ({ map, cores }: { map: MlMap; cores: Record<CorMapa, string> }) => {
-    const add = (id: string) => map.addSource(id, { type: "geojson", data: vazio() });
-    add("mp-regioes"); add("mp-areas"); add("mp-raios"); add("mp-locais"); add("mp-calor"); add("mp-descobertos"); add("mp-mascara");
-    map.addSource("mp-pessoas", { type: "geojson", data: vazio(), cluster: true, clusterRadius: 44, clusterMaxZoom: 15 });
-    const corLeitura: maplibregl.ExpressionSpecification = ["match", ["get", "leitura"], "falta", cores.falta, "forte", cores.forte, cores.media];
-    map.addLayer({ id: "mp-regioes-fill", type: "fill", source: "mp-regioes", paint: { "fill-color": corLeitura, "fill-opacity": 0.6 } });
-    map.addLayer({ id: "mp-regioes-linha", type: "line", source: "mp-regioes", paint: { "line-color": cores.papel, "line-width": 1.5 } });
-    map.addLayer({ id: "mp-regioes-sel", type: "line", source: "mp-regioes", filter: ["==", ["get", "codigo"], ""], paint: { "line-color": cores.tinta, "line-width": 3 } });
-    map.addLayer({ id: "mp-areas-fill", type: "fill", source: "mp-areas", paint: { "fill-color": ["get", "hex"], "fill-opacity": 0.14 } });
-    map.addLayer({ id: "mp-areas-linha", type: "line", source: "mp-areas", paint: { "line-color": ["get", "hex"], "line-width": 2.5 } });
-    map.addLayer({ id: "mp-raios", type: "line", source: "mp-raios", paint: { "line-color": cores.tinta, "line-width": 1.2, "line-dasharray": [3, 3], "line-opacity": 0.6 } });
-    map.addLayer({ id: "mp-calor", type: "heatmap", source: "mp-calor", paint: { "heatmap-radius": 28, "heatmap-opacity": 0.75, "heatmap-color": ["interpolate", ["linear"], ["heatmap-density"], 0, "rgba(0,0,0,0)", 0.3, cores.sand, 0.6, cores.amber, 1, cores.rust] } });
-    map.addLayer({ id: "mp-descobertos", type: "circle", source: "mp-descobertos", paint: { "circle-radius": 13, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": cores.alerta, "circle-stroke-width": 2 } });
-    map.addLayer({ id: "mp-clusters", type: "circle", source: "mp-pessoas", filter: ["has", "point_count"], paint: { "circle-radius": ["step", ["get", "point_count"], 15, 10, 19, 25, 23], "circle-color": cores.cluster, "circle-stroke-color": cores.papel, "circle-stroke-width": 3 } });
-    map.addLayer({ id: "mp-clusters-n", type: "symbol", source: "mp-pessoas", filter: ["has", "point_count"], layout: { "text-field": ["get", "point_count_abbreviated"], "text-font": ["Noto Sans Regular"], "text-size": 13 }, paint: { "text-color": cores.papel } });
-    map.addLayer({ id: "mp-pessoa", type: "circle", source: "mp-pessoas", filter: ["!", ["has", "point_count"]], paint: {
-      "circle-radius": ["case", ["get", "anonimo"], 4.5, 6.5],
-      "circle-color": ["match", ["get", "situacao"], "novo", cores.novo, cores.membro],
-      "circle-stroke-color": ["match", ["get", "situacao"], "novo", cores.membro, cores.papel],
-      "circle-stroke-width": 2, "circle-opacity": ["case", ["get", "anonimo"], 0.7, 1],
-    } });
-    map.addLayer({ id: "mp-grupos", type: "circle", source: "mp-locais", filter: ["!", ["get", "igreja"]], paint: { "circle-radius": 7, "circle-color": cores.papel, "circle-stroke-color": cores.tinta, "circle-stroke-width": 2.5 } });
-    map.addLayer({ id: "mp-igrejas", type: "circle", source: "mp-locais", filter: ["get", "igreja"], paint: { "circle-radius": ["case", ["get", "sede"], 12, 10], "circle-color": cores.tinta, "circle-stroke-color": cores.papel, "circle-stroke-width": 3 } });
-    map.addLayer({ id: "mp-mascara", type: "fill", source: "mp-mascara", paint: { "fill-color": cores.tinta, "fill-opacity": 0.5 } });
-
-    map.on("click", "mp-clusters", async (e) => {
-      const f = e.features?.[0];
-      const id = f?.properties?.cluster_id;
-      if (id === undefined) return;
-      const z = await (map.getSource("mp-pessoas") as GeoJSONSource).getClusterExpansionZoom(id);
-      map.easeTo({ center: (f!.geometry as GeoJSON.Point).coordinates as [number, number], zoom: z });
-    });
-    const clicar = (camada: string, fn: (e: MapLayerMouseEvent) => void) => {
-      map.on("click", camada, fn);
-      map.on("mouseenter", camada, () => { map.getCanvas().style.cursor = "pointer"; });
-      map.on("mouseleave", camada, () => { map.getCanvas().style.cursor = ""; });
-    };
-    clicar("mp-pessoa", (e) => { const i = e.features?.[0]?.properties?.i; if (typeof i === "number") cliqueRef.current({ tipo: "pessoa", i }); });
-    clicar("mp-igrejas", (e) => cliqueRef.current({ tipo: "local", id: String(e.features?.[0]?.properties?.id) }));
-    clicar("mp-grupos", (e) => cliqueRef.current({ tipo: "local", id: String(e.features?.[0]?.properties?.id) }));
-    clicar("mp-regioes-fill", (e) => cliqueRef.current({ tipo: "regiao", id: String(e.features?.[0]?.properties?.codigo) }));
-    clicar("mp-areas-fill", (e) => cliqueRef.current({ tipo: "area", id: String(e.features?.[0]?.properties?.id) }));
-    map.on("mousemove", "mp-regioes-fill", (e) => { const c = e.features?.[0]?.properties?.codigo; cliqueRef.current({ tipo: "tip", id: String(c), x: e.point.x, y: e.point.y }); });
-    map.on("mouseleave", "mp-regioes-fill", () => setTip(null));
-    setMapa({ map, cores });
-    return () => { setMapa(null); enquadrou.current = false; };
+    let vivo = true;
+    (async () => {
+      await registrarMarcadores(map, cores);
+      if (!vivo) return;
+      montarCamadas(map, cores);
+      map.on("click", (e) => toqueRef.current(e));
+      map.on("mousemove", (e) => {
+        if (modoRef.current) return;
+        const alvo = map.queryRenderedFeatures(e.point, { layers: TOCAVEIS.filter((id) => map.getLayer(id)) });
+        const cursor = alvo.length ? "pointer" : "";
+        if (map.getCanvas().style.cursor !== cursor) map.getCanvas().style.cursor = cursor;
+      });
+      setMapa({ map, cores });
+    })();
+    return () => { vivo = false; setMapa(null); enquadrou.current = false; };
   };
 
-  /* cliques do mapa chegam aqui com os dados atuais */
-  type Clique = { tipo: "pessoa"; i: number } | { tipo: "local" | "regiao" | "area"; id: string } | { tipo: "tip"; id: string; x: number; y: number };
-  const cliqueRef = useRef<(c: Clique) => void>(() => {});
   useEffect(() => {
-    cliqueRef.current = (c) => {
-      if (modo) return;
-      if (c.tipo === "pessoa") { const p = visiveis[c.i]; if (p && !p.anonimo) setSel({ tipo: "pessoa", p }); }
-      else if (c.tipo === "local") { const l = locais.find((x) => x.id === c.id); if (l) setSel({ tipo: "local", l }); }
-      else if (c.tipo === "regiao") { const r = regioes.find((x) => x.codigo === c.id); if (r) setSel({ tipo: "regiao", r }); }
-      else if (c.tipo === "area") { const a = areas.find((x) => x.id === c.id); if (a && !camadas.regioes) setSel({ tipo: "area", a }); }
-      else if (c.tipo === "tip") { const r = regioes.find((x) => x.codigo === c.id); setTip(r ? { x: c.x, y: c.y, r } : null); }
+    toqueRef.current = (e) => {
+      if (!mapa || modo) return;
+      const { map } = mapa;
+      const f = map.queryRenderedFeatures(e.point, { layers: TOCAVEIS.filter((id) => map.getLayer(id)) })[0];
+      const onde: [number, number] = [e.lngLat.lng, e.lngLat.lat];
+      const props = f?.properties ?? {};
+      if (!f) { setAberto(null); return; }
+      if (f.layer.id === "mp-clusters") {
+        (map.getSource("mp-pessoas") as GeoJSONSource).getClusterExpansionZoom(props.cluster_id).then((z) => {
+          map.easeTo({ center: (f.geometry as GeoJSON.Point).coordinates as [number, number], zoom: z });
+        }).catch(() => { /* os dados mudaram no meio: o próximo toque resolve */ });
+        return;
+      }
+      const ponto = f.geometry.type === "Point" ? (f.geometry.coordinates as [number, number]) : onde;
+      if (f.layer.id === "mp-pessoa") {
+        const p = pessoas[props.i];
+        if (p && !p.anonimo) setAberto({ tipo: "pessoa", i: props.i, p, onde: ponto });
+      } else if (f.layer.id === "mp-igrejas" || f.layer.id === "mp-grupos") {
+        const l = locais.find((x) => x.id === props.id);
+        if (l && temPonto(l)) setAberto({ tipo: "local", l: l as LocalMapa & Ponto, onde: ponto });
+      } else if (f.layer.id === "mp-lugares") {
+        const pt = lugares.find((x) => x.id === props.id);
+        if (pt) setAberto({ tipo: "lugar", pt, onde: ponto });
+      } else if (f.layer.id === "mp-areas-fill") {
+        const a = areas.find((x) => x.id === props.id);
+        if (a) setAberto({ tipo: "area", a, onde });
+      } else if (f.layer.id === "mp-regioes-fill") {
+        const r = regioes.find((x) => x.codigo === props.codigo);
+        if (r) setAberto({ tipo: "regiao", r, onde });
+      }
     };
   });
 
-  const vis = (map: MlMap, ids: string[], on: boolean) => ids.forEach((id) => map.getLayer(id) && map.setLayoutProperty(id, "visibility", on ? "visible" : "none"));
+  /* dados nas fontes */
   useEffect(() => {
     if (!mapa) return;
     const { map, cores } = mapa;
-    const set = (id: string, data: GeoJSON.FeatureCollection | GeoJSON.Feature) => (map.getSource(id) as GeoJSONSource | undefined)?.setData(data);
-    set("mp-pessoas", { type: "FeatureCollection", features: visiveis.map((p, i) => ({ type: "Feature", properties: { i, situacao: p.situacao, anonimo: p.anonimo }, geometry: { type: "Point", coordinates: [p.longitude, p.latitude] } })) });
-    set("mp-calor", { type: "FeatureCollection", features: visiveis.map((p) => ({ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [p.longitude, p.latitude] } })) });
-    set("mp-descobertos", { type: "FeatureCollection", features: descobertos.map((p) => ({ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [p.longitude, p.latitude] } })) });
-    set("mp-locais", { type: "FeatureCollection", features: locais.filter(temPonto).map((l) => ({ type: "Feature", properties: { id: l.id, igreja: l.tipo !== "grupo", sede: l.tipo === "sede" }, geometry: { type: "Point", coordinates: [l.longitude as number, l.latitude as number] } })) });
-    set("mp-regioes", { type: "FeatureCollection", features: regioes.map((r) => ({ type: "Feature", properties: { codigo: r.codigo, leitura: r.leitura }, geometry: r.geojson })) });
-    set("mp-areas", { type: "FeatureCollection", features: areas.map((a) => ({ type: "Feature", properties: { id: a.id, hex: cores[a.cor] }, geometry: a.geojson })) });
+    const set = (id: string, data: GeoJSON.FeatureCollection) => (map.getSource(id) as GeoJSONSource | undefined)?.setData(data);
+    const pt = (lng: number, lat: number): GeoJSON.Point => ({ type: "Point", coordinates: [lng, lat] });
+    set("mp-pessoas", { type: "FeatureCollection", features: pessoas.map((p, i) => ({ type: "Feature", properties: { i, situacao: p.situacao, anonimo: p.anonimo }, geometry: pt(p.longitude, p.latitude) })) });
+    set("mp-calor", { type: "FeatureCollection", features: pessoas.map((p) => ({ type: "Feature", properties: {}, geometry: pt(p.longitude, p.latitude) })) });
+    set("mp-locais", { type: "FeatureCollection", features: locais.filter(temPonto).map((l) => ({ type: "Feature", properties: { id: l.id, igreja: l.tipo !== "grupo", sede: l.tipo === "sede" }, geometry: pt(l.longitude as number, l.latitude as number) })) });
+    set("mp-lugares", { type: "FeatureCollection", features: lugaresVisiveis.filter((x) => lugaresLigados.includes(grupoDoLugar(x.categoria))).map((x) => ({ type: "Feature", properties: { id: x.id, grupo: grupoDoLugar(x.categoria) }, geometry: pt(x.longitude, x.latitude) })) });
+    set("mp-regioes", { type: "FeatureCollection", features: regioes.map((r) => ({ type: "Feature", properties: { codigo: r.codigo, tom: tomPresenca(r.um_a_cada) }, geometry: r.geojson })) });
+    set("mp-areas", { type: "FeatureCollection", features: areas.filter((a) => !areasOcultas.includes(a.id)).map((a) => ({ type: "Feature", properties: { id: a.id, hex: cores[a.cor] }, geometry: a.geojson })) });
     set("mp-raios", { type: "FeatureCollection", features: sede ? [1, 3, 5].map((km) => ({ type: "Feature", properties: { km }, geometry: circulo(sede, km) })) : [] });
-    set("mp-mascara", { type: "FeatureCollection", features: areaDoLider ? [{ type: "Feature", properties: {}, geometry: mascaraFora(areaDoLider.geojson) }] : [] });
-  }, [mapa, visiveis, descobertos, locais, regioes, areas, sede, areaDoLider]);
+    set("mp-mascara", areaDoLider ? { type: "FeatureCollection", features: [{ type: "Feature", properties: {}, geometry: mascaraFora(areaDoLider.geojson) }] } : vazio());
+  }, [mapa, pessoas, locais, lugaresVisiveis, lugaresLigados, regioes, areas, areasOcultas, sede, areaDoLider]);
 
+  /* camadas ligadas, transparência e seleção */
   useEffect(() => {
     if (!mapa) return;
     const { map } = mapa;
-    const emModo = modo === "area" || modo === "emergencia" || modo === "rota";
-    vis(map, ["mp-clusters", "mp-clusters-n", "mp-pessoa"], camadas.pessoas && !camadas.calor && modo !== "linha");
-    vis(map, ["mp-calor"], camadas.calor && camadas.pessoas);
-    vis(map, ["mp-igrejas"], camadas.igrejas);
-    vis(map, ["mp-grupos"], camadas.celulas);
-    vis(map, ["mp-areas-fill", "mp-areas-linha"], camadas.areas && !emModo);
-    vis(map, ["mp-raios"], camadas.raios);
-    vis(map, ["mp-descobertos"], camadas.descobertos && camadas.pessoas);
-    vis(map, ["mp-regioes-fill", "mp-regioes-linha", "mp-regioes-sel"], camadas.regioes && modo !== "area");
-    map.setFilter("mp-regioes-sel", ["==", ["get", "codigo"], sel?.tipo === "regiao" ? sel.r.codigo : ""]);
-  }, [mapa, camadas, modo, sel]);
+    const emModo = !!modo;
+    mostrar(map, IDS.pessoas, camadas.pessoas && modo !== "linha");
+    mostrar(map, IDS.calor, camadas.calor && !emModo);
+    mostrar(map, IDS.igrejas, camadas.igrejas);
+    mostrar(map, IDS.grupos, camadas.grupos && usaGrupos);
+    mostrar(map, IDS.presenca, camadas.presenca && comIbge && modo !== "area");
+    mostrar(map, IDS.raios, camadas.raios && !emModo);
+    mostrar(map, IDS.areas, !emModo);
+    mostrar(map, IDS.lugares, !emModo);
+    if (map.getLayer("mp-calor")) map.setPaintProperty("mp-calor", "heatmap-opacity", opacidade(OPACIDADE.calor, transp.calor));
+    if (map.getLayer("mp-regioes-fill")) map.setPaintProperty("mp-regioes-fill", "fill-opacity", opacidade(OPACIDADE.presenca, transp.presenca));
+    if (map.getLayer("mp-regioes-sel")) map.setFilter("mp-regioes-sel", ["==", ["get", "codigo"], aberto?.tipo === "regiao" ? aberto.r.codigo : ""]);
+    if (map.getLayer("mp-pessoa-sel")) map.setFilter("mp-pessoa-sel", ["==", ["get", "i"], aberto?.tipo === "pessoa" ? aberto.i : -1]);
+    marcarGrupo(map, aberto?.tipo === "local" && aberto.l.tipo === "grupo" ? aberto.l.id : null);
+  }, [mapa, camadas, transp, modo, aberto, usaGrupos, comIbge]);
 
-  /* Abre na sede. O recorte da liderança continua aplicado às camadas;
-     sem sede geocodificada, enquadra a área ou os pontos disponíveis. */
+
+  /* abre na sede; sem sede, enquadra a área do líder ou os pontos */
   const enquadrou = useRef(false);
   useEffect(() => {
     if (!mapa || enquadrou.current) return;
@@ -229,7 +266,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
     const caixa = areaDoLider ? caixaDaGeometria(areaDoLider.geojson) : caixaDosPontos([...pessoas, ...locais.filter(temPonto)] as Ponto[]);
     if (!caixa) return;
     enquadrou.current = true;
-    mapa.map.fitBounds(caixa, { padding: { top: 80, bottom: 80, left: 340, right: 80 }, maxZoom: 14, duration: 0 });
+    mapa.map.fitBounds(caixa, { padding: { top: 80, bottom: 120, left: LARGURA_PAINEL + 40, right: 80 }, maxZoom: 14, duration: 0 });
   }, [mapa, pessoas, locais, areaDoLider, sede]);
 
   useEffect(() => {
@@ -237,30 +274,30 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
     if (tres) { ligarPredios3D(mapa.map, mapa.cores); mapa.map.easeTo({ pitch: 55 }); } else mapa.map.easeTo({ pitch: 0 });
   }, [mapa, tres]);
 
-  const escolherVisao = (v: Visao) => { setVisao(v); setCamadas(PRESETS[v]); setSel(null); setPainelVer(false); };
-  const focar = (g: GeoJSON.Geometry | Ponto[]) => {
-    const caixa = Array.isArray(g) ? caixaDosPontos(g) : caixaDaGeometria(g);
-    if (caixa && mapa) mapa.map.fitBounds(caixa, { padding: { top: 80, bottom: 80, left: 340, right: 400 }, maxZoom: 15 });
+  const irPara = (centro: [number, number], zoom = 15) => mapa?.map.easeTo({ center: centro, zoom });
+  const enquadrar = (g: GeoJSON.Geometry) => {
+    const caixa = caixaDaGeometria(g);
+    if (caixa && mapa) mapa.map.fitBounds(caixa, { padding: { top: 80, bottom: 120, left: (recolhido ? LARGURA_TRILHO : LARGURA_PAINEL) + 40, right: 80 }, maxZoom: 15 });
   };
+  const vira = (k: ChaveCamada) => () => setCamadas((c) => ({ ...c, [k]: !c[k] }));
+  const analisar = (codigos: string[], n: "bairro" | "setor" | "area" = nivel) => { setMesaRegioes(codigos); setMesaNivel(n); setAberto(null); setTela("mesa"); };
+  const abrirModo = (m: Modo) => { setAberto(null); setModo(m); };
 
-  /* ── insights "Comece por aqui" ── */
-  const faltas = regioes.filter((r) => r.leitura === "falta");
-  const fortes = regioes.filter((r) => r.leitura === "forte");
-  const semCelula = regioes.filter((r) => r.pessoas >= 8 && r.grupos === 0);
-  type Cartao = { id: string; titulo: string; texto: string; acao: () => void };
-  const cartoes: Cartao[] = [];
-  if (faltas.length) cartoes.push({ id: "falta", titulo: `${plural(faltas.length, nivel === "bairro" ? "bairro" : "setor")} onde falta igreja`, texto: `${faltas.slice(0, 3).map((r) => r.nome).join(", ")}: muita gente e quase ninguém da igreja.`, acao: () => { escolherVisao("falta"); focar(faltas.flatMap((r) => { const c = caixaDaGeometria(r.geojson); return c ? [{ longitude: c[0][0], latitude: c[0][1] }, { longitude: c[1][0], latitude: c[1][1] }] : []; })); } });
-  if (fortes.length) cartoes.push({ id: "forte", titulo: `${fortes[0].nome} pode ajudar`, texto: `É onde somos mais fortes: ${umACada(fortes[0].um_a_cada, true).toLowerCase()} moradores. Base para alcançar os vizinhos.`, acao: () => { escolherVisao("falta"); setSel({ tipo: "regiao", r: fortes[0] }); focar(fortes[0].geojson); } });
-  if (descobertos.length || (totais?.sem_grupo ?? 0) > 0) cartoes.push({ id: "descobertos", titulo: ct(`${plural(totais?.sem_grupo ?? descobertos.length, "pessoa")} sem {grupo}`), texto: `${plural(descobertos.length, "mora", "moram")} a mais de ${DESCOBERTO_KM} km de qualquer uma.`, acao: () => escolherVisao("celulas") });
-  if (semCelula.length) cartoes.push({ id: "abrir", titulo: ct(`Sugestão: abrir {grupo} em ${semCelula[0].nome}`), texto: `${pessoasNaRegiao(semCelula[0].pessoas)} pessoas da igreja moram lá e não há nenhuma.`, acao: () => { escolherVisao("celulas"); focar(semCelula[0].geojson); } });
-  if (totais && totais.pessoas > totais.com_ponto) cartoes.push({ id: "local", titulo: `${plural(totais.pessoas - totais.com_ponto, "pessoa")} sem localização`, texto: "Sem CEP ou com CEP que não achamos. Peça para atualizarem no Perfil.", acao: () => {} });
-
-  /* ── busca ── */
+  /* ── busca: pessoa, bairro, igreja ou grupo ── */
   const termo = busca.trim().toLowerCase();
   const sugestoes = termo.length < 2 ? [] : [
-    ...pessoas.filter((p) => p.nome?.toLowerCase().includes(termo)).slice(0, 5).map((p) => ({ k: `p${p.id}`, t: p.nome as string, s: "pessoa", ir: () => { setSel({ tipo: "pessoa", p }); mapa?.map.easeTo({ center: [p.longitude, p.latitude], zoom: 15 }); } })),
-    ...regioes.filter((r) => r.nome.toLowerCase().includes(termo)).slice(0, 5).map((r) => ({ k: `r${r.codigo}`, t: r.nome, s: nivel, ir: () => { setCamadas((c) => ({ ...c, regioes: true })); setSel({ tipo: "regiao", r }); focar(r.geojson); } })),
-    ...locais.filter((l) => l.nome.toLowerCase().includes(termo) && temPonto(l)).slice(0, 5).map((l) => ({ k: `l${l.id}`, t: l.nome, s: l.tipo === "grupo" ? ct("{grupo}") : "igreja", ir: () => { setSel({ tipo: "local", l }); mapa?.map.easeTo({ center: [l.longitude as number, l.latitude as number], zoom: 15 }); } })),
+    ...pessoas.flatMap((p, i) => (p.nome?.toLowerCase().includes(termo) ? [{ p, i }] : [])).slice(0, 5).map(({ p, i }) => ({
+      k: `p${p.id}`, t: p.nome as string, s: SITUACAO[p.situacao] ?? "pessoa",
+      ir: () => { setCamadas((c) => ({ ...c, pessoas: true })); irPara([p.longitude, p.latitude], 16); setAberto({ tipo: "pessoa", i, p, onde: [p.longitude, p.latitude] }); },
+    })),
+    ...locais.filter((l) => l.nome.toLowerCase().includes(termo) && temPonto(l)).slice(0, 5).map((l) => ({
+      k: `l${l.id}`, t: l.nome, s: l.tipo === "grupo" ? ct("{grupo}") : l.tipo === "sede" ? "sede" : "congregação",
+      ir: () => { const o: [number, number] = [l.longitude as number, l.latitude as number]; irPara(o); setAberto({ tipo: "local", l: l as LocalMapa & Ponto, onde: o }); },
+    })),
+    ...regioes.filter((r) => r.nome.toLowerCase().includes(termo)).slice(0, 5).map((r) => ({
+      k: `r${r.codigo}`, t: r.nome, s: nivel,
+      ir: () => { setCamadas((c) => ({ ...c, presenca: true })); enquadrar(r.geojson); const cx = caixaDaGeometria(r.geojson); if (cx) setAberto({ tipo: "regiao", r, onde: [(cx[0][0] + cx[1][0]) / 2, (cx[0][1] + cx[1][1]) / 2] }); },
+    })),
   ];
 
   /* contexto estável para os modos: só muda quando mudam os dados */
@@ -272,9 +309,18 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   if (tela === "mesa" && acesso) return <Mesa org={organizationId} acesso={acesso} cidade={cidade} nivel={mesaNivel} regioesIniciais={mesaRegioes} igreja={churchName} onVoltar={() => setTela("mapa")} onAbrirMembro={onAbrirMembro} onMensagem={onMensagem} />;
   if (tela === "liberar") return <LiberarMapa org={organizationId} people={people} areas={areas} onVoltar={() => { setTela("mapa"); carregar(); }} />;
 
-  const temDir = !!sel && !modo;
   const semDados = acesso?.pode && totais && totais.com_ponto === 0 && locais.every((l) => !temPonto(l));
   const carregando = !acesso || (acesso.pode && !totais);
+  const comPessoas = acesso?.detalhe === "pessoas";
+
+  const ferramentas: ItemFerramenta[] = [
+    ...(acesso?.pode_editar ? [{ id: "area", rotulo: "Criar área", icone: ic("area"), aoTocar: () => { setAreaInicial([]); abrirModo("area"); } }] : []),
+    { id: "rota", rotulo: "Traçar rota", icone: ic("rota"), aoTocar: () => abrirModo("rota") },
+    { id: "linha", rotulo: "Linha do tempo", icone: ic("linhadotempo"), aoTocar: () => abrirModo("linha") },
+    ...(acesso?.pode_editar ? [{ id: "lugar", rotulo: "Marcar lugar", icone: ic("marcarlugar"), aoTocar: () => abrirModo("pontos") }] : []),
+    ...(acesso?.pode_mesa ? [{ id: "analisar", rotulo: "Analisar", icone: ic("analisar"), aoTocar: () => analisar(aberto?.tipo === "regiao" ? [aberto.r.codigo] : []) }] : []),
+    ...(acesso?.total && acesso.pode_editar ? [{ id: "emergencia", rotulo: "Emergência", icone: ic("emergencia"), alerta: true, aoTocar: () => abrirModo("emergencia") }] : []),
+  ];
 
   return (
     <div className="mapa-tela">
@@ -284,147 +330,124 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
       {semDados && !modo && (
         <div className="mp-vazio"><div>
           <p className="mp-pergunta">Ainda não há ninguém no mapa</p>
-          <p className="mp-texto" style={{ marginTop: 6 }}>As pessoas aparecem aqui quando têm CEP no cadastro. Peça para atualizarem no Perfil do app, ou preencha na ficha de cada uma.</p>
+          <p className="mp-texto">As pessoas aparecem aqui quando têm CEP no cadastro. Peça para atualizarem no Perfil do app, ou preencha na ficha de cada uma.</p>
         </div></div>
       )}
 
       {!modo && (
         <>
-          <aside className={`mp-painel mp-esq${painelVer ? " aberto" : ""}`} aria-label="O que ver no mapa">
-            <div className="mp-cab">
-              <div className="mp-sobre">{churchName}</div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
-                <h1 className="mp-titulo">Mapa da igreja</h1>
-                {totais && <span className="mp-texto"><span className="mp-num">{milhar(totais.com_ponto)}</span> pessoas</span>}
-              </div>
-              {areaDoLider && <p className="mp-fraco" style={{ marginTop: 6 }}>Você vê {areaDoLider.nome}. Fora dela o mapa fica apagado.</p>}
-              {acesso?.detalhe === "numeros" && <p className="mp-fraco" style={{ marginTop: 6 }}>Sua liberação mostra só os números por região, sem pessoas.</p>}
-            </div>
-            <div className="mp-corpo">
-              <div className="mp-pergunta">O que você quer ver?</div>
-              <Acao className="mp-visao" aria-pressed={visao === "pessoas"} onClick={() => escolherVisao("pessoas")}><b>Onde estão as pessoas</b><span>Membros e quem chegou há pouco</span></Acao>
-              <Acao className="mp-visao" aria-pressed={visao === "falta"} desativado={!cidade?.tem_ibge} onClick={() => escolherVisao("falta")}><b>Onde falta igreja</b><span>{cidade?.tem_ibge ? "Bairros com muita gente e pouca presença" : "Precisa dos dados do IBGE da cidade"}</span></Acao>
-              <Acao className="mp-visao" aria-pressed={visao === "celulas"} onClick={() => escolherVisao("celulas")}><b>{ct("{Grupos} e cobertura")}</b><span>{ct("Quem está longe de um {grupo}")}</span></Acao>
-              <Acao className="mp-visao" aria-pressed={visao === "regiao"} onClick={() => escolherVisao("regiao")}><b>O que tem na região</b><span>Escolas, praças, saúde e ônibus</span></Acao>
-
-              <Acao className="mp-abre" aria-expanded={personalizar} onClick={() => setPersonalizar((v) => !v)}>Personalizar camadas <Icon name={personalizar ? "voltar" : "avancar"} size={14} /></Acao>
-              {personalizar && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  {([
-                    ["pessoas", "Pessoas"], ["calor", "Mancha de densidade"], ["descobertos", ct(`Sem {grupo} a mais de ${DESCOBERTO_KM} km`)],
-                    ["igrejas", "Sede e congregações"], ["raios", "Raios de 1, 3 e 5 km da sede"], ["celulas", ct("{Grupos}")], ["areas", "Áreas da igreja"],
-                    ["regioes", "Moradores x igreja (IBGE)"], ["pontos", "Pontos de interesse"],
-                  ] as [keyof Camadas, string][]).map(([k, l]) => (
-                    <label key={k} className="mp-linha">{l}<Interruptor ligado={camadas[k]} rotulo={l} desativado={k === "regioes" && !cidade?.tem_ibge} onClick={() => setCamadas((c) => ({ ...c, [k]: !c[k] }))} /></label>
-                  ))}
-                  {camadas.regioes && cidade?.tem_ibge && (
-                    <div className="mp-linha">Agrupar por
-                      <div className="mp-seg" style={{ ["--n" as string]: 2 } as React.CSSProperties}>
-                        <Acao aria-pressed={nivel === "bairro"} desativado={!cidade.tem_bairros} onClick={() => trocarNivel("bairro")}>Bairro</Acao>
-                        <Acao aria-pressed={nivel === "setor"} onClick={() => trocarNivel("setor")}>Setor</Acao>
-                      </div>
-                    </div>
-                  )}
-                  <div className="mp-pergunta" style={{ marginTop: 8 }}>Filtros</div>
-                  <div className="mp-chips">
-                    {([["todos", "Todos"], ["membro", "Membros"], ["novo", "Novos na igreja"]] as const).map(([v, l]) => <Acao key={v} className="mp-chip" aria-pressed={filtroSit === v} onClick={() => setFiltroSit(v)}>{l}</Acao>)}
-                    <Acao className="mp-chip" aria-pressed={soSemGrupo} onClick={() => setSoSemGrupo((v) => !v)}>{ct("Sem {grupo}")}</Acao>
+          <PainelMapa
+            rotulo="Camadas do mapa"
+            titulo="Mapa da igreja"
+            recolhido={recolhido}
+            aoRecolher={setRecolhido}
+            trilho={[
+              { id: "igreja", rotulo: "Igreja", icone: ic("membros") },
+              ...(comIbge ? [{ id: "ibge", rotulo: "Cidade · IBGE 2022", icone: ic("presenca") }] : []),
+              ...(areas.length ? [{ id: "areas", rotulo: "Áreas da igreja", icone: ic("area") }] : []),
+              { id: "lugares", rotulo: "Lugares da região", icone: ic("bandeira") },
+            ]}
+            busca={(
+              <div className="mp-busca">
+                <Icon name="buscar" size={18} />
+                <Entrada value={busca} onChange={(e) => setBusca(e.target.value)} onKeyDown={(e) => { if (e.key === "Escape" && busca) { e.preventDefault(); setBusca(""); } }}
+                  placeholder={ct("Buscar pessoa, bairro ou {grupo}")} aria-label="Buscar no mapa" autoComplete="off" />
+                {sugestoes.length > 0 && (
+                  <div className="mp-sugestoes" role="listbox" aria-label="Resultados da busca">
+                    {sugestoes.map((s) => (
+                      <Acao key={s.k} role="option" aria-selected="false" className="mp-sug" onClick={() => { s.ir(); setBusca(""); }}>
+                        <span>{s.t}</span><span className="mp-fraco">{s.s}</span>
+                      </Acao>
+                    ))}
                   </div>
-                  <p className="mp-fraco"><span className="mp-num">{milhar(visiveis.length)}</span> no mapa com estes filtros</p>
-                </div>
-              )}
-            </div>
-            <div className="mp-pe">
-              <p className="mp-fraco" style={{ display: "flex", gap: 8 }}><Icon name="cadeado" size={14} />{totais && totais.com_nome < totais.com_ponto ? `${plural(totais.com_ponto - totais.com_nome, "pessoa aparece", "pessoas aparecem")} sem nome, porque não aceitou o termo. ` : ""}Endereço nunca é mostrado.</p>
-              {podeLiberar && <Botao compacto onClick={() => setTela("liberar")}>Quem vê o mapa</Botao>}
-            </div>
-          </aside>
-
-          <div className={`mp-topo${temDir ? "" : " sem-dir"}`}>
-            <div className="mp-busca">
-              <Icon name="buscar" size={16} />
-              <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder={ct("Buscar pessoa, bairro ou {grupo}")} aria-label="Buscar no mapa" />
-              {sugestoes.length > 0 && (
-                <div className="mp-sugestoes" role="listbox">
-                  {sugestoes.map((s) => <Acao key={s.k} role="option" aria-selected="false" onClick={() => { s.ir(); setBusca(""); }}><span>{s.t}</span><span className="mp-fraco">{s.s}</span></Acao>)}
-                </div>
-              )}
-            </div>
-            <div style={{ position: "relative" }}>
-              <Botao tamanho="mapa" aria-expanded={ferramentas} onClick={() => setFerramentas((v) => !v)}><Icon name="config" size={16} />Ferramentas</Botao>
-              {ferramentas && (
-                <div className="mp-menu" /* lei17-ok: ferramentas do mapa com descrição em duas linhas */ role="menu">
-                  {acesso?.pode_editar && <Acao role="menuitem" onClick={() => { setAreaInicial([]); setModo("area"); setFerramentas(false); }}><b>Criar uma área</b><span>Junte bairros para formar um setor</span></Acao>}
-                  <Acao role="menuitem" onClick={() => { setModo("rota"); setFerramentas(false); }}><b>Traçar rota</b><span>Visita, oração, panfletos ou carro de som</span></Acao>
-                  <Acao role="menuitem" onClick={() => { setModo("linha"); setFerramentas(false); }}><b>Linha do tempo</b><span>Veja onde a igreja cresceu</span></Acao>
-                  <Acao role="menuitem" onClick={() => { setModo("pontos"); setFerramentas(false); }}><b>Pontos de interesse</b><span>Escolas, praças e lugares da igreja</span></Acao>
-                  {acesso?.total && acesso.pode_editar && <><hr /><Acao role="menuitem" onClick={() => { setModo("emergencia"); setFerramentas(false); }}><b>Emergência</b><span>Enchente ou temporal: ache as famílias atingidas</span></Acao></>}
-                </div>
-              )}
-            </div>
-            {acesso?.pode_mesa && <Botao tamanho="mapa" onClick={() => { setMesaRegioes(sel?.tipo === "regiao" ? [sel.r.codigo] : faltas.map((r) => r.codigo)); setMesaNivel(nivel); setTela("mesa"); }}><Icon name="quadros" size={16} />Mesa de trabalho</Botao>}
-          </div>
-
-          <div className={`mp-controles${temDir ? "" : " sem-dir"}`}>
-            <Acao aria-label="Aproximar" onClick={() => mapa?.map.zoomIn()}>+</Acao>
-            <Acao aria-label="Afastar" onClick={() => mapa?.map.zoomOut()}>−</Acao>
-            <Acao aria-label="Inclinar em 3D" aria-pressed={tres} onClick={() => setTres((v) => !v)}>3D</Acao>
-          </div>
-          <div className="mp-so-celular">
-            <Botao tamanho="mapa" onClick={() => setPainelVer((v) => !v)}><Icon name="lista" size={20} />Ver</Botao>
-          </div>
-
-          <div className="mp-legenda" aria-label="Legenda">
-            {camadas.regioes ? (
+                )}
+              </div>
+            )}
+            rodape={(
               <>
-                <span style={{ display: "flex", gap: 10, alignItems: "center" }}><span className="mp-sw" style={{ background: "var(--mapa-falta)" }} />{LEITURA.falta}</span>
-                <span style={{ display: "flex", gap: 10, alignItems: "center" }}><span className="mp-sw" style={{ background: "var(--mapa-forte)" }} />{LEITURA.forte}</span>
-                <span style={{ display: "flex", gap: 10, alignItems: "center" }}><span className="mp-sw" style={{ background: "var(--mapa-media)" }} />{LEITURA.media}</span>
-                <span className="mp-fraco">Fonte: IBGE · Censo Demográfico <span className="mp-num">2022</span></span>
-              </>
-            ) : (
-              <>
-                <span style={{ display: "flex", gap: 10, alignItems: "center" }}><span className="mp-bola" style={{ background: "var(--mapa-membro)" }} />Membro</span>
-                <span style={{ display: "flex", gap: 10, alignItems: "center" }}><span className="mp-bola" style={{ background: "var(--mapa-novo)", boxShadow: "inset 0 0 0 2px var(--mapa-membro)" }} />Novo na igreja</span>
-                <span style={{ display: "flex", gap: 10, alignItems: "center" }}><span className="mp-bola" style={{ background: "var(--mapa-tinta)", boxShadow: "0 0 0 2px var(--mapa-papel)" }} />Sede e congregações</span>
-                <span style={{ display: "flex", gap: 10, alignItems: "center" }}><span className="mp-bola" style={{ background: "var(--mapa-papel)", boxShadow: "inset 0 0 0 2px var(--mapa-tinta)" }} />{ct("{Grupos}")}</span>
-                {camadas.descobertos && <span style={{ display: "flex", gap: 10, alignItems: "center" }}><span className="mp-bola" style={{ boxShadow: "inset 0 0 0 2px var(--mapa-alerta)" }} />{ct(`Sem {grupo} perto`)}</span>}
+                <span className="mp-pe-linha"><Icon name="privacidade" size={16} />Nenhum endereço aparece no mapa.</span>
+                {areaDoLider && <span>Você vê só {areaDoLider.nome}.</span>}
+                {acesso?.detalhe === "numeros" && <span>Sua liberação mostra só os números por região, sem pessoas.</span>}
+                <span className="mp-pe-links">
+                  {semCep > 0 && <Botao variante="texto" onClick={() => { setJanela("semcep"); setSemPonto(null); carregarSemPonto(organizationId).then(setSemPonto).catch(() => setSemPonto([])); }}>{plural(semCep, "pessoa")} sem CEP</Botao>}
+                  {podeLiberar && <Botao variante="texto" onClick={() => { setAberto(null); setTela("liberar"); }}>Quem vê o mapa</Botao>}
+                  <Botao variante="texto" onClick={() => setJanela("entenda")}>Entenda o mapa</Botao>
+                </span>
               </>
             )}
-          </div>
+          >
+            <GrupoCamadas titulo="Igreja">
+              {comPessoas && (
+                <LinhaCamada icone={ic("membros")} rotulo="Pessoas da igreja" detalhe={totais ? `${milhar(totais.com_ponto)} no mapa` : undefined} ligada={camadas.pessoas} aoAlternar={vira("pessoas")} />
+              )}
+              {comPessoas && (
+                <LinhaCamada icone={ic("concentracao")} rotulo="Concentração da igreja" ligada={camadas.calor} aoAlternar={vira("calor")}>
+                  <TransparenciaCamada valor={transp.calor} aoMudar={(v) => setTransp((t) => ({ ...t, calor: v }))} />
+                </LinhaCamada>
+              )}
+              <LinhaCamada icone={<MarcaCamada tipo="igreja" />} rotulo="Sede e congregações" ligada={camadas.igrejas} aoAlternar={vira("igrejas")} />
+              {usaGrupos && <LinhaCamada icone={<MarcaCamada tipo="celula" />} rotulo={ct("{Grupos}")} detalhe={`${milhar(grupos.length)} no mapa`} ligada={camadas.grupos} aoAlternar={vira("grupos")} />}
+            </GrupoCamadas>
 
-          {cartoes.length > 0 && !temDir && (
-            <section className={`mp-comece${temDir ? "" : " sem-dir"}`} aria-label="Comece por aqui">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span className="mp-pergunta">Comece por aqui</span>
-                {cartoes.length > 2 && <Botao variante="discreto" compacto onClick={() => setVerTodos((v) => !v)}>{verTodos ? "Ver menos" : `Ver os ${cartoes.length}`}</Botao>}
-              </div>
-              <div className="mp-cartoes">
-                {(verTodos ? cartoes : cartoes.slice(0, 2)).map((c) => (
-                  <Acao key={c.id} className="mp-cartao" onClick={c.acao}><b>{c.titulo}</b>{c.texto}<i>Ver no mapa →</i></Acao>
+            {comIbge && (
+              <GrupoCamadas titulo="Cidade · IBGE 2022">
+                <LinhaCamada icone={ic("presenca")} rotulo="Presença da igreja" detalhe="pessoas da igreja por morador" ligada={camadas.presenca} aoAlternar={vira("presenca")}>
+                  <EscalaTons inicio={`1 a cada mais de ${milhar(2000)}`} fim="1 a cada 200 ou menos" />
+                  {cidade?.um_a_cada ? <span className="mp-fraco">Na cidade: {umACada(cidade.um_a_cada, true)}</span> : null}
+                  <TransparenciaCamada valor={transp.presenca} aoMudar={(v) => setTransp((t) => ({ ...t, presenca: v }))} />
+                </LinhaCamada>
+              </GrupoCamadas>
+            )}
+
+            {areas.length > 0 && (
+              <GrupoCamadas titulo="Áreas da igreja" contagem={areas.length} recolhivel aberto={grupoAberto.areas} aoAlternar={() => setGrupoAberto((g) => ({ ...g, areas: !g.areas }))}>
+                {areas.map((a) => (
+                  <LinhaCamada key={a.id} recuo rotulo={a.nome} detalhe={TIPO_AREA[a.tipo]} ligada={!areasOcultas.includes(a.id)}
+                    aoAlternar={() => setAreasOcultas((o) => (o.includes(a.id) ? o.filter((x) => x !== a.id) : [...o, a.id]))} />
                 ))}
-              </div>
-            </section>
+              </GrupoCamadas>
+            )}
+
+            <GrupoCamadas titulo="Lugares da região" recolhivel aberto={grupoAberto.lugares} aoAlternar={() => setGrupoAberto((g) => ({ ...g, lugares: !g.lugares }))}>
+              {LUGARES.filter((g) => contaLugares(g.id) > 0).map((g) => (
+                <LinhaCamada key={g.id} icone={g.id === "igreja" ? <MarcaCamada tipo="lugar" /> : ic(g.icone)} rotulo={g.nome} detalhe={plural(contaLugares(g.id), "lugar", "lugares")}
+                  ligada={lugaresLigados.includes(g.id)} aoAlternar={() => setLugaresLigados((l) => (l.includes(g.id) ? l.filter((x) => x !== g.id) : [...l, g.id]))} />
+              ))}
+              {sede && <LinhaCamada icone={ic("circulo")} rotulo="Raios da sede" detalhe="1, 3 e 5 km" ligada={camadas.raios} aoAlternar={vira("raios")} />}
+            </GrupoCamadas>
+          </PainelMapa>
+
+          {aberto && mapa && (
+            <BalaoDoPonto key={`${aberto.tipo}-${"i" in aberto ? aberto.i : aberto.tipo === "local" ? aberto.l.id : aberto.tipo === "lugar" ? aberto.pt.id : aberto.tipo === "area" ? aberto.a.id : aberto.r.codigo}`}
+              sel={aberto} map={mapa.map} pessoas={pessoas} grupos={grupos} usaGrupos={usaGrupos} cidade={cidade} nivel={nivel} acesso={acesso}
+              aoFechar={() => setAberto(null)} onAbrirMembro={onAbrirMembro} onMensagem={onMensagem}
+              onAnalisar={analisar} onCriarArea={(cod) => { setAreaInicial(cod); abrirModo("area"); }} />
           )}
 
-          {tip && !sel && (
-            <div className="mp-tooltip" style={{ left: tip.x + 14, top: tip.y + 14 }} role="tooltip">
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><strong>{tip.r.nome}</strong><span>{LEITURA[tip.r.leitura]}</span></div>
-              <div style={{ marginTop: 6, color: "var(--white)" }}>{umACada(tip.r.um_a_cada)}</div>
-              {cidade?.um_a_cada && <div>Na cidade: {umACada(cidade.um_a_cada, true)}</div>}
-              <div style={{ marginTop: 6 }}><span className="mp-num">{milhar(tip.r.moradores)}</span> moradores · <span className="mp-num">{pessoasNaRegiao(tip.r.pessoas)}</span> da igreja</div>
+          <BarraFerramentas rotulo="Ferramentas do mapa" itens={ferramentas} fileira={celular} compacta={!celular}
+            desloc={celular ? 0 : recolhido ? LARGURA_TRILHO : LARGURA_PAINEL} reservaDir={celular ? 0 : RESERVA_AJUDA} />
+
+          <div className="mp-ctrl" role="group" aria-label="Controles do mapa">
+            <BotaoIcone className="mp-ctrl-b" rotulo="Inclinar em 3D" aria-pressed={tres} onClick={() => setTres((v) => !v)}><Icon name="tresd" size={20} stroke={1.9} /></BotaoIcone>
+            <BotaoIcone className="mp-ctrl-b" rotulo="Aproximar" onClick={() => mapa?.map.zoomIn()}><Icon name="add" size={20} stroke={2} /></BotaoIcone>
+            <BotaoIcone className="mp-ctrl-b" rotulo="Afastar" onClick={() => mapa?.map.zoomOut()}><Icon name="menos" size={20} stroke={2} /></BotaoIcone>
+          </div>
+        </>
+      )}
+
+      {janela === "entenda" && mapa && <EntendaOMapa cores={mapa.cores} usaGrupos={usaGrupos} totais={totais} aoFechar={() => setJanela(null)} />}
+      {janela === "semcep" && (
+        <Janela titulo="Pessoas sem CEP" texto="Elas ainda não aparecem no mapa. Abra a ficha e preencha o CEP." aoFechar={() => setJanela(null)} corpoBloco>
+          {!semPonto ? <p className="mp-fraco" role="status">Carregando...</p> : semPonto.length === 0 ? <p className="mp-fraco">Todo mundo já está no mapa.</p> : (
+            <div className="mp-semcep">
+              {semPonto.map((x) => (
+                <Acao key={x.id} className={`${linhaClasse({})} click mp-semcep-linha`} onClick={() => { setJanela(null); onAbrirMembro(x.id); }}>
+                  <span>{x.nome}</span><span className="mp-fraco">{x.tem_cep ? "CEP não encontrado" : "sem CEP"}</span>
+                </Acao>
+              ))}
             </div>
           )}
-
-          {sel && (
-            <aside className="mp-painel mp-dir" aria-label="Detalhes">
-              <PainelSelecao sel={sel} cidade={cidade} nivel={nivel} pessoas={pessoas} acesso={acesso} perto={pertoDeGrupo}
-                onFechar={() => setSel(null)} onAbrirMembro={onAbrirMembro} onMensagem={onMensagem}
-                onMesa={(cod, n) => { setMesaRegioes(cod); setMesaNivel(n ?? nivel); setTela("mesa"); }}
-                onCriarArea={(cod) => { setAreaInicial(cod); setModo("area"); setSel(null); }} />
-            </aside>
-          )}
-        </>
+        </Janela>
       )}
 
       {contexto && modo === "area" && <CriarArea ctx={contexto} bairrosIniciais={areaInicial} nivel={nivel} />}
@@ -433,117 +456,128 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
       {contexto && modo === "linha" && <LinhaDoTempo ctx={contexto} nivel={nivel} />}
       {contexto && modo === "pontos" && <Pontos ctx={contexto} />}
       {!contexto && modo && <div className="mp-vazio"><div><p className="mp-texto" role="status">Carregando o mapa...</p></div></div>}
-      {camadas.pontos && contexto && !modo && <Pontos ctx={contexto} soCamada />}
     </div>
   );
 }
 
-function PainelSelecao({ sel, cidade, nivel, pessoas, acesso, perto, onFechar, onAbrirMembro, onMensagem, onMesa, onCriarArea }: {
-  sel: NonNullable<Selecao>; cidade: Cidade | null; nivel: "bairro" | "setor"; pessoas: PessoaMapa[]; acesso: Acesso | null;
-  perto: (p: Ponto) => { g: LocalMapa; km: number } | null;
-  onFechar: () => void; onAbrirMembro: (id: string) => void; onMensagem: (id: string) => void; onMesa: (codigos: string[], nivel?: "area") => void; onCriarArea: (codigos: string[]) => void;
+/* Balão do ponto tocado: tudo do ponto, sem painel lateral (PLANO §10, P1). */
+function BalaoDoPonto({ sel, map, pessoas, grupos, usaGrupos, cidade, nivel, acesso, aoFechar, onAbrirMembro, onMensagem, onAnalisar, onCriarArea }: {
+  sel: Aberto; map: MlMap; pessoas: PessoaMapa[]; grupos: (LocalMapa & Ponto)[]; usaGrupos: boolean; cidade: Cidade | null; nivel: "bairro" | "setor"; acesso: Acesso | null;
+  aoFechar: () => void; onAbrirMembro: (id: string) => void; onMensagem: (id: string) => void;
+  onAnalisar: (codigos: string[], nivel?: "area") => void; onCriarArea: (codigos: string[]) => void;
 }) {
   const { comTermos: ct } = useTermos();
-  const fechar = <BotaoIcone className="mp-fechar" rotulo="Fechar" onClick={onFechar}><Icon name="recusou" size={14} /></BotaoIcone>;
+  /* o balão acompanha o ponto quando o mapa se move; só ele redesenha. Com o
+     ponto fora da tela fica escondido, mas montado (não puxa o foco de volta) */
+  const projetar = useCallback(() => {
+    const p = map.project(sel.onde);
+    const c = map.getContainer();
+    return { x: p.x, y: p.y, fora: p.x < 0 || p.y < 0 || p.x > c.clientWidth || p.y > c.clientHeight };
+  }, [map, sel.onde]);
+  const [pos, setPos] = useState(projetar);
+  useEffect(() => {
+    const mexeu = () => setPos(projetar());
+    map.on("move", mexeu);
+    return () => { map.off("move", mexeu); };
+  }, [map, projetar]);
+  const comum = { x: pos.x, y: pos.y, oculto: pos.fora, aoFechar };
 
   if (sel.tipo === "pessoa") {
     const p = sel.p;
-    const g = perto(p);
+    let perto: { g: LocalMapa; km: number } | null = null;
+    for (const g of grupos) { const km = distanciaKm(p, g); if (!perto || km < perto.km) perto = { g, km }; }
     return (
-      <>
-        <div className="mp-cab" style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <Avatar nome={p.nome ?? ""} tamanho="md" />
-          <div style={{ flex: 1, minWidth: 0 }}><h2 className="mp-titulo" style={{ fontSize: "var(--fs-pn-16)" }}>{p.nome}</h2><span className="mp-fraco">{SITUACAO[p.situacao] ?? p.situacao}{p.desde ? ` desde ${p.desde}` : ""}</span></div>
-          {fechar}
-        </div>
-        <div className="mp-corpo">
-          <dl className="mp-dados">
-            <dt>{ct("{Grupo}")}</dt><dd>{p.grupo ?? "Nenhum"}</dd>
-            {g && <><dt>{ct("{Grupo} mais perto")}</dt><dd>{g.g.nome} · {formatarDistancia(g.km)}</dd></>}
-            {g?.g.lider_nome && <><dt>Referência</dt><dd>{g.g.lider_nome}</dd></>}
-          </dl>
-          <p className="mp-fraco">Aceitou aparecer com o nome no mapa. O ponto mostra a região do CEP, não a casa.</p>
-        </div>
-        {p.id && (
-          <div className="mp-pe">
-            <Botao variante="principal" onClick={() => onAbrirMembro(p.id!)}>Ver ficha</Botao>
-            <Botao onClick={() => onMensagem(p.id!)}>Mensagem</Botao>
-          </div>
-        )}
-      </>
+      <Balao {...comum} sobretitulo={`${SITUACAO[p.situacao] ?? p.situacao}${p.desde ? ` desde ${p.desde}` : ""}`} titulo={p.nome ?? ""}
+        rodape={p.id ? <><Botao onClick={() => onAbrirMembro(p.id!)}>Ver ficha</Botao><Botao variante="principal" onClick={() => onMensagem(p.id!)}>Falar com {primeiroNome(p.nome)}</Botao></> : undefined}>
+        {usaGrupos && <LinhaBalao icone="inicio">{p.grupo ?? ct("Sem {grupo}")}</LinhaBalao>}
+        {usaGrupos && perto && perto.g.id !== p.grupo_id && <LinhaBalao icone="mapapin">{ct("{Grupo} mais perto")}: {perto.g.nome} · {formatarDistancia(perto.km)}</LinhaBalao>}
+        {perto?.g.lider_nome && perto.g.id !== p.grupo_id && <LinhaBalao icone="pessoa">{perto.g.lider_nome} lidera</LinhaBalao>}
+      </Balao>
     );
   }
 
   if (sel.tipo === "local") {
     const l = sel.l;
+    const perto = pessoas.filter((p) => distanciaKm(p, l) <= 1).length;
     const vagas = l.lugares ? Math.max(0, l.lugares - (l.ocupados ?? 0)) : null;
+    const onde = [[l.rua, l.numero].filter(Boolean).join(", "), l.bairro].filter(Boolean).join(" · ");
     return (
-      <>
-        <div className="mp-cab" style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-          <div><div className="mp-sobre">{l.tipo === "sede" ? "Sede" : l.tipo === "congregacao" ? "Congregação" : ct("{Grupo}")}</div><h2 className="mp-titulo">{l.nome}</h2></div>{fechar}
-        </div>
-        <div className="mp-corpo">
-          <dl className="mp-dados">
-            {(l.dia || l.hora) && <><dt>Quando</dt><dd>{[l.dia, l.hora].filter(Boolean).join(" · ")}</dd></>}
-            <dt>Onde</dt><dd>{[[l.rua, l.numero].filter(Boolean).join(", "), l.bairro].filter(Boolean).join(" · ") || "Sem endereço"}</dd>
-            {l.lider_nome && <><dt>Quem lidera</dt><dd>{l.lider_nome}</dd></>}
-            {l.lugares && <><dt>Lugares</dt><dd><span className="mp-num">{l.ocupados ?? 0} de {l.lugares}</span> · {vagas ? plural(vagas, "vaga") : "lotado"}</dd></>}
-          </dl>
-          <p className="mp-fraco">Local público: os membros veem este endereço no app, em Agenda › Onde.</p>
-        </div>
-        {l.lider_member_id && <div className="mp-pe"><Botao onClick={() => onMensagem(l.lider_member_id!)}>Mensagem para quem lidera</Botao></div>}
-      </>
+      <Balao {...comum} sobretitulo={l.tipo === "sede" ? "Sede" : l.tipo === "congregacao" ? "Congregação" : ct("{Grupo}")} titulo={l.nome}
+        rodape={l.lider_member_id ? <Botao variante="principal" onClick={() => onMensagem(l.lider_member_id!)}>Falar com {primeiroNome(l.lider_nome)}</Botao> : undefined}>
+        {(l.dia || l.hora) && <LinhaBalao icone="agenda">{[l.dia, l.hora].filter(Boolean).join(" · ")}</LinhaBalao>}
+        {onde && <LinhaBalao icone="mapapin">{onde}</LinhaBalao>}
+        {l.lider_nome && <LinhaBalao icone="pessoa">{l.lider_nome} lidera</LinhaBalao>}
+        {l.lugares ? <LinhaBalao icone="membros">{l.ocupados ?? 0} de {l.lugares} lugares · {vagas ? plural(vagas, "vaga") : "lotado"}</LinhaBalao> : null}
+        <LinhaBalao icone="concentracao">{perto === 1 ? "1 pessoa da igreja mora" : `${milhar(perto)} pessoas da igreja moram`} a até 1 km</LinhaBalao>
+      </Balao>
     );
   }
 
   if (sel.tipo === "area") {
     const a = sel.a;
-    const dentro = pessoas.filter((p) => dentroDe(p, a.geojson));
+    const dentro = pessoas.filter((p) => dentroDe(p, a.geojson)).length;
     return (
-      <>
-        <div className="mp-cab" style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-          <div><div className="mp-sobre">{a.tipo === "regiao" ? "Região pastoral" : a.tipo === "alcance" ? "Área de alcance" : "Setor"}</div><h2 className="mp-titulo">{a.nome}</h2></div>{fechar}
-        </div>
-        <div className="mp-corpo">
-          <div className="mp-kpis"><div className="mp-kpi"><small>Pessoas no mapa</small><strong>{milhar(dentro.length)}</strong></div><div className="mp-kpi"><small>Responsável</small><strong style={{ fontFamily: "inherit", fontSize: "var(--fs-pn-14)" }}>{a.responsavel ?? "Ninguém ainda"}</strong></div></div>
-        </div>
-        {acesso?.pode_mesa && <div className="mp-pe"><Botao variante="principal" onClick={() => onMesa([a.id], "area")}>Abrir na mesa de trabalho →</Botao></div>}
-      </>
+      <Balao {...comum} sobretitulo={TIPO_AREA[a.tipo]} titulo={a.nome}
+        rodape={acesso?.pode_mesa ? <Botao onClick={() => onAnalisar([a.id], "area")}>Analisar</Botao> : undefined}>
+        <LinhaBalao icone="membros">{plural(dentro, "pessoa da igreja", "pessoas da igreja")} no mapa</LinhaBalao>
+        <LinhaBalao icone="pessoa">{a.responsavel ? `${a.responsavel} é responsável` : "Sem responsável ainda"}</LinhaBalao>
+      </Balao>
+    );
+  }
+
+  if (sel.tipo === "lugar") {
+    const pt = sel.pt;
+    return (
+      <Balao {...comum} sobretitulo={CATEGORIAS.find((c) => c.id === pt.categoria)?.nome.replace("Pontos da igreja · ", "")} titulo={pt.nome || "Sem nome"}>
+        {pt.endereco && <LinhaBalao icone="mapapin">{pt.endereco}</LinhaBalao>}
+        {pt.observacao && <LinhaBalao icone="documento">{pt.observacao}</LinhaBalao>}
+        <LinhaBalao icone={pt.origem === "osm" ? "globo" : "bandeira"}>{pt.origem === "osm" ? "Do OpenStreetMap" : "Marcado pela igreja"}</LinhaBalao>
+      </Balao>
     );
   }
 
   const r = sel.r;
-  const daqui = pessoas.filter((p) => !p.anonimo && dentroDe(p, r.geojson));
   return (
-    <>
-      <div className="mp-cab" style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-        <div><div className="mp-sobre" style={{ color: r.leitura === "falta" ? "var(--mapa-falta)" : undefined }}>{nivel === "bairro" ? LEITURA_BAIRRO[r.leitura] : `Setor · ${LEITURA[r.leitura]}`}</div><h2 className="mp-titulo">{r.nome}</h2></div>{fechar}
+    <Balao {...comum} sobretitulo={`${nivel === "bairro" ? "Bairro" : "Setor"} · IBGE 2022`} titulo={r.nome}
+      rodape={(acesso?.pode_mesa || (acesso?.pode_editar && nivel === "bairro")) ? (
+        <>
+          {acesso?.pode_editar && nivel === "bairro" && <Botao onClick={() => onCriarArea([r.codigo])}>Criar área</Botao>}
+          {acesso?.pode_mesa && <Botao onClick={() => onAnalisar([r.codigo])}>Analisar</Botao>}
+        </>
+      ) : undefined}>
+      <LinhaBalao icone="presenca">{umACada(r.um_a_cada)}</LinhaBalao>
+      <LinhaBalao icone="moradores"><span className="mp-num">{milhar(r.moradores)}</span> moradores</LinhaBalao>
+      <LinhaBalao icone="membros"><span className="mp-num">{pessoasNaRegiao(r.pessoas)}</span> da igreja</LinhaBalao>
+      {usaGrupos && <LinhaBalao icone="inicio">{r.grupos ? plural(r.grupos, ct("{grupo}"), ct("{grupos}")) : ct("Nenhum {grupo}")}</LinhaBalao>}
+      {cidade?.um_a_cada ? <span className="mp-fraco">Na cidade: {umACada(cidade.um_a_cada, true)}</span> : null}
+    </Balao>
+  );
+}
+
+/* "Entenda o mapa": a legenda fica aqui, pequena, e não no mapa (decisão de 2026-11-05). */
+function EntendaOMapa({ cores, usaGrupos, totais, aoFechar }: { cores: Record<CorMapa, string>; usaGrupos: boolean; totais: Totais | null; aoFechar: () => void }) {
+  const { comTermos: ct } = useTermos();
+  const marca = (t: Marcador) => {
+    const { svg, w, h } = svgMarcador(t, cores);
+    const k = 28 / Math.max(w, h);
+    // eslint-disable-next-line @next/next/no-img-element -- marcador em SVG gerado aqui, não é foto
+    return <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`} width={Math.round(w * k)} height={Math.round(h * k)} alt="" />;
+  };
+  const itens: { m: React.ReactNode; t: string }[] = [
+    { m: <span className="mp-bola membro" />, t: "Membro" },
+    { m: <span className="mp-bola novo" />, t: "Novo na igreja" },
+    { m: marca("sede"), t: "Sede e congregações" },
+    ...(usaGrupos ? [{ m: marca("celula"), t: ct("{Grupos}") }] : []),
+    { m: marca("lugar-igreja"), t: "Lugar marcado pela igreja" },
+    { m: marca("lugar-regiao"), t: "Lugar da região" },
+  ];
+  return (
+    <Janela titulo="Entenda o mapa" aoFechar={aoFechar} corpoBloco>
+      <div className="mp-legenda">
+        {itens.map((i) => <div key={i.t} className="mp-legenda-it"><span className="mp-legenda-m" aria-hidden="true">{i.m}</span>{i.t}</div>)}
       </div>
-      <div className="mp-corpo">
-        <div className="mp-destaque">{umACada(r.um_a_cada)}
-          {cidade?.um_a_cada && <div className="mp-fraco" style={{ marginTop: 4, fontSize: "var(--fs-pn-13)" }}>A cidade tem {umACada(cidade.um_a_cada, true)}. {r.vezes ? `Aqui é ${frenteCidade(r.vezes)}.` : ""}</div>}
-        </div>
-        <div className="mp-kpis">
-          <div className="mp-kpi"><small>Moradores</small><strong>{milhar(r.moradores)}</strong></div>
-          <div className="mp-kpi"><small>Pessoas da igreja</small><strong>{pessoasNaRegiao(r.pessoas)}</strong></div>
-        </div>
-        <dl className="mp-dados">
-          <dt>{ct("{Grupos} aqui")}</dt><dd>{r.grupos || "Nenhum"}</dd>
-          <dt>Área</dt><dd><span className="mp-num">{String(r.area_km2).replace(".", ",")}</span> km²</dd>
-          <dt>Densidade</dt><dd><span className="mp-num">{milhar(r.moradores / Number(r.area_km2))}</span> moradores por km²</dd>
-        </dl>
-        {daqui.length > 0 && (
-          <div>
-            <div className="mp-pergunta" style={{ marginBottom: 6 }}>Pessoas com nome no mapa · <span className="mp-num">{daqui.length}</span></div>
-            {daqui.slice(0, 6).map((p) => <div key={p.id} className="mp-lista-pessoa"><Avatar nome={p.nome ?? ""} tamanho="xs" />{p.nome}<span className="mp-fraco" style={{ marginLeft: "auto" }}>{SITUACAO[p.situacao]}</span></div>)}
-          </div>
-        )}
-        <p className="mp-fraco">Fonte: IBGE · Censo Demográfico <span className="mp-num">2022</span></p>
-      </div>
-      <div className="mp-pe">
-        {acesso?.pode_mesa && <Botao variante="principal" onClick={() => onMesa([r.codigo])}>Abrir na mesa de trabalho →</Botao>}
-        {acesso?.pode_editar && nivel === "bairro" && <Botao onClick={() => onCriarArea([r.codigo])}>Criar área com este bairro</Botao>}
-      </div>
-    </>
+      <p className="mp-texto mp-legenda-txt">Cada pessoa aparece perto do CEP do cadastro, nunca na casa. Só quem aceitou o termo aparece com nome; as outras são só um ponto, e só quando há 3 ou mais perto.</p>
+      {totais && totais.com_ponto > 0 && <p className="mp-fraco">{milhar(totais.com_nome)} de {milhar(totais.com_ponto)} aparecem com nome.</p>}
+    </Janela>
   );
 }

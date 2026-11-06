@@ -25,12 +25,14 @@ export type BalaoProps = {
   /* até duas ações (lei 5) */
   rodape?: ReactNode;
   largura?: number;
+  /* o ponto saiu da tela: o balão fica montado (sem puxar o foco de novo), só escondido */
+  oculto?: boolean;
 };
 
 const AFASTA = 34;
 const MARGEM = 16;
 
-export function Balao({ x, y, titulo, sobretitulo, aoFechar, children, rodape, largura = 316 }: BalaoProps) {
+export function Balao({ x, y, titulo, sobretitulo, aoFechar, children, rodape, largura = 316, oculto }: BalaoProps) {
   const caixa = useRef<HTMLDivElement>(null);
   const fechar = useRef<HTMLButtonElement>(null);
   /* aoFechar costuma ser uma função nova a cada render: guardada num ref, o efeito
@@ -59,7 +61,7 @@ export function Balao({ x, y, titulo, sobretitulo, aoFechar, children, rodape, l
     const top = Math.max(MARGEM, Math.min(y - alto / 2, h - alto - MARGEM));
     const ponta = Math.max(20, Math.min(y - top, alto - 20));
     setPos((p) => (p.left === left && p.top === top && p.ponta === ponta && p.lado === lado && p.w === lw ? p : { left, top, ponta, lado, w: lw }));
-  }, [x, y, largura, children, rodape, medida]);
+  }, [x, y, largura, children, rodape, medida, oculto]);
 
   /* o contêiner mudou de tamanho (janela, painel recolhido): reposiciona */
   useEffect(() => {
@@ -96,6 +98,7 @@ export function Balao({ x, y, titulo, sobretitulo, aoFechar, children, rodape, l
       className={`balao ${pos.lado}`}
       role="dialog"
       aria-label={titulo}
+      hidden={oculto}
       style={{ left: pos.left, top: pos.top, width: pos.w, ["--balao-ponta" as string]: `${pos.ponta}px` }}
     >
       <div className="balao-cab">
