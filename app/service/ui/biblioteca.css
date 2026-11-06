@@ -899,6 +899,13 @@ body { --graf-neutro: color-mix(in srgb, var(--muted) 38%, transparent); --graf-
 }
 .balao.esq .balao-ponta { left: auto; right: -6px; }
 .balao.solto { transform-origin: center top; }
+/* celular (G16): o balão vira folha; a folha já dá o respiro das bordas */
+.m6-sheet.balao-folha { padding-left: 0; padding-right: 0; }
+.balao-folha .m6-grab-zona { margin-left: 0; margin-right: 0; }
+.balao-folha .balao-fechar { width: 44px; height: 44px; }
+.balao-folha .balao-cab { padding-top: 4px; }
+.balao-folha .balao-titulo { font-size: var(--fs-app-20, 20px); }
+.balao-folha .balao-corpo { font-size: var(--fs-app-15, 15px); }
 .balao.solto .balao-ponta { display: none; }
 
 @media (max-width: 860px) {

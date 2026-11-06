@@ -7,12 +7,15 @@
    tudo do ponto (não há painel lateral). Fecha no ✕ e no Esc; ao abrir, o foco vai
    para o ✕ e, ao fechar, volta para onde estava; o Esc só fecha com o foco dentro
    dele e nada aberto por cima. O contêiner (o mapa) precisa ter
-   position: relative. Visual e movimento em biblioteca.css (.balao). */
+   position: relative. Visual e movimento em biblioteca.css (.balao).
+   `folha` (celular, G16, prancha P3): o mesmo conteúdo sobe de baixo numa Folha
+   da biblioteca, com fundo escuro; tocar fora ou arrastar a alça fecha. */
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Icon } from "../lib/icons";
 import { BotaoIcone } from "./Botao";
+import { Folha } from "./Janela";
 
 export type BalaoProps = {
   /* ponto em px dentro do contêiner */
@@ -27,12 +30,36 @@ export type BalaoProps = {
   largura?: number;
   /* o ponto saiu da tela: o balão fica montado (sem puxar o foco de novo), só escondido */
   oculto?: boolean;
+  /* celular: abre como folha que sobe de baixo (x, y e largura não contam) */
+  folha?: boolean;
 };
 
 const AFASTA = 34;
 const MARGEM = 16;
 
-export function Balao({ x, y, titulo, sobretitulo, aoFechar, children, rodape, largura = 316, oculto }: BalaoProps) {
+export function Balao(props: BalaoProps) {
+  return props.folha ? <BalaoFolha {...props} /> : <BalaoPreso {...props} />;
+}
+
+function BalaoFolha({ titulo, sobretitulo, aoFechar, children, rodape }: BalaoProps) {
+  return (
+    <Folha aoFechar={aoFechar} rotulo={titulo} className="balao-folha">
+      <div className="balao-cab">
+        <div className="balao-cab-texto">
+          {sobretitulo && <div className="balao-sobre">{sobretitulo}</div>}
+          <h3 className="balao-titulo">{titulo}</h3>
+        </div>
+        <BotaoIcone className="balao-fechar" rotulo="Fechar" onClick={aoFechar}>
+          <Icon name="recusou" size={16} stroke={2.2} />
+        </BotaoIcone>
+      </div>
+      {children && <div className="balao-corpo">{children}</div>}
+      {rodape && <div className="balao-pe">{rodape}</div>}
+    </Folha>
+  );
+}
+
+function BalaoPreso({ x, y, titulo, sobretitulo, aoFechar, children, rodape, largura = 316, oculto }: BalaoProps) {
   const caixa = useRef<HTMLDivElement>(null);
   const fechar = useRef<HTMLButtonElement>(null);
   /* aoFechar costuma ser uma função nova a cada render: guardada num ref, o efeito

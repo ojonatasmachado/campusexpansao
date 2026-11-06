@@ -31,6 +31,8 @@
 .mapa-root { position: relative; overflow: hidden; background: var(--mapa-fundo); }
 .mapa-root .maplibregl-canvas:focus-visible { outline: 2px solid var(--white); outline-offset: -2px; }
 .mapa-root .maplibregl-ctrl-attrib { font-size: 12px; }
+/* o "i" dos créditos tem 24 px de desenho: a área de toque vai a 44 px (G16) */
+.mapa-root .maplibregl-ctrl-attrib-button::before { content: ""; position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); }
 .mapa-falha { position: absolute; inset: auto 12px 12px; padding: 10px 12px; border-radius: 10px; background: var(--graphite); color: var(--light); font-size: var(--fs-app-13); }
 
 /* ── aceite do termo (convite e app) ── */
@@ -131,13 +133,33 @@ a.m6-btn { text-decoration: none; }
 .mp-bola.novo { background: var(--mapa-novo); box-shadow: inset 0 0 0 2px var(--mapa-membro); }
 .mp-semcep { display: flex; flex-direction: column; max-height: 50vh; overflow-y: auto; }
 .mp-semcep-linha { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; text-align: left; }
+/* celular (G16, P2 a P4): busca e Camadas no topo, camadas numa folha */
+.mp-topo-cel { position: absolute; z-index: 3; top: 12px; left: 12px; right: 12px; display: flex; gap: 8px; align-items: flex-start; animation: entrar-mola .5s var(--ease-drawer) backwards; }
+.mp-topo-cel .mp-busca { flex: 1; min-width: 0; }
+.mp-topo-cel .mp-busca .input, .mp-topo-camadas {
+  height: 48px; border-radius: 16px; background: var(--graphite);
+  box-shadow: 0 14px 30px -14px rgba(0, 0, 0, .3), 0 0 0 1px color-mix(in srgb, var(--white) 5%, transparent);
+}
+.mp-topo-camadas { width: 48px; flex-shrink: 0; }
+.m6-sheet.mp-folha-camadas { padding-left: 0; padding-right: 0; display: flex; flex-direction: column; }
+.mp-folha-cab { display: flex; align-items: center; gap: 10px; padding: 0 16px 12px 22px; }
+.mp-folha-cab .pm-titulo { flex: 1; margin: 0; }
+.mp-folha-camadas .pm-corpo { flex: 1; min-height: 0; overflow-y: auto; }
+/* folha sem respiro lateral: a alça não pode sobrar para os lados (rolagem lateral) */
+.mp-folha-camadas .m6-grab-zona { margin-left: 0; margin-right: 0; }
+.m6-sheet.mp-folha-camadas .balao-fechar { width: 44px; height: 44px; }
+.mp-topo-cel .mp-sug { min-height: 44px; }
+.mp-folha-camadas .pm-pe .panel-link { min-height: 44px; display: inline-flex; align-items: center; }
+
 @media (max-width: 860px) {
+  /* o servidor não sabe a largura: sem isto o painel do computador pisca antes da troca */
+  .mapa-tela > .pm-painel, .mapa-tela > .pm-trilho { display: none; }
   .mp-ctrl { bottom: calc(100px + var(--safe-bottom, 0px)); right: 12px; }
   /* créditos do mapa acima da fileira de ferramentas, à esquerda dos controles */
   .mapa-tela .maplibregl-ctrl-bottom-right { bottom: calc(100px + var(--safe-bottom, 0px)); right: 72px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mp-ctrl, .mp-sugestoes { animation: none; }
+  .mp-ctrl, .mp-sugestoes, .mp-topo-cel { animation: none; }
   .mp-ctrl-b { transition: none; }
   .mp-ctrl-b:active { transform: none; }
 }
