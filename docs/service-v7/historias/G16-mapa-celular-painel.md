@@ -2,10 +2,10 @@
 id: G16
 titulo: Ajustar o mapa do painel ao celular
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-06
+branch: historia/G16-mapa-celular-painel
 depende: [G7]
 tamanho: M
 ---
