@@ -26,5 +26,12 @@ export default defineModule({
       limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
       motivo: "Decisão de 04/11 (mapa/PLANO.md §10): ferramentas à vista numa barra, no lugar do menu Ferramentas, e camadas que se somam num painel. A casca do painel (menu, busca e avatar) soma 24 das 45 ações e 40 das 105 palavras; o mapa em si tem 21 ações e 65 palavras. Antes da G7 a tela tinha 42 ações, 183 palavras e 1 sobreposição.",
     },
+    {
+      tela: "Mapa da igreja (painel no celular)",
+      tamanho: "390×844",
+      medido: { palavras: 11, acoes: 14, sobreposicoes: 0 },
+      limite: { palavras: 80, acoes: 12, sobreposicoes: 0 },
+      motivo: "G16: a casca do painel no celular (menu, busca, ajuda e avatar) soma 4 ações; o mapa tem busca, Camadas, 3D, minha posição, o \"i\" dos créditos do mapa (obrigatório pela licença) e as ferramentas visíveis da fileira que rola. Antes da G16 eram 18 ações e 1 sobreposição.",
+    },
   ],
 });

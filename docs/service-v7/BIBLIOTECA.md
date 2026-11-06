@@ -67,7 +67,7 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Menu de opções | `MenuAcoes` em `app/service/ui/Menu.tsx`; `MenuMais` usa por dentro | sim | menu do usuário (TopUserMenu) é peça própria | 4 |
 | Painel do mapa | `PainelMapa`, `GrupoCamadas`, `LinhaCamada`, `TransparenciaCamada`, `EscalaTons` em `app/service/ui/PainelMapa.tsx` (aberto, recolhido em trilho de ícones, painel de ferramenta com "Voltar ao mapa"; linha inteira é o interruptor) | sim | mapa ainda usa `.mp-painel` até a G7 | mapa P1 |
 | Barra de ferramentas | `BarraFerramentas` em `app/service/ui/BarraFerramentas.tsx` (itens com ícone e nome, `alerta` separado no fim, `fileira` rolável no celular, item com `href` vira link; `desloc` e `reservaDir` para centrar entre painel e ajuda, `compacta` para espaço curto) | sim | ok (mapa desde a G7) | mapa P1, P2 |
-| Balão | `Balao` e `LinhaBalao` em `app/service/ui/Balao.tsx` (preso a um ponto, vira para o outro lado perto da borda, Esc e foco; `oculto` quando o ponto sai da tela) | sim | ok (mapa desde a G7) | mapa P1 |
+| Balão | `Balao` e `LinhaBalao` em `app/service/ui/Balao.tsx` (preso a um ponto, vira para o outro lado perto da borda, Esc e foco; `oculto` quando o ponto sai da tela; `folha` no celular, sobe de baixo) | sim | ok (mapa desde a G7) | mapa P1 |
 
 ## Ordem sugerida de troca
 
