@@ -16,6 +16,7 @@ import type { ReactNode } from "react";
 import { Icon } from "../lib/icons";
 import { BotaoIcone } from "./Botao";
 import { Folha } from "./Janela";
+import { Selo } from "./Selo";
 
 export type BalaoProps = {
   /* ponto em px dentro do contêiner */
@@ -152,4 +153,24 @@ export function LinhaBalao({ icone, children }: { icone: string; children: React
       <span>{children}</span>
     </div>
   );
+}
+
+/* Lotação no balão (prancha P1): "9 de 12 lugares", selo com as vagas (ou
+   lotado) e a barra de ocupação. */
+export function LotacaoBalao({ ocupados, total, vagas, cheio }: { ocupados: number; total: number; vagas: string; cheio: boolean }) {
+  const pct = total > 0 ? Math.min(100, Math.round((ocupados / total) * 100)) : 0;
+  return (
+    <div className="balao-lotacao">
+      <div className="balao-lotacao-cab">
+        <span><b className="balao-lotacao-n">{ocupados} de {total}</b> lugares</span>
+        <Selo tom={cheio ? "cuidado" : "ok"}>{vagas}</Selo>
+      </div>
+      <span className="balao-lotacao-barra" aria-hidden="true"><span style={{ width: `${pct}%` }} /></span>
+    </div>
+  );
+}
+
+/* Linha de apoio do balão, sem ícone: número em destaque e o resto do texto */
+export function NotaBalao({ children }: { children: ReactNode }) {
+  return <p className="balao-nota">{children}</p>;
 }

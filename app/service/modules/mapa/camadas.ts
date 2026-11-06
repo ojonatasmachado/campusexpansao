@@ -65,7 +65,7 @@ export function montarCamadas(map: MlMap, c: Record<CorMapa, string>) {
   map.addLayer({ id: "mp-lugares", type: "symbol", source: "mp-lugares", layout: {
     ...marcador, "icon-size": 0.8,
     "icon-image": ["case", ["==", ["get", "grupo"], "igreja"], "mp-lugar-igreja", "mp-lugar-regiao"],
-  } });
+  }, paint: { "icon-opacity": ["case", ["boolean", ["get", "oculto"], false], 0.4, 1] } });
   map.addLayer({ id: "mp-grupos", type: "symbol", source: "mp-locais", filter: ["!", ["get", "igreja"]], layout: {
     ...marcador, "icon-size": 0.72, "icon-image": "mp-celula",
   } });
