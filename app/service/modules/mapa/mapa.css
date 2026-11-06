@@ -302,3 +302,62 @@ a.m6-btn { text-decoration: none; }
 .mesa-fs { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .mesa-fs legend { margin-bottom: 10px; }
 .mesa-opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+
+/* ── Criar área (G10, P5) ── */
+.ca-topo { position: absolute; z-index: 3; top: 18px; left: 392px; right: 18px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; pointer-events: none; animation: entrar-mola .5s var(--ease-drawer) backwards; }
+.ca-topo > * { pointer-events: auto; }
+.ca-barra {
+  display: flex; align-items: center; gap: 8px; max-width: 100%; padding: 6px; border-radius: 22px; box-sizing: border-box;
+  background: var(--graphite); color: var(--white);
+  box-shadow: 0 20px 44px -18px rgba(0, 0, 0, .3), 0 0 0 1px color-mix(in srgb, var(--white) 5%, transparent);
+}
+.ca-formas { flex-shrink: 0; }
+.ca-formas .seg-opt, .ca-formas > button { gap: 7px; }
+.ca-sep { width: 1px; height: 28px; flex-shrink: 0; background: var(--border); }
+.ca-desfazer { flex-shrink: 0; gap: 7px; }
+.ca-ima { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; padding: 0 6px 0 8px; font-size: var(--fs-pn-13); font-weight: 600; white-space: nowrap; }
+.ca-dica { max-width: 560px; padding: 9px 14px; border-radius: 14px; background: var(--graphite); color: var(--muted); font-size: var(--fs-pn-13); box-shadow: 0 6px 16px rgba(0, 0, 0, .08); }
+.ca-numeros { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.ca-num { display: flex; flex-direction: column; gap: 2px; padding: 14px; border-radius: 18px; background: color-mix(in srgb, var(--white) 6%, transparent); }
+.ca-num > span { font-size: var(--fs-pn-12); font-weight: 500; color: var(--muted); }
+.ca-num > b { font-size: 27px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; }
+.ca-num > b.ca-num-txt { font-size: var(--fs-pn-16); font-weight: 700; margin-top: 6px; letter-spacing: 0; }
+.ca-obs { grid-column: 1 / -1; margin: 0; font-size: var(--fs-pn-12); line-height: 1.45; color: var(--muted); }
+.ca-form { display: flex; flex-direction: column; gap: 16px; }
+.ca-cores { display: flex; flex-wrap: wrap; gap: 10px; }
+.ca-cor {
+  width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 10%, transparent);
+  transition: transform .25s var(--ease-drawer), box-shadow .25s ease;
+}
+.ca-cor:hover { transform: scale(1.08); }
+.ca-cor.on { box-shadow: 0 0 0 3px var(--graphite), 0 0 0 5px var(--white); }
+.ca-cor.cor-sand { background: var(--mapa-sand); } .ca-cor.cor-wheat { background: var(--mapa-wheat); }
+.ca-cor.cor-clay { background: var(--mapa-clay); } .ca-cor.cor-terra { background: var(--mapa-terra); }
+.ca-cor.cor-rust { background: var(--mapa-rust); } .ca-cor.cor-cocoa { background: var(--mapa-cocoa); }
+.ca-cor.cor-olive { background: var(--mapa-olive); }
+.ca-pe { display: flex; flex-direction: column; gap: 8px; }
+.ca-pe-botoes { display: flex; gap: 8px; }
+.ca-pe-botoes > * { flex: 1; }
+.ca-pe-botoes > .ca-salvar { flex: 2; }
+.ca-erro { margin: 0; font-size: var(--fs-pn-13); color: var(--danger); }
+@media (max-width: 860px) {
+  .ca-topo { left: 12px; right: 12px; top: 12px; gap: 8px; }
+  /* o mapa precisa aparecer para desenhar: a folha fica na metade de baixo (só nesta ferramenta) */
+  .mapa-tela:has(.ca-topo) > .pm-ferramenta { max-height: 40dvh; }
+  .mapa-tela:has(.ca-topo) .maplibregl-ctrl-bottom-right { top: auto; bottom: calc(40dvh + 12px); }
+  .ca-barra { width: 100%; flex-wrap: wrap; }
+  .ca-formas { flex: 1 1 100%; }
+  .ca-sep { display: none; }
+  .ca-desfazer, .ca-ima { min-height: 44px; }
+  /* alvo de 44 px no interruptor do ímã sem mudar o desenho (o ::after é o botão do interruptor) */
+  .ca-ima .sw { position: relative; }
+  .ca-ima .sw::before { content: ""; position: absolute; inset: -8px; }
+  .ca-cor { width: 44px; height: 44px; }
+  .ca-dica { max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ca-topo { animation: none; }
+  .ca-cor { transition: none; }
+  .ca-cor:hover { transform: none; }
+}

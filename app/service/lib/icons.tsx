@@ -140,6 +140,8 @@ export const ICON_PATHS: Record<string, string> = {
   idade: '<path d="M5 20v-6"/><path d="M10 20V8"/><path d="M15 20v-9"/><path d="M20 20V5"/>',
   comparar: '<path d="M4 20v-8"/><path d="M8 20V8"/><path d="M14 20v-6"/><path d="M18 20V6"/><path d="M3 20h18"/>',
   area: '<path d="m5 7 6-3 8 4-2 9-9 3-4-6Z"/>',
+  bairros: '<path d="M3 9l6-5 5 3v7l-6 3-5-3z"/><path d="M14 7l6 2v8l-6 3"/>',
+  livre: '<path d="M4 18l4-11 6 6 6-9"/>',
   rota: '<circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/>',
   linhadotempo: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',
   marcarlugar: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><path d="M12 7v6"/><path d="M9 10h6"/>',

@@ -47,5 +47,12 @@ export default defineModule({
       limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
       motivo: "G11, prancha P10: os dois controles do período, o play, os períodos prontos e De perto ou Cidade toda. A casca do painel soma 24 ações. Antes eram 30 ações, 108 palavras, 1 sobreposição e 2 alvos pequenos.",
     },
+    {
+      tela: "Mapa da igreja · Criar área",
+      tamanho: "1366×860",
+      medido: { palavras: 118, acoes: 45, sobreposicoes: 0 },
+      limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
+      motivo: "G10, prancha P5: as quatro formas, Desfazer e o ímã ficam à vista em cima do mapa, e nome, tipo, as 7 cores e o responsável no painel, para a área sair numa tela só. A casca do painel soma 24 ações e cerca de 40 palavras; a dica do gesto e a regra do responsável são o resto do texto. Antes eram 42 ações e 99 palavras. No celular (390×844) a tela tem 12 ações e 60 palavras, dentro da lei.",
+    },
   ],
 });
