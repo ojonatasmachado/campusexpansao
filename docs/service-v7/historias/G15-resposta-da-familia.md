@@ -2,10 +2,10 @@
 id: G15
 titulo: Deixar a família responder a emergência com um toque
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-06
+branch: historia/G15-resposta-da-familia
 depende: [G14]
 tamanho: M
 ---
