@@ -22,8 +22,6 @@ export type ContextoMapa = {
   celular: boolean;
   /* pastor e administração: escolhem o responsável da área (G10) */
   gestao: boolean;
-  /* abre a conversa com a ficha do membro (Emergência, G14) */
-  mensagem: (memberId: string) => void;
   recarregar: () => void;
   fechar: () => void;
 };

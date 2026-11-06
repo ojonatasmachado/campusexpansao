@@ -9,6 +9,7 @@ import { Av } from "./comum";
 import type { Board, Card, Chat, ChatMember, M, Message, Ministry, P } from "./tipos";
 
 import { Botao } from "../ui/Botao";
+import { avisar } from "../lib/avisar";
 import { Acao } from "../ui/Acao";
 import { Cartao } from "../ui/Cartao";
 // ── aba: Inicio ───────────────────────────────────────────────────────────────
@@ -186,6 +187,25 @@ export function TabConversas({
   const [novo, setNovo] = useState(!!startNew);
   const [novoMsg, setNovoMsg] = useState("");
   const [starting, setStarting] = useState(false);
+  /* perguntas de emergência (G15): a mensagem traz "Estamos bem" e "Precisamos de ajuda" */
+  const [perguntas, setPerguntas] = useState<Record<string, { aberta: boolean; resposta: "bem" | "ajuda" | null }>>({});
+  const [respondendo, setRespondendo] = useState<string | null>(null);
+  useEffect(() => {
+    if (!member) return;
+    createServiceBrowserClient().schema("service").rpc("mapa_minhas_perguntas").then(({ data }) => {
+      const m: Record<string, { aberta: boolean; resposta: "bem" | "ajuda" | null }> = {};
+      for (const r of (data ?? []) as { message_id: string; aberta: boolean; resposta: "bem" | "ajuda" | null }[]) m[r.message_id] = { aberta: r.aberta, resposta: r.resposta };
+      setPerguntas(m);
+    });
+  }, [member, messages.length]);
+  const responder = async (messageId: string, status: "bem" | "ajuda") => {
+    setRespondendo(messageId);
+    const { error } = await createServiceBrowserClient().schema("service").rpc("mapa_emergencia_responder", { p_message: messageId, p_status: status });
+    setRespondendo(null);
+    if (error) { avisar(error.message.includes("encerrada") ? "Essa emergência já foi encerrada." : "Não foi possível responder agora. Tente de novo.", "warn"); return; }
+    setPerguntas((p) => ({ ...p, [messageId]: { ...p[messageId], resposta: status } }));
+    avisar(status === "bem" ? "Obrigado. A igreja já sabe que vocês estão bem." : "A igreja já sabe que vocês precisam de ajuda.");
+  };
 
   const myChats = member
     ? chats.filter((c) =>
@@ -300,6 +320,17 @@ export function TabConversas({
                   >
                     {msg.body}
                   </div>
+                  {!isMine && perguntas[msg.id] && (
+                    <div className="m-pergunta">
+                      {perguntas[msg.id].resposta && <div className="m-pergunta-resp">Você respondeu: {perguntas[msg.id].resposta === "bem" ? "Estamos bem" : "Precisamos de ajuda"}</div>}
+                      {perguntas[msg.id].aberta && (
+                        <div className="m-pergunta-botoes">
+                          <Botao tamanho="toque" compacto variante={perguntas[msg.id].resposta === "bem" ? "principal" : "secundario"} desativado={respondendo === msg.id} onClick={() => responder(msg.id, "bem")}>Estamos bem</Botao>
+                          <Botao tamanho="toque" compacto variante={perguntas[msg.id].resposta === "ajuda" ? "perigo" : "secundario"} desativado={respondendo === msg.id} onClick={() => responder(msg.id, "ajuda")}>Precisamos de ajuda</Botao>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}

@@ -930,3 +930,9 @@ body { --graf-neutro: color-mix(in srgb, var(--muted) 38%, transparent); --graf-
   .pm-seta, .pm-recolher, .pm-voltar, .pm-camada, .pm-camada-linha, .bf-item, .balao-fechar { transition: none; }
   .bf-item:active, .pm-recolher:active, .pm-voltar:active, .balao-fechar:active { transform: none; }
 }
+
+/* pergunta da emergência na conversa do membro (G15): resposta com um toque */
+.m-pergunta { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.m-pergunta-botoes { display: flex; flex-wrap: wrap; gap: 6px; }
+.m-pergunta-botoes > * { min-height: 44px; }
+.m-pergunta-resp { font-size: var(--fs-app-13); color: var(--muted); }

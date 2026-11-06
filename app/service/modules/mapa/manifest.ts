@@ -18,6 +18,8 @@ export default defineModule({
     menu: [{ rota: "mapa", grupo: "Pessoas", rotulo: "Mapa da igreja", icone: "mapapin", ordem: 21, papeis: ["master", "pastor"], acessos: ["mapa"] }],
   },
   vocabulario: ["grupo"],
+  /* G15: a pergunta da emergência chega como conversa, com "Estamos bem" e "Precisamos de ajuda" */
+  avisos: [{ tipo: "emergencia_pergunta", categoria: "mensagens", publico: "família na área da emergência que ainda não respondeu", cartao: "pedido", quando: "ao perguntar a quem não respondeu" }],
   densidade: [
     {
       tela: "Mapa da igreja",

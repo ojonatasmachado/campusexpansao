@@ -32,7 +32,7 @@ type Situacao = "sem_resposta" | "bem" | "ajuda";
 type Familia = {
   chave: string; nome: string; pessoas: number; bairro: string | null; contato_member_id: string; telefone: string | null;
   status: Situacao; atualizado_em: string | null; membros: { id: string; nome: string }[];
-  latitude: number | null; longitude: number | null; marcado_por: string | null;
+  latitude: number | null; longitude: number | null; marcado_por: string | null; fonte: "coordenacao" | "familia" | null;
 };
 type Endereco = { rua: string | null; numero: string | null; complemento: string | null; bairro: string | null; cidade: string | null; cep: string | null; quando: string };
 
@@ -41,30 +41,45 @@ const TOM: Record<Situacao, SeloTom> = { sem_resposta: "neutro", bem: "ok", ajud
 const PERGUNTA = "Oi! Aqui é da igreja. Soubemos da situação na sua região. Vocês estão bem? Precisam de alguma ajuda?";
 const hora = (iso: string) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
-export function Emergencia({ ctx }: { ctx: ContextoMapa }) {
+export function Emergencia({ ctx, nivel, onMensagem }: { ctx: ContextoMapa; nivel: "bairro" | "setor"; onMensagem: (memberId: string) => void }) {
   const db = () => createServiceBrowserClient().schema("service");
   const [atual, setAtual] = useState<Emerg | null>(null);
   const [carregou, setCarregou] = useState(false);
+  const [falhou, setFalhou] = useState(false);
+  const [tentativa, setTentativa] = useState(0);
 
+  /* sem saber se há uma aberta, não oferece abrir outra */
   useEffect(() => {
-    db().rpc("mapa_emergencias", { p_org: ctx.org }).then(({ data }) => {
+    let vivo = true;
+    db().rpc("mapa_emergencias", { p_org: ctx.org }).then(({ data, error }) => {
+      if (!vivo) return;
+      if (error) { setFalhou(true); setCarregou(true); return; }
+      setFalhou(false);
       setAtual(((data ?? []) as Emerg[]).find((e) => e.status === "aberta") ?? null);
       setCarregou(true);
     });
-  }, [ctx.org]);
+    return () => { vivo = false; };
+  }, [ctx.org, tentativa]);
 
   if (!carregou) return null;
-  if (!atual) return <MarcarArea ctx={ctx} aoAbrir={setAtual} />;
-  return <EmergenciaAberta ctx={ctx} atual={atual} />;
+  if (falhou) return (
+    <PainelMapa rotulo="Emergência" sobretitulo="Emergência" titulo="Não foi possível carregar" voltar={{ aoTocar: ctx.fechar }}
+      rodape={<Botao variante="principal" onClick={() => { setCarregou(false); setTentativa((t) => t + 1); }}>Tentar de novo</Botao>}>
+      <p className="ca-obs">Confira a conexão e tente de novo.</p>
+    </PainelMapa>
+  );
+  if (!atual) return <MarcarArea ctx={ctx} nivel={nivel} aoAbrir={setAtual} />;
+  return <EmergenciaAberta ctx={ctx} atual={atual} onMensagem={onMensagem} />;
 }
 
 /* P12: marcar a área atingida e dar um nome */
-function MarcarArea({ ctx, aoAbrir }: { ctx: ContextoMapa; aoAbrir: (e: Emerg) => void }) {
+function MarcarArea({ ctx, nivel, aoAbrir }: { ctx: ContextoMapa; nivel: "bairro" | "setor"; aoAbrir: (e: Emerg) => void }) {
   const db = () => createServiceBrowserClient().schema("service");
-  const temBairros = ctx.regioes.length > 0;
+  const temBairros = nivel === "bairro" && ctx.regioes.length > 0;
   const area = useAreaDesenhada(ctx, { prefixo: "em", corHex: ctx.cores.alerta, inicial: "circulo", temBairros });
   const [titulo, setTitulo] = useState("");
   const [conta, setConta] = useState<{ familias: number; pessoas: number } | null>(null);
+  const [contando, setContando] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState("");
   const { forma, bairros, geo } = area;
@@ -74,9 +89,11 @@ function MarcarArea({ ctx, aoAbrir }: { ctx: ContextoMapa; aoAbrir: (e: Emerg) =
     let vivo = true;
     const t = setTimeout(async () => {
       const g = area.geometria();
-      if (!g) { setConta(null); return; }
+      if (!g) { setConta({ familias: 0, pessoas: 0 }); return; }
+      setContando(true);
       const { data, error } = await db().rpc("mapa_emergencia_previa", { p_org: ctx.org, p_geojson: g });
       if (!vivo) return;
+      setContando(false);
       setConta(error ? null : ((data ?? [])[0] as { familias: number; pessoas: number }) ?? null);
     }, 200);
     return () => { vivo = false; clearTimeout(t); };
@@ -100,8 +117,8 @@ function MarcarArea({ ctx, aoAbrir }: { ctx: ContextoMapa; aoAbrir: (e: Emerg) =
       <PainelMapa rotulo="Abrir emergência" sobretitulo="Emergência" titulo="O que aconteceu?" voltar={{ aoTocar: ctx.fechar }}
         busca={(
           <div className="ca-numeros">
-            <div className="ca-num"><span>Famílias na área</span><b className="mp-num">{conta?.familias ?? 0}</b></div>
-            <div className="ca-num"><span>Pessoas</span><b className="mp-num">{conta?.pessoas ?? 0}</b></div>
+            <div className="ca-num"><span>Famílias na área</span><b className="mp-num">{conta && !contando ? conta.familias : "-"}</b></div>
+            <div className="ca-num"><span>Pessoas</span><b className="mp-num">{conta && !contando ? conta.pessoas : "-"}</b></div>
           </div>
         )}
         rodape={(
@@ -120,7 +137,7 @@ function MarcarArea({ ctx, aoAbrir }: { ctx: ContextoMapa; aoAbrir: (e: Emerg) =
 }
 
 /* P13: emergência aberta, uma família por ponto */
-function EmergenciaAberta({ ctx, atual }: { ctx: ContextoMapa; atual: Emerg }) {
+function EmergenciaAberta({ ctx, atual, onMensagem }: { ctx: ContextoMapa; atual: Emerg; onMensagem: (memberId: string) => void }) {
   const db = () => createServiceBrowserClient().schema("service");
   const [familias, setFamilias] = useState<Familia[]>([]);
   const [filtro, setFiltro] = useState<"todas" | Situacao>("todas");
@@ -134,12 +151,18 @@ function EmergenciaAberta({ ctx, atual }: { ctx: ContextoMapa; atual: Emerg }) {
     const { data, error } = await db().rpc("mapa_emergencia_familias", { p_id: atual.id });
     if (!error) setFamilias((data ?? []) as Familia[]);
   }, [atual.id]);
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- carga do servidor ao abrir
-  useEffect(() => { carregar(); }, [carregar]);
+  /* a resposta da família muda a situação sozinha (G15): a lista se atualiza a cada 15 s */
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- carga do servidor ao abrir
+    carregar();
+    const t = setInterval(() => { if (document.visibilityState === "visible") carregar(); }, 15000);
+    return () => clearInterval(t);
+  }, [carregar]);
 
   /* área e pontos das famílias */
+  const mapaEm = ctx.mapa, coresEm = ctx.cores;
   useEffect(() => {
-    const { mapa, cores } = ctx;
+    const mapa = mapaEm, cores = coresEm;
     mapa.addSource("em-area", { type: "geojson", data: { type: "Feature", properties: {}, geometry: atual.geojson } });
     mapa.addLayer({ id: "em-area-fill", type: "fill", source: "em-area", paint: { "fill-color": cores.alerta, "fill-opacity": 0.14 } });
     mapa.addLayer({ id: "em-area-linha", type: "line", source: "em-area", paint: { "line-color": cores.alerta, "line-width": 2.5, "line-dasharray": [3, 2] } });
@@ -150,8 +173,6 @@ function EmergenciaAberta({ ctx, atual }: { ctx: ContextoMapa; atual: Emerg }) {
       "circle-color": ["match", ["get", "st"], "bem", cores.membro, "ajuda", cores.alerta, cores.afastado],
       "circle-stroke-color": ["case", ["get", "sel"], cores.tinta, cores.papel], "circle-stroke-width": ["case", ["get", "sel"], 3, 2],
     } });
-    const caixa = caixaDaGeometria(atual.geojson);
-    if (caixa) mapa.fitBounds(caixa, { padding: ctx.celular ? 40 : { top: 90, bottom: 60, left: 420, right: 60 }, maxZoom: 16 });
     const clique = (e: MapMouseEvent) => {
       const f = mapa.queryRenderedFeatures(e.point, { layers: ["em-fam"] })[0];
       setSel((f?.properties?.k as string | undefined) ?? null);
@@ -162,17 +183,25 @@ function EmergenciaAberta({ ctx, atual }: { ctx: ContextoMapa; atual: Emerg }) {
     mapa.on("mouseenter", "em-fam", sobre);
     mapa.on("mouseleave", "em-fam", fora);
     return () => { mapa.off("click", clique); mapa.off("mouseenter", "em-fam", sobre); mapa.off("mouseleave", "em-fam", fora); fora(); limparCamadas(mapa, "em-"); };
-  }, [ctx, atual]);
+  }, [mapaEm, coresEm, atual]);
+
+  /* enquadra a área uma vez, ao abrir (sem tirar o zoom da pessoa depois) */
+  const celular = ctx.celular;
+  useEffect(() => {
+    const caixa = caixaDaGeometria(atual.geojson);
+    if (caixa) ctx.mapa.fitBounds(caixa, { padding: celular ? 40 : { top: 90, bottom: 60, left: 420, right: 60 }, maxZoom: 16 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só ao trocar de emergência
+  }, [atual.id]);
 
   useEffect(() => {
     (ctx.mapa.getSource("em-fam") as GeoJSONSource | undefined)?.setData({
       type: "FeatureCollection",
       features: familias.filter((f) => f.latitude != null && f.longitude != null).map((f) => ({ type: "Feature", properties: { k: f.chave, st: f.status, sel: f.chave === sel }, geometry: { type: "Point", coordinates: [f.longitude as number, f.latitude as number] } })),
     });
-  }, [ctx, familias, sel]);
+  }, [ctx.mapa, familias, sel]);
 
   const marcar = async (f: Familia, status: Situacao) => {
-    setFamilias((fs) => fs.map((x) => (x.chave === f.chave ? { ...x, status, atualizado_em: new Date().toISOString(), marcado_por: "você" } : x)));
+    setFamilias((fs) => fs.map((x) => (x.chave === f.chave ? { ...x, status, atualizado_em: new Date().toISOString(), marcado_por: "você", fonte: "coordenacao" } : x)));
     const { error } = await db().rpc("mapa_emergencia_status", { p_id: atual.id, p_chave: f.chave, p_status: status });
     if (error) { avisar("Não foi possível salvar a situação agora. Tente de novo.", "warn"); carregar(); }
   };
@@ -187,10 +216,18 @@ function EmergenciaAberta({ ctx, atual }: { ctx: ContextoMapa; atual: Emerg }) {
     if (!texto.trim()) return;
     setOcupado(true);
     let n = 0;
-    for (const f of semResposta) { const { data } = await db().rpc("start_dm", { p_target_member: f.contato_member_id, p_body: texto.trim() }); if (data) n++; }
+    /* cada pergunta fica registrada e chega com "Estamos bem" e "Precisamos de ajuda";
+       vai para todos da família, para alguém com o app ler */
+    for (const f of semResposta) {
+      let chegou = false;
+      for (const m of f.membros) { const { data } = await db().rpc("mapa_emergencia_perguntar", { p_id: atual.id, p_chave: f.chave, p_member: m.id, p_body: texto.trim() }); if (data) chegou = true; }
+      if (chegou) n++;
+    }
     setOcupado(false);
     setCompondo(false);
-    avisar(n ? `Mensagem enviada para ${plural(n, "família", "famílias")}.` : "Não foi possível mandar. Confira se você tem ficha de membro.", n ? "ok" : "warn");
+    carregar();
+    const falhas = semResposta.length - n;
+    avisar(!n ? "Não foi possível mandar. Confira se você tem ficha de membro." : falhas ? `Mensagem enviada para ${plural(n, "família", "famílias")}. ${plural(falhas, "família não recebeu", "famílias não receberam")}.` : `Mensagem enviada para ${plural(n, "família", "famílias")}.`, n && !falhas ? "ok" : "warn");
   };
   const encerrar = async () => {
     const faltam = familias.filter((f) => f.status !== "bem").length;
@@ -209,7 +246,7 @@ function EmergenciaAberta({ ctx, atual }: { ctx: ContextoMapa; atual: Emerg }) {
   const conta = useMemo(() => ({ bem: familias.filter((f) => f.status === "bem").length, ajuda: familias.filter((f) => f.status === "ajuda").length }), [familias]);
   const lista = familias.filter((f) => filtro === "todas" || f.status === filtro);
   const aberta = familias.find((f) => f.chave === sel) ?? null;
-  const meta = (f: Familia) => [plural(f.pessoas, "pessoa"), f.bairro, f.status === "sem_resposta" ? "aguardando" : f.marcado_por && f.atualizado_em ? `marcado por ${f.marcado_por} às ${hora(f.atualizado_em)}` : null].filter(Boolean).join(" · ");
+  const meta = (f: Familia) => [plural(f.pessoas, "pessoa"), f.bairro, f.status === "sem_resposta" && !f.marcado_por ? "aguardando" : f.fonte === "familia" && f.atualizado_em ? `respondeu às ${hora(f.atualizado_em)}` : f.marcado_por && f.atualizado_em ? `marcado por ${f.marcado_por} às ${hora(f.atualizado_em)}` : null].filter(Boolean).join(" · ");
 
   return (
     <>
@@ -238,6 +275,7 @@ function EmergenciaAberta({ ctx, atual }: { ctx: ContextoMapa; atual: Emerg }) {
           <section className="em-compor" aria-label="Prévia da mensagem">
             <div className="em-compor-cab"><b>Para quem não respondeu</b><span>{plural(semResposta.length, "família", "famílias")}</span></div>
             <TextoLongo aria-label="Texto da mensagem" rows={3} maxLength={500} value={texto} onChange={(e) => setTexto(e.target.value)} />
+            <p className="em-compor-nota">Respondem com um toque: <Selo tom="ok">Estamos bem</Selo> <Selo tom="cuidado">Precisamos de ajuda</Selo></p>
             <div className="ca-pe-botoes">
               <Botao onClick={() => setCompondo(false)}>Cancelar</Botao>
               <Botao variante="principal" className="ca-salvar" desativado={ocupado || !texto.trim() || !semResposta.length} onClick={enviar}>{ocupado ? "Enviando..." : `Enviar para ${plural(semResposta.length, "família", "famílias")}`}</Botao>
@@ -266,14 +304,14 @@ function EmergenciaAberta({ ctx, atual }: { ctx: ContextoMapa; atual: Emerg }) {
 
       {aberta && aberta.latitude != null && aberta.longitude != null && (
         <BalaoFamilia key={aberta.chave} ctx={ctx} f={aberta} endereco={enderecos[aberta.chave]} meta={meta(aberta)}
-          aoFechar={() => setSel(null)} aoMarcar={(sit) => marcar(aberta, sit)} aoVerEndereco={() => verEndereco(aberta)} />
+          aoMensagem={onMensagem} aoFechar={() => setSel(null)} aoMarcar={(sit) => marcar(aberta, sit)} aoVerEndereco={() => verEndereco(aberta)} />
       )}
     </>
   );
 }
 
-function BalaoFamilia({ ctx, f, endereco, meta, aoFechar, aoMarcar, aoVerEndereco }: {
-  ctx: ContextoMapa; f: Familia; endereco?: Endereco; meta: string;
+function BalaoFamilia({ ctx, f, endereco, meta, aoMensagem, aoFechar, aoMarcar, aoVerEndereco }: {
+  ctx: ContextoMapa; f: Familia; endereco?: Endereco; meta: string; aoMensagem: (memberId: string) => void;
   aoFechar: () => void; aoMarcar: (s: Situacao) => void; aoVerEndereco: () => void;
 }) {
   const pos = usePosicaoNoMapa(ctx.mapa, [f.longitude as number, f.latitude as number]);
@@ -284,11 +322,11 @@ function BalaoFamilia({ ctx, f, endereco, meta, aoFechar, aoMarcar, aoVerEnderec
       rodape={(
         <>
           {f.telefone && <a className={botaoClasse({})} href={`tel:${f.telefone.replace(/[^\d+]/g, "")}`}>Ligar</a>}
-          <Botao onClick={() => ctx.mensagem(f.contato_member_id)}>Mensagem</Botao>
+          <Botao onClick={() => aoMensagem(f.contato_member_id)}>Mensagem</Botao>
         </>
       )}>
       <LinhaBalao icone="membros">{meta}</LinhaBalao>
-      <Segmentado role="group" aria-label={`Situação de ${f.nome}`}>
+      <Segmentado role="group" className="em-situacao" aria-label={`Situação de ${f.nome}`}>
         {(["sem_resposta", "bem", "ajuda"] as const).map((sit) => <Opcao key={sit} marcada={f.status === sit} onClick={() => aoMarcar(sit)}>{sit === "ajuda" ? "Precisa" : SITUACAO[sit]}</Opcao>)}
       </Segmentado>
       {endereco

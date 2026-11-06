@@ -1,7 +1,8 @@
 -- G14: a emergência mostra cada família como um ponto no mapa, com a
 -- situação e quem marcou; ao desenhar a área, famílias e pessoas contam ao vivo.
 
--- famílias: + ponto (média dos pontos da família, ~10 m) e quem marcou por último
+-- famílias: + ponto (média dos pontos da família com 3 casas, ~110 m: o
+-- endereço só abre pelo mapa_revelar_endereco, com registro) e quem marcou
 drop function if exists service.mapa_emergencia_familias(uuid);
 create or replace function service.mapa_emergencia_familias(p_id uuid)
 returns table (chave text, nome text, pessoas integer, bairro text, contato_member_id uuid, telefone text, status text, atualizado_em timestamptz, membros jsonb, latitude double precision, longitude double precision, marcado_por text)
@@ -10,6 +11,8 @@ declare e service.map_emergencies%rowtype;
 begin
   select * into e from service.map_emergencies where id = p_id;
   if not found or not service.mapa_coordena(e.organization_id) then raise exception 'sem_acesso'; end if;
+  -- encerrada: a lista com pontos deixa de abrir
+  if e.status <> 'aberta' then raise exception 'encerrada'; end if;
   -- quem abriu a lista (nomes e telefones), uma vez por minuto por pessoa
   if not exists (select 1 from service.map_emergency_log l where l.emergencia_id = p_id and l.acao = 'lista' and l.por = service.mapa_eu(e.organization_id) and l.em > now() - interval '1 minute') then
     insert into service.map_emergency_log (emergencia_id, acao, por) values (p_id, 'lista', service.mapa_eu(e.organization_id));
@@ -28,8 +31,8 @@ begin
          (array_agg(d.phone order by (d.phone is null), d.created_at))[1],
          coalesce(f.status, 'sem_resposta'), f.atualizado_em,
          jsonb_agg(jsonb_build_object('id', d.id, 'nome', d.name) order by d.name),
-         round(avg(d.latitude)::numeric, 4)::double precision,
-         round(avg(d.longitude)::numeric, 4)::double precision,
+         round(avg(d.latitude)::numeric, 3)::double precision,
+         round(avg(d.longitude)::numeric, 3)::double precision,
          (select p.name from service.people p where p.id = f.atualizado_por)
     from dentro d left join service.map_emergency_families f on f.emergencia_id = p_id and f.chave = d.k
    group by d.k, f.status, f.atualizado_em, f.atualizado_por
@@ -46,7 +49,9 @@ declare v_geom extensions.geometry;
 begin
   if not service.mapa_coordena(p_org) then raise exception 'sem_acesso'; end if;
   v_geom := extensions.st_makevalid(extensions.st_setsrid(extensions.st_geomfromgeojson(p_geojson::text), 4326));
-  if extensions.st_npoints(v_geom) > 2000 then raise exception 'area_complexa'; end if;
+  -- bairros juntos trazem muitos pontos: simplifica (~10 m) antes de contar
+  v_geom := extensions.st_simplifypreservetopology(v_geom, 0.0001);
+  if extensions.st_npoints(v_geom) > 20000 then raise exception 'area_complexa'; end if;
   return query
   select count(distinct coalesce(nullif(trim(m.family), ''), m.id::text))::integer, count(*)::integer
     from service.members m

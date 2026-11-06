@@ -332,7 +332,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   ];
 
   /* contexto estável para os modos: só muda quando mudam os dados */
-  const contexto: ContextoMapa | null = useMemo(() => (mapa && acesso ? { org: organizationId, mapa: mapa.map, cores: mapa.cores, acesso, cidade, regioes, pessoas, locais, areas, people, igreja: churchName, celular, gestao: podeLiberar, mensagem: onMensagem, recarregar: carregar, fechar: () => setModo(null) } : null), [mapa, acesso, organizationId, cidade, regioes, pessoas, locais, areas, people, churchName, celular, podeLiberar, onMensagem, carregar]);
+  const contexto: ContextoMapa | null = useMemo(() => (mapa && acesso ? { org: organizationId, mapa: mapa.map, cores: mapa.cores, acesso, cidade, regioes, pessoas, locais, areas, people, igreja: churchName, celular, gestao: podeLiberar, recarregar: carregar, fechar: () => setModo(null) } : null), [mapa, acesso, organizationId, cidade, regioes, pessoas, locais, areas, people, churchName, celular, podeLiberar, carregar]);
 
   /* ── estados vazios e de acesso ── */
   if (erro) return <div className="mapa-tela"><div className="mp-vazio"><div><p className="mp-texto" role="alert">{erro}</p><Botao compacto onClick={() => { setErro(""); carregar(); }}>Tentar de novo</Botao></div></div></div>;
@@ -522,7 +522,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
 
       {contexto && modo === "area" && <CriarArea ctx={contexto} bairrosIniciais={areaInicial} nivel={nivel} />}
       {contexto && modo === "rota" && <Rota ctx={contexto} />}
-      {contexto && modo === "emergencia" && <Emergencia ctx={contexto} />}
+      {contexto && modo === "emergencia" && <Emergencia ctx={contexto} nivel={nivel} onMensagem={onMensagem} />}
       {contexto && modo === "linha" && <LinhaDoTempo ctx={contexto} nivel={nivel} />}
       {contexto && modo === "pontos" && <Pontos key={lugarEditar?.id ?? "novo"} ctx={contexto} editar={lugarEditar} />}
       {!contexto && modo && <div className="mp-vazio"><div><p className="mp-texto" role="status">Carregando o mapa...</p></div></div>}
