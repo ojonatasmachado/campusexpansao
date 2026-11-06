@@ -2,10 +2,10 @@
 id: G17
 titulo: Refazer o Onde e o aceite do mapa no app do membro
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-06
+branch: historia/G17-membro-onde-aceite
 depende: [G6]
 tamanho: M
 ---
