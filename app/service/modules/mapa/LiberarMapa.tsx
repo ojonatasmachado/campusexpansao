@@ -31,7 +31,6 @@ const PERMISSOES: [keyof Pick<Liberacao, "pode_mesa" | "pode_csv" | "pode_editar
   ["pode_csv", "Baixar CSV com pessoas"],
   ["pode_editar", "Criar áreas e marcar lugares"],
 ];
-const dataCurta = (iso?: string) => (iso ? new Date(iso).toLocaleDateString("pt-BR", { day: "numeric", month: "long" }) : "");
 
 export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; people: PessoaLider[]; areas: Area[]; onVoltar: () => void }) {
   const db = () => createServiceBrowserClient().schema("service");
@@ -39,6 +38,7 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
   const [edit, setEdit] = useState<Liberacao | null>(null);
   const [nova, setNova] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const [inicial, setInicial] = useState("");
   const nome = (id: string) => people.find((p) => p.id === id)?.name ?? "Pessoa";
   const carregar = useCallback(async () => {
     const { data } = await db().from("map_access").select("person_id, escopo, area_id, detalhe, pode_mesa, pode_csv, pode_editar, created_at").eq("organization_id", org);
@@ -60,7 +60,9 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
 
   const resumo = (l: Liberacao) => (l.escopo === "nenhum" ? "Sem acesso" : `${l.escopo === "area" ? nomeArea(l.area_id) : "Cidade inteira"} · ${l.detalhe === "pessoas" ? "pessoas" : "só números"}`);
   const resumoLider = (id: string) => { const l = linhaDe(id); return l ? resumo(l) : `${(areasDe.get(id) ?? []).map((a) => a.nome).join(", ")} · pessoas`; };
-  const abrir = (id: string) => { setNova(""); const l = linhaDe(id); setEdit(l && l.escopo !== "nenhum" ? l : NOVA(id, areasDe.get(id)?.[0]?.id ?? null)); };
+  const abrir = (id: string) => { setNova(""); const l = linhaDe(id); const e = l && l.escopo !== "nenhum" ? l : NOVA(id, areasDe.get(id)?.[0]?.id ?? null); setEdit(e); setInicial(JSON.stringify(e)); };
+  /* cor da linha do líder: a da área que ele vê de fato (a da liberação, se houver) */
+  const corDe = (id: string) => { const l = linhaDe(id); return (l?.escopo === "area" ? areas.find((a) => a.id === l.area_id)?.cor : undefined) ?? areasDe.get(id)?.[0]?.cor ?? "terra"; };
 
   const salvar = async () => {
     if (!edit) return;
@@ -70,7 +72,7 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
     const { data: quem } = await db().from("people").select("id").eq("organization_id", org).eq("user_id", eu.user?.id ?? "").maybeSingle();
     const linha = { person_id: edit.person_id, escopo: edit.escopo, detalhe: edit.detalhe, pode_mesa: edit.pode_mesa, pode_csv: edit.pode_csv, pode_editar: edit.pode_editar };
     const r1 = await db().from("map_access").upsert({ ...linha, organization_id: org, area_id: edit.escopo === "area" ? edit.area_id : null, liberado_por: quem?.id ?? null }, { onConflict: "person_id" });
-    const r2 = await db().from("person_grants").upsert({ organization_id: org, person_id: edit.person_id, grant_code: "mapa", granted_by: quem?.id ?? null }, { onConflict: "person_id,grant_code", ignoreDuplicates: true });
+    const r2 = r1.error ? r1 : await db().from("person_grants").upsert({ organization_id: org, person_id: edit.person_id, grant_code: "mapa", granted_by: quem?.id ?? null }, { onConflict: "person_id,grant_code", ignoreDuplicates: true });
     setSalvando(false);
     if (r1.error || r2.error) { avisar("Não foi possível salvar o acesso. Tente de novo.", "warn"); return; }
     avisar("Acesso salvo.");
@@ -85,9 +87,19 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
     const r1 = areasDe.has(personId)
       ? await db().from("map_access").upsert({ person_id: personId, organization_id: org, escopo: "nenhum", area_id: null }, { onConflict: "person_id" })
       : await db().from("map_access").delete().eq("person_id", personId);
-    const r2 = await db().from("person_grants").delete().eq("person_id", personId).eq("grant_code", "mapa");
+    const r2 = r1.error ? r1 : await db().from("person_grants").delete().eq("person_id", personId).eq("grant_code", "mapa");
     if (r1.error || r2.error) { avisar("Não foi possível tirar o acesso. Tente de novo.", "warn"); return; }
     avisar("O mapa saiu do menu dessa pessoa.");
+    setEdit(null);
+    carregar();
+  };
+
+  /* líder com liberação própria: apagar a linha devolve o acesso automático (as áreas dele) */
+  const automatico = async (personId: string) => {
+    const r1 = await db().from("map_access").delete().eq("person_id", personId);
+    const r2 = r1.error ? r1 : await db().from("person_grants").upsert({ organization_id: org, person_id: personId, grant_code: "mapa" }, { onConflict: "person_id,grant_code", ignoreDuplicates: true });
+    if (r1.error || r2.error) { avisar("Não foi possível voltar ao acesso automático. Tente de novo.", "warn"); return; }
+    avisar("Voltou a ver as áreas que cuida.");
     setEdit(null);
     carregar();
   };
@@ -97,9 +109,14 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
   const atual = edit ? linhaDe(edit.person_id) : undefined;
   const nomesLider = lider?.map((a) => a.nome).join(", ") ?? "";
   const porque = !edit ? "" : lider
-    ? atual?.escopo === "nenhum" ? `É responsável por ${nomesLider}, mas o acesso foi tirado.` : `Vê o mapa porque é responsável por ${nomesLider}.`
-    : atual ? `Liberado pelo pastor em ${dataCurta(atual.created_at)}.` : "Ainda não vê o mapa.";
+    ? !atual ? `Vê o mapa porque é responsável por ${nomesLider}.`
+      : atual.escopo === "nenhum" ? `É responsável por ${nomesLider}, mas o acesso foi tirado.`
+      : `Responsável por ${nomesLider}. Liberado pelo pastor: ${resumo(atual)}.`
+    : atual ? "Liberado pelo pastor." : "Ainda não vê o mapa.";
   const podeTirar = !!edit && (lider ? atual?.escopo !== "nenhum" : !!atual);
+  /* líder no automático: só grava se o pastor mudou algo (senão viraria liberação fixa de uma área só) */
+  const semMudanca = !!edit && !!lider && !atual && JSON.stringify(edit) === inicial;
+  const podeAutomatico = !!edit && !!lider && !!atual && atual.escopo !== "nenhum";
 
   return (
     <div className="content mesa mapa-cores">
@@ -126,7 +143,7 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
           {lideres.map((id) => (
             <Acao key={id} className="mp-visao lm-pessoa" aria-pressed={edit?.person_id === id} onClick={() => abrir(id)}>
               <Avatar nome={nome(id)} tamanho="sm" />
-              <span><b>{nome(id)}</b><span className="lm-area"><span className={`pm-amostra cor-${areasDe.get(id)?.[0]?.cor ?? "terra"}`} aria-hidden="true" />{resumoLider(id)}</span></span>
+              <span><b>{nome(id)}</b><span className="lm-area"><span className={`pm-amostra cor-${corDe(id)}`} aria-hidden="true" />{resumoLider(id)}</span></span>
             </Acao>
           ))}
           <div className="lm-nova">
@@ -165,10 +182,10 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
                 <Marcar tipo="radio" className="mp-visao" name="lm-det" checked={edit.detalhe === "numeros"} onChange={() => setEdit({ ...edit, detalhe: "numeros" })}><b>Só números por bairro</b><span>Presença e totais, sem nomes.</span></Marcar>
               </div>
             </fieldset>
-            <fieldset className="mesa-fs">
+            <fieldset className="mesa-fs lm-perms">
               <legend className="mp-pergunta">Também pode</legend>
               {PERMISSOES.map(([k, rotulo]) => (
-                <Linha key={k} estilo="config" className="lm-perm">
+                <Linha key={k} estilo="config">
                   <span id={`lm-${k}`}>{rotulo}</span>
                   <Interruptor rotuloId={`lm-${k}`} ligado={edit[k]} onClick={() => setEdit({ ...edit, [k]: !edit[k] })} />
                 </Linha>
@@ -177,9 +194,10 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
             </fieldset>
             <div className="lm-pe">
               {podeTirar && <Botao variante="perigo" onClick={() => tirar(edit.person_id)}>Tirar o acesso</Botao>}
+              {podeAutomatico && <Botao variante="discreto" onClick={() => automatico(edit.person_id)}>Voltar ao automático</Botao>}
               <span className="lm-espaco" />
               <Botao onClick={() => { setEdit(null); setNova(""); }}>Cancelar</Botao>
-              <Botao variante="principal" desativado={salvando} onClick={salvar}>{salvando ? "Salvando..." : "Salvar acesso"}</Botao>
+              <Botao variante="principal" desativado={salvando || semMudanca} onClick={salvar}>{salvando ? "Salvando..." : "Salvar acesso"}</Botao>
             </div>
           </section>
         )}

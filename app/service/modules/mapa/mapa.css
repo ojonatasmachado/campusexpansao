@@ -372,13 +372,12 @@ a.m6-btn { text-decoration: none; }
 .lm-pessoa { display: flex; gap: 12px; align-items: center; }
 .lm-pessoa > span { margin-top: 0; }
 .lm-pessoa .lm-area { display: flex; align-items: center; gap: 6px; }
-.lm-area .pm-amostra { width: 10px; height: 10px; border-radius: 3px; }
 .lm-nova { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
 .lm-detalhe { padding: 24px; gap: 20px; }
 .lm-quem { display: flex; align-items: center; gap: 14px; }
 .lm-quem-linha { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .lm-area-campo { margin-top: 10px; }
-.lm-perm { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-right: 104px; }
-@media (max-width: 860px) { .lm-perm { padding-right: 0; } }
+/* largura de leitura: os interruptores ficam longe do botão de ajuda, que é fixo no canto */
+.lm-perms { max-width: 560px; }
 .lm-pe { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .lm-espaco { flex: 1; }
