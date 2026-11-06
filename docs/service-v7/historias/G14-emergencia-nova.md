@@ -2,10 +2,10 @@
 id: G14
 titulo: Refazer a emergência com formas e situação no mapa
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-06
+branch: historia/G14-emergencia-nova
 depende: [G10]
 tamanho: M
 ---
