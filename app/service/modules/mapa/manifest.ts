@@ -18,6 +18,8 @@ export default defineModule({
     menu: [{ rota: "mapa", grupo: "Pessoas", rotulo: "Mapa da igreja", icone: "mapapin", ordem: 21, papeis: ["master", "pastor"], acessos: ["mapa"] }],
   },
   vocabulario: ["grupo"],
+  /* G15: a pergunta da emergência chega como conversa, com "Estamos bem" e "Precisamos de ajuda" */
+  avisos: [{ tipo: "emergencia_pergunta", categoria: "mensagens", publico: "família na área da emergência que ainda não respondeu", cartao: "pedido", quando: "ao perguntar a quem não respondeu" }],
   densidade: [
     {
       tela: "Mapa da igreja",
@@ -60,6 +62,20 @@ export default defineModule({
       medido: { palavras: 171, acoes: 30, sobreposicoes: 0 },
       limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
       motivo: "G13, prancha P8: lista em dois grupos e o detalhe da pessoa (o que vê, nível de detalhe, três permissões e as saídas) lado a lado, para mudar ou tirar o acesso sem trocar de tela. A casca do painel soma 24 ações. Antes, com a mesma pessoa aberta, eram 30 ações, 163 palavras e 1 sobreposição; o líder de área nem aparecia.",
+    },
+    {
+      tela: "Mapa da igreja · Emergência (marcar a área)",
+      tamanho: "1366×860",
+      medido: { palavras: 98, acoes: 32, sobreposicoes: 0 },
+      limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
+      motivo: "G14, prancha P12: as quatro formas e o Desfazer da área atingida ficam à vista, como no Criar área. A casca do painel soma 24 ações. Antes eram 27 ações e 85 palavras, com a área só canto a canto.",
+    },
+    {
+      tela: "Mapa da igreja · Emergência aberta (família aberta no mapa)",
+      tamanho: "1366×860",
+      medido: { palavras: 163, acoes: 42, sobreposicoes: 0 },
+      limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
+      motivo: "G14, prancha P13: lista de famílias com a situação ao lado do mapa e o balão da família com situação, endereço e as duas saídas, para quem coordena agir sem trocar de tela numa emergência. A casca do painel soma 24 ações.",
     },
   ],
 });
