@@ -754,7 +754,7 @@
     },
     {
       "file": "app/service/membro/AceiteMapa.tsx",
-      "line": 61
+      "line": 54
     }
   ],
   "m1q3wvya": [
@@ -994,91 +994,91 @@
   "mdq310c": [
     {
       "file": "app/service/lib/termo-mapa.ts",
-      "line": 18
-    },
-    {
-      "file": "app/service/membro/AceiteMapa.tsx",
-      "line": 32
+      "line": 20
     }
   ],
   "m13x86ex": [
     {
       "file": "app/service/lib/termo-mapa.ts",
-      "line": 18
-    },
-    {
-      "file": "app/service/membro/AceiteMapa.tsx",
-      "line": 32
-    }
-  ],
-  "m1dfv3si": [
-    {
-      "file": "app/service/lib/termo-mapa.ts",
-      "line": 19
-    }
-  ],
-  "meckxe2": [
-    {
-      "file": "app/service/lib/termo-mapa.ts",
       "line": 20
-    },
-    {
-      "file": "app/service/membro/AceiteMapa.tsx",
-      "line": 34
     }
   ],
-  "ma2g40o": [
+  "m1krahbr": [
+    {
+      "file": "app/service/lib/termo-mapa.ts",
+      "line": 24
+    }
+  ],
+  "mbwzvy6": [
     {
       "file": "app/service/lib/termo-mapa.ts",
       "line": 25
     }
   ],
-  "m38z4wr": [
+  "m1jmyydw": [
     {
       "file": "app/service/lib/termo-mapa.ts",
-      "line": 27
+      "line": 26
     }
   ],
-  "mf19m92": [
+  "meckxe2": [
     {
       "file": "app/service/lib/termo-mapa.ts",
       "line": 28
     }
   ],
-  "m1g1kakl": [
-    {
-      "file": "app/service/lib/termo-mapa.ts",
-      "line": 29
-    }
-  ],
-  "m6baxw3": [
-    {
-      "file": "app/service/lib/termo-mapa.ts",
-      "line": 30
-    }
-  ],
-  "m1jyao5r": [
-    {
-      "file": "app/service/lib/termo-mapa.ts",
-      "line": 31
-    }
-  ],
-  "m9qyri4": [
-    {
-      "file": "app/service/lib/termo-mapa.ts",
-      "line": 32
-    }
-  ],
-  "m1wcdpfg": [
+  "ma2g40o": [
     {
       "file": "app/service/lib/termo-mapa.ts",
       "line": 33
     }
   ],
+  "m38z4wr": [
+    {
+      "file": "app/service/lib/termo-mapa.ts",
+      "line": 35
+    }
+  ],
+  "mf19m92": [
+    {
+      "file": "app/service/lib/termo-mapa.ts",
+      "line": 36
+    }
+  ],
+  "m1g1kakl": [
+    {
+      "file": "app/service/lib/termo-mapa.ts",
+      "line": 37
+    }
+  ],
+  "m6baxw3": [
+    {
+      "file": "app/service/lib/termo-mapa.ts",
+      "line": 38
+    }
+  ],
+  "m1jyao5r": [
+    {
+      "file": "app/service/lib/termo-mapa.ts",
+      "line": 39
+    }
+  ],
+  "m9qyri4": [
+    {
+      "file": "app/service/lib/termo-mapa.ts",
+      "line": 40
+    }
+  ],
+  "m1wcdpfg": [
+    {
+      "file": "app/service/lib/termo-mapa.ts",
+      "line": 41
+    }
+  ],
   "m132ciis": [
     {
       "file": "app/service/lib/termo-mapa.ts",
-      "line": 34
+      "line": 42
     }
   ],
   "mwmwgw4": [
@@ -1418,53 +1418,35 @@
   "m1bnfxh4": [
     {
       "file": "app/service/membro/AceiteMapa.tsx",
-      "line": 23
+      "line": 22
     },
     {
       "file": "app/service/membro/Perfil.tsx",
       "line": 238
     }
   ],
-  "mzbgips": [
-    {
-      "file": "app/service/membro/AceiteMapa.tsx",
-      "line": 33
-    }
-  ],
-  "mbwzvy6": [
-    {
-      "file": "app/service/membro/AceiteMapa.tsx",
-      "line": 33
-    }
-  ],
-  "m1jmyydw": [
-    {
-      "file": "app/service/membro/AceiteMapa.tsx",
-      "line": 33
-    }
-  ],
   "m1y3pn81": [
     {
       "file": "app/service/membro/AceiteMapa.tsx",
-      "line": 53
+      "line": 46
     }
   ],
   "m9viw2": [
     {
       "file": "app/service/membro/AceiteMapa.tsx",
-      "line": 54
+      "line": 47
     }
   ],
   "mrf4ql6": [
     {
       "file": "app/service/membro/AceiteMapa.tsx",
-      "line": 65
+      "line": 58
     }
   ],
   "mvxdrdb": [
     {
       "file": "app/service/membro/AceiteMapa.tsx",
-      "line": 66
+      "line": 59
     }
   ],
   "mubbkas": [

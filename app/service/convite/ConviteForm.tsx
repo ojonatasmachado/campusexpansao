@@ -117,7 +117,7 @@ export default function ConviteForm({ t, churchName }: { t: string; churchName?:
       )}
       <div className="login-field">
         <ul className="login-termo">
-          {pontosDoTermo(churchName, traduzirUi).map((p) => <li key={p}>{p}</li>)}
+          {pontosDoTermo(churchName, traduzirUi).map((p) => <li key={p.icone}>{p.texto}{p.forte ? ` ${p.forte}` : ""}</li>)}
         </ul>
         <details className="login-termo-completo">
           <summary>{traduzirUi("Ler o termo completo")}</summary>

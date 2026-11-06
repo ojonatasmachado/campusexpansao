@@ -3,7 +3,7 @@
 import { useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
-import { TERMO_MAPA_VERSAO, termoCompleto } from "../lib/termo-mapa";
+import { TERMO_MAPA_VERSAO, pontosDoTermo, termoCompleto } from "../lib/termo-mapa";
 import { Icon } from "../lib/icons";
 import { MemberUiContext } from "./comum";
 
@@ -24,13 +24,8 @@ export async function gravarAceiteMapa(memberId: string, aceita: boolean, origem
 
 export function SheetAceiteMapa({ memberId, churchName, usaGrupos = false, onDecidido }: { memberId: string; churchName?: string; usaGrupos?: boolean; onDecidido: (aceitou: boolean) => void }) {
   const traduzirUi = useTexto();
-  /* G17 (prancha P16): os 3 pontos em ícone; o grupo vem do vocabulário da
-     igreja ("seu {grupo}") e some se a igreja não usa grupos */
-  const pontos: { icone: "cadeado" | "mapapin" | "perfil"; texto: string; forte?: string }[] = [
-    { icone: "cadeado", texto: traduzirUi("Seus dados ficam só com a {igreja}.", { igreja: churchName?.trim() || traduzirUi("igreja") }) },
-    { icone: "mapapin", texto: usaGrupos ? traduzirUi("A liderança pode ver seu nome, a região do seu CEP, seu {grupo} e onde você serve.") : traduzirUi("A liderança pode ver seu nome, a região do seu CEP e onde você serve."), forte: traduzirUi("Nunca o endereço.") },
-    { icone: "perfil", texto: traduzirUi("Você muda isso quando quiser no Perfil.") },
-  ];
+  /* G17 (prancha P16): os 3 pontos em ícone, o grupo pelo vocabulário */
+  const pontos = pontosDoTermo(churchName, traduzirUi, usaGrupos);
 
   const ui = useContext(MemberUiContext);
   const router = useRouter();

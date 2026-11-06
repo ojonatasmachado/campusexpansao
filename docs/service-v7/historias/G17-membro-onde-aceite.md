@@ -21,6 +21,8 @@ Referência: mapa/PLANO.md §10 e canvas "Mapa da igreja · evolução" (claude.
 - `app/service/modules/mapa/mapa.css`
 - `app/service/modules/mapa/manifest.ts`
 - `app/service/ui/biblioteca.css`
+- `app/service/lib/termo-mapa.ts`
+- `app/service/convite/ConviteForm.tsx`
 - `app/service/lib/internacional/mensagens/*.json`
 - `docs/service-v7/historias/G17-membro-onde-aceite.md`
 
@@ -35,4 +37,4 @@ Referência: mapa/PLANO.md §10 e canvas "Mapa da igreja · evolução" (claude.
 
 ## Notas
 Criada em 04/11/2026 a partir da evolução da jornada do mapa (decisões do usuário em PLANO §10). Nada de aviso ou sugestão automática de expansão.
-06/11/2026 (claude): Onde com o mapa até as abas, filtros por cima e a folha "Perto de você" (toque ou arraste na alça sobe para a lista toda; cada lugar mostra distância e vagas; tocar abre o detalhe com Mandar mensagem, Quero participar e Como chegar). Aceite com os 3 pontos em ícone; o grupo vem do vocabulário ("seu {grupo}") e some se o módulo de grupos está desligado; frases novas no catálogo pt, en e es. Densidade: Onde 14/39 (antes 14/29), justificada; aceite 3/57, dentro. Fotos G17-0 a G17-4.
+06/11/2026 (claude): Onde com o mapa até as abas, filtros por cima e a folha "Perto de você" (toque ou arraste na alça sobe para a lista toda; cada lugar mostra distância e vagas; tocar abre o detalhe com Mandar mensagem, Quero participar e Como chegar). Aceite com os 3 pontos em ícone; o grupo vem do vocabulário ("seu {grupo}") e some se o módulo de grupos está desligado; frases novas no catálogo pt, en e es. Densidade: Onde 14/39 (antes 14/29), justificada; aceite 3/57, dentro. Fotos G17-0 a G17-4. Revisão: altura medida pela área que rola (sem rolar atrás do mapa), créditos do mapa acima da folha, filtros visíveis e inertes com a folha aberta, enquadramento descontando a folha, alça com captura do ponteiro e aria-controls; os 3 pontos moram em pontosDoTermo (aceite e convite) com "o {grupo} de que você participa", sem "sua célula" fixo. O termo completo ainda fala em célula: mudar exige versão nova do termo.

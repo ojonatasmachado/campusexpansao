@@ -34,6 +34,7 @@ type Filtro = "tudo" | "igrejas" | "grupos";
 type StartChat = (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
 
 const ehIgreja = (l: Local) => l.tipo !== "grupo";
+const vagasDe = (l: Local) => (l.lugares ? Math.max(0, l.lugares - (l.ocupados ?? 0)) : null);
 
 export function enderecoDoLocal(l: Local): string {
   return joinDot([l.rua, l.numero].filter(Boolean).join(", "), l.complemento, l.bairro, l.cidade);
@@ -49,20 +50,25 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
   const enquadrou = useRef(false);
   const [mapaPronto, setMapaPronto] = useState(false);
   const [folhaAberta, setFolhaAberta] = useState(false);
-  /* o mapa vai do topo do Onde até as abas: a altura sai da posição na tela */
+  /* o mapa vai do topo do Onde até o fim da área que rola (acima das abas):
+     refaz quando a área muda de tamanho (texto maior, cabeçalho, rotação) */
   const caixa = useRef<HTMLDivElement | null>(null);
   const [altura, setAltura] = useState<number | null>(null);
   useLayoutEffect(() => {
+    const el = caixa.current;
+    const rola = el?.closest<HTMLElement>(".m-scroll") ?? null;
+    if (!el) return;
     const medir = () => {
-      const el = caixa.current;
-      if (!el) return;
-      const abas = document.querySelector<HTMLElement>(".m6-tabs, .m6-nav, nav[aria-label='Abas']");
-      const fim = abas ? abas.getBoundingClientRect().top : window.innerHeight;
-      setAltura(Math.max(380, Math.round(fim - el.getBoundingClientRect().top)));
+      if (!rola) { setAltura(Math.round(window.innerHeight - el.getBoundingClientRect().top)); return; }
+      const fundo = parseFloat(getComputedStyle(rola).paddingBottom) || 0;
+      const topo = el.getBoundingClientRect().top - rola.getBoundingClientRect().top + rola.scrollTop;
+      setAltura(Math.max(240, Math.round(rola.clientHeight - fundo - topo)));
     };
     medir();
-    window.addEventListener("resize", medir);
-    return () => window.removeEventListener("resize", medir);
+    const obs = new ResizeObserver(medir);
+    if (rola) obs.observe(rola);
+    obs.observe(document.documentElement);
+    return () => obs.disconnect();
   }, []);
   const arraste = useRef<number | null>(null);
   const arrastou = useRef(false);
@@ -105,18 +111,19 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
     });
     if (!enquadrou.current && locais !== null) {
       if (sede) {
-        map.jumpTo({ center: [sede.longitude, sede.latitude], zoom: 14 });
+        map.easeTo({ center: [sede.longitude, sede.latitude], zoom: 14, offset: [0, -Math.round((map.getContainer().clientHeight || 600) * 0.18)], duration: 0 });
         enquadrou.current = true;
       } else {
         const caixa = caixaDosPontos([...visiveis.filter(temPonto), ...(eu ? [eu] : [])]);
-        if (caixa) { map.fitBounds(caixa, { padding: 48, maxZoom: 15, duration: 0 }); enquadrou.current = true; }
+        /* a folha cobre a parte de baixo e os filtros a de cima: os pontos ficam no que sobra */
+        const folha = Math.round((map.getContainer().clientHeight || 600) * 0.42);
+        if (caixa) { map.fitBounds(caixa, { padding: { top: 72, bottom: folha + 16, left: 32, right: 32 }, maxZoom: 15, duration: 0 }); enquadrou.current = true; }
       }
     }
   }, [visiveis, eu, mapaPronto, sede, locais]);
 
   const semPonto = (locais ?? []).filter((l) => !temPonto(l)).length;
 
-  const vagasDe = (l: Local) => (l.lugares ? Math.max(0, l.lugares - (l.ocupados ?? 0)) : null);
   return (
     <div className="onde" ref={caixa} style={altura ? { height: altura } : undefined}>
       <MapaBase
@@ -149,7 +156,7 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
           return () => { mapa.current = null; enquadrou.current = false; setMapaPronto(false); };
         }}
       />
-      <div className="onde-filtros" role="group" aria-label="Mostrar">
+      <div className="onde-filtros" role="group" aria-label="Mostrar" inert={folhaAberta}>
         {([["tudo", "Tudo"], ["igrejas", "Igrejas"], ["grupos", ct("{Grupos}")]] as const).map(([v, l]) => (
           <Opcao key={v} aria-pressed={filtro === v} marcada={filtro === v} estilo="onde-chip" onClick={() => setFiltro(v)}>{l}</Opcao>
         ))}
@@ -157,16 +164,17 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
 
       <section className={`onde-folha${folhaAberta ? " aberta" : ""}`} aria-label={eu ? "Perto de você" : "Lugares da igreja"}>
         <Acao className="onde-puxar" aria-expanded={folhaAberta} aria-label={folhaAberta ? "Mostrar o mapa" : "Ver a lista toda"}
-          onPointerDown={(e) => { arraste.current = e.clientY; arrastou.current = false; }}
+          aria-controls="onde-lista"
+          onPointerDown={(e) => { arraste.current = e.clientY; arrastou.current = false; e.currentTarget.setPointerCapture(e.pointerId); }}
           onPointerUp={(e) => { const y0 = arraste.current; arraste.current = null; if (y0 !== null && Math.abs(e.clientY - y0) > 24) { arrastou.current = true; setFolhaAberta(e.clientY < y0); } }}
-          onClick={() => { if (arrastou.current) { arrastou.current = false; return; } setFolhaAberta((v) => !v); }}>
+          onClick={(e) => { const foiArraste = e.detail > 0 && arrastou.current; arrastou.current = false; if (!foiArraste) setFolhaAberta((v) => !v); }}>
           <span className="onde-alca" aria-hidden="true" />
         </Acao>
         <div className="onde-folha-cab">
           <h2 className="m6-lbl">{eu ? "Perto de você" : "Lugares da igreja"}</h2>
           {locais && <span className="m6-meta">{plural(ordenados.length, "lugar", "lugares")}</span>}
         </div>
-        <div className="onde-folha-lista">
+        <div className="onde-folha-lista" id="onde-lista">
           {!eu && <p className="m6-meta">Coloque seu CEP no Perfil para ver o que fica mais perto.</p>}
           {erro && <p className="m6-meta" role="alert">Não foi possível carregar agora. Tente de novo.</p>}
           {locais === null && !erro && <Carregando forma="lista" />}
@@ -200,7 +208,7 @@ function SheetLocal({ local: l, member, eu, onStartChat }: { local: Local; membe
   const ui = useContext(MemberUiContext);
   const { comTermos: ct } = useTermos();
   const [enviando, setEnviando] = useState(false);
-  const vagas = l.lugares ? Math.max(0, l.lugares - (l.ocupados ?? 0)) : null;
+  const vagas = vagasDe(l);
   const km = eu && temPonto(l) ? distanciaKm(eu, l) : null;
   const podeFalar = !!(onStartChat && member && l.lider_member_id && l.lider_member_id !== member.id);
   const primeiroNome = (l.lider_nome ?? "").split(" ")[0];
