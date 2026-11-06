@@ -11,7 +11,7 @@ export type ChaveCamada = "pessoas" | "calor" | "igrejas" | "grupos" | "presenca
 
 /* ids de camada do MapLibre por camada do painel */
 export const IDS: Record<ChaveCamada | "areas" | "lugares", string[]> = {
-  pessoas: ["mp-clusters", "mp-clusters-n", "mp-pessoa", "mp-pessoa-sel"],
+  pessoas: ["mp-pessoa", "mp-pessoa-sel"],
   calor: ["mp-calor"],
   igrejas: ["mp-igrejas"],
   grupos: ["mp-grupos"],
@@ -23,7 +23,7 @@ export const IDS: Record<ChaveCamada | "areas" | "lugares", string[]> = {
 
 /* camadas que respondem ao toque, da mais alta para a mais baixa: o toque
    abre o balão do primeiro item encontrado */
-export const TOCAVEIS = ["mp-igrejas", "mp-grupos", "mp-lugares", "mp-clusters", "mp-pessoa", "mp-areas-fill", "mp-regioes-fill"];
+export const TOCAVEIS = ["mp-igrejas", "mp-grupos", "mp-lugares", "mp-pessoa", "mp-areas-fill", "mp-regioes-fill"];
 
 /* opacidade cheia de cada camada que tem transparência */
 export const OPACIDADE = { calor: 0.8, presenca: 0.85 } as const;
@@ -33,8 +33,7 @@ const vazio = (): GeoJSON.FeatureCollection => ({ type: "FeatureCollection", fea
 const fonte = (map: MlMap, id: string) => map.addSource(id, { type: "geojson", data: vazio() });
 
 export function montarCamadas(map: MlMap, c: Record<CorMapa, string>) {
-  ["mp-regioes", "mp-areas", "mp-mascara", "mp-raios", "mp-calor", "mp-lugares", "mp-locais"].forEach((id) => fonte(map, id));
-  map.addSource("mp-pessoas", { type: "geojson", data: vazio(), cluster: true, clusterRadius: 44, clusterMaxZoom: 15 });
+  ["mp-regioes", "mp-areas", "mp-mascara", "mp-raios", "mp-calor", "mp-lugares", "mp-locais", "mp-pessoas"].forEach((id) => fonte(map, id));
 
   const tom: ExpressionSpecification = ["match", ["get", "tom"], 1, c["tom-1"], 2, c["tom-2"], 3, c["tom-3"], 4, c["tom-4"], c["tom-5"]];
   map.addLayer({ id: "mp-regioes-fill", type: "fill", source: "mp-regioes", paint: { "fill-color": tom, "fill-opacity": OPACIDADE.presenca } });
@@ -51,13 +50,13 @@ export function montarCamadas(map: MlMap, c: Record<CorMapa, string>) {
     "heatmap-color": ["interpolate", ["linear"], ["heatmap-density"], 0, "rgba(0,0,0,0)", 0.3, c.sand, 0.6, c.amber, 1, c.rust],
   } });
 
-  map.addLayer({ id: "mp-clusters", type: "circle", source: "mp-pessoas", filter: ["has", "point_count"], paint: { "circle-radius": ["step", ["get", "point_count"], 15, 10, 19, 25, 23], "circle-color": c.cluster, "circle-stroke-color": c.papel, "circle-stroke-width": 3 } });
-  map.addLayer({ id: "mp-clusters-n", type: "symbol", source: "mp-pessoas", filter: ["has", "point_count"], layout: { "text-field": ["get", "point_count_abbreviated"], "text-font": ["Noto Sans Regular"], "text-size": 13 }, paint: { "text-color": c.papel } });
-  map.addLayer({ id: "mp-pessoa", type: "circle", source: "mp-pessoas", filter: ["!", ["has", "point_count"]], paint: {
-    "circle-radius": ["case", ["get", "anonimo"], 4.5, 6.5],
+  /* pessoas: cada uma é um ponto, nunca um grupo com número (G5). Afastando,
+     o ponto encolhe até uns 2 px; de perto, 6,5 px (anônimo um pouco menor) */
+  map.addLayer({ id: "mp-pessoa", type: "circle", source: "mp-pessoas", paint: {
+    "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 1, 12, 2.5, 14, ["case", ["get", "anonimo"], 4, 5], 16, ["case", ["get", "anonimo"], 4.5, 6.5]],
     "circle-color": ["match", ["get", "situacao"], "novo", c.novo, c.membro],
     "circle-stroke-color": ["match", ["get", "situacao"], "novo", c.membro, c.papel],
-    "circle-stroke-width": 2, "circle-opacity": ["case", ["get", "anonimo"], 0.7, 1],
+    "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 9, 0, 12, 0.8, 14, 1.5, 16, 2], "circle-opacity": ["case", ["get", "anonimo"], 0.7, 1],
   } });
   /* pessoa com o balão aberto: anel escuro em volta */
   map.addLayer({ id: "mp-pessoa-sel", type: "circle", source: "mp-pessoas", filter: ["==", ["get", "i"], -1], paint: { "circle-radius": 12, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": c.tinta, "circle-stroke-width": 2.5 } });
