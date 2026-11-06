@@ -2,10 +2,10 @@
 id: G5
 titulo: Espalhar perto da rua do CEP as pessoas do mesmo CEP
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-06
+branch: historia/G5-pontos-mesmo-cep
 depende: [G7]
 tamanho: M
 ---
