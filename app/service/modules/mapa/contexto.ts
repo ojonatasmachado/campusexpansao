@@ -20,6 +20,8 @@ export type ContextoMapa = {
   igreja: string;
   /* celular (até 860 px): balões viram folhas (G16, G11) */
   celular: boolean;
+  /* pastor e administração: escolhem o responsável da área (G10) */
+  gestao: boolean;
   recarregar: () => void;
   fechar: () => void;
 };

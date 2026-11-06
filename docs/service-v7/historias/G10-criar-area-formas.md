@@ -2,7 +2,7 @@
 id: G10
 titulo: Criar área com formas, alças e ímã
 tipo: codigo
-status: reservada
+status: feita
 quem: claude
 desde: 2026-11-06
 branch: historia/G10-criar-area-formas
@@ -19,7 +19,13 @@ Referência: mapa/PLANO.md §10 e canvas "Mapa da igreja · evolução" (claude.
 - `app/service/modules/mapa/desenho.ts`
 - `package.json`
 - `package-lock.json`
-- `supabase/migrations/<próximo>_service_mapa_responsavel_acesso.sql`
+- `supabase/migrations/0100_service_mapa_responsavel_acesso.sql`
+- `app/service/modules/mapa/MapaIgreja.tsx`
+- `app/service/modules/mapa/contexto.ts`
+- `app/service/modules/mapa/mapa.css`
+- `app/service/modules/mapa/manifest.ts`
+- `app/service/lib/icons.tsx`
+- `docs/service-v7/producao.sql`
 - `docs/service-v7/historias/G10-criar-area-formas.md`
 
 ## Pronto quando
@@ -34,3 +40,4 @@ Referência: mapa/PLANO.md §10 e canvas "Mapa da igreja · evolução" (claude.
 
 ## Notas
 Criada em 04/11/2026 a partir da evolução da jornada do mapa (decisões do usuário em PLANO §10). Nada de aviso ou sugestão automática de expansão.
+06/11/2026 (claude): terra-draw 1.38.0 com o adaptador do MapLibre 1.5.0. Quadrado e círculo nascem no meio da tela; ponto do meio do quadrado vira canto e a forma passa a livre; o círculo tem uma alça só. Ímã na rua mais perto (Alt solta), com o nome da rua na dica. Desfazer volta cada gesto, inclusive a troca de forma. Migração 0100: responsável vê só as áreas dele (pessoas uma a uma) e ganha o menu do mapa por gatilho; liberação do pastor vence e 'nenhum' tira; só pastor e administração veem e gravam o campo (testado com psql como líder, membro e master). A prévia ganhou o filtro pelo índice (estourava o tempo com os setores do país). Densidade 1366: 45 ações e 118 palavras (antes 42 e 99), fora da lei e justificada no manifesto; 390: 12 e 60, dentro. Fotos G10-0 a G10-4.

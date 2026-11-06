@@ -323,7 +323,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   ];
 
   /* contexto estável para os modos: só muda quando mudam os dados */
-  const contexto: ContextoMapa | null = useMemo(() => (mapa && acesso ? { org: organizationId, mapa: mapa.map, cores: mapa.cores, acesso, cidade, regioes, pessoas, locais, areas, people, igreja: churchName, celular, recarregar: carregar, fechar: () => setModo(null) } : null), [mapa, acesso, organizationId, cidade, regioes, pessoas, locais, areas, people, churchName, celular, carregar]);
+  const contexto: ContextoMapa | null = useMemo(() => (mapa && acesso ? { org: organizationId, mapa: mapa.map, cores: mapa.cores, acesso, cidade, regioes, pessoas, locais, areas, people, igreja: churchName, celular, gestao: podeLiberar, recarregar: carregar, fechar: () => setModo(null) } : null), [mapa, acesso, organizationId, cidade, regioes, pessoas, locais, areas, people, churchName, celular, podeLiberar, carregar]);
 
   /* ── estados vazios e de acesso ── */
   if (erro) return <div className="mapa-tela"><div className="mp-vazio"><div><p className="mp-texto" role="alert">{erro}</p><Botao compacto onClick={() => { setErro(""); carregar(); }}>Tentar de novo</Botao></div></div></div>;
@@ -471,7 +471,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
 
           {aberto && mapa && (
             <BalaoDoPonto key={`${aberto.tipo}-${"i" in aberto ? aberto.i : aberto.tipo === "local" ? aberto.l.id : aberto.tipo === "lugar" ? aberto.pt.id : aberto.tipo === "area" ? aberto.a.id : aberto.r.codigo}`}
-              org={organizationId} sel={aberto} map={mapa.map} folha={celular} pessoas={pessoas} grupos={grupos} usaGrupos={usaGrupos} cidade={cidade} nivel={nivel} acesso={acesso}
+              org={organizationId} sel={aberto} map={mapa.map} folha={celular} pessoas={pessoas} grupos={grupos} usaGrupos={usaGrupos} cidade={cidade} nivel={nivel} acesso={acesso} gestao={podeLiberar}
               aoFechar={() => setAberto(null)} onAbrirMembro={onAbrirMembro} onMensagem={onMensagem}
               onAnalisar={analisar} onCriarArea={(cod) => { setAreaInicial(cod); abrirModo("area"); }}
               onEditarLugar={(pt) => { setLugarEditar(pt); abrirModo("pontos"); }}
@@ -522,8 +522,8 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
 }
 
 /* Balão do ponto tocado: tudo do ponto, sem painel lateral (PLANO §10, P1). */
-function BalaoDoPonto({ org, sel, map, folha, pessoas, grupos, usaGrupos, cidade, nivel, acesso, aoFechar, onAbrirMembro, onMensagem, onAnalisar, onCriarArea, onEditarLugar, onLugarMudou }: {
-  org: string; sel: Aberto; map: MlMap; folha: boolean; pessoas: PessoaMapa[]; grupos: (LocalMapa & Ponto)[]; usaGrupos: boolean; cidade: Cidade | null; nivel: "bairro" | "setor"; acesso: Acesso | null;
+function BalaoDoPonto({ org, sel, map, folha, pessoas, grupos, usaGrupos, cidade, nivel, acesso, gestao, aoFechar, onAbrirMembro, onMensagem, onAnalisar, onCriarArea, onEditarLugar, onLugarMudou }: {
+  org: string; sel: Aberto; gestao: boolean; map: MlMap; folha: boolean; pessoas: PessoaMapa[]; grupos: (LocalMapa & Ponto)[]; usaGrupos: boolean; cidade: Cidade | null; nivel: "bairro" | "setor"; acesso: Acesso | null;
   aoFechar: () => void; onAbrirMembro: (id: string) => void; onMensagem: (id: string) => void;
   onAnalisar: (codigos: string[], nivel?: "area") => void; onCriarArea: (codigos: string[]) => void;
   onEditarLugar: (pt: Lugar) => void; onLugarMudou: () => void;
@@ -582,7 +582,7 @@ function BalaoDoPonto({ org, sel, map, folha, pessoas, grupos, usaGrupos, cidade
       <Balao {...comum} sobretitulo={TIPO_AREA[a.tipo]} titulo={a.nome}
         rodape={acesso?.pode_mesa ? <Botao onClick={() => onAnalisar([a.id], "area")}>Analisar</Botao> : undefined}>
         <LinhaBalao icone="membros">{plural(dentro, "pessoa da igreja", "pessoas da igreja")} no mapa</LinhaBalao>
-        <LinhaBalao icone="pessoa">{a.responsavel ? `${a.responsavel} é responsável` : "Sem responsável ainda"}</LinhaBalao>
+        {gestao && <LinhaBalao icone="pessoa">{a.responsavel ? `${a.responsavel} é responsável` : "Sem responsável ainda"}</LinhaBalao>}
       </Balao>
     );
   }
