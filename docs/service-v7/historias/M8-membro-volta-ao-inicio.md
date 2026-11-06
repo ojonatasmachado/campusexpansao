@@ -14,10 +14,10 @@ tamanho: M
 Depois de responder uma escala, confirmar todas, responder um aviso do Mural ou responder um evento, o app do membro volta sozinho para o Início em 2 a 5 s. A pessoa perde o contexto e precisa navegar de novo. Achado na M1 (seção "Sem pendentes"), fora daquela história porque é defeito de navegação, não de Agenda.
 
 ## Arquivos (trilho)
-- `app/service/MobileApp.tsx` — useEffect de restore() e go()
-- `app/service/lib/member-navigation.ts` — readMemberLocation / writeMemberLocation
-- `app/service/ServiceExactApp.tsx` — só no trecho do router.refresh() das ações do membro (responderEscala, responderEvento, responderMural, salvarDisponibilidade, journeyRpc, addCardCommentMobile, advanceVisitorStageMobile, saveBibleMarkMobile, markAnnouncementRead)
-- `docs/service-v7/historias/M8-membro-volta-ao-inicio.md` — esta história
+- `app/service/MobileApp.tsx`: useEffect de restore() e go()
+- `app/service/lib/member-navigation.ts`: readMemberLocation / writeMemberLocation
+- `app/service/ServiceExactApp.tsx`: só no trecho do router.refresh() das ações do membro (responderEscala, responderEvento, responderMural, salvarDisponibilidade, journeyRpc, addCardCommentMobile, advanceVisitorStageMobile, saveBibleMarkMobile, markAnnouncementRead)
+- `docs/service-v7/historias/M8-membro-volta-ao-inicio.md`: esta história
 
 ## Causa raiz (diagnóstico da M1, não refazer)
 1. O `go()` do membro grava a aba com `window.history.pushState` e os parâmetros `?maba=agenda&...` (MobileApp.tsx ~linha 259).
@@ -61,50 +61,25 @@ O `useEffect` de `restore()` no `MobileApp.tsx` foi dividido em dois efeitos ind
 
 O contexto que muda com refresh (`modulosMembro`, `serves`, `isRecep`, etc.) fica em `navCtxRef`, atualizado após cada render via `useEffect` sem dependências. O `applyLocation` é estabilizado com `useCallback([], [])` e lê sempre o valor mais recente do ref.
 
-## Testes (linha do tempo de 10 s)
+## Testes (linha do tempo, conferidos na revisão de 2026-11-06)
+Rodados pelos cliques em servidor dev-local num worktree no commit 1e581a6, login membro@teste.local, 390x844.
 
-### Cenário A: Agenda > Confirmar UMA escala
-| t | URL | Tela |
-|---|---|---|
-| 0-10 | `/service?maba=agenda&msegmento=minha` | Agenda |
-**Resultado: PASSOU** (ficou na Agenda por 10 s)
+| Cenário | Resultado |
+|---|---|
+| A. Agenda, Confirmar uma escala | URL `?maba=agenda&msegmento=minha` e tela Agenda em todas as 10 leituras (1,8 s a 12,4 s) |
+| A. Recarregar a página depois | Continua na Agenda (a URL mantém `?maba`) |
+| B. Confirmar todas e Desfazer | Agenda em todas as 10 leituras; "Confirmar todas (3 escalas)" volta |
+| C. Evento (Agenda > Igreja) | Não testado: no seed local a folha do culto só tem "Compartilhar" e "Adicionar ao calendário" |
+| D. Mural ("Vou") | Não testado: o Mural da igreja está vazio no seed local |
+| E. Voltar do navegador | Início, Agenda, Mensagens; voltar 1x vai para Agenda, voltar 2x para Início |
 
-### Cenário B: Agenda > Confirmar todas
-| t | URL | Tela |
-|---|---|---|
-| 0-10 | `/service?maba=agenda&msegmento=minha` | Agenda |
-**Resultado: PASSOU** (ficou na Agenda por 10 s)
-
-### Cenário D: Mensagens > Responder aviso do Mural
-| t | URL | Tela |
-|---|---|---|
-| 0-10 | `/service?maba=mensagens` | Mensagens |
-**Resultado: PASSOU** (ficou em Mensagens por 10 s)
-
-### Cenário F: Voltar do navegador
-| Passo | URL | Resultado |
-|---|---|---|
-| Início | `/service?maba=inicio` | OK |
-| Agenda | `/service?maba=agenda&msegmento=igreja` | OK |
-| Mensagens | `/service?maba=mensagens` | OK |
-| Voltar 1x | `/service?maba=agenda&msegmento=igreja` | PASSOU (Agenda) |
-| Voltar 2x | `/service?maba=inicio` | PASSOU (Início) |
+Antes da correção (medido na M1): confirmar uma escala levava ao Início em uns 2 s, e confirmar todas em uns 5 s.
 
 ## Foto
-`docs/service-v7/historias/screenshots/M8-agenda-apos-confirmar-todas.png`
-Agenda do app do membro 10 s após "Confirmar todas". URL: `?maba=agenda&msegmento=minha`. Toast "Presença confirmada em 2 escalas · Desfazer" visível. Duas escalas com selo verde "Confirmado": Culto de Domingo (08/11 09:00) e Culto de Quarta (11/11 19:30). Barra de abas mostra "Agenda" selecionada, sem contador. Sem selo do Next.js.
-
-## Banco restaurado
-Escalas da Maria (person_id `3556af23-...`) resetadas para `wait`:
-- `0bf4ccc5-fa85-49d8-8106-39f4c73e6175`: wait
-- `865d0f76-c4b1-4026-9df1-082a6b6a9b46`: wait
+`docs/service-v7/historias/screenshots/M8-agenda-apos-desfazer.png`: Agenda 10 s depois de "Confirmar todas" e Desfazer, com "Confirmar todas (3 escalas)" de volta, os 3 cartões pendentes (Sáb 07, Qua 11, Dom 15) e a aba Agenda marcando 3. Sem o selo do Next.
 
 ## Verificações
-- tsc: 0 erros
-- eslint: limpo
-- lei 12: nada piorou
-- componentes: ok
+- tsc, eslint, lei 12 e componentes: ok no CI service do PR #41.
 
 ## Notas
-Fechada em 2026-11-05. Depende de M1 (já feita).
-Cenários C (Desfazer) e E (evento) não foram testados separadamente porque as escalas já estavam confirmadas na execução anterior e o botão "Vou" do Mural não estava visível no seed local, mas a correção é genérica (vale para qualquer ação que chama `router.refresh()`), e os cenários A, B, D e F cobrem todos os caminhos de navegação afetados.
+Fechada em 2026-11-06: o restore() do membro roda só na montagem e no popstate, com o contexto num ref. Evento e Mural ficaram sem teste por falta de dado no seed local; a correção vale para qualquer ação que chama router.refresh().
