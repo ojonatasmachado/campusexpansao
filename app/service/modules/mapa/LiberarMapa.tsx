@@ -102,7 +102,7 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
   const podeTirar = !!edit && (lider ? atual?.escopo !== "nenhum" : !!atual);
 
   return (
-    <div className="content mesa">
+    <div className="content mesa mapa-cores">
       <header className="mesa-cab">
         <div>
           <Botao variante="discreto" compacto onClick={onVoltar}><Icon name="voltar" size={14} />Mapa da igreja</Botao>

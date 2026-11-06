@@ -6,7 +6,8 @@
    Não segue o tema da igreja: as cores do mapa são dados e precisam
    significar a mesma coisa em qualquer igreja. A cor da igreja nunca entra
    no mapa. MapLibre lê estas variáveis em modules/mapa/estilo.ts. */
-.mapa-root, .mapa-tela {
+/* .mapa-cores: telas do mapa sem mapa (Quem vê) que mostram a cor de uma área */
+.mapa-root, .mapa-tela, .mapa-cores {
   --mapa-fundo: #EFECE4;
   --mapa-agua: #CDD3C4;
   --mapa-verde: #DCE2CE;
@@ -370,13 +371,14 @@ a.m6-btn { text-decoration: none; }
 .lm-grupo:first-child { margin-top: 0; }
 .lm-pessoa { display: flex; gap: 12px; align-items: center; }
 .lm-pessoa > span { margin-top: 0; }
-.lm-area { display: inline-flex; align-items: center; gap: 6px; }
+.lm-pessoa .lm-area { display: flex; align-items: center; gap: 6px; }
 .lm-area .pm-amostra { width: 10px; height: 10px; border-radius: 3px; }
 .lm-nova { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
 .lm-detalhe { padding: 24px; gap: 20px; }
 .lm-quem { display: flex; align-items: center; gap: 14px; }
 .lm-quem-linha { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .lm-area-campo { margin-top: 10px; }
-.lm-perm { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lm-perm { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-right: 104px; }
+@media (max-width: 860px) { .lm-perm { padding-right: 0; } }
 .lm-pe { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .lm-espaco { flex: 1; }
