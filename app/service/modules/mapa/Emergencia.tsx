@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GeoJSONSource, MapMouseEvent } from "maplibre-gl";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { avisar } from "../../lib/avisar";
@@ -147,13 +147,18 @@ function EmergenciaAberta({ ctx, atual, onMensagem }: { ctx: ContextoMapa; atual
   const [texto, setTexto] = useState(PERGUNTA);
   const [ocupado, setOcupado] = useState(false);
 
+  /* com uma marcação gravando, a recarga não traz o status antigo de volta */
+  const gravando = useRef(0);
   const carregar = useCallback(async () => {
     const { data, error } = await db().rpc("mapa_emergencia_familias", { p_id: atual.id });
-    if (!error) setFamilias((data ?? []) as Familia[]);
-  }, [atual.id]);
+    if (error) {
+      if (error.message.includes("encerrada")) { avisar("Esta emergência foi encerrada."); ctx.fechar(); }
+      return;
+    }
+    if (gravando.current === 0) setFamilias((data ?? []) as Familia[]);
+  }, [atual.id, ctx]);
   /* a resposta da família muda a situação sozinha (G15): a lista se atualiza a cada 15 s */
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- carga do servidor ao abrir
     carregar();
     const t = setInterval(() => { if (document.visibilityState === "visible") carregar(); }, 15000);
     return () => clearInterval(t);
@@ -202,7 +207,9 @@ function EmergenciaAberta({ ctx, atual, onMensagem }: { ctx: ContextoMapa; atual
 
   const marcar = async (f: Familia, status: Situacao) => {
     setFamilias((fs) => fs.map((x) => (x.chave === f.chave ? { ...x, status, atualizado_em: new Date().toISOString(), marcado_por: "você", fonte: "coordenacao" } : x)));
+    gravando.current += 1;
     const { error } = await db().rpc("mapa_emergencia_status", { p_id: atual.id, p_chave: f.chave, p_status: status });
+    gravando.current -= 1;
     if (error) { avisar("Não foi possível salvar a situação agora. Tente de novo.", "warn"); carregar(); }
   };
   const verEndereco = async (f: Familia) => {
@@ -215,14 +222,10 @@ function EmergenciaAberta({ ctx, atual, onMensagem }: { ctx: ContextoMapa; atual
   const enviar = async () => {
     if (!texto.trim()) return;
     setOcupado(true);
-    let n = 0;
-    /* cada pergunta fica registrada e chega com "Estamos bem" e "Precisamos de ajuda";
-       vai para todos da família, para alguém com o app ler */
-    for (const f of semResposta) {
-      let chegou = false;
-      for (const m of f.membros) { const { data } = await db().rpc("mapa_emergencia_perguntar", { p_id: atual.id, p_chave: f.chave, p_member: m.id, p_body: texto.trim() }); if (data) chegou = true; }
-      if (chegou) n++;
-    }
+    /* no servidor: cada pergunta fica registrada, vai para todos da família e chega
+       com "Estamos bem" e "Precisamos de ajuda"; fechar o painel não corta o envio */
+    const { data, error } = await db().rpc("mapa_emergencia_perguntar_todas", { p_id: atual.id, p_body: texto.trim() });
+    const n = error ? 0 : Number(data ?? 0);
     setOcupado(false);
     setCompondo(false);
     carregar();

@@ -5911,8 +5911,13 @@ create table if not exists service.map_emergency_asks (
   member_id uuid not null references service.members(id) on delete cascade,
   message_id uuid not null references service.messages(id) on delete cascade,
   perguntado_por uuid references service.people(id) on delete set null,
+  -- a resposta de quem recebeu (cada toque fica guardado aqui)
+  resposta text check (resposta is null or resposta in ('bem', 'ajuda')),
+  respondido_em timestamptz,
   created_at timestamptz not null default now()
 );
+alter table service.map_emergency_asks add column if not exists resposta text check (resposta is null or resposta in ('bem', 'ajuda'));
+alter table service.map_emergency_asks add column if not exists respondido_em timestamptz;
 create index if not exists map_emergency_asks_msg_idx on service.map_emergency_asks (message_id);
 create index if not exists map_emergency_asks_emerg_idx on service.map_emergency_asks (emergencia_id);
 alter table service.map_emergency_asks enable row level security;
@@ -5943,13 +5948,45 @@ end $$;
 revoke all on function service.mapa_emergencia_perguntar(uuid, text, uuid, text) from public, anon;
 grant execute on function service.mapa_emergencia_perguntar(uuid, text, uuid, text) to authenticated;
 
+-- perguntar a todas as famílias sem resposta de uma vez (cada membro da
+-- família recebe; devolve quantas famílias receberam ao menos uma mensagem)
+create or replace function service.mapa_emergencia_perguntar_todas(p_id uuid, p_body text)
+returns integer language plpgsql security definer set search_path = service, public as $$
+declare e service.map_emergencies%rowtype; r record; v_n integer := 0; v_ultima text := null; v_ok boolean;
+begin
+  select * into e from service.map_emergencies where id = p_id;
+  if not found or not service.mapa_coordena(e.organization_id) then raise exception 'sem_acesso'; end if;
+  if e.status <> 'aberta' then raise exception 'encerrada'; end if;
+  for r in
+    select m.id, coalesce(nullif(trim(m.family), ''), m.id::text) as k
+      from service.members m
+      left join service.map_emergency_families f on f.emergencia_id = p_id and f.chave = coalesce(nullif(trim(m.family), ''), m.id::text)
+     where m.organization_id = e.organization_id and m.latitude is not null
+       and extensions.st_intersects(e.geom, extensions.st_setsrid(extensions.st_makepoint(m.longitude, m.latitude), 4326))
+       and coalesce(f.status, 'sem_resposta') = 'sem_resposta'
+     order by 2
+  loop
+    v_ok := true;
+    begin
+      perform service.mapa_emergencia_perguntar(p_id, r.k, r.id, p_body);
+    exception when others then v_ok := false;
+    end;
+    if v_ok and r.k is distinct from v_ultima then v_n := v_n + 1; v_ultima := r.k; end if;
+  end loop;
+  return v_n;
+end $$;
+revoke all on function service.mapa_emergencia_perguntar_todas(uuid, text) from public, anon;
+grant execute on function service.mapa_emergencia_perguntar_todas(uuid, text) to authenticated;
+
 -- as perguntas que chegaram para mim (app do membro): a mensagem, se ainda
 -- vale e o que a família respondeu
+drop function if exists service.mapa_minhas_perguntas();
 create or replace function service.mapa_minhas_perguntas()
-returns table (message_id uuid, aberta boolean, resposta text)
+returns table (message_id uuid, aberta boolean, resposta text, minha boolean)
 language sql stable security definer set search_path = service, public as $$
   select a.message_id, e.status = 'aberta',
-         case when f.fonte = 'familia' then f.status end
+         coalesce(a.resposta, case when f.fonte = 'familia' then f.status end),
+         a.resposta is not null
     from service.map_emergency_asks a
     join service.map_emergencies e on e.id = a.emergencia_id
     left join service.map_emergency_families f on f.emergencia_id = a.emergencia_id and f.chave = a.chave
@@ -5958,19 +5995,27 @@ $$;
 revoke all on function service.mapa_minhas_perguntas() from public, anon;
 grant execute on function service.mapa_minhas_perguntas() to authenticated;
 
--- a família responde com um toque
+-- a família responde com um toque. A chave e a área são as de agora (a
+-- família pode ter mudado); um "bem" não apaga um "ajuda" já registrado,
+-- e cada toque fica guardado na pergunta.
 create or replace function service.mapa_emergencia_responder(p_message uuid, p_status text)
 returns void language plpgsql security definer set search_path = service, public as $$
-declare a service.map_emergency_asks%rowtype; e service.map_emergencies%rowtype;
+declare a service.map_emergency_asks%rowtype; e service.map_emergencies%rowtype; v_chave text;
 begin
   if p_status not in ('bem', 'ajuda') then raise exception 'status_invalido'; end if;
   select * into a from service.map_emergency_asks where message_id = p_message and member_id = any(service.my_members()) limit 1;
   if not found then raise exception 'sem_acesso'; end if;
   select * into e from service.map_emergencies where id = a.emergencia_id;
   if e.status <> 'aberta' then raise exception 'encerrada'; end if;
+  select coalesce(nullif(trim(m.family), ''), m.id::text) into v_chave from service.members m
+   where m.id = a.member_id and m.latitude is not null
+     and extensions.st_intersects(e.geom, extensions.st_setsrid(extensions.st_makepoint(m.longitude, m.latitude), 4326));
+  if v_chave is null then raise exception 'fora_da_area'; end if;
+  update service.map_emergency_asks set resposta = p_status, respondido_em = now() where id = a.id;
   insert into service.map_emergency_families (emergencia_id, chave, status, fonte, respondido_por, atualizado_por)
-  values (a.emergencia_id, a.chave, p_status, 'familia', a.member_id, null)
-  on conflict (emergencia_id, chave) do update set status = excluded.status, fonte = 'familia', respondido_por = excluded.respondido_por, atualizado_por = null, atualizado_em = now();
+  values (a.emergencia_id, v_chave, p_status, 'familia', a.member_id, null)
+  on conflict (emergencia_id, chave) do update set status = excluded.status, fonte = 'familia', respondido_por = excluded.respondido_por, atualizado_por = null, atualizado_em = now()
+   where service.map_emergency_families.status <> 'ajuda' or excluded.status = 'ajuda';
 end $$;
 revoke all on function service.mapa_emergencia_responder(uuid, text) from public, anon;
 grant execute on function service.mapa_emergencia_responder(uuid, text) to authenticated;

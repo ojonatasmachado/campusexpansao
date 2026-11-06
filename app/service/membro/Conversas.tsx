@@ -188,22 +188,29 @@ export function TabConversas({
   const [novoMsg, setNovoMsg] = useState("");
   const [starting, setStarting] = useState(false);
   /* perguntas de emergência (G15): a mensagem traz "Estamos bem" e "Precisamos de ajuda" */
-  const [perguntas, setPerguntas] = useState<Record<string, { aberta: boolean; resposta: "bem" | "ajuda" | null }>>({});
+  const [perguntas, setPerguntas] = useState<Record<string, { aberta: boolean; resposta: "bem" | "ajuda" | null; minha: boolean }>>({});
   const [respondendo, setRespondendo] = useState<string | null>(null);
   useEffect(() => {
     if (!member) return;
-    createServiceBrowserClient().schema("service").rpc("mapa_minhas_perguntas").then(({ data }) => {
-      const m: Record<string, { aberta: boolean; resposta: "bem" | "ajuda" | null }> = {};
-      for (const r of (data ?? []) as { message_id: string; aberta: boolean; resposta: "bem" | "ajuda" | null }[]) m[r.message_id] = { aberta: r.aberta, resposta: r.resposta };
+    let vivo = true;
+    createServiceBrowserClient().schema("service").rpc("mapa_minhas_perguntas").then(({ data, error }) => {
+      if (!vivo || error) return;
+      const m: Record<string, { aberta: boolean; resposta: "bem" | "ajuda" | null; minha: boolean }> = {};
+      for (const r of (data ?? []) as { message_id: string; aberta: boolean; resposta: "bem" | "ajuda" | null; minha: boolean }[]) m[r.message_id] = { aberta: r.aberta, resposta: r.resposta, minha: r.minha };
       setPerguntas(m);
     });
+    return () => { vivo = false; };
   }, [member, messages.length]);
   const responder = async (messageId: string, status: "bem" | "ajuda") => {
     setRespondendo(messageId);
     const { error } = await createServiceBrowserClient().schema("service").rpc("mapa_emergencia_responder", { p_message: messageId, p_status: status });
     setRespondendo(null);
-    if (error) { avisar(error.message.includes("encerrada") ? "Essa emergência já foi encerrada." : "Não foi possível responder agora. Tente de novo.", "warn"); return; }
-    setPerguntas((p) => ({ ...p, [messageId]: { ...p[messageId], resposta: status } }));
+    if (error) {
+      if (error.message.includes("encerrada")) setPerguntas((p) => ({ ...p, [messageId]: { ...p[messageId], aberta: false } }));
+      avisar(error.message.includes("encerrada") ? "Essa emergência já foi encerrada." : error.message.includes("fora_da_area") ? "Seu endereço não está mais na área desta emergência. Fale com a igreja pela conversa." : "Não foi possível responder agora. Tente de novo.", "warn");
+      return;
+    }
+    setPerguntas((p) => ({ ...p, [messageId]: { ...p[messageId], resposta: status, minha: true } }));
     avisar(status === "bem" ? "Obrigado. A igreja já sabe que vocês estão bem." : "A igreja já sabe que vocês precisam de ajuda.");
   };
 
@@ -322,11 +329,11 @@ export function TabConversas({
                   </div>
                   {!isMine && perguntas[msg.id] && (
                     <div className="m-pergunta">
-                      {perguntas[msg.id].resposta && <div className="m-pergunta-resp">Você respondeu: {perguntas[msg.id].resposta === "bem" ? "Estamos bem" : "Precisamos de ajuda"}</div>}
+                      {perguntas[msg.id].resposta && <div className="m-pergunta-resp">{perguntas[msg.id].minha ? "Você respondeu" : "Sua família respondeu"}: {perguntas[msg.id].resposta === "bem" ? "Estamos bem" : "Precisamos de ajuda"}</div>}
                       {perguntas[msg.id].aberta && (
                         <div className="m-pergunta-botoes">
-                          <Botao tamanho="toque" compacto variante={perguntas[msg.id].resposta === "bem" ? "principal" : "secundario"} desativado={respondendo === msg.id} onClick={() => responder(msg.id, "bem")}>Estamos bem</Botao>
-                          <Botao tamanho="toque" compacto variante={perguntas[msg.id].resposta === "ajuda" ? "perigo" : "secundario"} desativado={respondendo === msg.id} onClick={() => responder(msg.id, "ajuda")}>Precisamos de ajuda</Botao>
+                          <Botao tamanho="toque" compacto aria-pressed={perguntas[msg.id].resposta === "bem"} variante={perguntas[msg.id].resposta === "bem" ? "principal" : "secundario"} desativado={respondendo === msg.id} onClick={() => responder(msg.id, "bem")}>Estamos bem</Botao>
+                          <Botao tamanho="toque" compacto aria-pressed={perguntas[msg.id].resposta === "ajuda"} variante={perguntas[msg.id].resposta === "ajuda" ? "perigo" : "secundario"} desativado={respondendo === msg.id} onClick={() => responder(msg.id, "ajuda")}>Precisamos de ajuda</Botao>
                         </div>
                       )}
                     </div>
