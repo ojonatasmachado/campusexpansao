@@ -2,10 +2,10 @@
 id: G10
 titulo: Criar área com formas, alças e ímã
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-06
+branch: historia/G10-criar-area-formas
 depende: [G7]
 tamanho: G
 ---
