@@ -33,5 +33,19 @@ export default defineModule({
       limite: { palavras: 80, acoes: 12, sobreposicoes: 0 },
       motivo: "G16: a casca do painel no celular (menu, busca, ajuda e avatar) soma 4 ações; o mapa tem busca, Camadas, 3D, minha posição, o \"i\" dos créditos do mapa (obrigatório pela licença) e as ferramentas visíveis da fileira que rola. Antes da G16 eram 18 ações e 1 sobreposição.",
     },
+    {
+      tela: "Mapa da igreja · Traçar rota",
+      tamanho: "1366×860",
+      medido: { palavras: 103, acoes: 39, sobreposicoes: 0 },
+      limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
+      motivo: "G11, prancha P9: objetivo, paradas que se reordenam, área, jeito de ir, nome, quando, equipe e as três saídas ficam no mesmo painel para a rota sair numa tela só. A casca do painel soma 24 ações. Antes eram 37 ações e 127 palavras.",
+    },
+    {
+      tela: "Mapa da igreja · Linha do tempo",
+      tamanho: "1366×860",
+      medido: { palavras: 96, acoes: 32, sobreposicoes: 0 },
+      limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
+      motivo: "G11, prancha P10: os dois controles do período, o play, os períodos prontos e De perto ou Cidade toda. A casca do painel soma 24 ações. Antes eram 30 ações, 108 palavras, 1 sobreposição e 2 alvos pequenos.",
+    },
   ],
 });

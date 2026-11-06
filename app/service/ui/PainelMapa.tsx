@@ -51,7 +51,7 @@ export function PainelMapa({ titulo, sobretitulo, rotulo, busca, rodape, childre
     );
   }
   return (
-    <aside className="pm-painel" aria-label={rotulo}>
+    <aside className={voltar ? "pm-painel pm-ferramenta" : "pm-painel"} aria-label={rotulo}>
       <div className="pm-cab">
         {voltar && (
           <Acao className="pm-voltar" onClick={voltar.aoTocar}>
@@ -108,9 +108,11 @@ export function GrupoCamadas({ titulo, contagem, recolhivel, aberto = true, aoAl
   );
 }
 
-export function LinhaCamada({ icone, rotulo, detalhe, ligada, aoAlternar, desativada, recuo, children }: {
+export function LinhaCamada({ icone, amostra, rotulo, detalhe, ligada, aoAlternar, desativada, recuo, children }: {
   /* o próprio marcador da camada (dispensa legenda separada) */
   icone?: ReactNode;
+  /* linha recuada de área: quadradinho na cor da área (paleta fixa do mapa, --mapa-<cor>) */
+  amostra?: string;
   rotulo: string;
   detalhe?: ReactNode;
   ligada: boolean;
@@ -130,6 +132,7 @@ export function LinhaCamada({ icone, rotulo, detalhe, ligada, aoAlternar, desati
     <div className={cls}>
       <Acao className="pm-camada-linha" role="switch" aria-checked={ligada} aria-labelledby={`${id}-n`} aria-describedby={detalhe ? `${id}-d` : undefined} desativado={desativada} onClick={aoAlternar}>
         {icone && <span className="pm-camada-ic" aria-hidden="true">{icone}</span>}
+        {amostra && <span className={`pm-amostra cor-${amostra}`} aria-hidden="true" />}
         <span className="pm-camada-txt">
           <span className="pm-camada-nome" id={`${id}-n`}>{rotulo}</span>
           {detalhe && <span className="pm-camada-det" id={`${id}-d`}>{detalhe}</span>}

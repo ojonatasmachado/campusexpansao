@@ -18,6 +18,8 @@ export type ContextoMapa = {
   areas: Area[];
   people: PessoaLider[];
   igreja: string;
+  /* celular (até 860 px): balões viram folhas (G16, G11) */
+  celular: boolean;
   recarregar: () => void;
   fechar: () => void;
 };

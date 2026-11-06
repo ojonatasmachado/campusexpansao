@@ -62,7 +62,6 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 
 ### 4b. Evolução da jornada do mapa (decisões de 04/11, `mapa/PLANO.md` §10)
 Ordem por dependência; G3 cancelada (sem avisos automáticos de expansão).
-- **G11** Rota, Linha do tempo e Marcar lugar no painel (tela principal da G7 pronta)
 - **G10** Criar área com formas e acesso do responsável → **G13** Líderes de área em Quem vê · **G14** Emergência nova → **G15** Resposta da família
 - **G12** Analisar (espera G1 para a idade) · **G8** Camadas do IBGE (espera G1) · **G17** Onde e aceite no app do membro
 
