@@ -361,3 +361,22 @@ a.m6-btn { text-decoration: none; }
   .ca-cor { transition: none; }
   .ca-cor:hover { transform: none; }
 }
+
+/* ── Quem vê o mapa (G13, P8) ── */
+.lm-sobre { margin-top: 10px; }
+.lm-intro { margin-top: 6px; }
+.lm-lista { padding: 16px; gap: 8px; }
+.lm-grupo { margin: 8px 0 2px; font-size: var(--fs-pn-12); font-weight: 600; color: var(--muted); }
+.lm-grupo:first-child { margin-top: 0; }
+.lm-pessoa { display: flex; gap: 12px; align-items: center; }
+.lm-pessoa > span { margin-top: 0; }
+.lm-area { display: inline-flex; align-items: center; gap: 6px; }
+.lm-area .pm-amostra { width: 10px; height: 10px; border-radius: 3px; }
+.lm-nova { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.lm-detalhe { padding: 24px; gap: 20px; }
+.lm-quem { display: flex; align-items: center; gap: 14px; }
+.lm-quem-linha { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lm-area-campo { margin-top: 10px; }
+.lm-perm { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lm-pe { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.lm-espaco { flex: 1; }
