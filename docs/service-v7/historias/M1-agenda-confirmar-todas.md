@@ -79,3 +79,4 @@ As 3 ações a mais são o "Não posso" de cada cartão, que antes ficava fora d
 ## Notas
 Fechada em 2026-11-05: `ConfirmarTodas` (Agenda.tsx) confirma na tela e grava em paralelo, com Desfazer e aviso parcial; `EscalaCard compacto` (Inicio.tsx); densidade no manifesto de Escalas.
 Depende de D1.
+Ajuste em 2026-11-06: o "Confirmar todas" ganhou `largo` e ocupa a mesma largura dos cartões (borda 16 a 374 nos dois em 390x844); antes terminava em 308 e ficava encostado à esquerda.

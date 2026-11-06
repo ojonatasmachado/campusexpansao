@@ -91,7 +91,7 @@ function ConfirmarTodas({ pend, evById, onResponderEscala }: {
   };
   return (
     <div className="m6-confirmar-todas">
-      <Botao tamanho="toque" variante="principal" desativado={salvando} onClick={confirmarTodas}>
+      <Botao tamanho="toque" variante="principal" largo desativado={salvando} onClick={confirmarTodas}>
         <Icon name="ok" size={20} />
         {salvando ? "Confirmando..." : `Confirmar todas (${plural(pend.length, "escala")})`}
       </Botao>
