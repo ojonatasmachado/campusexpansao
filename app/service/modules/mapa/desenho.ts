@@ -191,17 +191,31 @@ export function criarDesenho(mapa: MlMap, o: OpcoesDesenho): Desenho {
     /* trocar a feição no meio de um gesto quebra o terra-draw: troca no fim */
     if (ctx.mode === "livre" && ctx.action === "draw") {
       atual = String(id);
-      setTimeout(() => { const v = draw.getSnapshotFeature(id); if (v) { colocar("livre", v.geometry as GeoJSON.Polygon); o.aoTerminar("livre", v.geometry as GeoJSON.Polygon); } }, 0);
+      depois(() => { const v = draw.getSnapshotFeature(id); if (v) { colocar("livre", v.geometry as GeoJSON.Polygon); o.aoTerminar("livre", v.geometry as GeoJSON.Polygon); } });
       return;
     }
-    /* ponto do meio no quadrado: deixa de ser quadrado quando o dedo solta */
+    /* ponto do meio no quadrado: deixa de ser quadrado quando o dedo solta
+       (num clique o terra-draw avisa depois do pointerup: troca já) */
     if (forma === "quadrado" && ctx.action === "insertMidpoint") {
       forma = "livre";
-      window.addEventListener("pointerup", () => setTimeout(() => { const v = geo(); if (v) { colocar("livre", v); o.aoTerminar("livre", v); } }, 0), { once: true });
+      const virar = () => depois(() => { const v = geo(); if (v) { colocar("livre", v); o.aoTerminar("livre", v); } });
+      if (pressionado) aoSoltar = virar; else virar();
       return;
     }
     o.aoTerminar(forma, g);
   });
+
+  /* gesto em curso: a troca de feição espera o dedo soltar */
+  let vivo = true;
+  let pressionado = false;
+  let aoSoltar: (() => void) | null = null;
+  const depois = (fn: () => void) => setTimeout(() => { if (vivo) fn(); }, 0);
+  const desceu = () => { pressionado = true; };
+  const subiu = () => { pressionado = false; const f = aoSoltar; aoSoltar = null; f?.(); };
+  const caixaMapa = mapa.getContainer();
+  caixaMapa.addEventListener("pointerdown", desceu, true);
+  window.addEventListener("pointerup", subiu, true);
+  window.addEventListener("pointercancel", subiu, true);
 
   /* Shift mantém a proporção do quadrado */
   const tecla = (e: KeyboardEvent) => {
@@ -236,6 +250,11 @@ export function criarDesenho(mapa: MlMap, o: OpcoesDesenho): Desenho {
       for (const m of MODOS_AREA) draw.updateModeOptions<typeof TerraDrawPolygonMode>(m, { styles: estiloPoligono() });
     },
     destruir() {
+      vivo = false;
+      aoSoltar = null;
+      caixaMapa.removeEventListener("pointerdown", desceu, true);
+      window.removeEventListener("pointerup", subiu, true);
+      window.removeEventListener("pointercancel", subiu, true);
       window.removeEventListener("keydown", tecla);
       window.removeEventListener("keyup", tecla);
       try { draw.stop(); } catch { /* mapa já saiu */ }

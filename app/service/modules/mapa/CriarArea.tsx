@@ -64,8 +64,13 @@ export function CriarArea({ ctx, bairrosIniciais, nivel }: { ctx: ContextoMapa; 
   const estado = useRef({ forma });
   useEffect(() => { estado.current = { forma }; });
 
-  /* desenho (terra-draw) e camada dos bairros */
+  /* desenho (terra-draw) e camada dos bairros. Só recria se o mapa mudar:
+     tema, largura ou pessoas novas não podem apagar o que já foi desenhado */
+  const ctxAtual = useRef(ctx);
+  useEffect(() => { ctxAtual.current = ctx; });
+  const mapaDoCtx = ctx.mapa;
   useEffect(() => {
+    const ctx = ctxAtual.current;
     const { mapa, cores } = ctx;
     mapa.addSource("ca-bairros", { type: "geojson", data: { type: "FeatureCollection", features: ctx.regioes.map((r) => ({ type: "Feature", properties: { codigo: r.codigo }, geometry: r.geojson })) } });
     mapa.addLayer({ id: "ca-bairros-fill", type: "fill", source: "ca-bairros", paint: { "fill-color": cores.terra, "fill-opacity": 0 } });
@@ -91,7 +96,7 @@ export function CriarArea({ ctx, bairrosIniciais, nivel }: { ctx: ContextoMapa; 
     };
     mapa.on("click", clique);
     return () => { mapa.off("click", clique); d.destruir(); desenho.current = null; limparCamadas(mapa, "ca-"); };
-  }, [ctx]);
+  }, [mapaDoCtx]);
 
   /* cor da área no desenho e nos bairros */
   useEffect(() => {
@@ -108,13 +113,15 @@ export function CriarArea({ ctx, bairrosIniciais, nivel }: { ctx: ContextoMapa; 
 
   /* números ao vivo (com uma pequena espera para não chamar a cada quadro do arraste) */
   useEffect(() => {
+    /* só a resposta do último pedido vale (as antigas podem chegar depois) */
+    let vivo = true;
     const t = setTimeout(async () => {
       const b = forma === "bairros" ? bairros : [];
       const g = forma === "bairros" ? null : geo;
       if (!b.length && !g) { setPrevia(null); return; }
-      try { setPrevia(await previaArea(ctx.org, b, g)); } catch (e) { setPrevia(null); if (e instanceof Error && e.message.includes("area_complexa")) avisar("Área com pontos demais. Use menos cantos.", "warn"); }
+      try { const r = await previaArea(ctx.org, b, g); if (vivo) setPrevia(r); } catch (e) { if (!vivo) return; setPrevia(null); if (e instanceof Error && e.message.includes("area_complexa")) avisar("Área com pontos demais. Use menos cantos.", "warn"); }
     }, 180);
-    return () => clearTimeout(t);
+    return () => { vivo = false; clearTimeout(t); };
   }, [ctx.org, forma, bairros, geo]);
 
   const trocar = (f: Forma) => {
@@ -216,7 +223,7 @@ export function CriarArea({ ctx, bairrosIniciais, nivel }: { ctx: ContextoMapa; 
               <Campo rotulo="Responsável" id="ca-resp">
                 <Selecao valor={resp} aoMudar={setResp} vazio="Escolher depois" opcoes={ctx.people.map((p) => ({ v: p.id, l: p.name }))} />
               </Campo>
-              <p className="ca-obs">O responsável passa a ver o mapa só desta área. Este campo aparece só para o pastor e a administração.</p>
+              <p className="ca-obs">O responsável passa a ver o mapa só desta área.</p>
             </>
           )}
         </div>
