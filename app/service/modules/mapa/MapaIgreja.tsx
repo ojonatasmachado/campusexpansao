@@ -18,6 +18,7 @@ import { IDS, OPACIDADE, TOCAVEIS, marcarGrupo, montarCamadas, mostrar, opacidad
 import { registrarMarcadores, svgMarcador, type Marcador } from "./marcadores";
 import type { ContextoMapa, PessoaLider } from "./contexto";
 import { CriarArea } from "./CriarArea";
+import { usePosicaoNoMapa } from "./posicao";
 import { Rota } from "./Rota";
 import { Emergencia } from "./Emergencia";
 import { LinhaDoTempo } from "./LinhaDoTempo";
@@ -331,7 +332,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   ];
 
   /* contexto estável para os modos: só muda quando mudam os dados */
-  const contexto: ContextoMapa | null = useMemo(() => (mapa && acesso ? { org: organizationId, mapa: mapa.map, cores: mapa.cores, acesso, cidade, regioes, pessoas, locais, areas, people, igreja: churchName, celular, gestao: podeLiberar, recarregar: carregar, fechar: () => setModo(null) } : null), [mapa, acesso, organizationId, cidade, regioes, pessoas, locais, areas, people, churchName, celular, podeLiberar, carregar]);
+  const contexto: ContextoMapa | null = useMemo(() => (mapa && acesso ? { org: organizationId, mapa: mapa.map, cores: mapa.cores, acesso, cidade, regioes, pessoas, locais, areas, people, igreja: churchName, celular, gestao: podeLiberar, mensagem: onMensagem, recarregar: carregar, fechar: () => setModo(null) } : null), [mapa, acesso, organizationId, cidade, regioes, pessoas, locais, areas, people, churchName, celular, podeLiberar, onMensagem, carregar]);
 
   /* ── estados vazios e de acesso ── */
   if (erro) return <div className="mapa-tela"><div className="mp-vazio"><div><p className="mp-texto" role="alert">{erro}</p><Botao compacto onClick={() => { setErro(""); carregar(); }}>Tentar de novo</Botao></div></div></div>;
@@ -539,17 +540,7 @@ function BalaoDoPonto({ org, sel, map, folha, pessoas, grupos, usaGrupos, cidade
   const { comTermos: ct } = useTermos();
   /* o balão acompanha o ponto quando o mapa se move; só ele redesenha. Com o
      ponto fora da tela fica escondido, mas montado (não puxa o foco de volta) */
-  const projetar = useCallback(() => {
-    const p = map.project(sel.onde);
-    const c = map.getContainer();
-    return { x: p.x, y: p.y, fora: p.x < 0 || p.y < 0 || p.x > c.clientWidth || p.y > c.clientHeight };
-  }, [map, sel.onde]);
-  const [pos, setPos] = useState(projetar);
-  useEffect(() => {
-    const mexeu = () => setPos(projetar());
-    map.on("move", mexeu);
-    return () => { map.off("move", mexeu); };
-  }, [map, projetar]);
+  const pos = usePosicaoNoMapa(map, sel.onde as [number, number]);
   const comum = { x: pos.x, y: pos.y, oculto: pos.fora && !folha, aoFechar, folha };
 
   if (sel.tipo === "pessoa") {
