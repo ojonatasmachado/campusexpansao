@@ -2,10 +2,10 @@
 id: G11
 titulo: Levar rota, linha do tempo e marcar lugar para o painel
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-06
+branch: historia/G11-ferramentas-no-painel
 depende: [G7]
 tamanho: G
 ---
