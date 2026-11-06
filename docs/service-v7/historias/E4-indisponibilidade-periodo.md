@@ -2,10 +2,10 @@
 id: E4
 titulo: Implementar indisponibilidade por período e time
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-06
+branch: historia/E4-indisponibilidade-periodo
 depende: [D1]
 tamanho: M
 ---
