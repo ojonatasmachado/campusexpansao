@@ -17,7 +17,7 @@ import { TabTarefas } from "./Conversas";
 import type { Board, Card, Course, CourseLesson, Ev, EventRsvp, ItemAgenda, M, MeetingLite, Ministry, P, RehearsalLite, Slot } from "./tipos";
 
 import { Botao } from "../ui/Botao";
-import { Interruptor } from "../ui/Interruptor";
+import { Disponibilidade } from "./Disponibilidade";
 import { Acao } from "../ui/Acao";
 import { Opcao } from "../ui/Opcao";
 import { Linha, Lista, linhaClasse } from "../ui/Linha";
@@ -139,7 +139,7 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
   const avisarFalta = async () => {
     if (!member || !destFalta || !onStartChat) return;
     const id = await onStartChat(member.id, destFalta.member_id, ct("Oi! Queria avisar que vou faltar num dos próximos {cultos}. Posso te contar qual?"));
-    if (id) ui.go("mensagens", null, { chatId: id });
+    if (id) { ui.sheet(null); ui.go("mensagens", null, { chatId: id }); }
   };
 
   /* Minha agenda: tudo que envolve a pessoa */
@@ -283,8 +283,10 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
           {serve && (
             <div className="m6-sec">
               <div className="m6-lbl">Quando posso servir</div>
-              {onSaveAvailability ? <Disponibilidade person={person} onSave={onSaveAvailability} /> : null}
-              {member && destFalta && onStartChat && <div className="m6-pad"><Botao tamanho="toque" largo onClick={avisarFalta}>Avisar que vou faltar</Botao></div>}
+              {onSaveAvailability ? <Disponibilidade person={person} onSave={onSaveAvailability}
+                times={ministries.filter((m) => meusTimes.has(m.id))}
+                onFalar={member && destFalta && onStartChat ? avisarFalta : undefined}
+                onAvisar={member && destFalta && onStartChat ? async (mensagem) => !!await onStartChat(member.id, destFalta.member_id, mensagem) : undefined} /> : null}
             </div>
           )}
         </>
@@ -394,36 +396,5 @@ export function RespostaEvento({ id, inicial, onRespond }: { id: string; inicial
       <Botao tamanho="toque" variante="principal" onClick={() => set("vou")}>Vou</Botao>
       <Botao tamanho="toque" onClick={() => set("nao")}>Não vou</Botao>
     </div>
-  );
-}
-
-/* "Quando posso servir": uma chave por culto que se repete (S19) */
-export const DISPONIBILIDADE: { key: string; nome: string }[] = [
-  { key: "dom_m", nome: "Domingo de manhã" },
-  { key: "dom_n", nome: "Domingo à noite" },
-  { key: "qua", nome: "Quarta à noite" },
-];
-export function Disponibilidade({ person, onSave }: { person: P; onSave: (a: Record<string, boolean>) => Promise<boolean> }) {
-  const [disp, setDisp] = useState<Record<string, boolean>>(() => {
-    const atual = person.availability ?? {};
-    return Object.fromEntries(DISPONIBILIDADE.map((d) => [d.key, atual[d.key] ?? true]));
-  });
-  const trocar = async (key: string) => {
-    const novo = { ...disp, [key]: !disp[key] };
-    setDisp(novo);
-    if (!(await onSave(novo))) setDisp(disp);
-  };
-  return (
-    <Lista>
-      {DISPONIBILIDADE.map((d) => (
-        <Linha estilo="app" key={d.key}>
-          <span className="m6-rb">
-            <span className="m6-rt">{d.nome}</span>
-            <span className="m6-rs">{disp[d.key] ? "O líder pode escalar você" : "O líder não vai escalar você"}</span>
-          </span>
-          <Interruptor ligado={disp[d.key]} tamanho="toque" rotulo={d.nome} onClick={() => trocar(d.key)} />
-        </Linha>
-      ))}
-    </Lista>
   );
 }

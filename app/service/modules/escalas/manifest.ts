@@ -26,6 +26,13 @@ export default defineModule({
   historico: ["serviu", "faltou", "trocou"],
   densidade: [
     {
+      tela: "Agenda: Quando posso servir, lista de ausências",
+      tamanho: "390×844",
+      medido: { palavras: 67, acoes: 13, sobreposicoes: 0 },
+      limite: { palavras: 80, acoes: 12, sobreposicoes: 0 },
+      motivo: "Captura rolada até a ausência, não a primeira dobra da Agenda. A ação adicional é Remover, pedida na própria linha para retirar o bloqueio sem abrir um menu. A casca e os controles anteriores continuam visíveis. A folha de cadastro fica abaixo dos limites: 6 ações e 19 palavras.",
+    },
+    {
       tela: "Escalas por time",
       tamanho: "1366×860",
       medido: { palavras: 106, acoes: 54, sobreposicoes: 0 },

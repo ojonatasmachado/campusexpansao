@@ -205,7 +205,7 @@ class Estado {
 function candidatosDaVaga(e: EntradaPeriodo, est: Estado, c: CultoPlano, time: TimePlano, funcaoId: string, jaNoSlot: Set<string>): Candidato[] {
   const ids = new Set(time.pessoas);
   const pool = e.pessoas.filter((p) => ids.has(p.id));
-  return candidatosDisponiveis(pool, { slot: c.slot, eventDate: c.data }, jaNoSlot, est.noCulto[c.chave] ?? new Set(), e.cfg, est.carga(c.data.slice(0, 7)), est.ultimaAte(c.data, time.pessoas), est.datas, est.vezes);
+  return candidatosDisponiveis(pool, { slot: c.slot, eventDate: c.data, hora: c.hora, ministryId: time.id }, jaNoSlot, est.noCulto[c.chave] ?? new Set(), e.cfg, est.carga(c.data.slice(0, 7)), est.ultimaAte(c.data, time.pessoas), est.datas, est.vezes);
 }
 
 /** Proposta para o período inteiro, culto a culto em ordem de data: cada vaga
@@ -292,9 +292,9 @@ export function avaliarPeriodo(e: EntradaPeriodo, proposta: Proposta): Resumo {
         const falta = Math.max(0, f.vagas - ok.length - novos.length);
         faltam += falta;
         if (falta) avisos.push({ tipo: "sem_gente", culto: c.chave, timeId: time.id, funcaoId: f.id, faltam: falta });
-        for (const p of novos) {
+        for (const p of [...ok, ...novos]) {
           const pp = pessoa.get(p);
-          if (pp && indisponivel(pp, c.slot, c.data)) avisos.push({ tipo: "indisponivel", culto: c.chave, funcaoId: f.id, pessoa: p });
+          if (pp && indisponivel(pp, c.slot, c.data, c.hora, time.id)) avisos.push({ tipo: "indisponivel", culto: c.chave, funcaoId: f.id, pessoa: p });
         }
         for (const p of [...ok, ...novos]) contagem[p] = (contagem[p] ?? 0) + 1;
       }

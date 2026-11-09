@@ -1,6 +1,7 @@
 /* Quem pode entrar numa vaga da escala, e por quê não. Função pura usada pela
    escala de um culto (Escalas.tsx) e pela escala de um período inteiro
    (periodo.ts). Saiu de Escalas.tsx sem mudar o comportamento de um culto. */
+import { periodoDaHora } from "./disponibilidade";
 import { compararRodizio } from "./rodizio";
 import type { EscalaSettings } from "./regras";
 
@@ -14,11 +15,30 @@ export type Motivo = "evento" | "ferias" | "teto" | "folga";
 export type PessoaEscala = { id: string; name: string; status: "ativo" | "pausa" | "ferias"; availability: Record<string, boolean> };
 export type Candidato<P extends PessoaEscala = PessoaEscala> = { person: P; fit: "good" | "busy" | "block"; motivo: Motivo | null; vezes: number; ultima?: string };
 
-/** Indisponível neste culto: marcou que não pode no horário (slot) ou bloqueou
- *  a data (chave "d:AAAA-MM-DD" em people.availability). Sem resposta conta como disponível. */
-export function indisponivel(p: PessoaEscala, slot: string | null | undefined, data?: string | null): boolean {
-  if (slot && p.availability?.[slot] === false) return true;
-  if (data && p.availability?.[`d:${data}`] === false) return true;
+/** Indisponível neste culto: verifica chaves antigas (slot fixo, d:AAAA-MM-DD) e novas
+ *  (d:AAAA-MM-DD:periodo, d:AAAA-MM-DD:periodo:ministryId). Sem resposta conta como disponível.
+ *  hora: hora do culto (HH:MM) para derivar o período. ministryId: id do time/ministério. */
+export function indisponivel(
+  p: PessoaEscala,
+  slot: string | null | undefined,
+  data?: string | null,
+  hora?: string | null,
+  ministryId?: string | null,
+): boolean {
+  const av = p.availability;
+  if (!av) return false;
+  // Regras antigas (backward-compatible)
+  if (slot && av[slot] === false) return true;
+  if (data && av[`d:${data}`] === false) return true;
+  // Regras novas (E4)
+  if (!data) return false;
+  const periodo = periodoDaHora(hora);
+  // Dia inteiro por time
+  if (ministryId && av[`d:${data}:dia:${ministryId}`] === false) return true;
+  // Período específico (todos os times)
+  if (periodo && av[`d:${data}:${periodo}`] === false) return true;
+  // Período específico por time
+  if (periodo && ministryId && av[`d:${data}:${periodo}:${ministryId}`] === false) return true;
   return false;
 }
 
@@ -43,7 +63,7 @@ export function emFolga(datas: string[] | undefined, data: string | null | undef
    sempre as mesmas pessoas. O teto continua sendo o do mês. */
 export function candidatosDisponiveis<P extends PessoaEscala>(
   pool: P[],
-  event: { slot?: string | null; eventDate?: string | null },
+  event: { slot?: string | null; eventDate?: string | null; hora?: string | null; ministryId?: string | null },
   jaNoSlot: Set<string>,
   usadosNoEvento: Set<string>,
   cfg: EscalaSettings,
@@ -64,7 +84,7 @@ export function candidatosDisponiveis<P extends PessoaEscala>(
          vira "busy" quando a pessoa marcou explicitamente que não pode nesse
          horário, senão todo voluntário novo aparecia "ocupado" sem nunca ter
          recusado nada. */
-      const fit: Candidato["fit"] = motivo ? "block" : (indisponivel(p, event.slot, event.eventDate) ? "busy" : "good");
+      const fit: Candidato["fit"] = motivo ? "block" : (indisponivel(p, event.slot, event.eventDate, event.hora, event.ministryId) ? "busy" : "good");
       return { person: p, fit, motivo, vezes: (vezesRodizio ?? cargaPorPessoa)[p.id] ?? 0, ultima: ultimaVez[p.id] };
     })
     .sort((a, b) => {

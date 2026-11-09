@@ -20,7 +20,7 @@ import { ESCALA_DEFAULT, type EscalaPreset, type EscalaSettings } from "./regras
 import type { ChurchView, DrawerState, EventView, MinistryView, ModalState, PersonView, RosterAssignmentView, RouteId } from "../../ServiceExactApp";
 import { useTermos } from "../../lib/vocabulario-context";
 import { fraseRodizio, ultimaVezQueServiu } from "./rodizio";
-import { candidatosDisponiveis, cargaDoMes, type Candidato as CandidatoBase } from "./candidatos";
+import { candidatosDisponiveis, cargaDoMes, indisponivel, type Candidato as CandidatoBase } from "./candidatos";
 import { GerarPeriodo } from "./GerarPeriodo";
 import { EscalaExtra } from "./EscalaExtra";
 import { PublicarEscala } from "./PublicarEscala";
@@ -322,7 +322,7 @@ export function Escalas({
     const selectedEvent = events.find((e) => e.id === eventId);
     if (!selectedEvent) return [];
     const carga = cargaDoMes(roster, events, selectedEvent);
-    return candidatosDisponiveis(candidatePool(ministry), selectedEvent, jaNoSlot, usados, escalaCfg, carga, ultimaVezQueServiu(roster, events, todayISO()));
+    return candidatosDisponiveis(candidatePool(ministry), { ...selectedEvent, hora: selectedEvent.time, ministryId: ministry.id }, jaNoSlot, usados, escalaCfg, carga, ultimaVezQueServiu(roster, events, todayISO()));
   }
 
   const setModoEscala = async (modo: EscalaSettings["modo"]) => {
@@ -365,7 +365,7 @@ export function Escalas({
     await conferirGravacao(createServiceBrowserClient().schema("service").from("roster_assignments").update({ status: "no" }).eq("id", assignment.id).select("id").single());
     const selectedEvent = events.find((e) => e.id === assignment.event_id);
     if (escalaCfg.modo === "automatico" && escalaCfg.naRecusa === "proximo" && selectedEvent) {
-      const proximo = candidatosParaVaga(ministry, assignment.position_id, assignment.event_id).find((c) => c.fit !== "block");
+      const proximo = candidatosParaVaga(ministry, assignment.position_id, assignment.event_id).find((c) => c.fit === "good");
       if (proximo) {
         await conferirGravacao(createServiceBrowserClient().schema("service").from("roster_assignments").insert({
           organization_id: selectedEvent.organizationId, event_id: selectedEvent.id, position_id: assignment.position_id, person_id: proximo.person.id, status: "ok",
@@ -396,10 +396,10 @@ export function Escalas({
         if (!missing) return;
         const jaNoSlot = new Set(assignments.map((a) => a.person_id));
         const usados = new Set(assignments.filter((a) => a.status !== "no").map((a) => a.person_id));
-        const candidatos = candidatosDisponiveis(candidatePool(selectedMinistry), eventoAtual, jaNoSlot, usados, escalaCfg, carga, ultimas);
+        const candidatos = candidatosDisponiveis(candidatePool(selectedMinistry), { ...eventoAtual, hora: eventoAtual.time, ministryId: selectedMinistry.id }, jaNoSlot, usados, escalaCfg, carga, ultimas);
         for (const candidato of candidatos) {
           if (!missing) break;
-          if (candidato.fit === "block") continue;
+          if (candidato.fit !== "good") continue;
           inserts.push({ organization_id: eventoAtual.organizationId, event_id: eventoAtual.id, position_id: position.id, person_id: candidato.person.id, status: escalaCfg.modo === "automatico" ? "ok" : "wait" });
           missing--;
         }
@@ -534,7 +534,9 @@ export function Escalas({
                                 >
                                   <Av name={person?.name ?? "Voluntário"} size="xs" photoUrl={person?.photoUrl} />
                                   <span className="esc-tbl-name">{person?.name.split(" ")[0] ?? "Pessoa"}</span>
-                                  <Selo tom={a.status === "ok" ? "ok" : "pendente"} tamanho="lista">{a.status === "ok" ? "Confirmado" : "Aguardando"}</Selo>
+                                  {person && indisponivel(person, ev.slot, ev.eventDate, ev.time, selectedMinistry.id)
+                                    ? <Selo tom="cuidado" tamanho="lista">Indisponível</Selo>
+                                    : <Selo tom={a.status === "ok" ? "ok" : "pendente"} tamanho="lista">{a.status === "ok" ? "Confirmado" : "Aguardando"}</Selo>}
                                 </Acao>
                               );
                             })}
@@ -766,12 +768,12 @@ function RosterActionModal({
           : <div className="cand-meta">{fraseRodizio(c.ultima, c.vezes, todayISO())}</div>}
         {c.person.tags.length > 0 ? <div className="cand-meta">{c.person.tags.join(" · ")}</div> : null}
       </div>
-      {c.fit !== "block" && <span className={`cand-fit ${c.fit}`}>{c.fit === "good" ? <><Icon name="ok" size={13} /> disponível</> : <><Icon name="pendente" size={13} /> ocupado</>}</span>}
+      {c.fit !== "block" && <span className={`cand-fit ${c.fit}`}>{c.fit === "good" ? <><Icon name="ok" size={13} /> disponível</> : <><Icon name="pendente" size={13} /> indisponível</>}</span>}
     </Acao>
   );
   return (
     <Janela larga sobretitulo={`${isSwap ? "Escolher substituto" : "Escalar"} · ${action.position.name} · ${action.ministry.name}`} titulo={action.event.name}
-      texto={`${joinDot(action.event.weekday, action.event.time)}${joinDot(action.event.weekday, action.event.time) ? ". " : ""}Ocupado é quem marcou que não pode neste horário.`}
+      texto={`${joinDot(action.event.weekday, action.event.time)}${joinDot(action.event.weekday, action.event.time) ? ". " : ""}Indisponível é quem marcou que não pode neste horário ou data.`}
       aoFechar={onClose} ocupada={salvando} corpoBloco
       cabecalho={<>
         {isSwap && <p className="modal-sub">A pessoa escolhida passa a ocupar a vaga e precisa confirmar no app.</p>}
