@@ -6,7 +6,9 @@ import {
   avaliarPeriodo, cultosDoPeriodo, datasNoPeriodo, fimDoPeriodo, gerarPeriodo, linhasDaProposta, opcoesDaVaga, periodoValido, seriesDaAgenda,
   type EntradaPeriodo, type EventoAgenda, type TimePlano,
 } from "../app/service/modules/escalas/periodo";
-import type { PessoaEscala } from "../app/service/modules/escalas/candidatos";
+import { indisponivel, type PessoaEscala } from "../app/service/modules/escalas/candidatos";
+
+import { ausenciasFuturas, chavesAusencia, periodoDaHora } from "../app/service/modules/escalas/disponibilidade";
 
 let ok = 0;
 function caso(nome: string, fn: () => void) {
@@ -152,6 +154,63 @@ caso("40 pessoas, 12 meses, 3 cultos por semana: rápido e equilibrado", () => {
   const linhas = linhasDaProposta(e, p, (c) => c.eventId ?? c.chave);
   assert.equal(linhas.length, r.propostas);
   console.log(`    ${e.cultos.length} cultos, ${r.propostas} pessoas propostas, ${r.faltam} vagas abertas, ${ms}ms`);
+});
+
+caso("E4: limites do período e culto sem hora", () => {
+  assert.equal(periodoDaHora("11:59"), "manha");
+  assert.equal(periodoDaHora("12:00"), "tarde");
+  assert.equal(periodoDaHora("17:59"), "tarde");
+  assert.equal(periodoDaHora("18:00"), "noite");
+  assert.equal(periodoDaHora("20h00"), "noite");
+  for (const hora of [null, "", "24:00", "19:99", "sem hora"]) assert.equal(periodoDaHora(hora), null);
+});
+
+caso("E4: compatibilidade e isolamento por data, período e time", () => {
+  const data = "2026-11-11";
+  const bloqueada = (key: string, hora: string | null, timeId = "louvor", slot = "qua") =>
+    indisponivel(pessoa("maria", { availability: { [key]: false } }), slot, data, hora, timeId);
+  assert.ok(bloqueada("qua", null)); // slot legado mantém o sentido
+  assert.ok(bloqueada(`d:${data}`, null));
+  assert.ok(bloqueada(`d:${data}:dia:louvor`, null));
+  assert.ok(!bloqueada(`d:${data}:dia:louvor`, "20:00", "recepcao"));
+  for (const [periodo, hora] of [["manha", "09:00"], ["tarde", "15:00"], ["noite", "20:00"]]) {
+    assert.ok(bloqueada(`d:${data}:${periodo}`, hora));
+    assert.ok(!bloqueada(`d:${data}:${periodo}`, null));
+    assert.ok(bloqueada(`d:${data}:${periodo}:louvor`, hora));
+    assert.ok(!bloqueada(`d:${data}:${periodo}:louvor`, hora, "recepcao"));
+  }
+  assert.ok(!bloqueada(`d:${data}:noite:louvor`, "09:00"));
+  assert.ok(!bloqueada("d:2026-11-12", "20:00"));
+  assert.ok(!indisponivel(pessoa("maria", { availability: { [`d:${data}`]: true } }), "qua", data, "20:00", "louvor"));
+});
+
+caso("E4: intervalo inclusivo até 31 dias e leitura só de ausências futuras", () => {
+  assert.deepEqual(chavesAusencia("2026-11-11", "", "dia", null), ["d:2026-11-11"]);
+  assert.deepEqual(chavesAusencia("2026-11-11", "", "noite", "louvor"), ["d:2026-11-11:noite:louvor"]);
+  assert.equal(chavesAusencia("2026-12-15", "2027-01-14", "manha", null).length, 31);
+  assert.throws(() => chavesAusencia("2026-12-15", "2027-01-15", "dia", null), /31 dias/);
+  assert.throws(() => chavesAusencia("2026-11-11", "2026-11-10", "dia", null), /posterior/);
+  assert.throws(() => chavesAusencia("2026-02-30", "", "dia", null), /válida/);
+  assert.deepEqual(ausenciasFuturas({ qua: false, "d:2026-11-10": false, "d:2026-11-11": false, "d:2026-11-12": true }, "2026-11-11").map((a) => a.chave), ["d:2026-11-11"]);
+});
+
+caso("E4: Gerar período exclui Maria do Louvor à noite, preserva Recepção e manhã", () => {
+  const maria = pessoa("maria", { availability: { "d:2026-11-11:noite:louvor": false } });
+  for (const [hora, esperado] of [["20:00", []], ["09:00", ["maria"]]] as const) {
+    const e = entrada({ events: [ev("quarta", "2026-11-11", { time: hora, slot: "qua" })], inicio: "2026-11-11", fim: "2026-11-11", pessoas: [maria], times: [time(["maria"], 1, "louvor")] });
+    const proposta = gerarPeriodo(e);
+    assert.deepEqual(proposta[e.cultos[0].chave]?.["louvor-f"] ?? [], esperado);
+  }
+  const e = entrada({ events: [ev("quarta", "2026-11-11", { time: "20:00", slot: "qua" })], inicio: "2026-11-11", fim: "2026-11-11", pessoas: [maria], times: [time(["maria"], 1, "recepcao")] });
+  const proposta = gerarPeriodo(e);
+  assert.deepEqual(proposta[e.cultos[0].chave]["recepcao-f"], ["maria"]);
+});
+
+caso("E4: ausência posterior à escala salva vira aviso, sem apagar a escala", () => {
+  const e = entrada({ events: [ev("quarta", "2026-11-11", { time: "20:00", slot: "qua" })], inicio: "2026-11-11", fim: "2026-11-11", pessoas: [pessoa("maria", { availability: { "d:2026-11-11:noite:louvor": false } })], times: [time(["maria"], 1, "louvor")], roster: [{ event_id: "quarta", position_id: "louvor-f", person_id: "maria", status: "wait" }] });
+  const proposta = gerarPeriodo(e);
+  assert.deepEqual(proposta, {});
+  assert.equal(avaliarPeriodo(e, proposta).avisos.filter((a) => a.tipo === "indisponivel").length, 1);
 });
 
 console.log(`\n${ok} casos ok`);
