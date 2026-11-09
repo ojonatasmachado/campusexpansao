@@ -28,6 +28,7 @@ Valem para toda sessão que trabalha numa história do Service. Cada regra exist
 ## 3. Ambiente
 - Trabalhe só no worktree da história. Nunca no checkout principal (nada de servidor, reset, clean, `git add -A` ou stash sem nome lá).
 - use sempre npm run dev:local; npm run dev aponta para produção pelo .env.local
+- Nunca copie o `.env.local` para o worktree nem carregue esse arquivo: aponta para produção. Login falhando com cookie `sb-gjnhittspvbvzplsqfgv-...` quer dizer que o app está em produção: pare e relate. Já aconteceu: a E2 copiou o `.env.local` e subiu o servidor apontando para produção.
 - Nunca rode `supabase db reset` sem pedir antes.
 - Encerre o servidor que você subiu antes de relatar, e mostre que a porta ficou livre. Já aconteceu: a E1 deixou o servidor ligado 40 minutos, sem env, e as fotos saíram dele.
 
